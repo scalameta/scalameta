@@ -10,13 +10,9 @@ Symbols => 3 entries
 Occurrences => 7 entries
 
 Symbols:
-_empty_.Test. => final object TestTest
-  Test => _empty_.Test.
-_empty_.Test.main(Array). => method main: Unit
-  Unit => scala.Unit#
-_empty_.Test.main(Array).(args) => param args: Array[String]
-  Array => scala.Array#
-  String => scala.Predef.String#
+_empty_.Test. => final object Test
+_empty_.Test.main(Array). => method main
+_empty_.Test.main(Array).(args) => param args
 
 Occurrences:
 [0:7..0:11): Test <= _empty_.Test.

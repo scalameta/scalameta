@@ -110,11 +110,11 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       }
     }
 
-    private def tpe(linkMode: LinkMode): s.Type = {
+    private def sig(linkMode: LinkMode): s.Signature = {
       if (gsym.hasPackageFlag) {
-        s.NoType
+        s.NoSignature
       } else {
-        val gtpe = {
+        val gsig = {
           if (gsym.hasFlag(gf.JAVA_ENUM) && gsym.isStatic) {
             gsym.info.widen
           } else if (gsym.isAliasType) {
@@ -131,19 +131,24 @@ trait SymbolInformationOps { self: SemanticdbOps =>
             gsym.info
           }
         }
-        val stpe = gtpe.toSemantic(linkMode)
+        val ssig = gsig.toSemanticSig(linkMode)
         if (gsym.isConstructor) {
-          stpe match {
-            case m: s.MethodType => m.copy(returnType = s.NoType)
+          ssig match {
+            case m: s.MethodSignature => m.copy(returnType = s.NoType)
             case m => m
           }
         } else if (gsym.isScalacField) {
-          val stparams = Some(s.Scope())
-          val sparamss = Nil
-          val sret = stpe
-          s.MethodType(stparams, sparamss, sret)
+          ssig match {
+            case ssig: s.ValueSignature =>
+              val stparams = Some(s.Scope())
+              val sparamss = Nil
+              val sret = ssig.tpe
+              s.MethodSignature(stparams, sparamss, sret)
+            case _ =>
+              sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
+          }
         } else {
-          stpe
+          ssig
         }
       }
     }
@@ -183,7 +188,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         kind = kind,
         properties = properties,
         name = name,
-        tpe = tpe(linkMode),
+        signature = sig(linkMode),
         annotations = annotations,
         accessibility = accessibility
       )

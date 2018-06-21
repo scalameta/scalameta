@@ -60,22 +60,21 @@ object Scalalib {
       s.TypeRef(s.NoType, base, Nil)
     }
     val symbol = "scala." + name + "#"
-    val builtinTpe = s.TypeRef(s.NoType, symbol, Nil)
-    val ctorSig = s.MethodType(Some(s.Scope(Nil)), List(s.Scope(Nil)), s.NoType)
+    val ctorSig = s.MethodSignature(Some(s.Scope(Nil)), List(s.Scope(Nil)), s.NoType)
     val ctor = s.SymbolInformation(
       symbol = symbol + "`<init>`().",
       language = l.SCALA,
       kind = k.CONSTRUCTOR,
       properties = p.PRIMARY.value,
       name = "<init>",
-      tpe = ctorSig,
+      signature = ctorSig,
       accessibility = Some(s.Accessibility(a.PUBLIC))
     )
     val builtinSig = {
       val tparams = Some(s.Scope(Nil))
       val decls = symbols.filter(_.kind.isMethod)
       val declarations = if (kind.isClass) ctor +: decls else decls
-      s.ClassInfoType(tparams, parents, Some(s.Scope(declarations.map(_.symbol))))
+      s.ClassSignature(tparams, parents, Some(s.Scope(declarations.map(_.symbol))))
     }
     val builtin = s.SymbolInformation(
       symbol = symbol,
@@ -83,7 +82,7 @@ object Scalalib {
       kind = kind,
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       name = name,
-      tpe = builtinSig,
+      signature = builtinSig,
       accessibility = Some(s.Accessibility(a.PUBLIC))
     )
     val syntheticBase = PathIO.workingDirectory
@@ -107,33 +106,32 @@ object Scalalib {
     val methodSymbol = classSymbol + encodedMethodName + "()."
     val tparams = tparamDsls.map { tparamName =>
       val tparamSymbol = methodSymbol + "[" + tparamName + "]"
-      val tparamSig = s.TypeType()
+      val tparamSig = s.TypeSignature()
       s.SymbolInformation(
         symbol = tparamSymbol,
         language = l.SCALA,
         kind = k.TYPE_PARAMETER,
         properties = 0,
         name = tparamName,
-        tpe = tparamSig,
+        signature = tparamSig,
         accessibility = None)
     }
     val params = paramDsls.map {
       case (paramName, paramTpeSymbol) =>
         val paramSymbol = methodSymbol + "(" + paramName + ")"
-        val paramSig = s.TypeRef(s.NoType, paramTpeSymbol, Nil)
+        val paramSig = s.ValueSignature(s.TypeRef(s.NoType, paramTpeSymbol, Nil))
         s.SymbolInformation(
           symbol = paramSymbol,
           language = l.SCALA,
           kind = k.PARAMETER,
           properties = 0,
           name = paramName,
-          tpe = paramSig)
+          signature = paramSig)
     }
     val methodSig = {
       val tps = Some(s.Scope(tparams.map(_.symbol)))
       val returnType = s.TypeRef(s.NoType, retTpeSymbol, Nil)
-      val methodType = s.MethodType(tps, List(s.Scope(params.map(_.symbol))), returnType)
-      methodType
+      s.MethodSignature(tps, List(s.Scope(params.map(_.symbol))), returnType)
     }
     val method = s.SymbolInformation(
       symbol = methodSymbol,
@@ -141,7 +139,7 @@ object Scalalib {
       kind = k.METHOD,
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       name = methodName,
-      tpe = methodSig,
+      signature = methodSig,
       accessibility = Some(s.Accessibility(a.PUBLIC)))
     List(method) ++ tparams ++ params
   }

@@ -108,8 +108,8 @@ object Synthetic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.s
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(25)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(25)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(27)
+  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(27)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {

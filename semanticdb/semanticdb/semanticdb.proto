@@ -49,7 +49,7 @@ message Scope {
 }
 
 message Type {
-  reserved 1, 3, 4, 5, 6;
+  reserved 1, 3, 4, 5, 6, 11, 12, 15;
   oneof sealed_value {
     TypeRef typeRef = 2;
     SingletonType singletonType = 16;
@@ -60,11 +60,8 @@ message Type {
     AnnotatedType annotatedType = 8;
     ExistentialType existentialType = 9;
     UniversalType universalType = 10;
-    ClassInfoType classInfoType = 11;
-    MethodType methodType = 12;
     ByNameType byNameType = 13;
     RepeatedType repeatedType = 14;
-    TypeType typeType = 15;
   }
 }
 
@@ -135,20 +132,6 @@ message UniversalType {
   Type tpe = 2;
 }
 
-message ClassInfoType {
-  reserved 1, 3;
-  Scope type_parameters = 4;
-  repeated Type parents = 2;
-  Scope declarations = 5;
-}
-
-message MethodType {
-  reserved 1, 2;
-  Scope type_parameters = 4;
-  repeated Scope parameterLists = 5;
-  Type return_type = 3;
-}
-
 message ByNameType {
   Type tpe = 1;
 }
@@ -157,11 +140,35 @@ message RepeatedType {
   Type tpe = 1;
 }
 
-message TypeType {
-  reserved 1;
-  Scope type_parameters = 4;
+message Signature {
+  oneof sealed_value {
+    ClassSignature classSignature = 1;
+    MethodSignature methodSignature = 2;
+    TypeSignature typeSignature = 3;
+    ValueSignature valueSignature = 4;
+  }
+}
+
+message ClassSignature {
+  Scope type_parameters = 1;
+  repeated Type parents = 2;
+  Scope declarations = 3;
+}
+
+message MethodSignature {
+  Scope type_parameters = 1;
+  repeated Scope parameterLists = 2;
+  Type return_type = 3;
+}
+
+message TypeSignature {
+  Scope type_parameters = 1;
   Type lower_bound = 2;
   Type upper_bound = 3;
+}
+
+message ValueSignature {
+  Type tpe = 1;
 }
 
 message SymbolInformation {
@@ -202,13 +209,13 @@ message SymbolInformation {
     PRIMARY = 0x2000;
     ENUM = 0x4000;
   }
-  reserved 2, 6, 7, 8, 9, 10, 12, 15;
+  reserved 2, 6, 7, 8, 9, 10, 11, 12, 15;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
-  Type tpe = 11;
+  Signature signature = 17;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;
 }

@@ -50,6 +50,10 @@ abstract class BasePrinter(val settings: Settings, val reporter: Reporter, val d
     opt(pre, if (xs.nonEmpty) Some(xs) else None)(f)
   }
 
+  def opt[T](pre: String, xs: Signature)(f: Signature => Unit): Unit = {
+    opt(pre, if (xs.nonEmpty) Some(xs) else None)(f)
+  }
+
   def opt[T](xs: Option[T], suf: String)(f: T => Unit): Unit = {
     opt("", xs, suf)(f)
   }
@@ -58,7 +62,15 @@ abstract class BasePrinter(val settings: Settings, val reporter: Reporter, val d
     opt("", if (xs.nonEmpty) Some(xs) else None, suf)(f)
   }
 
+  def opt[T](xs: Signature, suf: String)(f: Signature => Unit): Unit = {
+    opt("", if (xs.nonEmpty) Some(xs) else None, suf)(f)
+  }
+
   def opt[T](xs: Type)(f: Type => Unit): Unit = {
+    opt("", if (xs.nonEmpty) Some(xs) else None, "")(f)
+  }
+
+  def opt[T](xs: Signature)(f: Signature => Unit): Unit = {
     opt("", if (xs.nonEmpty) Some(xs) else None, "")(f)
   }
 

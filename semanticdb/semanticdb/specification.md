@@ -10,6 +10,7 @@
   * [Symbol](#symbol)
   * [Scope](#scope)
   * [Type](#type)
+  * [Signature](#signature)
   * [SymbolInformation](#symbolinformation)
   * [Annotation](#annotation)
   * [Accessibility](#accessibility)
@@ -21,6 +22,7 @@
   * [Scala](#scala)
     * [Symbol](#scala-symbol)
     * [Type](#scala-type)
+    * [Signature](#scala-signature)
     * [SymbolInformation](#scala-symbolinformation)
     * [Annotation](#scala-annotation)
     * [Accessibility](#scala-accessibility)
@@ -28,6 +30,7 @@
   * [Java](#java)
     * [Symbol](#java-symbol)
     * [Type](#java-type)
+    * [Signature](#java-signature)
     * [SymbolInformation](#java-symbolinformation)
     * [Annotation](#java-annotation)
     * [Accessibility](#java-acessibility)
@@ -309,44 +312,25 @@ consumers.
 
 ```protobuf
 message Type {
-  enum Tag {
-    reserved 2, 3, 4, 5;
-    UNKNOWN_TYPE = 0;
-    TYPE_REF = 1;
-    SINGLETON_TYPE = 15;
-    INTERSECTION_TYPE = 16;
-    UNION_TYPE = 17;
-    WITH_TYPE = 18;
-    STRUCTURAL_TYPE = 6;
-    ANNOTATED_TYPE = 7;
-    EXISTENTIAL_TYPE = 8;
-    UNIVERSAL_TYPE = 9;
-    CLASS_INFO_TYPE = 10;
-    METHOD_TYPE = 11;
-    BY_NAME_TYPE = 12;
-    REPEATED_TYPE = 13;
-    TYPE_TYPE = 14;
+  reserved 1, 3, 4, 5, 6, 11, 12, 15;
+  oneof sealed_value {
+    TypeRef typeRef = 2;
+    SingletonType singletonType = 16;
+    IntersectionType intersectionType = 17;
+    UnionType unionType = 18;
+    WithType withType = 19;
+    StructuralType structuralType = 7;
+    AnnotatedType annotatedType = 8;
+    ExistentialType existentialType = 9;
+    UniversalType universalType = 10;
+    ByNameType byNameType = 13;
+    RepeatedType repeatedType = 14;
   }
-  reserved 3, 4, 5, 6;
-  Tag tag = 1;
-  TypeRef typeRef = 2;
-  SingletonType singletonType = 16;
-  IntersectionType intersectionType = 17;
-  UnionType unionType = 18;
-  WithType withType = 19;
-  StructuralType structuralType = 7;
-  AnnotatedType annotatedType = 8;
-  ExistentialType existentialType = 9;
-  UniversalType universalType = 10;
-  ClassInfoType classInfoType = 11;
-  MethodType methodType = 12;
-  ByNameType byNameType = 13;
-  RepeatedType repeatedType = 14;
-  TypeType typeType = 15;
 }
 ```
 
-`Type` represents expression types and definition signatures.
+`Type` represents expression types. Definition signatures are modelled
+with [Signature](#signature).
 
 The SemanticDB type system is a superset of the type systems of supported
 languages - currently modelled after the Scala type system [\[18\]][18].
@@ -467,33 +451,6 @@ message UniversalType {
 over `type_parameters`. Type parameters are modelled by a [Scope](#scope).
 
 ```protobuf
-message ClassInfoType {
-  reserved 1, 3;
-  Scope type_parameters = 4;
-  repeated Type parents = 2;
-  Scope declarations = 5;
-}
-```
-
-`ClassInfoType` represents a signature of a class, a trait or the like.
-Both type parameters and declarations are modelled by a [Scope](#scope).
-
-```protobuf
-message MethodType {
-  reserved 1, 2;
-  Scope type_parameters = 4;
-  repeated Scope parameterLists = 5;
-  Type return_type = 3;
-}
-```
-
-`MethodType` represents a signature of a method, a constructor or the like.
-It features `type_parameters`, `parameterLists` and a `return_type`. Both type
-parameters and parameters are modelled by [Scopes](#scope).
-Moreover, in order to support multiple parameter lists in Scala methods,
-`parameterLists` is a list of lists.
-
-```protobuf
 message ByNameType {
   Type tpe = 1;
 }
@@ -509,30 +466,84 @@ message RepeatedType {
 
 `RepeatedType` represents a signature of a repeated parameter.
 
+### Signature
+
 ```protobuf
-message TypeType {
-  reserved 1;
-  Scope type_parameters = 4;
+message Signature {
+  oneof sealed_value {
+    ClassSignature classSignature = 1;
+    MethodSignature methodSignature = 2;
+    TypeSignature typeSignature = 3;
+    ValueSignature valueSignature = 4;
+  }
+}
+```
+
+`Signature` represents definition signatures. Expression types are modelled
+with [Type](#type).
+
+The SemanticDB type system is a superset of the type systems of supported
+languages - currently modelled after the Scala type system [\[18\]][18].
+This section describes the model, while [Languages](#languages) elaborates
+on how language types map onto this model.
+
+```protobuf
+message ClassSignature {
+  Scope type_parameters = 1;
+  repeated Type parents = 2;
+  Scope declarations = 3;
+}
+```
+
+`ClassSignature` represents a signature of a class, a trait or the like.
+Both type parameters and declarations are modelled by a [Scope](#scope).
+
+```protobuf
+message MethodSignature {
+  Scope type_parameters = 1;
+  repeated Scope parameterLists = 2;
+  Type return_type = 3;
+}
+```
+
+`MethodSignature` represents a signature of a method, a constructor or the like.
+It features `type_parameters`, `parameterLists` and a `return_type`. Both type
+parameters and parameters are modelled by [Scopes](#scope).
+Moreover, in order to support multiple parameter lists in Scala methods,
+`parameterLists` is a list of lists.
+
+```protobuf
+message TypeSignature {
+  Scope type_parameters = 1;
   Type lower_bound = 2;
   Type upper_bound = 3;
 }
 ```
 
-`TypeType` represents a signature of a type parameter or a type member.
+`TypeSignature` represents a signature of a type parameter or a type member.
 It features `type_parameters` as well as `lower_bound` and `upper_bound`.
 Type parameters are modelled by a [Scope](#scope).
+
+```protobuf
+message ValueSignature {
+  Type tpe = 1;
+}
+```
+
+`ValueSignature` represents a signature of a field, a parameter or the like.
+It encapsulates an underlying type of the definition.
 
 ### SymbolInformation
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8, 9, 10, 12, 15;
+  reserved 2, 6, 7, 8, 9, 10, 11, 12, 15;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
-  Type tpe = 11;
+  Signature signature = 17;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;
 }
@@ -730,7 +741,7 @@ of the corresponding [Symbol](#symbol), except for language-specific situations.
 See [Languages](#languages) for more information on which definitions have
 which names in supported languages.
 
-`tpe`. [Type](#type) that represents the definition signature.
+`signature`. [Signature](#signature) that represents the definition signature.
 See [Languages](#languages) for more information on which definitions have
 which signatures in supported languages.
 
@@ -876,17 +887,19 @@ symbol occurrences:
   * [Scala](#scala)
     * [Symbol](#scala-symbol)
     * [Type](#scala-type)
+    * [Signature](#scala-signature)
     * [SymbolInformation](#scala-symbolinformation)
     * [Annotation](#scala-annotation)
     * [Accessibility](#scala-accessibility)
     * [SymbolOccurrence](#scala-symboloccurrence)
   * [Java](#java)
-    * [Symbol](#java)
-    * [Type](#java)
-    * [SymbolInformation](#java)
-    * [Annotation](#java)
-    * [Accessibility](#java)
-    * [SymbolOccurrence](#java)
+    * [Symbol](#java-symbol)
+    * [Type](#java-type)
+    * [Signature](#java-signature)
+    * [SymbolInformation](#java-symbolinformation)
+    * [Annotation](#java-annotation)
+    * [Accessibility](#java-accessibility)
+    * [SymbolOccurrence](#java-symboloccurrence)
 
 ### Notation
 
@@ -1042,44 +1055,26 @@ must be modelled:
 
 ```protobuf
 message Type {
-  enum Tag {
-    reserved 2, 3, 4, 5;
-    UNKNOWN_TYPE = 0;
-    TYPE_REF = 1;
-    SINGLETON_TYPE = 15;
-    INTERSECTION_TYPE = 16;
-    UNION_TYPE = 17;
-    WITH_TYPE = 18;
-    STRUCTURAL_TYPE = 6;
-    ANNOTATED_TYPE = 7;
-    EXISTENTIAL_TYPE = 8;
-    UNIVERSAL_TYPE = 9;
-    CLASS_INFO_TYPE = 10;
-    METHOD_TYPE = 11;
-    BY_NAME_TYPE = 12;
-    REPEATED_TYPE = 13;
-    TYPE_TYPE = 14;
+  reserved 1, 3, 4, 5, 6, 11, 12, 15;
+  oneof sealed_value {
+    TypeRef typeRef = 2;
+    SingletonType singletonType = 16;
+    IntersectionType intersectionType = 17;
+    UnionType unionType = 18;
+    WithType withType = 19;
+    StructuralType structuralType = 7;
+    AnnotatedType annotatedType = 8;
+    ExistentialType existentialType = 9;
+    UniversalType universalType = 10;
+    ByNameType byNameType = 13;
+    RepeatedType repeatedType = 14;
   }
-  reserved 3, 4, 5, 6;
-  Tag tag = 1;
-  TypeRef typeRef = 2;
-  SingletonType singletonType = 16;
-  IntersectionType intersectionType = 17;
-  UnionType unionType = 18;
-  WithType withType = 19;
-  StructuralType structuralType = 7;
-  AnnotatedType annotatedType = 8;
-  ExistentialType existentialType = 9;
-  UniversalType universalType = 10;
-  ClassInfoType classInfoType = 11;
-  MethodType methodType = 12;
-  ByNameType byNameType = 13;
-  RepeatedType repeatedType = 14;
-  TypeType typeType = 15;
 }
 ```
 
-In Scala, [Type](#type) represents types [\[18\]][18].
+In Scala, [Type](#type) represents value types [\[18\]][18].
+Non-value types [\[18\]][18] are modelled with a separate data structure
+called [Signature](#signature) (see [below](#scala-signature) for examples).
 
 In the examples below:
   * `E` is the lexically enclosing class of the location where the example
@@ -1093,10 +1088,6 @@ In the examples below:
     standard library.
   * `@ann1`, `@ann2`, etc are annotations.
   * `M1`, `M2`, etc are members.
-  * `ts` is a type parameter list that consists of
-    type parameters `t1`, `t2`, etc.
-  * `P1s`, `P2s`, etc are parameter lists that consists of parameter types
-    `P11`, `P12`, etc.
 
 <table>
   <tr>
@@ -1202,33 +1193,11 @@ In the examples below:
       </ul>
     </td>
   </tr>
-  <tr>
-    <td valign="top">Method types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#method-types">[35]</a></td>
-    <td>
-      <ul>
-        <li><code>(P1s)...(Pns)T</code> ~ <code>MethodType(List(), List(List(&lt;P11&gt;, ...), ..., List(&lt;Pn1&gt;, ...)), &lt;T&gt;)</code>.</li>
-      </ul>
-    </td>
-  </tr>
-  <tr>
-    <td valign="top">Polymorphic method types <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#polymorphic-method-types">[36]</a></td>
-    <td>
-      <ul>
-        <li><code>[ts](P1s)...(Pns)T</code> ~ <code>MethodType(List(&lt;t1&gt;, ..., &lt;tm&gt;), List(List(&lt;P11&gt;, ...), ..., List(&lt;Pn1&gt;, ...)), &lt;T&gt;)</code>.</li>
-      </ul>
-    </td>
-  </tr>
-  <tr>
-    <td valign="top">Type constructors <a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#type-constructors">[37]</a></td>
-    <td>
-      <ul>
-        <li><code>[ts]T</code> ~ <code>UniversalType(List(&lt;t1&gt;, ..., &lt;tm&gt;), &lt;T&gt;)</code>.</li>
-      </ul>
-    </td>
-  </tr>
 </table>
 
 Notes:
+* We diverge from SLS by having different data structures to model value types
+  ([Type](#type)) and non-value types ([Signature](#signature)).
 * We diverge from SLS on the matter of handling prefixes (see definitions of
   `TYPE_REF` and `SINGLETON_TYPE` for more information).
   * In SLS, all types that can have a prefix must have it specified
@@ -1247,18 +1216,26 @@ Notes:
   use [Occurrences](#symboloccurrence) for figuring out semantics of syntax
   written in source code.
 
+<a name="scala-signature"></a>
+#### Signature
+
+In Scala, [Signature](#signature) represents definition signatures,
+which also includes non-value types [\[18\]][18].
+See [below](#scala-symbolinformation) to learn which Scala definitions
+have which signatures.
+
 <a name="scala-symbolinformation"></a>
 #### SymbolInformation
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8, 9, 10, 12, 15;
+  reserved 2, 6, 7, 8, 9, 10, 11, 12, 15;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
-  Type tpe = 11;
+  Signature signature = 17;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;
 }
@@ -1290,7 +1267,7 @@ message SymbolInformation {
     <td>See <a href="#scala-symbol">Symbol</a>.</td>
   </tr>
   <tr>
-    <td><code>tpe</code></td>
+    <td><code>signature</code></td>
     <td>Explained below on per-definition basis.</td>
   </tr>
   <tr>
@@ -1336,49 +1313,49 @@ abstract class C(val xp: Int) {
     <td><code>xp</code></td>
     <td><code>_empty_.C#xp().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xp</code></td>
     <td><code>_empty_.C#`&lt;init&gt;`().(xp)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xm</code></td>
     <td><code>_empty_.C#xm().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xam</code></td>
     <td><code>_empty_.C#xam().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xlm</code></td>
     <td><code>_empty_.C#xlm().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xl</code></td>
     <td><code>local0</code></td>
     <td><code>LOCAL</code></td>
-    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xs</code></td>
     <td><code>local1</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xe</code></td>
     <td><code>local2</code></td>
     <td><code>METHOD</code></td>
-    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -1438,8 +1415,9 @@ Notes:
   * `kind`: `METHOD`.
   * `properties`: see below.
   * `name`: concatenation of the name of the variable followed by `_=`.
-  * `tpe`: `MethodType(List(), List(List(<x$1>)), <Unit>)`, where `x$1` is
-    a `PARAMETER` symbol having `tpe` equal to the type of the variable.
+  * `signature`: `MethodSignature(List(), List(List(<x$1>)), <Unit>)`, where
+    `x$1` is a `PARAMETER` symbol having `signature` equal to the type of the
+     variable.
   * `annotations` and `accessibility`: same as value symbols.
 * Supported properties for variable symbols are:
   * `ABSTRACT`: set for all corresponding symbols of variable declarations.
@@ -1478,25 +1456,25 @@ class C {
     <td><code>x</code></td>
     <td><code>local0</code></td>
     <td><code>LOCAL</code></td>
-    <td><code>TypeRef(None, &lt;Nothing&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;Nothing&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xval</code></td>
     <td><code>_empty_.C#xval().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xvar</code></td>
     <td><code>_empty_.C#xvar().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xvar</code></td>
     <td><code>_empty_.C#xvar_=().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(&lt;x$1&gt;), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(&lt;x$1&gt;), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -1534,19 +1512,19 @@ class C {
     <td><code>T1</code></td>
     <td><code>_empty_.C#T1#</code></td>
     <td><code>TYPE</code></td>
-    <td><code>TypeType(List(), None, &lt;Hi&gt;)</code></td>
+    <td><code>TypeSignature(List(), None, &lt;Hi&gt;)</code></td>
   </tr>
   <tr>
     <td><code>T2</code></td>
     <td><code>_empty_.C#T2#</code></td>
     <td><code>TYPE</code></td>
-    <td><code>TypeType(List(), &lt;Lo&gt;, None)</code></td>
+    <td><code>TypeSignature(List(), &lt;Lo&gt;, None)</code></td>
   </tr>
   <tr>
     <td><code>T</code></td>
     <td><code>_empty_.C#T#</code></td>
     <td><code>TYPE</code></td>
-    <td><code>TypeType(List(), TypeRef(None, &lt;Int&gt;, List()), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>TypeSignature(List(), TypeRef(None, &lt;Int&gt;, List()), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -1556,7 +1534,7 @@ Notes:
   * `FINAL`: set for `final` type aliases.
 * We leave the mapping between type syntax written in source code and
   `Type` entities deliberately unspecified. For example, a producer may
-  represent the signature of `T1` as `TypeType(List(), <Nothing>, <Hi>)`.
+  represent the signature of `T1` as `TypeSignature(List(), <Nothing>, <Hi>)`.
   See [Types](#scala-type) for more information.
 * If present, type parameters of type declarations and type aliases are
   represented as described below in order of their appearance in source code.
@@ -1581,7 +1559,7 @@ class C {
     <td><code>t</code></td>
     <td><code>local0</code></td>
     <td><code>TYPE</code></td>
-    <td><code>TypeType(List(), None, None)</code></td>
+    <td><code>TypeSignature(List(), None, None)</code></td>
   </tr>
 </table>
 
@@ -1594,7 +1572,7 @@ Notes:
   must be modelled as `_`, whereas the symbol name is implementation-dependent.
 * We leave the mapping between type syntax written in source code and
   `Type` entities deliberately unspecified. For example, a producer may
-  represent the signature of `t` as `TypeType(List(), <Nothing>, <Any>)`.
+  represent the signature of `t` as `TypeSignature(List(), <Nothing>, <Any>)`.
   See [Types](#scala-type) for more information.
 * Type variable symbols don't support any accessibilities.
 
@@ -1620,13 +1598,13 @@ class C2 {
     <td><code>self1</code></td>
     <td><code>local0</code></td>
     <td><code>SELF_PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;C1&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;C1&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>self2</code></td>
     <td><code>local0</code></td>
     <td><code>SELF_PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -1663,25 +1641,25 @@ class C[T1] {
     <td><code>T1</code></td>
     <td><code>_empty_.C#[T1]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
-    <td><code>TypeType(List(), None, None)</code></td>
+    <td><code>TypeSignature(List(), None, None)</code></td>
   </tr>
   <tr>
     <td><code>T2</code></td>
     <td><code>_empty_.C#m()[T2]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
-    <td><code>TypeType(List(), None, &lt;Hi&gt;)</code></td>
+    <td><code>TypeSignature(List(), None, &lt;Hi&gt;)</code></td>
   </tr>
   <tr>
     <td><code>T3</code></td>
     <td><code>_empty_.C#m()[T2][T3]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
-    <td><code>TypeType(List(), None, None)</code></td>
+    <td><code>TypeSignature(List(), None, None)</code></td>
   </tr>
   <tr>
     <td><code>T4</code></td>
     <td><code>_empty_.C#T#[T4]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
-    <td><code>TypeType(List(), &lt;Lo&gt;, None)</code></td>
+    <td><code>TypeSignature(List(), &lt;Lo&gt;, None)</code></td>
   </tr>
 </table>
 
@@ -1695,7 +1673,7 @@ Notes:
   must be modelled as `_`, whereas the symbol name is implementation-dependent.
 * We leave the mapping between type syntax written in source code and
   `Type` entities deliberately unspecified. For example, a producer may
-  represent the signature of `T1` as `TypeType(List(), <Nothing>, <Any>)`.
+  represent the signature of `T1` as `TypeSignature(List(), <Nothing>, <Any>)`.
   See [Types](#scala-type) for more information.
 * If present, context bounds and value bounds of type parameters are desugared
   into parameters of the enclosing definition as described in [\[44\]][44] and
@@ -1726,49 +1704,49 @@ class C(p1: Int) {
     <td><code>p1</code></td>
     <td><code>_empty_.C#`&lt;init&gt;`().(p1)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>p2</code></td>
     <td><code>_empty_.C#m2().(p2)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>p3</code></td>
     <td><code>_empty_.C#m3().(p3)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3$default$1</code></td>
     <td><code>_empty_.C#m3$default$1().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>p4</code></td>
     <td><code>_empty_.C#m4().(p4)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>ByNameType(TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>ValueSignature(ByNameType(TypeRef(None, &lt;Int&gt;, List())))</code></td>
   </tr>
   <tr>
     <td><code>p5</code></td>
     <td><code>_empty_.C#m5().(p5)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>RepeatedType(TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>ValueSignature(RepeatedType(TypeRef(None, &lt;Int&gt;, List())))</code></td>
   </tr>
   <tr>
     <td>Context bound</td>
     <td><code>_empty_.C#m6().(x$1)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;C&gt;, List(&lt;T&gt;))</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;C&gt;, List(&lt;T&gt;)))</code></td>
   </tr>
   <tr>
     <td>View bound</td>
     <td><code>_empty_.C#m7().(x$2)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;Function1&gt;, List(&lt;T&gt;, &lt;V&gt;))</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;Function1&gt;, List(&lt;T&gt;, &lt;V&gt;)))</code></td>
   </tr>
 </table>
 
@@ -1824,31 +1802,31 @@ abstract class C {
     <td><code>m1</code></td>
     <td><code>_empty_.C#m1().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m2</code></td>
     <td><code>_empty_.C#m2().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(List()), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(List()), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
     <td><code>_empty_.C#m3().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
     <td><code>_empty_.C#m3(+1).</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;org.Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;org.Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m4</code></td>
     <td><code>_empty_.C#m4().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(List(&lt;x&gt;), List(&lt;y&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(List(&lt;x&gt;), List(&lt;y&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -1902,7 +1880,7 @@ object M {
     <td><code>m1</code></td>
     <td><code>_empty_.M.m().</code></td>
     <td><code>MACRO</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -1934,13 +1912,13 @@ class C(x: Int) {
     <td>Primary constructor</td>
     <td><code>_empty_.C#`&lt;init&gt;`().</code></td>
     <td><code>CONSTRUCTOR</code></td>
-    <td><code>MethodType(List(), List(List(&lt;x&gt;)), None)</code></td>
+    <td><code>MethodSignature(List(), List(List(&lt;x&gt;)), None)</code></td>
   </tr>
   <tr>
     <td>Secondary constructor</td>
     <td><code>_empty_.C#`&lt;init&gt;`(+1).</code></td>
     <td><code>CONSTRUCTOR</code></td>
-    <td><code>MethodType(List(), List(), None)</code></td>
+    <td><code>MethodSignature(List(), List(), None)</code></td>
   </tr>
 </table>
 
@@ -1950,7 +1928,7 @@ Notes:
 * Supported properties for constructor symbols are:
   * `PRIMARY`: set for primary constructors.
 * Constructors don't have type parameters and return types, but we still
-  represent their signatures with `MethodType`. In these signatures,
+  represent their signatures with `MethodSignature`. In these signatures,
   type parameters are equal to `List()` and the return type is `None`.
 * Primary constructor parameters with `val` and `var` modifiers give rise
   to multiple different symbols as described above.
@@ -1975,73 +1953,73 @@ class C[T](x: T, val y: T, var z: T) extends B with X {
     <td><code>C</code></td>
     <td><code>_empty_.C#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassInfoType(List(&lt;T&gt;), List(&lt;B&gt;, &lt;X&gt;), List(&lt;x&gt;, &lt;y&gt;, &lt;y&gt;, &lt;z&gt;, &lt;z&gt;, &lt;z_=&gt;, &lt;&lt;init&gt;&gt;, &lt;m&gt;))</code></td>
+    <td><code>ClassSignature(List(&lt;T&gt;), List(&lt;B&gt;, &lt;X&gt;), List(&lt;x&gt;, &lt;y&gt;, &lt;y&gt;, &lt;z&gt;, &lt;z&gt;, &lt;z_=&gt;, &lt;&lt;init&gt;&gt;, &lt;m&gt;))</code></td>
   </tr>
   <tr>
     <td><code>T</code></td>
     <td><code>_empty_.C#[T]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
-    <td><code>TypeType(List(), None, None)</code></td>
+    <td><code>TypeSignature(List(), None, None)</code></td>
   </tr>
   <tr>
     <td><code>x</code></td>
     <td><code>_empty_.C#x().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>y</code></td>
     <td><code>_empty_.C#x().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
     <td><code>_empty_.C#z().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
     <td><code>_empty_.C#z_=().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(List(&lt;x$1&gt;)), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(List(&lt;x$1&gt;)), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
     <td><code>_empty_.C#z_=().(x$1)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td>Primary constructor</td>
     <td><code>_empty_.C#`&lt;init&gt;`().</code></td>
     <td><code>CONSTRUCTOR</code></td>
-    <td><code>TypeRef(None, &lt;Int&gt;, List())</code></td>
+    <td><code>MethodSignature(List(), List(), None)</code></td>
   </tr>
   <tr>
     <td><code>x</code></td>
     <td><code>_empty_.C#`&lt;init&gt;`().(x)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>y</code></td>
     <td><code>_empty_.C#`&lt;init&gt;`().(y)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
     <td><code>_empty_.C#`&lt;init&gt;`().(z)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;T&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m</code></td>
     <td><code>_empty_.C#m().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -2053,11 +2031,11 @@ Notes:
   * `IMPLICIT`: set for `implicit` classes.
   * `CASE`: set for `case` classes.
 * We leave the mapping between parent syntax written in source code and
-  `ClassInfoType.parents` deliberately unspecified. Some producers are known
+  `ClassSignature.parents` deliberately unspecified. Some producers are known
   to insert `<AnyRef>` into `parents` under certain circumstances, so we can't
   guarantee a one-to-one mapping of parent clauses in source code and
   entities in `parents`. We may improve on this in the future.
-* `ClassInfoType.declarations` must be ordered as follows:
+* `ClassSignature.declarations` must be ordered as follows:
   * For every parameter of the primary constructor, its field symbol, then
     its getter symbol, then its setter symbol.
   * Symbol of the primary constructor.
@@ -2087,7 +2065,7 @@ between object symbols and class symbols are:
 * Apart from `FINAL`, object symbols only support `CASE` and `IMPLICIT`
   properties.
 * Objects don't have type parameters, but we still represent their signatures
-  with `ClassInfoType`. In these signatures, type parameters are equal
+  with `ClassSignature`. In these signatures, type parameters are equal
   to `List()`.
 * Objects don't have constructors.
 
@@ -2384,40 +2362,19 @@ must be modelled:
 
 ```protobuf
 message Type {
-  enum Tag {
-    reserved 2, 3, 4, 5;
-    UNKNOWN_TYPE = 0;
-    TYPE_REF = 1;
-    SINGLETON_TYPE = 15;
-    INTERSECTION_TYPE = 16;
-    UNION_TYPE = 17;
-    WITH_TYPE = 18;
-    STRUCTURAL_TYPE = 6;
-    ANNOTATED_TYPE = 7;
-    EXISTENTIAL_TYPE = 8;
-    UNIVERSAL_TYPE = 9;
-    CLASS_INFO_TYPE = 10;
-    METHOD_TYPE = 11;
-    BY_NAME_TYPE = 12;
-    REPEATED_TYPE = 13;
-    TYPE_TYPE = 14;
+  oneof sealed_value {
+    TypeRef typeRef = 2;
+    SingletonType singletonType = 16;
+    IntersectionType intersectionType = 17;
+    UnionType unionType = 18;
+    WithType withType = 19;
+    StructuralType structuralType = 7;
+    AnnotatedType annotatedType = 8;
+    ExistentialType existentialType = 9;
+    UniversalType universalType = 10;
+    ByNameType byNameType = 13;
+    RepeatedType repeatedType = 14;
   }
-  reserved 3, 4, 5, 6;
-  Tag tag = 1;
-  TypeRef typeRef = 2;
-  SingletonType singletonType = 16;
-  IntersectionType intersectionType = 17;
-  UnionType unionType = 18;
-  WithType withType = 19;
-  StructuralType structuralType = 7;
-  AnnotatedType annotatedType = 8;
-  ExistentialType existentialType = 9;
-  UniversalType universalType = 10;
-  ClassInfoType classInfoType = 11;
-  MethodType methodType = 12;
-  ByNameType byNameType = 13;
-  RepeatedType repeatedType = 14;
-  TypeType typeType = 15;
 }
 ```
 
@@ -2465,8 +2422,8 @@ In the examples below:
     <td valign="top">Type variable [<a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.4">78</a>]</td>
     <td>
       <ul>
-        <li>Signature of <code>T</code> ~ <code>TypeType(List(), None, None)</code>.</li>
-        <li>Signature of <code>T extends A</code> ~ <code>TypeType(List(), None, Some(&lt;A&gt;))</code>.</li>
+        <li>Signature of <code>T</code> ~ <code>TypeSignature(List(), None, None)</code>.</li>
+        <li>Signature of <code>T extends A</code> ~ <code>TypeSignature(List(), None, Some(&lt;A&gt;))</code>.</li>
       </ul>
     </td>
   </tr>
@@ -2475,8 +2432,8 @@ In the examples below:
     <td>
       <ul>
         <li><code>C&lt;T1, ..., Tn&gt;</code> ~ <code>TypeRef(None, &lt;C&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
-        <li><code>C&lt;?&gt;</code> ~ <code>ExistentialType(List(&lt;T&gt;), TypeRef(None, &lt;C&gt;, List(&lt;T&gt;))</code> where signature of <code>&lt;T&gt;</code> is <code>TypeType(List(), None, None)</code>.</li>
-        <li><code>C&lt;? extends A&gt;</code> ~ <code>ExistentialType(List(&lt;T&gt;), TypeRef(None, &lt;C&gt;, List(&lt;T&gt;))</code> where signature of <code>&lt;T&gt;</code> is <code>TypeType(List(), None, &lt;A&gt;)</code>.</li>
+        <li><code>C&lt;?&gt;</code> ~ <code>ExistentialType(List(&lt;T&gt;), TypeRef(None, &lt;C&gt;, List(&lt;T&gt;))</code> where signature of <code>&lt;T&gt;</code> is <code>TypeSignature(List(), None, None)</code>.</li>
+        <li><code>C&lt;? extends A&gt;</code> ~ <code>ExistentialType(List(&lt;T&gt;), TypeRef(None, &lt;C&gt;, List(&lt;T&gt;))</code> where signature of <code>&lt;T&gt;</code> is <code>TypeSignature(List(), None, &lt;A&gt;)</code>.</li>
       </ul>
     </td>
   </tr>
@@ -2512,18 +2469,25 @@ Notes:
 * Since Java doesn't support path-dependent types, prefixes in type refs are
 always empty.
 
+<a name="java-signature"></a>
+#### Signature
+
+In Java, [Signature](#signature) represents definition signatures.
+See [below](#java-symbolinformation) to learn which Java definitions
+have which signatures.
+
 <a name="java-symbolinformation"></a>
 #### SymbolInformation
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8, 9, 10, 12, 15;
+  reserved 2, 6, 7, 8, 9, 10, 11, 12, 15;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
   string name = 5;
-  Type tpe = 11;
+  Signature signature = 17;
   repeated Annotation annotations = 13;
   Accessibility accessibility = 14;
 }
@@ -2554,7 +2518,7 @@ message SymbolInformation {
     <td>See <a href="#java-symbol">Symbol</a>.</td>
   </tr>
   <tr>
-    <td><code>tpe</code></td>
+    <td><code>signature</code></td>
     <td>Explained below on per-definition basis.</td>
   </tr>
   <tr>
@@ -2593,7 +2557,7 @@ class C extends S1 implements I {
     <td><code>C</code></td>
     <td><code>a.C#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassInfoType(List(), List(&lt;S1&gt;, &lt;I&gt;), List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3(Overload)&gt;, &lt;m3(Overload+1)&gt;, &lt;m3(Overload+2)&gt;, &lt;D1&gt;, &lt;D2&gt;))</code></td>
+    <td><code>ClassSignature(List(), List(&lt;S1&gt;, &lt;I&gt;), List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3(Overload)&gt;, &lt;m3(Overload+1)&gt;, &lt;m3(Overload+2)&gt;, &lt;D1&gt;, &lt;D2&gt;))</code></td>
   </tr>
   <tr>
     <td><code>m1</code></td>
@@ -2605,67 +2569,67 @@ class C extends S1 implements I {
     <td><code>m2</code></td>
     <td><code>a.C#m2().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;T2&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T2&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
     <td><code>a.C#m3().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(&lt;e1&gt;), TypeRef(None, &lt;T3&gt;))</code></td>
+    <td><code>MethodSignature(List(), List(&lt;e1&gt;), TypeRef(None, &lt;T3&gt;))</code></td>
   </tr>
   <tr>
     <td><code>e1</code></td>
     <td><code>a.C#m3().(e1)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;one.Overload&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;one.Overload&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
     <td><code>a.C#m3(+1).</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(&lte3&gt;), TypeRef(None, &lt;T5&gt;))</code></td>
+    <td><code>MethodSignature(List(), List(&lte3&gt;), TypeRef(None, &lt;T5&gt;))</code></td>
   </tr>
   <tr>
     <td><code>e3</code></td>
     <td><code>a.C#m3(+1).(e3)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;three.Overload&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;three.Overload&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
     <td><code>a.C#m3(+2).</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(&lt;e2&gt;) TypeRef(None, &lt;T4&gt;))</code></td>
+    <td><code>MethodSignature(List(), List(&lt;e2&gt;) TypeRef(None, &lt;T4&gt;))</code></td>
   </tr>
   <tr>
     <td><code>e2</code></td>
     <td><code>a.C#m3(+2).(e2)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;two.Overload&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;two.Overload&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>T6</code></td>
     <td><code>a.C#D1#[T6]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
-    <td><code>TypeType(List(), None, Some(IntersectionType(List(&lt;S2&gt;, &lt;S3&gt;))))</code></td>
+    <td><code>TypeSignature(List(), None, Some(IntersectionType(List(&lt;S2&gt;, &lt;S3&gt;))))</code></td>
   </tr>
   <tr>
     <td><code>T7</code></td>
     <td><code>a.C#D1#[T7]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
-    <td><code>TypeType(List(), None, None)</code></td>
+    <td><code>TypeSignature(List(), None, None)</code></td>
   </tr>
   <tr>
     <td><code>D1</code></td>
     <td><code>a.C#D1#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassInfoType(List(&lt;T6&gt;, &lt;T7&gt;), List(&lt;java.lang.Object#&gt;), List())</code></td>
+    <td><code>ClassSignature(List(&lt;T6&gt;, &lt;T7&gt;), List(&lt;java.lang.Object#&gt;), List())</code></td>
   </tr>
   <tr>
     <td><code>D2</code></td>
     <td><code>a.C#D2#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassInfoType(List(), List(), List())</code></td>
+    <td><code>ClassSignature(List(), List(), List())</code></td>
   </tr>
 </table>
 
@@ -2677,7 +2641,7 @@ Notes:
     original source.
   * static members secondly, following the same order as they appear in the
     original source
-* A Java class maps to a single symbol with type `ClassInfoType` including all
+* A Java class maps to a single symbol with type `ClassSignature` including all
   static and non-static members. This departs from the Scala compiler internal
   representation of Java classes where non-static members are grouped under a
   `CLASS` symbol and static members are grouped under an `OBJECT` symbol.
@@ -2711,31 +2675,31 @@ public enum Coin {
     <td><code>Coin</code></td>
     <td><code>a.Coin#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassInfoType(List(), List(&lt;Enum&lt;Coin&gt;&gt;), List(&lt;PENNY&gt;, &lt;NICKEL&gt;))</code></td>
+    <td><code>ClassSignature(List(), List(&lt;Enum&lt;Coin&gt;&gt;), List(&lt;PENNY&gt;, &lt;NICKEL&gt;))</code></td>
   </tr>
   <tr>
     <td><code>PENNY</code></td>
     <td><code>a.Coin#PENNY.</code></td>
     <td><code>FIELD</code></td>
-    <td><code>TypeRef(None, &lt;Coin&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;Coin&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>NICKEL</code></td>
     <td><code>a.Coin#NICKEL.</code></td>
     <td><code>FIELD</code></td>
-    <td><code>TypeRef(None, &lt;Coin&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;Coin&gt;, List()))</code></td>
   </tr>
   <tr>
     <td></td>
     <td><code>a.Coin#values().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Array&gt;, List(&lt;Coin&gt;)))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Array&gt;, List(&lt;Coin&gt;)))</code></td>
   </tr>
   <tr>
     <td></td>
     <td><code>a.Coin#valueOf().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;Coin&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Coin&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -2779,13 +2743,13 @@ public interface List<T> extends I {
     <td><code>List</code></td>
     <td><code>a.List#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassInfoType(List(&lt;T&gt;), List(&lt;I&gt;), List(&lt;head&gt;))</code></td>
+    <td><code>ClassSignature(List(&lt;T&gt;), List(&lt;I&gt;), List(&lt;head&gt;))</code></td>
   </tr>
   <tr>
     <td><code>head</code></td>
     <td><code>a.List#head().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -2823,43 +2787,43 @@ class A {
     <td><code>A</code></td>
     <td><code>a.A#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassInfoType(List(), List(), List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3&gt;))</code></td>
+    <td><code>ClassSignature(List(), List(), List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3&gt;))</code></td>
   </tr>
   <tr>
     <td><code>m1</code></td>
     <td><code>a.A#m1().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(), TypeRef(None, &lt;A&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;A&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m2</code></td>
     <td><code>a.A#m2().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(), List(&lt;t1&gt;), TypeRef(None, &lt;A&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(&lt;t1&gt;), TypeRef(None, &lt;A&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>t1</code></td>
     <td><code>a.A#m2().(t1)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;T1&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;T1&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
     <td><code>a.A#m3().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodType(List(&lt;T2&gt;), List(&lt;t2&gt;), TypeRef(None, &lt;T2&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(&lt;T2&gt;), List(&lt;t2&gt;), TypeRef(None, &lt;T2&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
     <td><code>a.A#m3().[T2]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
-    <td><code>TypeType(List(), None, None)</code></td>
+    <td><code>TypeSignature(List(), None, None)</code></td>
   </tr>
   <tr>
     <td><code>t2</code></td>
     <td><code>a.A#m3().(t2)</code></td>
     <td><code>PARAMETER</code></td>
-    <td><code>TypeRef(None, &lt;T2&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;T2&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -2900,13 +2864,13 @@ class A {
     <td><code>A</code></td>
     <td><code>a.A#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassInfoType(List(), List(), List(&lt;field&gt;))</code></td>
+    <td><code>ClassSignature(List(), List(), List(&lt;field&gt;))</code></td>
   </tr>
   <tr>
     <td><code>field</code></td>
     <td><code>a.A#field.</code></td>
     <td><code>FIELD</code></td>
-    <td><code>TypeRef(None, &lt;A&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;A&gt;, List()))</code></td>
   </tr>
 </table>
 
@@ -2942,31 +2906,31 @@ class Outer {
     <td><code>Outer</code></td>
     <td><code>a.Outer#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassInfoType(List(), List(), List(&lt;a.Outer#&lt;init&gt;, &lt;Inner&gt;))</code></td>
+    <td><code>ClassSignature(List(), List(), List(&lt;a.Outer#&lt;init&gt;, &lt;Inner&gt;))</code></td>
   </tr>
   <tr>
     <td>Constructor of <code>Outer</code></td>
     <td><code>a.Outer#&lt;init&gt;().</code></td>
     <td><code>CONSTRUCTOR</code></td>
-    <td><code>MethodType(List(), List(), None)</code></td>
+    <td><code>MethodSignature(List(), List(), None)</code></td>
   </tr>
   <tr>
     <td><code>Inner</code></td>
     <td><code>a.Outer#Inner#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassInfoType(List(), List(), List(&lt;a.Outer#Inner#&lt;init&gt;))</code></td>
+    <td><code>ClassSignature(List(), List(), List(&lt;a.Outer#Inner#&lt;init&gt;))</code></td>
   </tr>
   <tr>
     <td>Constructor of <code>Inner</code></td>
     <td><code>a.Outer#Inner#&lt;init&gt;().</code></td>
     <td><code>CONSTRUCTOR</code></td>
-    <td><code>MethodType(List(), List(), None)</code></td>
+    <td><code>MethodSignature(List(), List(), None)</code></td>
   </tr>
 </table>
 
 Notes:
 * Constructors don't have type parameters and return types, but we still
-  represent their signatures with `MethodType`. In these signatures,
+  represent their signatures with `MethodSignature`. In these signatures,
   type parameters are equal to `List()` and the return type is `None`.
 * Constructor declarations support no properties.
 * Constructor declarations support

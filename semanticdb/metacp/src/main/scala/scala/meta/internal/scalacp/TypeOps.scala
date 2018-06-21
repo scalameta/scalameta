@@ -8,7 +8,7 @@ import scala.tools.scalap.scalax.rules.scalasig._
 
 trait TypeOps { self: Scalacp =>
   implicit class XtensionTypeSType(tpe: Type) {
-    def toSemantic(linkMode: LinkMode): s.Type = {
+    def toSemanticTpe: s.Type = {
       def loop(tpe: Type): s.Type = {
         tpe match {
           case ByNameType(tpe) =>
@@ -99,33 +99,10 @@ trait TypeOps { self: Scalacp =>
             val stpe = loop(tpe)
             val sdecls = Some(tparams.sscope(HardlinkChildren))
             s.ExistentialType(stpe, sdecls)
-          case ClassInfoType(sym, parents) =>
-            val stparams = Some(s.Scope())
-            val sparents = parents.map(loop)
-            val sdecls = Some(sym.semanticdbDecls.sscope(linkMode))
-            s.ClassInfoType(stparams, sparents, sdecls)
-          case _: NullaryMethodType | _: MethodType =>
-            val stparams = Some(s.Scope())
-            val sparamss = tpe.paramss.map(_.sscope(linkMode))
-            val sret = loop(tpe.ret)
-            s.MethodType(stparams, sparamss, sret)
-          case TypeBoundsType(lo, hi) =>
-            val stparams = Some(s.Scope())
-            val slo = loop(lo)
-            val shi = loop(hi)
-            s.TypeType(stparams, slo, shi)
           case PolyType(tpe, tparams) =>
             loop(tpe) match {
-              case s.NoType => s.NoType
-              case t: s.ClassInfoType =>
-                val stparams = tparams.sscope(linkMode)
-                t.copy(typeParameters = Some(stparams))
-              case t: s.MethodType =>
-                val stparams = tparams.sscope(linkMode)
-                t.copy(typeParameters = Some(stparams))
-              case t: s.TypeType =>
-                val stparams = tparams.sscope(linkMode)
-                t.copy(typeParameters = Some(stparams))
+              case s.NoType =>
+                s.NoType
               case stpe =>
                 val stparams = tparams.sscope(HardlinkChildren)
                 s.UniversalType(Some(stparams), stpe)
@@ -136,6 +113,50 @@ trait TypeOps { self: Scalacp =>
             s.NoType
           case other =>
             sys.error(s"unsupported type $other")
+        }
+      }
+      loop(tpe)
+    }
+    def toSemanticSig(linkMode: LinkMode): s.Signature = {
+      def loop(tpe: Type): s.Signature = {
+        tpe match {
+          case ClassInfoType(sym, parents) =>
+            val stparams = Some(s.Scope())
+            val sparents = parents.map(_.toSemanticTpe)
+            val sdecls = Some(sym.semanticdbDecls.sscope(linkMode))
+            s.ClassSignature(stparams, sparents, sdecls)
+          case _: NullaryMethodType | _: MethodType =>
+            val stparams = Some(s.Scope())
+            val sparamss = tpe.paramss.map(_.sscope(linkMode))
+            val sret = tpe.ret.toSemanticTpe
+            s.MethodSignature(stparams, sparamss, sret)
+          case TypeBoundsType(lo, hi) =>
+            val stparams = Some(s.Scope())
+            val slo = lo.toSemanticTpe
+            val shi = hi.toSemanticTpe
+            s.TypeSignature(stparams, slo, shi)
+          case PolyType(tpe, tparams) =>
+            loop(tpe) match {
+              case s.NoSignature =>
+                s.NoSignature
+              case t: s.ClassSignature =>
+                val stparams = tparams.sscope(linkMode)
+                t.copy(typeParameters = Some(stparams))
+              case t: s.MethodSignature =>
+                val stparams = tparams.sscope(linkMode)
+                t.copy(typeParameters = Some(stparams))
+              case t: s.TypeSignature =>
+                val stparams = tparams.sscope(linkMode)
+                t.copy(typeParameters = Some(stparams))
+              case t: s.ValueSignature =>
+                val stparams = tparams.sscope(HardlinkChildren)
+                val stpe = t.tpe
+                s.ValueSignature(s.UniversalType(Some(stparams), stpe))
+            }
+          case NoType =>
+            s.NoSignature
+          case other =>
+            s.ValueSignature(other.toSemanticTpe)
         }
       }
       loop(tpe)

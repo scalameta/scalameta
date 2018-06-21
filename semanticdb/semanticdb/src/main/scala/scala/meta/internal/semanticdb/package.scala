@@ -3,6 +3,7 @@ package scala.meta.internal
 package object semanticdb {
 
   val NoType = Type.Empty
+  val NoSignature = Signature.Empty
 
   implicit class XtensionSemanticdbSymbolInformation(info: SymbolInformation) {
     def has(
@@ -40,5 +41,9 @@ package object semanticdb {
 
   implicit class XtensionSemanticdbType(tpe: Type) {
     def nonEmpty: Boolean = tpe.isDefined
+  }
+
+  implicit class XtensionSemanticdbSignature(sig: Signature) {
+    def nonEmpty: Boolean = sig.isDefined
   }
 }

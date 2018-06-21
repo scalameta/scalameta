@@ -24,11 +24,8 @@ object Type {
       case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.AnnotatedType => v.value
       case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.ExistentialType => v.value
       case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.UniversalType => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.ClassInfoType => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.MethodType => v.value
       case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.ByNameType => v.value
       case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.RepeatedType => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.TypeType => v.value
       case scala.meta.internal.semanticdb.TypeMessage.SealedValue.Empty => Empty
     }
     override def toBase(__custom: Type): TypeMessage = TypeMessage(__custom match {
@@ -41,11 +38,8 @@ object Type {
       case v: scala.meta.internal.semanticdb.AnnotatedType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.AnnotatedType(v)
       case v: scala.meta.internal.semanticdb.ExistentialType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.ExistentialType(v)
       case v: scala.meta.internal.semanticdb.UniversalType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.UniversalType(v)
-      case v: scala.meta.internal.semanticdb.ClassInfoType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.ClassInfoType(v)
-      case v: scala.meta.internal.semanticdb.MethodType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.MethodType(v)
       case v: scala.meta.internal.semanticdb.ByNameType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.ByNameType(v)
       case v: scala.meta.internal.semanticdb.RepeatedType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.RepeatedType(v)
-      case v: scala.meta.internal.semanticdb.TypeType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.TypeType(v)
       case Empty => scala.meta.internal.semanticdb.TypeMessage.SealedValue.Empty
     })
   }
@@ -94,24 +88,12 @@ final case class TypeMessage(
         val __value = sealedValue.universalType.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
-      if (sealedValue.classInfoType.isDefined) {
-        val __value = sealedValue.classInfoType.get
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-      };
-      if (sealedValue.methodType.isDefined) {
-        val __value = sealedValue.methodType.get
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-      };
       if (sealedValue.byNameType.isDefined) {
         val __value = sealedValue.byNameType.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
       if (sealedValue.repeatedType.isDefined) {
         val __value = sealedValue.repeatedType.get
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-      };
-      if (sealedValue.typeType.isDefined) {
-        val __value = sealedValue.typeType.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
       __size
@@ -155,18 +137,6 @@ final case class TypeMessage(
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-      sealedValue.classInfoType.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(11, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
-      };
-      sealedValue.methodType.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(12, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
-      };
       sealedValue.byNameType.foreach { __v =>
         val __m = __v
         _output__.writeTag(13, 2)
@@ -176,12 +146,6 @@ final case class TypeMessage(
       sealedValue.repeatedType.foreach { __v =>
         val __m = __v
         _output__.writeTag(14, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
-      };
-      sealedValue.typeType.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(15, 2)
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
@@ -235,16 +199,10 @@ final case class TypeMessage(
             __sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.ExistentialType(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.existentialType.getOrElse(scala.meta.internal.semanticdb.ExistentialType.defaultInstance)))
           case 82 =>
             __sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.UniversalType(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.universalType.getOrElse(scala.meta.internal.semanticdb.UniversalType.defaultInstance)))
-          case 90 =>
-            __sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.ClassInfoType(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.classInfoType.getOrElse(scala.meta.internal.semanticdb.ClassInfoType.defaultInstance)))
-          case 98 =>
-            __sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.MethodType(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.methodType.getOrElse(scala.meta.internal.semanticdb.MethodType.defaultInstance)))
           case 106 =>
             __sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.ByNameType(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.byNameType.getOrElse(scala.meta.internal.semanticdb.ByNameType.defaultInstance)))
           case 114 =>
             __sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.RepeatedType(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.repeatedType.getOrElse(scala.meta.internal.semanticdb.RepeatedType.defaultInstance)))
-          case 122 =>
-            __sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.TypeType(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.typeType.getOrElse(scala.meta.internal.semanticdb.TypeType.defaultInstance)))
           case tag => _input__.skipField(tag)
         }
       }
@@ -270,16 +228,10 @@ final case class TypeMessage(
     def withExistentialType(__v: scala.meta.internal.semanticdb.ExistentialType): TypeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.ExistentialType(__v))
     def getUniversalType: scala.meta.internal.semanticdb.UniversalType = sealedValue.universalType.getOrElse(scala.meta.internal.semanticdb.UniversalType.defaultInstance)
     def withUniversalType(__v: scala.meta.internal.semanticdb.UniversalType): TypeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.UniversalType(__v))
-    def getClassInfoType: scala.meta.internal.semanticdb.ClassInfoType = sealedValue.classInfoType.getOrElse(scala.meta.internal.semanticdb.ClassInfoType.defaultInstance)
-    def withClassInfoType(__v: scala.meta.internal.semanticdb.ClassInfoType): TypeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.ClassInfoType(__v))
-    def getMethodType: scala.meta.internal.semanticdb.MethodType = sealedValue.methodType.getOrElse(scala.meta.internal.semanticdb.MethodType.defaultInstance)
-    def withMethodType(__v: scala.meta.internal.semanticdb.MethodType): TypeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.MethodType(__v))
     def getByNameType: scala.meta.internal.semanticdb.ByNameType = sealedValue.byNameType.getOrElse(scala.meta.internal.semanticdb.ByNameType.defaultInstance)
     def withByNameType(__v: scala.meta.internal.semanticdb.ByNameType): TypeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.ByNameType(__v))
     def getRepeatedType: scala.meta.internal.semanticdb.RepeatedType = sealedValue.repeatedType.getOrElse(scala.meta.internal.semanticdb.RepeatedType.defaultInstance)
     def withRepeatedType(__v: scala.meta.internal.semanticdb.RepeatedType): TypeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.RepeatedType(__v))
-    def getTypeType: scala.meta.internal.semanticdb.TypeType = sealedValue.typeType.getOrElse(scala.meta.internal.semanticdb.TypeType.defaultInstance)
-    def withTypeType(__v: scala.meta.internal.semanticdb.TypeType): TypeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.TypeType(__v))
     def clearSealedValue: TypeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.Empty)
     def withSealedValue(__v: scala.meta.internal.semanticdb.TypeMessage.SealedValue): TypeMessage = copy(sealedValue = __v)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
@@ -293,11 +245,8 @@ final case class TypeMessage(
         case 8 => sealedValue.annotatedType.orNull
         case 9 => sealedValue.existentialType.orNull
         case 10 => sealedValue.universalType.orNull
-        case 11 => sealedValue.classInfoType.orNull
-        case 12 => sealedValue.methodType.orNull
         case 13 => sealedValue.byNameType.orNull
         case 14 => sealedValue.repeatedType.orNull
-        case 15 => sealedValue.typeType.orNull
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
@@ -312,11 +261,8 @@ final case class TypeMessage(
         case 8 => sealedValue.annotatedType.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
         case 9 => sealedValue.existentialType.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
         case 10 => sealedValue.universalType.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 11 => sealedValue.classInfoType.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 12 => sealedValue.methodType.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
         case 13 => sealedValue.byNameType.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
         case 14 => sealedValue.repeatedType.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 15 => sealedValue.typeType.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
@@ -339,11 +285,8 @@ object TypeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
     .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(__fields.get(6)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.AnnotatedType]].map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.AnnotatedType))
     .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(__fields.get(7)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.ExistentialType]].map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.ExistentialType))
     .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(__fields.get(8)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.UniversalType]].map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.UniversalType))
-    .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(__fields.get(9)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.ClassInfoType]].map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.ClassInfoType))
-    .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(__fields.get(10)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.MethodType]].map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.MethodType))
-    .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(__fields.get(11)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.ByNameType]].map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.ByNameType))
-    .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(__fields.get(12)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.RepeatedType]].map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.RepeatedType))
-    .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(__fields.get(13)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.TypeType]].map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.TypeType))
+    .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(__fields.get(9)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.ByNameType]].map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.ByNameType))
+    .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(__fields.get(10)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.RepeatedType]].map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.RepeatedType))
     .getOrElse(scala.meta.internal.semanticdb.TypeMessage.SealedValue.Empty)
     )
   }
@@ -360,11 +303,8 @@ object TypeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
     .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(8).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.AnnotatedType]]).map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.AnnotatedType))
     .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(9).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.ExistentialType]]).map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.ExistentialType))
     .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(10).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.UniversalType]]).map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.UniversalType))
-    .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(11).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.ClassInfoType]]).map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.ClassInfoType))
-    .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(12).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.MethodType]]).map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.MethodType))
     .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(13).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.ByNameType]]).map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.ByNameType))
     .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(14).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.RepeatedType]]).map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.RepeatedType))
-    .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(15).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.TypeType]]).map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.TypeType))
     .getOrElse(scala.meta.internal.semanticdb.TypeMessage.SealedValue.Empty)
       )
     case _ => throw new RuntimeException("Expected PMessage")
@@ -383,11 +323,8 @@ object TypeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
       case 8 => __out = scala.meta.internal.semanticdb.AnnotatedType
       case 9 => __out = scala.meta.internal.semanticdb.ExistentialType
       case 10 => __out = scala.meta.internal.semanticdb.UniversalType
-      case 11 => __out = scala.meta.internal.semanticdb.ClassInfoType
-      case 12 => __out = scala.meta.internal.semanticdb.MethodType
       case 13 => __out = scala.meta.internal.semanticdb.ByNameType
       case 14 => __out = scala.meta.internal.semanticdb.RepeatedType
-      case 15 => __out = scala.meta.internal.semanticdb.TypeType
     }
     __out
   }
@@ -407,11 +344,8 @@ object TypeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
     def isAnnotatedType: _root_.scala.Boolean = false
     def isExistentialType: _root_.scala.Boolean = false
     def isUniversalType: _root_.scala.Boolean = false
-    def isClassInfoType: _root_.scala.Boolean = false
-    def isMethodType: _root_.scala.Boolean = false
     def isByNameType: _root_.scala.Boolean = false
     def isRepeatedType: _root_.scala.Boolean = false
-    def isTypeType: _root_.scala.Boolean = false
     def typeRef: _root_.scala.Option[scala.meta.internal.semanticdb.TypeRef] = None
     def singletonType: _root_.scala.Option[scala.meta.internal.semanticdb.SingletonType] = None
     def intersectionType: _root_.scala.Option[scala.meta.internal.semanticdb.IntersectionType] = None
@@ -421,11 +355,8 @@ object TypeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
     def annotatedType: _root_.scala.Option[scala.meta.internal.semanticdb.AnnotatedType] = None
     def existentialType: _root_.scala.Option[scala.meta.internal.semanticdb.ExistentialType] = None
     def universalType: _root_.scala.Option[scala.meta.internal.semanticdb.UniversalType] = None
-    def classInfoType: _root_.scala.Option[scala.meta.internal.semanticdb.ClassInfoType] = None
-    def methodType: _root_.scala.Option[scala.meta.internal.semanticdb.MethodType] = None
     def byNameType: _root_.scala.Option[scala.meta.internal.semanticdb.ByNameType] = None
     def repeatedType: _root_.scala.Option[scala.meta.internal.semanticdb.RepeatedType] = None
-    def typeType: _root_.scala.Option[scala.meta.internal.semanticdb.TypeType] = None
   }
   object SealedValue extends {
     @SerialVersionUID(0L)
@@ -501,20 +432,6 @@ object TypeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
       override def number: _root_.scala.Int = 10
     }
     @SerialVersionUID(0L)
-    final case class ClassInfoType(value: scala.meta.internal.semanticdb.ClassInfoType) extends scala.meta.internal.semanticdb.TypeMessage.SealedValue {
-      type ValueType = scala.meta.internal.semanticdb.ClassInfoType
-      override def isClassInfoType: _root_.scala.Boolean = true
-      override def classInfoType: _root_.scala.Option[scala.meta.internal.semanticdb.ClassInfoType] = Some(value)
-      override def number: _root_.scala.Int = 11
-    }
-    @SerialVersionUID(0L)
-    final case class MethodType(value: scala.meta.internal.semanticdb.MethodType) extends scala.meta.internal.semanticdb.TypeMessage.SealedValue {
-      type ValueType = scala.meta.internal.semanticdb.MethodType
-      override def isMethodType: _root_.scala.Boolean = true
-      override def methodType: _root_.scala.Option[scala.meta.internal.semanticdb.MethodType] = Some(value)
-      override def number: _root_.scala.Int = 12
-    }
-    @SerialVersionUID(0L)
     final case class ByNameType(value: scala.meta.internal.semanticdb.ByNameType) extends scala.meta.internal.semanticdb.TypeMessage.SealedValue {
       type ValueType = scala.meta.internal.semanticdb.ByNameType
       override def isByNameType: _root_.scala.Boolean = true
@@ -528,13 +445,6 @@ object TypeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
       override def repeatedType: _root_.scala.Option[scala.meta.internal.semanticdb.RepeatedType] = Some(value)
       override def number: _root_.scala.Int = 14
     }
-    @SerialVersionUID(0L)
-    final case class TypeType(value: scala.meta.internal.semanticdb.TypeType) extends scala.meta.internal.semanticdb.TypeMessage.SealedValue {
-      type ValueType = scala.meta.internal.semanticdb.TypeType
-      override def isTypeType: _root_.scala.Boolean = true
-      override def typeType: _root_.scala.Option[scala.meta.internal.semanticdb.TypeType] = Some(value)
-      override def number: _root_.scala.Int = 15
-    }
   }
   implicit class TypeMessageLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.TypeMessage]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.TypeMessage](_l) {
     def typeRef: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.TypeRef] = field(_.getTypeRef)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.TypeRef(f_)))
@@ -546,11 +456,8 @@ object TypeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
     def annotatedType: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.AnnotatedType] = field(_.getAnnotatedType)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.AnnotatedType(f_)))
     def existentialType: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.ExistentialType] = field(_.getExistentialType)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.ExistentialType(f_)))
     def universalType: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.UniversalType] = field(_.getUniversalType)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.UniversalType(f_)))
-    def classInfoType: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.ClassInfoType] = field(_.getClassInfoType)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.ClassInfoType(f_)))
-    def methodType: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.MethodType] = field(_.getMethodType)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.MethodType(f_)))
     def byNameType: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.ByNameType] = field(_.getByNameType)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.ByNameType(f_)))
     def repeatedType: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.RepeatedType] = field(_.getRepeatedType)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.RepeatedType(f_)))
-    def typeType: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.TypeType] = field(_.getTypeType)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TypeMessage.SealedValue.TypeType(f_)))
     def sealedValue: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.TypeMessage.SealedValue] = field(_.sealedValue)((c_, f_) => c_.copy(sealedValue = f_))
   }
   final val TYPEREF_FIELD_NUMBER = 2
@@ -562,11 +469,8 @@ object TypeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
   final val ANNOTATEDTYPE_FIELD_NUMBER = 8
   final val EXISTENTIALTYPE_FIELD_NUMBER = 9
   final val UNIVERSALTYPE_FIELD_NUMBER = 10
-  final val CLASSINFOTYPE_FIELD_NUMBER = 11
-  final val METHODTYPE_FIELD_NUMBER = 12
   final val BYNAMETYPE_FIELD_NUMBER = 13
   final val REPEATEDTYPE_FIELD_NUMBER = 14
-  final val TYPETYPE_FIELD_NUMBER = 15
 }
 
 @SerialVersionUID(0L)
@@ -1970,321 +1874,6 @@ object UniversalType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
 }
 
 @SerialVersionUID(0L)
-final case class ClassInfoType(
-    typeParameters: _root_.scala.Option[scala.meta.internal.semanticdb.Scope] = None,
-    parents: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Type] = _root_.scala.collection.Seq.empty,
-    declarations: _root_.scala.Option[scala.meta.internal.semanticdb.Scope] = None
-    ) extends scala.meta.internal.semanticdb.Type with scalapb.GeneratedMessage with scalapb.Message[ClassInfoType] with scalapb.lenses.Updatable[ClassInfoType] {
-    @transient
-    private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
-    private[this] def __computeSerializedValue(): _root_.scala.Int = {
-      var __size = 0
-      if (typeParameters.isDefined) {
-        val __value = typeParameters.get
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-      };
-      parents.foreach { __item =>
-        val __value = scala.meta.internal.semanticdb.ClassInfoType._typemapper_parents.toBase(__item)
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-      }
-      if (declarations.isDefined) {
-        val __value = declarations.get
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-      };
-      __size
-    }
-    final override def serializedSize: _root_.scala.Int = {
-      var read = __serializedSizeCachedValue
-      if (read == 0) {
-        read = __computeSerializedValue()
-        __serializedSizeCachedValue = read
-      }
-      read
-    }
-    def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
-      parents.foreach { __v =>
-        val __m = scala.meta.internal.semanticdb.ClassInfoType._typemapper_parents.toBase(__v)
-        _output__.writeTag(2, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
-      };
-      typeParameters.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(4, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
-      };
-      declarations.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(5, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
-      };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.ClassInfoType = {
-      var __typeParameters = this.typeParameters
-      val __parents = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb.Type] ++= this.parents)
-      var __declarations = this.declarations
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 34 =>
-            __typeParameters = Option(_root_.scalapb.LiteParser.readMessage(_input__, __typeParameters.getOrElse(scala.meta.internal.semanticdb.Scope.defaultInstance)))
-          case 18 =>
-            __parents += scala.meta.internal.semanticdb.ClassInfoType._typemapper_parents.toCustom(_root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.TypeMessage.defaultInstance))
-          case 42 =>
-            __declarations = Option(_root_.scalapb.LiteParser.readMessage(_input__, __declarations.getOrElse(scala.meta.internal.semanticdb.Scope.defaultInstance)))
-          case tag => _input__.skipField(tag)
-        }
-      }
-      scala.meta.internal.semanticdb.ClassInfoType(
-          typeParameters = __typeParameters,
-          parents = __parents.result(),
-          declarations = __declarations
-      )
-    }
-    def getTypeParameters: scala.meta.internal.semanticdb.Scope = typeParameters.getOrElse(scala.meta.internal.semanticdb.Scope.defaultInstance)
-    def clearTypeParameters: ClassInfoType = copy(typeParameters = None)
-    def withTypeParameters(__v: scala.meta.internal.semanticdb.Scope): ClassInfoType = copy(typeParameters = Option(__v))
-    def clearParents = copy(parents = _root_.scala.collection.Seq.empty)
-    def addParents(__vs: scala.meta.internal.semanticdb.Type*): ClassInfoType = addAllParents(__vs)
-    def addAllParents(__vs: TraversableOnce[scala.meta.internal.semanticdb.Type]): ClassInfoType = copy(parents = parents ++ __vs)
-    def withParents(__v: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Type]): ClassInfoType = copy(parents = __v)
-    def getDeclarations: scala.meta.internal.semanticdb.Scope = declarations.getOrElse(scala.meta.internal.semanticdb.Scope.defaultInstance)
-    def clearDeclarations: ClassInfoType = copy(declarations = None)
-    def withDeclarations(__v: scala.meta.internal.semanticdb.Scope): ClassInfoType = copy(declarations = Option(__v))
-    def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
-      (__fieldNumber: @_root_.scala.unchecked) match {
-        case 4 => typeParameters.orNull
-        case 2 => parents.map(scala.meta.internal.semanticdb.ClassInfoType._typemapper_parents.toBase)(_root_.scala.collection.breakOut)
-        case 5 => declarations.orNull
-      }
-    }
-    def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
-      (__field.number: @_root_.scala.unchecked) match {
-        case 4 => typeParameters.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 2 => _root_.scalapb.descriptors.PRepeated(parents.map(scala.meta.internal.semanticdb.ClassInfoType._typemapper_parents.toBase(_).toPMessage)(_root_.scala.collection.breakOut))
-        case 5 => declarations.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-      }
-    }
-    def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
-    def companion = scala.meta.internal.semanticdb.ClassInfoType
-}
-
-object ClassInfoType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ClassInfoType] {
-  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ClassInfoType] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.ClassInfoType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
-    scala.meta.internal.semanticdb.ClassInfoType(
-      __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]],
-      __fieldsMap.getOrElse(__fields.get(1), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.TypeMessage]].map(scala.meta.internal.semanticdb.ClassInfoType._typemapper_parents.toCustom)(_root_.scala.collection.breakOut),
-      __fieldsMap.get(__fields.get(2)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]]
-    )
-  }
-  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.ClassInfoType] = _root_.scalapb.descriptors.Reads{
-    case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
-      scala.meta.internal.semanticdb.ClassInfoType(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]]),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.TypeMessage]]).getOrElse(_root_.scala.collection.Seq.empty).map(scala.meta.internal.semanticdb.ClassInfoType._typemapper_parents.toCustom)(_root_.scala.collection.breakOut),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]])
-      )
-    case _ => throw new RuntimeException("Expected PMessage")
-  }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(15)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(15)
-  def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
-    var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
-    (__number: @_root_.scala.unchecked) match {
-      case 4 => __out = scala.meta.internal.semanticdb.Scope
-      case 2 => __out = scala.meta.internal.semanticdb.TypeMessage
-      case 5 => __out = scala.meta.internal.semanticdb.Scope
-    }
-    __out
-  }
-  lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq.empty
-  def enumCompanionForFieldNumber(__fieldNumber: _root_.scala.Int): _root_.scalapb.GeneratedEnumCompanion[_] = throw new MatchError(__fieldNumber)
-  lazy val defaultInstance = scala.meta.internal.semanticdb.ClassInfoType(
-  )
-  implicit class ClassInfoTypeLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.ClassInfoType]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.ClassInfoType](_l) {
-    def typeParameters: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Scope] = field(_.getTypeParameters)((c_, f_) => c_.copy(typeParameters = Option(f_)))
-    def optionalTypeParameters: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Option[scala.meta.internal.semanticdb.Scope]] = field(_.typeParameters)((c_, f_) => c_.copy(typeParameters = f_))
-    def parents: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Type]] = field(_.parents)((c_, f_) => c_.copy(parents = f_))
-    def declarations: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Scope] = field(_.getDeclarations)((c_, f_) => c_.copy(declarations = Option(f_)))
-    def optionalDeclarations: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Option[scala.meta.internal.semanticdb.Scope]] = field(_.declarations)((c_, f_) => c_.copy(declarations = f_))
-  }
-  final val TYPE_PARAMETERS_FIELD_NUMBER = 4
-  final val PARENTS_FIELD_NUMBER = 2
-  final val DECLARATIONS_FIELD_NUMBER = 5
-  @transient
-  private val _typemapper_parents: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type]]
-}
-
-@SerialVersionUID(0L)
-final case class MethodType(
-    typeParameters: _root_.scala.Option[scala.meta.internal.semanticdb.Scope] = None,
-    parameterLists: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Scope] = _root_.scala.collection.Seq.empty,
-    returnType: scala.meta.internal.semanticdb.Type = scala.meta.internal.semanticdb.MethodType._typemapper_returnType.toCustom(scala.meta.internal.semanticdb.TypeMessage.defaultInstance)
-    ) extends scala.meta.internal.semanticdb.Type with scalapb.GeneratedMessage with scalapb.Message[MethodType] with scalapb.lenses.Updatable[MethodType] {
-    @transient
-    private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
-    private[this] def __computeSerializedValue(): _root_.scala.Int = {
-      var __size = 0
-      if (typeParameters.isDefined) {
-        val __value = typeParameters.get
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-      };
-      parameterLists.foreach { __item =>
-        val __value = __item
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-      }
-      
-      {
-        val __value = scala.meta.internal.semanticdb.MethodType._typemapper_returnType.toBase(returnType)
-        if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
-          __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-        }
-      };
-      __size
-    }
-    final override def serializedSize: _root_.scala.Int = {
-      var read = __serializedSizeCachedValue
-      if (read == 0) {
-        read = __computeSerializedValue()
-        __serializedSizeCachedValue = read
-      }
-      read
-    }
-    def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
-      {
-        val __v = scala.meta.internal.semanticdb.MethodType._typemapper_returnType.toBase(returnType)
-        if (__v != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
-          _output__.writeTag(3, 2)
-          _output__.writeUInt32NoTag(__v.serializedSize)
-          __v.writeTo(_output__)
-        }
-      };
-      typeParameters.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(4, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
-      };
-      parameterLists.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(5, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
-      };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.MethodType = {
-      var __typeParameters = this.typeParameters
-      val __parameterLists = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb.Scope] ++= this.parameterLists)
-      var __returnType = this.returnType
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 34 =>
-            __typeParameters = Option(_root_.scalapb.LiteParser.readMessage(_input__, __typeParameters.getOrElse(scala.meta.internal.semanticdb.Scope.defaultInstance)))
-          case 42 =>
-            __parameterLists += _root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.Scope.defaultInstance)
-          case 26 =>
-            __returnType = scala.meta.internal.semanticdb.MethodType._typemapper_returnType.toCustom(_root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.MethodType._typemapper_returnType.toBase(__returnType)))
-          case tag => _input__.skipField(tag)
-        }
-      }
-      scala.meta.internal.semanticdb.MethodType(
-          typeParameters = __typeParameters,
-          parameterLists = __parameterLists.result(),
-          returnType = __returnType
-      )
-    }
-    def getTypeParameters: scala.meta.internal.semanticdb.Scope = typeParameters.getOrElse(scala.meta.internal.semanticdb.Scope.defaultInstance)
-    def clearTypeParameters: MethodType = copy(typeParameters = None)
-    def withTypeParameters(__v: scala.meta.internal.semanticdb.Scope): MethodType = copy(typeParameters = Option(__v))
-    def clearParameterLists = copy(parameterLists = _root_.scala.collection.Seq.empty)
-    def addParameterLists(__vs: scala.meta.internal.semanticdb.Scope*): MethodType = addAllParameterLists(__vs)
-    def addAllParameterLists(__vs: TraversableOnce[scala.meta.internal.semanticdb.Scope]): MethodType = copy(parameterLists = parameterLists ++ __vs)
-    def withParameterLists(__v: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Scope]): MethodType = copy(parameterLists = __v)
-    def withReturnType(__v: scala.meta.internal.semanticdb.Type): MethodType = copy(returnType = __v)
-    def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
-      (__fieldNumber: @_root_.scala.unchecked) match {
-        case 4 => typeParameters.orNull
-        case 5 => parameterLists
-        case 3 => {
-          val __t = scala.meta.internal.semanticdb.MethodType._typemapper_returnType.toBase(returnType)
-          if (__t != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) __t else null
-        }
-      }
-    }
-    def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
-      (__field.number: @_root_.scala.unchecked) match {
-        case 4 => typeParameters.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 5 => _root_.scalapb.descriptors.PRepeated(parameterLists.map(_.toPMessage)(_root_.scala.collection.breakOut))
-        case 3 => scala.meta.internal.semanticdb.MethodType._typemapper_returnType.toBase(returnType).toPMessage
-      }
-    }
-    def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
-    def companion = scala.meta.internal.semanticdb.MethodType
-}
-
-object MethodType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.MethodType] {
-  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.MethodType] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.MethodType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
-    scala.meta.internal.semanticdb.MethodType(
-      __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]],
-      __fieldsMap.getOrElse(__fields.get(1), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Scope]],
-      scala.meta.internal.semanticdb.MethodType._typemapper_returnType.toCustom(__fieldsMap.getOrElse(__fields.get(2), scala.meta.internal.semanticdb.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TypeMessage])
-    )
-  }
-  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.MethodType] = _root_.scalapb.descriptors.Reads{
-    case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
-      scala.meta.internal.semanticdb.MethodType(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]]),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Scope]]).getOrElse(_root_.scala.collection.Seq.empty),
-        scala.meta.internal.semanticdb.MethodType._typemapper_returnType.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance))
-      )
-    case _ => throw new RuntimeException("Expected PMessage")
-  }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(16)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(16)
-  def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
-    var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
-    (__number: @_root_.scala.unchecked) match {
-      case 4 => __out = scala.meta.internal.semanticdb.Scope
-      case 5 => __out = scala.meta.internal.semanticdb.Scope
-      case 3 => __out = scala.meta.internal.semanticdb.TypeMessage
-    }
-    __out
-  }
-  lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq.empty
-  def enumCompanionForFieldNumber(__fieldNumber: _root_.scala.Int): _root_.scalapb.GeneratedEnumCompanion[_] = throw new MatchError(__fieldNumber)
-  lazy val defaultInstance = scala.meta.internal.semanticdb.MethodType(
-  )
-  implicit class MethodTypeLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.MethodType]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.MethodType](_l) {
-    def typeParameters: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Scope] = field(_.getTypeParameters)((c_, f_) => c_.copy(typeParameters = Option(f_)))
-    def optionalTypeParameters: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Option[scala.meta.internal.semanticdb.Scope]] = field(_.typeParameters)((c_, f_) => c_.copy(typeParameters = f_))
-    def parameterLists: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Scope]] = field(_.parameterLists)((c_, f_) => c_.copy(parameterLists = f_))
-    def returnType: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Type] = field(_.returnType)((c_, f_) => c_.copy(returnType = f_))
-  }
-  final val TYPE_PARAMETERS_FIELD_NUMBER = 4
-  final val PARAMETERLISTS_FIELD_NUMBER = 5
-  final val RETURN_TYPE_FIELD_NUMBER = 3
-  @transient
-  private val _typemapper_returnType: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type]]
-}
-
-@SerialVersionUID(0L)
 final case class ByNameType(
     tpe: scala.meta.internal.semanticdb.Type = scala.meta.internal.semanticdb.ByNameType._typemapper_tpe.toCustom(scala.meta.internal.semanticdb.TypeMessage.defaultInstance)
     ) extends scala.meta.internal.semanticdb.Type with scalapb.GeneratedMessage with scalapb.Message[ByNameType] with scalapb.lenses.Updatable[ByNameType] {
@@ -2371,8 +1960,8 @@ object ByNameType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(17)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(17)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(15)
+  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(15)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
@@ -2479,8 +2068,8 @@ object RepeatedType extends scalapb.GeneratedMessageCompanion[scala.meta.interna
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(18)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(18)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(16)
+  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(16)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
@@ -2498,171 +2087,4 @@ object RepeatedType extends scalapb.GeneratedMessageCompanion[scala.meta.interna
   final val TPE_FIELD_NUMBER = 1
   @transient
   private val _typemapper_tpe: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type]]
-}
-
-@SerialVersionUID(0L)
-final case class TypeType(
-    typeParameters: _root_.scala.Option[scala.meta.internal.semanticdb.Scope] = None,
-    lowerBound: scala.meta.internal.semanticdb.Type = scala.meta.internal.semanticdb.TypeType._typemapper_lowerBound.toCustom(scala.meta.internal.semanticdb.TypeMessage.defaultInstance),
-    upperBound: scala.meta.internal.semanticdb.Type = scala.meta.internal.semanticdb.TypeType._typemapper_upperBound.toCustom(scala.meta.internal.semanticdb.TypeMessage.defaultInstance)
-    ) extends scala.meta.internal.semanticdb.Type with scalapb.GeneratedMessage with scalapb.Message[TypeType] with scalapb.lenses.Updatable[TypeType] {
-    @transient
-    private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
-    private[this] def __computeSerializedValue(): _root_.scala.Int = {
-      var __size = 0
-      if (typeParameters.isDefined) {
-        val __value = typeParameters.get
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-      };
-      
-      {
-        val __value = scala.meta.internal.semanticdb.TypeType._typemapper_lowerBound.toBase(lowerBound)
-        if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
-          __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-        }
-      };
-      
-      {
-        val __value = scala.meta.internal.semanticdb.TypeType._typemapper_upperBound.toBase(upperBound)
-        if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
-          __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-        }
-      };
-      __size
-    }
-    final override def serializedSize: _root_.scala.Int = {
-      var read = __serializedSizeCachedValue
-      if (read == 0) {
-        read = __computeSerializedValue()
-        __serializedSizeCachedValue = read
-      }
-      read
-    }
-    def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
-      {
-        val __v = scala.meta.internal.semanticdb.TypeType._typemapper_lowerBound.toBase(lowerBound)
-        if (__v != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
-          _output__.writeTag(2, 2)
-          _output__.writeUInt32NoTag(__v.serializedSize)
-          __v.writeTo(_output__)
-        }
-      };
-      {
-        val __v = scala.meta.internal.semanticdb.TypeType._typemapper_upperBound.toBase(upperBound)
-        if (__v != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
-          _output__.writeTag(3, 2)
-          _output__.writeUInt32NoTag(__v.serializedSize)
-          __v.writeTo(_output__)
-        }
-      };
-      typeParameters.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(4, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
-      };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.TypeType = {
-      var __typeParameters = this.typeParameters
-      var __lowerBound = this.lowerBound
-      var __upperBound = this.upperBound
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 34 =>
-            __typeParameters = Option(_root_.scalapb.LiteParser.readMessage(_input__, __typeParameters.getOrElse(scala.meta.internal.semanticdb.Scope.defaultInstance)))
-          case 18 =>
-            __lowerBound = scala.meta.internal.semanticdb.TypeType._typemapper_lowerBound.toCustom(_root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.TypeType._typemapper_lowerBound.toBase(__lowerBound)))
-          case 26 =>
-            __upperBound = scala.meta.internal.semanticdb.TypeType._typemapper_upperBound.toCustom(_root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.TypeType._typemapper_upperBound.toBase(__upperBound)))
-          case tag => _input__.skipField(tag)
-        }
-      }
-      scala.meta.internal.semanticdb.TypeType(
-          typeParameters = __typeParameters,
-          lowerBound = __lowerBound,
-          upperBound = __upperBound
-      )
-    }
-    def getTypeParameters: scala.meta.internal.semanticdb.Scope = typeParameters.getOrElse(scala.meta.internal.semanticdb.Scope.defaultInstance)
-    def clearTypeParameters: TypeType = copy(typeParameters = None)
-    def withTypeParameters(__v: scala.meta.internal.semanticdb.Scope): TypeType = copy(typeParameters = Option(__v))
-    def withLowerBound(__v: scala.meta.internal.semanticdb.Type): TypeType = copy(lowerBound = __v)
-    def withUpperBound(__v: scala.meta.internal.semanticdb.Type): TypeType = copy(upperBound = __v)
-    def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
-      (__fieldNumber: @_root_.scala.unchecked) match {
-        case 4 => typeParameters.orNull
-        case 2 => {
-          val __t = scala.meta.internal.semanticdb.TypeType._typemapper_lowerBound.toBase(lowerBound)
-          if (__t != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) __t else null
-        }
-        case 3 => {
-          val __t = scala.meta.internal.semanticdb.TypeType._typemapper_upperBound.toBase(upperBound)
-          if (__t != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) __t else null
-        }
-      }
-    }
-    def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
-      (__field.number: @_root_.scala.unchecked) match {
-        case 4 => typeParameters.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 2 => scala.meta.internal.semanticdb.TypeType._typemapper_lowerBound.toBase(lowerBound).toPMessage
-        case 3 => scala.meta.internal.semanticdb.TypeType._typemapper_upperBound.toBase(upperBound).toPMessage
-      }
-    }
-    def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
-    def companion = scala.meta.internal.semanticdb.TypeType
-}
-
-object TypeType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.TypeType] {
-  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.TypeType] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.TypeType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
-    scala.meta.internal.semanticdb.TypeType(
-      __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]],
-      scala.meta.internal.semanticdb.TypeType._typemapper_lowerBound.toCustom(__fieldsMap.getOrElse(__fields.get(1), scala.meta.internal.semanticdb.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TypeMessage]),
-      scala.meta.internal.semanticdb.TypeType._typemapper_upperBound.toCustom(__fieldsMap.getOrElse(__fields.get(2), scala.meta.internal.semanticdb.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TypeMessage])
-    )
-  }
-  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.TypeType] = _root_.scalapb.descriptors.Reads{
-    case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
-      scala.meta.internal.semanticdb.TypeType(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]]),
-        scala.meta.internal.semanticdb.TypeType._typemapper_lowerBound.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance)),
-        scala.meta.internal.semanticdb.TypeType._typemapper_upperBound.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance))
-      )
-    case _ => throw new RuntimeException("Expected PMessage")
-  }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(19)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(19)
-  def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
-    var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
-    (__number: @_root_.scala.unchecked) match {
-      case 4 => __out = scala.meta.internal.semanticdb.Scope
-      case 2 => __out = scala.meta.internal.semanticdb.TypeMessage
-      case 3 => __out = scala.meta.internal.semanticdb.TypeMessage
-    }
-    __out
-  }
-  lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq.empty
-  def enumCompanionForFieldNumber(__fieldNumber: _root_.scala.Int): _root_.scalapb.GeneratedEnumCompanion[_] = throw new MatchError(__fieldNumber)
-  lazy val defaultInstance = scala.meta.internal.semanticdb.TypeType(
-  )
-  implicit class TypeTypeLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.TypeType]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.TypeType](_l) {
-    def typeParameters: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Scope] = field(_.getTypeParameters)((c_, f_) => c_.copy(typeParameters = Option(f_)))
-    def optionalTypeParameters: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Option[scala.meta.internal.semanticdb.Scope]] = field(_.typeParameters)((c_, f_) => c_.copy(typeParameters = f_))
-    def lowerBound: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Type] = field(_.lowerBound)((c_, f_) => c_.copy(lowerBound = f_))
-    def upperBound: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Type] = field(_.upperBound)((c_, f_) => c_.copy(upperBound = f_))
-  }
-  final val TYPE_PARAMETERS_FIELD_NUMBER = 4
-  final val LOWER_BOUND_FIELD_NUMBER = 2
-  final val UPPER_BOUND_FIELD_NUMBER = 3
-  @transient
-  private val _typemapper_lowerBound: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type]]
-  @transient
-  private val _typemapper_upperBound: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type]]
 }

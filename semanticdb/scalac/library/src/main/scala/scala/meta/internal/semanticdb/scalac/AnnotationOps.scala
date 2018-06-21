@@ -7,7 +7,7 @@ trait AnnotationOps { self: SemanticdbOps =>
 
   implicit class XtensionAnnotationInfo(gann: g.AnnotationInfo) {
     def toSemantic: s.Annotation = {
-      s.Annotation(gann.atp.toSemantic(SymlinkChildren))
+      s.Annotation(gann.atp.toSemanticTpe)
     }
   }
 }
