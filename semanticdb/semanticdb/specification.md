@@ -496,9 +496,9 @@ message ClassSignature {
 }
 ```
 
-`ClassSignature` represents a signature of a class, a trait or the like.
-Both type parameters and declarations are modelled by a [Scope](#scope).
-`self` represents an optional self-type [\[99\]][99].
+`ClassSignature` represents signatures of objects, package objects, classes,
+traits and interfaces. Both type parameters and declarations are modelled by
+a [Scope](#scope). `self` represents an optional self-type [\[99\]][99].
 
 ```protobuf
 message MethodSignature {
@@ -508,9 +508,9 @@ message MethodSignature {
 }
 ```
 
-`MethodSignature` represents a signature of a method, a constructor or the like.
-It features `type_parameters`, `parameterLists` and a `return_type`. Both type
-parameters and parameters are modelled by [Scopes](#scope).
+`MethodSignature` represents signatures of methods (including getters and setters),
+constructors and macros. It features `type_parameters`, `parameterLists` and
+a `return_type`. Both type parameters and parameters are modelled by [Scopes](#scope).
 Moreover, in order to support multiple parameter lists in Scala methods,
 `parameterLists` is a list of lists.
 
@@ -522,7 +522,7 @@ message TypeSignature {
 }
 ```
 
-`TypeSignature` represents a signature of a type parameter or a type member.
+`TypeSignature` represents signatures of type parameters or type members.
 It features `type_parameters` as well as `lower_bound` and `upper_bound`.
 Type parameters are modelled by a [Scope](#scope).
 
@@ -532,7 +532,7 @@ message ValueSignature {
 }
 ```
 
-`ValueSignature` represents a signature of a field, a parameter or the like.
+`ValueSignature` represents signatures of locals, fields and self parameters.
 It encapsulates an underlying type of the definition.
 
 ### SymbolInformation
