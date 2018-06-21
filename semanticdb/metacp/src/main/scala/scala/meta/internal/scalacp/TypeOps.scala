@@ -92,8 +92,9 @@ trait TypeOps { self: Scalacp =>
           case ClassInfoType(sym, parents) =>
             val stparams = Some(s.Scope())
             val sparents = parents.map(_.toSemanticTpe)
+            val sself = sym.self.toSemanticTpe
             val sdecls = Some(sym.semanticdbDecls.sscope(linkMode))
-            s.ClassSignature(stparams, sparents, sdecls)
+            s.ClassSignature(stparams, sparents, sself, sdecls)
           case _: NullaryMethodType | _: MethodType =>
             val stparams = Some(s.Scope())
             val sparamss = tpe.paramss.map(_.sscope(linkMode))

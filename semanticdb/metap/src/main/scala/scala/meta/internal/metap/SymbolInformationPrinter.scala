@@ -70,7 +70,10 @@ trait SymbolInformationPrinter extends BasePrinter {
         case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
       }
       pprint(info.name)
-      opt(info.prefixBeforeTpe, info.signature)(pprint)
+      info.signature match {
+        case NoSignature if info.kind == SELF_PARAMETER => ()
+        case _ => opt(info.prefixBeforeTpe, info.signature)(pprint)
+      }
     }
 
     private def pprint(ann: Annotation): Unit = {
@@ -110,10 +113,23 @@ trait SymbolInformationPrinter extends BasePrinter {
 
     def pprint(sig: Signature): Unit = {
       sig match {
-        case ClassSignature(tparams, parents, decls) =>
+        case ClassSignature(tparams, parents, self, decls) =>
           rep("[", tparams.infos, ", ", "]")(pprintDefn)
           rep(" extends ", parents, " with ")(pprint)
-          if (decls.infos.nonEmpty) out.print(s" { +${decls.infos.length} decls }")
+          if (self.nonEmpty || decls.infos.nonEmpty) {
+            out.print(" { ")
+          }
+          if (self.nonEmpty) {
+            out.print("self: ")
+            pprint(self)
+            out.print(" => ")
+          }
+          if (decls.infos.nonEmpty) {
+            out.print(s"+${decls.infos.length} decls")
+          }
+          if (self.nonEmpty || decls.infos.nonEmpty) {
+            out.print(" }")
+          }
         case MethodSignature(tparams, paramss, res) =>
           rep("[", tparams.infos, ", ", "]")(pprintDefn)
           rep("(", paramss, ")(", ")")(params => rep(params.infos, ", ")(pprintDefn))
@@ -269,7 +285,10 @@ trait SymbolInformationPrinter extends BasePrinter {
             case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
           }
           pprint(info.name)
-          opt(info.prefixBeforeTpe, info.signature)(pprint)
+          info.signature match {
+            case NoSignature if info.kind == SELF_PARAMETER => ()
+            case _ => opt(info.prefixBeforeTpe, info.signature)(pprint)
+          }
       }
     }
 

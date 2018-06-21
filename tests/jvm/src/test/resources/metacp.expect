@@ -1942,6 +1942,126 @@ prefixes.Test.n2(). => method n2: T
 prefixes.Test.n3(). => method n3: T
   T => prefixes.M.T#
 
+selfs/B.class
+-------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/B.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+_root_. => package _root_
+selfs. => package selfs
+selfs.B# => class B extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
+selfs.B#`<init>`(). => primary ctor <init>()
+
+selfs/C1.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/C1.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+_root_. => package _root_
+selfs. => package selfs
+selfs.C1# => class C1 extends B { +1 decls }
+  B => selfs.B#
+selfs.C1#`<init>`(). => primary ctor <init>()
+
+selfs/C2.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/C2.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+_root_. => package _root_
+selfs. => package selfs
+selfs.C2# => class C2 extends B { self: B => +1 decls }
+  B => selfs.B#
+selfs.C2#`<init>`(). => primary ctor <init>()
+
+selfs/C3.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/C3.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+_root_. => package _root_
+selfs. => package selfs
+selfs.C3# => class C3 extends B { self: B with Int {} => +1 decls }
+  B => selfs.B#
+  Int => scala.Int#
+selfs.C3#`<init>`(). => primary ctor <init>()
+
+selfs/C4.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/C4.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+_root_. => package _root_
+selfs. => package selfs
+selfs.C4# => class C4 extends B { +1 decls }
+  B => selfs.B#
+selfs.C4#`<init>`(). => primary ctor <init>()
+
+selfs/C5.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/C5.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+_root_. => package _root_
+selfs. => package selfs
+selfs.C5# => class C5 extends B { self: B => +1 decls }
+  B => selfs.B#
+selfs.C5#`<init>`(). => primary ctor <init>()
+
+selfs/C6.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/C6.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+_root_. => package _root_
+selfs. => package selfs
+selfs.C6# => class C6 extends B { self: B => +1 decls }
+  B => selfs.B#
+selfs.C6#`<init>`(). => primary ctor <init>()
+
 traits/C.class
 --------------
 
@@ -2010,8 +2130,9 @@ Symbols => 3 entries
 Symbols:
 _root_. => package _root_
 traits. => package traits
-traits.V# => trait V extends AnyRef
+traits.V# => trait V extends AnyRef { self: C =>  }
   AnyRef => scala.AnyRef#
+  C => traits.C#
 
 types/ann.class
 ---------------

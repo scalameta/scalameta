@@ -253,6 +253,7 @@ object SignatureMessage extends scalapb.GeneratedMessageCompanion[scala.meta.int
 final case class ClassSignature(
     typeParameters: _root_.scala.Option[scala.meta.internal.semanticdb.Scope] = None,
     parents: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Type] = _root_.scala.collection.Seq.empty,
+    self: scala.meta.internal.semanticdb.Type = scala.meta.internal.semanticdb.ClassSignature._typemapper_self.toCustom(scala.meta.internal.semanticdb.TypeMessage.defaultInstance),
     declarations: _root_.scala.Option[scala.meta.internal.semanticdb.Scope] = None
     ) extends scala.meta.internal.semanticdb.Signature with scalapb.GeneratedMessage with scalapb.Message[ClassSignature] with scalapb.lenses.Updatable[ClassSignature] {
     @transient
@@ -267,6 +268,13 @@ final case class ClassSignature(
         val __value = scala.meta.internal.semanticdb.ClassSignature._typemapper_parents.toBase(__item)
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       }
+      
+      {
+        val __value = scala.meta.internal.semanticdb.ClassSignature._typemapper_self.toBase(self)
+        if (__value != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
+          __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
+        }
+      };
       if (declarations.isDefined) {
         val __value = declarations.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
@@ -294,9 +302,17 @@ final case class ClassSignature(
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
+      {
+        val __v = scala.meta.internal.semanticdb.ClassSignature._typemapper_self.toBase(self)
+        if (__v != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
+          _output__.writeTag(3, 2)
+          _output__.writeUInt32NoTag(__v.serializedSize)
+          __v.writeTo(_output__)
+        }
+      };
       declarations.foreach { __v =>
         val __m = __v
-        _output__.writeTag(3, 2)
+        _output__.writeTag(4, 2)
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
@@ -304,6 +320,7 @@ final case class ClassSignature(
     def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.ClassSignature = {
       var __typeParameters = this.typeParameters
       val __parents = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb.Type] ++= this.parents)
+      var __self = this.self
       var __declarations = this.declarations
       var _done__ = false
       while (!_done__) {
@@ -315,6 +332,8 @@ final case class ClassSignature(
           case 18 =>
             __parents += scala.meta.internal.semanticdb.ClassSignature._typemapper_parents.toCustom(_root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.TypeMessage.defaultInstance))
           case 26 =>
+            __self = scala.meta.internal.semanticdb.ClassSignature._typemapper_self.toCustom(_root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.ClassSignature._typemapper_self.toBase(__self)))
+          case 34 =>
             __declarations = Option(_root_.scalapb.LiteParser.readMessage(_input__, __declarations.getOrElse(scala.meta.internal.semanticdb.Scope.defaultInstance)))
           case tag => _input__.skipField(tag)
         }
@@ -322,6 +341,7 @@ final case class ClassSignature(
       scala.meta.internal.semanticdb.ClassSignature(
           typeParameters = __typeParameters,
           parents = __parents.result(),
+          self = __self,
           declarations = __declarations
       )
     }
@@ -332,6 +352,7 @@ final case class ClassSignature(
     def addParents(__vs: scala.meta.internal.semanticdb.Type*): ClassSignature = addAllParents(__vs)
     def addAllParents(__vs: TraversableOnce[scala.meta.internal.semanticdb.Type]): ClassSignature = copy(parents = parents ++ __vs)
     def withParents(__v: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Type]): ClassSignature = copy(parents = __v)
+    def withSelf(__v: scala.meta.internal.semanticdb.Type): ClassSignature = copy(self = __v)
     def getDeclarations: scala.meta.internal.semanticdb.Scope = declarations.getOrElse(scala.meta.internal.semanticdb.Scope.defaultInstance)
     def clearDeclarations: ClassSignature = copy(declarations = None)
     def withDeclarations(__v: scala.meta.internal.semanticdb.Scope): ClassSignature = copy(declarations = Option(__v))
@@ -339,7 +360,11 @@ final case class ClassSignature(
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => typeParameters.orNull
         case 2 => parents.map(scala.meta.internal.semanticdb.ClassSignature._typemapper_parents.toBase)(_root_.scala.collection.breakOut)
-        case 3 => declarations.orNull
+        case 3 => {
+          val __t = scala.meta.internal.semanticdb.ClassSignature._typemapper_self.toBase(self)
+          if (__t != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) __t else null
+        }
+        case 4 => declarations.orNull
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
@@ -347,7 +372,8 @@ final case class ClassSignature(
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => typeParameters.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
         case 2 => _root_.scalapb.descriptors.PRepeated(parents.map(scala.meta.internal.semanticdb.ClassSignature._typemapper_parents.toBase(_).toPMessage)(_root_.scala.collection.breakOut))
-        case 3 => declarations.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 3 => scala.meta.internal.semanticdb.ClassSignature._typemapper_self.toBase(self).toPMessage
+        case 4 => declarations.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
@@ -362,7 +388,8 @@ object ClassSignature extends scalapb.GeneratedMessageCompanion[scala.meta.inter
     scala.meta.internal.semanticdb.ClassSignature(
       __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]],
       __fieldsMap.getOrElse(__fields.get(1), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.TypeMessage]].map(scala.meta.internal.semanticdb.ClassSignature._typemapper_parents.toCustom)(_root_.scala.collection.breakOut),
-      __fieldsMap.get(__fields.get(2)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]]
+      scala.meta.internal.semanticdb.ClassSignature._typemapper_self.toCustom(__fieldsMap.getOrElse(__fields.get(2), scala.meta.internal.semanticdb.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TypeMessage]),
+      __fieldsMap.get(__fields.get(3)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]]
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.ClassSignature] = _root_.scalapb.descriptors.Reads{
@@ -371,7 +398,8 @@ object ClassSignature extends scalapb.GeneratedMessageCompanion[scala.meta.inter
       scala.meta.internal.semanticdb.ClassSignature(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]]),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.TypeMessage]]).getOrElse(_root_.scala.collection.Seq.empty).map(scala.meta.internal.semanticdb.ClassSignature._typemapper_parents.toCustom)(_root_.scala.collection.breakOut),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]])
+        scala.meta.internal.semanticdb.ClassSignature._typemapper_self.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance)),
+        __fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]])
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
@@ -382,7 +410,8 @@ object ClassSignature extends scalapb.GeneratedMessageCompanion[scala.meta.inter
     (__number: @_root_.scala.unchecked) match {
       case 1 => __out = scala.meta.internal.semanticdb.Scope
       case 2 => __out = scala.meta.internal.semanticdb.TypeMessage
-      case 3 => __out = scala.meta.internal.semanticdb.Scope
+      case 3 => __out = scala.meta.internal.semanticdb.TypeMessage
+      case 4 => __out = scala.meta.internal.semanticdb.Scope
     }
     __out
   }
@@ -394,14 +423,18 @@ object ClassSignature extends scalapb.GeneratedMessageCompanion[scala.meta.inter
     def typeParameters: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Scope] = field(_.getTypeParameters)((c_, f_) => c_.copy(typeParameters = Option(f_)))
     def optionalTypeParameters: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Option[scala.meta.internal.semanticdb.Scope]] = field(_.typeParameters)((c_, f_) => c_.copy(typeParameters = f_))
     def parents: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Type]] = field(_.parents)((c_, f_) => c_.copy(parents = f_))
+    def self: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Type] = field(_.self)((c_, f_) => c_.copy(self = f_))
     def declarations: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Scope] = field(_.getDeclarations)((c_, f_) => c_.copy(declarations = Option(f_)))
     def optionalDeclarations: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Option[scala.meta.internal.semanticdb.Scope]] = field(_.declarations)((c_, f_) => c_.copy(declarations = f_))
   }
   final val TYPE_PARAMETERS_FIELD_NUMBER = 1
   final val PARENTS_FIELD_NUMBER = 2
-  final val DECLARATIONS_FIELD_NUMBER = 3
+  final val SELF_FIELD_NUMBER = 3
+  final val DECLARATIONS_FIELD_NUMBER = 4
   @transient
   private val _typemapper_parents: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type]]
+  @transient
+  private val _typemapper_self: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type]]
 }
 
 @SerialVersionUID(0L)

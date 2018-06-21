@@ -810,8 +810,7 @@ example.Example.main().(args) => param args: Array[String]
 example.Example.x(). => val method x: ClassTag[Int]
   ClassTag => scala.reflect.ClassTag#
   Int => scala.Int#
-local0 => selfparam self: Example
-  Example => example.Example.
+local0 => selfparam self
 
 Occurrences:
 [0:8..0:15): example <= example.
@@ -1803,6 +1802,84 @@ Occurrences:
 [27:10..27:11): T => prefixes.M.T#
 [27:14..27:17): ??? => scala.Predef.`???`().
 
+semanticdb/integration/src/main/scala/example/Selfs.scala
+---------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Selfs.scala
+Text => non-empty
+Language => Scala
+Symbols => 18 entries
+Occurrences => 34 entries
+
+Symbols:
+local0 => selfparam self
+local1 => selfparam self: B
+  B => selfs.B#
+local2 => selfparam self: B with Int {}
+  B => selfs.B#
+  Int => scala.Int#
+selfs. => package selfs
+selfs.B# => class B extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
+selfs.B#`<init>`(). => primary ctor <init>()
+selfs.C1# => class C1 extends B { +1 decls }
+  B => selfs.B#
+selfs.C1#`<init>`(). => primary ctor <init>()
+selfs.C2# => class C2 extends B { self: B => +1 decls }
+  B => selfs.B#
+selfs.C2#`<init>`(). => primary ctor <init>()
+selfs.C3# => class C3 extends B { self: B with Int {} => +1 decls }
+  B => selfs.B#
+  Int => scala.Int#
+selfs.C3#`<init>`(). => primary ctor <init>()
+selfs.C4# => class C4 extends B { +1 decls }
+  B => selfs.B#
+selfs.C4#`<init>`(). => primary ctor <init>()
+selfs.C5# => class C5 extends B { self: B => +1 decls }
+  B => selfs.B#
+selfs.C5#`<init>`(). => primary ctor <init>()
+selfs.C6# => class C6 extends B { self: B => +1 decls }
+  B => selfs.B#
+selfs.C6#`<init>`(). => primary ctor <init>()
+
+Occurrences:
+[0:8..0:13): selfs <= selfs.
+[2:6..2:7): B <= selfs.B#
+[4:6..4:8): C1 <= selfs.C1#
+[4:9..4:9):  <= selfs.C1#`<init>`().
+[4:17..4:18): B => selfs.B#
+[4:19..4:19):  => selfs.B#`<init>`().
+[4:21..4:25): self <= local0
+[7:6..7:8): C2 <= selfs.C2#
+[7:9..7:9):  <= selfs.C2#`<init>`().
+[7:17..7:18): B => selfs.B#
+[7:19..7:19):  => selfs.B#`<init>`().
+[7:21..7:25): self <= local1
+[7:27..7:28): B => selfs.B#
+[10:6..10:8): C3 <= selfs.C3#
+[10:9..10:9):  <= selfs.C3#`<init>`().
+[10:17..10:18): B => selfs.B#
+[10:19..10:19):  => selfs.B#`<init>`().
+[10:21..10:25): self <= local2
+[10:27..10:28): B => selfs.B#
+[10:34..10:37): Int => scala.Int#
+[13:6..13:8): C4 <= selfs.C4#
+[13:9..13:9):  <= selfs.C4#`<init>`().
+[13:17..13:18): B => selfs.B#
+[13:19..13:19):  => selfs.B#`<init>`().
+[16:6..16:8): C5 <= selfs.C5#
+[16:9..16:9):  <= selfs.C5#`<init>`().
+[16:17..16:18): B => selfs.B#
+[16:19..16:19):  => selfs.B#`<init>`().
+[16:24..16:25): B => selfs.B#
+[19:6..19:8): C6 <= selfs.C6#
+[19:9..19:9):  <= selfs.C6#`<init>`().
+[19:17..19:18): B => selfs.B#
+[19:19..19:19):  => selfs.B#`<init>`().
+[19:27..19:28): B => selfs.B#
+
 semanticdb/integration/src/main/scala/example/Synthetic.scala
 -------------------------------------------------------------
 
@@ -1872,8 +1949,7 @@ Symbols => 10 entries
 Occurrences => 14 entries
 
 Symbols:
-local0 => selfparam self: V with C {}
-  V => traits.V#
+local0 => selfparam self: C
   C => traits.C#
 traits. => package traits
 traits.C# => class C extends AnyRef { +1 decls }
@@ -1889,8 +1965,9 @@ traits.U. => final object U extends AnyRef { +1 decls }
   AnyRef => scala.AnyRef#
 traits.U.u(). => method u: U
   U => traits.U#
-traits.V# => trait V extends AnyRef
+traits.V# => trait V extends AnyRef { self: C =>  }
   AnyRef => scala.AnyRef#
+  C => traits.C#
 
 Occurrences:
 [0:8..0:14): traits <= traits.
