@@ -38,10 +38,12 @@ This guide covers several non-standard command-line tools: `metac`, `metacp`,
 Make sure you are using the latest coursier version (1.1.0-M4 or newer).
 2. Add the following aliases to your shell:
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.scalameta/scalameta_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.scalameta/scalameta_2.12)
+
 ```bash
-alias metac="coursier launch org.scalameta:metac_2.11:4.0.0 -- -cp $(coursier fetch -p org.scala-lang:scala-library:2.11.12)"
-alias metacp="coursier launch org.scalameta:metacp_2.11:4.0.0 --"
-alias metap="coursier launch org.scalameta:metap_2.11:4.0.0 --"
+alias metac="coursier launch org.scalameta:metac_2.12.6:4.0.0-M4 -- -cp $(coursier fetch -p org.scala-lang:scala-library:2.12.6)"
+alias metacp="coursier launch org.scalameta:metacp_2.12.6:4.0.0-M4 --"
+alias metap="coursier launch org.scalameta:metap_2.11:4.0.0-M4 --"
 ```
 
 (Optional) Instead of running `metap` on the JVM, you can build a native binary
@@ -54,7 +56,7 @@ and 10 ms on native).
 2. Link a native `metap` binary.
 
 ```bash
-coursier bootstrap org.scalameta:metap_native0.3_2.11:4.0.0 -o metap -f --native --main scala.meta.cli.Metap
+coursier bootstrap org.scalameta:metap_native0.3_2.11:4.0.0-M4 -o metap -f --native --main scala.meta.cli.Metap
 ```
 
 ## Example
@@ -101,15 +103,17 @@ files store protobuf payloads.
 
 ```
 $ xxd META-INF/semanticdb/Test.scala.semanticdb
-00000000: 0ae4 0408 0312 0a54 6573 742e 7363 616c  .......Test.scal
-00000010: 611a 596f 626a 6563 7420 5465 7374 207b  a.Yobject Test {
-00000020: 0a20 2064 6566 206d 6169 6e28 6172 6773  .  def main(args
-00000030: 3a20 4172 7261 795b 5374 7269 6e67 5d29  : Array[String])
-00000040: 3a20 556e 6974 203d 207b 0a20 2020 2070  : Unit = {.    p
-00000050: 7269 6e74 6c6e 2822 6865 6c6c 6f20 776f  rintln("hello wo
-00000060: 726c 6422 290a 2020 7d0a 7d0a 2a5b 0a1a  rld").  }.}.*[..
-00000070: 5f65 6d70 7479 5f2e 5465 7374 2e6d 6169  _empty_.Test.mai
-00000080: 6e28 292e 2861 7267 7329 1808 2a04 6172  n().(args)..*.ar
+00000000: 0aac 0408 0412 0a54 6573 742e 7363 616c  .......Test.scal
+00000010: 612a 520a 0d5f 656d 7074 795f 2e54 6573  a*R.._empty_.Tes
+00000020: 742e 180a 2008 2a04 5465 7374 7202 0807  t... .*.Testr...
+00000030: 8001 018a 012f 0a2d 0a00 1211 120f 120d  ...../.-........
+00000040: 7363 616c 612e 416e 7952 6566 2322 160a  scala.AnyRef#"..
+00000050: 145f 656d 7074 795f 2e54 6573 742e 6d61  ._empty_.Test.ma
+00000060: 696e 2829 2e2a 5c0a 1a5f 656d 7074 795f  in().*\.._empty_
+00000070: 2e54 6573 742e 6d61 696e 2829 2e28 6172  .Test.main().(ar
+00000080: 6773 2918 082a 0461 7267 7372 0208 0780  gs)..*.argsr....
+00000090: 0101 8a01 2e22 2c0a 2a12 2812 0c73 6361  .....",.*.(..sca
+000000a0: 6c61 2e41 7272 6179 231a 1812 1612 1473  la.Array#......s
 ...
 ```
 
@@ -125,7 +129,7 @@ Test.scala
 Summary:
 Schema => SemanticDB v4
 Uri => Test.scala
-Text => non-empty
+Text => empty
 Language => Scala
 Symbols => 3 entries
 Occurrences => 7 entries
@@ -136,13 +140,13 @@ _empty_.Test.main(). => method main(args: Array[String]): Unit
 _empty_.Test.main().(args) => param args: Array[String]
 
 Occurrences:
-[0:7..0:11): Test <= _empty_.Test.
-[1:6..1:10): main <= _empty_.Test.main().
-[1:11..1:15): args <= _empty_.Test.main().(args)
-[1:17..1:22): Array => scala.Array#
-[1:23..1:29): String => scala.Predef.String#
-[1:33..1:37): Unit => scala.Unit#
-[2:4..2:11): println => scala.Predef.println(+1).
+[0:7..0:11) <= _empty_.Test.
+[1:6..1:10) <= _empty_.Test.main().
+[1:11..1:15) <= _empty_.Test.main().(args)
+[1:17..1:22) => scala.Array#
+[1:23..1:29) => scala.Predef.String#
+[1:33..1:37) => scala.Unit#
+[2:4..2:11) => scala.Predef.println(+1).
 ```
 
 Metap prettyprints various parts of the SemanticDB payload in correspondence
@@ -347,7 +351,7 @@ to your build. Note that the compiler plugin requires the `-Yrangepos` compiler
 option to be enabled.
 
 ```scala
-addCompilerPlugin("org.scalameta" % "semanticdb-scalac" % "3.7.4" cross CrossVersion.full)
+addCompilerPlugin("org.scalameta" % "semanticdb-scalac" % "4.0.0-M4" cross CrossVersion.full)
 scalacOptions += "-Yrangepos"
 ```
 
@@ -480,16 +484,9 @@ Symbols => 5 entries
 
 Symbols:
 _empty_. => package _empty_
-_empty_.Test. => final object Test.{+1 decls}
-  extends AnyRef
-_empty_.Test.main(). => method main: (args: Array[String]): Unit
-  args => _empty_.Test.main().(args)
-  Array => scala.Array#
-  String => scala.Predef.String#
-  Unit => scala.Unit#
+_empty_.Test. => final object Test extends AnyRef { +1 decls }
+_empty_.Test.main(). => method main(args: Array[String]): Unit
 _empty_.Test.main().(args) => param args: Array[String]
-  Array => scala.Array#
-  String => scala.Predef.String#
 _root_. => package _root_
 ```
 
@@ -503,13 +500,13 @@ library, one can model SemanticDB entities as Scala case classes and
 serialize/deserialize them into bytes and streams.
 
 ```
-libraryDependencies += "org.scalameta" %% "semanticdb" % "4.0.0"
+libraryDependencies += "org.scalameta" %% "semanticdb" % "4.0.0-M4"
 ```
 
 `semanticdb` is available for all supported Scala platforms - JVM, Scala.js
 and Scala Native. For more information, check out autogenerated documentation for
-[Scala 2.11](https://static.javadoc.io/org.scalameta/semanticdb_2.11/4.0.0/scala/meta/internal/semanticdb/TextDocuments.html)
-and [Scala 2.12](https://static.javadoc.io/org.scalameta/semanticdb_2.12/4.0.0/scala/meta/internal/semanticdb/TextDocuments.html).
+[Scala 2.11](https://static.javadoc.io/org.scalameta/semanticdb_2.11/4.0.0-M4/scala/meta/internal/semanticdb/TextDocuments.html)
+and [Scala 2.12](https://static.javadoc.io/org.scalameta/semanticdb_2.12/4.0.0-M4/scala/meta/internal/semanticdb/TextDocuments.html).
 
 Caveats:
   * At the moment, there are no compatibility guarantees for Scala bindings to the SemanticDB
@@ -602,30 +599,34 @@ semanticdb.proto < META-INF/semanticdb/Test.scala.semanticdb
 documents {
   schema: SEMANTICDB4
   uri: "Test.scala"
-  text: "object Test {\n  def main(args: Array[String]): Unit = {\n    println(\"hello world\")\n  }\n}\n"
   symbols {
-    symbol: "_empty_.Test.main().(args)"
-    kind: PARAMETER
-    name: "args"
-    tpe {
-      tag: TYPE_REF
-      typeRef {
-        symbol: "scala.Array#"
-        type_arguments {
-          tag: TYPE_REF
-          typeRef {
-            symbol: "scala.Predef.String#"
-          }
-        }
-      }
-    }
+    symbol: "_empty_.Test."
+    kind: OBJECT
+    properties: 8
+    name: "Test"
     accessibility {
       tag: PUBLIC
     }
     language: SCALA
+    signature {
+      classSignature {
+        type_parameters {
+        }
+        parents {
+          typeRef {
+            symbol: "scala.AnyRef#"
+          }
+        }
+        declarations {
+          symlinks: "_empty_.Test.main()."
+        }
+      }
+    }
   }
-  ...
-}
+  symbols {
+    symbol: "_empty_.Test.main().(args)"
+    kind: PARAMETER
+...
 ```
 
 `protoc` was useful for getting things done in the early days of SemanticDB,

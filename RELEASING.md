@@ -37,8 +37,7 @@
     * Release the repositories.
 * Verify the Sonatype release:
   * Make sure that the release shows up at https://oss.sonatype.org/content/repositories/releases/org/scalameta/.
-  * Make sure that `coursier fetch org.scalameta:semanticdb-scalac-core_a.b.c:x.y.z -r sonatype:releases`
-    succeeds for the supported Scala versions.
+  * Run `./bin/test-release.sh $VERSION` to ensure that all artifacts have successfully been released.
 * Update the website:
   * Submit a pull request like https://github.com/scalameta/tutorial/pull/33.
   * Wait for the Travis CI validation.
