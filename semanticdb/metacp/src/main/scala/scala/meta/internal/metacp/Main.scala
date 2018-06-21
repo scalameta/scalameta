@@ -30,40 +30,6 @@ class Main(settings: Settings, reporter: Reporter) {
       Files.createDirectories(settings.cacheDir.toNIO)
     }
 
-    // Writes to a temporary jar file and atomically moves the resulting jar file to cacheEntry once processing
-    // completes. This guarantees the cached jar is never available in half-processed form.
-    def createCachedJar(cacheEntry: AbsolutePath)(f: AbsolutePath => Boolean): Unit = {
-      val tmp = Files.createTempDirectory("metacp").resolve(cacheEntry.toNIO.getFileName)
-      PlatformFileIO.withJarFileSystem(AbsolutePath(tmp), create = true) { out =>
-        val res = f(out)
-        success.compareAndSet(true, res)
-        buffer.add(cacheEntry)
-      }
-      try {
-        Files.move(
-          tmp,
-          cacheEntry.toNIO,
-          StandardCopyOption.ATOMIC_MOVE,
-          StandardCopyOption.REPLACE_EXISTING
-        )
-      } catch {
-        case _: AtomicMoveNotSupportedException =>
-          Files.move(
-            tmp,
-            cacheEntry.toNIO,
-            StandardCopyOption.REPLACE_EXISTING
-          )
-        case _: AccessDeniedException if scala.util.Properties.isWin =>
-          // AccessDeniedException seems to be thrown on Windows when ATOMIC_MOVE is provided
-          // and the target file is being used elsewhere, see https://github.com/scalameta/scalameta/issues/1499
-          Files.move(
-            tmp,
-            cacheEntry.toNIO,
-            StandardCopyOption.REPLACE_EXISTING
-          )
-      }
-    }
-
     classpath.foreach { entry =>
       if (entry.isDirectory) {
         val out = AbsolutePath(Files.createTempDirectory("semanticdb"))
@@ -81,7 +47,7 @@ class Main(settings: Settings, reporter: Reporter) {
         if (cacheEntry.toFile.exists) {
           buffer.add(cacheEntry)
         } else {
-          createCachedJar(cacheEntry) { out =>
+          createCachedJar(success, buffer, cacheEntry) { out =>
             val index = new Index
             def loop(entry: AbsolutePath): Boolean = {
               var result = convertClasspathEntry(entry, out, index)
@@ -113,7 +79,7 @@ class Main(settings: Settings, reporter: Reporter) {
       if (cacheEntry.toFile.exists) {
         buffer.add(cacheEntry)
       } else {
-        createCachedJar(cacheEntry)(dumpScalaLibrarySynthetics)
+        createCachedJar(success, buffer, cacheEntry)(dumpScalaLibrarySynthetics)
       }
     }
 
@@ -122,6 +88,40 @@ class Main(settings: Settings, reporter: Reporter) {
       Some(Classpath(buffer.iterator().asScala.toList))
     } else {
       None
+    }
+  }
+
+  // Writes to a temporary jar file and atomically moves the resulting jar file to cacheEntry once processing
+  // completes. This guarantees the cached jar is never available in half-processed form.
+  private def createCachedJar(
+      success: AtomicBoolean,
+      buffer: ConcurrentLinkedQueue[AbsolutePath],
+      cacheEntry: AbsolutePath)(f: AbsolutePath => Boolean): Unit = {
+    val tmp = Files.createTempDirectory("metacp").resolve(cacheEntry.toNIO.getFileName)
+    PlatformFileIO.withJarFileSystem(AbsolutePath(tmp), create = true) { out =>
+      val res = f(out)
+      success.compareAndSet(true, res)
+      buffer.add(cacheEntry)
+    }
+
+    if (Files.exists(cacheEntry.toNIO)) {
+      // Do nothing, the file has been processed by another thread
+      ()
+    } else {
+      try {
+        Files.move(tmp, cacheEntry.toNIO, StandardCopyOption.ATOMIC_MOVE)
+      } catch {
+        case _: AtomicMoveNotSupportedException =>
+          Files.move(tmp, cacheEntry.toNIO, StandardCopyOption.REPLACE_EXISTING)
+        case _: AccessDeniedException if scala.util.Properties.isWin =>
+          // AccessDeniedException seems to be thrown on Windows when ATOMIC_MOVE is provided
+          // and the target file is being used elsewhere, see https://github.com/scalameta/scalameta/issues/1499
+          Files.move(tmp, cacheEntry.toNIO, StandardCopyOption.REPLACE_EXISTING)
+        case e: FileSystemException
+            if scala.util.Properties.isWin &&
+              // See https://github.com/scalameta/scalameta/issues/1521
+              e.getMessage.contains("being used by another process") =>
+      }
     }
   }
 
