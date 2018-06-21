@@ -357,8 +357,7 @@ class TargetedSuite extends SemanticdbSuite {
        |i.B# => trait B extends AnyRef { +2 decls }
        |  AnyRef => scala.AnyRef#
        |i.B#X# => abstract type X
-       |i.B#x(). => abstract method x: B.this.X
-       |  B => i.B#
+       |i.B#x(). => abstract method x: X
        |  X => i.B#X#
        |i.D# => class D extends AnyRef with B { +3 decls }
        |  AnyRef => scala.AnyRef#
@@ -602,11 +601,9 @@ class TargetedSuite extends SemanticdbSuite {
        |_empty_.y.Path#B#C#`<init>`(). => primary ctor <init>()
        |_empty_.y.Path#B#`<init>`(). => primary ctor <init>()
        |_empty_.y.Path#`<init>`(). => primary ctor <init>()
-       |_empty_.y.Path#x(). => val method x: Path.this.B
-       |  Path => _empty_.y.Path#
+       |_empty_.y.Path#x(). => val method x: B
        |  B => _empty_.y.Path#B#
-       |_empty_.y.Path#y(). => val method y: Path.this.x.C
-       |  Path => _empty_.y.Path#
+       |_empty_.y.Path#y(). => val method y: x.C
        |  x => _empty_.y.Path#x().
        |  C => _empty_.y.Path#B#C#
        |_empty_.y.b(). => implicit val method b: Path#B

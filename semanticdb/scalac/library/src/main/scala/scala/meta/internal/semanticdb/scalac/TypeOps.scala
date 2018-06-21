@@ -17,12 +17,12 @@ trait TypeOps { self: SemanticdbOps =>
             val stpe = loop(gtpe)
             s.RepeatedType(stpe)
           case g.TypeRef(gpre, gsym, gargs) =>
-            val spre = if (gtpe.hasNontrivialPrefix) loop(gpre) else s.NoType
+            val spre = if (gpre.isTrivialPrefix) s.NoType else loop(gpre)
             val ssym = gsym.ssym
             val sargs = gargs.map(loop)
             s.TypeRef(spre, ssym, sargs)
           case g.SingleType(gpre, gsym) =>
-            val spre = if (gtpe.hasNontrivialPrefix) loop(gpre) else s.NoType
+            val spre = if (gpre.isTrivialPrefix) s.NoType else loop(gpre)
             val ssym = gsym.ssym
             s.SingleType(spre, ssym)
           case g.ThisType(gsym) =>
@@ -135,22 +135,13 @@ trait TypeOps { self: SemanticdbOps =>
   }
 
   implicit class XtensionGType(gtpe: g.Type) {
-    // FIXME: https://github.com/scalameta/scalameta/issues/1343
-    def hasNontrivialPrefix: Boolean = {
-      val (gpre, gsym) = {
-        gtpe match {
-          case g.TypeRef(gpre, gsym, _) => (gpre, gsym)
-          case g.SingleType(gpre, gsym) => (gpre, gsym)
-          case _ => return true
-        }
-      }
-      gpre match {
-        case g.SingleType(_, gpresym) =>
-          gpresym.isTerm && !gpresym.isModule
-        case g.ThisType(gpresym) =>
-          !gpresym.hasPackageFlag && !gpresym.isModuleOrModuleClass && !gpresym.isConstructor
-        case _ =>
-          true
+    def isTrivialPrefix: Boolean = {
+      gtpe match {
+        case g.TypeRef(gpre, gsym, _) => gpre.isTrivialPrefix && gsym.isModuleClass
+        case g.SingleType(gpre, gsym) => gpre.isTrivialPrefix && gsym.isModule
+        case _: g.ThisType => true
+        case g.NoPrefix => true
+        case _ => false
       }
     }
   }

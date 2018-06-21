@@ -1180,7 +1180,7 @@ Notes:
 * We diverge from SLS by having different data structures to model value types
   ([Type](#type)) and non-value types ([Signature](#signature)).
 * We diverge from SLS on the matter of handling prefixes (see definitions of
-  `TYPE_REF` and `SINGLETON_TYPE` for more information).
+  `TypeRef` and `SingleType` for more information).
   * In SLS, all types that can have a prefix must have it specified
     explicitly, even if the prefix is trivial. For example in Scalac, `Int` must
     be represented as `TypeRef(<scala.this.type>, <Int>, List())` [\[27\]][27].
@@ -1188,6 +1188,10 @@ Notes:
     specified explicitly. For example in SemanticDB, `Int` must be represented
     as `TypeRef(None, <Int>, List())`. Moreover, even `scala.Int` must be
     represented as `TypeRef(None, <Int>, List())`.
+  * By a trivial prefix, we mean either empty prefix (for definitions that
+    aren't members of any other definition, e.g. parameters or type parameters)
+    or `ThisType` of the enclosing class, trait, interface, object, package object
+    or package (for all other definitions), as well as types equivalent to them.
 * We leave the mapping between type syntax written in source code and
   `Type` entities deliberately unspecified. Some producers may transform
   types in unspecified ways (e.g. Scalac transforms all `this.type` types

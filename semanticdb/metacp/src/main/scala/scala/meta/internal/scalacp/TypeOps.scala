@@ -17,12 +17,12 @@ trait TypeOps { self: Scalacp =>
             val stpe = loop(tpe)
             s.RepeatedType(stpe)
           case TypeRefType(pre, sym, args) =>
-            val spre = if (tpe.hasNontrivialPrefix) loop(pre) else s.NoType
+            val spre = if (pre.isTrivialPrefix) s.NoType else loop(pre)
             val ssym = sym.ssym
             val sargs = args.map(loop)
             s.TypeRef(spre, ssym, sargs)
           case SingleType(pre, sym) =>
-            val spre = if (tpe.hasNontrivialPrefix) loop(pre) else s.NoType
+            val spre = if (pre.isTrivialPrefix) s.NoType else loop(pre)
             val ssym = {
               // NOTE: Due to some unclear reason, Scalac sometimes saves
               // (or Scalap sometimes loads) single types that point to
@@ -133,25 +133,23 @@ trait TypeOps { self: Scalacp =>
   }
 
   implicit class XtensionType(tpe: Type) {
-    def prefix: Type = {
+    def isTrivialPrefix: Boolean = {
       tpe match {
-        case TypeRefType(pre, _, _) => pre
-        case SingleType(pre, _) => pre
-        case _ => NoType
+        case TypeRefType(pre, sym: ExternalSymbol, _) =>
+          pre.isTrivialPrefix && sym.entry.entryType == 10
+        case TypeRefType(pre, sym: SymbolInfoSymbol, _) =>
+          pre.isTrivialPrefix && sym.isModule
+        case SingleType(pre, _: ExternalSymbol) =>
+          pre.isTrivialPrefix
+        case SingleType(pre, sym: SymbolInfoSymbol) =>
+          pre.isTrivialPrefix && sym.isModule
+        case _: ThisType =>
+          true
+        case NoPrefixType =>
+          true
+        case _ =>
+          false
       }
-    }
-    def symbol: Symbol = {
-      tpe match {
-        case TypeRefType(_, sym, _) => sym
-        case SingleType(_, sym) => sym
-        case ThisType(sym) => sym
-        case _ => NoSymbol
-      }
-    }
-    // FIXME: https://github.com/scalameta/scalameta/issues/1343
-    def hasNontrivialPrefix: Boolean = {
-      val kind = tpe.prefix.symbol.kind
-      kind != k.OBJECT && kind != k.PACKAGE && kind != k.PACKAGE_OBJECT
     }
     def paramss: List[List[SymbolInfoSymbol]] = {
       tpe match {

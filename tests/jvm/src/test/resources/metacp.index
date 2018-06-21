@@ -13,6 +13,7 @@ _root_.
   exclude.
   flags.
   objects.
+  prefixes.
   traits.
   types.
 advanced.
@@ -68,6 +69,10 @@ flags.p.
   flags.p.package.
 objects.
   objects.X.
+prefixes.
+  prefixes.C#
+  prefixes.M.
+  prefixes.Test.
 traits.
   traits.C#
   traits.T#
@@ -131,6 +136,9 @@ example.`local-file`# => example/local$minusfile.class.semanticdb
 exclude.Exclude# => exclude/Exclude.class.semanticdb
 flags.p.package. => flags/p/package.class.semanticdb
 objects.X. => objects/X.class.semanticdb
+prefixes.C# => prefixes/C.class.semanticdb
+prefixes.M. => prefixes/M.class.semanticdb
+prefixes.Test. => prefixes/Test.class.semanticdb
 traits.C# => traits/C.class.semanticdb
 traits.T# => traits/T.class.semanticdb
 traits.U# => traits/U.class.semanticdb
