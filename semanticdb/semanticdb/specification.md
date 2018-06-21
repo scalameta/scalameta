@@ -1180,7 +1180,7 @@ Notes:
 * We diverge from SLS by having different data structures to model value types
   ([Type](#type)) and non-value types ([Signature](#signature)).
 * We diverge from SLS on the matter of handling prefixes (see definitions of
-  `TYPE_REF` and `SINGLE_TYPE` for more information).
+  `TypeRef` and `SingleType` for more information).
   * In SLS, all types that can have a prefix must have it specified
     explicitly, even if the prefix is trivial. For example in Scalac, `Int` must
     be represented as `TypeRef(<scala.this.type>, <Int>, List())` [\[27\]][27].
