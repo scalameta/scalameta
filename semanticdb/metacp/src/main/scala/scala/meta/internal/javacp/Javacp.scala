@@ -128,11 +128,6 @@ object Javacp {
       }
     }
 
-    // NOTE: we sort methods by whether they're static or not in order to compute same method symbols as metac.
-    // In scalac, static class members are separated from non-static members, which makes it impossible
-    // to recover the original mixed static/non-static member order in the classfile.
-    node.methods.sort(ByStaticAccess)
-
     val methodSignatures = node.methods.asScala.map { method: MethodNode =>
       val signature = JavaTypeSignature.parse(
         if (method.signature == null) method.desc else method.signature,
@@ -141,13 +136,18 @@ object Javacp {
       MethodInfo(method, signature)
     }
 
+    // NOTE: we sort methods by whether they're static or not in order to compute same method symbols as metac.
+    // In scalac, static class members are separated from non-static members, which makes it impossible
+    // to recover the original mixed static/non-static member order in the classfile.
+    val byStaticAccess = methodSignatures.sortBy(_.node.access.hasFlag(o.ACC_STATIC))
+
     methodSignatures.foreach {
       case method: MethodInfo if method.node.name == "<clinit>" =>
         ()
       case method: MethodInfo =>
         val isConstructor = method.node.name == "<init>"
         val methodDisambiguator = {
-          val overloads = methodSignatures.filter(_.node.name == method.node.name)
+          val overloads = byStaticAccess.filter(_.node.name == method.node.name)
           if (overloads.lengthCompare(1) == 0) "()"
           else {
             val index = overloads.indexWhere(_.signature eq method.signature)
@@ -453,15 +453,6 @@ object Javacp {
   private implicit class XtensionAccess(asmAccess: Int) {
     def hasFlag(flag: Int): Boolean =
       (flag & asmAccess) != 0
-  }
-
-  private val ByStaticAccess: Comparator[MethodNode] = new Comparator[MethodNode] {
-    override def compare(o1: MethodNode, o2: MethodNode): Int = {
-      java.lang.Boolean.compare(
-        o1.access.hasFlag(o.ACC_STATIC),
-        o2.access.hasFlag(o.ACC_STATIC)
-      )
-    }
   }
 
 }
