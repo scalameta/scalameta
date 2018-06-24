@@ -2305,13 +2305,22 @@ In this section, we describe the Java symbol format.
   * Concatenation of a left parenthesis (`(`), a tag
     and a right parenthesis (`)`).
     If the definition is not overloaded, the tag is empty.
-    If the definition is overloaded, the tag is computed from the order of
-    appearance of overloads in the source code (see "Class declarations" below
-    for an example):
+    If the definition is overloaded, the tag is computed depending on where
+    the definition appears in the following order:
+
+      * non-static overloads first, following the same order as they
+        appear in the original source,
+      * static overloads secondly, following the same order as they
+        appear in the original source
+
+    Given this order, the tag becomes
+
       * Empty string for the definition that appears first.
       * `+1` for the definition that appears second.
       * `+2` for the definition that appears third.
       * ...
+
+    See "Class declarations" below for an example.
 
 **Name** is:
   * For root package, `_root_`.
@@ -2529,7 +2538,7 @@ class C extends S1 implements I {
     <td><code>C</code></td>
     <td><code>a.C#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassSignature(List(), List(&lt;S1&gt;, &lt;I&gt;), None, List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3(Overload)&gt;, &lt;m3(Overload+1)&gt;, &lt;m3(Overload+2)&gt;, &lt;D1&gt;, &lt;D2&gt;))</code></td>
+    <td><code>ClassSignature(List(), List(&lt;S1&gt;, &lt;I&gt;), None, List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3(Overload)&gt;, &lt;m3(Overload+2)&gt;, &lt;m3(Overload+1)&gt;, &lt;D1&gt;, &lt;D2&gt;))</code></td>
   </tr>
   <tr>
     <td><code>m1</code></td>
@@ -2557,18 +2566,6 @@ class C extends S1 implements I {
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>a.C#m3(+1).</code></td>
-    <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(&lte3&gt;), TypeRef(None, &lt;T5&gt;))</code></td>
-  </tr>
-  <tr>
-    <td><code>e3</code></td>
-    <td><code>a.C#m3(+1).(e3)</code></td>
-    <td><code>PARAMETER</code></td>
-    <td><code>ValueSignature(TypeRef(None, &lt;three.Overload&gt;, List()))</code></td>
-  </tr>
-  <tr>
-    <td><code>m3</code></td>
     <td><code>a.C#m3(+2).</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(&lt;e2&gt;) TypeRef(None, &lt;T4&gt;))</code></td>
@@ -2578,6 +2575,18 @@ class C extends S1 implements I {
     <td><code>a.C#m3(+2).(e2)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;two.Overload&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>m3</code></td>
+    <td><code>a.C#m3(+1).</code></td>
+    <td><code>METHOD</code></td>
+    <td><code>MethodSignature(List(), List(&lte3&gt;), TypeRef(None, &lt;T5&gt;))</code></td>
+  </tr>
+  <tr>
+    <td><code>e3</code></td>
+    <td><code>a.C#m3(+1).(e3)</code></td>
+    <td><code>PARAMETER</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;three.Overload&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>T6</code></td>
@@ -2606,17 +2615,17 @@ class C extends S1 implements I {
 </table>
 
 Notes:
-* Class members must appear in the order specified below. This requirement is
-  necessary to compute consistent method symbol disambiguators in the Scala
-  compiler where static and non-static members have separate owners.
-  * non-static members first, following the same order as they appear in the
-    original source.
-  * static members secondly, following the same order as they appear in the
-    original source
 * A Java class maps to a single symbol with type `ClassSignature` including all
   static and non-static members. This departs from the Scala compiler internal
   representation of Java classes where non-static members are grouped under a
   `CLASS` symbol and static members are grouped under an `OBJECT` symbol.
+* The method `m3(+2)` has a higher disambiguator tag number than `m3(+1)` even
+  if `m3(+2)` appears earlier in the source code. This is because `m3(+2)` is
+  static and the disambiguator tag is computed from non-static members first
+  and static members second. The reason for this required order is to ensure
+  that it's possible to compute correct method symbols inside the Scala compiler,
+  which groups static member under an `OBJECT` symbol and non-static members under
+  a `CLASS` symbol.
 * Supported properties for `CLASS` symbols are
   * `FINAL` set for all final classes
   * `ABSTRACT` set for all abstract classes
