@@ -2258,6 +2258,10 @@ In this section, we describe the Java symbol format.
           For top-level package, its descriptor.
         </li>
         <li>
+          For static inner classes and interfaces, concatenation of
+          of owner's simple name, dot (`.`) and definition descriptor.
+        </li>
+        <li>
           For other definition, concatenation of owner symbol and
           definition descriptor.
         </li>
@@ -2515,6 +2519,7 @@ class C extends S1 implements I {
   T5 m3(three.Overload e3);
   static class D1<T6 extends S2 & S3, T7> { }
   class D2 { }
+  interface D3
 }
 ```
 
@@ -2529,7 +2534,7 @@ class C extends S1 implements I {
     <td><code>C</code></td>
     <td><code>a.C#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassSignature(List(), List(&lt;S1&gt;, &lt;I&gt;), None, List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3(Overload)&gt;, &lt;m3(Overload+1)&gt;, &lt;m3(Overload+2)&gt;, &lt;D1&gt;, &lt;D2&gt;))</code></td>
+    <td><code>ClassSignature(List(), List(&lt;S1&gt;, &lt;I&gt;), None, List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3(Overload)&gt;, &lt;m3(Overload+1)&gt;, &lt;m3(Overload+2)&gt;, &lt;D1&gt;, &lt;D2&gt;, &lt;D3&gt;))</code></td>
   </tr>
   <tr>
     <td><code>m1</code></td>
@@ -2581,19 +2586,19 @@ class C extends S1 implements I {
   </tr>
   <tr>
     <td><code>T6</code></td>
-    <td><code>a.C#D1#[T6]</code></td>
+    <td><code>a.C.D1#[T6]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td><code>TypeSignature(List(), None, Some(IntersectionType(List(&lt;S2&gt;, &lt;S3&gt;))))</code></td>
   </tr>
   <tr>
     <td><code>T7</code></td>
-    <td><code>a.C#D1#[T7]</code></td>
+    <td><code>a.C.D1#[T7]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td><code>TypeSignature(List(), None, None)</code></td>
   </tr>
   <tr>
     <td><code>D1</code></td>
-    <td><code>a.C#D1#</code></td>
+    <td><code>a.C.D1#</code></td>
     <td><code>CLASS</code></td>
     <td><code>ClassSignature(List(&lt;T6&gt;, &lt;T7&gt;), List(&lt;java.lang.Object#&gt;), None, List())</code></td>
   </tr>
@@ -2601,6 +2606,12 @@ class C extends S1 implements I {
     <td><code>D2</code></td>
     <td><code>a.C#D2#</code></td>
     <td><code>CLASS</code></td>
+    <td><code>ClassSignature(List(), List(), None, List())</code></td>
+  </tr>
+  <tr>
+    <td><code>D3</code></td>
+    <td><code>a.C.D3#</code></td>
+    <td><code>INTERFACE</code></td>
     <td><code>ClassSignature(List(), List(), None, List())</code></td>
   </tr>
 </table>
@@ -2613,6 +2624,8 @@ Notes:
     original source.
   * static members secondly, following the same order as they appear in the
     original source
+* The static inner class `C.D1` and inner interface `C.D3` have the owner `a.C#`
+  while their symbol syntax is the concatenation of `a.C.` and their descriptor.
 * A Java class maps to a single symbol with type `ClassSignature` including all
   static and non-static members. This departs from the Scala compiler internal
   representation of Java classes where non-static members are grouped under a

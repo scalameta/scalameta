@@ -7,6 +7,7 @@ import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.reflect.internal.{Flags => gf}
 import scala.util.control.NonFatal
 
 trait SymbolOps { self: SemanticdbOps =>
@@ -21,7 +22,11 @@ trait SymbolOps { self: SemanticdbOps =>
         if (sym.isTypeSkolem) return sym.deSkolemize.toSemantic
         if (sym.isSemanticdbLocal) return freshSymbol(sym.pos.toMeta.input)
 
-        val owner = sym.owner.toSemantic
+        val owner = {
+          val result = sym.owner.toSemantic
+          if (sym.isJavaStaticInnerClass) result.stripSuffix("#") + "."
+          else result
+        }
         val signature = {
           if (sym.isMethod || sym.isUsefulField) {
             d.Method(sym.name.toSemantic, sym.disambiguator)
@@ -179,6 +184,10 @@ trait SymbolOps { self: SemanticdbOps =>
     def isSelfParameter: Boolean = {
       sym != g.NoSymbol && sym.owner.thisSym == sym
     }
+
+    def isJavaStaticInnerClass: Boolean =
+      sym.isJavaClass &&
+        sym.hasFlag(gf.STATIC)
     def isJavaClass: Boolean =
       sym.isJavaDefined &&
         !sym.hasPackageFlag &&

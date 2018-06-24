@@ -21,12 +21,22 @@ import scala.tools.asm.{Opcodes => o}
 
 object Javacp {
   def parse(classfile: ToplevelClassfile): Option[ToplevelInfos] = {
-    sinfos(classfile, classfile.node, 0, Scope.empty) match {
+    sinfos(classfile, classfile.node, 0, sscope(classfile)) match {
       case others :+ toplevel =>
         Some(ToplevelInfos(classfile, List(toplevel), others.toList))
       case _ =>
         None
     }
+  }
+
+  private def sscope(classfile: ToplevelClassfile): Scope = {
+    var scope = Scope.empty
+    classfile.node.innerClasses.asScala.foreach { ic =>
+      if (ic.access.hasFlag(o.ACC_STATIC)) {
+        scope = scope.enterStaticClass(ic.name)
+      }
+    }
+    scope
   }
 
   private def sinfos(
@@ -59,7 +69,7 @@ object Javacp {
     }
 
     if (isAnonymousClass(node)) return Nil
-    val classSymbol = ssym(node.name)
+    val classSymbol = ssym(node.name, scope)
     val className = sname(node.name)
     val classAccess = node.access | access
     val hasOuterClassReference = node.fields.asScala.exists(isOuterClassReference)
@@ -230,7 +240,7 @@ object Javacp {
     // node.innerClasses includes all inner classes, both direct and those nested inside other inner classes.
     val directInnerClasses = node.innerClasses.asScala.filter(_.outerName == node.name)
     directInnerClasses.foreach { ic =>
-      val innerClassSymbol = ssym(ic.name)
+      val innerClassSymbol = ssym(ic.name, classScope)
       decls += innerClassSymbol
       val innerPath = asmNameToPath(ic.name, toplevel.base)
       val innerClassNode = innerPath.toClassNode
@@ -273,12 +283,12 @@ object Javacp {
     sig match {
       case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
         require(identifier != null, sig.toString)
-        val prefix = styperef(ssym(identifier), targs.toSemanticTpe(scope))
+        val prefix = styperef(ssym(identifier, scope), targs.toSemanticTpe(scope))
         suffix.foldLeft(prefix) {
           case (accum, s: ClassTypeSignatureSuffix) =>
             styperef(
               prefix = accum,
-              symbol = ssym(s.simpleClassTypeSignature.identifier),
+              symbol = ssym(s.simpleClassTypeSignature.identifier, scope),
               args = s.simpleClassTypeSignature.typeArguments.toSemanticTpe(scope)
             )
         }
@@ -350,7 +360,7 @@ object Javacp {
     asmName
   }
 
-  private def ssym(asmName: String): String = {
+  private def ssym(asmName: String, scope: Scope): String = {
     var i = 0
     var slash = false
     val result = new StringBuilder
@@ -362,6 +372,13 @@ object Javacp {
       result.append(part.toString.encoded)
       part.clear()
     }
+    def childName(i: Int): String = {
+      var j = i + 1
+      while (j < asmName.length && asmName.charAt(j) != '$') {
+        j += 1
+      }
+      asmName.substring(0, j)
+    }
     while (i < asmName.length) {
       val c = asmName.charAt(i)
       if (c == '/') {
@@ -370,7 +387,11 @@ object Javacp {
         result.append('.')
       } else if (c == '$') {
         flush()
-        result.append('#')
+        if (scope.isStatic(childName(i))) {
+          result.append('.')
+        } else {
+          result.append('#')
+        }
       } else {
         put(c)
       }

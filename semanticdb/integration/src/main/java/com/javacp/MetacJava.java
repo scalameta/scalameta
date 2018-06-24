@@ -18,4 +18,5 @@ public class MetacJava {
     // that methods are sorted by whether they're static or not.
     public static void overload(Overload3.A a) {}
     public void overload(Overload2.A a) {}
+    public static java.util.Map.Entry<String, Integer> entry;
 }
