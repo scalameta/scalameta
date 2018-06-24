@@ -42,7 +42,7 @@ Make sure you are using the latest coursier version (1.1.0-M4 or newer).
 
 ```bash
 alias metac="coursier launch org.scalameta:metac_2.12.6:4.0.0-M4 -- -cp $(coursier fetch -p org.scala-lang:scala-library:2.12.6)"
-alias metacp="coursier launch org.scalameta:metacp_2.12:4.0.0-M4 --"
+alias metacp="coursier launch org.scalameta:metacp_2.12:4.0.0-M4 --" 
 alias metap="coursier launch org.scalameta:metap_2.11:4.0.0-M4 --"
 ```
 
