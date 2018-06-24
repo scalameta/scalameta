@@ -9,7 +9,7 @@ In this document, we introduce practical aspects of working with SemanticDB.
 We describe the tools that can be used to produce SemanticDB payloads, the tools
 can be used to consume SemanticDB payloads and useful tips & tricks for working
 with SemanticDB. If you're looking for a comprehensive reference of SemanticDB
-features, check out [the specification](specification.md).
+features, check out [the specification](semanticdb3.md).
 
 * [Installation](#installation)
 * [Example](#example)
@@ -150,7 +150,7 @@ Occurrences:
 ```
 
 Metap prettyprints various parts of the SemanticDB payload in correspondence
-with [the SemanticDB specification](specification.md). Here are the most
+with [the SemanticDB specification](semanticdb3.md). Here are the most
 important parts:
   * `Uri` stores the URI of the source file relative to
     the directory where the SemanticDB producer was invoked.
@@ -170,7 +170,7 @@ important parts:
 ## What is SemanticDB good for?
 
 SemanticDB decouples producers and consumers of semantic information about
-programs and establishes [a rigorous specification](specification.md) of the
+programs and establishes [a rigorous specification](semanticdb3.md) of the
 interchange format.
 
 Thanks to that, SemanticDB-based tools like [Scalafix](#scalafix),
@@ -432,7 +432,7 @@ Because Metacp only works with classfiles and not sources, SemanticDB files
 that it produces only contain the `Symbols` section. Neither `Occurrences`
 nor `Diagnostics` sections are present, because they both require source
 information. For more information about the SemanticDB format, check out
-[the specification](#specification.md).
+[the specification](semanticdb3.md).
 
 In order to improve performance, Metacp sometimes caches conversion results.
 Every classpath entry is converted and cached individually according to the
