@@ -17,6 +17,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.GenSeq
 
 class Main(settings: Settings, reporter: Reporter) {
+
+  lazy val lookup = ClasspathLookup(settings.fullClasspath)
+
   def process(): Option[Classpath] = {
     val success = new AtomicBoolean(true)
 
@@ -113,14 +116,14 @@ class Main(settings: Settings, reporter: Reporter) {
               val result = {
                 val attrs = if (node.attrs != null) node.attrs.asScala else Nil
                 if (attrs.exists(_.`type` == "ScalaSig")) {
-                  val classfile = ToplevelClassfile(base, abspath, node)
+                  val classfile = ToplevelClassfile(base, abspath, node, lookup, settings, reporter)
                   Scalacp.parse(classfile)
                 } else if (attrs.exists(_.`type` == "Scala")) {
                   None
                 } else {
                   val innerClassNode = node.innerClasses.asScala.find(_.name == node.name)
                   if (innerClassNode.isEmpty) {
-                    val classfile = ToplevelClassfile(base, abspath, node)
+                    val classfile = ToplevelClassfile(base, abspath, node, null, settings, reporter)
                     Javacp.parse(classfile)
                   } else {
                     None
@@ -132,6 +135,7 @@ class Main(settings: Settings, reporter: Reporter) {
                 infos.save(out)
               }
             } catch {
+              case e: ClasspathLookup.Error => throw e
               case NonFatal(ex) =>
                 reporter.out.println(s"error: can't convert $path")
                 ex.printStackTrace(reporter.out)

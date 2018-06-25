@@ -210,27 +210,6 @@ example.Acc#
 +      symlinks: "example.Acc#m3()."
 
 
-==============================
-example.MetacJava#nonStatic().
-==============================
---- metac
-+++ metacp
-             symbol: "example.MetacJava#staticInner()."
--        symbol: "com.javacp.MetacJava#StaticInner#NonStatic#"
-+        symbol: "com.javacp.MetacJava.StaticInner#NonStatic#"
-
-
-================================
-example.MetacJava#staticInner().
-================================
---- metac
-+++ metacp
-       typeRef {
-         prefix {
--        symbol: "com.javacp.MetacJava#StaticInner#"
-+        symbol: "com.javacp.MetacJava.StaticInner#"
-
-
 =========================
 example.Methods#m13().(x)
 =========================

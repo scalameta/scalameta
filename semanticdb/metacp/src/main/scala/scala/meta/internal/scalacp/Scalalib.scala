@@ -87,7 +87,7 @@ object Scalalib {
     )
     val syntheticBase = PathIO.workingDirectory
     val syntheticPath = syntheticBase.resolve("scala/" + name + ".class")
-    val syntheticClassfile = ToplevelClassfile(syntheticBase, syntheticPath, null)
+    val syntheticClassfile = ToplevelClassfile(syntheticBase, syntheticPath, null, null, null, null)
     ToplevelInfos(syntheticClassfile, List(builtin), if (kind.isClass) ctor +: symbols else symbols)
   }
 

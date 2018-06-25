@@ -26,4 +26,28 @@ object PathIO {
     if (idx == -1) ""
     else filename.substring(idx + 1)
   }
+
+  /** Returns the parent directory of the absolute string path */
+  def dirname(abspath: String): String = {
+    val isDir = abspath.endsWith("/")
+    val end =
+      if (isDir) abspath.lastIndexOf('/', abspath.length - 2)
+      else abspath.lastIndexOf('/')
+    if (end < 0) "/"
+    else abspath.substring(0, end + 1)
+  }
+
+  /** Returns the parent directory of the string path */
+  def basename(abspath: String): String = {
+    val end = abspath.lastIndexOf('/')
+    val isDir = end == abspath.length - 1
+    if (end < 0) abspath
+    else if (!isDir) abspath.substring(end + 1)
+    else {
+      val start = abspath.lastIndexOf('/', end - 1)
+      if (start < 0) abspath.substring(0, end)
+      else abspath.substring(start + 1, end)
+    }
+  }
+
 }

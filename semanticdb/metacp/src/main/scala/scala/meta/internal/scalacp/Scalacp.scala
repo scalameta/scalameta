@@ -9,7 +9,7 @@ import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.Scala._
 import scala.tools.scalap.scalax.rules.scalasig._
 
-class Scalacp private (classfile: ToplevelClassfile)
+class Scalacp private (val classfile: ToplevelClassfile)
     extends AnnotationOps
     with NameOps
     with SymbolInformationOps

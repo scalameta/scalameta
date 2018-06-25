@@ -17,6 +17,7 @@ import scala.meta.tests.cli._
 import scala.meta.testkit.DiffAssertions
 import org.scalatest.FunSuite
 import org.scalatest.FunSuiteLike
+import scala.meta.tests.metacp.Library
 
 class ExpectSuite extends FunSuite with DiffAssertions {
   BuildInfo.scalaVersion.split("\\.").take(2).toList match {
@@ -45,7 +46,7 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         import MetacIndexExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
-      test("metac-metacp.expect.diff") {
+      test("metac-metacp.diff") {
         import MetacMetacpExpectDiffExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
@@ -133,6 +134,10 @@ trait ExpectHelpers extends FunSuiteLike {
         .Settings()
         .withCacheDir(AbsolutePath(target))
         .withClasspath(Classpath(AbsolutePath(in)))
+        .withDependencyClasspath(Classpath(
+          Library.scalaLibrary.classpath().entries ++
+            Library.jdk.classpath().entries
+        ))
         .withScalaLibrarySynthetics(false)
       val reporter = Reporter().withOut(out).withErr(err)
       Metacp.process(settings, reporter) match {
