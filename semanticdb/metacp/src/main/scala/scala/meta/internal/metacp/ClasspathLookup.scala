@@ -7,7 +7,6 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.jar.JarFile
 import scala.collection.mutable
-import scala.meta.internal.metacp
 import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
 import scala.meta.internal.io.PathIO
@@ -19,18 +18,17 @@ final class ClasspathLookup private (val dirs: collection.Map[String, ClasspathE
   }
 
   def getEntry(path: String): Option[ReadableClasspathEntry] = {
-    if (path.endsWith("/")) None
-    else {
-      val dir = PathIO.dirname(path)
-      dirs.get(dir) match {
-        case Some(pkg) =>
-          val name = PathIO.basename(path)
-          pkg.members.get(name).collect {
-            case e: ReadableClasspathEntry => e
-          }
-        case _ =>
-          None
-      }
+    getEntry(PathIO.dirname(path), PathIO.basename(path))
+  }
+
+  def getEntry(directory: String, filename: String): Option[ReadableClasspathEntry] = {
+    dirs.get(directory) match {
+      case Some(pkg) =>
+        pkg.members.get(filename).collect {
+          case e: ReadableClasspathEntry => e
+        }
+      case _ =>
+        None
     }
   }
 

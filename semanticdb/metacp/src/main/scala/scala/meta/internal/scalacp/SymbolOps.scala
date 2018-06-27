@@ -30,18 +30,18 @@ trait SymbolOps { self: Scalacp =>
               case None => false
               case Some(p) =>
                 def classpathSaysSymbolIsFromJava(): Boolean = {
-                  val javaClassPath = p.packageResourceName + sym.name + ".class"
-                  classfile.lookup.getEntry(javaClassPath) match {
+                  val javaClassName = sym.name + ".class"
+                  classfile.lookup.getEntry(p.packageResourceName, javaClassName) match {
                     case Some(entry) =>
                       !entry.hasScalaSig
                     case None =>
-                      val scalaObjectPath = p.packageResourceName + sym.name + "$.class"
-                      classfile.lookup.getEntry(scalaObjectPath) match {
+                      val scalaObjectName = sym.name + "$.class"
+                      classfile.lookup.getEntry(p.packageResourceName, scalaObjectName) match {
                         case Some(_) =>
                           false
                         case None =>
                           if (sym.isAssumedJava) true
-                          else throw MissingSymbolException(javaClassPath)
+                          else throw MissingSymbolException(javaClassName)
                       }
                   }
                 }
