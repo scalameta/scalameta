@@ -9,6 +9,7 @@
   * [Location](#location)
   * [Symbol](#symbol)
   * [Scope](#scope)
+  * [Constant](#constant)
   * [Type](#type)
   * [Signature](#signature)
   * [SymbolInformation](#symbolinformation)
@@ -308,14 +309,82 @@ directly inside the payloads representing these types. Thanks to hardlinking,
 we don't need to invent global symbols to remain convenient to SemanticDB
 consumers.
 
+### Constant
+
+```protobuf
+message Constant {
+  oneof sealed_value {
+    UnitConstant unitConstant = 1;
+    BooleanConstant booleanConstant = 2;
+    ByteConstant byteConstant = 3;
+    ShortConstant shortConstant = 4;
+    CharConstant charConstant = 5;
+    IntConstant intConstant = 6;
+    LongConstant longConstant = 7;
+    FloatConstant floatConstant = 8;
+    DoubleConstant doubleConstant = 9;
+    StringConstant stringConstant = 10;
+    NullConstant nullConstant = 11;
+  }
+}
+
+message UnitConstant {
+}
+
+message BooleanConstant {
+  bool value = 1;
+}
+
+message ByteConstant {
+  int32 value = 1;
+}
+
+message ShortConstant {
+  int32 value = 1;
+}
+
+message CharConstant {
+  int32 value = 1;
+}
+
+message IntConstant {
+  int32 value = 1;
+}
+
+message LongConstant {
+  int64 value = 1;
+}
+
+message FloatConstant {
+  float value = 1;
+}
+
+message DoubleConstant {
+  double value = 1;
+}
+
+message StringConstant {
+  string value = 1;
+}
+
+message NullConstant {
+}
+```
+
+`Constant` represents compile-time constants. Compile-time constants include
+values of the nine primitive types on the JVM, as well as strings and `null`.
+
 ### Type
 
 ```protobuf
 message Type {
-  reserved 1, 3, 4, 5, 6, 11, 12, 15;
+  reserved 1, 3, 4, 5, 6, 11, 12, 15, 16;
   oneof sealed_value {
     TypeRef typeRef = 2;
-    SingletonType singletonType = 16;
+    SingleType singleType = 20;
+    ThisType thisType = 21;
+    SuperType superType = 22;
+    ConstantType constantType = 23;
     IntersectionType intersectionType = 17;
     UnionType unionType = 18;
     WithType withType = 19;
@@ -351,35 +420,45 @@ references to nested type definitions, e.g. path-dependent types in Scala,
 type refs include `prefix`.
 
 ```protobuf
-message SingletonType {
-  enum Tag {
-    UNKNOWN_SINGLETON = 0;
-    SYMBOL = 1;
-    THIS = 2;
-    SUPER = 3;
-    UNIT = 4;
-    BOOLEAN = 5;
-    BYTE = 6;
-    SHORT = 7;
-    CHAR = 8;
-    INT = 9;
-    LONG = 10;
-    FLOAT = 11;
-    DOUBLE = 12;
-    STRING = 13;
-    NULL = 14;
-  }
-  Tag tag = 1;
-  Type prefix = 2;
-  string symbol = 3;
-  int64 primitive = 4;
-  string string = 5;
+message SingleType {
+  Type prefix = 1;
+  string symbol = 2;
 }
 ```
 
-`SingletonType` represents a singleton type. Singletons may be specified: 1)
-via a [Symbol](#symbol) accompanied with a `prefix`, 2) via
-a keyword (by `this` or `super`) or 3) via a literal.
+`SingleType` is a singleton type that is inhabited only by the value of
+the definition represented by `symbol` and the accompanying `prefix`.
+
+```protobuf
+message ThisType {
+  string symbol = 1;
+}
+```
+
+`ThisType` is a singleton type that is inhabited only by the value
+of `this` reference to the definition represented by `symbol`,
+only visible inside the lexical extent of the enclosing definition.
+
+```protobuf
+message SuperType {
+  Type prefix = 1;
+  string symbol = 2;
+}
+```
+
+`SuperType` is a singleton type that is inhabited only by the value
+of `super` reference to the definition represented by `symbol`,
+prefixed by an optional `prefix`, only visible inside the lexical extent
+of the enclosing definition.
+
+```protobuf
+message ConstantType {
+  Constant constant = 1;
+}
+```
+
+`ConstantType` is a singleton type that is inhabited only by the value
+of a [Constant](#constant).
 
 ```protobuf
 message IntersectionType {
@@ -1037,11 +1116,13 @@ must be modelled:
 #### Type
 
 ```protobuf
-message Type {
-  reserved 1, 3, 4, 5, 6, 11, 12, 15;
+  reserved 1, 3, 4, 5, 6, 11, 12, 15, 16;
   oneof sealed_value {
     TypeRef typeRef = 2;
-    SingletonType singletonType = 16;
+    SingleType singleType = 20;
+    ThisType thisType = 21;
+    SuperType superType = 22;
+    ConstantType constantType = 23;
     IntersectionType intersectionType = 17;
     UnionType unionType = 18;
     WithType withType = 19;
@@ -1052,7 +1133,6 @@ message Type {
     ByNameType byNameType = 13;
     RepeatedType repeatedType = 14;
   }
-}
 ```
 
 In Scala, [Type](#type) represents value types [\[18\]][18].
@@ -1081,14 +1161,14 @@ In the examples below:
     <td valign="top">Singleton types [<a href="https://www.scala-lang.org/files/archive/spec/2.12/03-types.html#singleton-types">24</a>, <a href="https://github.com/scala/scala/pull/5310">25</a>]</td>
     <td>
       <ul>
-        <li><code>x.type</code> ~ <code>SingletonType(SYMBOL, None, &lt;x&gt;, None, None)</code>.</li>
-        <li><code>p.x.type</code> ~ <code>SingletonType(SYMBOL, &lt;p.type&gt;, &lt;x&gt;, None, None)</code>.</li>
-        <li><code>this.type</code> ~ <code>SingletonType(THIS, None, &lt;E&gt;, None, None)</code>.</li>
-        <li><code>C.this.type</code> ~ <code>SingletonType(THIS, None, &lt;C&gt;, None, None)</code>.</li>
-        <li>Type of <code>super</code> ~ <code>SingletonType(SUPER, &lt;E&gt;, None, None, None)</code>.</li>
-        <li>Type of <code>super[M]</code> ~ <code>SingletonType(SUPER, &lt;E&gt;, &lt;M&gt;, None, None)</code>.</li>
-        <li>Type of <code>C.super[M]</code> ~ <code>SingletonType(SUPER, &lt;C&gt;, &lt;M&gt;, None, None)</code>.</li>
-        <li>Literal type ~ <code>SingletonType(&lt;TAG&gt;, None, None, &lt;value&gt;, None)</code> or <code>SingletonType(&lt;TAG&gt;, None, None, None, &lt;value&gt;)</code>.</li>
+        <li><code>x.type</code> ~ <code>SingleType(None, &lt;x&gt;)</code>.</li>
+        <li><code>p.x.type</code> ~ <code>SingleType(&lt;p.type&gt;, &lt;x&gt;)</code>.</li>
+        <li><code>this.type</code> ~ <code>ThisType(&lt;E&gt;)</code>.</li>
+        <li><code>C.this.type</code> ~ <code>ThisType(THIS, None, &lt;C&gt;, None, None)</code>.</li>
+        <li>Type of <code>super</code> ~ <code>SuperType(&lt;E&gt;, None)</code>.</li>
+        <li>Type of <code>super[M]</code> ~ <code>SuperType(&lt;E&gt;, &lt;M&gt;)</code>.</li>
+        <li>Type of <code>C.super[M]</code> ~ <code>SuperType(&lt;C&gt;, &lt;M&gt;)</code>.</li>
+        <li>Literal type ~ <code>ConstantType(&lt;value&gt;)</code>.</li>
       </ul>
     </td>
   </tr>
@@ -2342,10 +2422,13 @@ must be modelled:
 #### Type
 
 ```protobuf
-message Type {
+  reserved 1, 3, 4, 5, 6, 11, 12, 15, 16;
   oneof sealed_value {
     TypeRef typeRef = 2;
-    SingletonType singletonType = 16;
+    SingleType singleType = 20;
+    ThisType thisType = 21;
+    SuperType superType = 22;
+    ConstantType constantType = 23;
     IntersectionType intersectionType = 17;
     UnionType unionType = 18;
     WithType withType = 19;
@@ -2356,7 +2439,6 @@ message Type {
     ByNameType byNameType = 13;
     RepeatedType repeatedType = 14;
   }
-}
 ```
 
 In Java, [Type](#type) represents types [\[74\]][74].
