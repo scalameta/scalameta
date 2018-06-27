@@ -45,8 +45,7 @@ trait SymbolOps { self: Scalacp =>
                       }
                   }
                 }
-                p.isJavaDefined ||
-                (p.isReallyPackage && classpathSaysSymbolIsFromJava())
+                p.isJavaDefined || (p.isReallyPackage && classpathSaysSymbolIsFromJava())
             }
           }
         self.isJavaDefined.put(sym, result)

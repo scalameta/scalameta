@@ -126,7 +126,7 @@ object ClasspathLookup {
           if (dir.endsWith("META-INF")) FileVisitResult.SKIP_SUBTREE
           else {
             val name = relpath(dir)
-            dirs(name) = metacp.ClasspathEntry.Package(name)
+            dirs(name) = ClasspathEntry.Package(name)
             super.preVisitDirectory(dir, attrs)
           }
         }

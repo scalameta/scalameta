@@ -14,10 +14,10 @@ sealed abstract class ClasspathEntry {
   def name: String
 }
 
-/** A classpath entry that  can be read as an InputStream. */
+/** A classpath entry that can be read as an InputStream. */
 sealed abstract class ReadableClasspathEntry extends ClasspathEntry {
 
-  /** Returns an input stream to read the bytes of this entry.
+  /** Returns an input stream to read the bytes of this classpath entry.
     *
     * @note The caller is responsible for closing the InputStream.
     */
