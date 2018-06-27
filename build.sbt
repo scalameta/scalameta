@@ -427,7 +427,7 @@ lazy val testkit = project
     hasLargeIntegrationTests,
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % "3.2.0-SNAP10",
-      "com.lihaoyi" %% "geny" % "0.1.1",
+      "com.lihaoyi" %% "geny" % "0.1.2",
       // These are used to download and extract a corpus tar.gz
       "org.rauschig" % "jarchivelib" % "0.7.1",
       "commons-io" % "commons-io" % "2.5",
