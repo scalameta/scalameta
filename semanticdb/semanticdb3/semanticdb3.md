@@ -9,6 +9,7 @@
   * [Location](#location)
   * [Symbol](#symbol)
   * [Scope](#scope)
+  * [Constant](#constant)
   * [Type](#type)
   * [Signature](#signature)
   * [SymbolInformation](#symbolinformation)
@@ -308,6 +309,71 @@ directly inside the payloads representing these types. Thanks to hardlinking,
 we don't need to invent global symbols to remain convenient to SemanticDB
 consumers.
 
+### Constant
+
+```protobuf
+message Constant {
+  oneof sealed_value {
+    UnitConstant unitConstant = 1;
+    BooleanConstant booleanConstant = 2;
+    ByteConstant byteConstant = 3;
+    ShortConstant shortConstant = 4;
+    CharConstant charConstant = 5;
+    IntConstant intConstant = 6;
+    LongConstant longConstant = 7;
+    FloatConstant floatConstant = 8;
+    DoubleConstant doubleConstant = 9;
+    StringConstant stringConstant = 10;
+    NullConstant nullConstant = 11;
+  }
+}
+
+message UnitConstant {
+}
+
+message BooleanConstant {
+  bool value = 1;
+}
+
+message ByteConstant {
+  int32 value = 1;
+}
+
+message ShortConstant {
+  int32 value = 1;
+}
+
+message CharConstant {
+  int32 value = 1;
+}
+
+message IntConstant {
+  int32 value = 1;
+}
+
+message LongConstant {
+  int64 value = 1;
+}
+
+message FloatConstant {
+  float value = 1;
+}
+
+message DoubleConstant {
+  double value = 1;
+}
+
+message StringConstant {
+  string value = 1;
+}
+
+message NullConstant {
+}
+```
+
+`Constant` represents compile-time constants. Compile-time constants include
+values of the nine primitive types on the JVM, as well as strings and `null`.
+
 ### Type
 
 ```protobuf
@@ -392,8 +458,7 @@ message ConstantType {
 ```
 
 `ConstantType` is a singleton type that is inhabited only by the value
-of `constant`. Constants can include values of the nine primitive types
-on the JVM, as well as strings and `null`.
+of a [Constant](#constant).
 
 ```protobuf
 message IntersectionType {
