@@ -48,6 +48,19 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   def customizeConfig(config: SemanticdbConfig): SemanticdbConfig = config
   import databaseOps._
 
+  private def assertNoReporterErrors(): Unit = {
+    val reporter = g.reporter.asInstanceOf[StoreReporter]
+    val errors = reporter.infos.filter(_.severity == reporter.ERROR)
+    val diagnostics = errors.map { error =>
+      s"""|<input>:${error.pos.line}:${error.pos.column}: error ${error.msg}
+          |${error.pos.lineContent}
+          |${error.pos.lineCaret}""".stripMargin
+    }
+    if (errors.nonEmpty) {
+      fail(diagnostics.mkString("\n"))
+    }
+  }
+
   private def computeDatabaseFromSnippet(code: String, language: s.Language): s.TextDocument = {
     val javaFile = File.createTempFile("paradise", "." + language.toString().toLowerCase())
     val writer = new PrintWriter(javaFile)
@@ -67,14 +80,7 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
     unit.body =
       if (language.isScala) g.newUnitParser(unit).parse()
       else g.newJavaUnitParser(unit).parse()
-    val errors = reporter.infos.filter(_.severity == reporter.ERROR)
-    errors.foreach { error =>
-      val msg =
-        s"""|<input>:${error.pos.line}:${error.pos.column}: error ${error.msg}
-            |${error.pos.lineContent}
-            |${error.pos.lineCaret}""".stripMargin
-      fail(msg)
-    }
+    assertNoReporterErrors()
 
     val packageobjectsPhase = run.phaseNamed("packageobjects")
     val phases = List(run.parserPhase, run.namerPhase, packageobjectsPhase, run.typerPhase)
@@ -84,8 +90,7 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
       g.phase = phase
       g.globalPhase = phase
       phase.asInstanceOf[g.GlobalPhase].apply(unit)
-      val errors = reporter.infos.filter(_.severity == reporter.ERROR)
-      errors.foreach(error => fail(s"scalac ${phase.name} error: ${error.msg} at ${error.pos}"))
+      assertNoReporterErrors()
     })
     g.phase = run.phaseNamed("patmat")
     g.globalPhase = run.phaseNamed("patmat")
