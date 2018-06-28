@@ -9,69 +9,11 @@ import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.tools.scalap.scalax.rules.scalasig._
 
-trait SymbolOps { self: Scalacp =>
+trait SymbolOps { scalacp: Scalacp =>
   lazy val symbolCache = new HashMap[Symbol, String]
   lazy val isJavaDefined = mutable.Map.empty[Symbol, Boolean]
+
   implicit class XtensionSymbolSSymbol(sym: Symbol) {
-
-    def isReallyPackage: Boolean = {
-      index.isClassdir(packageResourceName)
-    }
-
-    def isJavaDefined: Boolean = self.isJavaDefined.get(sym) match {
-      case Some(cachedResult) =>
-        cachedResult
-      case _ =>
-        val result =
-          if (sym.isReallyPackage) false
-          else if (sym.isPackageObject) false
-          else {
-            sym.parent match {
-              case None => false
-              case Some(p) =>
-                def classpathSaysSymbolIsFromJava(): Boolean = {
-                  val javaClassName = sym.name + ".class"
-                  index.getClassfile(p.packageResourceName, javaClassName) match {
-                    case Some(entry) =>
-                      !entry.hasScalaSig
-                    case None =>
-                      val scalaObjectName = sym.name + "$.class"
-                      index.getClassfile(p.packageResourceName, scalaObjectName) match {
-                        case Some(_) =>
-                          false
-                        case None =>
-                          if (sym.isAssumedJava) true
-                          else throw MissingSymbolException(javaClassName)
-                      }
-                  }
-                }
-                p.isJavaDefined || (p.isReallyPackage && classpathSaysSymbolIsFromJava())
-            }
-          }
-        self.isJavaDefined.put(sym, result)
-        result
-    }
-
-    def isAssumedJava: Boolean = {
-      val path = sym.path
-      if (settings.assumeJava(path)) true
-      else if (settings.assumeScala(path)) false
-      else sym.parent.exists(_.isAssumedJava)
-    }
-
-    def packageResourceName: String = {
-      ownerChain.map(_.name).mkString("", "/", "/")
-    }
-
-    def ownerChain: Traversable[Symbol] = new Traversable[Symbol] {
-      override def foreach[U](f: Symbol => U): Unit = {
-        def loop(s: Symbol): Unit = {
-          s.parent.foreach(loop)
-          f(s)
-        }
-        loop(sym)
-      }
-    }
 
     def toSemantic: String = {
       def uncached(sym: Symbol): String = {
@@ -206,6 +148,60 @@ trait SymbolOps { self: Scalacp =>
   }
 
   implicit class XtensionSymbol(sym: Symbol) {
+    def isJavaDefined: Boolean = scalacp.isJavaDefined.get(sym) match {
+      case Some(cachedResult) =>
+        cachedResult
+      case _ =>
+        val result =
+          if (sym.isReallyPackage) false
+          else if (sym.isPackageObject) false
+          else {
+            sym.parent match {
+              case None => false
+              case Some(p) =>
+                def classpathSaysSymbolIsFromJava(): Boolean = {
+                  val javaClassName = sym.name + ".class"
+                  index.getClassfile(p.packageResourceName, javaClassName) match {
+                    case Some(entry) =>
+                      !entry.hasScalaSig
+                    case None =>
+                      val scalaObjectName = sym.name + "$.class"
+                      index.getClassfile(p.packageResourceName, scalaObjectName) match {
+                        case Some(_) =>
+                          false
+                        case None =>
+                          if (sym.isAssumedJava) true
+                          else throw MissingSymbolException(javaClassName)
+                      }
+                  }
+                }
+                p.isJavaDefined || (p.isReallyPackage && classpathSaysSymbolIsFromJava())
+            }
+          }
+        scalacp.isJavaDefined.put(sym, result)
+        result
+    }
+    def isReallyPackage: Boolean = {
+      index.isClassdir(packageResourceName)
+    }
+    def packageResourceName: String = {
+      ownerChain.map(_.name).mkString("", "/", "/")
+    }
+    def isAssumedJava: Boolean = {
+      val path = sym.path
+      if (settings.assumeJava(path)) true
+      else if (settings.assumeScala(path)) false
+      else sym.parent.exists(_.isAssumedJava)
+    }
+    private def ownerChain: Traversable[Symbol] = new Traversable[Symbol] {
+      override def foreach[U](f: Symbol => U): Unit = {
+        def loop(s: Symbol): Unit = {
+          s.parent.foreach(loop)
+          f(s)
+        }
+        loop(sym)
+      }
+    }
     def ssym: String = sym.toSemantic
     def self: Type = sym match {
       case sym: ClassSymbol =>
