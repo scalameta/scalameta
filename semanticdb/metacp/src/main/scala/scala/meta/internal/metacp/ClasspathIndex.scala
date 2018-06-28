@@ -12,45 +12,49 @@ import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
 import scala.meta.internal.io.PathIO
 
-final class ClasspathLookup private (val dirs: collection.Map[String, ClasspathEntry.Package]) {
+/** An index to lookup class directories and classfiles by their JVM names. */
+final class ClasspathIndex private (val dirs: collection.Map[String, Classdir]) {
 
   override def toString: String = {
-    s"ClasspathLookup(${dirs.size} entries)"
+    s"ClasspathIndex(${dirs.size} entries)"
   }
 
-  def getEntry(path: String): Option[ReadableClasspathEntry] = {
-    getEntry(PathIO.dirname(path), PathIO.basename(path))
+  /** Returns a classfile with the given path. */
+  def getClassfile(path: String): Option[Classfile] = {
+    getClassfile(PathIO.dirname(path), PathIO.basename(path))
   }
 
-  def getEntry(directory: String, filename: String): Option[ReadableClasspathEntry] = {
+  /** Returns a classfile with the given directory and filename. */
+  def getClassfile(directory: String, filename: String): Option[Classfile] = {
     dirs.get(directory) match {
       case Some(pkg) =>
         pkg.members.get(filename).collect {
-          case e: ReadableClasspathEntry => e
+          case e: Classfile => e
         }
       case _ =>
         None
     }
   }
 
-  def isPackage(name: String): Boolean =
-    dirs.contains(name)
+  /** Returns true if this path is a class directory. */
+  def isClassdir(path: String): Boolean =
+    dirs.contains(path)
 
 }
 
-object ClasspathLookup {
+object ClasspathIndex {
   case class Error(msg: String) extends Exception(msg)
-  def empty: ClasspathLookup = ClasspathLookup(Classpath(Nil))
-  def apply(classpath: Classpath): ClasspathLookup = new Builder(classpath).result()
+  def empty: ClasspathIndex = ClasspathIndex(Classpath(Nil))
+  def apply(classpath: Classpath): ClasspathIndex = new Builder(classpath).result()
 
   private final class Builder(classpath: Classpath) {
-    private val dirs = mutable.Map.empty[String, ClasspathEntry.Package]
+    private val dirs = mutable.Map.empty[String, Classdir]
 
-    def result(): ClasspathLookup = {
-      val root = ClasspathEntry.Package("/")
+    def result(): ClasspathIndex = {
+      val root = Classdir("/")
       dirs(root.name) = root
       classpath.entries.foreach(expandPath)
-      new ClasspathLookup(dirs)
+      new ClasspathIndex(dirs)
     }
 
     private def expandPath(path: AbsolutePath): Unit = {
@@ -59,13 +63,13 @@ object ClasspathLookup {
       else throw Error(s"file does not exist: $path")
     }
 
-    private def getPackage(name: String): ClasspathEntry.Package = {
+    private def getPackage(name: String): Classdir = {
       dirs.get(name) match {
         case Some(dir) =>
           dir
         case _ =>
           val parent = getPackage(PathIO.dirname(name))
-          val entry = ClasspathEntry.Package(name)
+          val entry = Classdir(name)
           parent.members(PathIO.basename(name)) = entry
           dirs(name) = entry
           entry
@@ -84,7 +88,7 @@ object ClasspathLookup {
               if (entry.isDirectory) entry.getName
               else PathIO.dirname(entry.getName)
             )
-            val inJar = ClasspathEntry.InJar(entry, file)
+            val inJar = CompressedClassfile(entry, file)
             parent.members(PathIO.basename(entry.getName)) = inJar
           }
         }
@@ -114,7 +118,7 @@ object ClasspathLookup {
           val name = file.getFileName.toString
           if (name.endsWith(".class")) {
             val dir = dirs(relpath(file.getParent))
-            dir.members(name) = ClasspathEntry.OnDisk(AbsolutePath(file))
+            dir.members(name) = UncompressedClassfile(AbsolutePath(file))
           }
           super.visitFile(file, attrs)
         }
@@ -125,7 +129,7 @@ object ClasspathLookup {
           if (dir.endsWith("META-INF")) FileVisitResult.SKIP_SUBTREE
           else {
             val name = relpath(dir)
-            dirs(name) = ClasspathEntry.Package(name)
+            dirs(name) = Classdir(name)
             super.preVisitDirectory(dir, attrs)
           }
         }

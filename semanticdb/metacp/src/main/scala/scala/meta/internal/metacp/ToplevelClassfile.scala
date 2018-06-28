@@ -10,7 +10,7 @@ final case class ToplevelClassfile(
     base: AbsolutePath,
     path: AbsolutePath,
     node: ClassNode,
-    lookup: ClasspathLookup,
+    index: ClasspathIndex,
     settings: Settings,
     reporter: Reporter
 ) {

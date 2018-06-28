@@ -9,7 +9,7 @@ import scala.tools.asm.tree._
 package object metacp {
   private val SKIP_ALL = SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES
 
-  implicit class XtensionAsmBytes(entry: ReadableClasspathEntry) {
+  implicit class XtensionAsmBytes(entry: Classfile) {
     def hasScalaSig: Boolean = {
       val visitor = new HasScalaSigVisitor
       val in = entry.openInputStream()

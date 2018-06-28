@@ -18,7 +18,7 @@ import scala.collection.GenSeq
 
 class Main(settings: Settings, reporter: Reporter) {
 
-  lazy val lookup = ClasspathLookup(settings.fullClasspath)
+  lazy val index = ClasspathIndex(settings.fullClasspath)
 
   def process(): Option[Classpath] = {
     val success = new AtomicBoolean(true)
@@ -116,7 +116,7 @@ class Main(settings: Settings, reporter: Reporter) {
               val result = {
                 val attrs = if (node.attrs != null) node.attrs.asScala else Nil
                 if (attrs.exists(_.`type` == "ScalaSig")) {
-                  val classfile = ToplevelClassfile(base, abspath, node, lookup, settings, reporter)
+                  val classfile = ToplevelClassfile(base, abspath, node, index, settings, reporter)
                   Scalacp.parse(classfile)
                 } else if (attrs.exists(_.`type` == "Scala")) {
                   None
@@ -135,7 +135,7 @@ class Main(settings: Settings, reporter: Reporter) {
                 infos.save(out)
               }
             } catch {
-              case e: ClasspathLookup.Error => throw e
+              case e: ClasspathIndex.Error => throw e
               case NonFatal(ex) =>
                 reporter.out.println(s"error: can't convert $path")
                 ex.printStackTrace(reporter.out)
