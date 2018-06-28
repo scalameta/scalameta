@@ -75,7 +75,10 @@ trait SymbolOps { self: SemanticdbOps =>
     def isSemanticdbMulti: Boolean = sym.isOverloaded
     def disambiguator: String = {
       val peers = sym.owner.semanticdbDecls.gsyms
-      val overloads = peers.filter(_.name == sym.name)
+      val overloads = peers.filter { peer =>
+        peer.isMethod &&
+        peer.name == sym.name
+      }
       val suffix = {
         if (overloads.lengthCompare(1) == 0) ""
         else {

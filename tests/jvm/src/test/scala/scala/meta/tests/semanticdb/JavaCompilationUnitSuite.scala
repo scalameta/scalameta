@@ -3,6 +3,9 @@ package scala.meta.tests.semanticdb
 class JavaCompilationUnitSuite extends SemanticdbSuite {
   override def trimLines: Boolean = false
 
+  def skip(a: String, b: String): Unit =
+    ignore(a.take(20)) {}
+
   javaSymbols(
     """package ja;
       |public class A {
@@ -68,4 +71,20 @@ class JavaCompilationUnitSuite extends SemanticdbSuite {
     """.stripMargin
   )
 
+  javaSymbols(
+    """package jc;
+      |public class Overload {
+      |  private final int value;
+      |  public int value() { return value; }
+      |}
+    """.stripMargin,
+    """|jc.Overload# => class Overload extends Object { +3 decls }
+       |  Object => java.lang.Object#
+       |jc.Overload#`<init>`(). => ctor <init>()
+       |jc.Overload#value(). => method value(): Int
+       |  Int => scala.Int#
+       |jc.Overload#value. => private field value: Int
+       |  Int => scala.Int#
+    """.stripMargin
+  )
 }
