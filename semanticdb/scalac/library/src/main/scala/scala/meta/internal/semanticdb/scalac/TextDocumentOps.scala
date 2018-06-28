@@ -533,14 +533,10 @@ trait TextDocumentOps { self: SemanticdbOps =>
           tree match {
             case d: g.DefTree =>
               val _ = d.symbol.info // complete symbol
-              if (
-                d.symbol != g.NoSymbol &&
-                !(d.symbol.isModule && !d.symbol.isStatic) &&
-                !d.symbol.hasPackageFlag
-              ) {
+              if (d.symbol.isUseful &&
+                  !d.symbol.isModule &&
+                  !d.symbol.hasPackageFlag) {
                 symbols += d.symbol.toSymbolInformation(SymlinkChildren)
-              } else if (!d.symbol.hasPackageFlag) {
-                org.scalameta.logger.elem(d.symbol, d, d.symbol.info, d.symbol)
               }
               super.traverse(tree)
             case _: g.Import =>

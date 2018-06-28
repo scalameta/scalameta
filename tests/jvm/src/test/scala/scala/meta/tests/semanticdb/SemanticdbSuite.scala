@@ -15,8 +15,7 @@ import scala.meta.internal.{semanticdb => s}
 import scala.meta.io._
 import scala.meta.testkit.DiffAssertions
 
-abstract class SemanticdbSuite extends FunSuite
-    with DiffAssertions { self =>
+abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
     if (name.length > 50) name = name.take(50) + "..."
@@ -49,8 +48,8 @@ abstract class SemanticdbSuite extends FunSuite
   def customizeConfig(config: SemanticdbConfig): SemanticdbConfig = config
   import databaseOps._
 
-  private def computeDatabaseFromSnippet(code: String): s.TextDocument = {
-    val javaFile = File.createTempFile("paradise", ".scala")
+  private def computeDatabaseFromSnippet(code: String, language: s.Language): s.TextDocument = {
+    val javaFile = File.createTempFile("paradise", "." + language.toString().toLowerCase())
     val writer = new PrintWriter(javaFile)
     try writer.write(code)
     finally writer.close()
@@ -65,9 +64,17 @@ abstract class SemanticdbSuite extends FunSuite
     g.globalPhase = run.parserPhase
     val reporter = new StoreReporter()
     g.reporter = reporter
-    unit.body = g.newUnitParser(unit).parse()
+    unit.body =
+      if (language.isScala) g.newUnitParser(unit).parse()
+      else g.newJavaUnitParser(unit).parse()
     val errors = reporter.infos.filter(_.severity == reporter.ERROR)
-    errors.foreach(error => fail(s"scalac parse error: ${error.msg} at ${error.pos}"))
+    errors.foreach { error =>
+      val msg =
+        s"""|<input>:${error.pos.line}:${error.pos.column}: error ${error.msg}
+            |${error.pos.lineContent}
+            |${error.pos.lineCaret}""".stripMargin
+      fail(msg)
+    }
 
     val packageobjectsPhase = run.phaseNamed("packageobjects")
     val phases = List(run.parserPhase, run.namerPhase, packageobjectsPhase, run.typerPhase)
@@ -83,20 +90,29 @@ abstract class SemanticdbSuite extends FunSuite
     g.phase = run.phaseNamed("patmat")
     g.globalPhase = run.phaseNamed("patmat")
 
-    unit.toTextDocument
+    if (language.isScala) unit.toTextDocument
+    else unit.toJavaTextDocument
   }
 
-  private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
-    val document = computeDatabaseFromSnippet(code)
+  private def computeDatabaseSectionFromSnippet(
+      code: String,
+      sectionName: String,
+      language: s.Language): String = {
+    val document = computeDatabaseFromSnippet(code, language)
     val format = scala.meta.metap.Format.Detailed
     val payload = s.Print.document(format, document).toString.split(EOL)
     val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
     section.mkString(EOL)
   }
 
-  def checkSection(code: String, expected: String, section: String): Unit = {
+  def checkSection(
+      code: String,
+      expected: String,
+      section: String,
+      language: s.Language = s.Language.SCALA
+  ): Unit = {
     test(code) {
-      val obtained = computeDatabaseSectionFromSnippet(code, section)
+      val obtained = computeDatabaseSectionFromSnippet(code, section, language)
       try assertNoDiff(obtained, expected)
       catch {
         case ex: Exception =>
@@ -112,6 +128,10 @@ abstract class SemanticdbSuite extends FunSuite
           throw ex
       }
     }
+  }
+
+  def javaSymbols(code: String, expected: String): Unit = {
+    checkSection(code, expected, "Symbols", s.Language.JAVA)
   }
 
   def occurrences(code: String, expected: String): Unit = {
@@ -130,12 +150,15 @@ abstract class SemanticdbSuite extends FunSuite
     checkSection(code, expected, "Synthetics")
   }
 
-  private def computeDatabaseAndOccurrencesFromMarkup(markup: String): (s.TextDocument, List[String]) = {
+  private def computeDatabaseAndOccurrencesFromMarkup(
+      markup: String,
+      language: s.Language = s.Language.SCALA
+  ): (s.TextDocument, List[String]) = {
     val chevrons = "<<(.*?)>>".r
     val ps0 = chevrons.findAllIn(markup).matchData.map(m => (m.start, m.end)).toList
     val ps = ps0.zipWithIndex.map { case ((s, e), i) => (s - 4 * i, e - 4 * i - 4) }
     val code = chevrons.replaceAllIn(markup, "$1")
-    val database = computeDatabaseFromSnippet(code)
+    val database = computeDatabaseFromSnippet(code, language)
     val unit = g.currentRun.units.toList.last
     val source = unit.toSource
     val symbols = ps.map {

@@ -73,7 +73,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         if (isAbstractClass || kind.isInterface || isAbstractMethod) flip(p.ABSTRACT)
         if (gsym.hasFlag(gf.FINAL) || gsym.hasFlag(gf.JAVA_ENUM)) flip(p.FINAL)
         if (gsym.hasFlag(gf.JAVA_ENUM)) flip(p.ENUM)
-        if (gsym.hasFlag(gf.STATIC)) flip(p.STATIC)
+        if (gsym.hasFlag(gf.STATIC) && !gsym.hasFlag(gf.INTERFACE)) flip(p.STATIC)
       } else {
         if (isAbstractClass || isAbstractMethod || isAbstractType) flip(p.ABSTRACT)
         if (gsym.hasFlag(gf.FINAL) || isObject) flip(p.FINAL)
