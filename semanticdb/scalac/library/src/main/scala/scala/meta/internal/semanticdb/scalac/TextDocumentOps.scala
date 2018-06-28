@@ -165,7 +165,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               // https://github.com/scalameta/scalameta/issues/665
               // Instead of crashing with "unsupported file", we ignore these cases.
               if (gsym0 == null) return
-              if (gsym0.isUseless) return
+              if (gsym0.isUselessOccurrence) return
               if (mtree.pos == m.Position.None) return
               if (occurrences.contains(mtree.pos)) return
 
@@ -533,9 +533,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
           tree match {
             case d: g.DefTree =>
               val _ = d.symbol.info // complete symbol
-              if (d.symbol.isUseful &&
-                  !d.symbol.isModule &&
-                  !d.symbol.hasPackageFlag) {
+              if (d.symbol.isUseful && !d.symbol.hasPackageFlag) {
                 symbols += d.symbol.toSymbolInformation(SymlinkChildren)
               }
               super.traverse(tree)

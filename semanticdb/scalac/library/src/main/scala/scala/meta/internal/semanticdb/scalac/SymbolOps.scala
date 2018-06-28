@@ -220,6 +220,9 @@ trait SymbolOps { self: SemanticdbOps =>
     def isSyntheticCaseAccessor: Boolean = {
       sym.isCaseAccessor && sym.name.toString.contains("$")
     }
+    def isSyntheticJavaModule: Boolean = {
+      !sym.hasPackageFlag && sym.isJavaDefined && sym.isModule
+    }
     def isUseless: Boolean = {
       sym == g.NoSymbol ||
       sym.isAnonymousClass ||
@@ -229,7 +232,12 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isSyntheticValueClassCompanion ||
       sym.isUselessField ||
       sym.isSyntheticCaseAccessor ||
-      sym.isRefinementClass
+      sym.isRefinementClass ||
+      sym.isSyntheticJavaModule
+    }
+    def isUselessOccurrence: Boolean = {
+      sym.isUseless &&
+      !sym.isSyntheticJavaModule
     }
     def isUseful: Boolean = !sym.isUseless
   }

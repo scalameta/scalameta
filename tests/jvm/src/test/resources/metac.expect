@@ -9,13 +9,13 @@ Language => Java
 Symbols => 11 entries
 
 Symbols:
-com.javacp.ClassSuffix# => class ClassSuffix extends Object { +4 decls }
+com.javacp.ClassSuffix# => class ClassSuffix extends Object { +3 decls }
   Object => java.lang.Object#
-com.javacp.ClassSuffix#Inner# => private[javacp] class Inner[A] extends Object { +3 decls }
+com.javacp.ClassSuffix#Inner# => private[javacp] class Inner[A] extends Object { +2 decls }
   javacp => com.javacp.
   A => com.javacp.ClassSuffix#Inner#[A]
   Object => java.lang.Object#
-com.javacp.ClassSuffix#Inner#Bar# => private[javacp] class Bar extends Object { +3 decls }
+com.javacp.ClassSuffix#Inner#Bar# => private[javacp] class Bar extends Object { +2 decls }
   javacp => com.javacp.
   Object => java.lang.Object#
 com.javacp.ClassSuffix#Inner#Bar#Fuz# => private[javacp] class Fuz[B] extends Object { +1 decls }
@@ -60,7 +60,7 @@ com.javacp.Coin#QUARTER. => final static enum field QUARTER: Coin
   Coin => com.javacp.Coin#
 com.javacp.Coin#`<init>`().(value) => param value: Int
   Int => scala.Int#
-com.javacp.Coin#value(+1). => method value(): Int
+com.javacp.Coin#value(). => method value(): Int
   Int => scala.Int#
 com.javacp.Coin#value. => private field value: Int
   Int => scala.Int#
@@ -114,27 +114,27 @@ Language => Java
 Symbols => 28 entries
 
 Symbols:
-com.javacp.MetacJava# => class MetacJava extends Object { +12 decls }
+com.javacp.MetacJava# => class MetacJava extends Object { +8 decls }
   Object => java.lang.Object#
-com.javacp.MetacJava#Overload1# => class Overload1 extends Object { +3 decls }
+com.javacp.MetacJava#Overload1# => class Overload1 extends Object { +2 decls }
   Object => java.lang.Object#
 com.javacp.MetacJava#Overload1#A# => class A extends Object { +1 decls }
   Object => java.lang.Object#
 com.javacp.MetacJava#Overload1#A#`<init>`(). => ctor <init>()
 com.javacp.MetacJava#Overload1#`<init>`(). => ctor <init>()
-com.javacp.MetacJava#Overload2# => class Overload2 extends Object { +3 decls }
+com.javacp.MetacJava#Overload2# => class Overload2 extends Object { +2 decls }
   Object => java.lang.Object#
 com.javacp.MetacJava#Overload2#A# => class A extends Object { +1 decls }
   Object => java.lang.Object#
 com.javacp.MetacJava#Overload2#A#`<init>`(). => ctor <init>()
 com.javacp.MetacJava#Overload2#`<init>`(). => ctor <init>()
-com.javacp.MetacJava#Overload3# => static class Overload3 extends Object { +3 decls }
+com.javacp.MetacJava#Overload3# => static class Overload3 extends Object { +2 decls }
   Object => java.lang.Object#
 com.javacp.MetacJava#Overload3#A# => static class A extends Object { +1 decls }
   Object => java.lang.Object#
 com.javacp.MetacJava#Overload3#A#`<init>`(). => ctor <init>()
 com.javacp.MetacJava#Overload3#`<init>`(). => ctor <init>()
-com.javacp.MetacJava#StaticInner# => static class StaticInner extends Object { +5 decls }
+com.javacp.MetacJava#StaticInner# => static class StaticInner extends Object { +4 decls }
   Object => java.lang.Object#
 com.javacp.MetacJava#StaticInner#NonStatic# => class NonStatic extends Object { +2 decls }
   Object => java.lang.Object#
@@ -204,7 +204,7 @@ Language => Java
 Symbols => 13 entries
 
 Symbols:
-com.javacp.Recursive# => abstract class Recursive[A <: Recursive[A, B] with Serializable {}, B <: Inner[A, B]] extends Object { +6 decls }
+com.javacp.Recursive# => abstract class Recursive[A <: Recursive[A, B] with Serializable {}, B <: Inner[A, B]] extends Object { +4 decls }
   A => com.javacp.Recursive#[A]
   Recursive => com.javacp.Recursive#
   B => com.javacp.Recursive#[B]
@@ -262,7 +262,7 @@ Language => Java
 Symbols => 70 entries
 
 Symbols:
-com.javacp.Test# => final class Test[A <: CharSequence with Serializable {}, B] extends ArrayList[A] with Comparable[B] with Serializable { +38 decls }
+com.javacp.Test# => final class Test[A <: CharSequence with Serializable {}, B] extends ArrayList[A] with Comparable[B] with Serializable { +36 decls }
   A => com.javacp.Test#[A]
   CharSequence => java.lang.CharSequence#
   Serializable => java.io.Serializable#
