@@ -55,7 +55,6 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
           val sdoc = unit.toJavaTextDocument
           sdoc.save(config.targetroot)
         } catch handleCrash(Some(unit))
-
       }
       override def apply(unit: g.CompilationUnit): Unit = {
         try {

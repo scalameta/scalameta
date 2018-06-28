@@ -351,7 +351,7 @@ com.javacp.Coin#`<init>`().(value)
 -  tag: PUBLIC
 -  symbol: ""
 -}
--language: SCALA
+-language: JAVA
 +name: ""
 +language: UNKNOWN_LANGUAGE
  signature {
@@ -404,7 +404,7 @@ com.javacp.Coin#valueOf().(x)
 -  tag: PUBLIC
 -  symbol: ""
 -}
--language: SCALA
+-language: JAVA
 +name: ""
 +language: UNKNOWN_LANGUAGE
  signature {
@@ -415,31 +415,11 @@ com.javacp.Coin#valueOf().(x)
 -        symbol: "java.lang.String#"
 
 
-=======================================================
-com.javacp.MetacJava#StaticInner#NonStatic#method().(e)
-=======================================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
 ===================================
 com.javacp.MetacJava#overload().(a)
 ===================================
 --- metac
 +++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
      tpe {
        typeRef {
          prefix {
@@ -454,12 +434,6 @@ com.javacp.MetacJava#overload(+1).(a)
 =====================================
 --- metac
 +++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
      tpe {
        typeRef {
          prefix {
@@ -467,20 +441,6 @@ com.javacp.MetacJava#overload(+1).(a)
 -            prefix {
 -            symbol: "com.javacp.MetacJava#Overload2#"
          symbol: "com.javacp.MetacJava#Overload2#A#"
-
-
-=====================================
-com.javacp.MetacJava#overload(+2).(a)
-=====================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
 
 
 ==============================
@@ -737,34 +697,6 @@ com.javacp.Test#InnerShadowTypeParam#`<init>`().
  signature {
 
 
-===============================================
-com.javacp.Test#InnerShadowTypeParam#move().(a)
-===============================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-===============================================
-com.javacp.Test#InnerShadowTypeParam#move().(b)
-===============================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
 =======================================
 com.javacp.Test#StaticClass#`<init>`().
 =======================================
@@ -866,62 +798,6 @@ com.javacp.Test#arrayField.
    tag: PRIVATE_WITHIN
 
 
-===============================
-com.javacp.Test#compareTo().(b)
-===============================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-===================================
-com.javacp.Test#genericParams().(a)
-===================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-===================================
-com.javacp.Test#genericParams().(b)
-===================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-======================================
-com.javacp.Test#methodTypeParams().(c)
-======================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
 ======================================
 com.javacp.Test#methodTypeParams().[C]
 ======================================
@@ -944,146 +820,6 @@ com.javacp.Test#methodTypeParams().[C]
 -        symbol: "scala.Nothing#"
      upper_bound {
        typeRef {
-
-
-==============================
-com.javacp.Test#overload().(a)
-==============================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-================================
-com.javacp.Test#overload(+1).(a)
-================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-=====================================
-com.javacp.Test#primitiveParams().(a)
-=====================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-=====================================
-com.javacp.Test#primitiveParams().(b)
-=====================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-=====================================
-com.javacp.Test#primitiveParams().(c)
-=====================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-=====================================
-com.javacp.Test#primitiveParams().(d)
-=====================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-=====================================
-com.javacp.Test#primitiveParams().(e)
-=====================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-=====================================
-com.javacp.Test#primitiveParams().(f)
-=====================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-=====================================
-com.javacp.Test#primitiveParams().(g)
-=====================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-=====================================
-com.javacp.Test#primitiveParams().(h)
-=====================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
 
 
 ===============================
@@ -1137,71 +873,11 @@ com.javacp.Test#strictfpMethod().
    symbol: "com.javacp."
 
 
-================================
-com.javacp.Test#typeParams().(a)
-================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-================================
-com.javacp.Test#typeParams().(b)
-================================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-============================
-com.javacp.Test#vararg().(a)
-============================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
-===============================
-com.javacp.Test#vararg().(args)
-===============================
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-   valueSignature {
-     tpe {
-
-
 =====================================
 com.javacp.Test#wildcard().(wildcard)
 =====================================
 --- metac
 +++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
  signature {
    valueSignature {
      tpe {
@@ -1247,10 +923,6 @@ com.javacp.Test#wildcard(+1).(a)
 ================================
 --- metac
 +++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
  signature {
    valueSignature {
      tpe {
@@ -1296,10 +968,6 @@ com.javacp.Test#wildcard(+1).(b)
 ================================
 --- metac
 +++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
  signature {
    valueSignature {
      tpe {
