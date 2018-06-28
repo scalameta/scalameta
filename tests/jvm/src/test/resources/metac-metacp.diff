@@ -194,19 +194,6 @@ classes.N.anonClass().
              name: "local"
 
 
-=======================
-com.javacp.ClassSuffix#
-=======================
---- metac
-+++ metacp
-     self {
-     declarations {
-+      symlinks: "com.javacp.ClassSuffix#suffix."
-       symlinks: "com.javacp.ClassSuffix#`<init>`()."
-       symlinks: "com.javacp.ClassSuffix#Inner#"
--      symlinks: "com.javacp.ClassSuffix#suffix."
-
-
 ========================================
 com.javacp.ClassSuffix#Inner#Bar#Fuz#[B]
 ========================================
@@ -338,18 +325,15 @@ com.javacp.Coin#
 +++ metacp
      self {
      declarations {
--      symlinks: "com.javacp.Coin#value."
--      symlinks: "com.javacp.Coin#value()."
-       symlinks: "com.javacp.Coin#PENNY."
-       symlinks: "com.javacp.Coin#NICKEL."
-       symlinks: "com.javacp.Coin#DIME."
-       symlinks: "com.javacp.Coin#QUARTER."
-+      symlinks: "com.javacp.Coin#value."
 +      symlinks: "com.javacp.Coin#$VALUES."
-       symlinks: "com.javacp.Coin#values()."
-       symlinks: "com.javacp.Coin#valueOf()."
+       symlinks: "com.javacp.Coin#DIME."
+       symlinks: "com.javacp.Coin#NICKEL."
+       symlinks: "com.javacp.Coin#PENNY."
+       symlinks: "com.javacp.Coin#QUARTER."
 +      symlinks: "com.javacp.Coin#`<init>`()."
-+      symlinks: "com.javacp.Coin#value()."
+       symlinks: "com.javacp.Coin#value()."
+       symlinks: "com.javacp.Coin#value."
+       symlinks: "com.javacp.Coin#valueOf()."
 
 
 ==================================
@@ -431,39 +415,6 @@ com.javacp.Coin#valueOf().(x)
 -        symbol: "java.lang.String#"
 
 
-=====================
-com.javacp.MetacJava#
-=====================
---- metac
-+++ metacp
-     declarations {
-       symlinks: "com.javacp.MetacJava#`<init>`()."
--      symlinks: "com.javacp.MetacJava#Overload1#"
--      symlinks: "com.javacp.MetacJava#Overload2#"
-       symlinks: "com.javacp.MetacJava#overload()."
-+      symlinks: "com.javacp.MetacJava#overload(+2)."
-       symlinks: "com.javacp.MetacJava#overload(+1)."
--      symlinks: "com.javacp.MetacJava#StaticInner#"
-+      symlinks: "com.javacp.MetacJava#Overload2#"
-       symlinks: "com.javacp.MetacJava#Overload3#"
--      symlinks: "com.javacp.MetacJava#overload(+2)."
-+      symlinks: "com.javacp.MetacJava#Overload1#"
-+      symlinks: "com.javacp.MetacJava#StaticInner#"
-
-
-=================================
-com.javacp.MetacJava#StaticInner#
-=================================
---- metac
-+++ metacp
-     declarations {
-       symlinks: "com.javacp.MetacJava#StaticInner#`<init>`()."
-       symlinks: "com.javacp.MetacJava#StaticInner#isNotStatic()."
--      symlinks: "com.javacp.MetacJava#StaticInner#NonStatic#"
-       symlinks: "com.javacp.MetacJava#StaticInner#isStatic()."
-+      symlinks: "com.javacp.MetacJava#StaticInner#NonStatic#"
-
-
 =======================================================
 com.javacp.MetacJava#StaticInner#NonStatic#method().(e)
 =======================================================
@@ -530,19 +481,6 @@ com.javacp.MetacJava#overload(+2).(a)
  signature {
    valueSignature {
      tpe {
-
-
-=====================
-com.javacp.Recursive#
-=====================
---- metac
-+++ metacp
-     declarations {
-       symlinks: "com.javacp.Recursive#`<init>`()."
--      symlinks: "com.javacp.Recursive#Inner2#"
-       symlinks: "com.javacp.Recursive#foo()."
-+      symlinks: "com.javacp.Recursive#Inner2#"
-       symlinks: "com.javacp.Recursive#Inner#"
 
 
 ==============================
@@ -754,62 +692,6 @@ com.javacp.Recursive#foo().[Anon]
          prefix {
 -        symbol: "scala.Any#"
 +        symbol: "java.lang.Object#"
-
-
-================
-com.javacp.Test#
-================
---- metac
-+++ metacp
-     self {
-     declarations {
--      symlinks: "com.javacp.Test#`<init>`()."
--      symlinks: "com.javacp.Test#compareTo()."
--      symlinks: "com.javacp.Test#wildcard()."
--      symlinks: "com.javacp.Test#wildcard(+1)."
--      symlinks: "com.javacp.Test#InnerShadowTypeParam#"
-       symlinks: "com.javacp.Test#genericField."
-       symlinks: "com.javacp.Test#arrayField."
--      symlinks: "com.javacp.Test#genericMethod()."
--      symlinks: "com.javacp.Test#arrayMethod()."
--      symlinks: "com.javacp.Test#genericParams()."
--      symlinks: "com.javacp.Test#primitiveParams()."
--      symlinks: "com.javacp.Test#typeParams()."
--      symlinks: "com.javacp.Test#methodTypeParams()."
--      symlinks: "com.javacp.Test#overload()."
--      symlinks: "com.javacp.Test#overload(+1)."
-       symlinks: "com.javacp.Test#Int."
-       symlinks: "com.javacp.Test#Long."
-       symlinks: "com.javacp.Test#Float."
-       symlinks: "com.javacp.Test#protectedField."
-       symlinks: "com.javacp.Test#publicField."
-       symlinks: "com.javacp.Test#packagePrivateField."
-+      symlinks: "com.javacp.Test#anonymous."
-+      symlinks: "com.javacp.Test#staticField."
-+      symlinks: "com.javacp.Test#`<init>`()."
-+      symlinks: "com.javacp.Test#compareTo()."
-+      symlinks: "com.javacp.Test#wildcard()."
-+      symlinks: "com.javacp.Test#wildcard(+1)."
-+      symlinks: "com.javacp.Test#genericMethod()."
-+      symlinks: "com.javacp.Test#arrayMethod()."
-+      symlinks: "com.javacp.Test#genericParams()."
-+      symlinks: "com.javacp.Test#primitiveParams()."
-+      symlinks: "com.javacp.Test#typeParams()."
-+      symlinks: "com.javacp.Test#methodTypeParams()."
-+      symlinks: "com.javacp.Test#overload()."
-+      symlinks: "com.javacp.Test#overload(+1)."
-       symlinks: "com.javacp.Test#privateMethod()."
-       symlinks: "com.javacp.Test#protectedMethod()."
-       symlinks: "com.javacp.Test#publicMethod()."
-       symlinks: "com.javacp.Test#packagePrivateMethod()."
--      symlinks: "com.javacp.Test#anonymous."
-+      symlinks: "com.javacp.Test#staticMethod()."
-       symlinks: "com.javacp.Test#vararg()."
-       symlinks: "com.javacp.Test#strictfpMethod()."
--      symlinks: "com.javacp.Test#staticField."
--      symlinks: "com.javacp.Test#staticMethod()."
-       symlinks: "com.javacp.Test#StaticClass#"
-+      symlinks: "com.javacp.Test#InnerShadowTypeParam#"
 
 
 ========================================
@@ -1458,22 +1340,6 @@ com.javacp.Test#wildcard(+1).(b)
 -                    symbol: "scala.Any#"
 
 
-============
-example.Acc#
-============
---- metac
-+++ metacp
-       symlinks: "example.Acc#`<init>`()."
-       symlinks: "example.Acc#m1()."
-       symlinks: "example.Acc#m2()."
--      symlinks: "example.Acc#m3()."
-       symlinks: "example.Acc#m4()."
-       symlinks: "example.Acc#m5()."
-       symlinks: "example.Acc#m6()."
-       symlinks: "example.Acc#m7()."
-+      symlinks: "example.Acc#m3()."
-
-
 =========================
 example.Methods#m13().(x)
 =========================
@@ -1495,25 +1361,6 @@ example.Methods#m13().(x)
 -              prefix {
 -              symbol: "scala.unchecked#"
 +        symbol: "scala.Int#"
-
-
-================
-flags.p.package.
-================
---- metac
-+++ metacp
-       symlinks: "flags.p.package.C#"
-       symlinks: "flags.p.package.T1#"
-       symlinks: "flags.p.package.T2#"
-+      symlinks: "flags.p.package.S#"
-       symlinks: "flags.p.package.U#"
-       symlinks: "flags.p.package.V#"
-       symlinks: "flags.p.package.X."
-       symlinks: "flags.p.package.Y#"
-       symlinks: "flags.p.package.Z#"
-       symlinks: "flags.p.package.AA#"
--      symlinks: "flags.p.package.S#"
-       symlinks: "flags.p.package.xs1()."
 
 
 =====================

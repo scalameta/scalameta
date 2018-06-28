@@ -109,7 +109,18 @@ trait ExpectHelpers extends FunSuiteLike {
       if PathIO.extension(file.toNIO) == "semanticdb"
       doc <- s.TextDocuments.parseFrom(file.readAllBytes).documents
       sym <- doc.symbols
-    } yield sym.symbol -> sym
+      normalized = sym.signature match {
+        case c: s.ClassSignature =>
+          sym.copy(
+            signature = c.copy(
+              declarations = Some(
+                c.declarations.get.copy(symlinks = c.declarations.get.symlinks.sorted)
+              )
+            )
+          )
+        case _ => sym
+      }
+    } yield sym.symbol -> normalized
   }.toMap
 
   protected def metap(dirOrJar: Path): String = {
