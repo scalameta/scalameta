@@ -7,6 +7,7 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.jar.JarFile
 import scala.collection.mutable
+import scala.collection.JavaConverters._
 import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
 import scala.meta.internal.io.PathIO
@@ -104,7 +105,7 @@ object ClasspathLookup {
 
     private def expandDirectory(root: AbsolutePath): Unit = {
       def relpath(dir: Path): String =
-        root.toNIO.relativize(dir).toString + "/"
+        root.toNIO.relativize(dir).iterator().asScala.mkString("", "/", "/")
       Files.walkFileTree(root.toNIO, new SimpleFileVisitor[Path] {
         override def visitFile(
             file: Path,
