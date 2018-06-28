@@ -7,10 +7,14 @@ import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.Scala._
+import scala.meta.metacp.Settings
 import scala.tools.scalap.scalax.rules.scalasig._
 
-class Scalacp private (val classfile: ToplevelClassfile)
-    extends AnnotationOps
+final class Scalacp private (
+    val classfile: ToplevelClassfile,
+    val settings: Settings,
+    val index: ClasspathIndex
+) extends AnnotationOps
     with NameOps
     with SymbolInformationOps
     with SymbolOps
@@ -60,8 +64,12 @@ class Scalacp private (val classfile: ToplevelClassfile)
 }
 
 object Scalacp {
-  def parse(classfile: ToplevelClassfile): Option[ToplevelInfos] = {
-    val scalacp = new Scalacp(classfile)
+  def parse(
+      classfile: ToplevelClassfile,
+      settings: Settings,
+      index: ClasspathIndex
+  ): Option[ToplevelInfos] = {
+    val scalacp = new Scalacp(classfile, settings, index)
     scalacp.parse()
   }
 }

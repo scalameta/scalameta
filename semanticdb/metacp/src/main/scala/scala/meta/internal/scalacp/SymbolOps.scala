@@ -15,7 +15,7 @@ trait SymbolOps { self: Scalacp =>
   implicit class XtensionSymbolSSymbol(sym: Symbol) {
 
     def isReallyPackage: Boolean = {
-      classfile.index.isClassdir(packageResourceName)
+      index.isClassdir(packageResourceName)
     }
 
     def isJavaDefined: Boolean = self.isJavaDefined.get(sym) match {
@@ -31,12 +31,12 @@ trait SymbolOps { self: Scalacp =>
               case Some(p) =>
                 def classpathSaysSymbolIsFromJava(): Boolean = {
                   val javaClassName = sym.name + ".class"
-                  classfile.index.getClassfile(p.packageResourceName, javaClassName) match {
+                  index.getClassfile(p.packageResourceName, javaClassName) match {
                     case Some(entry) =>
                       !entry.hasScalaSig
                     case None =>
                       val scalaObjectName = sym.name + "$.class"
-                      classfile.index.getClassfile(p.packageResourceName, scalaObjectName) match {
+                      index.getClassfile(p.packageResourceName, scalaObjectName) match {
                         case Some(_) =>
                           false
                         case None =>
@@ -54,8 +54,8 @@ trait SymbolOps { self: Scalacp =>
 
     def isAssumedJava: Boolean = {
       val path = sym.path
-      if (classfile.settings.assumeJava(path)) true
-      else if (classfile.settings.assumeScala(path)) false
+      if (settings.assumeJava(path)) true
+      else if (settings.assumeScala(path)) false
       else sym.parent.exists(_.isAssumedJava)
     }
 

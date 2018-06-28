@@ -18,7 +18,7 @@ import scala.collection.GenSeq
 
 class Main(settings: Settings, reporter: Reporter) {
 
-  lazy val index = ClasspathIndex(settings.fullClasspath)
+  lazy val classpathIndex = ClasspathIndex(settings.fullClasspath)
 
   def process(): Option[Classpath] = {
     val success = new AtomicBoolean(true)
@@ -116,14 +116,14 @@ class Main(settings: Settings, reporter: Reporter) {
               val result = {
                 val attrs = if (node.attrs != null) node.attrs.asScala else Nil
                 if (attrs.exists(_.`type` == "ScalaSig")) {
-                  val classfile = ToplevelClassfile(base, abspath, node, index, settings, reporter)
-                  Scalacp.parse(classfile)
+                  val classfile = ToplevelClassfile(base, abspath, node)
+                  Scalacp.parse(classfile, settings, classpathIndex)
                 } else if (attrs.exists(_.`type` == "Scala")) {
                   None
                 } else {
                   val innerClassNode = node.innerClasses.asScala.find(_.name == node.name)
                   if (innerClassNode.isEmpty) {
-                    val classfile = ToplevelClassfile(base, abspath, node, null, settings, reporter)
+                    val classfile = ToplevelClassfile(base, abspath, node)
                     Javacp.parse(classfile)
                   } else {
                     None
