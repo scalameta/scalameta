@@ -50,6 +50,13 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
     override val description = "compute and persist SemanticDB after typer"
     def newPhase(_prev: Phase) = new ComputeSemanticdbPhase(_prev)
     class ComputeSemanticdbPhase(prev: Phase) extends StdPhase(prev) {
+      def processJavaUnit(unit: g.CompilationUnit): Unit = {
+        try {
+          val sdoc = unit.toJavaCompilationTextDocument
+          sdoc.save(config.targetroot)
+        } catch handleCrash(Some(unit))
+
+      }
       override def apply(unit: g.CompilationUnit): Unit = {
         try {
           if (unit.isIgnored) return
@@ -71,6 +78,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
         try {
           timestampComputeStarted = System.nanoTime()
           super.run()
+          g.currentRun.units.filter(_.isJava).foreach(processJavaUnit)
           synchronizeSourcesAndSemanticdbFiles()
           synchronizeSourcesAndSemanticdbIndex()
           timestampComputeFinished = System.nanoTime()

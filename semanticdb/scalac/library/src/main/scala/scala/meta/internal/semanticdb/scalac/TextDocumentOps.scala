@@ -526,6 +526,36 @@ trait TextDocumentOps { self: SemanticdbOps =>
         synthetics = finalSynthetics
       )
     }
+    def toJavaCompilationTextDocument: s.TextDocument = {
+      val symbols = List.newBuilder[s.SymbolInformation]
+      val isDone = mutable.Set.empty[String]
+      object traverser extends g.Traverser {
+        override def traverse(tree: g.Tree): Unit = {
+          tree match {
+            case d: g.DefTree =>
+              if (!isDone(d.symbol.toSemantic)) {
+                symbols += d.symbol.toSymbolInformation(SymlinkChildren)
+              }
+              super.traverse(tree)
+            case _: g.Import =>
+            case _ =>
+              super.traverse(tree)
+          }
+        }
+      }
+      traverser.traverse(unit.body)
+      s.TextDocument(
+        schema = s.Schema.SEMANTICDB4,
+        uri = unit.source.toUri,
+        text = "",
+        md5 = "",
+        language = s.Language.JAVA,
+        symbols = symbols.result(),
+        occurrences = Nil,
+        diagnostics = Nil,
+        synthetics = Nil
+      )
+    }
   }
 
   private def isSyntheticName(select: g.Select): Boolean =

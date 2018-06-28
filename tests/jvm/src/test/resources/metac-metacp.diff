@@ -194,6 +194,1421 @@ classes.N.anonClass().
              name: "local"
 
 
+===========
+com.javacp.
+===========
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+
+
+=======================
+com.javacp.ClassSuffix#
+=======================
+--- metac
++++ metacp
+     self {
+     declarations {
++      symlinks: "com.javacp.ClassSuffix#suffix."
+       symlinks: "com.javacp.ClassSuffix#`<init>`()."
+       symlinks: "com.javacp.ClassSuffix#Inner#"
+-      symlinks: "com.javacp.ClassSuffix#Inner#"
+-      symlinks: "com.javacp.ClassSuffix#suffix."
+
+
+=============================
+com.javacp.ClassSuffix#Inner#
+=============================
+--- metac
++++ metacp
+     declarations {
+       symlinks: "com.javacp.ClassSuffix#Inner#`<init>`()."
+       symlinks: "com.javacp.ClassSuffix#Inner#Bar#"
+-      symlinks: "com.javacp.ClassSuffix#Inner#Bar#"
+
+
+=================================
+com.javacp.ClassSuffix#Inner#Bar#
+=================================
+--- metac
++++ metacp
+     declarations {
+       symlinks: "com.javacp.ClassSuffix#Inner#Bar#`<init>`()."
+       symlinks: "com.javacp.ClassSuffix#Inner#Bar#Fuz#"
+-      symlinks: "com.javacp.ClassSuffix#Inner#Bar#Fuz#"
+
+
+========================================
+com.javacp.ClassSuffix#Inner#Bar#Fuz#[B]
+========================================
+--- metac
++++ metacp
+ kind: TYPE_PARAMETER
+ properties: 0
+ name: "B"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: JAVA
+ signature {
+   typeSignature {
+-    type_parameters {
+     lower_bound {
+-      typeRef {
+-        prefix {
+-        symbol: "scala.Nothing#"
+     upper_bound {
+       typeRef {
+         prefix {
+-        symbol: "scala.Any#"
++        symbol: "java.lang.Object#"
+
+
+================================================
+com.javacp.ClassSuffix#Inner#Bar#Fuz#`<init>`().
+================================================
+--- metac
++++ metacp
+ properties: 0
+ name: "<init>"
+ accessibility {
+-  tag: PUBLIC
+-  symbol: ""
++  tag: PRIVATE_WITHIN
++  symbol: "com.javacp."
+ language: JAVA
+ signature {
+
+
+============================================
+com.javacp.ClassSuffix#Inner#Bar#`<init>`().
+============================================
+--- metac
++++ metacp
+ properties: 0
+ name: "<init>"
+ accessibility {
+-  tag: PUBLIC
+-  symbol: ""
++  tag: PRIVATE_WITHIN
++  symbol: "com.javacp."
+ language: JAVA
+ signature {
+
+
+================================
+com.javacp.ClassSuffix#Inner#[A]
+================================
+--- metac
++++ metacp
+ kind: TYPE_PARAMETER
+ properties: 0
+ name: "A"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: JAVA
+ signature {
+   typeSignature {
+-    type_parameters {
+     lower_bound {
+-      typeRef {
+-        prefix {
+-        symbol: "scala.Nothing#"
+     upper_bound {
+       typeRef {
+         prefix {
+-        symbol: "scala.Any#"
++        symbol: "java.lang.Object#"
+
+
+========================================
+com.javacp.ClassSuffix#Inner#`<init>`().
+========================================
+--- metac
++++ metacp
+ properties: 0
+ name: "<init>"
+ accessibility {
+-  tag: PUBLIC
+-  symbol: ""
++  tag: PRIVATE_WITHIN
++  symbol: "com.javacp."
+ language: JAVA
+ signature {
+
+
+==============================
+com.javacp.ClassSuffix#suffix.
+==============================
+--- metac
++++ metacp
+             prefix {
+               typeRef {
+                 prefix {
+-                  typeRef {
+-                    prefix {
+-                    symbol: "com.javacp.ClassSuffix#"
+                 symbol: "com.javacp.ClassSuffix#Inner#"
+                 type_arguments {
+-            symbol: "com.javacp.ClassSuffix#Inner#Bar#"
++            symbol: "_empty_.Bar#"
+-        symbol: "com.javacp.ClassSuffix#Inner#Bar#Fuz#"
++        symbol: "_empty_.Fuz#"
+         type_arguments {
+           typeRef {
+             prefix {
+
+
+================
+com.javacp.Coin#
+================
+--- metac
++++ metacp
+     self {
+     declarations {
+-      symlinks: "com.javacp.Coin#value."
+-      symlinks: "com.javacp.Coin#value(+1)."
+       symlinks: "com.javacp.Coin#PENNY."
+       symlinks: "com.javacp.Coin#NICKEL."
+       symlinks: "com.javacp.Coin#DIME."
+       symlinks: "com.javacp.Coin#QUARTER."
++      symlinks: "com.javacp.Coin#value."
++      symlinks: "com.javacp.Coin#$VALUES."
+       symlinks: "com.javacp.Coin#values()."
+       symlinks: "com.javacp.Coin#valueOf()."
++      symlinks: "com.javacp.Coin#`<init>`()."
++      symlinks: "com.javacp.Coin#value()."
+
+
+===========================
+com.javacp.Coin#`<init>`().
+===========================
+--- metac
++++ metacp
+ properties: 0
+ name: "<init>"
+ accessibility {
+-  tag: PRIVATE_WITHIN
+-  symbol: "com.javacp."
++  tag: PRIVATE
++  symbol: ""
+ language: JAVA
+ signature {
+     type_parameters {
+     parameterLists {
+-      symlinks: "com.javacp.Coin#`<init>`().(value)"
++      symlinks: "com.javacp.Coin#`<init>`().($enum$name)"
+     return_type {
+
+
+==================================
+com.javacp.Coin#`<init>`().(value)
+==================================
+--- metac
++++ metacp
+-symbol: "com.javacp.Coin#`<init>`().(value)"
+-kind: PARAMETER
++symbol: ""
++kind: UNKNOWN_KIND
+ properties: 0
+-name: "value"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+-language: SCALA
++name: ""
++language: UNKNOWN_LANGUAGE
+ signature {
+-  valueSignature {
+-    tpe {
+-      typeRef {
+-        prefix {
+-        symbol: "scala.Int#"
+
+
+==========================
+com.javacp.Coin#value(+1).
+==========================
+--- metac
++++ metacp
+-symbol: "com.javacp.Coin#value(+1)."
+-kind: METHOD
++symbol: ""
++kind: UNKNOWN_KIND
+ properties: 0
+-name: "value"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+-language: JAVA
++name: ""
++language: UNKNOWN_LANGUAGE
+ signature {
+-  methodSignature {
+-    type_parameters {
+-    parameterLists {
+-    return_type {
+-      typeRef {
+-        prefix {
+-        symbol: "scala.Int#"
+
+
+======================
+com.javacp.Coin#value.
+======================
+--- metac
++++ metacp
+ symbol: "com.javacp.Coin#value."
+ kind: FIELD
+-properties: 0
++properties: 8
+ name: "value"
+ accessibility {
+   tag: PRIVATE
+
+
+==========================
+com.javacp.Coin#valueOf().
+==========================
+--- metac
++++ metacp
+     type_parameters {
+     parameterLists {
+-      symlinks: "com.javacp.Coin#valueOf().(x)"
++      symlinks: "com.javacp.Coin#valueOf().(name)"
+     return_type {
+       typeRef {
+
+
+=============================
+com.javacp.Coin#valueOf().(x)
+=============================
+--- metac
++++ metacp
+-symbol: "com.javacp.Coin#valueOf().(x)"
+-kind: PARAMETER
++symbol: ""
++kind: UNKNOWN_KIND
+ properties: 0
+-name: "x"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+-language: SCALA
++name: ""
++language: UNKNOWN_LANGUAGE
+ signature {
+-  valueSignature {
+-    tpe {
+-      typeRef {
+-        prefix {
+-        symbol: "java.lang.String#"
+
+
+================================
+com.javacp.Interface#`<init>`().
+================================
+--- metac
++++ metacp
+-symbol: "com.javacp.Interface#`<init>`()."
+-kind: CONSTRUCTOR
++symbol: ""
++kind: UNKNOWN_KIND
+ properties: 0
+-name: "<init>"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+-language: JAVA
++name: ""
++language: UNKNOWN_LANGUAGE
+ signature {
+-  methodSignature {
+-    type_parameters {
+-    parameterLists {
+-    return_type {
+
+
+=====================
+com.javacp.MetacJava#
+=====================
+--- metac
++++ metacp
+     declarations {
+       symlinks: "com.javacp.MetacJava#`<init>`()."
+-      symlinks: "com.javacp.MetacJava#Overload1#"
+-      symlinks: "com.javacp.MetacJava#Overload1#"
+-      symlinks: "com.javacp.MetacJava#Overload2#"
+-      symlinks: "com.javacp.MetacJava#Overload2#"
+       symlinks: "com.javacp.MetacJava#overload()."
++      symlinks: "com.javacp.MetacJava#overload(+2)."
+       symlinks: "com.javacp.MetacJava#overload(+1)."
+-      symlinks: "com.javacp.MetacJava#StaticInner#"
+-      symlinks: "com.javacp.MetacJava#StaticInner#"
++      symlinks: "com.javacp.MetacJava#Overload2#"
+       symlinks: "com.javacp.MetacJava#Overload3#"
+-      symlinks: "com.javacp.MetacJava#Overload3#"
+-      symlinks: "com.javacp.MetacJava#overload(+2)."
++      symlinks: "com.javacp.MetacJava#Overload1#"
++      symlinks: "com.javacp.MetacJava#StaticInner#"
+
+
+===============================
+com.javacp.MetacJava#Overload1#
+===============================
+--- metac
++++ metacp
+     declarations {
+       symlinks: "com.javacp.MetacJava#Overload1#`<init>`()."
+       symlinks: "com.javacp.MetacJava#Overload1#A#"
+-      symlinks: "com.javacp.MetacJava#Overload1#A#"
+
+
+===============================
+com.javacp.MetacJava#Overload2#
+===============================
+--- metac
++++ metacp
+     declarations {
+       symlinks: "com.javacp.MetacJava#Overload2#`<init>`()."
+       symlinks: "com.javacp.MetacJava#Overload2#A#"
+-      symlinks: "com.javacp.MetacJava#Overload2#A#"
+
+
+===============================
+com.javacp.MetacJava#Overload3#
+===============================
+--- metac
++++ metacp
+     declarations {
+       symlinks: "com.javacp.MetacJava#Overload3#`<init>`()."
+       symlinks: "com.javacp.MetacJava#Overload3#A#"
+-      symlinks: "com.javacp.MetacJava#Overload3#A#"
+
+
+=================================
+com.javacp.MetacJava#StaticInner#
+=================================
+--- metac
++++ metacp
+     declarations {
+       symlinks: "com.javacp.MetacJava#StaticInner#`<init>`()."
+       symlinks: "com.javacp.MetacJava#StaticInner#isNotStatic()."
+-      symlinks: "com.javacp.MetacJava#StaticInner#NonStatic#"
+-      symlinks: "com.javacp.MetacJava#StaticInner#NonStatic#"
+       symlinks: "com.javacp.MetacJava#StaticInner#isStatic()."
++      symlinks: "com.javacp.MetacJava#StaticInner#NonStatic#"
+
+
+=======================================================
+com.javacp.MetacJava#StaticInner#NonStatic#method().(e)
+=======================================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+===================================
+com.javacp.MetacJava#overload().(a)
+===================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+       typeRef {
+         prefix {
+-          typeRef {
+-            prefix {
+-            symbol: "com.javacp.MetacJava#Overload1#"
+         symbol: "com.javacp.MetacJava#Overload1#A#"
+
+
+=====================================
+com.javacp.MetacJava#overload(+1).(a)
+=====================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+       typeRef {
+         prefix {
+-          typeRef {
+-            prefix {
+-            symbol: "com.javacp.MetacJava#Overload2#"
+         symbol: "com.javacp.MetacJava#Overload2#A#"
+
+
+=====================================
+com.javacp.MetacJava#overload(+2).(a)
+=====================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+=====================
+com.javacp.Recursive#
+=====================
+--- metac
++++ metacp
+     declarations {
+       symlinks: "com.javacp.Recursive#`<init>`()."
+-      symlinks: "com.javacp.Recursive#Inner2#"
+-      symlinks: "com.javacp.Recursive#Inner2#"
+       symlinks: "com.javacp.Recursive#foo()."
++      symlinks: "com.javacp.Recursive#Inner2#"
+       symlinks: "com.javacp.Recursive#Inner#"
+-      symlinks: "com.javacp.Recursive#Inner#"
+
+
+==============================
+com.javacp.Recursive#Inner#[A]
+==============================
+--- metac
++++ metacp
+ kind: TYPE_PARAMETER
+ properties: 0
+ name: "A"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: JAVA
+ signature {
+   typeSignature {
+-    type_parameters {
+     lower_bound {
+-      typeRef {
+-        prefix {
+-        symbol: "scala.Nothing#"
+     upper_bound {
+-      structuralType {
+-        tpe {
+-          withType {
+-            types {
++      intersectionType {
++        types {
++          typeRef {
++            prefix {
++            symbol: "com.javacp.Recursive#"
++            type_arguments {
+               typeRef {
+                 prefix {
+-                symbol: "com.javacp.Recursive#"
+-                type_arguments {
+-                  typeRef {
+-                    prefix {
+-                    symbol: "com.javacp.Recursive#Inner#[A]"
+-                type_arguments {
+-                  typeRef {
+-                    prefix {
+-                    symbol: "com.javacp.Recursive#Inner#[B]"
++                symbol: "com.javacp.Recursive#Inner#[A]"
+-            types {
++            type_arguments {
+               typeRef {
+                 prefix {
+-                symbol: "java.io.Serializable#"
++                symbol: "com.javacp.Recursive#Inner#[B]"
+-        declarations {
++        types {
++          typeRef {
++            prefix {
++            symbol: "java.io.Serializable#"
+
+
+==============================
+com.javacp.Recursive#Inner#[B]
+==============================
+--- metac
++++ metacp
+ kind: TYPE_PARAMETER
+ properties: 0
+ name: "B"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: JAVA
+ signature {
+   typeSignature {
+-    type_parameters {
+     lower_bound {
+-      typeRef {
+-        prefix {
+-        symbol: "scala.Nothing#"
+     upper_bound {
+       typeRef {
+
+
+===============================
+com.javacp.Recursive#Inner2#[C]
+===============================
+--- metac
++++ metacp
+ kind: TYPE_PARAMETER
+ properties: 0
+ name: "C"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: JAVA
+ signature {
+   typeSignature {
+-    type_parameters {
+     lower_bound {
+-      typeRef {
+-        prefix {
+-        symbol: "scala.Nothing#"
+     upper_bound {
+       typeRef {
+
+
+========================
+com.javacp.Recursive#[A]
+========================
+--- metac
++++ metacp
+ kind: TYPE_PARAMETER
+ properties: 0
+ name: "A"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: JAVA
+ signature {
+   typeSignature {
+-    type_parameters {
+     lower_bound {
+-      typeRef {
+-        prefix {
+-        symbol: "scala.Nothing#"
+     upper_bound {
+-      structuralType {
+-        tpe {
+-          withType {
+-            types {
++      intersectionType {
++        types {
++          typeRef {
++            prefix {
++            symbol: "com.javacp.Recursive#"
++            type_arguments {
+               typeRef {
+                 prefix {
+-                symbol: "com.javacp.Recursive#"
+-                type_arguments {
+-                  typeRef {
+-                    prefix {
+-                    symbol: "com.javacp.Recursive#[A]"
+-                type_arguments {
+-                  typeRef {
+-                    prefix {
+-                    symbol: "com.javacp.Recursive#[B]"
++                symbol: "com.javacp.Recursive#[A]"
+-            types {
++            type_arguments {
+               typeRef {
+                 prefix {
+-                symbol: "java.io.Serializable#"
++                symbol: "com.javacp.Recursive#[B]"
+-        declarations {
++        types {
++          typeRef {
++            prefix {
++            symbol: "java.io.Serializable#"
+
+
+========================
+com.javacp.Recursive#[B]
+========================
+--- metac
++++ metacp
+ kind: TYPE_PARAMETER
+ properties: 0
+ name: "B"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: JAVA
+ signature {
+   typeSignature {
+-    type_parameters {
+     lower_bound {
+-      typeRef {
+-        prefix {
+-        symbol: "scala.Nothing#"
+     upper_bound {
+       typeRef {
+
+
+=================================
+com.javacp.Recursive#foo().[Anon]
+=================================
+--- metac
++++ metacp
+ kind: TYPE_PARAMETER
+ properties: 0
+ name: "Anon"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: JAVA
+ signature {
+   typeSignature {
+-    type_parameters {
+     lower_bound {
+-      typeRef {
+-        prefix {
+-        symbol: "scala.Nothing#"
+     upper_bound {
+       typeRef {
+         prefix {
+-        symbol: "scala.Any#"
++        symbol: "java.lang.Object#"
+
+
+================
+com.javacp.Test#
+================
+--- metac
++++ metacp
+     self {
+     declarations {
+-      symlinks: "com.javacp.Test#`<init>`()."
+-      symlinks: "com.javacp.Test#compareTo()."
+-      symlinks: "com.javacp.Test#wildcard()."
+-      symlinks: "com.javacp.Test#wildcard(+1)."
+-      symlinks: "com.javacp.Test#InnerShadowTypeParam#"
+-      symlinks: "com.javacp.Test#InnerShadowTypeParam#"
+       symlinks: "com.javacp.Test#genericField."
+       symlinks: "com.javacp.Test#arrayField."
+-      symlinks: "com.javacp.Test#genericMethod()."
+-      symlinks: "com.javacp.Test#arrayMethod()."
+-      symlinks: "com.javacp.Test#genericParams()."
+-      symlinks: "com.javacp.Test#primitiveParams()."
+-      symlinks: "com.javacp.Test#typeParams()."
+-      symlinks: "com.javacp.Test#methodTypeParams()."
+-      symlinks: "com.javacp.Test#overload()."
+-      symlinks: "com.javacp.Test#overload(+1)."
+       symlinks: "com.javacp.Test#Int."
+       symlinks: "com.javacp.Test#Long."
+       symlinks: "com.javacp.Test#Float."
+       symlinks: "com.javacp.Test#protectedField."
+       symlinks: "com.javacp.Test#publicField."
+       symlinks: "com.javacp.Test#packagePrivateField."
++      symlinks: "com.javacp.Test#anonymous."
++      symlinks: "com.javacp.Test#staticField."
++      symlinks: "com.javacp.Test#`<init>`()."
++      symlinks: "com.javacp.Test#compareTo()."
++      symlinks: "com.javacp.Test#wildcard()."
++      symlinks: "com.javacp.Test#wildcard(+1)."
++      symlinks: "com.javacp.Test#genericMethod()."
++      symlinks: "com.javacp.Test#arrayMethod()."
++      symlinks: "com.javacp.Test#genericParams()."
++      symlinks: "com.javacp.Test#primitiveParams()."
++      symlinks: "com.javacp.Test#typeParams()."
++      symlinks: "com.javacp.Test#methodTypeParams()."
++      symlinks: "com.javacp.Test#overload()."
++      symlinks: "com.javacp.Test#overload(+1)."
+       symlinks: "com.javacp.Test#privateMethod()."
+       symlinks: "com.javacp.Test#protectedMethod()."
+       symlinks: "com.javacp.Test#publicMethod()."
+       symlinks: "com.javacp.Test#packagePrivateMethod()."
+-      symlinks: "com.javacp.Test#anonymous."
++      symlinks: "com.javacp.Test#staticMethod()."
+       symlinks: "com.javacp.Test#vararg()."
+       symlinks: "com.javacp.Test#strictfpMethod()."
+-      symlinks: "com.javacp.Test#staticField."
+-      symlinks: "com.javacp.Test#staticMethod()."
+       symlinks: "com.javacp.Test#StaticClass#"
+-      symlinks: "com.javacp.Test#StaticClass#"
++      symlinks: "com.javacp.Test#InnerShadowTypeParam#"
+
+
+========================================
+com.javacp.Test#InnerShadowTypeParam#[A]
+========================================
+--- metac
++++ metacp
+ kind: TYPE_PARAMETER
+ properties: 0
+ name: "A"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: JAVA
+ signature {
+   typeSignature {
+-    type_parameters {
+     lower_bound {
+-      typeRef {
+-        prefix {
+-        symbol: "scala.Nothing#"
+     upper_bound {
+       typeRef {
+         prefix {
+-        symbol: "scala.Any#"
++        symbol: "java.lang.Object#"
+
+
+================================================
+com.javacp.Test#InnerShadowTypeParam#`<init>`().
+================================================
+--- metac
++++ metacp
+ properties: 0
+ name: "<init>"
+ accessibility {
+-  tag: PUBLIC
+-  symbol: ""
++  tag: PRIVATE_WITHIN
++  symbol: "com.javacp."
+ language: JAVA
+ signature {
+
+
+===============================================
+com.javacp.Test#InnerShadowTypeParam#move().(a)
+===============================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+===============================================
+com.javacp.Test#InnerShadowTypeParam#move().(b)
+===============================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+=======================================
+com.javacp.Test#StaticClass#`<init>`().
+=======================================
+--- metac
++++ metacp
+ properties: 0
+ name: "<init>"
+ accessibility {
+-  tag: PUBLIC
+-  symbol: ""
++  tag: PRIVATE_WITHIN
++  symbol: "com.javacp."
+ language: JAVA
+ signature {
+
+
+===================
+com.javacp.Test#[A]
+===================
+--- metac
++++ metacp
+ kind: TYPE_PARAMETER
+ properties: 0
+ name: "A"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: JAVA
+ signature {
+   typeSignature {
+-    type_parameters {
+     lower_bound {
+-      typeRef {
+-        prefix {
+-        symbol: "scala.Nothing#"
+     upper_bound {
+-      structuralType {
+-        tpe {
+-          withType {
+-            types {
+-              typeRef {
+-                prefix {
+-                symbol: "java.lang.CharSequence#"
++      intersectionType {
++        types {
++          typeRef {
++            prefix {
+-            types {
+-              typeRef {
+-                prefix {
+-                symbol: "java.io.Serializable#"
++            symbol: "java.lang.CharSequence#"
++        types {
++          typeRef {
++            prefix {
++            symbol: "java.io.Serializable#"
+-        declarations {
+
+
+===================
+com.javacp.Test#[B]
+===================
+--- metac
++++ metacp
+ kind: TYPE_PARAMETER
+ properties: 0
+ name: "B"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: JAVA
+ signature {
+   typeSignature {
+-    type_parameters {
+     lower_bound {
+-      typeRef {
+-        prefix {
+-        symbol: "scala.Nothing#"
+     upper_bound {
+       typeRef {
+         prefix {
+-        symbol: "scala.Any#"
++        symbol: "java.lang.Object#"
+
+
+===========================
+com.javacp.Test#arrayField.
+===========================
+--- metac
++++ metacp
+ symbol: "com.javacp.Test#arrayField."
+ kind: FIELD
+-properties: 0
++properties: 8
+ name: "arrayField"
+ accessibility {
+   tag: PRIVATE_WITHIN
+
+
+===============================
+com.javacp.Test#compareTo().(b)
+===============================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+===================================
+com.javacp.Test#genericParams().(a)
+===================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+===================================
+com.javacp.Test#genericParams().(b)
+===================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+======================================
+com.javacp.Test#methodTypeParams().(c)
+======================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+======================================
+com.javacp.Test#methodTypeParams().[C]
+======================================
+--- metac
++++ metacp
+ kind: TYPE_PARAMETER
+ properties: 0
+ name: "C"
+-accessibility {
+-  tag: PUBLIC
+-  symbol: ""
+-}
+ language: JAVA
+ signature {
+   typeSignature {
+-    type_parameters {
+     lower_bound {
+-      typeRef {
+-        prefix {
+-        symbol: "scala.Nothing#"
+     upper_bound {
+       typeRef {
+
+
+==============================
+com.javacp.Test#overload().(a)
+==============================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+================================
+com.javacp.Test#overload(+1).(a)
+================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+=====================================
+com.javacp.Test#primitiveParams().(a)
+=====================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+=====================================
+com.javacp.Test#primitiveParams().(b)
+=====================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+=====================================
+com.javacp.Test#primitiveParams().(c)
+=====================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+=====================================
+com.javacp.Test#primitiveParams().(d)
+=====================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+=====================================
+com.javacp.Test#primitiveParams().(e)
+=====================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+=====================================
+com.javacp.Test#primitiveParams().(f)
+=====================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+=====================================
+com.javacp.Test#primitiveParams().(g)
+=====================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+=====================================
+com.javacp.Test#primitiveParams().(h)
+=====================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+===============================
+com.javacp.Test#protectedField.
+===============================
+--- metac
++++ metacp
+ properties: 0
+ name: "protectedField"
+ accessibility {
+-  tag: PROTECTED_WITHIN
+-  symbol: "com.javacp."
++  tag: PROTECTED
++  symbol: ""
+ language: JAVA
+ signature {
+
+
+==================================
+com.javacp.Test#protectedMethod().
+==================================
+--- metac
++++ metacp
+ properties: 0
+ name: "protectedMethod"
+ accessibility {
+-  tag: PROTECTED_WITHIN
+-  symbol: "com.javacp."
++  tag: PROTECTED
++  symbol: ""
+ language: JAVA
+ signature {
+
+
+=================================
+com.javacp.Test#strictfpMethod().
+=================================
+--- metac
++++ metacp
+ kind: METHOD
+ properties: 0
+ name: "strictfpMethod"
++annotations {
++  tpe {
++    typeRef {
++      prefix {
++      symbol: "scala.annotation.strictfp#"
++}
+ accessibility {
+   tag: PRIVATE_WITHIN
+   symbol: "com.javacp."
+
+
+================================
+com.javacp.Test#typeParams().(a)
+================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+================================
+com.javacp.Test#typeParams().(b)
+================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+============================
+com.javacp.Test#vararg().(a)
+============================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+===============================
+com.javacp.Test#vararg().(args)
+===============================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+
+
+=====================================
+com.javacp.Test#wildcard().(wildcard)
+=====================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+-      existentialType {
+-        tpe {
++      typeRef {
++        prefix {
++        symbol: "java.util.ArrayList#"
++        type_arguments {
+           typeRef {
+             prefix {
+-            symbol: "java.util.ArrayList#"
+-            type_arguments {
+-              typeRef {
+-                prefix {
+-                symbol: "local0"
++            symbol: "local_wildcard"
+-        declarations {
+-          hardlinks {
+-            symbol: "local0"
+-            kind: TYPE
+-            properties: 4
+-            name: "_"
+-            accessibility {
+-              tag: PUBLIC
+-              symbol: ""
+-            language: SCALA
+-            signature {
+-              typeSignature {
+-                type_parameters {
+-                lower_bound {
+-                  typeRef {
+-                    prefix {
+-                    symbol: "scala.Nothing#"
+-                upper_bound {
+-                  typeRef {
+-                    prefix {
+-                    symbol: "scala.Any#"
+
+
+================================
+com.javacp.Test#wildcard(+1).(a)
+================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+-      existentialType {
+-        tpe {
++      typeRef {
++        prefix {
++        symbol: "java.util.Collection#"
++        type_arguments {
+           typeRef {
+             prefix {
+-            symbol: "java.util.Collection#"
+-            type_arguments {
+-              typeRef {
+-                prefix {
+-                symbol: "local2"
++            symbol: "java.lang.Number#"
+-        declarations {
+-          hardlinks {
+-            symbol: "local2"
+-            kind: TYPE
+-            properties: 4
+-            name: "_"
+-            accessibility {
+-              tag: PUBLIC
+-              symbol: ""
+-            language: SCALA
+-            signature {
+-              typeSignature {
+-                type_parameters {
+-                lower_bound {
+-                  typeRef {
+-                    prefix {
+-                    symbol: "scala.Nothing#"
+-                upper_bound {
+-                  typeRef {
+-                    prefix {
+-                    symbol: "java.lang.Number#"
+
+
+================================
+com.javacp.Test#wildcard(+1).(b)
+================================
+--- metac
++++ metacp
+   tag: PUBLIC
+   symbol: ""
+-language: SCALA
++language: JAVA
+ signature {
+   valueSignature {
+     tpe {
+-      existentialType {
+-        tpe {
++      typeRef {
++        prefix {
++        symbol: "java.util.Collection#"
++        type_arguments {
+           typeRef {
+             prefix {
+-            symbol: "java.util.Collection#"
+-            type_arguments {
+-              typeRef {
+-                prefix {
+-                symbol: "local4"
++            symbol: "java.lang.Number#"
+-        declarations {
+-          hardlinks {
+-            symbol: "local4"
+-            kind: TYPE
+-            properties: 4
+-            name: "_"
+-            accessibility {
+-              tag: PUBLIC
+-              symbol: ""
+-            language: SCALA
+-            signature {
+-              typeSignature {
+-                type_parameters {
+-                lower_bound {
+-                  typeRef {
+-                    prefix {
+-                    symbol: "java.lang.Number#"
+-                upper_bound {
+-                  typeRef {
+-                    prefix {
+-                    symbol: "scala.Any#"
+
+
 ============
 example.Acc#
 ============
