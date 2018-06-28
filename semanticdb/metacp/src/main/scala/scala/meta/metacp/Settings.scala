@@ -15,6 +15,11 @@ final class Settings private (
     val assumeJava: Set[String],
     val assumeScala: Set[String]
 ) {
+  fullClasspath.entries.foreach { entry =>
+    if (!entry.isFile && !entry.isDirectory) {
+      throw new IllegalArgumentException(s"classpath entry does not exist: $entry")
+    }
+  }
   private def this() = {
     this(
       cacheDir = Settings.defaultCacheDir,

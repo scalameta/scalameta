@@ -135,7 +135,6 @@ class Main(settings: Settings, reporter: Reporter) {
                 infos.save(out)
               }
             } catch {
-              case e: ClasspathIndex.Error => throw e
               case NonFatal(ex) =>
                 reporter.out.println(s"error: can't convert $path")
                 ex.printStackTrace(reporter.out)

@@ -51,10 +51,9 @@ class ClasspathIndexSuite extends FunSuite {
   }
 
   test("error") {
-    val error = intercept[ClasspathIndex.Error] {
+    val error = intercept[IllegalArgumentException] {
       ClasspathIndex(Classpath(PathIO.workingDirectory.resolve("doesnotexist.jar")))
     }
-    assert(error.getMessage.contains(""))
     assert(error.getMessage.contains("doesnotexist.jar"))
   }
 

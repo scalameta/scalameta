@@ -43,7 +43,6 @@ final class ClasspathIndex private (val dirs: collection.Map[String, Classdir]) 
 }
 
 object ClasspathIndex {
-  case class Error(msg: String) extends Exception(msg)
   def empty: ClasspathIndex = ClasspathIndex(Classpath(Nil))
   def apply(classpath: Classpath): ClasspathIndex = new Builder(classpath).result()
 
@@ -60,7 +59,7 @@ object ClasspathIndex {
     private def expandPath(path: AbsolutePath): Unit = {
       if (path.isFile) expandJar(path)
       else if (path.isDirectory) expandDirectory(path)
-      else throw Error(s"file does not exist: $path")
+      else throw new IllegalArgumentException(path.toString)
     }
 
     private def getPackage(name: String): Classdir = {
