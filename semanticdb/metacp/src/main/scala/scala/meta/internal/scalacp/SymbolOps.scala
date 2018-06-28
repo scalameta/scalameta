@@ -193,14 +193,14 @@ trait SymbolOps { scalacp: Scalacp =>
       else if (settings.assumeScala(path)) false
       else sym.parent.exists(_.isAssumedJava)
     }
-    private def ownerChain: Traversable[Symbol] = new Traversable[Symbol] {
-      override def foreach[U](f: Symbol => U): Unit = {
-        def loop(s: Symbol): Unit = {
-          s.parent.foreach(loop)
-          f(s)
-        }
-        loop(sym)
+    private def ownerChain: List[Symbol] = {
+      val buf = List.newBuilder[Symbol]
+      def loop(s: Symbol): Unit = {
+        s.parent.foreach(loop)
+        buf += s
       }
+      loop(sym)
+      buf.result()
     }
     def ssym: String = sym.toSemantic
     def self: Type = sym match {
