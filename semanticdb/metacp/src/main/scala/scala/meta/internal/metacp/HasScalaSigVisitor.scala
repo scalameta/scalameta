@@ -8,7 +8,7 @@ final class HasScalaSigVisitor extends ClassVisitor(Opcodes.ASM5) {
   var hasScalaSig = false
   override def visitAttribute(attr: Attribute): Unit = {
     attr.`type` match {
-      case "ScalaSig" => hasScalaSig = true
+      case "ScalaSig" | "Scala" => hasScalaSig = true
       case _ =>
     }
   }
