@@ -194,18 +194,6 @@ classes.N.anonClass().
              name: "local"
 
 
-===========
-com.javacp.
-===========
---- metac
-+++ metacp
-   tag: PUBLIC
-   symbol: ""
--language: SCALA
-+language: JAVA
- signature {
-
-
 =======================
 com.javacp.ClassSuffix#
 =======================
@@ -694,86 +682,6 @@ com.javacp.Recursive#
 -      symlinks: "com.javacp.Recursive#Inner#"
 
 
-==============================
-com.javacp.Recursive#Inner#[A]
-==============================
---- metac
-+++ metacp
- kind: TYPE_PARAMETER
- properties: 0
- name: "A"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala.Nothing#"
-     upper_bound {
--      structuralType {
--        tpe {
--          withType {
--            types {
-+      intersectionType {
-+        types {
-+          typeRef {
-+            prefix {
-+            symbol: "com.javacp.Recursive#"
-+            type_arguments {
-               typeRef {
-                 prefix {
--                symbol: "com.javacp.Recursive#"
--                type_arguments {
--                  typeRef {
--                    prefix {
--                    symbol: "com.javacp.Recursive#Inner#[A]"
--                type_arguments {
--                  typeRef {
--                    prefix {
--                    symbol: "com.javacp.Recursive#Inner#[B]"
-+                symbol: "com.javacp.Recursive#Inner#[A]"
--            types {
-+            type_arguments {
-               typeRef {
-                 prefix {
--                symbol: "java.io.Serializable#"
-+                symbol: "com.javacp.Recursive#Inner#[B]"
--        declarations {
-+        types {
-+          typeRef {
-+            prefix {
-+            symbol: "java.io.Serializable#"
-
-
-==============================
-com.javacp.Recursive#Inner#[B]
-==============================
---- metac
-+++ metacp
- kind: TYPE_PARAMETER
- properties: 0
- name: "B"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala.Nothing#"
-     upper_bound {
-       typeRef {
-
-
 ===============================
 com.javacp.Recursive#Inner2#[C]
 ===============================
@@ -1032,22 +940,6 @@ com.javacp.Test#InnerShadowTypeParam#move().(b)
  signature {
    valueSignature {
      tpe {
-
-
-=======================================
-com.javacp.Test#StaticClass#`<init>`().
-=======================================
---- metac
-+++ metacp
- properties: 0
- name: "<init>"
- accessibility {
--  tag: PUBLIC
--  symbol: ""
-+  tag: PRIVATE_WITHIN
-+  symbol: "com.javacp."
- language: JAVA
- signature {
 
 
 ===================
