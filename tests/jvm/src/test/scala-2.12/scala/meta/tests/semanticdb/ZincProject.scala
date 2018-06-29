@@ -70,8 +70,8 @@ class ZincProject(debug: Boolean = false) {
 
   private def assertCompilesWithExitStatus(layout: String, expected: ExitStatus): Unit = {
     applyFileChanges(layout)
-    val exit = compile()
-    assert(exit == expected, s"Expected $expected. Obtained $exit")
+    val (exit, out) = run("compile", project)
+    assert(exit == expected, s"Expected $expected. Obtained $exit. Output:\n$out")
   }
 
   private def setupBloop(): Unit = {
