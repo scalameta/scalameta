@@ -154,7 +154,6 @@ trait SymbolOps { _: Scalacp =>
       case _ =>
         val result =
           if (sym.isPackageAccordingToClasspath) false
-          else if (sym.isPackageObject) false
           else {
             sym.parent match {
               case None => false
