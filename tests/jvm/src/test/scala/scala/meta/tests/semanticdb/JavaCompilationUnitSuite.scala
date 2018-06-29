@@ -3,9 +3,6 @@ package scala.meta.tests.semanticdb
 class JavaCompilationUnitSuite extends SemanticdbSuite {
   override def trimLines: Boolean = false
 
-  def skip(a: String, b: String): Unit =
-    ignore(a.take(20)) {}
-
   javaSymbols(
     """package ja;
       |public class A {
