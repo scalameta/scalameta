@@ -153,7 +153,7 @@ trait SymbolOps { _: Scalacp =>
         cachedResult
       case _ =>
         val result =
-          if (sym.isReallyPackage) false
+          if (sym.isPackageAccordingToClasspath) false
           else if (sym.isPackageObject) false
           else {
             sym.parent match {
@@ -175,13 +175,15 @@ trait SymbolOps { _: Scalacp =>
                       }
                   }
                 }
-                p.isJavaDefined || (p.isReallyPackage && classpathSaysSymbolIsFromJava())
+                p.isJavaDefined || (p.isPackageAccordingToClasspath && classpathSaysSymbolIsFromJava())
             }
           }
         javaDefinedCache.put(sym, result)
         result
     }
-    def isReallyPackage: Boolean = {
+    // scalap Symbol.isPackage returns a constant false for external symbols so we have to
+    // query the classpath to know which symbols are truly packages.
+    def isPackageAccordingToClasspath: Boolean = {
       index.isClassdir(packageResourceName)
     }
     def packageResourceName: String = {
