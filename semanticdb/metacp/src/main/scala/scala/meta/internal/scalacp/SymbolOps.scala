@@ -9,9 +9,9 @@ import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.tools.scalap.scalax.rules.scalasig._
 
-trait SymbolOps { scalacp: Scalacp =>
+trait SymbolOps { _: Scalacp =>
   lazy val symbolCache = new HashMap[Symbol, String]
-  lazy val isJavaDefined = mutable.Map.empty[Symbol, Boolean]
+  lazy val javaDefinedCache = mutable.Map.empty[Symbol, Boolean]
 
   implicit class XtensionSymbolSSymbol(sym: Symbol) {
 
@@ -148,7 +148,7 @@ trait SymbolOps { scalacp: Scalacp =>
   }
 
   implicit class XtensionSymbol(sym: Symbol) {
-    def isJavaDefined: Boolean = scalacp.isJavaDefined.get(sym) match {
+    def isJavaDefined: Boolean = javaDefinedCache.get(sym) match {
       case Some(cachedResult) =>
         cachedResult
       case _ =>
@@ -178,7 +178,7 @@ trait SymbolOps { scalacp: Scalacp =>
                 p.isJavaDefined || (p.isReallyPackage && classpathSaysSymbolIsFromJava())
             }
           }
-        scalacp.isJavaDefined.put(sym, result)
+        javaDefinedCache.put(sym, result)
         result
     }
     def isReallyPackage: Boolean = {
