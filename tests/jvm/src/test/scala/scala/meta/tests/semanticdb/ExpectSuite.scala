@@ -111,6 +111,13 @@ trait ExpectHelpers extends FunSuiteLike {
       sym <- doc.symbols
       normalized = sym.signature match {
         case c: s.ClassSignature =>
+          // FIXME: https://github.com/scalameta/scalameta/issues/1642
+          // We sort class signature declarations to make it easier to eye-ball actual bugs
+          // in metac-metacp.diff. Without sorting, the diffs become noisy for questionable
+          // benefit since at the moment the biggest priority is to fix all metac/metacp
+          // differences in symbol formats, signatures, accessibilities, etc.
+          // Presevering the source ordering of declarations is important for documentation tools
+          // so we should eventually stop sorting them here.
           sym.copy(
             signature = c.copy(
               declarations = Some(
