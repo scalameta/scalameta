@@ -52,22 +52,22 @@ object ClasspathIndex {
     def result(): ClasspathIndex = {
       val root = Classdir("/")
       dirs(root.name) = root
-      classpath.entries.foreach(expandPath)
+      classpath.entries.foreach(expandEntry)
       new ClasspathIndex(dirs)
     }
 
-    private def expandPath(path: AbsolutePath): Unit = {
-      if (path.isFile) expandJar(path)
-      else if (path.isDirectory) expandDirectory(path)
+    private def expandEntry(path: AbsolutePath): Unit = {
+      if (path.isFile) expandJarEntry(path)
+      else if (path.isDirectory) expandDirEntry(path)
       else throw new IllegalArgumentException(path.toString)
     }
 
-    private def getPackage(name: String): Classdir = {
+    private def getClassdir(name: String): Classdir = {
       dirs.get(name) match {
         case Some(dir) =>
           dir
         case _ =>
-          val parent = getPackage(PathIO.dirname(name))
+          val parent = getClassdir(PathIO.dirname(name))
           val entry = Classdir(name)
           parent.members(PathIO.basename(name)) = entry
           dirs(name) = entry
@@ -75,7 +75,7 @@ object ClasspathIndex {
       }
     }
 
-    private def expandJar(jarpath: AbsolutePath): Unit = {
+    private def expandJarEntry(jarpath: AbsolutePath): Unit = {
       val file = jarpath.toFile
       val jar = new JarFile(file)
       try {
@@ -83,7 +83,7 @@ object ClasspathIndex {
         while (entries.hasMoreElements) {
           val entry = entries.nextElement()
           if (!entry.getName.startsWith("META-INF")) {
-            val parent = getPackage(
+            val parent = getClassdir(
               if (entry.isDirectory) entry.getName
               else PathIO.dirname(entry.getName)
             )
@@ -97,7 +97,7 @@ object ClasspathIndex {
           if (classpathAttr != null) {
             classpathAttr.split(" ").foreach { relpath =>
               val abspath = AbsolutePath(jarpath.toNIO.getParent).resolve(relpath)
-              expandPath(abspath)
+              expandEntry(abspath)
             }
           }
         }
@@ -106,7 +106,7 @@ object ClasspathIndex {
       }
     }
 
-    private def expandDirectory(root: AbsolutePath): Unit = {
+    private def expandDirEntry(root: AbsolutePath): Unit = {
       def relpath(dir: Path): String =
         root.toNIO.relativize(dir).iterator().asScala.mkString("", "/", "/")
       Files.walkFileTree(root.toNIO, new SimpleFileVisitor[Path] {
