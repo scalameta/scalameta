@@ -79,7 +79,7 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
     g.reporter = reporter
     unit.body =
       if (language.isScala) g.newUnitParser(unit).parse()
-      else g.newJavaUnitParser(unit).parse()
+      else new g.syntaxAnalyzer.JavaUnitParser(unit).parse()
     assertNoReporterErrors()
 
     val packageobjectsPhase = run.phaseNamed("packageobjects")
