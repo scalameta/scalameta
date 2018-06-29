@@ -113,7 +113,7 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
       code: String,
       expected: String,
       section: String,
-      language: s.Language = s.Language.SCALA
+      language: s.Language
   ): Unit = {
     test(code) {
       val obtained = computeDatabaseSectionFromSnippet(code, section, language)
@@ -139,19 +139,19 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   }
 
   def occurrences(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Occurrences")
+    checkSection(code, expected, "Occurrences", s.Language.SCALA)
   }
 
   def diagnostics(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Diagnostics")
+    checkSection(code, expected, "Diagnostics", s.Language.SCALA)
   }
 
   def symbols(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Symbols")
+    checkSection(code, expected, "Symbols", s.Language.SCALA)
   }
 
   def synthetics(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Synthetics")
+    checkSection(code, expected, "Synthetics", s.Language.SCALA)
   }
 
   private def computeDatabaseAndOccurrencesFromMarkup(
