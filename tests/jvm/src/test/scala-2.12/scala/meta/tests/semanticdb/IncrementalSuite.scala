@@ -1,6 +1,7 @@
 package scala.meta.tests.semanticdb
 
 import java.nio.file.Files
+import org.scalactic.source.Position
 import org.scalatest.FunSuite
 import org.scalatest.tagobjects.Slow
 import org.scalatest.BeforeAndAfterEach
@@ -17,7 +18,7 @@ class IncrementalSuite extends FunSuite with BeforeAndAfterEach with DiffAsserti
     zinc = new ZincProject(debug = false)
   }
 
-  def assertIndexMatches(expected: String): Unit = {
+  def assertIndexMatches(expected: String)(implicit source: Position): Unit = {
     val path = zinc.targetroot.resolve("META-INF").resolve("semanticdb.semanticidx")
     val index = Index.parseFrom(path.readAllBytes)
     val obtained = MetacpIndexExpect.printIndex(index)

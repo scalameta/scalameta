@@ -3,15 +3,17 @@ package scala.meta.testkit
 import org.scalatest.FunSuiteLike
 import org.scalatest.exceptions.TestFailedException
 import collection.JavaConverters._
+import org.scalactic.source.Position
 
 trait DiffAssertions extends FunSuiteLike {
 
-  def assertNoDiff(obtained: String, expected: String, title: String = ""): Boolean = {
+  def assertNoDiff(obtained: String, expected: String, title: String = "")(
+      implicit source: Position): Boolean = {
     if (obtained.isEmpty && !expected.isEmpty) fail("Obtained empty output!")
     val result = compareContents(obtained, expected)
     if (result.isEmpty) true
     else {
-      throw DiffFailure(title, expected, obtained, result)
+      throw DiffFailure(title, expected, obtained, result, source)
     }
   }
 
@@ -20,8 +22,17 @@ trait DiffAssertions extends FunSuiteLike {
     s"$line\n=> $t\n$line"
   }
 
-  private case class DiffFailure(title: String, expected: String, obtained: String, diff: String)
-      extends TestFailedException(title + "\n" + error2message(obtained, expected), 3)
+  private case class DiffFailure(
+      title: String,
+      expected: String,
+      obtained: String,
+      diff: String,
+      source: Position
+  ) extends TestFailedException(
+        _ => Some(title + "\n" + error2message(obtained, expected)),
+        None,
+        source
+      )
 
   private def error2message(obtained: String, expected: String): String = {
     val sb = new StringBuilder
