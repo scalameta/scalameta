@@ -95,8 +95,7 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
     g.phase = run.phaseNamed("patmat")
     g.globalPhase = run.phaseNamed("patmat")
 
-    if (language.isScala) unit.toTextDocument
-    else unit.toJavaTextDocument
+    unit.toTextDocument
   }
 
   private def computeDatabaseSectionFromSnippet(

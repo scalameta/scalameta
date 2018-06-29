@@ -47,6 +47,10 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
     def toTextDocument: s.TextDocument = {
+      if (unit.isJava) toJavaTextDocument
+      else toScalaTextDocument
+    }
+    private def toScalaTextDocument: s.TextDocument = {
       val binders = mutable.Set[m.Position]()
       val occurrences = mutable.Map[m.Position, String]()
       val symbols = mutable.Map[String, s.SymbolInformation]()
@@ -526,7 +530,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
         synthetics = finalSynthetics
       )
     }
-    def toJavaTextDocument: s.TextDocument = {
+    private def toJavaTextDocument: s.TextDocument = {
       val symbols = List.newBuilder[s.SymbolInformation]
       object traverser extends g.Traverser {
         override def traverse(tree: g.Tree): Unit = {

@@ -14,7 +14,9 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
     def isIgnored: Boolean = {
       val matchesExtension = {
         val fileName = unit.source.file.name
-        fileName.endsWith(".scala") || fileName.endsWith(".sc")
+        fileName.endsWith(".scala") ||
+        fileName.endsWith(".sc") ||
+        fileName.endsWith(".java")
       }
       val matchesFilter = {
         Option(unit.source.file)
@@ -50,20 +52,17 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
     override val description = "compute and persist SemanticDB after typer"
     def newPhase(_prev: Phase) = new ComputeSemanticdbPhase(_prev)
     class ComputeSemanticdbPhase(prev: Phase) extends StdPhase(prev) {
-      def processJavaUnit(unit: g.CompilationUnit): Unit = {
+
+      def saveSemanticdbForCompilationUnit(unit: g.CompilationUnit): Unit = {
         try {
           if (unit.isIgnored) return
-          val sdoc = unit.toJavaTextDocument
-          sdoc.save(config.targetroot)
-        } catch handleCrash(Some(unit))
-      }
-      override def apply(unit: g.CompilationUnit): Unit = {
-        try {
-          if (unit.isIgnored) return
-          validateCompilerState()
           val sdoc = unit.toTextDocument
           sdoc.save(config.targetroot)
         } catch handleCrash(Some(unit))
+      }
+
+      override def apply(unit: g.CompilationUnit): Unit = {
+        saveSemanticdbForCompilationUnit(unit)
       }
 
       private def synchronizeSourcesAndSemanticdbFiles(): Unit = {
@@ -78,7 +77,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
         try {
           timestampComputeStarted = System.nanoTime()
           super.run()
-          g.currentRun.units.filter(_.isJava).foreach(processJavaUnit)
+          g.currentRun.units.filter(_.isJava).foreach(saveSemanticdbForCompilationUnit)
           synchronizeSourcesAndSemanticdbFiles()
           synchronizeSourcesAndSemanticdbIndex()
           timestampComputeFinished = System.nanoTime()
