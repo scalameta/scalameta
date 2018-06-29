@@ -270,11 +270,12 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
   ): Map[String, SymbolInformation] = symtab.map {
     case (key, sym) =>
       val newSymbol = sym.signature match {
-        case c: ClassSignature =>
+        case c: ClassSignature if sym.language.isJava =>
+          val sortedJavaDeclarations = c.declarations.get.symlinks.sorted
           sym.copy(
             signature = c.copy(
               declarations = Some(
-                c.declarations.get.copy(symlinks = c.declarations.get.symlinks.sorted)
+                c.declarations.get.copy(symlinks = sortedJavaDeclarations)
               )
             )
           )

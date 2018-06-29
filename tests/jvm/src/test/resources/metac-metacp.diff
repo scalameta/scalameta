@@ -1008,6 +1008,22 @@ com.javacp.Test#wildcard(+1).(b)
 -                    symbol: "scala.Any#"
 
 
+============
+example.Acc#
+============
+--- metac
++++ metacp
+       symlinks: "example.Acc#`<init>`()."
+       symlinks: "example.Acc#m1()."
+       symlinks: "example.Acc#m2()."
+-      symlinks: "example.Acc#m3()."
+       symlinks: "example.Acc#m4()."
+       symlinks: "example.Acc#m5()."
+       symlinks: "example.Acc#m6()."
+       symlinks: "example.Acc#m7()."
++      symlinks: "example.Acc#m3()."
+
+
 =========================
 example.Methods#m13().(x)
 =========================
@@ -1029,6 +1045,25 @@ example.Methods#m13().(x)
 -              prefix {
 -              symbol: "scala.unchecked#"
 +        symbol: "scala.Int#"
+
+
+================
+flags.p.package.
+================
+--- metac
++++ metacp
+       symlinks: "flags.p.package.C#"
+       symlinks: "flags.p.package.T1#"
+       symlinks: "flags.p.package.T2#"
++      symlinks: "flags.p.package.S#"
+       symlinks: "flags.p.package.U#"
+       symlinks: "flags.p.package.V#"
+       symlinks: "flags.p.package.X."
+       symlinks: "flags.p.package.Y#"
+       symlinks: "flags.p.package.Z#"
+       symlinks: "flags.p.package.AA#"
+-      symlinks: "flags.p.package.S#"
+       symlinks: "flags.p.package.xs1()."
 
 
 =====================
