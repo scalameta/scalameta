@@ -20,7 +20,6 @@ import org.scalatest.FunSuiteLike
 import scala.meta.tests.metacp.Library
 
 class ExpectSuite extends FunSuite with DiffAssertions {
-  override def trimLines: Boolean = false
   BuildInfo.scalaVersion.split("\\.").take(2).toList match {
     // both the compiler and stdlib are different between Scala versions.
     // For the sake of simplicity, we only run the expect test against the

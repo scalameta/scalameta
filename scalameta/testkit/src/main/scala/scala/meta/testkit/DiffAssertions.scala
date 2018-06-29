@@ -1,17 +1,10 @@
 package scala.meta.testkit
 
-import java.util
 import org.scalatest.FunSuiteLike
 import org.scalatest.exceptions.TestFailedException
 import collection.JavaConverters._
 
-object DiffAssertions extends DiffAssertions {
-  override def trimLines: Boolean = false
-}
 trait DiffAssertions extends FunSuiteLike {
-
-  // NOTE: Not trimming lines may cause problems on AppVeyor.
-  protected def trimLines: Boolean = true
 
   def assertNoDiff(obtained: String, expected: String, title: String = ""): Boolean = {
     if (obtained.isEmpty && !expected.isEmpty) fail("Obtained empty output!")
@@ -49,16 +42,14 @@ trait DiffAssertions extends FunSuiteLike {
 
   private def stripTrailingWhitespace(str: String): String = str.replaceAll(" \n", "∙\n")
 
-  private def compareContents(original: String, revised: String): String =
-    compareContents(original.trim.split("\n"), revised.trim.split("\n"))
+  private def splitIntoLines(string: String): Seq[String] =
+    string.trim.replace("\r\n", "\n").split("\n")
 
-  private def trim(lines: Seq[String]): util.List[String] = {
-    if (trimLines) lines.map(_.trim).asJava
-    else lines.asJava
-  }
+  private def compareContents(original: String, revised: String): String =
+    compareContents(splitIntoLines(original), splitIntoLines(revised))
 
   private def compareContents(original: Seq[String], revised: Seq[String]): String = {
-    val diff = difflib.DiffUtils.diff(trim(original), trim(revised))
+    val diff = difflib.DiffUtils.diff(original.asJava, revised.asJava)
     if (diff.getDeltas.isEmpty) ""
     else
       difflib.DiffUtils

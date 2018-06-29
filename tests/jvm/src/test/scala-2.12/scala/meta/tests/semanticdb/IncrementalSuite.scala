@@ -7,9 +7,9 @@ import org.scalatest.BeforeAndAfterEach
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
 import scala.meta.internal.semanticdb.Index
 import scala.meta.io.RelativePath
-import scala.meta.testkit.DiffAssertions._
+import scala.meta.testkit.DiffAssertions
 
-class IncrementalSuite extends FunSuite with BeforeAndAfterEach {
+class IncrementalSuite extends FunSuite with BeforeAndAfterEach with DiffAssertions {
 
   var zinc: ZincProject = _
 

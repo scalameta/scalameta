@@ -1,7 +1,6 @@
 package scala.meta.tests.semanticdb
 
 class JavaCompilationUnitSuite extends SemanticdbSuite {
-  override def trimLines: Boolean = false
 
   javaSymbols(
     """package ja;
