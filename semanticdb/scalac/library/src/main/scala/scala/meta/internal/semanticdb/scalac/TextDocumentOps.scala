@@ -4,7 +4,6 @@ import scala.collection.mutable
 import scala.meta.internal.inputs._
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.scalacp._
-import scala.meta.internal.semanticdb._
 import scala.meta.internal.{semanticdb => s}
 import scala.reflect.internal._
 import scala.reflect.internal.util._
@@ -184,21 +183,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               todo -= mtree
 
               if (mtree.isDefinition) {
-                val isToplevel = gsym.owner.hasPackageFlag
-                if (isToplevel) {
-                  unit.source.file match {
-                    case gfile: GPlainFile =>
-                      // FIXME: https://github.com/scalameta/scalameta/issues/1396
-                      val scalaRelPath = m.AbsolutePath(gfile.file).toRelative(config.sourceroot)
-                      val semanticdbRelPath = scalaRelPath + ".semanticdb"
-                      val suri = PathIO.toUnix(semanticdbRelPath.toString)
-                      val ssymbol = symbol
-                      val sinfo = s.SymbolInformation(symbol = ssymbol)
-                      index.append(suri, List(sinfo))
-                    case _ =>
-                      ()
-                  }
-                }
+                appendToplevelSymbolToIndex(gsym)
                 binders += mtree.pos
                 occurrences(mtree.pos) = symbol
                 if (config.symbols.isOn) {
@@ -535,6 +520,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
       object traverser extends g.Traverser {
         override def traverse(tree: g.Tree): Unit = {
           tree match {
+            case _: g.PackageDef =>
+              ()
             case d: g.DefTree =>
               // Unlike for Scala compilation units, def symbols in Java compilation units
               // are not initialized during type-checking. Without an explicit call to
@@ -542,12 +529,12 @@ trait TextDocumentOps { self: SemanticdbOps =>
               val _ = d.symbol.initialize
               if (d.symbol.isUseful && !d.symbol.hasPackageFlag) {
                 symbols += d.symbol.toSymbolInformation(SymlinkChildren)
+                appendToplevelSymbolToIndex(d.symbol)
               }
               super.traverse(tree)
-            case _: g.Import =>
             case _ =>
-              super.traverse(tree)
           }
+          super.traverse(tree)
         }
       }
       traverser.traverse(unit.body)
@@ -562,6 +549,23 @@ trait TextDocumentOps { self: SemanticdbOps =>
         diagnostics = Nil,
         synthetics = Nil
       )
+    }
+    private def appendToplevelSymbolToIndex(gsym: g.Symbol): Unit = {
+      val isToplevel = gsym.owner.hasPackageFlag
+      if (isToplevel) {
+        unit.source.file match {
+          case gfile: GPlainFile =>
+            // FIXME: https://github.com/scalameta/scalameta/issues/1396
+            val scalaRelPath = m.AbsolutePath(gfile.file).toRelative(config.sourceroot)
+            val semanticdbRelPath = scalaRelPath + ".semanticdb"
+            val suri = PathIO.toUnix(semanticdbRelPath.toString)
+            val ssymbol = gsym.toSemantic
+            val sinfo = s.SymbolInformation(symbol = ssymbol)
+            index.append(suri, List(sinfo))
+          case _ =>
+            ()
+        }
+      }
     }
   }
 

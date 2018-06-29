@@ -123,4 +123,32 @@ class IncrementalSuite extends FunSuite with BeforeAndAfterEach with DiffAsserti
     assertIndexMatches(A)
   }
 
+  test("java only") {
+    zinc.assertCompiles(
+      """|/src/A.scala
+         |object A
+         |/src/B.java
+         |public class B {}
+         |""".stripMargin
+    )
+    assertIndexMatches(
+      """|Packages:
+         |=========
+         |_empty_.
+         |  _empty_.A.
+         |  _empty_.B#
+         |_root_.
+         |  _empty_.
+         |
+         |Toplevels:
+         |==========
+         |_empty_.A. => src/A.scala.semanticdb
+         |_empty_.B# => src/B.java.semanticdb
+         |""".stripMargin
+    )
+    Files.delete(zinc.sourceroot.resolve("src/B.java").toNIO)
+    zinc.assertCompiles("")
+    assertIndexMatches(A)
+  }
+
 }
