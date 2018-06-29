@@ -237,7 +237,7 @@ trait SymbolOps { self: SemanticdbOps =>
     }
     def isUselessOccurrence: Boolean = {
       sym.isUseless &&
-      !sym.isSyntheticJavaModule
+      !sym.isSyntheticJavaModule // references to static Java inner classes should have occurrences
     }
     def isUseful: Boolean = !sym.isUseless
   }
