@@ -5,7 +5,7 @@ import scala.meta.internal.semanticdb.ClassSignature
 import scala.meta.internal.semanticdb.Scala._
 
 class JavacpSuite extends FunSuite {
-  private val infos = MetacMetacpExpectDiffExpect.metacpSymbols
+  private val infos = MetacMetacpDiffExpect.metacpSymbols
 
   def checkOrder(
       name: String,
