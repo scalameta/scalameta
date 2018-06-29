@@ -52,6 +52,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
     class ComputeSemanticdbPhase(prev: Phase) extends StdPhase(prev) {
       def processJavaUnit(unit: g.CompilationUnit): Unit = {
         try {
+          if (unit.isIgnored) return
           val sdoc = unit.toJavaTextDocument
           sdoc.save(config.targetroot)
         } catch handleCrash(Some(unit))
