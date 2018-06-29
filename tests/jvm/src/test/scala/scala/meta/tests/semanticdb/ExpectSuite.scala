@@ -17,6 +17,7 @@ import scala.meta.tests.cli._
 import scala.meta.testkit.DiffAssertions
 import org.scalatest.FunSuite
 import org.scalatest.FunSuiteLike
+import scala.meta.tests.metacp.Library
 
 class ExpectSuite extends FunSuite with DiffAssertions {
   BuildInfo.scalaVersion.split("\\.").take(2).toList match {
@@ -45,8 +46,8 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         import MetacIndexExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
-      test("metac-metacp.expect.diff") {
-        import MetacMetacpExpectDiffExpect._
+      test("metac-metacp.diff") {
+        import MetacMetacpDiffExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
       test("manifest.metap") {
@@ -133,6 +134,7 @@ trait ExpectHelpers extends FunSuiteLike {
         .Settings()
         .withCacheDir(AbsolutePath(target))
         .withClasspath(Classpath(AbsolutePath(in)))
+        .withDependencyClasspath(Library.scalaLibrary.classpath() ++ Library.jdk.classpath())
         .withScalaLibrarySynthetics(false)
       val reporter = Reporter().withOut(out).withErr(err)
       Metacp.process(settings, reporter) match {
@@ -217,8 +219,8 @@ object MetacIndexExpect extends ExpectHelpers {
   def loadObtained: String = index(Paths.get(BuildInfo.databaseClasspath))
 }
 
-object MetacMetacpExpectDiffExpect extends ExpectHelpers {
-  def filename: String = "metac-metacp.expect.diff"
+object MetacMetacpDiffExpect extends ExpectHelpers {
+  def filename: String = "metac-metacp.diff"
   def loadObtained: String = {
     val metacp = metacpSymbols
     val metac = metacSymbols.valuesIterator.toSeq.sortBy(_.symbol)
@@ -281,7 +283,7 @@ object SaveExpectTest {
     MetacpIndexExpect.saveExpected(MetacpIndexExpect.loadObtained)
     MetacExpect.saveExpected(MetacExpect.loadObtained)
     MetacIndexExpect.saveExpected(MetacIndexExpect.loadObtained)
-    MetacMetacpExpectDiffExpect.saveExpected(MetacMetacpExpectDiffExpect.loadObtained)
+    MetacMetacpDiffExpect.saveExpected(MetacMetacpDiffExpect.loadObtained)
     ManifestMetap.saveExpected(ManifestMetap.loadObtained)
     ManifestMetacp.saveExpected(ManifestMetacp.loadObtained)
   }

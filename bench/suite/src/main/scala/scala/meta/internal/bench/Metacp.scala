@@ -19,10 +19,11 @@ object Metacp {
 }
 
 trait Metacp {
-  def runImpl(classpath: Classpath): Unit = {
+  def runImpl(classpath: Classpath, dependencyClasspath: Classpath): Unit = {
     val tmp = Files.createTempDirectory("metacp_")
     val settings = Settings()
       .withCacheDir(AbsolutePath(tmp))
+      .withDependencyClasspath(dependencyClasspath)
       .withClasspath(classpath)
       .withScalaLibrarySynthetics(false)
     val reporter = Reporter().withOut(System.out).withErr(System.err)
@@ -41,7 +42,7 @@ trait Metacp {
 class MetacpJDK extends Metacp {
   @Benchmark
   def run(bs: BenchmarkState): Unit = {
-    runImpl(bs.jdk)
+    runImpl(bs.jdk, Classpath(Nil))
   }
 }
 
@@ -53,6 +54,6 @@ class MetacpJDK extends Metacp {
 class MetacpScalaLibrary extends Metacp {
   @Benchmark
   def run(bs: BenchmarkState): Unit = {
-    runImpl(bs.scalaLibrary)
+    runImpl(bs.scalaLibrary, bs.jdk)
   }
 }

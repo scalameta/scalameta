@@ -1,16 +1,20 @@
 package scala.meta.internal.scalacp
 
 import java.util.{HashMap, HashSet}
+import scala.meta.internal.metacp._
+import scala.collection.mutable
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
-import scala.meta.internal.semanticdb.Scala.{Names => n}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.tools.scalap.scalax.rules.scalasig._
 
-trait SymbolOps { self: Scalacp =>
+trait SymbolOps { _: Scalacp =>
   lazy val symbolCache = new HashMap[Symbol, String]
+  lazy val javaDefinedCache = mutable.Map.empty[Symbol, Boolean]
+
   implicit class XtensionSymbolSSymbol(sym: Symbol) {
+
     def toSemantic: String = {
       def uncached(sym: Symbol): String = {
         if (sym.isSemanticdbGlobal) Symbols.Global(sym.owner, sym.descriptor)
@@ -144,6 +148,61 @@ trait SymbolOps { self: Scalacp =>
   }
 
   implicit class XtensionSymbol(sym: Symbol) {
+    def isJavaDefined: Boolean = javaDefinedCache.get(sym) match {
+      case Some(cachedResult) =>
+        cachedResult
+      case _ =>
+        val result =
+          if (sym.isPackageAccordingToClasspath) false
+          else {
+            sym.parent match {
+              case None => false
+              case Some(p) =>
+                def classpathSaysSymbolIsFromJava(): Boolean = {
+                  val javaClassName = sym.name + ".class"
+                  index.getClassfile(p.packageResourceName, javaClassName) match {
+                    case Some(entry) =>
+                      !entry.hasScalaSig
+                    case None =>
+                      val scalaObjectName = sym.name + "$.class"
+                      index.getClassfile(p.packageResourceName, scalaObjectName) match {
+                        case Some(_) =>
+                          false
+                        case None =>
+                          if (sym.isAssumedJava) true
+                          else throw MissingSymbolException(javaClassName)
+                      }
+                  }
+                }
+                p.isJavaDefined || (p.isPackageAccordingToClasspath && classpathSaysSymbolIsFromJava())
+            }
+          }
+        javaDefinedCache.put(sym, result)
+        result
+    }
+    // scalap Symbol.isPackage returns a constant false for external symbols so we have to
+    // query the classpath to know which symbols are truly packages.
+    def isPackageAccordingToClasspath: Boolean = {
+      index.isClassdir(packageResourceName)
+    }
+    def packageResourceName: String = {
+      ownerChain.map(_.name).mkString("", "/", "/")
+    }
+    def isAssumedJava: Boolean = {
+      val path = sym.path
+      if (settings.assumeJava(path)) true
+      else if (settings.assumeScala(path)) false
+      else sym.parent.exists(_.isAssumedJava)
+    }
+    private def ownerChain: List[Symbol] = {
+      val buf = List.newBuilder[Symbol]
+      def loop(s: Symbol): Unit = {
+        s.parent.foreach(loop)
+        buf += s
+      }
+      loop(sym)
+      buf.result()
+    }
     def ssym: String = sym.toSemantic
     def self: Type = sym match {
       case sym: ClassSymbol =>

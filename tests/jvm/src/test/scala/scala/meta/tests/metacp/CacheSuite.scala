@@ -62,6 +62,7 @@ class CacheSuite extends FunSuite with DiffAssertions with TimeLimitedTests {
     val settings = Settings()
         .withCacheDir(tmp.resolve("scala-library"))
         .withClasspath(Library.scalaLibrary.classpath())
+        .withDependencyClasspath(Library.jdk.classpath())
         .withScalaLibrarySynthetics(false)
     val reporter = Reporter()
     Metacp.process(settings, reporter) match {

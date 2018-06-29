@@ -1324,23 +1324,26 @@ Schema => SemanticDB v4
 Uri => example/MetacJava.class
 Text => empty
 Language => Scala
-Symbols => 11 entries
+Symbols => 12 entries
 
 Symbols:
 _root_. => package _root_
 example. => package example
-example.MetacJava# => class MetacJava extends AnyRef { +8 decls }
+example.MetacJava# => class MetacJava extends AnyRef { +9 decls }
   AnyRef => scala.AnyRef#
 example.MetacJava#`<init>`(). => primary ctor <init>()
 example.MetacJava#coin(). => val method coin: Coin
   Coin => com.javacp.Coin#
+example.MetacJava#entry(). => val method entry: Entry[Int, Int]
+  Entry => java.util.Map#Entry#
+  Int => scala.Int#
 example.MetacJava#inner(). => val method inner: MetacJava
   MetacJava => com.javacp.MetacJava#
 example.MetacJava#interface(). => val method interface: Interface
   Interface => com.javacp.Interface#
 example.MetacJava#nonStatic(). => val method nonStatic: staticInner.NonStatic
   staticInner => example.MetacJava#staticInner().
-  NonStatic => com.javacp.MetacJava.StaticInner#NonStatic#
+  NonStatic => com.javacp.MetacJava#StaticInner#NonStatic#
 example.MetacJava#overload1(). => val method overload1: inner.Overload1
   inner => example.MetacJava#inner().
   Overload1 => com.javacp.MetacJava#Overload1#
@@ -1348,7 +1351,7 @@ example.MetacJava#overload2(). => val method overload2: inner.Overload2
   inner => example.MetacJava#inner().
   Overload2 => com.javacp.MetacJava#Overload2#
 example.MetacJava#staticInner(). => val method staticInner: StaticInner
-  StaticInner => com.javacp.MetacJava.StaticInner#
+  StaticInner => com.javacp.MetacJava#StaticInner#
 
 example/Methods.class
 ---------------------

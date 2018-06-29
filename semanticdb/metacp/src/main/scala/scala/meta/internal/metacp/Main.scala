@@ -17,6 +17,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.GenSeq
 
 class Main(settings: Settings, reporter: Reporter) {
+
+  lazy val classpathIndex = ClasspathIndex(settings.fullClasspath)
+
   def process(): Option[Classpath] = {
     val success = new AtomicBoolean(true)
 
@@ -114,7 +117,7 @@ class Main(settings: Settings, reporter: Reporter) {
                 val attrs = if (node.attrs != null) node.attrs.asScala else Nil
                 if (attrs.exists(_.`type` == "ScalaSig")) {
                   val classfile = ToplevelClassfile(base, abspath, node)
-                  Scalacp.parse(classfile)
+                  Scalacp.parse(classfile, settings, classpathIndex)
                 } else if (attrs.exists(_.`type` == "Scala")) {
                   None
                 } else {

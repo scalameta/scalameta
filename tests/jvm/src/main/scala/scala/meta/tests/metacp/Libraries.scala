@@ -1,13 +1,8 @@
 package scala.meta.tests.metacp
 
-import java.nio.file.Files
-import org.scalatest._
-import scala.collection.mutable
-import scala.meta.cli._
+import java.io.File
 import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
-import scala.meta.metacp._
-import scala.meta.testkit._
 import scala.meta.tests._
 
 object Libraries {
@@ -32,9 +27,7 @@ object Library {
   def apply(organization: String, artifact: String, version: String): Library =
     Library(
       List(organization, artifact, version).mkString(":"), { () =>
-        val jars = Jars
-          .fetch(organization, artifact, version)
-          .filterNot(_.toString.contains("scala-lang"))
+        val jars = Jars.fetch(organization, artifact, version)
         Classpath(jars)
       }
     )
@@ -42,8 +35,8 @@ object Library {
     val bootClasspath = Classpath(
       sys.props
         .collectFirst { case (k, v) if k.endsWith(".boot.class.path") => v }
-        .getOrElse(""))
-    Library("JDK", () => bootClasspath)
+        .getOrElse("")).entries.filter(_.isFile)
+    Library("JDK", () => Classpath(bootClasspath))
   }
   lazy val scalaLibrary: Library = {
     Library("scala-library", () => {
