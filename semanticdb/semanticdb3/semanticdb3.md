@@ -1081,7 +1081,7 @@ which Scala definitions, what their metadata is, etc). See
     and a right parenthesis (`)`).
     If the definition is not overloaded, the tag is empty.
     If the definition is overloaded, the tag is computed from the order of
-    appearance of overloads in the source code (see
+    appearance of overloads in the source code. (see
     "Function declarations and definitions" below for an example):
       * Empty string for the definition that appears first.
       * `+1` for the definition that appears second.
@@ -1848,6 +1848,7 @@ with `METHOD` symbols.
 abstract class C {
   def m1: Int = ???
   def m2(): Int = ???
+  object m3
   def m3(x: Int): Int = ???
   def m3(x: org.Int): Int = ???
   def m4(x: Int)(y: Int): Int = ???
@@ -1871,6 +1872,12 @@ abstract class C {
     <td><code>_empty_.C#m2().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(List()), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>m3</code></td>
+    <td><code>_empty_.C#m3.</code></td>
+    <td><code>OBJECT</code></td>
+    <td><code>ClassSignature(List(), List(), None, List())</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
@@ -1921,6 +1928,8 @@ Notes:
   in SLS [\[50\]][50]. Corresponding signature is computed using the inferred
   retyrb type as explained in [Type](#scala-type).
 * Method symbols support [all Scala accessibilities](#scala-accessibility).
+* The disambiguators for `m3()` and `m3(+1)` do not take into account overloaded
+  object `m3.`.
 
 **Macro definitions** [\[51\]][51] are represented with `MACRO` symbols
 similarly to function definitions (see above).

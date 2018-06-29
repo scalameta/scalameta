@@ -1361,12 +1361,12 @@ Schema => SemanticDB v4
 Uri => example/Methods.class
 Text => empty
 Language => Scala
-Symbols => 59 entries
+Symbols => 65 entries
 
 Symbols:
 _root_. => package _root_
 example. => package example
-example.Methods# => class Methods[T] extends AnyRef { +26 decls }
+example.Methods# => class Methods[T] extends AnyRef { +29 decls }
   T => example.Methods#[T]
   AnyRef => scala.AnyRef#
 example.Methods#AList# => type AList[T] = List[T]
@@ -1447,6 +1447,22 @@ example.Methods#m16(). => method m16(x: Int*): Nothing
   Nothing => scala.Nothing#
 example.Methods#m16().(x) => param x: Int*
   Int => scala.Int#
+example.Methods#m17(). => method m17(a: Int): Nothing
+  a => example.Methods#m17().(a)
+  Int => scala.Int#
+  Nothing => scala.Nothing#
+example.Methods#m17().(a) => param a: Int
+  Int => scala.Int#
+example.Methods#m17(+1). => method m17(b: String): Nothing
+  b => example.Methods#m17(+1).(b)
+  String => scala.Predef.String#
+  Nothing => scala.Nothing#
+example.Methods#m17(+1).(b) => param b: String
+  String => scala.Predef.String#
+example.Methods#m17. => final object m17 extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
+example.Methods#m17.m(). => method m(): Nothing
+  Nothing => scala.Nothing#
 example.Methods#m2(). => method m2(): Nothing
   Nothing => scala.Nothing#
 example.Methods#m3(). => method m3(x: Int): Nothing

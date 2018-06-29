@@ -29,6 +29,9 @@ class Methods[T] {
   def m14(x: T forSome { type T }) = ???
   def m15(x: => Int) = ???
   def m16(x: Int*) = ???
+  object m17 { def m() = ??? }
+  def m17(a: Int) = ???
+  def m17(b: String) = ???
 }
 
 class MethodUsages {
@@ -55,4 +58,8 @@ class MethodUsages {
   m.m14(null)
   m.m15(0)
   m.m16(0)
+  m.m16(0)
+  m.m17.m()
+  m.m17(1)
+  m.m17("")
 }
