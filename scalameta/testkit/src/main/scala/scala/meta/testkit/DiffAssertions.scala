@@ -4,6 +4,7 @@ import org.scalatest.FunSuiteLike
 import org.scalatest.exceptions.TestFailedException
 import collection.JavaConverters._
 import org.scalactic.source.Position
+import org.scalatest.exceptions.StackDepthException
 
 trait DiffAssertions extends FunSuiteLike {
 
@@ -29,7 +30,9 @@ trait DiffAssertions extends FunSuiteLike {
       diff: String,
       source: Position
   ) extends TestFailedException(
-        _ => Some(title + "\n" + error2message(obtained, expected)),
+        { _: StackDepthException =>
+          Some(title + "\n" + error2message(obtained, expected))
+        },
         None,
         source
       )
