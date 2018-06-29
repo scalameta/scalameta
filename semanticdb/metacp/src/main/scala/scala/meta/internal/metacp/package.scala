@@ -1,37 +1,35 @@
 package scala.meta.internal
 
+import java.io.InputStream
 import java.nio.file.Files
 import scala.meta.io.AbsolutePath
 import scala.tools.asm._
 import scala.tools.asm.ClassReader._
 import scala.tools.asm.tree._
+import scala.collection.JavaConverters._
 
 package object metacp {
-  private val SKIP_ALL = SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES
-
-  implicit class XtensionAsmBytes(entry: Classfile) {
-    def hasScalaSig: Boolean = {
-      val visitor = new HasScalaSigVisitor
-      val in = entry.openInputStream()
-      try {
-        new ClassReader(in).accept(visitor, SKIP_ALL)
-        visitor.hasScalaSig
-      } finally {
-        in.close()
-      }
-    }
-  }
-
   implicit class XtensionAsmPathOps(path: AbsolutePath) {
     def toClassNode: ClassNode = {
-      val node = new ClassNode()
-      val in = Files.newInputStream(path.toNIO)
-      try {
-        new ClassReader(in).accept(node, SKIP_ALL)
-        node
-      } finally {
-        in.close()
-      }
+      readInputStreamToClassNode(Files.newInputStream(path.toNIO))
+    }
+  }
+  implicit class XtensionAsmClassfileOps(classfile: Classfile) {
+    def hasScalaSig: Boolean = {
+      val classNode = readInputStreamToClassNode(classfile.openInputStream())
+      classNode.attrs != null && classNode.attrs.asScala.exists(_.`type` match {
+        case "Scala" | "ScalaSig" => true
+        case _ => false
+      })
+    }
+  }
+  private def readInputStreamToClassNode(in: InputStream): ClassNode = {
+    val node = new ClassNode()
+    try {
+      new ClassReader(in).accept(node, SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES)
+      node
+    } finally {
+      in.close()
     }
   }
 }
