@@ -536,7 +536,10 @@ trait TextDocumentOps { self: SemanticdbOps =>
         override def traverse(tree: g.Tree): Unit = {
           tree match {
             case d: g.DefTree =>
-              val _ = d.symbol.info // complete symbol
+              // Unlike for Scala compilation units, def symbols in Java compilation units
+              // are not initialized during type-checking. Without an explicit call to
+              // initialize, some Java def trees will not have their infos set.
+              val _ = d.symbol.initialize
               if (d.symbol.isUseful && !d.symbol.hasPackageFlag) {
                 symbols += d.symbol.toSymbolInformation(SymlinkChildren)
               }
