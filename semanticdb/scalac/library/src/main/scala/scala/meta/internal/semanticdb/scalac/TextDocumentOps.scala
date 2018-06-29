@@ -531,7 +531,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 symbols += d.symbol.toSymbolInformation(SymlinkChildren)
                 appendToplevelSymbolToIndex(d.symbol)
               }
-              super.traverse(tree)
             case _ =>
           }
           super.traverse(tree)
