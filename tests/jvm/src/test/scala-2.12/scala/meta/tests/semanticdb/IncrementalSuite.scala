@@ -123,7 +123,7 @@ class IncrementalSuite extends FunSuite with BeforeAndAfterEach with DiffAsserti
     assertIndexMatches(A)
   }
 
-  test("java only") {
+  test("java only", Slow) {
     zinc.assertCompiles(
       """|/src/A.scala
          |object A
