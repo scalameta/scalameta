@@ -843,9 +843,9 @@ class TargetedSuite extends SemanticdbSuite {
       |  def <<foo>>(a: String): Unit = ()
       |}
     """.stripMargin, (doc, foo1, foo2, foo3) => {
-      assert(foo1 == "_empty_.am.foo.")
-      assert(foo2 == "_empty_.am.foo().")
-      assert(foo3 == "_empty_.am.foo(+1).")
+      assert(foo1 == "_empty_.ao.foo.")
+      assert(foo2 == "_empty_.ao.foo().")
+      assert(foo3 == "_empty_.ao.foo(+1).")
     }
   )
 }
