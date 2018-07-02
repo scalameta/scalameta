@@ -26,10 +26,15 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extend
   import reporter._
 
   /** Is last character a unicode escape \\uxxxx? */
-  def isUnicodeEscape = charOffset == lastUnicodeOffset
+  var isUnicodeEscape = false
 
   /** Advance one character; reducing CR;LF pairs to just LF */
   final def nextChar(): Unit = {
+    // If the last character is a unicode escape, skip charOffset to the end of
+    // the last character. In case `potentialUnicode` restores charOffset
+    // to the head of last character.
+    if(isUnicodeEscape) charOffset = lastUnicodeOffset
+    isUnicodeEscape = false
     if (charOffset >= buf.length) {
       ch = SU
     } else {
@@ -52,6 +57,8 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extend
    *  "potential line ends" here.
    */
   final def nextRawChar() {
+    if(isUnicodeEscape) charOffset = lastUnicodeOffset
+    isUnicodeEscape = false
     if (charOffset >= buf.length) {
       ch = SU
     } else {
@@ -84,13 +91,23 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extend
         d
       }
     }
+
+    // save the end of the current token (exclusive) in case this method
+    // advances the offset more than once. See UnicodeEscapeSuite for a
+    // and https://github.com/scalacenter/scalafix/issues/593 for
+    // an example why this this is necessary.
+    val end = charOffset
     if (charOffset < buf.length && buf(charOffset) == 'u' && evenSlashPrefix) {
       do charOffset += 1
       while (charOffset < buf.length && buf(charOffset) == 'u')
       val code = udigit << 12 | udigit << 8 | udigit << 4 | udigit
       lastUnicodeOffset = charOffset
+      isUnicodeEscape = true
       ch = code.toChar
     }
+
+    // restore the charOffset to the saved position
+    if (end < buf.length) charOffset = end
   }
 
   /** replace CR;LF by LF */
