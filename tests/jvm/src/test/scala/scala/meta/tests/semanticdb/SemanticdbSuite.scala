@@ -83,7 +83,10 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
     assertNoReporterErrors()
 
     val packageobjectsPhase = run.phaseNamed("packageobjects")
-    val phases = List(run.parserPhase, run.namerPhase, packageobjectsPhase, run.typerPhase)
+    val basePhases = List(run.parserPhase, run.namerPhase, packageobjectsPhase)
+    val phases =
+      if (unit.isJava) basePhases
+      else basePhases :+ run.typerPhase // can't run typer for Java units in 2.11
     reporter.reset()
 
     phases.foreach(phase => {
