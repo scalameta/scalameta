@@ -28,7 +28,12 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
     if (classpath == null) fail("classpath not set. broken build?")
     val pluginjar = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
     if (pluginjar == null) fail("pluginjar not set. broken build?")
-    val options = "-Yrangepos -Ywarn-unused-import -Ywarn-unused -cp " + classpath + " -Xplugin:" + pluginjar + " -Xplugin-require:semanticdb"
+    val paradiseJar =
+      sys.props("sbt.paths.tests.test.options").split(" ").find(_.contains("paradise")).orNull
+    if (paradiseJar == null) fail("Missing scalamacros/paradise from scalacOptions")
+    val options = "-Yrangepos -Ywarn-unused-import -Ywarn-unused -cp " + classpath +
+      " -Xplugin:" + pluginjar + " -Xplugin-require:semanticdb " +
+      paradiseJar + " -Xplugin-require:macro-paradise-plugin"
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
     val reporter = new StoreReporter()

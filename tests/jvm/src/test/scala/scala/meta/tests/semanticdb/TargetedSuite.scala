@@ -848,6 +848,22 @@ class TargetedSuite extends SemanticdbSuite {
       assert(foo3 == "_empty_.ao.foo(+1).")
     }
   )
+
+
+  targeted(
+    """|package ap
+       |
+       |@org.scalameta.data.data
+       |class A(a: Int)
+       |class C[T]
+    """.stripMargin, { doc =>
+      val symbols = doc.symbols.map(_.symbol).sorted
+      assert(symbols.contains("ap.A#"))
+      assert(symbols.contains("ap.A#productElement()."))
+      assert(symbols.contains("ap.A.unapply()."))
+      assert(symbols.contains("ap.A.apply()."))
+    }
+  )
 }
 
 object Compat {

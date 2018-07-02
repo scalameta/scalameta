@@ -1638,6 +1638,28 @@ Synthetics:
   [0:0..0:1): * => _star_.
   [0:2..0:5): Int => scala.Int#
 
+semanticdb/integration/src/main/scala/example/MacroAnnotations.scala
+--------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/MacroAnnotations.scala
+Text => non-empty
+Language => Scala
+Symbols => 3 entries
+Occurrences => 3 entries
+
+Symbols:
+example. => package example
+example.MacroAnnotations# => class MacroAnnotations extends AnyRef { +2 decls }
+  AnyRef => scala.AnyRef#
+example.MacroAnnotations#`<init>`(). => primary ctor <init>()
+
+Occurrences:
+[0:8..0:15): example <= example.
+[2:1..2:14): IdentityMacro => example.MacroAnnotations#
+[2:21..2:37): MacroAnnotations <= example.MacroAnnotations#
+
 semanticdb/integration/src/main/scala/example/MetacJava.scala
 -------------------------------------------------------------
 

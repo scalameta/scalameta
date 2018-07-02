@@ -1316,6 +1316,29 @@ example.`local-file`# => class local-file extends AnyRef { +1 decls }
   AnyRef => scala.AnyRef#
 example.`local-file`#`<init>`(). => primary ctor <init>()
 
+example/MacroAnnotations.class
+------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/MacroAnnotations.class
+Text => empty
+Language => Scala
+Symbols => 7 entries
+
+Symbols:
+_root_. => package _root_
+example. => package example
+example.MacroAnnotations# => class MacroAnnotations extends AnyRef { +2 decls }
+  AnyRef => scala.AnyRef#
+example.MacroAnnotations#`<init>`(). => primary ctor <init>()
+example.MacroAnnotations#number(). => method number: Int
+  Int => scala.Int#
+example.MacroAnnotations. => final object MacroAnnotations extends AnyRef { +1 decls }
+  AnyRef => scala.AnyRef#
+example.MacroAnnotations.number(). => method number: Int
+  Int => scala.Int#
+
 example/MetacJava.class
 -----------------------
 

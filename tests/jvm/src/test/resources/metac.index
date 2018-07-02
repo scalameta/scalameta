@@ -52,6 +52,7 @@ example.
   example.B#
   example.EmptyObject.
   example.Example.
+  example.MacroAnnotations#
   example.MetacJava#
   example.MethodUsages#
   example.Methods#
@@ -131,6 +132,7 @@ example.Acc# => semanticdb/integration/src/main/scala/example/Accessibility.scal
 example.B# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
 example.EmptyObject. => semanticdb/integration/src/main/scala/example/EmptyObject.scala.semanticdb
 example.Example. => semanticdb/integration/src/main/scala/example/Example.scala.semanticdb
+example.MacroAnnotations# => semanticdb/integration/src/main/scala/example/MacroAnnotations.scala.semanticdb
 example.MetacJava# => semanticdb/integration/src/main/scala/example/MetacJava.scala.semanticdb
 example.MethodUsages# => semanticdb/integration/src/main/scala/example/MethodUsages.scala.semanticdb
 example.Methods# => semanticdb/integration/src/main/scala/example/Methods.scala.semanticdb
