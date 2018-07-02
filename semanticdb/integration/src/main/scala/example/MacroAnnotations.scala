@@ -1,4 +1,5 @@
 package example
 
-@IdentityMacro class MacroAnnotations
+@MacroAnnotation
+class MacroAnnotations
 object MacroAnnotations

@@ -1332,11 +1332,11 @@ example. => package example
 example.MacroAnnotations# => class MacroAnnotations extends AnyRef { +2 decls }
   AnyRef => scala.AnyRef#
 example.MacroAnnotations#`<init>`(). => primary ctor <init>()
-example.MacroAnnotations#number(). => method number: Int
+example.MacroAnnotations#classNumber(). => method classNumber: Int
   Int => scala.Int#
 example.MacroAnnotations. => final object MacroAnnotations extends AnyRef { +1 decls }
   AnyRef => scala.AnyRef#
-example.MacroAnnotations.number(). => method number: Int
+example.MacroAnnotations.objectNumber(). => method objectNumber: Int
   Int => scala.Int#
 
 example/MetacJava.class
