@@ -1,15 +1,16 @@
 package scala.meta.tests.semanticdb
 
 import java.nio.file.Files
+import org.scalactic.source.Position
 import org.scalatest.FunSuite
 import org.scalatest.tagobjects.Slow
 import org.scalatest.BeforeAndAfterEach
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
 import scala.meta.internal.semanticdb.Index
 import scala.meta.io.RelativePath
-import scala.meta.testkit.DiffAssertions._
+import scala.meta.testkit.DiffAssertions
 
-class IncrementalSuite extends FunSuite with BeforeAndAfterEach {
+class IncrementalSuite extends FunSuite with BeforeAndAfterEach with DiffAssertions {
 
   var zinc: ZincProject = _
 
@@ -17,7 +18,7 @@ class IncrementalSuite extends FunSuite with BeforeAndAfterEach {
     zinc = new ZincProject(debug = false)
   }
 
-  def assertIndexMatches(expected: String): Unit = {
+  def assertIndexMatches(expected: String)(implicit source: Position): Unit = {
     val path = zinc.targetroot.resolve("META-INF").resolve("semanticdb.semanticidx")
     val index = Index.parseFrom(path.readAllBytes)
     val obtained = MetacpIndexExpect.printIndex(index)
@@ -119,6 +120,34 @@ class IncrementalSuite extends FunSuite with BeforeAndAfterEach {
     assert(Bsemanticdb.isFile)
     zinc.assertCompiles("")
     assert(!Bsemanticdb.isFile, "orphan SemanticDB was not removed")
+    assertIndexMatches(A)
+  }
+
+  test("java only", Slow) {
+    zinc.assertCompiles(
+      """|/src/A.scala
+         |object A
+         |/src/B.java
+         |public class B {}
+         |""".stripMargin
+    )
+    assertIndexMatches(
+      """|Packages:
+         |=========
+         |_empty_.
+         |  _empty_.A.
+         |  _empty_.B#
+         |_root_.
+         |  _empty_.
+         |
+         |Toplevels:
+         |==========
+         |_empty_.A. => src/A.scala.semanticdb
+         |_empty_.B# => src/B.java.semanticdb
+         |""".stripMargin
+    )
+    Files.delete(zinc.sourceroot.resolve("src/B.java").toNIO)
+    zinc.assertCompiles("")
     assertIndexMatches(A)
   }
 

@@ -15,8 +15,7 @@ import scala.meta.internal.{semanticdb => s}
 import scala.meta.io._
 import scala.meta.testkit.DiffAssertions
 
-abstract class SemanticdbSuite extends FunSuite
-    with DiffAssertions { self =>
+abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
     if (name.length > 50) name = name.take(50) + "..."
@@ -49,8 +48,21 @@ abstract class SemanticdbSuite extends FunSuite
   def customizeConfig(config: SemanticdbConfig): SemanticdbConfig = config
   import databaseOps._
 
-  private def computeDatabaseFromSnippet(code: String): s.TextDocument = {
-    val javaFile = File.createTempFile("paradise", ".scala")
+  private def assertNoReporterErrors(): Unit = {
+    val reporter = g.reporter.asInstanceOf[StoreReporter]
+    val errors = reporter.infos.filter(_.severity == reporter.ERROR)
+    val diagnostics = errors.map { error =>
+      s"""|<input>:${error.pos.line}:${error.pos.column}: error ${error.msg}
+          |${error.pos.lineContent}
+          |${error.pos.lineCaret}""".stripMargin
+    }
+    if (errors.nonEmpty) {
+      fail(diagnostics.mkString("\n"))
+    }
+  }
+
+  private def computeDatabaseFromSnippet(code: String, language: s.Language): s.TextDocument = {
+    val javaFile = File.createTempFile("paradise", "." + language.toString().toLowerCase())
     val writer = new PrintWriter(javaFile)
     try writer.write(code)
     finally writer.close()
@@ -65,20 +77,23 @@ abstract class SemanticdbSuite extends FunSuite
     g.globalPhase = run.parserPhase
     val reporter = new StoreReporter()
     g.reporter = reporter
-    unit.body = g.newUnitParser(unit).parse()
-    val errors = reporter.infos.filter(_.severity == reporter.ERROR)
-    errors.foreach(error => fail(s"scalac parse error: ${error.msg} at ${error.pos}"))
+    unit.body =
+      if (language.isScala) g.newUnitParser(unit).parse()
+      else new g.syntaxAnalyzer.JavaUnitParser(unit).parse()
+    assertNoReporterErrors()
 
     val packageobjectsPhase = run.phaseNamed("packageobjects")
-    val phases = List(run.parserPhase, run.namerPhase, packageobjectsPhase, run.typerPhase)
+    val basePhases = List(run.parserPhase, run.namerPhase, packageobjectsPhase)
+    val phases =
+      if (unit.isJava) basePhases
+      else basePhases :+ run.typerPhase // can't run typer for Java units in 2.11
     reporter.reset()
 
     phases.foreach(phase => {
       g.phase = phase
       g.globalPhase = phase
       phase.asInstanceOf[g.GlobalPhase].apply(unit)
-      val errors = reporter.infos.filter(_.severity == reporter.ERROR)
-      errors.foreach(error => fail(s"scalac ${phase.name} error: ${error.msg} at ${error.pos}"))
+      assertNoReporterErrors()
     })
     g.phase = run.phaseNamed("patmat")
     g.globalPhase = run.phaseNamed("patmat")
@@ -86,17 +101,25 @@ abstract class SemanticdbSuite extends FunSuite
     unit.toTextDocument
   }
 
-  private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
-    val document = computeDatabaseFromSnippet(code)
+  private def computeDatabaseSectionFromSnippet(
+      code: String,
+      sectionName: String,
+      language: s.Language): String = {
+    val document = computeDatabaseFromSnippet(code, language)
     val format = scala.meta.metap.Format.Detailed
     val payload = s.Print.document(format, document).toString.split(EOL)
     val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
     section.mkString(EOL)
   }
 
-  def checkSection(code: String, expected: String, section: String): Unit = {
+  def checkSection(
+      code: String,
+      expected: String,
+      section: String,
+      language: s.Language
+  ): Unit = {
     test(code) {
-      val obtained = computeDatabaseSectionFromSnippet(code, section)
+      val obtained = computeDatabaseSectionFromSnippet(code, section, language)
       try assertNoDiff(obtained, expected)
       catch {
         case ex: Exception =>
@@ -114,28 +137,35 @@ abstract class SemanticdbSuite extends FunSuite
     }
   }
 
+  def javaSymbols(code: String, expected: String): Unit = {
+    checkSection(code, expected, "Symbols", s.Language.JAVA)
+  }
+
   def occurrences(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Occurrences")
+    checkSection(code, expected, "Occurrences", s.Language.SCALA)
   }
 
   def diagnostics(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Diagnostics")
+    checkSection(code, expected, "Diagnostics", s.Language.SCALA)
   }
 
   def symbols(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Symbols")
+    checkSection(code, expected, "Symbols", s.Language.SCALA)
   }
 
   def synthetics(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Synthetics")
+    checkSection(code, expected, "Synthetics", s.Language.SCALA)
   }
 
-  private def computeDatabaseAndOccurrencesFromMarkup(markup: String): (s.TextDocument, List[String]) = {
+  private def computeDatabaseAndOccurrencesFromMarkup(
+      markup: String,
+      language: s.Language
+  ): (s.TextDocument, List[String]) = {
     val chevrons = "<<(.*?)>>".r
     val ps0 = chevrons.findAllIn(markup).matchData.map(m => (m.start, m.end)).toList
     val ps = ps0.zipWithIndex.map { case ((s, e), i) => (s - 4 * i, e - 4 * i - 4) }
     val code = chevrons.replaceAllIn(markup, "$1")
-    val database = computeDatabaseFromSnippet(code)
+    val database = computeDatabaseFromSnippet(code, language)
     val unit = g.currentRun.units.toList.last
     val source = unit.toSource
     val symbols = ps.map {
@@ -162,7 +192,7 @@ abstract class SemanticdbSuite extends FunSuite
 
   def targeted(markup: String, fn: s.TextDocument => Unit)(implicit hack: OverloadHack1): Unit = {
     test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup, s.Language.SCALA)
       occurrences match {
         case List() => fn(database)
         case _ => sys.error(s"0 chevrons expected, ${occurrences.length} chevrons found")
@@ -173,7 +203,7 @@ abstract class SemanticdbSuite extends FunSuite
   def targeted(markup: String, fn: (s.TextDocument, String) => Unit)(
       implicit hack: OverloadHack2): Unit = {
     test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup, s.Language.SCALA)
       occurrences match {
         case List(name1) => fn(database, name1)
         case _ => sys.error(s"1 chevron expected, ${occurrences.length} chevrons found")
@@ -184,7 +214,7 @@ abstract class SemanticdbSuite extends FunSuite
   def targeted(markup: String, fn: (s.TextDocument, String, String) => Unit)(
       implicit hack: OverloadHack3): Unit = {
     test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup, s.Language.SCALA)
       occurrences match {
         case List(name1, name2) => fn(database, name1, name2)
         case _ => sys.error(s"2 chevrons expected, ${occurrences.length} chevrons found")
@@ -195,7 +225,7 @@ abstract class SemanticdbSuite extends FunSuite
   def targeted(markup: String, fn: (s.TextDocument, String, String, String) => Unit)(
       implicit hack: OverloadHack4): Unit = {
     test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup, s.Language.SCALA)
       occurrences match {
         case List(name1, name2, name3) => fn(database, name1, name2, name3)
         case _ => sys.error(s"3 chevrons expected, ${occurrences.length} chevrons found")
@@ -206,7 +236,7 @@ abstract class SemanticdbSuite extends FunSuite
   def targeted(markup: String, fn: (s.TextDocument, String, String, String, String) => Unit)(
       implicit hack: OverloadHack5): Unit = {
     test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup, s.Language.SCALA)
       occurrences match {
         case List(name1, name2, name3, name4) => fn(database, name1, name2, name3, name4)
         case _ => sys.error(s"4 chevrons expected, ${occurrences.length} chevrons found")

@@ -23,6 +23,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
     private def language: s.Language = {
       if (gsym.hasPackageFlag) l.SCALA
       else if (gsym.hasFlag(gf.JAVA)) l.JAVA
+      else if (gsym.isParameter && gsym.owner.hasFlag(gf.JAVA)) l.JAVA
       else l.SCALA
     }
 
@@ -73,7 +74,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         if (isAbstractClass || kind.isInterface || isAbstractMethod) flip(p.ABSTRACT)
         if (gsym.hasFlag(gf.FINAL) || gsym.hasFlag(gf.JAVA_ENUM)) flip(p.FINAL)
         if (gsym.hasFlag(gf.JAVA_ENUM)) flip(p.ENUM)
-        if (gsym.hasFlag(gf.STATIC)) flip(p.STATIC)
+        if (gsym.hasFlag(gf.STATIC) && !gsym.hasFlag(gf.INTERFACE)) flip(p.STATIC)
       } else {
         if (isAbstractClass || isAbstractMethod || isAbstractType) flip(p.ABSTRACT)
         if (gsym.hasFlag(gf.FINAL) || isObject) flip(p.FINAL)

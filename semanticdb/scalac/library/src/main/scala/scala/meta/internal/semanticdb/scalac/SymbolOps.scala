@@ -75,7 +75,10 @@ trait SymbolOps { self: SemanticdbOps =>
     def isSemanticdbMulti: Boolean = sym.isOverloaded
     def disambiguator: String = {
       val peers = sym.owner.semanticdbDecls.gsyms
-      val overloads = peers.filter(_.name == sym.name)
+      val overloads = peers.filter { peer =>
+        peer.isMethod &&
+        peer.name == sym.name
+      }
       val suffix = {
         if (overloads.lengthCompare(1) == 0) ""
         else {
@@ -217,6 +220,9 @@ trait SymbolOps { self: SemanticdbOps =>
     def isSyntheticCaseAccessor: Boolean = {
       sym.isCaseAccessor && sym.name.toString.contains("$")
     }
+    def isSyntheticJavaModule: Boolean = {
+      !sym.hasPackageFlag && sym.isJavaDefined && sym.isModule
+    }
     def isUseless: Boolean = {
       sym == g.NoSymbol ||
       sym.isAnonymousClass ||
@@ -226,7 +232,12 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isSyntheticValueClassCompanion ||
       sym.isUselessField ||
       sym.isSyntheticCaseAccessor ||
-      sym.isRefinementClass
+      sym.isRefinementClass ||
+      sym.isSyntheticJavaModule
+    }
+    def isUselessOccurrence: Boolean = {
+      sym.isUseless &&
+      !sym.isSyntheticJavaModule // references to static Java inner classes should have occurrences
     }
     def isUseful: Boolean = !sym.isUseless
   }

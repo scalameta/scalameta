@@ -71,7 +71,6 @@ trait SymbolOps { _: Scalacp =>
           val overloads = {
             val peers = sym.parent.get.semanticdbDecls.syms
             peers.filter {
-              case peer: ObjectSymbol => peer.name == sym.name
               case peer: MethodSymbol => peer.name == sym.name
               case _ => false
             }
@@ -166,11 +165,12 @@ trait SymbolOps { _: Scalacp =>
                     case None =>
                       val scalaObjectName = sym.name + "$.class"
                       index.getClassfile(p.packageResourceName, scalaObjectName) match {
-                        case Some(_) =>
-                          false
+                        case Some(objectClassfile) =>
+                          if (objectClassfile.hasScalaSig) false
+                          else throw MissingSymbolException(sym.path)
                         case None =>
                           if (sym.isAssumedJava) true
-                          else throw MissingSymbolException(javaClassName)
+                          else throw MissingSymbolException(sym.path)
                       }
                   }
                 }

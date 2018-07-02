@@ -1848,6 +1848,7 @@ with `METHOD` symbols.
 abstract class C {
   def m1: Int = ???
   def m2(): Int = ???
+  object m3
   def m3(x: Int): Int = ???
   def m3(x: org.Int): Int = ???
   def m4(x: Int)(y: Int): Int = ???
@@ -1871,6 +1872,12 @@ abstract class C {
     <td><code>_empty_.C#m2().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(List()), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>m3</code></td>
+    <td><code>_empty_.C#m3.</code></td>
+    <td><code>OBJECT</code></td>
+    <td><code>ClassSignature(List(), List(), None, List())</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
@@ -1921,6 +1928,8 @@ Notes:
   in SLS [\[50\]][50]. Corresponding signature is computed using the inferred
   retyrb type as explained in [Type](#scala-type).
 * Method symbols support [all Scala accessibilities](#scala-accessibility).
+* The disambiguators for `m3()` and `m3(+1)` do not take into account overloaded
+  object `m3.`.
 
 **Macro definitions** [\[51\]][51] are represented with `MACRO` symbols
 similarly to function definitions (see above).
@@ -2393,6 +2402,7 @@ In this section, we describe the Java symbol format.
       * static overloads secondly, following the same order as they
         appear in the original source
 
+    `FIELD` definitions are not included in the list of overloads.
     Given this order, the tag becomes
 
       * Empty string for the definition that appears first.
@@ -2601,6 +2611,7 @@ package a;
 class C extends S1 implements I {
   T1 m1;
   static T2 m2();
+  zero.Overload m3;
   T3 m3(one.Overload e1);
   static T4 m3(two.Overload e2);
   T5 m3(three.Overload e3);
@@ -2626,13 +2637,19 @@ class C extends S1 implements I {
     <td><code>m1</code></td>
     <td><code>a.C#m1.</code></td>
     <td><code>FIELD</code></td>
-    <td><code>TypeRef(None, &lt;T1&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;T1&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m2</code></td>
     <td><code>a.C#m2().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T2&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>m3</code></td>
+    <td><code>a.C#m3.</code></td>
+    <td><code>FIELD</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;zero.Overload&gt;))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
@@ -2716,6 +2733,8 @@ Notes:
 * Class declarations support [all Java accessibilities](#java-accessibility).
 * Class members without explicit access modifiers have accessibility
   `PRIVATE_WITHIN` within the enclosing package.
+* The disambiguators for `m3()`, `m3(+1)` and `m3(+2)` do not take into account
+  overloaded field `m3.`.
 
 **Enum declarations** [\[84\]][84] are represented by a single symbol
 with the `CLASS` kind.

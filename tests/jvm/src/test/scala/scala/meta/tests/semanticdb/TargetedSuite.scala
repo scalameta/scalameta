@@ -834,6 +834,20 @@ class TargetedSuite extends SemanticdbSuite {
       assert(denot.symbol.startsWith("local"))
     }
   )
+
+  targeted(
+    """
+      |object ao {
+      |  object <<foo>>
+      |  def <<foo>>(a: Int): Unit = ()
+      |  def <<foo>>(a: String): Unit = ()
+      |}
+    """.stripMargin, (doc, foo1, foo2, foo3) => {
+      assert(foo1 == "_empty_.ao.foo.")
+      assert(foo2 == "_empty_.ao.foo().")
+      assert(foo3 == "_empty_.ao.foo(+1).")
+    }
+  )
 }
 
 object Compat {

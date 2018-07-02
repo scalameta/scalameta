@@ -102,7 +102,7 @@ trait ExpectHelpers extends FunSuiteLike {
     diff
   }
 
-  protected def normalizedSymbols(path: Path): Map[String, s.SymbolInformation] = {
+  protected def loadMiniSymtab(path: Path): Map[String, s.SymbolInformation] = {
     for {
       file <- FileIO.listAllFilesRecursively(AbsolutePath(path)).iterator
       if PathIO.extension(file.toNIO) == "semanticdb"
@@ -222,8 +222,8 @@ object MetacIndexExpect extends ExpectHelpers {
 object MetacMetacpDiffExpect extends ExpectHelpers {
   def filename: String = "metac-metacp.diff"
   def loadObtained: String = {
-    val metacp = metacpSymbols
-    val metac = metacSymbols.valuesIterator.toSeq.sortBy(_.symbol)
+    val metacp = sortDeclarations(metacpSymbols)
+    val metac = sortDeclarations(metacSymbols).valuesIterator.toSeq.sortBy(_.symbol)
     val symbols = for {
       sym <- metac.iterator
       javasym <- {
@@ -255,8 +255,34 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
     }
     symbols.mkString
   }
-  def metacpSymbols = normalizedSymbols(metacp(Paths.get(BuildInfo.databaseClasspath)))
-  def metacSymbols = normalizedSymbols(Paths.get(BuildInfo.databaseClasspath))
+  def metacpSymbols = loadMiniSymtab(metacp(Paths.get(BuildInfo.databaseClasspath)))
+  def metacSymbols = loadMiniSymtab(Paths.get(BuildInfo.databaseClasspath))
+
+  // FIXME: https://github.com/scalameta/scalameta/issues/1642
+  // We sort class signature declarations to make it easier to eye-ball actual bugs
+  // in metac-metacp.diff. Without sorting, the diffs become noisy for questionable
+  // benefit since at the moment the biggest priority is to fix all metac/metacp
+  // differences in symbol formats, signatures, accessibilities, etc.
+  // Presevering the source ordering of declarations is important for documentation tools
+  // so we should eventually stop sorting them here.
+  private def sortDeclarations(
+      symtab: Map[String, SymbolInformation]
+  ): Map[String, SymbolInformation] = symtab.map {
+    case (key, sym) =>
+      val newSymbol = sym.signature match {
+        case c: ClassSignature if sym.language.isJava =>
+          val sortedJavaDeclarations = c.declarations.get.symlinks.sorted
+          sym.copy(
+            signature = c.copy(
+              declarations = Some(
+                c.declarations.get.copy(symlinks = sortedJavaDeclarations)
+              )
+            )
+          )
+        case _ => sym
+      }
+      key -> newSymbol
+  }
 }
 
 object ManifestMetap extends ExpectHelpers {
