@@ -263,9 +263,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case _ =>
             }
 
-            if (gtree.pos == null || gtree.pos == NoPosition) {
-              return
-            }
+            if (gtree.pos == null || gtree.pos == NoPosition) return
             val gstart = gtree.pos.start
             val gpoint = gtree.pos.point
             val gend = gtree.pos.end

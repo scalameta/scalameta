@@ -2534,7 +2534,7 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Synthetic.scala
 Text => non-empty
 Language => Scala
-Symbols => 4 entries
+Symbols => 3 entries
 Occurrences => 11 entries
 Synthetics => 6 entries
 
@@ -2543,8 +2543,6 @@ example. => package example
 example.Synthetic# => class Synthetic extends AnyRef { +1 decls }
   AnyRef => scala.AnyRef#
 example.Synthetic#`<init>`(). => primary ctor <init>()
-local0 => param x$1: Int
-  Int => scala.Int#
 
 Occurrences:
 [0:8..0:15): example <= example.

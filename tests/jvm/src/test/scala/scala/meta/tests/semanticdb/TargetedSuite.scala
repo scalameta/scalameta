@@ -886,6 +886,17 @@ class TargetedSuite extends SemanticdbSuite {
     }
   )
 
+  targeted(
+    """|package ar
+       |object Lambda {
+       | val x: Int => Int = _ + 1
+       |}
+    """.stripMargin, { doc =>
+      val symbols = doc.symbols.map(s => s.symbol)
+      assert(!symbols.exists(_.startsWith("local")))
+    }
+  )
+
 }
 
 object Compat {

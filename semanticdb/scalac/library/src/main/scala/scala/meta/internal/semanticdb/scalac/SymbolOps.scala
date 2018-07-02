@@ -229,10 +229,14 @@ trait SymbolOps { self: SemanticdbOps =>
     def isSyntheticAbstractType: Boolean = {
       sym.isSynthetic && sym.isAbstractType // these are hardlinked to TypeOps
     }
+    def isEtaExpandedParameter: Boolean = {
+      sym.isParameter && sym.isSynthetic && sym.owner.isAnonymousFunction
+    }
     def isUseless: Boolean = {
       sym == g.NoSymbol ||
       sym.isAnonymousClass ||
       sym.isAnonymousClassConstructor ||
+      sym.isEtaExpandedParameter ||
       sym.isSyntheticConstructor ||
       sym.isStaticConstructor ||
       sym.isLocalChild ||
