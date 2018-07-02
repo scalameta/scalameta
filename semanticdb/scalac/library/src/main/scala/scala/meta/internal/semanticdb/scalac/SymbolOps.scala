@@ -226,6 +226,9 @@ trait SymbolOps { self: SemanticdbOps =>
     def isAnonymousClassConstructor: Boolean = {
       sym.isConstructor && sym.owner.isAnonymousClass
     }
+    def isSyntheticAbstractType: Boolean = {
+      sym.isSynthetic && sym.isAbstractType // these are hardlinked to TypeOps
+    }
     def isUseless: Boolean = {
       sym == g.NoSymbol ||
       sym.isAnonymousClass ||
@@ -237,7 +240,8 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isUselessField ||
       sym.isSyntheticCaseAccessor ||
       sym.isRefinementClass ||
-      sym.isSyntheticJavaModule
+      sym.isSyntheticJavaModule ||
+      sym.isSyntheticAbstractType
     }
     def isUselessOccurrence: Boolean = {
       sym.isUseless &&
