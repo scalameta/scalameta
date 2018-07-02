@@ -796,11 +796,12 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Anonymous.scala
 Text => non-empty
 Language => Scala
-Symbols => 13 entries
+Symbols => 14 entries
 Occurrences => 21 entries
 Synthetics => 2 entries
 
 Symbols:
+_empty_. => package _empty_
 _empty_.C# => class C extends AnyRef { +3 decls }
   AnyRef => scala.AnyRef#
 _empty_.C#`<init>`(). => primary ctor <init>()
@@ -1283,10 +1284,11 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Empty.scala
 Text => non-empty
 Language => Scala
-Symbols => 6 entries
+Symbols => 7 entries
 Occurrences => 10 entries
 
 Symbols:
+_empty_. => package _empty_
 _empty_.A# => class A extends AnyRef { +2 decls }
   AnyRef => scala.AnyRef#
 _empty_.A#`<init>`(). => primary ctor <init>()
@@ -1416,12 +1418,13 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Flags.scala
 Text => non-empty
 Language => Scala
-Symbols => 59 entries
+Symbols => 60 entries
 Occurrences => 71 entries
 Synthetics => 2 entries
 
 Symbols:
 flags. => package flags
+flags.p. => package p
 flags.p.package. => final package object p extends AnyRef { +16 decls }
   AnyRef => scala.AnyRef#
 flags.p.package.AA# => class AA extends AnyRef { +5 decls }
@@ -1648,8 +1651,12 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Imports.scala
 Text => non-empty
 Language => Scala
+Symbols => 1 entries
 Occurrences => 4 entries
 Diagnostics => 1 entries
+
+Symbols:
+_empty_. => package _empty_
 
 Occurrences:
 [0:7..0:12): scala => scala.

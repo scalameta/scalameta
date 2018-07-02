@@ -99,6 +99,7 @@ types.
 
 Toplevels:
 ==========
+_empty_. => semanticdb/integration/src/main/scala/example/Imports.scala.semanticdb
 _empty_.A# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
 _empty_.B# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
 _empty_.C# => semanticdb/integration/src/main/scala/example/Anonymous.scala.semanticdb
@@ -147,6 +148,7 @@ example.ValUsages. => semanticdb/integration/src/main/scala/example/Vals.scala.s
 example.Vals# => semanticdb/integration/src/main/scala/example/Vals.scala.semanticdb
 example.`local-file`# => semanticdb/integration/src/main/scala/example/local-file.scala.semanticdb
 flags. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
+flags.p. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
 flags.p.package. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
 objects. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb
 objects.X. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb

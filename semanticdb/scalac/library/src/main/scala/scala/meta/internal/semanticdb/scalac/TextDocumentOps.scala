@@ -220,7 +220,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
               if (mtree.isDefinition) {
                 binders += mtree.pos
                 occurrences(mtree.pos) = symbol
-                trySymbolDefinition(gsym)
               } else {
                 val selectionFromStructuralType = gsym.owner.isRefinementClass
                 if (!selectionFromStructuralType) occurrences(mtree.pos) = symbol
@@ -260,7 +259,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
             }
 
             gtree match {
-              case _: g.PackageDef =>
               case _: g.DefTree => trySymbolDefinition(gtree.symbol)
               case _ =>
             }
