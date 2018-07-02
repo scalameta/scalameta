@@ -664,7 +664,9 @@ class TargetedSuite extends SemanticdbSuite {
        |  Int => scala.Int#
        |_empty_.ac.y(). => val method y: Class[_] forSome { type _ }
        |  Class => scala.Predef.Class#
-       |  _ => local0
+       |  _ => local1
+       |local0 => abstract type _
+       |local2 => abstract type _
     """.stripMargin
   )
 
@@ -694,39 +696,45 @@ class TargetedSuite extends SemanticdbSuite {
        |_empty_.ad.k(). => val method k: AnyRef with Foo { val def y: Any }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
-       |  y => local10
+       |  y => local13
        |  Any => scala.Any#
        |_empty_.ad.x(). => val method x: AnyRef with Foo { val def y: Int; def z[T](e: T): T }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
-       |  y => local5
+       |  y => local7
        |  Int => scala.Int#
-       |  z => local6
-       |  T => local8
-       |  e => local7
+       |  z => local8
+       |  T => local10
+       |  e => local9
        |_empty_.ad.z(). => val method z: AnyRef with Foo { val def y: Int }
        |  AnyRef => scala.AnyRef#
        |  Foo => _empty_.ad.Foo#
-       |  y => local9
+       |  y => local11
        |  Int => scala.Int#
        |_empty_.ad.zz(). => val method zz: Bar { val def y: Int }
        |  Bar => _empty_.ad.Bar#
-       |  y => local12
+       |  y => local18
        |  Int => scala.Int#
-       |local0 => val method y: Int
+       |local0 => primary ctor <init>()
+       |local11 => abstract val method y: Int
        |  Int => scala.Int#
-       |local1 => method z[T](unknown local2): T
-       |  T => local3
-       |  local2 => local2
-       |local10 => abstract val method y: Any
+       |local12 => abstract val method y: Int
+       |  Int => scala.Int#
+       |local13 => abstract val method y: Any
        |  Any => scala.Any#
-       |local11 => val method y: Int
+       |local14 => abstract val method y: Any
+       |  Any => scala.Any#
+       |local15 => primary ctor <init>()
+       |local17 => val method y: Int
        |  Int => scala.Int#
-       |local3 => typeparam T
-       |local4 => param e: T
-       |  T => local3
-       |local9 => abstract val method y: Int
+       |local2 => val method y: Int
        |  Int => scala.Int#
+       |local3 => method z[T](unknown local4): T
+       |  T => local5
+       |  local4 => local4
+       |local5 => typeparam T
+       |local6 => param e: T
+       |  T => local5
     """.stripMargin
   )
 
@@ -850,60 +858,6 @@ class TargetedSuite extends SemanticdbSuite {
     }
   )
 
-  targeted(
-    """|package ap
-       |
-       |@org.scalameta.data.data
-       |class A(a: Int)
-    """.stripMargin, { doc =>
-      val symbols = doc.symbols.map(_.symbol).sorted
-      assert(symbols.contains("ap.A#"))
-      assert(symbols.contains("ap.A#productElement()."))
-      assert(symbols.contains("ap.A.unapply()."))
-      assert(symbols.contains("ap.A.apply()."))
-    }
-  )
-
-  targeted(
-    """
-      |package aq
-      |class C1(val x1: Int) extends AnyVal
-      |
-      |class C2(val x2: Int) extends AnyVal
-      |object C2
-      |
-      |case class C3(x: Int)
-      |
-      |case class C4(x: Int)
-      |object C4
-      |
-      |object M {
-      |  implicit class C5(x: Int)
-      |}
-      |
-      |case class C6(private val x: Int)
-      |
-      |class C7(x: Int)
-      |
-      |class C8(private[this] val x: Int)
-      |
-      |class C9(private[this] var x: Int)
-      |
-      |object N {
-      |  val anonClass = new C7(42) {
-      |    val local = ???
-      |  }
-      |  val anonFun = List(1).map { i =>
-      |    val local = 2
-      |    local + 2
-      |  }
-      |}
-    """.stripMargin, { doc =>
-      val symbols = doc.symbols.map(_.symbol).sorted
-      val unknown = doc.syntax.lines.filter(_.contains("unknown")).mkString("\n")
-      pprint.log(unknown)
-    }
-  )
 }
 
 object Compat {

@@ -253,19 +253,4 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
     }
   }
 
-  implicit class XtensionTextDocumentSymtab(doc: s.TextDocument) {
-    private def withPrinter(f: DocumentPrinter => Unit): String = {
-      val out = new ByteArrayOutputStream()
-      val reporter =
-        scala.meta.cli.Reporter().withOut(new PrintStream(out)).withErr(new PrintStream(out))
-      val settings = scala.meta.metap.Settings().withFormat(Format.Detailed)
-      val printer = new DocumentPrinter(settings, reporter, doc)
-      f(printer)
-      out.toString()
-    }
-    def info(sym: String): s.SymbolInformation =
-      doc.symbols.find(_.symbol == sym).getOrElse(throw new NoSuchElementException(sym))
-    def syntax: String = withPrinter(_.print())
-    def infoSyntax(sym: String): String = withPrinter(_.pprint(this.info(sym)))
-  }
 }
