@@ -15,7 +15,7 @@ class IncrementalSuite extends FunSuite with BeforeAndAfterEach with DiffAsserti
   var zinc: ZincProject = _
 
   override def beforeEach(): Unit = {
-    zinc = new ZincProject(debug = false)
+    zinc = new ZincProject()
   }
 
   def assertIndexMatches(expected: String)(implicit source: Position): Unit = {
