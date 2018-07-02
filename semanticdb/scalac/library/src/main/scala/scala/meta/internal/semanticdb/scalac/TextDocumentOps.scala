@@ -162,6 +162,41 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
       locally {
         object traverser extends g.Traverser {
+          private def trySymbolDefinition(gsym: g.Symbol): Unit = {
+            if (config.symbols.isOff) return
+            if (gsym == null) return
+            if (gsym.isUseless) return
+            val symbol = gsym.toSemantic
+            if (symbol == Symbols.None) return
+
+            appendToplevelSymbolToIndex(gsym)
+
+            def saveSymbol(gs: g.Symbol): Unit = {
+              if (gs.isUseful) {
+                symbols(gs.toSemantic) = gs.toSymbolInformation(SymlinkChildren)
+              }
+            }
+
+            saveSymbol(gsym)
+            if (gsym.isClass && !gsym.isTrait) {
+              val gprim = gsym.primaryConstructor
+              saveSymbol(gprim)
+              gprim.info.paramss.flatten.foreach(saveSymbol)
+            }
+            if (gsym.isGetter) {
+              val gsetter = gsym.setterIn(gsym.owner)
+              saveSymbol(gsetter)
+              gsetter.info.paramss.flatten.foreach(saveSymbol)
+            }
+            if (gsym.isUsefulField && gsym.isMutable) {
+              val getterInfo = symbols(symbol)
+              val setterInfos = Synthetics.setterInfos(getterInfo, SymlinkChildren)
+              setterInfos.foreach { info =>
+                val msymbol = info.symbol
+                symbols(msymbol) = info
+              }
+            }
+          }
           private def tryFindMtree(gtree: g.Tree): Unit = {
             def success(mtree: m.Name, gsym0: g.Symbol): Unit = {
               // We cannot be guaranteed that all symbols have a position, see
@@ -183,35 +218,9 @@ trait TextDocumentOps { self: SemanticdbOps =>
               todo -= mtree
 
               if (mtree.isDefinition) {
-                appendToplevelSymbolToIndex(gsym)
                 binders += mtree.pos
                 occurrences(mtree.pos) = symbol
-                if (config.symbols.isOn) {
-                  def saveSymbol(gs: g.Symbol): Unit = {
-                    if (gs.isUseful) {
-                      symbols(gs.toSemantic) = gs.toSymbolInformation(SymlinkChildren)
-                    }
-                  }
-                  saveSymbol(gsym)
-                  if (gsym.isClass && !gsym.isTrait) {
-                    val gprim = gsym.primaryConstructor
-                    saveSymbol(gprim)
-                    gprim.info.paramss.flatten.foreach(saveSymbol)
-                  }
-                  if (gsym.isGetter) {
-                    val gsetter = gsym.setterIn(gsym.owner)
-                    saveSymbol(gsetter)
-                    gsetter.info.paramss.flatten.foreach(saveSymbol)
-                  }
-                  if (gsym.isUsefulField && gsym.isMutable) {
-                    val getterInfo = symbols(symbol)
-                    val setterInfos = Synthetics.setterInfos(getterInfo, SymlinkChildren)
-                    setterInfos.foreach { info =>
-                      val msymbol = info.symbol
-                      symbols(msymbol) = info
-                    }
-                  }
-                }
+                trySymbolDefinition(gsym)
               } else {
                 val selectionFromStructuralType = gsym.owner.isRefinementClass
                 if (!selectionFromStructuralType) occurrences(mtree.pos) = symbol
@@ -250,7 +259,15 @@ trait TextDocumentOps { self: SemanticdbOps =>
               return true
             }
 
-            if (gtree.pos == null || gtree.pos == NoPosition) return
+            gtree match {
+              case _: g.PackageDef =>
+              case _: g.DefTree => trySymbolDefinition(gtree.symbol)
+              case _ =>
+            }
+
+            if (gtree.pos == null || gtree.pos == NoPosition) {
+              return
+            }
             val gstart = gtree.pos.start
             val gpoint = gtree.pos.point
             val gend = gtree.pos.end

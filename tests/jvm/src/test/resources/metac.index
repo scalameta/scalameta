@@ -27,9 +27,11 @@ classes.
   classes.C2#
   classes.C2.
   classes.C3#
+  classes.C3.
   classes.C4#
   classes.C4.
   classes.C6#
+  classes.C6.
   classes.C7#
   classes.C8#
   classes.C9#
@@ -53,6 +55,7 @@ example.
   example.EmptyObject.
   example.Example.
   example.MacroAnnotations#
+  example.MacroAnnotations.
   example.MetacJava#
   example.MethodUsages#
   example.Methods#
@@ -110,9 +113,11 @@ classes.C1# => semanticdb/integration/src/main/scala/example/Classes.scala.seman
 classes.C2# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C2. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C3# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C3. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C4# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C4. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C6# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C6. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C7# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C8# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C9# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
@@ -133,6 +138,7 @@ example.B# => semanticdb/integration/src/main/scala/example/Overrides.scala.sema
 example.EmptyObject. => semanticdb/integration/src/main/scala/example/EmptyObject.scala.semanticdb
 example.Example. => semanticdb/integration/src/main/scala/example/Example.scala.semanticdb
 example.MacroAnnotations# => semanticdb/integration/src/main/scala/example/MacroAnnotations.scala.semanticdb
+example.MacroAnnotations. => semanticdb/integration/src/main/scala/example/MacroAnnotations.scala.semanticdb
 example.MetacJava# => semanticdb/integration/src/main/scala/example/MetacJava.scala.semanticdb
 example.MethodUsages# => semanticdb/integration/src/main/scala/example/MethodUsages.scala.semanticdb
 example.Methods# => semanticdb/integration/src/main/scala/example/Methods.scala.semanticdb

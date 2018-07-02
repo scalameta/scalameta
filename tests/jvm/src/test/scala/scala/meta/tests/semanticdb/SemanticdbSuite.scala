@@ -1,6 +1,8 @@
 package scala.meta.tests
 package semanticdb
 
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 import org.scalatest._
 import java.io.{File, PrintWriter}
 import scala.reflect.io._
@@ -10,9 +12,11 @@ import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
 import scala.{meta => m}
 import scala.meta.internal.inputs._
+import scala.meta.internal.metap.DocumentPrinter
 import scala.meta.internal.semanticdb.scalac._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io._
+import scala.meta.metap.Format
 import scala.meta.testkit.DiffAssertions
 
 abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
@@ -249,4 +253,19 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
     }
   }
 
+  implicit class XtensionTextDocumentSymtab(doc: s.TextDocument) {
+    private def withPrinter(f: DocumentPrinter => Unit): String = {
+      val out = new ByteArrayOutputStream()
+      val reporter =
+        scala.meta.cli.Reporter().withOut(new PrintStream(out)).withErr(new PrintStream(out))
+      val settings = scala.meta.metap.Settings().withFormat(Format.Detailed)
+      val printer = new DocumentPrinter(settings, reporter, doc)
+      f(printer)
+      out.toString()
+    }
+    def info(sym: String): s.SymbolInformation =
+      doc.symbols.find(_.symbol == sym).getOrElse(throw new NoSuchElementException(sym))
+    def syntax: String = withPrinter(_.print())
+    def infoSyntax(sym: String): String = withPrinter(_.pprint(this.info(sym)))
+  }
 }

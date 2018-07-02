@@ -153,7 +153,7 @@ class TargetedSuite extends SemanticdbSuite {
         |package object F {
         |}
     """.trim.stripMargin,
-    """|F.package. => final package object F extends AnyRef
+      """|F.package. => final package object F extends AnyRef
        |  AnyRef => scala.AnyRef#
        |f. => package f
        |f.C1# => class C1 extends AnyRef { +13 decls }
@@ -842,26 +842,66 @@ class TargetedSuite extends SemanticdbSuite {
       |  def <<foo>>(a: Int): Unit = ()
       |  def <<foo>>(a: String): Unit = ()
       |}
-    """.stripMargin, (doc, foo1, foo2, foo3) => {
+    """.stripMargin,
+    (doc, foo1, foo2, foo3) => {
       assert(foo1 == "_empty_.ao.foo.")
       assert(foo2 == "_empty_.ao.foo().")
       assert(foo3 == "_empty_.ao.foo(+1).")
     }
   )
 
-
   targeted(
     """|package ap
        |
        |@org.scalameta.data.data
        |class A(a: Int)
-       |class C[T]
     """.stripMargin, { doc =>
       val symbols = doc.symbols.map(_.symbol).sorted
       assert(symbols.contains("ap.A#"))
       assert(symbols.contains("ap.A#productElement()."))
       assert(symbols.contains("ap.A.unapply()."))
       assert(symbols.contains("ap.A.apply()."))
+    }
+  )
+
+  targeted(
+    """
+      |package aq
+      |class C1(val x1: Int) extends AnyVal
+      |
+      |class C2(val x2: Int) extends AnyVal
+      |object C2
+      |
+      |case class C3(x: Int)
+      |
+      |case class C4(x: Int)
+      |object C4
+      |
+      |object M {
+      |  implicit class C5(x: Int)
+      |}
+      |
+      |case class C6(private val x: Int)
+      |
+      |class C7(x: Int)
+      |
+      |class C8(private[this] val x: Int)
+      |
+      |class C9(private[this] var x: Int)
+      |
+      |object N {
+      |  val anonClass = new C7(42) {
+      |    val local = ???
+      |  }
+      |  val anonFun = List(1).map { i =>
+      |    val local = 2
+      |    local + 2
+      |  }
+      |}
+    """.stripMargin, { doc =>
+      val symbols = doc.symbols.map(_.symbol).sorted
+      val unknown = doc.syntax.lines.filter(_.contains("unknown")).mkString("\n")
+      pprint.log(unknown)
     }
   )
 }

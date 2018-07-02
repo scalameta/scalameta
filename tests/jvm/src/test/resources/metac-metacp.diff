@@ -1,3 +1,33 @@
+===============
+_empty_.C#m2().
+===============
+--- metac
++++ metacp
+               typeRef {
+                 prefix {
+-                symbol: "local1"
++                symbol: "local0"
+             type_arguments {
+                       typeRef {
+                         prefix {
+-                        symbol: "local2"
++                        symbol: "local1"
+                 declarations {
+                   hardlinks {
+-                    symbol: "local2"
++                    symbol: "local1"
+                     kind: TYPE
+                     properties: 4
+                     name: "_"
+         declarations {
+           hardlinks {
+-            symbol: "local1"
++            symbol: "local0"
+             kind: TYPE
+             properties: 4
+             name: "_"
+
+
 ===========
 advanced.D#
 ===========
@@ -5,11 +35,11 @@ advanced.D#
 +++ metacp
                    typeRef {
                      prefix {
--                    symbol: "local14"
+-                    symbol: "local19"
 +                    symbol: "advanced.D#_#"
              declarations {
                hardlinks {
--                symbol: "local14"
+-                symbol: "local19"
 +                symbol: "advanced.D#_#"
                  kind: TYPE
                  properties: 4
@@ -27,11 +57,11 @@ advanced.Existential#e1().
 +++ metacp
                typeRef {
                  prefix {
--                symbol: "local7"
+-                symbol: "local11"
 +                symbol: "local0"
          declarations {
            hardlinks {
--            symbol: "local7"
+-            symbol: "local11"
 +            symbol: "local0"
              kind: TYPE
              properties: 4
@@ -45,11 +75,11 @@ advanced.Existential#e2().
 +++ metacp
                    typeRef {
                      prefix {
--                    symbol: "local8"
+-                    symbol: "local13"
 +                    symbol: "local1"
              declarations {
                hardlinks {
--                symbol: "local8"
+-                symbol: "local13"
 +                symbol: "local1"
                  kind: TYPE
                  properties: 4
@@ -63,21 +93,21 @@ advanced.Existential#e4().
 +++ metacp
            typeRef {
              prefix {
--            symbol: "local10"
+-            symbol: "local15"
 +            symbol: "local2"
              type_arguments {
                typeRef {
                  prefix {
          declarations {
            hardlinks {
--            symbol: "local10"
+-            symbol: "local15"
 +            symbol: "local2"
              kind: TYPE
              properties: 4
              name: "U"
                      type_parameters {
                        hardlinks {
--                        symbol: "local11"
+-                        symbol: "local16"
 +                        symbol: "local3"
                          kind: TYPE_PARAMETER
                          properties: 0
@@ -91,14 +121,14 @@ advanced.Structural#s3().
 +++ metacp
          declarations {
            hardlinks {
--            symbol: "local3"
+-            symbol: "local5"
 +            symbol: "local2"
              kind: METHOD
              properties: 0
              name: "m"
                  parameterLists {
                    hardlinks {
--                    symbol: "local4"
+-                    symbol: "local6"
 +                    symbol: "local3"
                      kind: PARAMETER
                      properties: 0
@@ -112,11 +142,11 @@ advanced.Test.e2().
 +++ metacp
                    typeRef {
                      prefix {
--                    symbol: "local8"
+-                    symbol: "local13"
 +                    symbol: "advanced.Test.T#"
              declarations {
                hardlinks {
--                symbol: "local8"
+-                symbol: "local13"
 +                symbol: "advanced.Test.T#"
                  kind: TYPE
                  properties: 4
@@ -130,14 +160,14 @@ advanced.Test.s3().
 +++ metacp
          declarations {
            hardlinks {
--            symbol: "local3"
+-            symbol: "local5"
 +            symbol: "local2"
              kind: METHOD
              properties: 0
              name: "m"
                  parameterLists {
                    hardlinks {
--                    symbol: "local4"
+-                    symbol: "local6"
 +                    symbol: "local3"
                      kind: PARAMETER
                      properties: 0
@@ -187,7 +217,7 @@ classes.N.anonClass().
 +++ metacp
          declarations {
            hardlinks {
--            symbol: "local1"
+-            symbol: "local11"
 +            symbol: "local0"
              kind: METHOD
              properties: 1024
@@ -1119,13 +1149,27 @@ types.Test.C#annType2().
 
 
 =============================
+types.Test.C#compoundType3().
+=============================
+--- metac
++++ metacp
+         declarations {
+           hardlinks {
+-            symbol: "local2"
++            symbol: "local1"
+             kind: METHOD
+             properties: 4
+             name: "k"
+
+
+=============================
 types.Test.C#compoundType4().
 =============================
 --- metac
 +++ metacp
          declarations {
            hardlinks {
--            symbol: "local3"
+-            symbol: "local7"
 +            symbol: "local2"
              kind: METHOD
              properties: 0
@@ -1139,7 +1183,7 @@ types.Test.C#compoundType6().
 +++ metacp
          declarations {
            hardlinks {
--            symbol: "local5"
+-            symbol: "local13"
 +            symbol: "local3"
              kind: METHOD
              properties: 0
@@ -1153,11 +1197,11 @@ types.Test.C#existentialType1().
 +++ metacp
            typeRef {
              prefix {
--            symbol: "local7"
+-            symbol: "local15"
 +            symbol: "local4"
          declarations {
            hardlinks {
--            symbol: "local7"
+-            symbol: "local15"
 +            symbol: "local4"
              kind: TYPE
              properties: 4
@@ -1171,11 +1215,11 @@ types.Test.C#existentialType2().
 +++ metacp
                typeRef {
                  prefix {
--                symbol: "local8"
+-                symbol: "local18"
 +                symbol: "local5"
          declarations {
            hardlinks {
--            symbol: "local8"
+-            symbol: "local18"
 +            symbol: "local5"
              kind: TYPE
              properties: 4
