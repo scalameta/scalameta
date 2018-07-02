@@ -223,9 +223,13 @@ trait SymbolOps { self: SemanticdbOps =>
     def isSyntheticJavaModule: Boolean = {
       !sym.hasPackageFlag && sym.isJavaDefined && sym.isModule
     }
+    def isAnonymousClassConstructor: Boolean = {
+      sym.isConstructor && sym.owner.isAnonymousClass
+    }
     def isUseless: Boolean = {
       sym == g.NoSymbol ||
       sym.isAnonymousClass ||
+      sym.isAnonymousClassConstructor ||
       sym.isSyntheticConstructor ||
       sym.isStaticConstructor ||
       sym.isLocalChild ||

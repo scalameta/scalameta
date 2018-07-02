@@ -858,6 +858,19 @@ class TargetedSuite extends SemanticdbSuite {
     }
   )
 
+  targeted(
+    """
+      |package ap
+      |object U {
+      |  def s: Serializable = new Serializable {}
+      |}
+    """.stripMargin, { doc =>
+      val symbols = doc.symbols.map(_.symbol).sorted.toList
+      // assert there is no anonymous class constructor symbol.
+      assert(symbols == List("ap.", "ap.U.", "ap.U.s()."))
+    }
+  )
+
 }
 
 object Compat {
