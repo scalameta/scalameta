@@ -837,7 +837,7 @@ class TargetedSuite extends SemanticdbSuite {
 
   targeted(
     """
-      |object am {
+      |object ao {
       |  object <<foo>>
       |  def <<foo>>(a: Int): Unit = ()
       |  def <<foo>>(a: String): Unit = ()
