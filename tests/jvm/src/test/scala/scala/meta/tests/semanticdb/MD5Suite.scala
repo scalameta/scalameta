@@ -37,21 +37,19 @@ class MD5Suite extends FunSuite {
 
   Locator(Paths.get(BuildInfo.databaseClasspath)) { (_, docs) =>
     val doc = docs.documents.head
-    if (doc.language.isScala) {
-      test(doc.uri, Slow) {
-        val fromText = stringMD5(doc.text)
-        assert(
-          doc.md5 == fromText,
-          "TextDocument.md5 does not match stringMD5(TextDocument.md5)"
-        )
-        val fromFile = fileMD5(AbsolutePath(doc.uri))
-        assert(
-          doc.md5 == fromFile,
-          "TextDocument.md5 does not match fileMD5(Paths.get(TextDocument.uri))"
-        )
-        assert(!md5Fingerprings.contains(doc.md5), "Fingerprint was not unique")
-        md5Fingerprings += doc.md5
-      }
+    test(doc.uri, Slow) {
+      val fromText = stringMD5(doc.text)
+      assert(
+        doc.md5 == fromText,
+        "TextDocument.md5 does not match stringMD5(TextDocument.md5)"
+      )
+      val fromFile = fileMD5(AbsolutePath(doc.uri))
+      assert(
+        doc.md5 == fromFile,
+        "TextDocument.md5 does not match fileMD5(Paths.get(TextDocument.uri))"
+      )
+      assert(!md5Fingerprings.contains(doc.md5), "Fingerprint was not unique")
+      md5Fingerprings += doc.md5
     }
   }
 

@@ -27,7 +27,7 @@ trait InputOps { self: SemanticdbOps =>
     def toText: String = toInput match {
       case _: m.Input.File =>
         "" // slim mode, don't embed contents
-      case input: m.Input.VirtualFile =>
+      case input: m.Input.VirtualFile if config.text.isOn =>
         input.value
       case _ =>
         ""

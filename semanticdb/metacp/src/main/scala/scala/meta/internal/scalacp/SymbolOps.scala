@@ -165,11 +165,12 @@ trait SymbolOps { _: Scalacp =>
                     case None =>
                       val scalaObjectName = sym.name + "$.class"
                       index.getClassfile(p.packageResourceName, scalaObjectName) match {
-                        case Some(_) =>
-                          false
+                        case Some(objectClassfile) =>
+                          if (objectClassfile.hasScalaSig) false
+                          else throw MissingSymbolException(sym.path)
                         case None =>
                           if (sym.isAssumedJava) true
-                          else throw MissingSymbolException(javaClassName)
+                          else throw MissingSymbolException(sym.path)
                       }
                   }
                 }

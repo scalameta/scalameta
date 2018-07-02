@@ -43,7 +43,6 @@ final class ClasspathIndex private (val dirs: collection.Map[String, Classdir]) 
 }
 
 object ClasspathIndex {
-  def empty: ClasspathIndex = ClasspathIndex(Classpath(Nil))
   def apply(classpath: Classpath): ClasspathIndex = new Builder(classpath).result()
 
   private final class Builder(classpath: Classpath) {

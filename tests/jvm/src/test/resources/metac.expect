@@ -4,7 +4,7 @@ semanticdb/integration/src/main/java/com/javacp/ClassSuffix.java
 Summary:
 Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/java/com/javacp/ClassSuffix.java
-Text => empty
+Text => non-empty
 Language => Java
 Symbols => 11 entries
 
@@ -42,7 +42,7 @@ semanticdb/integration/src/main/java/com/javacp/Coin.java
 Summary:
 Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/java/com/javacp/Coin.java
-Text => empty
+Text => non-empty
 Language => Java
 Symbols => 11 entries
 
@@ -80,7 +80,7 @@ semanticdb/integration/src/main/java/com/javacp/Interface.java
 Summary:
 Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/java/com/javacp/Interface.java
-Text => empty
+Text => non-empty
 Language => Java
 Symbols => 1 entries
 
@@ -94,7 +94,7 @@ semanticdb/integration/src/main/java/com/javacp/Logger.java
 Summary:
 Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/java/com/javacp/Logger.java
-Text => empty
+Text => non-empty
 Language => Java
 Symbols => 2 entries
 
@@ -109,7 +109,7 @@ semanticdb/integration/src/main/java/com/javacp/MetacJava.java
 Summary:
 Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/java/com/javacp/MetacJava.java
-Text => empty
+Text => non-empty
 Language => Java
 Symbols => 28 entries
 
@@ -180,7 +180,7 @@ semanticdb/integration/src/main/java/com/javacp/NonGeneric.java
 Summary:
 Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/java/com/javacp/NonGeneric.java
-Text => empty
+Text => non-empty
 Language => Java
 Symbols => 3 entries
 
@@ -199,7 +199,7 @@ semanticdb/integration/src/main/java/com/javacp/Recursive.java
 Summary:
 Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/java/com/javacp/Recursive.java
-Text => empty
+Text => non-empty
 Language => Java
 Symbols => 13 entries
 
@@ -257,7 +257,7 @@ semanticdb/integration/src/main/java/com/javacp/Test.java
 Summary:
 Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/java/com/javacp/Test.java
-Text => empty
+Text => non-empty
 Language => Java
 Symbols => 70 entries
 

@@ -1081,7 +1081,7 @@ which Scala definitions, what their metadata is, etc). See
     and a right parenthesis (`)`).
     If the definition is not overloaded, the tag is empty.
     If the definition is overloaded, the tag is computed from the order of
-    appearance of overloads in the source code. (see
+    appearance of overloads in the source code (see
     "Function declarations and definitions" below for an example):
       * Empty string for the definition that appears first.
       * `+1` for the definition that appears second.
@@ -2402,6 +2402,7 @@ In this section, we describe the Java symbol format.
       * static overloads secondly, following the same order as they
         appear in the original source
 
+    `FIELD` definitions are not included in the list of overloads.
     Given this order, the tag becomes
 
       * Empty string for the definition that appears first.
@@ -2610,6 +2611,7 @@ package a;
 class C extends S1 implements I {
   T1 m1;
   static T2 m2();
+  zero.Overload m3;
   T3 m3(one.Overload e1);
   static T4 m3(two.Overload e2);
   T5 m3(three.Overload e3);
@@ -2635,13 +2637,19 @@ class C extends S1 implements I {
     <td><code>m1</code></td>
     <td><code>a.C#m1.</code></td>
     <td><code>FIELD</code></td>
-    <td><code>TypeRef(None, &lt;T1&gt;, List())</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;T1&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m2</code></td>
     <td><code>a.C#m2().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T2&gt;, List()))</code></td>
+  </tr>
+  <tr>
+    <td><code>m3</code></td>
+    <td><code>a.C#m3.</code></td>
+    <td><code>FIELD</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;zero.Overload&gt;))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
@@ -2725,6 +2733,8 @@ Notes:
 * Class declarations support [all Java accessibilities](#java-accessibility).
 * Class members without explicit access modifiers have accessibility
   `PRIVATE_WITHIN` within the enclosing package.
+* The disambiguators for `m3()`, `m3(+1)` and `m3(+2)` do not take into account
+  overloaded field `m3.`.
 
 **Enum declarations** [\[84\]][84] are represented by a single symbol
 with the `CLASS` kind.

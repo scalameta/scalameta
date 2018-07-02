@@ -526,7 +526,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               // Unlike for Scala compilation units, def symbols in Java compilation units
               // are not initialized during type-checking. Without an explicit call to
               // initialize, some Java def trees will not have their infos set.
-              val _ = d.symbol.initialize
+              d.symbol.initialize
               if (d.symbol.isUseful && !d.symbol.hasPackageFlag) {
                 symbols += d.symbol.toSymbolInformation(SymlinkChildren)
                 appendToplevelSymbolToIndex(d.symbol)
@@ -540,8 +540,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
       s.TextDocument(
         schema = s.Schema.SEMANTICDB4,
         uri = unit.source.toUri,
-        text = "",
-        md5 = "",
+        text = unit.source.toText,
+        md5 = unit.source.toMD5,
         language = s.Language.JAVA,
         symbols = symbols.result(),
         occurrences = Nil,
