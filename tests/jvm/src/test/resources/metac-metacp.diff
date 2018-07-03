@@ -972,20 +972,6 @@ example/Acc#
 +      symlinks: "example/Acc#m3()."
 
 
-==========================
-example/MetacJava#entry().
-==========================
---- metac
-+++ metacp
-       typeRef {
-         prefix {
--        symbol: "java/util/Map#Entry#"
-+        symbol: "java.util.Map#Entry#"
-         type_arguments {
-           typeRef {
-             prefix {
-
-
 =========================
 example/Methods#m13().(x)
 =========================
@@ -1059,17 +1045,6 @@ flags/p/package.S#[T]
  accessibility {
    tag: PUBLIC
    symbol: ""
-
-
-======================
-types/Test.C#Either().
-======================
---- metac
-+++ metacp
-       singleType {
-         prefix {
--        symbol: "scala/util/Either."
-+        symbol: "scala/util.Either."
 
 
 ========================
