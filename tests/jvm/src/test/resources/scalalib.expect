@@ -9,42 +9,42 @@ Language => Scala
 Symbols => 16 entries
 
 Symbols:
-scala.Any# => abstract class Any { +10 decls }
-scala.Any#`!=`(). => final method !=(that: Any): Boolean
-  that => scala.Any#`!=`().(that)
-  Any => scala.Any#
-  Boolean => scala.Boolean#
-scala.Any#`!=`().(that) => param that: Any
-  Any => scala.Any#
-scala.Any#`##`(). => final method ##(): Int
-  Int => scala.Int#
-scala.Any#`<init>`(). => primary ctor <init>()
-scala.Any#`==`(). => final method ==(that: Any): Boolean
-  that => scala.Any#`==`().(that)
-  Any => scala.Any#
-  Boolean => scala.Boolean#
-scala.Any#`==`().(that) => param that: Any
-  Any => scala.Any#
-scala.Any#asInstanceOf(). => final method asInstanceOf[A](): A
-  A => scala.Any#asInstanceOf().[A]
-  A => scala.Any.asInstanceOf(A).[A]
-scala.Any#asInstanceOf().[A] => typeparam A
-scala.Any#equals(). => abstract method equals(that: Any): Boolean
-  that => scala.Any#equals().(that)
-  Any => scala.Any#
-  Boolean => scala.Boolean#
-scala.Any#equals().(that) => param that: Any
-  Any => scala.Any#
-scala.Any#getClass(). => final method getClass(): Class
-  Class => java.lang.Class#
-scala.Any#hashCode(). => abstract method hashCode(): Int
-  Int => scala.Int#
-scala.Any#isInstanceOf(). => final method isInstanceOf[A](): Boolean
-  A => scala.Any#isInstanceOf().[A]
-  Boolean => scala.Boolean#
-scala.Any#isInstanceOf().[A] => typeparam A
-scala.Any#toString(). => abstract method toString(): String
-  String => java.lang.String#
+scala/Any# => abstract class Any { +10 decls }
+scala/Any#`!=`(). => final method !=(that: Any): Boolean
+  that => scala/Any#`!=`().(that)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+scala/Any#`!=`().(that) => param that: Any
+  Any => scala/Any#
+scala/Any#`##`(). => final method ##(): Int
+  Int => scala/Int#
+scala/Any#`<init>`(). => primary ctor <init>()
+scala/Any#`==`(). => final method ==(that: Any): Boolean
+  that => scala/Any#`==`().(that)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+scala/Any#`==`().(that) => param that: Any
+  Any => scala/Any#
+scala/Any#asInstanceOf(). => final method asInstanceOf[A](): A
+  A => scala/Any#asInstanceOf().[A]
+  A => scala/Any.asInstanceOf(A).[A]
+scala/Any#asInstanceOf().[A] => typeparam A
+scala/Any#equals(). => abstract method equals(that: Any): Boolean
+  that => scala/Any#equals().(that)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+scala/Any#equals().(that) => param that: Any
+  Any => scala/Any#
+scala/Any#getClass(). => final method getClass(): Class
+  Class => java/lang/Class#
+scala/Any#hashCode(). => abstract method hashCode(): Int
+  Int => scala/Int#
+scala/Any#isInstanceOf(). => final method isInstanceOf[A](): Boolean
+  A => scala/Any#isInstanceOf().[A]
+  Boolean => scala/Boolean#
+scala/Any#isInstanceOf().[A] => typeparam A
+scala/Any#toString(). => abstract method toString(): String
+  String => java/lang/String#
 
 scala/AnyRef.class
 ------------------
@@ -57,28 +57,28 @@ Language => Scala
 Symbols => 9 entries
 
 Symbols:
-scala.AnyRef# => class AnyRef extends Any { +4 decls }
-  Any => scala.Any#
-scala.AnyRef#`<init>`(). => primary ctor <init>()
-scala.AnyRef#eq(). => final method eq(that: AnyRef): Boolean
-  that => scala.AnyRef#eq().(that)
-  AnyRef => scala.AnyRef#
-  Boolean => scala.Boolean#
-scala.AnyRef#eq().(that) => param that: AnyRef
-  AnyRef => scala.AnyRef#
-scala.AnyRef#ne(). => final method ne(that: AnyRef): Boolean
-  that => scala.AnyRef#ne().(that)
-  AnyRef => scala.AnyRef#
-  Boolean => scala.Boolean#
-scala.AnyRef#ne().(that) => param that: AnyRef
-  AnyRef => scala.AnyRef#
-scala.AnyRef#synchronized(). => final method synchronized[T](body: T): T
-  T => scala.AnyRef#synchronized().[T]
-  body => scala.AnyRef#synchronized().(body)
-  T => scala.AnyRef.synchronized(T).[T]
-scala.AnyRef#synchronized().(body) => param body: T
-  T => scala.AnyRef.synchronized(T).[T]
-scala.AnyRef#synchronized().[T] => typeparam T
+scala/AnyRef# => class AnyRef extends Any { +4 decls }
+  Any => scala/Any#
+scala/AnyRef#`<init>`(). => primary ctor <init>()
+scala/AnyRef#eq(). => final method eq(that: AnyRef): Boolean
+  that => scala/AnyRef#eq().(that)
+  AnyRef => scala/AnyRef#
+  Boolean => scala/Boolean#
+scala/AnyRef#eq().(that) => param that: AnyRef
+  AnyRef => scala/AnyRef#
+scala/AnyRef#ne(). => final method ne(that: AnyRef): Boolean
+  that => scala/AnyRef#ne().(that)
+  AnyRef => scala/AnyRef#
+  Boolean => scala/Boolean#
+scala/AnyRef#ne().(that) => param that: AnyRef
+  AnyRef => scala/AnyRef#
+scala/AnyRef#synchronized(). => final method synchronized[T](body: T): T
+  T => scala/AnyRef#synchronized().[T]
+  body => scala/AnyRef#synchronized().(body)
+  T => scala/AnyRef.synchronized(T).[T]
+scala/AnyRef#synchronized().(body) => param body: T
+  T => scala/AnyRef.synchronized(T).[T]
+scala/AnyRef#synchronized().[T] => typeparam T
 
 scala/AnyVal.class
 ------------------
@@ -91,9 +91,9 @@ Language => Scala
 Symbols => 2 entries
 
 Symbols:
-scala.AnyVal# => abstract class AnyVal extends Any { +1 decls }
-  Any => scala.Any#
-scala.AnyVal#`<init>`(). => primary ctor <init>()
+scala/AnyVal# => abstract class AnyVal extends Any { +1 decls }
+  Any => scala/Any#
+scala/AnyVal#`<init>`(). => primary ctor <init>()
 
 scala/Nothing.class
 -------------------
@@ -106,9 +106,9 @@ Language => Scala
 Symbols => 2 entries
 
 Symbols:
-scala.Nothing# => abstract final class Nothing extends Any { +1 decls }
-  Any => scala.Any#
-scala.Nothing#`<init>`(). => primary ctor <init>()
+scala/Nothing# => abstract final class Nothing extends Any { +1 decls }
+  Any => scala/Any#
+scala/Nothing#`<init>`(). => primary ctor <init>()
 
 scala/Null.class
 ----------------
@@ -121,9 +121,9 @@ Language => Scala
 Symbols => 2 entries
 
 Symbols:
-scala.Null# => abstract final class Null extends AnyRef { +1 decls }
-  AnyRef => scala.AnyRef#
-scala.Null#`<init>`(). => primary ctor <init>()
+scala/Null# => abstract final class Null extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+scala/Null#`<init>`(). => primary ctor <init>()
 
 scala/Singleton.class
 ---------------------
@@ -136,5 +136,5 @@ Language => Scala
 Symbols => 1 entries
 
 Symbols:
-scala.Singleton# => trait Singleton extends Any
-  Any => scala.Any#
+scala/Singleton# => trait Singleton extends Any
+  Any => scala/Any#

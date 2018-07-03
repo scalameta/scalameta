@@ -186,10 +186,10 @@ object Javacp {
             val paramTpe =
               if (isRepeatedType) {
                 param.toSemanticTpe(methodScope) match {
-                  case s.TypeRef(s.NoType, "scala.Array#", targ :: Nil) =>
+                  case s.TypeRef(s.NoType, "scala/Array#", targ :: Nil) =>
                     s.RepeatedType(targ)
                   case tpe =>
-                    sys.error(s"expected $paramName to be a scala.Array#, found $tpe")
+                    sys.error(s"expected $paramName to be a scala/Array#, found $tpe")
                 }
               } else {
                 param.toSemanticTpe(methodScope)
@@ -285,7 +285,7 @@ object Javacp {
       case TypeVariableSignature(name) =>
         styperef(scope.resolve(name))
       case t: BaseType =>
-        styperef("scala." + t.name + "#")
+        styperef("scala/" + t.name + "#")
       case ArrayTypeSignature(tpe) =>
         sarray(tpe.toSemanticTpe(scope))
     }
@@ -367,7 +367,7 @@ object Javacp {
       if (c == '/') {
         slash = true
         flush()
-        result.append('.')
+        result.append('/')
       } else if (c == '$') {
         flush()
         result.append('#')
@@ -391,7 +391,7 @@ object Javacp {
     else if (access.hasFlag(o.ACC_PROTECTED)) sacc(a.PROTECTED)
     else if (access.hasFlag(o.ACC_PRIVATE)) sacc(a.PRIVATE)
     else {
-      val within = symbol.ownerChain.reverse.tail.find(_.desc.isTerm).get
+      val within = symbol.ownerChain.reverse.tail.find(_.desc.isPackage).get
       Some(s.Accessibility(tag = a.PRIVATE_WITHIN, symbol = within))
     }
   }
@@ -402,7 +402,7 @@ object Javacp {
     def push(symbol: String): Unit =
       buf += s.Annotation(styperef(symbol))
 
-    if (access.hasFlag(o.ACC_STRICT)) push("scala.annotation.strictfp#")
+    if (access.hasFlag(o.ACC_STRICT)) push("scala/annotation/strictfp#")
 
     buf.result()
   }
@@ -419,7 +419,7 @@ object Javacp {
   }
 
   private def sarray(tpe: s.Type): s.Type =
-    styperef("scala.Array#", tpe :: Nil)
+    styperef("scala/Array#", tpe :: Nil)
 
   private def styperef(
       symbol: String,

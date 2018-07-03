@@ -3,172 +3,173 @@ Packages:
 _empty_.
   _empty_.A#
   _empty_.B#
-  _empty_.C#
-_root_.
+_empty_/
+_root_/
   _empty_.
-  advanced.
-  classes.
-  com.
-  example.
-  exclude.
-  flags.
-  objects.
-  prefixes.
-  selfs.
-  traits.
-  types.
-advanced.
-  advanced.C#
-  advanced.D#
-  advanced.Existential#
-  advanced.Structural#
-  advanced.Test.
-classes.
-  classes.C1#
-  classes.C2#
-  classes.C2.
-  classes.C3#
-  classes.C3.
-  classes.C4#
-  classes.C4.
-  classes.C6#
-  classes.C6.
-  classes.C7#
-  classes.C8#
-  classes.C9#
-  classes.M.
-  classes.N.
-com.
-  com.javacp.
-com.javacp.
-  com.javacp.ClassSuffix#
-  com.javacp.Coin#
-  com.javacp.Interface#
-  com.javacp.Logger#
-  com.javacp.MetacJava#
-  com.javacp.NonGeneric#
-  com.javacp.Recursive#
-  com.javacp.Test#
-example.
-  example.A#
-  example.Acc#
-  example.B#
-  example.EmptyObject.
-  example.Example.
-  example.MacroAnnotations#
-  example.MacroAnnotations.
-  example.MetacJava#
-  example.MethodUsages#
-  example.Methods#
-  example.Synthetic#
-  example.ValUsages.
-  example.Vals#
-  example.`local-file`#
-exclude.
-  exclude.Exclude#
-flags.
-  flags.p.
-flags.p.
-  flags.p.package.
-objects.
-  objects.X.
-prefixes.
-  prefixes.C#
-  prefixes.M.
-  prefixes.Test.
-selfs.
-  selfs.B#
-  selfs.C1#
-  selfs.C2#
-  selfs.C3#
-  selfs.C4#
-  selfs.C5#
-  selfs.C6#
-traits.
-  traits.C#
-  traits.T#
-  traits.U#
-  traits.U.
-  traits.V#
-types.
-  types.B#
-  types.C#
-  types.P#
-  types.T#
-  types.Test.
-  types.ann#
-  types.ann1#
-  types.ann2#
+  advanced/
+  classes/
+  com/
+  example/
+  exclude/
+  flags/
+  objects/
+  prefixes/
+  selfs/
+  traits/
+  types/
+advanced/
+  advanced/C#
+  advanced/D#
+  advanced/Existential#
+  advanced/Structural#
+  advanced/Test.
+classes/
+  classes/C1#
+  classes/C2#
+  classes/C2.
+  classes/C3#
+  classes/C3.
+  classes/C4#
+  classes/C4.
+  classes/C6#
+  classes/C6.
+  classes/C7#
+  classes/C8#
+  classes/C9#
+  classes/M.
+  classes/N.
+com/
+  com/javacp/
+com/javacp/
+  com/javacp/ClassSuffix#
+  com/javacp/Coin#
+  com/javacp/Interface#
+  com/javacp/Logger#
+  com/javacp/MetacJava#
+  com/javacp/NonGeneric#
+  com/javacp/Recursive#
+  com/javacp/Test#
+example/
+  example/A#
+  example/Acc#
+  example/Anonymous#
+  example/B#
+  example/EmptyObject.
+  example/Example.
+  example/MacroAnnotations#
+  example/MacroAnnotations.
+  example/MetacJava#
+  example/MethodUsages#
+  example/Methods#
+  example/Synthetic#
+  example/ValUsages.
+  example/Vals#
+  example/`local-file`#
+exclude/
+  exclude/Exclude#
+flags/
+  flags/p/
+flags/p/
+  flags/p/package.
+objects/
+  objects/X.
+prefixes/
+  prefixes/C#
+  prefixes/M.
+  prefixes/Test.
+selfs/
+  selfs/B#
+  selfs/C1#
+  selfs/C2#
+  selfs/C3#
+  selfs/C4#
+  selfs/C5#
+  selfs/C6#
+traits/
+  traits/C#
+  traits/T#
+  traits/U#
+  traits/U.
+  traits/V#
+types/
+  types/B#
+  types/C#
+  types/P#
+  types/T#
+  types/Test.
+  types/ann#
+  types/ann1#
+  types/ann2#
 
 Toplevels:
 ==========
 _empty_.A# => A.class.semanticdb
 _empty_.B# => B.class.semanticdb
-_empty_.C# => C.class.semanticdb
-advanced.C# => advanced/C.class.semanticdb
-advanced.D# => advanced/D.class.semanticdb
-advanced.Existential# => advanced/Existential.class.semanticdb
-advanced.Structural# => advanced/Structural.class.semanticdb
-advanced.Test. => advanced/Test.class.semanticdb
-classes.C1# => classes/C1.class.semanticdb
-classes.C2# => classes/C2.class.semanticdb
-classes.C2. => classes/C2.class.semanticdb
-classes.C3# => classes/C3.class.semanticdb
-classes.C3. => classes/C3.class.semanticdb
-classes.C4# => classes/C4.class.semanticdb
-classes.C4. => classes/C4.class.semanticdb
-classes.C6# => classes/C6.class.semanticdb
-classes.C6. => classes/C6.class.semanticdb
-classes.C7# => classes/C7.class.semanticdb
-classes.C8# => classes/C8.class.semanticdb
-classes.C9# => classes/C9.class.semanticdb
-classes.M. => classes/M.class.semanticdb
-classes.N. => classes/N.class.semanticdb
-com.javacp.ClassSuffix# => com/javacp/ClassSuffix.class.semanticdb
-com.javacp.Coin# => com/javacp/Coin.class.semanticdb
-com.javacp.Interface# => com/javacp/Interface.class.semanticdb
-com.javacp.Logger# => com/javacp/Logger.class.semanticdb
-com.javacp.MetacJava# => com/javacp/MetacJava.class.semanticdb
-com.javacp.NonGeneric# => com/javacp/NonGeneric.class.semanticdb
-com.javacp.Recursive# => com/javacp/Recursive.class.semanticdb
-com.javacp.Test# => com/javacp/Test.class.semanticdb
-example.A# => example/A.class.semanticdb
-example.Acc# => example/Acc.class.semanticdb
-example.B# => example/B.class.semanticdb
-example.EmptyObject. => example/EmptyObject.class.semanticdb
-example.Example. => example/Example.class.semanticdb
-example.MacroAnnotations# => example/MacroAnnotations.class.semanticdb
-example.MacroAnnotations. => example/MacroAnnotations.class.semanticdb
-example.MetacJava# => example/MetacJava.class.semanticdb
-example.MethodUsages# => example/MethodUsages.class.semanticdb
-example.Methods# => example/Methods.class.semanticdb
-example.Synthetic# => example/Synthetic.class.semanticdb
-example.ValUsages. => example/ValUsages.class.semanticdb
-example.Vals# => example/Vals.class.semanticdb
-example.`local-file`# => example/local$minusfile.class.semanticdb
-exclude.Exclude# => exclude/Exclude.class.semanticdb
-flags.p.package. => flags/p/package.class.semanticdb
-objects.X. => objects/X.class.semanticdb
-prefixes.C# => prefixes/C.class.semanticdb
-prefixes.M. => prefixes/M.class.semanticdb
-prefixes.Test. => prefixes/Test.class.semanticdb
-selfs.B# => selfs/B.class.semanticdb
-selfs.C1# => selfs/C1.class.semanticdb
-selfs.C2# => selfs/C2.class.semanticdb
-selfs.C3# => selfs/C3.class.semanticdb
-selfs.C4# => selfs/C4.class.semanticdb
-selfs.C5# => selfs/C5.class.semanticdb
-selfs.C6# => selfs/C6.class.semanticdb
-traits.C# => traits/C.class.semanticdb
-traits.T# => traits/T.class.semanticdb
-traits.U# => traits/U.class.semanticdb
-traits.U. => traits/U.class.semanticdb
-traits.V# => traits/V.class.semanticdb
-types.B# => types/B.class.semanticdb
-types.C# => types/C.class.semanticdb
-types.P# => types/P.class.semanticdb
-types.T# => types/T.class.semanticdb
-types.Test. => types/Test.class.semanticdb
-types.ann# => types/ann.class.semanticdb
-types.ann1# => types/ann1.class.semanticdb
-types.ann2# => types/ann2.class.semanticdb
+advanced/C# => advanced/C.class.semanticdb
+advanced/D# => advanced/D.class.semanticdb
+advanced/Existential# => advanced/Existential.class.semanticdb
+advanced/Structural# => advanced/Structural.class.semanticdb
+advanced/Test. => advanced/Test.class.semanticdb
+classes/C1# => classes/C1.class.semanticdb
+classes/C2# => classes/C2.class.semanticdb
+classes/C2. => classes/C2.class.semanticdb
+classes/C3# => classes/C3.class.semanticdb
+classes/C3. => classes/C3.class.semanticdb
+classes/C4# => classes/C4.class.semanticdb
+classes/C4. => classes/C4.class.semanticdb
+classes/C6# => classes/C6.class.semanticdb
+classes/C6. => classes/C6.class.semanticdb
+classes/C7# => classes/C7.class.semanticdb
+classes/C8# => classes/C8.class.semanticdb
+classes/C9# => classes/C9.class.semanticdb
+classes/M. => classes/M.class.semanticdb
+classes/N. => classes/N.class.semanticdb
+com/javacp/ClassSuffix# => com/javacp/ClassSuffix.class.semanticdb
+com/javacp/Coin# => com/javacp/Coin.class.semanticdb
+com/javacp/Interface# => com/javacp/Interface.class.semanticdb
+com/javacp/Logger# => com/javacp/Logger.class.semanticdb
+com/javacp/MetacJava# => com/javacp/MetacJava.class.semanticdb
+com/javacp/NonGeneric# => com/javacp/NonGeneric.class.semanticdb
+com/javacp/Recursive# => com/javacp/Recursive.class.semanticdb
+com/javacp/Test# => com/javacp/Test.class.semanticdb
+example/A# => example/A.class.semanticdb
+example/Acc# => example/Acc.class.semanticdb
+example/Anonymous# => example/Anonymous.class.semanticdb
+example/B# => example/B.class.semanticdb
+example/EmptyObject. => example/EmptyObject.class.semanticdb
+example/Example. => example/Example.class.semanticdb
+example/MacroAnnotations# => example/MacroAnnotations.class.semanticdb
+example/MacroAnnotations. => example/MacroAnnotations.class.semanticdb
+example/MetacJava# => example/MetacJava.class.semanticdb
+example/MethodUsages# => example/MethodUsages.class.semanticdb
+example/Methods# => example/Methods.class.semanticdb
+example/Synthetic# => example/Synthetic.class.semanticdb
+example/ValUsages. => example/ValUsages.class.semanticdb
+example/Vals# => example/Vals.class.semanticdb
+example/`local-file`# => example/local$minusfile.class.semanticdb
+exclude/Exclude# => exclude/Exclude.class.semanticdb
+flags/p/package. => flags/p/package.class.semanticdb
+objects/X. => objects/X.class.semanticdb
+prefixes/C# => prefixes/C.class.semanticdb
+prefixes/M. => prefixes/M.class.semanticdb
+prefixes/Test. => prefixes/Test.class.semanticdb
+selfs/B# => selfs/B.class.semanticdb
+selfs/C1# => selfs/C1.class.semanticdb
+selfs/C2# => selfs/C2.class.semanticdb
+selfs/C3# => selfs/C3.class.semanticdb
+selfs/C4# => selfs/C4.class.semanticdb
+selfs/C5# => selfs/C5.class.semanticdb
+selfs/C6# => selfs/C6.class.semanticdb
+traits/C# => traits/C.class.semanticdb
+traits/T# => traits/T.class.semanticdb
+traits/U# => traits/U.class.semanticdb
+traits/U. => traits/U.class.semanticdb
+traits/V# => traits/V.class.semanticdb
+types/B# => types/B.class.semanticdb
+types/C# => types/C.class.semanticdb
+types/P# => types/P.class.semanticdb
+types/T# => types/T.class.semanticdb
+types/Test. => types/Test.class.semanticdb
+types/ann# => types/ann.class.semanticdb
+types/ann1# => types/ann1.class.semanticdb
+types/ann2# => types/ann2.class.semanticdb

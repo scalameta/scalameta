@@ -342,14 +342,14 @@ trait SymbolInformationPrinter extends BasePrinter {
 
     private object NothingTpe {
       def unapply(tpe: Type): Boolean = tpe match {
-        case TypeRef(NoType, "scala.Nothing#", Nil) => true
+        case TypeRef(NoType, "scala/Nothing#", Nil) => true
         case _ => false
       }
     }
 
     private object AnyTpe {
       def unapply(tpe: Type): Boolean = tpe match {
-        case TypeRef(NoType, "scala.Any#", Nil) => true
+        case TypeRef(NoType, "scala/Any#", Nil) => true
         case _ => false
       }
     }

@@ -1,7 +1,8 @@
+package example
 import scala.language.higherKinds
 
-class C {
-  this: C =>
+class Anonymous {
+  this: Anonymous =>
 
   def m1[T[_], _] = ???
   def m2: Map[_, List[_]] = ???
@@ -11,4 +12,7 @@ class C {
   locally {
     val x: Int => Int = _ => ???
   }
+
+  trait Foo
+  new Foo {}
 }

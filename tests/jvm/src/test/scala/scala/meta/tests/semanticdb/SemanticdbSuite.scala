@@ -1,8 +1,6 @@
 package scala.meta.tests
 package semanticdb
 
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
 import org.scalatest._
 import java.io.{File, PrintWriter}
 import scala.reflect.io._
@@ -12,11 +10,9 @@ import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
 import scala.{meta => m}
 import scala.meta.internal.inputs._
-import scala.meta.internal.metap.DocumentPrinter
 import scala.meta.internal.semanticdb.scalac._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io._
-import scala.meta.metap.Format
 import scala.meta.testkit.DiffAssertions
 
 abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
@@ -129,20 +125,7 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   ): Unit = {
     test(code) {
       val obtained = computeDatabaseSectionFromSnippet(code, section, language)
-      try assertNoDiff(obtained, expected)
-      catch {
-        case ex: Exception =>
-          obtained.lines.toList match {
-            case head +: tail =>
-              println("    \"\"\"|" + head)
-              tail.foreach(line => println("       |" + line))
-            case head +: Nil =>
-              println(head)
-            case Nil =>
-              println("obtained is empty")
-          }
-          throw ex
-      }
+      assertNoDiffOrPrintExpected(obtained, expected)
     }
   }
 

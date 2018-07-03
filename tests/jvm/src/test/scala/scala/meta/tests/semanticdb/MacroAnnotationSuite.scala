@@ -11,16 +11,16 @@ package scala.meta.tests.semanticdb
 class MacroAnnotationSuite extends SemanticdbSuite {
 
   targeted(
-    """|package ap
+    """|package a
        |
        |@org.scalameta.data.data
        |class A(a: Int)
     """.stripMargin, { doc =>
       val symbols = doc.symbols.map(_.symbol).sorted
-      assert(symbols.contains("ap.A#"))
-      assert(symbols.contains("ap.A#productElement()."))
-      assert(symbols.contains("ap.A.unapply()."))
-      assert(symbols.contains("ap.A.apply()."))
+      assert(symbols.contains("a/A#"))
+      assert(symbols.contains("a/A#productElement()."))
+      assert(symbols.contains("a/A.unapply()."))
+      assert(symbols.contains("a/A.apply()."))
     }
   )
 

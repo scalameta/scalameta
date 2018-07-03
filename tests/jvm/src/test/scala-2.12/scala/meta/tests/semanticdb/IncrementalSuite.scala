@@ -28,49 +28,46 @@ class IncrementalSuite extends FunSuite with BeforeAndAfterEach with DiffAsserti
   val A: String =
     """|Packages:
        |=========
-       |_empty_.
-       |  _empty_.A.
-       |_root_.
-       |  _empty_.
+       |_empty_/
+       |  _empty_/A.
+       |_root_/
+       |  _empty_/
        |
        |Toplevels:
        |==========
-       |_empty_. => src/A.scala.semanticdb
-       |_empty_.A. => src/A.scala.semanticdb
+       |_empty_/A. => src/A.scala.semanticdb
        |""".stripMargin
 
   val AB: String =
     """|Packages:
        |=========
-       |_empty_.
-       |  _empty_.A.
-       |  _empty_.B.
-       |_root_.
-       |  _empty_.
+       |_empty_/
+       |  _empty_/A.
+       |  _empty_/B.
+       |_root_/
+       |  _empty_/
        |
        |Toplevels:
        |==========
-       |_empty_. => src/B.scala.semanticdb
-       |_empty_.A. => src/A.scala.semanticdb
-       |_empty_.B. => src/B.scala.semanticdb
+       |_empty_/A. => src/A.scala.semanticdb
+       |_empty_/B. => src/B.scala.semanticdb
        |""".stripMargin
 
   val ABC: String =
     """|Packages:
        |=========
-       |_empty_.
-       |  _empty_.A.
-       |  _empty_.B.
-       |  _empty_.C.
-       |_root_.
-       |  _empty_.
+       |_empty_/
+       |  _empty_/A.
+       |  _empty_/B.
+       |  _empty_/C.
+       |_root_/
+       |  _empty_/
        |
        |Toplevels:
        |==========
-       |_empty_. => src/A.scala.semanticdb
-       |_empty_.A. => src/A.scala.semanticdb
-       |_empty_.B. => src/B.scala.semanticdb
-       |_empty_.C. => src/A.scala.semanticdb
+       |_empty_/A. => src/A.scala.semanticdb
+       |_empty_/B. => src/B.scala.semanticdb
+       |_empty_/C. => src/A.scala.semanticdb
        |""".stripMargin
 
   test("update file", Slow) {
@@ -137,17 +134,16 @@ class IncrementalSuite extends FunSuite with BeforeAndAfterEach with DiffAsserti
     assertIndexMatches(
       """|Packages:
          |=========
-         |_empty_.
-         |  _empty_.A.
-         |  _empty_.B#
-         |_root_.
-         |  _empty_.
+         |_empty_/
+         |  _empty_/A.
+         |  _empty_/B#
+         |_root_/
+         |  _empty_/
          |
          |Toplevels:
          |==========
-         |_empty_. => src/A.scala.semanticdb
-         |_empty_.A. => src/A.scala.semanticdb
-         |_empty_.B# => src/B.java.semanticdb
+         |_empty_/A. => src/A.scala.semanticdb
+         |_empty_/B# => src/B.java.semanticdb
          |""".stripMargin
     )
     Files.delete(zinc.sourceroot.resolve("src/B.java").toNIO)
