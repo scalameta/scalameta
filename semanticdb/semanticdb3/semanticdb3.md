@@ -2155,7 +2155,6 @@ between package object symbols and object symbols are:
 In Scala, `SymbolInformation` for `PACKAGE` symbols is very modest -
 the only non-empty fields must be:
   * `symbol` (as described in [Symbol](#scala-symbol)).
-  * `language` (`SCALA`).
   * `kind` (`PACKAGE`).
   * `name` (as described in [SymbolInformation](#symbolinformation)).
 
@@ -3023,7 +3022,6 @@ Notes:
 In Java, `SymbolInformation` for `PACKAGE` symbols is very modest -
 the only non-empty fields must be:
   * symbol (as described in [Symbol](#java-symbol)).
-  * language (`JAVA`).
   * kind (`PACKAGE`).
   * name (as described in [Symbol](#java-symbol)).
 
