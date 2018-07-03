@@ -60,11 +60,10 @@ class CliSuite extends FunSuite with DiffAssertions {
        |Uri => HelloWorld.scala
        |Text => non-empty
        |Language => Scala
-       |Symbols => 4 entries
+       |Symbols => 3 entries
        |Occurrences => 7 entries
        |
        |Symbols:
-       |_empty_/ => package _empty_
        |_empty_/HelloWorld. => final object HelloWorld extends AnyRef { +1 decls }
        |  AnyRef => scala/AnyRef#
        |_empty_/HelloWorld.main(). => method main(args: Array[String]): Unit
