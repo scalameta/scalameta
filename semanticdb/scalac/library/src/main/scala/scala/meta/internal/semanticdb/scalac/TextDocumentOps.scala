@@ -165,7 +165,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
           private def trySymbolDefinition(gsym: g.Symbol): Unit = {
             if (config.symbols.isOff) return
             if (gsym == null) return
-            if (gsym.isUseless) return
+            if (gsym.isUselessSymbolInformation) return
             val symbol = gsym.toSemantic
             if (symbol == Symbols.None) return
 

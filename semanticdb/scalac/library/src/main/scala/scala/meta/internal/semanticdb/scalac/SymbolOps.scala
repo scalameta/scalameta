@@ -242,8 +242,6 @@ trait SymbolOps { self: SemanticdbOps =>
     def isUseless: Boolean = {
       sym == g.NoSymbol ||
       sym.isAnonymousClass ||
-      sym.isAnonymousClassConstructor ||
-      sym.isEtaExpandedParameter ||
       sym.isSyntheticConstructor ||
       sym.isStaticConstructor ||
       sym.isLocalChild ||
@@ -251,15 +249,20 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isUselessField ||
       sym.isSyntheticCaseAccessor ||
       sym.isRefinementClass ||
-      sym.isSyntheticJavaModule ||
-      sym.isSyntheticAbstractType ||
-      sym.isAnonymousSelfParameter
+      sym.isSyntheticJavaModule
     }
+    def isUseful: Boolean = !sym.isUseless
     def isUselessOccurrence: Boolean = {
       sym.isUseless &&
       !sym.isSyntheticJavaModule // references to static Java inner classes should have occurrences
     }
-    def isUseful: Boolean = !sym.isUseless
+    def isUselessSymbolInformation: Boolean = {
+      sym.isUseless ||
+      sym.isEtaExpandedParameter ||
+      sym.isAnonymousClassConstructor ||
+      sym.isSyntheticAbstractType ||
+      sym.isAnonymousSelfParameter
+    }
   }
 
   lazy val idCache = new HashMap[String, Int]
