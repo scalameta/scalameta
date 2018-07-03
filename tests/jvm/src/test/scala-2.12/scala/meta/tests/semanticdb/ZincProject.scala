@@ -16,13 +16,7 @@ import bloop.config.{Config => C}
 import scala.meta.internal.io.FileIO
 import scala.meta.internal.semanticdb.Index
 
-/**
-  * Utility class to reproduce incremental compilation with Zinc via Bloop.
-  *
-  * @param debug If true, prints out compilation logs to stdout.
-  *              If false, is silent and prints nothing to stdout.
-  */
-class ZincProject(debug: Boolean = false) {
+class ZincProject() {
   private val tmp = Files.createTempDirectory("scalameta")
   val sourceroot: AbsolutePath = AbsolutePath(tmp)
   private val out = tmp.resolve("out")
@@ -57,15 +51,7 @@ class ZincProject(debug: Boolean = false) {
     )
     val action = Cli.parse(args.toArray, common)
     val exit = Cli.run(action, NoPool, args.toArray)
-    exit -> out.toString()
-  }
-
-  private def compile(): ExitStatus = {
-    val (exit, out) = run("compile", project)
-    if (debug) {
-      println(out)
-    }
-    exit
+    exit -> fansi.Str(out.toString()).plainText
   }
 
   private def assertCompilesWithExitStatus(layout: String, expected: ExitStatus): Unit = {
