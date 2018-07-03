@@ -2412,6 +2412,11 @@ In this section, we describe the Java symbol format.
 
     See "Class declarations" below for an example.
 
+**Encoded name** is:
+  * If name is a Java identifier [\[22\]][22], the name itself.
+  * Otherwise, concatenation of a backtick, the name itself and
+    another backtick.
+
 **Name** is:
   * For root package, `_root_`.
   * For unnamed package, `_empty_`.
