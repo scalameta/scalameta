@@ -223,6 +223,22 @@ trait SymbolOps { self: SemanticdbOps =>
     def isSyntheticJavaModule: Boolean = {
       !sym.hasPackageFlag && sym.isJavaDefined && sym.isModule
     }
+    def isAnonymousClassConstructor: Boolean = {
+      sym.isConstructor && sym.owner.isAnonymousClass
+    }
+    def isSyntheticAbstractType: Boolean = {
+      sym.isSynthetic && sym.isAbstractType // these are hardlinked to TypeOps
+    }
+    def isEtaExpandedParameter: Boolean = {
+      // Term.Placeholder occurrences are not persisted so we don't persist their symbol information.
+      // We might want to revisit this decision https://github.com/scalameta/scalameta/issues/1657
+      sym.isParameter &&
+      sym.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX) &&
+      sym.owner.isAnonymousFunction
+    }
+    def isAnonymousSelfParameter: Boolean = {
+      sym.isSelfParameter && sym.name == g.nme.this_ // persisted as ClassSignature.self
+    }
     def isUseless: Boolean = {
       sym == g.NoSymbol ||
       sym.isAnonymousClass ||
@@ -235,11 +251,18 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isRefinementClass ||
       sym.isSyntheticJavaModule
     }
+    def isUseful: Boolean = !sym.isUseless
     def isUselessOccurrence: Boolean = {
       sym.isUseless &&
       !sym.isSyntheticJavaModule // references to static Java inner classes should have occurrences
     }
-    def isUseful: Boolean = !sym.isUseless
+    def isUselessSymbolInformation: Boolean = {
+      sym.isUseless ||
+      sym.isEtaExpandedParameter ||
+      sym.isAnonymousClassConstructor ||
+      sym.isSyntheticAbstractType ||
+      sym.isAnonymousSelfParameter
+    }
   }
 
   lazy val idCache = new HashMap[String, Int]

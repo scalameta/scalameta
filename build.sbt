@@ -421,6 +421,15 @@ lazy val semanticdbIntegration = project
     },
     javacOptions += "-parameters"
   )
+  .dependsOn(semanticdbIntegrationMacros)
+
+lazy val semanticdbIntegrationMacros = project
+  .in(file("semanticdb/integration-macros"))
+  .settings(
+    sharedSettings,
+    nonPublishableSettings,
+    enableMacros
+  )
 
 lazy val testkit = project
   .in(file("scalameta/testkit"))
@@ -802,6 +811,11 @@ def exposePaths(projectName: String, config: Configuration) = {
     }
   val prefix = "sbt.paths." + projectName + "." + uncapitalize(config.name) + "."
   Seq(
+    scalacOptions.in(config) := {
+      val defaultValue = scalacOptions.in(config).value
+      System.setProperty(prefix + "options", defaultValue.mkString(" "))
+      defaultValue
+    },
     sourceDirectory.in(config) := {
       val defaultValue = sourceDirectory.in(config).value
       System.setProperty(prefix + "sources", defaultValue.getAbsolutePath)

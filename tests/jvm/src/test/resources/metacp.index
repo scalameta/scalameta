@@ -55,6 +55,8 @@ example.
   example.B#
   example.EmptyObject.
   example.Example.
+  example.MacroAnnotations#
+  example.MacroAnnotations.
   example.MetacJava#
   example.MethodUsages#
   example.Methods#
@@ -135,6 +137,8 @@ example.Acc# => example/Acc.class.semanticdb
 example.B# => example/B.class.semanticdb
 example.EmptyObject. => example/EmptyObject.class.semanticdb
 example.Example. => example/Example.class.semanticdb
+example.MacroAnnotations# => example/MacroAnnotations.class.semanticdb
+example.MacroAnnotations. => example/MacroAnnotations.class.semanticdb
 example.MetacJava# => example/MetacJava.class.semanticdb
 example.MethodUsages# => example/MethodUsages.class.semanticdb
 example.Methods# => example/Methods.class.semanticdb

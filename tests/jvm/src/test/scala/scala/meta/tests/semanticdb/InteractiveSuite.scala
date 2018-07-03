@@ -98,11 +98,12 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       |Uri => interactive.scala
       |Text => non-empty
       |Language => Scala
-      |Symbols => 3 entries
+      |Symbols => 4 entries
       |Occurrences => 4 entries
       |Diagnostics => 1 entries
       |
       |Symbols:
+      |_empty_. => package _empty_
       |_empty_.b. => final object b extends AnyRef { +1 decls }
       |  AnyRef => scala.AnyRef#
       |_empty_.b.add(). => method add(a): Int

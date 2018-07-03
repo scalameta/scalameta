@@ -153,8 +153,10 @@ class TargetedSuite extends SemanticdbSuite {
         |package object F {
         |}
     """.trim.stripMargin,
-    """|F.package. => final package object F extends AnyRef
+      """|F. => package F
+       |F.package. => final package object F extends AnyRef
        |  AnyRef => scala.AnyRef#
+       |_empty_. => package _empty_
        |f. => package f
        |f.C1# => class C1 extends AnyRef { +13 decls }
        |  AnyRef => scala.AnyRef#
@@ -505,7 +507,8 @@ class TargetedSuite extends SemanticdbSuite {
       |  List.newBuilder[Int].result
       |  List(1).head
       |}""".stripMargin,
-    """|_empty_.o. => final object o extends AnyRef
+    """|_empty_. => package _empty_
+       |_empty_.o. => final object o extends AnyRef
        |  AnyRef => scala.AnyRef#
     """.stripMargin.trim
   )
@@ -590,7 +593,8 @@ class TargetedSuite extends SemanticdbSuite {
       |  implicit val b = new Path().x
       |}
     """.stripMargin,
-    """|_empty_.y. => final object y extends AnyRef { +2 decls }
+    """|_empty_. => package _empty_
+       |_empty_.y. => final object y extends AnyRef { +2 decls }
        |  AnyRef => scala.AnyRef#
        |_empty_.y.Path# => class Path extends AnyRef { +4 decls }
        |  AnyRef => scala.AnyRef#
@@ -618,7 +622,8 @@ class TargetedSuite extends SemanticdbSuite {
       |  val x = z
       |}
     """.stripMargin,
-    """|_empty_.z. => final object z extends AnyRef { +1 decls }
+    """|_empty_. => package _empty_
+       |_empty_.z. => final object z extends AnyRef { +1 decls }
        |  AnyRef => scala.AnyRef#
        |_empty_.z.x(). => val method x: z.type
        |  z => _empty_.z.
@@ -632,7 +637,8 @@ class TargetedSuite extends SemanticdbSuite {
       |  val y: aa.this.type = this
       |}
     """.stripMargin,
-    """|_empty_.aa# => class aa extends AnyRef { +3 decls }
+    """|_empty_. => package _empty_
+       |_empty_.aa# => class aa extends AnyRef { +3 decls }
        |  AnyRef => scala.AnyRef#
        |_empty_.aa#`<init>`(). => primary ctor <init>()
        |_empty_.aa#x(). => val method x: aa
@@ -646,7 +652,8 @@ class TargetedSuite extends SemanticdbSuite {
     """
       |object `ab ab`
     """.stripMargin,
-    """|_empty_.`ab ab`. => final object ab ab extends AnyRef
+    """|_empty_. => package _empty_
+       |_empty_.`ab ab`. => final object ab ab extends AnyRef
        |  AnyRef => scala.AnyRef#
     """.stripMargin
   )
@@ -658,75 +665,14 @@ class TargetedSuite extends SemanticdbSuite {
       |  val y: Class[_] = ???
       |}
     """.stripMargin,
-    """|_empty_.ac. => final object ac extends AnyRef { +2 decls }
+    """|_empty_. => package _empty_
+       |_empty_.ac. => final object ac extends AnyRef { +2 decls }
        |  AnyRef => scala.AnyRef#
        |_empty_.ac.x(). => val method x: Int
        |  Int => scala.Int#
        |_empty_.ac.y(). => val method y: Class[_] forSome { type _ }
        |  Class => scala.Predef.Class#
        |  _ => local0
-    """.stripMargin
-  )
-
-  symbols(
-    """
-      |object ad {
-      |  trait Foo
-      |  class Bar
-      |  val x = new Foo {
-      |    val y = 2
-      |    def z[T](e: T) = e
-      |  }
-      |  val z: AnyRef with Foo { val y: Int } = x
-      |  val k: AnyRef with Foo { val y: Any } = x
-      |  val zz = new Bar {
-      |    val y = 2
-      |  }
-      |}
-    """.stripMargin,
-    """|_empty_.ad. => final object ad extends AnyRef { +6 decls }
-       |  AnyRef => scala.AnyRef#
-       |_empty_.ad.Bar# => class Bar extends AnyRef { +1 decls }
-       |  AnyRef => scala.AnyRef#
-       |_empty_.ad.Bar#`<init>`(). => primary ctor <init>()
-       |_empty_.ad.Foo# => trait Foo extends AnyRef
-       |  AnyRef => scala.AnyRef#
-       |_empty_.ad.k(). => val method k: AnyRef with Foo { val def y: Any }
-       |  AnyRef => scala.AnyRef#
-       |  Foo => _empty_.ad.Foo#
-       |  y => local10
-       |  Any => scala.Any#
-       |_empty_.ad.x(). => val method x: AnyRef with Foo { val def y: Int; def z[T](e: T): T }
-       |  AnyRef => scala.AnyRef#
-       |  Foo => _empty_.ad.Foo#
-       |  y => local5
-       |  Int => scala.Int#
-       |  z => local6
-       |  T => local8
-       |  e => local7
-       |_empty_.ad.z(). => val method z: AnyRef with Foo { val def y: Int }
-       |  AnyRef => scala.AnyRef#
-       |  Foo => _empty_.ad.Foo#
-       |  y => local9
-       |  Int => scala.Int#
-       |_empty_.ad.zz(). => val method zz: Bar { val def y: Int }
-       |  Bar => _empty_.ad.Bar#
-       |  y => local12
-       |  Int => scala.Int#
-       |local0 => val method y: Int
-       |  Int => scala.Int#
-       |local1 => method z[T](unknown local2): T
-       |  T => local3
-       |  local2 => local2
-       |local10 => abstract val method y: Any
-       |  Any => scala.Any#
-       |local11 => val method y: Int
-       |  Int => scala.Int#
-       |local3 => typeparam T
-       |local4 => param e: T
-       |  T => local3
-       |local9 => abstract val method y: Int
-       |  Int => scala.Int#
     """.stripMargin
   )
 
@@ -842,12 +788,58 @@ class TargetedSuite extends SemanticdbSuite {
       |  def <<foo>>(a: Int): Unit = ()
       |  def <<foo>>(a: String): Unit = ()
       |}
-    """.stripMargin, (doc, foo1, foo2, foo3) => {
+    """.stripMargin,
+    (doc, foo1, foo2, foo3) => {
       assert(foo1 == "_empty_.ao.foo.")
       assert(foo2 == "_empty_.ao.foo().")
       assert(foo3 == "_empty_.ao.foo(+1).")
     }
   )
+
+  targeted(
+    """
+      |package ap
+      |object U {
+      |  def s: Serializable = new Serializable {}
+      |}
+    """.stripMargin, { doc =>
+      val symbols = doc.symbols.map(_.symbol)
+      assert(!symbols.exists(_.startsWith("local")))
+    }
+  )
+
+  targeted(
+    """|package aq
+       |object TypeType {
+       | def e1: Map[_ <: String, List[_ <: Int]] = ???
+       |}
+    """.stripMargin, { doc =>
+      val symbols = doc.symbols.map(s => s.symbol)
+      assert(!symbols.exists(_.startsWith("local")))
+    }
+  )
+
+  targeted(
+    """|package ar
+       |object Lambda {
+       | val x: Int => Int = _ + 1
+       |}
+    """.stripMargin, { doc =>
+      val symbols = doc.symbols.map(s => s.symbol)
+      assert(!symbols.exists(_.startsWith("local")))
+    }
+  )
+
+  targeted(
+    """|package as
+       |class Self { this: Serializable =>
+       |}
+    """.stripMargin, { doc =>
+      val symbols = doc.symbols.map(s => s.symbol)
+      assert(!symbols.exists(_.startsWith("local")))
+    }
+  )
+
 }
 
 object Compat {

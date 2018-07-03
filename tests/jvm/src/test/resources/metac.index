@@ -27,9 +27,11 @@ classes.
   classes.C2#
   classes.C2.
   classes.C3#
+  classes.C3.
   classes.C4#
   classes.C4.
   classes.C6#
+  classes.C6.
   classes.C7#
   classes.C8#
   classes.C9#
@@ -52,6 +54,8 @@ example.
   example.B#
   example.EmptyObject.
   example.Example.
+  example.MacroAnnotations#
+  example.MacroAnnotations.
   example.MetacJava#
   example.MethodUsages#
   example.Methods#
@@ -95,6 +99,7 @@ types.
 
 Toplevels:
 ==========
+_empty_. => semanticdb/integration/src/main/scala/example/Imports.scala.semanticdb
 _empty_.A# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
 _empty_.B# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
 _empty_.C# => semanticdb/integration/src/main/scala/example/Anonymous.scala.semanticdb
@@ -109,9 +114,11 @@ classes.C1# => semanticdb/integration/src/main/scala/example/Classes.scala.seman
 classes.C2# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C2. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C3# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C3. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C4# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C4. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C6# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
+classes.C6. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C7# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C8# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes.C9# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
@@ -131,6 +138,8 @@ example.Acc# => semanticdb/integration/src/main/scala/example/Accessibility.scal
 example.B# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
 example.EmptyObject. => semanticdb/integration/src/main/scala/example/EmptyObject.scala.semanticdb
 example.Example. => semanticdb/integration/src/main/scala/example/Example.scala.semanticdb
+example.MacroAnnotations# => semanticdb/integration/src/main/scala/example/MacroAnnotations.scala.semanticdb
+example.MacroAnnotations. => semanticdb/integration/src/main/scala/example/MacroAnnotations.scala.semanticdb
 example.MetacJava# => semanticdb/integration/src/main/scala/example/MetacJava.scala.semanticdb
 example.MethodUsages# => semanticdb/integration/src/main/scala/example/MethodUsages.scala.semanticdb
 example.Methods# => semanticdb/integration/src/main/scala/example/Methods.scala.semanticdb
@@ -139,6 +148,7 @@ example.ValUsages. => semanticdb/integration/src/main/scala/example/Vals.scala.s
 example.Vals# => semanticdb/integration/src/main/scala/example/Vals.scala.semanticdb
 example.`local-file`# => semanticdb/integration/src/main/scala/example/local-file.scala.semanticdb
 flags. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
+flags.p. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
 flags.p.package. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
 objects. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb
 objects.X. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb

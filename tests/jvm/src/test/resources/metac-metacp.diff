@@ -187,7 +187,7 @@ classes.N.anonClass().
 +++ metacp
          declarations {
            hardlinks {
--            symbol: "local1"
+-            symbol: "local9"
 +            symbol: "local0"
              kind: METHOD
              properties: 1024
@@ -1119,13 +1119,27 @@ types.Test.C#annType2().
 
 
 =============================
+types.Test.C#compoundType3().
+=============================
+--- metac
++++ metacp
+         declarations {
+           hardlinks {
+-            symbol: "local2"
++            symbol: "local1"
+             kind: METHOD
+             properties: 4
+             name: "k"
+
+
+=============================
 types.Test.C#compoundType4().
 =============================
 --- metac
 +++ metacp
          declarations {
            hardlinks {
--            symbol: "local3"
+-            symbol: "local5"
 +            symbol: "local2"
              kind: METHOD
              properties: 0
@@ -1139,7 +1153,7 @@ types.Test.C#compoundType6().
 +++ metacp
          declarations {
            hardlinks {
--            symbol: "local5"
+-            symbol: "local7"
 +            symbol: "local3"
              kind: METHOD
              properties: 0
@@ -1153,11 +1167,11 @@ types.Test.C#existentialType1().
 +++ metacp
            typeRef {
              prefix {
--            symbol: "local7"
+-            symbol: "local9"
 +            symbol: "local4"
          declarations {
            hardlinks {
--            symbol: "local7"
+-            symbol: "local9"
 +            symbol: "local4"
              kind: TYPE
              properties: 4
@@ -1171,11 +1185,11 @@ types.Test.C#existentialType2().
 +++ metacp
                typeRef {
                  prefix {
--                symbol: "local8"
+-                symbol: "local11"
 +                symbol: "local5"
          declarations {
            hardlinks {
--            symbol: "local8"
+-            symbol: "local11"
 +            symbol: "local5"
              kind: TYPE
              properties: 4
