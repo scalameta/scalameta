@@ -232,6 +232,9 @@ trait SymbolOps { self: SemanticdbOps =>
     def isEtaExpandedParameter: Boolean = {
       sym.isParameter && sym.isSynthetic && sym.owner.isAnonymousFunction
     }
+    def isAnonymousSelfParameter: Boolean = {
+      sym.isSelfParameter && sym.name == g.nme.this_ // persisted as ClassSignature.self
+    }
     def isUseless: Boolean = {
       sym == g.NoSymbol ||
       sym.isAnonymousClass ||
@@ -245,7 +248,8 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isSyntheticCaseAccessor ||
       sym.isRefinementClass ||
       sym.isSyntheticJavaModule ||
-      sym.isSyntheticAbstractType
+      sym.isSyntheticAbstractType ||
+      sym.isAnonymousSelfParameter
     }
     def isUselessOccurrence: Boolean = {
       sym.isUseless &&

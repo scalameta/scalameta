@@ -1,33 +1,3 @@
-===============
-_empty_.C#m2().
-===============
---- metac
-+++ metacp
-               typeRef {
-                 prefix {
--                symbol: "local1"
-+                symbol: "local0"
-             type_arguments {
-                       typeRef {
-                         prefix {
--                        symbol: "local2"
-+                        symbol: "local1"
-                 declarations {
-                   hardlinks {
--                    symbol: "local2"
-+                    symbol: "local1"
-                     kind: TYPE
-                     properties: 4
-                     name: "_"
-         declarations {
-           hardlinks {
--            symbol: "local1"
-+            symbol: "local0"
-             kind: TYPE
-             properties: 4
-             name: "_"
-
-
 ===========
 advanced.D#
 ===========

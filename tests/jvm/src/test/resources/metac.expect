@@ -792,7 +792,7 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Anonymous.scala
 Text => non-empty
 Language => Scala
-Symbols => 12 entries
+Symbols => 11 entries
 Occurrences => 21 entries
 Synthetics => 2 entries
 
@@ -812,15 +812,14 @@ _empty_.C#m1().[T][_] => typeparam _
 _empty_.C#m1().[_] => typeparam _
 _empty_.C#m2(). => method m2: Map[_, List[_] forSome { type _ }] forSome { type _ }
   Map => scala.Predef.Map#
-  _ => local1
+  _ => local0
   List => scala.package.List#
-  _ => local2
-local0 => selfparam this
-local3 => abstract type _
-local4 => val local x: Function1[Int, Int]
+  _ => local1
+local2 => abstract type _
+local3 => val local x: Function1[Int, Int]
   Function1 => scala.Function1#
   Int => scala.Int#
-local5 => param x$1: Int
+local4 => param x$1: Int
   Int => scala.Int#
 
 Occurrences:
@@ -841,7 +840,7 @@ Occurrences:
 [8:4..8:7): ??? => scala.Predef.`???`().
 [8:24..8:28): List => scala.package.List#
 [10:2..10:9): locally => scala.Predef.locally().
-[11:8..11:9): x <= local4
+[11:8..11:9): x <= local3
 [11:11..11:14): Int => scala.Int#
 [11:18..11:21): Int => scala.Int#
 [11:29..11:32): ??? => scala.Predef.`???`().
@@ -2451,7 +2450,7 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Selfs.scala
 Text => non-empty
 Language => Scala
-Symbols => 21 entries
+Symbols => 20 entries
 Occurrences => 34 entries
 
 Symbols:
@@ -2463,8 +2462,6 @@ local2 => selfparam self: B with Int {}
   Int => scala.Int#
 local3 => selfparam x$1
 local4 => selfparam x$2: B
-  B => selfs.B#
-local5 => selfparam this: B
   B => selfs.B#
 selfs. => package selfs
 selfs.B# => class B extends AnyRef { +1 decls }
