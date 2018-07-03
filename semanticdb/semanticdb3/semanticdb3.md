@@ -2378,14 +2378,14 @@ In this section, we describe the Java symbol format.
 **Descriptor** is:
   * For `LOCAL`, unsupported.
   * For `PACKAGE`, concatenation of its encoded name and a forward slash (`/`).
-  * For `FIELD`, concatenation of its simple name [\[98\]][98] and a dot (`.`).
-  * For `METHOD` or `CONSTRUCTOR`, concatenation of its simple name,
+  * For `FIELD`, concatenation of its encoded name and a dot (`.`).
+  * For `METHOD` or `CONSTRUCTOR`, concatenation of its encoded name,
     a disambiguator and a dot (`.`).
-  * For `CLASS` or `INTERFACE`, concatenation of its simple name and
+  * For `CLASS` or `INTERFACE`, concatenation of its encoded name and
     a pound sign (`#`).
-  * For `PARAMETER`, concatenation of a left parenthesis (`(`), its simple name
+  * For `PARAMETER`, concatenation of a left parenthesis (`(`), its encoded name
     and a right parenthesis (`)`).
-  * For `TYPE_PARAMETER`, concatenation of a left bracket (`[`), its simple name
+  * For `TYPE_PARAMETER`, concatenation of a left bracket (`[`), its encoded name
     and a right bracket (`]`).
   * See [SymbolInformation](#java-symbolinformation) for details on
     which Java definitions are modelled by which symbols.
@@ -2421,7 +2421,7 @@ In this section, we describe the Java symbol format.
   * For root package, `_root_`.
   * For unnamed package, `_empty_`.
   * For constructor, `<init>`.
-  * For other definition, its simple name [\[98\]][98].
+  * For other definition, its encoded name.
 
 For example, this is how some of the definitions from the Java standard library
 must be modelled:
@@ -3242,5 +3242,4 @@ the Java language. We intend to improve on this in the future.
 [95]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.8
 [96]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.3
 [97]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-7.html#jls-7.4.2
-[98]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.2
 [99]: https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#templates
