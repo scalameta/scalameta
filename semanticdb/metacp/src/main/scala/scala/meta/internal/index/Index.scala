@@ -12,8 +12,8 @@ import scala.meta.io._
 class Index {
   private val packages = mutable.Map[String, mutable.Set[String]]()
   private val toplevels = mutable.Map[String, String]()
-  packages("_root_.") = mutable.Set[String]()
-  packages("_empty_.") = mutable.Set[String]()
+  packages(Symbols.RootPackage) = mutable.Set[String]()
+  packages(Symbols.EmptyPackage) = mutable.Set[String]()
 
   def append(uri: String, infos: List[s.SymbolInformation]): Unit = {
     infos.foreach { info =>

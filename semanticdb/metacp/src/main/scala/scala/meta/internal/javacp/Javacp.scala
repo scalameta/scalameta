@@ -37,7 +37,7 @@ object Javacp {
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
     val decls = ListBuffer.empty[String]
-def addInfo(
+    def addInfo(
         symbol: String,
         kind: s.SymbolInformation.Kind,
         name: String,

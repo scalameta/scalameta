@@ -17,10 +17,10 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |class A(a: Int)
     """.stripMargin, { doc =>
       val symbols = doc.symbols.map(_.symbol).sorted
-      assert(symbols.contains("ap.A#"))
-      assert(symbols.contains("ap.A#productElement()."))
-      assert(symbols.contains("ap.A.unapply()."))
-      assert(symbols.contains("ap.A.apply()."))
+      assert(symbols.contains("ap/A#"))
+      assert(symbols.contains("ap/A#productElement()."))
+      assert(symbols.contains("ap/A.unapply()."))
+      assert(symbols.contains("ap/A.apply()."))
     }
   )
 

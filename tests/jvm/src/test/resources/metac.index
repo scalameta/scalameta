@@ -1,11 +1,8 @@
 Packages:
 =========
-_empty_.
 _empty_/
   _empty_/A#
   _empty_/B#
-  _empty_/C#
-_root_.
 _root_/
   _empty_/
   advanced/
@@ -53,6 +50,7 @@ com/javacp/
 example/
   example/A#
   example/Acc#
+  example/Anonymous#
   example/B#
   example/EmptyObject.
   example/Example.
@@ -101,17 +99,13 @@ types/
 
 Toplevels:
 ==========
-_empty_/ => semanticdb/integration/src/main/scala/example/Imports.scala.semanticdb
 _empty_/A# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
 _empty_/B# => semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb
-_empty_/C# => semanticdb/integration/src/main/scala/example/Anonymous.scala.semanticdb
-advanced/ => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 advanced/C# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 advanced/D# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 advanced/Existential# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 advanced/Structural# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 advanced/Test. => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
-classes/ => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes/C1# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes/C2# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes/C2. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
@@ -134,9 +128,9 @@ com/javacp/MetacJava# => semanticdb/integration/src/main/java/com/javacp/MetacJa
 com/javacp/NonGeneric# => semanticdb/integration/src/main/java/com/javacp/NonGeneric.java.semanticdb
 com/javacp/Recursive# => semanticdb/integration/src/main/java/com/javacp/Recursive.java.semanticdb
 com/javacp/Test# => semanticdb/integration/src/main/java/com/javacp/Test.java.semanticdb
-example/ => semanticdb/integration/src/main/scala/example/local-file.scala.semanticdb
 example/A# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
 example/Acc# => semanticdb/integration/src/main/scala/example/Accessibility.scala.semanticdb
+example/Anonymous# => semanticdb/integration/src/main/scala/example/Anonymous.scala.semanticdb
 example/B# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
 example/EmptyObject. => semanticdb/integration/src/main/scala/example/EmptyObject.scala.semanticdb
 example/Example. => semanticdb/integration/src/main/scala/example/Example.scala.semanticdb
@@ -149,16 +143,11 @@ example/Synthetic# => semanticdb/integration/src/main/scala/example/Synthetic.sc
 example/ValUsages. => semanticdb/integration/src/main/scala/example/Vals.scala.semanticdb
 example/Vals# => semanticdb/integration/src/main/scala/example/Vals.scala.semanticdb
 example/`local-file`# => semanticdb/integration/src/main/scala/example/local-file.scala.semanticdb
-flags/ => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
-flags/p/ => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
 flags/p/package. => semanticdb/integration/src/main/scala/example/Flags.scala.semanticdb
-objects/ => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb
 objects/X. => semanticdb/integration/src/main/scala/example/Objects.scala.semanticdb
-prefixes/ => semanticdb/integration/src/main/scala/example/Prefixes.scala.semanticdb
 prefixes/C# => semanticdb/integration/src/main/scala/example/Prefixes.scala.semanticdb
 prefixes/M. => semanticdb/integration/src/main/scala/example/Prefixes.scala.semanticdb
 prefixes/Test. => semanticdb/integration/src/main/scala/example/Prefixes.scala.semanticdb
-selfs/ => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
 selfs/B# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
 selfs/C1# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
 selfs/C2# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
@@ -166,13 +155,11 @@ selfs/C3# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticd
 selfs/C4# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
 selfs/C5# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
 selfs/C6# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
-traits/ => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits/C# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits/T# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits/U# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits/U. => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits/V# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
-types/ => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 types/B# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 types/C# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb
 types/P# => semanticdb/integration/src/main/scala/example/Types.scala.semanticdb

@@ -50,41 +50,40 @@ class CliSuite extends FunSuite with DiffAssertions {
       Metap.process(settings, reporter)
     }
     assert(success)
-    assertNoDiff(
+    assertNoDiffOrPrintExpected(
       out,
-      """
-      |HelloWorld.scala
-      |----------------
-      |
-      |Summary:
-      |Schema => SemanticDB v4
-      |Uri => HelloWorld.scala
-      |Text => non-empty
-      |Language => Scala
-      |Symbols => 4 entries
-      |Occurrences => 7 entries
-      |
-      |Symbols:
-      |_empty_. => package _empty_
-      |_empty_.HelloWorld. => final object HelloWorld extends AnyRef { +1 decls }
-      |  AnyRef => scala.AnyRef#
-      |_empty_.HelloWorld.main(). => method main(args: Array[String]): Unit
-      |  args => _empty_.HelloWorld.main().(args)
-      |  Array => scala.Array#
-      |  String => scala.Predef.String#
-      |  Unit => scala.Unit#
-      |_empty_.HelloWorld.main().(args) => param args: Array[String]
-      |  Array => scala.Array#
-      |  String => scala.Predef.String#
-      |
-      |Occurrences:
-      |[1:11..1:21): HelloWorld <= _empty_.HelloWorld.
-      |[2:10..2:14): main <= _empty_.HelloWorld.main().
-      |[2:15..2:19): args <= _empty_.HelloWorld.main().(args)
-      |[2:21..2:26): Array => scala.Array#
-      |[2:27..2:33): String => scala.Predef.String#
-      |[2:37..2:41): Unit => scala.Unit#
-      |[3:8..3:15): println => scala.Predef.println(+1).
+    """|HelloWorld.scala
+       |----------------
+       |
+       |Summary:
+       |Schema => SemanticDB v4
+       |Uri => HelloWorld.scala
+       |Text => non-empty
+       |Language => Scala
+       |Symbols => 4 entries
+       |Occurrences => 7 entries
+       |
+       |Symbols:
+       |_empty_/ => package _empty_
+       |_empty_/HelloWorld. => final object HelloWorld extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/HelloWorld.main(). => method main(args: Array[String]): Unit
+       |  args => _empty_/HelloWorld.main().(args)
+       |  Array => scala/Array#
+       |  String => scala/Predef.String#
+       |  Unit => scala/Unit#
+       |_empty_/HelloWorld.main().(args) => param args: Array[String]
+       |  Array => scala/Array#
+       |  String => scala/Predef.String#
+       |
+       |Occurrences:
+       |[1:11..1:21): HelloWorld <= _empty_/HelloWorld.
+       |[2:10..2:14): main <= _empty_/HelloWorld.main().
+       |[2:15..2:19): args <= _empty_/HelloWorld.main().(args)
+       |[2:21..2:26): Array => scala/Array#
+       |[2:27..2:33): String => scala/Predef.String#
+       |[2:37..2:41): Unit => scala/Unit#
+       |[3:8..3:15): println => scala/Predef.println(+1).
     """.trim.stripMargin)
     assert(err.isEmpty)
   }

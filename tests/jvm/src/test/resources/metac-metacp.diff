@@ -1009,6 +1009,20 @@ example/Methods#m13().(x)
 +        symbol: "scala/Int#"
 
 
+========================
+example/Synthetic#x$2().
+========================
+--- metac
++++ metacp
+ properties: 1024
+ name: "x$2"
+ accessibility {
+-  tag: PUBLIC
++  tag: PRIVATE_THIS
+   symbol: ""
+ language: SCALA
+
+
 ================
 flags/p/package.
 ================

@@ -192,37 +192,6 @@ _empty_.B#a(). => method a: A
   A => _empty_.A#
 _root_/ => package _root_
 
-C.class
--------
-
-Summary:
-Schema => SemanticDB v4
-Uri => C.class
-Text => empty
-Language => Scala
-Symbols => 9 entries
-
-Symbols:
-_empty_. => package _empty_
-_empty_.C# => class C extends AnyRef { +3 decls }
-  AnyRef => scala/AnyRef#
-_empty_.C#`<init>`(). => primary ctor <init>()
-_empty_.C#m1(). => method m1[T[_], _]: Nothing
-  T => _empty_.C#m1().[T]
-  _ => _empty_.C#m1().[T][_]
-  _ => _empty_.C#m1().[_]
-  Nothing => scala/Nothing#
-_empty_.C#m1().[T] => typeparam T[_]
-  _ => _empty_.C#m1().[T][_]
-_empty_.C#m1().[T][_] => typeparam _
-_empty_.C#m1().[_] => typeparam _
-_empty_.C#m2(). => method m2: Map[_, List[_] forSome { type _ }] forSome { type _ }
-  Map => scala/Predef.Map#
-  _ => local0
-  List => scala/package.List#
-  _ => local1
-_root_/ => package _root_
-
 classes/C1.class
 ----------------
 
@@ -1236,6 +1205,39 @@ example/Acc#m6(). => protected[example] method m6: Nothing
 example/Acc#m7(). => method m7: Nothing
   Nothing => scala/Nothing#
 
+example/Anonymous.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Anonymous.class
+Text => empty
+Language => Scala
+Symbols => 10 entries
+
+Symbols:
+_root_/ => package _root_
+example/ => package example
+example/Anonymous# => class Anonymous extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+example/Anonymous#Foo# => trait Foo extends AnyRef
+  AnyRef => scala/AnyRef#
+example/Anonymous#`<init>`(). => primary ctor <init>()
+example/Anonymous#m1(). => method m1[T[_], _]: Nothing
+  T => example/Anonymous#m1().[T]
+  _ => example/Anonymous#m1().[T][_]
+  _ => example/Anonymous#m1().[_]
+  Nothing => scala/Nothing#
+example/Anonymous#m1().[T] => typeparam T[_]
+  _ => example/Anonymous#m1().[T][_]
+example/Anonymous#m1().[T][_] => typeparam _
+example/Anonymous#m1().[_] => typeparam _
+example/Anonymous#m2(). => method m2: Map[_, List[_] forSome { type _ }] forSome { type _ }
+  Map => scala/Predef.Map#
+  _ => local0
+  List => scala/package.List#
+  _ => local1
+
 example/B.class
 ---------------
 
@@ -1608,14 +1610,110 @@ Schema => SemanticDB v4
 Uri => example/Synthetic.class
 Text => empty
 Language => Scala
-Symbols => 4 entries
+Symbols => 41 entries
 
 Symbols:
 _root_/ => package _root_
 example/ => package example
-example/Synthetic# => class Synthetic extends AnyRef { +1 decls }
+example/Synthetic# => class Synthetic extends AnyRef { +12 decls }
   AnyRef => scala/AnyRef#
+example/Synthetic#F# => class F extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/Synthetic#F#`<init>`(). => primary ctor <init>()
+example/Synthetic#J# => class J[T] extends AnyRef { +3 decls }
+  T => example/Synthetic#J#[T]
+  AnyRef => scala/AnyRef#
+example/Synthetic#J#[T] => typeparam T
+example/Synthetic#J#`<init>`(). => primary ctor <init>()(implicit evidence$1: Manifest[T])
+  evidence$1 => example/Synthetic#J#`<init>`().(evidence$1)
+  Manifest => scala/Predef.Manifest#
+  T => example/Synthetic#J#[T]
+example/Synthetic#J#`<init>`().(evidence$1) => implicit param evidence$1: Manifest[T]
+  Manifest => scala/Predef.Manifest#
+  T => example/Synthetic#J#[T]
+example/Synthetic#J#arr(). => val method arr: Array[T]
+  Array => scala/Array#
+  T => example/Synthetic#J#[T]
+example/Synthetic#J#evidence$1(). => private[this] implicit val method evidence$1: Manifest[T]
+  Manifest => scala/Predef.Manifest#
+  T => example/Synthetic#J#[T]
+example/Synthetic#Name(). => val method Name: Regex
+  Regex => scala/util/matching/Regex#
 example/Synthetic#`<init>`(). => primary ctor <init>()
+example/Synthetic#f(). => val method f: Ordered[F]
+  Ordered => scala/package.Ordered#
+  F => example/Synthetic#F#
+example/Synthetic#lst(). => val method lst: Stream[Int]
+  Stream => scala/collection/immutable/Stream#
+  Int => scala/Int#
+example/Synthetic#name(). => val method name: String
+  String => scala/Predef.String#
+example/Synthetic#ordering(). => implicit val method ordering: Ordering[F]
+  Ordering => scala/package.Ordering#
+  F => example/Synthetic#F#
+example/Synthetic#s. => final object s extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/Synthetic#s.Bar# => case class Bar extends AnyRef with Product with Serializable { +10 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/Serializable#
+example/Synthetic#s.Bar#`<init>`(). => primary ctor <init>()
+example/Synthetic#s.Bar#canEqual(). => method canEqual(x$1: Any): Boolean
+  x$1 => example/Synthetic#s.Bar#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/Synthetic#s.Bar#canEqual().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/Synthetic#s.Bar#copy(). => method copy(): Bar
+  Bar => example/Synthetic#s.Bar#
+example/Synthetic#s.Bar#equals(). => method equals(x$1: Any): Boolean
+  x$1 => example/Synthetic#s.Bar#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/Synthetic#s.Bar#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/Synthetic#s.Bar#hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+example/Synthetic#s.Bar#productArity(). => method productArity: Int
+  Int => scala/Int#
+example/Synthetic#s.Bar#productElement(). => method productElement(x$1: Int): Any
+  x$1 => example/Synthetic#s.Bar#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+example/Synthetic#s.Bar#productElement().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/Synthetic#s.Bar#productIterator(). => method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+example/Synthetic#s.Bar#productPrefix(). => method productPrefix: String
+  String => java/lang/String#
+example/Synthetic#s.Bar#toString(). => method toString(): String
+  String => java/lang/String#
+example/Synthetic#s.Bar. => final object Bar extends AbstractFunction0[Bar] with Serializable { +3 decls }
+  AbstractFunction0 => scala/runtime/AbstractFunction0#
+  Bar => example/Synthetic#s.Bar#
+  Serializable => scala/Serializable#
+example/Synthetic#s.Bar.apply(). => method apply(): Bar
+  Bar => example/Synthetic#s.Bar#
+example/Synthetic#s.Bar.toString(). => final method toString(): String
+  String => java/lang/String#
+example/Synthetic#s.Bar.unapply(). => method unapply(x$0: Bar): Boolean
+  x$0 => example/Synthetic#s.Bar.unapply().(x$0)
+  Bar => example/Synthetic#s.Bar#
+  Boolean => scala/Boolean#
+example/Synthetic#s.Bar.unapply().(x$0) => param x$0: Bar
+  Bar => example/Synthetic#s.Bar#
+example/Synthetic#s.apply(). => method apply(): Int
+  Int => scala/Int#
+example/Synthetic#x$2(). => private[this] val method x$2: Tuple2[Int, Stream[Int]]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+  Stream => scala/collection/immutable/Stream#
+example/Synthetic#x(). => val method x: Int
+  Int => scala/Int#
+example/Synthetic#xs(). => val method xs: Stream[Int]
+  Stream => scala/collection/immutable/Stream#
+  Int => scala/Int#
 
 example/Vals.class
 ------------------
