@@ -230,7 +230,11 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isSynthetic && sym.isAbstractType // these are hardlinked to TypeOps
     }
     def isEtaExpandedParameter: Boolean = {
-      sym.isParameter && sym.isSynthetic && sym.owner.isAnonymousFunction
+      // Term.Placeholder occurrences are not persisted so we don't persist their symbol information.
+      // We might want to revisit this decision https://github.com/scalameta/scalameta/issues/1657
+      sym.isParameter &&
+      sym.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX) &&
+      sym.owner.isAnonymousFunction
     }
     def isAnonymousSelfParameter: Boolean = {
       sym.isSelfParameter && sym.name == g.nme.this_ // persisted as ClassSignature.self

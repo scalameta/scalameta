@@ -792,7 +792,7 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Anonymous.scala
 Text => non-empty
 Language => Scala
-Symbols => 11 entries
+Symbols => 10 entries
 Occurrences => 21 entries
 Synthetics => 2 entries
 
@@ -818,8 +818,6 @@ _empty_.C#m2(). => method m2: Map[_, List[_] forSome { type _ }] forSome { type 
 local2 => abstract type _
 local3 => val local x: Function1[Int, Int]
   Function1 => scala.Function1#
-  Int => scala.Int#
-local4 => param x$1: Int
   Int => scala.Int#
 
 Occurrences:
