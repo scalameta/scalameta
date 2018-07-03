@@ -35,6 +35,7 @@ class IncrementalSuite extends FunSuite with BeforeAndAfterEach with DiffAsserti
        |
        |Toplevels:
        |==========
+       |_empty_. => src/A.scala.semanticdb
        |_empty_.A. => src/A.scala.semanticdb
        |""".stripMargin
 
@@ -49,6 +50,7 @@ class IncrementalSuite extends FunSuite with BeforeAndAfterEach with DiffAsserti
        |
        |Toplevels:
        |==========
+       |_empty_. => src/B.scala.semanticdb
        |_empty_.A. => src/A.scala.semanticdb
        |_empty_.B. => src/B.scala.semanticdb
        |""".stripMargin
@@ -65,6 +67,7 @@ class IncrementalSuite extends FunSuite with BeforeAndAfterEach with DiffAsserti
        |
        |Toplevels:
        |==========
+       |_empty_. => src/A.scala.semanticdb
        |_empty_.A. => src/A.scala.semanticdb
        |_empty_.B. => src/B.scala.semanticdb
        |_empty_.C. => src/A.scala.semanticdb
@@ -142,6 +145,7 @@ class IncrementalSuite extends FunSuite with BeforeAndAfterEach with DiffAsserti
          |
          |Toplevels:
          |==========
+         |_empty_. => src/A.scala.semanticdb
          |_empty_.A. => src/A.scala.semanticdb
          |_empty_.B# => src/B.java.semanticdb
          |""".stripMargin
