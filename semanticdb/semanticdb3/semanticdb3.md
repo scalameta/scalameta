@@ -1062,7 +1062,8 @@ which Scala definitions, what their metadata is, etc). See
 
 **Descriptor** is:
   * For `LOCAL`, unsupported.
-  * For `OBJECT`, `PACKAGE` or `PACKAGE_OBJECT`,
+  * For `PACKAGE`, concatenation of its encoded name and a forward slash (`/`).
+  * For `OBJECT` or `PACKAGE_OBJECT`,
     concatenation of its encoded name and a dot (`.`).
   * For `METHOD`, `CONSTRUCTOR`, or `MACRO`,
     concatenation of its encoded name, a disambiguator and a dot (`.`).
@@ -1104,13 +1105,13 @@ which Scala definitions, what their metadata is, etc). See
 For example, this is how some of the definitions from the Scala standard library
 must be modelled:
 
-* The `scala` package: `scala.`
-* The `Int` class: `scala.Int#`
-* The `def implicitly[T](implicit e: T)` method: `scala.Predef.implicitly().`
-* The `e` parameter of that method: `scala.Predef.implicitly().(e)`
-* The `T` type parameter of that method: `scala.Predef.implicitly().[T]`
+* The `scala` package: `scala/`
+* The `Int` class: `scala/Int#`
+* The `def implicitly[T](implicit e: T)` method: `scala/Predef.implicitly().`
+* The `e` parameter of that method: `scala/Predef.implicitly().(e)`
+* The `T` type parameter of that method: `scala/Predef.implicitly().[T]`
 * The `def contains[A: Ordering](tree: Tree[A, _], x: A): Boolean` method:
-  `scala.collection.immutable.RedBlackTree#contains().`
+  `scala/collection/immutable/RedBlackTree#contains().`
 
 <a name="scala-type"></a>
 #### Type
@@ -1378,31 +1379,31 @@ abstract class C(val xp: Int) {
   </tr>
   <tr>
     <td><code>xp</code></td>
-    <td><code>_empty_.C#xp().</code></td>
+    <td><code>_empty_/C#xp().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xp</code></td>
-    <td><code>_empty_.C#`&lt;init&gt;`().(xp)</code></td>
+    <td><code>_empty_/C#`&lt;init&gt;`().(xp)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xm</code></td>
-    <td><code>_empty_.C#xm().</code></td>
+    <td><code>_empty_/C#xm().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xam</code></td>
-    <td><code>_empty_.C#xam().</code></td>
+    <td><code>_empty_/C#xam().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xlm</code></td>
-    <td><code>_empty_.C#xlm().</code></td>
+    <td><code>_empty_/C#xlm().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
@@ -1527,19 +1528,19 @@ class C {
   </tr>
   <tr>
     <td><code>xval</code></td>
-    <td><code>_empty_.C#xval().</code></td>
+    <td><code>_empty_/C#xval().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xvar</code></td>
-    <td><code>_empty_.C#xvar().</code></td>
+    <td><code>_empty_/C#xvar().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>xvar</code></td>
-    <td><code>_empty_.C#xvar_=().</code></td>
+    <td><code>_empty_/C#xvar_=().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(&lt;x$1&gt;), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
   </tr>
@@ -1577,19 +1578,19 @@ class C {
   </tr>
   <tr>
     <td><code>T1</code></td>
-    <td><code>_empty_.C#T1#</code></td>
+    <td><code>_empty_/C#T1#</code></td>
     <td><code>TYPE</code></td>
     <td><code>TypeSignature(List(), None, &lt;Hi&gt;)</code></td>
   </tr>
   <tr>
     <td><code>T2</code></td>
-    <td><code>_empty_.C#T2#</code></td>
+    <td><code>_empty_/C#T2#</code></td>
     <td><code>TYPE</code></td>
     <td><code>TypeSignature(List(), &lt;Lo&gt;, None)</code></td>
   </tr>
   <tr>
     <td><code>T</code></td>
-    <td><code>_empty_.C#T#</code></td>
+    <td><code>_empty_/C#T#</code></td>
     <td><code>TYPE</code></td>
     <td><code>TypeSignature(List(), TypeRef(None, &lt;Int&gt;, List()), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
@@ -1701,25 +1702,25 @@ class C[T1] {
   </tr>
   <tr>
     <td><code>T1</code></td>
-    <td><code>_empty_.C#[T1]</code></td>
+    <td><code>_empty_/C#[T1]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td><code>TypeSignature(List(), None, None)</code></td>
   </tr>
   <tr>
     <td><code>T2</code></td>
-    <td><code>_empty_.C#m()[T2]</code></td>
+    <td><code>_empty_/C#m()[T2]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td><code>TypeSignature(List(), None, &lt;Hi&gt;)</code></td>
   </tr>
   <tr>
     <td><code>T3</code></td>
-    <td><code>_empty_.C#m()[T2][T3]</code></td>
+    <td><code>_empty_/C#m()[T2][T3]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td><code>TypeSignature(List(), None, None)</code></td>
   </tr>
   <tr>
     <td><code>T4</code></td>
-    <td><code>_empty_.C#T#[T4]</code></td>
+    <td><code>_empty_/C#T#[T4]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td><code>TypeSignature(List(), &lt;Lo&gt;, None)</code></td>
   </tr>
@@ -1764,49 +1765,49 @@ class C(p1: Int) {
   </tr>
   <tr>
     <td><code>p1</code></td>
-    <td><code>_empty_.C#`&lt;init&gt;`().(p1)</code></td>
+    <td><code>_empty_/C#`&lt;init&gt;`().(p1)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>p2</code></td>
-    <td><code>_empty_.C#m2().(p2)</code></td>
+    <td><code>_empty_/C#m2().(p2)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>p3</code></td>
-    <td><code>_empty_.C#m3().(p3)</code></td>
+    <td><code>_empty_/C#m3().(p3)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3$default$1</code></td>
-    <td><code>_empty_.C#m3$default$1().</code></td>
+    <td><code>_empty_/C#m3$default$1().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>p4</code></td>
-    <td><code>_empty_.C#m4().(p4)</code></td>
+    <td><code>_empty_/C#m4().(p4)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(ByNameType(TypeRef(None, &lt;Int&gt;, List())))</code></td>
   </tr>
   <tr>
     <td><code>p5</code></td>
-    <td><code>_empty_.C#m5().(p5)</code></td>
+    <td><code>_empty_/C#m5().(p5)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(RepeatedType(TypeRef(None, &lt;Int&gt;, List())))</code></td>
   </tr>
   <tr>
     <td>Context bound</td>
-    <td><code>_empty_.C#m6().(x$1)</code></td>
+    <td><code>_empty_/C#m6().(x$1)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;C&gt;, List(&lt;T&gt;)))</code></td>
   </tr>
   <tr>
     <td>View bound</td>
-    <td><code>_empty_.C#m7().(x$2)</code></td>
+    <td><code>_empty_/C#m7().(x$2)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;Function1&gt;, List(&lt;T&gt;, &lt;V&gt;)))</code></td>
   </tr>
@@ -1863,37 +1864,37 @@ abstract class C {
   </tr>
   <tr>
     <td><code>m1</code></td>
-    <td><code>_empty_.C#m1().</code></td>
+    <td><code>_empty_/C#m1().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m2</code></td>
-    <td><code>_empty_.C#m2().</code></td>
+    <td><code>_empty_/C#m2().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(List()), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>_empty_.C#m3.</code></td>
+    <td><code>_empty_/C#m3.</code></td>
     <td><code>OBJECT</code></td>
     <td><code>ClassSignature(List(), List(), None, List())</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>_empty_.C#m3().</code></td>
+    <td><code>_empty_/C#m3().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>_empty_.C#m3(+1).</code></td>
+    <td><code>_empty_/C#m3(+1).</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;org.Int&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m4</code></td>
-    <td><code>_empty_.C#m4().</code></td>
+    <td><code>_empty_/C#m4().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(List(&lt;x&gt;), List(&lt;y&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
@@ -1949,7 +1950,7 @@ object M {
   </tr>
   <tr>
     <td><code>m1</code></td>
-    <td><code>_empty_.M.m().</code></td>
+    <td><code>_empty_/M.m().</code></td>
     <td><code>MACRO</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
@@ -1981,13 +1982,13 @@ class C(x: Int) {
   </tr>
   <tr>
     <td>Primary constructor</td>
-    <td><code>_empty_.C#`&lt;init&gt;`().</code></td>
+    <td><code>_empty_/C#`&lt;init&gt;`().</code></td>
     <td><code>CONSTRUCTOR</code></td>
     <td><code>MethodSignature(List(), List(List(&lt;x&gt;)), None)</code></td>
   </tr>
   <tr>
     <td>Secondary constructor</td>
-    <td><code>_empty_.C#`&lt;init&gt;`(+1).</code></td>
+    <td><code>_empty_/C#`&lt;init&gt;`(+1).</code></td>
     <td><code>CONSTRUCTOR</code></td>
     <td><code>MethodSignature(List(), List(), None)</code></td>
   </tr>
@@ -2022,73 +2023,73 @@ class C[T](x: T, val y: T, var z: T) extends B with X { self: Y =>
   </tr>
   <tr>
     <td><code>C</code></td>
-    <td><code>_empty_.C#</code></td>
+    <td><code>_empty_/C#</code></td>
     <td><code>CLASS</code></td>
     <td><code>ClassSignature(List(&lt;T&gt;), List(&lt;B&gt;, &lt;X&gt;), &lt;Y&gt;, List(&lt;x&gt;, &lt;y&gt;, &lt;y&gt;, &lt;z&gt;, &lt;z&gt;, &lt;z_=&gt;, &lt;&lt;init&gt;&gt;, &lt;m&gt;))</code></td>
   </tr>
   <tr>
     <td><code>T</code></td>
-    <td><code>_empty_.C#[T]</code></td>
+    <td><code>_empty_/C#[T]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td><code>TypeSignature(List(), None, None)</code></td>
   </tr>
   <tr>
     <td><code>x</code></td>
-    <td><code>_empty_.C#x().</code></td>
+    <td><code>_empty_/C#x().</code></td>
     <td><code>METHOD</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>y</code></td>
-    <td><code>_empty_.C#x().</code></td>
+    <td><code>_empty_/C#x().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
-    <td><code>_empty_.C#z().</code></td>
+    <td><code>_empty_/C#z().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
-    <td><code>_empty_.C#z_=().</code></td>
+    <td><code>_empty_/C#z_=().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(List(&lt;x$1&gt;)), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
-    <td><code>_empty_.C#z_=().(x$1)</code></td>
+    <td><code>_empty_/C#z_=().(x$1)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td>Primary constructor</td>
-    <td><code>_empty_.C#`&lt;init&gt;`().</code></td>
+    <td><code>_empty_/C#`&lt;init&gt;`().</code></td>
     <td><code>CONSTRUCTOR</code></td>
     <td><code>MethodSignature(List(), List(), None)</code></td>
   </tr>
   <tr>
     <td><code>x</code></td>
-    <td><code>_empty_.C#`&lt;init&gt;`().(x)</code></td>
+    <td><code>_empty_/C#`&lt;init&gt;`().(x)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>y</code></td>
-    <td><code>_empty_.C#`&lt;init&gt;`().(y)</code></td>
+    <td><code>_empty_/C#`&lt;init&gt;`().(y)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
-    <td><code>_empty_.C#`&lt;init&gt;`().(z)</code></td>
+    <td><code>_empty_/C#`&lt;init&gt;`().(z)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m</code></td>
-    <td><code>_empty_.C#m().</code></td>
+    <td><code>_empty_/C#m().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
@@ -2377,8 +2378,8 @@ In this section, we describe the Java symbol format.
 
 **Descriptor** is:
   * For `LOCAL`, unsupported.
-  * For `FIELD` or `PACKAGE`, concatenation of its simple name [\[98\]][98]
-    and a dot (`.`).
+  * For `PACKAGE`, concatenation of its encoded name and a forward slash (`/`).
+  * For `FIELD`, concatenation of its simple name [\[98\]][98] and a dot (`.`).
   * For `METHOD` or `CONSTRUCTOR`, concatenation of its simple name,
     a disambiguator and a dot (`.`).
   * For `CLASS` or `INTERFACE`, concatenation of its simple name and
@@ -2629,85 +2630,85 @@ class C extends S1 implements I {
   </tr>
   <tr>
     <td><code>C</code></td>
-    <td><code>a.C#</code></td>
+    <td><code>a/C#</code></td>
     <td><code>CLASS</code></td>
     <td><code>ClassSignature(List(), List(&lt;S1&gt;, &lt;I&gt;), None, List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3(Overload)&gt;, &lt;m3(Overload+2)&gt;, &lt;m3(Overload+1)&gt;, &lt;D1&gt;, &lt;D2&gt;))</code></td>
   </tr>
   <tr>
     <td><code>m1</code></td>
-    <td><code>a.C#m1.</code></td>
+    <td><code>a/C#m1.</code></td>
     <td><code>FIELD</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;T1&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m2</code></td>
-    <td><code>a.C#m2().</code></td>
+    <td><code>a/C#m2().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T2&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>a.C#m3.</code></td>
+    <td><code>a/C#m3.</code></td>
     <td><code>FIELD</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;zero.Overload&gt;))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>a.C#m3().</code></td>
+    <td><code>a/C#m3().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(&lt;e1&gt;), TypeRef(None, &lt;T3&gt;))</code></td>
   </tr>
   <tr>
     <td><code>e1</code></td>
-    <td><code>a.C#m3().(e1)</code></td>
+    <td><code>a/C#m3().(e1)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;one.Overload&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>a.C#m3(+2).</code></td>
+    <td><code>a/C#m3(+2).</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(&lt;e2&gt;) TypeRef(None, &lt;T4&gt;))</code></td>
   </tr>
   <tr>
     <td><code>e2</code></td>
-    <td><code>a.C#m3(+2).(e2)</code></td>
+    <td><code>a/C#m3(+2).(e2)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;two.Overload&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>a.C#m3(+1).</code></td>
+    <td><code>a/C#m3(+1).</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(&lte3&gt;), TypeRef(None, &lt;T5&gt;))</code></td>
   </tr>
   <tr>
     <td><code>e3</code></td>
-    <td><code>a.C#m3(+1).(e3)</code></td>
+    <td><code>a/C#m3(+1).(e3)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;three.Overload&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>T6</code></td>
-    <td><code>a.C#D1#[T6]</code></td>
+    <td><code>a/C#D1#[T6]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td><code>TypeSignature(List(), None, Some(IntersectionType(List(&lt;S2&gt;, &lt;S3&gt;))))</code></td>
   </tr>
   <tr>
     <td><code>T7</code></td>
-    <td><code>a.C#D1#[T7]</code></td>
+    <td><code>a/C#D1#[T7]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td><code>TypeSignature(List(), None, None)</code></td>
   </tr>
   <tr>
     <td><code>D1</code></td>
-    <td><code>a.C#D1#</code></td>
+    <td><code>a/C#D1#</code></td>
     <td><code>CLASS</code></td>
     <td><code>ClassSignature(List(&lt;T6&gt;, &lt;T7&gt;), List(&lt;java.lang.Object#&gt;), None, List())</code></td>
   </tr>
   <tr>
     <td><code>D2</code></td>
-    <td><code>a.C#D2#</code></td>
+    <td><code>a/C#D2#</code></td>
     <td><code>CLASS</code></td>
     <td><code>ClassSignature(List(), List(), None, List())</code></td>
   </tr>
@@ -2755,31 +2756,31 @@ public enum Coin {
   </tr>
   <tr>
     <td><code>Coin</code></td>
-    <td><code>a.Coin#</code></td>
+    <td><code>a/Coin#</code></td>
     <td><code>CLASS</code></td>
     <td><code>ClassSignature(List(), List(&lt;Enum&lt;Coin&gt;&gt;), None, List(&lt;PENNY&gt;, &lt;NICKEL&gt;))</code></td>
   </tr>
   <tr>
     <td><code>PENNY</code></td>
-    <td><code>a.Coin#PENNY.</code></td>
+    <td><code>a/Coin#PENNY.</code></td>
     <td><code>FIELD</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;Coin&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>NICKEL</code></td>
-    <td><code>a.Coin#NICKEL.</code></td>
+    <td><code>a/Coin#NICKEL.</code></td>
     <td><code>FIELD</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;Coin&gt;, List()))</code></td>
   </tr>
   <tr>
     <td></td>
-    <td><code>a.Coin#values().</code></td>
+    <td><code>a/Coin#values().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Array&gt;, List(&lt;Coin&gt;)))</code></td>
   </tr>
   <tr>
     <td></td>
-    <td><code>a.Coin#valueOf().</code></td>
+    <td><code>a/Coin#valueOf().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Coin&gt;, List()))</code></td>
   </tr>
@@ -2823,13 +2824,13 @@ public interface List<T> extends I {
   </tr>
   <tr>
     <td><code>List</code></td>
-    <td><code>a.List#</code></td>
+    <td><code>a/List#</code></td>
     <td><code>CLASS</code></td>
     <td><code>ClassSignature(List(&lt;T&gt;), List(&lt;I&gt;), None, List(&lt;head&gt;))</code></td>
   </tr>
   <tr>
     <td><code>head</code></td>
-    <td><code>a.List#head().</code></td>
+    <td><code>a/List#head().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
   </tr>
@@ -2867,43 +2868,43 @@ class A {
   </tr>
   <tr>
     <td><code>A</code></td>
-    <td><code>a.A#</code></td>
+    <td><code>a/A#</code></td>
     <td><code>CLASS</code></td>
     <td><code>ClassSignature(List(), List(), None, List(&lt;m1&gt;, &lt;m2&gt;, &lt;m3&gt;))</code></td>
   </tr>
   <tr>
     <td><code>m1</code></td>
-    <td><code>a.A#m1().</code></td>
+    <td><code>a/A#m1().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;A&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m2</code></td>
-    <td><code>a.A#m2().</code></td>
+    <td><code>a/A#m2().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(&lt;t1&gt;), TypeRef(None, &lt;A&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>t1</code></td>
-    <td><code>a.A#m2().(t1)</code></td>
+    <td><code>a/A#m2().(t1)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;T1&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>a.A#m3().</code></td>
+    <td><code>a/A#m3().</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(&lt;T2&gt;), List(&lt;t2&gt;), TypeRef(None, &lt;T2&gt;, List()))</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
-    <td><code>a.A#m3().[T2]</code></td>
+    <td><code>a/A#m3().[T2]</code></td>
     <td><code>TYPE_PARAMETER</code></td>
     <td><code>TypeSignature(List(), None, None)</code></td>
   </tr>
   <tr>
     <td><code>t2</code></td>
-    <td><code>a.A#m3().(t2)</code></td>
+    <td><code>a/A#m3().(t2)</code></td>
     <td><code>PARAMETER</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;T2&gt;, List()))</code></td>
   </tr>
@@ -2944,13 +2945,13 @@ class A {
   </tr>
   <tr>
     <td><code>A</code></td>
-    <td><code>a.A#</code></td>
+    <td><code>a/A#</code></td>
     <td><code>CLASS</code></td>
     <td><code>ClassSignature(List(), List(), None, List(&lt;field&gt;))</code></td>
   </tr>
   <tr>
     <td><code>field</code></td>
-    <td><code>a.A#field.</code></td>
+    <td><code>a/A#field.</code></td>
     <td><code>FIELD</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;A&gt;, List()))</code></td>
   </tr>
@@ -2986,25 +2987,25 @@ class Outer {
   </tr>
   <tr>
     <td><code>Outer</code></td>
-    <td><code>a.Outer#</code></td>
+    <td><code>a/Outer#</code></td>
     <td><code>CLASS</code></td>
     <td><code>ClassSignature(List(), List(), None, List(&lt;a.Outer#&lt;init&gt;, &lt;Inner&gt;))</code></td>
   </tr>
   <tr>
     <td>Constructor of <code>Outer</code></td>
-    <td><code>a.Outer#&lt;init&gt;().</code></td>
+    <td><code>a/Outer#&lt;init&gt;().</code></td>
     <td><code>CONSTRUCTOR</code></td>
     <td><code>MethodSignature(List(), List(), None)</code></td>
   </tr>
   <tr>
     <td><code>Inner</code></td>
-    <td><code>a.Outer#Inner#</code></td>
+    <td><code>a/Outer#Inner#</code></td>
     <td><code>CLASS</code></td>
     <td><code>ClassSignature(List(), List(), None, List(&lt;a.Outer#Inner#&lt;init&gt;))</code></td>
   </tr>
   <tr>
     <td>Constructor of <code>Inner</code></td>
-    <td><code>a.Outer#Inner#&lt;init&gt;().</code></td>
+    <td><code>a/Outer#Inner#&lt;init&gt;().</code></td>
     <td><code>CONSTRUCTOR</code></td>
     <td><code>MethodSignature(List(), List(), None)</code></td>
   </tr>
