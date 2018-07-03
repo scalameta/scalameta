@@ -1,27 +1,27 @@
 ===========
-advanced.D#
+advanced/D#
 ===========
 --- metac
 +++ metacp
                    typeRef {
                      prefix {
 -                    symbol: "local14"
-+                    symbol: "advanced.D#_#"
++                    symbol: "advanced/D#_#"
              declarations {
                hardlinks {
 -                symbol: "local14"
-+                symbol: "advanced.D#_#"
++                symbol: "advanced/D#_#"
                  kind: TYPE
                  properties: 4
                  name: "_"
      self {
      declarations {
-+      symlinks: "advanced.D#_#"
-       symlinks: "advanced.D#`<init>`()."
++      symlinks: "advanced/D#_#"
+       symlinks: "advanced/D#`<init>`()."
 
 
 ==========================
-advanced.Existential#e1().
+advanced/Existential#e1().
 ==========================
 --- metac
 +++ metacp
@@ -39,7 +39,7 @@ advanced.Existential#e1().
 
 
 ==========================
-advanced.Existential#e2().
+advanced/Existential#e2().
 ==========================
 --- metac
 +++ metacp
@@ -57,7 +57,7 @@ advanced.Existential#e2().
 
 
 ==========================
-advanced.Existential#e4().
+advanced/Existential#e4().
 ==========================
 --- metac
 +++ metacp
@@ -85,7 +85,7 @@ advanced.Existential#e4().
 
 
 =========================
-advanced.Structural#s3().
+advanced/Structural#s3().
 =========================
 --- metac
 +++ metacp
@@ -106,25 +106,25 @@ advanced.Structural#s3().
 
 
 ===================
-advanced.Test.e2().
+advanced/Test.e2().
 ===================
 --- metac
 +++ metacp
                    typeRef {
                      prefix {
 -                    symbol: "local8"
-+                    symbol: "advanced.Test.T#"
++                    symbol: "advanced/Test.T#"
              declarations {
                hardlinks {
 -                symbol: "local8"
-+                symbol: "advanced.Test.T#"
++                symbol: "advanced/Test.T#"
                  kind: TYPE
                  properties: 4
                  name: "T"
 
 
 ===================
-advanced.Test.s3().
+advanced/Test.s3().
 ===================
 --- metac
 +++ metacp
@@ -145,7 +145,7 @@ advanced.Test.s3().
 
 
 ============================
-classes.C3#copy$default$1().
+classes/C3#copy$default$1().
 ============================
 --- metac
 +++ metacp
@@ -153,23 +153,11 @@ classes.C3#copy$default$1().
            tpe {
 -            typeRef {
 -              prefix {
--              symbol: "scala.annotation.unchecked.uncheckedVariance#"
+-              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
 ============================
-classes.C4#copy$default$1().
-============================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            typeRef {
--              prefix {
--              symbol: "scala.annotation.unchecked.uncheckedVariance#"
-
-
-============================
-classes.C6#copy$default$1().
+classes/C4#copy$default$1().
 ============================
 --- metac
 +++ metacp
@@ -177,11 +165,23 @@ classes.C6#copy$default$1().
            tpe {
 -            typeRef {
 -              prefix {
--              symbol: "scala.annotation.unchecked.uncheckedVariance#"
+-              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
+============================
+classes/C6#copy$default$1().
+============================
+--- metac
++++ metacp
+         annotations {
+           tpe {
+-            typeRef {
+-              prefix {
+-              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
 ======================
-classes.N.anonClass().
+classes/N.anonClass().
 ======================
 --- metac
 +++ metacp
@@ -195,7 +195,7 @@ classes.N.anonClass().
 
 
 ========================================
-com.javacp.ClassSuffix#Inner#Bar#Fuz#[B]
+com/javacp/ClassSuffix#Inner#Bar#Fuz#[B]
 ========================================
 --- metac
 +++ metacp
@@ -213,16 +213,16 @@ com.javacp.ClassSuffix#Inner#Bar#Fuz#[B]
      lower_bound {
 -      typeRef {
 -        prefix {
--        symbol: "scala.Nothing#"
+-        symbol: "scala/Nothing#"
      upper_bound {
        typeRef {
          prefix {
--        symbol: "scala.Any#"
-+        symbol: "java.lang.Object#"
+-        symbol: "scala/Any#"
++        symbol: "java/lang/Object#"
 
 
 ================================================
-com.javacp.ClassSuffix#Inner#Bar#Fuz#`<init>`().
+com/javacp/ClassSuffix#Inner#Bar#Fuz#`<init>`().
 ================================================
 --- metac
 +++ metacp
@@ -232,13 +232,13 @@ com.javacp.ClassSuffix#Inner#Bar#Fuz#`<init>`().
 -  tag: PUBLIC
 -  symbol: ""
 +  tag: PRIVATE_WITHIN
-+  symbol: "com.javacp."
++  symbol: "com/javacp/"
  language: JAVA
  signature {
 
 
 ============================================
-com.javacp.ClassSuffix#Inner#Bar#`<init>`().
+com/javacp/ClassSuffix#Inner#Bar#`<init>`().
 ============================================
 --- metac
 +++ metacp
@@ -248,13 +248,13 @@ com.javacp.ClassSuffix#Inner#Bar#`<init>`().
 -  tag: PUBLIC
 -  symbol: ""
 +  tag: PRIVATE_WITHIN
-+  symbol: "com.javacp."
++  symbol: "com/javacp/"
  language: JAVA
  signature {
 
 
 ================================
-com.javacp.ClassSuffix#Inner#[A]
+com/javacp/ClassSuffix#Inner#[A]
 ================================
 --- metac
 +++ metacp
@@ -272,16 +272,16 @@ com.javacp.ClassSuffix#Inner#[A]
      lower_bound {
 -      typeRef {
 -        prefix {
--        symbol: "scala.Nothing#"
+-        symbol: "scala/Nothing#"
      upper_bound {
        typeRef {
          prefix {
--        symbol: "scala.Any#"
-+        symbol: "java.lang.Object#"
+-        symbol: "scala/Any#"
++        symbol: "java/lang/Object#"
 
 
 ========================================
-com.javacp.ClassSuffix#Inner#`<init>`().
+com/javacp/ClassSuffix#Inner#`<init>`().
 ========================================
 --- metac
 +++ metacp
@@ -291,13 +291,13 @@ com.javacp.ClassSuffix#Inner#`<init>`().
 -  tag: PUBLIC
 -  symbol: ""
 +  tag: PRIVATE_WITHIN
-+  symbol: "com.javacp."
++  symbol: "com/javacp/"
  language: JAVA
  signature {
 
 
 ==============================
-com.javacp.ClassSuffix#suffix.
+com/javacp/ClassSuffix#suffix.
 ==============================
 --- metac
 +++ metacp
@@ -306,68 +306,42 @@ com.javacp.ClassSuffix#suffix.
                  prefix {
 -                  typeRef {
 -                    prefix {
--                    symbol: "com.javacp.ClassSuffix#"
-                 symbol: "com.javacp.ClassSuffix#Inner#"
+-                    symbol: "com/javacp/ClassSuffix#"
+                 symbol: "com/javacp/ClassSuffix#Inner#"
                  type_arguments {
--            symbol: "com.javacp.ClassSuffix#Inner#Bar#"
-+            symbol: "_empty_.Bar#"
--        symbol: "com.javacp.ClassSuffix#Inner#Bar#Fuz#"
-+        symbol: "_empty_.Fuz#"
+-            symbol: "com/javacp/ClassSuffix#Inner#Bar#"
++            symbol: "_empty_/Bar#"
+-        symbol: "com/javacp/ClassSuffix#Inner#Bar#Fuz#"
++        symbol: "_empty_/Fuz#"
          type_arguments {
            typeRef {
              prefix {
 
 
 ================
-com.javacp.Coin#
+com/javacp/Coin#
 ================
 --- metac
 +++ metacp
      self {
      declarations {
-+      symlinks: "com.javacp.Coin#$VALUES."
-       symlinks: "com.javacp.Coin#DIME."
-       symlinks: "com.javacp.Coin#NICKEL."
-       symlinks: "com.javacp.Coin#PENNY."
-       symlinks: "com.javacp.Coin#QUARTER."
-+      symlinks: "com.javacp.Coin#`<init>`()."
-       symlinks: "com.javacp.Coin#value()."
-       symlinks: "com.javacp.Coin#value."
-       symlinks: "com.javacp.Coin#valueOf()."
-
-
-==================================
-com.javacp.Coin#`<init>`().(value)
-==================================
---- metac
-+++ metacp
--symbol: "com.javacp.Coin#`<init>`().(value)"
--kind: PARAMETER
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
--name: "value"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
--language: JAVA
-+name: ""
-+language: UNKNOWN_LANGUAGE
- signature {
--  valueSignature {
--    tpe {
--      typeRef {
--        prefix {
--        symbol: "scala.Int#"
++      symlinks: "com/javacp/Coin#$VALUES."
+       symlinks: "com/javacp/Coin#DIME."
+       symlinks: "com/javacp/Coin#NICKEL."
+       symlinks: "com/javacp/Coin#PENNY."
+       symlinks: "com/javacp/Coin#QUARTER."
++      symlinks: "com/javacp/Coin#`<init>`()."
+       symlinks: "com/javacp/Coin#value()."
+       symlinks: "com/javacp/Coin#value."
+       symlinks: "com/javacp/Coin#valueOf()."
 
 
 ======================
-com.javacp.Coin#value.
+com/javacp/Coin#value.
 ======================
 --- metac
 +++ metacp
- symbol: "com.javacp.Coin#value."
+ symbol: "com/javacp/Coin#value."
  kind: FIELD
 -properties: 0
 +properties: 8
@@ -377,46 +351,20 @@ com.javacp.Coin#value.
 
 
 ==========================
-com.javacp.Coin#valueOf().
+com/javacp/Coin#valueOf().
 ==========================
 --- metac
 +++ metacp
      type_parameters {
      parameterLists {
--      symlinks: "com.javacp.Coin#valueOf().(x)"
-+      symlinks: "com.javacp.Coin#valueOf().(name)"
+-      symlinks: "com/javacp/Coin#valueOf().(x)"
++      symlinks: "com/javacp/Coin#valueOf().(name)"
      return_type {
        typeRef {
 
 
-=============================
-com.javacp.Coin#valueOf().(x)
-=============================
---- metac
-+++ metacp
--symbol: "com.javacp.Coin#valueOf().(x)"
--kind: PARAMETER
-+symbol: ""
-+kind: UNKNOWN_KIND
- properties: 0
--name: "x"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
--language: JAVA
-+name: ""
-+language: UNKNOWN_LANGUAGE
- signature {
--  valueSignature {
--    tpe {
--      typeRef {
--        prefix {
--        symbol: "java.lang.String#"
-
-
 ===================================
-com.javacp.MetacJava#overload().(a)
+com/javacp/MetacJava#overload().(a)
 ===================================
 --- metac
 +++ metacp
@@ -425,12 +373,12 @@ com.javacp.MetacJava#overload().(a)
          prefix {
 -          typeRef {
 -            prefix {
--            symbol: "com.javacp.MetacJava#Overload1#"
-         symbol: "com.javacp.MetacJava#Overload1#A#"
+-            symbol: "com/javacp/MetacJava#Overload1#"
+         symbol: "com/javacp/MetacJava#Overload1#A#"
 
 
 =====================================
-com.javacp.MetacJava#overload(+1).(a)
+com/javacp/MetacJava#overload(+1).(a)
 =====================================
 --- metac
 +++ metacp
@@ -439,12 +387,12 @@ com.javacp.MetacJava#overload(+1).(a)
          prefix {
 -          typeRef {
 -            prefix {
--            symbol: "com.javacp.MetacJava#Overload2#"
-         symbol: "com.javacp.MetacJava#Overload2#A#"
+-            symbol: "com/javacp/MetacJava#Overload2#"
+         symbol: "com/javacp/MetacJava#Overload2#A#"
 
 
 ==============================
-com.javacp.Recursive#Inner#[A]
+com/javacp/Recursive#Inner#[A]
 ==============================
 --- metac
 +++ metacp
@@ -462,7 +410,7 @@ com.javacp.Recursive#Inner#[A]
      lower_bound {
 -      typeRef {
 -        prefix {
--        symbol: "scala.Nothing#"
+-        symbol: "scala/Nothing#"
      upper_bound {
 -      structuralType {
 -        tpe {
@@ -472,35 +420,35 @@ com.javacp.Recursive#Inner#[A]
 +        types {
 +          typeRef {
 +            prefix {
-+            symbol: "com.javacp.Recursive#"
++            symbol: "com/javacp/Recursive#"
 +            type_arguments {
                typeRef {
                  prefix {
--                symbol: "com.javacp.Recursive#"
+-                symbol: "com/javacp/Recursive#"
 -                type_arguments {
 -                  typeRef {
 -                    prefix {
--                    symbol: "com.javacp.Recursive#Inner#[A]"
+-                    symbol: "com/javacp/Recursive#Inner#[A]"
 -                type_arguments {
 -                  typeRef {
 -                    prefix {
--                    symbol: "com.javacp.Recursive#Inner#[B]"
-+                symbol: "com.javacp.Recursive#Inner#[A]"
+-                    symbol: "com/javacp/Recursive#Inner#[B]"
++                symbol: "com/javacp/Recursive#Inner#[A]"
 -            types {
 +            type_arguments {
                typeRef {
                  prefix {
--                symbol: "java.io.Serializable#"
-+                symbol: "com.javacp.Recursive#Inner#[B]"
+-                symbol: "java/io/Serializable#"
++                symbol: "com/javacp/Recursive#Inner#[B]"
 -        declarations {
 +        types {
 +          typeRef {
 +            prefix {
-+            symbol: "java.io.Serializable#"
++            symbol: "java/io/Serializable#"
 
 
 ==============================
-com.javacp.Recursive#Inner#[B]
+com/javacp/Recursive#Inner#[B]
 ==============================
 --- metac
 +++ metacp
@@ -518,13 +466,13 @@ com.javacp.Recursive#Inner#[B]
      lower_bound {
 -      typeRef {
 -        prefix {
--        symbol: "scala.Nothing#"
+-        symbol: "scala/Nothing#"
      upper_bound {
        typeRef {
 
 
 ===============================
-com.javacp.Recursive#Inner2#[C]
+com/javacp/Recursive#Inner2#[C]
 ===============================
 --- metac
 +++ metacp
@@ -542,13 +490,13 @@ com.javacp.Recursive#Inner2#[C]
      lower_bound {
 -      typeRef {
 -        prefix {
--        symbol: "scala.Nothing#"
+-        symbol: "scala/Nothing#"
      upper_bound {
        typeRef {
 
 
 ========================
-com.javacp.Recursive#[A]
+com/javacp/Recursive#[A]
 ========================
 --- metac
 +++ metacp
@@ -566,7 +514,7 @@ com.javacp.Recursive#[A]
      lower_bound {
 -      typeRef {
 -        prefix {
--        symbol: "scala.Nothing#"
+-        symbol: "scala/Nothing#"
      upper_bound {
 -      structuralType {
 -        tpe {
@@ -576,35 +524,35 @@ com.javacp.Recursive#[A]
 +        types {
 +          typeRef {
 +            prefix {
-+            symbol: "com.javacp.Recursive#"
++            symbol: "com/javacp/Recursive#"
 +            type_arguments {
                typeRef {
                  prefix {
--                symbol: "com.javacp.Recursive#"
+-                symbol: "com/javacp/Recursive#"
 -                type_arguments {
 -                  typeRef {
 -                    prefix {
--                    symbol: "com.javacp.Recursive#[A]"
+-                    symbol: "com/javacp/Recursive#[A]"
 -                type_arguments {
 -                  typeRef {
 -                    prefix {
--                    symbol: "com.javacp.Recursive#[B]"
-+                symbol: "com.javacp.Recursive#[A]"
+-                    symbol: "com/javacp/Recursive#[B]"
++                symbol: "com/javacp/Recursive#[A]"
 -            types {
 +            type_arguments {
                typeRef {
                  prefix {
--                symbol: "java.io.Serializable#"
-+                symbol: "com.javacp.Recursive#[B]"
+-                symbol: "java/io/Serializable#"
++                symbol: "com/javacp/Recursive#[B]"
 -        declarations {
 +        types {
 +          typeRef {
 +            prefix {
-+            symbol: "java.io.Serializable#"
++            symbol: "java/io/Serializable#"
 
 
 ========================
-com.javacp.Recursive#[B]
+com/javacp/Recursive#[B]
 ========================
 --- metac
 +++ metacp
@@ -622,13 +570,13 @@ com.javacp.Recursive#[B]
      lower_bound {
 -      typeRef {
 -        prefix {
--        symbol: "scala.Nothing#"
+-        symbol: "scala/Nothing#"
      upper_bound {
        typeRef {
 
 
 =================================
-com.javacp.Recursive#foo().[Anon]
+com/javacp/Recursive#foo().[Anon]
 =================================
 --- metac
 +++ metacp
@@ -646,16 +594,16 @@ com.javacp.Recursive#foo().[Anon]
      lower_bound {
 -      typeRef {
 -        prefix {
--        symbol: "scala.Nothing#"
+-        symbol: "scala/Nothing#"
      upper_bound {
        typeRef {
          prefix {
--        symbol: "scala.Any#"
-+        symbol: "java.lang.Object#"
+-        symbol: "scala/Any#"
++        symbol: "java/lang/Object#"
 
 
 ========================================
-com.javacp.Test#InnerShadowTypeParam#[A]
+com/javacp/Test#InnerShadowTypeParam#[A]
 ========================================
 --- metac
 +++ metacp
@@ -673,16 +621,16 @@ com.javacp.Test#InnerShadowTypeParam#[A]
      lower_bound {
 -      typeRef {
 -        prefix {
--        symbol: "scala.Nothing#"
+-        symbol: "scala/Nothing#"
      upper_bound {
        typeRef {
          prefix {
--        symbol: "scala.Any#"
-+        symbol: "java.lang.Object#"
+-        symbol: "scala/Any#"
++        symbol: "java/lang/Object#"
 
 
 ================================================
-com.javacp.Test#InnerShadowTypeParam#`<init>`().
+com/javacp/Test#InnerShadowTypeParam#`<init>`().
 ================================================
 --- metac
 +++ metacp
@@ -692,13 +640,13 @@ com.javacp.Test#InnerShadowTypeParam#`<init>`().
 -  tag: PUBLIC
 -  symbol: ""
 +  tag: PRIVATE_WITHIN
-+  symbol: "com.javacp."
++  symbol: "com/javacp/"
  language: JAVA
  signature {
 
 
 =======================================
-com.javacp.Test#StaticClass#`<init>`().
+com/javacp/Test#StaticClass#`<init>`().
 =======================================
 --- metac
 +++ metacp
@@ -708,13 +656,13 @@ com.javacp.Test#StaticClass#`<init>`().
 -  tag: PUBLIC
 -  symbol: ""
 +  tag: PRIVATE_WITHIN
-+  symbol: "com.javacp."
++  symbol: "com/javacp/"
  language: JAVA
  signature {
 
 
 ===================
-com.javacp.Test#[A]
+com/javacp/Test#[A]
 ===================
 --- metac
 +++ metacp
@@ -732,7 +680,7 @@ com.javacp.Test#[A]
      lower_bound {
 -      typeRef {
 -        prefix {
--        symbol: "scala.Nothing#"
+-        symbol: "scala/Nothing#"
      upper_bound {
 -      structuralType {
 -        tpe {
@@ -740,7 +688,7 @@ com.javacp.Test#[A]
 -            types {
 -              typeRef {
 -                prefix {
--                symbol: "java.lang.CharSequence#"
+-                symbol: "java/lang/CharSequence#"
 +      intersectionType {
 +        types {
 +          typeRef {
@@ -748,17 +696,17 @@ com.javacp.Test#[A]
 -            types {
 -              typeRef {
 -                prefix {
--                symbol: "java.io.Serializable#"
-+            symbol: "java.lang.CharSequence#"
+-                symbol: "java/io/Serializable#"
++            symbol: "java/lang/CharSequence#"
 +        types {
 +          typeRef {
 +            prefix {
-+            symbol: "java.io.Serializable#"
++            symbol: "java/io/Serializable#"
 -        declarations {
 
 
 ===================
-com.javacp.Test#[B]
+com/javacp/Test#[B]
 ===================
 --- metac
 +++ metacp
@@ -776,20 +724,20 @@ com.javacp.Test#[B]
      lower_bound {
 -      typeRef {
 -        prefix {
--        symbol: "scala.Nothing#"
+-        symbol: "scala/Nothing#"
      upper_bound {
        typeRef {
          prefix {
--        symbol: "scala.Any#"
-+        symbol: "java.lang.Object#"
+-        symbol: "scala/Any#"
++        symbol: "java/lang/Object#"
 
 
 ===========================
-com.javacp.Test#arrayField.
+com/javacp/Test#arrayField.
 ===========================
 --- metac
 +++ metacp
- symbol: "com.javacp.Test#arrayField."
+ symbol: "com/javacp/Test#arrayField."
  kind: FIELD
 -properties: 0
 +properties: 8
@@ -799,7 +747,7 @@ com.javacp.Test#arrayField.
 
 
 ======================================
-com.javacp.Test#methodTypeParams().[C]
+com/javacp/Test#methodTypeParams().[C]
 ======================================
 --- metac
 +++ metacp
@@ -817,13 +765,13 @@ com.javacp.Test#methodTypeParams().[C]
      lower_bound {
 -      typeRef {
 -        prefix {
--        symbol: "scala.Nothing#"
+-        symbol: "scala/Nothing#"
      upper_bound {
        typeRef {
 
 
 ===============================
-com.javacp.Test#protectedField.
+com/javacp/Test#protectedField.
 ===============================
 --- metac
 +++ metacp
@@ -831,7 +779,7 @@ com.javacp.Test#protectedField.
  name: "protectedField"
  accessibility {
 -  tag: PROTECTED_WITHIN
--  symbol: "com.javacp."
+-  symbol: "com/javacp/"
 +  tag: PROTECTED
 +  symbol: ""
  language: JAVA
@@ -839,7 +787,7 @@ com.javacp.Test#protectedField.
 
 
 ==================================
-com.javacp.Test#protectedMethod().
+com/javacp/Test#protectedMethod().
 ==================================
 --- metac
 +++ metacp
@@ -847,7 +795,7 @@ com.javacp.Test#protectedMethod().
  name: "protectedMethod"
  accessibility {
 -  tag: PROTECTED_WITHIN
--  symbol: "com.javacp."
+-  symbol: "com/javacp/"
 +  tag: PROTECTED
 +  symbol: ""
  language: JAVA
@@ -855,7 +803,7 @@ com.javacp.Test#protectedMethod().
 
 
 =================================
-com.javacp.Test#strictfpMethod().
+com/javacp/Test#strictfpMethod().
 =================================
 --- metac
 +++ metacp
@@ -866,15 +814,15 @@ com.javacp.Test#strictfpMethod().
 +  tpe {
 +    typeRef {
 +      prefix {
-+      symbol: "scala.annotation.strictfp#"
++      symbol: "scala/annotation/strictfp#"
 +}
  accessibility {
    tag: PRIVATE_WITHIN
-   symbol: "com.javacp."
+   symbol: "com/javacp/"
 
 
 =====================================
-com.javacp.Test#wildcard().(wildcard)
+com/javacp/Test#wildcard().(wildcard)
 =====================================
 --- metac
 +++ metacp
@@ -885,11 +833,11 @@ com.javacp.Test#wildcard().(wildcard)
 -        tpe {
 +      typeRef {
 +        prefix {
-+        symbol: "java.util.ArrayList#"
++        symbol: "java/util/ArrayList#"
 +        type_arguments {
            typeRef {
              prefix {
--            symbol: "java.util.ArrayList#"
+-            symbol: "java/util/ArrayList#"
 -            type_arguments {
 -              typeRef {
 -                prefix {
@@ -911,15 +859,15 @@ com.javacp.Test#wildcard().(wildcard)
 -                lower_bound {
 -                  typeRef {
 -                    prefix {
--                    symbol: "scala.Nothing#"
+-                    symbol: "scala/Nothing#"
 -                upper_bound {
 -                  typeRef {
 -                    prefix {
--                    symbol: "scala.Any#"
+-                    symbol: "scala/Any#"
 
 
 ================================
-com.javacp.Test#wildcard(+1).(a)
+com/javacp/Test#wildcard(+1).(a)
 ================================
 --- metac
 +++ metacp
@@ -930,16 +878,16 @@ com.javacp.Test#wildcard(+1).(a)
 -        tpe {
 +      typeRef {
 +        prefix {
-+        symbol: "java.util.Collection#"
++        symbol: "java/util/Collection#"
 +        type_arguments {
            typeRef {
              prefix {
--            symbol: "java.util.Collection#"
+-            symbol: "java/util/Collection#"
 -            type_arguments {
 -              typeRef {
 -                prefix {
 -                symbol: "local2"
-+            symbol: "java.lang.Number#"
++            symbol: "java/lang/Number#"
 -        declarations {
 -          hardlinks {
 -            symbol: "local2"
@@ -956,15 +904,15 @@ com.javacp.Test#wildcard(+1).(a)
 -                lower_bound {
 -                  typeRef {
 -                    prefix {
--                    symbol: "scala.Nothing#"
+-                    symbol: "scala/Nothing#"
 -                upper_bound {
 -                  typeRef {
 -                    prefix {
--                    symbol: "java.lang.Number#"
+-                    symbol: "java/lang/Number#"
 
 
 ================================
-com.javacp.Test#wildcard(+1).(b)
+com/javacp/Test#wildcard(+1).(b)
 ================================
 --- metac
 +++ metacp
@@ -975,16 +923,16 @@ com.javacp.Test#wildcard(+1).(b)
 -        tpe {
 +      typeRef {
 +        prefix {
-+        symbol: "java.util.Collection#"
++        symbol: "java/util/Collection#"
 +        type_arguments {
            typeRef {
              prefix {
--            symbol: "java.util.Collection#"
+-            symbol: "java/util/Collection#"
 -            type_arguments {
 -              typeRef {
 -                prefix {
 -                symbol: "local4"
-+            symbol: "java.lang.Number#"
++            symbol: "java/lang/Number#"
 -        declarations {
 -          hardlinks {
 -            symbol: "local4"
@@ -1001,31 +949,45 @@ com.javacp.Test#wildcard(+1).(b)
 -                lower_bound {
 -                  typeRef {
 -                    prefix {
--                    symbol: "java.lang.Number#"
+-                    symbol: "java/lang/Number#"
 -                upper_bound {
 -                  typeRef {
 -                    prefix {
--                    symbol: "scala.Any#"
+-                    symbol: "scala/Any#"
 
 
 ============
-example.Acc#
+example/Acc#
 ============
 --- metac
 +++ metacp
-       symlinks: "example.Acc#`<init>`()."
-       symlinks: "example.Acc#m1()."
-       symlinks: "example.Acc#m2()."
--      symlinks: "example.Acc#m3()."
-       symlinks: "example.Acc#m4()."
-       symlinks: "example.Acc#m5()."
-       symlinks: "example.Acc#m6()."
-       symlinks: "example.Acc#m7()."
-+      symlinks: "example.Acc#m3()."
+       symlinks: "example/Acc#`<init>`()."
+       symlinks: "example/Acc#m1()."
+       symlinks: "example/Acc#m2()."
+-      symlinks: "example/Acc#m3()."
+       symlinks: "example/Acc#m4()."
+       symlinks: "example/Acc#m5()."
+       symlinks: "example/Acc#m6()."
+       symlinks: "example/Acc#m7()."
++      symlinks: "example/Acc#m3()."
+
+
+==========================
+example/MetacJava#entry().
+==========================
+--- metac
++++ metacp
+       typeRef {
+         prefix {
+-        symbol: "java/util/Map#Entry#"
++        symbol: "java.util.Map#Entry#"
+         type_arguments {
+           typeRef {
+             prefix {
 
 
 =========================
-example.Methods#m13().(x)
+example/Methods#m13().(x)
 =========================
 --- metac
 +++ metacp
@@ -1036,38 +998,38 @@ example.Methods#m13().(x)
 -        tpe {
 -          typeRef {
 -            prefix {
--            symbol: "scala.Int#"
+-            symbol: "scala/Int#"
 +      typeRef {
 +        prefix {
 -        annotations {
 -          tpe {
 -            typeRef {
 -              prefix {
--              symbol: "scala.unchecked#"
-+        symbol: "scala.Int#"
+-              symbol: "scala/unchecked#"
++        symbol: "scala/Int#"
 
 
 ================
-flags.p.package.
+flags/p/package.
 ================
 --- metac
 +++ metacp
-       symlinks: "flags.p.package.C#"
-       symlinks: "flags.p.package.T1#"
-       symlinks: "flags.p.package.T2#"
-+      symlinks: "flags.p.package.S#"
-       symlinks: "flags.p.package.U#"
-       symlinks: "flags.p.package.V#"
-       symlinks: "flags.p.package.X."
-       symlinks: "flags.p.package.Y#"
-       symlinks: "flags.p.package.Z#"
-       symlinks: "flags.p.package.AA#"
--      symlinks: "flags.p.package.S#"
-       symlinks: "flags.p.package.xs1()."
+       symlinks: "flags/p/package.C#"
+       symlinks: "flags/p/package.T1#"
+       symlinks: "flags/p/package.T2#"
++      symlinks: "flags/p/package.S#"
+       symlinks: "flags/p/package.U#"
+       symlinks: "flags/p/package.V#"
+       symlinks: "flags/p/package.X."
+       symlinks: "flags/p/package.Y#"
+       symlinks: "flags/p/package.Z#"
+       symlinks: "flags/p/package.AA#"
+-      symlinks: "flags/p/package.S#"
+       symlinks: "flags/p/package.xs1()."
 
 
 =====================
-flags.p.package.S#[T]
+flags/p/package.S#[T]
 =====================
 --- metac
 +++ metacp
@@ -1078,15 +1040,26 @@ flags.p.package.S#[T]
 -  tpe {
 -    typeRef {
 -      prefix {
--      symbol: "scala.specialized#"
+-      symbol: "scala/specialized#"
 -}
  accessibility {
    tag: PUBLIC
    symbol: ""
 
 
+======================
+types/Test.C#Either().
+======================
+--- metac
++++ metacp
+       singleType {
+         prefix {
+-        symbol: "scala/util/Either."
++        symbol: "scala/util.Either."
+
+
 ========================
-types.Test.C#annType1().
+types/Test.C#annType1().
 ========================
 --- metac
 +++ metacp
@@ -1094,15 +1067,15 @@ types.Test.C#annType1().
            tpe {
 -            typeRef {
 -              prefix {
--              symbol: "types.ann#"
+-              symbol: "types/ann#"
 -              type_arguments {
 -                typeRef {
 -                  prefix {
--                  symbol: "scala.Int#"
+-                  symbol: "scala/Int#"
 
 
 ========================
-types.Test.C#annType2().
+types/Test.C#annType2().
 ========================
 --- metac
 +++ metacp
@@ -1110,16 +1083,16 @@ types.Test.C#annType2().
            tpe {
 -            typeRef {
 -              prefix {
--              symbol: "types.ann1#"
+-              symbol: "types/ann1#"
          annotations {
            tpe {
 -            typeRef {
 -              prefix {
--              symbol: "types.ann2#"
+-              symbol: "types/ann2#"
 
 
 =============================
-types.Test.C#compoundType3().
+types/Test.C#compoundType3().
 =============================
 --- metac
 +++ metacp
@@ -1133,7 +1106,7 @@ types.Test.C#compoundType3().
 
 
 =============================
-types.Test.C#compoundType4().
+types/Test.C#compoundType4().
 =============================
 --- metac
 +++ metacp
@@ -1147,7 +1120,7 @@ types.Test.C#compoundType4().
 
 
 =============================
-types.Test.C#compoundType6().
+types/Test.C#compoundType6().
 =============================
 --- metac
 +++ metacp
@@ -1161,7 +1134,7 @@ types.Test.C#compoundType6().
 
 
 ================================
-types.Test.C#existentialType1().
+types/Test.C#existentialType1().
 ================================
 --- metac
 +++ metacp
@@ -1179,7 +1152,7 @@ types.Test.C#existentialType1().
 
 
 ================================
-types.Test.C#existentialType2().
+types/Test.C#existentialType2().
 ================================
 --- metac
 +++ metacp
@@ -1197,17 +1170,31 @@ types.Test.C#existentialType2().
 
 
 ===========================
-types.Test.C#singleType2().
+types/Test.C#singleType2().
 ===========================
 --- metac
 +++ metacp
-             symbol: "types.Test.C#p()."
--        symbol: "types.P#x()."
-+        symbol: "types.P#x."
+             symbol: "types/Test.C#p()."
+-        symbol: "types/P#x()."
++        symbol: "types/P#x."
+
+
+=============================
+types/Test.Literal.clazzOf().
+=============================
+--- metac
++++ metacp
+       typeRef {
+         prefix {
+-        symbol: "java/lang/Class#"
++        symbol: "java.lang.Class#"
+         type_arguments {
+           typeRef {
+             prefix {
 
 
 ==============================
-types.Test.Literal.javaEnum().
+types/Test.Literal.javaEnum().
 ==============================
 --- metac
 +++ metacp
@@ -1218,6 +1205,6 @@ types.Test.Literal.javaEnum().
 -    return_type {
 -      singleType {
 -        prefix {
--        symbol: "java.nio.file.LinkOption#NOFOLLOW_LINKS."
+-        symbol: "java/nio/file/LinkOption#NOFOLLOW_LINKS."
 
 

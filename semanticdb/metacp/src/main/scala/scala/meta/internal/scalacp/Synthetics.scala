@@ -38,7 +38,7 @@ object Synthetics {
       accessibility = Some(s.Accessibility(a.PUBLIC)))
 
     val setterSig = {
-      val unit = s.TypeRef(s.NoType, "scala.Unit#", Nil)
+      val unit = s.TypeRef(s.NoType, "scala/Unit#", Nil)
       val setterParamss = {
         linkMode match {
           case SymlinkChildren => List(s.Scope(symlinks = List(paramInfo.symbol)))

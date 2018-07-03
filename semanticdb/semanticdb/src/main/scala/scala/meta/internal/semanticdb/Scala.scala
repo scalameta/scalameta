@@ -7,8 +7,8 @@ import scala.meta.internal.semanticdb.Scala.{Names => n}
 object Scala {
   object Symbols {
     val None: String = ""
-    val RootPackage: String = "_root_."
-    val EmptyPackage: String = "_empty_."
+    val RootPackage: String = "_root_/"
+    val EmptyPackage: String = "_empty_/"
     def Global(owner: String, desc: Descriptor): String =
       if (owner != RootPackage) owner + desc.toString
       else desc.toString
