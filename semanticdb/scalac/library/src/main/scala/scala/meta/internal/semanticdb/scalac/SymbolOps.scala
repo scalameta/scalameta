@@ -31,6 +31,8 @@ trait SymbolOps { self: SemanticdbOps =>
             d.Parameter(sym.name.toSemantic)
           } else if (sym.isType || sym.isJavaClass) {
             d.Type(sym.name.toSemantic)
+          } else if (sym.hasPackageFlag) {
+            d.Package(sym.name.toSemantic)
           } else {
             d.Term(sym.name.toSemantic)
           }

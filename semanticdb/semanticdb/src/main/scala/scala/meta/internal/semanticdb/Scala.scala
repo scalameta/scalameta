@@ -35,7 +35,7 @@ object Scala {
       symbol == Symbols.EmptyPackage
     def isGlobal: Boolean =
       !isNone && !isMulti && (symbol.last match {
-        case '.' | '#' | ')' | ']' => true
+        case '.' | '#' | '/' | ')' | ']' => true
         case _ => false
       })
     def isLocal: Boolean =
@@ -103,6 +103,7 @@ object Scala {
     def isTerm: Boolean = this.isInstanceOf[d.Term]
     def isMethod: Boolean = this.isInstanceOf[d.Method]
     def isType: Boolean = this.isInstanceOf[d.Type]
+    def isPackage: Boolean = this.isInstanceOf[d.Package]
     def isParameter: Boolean = this.isInstanceOf[d.Parameter]
     def isTypeParameter: Boolean = this.isInstanceOf[d.TypeParameter]
     def name: String
@@ -112,6 +113,7 @@ object Scala {
         case d.Term(name) => s"${name.encoded}."
         case d.Method(name, disambiguator) => s"${name.encoded}${disambiguator}."
         case d.Type(name) => s"${name.encoded}#"
+        case d.Package(name) => s"${name.encoded}/"
         case d.Parameter(name) => s"(${name.encoded})"
         case d.TypeParameter(name) => s"[${name.encoded}]"
       }
@@ -122,6 +124,7 @@ object Scala {
     final case class Term(name: String) extends Descriptor
     final case class Method(name: String, disambiguator: String) extends Descriptor
     final case class Type(name: String) extends Descriptor
+    final case class Package(name: String) extends Descriptor
     final case class Parameter(name: String) extends Descriptor
     final case class TypeParameter(name: String) extends Descriptor
   }
@@ -213,6 +216,9 @@ object Scala {
       } else if (currChar == '#') {
         readChar()
         d.Type(parseName())
+      } else if (currChar == '/') {
+        readChar()
+        d.Package(parseName())
       } else if (currChar == ')') {
         readChar()
         val name = parseName()

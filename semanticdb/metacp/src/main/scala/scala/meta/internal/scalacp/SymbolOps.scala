@@ -65,7 +65,7 @@ trait SymbolOps { _: Scalacp =>
     def descriptor: Descriptor = {
       val name = sym.name.toSemantic
       sym.kind match {
-        case k.LOCAL | k.OBJECT | k.PACKAGE | k.PACKAGE_OBJECT =>
+        case k.LOCAL | k.OBJECT | k.PACKAGE_OBJECT =>
           d.Term(name)
         case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
           val overloads = {
@@ -86,6 +86,8 @@ trait SymbolOps { _: Scalacp =>
           d.Method(name, disambiguator)
         case k.TYPE | k.CLASS | k.TRAIT =>
           d.Type(name)
+        case k.PACKAGE =>
+          d.Package(name)
         case k.PARAMETER =>
           d.Parameter(name)
         case k.TYPE_PARAMETER =>

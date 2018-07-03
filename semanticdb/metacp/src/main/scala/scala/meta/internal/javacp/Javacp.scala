@@ -367,7 +367,7 @@ object Javacp {
       if (c == '/') {
         slash = true
         flush()
-        result.append('.')
+        result.append('/')
       } else if (c == '$') {
         flush()
         result.append('#')

@@ -67,7 +67,8 @@ trait SymbolInformationOps { self: Scalacp =>
           }
           val isModuleClass = sym.entry.entryType == 10
           def isScalaObject: Boolean = isModuleClass && !sym.isJavaDefined
-          if (hasTermName || isScalaObject) k.OBJECT
+          if (hasTermName && sym.isPackageAccordingToClasspath) k.PACKAGE
+          else if (hasTermName || isScalaObject) k.OBJECT
           else k.CLASS
         case NoSymbol =>
           k.UNKNOWN_KIND
