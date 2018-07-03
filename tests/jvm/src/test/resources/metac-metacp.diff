@@ -1193,20 +1193,6 @@ types/Test.C#singleType2().
 +        symbol: "types/P#x."
 
 
-=============================
-types/Test.Literal.clazzOf().
-=============================
---- metac
-+++ metacp
-       typeRef {
-         prefix {
--        symbol: "java/lang/Class#"
-+        symbol: "java.lang.Class#"
-         type_arguments {
-           typeRef {
-             prefix {
-
-
 ==============================
 types/Test.Literal.javaEnum().
 ==============================

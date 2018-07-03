@@ -48,7 +48,7 @@ trait TypeOps { self: Scalacp =>
             loop(underlying) match {
               case s.NoType => s.NoType
               case sarg =>
-                val ssym = "java.lang.Class#"
+                val ssym = "java/lang/Class#"
                 val sargs = sarg :: Nil
                 s.TypeRef(s.NoType, ssym, sargs)
             }
