@@ -7,6 +7,7 @@ _empty_/
 _root_/
   _empty_.
   advanced/
+  annot/
   classes/
   com/
   example/
@@ -23,6 +24,11 @@ advanced/
   advanced/Existential#
   advanced/Structural#
   advanced/Test.
+annot/
+  annot/Annotations#
+  annot/B#
+  annot/M.
+  annot/T#
 classes/
   classes/C1#
   classes/C2#
@@ -49,6 +55,27 @@ com/javacp/
   com/javacp/NonGeneric#
   com/javacp/Recursive#
   com/javacp/Test#
+  com/javacp/annot/
+com/javacp/annot/
+  com/javacp/annot/ClassAnnotation#
+  com/javacp/annot/ConstructorAnnotation#
+  com/javacp/annot/FieldAnnotation#
+  com/javacp/annot/InterfaceAnnotation#
+  com/javacp/annot/LocalAnnotation#
+  com/javacp/annot/MacroAnnotation#
+  com/javacp/annot/MethodAnnotation#
+  com/javacp/annot/ObjectAnnotation#
+  com/javacp/annot/PackageAnnotation#
+  com/javacp/annot/PackageObjectAnnotation#
+  com/javacp/annot/ParameterAnnotation#
+  com/javacp/annot/SelfParameterAnnotation#
+  com/javacp/annot/TraitAnnotation#
+  com/javacp/annot/TypeAnnotation#
+  com/javacp/annot/TypeParameterAnnotation#
+  com/javacp/annot/usage/
+com/javacp/annot/usage/
+  com/javacp/annot/usage/AnnotatedInterface#
+  com/javacp/annot/usage/AnnotatedPackage#
 example/
   example/A#
   example/Acc#
@@ -110,6 +137,10 @@ advanced/D# => advanced/D.class.semanticdb
 advanced/Existential# => advanced/Existential.class.semanticdb
 advanced/Structural# => advanced/Structural.class.semanticdb
 advanced/Test. => advanced/Test.class.semanticdb
+annot/Annotations# => annot/Annotations.class.semanticdb
+annot/B# => annot/B.class.semanticdb
+annot/M. => annot/M.class.semanticdb
+annot/T# => annot/T.class.semanticdb
 classes/C1# => classes/C1.class.semanticdb
 classes/C2# => classes/C2.class.semanticdb
 classes/C2. => classes/C2.class.semanticdb
@@ -132,6 +163,23 @@ com/javacp/MetacJava# => com/javacp/MetacJava.class.semanticdb
 com/javacp/NonGeneric# => com/javacp/NonGeneric.class.semanticdb
 com/javacp/Recursive# => com/javacp/Recursive.class.semanticdb
 com/javacp/Test# => com/javacp/Test.class.semanticdb
+com/javacp/annot/ClassAnnotation# => com/javacp/annot/ClassAnnotation.class.semanticdb
+com/javacp/annot/ConstructorAnnotation# => com/javacp/annot/ConstructorAnnotation.class.semanticdb
+com/javacp/annot/FieldAnnotation# => com/javacp/annot/FieldAnnotation.class.semanticdb
+com/javacp/annot/InterfaceAnnotation# => com/javacp/annot/InterfaceAnnotation.class.semanticdb
+com/javacp/annot/LocalAnnotation# => com/javacp/annot/LocalAnnotation.class.semanticdb
+com/javacp/annot/MacroAnnotation# => com/javacp/annot/MacroAnnotation.class.semanticdb
+com/javacp/annot/MethodAnnotation# => com/javacp/annot/MethodAnnotation.class.semanticdb
+com/javacp/annot/ObjectAnnotation# => com/javacp/annot/ObjectAnnotation.class.semanticdb
+com/javacp/annot/PackageAnnotation# => com/javacp/annot/PackageAnnotation.class.semanticdb
+com/javacp/annot/PackageObjectAnnotation# => com/javacp/annot/PackageObjectAnnotation.class.semanticdb
+com/javacp/annot/ParameterAnnotation# => com/javacp/annot/ParameterAnnotation.class.semanticdb
+com/javacp/annot/SelfParameterAnnotation# => com/javacp/annot/SelfParameterAnnotation.class.semanticdb
+com/javacp/annot/TraitAnnotation# => com/javacp/annot/TraitAnnotation.class.semanticdb
+com/javacp/annot/TypeAnnotation# => com/javacp/annot/TypeAnnotation.class.semanticdb
+com/javacp/annot/TypeParameterAnnotation# => com/javacp/annot/TypeParameterAnnotation.class.semanticdb
+com/javacp/annot/usage/AnnotatedInterface# => com/javacp/annot/usage/AnnotatedInterface.class.semanticdb
+com/javacp/annot/usage/AnnotatedPackage# => com/javacp/annot/usage/AnnotatedPackage.class.semanticdb
 example/A# => example/A.class.semanticdb
 example/Acc# => example/Acc.class.semanticdb
 example/Anonymous# => example/Anonymous.class.semanticdb

@@ -215,9 +215,29 @@ trait SymbolInformationOps { self: Scalacp =>
       }
     }
 
+    private val syntheticAnnotationsSymbols = Set(
+      "scala.reflect.macros.internal.macroImpl#"
+    )
+    private def syntheticAnnotations(annot: s.Annotation): Boolean = {
+      annot.tpe match {
+        case s.TypeRef(_, sym, _) => syntheticAnnotationsSymbols.contains(sym)
+        case _ => false
+      }
+    }
+
     private def annotations: List[s.Annotation] = {
-      // FIXME: https://github.com/scalameta/scalameta/issues/1315
-      Nil
+      sym match {
+        case c: ScalaSigSymbol =>
+          val annots =
+            c.attributes
+              .map(attribute => s.Annotation(attribute.typeRef.toSemanticTpe))
+              .toList
+
+          annots.filterNot(syntheticAnnotations)
+
+        case _ =>
+          Nil
+      }
     }
 
     private def accessibility: Option[s.Accessibility] = {

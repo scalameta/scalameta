@@ -6,6 +6,7 @@ _empty_/
 _root_/
   _empty_/
   advanced/
+  annot/
   classes/
   com/
   example/
@@ -21,6 +22,11 @@ advanced/
   advanced/Existential#
   advanced/Structural#
   advanced/Test.
+annot/
+  annot/Annotations#
+  annot/B#
+  annot/M.
+  annot/T#
 classes/
   classes/C1#
   classes/C2#
@@ -47,6 +53,27 @@ com/javacp/
   com/javacp/NonGeneric#
   com/javacp/Recursive#
   com/javacp/Test#
+  com/javacp/annot/
+com/javacp/annot/
+  com/javacp/annot/ClassAnnotation#
+  com/javacp/annot/ConstructorAnnotation#
+  com/javacp/annot/FieldAnnotation#
+  com/javacp/annot/InterfaceAnnotation#
+  com/javacp/annot/LocalAnnotation#
+  com/javacp/annot/MacroAnnotation#
+  com/javacp/annot/MethodAnnotation#
+  com/javacp/annot/ObjectAnnotation#
+  com/javacp/annot/PackageAnnotation#
+  com/javacp/annot/PackageObjectAnnotation#
+  com/javacp/annot/ParameterAnnotation#
+  com/javacp/annot/SelfParameterAnnotation#
+  com/javacp/annot/TraitAnnotation#
+  com/javacp/annot/TypeAnnotation#
+  com/javacp/annot/TypeParameterAnnotation#
+  com/javacp/annot/usage/
+com/javacp/annot/usage/
+  com/javacp/annot/usage/AnnotatedInterface#
+  com/javacp/annot/usage/AnnotatedPackage#
 example/
   example/A#
   example/Acc#
@@ -106,6 +133,10 @@ advanced/D# => semanticdb/integration/src/main/scala/example/Advanced.scala.sema
 advanced/Existential# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 advanced/Structural# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 advanced/Test. => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
+annot/Annotations# => semanticdb/integration/src/main/scala/example/Annotations.scala.semanticdb
+annot/B# => semanticdb/integration/src/main/scala/example/Annotations.scala.semanticdb
+annot/M. => semanticdb/integration/src/main/scala/example/Annotations.scala.semanticdb
+annot/T# => semanticdb/integration/src/main/scala/example/Annotations.scala.semanticdb
 classes/C1# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes/C2# => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
 classes/C2. => semanticdb/integration/src/main/scala/example/Classes.scala.semanticdb
@@ -128,6 +159,23 @@ com/javacp/MetacJava# => semanticdb/integration/src/main/java/com/javacp/MetacJa
 com/javacp/NonGeneric# => semanticdb/integration/src/main/java/com/javacp/NonGeneric.java.semanticdb
 com/javacp/Recursive# => semanticdb/integration/src/main/java/com/javacp/Recursive.java.semanticdb
 com/javacp/Test# => semanticdb/integration/src/main/java/com/javacp/Test.java.semanticdb
+com/javacp/annot/ClassAnnotation# => semanticdb/integration/src/main/java/com/javacp/annot/ClassAnnotation.java.semanticdb
+com/javacp/annot/ConstructorAnnotation# => semanticdb/integration/src/main/java/com/javacp/annot/ConstructorAnnotation.java.semanticdb
+com/javacp/annot/FieldAnnotation# => semanticdb/integration/src/main/java/com/javacp/annot/FieldAnnotation.java.semanticdb
+com/javacp/annot/InterfaceAnnotation# => semanticdb/integration/src/main/java/com/javacp/annot/InterfaceAnnotation.java.semanticdb
+com/javacp/annot/LocalAnnotation# => semanticdb/integration/src/main/java/com/javacp/annot/LocalAnnotation.java.semanticdb
+com/javacp/annot/MacroAnnotation# => semanticdb/integration/src/main/java/com/javacp/annot/MacroAnnotation.java.semanticdb
+com/javacp/annot/MethodAnnotation# => semanticdb/integration/src/main/java/com/javacp/annot/MethodAnnotation.java.semanticdb
+com/javacp/annot/ObjectAnnotation# => semanticdb/integration/src/main/java/com/javacp/annot/ObjectAnnotation.java.semanticdb
+com/javacp/annot/PackageAnnotation# => semanticdb/integration/src/main/java/com/javacp/annot/PackageAnnotation.java.semanticdb
+com/javacp/annot/PackageObjectAnnotation# => semanticdb/integration/src/main/java/com/javacp/annot/PackageObjectAnnotation.java.semanticdb
+com/javacp/annot/ParameterAnnotation# => semanticdb/integration/src/main/java/com/javacp/annot/ParameterAnnotation.java.semanticdb
+com/javacp/annot/SelfParameterAnnotation# => semanticdb/integration/src/main/java/com/javacp/annot/SelfParameterAnnotation.java.semanticdb
+com/javacp/annot/TraitAnnotation# => semanticdb/integration/src/main/java/com/javacp/annot/TraitAnnotation.java.semanticdb
+com/javacp/annot/TypeAnnotation# => semanticdb/integration/src/main/java/com/javacp/annot/TypeAnnotation.java.semanticdb
+com/javacp/annot/TypeParameterAnnotation# => semanticdb/integration/src/main/java/com/javacp/annot/TypeParameterAnnotation.java.semanticdb
+com/javacp/annot/usage/AnnotatedInterface# => semanticdb/integration/src/main/java/com/javacp/annot/usage/AnnotatedInterface.java.semanticdb
+com/javacp/annot/usage/AnnotatedPackage# => semanticdb/integration/src/main/java/com/javacp/annot/usage/AnnotatedPackage.java.semanticdb
 example/A# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
 example/Acc# => semanticdb/integration/src/main/scala/example/Accessibility.scala.semanticdb
 example/Anonymous# => semanticdb/integration/src/main/scala/example/Anonymous.scala.semanticdb
