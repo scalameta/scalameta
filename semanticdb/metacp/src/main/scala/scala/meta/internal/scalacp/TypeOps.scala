@@ -29,7 +29,7 @@ trait TypeOps { self: Scalacp =>
               // companion classes, not module classes (see #1392).
               // We assume that it's a mistake and work around accordingly.
               val raw = sym.ssym
-              if (raw.endsWith("#")) raw.stripSuffix("#") + "."
+              if (raw.isType) Symbols.Global(raw.owner, Descriptor.Term(raw.desc.name))
               else raw
             }
             s.SingleType(spre, ssym)
