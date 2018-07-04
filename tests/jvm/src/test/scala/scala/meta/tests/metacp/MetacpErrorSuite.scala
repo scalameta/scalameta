@@ -3,6 +3,7 @@ package scala.meta.tests.metacp
 import java.nio.file._
 import org.scalatest.FunSuite
 import org.scalatest.tagobjects.Slow
+import scala.collection.JavaConverters._
 import scala.meta.cli.Metacp
 import scala.meta.io._
 import scala.meta.metacp.Settings
@@ -57,5 +58,36 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
       Metacp.process(settings.withClasspath(classpath), reporter)
     }
     assert(classpath.isEmpty)
+    assert(err.isEmpty)
+    assertNoDiffOrPrintExpected(
+      out,
+      """|missing symbol: scala
+         |NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
+      """.stripMargin
+    )
+  }
+
+  test("missing symbol 3") {
+    val cacheDir = Files.createTempDirectory("metacp")
+    cacheDir.toFile.deleteOnExit()
+    val resources = Paths.get("tests", "jvm", "src", "test", "resources")
+    val manifest = resources.resolve("manifest.jar")
+    val settings = Settings()
+      .withCacheDir(AbsolutePath(cacheDir))
+      .withClasspath(Classpath(AbsolutePath(manifest)))
+
+    assert(!Files.list(cacheDir).iterator.hasNext)
+    val (classpath, out, err) = CliSuite.withReporter { reporter =>
+      Metacp.process(settings, reporter)
+    }
+    assert(classpath.isEmpty)
+    assert(err.isEmpty)
+    assertNoDiffOrPrintExpected(
+      out,
+      """|missing symbol: scala
+         |NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
+      """.stripMargin
+    )
+    assert(!Files.list(cacheDir).iterator.hasNext)
   }
 }
