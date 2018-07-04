@@ -19,5 +19,5 @@ trait SemanticdbOps
     with TypeOps {
   val global: Global
   var config: SemanticdbConfig = SemanticdbConfig.default
-  val index: Index = new Index
+  val semanticdbIndex: SemanticdbIndex = new SemanticdbIndex
 }

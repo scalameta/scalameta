@@ -161,12 +161,12 @@ trait SymbolOps { _: Scalacp =>
               case Some(p) =>
                 def classpathSaysSymbolIsFromJava(): Boolean = {
                   val javaClassName = sym.name + ".class"
-                  index.getClassfile(p.packageResourceName, javaClassName) match {
+                  classpathIndex.getClassfile(p.packageResourceName, javaClassName) match {
                     case Some(entry) =>
                       !entry.hasScalaSig
                     case None =>
                       val scalaObjectName = sym.name + "$.class"
-                      index.getClassfile(p.packageResourceName, scalaObjectName) match {
+                      classpathIndex.getClassfile(p.packageResourceName, scalaObjectName) match {
                         case Some(objectClassfile) =>
                           if (objectClassfile.hasScalaSig) false
                           else throw MissingSymbolException(sym)
@@ -185,7 +185,7 @@ trait SymbolOps { _: Scalacp =>
     // query the classpath to know which symbols are truly packages.
     def isPackageAccordingToClasspath: Boolean = {
       if (sym.isRootPackage || sym.isEmptyPackage) true
-      else index.isClassdir(packageResourceName)
+      else classpathIndex.isClassdir(packageResourceName)
     }
     def packageResourceName: String = {
       ownerChain.map(_.name).mkString("", "/", "/")

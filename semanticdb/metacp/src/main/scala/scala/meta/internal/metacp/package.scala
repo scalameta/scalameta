@@ -2,6 +2,7 @@ package scala.meta.internal
 
 import java.io.InputStream
 import java.nio.file.Files
+import scala.meta.internal.classpath._
 import scala.meta.io.AbsolutePath
 import scala.tools.asm._
 import scala.tools.asm.ClassReader._

@@ -1,6 +1,7 @@
 package scala.meta.internal.scalacp
 
 import java.nio.file._
+import scala.meta.internal.classpath._
 import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
@@ -13,7 +14,7 @@ import scala.tools.scalap.scalax.rules.scalasig._
 final class Scalacp private (
     val classfile: ToplevelClassfile,
     val settings: Settings,
-    val index: ClasspathIndex
+    val classpathIndex: ClasspathIndex
 ) extends AnnotationOps
     with NameOps
     with SymbolInformationOps
@@ -67,9 +68,9 @@ object Scalacp {
   def parse(
       classfile: ToplevelClassfile,
       settings: Settings,
-      index: ClasspathIndex
+      classpathIndex: ClasspathIndex
   ): Option[ToplevelInfos] = {
-    val scalacp = new Scalacp(classfile, settings, index)
+    val scalacp = new Scalacp(classfile, settings, classpathIndex)
     scalacp.parse()
   }
 }

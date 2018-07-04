@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.jar._
 import scala.collection.JavaConverters._
 import scala.meta.cli._
+import scala.meta.internal.classpath._
 import scala.meta.internal.index._
 import scala.meta.internal.javacp._
 import scala.meta.internal.scalacp._
@@ -47,9 +48,9 @@ class Main(settings: Settings, reporter: Reporter) {
     classpath.foreach { entry =>
       if (entry.isDirectory) {
         val out = AbsolutePath(Files.createTempDirectory("semanticdb"))
-        val index = new Index
-        val res = convertClasspathEntry(entry, out, index)
-        index.save(out)
+        val semanticdbIndex = new SemanticdbIndex
+        val res = convertClasspathEntry(entry, out, semanticdbIndex)
+        semanticdbIndex.save(out)
         success.compareAndSet(true, res)
         buffer.add(out)
       } else if (entry.isFile) {
@@ -62,9 +63,9 @@ class Main(settings: Settings, reporter: Reporter) {
           buffer.add(cacheEntry)
         } else {
           createCachedJar(cacheEntry) { out =>
-            val index = new Index
+            val semanticdbIndex = new SemanticdbIndex
             def loop(entry: AbsolutePath): Boolean = {
-              var result = convertClasspathEntry(entry, out, index)
+              var result = convertClasspathEntry(entry, out, semanticdbIndex)
               if (entry.isFile) {
                 val jar = new JarFile(entry.toFile)
                 val manifest = jar.getManifest
@@ -81,7 +82,7 @@ class Main(settings: Settings, reporter: Reporter) {
               result
             }
             val result = loop(entry)
-            index.save(out)
+            semanticdbIndex.save(out)
             result
           }
         }
@@ -111,7 +112,10 @@ class Main(settings: Settings, reporter: Reporter) {
     }
   }
 
-  private def convertClasspathEntry(in: AbsolutePath, out: AbsolutePath, index: Index): Boolean = {
+  private def convertClasspathEntry(
+      in: AbsolutePath,
+      out: AbsolutePath,
+      semanticdbIndex: SemanticdbIndex): Boolean = {
     var success = true
     val classpath = Classpath(in)
     classpath.visit { base =>
@@ -139,7 +143,7 @@ class Main(settings: Settings, reporter: Reporter) {
                 }
               }
               result.foreach { infos =>
-                index.append(infos.uri, infos.toplevels)
+                semanticdbIndex.append(infos.uri, infos.toplevels)
                 infos.save(out)
               }
             } catch {
@@ -163,12 +167,12 @@ class Main(settings: Settings, reporter: Reporter) {
   }
 
   private def dumpScalaLibrarySynthetics(out: AbsolutePath): Boolean = {
-    val index = new Index
+    val semanticdbIndex = new SemanticdbIndex
     Scalalib.synthetics.foreach { infos =>
-      index.append(infos.uri, infos.toplevels)
+      semanticdbIndex.append(infos.uri, infos.toplevels)
       infos.save(out)
     }
-    index.save(out)
+    semanticdbIndex.save(out)
     true
   }
 }

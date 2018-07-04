@@ -9,7 +9,7 @@ import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.io._
 
-class Index {
+class SemanticdbIndex {
   private val packages = mutable.Map[String, mutable.Set[String]]()
   private val toplevels = mutable.Map[String, String]()
   packages(Symbols.RootPackage) = mutable.Set[String]()
