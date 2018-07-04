@@ -207,7 +207,7 @@ trait SymbolInformationOps { self: Scalacp =>
     }
 
     private val syntheticAnnotationsSymbols = Set(
-      "scala.reflect.macros.internal.macroImpl#"
+      "scala/reflect/macros/internal/macroImpl#"
     )
     private def syntheticAnnotations(annot: s.Annotation): Boolean = {
       annot.tpe match {

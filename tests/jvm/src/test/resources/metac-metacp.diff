@@ -144,22 +144,6 @@ advanced/Test.s3().
                      name: "x"
 
 
-============
-annot/M.m().
-============
---- metac
-+++ metacp
-+annotations {
-+  tpe {
-+    typeRef {
-+      prefix {
-+      symbol: "scala/reflect/macros/internal/macroImpl#"
-+}
- accessibility {
-   tag: PUBLIC
-   symbol: ""
-
-
 ============================
 classes/C3#copy$default$1().
 ============================
@@ -1479,25 +1463,6 @@ flags/p/package.
        symlinks: "flags/p/package.AA#"
 -      symlinks: "flags/p/package.S#"
        symlinks: "flags/p/package.xs1()."
-
-
-====================
-flags/p/package.m().
-====================
---- metac
-+++ metacp
- kind: MACRO
- properties: 0
- name: "m"
-+annotations {
-+  tpe {
-+    typeRef {
-+      prefix {
-+      symbol: "scala/reflect/macros/internal/macroImpl#"
-+}
- accessibility {
-   tag: PUBLIC
-   symbol: ""
 
 
 ========================
