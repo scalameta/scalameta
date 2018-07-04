@@ -15,14 +15,19 @@ object Scala {
     def Local(id: Int): String =
       "local" + id.toString
     def Multi(symbols: List[String]): String = {
-      val sb = new StringBuilder
-      symbols.foreach { symbol =>
-        if (!symbol.isMulti) {
-          sb.append(';')
-        }
-        sb.append(symbol)
+      symbols.distinct match {
+        case List(symbol) =>
+          symbol
+        case symbols =>
+          val sb = new StringBuilder
+          symbols.foreach { symbol =>
+            if (!symbol.isMulti) {
+              sb.append(';')
+            }
+            sb.append(symbol)
+          }
+          sb.toString()
       }
-      sb.toString()
     }
   }
 

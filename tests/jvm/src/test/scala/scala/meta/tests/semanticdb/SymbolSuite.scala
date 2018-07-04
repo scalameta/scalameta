@@ -37,6 +37,8 @@ class SymbolSuite extends FunSuite {
   }
 
   checkMultiSyntax(Nil, "")
+  checkMultiSyntax("a." :: Nil, "a.")
+  checkMultiSyntax("a.":: "a." :: Nil, "a.")
   checkMultiSyntax("a.":: "b." :: Nil, ";a.;b.")
   checkMultiSyntax(";a.;b.":: ";c.;d." :: Nil, ";a.;b.;c.;d.")
 
@@ -45,7 +47,7 @@ class SymbolSuite extends FunSuite {
   checkMultiRoundtrip("com/Bar#" :: "com.Bar." :: Nil)
   checkMultiRoundtrip("com/`; ;`#" :: "com.`; ;`." :: Nil)
   checkMultiRoundtrip("a" :: "b" :: "" :: Nil)
-  checkMultiRoundtrip(";_root_.;_empty_." :: "_star_." :: Nil)
+  checkMultiRoundtrip(";_root_/;_empty_/" :: "_star_." :: Nil)
 
   checkGlobal("com/Bar#")
   checkGlobal("com/Bar.")

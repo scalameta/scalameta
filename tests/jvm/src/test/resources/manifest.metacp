@@ -1,23 +1,37 @@
-Test.class
-----------
+A.class
+-------
 
 Summary:
 Schema => SemanticDB v4
-Uri => Test.class
+Uri => A.class
 Text => empty
 Language => Scala
 Symbols => 5 entries
 
 Symbols:
-_empty_. => package _empty_
-_empty_.Test. => final object Test extends AnyRef { +1 decls }
+_empty_/ => package _empty_
+_empty_/A# => class A extends AnyRef { +2 decls }
   AnyRef => scala/AnyRef#
-_empty_.Test.main(). => method main(args: Array[String]): Unit
-  args => _empty_.Test.main().(args)
-  Array => scala/Array#
-  String => scala/Predef.String#
-  Unit => scala/Unit#
-_empty_.Test.main().(args) => param args: Array[String]
-  Array => scala/Array#
-  String => scala/Predef.String#
+_empty_/A#`<init>`(). => primary ctor <init>()
+_empty_/A#b(). => method b: B
+  B => _empty_/B#
+_root_/ => package _root_
+
+B.class
+-------
+
+Summary:
+Schema => SemanticDB v4
+Uri => B.class
+Text => empty
+Language => Scala
+Symbols => 5 entries
+
+Symbols:
+_empty_/ => package _empty_
+_empty_/B# => class B extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+_empty_/B#`<init>`(). => primary ctor <init>()
+_empty_/B#a(). => method a: A
+  A => _empty_/A#
 _root_/ => package _root_

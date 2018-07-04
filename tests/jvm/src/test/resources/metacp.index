@@ -1,11 +1,10 @@
 Packages:
 =========
-_empty_.
-  _empty_.A#
-  _empty_.B#
 _empty_/
+  _empty_/A#
+  _empty_/B#
 _root_/
-  _empty_.
+  _empty_/
   advanced/
   classes/
   com/
@@ -103,8 +102,8 @@ types/
 
 Toplevels:
 ==========
-_empty_.A# => A.class.semanticdb
-_empty_.B# => B.class.semanticdb
+_empty_/A# => A.class.semanticdb
+_empty_/B# => B.class.semanticdb
 advanced/C# => advanced/C.class.semanticdb
 advanced/D# => advanced/D.class.semanticdb
 advanced/Existential# => advanced/Existential.class.semanticdb

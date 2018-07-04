@@ -19,7 +19,7 @@ class ClasspathIndexSuite extends FunSuite {
   test("manifest") {
     val jar = AbsolutePath(ManifestMetacp.path.getParent.resolve("manifest.jar"))
     val manifest = ClasspathIndex(classpath(jar))
-    assert(manifest.getClassfile("Test.class").isDefined)
+    assert(manifest.getClassfile("A.class").isDefined)
   }
 
   test("classpath") {

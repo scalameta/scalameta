@@ -2,8 +2,10 @@ package scala.meta.tests
 package semanticdb
 
 import scala.meta.internal.{semanticdb => s}
+import java.io._
 import java.nio.file._
 import java.nio.charset.StandardCharsets._
+import java.util.jar._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.compat.Platform.EOL
@@ -312,5 +314,60 @@ object SaveExpectTest {
     MetacMetacpDiffExpect.saveExpected(MetacMetacpDiffExpect.loadObtained)
     ManifestMetap.saveExpected(ManifestMetap.loadObtained)
     ManifestMetacp.saveExpected(ManifestMetacp.loadObtained)
+  }
+}
+
+object SaveManifestTest {
+  def main(args: Array[String]): Unit = {
+    val classes = Paths.get(BuildInfo.databaseClasspath)
+    val resources = Paths.get("tests", "jvm", "src", "test", "resources")
+
+    val manifest = resources.resolve("manifest.jar")
+    val part0 = resources.resolve("part0.jar")
+    val part1 = resources.resolve("part1.jar")
+
+    withJar(manifest) { jos =>
+      jos.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"))
+      val manifest = """
+        |Manifest-Version: 1.0
+        |Class-Path: part0.jar part1.jar
+      """.trim.stripMargin + "\n\n"
+      jos.write(manifest.getBytes(UTF_8))
+      jos.closeEntry()
+    }
+
+    val emptyClassfiles =
+      Files.list(classes).iterator.asScala.toList.filter(f => Files.isRegularFile(f))
+    withJar(part0) { jos =>
+      emptyClassfiles.foreach { classfile =>
+        jos.putNextEntry(new JarEntry(classes.relativize(classfile).toString))
+        jos.write(Files.readAllBytes(classfile))
+        jos.closeEntry()
+      }
+    }
+
+    val emptySemanticdbRelPath =
+      "META-INF/semanticdb/semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb"
+    val emptySemanticdbAbsPath = classes.resolve(emptySemanticdbRelPath)
+    withJar(part1) { jos =>
+      jos.putNextEntry(new JarEntry(emptySemanticdbRelPath))
+      jos.write(Files.readAllBytes(emptySemanticdbAbsPath))
+      jos.closeEntry()
+    }
+
+    ManifestMetap.saveExpected(ManifestMetap.loadObtained)
+    ManifestMetacp.saveExpected(ManifestMetacp.loadObtained)
+  }
+
+  private def withJar(path: Path)(fn: JarOutputStream => Unit): Unit = {
+    val os = Files.newOutputStream(path)
+    val bos = new BufferedOutputStream(os)
+    val jos = new JarOutputStream(bos)
+    try fn(jos)
+    finally {
+      jos.close()
+      bos.close()
+      os.close()
+    }
   }
 }

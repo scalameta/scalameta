@@ -82,6 +82,9 @@ commands += Command.command("save-expect") { s =>
     "semanticdbIntegration/compile" ::
     "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
 }
+commands += Command.command("save-manifest") { s =>
+  "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s
+}
 // NOTE: These tasks are aliased here in order to support running "tests/test"
 // from a command. Running "test" inside a command will trigger the `test` task
 // to run in all defined modules, including ones like inputs/io/dialects which
