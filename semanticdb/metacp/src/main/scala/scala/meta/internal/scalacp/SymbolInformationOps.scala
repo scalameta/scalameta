@@ -12,7 +12,7 @@ import scala.tools.scalap.scalax.rules.scalasig._
 
 trait SymbolInformationOps { self: Scalacp =>
   private val primaryCtors = mutable.Map[String, Int]()
-  implicit class XtensionGSymbolSSymbolInformation(sym: Symbol) {
+  implicit class XtensionGSymbolSSymbolInformation(sym: SymbolInfoSymbol) {
     private def language: s.Language = {
       // NOTE: We have no way to figure out whether an external symbol
       // comes from Java or Scala. Moreover, we can't even find out
@@ -52,28 +52,12 @@ trait SymbolInformationOps { self: Scalacp =>
         case _: TypeSymbol | _: AliasSymbol =>
           if (sym.isParam) k.TYPE_PARAMETER
           else k.TYPE
-        case sym: ExternalSymbol =>
-          // NOTE: These kinds are inherently imprecise.
-          // JavaLookup may indicate k.INTERFACE,
-          // ScalaLookup may indicate k.TYPE and maybe even k.METHOD.
-          symbolIndex.lookup(sym) match {
-            case PackageLookup => k.PACKAGE
-            case JavaLookup => k.CLASS
-            case ScalaLookup if sym.entry.entryType == 9 => k.CLASS
-            case ScalaLookup if sym.entry.entryType == 10 => k.OBJECT
-            case ScalaLookup => sys.error(s"unsupported symbol $sym")
-            case MissingLookup => throw MissingSymbolException(sym)
-          }
-        case NoSymbol =>
-          k.UNKNOWN_KIND
         case _ =>
           sys.error(s"unsupported symbol $sym")
       }
     }
 
     private[meta] def properties: Int = {
-      sym match {
-        case sym: SymbolInfoSymbol =>
           var flags = 0
           def flip(sprop: s.SymbolInformation.Property) = flags |= sprop.value
           def isAbstractClass = sym.isClass && sym.isAbstract && !sym.isTrait
@@ -108,7 +92,8 @@ trait SymbolInformationOps { self: Scalacp =>
               else flip(p.VAR)
             }
             if (sym.isParam) {
-              sym.parent.foreach { parent =>
+              sym.parent.foreach {
+                case parent: SymbolInfoSymbol =>
                 if ((parent.properties & p.PRIMARY.value) != 0) {
                   parent.parent.foreach { grandParent =>
                     val classMembers = grandParent.children
@@ -124,6 +109,8 @@ trait SymbolInformationOps { self: Scalacp =>
                     }
                   }
                 }
+                case _ =>
+                  ()
               }
             }
             if (sym.isConstructor) {
@@ -132,9 +119,6 @@ trait SymbolInformationOps { self: Scalacp =>
             }
           }
           flags
-        case _ =>
-          0
-      }
     }
 
     private def name: String = {
@@ -147,8 +131,6 @@ trait SymbolInformationOps { self: Scalacp =>
     }
 
     private def sig(linkMode: LinkMode): s.Signature = {
-      sym match {
-        case sym: SymbolInfoSymbol =>
           try {
             if (sym.isPackage) {
               s.NoSignature
@@ -204,9 +186,6 @@ trait SymbolInformationOps { self: Scalacp =>
               // FIXME: https://github.com/scalameta/scalameta/issues/1494
               s.NoSignature
           }
-        case _ =>
-          s.NoSignature
-      }
     }
 
     private val syntheticAnnotationsSymbols = Set(
@@ -220,24 +199,16 @@ trait SymbolInformationOps { self: Scalacp =>
     }
 
     private def annotations: List[s.Annotation] = {
-      sym match {
-        case c: ScalaSigSymbol =>
           val annots =
-            c.attributes
+            sym.attributes
               .map(attribute => s.Annotation(attribute.typeRef.toSemanticTpe))
               .toList
 
           annots.filterNot(syntheticAnnotations)
-
-        case _ =>
-          Nil
-      }
     }
 
     private def accessibility: Option[s.Accessibility] = {
       // FIXME: https://github.com/scalameta/scalameta/issues/1325
-      sym match {
-        case sym: SymbolInfoSymbol =>
           sym.symbolInfo.privateWithin match {
             case None =>
               if (sym.isPrivate && sym.isLocal) Some(s.Accessibility(a.PRIVATE_THIS))
@@ -252,9 +223,6 @@ trait SymbolInformationOps { self: Scalacp =>
             case Some(other) =>
               sys.error(s"unsupported privateWithin: ${other.getClass} $other")
           }
-        case _ =>
-          None
-      }
     }
 
     def toSymbolInformation(linkMode: LinkMode): s.SymbolInformation = {

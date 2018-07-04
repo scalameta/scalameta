@@ -60,36 +60,50 @@ trait SymbolOps { _: Scalacp =>
     }
     def descriptor: Descriptor = {
       val name = sym.name.toSemantic
-      sym.kind match {
-        case k.LOCAL | k.OBJECT | k.PACKAGE_OBJECT =>
-          d.Term(name)
-        case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
-          val overloads = {
-            val peers = sym.parent.get.semanticdbDecls.syms
-            peers.filter {
-              case peer: MethodSymbol => peer.name == sym.name
-              case _ => false
-            }
+      sym match {
+        case sym: SymbolInfoSymbol =>
+          sym.kind match {
+            case k.LOCAL | k.OBJECT | k.PACKAGE_OBJECT =>
+              d.Term(name)
+            case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
+              val overloads = {
+                val peers = sym.parent.get.semanticdbDecls.syms
+                peers.filter {
+                  case peer: MethodSymbol => peer.name == sym.name
+                  case _ => false
+                }
+              }
+              val disambiguator = {
+                if (overloads.lengthCompare(1) == 0) "()"
+                else {
+                  val index = overloads.indexOf(sym)
+                  if (index <= 0) "()"
+                  else s"(+${index})"
+                }
+              }
+              d.Method(name, disambiguator)
+            case k.TYPE | k.CLASS | k.TRAIT =>
+              d.Type(name)
+            case k.PACKAGE =>
+              d.Package(name)
+            case k.PARAMETER =>
+              d.Parameter(name)
+            case k.TYPE_PARAMETER =>
+              d.TypeParameter(name)
+            case skind =>
+              sys.error(s"unsupported kind $skind for symbol $sym")
           }
-          val disambiguator = {
-            if (overloads.lengthCompare(1) == 0) "()"
-            else {
-              val index = overloads.indexOf(sym)
-              if (index <= 0) "()"
-              else s"(+${index})"
-            }
+        case sym: ExternalSymbol =>
+          symbolIndex.lookup(sym) match {
+            case PackageLookup => d.Package(name)
+            case JavaLookup => d.Type(name)
+            case ScalaLookup if sym.entry.entryType == 9 => d.Type(name)
+            case ScalaLookup if sym.entry.entryType == 10 => d.Term(name)
+            case ScalaLookup => sys.error(s"unsupported symbol $sym")
+            case MissingLookup => throw MissingSymbolException(sym)
           }
-          d.Method(name, disambiguator)
-        case k.TYPE | k.CLASS | k.TRAIT =>
-          d.Type(name)
-        case k.PACKAGE =>
-          d.Package(name)
-        case k.PARAMETER =>
-          d.Parameter(name)
-        case k.TYPE_PARAMETER =>
-          d.TypeParameter(name)
-        case skind =>
-          sys.error(s"unsupported kind $skind for symbol $sym")
+        case NoSymbol =>
+          d.None
       }
     }
     def semanticdbDecls: SemanticdbDecls = {
@@ -109,7 +123,11 @@ trait SymbolOps { _: Scalacp =>
           s.Scope(symlinks = syms.map(_.ssym))
         case HardlinkChildren =>
           syms.map(registerHardlink)
-          s.Scope(hardlinks = syms.map(_.toSymbolInformation(HardlinkChildren)))
+          val hardlinks = syms.map {
+            case sym: SymbolInfoSymbol => sym.toSymbolInformation(HardlinkChildren)
+            case sym => sys.error(s"unsupported symbol $sym")
+          }
+          s.Scope(hardlinks = hardlinks)
       }
     }
   }
@@ -133,7 +151,10 @@ trait SymbolOps { _: Scalacp =>
           val sbuf = List.newBuilder[s.SymbolInformation]
           syms.foreach { sym =>
             registerHardlink(sym)
-            val sinfo = sym.toSymbolInformation(HardlinkChildren)
+            val sinfo = sym match {
+              case sym: SymbolInfoSymbol => sym.toSymbolInformation(HardlinkChildren)
+              case sym => sys.error(s"unsupported symbol $sym")
+            }
             sbuf += sinfo
             if (sym.isUsefulField && sym.isMutable) {
               Synthetics.setterInfos(sinfo, HardlinkChildren).foreach(sbuf.+=)
