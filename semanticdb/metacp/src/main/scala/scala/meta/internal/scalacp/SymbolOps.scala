@@ -185,7 +185,8 @@ trait SymbolOps { _: Scalacp =>
     // scalap Symbol.isPackage returns a constant false for external symbols so we have to
     // query the classpath to know which symbols are truly packages.
     def isPackageAccordingToClasspath: Boolean = {
-      index.isClassdir(packageResourceName)
+      if (sym.isRootPackage || sym.isEmptyPackage) true
+      else index.isClassdir(packageResourceName)
     }
     def packageResourceName: String = {
       ownerChain.map(_.name).mkString("", "/", "/")
