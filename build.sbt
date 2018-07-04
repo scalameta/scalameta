@@ -454,7 +454,7 @@ lazy val testkit = project
 
 lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("tests"))
-  .configs(Slow)
+  .configs(Slow, All)
   .settings(
     sharedSettings,
     nonPublishableSettings,
@@ -478,6 +478,8 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     ),
     testOptions.in(Test) += Tests.Argument("-l", "org.scalatest.tags.Slow"),
     inConfig(Slow)(Defaults.testTasks),
+    inConfig(All)(Defaults.testTasks),
+    testOptions.in(All) := Nil,
     testOptions.in(Slow) -= Tests.Argument("-l", "org.scalatest.tags.Slow"),
     testOptions.in(Slow) += Tests.Argument("-n", "org.scalatest.tags.Slow")
   )
