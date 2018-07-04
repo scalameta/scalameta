@@ -336,7 +336,8 @@ object SaveManifestTest {
       jos.closeEntry()
     }
 
-    val emptyClassfiles = Files.list(classes).iterator.asScala.toList.filter(f => Files.isRegularFile(f))
+    val emptyClassfiles =
+      Files.list(classes).iterator.asScala.toList.filter(f => Files.isRegularFile(f))
     withJar(part0) { jos =>
       emptyClassfiles.foreach { classfile =>
         jos.putNextEntry(new JarEntry(classes.relativize(classfile).toString))
@@ -345,7 +346,8 @@ object SaveManifestTest {
       }
     }
 
-    val emptySemanticdbRelPath = "META-INF/semanticdb/semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb"
+    val emptySemanticdbRelPath =
+      "META-INF/semanticdb/semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb"
     val emptySemanticdbAbsPath = classes.resolve(emptySemanticdbRelPath)
     withJar(part1) { jos =>
       jos.putNextEntry(new JarEntry(emptySemanticdbRelPath))
