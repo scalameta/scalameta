@@ -104,7 +104,7 @@ class Main(settings: Settings, reporter: Reporter) {
       if (missingSymbols.nonEmpty) {
         reporter.out.println(
           "NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. " +
-            "The provided classpath should also include JDK jars such as rt.jar"
+            "The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar."
         )
       }
       None
