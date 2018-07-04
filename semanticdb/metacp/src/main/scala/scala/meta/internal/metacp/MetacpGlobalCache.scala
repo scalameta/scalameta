@@ -28,18 +28,19 @@ object MetacpGlobalCache {
     * @param cacheTarget The path to store the cached results.
     * @param computeFunction The expensive compute function that writes its results into the
     *                        callback argument path, which points to a non-existing temporary file.
-    *                        Once the compute function has completed, the temporary file is moved
-    *                        to the target cache location.
+    *                        Once the compute function has completed successfully, the temporary file
+    *                        is moved to the target cache location.
     */
-  def computeIfAbsent(cacheTarget: Path)(computeFunction: Path => Unit): Unit = {
+  def computeIfAbsent(cacheTarget: Path)(computeFunction: Path => Boolean): Unit = {
     val lock = cacheTargetLocks.computeIfAbsent(cacheTarget, new function.Function[Path, Object] {
       override def apply(t: Path): AnyRef = new Object
     })
     lock.synchronized {
       if (!Files.exists(cacheTarget)) {
         val tmp = Files.createTempDirectory("metacp").resolve(cacheTarget.getFileName)
-        computeFunction(tmp)
-        tryAtomicMove(tmp, cacheTarget)
+        if (computeFunction(tmp)) {
+          tryAtomicMove(tmp, cacheTarget)
+        }
       }
     }
   }

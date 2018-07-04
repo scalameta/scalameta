@@ -38,6 +38,7 @@ class Main(settings: Settings, reporter: Reporter) {
           val res = f(out)
           success.compareAndSet(true, res)
           buffer.add(cacheEntry)
+          res
         }
       }
 
