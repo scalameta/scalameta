@@ -53,13 +53,16 @@ trait SymbolInformationOps { self: Scalacp =>
           if (sym.isParam) k.TYPE_PARAMETER
           else k.TYPE
         case sym: ExternalSymbol =>
-          val isModuleClass = sym.entry.entryType == 10
-          if (isModuleClass) {
-            if (sym.isPackageAccordingToClasspath) k.PACKAGE
-            else if (sym.isJavaDefined) k.CLASS
-            else k.OBJECT
-          } else {
-            k.CLASS
+          // NOTE: These kinds are inherently imprecise.
+          // JavaLookup may indicate k.INTERFACE,
+          // ScalaLookup may indicate k.TYPE and maybe even k.METHOD.
+          symbolIndex.lookup(sym) match {
+            case PackageLookup => k.PACKAGE
+            case JavaLookup => k.CLASS
+            case ScalaLookup if sym.entry.entryType == 9 => k.CLASS
+            case ScalaLookup if sym.entry.entryType == 10 => k.OBJECT
+            case ScalaLookup => sys.error(s"unsupported symbol $sym")
+            case MissingLookup => throw MissingSymbolException(sym)
           }
         case NoSymbol =>
           k.UNKNOWN_KIND

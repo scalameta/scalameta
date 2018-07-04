@@ -14,7 +14,7 @@ import scala.tools.scalap.scalax.rules.scalasig._
 final class Scalacp private (
     val classfile: ToplevelClassfile,
     val settings: Settings,
-    val classpathIndex: ClasspathIndex
+    val symbolIndex: SymbolIndex
 ) extends AnnotationOps
     with NameOps
     with SymbolInformationOps
@@ -70,7 +70,8 @@ object Scalacp {
       settings: Settings,
       classpathIndex: ClasspathIndex
   ): Option[ToplevelInfos] = {
-    val scalacp = new Scalacp(classfile, settings, classpathIndex)
+    val symbolIndex = SymbolIndex(classpathIndex)
+    val scalacp = new Scalacp(classfile, settings, symbolIndex)
     scalacp.parse()
   }
 }
