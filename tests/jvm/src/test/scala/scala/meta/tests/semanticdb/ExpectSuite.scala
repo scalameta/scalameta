@@ -20,6 +20,8 @@ import scala.meta.testkit.DiffAssertions
 import org.scalatest.FunSuite
 import org.scalatest.FunSuiteLike
 import scala.meta.tests.metacp.Library
+import scala.meta.tests.metacp.MetacpOps
+import scala.meta.tests.semanticdb.MetacpExpect.metacp
 
 class ExpectSuite extends FunSuite with DiffAssertions {
   BuildInfo.scalaVersion.split("\\.").take(2).toList match {
@@ -58,6 +60,10 @@ class ExpectSuite extends FunSuite with DiffAssertions {
       }
       test("manifest.metacp") {
         import ManifestMetacp._
+        assertNoDiff(loadObtained, loadExpected)
+      }
+      test("metacp.undefined") {
+        import MetacpUndefined._
         assertNoDiff(loadObtained, loadExpected)
       }
     case _ =>
@@ -303,6 +309,24 @@ object ManifestMetacp extends ExpectHelpers {
   }
 }
 
+object MetacpUndefined extends ExpectHelpers {
+  def filename: String = "metacp.undefined"
+  def loadObtained: String = {
+    val classpath = Classpath(AbsolutePath(metacp(Paths.get(BuildInfo.databaseClasspath))))
+    val undefined = MetacpOps.collectReferencedToUndefinedSymbols(classpath)
+    val interesting = undefined.filterNot { symbol =>
+      // We are only interested in references to symbols in semanticdb/integration
+      // that have no SymbolInformation. It's expected that references to the packages
+      // scala/ and java/ package have no SymbolInformation because we only process
+      // databaseClasspath, scala-library and the JDK are only --dependency-classpath.
+      symbol.startsWith("scala/") ||
+      symbol.startsWith("java/") ||
+      symbol == "local_wildcard"
+    }
+    interesting.toSeq.sorted.mkString("", "\n", "\n")
+  }
+}
+
 // To save the current behavior, run `sbt save-expect`.
 object SaveExpectTest {
   def main(args: Array[String]): Unit = {
@@ -314,6 +338,7 @@ object SaveExpectTest {
     MetacMetacpDiffExpect.saveExpected(MetacMetacpDiffExpect.loadObtained)
     ManifestMetap.saveExpected(ManifestMetap.loadObtained)
     ManifestMetacp.saveExpected(ManifestMetacp.loadObtained)
+    MetacpUndefined.saveExpected(MetacpUndefined.loadObtained)
   }
 }
 

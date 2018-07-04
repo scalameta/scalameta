@@ -674,8 +674,8 @@ com/javacp/ClassSuffix#`<init>`(). => ctor <init>()
 com/javacp/ClassSuffix#suffix. => field suffix: Inner[String]#Bar#Fuz[Integer]
   Inner => com/javacp/ClassSuffix#Inner#
   String => java/lang/String#
-  Bar => _empty_/Bar#
-  Fuz => _empty_/Fuz#
+  Bar => com/javacp/ClassSuffix#Inner#Bar#
+  Fuz => com/javacp/ClassSuffix#Inner#Bar#Fuz#
   Integer => java/lang/Integer#
 
 com/javacp/Coin.class
@@ -686,17 +686,14 @@ Schema => SemanticDB v4
 Uri => com/javacp/Coin.class
 Text => empty
 Language => Java
-Symbols => 16 entries
+Symbols => 15 entries
 
 Symbols:
 _root_/ => package _root_
 com/ => package com
 com/javacp/ => package javacp
-com/javacp/Coin# => final enum class Coin extends Enum[Coin] { +10 decls }
+com/javacp/Coin# => final enum class Coin extends Enum[Coin] { +9 decls }
   Enum => java/lang/Enum#
-  Coin => com/javacp/Coin#
-com/javacp/Coin#$VALUES. => private final static field $VALUES: Array[Coin]
-  Array => scala/Array#
   Coin => com/javacp/Coin#
 com/javacp/Coin#DIME. => final static enum field DIME: Coin
   Coin => com/javacp/Coin#

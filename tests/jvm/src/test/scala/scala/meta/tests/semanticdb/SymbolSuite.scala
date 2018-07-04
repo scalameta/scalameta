@@ -36,11 +36,17 @@ class SymbolSuite extends FunSuite {
     test(" !local: " + symbol) { assert(!symbol.isLocal) }
   }
 
+  def check(sym: String)(f: String => Boolean): Unit = {
+    test(sym) {
+      assert(f(sym))
+    }
+  }
+
   checkMultiSyntax(Nil, "")
   checkMultiSyntax("a." :: Nil, "a.")
-  checkMultiSyntax("a.":: "a." :: Nil, "a.")
-  checkMultiSyntax("a.":: "b." :: Nil, ";a.;b.")
-  checkMultiSyntax(";a.;b.":: ";c.;d." :: Nil, ";a.;b.;c.;d.")
+  checkMultiSyntax("a." :: "a." :: Nil, "a.")
+  checkMultiSyntax("a." :: "b." :: Nil, ";a.;b.")
+  checkMultiSyntax(";a.;b." :: ";c.;d." :: Nil, ";a.;b.;c.;d.")
 
   checkMultiRoundtrip(Nil)
   checkMultiRoundtrip("com/Bar#" :: Nil)
@@ -66,5 +72,12 @@ class SymbolSuite extends FunSuite {
   checkNotLocal(Symbols.None)
   checkNotLocal(Symbols.RootPackage)
   checkNotLocal(Symbols.EmptyPackage)
+
+  check("com/Predef.")(_.isTerm)
+  check("com/Class#")(_.isType)
+  check("com/")(_.isPackage)
+  check(";com/;org/")(!_.isPackage)
+  check("com/Class#(a)")(_.isParameter)
+  check("com/Class#[A]")(_.isTypeParameter)
 
 }

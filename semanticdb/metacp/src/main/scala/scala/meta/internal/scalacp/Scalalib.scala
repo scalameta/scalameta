@@ -21,7 +21,7 @@ object Scalalib {
       // The method is special-cased in both the Java and Scala compilers, so we'll slack a little bit too for the time being.
       builtinMethod("Any", List(p.FINAL), "getClass", Nil, Nil, "java/lang/Class#"),
       builtinMethod("Any", List(p.FINAL), "isInstanceOf", List("A"), Nil, "scala/Boolean#"),
-      builtinMethod("Any", List(p.FINAL), "asInstanceOf", List("A"), Nil, "scala/Any.asInstanceOf(A).[A]"))
+      builtinMethod("Any", List(p.FINAL), "asInstanceOf", List("A"), Nil, "scala/Any#asInstanceOf().[A]"))
     builtin(k.CLASS, List(p.ABSTRACT), "Any", Nil, symbols.flatten)
   }
 
@@ -34,7 +34,7 @@ object Scalalib {
     val symbols = List(
       builtinMethod("AnyRef", List(p.FINAL), "eq", Nil, List("that" -> "scala/AnyRef#"), "scala/Boolean#"),
       builtinMethod("AnyRef", List(p.FINAL), "ne", Nil, List("that" -> "scala/AnyRef#"), "scala/Boolean#"),
-      builtinMethod("AnyRef", List(p.FINAL), "synchronized", List("T"), List("body" -> "scala/AnyRef.synchronized(T).[T]"), "scala/AnyRef.synchronized(T).[T]"))
+      builtinMethod("AnyRef", List(p.FINAL), "synchronized", List("T"), List("body" -> "scala/AnyRef#synchronized().[T]"), "scala/AnyRef#synchronized().[T]"))
     builtin(k.CLASS, Nil, "AnyRef", List("scala/Any#"), symbols.flatten)
   }
 

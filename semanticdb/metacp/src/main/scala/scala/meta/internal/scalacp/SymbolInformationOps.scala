@@ -53,23 +53,14 @@ trait SymbolInformationOps { self: Scalacp =>
           if (sym.isParam) k.TYPE_PARAMETER
           else k.TYPE
         case sym: ExternalSymbol =>
-          // NOTE: Object and package external symbols
-          // are indistinguishable from each other.
-          // This means that metacp never sets k.PACKAGE.
-          val hasTermName = {
-            val idx = sym.entry.index + 1
-            if (sym.entry.scalaSig.hasEntry(idx)) {
-              val nameEntryType = sym.entry.scalaSig.table(idx)._1
-              nameEntryType == 1
-            } else {
-              false
-            }
-          }
           val isModuleClass = sym.entry.entryType == 10
-          def isScalaObject: Boolean = isModuleClass && !sym.isJavaDefined
-          if (sym.isPackageAccordingToClasspath) k.PACKAGE
-          else if (hasTermName || isScalaObject) k.OBJECT
-          else k.CLASS
+          if (isModuleClass) {
+            if (sym.isPackageAccordingToClasspath) k.PACKAGE
+            else if (sym.isJavaDefined) k.CLASS
+            else k.OBJECT
+          } else {
+            k.CLASS
+          }
         case NoSymbol =>
           k.UNKNOWN_KIND
         case _ =>

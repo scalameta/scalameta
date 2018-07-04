@@ -85,22 +85,16 @@ commands += Command.command("save-expect") { s =>
 commands += Command.command("save-manifest") { s =>
   "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s
 }
-// NOTE: These tasks are aliased here in order to support running "tests/test"
-// from a command. Running "test" inside a command will trigger the `test` task
-// to run in all defined modules, including ones like inputs/io/dialects which
-// have no tests.
-test := {
-  println(
-    """Welcome to the scalameta build! This is a big project with lots of tests :)
-      |Running "test" may take a really long time. Here are some other useful commands
-      |that give a tighter edit/run/debug cycle.
-      |- testsJVM/test      # Bread and butter tests
-      |- testsJVM/slow:test # More thorough tests that take much longer to run
-      |- testsJS/testQuick  # Ensure crosscompilability
-      |- testkit/test       # Ensure additional reliability thanks to property tests
-      |""".stripMargin
-  )
-}
+def helloContributor(): Unit = println(
+  """Welcome to the Scalameta build! You probably don't want to run `sbt test` since
+    |that will take a long time to complete.  More likely, you want to run `testsJVM/test`.
+    |For more productivity tips, please read CONTRIBUTING.md.
+    |""".stripMargin
+)
+test := helloContributor()
+aggregate in test := false
+testOnly := helloContributor()
+aggregate in testOnly := false
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalametaJVM, Compile).value
@@ -454,7 +448,7 @@ lazy val testkit = project
 
 lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("tests"))
-  .configs(Slow)
+  .configs(Slow, All)
   .settings(
     sharedSettings,
     nonPublishableSettings,
@@ -478,6 +472,8 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     ),
     testOptions.in(Test) += Tests.Argument("-l", "org.scalatest.tags.Slow"),
     inConfig(Slow)(Defaults.testTasks),
+    inConfig(All)(Defaults.testTasks),
+    testOptions.in(All) := Nil,
     testOptions.in(Slow) -= Tests.Argument("-l", "org.scalatest.tags.Slow"),
     testOptions.in(Slow) += Tests.Argument("-n", "org.scalatest.tags.Slow")
   )

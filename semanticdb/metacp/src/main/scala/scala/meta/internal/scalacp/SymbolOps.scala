@@ -171,8 +171,7 @@ trait SymbolOps { _: Scalacp =>
                           if (objectClassfile.hasScalaSig) false
                           else throw MissingSymbolException(sym.path)
                         case None =>
-                          if (sym.isAssumedJava) true
-                          else throw MissingSymbolException(sym.path)
+                          throw MissingSymbolException(sym.path)
                       }
                   }
                 }
@@ -190,12 +189,6 @@ trait SymbolOps { _: Scalacp =>
     }
     def packageResourceName: String = {
       ownerChain.map(_.name).mkString("", "/", "/")
-    }
-    def isAssumedJava: Boolean = {
-      val path = sym.path
-      if (settings.assumeJava(path)) true
-      else if (settings.assumeScala(path)) false
-      else sym.parent.exists(_.isAssumedJava)
     }
     private def ownerChain: List[Symbol] = {
       val buf = List.newBuilder[Symbol]

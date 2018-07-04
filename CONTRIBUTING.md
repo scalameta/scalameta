@@ -1,3 +1,37 @@
+## Project overview
+
+The code in this repository is primarily divided into three top-level directories:
+
+- `scalameta/`: syntactic APIs like tokenizers, parsers, trees, quasiquotes and
+  pretty printers.
+- `semanticdb/`: semantic APIs like the SemanticDB protobuf schema, compiler plugin,
+  metacp to process classpaths and metap to pretty-print SemanticDB payloads.
+- `tests/`: unit and integration tests for both Scalameta and SemanticDB.
+
+## Testing
+
+The exact test command to run tests depends on what you are working on:
+
+- `testsJVM/test`: run fast unit tests for both syntactic and semantic APIs.
+- `testsJVM/slow:test`: run slow integration tests for semantic APIs.
+- `testsJVM/all:test`: run all tests, both fast and slow.
+
+Tips to make your edit/test/debug worflow as productive as possible:
+
+- Use `testOnly` to speedup your workflow. Running `testsJVM/test` may
+  still be too slow if you want fast feedback while iterating on a small change.
+  It's recommended to use `testsJVM/testOnly *CUSTOM_SUITE` where `CUSTOM_SUITE`
+  is the name of your test suite.
+- Use `testOnly *CUSTOM_SUITE -- -z "TEST_NAME"` to target an individual test case
+  from a test suite. Some test suites contains a lot of unit tests so it may still
+  be too slow to use `testOnly`. To target an individual slow test you must use
+  the `all` scope `testsJVM/all:testOnly *CUSTOM_SUITE -- -z "TEST_NAME"`.
+- Use the sbt command `save-expect` to make `ExpectSuite` pass. This command
+  writes to disk the output of the current behavior. The diff may be large,
+  please review it thoroughly to ensure that the new expected behavior is correct.
+  The name "expect tests" comes from
+  [this blog post](https://blog.janestreet.com/testing-with-expectations/).
+
 ## Ticket Guidelines
 
 - **Bugs**:

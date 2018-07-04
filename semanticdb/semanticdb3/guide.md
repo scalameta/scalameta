@@ -45,6 +45,8 @@ alias metac="coursier launch org.scalameta:metac_2.12.6:4.0.0-M5 -- -cp $(coursi
 alias metacp="coursier launch org.scalameta:metacp_2.12:4.0.0-M5 --"
 alias metap="coursier launch org.scalameta:metap_2.11:4.0.0-M5 --"
 ```
+NOTE. These installation instructions are for the current unstable `master` branch, 
+it's recommended to view this document at the latest git tag instead of `master`.
 
 (Optional) Instead of running `metap` on the JVM, you can build a native binary
 on macOS or Linux. Thanks to [Scala Native](https://scala-native.readthedocs.io/en/latest/),

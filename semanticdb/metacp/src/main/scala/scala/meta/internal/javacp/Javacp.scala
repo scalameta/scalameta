@@ -106,35 +106,39 @@ object Javacp {
       if (isJavaLangObject) Nil
       else classSignature.parents.map(_.toSemanticTpe(classScope))
 
-    node.fields.asScala.foreach { field: FieldNode =>
-      if (isOuterClassReference(field)) {
-        // Drop the constructor argument that holds the reference to the outer class.
-        ()
-      } else {
-        val fieldSymbol = Symbols.Global(classSymbol, d.Term(field.name))
-        val fieldSignature = JavaTypeSignature.parse(
-          if (field.signature == null) field.desc else field.signature,
-          new FieldSignatureVisitor
-        )
-        val fieldInfo = addInfo(
-          fieldSymbol,
-          k.FIELD,
-          field.name,
-          s.ValueSignature(fieldSignature.toSemanticTpe(classScope)),
-          field.access
-        )
+    node.fields.asScala
+      .filterNot(_.access.hasFlag(o.ACC_SYNTHETIC))
+      .foreach { field: FieldNode =>
+        if (isOuterClassReference(field)) {
+          // Drop the constructor argument that holds the reference to the outer class.
+          ()
+        } else {
+          val fieldSymbol = Symbols.Global(classSymbol, d.Term(field.name))
+          val fieldSignature = JavaTypeSignature.parse(
+            if (field.signature == null) field.desc else field.signature,
+            new FieldSignatureVisitor
+          )
+          val fieldInfo = addInfo(
+            fieldSymbol,
+            k.FIELD,
+            field.name,
+            s.ValueSignature(fieldSignature.toSemanticTpe(classScope)),
+            field.access
+          )
 
-        decls += fieldInfo.symbol
+          decls += fieldInfo.symbol
+        }
       }
-    }
 
-    val methodSignatures = node.methods.asScala.map { method: MethodNode =>
-      val signature = JavaTypeSignature.parse(
-        if (method.signature == null) method.desc else method.signature,
-        new MethodSignatureVisitor
-      )
-      MethodInfo(method, signature)
-    }
+    val methodSignatures = node.methods.asScala
+      .filterNot(_.access.hasFlag(o.ACC_SYNTHETIC))
+      .map { method: MethodNode =>
+        val signature = JavaTypeSignature.parse(
+          if (method.signature == null) method.desc else method.signature,
+          new MethodSignatureVisitor
+        )
+        MethodInfo(method, signature)
+      }
 
     // NOTE: we sort methods by whether they're static or not in order to compute same method symbols as metac.
     // In scalac, static class members are separated from non-static members, which makes it impossible
@@ -273,15 +277,19 @@ object Javacp {
     sig match {
       case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
         require(identifier != null, sig.toString)
-        val prefix = styperef(ssym(identifier), targs.toSemanticTpe(scope))
-        suffix.foldLeft(prefix) {
-          case (accum, s: ClassTypeSignatureSuffix) =>
+        val sym = ssym(identifier)
+        val prefix = styperef(sym, targs.toSemanticTpe(scope))
+        val (result, _) = suffix.foldLeft(prefix -> sym) {
+          case ((accum, owner), s: ClassTypeSignatureSuffix) =>
+            val desc = Descriptor.Type(s.simpleClassTypeSignature.identifier.encoded)
+            val symbol = Symbols.Global(owner, desc)
             styperef(
               prefix = accum,
-              symbol = ssym(s.simpleClassTypeSignature.identifier),
+              symbol = symbol,
               args = s.simpleClassTypeSignature.typeArguments.toSemanticTpe(scope)
-            )
+            ) -> symbol
         }
+        result
       case TypeVariableSignature(name) =>
         styperef(scope.resolve(name))
       case t: BaseType =>

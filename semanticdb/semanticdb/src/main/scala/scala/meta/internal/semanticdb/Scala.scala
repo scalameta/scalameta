@@ -71,6 +71,16 @@ object Scala {
         buf.result()
       }
     }
+    def isTerm: Boolean =
+      !isNone && !isMulti && symbol.last == '.'
+    def isType: Boolean =
+      !isNone && !isMulti && symbol.last == '#'
+    def isPackage: Boolean =
+      !isNone && !isMulti && symbol.last == '/'
+    def isParameter: Boolean =
+      !isNone && !isMulti && symbol.last == ')'
+    def isTypeParameter: Boolean =
+      !isNone && !isMulti && symbol.last == ']'
     def ownerChain: List[String] = {
       val buf = List.newBuilder[String]
       def loop(symbol: String): Unit = {
