@@ -144,8 +144,8 @@ class Main(settings: Settings, reporter: Reporter) {
               }
             } catch {
               case e @ MissingSymbolException(symbol) =>
-                if (!missingSymbols(symbol)) {
-                  missingSymbols += symbol
+                if (!missingSymbols(symbol.path)) {
+                  missingSymbols += symbol.path
                   reporter.out.println(e.getMessage)
                   success = false
                 }

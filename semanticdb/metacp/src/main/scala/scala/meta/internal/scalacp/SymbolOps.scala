@@ -169,9 +169,9 @@ trait SymbolOps { _: Scalacp =>
                       index.getClassfile(p.packageResourceName, scalaObjectName) match {
                         case Some(objectClassfile) =>
                           if (objectClassfile.hasScalaSig) false
-                          else throw MissingSymbolException(sym.path)
+                          else throw MissingSymbolException(sym)
                         case None =>
-                          throw MissingSymbolException(sym.path)
+                          throw MissingSymbolException(sym)
                       }
                   }
                 }
