@@ -173,6 +173,110 @@ advanced/Test.s3(). => val method s3: AnyRef { def m(x: Int): Int }
 advanced/Test.s3x(). => val method s3x: Int
   Int => scala/Int#
 
+annot/Annotations.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => annot/Annotations.class
+Text => empty
+Language => Scala
+Symbols => 10 entries
+
+Symbols:
+_root_/ => package _root_
+annot/ => package annot
+annot/Annotations# => @ClassAnnotation class Annotations[@TypeParameterAnnotation T] extends AnyRef { self: AnyRef => +5 decls }
+  ClassAnnotation => com/javacp/annot/ClassAnnotation#
+  T => annot/Annotations#[T]
+  TypeParameterAnnotation => com/javacp/annot/TypeParameterAnnotation#
+  AnyRef => scala/AnyRef#
+annot/Annotations#T# => @TypeAnnotation abstract type T
+  TypeAnnotation => com/javacp/annot/TypeAnnotation#
+annot/Annotations#[T] => @TypeParameterAnnotation typeparam T
+  TypeParameterAnnotation => com/javacp/annot/TypeParameterAnnotation#
+annot/Annotations#`<init>`(). => primary ctor <init>(@ParameterAnnotation x: T)
+  x => annot/Annotations#`<init>`().(x)
+  ParameterAnnotation => com/javacp/annot/ParameterAnnotation#
+  T => annot/Annotations#[T]
+annot/Annotations#`<init>`().(x) => @ParameterAnnotation param x: T
+  ParameterAnnotation => com/javacp/annot/ParameterAnnotation#
+  T => annot/Annotations#[T]
+annot/Annotations#field(). => val method field: Int
+  Int => scala/Int#
+annot/Annotations#method(). => @MethodAnnotation method method: Int
+  MethodAnnotation => com/javacp/annot/MethodAnnotation#
+  Int => scala/Int#
+annot/Annotations#x(). => @ParameterAnnotation private[this] val method x: T
+  ParameterAnnotation => com/javacp/annot/ParameterAnnotation#
+  T => annot/Annotations#[T]
+
+annot/B.class
+-------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => annot/B.class
+Text => empty
+Language => Scala
+Symbols => 7 entries
+
+Symbols:
+_root_/ => package _root_
+annot/ => package annot
+annot/B# => class B extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+annot/B#`<init>`(). => @ConstructorAnnotation primary ctor <init>(x: Int)
+  ConstructorAnnotation => com/javacp/annot/ConstructorAnnotation#
+  x => annot/B#`<init>`().(x)
+  Int => scala/Int#
+annot/B#`<init>`().(x) => param x: Int
+  Int => scala/Int#
+annot/B#`<init>`(+1). => @ConstructorAnnotation ctor <init>()
+  ConstructorAnnotation => com/javacp/annot/ConstructorAnnotation#
+annot/B#x(). => private[this] val method x: Int
+  Int => scala/Int#
+
+annot/M.class
+-------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => annot/M.class
+Text => empty
+Language => Scala
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+annot/ => package annot
+annot/M. => @ObjectAnnotation final object M extends AnyRef { +1 decls }
+  ObjectAnnotation => com/javacp/annot/ObjectAnnotation#
+  AnyRef => scala/AnyRef#
+annot/M.m(). => @MacroAnnotation @macroImpl macro m[TT]: Nothing
+  MacroAnnotation => com/javacp/annot/MacroAnnotation#
+  macroImpl => scala/reflect/macros/internal/macroImpl#
+  TT => annot/M.m().[TT]
+  Nothing => scala/Nothing#
+annot/M.m().[TT] => typeparam TT
+
+annot/T.class
+-------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => annot/T.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+_root_/ => package _root_
+annot/ => package annot
+annot/T# => @TraitAnnotation trait T extends AnyRef
+  TraitAnnotation => com/javacp/annot/TraitAnnotation#
+  AnyRef => scala/AnyRef#
+
 B.class
 -------
 
@@ -632,6 +736,331 @@ classes/N.anonClass(). => val method anonClass: C7 { val def local: Nothing }
 classes/N.anonFun(). => val method anonFun: List[Int]
   List => scala/collection/immutable/List#
   Int => scala/Int#
+
+com/javacp/annot/ClassAnnotation.class
+--------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/ClassAnnotation.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/ClassAnnotation# => abstract interface ClassAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/ConstructorAnnotation.class
+--------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/ConstructorAnnotation.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/ConstructorAnnotation# => abstract interface ConstructorAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/FieldAnnotation.class
+--------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/FieldAnnotation.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/FieldAnnotation# => abstract interface FieldAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/InterfaceAnnotation.class
+------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/InterfaceAnnotation.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/InterfaceAnnotation# => abstract interface InterfaceAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/LocalAnnotation.class
+--------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/LocalAnnotation.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/LocalAnnotation# => abstract interface LocalAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/MacroAnnotation.class
+--------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/MacroAnnotation.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/MacroAnnotation# => abstract interface MacroAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/MethodAnnotation.class
+---------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/MethodAnnotation.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/MethodAnnotation# => abstract interface MethodAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/ObjectAnnotation.class
+---------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/ObjectAnnotation.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/ObjectAnnotation# => abstract interface ObjectAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/PackageAnnotation.class
+----------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/PackageAnnotation.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/PackageAnnotation# => abstract interface PackageAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/PackageObjectAnnotation.class
+----------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/PackageObjectAnnotation.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/PackageObjectAnnotation# => abstract interface PackageObjectAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/ParameterAnnotation.class
+------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/ParameterAnnotation.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/ParameterAnnotation# => abstract interface ParameterAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/SelfParameterAnnotation.class
+----------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/SelfParameterAnnotation.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/SelfParameterAnnotation# => abstract interface SelfParameterAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/TraitAnnotation.class
+--------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/TraitAnnotation.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/TraitAnnotation# => abstract interface TraitAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/TypeAnnotation.class
+-------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/TypeAnnotation.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/TypeAnnotation# => abstract interface TypeAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/TypeParameterAnnotation.class
+----------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/TypeParameterAnnotation.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/TypeParameterAnnotation# => abstract interface TypeParameterAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/usage/AnnotatedInterface.class
+-----------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/usage/AnnotatedInterface.class
+Text => empty
+Language => Java
+Symbols => 6 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/usage/ => package usage
+com/javacp/annot/usage/AnnotatedInterface# => abstract interface AnnotatedInterface extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/usage/AnnotatedPackage.class
+---------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/usage/AnnotatedPackage.class
+Text => empty
+Language => Java
+Symbols => 7 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/usage/ => package usage
+com/javacp/annot/usage/AnnotatedPackage# => class AnnotatedPackage extends Object { +1 decls }
+  Object => java/lang/Object#
+com/javacp/annot/usage/AnnotatedPackage#`<init>`(). => ctor <init>()
 
 com/javacp/ClassSuffix.class
 ----------------------------
@@ -1913,10 +2342,12 @@ flags/p/package.C#y(). => private[this] val method y: U
   U => flags/p/package.C#[U]
 flags/p/package.C#z(). => private[this] val method z: V
   V => flags/p/package.C#[V]
-flags/p/package.S# => class S[T] extends AnyRef { +1 decls }
+flags/p/package.S# => class S[@specialized T] extends AnyRef { +1 decls }
   T => flags/p/package.S#[T]
+  specialized => scala/specialized#
   AnyRef => scala/AnyRef#
-flags/p/package.S#[T] => typeparam T
+flags/p/package.S#[T] => @specialized typeparam T
+  specialized => scala/specialized#
 flags/p/package.S#`<init>`(). => primary ctor <init>()
 flags/p/package.T1# => type T1 = Int
   Int => scala/Int#
@@ -1968,7 +2399,8 @@ flags/p/package.`y_=`(). => protected var method y_=(x$1: Int): Unit
   Unit => scala/Unit#
 flags/p/package.`y_=`().(x$1) => param x$1: Int
   Int => scala/Int#
-flags/p/package.m(). => macro m[TT]: Nothing
+flags/p/package.m(). => @macroImpl macro m[TT]: Nothing
+  macroImpl => scala/reflect/macros/internal/macroImpl#
   TT => flags/p/package.m().[TT]
   Nothing => scala/Nothing#
 flags/p/package.m().[TT] => typeparam TT

@@ -144,6 +144,22 @@ advanced/Test.s3().
                      name: "x"
 
 
+============
+annot/M.m().
+============
+--- metac
++++ metacp
++annotations {
++  tpe {
++    typeRef {
++      prefix {
++      symbol: "scala/reflect/macros/internal/macroImpl#"
++}
+ accessibility {
+   tag: PUBLIC
+   symbol: ""
+
+
 ============================
 classes/C3#copy$default$1().
 ============================
@@ -945,6 +961,454 @@ com/javacp/Test#wildcard(+1).(b)
 -                    symbol: "scala/Any#"
 
 
+=================================
+com/javacp/annot/ClassAnnotation#
+=================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/ClassAnnotation#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "ClassAnnotation"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/ClassAnnotation#`<init>`()."
+
+
+=======================================
+com/javacp/annot/ConstructorAnnotation#
+=======================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/ConstructorAnnotation#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "ConstructorAnnotation"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/ConstructorAnnotation#`<init>`()."
+
+
+=================================
+com/javacp/annot/FieldAnnotation#
+=================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/FieldAnnotation#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "FieldAnnotation"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/FieldAnnotation#`<init>`()."
+
+
+=====================================
+com/javacp/annot/InterfaceAnnotation#
+=====================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/InterfaceAnnotation#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "InterfaceAnnotation"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/InterfaceAnnotation#`<init>`()."
+
+
+=================================
+com/javacp/annot/LocalAnnotation#
+=================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/LocalAnnotation#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "LocalAnnotation"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/LocalAnnotation#`<init>`()."
+
+
+=================================
+com/javacp/annot/MacroAnnotation#
+=================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/MacroAnnotation#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "MacroAnnotation"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/MacroAnnotation#`<init>`()."
+
+
+==================================
+com/javacp/annot/MethodAnnotation#
+==================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/MethodAnnotation#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "MethodAnnotation"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/MethodAnnotation#`<init>`()."
+
+
+==================================
+com/javacp/annot/ObjectAnnotation#
+==================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/ObjectAnnotation#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "ObjectAnnotation"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/ObjectAnnotation#`<init>`()."
+
+
+===================================
+com/javacp/annot/PackageAnnotation#
+===================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/PackageAnnotation#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "PackageAnnotation"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/PackageAnnotation#`<init>`()."
+
+
+=========================================
+com/javacp/annot/PackageObjectAnnotation#
+=========================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/PackageObjectAnnotation#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "PackageObjectAnnotation"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/PackageObjectAnnotation#`<init>`()."
+
+
+=====================================
+com/javacp/annot/ParameterAnnotation#
+=====================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/ParameterAnnotation#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "ParameterAnnotation"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/ParameterAnnotation#`<init>`()."
+
+
+=========================================
+com/javacp/annot/SelfParameterAnnotation#
+=========================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/SelfParameterAnnotation#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "SelfParameterAnnotation"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/SelfParameterAnnotation#`<init>`()."
+
+
+=================================
+com/javacp/annot/TraitAnnotation#
+=================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/TraitAnnotation#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "TraitAnnotation"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/TraitAnnotation#`<init>`()."
+
+
+================================
+com/javacp/annot/TypeAnnotation#
+================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/TypeAnnotation#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "TypeAnnotation"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/TypeAnnotation#`<init>`()."
+
+
+=========================================
+com/javacp/annot/TypeParameterAnnotation#
+=========================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/TypeParameterAnnotation#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "TypeParameterAnnotation"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/TypeParameterAnnotation#`<init>`()."
+
+
+==========================================
+com/javacp/annot/usage/AnnotatedInterface#
+==========================================
+--- metac
++++ metacp
+ symbol: "com/javacp/annot/usage/AnnotatedInterface#"
+-kind: CLASS
+-properties: 0
++kind: INTERFACE
++properties: 4
+ name: "AnnotatedInterface"
+ accessibility {
+   tag: PUBLIC
+       typeRef {
+         prefix {
+-        symbol: "scala/annotation/Annotation#"
++        symbol: "java/lang/Object#"
+     parents {
+         symbol: "java/lang/annotation/Annotation#"
+-    parents {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/annotation/ClassfileAnnotation#"
+     self {
+     declarations {
+-      symlinks: "com/javacp/annot/usage/AnnotatedInterface#`<init>`()."
+
+
 ============
 example/Acc#
 ============
@@ -1017,20 +1481,20 @@ flags/p/package.
        symlinks: "flags/p/package.xs1()."
 
 
-=====================
-flags/p/package.S#[T]
-=====================
+====================
+flags/p/package.m().
+====================
 --- metac
 +++ metacp
- kind: TYPE_PARAMETER
+ kind: MACRO
  properties: 0
- name: "T"
--annotations {
--  tpe {
--    typeRef {
--      prefix {
--      symbol: "scala/specialized#"
--}
+ name: "m"
++annotations {
++  tpe {
++    typeRef {
++      prefix {
++      symbol: "scala/reflect/macros/internal/macroImpl#"
++}
  accessibility {
    tag: PUBLIC
    symbol: ""

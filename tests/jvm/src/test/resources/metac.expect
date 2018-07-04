@@ -1,3 +1,290 @@
+semanticdb/integration/src/main/java/com/javacp/annot/ClassAnnotation.java
+--------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/ClassAnnotation.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/ClassAnnotation# => class ClassAnnotation extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/ClassAnnotation#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/ConstructorAnnotation.java
+--------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/ConstructorAnnotation.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/ConstructorAnnotation# => class ConstructorAnnotation extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/ConstructorAnnotation#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/FieldAnnotation.java
+--------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/FieldAnnotation.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/FieldAnnotation# => class FieldAnnotation extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/FieldAnnotation#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/InterfaceAnnotation.java
+------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/InterfaceAnnotation.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/InterfaceAnnotation# => class InterfaceAnnotation extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/InterfaceAnnotation#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/LocalAnnotation.java
+--------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/LocalAnnotation.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/LocalAnnotation# => class LocalAnnotation extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/LocalAnnotation#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/MacroAnnotation.java
+--------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/MacroAnnotation.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/MacroAnnotation# => class MacroAnnotation extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/MacroAnnotation#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/MethodAnnotation.java
+---------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/MethodAnnotation.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/MethodAnnotation# => class MethodAnnotation extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/MethodAnnotation#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/ObjectAnnotation.java
+---------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/ObjectAnnotation.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/ObjectAnnotation# => class ObjectAnnotation extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/ObjectAnnotation#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/PackageAnnotation.java
+----------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/PackageAnnotation.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/PackageAnnotation# => class PackageAnnotation extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/PackageAnnotation#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/PackageObjectAnnotation.java
+----------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/PackageObjectAnnotation.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/PackageObjectAnnotation# => class PackageObjectAnnotation extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/PackageObjectAnnotation#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/ParameterAnnotation.java
+------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/ParameterAnnotation.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/ParameterAnnotation# => class ParameterAnnotation extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/ParameterAnnotation#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/SelfParameterAnnotation.java
+----------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/SelfParameterAnnotation.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/SelfParameterAnnotation# => class SelfParameterAnnotation extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/SelfParameterAnnotation#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/TraitAnnotation.java
+--------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/TraitAnnotation.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/TraitAnnotation# => class TraitAnnotation extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/TraitAnnotation#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/TypeAnnotation.java
+-------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/TypeAnnotation.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/TypeAnnotation# => class TypeAnnotation extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/TypeAnnotation#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/TypeParameterAnnotation.java
+----------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/TypeParameterAnnotation.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/TypeParameterAnnotation# => class TypeParameterAnnotation extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/TypeParameterAnnotation#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/usage/AnnotatedInterface.java
+-----------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/usage/AnnotatedInterface.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/usage/AnnotatedInterface# => class AnnotatedInterface extends Annotation with Annotation with ClassfileAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  Annotation => java/lang/annotation/Annotation#
+  ClassfileAnnotation => scala/annotation/ClassfileAnnotation#
+com/javacp/annot/usage/AnnotatedInterface#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/annot/usage/AnnotatedPackage.java
+---------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/usage/AnnotatedPackage.java
+Text => non-empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/usage/AnnotatedPackage# => class AnnotatedPackage extends Object { +1 decls }
+  Object => java/lang/Object#
+com/javacp/annot/usage/AnnotatedPackage#`<init>`(). => ctor <init>()
+
 semanticdb/integration/src/main/java/com/javacp/ClassSuffix.java
 ----------------------------------------------------------------
 
@@ -781,6 +1068,127 @@ Synthetics:
 [39:9..39:9):  => *[Unit]
   [0:0..0:1): * => _star_.
   [0:2..0:6): Unit => scala/Unit#
+
+semanticdb/integration/src/main/scala/example/Annotations.scala
+---------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Annotations.scala
+Text => non-empty
+Language => Scala
+Symbols => 19 entries
+Occurrences => 54 entries
+
+Symbols:
+annot/Annotations# => @ClassAnnotation class Annotations[@TypeParameterAnnotation T] extends AnyRef { self: AnyRef => +5 decls }
+  ClassAnnotation => com/javacp/annot/ClassAnnotation#
+  T => annot/Annotations#[T]
+  TypeParameterAnnotation => com/javacp/annot/TypeParameterAnnotation#
+  AnyRef => scala/AnyRef#
+annot/Annotations#T# => @TypeAnnotation abstract type T
+  TypeAnnotation => com/javacp/annot/TypeAnnotation#
+annot/Annotations#[T] => @TypeParameterAnnotation typeparam T
+  TypeParameterAnnotation => com/javacp/annot/TypeParameterAnnotation#
+annot/Annotations#`<init>`(). => primary ctor <init>(@ParameterAnnotation x: T)
+  x => annot/Annotations#`<init>`().(x)
+  ParameterAnnotation => com/javacp/annot/ParameterAnnotation#
+  T => annot/Annotations#[T]
+annot/Annotations#`<init>`().(x) => @ParameterAnnotation param x: T
+  ParameterAnnotation => com/javacp/annot/ParameterAnnotation#
+  T => annot/Annotations#[T]
+annot/Annotations#field(). => val method field: Int
+  Int => scala/Int#
+annot/Annotations#method(). => @MethodAnnotation method method: Int
+  MethodAnnotation => com/javacp/annot/MethodAnnotation#
+  Int => scala/Int#
+annot/Annotations#x(). => @ParameterAnnotation private[this] val method x: T
+  ParameterAnnotation => com/javacp/annot/ParameterAnnotation#
+  T => annot/Annotations#[T]
+annot/B# => class B extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+annot/B#`<init>`(). => @ConstructorAnnotation primary ctor <init>(x: Int)
+  ConstructorAnnotation => com/javacp/annot/ConstructorAnnotation#
+  x => annot/B#`<init>`().(x)
+  Int => scala/Int#
+annot/B#`<init>`().(x) => param x: Int
+  Int => scala/Int#
+annot/B#`<init>`(+1). => @ConstructorAnnotation ctor <init>()
+  ConstructorAnnotation => com/javacp/annot/ConstructorAnnotation#
+annot/B#x(). => private[this] val method x: Int
+  Int => scala/Int#
+annot/M. => @ObjectAnnotation final object M extends AnyRef { +1 decls }
+  ObjectAnnotation => com/javacp/annot/ObjectAnnotation#
+  AnyRef => scala/AnyRef#
+annot/M.m(). => @MacroAnnotation macro m[TT]: Nothing
+  MacroAnnotation => com/javacp/annot/MacroAnnotation#
+  TT => annot/M.m().[TT]
+  Nothing => scala/Nothing#
+annot/M.m().[TT] => typeparam TT
+annot/T# => @TraitAnnotation trait T extends AnyRef
+  TraitAnnotation => com/javacp/annot/TraitAnnotation#
+  AnyRef => scala/AnyRef#
+local0 => selfparam self: AnyRef
+  AnyRef => scala/AnyRef#
+local1 => @LocalAnnotation val local local: Int
+  LocalAnnotation => com/javacp/annot/LocalAnnotation#
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:13): annot <= annot/
+[2:7..2:12): scala => scala/
+[2:13..2:21): language => scala/language.
+[2:22..2:34): experimental => scala/language.experimental.
+[2:35..2:41): macros => scala/language.experimental.macros().
+[4:7..4:10): com => com/
+[4:11..4:17): javacp => com/javacp/
+[4:18..4:23): annot => com/javacp/annot/
+[6:1..6:16): ClassAnnotation => com/javacp/annot/ClassAnnotation#
+[6:16..6:16):  => com/javacp/annot/ClassAnnotation#`<init>`().
+[7:6..7:17): Annotations <= annot/Annotations#
+[7:19..7:42): TypeParameterAnnotation => com/javacp/annot/TypeParameterAnnotation#
+[7:43..7:43):  => com/javacp/annot/TypeParameterAnnotation#`<init>`().
+[7:43..7:44): T <= annot/Annotations#[T]
+[7:45..7:45):  <= annot/Annotations#`<init>`().
+[7:47..7:66): ParameterAnnotation => com/javacp/annot/ParameterAnnotation#
+[7:67..7:67):  => com/javacp/annot/ParameterAnnotation#`<init>`().
+[7:67..7:68): x <= annot/Annotations#x().
+[7:70..7:71): T => annot/Annotations#[T]
+[7:75..7:79): self <= local0
+[7:81..7:87): AnyRef => scala/AnyRef#
+[8:3..8:18): FieldAnnotation => com/javacp/annot/FieldAnnotation#
+[8:18..8:18):  => com/javacp/annot/FieldAnnotation#`<init>`().
+[9:6..9:11): field <= annot/Annotations#field().
+[11:3..11:19): MethodAnnotation => com/javacp/annot/MethodAnnotation#
+[11:19..11:19):  => com/javacp/annot/MethodAnnotation#`<init>`().
+[12:6..12:12): method <= annot/Annotations#method().
+[13:5..13:20): LocalAnnotation => com/javacp/annot/LocalAnnotation#
+[13:20..13:20):  => com/javacp/annot/LocalAnnotation#`<init>`().
+[14:8..14:13): local <= local1
+[15:4..15:9): local => local1
+[17:3..17:17): TypeAnnotation => com/javacp/annot/TypeAnnotation#
+[17:17..17:17):  => com/javacp/annot/TypeAnnotation#`<init>`().
+[18:7..18:8): T <= annot/Annotations#T#
+[21:6..21:7): B <= annot/B#
+[21:9..21:30): ConstructorAnnotation => com/javacp/annot/ConstructorAnnotation#
+[21:30..21:30):  => com/javacp/annot/ConstructorAnnotation#`<init>`().
+[21:32..21:32):  <= annot/B#`<init>`().
+[21:33..21:34): x <= annot/B#x().
+[21:36..21:39): Int => scala/Int#
+[22:3..22:24): ConstructorAnnotation => com/javacp/annot/ConstructorAnnotation#
+[22:24..22:24):  => com/javacp/annot/ConstructorAnnotation#`<init>`().
+[23:19..23:19):  => annot/B#`<init>`().
+[26:1..26:17): ObjectAnnotation => com/javacp/annot/ObjectAnnotation#
+[26:17..26:17):  => com/javacp/annot/ObjectAnnotation#`<init>`().
+[27:7..27:8): M <= annot/M.
+[28:3..28:18): MacroAnnotation => com/javacp/annot/MacroAnnotation#
+[28:18..28:18):  => com/javacp/annot/MacroAnnotation#`<init>`().
+[29:6..29:7): m <= annot/M.m().
+[29:8..29:10): TT <= annot/M.m().[TT]
+[29:20..29:23): ??? => scala/Predef.`???`().
+[32:1..32:16): TraitAnnotation => com/javacp/annot/TraitAnnotation#
+[32:16..32:16):  => com/javacp/annot/TraitAnnotation#`<init>`().
+[33:6..33:7): T <= annot/T#
 
 semanticdb/integration/src/main/scala/example/Anonymous.scala
 -------------------------------------------------------------
