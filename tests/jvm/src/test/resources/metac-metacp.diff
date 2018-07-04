@@ -309,13 +309,6 @@ com/javacp/ClassSuffix#suffix.
 -                    symbol: "com/javacp/ClassSuffix#"
                  symbol: "com/javacp/ClassSuffix#Inner#"
                  type_arguments {
--            symbol: "com/javacp/ClassSuffix#Inner#Bar#"
-+            symbol: "_empty_/Bar#"
--        symbol: "com/javacp/ClassSuffix#Inner#Bar#Fuz#"
-+        symbol: "_empty_/Fuz#"
-         type_arguments {
-           typeRef {
-             prefix {
 
 
 ================
@@ -323,10 +316,6 @@ com/javacp/Coin#
 ================
 --- metac
 +++ metacp
-     self {
-     declarations {
-+      symlinks: "com/javacp/Coin#$VALUES."
-       symlinks: "com/javacp/Coin#DIME."
        symlinks: "com/javacp/Coin#NICKEL."
        symlinks: "com/javacp/Coin#PENNY."
        symlinks: "com/javacp/Coin#QUARTER."

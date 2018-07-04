@@ -27,7 +27,6 @@ scala/Any#`==`().(that) => param that: Any
   Any => scala/Any#
 scala/Any#asInstanceOf(). => final method asInstanceOf[A](): A
   A => scala/Any#asInstanceOf().[A]
-  A => scala/Any.asInstanceOf(A).[A]
 scala/Any#asInstanceOf().[A] => typeparam A
 scala/Any#equals(). => abstract method equals(that: Any): Boolean
   that => scala/Any#equals().(that)
@@ -75,9 +74,8 @@ scala/AnyRef#ne().(that) => param that: AnyRef
 scala/AnyRef#synchronized(). => final method synchronized[T](body: T): T
   T => scala/AnyRef#synchronized().[T]
   body => scala/AnyRef#synchronized().(body)
-  T => scala/AnyRef.synchronized(T).[T]
 scala/AnyRef#synchronized().(body) => param body: T
-  T => scala/AnyRef.synchronized(T).[T]
+  T => scala/AnyRef#synchronized().[T]
 scala/AnyRef#synchronized().[T] => typeparam T
 
 scala/AnyVal.class
