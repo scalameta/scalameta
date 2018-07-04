@@ -9,7 +9,18 @@ import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 
 object Scalalib {
-  def anyClass: ToplevelInfos = {
+  lazy val synthetics: List[ToplevelInfos] = {
+    List(
+      Scalalib.anyClass,
+      Scalalib.anyValClass,
+      Scalalib.anyRefClass,
+      Scalalib.nothingClass,
+      Scalalib.nullClass,
+      Scalalib.singletonTrait
+    )
+  }
+
+  private def anyClass: ToplevelInfos = {
     val symbols = List(
       builtinMethod("Any", List(p.ABSTRACT), "equals", Nil, List("that" -> "scala/Any#"), "scala/Boolean#"),
       builtinMethod("Any", List(p.FINAL), "==", Nil, List("that" -> "scala/Any#"), "scala/Boolean#"),
@@ -25,11 +36,11 @@ object Scalalib {
     builtin(k.CLASS, List(p.ABSTRACT), "Any", Nil, symbols.flatten)
   }
 
-  def anyValClass: ToplevelInfos = {
+  private def anyValClass: ToplevelInfos = {
     builtin(k.CLASS, List(p.ABSTRACT), "AnyVal", List("scala/Any#"), Nil)
   }
 
-  def anyRefClass: ToplevelInfos = {
+  private def anyRefClass: ToplevelInfos = {
     // FIXME: https://github.com/scalameta/scalameta/issues/1564
     val symbols = List(
       builtinMethod("AnyRef", List(p.FINAL), "eq", Nil, List("that" -> "scala/AnyRef#"), "scala/Boolean#"),
@@ -38,15 +49,15 @@ object Scalalib {
     builtin(k.CLASS, Nil, "AnyRef", List("scala/Any#"), symbols.flatten)
   }
 
-  def nothingClass: ToplevelInfos = {
+  private def nothingClass: ToplevelInfos = {
     builtin(k.CLASS, List(p.ABSTRACT, p.FINAL), "Nothing", List("scala/Any#"), Nil)
   }
 
-  def nullClass: ToplevelInfos = {
+  private def nullClass: ToplevelInfos = {
     builtin(k.CLASS, List(p.ABSTRACT, p.FINAL), "Null", List("scala/AnyRef#"), Nil)
   }
 
-  def singletonTrait: ToplevelInfos = {
+  private def singletonTrait: ToplevelInfos = {
     builtin(k.TRAIT, Nil, "Singleton", List("scala/Any#"), Nil)
   }
 
@@ -91,7 +102,7 @@ object Scalalib {
     ToplevelInfos(syntheticClassfile, List(builtin), if (kind.isClass) ctor +: symbols else symbols)
   }
 
-  def builtinMethod(
+  private def builtinMethod(
       className: String,
       props: List[s.SymbolInformation.Property],
       methodName: String,
