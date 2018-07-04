@@ -7,6 +7,7 @@ import scala.meta.cli.Metacp
 import scala.meta.io._
 import scala.meta.metacp.Settings
 import scala.meta.testkit.DiffAssertions
+import scala.meta.tests._
 import scala.meta.tests.cli.CliSuite
 
 class MetacpErrorSuite extends FunSuite with DiffAssertions {
@@ -15,7 +16,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
   tmp.toFile.deleteOnExit()
   private val settings = Settings().withCacheDir(tmp)
 
-  test("missing symbol", Slow) {
+  test("missing symbol 1", Slow) {
     val (classpath, out, err) = CliSuite.withReporter { reporter =>
       val scalametaSettings = settings.withClasspath(
         Library(
@@ -42,4 +43,17 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
     )
   }
 
+  test("missing symbol 2") {
+    val tmp = Files.createTempDirectory("a_")
+    tmp.toFile.deleteOnExit()
+    val aclassFrom = Paths.get(BuildInfo.databaseClasspath).resolve("A.class")
+    val aclassTo = tmp.resolve("A.class")
+    Files.copy(aclassFrom, aclassTo)
+
+    val (classpath, out, err) = CliSuite.withReporter { reporter =>
+      val classpath = Classpath(AbsolutePath(tmp))
+      Metacp.process(settings.withClasspath(classpath), reporter)
+    }
+    assert(classpath.isEmpty)
+  }
 }
