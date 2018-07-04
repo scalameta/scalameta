@@ -34,11 +34,13 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
     assert(err.isEmpty)
     assertNoDiffOrPrintExpected(
       out,
-      """
-        |missing symbol: scala.reflect.macros.whitebox
-        |missing symbol: scala.reflect.macros.blackbox
-        |missing symbol: scala.reflect.api
-        |NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath should also include JDK jars such as rt.jar
+      """|missing symbol: java
+         |missing symbol: scala.reflect.macros.whitebox
+         |missing symbol: scala.reflect.macros.blackbox
+         |missing symbol: scala.reflect.macros.Aliases
+         |missing symbol: scala.reflect.api
+         |missing symbol: scala.reflect.macros.Universe
+         |NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
       """.stripMargin
     )
   }
