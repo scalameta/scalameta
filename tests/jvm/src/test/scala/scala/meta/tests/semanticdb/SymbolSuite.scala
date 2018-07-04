@@ -37,6 +37,8 @@ class SymbolSuite extends FunSuite {
   }
 
   checkMultiSyntax(Nil, "")
+  checkMultiSyntax("a." :: Nil, "a.")
+  checkMultiSyntax("a.":: "a." :: Nil, "a.")
   checkMultiSyntax("a.":: "b." :: Nil, ";a.;b.")
   checkMultiSyntax(";a.;b.":: ";c.;d." :: Nil, ";a.;b.;c.;d.")
 
