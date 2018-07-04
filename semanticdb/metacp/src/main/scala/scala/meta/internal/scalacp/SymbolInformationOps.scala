@@ -58,67 +58,67 @@ trait SymbolInformationOps { self: Scalacp =>
     }
 
     private[meta] def properties: Int = {
-          var flags = 0
-          def flip(sprop: s.SymbolInformation.Property) = flags |= sprop.value
-          def isAbstractClass = sym.isClass && sym.isAbstract && !sym.isTrait
-          def isAbstractMethod = sym.isMethod && sym.isDeferred
-          def isAbstractType = sym.isType && !sym.isParam && sym.isDeferred
-          if (sym.isPackage) {
-            ()
-          } else if (sym.isJava) {
-            if (isAbstractClass || kind.isInterface || isAbstractMethod) flip(p.ABSTRACT)
-            // NOTE: Scalap doesn't expose JAVA_ENUM.
-            if (sym.isFinal /* || sym.isJavaEnum */ ) flip(p.FINAL)
-            // NOTE: Scalap doesn't expose JAVA_ENUM.
-            // if (sym.isJavaEnum) flip(p.ENUM)
-            if (sym.isStatic) flip(p.STATIC)
-            ???
-          } else {
-            if (isAbstractClass || isAbstractMethod || isAbstractType) flip(p.ABSTRACT)
-            if (sym.isFinal || sym.isModule) flip(p.FINAL)
-            if (sym.isSealed) flip(p.SEALED)
-            if (sym.isImplicit) flip(p.IMPLICIT)
-            if (sym.isLazy) flip(p.LAZY)
-            if (sym.isCase && (sym.isClass || sym.isModule)) flip(p.CASE)
-            if (sym.isType && sym.isCovariant) flip(p.COVARIANT)
-            if (sym.isType && sym.isContravariant) flip(p.CONTRAVARIANT)
-            // NOTE: Scalap doesn't expose locals.
-            if (/*kind.isLocal ||*/ sym.isUsefulField) {
-              if (sym.isMutable) flip(p.VAR)
-              else flip(p.VAL)
-            }
-            if (sym.isAccessor) {
-              if (sym.isStable) flip(p.VAL)
-              else flip(p.VAR)
-            }
-            if (sym.isParam) {
-              sym.parent.foreach {
-                case parent: SymbolInfoSymbol =>
-                if ((parent.properties & p.PRIMARY.value) != 0) {
-                  parent.parent.foreach { grandParent =>
-                    val classMembers = grandParent.children
-                    val accessor = classMembers.find(m => m.isParamAccessor && m.name == sym.name)
-                    accessor.foreach { accessor =>
-                      val isStable = {
-                        if (accessor.isMethod) accessor.isStable
-                        else !accessor.isMutable
-                      }
-                      if (!isStable) flip(p.VAR)
-                      else if (accessor.isMethod) flip(p.VAL)
-                      else ()
+      var flags = 0
+      def flip(sprop: s.SymbolInformation.Property) = flags |= sprop.value
+      def isAbstractClass = sym.isClass && sym.isAbstract && !sym.isTrait
+      def isAbstractMethod = sym.isMethod && sym.isDeferred
+      def isAbstractType = sym.isType && !sym.isParam && sym.isDeferred
+      if (sym.isPackage) {
+        ()
+      } else if (sym.isJava) {
+        if (isAbstractClass || kind.isInterface || isAbstractMethod) flip(p.ABSTRACT)
+        // NOTE: Scalap doesn't expose JAVA_ENUM.
+        if (sym.isFinal /* || sym.isJavaEnum */ ) flip(p.FINAL)
+        // NOTE: Scalap doesn't expose JAVA_ENUM.
+        // if (sym.isJavaEnum) flip(p.ENUM)
+        if (sym.isStatic) flip(p.STATIC)
+        ???
+      } else {
+        if (isAbstractClass || isAbstractMethod || isAbstractType) flip(p.ABSTRACT)
+        if (sym.isFinal || sym.isModule) flip(p.FINAL)
+        if (sym.isSealed) flip(p.SEALED)
+        if (sym.isImplicit) flip(p.IMPLICIT)
+        if (sym.isLazy) flip(p.LAZY)
+        if (sym.isCase && (sym.isClass || sym.isModule)) flip(p.CASE)
+        if (sym.isType && sym.isCovariant) flip(p.COVARIANT)
+        if (sym.isType && sym.isContravariant) flip(p.CONTRAVARIANT)
+        // NOTE: Scalap doesn't expose locals.
+        if (/*kind.isLocal ||*/ sym.isUsefulField) {
+          if (sym.isMutable) flip(p.VAR)
+          else flip(p.VAL)
+        }
+        if (sym.isAccessor) {
+          if (sym.isStable) flip(p.VAL)
+          else flip(p.VAR)
+        }
+        if (sym.isParam) {
+          sym.parent.foreach {
+            case parent: SymbolInfoSymbol =>
+              if ((parent.properties & p.PRIMARY.value) != 0) {
+                parent.parent.foreach { grandParent =>
+                  val classMembers = grandParent.children
+                  val accessor = classMembers.find(m => m.isParamAccessor && m.name == sym.name)
+                  accessor.foreach { accessor =>
+                    val isStable = {
+                      if (accessor.isMethod) accessor.isStable
+                      else !accessor.isMutable
                     }
+                    if (!isStable) flip(p.VAR)
+                    else if (accessor.isMethod) flip(p.VAL)
+                    else ()
                   }
                 }
-                case _ =>
-                  ()
               }
-            }
-            if (sym.isConstructor) {
-              val primaryIndex = primaryCtors.getOrElseUpdate(sym.path, sym.entry.index)
-              if (sym.entry.index == primaryIndex) flip(p.PRIMARY)
-            }
+            case _ =>
+              ()
           }
-          flags
+        }
+        if (sym.isConstructor) {
+          val primaryIndex = primaryCtors.getOrElseUpdate(sym.path, sym.entry.index)
+          if (sym.entry.index == primaryIndex) flip(p.PRIMARY)
+        }
+      }
+      flags
     }
 
     private def name: String = {
@@ -131,61 +131,61 @@ trait SymbolInformationOps { self: Scalacp =>
     }
 
     private def sig(linkMode: LinkMode): s.Signature = {
-          try {
-            if (sym.isPackage) {
-              s.NoSignature
+      try {
+        if (sym.isPackage) {
+          s.NoSignature
+        } else {
+          val sig = {
+            // NOTE: Scalap doesn't expose JAVA_ENUM.
+            // if (sym.isJavaEnum && gsym.isStatic) {
+            //   ???
+            // } else {
+            if (sym.isAlias) {
+              def preprocess(tpe: Type): Type = {
+                tpe match {
+                  case PolyType(tpe, tparams) => PolyType(preprocess(tpe), tparams)
+                  case tpe => TypeBoundsType(tpe, tpe)
+                }
+              }
+              preprocess(sym.infoType)
+            } else if (sym.isObject) {
+              sym.infoType match {
+                case TypeRefType(_, moduleClassSym: SymbolInfoSymbol, _) =>
+                  moduleClassSym.infoType
+                case other =>
+                  sys.error(s"unsupported type $other")
+              }
             } else {
-              val sig = {
-                // NOTE: Scalap doesn't expose JAVA_ENUM.
-                // if (sym.isJavaEnum && gsym.isStatic) {
-                //   ???
-                // } else {
-                if (sym.isAlias) {
-                  def preprocess(tpe: Type): Type = {
-                    tpe match {
-                      case PolyType(tpe, tparams) => PolyType(preprocess(tpe), tparams)
-                      case tpe => TypeBoundsType(tpe, tpe)
-                    }
-                  }
-                  preprocess(sym.infoType)
-                } else if (sym.isObject) {
-                  sym.infoType match {
-                    case TypeRefType(_, moduleClassSym: SymbolInfoSymbol, _) =>
-                      moduleClassSym.infoType
-                    case other =>
-                      sys.error(s"unsupported type $other")
-                  }
-                } else {
-                  sym.infoType
-                }
-              }
-              val ssig = sig.toSemanticSig(linkMode)
-              if (sym.isConstructor) {
-                ssig match {
-                  case ssig: s.MethodSignature => ssig.copy(returnType = s.NoType)
-                  case _ => ssig
-                }
-              } else if (sym.isScalacField) {
-                ssig match {
-                  case ssig: s.ValueSignature =>
-                    val stparams = Some(s.Scope())
-                    val sparamss = Nil
-                    val sret = ssig.tpe
-                    s.MethodSignature(stparams, sparamss, sret)
-                  case s.NoSignature =>
-                    s.NoSignature
-                  case _ =>
-                    sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
-                }
-              } else {
-                ssig
-              }
+              sym.infoType
             }
-          } catch {
-            case ScalaSigParserError("Unexpected failure") =>
-              // FIXME: https://github.com/scalameta/scalameta/issues/1494
-              s.NoSignature
           }
+          val ssig = sig.toSemanticSig(linkMode)
+          if (sym.isConstructor) {
+            ssig match {
+              case ssig: s.MethodSignature => ssig.copy(returnType = s.NoType)
+              case _ => ssig
+            }
+          } else if (sym.isScalacField) {
+            ssig match {
+              case ssig: s.ValueSignature =>
+                val stparams = Some(s.Scope())
+                val sparamss = Nil
+                val sret = ssig.tpe
+                s.MethodSignature(stparams, sparamss, sret)
+              case s.NoSignature =>
+                s.NoSignature
+              case _ =>
+                sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
+            }
+          } else {
+            ssig
+          }
+        }
+      } catch {
+        case ScalaSigParserError("Unexpected failure") =>
+          // FIXME: https://github.com/scalameta/scalameta/issues/1494
+          s.NoSignature
+      }
     }
 
     private val syntheticAnnotationsSymbols = Set(
@@ -199,30 +199,30 @@ trait SymbolInformationOps { self: Scalacp =>
     }
 
     private def annotations: List[s.Annotation] = {
-          val annots =
-            sym.attributes
-              .map(attribute => s.Annotation(attribute.typeRef.toSemanticTpe))
-              .toList
+      val annots =
+        sym.attributes
+          .map(attribute => s.Annotation(attribute.typeRef.toSemanticTpe))
+          .toList
 
-          annots.filterNot(syntheticAnnotations)
+      annots.filterNot(syntheticAnnotations)
     }
 
     private def accessibility: Option[s.Accessibility] = {
       // FIXME: https://github.com/scalameta/scalameta/issues/1325
-          sym.symbolInfo.privateWithin match {
-            case None =>
-              if (sym.isPrivate && sym.isLocal) Some(s.Accessibility(a.PRIVATE_THIS))
-              else if (sym.isPrivate) Some(s.Accessibility(a.PRIVATE))
-              else if (sym.isProtected && sym.isLocal) Some(s.Accessibility(a.PROTECTED_THIS))
-              else if (sym.isProtected) Some(s.Accessibility(a.PROTECTED))
-              else Some(s.Accessibility(a.PUBLIC))
-            case Some(privateWithin: Symbol) =>
-              val ssym = privateWithin.ssym
-              if (sym.isProtected) Some(s.Accessibility(a.PROTECTED_WITHIN, ssym))
-              else Some(s.Accessibility(a.PRIVATE_WITHIN, ssym))
-            case Some(other) =>
-              sys.error(s"unsupported privateWithin: ${other.getClass} $other")
-          }
+      sym.symbolInfo.privateWithin match {
+        case None =>
+          if (sym.isPrivate && sym.isLocal) Some(s.Accessibility(a.PRIVATE_THIS))
+          else if (sym.isPrivate) Some(s.Accessibility(a.PRIVATE))
+          else if (sym.isProtected && sym.isLocal) Some(s.Accessibility(a.PROTECTED_THIS))
+          else if (sym.isProtected) Some(s.Accessibility(a.PROTECTED))
+          else Some(s.Accessibility(a.PUBLIC))
+        case Some(privateWithin: Symbol) =>
+          val ssym = privateWithin.ssym
+          if (sym.isProtected) Some(s.Accessibility(a.PROTECTED_WITHIN, ssym))
+          else Some(s.Accessibility(a.PRIVATE_WITHIN, ssym))
+        case Some(other) =>
+          sys.error(s"unsupported privateWithin: ${other.getClass} $other")
+      }
     }
 
     def toSymbolInformation(linkMode: LinkMode): s.SymbolInformation = {
