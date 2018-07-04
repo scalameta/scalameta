@@ -20,7 +20,7 @@ import scala.collection.mutable
 class Main(settings: Settings, reporter: Reporter) {
 
   lazy val classpathIndex = ClasspathIndex(settings.fullClasspath)
-  private val isReportedMissingSymbol = mutable.Set.empty[String]
+  private val missingSymbols = mutable.Set.empty[String]
 
   def process(): Option[Classpath] = {
     val success = new AtomicBoolean(true)
@@ -101,7 +101,7 @@ class Main(settings: Settings, reporter: Reporter) {
       import scala.collection.JavaConverters._
       Some(Classpath(buffer.iterator().asScala.toList))
     } else {
-      if (isReportedMissingSymbol.nonEmpty) {
+      if (missingSymbols.nonEmpty) {
         reporter.out.println(
           "NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. " +
             "The provided classpath should also include JDK jars such as rt.jar"
@@ -144,8 +144,8 @@ class Main(settings: Settings, reporter: Reporter) {
               }
             } catch {
               case e @ MissingSymbolException(symbol) =>
-                if (!isReportedMissingSymbol(symbol)) {
-                  isReportedMissingSymbol += symbol
+                if (!missingSymbols(symbol)) {
+                  missingSymbols += symbol
                   reporter.out.println(e.getMessage)
                   success = false
                 }
