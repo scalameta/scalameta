@@ -15,10 +15,12 @@ import scala.meta.metacp._
 import scala.util.control.NonFatal
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.GenSeq
+import scala.collection.mutable
 
 class Main(settings: Settings, reporter: Reporter) {
 
   lazy val classpathIndex = ClasspathIndex(settings.fullClasspath)
+  private val isReportedMissingSymbol = mutable.Set.empty[String]
 
   def process(): Option[Classpath] = {
     val success = new AtomicBoolean(true)
@@ -99,6 +101,12 @@ class Main(settings: Settings, reporter: Reporter) {
       import scala.collection.JavaConverters._
       Some(Classpath(buffer.iterator().asScala.toList))
     } else {
+      if (isReportedMissingSymbol.nonEmpty) {
+        reporter.out.println(
+          "NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. " +
+            "The provided classpath should also include JDK jars such as rt.jar"
+        )
+      }
       None
     }
   }
@@ -135,6 +143,12 @@ class Main(settings: Settings, reporter: Reporter) {
                 infos.save(out)
               }
             } catch {
+              case e @ MissingSymbolException(symbol) =>
+                if (!isReportedMissingSymbol(symbol)) {
+                  isReportedMissingSymbol += symbol
+                  reporter.out.println(e.getMessage)
+                  success = false
+                }
               case NonFatal(ex) =>
                 reporter.out.println(s"error: can't convert $path")
                 ex.printStackTrace(reporter.out)

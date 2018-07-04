@@ -15,7 +15,6 @@ class ConvertSuite extends FunSuite {
     val (scalaOrg, toProcess) = classpath.entries.partition(_.toString.contains("scala-lang"))
     val settings = Settings()
       .withClasspath(Classpath(toProcess))
-      .withAssumeJava(Set("java", "org.eclipse"))
       .withDependencyClasspath(Library.jdk.classpath() ++ Classpath(scalaOrg))
       .withCacheDir(tmp)
       .withPar(true)

@@ -3,7 +3,7 @@ package scala.meta.tests.cli
 import java.io._
 import java.nio.charset.StandardCharsets._
 import java.nio.file._
-import org.scalatest._
+import org.scalatest.FunSuite
 import scala.meta.cli._
 import scala.meta.testkit._
 import scala.meta.tests.metacp._
@@ -45,14 +45,15 @@ class CliSuite extends FunSuite with DiffAssertions {
   test("metap " + helloWorldSemanticdb) {
     val (success, out, err) = CliSuite.communicate { (out, err) =>
       val format = scala.meta.metap.Format.Detailed
-      val settings = scala.meta.metap.Settings().withFormat(format).withPaths(List(helloWorldSemanticdb))
+      val settings =
+        scala.meta.metap.Settings().withFormat(format).withPaths(List(helloWorldSemanticdb))
       val reporter = Reporter().withOut(out).withErr(err)
       Metap.process(settings, reporter)
     }
     assert(success)
     assertNoDiffOrPrintExpected(
       out,
-    """|HelloWorld.scala
+      """|HelloWorld.scala
        |----------------
        |
        |Summary:
@@ -89,6 +90,11 @@ class CliSuite extends FunSuite with DiffAssertions {
 }
 
 object CliSuite {
+  def withReporter[T](op: Reporter => T): (T, String, String) = {
+    communicate { (out, err) =>
+      op(Reporter().withOut(out).withErr(err))
+    }
+  }
   def communicate[T](op: (PrintStream, PrintStream) => T): (T, String, String) = {
     val outbaos = new ByteArrayOutputStream
     val outps = new PrintStream(outbaos, true, UTF_8.name)

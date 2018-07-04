@@ -13,6 +13,8 @@ case class ModuleID(organization: String, name: String, version: String) {
   override def toString: String = s"$organization:$name:$version"
 }
 object ModuleID {
+  def scalaReflect(scalaVersion: String): ModuleID =
+    ModuleID("org.scala-lang", "scala-reflect", scalaVersion)
   def fromString(string: String): List[ModuleID] = {
     string
       .split(";")
@@ -27,16 +29,18 @@ object ModuleID {
       .toList
   }
 }
-object Jars  {
+object Jars {
   def fetch(
       org: String,
       artifact: String,
       version: String,
       out: PrintStream = System.out,
       // If true, fetches the -sources.jar files instead of regular jar with classfiles.
-      fetchSourceJars: Boolean = false
-  ): List[AbsolutePath] =
-    fetch(ModuleID(org, artifact, version) :: Nil, out, fetchSourceJars)
+      fetchSourceJars: Boolean = false,
+      provided: List[ModuleID] = Nil
+  ): List[AbsolutePath] = {
+    fetch(ModuleID(org, artifact, version) :: provided, out, fetchSourceJars)
+  }
 
   def fetch(
       modules: Iterable[ModuleID],

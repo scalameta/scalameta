@@ -11,9 +11,7 @@ final class Settings private (
     val classpath: Classpath,
     val dependencyClasspath: Classpath,
     val scalaLibrarySynthetics: Boolean,
-    val par: Boolean,
-    val assumeJava: Set[String],
-    val assumeScala: Set[String]
+    val par: Boolean
 ) {
   fullClasspath.entries.foreach { entry =>
     if (!entry.isFile && !entry.isDirectory) {
@@ -26,9 +24,7 @@ final class Settings private (
       classpath = Classpath(Nil),
       dependencyClasspath = Classpath(Nil),
       scalaLibrarySynthetics = false,
-      par = false,
-      assumeJava = Set("java"),
-      assumeScala = Set.empty
+      par = false
     )
   }
 
@@ -51,14 +47,6 @@ final class Settings private (
     copy(scalaLibrarySynthetics = include)
   }
 
-  def withAssumeJava(assumeJava: Set[String]): Settings = {
-    copy(assumeJava = assumeJava)
-  }
-
-  def withAssumeScala(assumeScala: Set[String]): Settings = {
-    copy(assumeScala = assumeScala)
-  }
-
   def withPar(par: Boolean): Settings = {
     copy(par = par)
   }
@@ -68,18 +56,14 @@ final class Settings private (
       classpath: Classpath = classpath,
       dependencyClasspath: Classpath = dependencyClasspath,
       scalaLibrarySynthetics: Boolean = scalaLibrarySynthetics,
-      par: Boolean = par,
-      assumeJava: Set[String] = assumeJava,
-      assumeScala: Set[String] = assumeScala
+      par: Boolean = par
   ): Settings = {
     new Settings(
       cacheDir = cacheDir,
       classpath = classpath,
       dependencyClasspath = dependencyClasspath,
       scalaLibrarySynthetics = scalaLibrarySynthetics,
-      par = par,
-      assumeJava = assumeJava,
-      assumeScala = assumeScala
+      par = par
     )
   }
 }
@@ -100,10 +84,6 @@ object Settings {
           loop(settings.copy(scalaLibrarySynthetics = true), true, rest)
         case "--par" +: rest if allowOptions =>
           loop(settings.copy(par = true), true, rest)
-        case "--assume-java" +: fqn +: rest if allowOptions =>
-          loop(settings.copy(assumeJava = settings.assumeJava + fqn), true, rest)
-        case "--assume-scala" +: fqn +: rest if allowOptions =>
-          loop(settings.copy(assumeScala = settings.assumeScala + fqn), true, rest)
         case flag +: _ if allowOptions && flag.startsWith("-") =>
           reporter.out.println(s"unsupported flag $flag")
           None
