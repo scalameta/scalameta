@@ -189,7 +189,7 @@ object TreeSyntax {
             validity == Valid
           }
 
-          t.value != "this" && (keywords.contains(t.value) || !validPlainid(t.value))
+          t.value != "this" && (keywords.contains(t.value) || t.value.contains("//") || t.value.contains("/*") || t.value.contains("*/") || !validPlainid(t.value))
         }
         def isAmbiguousWithPatVarTerm(t: Term.Name, p: Tree): Boolean = {
           val looksLikePatVar = t.value.head.isLower && t.value.head.isLetter

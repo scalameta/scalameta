@@ -647,5 +647,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(q"val `a+` = 2".syntax == "val `a+` = 2")
     assert(q"val `a-b` = 2".syntax == "val `a-b` = 2")
     assert(q"val `a:b` = 2".syntax == "val `a:b` = 2")
+
+    // Comments must be handled carefully
+    assert(q"val `/*` = 2".syntax == "val `/*` = 2")
+    assert(q"val `//` = 2".syntax == "val `//` = 2")
+    assert(q"val `a_//` = 2".syntax == "val `a_//` = 2")
   }
 }
