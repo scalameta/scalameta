@@ -20,7 +20,7 @@ import scala.collection.mutable
 
 class Main(settings: Settings, reporter: Reporter) {
 
-  lazy val classpathIndex = ClasspathIndex(settings.fullClasspath)
+  val classpathIndex = ClasspathIndex(settings.fullClasspath)
   private val missingSymbols = mutable.Set.empty[String]
 
   def process(): Option[Classpath] = {
