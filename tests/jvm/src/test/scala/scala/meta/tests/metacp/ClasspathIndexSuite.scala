@@ -50,11 +50,9 @@ class ClasspathIndexSuite extends FunSuite {
     assert(index.getClassfile("flags/p/package$AA.class").isDefined)
   }
 
-  test("error") {
-    val error = intercept[IllegalArgumentException] {
-      ClasspathIndex(Classpath(PathIO.workingDirectory.resolve("doesnotexist.jar")))
-    }
-    assert(error.getMessage.contains("doesnotexist.jar"))
+  test("ignore non-existent") {
+    val classpath = Classpath(PathIO.workingDirectory.resolve("doesnotexist.jar"))
+    val index = ClasspathIndex(classpath)
   }
 
 }

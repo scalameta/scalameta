@@ -58,7 +58,7 @@ object ClasspathIndex {
     private def expandEntry(path: AbsolutePath): Unit = {
       if (path.isFile) expandJarEntry(path)
       else if (path.isDirectory) expandDirEntry(path)
-      else throw new IllegalArgumentException(path.toString)
+      else ()
     }
 
     private def getClassdir(name: String): Classdir = {
@@ -96,7 +96,9 @@ object ClasspathIndex {
           if (classpathAttr != null) {
             classpathAttr.split(" ").foreach { relpath =>
               val abspath = AbsolutePath(jarpath.toNIO.getParent).resolve(relpath)
-              expandEntry(abspath)
+              if (abspath.isFile || abspath.isDirectory) {
+                expandEntry(abspath)
+              }
             }
           }
         }
