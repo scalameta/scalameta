@@ -624,5 +624,33 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(q"val `a b` = 2".syntax == "val `a b` = 2")
   }
 
-}
+  test("#1661 Names outside ") {
+    // Must start with either a letter or an operator
+    assert(q"val `foo` = 2".syntax == "val foo = 2")
+    assert(q"val `++++` = 2".syntax == "val ++++ = 2")
+    assert(q"val `_+` = 2".syntax == "val `_+` = 2")
 
+    // Non-leading operators are accepted only after underscores
+    assert(q"val `a_+` = 2".syntax == "val a_+ = 2")
+    assert(q"val `a_a_+` = 2".syntax == "val a_a_+ = 2")
+
+    // Operators must not be followed by non-operators
+    assert(q"val `+_a` = 2".syntax == "val `+_a` = 2")
+    assert(q"val `a_++` = 2".syntax == "val a_++ = 2")
+    assert(q"val `a_++a` = 2".syntax == "val `a_++a` = 2")
+
+    // Lexical letters and digits can follow underscores
+    assert(q"val `_a` = 2".syntax == "val _a = 2")
+    assert(q"val `a_a` = 2".syntax == "val a_a = 2")
+
+    // Non-operators must not be followed by operators
+    assert(q"val `a+` = 2".syntax == "val `a+` = 2")
+    assert(q"val `a-b` = 2".syntax == "val `a-b` = 2")
+    assert(q"val `a:b` = 2".syntax == "val `a:b` = 2")
+
+    // Comments must be handled carefully
+    assert(q"val `/*` = 2".syntax == "val `/*` = 2")
+    assert(q"val `//` = 2".syntax == "val `//` = 2")
+    assert(q"val `a_//` = 2".syntax == "val `a_//` = 2")
+  }
+}
