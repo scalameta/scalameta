@@ -44,13 +44,13 @@ class CacheSuite extends FunSuite with DiffAssertions with TimeLimitedTests {
         assertDirectoryListingMatches(
           scalaLibrarySyntheticsJar,
           """
-            |META-INF/semanticdb.semanticidx
             |META-INF/semanticdb/scala/Any.class.semanticdb
             |META-INF/semanticdb/scala/AnyRef.class.semanticdb
             |META-INF/semanticdb/scala/AnyVal.class.semanticdb
             |META-INF/semanticdb/scala/Nothing.class.semanticdb
             |META-INF/semanticdb/scala/Null.class.semanticdb
             |META-INF/semanticdb/scala/Singleton.class.semanticdb
+            |META-INF/semanticdb/semanticdb.index
             |""".stripMargin
         )
       case other =>
