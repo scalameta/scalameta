@@ -9,17 +9,16 @@ object SemanticidxProto extends _root_.scalapb.GeneratedFileObject {
   lazy val dependencies: Seq[_root_.scalapb.GeneratedFileObject] = Seq(
   )
   lazy val messagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq(
-    scala.meta.internal.semanticdb.Index,
-    scala.meta.internal.semanticdb.PackageEntry,
-    scala.meta.internal.semanticdb.ToplevelEntry
+    scala.meta.internal.semanticdb.Indexes,
+    scala.meta.internal.semanticdb.Index
   )
   private lazy val ProtoBytes: Array[Byte] =
       scalapb.Encoding.fromBase64(scala.collection.Seq(
   """CidzZW1hbnRpY2RiL3NlbWFudGljZGIvc2VtYW50aWNpZHgucHJvdG8SHnNjYWxhLm1ldGEuaW50ZXJuYWwuc2VtYW50aWNkY
-  iKeAQoFSW5kZXgSSAoIcGFja2FnZXMYASADKAsyLC5zY2FsYS5tZXRhLmludGVybmFsLnNlbWFudGljZGIuUGFja2FnZUVudHJ5U
-  ghwYWNrYWdlcxJLCgl0b3BsZXZlbHMYAiADKAsyLS5zY2FsYS5tZXRhLmludGVybmFsLnNlbWFudGljZGIuVG9wbGV2ZWxFbnRye
-  VIJdG9wbGV2ZWxzIkAKDFBhY2thZ2VFbnRyeRIWCgZzeW1ib2wYASABKAlSBnN5bWJvbBIYCgdtZW1iZXJzGAIgAygJUgdtZW1iZ
-  XJzIjkKDVRvcGxldmVsRW50cnkSFgoGc3ltYm9sGAEgASgJUgZzeW1ib2wSEAoDdXJpGAIgASgJUgN1cmliBnByb3RvMw=="""
+  iJKCgdJbmRleGVzEj8KB2luZGV4ZXMYASADKAsyJS5zY2FsYS5tZXRhLmludGVybmFsLnNlbWFudGljZGIuSW5kZXhSB2luZGV4Z
+  XMimQEKBUluZGV4ElIKCXRvcGxldmVscxgBIAMoCzI0LnNjYWxhLm1ldGEuaW50ZXJuYWwuc2VtYW50aWNkYi5JbmRleC5Ub3BsZ
+  XZlbHNFbnRyeVIJdG9wbGV2ZWxzGjwKDlRvcGxldmVsc0VudHJ5EhAKA2tleRgBIAEoCVIDa2V5EhQKBXZhbHVlGAIgASgJUgV2Y
+  Wx1ZToCOAFiBnByb3RvMw=="""
       ).mkString)
   lazy val scalaDescriptor: _root_.scalapb.descriptors.FileDescriptor = {
     val scalaProto = com.google.protobuf.descriptor.FileDescriptorProto.parseFrom(ProtoBytes)

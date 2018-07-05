@@ -5,8 +5,8 @@ import org.scalactic.source.Position
 import org.scalatest.FunSuite
 import org.scalatest.tagobjects.Slow
 import org.scalatest.BeforeAndAfterEach
+import scala.meta.internal.io.FileIO
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
-import scala.meta.internal.semanticdb.Index
 import scala.meta.io.RelativePath
 import scala.meta.testkit.DiffAssertions
 
@@ -19,53 +19,23 @@ class IncrementalSuite extends FunSuite with BeforeAndAfterEach with DiffAsserti
   }
 
   def assertIndexMatches(expected: String)(implicit source: Position): Unit = {
-    val path = zinc.targetroot.resolve("META-INF").resolve("semanticdb.semanticidx")
-    val index = Index.parseFrom(path.readAllBytes)
+    val path = zinc.targetroot.resolve("META-INF/semanticdb/semanticdb.index")
+    val index = FileIO.readIndex(path)
     val obtained = MetacpIndexExpect.printIndex(index)
     assertNoDiff(obtained, expected)
   }
 
   val A: String =
-    """|Packages:
-       |=========
-       |_empty_/
-       |  _empty_/A.
-       |_root_/
-       |  _empty_/
-       |
-       |Toplevels:
-       |==========
-       |_empty_/A. => src/A.scala.semanticdb
+    """|_empty_/A. => src/A.scala.semanticdb
        |""".stripMargin
 
   val AB: String =
-    """|Packages:
-       |=========
-       |_empty_/
-       |  _empty_/A.
-       |  _empty_/B.
-       |_root_/
-       |  _empty_/
-       |
-       |Toplevels:
-       |==========
-       |_empty_/A. => src/A.scala.semanticdb
+    """|_empty_/A. => src/A.scala.semanticdb
        |_empty_/B. => src/B.scala.semanticdb
        |""".stripMargin
 
   val ABC: String =
-    """|Packages:
-       |=========
-       |_empty_/
-       |  _empty_/A.
-       |  _empty_/B.
-       |  _empty_/C.
-       |_root_/
-       |  _empty_/
-       |
-       |Toplevels:
-       |==========
-       |_empty_/A. => src/A.scala.semanticdb
+    """|_empty_/A. => src/A.scala.semanticdb
        |_empty_/B. => src/B.scala.semanticdb
        |_empty_/C. => src/A.scala.semanticdb
        |""".stripMargin
@@ -132,17 +102,7 @@ class IncrementalSuite extends FunSuite with BeforeAndAfterEach with DiffAsserti
          |""".stripMargin
     )
     assertIndexMatches(
-      """|Packages:
-         |=========
-         |_empty_/
-         |  _empty_/A.
-         |  _empty_/B#
-         |_root_/
-         |  _empty_/
-         |
-         |Toplevels:
-         |==========
-         |_empty_/A. => src/A.scala.semanticdb
+      """|_empty_/A. => src/A.scala.semanticdb
          |_empty_/B# => src/B.java.semanticdb
          |""".stripMargin
     )

@@ -7,7 +7,6 @@ import java.nio.file._
 import java.nio.charset.StandardCharsets._
 import java.util.jar._
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 import scala.compat.Platform.EOL
 import scala.meta._
 import scala.meta.cli._
@@ -21,7 +20,6 @@ import org.scalatest.FunSuite
 import org.scalatest.FunSuiteLike
 import scala.meta.tests.metacp.Library
 import scala.meta.tests.metacp.MetacpOps
-import scala.meta.tests.semanticdb.MetacpExpect.metacp
 
 class ExpectSuite extends FunSuite with DiffAssertions {
   BuildInfo.scalaVersion.split("\\.").take(2).toList match {
@@ -161,7 +159,7 @@ trait ExpectHelpers extends FunSuiteLike {
   }
 
   protected def index(path: Path): String = {
-    val semanticdbSemanticidx = path.resolve("META-INF/semanticdb.semanticidx")
+    val semanticdbSemanticidx = path.resolve("META-INF/semanticdb/semanticdb.index")
     if (Files.exists(semanticdbSemanticidx)) {
       val index = FileIO.readIndex(AbsolutePath(semanticdbSemanticidx))
       printIndex(index)
@@ -171,20 +169,10 @@ trait ExpectHelpers extends FunSuiteLike {
   }
 
   def printIndex(index: s.Index): String = {
-    val buf = new StringBuilder
-    buf.append("Packages:" + EOL)
-    buf.append("=========" + EOL)
-    index.packages.sortBy(_.symbol).foreach { entry =>
-      buf.append(entry.symbol + EOL)
-      entry.members.sorted.foreach(member => buf.append("  " + member + EOL))
-    }
-    buf.append(EOL)
-    buf.append("Toplevels:" + EOL)
-    buf.append("==========" + EOL)
-    index.toplevels.sortBy(_.symbol).foreach { entry =>
-      buf.append(s"${entry.symbol} => ${entry.uri}" + EOL)
-    }
-    buf.toString
+    index.toplevels.toSeq
+      .sortBy(_._1)
+      .map { case (symbol, uri) => s"$symbol => $uri" }
+      .mkString("", "\n", "\n")
   }
 
 }

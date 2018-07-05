@@ -35,8 +35,11 @@ object PlatformFileIO {
 
   def readIndex(path: AbsolutePath): Index = {
     val stream = Files.newInputStream(path.toNIO)
-    try Index.parseFrom(stream)
-    finally stream.close()
+    val indexes =
+      try Indexes.parseFrom(stream)
+      finally stream.close()
+    if (indexes.indexes.length == 1) indexes.indexes.head
+    else Index(indexes.indexes.flatMap(_.toplevels).toMap)
   }
 
   def write(path: AbsolutePath, proto: GeneratedMessage): Unit = {

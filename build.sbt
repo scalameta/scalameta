@@ -637,6 +637,8 @@ lazy val mergeSettings = Def.settings(
 //   sbt scalapbc/assembly
 //   cd ../scalameta
 //   export SCALAPBC=/Users/ollie/dev/ScalaPB/scalapbc/target/scala-2.10/scalapbc-assembly-0.7.5-SNAPSHOT.jar
+//   rm -rf semanticdb/semanticdb/src/main/generated
+//   mkdir semanticdb/semanticdb/src/main/generated
 //   java -jar $SCALAPBC --scala_out=flat_package:semanticdb/semanticdb/src/main/generated semanticdb/semanticdb/*.proto
 lazy val protobufSettings = Def.settings(
   sharedSettings,

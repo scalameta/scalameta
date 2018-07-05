@@ -7,19 +7,14 @@ package scala.meta.internal.semanticdb
 
 @SerialVersionUID(0L)
 final case class Index(
-    packages: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.PackageEntry] = _root_.scala.collection.Seq.empty,
-    toplevels: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.ToplevelEntry] = _root_.scala.collection.Seq.empty
+    toplevels: scala.collection.immutable.Map[_root_.scala.Predef.String, _root_.scala.Predef.String] = scala.collection.immutable.Map.empty
     ) extends scalapb.GeneratedMessage with scalapb.Message[Index] with scalapb.lenses.Updatable[Index] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-      packages.foreach { __item =>
-        val __value = __item
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-      }
       toplevels.foreach { __item =>
-        val __value = __item
+        val __value = scala.meta.internal.semanticdb.Index._typemapper_toplevels.toBase(__item)
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       }
       __size
@@ -33,58 +28,42 @@ final case class Index(
       read
     }
     def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
-      packages.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(1, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
-      };
       toplevels.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(2, 2)
+        val __m = scala.meta.internal.semanticdb.Index._typemapper_toplevels.toBase(__v)
+        _output__.writeTag(1, 2)
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
     }
     def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.Index = {
-      val __packages = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb.PackageEntry] ++= this.packages)
-      val __toplevels = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb.ToplevelEntry] ++= this.toplevels)
+      val __toplevels = (scala.collection.immutable.Map.newBuilder[_root_.scala.Predef.String, _root_.scala.Predef.String] ++= this.toplevels)
       var _done__ = false
       while (!_done__) {
         val _tag__ = _input__.readTag()
         _tag__ match {
           case 0 => _done__ = true
           case 10 =>
-            __packages += _root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.PackageEntry.defaultInstance)
-          case 18 =>
-            __toplevels += _root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.ToplevelEntry.defaultInstance)
+            __toplevels += scala.meta.internal.semanticdb.Index._typemapper_toplevels.toCustom(_root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.Index.ToplevelsEntry.defaultInstance))
           case tag => _input__.skipField(tag)
         }
       }
       scala.meta.internal.semanticdb.Index(
-          packages = __packages.result(),
           toplevels = __toplevels.result()
       )
     }
-    def clearPackages = copy(packages = _root_.scala.collection.Seq.empty)
-    def addPackages(__vs: scala.meta.internal.semanticdb.PackageEntry*): Index = addAllPackages(__vs)
-    def addAllPackages(__vs: TraversableOnce[scala.meta.internal.semanticdb.PackageEntry]): Index = copy(packages = packages ++ __vs)
-    def withPackages(__v: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.PackageEntry]): Index = copy(packages = __v)
-    def clearToplevels = copy(toplevels = _root_.scala.collection.Seq.empty)
-    def addToplevels(__vs: scala.meta.internal.semanticdb.ToplevelEntry*): Index = addAllToplevels(__vs)
-    def addAllToplevels(__vs: TraversableOnce[scala.meta.internal.semanticdb.ToplevelEntry]): Index = copy(toplevels = toplevels ++ __vs)
-    def withToplevels(__v: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.ToplevelEntry]): Index = copy(toplevels = __v)
+    def clearToplevels = copy(toplevels = scala.collection.immutable.Map.empty)
+    def addToplevels(__vs: (_root_.scala.Predef.String, _root_.scala.Predef.String)*): Index = addAllToplevels(__vs)
+    def addAllToplevels(__vs: TraversableOnce[(_root_.scala.Predef.String, _root_.scala.Predef.String)]): Index = copy(toplevels = toplevels ++ __vs)
+    def withToplevels(__v: scala.collection.immutable.Map[_root_.scala.Predef.String, _root_.scala.Predef.String]): Index = copy(toplevels = __v)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
-        case 1 => packages
-        case 2 => toplevels
+        case 1 => toplevels.map(scala.meta.internal.semanticdb.Index._typemapper_toplevels.toBase)(_root_.scala.collection.breakOut)
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
       require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
-        case 1 => _root_.scalapb.descriptors.PRepeated(packages.map(_.toPMessage)(_root_.scala.collection.breakOut))
-        case 2 => _root_.scalapb.descriptors.PRepeated(toplevels.map(_.toPMessage)(_root_.scala.collection.breakOut))
+        case 1 => _root_.scalapb.descriptors.PRepeated(toplevels.map(scala.meta.internal.semanticdb.Index._typemapper_toplevels.toBase(_).toPMessage)(_root_.scala.collection.breakOut))
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
@@ -97,37 +76,164 @@ object Index extends scalapb.GeneratedMessageCompanion[scala.meta.internal.seman
     require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.Index(
-      __fieldsMap.getOrElse(__fields.get(0), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.PackageEntry]],
-      __fieldsMap.getOrElse(__fields.get(1), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.ToplevelEntry]]
+      __fieldsMap.getOrElse(__fields.get(0), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Index.ToplevelsEntry]].map(scala.meta.internal.semanticdb.Index._typemapper_toplevels.toCustom)(_root_.scala.collection.breakOut)
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.Index] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
       require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.Index(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.PackageEntry]]).getOrElse(_root_.scala.collection.Seq.empty),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.ToplevelEntry]]).getOrElse(_root_.scala.collection.Seq.empty)
+        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Index.ToplevelsEntry]]).getOrElse(_root_.scala.collection.Seq.empty).map(scala.meta.internal.semanticdb.Index._typemapper_toplevels.toCustom)(_root_.scala.collection.breakOut)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticidxProto.javaDescriptor.getMessageTypes.get(0)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticidxProto.scalaDescriptor.messages(0)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticidxProto.javaDescriptor.getMessageTypes.get(1)
+  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticidxProto.scalaDescriptor.messages(1)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
-      case 1 => __out = scala.meta.internal.semanticdb.PackageEntry
-      case 2 => __out = scala.meta.internal.semanticdb.ToplevelEntry
+      case 1 => __out = scala.meta.internal.semanticdb.Index.ToplevelsEntry
     }
     __out
   }
-  lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq.empty
+  lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq[_root_.scalapb.GeneratedMessageCompanion[_]](
+    _root_.scala.meta.internal.semanticdb.Index.ToplevelsEntry
+  )
   def enumCompanionForFieldNumber(__fieldNumber: _root_.scala.Int): _root_.scalapb.GeneratedEnumCompanion[_] = throw new MatchError(__fieldNumber)
   lazy val defaultInstance = scala.meta.internal.semanticdb.Index(
   )
-  implicit class IndexLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Index]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.Index](_l) {
-    def packages: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb.PackageEntry]] = field(_.packages)((c_, f_) => c_.copy(packages = f_))
-    def toplevels: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb.ToplevelEntry]] = field(_.toplevels)((c_, f_) => c_.copy(toplevels = f_))
+  @SerialVersionUID(0L)
+  final case class ToplevelsEntry(
+      key: _root_.scala.Predef.String = "",
+      value: _root_.scala.Predef.String = ""
+      ) extends scalapb.GeneratedMessage with scalapb.Message[ToplevelsEntry] with scalapb.lenses.Updatable[ToplevelsEntry] {
+      @transient
+      private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
+      private[this] def __computeSerializedValue(): _root_.scala.Int = {
+        var __size = 0
+        
+        {
+          val __value = key
+          if (__value != "") {
+            __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(1, __value)
+          }
+        };
+        
+        {
+          val __value = value
+          if (__value != "") {
+            __size += _root_.com.google.protobuf.CodedOutputStream.computeStringSize(2, __value)
+          }
+        };
+        __size
+      }
+      final override def serializedSize: _root_.scala.Int = {
+        var read = __serializedSizeCachedValue
+        if (read == 0) {
+          read = __computeSerializedValue()
+          __serializedSizeCachedValue = read
+        }
+        read
+      }
+      def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
+        {
+          val __v = key
+          if (__v != "") {
+            _output__.writeString(1, __v)
+          }
+        };
+        {
+          val __v = value
+          if (__v != "") {
+            _output__.writeString(2, __v)
+          }
+        };
+      }
+      def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.Index.ToplevelsEntry = {
+        var __key = this.key
+        var __value = this.value
+        var _done__ = false
+        while (!_done__) {
+          val _tag__ = _input__.readTag()
+          _tag__ match {
+            case 0 => _done__ = true
+            case 10 =>
+              __key = _input__.readString()
+            case 18 =>
+              __value = _input__.readString()
+            case tag => _input__.skipField(tag)
+          }
+        }
+        scala.meta.internal.semanticdb.Index.ToplevelsEntry(
+            key = __key,
+            value = __value
+        )
+      }
+      def withKey(__v: _root_.scala.Predef.String): ToplevelsEntry = copy(key = __v)
+      def withValue(__v: _root_.scala.Predef.String): ToplevelsEntry = copy(value = __v)
+      def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
+        (__fieldNumber: @_root_.scala.unchecked) match {
+          case 1 => {
+            val __t = key
+            if (__t != "") __t else null
+          }
+          case 2 => {
+            val __t = value
+            if (__t != "") __t else null
+          }
+        }
+      }
+      def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
+        require(__field.containingMessage eq companion.scalaDescriptor)
+        (__field.number: @_root_.scala.unchecked) match {
+          case 1 => _root_.scalapb.descriptors.PString(key)
+          case 2 => _root_.scalapb.descriptors.PString(value)
+        }
+      }
+      def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
+      def companion = scala.meta.internal.semanticdb.Index.ToplevelsEntry
   }
-  final val PACKAGES_FIELD_NUMBER = 1
-  final val TOPLEVELS_FIELD_NUMBER = 2
+  
+  object ToplevelsEntry extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.Index.ToplevelsEntry] {
+    implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.Index.ToplevelsEntry] = this
+    def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.Index.ToplevelsEntry = {
+      require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+      val __fields = javaDescriptor.getFields
+      scala.meta.internal.semanticdb.Index.ToplevelsEntry(
+        __fieldsMap.getOrElse(__fields.get(0), "").asInstanceOf[_root_.scala.Predef.String],
+        __fieldsMap.getOrElse(__fields.get(1), "").asInstanceOf[_root_.scala.Predef.String]
+      )
+    }
+    implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.Index.ToplevelsEntry] = _root_.scalapb.descriptors.Reads{
+      case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
+        require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+        scala.meta.internal.semanticdb.Index.ToplevelsEntry(
+          __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
+          __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Predef.String]).getOrElse("")
+        )
+      case _ => throw new RuntimeException("Expected PMessage")
+    }
+    def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = scala.meta.internal.semanticdb.Index.javaDescriptor.getNestedTypes.get(0)
+    def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = scala.meta.internal.semanticdb.Index.scalaDescriptor.nestedMessages(0)
+    def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = throw new MatchError(__number)
+    lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq.empty
+    def enumCompanionForFieldNumber(__fieldNumber: _root_.scala.Int): _root_.scalapb.GeneratedEnumCompanion[_] = throw new MatchError(__fieldNumber)
+    lazy val defaultInstance = scala.meta.internal.semanticdb.Index.ToplevelsEntry(
+    )
+    implicit class ToplevelsEntryLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Index.ToplevelsEntry]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.Index.ToplevelsEntry](_l) {
+      def key: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Predef.String] = field(_.key)((c_, f_) => c_.copy(key = f_))
+      def value: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Predef.String] = field(_.value)((c_, f_) => c_.copy(value = f_))
+    }
+    final val KEY_FIELD_NUMBER = 1
+    final val VALUE_FIELD_NUMBER = 2
+    implicit val keyValueMapper: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.Index.ToplevelsEntry, (_root_.scala.Predef.String, _root_.scala.Predef.String)] =
+      _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.Index.ToplevelsEntry, (_root_.scala.Predef.String, _root_.scala.Predef.String)](__m => (__m.key, __m.value))(__p => scala.meta.internal.semanticdb.Index.ToplevelsEntry(__p._1, __p._2))
+  }
+  
+  implicit class IndexLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Index]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.Index](_l) {
+    def toplevels: _root_.scalapb.lenses.Lens[UpperPB, scala.collection.immutable.Map[_root_.scala.Predef.String, _root_.scala.Predef.String]] = field(_.toplevels)((c_, f_) => c_.copy(toplevels = f_))
+  }
+  final val TOPLEVELS_FIELD_NUMBER = 1
+  @transient
+  private val _typemapper_toplevels: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.Index.ToplevelsEntry, (_root_.scala.Predef.String, _root_.scala.Predef.String)] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.Index.ToplevelsEntry, (_root_.scala.Predef.String, _root_.scala.Predef.String)]]
 }
