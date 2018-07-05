@@ -70,7 +70,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
       }
 
       private def synchronizeSourcesAndSemanticdbIndex(): Unit = {
-        index.save(config.targetroot, config.sourceroot)
+        semanticdbIndex.save(config.targetroot, config.sourceroot)
       }
 
       override def run(): Unit = {

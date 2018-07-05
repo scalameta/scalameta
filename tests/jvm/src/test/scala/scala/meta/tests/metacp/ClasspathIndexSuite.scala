@@ -1,8 +1,8 @@
 package scala.meta.tests.metacp
 
 import org.scalatest.FunSuite
+import scala.meta.internal.classpath.ClasspathIndex
 import scala.meta.internal.io.PathIO
-import scala.meta.internal.metacp.ClasspathIndex
 import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
 import scala.meta.tests.BuildInfo
@@ -50,11 +50,9 @@ class ClasspathIndexSuite extends FunSuite {
     assert(index.getClassfile("flags/p/package$AA.class").isDefined)
   }
 
-  test("error") {
-    val error = intercept[IllegalArgumentException] {
-      ClasspathIndex(Classpath(PathIO.workingDirectory.resolve("doesnotexist.jar")))
-    }
-    assert(error.getMessage.contains("doesnotexist.jar"))
+  test("ignore non-existent") {
+    val classpath = Classpath(PathIO.workingDirectory.resolve("doesnotexist.jar"))
+    val index = ClasspathIndex(classpath)
   }
 
 }

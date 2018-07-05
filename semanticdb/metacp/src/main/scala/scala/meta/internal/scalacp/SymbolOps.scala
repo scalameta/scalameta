@@ -2,7 +2,6 @@ package scala.meta.internal.scalacp
 
 import java.util.{HashMap, HashSet}
 import scala.meta.internal.metacp._
-import scala.collection.mutable
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
@@ -11,10 +10,7 @@ import scala.tools.scalap.scalax.rules.scalasig._
 
 trait SymbolOps { _: Scalacp =>
   lazy val symbolCache = new HashMap[Symbol, String]
-  lazy val javaDefinedCache = mutable.Map.empty[Symbol, Boolean]
-
   implicit class XtensionSymbolSSymbol(sym: Symbol) {
-
     def toSemantic: String = {
       def uncached(sym: Symbol): String = {
         if (sym.isSemanticdbGlobal) Symbols.Global(sym.owner, sym.descriptor)
@@ -64,36 +60,50 @@ trait SymbolOps { _: Scalacp =>
     }
     def descriptor: Descriptor = {
       val name = sym.name.toSemantic
-      sym.kind match {
-        case k.LOCAL | k.OBJECT | k.PACKAGE_OBJECT =>
-          d.Term(name)
-        case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
-          val overloads = {
-            val peers = sym.parent.get.semanticdbDecls.syms
-            peers.filter {
-              case peer: MethodSymbol => peer.name == sym.name
-              case _ => false
-            }
+      sym match {
+        case sym: SymbolInfoSymbol =>
+          sym.kind match {
+            case k.LOCAL | k.OBJECT | k.PACKAGE_OBJECT =>
+              d.Term(name)
+            case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
+              val overloads = {
+                val peers = sym.parent.get.semanticdbDecls.syms
+                peers.filter {
+                  case peer: MethodSymbol => peer.name == sym.name
+                  case _ => false
+                }
+              }
+              val disambiguator = {
+                if (overloads.lengthCompare(1) == 0) "()"
+                else {
+                  val index = overloads.indexOf(sym)
+                  if (index <= 0) "()"
+                  else s"(+${index})"
+                }
+              }
+              d.Method(name, disambiguator)
+            case k.TYPE | k.CLASS | k.TRAIT =>
+              d.Type(name)
+            case k.PACKAGE =>
+              d.Package(name)
+            case k.PARAMETER =>
+              d.Parameter(name)
+            case k.TYPE_PARAMETER =>
+              d.TypeParameter(name)
+            case skind =>
+              sys.error(s"unsupported kind $skind for symbol $sym")
           }
-          val disambiguator = {
-            if (overloads.lengthCompare(1) == 0) "()"
-            else {
-              val index = overloads.indexOf(sym)
-              if (index <= 0) "()"
-              else s"(+${index})"
-            }
+        case sym: ExternalSymbol =>
+          symbolIndex.lookup(sym) match {
+            case PackageLookup => d.Package(name)
+            case JavaLookup => d.Type(name)
+            case ScalaLookup if sym.entry.entryType == 9 => d.Type(name)
+            case ScalaLookup if sym.entry.entryType == 10 => d.Term(name)
+            case ScalaLookup => sys.error(s"unsupported symbol $sym")
+            case MissingLookup => throw MissingSymbolException(sym)
           }
-          d.Method(name, disambiguator)
-        case k.TYPE | k.CLASS | k.TRAIT =>
-          d.Type(name)
-        case k.PACKAGE =>
-          d.Package(name)
-        case k.PARAMETER =>
-          d.Parameter(name)
-        case k.TYPE_PARAMETER =>
-          d.TypeParameter(name)
-        case skind =>
-          sys.error(s"unsupported kind $skind for symbol $sym")
+        case NoSymbol =>
+          d.None
       }
     }
     def semanticdbDecls: SemanticdbDecls = {
@@ -113,7 +123,11 @@ trait SymbolOps { _: Scalacp =>
           s.Scope(symlinks = syms.map(_.ssym))
         case HardlinkChildren =>
           syms.map(registerHardlink)
-          s.Scope(hardlinks = syms.map(_.toSymbolInformation(HardlinkChildren)))
+          val hardlinks = syms.map {
+            case sym: SymbolInfoSymbol => sym.toSymbolInformation(HardlinkChildren)
+            case sym => sys.error(s"unsupported symbol $sym")
+          }
+          s.Scope(hardlinks = hardlinks)
       }
     }
   }
@@ -137,7 +151,10 @@ trait SymbolOps { _: Scalacp =>
           val sbuf = List.newBuilder[s.SymbolInformation]
           syms.foreach { sym =>
             registerHardlink(sym)
-            val sinfo = sym.toSymbolInformation(HardlinkChildren)
+            val sinfo = sym match {
+              case sym: SymbolInfoSymbol => sym.toSymbolInformation(HardlinkChildren)
+              case sym => sys.error(s"unsupported symbol $sym")
+            }
             sbuf += sinfo
             if (sym.isUsefulField && sym.isMutable) {
               Synthetics.setterInfos(sinfo, HardlinkChildren).foreach(sbuf.+=)
@@ -149,56 +166,6 @@ trait SymbolOps { _: Scalacp =>
   }
 
   implicit class XtensionSymbol(sym: Symbol) {
-    def isJavaDefined: Boolean = javaDefinedCache.get(sym) match {
-      case Some(cachedResult) =>
-        cachedResult
-      case _ =>
-        val result =
-          if (sym.isPackageAccordingToClasspath) false
-          else {
-            sym.parent match {
-              case None => false
-              case Some(p) =>
-                def classpathSaysSymbolIsFromJava(): Boolean = {
-                  val javaClassName = sym.name + ".class"
-                  index.getClassfile(p.packageResourceName, javaClassName) match {
-                    case Some(entry) =>
-                      !entry.hasScalaSig
-                    case None =>
-                      val scalaObjectName = sym.name + "$.class"
-                      index.getClassfile(p.packageResourceName, scalaObjectName) match {
-                        case Some(objectClassfile) =>
-                          if (objectClassfile.hasScalaSig) false
-                          else throw MissingSymbolException(sym.path)
-                        case None =>
-                          throw MissingSymbolException(sym.path)
-                      }
-                  }
-                }
-                p.isJavaDefined || (p.isPackageAccordingToClasspath && classpathSaysSymbolIsFromJava())
-            }
-          }
-        javaDefinedCache.put(sym, result)
-        result
-    }
-    // scalap Symbol.isPackage returns a constant false for external symbols so we have to
-    // query the classpath to know which symbols are truly packages.
-    def isPackageAccordingToClasspath: Boolean = {
-      if (sym.isRootPackage || sym.isEmptyPackage) true
-      else index.isClassdir(packageResourceName)
-    }
-    def packageResourceName: String = {
-      ownerChain.map(_.name).mkString("", "/", "/")
-    }
-    private def ownerChain: List[Symbol] = {
-      val buf = List.newBuilder[Symbol]
-      def loop(s: Symbol): Unit = {
-        s.parent.foreach(loop)
-        buf += s
-      }
-      loop(sym)
-      buf.result()
-    }
     def ssym: String = sym.toSemantic
     def self: Type = sym match {
       case sym: ClassSymbol =>

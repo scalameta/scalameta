@@ -13,11 +13,6 @@ final class Settings private (
     val scalaLibrarySynthetics: Boolean,
     val par: Boolean
 ) {
-  fullClasspath.entries.foreach { entry =>
-    if (!entry.isFile && !entry.isDirectory) {
-      throw new IllegalArgumentException(s"classpath entry does not exist: $entry")
-    }
-  }
   private def this() = {
     this(
       cacheDir = Settings.defaultCacheDir,

@@ -1,4 +1,4 @@
-package scala.meta.internal.metacp
+package scala.meta.internal.classpath
 
 import java.io.File
 import java.io.FilterInputStream

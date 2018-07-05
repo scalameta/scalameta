@@ -574,7 +574,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
             val suri = PathIO.toUnix(semanticdbRelPath.toString)
             val ssymbol = gsym.toSemantic
             val sinfo = s.SymbolInformation(symbol = ssymbol)
-            index.append(suri, List(sinfo))
+            semanticdbIndex.append(suri, List(sinfo))
           case _ =>
             ()
         }
