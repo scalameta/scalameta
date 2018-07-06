@@ -1,6 +1,5 @@
 package scala.meta.internal.semanticdb.scalac
 
-import scala.meta.internal.index._
 import scala.tools.nsc.Global
 
 trait SemanticdbOps
@@ -19,5 +18,4 @@ trait SemanticdbOps
     with TypeOps {
   val global: Global
   var config: SemanticdbConfig = SemanticdbConfig.default
-  val semanticdbIndex: SemanticdbIndex = new SemanticdbIndex
 }

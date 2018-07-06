@@ -9,7 +9,7 @@ import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 
 object Scalalib {
-  lazy val synthetics: List[ToplevelInfos] = {
+  lazy val synthetics: List[ClassfileInfos] = {
     List(
       Scalalib.anyClass,
       Scalalib.anyValClass,
@@ -19,8 +19,7 @@ object Scalalib {
       Scalalib.singletonTrait
     )
   }
-
-  private def anyClass: ToplevelInfos = {
+  private def anyClass: ClassfileInfos = {
     val symbols = List(
       builtinMethod("Any", List(p.ABSTRACT), "equals", Nil, List("that" -> "scala/Any#"), "scala/Boolean#"),
       builtinMethod("Any", List(p.FINAL), "==", Nil, List("that" -> "scala/Any#"), "scala/Boolean#"),
@@ -36,11 +35,11 @@ object Scalalib {
     builtin(k.CLASS, List(p.ABSTRACT), "Any", Nil, symbols.flatten)
   }
 
-  private def anyValClass: ToplevelInfos = {
+  private def anyValClass: ClassfileInfos = {
     builtin(k.CLASS, List(p.ABSTRACT), "AnyVal", List("scala/Any#"), Nil)
   }
 
-  private def anyRefClass: ToplevelInfos = {
+  private def anyRefClass: ClassfileInfos = {
     // FIXME: https://github.com/scalameta/scalameta/issues/1564
     val symbols = List(
       builtinMethod("AnyRef", List(p.FINAL), "eq", Nil, List("that" -> "scala/AnyRef#"), "scala/Boolean#"),
@@ -49,15 +48,15 @@ object Scalalib {
     builtin(k.CLASS, Nil, "AnyRef", List("scala/Any#"), symbols.flatten)
   }
 
-  private def nothingClass: ToplevelInfos = {
+  private def nothingClass: ClassfileInfos = {
     builtin(k.CLASS, List(p.ABSTRACT, p.FINAL), "Nothing", List("scala/Any#"), Nil)
   }
 
-  private def nullClass: ToplevelInfos = {
+  private def nullClass: ClassfileInfos = {
     builtin(k.CLASS, List(p.ABSTRACT, p.FINAL), "Null", List("scala/AnyRef#"), Nil)
   }
 
-  private def singletonTrait: ToplevelInfos = {
+  private def singletonTrait: ClassfileInfos = {
     builtin(k.TRAIT, Nil, "Singleton", List("scala/Any#"), Nil)
   }
 
@@ -66,7 +65,7 @@ object Scalalib {
       props: List[s.SymbolInformation.Property],
       name: String,
       bases: List[String],
-      symbols: List[s.SymbolInformation]): ToplevelInfos = {
+      symbols: List[s.SymbolInformation]): ClassfileInfos = {
     val parents = bases.map { base =>
       s.TypeRef(s.NoType, base, Nil)
     }
@@ -96,10 +95,13 @@ object Scalalib {
       signature = builtinSig,
       accessibility = Some(s.Accessibility(a.PUBLIC))
     )
-    val syntheticBase = PathIO.workingDirectory
-    val syntheticPath = syntheticBase.resolve("scala/" + name + ".class")
-    val syntheticClassfile = ToplevelClassfile(syntheticBase, syntheticPath, null)
-    ToplevelInfos(syntheticClassfile, List(builtin), if (kind.isClass) ctor +: symbols else symbols)
+    val infos = builtin :: (
+      if (kind.isClass) ctor :: symbols
+      else symbols
+    )
+    val relativeUri = "scala/" + name + ".class"
+    val syntheticClassfile = ClassfileInfos(relativeUri, s.Language.SCALA, infos)
+    syntheticClassfile
   }
 
   private def builtinMethod(

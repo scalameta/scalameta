@@ -957,7 +957,7 @@ diagnostics as error, warning, information or hint.
 
 ### Protobuf
 
-[semanticdb.proto][semanticdb.proto]
+[semanticdb3.proto][semanticdb3.proto]
 
 ## Languages
 

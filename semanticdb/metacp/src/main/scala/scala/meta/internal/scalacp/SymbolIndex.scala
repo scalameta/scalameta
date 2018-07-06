@@ -6,6 +6,11 @@ import scala.meta.internal.metacp._
 import scala.tools.scalap.scalax.rules.scalasig._
 
 final class SymbolIndex private (classpathIndex: ClasspathIndex) {
+  lazy val syntheticsPaths: Set[String] =
+    Scalalib.synthetics.map { synthetic =>
+      synthetic.relativeUri.stripSuffix(".class").replace('/', '.')
+    }.toSet
+
   private lazy val lookupCache = mutable.Map.empty[Symbol, SymbolLookup]
   def lookup(sym: ExternalSymbol): SymbolLookup = {
     lookupCache.getOrElseUpdate(sym, {
@@ -52,9 +57,7 @@ final class SymbolIndex private (classpathIndex: ClasspathIndex) {
     def isRootPackage: Boolean = sym.path == "<root>"
     def isEmptyPackage: Boolean = sym.path == "<empty>"
     def isScalalibSynthetic: Boolean = {
-      Scalalib.synthetics.exists { info =>
-        sym.path == info.classfile.uri.stripSuffix(".class").replace("/", ".")
-      }
+      syntheticsPaths.contains(sym.path)
     }
     def packageResourceName: String = {
       ownerChain.filterNot(_.isEmptyPackage).map(_.name).mkString("", "/", "/")

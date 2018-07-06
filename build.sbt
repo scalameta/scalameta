@@ -184,10 +184,9 @@ lazy val metacp = project
   .in(file("semanticdb/metacp"))
   .settings(
     publishableSettings,
-    description := "Scala 2.x classpath to SemanticDB converter",
+    description := "Scala 2.x and Java classpath to SemanticDB converter",
     libraryDependencies ++= List(
-      "org.scala-lang" % "scalap" % scalaVersion.value,
-      "io.github.soc" % "directories" % "10"
+      "org.scala-lang" % "scalap" % scalaVersion.value
     ),
     mainClass := Some("scala.meta.cli.Metacp"),
     buildInfoKeys := Seq[BuildInfoKey](version),
@@ -489,8 +488,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "org.scalacheck" %% "scalacheck" % "1.13.5",
       "io.get-coursier" %% "coursier" % coursier.util.Properties.version,
       "io.get-coursier" %% "coursier-cache" % coursier.util.Properties.version
-    ),
-    bloopSettings
+    )
   )
   .jvmConfigure(_.dependsOn(testkit, interactive, metac, metacp, semanticdbIntegration))
   .nativeSettings(
@@ -866,23 +864,6 @@ def CiCommand(name: String)(commands: List[String]): Command = Command.command(n
 def ci(command: String) = s"plz $ciScalaVersion $command"
 def customVersion = sys.props.get("scalameta.version")
 
-val bloopSettings: Setting[_] = libraryDependencies ++= {
-  if (scalaBinaryVersion.value != "2.12") Nil
-  else {
-    // Zinc is only published for 2.12 since sbt 1 only supports 2.12.
-    val bloop = ("ch.epfl.scala" %% "bloop-frontend" % "1.0.0-M11").excludeAll(
-      ExclusionRule(
-        organization = "com.trueaccord.scalapb",
-        name = s"scalapb-runtime_${scalaBinaryVersion.value}"
-      ),
-      ExclusionRule(
-        organization = "com.lihaoyi",
-        name = s"fastparse_${scalaBinaryVersion.value}"
-      )
-    )
-    bloop :: Nil
-  }
-}
 // Defining these here so it's only defined once and for all projects (including root)
 inScope(Global)(
   Seq(

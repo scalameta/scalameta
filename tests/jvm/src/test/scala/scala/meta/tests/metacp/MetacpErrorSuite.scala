@@ -15,7 +15,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
 
   private val tmp = AbsolutePath(Files.createTempDirectory("metacp"))
   tmp.toFile.deleteOnExit()
-  private val settings = Settings().withCacheDir(tmp)
+  private val settings = Settings().withOut(tmp)
 
   test("missing symbol 1", Slow) {
     val (classpath, out, err) = CliSuite.withReporter { reporter =>
@@ -73,7 +73,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
     val resources = Paths.get("tests", "jvm", "src", "test", "resources")
     val manifest = resources.resolve("manifest.jar")
     val settings = Settings()
-      .withCacheDir(AbsolutePath(cacheDir))
+      .withOut(AbsolutePath(cacheDir))
       .withClasspath(Classpath(AbsolutePath(manifest)))
 
     assert(!Files.list(cacheDir).iterator.hasNext)

@@ -6,16 +6,14 @@ Schema => SemanticDB v4
 Uri => A.class
 Text => empty
 Language => Scala
-Symbols => 5 entries
+Symbols => 3 entries
 
 Symbols:
-_empty_/ => package _empty_
 _empty_/A# => class A extends AnyRef { +2 decls }
   AnyRef => scala/AnyRef#
 _empty_/A#`<init>`(). => primary ctor <init>()
 _empty_/A#b(). => method b: B
   B => _empty_/B#
-_root_/ => package _root_
 
 B.class
 -------
@@ -25,13 +23,11 @@ Schema => SemanticDB v4
 Uri => B.class
 Text => empty
 Language => Scala
-Symbols => 5 entries
+Symbols => 3 entries
 
 Symbols:
-_empty_/ => package _empty_
 _empty_/B# => class B extends AnyRef { +2 decls }
   AnyRef => scala/AnyRef#
 _empty_/B#`<init>`(). => primary ctor <init>()
 _empty_/B#a(). => method a: A
   A => _empty_/A#
-_root_/ => package _root_
