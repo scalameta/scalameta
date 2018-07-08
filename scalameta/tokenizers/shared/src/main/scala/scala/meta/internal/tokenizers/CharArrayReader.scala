@@ -114,9 +114,6 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extend
   private def skipCR() =
     if (ch == CR && charOffset < buf.length)
       buf(charOffset) match {
-        case LF =>
-          charOffset += 1
-          ch = LF
         case '\\' =>
           if (lookaheadReader.getu == LF)
             potentialUnicode()
