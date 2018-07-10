@@ -4,6 +4,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.meta.internal.classpath.ClasspathIndex
+import scala.meta.internal.classpath.MissingSymbolException
 import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
 import scala.meta.internal.semanticdb.Scala._
@@ -19,9 +20,9 @@ import scala.tools.asm.tree.MethodNode
 import scala.tools.asm.{Opcodes => o}
 
 object Javacp {
-  def parse(node: ClassNode, relativeUri: String, classpathIndex: ClasspathIndex): ClassfileInfos = {
+  def parse(node: ClassNode, classpathIndex: ClasspathIndex): ClassfileInfos = {
     val infos = sinfos(node, classpathIndex, 0, Scope.empty)
-    ClassfileInfos(relativeUri: String, s.Language.JAVA, infos.toList)
+    ClassfileInfos(node.name + ".class", s.Language.JAVA, infos.toList)
   }
 
   private def sinfos(
@@ -233,7 +234,7 @@ object Javacp {
       decls += innerClassSymbol
       val path = ic.name + ".class"
       val classfile = classpathIndex.getClassfile(path).getOrElse {
-        throw new NoSuchElementException(path)
+        throw MissingSymbolException(path)
       }
       val innerClassNode = classfile.toClassNode
       buf ++= sinfos(innerClassNode, classpathIndex, ic.access, classScope)

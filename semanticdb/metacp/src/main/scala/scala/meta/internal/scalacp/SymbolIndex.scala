@@ -6,11 +6,6 @@ import scala.meta.internal.metacp._
 import scala.tools.scalap.scalax.rules.scalasig._
 
 final class SymbolIndex private (classpathIndex: ClasspathIndex) {
-  lazy val syntheticsPaths: Set[String] =
-    Scalalib.synthetics.map { synthetic =>
-      synthetic.relativeUri.stripSuffix(".class").replace('/', '.')
-    }.toSet
-
   private lazy val lookupCache = mutable.Map.empty[Symbol, SymbolLookup]
   def lookup(sym: ExternalSymbol): SymbolLookup = {
     lookupCache.getOrElseUpdate(sym, {
@@ -72,6 +67,10 @@ final class SymbolIndex private (classpathIndex: ClasspathIndex) {
       buf.result()
     }
   }
+  private lazy val syntheticsPaths: Set[String] =
+    Scalalib.synthetics.map { synthetic =>
+      synthetic.relativeUri.stripSuffix(".class").replace('/', '.')
+    }.toSet
 }
 
 object SymbolIndex {

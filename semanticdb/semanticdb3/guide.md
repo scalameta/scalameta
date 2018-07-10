@@ -436,18 +436,6 @@ nor `Diagnostics` sections are present, because they both require source
 information. For more information about the SemanticDB format, check out
 [the specification](semanticdb3.md).
 
-In order to improve performance, Metacp sometimes caches conversion results.
-Every classpath entry is converted and cached individually according to the
-following scheme:
-  * Jar files. Always cached in the OS cache directory keyed by the application
-    name `semanticdb`, Metacp version and the fingerprint of the jar.
-    The default cache location depends on the OS and is computed using
-    [directories-jvm](https://github.com/soc/directories-jvm).
-    For example, on macOS the location for scala-library would be
-    `$HOME/Library/Caches/org.scalameta.SemanticDB/3.7.4/scala-library-FINGERPRINT.jar`.
-  * Class directories. Never cached to avoid overflowing the cache with
-    transient results.
-
 As an example of using Metacp, let's compile Test.scala from
 [Example](#example) using Scalac and then convert
 the resulting classfiles to SemanticDB. Note that newer versions of Metac

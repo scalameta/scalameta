@@ -8,7 +8,7 @@ import scala.tools.scalap.scalax.rules.scalasig.ByteCode
 import scala.tools.scalap.scalax.rules.scalasig.ScalaSig
 import scala.tools.scalap.scalax.rules.scalasig.ScalaSigAttributeParsers
 
-sealed abstract class BaseScalaSigAttribute(`type`: String) extends Attribute(`type`) {
+sealed abstract class BaseScalaSigAttribute extends Attribute(Main.SCALA_SIG) {
   override def read(
       cr: ClassReader,
       off: Int,
@@ -22,5 +22,5 @@ sealed abstract class BaseScalaSigAttribute(`type`: String) extends Attribute(`t
     ScalaSigAttribute(scalaSig)
   }
 }
-final case class ScalaSigAttribute(scalaSig: ScalaSig) extends BaseScalaSigAttribute(Main.SCALA_SIG)
-object ScalaSigAttribute extends BaseScalaSigAttribute(Main.SCALA_SIG)
+final case class ScalaSigAttribute(scalaSig: ScalaSig) extends BaseScalaSigAttribute
+object ScalaSigAttribute extends BaseScalaSigAttribute

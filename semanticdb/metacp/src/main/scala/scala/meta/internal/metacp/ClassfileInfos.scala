@@ -28,33 +28,36 @@ final case class ClassfileInfos(
     assert(infos.nonEmpty)
     val semanticdbAbspath =
       out.resolve("META-INF").resolve("semanticdb").resolve(relativeUri + ".semanticdb")
-    PlatformFileIO.write(
-      semanticdbAbspath,
-      toTextDocuments,
-      StandardOpenOption.CREATE,
-      StandardOpenOption.TRUNCATE_EXISTING
-    )
+    // First element wins in case of conflicts to match scala-compiler behavior:
+    // $ scala -classpath $(coursier fetch org.scalameta:metacp_2.12:4.0.0-M3 -p):$(coursier fetch org.scalameta:metacp_2.12:4.0.0-M4 -p)
+    // scala> scala.meta.internal.metacp.BuildInfo
+    // res0: meta.internal.metacp.BuildInfo.type = version: 4.0.0-M3
+    //
+    // $ scala -classpath $(coursier fetch org.scalameta:metacp_2.12:4.0.0-M4 -p):$(coursier fetch org.scalameta:metacp_2.12:4.0.0-M3 -p)
+    // scala> scala.meta.internal.metacp.BuildInfo
+    // res0: meta.internal.metacp.BuildInfo.type = version: 4.0.0-M4
+    if (!semanticdbAbspath.isFile) {
+      FileIO.write(semanticdbAbspath, toTextDocuments)
+    }
   }
 }
 
 object ClassfileInfos {
   def fromClassNode(
       node: ClassNode,
-      relativeUri: String,
       classpathIndex: ClasspathIndex
   ): Option[ClassfileInfos] = {
     node.scalaSig match {
       case Some(scalaSig) =>
-        Some(Scalacp.parse(scalaSig, relativeUri, classpathIndex))
+        Some(Scalacp.parse(node, scalaSig, classpathIndex))
       case None =>
         val attrs = if (node.attrs != null) node.attrs.asScala else Nil
         if (attrs.exists(_.`type` == "Scala")) {
           None
         } else {
-          val innerClassNode =
-            node.innerClasses.asScala.find(_.name == node.name)
+          val innerClassNode = node.innerClasses.asScala.find(_.name == node.name)
           if (innerClassNode.isEmpty) {
-            Some(Javacp.parse(node, relativeUri, classpathIndex))
+            Some(Javacp.parse(node, classpathIndex))
           } else {
             None
           }

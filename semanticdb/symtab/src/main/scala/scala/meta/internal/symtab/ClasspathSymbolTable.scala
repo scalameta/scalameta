@@ -35,7 +35,7 @@ final class ClasspathSymbolTable(classpathIndex: ClasspathIndex) extends SymbolT
     classpathIndex.getClassfile(classdir, filename) match {
       case Some(classfile) =>
         val node = classfile.toClassNode
-        ClassfileInfos.fromClassNode(node, node.name + ".class", classpathIndex) match {
+        ClassfileInfos.fromClassNode(node, classpathIndex) match {
           case Some(infos) =>
             enter(infos)
           case _ =>

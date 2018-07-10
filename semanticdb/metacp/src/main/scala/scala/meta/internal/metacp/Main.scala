@@ -62,7 +62,9 @@ class Main(settings: Settings, reporter: Reporter) {
     }
 
     if (settings.scalaLibrarySynthetics) {
-      dumpScalaLibrarySynthetics(outRoot)
+      Scalalib.synthetics.foreach { infos =>
+        infos.save(outRoot)
+      }
     }
 
     if (success.get) {
@@ -81,22 +83,21 @@ class Main(settings: Settings, reporter: Reporter) {
   private def convertClasspathEntry(in: AbsolutePath, out: AbsolutePath): Boolean = {
     var success = true
     val classpath = Classpath(in)
-    classpath.visit { base =>
+    classpath.visit { _ =>
       new SimpleFileVisitor[Path] {
         override def visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult = {
           if (PathIO.extension(path) == "class") {
             try {
               val abspath = AbsolutePath(path)
               val node = abspath.toClassNode
-              val relativeUri = base.toNIO.relativize(path).iterator().asScala.mkString("/")
-              val result = ClassfileInfos.fromClassNode(node, relativeUri, classpathIndex)
+              val result = ClassfileInfos.fromClassNode(node, classpathIndex)
               result.foreach { infos =>
                 infos.save(out)
               }
             } catch {
               case e @ MissingSymbolException(symbol) =>
-                if (!missingSymbols(symbol.path)) {
-                  missingSymbols += symbol.path
+                if (!missingSymbols(symbol)) {
+                  missingSymbols += symbol
                   reporter.out.println(e.getMessage)
                   success = false
                 }
@@ -111,11 +112,5 @@ class Main(settings: Settings, reporter: Reporter) {
       }
     }
     success
-  }
-
-  private def dumpScalaLibrarySynthetics(out: AbsolutePath): Unit = {
-    Scalalib.synthetics.foreach { infos =>
-      infos.save(out)
-    }
   }
 }
