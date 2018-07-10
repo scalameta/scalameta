@@ -50,7 +50,12 @@ final class GlobalSymbolTable(classpathIndex: ClasspathIndex) extends SymbolTabl
   override def info(symbol: String): Option[SymbolInformation] =
     if (symbol.isPackage) {
       if (classpathIndex.isClassdir(symbol)) {
-        Some(SymbolInformation(symbol, kind = SymbolInformation.Kind.PACKAGE))
+        val info = SymbolInformation(
+          symbol = symbol,
+          name = symbol.desc.name,
+          kind = SymbolInformation.Kind.PACKAGE
+        )
+        Some(info)
       } else {
         None
       }
@@ -66,7 +71,7 @@ final class GlobalSymbolTable(classpathIndex: ClasspathIndex) extends SymbolTabl
 }
 
 object GlobalSymbolTable {
-  def fromClasspath(classpath: Classpath): GlobalSymbolTable = {
+  def apply(classpath: Classpath): GlobalSymbolTable = {
     new GlobalSymbolTable(ClasspathIndex(classpath))
   }
 }

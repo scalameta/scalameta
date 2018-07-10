@@ -1,10 +1,8 @@
 package scala.meta.internal.metacp
 
-import java.nio.file.StandardOpenOption
 import scala.collection.JavaConverters._
 import scala.meta.internal.classpath.ClasspathIndex
 import scala.meta.internal.io.FileIO
-import scala.meta.internal.io.PlatformFileIO
 import scala.meta.internal.javacp.Javacp
 import scala.meta.internal.scalacp.Scalacp
 import scala.meta.internal.{semanticdb => s}
@@ -28,14 +26,7 @@ final case class ClassfileInfos(
     assert(infos.nonEmpty)
     val semanticdbAbspath =
       out.resolve("META-INF").resolve("semanticdb").resolve(relativeUri + ".semanticdb")
-    // First element wins in case of conflicts to match scala-compiler behavior:
-    // $ scala -classpath $(coursier fetch org.scalameta:metacp_2.12:4.0.0-M3 -p):$(coursier fetch org.scalameta:metacp_2.12:4.0.0-M4 -p)
-    // scala> scala.meta.internal.metacp.BuildInfo
-    // res0: meta.internal.metacp.BuildInfo.type = version: 4.0.0-M3
-    //
-    // $ scala -classpath $(coursier fetch org.scalameta:metacp_2.12:4.0.0-M4 -p):$(coursier fetch org.scalameta:metacp_2.12:4.0.0-M3 -p)
-    // scala> scala.meta.internal.metacp.BuildInfo
-    // res0: meta.internal.metacp.BuildInfo.type = version: 4.0.0-M4
+    // First element wins in case of conflicts to match scala-compiler behavior.
     if (!semanticdbAbspath.isFile) {
       FileIO.write(semanticdbAbspath, toTextDocuments)
     }
@@ -49,7 +40,7 @@ object ClassfileInfos {
   ): Option[ClassfileInfos] = {
     node.scalaSig match {
       case Some(scalaSig) =>
-        Some(Scalacp.parse(node, scalaSig, classpathIndex))
+        Some(Scalacp.parse(scalaSig, classpathIndex))
       case None =>
         val attrs = if (node.attrs != null) node.attrs.asScala else Nil
         if (attrs.exists(_.`type` == "Scala")) {

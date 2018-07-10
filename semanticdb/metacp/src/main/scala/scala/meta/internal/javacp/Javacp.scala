@@ -234,7 +234,7 @@ object Javacp {
       decls += innerClassSymbol
       val path = ic.name + ".class"
       val classfile = classpathIndex.getClassfile(path).getOrElse {
-        throw MissingSymbolException(path)
+        throw MissingSymbolException(ssym(ic.name))
       }
       val innerClassNode = classfile.toClassNode
       buf ++= sinfos(innerClassNode, classpathIndex, ic.access, classScope)

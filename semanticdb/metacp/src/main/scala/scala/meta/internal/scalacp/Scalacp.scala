@@ -3,7 +3,6 @@ package scala.meta.internal.scalacp
 import scala.meta.internal.classpath._
 import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb => s}
-import scala.tools.asm.tree.ClassNode
 import scala.tools.scalap.scalax.rules.scalasig._
 
 final class Scalacp private (
@@ -13,13 +12,13 @@ final class Scalacp private (
     with SymbolInformationOps
     with SymbolOps
     with TypeOps {
-  def parse(node: ClassNode, scalaSig: ScalaSig): ClassfileInfos = {
-    val sinfos = scalaSig.symbols.toList.flatMap {
+  def parse(node: ScalaSigNode): ClassfileInfos = {
+    val sinfos = node.scalaSig.symbols.toList.flatMap {
       case sym: SymbolInfoSymbol => this.sinfos(sym)
       case _ => Nil
     }
     val snonlocalInfos = sinfos.filter(sinfo => !hardlinks.contains(sinfo.symbol))
-    ClassfileInfos(node.name + ".class", s.Language.SCALA, snonlocalInfos)
+    ClassfileInfos(node.relativeUri, s.Language.SCALA, snonlocalInfos)
   }
 
   private def sinfos(sym: SymbolInfoSymbol): List[s.SymbolInformation] = {
@@ -38,12 +37,11 @@ final class Scalacp private (
 
 object Scalacp {
   def parse(
-      node: ClassNode,
-      scalaSig: ScalaSig,
+      node: ScalaSigNode,
       classpathIndex: ClasspathIndex
   ): ClassfileInfos = {
     val symbolIndex = SymbolIndex(classpathIndex)
     val scalacp = new Scalacp(symbolIndex)
-    scalacp.parse(node, scalaSig)
+    scalacp.parse(node)
   }
 }

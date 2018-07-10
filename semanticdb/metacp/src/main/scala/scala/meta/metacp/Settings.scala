@@ -75,6 +75,9 @@ object Settings {
           loop(settings, false, rest)
         case "--out" +: out +: rest if allowOptions =>
           loop(settings.copy(out = AbsolutePath(out)), true, rest)
+        case "--cache-dir" +: _ +: _ if allowOptions =>
+          reporter.err.println("--cache-dir is deprecated, use --out instead")
+          None
         case "--dependency-classpath" +: dependencyClasspath +: rest if allowOptions =>
           loop(settings.copy(dependencyClasspath = Classpath(dependencyClasspath)), true, rest)
         case "--exclude-scala-library-synthetics" +: rest if allowOptions =>

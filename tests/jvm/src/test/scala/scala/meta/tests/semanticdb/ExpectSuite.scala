@@ -57,6 +57,7 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         assertNoDiff(loadObtained, loadExpected)
       }
     case _ =>
+      println(s"Skipping ExpectSuite because scalaVersion is ${BuildInfo.scalaVersion}")
       ()
   }
 }

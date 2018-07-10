@@ -9,7 +9,7 @@ import scala.meta.internal.{semanticdb => s}
 
 class SymbolTableSuite extends FunSuite {
   private val classpath = Library.jdk.classpath() ++ Library.scalaLibrary.classpath()
-  private val globalSymtab = GlobalSymbolTable.fromClasspath(classpath)
+  private val globalSymtab = GlobalSymbolTable(classpath)
 
   def checkNotExists(symbol: String): Unit = {
     test(symbol) {

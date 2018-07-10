@@ -12,6 +12,7 @@ import scala.tools.asm.ClassReader._
 import scala.tools.asm.tree._
 import scala.collection.JavaConverters._
 import scala.meta.internal.scalacp.ScalaSigAttribute
+import scala.meta.internal.scalacp.ScalaSigNode
 import scala.reflect.internal.pickling.ByteCodecs
 import scala.tools.scalap.Main
 import scala.tools.scalap.scalax.rules.scalasig.ByteCode
@@ -20,7 +21,7 @@ import scala.tools.scalap.scalax.rules.scalasig.ScalaSigAttributeParsers
 
 package object metacp {
   implicit class XtensionClassNode(node: ClassNode) {
-    def scalaSig: Option[ScalaSig] = {
+    def scalaSig: Option[ScalaSigNode] = {
       if (node.attrs == null) None
       else {
         for {
@@ -31,7 +32,7 @@ package object metacp {
             if (scalaSigAttribute.table.nonEmpty) Some(scalaSigAttribute)
             else fromScalaSigAnnotation
           }
-        } yield scalaSig
+        } yield ScalaSigNode(node.name + ".class", scalaSig)
       }
     }
     private def fromScalaSigAnnotation: Option[ScalaSig] = {

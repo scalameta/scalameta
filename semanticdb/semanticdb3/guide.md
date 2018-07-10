@@ -384,10 +384,10 @@ metacp [options] <classpath>
     <td></td>
   </tr>
   <tr>
-    <td><code>--cache-dir &lt;value&gt</code></td>
+    <td><code>--out &lt;value&gt</code></td>
     <td>Absolute or relative path</td>
     <td>
-      Says where Metacp should cache conversion results.
+      Says where Metacp should output conversion results.
     </td>
     <td>
       See below
