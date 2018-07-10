@@ -13,10 +13,11 @@ class ConvertSuite extends FunSuite {
 
   def runConversion(name: String, classpath: Classpath): Unit = {
     val (scalaOrg, toProcess) = classpath.entries.partition(_.toString.contains("scala-lang"))
+    val filename = name.replaceAll("[^a-zA-Z0-9]", "_") + ".jar"
     val settings = Settings()
       .withClasspath(Classpath(toProcess))
       .withDependencyClasspath(Library.jdk.classpath() ++ Classpath(scalaOrg))
-      .withOut(tmp.resolve(name + ".jar"))
+      .withOut(tmp.resolve(filename))
       .withPar(true)
     val reporter = Reporter().withOut(System.out).withErr(System.err)
     assert(Metacp.process(settings, reporter).nonEmpty)
