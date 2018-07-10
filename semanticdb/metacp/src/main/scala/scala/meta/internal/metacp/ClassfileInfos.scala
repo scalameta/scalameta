@@ -26,10 +26,7 @@ final case class ClassfileInfos(
     assert(infos.nonEmpty)
     val semanticdbAbspath =
       out.resolve("META-INF").resolve("semanticdb").resolve(relativeUri + ".semanticdb")
-    // First element wins in case of conflicts to match scala-compiler behavior.
-    if (!semanticdbAbspath.isFile) {
-      FileIO.write(semanticdbAbspath, toTextDocuments)
-    }
+    FileIO.write(semanticdbAbspath, toTextDocuments)
   }
 }
 

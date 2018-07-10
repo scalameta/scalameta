@@ -18,6 +18,7 @@ lazy val LanguageVersion = LanguageVersions.head
 // ==========================================
 // Projects
 // ==========================================
+javaH
 
 sharedSettings
 version.in(ThisBuild) ~= { old =>
