@@ -25,11 +25,11 @@ object Classpath {
     new Classpath(value.split(pathSeparator).map(AbsolutePath(_)).toList)
   }
 
-  def apply(entry: Path): Classpath = {
+  def fromNIO(entry: Path): Classpath = {
     Classpath(AbsolutePath(entry))
   }
 
-  def apply(entries: List[Path]): Classpath = {
+  def fromNIO(entries: List[Path]): Classpath = {
     Classpath(entries.map(AbsolutePath(_)))
   }
 }

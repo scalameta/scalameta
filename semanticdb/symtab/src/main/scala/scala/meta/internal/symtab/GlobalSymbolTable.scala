@@ -8,14 +8,15 @@ import scala.meta.io._
 import scala.meta.internal.metacp._
 import scala.meta.internal.scalacp.Scalalib
 import scala.meta.internal.semanticdb.Scala._
-import scala.meta.internal.semanticdb.Scope
 import scala.reflect.NameTransformer
 
-final class ClasspathSymbolTable(classpathIndex: ClasspathIndex) extends SymbolTable {
+/** A lazy symbol table that returns global symbols on-the-fly from disk. */
+final class GlobalSymbolTable(classpathIndex: ClasspathIndex) extends SymbolTable {
+
   private val symbolCache = TrieMap.empty[String, SymbolInformation]
   Scalalib.synthetics.foreach(enter)
 
-  override def toString: String = s"ClasspathSymbolTable($classpathIndex)"
+  override def toString: String = s"GlobalSymbolTable($classpathIndex)"
 
   private def enter(infos: ClassfileInfos): Unit =
     infos.infos.foreach { info =>
@@ -62,13 +63,10 @@ final class ClasspathSymbolTable(classpathIndex: ClasspathIndex) extends SymbolT
           symbolCache.get(symbol)
       }
     }
-
-  override def withScope(scope: Scope): SymbolTable =
-    LocalSymbolTable(this, scope)
 }
 
-object ClasspathSymbolTable {
-  def fromClasspath(classpath: Classpath): ClasspathSymbolTable = {
-    new ClasspathSymbolTable(ClasspathIndex(classpath))
+object GlobalSymbolTable {
+  def fromClasspath(classpath: Classpath): GlobalSymbolTable = {
+    new GlobalSymbolTable(ClasspathIndex(classpath))
   }
 }
