@@ -23,14 +23,8 @@ final class GlobalSymbolTable(classpathIndex: ClasspathIndex) extends SymbolTabl
       symbolCache(info.symbol) = info
     }
 
-  @tailrec private def getToplevel(symbol: String): String = {
-    val owner = symbol.owner
-    if (owner.isPackage) symbol
-    else getToplevel(owner)
-  }
-
   private def loadSymbol(symbol: String): Unit = {
-    val toplevel = getToplevel(symbol)
+    val toplevel = symbol.ownerChain.find(!_.isPackage).get
     val classdir = toplevel.owner
     val filename = NameTransformer.encode(toplevel.desc.name.decoded) + ".class"
     classpathIndex.getClassfile(classdir, filename) match {
@@ -49,7 +43,7 @@ final class GlobalSymbolTable(classpathIndex: ClasspathIndex) extends SymbolTabl
 
   override def info(symbol: String): Option[SymbolInformation] =
     if (symbol.isPackage) {
-      if (classpathIndex.isClassdir(symbol)) {
+      if (symbol.isRootPackage || symbol.isEmptyPackage || classpathIndex.isClassdir(symbol)) {
         val info = SymbolInformation(
           symbol = symbol,
           name = symbol.desc.name,

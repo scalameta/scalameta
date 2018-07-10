@@ -85,10 +85,7 @@ class Main(settings: Settings, reporter: Reporter) {
     }
   }
 
-  private def processManifest(
-      entry: AbsolutePath,
-      manifest: Manifest,
-      out: AbsolutePath): Boolean = {
+  private def processManifest(entry: AbsolutePath, manifest: Manifest, out: AbsolutePath): Boolean = {
     var success = true
     val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
     if (classpathAttr != null) {

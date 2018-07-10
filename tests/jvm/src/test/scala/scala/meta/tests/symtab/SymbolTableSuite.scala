@@ -26,6 +26,8 @@ class SymbolTableSuite extends FunSuite {
     }
   }
 
+  check("_empty_/")(_.kind.isPackage)
+  check("_root_/")(_.kind.isPackage)
   check("java/util/ArrayList#size.")(_.kind.isField)
   check("java/util/Map#Entry#")(_.kind.isInterface)
   check("scala/Any#asInstanceOf().")(_.kind.isMethod)
@@ -42,7 +44,9 @@ class SymbolTableSuite extends FunSuite {
   check("scala/reflect/package.materializeClassTag().")(_.kind.isMacro)
   check("scala/util/")(_.kind.isPackage)
 
+  checkNotExists("local20")
   checkNotExists("foo/bar/")
+  checkNotExists("foo.bar/")
   checkNotExists("does/not/Exist#")
   checkNotExists("does/not/Exist.")
   checkNotExists("does/not/Exist.(a)")

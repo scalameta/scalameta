@@ -18,7 +18,6 @@ lazy val LanguageVersion = LanguageVersions.head
 // ==========================================
 // Projects
 // ==========================================
-javaH
 
 sharedSettings
 version.in(ThisBuild) ~= { old =>
@@ -177,7 +176,7 @@ lazy val metac = project
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     mainClass := Some("scala.meta.cli.Metac")
   )
-  // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
+  // FIXME: https://github.com/scalameta/scalameta/issues/1688
   .disablePlugins(BackgroundRunPlugin)
   .dependsOn(cliJVM, semanticdbScalacPlugin)
 
@@ -194,7 +193,7 @@ lazy val metacp = project
     buildInfoPackage := "scala.meta.internal.metacp"
   )
   .enablePlugins(BuildInfoPlugin)
-  // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
+  // FIXME: https://github.com/scalameta/scalameta/issues/1688
   .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdbJVM, cliJVM, ioJVM)
 
@@ -204,7 +203,7 @@ lazy val symtab = project
     publishableSettings,
     description := "SemanticDB symbol table for Scala 2.x and Java classpaths"
   )
-  // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
+  // FIXME: https://github.com/scalameta/scalameta/issues/1688
   .disablePlugins(BackgroundRunPlugin)
   .dependsOn(metacp)
 
@@ -217,7 +216,7 @@ lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     mainClass := Some("scala.meta.cli.Metap")
   )
   .nativeSettings(nativeSettings)
-  // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
+  // FIXME: https://github.com/scalameta/scalameta/issues/1688
   .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdb, cli)
 lazy val metapJVM = metap.jvm
