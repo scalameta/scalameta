@@ -40,7 +40,6 @@ class ClasspathSymbolTableSuite extends FunSuite {
   check("scala/package.Either().")(_.kind.isMethod)
   check("scala/reflect/package.materializeClassTag().")(_.kind.isMacro)
   check("scala/util/")(_.kind.isPackage)
-  check("scala/runtime/Nothing$#")(_.kind.isClass)
 
   checkNotExists("foo/bar/")
   checkNotExists("does/not/Exist#")
