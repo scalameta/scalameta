@@ -197,6 +197,16 @@ lazy val metacp = project
   .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdbJVM, cliJVM, ioJVM)
 
+lazy val symtab = project
+  .in(file("semanticdb/symtab"))
+  .settings(
+    publishableSettings,
+    description := "SemanticDB symbol table for Scala 2.x and Java classpaths"
+  )
+  // NOTE: workaround for https://github.com/sbt/sbt-core-next/issues/8
+  .disablePlugins(BackgroundRunPlugin)
+  .dependsOn(metacp)
+
 lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("semanticdb/metap"))
@@ -490,7 +500,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "io.get-coursier" %% "coursier-cache" % coursier.util.Properties.version
     )
   )
-  .jvmConfigure(_.dependsOn(testkit, interactive, metac, metacp, semanticdbIntegration))
+  .jvmConfigure(_.dependsOn(testkit, interactive, metac, metacp, symtab, semanticdbIntegration))
   .nativeSettings(
     nativeSettings,
     // FIXME: https://github.com/scalatest/scalatest/issues/1112

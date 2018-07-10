@@ -1,8 +1,10 @@
 package scala.meta.internal.metacp
 
+import java.nio.file.StandardOpenOption
 import scala.collection.JavaConverters._
 import scala.meta.internal.classpath.ClasspathIndex
 import scala.meta.internal.io.FileIO
+import scala.meta.internal.io.PlatformFileIO
 import scala.meta.internal.javacp.Javacp
 import scala.meta.internal.scalacp.Scalacp
 import scala.meta.internal.{semanticdb => s}
@@ -26,9 +28,12 @@ final case class ClassfileInfos(
     assert(infos.nonEmpty)
     val semanticdbAbspath =
       out.resolve("META-INF").resolve("semanticdb").resolve(relativeUri + ".semanticdb")
-    if (!semanticdbAbspath.isFile) {
-      FileIO.write(semanticdbAbspath, toTextDocuments)
-    }
+    PlatformFileIO.write(
+      semanticdbAbspath,
+      toTextDocuments,
+      StandardOpenOption.CREATE,
+      StandardOpenOption.TRUNCATE_EXISTING
+    )
   }
 }
 

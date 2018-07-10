@@ -6,6 +6,7 @@ import java.nio.file.FileSystem
 import java.nio.file.FileSystemAlreadyExistsException
 import java.nio.file.FileSystems
 import java.nio.file.Files
+import java.nio.file.OpenOption
 import java.nio.file.Path
 import java.util
 import java.util.stream.Collectors
@@ -33,9 +34,9 @@ object PlatformFileIO {
     finally stream.close()
   }
 
-  def write(path: AbsolutePath, proto: GeneratedMessage): Unit = {
+  def write(path: AbsolutePath, proto: GeneratedMessage, options: OpenOption*): Unit = {
     Files.createDirectories(path.toNIO.getParent)
-    val os = Files.newOutputStream(path.toNIO)
+    val os = Files.newOutputStream(path.toNIO, options: _*)
     try proto.writeTo(os)
     finally os.close()
   }
