@@ -1,7 +1,6 @@
 package scala.meta.io
 
 import java.io.File.pathSeparator
-import java.nio.file.Path
 
 final case class Classpath(entries: List[AbsolutePath]) {
 
@@ -23,17 +22,5 @@ object Classpath {
 
   def apply(value: String): Classpath = {
     new Classpath(value.split(pathSeparator).map(AbsolutePath(_)).toList)
-  }
-
-  def apply(entry: Path): Classpath = {
-    Classpath(AbsolutePath(entry))
-  }
-
-  def apply(entries: List[Path])(implicit dummy: DummyImplicit): Classpath = {
-    Classpath(entries.map(AbsolutePath(_)))
-  }
-
-  def apply(`_`: Nil.type)(implicit dummy: DummyImplicit): Classpath = {
-    Classpath(List.empty[AbsolutePath])
   }
 }
