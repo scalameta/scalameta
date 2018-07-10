@@ -721,6 +721,19 @@ class TokenizerSuite extends BaseTokenizerSuite {
     """.trim.stripMargin.replace("QQQ", "\"\"\""))
   }
 
+  test("interpolation start & end - episode 09") {
+    assert(tokenize("q\"a\"\r\n").map(_.structure).mkString("\n") === """
+      |BOF [0..0)
+      |q [0..1)
+      |" [1..2)
+      |a [2..3)
+      |" [3..4)
+      |\r [4..5)
+      |\n [5..6)
+      |EOF [6..6)
+    """.trim.stripMargin)
+  }
+
   test("$this") {
     assert(tokenize("q\"$this\"").map(_.structure).mkString("\n") === """
       |BOF [0..0)
@@ -854,6 +867,21 @@ class TokenizerSuite extends BaseTokenizerSuite {
   test("Interpolation.Part.value") {
     val Tokens(bof, _, _, _, part: Interpolation.Part, _, _, eof) = """ q"foo" """.tokenize.get
     assert(part.value === "foo")
+  }
+
+  test("Interpolated tree parsed succesfully with windows newline") {
+    val foo = (""" q"foo"""" + "\r\n").tokenize.get
+    println(foo)
+    val Tokens(bof, _, _, _, part: Interpolation.Part, _, cr: CR, lf: LF, eof) = foo
+    assert(part.value === "foo")
+    assert(cr.syntax === "\r")
+    assert(lf.syntax === "\n")
+  }
+
+  test("Interpolated tree parsed succesfully with unix newline") {
+    val Tokens(bof, _, _, _, part: Interpolation.Part, _, lf: LF, eof) = (""" q"foo"""" + "\n").tokenize.get
+    assert(part.value === "foo")
+    assert(lf.syntax === "\n")
   }
 
   test("Comment.value") {
