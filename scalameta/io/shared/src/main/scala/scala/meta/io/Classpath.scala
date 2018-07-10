@@ -25,11 +25,15 @@ object Classpath {
     new Classpath(value.split(pathSeparator).map(AbsolutePath(_)).toList)
   }
 
-  def fromNIO(entry: Path): Classpath = {
+  def apply(entry: Path): Classpath = {
     Classpath(AbsolutePath(entry))
   }
 
-  def fromNIO(entries: List[Path]): Classpath = {
+  def apply(entries: List[Path])(implicit dummy: DummyImplicit): Classpath = {
     Classpath(entries.map(AbsolutePath(_)))
+  }
+
+  def apply(`_`: Nil.type)(implicit dummy: DummyImplicit): Classpath = {
+    Classpath(List.empty[AbsolutePath])
   }
 }
