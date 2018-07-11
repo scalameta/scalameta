@@ -14,12 +14,13 @@ import scala.meta.internal.semanticdb.scalac._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io._
 import scala.meta.testkit.DiffAssertions
+import scala.meta.tests.SkipWindows
 
 abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
     if (name.length > 50) name = name.take(50) + "..."
-    super.test(name)(fn)
+    super.test(name, SkipWindows)(fn)
   }
 
   lazy val g: Global = {

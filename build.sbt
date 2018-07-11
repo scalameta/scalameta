@@ -47,6 +47,10 @@ commands += Command.command("ci-fast") { s =>
     ci("doc") ::
     s
 }
+commands += Command.command("ci-windows") { s =>
+  s"testsJVM/all:testOnly -- -l SkipWindows" ::
+    s
+}
 commands += Command.command("ci-native") { s =>
   "metapNative/nativeLink" ::
     "ci-fast" ::
