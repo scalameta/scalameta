@@ -170,8 +170,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
             val symbol = gsym.toSemantic
             if (symbol == Symbols.None) return
 
-            appendToplevelSymbolToIndex(gsym)
-
             def saveSymbol(gs: g.Symbol): Unit = {
               if (gs.isUseful) {
                 symbols(gs.toSemantic) = gs.toSymbolInformation(SymlinkChildren)
@@ -543,7 +541,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
               d.symbol.initialize
               if (d.symbol.isUseful && !d.symbol.hasPackageFlag) {
                 symbols += d.symbol.toSymbolInformation(SymlinkChildren)
-                appendToplevelSymbolToIndex(d.symbol)
               }
             case _ =>
           }
@@ -562,23 +559,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
         diagnostics = Nil,
         synthetics = Nil
       )
-    }
-    private def appendToplevelSymbolToIndex(gsym: g.Symbol): Unit = {
-      val isToplevel = gsym.owner.hasPackageFlag
-      if (isToplevel) {
-        unit.source.file match {
-          case gfile: GPlainFile =>
-            // FIXME: https://github.com/scalameta/scalameta/issues/1396
-            val scalaRelPath = m.AbsolutePath(gfile.file).toRelative(config.sourceroot)
-            val semanticdbRelPath = scalaRelPath + ".semanticdb"
-            val suri = PathIO.toUnix(semanticdbRelPath.toString)
-            val ssymbol = gsym.toSemantic
-            val sinfo = s.SymbolInformation(symbol = ssymbol)
-            semanticdbIndex.append(suri, List(sinfo))
-          case _ =>
-            ()
-        }
-      }
     }
   }
 

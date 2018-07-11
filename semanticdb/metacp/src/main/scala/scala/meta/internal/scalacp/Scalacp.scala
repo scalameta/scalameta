@@ -1,53 +1,24 @@
 package scala.meta.internal.scalacp
 
-import java.nio.file._
 import scala.meta.internal.classpath._
 import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb => s}
-import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
-import scala.meta.internal.semanticdb.{Language => l}
-import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb.Scala._
-import scala.meta.metacp.Settings
 import scala.tools.scalap.scalax.rules.scalasig._
 
 final class Scalacp private (
-    val classfile: ToplevelClassfile,
-    val settings: Settings,
     val symbolIndex: SymbolIndex
 ) extends AnnotationOps
     with NameOps
     with SymbolInformationOps
     with SymbolOps
     with TypeOps {
-  def parse(): Option[ToplevelInfos] = {
-    val bytes = Files.readAllBytes(classfile.path.toNIO)
-    val scalapClassfile = ClassFileParser.parse(ByteCode(bytes))
-    ScalaSigParser.parse(scalapClassfile).map { scalaSig =>
-      val toplevels = scalaSig.topLevelClasses ++ scalaSig.topLevelObjects
-      val others = {
-        scalaSig.symbols.toList.flatMap {
-          case sym: SymbolInfoSymbol if !toplevels.contains(sym) => Some(sym)
-          case _ => None
-        }
-      }
-      val stoplevels = toplevels.flatMap(sinfos)
-      val sothers = toplevels.flatMap(spackages).distinct ++ others.flatMap(sinfos)
-      val snonlocalOthers = sothers.filter(sinfo => !hardlinks.contains(sinfo.symbol))
-      ToplevelInfos(classfile, stoplevels, snonlocalOthers)
+  def parse(node: ScalaSigNode): ClassfileInfos = {
+    val sinfos = node.scalaSig.symbols.toList.flatMap {
+      case sym: SymbolInfoSymbol => this.sinfos(sym)
+      case _ => Nil
     }
-  }
-
-  private def spackages(toplevelSym: SymbolInfoSymbol): List[s.SymbolInformation] = {
-    val enclosingPackages = toplevelSym.ssym.ownerChain.init
-    enclosingPackages.map { enclosingPackage =>
-      s.SymbolInformation(
-        symbol = enclosingPackage,
-        language = l.SCALA,
-        kind = k.PACKAGE,
-        name = enclosingPackage.desc.name,
-        accessibility = Some(s.Accessibility(a.PUBLIC)))
-    }
+    val snonlocalInfos = sinfos.filter(sinfo => !hardlinks.contains(sinfo.symbol))
+    ClassfileInfos(node.relativeUri, s.Language.SCALA, snonlocalInfos)
   }
 
   private def sinfos(sym: SymbolInfoSymbol): List[s.SymbolInformation] = {
@@ -66,12 +37,11 @@ final class Scalacp private (
 
 object Scalacp {
   def parse(
-      classfile: ToplevelClassfile,
-      settings: Settings,
+      node: ScalaSigNode,
       classpathIndex: ClasspathIndex
-  ): Option[ToplevelInfos] = {
+  ): ClassfileInfos = {
     val symbolIndex = SymbolIndex(classpathIndex)
-    val scalacp = new Scalacp(classfile, settings, symbolIndex)
-    scalacp.parse()
+    val scalacp = new Scalacp(symbolIndex)
+    scalacp.parse(node)
   }
 }

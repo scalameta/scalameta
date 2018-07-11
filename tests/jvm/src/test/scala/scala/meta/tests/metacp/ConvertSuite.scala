@@ -11,19 +11,21 @@ class ConvertSuite extends FunSuite {
   val tmp = AbsolutePath(Files.createTempDirectory("metacp"))
   tmp.toFile.deleteOnExit()
 
-  def runConversion(classpath: Classpath): Unit = {
+  def runConversion(name: String, classpath: Classpath): Unit = {
     val (scalaOrg, toProcess) = classpath.entries.partition(_.toString.contains("scala-lang"))
+    val filename = name.replaceAll("[^a-zA-Z0-9]", "_")
     val settings = Settings()
       .withClasspath(Classpath(toProcess))
       .withDependencyClasspath(Library.jdk.classpath() ++ Classpath(scalaOrg))
-      .withCacheDir(tmp)
+      .withOut(tmp.resolve(filename))
       .withPar(true)
     val reporter = Reporter().withOut(System.out).withErr(System.err)
-    assert(Metacp.process(settings, reporter).nonEmpty)
+    val output = Metacp.process(settings, reporter)
+    assert(output.nonEmpty)
   }
   private def checkConversionSucceeds(library: Library): Unit = {
     test(library.name, Slow) {
-      runConversion(library.classpath())
+      runConversion(library.name, library.classpath())
     }
   }
 

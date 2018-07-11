@@ -36,16 +36,8 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         import MetacpExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
-      test("metacp.index") {
-        import MetacpIndexExpect._
-        assertNoDiff(loadObtained, loadExpected)
-      }
       test("metac.expect") {
         import MetacExpect._
-        assertNoDiff(loadObtained, loadExpected)
-      }
-      test("metac.index") {
-        import MetacIndexExpect._
         assertNoDiff(loadObtained, loadExpected)
       }
       test("metac-metacp.diff") {
@@ -65,6 +57,7 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         assertNoDiff(loadObtained, loadExpected)
       }
     case _ =>
+      println(s"Skipping ExpectSuite because scalaVersion is ${BuildInfo.scalaVersion}")
       ()
   }
 }
@@ -138,7 +131,7 @@ trait ExpectHelpers extends FunSuiteLike {
     val (outPath, out, err) = CliSuite.communicate { (out, err) =>
       val settings = scala.meta.metacp
         .Settings()
-        .withCacheDir(AbsolutePath(target))
+        .withOut(AbsolutePath(target))
         .withClasspath(Classpath(AbsolutePath(in)))
         .withDependencyClasspath(Library.scalaLibrary.classpath() ++ Library.jdk.classpath())
         .withScalaLibrarySynthetics(false)
@@ -158,23 +151,6 @@ trait ExpectHelpers extends FunSuiteLike {
     outPath.toNIO
   }
 
-  protected def index(path: Path): String = {
-    val semanticdbSemanticidx = path.resolve("META-INF/semanticdb/semanticdb.index")
-    if (Files.exists(semanticdbSemanticidx)) {
-      val index = FileIO.readIndex(AbsolutePath(semanticdbSemanticidx))
-      printIndex(index)
-    } else {
-      ""
-    }
-  }
-
-  def printIndex(index: s.Index): String = {
-    index.toplevels.toSeq
-      .sortBy(_._1)
-      .map { case (symbol, uri) => s"$symbol => $uri" }
-      .mkString("", "\n", "\n")
-  }
-
 }
 
 object ScalalibExpect extends ExpectHelpers {
@@ -184,7 +160,7 @@ object ScalalibExpect extends ExpectHelpers {
     tmp.toFile.deleteOnExit()
     val settings = scala.meta.metacp
       .Settings()
-      .withCacheDir(AbsolutePath(tmp))
+      .withOut(AbsolutePath(tmp))
       .withClasspath(Classpath(Nil))
       .withScalaLibrarySynthetics(true)
     val reporter = Reporter()
@@ -200,19 +176,9 @@ object MetacpExpect extends ExpectHelpers {
   def loadObtained: String = metap(metacp(Paths.get(BuildInfo.databaseClasspath)))
 }
 
-object MetacpIndexExpect extends ExpectHelpers {
-  def filename: String = "metacp.index"
-  def loadObtained: String = index(metacp(Paths.get(BuildInfo.databaseClasspath)))
-}
-
 object MetacExpect extends ExpectHelpers {
   def filename: String = "metac.expect"
   def loadObtained: String = metap(Paths.get(BuildInfo.databaseClasspath))
-}
-
-object MetacIndexExpect extends ExpectHelpers {
-  def filename: String = "metac.index"
-  def loadObtained: String = index(Paths.get(BuildInfo.databaseClasspath))
 }
 
 object MetacMetacpDiffExpect extends ExpectHelpers {
@@ -320,9 +286,7 @@ object SaveExpectTest {
   def main(args: Array[String]): Unit = {
     ScalalibExpect.saveExpected(ScalalibExpect.loadObtained)
     MetacpExpect.saveExpected(MetacpExpect.loadObtained)
-    MetacpIndexExpect.saveExpected(MetacpIndexExpect.loadObtained)
     MetacExpect.saveExpected(MetacExpect.loadObtained)
-    MetacIndexExpect.saveExpected(MetacIndexExpect.loadObtained)
     MetacMetacpDiffExpect.saveExpected(MetacMetacpDiffExpect.loadObtained)
     ManifestMetap.saveExpected(ManifestMetap.loadObtained)
     ManifestMetacp.saveExpected(ManifestMetacp.loadObtained)

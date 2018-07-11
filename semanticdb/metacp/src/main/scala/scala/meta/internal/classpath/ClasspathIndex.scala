@@ -50,7 +50,7 @@ object ClasspathIndex {
 
     def result(): ClasspathIndex = {
       val root = Classdir("/")
-      dirs(root.name) = root
+      dirs(root.relativeUri) = root
       classpath.entries.foreach(expandEntry)
       new ClasspathIndex(dirs)
     }
@@ -61,16 +61,30 @@ object ClasspathIndex {
       else ()
     }
 
+    private def addMember(parent: Classdir, basename: String, element: ClasspathElement): Unit = {
+      // First element wins in case of conflicts to match scala-compiler behavior:
+      // $ scala -classpath $(coursier fetch org.scalameta:metacp_2.12:4.0.0-M3 -p):$(coursier fetch org.scalameta:metacp_2.12:4.0.0-M4 -p)
+      // scala> scala.meta.internal.metacp.BuildInfo
+      // res0: meta.internal.metacp.BuildInfo.type = version: 4.0.0-M3
+      //
+      // $ scala -classpath $(coursier fetch org.scalameta:metacp_2.12:4.0.0-M4 -p):$(coursier fetch org.scalameta:metacp_2.12:4.0.0-M3 -p)
+      // scala> scala.meta.internal.metacp.BuildInfo
+      // res0: meta.internal.metacp.BuildInfo.type = version: 4.0.0-M4
+      if (!parent.members.contains(basename)) {
+        parent.members(basename) = element
+      }
+    }
+
     private def getClassdir(name: String): Classdir = {
       dirs.get(name) match {
         case Some(dir) =>
           dir
         case _ =>
           val parent = getClassdir(PathIO.dirname(name))
-          val entry = Classdir(name)
-          parent.members(PathIO.basename(name)) = entry
-          dirs(name) = entry
-          entry
+          val element = Classdir(name)
+          parent.members(PathIO.basename(name)) = element
+          dirs(name) = element
+          element
       }
     }
 
@@ -80,14 +94,14 @@ object ClasspathIndex {
       try {
         val entries = jar.entries()
         while (entries.hasMoreElements) {
-          val entry = entries.nextElement()
-          if (!entry.getName.startsWith("META-INF")) {
+          val element = entries.nextElement()
+          if (!element.getName.startsWith("META-INF")) {
             val parent = getClassdir(
-              if (entry.isDirectory) entry.getName
-              else PathIO.dirname(entry.getName)
+              if (element.isDirectory) element.getName
+              else PathIO.dirname(element.getName)
             )
-            val inJar = CompressedClassfile(entry, file)
-            parent.members(PathIO.basename(entry.getName)) = inJar
+            val inJar = CompressedClassfile(element, file)
+            addMember(parent, PathIO.basename(element.getName), inJar)
           }
         }
         val manifest = jar.getManifest
@@ -108,7 +122,7 @@ object ClasspathIndex {
     }
 
     private def expandDirEntry(root: AbsolutePath): Unit = {
-      def relpath(dir: Path): String =
+      def getRelativeUri(dir: Path): String =
         root.toNIO.relativize(dir).iterator().asScala.mkString("", "/", "/")
       Files.walkFileTree(root.toNIO, new SimpleFileVisitor[Path] {
         override def visitFile(
@@ -117,8 +131,10 @@ object ClasspathIndex {
         ): FileVisitResult = {
           val name = file.getFileName.toString
           if (name.endsWith(".class")) {
-            val dir = dirs(relpath(file.getParent))
-            dir.members(name) = UncompressedClassfile(AbsolutePath(file))
+            val relativeUri = getRelativeUri(file.getParent)
+            val dir = dirs(relativeUri)
+            val element = UncompressedClassfile(relativeUri, AbsolutePath(file))
+            addMember(dir, name, element)
           }
           super.visitFile(file, attrs)
         }
@@ -128,7 +144,7 @@ object ClasspathIndex {
         ): FileVisitResult = {
           if (dir.endsWith("META-INF")) FileVisitResult.SKIP_SUBTREE
           else {
-            val name = relpath(dir)
+            val name = getRelativeUri(dir)
             dirs(name) = Classdir(name)
             super.preVisitDirectory(dir, attrs)
           }

@@ -2,7 +2,6 @@ package scala.meta.internal.io
 
 import scala.meta.internal.semanticdb.TextDocument
 import scala.meta.internal.semanticdb.TextDocuments
-import scala.meta.internal.semanticdb.Index
 import java.net.URI
 import java.nio.charset.Charset
 import java.nio.file.Files
@@ -32,13 +31,6 @@ object PlatformFileIO {
       val filepath = Paths.get(uri)
       readAllBytes(AbsolutePath(filepath.toString))
     } else throw new UnsupportedOperationException(s"Can't read $uri as InputStream")
-  }
-
-  // copy-pasted from JVM
-  def readIndex(path: AbsolutePath): Index = {
-    val stream = Files.newInputStream(path.toNIO)
-    try Index.parseFrom(stream)
-    finally stream.close()
   }
 
   // copy-pasted from JVM

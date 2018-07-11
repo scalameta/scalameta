@@ -1,14 +1,14 @@
 package scala.meta.internal.javacp
 
-import java.util.Comparator
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
+import scala.meta.internal.classpath.ClasspathIndex
+import scala.meta.internal.classpath.MissingSymbolException
 import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
-import scala.meta.internal.semanticdb.Scala.{Names => n}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.{semanticdb => s}
@@ -20,18 +20,14 @@ import scala.tools.asm.tree.MethodNode
 import scala.tools.asm.{Opcodes => o}
 
 object Javacp {
-  def parse(classfile: ToplevelClassfile): Option[ToplevelInfos] = {
-    sinfos(classfile, classfile.node, 0, Scope.empty) match {
-      case others :+ toplevel =>
-        Some(ToplevelInfos(classfile, List(toplevel), others.toList))
-      case _ =>
-        None
-    }
+  def parse(node: ClassNode, classpathIndex: ClasspathIndex): ClassfileInfos = {
+    val infos = sinfos(node, classpathIndex, 0, Scope.empty)
+    ClassfileInfos(node.name + ".class", s.Language.JAVA, infos.toList)
   }
 
   private def sinfos(
-      toplevel: ToplevelClassfile,
       node: ClassNode,
+      classpathIndex: ClasspathIndex,
       access: Int,
       scope: Scope): Seq[s.SymbolInformation] = {
 
@@ -236,9 +232,12 @@ object Javacp {
     directInnerClasses.foreach { ic =>
       val innerClassSymbol = ssym(ic.name)
       decls += innerClassSymbol
-      val innerPath = asmNameToPath(ic.name, toplevel.base)
-      val innerClassNode = innerPath.toClassNode
-      buf ++= sinfos(toplevel, innerClassNode, ic.access, classScope)
+      val path = ic.name + ".class"
+      val classfile = classpathIndex.getClassfile(path).getOrElse {
+        throw MissingSymbolException(ssym(ic.name))
+      }
+      val innerClassNode = classfile.toClassNode
+      buf ++= sinfos(innerClassNode, classpathIndex, ic.access, classScope)
     }
 
     val classSig = s.ClassSignature(

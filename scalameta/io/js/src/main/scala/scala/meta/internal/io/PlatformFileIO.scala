@@ -40,11 +40,6 @@ object PlatformFileIO {
     TextDocuments.parseFrom(bytes).documents
   }
 
-  def readIndex(path: AbsolutePath): Index = JSIO.inNode {
-    val bytes = readAllBytes(path)
-    Index.parseFrom(bytes)
-  }
-
   def write(path: AbsolutePath, proto: GeneratedMessage): Unit = JSIO.inNode {
     JSIO.fs.mkdirSync(path.toNIO.getParent.toString)
     val os = new ByteArrayOutputStream

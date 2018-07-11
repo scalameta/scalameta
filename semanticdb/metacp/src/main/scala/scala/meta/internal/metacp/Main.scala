@@ -1,5 +1,7 @@
 package scala.meta.internal.metacp
 
+import java.io.BufferedOutputStream
+import java.nio.charset.StandardCharsets
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -7,8 +9,6 @@ import java.util.jar._
 import scala.collection.JavaConverters._
 import scala.meta.cli._
 import scala.meta.internal.classpath._
-import scala.meta.internal.index._
-import scala.meta.internal.javacp._
 import scala.meta.internal.scalacp._
 import scala.meta.internal.io._
 import scala.meta.io._
@@ -26,85 +26,54 @@ class Main(settings: Settings, reporter: Reporter) {
   def process(): Option[Classpath] = {
     val success = new AtomicBoolean(true)
 
+    if (settings.out.isFile) {
+      throw new FileAlreadyExistsException(settings.out.toString, null, "--out must not be a file")
+    } else if (!settings.out.isDirectory) {
+      Files.createDirectories(settings.out.toNIO)
+    }
+
     val classpath: GenSeq[AbsolutePath] =
       if (settings.par) settings.classpath.entries.par
       else settings.classpath.entries
 
     val buffer = new ConcurrentLinkedQueue[AbsolutePath]()
-
-    def createCachedJar(cacheEntry: AbsolutePath)(f: AbsolutePath => Boolean): Unit =
-      MetacpGlobalCache.computeIfAbsent(cacheEntry.toNIO) { tmp =>
-        PlatformFileIO.withJarFileSystem(AbsolutePath(tmp), create = true) { out =>
-          val res = f(out)
-          success.compareAndSet(true, res)
-          buffer.add(cacheEntry)
-          res
-        }
+    def processEntry(entry: AbsolutePath): OutputEntry = {
+      withOutputEntry(entry) { out =>
+        buffer.add(out.output)
+        val isSuccess = convertClasspathEntry(entry, out.root)
+        success.compareAndSet(true, isSuccess)
+        out
       }
-
-    if (!Files.exists(Files.createDirectories(settings.cacheDir.toNIO))) {
-      Files.createDirectories(settings.cacheDir.toNIO)
     }
 
     classpath.foreach { entry =>
-      if (entry.isDirectory) {
-        val out = AbsolutePath(Files.createTempDirectory("semanticdb"))
-        val semanticdbIndex = new SemanticdbIndex
-        val res = convertClasspathEntry(entry, out, semanticdbIndex)
-        semanticdbIndex.save(out)
-        success.compareAndSet(true, res)
-        buffer.add(out)
-      } else if (entry.isFile) {
-        val cacheEntry = {
-          val checksum = Checksum(entry)
-          settings.cacheDir.resolve(
-            entry.toFile.getName.stripSuffix(".jar") + "-" + checksum + ".jar")
-        }
-        if (cacheEntry.toFile.exists) {
-          buffer.add(cacheEntry)
-        } else {
-          createCachedJar(cacheEntry) { out =>
-            val semanticdbIndex = new SemanticdbIndex
-            def loop(entry: AbsolutePath): Boolean = {
-              var result = convertClasspathEntry(entry, out, semanticdbIndex)
-              if (entry.isFile) {
-                val jar = new JarFile(entry.toFile)
-                val manifest = jar.getManifest
-                if (manifest != null) {
-                  val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
-                  if (classpathAttr != null) {
-                    classpathAttr.split(" ").foreach { classpathEntry =>
-                      val linkedPath = entry.toNIO.getParent.resolve(classpathEntry)
-                      val linkedEntry = AbsolutePath(linkedPath)
-                      if (linkedEntry.isFile || linkedEntry.isDirectory) {
-                        result &= loop(linkedEntry)
-                      }
-                    }
-                  }
-                }
-              }
-              result
-            }
-            val result = loop(entry)
-            semanticdbIndex.save(out)
-            result
+      val out = processEntry(entry)
+      if (entry.isFile) {
+        val jar = new JarFile(entry.toFile)
+        try {
+          val manifest = jar.getManifest
+          if (manifest != null) {
+            val isSuccess = processManifest(entry, manifest, out.output)
+            success.compareAndSet(true, isSuccess)
           }
+        } finally {
+          jar.close()
         }
       }
     }
 
-    if (settings.scalaLibrarySynthetics) {
-      val cacheTarget = settings.cacheDir.resolve("scala-library-synthetics.jar")
-      if (cacheTarget.toFile.exists) {
-        buffer.add(cacheTarget)
-      } else {
-        createCachedJar(cacheTarget)(dumpScalaLibrarySynthetics)
+    if (settings.scalaLibrarySynthetics && success.get) {
+      withOutputEntry(settings.out.resolve("scala-library-synthetics.jar")) { out =>
+        buffer.add(out.output)
+        Scalalib.synthetics.foreach { infos =>
+          infos.save(out.root)
+        }
       }
     }
 
     if (success.get) {
       import scala.collection.JavaConverters._
-      Some(Classpath(buffer.iterator().asScala.toList))
+      Some(Classpath(buffer.asScala.toList))
     } else {
       if (missingSymbols.nonEmpty) {
         reporter.out.println(
@@ -116,44 +85,96 @@ class Main(settings: Settings, reporter: Reporter) {
     }
   }
 
-  private def convertClasspathEntry(
-      in: AbsolutePath,
-      out: AbsolutePath,
-      semanticdbIndex: SemanticdbIndex): Boolean = {
+  private def processManifest(entry: AbsolutePath, manifest: Manifest, out: AbsolutePath): Boolean = {
+    var success = true
+    val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
+    if (classpathAttr != null) {
+      val outputClasspath = List.newBuilder[AbsolutePath]
+      classpathAttr.split(" ").foreach { classpathEntry =>
+        val linkedPath = entry.toNIO.getParent.resolve(classpathEntry)
+        val linkedEntry = AbsolutePath(linkedPath)
+        if (linkedEntry.isFile || linkedEntry.isDirectory) {
+          withOutputEntry(linkedEntry) { out =>
+            outputClasspath += out.output
+            success &= convertClasspathEntry(linkedEntry, out.root)
+          }
+        }
+      }
+      withJar(out.toNIO) { jos =>
+        jos.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"))
+        val classPath = outputClasspath.result().mkString(" ")
+        val manifest =
+          s"""|Manifest-Version: 1.0
+              |Class-Path: $classPath
+              |""".stripMargin.trim + "\n\n"
+        jos.write(manifest.getBytes(StandardCharsets.UTF_8))
+        jos.closeEntry()
+      }
+    }
+    success
+  }
+
+  private def withJar(path: Path)(fn: JarOutputStream => Unit): Unit = {
+    val os = Files.newOutputStream(path)
+    val bos = new BufferedOutputStream(os)
+    val jos = new JarOutputStream(bos)
+    try fn(jos)
+    finally {
+      jos.close()
+      bos.close()
+      os.close()
+    }
+  }
+
+  /** An output entry that is either a directory or a jar.
+    *
+    * @param output the output directory or jar file on disk that is returned to the user.
+    * @param root the output directory or the NIO FileSystem jar root path if output is a jar file.
+    */
+  private case class OutputEntry(output: AbsolutePath, root: AbsolutePath)
+
+  private def withOutputEntry[T](entry: AbsolutePath)(f: OutputEntry => T): T = {
+    val name = entry.toNIO.getFileName.toString
+    if (PathIO.extension(entry.toNIO) == "jar") {
+      val freeJar = jarNameAlternatives(name, 0).filter(!_.isFile).head
+      PlatformFileIO.withJarFileSystem(freeJar, create = true) { jarRoot =>
+        f(OutputEntry(freeJar, jarRoot))
+      }
+    } else {
+      val freeDir = directoryNameAlternatives(name, 0).filter(!_.isDirectory).head
+      Files.createDirectories(freeDir.toNIO)
+      f(OutputEntry(freeDir, freeDir))
+    }
+  }
+
+  private def directoryNameAlternatives(filename: String, i: Int): Stream[AbsolutePath] = {
+    val name = if (i == 0) filename else filename + "-" + i
+    settings.out.resolve(name) #:: directoryNameAlternatives(filename, i + 1)
+  }
+
+  private def jarNameAlternatives(filename: String, i: Int): Stream[AbsolutePath] = {
+    val name = if (i == 0) filename else (filename.stripSuffix(".jar") + "-" + i) + ".jar"
+    settings.out.resolve(name) #:: jarNameAlternatives(filename, i + 1)
+  }
+
+  private def convertClasspathEntry(in: AbsolutePath, out: AbsolutePath): Boolean = {
     var success = true
     val classpath = Classpath(in)
-    classpath.visit { base =>
+    classpath.visit { _ =>
       new SimpleFileVisitor[Path] {
         override def visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult = {
           if (PathIO.extension(path) == "class") {
             try {
               val abspath = AbsolutePath(path)
               val node = abspath.toClassNode
-              val result = {
-                val attrs = if (node.attrs != null) node.attrs.asScala else Nil
-                if (attrs.exists(_.`type` == "ScalaSig")) {
-                  val classfile = ToplevelClassfile(base, abspath, node)
-                  Scalacp.parse(classfile, settings, classpathIndex)
-                } else if (attrs.exists(_.`type` == "Scala")) {
-                  None
-                } else {
-                  val innerClassNode = node.innerClasses.asScala.find(_.name == node.name)
-                  if (innerClassNode.isEmpty) {
-                    val classfile = ToplevelClassfile(base, abspath, node)
-                    Javacp.parse(classfile)
-                  } else {
-                    None
-                  }
-                }
-              }
+              val result = ClassfileInfos.fromClassNode(node, classpathIndex)
               result.foreach { infos =>
-                semanticdbIndex.append(infos.uri, infos.toplevels)
                 infos.save(out)
               }
             } catch {
               case e @ MissingSymbolException(symbol) =>
-                if (!missingSymbols(symbol.path)) {
-                  missingSymbols += symbol.path
+                if (!missingSymbols(symbol)) {
+                  missingSymbols += symbol
                   reporter.out.println(e.getMessage)
                   success = false
                 }
@@ -168,15 +189,5 @@ class Main(settings: Settings, reporter: Reporter) {
       }
     }
     success
-  }
-
-  private def dumpScalaLibrarySynthetics(out: AbsolutePath): Boolean = {
-    val semanticdbIndex = new SemanticdbIndex
-    Scalalib.synthetics.foreach { infos =>
-      semanticdbIndex.append(infos.uri, infos.toplevels)
-      infos.save(out)
-    }
-    semanticdbIndex.save(out)
-    true
   }
 }

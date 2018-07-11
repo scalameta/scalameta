@@ -52,9 +52,7 @@ final class SymbolIndex private (classpathIndex: ClasspathIndex) {
     def isRootPackage: Boolean = sym.path == "<root>"
     def isEmptyPackage: Boolean = sym.path == "<empty>"
     def isScalalibSynthetic: Boolean = {
-      Scalalib.synthetics.exists { info =>
-        sym.path == info.classfile.uri.stripSuffix(".class").replace("/", ".")
-      }
+      scalalibSyntheticsPaths.contains(sym.path)
     }
     def packageResourceName: String = {
       ownerChain.filterNot(_.isEmptyPackage).map(_.name).mkString("", "/", "/")
@@ -69,6 +67,10 @@ final class SymbolIndex private (classpathIndex: ClasspathIndex) {
       buf.result()
     }
   }
+  private lazy val scalalibSyntheticsPaths: Set[String] =
+    Scalalib.synthetics.map { synthetic =>
+      synthetic.relativeUri.stripSuffix(".class").replace('/', '.')
+    }.toSet
 }
 
 object SymbolIndex {

@@ -1,7 +1,7 @@
 package scala.meta.internal.scalacp
 
 import java.util.{HashMap, HashSet}
-import scala.meta.internal.metacp._
+import scala.meta.internal.classpath.MissingSymbolException
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
@@ -100,7 +100,7 @@ trait SymbolOps { _: Scalacp =>
             case ScalaLookup if sym.entry.entryType == 9 => d.Type(name)
             case ScalaLookup if sym.entry.entryType == 10 => d.Term(name)
             case ScalaLookup => sys.error(s"unsupported symbol $sym")
-            case MissingLookup => throw MissingSymbolException(sym)
+            case MissingLookup => throw MissingSymbolException(sym.path)
           }
         case NoSymbol =>
           d.None

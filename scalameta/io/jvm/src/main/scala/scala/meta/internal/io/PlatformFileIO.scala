@@ -33,15 +33,6 @@ object PlatformFileIO {
     finally stream.close()
   }
 
-  def readIndex(path: AbsolutePath): Index = {
-    val stream = Files.newInputStream(path.toNIO)
-    val indexes =
-      try Indexes.parseFrom(stream)
-      finally stream.close()
-    if (indexes.indexes.length == 1) indexes.indexes.head
-    else Index(indexes.indexes.flatMap(_.toplevels).toMap)
-  }
-
   def write(path: AbsolutePath, proto: GeneratedMessage): Unit = {
     Files.createDirectories(path.toNIO.getParent)
     val os = Files.newOutputStream(path.toNIO)
@@ -74,8 +65,8 @@ object PlatformFileIO {
     new ListFiles(root, relativeFiles.toList)
   }
 
-  def jarRootPath(jarFile: AbsolutePath): AbsolutePath = {
-    val fs = newJarFileSystem(jarFile, create = false)
+  def jarRootPath(jarFile: AbsolutePath, create: Boolean = false): AbsolutePath = {
+    val fs = newJarFileSystem(jarFile, create = create)
     AbsolutePath(fs.getPath("/"))
   }
 

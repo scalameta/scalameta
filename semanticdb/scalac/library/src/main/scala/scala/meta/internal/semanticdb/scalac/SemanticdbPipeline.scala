@@ -69,17 +69,12 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
         RemoveOrphanSemanticdbFiles.process(config)
       }
 
-      private def synchronizeSourcesAndSemanticdbIndex(): Unit = {
-        semanticdbIndex.save(config.targetroot, config.sourceroot)
-      }
-
       override def run(): Unit = {
         try {
           timestampComputeStarted = System.nanoTime()
           super.run()
           g.currentRun.units.filter(_.isJava).foreach(saveSemanticdbForCompilationUnit)
           synchronizeSourcesAndSemanticdbFiles()
-          synchronizeSourcesAndSemanticdbIndex()
           timestampComputeFinished = System.nanoTime()
           idCache.clear()
           symbolCache.clear()

@@ -1,13 +1,12 @@
 package scala.meta.metacp
 
-import io.github.soc.directories.ProjectDirectories
 import scala.meta.cli._
+import scala.meta.internal.io.PathIO
 import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
-import scala.meta.internal.metacp.BuildInfo
 
 final class Settings private (
-    val cacheDir: AbsolutePath,
+    val out: AbsolutePath,
     val classpath: Classpath,
     val dependencyClasspath: Classpath,
     val scalaLibrarySynthetics: Boolean,
@@ -15,7 +14,7 @@ final class Settings private (
 ) {
   private def this() = {
     this(
-      cacheDir = Settings.defaultCacheDir,
+      out = Settings.defaultOut,
       classpath = Classpath(Nil),
       dependencyClasspath = Classpath(Nil),
       scalaLibrarySynthetics = false,
@@ -26,8 +25,13 @@ final class Settings private (
   def fullClasspath: Classpath =
     Classpath(classpath.entries ++ dependencyClasspath.entries)
 
-  def withCacheDir(cacheDir: AbsolutePath): Settings = {
-    copy(cacheDir = cacheDir)
+  def withOut(out: AbsolutePath): Settings = {
+    copy(out = out)
+  }
+
+  @deprecated("Use withOut instead", "4.0.0")
+  def withCacheDir(out: AbsolutePath): Settings = {
+    copy(out = out)
   }
 
   def withClasspath(classpath: Classpath): Settings = {
@@ -47,14 +51,14 @@ final class Settings private (
   }
 
   private def copy(
-      cacheDir: AbsolutePath = cacheDir,
+      out: AbsolutePath = out,
       classpath: Classpath = classpath,
       dependencyClasspath: Classpath = dependencyClasspath,
       scalaLibrarySynthetics: Boolean = scalaLibrarySynthetics,
       par: Boolean = par
   ): Settings = {
     new Settings(
-      cacheDir = cacheDir,
+      out = out,
       classpath = classpath,
       dependencyClasspath = dependencyClasspath,
       scalaLibrarySynthetics = scalaLibrarySynthetics,
@@ -69,8 +73,11 @@ object Settings {
       args match {
         case "--" +: rest =>
           loop(settings, false, rest)
-        case "--cache-dir" +: cacheDir +: rest if allowOptions =>
-          loop(settings.copy(cacheDir = AbsolutePath(cacheDir)), true, rest)
+        case "--out" +: out +: rest if allowOptions =>
+          loop(settings.copy(out = AbsolutePath(out)), true, rest)
+        case "--cache-dir" +: _ +: _ if allowOptions =>
+          reporter.err.println("--cache-dir is deprecated, use --out instead")
+          None
         case "--dependency-classpath" +: dependencyClasspath +: rest if allowOptions =>
           loop(settings.copy(dependencyClasspath = Classpath(dependencyClasspath)), true, rest)
         case "--exclude-scala-library-synthetics" +: rest if allowOptions =>
@@ -94,10 +101,8 @@ object Settings {
     loop(Settings(), allowOptions = true, args)
   }
 
-  def defaultCacheDir: AbsolutePath = {
-    val projectDirectories = ProjectDirectories.from("org.scalameta", "", "SemanticDB")
-    val cacheRoot = AbsolutePath(projectDirectories.cacheDir)
-    cacheRoot.resolve(BuildInfo.version)
+  def defaultOut: AbsolutePath = {
+    PathIO.workingDirectory.resolve("out.jar")
   }
 
   def apply(): Settings = {
