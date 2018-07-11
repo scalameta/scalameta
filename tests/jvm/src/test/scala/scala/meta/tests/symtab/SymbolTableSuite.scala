@@ -12,7 +12,8 @@ class SymbolTableSuite extends FunSuite {
   private val globalSymtab = GlobalSymbolTable(classpath)
 
   def checkNotExists(symbol: String): Unit = {
-    test(symbol) {
+    val name = if (symbol.isEmpty) "<nosymbol>" else symbol
+    test(name) {
       val obtained = globalSymtab.info(symbol)
       assert(obtained.isEmpty, symbol)
     }
@@ -44,6 +45,7 @@ class SymbolTableSuite extends FunSuite {
   check("scala/reflect/package.materializeClassTag().")(_.kind.isMacro)
   check("scala/util/")(_.kind.isPackage)
 
+  checkNotExists("")
   checkNotExists("local20")
   checkNotExists("foo/bar/")
   checkNotExists("foo.bar/")

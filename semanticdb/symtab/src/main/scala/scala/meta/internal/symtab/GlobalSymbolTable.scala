@@ -42,7 +42,8 @@ final class GlobalSymbolTable(classpathIndex: ClasspathIndex) extends SymbolTabl
   }
 
   override def info(symbol: String): Option[SymbolInformation] =
-    if (symbol.isPackage) {
+    if (symbol.isNone) None
+    else if (symbol.isPackage) {
       if (symbol.isRootPackage || symbol.isEmptyPackage || classpathIndex.isClassdir(symbol)) {
         val info = SymbolInformation(
           symbol = symbol,
