@@ -20,8 +20,9 @@ object PlatformFileIO {
     if (uri.getScheme == "file") {
       val filepath = Paths.get(uri)
       readAllBytes(AbsolutePath(filepath.toString))
+    } else {
+      throw new UnsupportedOperationException(s"Can't read $uri as InputStream")
     }
-    else throw new UnsupportedOperationException(s"Can't read $uri as InputStream")
 
   def readAllBytes(path: AbsolutePath): Array[Byte] = JSIO.inNode {
     val jsArray = JSIO.fs.readFileSync(path.toString)
@@ -83,5 +84,9 @@ object PlatformFileIO {
   }
 
   def jarRootPath(jarFile: AbsolutePath): AbsolutePath =
+    throw new UnsupportedOperationException("Can't expand jar file in Scala.js")
+
+  def withJarFileSystem[T](path: AbsolutePath, create: Boolean, close: Boolean = false)(
+      f: AbsolutePath => T): T =
     throw new UnsupportedOperationException("Can't expand jar file in Scala.js")
 }

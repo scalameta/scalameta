@@ -2,6 +2,8 @@ package scala.meta.tests
 package semanticdb
 
 import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.{semanticidx => i}
 import java.io._
 import java.nio.file._
 import java.nio.charset.StandardCharsets._
@@ -10,8 +12,7 @@ import scala.collection.JavaConverters._
 import scala.compat.Platform.EOL
 import scala.meta._
 import scala.meta.cli._
-import scala.meta.internal.io.FileIO
-import scala.meta.internal.io.PathIO
+import scala.meta.internal.io._
 import scala.meta.internal.semanticdb._
 import scala.meta.io.AbsolutePath
 import scala.meta.tests.cli._
@@ -64,6 +65,10 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         import MetacpUndefined._
         assertNoDiff(loadObtained, loadExpected)
       }
+      test("metai.expect") {
+        import MetaiExpect._
+        assertNoDiff(loadObtained, loadExpected)
+      }
     case _ =>
       println(s"Skipping ExpectSuite because scalaVersion is ${BuildInfo.scalaVersion}")
       ()
@@ -74,6 +79,7 @@ trait ExpectHelpers extends FunSuiteLike {
   def filename: String
   def path: Path =
     Paths.get("tests", "jvm", "src", "test", "resources", filename)
+  def manifestJar: Path = path.resolveSibling("manifest.jar")
   def loadExpected: String =
     new String(Files.readAllBytes(path), UTF_8)
   def saveExpected(value: String): Unit =
@@ -392,7 +398,6 @@ object JavacMetacpDiffExpect extends ExpectHelpers {
 object ManifestMetap extends ExpectHelpers {
   def filename: String = "manifest.metap"
   def loadObtained: String = {
-    val manifestJar = path.getParent.resolve("manifest.jar")
     metap(manifestJar)
   }
 }
@@ -400,7 +405,6 @@ object ManifestMetap extends ExpectHelpers {
 object ManifestMetacp extends ExpectHelpers {
   def filename: String = "manifest.metacp"
   def loadObtained: String = {
-    val manifestJar = path.getParent.resolve("manifest.jar")
     metap(metacp(manifestJar))
   }
 }
@@ -423,6 +427,45 @@ object MetacpUndefined extends ExpectHelpers {
   }
 }
 
+object MetaiExpect extends ExpectHelpers {
+  def filename: String = "metai.expect"
+  def loadObtained: String = {
+    val classpath = Classpath(
+      List(
+        AbsolutePath(BuildInfo.databaseClasspath),
+        AbsolutePath(metacp(manifestJar))
+      )
+    )
+    val settings = scala.meta.metai.Settings().withClasspath(classpath)
+    val output = cli.Metai.process(settings, Reporter())
+    if (output.isEmpty) {
+      sys.error("metai error")
+    }
+    val buf = List.newBuilder[i.Index]
+    classpath.foreach { root =>
+      val semanticidx = root.resolve("META-INF/semanticdb.semanticidx")
+      if (semanticidx.isFile) {
+        val indexes = i.Indexes.parseFrom(semanticidx.readAllBytes)
+        buf ++= indexes.indexes
+      }
+    }
+    val indexes = buf.result()
+    val sb = new StringBuilder
+    val bySymbol = indexes.flatMap(_.entries).sortBy(_._1)
+    bySymbol.foreach {
+      case (sym, entry) =>
+        sb.append(sym).append(" => ")
+        entry match {
+          case i.PackageEntry() => sb.append(s"package ").append(sym.desc.name)
+          case i.ToplevelEntry(uri) => sb.append(uri)
+          case i.Entry.Empty => sys.error(sym)
+        }
+        sb.append("\n")
+    }
+    sb.toString()
+  }
+}
+
 // To save the current behavior, run `sbt save-expect`.
 object SaveExpectTest {
   def main(args: Array[String]): Unit = {
@@ -435,6 +478,7 @@ object SaveExpectTest {
     ManifestMetap.saveExpected(ManifestMetap.loadObtained)
     ManifestMetacp.saveExpected(ManifestMetacp.loadObtained)
     MetacpUndefined.saveExpected(MetacpUndefined.loadObtained)
+    MetaiExpect.saveExpected(MetaiExpect.loadObtained)
   }
 }
 

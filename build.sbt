@@ -228,7 +228,22 @@ lazy val metacp = project
   .enablePlugins(BuildInfoPlugin)
   // FIXME: https://github.com/scalameta/scalameta/issues/1688
   .disablePlugins(BackgroundRunPlugin)
-  .aggregate(scalametaJVM, cliJVM, ioJVM)
+  .aggregate(semanticdbJVM, cliJVM, ioJVM)
+  .dependsOn(semanticdbJVM, cliJVM, ioJVM)
+
+lazy val metai = project
+  .in(file("semanticdb/metai"))
+  .settings(
+    publishableSettings,
+    description := "SemanticDB classpath indexer",
+    mainClass := Some("scala.meta.cli.Metai"),
+    buildInfoKeys := Seq[BuildInfoKey](version),
+    buildInfoPackage := "scala.meta.internal.metai"
+  )
+  .enablePlugins(BuildInfoPlugin)
+  // FIXME: https://github.com/scalameta/scalameta/issues/1688
+  .disablePlugins(BackgroundRunPlugin)
+  .aggregate(semanticdbJVM, cliJVM, ioJVM)
   .dependsOn(semanticdbJVM, cliJVM, ioJVM)
 
 lazy val symtab = project
@@ -581,7 +596,9 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "io.get-coursier" %% "coursier-cache" % coursier.util.Properties.version
     )
   )
-  .jvmConfigure(_.dependsOn(testkit, interactive, metac, metacp, symtab, semanticdbIntegration))
+  .jvmConfigure(
+    _.dependsOn(testkit, interactive, metac, metacp, metai, symtab, semanticdbIntegration)
+  )
   .nativeSettings(
     nativeSettings,
     // FIXME: https://github.com/scalatest/scalatest/issues/1112
