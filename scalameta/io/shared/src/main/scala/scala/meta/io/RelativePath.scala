@@ -12,6 +12,7 @@ import scala.collection.JavaConverters._
 sealed abstract case class RelativePath(toNIO: Path) {
   require(!toNIO.isAbsolute, s"$toNIO is not relative!")
   def toFile: File = toNIO.toFile
+  @deprecated("Use toURI(isDirectory = false) instead", "4.0.0")
   def toURI: URI = {
     toURI(isDirectory = false)
   }

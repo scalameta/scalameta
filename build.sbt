@@ -236,11 +236,8 @@ lazy val metai = project
   .settings(
     publishableSettings,
     description := "SemanticDB classpath indexer",
-    mainClass := Some("scala.meta.cli.Metai"),
-    buildInfoKeys := Seq[BuildInfoKey](version),
-    buildInfoPackage := "scala.meta.internal.metai"
+    mainClass := Some("scala.meta.cli.Metai")
   )
-  .enablePlugins(BuildInfoPlugin)
   // FIXME: https://github.com/scalameta/scalameta/issues/1688
   .disablePlugins(BackgroundRunPlugin)
   .aggregate(semanticdbJVM, cliJVM, ioJVM)
