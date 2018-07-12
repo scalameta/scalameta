@@ -360,18 +360,34 @@ scalacOptions += "-Yrangepos"
 
 ### Javac compiler plugin
 
-The `semanticdb-javac` compiler plugin acts harvests and dumps SemanticDB information after the analyze phase of the Java compiler.
+The `semanticdb-javac` compiler plugin collects and dumps SemanticDB information after the analyze
+phase of the Java compiler. It currently only produces symbol information, not occurrences.
 
-To use it, add it to your build's compile classpath and add the following javac option:
+To use it, follow these instructions:
 
-```"-Xplugin:semanticdb <target-dir> --sourceroot <source-root>"```
+1. Install the plugin by adding a dependency to `org.scalameta:semanticdb-javac` in your build, or by running:
+  
+    ```$ coursier fetch --intransitive org.scalameta:semanticdb-javac_2.12:4.0.0-M4```
 
-Replace `<target-dir>` with whatever directory you want the generated SemanticDB to live in, and replace `<source-root>` with the root you want source file URIs to be relative too. If `<source-root>` is omitted, it defaults to the current working directory.
+2. Add the plugin to your build's compile classpath. If invoking `javac` directly add it as one of the listed `-cp` entries. Otherwise, adding the plugin as a library dependency in your build tool should be enough.
+
+3. Add the following javac option:
+
+    ```"-Xplugin:semanticdb <target-dir> --sourceroot <source-root>"```
+
+    > __Note__: Giving quotes around this option is necessary on the command line, as that is how javac is able to tell what arguments belong to the plugin. If you are constructing the javac command programmatically as a sequence of string arguments, then this should be a single string without quotes.
+
+    Replace `<target-dir>` with whatever directory you want the generated SemanticDB to live in, and
+    replace `<source-root>` with the root you want source file URIs to be relative to.
+    If `<source-root>` is omitted, it defaults to the current working directory.
 
 For example, a full javac invocation using the plugin would look like:
 
 ```
-javac "-Xplugin:semanticdb java-project/target/semanticdb --sourceroot java-project/" -cp <classpath>:<path-to-semanticdb-javac.jar> java-project/src/main/File1.java -d java-project/target/classes
+javac "-Xplugin:semanticdb java-project/target/semanticdb --sourceroot java-project/" \
+  -cp <classpath>:<path-to-semanticdb-javac.jar> \
+  -d java-project/target/classes \
+  java-project/src/main/File1.java java-project/src/main/File2.java
 ```
 
 ### Metacp
