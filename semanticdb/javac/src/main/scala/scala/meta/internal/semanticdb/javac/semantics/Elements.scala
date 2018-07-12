@@ -211,17 +211,17 @@ trait Elements {
       infos += myInfo
       elem match {
         case elem: TypeElement =>
+          elem.typeParamElements.foreach { elem =>
+            elem.populateInfos(infos)
+          }
           elem.enclosedElements.foreach { elem =>
             elem.populateInfos(infos)
           }
-          elem.typeParamElements.foreach { elem =>
-            elem.populateInfos(infos)
-          }
         case elem: ExecutableElement =>
-          elem.paramElements.foreach { elem =>
+          elem.typeParamElements.foreach { elem =>
             elem.populateInfos(infos)
           }
-          elem.typeParamElements.foreach { elem =>
+          elem.paramElements.foreach { elem =>
             elem.populateInfos(infos)
           }
         case _ =>

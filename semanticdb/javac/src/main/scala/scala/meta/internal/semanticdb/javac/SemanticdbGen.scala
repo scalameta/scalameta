@@ -20,13 +20,8 @@ class SemanticdbGen(relSourcePath: Path, toplevels: Seq[TypeElement]) {
     def infoForPackage(pkgSym: String): s.SymbolInformation =
       s.SymbolInformation(
         symbol = pkgSym,
-        language = s.Language.JAVA,
         kind = s.SymbolInformation.Kind.PACKAGE,
-        name = pkgSym.desc.name,
-        accessibility = Some(
-          s.Accessibility(
-            tag = s.Accessibility.Tag.PUBLIC
-          ))
+        name = pkgSym.desc.name
       )
 
     val pkg = toplevels.head.enclosingPackage

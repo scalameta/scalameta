@@ -18,6 +18,7 @@ features, check out [the specification](semanticdb3.md).
   * [Scalac compiler plugin](#scalac-compiler-plugin)
   * [Metac](#metac)
   * [sbt](#sbt)
+  * [Javac compiler plugin](#javac-compiler-plugin)
   * [Metacp](#metacp)
 * [Consuming SemanticDB](#consuming-semanticdb)
   * [Scala bindings](#scala-bindings)
@@ -355,6 +356,22 @@ option to be enabled.
 ```scala
 addCompilerPlugin("org.scalameta" % "semanticdb-scalac" % "4.0.0-M5" cross CrossVersion.full)
 scalacOptions += "-Yrangepos"
+```
+
+### Javac compiler plugin
+
+The `semanticdb-javac` compiler plugin acts harvests and dumps SemanticDB information after the analyze phase of the Java compiler.
+
+To use it, add it to your build's compile classpath and add the following javac option:
+
+```"-Xplugin:semanticdb <target-dir> --sourceroot <source-root>"```
+
+Replace `<target-dir>` with whatever directory you want the generated SemanticDB to live in, and replace `<source-root>` with the root you want source file URIs to be relative too. If `<source-root>` is omitted, it defaults to the current working directory.
+
+For example, a full javac invocation using the plugin would look like:
+
+```
+javac "-Xplugin:semanticdb java-project/target/semanticdb --sourceroot java-project/" -cp <classpath>:<path-to-semanticdb-javac.jar> java-project/src/main/File1.java -d java-project/target/classes
 ```
 
 ### Metacp
