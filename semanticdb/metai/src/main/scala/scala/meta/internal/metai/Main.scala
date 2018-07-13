@@ -1,8 +1,8 @@
 package scala.meta.internal.metai
 
+import java.net.URI
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
-import scala.collection.mutable
 import scala.meta.cli.Reporter
 import scala.meta.internal.io.FileIO
 import scala.meta.internal.io.PathIO
@@ -21,29 +21,41 @@ final class Main(settings: Settings, reporter: Reporter) {
     var success = true
     settings.classpath.foreach { entry =>
       try {
-        processEntry(entry)
+        success &= processEntry(entry)
       } catch {
         case NonFatal(e) =>
-          e.printStackTrace(reporter.err)
+          e.printStackTrace(reporter.out)
           success = false
       }
     }
     success
   }
 
-  private def processEntry(entry: AbsolutePath): Unit = {
-    val semanticdb = entry.resolve("META-INF").resolve("semanticdb")
-    if (!semanticdb.isDirectory) return
-    val ls = FileIO.listAllFilesRecursively(semanticdb)
+  private def processEntry(file: ClasspathFile): Boolean = {
+    var hasSemanticdb = false
+    val ls = FileIO.listAllFilesRecursively(file.path)
     var index = i.Index()
     ls.files.foreach { relpath =>
       if (PathIO.extension(relpath.toNIO) == "semanticdb") {
+        hasSemanticdb = true
         val entries = getEntriesForPath(ls.root, relpath).entries
         index = index.addAllEntries(entries)
       }
     }
-    val indexes = i.Indexes(List(index))
-    writeIndex(ls.root, indexes)
+    if (hasSemanticdb) {
+      val indexes = i.Indexes(List(index))
+      writeIndex(ls.root, indexes)
+      true
+    } else {
+      file.path.toManifest match {
+        case Some(manifest) if manifest.getMainAttributes.getValue("Class-Path") != null =>
+          // It's expected that manifest jars that point to other jars don't have SemanticDB files.
+          true
+        case _ =>
+          reporter.out.println(s"No SemanticDB: ${file.pathOnDisk}")
+          false
+      }
+    }
   }
 
   private def writeIndex(root: AbsolutePath, indexes: i.Indexes): Unit = {
@@ -56,9 +68,11 @@ final class Main(settings: Settings, reporter: Reporter) {
     )
   }
 
+  private val RelUriPrefix = URI.create("META-INF/semanticdb")
+
   private def getEntriesForPath(root: AbsolutePath, relpath: RelativePath): i.Index = {
     val abspath = root.resolve(relpath)
-    val reluri = relpath.toURI(isDirectory = false).toString
+    val reluri = RelUriPrefix.relativize(relpath.toURI(isDirectory = false)).toString
     val in = Files.newInputStream(abspath.toNIO)
     val docs =
       try s.TextDocuments.parseFrom(in)
