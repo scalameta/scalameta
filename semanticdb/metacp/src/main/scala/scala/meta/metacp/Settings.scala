@@ -102,7 +102,7 @@ object Settings {
   }
 
   def defaultOut: AbsolutePath = {
-    PathIO.workingDirectory.resolve("out.jar")
+    PathIO.workingDirectory.resolve("out")
   }
 
   def apply(): Settings = {
