@@ -233,7 +233,7 @@ object MetacExpect extends ExpectHelpers {
 
 object JavacExpect extends ExpectHelpers {
   def filename: String = "javac.expect"
-  def loadObtained: String = metap(classDirectory)
+  def loadObtained: String = metap(Paths.get(BuildInfo.javacSemanticdbPath))
 }
 
 object MetacMetacpDiffExpect extends ExpectHelpers {
@@ -478,7 +478,7 @@ object SaveExpectTest {
     MetacExpect.saveExpected()
     JavacExpect.saveExpected()
     MetacMetacpDiffExpect.saveExpected()
-    JavacMetacpDiffExpect.saveExpected(JavacMetacpDiffExpect.loadObtained)
+    JavacMetacpDiffExpect.saveExpected()
     ManifestMetap.saveExpected()
     ManifestMetacp.saveExpected()
     MetacpUndefined.saveExpected()
