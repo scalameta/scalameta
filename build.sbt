@@ -548,37 +548,9 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     sharedSettings,
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
-    exposePaths("tests", Test),
-    fullClasspath.in(Test) := {
-      val semanticdbScalacJar =
-        Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
-      sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") = semanticdbScalacJar
-      fullClasspath.in(Test).value
-    },
-    buildInfoKeys := Seq[BuildInfoKey](
-      scalaVersion,
-      "databaseSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
-      "databaseClasspath" -> classDirectory
-        .in(semanticdbIntegration, Compile)
-        .value
-        .getAbsolutePath,
-      "javacSemanticdbPath" -> javacSemanticdbDirectory
-        .in(semanticdbIntegration)
-        .value
-        .getAbsolutePath
-    ),
-    buildInfoPackage := "scala.meta.tests",
-    libraryDependencies ++= List(
-      "com.lihaoyi" %%% "fansi" % "0.2.5" % "test",
-      "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % "test"
-    ),
-    testOptions.in(Test) += Tests.Argument("-l", "org.scalatest.tags.Slow"),
-    inConfig(Slow)(Defaults.testTasks),
-    inConfig(All)(Defaults.testTasks),
-    testOptions.in(All) := Nil,
-    testOptions.in(Slow) -= Tests.Argument("-l", "org.scalatest.tags.Slow"),
-    testOptions.in(Slow) += Tests.Argument("-n", "org.scalatest.tags.Slow")
+    exposePaths("tests", Test)
   )
+  .settings(testSettings: _*)
   .jvmSettings(
     // FIXME: https://github.com/scalatest/scalatest/issues/1112
     // Without adding scalacheck to library dependencies, we get the following error:
@@ -610,6 +582,39 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
 lazy val testsNative = tests.native
+
+lazy val testSettings: List[Def.SettingsDefinition] = List(
+  fullClasspath.in(Test) := {
+    val semanticdbScalacJar =
+      Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
+    sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") = semanticdbScalacJar
+    fullClasspath.in(Test).value
+  },
+  buildInfoKeys := Seq[BuildInfoKey](
+    scalaVersion,
+    "databaseSourcepath" ->
+      baseDirectory.in(ThisBuild).value.getAbsolutePath,
+    "databaseClasspath" -> classDirectory
+      .in(semanticdbIntegration, Compile)
+      .value
+      .getAbsolutePath,
+    "javacSemanticdbPath" -> javacSemanticdbDirectory
+      .in(semanticdbIntegration)
+      .value
+      .getAbsolutePath
+  ),
+  buildInfoPackage := "scala.meta.tests",
+  libraryDependencies ++= List(
+    "com.lihaoyi" %%% "fansi" % "0.2.5" % "test",
+    "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % "test"
+  ),
+  testOptions.in(Test) += Tests.Argument("-l", "org.scalatest.tags.Slow"),
+  inConfig(Slow)(Defaults.testTasks),
+  inConfig(All)(Defaults.testTasks),
+  testOptions.in(All) := Nil,
+  testOptions.in(Slow) -= Tests.Argument("-l", "org.scalatest.tags.Slow"),
+  testOptions.in(Slow) += Tests.Argument("-n", "org.scalatest.tags.Slow")
+)
 
 /** ======================== BENCHES ======================== **/
 lazy val bench = project
