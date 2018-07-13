@@ -47,6 +47,10 @@ commands += Command.command("ci-fast") { s =>
     ci("doc") ::
     s
 }
+commands += Command.command("ci-windows") { s =>
+  s"testsJVM/all:testOnly -- -l SkipWindows" ::
+    s
+}
 commands += Command.command("ci-native") { s =>
   "metapNative/nativeLink" ::
     "ci-fast" ::
@@ -78,6 +82,7 @@ commands += Command.command("save-expect") { s =>
   "metapJVM/compile" ::
     "metacp/compile" ::
     "semanticdbScalacPlugin/compile" ::
+    "semanticdbJavacPlugin/compile" ::
     "semanticdbIntegration/clean" ::
     "semanticdbIntegration/compile" ::
     "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
@@ -156,6 +161,31 @@ lazy val semanticdbScalacPlugin = project
   )
   .aggregate(semanticdbScalacCore)
   .dependsOn(semanticdbScalacCore)
+
+lazy val semanticdbJavacPlugin = project
+  .in(file("semanticdb/javac"))
+  .settings(
+    moduleName := "semanticdb-javac",
+    description := "Javac compiler plugin that generates SemanticDB on compile",
+    publishableSettings,
+    mergeSettings,
+    pomPostProcess := { node =>
+      new RuleTransformer(new RewriteRule {
+        private def isAbsorbedDependency(node: XmlNode): Boolean = {
+          def isArtifactId(node: XmlNode, fn: String => Boolean) =
+            node.label == "artifactId" && fn(node.text)
+          node.label == "dependency" && node.child.exists(child =>
+            isArtifactId(child, _.startsWith("semanticdb-javac")))
+        }
+        override def transform(node: XmlNode): XmlNodeSeq = node match {
+          case e: Elem if isAbsorbedDependency(node) =>
+            Comment("the dependency that was here has been absorbed via sbt-assembly")
+          case _ => node
+        }
+      }).transform(node).head
+    }
+  )
+  .dependsOn(semanticdbJVM, ioJVM)
 
 lazy val cli = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
@@ -455,7 +485,20 @@ lazy val semanticdbIntegration = project
         s"-P:semanticdb:synthetics:on"
       )
     },
-    javacOptions += "-parameters"
+    javacSemanticdbDirectory := (target.in(Compile).value / "javac-semanticdb"),
+    javaHome in Compile := {
+      // force javac to fork by setting javaHome, otherwise the compiler errors
+      Some(file(sys.props("java.home")).getParentFile)
+    },
+    managedClasspath in Compile += Keys.`package`.in(semanticdbJavacPlugin, Compile).value,
+    javacOptions ++= {
+      import Path._
+      val outDir = javacSemanticdbDirectory.value.absolutePath
+      Seq(
+        s"-Xplugin:semanticdb $outDir --sourceroot ${baseDirectory.in(ThisBuild).value}",
+        "-parameters"
+      )
+    }
   )
   .dependsOn(semanticdbIntegrationMacros)
 
@@ -503,7 +546,14 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     buildInfoKeys := Seq[BuildInfoKey](
       scalaVersion,
       "databaseSourcepath" -> baseDirectory.in(ThisBuild).value.getAbsolutePath,
-      "databaseClasspath" -> classDirectory.in(semanticdbIntegration, Compile).value.getAbsolutePath
+      "databaseClasspath" -> classDirectory
+        .in(semanticdbIntegration, Compile)
+        .value
+        .getAbsolutePath,
+      "javacSemanticdbPath" -> javacSemanticdbDirectory
+        .in(semanticdbIntegration)
+        .value
+        .getAbsolutePath
     ),
     buildInfoPackage := "scala.meta.tests",
     libraryDependencies ++= List(

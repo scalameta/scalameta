@@ -67,5 +67,10 @@ object Build extends AutoPlugin {
     lazy val Fast = config("fast").extend(Test)
     lazy val Slow = config("slow").extend(Test)
     lazy val All = config("all").extend(Test)
+
+    val javacSemanticdbDirectory =
+      SettingKey[File](
+        "javacSemanticdbDirectory",
+        "location of semanticdb produced by semanticdb-javac")
   }
 }

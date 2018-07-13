@@ -1,0 +1,842 @@
+semanticdb/integration/src/main/java/com/javacp/annot/ClassAnnotation.java
+--------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/ClassAnnotation.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/ClassAnnotation# => abstract interface ClassAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/ConstructorAnnotation.java
+--------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/ConstructorAnnotation.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/ConstructorAnnotation# => abstract interface ConstructorAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/FieldAnnotation.java
+--------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/FieldAnnotation.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/FieldAnnotation# => abstract interface FieldAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/InterfaceAnnotation.java
+------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/InterfaceAnnotation.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/InterfaceAnnotation# => abstract interface InterfaceAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/LocalAnnotation.java
+--------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/LocalAnnotation.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/LocalAnnotation# => abstract interface LocalAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/MacroAnnotation.java
+--------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/MacroAnnotation.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/MacroAnnotation# => abstract interface MacroAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/MethodAnnotation.java
+---------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/MethodAnnotation.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/MethodAnnotation# => abstract interface MethodAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/ObjectAnnotation.java
+---------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/ObjectAnnotation.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/ObjectAnnotation# => abstract interface ObjectAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/PackageAnnotation.java
+----------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/PackageAnnotation.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/PackageAnnotation# => abstract interface PackageAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/PackageObjectAnnotation.java
+----------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/PackageObjectAnnotation.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/PackageObjectAnnotation# => abstract interface PackageObjectAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/ParameterAnnotation.java
+------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/ParameterAnnotation.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/ParameterAnnotation# => abstract interface ParameterAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/SelfParameterAnnotation.java
+----------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/SelfParameterAnnotation.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/SelfParameterAnnotation# => abstract interface SelfParameterAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/TraitAnnotation.java
+--------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/TraitAnnotation.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/TraitAnnotation# => abstract interface TraitAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/TypeAnnotation.java
+-------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/TypeAnnotation.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/TypeAnnotation# => abstract interface TypeAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/TypeParameterAnnotation.java
+----------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/TypeParameterAnnotation.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/TypeParameterAnnotation# => abstract interface TypeParameterAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/usage/AnnotatedInterface.java
+-----------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/usage/AnnotatedInterface.java
+Text => empty
+Language => Java
+Symbols => 6 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/usage/ => package usage
+com/javacp/annot/usage/AnnotatedInterface# => abstract interface AnnotatedInterface extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+semanticdb/integration/src/main/java/com/javacp/annot/usage/AnnotatedPackage.java
+---------------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/annot/usage/AnnotatedPackage.java
+Text => empty
+Language => Java
+Symbols => 7 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/annot/ => package annot
+com/javacp/annot/usage/ => package usage
+com/javacp/annot/usage/AnnotatedPackage# => class AnnotatedPackage extends Object { +1 decls }
+  Object => java/lang/Object#
+com/javacp/annot/usage/AnnotatedPackage#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/ClassSuffix.java
+----------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/ClassSuffix.java
+Text => empty
+Language => Java
+Symbols => 14 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/ClassSuffix# => class ClassSuffix extends Object { +3 decls }
+  Object => java/lang/Object#
+com/javacp/ClassSuffix#Inner# => private[javacp] class Inner[A <: Object] extends Object { +2 decls }
+  javacp => com/javacp/
+  A => com/javacp/ClassSuffix#Inner#[A]
+  Object => java/lang/Object#
+com/javacp/ClassSuffix#Inner#Bar# => private[javacp] class Bar extends Object { +2 decls }
+  javacp => com/javacp/
+  Object => java/lang/Object#
+com/javacp/ClassSuffix#Inner#Bar#Fuz# => private[javacp] class Fuz[B <: Object] extends Object { +1 decls }
+  javacp => com/javacp/
+  B => com/javacp/ClassSuffix#Inner#Bar#Fuz#[B]
+  Object => java/lang/Object#
+com/javacp/ClassSuffix#Inner#Bar#Fuz#[B] => typeparam B <: Object
+  Object => java/lang/Object#
+com/javacp/ClassSuffix#Inner#Bar#Fuz#`<init>`(). => private[javacp] ctor <init>()
+  javacp => com/javacp/
+com/javacp/ClassSuffix#Inner#Bar#`<init>`(). => private[javacp] ctor <init>()
+  javacp => com/javacp/
+com/javacp/ClassSuffix#Inner#[A] => typeparam A <: Object
+  Object => java/lang/Object#
+com/javacp/ClassSuffix#Inner#`<init>`(). => private[javacp] ctor <init>()
+  javacp => com/javacp/
+com/javacp/ClassSuffix#`<init>`(). => ctor <init>()
+com/javacp/ClassSuffix#suffix. => field suffix: Inner[String]#Bar#Fuz[Integer]
+  Inner => com/javacp/ClassSuffix#Inner#
+  String => java/lang/String#
+  Bar => com/javacp/ClassSuffix#Inner#Bar#
+  Fuz => com/javacp/ClassSuffix#Inner#Bar#Fuz#
+  Integer => java/lang/Integer#
+
+semanticdb/integration/src/main/java/com/javacp/Coin.java
+---------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/Coin.java
+Text => empty
+Language => Java
+Symbols => 15 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/Coin# => final enum class Coin extends Enum[Coin] { +9 decls }
+  Enum => java/lang/Enum#
+  Coin => com/javacp/Coin#
+com/javacp/Coin#DIME. => final static enum field DIME: Coin
+  Coin => com/javacp/Coin#
+com/javacp/Coin#NICKEL. => final static enum field NICKEL: Coin
+  Coin => com/javacp/Coin#
+com/javacp/Coin#PENNY. => final static enum field PENNY: Coin
+  Coin => com/javacp/Coin#
+com/javacp/Coin#QUARTER. => final static enum field QUARTER: Coin
+  Coin => com/javacp/Coin#
+com/javacp/Coin#`<init>`(). => private ctor <init>(value: Int)
+  value => com/javacp/Coin#`<init>`().(value)
+  Int => scala/Int#
+com/javacp/Coin#`<init>`().(value) => param value: Int
+  Int => scala/Int#
+com/javacp/Coin#value(). => method value(): Int
+  Int => scala/Int#
+com/javacp/Coin#value. => private final field value: Int
+  Int => scala/Int#
+com/javacp/Coin#valueOf(). => static method valueOf(name: String): Coin
+  name => com/javacp/Coin#valueOf().(name)
+  String => java/lang/String#
+  Coin => com/javacp/Coin#
+com/javacp/Coin#valueOf().(name) => param name: String
+  String => java/lang/String#
+com/javacp/Coin#values(). => static method values(): Array[Coin]
+  Array => scala/Array#
+  Coin => com/javacp/Coin#
+
+semanticdb/integration/src/main/java/com/javacp/Interface.java
+--------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/Interface.java
+Text => empty
+Language => Java
+Symbols => 4 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/Interface# => abstract interface Interface extends Object
+  Object => java/lang/Object#
+
+semanticdb/integration/src/main/java/com/javacp/Logger.java
+-----------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/Logger.java
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/Logger# => class Logger extends Object { +1 decls }
+  Object => java/lang/Object#
+com/javacp/Logger#`<init>`(). => ctor <init>()
+
+semanticdb/integration/src/main/java/com/javacp/MetacJava.java
+--------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/MetacJava.java
+Text => empty
+Language => Java
+Symbols => 31 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/MetacJava# => class MetacJava extends Object { +8 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#Overload1# => class Overload1 extends Object { +2 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#Overload1#A# => class A extends Object { +1 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#Overload1#A#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#Overload1#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#Overload2# => class Overload2 extends Object { +2 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#Overload2#A# => class A extends Object { +1 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#Overload2#A#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#Overload2#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#Overload3# => static class Overload3 extends Object { +2 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#Overload3#A# => static class A extends Object { +1 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#Overload3#A#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#Overload3#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#StaticInner# => static class StaticInner extends Object { +4 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#StaticInner#NonStatic# => class NonStatic extends Object { +2 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#StaticInner#NonStatic#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#StaticInner#NonStatic#method(). => method method(e: NonStatic): Unit
+  e => com/javacp/MetacJava#StaticInner#NonStatic#method().(e)
+  NonStatic => com/javacp/MetacJava#StaticInner#NonStatic#
+  Unit => scala/Unit#
+com/javacp/MetacJava#StaticInner#NonStatic#method().(e) => param e: NonStatic
+  NonStatic => com/javacp/MetacJava#StaticInner#NonStatic#
+com/javacp/MetacJava#StaticInner#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#StaticInner#isNotStatic(). => method isNotStatic(): Unit
+  Unit => scala/Unit#
+com/javacp/MetacJava#StaticInner#isStatic(). => static method isStatic(): Unit
+  Unit => scala/Unit#
+com/javacp/MetacJava#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#overload(). => method overload(a: A): Unit
+  a => com/javacp/MetacJava#overload().(a)
+  A => com/javacp/MetacJava#Overload1#A#
+  Unit => scala/Unit#
+com/javacp/MetacJava#overload().(a) => param a: A
+  A => com/javacp/MetacJava#Overload1#A#
+com/javacp/MetacJava#overload(+1). => method overload(a: A): Unit
+  a => com/javacp/MetacJava#overload(+1).(a)
+  A => com/javacp/MetacJava#Overload2#A#
+  Unit => scala/Unit#
+com/javacp/MetacJava#overload(+1).(a) => param a: A
+  A => com/javacp/MetacJava#Overload2#A#
+com/javacp/MetacJava#overload(+2). => static method overload(a: A): Unit
+  a => com/javacp/MetacJava#overload(+2).(a)
+  A => com/javacp/MetacJava#Overload3#A#
+  Unit => scala/Unit#
+com/javacp/MetacJava#overload(+2).(a) => param a: A
+  A => com/javacp/MetacJava#Overload3#A#
+
+semanticdb/integration/src/main/java/com/javacp/NonGeneric.java
+---------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/NonGeneric.java
+Text => empty
+Language => Java
+Symbols => 6 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/NonGeneric# => class NonGeneric extends Exception with Serializable with Flushable { +2 decls }
+  Exception => java/lang/Exception#
+  Serializable => java/io/Serializable#
+  Flushable => java/io/Flushable#
+com/javacp/NonGeneric#`<init>`(). => ctor <init>()
+com/javacp/NonGeneric#flush(). => method flush(): Unit
+  Unit => scala/Unit#
+
+semanticdb/integration/src/main/java/com/javacp/Recursive.java
+--------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/Recursive.java
+Text => empty
+Language => Java
+Symbols => 16 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/Recursive# => abstract class Recursive[A <: Recursive[A, B] & Serializable, B <: Inner[A, B]] extends Object { +4 decls }
+  A => com/javacp/Recursive#[A]
+  Recursive => com/javacp/Recursive#
+  B => com/javacp/Recursive#[B]
+  Serializable => java/io/Serializable#
+  Inner => com/javacp/Recursive#Inner#
+  Object => java/lang/Object#
+com/javacp/Recursive#Inner# => abstract static class Inner[A <: Recursive[A, B] & Serializable, B <: Inner[A, B]] extends Object { +1 decls }
+  A => com/javacp/Recursive#Inner#[A]
+  Recursive => com/javacp/Recursive#
+  B => com/javacp/Recursive#Inner#[B]
+  Serializable => java/io/Serializable#
+  Inner => com/javacp/Recursive#Inner#
+  Object => java/lang/Object#
+com/javacp/Recursive#Inner#[A] => typeparam A <: Recursive[A, B] & Serializable
+  Recursive => com/javacp/Recursive#
+  A => com/javacp/Recursive#Inner#[A]
+  B => com/javacp/Recursive#Inner#[B]
+  Serializable => java/io/Serializable#
+com/javacp/Recursive#Inner#[B] => typeparam B <: Inner[A, B]
+  Inner => com/javacp/Recursive#Inner#
+  A => com/javacp/Recursive#Inner#[A]
+  B => com/javacp/Recursive#Inner#[B]
+com/javacp/Recursive#Inner#`<init>`(). => ctor <init>()
+com/javacp/Recursive#Inner2# => abstract class Inner2[C <: Comparable[C]] extends Object { +1 decls }
+  C => com/javacp/Recursive#Inner2#[C]
+  Comparable => java/lang/Comparable#
+  Object => java/lang/Object#
+com/javacp/Recursive#Inner2#[C] => typeparam C <: Comparable[C]
+  Comparable => java/lang/Comparable#
+  C => com/javacp/Recursive#Inner2#[C]
+com/javacp/Recursive#Inner2#`<init>`(). => ctor <init>()
+com/javacp/Recursive#[A] => typeparam A <: Recursive[A, B] & Serializable
+  Recursive => com/javacp/Recursive#
+  A => com/javacp/Recursive#[A]
+  B => com/javacp/Recursive#[B]
+  Serializable => java/io/Serializable#
+com/javacp/Recursive#[B] => typeparam B <: Inner[A, B]
+  Inner => com/javacp/Recursive#Inner#
+  A => com/javacp/Recursive#[A]
+  B => com/javacp/Recursive#[B]
+com/javacp/Recursive#`<init>`(). => ctor <init>()
+com/javacp/Recursive#foo(). => method foo[Anon <: Object](): ArrayList[Anon]
+  Anon => com/javacp/Recursive#foo().[Anon]
+  Object => java/lang/Object#
+  ArrayList => java/util/ArrayList#
+com/javacp/Recursive#foo().[Anon] => typeparam Anon <: Object
+  Object => java/lang/Object#
+
+semanticdb/integration/src/main/java/com/javacp/Test.java
+---------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/java/com/javacp/Test.java
+Text => empty
+Language => Java
+Symbols => 70 entries
+
+Symbols:
+_root_/ => package _root_
+com/ => package com
+com/javacp/ => package javacp
+com/javacp/Test# => final class Test[A <: CharSequence & Serializable, B <: Object] extends ArrayList[A] with Comparable[B] with Serializable { +36 decls }
+  A => com/javacp/Test#[A]
+  CharSequence => java/lang/CharSequence#
+  Serializable => java/io/Serializable#
+  B => com/javacp/Test#[B]
+  Object => java/lang/Object#
+  ArrayList => java/util/ArrayList#
+  Comparable => java/lang/Comparable#
+com/javacp/Test#Boolean. => field Boolean: Boolean
+  Boolean => scala/Boolean#
+com/javacp/Test#Byte. => field Byte: Byte
+  Byte => scala/Byte#
+com/javacp/Test#Char. => field Char: Char
+  Char => scala/Char#
+com/javacp/Test#Float. => field Float: Float
+  Float => scala/Float#
+com/javacp/Test#InnerShadowTypeParam# => private[javacp] class InnerShadowTypeParam[A <: Object] extends Object { +2 decls }
+  javacp => com/javacp/
+  A => com/javacp/Test#InnerShadowTypeParam#[A]
+  Object => java/lang/Object#
+com/javacp/Test#InnerShadowTypeParam#[A] => typeparam A <: Object
+  Object => java/lang/Object#
+com/javacp/Test#InnerShadowTypeParam#`<init>`(). => private[javacp] ctor <init>()
+  javacp => com/javacp/
+com/javacp/Test#InnerShadowTypeParam#move(). => method move(a: A, b: B): Unit
+  a => com/javacp/Test#InnerShadowTypeParam#move().(a)
+  A => com/javacp/Test#InnerShadowTypeParam#[A]
+  b => com/javacp/Test#InnerShadowTypeParam#move().(b)
+  B => com/javacp/Test#[B]
+  Unit => scala/Unit#
+com/javacp/Test#InnerShadowTypeParam#move().(a) => param a: A
+  A => com/javacp/Test#InnerShadowTypeParam#[A]
+com/javacp/Test#InnerShadowTypeParam#move().(b) => param b: B
+  B => com/javacp/Test#[B]
+com/javacp/Test#Int. => field Int: Int
+  Int => scala/Int#
+com/javacp/Test#Long. => field Long: Long
+  Long => scala/Long#
+com/javacp/Test#Short. => field Short: Short
+  Short => scala/Short#
+com/javacp/Test#StaticClass# => private[javacp] static class StaticClass extends Object { +1 decls }
+  javacp => com/javacp/
+  Object => java/lang/Object#
+com/javacp/Test#StaticClass#`<init>`(). => private[javacp] ctor <init>()
+  javacp => com/javacp/
+com/javacp/Test#[A] => typeparam A <: CharSequence & Serializable
+  CharSequence => java/lang/CharSequence#
+  Serializable => java/io/Serializable#
+com/javacp/Test#[B] => typeparam B <: Object
+  Object => java/lang/Object#
+com/javacp/Test#`<init>`(). => ctor <init>()
+com/javacp/Test#anonymous. => field anonymous: Serializable
+  Serializable => java/io/Serializable#
+com/javacp/Test#arrayField. => private[javacp] final field arrayField: Array[Int]
+  javacp => com/javacp/
+  Array => scala/Array#
+  Int => scala/Int#
+com/javacp/Test#arrayMethod(). => private[javacp] method arrayMethod(): Array[Int]
+  javacp => com/javacp/
+  Array => scala/Array#
+  Int => scala/Int#
+com/javacp/Test#compareTo(). => final method compareTo(b: B): Int
+  b => com/javacp/Test#compareTo().(b)
+  B => com/javacp/Test#[B]
+  Int => scala/Int#
+com/javacp/Test#compareTo().(b) => param b: B
+  B => com/javacp/Test#[B]
+com/javacp/Test#genericField. => private[javacp] field genericField: ArrayList[A]
+  javacp => com/javacp/
+  ArrayList => java/util/ArrayList#
+  A => com/javacp/Test#[A]
+com/javacp/Test#genericMethod(). => private[javacp] method genericMethod(): ArrayList[A]
+  javacp => com/javacp/
+  ArrayList => java/util/ArrayList#
+  A => com/javacp/Test#[A]
+com/javacp/Test#genericParams(). => private[javacp] method genericParams(a: A, b: B): Unit
+  javacp => com/javacp/
+  a => com/javacp/Test#genericParams().(a)
+  A => com/javacp/Test#[A]
+  b => com/javacp/Test#genericParams().(b)
+  B => com/javacp/Test#[B]
+  Unit => scala/Unit#
+com/javacp/Test#genericParams().(a) => param a: A
+  A => com/javacp/Test#[A]
+com/javacp/Test#genericParams().(b) => param b: B
+  B => com/javacp/Test#[B]
+com/javacp/Test#methodTypeParams(). => private[javacp] method methodTypeParams[C <: Integer](c: C): Unit
+  javacp => com/javacp/
+  C => com/javacp/Test#methodTypeParams().[C]
+  Integer => java/lang/Integer#
+  c => com/javacp/Test#methodTypeParams().(c)
+  Unit => scala/Unit#
+com/javacp/Test#methodTypeParams().(c) => param c: C
+  C => com/javacp/Test#methodTypeParams().[C]
+com/javacp/Test#methodTypeParams().[C] => typeparam C <: Integer
+  Integer => java/lang/Integer#
+com/javacp/Test#overload(). => method overload(a: Logger): Unit
+  a => com/javacp/Test#overload().(a)
+  Logger => java/util/logging/Logger#
+  Unit => scala/Unit#
+com/javacp/Test#overload().(a) => param a: Logger
+  Logger => java/util/logging/Logger#
+com/javacp/Test#overload(+1). => method overload(a: Logger): Unit
+  a => com/javacp/Test#overload(+1).(a)
+  Logger => com/javacp/Logger#
+  Unit => scala/Unit#
+com/javacp/Test#overload(+1).(a) => param a: Logger
+  Logger => com/javacp/Logger#
+com/javacp/Test#packagePrivateField. => private[javacp] field packagePrivateField: Int
+  javacp => com/javacp/
+  Int => scala/Int#
+com/javacp/Test#packagePrivateMethod(). => private[javacp] method packagePrivateMethod(): Unit
+  javacp => com/javacp/
+  Unit => scala/Unit#
+com/javacp/Test#primitiveParams(). => private[javacp] method primitiveParams(a: Int, b: Long, c: Float, d: Double, e: Short, f: Byte, g: Boolean, h: Char): Unit
+  javacp => com/javacp/
+  a => com/javacp/Test#primitiveParams().(a)
+  Int => scala/Int#
+  b => com/javacp/Test#primitiveParams().(b)
+  Long => scala/Long#
+  c => com/javacp/Test#primitiveParams().(c)
+  Float => scala/Float#
+  d => com/javacp/Test#primitiveParams().(d)
+  Double => scala/Double#
+  e => com/javacp/Test#primitiveParams().(e)
+  Short => scala/Short#
+  f => com/javacp/Test#primitiveParams().(f)
+  Byte => scala/Byte#
+  g => com/javacp/Test#primitiveParams().(g)
+  Boolean => scala/Boolean#
+  h => com/javacp/Test#primitiveParams().(h)
+  Char => scala/Char#
+  Unit => scala/Unit#
+com/javacp/Test#primitiveParams().(a) => param a: Int
+  Int => scala/Int#
+com/javacp/Test#primitiveParams().(b) => param b: Long
+  Long => scala/Long#
+com/javacp/Test#primitiveParams().(c) => param c: Float
+  Float => scala/Float#
+com/javacp/Test#primitiveParams().(d) => param d: Double
+  Double => scala/Double#
+com/javacp/Test#primitiveParams().(e) => param e: Short
+  Short => scala/Short#
+com/javacp/Test#primitiveParams().(f) => param f: Byte
+  Byte => scala/Byte#
+com/javacp/Test#primitiveParams().(g) => param g: Boolean
+  Boolean => scala/Boolean#
+com/javacp/Test#primitiveParams().(h) => param h: Char
+  Char => scala/Char#
+com/javacp/Test#privateField. => private field privateField: Int
+  Int => scala/Int#
+com/javacp/Test#privateMethod(). => private method privateMethod(): Unit
+  Unit => scala/Unit#
+com/javacp/Test#protectedField. => protected field protectedField: Int
+  Int => scala/Int#
+com/javacp/Test#protectedMethod(). => protected method protectedMethod(): Unit
+  Unit => scala/Unit#
+com/javacp/Test#publicField. => field publicField: Int
+  Int => scala/Int#
+com/javacp/Test#publicMethod(). => method publicMethod(): Unit
+  Unit => scala/Unit#
+com/javacp/Test#staticField. => private[javacp] static field staticField: Int
+  javacp => com/javacp/
+  Int => scala/Int#
+com/javacp/Test#staticMethod(). => private[javacp] static method staticMethod(): Unit
+  javacp => com/javacp/
+  Unit => scala/Unit#
+com/javacp/Test#strictfpMethod(). => @strictfp private[javacp] method strictfpMethod(): Unit
+  strictfp => scala/annotation/strictfp#
+  javacp => com/javacp/
+  Unit => scala/Unit#
+com/javacp/Test#typeParams(). => private[javacp] method typeParams(a: ArrayList[HashMap[A, Array[String]]], b: Hashtable[String, B]): Unit
+  javacp => com/javacp/
+  a => com/javacp/Test#typeParams().(a)
+  ArrayList => java/util/ArrayList#
+  HashMap => java/util/HashMap#
+  A => com/javacp/Test#[A]
+  Array => scala/Array#
+  String => java/lang/String#
+  b => com/javacp/Test#typeParams().(b)
+  Hashtable => java/util/Hashtable#
+  B => com/javacp/Test#[B]
+  Unit => scala/Unit#
+com/javacp/Test#typeParams().(a) => param a: ArrayList[HashMap[A, Array[String]]]
+  ArrayList => java/util/ArrayList#
+  HashMap => java/util/HashMap#
+  A => com/javacp/Test#[A]
+  Array => scala/Array#
+  String => java/lang/String#
+com/javacp/Test#typeParams().(b) => param b: Hashtable[String, B]
+  Hashtable => java/util/Hashtable#
+  String => java/lang/String#
+  B => com/javacp/Test#[B]
+com/javacp/Test#vararg(). => private[javacp] method vararg(a: Int, args: String*): Unit
+  javacp => com/javacp/
+  a => com/javacp/Test#vararg().(a)
+  Int => scala/Int#
+  args => com/javacp/Test#vararg().(args)
+  String => java/lang/String#
+  Unit => scala/Unit#
+com/javacp/Test#vararg().(a) => param a: Int
+  Int => scala/Int#
+com/javacp/Test#vararg().(args) => param args: String*
+  String => java/lang/String#
+com/javacp/Test#wildcard(). => method wildcard(wildcard: ArrayList[local_wildcard]): Unit
+  wildcard => com/javacp/Test#wildcard().(wildcard)
+  ArrayList => java/util/ArrayList#
+  local_wildcard => local_wildcard
+  Unit => scala/Unit#
+com/javacp/Test#wildcard().(wildcard) => param wildcard: ArrayList[local_wildcard]
+  ArrayList => java/util/ArrayList#
+  local_wildcard => local_wildcard
+com/javacp/Test#wildcard(+1). => method wildcard(a: Collection[Number], b: Collection[Number]): Unit
+  a => com/javacp/Test#wildcard(+1).(a)
+  Collection => java/util/Collection#
+  Number => java/lang/Number#
+  b => com/javacp/Test#wildcard(+1).(b)
+  Unit => scala/Unit#
+com/javacp/Test#wildcard(+1).(a) => param a: Collection[Number]
+  Collection => java/util/Collection#
+  Number => java/lang/Number#
+com/javacp/Test#wildcard(+1).(b) => param b: Collection[Number]
+  Collection => java/util/Collection#
+  Number => java/lang/Number#
