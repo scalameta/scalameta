@@ -1,9 +1,10 @@
 package java.nio.file
 
 import java.net.URI
+import java.lang.Iterable
 
 // obtained interface by experimentation on the JDK.
-trait Path {
+trait Path extends Iterable[Path] {
   def isAbsolute: Boolean
   def getRoot: Path
   def getFileName: Path
