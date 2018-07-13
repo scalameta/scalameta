@@ -25,6 +25,8 @@ sealed abstract case class AbsolutePath(toNIO: nio.Path) {
 
   def resolve(other: RelativePath): AbsolutePath = AbsolutePath(toNIO.resolve(other.toNIO))(this)
   def resolve(other: String): AbsolutePath = AbsolutePath(toNIO.resolve(other))(this)
+  def resolveSibling(f: String => String): AbsolutePath =
+    AbsolutePath(toNIO.resolveSibling(f(toNIO.getFileName.toString)))
 
   def isFile: Boolean = FileIO.isFile(this)
   def isDirectory: Boolean = FileIO.isDirectory(this)

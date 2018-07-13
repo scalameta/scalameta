@@ -1,5 +1,6 @@
 package scala.meta.internal.metacp
 
+import java.nio.file.Files
 import scala.collection.JavaConverters._
 import scala.meta.internal.classpath.ClasspathIndex
 import scala.meta.internal.io.FileIO
@@ -26,6 +27,7 @@ final case class ClassfileInfos(
     assert(infos.nonEmpty)
     val semanticdbAbspath =
       out.resolve("META-INF").resolve("semanticdb").resolve(relativeUri + ".semanticdb")
+    Files.createDirectories(semanticdbAbspath.toNIO.getParent)
     FileIO.write(semanticdbAbspath, toTextDocuments)
   }
 }

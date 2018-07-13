@@ -74,6 +74,10 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
+  test("scala.meta.cli.Metai.toString") {
+    // n/a
+  }
+
   test("scala.meta.cli.Metap.toString") {
     // n/a
   }
@@ -233,6 +237,10 @@ class PublicSuite extends FunSuite {
   }
 
   test("scala.meta.metacp.Settings.toString") {
+    // n/a
+  }
+
+  test("scala.meta.metai.Settings.toString") {
     // n/a
   }
 

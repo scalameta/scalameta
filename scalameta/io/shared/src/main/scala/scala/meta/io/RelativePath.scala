@@ -6,12 +6,22 @@ import java.nio.file.Path
 import java.nio.{file => nio}
 import java.nio.file.Paths
 import scala.meta.internal.io.PathIO
+import scala.collection.JavaConverters._
 
 /** Wrapper around a relative nio.Path. */
 sealed abstract case class RelativePath(toNIO: Path) {
   require(!toNIO.isAbsolute, s"$toNIO is not relative!")
   def toFile: File = toNIO.toFile
-  def toURI: URI = toFile.toURI
+  def toURI(isDirectory: Boolean): URI = {
+    val suffix = if (isDirectory) "/" else ""
+    // Can't use toNIO.toUri because it produces an absolute URI.
+    val names = toNIO.iterator().asScala
+    val uris = names.map { name =>
+      // URI encode each part of the path individually.
+      new URI(null, null, name.toString, null)
+    }
+    URI.create(uris.mkString("", "/", suffix))
+  }
 
   def syntax: String = toString
   def structure: String = s"""RelativePath("$syntax")"""

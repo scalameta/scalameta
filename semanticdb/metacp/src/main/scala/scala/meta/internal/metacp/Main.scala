@@ -89,13 +89,13 @@ class Main(settings: Settings, reporter: Reporter) {
     var success = true
     val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
     if (classpathAttr != null) {
-      val outputClasspath = List.newBuilder[AbsolutePath]
+      val outputClasspath = List.newBuilder[Path]
       classpathAttr.split(" ").foreach { classpathEntry =>
         val linkedPath = entry.toNIO.getParent.resolve(classpathEntry)
         val linkedEntry = AbsolutePath(linkedPath)
         if (linkedEntry.isFile || linkedEntry.isDirectory) {
           withOutputEntry(linkedEntry) { out =>
-            outputClasspath += out.output
+            outputClasspath += out.output.toNIO.getFileName
             success &= convertClasspathEntry(linkedEntry, out.root)
           }
         }

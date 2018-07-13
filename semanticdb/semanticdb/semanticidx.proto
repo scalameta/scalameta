@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package scala.meta.internal.semanticidx;
+
+message Indexes {
+  repeated Index indexes = 1;
+}
+
+message Index {
+  map<string, Entry> entries = 1;
+}
+
+message Entry {
+  oneof sealed_value {
+    PackageEntry packageEntry = 1;
+    ToplevelEntry toplevelEntry = 2;
+  }
+}
+
+message PackageEntry {
+}
+
+message ToplevelEntry {
+  string uri = 1; // relative URI to semanticdb file containing full information
+}
+

@@ -2,17 +2,18 @@ package scala.meta.tests
 package semanticdb
 
 import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.{semanticidx => i}
 import java.io._
 import java.nio.file._
 import java.nio.charset.StandardCharsets._
 import java.util.jar._
 import scala.collection.JavaConverters._
-import scala.compat.Platform.EOL
 import scala.meta._
 import scala.meta.cli._
-import scala.meta.internal.io.FileIO
-import scala.meta.internal.io.PathIO
+import scala.meta.internal.io._
 import scala.meta.internal.semanticdb._
+import scala.meta.io.Classpath
 import scala.meta.io.AbsolutePath
 import scala.meta.tests.cli._
 import scala.meta.testkit.DiffAssertions
@@ -64,6 +65,10 @@ class ExpectSuite extends FunSuite with DiffAssertions {
         import MetacpUndefined._
         assertNoDiff(loadObtained, loadExpected)
       }
+      test("metai.expect") {
+        import MetaiExpect._
+        assertNoDiff(loadObtained, loadExpected)
+      }
     case _ =>
       println(s"Skipping ExpectSuite because scalaVersion is ${BuildInfo.scalaVersion}")
       ()
@@ -72,12 +77,18 @@ class ExpectSuite extends FunSuite with DiffAssertions {
 
 trait ExpectHelpers extends FunSuiteLike {
   def filename: String
-  def path: Path =
-    Paths.get("tests", "jvm", "src", "test", "resources", filename)
+
   def loadExpected: String =
     new String(Files.readAllBytes(path), UTF_8)
-  def saveExpected(value: String): Unit =
-    Files.write(path, value.getBytes(UTF_8))
+  def loadObtained: String
+
+  def path: Path =
+    Paths.get("tests", "jvm", "src", "test", "resources", filename)
+  def manifestJar: Path = path.resolveSibling("manifest.jar")
+  def classDirectory: Path = Paths.get(BuildInfo.databaseClasspath)
+
+  def saveExpected(): Unit =
+    Files.write(path, loadObtained.getBytes(UTF_8))
 
   protected def unifiedDiff(
       originalTitle: String,
@@ -159,6 +170,37 @@ trait ExpectHelpers extends FunSuiteLike {
     outPath.toNIO
   }
 
+  protected def metai(path: Path): String = {
+    val classpath = Classpath(path)
+    val settings = scala.meta.metai.Settings().withClasspath(classpath)
+    val isSuccess = cli.Metai.process(settings, Reporter())
+    if (!isSuccess) {
+      sys.error("metai error")
+    }
+    val buf = List.newBuilder[i.Index]
+    classpath.foreach { root =>
+      val semanticidx = root.path.resolve("META-INF/semanticdb.semanticidx")
+      if (semanticidx.isFile) {
+        val indexes = i.Indexes.parseFrom(semanticidx.readAllBytes)
+        buf ++= indexes.indexes
+      }
+    }
+    val indexes = buf.result()
+    val sb = new StringBuilder
+    val bySymbol = indexes.flatMap(_.entries).sortBy(_._1)
+    bySymbol.foreach {
+      case (sym, entry) =>
+        sb.append(sym).append(" => ")
+        entry match {
+          case i.PackageEntry() => sb.append(s"package ").append(sym.desc.name)
+          case i.ToplevelEntry(uri) => sb.append(uri)
+          case i.Entry.Empty => sys.error(sym)
+        }
+        sb.append("\n")
+    }
+    sb.toString()
+  }
+
 }
 
 object ScalalibExpect extends ExpectHelpers {
@@ -181,12 +223,12 @@ object ScalalibExpect extends ExpectHelpers {
 
 object MetacpExpect extends ExpectHelpers {
   def filename: String = "metacp.expect"
-  def loadObtained: String = metap(metacp(Paths.get(BuildInfo.databaseClasspath)))
+  def loadObtained: String = metap(metacp(classDirectory))
 }
 
 object MetacExpect extends ExpectHelpers {
   def filename: String = "metac.expect"
-  def loadObtained: String = metap(Paths.get(BuildInfo.databaseClasspath))
+  def loadObtained: String = metap(classDirectory)
 }
 
 object JavacExpect extends ExpectHelpers {
@@ -230,8 +272,8 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
     }
     symbols.mkString
   }
-  def metacpSymbols = loadMiniSymtab(metacp(Paths.get(BuildInfo.databaseClasspath)))
-  def metacSymbols = loadMiniSymtab(Paths.get(BuildInfo.databaseClasspath))
+  def metacpSymbols = loadMiniSymtab(metacp(classDirectory))
+  def metacSymbols = loadMiniSymtab(classDirectory)
 
   // FIXME: https://github.com/scalameta/scalameta/issues/1642
   // We sort class signature declarations to make it easier to eye-ball actual bugs
@@ -392,7 +434,6 @@ object JavacMetacpDiffExpect extends ExpectHelpers {
 object ManifestMetap extends ExpectHelpers {
   def filename: String = "manifest.metap"
   def loadObtained: String = {
-    val manifestJar = path.getParent.resolve("manifest.jar")
     metap(manifestJar)
   }
 }
@@ -400,7 +441,6 @@ object ManifestMetap extends ExpectHelpers {
 object ManifestMetacp extends ExpectHelpers {
   def filename: String = "manifest.metacp"
   def loadObtained: String = {
-    val manifestJar = path.getParent.resolve("manifest.jar")
     metap(metacp(manifestJar))
   }
 }
@@ -408,7 +448,7 @@ object ManifestMetacp extends ExpectHelpers {
 object MetacpUndefined extends ExpectHelpers {
   def filename: String = "metacp.undefined"
   def loadObtained: String = {
-    val classpath = Classpath(AbsolutePath(metacp(Paths.get(BuildInfo.databaseClasspath))))
+    val classpath = Classpath(AbsolutePath(metacp(classDirectory)))
     val undefined = MetacpOps.collectReferencedToUndefinedSymbols(classpath)
     val interesting = undefined.filterNot { symbol =>
       // We are only interested in references to symbols in semanticdb/integration
@@ -423,24 +463,32 @@ object MetacpUndefined extends ExpectHelpers {
   }
 }
 
+object MetaiExpect extends ExpectHelpers {
+  def filename: String = "metai.expect"
+  def loadObtained: String = {
+    metai(classDirectory)
+  }
+}
+
 // To save the current behavior, run `sbt save-expect`.
 object SaveExpectTest {
   def main(args: Array[String]): Unit = {
-    ScalalibExpect.saveExpected(ScalalibExpect.loadObtained)
-    MetacpExpect.saveExpected(MetacpExpect.loadObtained)
-    MetacExpect.saveExpected(MetacExpect.loadObtained)
-    JavacExpect.saveExpected(JavacExpect.loadObtained)
-    MetacMetacpDiffExpect.saveExpected(MetacMetacpDiffExpect.loadObtained)
-    JavacMetacpDiffExpect.saveExpected(JavacMetacpDiffExpect.loadObtained)
-    ManifestMetap.saveExpected(ManifestMetap.loadObtained)
-    ManifestMetacp.saveExpected(ManifestMetacp.loadObtained)
-    MetacpUndefined.saveExpected(MetacpUndefined.loadObtained)
+    ScalalibExpect.saveExpected()
+    MetacpExpect.saveExpected()
+    MetacExpect.saveExpected()
+    JavacExpect.saveExpected()
+    MetacMetacpDiffExpect.saveExpected()
+    JavacMetacpDiffExpect.saveExpected()
+    ManifestMetap.saveExpected()
+    ManifestMetacp.saveExpected()
+    MetacpUndefined.saveExpected()
+    MetaiExpect.saveExpected()
   }
 }
 
 object SaveManifestTest {
   def main(args: Array[String]): Unit = {
-    val classes = Paths.get(BuildInfo.databaseClasspath)
+    val classes = ManifestMetacp.classDirectory
     val resources = Paths.get("tests", "jvm", "src", "test", "resources")
 
     val manifest = resources.resolve("manifest.jar")
@@ -476,8 +524,8 @@ object SaveManifestTest {
       jos.closeEntry()
     }
 
-    ManifestMetap.saveExpected(ManifestMetap.loadObtained)
-    ManifestMetacp.saveExpected(ManifestMetacp.loadObtained)
+    ManifestMetap.saveExpected()
+    ManifestMetacp.saveExpected()
   }
 
   private def withJar(path: Path)(fn: JarOutputStream => Unit): Unit = {
