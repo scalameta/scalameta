@@ -33,7 +33,7 @@ trait SymbolInformationPrinter extends BasePrinter {
     }
   }
 
-  private class InfoPrinter(notes: InfoNotes) {
+  protected class InfoPrinter(notes: InfoNotes) {
     def pprint(info: SymbolInformation): Unit = {
       notes.visit(info)
       rep(info.annotations, " ", " ")(pprint)

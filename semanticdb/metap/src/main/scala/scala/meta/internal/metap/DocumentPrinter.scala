@@ -10,7 +10,8 @@ class DocumentPrinter(settings: Settings, reporter: Reporter, doc: TextDocument)
     with SymbolInformationPrinter
     with OccurrencePrinter
     with DiagnosticPrinter
-    with SyntheticPrinter {
+    with SyntheticPrinter
+    with NewSyntheticPrinter {
 
   def print(): Unit = {
     out.println(doc.uri)
@@ -53,6 +54,12 @@ class DocumentPrinter(settings: Settings, reporter: Reporter, doc: TextDocument)
       out.println("")
       out.println("Synthetics:")
       doc.synthetics.sorted.foreach(pprint)
+    }
+
+    if (doc.newSynthetics.nonEmpty) {
+      out.println("")
+      out.println("New-style Synthetics:")
+      doc.newSynthetics.sorted.foreach(pprint)
     }
   }
 }

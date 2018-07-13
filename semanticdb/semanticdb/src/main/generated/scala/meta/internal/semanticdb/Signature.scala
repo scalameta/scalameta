@@ -6,26 +6,29 @@
 package scala.meta.internal.semanticdb
 
 sealed trait Signature {
-  final def isEmpty = this.isInstanceOf[Signature.Empty.type]
+  final def isEmpty = this.isInstanceOf[scala.meta.internal.semanticdb.Signature.Empty.type]
   final def isDefined = !isEmpty
-  final def toSignatureMessage: SignatureMessage = Signature.SignatureTypeMapper.toBase(this)
+  final def asMessage: scala.meta.internal.semanticdb.SignatureMessage = scala.meta.internal.semanticdb.Signature.SignatureTypeMapper.toBase(this)
 }
+
 object Signature {
-  case object Empty extends Signature
-  def defaultInstance: Signature = Empty
-  implicit val SignatureTypeMapper: _root_.scalapb.TypeMapper[SignatureMessage, Signature] = new _root_.scalapb.TypeMapper[SignatureMessage, Signature] {
-    override def toCustom(__base: SignatureMessage): Signature = __base.sealedValue match {
-      case v: scala.meta.internal.semanticdb.SignatureMessage.SealedValue.ClassSignature => v.value
-      case v: scala.meta.internal.semanticdb.SignatureMessage.SealedValue.MethodSignature => v.value
-      case v: scala.meta.internal.semanticdb.SignatureMessage.SealedValue.TypeSignature => v.value
-      case v: scala.meta.internal.semanticdb.SignatureMessage.SealedValue.ValueSignature => v.value
+  case object Empty extends scala.meta.internal.semanticdb.Signature
+  
+  def defaultInstance: scala.meta.internal.semanticdb.Signature = Empty
+  
+  implicit val SignatureTypeMapper: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.SignatureMessage, scala.meta.internal.semanticdb.Signature] = new _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.SignatureMessage, scala.meta.internal.semanticdb.Signature] {
+    override def toCustom(__base: scala.meta.internal.semanticdb.SignatureMessage): scala.meta.internal.semanticdb.Signature = __base.sealedValue match {
+      case __v: scala.meta.internal.semanticdb.SignatureMessage.SealedValue.ClassSignature => __v.value
+      case __v: scala.meta.internal.semanticdb.SignatureMessage.SealedValue.MethodSignature => __v.value
+      case __v: scala.meta.internal.semanticdb.SignatureMessage.SealedValue.TypeSignature => __v.value
+      case __v: scala.meta.internal.semanticdb.SignatureMessage.SealedValue.ValueSignature => __v.value
       case scala.meta.internal.semanticdb.SignatureMessage.SealedValue.Empty => Empty
     }
-    override def toBase(__custom: Signature): SignatureMessage = SignatureMessage(__custom match {
-      case v: scala.meta.internal.semanticdb.ClassSignature => scala.meta.internal.semanticdb.SignatureMessage.SealedValue.ClassSignature(v)
-      case v: scala.meta.internal.semanticdb.MethodSignature => scala.meta.internal.semanticdb.SignatureMessage.SealedValue.MethodSignature(v)
-      case v: scala.meta.internal.semanticdb.TypeSignature => scala.meta.internal.semanticdb.SignatureMessage.SealedValue.TypeSignature(v)
-      case v: scala.meta.internal.semanticdb.ValueSignature => scala.meta.internal.semanticdb.SignatureMessage.SealedValue.ValueSignature(v)
+    override def toBase(__custom: scala.meta.internal.semanticdb.Signature): scala.meta.internal.semanticdb.SignatureMessage = scala.meta.internal.semanticdb.SignatureMessage(__custom match {
+      case __v: scala.meta.internal.semanticdb.ClassSignature => scala.meta.internal.semanticdb.SignatureMessage.SealedValue.ClassSignature(__v)
+      case __v: scala.meta.internal.semanticdb.MethodSignature => scala.meta.internal.semanticdb.SignatureMessage.SealedValue.MethodSignature(__v)
+      case __v: scala.meta.internal.semanticdb.TypeSignature => scala.meta.internal.semanticdb.SignatureMessage.SealedValue.TypeSignature(__v)
+      case __v: scala.meta.internal.semanticdb.ValueSignature => scala.meta.internal.semanticdb.SignatureMessage.SealedValue.ValueSignature(__v)
       case Empty => scala.meta.internal.semanticdb.SignatureMessage.SealedValue.Empty
     })
   }
@@ -131,7 +134,7 @@ final case class SignatureMessage(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => sealedValue.classSignature.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
         case 2 => sealedValue.methodSignature.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
@@ -141,13 +144,13 @@ final case class SignatureMessage(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = scala.meta.internal.semanticdb.SignatureMessage
-    def toSignature: Signature = Signature.SignatureTypeMapper.toCustom(this)
+    def toSignature: scala.meta.internal.semanticdb.Signature = scala.meta.internal.semanticdb.Signature.SignatureTypeMapper.toCustom(this)
 }
 
 object SignatureMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.SignatureMessage] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.SignatureMessage] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.SignatureMessage = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.SignatureMessage(
       sealedValue = __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.ClassSignature]].map(scala.meta.internal.semanticdb.SignatureMessage.SealedValue.ClassSignature)
@@ -159,7 +162,7 @@ object SignatureMessage extends scalapb.GeneratedMessageCompanion[scala.meta.int
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.SignatureMessage] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.SignatureMessage(
         sealedValue = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.ClassSignature]]).map(scala.meta.internal.semanticdb.SignatureMessage.SealedValue.ClassSignature)
     .orElse[scala.meta.internal.semanticdb.SignatureMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.MethodSignature]]).map(scala.meta.internal.semanticdb.SignatureMessage.SealedValue.MethodSignature))
@@ -368,7 +371,7 @@ final case class ClassSignature(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => typeParameters.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
         case 2 => _root_.scalapb.descriptors.PRepeated(parents.map(scala.meta.internal.semanticdb.ClassSignature._typemapper_parents.toBase(_).toPMessage)(_root_.scala.collection.breakOut))
@@ -383,7 +386,7 @@ final case class ClassSignature(
 object ClassSignature extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ClassSignature] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ClassSignature] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.ClassSignature = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.ClassSignature(
       __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]],
@@ -394,7 +397,7 @@ object ClassSignature extends scalapb.GeneratedMessageCompanion[scala.meta.inter
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.ClassSignature] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.ClassSignature(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]]),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.TypeMessage]]).getOrElse(_root_.scala.collection.Seq.empty).map(scala.meta.internal.semanticdb.ClassSignature._typemapper_parents.toCustom)(_root_.scala.collection.breakOut),
@@ -537,7 +540,7 @@ final case class MethodSignature(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => typeParameters.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
         case 2 => _root_.scalapb.descriptors.PRepeated(parameterLists.map(_.toPMessage)(_root_.scala.collection.breakOut))
@@ -551,7 +554,7 @@ final case class MethodSignature(
 object MethodSignature extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.MethodSignature] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.MethodSignature] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.MethodSignature = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.MethodSignature(
       __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]],
@@ -561,7 +564,7 @@ object MethodSignature extends scalapb.GeneratedMessageCompanion[scala.meta.inte
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.MethodSignature] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.MethodSignature(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]]),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Scope]]).getOrElse(_root_.scala.collection.Seq.empty),
@@ -702,7 +705,7 @@ final case class TypeSignature(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => typeParameters.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
         case 2 => scala.meta.internal.semanticdb.TypeSignature._typemapper_lowerBound.toBase(lowerBound).toPMessage
@@ -716,7 +719,7 @@ final case class TypeSignature(
 object TypeSignature extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.TypeSignature] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.TypeSignature] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.TypeSignature = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.TypeSignature(
       __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]],
@@ -726,7 +729,7 @@ object TypeSignature extends scalapb.GeneratedMessageCompanion[scala.meta.intern
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.TypeSignature] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.TypeSignature(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]]),
         scala.meta.internal.semanticdb.TypeSignature._typemapper_lowerBound.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance)),
@@ -825,7 +828,7 @@ final case class ValueSignature(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => scala.meta.internal.semanticdb.ValueSignature._typemapper_tpe.toBase(tpe).toPMessage
       }
@@ -837,7 +840,7 @@ final case class ValueSignature(
 object ValueSignature extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ValueSignature] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ValueSignature] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.ValueSignature = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.ValueSignature(
       scala.meta.internal.semanticdb.ValueSignature._typemapper_tpe.toCustom(__fieldsMap.getOrElse(__fields.get(0), scala.meta.internal.semanticdb.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TypeMessage])
@@ -845,7 +848,7 @@ object ValueSignature extends scalapb.GeneratedMessageCompanion[scala.meta.inter
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.ValueSignature] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.ValueSignature(
         scala.meta.internal.semanticdb.ValueSignature._typemapper_tpe.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance))
       )

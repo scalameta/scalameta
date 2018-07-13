@@ -6,46 +6,49 @@
 package scala.meta.internal.semanticdb
 
 sealed trait Type {
-  final def isEmpty = this.isInstanceOf[Type.Empty.type]
+  final def isEmpty = this.isInstanceOf[scala.meta.internal.semanticdb.Type.Empty.type]
   final def isDefined = !isEmpty
-  final def toTypeMessage: TypeMessage = Type.TypeTypeMapper.toBase(this)
+  final def asMessage: scala.meta.internal.semanticdb.TypeMessage = scala.meta.internal.semanticdb.Type.TypeTypeMapper.toBase(this)
 }
+
 object Type {
-  case object Empty extends Type
-  def defaultInstance: Type = Empty
-  implicit val TypeTypeMapper: _root_.scalapb.TypeMapper[TypeMessage, Type] = new _root_.scalapb.TypeMapper[TypeMessage, Type] {
-    override def toCustom(__base: TypeMessage): Type = __base.sealedValue match {
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.TypeRef => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.SingleType => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.ThisType => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.SuperType => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.ConstantType => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.IntersectionType => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.UnionType => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.WithType => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.StructuralType => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.AnnotatedType => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.ExistentialType => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.UniversalType => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.ByNameType => v.value
-      case v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.RepeatedType => v.value
+  case object Empty extends scala.meta.internal.semanticdb.Type
+  
+  def defaultInstance: scala.meta.internal.semanticdb.Type = Empty
+  
+  implicit val TypeTypeMapper: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type] = new _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type] {
+    override def toCustom(__base: scala.meta.internal.semanticdb.TypeMessage): scala.meta.internal.semanticdb.Type = __base.sealedValue match {
+      case __v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.TypeRef => __v.value
+      case __v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.SingleType => __v.value
+      case __v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.ThisType => __v.value
+      case __v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.SuperType => __v.value
+      case __v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.ConstantType => __v.value
+      case __v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.IntersectionType => __v.value
+      case __v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.UnionType => __v.value
+      case __v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.WithType => __v.value
+      case __v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.StructuralType => __v.value
+      case __v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.AnnotatedType => __v.value
+      case __v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.ExistentialType => __v.value
+      case __v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.UniversalType => __v.value
+      case __v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.ByNameType => __v.value
+      case __v: scala.meta.internal.semanticdb.TypeMessage.SealedValue.RepeatedType => __v.value
       case scala.meta.internal.semanticdb.TypeMessage.SealedValue.Empty => Empty
     }
-    override def toBase(__custom: Type): TypeMessage = TypeMessage(__custom match {
-      case v: scala.meta.internal.semanticdb.TypeRef => scala.meta.internal.semanticdb.TypeMessage.SealedValue.TypeRef(v)
-      case v: scala.meta.internal.semanticdb.SingleType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.SingleType(v)
-      case v: scala.meta.internal.semanticdb.ThisType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.ThisType(v)
-      case v: scala.meta.internal.semanticdb.SuperType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.SuperType(v)
-      case v: scala.meta.internal.semanticdb.ConstantType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.ConstantType(v)
-      case v: scala.meta.internal.semanticdb.IntersectionType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.IntersectionType(v)
-      case v: scala.meta.internal.semanticdb.UnionType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.UnionType(v)
-      case v: scala.meta.internal.semanticdb.WithType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.WithType(v)
-      case v: scala.meta.internal.semanticdb.StructuralType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.StructuralType(v)
-      case v: scala.meta.internal.semanticdb.AnnotatedType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.AnnotatedType(v)
-      case v: scala.meta.internal.semanticdb.ExistentialType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.ExistentialType(v)
-      case v: scala.meta.internal.semanticdb.UniversalType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.UniversalType(v)
-      case v: scala.meta.internal.semanticdb.ByNameType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.ByNameType(v)
-      case v: scala.meta.internal.semanticdb.RepeatedType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.RepeatedType(v)
+    override def toBase(__custom: scala.meta.internal.semanticdb.Type): scala.meta.internal.semanticdb.TypeMessage = scala.meta.internal.semanticdb.TypeMessage(__custom match {
+      case __v: scala.meta.internal.semanticdb.TypeRef => scala.meta.internal.semanticdb.TypeMessage.SealedValue.TypeRef(__v)
+      case __v: scala.meta.internal.semanticdb.SingleType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.SingleType(__v)
+      case __v: scala.meta.internal.semanticdb.ThisType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.ThisType(__v)
+      case __v: scala.meta.internal.semanticdb.SuperType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.SuperType(__v)
+      case __v: scala.meta.internal.semanticdb.ConstantType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.ConstantType(__v)
+      case __v: scala.meta.internal.semanticdb.IntersectionType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.IntersectionType(__v)
+      case __v: scala.meta.internal.semanticdb.UnionType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.UnionType(__v)
+      case __v: scala.meta.internal.semanticdb.WithType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.WithType(__v)
+      case __v: scala.meta.internal.semanticdb.StructuralType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.StructuralType(__v)
+      case __v: scala.meta.internal.semanticdb.AnnotatedType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.AnnotatedType(__v)
+      case __v: scala.meta.internal.semanticdb.ExistentialType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.ExistentialType(__v)
+      case __v: scala.meta.internal.semanticdb.UniversalType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.UniversalType(__v)
+      case __v: scala.meta.internal.semanticdb.ByNameType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.ByNameType(__v)
+      case __v: scala.meta.internal.semanticdb.RepeatedType => scala.meta.internal.semanticdb.TypeMessage.SealedValue.RepeatedType(__v)
       case Empty => scala.meta.internal.semanticdb.TypeMessage.SealedValue.Empty
     })
   }
@@ -301,7 +304,7 @@ final case class TypeMessage(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 2 => sealedValue.typeRef.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
         case 20 => sealedValue.singleType.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
@@ -321,13 +324,13 @@ final case class TypeMessage(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = scala.meta.internal.semanticdb.TypeMessage
-    def toType: Type = Type.TypeTypeMapper.toCustom(this)
+    def toType: scala.meta.internal.semanticdb.Type = scala.meta.internal.semanticdb.Type.TypeTypeMapper.toCustom(this)
 }
 
 object TypeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.TypeMessage] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.TypeMessage] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.TypeMessage = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.TypeMessage(
       sealedValue = __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.TypeRef]].map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.TypeRef)
@@ -349,7 +352,7 @@ object TypeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.TypeMessage] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.TypeMessage(
         sealedValue = __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.TypeRef]]).map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.TypeRef)
     .orElse[scala.meta.internal.semanticdb.TypeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(20).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.SingleType]]).map(scala.meta.internal.semanticdb.TypeMessage.SealedValue.SingleType))
@@ -673,7 +676,7 @@ final case class TypeRef(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => scala.meta.internal.semanticdb.TypeRef._typemapper_prefix.toBase(prefix).toPMessage
         case 2 => _root_.scalapb.descriptors.PString(symbol)
@@ -687,7 +690,7 @@ final case class TypeRef(
 object TypeRef extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.TypeRef] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.TypeRef] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.TypeRef = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.TypeRef(
       scala.meta.internal.semanticdb.TypeRef._typemapper_prefix.toCustom(__fieldsMap.getOrElse(__fields.get(0), scala.meta.internal.semanticdb.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TypeMessage]),
@@ -697,7 +700,7 @@ object TypeRef extends scalapb.GeneratedMessageCompanion[scala.meta.internal.sem
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.TypeRef] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.TypeRef(
         scala.meta.internal.semanticdb.TypeRef._typemapper_prefix.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance)),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
@@ -817,7 +820,7 @@ final case class SingleType(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => scala.meta.internal.semanticdb.SingleType._typemapper_prefix.toBase(prefix).toPMessage
         case 2 => _root_.scalapb.descriptors.PString(symbol)
@@ -830,7 +833,7 @@ final case class SingleType(
 object SingleType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.SingleType] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.SingleType] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.SingleType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.SingleType(
       scala.meta.internal.semanticdb.SingleType._typemapper_prefix.toCustom(__fieldsMap.getOrElse(__fields.get(0), scala.meta.internal.semanticdb.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TypeMessage]),
@@ -839,7 +842,7 @@ object SingleType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.SingleType] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.SingleType(
         scala.meta.internal.semanticdb.SingleType._typemapper_prefix.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance)),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Predef.String]).getOrElse("")
@@ -928,7 +931,7 @@ final case class ThisType(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PString(symbol)
       }
@@ -940,7 +943,7 @@ final case class ThisType(
 object ThisType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ThisType] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ThisType] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.ThisType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.ThisType(
       __fieldsMap.getOrElse(__fields.get(0), "").asInstanceOf[_root_.scala.Predef.String]
@@ -948,7 +951,7 @@ object ThisType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.se
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.ThisType] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.ThisType(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Predef.String]).getOrElse("")
       )
@@ -1051,7 +1054,7 @@ final case class SuperType(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => scala.meta.internal.semanticdb.SuperType._typemapper_prefix.toBase(prefix).toPMessage
         case 2 => _root_.scalapb.descriptors.PString(symbol)
@@ -1064,7 +1067,7 @@ final case class SuperType(
 object SuperType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.SuperType] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.SuperType] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.SuperType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.SuperType(
       scala.meta.internal.semanticdb.SuperType._typemapper_prefix.toCustom(__fieldsMap.getOrElse(__fields.get(0), scala.meta.internal.semanticdb.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TypeMessage]),
@@ -1073,7 +1076,7 @@ object SuperType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.s
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.SuperType] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.SuperType(
         scala.meta.internal.semanticdb.SuperType._typemapper_prefix.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance)),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Predef.String]).getOrElse("")
@@ -1164,7 +1167,7 @@ final case class ConstantType(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => scala.meta.internal.semanticdb.ConstantType._typemapper_constant.toBase(constant).toPMessage
       }
@@ -1176,7 +1179,7 @@ final case class ConstantType(
 object ConstantType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ConstantType] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ConstantType] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.ConstantType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.ConstantType(
       scala.meta.internal.semanticdb.ConstantType._typemapper_constant.toCustom(__fieldsMap.getOrElse(__fields.get(0), scala.meta.internal.semanticdb.ConstantMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.ConstantMessage])
@@ -1184,7 +1187,7 @@ object ConstantType extends scalapb.GeneratedMessageCompanion[scala.meta.interna
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.ConstantType] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.ConstantType(
         scala.meta.internal.semanticdb.ConstantType._typemapper_constant.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[scala.meta.internal.semanticdb.ConstantMessage]).getOrElse(scala.meta.internal.semanticdb.ConstantMessage.defaultInstance))
       )
@@ -1267,7 +1270,7 @@ final case class IntersectionType(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PRepeated(types.map(scala.meta.internal.semanticdb.IntersectionType._typemapper_types.toBase(_).toPMessage)(_root_.scala.collection.breakOut))
       }
@@ -1279,7 +1282,7 @@ final case class IntersectionType(
 object IntersectionType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.IntersectionType] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.IntersectionType] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.IntersectionType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.IntersectionType(
       __fieldsMap.getOrElse(__fields.get(0), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.TypeMessage]].map(scala.meta.internal.semanticdb.IntersectionType._typemapper_types.toCustom)(_root_.scala.collection.breakOut)
@@ -1287,7 +1290,7 @@ object IntersectionType extends scalapb.GeneratedMessageCompanion[scala.meta.int
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.IntersectionType] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.IntersectionType(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.TypeMessage]]).getOrElse(_root_.scala.collection.Seq.empty).map(scala.meta.internal.semanticdb.IntersectionType._typemapper_types.toCustom)(_root_.scala.collection.breakOut)
       )
@@ -1370,7 +1373,7 @@ final case class UnionType(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PRepeated(types.map(scala.meta.internal.semanticdb.UnionType._typemapper_types.toBase(_).toPMessage)(_root_.scala.collection.breakOut))
       }
@@ -1382,7 +1385,7 @@ final case class UnionType(
 object UnionType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.UnionType] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.UnionType] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.UnionType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.UnionType(
       __fieldsMap.getOrElse(__fields.get(0), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.TypeMessage]].map(scala.meta.internal.semanticdb.UnionType._typemapper_types.toCustom)(_root_.scala.collection.breakOut)
@@ -1390,7 +1393,7 @@ object UnionType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.s
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.UnionType] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.UnionType(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.TypeMessage]]).getOrElse(_root_.scala.collection.Seq.empty).map(scala.meta.internal.semanticdb.UnionType._typemapper_types.toCustom)(_root_.scala.collection.breakOut)
       )
@@ -1473,7 +1476,7 @@ final case class WithType(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PRepeated(types.map(scala.meta.internal.semanticdb.WithType._typemapper_types.toBase(_).toPMessage)(_root_.scala.collection.breakOut))
       }
@@ -1485,7 +1488,7 @@ final case class WithType(
 object WithType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.WithType] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.WithType] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.WithType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.WithType(
       __fieldsMap.getOrElse(__fields.get(0), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.TypeMessage]].map(scala.meta.internal.semanticdb.WithType._typemapper_types.toCustom)(_root_.scala.collection.breakOut)
@@ -1493,7 +1496,7 @@ object WithType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.se
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.WithType] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.WithType(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.TypeMessage]]).getOrElse(_root_.scala.collection.Seq.empty).map(scala.meta.internal.semanticdb.WithType._typemapper_types.toCustom)(_root_.scala.collection.breakOut)
       )
@@ -1600,7 +1603,7 @@ final case class StructuralType(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 4 => scala.meta.internal.semanticdb.StructuralType._typemapper_tpe.toBase(tpe).toPMessage
         case 5 => declarations.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
@@ -1613,7 +1616,7 @@ final case class StructuralType(
 object StructuralType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.StructuralType] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.StructuralType] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.StructuralType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.StructuralType(
       scala.meta.internal.semanticdb.StructuralType._typemapper_tpe.toCustom(__fieldsMap.getOrElse(__fields.get(0), scala.meta.internal.semanticdb.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TypeMessage]),
@@ -1622,7 +1625,7 @@ object StructuralType extends scalapb.GeneratedMessageCompanion[scala.meta.inter
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.StructuralType] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.StructuralType(
         scala.meta.internal.semanticdb.StructuralType._typemapper_tpe.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance)),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]])
@@ -1735,7 +1738,7 @@ final case class AnnotatedType(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 3 => _root_.scalapb.descriptors.PRepeated(annotations.map(_.toPMessage)(_root_.scala.collection.breakOut))
         case 1 => scala.meta.internal.semanticdb.AnnotatedType._typemapper_tpe.toBase(tpe).toPMessage
@@ -1748,7 +1751,7 @@ final case class AnnotatedType(
 object AnnotatedType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.AnnotatedType] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.AnnotatedType] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.AnnotatedType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.AnnotatedType(
       __fieldsMap.getOrElse(__fields.get(0), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Annotation]],
@@ -1757,7 +1760,7 @@ object AnnotatedType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.AnnotatedType] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.AnnotatedType(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Annotation]]).getOrElse(_root_.scala.collection.Seq.empty),
         scala.meta.internal.semanticdb.AnnotatedType._typemapper_tpe.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance))
@@ -1868,7 +1871,7 @@ final case class ExistentialType(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => scala.meta.internal.semanticdb.ExistentialType._typemapper_tpe.toBase(tpe).toPMessage
         case 3 => declarations.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
@@ -1881,7 +1884,7 @@ final case class ExistentialType(
 object ExistentialType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ExistentialType] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ExistentialType] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.ExistentialType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.ExistentialType(
       scala.meta.internal.semanticdb.ExistentialType._typemapper_tpe.toCustom(__fieldsMap.getOrElse(__fields.get(0), scala.meta.internal.semanticdb.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TypeMessage]),
@@ -1890,7 +1893,7 @@ object ExistentialType extends scalapb.GeneratedMessageCompanion[scala.meta.inte
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.ExistentialType] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.ExistentialType(
         scala.meta.internal.semanticdb.ExistentialType._typemapper_tpe.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance)),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]])
@@ -2002,7 +2005,7 @@ final case class UniversalType(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 3 => typeParameters.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
         case 2 => scala.meta.internal.semanticdb.UniversalType._typemapper_tpe.toBase(tpe).toPMessage
@@ -2015,7 +2018,7 @@ final case class UniversalType(
 object UniversalType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.UniversalType] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.UniversalType] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.UniversalType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.UniversalType(
       __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]],
@@ -2024,7 +2027,7 @@ object UniversalType extends scalapb.GeneratedMessageCompanion[scala.meta.intern
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.UniversalType] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.UniversalType(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Scope]]),
         scala.meta.internal.semanticdb.UniversalType._typemapper_tpe.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance))
@@ -2117,7 +2120,7 @@ final case class ByNameType(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => scala.meta.internal.semanticdb.ByNameType._typemapper_tpe.toBase(tpe).toPMessage
       }
@@ -2129,7 +2132,7 @@ final case class ByNameType(
 object ByNameType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ByNameType] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ByNameType] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.ByNameType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.ByNameType(
       scala.meta.internal.semanticdb.ByNameType._typemapper_tpe.toCustom(__fieldsMap.getOrElse(__fields.get(0), scala.meta.internal.semanticdb.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TypeMessage])
@@ -2137,7 +2140,7 @@ object ByNameType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.ByNameType] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.ByNameType(
         scala.meta.internal.semanticdb.ByNameType._typemapper_tpe.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance))
       )
@@ -2225,7 +2228,7 @@ final case class RepeatedType(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => scala.meta.internal.semanticdb.RepeatedType._typemapper_tpe.toBase(tpe).toPMessage
       }
@@ -2237,7 +2240,7 @@ final case class RepeatedType(
 object RepeatedType extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.RepeatedType] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.RepeatedType] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.RepeatedType = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.RepeatedType(
       scala.meta.internal.semanticdb.RepeatedType._typemapper_tpe.toCustom(__fieldsMap.getOrElse(__fields.get(0), scala.meta.internal.semanticdb.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TypeMessage])
@@ -2245,7 +2248,7 @@ object RepeatedType extends scalapb.GeneratedMessageCompanion[scala.meta.interna
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.RepeatedType] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.RepeatedType(
         scala.meta.internal.semanticdb.RepeatedType._typemapper_tpe.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance))
       )

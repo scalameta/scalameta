@@ -407,7 +407,17 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case gview: g.ApplyImplicitView =>
                 val pos = gtree.pos.toMeta
                 val syntax = showSynthetic(gview.fun) + "(" + S.star + ")"
-                success(pos, _.copy(conversion = Some(syntax)))
+                success(pos, { inf =>
+                  inf.copy(
+                    conversion = Some(syntax),
+                    newSynthetics = inf.newSynthetics :+ s.ImplicitConversionSynthetic(
+                      range = Some(pos.toRange),
+                      call = Some(s.SyntheticApply(
+                        sym = gview.symbol.toSemantic
+                      ))
+                    )
+                  )
+                })
                 isVisited += gview.fun
               case gimpl: g.ApplyToImplicitArgs =>
                 val args = S.mkString(gimpl.args.map(showSynthetic), ", ")
@@ -515,6 +525,10 @@ trait TextDocumentOps { self: SemanticdbOps =>
         case (pos, synthetic) => synthetic.toSynthetic(input, pos)
       }.toList
 
+      val finalNewSynthetics = synthetics.valuesIterator.flatMap {
+        inferred => inferred.newSynthetics
+      }.toList
+
       s.TextDocument(
         schema = s.Schema.SEMANTICDB4,
         uri = unit.source.toUri,
@@ -524,7 +538,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
         symbols = finalSymbols,
         occurrences = finalOccurrences,
         diagnostics = diagnostics,
-        synthetics = finalSynthetics
+        synthetics = finalSynthetics,
+        newSynthetics = finalNewSynthetics
       )
     }
     private def toJavaTextDocument: s.TextDocument = {

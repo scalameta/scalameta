@@ -44,7 +44,8 @@ case class Inferred(
     select: Option[AttributedSynthetic] = None,
     targs: Option[AttributedSynthetic] = None,
     conversion: Option[AttributedSynthetic] = None,
-    args: Option[AttributedSynthetic] = None
+    args: Option[AttributedSynthetic] = None,
+    newSynthetics: List[s.NewSynthetic] = Nil
 ) {
   assert(
     args.isEmpty || conversion.isEmpty,
@@ -82,4 +83,5 @@ case class Inferred(
       )
     )
   }
+
 }

@@ -23,6 +23,7 @@ message TextDocument {
   repeated SymbolOccurrence occurrences = 6;
   repeated Diagnostic diagnostics = 7;
   repeated Synthetic synthetics = 8;
+  repeated NewSynthetic newSynthetics = 12;
 }
 
 enum Language {
@@ -321,4 +322,34 @@ message Diagnostic {
 message Synthetic {
   Range range = 1;
   TextDocument text = 2;
+}
+
+message NewSynthetic {
+  oneof sealed_value {
+    ImplicitConversionSynthetic implicitConversionSynthetic = 1;
+    InferredTypeSynthetic inferredTypeSynthetic = 2;
+  }
+}
+
+message ImplicitConversionSynthetic {
+  Range range = 1;
+  SyntheticApply call = 2;
+}
+
+message InferredTypeSynthetic {
+  Range range = 1;
+  repeated Type types = 2;
+}
+
+
+message SyntheticTerm {
+  oneof sealed_value {
+    SyntheticApply methodCall = 1;
+  }
+}
+
+message SyntheticApply {
+  string sym = 1;
+  repeated Type typeArgs = 2;
+  repeated SyntheticTerm args = 3;
 }

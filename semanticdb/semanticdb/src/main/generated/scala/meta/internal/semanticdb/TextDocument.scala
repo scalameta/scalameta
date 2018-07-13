@@ -15,7 +15,8 @@ final case class TextDocument(
     symbols: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.SymbolInformation] = _root_.scala.collection.Seq.empty,
     occurrences: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.SymbolOccurrence] = _root_.scala.collection.Seq.empty,
     diagnostics: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Diagnostic] = _root_.scala.collection.Seq.empty,
-    synthetics: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Synthetic] = _root_.scala.collection.Seq.empty
+    synthetics: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Synthetic] = _root_.scala.collection.Seq.empty,
+    newSynthetics: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.NewSynthetic] = _root_.scala.collection.Seq.empty
     ) extends scalapb.GeneratedMessage with scalapb.Message[TextDocument] with scalapb.lenses.Updatable[TextDocument] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
@@ -70,6 +71,10 @@ final case class TextDocument(
       }
       synthetics.foreach { __item =>
         val __value = __item
+        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
+      }
+      newSynthetics.foreach { __item =>
+        val __value = scala.meta.internal.semanticdb.TextDocument._typemapper_newSynthetics.toBase(__item)
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       }
       __size
@@ -137,6 +142,12 @@ final case class TextDocument(
           _output__.writeString(11, __v)
         }
       };
+      newSynthetics.foreach { __v =>
+        val __m = scala.meta.internal.semanticdb.TextDocument._typemapper_newSynthetics.toBase(__v)
+        _output__.writeTag(12, 2)
+        _output__.writeUInt32NoTag(__m.serializedSize)
+        __m.writeTo(_output__)
+      };
     }
     def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.TextDocument = {
       var __schema = this.schema
@@ -148,6 +159,7 @@ final case class TextDocument(
       val __occurrences = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb.SymbolOccurrence] ++= this.occurrences)
       val __diagnostics = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb.Diagnostic] ++= this.diagnostics)
       val __synthetics = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb.Synthetic] ++= this.synthetics)
+      val __newSynthetics = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb.NewSynthetic] ++= this.newSynthetics)
       var _done__ = false
       while (!_done__) {
         val _tag__ = _input__.readTag()
@@ -171,6 +183,8 @@ final case class TextDocument(
             __diagnostics += _root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.Diagnostic.defaultInstance)
           case 66 =>
             __synthetics += _root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.Synthetic.defaultInstance)
+          case 98 =>
+            __newSynthetics += scala.meta.internal.semanticdb.TextDocument._typemapper_newSynthetics.toCustom(_root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.NewSyntheticMessage.defaultInstance))
           case tag => _input__.skipField(tag)
         }
       }
@@ -183,7 +197,8 @@ final case class TextDocument(
           symbols = __symbols.result(),
           occurrences = __occurrences.result(),
           diagnostics = __diagnostics.result(),
-          synthetics = __synthetics.result()
+          synthetics = __synthetics.result(),
+          newSynthetics = __newSynthetics.result()
       )
     }
     def withSchema(__v: scala.meta.internal.semanticdb.Schema): TextDocument = copy(schema = __v)
@@ -207,6 +222,10 @@ final case class TextDocument(
     def addSynthetics(__vs: scala.meta.internal.semanticdb.Synthetic*): TextDocument = addAllSynthetics(__vs)
     def addAllSynthetics(__vs: TraversableOnce[scala.meta.internal.semanticdb.Synthetic]): TextDocument = copy(synthetics = synthetics ++ __vs)
     def withSynthetics(__v: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Synthetic]): TextDocument = copy(synthetics = __v)
+    def clearNewSynthetics = copy(newSynthetics = _root_.scala.collection.Seq.empty)
+    def addNewSynthetics(__vs: scala.meta.internal.semanticdb.NewSynthetic*): TextDocument = addAllNewSynthetics(__vs)
+    def addAllNewSynthetics(__vs: TraversableOnce[scala.meta.internal.semanticdb.NewSynthetic]): TextDocument = copy(newSynthetics = newSynthetics ++ __vs)
+    def withNewSynthetics(__v: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.NewSynthetic]): TextDocument = copy(newSynthetics = __v)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
         case 1 => {
@@ -233,10 +252,11 @@ final case class TextDocument(
         case 6 => occurrences
         case 7 => diagnostics
         case 8 => synthetics
+        case 12 => newSynthetics.map(scala.meta.internal.semanticdb.TextDocument._typemapper_newSynthetics.toBase)(_root_.scala.collection.breakOut)
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PEnum(schema.scalaValueDescriptor)
         case 2 => _root_.scalapb.descriptors.PString(uri)
@@ -247,6 +267,7 @@ final case class TextDocument(
         case 6 => _root_.scalapb.descriptors.PRepeated(occurrences.map(_.toPMessage)(_root_.scala.collection.breakOut))
         case 7 => _root_.scalapb.descriptors.PRepeated(diagnostics.map(_.toPMessage)(_root_.scala.collection.breakOut))
         case 8 => _root_.scalapb.descriptors.PRepeated(synthetics.map(_.toPMessage)(_root_.scala.collection.breakOut))
+        case 12 => _root_.scalapb.descriptors.PRepeated(newSynthetics.map(scala.meta.internal.semanticdb.TextDocument._typemapper_newSynthetics.toBase(_).toPMessage)(_root_.scala.collection.breakOut))
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
@@ -256,7 +277,7 @@ final case class TextDocument(
 object TextDocument extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.TextDocument] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.TextDocument] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.TextDocument = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.TextDocument(
       scala.meta.internal.semanticdb.Schema.fromValue(__fieldsMap.getOrElse(__fields.get(0), scala.meta.internal.semanticdb.Schema.LEGACY.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
@@ -267,12 +288,13 @@ object TextDocument extends scalapb.GeneratedMessageCompanion[scala.meta.interna
       __fieldsMap.getOrElse(__fields.get(5), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.SymbolInformation]],
       __fieldsMap.getOrElse(__fields.get(6), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.SymbolOccurrence]],
       __fieldsMap.getOrElse(__fields.get(7), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Diagnostic]],
-      __fieldsMap.getOrElse(__fields.get(8), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Synthetic]]
+      __fieldsMap.getOrElse(__fields.get(8), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Synthetic]],
+      __fieldsMap.getOrElse(__fields.get(9), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.NewSyntheticMessage]].map(scala.meta.internal.semanticdb.TextDocument._typemapper_newSynthetics.toCustom)(_root_.scala.collection.breakOut)
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.TextDocument] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.TextDocument(
         scala.meta.internal.semanticdb.Schema.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(scala.meta.internal.semanticdb.Schema.LEGACY.scalaValueDescriptor).number),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
@@ -282,7 +304,8 @@ object TextDocument extends scalapb.GeneratedMessageCompanion[scala.meta.interna
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.SymbolInformation]]).getOrElse(_root_.scala.collection.Seq.empty),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.SymbolOccurrence]]).getOrElse(_root_.scala.collection.Seq.empty),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(7).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Diagnostic]]).getOrElse(_root_.scala.collection.Seq.empty),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(8).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Synthetic]]).getOrElse(_root_.scala.collection.Seq.empty)
+        __fieldsMap.get(scalaDescriptor.findFieldByNumber(8).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Synthetic]]).getOrElse(_root_.scala.collection.Seq.empty),
+        __fieldsMap.get(scalaDescriptor.findFieldByNumber(12).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.NewSyntheticMessage]]).getOrElse(_root_.scala.collection.Seq.empty).map(scala.meta.internal.semanticdb.TextDocument._typemapper_newSynthetics.toCustom)(_root_.scala.collection.breakOut)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
@@ -295,6 +318,7 @@ object TextDocument extends scalapb.GeneratedMessageCompanion[scala.meta.interna
       case 6 => __out = scala.meta.internal.semanticdb.SymbolOccurrence
       case 7 => __out = scala.meta.internal.semanticdb.Diagnostic
       case 8 => __out = scala.meta.internal.semanticdb.Synthetic
+      case 12 => __out = scala.meta.internal.semanticdb.NewSyntheticMessage
     }
     __out
   }
@@ -317,6 +341,7 @@ object TextDocument extends scalapb.GeneratedMessageCompanion[scala.meta.interna
     def occurrences: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb.SymbolOccurrence]] = field(_.occurrences)((c_, f_) => c_.copy(occurrences = f_))
     def diagnostics: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Diagnostic]] = field(_.diagnostics)((c_, f_) => c_.copy(diagnostics = f_))
     def synthetics: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Synthetic]] = field(_.synthetics)((c_, f_) => c_.copy(synthetics = f_))
+    def newSynthetics: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb.NewSynthetic]] = field(_.newSynthetics)((c_, f_) => c_.copy(newSynthetics = f_))
   }
   final val SCHEMA_FIELD_NUMBER = 1
   final val URI_FIELD_NUMBER = 2
@@ -327,4 +352,7 @@ object TextDocument extends scalapb.GeneratedMessageCompanion[scala.meta.interna
   final val OCCURRENCES_FIELD_NUMBER = 6
   final val DIAGNOSTICS_FIELD_NUMBER = 7
   final val SYNTHETICS_FIELD_NUMBER = 8
+  final val NEWSYNTHETICS_FIELD_NUMBER = 12
+  @transient
+  private val _typemapper_newSynthetics: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.NewSyntheticMessage, scala.meta.internal.semanticdb.NewSynthetic] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.NewSyntheticMessage, scala.meta.internal.semanticdb.NewSynthetic]]
 }
