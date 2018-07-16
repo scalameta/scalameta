@@ -84,4 +84,8 @@ case class Inferred(
     )
   }
 
+  def addNewSynth(synth: s.NewSynthetic): Inferred = copy(
+    newSynthetics = newSynthetics :+ synth
+  )
+
 }

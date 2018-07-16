@@ -407,26 +407,25 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case gview: g.ApplyImplicitView =>
                 val pos = gtree.pos.toMeta
                 val syntax = showSynthetic(gview.fun) + "(" + S.star + ")"
-                success(pos, { inf =>
-                  inf.copy(
-                    conversion = Some(syntax),
-                    newSynthetics = inf.newSynthetics :+ s.ImplicitConversionSynthetic(
-                      range = Some(pos.toRange),
-                      call = Some(s.SyntheticApply(
-                        sym = gview.symbol.toSemantic
-                      ))
-                    )
-                  )
-                })
+                success(pos, _.copy(conversion = Some(syntax)).addNewSynth(s.ImplicitConversionSynthetic(
+                  range = Some(pos.toRange),
+                  call = Some(gview.asSyntheticApply)
+                )))
                 isVisited += gview.fun
               case gimpl: g.ApplyToImplicitArgs =>
                 val args = S.mkString(gimpl.args.map(showSynthetic), ", ")
+                val newSynthArgs = gimpl.args.map(_.asSyntheticTerm)
                 gimpl.fun match {
                   case gview: g.ApplyImplicitView =>
                     isVisited += gview
                     val pos = gtree.pos.toMeta
                     val syntax = showSynthetic(gview.fun) + "(" + S.star + ")(" + args + ")"
-                    success(pos, _.copy(conversion = Some(syntax)))
+                    success(pos, _.copy(conversion = Some(syntax)).addNewSynth(s.ImplicitConversionSynthetic(
+                      range = Some(pos.toRange),
+                      call = Some(gview.asSyntheticApply.copy(
+                        args = newSynthArgs
+                      ))
+                    )))
                   case ForComprehensionImplicitArg(qual) =>
                     val morePrecisePos = qual.pos.withStart(qual.pos.end).toMeta
                     val syntax = S("(") + S.star + ")" + "(" + args + ")"

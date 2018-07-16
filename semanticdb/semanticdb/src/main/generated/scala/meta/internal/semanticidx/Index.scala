@@ -61,7 +61,7 @@ final case class Index(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PRepeated(entries.map(scala.meta.internal.semanticidx.Index._typemapper_entries.toBase(_).toPMessage)(_root_.scala.collection.breakOut))
       }
@@ -73,7 +73,7 @@ final case class Index(
 object Index extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticidx.Index] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticidx.Index] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticidx.Index = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticidx.Index(
       __fieldsMap.getOrElse(__fields.get(0), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticidx.Index.EntriesEntry]].map(scala.meta.internal.semanticidx.Index._typemapper_entries.toCustom)(_root_.scala.collection.breakOut)
@@ -81,7 +81,7 @@ object Index extends scalapb.GeneratedMessageCompanion[scala.meta.internal.seman
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticidx.Index] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticidx.Index(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticidx.Index.EntriesEntry]]).getOrElse(_root_.scala.collection.Seq.empty).map(scala.meta.internal.semanticidx.Index._typemapper_entries.toCustom)(_root_.scala.collection.breakOut)
       )
@@ -186,7 +186,7 @@ object Index extends scalapb.GeneratedMessageCompanion[scala.meta.internal.seman
         }
       }
       def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-        require(__field.containingMessage eq companion.scalaDescriptor)
+        _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
         (__field.number: @_root_.scala.unchecked) match {
           case 1 => _root_.scalapb.descriptors.PString(key)
           case 2 => scala.meta.internal.semanticidx.Index.EntriesEntry._typemapper_value.toBase(value).toPMessage
@@ -199,7 +199,7 @@ object Index extends scalapb.GeneratedMessageCompanion[scala.meta.internal.seman
   object EntriesEntry extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticidx.Index.EntriesEntry] {
     implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticidx.Index.EntriesEntry] = this
     def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticidx.Index.EntriesEntry = {
-      require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
       val __fields = javaDescriptor.getFields
       scala.meta.internal.semanticidx.Index.EntriesEntry(
         __fieldsMap.getOrElse(__fields.get(0), "").asInstanceOf[_root_.scala.Predef.String],
@@ -208,7 +208,7 @@ object Index extends scalapb.GeneratedMessageCompanion[scala.meta.internal.seman
     }
     implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticidx.Index.EntriesEntry] = _root_.scalapb.descriptors.Reads{
       case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-        require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+        _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
         scala.meta.internal.semanticidx.Index.EntriesEntry(
           __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
           scala.meta.internal.semanticidx.Index.EntriesEntry._typemapper_value.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[scala.meta.internal.semanticidx.EntryMessage]).getOrElse(scala.meta.internal.semanticidx.EntryMessage.defaultInstance))

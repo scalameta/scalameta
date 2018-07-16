@@ -325,31 +325,56 @@ message Synthetic {
 }
 
 message NewSynthetic {
+  Range range = 1;
+  Tree tree = 2;
+}
+
+message Tree {
   oneof sealed_value {
-    ImplicitConversionSynthetic implicitConversionSynthetic = 1;
-    InferredTypeSynthetic inferredTypeSynthetic = 2;
+    ApplyTree apply = 1;
+    FunctionTree function = 2;
+    IdTree id = 3;
+    LiteralTree literal = 4;
+    MacroExpansionTree macroExpansion = 5;
+    OriginalTree original = 6;
+    SelectTree select = 7;
+    TypeApplyTree typeApply = 8;
   }
 }
 
-message ImplicitConversionSynthetic {
-  Range range = 1;
-  SyntheticApply call = 2;
+message ApplyTree {
+  Tree fn = 1;
+  repeated Tree args = 2;
 }
 
-message InferredTypeSynthetic {
-  Range range = 1;
-  repeated Type types = 2;
+message FunctionTree {
+  repeated IdTree params = 1;
+  Tree term = 2;
 }
 
-
-message SyntheticTerm {
-  oneof sealed_value {
-    SyntheticApply methodCall = 1;
-  }
-}
-
-message SyntheticApply {
+message IdTree {
   string sym = 1;
-  repeated Type typeArgs = 2;
-  repeated SyntheticTerm args = 3;
+}
+
+message LiteralTree {
+  Constant const = 1;
+}
+
+message MacroExpansionTree {
+  Tree expandee = 1;
+  Type type = 2;
+}
+
+message OriginalTree {
+  Range range = 1;
+}
+
+message SelectTree {
+  Tree qual = 1;
+  IdTree id = 2;
+}
+
+message TypeApplyTree {
+  Tree fn = 1;
+  repeated Type targs = 2;
 }

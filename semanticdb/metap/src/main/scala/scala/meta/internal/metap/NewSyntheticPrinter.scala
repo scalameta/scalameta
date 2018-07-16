@@ -27,8 +27,9 @@ trait NewSyntheticPrinter extends BasePrinter with RangePrinter with SymbolInfor
       case synthTerm: s.SyntheticApply =>
         out.print(synthTerm.sym)
         rep("[", synthTerm.typeArgs, ",", "]")(syntheticInfoPrinter.pprint)
-        out.print("(*)")
         rep("(", synthTerm.args, ",", ")")(pprint)
+      case synthTerm: s.SyntheticValue =>
+        out.print(synthTerm.sym)
       case _ =>
     }
   }

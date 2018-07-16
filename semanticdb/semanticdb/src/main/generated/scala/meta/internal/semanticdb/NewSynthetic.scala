@@ -5,45 +5,25 @@
 
 package scala.meta.internal.semanticdb
 
-sealed trait NewSynthetic {
-  final def isEmpty = this.isInstanceOf[scala.meta.internal.semanticdb.NewSynthetic.Empty.type]
-  final def isDefined = !isEmpty
-  final def asMessage: scala.meta.internal.semanticdb.NewSyntheticMessage = scala.meta.internal.semanticdb.NewSynthetic.NewSyntheticTypeMapper.toBase(this)
-}
-
-object NewSynthetic {
-  case object Empty extends scala.meta.internal.semanticdb.NewSynthetic
-  
-  def defaultInstance: scala.meta.internal.semanticdb.NewSynthetic = Empty
-  
-  implicit val NewSyntheticTypeMapper: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.NewSyntheticMessage, scala.meta.internal.semanticdb.NewSynthetic] = new _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.NewSyntheticMessage, scala.meta.internal.semanticdb.NewSynthetic] {
-    override def toCustom(__base: scala.meta.internal.semanticdb.NewSyntheticMessage): scala.meta.internal.semanticdb.NewSynthetic = __base.sealedValue match {
-      case __v: scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.ImplicitConversionSynthetic => __v.value
-      case __v: scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.InferredTypeSynthetic => __v.value
-      case scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.Empty => Empty
-    }
-    override def toBase(__custom: scala.meta.internal.semanticdb.NewSynthetic): scala.meta.internal.semanticdb.NewSyntheticMessage = scala.meta.internal.semanticdb.NewSyntheticMessage(__custom match {
-      case __v: scala.meta.internal.semanticdb.ImplicitConversionSynthetic => scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.ImplicitConversionSynthetic(__v)
-      case __v: scala.meta.internal.semanticdb.InferredTypeSynthetic => scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.InferredTypeSynthetic(__v)
-      case Empty => scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.Empty
-    })
-  }
-}
 @SerialVersionUID(0L)
-final case class NewSyntheticMessage(
-    sealedValue: scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue = scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.Empty
-    ) extends scalapb.GeneratedMessage with scalapb.Message[NewSyntheticMessage] with scalapb.lenses.Updatable[NewSyntheticMessage] {
+final case class NewSynthetic(
+    range: _root_.scala.Option[scala.meta.internal.semanticdb.Range] = None,
+    tree: scala.meta.internal.semanticdb.Tree = scala.meta.internal.semanticdb.NewSynthetic._typemapper_tree.toCustom(scala.meta.internal.semanticdb.TreeMessage.defaultInstance)
+    ) extends scalapb.GeneratedMessage with scalapb.Message[NewSynthetic] with scalapb.lenses.Updatable[NewSynthetic] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-      if (sealedValue.implicitConversionSynthetic.isDefined) {
-        val __value = sealedValue.implicitConversionSynthetic.get
+      if (range.isDefined) {
+        val __value = range.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
-      if (sealedValue.inferredTypeSynthetic.isDefined) {
-        val __value = sealedValue.inferredTypeSynthetic.get
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
+      
+      {
+        val __value = scala.meta.internal.semanticdb.NewSynthetic._typemapper_tree.toBase(tree)
+        if (__value != scala.meta.internal.semanticdb.TreeMessage.defaultInstance) {
+          __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
+        }
       };
       __size
     }
@@ -56,79 +36,81 @@ final case class NewSyntheticMessage(
       read
     }
     def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
-      sealedValue.implicitConversionSynthetic.foreach { __v =>
+      range.foreach { __v =>
         val __m = __v
         _output__.writeTag(1, 2)
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-      sealedValue.inferredTypeSynthetic.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(2, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
+      {
+        val __v = scala.meta.internal.semanticdb.NewSynthetic._typemapper_tree.toBase(tree)
+        if (__v != scala.meta.internal.semanticdb.TreeMessage.defaultInstance) {
+          _output__.writeTag(2, 2)
+          _output__.writeUInt32NoTag(__v.serializedSize)
+          __v.writeTo(_output__)
+        }
       };
     }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.NewSyntheticMessage = {
-      var __sealedValue = this.sealedValue
+    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.NewSynthetic = {
+      var __range = this.range
+      var __tree = this.tree
       var _done__ = false
       while (!_done__) {
         val _tag__ = _input__.readTag()
         _tag__ match {
           case 0 => _done__ = true
           case 10 =>
-            __sealedValue = scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.ImplicitConversionSynthetic(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.implicitConversionSynthetic.getOrElse(scala.meta.internal.semanticdb.ImplicitConversionSynthetic.defaultInstance)))
+            __range = Option(_root_.scalapb.LiteParser.readMessage(_input__, __range.getOrElse(scala.meta.internal.semanticdb.Range.defaultInstance)))
           case 18 =>
-            __sealedValue = scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.InferredTypeSynthetic(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.inferredTypeSynthetic.getOrElse(scala.meta.internal.semanticdb.InferredTypeSynthetic.defaultInstance)))
+            __tree = scala.meta.internal.semanticdb.NewSynthetic._typemapper_tree.toCustom(_root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.NewSynthetic._typemapper_tree.toBase(__tree)))
           case tag => _input__.skipField(tag)
         }
       }
-      scala.meta.internal.semanticdb.NewSyntheticMessage(
-          sealedValue = __sealedValue
+      scala.meta.internal.semanticdb.NewSynthetic(
+          range = __range,
+          tree = __tree
       )
     }
-    def getImplicitConversionSynthetic: scala.meta.internal.semanticdb.ImplicitConversionSynthetic = sealedValue.implicitConversionSynthetic.getOrElse(scala.meta.internal.semanticdb.ImplicitConversionSynthetic.defaultInstance)
-    def withImplicitConversionSynthetic(__v: scala.meta.internal.semanticdb.ImplicitConversionSynthetic): NewSyntheticMessage = copy(sealedValue = scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.ImplicitConversionSynthetic(__v))
-    def getInferredTypeSynthetic: scala.meta.internal.semanticdb.InferredTypeSynthetic = sealedValue.inferredTypeSynthetic.getOrElse(scala.meta.internal.semanticdb.InferredTypeSynthetic.defaultInstance)
-    def withInferredTypeSynthetic(__v: scala.meta.internal.semanticdb.InferredTypeSynthetic): NewSyntheticMessage = copy(sealedValue = scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.InferredTypeSynthetic(__v))
-    def clearSealedValue: NewSyntheticMessage = copy(sealedValue = scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.Empty)
-    def withSealedValue(__v: scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue): NewSyntheticMessage = copy(sealedValue = __v)
+    def getRange: scala.meta.internal.semanticdb.Range = range.getOrElse(scala.meta.internal.semanticdb.Range.defaultInstance)
+    def clearRange: NewSynthetic = copy(range = None)
+    def withRange(__v: scala.meta.internal.semanticdb.Range): NewSynthetic = copy(range = Option(__v))
+    def withTree(__v: scala.meta.internal.semanticdb.Tree): NewSynthetic = copy(tree = __v)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
-        case 1 => sealedValue.implicitConversionSynthetic.orNull
-        case 2 => sealedValue.inferredTypeSynthetic.orNull
+        case 1 => range.orNull
+        case 2 => {
+          val __t = scala.meta.internal.semanticdb.NewSynthetic._typemapper_tree.toBase(tree)
+          if (__t != scala.meta.internal.semanticdb.TreeMessage.defaultInstance) __t else null
+        }
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
       _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
-        case 1 => sealedValue.implicitConversionSynthetic.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 2 => sealedValue.inferredTypeSynthetic.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 1 => range.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 2 => scala.meta.internal.semanticdb.NewSynthetic._typemapper_tree.toBase(tree).toPMessage
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
-    def companion = scala.meta.internal.semanticdb.NewSyntheticMessage
-    def toNewSynthetic: scala.meta.internal.semanticdb.NewSynthetic = scala.meta.internal.semanticdb.NewSynthetic.NewSyntheticTypeMapper.toCustom(this)
+    def companion = scala.meta.internal.semanticdb.NewSynthetic
 }
 
-object NewSyntheticMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.NewSyntheticMessage] {
-  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.NewSyntheticMessage] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.NewSyntheticMessage = {
+object NewSynthetic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.NewSynthetic] {
+  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.NewSynthetic] = this
+  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.NewSynthetic = {
     _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
-    scala.meta.internal.semanticdb.NewSyntheticMessage(
-      sealedValue = __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.ImplicitConversionSynthetic]].map(scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.ImplicitConversionSynthetic)
-    .orElse[scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue](__fieldsMap.get(__fields.get(1)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.InferredTypeSynthetic]].map(scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.InferredTypeSynthetic))
-    .getOrElse(scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.Empty)
+    scala.meta.internal.semanticdb.NewSynthetic(
+      __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Range]],
+      scala.meta.internal.semanticdb.NewSynthetic._typemapper_tree.toCustom(__fieldsMap.getOrElse(__fields.get(1), scala.meta.internal.semanticdb.TreeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TreeMessage])
     )
   }
-  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.NewSyntheticMessage] = _root_.scalapb.descriptors.Reads{
+  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.NewSynthetic] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
       _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
-      scala.meta.internal.semanticdb.NewSyntheticMessage(
-        sealedValue = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.ImplicitConversionSynthetic]]).map(scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.ImplicitConversionSynthetic)
-    .orElse[scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.InferredTypeSynthetic]]).map(scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.InferredTypeSynthetic))
-    .getOrElse(scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.Empty)
+      scala.meta.internal.semanticdb.NewSynthetic(
+        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Range]]),
+        scala.meta.internal.semanticdb.NewSynthetic._typemapper_tree.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[scala.meta.internal.semanticdb.TreeMessage]).getOrElse(scala.meta.internal.semanticdb.TreeMessage.defaultInstance))
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
@@ -137,309 +119,22 @@ object NewSyntheticMessage extends scalapb.GeneratedMessageCompanion[scala.meta.
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
-      case 1 => __out = scala.meta.internal.semanticdb.ImplicitConversionSynthetic
-      case 2 => __out = scala.meta.internal.semanticdb.InferredTypeSynthetic
-    }
-    __out
-  }
-  lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq.empty
-  def enumCompanionForFieldNumber(__fieldNumber: _root_.scala.Int): _root_.scalapb.GeneratedEnumCompanion[_] = throw new MatchError(__fieldNumber)
-  lazy val defaultInstance = scala.meta.internal.semanticdb.NewSyntheticMessage(
-  )
-  sealed trait SealedValue extends _root_.scalapb.GeneratedOneof {
-    def isEmpty: _root_.scala.Boolean = false
-    def isDefined: _root_.scala.Boolean = true
-    def isImplicitConversionSynthetic: _root_.scala.Boolean = false
-    def isInferredTypeSynthetic: _root_.scala.Boolean = false
-    def implicitConversionSynthetic: _root_.scala.Option[scala.meta.internal.semanticdb.ImplicitConversionSynthetic] = None
-    def inferredTypeSynthetic: _root_.scala.Option[scala.meta.internal.semanticdb.InferredTypeSynthetic] = None
-  }
-  object SealedValue extends {
-    @SerialVersionUID(0L)
-    case object Empty extends scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue {
-      type ValueType = _root_.scala.Nothing
-      override def isEmpty: _root_.scala.Boolean = true
-      override def isDefined: _root_.scala.Boolean = false
-      override def number: _root_.scala.Int = 0
-      override def value: _root_.scala.Nothing = throw new java.util.NoSuchElementException("Empty.value")
-    }
-  
-    @SerialVersionUID(0L)
-    final case class ImplicitConversionSynthetic(value: scala.meta.internal.semanticdb.ImplicitConversionSynthetic) extends scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue {
-      type ValueType = scala.meta.internal.semanticdb.ImplicitConversionSynthetic
-      override def isImplicitConversionSynthetic: _root_.scala.Boolean = true
-      override def implicitConversionSynthetic: _root_.scala.Option[scala.meta.internal.semanticdb.ImplicitConversionSynthetic] = Some(value)
-      override def number: _root_.scala.Int = 1
-    }
-    @SerialVersionUID(0L)
-    final case class InferredTypeSynthetic(value: scala.meta.internal.semanticdb.InferredTypeSynthetic) extends scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue {
-      type ValueType = scala.meta.internal.semanticdb.InferredTypeSynthetic
-      override def isInferredTypeSynthetic: _root_.scala.Boolean = true
-      override def inferredTypeSynthetic: _root_.scala.Option[scala.meta.internal.semanticdb.InferredTypeSynthetic] = Some(value)
-      override def number: _root_.scala.Int = 2
-    }
-  }
-  implicit class NewSyntheticMessageLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.NewSyntheticMessage]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.NewSyntheticMessage](_l) {
-    def implicitConversionSynthetic: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.ImplicitConversionSynthetic] = field(_.getImplicitConversionSynthetic)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.ImplicitConversionSynthetic(f_)))
-    def inferredTypeSynthetic: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.InferredTypeSynthetic] = field(_.getInferredTypeSynthetic)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue.InferredTypeSynthetic(f_)))
-    def sealedValue: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.NewSyntheticMessage.SealedValue] = field(_.sealedValue)((c_, f_) => c_.copy(sealedValue = f_))
-  }
-  final val IMPLICITCONVERSIONSYNTHETIC_FIELD_NUMBER = 1
-  final val INFERREDTYPESYNTHETIC_FIELD_NUMBER = 2
-}
-
-@SerialVersionUID(0L)
-final case class ImplicitConversionSynthetic(
-    range: _root_.scala.Option[scala.meta.internal.semanticdb.Range] = None,
-    call: _root_.scala.Option[scala.meta.internal.semanticdb.SyntheticApply] = None
-    ) extends scala.meta.internal.semanticdb.NewSynthetic with scalapb.GeneratedMessage with scalapb.Message[ImplicitConversionSynthetic] with scalapb.lenses.Updatable[ImplicitConversionSynthetic] {
-    @transient
-    private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
-    private[this] def __computeSerializedValue(): _root_.scala.Int = {
-      var __size = 0
-      if (range.isDefined) {
-        val __value = range.get
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-      };
-      if (call.isDefined) {
-        val __value = call.get
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-      };
-      __size
-    }
-    final override def serializedSize: _root_.scala.Int = {
-      var read = __serializedSizeCachedValue
-      if (read == 0) {
-        read = __computeSerializedValue()
-        __serializedSizeCachedValue = read
-      }
-      read
-    }
-    def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
-      range.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(1, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
-      };
-      call.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(2, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
-      };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.ImplicitConversionSynthetic = {
-      var __range = this.range
-      var __call = this.call
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 10 =>
-            __range = Option(_root_.scalapb.LiteParser.readMessage(_input__, __range.getOrElse(scala.meta.internal.semanticdb.Range.defaultInstance)))
-          case 18 =>
-            __call = Option(_root_.scalapb.LiteParser.readMessage(_input__, __call.getOrElse(scala.meta.internal.semanticdb.SyntheticApply.defaultInstance)))
-          case tag => _input__.skipField(tag)
-        }
-      }
-      scala.meta.internal.semanticdb.ImplicitConversionSynthetic(
-          range = __range,
-          call = __call
-      )
-    }
-    def getRange: scala.meta.internal.semanticdb.Range = range.getOrElse(scala.meta.internal.semanticdb.Range.defaultInstance)
-    def clearRange: ImplicitConversionSynthetic = copy(range = None)
-    def withRange(__v: scala.meta.internal.semanticdb.Range): ImplicitConversionSynthetic = copy(range = Option(__v))
-    def getCall: scala.meta.internal.semanticdb.SyntheticApply = call.getOrElse(scala.meta.internal.semanticdb.SyntheticApply.defaultInstance)
-    def clearCall: ImplicitConversionSynthetic = copy(call = None)
-    def withCall(__v: scala.meta.internal.semanticdb.SyntheticApply): ImplicitConversionSynthetic = copy(call = Option(__v))
-    def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
-      (__fieldNumber: @_root_.scala.unchecked) match {
-        case 1 => range.orNull
-        case 2 => call.orNull
-      }
-    }
-    def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
-      (__field.number: @_root_.scala.unchecked) match {
-        case 1 => range.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 2 => call.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-      }
-    }
-    def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
-    def companion = scala.meta.internal.semanticdb.ImplicitConversionSynthetic
-}
-
-object ImplicitConversionSynthetic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ImplicitConversionSynthetic] {
-  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ImplicitConversionSynthetic] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.ImplicitConversionSynthetic = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
-    scala.meta.internal.semanticdb.ImplicitConversionSynthetic(
-      __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Range]],
-      __fieldsMap.get(__fields.get(1)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.SyntheticApply]]
-    )
-  }
-  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.ImplicitConversionSynthetic] = _root_.scalapb.descriptors.Reads{
-    case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
-      scala.meta.internal.semanticdb.ImplicitConversionSynthetic(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Range]]),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.SyntheticApply]])
-      )
-    case _ => throw new RuntimeException("Expected PMessage")
-  }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(44)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(44)
-  def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
-    var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
-    (__number: @_root_.scala.unchecked) match {
       case 1 => __out = scala.meta.internal.semanticdb.Range
-      case 2 => __out = scala.meta.internal.semanticdb.SyntheticApply
+      case 2 => __out = scala.meta.internal.semanticdb.TreeMessage
     }
     __out
   }
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq.empty
   def enumCompanionForFieldNumber(__fieldNumber: _root_.scala.Int): _root_.scalapb.GeneratedEnumCompanion[_] = throw new MatchError(__fieldNumber)
-  lazy val defaultInstance = scala.meta.internal.semanticdb.ImplicitConversionSynthetic(
+  lazy val defaultInstance = scala.meta.internal.semanticdb.NewSynthetic(
   )
-  implicit class ImplicitConversionSyntheticLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.ImplicitConversionSynthetic]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.ImplicitConversionSynthetic](_l) {
+  implicit class NewSyntheticLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.NewSynthetic]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.NewSynthetic](_l) {
     def range: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Range] = field(_.getRange)((c_, f_) => c_.copy(range = Option(f_)))
     def optionalRange: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Option[scala.meta.internal.semanticdb.Range]] = field(_.range)((c_, f_) => c_.copy(range = f_))
-    def call: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.SyntheticApply] = field(_.getCall)((c_, f_) => c_.copy(call = Option(f_)))
-    def optionalCall: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Option[scala.meta.internal.semanticdb.SyntheticApply]] = field(_.call)((c_, f_) => c_.copy(call = f_))
+    def tree: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Tree] = field(_.tree)((c_, f_) => c_.copy(tree = f_))
   }
   final val RANGE_FIELD_NUMBER = 1
-  final val CALL_FIELD_NUMBER = 2
-}
-
-@SerialVersionUID(0L)
-final case class InferredTypeSynthetic(
-    range: _root_.scala.Option[scala.meta.internal.semanticdb.Range] = None,
-    types: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Type] = _root_.scala.collection.Seq.empty
-    ) extends scala.meta.internal.semanticdb.NewSynthetic with scalapb.GeneratedMessage with scalapb.Message[InferredTypeSynthetic] with scalapb.lenses.Updatable[InferredTypeSynthetic] {
-    @transient
-    private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
-    private[this] def __computeSerializedValue(): _root_.scala.Int = {
-      var __size = 0
-      if (range.isDefined) {
-        val __value = range.get
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-      };
-      types.foreach { __item =>
-        val __value = scala.meta.internal.semanticdb.InferredTypeSynthetic._typemapper_types.toBase(__item)
-        __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-      }
-      __size
-    }
-    final override def serializedSize: _root_.scala.Int = {
-      var read = __serializedSizeCachedValue
-      if (read == 0) {
-        read = __computeSerializedValue()
-        __serializedSizeCachedValue = read
-      }
-      read
-    }
-    def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
-      range.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(1, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
-      };
-      types.foreach { __v =>
-        val __m = scala.meta.internal.semanticdb.InferredTypeSynthetic._typemapper_types.toBase(__v)
-        _output__.writeTag(2, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
-      };
-    }
-    def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.InferredTypeSynthetic = {
-      var __range = this.range
-      val __types = (_root_.scala.collection.immutable.Vector.newBuilder[scala.meta.internal.semanticdb.Type] ++= this.types)
-      var _done__ = false
-      while (!_done__) {
-        val _tag__ = _input__.readTag()
-        _tag__ match {
-          case 0 => _done__ = true
-          case 10 =>
-            __range = Option(_root_.scalapb.LiteParser.readMessage(_input__, __range.getOrElse(scala.meta.internal.semanticdb.Range.defaultInstance)))
-          case 18 =>
-            __types += scala.meta.internal.semanticdb.InferredTypeSynthetic._typemapper_types.toCustom(_root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.TypeMessage.defaultInstance))
-          case tag => _input__.skipField(tag)
-        }
-      }
-      scala.meta.internal.semanticdb.InferredTypeSynthetic(
-          range = __range,
-          types = __types.result()
-      )
-    }
-    def getRange: scala.meta.internal.semanticdb.Range = range.getOrElse(scala.meta.internal.semanticdb.Range.defaultInstance)
-    def clearRange: InferredTypeSynthetic = copy(range = None)
-    def withRange(__v: scala.meta.internal.semanticdb.Range): InferredTypeSynthetic = copy(range = Option(__v))
-    def clearTypes = copy(types = _root_.scala.collection.Seq.empty)
-    def addTypes(__vs: scala.meta.internal.semanticdb.Type*): InferredTypeSynthetic = addAllTypes(__vs)
-    def addAllTypes(__vs: TraversableOnce[scala.meta.internal.semanticdb.Type]): InferredTypeSynthetic = copy(types = types ++ __vs)
-    def withTypes(__v: _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Type]): InferredTypeSynthetic = copy(types = __v)
-    def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
-      (__fieldNumber: @_root_.scala.unchecked) match {
-        case 1 => range.orNull
-        case 2 => types.map(scala.meta.internal.semanticdb.InferredTypeSynthetic._typemapper_types.toBase)(_root_.scala.collection.breakOut)
-      }
-    }
-    def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
-      (__field.number: @_root_.scala.unchecked) match {
-        case 1 => range.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 2 => _root_.scalapb.descriptors.PRepeated(types.map(scala.meta.internal.semanticdb.InferredTypeSynthetic._typemapper_types.toBase(_).toPMessage)(_root_.scala.collection.breakOut))
-      }
-    }
-    def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
-    def companion = scala.meta.internal.semanticdb.InferredTypeSynthetic
-}
-
-object InferredTypeSynthetic extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.InferredTypeSynthetic] {
-  implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.InferredTypeSynthetic] = this
-  def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.InferredTypeSynthetic = {
-    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
-    val __fields = javaDescriptor.getFields
-    scala.meta.internal.semanticdb.InferredTypeSynthetic(
-      __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.Range]],
-      __fieldsMap.getOrElse(__fields.get(1), Nil).asInstanceOf[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.TypeMessage]].map(scala.meta.internal.semanticdb.InferredTypeSynthetic._typemapper_types.toCustom)(_root_.scala.collection.breakOut)
-    )
-  }
-  implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.InferredTypeSynthetic] = _root_.scalapb.descriptors.Reads{
-    case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
-      scala.meta.internal.semanticdb.InferredTypeSynthetic(
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.Range]]),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.TypeMessage]]).getOrElse(_root_.scala.collection.Seq.empty).map(scala.meta.internal.semanticdb.InferredTypeSynthetic._typemapper_types.toCustom)(_root_.scala.collection.breakOut)
-      )
-    case _ => throw new RuntimeException("Expected PMessage")
-  }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(45)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(45)
-  def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
-    var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
-    (__number: @_root_.scala.unchecked) match {
-      case 1 => __out = scala.meta.internal.semanticdb.Range
-      case 2 => __out = scala.meta.internal.semanticdb.TypeMessage
-    }
-    __out
-  }
-  lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq.empty
-  def enumCompanionForFieldNumber(__fieldNumber: _root_.scala.Int): _root_.scalapb.GeneratedEnumCompanion[_] = throw new MatchError(__fieldNumber)
-  lazy val defaultInstance = scala.meta.internal.semanticdb.InferredTypeSynthetic(
-  )
-  implicit class InferredTypeSyntheticLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.InferredTypeSynthetic]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.InferredTypeSynthetic](_l) {
-    def range: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Range] = field(_.getRange)((c_, f_) => c_.copy(range = Option(f_)))
-    def optionalRange: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.Option[scala.meta.internal.semanticdb.Range]] = field(_.range)((c_, f_) => c_.copy(range = f_))
-    def types: _root_.scalapb.lenses.Lens[UpperPB, _root_.scala.collection.Seq[scala.meta.internal.semanticdb.Type]] = field(_.types)((c_, f_) => c_.copy(types = f_))
-  }
-  final val RANGE_FIELD_NUMBER = 1
-  final val TYPES_FIELD_NUMBER = 2
+  final val TREE_FIELD_NUMBER = 2
   @transient
-  private val _typemapper_types: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type]]
+  private val _typemapper_tree: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TreeMessage, scala.meta.internal.semanticdb.Tree] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TreeMessage, scala.meta.internal.semanticdb.Tree]]
 }

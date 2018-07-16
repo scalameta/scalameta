@@ -15,6 +15,7 @@ trait SemanticdbOps
     with ReporterOps
     with ReflectionToolkit
     with SymbolOps
+    with TreeOps
     with TypeOps {
   val global: Global
   var config: SemanticdbConfig = SemanticdbConfig.default
