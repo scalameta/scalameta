@@ -1751,10 +1751,10 @@ Schema => SemanticDB v4
 Uri => example/Methods.class
 Text => empty
 Language => Scala
-Symbols => 63 entries
+Symbols => 68 entries
 
 Symbols:
-example/Methods# => class Methods[T] extends AnyRef { +29 decls }
+example/Methods# => class Methods[T] extends AnyRef { +32 decls }
   T => example/Methods#[T]
   AnyRef => scala/AnyRef#
 example/Methods#AList# => type AList[T] = List[T]
@@ -1851,6 +1851,20 @@ example/Methods#m17. => final object m17 extends AnyRef { +1 decls }
   AnyRef => scala/AnyRef#
 example/Methods#m17.m(). => method m(): Nothing
   Nothing => scala/Nothing#
+example/Methods#m18(). => method m18(a: Int): Nothing
+  a => example/Methods#m18().(a)
+  Int => scala/Int#
+  Nothing => scala/Nothing#
+example/Methods#m18().(a) => param a: Int
+  Int => scala/Int#
+example/Methods#m18(+1). => method m18(b: String): Nothing
+  b => example/Methods#m18(+1).(b)
+  String => scala/Predef.String#
+  Nothing => scala/Nothing#
+example/Methods#m18(+1).(b) => param b: String
+  String => scala/Predef.String#
+example/Methods#m18. => val method m18: m17.type
+  m17 => example/Methods#m17.
 example/Methods#m2(). => method m2(): Nothing
   Nothing => scala/Nothing#
 example/Methods#m3(). => method m3(x: Int): Nothing

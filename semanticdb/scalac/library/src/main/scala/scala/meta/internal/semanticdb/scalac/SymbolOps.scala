@@ -81,7 +81,8 @@ trait SymbolOps { self: SemanticdbOps =>
       val peers = sym.owner.semanticdbDecls.gsyms
       val overloads = peers.filter { peer =>
         peer.isMethod &&
-        peer.name == sym.name
+        peer.name == sym.name &&
+        !peer.isValMethod
       }
       val suffix = {
         if (overloads.lengthCompare(1) == 0) ""

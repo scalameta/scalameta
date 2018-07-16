@@ -71,8 +71,11 @@ trait SymbolOps { _: Scalacp =>
               val overloads = {
                 val peers = sym.parent.get.semanticdbDecls.syms
                 peers.filter {
-                  case peer: MethodSymbol => peer.name == sym.name
-                  case _ => false
+                  case peer: MethodSymbol =>
+                    peer.name == sym.name &&
+                      !peer.isValMethod
+                  case _ =>
+                    false
                 }
               }
               val disambiguator = {
