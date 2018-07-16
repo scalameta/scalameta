@@ -844,14 +844,9 @@ lazy val publishableSettings = Def.settings(
         <url>http://xeno.by</url>
       </developer>
       <developer>
-        <id>densh</id>
-        <name>Denys Shabalin</name>
-        <url>http://den.sh</url>
-      </developer>
-      <developer>
-        <id>mutcianm</id>
-        <name>Mikhail Mutcianko</name>
-        <url>https://github.com/mutcianm</url>
+        <id>DavidDudson</id>
+        <name>David Dudson</name>
+        <url>https://daviddudson.github.io/</url>
       </developer>
       <developer>
         <id>olafurpg</id>
@@ -859,14 +854,24 @@ lazy val publishableSettings = Def.settings(
         <url>https://geirsson.com/</url>
       </developer>
       <developer>
-        <id>DavidDudson</id>
-        <name>David Dudson</name>
-        <url>https://daviddudson.github.io/</url>
+        <id>mutcianm</id>
+        <name>Mikhail Mutcianko</name>
+        <url>https://github.com/mutcianm</url>
+      </developer>
+      <developer>
+        <id>gabro</id>
+        <name>Max Ovsiankin</name>
+        <url>https://github.com/maxov</url>
       </developer>
       <developer>
         <id>gabro</id>
         <name>Gabriele Petronella</name>
         <url>http://buildo.io</url>
+      </developer>
+      <developer>
+        <id>densh</id>
+        <name>Denys Shabalin</name>
+        <url>http://den.sh</url>
       </developer>
     </developers>
   )
