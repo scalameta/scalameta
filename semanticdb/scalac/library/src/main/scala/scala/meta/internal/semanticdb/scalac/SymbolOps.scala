@@ -23,7 +23,9 @@ trait SymbolOps { self: SemanticdbOps =>
 
         val owner = sym.owner.toSemantic
         val signature = {
-          if (sym.isMethod || sym.isUsefulField) {
+          if (sym.isValMethod) {
+            d.Term(sym.name.toSemantic)
+          } else if (sym.isMethod || sym.isUsefulField) {
             d.Method(sym.name.toSemantic, sym.disambiguator)
           } else if (sym.isTypeParameter) {
             d.TypeParameter(sym.name.toSemantic)
@@ -79,7 +81,8 @@ trait SymbolOps { self: SemanticdbOps =>
       val peers = sym.owner.semanticdbDecls.gsyms
       val overloads = peers.filter { peer =>
         peer.isMethod &&
-        peer.name == sym.name
+        peer.name == sym.name &&
+        !peer.isValMethod
       }
       val suffix = {
         if (overloads.lengthCompare(1) == 0) ""
@@ -205,6 +208,12 @@ trait SymbolOps { self: SemanticdbOps =>
         sym.isModuleClass &&
         sym.isSynthetic &&
         sym.semanticdbDecls.gsyms.isEmpty
+      }
+    }
+    def isValMethod: Boolean = {
+      sym.kind.isMethod && {
+        (sym.isAccessor && sym.isStable) ||
+        (sym.isUsefulField && !sym.isMutable)
       }
     }
     def isScalacField: Boolean = {

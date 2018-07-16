@@ -32,4 +32,7 @@ class Methods[T] {
   object m17 { def m() = ??? }
   def m17(a: Int) = ???
   def m17(b: String) = ???
+  val m18 = m17
+  def m18(a: Int) = ???
+  def m18(b: String) = ???
 }

@@ -84,20 +84,20 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:7..3:8): x <= e/x.
        |[3:17..3:25): FunSuite => org/scalatest/FunSuite#
        |[3:26..3:26):  => org/scalatest/FunSuite#`<init>`().
-       |[4:6..4:7): x <= e/x.x().
+       |[4:6..4:7): x <= e/x.x.
        |[4:10..4:11): q => scala/meta/internal/quasiquotes/Unlift.
-       |[5:6..5:7): y <= e/x.y().
+       |[5:6..5:7): y <= e/x.y.
        |[5:10..5:11): q => scala/meta/internal/quasiquotes/Unlift.
-       |[6:6..6:7): z <= e/x.z().
+       |[6:6..6:7): z <= e/x.z.
        |[6:10..6:11): q => scala/meta/internal/quasiquotes/Unlift.
-       |[6:13..6:14): x => e/x.x().
-       |[6:18..6:19): y => e/x.y().
-       |[7:6..7:7): k <= e/x.k().
+       |[6:13..6:14): x => e/x.x.
+       |[6:18..6:19): y => e/x.y.
+       |[7:6..7:7): k <= e/x.k.
        |[7:10..7:20): sourcecode => sourcecode/
        |[7:21..7:25): Name => sourcecode/Name.
        |[7:26..7:34): generate => sourcecode/Name.generate().
        |[8:2..8:8): assert => org/scalatest/Assertions#assert().
-       |[8:9..8:10): x => e/x.x().
+       |[8:9..8:10): x => e/x.x.
        |[8:11..8:16): value => scala/meta/Term.Name#value().
        |[8:17..8:19): == => java/lang/Object#`==`().
        |""".stripMargin

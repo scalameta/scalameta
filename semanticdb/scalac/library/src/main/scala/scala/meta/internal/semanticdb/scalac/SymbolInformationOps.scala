@@ -27,7 +27,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       else l.SCALA
     }
 
-    private def kind: s.SymbolInformation.Kind = {
+    private[meta] def kind: s.SymbolInformation.Kind = {
       gsym match {
         case _ if gsym.isSelfParameter =>
           k.SELF_PARAMETER

@@ -48,7 +48,7 @@ class SymbolTableSuite extends FunSuite {
   check("scala/concurrent/Future#")(_.kind.isTrait)
   check("scala/package.")(_.kind.isPackageObject)
   check("scala/package.Either#")(_.kind.isType)
-  check("scala/package.Either().")(_.kind.isMethod)
+  check("scala/package.Either.")(_.kind.isMethod)
   check("scala/reflect/package.materializeClassTag().")(_.kind.isMacro)
   check("scala/util/")(_.kind.isPackage)
 

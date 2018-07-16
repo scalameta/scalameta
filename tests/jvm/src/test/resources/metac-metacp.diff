@@ -105,9 +105,9 @@ advanced/Structural#s3().
                      name: "x"
 
 
-===================
-advanced/Test.e2().
-===================
+=================
+advanced/Test.e2.
+=================
 --- metac
 +++ metacp
                    typeRef {
@@ -123,9 +123,9 @@ advanced/Test.e2().
                  name: "T"
 
 
-===================
-advanced/Test.s3().
-===================
+=================
+advanced/Test.s3.
+=================
 --- metac
 +++ metacp
          declarations {
@@ -180,9 +180,9 @@ classes/C6#copy$default$1().
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
-======================
-classes/N.anonClass().
-======================
+====================
+classes/N.anonClass.
+====================
 --- metac
 +++ metacp
          declarations {
@@ -1432,9 +1432,9 @@ example/Methods#m13().(x)
 +        symbol: "scala/Int#"
 
 
-========================
-example/Synthetic#x$2().
-========================
+======================
+example/Synthetic#x$2.
+======================
 --- metac
 +++ metacp
  properties: 1024
@@ -1462,12 +1462,12 @@ flags/p/package.
        symlinks: "flags/p/package.Z#"
        symlinks: "flags/p/package.AA#"
 -      symlinks: "flags/p/package.S#"
-       symlinks: "flags/p/package.xs1()."
+       symlinks: "flags/p/package.xs1."
 
 
-========================
-types/Test.C#annType1().
-========================
+======================
+types/Test.C#annType1.
+======================
 --- metac
 +++ metacp
          annotations {
@@ -1481,9 +1481,9 @@ types/Test.C#annType1().
 -                  symbol: "scala/Int#"
 
 
-========================
-types/Test.C#annType2().
-========================
+======================
+types/Test.C#annType2.
+======================
 --- metac
 +++ metacp
          annotations {
@@ -1498,9 +1498,9 @@ types/Test.C#annType2().
 -              symbol: "types/ann2#"
 
 
-=============================
-types/Test.C#compoundType3().
-=============================
+===========================
+types/Test.C#compoundType3.
+===========================
 --- metac
 +++ metacp
          declarations {
@@ -1512,9 +1512,9 @@ types/Test.C#compoundType3().
              name: "k"
 
 
-=============================
-types/Test.C#compoundType4().
-=============================
+===========================
+types/Test.C#compoundType4.
+===========================
 --- metac
 +++ metacp
          declarations {
@@ -1526,9 +1526,9 @@ types/Test.C#compoundType4().
              name: "k"
 
 
-=============================
-types/Test.C#compoundType6().
-=============================
+===========================
+types/Test.C#compoundType6.
+===========================
 --- metac
 +++ metacp
          declarations {
@@ -1540,9 +1540,9 @@ types/Test.C#compoundType6().
              name: "k"
 
 
-================================
-types/Test.C#existentialType1().
-================================
+==============================
+types/Test.C#existentialType1.
+==============================
 --- metac
 +++ metacp
            typeRef {
@@ -1558,9 +1558,9 @@ types/Test.C#existentialType1().
              name: "T"
 
 
-================================
-types/Test.C#existentialType2().
-================================
+==============================
+types/Test.C#existentialType2.
+==============================
 --- metac
 +++ metacp
                typeRef {
@@ -1576,19 +1576,9 @@ types/Test.C#existentialType2().
              name: "_"
 
 
-===========================
-types/Test.C#singleType2().
-===========================
---- metac
-+++ metacp
-             symbol: "types/Test.C#p()."
--        symbol: "types/P#x()."
-+        symbol: "types/P#x."
-
-
-==============================
-types/Test.Literal.javaEnum().
-==============================
+============================
+types/Test.Literal.javaEnum.
+============================
 --- metac
 +++ metacp
  language: SCALA
