@@ -594,6 +594,10 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
     scalaVersion,
     "databaseSourcepath" ->
       baseDirectory.in(ThisBuild).value.getAbsolutePath,
+    "commonJVMClassDirectory" -> classDirectory
+      .in(commonJVM, Compile)
+      .value
+      .getAbsolutePath,
     "databaseClasspath" -> classDirectory
       .in(semanticdbIntegration, Compile)
       .value

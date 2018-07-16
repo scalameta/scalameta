@@ -122,8 +122,6 @@ object ClasspathIndex {
     }
 
     private def expandDirEntry(root: AbsolutePath): Unit = {
-      def getRelativeUri(dir: Path): String =
-        root.toNIO.relativize(dir).iterator().asScala.mkString("", "/", "/")
       Files.walkFileTree(root.toNIO, new SimpleFileVisitor[Path] {
         override def visitFile(
             file: Path,
@@ -131,10 +129,13 @@ object ClasspathIndex {
         ): FileVisitResult = {
           val name = file.getFileName.toString
           if (name.endsWith(".class")) {
-            val relativeUri = getRelativeUri(file.getParent)
-            val dir = dirs(relativeUri)
-            val element = UncompressedClassfile(relativeUri, AbsolutePath(file))
-            addMember(dir, name, element)
+            val relpath = AbsolutePath(file).toRelative(root)
+            val reluri = relpath.toURI(isDirectory = false).toString
+            val basename = PathIO.basename(reluri)
+            val dirname = PathIO.dirname(reluri)
+            val classdir = getClassdir(dirname)
+            val element = UncompressedClassfile(reluri, AbsolutePath(file))
+            addMember(classdir, basename, element)
           }
           super.visitFile(file, attrs)
         }
@@ -143,11 +144,7 @@ object ClasspathIndex {
             attrs: BasicFileAttributes
         ): FileVisitResult = {
           if (dir.endsWith("META-INF")) FileVisitResult.SKIP_SUBTREE
-          else {
-            val name = getRelativeUri(dir)
-            dirs(name) = Classdir(name)
-            super.preVisitDirectory(dir, attrs)
-          }
+          else FileVisitResult.CONTINUE
         }
       })
     }

@@ -25,7 +25,8 @@ final class GlobalSymbolTable(classpathIndex: ClasspathIndex) extends SymbolTabl
 
   private def loadSymbol(symbol: String): Unit = {
     val toplevel = symbol.ownerChain.find(!_.isPackage).get
-    val classdir = toplevel.owner
+    val owner = toplevel.owner
+    val classdir = if (owner.isEmptyPackage) "/" else owner
     val filename = NameTransformer.encode(toplevel.desc.name.decoded) + ".class"
     classpathIndex.getClassfile(classdir, filename) match {
       case Some(classfile) =>
