@@ -451,7 +451,16 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
                 val args = S.mkString(targs.map(showSynthetic), ", ")
                 val syntax = S("[") + args + "]"
-                success(morePrecisePos, _.copy(targs = Some(syntax)))
+                println(fun)
+                success(morePrecisePos, _.copy(targs = Some(syntax)).addNewSynth(s.NewSynthetic(
+                  range = Some(fun.pos.toMeta.toRange),
+                  tree = s.TypeApplyTree(
+                    fn = s.OriginalTree(
+                      range = Some(fun.pos.toMeta.toRange)
+                    ),
+                    targs = targs.map(_.tpe.toSemanticTpe)
+                  )
+                )))
               case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
                 val pos = qual.pos.withStart(qual.pos.end).toMeta
                 val symbol = select.symbol.toSemantic

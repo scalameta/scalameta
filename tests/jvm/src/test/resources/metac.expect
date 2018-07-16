@@ -1069,6 +1069,9 @@ Synthetics:
   [0:0..0:1): * => _star_.
   [0:2..0:6): Unit => scala/Unit#
 
+New-style Synthetics:
+[39:2..39:9): locally => <locally>[Unit]
+
 semanticdb/integration/src/main/scala/example/Annotations.scala
 ---------------------------------------------------------------
 
@@ -1261,6 +1264,10 @@ Synthetics:
 [11:9..11:9):  => *[Unit]
   [0:0..0:1): * => _star_.
   [0:2..0:6): Unit => scala/Unit#
+
+New-style Synthetics:
+[8:2..8:9): locally => <locally>[Unit]
+[11:2..11:9): locally => <locally>[Unit]
 
 semanticdb/integration/src/main/scala/example/Classes.scala
 -----------------------------------------------------------
@@ -1676,6 +1683,10 @@ Synthetics:
   [0:34..0:46): canBuildFrom => scala/collection/immutable/List.canBuildFrom().
   [0:47..0:50): Int => scala/Int#
 
+New-style Synthetics:
+[28:16..28:20): List => <List>[Int]
+[28:16..28:27): List(1).map => <List(1).map>[Int,List[Int]]
+
 semanticdb/integration/src/main/scala/example/Empty.scala
 ---------------------------------------------------------
 
@@ -2038,6 +2049,10 @@ Synthetics:
   [0:2..0:12): unapplySeq => scala/collection/generic/SeqFactory#unapplySeq().
   [0:13..0:20): Nothing => scala/Nothing#
 
+New-style Synthetics:
+[22:6..22:10): List => <List>[Nothing]
+[23:19..23:23): List => <List>[Nothing]
+
 semanticdb/integration/src/main/scala/example/Imports.scala
 -----------------------------------------------------------
 
@@ -2090,6 +2105,9 @@ Synthetics:
 [3:9..3:9):  => *[Int]
   [0:0..0:1): * => _star_.
   [0:2..0:5): Int => scala/Int#
+
+New-style Synthetics:
+[3:2..3:9): locally => <locally>[Int]
 
 semanticdb/integration/src/main/scala/example/MacroAnnotations.scala
 --------------------------------------------------------------------
@@ -2712,6 +2730,10 @@ Synthetics:
   [0:0..0:1): * => _star_.
   [0:15..0:24): $conforms => scala/Predef.$conforms().
   [0:25..0:28): Int => scala/Int#
+
+New-style Synthetics:
+[13:2..13:7): m.m7a => <m.m7a>[Int]
+[14:2..14:7): m.m7b => <m.m7b>[Int]
 
 semanticdb/integration/src/main/scala/example/Objects.scala
 -----------------------------------------------------------
@@ -3438,22 +3460,49 @@ Synthetics:
   [0:58..0:64): global => scala/concurrent/ExecutionContext.Implicits.global.
 
 New-style Synthetics:
+[3:2..3:6): List => <List>[Int]
+[3:2..3:13): List(1).map => <List(1).map>[Int,List[Int]]
 [4:2..4:18): Array.empty[Int] => scala.Predef.intArrayOps(<Array.empty[Int]>)
 [5:2..5:8): "fooo" => scala.Predef.augmentString(<"fooo">)
 [8:13..8:24): "name:(.*)" => scala.Predef.augmentString(<"name:(.*)">)
+[9:6..9:14): x #:: xs => <x #:: xs>[Int,Stream[Int]]
+[9:17..9:23): Stream => <Stream>[Int]
+[11:4..11:26): #:: 2 #:: Stream.empty => <#:: 2 #:: Stream.empty>[Int]
 [11:8..11:26): 2 #:: Stream.empty => immutable.Stream.consWrapper[Int](<2 #:: Stream.empty>)
+[11:10..11:26): #:: Stream.empty => <#:: Stream.empty>[Int]
+[11:14..11:26): Stream.empty => <Stream.empty>[Nothing]
 [11:14..11:26): Stream.empty => immutable.Stream.consWrapper[Nothing](<Stream.empty>)
+[13:14..13:36): #:: 2 #:: Stream.empty => <#:: 2 #:: Stream.empty>[Int]
 [13:18..13:36): 2 #:: Stream.empty => immutable.Stream.consWrapper[Int](<2 #:: Stream.empty>)
+[13:20..13:36): #:: Stream.empty => <#:: Stream.empty>[Int]
+[13:24..13:36): Stream.empty => <Stream.empty>[Nothing]
 [13:24..13:36): Stream.empty => immutable.Stream.consWrapper[Nothing](<Stream.empty>)
 [14:2..14:5): lst => scala.Predef.any2stringadd[Stream[Int]](<lst>)
 [16:12..16:13): 1 => scala.Predef.intWrapper(<1>)
+[16:12..16:19): 1 to 10 => <1 to 10>[Unit]
 [16:26..16:27): 0 => scala.Predef.intWrapper(<0>)
+[16:26..16:36): 0 until 10 => <0 until 10>[Unit]
 [16:46..16:47): x => scala.Predef.ArrowAssoc[Int](<x>)
+[16:46..16:50): x -> => <x ->>[Int]
 [17:12..17:13): 1 => scala.Predef.intWrapper(<1>)
+[17:12..17:19): 1 to 10 => <1 to 10>[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]
 [17:26..17:27): 0 => scala.Predef.intWrapper(<0>)
+[17:26..17:36): 0 until 10 => <0 until 10>[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]
 [18:12..18:13): 1 => scala.Predef.intWrapper(<1>)
+[18:12..18:19): 1 to 10 => <1 to 10>[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]
 [18:26..18:27): 0 => scala.Predef.intWrapper(<0>)
+[18:26..18:50): 0 until 10 if i % 2 == 0 => <0 until 10 if i % 2 == 0>[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]
 [33:22..33:27): new F => math.Ordered.orderingToOrdered[F](<new F>)(Synthetic.ordering)
+[37:9..37:43): scala.concurrent.Future.successful => <scala.concurrent.Future.successful>[Int]
+[37:9..37:46): scala.concurrent.Future.successful(1) => <scala.concurrent.Future.successful(1)>[Unit]
+[38:9..38:43): scala.concurrent.Future.successful => <scala.concurrent.Future.successful>[Int]
+[38:9..38:46): scala.concurrent.Future.successful(2) => <scala.concurrent.Future.successful(2)>[Unit]
+[41:9..41:43): scala.concurrent.Future.successful => <scala.concurrent.Future.successful>[Int]
+[41:9..41:46): scala.concurrent.Future.successful(1) => <scala.concurrent.Future.successful(1)>[Int]
+[42:9..42:43): scala.concurrent.Future.successful => <scala.concurrent.Future.successful>[Int]
+[42:9..43:12): scala.concurrent.Future.successful(2)
+    if a < b => <scala.concurrent.Future.successful(2)
+    if a < b>[Int]
 
 semanticdb/integration/src/main/scala/example/Traits.scala
 ----------------------------------------------------------
