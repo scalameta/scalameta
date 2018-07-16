@@ -16,22 +16,8 @@ class SemanticdbGen(relSourcePath: Path, toplevels: Seq[TypeElement]) {
     PathIO.toUnix(relSourcePath.toString + ".semanticdb")
 
   def populate(): Unit = {
-
-    def infoForPackage(pkgSym: String): s.SymbolInformation =
-      s.SymbolInformation(
-        symbol = pkgSym,
-        kind = s.SymbolInformation.Kind.PACKAGE,
-        name = pkgSym.desc.name
-      )
-
-    val pkg = toplevels.head.enclosingPackage
-
     toplevels.foreach { toplevel =>
       toplevel.populateInfos(infos)
-    }
-
-    pkg.sym.ownerChain.foreach { packageName =>
-      infos += infoForPackage(packageName)
     }
   }
 

@@ -60,20 +60,6 @@ object Javacp {
     val classAccess = node.access | access
     val hasOuterClassReference = node.fields.asScala.exists(isOuterClassReference)
 
-    val isTopLevelClass = !node.name.contains("$")
-    if (isTopLevelClass) {
-      val enclosingPackages = classSymbol.ownerChain.init
-      enclosingPackages.foreach { enclosingPackage =>
-        addInfo(
-          enclosingPackage,
-          k.PACKAGE,
-          enclosingPackage.desc.name,
-          s.NoSignature,
-          o.ACC_PUBLIC
-        )
-      }
-    }
-
     val classKind =
       if (classAccess.hasFlag(o.ACC_INTERFACE)) k.INTERFACE
       else k.CLASS
