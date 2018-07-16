@@ -6,9 +6,15 @@ import scala.meta.internal.symtab.GlobalSymbolTable
 import scala.meta.internal.symtab.LocalSymbolTable
 import scala.meta.tests.metacp.Library
 import scala.meta.internal.{semanticdb => s}
+import scala.meta.io.Classpath
+import scala.meta.tests.BuildInfo
 
 class SymbolTableSuite extends FunSuite {
-  private val classpath = Library.jdk.classpath() ++ Library.scalaLibrary.classpath()
+  private val classpath =
+    Classpath(BuildInfo.databaseClasspath) ++
+      Classpath(BuildInfo.commonJVMClassDirectory) ++
+      Library.jdk.classpath() ++
+      Library.scalaLibrary.classpath()
   private val globalSymtab = GlobalSymbolTable(classpath)
 
   def checkNotExists(symbol: String): Unit = {
@@ -27,6 +33,7 @@ class SymbolTableSuite extends FunSuite {
     }
   }
 
+  // jar classpath entries
   check("_empty_/")(_.kind.isPackage)
   check("_root_/")(_.kind.isPackage)
   check("java/util/ArrayList#size.")(_.kind.isField)
@@ -44,6 +51,11 @@ class SymbolTableSuite extends FunSuite {
   check("scala/package.Either().")(_.kind.isMethod)
   check("scala/reflect/package.materializeClassTag().")(_.kind.isMacro)
   check("scala/util/")(_.kind.isPackage)
+
+  // directory classpath entries
+  check("example/Example.")(_.kind.isObject)
+  check("_empty_/A#")(_.kind.isClass)
+  check("org/scalameta/data/data#")(_.kind.isClass)
 
   checkNotExists("")
   checkNotExists("local20")
