@@ -239,7 +239,10 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.owner.isAnonymousFunction
     }
     def isAnonymousSelfParameter: Boolean = {
-      sym.isSelfParameter && sym.name == g.nme.this_ // persisted as ClassSignature.self
+      sym.isSelfParameter && {
+        sym.name == g.nme.this_ || // hardlinked in ClassSignature.self
+        sym.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX) // wildcards can't be referenced: class A { _: B => }
+      }
     }
     def isUseless: Boolean = {
       sym == g.NoSymbol ||

@@ -90,6 +90,7 @@ selfs/C3# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticd
 selfs/C4# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
 selfs/C5# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
 selfs/C6# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
+selfs/C7# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb
 traits/ => package traits
 traits/C# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb
 traits/T# => semanticdb/integration/src/main/scala/example/Traits.scala.semanticdb

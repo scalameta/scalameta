@@ -2438,6 +2438,22 @@ selfs/C6# => class C6 extends B { self: B => +1 decls }
   B => selfs/B#
 selfs/C6#`<init>`(). => primary ctor <init>()
 
+selfs/C7.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/C7.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+selfs/C7# => abstract class C7 extends AnyRef { self: B => +1 decls }
+  AnyRef => scala/AnyRef#
+  B => selfs/B#
+selfs/C7#`<init>`(). => primary ctor <init>()
+
 traits/C.class
 --------------
 
