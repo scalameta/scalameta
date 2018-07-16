@@ -19,3 +19,6 @@ class C5 extends B { _: B =>
 
 class C6 extends B { this: B =>
 }
+
+abstract class C7 { _: B =>
+}

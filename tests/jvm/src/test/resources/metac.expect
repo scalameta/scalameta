@@ -2842,7 +2842,7 @@ Uri => semanticdb/integration/src/main/scala/example/Selfs.scala
 Text => non-empty
 Language => Scala
 Symbols => 19 entries
-Occurrences => 34 entries
+Occurrences => 37 entries
 
 Symbols:
 local0 => selfparam self
@@ -2851,9 +2851,6 @@ local1 => selfparam self: B
 local2 => selfparam self: B with Int {}
   B => selfs/B#
   Int => scala/Int#
-local3 => selfparam x$1
-local4 => selfparam x$2: B
-  B => selfs/B#
 selfs/B# => class B extends AnyRef { +1 decls }
   AnyRef => scala/AnyRef#
 selfs/B#`<init>`(). => primary ctor <init>()
@@ -2876,6 +2873,10 @@ selfs/C5#`<init>`(). => primary ctor <init>()
 selfs/C6# => class C6 extends B { self: B => +1 decls }
   B => selfs/B#
 selfs/C6#`<init>`(). => primary ctor <init>()
+selfs/C7# => abstract class C7 extends AnyRef { self: B => +1 decls }
+  AnyRef => scala/AnyRef#
+  B => selfs/B#
+selfs/C7#`<init>`(). => primary ctor <init>()
 
 Occurrences:
 [0:8..0:13): selfs <= selfs/
@@ -2912,6 +2913,9 @@ Occurrences:
 [19:17..19:18): B => selfs/B#
 [19:19..19:19):  => selfs/B#`<init>`().
 [19:27..19:28): B => selfs/B#
+[22:15..22:17): C7 <= selfs/C7#
+[22:18..22:18):  <= selfs/C7#`<init>`().
+[22:23..22:24): B => selfs/B#
 
 semanticdb/integration/src/main/scala/example/Synthetic.scala
 -------------------------------------------------------------
