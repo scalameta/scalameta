@@ -49,7 +49,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
        |Symbols:
        |b/a. => final object a extends AnyRef { +1 decls }
        |  AnyRef => scala/AnyRef#
-       |b/a.x(). => val method x: List[Nothing]
+       |b/a.x. => val method x: List[Nothing]
        |  List => scala/collection/immutable/List#
        |  Nothing => scala/Nothing#
        |
@@ -60,9 +60,9 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
        |[1:24..1:30): Future => scala/concurrent/Future#
        |[1:24..1:30): Future => scala/concurrent/Future.
        |[2:7..2:8): a <= b/a.
-       |[3:6..3:7): x <= b/a.x().
+       |[3:6..3:7): x <= b/a.x.
        |[3:23..3:27): List => scala/collection/immutable/List.
-       |[4:2..4:3): x => b/a.x().
+       |[4:2..4:3): x => b/a.x.
        |[4:4..4:5): + => scala/Predef.any2stringadd#`+`().
        |
        |Diagnostics:
