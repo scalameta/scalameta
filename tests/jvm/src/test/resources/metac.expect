@@ -3438,22 +3438,22 @@ Synthetics:
   [0:58..0:64): global => scala/concurrent/ExecutionContext.Implicits.global.
 
 New-style Synthetics:
-[4:2..4:18): Array.empty[Int] => scala/Predef.intArrayOps().
-[5:2..5:8): "fooo" => scala/Predef.augmentString().
-[8:13..8:24): "name:(.*)" => scala/Predef.augmentString().
-[11:8..11:26): 2 #:: Stream.empty => scala/collection/immutable/Stream.consWrapper().
-[11:14..11:26): Stream.empty => scala/collection/immutable/Stream.consWrapper().
-[13:18..13:36): 2 #:: Stream.empty => scala/collection/immutable/Stream.consWrapper().
-[13:24..13:36): Stream.empty => scala/collection/immutable/Stream.consWrapper().
-[14:2..14:5): lst => scala/Predef.any2stringadd().
-[16:12..16:13): 1 => scala/LowPriorityImplicits#intWrapper().
-[16:26..16:27): 0 => scala/LowPriorityImplicits#intWrapper().
-[16:46..16:47): x => scala/Predef.ArrowAssoc().
-[17:12..17:13): 1 => scala/LowPriorityImplicits#intWrapper().
-[17:26..17:27): 0 => scala/LowPriorityImplicits#intWrapper().
-[18:12..18:13): 1 => scala/LowPriorityImplicits#intWrapper().
-[18:26..18:27): 0 => scala/LowPriorityImplicits#intWrapper().
-[33:22..33:27): new F => scala/math/Ordered.orderingToOrdered().(example/Synthetic#ordering().)
+[4:2..4:18): Array.empty[Int] => scala.Predef.intArrayOps(<Array.empty[Int]>)
+[5:2..5:8): "fooo" => scala.Predef.augmentString(<"fooo">)
+[8:13..8:24): "name:(.*)" => scala.Predef.augmentString(<"name:(.*)">)
+[11:8..11:26): 2 #:: Stream.empty => immutable.Stream.consWrapper[Int](<2 #:: Stream.empty>)
+[11:14..11:26): Stream.empty => immutable.Stream.consWrapper[Nothing](<Stream.empty>)
+[13:18..13:36): 2 #:: Stream.empty => immutable.Stream.consWrapper[Int](<2 #:: Stream.empty>)
+[13:24..13:36): Stream.empty => immutable.Stream.consWrapper[Nothing](<Stream.empty>)
+[14:2..14:5): lst => scala.Predef.any2stringadd[Stream[Int]](<lst>)
+[16:12..16:13): 1 => scala.Predef.intWrapper(<1>)
+[16:26..16:27): 0 => scala.Predef.intWrapper(<0>)
+[16:46..16:47): x => scala.Predef.ArrowAssoc[Int](<x>)
+[17:12..17:13): 1 => scala.Predef.intWrapper(<1>)
+[17:26..17:27): 0 => scala.Predef.intWrapper(<0>)
+[18:12..18:13): 1 => scala.Predef.intWrapper(<1>)
+[18:26..18:27): 0 => scala.Predef.intWrapper(<0>)
+[33:22..33:27): new F => math.Ordered.orderingToOrdered[F](<new F>)(Synthetic.ordering)
 
 semanticdb/integration/src/main/scala/example/Traits.scala
 ----------------------------------------------------------

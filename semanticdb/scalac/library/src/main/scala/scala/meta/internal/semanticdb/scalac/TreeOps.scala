@@ -7,29 +7,28 @@ trait TreeOps { self: SemanticdbOps =>
   import g._
 
   implicit class XtensionGTreeSyntheticTerm(gTree: g.Tree) {
-    def asSyntheticTerm: s.SyntheticTerm = gTree match {
-      case gTree: g.Apply => s.SyntheticApply(
+    def toSemanticTree: s.Tree = gTree match {
+      case gTree: g.Apply => s.ApplyTree(
+        fn = gTree.fun.toSemanticTree,
+        args = gTree.args.map(_.toSemanticTree)
+      )
+      case gTree: g.TypeApply => s.TypeApplyTree(
+        fn = gTree.fun.toSemanticTree,
+        targs = gTree.args.map(_.tpe.toSemanticTpe)
+      )
+      case gTree: g.Select => s.SelectTree(
+        qual = gTree.qualifier.toSemanticTree,
+        id = Some(s.IdTree(gTree.symbol.toSemantic))
+      )
+      case gTree: g.Ident => s.IdTree(
         sym = gTree.symbol.toSemantic
       )
-      case gTree: g.TypeApply =>
-        gTree.fun.asSyntheticApply.copy(
-          typeArgs = gTree.args.map(_.tpe.toSemanticTpe)
-        )
-      case gTree: g.Select =>
-        val sym = gTree.symbol.toSemantic
-        if (sym.desc.isMethod) s.SyntheticApply(
-          sym = sym
-        )
-        else s.SyntheticValue(
-          sym = sym
-        )
+      case gTree: g.This => s.IdTree(
+        sym = gTree.symbol.toSemantic
+      )
       case _ =>
         println(s"No match on: $gTree ${gTree.getClass}")
-        s.SyntheticTerm.Empty
-    }
-    def asSyntheticApply = {
-      println(s"attempting $gTree as SyntheticApply")
-      asSyntheticTerm.asInstanceOf[s.SyntheticApply]
+        s.Tree.Empty
     }
   }
 

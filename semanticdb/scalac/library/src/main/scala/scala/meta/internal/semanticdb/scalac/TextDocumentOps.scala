@@ -407,24 +407,35 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case gview: g.ApplyImplicitView =>
                 val pos = gtree.pos.toMeta
                 val syntax = showSynthetic(gview.fun) + "(" + S.star + ")"
-                success(pos, _.copy(conversion = Some(syntax)).addNewSynth(s.ImplicitConversionSynthetic(
+                success(pos, _.copy(conversion = Some(syntax)).addNewSynth(s.NewSynthetic(
                   range = Some(pos.toRange),
-                  call = Some(gview.asSyntheticApply)
+                  tree = s.ApplyTree(
+                    fn = gview.fun.toSemanticTree,
+                    args = List(s.OriginalTree(
+                      range = Some(pos.toRange)
+                    ))
+                  )
                 )))
                 isVisited += gview.fun
               case gimpl: g.ApplyToImplicitArgs =>
                 val args = S.mkString(gimpl.args.map(showSynthetic), ", ")
-                val newSynthArgs = gimpl.args.map(_.asSyntheticTerm)
+                val newSynthArgs = gimpl.args.map(_.toSemanticTree)
                 gimpl.fun match {
                   case gview: g.ApplyImplicitView =>
                     isVisited += gview
                     val pos = gtree.pos.toMeta
                     val syntax = showSynthetic(gview.fun) + "(" + S.star + ")(" + args + ")"
-                    success(pos, _.copy(conversion = Some(syntax)).addNewSynth(s.ImplicitConversionSynthetic(
+                    success(pos, _.copy(conversion = Some(syntax)).addNewSynth(s.NewSynthetic(
                       range = Some(pos.toRange),
-                      call = Some(gview.asSyntheticApply.copy(
-                        args = newSynthArgs
-                      ))
+                      tree = s.ApplyTree(
+                        fn = s.ApplyTree(
+                          fn = gview.fun.toSemanticTree,
+                          args = List(s.OriginalTree(
+                            range = Some(pos.toRange)
+                          ))
+                        ),
+                        args = gimpl.args.map(_.toSemanticTree)
+                      )
                     )))
                   case ForComprehensionImplicitArg(qual) =>
                     val morePrecisePos = qual.pos.withStart(qual.pos.end).toMeta
