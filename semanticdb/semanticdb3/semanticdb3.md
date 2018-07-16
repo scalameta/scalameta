@@ -1065,7 +1065,9 @@ which Scala definitions, what their metadata is, etc). See
   * For `PACKAGE`, concatenation of its encoded name and a forward slash (`/`).
   * For `OBJECT` or `PACKAGE_OBJECT`,
     concatenation of its encoded name and a dot (`.`).
-  * For `METHOD`, `CONSTRUCTOR`, or `MACRO`,
+  * Exceptionally, for `VAL` `METHOD`,
+    concatenation of its encoded name and a dot (`.`).
+  * For other `METHOD`, `CONSTRUCTOR`, or `MACRO`,
     concatenation of its encoded name, a disambiguator and a dot (`.`).
   * For `TYPE`, `CLASS` or `TRAIT`, concatenation of its
     encoded name and a pound sign (`#`).

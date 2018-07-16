@@ -65,6 +65,8 @@ trait SymbolOps { _: Scalacp =>
           sym.kind match {
             case k.LOCAL | k.OBJECT | k.PACKAGE_OBJECT =>
               d.Term(name)
+            case k.METHOD if sym.isValMethod =>
+              d.Term(name)
             case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
               val overloads = {
                 val peers = sym.parent.get.semanticdbDecls.syms
@@ -224,6 +226,17 @@ trait SymbolOps { _: Scalacp =>
             sym.moduleClass.isSyntheticValueClassCompanion
           } else {
             false
+          }
+        case _ =>
+          false
+      }
+    }
+    def isValMethod: Boolean = {
+      sym match {
+        case sym: SymbolInfoSymbol =>
+          sym.kind.isMethod && {
+            (sym.isAccessor && sym.isStable) ||
+            (isUsefulField && !sym.isMutable)
           }
         case _ =>
           false
