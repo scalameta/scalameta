@@ -2152,8 +2152,9 @@ between package object symbols and object symbols are:
 * Package objects don't support any accessibilities.
 
 **Packages** [\[61\]][61] are represented by `PACKAGE` symbols.
-In Scala, `SymbolInformation` for `PACKAGE` symbols is very modest -
-the only non-empty fields must be:
+The ["Symbols"](#symbolinformation) section does not include
+`SymbolInformation` for `PACKAGE` because the only non-empty fields
+can be computed on the fly:
   * `symbol` (as described in [Symbol](#scala-symbol)).
   * `kind` (`PACKAGE`).
   * `name` (as described in [SymbolInformation](#symbolinformation)).
@@ -3024,11 +3025,12 @@ Notes:
   [all Java accessibilities](#java-accessibility).
 
 **Packages** [\[94\]][94] are represented by `PACKAGE` symbols.
-In Java, `SymbolInformation` for `PACKAGE` symbols is very modest -
-the only non-empty fields must be:
-  * symbol (as described in [Symbol](#java-symbol)).
-  * kind (`PACKAGE`).
-  * name (as described in [Symbol](#java-symbol)).
+The ["Symbols"](#symbolinformation) section does not include
+`SymbolInformation` for `PACKAGE` because the only non-empty fields
+can be computed on the fly:
+  * `symbol` (as described in [Symbol](#java-symbol)).
+  * `kind` (`PACKAGE`).
+  * `name` (as described in [SymbolInformation](#symbolinformation)).
 
 <a name="java-root-package"></a>
 ##### Root package

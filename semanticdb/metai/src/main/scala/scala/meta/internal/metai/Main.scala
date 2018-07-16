@@ -86,7 +86,6 @@ final class Main(settings: Settings, reporter: Reporter) {
     for {
       doc <- docs.documents
       toplevel <- doc.symbols
-      if !toplevel.symbol.isPackage
       if toplevel.symbol.owner.isPackage
     } {
       toplevel.symbol.ownerChain.foreach { sym =>

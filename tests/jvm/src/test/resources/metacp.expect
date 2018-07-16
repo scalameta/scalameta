@@ -702,13 +702,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/ClassAnnotation.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
 com/javacp/annot/ClassAnnotation# => abstract interface ClassAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -721,13 +717,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/ConstructorAnnotation.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
 com/javacp/annot/ConstructorAnnotation# => abstract interface ConstructorAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -740,13 +732,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/FieldAnnotation.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
 com/javacp/annot/FieldAnnotation# => abstract interface FieldAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -759,13 +747,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/InterfaceAnnotation.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
 com/javacp/annot/InterfaceAnnotation# => abstract interface InterfaceAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -778,13 +762,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/LocalAnnotation.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
 com/javacp/annot/LocalAnnotation# => abstract interface LocalAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -797,13 +777,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/MacroAnnotation.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
 com/javacp/annot/MacroAnnotation# => abstract interface MacroAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -816,13 +792,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/MethodAnnotation.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
 com/javacp/annot/MethodAnnotation# => abstract interface MethodAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -835,13 +807,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/ObjectAnnotation.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
 com/javacp/annot/ObjectAnnotation# => abstract interface ObjectAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -854,13 +822,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/PackageAnnotation.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
 com/javacp/annot/PackageAnnotation# => abstract interface PackageAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -873,13 +837,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/PackageObjectAnnotation.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
 com/javacp/annot/PackageObjectAnnotation# => abstract interface PackageObjectAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -892,13 +852,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/ParameterAnnotation.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
 com/javacp/annot/ParameterAnnotation# => abstract interface ParameterAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -911,13 +867,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/SelfParameterAnnotation.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
 com/javacp/annot/SelfParameterAnnotation# => abstract interface SelfParameterAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -930,13 +882,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/TraitAnnotation.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
 com/javacp/annot/TraitAnnotation# => abstract interface TraitAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -949,13 +897,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/TypeAnnotation.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
 com/javacp/annot/TypeAnnotation# => abstract interface TypeAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -968,13 +912,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/TypeParameterAnnotation.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
 com/javacp/annot/TypeParameterAnnotation# => abstract interface TypeParameterAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -987,14 +927,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/usage/AnnotatedInterface.class
 Text => empty
 Language => Java
-Symbols => 6 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
-com/javacp/annot/usage/ => package usage
 com/javacp/annot/usage/AnnotatedInterface# => abstract interface AnnotatedInterface extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
@@ -1007,14 +942,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/annot/usage/AnnotatedPackage.class
 Text => empty
 Language => Java
-Symbols => 7 entries
+Symbols => 2 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
-com/javacp/annot/ => package annot
-com/javacp/annot/usage/ => package usage
 com/javacp/annot/usage/AnnotatedPackage# => class AnnotatedPackage extends Object { +1 decls }
   Object => java/lang/Object#
 com/javacp/annot/usage/AnnotatedPackage#`<init>`(). => ctor <init>()
@@ -1027,12 +957,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/ClassSuffix.class
 Text => empty
 Language => Java
-Symbols => 14 entries
+Symbols => 11 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
 com/javacp/ClassSuffix# => class ClassSuffix extends Object { +3 decls }
   Object => java/lang/Object#
 com/javacp/ClassSuffix#Inner# => private[javacp] class Inner[A <: Object] extends Object { +2 decls }
@@ -1072,12 +999,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/Coin.class
 Text => empty
 Language => Java
-Symbols => 15 entries
+Symbols => 12 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
 com/javacp/Coin# => final enum class Coin extends Enum[Coin] { +9 decls }
   Enum => java/lang/Enum#
   Coin => com/javacp/Coin#
@@ -1116,12 +1040,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/Interface.class
 Text => empty
 Language => Java
-Symbols => 4 entries
+Symbols => 1 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
 com/javacp/Interface# => abstract interface Interface extends Object
   Object => java/lang/Object#
 
@@ -1133,12 +1054,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/Logger.class
 Text => empty
 Language => Java
-Symbols => 5 entries
+Symbols => 2 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
 com/javacp/Logger# => class Logger extends Object { +1 decls }
   Object => java/lang/Object#
 com/javacp/Logger#`<init>`(). => ctor <init>()
@@ -1151,12 +1069,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/MetacJava.class
 Text => empty
 Language => Java
-Symbols => 31 entries
+Symbols => 28 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
 com/javacp/MetacJava# => class MetacJava extends Object { +8 decls }
   Object => java/lang/Object#
 com/javacp/MetacJava#Overload1# => class Overload1 extends Object { +2 decls }
@@ -1221,12 +1136,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/NonGeneric.class
 Text => empty
 Language => Java
-Symbols => 6 entries
+Symbols => 3 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
 com/javacp/NonGeneric# => class NonGeneric extends Exception with Serializable with Flushable { +2 decls }
   Exception => java/lang/Exception#
   Serializable => java/io/Serializable#
@@ -1243,12 +1155,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/Recursive.class
 Text => empty
 Language => Java
-Symbols => 16 entries
+Symbols => 13 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
 com/javacp/Recursive# => abstract class Recursive[A <: Recursive[A, B] & Serializable, B <: Inner[A, B]] extends Object { +4 decls }
   A => com/javacp/Recursive#[A]
   Recursive => com/javacp/Recursive#
@@ -1306,12 +1215,9 @@ Schema => SemanticDB v4
 Uri => com/javacp/Test.class
 Text => empty
 Language => Java
-Symbols => 70 entries
+Symbols => 67 entries
 
 Symbols:
-_root_/ => package _root_
-com/ => package com
-com/javacp/ => package javacp
 com/javacp/Test# => final class Test[A <: CharSequence & Serializable, B <: Object] extends ArrayList[A] with Comparable[B] with Serializable { +36 decls }
   A => com/javacp/Test#[A]
   CharSequence => java/lang/CharSequence#
