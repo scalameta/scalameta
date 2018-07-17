@@ -2,20 +2,20 @@ package scala.meta.cli
 
 import java.io._
 
-final class Reporter private (val out: LengthWriter, val err: LengthWriter) {
+final class Reporter private (val out: PrintStream, val err: PrintStream) {
   private def this() = {
-    this(out = new LengthWriter(new PrintWriter(System.out), 0), err = System.err)
+    this(out = System.out, err = System.err)
   }
 
-  def withOut(out: LengthWriter): Reporter = {
+  def withOut(out: PrintStream): Reporter = {
     copy(out = out)
   }
 
-  def withErr(err: LengthWriter): Reporter = {
+  def withErr(err: PrintStream): Reporter = {
     copy(err = err)
   }
 
-  private def copy(out: LengthWriter = out, err: LengthWriter = err): Reporter = {
+  private def copy(out: PrintStream = out, err: PrintStream = err): Reporter = {
     new Reporter(out = out, err = err)
   }
 }

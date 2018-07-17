@@ -1,4 +1,4 @@
-package scala.meta.cli
+package scala.meta.internal.semanticdb.scalac
 
 import java.io.Writer
 

@@ -339,9 +339,6 @@ trait SymbolInformationPrinter extends BasePrinter with ConstantPrinter { self =
     }
 
     def visit(sym: String): SymbolInformation = {
-      if (!noteSymtab.contains(sym) && docSymtab.contains(sym)) {
-        println(s"yoooo $sym")
-      }
       val symtabInfo = noteSymtab.get(sym).orElse(docSymtab.get(sym))
       val info = symtabInfo.getOrElse {
         val name = if (sym.isGlobal) sym.desc.name else sym

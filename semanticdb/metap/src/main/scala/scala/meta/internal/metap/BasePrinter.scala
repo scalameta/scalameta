@@ -6,9 +6,6 @@ import scala.meta.internal.semanticdb._
 import scala.meta.metap._
 
 abstract class BasePrinter(val settings: Settings, val reporter: Reporter, val doc: TextDocument) {
-
-  private var tracking
-
   def out: PrintStream = {
     reporter.out
   }
