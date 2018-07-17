@@ -132,7 +132,6 @@ lazy val semanticdbScalacCore = project
     description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
   )
-  .aggregate(scalametaJVM, metacp)
   .dependsOn(scalametaJVM, metacp)
 
 lazy val semanticdbScalacPlugin = project
@@ -159,7 +158,6 @@ lazy val semanticdbScalacPlugin = project
       }).transform(node).head
     }
   )
-  .aggregate(semanticdbScalacCore)
   .dependsOn(semanticdbScalacCore)
 
 lazy val semanticdbJavacPlugin = project
@@ -210,7 +208,6 @@ lazy val metac = project
   )
   // FIXME: https://github.com/scalameta/scalameta/issues/1688
   .disablePlugins(BackgroundRunPlugin)
-  .aggregate(cliJVM, semanticdbScalacPlugin)
   .dependsOn(cliJVM, semanticdbScalacPlugin)
 
 lazy val metacp = project
@@ -228,7 +225,6 @@ lazy val metacp = project
   .enablePlugins(BuildInfoPlugin)
   // FIXME: https://github.com/scalameta/scalameta/issues/1688
   .disablePlugins(BackgroundRunPlugin)
-  .aggregate(semanticdbJVM, cliJVM, ioJVM)
   .dependsOn(semanticdbJVM, cliJVM, ioJVM)
 
 lazy val metai = project
@@ -240,7 +236,6 @@ lazy val metai = project
   )
   // FIXME: https://github.com/scalameta/scalameta/issues/1688
   .disablePlugins(BackgroundRunPlugin)
-  .aggregate(semanticdbJVM, cliJVM, ioJVM)
   .dependsOn(semanticdbJVM, cliJVM, ioJVM)
 
 lazy val symtab = project
@@ -251,7 +246,6 @@ lazy val symtab = project
   )
   // FIXME: https://github.com/scalameta/scalameta/issues/1688
   .disablePlugins(BackgroundRunPlugin)
-  .aggregate(metacp)
   .dependsOn(metacp)
 
 lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
@@ -265,7 +259,6 @@ lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .nativeSettings(nativeSettings)
   // FIXME: https://github.com/scalameta/scalameta/issues/1688
   .disablePlugins(BackgroundRunPlugin)
-  .jvmConfigure(_.aggregate(semanticdbJVM, cliJVM))
   .dependsOn(semanticdb, cli)
 lazy val metapJVM = metap.jvm
 lazy val metapJS = metap.js
@@ -281,7 +274,6 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     enableMacros
   )
   .nativeSettings(nativeSettings)
-  .jvmConfigure(_.aggregate(semanticdbJVM))
   .dependsOn(semanticdb)
 lazy val commonJVM = common.jvm
 lazy val commonJS = common.js
@@ -294,7 +286,6 @@ lazy val io = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     description := "Scalameta APIs for input/output"
   )
   .nativeSettings(nativeSettings)
-  .jvmConfigure(_.aggregate(commonJVM))
   .dependsOn(common)
 
 lazy val ioJVM = io.jvm
@@ -309,7 +300,6 @@ lazy val dialects = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     enableMacros
   )
   .nativeSettings(nativeSettings)
-  .jvmConfigure(_.aggregate(commonJVM))
   .dependsOn(common)
 lazy val dialectsJVM = dialects.jvm
 lazy val dialectsJS = dialects.js
@@ -323,7 +313,6 @@ lazy val inputs = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     enableMacros
   )
   .nativeSettings(nativeSettings)
-  .jvmConfigure(_.aggregate(commonJVM, ioJVM))
   .dependsOn(common, io)
 lazy val inputsJVM = inputs.jvm
 lazy val inputsJS = inputs.js
@@ -337,7 +326,6 @@ lazy val interactive = project
     description := "Scalameta APIs for interactive building of SemanticDB",
     enableMacros
   )
-  .aggregate(semanticdbScalacCore)
   .dependsOn(semanticdbScalacCore)
 
 lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
@@ -348,7 +336,6 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     scalaJSModuleKind := ModuleKind.CommonJSModule
   )
   .nativeSettings(nativeSettings)
-  .jvmConfigure(_.aggregate(commonJVM, dialectsJVM, inputsJVM, tokensJVM, tokenizersJVM, treesJVM))
   .dependsOn(common, dialects, inputs, tokens, tokenizers, trees)
 lazy val parsersJVM = parsers.jvm
 lazy val parsersJS = parsers.js
@@ -362,7 +349,6 @@ lazy val quasiquotes = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     enableHardcoreMacros
   )
   .nativeSettings(nativeSettings)
-  .jvmConfigure(_.aggregate(commonJVM, dialectsJVM, inputsJVM, treesJVM, parsersJVM))
   .dependsOn(common, dialects, inputs, trees, parsers)
 lazy val quasiquotesJVM = quasiquotes.jvm
 lazy val quasiquotesJS = quasiquotes.js
@@ -377,7 +363,6 @@ lazy val tokenizers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     enableMacros
   )
   .nativeSettings(nativeSettings)
-  .jvmConfigure(_.aggregate(commonJVM, dialectsJVM, inputsJVM, tokensJVM))
   .dependsOn(common, dialects, inputs, tokens)
 lazy val tokenizersJVM = tokenizers.jvm
 lazy val tokenizersJS = tokenizers.js
@@ -391,7 +376,6 @@ lazy val tokens = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     enableMacros
   )
   .nativeSettings(nativeSettings)
-  .jvmConfigure(_.aggregate(commonJVM, dialectsJVM, inputsJVM))
   .dependsOn(common, dialects, inputs)
 lazy val tokensJVM = tokens.jvm
 lazy val tokensJS = tokens.js
@@ -406,7 +390,6 @@ lazy val transversers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     enableMacros
   )
   .nativeSettings(nativeSettings)
-  .jvmConfigure(_.aggregate(commonJVM, treesJVM))
   .dependsOn(common, trees)
 lazy val transversersJVM = transversers.jvm
 lazy val transversersJS = transversers.js
@@ -422,7 +405,6 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     enableMacros
   )
   .nativeSettings(nativeSettings)
-  .jvmConfigure(_.aggregate(commonJVM, dialectsJVM, inputsJVM, tokensJVM, tokenizersJVM))
   .dependsOn(common, dialects, inputs, tokens, tokenizers) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
 lazy val treesJVM = trees.jvm
 lazy val treesJS = trees.js
@@ -435,18 +417,6 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     description := "Scalameta umbrella module that includes all public APIs"
   )
   .nativeSettings(nativeSettings)
-  .jvmConfigure(
-    _.aggregate(
-      commonJVM,
-      dialectsJVM,
-      parsersJVM,
-      quasiquotesJVM,
-      tokenizersJVM,
-      transversersJVM,
-      treesJVM,
-      inputsJVM,
-      ioJVM
-    ))
   .dependsOn(
     common,
     dialects,
@@ -469,7 +439,6 @@ lazy val contrib = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     description := "Incubator for Scalameta APIs"
   )
   .nativeSettings(nativeSettings)
-  .jvmConfigure(_.aggregate(scalametaJVM))
   .dependsOn(scalameta)
 lazy val contribJVM = contrib.jvm
 lazy val contribJS = contrib.js
@@ -538,7 +507,6 @@ lazy val testkit = project
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
     description := "Testing utilities for scalameta APIs"
   )
-  .aggregate(contribJVM)
   .dependsOn(contribJVM)
 
 lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
