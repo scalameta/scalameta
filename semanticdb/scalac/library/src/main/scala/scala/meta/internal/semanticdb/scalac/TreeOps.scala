@@ -9,27 +9,21 @@ trait TreeOps { self: SemanticdbOps =>
   implicit class XtensionGTreeSyntheticTerm(gTree: g.Tree) {
     def toSemanticTree: s.Tree = gTree match {
       case gTree: g.Apply => s.ApplyTree(
-        fn = gTree.fun.toSemanticTree,
+        fn = gTree.fun.toSemanticId,
         args = gTree.args.map(_.toSemanticTree)
       )
       case gTree: g.TypeApply => s.TypeApplyTree(
         fn = gTree.fun.toSemanticTree,
         targs = gTree.args.map(_.tpe.toSemanticTpe)
       )
-      case gTree: g.Select => s.SelectTree(
-        qual = gTree.qualifier.toSemanticTree,
-        id = Some(s.IdTree(gTree.symbol.toSemantic))
-      )
-      case gTree: g.Ident => s.IdTree(
-        sym = gTree.symbol.toSemantic
-      )
-      case gTree: g.This => s.IdTree(
-        sym = gTree.symbol.toSemantic
-      )
+      case gTree: g.Select =>gTree.toSemanticId
+      case gTree: g.Ident => gTree.toSemanticId
+      case gTree: g.This => gTree.toSemanticId
       case _ =>
         println(s"No match on: $gTree ${gTree.getClass}")
         s.Tree.Empty
     }
+    def toSemanticId: s.Tree = s.IdTree(sym = gTree.symbol.toSemantic)
   }
 
 }

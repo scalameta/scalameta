@@ -451,7 +451,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
                 val args = S.mkString(targs.map(showSynthetic), ", ")
                 val syntax = S("[") + args + "]"
-                println(fun)
                 success(morePrecisePos, _.copy(targs = Some(syntax)).addNewSynth(s.NewSynthetic(
                   range = Some(fun.pos.toMeta.toRange),
                   tree = s.TypeApplyTree(
