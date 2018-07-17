@@ -10,6 +10,20 @@ import scala.meta.internal.semanticdb.SymbolInformation.Kind._
 import scala.meta.internal.semanticdb.SymbolInformation.Property._
 
 trait SymbolInformationPrinter extends BasePrinter with ConstantPrinter { self =>
+
+  protected def printInfosVisited(infos: List[SymbolInformation]): Unit = {
+    val printed = mutable.Set[String]()
+    infos.foreach { info =>
+      if (!printed(info.symbol)) {
+        printed += info.symbol
+        out.print("  ")
+        out.print(info.name)
+        out.print(" => ")
+        out.println(info.symbol)
+      }
+    }
+  }
+
   def pprint(info: SymbolInformation): Unit = {
     out.print(info.symbol)
     out.print(" => ")
@@ -20,16 +34,7 @@ trait SymbolInformationPrinter extends BasePrinter with ConstantPrinter { self =
     out.println()
 
     if (settings.format.isDetailed) {
-      val printed = mutable.Set[String]()
-      infoNotes.visited.tail.foreach { info =>
-        if (!printed(info.symbol)) {
-          printed += info.symbol
-          out.print("  ")
-          out.print(info.name)
-          out.print(" => ")
-          out.println(info.symbol)
-        }
-      }
+      printInfosVisited(infoNotes.visited.tail)
     }
   }
 
@@ -238,11 +243,11 @@ trait SymbolInformationPrinter extends BasePrinter with ConstantPrinter { self =
       pprint(info.symbol, Definition)
     }
 
-    private sealed trait SymbolStyle
-    private case object Reference extends SymbolStyle
-    private case object Definition extends SymbolStyle
+    protected sealed trait SymbolStyle
+    protected case object Reference extends SymbolStyle
+    protected case object Definition extends SymbolStyle
 
-    private def pprint(sym: String, style: SymbolStyle): Unit = {
+    protected def pprint(sym: String, style: SymbolStyle): Unit = {
       val info = notes.visit(sym)
       style match {
         case Reference =>
