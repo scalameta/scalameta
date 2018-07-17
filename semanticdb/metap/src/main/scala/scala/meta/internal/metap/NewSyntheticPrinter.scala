@@ -53,7 +53,6 @@ trait NewSyntheticPrinter extends BasePrinter with RangePrinter with SymbolInfor
           print(")")
         case tree: s.FunctionTree =>
         case tree: s.IdTree =>
-          printOcc()
           out.print(tree.sym.desc.name)
         case tree: s.LiteralTree =>
           self.pprint(tree.const)

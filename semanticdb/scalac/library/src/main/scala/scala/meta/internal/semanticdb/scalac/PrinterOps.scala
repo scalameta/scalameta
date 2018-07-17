@@ -5,6 +5,7 @@ import java.io.PrintWriter
 import java.io.StringWriter
 import java.io.Writer
 import scala.collection.mutable
+import scala.meta.cli.LengthWriter
 import scala.meta.internal.semanticdb.Scala.Symbols
 import scala.reflect.internal.ModifierFlags._
 
