@@ -417,6 +417,21 @@ metacp [options] <classpath>
     <td></td>
   </tr>
   <tr>
+    <td><code>--dependency-classpath &lt;value&gt</code></td>
+    <td>Java classpath</td>
+    <td>
+      The classpath for library dependencies to compute external library references.
+      For example, should include the JDK and scala-library if those are not
+      part of <code>&lt;classpath&gt;</code>. The difference between
+      <code>&lt;classpath&gt;</code> and <code>--dependency-classpath</code> is
+      that entries in <code>--dependency-classpath</code> will not be processed
+      for <code>--out</code>.
+    </td>
+    <td>
+      Empty.
+    </td>
+  </tr>
+  <tr>
     <td><code>--out &lt;value&gt</code></td>
     <td>Absolute or relative path</td>
     <td>
