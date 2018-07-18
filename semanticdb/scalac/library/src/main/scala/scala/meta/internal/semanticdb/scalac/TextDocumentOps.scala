@@ -457,6 +457,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   // for loops
                   val fnTree = fun match {
                     case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
+                      visitedSyntheticParent += select
                       visitedSyntheticParent += fun
                       val symbol = select.symbol.toSemantic
                       s.SelectTree(
@@ -476,6 +477,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                     )
                   )
                 case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
+                  visitedSyntheticParent += select
                   val symbol = select.symbol.toSemantic
                   synthetics += s.Synthetic(
                     range = Some(qual.pos.toMeta.toRange),

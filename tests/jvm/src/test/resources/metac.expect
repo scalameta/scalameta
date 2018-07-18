@@ -2946,7 +2946,7 @@ Text => non-empty
 Language => Scala
 Symbols => 58 entries
 Occurrences => 111 entries
-Synthetics => 65 entries
+Synthetics => 59 entries
 
 Symbols:
 example/Synthetic# => class Synthetic extends AnyRef { +12 decls }
@@ -3227,8 +3227,6 @@ Synthetics:
   Int => scala/Int#
 [10:6..10:10): <Name> => <Name>.unapplySeq
   unapplySeq => scala/util/matching/Regex#unapplySeq().
-[10:6..10:10): <Name> => <Name>.unapplySeq
-  unapplySeq => scala/util/matching/Regex#unapplySeq().
 [11:4..11:26): <#:: 2 #:: Stream.empty> => <#:: 2 #:: Stream.empty>[Int]
   Int => scala/Int#
 [11:8..11:26): <2 #:: Stream.empty> => consWrapper[Int](<2 #:: Stream.empty>)
@@ -3309,8 +3307,6 @@ Synthetics:
   intWrapper => scala/LowPriorityImplicits#intWrapper().
 [18:26..18:36): <0 until 10> => <0 until 10>.withFilter
   withFilter => scala/collection/TraversableLike#withFilter().
-[18:26..18:36): <0 until 10> => <0 until 10>.withFilter
-  withFilter => scala/collection/TraversableLike#withFilter().
 [18:26..18:50): <0 until 10 if i % 2 == 0> => <0 until 10 if i % 2 == 0>(canBuildFrom[Tuple2[Int, Int]])
   canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
   Tuple2 => scala/Tuple2#
@@ -3322,14 +3318,8 @@ Synthetics:
   IndexedSeq => scala/collection/immutable/IndexedSeq#
 [22:4..22:5): <s> => <s>.apply
   apply => example/Synthetic#s.apply().
-[22:4..22:5): <s> => <s>.apply
-  apply => example/Synthetic#s.apply().
 [25:4..25:7): <Bar> => <Bar>.apply
   apply => example/Synthetic#s.Bar.apply().
-[25:4..25:7): <Bar> => <Bar>.apply
-  apply => example/Synthetic#s.Bar.apply().
-[26:4..26:33): <null.asInstanceOf[Int => Int]> => <null.asInstanceOf[Int => Int]>.apply
-  apply => scala/Function1#apply().
 [26:4..26:33): <null.asInstanceOf[Int => Int]> => <null.asInstanceOf[Int => Int]>.apply
   apply => scala/Function1#apply().
 [29:35..29:49): <Array.empty[T]> => <Array.empty[T]>(evidence$1)
@@ -3363,8 +3353,6 @@ Synthetics:
   Int => scala/Int#
 [42:9..42:46): <scala.concurrent.Future.successful(2)> => <scala.concurrent.Future.successful(2)>(global)
   global => scala/concurrent/ExecutionContext.Implicits.global.
-[42:9..42:46): <scala.concurrent.Future.successful(2)> => <scala.concurrent.Future.successful(2)>.withFilter
-  withFilter => scala/concurrent/Future#withFilter().
 [42:9..42:46): <scala.concurrent.Future.successful(2)> => <scala.concurrent.Future.successful(2)>.withFilter
   withFilter => scala/concurrent/Future#withFilter().
 [42:9..43:12): <scala.concurrent.Future.successful(2)
