@@ -1269,7 +1269,7 @@ Text => non-empty
 Language => Scala
 Symbols => 124 entries
 Occurrences => 57 entries
-Synthetics => 4 entries
+Synthetics => 3 entries
 
 Symbols:
 classes/C1# => final class C1 extends AnyVal { +4 decls }
@@ -1662,8 +1662,6 @@ Synthetics:
 [28:16..28:20): <List> => <List>.apply[Int]
   apply => scala/collection/immutable/List.apply().
   Int => scala/Int#
-[28:16..28:20): <List> => <List>.apply
-  apply => scala/collection/immutable/List.apply().
 [28:16..28:27): <List(1).map> => <List(1).map>[Int,List[Int]]
   Int => scala/Int#
   List => scala/collection/immutable/List#
@@ -1814,7 +1812,7 @@ Text => non-empty
 Language => Scala
 Symbols => 58 entries
 Occurrences => 71 entries
-Synthetics => 4 entries
+Synthetics => 2 entries
 
 Symbols:
 flags/p/package. => final package object p extends AnyRef { +16 decls }
@@ -2029,13 +2027,9 @@ Synthetics:
 [22:6..22:10): <List> => <List>.unapplySeq[Nothing]
   unapplySeq => scala/collection/generic/SeqFactory#unapplySeq().
   Nothing => scala/Nothing#
-[22:6..22:10): <List> => <List>.unapplySeq
-  unapplySeq => scala/collection/generic/SeqFactory#unapplySeq().
 [23:19..23:23): <List> => <List>.unapplySeq[Nothing]
   unapplySeq => scala/collection/generic/SeqFactory#unapplySeq().
   Nothing => scala/Nothing#
-[23:19..23:23): <List> => <List>.unapplySeq
-  unapplySeq => scala/collection/generic/SeqFactory#unapplySeq().
 
 semanticdb/integration/src/main/scala/example/Imports.scala
 -----------------------------------------------------------
@@ -2952,7 +2946,7 @@ Text => non-empty
 Language => Scala
 Symbols => 58 entries
 Occurrences => 111 entries
-Synthetics => 78 entries
+Synthetics => 64 entries
 
 Symbols:
 example/Synthetic# => class Synthetic extends AnyRef { +12 decls }
@@ -3211,8 +3205,6 @@ Synthetics:
 [3:2..3:6): <List> => <List>.apply[Int]
   apply => scala/collection/immutable/List.apply().
   Int => scala/Int#
-[3:2..3:6): <List> => <List>.apply
-  apply => scala/collection/immutable/List.apply().
 [3:2..3:13): <List(1).map> => <List(1).map>[Int,List[Int]]
   Int => scala/Int#
   List => scala/collection/immutable/List#
@@ -3230,13 +3222,9 @@ Synthetics:
   apply => scala/Tuple2.apply().
   Int => scala/Int#
   Stream => scala/collection/immutable/Stream#
-[9:6..9:14): <x #:: xs> => <x #:: xs>.apply
-  apply => scala/Tuple2.apply().
 [9:17..9:23): <Stream> => <Stream>.apply[Int]
   apply => scala/collection/immutable/Stream.apply().
   Int => scala/Int#
-[9:17..9:23): <Stream> => <Stream>.apply
-  apply => scala/collection/immutable/Stream.apply().
 [10:6..10:10): <Name> => <Name>.unapplySeq
   unapplySeq => scala/util/matching/Regex#unapplySeq().
 [10:6..10:10): <Name> => <Name>.unapplySeq
@@ -3274,15 +3262,11 @@ Synthetics:
 [16:12..16:19): <1 to 10> => <1 to 10>.foreach[Unit]
   foreach => scala/collection/immutable/Range#foreach().
   Unit => scala/Unit#
-[16:12..16:19): <1 to 10> => <1 to 10>.foreach
-  foreach => scala/collection/immutable/Range#foreach().
 [16:26..16:27): <0> => intWrapper(<0>)
   intWrapper => scala/LowPriorityImplicits#intWrapper().
 [16:26..16:36): <0 until 10> => <0 until 10>.foreach[Unit]
   foreach => scala/collection/immutable/Range#foreach().
   Unit => scala/Unit#
-[16:26..16:36): <0 until 10> => <0 until 10>.foreach
-  foreach => scala/collection/immutable/Range#foreach().
 [16:46..16:47): <x> => ArrowAssoc[Int](<x>)
   ArrowAssoc => scala/Predef.ArrowAssoc().
   Int => scala/Int#
@@ -3299,8 +3283,6 @@ Synthetics:
   Tuple2 => scala/Tuple2#
   Int => scala/Int#
   IndexedSeq => scala/collection/immutable/IndexedSeq#
-[17:12..17:19): <1 to 10> => <1 to 10>.flatMap
-  flatMap => scala/collection/TraversableLike#flatMap().
 [17:26..17:27): <0> => intWrapper(<0>)
   intWrapper => scala/LowPriorityImplicits#intWrapper().
 [17:26..17:36): <0 until 10> => <0 until 10>(canBuildFrom[Tuple2[Int, Int]])
@@ -3312,8 +3294,6 @@ Synthetics:
   Tuple2 => scala/Tuple2#
   Int => scala/Int#
   IndexedSeq => scala/collection/immutable/IndexedSeq#
-[17:26..17:36): <0 until 10> => <0 until 10>.map
-  map => scala/collection/TraversableLike#map().
 [18:12..18:13): <1> => intWrapper(<1>)
   intWrapper => scala/LowPriorityImplicits#intWrapper().
 [18:12..18:19): <1 to 10> => <1 to 10>(canBuildFrom[Tuple2[Int, Int]])
@@ -3325,8 +3305,6 @@ Synthetics:
   Tuple2 => scala/Tuple2#
   Int => scala/Int#
   IndexedSeq => scala/collection/immutable/IndexedSeq#
-[18:12..18:19): <1 to 10> => <1 to 10>.flatMap
-  flatMap => scala/collection/TraversableLike#flatMap().
 [18:26..18:27): <0> => intWrapper(<0>)
   intWrapper => scala/LowPriorityImplicits#intWrapper().
 [18:26..18:36): <0 until 10> => <0 until 10>.withFilter
@@ -3342,8 +3320,6 @@ Synthetics:
   Tuple2 => scala/Tuple2#
   Int => scala/Int#
   IndexedSeq => scala/collection/immutable/IndexedSeq#
-[18:26..18:50): <0 until 10 if i % 2 == 0> => <0 until 10 if i % 2 == 0>.map
-  map => scala/collection/generic/FilterMonadic#map().
 [22:4..22:5): <s> => <s>.apply
   apply => example/Synthetic#s.apply().
 [22:4..22:5): <s> => <s>.apply
@@ -3358,10 +3334,6 @@ Synthetics:
   apply => scala/Function1#apply().
 [29:35..29:49): <Array.empty[T]> => <Array.empty[T]>(evidence$1)
   evidence$1 => example/Synthetic#J#evidence$1.
-[33:22..33:27): <new F> => orderingToOrdered[F](<new F>)(ordering)
-  orderingToOrdered => scala/math/Ordered.orderingToOrdered().
-  F => example/Synthetic#F#
-  ordering => example/Synthetic#ordering.
 [37:9..37:43): <scala.concurrent.Future.successful> => <scala.concurrent.Future.successful>[Int]
   Int => scala/Int#
 [37:9..37:46): <scala.concurrent.Future.successful(1)> => <scala.concurrent.Future.successful(1)>(global)
@@ -3369,8 +3341,6 @@ Synthetics:
 [37:9..37:46): <scala.concurrent.Future.successful(1)> => <scala.concurrent.Future.successful(1)>.foreach[Unit]
   foreach => scala/concurrent/Future#foreach().
   Unit => scala/Unit#
-[37:9..37:46): <scala.concurrent.Future.successful(1)> => <scala.concurrent.Future.successful(1)>.foreach
-  foreach => scala/concurrent/Future#foreach().
 [38:9..38:43): <scala.concurrent.Future.successful> => <scala.concurrent.Future.successful>[Int]
   Int => scala/Int#
 [38:9..38:46): <scala.concurrent.Future.successful(2)> => <scala.concurrent.Future.successful(2)>(global)
@@ -3378,8 +3348,6 @@ Synthetics:
 [38:9..38:46): <scala.concurrent.Future.successful(2)> => <scala.concurrent.Future.successful(2)>.foreach[Unit]
   foreach => scala/concurrent/Future#foreach().
   Unit => scala/Unit#
-[38:9..38:46): <scala.concurrent.Future.successful(2)> => <scala.concurrent.Future.successful(2)>.foreach
-  foreach => scala/concurrent/Future#foreach().
 [41:9..41:43): <scala.concurrent.Future.successful> => <scala.concurrent.Future.successful>[Int]
   Int => scala/Int#
 [41:9..41:46): <scala.concurrent.Future.successful(1)> => <scala.concurrent.Future.successful(1)>(global)
@@ -3387,8 +3355,6 @@ Synthetics:
 [41:9..41:46): <scala.concurrent.Future.successful(1)> => <scala.concurrent.Future.successful(1)>.flatMap[Int]
   flatMap => scala/concurrent/Future#flatMap().
   Int => scala/Int#
-[41:9..41:46): <scala.concurrent.Future.successful(1)> => <scala.concurrent.Future.successful(1)>.flatMap
-  flatMap => scala/concurrent/Future#flatMap().
 [42:9..42:43): <scala.concurrent.Future.successful> => <scala.concurrent.Future.successful>[Int]
   Int => scala/Int#
 [42:9..42:46): <scala.concurrent.Future.successful(2)> => <scala.concurrent.Future.successful(2)>(global)
@@ -3406,10 +3372,6 @@ Synthetics:
     if a < b>.map[Int]
   map => scala/concurrent/Future#map().
   Int => scala/Int#
-[42:9..43:12): <scala.concurrent.Future.successful(2)
-    if a < b> => <scala.concurrent.Future.successful(2)
-    if a < b>.map
-  map => scala/concurrent/Future#map().
 
 semanticdb/integration/src/main/scala/example/Traits.scala
 ----------------------------------------------------------
