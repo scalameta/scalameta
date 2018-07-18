@@ -842,7 +842,6 @@ Text => non-empty
 Language => Scala
 Symbols => 42 entries
 Occurrences => 109 entries
-Synthetics => 1 entries
 
 Symbols:
 advanced/C# => class C[T] extends AnyRef { +2 decls }
@@ -1065,11 +1064,6 @@ Occurrences:
 [42:21..42:25): head => scala/collection/IterableLike#head().
 
 Synthetics:
-[39:9..39:9):  => *[Unit]
-  [0:0..0:1): * => _star_.
-  [0:2..0:6): Unit => scala/Unit#
-
-New-style Synthetics:
 [39:2..39:9): <locally> => <locally>[Unit]
   Unit => scala/Unit#
 
@@ -1204,7 +1198,6 @@ Text => non-empty
 Language => Scala
 Symbols => 10 entries
 Occurrences => 25 entries
-Synthetics => 2 entries
 
 Symbols:
 example/Anonymous# => class Anonymous extends AnyRef { +4 decls }
@@ -1259,14 +1252,6 @@ Occurrences:
 [16:10..16:10):  => java/lang/Object#`<init>`().
 
 Synthetics:
-[8:9..8:9):  => *[Unit]
-  [0:0..0:1): * => _star_.
-  [0:2..0:6): Unit => scala/Unit#
-[11:9..11:9):  => *[Unit]
-  [0:0..0:1): * => _star_.
-  [0:2..0:6): Unit => scala/Unit#
-
-New-style Synthetics:
 [8:2..8:9): <locally> => <locally>[Unit]
   Unit => scala/Unit#
 [11:2..11:9): <locally> => <locally>[Unit]
@@ -1282,7 +1267,6 @@ Text => non-empty
 Language => Scala
 Symbols => 124 entries
 Occurrences => 57 entries
-Synthetics => 3 entries
 
 Symbols:
 classes/C1# => final class C1 extends AnyVal { +4 decls }
@@ -1672,21 +1656,6 @@ Occurrences:
 [30:10..30:11): + => scala/Int#`+`(+4).
 
 Synthetics:
-[28:20..28:20):  => *.apply[Int]
-  [0:0..0:1): * => _star_.
-  [0:2..0:7): apply => scala/collection/immutable/List.apply().
-  [0:8..0:11): Int => scala/Int#
-[28:27..28:27):  => *[Int, List[Int]]
-  [0:0..0:1): * => _star_.
-  [0:2..0:5): Int => scala/Int#
-  [0:7..0:11): List => scala/collection/immutable/List#
-  [0:12..0:15): Int => scala/Int#
-[31:3..31:3):  => *(scala.collection.immutable.List.canBuildFrom[Int])
-  [0:0..0:1): * => _star_.
-  [0:34..0:46): canBuildFrom => scala/collection/immutable/List.canBuildFrom().
-  [0:47..0:50): Int => scala/Int#
-
-New-style Synthetics:
 [28:16..28:20): <List> => <List>.apply[Int]
   apply => scala/collection/immutable/List.apply().
   Int => scala/Int#
@@ -1695,6 +1664,9 @@ New-style Synthetics:
 [28:16..28:27): <List(1).map> => <List(1).map>[Int,List[Int]]
   Int => scala/Int#
   List => scala/collection/immutable/List#
+[28:16..31:3): <List(1).map { i =>...> => <List(1).map { i =>...>(canBuildFrom[Int])
+  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+  Int => scala/Int#
 
 semanticdb/integration/src/main/scala/example/Empty.scala
 ---------------------------------------------------------
@@ -1761,7 +1733,6 @@ Language => Scala
 Symbols => 5 entries
 Occurrences => 24 entries
 Diagnostics => 1 entries
-Synthetics => 1 entries
 
 Symbols:
 example/Example. => final object Example extends AnyRef { +2 decls }
@@ -1809,11 +1780,7 @@ Diagnostics:
 [2:24..2:30) [warning] Unused import
 
 Synthetics:
-[9:37..9:37):  => *(((ClassTag.Int): ClassTag[Int]))
-  [0:0..0:1): * => _star_.
-  [0:13..0:16): Int => scala/reflect/ClassTag.Int.
-  [0:19..0:27): ClassTag => scala/reflect/ClassTag#
-  [0:28..0:31): Int => scala/Int#
+[9:10..9:37): <scala.reflect.classTag[Int]> => <scala.reflect.classTag[Int]>(<?>)
 semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
 
@@ -1837,7 +1804,6 @@ Text => non-empty
 Language => Scala
 Symbols => 58 entries
 Occurrences => 71 entries
-Synthetics => 2 entries
 
 Symbols:
 flags/p/package. => final package object p extends AnyRef { +16 decls }
@@ -2049,16 +2015,6 @@ Occurrences:
 [24:33..24:36): ??? => scala/Predef.`???`().
 
 Synthetics:
-[22:10..22:10):  => *.unapplySeq[Nothing]
-  [0:0..0:1): * => _star_.
-  [0:2..0:12): unapplySeq => scala/collection/generic/SeqFactory#unapplySeq().
-  [0:13..0:20): Nothing => scala/Nothing#
-[23:23..23:23):  => *.unapplySeq[Nothing]
-  [0:0..0:1): * => _star_.
-  [0:2..0:12): unapplySeq => scala/collection/generic/SeqFactory#unapplySeq().
-  [0:13..0:20): Nothing => scala/Nothing#
-
-New-style Synthetics:
 [22:6..22:10): <List> => <List>.unapplySeq[Nothing]
   unapplySeq => scala/collection/generic/SeqFactory#unapplySeq().
   Nothing => scala/Nothing#
@@ -2100,7 +2056,6 @@ Text => non-empty
 Language => Scala
 Symbols => 3 entries
 Occurrences => 7 entries
-Synthetics => 1 entries
 
 Symbols:
 example/`local-file`# => class local-file extends AnyRef { +1 decls }
@@ -2119,11 +2074,6 @@ Occurrences:
 [5:10..5:11): + => scala/Int#`+`(+4).
 
 Synthetics:
-[3:9..3:9):  => *[Int]
-  [0:0..0:1): * => _star_.
-  [0:2..0:5): Int => scala/Int#
-
-New-style Synthetics:
 [3:2..3:9): <locally> => <locally>[Int]
   Int => scala/Int#
 
@@ -2639,7 +2589,6 @@ Text => non-empty
 Language => Scala
 Symbols => 3 entries
 Occurrences => 83 entries
-Synthetics => 4 entries
 
 Symbols:
 example/MethodUsages# => class MethodUsages extends AnyRef { +2 decls }
@@ -2735,24 +2684,14 @@ Occurrences:
 [32:4..32:7): m18 => example/Methods#m18(+1).
 
 Synthetics:
-[13:7..13:7):  => *[Int]
-  [0:0..0:1): * => _star_.
-  [0:2..0:5): Int => scala/Int#
-[13:27..13:27):  => *(scala.math.Ordering.Int)
-  [0:0..0:1): * => _star_.
-  [0:22..0:25): Int => scala/math/Ordering.Int.
-[14:7..14:7):  => *[Int]
-  [0:0..0:1): * => _star_.
-  [0:2..0:5): Int => scala/Int#
-[14:24..14:24):  => *(scala.Predef.$conforms[Int])
-  [0:0..0:1): * => _star_.
-  [0:15..0:24): $conforms => scala/Predef.$conforms().
-  [0:25..0:28): Int => scala/Int#
-
-New-style Synthetics:
 [13:2..13:7): <m.m7a> => <m.m7a>[Int]
   Int => scala/Int#
+[13:2..13:27): <m.m7a(m, new m.List[Int])> => <m.m7a(m, new m.List[Int])>(Int)
+  Int => scala/math/Ordering.Int.
 [14:2..14:7): <m.m7b> => <m.m7b>[Int]
+  Int => scala/Int#
+[14:2..14:24): <m.m7b(new m.List[Int])> => <m.m7b(new m.List[Int])>($conforms[Int])
+  $conforms => scala/Predef.$conforms().
   Int => scala/Int#
 
 semanticdb/integration/src/main/scala/example/Objects.scala
@@ -3000,7 +2939,6 @@ Text => non-empty
 Language => Scala
 Symbols => 58 entries
 Occurrences => 111 entries
-Synthetics => 46 entries
 
 Symbols:
 example/Synthetic# => class Synthetic extends AnyRef { +12 decls }
@@ -3256,230 +3194,6 @@ Occurrences:
 [44:10..44:11): a => local11
 
 Synthetics:
-[3:6..3:6):  => *.apply[Int]
-  [0:0..0:1): * => _star_.
-  [0:2..0:7): apply => scala/collection/immutable/List.apply().
-  [0:8..0:11): Int => scala/Int#
-[3:13..3:13):  => *[Int, List[Int]]
-  [0:0..0:1): * => _star_.
-  [0:2..0:5): Int => scala/Int#
-  [0:7..0:11): List => scala/collection/immutable/List#
-  [0:12..0:15): Int => scala/Int#
-[3:20..3:20):  => *(scala.collection.immutable.List.canBuildFrom[Int])
-  [0:0..0:1): * => _star_.
-  [0:34..0:46): canBuildFrom => scala/collection/immutable/List.canBuildFrom().
-  [0:47..0:50): Int => scala/Int#
-[4:2..4:18): Array.empty[Int] => scala.Predef.intArrayOps(*)
-  [0:13..0:24): intArrayOps => scala/Predef.intArrayOps().
-  [0:25..0:26): * => _star_.
-[4:18..4:18):  => *(((ClassTag.Int): ClassTag[Int]))
-  [0:0..0:1): * => _star_.
-  [0:13..0:16): Int => scala/reflect/ClassTag.Int.
-  [0:19..0:27): ClassTag => scala/reflect/ClassTag#
-  [0:28..0:31): Int => scala/Int#
-[5:2..5:8): "fooo" => scala.Predef.augmentString(*)
-  [0:13..0:26): augmentString => scala/Predef.augmentString().
-  [0:27..0:28): * => _star_.
-[8:13..8:24): "name:(.*)" => scala.Predef.augmentString(*)
-  [0:13..0:26): augmentString => scala/Predef.augmentString().
-  [0:27..0:28): * => _star_.
-[9:14..9:14):  => *.apply[Int, Stream[Int]]
-  [0:0..0:1): * => _star_.
-  [0:2..0:7): apply => scala/Tuple2.apply().
-  [0:8..0:11): Int => scala/Int#
-  [0:13..0:19): Stream => scala/collection/immutable/Stream#
-  [0:20..0:23): Int => scala/Int#
-[9:23..9:23):  => *.apply[Int]
-  [0:0..0:1): * => _star_.
-  [0:2..0:7): apply => scala/collection/immutable/Stream.apply().
-  [0:8..0:11): Int => scala/Int#
-[10:10..10:10):  => *.unapplySeq
-  [0:0..0:1): * => _star_.
-  [0:2..0:12): unapplySeq => scala/util/matching/Regex#unapplySeq().
-[11:8..11:26): 2 #:: Stream.empty => scala.collection.immutable.Stream.consWrapper[Int](*)
-  [0:34..0:45): consWrapper => scala/collection/immutable/Stream.consWrapper().
-  [0:46..0:49): Int => scala/Int#
-  [0:51..0:52): * => _star_.
-[11:14..11:26): Stream.empty => scala.collection.immutable.Stream.consWrapper[Nothing](*)
-  [0:34..0:45): consWrapper => scala/collection/immutable/Stream.consWrapper().
-  [0:46..0:53): Nothing => scala/Nothing#
-  [0:55..0:56): * => _star_.
-[11:26..11:26):  => *[Nothing]
-  [0:0..0:1): * => _star_.
-  [0:2..0:9): Nothing => scala/Nothing#
-[13:18..13:36): 2 #:: Stream.empty => scala.collection.immutable.Stream.consWrapper[Int](*)
-  [0:34..0:45): consWrapper => scala/collection/immutable/Stream.consWrapper().
-  [0:46..0:49): Int => scala/Int#
-  [0:51..0:52): * => _star_.
-[13:24..13:36): Stream.empty => scala.collection.immutable.Stream.consWrapper[Nothing](*)
-  [0:34..0:45): consWrapper => scala/collection/immutable/Stream.consWrapper().
-  [0:46..0:53): Nothing => scala/Nothing#
-  [0:55..0:56): * => _star_.
-[13:36..13:36):  => *[Nothing]
-  [0:0..0:1): * => _star_.
-  [0:2..0:9): Nothing => scala/Nothing#
-[14:2..14:5): lst => scala.Predef.any2stringadd[Stream[Int]](*)
-  [0:13..0:26): any2stringadd => scala/Predef.any2stringadd().
-  [0:27..0:33): Stream => scala/collection/immutable/Stream#
-  [0:34..0:37): Int => scala/Int#
-  [0:40..0:41): * => _star_.
-[16:12..16:13): 1 => scala.Predef.intWrapper(*)
-  [0:13..0:23): intWrapper => scala/LowPriorityImplicits#intWrapper().
-  [0:24..0:25): * => _star_.
-[16:19..16:19):  => *.foreach[Unit]
-  [0:0..0:1): * => _star_.
-  [0:2..0:9): foreach => scala/collection/immutable/Range#foreach().
-  [0:10..0:14): Unit => scala/Unit#
-[16:26..16:27): 0 => scala.Predef.intWrapper(*)
-  [0:13..0:23): intWrapper => scala/LowPriorityImplicits#intWrapper().
-  [0:24..0:25): * => _star_.
-[16:36..16:36):  => *.foreach[Unit]
-  [0:0..0:1): * => _star_.
-  [0:2..0:9): foreach => scala/collection/immutable/Range#foreach().
-  [0:10..0:14): Unit => scala/Unit#
-[16:46..16:47): x => scala.Predef.ArrowAssoc[Int](*)
-  [0:13..0:23): ArrowAssoc => scala/Predef.ArrowAssoc().
-  [0:24..0:27): Int => scala/Int#
-  [0:29..0:30): * => _star_.
-[16:50..16:50):  => *[Int]
-  [0:0..0:1): * => _star_.
-  [0:2..0:5): Int => scala/Int#
-[17:12..17:13): 1 => scala.Predef.intWrapper(*)
-  [0:13..0:23): intWrapper => scala/LowPriorityImplicits#intWrapper().
-  [0:24..0:25): * => _star_.
-[17:19..17:19):  => *.flatMap[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
-  [0:0..0:1): * => _star_.
-  [0:2..0:9): flatMap => scala/collection/TraversableLike#flatMap().
-  [0:10..0:16): Tuple2 => scala/Tuple2#
-  [0:17..0:20): Int => scala/Int#
-  [0:22..0:25): Int => scala/Int#
-  [0:28..0:38): IndexedSeq => scala/collection/immutable/IndexedSeq#
-  [0:39..0:45): Tuple2 => scala/Tuple2#
-  [0:46..0:49): Int => scala/Int#
-  [0:51..0:54): Int => scala/Int#
-  [0:58..0:59): * => _star_.
-  [0:99..0:111): canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
-  [0:112..0:118): Tuple2 => scala/Tuple2#
-  [0:119..0:122): Int => scala/Int#
-  [0:124..0:127): Int => scala/Int#
-[17:26..17:27): 0 => scala.Predef.intWrapper(*)
-  [0:13..0:23): intWrapper => scala/LowPriorityImplicits#intWrapper().
-  [0:24..0:25): * => _star_.
-[17:36..17:36):  => *.map[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
-  [0:0..0:1): * => _star_.
-  [0:2..0:5): map => scala/collection/TraversableLike#map().
-  [0:6..0:12): Tuple2 => scala/Tuple2#
-  [0:13..0:16): Int => scala/Int#
-  [0:18..0:21): Int => scala/Int#
-  [0:24..0:34): IndexedSeq => scala/collection/immutable/IndexedSeq#
-  [0:35..0:41): Tuple2 => scala/Tuple2#
-  [0:42..0:45): Int => scala/Int#
-  [0:47..0:50): Int => scala/Int#
-  [0:54..0:55): * => _star_.
-  [0:95..0:107): canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
-  [0:108..0:114): Tuple2 => scala/Tuple2#
-  [0:115..0:118): Int => scala/Int#
-  [0:120..0:123): Int => scala/Int#
-[18:12..18:13): 1 => scala.Predef.intWrapper(*)
-  [0:13..0:23): intWrapper => scala/LowPriorityImplicits#intWrapper().
-  [0:24..0:25): * => _star_.
-[18:19..18:19):  => *.flatMap[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
-  [0:0..0:1): * => _star_.
-  [0:2..0:9): flatMap => scala/collection/TraversableLike#flatMap().
-  [0:10..0:16): Tuple2 => scala/Tuple2#
-  [0:17..0:20): Int => scala/Int#
-  [0:22..0:25): Int => scala/Int#
-  [0:28..0:38): IndexedSeq => scala/collection/immutable/IndexedSeq#
-  [0:39..0:45): Tuple2 => scala/Tuple2#
-  [0:46..0:49): Int => scala/Int#
-  [0:51..0:54): Int => scala/Int#
-  [0:58..0:59): * => _star_.
-  [0:99..0:111): canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
-  [0:112..0:118): Tuple2 => scala/Tuple2#
-  [0:119..0:122): Int => scala/Int#
-  [0:124..0:127): Int => scala/Int#
-[18:26..18:27): 0 => scala.Predef.intWrapper(*)
-  [0:13..0:23): intWrapper => scala/LowPriorityImplicits#intWrapper().
-  [0:24..0:25): * => _star_.
-[18:36..18:36):  => *.withFilter
-  [0:0..0:1): * => _star_.
-  [0:2..0:12): withFilter => scala/collection/TraversableLike#withFilter().
-[18:50..18:50):  => *.map[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]](*)(scala.collection.immutable.IndexedSeq.canBuildFrom[Tuple2[Int, Int]])
-  [0:0..0:1): * => _star_.
-  [0:2..0:5): map => scala/collection/generic/FilterMonadic#map().
-  [0:6..0:12): Tuple2 => scala/Tuple2#
-  [0:13..0:16): Int => scala/Int#
-  [0:18..0:21): Int => scala/Int#
-  [0:24..0:34): IndexedSeq => scala/collection/immutable/IndexedSeq#
-  [0:35..0:41): Tuple2 => scala/Tuple2#
-  [0:42..0:45): Int => scala/Int#
-  [0:47..0:50): Int => scala/Int#
-  [0:54..0:55): * => _star_.
-  [0:95..0:107): canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
-  [0:108..0:114): Tuple2 => scala/Tuple2#
-  [0:115..0:118): Int => scala/Int#
-  [0:120..0:123): Int => scala/Int#
-[22:5..22:5):  => *.apply
-  [0:0..0:1): * => _star_.
-  [0:2..0:7): apply => example/Synthetic#s.apply().
-[25:7..25:7):  => *.apply
-  [0:0..0:1): * => _star_.
-  [0:2..0:7): apply => example/Synthetic#s.Bar.apply().
-[26:33..26:33):  => *.apply
-  [0:0..0:1): * => _star_.
-  [0:2..0:7): apply => scala/Function1#apply().
-[29:49..29:49):  => *(J.this.evidence$1)
-  [0:0..0:1): * => _star_.
-  [0:9..0:19): evidence$1 => example/Synthetic#J#evidence$1.
-[33:22..33:27): new F => scala.math.Ordered.orderingToOrdered[Synthetic.this.F](*)(Synthetic.this.ordering)
-  [0:19..0:36): orderingToOrdered => scala/math/Ordered.orderingToOrdered().
-  [0:37..0:46): Synthetic => example/Synthetic#
-  [0:52..0:53): F => example/Synthetic#F#
-  [0:55..0:56): * => _star_.
-  [0:73..0:81): ordering => example/Synthetic#ordering.
-[37:43..37:43):  => *[Int]
-  [0:0..0:1): * => _star_.
-  [0:2..0:5): Int => scala/Int#
-[37:46..37:46):  => *.foreach[Unit](*)(scala.concurrent.ExecutionContext.Implicits.global)
-  [0:0..0:1): * => _star_.
-  [0:2..0:9): foreach => scala/concurrent/Future#foreach().
-  [0:10..0:14): Unit => scala/Unit#
-  [0:16..0:17): * => _star_.
-  [0:63..0:69): global => scala/concurrent/ExecutionContext.Implicits.global.
-[38:43..38:43):  => *[Int]
-  [0:0..0:1): * => _star_.
-  [0:2..0:5): Int => scala/Int#
-[38:46..38:46):  => *.foreach[Unit](*)(scala.concurrent.ExecutionContext.Implicits.global)
-  [0:0..0:1): * => _star_.
-  [0:2..0:9): foreach => scala/concurrent/Future#foreach().
-  [0:10..0:14): Unit => scala/Unit#
-  [0:16..0:17): * => _star_.
-  [0:63..0:69): global => scala/concurrent/ExecutionContext.Implicits.global.
-[41:43..41:43):  => *[Int]
-  [0:0..0:1): * => _star_.
-  [0:2..0:5): Int => scala/Int#
-[41:46..41:46):  => *.flatMap[Int](*)(scala.concurrent.ExecutionContext.Implicits.global)
-  [0:0..0:1): * => _star_.
-  [0:2..0:9): flatMap => scala/concurrent/Future#flatMap().
-  [0:10..0:13): Int => scala/Int#
-  [0:15..0:16): * => _star_.
-  [0:62..0:68): global => scala/concurrent/ExecutionContext.Implicits.global.
-[42:43..42:43):  => *[Int]
-  [0:0..0:1): * => _star_.
-  [0:2..0:5): Int => scala/Int#
-[42:46..42:46):  => *.withFilter(*)(scala.concurrent.ExecutionContext.Implicits.global)
-  [0:0..0:1): * => _star_.
-  [0:2..0:12): withFilter => scala/concurrent/Future#withFilter().
-  [0:13..0:14): * => _star_.
-  [0:60..0:66): global => scala/concurrent/ExecutionContext.Implicits.global.
-[43:12..43:12):  => *.map[Int](*)(scala.concurrent.ExecutionContext.Implicits.global)
-  [0:0..0:1): * => _star_.
-  [0:2..0:5): map => scala/concurrent/Future#map().
-  [0:6..0:9): Int => scala/Int#
-  [0:11..0:12): * => _star_.
-  [0:58..0:64): global => scala/concurrent/ExecutionContext.Implicits.global.
-
-New-style Synthetics:
 [3:2..3:6): <List> => <List>.apply[Int]
   apply => scala/collection/immutable/List.apply().
   Int => scala/Int#
@@ -3488,8 +3202,12 @@ New-style Synthetics:
 [3:2..3:13): <List(1).map> => <List(1).map>[Int,List[Int]]
   Int => scala/Int#
   List => scala/collection/immutable/List#
+[3:2..3:20): <List(1).map(_ + 2)> => <List(1).map(_ + 2)>(canBuildFrom[Int])
+  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+  Int => scala/Int#
 [4:2..4:18): <Array.empty[Int]> => intArrayOps(<Array.empty[Int]>)
   intArrayOps => scala/Predef.intArrayOps().
+[4:2..4:18): <Array.empty[Int]> => <Array.empty[Int]>(<?>)
 [5:2..5:8): <"fooo"> => augmentString(<"fooo">)
   augmentString => scala/Predef.augmentString().
 [8:13..8:24): <"name:(.*)"> => augmentString(<"name:(.*)">)
@@ -3516,10 +3234,10 @@ New-style Synthetics:
   Int => scala/Int#
 [11:10..11:26): <#:: Stream.empty> => <#:: Stream.empty>[Int]
   Int => scala/Int#
-[11:14..11:26): <Stream.empty> => <Stream.empty>[Nothing]
-  Nothing => scala/Nothing#
 [11:14..11:26): <Stream.empty> => consWrapper[Nothing](<Stream.empty>)
   consWrapper => scala/collection/immutable/Stream.consWrapper().
+  Nothing => scala/Nothing#
+[11:14..11:26): <Stream.empty> => <Stream.empty>[Nothing]
   Nothing => scala/Nothing#
 [13:14..13:36): <#:: 2 #:: Stream.empty> => <#:: 2 #:: Stream.empty>[Int]
   Int => scala/Int#
@@ -3528,10 +3246,10 @@ New-style Synthetics:
   Int => scala/Int#
 [13:20..13:36): <#:: Stream.empty> => <#:: Stream.empty>[Int]
   Int => scala/Int#
-[13:24..13:36): <Stream.empty> => <Stream.empty>[Nothing]
-  Nothing => scala/Nothing#
 [13:24..13:36): <Stream.empty> => consWrapper[Nothing](<Stream.empty>)
   consWrapper => scala/collection/immutable/Stream.consWrapper().
+  Nothing => scala/Nothing#
+[13:24..13:36): <Stream.empty> => <Stream.empty>[Nothing]
   Nothing => scala/Nothing#
 [14:2..14:5): <lst> => any2stringadd[Stream[Int]](<lst>)
   any2stringadd => scala/Predef.any2stringadd().
@@ -3558,6 +3276,10 @@ New-style Synthetics:
   Int => scala/Int#
 [17:12..17:13): <1> => intWrapper(<1>)
   intWrapper => scala/LowPriorityImplicits#intWrapper().
+[17:12..17:19): <1 to 10> => <1 to 10>(canBuildFrom[Tuple2[Int, Int]])
+  canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
 [17:12..17:19): <1 to 10> => <1 to 10>.flatMap[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]
   flatMap => scala/collection/TraversableLike#flatMap().
   Tuple2 => scala/Tuple2#
@@ -3567,6 +3289,10 @@ New-style Synthetics:
   flatMap => scala/collection/TraversableLike#flatMap().
 [17:26..17:27): <0> => intWrapper(<0>)
   intWrapper => scala/LowPriorityImplicits#intWrapper().
+[17:26..17:36): <0 until 10> => <0 until 10>(canBuildFrom[Tuple2[Int, Int]])
+  canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
 [17:26..17:36): <0 until 10> => <0 until 10>.map[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]
   map => scala/collection/TraversableLike#map().
   Tuple2 => scala/Tuple2#
@@ -3576,6 +3302,10 @@ New-style Synthetics:
   map => scala/collection/TraversableLike#map().
 [18:12..18:13): <1> => intWrapper(<1>)
   intWrapper => scala/LowPriorityImplicits#intWrapper().
+[18:12..18:19): <1 to 10> => <1 to 10>(canBuildFrom[Tuple2[Int, Int]])
+  canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
 [18:12..18:19): <1 to 10> => <1 to 10>.flatMap[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]
   flatMap => scala/collection/TraversableLike#flatMap().
   Tuple2 => scala/Tuple2#
@@ -3589,6 +3319,10 @@ New-style Synthetics:
   withFilter => scala/collection/TraversableLike#withFilter().
 [18:26..18:36): <0 until 10> => <0 until 10>.withFilter
   withFilter => scala/collection/TraversableLike#withFilter().
+[18:26..18:50): <0 until 10 if i % 2 == 0> => <0 until 10 if i % 2 == 0>(canBuildFrom[Tuple2[Int, Int]])
+  canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
 [18:26..18:50): <0 until 10 if i % 2 == 0> => <0 until 10 if i % 2 == 0>.map[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]
   map => scala/collection/generic/FilterMonadic#map().
   Tuple2 => scala/Tuple2#
@@ -3608,12 +3342,16 @@ New-style Synthetics:
   apply => scala/Function1#apply().
 [26:4..26:33): <null.asInstanceOf[Int => Int]> => <null.asInstanceOf[Int => Int]>.apply
   apply => scala/Function1#apply().
+[29:35..29:49): <Array.empty[T]> => <Array.empty[T]>(evidence$1)
+  evidence$1 => example/Synthetic#J#evidence$1.
 [33:22..33:27): <new F> => orderingToOrdered[F](<new F>)(ordering)
   orderingToOrdered => scala/math/Ordered.orderingToOrdered().
   F => example/Synthetic#F#
   ordering => example/Synthetic#ordering.
 [37:9..37:43): <scala.concurrent.Future.successful> => <scala.concurrent.Future.successful>[Int]
   Int => scala/Int#
+[37:9..37:46): <scala.concurrent.Future.successful(1)> => <scala.concurrent.Future.successful(1)>(global)
+  global => scala/concurrent/ExecutionContext.Implicits.global.
 [37:9..37:46): <scala.concurrent.Future.successful(1)> => <scala.concurrent.Future.successful(1)>.foreach[Unit]
   foreach => scala/concurrent/Future#foreach().
   Unit => scala/Unit#
@@ -3621,6 +3359,8 @@ New-style Synthetics:
   foreach => scala/concurrent/Future#foreach().
 [38:9..38:43): <scala.concurrent.Future.successful> => <scala.concurrent.Future.successful>[Int]
   Int => scala/Int#
+[38:9..38:46): <scala.concurrent.Future.successful(2)> => <scala.concurrent.Future.successful(2)>(global)
+  global => scala/concurrent/ExecutionContext.Implicits.global.
 [38:9..38:46): <scala.concurrent.Future.successful(2)> => <scala.concurrent.Future.successful(2)>.foreach[Unit]
   foreach => scala/concurrent/Future#foreach().
   Unit => scala/Unit#
@@ -3628,6 +3368,8 @@ New-style Synthetics:
   foreach => scala/concurrent/Future#foreach().
 [41:9..41:43): <scala.concurrent.Future.successful> => <scala.concurrent.Future.successful>[Int]
   Int => scala/Int#
+[41:9..41:46): <scala.concurrent.Future.successful(1)> => <scala.concurrent.Future.successful(1)>(global)
+  global => scala/concurrent/ExecutionContext.Implicits.global.
 [41:9..41:46): <scala.concurrent.Future.successful(1)> => <scala.concurrent.Future.successful(1)>.flatMap[Int]
   flatMap => scala/concurrent/Future#flatMap().
   Int => scala/Int#
@@ -3635,18 +3377,18 @@ New-style Synthetics:
   flatMap => scala/concurrent/Future#flatMap().
 [42:9..42:43): <scala.concurrent.Future.successful> => <scala.concurrent.Future.successful>[Int]
   Int => scala/Int#
+[42:9..42:46): <scala.concurrent.Future.successful(2)> => <scala.concurrent.Future.successful(2)>(global)
+  global => scala/concurrent/ExecutionContext.Implicits.global.
 [42:9..42:46): <scala.concurrent.Future.successful(2)> => <scala.concurrent.Future.successful(2)>.withFilter
   withFilter => scala/concurrent/Future#withFilter().
 [42:9..42:46): <scala.concurrent.Future.successful(2)> => <scala.concurrent.Future.successful(2)>.withFilter
   withFilter => scala/concurrent/Future#withFilter().
-[42:9..43:12): <scala.concurrent.Future.successful(2)
-    if a < b> => <scala.concurrent.Future.successful(2)
-    if a < b>.map[Int]
+[42:9..43:12): <scala.concurrent.Future.successful(2)...> => <scala.concurrent.Future.successful(2)...>(global)
+  global => scala/concurrent/ExecutionContext.Implicits.global.
+[42:9..43:12): <scala.concurrent.Future.successful(2)...> => <scala.concurrent.Future.successful(2)...>.map[Int]
   map => scala/concurrent/Future#map().
   Int => scala/Int#
-[42:9..43:12): <scala.concurrent.Future.successful(2)
-    if a < b> => <scala.concurrent.Future.successful(2)
-    if a < b>.map
+[42:9..43:12): <scala.concurrent.Future.successful(2)...> => <scala.concurrent.Future.successful(2)...>.map
   map => scala/concurrent/Future#map().
 
 semanticdb/integration/src/main/scala/example/Traits.scala

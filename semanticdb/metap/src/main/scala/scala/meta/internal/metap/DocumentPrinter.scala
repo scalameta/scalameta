@@ -10,8 +10,7 @@ class DocumentPrinter(settings: Settings, reporter: Reporter, doc: TextDocument)
     with SymbolInformationPrinter
     with OccurrencePrinter
     with DiagnosticPrinter
-    with SyntheticPrinter
-    with NewSyntheticPrinter {
+    with SyntheticPrinter {
 
   def print(): Unit = {
     out.println(doc.uri)
@@ -30,7 +29,7 @@ class DocumentPrinter(settings: Settings, reporter: Reporter, doc: TextDocument)
     if (doc.symbols.nonEmpty) out.println(s"Symbols => ${doc.symbols.length} entries")
     if (doc.occurrences.nonEmpty) out.println(s"Occurrences => ${doc.occurrences.length} entries")
     if (doc.diagnostics.nonEmpty) out.println(s"Diagnostics => ${doc.diagnostics.length} entries")
-    if (doc.synthetics.nonEmpty) out.println(s"Synthetics => ${doc.synthetics.length} entries")
+    if (doc.newSynthetics.nonEmpty) out.println(s"Synthetics => ${doc.newSynthetics.length} entries")
 
     if (doc.symbols.nonEmpty) {
       out.println("")
@@ -50,15 +49,9 @@ class DocumentPrinter(settings: Settings, reporter: Reporter, doc: TextDocument)
       doc.diagnostics.sorted.foreach(pprint)
     }
 
-    if (doc.synthetics.nonEmpty) {
-      out.println("")
-      out.println("Synthetics:")
-      doc.synthetics.sorted.foreach(pprint)
-    }
-
     if (doc.newSynthetics.nonEmpty) {
       out.println("")
-      out.println("New-style Synthetics:")
+      out.println("Synthetics:")
       doc.newSynthetics.sorted.foreach(pprint)
     }
   }

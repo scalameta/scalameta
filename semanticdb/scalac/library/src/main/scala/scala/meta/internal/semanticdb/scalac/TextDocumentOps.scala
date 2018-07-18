@@ -53,7 +53,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
       val binders = mutable.Set[m.Position]()
       val occurrences = mutable.Map[m.Position, String]()
       val symbols = mutable.Map[String, s.SymbolInformation]()
-      val synthetics = mutable.Map[m.Position, Inferred]().withDefaultValue(Inferred())
+      val synthetics = mutable.ListBuffer[s.NewSynthetic]()
       val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
       val todo = mutable.Set[m.Name]() // names to map to global trees
       val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
@@ -372,9 +372,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
             if (!config.synthetics.isOn) return
 
             import scala.meta.internal.semanticdb.scalac.{AttributedSynthetic => S}
-            def success(pos: m.Position, f: Inferred => Inferred): Unit = {
-              synthetics(pos) = f(synthetics(pos))
-            }
 
             if (!gtree.pos.isRange) return
 
@@ -407,7 +404,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case gview: g.ApplyImplicitView =>
                 val pos = gtree.pos.toMeta
                 val syntax = showSynthetic(gview.fun) + "(" + S.star + ")"
-                success(pos, _.copy(conversion = Some(syntax)).addNewSynth(s.NewSynthetic(
+                synthetics += s.NewSynthetic(
                   range = Some(pos.toRange),
                   tree = s.ApplyTree(
                     fn = gview.fun.toSemanticTree,
@@ -415,7 +412,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                       range = Some(pos.toRange)
                     ))
                   )
-                )))
+                )
                 isVisited += gview.fun
               case gimpl: g.ApplyToImplicitArgs =>
                 val args = S.mkString(gimpl.args.map(showSynthetic), ", ")
@@ -425,7 +422,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                     isVisited += gview
                     val pos = gtree.pos.toMeta
                     val syntax = showSynthetic(gview.fun) + "(" + S.star + ")(" + args + ")"
-                    success(pos, _.copy(conversion = Some(syntax)).addNewSynth(s.NewSynthetic(
+                    synthetics += s.NewSynthetic(
                       range = Some(pos.toRange),
                       tree = s.ApplyTree(
                         fn = s.ApplyTree(
@@ -436,15 +433,31 @@ trait TextDocumentOps { self: SemanticdbOps =>
                         ),
                         args = gimpl.args.map(_.toSemanticTree)
                       )
-                    )))
+                    )
                   case ForComprehensionImplicitArg(qual) =>
                     val morePrecisePos = qual.pos.withStart(qual.pos.end).toMeta
                     val syntax = S("(") + S.star + ")" + "(" + args + ")"
-                    success(morePrecisePos, _.copy(args = Some(syntax)))
+                    synthetics += s.NewSynthetic(
+                      range = Some(qual.pos.toMeta.toRange),
+                      tree = s.ApplyTree(
+                        fn = s.OriginalTree(
+                          range = Some(qual.pos.toMeta.toRange)
+                        ),
+                        args = gimpl.args.map(_.toSemanticTree)
+                      )
+                    )
                   case gfun =>
                     val morePrecisePos = gimpl.pos.withStart(gimpl.pos.end).toMeta
                     val syntax = S("(") + args + ")"
-                    success(morePrecisePos, _.copy(args = Some(syntax)))
+                    synthetics += s.NewSynthetic(
+                      range = Some(gfun.pos.toMeta.toRange),
+                      tree = s.ApplyTree(
+                        fn = s.OriginalTree(
+                          range = Some(gfun.pos.toMeta.toRange)
+                        ),
+                        args = gimpl.args.map(_.toSemanticTree)
+                      )
+                    )
                 }
               case g.TypeApply(fun, targs @ List(targ, _*)) =>
                 if (targ.pos.isRange) return
@@ -463,26 +476,23 @@ trait TextDocumentOps { self: SemanticdbOps =>
                     range = Some(fun.pos.toMeta.toRange)
                   )
                 }
-                success(morePrecisePos, _.copy(targs = Some(syntax)).addNewSynth(s.NewSynthetic(
+                synthetics += s.NewSynthetic(
                   range = Some(fun.pos.toMeta.toRange),
                   tree = s.TypeApplyTree(
                     fn = fnTree,
                     targs = targs.map(_.tpe.toSemanticTpe)
                   )
-                )))
+                )
               case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
                 val pos = qual.pos.withStart(qual.pos.end).toMeta
                 val symbol = select.symbol.toSemantic
-                val name = nme.decoded
-                val names = List(SyntheticRange(0, name.length, symbol))
-                val syntax = S(".") + S(nme.decoded, names)
-                success(pos, _.copy(select = Some(syntax)).addNewSynth(s.NewSynthetic(
+                synthetics += s.NewSynthetic(
                   range = Some(qual.pos.toMeta.toRange),
                   tree = s.SelectTree(
                     qual = s.OriginalTree(range = Some(qual.pos.toMeta.toRange)),
                     id = Some(s.IdTree(sym = symbol))
                   )
-                )))
+                )
               case _ =>
               // do nothing
             }
@@ -555,14 +565,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
       val diagnostics = unit.reportedDiagnostics(mstarts)
 
-      val finalSynthetics = synthetics.toIterator.map {
-        case (pos, synthetic) => synthetic.toSynthetic(input, pos)
-      }.toList
-
-      val finalNewSynthetics = synthetics.valuesIterator.flatMap {
-        inferred => inferred.newSynthetics
-      }.toList
-
       s.TextDocument(
         schema = s.Schema.SEMANTICDB4,
         uri = unit.source.toUri,
@@ -572,8 +574,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
         symbols = finalSymbols,
         occurrences = finalOccurrences,
         diagnostics = diagnostics,
-        synthetics = finalSynthetics,
-        newSynthetics = finalNewSynthetics
+        synthetics = Seq(),
+        newSynthetics = synthetics
       )
     }
     private def toJavaTextDocument: s.TextDocument = {
