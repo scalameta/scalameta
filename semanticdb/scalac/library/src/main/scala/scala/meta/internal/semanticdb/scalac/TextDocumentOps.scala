@@ -451,12 +451,22 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 val morePrecisePos = fun.pos.withStart(fun.pos.end).toMeta
                 val args = S.mkString(targs.map(showSynthetic), ", ")
                 val syntax = S("[") + args + "]"
+                // for loops
+                val fnTree = fun match {
+                  case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
+                    val symbol = select.symbol.toSemantic
+                    s.SelectTree(
+                        qual = s.OriginalTree(range = Some(qual.pos.toMeta.toRange)),
+                        id = Some(s.IdTree(sym = symbol))
+                  )
+                  case _ => s.OriginalTree(
+                    range = Some(fun.pos.toMeta.toRange)
+                  )
+                }
                 success(morePrecisePos, _.copy(targs = Some(syntax)).addNewSynth(s.NewSynthetic(
                   range = Some(fun.pos.toMeta.toRange),
                   tree = s.TypeApplyTree(
-                    fn = s.OriginalTree(
-                      range = Some(fun.pos.toMeta.toRange)
-                    ),
+                    fn = fnTree,
                     targs = targs.map(_.tpe.toSemanticTpe)
                   )
                 )))
@@ -466,7 +476,13 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 val name = nme.decoded
                 val names = List(SyntheticRange(0, name.length, symbol))
                 val syntax = S(".") + S(nme.decoded, names)
-                success(pos, _.copy(select = Some(syntax)))
+                success(pos, _.copy(select = Some(syntax)).addNewSynth(s.NewSynthetic(
+                  range = Some(qual.pos.toMeta.toRange),
+                  tree = s.SelectTree(
+                    qual = s.OriginalTree(range = Some(qual.pos.toMeta.toRange)),
+                    id = Some(s.IdTree(sym = symbol))
+                  )
+                )))
               case _ =>
               // do nothing
             }
