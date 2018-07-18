@@ -1667,7 +1667,13 @@ Synthetics:
 [28:16..28:27): <List(1).map> => <List(1).map>[Int,List[Int]]
   Int => scala/Int#
   List => scala/collection/immutable/List#
-[28:16..31:3): <List(1).map { i =>...> => <List(1).map { i =>...>(canBuildFrom[Int])
+[28:16..31:3): <List(1).map { i =>
+    val local = 2
+    local + 2
+  }> => <List(1).map { i =>
+    val local = 2
+    local + 2
+  }>(canBuildFrom[Int])
   canBuildFrom => scala/collection/immutable/List.canBuildFrom().
   Int => scala/Int#
 
@@ -3391,12 +3397,18 @@ Synthetics:
   withFilter => scala/concurrent/Future#withFilter().
 [42:9..42:46): <scala.concurrent.Future.successful(2)> => <scala.concurrent.Future.successful(2)>.withFilter
   withFilter => scala/concurrent/Future#withFilter().
-[42:9..43:12): <scala.concurrent.Future.successful(2)...> => <scala.concurrent.Future.successful(2)...>(global)
+[42:9..43:12): <scala.concurrent.Future.successful(2)
+    if a < b> => <scala.concurrent.Future.successful(2)
+    if a < b>(global)
   global => scala/concurrent/ExecutionContext.Implicits.global.
-[42:9..43:12): <scala.concurrent.Future.successful(2)...> => <scala.concurrent.Future.successful(2)...>.map[Int]
+[42:9..43:12): <scala.concurrent.Future.successful(2)
+    if a < b> => <scala.concurrent.Future.successful(2)
+    if a < b>.map[Int]
   map => scala/concurrent/Future#map().
   Int => scala/Int#
-[42:9..43:12): <scala.concurrent.Future.successful(2)...> => <scala.concurrent.Future.successful(2)...>.map
+[42:9..43:12): <scala.concurrent.Future.successful(2)
+    if a < b> => <scala.concurrent.Future.successful(2)
+    if a < b>.map
   map => scala/concurrent/Future#map().
 
 semanticdb/integration/src/main/scala/example/Traits.scala

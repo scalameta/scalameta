@@ -15,7 +15,7 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
 
   def pprint(synth: s.Synthetic): Unit = {
     opt(synth.range)(pprint)
-    opt(": <", doc.substring(synth.range).map(shorten), ">")(out.print)
+    opt(": <", doc.substring(synth.range), ">")(out.print)
     out.print(" => ")
     pprint(synth.tree)
   }
@@ -50,7 +50,7 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
         case tree: s.MacroExpansionTree =>
         case tree: s.OriginalTree =>
           out.print("<")
-          opt(doc.substring(tree.range).map(shorten))(out.print)
+          opt(doc.substring(tree.range))(out.print)
           out.print(">")
         case tree: s.SelectTree =>
           pprint(tree.qual)
