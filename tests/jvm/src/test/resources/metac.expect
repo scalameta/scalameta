@@ -2946,7 +2946,7 @@ Text => non-empty
 Language => Scala
 Symbols => 58 entries
 Occurrences => 111 entries
-Synthetics => 64 entries
+Synthetics => 65 entries
 
 Symbols:
 example/Synthetic# => class Synthetic extends AnyRef { +12 decls }
@@ -3334,6 +3334,10 @@ Synthetics:
   apply => scala/Function1#apply().
 [29:35..29:49): <Array.empty[T]> => <Array.empty[T]>(evidence$1)
   evidence$1 => example/Synthetic#J#evidence$1.
+[33:22..33:27): <new F> => orderingToOrdered[F](<new F>)(ordering)
+  orderingToOrdered => scala/math/Ordered.orderingToOrdered().
+  F => example/Synthetic#F#
+  ordering => example/Synthetic#ordering.
 [37:9..37:43): <scala.concurrent.Future.successful> => <scala.concurrent.Future.successful>[Int]
   Int => scala/Int#
 [37:9..37:46): <scala.concurrent.Future.successful(1)> => <scala.concurrent.Future.successful(1)>(global)

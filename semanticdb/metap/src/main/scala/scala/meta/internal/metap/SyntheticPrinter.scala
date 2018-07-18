@@ -2,7 +2,11 @@ package scala.meta.internal.metap
 
 import scala.meta.internal.{semanticdb => s}
 
-trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformationPrinter with ConstantPrinter {
+trait SyntheticPrinter
+    extends BasePrinter
+    with RangePrinter
+    with SymbolInformationPrinter
+    with ConstantPrinter {
   self =>
 
   private def shorten(s: String): String = {
