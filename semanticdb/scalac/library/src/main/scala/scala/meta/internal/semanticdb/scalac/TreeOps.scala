@@ -16,7 +16,7 @@ trait TreeOps { self: SemanticdbOps =>
         fn = gTree.fun.toSemanticTree,
         targs = gTree.args.map(_.tpe.toSemanticTpe)
       )
-      case gTree: g.Select =>gTree.toSemanticId
+      case gTree: g.Select => gTree.toSemanticId
       case gTree: g.Ident => gTree.toSemanticId
       case gTree: g.This => gTree.toSemanticId
       case _ =>

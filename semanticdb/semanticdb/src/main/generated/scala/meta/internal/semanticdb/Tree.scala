@@ -252,8 +252,8 @@ object TreeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(44)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(44)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(43)
+  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(43)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
@@ -490,8 +490,8 @@ object ApplyTree extends scalapb.GeneratedMessageCompanion[scala.meta.internal.s
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(45)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(45)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(44)
+  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(44)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
@@ -626,8 +626,8 @@ object FunctionTree extends scalapb.GeneratedMessageCompanion[scala.meta.interna
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(46)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(46)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(45)
+  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(45)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
@@ -735,8 +735,8 @@ object IdTree extends scalapb.GeneratedMessageCompanion[scala.meta.internal.sema
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(47)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(47)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(46)
+  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(46)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = throw new MatchError(__number)
   lazy val nestedMessagesCompanions: Seq[_root_.scalapb.GeneratedMessageCompanion[_]] = Seq.empty
   def enumCompanionForFieldNumber(__fieldNumber: _root_.scala.Int): _root_.scalapb.GeneratedEnumCompanion[_] = throw new MatchError(__fieldNumber)
@@ -835,8 +835,8 @@ object LiteralTree extends scalapb.GeneratedMessageCompanion[scala.meta.internal
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(48)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(48)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(47)
+  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(47)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
@@ -971,8 +971,8 @@ object MacroExpansionTree extends scalapb.GeneratedMessageCompanion[scala.meta.i
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(49)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(49)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(48)
+  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(48)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
@@ -1078,8 +1078,8 @@ object OriginalTree extends scalapb.GeneratedMessageCompanion[scala.meta.interna
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(50)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(50)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(49)
+  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(49)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
@@ -1207,8 +1207,8 @@ object SelectTree extends scalapb.GeneratedMessageCompanion[scala.meta.internal.
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(51)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(51)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(50)
+  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(50)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
@@ -1342,8 +1342,8 @@ object TypeApplyTree extends scalapb.GeneratedMessageCompanion[scala.meta.intern
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
-  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(52)
-  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(52)
+  def javaDescriptor: _root_.com.google.protobuf.Descriptors.Descriptor = SemanticdbProto.javaDescriptor.getMessageTypes.get(51)
+  def scalaDescriptor: _root_.scalapb.descriptors.Descriptor = SemanticdbProto.scalaDescriptor.messages(51)
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {

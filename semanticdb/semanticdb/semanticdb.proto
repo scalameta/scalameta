@@ -13,7 +13,7 @@ message TextDocuments {
 }
 
 message TextDocument {
-  reserved 4, 9;
+  reserved 4, 8, 9;
   Schema schema = 1;
   string uri = 2;
   string text = 3;
@@ -22,8 +22,7 @@ message TextDocument {
   repeated SymbolInformation symbols = 5;
   repeated SymbolOccurrence occurrences = 6;
   repeated Diagnostic diagnostics = 7;
-  repeated Synthetic synthetics = 8;
-  repeated NewSynthetic newSynthetics = 12;
+  repeated Synthetic synthetics = 12;
 }
 
 enum Language {
@@ -321,11 +320,6 @@ message Diagnostic {
 
 message Synthetic {
   Range range = 1;
-  TextDocument text = 2;
-}
-
-message NewSynthetic {
-  Range range = 1;
   Tree tree = 2;
 }
 
@@ -341,7 +335,7 @@ message Tree {
     TypeApplyTree typeApply = 8;
   }
 }
-
+T
 message ApplyTree {
   Tree fn = 1;
   repeated Tree args = 2;

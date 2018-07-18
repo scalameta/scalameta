@@ -11,27 +11,6 @@ import scala.reflect.internal.ModifierFlags._
 trait PrinterOps { self: SemanticdbOps =>
   import g._
 
-  def showSynthetic(tpe: g.Type): AttributedSynthetic = tpe match {
-    case g.TypeBounds(_, _) =>
-      // Skip signature for abstract type members, e.g. type T <: Int
-      AttributedSynthetic.empty
-    case PolyType(_, _: TypeBounds) =>
-      // Type lambda with no body
-      AttributedSynthetic.empty
-    case _ => showSynthetic(g.TypeTree(tpe))
-  }
-  def showSynthetic(what: g.Tree): AttributedSynthetic = {
-    val out = new StringWriter()
-    val printer = SyntheticCodePrinter(out)
-    printer.print(what)
-    val occurrences = printer.occurrences.map {
-      case ((start, end), symbol) => SyntheticRange(start, end, symbol)
-    }.toList
-    printer.occurrences.clear()
-    val syntax = out.toString
-    AttributedSynthetic(syntax, occurrences)
-  }
-
   private object SyntheticCodePrinter {
     def apply(writer: Writer) = new SyntheticCodePrinter(new LengthWriter(writer, 0))
   }

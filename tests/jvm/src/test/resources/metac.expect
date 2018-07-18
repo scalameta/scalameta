@@ -842,6 +842,7 @@ Text => non-empty
 Language => Scala
 Symbols => 42 entries
 Occurrences => 109 entries
+Synthetics => 1 entries
 
 Symbols:
 advanced/C# => class C[T] extends AnyRef { +2 decls }
@@ -1198,6 +1199,7 @@ Text => non-empty
 Language => Scala
 Symbols => 10 entries
 Occurrences => 25 entries
+Synthetics => 2 entries
 
 Symbols:
 example/Anonymous# => class Anonymous extends AnyRef { +4 decls }
@@ -1267,6 +1269,7 @@ Text => non-empty
 Language => Scala
 Symbols => 124 entries
 Occurrences => 57 entries
+Synthetics => 4 entries
 
 Symbols:
 classes/C1# => final class C1 extends AnyVal { +4 decls }
@@ -1733,6 +1736,7 @@ Language => Scala
 Symbols => 5 entries
 Occurrences => 24 entries
 Diagnostics => 1 entries
+Synthetics => 1 entries
 
 Symbols:
 example/Example. => final object Example extends AnyRef { +2 decls }
@@ -1804,6 +1808,7 @@ Text => non-empty
 Language => Scala
 Symbols => 58 entries
 Occurrences => 71 entries
+Synthetics => 4 entries
 
 Symbols:
 flags/p/package. => final package object p extends AnyRef { +16 decls }
@@ -2056,6 +2061,7 @@ Text => non-empty
 Language => Scala
 Symbols => 3 entries
 Occurrences => 7 entries
+Synthetics => 1 entries
 
 Symbols:
 example/`local-file`# => class local-file extends AnyRef { +1 decls }
@@ -2589,6 +2595,7 @@ Text => non-empty
 Language => Scala
 Symbols => 3 entries
 Occurrences => 83 entries
+Synthetics => 4 entries
 
 Symbols:
 example/MethodUsages# => class MethodUsages extends AnyRef { +2 decls }
@@ -2939,6 +2946,7 @@ Text => non-empty
 Language => Scala
 Symbols => 58 entries
 Occurrences => 111 entries
+Synthetics => 78 entries
 
 Symbols:
 example/Synthetic# => class Synthetic extends AnyRef { +12 decls }

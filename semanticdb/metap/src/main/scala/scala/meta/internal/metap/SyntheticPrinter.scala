@@ -13,7 +13,7 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
     } else s.substring(0, newline) + "..."
   }
 
-  def pprint(synth: s.NewSynthetic): Unit = {
+  def pprint(synth: s.Synthetic): Unit = {
     opt(synth.range)(pprint)
     opt(": <", doc.substring(synth.range).map(shorten), ">")(out.print)
     out.print(" => ")
@@ -31,7 +31,7 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
     }
   }
 
-  implicit def newSynthOrder: Ordering[s.NewSynthetic] = Ordering.by(_.range)
+  implicit def newSynthOrder: Ordering[s.Synthetic] = Ordering.by(_.range)
 
   private class TreePrinter(notes: InfoNotes) extends InfoPrinter(notes) {
 
