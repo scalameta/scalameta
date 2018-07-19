@@ -41,5 +41,4 @@ trait TreeOps { self: SemanticdbOps =>
 
   }
 
-
 }

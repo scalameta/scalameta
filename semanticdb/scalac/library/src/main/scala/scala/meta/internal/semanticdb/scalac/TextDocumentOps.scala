@@ -384,9 +384,9 @@ trait TextDocumentOps { self: SemanticdbOps =>
             def isForSynthetic(gtree: g.Tree): Boolean = {
               def isForComprehensionSyntheticName(select: g.Select): Boolean = {
                 select.pos == select.qualifier.pos && (select.name == g.nme.map ||
-                  select.name == g.nme.withFilter ||
-                  select.name == g.nme.flatMap ||
-                  select.name == g.nme.foreach)
+                select.name == g.nme.withFilter ||
+                select.name == g.nme.flatMap ||
+                select.name == g.nme.foreach)
               }
               gtree match {
                 case g.Apply(fun, List(arg: g.Function)) => isForSynthetic(fun)
@@ -470,9 +470,10 @@ trait TextDocumentOps { self: SemanticdbOps =>
                         tree = s.ApplyTree(
                           fn = s.ApplyTree(
                             fn = gview.fun.toSemanticTree,
-                            args = List(s.OriginalTree(
-                              range = Some(range)
-                            ))
+                            args = List(
+                              s.OriginalTree(
+                                range = Some(range)
+                              ))
                           ),
                           args = gimpl.args.map(_.toSemanticTree)
                         )
