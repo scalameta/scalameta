@@ -2949,7 +2949,7 @@ Text => non-empty
 Language => Scala
 Symbols => 58 entries
 Occurrences => 111 entries
-Synthetics => 55 entries
+Synthetics => 44 entries
 
 Symbols:
 example/Synthetic# => class Synthetic extends AnyRef { +12 decls }
@@ -3138,13 +3138,13 @@ Occurrences:
 [17:48..17:49): j => local5
 [18:7..18:8): i <= local6
 [18:14..18:16): to => scala/runtime/RichInt#to().
-[18:21..18:22): j <= local8
+[18:21..18:22): j <= local7
 [18:28..18:33): until => scala/runtime/RichInt#until().
 [18:40..18:41): i => local6
 [18:42..18:43): % => scala/Int#`%`(+3).
 [18:46..18:48): == => scala/Int#`==`(+3).
 [18:59..18:60): i => local6
-[18:62..18:63): j => local7
+[18:62..18:63): j => local8
 [20:9..20:10): s <= example/Synthetic#s.
 [21:8..21:13): apply <= example/Synthetic#s.apply().
 [22:4..22:5): s => example/Synthetic#s.
@@ -3194,14 +3194,14 @@ Occurrences:
 [41:15..41:25): concurrent => scala/concurrent/
 [41:26..41:32): Future => scala/concurrent/Future.
 [41:33..41:43): successful => scala/concurrent/Future.successful().
-[42:4..42:5): b <= local13
+[42:4..42:5): b <= local12
 [42:9..42:14): scala => scala/
 [42:15..42:25): concurrent => scala/concurrent/
 [42:26..42:32): Future => scala/concurrent/Future.
 [42:33..42:43): successful => scala/concurrent/Future.successful().
 [43:7..43:8): a => local11
 [43:9..43:10): < => scala/Int#`<`(+3).
-[43:11..43:12): b => local13
+[43:11..43:12): b => local12
 [44:10..44:11): a => local11
 
 Synthetics:
@@ -3287,43 +3287,23 @@ Synthetics:
   canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
 [17:12..17:13): orig(1) => intWrapper(orig(1))
   intWrapper => scala/LowPriorityImplicits#intWrapper().
-[17:12..17:19): orig(1 to 10) => orig(1 to 10).flatMap[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]
-  flatMap => scala/collection/TraversableLike#flatMap().
-  Tuple2 => scala/Tuple2#
-  Int => scala/Int#
-  IndexedSeq => scala/collection/immutable/IndexedSeq#
 [17:26..17:27): orig(0) => intWrapper(orig(0))
   intWrapper => scala/LowPriorityImplicits#intWrapper().
-[17:26..17:36): orig(0 until 10) => orig(0 until 10).map[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]
-  map => scala/collection/TraversableLike#map().
-  Tuple2 => scala/Tuple2#
-  Int => scala/Int#
-  IndexedSeq => scala/collection/immutable/IndexedSeq#
-[18:2..18:64): orig(for (i <- 1 to 10; j <- 0 until 10 if i % 2 == 0) yield (i, j)) => orig(1 to 10).flatMap[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]({(i) => orig(0 until 10 if i % 2 == 0).map[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]({(j) => orig((i, j))})(canBuildFrom[Tuple2[Int, Int]])})(canBuildFrom[Tuple2[Int, Int]])
+[18:2..18:64): orig(for (i <- 1 to 10; j <- 0 until 10 if i % 2 == 0) yield (i, j)) => orig(1 to 10).flatMap[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]({(i) => orig(0 until 10).withFilter({(j) => orig(i % 2 == 0)}).map[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]({(j) => orig((i, j))})(canBuildFrom[Tuple2[Int, Int]])})(canBuildFrom[Tuple2[Int, Int]])
   flatMap => scala/collection/TraversableLike#flatMap().
   Tuple2 => scala/Tuple2#
   Int => scala/Int#
   IndexedSeq => scala/collection/immutable/IndexedSeq#
   i => local6
-  map => scala/collection/generic/FilterMonadic#map().
+  withFilter => scala/collection/TraversableLike#withFilter().
   j => local7
+  map => scala/collection/generic/FilterMonadic#map().
+  j => local8
   canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
 [18:12..18:13): orig(1) => intWrapper(orig(1))
   intWrapper => scala/LowPriorityImplicits#intWrapper().
-[18:12..18:19): orig(1 to 10) => orig(1 to 10).flatMap[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]
-  flatMap => scala/collection/TraversableLike#flatMap().
-  Tuple2 => scala/Tuple2#
-  Int => scala/Int#
-  IndexedSeq => scala/collection/immutable/IndexedSeq#
 [18:26..18:27): orig(0) => intWrapper(orig(0))
   intWrapper => scala/LowPriorityImplicits#intWrapper().
-[18:26..18:36): orig(0 until 10) => orig(0 until 10).withFilter
-  withFilter => scala/collection/TraversableLike#withFilter().
-[18:26..18:50): orig(0 until 10 if i % 2 == 0) => orig(0 until 10 if i % 2 == 0).map[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]
-  map => scala/collection/generic/FilterMonadic#map().
-  Tuple2 => scala/Tuple2#
-  Int => scala/Int#
-  IndexedSeq => scala/collection/immutable/IndexedSeq#
 [22:4..22:5): orig(s) => orig(s).apply
   apply => example/Synthetic#s.apply().
 [25:4..25:7): orig(Bar) => orig(Bar).apply
@@ -3347,45 +3327,25 @@ Synthetics:
   global => scala/concurrent/ExecutionContext.Implicits.global.
 [37:9..37:43): orig(scala.concurrent.Future.successful) => orig(scala.concurrent.Future.successful)[Int]
   Int => scala/Int#
-[37:9..37:46): orig(scala.concurrent.Future.successful(1)) => orig(scala.concurrent.Future.successful(1)).foreach[Unit]
-  foreach => scala/concurrent/Future#foreach().
-  Unit => scala/Unit#
 [38:9..38:43): orig(scala.concurrent.Future.successful) => orig(scala.concurrent.Future.successful)[Int]
   Int => scala/Int#
-[38:9..38:46): orig(scala.concurrent.Future.successful(2)) => orig(scala.concurrent.Future.successful(2)).foreach[Unit]
-  foreach => scala/concurrent/Future#foreach().
-  Unit => scala/Unit#
 [40:2..44:11): orig(for {
     a <- scala.concurrent.Future.successful(1)
     b <- scala.concurrent.Future.successful(2)
     if a < b
-  } yield a) => orig(scala.concurrent.Future.successful(1)).flatMap[Int]({(a) => orig(scala.concurrent.Future.successful(2)
-    if a < b).map[Int]({(b) => orig(a)})(global)})(global)
+  } yield a) => orig(scala.concurrent.Future.successful(1)).flatMap[Int]({(a) => orig(scala.concurrent.Future.successful(2)).withFilter({(b) => orig(a < b)})(global).map[Int]({(b) => orig(a)})(global)})(global)
   flatMap => scala/concurrent/Future#flatMap().
   Int => scala/Int#
   a => local11
-  map => scala/concurrent/Future#map().
+  withFilter => scala/concurrent/Future#withFilter().
   b => local12
   global => scala/concurrent/ExecutionContext.Implicits.global.
+  map => scala/concurrent/Future#map().
+  b => local13
 [41:9..41:43): orig(scala.concurrent.Future.successful) => orig(scala.concurrent.Future.successful)[Int]
-  Int => scala/Int#
-[41:9..41:46): orig(scala.concurrent.Future.successful(1)) => orig(scala.concurrent.Future.successful(1)).flatMap[Int]
-  flatMap => scala/concurrent/Future#flatMap().
   Int => scala/Int#
 [42:9..42:43): orig(scala.concurrent.Future.successful) => orig(scala.concurrent.Future.successful)[Int]
   Int => scala/Int#
-[42:9..42:46): orig(scala.concurrent.Future.successful(2)) => orig(scala.concurrent.Future.successful(2)).withFilter
-  withFilter => scala/concurrent/Future#withFilter().
-[42:9..43:12): orig(scala.concurrent.Future.successful(2)
-    if a < b) => orig(scala.concurrent.Future.successful(2)
-    if a < b).map[Int]
-  map => scala/concurrent/Future#map().
-  Int => scala/Int#
-[42:9..43:12): orig(scala.concurrent.Future.successful(2)
-    if a < b) => orig(scala.concurrent.Future.successful(2)).withFilter({(b) => orig(a < b)})(global)
-  withFilter => scala/concurrent/Future#withFilter().
-  b => local13
-  global => scala/concurrent/ExecutionContext.Implicits.global.
 
 semanticdb/integration/src/main/scala/example/Traits.scala
 ----------------------------------------------------------
