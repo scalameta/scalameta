@@ -401,6 +401,14 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
             def forComprehensionTree(gimpl: g.ApplyToImplicitArgs): s.Tree = {
 
+              def extractForMethodQual(tree: g.Tree): s.Tree = tree match {
+                case ForComprehensionImplicitArg(_) =>
+                  tree match {
+                    case tree: g.ApplyImplicitView => s.Tree.Empty
+                  }
+                case _ => tree.toSemanticOriginalTree
+              }
+
               def extractForMethod(tree: g.Tree) = tree match {
                 case forMethod: g.Select =>
                   s.SelectTree(
@@ -417,9 +425,9 @@ trait TextDocumentOps { self: SemanticdbOps =>
                       val names = forBlock.vparams.map(_.toSemanticId)
                       val bodyTree = forBlock.body match {
                         case body: g.ApplyToImplicitArgs =>
+                          visitedSyntheticParent += body
                           forComprehensionTree(body)
                         case body =>
-                          println(body, body.pos)
                           body.toSemanticOriginalTree
                       }
                       s.FunctionTree(names, bodyTree)
@@ -442,15 +450,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 fn = funTree,
                 args = implicitArgs
               )
-//              synthetics += s.Synthetic(
-//                range = Some(range),
-//                tree = s.ApplyTree(
-//                  fn = s.OriginalTree(
-//                    range = Some(qual.pos.toMeta.toRange)
-//                  ),
-//                  args =
-//                )
-//              )
             }
 
             if (!visitedSyntheticParent(gtree)) {

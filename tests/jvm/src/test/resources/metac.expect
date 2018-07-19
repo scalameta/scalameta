@@ -1788,7 +1788,10 @@ Diagnostics:
 [2:24..2:30) [warning] Unused import
 
 Synthetics:
-[9:10..9:37): orig(scala.reflect.classTag[Int]) => orig(scala.reflect.classTag[Int])(<?>)
+[9:10..9:37): orig(scala.reflect.classTag[Int]) => orig(scala.reflect.classTag[Int])((Int:ClassTag[Int]))
+  Int => scala/reflect/ClassTag.Int.
+  ClassTag => scala/reflect/ClassTag#
+  Int => scala/Int#
 semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
 
@@ -2946,7 +2949,7 @@ Text => non-empty
 Language => Scala
 Symbols => 58 entries
 Occurrences => 111 entries
-Synthetics => 59 entries
+Synthetics => 55 entries
 
 Symbols:
 example/Synthetic# => class Synthetic extends AnyRef { +12 decls }
@@ -3213,7 +3216,10 @@ Synthetics:
   Int => scala/Int#
 [4:2..4:18): orig(Array.empty[Int]) => intArrayOps(orig(Array.empty[Int]))
   intArrayOps => scala/Predef.intArrayOps().
-[4:2..4:18): orig(Array.empty[Int]) => orig(Array.empty[Int])(<?>)
+[4:2..4:18): orig(Array.empty[Int]) => orig(Array.empty[Int])((Int:ClassTag[Int]))
+  Int => scala/reflect/ClassTag.Int.
+  ClassTag => scala/reflect/ClassTag#
+  Int => scala/Int#
 [5:2..5:8): orig("fooo") => augmentString(orig("fooo"))
   augmentString => scala/Predef.augmentString().
 [8:13..8:24): orig("name:(.*)") => augmentString(orig("name:(.*)"))
@@ -3286,13 +3292,6 @@ Synthetics:
   Tuple2 => scala/Tuple2#
   Int => scala/Int#
   IndexedSeq => scala/collection/immutable/IndexedSeq#
-[17:21..17:50): orig(j <- 0 until 10) yield (i, j)) => orig(0 until 10).map[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]({(j) => orig((i, j))})(canBuildFrom[Tuple2[Int, Int]])
-  map => scala/collection/TraversableLike#map().
-  Tuple2 => scala/Tuple2#
-  Int => scala/Int#
-  IndexedSeq => scala/collection/immutable/IndexedSeq#
-  j => local5
-  canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
 [17:26..17:27): orig(0) => intWrapper(orig(0))
   intWrapper => scala/LowPriorityImplicits#intWrapper().
 [17:26..17:36): orig(0 until 10) => orig(0 until 10).map[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]
@@ -3316,13 +3315,6 @@ Synthetics:
   Tuple2 => scala/Tuple2#
   Int => scala/Int#
   IndexedSeq => scala/collection/immutable/IndexedSeq#
-[18:21..18:64): orig(j <- 0 until 10 if i % 2 == 0) yield (i, j)) => orig(0 until 10 if i % 2 == 0).map[Tuple2[Int, Int],IndexedSeq[Tuple2[Int, Int]]]({(j) => orig((i, j))})(canBuildFrom[Tuple2[Int, Int]])
-  map => scala/collection/generic/FilterMonadic#map().
-  Tuple2 => scala/Tuple2#
-  Int => scala/Int#
-  IndexedSeq => scala/collection/immutable/IndexedSeq#
-  j => local7
-  canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
 [18:26..18:27): orig(0) => intWrapper(orig(0))
   intWrapper => scala/LowPriorityImplicits#intWrapper().
 [18:26..18:36): orig(0 until 10) => orig(0 until 10).withFilter
@@ -3358,12 +3350,6 @@ Synthetics:
 [37:9..37:46): orig(scala.concurrent.Future.successful(1)) => orig(scala.concurrent.Future.successful(1)).foreach[Unit]
   foreach => scala/concurrent/Future#foreach().
   Unit => scala/Unit#
-[38:4..39:14): orig(b <- scala.concurrent.Future.successful(2)
-  } println(a)) => orig(scala.concurrent.Future.successful(2)).foreach[Unit]({(b) => orig(println(a))})(global)
-  foreach => scala/concurrent/Future#foreach().
-  Unit => scala/Unit#
-  b => local10
-  global => scala/concurrent/ExecutionContext.Implicits.global.
 [38:9..38:43): orig(scala.concurrent.Future.successful) => orig(scala.concurrent.Future.successful)[Int]
   Int => scala/Int#
 [38:9..38:46): orig(scala.concurrent.Future.successful(2)) => orig(scala.concurrent.Future.successful(2)).foreach[Unit]
@@ -3386,14 +3372,6 @@ Synthetics:
 [41:9..41:46): orig(scala.concurrent.Future.successful(1)) => orig(scala.concurrent.Future.successful(1)).flatMap[Int]
   flatMap => scala/concurrent/Future#flatMap().
   Int => scala/Int#
-[42:4..44:11): orig(b <- scala.concurrent.Future.successful(2)
-    if a < b
-  } yield a) => orig(scala.concurrent.Future.successful(2)
-    if a < b).map[Int]({(b) => orig(a)})(global)
-  map => scala/concurrent/Future#map().
-  Int => scala/Int#
-  b => local12
-  global => scala/concurrent/ExecutionContext.Implicits.global.
 [42:9..42:43): orig(scala.concurrent.Future.successful) => orig(scala.concurrent.Future.successful)[Int]
   Int => scala/Int#
 [42:9..42:46): orig(scala.concurrent.Future.successful(2)) => orig(scala.concurrent.Future.successful(2)).withFilter

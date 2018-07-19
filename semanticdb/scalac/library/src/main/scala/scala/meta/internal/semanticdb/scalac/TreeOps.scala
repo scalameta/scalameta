@@ -23,6 +23,11 @@ trait TreeOps { self: SemanticdbOps =>
       case gTree: g.Select => gTree.toSemanticId
       case gTree: g.Ident => gTree.toSemanticId
       case gTree: g.This => gTree.toSemanticId
+      case gTree: g.Typed =>
+        s.MacroExpansionTree(
+          expandee = gTree.expr.toSemanticTree,
+          tpe = gTree.tpt.tpe.toSemanticTpe
+        )
       case _ =>
         println(s"No match on: $gTree ${gTree.getClass}")
         s.Tree.Empty

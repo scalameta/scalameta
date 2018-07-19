@@ -56,6 +56,11 @@ trait SyntheticPrinter
         case tree: s.LiteralTree =>
           self.pprint(tree.const)
         case tree: s.MacroExpansionTree =>
+          out.print("(")
+          pprint(tree.expandee)
+          out.print(":")
+          pprint(tree.tpe)
+          out.print(")")
         case tree: s.OriginalTree =>
           out.print("orig(")
           opt(doc.substring(tree.range))(out.print)

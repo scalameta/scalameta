@@ -335,7 +335,7 @@ message Tree {
     TypeApplyTree typeApply = 8;
   }
 }
-T
+
 message ApplyTree {
   Tree fn = 1;
   repeated Tree args = 2;
@@ -356,7 +356,7 @@ message LiteralTree {
 
 message MacroExpansionTree {
   Tree expandee = 1;
-  Type type = 2;
+  Type tpe = 2;
 }
 
 message OriginalTree {
