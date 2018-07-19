@@ -2752,7 +2752,7 @@ example/B#foo(). => method foo: Int
 Occurrences:
 [0:8..0:15): example <= example/
 [2:6..2:7): A <= example/A#
-[2:14..2:17): foo <= example/A#foo().
+[2:14..2:17): foo <= example/A#foo().`
 [2:19..2:22): Int => scala/Int#
 [3:6..3:7): B <= example/B#
 [3:7..3:7):  <= example/B#`<init>`().
@@ -2949,7 +2949,7 @@ Text => non-empty
 Language => Scala
 Symbols => 58 entries
 Occurrences => 111 entries
-Synthetics => 44 entries
+Synthetics => 43 entries
 
 Symbols:
 example/Synthetic# => class Synthetic extends AnyRef { +12 decls }
@@ -3261,16 +3261,15 @@ Synthetics:
   any2stringadd => scala/Predef.any2stringadd().
   Stream => scala/collection/immutable/Stream#
   Int => scala/Int#
+[16:2..16:53): orig(for (x <- 1 to 10; y <- 0 until 10) println(x -> x)) => orig(1 to 10).foreach[Unit]({(x) => orig(0 until 10).foreach[Unit]({(y) => orig(println(x -> x))})})
+  foreach => scala/collection/immutable/Range#foreach().
+  Unit => scala/Unit#
+  x => local2
+  y => local3
 [16:12..16:13): orig(1) => intWrapper(orig(1))
   intWrapper => scala/LowPriorityImplicits#intWrapper().
-[16:12..16:19): orig(1 to 10) => orig(1 to 10).foreach[Unit]
-  foreach => scala/collection/immutable/Range#foreach().
-  Unit => scala/Unit#
 [16:26..16:27): orig(0) => intWrapper(orig(0))
   intWrapper => scala/LowPriorityImplicits#intWrapper().
-[16:26..16:36): orig(0 until 10) => orig(0 until 10).foreach[Unit]
-  foreach => scala/collection/immutable/Range#foreach().
-  Unit => scala/Unit#
 [16:46..16:47): orig(x) => ArrowAssoc[Int](orig(x))
   ArrowAssoc => scala/Predef.ArrowAssoc().
   Int => scala/Int#

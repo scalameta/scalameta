@@ -381,29 +381,19 @@ trait TextDocumentOps { self: SemanticdbOps =>
               }
             }
 
-            object ForComprehensionImplicitArg {
+            def isForSynthetic(gtree: g.Tree): Boolean = {
               def isForComprehensionSyntheticName(select: g.Select): Boolean = {
                 select.pos == select.qualifier.pos && (select.name == g.nme.map ||
-                select.name == g.nme.withFilter ||
-                select.name == g.nme.flatMap ||
-                select.name == g.nme.foreach)
+                  select.name == g.nme.withFilter ||
+                  select.name == g.nme.flatMap ||
+                  select.name == g.nme.foreach)
               }
-
-              private def findSelect(t: g.Tree): Option[g.Tree] = t match {
-                case g.Apply(fun, _) => findSelect(fun)
-                case g.TypeApply(fun, _) => findSelect(fun)
-                case s @ g.Select(qual, _) if isForComprehensionSyntheticName(s) => Some(qual)
-                case _ => None
+              gtree match {
+                case g.Apply(fun, List(arg: g.Function)) => isForSynthetic(fun)
+                case g.TypeApply(fun, _) => isForSynthetic(fun)
+                case gtree: g.Select if isForComprehensionSyntheticName(gtree) => true
+                case _ => false
               }
-
-              def unapply(gfun: g.Apply): Option[g.Tree] = findSelect(gfun)
-            }
-
-            def isForApply(gtree: g.Tree): Boolean = gtree match {
-              case g.Apply(fun, List(arg: g.Function)) => isForApply(fun)
-              case g.TypeApply(fun, _) => isForApply(fun)
-              case gtree: g.Select if ForComprehensionImplicitArg.isForComprehensionSyntheticName(gtree) => true
-              case _ => false
             }
 
             def forMethodSelect(gtree: g.Tree): s.Tree = {
@@ -416,7 +406,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                     fn = innerTree,
                     targs = targs
                   )
-                case gtree: g.Select if ForComprehensionImplicitArg.isForComprehensionSyntheticName(gtree) =>
+                case gtree: g.Select if isForSynthetic(gtree) =>
                   val qual = forSyntheticOrOrig(gtree.qualifier)
                   s.SelectTree(
                     qual = qual,
@@ -444,7 +434,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                     fn = innerTree,
                     args = implicitArgs
                   )
-                case gtree: g.Apply if isForApply(gtree) =>
+                case gtree: g.Apply if isForSynthetic(gtree) =>
                   val fun = forMethodSelect(gtree.fun)
                   val body = forMethodBody(gtree.args.head)
                   s.ApplyTree(
@@ -487,7 +477,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                           args = gimpl.args.map(_.toSemanticTree)
                         )
                       )
-                    case ForComprehensionImplicitArg(qual) =>
+                    case gfun if isForSynthetic(gfun) =>
                       val range = gimpl.pos.toMeta.toRange
                       val synthTree = forSyntheticOrOrig(gimpl)
                       synthetics += s.Synthetic(
@@ -538,6 +528,13 @@ trait TextDocumentOps { self: SemanticdbOps =>
                       qual = s.OriginalTree(range = Some(qual.pos.toMeta.toRange)),
                       id = Some(s.IdTree(sym = symbol))
                     )
+                  )
+                case gtree if isForSynthetic(gtree) =>
+                  val range = gtree.pos.toMeta.toRange
+                  val synthTree = forSyntheticOrOrig(gtree)
+                  synthetics += s.Synthetic(
+                    range = Some(range),
+                    tree = synthTree
                   )
                 case _ =>
                 // do nothing
