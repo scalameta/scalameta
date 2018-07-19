@@ -2,11 +2,13 @@ package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.inputs._
 
 trait TreeOps { self: SemanticdbOps =>
   import g._
 
   implicit class XtensionGTreeSyntheticTerm(gTree: g.Tree) {
+
     def toSemanticTree: s.Tree = gTree match {
       case gTree: g.Apply =>
         s.ApplyTree(
@@ -25,7 +27,14 @@ trait TreeOps { self: SemanticdbOps =>
         println(s"No match on: $gTree ${gTree.getClass}")
         s.Tree.Empty
     }
-    def toSemanticId: s.Tree = s.IdTree(sym = gTree.symbol.toSemantic)
+
+    def toSemanticId: s.IdTree = s.IdTree(sym = gTree.symbol.toSemantic)
+
+    def toSemanticOriginalTree: s.Tree = s.OriginalTree(
+      range = Some(gTree.pos.toMeta.toRange)
+    )
+
   }
+
 
 }

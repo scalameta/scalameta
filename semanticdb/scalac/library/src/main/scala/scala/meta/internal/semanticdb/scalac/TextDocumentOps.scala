@@ -382,7 +382,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
             }
 
             object ForComprehensionImplicitArg {
-              private def isForComprehensionSyntheticName(select: g.Select): Boolean = {
+              def isForComprehensionSyntheticName(select: g.Select): Boolean = {
                 select.pos == select.qualifier.pos && (select.name == g.nme.map ||
                 select.name == g.nme.withFilter ||
                 select.name == g.nme.flatMap ||
@@ -397,6 +397,60 @@ trait TextDocumentOps { self: SemanticdbOps =>
               }
 
               def unapply(gfun: g.Apply): Option[g.Tree] = findSelect(gfun)
+            }
+
+            def forComprehensionTree(gimpl: g.ApplyToImplicitArgs): s.Tree = {
+
+              def extractForMethod(tree: g.Tree) = tree match {
+                case forMethod: g.Select =>
+                  s.SelectTree(
+                    qual = forMethod.qualifier.toSemanticOriginalTree,
+                    id = Some(forMethod.toSemanticId)
+                  )
+              }
+
+              val implicitArgs = gimpl.args.map(_.toSemanticTree)
+              val funTree = gimpl.fun match {
+                case g.Apply(forMethod, List(forBlock)) =>
+                  val blockTree = forBlock match {
+                    case forBlock: g.Function =>
+                      val names = forBlock.vparams.map(_.toSemanticId)
+                      val bodyTree = forBlock.body match {
+                        case body: g.ApplyToImplicitArgs =>
+                          forComprehensionTree(body)
+                        case body =>
+                          println(body, body.pos)
+                          body.toSemanticOriginalTree
+                      }
+                      s.FunctionTree(names, bodyTree)
+                    case _ => forBlock.toSemanticOriginalTree
+                  }
+                  val forMethodTree = forMethod match {
+                    case forMethod: g.TypeApply =>
+                      s.TypeApplyTree(
+                        fn = extractForMethod(forMethod.fun),
+                        targs = forMethod.args.map(_.tpe.toSemanticTpe)
+                      )
+                    case _ => extractForMethod(forMethod)
+                  }
+                  s.ApplyTree(
+                    fn = forMethodTree,
+                    args = List(blockTree)
+                  )
+              }
+              s.ApplyTree(
+                fn = funTree,
+                args = implicitArgs
+              )
+//              synthetics += s.Synthetic(
+//                range = Some(range),
+//                tree = s.ApplyTree(
+//                  fn = s.OriginalTree(
+//                    range = Some(qual.pos.toMeta.toRange)
+//                  ),
+//                  args =
+//                )
+//              )
             }
 
             if (!visitedSyntheticParent(gtree)) {
@@ -432,14 +486,11 @@ trait TextDocumentOps { self: SemanticdbOps =>
                         )
                       )
                     case ForComprehensionImplicitArg(qual) =>
+                      val range = gimpl.pos.toMeta.toRange
+                      val synthTree = forComprehensionTree(gimpl)
                       synthetics += s.Synthetic(
-                        range = Some(qual.pos.toMeta.toRange),
-                        tree = s.ApplyTree(
-                          fn = s.OriginalTree(
-                            range = Some(qual.pos.toMeta.toRange)
-                          ),
-                          args = gimpl.args.map(_.toSemanticTree)
-                        )
+                        range = Some(range),
+                        tree = synthTree
                       )
                     case gfun =>
                       synthetics += s.Synthetic(

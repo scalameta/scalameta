@@ -19,7 +19,7 @@ trait SyntheticPrinter
 
   def pprint(synth: s.Synthetic): Unit = {
     opt(synth.range)(pprint)
-    opt(": <", doc.substring(synth.range), ">")(out.print)
+    opt(": orig(", doc.substring(synth.range), ")")(out.print)
     out.print(" => ")
     pprint(synth.tree)
   }
@@ -47,15 +47,19 @@ trait SyntheticPrinter
           rep(tree.args, ",")(pprint)
           out.print(")")
         case tree: s.FunctionTree =>
+          out.print("{")
+          rep("(", tree.params, ",", ") => ")(pprint)
+          pprint(tree.term)
+          out.print("}")
         case tree: s.IdTree =>
           pprint(tree.sym, Reference)
         case tree: s.LiteralTree =>
           self.pprint(tree.const)
         case tree: s.MacroExpansionTree =>
         case tree: s.OriginalTree =>
-          out.print("<")
+          out.print("orig(")
           opt(doc.substring(tree.range))(out.print)
-          out.print(">")
+          out.print(")")
         case tree: s.SelectTree =>
           pprint(tree.qual)
           out.print(".")
