@@ -965,7 +965,71 @@ message Synthetic {
 }
 ```
 
+"Synthetics" is a section of a [TextDocument](#textdocument) that stores
+synthetic terms added by compilers that do not appear in the original source
+file.
+Examples include inferred type arguments, implicit parameters, or desugarings of
+for loops.
+
+`Synthetic` models one of these synthetics as a transformation of a piece of the
+original source file to a synthetic AST that may still use quotes of the
+original source.
+The piece of the source file is given as a `Range range`, and the new synthetic
+AST is given as a `Tree tree`.
+
 ### Tree
+
+
+```protobuf
+message Tree {
+  oneof sealed_value {
+    ApplyTree applyTree = 1;
+    FunctionTree functionTree = 2;
+    IdTree idTree = 3;
+    LiteralTree literalTree = 4;
+    MacroExpansionTree macroExpansionTree = 5;
+    OriginalTree originalTree = 6;
+    SelectTree selectTree = 7;
+    TypeApplyTree typeApplyTree = 8;
+  }
+}
+
+message ApplyTree {
+  Tree fn = 1;
+  repeated Tree args = 2;
+}
+
+message FunctionTree {
+  repeated IdTree params = 1;
+  Tree term = 2;
+}
+
+message IdTree {
+  string sym = 1;
+}
+
+message LiteralTree {
+  Constant const = 1;
+}
+
+message MacroExpansionTree {
+  Type tpe = 2;
+}
+
+message OriginalTree {
+  Range range = 1;
+}
+
+message SelectTree {
+  Tree qual = 1;
+  IdTree id = 2;
+}
+
+message TypeApplyTree {
+  Tree fn = 1;
+  repeated Type targs = 2;
+}
+```
 
 ## Data Schemas
 
