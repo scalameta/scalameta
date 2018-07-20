@@ -30,6 +30,7 @@
     * [Annotation](#scala-annotation)
     * [Accessibility](#scala-accessibility)
     * [SymbolOccurrence](#scala-symboloccurrence)
+    * [Synthetic](#scala-synthetic)
   * [Java](#java)
     * [Symbol](#java-symbol)
     * [Type](#java-type)
@@ -1092,6 +1093,7 @@ symbol occurrences:
     * [Annotation](#scala-annotation)
     * [Accessibility](#scala-accessibility)
     * [SymbolOccurrence](#scala-symboloccurrence)
+    * [Synthetic](#scala-synthetic)
   * [Java](#java)
     * [Symbol](#java-symbol)
     * [Type](#java-type)
@@ -2443,6 +2445,10 @@ both in terms of handling sizeable codebases and understanding esoteric
 language constructs and idioms. However, but we do not yet have a specification
 that comprehensively describes how Scala language features map onto symbol
 occurrences. We intend to improve on this in the future.
+
+<a name="scala-synthetic"></a>
+
+#### Synthetic
 
 ### Java
 
