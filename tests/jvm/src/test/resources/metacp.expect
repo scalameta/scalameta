@@ -2315,6 +2315,23 @@ prefixes/M.T# => abstract type T
 prefixes/M.n1(). => method n1: T
   T => prefixes/M.T#
 
+prefixes/O.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => prefixes/O.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+prefixes/O. => final object O extends C { +1 decls }
+  C => prefixes/C#
+prefixes/O.o1(). => method o1: O.this.T
+  O => prefixes/O.
+  T => prefixes/C#T#
+
 prefixes/Test.class
 -------------------
 

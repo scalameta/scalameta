@@ -81,6 +81,7 @@ objects/X. => semanticdb/integration/src/main/scala/example/Objects.scala.semant
 prefixes/ => package prefixes
 prefixes/C# => semanticdb/integration/src/main/scala/example/Prefixes.scala.semanticdb
 prefixes/M. => semanticdb/integration/src/main/scala/example/Prefixes.scala.semanticdb
+prefixes/O. => semanticdb/integration/src/main/scala/example/Prefixes.scala.semanticdb
 prefixes/Test. => semanticdb/integration/src/main/scala/example/Prefixes.scala.semanticdb
 selfs/ => package selfs
 selfs/B# => semanticdb/integration/src/main/scala/example/Selfs.scala.semanticdb

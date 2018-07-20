@@ -15,6 +15,10 @@ object M {
   def n1: T = ???
 }
 
+object O extends C {
+  def o1: T = ???
+}
+
 object Test {
   val c: C = ???
   def m2: c.T = ???
