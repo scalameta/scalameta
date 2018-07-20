@@ -17,6 +17,8 @@
   * [Accessibility](#accessibility)
   * [SymbolOccurrence](#symboloccurrence)
   * [Diagnostic](#diagnostic)
+  * [Synthetic](#synthetic)
+  * [Tree](#tree)
 * [Data Schemas](#data-schemas)
   * [Protobuf](#protobuf)
 * [Languages](#languages)
@@ -107,6 +109,7 @@ message TextDocument {
   repeated SymbolInformation symbols = 5;
   repeated SymbolOccurrence occurrences = 6;
   repeated Diagnostic diagnostics = 7;
+  repeated Synthetic synthetics = 12;
 }
 ```
 
@@ -952,6 +955,17 @@ diagnostics as error, warning, information or hint.
     <td>Hint.</td>
   </tr>
 </table>
+
+### Synthetic 
+
+```protobuf
+message Synthetic {
+  Range range = 1;
+  Tree tree = 2;
+}
+```
+
+### Tree
 
 ## Data Schemas
 
