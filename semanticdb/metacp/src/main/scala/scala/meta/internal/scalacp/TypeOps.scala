@@ -139,11 +139,11 @@ trait TypeOps { self: Scalacp =>
         pre match {
           case TypeRefType(prepre, presym, _) =>
             checkTrivialPrefix(prepre, presym) &&
-            checkTrivialOwner(presym, sym) &&
-            checkModule(presym)
+              checkTrivialOwner(presym, sym) &&
+              checkModule(presym)
           case SingleType(prepre, presym) =>
             checkTrivialPrefix(prepre, presym) &&
-            checkTrivialOwner(presym, sym)
+              checkTrivialOwner(presym, sym)
           case ThisType(presym) =>
             checkTrivialOwner(presym, sym)
           case NoPrefixType =>
