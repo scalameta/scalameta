@@ -11,10 +11,10 @@ trait SemanticdbOps
     with DiagnosticOps
     with NameOps
     with ParseOps
-    with PrinterOps
     with ReporterOps
     with ReflectionToolkit
     with SymbolOps
+    with SyntheticOps
     with TypeOps {
   val global: Global
   var config: SemanticdbConfig = SemanticdbConfig.default

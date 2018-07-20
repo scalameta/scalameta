@@ -6,40 +6,43 @@
 package scala.meta.internal.semanticdb
 
 sealed trait Constant {
-  final def isEmpty = this.isInstanceOf[Constant.Empty.type]
+  final def isEmpty = this.isInstanceOf[scala.meta.internal.semanticdb.Constant.Empty.type]
   final def isDefined = !isEmpty
-  final def toConstantMessage: ConstantMessage = Constant.ConstantTypeMapper.toBase(this)
+  final def asMessage: scala.meta.internal.semanticdb.ConstantMessage = scala.meta.internal.semanticdb.Constant.ConstantTypeMapper.toBase(this)
 }
+
 object Constant {
-  case object Empty extends Constant
-  def defaultInstance: Constant = Empty
-  implicit val ConstantTypeMapper: _root_.scalapb.TypeMapper[ConstantMessage, Constant] = new _root_.scalapb.TypeMapper[ConstantMessage, Constant] {
-    override def toCustom(__base: ConstantMessage): Constant = __base.sealedValue match {
-      case v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.UnitConstant => v.value
-      case v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.BooleanConstant => v.value
-      case v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.ByteConstant => v.value
-      case v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.ShortConstant => v.value
-      case v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.CharConstant => v.value
-      case v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.IntConstant => v.value
-      case v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.LongConstant => v.value
-      case v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.FloatConstant => v.value
-      case v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.DoubleConstant => v.value
-      case v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.StringConstant => v.value
-      case v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.NullConstant => v.value
+  case object Empty extends scala.meta.internal.semanticdb.Constant
+  
+  def defaultInstance: scala.meta.internal.semanticdb.Constant = Empty
+  
+  implicit val ConstantTypeMapper: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.ConstantMessage, scala.meta.internal.semanticdb.Constant] = new _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.ConstantMessage, scala.meta.internal.semanticdb.Constant] {
+    override def toCustom(__base: scala.meta.internal.semanticdb.ConstantMessage): scala.meta.internal.semanticdb.Constant = __base.sealedValue match {
+      case __v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.UnitConstant => __v.value
+      case __v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.BooleanConstant => __v.value
+      case __v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.ByteConstant => __v.value
+      case __v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.ShortConstant => __v.value
+      case __v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.CharConstant => __v.value
+      case __v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.IntConstant => __v.value
+      case __v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.LongConstant => __v.value
+      case __v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.FloatConstant => __v.value
+      case __v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.DoubleConstant => __v.value
+      case __v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.StringConstant => __v.value
+      case __v: scala.meta.internal.semanticdb.ConstantMessage.SealedValue.NullConstant => __v.value
       case scala.meta.internal.semanticdb.ConstantMessage.SealedValue.Empty => Empty
     }
-    override def toBase(__custom: Constant): ConstantMessage = ConstantMessage(__custom match {
-      case v: scala.meta.internal.semanticdb.UnitConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.UnitConstant(v)
-      case v: scala.meta.internal.semanticdb.BooleanConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.BooleanConstant(v)
-      case v: scala.meta.internal.semanticdb.ByteConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.ByteConstant(v)
-      case v: scala.meta.internal.semanticdb.ShortConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.ShortConstant(v)
-      case v: scala.meta.internal.semanticdb.CharConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.CharConstant(v)
-      case v: scala.meta.internal.semanticdb.IntConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.IntConstant(v)
-      case v: scala.meta.internal.semanticdb.LongConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.LongConstant(v)
-      case v: scala.meta.internal.semanticdb.FloatConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.FloatConstant(v)
-      case v: scala.meta.internal.semanticdb.DoubleConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.DoubleConstant(v)
-      case v: scala.meta.internal.semanticdb.StringConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.StringConstant(v)
-      case v: scala.meta.internal.semanticdb.NullConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.NullConstant(v)
+    override def toBase(__custom: scala.meta.internal.semanticdb.Constant): scala.meta.internal.semanticdb.ConstantMessage = scala.meta.internal.semanticdb.ConstantMessage(__custom match {
+      case __v: scala.meta.internal.semanticdb.UnitConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.UnitConstant(__v)
+      case __v: scala.meta.internal.semanticdb.BooleanConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.BooleanConstant(__v)
+      case __v: scala.meta.internal.semanticdb.ByteConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.ByteConstant(__v)
+      case __v: scala.meta.internal.semanticdb.ShortConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.ShortConstant(__v)
+      case __v: scala.meta.internal.semanticdb.CharConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.CharConstant(__v)
+      case __v: scala.meta.internal.semanticdb.IntConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.IntConstant(__v)
+      case __v: scala.meta.internal.semanticdb.LongConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.LongConstant(__v)
+      case __v: scala.meta.internal.semanticdb.FloatConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.FloatConstant(__v)
+      case __v: scala.meta.internal.semanticdb.DoubleConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.DoubleConstant(__v)
+      case __v: scala.meta.internal.semanticdb.StringConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.StringConstant(__v)
+      case __v: scala.meta.internal.semanticdb.NullConstant => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.NullConstant(__v)
       case Empty => scala.meta.internal.semanticdb.ConstantMessage.SealedValue.Empty
     })
   }
@@ -250,7 +253,7 @@ final case class ConstantMessage(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => sealedValue.unitConstant.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
         case 2 => sealedValue.booleanConstant.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
@@ -267,13 +270,13 @@ final case class ConstantMessage(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = scala.meta.internal.semanticdb.ConstantMessage
-    def toConstant: Constant = Constant.ConstantTypeMapper.toCustom(this)
+    def toConstant: scala.meta.internal.semanticdb.Constant = scala.meta.internal.semanticdb.Constant.ConstantTypeMapper.toCustom(this)
 }
 
 object ConstantMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ConstantMessage] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ConstantMessage] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.ConstantMessage = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.ConstantMessage(
       sealedValue = __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.UnitConstant]].map(scala.meta.internal.semanticdb.ConstantMessage.SealedValue.UnitConstant)
@@ -292,7 +295,7 @@ object ConstantMessage extends scalapb.GeneratedMessageCompanion[scala.meta.inte
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.ConstantMessage] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.ConstantMessage(
         sealedValue = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.UnitConstant]]).map(scala.meta.internal.semanticdb.ConstantMessage.SealedValue.UnitConstant)
     .orElse[scala.meta.internal.semanticdb.ConstantMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.BooleanConstant]]).map(scala.meta.internal.semanticdb.ConstantMessage.SealedValue.BooleanConstant))
@@ -500,13 +503,13 @@ final case class UnitConstant(
 object UnitConstant extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.UnitConstant] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.UnitConstant] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.UnitConstant = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     scala.meta.internal.semanticdb.UnitConstant(
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.UnitConstant] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.UnitConstant(
       )
     case _ => throw new RuntimeException("Expected PMessage")
@@ -581,7 +584,7 @@ final case class BooleanConstant(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PBoolean(value)
       }
@@ -593,7 +596,7 @@ final case class BooleanConstant(
 object BooleanConstant extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.BooleanConstant] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.BooleanConstant] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.BooleanConstant = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.BooleanConstant(
       __fieldsMap.getOrElse(__fields.get(0), false).asInstanceOf[_root_.scala.Boolean]
@@ -601,7 +604,7 @@ object BooleanConstant extends scalapb.GeneratedMessageCompanion[scala.meta.inte
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.BooleanConstant] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.BooleanConstant(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Boolean]).getOrElse(false)
       )
@@ -679,7 +682,7 @@ final case class ByteConstant(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PInt(value)
       }
@@ -691,7 +694,7 @@ final case class ByteConstant(
 object ByteConstant extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ByteConstant] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ByteConstant] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.ByteConstant = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.ByteConstant(
       __fieldsMap.getOrElse(__fields.get(0), 0).asInstanceOf[_root_.scala.Int]
@@ -699,7 +702,7 @@ object ByteConstant extends scalapb.GeneratedMessageCompanion[scala.meta.interna
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.ByteConstant] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.ByteConstant(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Int]).getOrElse(0)
       )
@@ -777,7 +780,7 @@ final case class ShortConstant(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PInt(value)
       }
@@ -789,7 +792,7 @@ final case class ShortConstant(
 object ShortConstant extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ShortConstant] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.ShortConstant] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.ShortConstant = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.ShortConstant(
       __fieldsMap.getOrElse(__fields.get(0), 0).asInstanceOf[_root_.scala.Int]
@@ -797,7 +800,7 @@ object ShortConstant extends scalapb.GeneratedMessageCompanion[scala.meta.intern
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.ShortConstant] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.ShortConstant(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Int]).getOrElse(0)
       )
@@ -875,7 +878,7 @@ final case class CharConstant(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PInt(value)
       }
@@ -887,7 +890,7 @@ final case class CharConstant(
 object CharConstant extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.CharConstant] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.CharConstant] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.CharConstant = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.CharConstant(
       __fieldsMap.getOrElse(__fields.get(0), 0).asInstanceOf[_root_.scala.Int]
@@ -895,7 +898,7 @@ object CharConstant extends scalapb.GeneratedMessageCompanion[scala.meta.interna
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.CharConstant] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.CharConstant(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Int]).getOrElse(0)
       )
@@ -973,7 +976,7 @@ final case class IntConstant(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PInt(value)
       }
@@ -985,7 +988,7 @@ final case class IntConstant(
 object IntConstant extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.IntConstant] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.IntConstant] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.IntConstant = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.IntConstant(
       __fieldsMap.getOrElse(__fields.get(0), 0).asInstanceOf[_root_.scala.Int]
@@ -993,7 +996,7 @@ object IntConstant extends scalapb.GeneratedMessageCompanion[scala.meta.internal
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.IntConstant] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.IntConstant(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Int]).getOrElse(0)
       )
@@ -1071,7 +1074,7 @@ final case class LongConstant(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PLong(value)
       }
@@ -1083,7 +1086,7 @@ final case class LongConstant(
 object LongConstant extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.LongConstant] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.LongConstant] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.LongConstant = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.LongConstant(
       __fieldsMap.getOrElse(__fields.get(0), 0L).asInstanceOf[_root_.scala.Long]
@@ -1091,7 +1094,7 @@ object LongConstant extends scalapb.GeneratedMessageCompanion[scala.meta.interna
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.LongConstant] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.LongConstant(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Long]).getOrElse(0L)
       )
@@ -1169,7 +1172,7 @@ final case class FloatConstant(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PFloat(value)
       }
@@ -1181,7 +1184,7 @@ final case class FloatConstant(
 object FloatConstant extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.FloatConstant] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.FloatConstant] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.FloatConstant = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.FloatConstant(
       __fieldsMap.getOrElse(__fields.get(0), 0.0f).asInstanceOf[_root_.scala.Float]
@@ -1189,7 +1192,7 @@ object FloatConstant extends scalapb.GeneratedMessageCompanion[scala.meta.intern
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.FloatConstant] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.FloatConstant(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Float]).getOrElse(0.0f)
       )
@@ -1267,7 +1270,7 @@ final case class DoubleConstant(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PDouble(value)
       }
@@ -1279,7 +1282,7 @@ final case class DoubleConstant(
 object DoubleConstant extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.DoubleConstant] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.DoubleConstant] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.DoubleConstant = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.DoubleConstant(
       __fieldsMap.getOrElse(__fields.get(0), 0.0).asInstanceOf[_root_.scala.Double]
@@ -1287,7 +1290,7 @@ object DoubleConstant extends scalapb.GeneratedMessageCompanion[scala.meta.inter
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.DoubleConstant] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.DoubleConstant(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Double]).getOrElse(0.0)
       )
@@ -1365,7 +1368,7 @@ final case class StringConstant(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PString(value)
       }
@@ -1377,7 +1380,7 @@ final case class StringConstant(
 object StringConstant extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.StringConstant] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.StringConstant] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.StringConstant = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.StringConstant(
       __fieldsMap.getOrElse(__fields.get(0), "").asInstanceOf[_root_.scala.Predef.String]
@@ -1385,7 +1388,7 @@ object StringConstant extends scalapb.GeneratedMessageCompanion[scala.meta.inter
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.StringConstant] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.StringConstant(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Predef.String]).getOrElse("")
       )
@@ -1431,13 +1434,13 @@ final case class NullConstant(
 object NullConstant extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.NullConstant] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.NullConstant] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.NullConstant = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     scala.meta.internal.semanticdb.NullConstant(
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.NullConstant] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.NullConstant(
       )
     case _ => throw new RuntimeException("Expected PMessage")

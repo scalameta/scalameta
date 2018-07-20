@@ -6,22 +6,25 @@
 package scala.meta.internal.semanticidx
 
 sealed trait Entry {
-  final def isEmpty = this.isInstanceOf[Entry.Empty.type]
+  final def isEmpty = this.isInstanceOf[scala.meta.internal.semanticidx.Entry.Empty.type]
   final def isDefined = !isEmpty
-  final def toEntryMessage: EntryMessage = Entry.EntryTypeMapper.toBase(this)
+  final def asMessage: scala.meta.internal.semanticidx.EntryMessage = scala.meta.internal.semanticidx.Entry.EntryTypeMapper.toBase(this)
 }
+
 object Entry {
-  case object Empty extends Entry
-  def defaultInstance: Entry = Empty
-  implicit val EntryTypeMapper: _root_.scalapb.TypeMapper[EntryMessage, Entry] = new _root_.scalapb.TypeMapper[EntryMessage, Entry] {
-    override def toCustom(__base: EntryMessage): Entry = __base.sealedValue match {
-      case v: scala.meta.internal.semanticidx.EntryMessage.SealedValue.PackageEntry => v.value
-      case v: scala.meta.internal.semanticidx.EntryMessage.SealedValue.ToplevelEntry => v.value
+  case object Empty extends scala.meta.internal.semanticidx.Entry
+  
+  def defaultInstance: scala.meta.internal.semanticidx.Entry = Empty
+  
+  implicit val EntryTypeMapper: _root_.scalapb.TypeMapper[scala.meta.internal.semanticidx.EntryMessage, scala.meta.internal.semanticidx.Entry] = new _root_.scalapb.TypeMapper[scala.meta.internal.semanticidx.EntryMessage, scala.meta.internal.semanticidx.Entry] {
+    override def toCustom(__base: scala.meta.internal.semanticidx.EntryMessage): scala.meta.internal.semanticidx.Entry = __base.sealedValue match {
+      case __v: scala.meta.internal.semanticidx.EntryMessage.SealedValue.PackageEntry => __v.value
+      case __v: scala.meta.internal.semanticidx.EntryMessage.SealedValue.ToplevelEntry => __v.value
       case scala.meta.internal.semanticidx.EntryMessage.SealedValue.Empty => Empty
     }
-    override def toBase(__custom: Entry): EntryMessage = EntryMessage(__custom match {
-      case v: scala.meta.internal.semanticidx.PackageEntry => scala.meta.internal.semanticidx.EntryMessage.SealedValue.PackageEntry(v)
-      case v: scala.meta.internal.semanticidx.ToplevelEntry => scala.meta.internal.semanticidx.EntryMessage.SealedValue.ToplevelEntry(v)
+    override def toBase(__custom: scala.meta.internal.semanticidx.Entry): scala.meta.internal.semanticidx.EntryMessage = scala.meta.internal.semanticidx.EntryMessage(__custom match {
+      case __v: scala.meta.internal.semanticidx.PackageEntry => scala.meta.internal.semanticidx.EntryMessage.SealedValue.PackageEntry(__v)
+      case __v: scala.meta.internal.semanticidx.ToplevelEntry => scala.meta.internal.semanticidx.EntryMessage.SealedValue.ToplevelEntry(__v)
       case Empty => scala.meta.internal.semanticidx.EntryMessage.SealedValue.Empty
     })
   }
@@ -97,7 +100,7 @@ final case class EntryMessage(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => sealedValue.packageEntry.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
         case 2 => sealedValue.toplevelEntry.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
@@ -105,13 +108,13 @@ final case class EntryMessage(
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
     def companion = scala.meta.internal.semanticidx.EntryMessage
-    def toEntry: Entry = Entry.EntryTypeMapper.toCustom(this)
+    def toEntry: scala.meta.internal.semanticidx.Entry = scala.meta.internal.semanticidx.Entry.EntryTypeMapper.toCustom(this)
 }
 
 object EntryMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticidx.EntryMessage] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticidx.EntryMessage] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticidx.EntryMessage = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticidx.EntryMessage(
       sealedValue = __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticidx.PackageEntry]].map(scala.meta.internal.semanticidx.EntryMessage.SealedValue.PackageEntry)
@@ -121,7 +124,7 @@ object EntryMessage extends scalapb.GeneratedMessageCompanion[scala.meta.interna
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticidx.EntryMessage] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticidx.EntryMessage(
         sealedValue = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticidx.PackageEntry]]).map(scala.meta.internal.semanticidx.EntryMessage.SealedValue.PackageEntry)
     .orElse[scala.meta.internal.semanticidx.EntryMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticidx.ToplevelEntry]]).map(scala.meta.internal.semanticidx.EntryMessage.SealedValue.ToplevelEntry))
@@ -212,13 +215,13 @@ final case class PackageEntry(
 object PackageEntry extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticidx.PackageEntry] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticidx.PackageEntry] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticidx.PackageEntry = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     scala.meta.internal.semanticidx.PackageEntry(
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticidx.PackageEntry] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticidx.PackageEntry(
       )
     case _ => throw new RuntimeException("Expected PMessage")
@@ -296,7 +299,7 @@ final case class ToplevelEntry(
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PString(uri)
       }
@@ -308,7 +311,7 @@ final case class ToplevelEntry(
 object ToplevelEntry extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticidx.ToplevelEntry] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticidx.ToplevelEntry] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticidx.ToplevelEntry = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticidx.ToplevelEntry(
       __fieldsMap.getOrElse(__fields.get(0), "").asInstanceOf[_root_.scala.Predef.String]
@@ -316,7 +319,7 @@ object ToplevelEntry extends scalapb.GeneratedMessageCompanion[scala.meta.intern
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticidx.ToplevelEntry] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticidx.ToplevelEntry(
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scala.Predef.String]).getOrElse("")
       )

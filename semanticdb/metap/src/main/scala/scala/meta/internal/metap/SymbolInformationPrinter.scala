@@ -10,6 +10,7 @@ import scala.meta.internal.semanticdb.SymbolInformation.Kind._
 import scala.meta.internal.semanticdb.SymbolInformation.Property._
 
 trait SymbolInformationPrinter extends BasePrinter {
+
   def pprint(info: SymbolInformation): Unit = {
     out.print(info.symbol)
     out.print(" => ")
@@ -33,7 +34,7 @@ trait SymbolInformationPrinter extends BasePrinter {
     }
   }
 
-  private class InfoPrinter(notes: InfoNotes) {
+  protected class InfoPrinter(notes: InfoNotes) {
     def pprint(info: SymbolInformation): Unit = {
       notes.visit(info)
       rep(info.annotations, " ", " ")(pprint)
@@ -238,11 +239,11 @@ trait SymbolInformationPrinter extends BasePrinter {
       pprint(info.symbol, Definition)
     }
 
-    private sealed trait SymbolStyle
-    private case object Reference extends SymbolStyle
-    private case object Definition extends SymbolStyle
+    protected sealed trait SymbolStyle
+    protected case object Reference extends SymbolStyle
+    protected case object Definition extends SymbolStyle
 
-    private def pprint(sym: String, style: SymbolStyle): Unit = {
+    protected def pprint(sym: String, style: SymbolStyle): Unit = {
       val info = notes.visit(sym)
       style match {
         case Reference =>
@@ -297,7 +298,7 @@ trait SymbolInformationPrinter extends BasePrinter {
       else out.print("<?>")
     }
 
-    private def pprint(const: Constant): Unit = {
+    protected def pprint(const: Constant): Unit = {
       const match {
         case NoConstant =>
           out.print("<?>")
@@ -359,7 +360,7 @@ trait SymbolInformationPrinter extends BasePrinter {
     doc.symbols.map(info => (info.symbol, info)).toMap
   }
 
-  private class InfoNotes {
+  protected class InfoNotes {
     private val buf = mutable.ListBuffer[SymbolInformation]()
     private val noteSymtab = mutable.Map[String, SymbolInformation]()
 

@@ -119,12 +119,6 @@ final case class TextDocument(
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-      synthetics.foreach { __v =>
-        val __m = __v
-        _output__.writeTag(8, 2)
-        _output__.writeUInt32NoTag(__m.serializedSize)
-        __m.writeTo(_output__)
-      };
       {
         val __v = language
         if (__v != scala.meta.internal.semanticdb.Language.UNKNOWN_LANGUAGE) {
@@ -136,6 +130,12 @@ final case class TextDocument(
         if (__v != "") {
           _output__.writeString(11, __v)
         }
+      };
+      synthetics.foreach { __v =>
+        val __m = __v
+        _output__.writeTag(12, 2)
+        _output__.writeUInt32NoTag(__m.serializedSize)
+        __m.writeTo(_output__)
       };
     }
     def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.TextDocument = {
@@ -169,7 +169,7 @@ final case class TextDocument(
             __occurrences += _root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.SymbolOccurrence.defaultInstance)
           case 58 =>
             __diagnostics += _root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.Diagnostic.defaultInstance)
-          case 66 =>
+          case 98 =>
             __synthetics += _root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.Synthetic.defaultInstance)
           case tag => _input__.skipField(tag)
         }
@@ -232,11 +232,11 @@ final case class TextDocument(
         case 5 => symbols
         case 6 => occurrences
         case 7 => diagnostics
-        case 8 => synthetics
+        case 12 => synthetics
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
-      require(__field.containingMessage eq companion.scalaDescriptor)
+      _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
         case 1 => _root_.scalapb.descriptors.PEnum(schema.scalaValueDescriptor)
         case 2 => _root_.scalapb.descriptors.PString(uri)
@@ -246,7 +246,7 @@ final case class TextDocument(
         case 5 => _root_.scalapb.descriptors.PRepeated(symbols.map(_.toPMessage)(_root_.scala.collection.breakOut))
         case 6 => _root_.scalapb.descriptors.PRepeated(occurrences.map(_.toPMessage)(_root_.scala.collection.breakOut))
         case 7 => _root_.scalapb.descriptors.PRepeated(diagnostics.map(_.toPMessage)(_root_.scala.collection.breakOut))
-        case 8 => _root_.scalapb.descriptors.PRepeated(synthetics.map(_.toPMessage)(_root_.scala.collection.breakOut))
+        case 12 => _root_.scalapb.descriptors.PRepeated(synthetics.map(_.toPMessage)(_root_.scala.collection.breakOut))
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
@@ -256,7 +256,7 @@ final case class TextDocument(
 object TextDocument extends scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.TextDocument] {
   implicit def messageCompanion: scalapb.GeneratedMessageCompanion[scala.meta.internal.semanticdb.TextDocument] = this
   def fromFieldsMap(__fieldsMap: scala.collection.immutable.Map[_root_.com.google.protobuf.Descriptors.FieldDescriptor, _root_.scala.Any]): scala.meta.internal.semanticdb.TextDocument = {
-    require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
+    _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.TextDocument(
       scala.meta.internal.semanticdb.Schema.fromValue(__fieldsMap.getOrElse(__fields.get(0), scala.meta.internal.semanticdb.Schema.LEGACY.javaValueDescriptor).asInstanceOf[_root_.com.google.protobuf.Descriptors.EnumValueDescriptor].getNumber),
@@ -272,7 +272,7 @@ object TextDocument extends scalapb.GeneratedMessageCompanion[scala.meta.interna
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.TextDocument] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
-      require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
+      _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.TextDocument(
         scala.meta.internal.semanticdb.Schema.fromValue(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[_root_.scalapb.descriptors.EnumValueDescriptor]).getOrElse(scala.meta.internal.semanticdb.Schema.LEGACY.scalaValueDescriptor).number),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[_root_.scala.Predef.String]).getOrElse(""),
@@ -282,7 +282,7 @@ object TextDocument extends scalapb.GeneratedMessageCompanion[scala.meta.interna
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.SymbolInformation]]).getOrElse(_root_.scala.collection.Seq.empty),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.SymbolOccurrence]]).getOrElse(_root_.scala.collection.Seq.empty),
         __fieldsMap.get(scalaDescriptor.findFieldByNumber(7).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Diagnostic]]).getOrElse(_root_.scala.collection.Seq.empty),
-        __fieldsMap.get(scalaDescriptor.findFieldByNumber(8).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Synthetic]]).getOrElse(_root_.scala.collection.Seq.empty)
+        __fieldsMap.get(scalaDescriptor.findFieldByNumber(12).get).map(_.as[_root_.scala.collection.Seq[scala.meta.internal.semanticdb.Synthetic]]).getOrElse(_root_.scala.collection.Seq.empty)
       )
     case _ => throw new RuntimeException("Expected PMessage")
   }
@@ -294,7 +294,7 @@ object TextDocument extends scalapb.GeneratedMessageCompanion[scala.meta.interna
       case 5 => __out = scala.meta.internal.semanticdb.SymbolInformation
       case 6 => __out = scala.meta.internal.semanticdb.SymbolOccurrence
       case 7 => __out = scala.meta.internal.semanticdb.Diagnostic
-      case 8 => __out = scala.meta.internal.semanticdb.Synthetic
+      case 12 => __out = scala.meta.internal.semanticdb.Synthetic
     }
     __out
   }
@@ -326,5 +326,5 @@ object TextDocument extends scalapb.GeneratedMessageCompanion[scala.meta.interna
   final val SYMBOLS_FIELD_NUMBER = 5
   final val OCCURRENCES_FIELD_NUMBER = 6
   final val DIAGNOSTICS_FIELD_NUMBER = 7
-  final val SYNTHETICS_FIELD_NUMBER = 8
+  final val SYNTHETICS_FIELD_NUMBER = 12
 }
