@@ -4,10 +4,10 @@ import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.inputs._
 
-trait TreeOps { self: SemanticdbOps =>
+trait SyntheticOps { self: SemanticdbOps =>
   import g._
 
-  implicit class XtensionGTreeSyntheticTerm(gTree: g.Tree) {
+  implicit class XtensionGTreeSTree(gTree: g.Tree) {
 
     def toSemanticTree: s.Tree = gTree match {
       case gTree: g.Apply =>
@@ -23,19 +23,17 @@ trait TreeOps { self: SemanticdbOps =>
       case gTree: g.Select => gTree.toSemanticId
       case gTree: g.Ident => gTree.toSemanticId
       case gTree: g.This => gTree.toSemanticId
-      case gTree: g.Typed =>
+      case gTree: g.Typed if gTree.hasAttachment[g.analyzer.MacroExpansionAttachment] =>
         s.MacroExpansionTree(
-          expandee = gTree.expr.toSemanticTree,
           tpe = gTree.tpt.tpe.toSemanticTpe
         )
       case _ =>
-        println(s"No match on: $gTree ${gTree.getClass}")
-        s.Tree.Empty
+        s.NoTree
     }
 
     def toSemanticId: s.IdTree = s.IdTree(sym = gTree.symbol.toSemantic)
 
-    def toSemanticOriginalTree: s.Tree = s.OriginalTree(
+    def toSemanticOriginal: s.Tree = s.OriginalTree(
       range = Some(gTree.pos.toMeta.toRange)
     )
 

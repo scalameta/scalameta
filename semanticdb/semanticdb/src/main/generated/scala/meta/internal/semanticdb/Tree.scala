@@ -18,25 +18,25 @@ object Tree {
   
   implicit val TreeTypeMapper: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TreeMessage, scala.meta.internal.semanticdb.Tree] = new _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TreeMessage, scala.meta.internal.semanticdb.Tree] {
     override def toCustom(__base: scala.meta.internal.semanticdb.TreeMessage): scala.meta.internal.semanticdb.Tree = __base.sealedValue match {
-      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.Apply => __v.value
-      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.Function => __v.value
-      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.Id => __v.value
-      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.Literal => __v.value
-      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.MacroExpansion => __v.value
-      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.Original => __v.value
-      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.Select => __v.value
-      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.TypeApply => __v.value
+      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.ApplyTree => __v.value
+      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.FunctionTree => __v.value
+      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.IdTree => __v.value
+      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.LiteralTree => __v.value
+      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.MacroExpansionTree => __v.value
+      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.OriginalTree => __v.value
+      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.SelectTree => __v.value
+      case __v: scala.meta.internal.semanticdb.TreeMessage.SealedValue.TypeApplyTree => __v.value
       case scala.meta.internal.semanticdb.TreeMessage.SealedValue.Empty => Empty
     }
     override def toBase(__custom: scala.meta.internal.semanticdb.Tree): scala.meta.internal.semanticdb.TreeMessage = scala.meta.internal.semanticdb.TreeMessage(__custom match {
-      case __v: scala.meta.internal.semanticdb.ApplyTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.Apply(__v)
-      case __v: scala.meta.internal.semanticdb.FunctionTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.Function(__v)
-      case __v: scala.meta.internal.semanticdb.IdTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.Id(__v)
-      case __v: scala.meta.internal.semanticdb.LiteralTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.Literal(__v)
-      case __v: scala.meta.internal.semanticdb.MacroExpansionTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.MacroExpansion(__v)
-      case __v: scala.meta.internal.semanticdb.OriginalTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.Original(__v)
-      case __v: scala.meta.internal.semanticdb.SelectTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.Select(__v)
-      case __v: scala.meta.internal.semanticdb.TypeApplyTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.TypeApply(__v)
+      case __v: scala.meta.internal.semanticdb.ApplyTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.ApplyTree(__v)
+      case __v: scala.meta.internal.semanticdb.FunctionTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.FunctionTree(__v)
+      case __v: scala.meta.internal.semanticdb.IdTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.IdTree(__v)
+      case __v: scala.meta.internal.semanticdb.LiteralTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.LiteralTree(__v)
+      case __v: scala.meta.internal.semanticdb.MacroExpansionTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.MacroExpansionTree(__v)
+      case __v: scala.meta.internal.semanticdb.OriginalTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.OriginalTree(__v)
+      case __v: scala.meta.internal.semanticdb.SelectTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.SelectTree(__v)
+      case __v: scala.meta.internal.semanticdb.TypeApplyTree => scala.meta.internal.semanticdb.TreeMessage.SealedValue.TypeApplyTree(__v)
       case Empty => scala.meta.internal.semanticdb.TreeMessage.SealedValue.Empty
     })
   }
@@ -49,36 +49,36 @@ final case class TreeMessage(
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-      if (sealedValue.apply.isDefined) {
-        val __value = sealedValue.apply.get
+      if (sealedValue.applyTree.isDefined) {
+        val __value = sealedValue.applyTree.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
-      if (sealedValue.function.isDefined) {
-        val __value = sealedValue.function.get
+      if (sealedValue.functionTree.isDefined) {
+        val __value = sealedValue.functionTree.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
-      if (sealedValue.id.isDefined) {
-        val __value = sealedValue.id.get
+      if (sealedValue.idTree.isDefined) {
+        val __value = sealedValue.idTree.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
-      if (sealedValue.literal.isDefined) {
-        val __value = sealedValue.literal.get
+      if (sealedValue.literalTree.isDefined) {
+        val __value = sealedValue.literalTree.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
-      if (sealedValue.macroExpansion.isDefined) {
-        val __value = sealedValue.macroExpansion.get
+      if (sealedValue.macroExpansionTree.isDefined) {
+        val __value = sealedValue.macroExpansionTree.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
-      if (sealedValue.original.isDefined) {
-        val __value = sealedValue.original.get
+      if (sealedValue.originalTree.isDefined) {
+        val __value = sealedValue.originalTree.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
-      if (sealedValue.select.isDefined) {
-        val __value = sealedValue.select.get
+      if (sealedValue.selectTree.isDefined) {
+        val __value = sealedValue.selectTree.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
-      if (sealedValue.typeApply.isDefined) {
-        val __value = sealedValue.typeApply.get
+      if (sealedValue.typeApplyTree.isDefined) {
+        val __value = sealedValue.typeApplyTree.get
         __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
       };
       __size
@@ -92,49 +92,49 @@ final case class TreeMessage(
       read
     }
     def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
-      sealedValue.apply.foreach { __v =>
+      sealedValue.applyTree.foreach { __v =>
         val __m = __v
         _output__.writeTag(1, 2)
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-      sealedValue.function.foreach { __v =>
+      sealedValue.functionTree.foreach { __v =>
         val __m = __v
         _output__.writeTag(2, 2)
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-      sealedValue.id.foreach { __v =>
+      sealedValue.idTree.foreach { __v =>
         val __m = __v
         _output__.writeTag(3, 2)
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-      sealedValue.literal.foreach { __v =>
+      sealedValue.literalTree.foreach { __v =>
         val __m = __v
         _output__.writeTag(4, 2)
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-      sealedValue.macroExpansion.foreach { __v =>
+      sealedValue.macroExpansionTree.foreach { __v =>
         val __m = __v
         _output__.writeTag(5, 2)
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-      sealedValue.original.foreach { __v =>
+      sealedValue.originalTree.foreach { __v =>
         val __m = __v
         _output__.writeTag(6, 2)
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-      sealedValue.select.foreach { __v =>
+      sealedValue.selectTree.foreach { __v =>
         val __m = __v
         _output__.writeTag(7, 2)
         _output__.writeUInt32NoTag(__m.serializedSize)
         __m.writeTo(_output__)
       };
-      sealedValue.typeApply.foreach { __v =>
+      sealedValue.typeApplyTree.foreach { __v =>
         val __m = __v
         _output__.writeTag(8, 2)
         _output__.writeUInt32NoTag(__m.serializedSize)
@@ -149,21 +149,21 @@ final case class TreeMessage(
         _tag__ match {
           case 0 => _done__ = true
           case 10 =>
-            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Apply(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.apply.getOrElse(scala.meta.internal.semanticdb.ApplyTree.defaultInstance)))
+            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.ApplyTree(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.applyTree.getOrElse(scala.meta.internal.semanticdb.ApplyTree.defaultInstance)))
           case 18 =>
-            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Function(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.function.getOrElse(scala.meta.internal.semanticdb.FunctionTree.defaultInstance)))
+            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.FunctionTree(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.functionTree.getOrElse(scala.meta.internal.semanticdb.FunctionTree.defaultInstance)))
           case 26 =>
-            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Id(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.id.getOrElse(scala.meta.internal.semanticdb.IdTree.defaultInstance)))
+            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.IdTree(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.idTree.getOrElse(scala.meta.internal.semanticdb.IdTree.defaultInstance)))
           case 34 =>
-            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Literal(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.literal.getOrElse(scala.meta.internal.semanticdb.LiteralTree.defaultInstance)))
+            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.LiteralTree(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.literalTree.getOrElse(scala.meta.internal.semanticdb.LiteralTree.defaultInstance)))
           case 42 =>
-            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.MacroExpansion(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.macroExpansion.getOrElse(scala.meta.internal.semanticdb.MacroExpansionTree.defaultInstance)))
+            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.MacroExpansionTree(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.macroExpansionTree.getOrElse(scala.meta.internal.semanticdb.MacroExpansionTree.defaultInstance)))
           case 50 =>
-            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Original(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.original.getOrElse(scala.meta.internal.semanticdb.OriginalTree.defaultInstance)))
+            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.OriginalTree(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.originalTree.getOrElse(scala.meta.internal.semanticdb.OriginalTree.defaultInstance)))
           case 58 =>
-            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Select(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.select.getOrElse(scala.meta.internal.semanticdb.SelectTree.defaultInstance)))
+            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.SelectTree(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.selectTree.getOrElse(scala.meta.internal.semanticdb.SelectTree.defaultInstance)))
           case 66 =>
-            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.TypeApply(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.typeApply.getOrElse(scala.meta.internal.semanticdb.TypeApplyTree.defaultInstance)))
+            __sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.TypeApplyTree(_root_.scalapb.LiteParser.readMessage(_input__, sealedValue.typeApplyTree.getOrElse(scala.meta.internal.semanticdb.TypeApplyTree.defaultInstance)))
           case tag => _input__.skipField(tag)
         }
       }
@@ -171,47 +171,47 @@ final case class TreeMessage(
           sealedValue = __sealedValue
       )
     }
-    def getApply: scala.meta.internal.semanticdb.ApplyTree = sealedValue.apply.getOrElse(scala.meta.internal.semanticdb.ApplyTree.defaultInstance)
-    def withApply(__v: scala.meta.internal.semanticdb.ApplyTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Apply(__v))
-    def getFunction: scala.meta.internal.semanticdb.FunctionTree = sealedValue.function.getOrElse(scala.meta.internal.semanticdb.FunctionTree.defaultInstance)
-    def withFunction(__v: scala.meta.internal.semanticdb.FunctionTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Function(__v))
-    def getId: scala.meta.internal.semanticdb.IdTree = sealedValue.id.getOrElse(scala.meta.internal.semanticdb.IdTree.defaultInstance)
-    def withId(__v: scala.meta.internal.semanticdb.IdTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Id(__v))
-    def getLiteral: scala.meta.internal.semanticdb.LiteralTree = sealedValue.literal.getOrElse(scala.meta.internal.semanticdb.LiteralTree.defaultInstance)
-    def withLiteral(__v: scala.meta.internal.semanticdb.LiteralTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Literal(__v))
-    def getMacroExpansion: scala.meta.internal.semanticdb.MacroExpansionTree = sealedValue.macroExpansion.getOrElse(scala.meta.internal.semanticdb.MacroExpansionTree.defaultInstance)
-    def withMacroExpansion(__v: scala.meta.internal.semanticdb.MacroExpansionTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.MacroExpansion(__v))
-    def getOriginal: scala.meta.internal.semanticdb.OriginalTree = sealedValue.original.getOrElse(scala.meta.internal.semanticdb.OriginalTree.defaultInstance)
-    def withOriginal(__v: scala.meta.internal.semanticdb.OriginalTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Original(__v))
-    def getSelect: scala.meta.internal.semanticdb.SelectTree = sealedValue.select.getOrElse(scala.meta.internal.semanticdb.SelectTree.defaultInstance)
-    def withSelect(__v: scala.meta.internal.semanticdb.SelectTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Select(__v))
-    def getTypeApply: scala.meta.internal.semanticdb.TypeApplyTree = sealedValue.typeApply.getOrElse(scala.meta.internal.semanticdb.TypeApplyTree.defaultInstance)
-    def withTypeApply(__v: scala.meta.internal.semanticdb.TypeApplyTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.TypeApply(__v))
+    def getApplyTree: scala.meta.internal.semanticdb.ApplyTree = sealedValue.applyTree.getOrElse(scala.meta.internal.semanticdb.ApplyTree.defaultInstance)
+    def withApplyTree(__v: scala.meta.internal.semanticdb.ApplyTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.ApplyTree(__v))
+    def getFunctionTree: scala.meta.internal.semanticdb.FunctionTree = sealedValue.functionTree.getOrElse(scala.meta.internal.semanticdb.FunctionTree.defaultInstance)
+    def withFunctionTree(__v: scala.meta.internal.semanticdb.FunctionTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.FunctionTree(__v))
+    def getIdTree: scala.meta.internal.semanticdb.IdTree = sealedValue.idTree.getOrElse(scala.meta.internal.semanticdb.IdTree.defaultInstance)
+    def withIdTree(__v: scala.meta.internal.semanticdb.IdTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.IdTree(__v))
+    def getLiteralTree: scala.meta.internal.semanticdb.LiteralTree = sealedValue.literalTree.getOrElse(scala.meta.internal.semanticdb.LiteralTree.defaultInstance)
+    def withLiteralTree(__v: scala.meta.internal.semanticdb.LiteralTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.LiteralTree(__v))
+    def getMacroExpansionTree: scala.meta.internal.semanticdb.MacroExpansionTree = sealedValue.macroExpansionTree.getOrElse(scala.meta.internal.semanticdb.MacroExpansionTree.defaultInstance)
+    def withMacroExpansionTree(__v: scala.meta.internal.semanticdb.MacroExpansionTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.MacroExpansionTree(__v))
+    def getOriginalTree: scala.meta.internal.semanticdb.OriginalTree = sealedValue.originalTree.getOrElse(scala.meta.internal.semanticdb.OriginalTree.defaultInstance)
+    def withOriginalTree(__v: scala.meta.internal.semanticdb.OriginalTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.OriginalTree(__v))
+    def getSelectTree: scala.meta.internal.semanticdb.SelectTree = sealedValue.selectTree.getOrElse(scala.meta.internal.semanticdb.SelectTree.defaultInstance)
+    def withSelectTree(__v: scala.meta.internal.semanticdb.SelectTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.SelectTree(__v))
+    def getTypeApplyTree: scala.meta.internal.semanticdb.TypeApplyTree = sealedValue.typeApplyTree.getOrElse(scala.meta.internal.semanticdb.TypeApplyTree.defaultInstance)
+    def withTypeApplyTree(__v: scala.meta.internal.semanticdb.TypeApplyTree): TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.TypeApplyTree(__v))
     def clearSealedValue: TreeMessage = copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Empty)
     def withSealedValue(__v: scala.meta.internal.semanticdb.TreeMessage.SealedValue): TreeMessage = copy(sealedValue = __v)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
-        case 1 => sealedValue.apply.orNull
-        case 2 => sealedValue.function.orNull
-        case 3 => sealedValue.id.orNull
-        case 4 => sealedValue.literal.orNull
-        case 5 => sealedValue.macroExpansion.orNull
-        case 6 => sealedValue.original.orNull
-        case 7 => sealedValue.select.orNull
-        case 8 => sealedValue.typeApply.orNull
+        case 1 => sealedValue.applyTree.orNull
+        case 2 => sealedValue.functionTree.orNull
+        case 3 => sealedValue.idTree.orNull
+        case 4 => sealedValue.literalTree.orNull
+        case 5 => sealedValue.macroExpansionTree.orNull
+        case 6 => sealedValue.originalTree.orNull
+        case 7 => sealedValue.selectTree.orNull
+        case 8 => sealedValue.typeApplyTree.orNull
       }
     }
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
       _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
-        case 1 => sealedValue.apply.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 2 => sealedValue.function.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 3 => sealedValue.id.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 4 => sealedValue.literal.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 5 => sealedValue.macroExpansion.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 6 => sealedValue.original.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 7 => sealedValue.select.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
-        case 8 => sealedValue.typeApply.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 1 => sealedValue.applyTree.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 2 => sealedValue.functionTree.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 3 => sealedValue.idTree.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 4 => sealedValue.literalTree.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 5 => sealedValue.macroExpansionTree.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 6 => sealedValue.originalTree.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 7 => sealedValue.selectTree.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
+        case 8 => sealedValue.typeApplyTree.map(_.toPMessage).getOrElse(_root_.scalapb.descriptors.PEmpty)
       }
     }
     def toProtoString: _root_.scala.Predef.String = _root_.scalapb.TextFormat.printToUnicodeString(this)
@@ -225,14 +225,14 @@ object TreeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
     _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.TreeMessage(
-      sealedValue = __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.ApplyTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.Apply)
-    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(__fields.get(1)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.FunctionTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.Function))
-    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(__fields.get(2)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.IdTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.Id))
-    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(__fields.get(3)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.LiteralTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.Literal))
-    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(__fields.get(4)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.MacroExpansionTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.MacroExpansion))
-    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(__fields.get(5)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.OriginalTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.Original))
-    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(__fields.get(6)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.SelectTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.Select))
-    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(__fields.get(7)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.TypeApplyTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.TypeApply))
+      sealedValue = __fieldsMap.get(__fields.get(0)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.ApplyTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.ApplyTree)
+    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(__fields.get(1)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.FunctionTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.FunctionTree))
+    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(__fields.get(2)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.IdTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.IdTree))
+    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(__fields.get(3)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.LiteralTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.LiteralTree))
+    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(__fields.get(4)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.MacroExpansionTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.MacroExpansionTree))
+    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(__fields.get(5)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.OriginalTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.OriginalTree))
+    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(__fields.get(6)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.SelectTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.SelectTree))
+    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(__fields.get(7)).asInstanceOf[_root_.scala.Option[scala.meta.internal.semanticdb.TypeApplyTree]].map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.TypeApplyTree))
     .getOrElse(scala.meta.internal.semanticdb.TreeMessage.SealedValue.Empty)
     )
   }
@@ -240,14 +240,14 @@ object TreeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
       _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.TreeMessage(
-        sealedValue = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.ApplyTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.Apply)
-    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.FunctionTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.Function))
-    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.IdTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.Id))
-    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.LiteralTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.Literal))
-    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.MacroExpansionTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.MacroExpansion))
-    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.OriginalTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.Original))
-    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(7).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.SelectTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.Select))
-    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(8).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.TypeApplyTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.TypeApply))
+        sealedValue = __fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.ApplyTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.ApplyTree)
+    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.FunctionTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.FunctionTree))
+    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(3).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.IdTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.IdTree))
+    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(4).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.LiteralTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.LiteralTree))
+    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(5).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.MacroExpansionTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.MacroExpansionTree))
+    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(6).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.OriginalTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.OriginalTree))
+    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(7).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.SelectTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.SelectTree))
+    .orElse[scala.meta.internal.semanticdb.TreeMessage.SealedValue](__fieldsMap.get(scalaDescriptor.findFieldByNumber(8).get).flatMap(_.as[_root_.scala.Option[scala.meta.internal.semanticdb.TypeApplyTree]]).map(scala.meta.internal.semanticdb.TreeMessage.SealedValue.TypeApplyTree))
     .getOrElse(scala.meta.internal.semanticdb.TreeMessage.SealedValue.Empty)
       )
     case _ => throw new RuntimeException("Expected PMessage")
@@ -275,22 +275,22 @@ object TreeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
   sealed trait SealedValue extends _root_.scalapb.GeneratedOneof {
     def isEmpty: _root_.scala.Boolean = false
     def isDefined: _root_.scala.Boolean = true
-    def isApply: _root_.scala.Boolean = false
-    def isFunction: _root_.scala.Boolean = false
-    def isId: _root_.scala.Boolean = false
-    def isLiteral: _root_.scala.Boolean = false
-    def isMacroExpansion: _root_.scala.Boolean = false
-    def isOriginal: _root_.scala.Boolean = false
-    def isSelect: _root_.scala.Boolean = false
-    def isTypeApply: _root_.scala.Boolean = false
-    def apply: _root_.scala.Option[scala.meta.internal.semanticdb.ApplyTree] = None
-    def function: _root_.scala.Option[scala.meta.internal.semanticdb.FunctionTree] = None
-    def id: _root_.scala.Option[scala.meta.internal.semanticdb.IdTree] = None
-    def literal: _root_.scala.Option[scala.meta.internal.semanticdb.LiteralTree] = None
-    def macroExpansion: _root_.scala.Option[scala.meta.internal.semanticdb.MacroExpansionTree] = None
-    def original: _root_.scala.Option[scala.meta.internal.semanticdb.OriginalTree] = None
-    def select: _root_.scala.Option[scala.meta.internal.semanticdb.SelectTree] = None
-    def typeApply: _root_.scala.Option[scala.meta.internal.semanticdb.TypeApplyTree] = None
+    def isApplyTree: _root_.scala.Boolean = false
+    def isFunctionTree: _root_.scala.Boolean = false
+    def isIdTree: _root_.scala.Boolean = false
+    def isLiteralTree: _root_.scala.Boolean = false
+    def isMacroExpansionTree: _root_.scala.Boolean = false
+    def isOriginalTree: _root_.scala.Boolean = false
+    def isSelectTree: _root_.scala.Boolean = false
+    def isTypeApplyTree: _root_.scala.Boolean = false
+    def applyTree: _root_.scala.Option[scala.meta.internal.semanticdb.ApplyTree] = None
+    def functionTree: _root_.scala.Option[scala.meta.internal.semanticdb.FunctionTree] = None
+    def idTree: _root_.scala.Option[scala.meta.internal.semanticdb.IdTree] = None
+    def literalTree: _root_.scala.Option[scala.meta.internal.semanticdb.LiteralTree] = None
+    def macroExpansionTree: _root_.scala.Option[scala.meta.internal.semanticdb.MacroExpansionTree] = None
+    def originalTree: _root_.scala.Option[scala.meta.internal.semanticdb.OriginalTree] = None
+    def selectTree: _root_.scala.Option[scala.meta.internal.semanticdb.SelectTree] = None
+    def typeApplyTree: _root_.scala.Option[scala.meta.internal.semanticdb.TypeApplyTree] = None
   }
   object SealedValue extends {
     @SerialVersionUID(0L)
@@ -303,81 +303,81 @@ object TreeMessage extends scalapb.GeneratedMessageCompanion[scala.meta.internal
     }
   
     @SerialVersionUID(0L)
-    final case class Apply(value: scala.meta.internal.semanticdb.ApplyTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
+    final case class ApplyTree(value: scala.meta.internal.semanticdb.ApplyTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
       type ValueType = scala.meta.internal.semanticdb.ApplyTree
-      override def isApply: _root_.scala.Boolean = true
-      override def apply: _root_.scala.Option[scala.meta.internal.semanticdb.ApplyTree] = Some(value)
+      override def isApplyTree: _root_.scala.Boolean = true
+      override def applyTree: _root_.scala.Option[scala.meta.internal.semanticdb.ApplyTree] = Some(value)
       override def number: _root_.scala.Int = 1
     }
     @SerialVersionUID(0L)
-    final case class Function(value: scala.meta.internal.semanticdb.FunctionTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
+    final case class FunctionTree(value: scala.meta.internal.semanticdb.FunctionTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
       type ValueType = scala.meta.internal.semanticdb.FunctionTree
-      override def isFunction: _root_.scala.Boolean = true
-      override def function: _root_.scala.Option[scala.meta.internal.semanticdb.FunctionTree] = Some(value)
+      override def isFunctionTree: _root_.scala.Boolean = true
+      override def functionTree: _root_.scala.Option[scala.meta.internal.semanticdb.FunctionTree] = Some(value)
       override def number: _root_.scala.Int = 2
     }
     @SerialVersionUID(0L)
-    final case class Id(value: scala.meta.internal.semanticdb.IdTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
+    final case class IdTree(value: scala.meta.internal.semanticdb.IdTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
       type ValueType = scala.meta.internal.semanticdb.IdTree
-      override def isId: _root_.scala.Boolean = true
-      override def id: _root_.scala.Option[scala.meta.internal.semanticdb.IdTree] = Some(value)
+      override def isIdTree: _root_.scala.Boolean = true
+      override def idTree: _root_.scala.Option[scala.meta.internal.semanticdb.IdTree] = Some(value)
       override def number: _root_.scala.Int = 3
     }
     @SerialVersionUID(0L)
-    final case class Literal(value: scala.meta.internal.semanticdb.LiteralTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
+    final case class LiteralTree(value: scala.meta.internal.semanticdb.LiteralTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
       type ValueType = scala.meta.internal.semanticdb.LiteralTree
-      override def isLiteral: _root_.scala.Boolean = true
-      override def literal: _root_.scala.Option[scala.meta.internal.semanticdb.LiteralTree] = Some(value)
+      override def isLiteralTree: _root_.scala.Boolean = true
+      override def literalTree: _root_.scala.Option[scala.meta.internal.semanticdb.LiteralTree] = Some(value)
       override def number: _root_.scala.Int = 4
     }
     @SerialVersionUID(0L)
-    final case class MacroExpansion(value: scala.meta.internal.semanticdb.MacroExpansionTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
+    final case class MacroExpansionTree(value: scala.meta.internal.semanticdb.MacroExpansionTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
       type ValueType = scala.meta.internal.semanticdb.MacroExpansionTree
-      override def isMacroExpansion: _root_.scala.Boolean = true
-      override def macroExpansion: _root_.scala.Option[scala.meta.internal.semanticdb.MacroExpansionTree] = Some(value)
+      override def isMacroExpansionTree: _root_.scala.Boolean = true
+      override def macroExpansionTree: _root_.scala.Option[scala.meta.internal.semanticdb.MacroExpansionTree] = Some(value)
       override def number: _root_.scala.Int = 5
     }
     @SerialVersionUID(0L)
-    final case class Original(value: scala.meta.internal.semanticdb.OriginalTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
+    final case class OriginalTree(value: scala.meta.internal.semanticdb.OriginalTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
       type ValueType = scala.meta.internal.semanticdb.OriginalTree
-      override def isOriginal: _root_.scala.Boolean = true
-      override def original: _root_.scala.Option[scala.meta.internal.semanticdb.OriginalTree] = Some(value)
+      override def isOriginalTree: _root_.scala.Boolean = true
+      override def originalTree: _root_.scala.Option[scala.meta.internal.semanticdb.OriginalTree] = Some(value)
       override def number: _root_.scala.Int = 6
     }
     @SerialVersionUID(0L)
-    final case class Select(value: scala.meta.internal.semanticdb.SelectTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
+    final case class SelectTree(value: scala.meta.internal.semanticdb.SelectTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
       type ValueType = scala.meta.internal.semanticdb.SelectTree
-      override def isSelect: _root_.scala.Boolean = true
-      override def select: _root_.scala.Option[scala.meta.internal.semanticdb.SelectTree] = Some(value)
+      override def isSelectTree: _root_.scala.Boolean = true
+      override def selectTree: _root_.scala.Option[scala.meta.internal.semanticdb.SelectTree] = Some(value)
       override def number: _root_.scala.Int = 7
     }
     @SerialVersionUID(0L)
-    final case class TypeApply(value: scala.meta.internal.semanticdb.TypeApplyTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
+    final case class TypeApplyTree(value: scala.meta.internal.semanticdb.TypeApplyTree) extends scala.meta.internal.semanticdb.TreeMessage.SealedValue {
       type ValueType = scala.meta.internal.semanticdb.TypeApplyTree
-      override def isTypeApply: _root_.scala.Boolean = true
-      override def typeApply: _root_.scala.Option[scala.meta.internal.semanticdb.TypeApplyTree] = Some(value)
+      override def isTypeApplyTree: _root_.scala.Boolean = true
+      override def typeApplyTree: _root_.scala.Option[scala.meta.internal.semanticdb.TypeApplyTree] = Some(value)
       override def number: _root_.scala.Int = 8
     }
   }
   implicit class TreeMessageLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.TreeMessage]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.TreeMessage](_l) {
-    def apply: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.ApplyTree] = field(_.getApply)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Apply(f_)))
-    def function: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.FunctionTree] = field(_.getFunction)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Function(f_)))
-    def id: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.IdTree] = field(_.getId)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Id(f_)))
-    def literal: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.LiteralTree] = field(_.getLiteral)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Literal(f_)))
-    def macroExpansion: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.MacroExpansionTree] = field(_.getMacroExpansion)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.MacroExpansion(f_)))
-    def original: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.OriginalTree] = field(_.getOriginal)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Original(f_)))
-    def select: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.SelectTree] = field(_.getSelect)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.Select(f_)))
-    def typeApply: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.TypeApplyTree] = field(_.getTypeApply)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.TypeApply(f_)))
+    def applyTree: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.ApplyTree] = field(_.getApplyTree)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.ApplyTree(f_)))
+    def functionTree: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.FunctionTree] = field(_.getFunctionTree)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.FunctionTree(f_)))
+    def idTree: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.IdTree] = field(_.getIdTree)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.IdTree(f_)))
+    def literalTree: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.LiteralTree] = field(_.getLiteralTree)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.LiteralTree(f_)))
+    def macroExpansionTree: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.MacroExpansionTree] = field(_.getMacroExpansionTree)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.MacroExpansionTree(f_)))
+    def originalTree: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.OriginalTree] = field(_.getOriginalTree)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.OriginalTree(f_)))
+    def selectTree: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.SelectTree] = field(_.getSelectTree)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.SelectTree(f_)))
+    def typeApplyTree: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.TypeApplyTree] = field(_.getTypeApplyTree)((c_, f_) => c_.copy(sealedValue = scala.meta.internal.semanticdb.TreeMessage.SealedValue.TypeApplyTree(f_)))
     def sealedValue: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.TreeMessage.SealedValue] = field(_.sealedValue)((c_, f_) => c_.copy(sealedValue = f_))
   }
-  final val APPLY_FIELD_NUMBER = 1
-  final val FUNCTION_FIELD_NUMBER = 2
-  final val ID_FIELD_NUMBER = 3
-  final val LITERAL_FIELD_NUMBER = 4
-  final val MACROEXPANSION_FIELD_NUMBER = 5
-  final val ORIGINAL_FIELD_NUMBER = 6
-  final val SELECT_FIELD_NUMBER = 7
-  final val TYPEAPPLY_FIELD_NUMBER = 8
+  final val APPLYTREE_FIELD_NUMBER = 1
+  final val FUNCTIONTREE_FIELD_NUMBER = 2
+  final val IDTREE_FIELD_NUMBER = 3
+  final val LITERALTREE_FIELD_NUMBER = 4
+  final val MACROEXPANSIONTREE_FIELD_NUMBER = 5
+  final val ORIGINALTREE_FIELD_NUMBER = 6
+  final val SELECTTREE_FIELD_NUMBER = 7
+  final val TYPEAPPLYTREE_FIELD_NUMBER = 8
 }
 
 @SerialVersionUID(0L)
@@ -858,20 +858,12 @@ object LiteralTree extends scalapb.GeneratedMessageCompanion[scala.meta.internal
 
 @SerialVersionUID(0L)
 final case class MacroExpansionTree(
-    expandee: scala.meta.internal.semanticdb.Tree = scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_expandee.toCustom(scala.meta.internal.semanticdb.TreeMessage.defaultInstance),
     tpe: scala.meta.internal.semanticdb.Type = scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_tpe.toCustom(scala.meta.internal.semanticdb.TypeMessage.defaultInstance)
     ) extends scala.meta.internal.semanticdb.Tree with scalapb.GeneratedMessage with scalapb.Message[MacroExpansionTree] with scalapb.lenses.Updatable[MacroExpansionTree] {
     @transient
     private[this] var __serializedSizeCachedValue: _root_.scala.Int = 0
     private[this] def __computeSerializedValue(): _root_.scala.Int = {
       var __size = 0
-      
-      {
-        val __value = scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_expandee.toBase(expandee)
-        if (__value != scala.meta.internal.semanticdb.TreeMessage.defaultInstance) {
-          __size += 1 + _root_.com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag(__value.serializedSize) + __value.serializedSize
-        }
-      };
       
       {
         val __value = scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_tpe.toBase(tpe)
@@ -891,14 +883,6 @@ final case class MacroExpansionTree(
     }
     def writeTo(`_output__`: _root_.com.google.protobuf.CodedOutputStream): _root_.scala.Unit = {
       {
-        val __v = scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_expandee.toBase(expandee)
-        if (__v != scala.meta.internal.semanticdb.TreeMessage.defaultInstance) {
-          _output__.writeTag(1, 2)
-          _output__.writeUInt32NoTag(__v.serializedSize)
-          __v.writeTo(_output__)
-        }
-      };
-      {
         val __v = scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_tpe.toBase(tpe)
         if (__v != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) {
           _output__.writeTag(2, 2)
@@ -908,33 +892,24 @@ final case class MacroExpansionTree(
       };
     }
     def mergeFrom(`_input__`: _root_.com.google.protobuf.CodedInputStream): scala.meta.internal.semanticdb.MacroExpansionTree = {
-      var __expandee = this.expandee
       var __tpe = this.tpe
       var _done__ = false
       while (!_done__) {
         val _tag__ = _input__.readTag()
         _tag__ match {
           case 0 => _done__ = true
-          case 10 =>
-            __expandee = scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_expandee.toCustom(_root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_expandee.toBase(__expandee)))
           case 18 =>
             __tpe = scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_tpe.toCustom(_root_.scalapb.LiteParser.readMessage(_input__, scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_tpe.toBase(__tpe)))
           case tag => _input__.skipField(tag)
         }
       }
       scala.meta.internal.semanticdb.MacroExpansionTree(
-          expandee = __expandee,
           tpe = __tpe
       )
     }
-    def withExpandee(__v: scala.meta.internal.semanticdb.Tree): MacroExpansionTree = copy(expandee = __v)
     def withTpe(__v: scala.meta.internal.semanticdb.Type): MacroExpansionTree = copy(tpe = __v)
     def getFieldByNumber(__fieldNumber: _root_.scala.Int): _root_.scala.Any = {
       (__fieldNumber: @_root_.scala.unchecked) match {
-        case 1 => {
-          val __t = scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_expandee.toBase(expandee)
-          if (__t != scala.meta.internal.semanticdb.TreeMessage.defaultInstance) __t else null
-        }
         case 2 => {
           val __t = scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_tpe.toBase(tpe)
           if (__t != scala.meta.internal.semanticdb.TypeMessage.defaultInstance) __t else null
@@ -944,7 +919,6 @@ final case class MacroExpansionTree(
     def getField(__field: _root_.scalapb.descriptors.FieldDescriptor): _root_.scalapb.descriptors.PValue = {
       _root_.scala.Predef.require(__field.containingMessage eq companion.scalaDescriptor)
       (__field.number: @_root_.scala.unchecked) match {
-        case 1 => scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_expandee.toBase(expandee).toPMessage
         case 2 => scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_tpe.toBase(tpe).toPMessage
       }
     }
@@ -958,15 +932,13 @@ object MacroExpansionTree extends scalapb.GeneratedMessageCompanion[scala.meta.i
     _root_.scala.Predef.require(__fieldsMap.keys.forall(_.getContainingType() == javaDescriptor), "FieldDescriptor does not match message type.")
     val __fields = javaDescriptor.getFields
     scala.meta.internal.semanticdb.MacroExpansionTree(
-      scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_expandee.toCustom(__fieldsMap.getOrElse(__fields.get(0), scala.meta.internal.semanticdb.TreeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TreeMessage]),
-      scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_tpe.toCustom(__fieldsMap.getOrElse(__fields.get(1), scala.meta.internal.semanticdb.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TypeMessage])
+      scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_tpe.toCustom(__fieldsMap.getOrElse(__fields.get(0), scala.meta.internal.semanticdb.TypeMessage.defaultInstance).asInstanceOf[scala.meta.internal.semanticdb.TypeMessage])
     )
   }
   implicit def messageReads: _root_.scalapb.descriptors.Reads[scala.meta.internal.semanticdb.MacroExpansionTree] = _root_.scalapb.descriptors.Reads{
     case _root_.scalapb.descriptors.PMessage(__fieldsMap) =>
       _root_.scala.Predef.require(__fieldsMap.keys.forall(_.containingMessage == scalaDescriptor), "FieldDescriptor does not match message type.")
       scala.meta.internal.semanticdb.MacroExpansionTree(
-        scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_expandee.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(1).get).map(_.as[scala.meta.internal.semanticdb.TreeMessage]).getOrElse(scala.meta.internal.semanticdb.TreeMessage.defaultInstance)),
         scala.meta.internal.semanticdb.MacroExpansionTree._typemapper_tpe.toCustom(__fieldsMap.get(scalaDescriptor.findFieldByNumber(2).get).map(_.as[scala.meta.internal.semanticdb.TypeMessage]).getOrElse(scala.meta.internal.semanticdb.TypeMessage.defaultInstance))
       )
     case _ => throw new RuntimeException("Expected PMessage")
@@ -976,7 +948,6 @@ object MacroExpansionTree extends scalapb.GeneratedMessageCompanion[scala.meta.i
   def messageCompanionForFieldNumber(__number: _root_.scala.Int): _root_.scalapb.GeneratedMessageCompanion[_] = {
     var __out: _root_.scalapb.GeneratedMessageCompanion[_] = null
     (__number: @_root_.scala.unchecked) match {
-      case 1 => __out = scala.meta.internal.semanticdb.TreeMessage
       case 2 => __out = scala.meta.internal.semanticdb.TypeMessage
     }
     __out
@@ -986,13 +957,9 @@ object MacroExpansionTree extends scalapb.GeneratedMessageCompanion[scala.meta.i
   lazy val defaultInstance = scala.meta.internal.semanticdb.MacroExpansionTree(
   )
   implicit class MacroExpansionTreeLens[UpperPB](_l: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.MacroExpansionTree]) extends _root_.scalapb.lenses.ObjectLens[UpperPB, scala.meta.internal.semanticdb.MacroExpansionTree](_l) {
-    def expandee: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Tree] = field(_.expandee)((c_, f_) => c_.copy(expandee = f_))
     def tpe: _root_.scalapb.lenses.Lens[UpperPB, scala.meta.internal.semanticdb.Type] = field(_.tpe)((c_, f_) => c_.copy(tpe = f_))
   }
-  final val EXPANDEE_FIELD_NUMBER = 1
   final val TPE_FIELD_NUMBER = 2
-  @transient
-  private val _typemapper_expandee: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TreeMessage, scala.meta.internal.semanticdb.Tree] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TreeMessage, scala.meta.internal.semanticdb.Tree]]
   @transient
   private val _typemapper_tpe: _root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type] = implicitly[_root_.scalapb.TypeMapper[scala.meta.internal.semanticdb.TypeMessage, scala.meta.internal.semanticdb.Type]]
 }

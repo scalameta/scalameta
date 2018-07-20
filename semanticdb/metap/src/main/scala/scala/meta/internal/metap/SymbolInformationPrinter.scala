@@ -9,20 +9,7 @@ import scala.meta.internal.semanticdb.SymbolInformation._
 import scala.meta.internal.semanticdb.SymbolInformation.Kind._
 import scala.meta.internal.semanticdb.SymbolInformation.Property._
 
-trait SymbolInformationPrinter extends BasePrinter with ConstantPrinter { self =>
-
-  protected def printInfosVisited(infos: List[SymbolInformation]): Unit = {
-    val printed = mutable.Set[String]()
-    infos.foreach { info =>
-      if (!printed(info.symbol)) {
-        printed += info.symbol
-        out.print("  ")
-        out.print(info.name)
-        out.print(" => ")
-        out.println(info.symbol)
-      }
-    }
-  }
+trait SymbolInformationPrinter extends BasePrinter {
 
   def pprint(info: SymbolInformation): Unit = {
     out.print(info.symbol)
@@ -34,7 +21,16 @@ trait SymbolInformationPrinter extends BasePrinter with ConstantPrinter { self =
     out.println()
 
     if (settings.format.isDetailed) {
-      printInfosVisited(infoNotes.visited.tail)
+      val printed = mutable.Set[String]()
+      infoNotes.visited.tail.foreach { info =>
+        if (!printed(info.symbol)) {
+          printed += info.symbol
+          out.print("  ")
+          out.print(info.name)
+          out.print(" => ")
+          out.println(info.symbol)
+        }
+      }
     }
   }
 
@@ -188,7 +184,7 @@ trait SymbolInformationPrinter extends BasePrinter with ConstantPrinter { self =
             out.print("super")
             opt("[", sym, "]")(pprintRef)
           case ConstantType(const) =>
-            self.pprint(const)
+            pprint(const)
           case IntersectionType(types) =>
             rep(types, " & ")(normal)
           case UnionType(types) =>
@@ -300,6 +296,37 @@ trait SymbolInformationPrinter extends BasePrinter with ConstantPrinter { self =
     private def pprint(name: String): Unit = {
       if (name.nonEmpty) out.print(name)
       else out.print("<?>")
+    }
+
+    protected def pprint(const: Constant): Unit = {
+      const match {
+        case NoConstant =>
+          out.print("<?>")
+        case UnitConstant() =>
+          out.print("()")
+        case BooleanConstant(true) =>
+          out.print(true)
+        case BooleanConstant(false) =>
+          out.print(false)
+        case ByteConstant(value) =>
+          out.print(value.toByte)
+        case ShortConstant(value) =>
+          out.print(value.toShort)
+        case CharConstant(value) =>
+          out.print("'" + value.toChar + "'")
+        case IntConstant(value) =>
+          out.print(value)
+        case LongConstant(value) =>
+          out.print(value + "L")
+        case FloatConstant(value) =>
+          out.print(value + "f")
+        case DoubleConstant(value) =>
+          out.print(value)
+        case StringConstant(value) =>
+          out.print("\"" + value + "\"")
+        case NullConstant() =>
+          out.print("null")
+      }
     }
 
     private implicit class InfoOps(info: SymbolInformation) {

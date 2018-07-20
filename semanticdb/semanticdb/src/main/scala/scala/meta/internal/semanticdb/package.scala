@@ -5,6 +5,7 @@ package object semanticdb {
   val NoType = Type.Empty
   val NoConstant = Constant.Empty
   val NoSignature = Signature.Empty
+  val NoTree = Tree.Empty
 
   implicit class XtensionSemanticdbSymbolInformation(info: SymbolInformation) {
     def has(

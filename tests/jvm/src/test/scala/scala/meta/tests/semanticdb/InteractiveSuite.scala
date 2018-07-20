@@ -69,10 +69,10 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
        |[1:24..1:30) [warning] Unused import
        |
        |Synthetics:
-       |[3:10..3:27): orig(_root_.scala.List) => orig(_root_.scala.List).apply[Nothing]
+       |[3:10..3:27): _root_.scala.List => orig(_root_.scala.List).apply[Nothing]
        |  apply => scala/collection/immutable/List.apply().
        |  Nothing => scala/Nothing#
-       |[4:2..4:3): orig(x) => any2stringadd[List[Nothing]](orig(x))
+       |[4:2..4:3): x => any2stringadd[List[Nothing]](orig(x))
        |  any2stringadd => scala/Predef.any2stringadd().
        |  List => scala/collection/immutable/List#
        |  Nothing => scala/Nothing#

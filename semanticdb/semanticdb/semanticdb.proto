@@ -325,14 +325,14 @@ message Synthetic {
 
 message Tree {
   oneof sealed_value {
-    ApplyTree apply = 1;
-    FunctionTree function = 2;
-    IdTree id = 3;
-    LiteralTree literal = 4;
-    MacroExpansionTree macroExpansion = 5;
-    OriginalTree original = 6;
-    SelectTree select = 7;
-    TypeApplyTree typeApply = 8;
+    ApplyTree applyTree = 1;
+    FunctionTree functionTree = 2;
+    IdTree idTree = 3;
+    LiteralTree literalTree = 4;
+    MacroExpansionTree macroExpansionTree = 5;
+    OriginalTree originalTree = 6;
+    SelectTree selectTree = 7;
+    TypeApplyTree typeApplyTree = 8;
   }
 }
 
@@ -355,7 +355,6 @@ message LiteralTree {
 }
 
 message MacroExpansionTree {
-  Tree expandee = 1;
   Type tpe = 2;
 }
 

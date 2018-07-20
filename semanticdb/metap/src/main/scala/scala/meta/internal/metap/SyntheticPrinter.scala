@@ -1,80 +1,75 @@
 package scala.meta.internal.metap
 
-import scala.meta.internal.{semanticdb => s}
+import scala.collection.mutable
+import scala.meta.internal.semanticdb._
 
-trait SyntheticPrinter
-    extends BasePrinter
-    with RangePrinter
-    with SymbolInformationPrinter
-    with ConstantPrinter {
-  self =>
+trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformationPrinter {
 
-  private def shorten(s: String): String = {
-    val newline = s.indexOf('\n')
-    if (newline == -1) {
-      if (s.length > 100) s.takeRight(100) + "..."
-      else s
-    } else s.substring(0, newline) + "..."
-  }
-
-  def pprint(synth: s.Synthetic): Unit = {
+  def pprint(synth: Synthetic): Unit = {
     opt(synth.range)(pprint)
-    opt(": orig(", doc.substring(synth.range), ")")(out.print)
+    opt(": ", doc.substring(synth.range), "")(out.print)
     out.print(" => ")
     pprint(synth.tree)
   }
 
-  def pprint(tree: s.Tree): Unit = {
+  def pprint(tree: Tree): Unit = {
     val infoNotes = new InfoNotes
     val treePrinter = new TreePrinter(infoNotes)
     treePrinter.pprint(tree)
     out.println()
 
     if (settings.format.isDetailed) {
-      printInfosVisited(infoNotes.visited)
+      val printed = mutable.Set[String]()
+      infoNotes.visited.foreach { info =>
+        if (!printed(info.symbol)) {
+          printed += info.symbol
+          out.print("  ")
+          out.print(info.name)
+          out.print(" => ")
+          out.println(info.symbol)
+        }
+      }
     }
   }
 
-  implicit def newSynthOrder: Ordering[s.Synthetic] = Ordering.by(_.range)
+  implicit def syntheticOrder: Ordering[Synthetic] = Ordering.by(_.range)
 
   private class TreePrinter(notes: InfoNotes) extends InfoPrinter(notes) {
 
-    def pprint(tree: s.Tree): Unit = {
+    def pprint(tree: Tree): Unit = {
       tree match {
-        case tree: s.ApplyTree =>
+        case tree: ApplyTree =>
           pprint(tree.fn)
           out.print("(")
-          rep(tree.args, ",")(pprint)
+          rep(tree.args, ", ")(pprint)
           out.print(")")
-        case tree: s.FunctionTree =>
+        case tree: FunctionTree =>
           out.print("{")
-          rep("(", tree.params, ",", ") => ")(pprint)
+          rep("(", tree.params, ", ", ") => ")(pprint)
           pprint(tree.term)
           out.print("}")
-        case tree: s.IdTree =>
+        case tree: IdTree =>
           pprint(tree.sym, Reference)
-        case tree: s.LiteralTree =>
-          self.pprint(tree.const)
-        case tree: s.MacroExpansionTree =>
-          out.print("(")
-          pprint(tree.expandee)
-          out.print(":")
+        case tree: LiteralTree =>
+          pprint(tree.const)
+        case tree: MacroExpansionTree =>
+          out.print("(<?>:")
           pprint(tree.tpe)
           out.print(")")
-        case tree: s.OriginalTree =>
+        case tree: OriginalTree =>
           out.print("orig(")
           opt(doc.substring(tree.range))(out.print)
           out.print(")")
-        case tree: s.SelectTree =>
+        case tree: SelectTree =>
           pprint(tree.qual)
           out.print(".")
           opt(tree.id)(pprint)
-        case tree: s.TypeApplyTree =>
+        case tree: TypeApplyTree =>
           pprint(tree.fn)
           out.print("[")
-          rep(tree.targs, ",")(pprint)
+          rep(tree.targs, ", ")(pprint)
           out.print("]")
-        case s.Tree.Empty =>
+        case NoTree =>
           out.print("<?>")
       }
     }

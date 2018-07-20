@@ -55,7 +55,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
       val symbols = mutable.Map[String, s.SymbolInformation]()
       val synthetics = mutable.ListBuffer[s.Synthetic]()
       val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
-      val visitedSyntheticParent = mutable.Set.empty[g.Tree] // synthetics we have already visited the parents of
+      val isVisitedParent = mutable.Set.empty[g.Tree] // synthetics we have already visited the parents of
       val todo = mutable.Set[m.Name]() // names to map to global trees
       val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
       val mends = mutable.Map[Int, m.Name]() // end offset -> tree
@@ -369,7 +369,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
             }
           }
 
-          private def tryFindInferred(gtree: g.Tree): Unit = {
+          private def tryFindSynthetic(gtree: g.Tree): Unit = {
             if (!config.synthetics.isOn) return
 
             if (!gtree.pos.isRange) return
@@ -397,7 +397,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
             }
 
             def forMethodSelect(gtree: g.Tree): s.Tree = {
-              visitedSyntheticParent += gtree
+              isVisitedParent += gtree
               gtree match {
                 case gtree: g.TypeApply =>
                   val targs = gtree.args.map(_.tpe.toSemanticTpe)
@@ -421,11 +421,11 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 val bodyTree = forSyntheticOrOrig(gtree.body)
                 s.FunctionTree(names, bodyTree)
               case _ =>
-                gtree.toSemanticOriginalTree
+                gtree.toSemanticOriginal
             }
 
             def forSyntheticOrOrig(gtree: g.Tree): s.Tree = {
-              visitedSyntheticParent += gtree
+              isVisitedParent += gtree
               gtree match {
                 case gtree: g.ApplyToImplicitArgs =>
                   val implicitArgs = gtree.args.map(_.toSemanticTree)
@@ -441,11 +441,11 @@ trait TextDocumentOps { self: SemanticdbOps =>
                     fn = fun,
                     args = List(body)
                   )
-                case gtree => gtree.toSemanticOriginalTree
+                case gtree => gtree.toSemanticOriginal
               }
             }
 
-            if (!visitedSyntheticParent(gtree)) {
+            if (!isVisitedParent(gtree)) {
               gtree match {
                 case gview: g.ApplyImplicitView =>
                   val pos = gtree.pos.toMeta
@@ -501,8 +501,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   // for loops
                   val fnTree = fun match {
                     case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
-                      visitedSyntheticParent += select
-                      visitedSyntheticParent += fun
+                      isVisitedParent += select
+                      isVisitedParent += fun
                       val symbol = select.symbol.toSemantic
                       s.SelectTree(
                         qual = s.OriginalTree(range = Some(qual.pos.toMeta.toRange)),
@@ -521,7 +521,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                     )
                   )
                 case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
-                  visitedSyntheticParent += select
+                  isVisitedParent += select
                   val symbol = select.symbol.toSemantic
                   synthetics += s.Synthetic(
                     range = Some(qual.pos.toMeta.toRange),
@@ -579,10 +579,10 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 gtree.symbol.annotations.map(ann => traverse(ann.original))
                 tryFindMtree(gtree)
               case _: g.Apply | _: g.TypeApply =>
-                tryFindInferred(gtree)
+                tryFindSynthetic(gtree)
               case select: g.Select if isSyntheticName(select) =>
                 tryFindMtree(select.qualifier)
-                tryFindInferred(select)
+                tryFindSynthetic(select)
               case _ =>
                 tryFindMtree(gtree)
             }
