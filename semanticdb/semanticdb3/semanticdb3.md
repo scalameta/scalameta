@@ -967,7 +967,8 @@ message Synthetic {
 
 "Synthetics" is a section of a [TextDocument](#textdocument) that stores
 synthetic terms added by compilers that do not appear in the original source
-file.
+file. If synthetics appear in a `TextDocument`,  then the `TextDocument` should
+also have a `text` field.
 Examples include inferred type arguments, implicit parameters, or desugarings of
 for loops.
 
@@ -978,7 +979,6 @@ The piece of the source file is given as a `Range range`, and the new synthetic
 AST is given as a `Tree tree`.
 
 ### Tree
-
 
 ```protobuf
 message Tree {
@@ -993,43 +993,84 @@ message Tree {
     TypeApplyTree typeApplyTree = 8;
   }
 }
+```
 
+A `Tree` represents an abstract syntax tree for synthetic terms.
+The tree types generally parallel those of the scalameta trees, except for 
+`OriginalTree`, which represents a quote of the original source file.
+
+```protobuf
 message ApplyTree {
   Tree fn = 1;
   repeated Tree args = 2;
 }
+```
 
+An `ApplyTree` represents a method application.
+
+```protobuf
 message FunctionTree {
   repeated IdTree params = 1;
   Tree term = 2;
 }
+```
 
+A `FunctionTree` represents a function literal with parameter declarations and a body.
+
+```protobuf
 message IdTree {
   string sym = 1;
 }
+```
 
+A `IdTree` represents a reference to a [Symbol](#symbol) in an identifier.
+
+```protobuf
 message LiteralTree {
   Constant const = 1;
 }
+```
 
+A `LiteralTree` represents a [Constant](#constant) literal.
+
+```protobuf
 message MacroExpansionTree {
   Type tpe = 2;
 }
+```
 
+A `MacroExpansionTree` represents a macro expansion. The `expandee` is not
+provided to avoid having to model all of Scala trees in SemanticDB.
+
+```protobuf
 message OriginalTree {
   Range range = 1;
 }
+```
 
+An `OriginalTree` represents a quote from the text of the enclosing
+`TextDocument`, given as the range of that quote from the original text.
+These represent trees that have direct correspondents with the original
+source file.
+
+```protobuf
 message SelectTree {
   Tree qual = 1;
   IdTree id = 2;
 }
+```
 
+A `SelectTree` represents a field selection on a qualifier.
+
+```protobuf
 message TypeApplyTree {
   Tree fn = 1;
   repeated Type targs = 2;
 }
 ```
+
+A `TypeApplyTree` represents the type application of a method, providing
+that method with type arguments.
 
 ## Data Schemas
 
