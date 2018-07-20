@@ -9,12 +9,12 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
     opt(synth.range)(pprint)
     opt(": ", doc.substring(synth.range), "")(out.print)
     out.print(" => ")
-    pprint(synth.tree)
+    pprint(synth.tree, synth.range)
   }
 
-  def pprint(tree: Tree): Unit = {
+  def pprint(tree: Tree, originalRange: Option[Range]): Unit = {
     val infoNotes = new InfoNotes
-    val treePrinter = new TreePrinter(infoNotes)
+    val treePrinter = new TreePrinter(infoNotes, originalRange)
     treePrinter.pprint(tree)
     out.println()
 
@@ -34,7 +34,8 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
 
   implicit def syntheticOrder: Ordering[Synthetic] = Ordering.by(_.range)
 
-  private class TreePrinter(notes: InfoNotes) extends InfoPrinter(notes) {
+  private class TreePrinter(notes: InfoNotes, originalRange: Option[Range])
+      extends InfoPrinter(notes) {
 
     def pprint(tree: Tree): Unit = {
       tree match {
@@ -57,9 +58,13 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
           pprint(tree.tpe)
           out.print(")")
         case tree: OriginalTree =>
-          out.print("orig(")
-          opt(doc.substring(tree.range))(out.print)
-          out.print(")")
+          if (tree.range == originalRange && originalRange.nonEmpty) {
+            out.print("*")
+          } else {
+            out.print("orig(")
+            opt(doc.substring(tree.range))(out.print)
+            out.print(")")
+          }
         case tree: SelectTree =>
           pprint(tree.qual)
           out.print(".")
