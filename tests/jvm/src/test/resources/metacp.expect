@@ -2259,6 +2259,23 @@ flags/p/package.z(). => method z(pp: Int): Int
 flags/p/package.z().(pp) => param pp: Int
   Int => scala/Int#
 
+locals/Test.class
+-----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => locals/Test.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+locals/Test. => final object Test extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+locals/Test.xs. => val method xs: List[Int]
+  List => scala/collection/immutable/List#
+  Int => scala/Int#
+
 objects/X.class
 ---------------
 

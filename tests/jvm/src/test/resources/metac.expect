@@ -1936,8 +1936,6 @@ flags/p/package.x. => private lazy val method x: Int
   Int => scala/Int#
 flags/p/package.xs1. => val method xs1: Nothing
   Nothing => scala/Nothing#
-flags/p/package.xs1.xs1. => val local xs1: Nothing
-  Nothing => scala/Nothing#
 flags/p/package.y(). => protected implicit var method y: Int
   Int => scala/Int#
 flags/p/package.z(). => method z(pp: Int): Int
@@ -1945,9 +1943,11 @@ flags/p/package.z(). => method z(pp: Int): Int
   Int => scala/Int#
 flags/p/package.z().(pp) => param pp: Int
   Int => scala/Int#
-local0 => val local xs2: Nothing
+local0 => val local xs1: Nothing
   Nothing => scala/Nothing#
-local1 => abstract type t
+local1 => val local xs2: Nothing
+  Nothing => scala/Nothing#
+local2 => abstract type t
 
 Occurrences:
 [0:8..0:13): flags <= flags/
@@ -2011,15 +2011,15 @@ Occurrences:
 [21:23..21:24): T <= flags/p/package.S#[T]
 [21:25..21:25):  <= flags/p/package.S#`<init>`().
 [22:6..22:10): List => scala/collection/immutable/List.
-[22:11..22:14): xs1 <= flags/p/package.xs1.xs1.
+[22:11..22:14): xs1 <= local0
 [22:18..22:21): ??? => scala/Predef.`???`().
 [23:2..23:5): ??? => scala/Predef.`???`().
 [23:19..23:23): List => scala/collection/immutable/List.
-[23:24..23:27): xs2 <= local0
+[23:24..23:27): xs2 <= local1
 [23:32..23:35): ??? => scala/Predef.`???`().
 [24:2..24:5): ??? => scala/Predef.`???`().
 [24:22..24:26): List => scala/package.List#
-[24:27..24:28): t <= local1
+[24:27..24:28): t <= local2
 [24:33..24:36): ??? => scala/Predef.`???`().
 
 Synthetics:
@@ -2080,6 +2080,40 @@ Occurrences:
 
 Synthetics:
 [3:2..3:9): locally => *[Int]
+  Int => scala/Int#
+
+semanticdb/integration/src/main/scala/example/Locals.scala
+----------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Locals.scala
+Text => non-empty
+Language => Scala
+Symbols => 3 entries
+Occurrences => 6 entries
+Synthetics => 1 entries
+
+Symbols:
+local0 => val local x: Int
+  Int => scala/Int#
+locals/Test. => final object Test extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+locals/Test.xs. => val method xs: List[Int]
+  List => scala/collection/immutable/List#
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:14): locals <= locals/
+[2:7..2:11): Test <= locals/Test.
+[3:6..3:8): xs <= locals/Test.xs.
+[4:8..4:9): x <= local0
+[5:4..5:8): List => scala/collection/immutable/List.
+[5:9..5:10): x => local0
+
+Synthetics:
+[5:4..5:8): List => *.apply[Int]
+  apply => scala/collection/immutable/List.apply().
   Int => scala/Int#
 
 semanticdb/integration/src/main/scala/example/MacroAnnotations.scala
@@ -2990,13 +3024,7 @@ example/Synthetic#f. => val method f: Ordered[F]
 example/Synthetic#lst. => val method lst: Stream[Int]
   Stream => scala/collection/immutable/Stream#
   Int => scala/Int#
-example/Synthetic#lst.x$5. => val local x$5: Int
-  Int => scala/Int#
-example/Synthetic#lst.x$6. => val local x$6: Int
-  Int => scala/Int#
 example/Synthetic#name. => val method name: String
-  String => scala/Predef.String#
-example/Synthetic#name.name. => val local name: String
   String => scala/Predef.String#
 example/Synthetic#ordering. => implicit val method ordering: Ordering[F]
   Ordering => scala/package.Ordering#
@@ -3059,43 +3087,49 @@ example/Synthetic#x$2. => val method x$2: Tuple2[Int, Stream[Int]]
   Tuple2 => scala/Tuple2#
   Int => scala/Int#
   Stream => scala/collection/immutable/Stream#
-example/Synthetic#x$2.x. => val local x: Int
-  Int => scala/Int#
-example/Synthetic#x$2.xs. => val local xs: Stream[Int]
-  Stream => scala/collection/immutable/Stream#
-  Int => scala/Int#
 example/Synthetic#x. => val method x: Int
   Int => scala/Int#
 example/Synthetic#xs. => val method xs: Stream[Int]
   Stream => scala/collection/immutable/Stream#
   Int => scala/Int#
-local0 => val local x$4: Int
+local0 => val local x: Int
   Int => scala/Int#
-local1 => val local x$3: Int
+local1 => val local xs: Stream[Int]
+  Stream => scala/collection/immutable/Stream#
   Int => scala/Int#
-local10 => param b: Int
+local10 => param j: Int
   Int => scala/Int#
-local11 => param a: Int
+local11 => param i: Int
   Int => scala/Int#
-local12 => param b: Int
+local12 => param j: Int
   Int => scala/Int#
-local13 => param b: Int
+local13 => param j: Int
   Int => scala/Int#
-local2 => param x: Int
+local14 => param a: Int
   Int => scala/Int#
-local3 => param y: Int
+local15 => param b: Int
   Int => scala/Int#
-local4 => param i: Int
+local16 => param a: Int
   Int => scala/Int#
-local5 => param j: Int
+local17 => param b: Int
   Int => scala/Int#
-local6 => param i: Int
+local18 => param b: Int
   Int => scala/Int#
-local7 => param j: Int
+local2 => val local name: String
+  String => scala/Predef.String#
+local3 => val local x$4: Int
   Int => scala/Int#
-local8 => param j: Int
+local4 => val local x$3: Int
   Int => scala/Int#
-local9 => param a: Int
+local5 => val local x$6: Int
+  Int => scala/Int#
+local6 => val local x$5: Int
+  Int => scala/Int#
+local7 => param x: Int
+  Int => scala/Int#
+local8 => param y: Int
+  Int => scala/Int#
+local9 => param i: Int
   Int => scala/Int#
 
 Occurrences:
@@ -3112,12 +3146,12 @@ Occurrences:
 [5:9..5:20): stripPrefix => scala/collection/immutable/StringLike#stripPrefix().
 [8:6..8:10): Name <= example/Synthetic#Name.
 [8:25..8:26): r => scala/collection/immutable/StringLike#r().
-[9:6..9:7): x <= example/Synthetic#x$2.x.
+[9:6..9:7): x <= local0
 [9:8..9:11): #:: => scala/package.`#::`.
-[9:12..9:14): xs <= example/Synthetic#x$2.xs.
+[9:12..9:14): xs <= local1
 [9:17..9:23): Stream => scala/package.Stream.
 [10:6..10:10): Name => example/Synthetic#Name.
-[10:11..10:15): name <= example/Synthetic#name.name.
+[10:11..10:15): name <= local2
 [11:4..11:7): #:: => scala/collection/immutable/Stream.ConsWrapper#`#::`().
 [11:10..11:13): #:: => scala/collection/immutable/Stream.ConsWrapper#`#::`().
 [11:14..11:20): Stream => scala/package.Stream.
@@ -3129,29 +3163,29 @@ Occurrences:
 [13:31..13:36): empty => scala/collection/immutable/Stream.empty().
 [14:2..14:5): lst => example/Synthetic#lst.
 [14:6..14:7): + => scala/Predef.any2stringadd#`+`().
-[16:7..16:8): x <= local2
+[16:7..16:8): x <= local7
 [16:14..16:16): to => scala/runtime/RichInt#to().
-[16:21..16:22): y <= local3
+[16:21..16:22): y <= local8
 [16:28..16:33): until => scala/runtime/RichInt#until().
 [16:38..16:45): println => scala/Predef.println(+1).
-[16:46..16:47): x => local2
+[16:46..16:47): x => local7
 [16:48..16:50): -> => scala/Predef.ArrowAssoc#`->`().
-[16:51..16:52): x => local2
-[17:7..17:8): i <= local4
+[16:51..16:52): x => local7
+[17:7..17:8): i <= local9
 [17:14..17:16): to => scala/runtime/RichInt#to().
-[17:21..17:22): j <= local5
+[17:21..17:22): j <= local10
 [17:28..17:33): until => scala/runtime/RichInt#until().
-[17:45..17:46): i => local4
-[17:48..17:49): j => local5
-[18:7..18:8): i <= local6
+[17:45..17:46): i => local9
+[17:48..17:49): j => local10
+[18:7..18:8): i <= local11
 [18:14..18:16): to => scala/runtime/RichInt#to().
-[18:21..18:22): j <= local7
+[18:21..18:22): j <= local12
 [18:28..18:33): until => scala/runtime/RichInt#until().
-[18:40..18:41): i => local6
+[18:40..18:41): i => local11
 [18:42..18:43): % => scala/Int#`%`(+3).
 [18:46..18:48): == => scala/Int#`==`(+3).
-[18:59..18:60): i => local6
-[18:62..18:63): j => local8
+[18:59..18:60): i => local11
+[18:62..18:63): j => local13
 [20:9..20:10): s <= example/Synthetic#s.
 [21:8..21:13): apply <= example/Synthetic#s.apply().
 [22:4..22:5): s => example/Synthetic#s.
@@ -3184,32 +3218,32 @@ Occurrences:
 [35:26..35:42): ExecutionContext => scala/concurrent/ExecutionContext.
 [35:43..35:52): Implicits => scala/concurrent/ExecutionContext.Implicits.
 [35:53..35:59): global => scala/concurrent/ExecutionContext.Implicits.global.
-[37:4..37:5): a <= local9
+[37:4..37:5): a <= local14
 [37:9..37:14): scala => scala/
 [37:15..37:25): concurrent => scala/concurrent/
 [37:26..37:32): Future => scala/concurrent/Future.
 [37:33..37:43): successful => scala/concurrent/Future.successful().
-[38:4..38:5): b <= local10
+[38:4..38:5): b <= local15
 [38:9..38:14): scala => scala/
 [38:15..38:25): concurrent => scala/concurrent/
 [38:26..38:32): Future => scala/concurrent/Future.
 [38:33..38:43): successful => scala/concurrent/Future.successful().
 [39:4..39:11): println => scala/Predef.println(+1).
-[39:12..39:13): a => local9
-[41:4..41:5): a <= local11
+[39:12..39:13): a => local14
+[41:4..41:5): a <= local16
 [41:9..41:14): scala => scala/
 [41:15..41:25): concurrent => scala/concurrent/
 [41:26..41:32): Future => scala/concurrent/Future.
 [41:33..41:43): successful => scala/concurrent/Future.successful().
-[42:4..42:5): b <= local12
+[42:4..42:5): b <= local17
 [42:9..42:14): scala => scala/
 [42:15..42:25): concurrent => scala/concurrent/
 [42:26..42:32): Future => scala/concurrent/Future.
 [42:33..42:43): successful => scala/concurrent/Future.successful().
-[43:7..43:8): a => local11
+[43:7..43:8): a => local16
 [43:9..43:10): < => scala/Int#`<`(+3).
-[43:11..43:12): b => local12
-[44:10..44:11): a => local11
+[43:11..43:12): b => local17
+[44:10..44:11): a => local16
 
 Synthetics:
 [3:2..3:6): List => *.apply[Int]
@@ -3270,8 +3304,8 @@ Synthetics:
 [16:2..16:53): for (x <- 1 to 10; y <- 0 until 10) println(x -> x) => orig(1 to 10).foreach[Unit]({(x) => orig(0 until 10).foreach[Unit]({(y) => orig(println(x -> x))})})
   foreach => scala/collection/immutable/Range#foreach().
   Unit => scala/Unit#
-  x => local2
-  y => local3
+  x => local7
+  y => local8
 [16:12..16:13): 1 => intWrapper(*)
   intWrapper => scala/LowPriorityImplicits#intWrapper().
 [16:26..16:27): 0 => intWrapper(*)
@@ -3286,9 +3320,9 @@ Synthetics:
   Tuple2 => scala/Tuple2#
   Int => scala/Int#
   IndexedSeq => scala/collection/immutable/IndexedSeq#
-  i => local4
+  i => local9
   map => scala/collection/TraversableLike#map().
-  j => local5
+  j => local10
   canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
 [17:12..17:13): 1 => intWrapper(*)
   intWrapper => scala/LowPriorityImplicits#intWrapper().
@@ -3299,11 +3333,11 @@ Synthetics:
   Tuple2 => scala/Tuple2#
   Int => scala/Int#
   IndexedSeq => scala/collection/immutable/IndexedSeq#
-  i => local6
+  i => local11
   withFilter => scala/collection/TraversableLike#withFilter().
-  j => local7
+  j => local12
   map => scala/collection/generic/FilterMonadic#map().
-  j => local8
+  j => local13
   canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
 [18:12..18:13): 1 => intWrapper(*)
   intWrapper => scala/LowPriorityImplicits#intWrapper().
@@ -3327,8 +3361,8 @@ Synthetics:
   } println(a) => orig(scala.concurrent.Future.successful(1)).foreach[Unit]({(a) => orig(scala.concurrent.Future.successful(2)).foreach[Unit]({(b) => orig(println(a))})(global)})(global)
   foreach => scala/concurrent/Future#foreach().
   Unit => scala/Unit#
-  a => local9
-  b => local10
+  a => local14
+  b => local15
   global => scala/concurrent/ExecutionContext.Implicits.global.
 [37:9..37:43): scala.concurrent.Future.successful => *[Int]
   Int => scala/Int#
@@ -3341,12 +3375,12 @@ Synthetics:
   } yield a => orig(scala.concurrent.Future.successful(1)).flatMap[Int]({(a) => orig(scala.concurrent.Future.successful(2)).withFilter({(b) => orig(a < b)})(global).map[Int]({(b) => orig(a)})(global)})(global)
   flatMap => scala/concurrent/Future#flatMap().
   Int => scala/Int#
-  a => local11
+  a => local16
   withFilter => scala/concurrent/Future#withFilter().
-  b => local12
+  b => local17
   global => scala/concurrent/ExecutionContext.Implicits.global.
   map => scala/concurrent/Future#map().
-  b => local13
+  b => local18
 [41:9..41:43): scala.concurrent.Future.successful => *[Int]
   Int => scala/Int#
 [42:9..42:43): scala.concurrent.Future.successful => *[Int]

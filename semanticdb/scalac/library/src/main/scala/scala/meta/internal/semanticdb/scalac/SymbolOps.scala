@@ -65,7 +65,7 @@ trait SymbolOps { self: SemanticdbOps =>
       def definitelyGlobal = sym.hasPackageFlag
       def definitelyLocal =
         sym == g.NoSymbol ||
-          (sym.owner.isMethod && !sym.isParameter) ||
+          (sym.owner.isTerm && !sym.isParameter) ||
           ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter) ||
           sym.isSelfParameter ||
           sym.isLocalDummy ||

@@ -109,7 +109,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
        |[1:7..1:8): b <= _empty_/b.
        |[2:6..2:9): add <= _empty_/b.add().
        |[2:10..2:11): a <= _empty_/b.add().(a)
-       |[2:13..2:15): In => _empty_/b.add().(a)`<error: <none>>`#
+       |[2:13..2:15): In => local0
        |
        |Diagnostics:
        |[2:13..2:15) [error] not found: type In
