@@ -2706,12 +2706,12 @@ Schema => SemanticDB v4
 Uri => types/Test.class
 Text => empty
 Language => Scala
-Symbols => 99 entries
+Symbols => 101 entries
 
 Symbols:
 types/Test. => final object Test extends AnyRef { +4 decls }
   AnyRef => scala/AnyRef#
-types/Test.C# => class C extends M { +34 decls }
+types/Test.C# => class C extends M { +36 decls }
   M => types/Test.M#
 types/Test.C#ByNameType. => final object ByNameType extends AnyRef { +1 decls }
   AnyRef => scala/AnyRef#
@@ -2875,6 +2875,12 @@ types/Test.C#existentialType1. => val method existentialType1: T forSome { type 
 types/Test.C#existentialType2. => val method existentialType2: List[_] forSome { type _ }
   List => scala/package.List#
   _ => local5
+types/Test.C#existentialType3. => val method existentialType3: Class[?0] forSome { type ?0 }
+  Class => java/lang/Class#
+  ?0 => local6
+types/Test.C#existentialType4. => val method existentialType4: Class[?0] forSome { type ?0 }
+  Class => java/lang/Class#
+  ?0 => local7
 types/Test.C#p. => val method p: P
   P => types/P#
 types/Test.C#singleType1. => val method singleType1: x.type
