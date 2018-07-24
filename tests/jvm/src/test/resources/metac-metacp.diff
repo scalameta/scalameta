@@ -1576,6 +1576,42 @@ types/Test.C#existentialType2.
              name: "_"
 
 
+==============================
+types/Test.C#existentialType3.
+==============================
+--- metac
++++ metacp
+               typeRef {
+                 prefix {
+-                symbol: "local12"
++                symbol: "local6"
+         declarations {
+           hardlinks {
+-            symbol: "local12"
++            symbol: "local6"
+             kind: TYPE
+             properties: 4
+             name: "?0"
+
+
+==============================
+types/Test.C#existentialType4.
+==============================
+--- metac
++++ metacp
+               typeRef {
+                 prefix {
+-                symbol: "local13"
++                symbol: "local7"
+         declarations {
+           hardlinks {
+-            symbol: "local13"
++            symbol: "local7"
+             kind: TYPE
+             properties: 4
+             name: "?0"
+
+
 ============================
 types/Test.Literal.javaEnum.
 ============================

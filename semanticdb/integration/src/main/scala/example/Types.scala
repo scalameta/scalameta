@@ -64,6 +64,8 @@ object Test {
 
     val existentialType1: T forSome { type T } = ???
     val existentialType2: List[_] = ???
+    val existentialType3 = Class.forName("foo.Bar")
+    val existentialType4 = Class.forName("foo.Bar")
 
     def typeLambda1[M[_]] = ???
     typeLambda1[({ type L[T] = List[T] })#L]

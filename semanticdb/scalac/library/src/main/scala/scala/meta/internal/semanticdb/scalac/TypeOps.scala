@@ -17,12 +17,12 @@ trait TypeOps { self: SemanticdbOps =>
             val stpe = loop(gtpe)
             s.RepeatedType(stpe)
           case g.TypeRef(gpre, gsym, gargs) =>
-            val spre = if (gpre.isTrivialPrefix) s.NoType else loop(gpre)
+            val spre = if (gtpe.hasTrivialPrefix) s.NoType else loop(gpre)
             val ssym = gsym.ssym
             val sargs = gargs.map(loop)
             s.TypeRef(spre, ssym, sargs)
           case g.SingleType(gpre, gsym) =>
-            val spre = if (gpre.isTrivialPrefix) s.NoType else loop(gpre)
+            val spre = if (gtpe.hasTrivialPrefix) s.NoType else loop(gpre)
             val ssym = gsym.ssym
             s.SingleType(spre, ssym)
           case g.ThisType(gsym) =>
@@ -136,14 +136,15 @@ trait TypeOps { self: SemanticdbOps =>
   }
 
   implicit class XtensionGType(gtpe: g.Type) {
-    def isTrivialPrefix: Boolean = {
+    def hasTrivialPrefix: Boolean = {
       gtpe match {
-        case g.TypeRef(gpre, gsym, _) => gpre.isTrivialPrefix && gsym.isModuleClass
-        case g.SingleType(gpre, gsym) => gpre.isTrivialPrefix && gsym.isModule
-        case _: g.ThisType => true
-        case g.NoPrefix => true
+        case g.TypeRef(gpre, gsym, _) => checkTrivialPrefix(gpre, gsym)
+        case g.SingleType(gpre, gsym) => checkTrivialPrefix(gpre, gsym)
         case _ => false
       }
+    }
+    private def checkTrivialPrefix(gpre: g.Type, gsym: g.Symbol): Boolean = {
+      gpre =:= gsym.owner.thisType
     }
   }
 

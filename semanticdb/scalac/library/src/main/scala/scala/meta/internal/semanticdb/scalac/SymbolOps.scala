@@ -7,6 +7,7 @@ import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.reflect.internal.util.{SourceFile => GSourceFile, NoSourceFile => GNoSourceFile}
 import scala.util.control.NonFatal
 
 trait SymbolOps { self: SemanticdbOps =>
@@ -19,7 +20,7 @@ trait SymbolOps { self: SemanticdbOps =>
         if (sym.isOverloaded) return Symbols.Multi(sym.alternatives.map(_.toSemantic))
         if (sym.isModuleClass) return sym.asClass.module.toSemantic
         if (sym.isTypeSkolem) return sym.deSkolemize.toSemantic
-        if (sym.isSemanticdbLocal) return freshSymbol(sym.pos.toMeta.input)
+        if (sym.isSemanticdbLocal) return freshSymbol(sym)
 
         val owner = sym.owner.toSemantic
         val signature = {
@@ -65,7 +66,7 @@ trait SymbolOps { self: SemanticdbOps =>
       def definitelyGlobal = sym.hasPackageFlag
       def definitelyLocal =
         sym == g.NoSymbol ||
-          (sym.owner.isMethod && !sym.isParameter) ||
+          (sym.owner.isTerm && !sym.isParameter) ||
           ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter) ||
           sym.isSelfParameter ||
           sym.isLocalDummy ||
@@ -280,7 +281,16 @@ trait SymbolOps { self: SemanticdbOps =>
   }
 
   lazy val idCache = new HashMap[String, Int]
-  private def freshSymbol(minput: m.Input): String = {
+  private def freshSymbol(sym: g.Symbol): String = {
+    def loop(sym: g.Symbol): GSourceFile = {
+      if (sym.pos.source != GNoSourceFile) {
+        sym.pos.source
+      } else {
+        if (sym == g.NoSymbol) GNoSourceFile
+        else loop(sym.owner)
+      }
+    }
+    val minput = loop(sym).toInput
     if (minput == m.Input.None) Symbols.None
     else {
       val id = idCache.get(minput.syntax)
