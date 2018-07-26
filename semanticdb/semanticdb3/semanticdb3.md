@@ -996,7 +996,7 @@ message Tree {
 ```
 
 A `Tree` represents a typed abstract syntax tree.
-The tree types are similar to Scalameta and Rsc trees, except for
+The trees are similar to Scalameta and Rsc trees, except for
 `OriginalTree`, which represents a quote of the original source file.
 We only support a small subset of Scala syntax necessary to model [Synthetics](#synthetics).
 At the moment, we do not have plans to add more trees.
