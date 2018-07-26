@@ -54,7 +54,7 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
         case tree: LiteralTree =>
           pprint(tree.const)
         case tree: MacroExpansionTree =>
-          out.print("(<?>:")
+          out.print("(??? : ")
           pprint(tree.tpe)
           out.print(")")
         case tree: OriginalTree =>
