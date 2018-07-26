@@ -6,22 +6,28 @@ import Keys._
 import sbt.complete.Parser
 
 // Helper to execute command from tasks.
-// Note: This was copied from https://github.com/sbt/sbt-release/blob/663cfd426361484228a21a1244b2e6b0f7656bdf/src/main/scala/ReleasePlugin.scala#L99-L115
 object RunSbtCommand {
-  def apply(command: String): State => State = { st: State =>
+
+  // copied from https://github.com/sbt/sbt-release/blob/0d79966dfe65a60ac97d8084691ce396bbaaede7/src/main/scala-sbt-1.0/Compat.scala
+  type Command = sbt.Exec
+  implicit def command2String(command: Command) = command.commandLine
+  implicit def string2Exex(s: String): Command = sbt.Exec(s, None, None)
+  private val FailureCommand: Exec = "--failure--"
+
+  // copied from https://github.com/sbt/sbt-release/blob/e6b1574b00cbbf71dd24b500520f4c56e8cc492b/src/main/scala/ReleasePlugin.scala#L102-L115
+  def apply(command: String): State => State = { initState: State =>
     @annotation.tailrec
-    def runCommand(command: String, state: State): State = {
-      val nextState = Parser.parse(command, state.combinedParser) match {
+    def runCommand(command: Exec, state: State): State = {
+      val nextState = Parser.parse(command.commandLine, state.combinedParser) match {
         case Right(cmd) => cmd()
         case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
       }
       nextState.remainingCommands.toList match {
-        case Nil => nextState
+        case Nil => nextState.copy(remainingCommands = initState.remainingCommands)
+        case FailureCommand :: tail => nextState.copy(remainingCommands = FailureCommand +: initState.remainingCommands)
         case head :: tail => runCommand(head, nextState.copy(remainingCommands = tail))
       }
     }
-    runCommand(command,
-               st.copy(remainingCommands = Nil, onFailure = Some(s"Failed to run $command")))
-      .copy(remainingCommands = st.remainingCommands)
+    runCommand(command, initState.copy(remainingCommands = Nil))
   }
 }

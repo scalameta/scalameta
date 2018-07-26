@@ -1,7 +1,7 @@
 // exclude is a workaround for https://github.com/sbt/sbt-assembly/issues/236#issuecomment-294452474
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.6" exclude("org.apache.maven", "maven-plugin-api"))
 
-addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.3.3")
+addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.4.1")
 
 addSbtPlugin("io.get-coursier" % "sbt-coursier" % coursier.util.Properties.version)
 
@@ -11,12 +11,10 @@ addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.2.27")
 
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.7.0")
 
-addSbtPlugin("com.eed3si9n" % "sbt-doge" % "0.1.5")
-
-addSbtPlugin("com.thesamet" % "sbt-protoc" % "0.99.18" exclude ("com.trueaccord.scalapb", "protoc-bridge_2.10"))
+addSbtPlugin("com.thesamet" % "sbt-protoc" % "0.99.18")
 libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin-shaded" % "0.7.1"
 
-libraryDependencies += "org.scala-sbt" % "scripted-plugin" % sbtVersion.value
+libraryDependencies += "org.scala-sbt" %% "scripted-plugin" % sbtVersion.value
 
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.0")
 
@@ -36,5 +34,4 @@ addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.22")
 
 addSbtPlugin("org.scala-native" %% "sbt-scala-native" % "0.3.8")
 
-addSbtPlugin("org.scala-debugger" % "sbt-jdi-tools" % "1.0.0")
-
+addSbtPlugin("org.scala-debugger" % "sbt-jdi-tools" % "1.1.0")
