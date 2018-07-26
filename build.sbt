@@ -7,7 +7,6 @@ import sbtcrossproject.{crossProject, CrossType}
 import org.scalameta.build._
 import org.scalameta.build.Versions._
 import org.scalameta.os
-import UnidocKeys._
 import sbt.ScriptedPlugin._
 import complete.DefaultParsers._
 import scalapb.compiler.Version.scalapbVersion
@@ -35,7 +34,7 @@ name := {
   "scalametaRoot"
 }
 nonPublishableSettings
-unidocSettings
+enablePlugins(ScalaUnidocPlugin)
 addCommandAlias("benchAll", benchAll.command)
 addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
@@ -206,8 +205,6 @@ lazy val metac = project
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     mainClass := Some("scala.meta.cli.Metac")
   )
-  // FIXME: https://github.com/scalameta/scalameta/issues/1688
-  .disablePlugins(BackgroundRunPlugin)
   .dependsOn(cliJVM, semanticdbScalacPlugin)
 
 lazy val metacp = project
@@ -223,8 +220,6 @@ lazy val metacp = project
     buildInfoPackage := "scala.meta.internal.metacp"
   )
   .enablePlugins(BuildInfoPlugin)
-  // FIXME: https://github.com/scalameta/scalameta/issues/1688
-  .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdbJVM, cliJVM, ioJVM)
 
 lazy val metai = project
@@ -234,8 +229,6 @@ lazy val metai = project
     description := "SemanticDB classpath indexer",
     mainClass := Some("scala.meta.cli.Metai")
   )
-  // FIXME: https://github.com/scalameta/scalameta/issues/1688
-  .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdbJVM, cliJVM, ioJVM)
 
 lazy val symtab = project
@@ -244,8 +237,6 @@ lazy val symtab = project
     publishableSettings,
     description := "SemanticDB symbol table for Scala 2.x and Java classpaths"
   )
-  // FIXME: https://github.com/scalameta/scalameta/issues/1688
-  .disablePlugins(BackgroundRunPlugin)
   .dependsOn(metacp)
 
 lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
@@ -257,8 +248,6 @@ lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     mainClass := Some("scala.meta.cli.Metap")
   )
   .nativeSettings(nativeSettings)
-  // FIXME: https://github.com/scalameta/scalameta/issues/1688
-  .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdb, cli)
 lazy val metapJVM = metap.jvm
 lazy val metapJS = metap.js
@@ -693,7 +682,7 @@ lazy val mergeSettings = Def.settings(
     val fatJar =
       new File(crossTarget.value + "/" + assemblyJarName.in(assembly).value)
     val _ = assembly.value
-    IO.copy(List(fatJar -> slimJar), overwrite = true)
+    IO.copy(List(fatJar -> slimJar), CopyOptions().withOverwrite(true))
     slimJar
   },
   packagedArtifact.in(Compile).in(packageBin) := {
@@ -702,7 +691,7 @@ lazy val mergeSettings = Def.settings(
     val fatJar =
       new File(crossTarget.value + "/" + assemblyJarName.in(assembly).value)
     val _ = assembly.value
-    IO.copy(List(fatJar -> slimJar), overwrite = true)
+    IO.copy(List(fatJar -> slimJar), CopyOptions().withOverwrite(true))
     (art, slimJar)
   },
   mimaCurrentClassfiles := {
