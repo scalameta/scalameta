@@ -958,7 +958,7 @@ diagnostics as error, warning, information or hint.
   </tr>
 </table>
 
-### Synthetic 
+### Synthetic
 
 ```protobuf
 message Synthetic {
@@ -1042,8 +1042,9 @@ message MacroExpansionTree {
 }
 ```
 
-A `MacroExpansionTree` represents a macro expansion. The `expandee` is not
-provided to avoid having to model all of Scala trees in SemanticDB.
+A `MacroExpansionTree` represents a macro expansion. The `expandee` can be
+an `OriginalTree` (expansion of original code) or any other `Tree`
+(expansion of synthetic code).
 
 ```protobuf
 message OriginalTree {
@@ -1079,7 +1080,7 @@ that method with type arguments.
 
 ### Protobuf
 
-[semanticdb3.proto][semanticdb3.proto]
+[semanticdb.proto][semanticdb.proto]
 
 ## Languages
 
@@ -2062,7 +2063,7 @@ Notes:
   in SLS [\[50\]][50]. Corresponding signature is computed using the inferred
   retyrb type as explained in [Type](#scala-type).
 * Method symbols support [all Scala accessibilities](#scala-accessibility).
-* The `OBJECT` symbol `m3.` and `VAL METHOD` symbol `m4.` do not contribute 
+* The `OBJECT` symbol `m3.` and `VAL METHOD` symbol `m4.` do not contribute
   to the disambiguator tag for the method symbols `m3().`, `m3(+1).` and `m4().`
   because `OBJECT` and (exceptionally) `VAL METHOD` symbols do not require a
   disambiguator.
@@ -2473,22 +2474,22 @@ Inferred method calls
 
   </td>
   <td>
-      
+
 ```scala
 List(1)
 ```
 
   </td>
   <td>
-      
+
 ```scala
 Synthetic(
   <List>,
   TypeApplyTree(
     SelectTree(
       OriginalTree(<List>),
-      Some(IdTree(scala/collection/immutable/List.apply().))),
-    List(TypeRef(Empty,scala/Int#,List()))))
+      Some(IdTree(<List.apply>))),
+    List(TypeRef(None, <Int>, List()))))
 ```
 
   </td>
@@ -2508,8 +2509,8 @@ Synthetic(
   TypeApplyTree(
     SelectTree(
       OriginalTree(<List>),
-      Some(IdTree(scala/collection/generic/SeqFactory#unapplySeq().))),
-    List(TypeRef(Empty,scala/Nothing#,List()))))
+      Some(IdTree(<SeqFactory.unapplySeq>))),
+    List(TypeRef(None, <Nothing>, List()))))
 ```
 
   </td>
@@ -2521,23 +2522,23 @@ Inferred type applications
 
   </td>
   <td>
-      
+
 ```scala
 List(1).map(_ + 2)
 ```
 
   </td>
   <td>
-      
+
 ```scala
 Synthetic(
   <List(1).map>,
   TypeApplyTree(
     OriginalTree(<List(1).map>),
     List(
-      TypeRef(Empty, scala/Int#, List()),
-      TypeRef(Empty, scala/collection/immutable/List#,
-        List(TypeRef(Empty,scala/Int#,List()))))))
+      TypeRef(None, <Int>, List()),
+      TypeRef(None, <List>,
+        List(TypeRef(None, <Int>, List()))))))
 ```
 
   </td>
@@ -2558,7 +2559,7 @@ Synthetic(
   TypeApplyTree(
     OriginalTree(<#:: 2 #:: Stream.empty>),
     List(
-      TypeRef(Empty, scala/Int#, List()))))
+      TypeRef(None, <Int>, List()))))
 ```
 
 </td>
@@ -2570,14 +2571,14 @@ Implicit parameters
 
   </td>
   <td>
-      
+
 ```scala
 List(1).map(_ + 2)
 ```
 
   </td>
   <td>
-      
+
 ```scala
 Synthetic(
   <List(1).map(_ + 2)>,
@@ -2585,8 +2586,8 @@ Synthetic(
     OriginalTree(<List(1).map(_ + 2)>),
     List(
       TypeApplyTree(
-        IdTree(scala/collection/immutable/List.canBuildFrom().),
-        List(TypeRef(Empty,scala/Int#,List()))))))
+        IdTree(<List.canBuildFrom>),
+        List(TypeRef(None, <Int>, List()))))))
 ```
 
   </td>
@@ -2598,19 +2599,19 @@ Implicit views/conversions
 
   </td>
   <td>
-      
+
 ```scala
 "fooo".stripPrefix("o")
 ```
 
   </td>
   <td>
-      
+
 ```scala
 Synthetic(
   <"fooo">,
   ApplyTree(
-    IdTree(scala/Predef.augmentString().),
+    IdTree(<Predef.augmentString>),
     List(OriginalTree(<"fooo">))))
 ```
 
@@ -2623,14 +2624,14 @@ Macro expansions
 
   </td>
   <td>
-      
+
 ```scala
 Array.empty[Int]
 ```
 
   </td>
   <td>
-      
+
 ```scala
 Synthetic(
   <Array.empty[Int]>,
@@ -2638,9 +2639,9 @@ Synthetic(
     OriginalTree(<Array.empty[Int]>),
     List(
       MacroExpansionTree(
-        IdTree(scala/reflect/ClassTag.Int.),
-        TypeRef(Empty, scala/reflect/ClassTag#,
-          List(TypeRef(Empty, scala/Int#, List())))))))
+        IdTree(<ClassTag.Int>),
+        TypeRef(None, <ClassTag>,
+          List(TypeRef(None, <Int>, List())))))))
 ```
 
   </td>
@@ -2652,7 +2653,7 @@ For loop desugarings
 
   </td>
   <td>
-      
+
 ```scala
 for {
   i <- 1 to 10
@@ -2663,7 +2664,7 @@ for {
 
   </td>
   <td>
-      
+
 ```scala
 orig(1 to 10).flatMap[Tuple2[Int, Int], IndexedSeq[Tuple2[Int, Int]]]({
   (i) =>
@@ -3546,8 +3547,7 @@ the Java language. We intend to improve on this in the future.
 
 #### Synthetic
 At this moment, there is no tool that supports Synthetic for
-the Java language.
-We intend to improve on this in the future.
+the Java language. We may improve on this in the future.
 
 [semanticdb.proto]: semanticdb.proto
 [1]: https://semver.org/
