@@ -355,6 +355,7 @@ message LiteralTree {
 }
 
 message MacroExpansionTree {
+  Tree expandee = 1;
   Type tpe = 2;
 }
 

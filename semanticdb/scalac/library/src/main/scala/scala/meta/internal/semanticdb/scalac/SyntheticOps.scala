@@ -24,7 +24,12 @@ trait SyntheticOps { self: SemanticdbOps =>
       case gTree: g.Ident => gTree.toSemanticId
       case gTree: g.This => gTree.toSemanticId
       case gTree: g.Typed if gTree.hasAttachment[g.analyzer.MacroExpansionAttachment] =>
+        val expandeeTree = gTree.attachments.get[g.analyzer.MacroExpansionAttachment].get.expandee
+        val expandee =
+          if (expandeeTree.pos.isRange) expandeeTree.toSemanticOriginal
+          else expandeeTree.toSemanticTree
         s.MacroExpansionTree(
+          expandee = expandee,
           tpe = gTree.tpt.tpe.toSemanticTpe
         )
       case _ =>
