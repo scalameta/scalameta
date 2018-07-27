@@ -149,13 +149,13 @@ SemanticDB payloads must include the version of the SemanticDB model in the
 relativized by the project sourceroot, which by convention is the root directory
 of the project's workspace.
 
-`text` optionally defines the full string contents of the text document. When `text`
-is empty, the combination of the `uri` field and a sourceroot enables tools to
-retrieve the text document contents from disk.
+`text` optionally defines the full string contents of the text document. When
+`text` is empty, the combination of the `uri` field and a sourceroot enables
+tools to retrieve the text document contents from disk.
 
-`md5` defines the hexadecimal formatted MD5 fingerprint of the source file contents.
-When `text` is empty, the MD5 fingerprint can be used to ensure a SemanticDB payload
-is up-to-date with the file contents on disk.
+`md5` defines the hexadecimal formatted MD5 fingerprint of the source file
+contents. When `text` is empty, the MD5 fingerprint can be used to ensure
+a SemanticDB payload is up-to-date with the file contents on disk.
 
 `language` defines the [Language](#language) in which the code snippet
 is written. See [Languages](#languages) for the list of supported programming
@@ -309,10 +309,10 @@ In that case, in order to analyze public signatures of the containing
 [TextDocument](#textdocument), SemanticDB consumers have to load the entire
 "Symbols" section, which has adverse performance characteristics.
 
-Hardlinking solves this conundrum by storing symbol metadata related to advanced types
-directly inside the payloads representing these types. Thanks to hardlinking,
-we don't need to invent global symbols to remain convenient to SemanticDB
-consumers.
+Hardlinking solves this conundrum by storing symbol metadata related to advanced
+types directly inside the payloads representing these types. Thanks to
+hardlinking, we don't need to invent global symbols to remain convenient to
+SemanticDB consumers.
 
 ### Constant
 
@@ -592,11 +592,11 @@ message MethodSignature {
 }
 ```
 
-`MethodSignature` represents signatures of methods (including getters and setters),
-constructors and macros. It features `type_parameters`, `parameterLists` and
-a `return_type`. Both type parameters and parameters are modelled by [Scopes](#scope).
-Moreover, in order to support multiple parameter lists in Scala methods,
-`parameterLists` is a list of lists.
+`MethodSignature` represents signatures of methods (including getters and
+setters), constructors and macros. It features `type_parameters`,
+`parameterLists` and a `return_type`. Both type parameters and parameters
+are modelled by [Scopes](#scope). Moreover, in order to support multiple
+parameter lists in Scala methods, `parameterLists` is a list of lists.
 
 ```protobuf
 message TypeSignature {
@@ -975,8 +975,8 @@ for loops.
 `Synthetic` models one of these synthetics as a transformation of a piece of the
 original source file to a synthetic AST that may still use quotes of the
 original source.
-The piece of the source file is given as a [Range](#range), and the new synthetic
-AST is given as a [Tree](#tree).
+The piece of the source file is given as a [Range](#range), and the new
+synthetic AST is given as a [Tree](#tree).
 
 ### Tree
 
@@ -998,7 +998,8 @@ message Tree {
 A `Tree` represents a typed abstract syntax tree.
 The trees are similar to Scalameta and Rsc trees, except for
 `OriginalTree`, which represents a quote of the original source file.
-We only support a small subset of Scala syntax necessary to model [Synthetics](#synthetics).
+We only support a small subset of Scala syntax necessary to model
+[Synthetics](#synthetics).
 At the moment, we do not have plans to add more trees.
 
 ```protobuf
@@ -1017,7 +1018,8 @@ message FunctionTree {
 }
 ```
 
-A `FunctionTree` represents a function literal with parameter declarations and a body.
+A `FunctionTree` represents a function literal with parameter declarations and
+a body.
 
 ```protobuf
 message IdTree {
@@ -1126,9 +1128,9 @@ is incomplete or out of date.
 <a name="scala-symbol"></a>
 #### Symbol
 
-In this section, we describe the Scala symbol format, but don't cover the details
-of how Scala definitions map onto symbols (e.g. which symbols are created for
-which Scala definitions, what their metadata is, etc). See
+In this section, we describe the Scala symbol format, but don't cover the
+details of how Scala definitions map onto symbols (e.g. which symbols are
+created for which Scala definitions, what their metadata is, etc). See
 [SymbolInformation](#scala-symbolinformation) for more information about that.
 
 <table>
@@ -1597,9 +1599,9 @@ Notes:
 multiple symbols, with the exact number of symbols, their kinds, properties,
 signatures and accessibilities dependent on the corresponding value:
 * Local symbol of kind `LOCAL` is created for all local variables.
-* Getter and setter symbols of kind `METHOD` are created for all member variables
-  to model the getter and setter methods associated with the corresponding
-  member variable.
+* Getter and setter symbols of kind `METHOD` are created for all member
+  variables to model the getter and setter methods associated with the
+  corresponding member variable.
 * Parameter symbol of kind `PARAMETER` is created for `var` parameters
   of primary constructors to model the corresponding constructor parameter.
 
@@ -2056,7 +2058,7 @@ Notes:
 * If present, parameters of methods are
   represented as described above in order of their appearance in source code.
 * For procedures [\[49\]][49], the return type is assumed to be `Unit`.
-  Corresponding signature is computed using the assumed retyrb
+  Corresponding signature is computed using the assumed return
   type as explained in [Type](#scala-type).
 * If the return type is not provided in source code, it is inferred from the
   right-hand side of the method according to the rules described
@@ -2453,13 +2455,13 @@ occurrences. We intend to improve on this in the future.
 
 #### Synthetic
 
-The following is an exhaustive list of the kinds of synthetics that are generated by the
-Scala compiler plugin, along with examples.
+The following is an exhaustive list of the kinds of synthetics that are
+generated by the Scala compiler plugin, along with examples.
 
 Synthetics generated from represent for loops are quite massive,
 so we use a shorthand notation for them.
-In that notation, OriginalTree trees are represented by `orig(<code>)` and other trees are represented
-by their syntax.
+In that notation, OriginalTree trees are represented by `orig(<code>)`
+and other trees are represented by their syntax.
 
 <table>
 <tr>
@@ -2714,8 +2716,8 @@ orig(scala.concurrent.Future.successful(1)).flatMap[Int]({ (a) =>
 
 In this section, we exhaustively map Java language features onto SemanticDB.
 As a reference, we use the Java Language Specification [\[85\]][85] (referred
-to as "JLS" in the text below) and Java Virtual Machine Specification [\[91\]][91]
-(referred to as "JVMS" in the text below).
+to as "JLS" in the text below) and Java Virtual Machine Specification
+[\[91\]][91] (referred to as "JVMS" in the text below).
 
 <a name="java-symbol"></a>
 #### Symbol
@@ -2781,10 +2783,10 @@ In this section, we describe the Java symbol format.
     a disambiguator and a dot (`.`).
   * For `CLASS` or `INTERFACE`, concatenation of its encoded name and
     a pound sign (`#`).
-  * For `PARAMETER`, concatenation of a left parenthesis (`(`), its encoded name
-    and a right parenthesis (`)`).
-  * For `TYPE_PARAMETER`, concatenation of a left bracket (`[`), its encoded name
-    and a right bracket (`]`).
+  * For `PARAMETER`, concatenation of a left parenthesis (`(`), its encoded
+    name and a right parenthesis (`)`).
+  * For `TYPE_PARAMETER`, concatenation of a left bracket (`[`), its encoded
+    name and a right bracket (`]`).
   * See [SymbolInformation](#java-symbolinformation) for details on
     which Java definitions are modelled by which symbols.
 
@@ -2941,9 +2943,11 @@ In the examples below:
 </table>
 
 Notes:
-* Primitive and array types are converted to their equivalent [Scala type](#scala-type) representations. We may improve on this in the future.
+* Primitive and array types are converted to their equivalent
+  [Scala type](#scala-type) representations. We may improve on this
+  in the future.
 * Since Java doesn't support path-dependent types, prefixes in type refs are
-always empty.
+  always empty.
 
 <a name="java-signature"></a>
 #### Signature
@@ -3007,7 +3011,8 @@ message SymbolInformation {
   </tr>
 </table>
 
-**Class declarations** [\[76\]][76] are represented by a single symbol with the `CLASS` kind.
+**Class declarations** [\[76\]][76] are represented by a single symbol with
+the `CLASS` kind.
 
 ```java
 package a;
@@ -3125,9 +3130,9 @@ Notes:
   if `m3(+2)` appears earlier in the source code. This is because `m3(+2)` is
   static and the disambiguator tag is computed from non-static members first
   and static members second. The reason for this required order is to ensure
-  that it's possible to compute correct method symbols inside the Scala compiler,
-  which groups static member under an `OBJECT` symbol and non-static members under
-  a `CLASS` symbol.
+  that it's possible to compute correct method symbols inside the Scala
+  compiler, which groups static member under an `OBJECT` symbol and non-static
+  members under a `CLASS` symbol.
 * Supported properties for `CLASS` symbols are
   * `FINAL` set for all final classes
   * `ABSTRACT` set for all abstract classes
@@ -3436,7 +3441,8 @@ The root package is a synthetic package that does not exist in the JLS but
 has an equivalent in the SLS [\[20\]][20].
 The root package is the owner of all unnamed and all top-level named packages.
 The motivation to define a root package for the Java language is to keep
-consistency with how package owners are encoded in [Scala symbols](#scala-symbol).
+consistency with how package owners are encoded in
+[Scala symbols](#scala-symbol).
 
 <a name="java-annotation"></a>
 #### Annotation
@@ -3447,7 +3453,8 @@ message Annotation {
 }
 ```
 
-In Java, [Annotation](#annotation) represents `access_flags` in the JVMS `class` file format [\[92\]][92] but not the actual annotations [\[93\]][93].
+In Java, [Annotation](#annotation) represents `access_flags` in the JVMS `class`
+file format [\[92\]][92] but not the actual annotations [\[93\]][93].
 We may improve on this in the future.
 
 <table>
@@ -3485,7 +3492,8 @@ message Accessibility {
 }
 ```
 
-In Java, [Accessibility](#accessibility) represents access control [\[87\]][87] of names
+In Java, [Accessibility](#accessibility) represents access control [\[87\]][87]
+of names.
 <table>
   <tr>
     <td><b>Accessibility</b></td>
