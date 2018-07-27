@@ -41,4 +41,17 @@ object Position {
     override def text = new String(input.chars, start, end - start)
     override def toString = s"[$start..$end) in $input"
   }
+
+  object Range {
+    def apply(
+        input: Input,
+        startLine: Int,
+        startColumn: Int,
+        endLine: Int,
+        endColumn: Int): Position.Range = {
+      val start = input.lineToOffset(startLine) + startColumn
+      val end = input.lineToOffset(endLine) + endColumn
+      Range(input, start, end)
+    }
+  }
 }
