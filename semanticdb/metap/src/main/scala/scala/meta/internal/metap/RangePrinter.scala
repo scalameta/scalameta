@@ -2,6 +2,7 @@ package scala.meta.internal.metap
 
 import scala.collection.mutable
 import scala.math.Ordering
+import scala.meta.inputs._
 import scala.meta.internal.semanticdb._
 
 trait RangePrinter extends BasePrinter {
@@ -17,26 +18,19 @@ trait RangePrinter extends BasePrinter {
     out.print(")")
   }
 
-  private val lineToOffsetCache = new mutable.HashMap[TextDocument, Array[Int]]
+  private val inputCache = new mutable.HashMap[TextDocument, Input]
   implicit class DocumentOps(doc: TextDocument) {
     def substring(range: Option[Range]): Option[String] = {
       range.flatMap { range =>
         if (doc.text.nonEmpty) {
-          val lineToOffset = lineToOffsetCache.getOrElseUpdate(doc, {
-            val chars = doc.text.toArray
-            val buf = new mutable.ArrayBuffer[Int]
-            buf += 0
-            var i = 0
-            while (i < chars.length) {
-              if (chars(i) == '\n') buf += (i + 1)
-              i += 1
-            }
-            if (buf.last != chars.length) buf += chars.length
-            buf.toArray
-          })
-          val startOffset = lineToOffset(range.startLine) + range.startCharacter
-          val endOffset = lineToOffset(range.endLine) + range.endCharacter
-          Some(doc.text.substring(startOffset, endOffset))
+          val input = inputCache.getOrElseUpdate(doc, Input.String(doc.text))
+          val pos = Position.Range(
+            input,
+            range.startLine,
+            range.startCharacter,
+            range.endLine,
+            range.endCharacter)
+          Some(pos.text)
         } else {
           None
         }

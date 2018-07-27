@@ -259,7 +259,7 @@ lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .nativeSettings(nativeSettings)
   // FIXME: https://github.com/scalameta/scalameta/issues/1688
   .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(semanticdb, cli)
+  .dependsOn(semanticdb, cli, inputs)
 lazy val metapJVM = metap.jvm
 lazy val metapJS = metap.js
 lazy val metapNative = metap.native

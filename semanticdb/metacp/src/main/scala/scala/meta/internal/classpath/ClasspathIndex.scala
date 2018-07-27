@@ -13,11 +13,7 @@ import scala.meta.io.Classpath
 import scala.meta.internal.io.PathIO
 
 /** An index to lookup class directories and classfiles by their JVM names. */
-final class ClasspathIndex private (val dirs: collection.Map[String, Classdir]) {
-
-  override def toString: String = {
-    s"ClasspathIndex(${dirs.size} entries)"
-  }
+final class ClasspathIndex private (classpath: Classpath, dirs: collection.Map[String, Classdir]) {
 
   /** Returns a classfile with the given path. */
   def getClassfile(path: String): Option[Classfile] = {
@@ -40,6 +36,9 @@ final class ClasspathIndex private (val dirs: collection.Map[String, Classdir]) 
   def isClassdir(path: String): Boolean =
     dirs.contains(path)
 
+  override def toString: String = {
+    s"ClasspathIndex($classpath)"
+  }
 }
 
 object ClasspathIndex {
@@ -52,7 +51,7 @@ object ClasspathIndex {
       val root = Classdir("/")
       dirs(root.relativeUri) = root
       classpath.entries.foreach(expandEntry)
-      new ClasspathIndex(dirs)
+      new ClasspathIndex(classpath, dirs)
     }
 
     private def expandEntry(path: AbsolutePath): Unit = {
