@@ -236,7 +236,15 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
+  test("scala.meta.metacp.Result.toString") {
+    // n/a
+  }
+
   test("scala.meta.metacp.Settings.toString") {
+    // n/a
+  }
+
+  test("scala.meta.metai.Result.toString") {
     // n/a
   }
 
