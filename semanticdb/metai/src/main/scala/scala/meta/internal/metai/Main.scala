@@ -47,12 +47,11 @@ final class Main(settings: Settings, reporter: Reporter) {
   }
 
   private def processEntry(file: ClasspathFile): Boolean = {
-    var hasSemanticdb = false
+    val hasSemanticdb = file.path.resolve("META-INF").resolve("semanticdb").isDirectory
     val ls = FileIO.listAllFilesRecursively(file.path)
     var index = i.Index()
     ls.files.foreach { relpath =>
       if (PathIO.extension(relpath.toNIO) == "semanticdb") {
-        hasSemanticdb = true
         val entries = getEntriesForPath(ls.root, relpath).entries
         index = index.addAllEntries(entries)
       }
@@ -67,7 +66,7 @@ final class Main(settings: Settings, reporter: Reporter) {
           // It's expected that manifest jars that point to other jars don't have SemanticDB files.
           true
         case _ =>
-          reporter.err.println(s"No SemanticDB: ${file.pathOnDisk}")
+          reporter.err.println(s"No META-INF/semanticdb found in ${file.pathOnDisk}")
           false
       }
     }

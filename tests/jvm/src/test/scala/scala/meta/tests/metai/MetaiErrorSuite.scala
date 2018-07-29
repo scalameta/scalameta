@@ -13,26 +13,26 @@ import scala.meta.tests.cli.CliSuite
 import scala.meta.tests.metacp.Library
 
 class MetaiErrorSuite extends FunSuite {
-  test("no SemanticDB should error") {
+  test("no META-INF/semanticdb should error") {
     val scalaLibrary = Library.scalaLibrary.classpath().entries.head
     val tmp1 = Files.createTempFile("metai", "_scala-library.jar")
     Files.copy(scalaLibrary.toNIO, tmp1, StandardCopyOption.REPLACE_EXISTING)
     val tmp2 = Files.createTempDirectory("metai")
+    Files.createDirectories(tmp2.resolve("META-INF/semanticdb"))
     val cp = Classpath(List(AbsolutePath(tmp1), AbsolutePath(tmp2)))
     val settings = Settings().withClasspath(cp)
     val (out, stdout, stderr) = CliSuite.withReporter { reporter =>
       Metai.process(settings, reporter)
     }
-    assert(!out.success, "metai should error for non-SemanticDB classpath")
+    assert(!out.success, "metai should error for non-META-INF/semanticdb entries")
     val expectedStdout =
       s"""|{
           |  "$tmp1": false,
-          |  "$tmp2": false
+          |  "$tmp2": true
           |}
           |""".stripMargin
     val expectedStderr =
-      s"""|No SemanticDB: $tmp1
-          |No SemanticDB: $tmp2
+      s"""|No META-INF/semanticdb found in $tmp1
           |""".stripMargin
     assert(stdout == expectedStdout, stdout)
     assert(stderr == expectedStderr, stderr)
@@ -41,6 +41,6 @@ class MetaiErrorSuite extends FunSuite {
       assert(!semanticidx1.isFile, semanticidx1)
     }
     val semanticidx2 = AbsolutePath(tmp2.resolve("META-INF/semanticdb.semanticidx"))
-    assert(!semanticidx2.isFile, semanticidx2)
+    assert(semanticidx2.isFile, semanticidx2)
   }
 }
