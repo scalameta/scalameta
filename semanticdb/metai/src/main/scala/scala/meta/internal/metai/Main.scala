@@ -3,6 +3,7 @@ package scala.meta.internal.metai
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
+import scala.collection.mutable
 import scala.meta.cli.Reporter
 import scala.meta.internal.io.FileIO
 import scala.meta.internal.io.PathIO
@@ -14,23 +15,35 @@ import scala.meta.internal.{semanticidx => i}
 import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
 import scala.meta.io.RelativePath
+import scala.meta.metai.Result
 import scala.meta.metai.Settings
 
 final class Main(settings: Settings, reporter: Reporter) {
-  def process(): Classpath = {
-    val buf = List.newBuilder[AbsolutePath]
+  def process(): Result = {
+    val status = mutable.Map[AbsolutePath, Boolean]()
     settings.classpath.foreach { entry =>
-      try {
-        if (processEntry(entry)) {
-          buf += entry.path
+      val success = {
+        try {
+          processEntry(entry)
+        } catch {
+          case e: Throwable =>
+            println(s"Error indexing $entry:")
+            e.printStackTrace(reporter.err)
+            false
         }
-      } catch {
-        case e: Throwable =>
-          println(s"Error indexing $entry:")
-          e.printStackTrace(reporter.err)
       }
+      status(entry.pathOnDisk) = success
     }
-    Classpath(buf.result)
+    reporter.out.println("{")
+    val ins = settings.classpath.entries
+    ins.zipWithIndex.foreach {
+      case (in, i) =>
+        reporter.out.print(s"""  "${in.toNIO}": ${status(in)}""")
+        if (i != ins.length - 1) reporter.out.print(",")
+        reporter.out.println()
+    }
+    reporter.out.println("}")
+    Result(status.toMap)
   }
 
   private def processEntry(file: ClasspathFile): Boolean = {

@@ -2,6 +2,7 @@ package scala.meta.cli
 
 import scala.meta.internal.metai.Main
 import scala.meta.io.Classpath
+import scala.meta.metai.Result
 import scala.meta.metai.Settings
 
 object Metai {
@@ -12,16 +13,15 @@ object Metai {
   def process(args: Array[String], reporter: Reporter): Int = {
     Settings.parse(args.toList, reporter) match {
       case Some(settings) =>
-        val in = settings.classpath
-        val out = process(settings, reporter)
-        if (in.entries.length == out.entries.length) 0
+        val result = process(settings, reporter)
+        if (result.success) 0
         else 1
       case None =>
         1
     }
   }
 
-  def process(settings: Settings, reporter: Reporter): Classpath = {
+  def process(settings: Settings, reporter: Reporter): Result = {
     val main = new Main(settings, reporter)
     main.process()
   }
