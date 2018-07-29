@@ -15,7 +15,6 @@ import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
 import scala.meta.io.RelativePath
 import scala.meta.metai.Settings
-import scala.util.control.NonFatal
 
 final class Main(settings: Settings, reporter: Reporter) {
   def process(): Classpath = {
@@ -26,7 +25,7 @@ final class Main(settings: Settings, reporter: Reporter) {
           buf += entry.path
         }
       } catch {
-        case NonFatal(e) =>
+        case e: Throwable =>
           println(s"Error indexing $entry:")
           e.printStackTrace(reporter.err)
       }

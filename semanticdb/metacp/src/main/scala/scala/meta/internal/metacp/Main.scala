@@ -13,7 +13,6 @@ import scala.meta.internal.scalacp._
 import scala.meta.internal.io._
 import scala.meta.io._
 import scala.meta.metacp._
-import scala.util.control.NonFatal
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.GenSeq
 import scala.collection.mutable
@@ -178,7 +177,7 @@ class Main(settings: Settings, reporter: Reporter) {
                   reporter.out.println(e.getMessage)
                   success = false
                 }
-              case NonFatal(ex) =>
+              case ex: Throwable =>
                 reporter.out.println(s"error: can't convert $path")
                 ex.printStackTrace(reporter.out)
                 success = false

@@ -5,7 +5,6 @@ import java.net.URI
 import scala.compat.Platform.EOL
 import scala.tools.nsc.Phase
 import scala.tools.nsc.plugins.PluginComponent
-import scala.util.control.NonFatal
 import scala.meta.internal.{semanticdb => s}
 
 trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
@@ -29,7 +28,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
   }
 
   def handleCrash(unit: Option[g.CompilationUnit]): PartialFunction[Throwable, Unit] = {
-    case NonFatal(ex) =>
+    case ex: Throwable =>
       val writer = new StringWriter()
       val culprit = unit.map(unit => " for " + unit.source.file.path).getOrElse("")
       writer.write(s"failed to generate semanticdb$culprit:$EOL")
