@@ -11,12 +11,25 @@ final class Reporter private (val out: PrintStream, val err: PrintStream) {
     copy(out = out)
   }
 
+  def silenceOut(): Reporter = {
+    withOut(devnull)
+  }
+
   def withErr(err: PrintStream): Reporter = {
     copy(err = err)
   }
 
+  def silenceErr(): Reporter = {
+    withErr(devnull)
+  }
+
   private def copy(out: PrintStream = out, err: PrintStream = err): Reporter = {
     new Reporter(out = out, err = err)
+  }
+
+  private def devnull: PrintStream = {
+    val os = new OutputStream { override def write(b: Int) = () }
+    new PrintStream(os)
   }
 }
 
