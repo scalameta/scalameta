@@ -188,6 +188,11 @@ class Main(settings: Settings, reporter: Reporter) {
         }
       }
     }
+    // NOTE: In the case when an input contains no class files,
+    // we need to create an empty META-INF/semanticdb directory to distinguish
+    // metacp-processed outputs from regular class directories and/or jar.
+    val semanticdbRoot = out.resolve("META-INF").resolve("semanticdb")
+    Files.createDirectories(semanticdbRoot.toNIO)
     success
   }
 }
