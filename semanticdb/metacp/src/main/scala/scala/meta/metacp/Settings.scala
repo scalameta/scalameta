@@ -87,12 +87,12 @@ object Settings {
         case "--par" +: rest if allowOptions =>
           loop(settings.copy(par = true), true, rest)
         case flag +: _ if allowOptions && flag.startsWith("-") =>
-          reporter.out.println(s"unsupported flag $flag")
+          reporter.err.println(s"unsupported flag $flag")
           None
         case classpath +: Nil =>
           Some(settings.copy(classpath = Classpath(classpath)))
         case classpath +: arg +: _ =>
-          reporter.out.println(s"unsupported argument $arg")
+          reporter.err.println(s"unsupported argument $arg")
           None
         case Nil =>
           Some(settings)

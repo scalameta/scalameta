@@ -75,7 +75,7 @@ class Main(settings: Settings, reporter: Reporter) {
       Some(Classpath(buffer.asScala.toList))
     } else {
       if (missingSymbols.nonEmpty) {
-        reporter.out.println(
+        reporter.err.println(
           "NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. " +
             "The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar."
         )
@@ -174,12 +174,12 @@ class Main(settings: Settings, reporter: Reporter) {
               case e @ MissingSymbolException(symbol) =>
                 if (!missingSymbols(symbol)) {
                   missingSymbols += symbol
-                  reporter.out.println(e.getMessage)
+                  reporter.err.println(e.getMessage)
                   success = false
                 }
               case ex: Throwable =>
-                reporter.out.println(s"error: can't convert $path")
-                ex.printStackTrace(reporter.out)
+                reporter.err.println(s"error: can't convert $path")
+                ex.printStackTrace(reporter.err)
                 success = false
             }
           }

@@ -26,8 +26,8 @@ class Main(settings: Settings, reporter: Reporter) {
         }
       } catch {
         case ex: Throwable =>
-          reporter.out.println(s"error: can't decompile $path")
-          ex.printStackTrace(reporter.out)
+          reporter.err.println(s"error: can't decompile $path")
+          ex.printStackTrace(reporter.err)
           success = false
       }
     }

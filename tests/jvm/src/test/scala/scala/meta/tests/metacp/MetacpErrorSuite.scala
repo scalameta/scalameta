@@ -32,9 +32,9 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
       Metacp.process(scalametaSettings, reporter)
     }
     assert(classpath.isEmpty)
-    assert(err.isEmpty)
+    assert(out.isEmpty)
     assertNoDiffOrPrintExpected(
-      out,
+      err,
       """|missing symbol: java
          |missing symbol: scala.reflect.macros.whitebox
          |missing symbol: scala.reflect.macros.blackbox
@@ -58,9 +58,9 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
       Metacp.process(settings.withClasspath(classpath), reporter)
     }
     assert(classpath.isEmpty)
-    assert(err.isEmpty)
+    assert(out.isEmpty)
     assertNoDiffOrPrintExpected(
-      out,
+      err,
       """|missing symbol: scala
          |NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
       """.stripMargin
@@ -81,9 +81,9 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
       Metacp.process(settings, reporter)
     }
     assert(classpath.isEmpty)
-    assert(err.isEmpty)
+    assert(out.isEmpty)
     assertNoDiffOrPrintExpected(
-      out,
+      err,
       """|missing symbol: scala
          |NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
       """.stripMargin
