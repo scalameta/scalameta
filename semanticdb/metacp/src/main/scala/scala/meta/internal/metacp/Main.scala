@@ -90,7 +90,7 @@ class Main(settings: Settings, reporter: Reporter) {
         if (i != ins.length - 1) reporter.out.print(",")
         reporter.out.println()
     }
-    reporter.out.println("  }")
+    reporter.out.println("  },")
     val s_out = scalaLibrarySynthetics.map(_.toString).getOrElse("")
     reporter.out.println(s"""  "scalaLibrarySynthetics": "${s_out}"""")
     reporter.out.println("}")

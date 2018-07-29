@@ -63,7 +63,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
       s"""|{
           |  "status": {
           |    "$tmp": ""
-          |  }
+          |  },
           |  "scalaLibrarySynthetics": ""
           |}
           |""".stripMargin
@@ -95,7 +95,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
       s"""|{
           |  "status": {
           |    "${AbsolutePath(manifest)}": ""
-          |  }
+          |  },
           |  "scalaLibrarySynthetics": ""
           |}
           |""".stripMargin
