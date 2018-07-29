@@ -12,23 +12,26 @@ import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.{semanticidx => i}
 import scala.meta.io.AbsolutePath
+import scala.meta.io.Classpath
 import scala.meta.io.RelativePath
 import scala.meta.metai.Settings
 import scala.util.control.NonFatal
 
 final class Main(settings: Settings, reporter: Reporter) {
-  def process(): Boolean = {
-    var success = true
+  def process(): Classpath = {
+    val buf = List.newBuilder[AbsolutePath]
     settings.classpath.foreach { entry =>
       try {
-        success &= processEntry(entry)
+        if (processEntry(entry)) {
+          buf += entry.path
+        }
       } catch {
         case NonFatal(e) =>
-          e.printStackTrace(reporter.out)
-          success = false
+          println(s"Error indexing $entry:")
+          e.printStackTrace(reporter.err)
       }
     }
-    success
+    Classpath(buf.result)
   }
 
   private def processEntry(file: ClasspathFile): Boolean = {
@@ -52,7 +55,7 @@ final class Main(settings: Settings, reporter: Reporter) {
           // It's expected that manifest jars that point to other jars don't have SemanticDB files.
           true
         case _ =>
-          reporter.out.println(s"No SemanticDB: ${file.pathOnDisk}")
+          reporter.err.println(s"No SemanticDB: ${file.pathOnDisk}")
           false
       }
     }

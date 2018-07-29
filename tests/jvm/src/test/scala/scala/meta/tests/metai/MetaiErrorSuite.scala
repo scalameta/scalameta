@@ -17,12 +17,12 @@ class MetaiErrorSuite extends FunSuite {
     val tmp = Files.createTempFile("metai", "scala-library.jar")
     Files.copy(scalaLibrary.toNIO, tmp, StandardCopyOption.REPLACE_EXISTING)
     val settings = Settings().withClasspath(Classpath(tmp))
-    val (isSuccess, out, _) = CliSuite.withReporter { reporter =>
+    val (out, _, stderr) = CliSuite.withReporter { reporter =>
       Metai.process(settings, reporter)
     }
-    assert(!isSuccess, "metai should error for non-SemanticDB classpath")
-    assert(out.contains("No SemanticDB: "))
-    assert(out.contains("scala-library.jar"))
+    assert(out.entries.isEmpty, "metai should error for non-SemanticDB classpath")
+    assert(stderr.contains("No SemanticDB: "))
+    assert(stderr.contains("scala-library.jar"))
     FileIO.withJarFileSystem(AbsolutePath(tmp), create = false, close = true) { root =>
       val semanticidx = root.resolve("META-INF/semanticdb.semanticidx")
       assert(!semanticidx.isFile, semanticidx)

@@ -173,8 +173,8 @@ trait ExpectHelpers extends FunSuiteLike {
   protected def metai(path: Path): String = {
     val classpath = Classpath(path)
     val settings = scala.meta.metai.Settings().withClasspath(classpath)
-    val isSuccess = cli.Metai.process(settings, Reporter())
-    if (!isSuccess) {
+    val out = cli.Metai.process(settings, Reporter())
+    if (out.entries.isEmpty) {
       sys.error("metai error")
     }
     val buf = List.newBuilder[i.Index]
