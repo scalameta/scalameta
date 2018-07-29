@@ -18,7 +18,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
   private val settings = Settings().withOut(tmp)
 
   test("missing symbol 1", Slow) {
-    val (classpath, out, err) = CliSuite.withReporter { reporter =>
+    val (result, out, err) = CliSuite.withReporter { reporter =>
       val scalametaSettings = settings.withClasspath(
         Library(
           "org.scalameta",
@@ -31,7 +31,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
       )
       Metacp.process(scalametaSettings, reporter)
     }
-    assert(classpath.isEmpty)
+    assert(result.classpath.isEmpty)
     assert(out.isEmpty)
     assertNoDiffOrPrintExpected(
       err,
@@ -53,12 +53,21 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
     val aclassTo = tmp.resolve("A.class")
     Files.copy(aclassFrom, aclassTo)
 
-    val (classpath, out, err) = CliSuite.withReporter { reporter =>
+    val (result, out, err) = CliSuite.withReporter { reporter =>
       val classpath = Classpath(AbsolutePath(tmp))
       Metacp.process(settings.withClasspath(classpath), reporter)
     }
-    assert(classpath.isEmpty)
-    assert(out.isEmpty)
+    assert(result.classpath.isEmpty)
+    assertNoDiffOrPrintExpected(
+      out,
+      s"""|{
+          |  "status": {
+          |    "$tmp": ""
+          |  }
+          |  "scalaLibrarySynthetics": ""
+          |}
+          |""".stripMargin
+    )
     assertNoDiffOrPrintExpected(
       err,
       """|missing symbol: scala
@@ -77,11 +86,20 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
       .withClasspath(Classpath(AbsolutePath(manifest)))
 
     assert(!Files.list(output).iterator.hasNext)
-    val (classpath, out, err) = CliSuite.withReporter { reporter =>
+    val (result, out, err) = CliSuite.withReporter { reporter =>
       Metacp.process(settings, reporter)
     }
-    assert(classpath.isEmpty)
-    assert(out.isEmpty)
+    assert(result.classpath.isEmpty)
+    assertNoDiffOrPrintExpected(
+      out,
+      s"""|{
+          |  "status": {
+          |    "${AbsolutePath(manifest)}": ""
+          |  }
+          |  "scalaLibrarySynthetics": ""
+          |}
+          |""".stripMargin
+    )
     assertNoDiffOrPrintExpected(
       err,
       """|missing symbol: scala

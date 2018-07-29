@@ -4,8 +4,9 @@ import java.io.BufferedOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
-import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.ConcurrentHashMap
 import java.util.jar._
+import scala.collection.immutable
 import scala.collection.JavaConverters._
 import scala.meta.cli._
 import scala.meta.internal.classpath._
@@ -22,9 +23,7 @@ class Main(settings: Settings, reporter: Reporter) {
   val classpathIndex = ClasspathIndex(settings.fullClasspath)
   private val missingSymbols = mutable.Set.empty[String]
 
-  def process(): Option[Classpath] = {
-    val success = new AtomicBoolean(true)
-
+  def process(): Result = {
     if (settings.out.isFile) {
       throw new FileAlreadyExistsException(settings.out.toString, null, "--out must not be a file")
     } else if (!settings.out.isDirectory) {
@@ -35,12 +34,12 @@ class Main(settings: Settings, reporter: Reporter) {
       if (settings.par) settings.classpath.entries.par
       else settings.classpath.entries
 
-    val buffer = new ConcurrentLinkedQueue[AbsolutePath]()
+    val status = new ConcurrentHashMap[AbsolutePath, Option[AbsolutePath]]()
     def processEntry(entry: AbsolutePath): OutputEntry = {
       withOutputEntry(entry) { out =>
-        buffer.add(out.output)
         val isSuccess = convertClasspathEntry(entry, out.root)
-        success.compareAndSet(true, isSuccess)
+        if (isSuccess) status.put(entry, Some(out.output))
+        else status.put(entry, None)
         out
       }
     }
@@ -53,7 +52,7 @@ class Main(settings: Settings, reporter: Reporter) {
           val manifest = jar.getManifest
           if (manifest != null) {
             val isSuccess = processManifest(entry, manifest, out.output)
-            success.compareAndSet(true, isSuccess)
+            if (!isSuccess) status.put(entry, None)
           }
         } finally {
           jar.close()
@@ -61,27 +60,43 @@ class Main(settings: Settings, reporter: Reporter) {
       }
     }
 
-    if (settings.scalaLibrarySynthetics && success.get) {
-      withOutputEntry(settings.out.resolve("scala-library-synthetics.jar")) { out =>
-        buffer.add(out.output)
-        Scalalib.synthetics.foreach { infos =>
-          infos.save(out.root)
+    val scalaLibrarySynthetics = {
+      if (settings.scalaLibrarySynthetics) {
+        withOutputEntry(settings.out.resolve("scala-library-synthetics.jar")) { out =>
+          Scalalib.synthetics.foreach { infos =>
+            infos.save(out.root)
+          }
+          Some(out.output)
         }
+      } else {
+        None
       }
     }
 
-    if (success.get) {
-      import scala.collection.JavaConverters._
-      Some(Classpath(buffer.asScala.toList))
-    } else {
-      if (missingSymbols.nonEmpty) {
-        reporter.err.println(
-          "NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. " +
-            "The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar."
-        )
-      }
-      None
+    if (missingSymbols.nonEmpty) {
+      reporter.err.println(
+        "NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. " +
+          "The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar."
+      )
     }
+
+    reporter.out.println("{")
+    reporter.out.println("  \"status\": {")
+    val ins = settings.classpath.entries
+    ins.zipWithIndex.foreach {
+      case (in, i) =>
+        val s_out = status.get(in).map(_.toString).getOrElse("")
+        reporter.out.print(s"""    "${in.toNIO}": "${s_out}"""")
+        if (i != ins.length - 1) reporter.out.print(",")
+        reporter.out.println()
+    }
+    reporter.out.println("  }")
+    val s_out = scalaLibrarySynthetics.map(_.toString).getOrElse("")
+    reporter.out.println(s"""  "scalaLibrarySynthetics": "${s_out}"""")
+    reporter.out.println("}")
+
+    val orderedStatus = immutable.ListMap(ins.map(in => in -> status.get(in)): _*)
+    Result(orderedStatus, scalaLibrarySynthetics)
   }
 
   private def processManifest(entry: AbsolutePath, manifest: Manifest, out: AbsolutePath): Boolean = {

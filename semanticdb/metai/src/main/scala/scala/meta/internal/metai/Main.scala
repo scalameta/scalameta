@@ -3,6 +3,7 @@ package scala.meta.internal.metai
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
+import scala.collection.immutable
 import scala.collection.mutable
 import scala.meta.cli.Reporter
 import scala.meta.internal.io.FileIO
@@ -35,15 +36,17 @@ final class Main(settings: Settings, reporter: Reporter) {
       status(entry.pathOnDisk) = success
     }
     reporter.out.println("{")
+    reporter.out.println("  \"status\": {")
     val ins = settings.classpath.entries
     ins.zipWithIndex.foreach {
       case (in, i) =>
-        reporter.out.print(s"""  "${in.toNIO}": ${status(in)}""")
+        reporter.out.print(s"""    "${in.toNIO}": ${status(in)}""")
         if (i != ins.length - 1) reporter.out.print(",")
         reporter.out.println()
     }
+    reporter.out.println("  }")
     reporter.out.println("}")
-    Result(status.toMap)
+    Result(immutable.ListMap(ins.map(in => in -> status(in)): _*))
   }
 
   private def processEntry(file: ClasspathFile): Boolean = {

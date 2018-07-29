@@ -21,21 +21,23 @@ class MetaiErrorSuite extends FunSuite {
     Files.createDirectories(tmp2.resolve("META-INF/semanticdb"))
     val cp = Classpath(List(AbsolutePath(tmp1), AbsolutePath(tmp2)))
     val settings = Settings().withClasspath(cp)
-    val (out, stdout, stderr) = CliSuite.withReporter { reporter =>
+    val (result, out, err) = CliSuite.withReporter { reporter =>
       Metai.process(settings, reporter)
     }
-    assert(!out.success, "metai should error for non-META-INF/semanticdb entries")
+    assert(!result.success, "metai should error for non-META-INF/semanticdb entries")
     val expectedStdout =
       s"""|{
-          |  "$tmp1": false,
-          |  "$tmp2": true
+          |  "status": {
+          |    "$tmp1": false,
+          |    "$tmp2": true
+          |  }
           |}
           |""".stripMargin
     val expectedStderr =
       s"""|No META-INF/semanticdb found in $tmp1
           |""".stripMargin
-    assert(stdout == expectedStdout, stdout)
-    assert(stderr == expectedStderr, stderr)
+    assert(out == expectedStdout, out)
+    assert(err == expectedStderr, err)
     FileIO.withJarFileSystem(AbsolutePath(tmp1), create = false, close = true) { root =>
       val semanticidx1 = root.resolve("META-INF/semanticdb.semanticidx")
       assert(!semanticidx1.isFile, semanticidx1)

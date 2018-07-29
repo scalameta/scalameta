@@ -155,14 +155,14 @@ trait ExpectHelpers extends FunSuiteLike {
         .withDependencyClasspath(Library.scalaLibrary.classpath() ++ Library.jdk.classpath())
         .withScalaLibrarySynthetics(false)
       val reporter = Reporter().withOut(out).withErr(err)
-      Metacp.process(settings, reporter) match {
+      val result = Metacp.process(settings, reporter)
+      result.classpath match {
         case Some(Classpath(List(outPath))) => outPath
         case Some(other) => sys.error(s"unexpected metacp result: $other")
         case None => null
       }
     }
     if (outPath == null) {
-      println(out)
       println(err)
       fail("metacp failed")
     }
@@ -214,7 +214,7 @@ object ScalalibExpect extends ExpectHelpers {
       .withClasspath(Classpath(Nil))
       .withScalaLibrarySynthetics(true)
     val reporter = Reporter()
-    Metacp.process(settings, reporter) match {
+    Metacp.process(settings, reporter).classpath match {
       case Some(Classpath(List(jar))) => metap(jar.toNIO)
       case other => sys.error(s"unexpected metacp result: $other")
     }
