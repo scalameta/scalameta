@@ -191,7 +191,7 @@ class Main(settings: Settings, reporter: Reporter) {
               case e @ MissingSymbolException(symbol) =>
                 if (!missingSymbols(symbol)) {
                   missingSymbols += symbol
-                  reporter.err.println(e.getMessage)
+                  reporter.err.println(s"${e.getMessage} in $in")
                   success = false
                 }
               case ex: Throwable =>
