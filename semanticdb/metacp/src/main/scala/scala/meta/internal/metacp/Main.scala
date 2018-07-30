@@ -179,7 +179,7 @@ class Main(settings: Settings, reporter: Reporter) {
     classpath.visit { _ =>
       new SimpleFileVisitor[Path] {
         override def visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult = {
-          if (PathIO.extension(path) == "class") {
+          if (PathIO.extension(path) == "class" && Files.size(path) > 0) {
             try {
               val abspath = AbsolutePath(path)
               val node = abspath.toClassNode
