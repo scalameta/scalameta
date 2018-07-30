@@ -195,7 +195,7 @@ class Main(settings: Settings, reporter: Reporter) {
                   success = false
                 }
               case ex: Throwable =>
-                reporter.err.println(s"error: can't convert $path")
+                reporter.err.println(s"error: can't convert $path in $in")
                 ex.printStackTrace(reporter.err)
                 success = false
             }
