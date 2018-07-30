@@ -105,26 +105,29 @@ class Main(settings: Settings, reporter: Reporter) {
     var success = true
     val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
     if (classpathAttr != null) {
-      val outputClasspath = List.newBuilder[Path]
+      val buf = List.newBuilder[Path]
       classpathAttr.split(" ").foreach { classpathEntry =>
         val linkedPath = entry.toNIO.getParent.resolve(classpathEntry)
         val linkedEntry = AbsolutePath(linkedPath)
         if (linkedEntry.isFile || linkedEntry.isDirectory) {
           withOutputEntry(linkedEntry) { out =>
-            outputClasspath += out.output.toNIO.getFileName
+            buf += out.output.toNIO.getFileName
             success &= convertClasspathEntry(linkedEntry, out.root)
           }
         }
       }
-      withJar(out.toNIO) { jos =>
-        jos.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"))
-        val classPath = outputClasspath.result().mkString(" ")
-        val manifest =
-          s"""|Manifest-Version: 1.0
-              |Class-Path: $classPath
-              |""".stripMargin.trim + "\n\n"
-        jos.write(manifest.getBytes(StandardCharsets.UTF_8))
-        jos.closeEntry()
+      val convertedLinkedJars = buf.result()
+      if (convertedLinkedJars.nonEmpty) {
+        withJar(out.toNIO) { jos =>
+          jos.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"))
+          val classPath = convertedLinkedJars.mkString(" ")
+          val manifest =
+            s"""|Manifest-Version: 1.0
+                |Class-Path: $classPath
+                |""".stripMargin.trim + "\n\n"
+          jos.write(manifest.getBytes(StandardCharsets.UTF_8))
+          jos.closeEntry()
+        }
       }
     }
     success
