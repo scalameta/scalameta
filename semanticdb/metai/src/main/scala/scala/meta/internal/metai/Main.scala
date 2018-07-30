@@ -25,19 +25,18 @@ final class Main(settings: Settings, reporter: Reporter) {
     val status = mutable.Map[AbsolutePath, Boolean]()
     val job = Job(settings.classpath.entries, if (settings.verbose) reporter.err else devnull)
     job.foreach { entry =>
-      Classpath(entry).foreach { entry =>
-        val success = {
-          try {
-            processEntry(entry)
-          } catch {
-            case e: Throwable =>
-              reporter.err.println(s"Error indexing ${entry.pathOnDisk}:")
-              e.printStackTrace(reporter.err)
-              false
-          }
+      var success = true
+      try {
+        Classpath(entry).foreach { entry =>
+          success &= processEntry(entry)
         }
-        status(entry.pathOnDisk) = success
+      } catch {
+        case e: Throwable =>
+          reporter.err.println(s"Error indexing $entry:")
+          e.printStackTrace(reporter.err)
+          success = false
       }
+      status(entry) = success
     }
     reporter.out.println("{")
     reporter.out.println("  \"status\": {")
