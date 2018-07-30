@@ -1,6 +1,7 @@
 package scala.meta.cli
 
 import java.io._
+import scala.meta.internal.cli.Args
 import scala.meta.internal.metacp._
 import scala.meta.io._
 import scala.meta.metacp._
@@ -21,21 +22,18 @@ object Metacp {
   }
 
   private def process(args: Array[String], reporter: Reporter): Int = {
-    Settings.parse(args.toList, reporter) match {
+    val expandedArgs = Args.expand(args)
+    Settings.parse(expandedArgs, reporter) match {
       case Some(settings) =>
-        process(settings, reporter) match {
-          case Some(mclasspath) =>
-            reporter.out.println(mclasspath.entries.mkString(File.pathSeparator))
-            0
-          case None =>
-            1
-        }
+        val result = process(settings, reporter)
+        if (result.success) 0
+        else 1
       case None =>
         1
     }
   }
 
-  def process(settings: Settings, reporter: Reporter): Option[Classpath] = {
+  def process(settings: Settings, reporter: Reporter): Result = {
     val main = new Main(settings, reporter)
     main.process()
   }

@@ -1,9 +1,10 @@
 package scala.meta.cli
 
 import java.io._
+import scala.meta.internal.cli.Args
 import scala.meta.internal.metap._
-import scala.meta.metap._
 import scala.meta.internal.semanticdb.TextDocument
+import scala.meta.metap._
 
 object Metap {
   def main(args: Array[String]): Unit = {
@@ -21,7 +22,8 @@ object Metap {
   }
 
   private def process(args: Array[String], reporter: Reporter): Int = {
-    Settings.parse(args.toList, reporter) match {
+    val expandedArgs = Args.expand(args)
+    Settings.parse(expandedArgs, reporter) match {
       case Some(settings) =>
         if (process(settings, reporter)) 0
         else 1

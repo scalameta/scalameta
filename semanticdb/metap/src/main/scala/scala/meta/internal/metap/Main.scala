@@ -3,7 +3,6 @@ package scala.meta.internal.metap
 import scala.meta.internal.semanticdb._
 import scala.meta.cli._
 import scala.meta.metap._
-import scala.util.control.NonFatal
 
 class Main(settings: Settings, reporter: Reporter) {
   def process(): Boolean = {
@@ -26,9 +25,9 @@ class Main(settings: Settings, reporter: Reporter) {
           }
         }
       } catch {
-        case NonFatal(ex) =>
-          reporter.out.println(s"error: can't decompile $path")
-          ex.printStackTrace(reporter.out)
+        case ex: Throwable =>
+          reporter.err.println(s"error: can't decompile $path")
+          ex.printStackTrace(reporter.err)
           success = false
       }
     }

@@ -3,7 +3,10 @@ package scala.meta.internal.metai
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
+import scala.collection.immutable
+import scala.collection.mutable
 import scala.meta.cli.Reporter
+import scala.meta.internal.cli._
 import scala.meta.internal.io.FileIO
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.io.PlatformFileIO
@@ -12,32 +15,49 @@ import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.{semanticidx => i}
 import scala.meta.io.AbsolutePath
+import scala.meta.io.Classpath
 import scala.meta.io.RelativePath
+import scala.meta.metai.Result
 import scala.meta.metai.Settings
-import scala.util.control.NonFatal
 
 final class Main(settings: Settings, reporter: Reporter) {
-  def process(): Boolean = {
-    var success = true
-    settings.classpath.foreach { entry =>
+  def process(): Result = {
+    val status = mutable.Map[AbsolutePath, Boolean]()
+    val job = Job(settings.classpath.entries, if (settings.verbose) reporter.err else devnull)
+    job.foreach { entry =>
+      var success = true
       try {
-        success &= processEntry(entry)
+        Classpath(entry).foreach { entry =>
+          success &= processEntry(entry)
+        }
       } catch {
-        case NonFatal(e) =>
-          e.printStackTrace(reporter.out)
+        case e: Throwable =>
+          reporter.err.println(s"Error indexing $entry:")
+          e.printStackTrace(reporter.err)
           success = false
       }
+      status(entry) = success
     }
-    success
+    reporter.out.println("{")
+    reporter.out.println("  \"status\": {")
+    val ins = settings.classpath.entries
+    ins.zipWithIndex.foreach {
+      case (in, i) =>
+        reporter.out.print(s"""    "${in.toNIO}": ${status(in)}""")
+        if (i != ins.length - 1) reporter.out.print(",")
+        reporter.out.println()
+    }
+    reporter.out.println("  }")
+    reporter.out.println("}")
+    Result(immutable.ListMap(ins.map(in => in -> status(in)): _*))
   }
 
   private def processEntry(file: ClasspathFile): Boolean = {
-    var hasSemanticdb = false
+    val hasSemanticdb = file.path.resolve("META-INF").resolve("semanticdb").isDirectory
     val ls = FileIO.listAllFilesRecursively(file.path)
     var index = i.Index()
     ls.files.foreach { relpath =>
       if (PathIO.extension(relpath.toNIO) == "semanticdb") {
-        hasSemanticdb = true
         val entries = getEntriesForPath(ls.root, relpath).entries
         index = index.addAllEntries(entries)
       }
@@ -52,7 +72,7 @@ final class Main(settings: Settings, reporter: Reporter) {
           // It's expected that manifest jars that point to other jars don't have SemanticDB files.
           true
         case _ =>
-          reporter.out.println(s"No SemanticDB: ${file.pathOnDisk}")
+          reporter.err.println(s"No META-INF/semanticdb found in ${file.pathOnDisk}")
           false
       }
     }

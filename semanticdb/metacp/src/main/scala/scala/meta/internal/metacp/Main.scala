@@ -4,16 +4,17 @@ import java.io.BufferedOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
-import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.ConcurrentHashMap
 import java.util.jar._
+import scala.collection.immutable
 import scala.collection.JavaConverters._
 import scala.meta.cli._
+import scala.meta.internal.cli._
 import scala.meta.internal.classpath._
 import scala.meta.internal.scalacp._
 import scala.meta.internal.io._
 import scala.meta.io._
 import scala.meta.metacp._
-import scala.util.control.NonFatal
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.GenSeq
 import scala.collection.mutable
@@ -23,9 +24,7 @@ class Main(settings: Settings, reporter: Reporter) {
   val classpathIndex = ClasspathIndex(settings.fullClasspath)
   private val missingSymbols = mutable.Set.empty[String]
 
-  def process(): Option[Classpath] = {
-    val success = new AtomicBoolean(true)
-
+  def process(): Result = {
     if (settings.out.isFile) {
       throw new FileAlreadyExistsException(settings.out.toString, null, "--out must not be a file")
     } else if (!settings.out.isDirectory) {
@@ -36,17 +35,18 @@ class Main(settings: Settings, reporter: Reporter) {
       if (settings.par) settings.classpath.entries.par
       else settings.classpath.entries
 
-    val buffer = new ConcurrentLinkedQueue[AbsolutePath]()
+    val status = new ConcurrentHashMap[AbsolutePath, Option[AbsolutePath]]()
     def processEntry(entry: AbsolutePath): OutputEntry = {
       withOutputEntry(entry) { out =>
-        buffer.add(out.output)
         val isSuccess = convertClasspathEntry(entry, out.root)
-        success.compareAndSet(true, isSuccess)
+        if (isSuccess) status.put(entry, Some(out.output))
+        else status.put(entry, None)
         out
       }
     }
 
-    classpath.foreach { entry =>
+    val job = Job(classpath, if (settings.verbose) reporter.err else devnull)
+    job.foreach { entry =>
       val out = processEntry(entry)
       if (entry.isFile) {
         val jar = new JarFile(entry.toFile)
@@ -54,7 +54,7 @@ class Main(settings: Settings, reporter: Reporter) {
           val manifest = jar.getManifest
           if (manifest != null) {
             val isSuccess = processManifest(entry, manifest, out.output)
-            success.compareAndSet(true, isSuccess)
+            if (!isSuccess) status.put(entry, None)
           }
         } finally {
           jar.close()
@@ -62,53 +62,72 @@ class Main(settings: Settings, reporter: Reporter) {
       }
     }
 
-    if (settings.scalaLibrarySynthetics && success.get) {
-      withOutputEntry(settings.out.resolve("scala-library-synthetics.jar")) { out =>
-        buffer.add(out.output)
-        Scalalib.synthetics.foreach { infos =>
-          infos.save(out.root)
+    val scalaLibrarySynthetics = {
+      if (settings.scalaLibrarySynthetics) {
+        withOutputEntry(settings.out.resolve("scala-library-synthetics.jar")) { out =>
+          Scalalib.synthetics.foreach { infos =>
+            infos.save(out.root)
+          }
+          Some(out.output)
         }
+      } else {
+        None
       }
     }
 
-    if (success.get) {
-      import scala.collection.JavaConverters._
-      Some(Classpath(buffer.asScala.toList))
-    } else {
-      if (missingSymbols.nonEmpty) {
-        reporter.out.println(
-          "NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. " +
-            "The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar."
-        )
-      }
-      None
+    if (missingSymbols.nonEmpty) {
+      reporter.err.println(
+        "NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. " +
+          "The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar."
+      )
     }
+
+    reporter.out.println("{")
+    reporter.out.println("  \"status\": {")
+    val ins = settings.classpath.entries
+    ins.zipWithIndex.foreach {
+      case (in, i) =>
+        val s_out = status.get(in).map(_.toString).getOrElse("")
+        reporter.out.print(s"""    "${in.toNIO}": "${s_out}"""")
+        if (i != ins.length - 1) reporter.out.print(",")
+        reporter.out.println()
+    }
+    reporter.out.println("  },")
+    val s_out = scalaLibrarySynthetics.map(_.toString).getOrElse("")
+    reporter.out.println(s"""  "scalaLibrarySynthetics": "${s_out}"""")
+    reporter.out.println("}")
+
+    val orderedStatus = immutable.ListMap(ins.map(in => in -> status.get(in)): _*)
+    Result(orderedStatus, scalaLibrarySynthetics)
   }
 
   private def processManifest(entry: AbsolutePath, manifest: Manifest, out: AbsolutePath): Boolean = {
     var success = true
     val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
     if (classpathAttr != null) {
-      val outputClasspath = List.newBuilder[Path]
+      val buf = List.newBuilder[Path]
       classpathAttr.split(" ").foreach { classpathEntry =>
         val linkedPath = entry.toNIO.getParent.resolve(classpathEntry)
         val linkedEntry = AbsolutePath(linkedPath)
         if (linkedEntry.isFile || linkedEntry.isDirectory) {
           withOutputEntry(linkedEntry) { out =>
-            outputClasspath += out.output.toNIO.getFileName
+            buf += out.output.toNIO.getFileName
             success &= convertClasspathEntry(linkedEntry, out.root)
           }
         }
       }
-      withJar(out.toNIO) { jos =>
-        jos.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"))
-        val classPath = outputClasspath.result().mkString(" ")
-        val manifest =
-          s"""|Manifest-Version: 1.0
-              |Class-Path: $classPath
-              |""".stripMargin.trim + "\n\n"
-        jos.write(manifest.getBytes(StandardCharsets.UTF_8))
-        jos.closeEntry()
+      val convertedLinkedJars = buf.result()
+      if (convertedLinkedJars.nonEmpty) {
+        withJar(out.toNIO) { jos =>
+          jos.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"))
+          val classPath = convertedLinkedJars.mkString(" ")
+          val manifest =
+            s"""|Manifest-Version: 1.0
+                |Class-Path: $classPath
+                |""".stripMargin.trim + "\n\n"
+          jos.write(manifest.getBytes(StandardCharsets.UTF_8))
+          jos.closeEntry()
+        }
       }
     }
     success
@@ -163,7 +182,7 @@ class Main(settings: Settings, reporter: Reporter) {
     classpath.visit { _ =>
       new SimpleFileVisitor[Path] {
         override def visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult = {
-          if (PathIO.extension(path) == "class") {
+          if (PathIO.extension(path) == "class" && Files.size(path) > 0) {
             try {
               val abspath = AbsolutePath(path)
               val node = abspath.toClassNode
@@ -175,12 +194,12 @@ class Main(settings: Settings, reporter: Reporter) {
               case e @ MissingSymbolException(symbol) =>
                 if (!missingSymbols(symbol)) {
                   missingSymbols += symbol
-                  reporter.out.println(e.getMessage)
+                  reporter.err.println(s"${e.getMessage} in $in")
                   success = false
                 }
-              case NonFatal(ex) =>
-                reporter.out.println(s"error: can't convert $path")
-                ex.printStackTrace(reporter.out)
+              case ex: Throwable =>
+                reporter.err.println(s"error: can't convert $path in $in")
+                ex.printStackTrace(reporter.err)
                 success = false
             }
           }
@@ -188,6 +207,11 @@ class Main(settings: Settings, reporter: Reporter) {
         }
       }
     }
+    // NOTE: In the case when an input contains no class files,
+    // we need to create an empty META-INF/semanticdb directory to distinguish
+    // metacp-processed outputs from regular class directories and/or jar.
+    val semanticdbRoot = out.resolve("META-INF").resolve("semanticdb")
+    Files.createDirectories(semanticdbRoot.toNIO)
     success
   }
 }

@@ -19,9 +19,9 @@ class ConvertSuite extends FunSuite {
       .withDependencyClasspath(Library.jdk.classpath() ++ Classpath(scalaOrg))
       .withOut(tmp.resolve(filename))
       .withPar(true)
-    val reporter = Reporter().withOut(System.out).withErr(System.err)
+    val reporter = Reporter().silenceOut().withErr(System.err)
     val output = Metacp.process(settings, reporter)
-    assert(output.nonEmpty)
+    assert(output.success)
   }
   private def checkConversionSucceeds(library: Library): Unit = {
     test(library.name, Slow) {

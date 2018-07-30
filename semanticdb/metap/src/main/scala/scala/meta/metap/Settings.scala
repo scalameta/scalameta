@@ -38,7 +38,7 @@ object Settings {
         case "-proto" +: rest if allowOptions =>
           loop(settings.copy(format = Format.Proto), allowOptions = true, rest)
         case flag +: rest if allowOptions && flag.startsWith("-") =>
-          reporter.out.println(s"unknown flag $flag")
+          reporter.err.println(s"unknown flag $flag")
           None
         case path +: rest =>
           val paths1 = settings.paths ++ path.split(File.pathSeparator).map(Paths.get(_))

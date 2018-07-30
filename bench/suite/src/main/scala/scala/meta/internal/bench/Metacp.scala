@@ -26,7 +26,7 @@ trait Metacp {
       .withDependencyClasspath(dependencyClasspath)
       .withClasspath(classpath)
       .withScalaLibrarySynthetics(false)
-    val reporter = Reporter().withOut(System.out).withErr(System.err)
+    val reporter = Reporter().silenceOut().withErr(System.err)
     scala.meta.cli.Metacp.process(settings, reporter) match {
       case Some(_) => ()
       case None => sys.error("conversion failed")

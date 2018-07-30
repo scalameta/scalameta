@@ -1,6 +1,9 @@
 package scala.meta.cli
 
+import scala.meta.internal.cli.Args
 import scala.meta.internal.metai.Main
+import scala.meta.io.Classpath
+import scala.meta.metai.Result
 import scala.meta.metai.Settings
 
 object Metai {
@@ -9,17 +12,18 @@ object Metai {
   }
 
   def process(args: Array[String], reporter: Reporter): Int = {
-    Settings.parse(args.toList, reporter) match {
+    val expandedArgs = Args.expand(args)
+    Settings.parse(expandedArgs, reporter) match {
       case Some(settings) =>
-        val isSuccess = process(settings, reporter)
-        if (isSuccess) 0
+        val result = process(settings, reporter)
+        if (result.success) 0
         else 1
       case None =>
         1
     }
   }
 
-  def process(settings: Settings, reporter: Reporter): Boolean = {
+  def process(settings: Settings, reporter: Reporter): Result = {
     val main = new Main(settings, reporter)
     main.process()
   }
