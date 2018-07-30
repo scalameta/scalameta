@@ -6,6 +6,7 @@ import java.nio.file.StandardOpenOption
 import scala.collection.immutable
 import scala.collection.mutable
 import scala.meta.cli.Reporter
+import scala.meta.internal.cli._
 import scala.meta.internal.io.FileIO
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.io.PlatformFileIO
@@ -22,18 +23,21 @@ import scala.meta.metai.Settings
 final class Main(settings: Settings, reporter: Reporter) {
   def process(): Result = {
     val status = mutable.Map[AbsolutePath, Boolean]()
-    settings.classpath.foreach { entry =>
-      val success = {
-        try {
-          processEntry(entry)
-        } catch {
-          case e: Throwable =>
-            println(s"Error indexing $entry:")
-            e.printStackTrace(reporter.err)
-            false
+    val job = Job(settings.classpath.entries, if (settings.verbose) reporter.err else devnull)
+    job.foreach { entry =>
+      Classpath(entry).foreach { entry =>
+        val success = {
+          try {
+            processEntry(entry)
+          } catch {
+            case e: Throwable =>
+              println(s"Error indexing $entry:")
+              e.printStackTrace(reporter.err)
+              false
+          }
         }
+        status(entry.pathOnDisk) = success
       }
-      status(entry.pathOnDisk) = success
     }
     reporter.out.println("{")
     reporter.out.println("  \"status\": {")

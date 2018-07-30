@@ -1,6 +1,7 @@
 package scala.meta.cli
 
 import java.io._
+import scala.meta.internal.cli._
 
 final class Reporter private (val out: PrintStream, val err: PrintStream) {
   private def this() = {
@@ -25,11 +26,6 @@ final class Reporter private (val out: PrintStream, val err: PrintStream) {
 
   private def copy(out: PrintStream = out, err: PrintStream = err): Reporter = {
     new Reporter(out = out, err = err)
-  }
-
-  private def devnull: PrintStream = {
-    val os = new OutputStream { override def write(b: Int) = () }
-    new PrintStream(os)
   }
 }
 

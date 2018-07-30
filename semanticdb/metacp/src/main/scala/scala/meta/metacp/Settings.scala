@@ -10,7 +10,8 @@ final class Settings private (
     val classpath: Classpath,
     val dependencyClasspath: Classpath,
     val scalaLibrarySynthetics: Boolean,
-    val par: Boolean
+    val par: Boolean,
+    val verbose: Boolean
 ) {
   private def this() = {
     this(
@@ -18,7 +19,8 @@ final class Settings private (
       classpath = Classpath(Nil),
       dependencyClasspath = Classpath(Nil),
       scalaLibrarySynthetics = false,
-      par = false
+      par = false,
+      verbose = false
     )
   }
 
@@ -50,19 +52,25 @@ final class Settings private (
     copy(par = par)
   }
 
+  def withVerbose(verbose: Boolean): Settings = {
+    copy(verbose = verbose)
+  }
+
   private def copy(
       out: AbsolutePath = out,
       classpath: Classpath = classpath,
       dependencyClasspath: Classpath = dependencyClasspath,
       scalaLibrarySynthetics: Boolean = scalaLibrarySynthetics,
-      par: Boolean = par
+      par: Boolean = par,
+      verbose: Boolean = verbose
   ): Settings = {
     new Settings(
       out = out,
       classpath = classpath,
       dependencyClasspath = dependencyClasspath,
       scalaLibrarySynthetics = scalaLibrarySynthetics,
-      par = par
+      par = par,
+      verbose = verbose
     )
   }
 }
@@ -86,6 +94,8 @@ object Settings {
           loop(settings.copy(scalaLibrarySynthetics = true), true, rest)
         case "--par" +: rest if allowOptions =>
           loop(settings.copy(par = true), true, rest)
+        case "--verbose" +: rest if allowOptions =>
+          loop(settings.copy(verbose = true), true, rest)
         case flag +: _ if allowOptions && flag.startsWith("-") =>
           reporter.err.println(s"unsupported flag $flag")
           None

@@ -9,6 +9,7 @@ import java.util.jar._
 import scala.collection.immutable
 import scala.collection.JavaConverters._
 import scala.meta.cli._
+import scala.meta.internal.cli._
 import scala.meta.internal.classpath._
 import scala.meta.internal.scalacp._
 import scala.meta.internal.io._
@@ -44,7 +45,8 @@ class Main(settings: Settings, reporter: Reporter) {
       }
     }
 
-    classpath.foreach { entry =>
+    val job = Job(classpath, if (settings.verbose) reporter.err else devnull)
+    job.foreach { entry =>
       val out = processEntry(entry)
       if (entry.isFile) {
         val jar = new JarFile(entry.toFile)
