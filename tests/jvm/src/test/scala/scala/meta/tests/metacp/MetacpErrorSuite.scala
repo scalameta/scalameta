@@ -32,9 +32,9 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
       Metacp.process(scalametaSettings, reporter)
     }
     assert(result.classpath.isEmpty)
-    assert(out.isEmpty)
+    assert(out.nonEmpty)
     assertNoDiffOrPrintExpected(
-      err,
+      err.replaceAll("(missing symbol: .*?) .*", "$1"),
       """|missing symbol: java
          |missing symbol: scala.reflect.macros.whitebox
          |missing symbol: scala.reflect.macros.blackbox
@@ -70,8 +70,8 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
     )
     assertNoDiffOrPrintExpected(
       err,
-      """|missing symbol: scala
-         |NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
+      s"""|missing symbol: scala in $tmp
+          |NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
       """.stripMargin
     )
   }
@@ -102,8 +102,8 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
     )
     assertNoDiffOrPrintExpected(
       err,
-      """|missing symbol: scala
-         |NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
+      s"""|missing symbol: scala in ${AbsolutePath(manifest)}
+          |NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
       """.stripMargin
     )
     // TODO(olafurpg) fix this assertion before merging PR!
