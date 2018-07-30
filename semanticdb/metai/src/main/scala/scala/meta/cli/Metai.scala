@@ -1,5 +1,6 @@
 package scala.meta.cli
 
+import scala.meta.internal.cli.Args
 import scala.meta.internal.metai.Main
 import scala.meta.io.Classpath
 import scala.meta.metai.Result
@@ -11,7 +12,8 @@ object Metai {
   }
 
   def process(args: Array[String], reporter: Reporter): Int = {
-    Settings.parse(args.toList, reporter) match {
+    val expandedArgs = Args.expand(args)
+    Settings.parse(expandedArgs, reporter) match {
       case Some(settings) =>
         val result = process(settings, reporter)
         if (result.success) 0

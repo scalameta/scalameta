@@ -1,6 +1,7 @@
 package scala.meta.cli
 
 import java.io._
+import scala.meta.internal.cli.Args
 import scala.meta.internal.metacp._
 import scala.meta.io._
 import scala.meta.metacp._
@@ -21,7 +22,8 @@ object Metacp {
   }
 
   private def process(args: Array[String], reporter: Reporter): Int = {
-    Settings.parse(args.toList, reporter) match {
+    val expandedArgs = Args.expand(args)
+    Settings.parse(expandedArgs, reporter) match {
       case Some(settings) =>
         val result = process(settings, reporter)
         if (result.success) 0
