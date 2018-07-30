@@ -31,7 +31,7 @@ final class Main(settings: Settings, reporter: Reporter) {
             processEntry(entry)
           } catch {
             case e: Throwable =>
-              println(s"Error indexing $entry:")
+              reporter.err.println(s"Error indexing ${entry.pathOnDisk}:")
               e.printStackTrace(reporter.err)
               false
           }
