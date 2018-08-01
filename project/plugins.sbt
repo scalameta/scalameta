@@ -36,5 +36,4 @@ addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.22")
 
 addSbtPlugin("org.scala-native" %% "sbt-scala-native" % "0.3.8")
 
-addSbtPlugin("org.scala-debugger" % "sbt-jdi-tools" % "1.0.0")
-
+addSbtPlugin("org.scala-debugger" % "sbt-jdi-tools" % "1.0.1")
