@@ -67,4 +67,17 @@ public final class Test<A extends CharSequence & Serializable, B> extends ArrayL
     void vararg(int a, String... args) {}
 
     strictfp void strictfpMethod() {}
+
+    <T extends X> void m1() {}
+    <T extends X & Y> void m2() {}
+    <T extends X & Y & Z> void m3() {}
+}
+
+interface X {
+}
+
+interface Y {
+}
+
+interface Z {
 }

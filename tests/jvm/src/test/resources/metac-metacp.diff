@@ -374,39 +374,7 @@ com/javacp/Recursive#Inner#[A]
 -        prefix {
 -        symbol: "scala/Nothing#"
      upper_bound {
--      structuralType {
--        tpe {
--          withType {
--            types {
-+      intersectionType {
-+        types {
-+          typeRef {
-+            prefix {
-+            symbol: "com/javacp/Recursive#"
-+            type_arguments {
-               typeRef {
-                 prefix {
--                symbol: "com/javacp/Recursive#"
--                type_arguments {
--                  typeRef {
--                    prefix {
--                    symbol: "com/javacp/Recursive#Inner#[A]"
--                type_arguments {
--                  typeRef {
--                    prefix {
--                    symbol: "com/javacp/Recursive#Inner#[B]"
-+                symbol: "com/javacp/Recursive#Inner#[A]"
--            types {
-+            type_arguments {
-               typeRef {
-                 prefix {
--                symbol: "java/io/Serializable#"
-+                symbol: "com/javacp/Recursive#Inner#[B]"
--        declarations {
-+        types {
-+          typeRef {
-+            prefix {
-+            symbol: "java/io/Serializable#"
+       intersectionType {
 
 
 ==============================
@@ -457,39 +425,7 @@ com/javacp/Recursive#[A]
 -        prefix {
 -        symbol: "scala/Nothing#"
      upper_bound {
--      structuralType {
--        tpe {
--          withType {
--            types {
-+      intersectionType {
-+        types {
-+          typeRef {
-+            prefix {
-+            symbol: "com/javacp/Recursive#"
-+            type_arguments {
-               typeRef {
-                 prefix {
--                symbol: "com/javacp/Recursive#"
--                type_arguments {
--                  typeRef {
--                    prefix {
--                    symbol: "com/javacp/Recursive#[A]"
--                type_arguments {
--                  typeRef {
--                    prefix {
--                    symbol: "com/javacp/Recursive#[B]"
-+                symbol: "com/javacp/Recursive#[A]"
--            types {
-+            type_arguments {
-               typeRef {
-                 prefix {
--                symbol: "java/io/Serializable#"
-+                symbol: "com/javacp/Recursive#[B]"
--        declarations {
-+        types {
-+          typeRef {
-+            prefix {
-+            symbol: "java/io/Serializable#"
+       intersectionType {
 
 
 ========================
@@ -591,27 +527,7 @@ com/javacp/Test#[A]
 -        prefix {
 -        symbol: "scala/Nothing#"
      upper_bound {
--      structuralType {
--        tpe {
--          withType {
--            types {
--              typeRef {
--                prefix {
--                symbol: "java/lang/CharSequence#"
-+      intersectionType {
-+        types {
-+          typeRef {
-+            prefix {
--            types {
--              typeRef {
--                prefix {
--                symbol: "java/io/Serializable#"
-+            symbol: "java/lang/CharSequence#"
-+        types {
-+          typeRef {
-+            prefix {
-+            symbol: "java/io/Serializable#"
--        declarations {
+       intersectionType {
 
 
 ===================
@@ -646,6 +562,57 @@ com/javacp/Test#arrayField.
  name: "arrayField"
  access {
    privateWithinAccess {
+
+
+========================
+com/javacp/Test#m1().[T]
+========================
+--- metac
++++ metacp
+ language: JAVA
+ signature {
+   typeSignature {
+-    type_parameters {
+     lower_bound {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/Nothing#"
+     upper_bound {
+       typeRef {
+
+
+========================
+com/javacp/Test#m2().[T]
+========================
+--- metac
++++ metacp
+ language: JAVA
+ signature {
+   typeSignature {
+-    type_parameters {
+     lower_bound {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/Nothing#"
+     upper_bound {
+       intersectionType {
+
+
+========================
+com/javacp/Test#m3().[T]
+========================
+--- metac
++++ metacp
+ language: JAVA
+ signature {
+   typeSignature {
+-    type_parameters {
+     lower_bound {
+-      typeRef {
+-        prefix {
+-        symbol: "scala/Nothing#"
+     upper_bound {
+       intersectionType {
 
 
 ======================================
@@ -842,6 +809,48 @@ com/javacp/Test#wildcard(+1).(b)
 -                  typeRef {
 -                    prefix {
 -                    symbol: "scala/Any#"
+
+
+=============
+com/javacp/X#
+=============
+--- metac
++++ metacp
+ properties: 4
+ name: "X"
+ access {
+-  privateWithinAccess {
+-    symbol: "com/javacp/"
++  publicAccess {
+ language: JAVA
+
+
+=============
+com/javacp/Y#
+=============
+--- metac
++++ metacp
+ properties: 4
+ name: "Y"
+ access {
+-  privateWithinAccess {
+-    symbol: "com/javacp/"
++  publicAccess {
+ language: JAVA
+
+
+=============
+com/javacp/Z#
+=============
+--- metac
++++ metacp
+ properties: 4
+ name: "Z"
+ access {
+-  privateWithinAccess {
+-    symbol: "com/javacp/"
++  publicAccess {
+ language: JAVA
 
 
 ===============

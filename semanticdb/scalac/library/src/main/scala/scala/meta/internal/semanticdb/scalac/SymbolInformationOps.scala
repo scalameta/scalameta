@@ -163,10 +163,21 @@ trait SymbolInformationOps { self: SemanticdbOps =>
                   Some(s.TypeRef(s.NoType, "java/lang/Object#", Nil))
                 case s.TypeRef(s.NoType, "scala/annotation/ClassfileAnnotation#", Nil) =>
                   None
-                case other =>
-                  Some(other)
+                case sother =>
+                  Some(sother)
               }
               ssig.copy(parents = parents1)
+            case _ =>
+              sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
+          }
+        } else if (gsym.hasFlag(gf.JAVA) && kind == k.TYPE_PARAMETER) {
+          ssig match {
+            case ssig: s.TypeSignature =>
+              val upperBound1 = ssig.upperBound match {
+                case s.StructuralType(s.WithType(tpes), _) => s.IntersectionType(tpes)
+                case sother => sother
+              }
+              ssig.copy(upperBound = upperBound1)
             case _ =>
               sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
           }

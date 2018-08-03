@@ -1221,10 +1221,10 @@ Schema => SemanticDB v4
 Uri => com/javacp/Test.class
 Text => empty
 Language => Java
-Symbols => 67 entries
+Symbols => 73 entries
 
 Symbols:
-com/javacp/Test# => final class Test[A <: CharSequence & Serializable, B <: Object] extends ArrayList[A] with Comparable[B] with Serializable { +36 decls }
+com/javacp/Test# => final class Test[A <: CharSequence & Serializable, B <: Object] extends ArrayList[A] with Comparable[B] with Serializable { +39 decls }
   A => com/javacp/Test#[A]
   CharSequence => java/lang/CharSequence#
   Serializable => java/io/Serializable#
@@ -1310,6 +1310,33 @@ com/javacp/Test#genericParams().(a) => param a: A
   A => com/javacp/Test#[A]
 com/javacp/Test#genericParams().(b) => param b: B
   B => com/javacp/Test#[B]
+com/javacp/Test#m1(). => private[javacp] method m1[T <: X](): Unit
+  javacp => com/javacp/
+  T => com/javacp/Test#m1().[T]
+  X => com/javacp/X#
+  Unit => scala/Unit#
+com/javacp/Test#m1().[T] => typeparam T <: X
+  X => com/javacp/X#
+com/javacp/Test#m2(). => private[javacp] method m2[T <: X & Y](): Unit
+  javacp => com/javacp/
+  T => com/javacp/Test#m2().[T]
+  X => com/javacp/X#
+  Y => com/javacp/Y#
+  Unit => scala/Unit#
+com/javacp/Test#m2().[T] => typeparam T <: X & Y
+  X => com/javacp/X#
+  Y => com/javacp/Y#
+com/javacp/Test#m3(). => private[javacp] method m3[T <: X & Y & Z](): Unit
+  javacp => com/javacp/
+  T => com/javacp/Test#m3().[T]
+  X => com/javacp/X#
+  Y => com/javacp/Y#
+  Z => com/javacp/Z#
+  Unit => scala/Unit#
+com/javacp/Test#m3().[T] => typeparam T <: X & Y & Z
+  X => com/javacp/X#
+  Y => com/javacp/Y#
+  Z => com/javacp/Z#
 com/javacp/Test#methodTypeParams(). => private[javacp] method methodTypeParams[C <: Integer](c: C): Unit
   javacp => com/javacp/
   C => com/javacp/Test#methodTypeParams().[C]
@@ -1448,6 +1475,48 @@ com/javacp/Test#wildcard(+1).(a) => param a: Collection[Number]
 com/javacp/Test#wildcard(+1).(b) => param b: Collection[Number]
   Collection => java/util/Collection#
   Number => java/lang/Number#
+
+com/javacp/X.class
+------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/X.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/X# => abstract interface X extends Object
+  Object => java/lang/Object#
+
+com/javacp/Y.class
+------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/Y.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/Y# => abstract interface Y extends Object
+  Object => java/lang/Object#
+
+com/javacp/Z.class
+------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/Z.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/Z# => abstract interface Z extends Object
+  Object => java/lang/Object#
 
 example/A.class
 ---------------
