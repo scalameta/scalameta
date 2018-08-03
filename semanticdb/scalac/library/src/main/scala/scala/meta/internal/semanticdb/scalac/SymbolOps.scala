@@ -198,7 +198,9 @@ trait SymbolOps { self: SemanticdbOps =>
       val isInterfaceConstructor = sym.isConstructor && sym.owner.isJavaDefined && sym.owner.isInterface
       val isEnumConstructor = sym.isConstructor && sym.owner.hasJavaEnumFlag
       val isStaticConstructor = sym.name == g.TermName("<clinit>")
-      isModuleConstructor || isTraitConstructor || isInterfaceConstructor || isEnumConstructor || isStaticConstructor
+      val isClassfileAnnotationConstructor = sym.owner.isClassfileAnnotation
+      isModuleConstructor || isTraitConstructor || isInterfaceConstructor ||
+      isEnumConstructor || isStaticConstructor || isClassfileAnnotationConstructor
     }
     def isLocalChild: Boolean =
       sym.name == g.tpnme.LOCAL_CHILD
@@ -277,6 +279,9 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isAnonymousClassConstructor ||
       sym.isSyntheticAbstractType ||
       sym.isAnonymousSelfParameter
+    }
+    def isClassfileAnnotation: Boolean = {
+      sym.isNonBottomSubClass(g.definitions.ClassfileAnnotationClass)
     }
   }
 

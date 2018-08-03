@@ -47,6 +47,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         case gsym: ClassSymbol =>
           if (gsym.isTrait && gsym.hasFlag(gf.JAVA)) k.INTERFACE
           else if (gsym.isTrait) k.TRAIT
+          else if (gsym.isClassfileAnnotation) k.INTERFACE
           else k.CLASS
         case gsym: TypeSymbol =>
           if (gsym.isParameter) k.TYPE_PARAMETER
@@ -151,6 +152,21 @@ trait SymbolInformationOps { self: SemanticdbOps =>
           gsym.owner.self.toSemanticTpe match {
             case s.NoType => s.NoSignature
             case stpe => s.ValueSignature(stpe)
+          }
+        } else if (gsym.isClassfileAnnotation) {
+          ssig match {
+            case ssig: s.ClassSignature =>
+              val parents1 = ssig.parents.flatMap {
+                case s.TypeRef(s.NoType, "scala/annotation/Annotation#", Nil) =>
+                  Some(s.TypeRef(s.NoType, "java/lang/Object#", Nil))
+                case s.TypeRef(s.NoType, "scala/annotation/ClassfileAnnotation#", Nil) =>
+                  None
+                case other =>
+                  Some(other)
+              }
+              ssig.copy(parents = parents1)
+            case _ =>
+              sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
           }
         } else {
           ssig
