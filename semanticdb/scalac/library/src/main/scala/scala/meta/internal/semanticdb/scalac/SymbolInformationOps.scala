@@ -167,7 +167,8 @@ trait SymbolInformationOps { self: SemanticdbOps =>
 
     private def access: s.Access = {
       kind match {
-        case k.LOCAL | k.PARAMETER | k.SELF_PARAMETER | k.TYPE_PARAMETER | k.PACKAGE | k.PACKAGE_OBJECT =>
+        case k.LOCAL | k.PARAMETER | k.SELF_PARAMETER | k.TYPE_PARAMETER | k.PACKAGE |
+            k.PACKAGE_OBJECT =>
           s.NoAccess
         case _ =>
           if (gsym.hasFlag(gf.SYNTHETIC) && gsym.hasFlag(gf.ARTIFACT)) {

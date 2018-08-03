@@ -208,7 +208,8 @@ trait SymbolInformationOps { self: Scalacp =>
 
     private def access: s.Access = {
       kind match {
-        case k.LOCAL | k.PARAMETER | k.SELF_PARAMETER | k.TYPE_PARAMETER | k.PACKAGE | k.PACKAGE_OBJECT =>
+        case k.LOCAL | k.PARAMETER | k.SELF_PARAMETER | k.TYPE_PARAMETER | k.PACKAGE |
+            k.PACKAGE_OBJECT =>
           s.NoAccess
         case _ =>
           sym.symbolInfo.privateWithin match {
