@@ -93,15 +93,18 @@ trait Elements {
     }
 
     def access: s.Access = {
-      val mods = elem.getModifiers
-      val enclosingPackageSym = enclosingPackage.sym
-      if (mods.contains(Modifier.PUBLIC) || elem.getKind == ElementKind.PARAMETER)
-        s.PublicAccess()
-      else if (mods.contains(Modifier.PRIVATE)) s.PrivateAccess()
-      else if (mods.contains(Modifier.PROTECTED)) s.ProtectedAccess()
-      else if (elem.getKind != ElementKind.TYPE_PARAMETER)
-        s.PrivateWithinAccess(enclosingPackageSym)
-      else s.DefaultAccess
+      kind match {
+        case k.LOCAL | k.PARAMETER | k.TYPE_PARAMETER | k.PACKAGE =>
+          s.NoAccess
+        case k.INTERFACE =>
+          s.PublicAccess()
+        case _ =>
+          val mods = elem.getModifiers
+          if (mods.contains(Modifier.PUBLIC)) s.PublicAccess()
+          else if (mods.contains(Modifier.PRIVATE)) s.PrivateAccess()
+          else if (mods.contains(Modifier.PROTECTED)) s.ProtectedAccess()
+          else s.PrivateWithinAccess(enclosingPackage.sym)
+      }
     }
 
     def properties: Int = {

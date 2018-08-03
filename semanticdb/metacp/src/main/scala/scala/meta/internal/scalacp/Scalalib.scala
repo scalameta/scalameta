@@ -126,7 +126,7 @@ object Scalalib {
         properties = 0,
         name = tparamName,
         signature = tparamSig,
-        access = s.DefaultAccess)
+        access = s.NoAccess)
     }
     val params = paramDsls.map {
       case (paramName, paramTpeSymbol) =>

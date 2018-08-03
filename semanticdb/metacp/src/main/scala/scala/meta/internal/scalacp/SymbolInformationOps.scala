@@ -207,20 +207,24 @@ trait SymbolInformationOps { self: Scalacp =>
     }
 
     private def access: s.Access = {
-      // FIXME: https://github.com/scalameta/scalameta/issues/1325
-      sym.symbolInfo.privateWithin match {
-        case None =>
-          if (sym.isPrivate && sym.isLocal) s.PrivateThisAccess()
-          else if (sym.isPrivate) s.PrivateAccess()
-          else if (sym.isProtected && sym.isLocal) s.ProtectedThisAccess()
-          else if (sym.isProtected) s.ProtectedAccess()
-          else s.PublicAccess()
-        case Some(privateWithin: Symbol) =>
-          val ssym = privateWithin.ssym
-          if (sym.isProtected) s.ProtectedWithinAccess(ssym)
-          else s.PrivateWithinAccess(ssym)
-        case Some(other) =>
-          sys.error(s"unsupported privateWithin: ${other.getClass} $other")
+      kind match {
+        case k.LOCAL | k.PARAMETER | k.SELF_PARAMETER | k.TYPE_PARAMETER | k.PACKAGE | k.PACKAGE_OBJECT =>
+          s.NoAccess
+        case _ =>
+          sym.symbolInfo.privateWithin match {
+            case None =>
+              if (sym.isPrivate && sym.isLocal) s.PrivateThisAccess()
+              else if (sym.isPrivate) s.PrivateAccess()
+              else if (sym.isProtected && sym.isLocal) s.ProtectedThisAccess()
+              else if (sym.isProtected) s.ProtectedAccess()
+              else s.PublicAccess()
+            case Some(privateWithin: Symbol) =>
+              val ssym = privateWithin.ssym
+              if (sym.isProtected) s.ProtectedWithinAccess(ssym)
+              else s.PrivateWithinAccess(ssym)
+            case Some(other) =>
+              sys.error(s"unsupported privateWithin: ${other.getClass} $other")
+          }
       }
     }
 

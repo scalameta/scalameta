@@ -165,24 +165,28 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       ganns.map(_.toSemantic)
     }
 
-    // FIXME: https://github.com/scalameta/scalameta/issues/1325
     private def access: s.Access = {
-      if (gsym.hasFlag(gf.SYNTHETIC) && gsym.hasFlag(gf.ARTIFACT)) {
-        // NOTE: some sick artifact vals produced by mkPatDef can be
-        // private to method (whatever that means), so here we just ignore them.
-        s.PublicAccess()
-      } else {
-        if (gsym.privateWithin == NoSymbol) {
-          if (gsym.isPrivateThis) s.PrivateThisAccess()
-          else if (gsym.isPrivate) s.PrivateAccess()
-          else if (gsym.isProtectedThis) s.ProtectedThisAccess()
-          else if (gsym.isProtected) s.ProtectedAccess()
-          else s.PublicAccess()
-        } else {
-          val ssym = gsym.privateWithin.ssym
-          if (gsym.isProtected) s.ProtectedWithinAccess(ssym)
-          else s.PrivateWithinAccess(ssym)
-        }
+      kind match {
+        case k.LOCAL | k.PARAMETER | k.SELF_PARAMETER | k.TYPE_PARAMETER | k.PACKAGE | k.PACKAGE_OBJECT =>
+          s.NoAccess
+        case _ =>
+          if (gsym.hasFlag(gf.SYNTHETIC) && gsym.hasFlag(gf.ARTIFACT)) {
+            // NOTE: some sick artifact vals produced by mkPatDef can be
+            // private to method (whatever that means), so here we just ignore them.
+            s.PublicAccess()
+          } else {
+            if (gsym.privateWithin == NoSymbol) {
+              if (gsym.isPrivateThis) s.PrivateThisAccess()
+              else if (gsym.isPrivate) s.PrivateAccess()
+              else if (gsym.isProtectedThis) s.ProtectedThisAccess()
+              else if (gsym.isProtected) s.ProtectedAccess()
+              else s.PublicAccess()
+            } else {
+              val ssym = gsym.privateWithin.ssym
+              if (gsym.isProtected) s.ProtectedWithinAccess(ssym)
+              else s.PrivateWithinAccess(ssym)
+            }
+          }
       }
     }
 

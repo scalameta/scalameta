@@ -104,7 +104,7 @@ trait SymbolInformationPrinter extends BasePrinter {
           out.print("protected[")
           pprint(sym, Reference)
           out.print("] ")
-        case DefaultAccess | PublicAccess() =>
+        case NoAccess | PublicAccess() =>
           out.print("")
       }
     }

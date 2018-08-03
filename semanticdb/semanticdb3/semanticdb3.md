@@ -37,7 +37,7 @@
     * [Signature](#java-signature)
     * [SymbolInformation](#java-symbolinformation)
     * [Annotation](#java-annotation)
-    * [Access](#java-acessibility)
+    * [Access](#java-access)
     * [SymbolOccurrence](#java-symboloccurrence)
     * [Synthetic](#java-synthetic)
 
@@ -2403,6 +2403,16 @@ In Scala, [Access](#access) represents access modifiers of definitions.
     <td><b>Explanation</b></td>
   </tr>
   <tr>
+    <td><code>None</code></td>
+    <td><code></code></td>
+    <td>
+      Definitions that can't have access modifiers, i.e. `LOCAL`, `PARAMETER`,
+      `SELF_PARAMETER`, `TYPE_PARAMETER`, `PACKAGE` and `PACKAGE_OBJECT`.
+      Definitions that can have access modifiers, but don't have them will
+      have `PublicAccess` as described below.
+    </td>
+  </tr>
+  <tr>
     <td><code>PrivateAccess()</code></td>
     <td><code>private def x = ???</code></td>
     <td>
@@ -3557,6 +3567,16 @@ of names.
     <td><b>Access</b></td>
     <td width="125px"><b>Code</b></td>
     <td><b>Explanation</b></td>
+  </tr>
+  <tr>
+    <td><code>None</code></td>
+    <td><code></code></td>
+    <td>
+      Definitions that can't have access modifiers, i.e. `LOCAL`, `PARAMETER`,
+      `TYPE_PARAMETER` and `PACKAGE`.
+      Definitions that can have access modifiers, but don't have them will
+      have `PrivateWithinAccess` or `PublicAccess` as described below.
+    </td>
   </tr>
   <tr>
     <td><code>PrivateAccess</code></td>

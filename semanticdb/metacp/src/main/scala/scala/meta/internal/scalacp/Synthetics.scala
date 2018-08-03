@@ -34,7 +34,7 @@ object Synthetics {
       name = "x$1",
       signature = paramSig,
       annotations = Nil,
-      access = s.PublicAccess())
+      access = s.NoAccess)
 
     val setterSig = {
       val unit = s.TypeRef(s.NoType, "scala/Unit#", Nil)

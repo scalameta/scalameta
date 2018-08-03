@@ -199,10 +199,6 @@ com/javacp/ClassSuffix#Inner#Bar#Fuz#[B]
 ========================================
 --- metac
 +++ metacp
- properties: 0
- name: "B"
- access {
--  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -251,10 +247,6 @@ com/javacp/ClassSuffix#Inner#[A]
 ================================
 --- metac
 +++ metacp
- properties: 0
- name: "A"
- access {
--  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -373,10 +365,6 @@ com/javacp/Recursive#Inner#[A]
 ==============================
 --- metac
 +++ metacp
- properties: 0
- name: "A"
- access {
--  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -426,10 +414,6 @@ com/javacp/Recursive#Inner#[B]
 ==============================
 --- metac
 +++ metacp
- properties: 0
- name: "B"
- access {
--  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -447,10 +431,6 @@ com/javacp/Recursive#Inner2#[C]
 ===============================
 --- metac
 +++ metacp
- properties: 0
- name: "C"
- access {
--  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -468,10 +448,6 @@ com/javacp/Recursive#[A]
 ========================
 --- metac
 +++ metacp
- properties: 0
- name: "A"
- access {
--  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -521,10 +497,6 @@ com/javacp/Recursive#[B]
 ========================
 --- metac
 +++ metacp
- properties: 0
- name: "B"
- access {
--  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -542,10 +514,6 @@ com/javacp/Recursive#foo().[Anon]
 =================================
 --- metac
 +++ metacp
- properties: 0
- name: "Anon"
- access {
--  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -566,10 +534,6 @@ com/javacp/Test#InnerShadowTypeParam#[A]
 ========================================
 --- metac
 +++ metacp
- properties: 0
- name: "A"
- access {
--  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -618,10 +582,6 @@ com/javacp/Test#[A]
 ===================
 --- metac
 +++ metacp
- properties: 0
- name: "A"
- access {
--  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -659,10 +619,6 @@ com/javacp/Test#[B]
 ===================
 --- metac
 +++ metacp
- properties: 0
- name: "B"
- access {
--  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -697,10 +653,6 @@ com/javacp/Test#methodTypeParams().[C]
 ======================================
 --- metac
 +++ metacp
- properties: 0
- name: "C"
- access {
--  publicAccess {
  language: JAVA
  signature {
    typeSignature {

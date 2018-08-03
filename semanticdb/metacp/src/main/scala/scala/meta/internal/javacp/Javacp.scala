@@ -48,7 +48,7 @@ object Javacp {
         name = name,
         signature = sig,
         annotations = sannotations(access),
-        access = saccess(access, symbol)
+        access = saccess(access, symbol, kind)
       )
       buf += info
       info
@@ -377,13 +377,20 @@ object Javacp {
     else Symbols.EmptyPackage + result.toString
   }
 
-  private def saccess(access: Int, symbol: String): s.Access = {
-    if (access.hasFlag(o.ACC_PUBLIC)) s.PublicAccess()
-    else if (access.hasFlag(o.ACC_PROTECTED)) s.ProtectedAccess()
-    else if (access.hasFlag(o.ACC_PRIVATE)) s.PrivateAccess()
-    else {
-      val within = symbol.ownerChain.reverse.tail.find(_.desc.isPackage).get
-      s.PrivateWithinAccess(within)
+  private def saccess(access: Int, symbol: String, kind: s.SymbolInformation.Kind): s.Access = {
+    kind match {
+      case k.LOCAL | k.PARAMETER | k.TYPE_PARAMETER | k.PACKAGE =>
+        s.NoAccess
+      case k.INTERFACE =>
+        s.PublicAccess()
+      case _ =>
+        if (access.hasFlag(o.ACC_PUBLIC)) s.PublicAccess()
+        else if (access.hasFlag(o.ACC_PROTECTED)) s.ProtectedAccess()
+        else if (access.hasFlag(o.ACC_PRIVATE)) s.PrivateAccess()
+        else {
+          val within = symbol.ownerChain.reverse.tail.find(_.desc.isPackage).get
+          s.PrivateWithinAccess(within)
+        }
     }
   }
 
