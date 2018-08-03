@@ -44,7 +44,7 @@ object Javacp {
         symbol = symbol,
         language = l.JAVA,
         kind = kind,
-        properties = sproperties(access),
+        properties = sproperties(access, node),
         name = name,
         signature = sig,
         annotations = sannotations(access),
@@ -405,7 +405,7 @@ object Javacp {
     buf.result()
   }
 
-  private def sproperties(access: Int): Int = {
+  private def sproperties(access: Int, ownerNode: ClassNode): Int = {
     val p = s.SymbolInformation.Property
     var bits = 0
     def sflip(p: s.SymbolInformation.Property) = bits ^= p.value
@@ -413,6 +413,9 @@ object Javacp {
     if (access.hasFlag(o.ACC_FINAL)) sflip(p.FINAL)
     if (access.hasFlag(o.ACC_STATIC)) sflip(p.STATIC)
     if (access.hasFlag(o.ACC_ENUM)) sflip(p.ENUM)
+    if (ownerNode.access.hasFlag(o.ACC_INTERFACE) &&
+        !access.hasFlag(o.ACC_ABSTRACT) &&
+        !access.hasFlag(o.ACC_STATIC)) sflip(p.DEFAULT)
     bits
   }
 

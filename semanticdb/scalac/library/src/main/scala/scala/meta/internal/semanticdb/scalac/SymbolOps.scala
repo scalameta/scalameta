@@ -287,6 +287,9 @@ trait SymbolOps { self: SemanticdbOps =>
     def isDefaultParameter: Boolean = {
       sym.hasFlag(gf.DEFAULTPARAM) && sym.hasFlag(gf.PARAM)
     }
+    def isDefaultMethod: Boolean = {
+      sym.isJavaDefined && sym.owner.isInterface && !sym.isDeferred && !sym.isStatic
+    }
   }
 
   lazy val idCache = new HashMap[String, Int]

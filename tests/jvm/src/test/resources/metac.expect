@@ -337,11 +337,17 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/java/com/javacp/Interface.java
 Text => non-empty
 Language => Java
-Symbols => 1 entries
+Symbols => 4 entries
 
 Symbols:
-com/javacp/Interface# => abstract interface Interface extends Object
+com/javacp/Interface# => abstract interface Interface extends Object { +3 decls }
   Object => java/lang/Object#
+com/javacp/Interface#a(). => abstract method a(): Unit
+  Unit => scala/Unit#
+com/javacp/Interface#d(). => default method d(): Unit
+  Unit => scala/Unit#
+com/javacp/Interface#s(). => static method s(): Unit
+  Unit => scala/Unit#
 
 semanticdb/integration/src/main/java/com/javacp/Logger.java
 -----------------------------------------------------------

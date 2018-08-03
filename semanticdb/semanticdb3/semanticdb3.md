@@ -823,7 +823,7 @@ languages map onto these properties.
   <tr>
     <td><code>0x8000</code></td>
     <td><code>DEFAULT</code></td>
-    <td>Is a default parameter?</td>
+    <td>Is a default parameter or a default method?</td>
   </tr>
 </table>
 
@@ -3380,6 +3380,7 @@ Notes:
   * `FINAL`: set for `final` methods.
   * `STATIC`: set for `static` methods.
   * `ABSTRACT`: set for `abstract` methods.
+  * `DEFAULT`: set for `default` methods.
 * Method declarations support [all Java access modifiers](#java-access),
   however method declarations in interfaces can only be `PublicAccess`.
 

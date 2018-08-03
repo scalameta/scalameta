@@ -120,6 +120,12 @@ trait Elements {
         case ElementKind.INTERFACE => prop |= p.ABSTRACT.value
         case _ =>
       }
+      if (elem.getKind == ElementKind.METHOD &&
+          (prop & p.ABSTRACT.value) == 0 &&
+          (prop & p.STATIC.value) == 0 &&
+          elem.getEnclosingElement.getKind == ElementKind.INTERFACE) {
+        prop |= p.DEFAULT.value
+      }
       prop
     }
 
