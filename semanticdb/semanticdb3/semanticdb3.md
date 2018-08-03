@@ -2310,11 +2310,7 @@ between package object symbols and object symbols are:
 
 **Packages** [\[61\]][61] are represented by `PACKAGE` symbols.
 The ["Symbols"](#symbolinformation) section does not include
-`SymbolInformation` for `PACKAGE` because the only non-empty fields
-can be computed on the fly:
-  * `symbol` (as described in [Symbol](#scala-symbol)).
-  * `kind` (`PACKAGE`).
-  * `name` (as described in [SymbolInformation](#symbolinformation)).
+`SymbolInformation` for `PACKAGE`.
 
 <a name="scala-annotation"></a>
 #### Annotation
@@ -3476,11 +3472,7 @@ Notes:
 
 **Packages** [\[94\]][94] are represented by `PACKAGE` symbols.
 The ["Symbols"](#symbolinformation) section does not include
-`SymbolInformation` for `PACKAGE` because the only non-empty fields
-can be computed on the fly:
-  * `symbol` (as described in [Symbol](#java-symbol)).
-  * `kind` (`PACKAGE`).
-  * `name` (as described in [SymbolInformation](#symbolinformation)).
+`SymbolInformation` for `PACKAGE`.
 
 <a name="java-root-package"></a>
 ##### Root package
