@@ -3368,6 +3368,11 @@ class A {
 </table>
 
 Notes:
+* For type bounds of type parameters, we leave the mapping between type syntax
+  written in source code and `Type` entities deliberately unspecified.
+  For example, a producer may represent the signature of `T2` as
+  `TypeSignature(List(), None, <Object>)` instead of
+  `TypeSignature(List(), None, None)`.
 * When compiled with the compiler option `-parameters`, the name of method
   parameters matches their name written in source. Otherwise, parameters have
   the name `paramN` where `N` is the index of that given parameter starting at

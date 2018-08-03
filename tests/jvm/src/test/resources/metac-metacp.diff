@@ -204,14 +204,7 @@ com/javacp/ClassSuffix#Inner#Bar#Fuz#[B]
    typeSignature {
 -    type_parameters {
      lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
      upper_bound {
-       typeRef {
-         prefix {
--        symbol: "scala/Any#"
-+        symbol: "java/lang/Object#"
 
 
 ================================================
@@ -252,14 +245,7 @@ com/javacp/ClassSuffix#Inner#[A]
    typeSignature {
 -    type_parameters {
      lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
      upper_bound {
-       typeRef {
-         prefix {
--        symbol: "scala/Any#"
-+        symbol: "java/lang/Object#"
 
 
 ========================================
@@ -370,11 +356,7 @@ com/javacp/Recursive#Inner#[A]
    typeSignature {
 -    type_parameters {
      lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
      upper_bound {
-       intersectionType {
 
 
 ==============================
@@ -387,11 +369,7 @@ com/javacp/Recursive#Inner#[B]
    typeSignature {
 -    type_parameters {
      lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
      upper_bound {
-       typeRef {
 
 
 ===============================
@@ -404,11 +382,7 @@ com/javacp/Recursive#Inner2#[C]
    typeSignature {
 -    type_parameters {
      lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
      upper_bound {
-       typeRef {
 
 
 ========================
@@ -421,11 +395,7 @@ com/javacp/Recursive#[A]
    typeSignature {
 -    type_parameters {
      lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
      upper_bound {
-       intersectionType {
 
 
 ========================
@@ -438,11 +408,7 @@ com/javacp/Recursive#[B]
    typeSignature {
 -    type_parameters {
      lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
      upper_bound {
-       typeRef {
 
 
 =================================
@@ -455,14 +421,7 @@ com/javacp/Recursive#foo().[Anon]
    typeSignature {
 -    type_parameters {
      lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
      upper_bound {
-       typeRef {
-         prefix {
--        symbol: "scala/Any#"
-+        symbol: "java/lang/Object#"
 
 
 ========================================
@@ -475,14 +434,7 @@ com/javacp/Test#InnerShadowTypeParam#[A]
    typeSignature {
 -    type_parameters {
      lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
      upper_bound {
-       typeRef {
-         prefix {
--        symbol: "scala/Any#"
-+        symbol: "java/lang/Object#"
 
 
 ================================================
@@ -523,11 +475,7 @@ com/javacp/Test#[A]
    typeSignature {
 -    type_parameters {
      lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
      upper_bound {
-       intersectionType {
 
 
 ===================
@@ -540,14 +488,7 @@ com/javacp/Test#[B]
    typeSignature {
 -    type_parameters {
      lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
      upper_bound {
-       typeRef {
-         prefix {
--        symbol: "scala/Any#"
-+        symbol: "java/lang/Object#"
 
 
 ===========================
@@ -574,11 +515,7 @@ com/javacp/Test#m1().[T]
    typeSignature {
 -    type_parameters {
      lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
      upper_bound {
-       typeRef {
 
 
 ========================
@@ -591,11 +528,7 @@ com/javacp/Test#m2().[T]
    typeSignature {
 -    type_parameters {
      lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
      upper_bound {
-       intersectionType {
 
 
 ========================
@@ -608,11 +541,7 @@ com/javacp/Test#m3().[T]
    typeSignature {
 -    type_parameters {
      lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
      upper_bound {
-       intersectionType {
 
 
 ======================================
@@ -625,11 +554,7 @@ com/javacp/Test#methodTypeParams().[C]
    typeSignature {
 -    type_parameters {
      lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
      upper_bound {
-       typeRef {
 
 
 ===============================

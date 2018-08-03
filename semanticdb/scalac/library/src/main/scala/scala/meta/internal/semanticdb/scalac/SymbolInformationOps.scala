@@ -174,10 +174,14 @@ trait SymbolInformationOps { self: SemanticdbOps =>
           ssig match {
             case ssig: s.TypeSignature =>
               val upperBound1 = ssig.upperBound match {
-                case s.StructuralType(s.WithType(tpes), _) => s.IntersectionType(tpes)
-                case sother => sother
+                case s.StructuralType(s.WithType(tpes), _) =>
+                  s.IntersectionType(tpes)
+                case s.TypeRef(s.NoType, "scala/Any#", Nil) =>
+                  s.TypeRef(s.NoType, "java/lang/Object#", Nil)
+                case sother =>
+                  sother
               }
-              ssig.copy(upperBound = upperBound1)
+              ssig.copy(lowerBound = s.NoType, upperBound = upperBound1)
             case _ =>
               sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
           }
