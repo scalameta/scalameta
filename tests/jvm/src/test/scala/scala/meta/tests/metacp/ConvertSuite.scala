@@ -21,7 +21,7 @@ class ConvertSuite extends FunSuite {
       .withPar(true)
     val reporter = Reporter().silenceOut().withErr(System.err)
     val output = Metacp.process(settings, reporter)
-    assert(output.success)
+    assert(output.isSuccess)
   }
   private def checkConversionSucceeds(library: Library): Unit = {
     test(library.name, Slow) {

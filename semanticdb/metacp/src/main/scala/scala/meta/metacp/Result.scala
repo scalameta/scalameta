@@ -7,12 +7,12 @@ import scala.meta.io.Classpath
 final class Result private (
     val status: ListMap[AbsolutePath, Option[AbsolutePath]],
     val scalaLibrarySynthetics: Option[AbsolutePath]) {
-  def success: Boolean = {
+  def isSuccess: Boolean = {
     status.forall(_._2.nonEmpty)
   }
 
   def classpath: Option[Classpath] = {
-    if (success) Some(Classpath(status.toList.flatMap(_._2) ++ scalaLibrarySynthetics))
+    if (isSuccess) Some(Classpath(status.toList.flatMap(_._2) ++ scalaLibrarySynthetics))
     else None
   }
 
