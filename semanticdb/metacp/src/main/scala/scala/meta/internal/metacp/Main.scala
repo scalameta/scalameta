@@ -1,6 +1,7 @@
 package scala.meta.internal.metacp
 
 import java.io.BufferedOutputStream
+import java.net.URLClassLoader
 import java.nio.charset.StandardCharsets
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
@@ -15,13 +16,13 @@ import scala.meta.internal.scalacp._
 import scala.meta.internal.io._
 import scala.meta.io._
 import scala.meta.metacp._
-import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.GenSeq
 import scala.collection.mutable
 
 class Main(settings: Settings, reporter: Reporter) {
 
-  val classpathIndex = ClasspathIndex(settings.fullClasspath)
+  val classpathIndex =
+    ClasspathIndex(settings.classpath ++ settings.dependencyClasspath ++ detectJavacp)
   private val missingSymbols = mutable.Set.empty[String]
 
   def process(): Result = {
@@ -213,5 +214,36 @@ class Main(settings: Settings, reporter: Reporter) {
     val semanticdbRoot = out.resolve("META-INF").resolve("semanticdb")
     Files.createDirectories(semanticdbRoot.toNIO)
     success
+  }
+
+  private def detectJavacp: Classpath = {
+    if (settings.usejavacp) {
+      val jdk = sys.props
+        .collectFirst {
+          case (k, v) if k.endsWith(".boot.class.path") =>
+            Classpath(v).entries.filter(_.isFile)
+        }
+        .getOrElse {
+          throw new IllegalStateException("Unable to detect bootclasspath via --usejavacp")
+        }
+      val scalaLibrary = this.getClass.getClassLoader match {
+        case loader: URLClassLoader =>
+          loader.getURLs
+            .collectFirst {
+              case url if url.toString.contains("scala-library") =>
+                AbsolutePath(Paths.get(url.toURI))
+            }
+            .getOrElse {
+              throw new IllegalStateException("Unable to detect scala-library via --usejavacp")
+            }
+        case unexpected =>
+          throw new IllegalStateException(
+            s"Expected this.getClass.getClassLoader to be URLClassLoader. " +
+              s"Obtained $unexpected")
+      }
+      Classpath(scalaLibrary :: jdk)
+    } else {
+      Classpath(Nil)
+    }
   }
 }

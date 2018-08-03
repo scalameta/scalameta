@@ -11,7 +11,8 @@ final class Settings private (
     val dependencyClasspath: Classpath,
     val scalaLibrarySynthetics: Boolean,
     val par: Boolean,
-    val verbose: Boolean
+    val verbose: Boolean,
+    val usejavacp: Boolean
 ) {
   private def this() = {
     this(
@@ -20,12 +21,10 @@ final class Settings private (
       dependencyClasspath = Classpath(Nil),
       scalaLibrarySynthetics = false,
       par = false,
-      verbose = false
+      verbose = false,
+      usejavacp = false
     )
   }
-
-  def fullClasspath: Classpath =
-    Classpath(classpath.entries ++ dependencyClasspath.entries)
 
   def withOut(out: AbsolutePath): Settings = {
     copy(out = out)
@@ -56,13 +55,18 @@ final class Settings private (
     copy(verbose = verbose)
   }
 
+  def withUsejavacp(usejavacp: Boolean): Settings = {
+    copy(usejavacp = usejavacp)
+  }
+
   private def copy(
       out: AbsolutePath = out,
       classpath: Classpath = classpath,
       dependencyClasspath: Classpath = dependencyClasspath,
       scalaLibrarySynthetics: Boolean = scalaLibrarySynthetics,
       par: Boolean = par,
-      verbose: Boolean = verbose
+      verbose: Boolean = verbose,
+      usejavacp: Boolean = usejavacp
   ): Settings = {
     new Settings(
       out = out,
@@ -70,7 +74,8 @@ final class Settings private (
       dependencyClasspath = dependencyClasspath,
       scalaLibrarySynthetics = scalaLibrarySynthetics,
       par = par,
-      verbose = verbose
+      verbose = verbose,
+      usejavacp = usejavacp
     )
   }
 }
@@ -96,6 +101,8 @@ object Settings {
           loop(settings.copy(par = true), true, rest)
         case "--verbose" +: rest if allowOptions =>
           loop(settings.copy(verbose = true), true, rest)
+        case "--usejavacp" +: rest if allowOptions =>
+          loop(settings.copy(usejavacp = true), true, rest)
         case flag +: _ if allowOptions && flag.startsWith("-") =>
           reporter.err.println(s"unsupported flag $flag")
           None

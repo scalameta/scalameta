@@ -152,7 +152,7 @@ trait ExpectHelpers extends FunSuiteLike {
         .Settings()
         .withOut(AbsolutePath(target))
         .withClasspath(Classpath(AbsolutePath(in)))
-        .withDependencyClasspath(Library.scalaLibrary.classpath() ++ Library.jdk.classpath())
+        .withUsejavacp(true)
         .withScalaLibrarySynthetics(false)
       val reporter = Reporter().withOut(out).withErr(err)
       val result = Metacp.process(settings, reporter)
