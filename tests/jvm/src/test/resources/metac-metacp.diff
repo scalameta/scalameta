@@ -199,13 +199,10 @@ com/javacp/ClassSuffix#Inner#Bar#Fuz#[B]
 ========================================
 --- metac
 +++ metacp
- kind: TYPE_PARAMETER
  properties: 0
  name: "B"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
+ access {
+-  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -228,13 +225,11 @@ com/javacp/ClassSuffix#Inner#Bar#Fuz#`<init>`().
 +++ metacp
  properties: 0
  name: "<init>"
- accessibility {
--  tag: PUBLIC
--  symbol: ""
-+  tag: PRIVATE_WITHIN
-+  symbol: "com/javacp/"
+ access {
+-  publicAccess {
++  privateWithinAccess {
++    symbol: "com/javacp/"
  language: JAVA
- signature {
 
 
 ============================================
@@ -244,13 +239,11 @@ com/javacp/ClassSuffix#Inner#Bar#`<init>`().
 +++ metacp
  properties: 0
  name: "<init>"
- accessibility {
--  tag: PUBLIC
--  symbol: ""
-+  tag: PRIVATE_WITHIN
-+  symbol: "com/javacp/"
+ access {
+-  publicAccess {
++  privateWithinAccess {
++    symbol: "com/javacp/"
  language: JAVA
- signature {
 
 
 ================================
@@ -258,13 +251,10 @@ com/javacp/ClassSuffix#Inner#[A]
 ================================
 --- metac
 +++ metacp
- kind: TYPE_PARAMETER
  properties: 0
  name: "A"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
+ access {
+-  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -287,13 +277,11 @@ com/javacp/ClassSuffix#Inner#`<init>`().
 +++ metacp
  properties: 0
  name: "<init>"
- accessibility {
--  tag: PUBLIC
--  symbol: ""
-+  tag: PRIVATE_WITHIN
-+  symbol: "com/javacp/"
+ access {
+-  publicAccess {
++  privateWithinAccess {
++    symbol: "com/javacp/"
  language: JAVA
- signature {
 
 
 ==============================
@@ -335,8 +323,8 @@ com/javacp/Coin#value.
 -properties: 0
 +properties: 8
  name: "value"
- accessibility {
-   tag: PRIVATE
+ access {
+   privateAccess {
 
 
 ==========================
@@ -385,13 +373,10 @@ com/javacp/Recursive#Inner#[A]
 ==============================
 --- metac
 +++ metacp
- kind: TYPE_PARAMETER
  properties: 0
  name: "A"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
+ access {
+-  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -441,13 +426,10 @@ com/javacp/Recursive#Inner#[B]
 ==============================
 --- metac
 +++ metacp
- kind: TYPE_PARAMETER
  properties: 0
  name: "B"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
+ access {
+-  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -465,13 +447,10 @@ com/javacp/Recursive#Inner2#[C]
 ===============================
 --- metac
 +++ metacp
- kind: TYPE_PARAMETER
  properties: 0
  name: "C"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
+ access {
+-  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -489,13 +468,10 @@ com/javacp/Recursive#[A]
 ========================
 --- metac
 +++ metacp
- kind: TYPE_PARAMETER
  properties: 0
  name: "A"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
+ access {
+-  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -545,13 +521,10 @@ com/javacp/Recursive#[B]
 ========================
 --- metac
 +++ metacp
- kind: TYPE_PARAMETER
  properties: 0
  name: "B"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
+ access {
+-  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -569,13 +542,10 @@ com/javacp/Recursive#foo().[Anon]
 =================================
 --- metac
 +++ metacp
- kind: TYPE_PARAMETER
  properties: 0
  name: "Anon"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
+ access {
+-  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -596,13 +566,10 @@ com/javacp/Test#InnerShadowTypeParam#[A]
 ========================================
 --- metac
 +++ metacp
- kind: TYPE_PARAMETER
  properties: 0
  name: "A"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
+ access {
+-  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -625,13 +592,11 @@ com/javacp/Test#InnerShadowTypeParam#`<init>`().
 +++ metacp
  properties: 0
  name: "<init>"
- accessibility {
--  tag: PUBLIC
--  symbol: ""
-+  tag: PRIVATE_WITHIN
-+  symbol: "com/javacp/"
+ access {
+-  publicAccess {
++  privateWithinAccess {
++    symbol: "com/javacp/"
  language: JAVA
- signature {
 
 
 =======================================
@@ -641,13 +606,11 @@ com/javacp/Test#StaticClass#`<init>`().
 +++ metacp
  properties: 0
  name: "<init>"
- accessibility {
--  tag: PUBLIC
--  symbol: ""
-+  tag: PRIVATE_WITHIN
-+  symbol: "com/javacp/"
+ access {
+-  publicAccess {
++  privateWithinAccess {
++    symbol: "com/javacp/"
  language: JAVA
- signature {
 
 
 ===================
@@ -655,13 +618,10 @@ com/javacp/Test#[A]
 ===================
 --- metac
 +++ metacp
- kind: TYPE_PARAMETER
  properties: 0
  name: "A"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
+ access {
+-  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -699,13 +659,10 @@ com/javacp/Test#[B]
 ===================
 --- metac
 +++ metacp
- kind: TYPE_PARAMETER
  properties: 0
  name: "B"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
+ access {
+-  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -731,8 +688,8 @@ com/javacp/Test#arrayField.
 -properties: 0
 +properties: 8
  name: "arrayField"
- accessibility {
-   tag: PRIVATE_WITHIN
+ access {
+   privateWithinAccess {
 
 
 ======================================
@@ -740,13 +697,10 @@ com/javacp/Test#methodTypeParams().[C]
 ======================================
 --- metac
 +++ metacp
- kind: TYPE_PARAMETER
  properties: 0
  name: "C"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
+ access {
+-  publicAccess {
  language: JAVA
  signature {
    typeSignature {
@@ -766,13 +720,11 @@ com/javacp/Test#protectedField.
 +++ metacp
  properties: 0
  name: "protectedField"
- accessibility {
--  tag: PROTECTED_WITHIN
--  symbol: "com/javacp/"
-+  tag: PROTECTED
-+  symbol: ""
+ access {
+-  protectedWithinAccess {
+-    symbol: "com/javacp/"
++  protectedAccess {
  language: JAVA
- signature {
 
 
 ==================================
@@ -782,13 +734,11 @@ com/javacp/Test#protectedMethod().
 +++ metacp
  properties: 0
  name: "protectedMethod"
- accessibility {
--  tag: PROTECTED_WITHIN
--  symbol: "com/javacp/"
-+  tag: PROTECTED
-+  symbol: ""
+ access {
+-  protectedWithinAccess {
+-    symbol: "com/javacp/"
++  protectedAccess {
  language: JAVA
- signature {
 
 
 =================================
@@ -805,9 +755,9 @@ com/javacp/Test#strictfpMethod().
 +      prefix {
 +      symbol: "scala/annotation/strictfp#"
 +}
- accessibility {
-   tag: PRIVATE_WITHIN
-   symbol: "com/javacp/"
+ access {
+   privateWithinAccess {
+     symbol: "com/javacp/"
 
 
 =====================================
@@ -838,9 +788,8 @@ com/javacp/Test#wildcard().(wildcard)
 -            kind: TYPE
 -            properties: 4
 -            name: "_"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
+-            access {
+-              publicAccess {
 -            language: SCALA
 -            signature {
 -              typeSignature {
@@ -883,9 +832,8 @@ com/javacp/Test#wildcard(+1).(a)
 -            kind: TYPE
 -            properties: 4
 -            name: "_"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
+-            access {
+-              publicAccess {
 -            language: SCALA
 -            signature {
 -              typeSignature {
@@ -928,9 +876,8 @@ com/javacp/Test#wildcard(+1).(b)
 -            kind: TYPE
 -            properties: 4
 -            name: "_"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
+-            access {
+-              publicAccess {
 -            language: SCALA
 -            signature {
 -              typeSignature {
@@ -956,8 +903,8 @@ com/javacp/annot/ClassAnnotation#
 +kind: INTERFACE
 +properties: 4
  name: "ClassAnnotation"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -984,8 +931,8 @@ com/javacp/annot/ConstructorAnnotation#
 +kind: INTERFACE
 +properties: 4
  name: "ConstructorAnnotation"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -1012,8 +959,8 @@ com/javacp/annot/FieldAnnotation#
 +kind: INTERFACE
 +properties: 4
  name: "FieldAnnotation"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -1040,8 +987,8 @@ com/javacp/annot/InterfaceAnnotation#
 +kind: INTERFACE
 +properties: 4
  name: "InterfaceAnnotation"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -1068,8 +1015,8 @@ com/javacp/annot/LocalAnnotation#
 +kind: INTERFACE
 +properties: 4
  name: "LocalAnnotation"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -1096,8 +1043,8 @@ com/javacp/annot/MacroAnnotation#
 +kind: INTERFACE
 +properties: 4
  name: "MacroAnnotation"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -1124,8 +1071,8 @@ com/javacp/annot/MethodAnnotation#
 +kind: INTERFACE
 +properties: 4
  name: "MethodAnnotation"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -1152,8 +1099,8 @@ com/javacp/annot/ObjectAnnotation#
 +kind: INTERFACE
 +properties: 4
  name: "ObjectAnnotation"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -1180,8 +1127,8 @@ com/javacp/annot/PackageAnnotation#
 +kind: INTERFACE
 +properties: 4
  name: "PackageAnnotation"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -1208,8 +1155,8 @@ com/javacp/annot/PackageObjectAnnotation#
 +kind: INTERFACE
 +properties: 4
  name: "PackageObjectAnnotation"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -1236,8 +1183,8 @@ com/javacp/annot/ParameterAnnotation#
 +kind: INTERFACE
 +properties: 4
  name: "ParameterAnnotation"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -1264,8 +1211,8 @@ com/javacp/annot/SelfParameterAnnotation#
 +kind: INTERFACE
 +properties: 4
  name: "SelfParameterAnnotation"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -1292,8 +1239,8 @@ com/javacp/annot/TraitAnnotation#
 +kind: INTERFACE
 +properties: 4
  name: "TraitAnnotation"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -1320,8 +1267,8 @@ com/javacp/annot/TypeAnnotation#
 +kind: INTERFACE
 +properties: 4
  name: "TypeAnnotation"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -1348,8 +1295,8 @@ com/javacp/annot/TypeParameterAnnotation#
 +kind: INTERFACE
 +properties: 4
  name: "TypeParameterAnnotation"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -1376,8 +1323,8 @@ com/javacp/annot/usage/AnnotatedInterface#
 +kind: INTERFACE
 +properties: 4
  name: "AnnotatedInterface"
- accessibility {
-   tag: PUBLIC
+ access {
+   publicAccess {
        typeRef {
          prefix {
 -        symbol: "scala/annotation/Annotation#"
@@ -1393,20 +1340,20 @@ com/javacp/annot/usage/AnnotatedInterface#
 -      symlinks: "com/javacp/annot/usage/AnnotatedInterface#`<init>`()."
 
 
-============
-example/Acc#
-============
+===============
+example/Access#
+===============
 --- metac
 +++ metacp
-       symlinks: "example/Acc#`<init>`()."
-       symlinks: "example/Acc#m1()."
-       symlinks: "example/Acc#m2()."
--      symlinks: "example/Acc#m3()."
-       symlinks: "example/Acc#m4()."
-       symlinks: "example/Acc#m5()."
-       symlinks: "example/Acc#m6()."
-       symlinks: "example/Acc#m7()."
-+      symlinks: "example/Acc#m3()."
+       symlinks: "example/Access#`<init>`()."
+       symlinks: "example/Access#m1()."
+       symlinks: "example/Access#m2()."
+-      symlinks: "example/Access#m3()."
+       symlinks: "example/Access#m4()."
+       symlinks: "example/Access#m5()."
+       symlinks: "example/Access#m6()."
+       symlinks: "example/Access#m7()."
++      symlinks: "example/Access#m3()."
 
 
 =========================
@@ -1439,10 +1386,9 @@ example/Synthetic#x$2.
 +++ metacp
  properties: 1024
  name: "x$2"
- accessibility {
--  tag: PUBLIC
-+  tag: PRIVATE_THIS
-   symbol: ""
+ access {
+-  publicAccess {
++  privateThisAccess {
  language: SCALA
 
 

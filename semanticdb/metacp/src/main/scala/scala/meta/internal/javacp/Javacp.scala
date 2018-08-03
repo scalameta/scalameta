@@ -48,7 +48,7 @@ object Javacp {
         name = name,
         signature = sig,
         annotations = sannotations(access),
-        accessibility = saccessibility(access, symbol)
+        access = saccess(access, symbol)
       )
       buf += info
       info
@@ -377,15 +377,13 @@ object Javacp {
     else Symbols.EmptyPackage + result.toString
   }
 
-  private def saccessibility(access: Int, symbol: String): Option[s.Accessibility] = {
-    def sacc(tag: s.Accessibility.Tag): Option[s.Accessibility] = Some(s.Accessibility(tag))
-    val a = s.Accessibility.Tag
-    if (access.hasFlag(o.ACC_PUBLIC)) sacc(a.PUBLIC)
-    else if (access.hasFlag(o.ACC_PROTECTED)) sacc(a.PROTECTED)
-    else if (access.hasFlag(o.ACC_PRIVATE)) sacc(a.PRIVATE)
+  private def saccess(access: Int, symbol: String): s.Access = {
+    if (access.hasFlag(o.ACC_PUBLIC)) s.PublicAccess()
+    else if (access.hasFlag(o.ACC_PROTECTED)) s.ProtectedAccess()
+    else if (access.hasFlag(o.ACC_PRIVATE)) s.PrivateAccess()
     else {
       val within = symbol.ownerChain.reverse.tail.find(_.desc.isPackage).get
-      Some(s.Accessibility(tag = a.PRIVATE_WITHIN, symbol = within))
+      s.PrivateWithinAccess(within)
     }
   }
 

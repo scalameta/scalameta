@@ -1459,35 +1459,35 @@ example/A# => trait A extends AnyRef { +1 decls }
 example/A#foo(). => abstract method foo: Int
   Int => scala/Int#
 
-example/Acc.class
------------------
+example/Access.class
+--------------------
 
 Summary:
 Schema => SemanticDB v4
-Uri => example/Acc.class
+Uri => example/Access.class
 Text => empty
 Language => Scala
 Symbols => 9 entries
 
 Symbols:
-example/Acc# => class Acc extends AnyRef { +8 decls }
+example/Access# => class Access extends AnyRef { +8 decls }
   AnyRef => scala/AnyRef#
-example/Acc#`<init>`(). => primary ctor <init>()
-example/Acc#m1(). => private method m1: Nothing
+example/Access#`<init>`(). => primary ctor <init>()
+example/Access#m1(). => private method m1: Nothing
   Nothing => scala/Nothing#
-example/Acc#m2(). => private[this] method m2: Nothing
+example/Access#m2(). => private[this] method m2: Nothing
   Nothing => scala/Nothing#
-example/Acc#m3(). => private[Acc] method m3: Nothing
-  Acc => example/Acc#
+example/Access#m3(). => private[Access] method m3: Nothing
+  Access => example/Access#
   Nothing => scala/Nothing#
-example/Acc#m4(). => protected method m4: Nothing
+example/Access#m4(). => protected method m4: Nothing
   Nothing => scala/Nothing#
-example/Acc#m5(). => protected[this] method m5: Nothing
+example/Access#m5(). => protected[this] method m5: Nothing
   Nothing => scala/Nothing#
-example/Acc#m6(). => protected[example] method m6: Nothing
+example/Access#m6(). => protected[example] method m6: Nothing
   example => example/
   Nothing => scala/Nothing#
-example/Acc#m7(). => method m7: Nothing
+example/Access#m7(). => method m7: Nothing
   Nothing => scala/Nothing#
 
 example/Anonymous.class

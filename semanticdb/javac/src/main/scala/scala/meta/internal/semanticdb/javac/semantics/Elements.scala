@@ -5,7 +5,6 @@ import javax.lang.model.element._
 import scala.collection.mutable
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.collection.JavaConverters._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d, _}
@@ -93,16 +92,16 @@ trait Elements {
       case elem: TypeParameterElement => k.TYPE_PARAMETER
     }
 
-    def accessibility: Option[s.Accessibility] = {
+    def access: s.Access = {
       val mods = elem.getModifiers
       val enclosingPackageSym = enclosingPackage.sym
       if (mods.contains(Modifier.PUBLIC) || elem.getKind == ElementKind.PARAMETER)
-        Some(s.Accessibility(tag = a.PUBLIC))
-      else if (mods.contains(Modifier.PRIVATE)) Some(s.Accessibility(tag = a.PRIVATE))
-      else if (mods.contains(Modifier.PROTECTED)) Some(s.Accessibility(tag = a.PROTECTED))
+        s.PublicAccess()
+      else if (mods.contains(Modifier.PRIVATE)) s.PrivateAccess()
+      else if (mods.contains(Modifier.PROTECTED)) s.ProtectedAccess()
       else if (elem.getKind != ElementKind.TYPE_PARAMETER)
-        Some(s.Accessibility(tag = a.PRIVATE_WITHIN, symbol = enclosingPackageSym))
-      else None
+        s.PrivateWithinAccess(enclosingPackageSym)
+      else s.DefaultAccess
     }
 
     def properties: Int = {
@@ -201,7 +200,7 @@ trait Elements {
       kind = kind,
       name = name,
       annotations = annotations,
-      accessibility = accessibility,
+      access = access,
       properties = properties,
       signature = signature
     )

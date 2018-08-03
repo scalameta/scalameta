@@ -4,7 +4,6 @@ import scala.{meta => m}
 import scala.reflect.internal.{Flags => gf}
 import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb => s}
-import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
@@ -167,22 +166,22 @@ trait SymbolInformationOps { self: SemanticdbOps =>
     }
 
     // FIXME: https://github.com/scalameta/scalameta/issues/1325
-    private def accessibility: Option[s.Accessibility] = {
+    private def access: s.Access = {
       if (gsym.hasFlag(gf.SYNTHETIC) && gsym.hasFlag(gf.ARTIFACT)) {
         // NOTE: some sick artifact vals produced by mkPatDef can be
         // private to method (whatever that means), so here we just ignore them.
-        Some(s.Accessibility(a.PUBLIC))
+        s.PublicAccess()
       } else {
         if (gsym.privateWithin == NoSymbol) {
-          if (gsym.isPrivateThis) Some(s.Accessibility(a.PRIVATE_THIS))
-          else if (gsym.isPrivate) Some(s.Accessibility(a.PRIVATE))
-          else if (gsym.isProtectedThis) Some(s.Accessibility(a.PROTECTED_THIS))
-          else if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED))
-          else Some(s.Accessibility(a.PUBLIC))
+          if (gsym.isPrivateThis) s.PrivateThisAccess()
+          else if (gsym.isPrivate) s.PrivateAccess()
+          else if (gsym.isProtectedThis) s.ProtectedThisAccess()
+          else if (gsym.isProtected) s.ProtectedAccess()
+          else s.PublicAccess()
         } else {
           val ssym = gsym.privateWithin.ssym
-          if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED_WITHIN, ssym))
-          else Some(s.Accessibility(a.PRIVATE_WITHIN, ssym))
+          if (gsym.isProtected) s.ProtectedWithinAccess(ssym)
+          else s.PrivateWithinAccess(ssym)
         }
       }
     }
@@ -196,7 +195,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         name = name,
         signature = sig(linkMode),
         annotations = annotations,
-        accessibility = accessibility
+        access = access
       )
     }
   }

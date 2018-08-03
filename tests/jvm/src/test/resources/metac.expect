@@ -779,57 +779,57 @@ local3 => type _ <: Number
 local5 => type _ >: Number
   Number => java/lang/Number#
 
-semanticdb/integration/src/main/scala/example/Accessibility.scala
------------------------------------------------------------------
+semanticdb/integration/src/main/scala/example/Access.scala
+----------------------------------------------------------
 
 Summary:
 Schema => SemanticDB v4
-Uri => semanticdb/integration/src/main/scala/example/Accessibility.scala
+Uri => semanticdb/integration/src/main/scala/example/Access.scala
 Text => non-empty
 Language => Scala
 Symbols => 9 entries
 Occurrences => 19 entries
 
 Symbols:
-example/Acc# => class Acc extends AnyRef { +8 decls }
+example/Access# => class Access extends AnyRef { +8 decls }
   AnyRef => scala/AnyRef#
-example/Acc#`<init>`(). => primary ctor <init>()
-example/Acc#m1(). => private method m1: Nothing
+example/Access#`<init>`(). => primary ctor <init>()
+example/Access#m1(). => private method m1: Nothing
   Nothing => scala/Nothing#
-example/Acc#m2(). => private[this] method m2: Nothing
+example/Access#m2(). => private[this] method m2: Nothing
   Nothing => scala/Nothing#
-example/Acc#m3(). => private[Acc] method m3: Nothing
-  Acc => example/Acc#
+example/Access#m3(). => private[Access] method m3: Nothing
+  Access => example/Access#
   Nothing => scala/Nothing#
-example/Acc#m4(). => protected method m4: Nothing
+example/Access#m4(). => protected method m4: Nothing
   Nothing => scala/Nothing#
-example/Acc#m5(). => protected[this] method m5: Nothing
+example/Access#m5(). => protected[this] method m5: Nothing
   Nothing => scala/Nothing#
-example/Acc#m6(). => protected[example] method m6: Nothing
+example/Access#m6(). => protected[example] method m6: Nothing
   example => example/
   Nothing => scala/Nothing#
-example/Acc#m7(). => method m7: Nothing
+example/Access#m7(). => method m7: Nothing
   Nothing => scala/Nothing#
 
 Occurrences:
 [0:8..0:15): example <= example/
-[2:6..2:9): Acc <= example/Acc#
-[2:10..2:10):  <= example/Acc#`<init>`().
-[3:14..3:16): m1 <= example/Acc#m1().
+[2:6..2:12): Access <= example/Access#
+[2:13..2:13):  <= example/Access#`<init>`().
+[3:14..3:16): m1 <= example/Access#m1().
 [3:19..3:22): ??? => scala/Predef.`???`().
-[4:20..4:22): m2 <= example/Acc#m2().
+[4:20..4:22): m2 <= example/Access#m2().
 [4:25..4:28): ??? => scala/Predef.`???`().
-[5:10..5:13): Acc => example/Acc#
-[5:19..5:21): m3 <= example/Acc#m3().
-[5:24..5:27): ??? => scala/Predef.`???`().
-[6:16..6:18): m4 <= example/Acc#m4().
+[5:10..5:16): Access => example/Access#
+[5:22..5:24): m3 <= example/Access#m3().
+[5:27..5:30): ??? => scala/Predef.`???`().
+[6:16..6:18): m4 <= example/Access#m4().
 [6:21..6:24): ??? => scala/Predef.`???`().
-[7:22..7:24): m5 <= example/Acc#m5().
+[7:22..7:24): m5 <= example/Access#m5().
 [7:27..7:30): ??? => scala/Predef.`???`().
 [8:12..8:19): example => example/
-[8:25..8:27): m6 <= example/Acc#m6().
+[8:25..8:27): m6 <= example/Access#m6().
 [8:30..8:33): ??? => scala/Predef.`???`().
-[9:6..9:8): m7 <= example/Acc#m7().
+[9:6..9:8): m7 <= example/Access#m7().
 [9:11..9:14): ??? => scala/Predef.`???`().
 
 semanticdb/integration/src/main/scala/example/Advanced.scala

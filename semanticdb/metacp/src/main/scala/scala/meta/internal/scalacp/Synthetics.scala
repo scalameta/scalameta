@@ -1,7 +1,6 @@
 package scala.meta.internal.scalacp
 
 import scala.meta.internal.{semanticdb => s}
-import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
@@ -35,7 +34,7 @@ object Synthetics {
       name = "x$1",
       signature = paramSig,
       annotations = Nil,
-      accessibility = Some(s.Accessibility(a.PUBLIC)))
+      access = s.PublicAccess())
 
     val setterSig = {
       val unit = s.TypeRef(s.NoType, "scala/Unit#", Nil)
@@ -55,7 +54,7 @@ object Synthetics {
       name = getterInfo.name + "_=",
       signature = setterSig,
       annotations = getterInfo.annotations,
-      accessibility = getterInfo.accessibility)
+      access = getterInfo.access)
 
     linkMode match {
       case SymlinkChildren => List(paramInfo, setterInfo)

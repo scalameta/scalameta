@@ -14,7 +14,7 @@
   * [Signature](#signature)
   * [SymbolInformation](#symbolinformation)
   * [Annotation](#annotation)
-  * [Accessibility](#accessibility)
+  * [Access](#access)
   * [SymbolOccurrence](#symboloccurrence)
   * [Diagnostic](#diagnostic)
   * [Synthetic](#synthetic)
@@ -28,7 +28,7 @@
     * [Signature](#scala-signature)
     * [SymbolInformation](#scala-symbolinformation)
     * [Annotation](#scala-annotation)
-    * [Accessibility](#scala-accessibility)
+    * [Access](#scala-access)
     * [SymbolOccurrence](#scala-symboloccurrence)
     * [Synthetic](#scala-synthetic)
   * [Java](#java)
@@ -37,7 +37,7 @@
     * [Signature](#java-signature)
     * [SymbolInformation](#java-symbolinformation)
     * [Annotation](#java-annotation)
-    * [Accessibility](#java-acessibility)
+    * [Access](#java-acessibility)
     * [SymbolOccurrence](#java-symboloccurrence)
     * [Synthetic](#java-synthetic)
 
@@ -631,7 +631,7 @@ message SymbolInformation {
   string name = 5;
   Signature signature = 17;
   repeated Annotation annotations = 13;
-  Accessibility accessibility = 14;
+  Access access = 14;
 }
 ```
 
@@ -833,7 +833,7 @@ which signatures in supported languages.
 
 `annotation`. [Annotations](#annotation) of the corresponding definition.
 
-`accessibility`. [Accessibility](#accessibility) of the corresponding definition.
+`access`. [Access](#access) modifier of the corresponding definition.
 
 ### Annotation
 
@@ -847,31 +847,50 @@ message Annotation {
 information on how annotations in supported languages map onto this
 data structure.
 
-### Accessibility
+### Access
 
 ```protobuf
-message Accessibility {
-  enum Tag {
-    UNKNOWN_ACCESSIBILITY = 0;
-    PRIVATE = 1;
-    PRIVATE_THIS = 2;
-    PRIVATE_WITHIN = 3;
-    PROTECTED = 4;
-    PROTECTED_THIS = 5;
-    PROTECTED_WITHIN = 6;
-    PUBLIC = 7;
+message Access {
+  oneof sealed_value {
+    PrivateAccess privateAccess = 1;
+    PrivateThisAccess privateThisAccess = 2;
+    PrivateWithinAccess privateWithinAccess = 3;
+    ProtectedAccess protectedAccess = 4;
+    ProtectedThisAccess protectedThisAccess = 5;
+    ProtectedWithinAccess protectedWithinAccess = 6;
+    PublicAccess publicAccess = 7;
   }
-  Tag tag = 1;
-  string symbol = 2;
+}
+
+message PrivateAccess {
+}
+
+message PrivateThisAccess {
+}
+
+message PrivateWithinAccess {
+  string symbol = 1;
+}
+
+message ProtectedAccess {
+}
+
+message ProtectedThisAccess {
+}
+
+message ProtectedWithinAccess {
+  string symbol = 1;
+}
+
+message PublicAccess {
 }
 ```
 
-`Accessibility` represents accessibility of definitions, including `PRIVATE` and
-`PROTECTED`, as well as variants of these accessibilities: 1) limited to the
-current object instance (`PRIVATE_THIS` and `PROTECTED_THIS`), and 2) limited
-to the given `symbol` (`PRIVATE_WITHIN` and `PROTECTED_WITHIN`).
-See [Languages](#languages) for information on how accessibilities in supported
-languages map onto this data structure.
+`Access` represents access modifiers of definitions, including `private` and
+`protected`, as well as variants: 1) limited to the current object instance,
+and 2) limited to the given `symbol`. See [Languages](#languages) for
+information on how access modifiers in supported languages map onto this
+data structure.
 
 ### SymbolOccurrence
 
@@ -1087,7 +1106,7 @@ that method with type arguments.
 ## Languages
 
 In this section, we describe language-dependent SemanticDB entities, i.e.
-symbols, types, symbol informations, annotations, accessibilities and
+symbols, types, symbol informations, annotations, access modifiers and
 symbol occurrences:
 
   * [Scala](#scala)
@@ -1096,7 +1115,7 @@ symbol occurrences:
     * [Signature](#scala-signature)
     * [SymbolInformation](#scala-symbolinformation)
     * [Annotation](#scala-annotation)
-    * [Accessibility](#scala-accessibility)
+    * [Access](#scala-access)
     * [SymbolOccurrence](#scala-symboloccurrence)
     * [Synthetic](#scala-synthetic)
   * [Java](#java)
@@ -1105,7 +1124,7 @@ symbol occurrences:
     * [Signature](#java-signature)
     * [SymbolInformation](#java-symbolinformation)
     * [Annotation](#java-annotation)
-    * [Accessibility](#java-accessibility)
+    * [Access](#java-access)
     * [SymbolOccurrence](#java-symboloccurrence)
 
 ### Notation
@@ -1434,7 +1453,7 @@ message SymbolInformation {
   string name = 5;
   Signature signature = 17;
   repeated Annotation annotations = 13;
-  Accessibility accessibility = 14;
+  Access access = 14;
 }
 ```
 
@@ -1472,14 +1491,14 @@ message SymbolInformation {
     <td>Explained below on per-definition basis.</td>
   </tr>
   <tr>
-    <td><code>accessibility</code></td>
+    <td><code>access</code></td>
     <td>Explained below on per-definition basis.</td>
   </tr>
 </table>
 
 **Value declarations and definitions** [\[39\]][39] are represented by multiple
 symbols, with the exact number of symbols, their kinds, properties, signatures
-and accessibilities dependent on the corresponding value:
+and access modifiers dependent on the corresponding value:
 * Local symbol of kind `LOCAL` is created for all local values.
 * Getter symbol of kind `METHOD` is created for all member values to model
   the getter method associated with the corresponding member value.
@@ -1587,17 +1606,17 @@ Notes:
 * Depending on their meta annotations, value annotations may end up as
   `Annotation` entities associated with multiple corresponding symbols.
   See [\[40\]][40] for more information.
-* Supported accessibilities for value symbols are:
-  * `PRIVATE`: set for getters of `private` values.
-  * `PRIVATE_THIS`: set for vals of value members.
-  * `PRIVATE_WITHIN`: set for getters of `private[...]` values.
-  * `PROTECTED`: set for getters of `protected` values.
-  * `PROTECTED_THIS`: set for getters of `protected[this]` values.
-  * `PROTECTED_WITHIN`: set for getters of `protected[...]` values.
+* Supported access modifiers for value symbols are:
+  * `PrivateAccess`: set for getters of `private` values.
+  * `PrivateThisAccess`: set for vals of value members.
+  * `PrivateWithinAccess`: set for getters of `private[...]` values.
+  * `ProtectedAccess`: set for getters of `protected` values.
+  * `ProtectedThisAccess`: set for getters of `protected[this]` values.
+  * `ProtectedWithinAccess`: set for getters of `protected[...]` values.
 
 **Variable declarations and definitions** [\[41\]][41] are represented by
 multiple symbols, with the exact number of symbols, their kinds, properties,
-signatures and accessibilities dependent on the corresponding value:
+signatures and access modifiers dependent on the corresponding value:
 * Local symbol of kind `LOCAL` is created for all local variables.
 * Getter and setter symbols of kind `METHOD` are created for all member
   variables to model the getter and setter methods associated with the
@@ -1615,7 +1634,7 @@ Notes:
   * `signature`: `MethodSignature(List(), List(List(<x$1>)), <Unit>)`, where
     `x$1` is a `PARAMETER` symbol having `signature` equal to the type of the
      variable.
-  * `annotations` and `accessibility`: same as value symbols.
+  * `annotations` and `access`: same as value symbols.
 * Supported properties for variable symbols are:
   * `ABSTRACT`: set for all corresponding symbols of variable declarations.
   * `FINAL`: set for all corresponding symbols of `final` variables.
@@ -1685,7 +1704,7 @@ Notes:
   definitions and only then encoded into symbols as described in
   "Value declarations and definitions" and "Variable declarations and
   definitions".
-* Pattern variable symbols don't support any accessibilities.
+* Pattern variable symbols don't support any access modifiers.
 
 **Type declarations and type aliases** [\[42\]][42] are represented with
 `TYPE` symbols.
@@ -1735,7 +1754,7 @@ Notes:
   See [Types](#scala-type) for more information.
 * If present, type parameters of type declarations and type aliases are
   represented as described below in order of their appearance in source code.
-* Type symbols support [all Scala accessibilities](#scala-accessibility).
+* Type symbols support [all Scala access modifiers](#scala-access).
 
 **Type variables** [\[67\]][67] are represented with `TYPE` symbols.
 
@@ -1771,7 +1790,7 @@ Notes:
   `Type` entities deliberately unspecified. For example, a producer may
   represent the signature of `t` as `TypeSignature(List(), <Nothing>, <Any>)`.
   See [Types](#scala-type) for more information.
-* Type variable symbols don't support any accessibilities.
+* Type variable symbols don't support any access modifiers.
 
 **Self parameters** [\[64\]][64] are represented with `SELF_PARAMETER` symbols.
 
@@ -1812,7 +1831,7 @@ Notes:
 * Self parameters may be anonymous (via `_: T =>`, `this: T =>` or corresponding
   typeless syntaxes). In that case, their `name` must be modelled as `_`,
   whereas the symbol name is implementation-dependent.
-* Self parameter symbols don't support any accessibilities.
+* Self parameter symbols don't support any access modifiers.
 
 **Type parameters** [\[43\]][43] are represented with `TYPE_PARAMETER` symbols.
 
@@ -2064,7 +2083,7 @@ Notes:
   right-hand side of the method according to the rules described
   in SLS [\[50\]][50]. Corresponding signature is computed using the inferred
   retyrb type as explained in [Type](#scala-type).
-* Method symbols support [all Scala accessibilities](#scala-accessibility).
+* Method symbols support [all Scala access modifiers](#scala-access).
 * The `OBJECT` symbol `m3.` and `VAL METHOD` symbol `m4.` do not contribute
   to the disambiguator tag for the method symbols `m3().`, `m3(+1).` and `m4().`
   because `OBJECT` and (exceptionally) `VAL METHOD` symbols do not require a
@@ -2100,7 +2119,7 @@ Notes:
 * Return type inference for macros is not supported.
 * At the moment, `SymbolInformation` for macros does not contain information
   about corresponding macro implementations. We may improve this in the future.
-* Macro symbols support [all Scala accessibilities](#scala-accessibility).
+* Macro symbols support [all Scala access modifiers](#scala-access).
 
 **Constructors** [[52][52], [53][53]] are represented with `CONSTRUCTOR`
 symbols similarly to function definitions (see above).
@@ -2142,7 +2161,7 @@ Notes:
   type parameters are equal to `List()` and the return type is `None`.
 * Primary constructor parameters with `val` and `var` modifiers give rise
   to multiple different symbols as described above.
-* Constructor symbols support [all Scala accessibilities](#scala-accessibility).
+* Constructor symbols support [all Scala access modifiers](#scala-access).
 
 **Class definitions** [\[54\]][54] are represented with `CLASS` symbols.
 
@@ -2260,7 +2279,7 @@ Notes:
     * Case classes [\[55\]][55].
     * Implicit classes [\[56\]][56].
     * Value classes [\[57\]][57].
-* Class symbols support [all Scala accessibilities](#scala-accessibility).
+* Class symbols support [all Scala access modifiers](#scala-access).
 
 **Traits** [\[58\]][58] are represented by `TRAIT` symbols
 similarly to class definitions (see above). Concretely, the differences
@@ -2287,7 +2306,7 @@ between package object symbols and object symbols are:
 * Package objects `name` must be modelled as their name in source code.
   This is different from their symbol name that must be modelled as `package`.
 * Package objects don't have annotations.
-* Package objects don't support any accessibilities.
+* Package objects don't support any access modifiers.
 
 **Packages** [\[61\]][61] are represented by `PACKAGE` symbols.
 The ["Symbols"](#symbolinformation) section does not include
@@ -2335,37 +2354,56 @@ In Scala, [Annotation](#annotation) represents annotations [\[23\]][23].
   plan to add support for expressions in SemanticDB, so it is highly
   unlikely that expression annotations will be supported in the future.
 
-<a name="scala-accessibility"></a>
-#### Accessibility
+<a name="scala-access"></a>
+#### Access
 
 ```protobuf
-message Accessibility {
-  enum Tag {
-    UNKNOWN_ACCESSIBILITY = 0;
-    PRIVATE = 1;
-    PRIVATE_THIS = 2;
-    PRIVATE_WITHIN = 3;
-    PROTECTED = 4;
-    PROTECTED_THIS = 5;
-    PROTECTED_WITHIN = 6;
-    PUBLIC = 7;
+message Access {
+  oneof sealed_value {
+    PrivateAccess privateAccess = 1;
+    PrivateThisAccess privateThisAccess = 2;
+    PrivateWithinAccess privateWithinAccess = 3;
+    ProtectedAccess protectedAccess = 4;
+    ProtectedThisAccess protectedThisAccess = 5;
+    ProtectedWithinAccess protectedWithinAccess = 6;
+    PublicAccess publicAccess = 7;
   }
-  Tag tag = 1;
-  string symbol = 2;
+}
+
+message PrivateAccess {
+}
+
+message PrivateThisAccess {
+}
+
+message PrivateWithinAccess {
+  string symbol = 1;
+}
+
+message ProtectedAccess {
+}
+
+message ProtectedThisAccess {
+}
+
+message ProtectedWithinAccess {
+  string symbol = 1;
+}
+
+message PublicAccess {
 }
 ```
 
-In Scala, [Accessibility](#accessibility) represents accessibility of
-definitions.
+In Scala, [Access](#access) represents access modifiers of definitions.
 
 <table>
   <tr>
-    <td><b>Accessibility</b></td>
+    <td><b>Access</b></td>
     <td><b>Code</b></td>
     <td><b>Explanation</b></td>
   </tr>
   <tr>
-    <td><code>PRIVATE</code></td>
+    <td><code>PrivateAccess()</code></td>
     <td><code>private def x = ???</code></td>
     <td>
       Can be accessed only from within the directly enclosing template
@@ -2374,7 +2412,7 @@ definitions.
     </td>
   </tr>
   <tr>
-    <td><code>PRIVATE_THIS</code></td>
+    <td><code>PrivateThisAccess()</code></td>
     <td><code>private[this] def x = ???</code></td>
     <td>
       Can be accessed only from within the object in which the definition
@@ -2383,7 +2421,7 @@ definitions.
     </td>
   </tr>
   <tr>
-    <td><code>PRIVATE_WITHIN</code></td>
+    <td><code>PrivateWithinAccess(<X>)</code></td>
     <td><code>private[X] def x = ???</code></td>
     <td>
       Can be accessed respectively only from code inside the package
@@ -2393,7 +2431,7 @@ definitions.
     </td>
   </tr>
   <tr>
-    <td><code>PROTECTED</code></td>
+    <td><code>ProtectedAccess()</code></td>
     <td><code>protected def x = ???</code></td>
     <td>
       Can be accessed from within: 1) the template of the defining class,
@@ -2403,33 +2441,33 @@ definitions.
     </td>
   </tr>
   <tr>
-    <td><code>PROTECTED_THIS</code></td>
+    <td><code>ProtectedThisAccess()</code></td>
     <td><code>protected[this] def x = ???</code></td>
     <td>
-      Can be accessed as <code>PROTECTED</code> AND
+      Can be accessed as <code>protected</code> AND
       only from within the object in which the definition is defined.
       <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#protected">[63]</a>.
     </td>
   </tr>
   <tr>
-    <td><code>PROTECTED_WITHIN</code></td>
+    <td><code>ProtectedWithinAccess(<X>)</code></td>
     <td><code>protected[X] def x = ???</code></td>
     <td>
-      Can be accessed as <code>PROTECTED</code> OR
+      Can be accessed as <code>protected</code> OR
       from code inside the package <code>X</code> or from code inside
       the class <code>X</code> and its companion object.
       <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#protected">[63]</a>.
     </td>
   </tr>
   <tr>
-    <td><code>PUBLIC</code></td>
+    <td><code>PublicAccess()</code></td>
     <td><code>def x = ???</code></td>
     <td>None of the above.</td>
   </tr>
 </table>
 
 Notes:
-* Not all kinds of symbols support all accessibilities. See
+* Not all kinds of symbols support all access modifiers. See
   [SymbolInformation](#scala-symbolinformation) for more information.
 
 <a name="scala-symboloccurrence"></a>
@@ -2969,7 +3007,7 @@ message SymbolInformation {
   string name = 5;
   Signature signature = 17;
   repeated Annotation annotations = 13;
-  Accessibility accessibility = 14;
+  Access access = 14;
 }
 ```
 
@@ -3006,7 +3044,7 @@ message SymbolInformation {
     <td>Explained below on per-definition basis.</td>
   </tr>
   <tr>
-    <td><code>accessibility</code></td>
+    <td><code>access</code></td>
     <td>Explained below on per-definition basis.</td>
   </tr>
 </table>
@@ -3138,9 +3176,9 @@ Notes:
   * `ABSTRACT` set for all abstract classes
   * `STATIC` set for static inner classes
   * `ENUM` set for enum types
-* Class declarations support [all Java accessibilities](#java-accessibility).
-* Class members without explicit access modifiers have accessibility
-  `PRIVATE_WITHIN` within the enclosing package.
+* Class declarations support [all Java access modifiers](#java-access).
+* Class members without explicit access modifiers have access
+  `PrivateWithinAccess` within the enclosing package.
 * The disambiguators for `m3()`, `m3(+1)` and `m3(+2)` do not take into account
   overloaded field `m3.`.
 
@@ -3203,14 +3241,14 @@ Notes:
   [\[86\]][86]:
   * Enum fields have kind `FIELD`, properties `FINAL`, `STATIC` and `ENUM`,
     are named after the corresponding enum constants, have the type of the
-    enum declaration and `PUBLIC` accessibility.
+    enum declaration and `PublicAccess` access.
   * `valueOf` has kind `METHOD`, property `STATIC`, have a method type that
     goes from a `<String>` parameter to the enum declaration and
-    `PUBLIC` accessibility.
+    `PublicAccess` access.
   * `values` has kind `METHOD`, property `STATIC`, have a method type that
     goes from an empty parameter list to an array of the enum declaration
-    and `PUBLIC` accessibility.
-* Enum declarations support [all Java accessibilities](#java-accessibility).
+    and `PublicAccess` access.
+* Enum declarations support [all Java access modifiers](#java-access).
 
 **Interface declarations** [\[77\]][77] are represented by a single symbol
 like classes but with the `INTERFACE` kind.
@@ -3249,9 +3287,9 @@ The differences between interface symbols and class symbols are:
 * Supported properties for interface symbols are:
   * `ABSTRACT`: implicitly set for all interface symbols.
 * Interface declarations support
-  [all Java accessibilities](#java-accessibility).
-* Interface members without explicit access modifiers have accessibility
-  `PUBLIC` by default instead of `PRIVATE_WITHIN`.
+  [all Java access modifiers](#java-access).
+* Interface members without explicit access modifiers have access
+  `PublicAccess` by default instead of `PrivateWithinAccess`.
 
 **Method declarations** [\[82\]][82] are represented by a single symbol with
 the `METHOD` kind and one symbol for each type parameter with kind
@@ -3330,8 +3368,8 @@ Notes:
   * `FINAL`: set for `final` methods.
   * `STATIC`: set for `static` methods.
   * `ABSTRACT`: set for `abstract` methods.
-* Method declarations support [all Java accessibilities](#java-accessibility),
-  however method declarations in interfaces can only be `PUBLIC`.
+* Method declarations support [all Java access modifiers](#java-access),
+  however method declarations in interfaces can only be `PublicAccess`.
 
 **Field declarations** [\[83\]][83] are represented by a single symbol with
 the `FIELD` kind.
@@ -3368,8 +3406,8 @@ Notes:
 * Supported properties for field symbols are:
   * `FINAL`: set for `final` fields and interface fields.
   * `STATIC`: set for `static` fields and interface fields.
-* Field declarations support [all Java accessibilities](#java-accessibility).
-  However, field declarations in interfaces can only be `PUBLIC`.
+* Field declarations support [all Java access modifiers](#java-access).
+  However, field declarations in interfaces can only be `PublicAccess`.
 
 **Constructor declarations** [\[90\]][90] are represented by a single symbol
 with name `<init>` and the `CONSTRUCTOR` kind. Constructor formal parameters
@@ -3424,7 +3462,7 @@ Notes:
   type parameters are equal to `List()` and the return type is `None`.
 * Constructor declarations support no properties.
 * Constructor declarations support
-  [all Java accessibilities](#java-accessibility).
+  [all Java access modifiers](#java-access).
 
 **Packages** [\[94\]][94] are represented by `PACKAGE` symbols.
 The ["Symbols"](#symbolinformation) section does not include
@@ -3472,36 +3510,56 @@ We may improve on this in the future.
   </tr>
 </table>
 
-<a name="java-accessibility"></a>
-#### Accessibility
+<a name="java-access"></a>
+#### Access
 
 ```protobuf
-message Accessibility {
-  enum Tag {
-    UNKNOWN_ACCESSIBILITY = 0;
-    PRIVATE = 1;
-    PRIVATE_THIS = 2;
-    PRIVATE_WITHIN = 3;
-    PROTECTED = 4;
-    PROTECTED_THIS = 5;
-    PROTECTED_WITHIN = 6;
-    PUBLIC = 7;
+message Access {
+  oneof sealed_value {
+    PrivateAccess privateAccess = 1;
+    PrivateThisAccess privateThisAccess = 2;
+    PrivateWithinAccess privateWithinAccess = 3;
+    ProtectedAccess protectedAccess = 4;
+    ProtectedThisAccess protectedThisAccess = 5;
+    ProtectedWithinAccess protectedWithinAccess = 6;
+    PublicAccess publicAccess = 7;
   }
-  Tag tag = 1;
-  string symbol = 2;
+}
+
+message PrivateAccess {
+}
+
+message PrivateThisAccess {
+}
+
+message PrivateWithinAccess {
+  string symbol = 1;
+}
+
+message ProtectedAccess {
+}
+
+message ProtectedThisAccess {
+}
+
+message ProtectedWithinAccess {
+  string symbol = 1;
+}
+
+message PublicAccess {
 }
 ```
 
-In Java, [Accessibility](#accessibility) represents access control [\[87\]][87]
+In Java, [Access](#access) represents access control [\[87\]][87]
 of names.
 <table>
   <tr>
-    <td><b>Accessibility</b></td>
+    <td><b>Access</b></td>
     <td width="125px"><b>Code</b></td>
     <td><b>Explanation</b></td>
   </tr>
   <tr>
-    <td><code>PRIVATE</code></td>
+    <td><code>PrivateAccess</code></td>
     <td><code>private F f;</code></td>
     <td>
       Can be accessed only from within the directly enclosing class.
@@ -3509,7 +3567,7 @@ of names.
     </td>
   </tr>
   <tr>
-    <td><code>PRIVATE_WITHIN</code></td>
+    <td><code>PrivateWithinAccess(<x>)</code></td>
     <td><code>package x; class A {}</code></td>
     <td>
       A class, interface, class member or constructor declared without an access
@@ -3518,7 +3576,7 @@ of names.
     </td>
   </tr>
   <tr>
-    <td><code>PROTECTED</code></td>
+    <td><code>ProtectedAccess()</code></td>
     <td><code>protected F f;</code></td>
     <td>
       A protected member of constructor of an object can be accessed from
@@ -3528,7 +3586,7 @@ of names.
     </td>
   </tr>
   <tr>
-    <td><code>PUBLIC</code></td>
+    <td><code>PublicAccess()</code></td>
     <td><code>public F f;</code></td>
     <td>
       Can be accessed from from any code provided that the compilation unit
@@ -3542,8 +3600,8 @@ of names.
 </table>
 
 Notes:
-* `PRIVATE_THIS`, `PROTECTED_THIS`, `PROTECTED_WITHIN` are not supported in
-the Java language.
+* `PrivateThisAccess`, `ProtectedThisAccess`, `ProtectedWithinAccess`
+are not supported in the Java language.
 
 <a name="java-symboloccurrence"></a>
 #### SymbolOccurrence

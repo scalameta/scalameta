@@ -3,7 +3,6 @@ package scala.meta.internal.scalacp
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb => s}
-import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
@@ -78,7 +77,7 @@ object Scalalib {
       properties = p.PRIMARY.value,
       name = "<init>",
       signature = ctorSig,
-      accessibility = Some(s.Accessibility(a.PUBLIC))
+      access = s.PublicAccess()
     )
     val builtinSig = {
       val tparams = Some(s.Scope(Nil))
@@ -93,7 +92,7 @@ object Scalalib {
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       name = name,
       signature = builtinSig,
-      accessibility = Some(s.Accessibility(a.PUBLIC))
+      access = s.PublicAccess()
     )
     val infos = builtin :: (
       if (kind.isClass) ctor :: symbols
@@ -127,7 +126,7 @@ object Scalalib {
         properties = 0,
         name = tparamName,
         signature = tparamSig,
-        accessibility = None)
+        access = s.DefaultAccess)
     }
     val params = paramDsls.map {
       case (paramName, paramTpeSymbol) =>
@@ -153,7 +152,7 @@ object Scalalib {
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       name = methodName,
       signature = methodSig,
-      accessibility = Some(s.Accessibility(a.PUBLIC)))
+      access = s.PublicAccess())
     List(method) ++ tparams ++ params
   }
 }
