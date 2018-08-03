@@ -153,7 +153,7 @@ class Main(settings: Settings, reporter: Reporter) {
   private case class OutputEntry(output: AbsolutePath, root: AbsolutePath)
 
   private def withOutputEntry[T](entry: AbsolutePath)(f: OutputEntry => T): T = {
-    val name = entry.toNIO.getFileName.toString
+    val name = entry.toNIO.normalize().getFileName.toString
     if (PathIO.extension(entry.toNIO) == "jar") {
       val freeJar = jarNameAlternatives(name, 0).filter(!_.isFile).head
       PlatformFileIO.withJarFileSystem(freeJar, create = true) { jarRoot =>
