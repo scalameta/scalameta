@@ -173,7 +173,7 @@ trait ExpectHelpers extends FunSuiteLike {
   protected def metai(path: Path): String = {
     val classpath = Classpath(path)
     val settings = scala.meta.metai.Settings().withClasspath(classpath)
-    val result = cli.Metai.process(settings, Reporter().silenceOut())
+    val result = cli.Metai.process(settings, Reporter().withSilentOut())
     if (!result.isSuccess) {
       sys.error("metai error")
     }
@@ -213,7 +213,7 @@ object ScalalibExpect extends ExpectHelpers {
       .withOut(AbsolutePath(tmp))
       .withClasspath(Classpath(Nil))
       .withScalaLibrarySynthetics(true)
-    val reporter = Reporter().silenceOut()
+    val reporter = Reporter().withSilentOut()
     Metacp.process(settings, reporter).classpath match {
       case Some(Classpath(List(jar))) => metap(jar.toNIO)
       case other => sys.error(s"unexpected metacp result: $other")

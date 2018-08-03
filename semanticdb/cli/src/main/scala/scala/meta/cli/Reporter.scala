@@ -12,7 +12,7 @@ final class Reporter private (val out: PrintStream, val err: PrintStream) {
     copy(out = out)
   }
 
-  def silenceOut(): Reporter = {
+  def withSilentOut(): Reporter = {
     withOut(devnull)
   }
 
@@ -20,7 +20,7 @@ final class Reporter private (val out: PrintStream, val err: PrintStream) {
     copy(err = err)
   }
 
-  def silenceErr(): Reporter = {
+  def withSilentErr(): Reporter = {
     withErr(devnull)
   }
 
