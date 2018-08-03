@@ -710,21 +710,15 @@ lazy val mergeSettings = Def.settings(
   }
 )
 
-// To run ScalaPB generation manually:
-//   git clone https://github.com/scalapb/scalapb
-//   Make sure to use the latest commit from the branch in https://github.com/scalapb/ScalaPB/pull/458
-//   cd scalapb
-//   sbt scalapbc/assembly
-//   cd ../scalameta
-//   export SCALAPBC=/Users/ollie/dev/ScalaPB/scalapbc/target/scala-2.10/scalapbc-assembly-0.7.5-SNAPSHOT.jar
-//   rm -rf semanticdb/semanticdb/src/main/generated
-//   mkdir semanticdb/semanticdb/src/main/generated
-//   java -jar $SCALAPBC --scala_out=flat_package:semanticdb/semanticdb/src/main/generated semanticdb/semanticdb/*.proto
 lazy val protobufSettings = Def.settings(
   sharedSettings,
-  libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
-  unmanagedSourceDirectories.in(Compile) +=
-    baseDirectory.value.getParentFile / "src" / "main" / "generated"
+  PB.targets.in(Compile) := Seq(
+    scalapb.gen(
+      flatPackage = true // Don't append filename to package
+    ) -> sourceManaged.in(Compile).value
+  ),
+  PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb")),
+  libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion
 )
 
 lazy val adhocRepoUri = sys.props("scalameta.repository.uri")
