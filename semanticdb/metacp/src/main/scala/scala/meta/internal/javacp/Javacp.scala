@@ -313,7 +313,10 @@ object Javacp {
       case _ =>
         s.IntersectionType(types = typeParameters)
     }
-    val sig = s.TypeSignature(upperBound = upperBounds)
+    val sig = s.TypeSignature(
+      typeParameters = Some(s.Scope()),
+      upperBound = upperBounds
+    )
 
     s.SymbolInformation(
       symbol = typeParameter.symbol,

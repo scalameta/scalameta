@@ -194,19 +194,6 @@ classes/N.anonClass.
              name: "local"
 
 
-========================================
-com/javacp/ClassSuffix#Inner#Bar#Fuz#[B]
-========================================
---- metac
-+++ metacp
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
-     upper_bound {
-
-
 ================================================
 com/javacp/ClassSuffix#Inner#Bar#Fuz#`<init>`().
 ================================================
@@ -233,19 +220,6 @@ com/javacp/ClassSuffix#Inner#Bar#`<init>`().
 +  privateWithinAccess {
 +    symbol: "com/javacp/"
  language: JAVA
-
-
-================================
-com/javacp/ClassSuffix#Inner#[A]
-================================
---- metac
-+++ metacp
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
-     upper_bound {
 
 
 ========================================
@@ -346,97 +320,6 @@ com/javacp/MetacJava#overload(+1).(a)
          symbol: "com/javacp/MetacJava#Overload2#A#"
 
 
-==============================
-com/javacp/Recursive#Inner#[A]
-==============================
---- metac
-+++ metacp
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
-     upper_bound {
-
-
-==============================
-com/javacp/Recursive#Inner#[B]
-==============================
---- metac
-+++ metacp
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
-     upper_bound {
-
-
-===============================
-com/javacp/Recursive#Inner2#[C]
-===============================
---- metac
-+++ metacp
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
-     upper_bound {
-
-
-========================
-com/javacp/Recursive#[A]
-========================
---- metac
-+++ metacp
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
-     upper_bound {
-
-
-========================
-com/javacp/Recursive#[B]
-========================
---- metac
-+++ metacp
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
-     upper_bound {
-
-
-=================================
-com/javacp/Recursive#foo().[Anon]
-=================================
---- metac
-+++ metacp
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
-     upper_bound {
-
-
-========================================
-com/javacp/Test#InnerShadowTypeParam#[A]
-========================================
---- metac
-+++ metacp
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
-     upper_bound {
-
-
 ================================================
 com/javacp/Test#InnerShadowTypeParam#`<init>`().
 ================================================
@@ -465,32 +348,6 @@ com/javacp/Test#StaticClass#`<init>`().
  language: JAVA
 
 
-===================
-com/javacp/Test#[A]
-===================
---- metac
-+++ metacp
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
-     upper_bound {
-
-
-===================
-com/javacp/Test#[B]
-===================
---- metac
-+++ metacp
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
-     upper_bound {
-
-
 ===========================
 com/javacp/Test#arrayField.
 ===========================
@@ -503,58 +360,6 @@ com/javacp/Test#arrayField.
  name: "arrayField"
  access {
    privateWithinAccess {
-
-
-========================
-com/javacp/Test#m1().[T]
-========================
---- metac
-+++ metacp
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
-     upper_bound {
-
-
-========================
-com/javacp/Test#m2().[T]
-========================
---- metac
-+++ metacp
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
-     upper_bound {
-
-
-========================
-com/javacp/Test#m3().[T]
-========================
---- metac
-+++ metacp
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
-     upper_bound {
-
-
-======================================
-com/javacp/Test#methodTypeParams().[C]
-======================================
---- metac
-+++ metacp
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
-     upper_bound {
 
 
 ===============================

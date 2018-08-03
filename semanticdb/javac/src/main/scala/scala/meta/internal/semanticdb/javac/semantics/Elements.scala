@@ -178,6 +178,7 @@ trait Elements {
             }
           }
           s.TypeSignature(
+            typeParameters = Some(s.Scope()),
             upperBound = bounds
           )
         case elem: VariableElement if elem.getKind == ElementKind.PARAMETER =>
