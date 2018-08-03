@@ -51,6 +51,7 @@ trait SymbolInformationPrinter extends BasePrinter {
       if (info.has(STATIC)) out.print("static ")
       if (info.has(PRIMARY)) out.print("primary ")
       if (info.has(ENUM)) out.print("enum ")
+      if (info.has(DEFAULT)) out.print("default ")
       info.kind match {
         case LOCAL => out.print("local ")
         case FIELD => out.print("field ")
@@ -264,6 +265,7 @@ trait SymbolInformationPrinter extends BasePrinter {
           if (info.has(STATIC)) out.print("static ")
           if (info.has(PRIMARY)) out.print("")
           if (info.has(ENUM)) out.print("enum ")
+          if (info.has(PRIMARY)) out.print("")
           info.kind match {
             case LOCAL => out.print("")
             case FIELD => out.print("")

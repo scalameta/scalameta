@@ -116,6 +116,7 @@ trait SymbolInformationOps { self: Scalacp =>
           val primaryIndex = primaryCtors.getOrElseUpdate(sym.path, sym.entry.index)
           if (sym.entry.index == primaryIndex) flip(p.PRIMARY)
         }
+        if (sym.isDefaultParameter) flip(p.DEFAULT)
       }
       flags
     }

@@ -883,6 +883,30 @@ example/Methods#m13().(x)
 +        symbol: "scala/Int#"
 
 
+================================
+example/Methods#m19$default$2().
+================================
+--- metac
++++ metacp
+         annotations {
+           tpe {
+-            typeRef {
+-              prefix {
+-              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
+================================
+example/Methods#m19$default$3().
+================================
+--- metac
++++ metacp
+         annotations {
+           tpe {
+-            typeRef {
+-              prefix {
+-              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
 ======================
 example/Synthetic#x$2.
 ======================

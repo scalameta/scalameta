@@ -7,6 +7,7 @@ import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.reflect.internal.{Flags => gf}
 import scala.reflect.internal.util.{SourceFile => GSourceFile, NoSourceFile => GNoSourceFile}
 import scala.util.control.NonFatal
 
@@ -282,6 +283,9 @@ trait SymbolOps { self: SemanticdbOps =>
     }
     def isClassfileAnnotation: Boolean = {
       sym.isNonBottomSubClass(g.definitions.ClassfileAnnotationClass)
+    }
+    def isDefaultParameter: Boolean = {
+      sym.hasFlag(gf.DEFAULTPARAM) && sym.hasFlag(gf.PARAM)
     }
   }
 

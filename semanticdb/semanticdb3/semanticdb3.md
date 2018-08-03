@@ -820,6 +820,11 @@ languages map onto these properties.
     <td><code>ENUM</code></td>
     <td>Is an <code>enum</code> field or class?</td>
   </tr>
+  <tr>
+    <td><code>0x8000</code></td>
+    <td><code>DEFAULT</code></td>
+    <td>Is a default parameter?</td>
+  </tr>
 </table>
 
 `name`. Display name of the definition. Usually, it's the same as the name
@@ -1971,6 +1976,7 @@ Notes:
     bounds and view bounds (see above).
   * `VAL`: set for `val` parameters of primary constructors.
   * `VAR`: set for `var` parameters of primary constructors.
+  * `DEFAULT`: set for parameters with default values.
 * Scalac semantic model does not distinguish parameters in `class C(x: Int)`
   and `class C(private[this] val x: Int)`. As a result, due to implementation
   restrictions `private[this] val` parameters currently don't have the `VAL`

@@ -99,6 +99,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
           else ()
         }
         if (gsym.isPrimaryConstructor) flip(p.PRIMARY)
+        if (gsym.isDefaultParameter) flip(p.DEFAULT)
       }
       flags
     }
