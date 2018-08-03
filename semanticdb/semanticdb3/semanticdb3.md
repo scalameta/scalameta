@@ -1129,7 +1129,7 @@ symbol occurrences:
 
 ### Notation
 
-We use a simple notation to describe SemanticDB entities.
+We use a concise notation to describe SemanticDB entities.
 In this notation, `M(v1, v2, ...)` corresponds a Protocol Buffers message
 `M` with fields set to values `v1`, `v2`, etc. Literals correspond to
 scalar values, `List(x1, x2, ...)` corresponds to repeated values, `None`
