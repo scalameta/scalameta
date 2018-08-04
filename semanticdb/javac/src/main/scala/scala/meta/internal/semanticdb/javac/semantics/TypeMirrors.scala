@@ -52,14 +52,10 @@ trait TypeMirrors {
           symbol = mirror.asElement().sym
         )
       case mirror: WildcardType =>
-        val boundOpt = Option(mirror.getExtendsBound).orElse(Option(mirror.getSuperBound))
-        boundOpt match {
-          case Some(bound) => bound.tpe
-          case None =>
-            s.TypeRef(
-              symbol = "local_wildcard"
-            )
-        }
+        // FIXME: https://github.com/scalameta/scalameta/issues/1703
+        s.TypeRef(
+          symbol = "local_wildcard"
+        )
     }
   }
 

@@ -474,7 +474,7 @@ com/javacp/Test#wildcard(+1).(a)
 -              typeRef {
 -                prefix {
 -                symbol: "local2"
-+            symbol: "java/lang/Number#"
++            symbol: "local_wildcard"
 -        declarations {
 -          hardlinks {
 -            symbol: "local2"
@@ -518,7 +518,7 @@ com/javacp/Test#wildcard(+1).(b)
 -              typeRef {
 -                prefix {
 -                symbol: "local4"
-+            symbol: "java/lang/Number#"
++            symbol: "local_wildcard"
 -        declarations {
 -          hardlinks {
 -            symbol: "local4"

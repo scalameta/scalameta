@@ -435,9 +435,10 @@ object Javacp {
   private implicit class XtensionTypeArgument(self: TypeArgument) {
     // FIXME: https://github.com/scalameta/scalameta/issues/1563
     def toSemanticTpe(scope: Scope): s.Type = self match {
-      case ReferenceTypeArgument(_, referenceTypeSignature) =>
+      case ReferenceTypeArgument(None, referenceTypeSignature) =>
         referenceTypeSignature.toSemanticTpe(scope)
-      case WildcardTypeArgument =>
+      case ReferenceTypeArgument(Some(_), _) | WildcardTypeArgument =>
+        // FIXME: https://github.com/scalameta/scalameta/issues/1703
         styperef("local_wildcard")
     }
   }

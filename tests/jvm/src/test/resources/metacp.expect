@@ -1456,18 +1456,18 @@ com/javacp/Test#wildcard(). => method wildcard(wildcard: ArrayList[local_wildcar
 com/javacp/Test#wildcard().(wildcard) => param wildcard: ArrayList[local_wildcard]
   ArrayList => java/util/ArrayList#
   local_wildcard => local_wildcard
-com/javacp/Test#wildcard(+1). => method wildcard(a: Collection[Number], b: Collection[Number]): Unit
+com/javacp/Test#wildcard(+1). => method wildcard(a: Collection[local_wildcard], b: Collection[local_wildcard]): Unit
   a => com/javacp/Test#wildcard(+1).(a)
   Collection => java/util/Collection#
-  Number => java/lang/Number#
+  local_wildcard => local_wildcard
   b => com/javacp/Test#wildcard(+1).(b)
   Unit => scala/Unit#
-com/javacp/Test#wildcard(+1).(a) => param a: Collection[Number]
+com/javacp/Test#wildcard(+1).(a) => param a: Collection[local_wildcard]
   Collection => java/util/Collection#
-  Number => java/lang/Number#
-com/javacp/Test#wildcard(+1).(b) => param b: Collection[Number]
+  local_wildcard => local_wildcard
+com/javacp/Test#wildcard(+1).(b) => param b: Collection[local_wildcard]
   Collection => java/util/Collection#
-  Number => java/lang/Number#
+  local_wildcard => local_wildcard
 
 com/javacp/X.class
 ------------------
