@@ -216,13 +216,10 @@ com/javacp/ClassSuffix#Inner#Bar#Fuz#`<init>`().
 ================================================
 --- metac
 +++ metacp
- properties: 0
- name: "<init>"
  access {
 -  publicAccess {
 +  privateWithinAccess {
 +    symbol: "com/javacp/"
- language: JAVA
 
 
 ============================================
@@ -230,13 +227,10 @@ com/javacp/ClassSuffix#Inner#Bar#`<init>`().
 ============================================
 --- metac
 +++ metacp
- properties: 0
- name: "<init>"
  access {
 -  publicAccess {
 +  privateWithinAccess {
 +    symbol: "com/javacp/"
- language: JAVA
 
 
 ========================================
@@ -244,13 +238,10 @@ com/javacp/ClassSuffix#Inner#`<init>`().
 ========================================
 --- metac
 +++ metacp
- properties: 0
- name: "<init>"
  access {
 -  publicAccess {
 +  privateWithinAccess {
 +    symbol: "com/javacp/"
- language: JAVA
 
 
 ==============================
@@ -292,8 +283,8 @@ com/javacp/Coin#value.
 -properties: 0
 +properties: 8
  name: "value"
- access {
-   privateAccess {
+ language: JAVA
+ signature {
 
 
 ==========================
@@ -342,13 +333,10 @@ com/javacp/Test#InnerShadowTypeParam#`<init>`().
 ================================================
 --- metac
 +++ metacp
- properties: 0
- name: "<init>"
  access {
 -  publicAccess {
 +  privateWithinAccess {
 +    symbol: "com/javacp/"
- language: JAVA
 
 
 =======================================
@@ -356,13 +344,10 @@ com/javacp/Test#StaticClass#`<init>`().
 =======================================
 --- metac
 +++ metacp
- properties: 0
- name: "<init>"
  access {
 -  publicAccess {
 +  privateWithinAccess {
 +    symbol: "com/javacp/"
- language: JAVA
 
 
 ===========================
@@ -375,8 +360,8 @@ com/javacp/Test#arrayField.
 -properties: 0
 +properties: 8
  name: "arrayField"
- access {
-   privateWithinAccess {
+ language: JAVA
+ signature {
 
 
 ===============================
@@ -384,13 +369,10 @@ com/javacp/Test#protectedField.
 ===============================
 --- metac
 +++ metacp
- properties: 0
- name: "protectedField"
  access {
 -  protectedWithinAccess {
 -    symbol: "com/javacp/"
 +  protectedAccess {
- language: JAVA
 
 
 ==================================
@@ -398,13 +380,10 @@ com/javacp/Test#protectedMethod().
 ==================================
 --- metac
 +++ metacp
- properties: 0
- name: "protectedMethod"
  access {
 -  protectedWithinAccess {
 -    symbol: "com/javacp/"
 +  protectedAccess {
- language: JAVA
 
 
 =================================
@@ -421,9 +400,9 @@ com/javacp/Test#strictfpMethod().
 +      prefix {
 +      symbol: "scala/annotation/strictfp#"
 +}
- access {
-   privateWithinAccess {
-     symbol: "com/javacp/"
+ language: JAVA
+ signature {
+   methodSignature {
 
 
 =====================================
@@ -454,8 +433,6 @@ com/javacp/Test#wildcard().(wildcard)
 -            kind: TYPE
 -            properties: 4
 -            name: "_"
--            access {
--              publicAccess {
 -            language: SCALA
 -            signature {
 -              typeSignature {
@@ -468,6 +445,8 @@ com/javacp/Test#wildcard().(wildcard)
 -                  typeRef {
 -                    prefix {
 -                    symbol: "scala/Any#"
+-            access {
+-              publicAccess {
 
 
 ================================
@@ -498,8 +477,6 @@ com/javacp/Test#wildcard(+1).(a)
 -            kind: TYPE
 -            properties: 4
 -            name: "_"
--            access {
--              publicAccess {
 -            language: SCALA
 -            signature {
 -              typeSignature {
@@ -512,6 +489,8 @@ com/javacp/Test#wildcard(+1).(a)
 -                  typeRef {
 -                    prefix {
 -                    symbol: "java/lang/Number#"
+-            access {
+-              publicAccess {
 
 
 ================================
@@ -542,8 +521,6 @@ com/javacp/Test#wildcard(+1).(b)
 -            kind: TYPE
 -            properties: 4
 -            name: "_"
--            access {
--              publicAccess {
 -            language: SCALA
 -            signature {
 -              typeSignature {
@@ -556,6 +533,8 @@ com/javacp/Test#wildcard(+1).(b)
 -                  typeRef {
 -                    prefix {
 -                    symbol: "scala/Any#"
+-            access {
+-              publicAccess {
 
 
 =============
@@ -563,13 +542,10 @@ com/javacp/X#
 =============
 --- metac
 +++ metacp
- properties: 4
- name: "X"
  access {
 -  privateWithinAccess {
 -    symbol: "com/javacp/"
 +  publicAccess {
- language: JAVA
 
 
 =============
@@ -577,13 +553,10 @@ com/javacp/Y#
 =============
 --- metac
 +++ metacp
- properties: 4
- name: "Y"
  access {
 -  privateWithinAccess {
 -    symbol: "com/javacp/"
 +  publicAccess {
- language: JAVA
 
 
 =============
@@ -591,13 +564,10 @@ com/javacp/Z#
 =============
 --- metac
 +++ metacp
- properties: 4
- name: "Z"
  access {
 -  privateWithinAccess {
 -    symbol: "com/javacp/"
 +  publicAccess {
- language: JAVA
 
 
 ===============
@@ -668,12 +638,9 @@ example/Synthetic#x$2.
 ======================
 --- metac
 +++ metacp
- properties: 1024
- name: "x$2"
  access {
 -  publicAccess {
 +  privateThisAccess {
- language: SCALA
 
 
 ================
@@ -847,6 +814,7 @@ types/Test.Literal.javaEnum.
 ============================
 --- metac
 +++ metacp
+ name: "javaEnum"
  language: SCALA
  signature {
 -  methodSignature {
@@ -855,5 +823,7 @@ types/Test.Literal.javaEnum.
 -      singleType {
 -        prefix {
 -        symbol: "java/nio/file/LinkOption#NOFOLLOW_LINKS."
+ access {
+   publicAccess {
 
 
