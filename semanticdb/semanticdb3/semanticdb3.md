@@ -623,7 +623,7 @@ It encapsulates an underlying type of the definition.
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8, 9, 10, 11, 12, 15;
+  reserved 2, 6, 7, 8, 9, 10, 11, 12, 14, 15;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
@@ -631,7 +631,7 @@ message SymbolInformation {
   string name = 5;
   Signature signature = 17;
   repeated Annotation annotations = 13;
-  Access access = 14;
+  Access access = 18;
 }
 ```
 
@@ -1450,7 +1450,7 @@ have which signatures.
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8, 9, 10, 11, 12, 15;
+  reserved 2, 6, 7, 8, 9, 10, 11, 12, 14, 15;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
@@ -1458,7 +1458,7 @@ message SymbolInformation {
   string name = 5;
   Signature signature = 17;
   repeated Annotation annotations = 13;
-  Access access = 14;
+  Access access = 18;
 }
 ```
 
@@ -3011,7 +3011,7 @@ have which signatures.
 
 ```protobuf
 message SymbolInformation {
-  reserved 2, 6, 7, 8, 9, 10, 11, 12, 15;
+  reserved 2, 6, 7, 8, 9, 10, 11, 12, 14, 15;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
@@ -3019,7 +3019,7 @@ message SymbolInformation {
   string name = 5;
   Signature signature = 17;
   repeated Annotation annotations = 13;
-  Access access = 14;
+  Access access = 18;
 }
 ```
 
