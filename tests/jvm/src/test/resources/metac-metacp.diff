@@ -144,6 +144,23 @@ advanced/Test.s3.
                      name: "x"
 
 
+==============
+annot/Alias.A#
+==============
+--- metac
++++ metacp
+         annotations {
+           tpe {
+-            typeRef {
+-              prefix {
+-              symbol: "scala/annotation/meta/param#"
+         annotations {
+           tpe {
+-            typeRef {
+-              prefix {
+-              symbol: "scala/annotation/meta/param#"
+
+
 ============================
 classes/C3#copy$default$1().
 ============================

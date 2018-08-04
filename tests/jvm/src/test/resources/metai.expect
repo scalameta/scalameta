@@ -9,6 +9,7 @@ advanced/Existential# => semanticdb/integration/src/main/scala/example/Advanced.
 advanced/Structural# => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 advanced/Test. => semanticdb/integration/src/main/scala/example/Advanced.scala.semanticdb
 annot/ => package annot
+annot/Alias. => semanticdb/integration/src/main/scala/example/Annotations.scala.semanticdb
 annot/Annotations# => semanticdb/integration/src/main/scala/example/Annotations.scala.semanticdb
 annot/B# => semanticdb/integration/src/main/scala/example/Annotations.scala.semanticdb
 annot/M. => semanticdb/integration/src/main/scala/example/Annotations.scala.semanticdb

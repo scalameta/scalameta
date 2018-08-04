@@ -282,7 +282,7 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isAnonymousSelfParameter
     }
     def isClassfileAnnotation: Boolean = {
-      sym.isNonBottomSubClass(g.definitions.ClassfileAnnotationClass)
+      sym.isClass && sym.isNonBottomSubClass(g.definitions.ClassfileAnnotationClass)
     }
     def isDefaultParameter: Boolean = {
       sym.hasFlag(gf.DEFAULTPARAM) && sym.hasFlag(gf.PARAM)

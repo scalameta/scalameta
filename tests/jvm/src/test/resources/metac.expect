@@ -1086,10 +1086,15 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Annotations.scala
 Text => non-empty
 Language => Scala
-Symbols => 19 entries
-Occurrences => 42 entries
+Symbols => 21 entries
+Occurrences => 50 entries
 
 Symbols:
+annot/Alias. => final object Alias extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+annot/Alias.A# => type A = ClassAnnotation @param
+  ClassAnnotation => com/javacp/annot/ClassAnnotation#
+  param => scala/annotation/meta/param#
 annot/Annotations# => @ClassAnnotation class Annotations[@TypeParameterAnnotation T] extends AnyRef { self: AnyRef => +5 decls }
   ClassAnnotation => com/javacp/annot/ClassAnnotation#
   T => annot/Annotations#[T]
@@ -1145,13 +1150,16 @@ local1 => @LocalAnnotation val local local: Int
 
 Occurrences:
 [0:8..0:13): annot <= annot/
-[2:7..2:12): scala => scala/
-[2:13..2:21): language => scala/language.
-[2:22..2:34): experimental => scala/language.experimental.
-[2:35..2:41): macros => scala/language.experimental.macros.
-[4:7..4:10): com => com/
-[4:11..4:17): javacp => com/javacp/
-[4:18..4:23): annot => com/javacp/annot/
+[2:7..2:10): com => com/
+[2:11..2:17): javacp => com/javacp/
+[2:18..2:23): annot => com/javacp/annot/
+[3:7..3:12): scala => scala/
+[3:13..3:23): annotation => scala/annotation/
+[3:24..3:28): meta => scala/annotation/meta/
+[4:7..4:12): scala => scala/
+[4:13..4:21): language => scala/language.
+[4:22..4:34): experimental => scala/language.experimental.
+[4:35..4:41): macros => scala/language.experimental.macros.
 [6:1..6:16): ClassAnnotation => com/javacp/annot/ClassAnnotation#
 [7:6..7:17): Annotations <= annot/Annotations#
 [7:19..7:42): TypeParameterAnnotation => com/javacp/annot/TypeParameterAnnotation#
@@ -1186,6 +1194,11 @@ Occurrences:
 [29:20..29:23): ??? => scala/Predef.`???`().
 [32:1..32:16): TraitAnnotation => com/javacp/annot/TraitAnnotation#
 [33:6..33:7): T <= annot/T#
+[35:7..35:12): Alias <= annot/Alias.
+[36:7..36:8): A <= annot/Alias.A#
+[36:11..36:26): ClassAnnotation => com/javacp/annot/ClassAnnotation#
+[36:28..36:33): param => scala/annotation/meta/param#
+[37:0..37:0):  => scala/annotation/meta/param#`<init>`().
 
 semanticdb/integration/src/main/scala/example/Anonymous.scala
 -------------------------------------------------------------

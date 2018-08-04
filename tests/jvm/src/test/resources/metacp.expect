@@ -161,6 +161,22 @@ advanced/Test.s3. => val method s3: AnyRef { def m(x: Int): Int }
 advanced/Test.s3x. => val method s3x: Int
   Int => scala/Int#
 
+annot/Alias.class
+-----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => annot/Alias.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+annot/Alias. => final object Alias extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+annot/Alias.A# => type A = ClassAnnotation @<?>
+  ClassAnnotation => com/javacp/annot/ClassAnnotation#
+
 annot/Annotations.class
 -----------------------
 
