@@ -86,14 +86,13 @@ trait DiffAssertions extends FunSuiteLike {
     else
       difflib.DiffUtils
         .generateUnifiedDiff(
-          "original",
-          "revised",
+          "obtained",
+          "expected",
           original.asJava,
           diff,
           1
         )
         .asScala
-        .drop(3)
         .mkString("\n")
   }
 
