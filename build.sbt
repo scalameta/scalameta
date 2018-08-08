@@ -877,6 +877,9 @@ lazy val nativeSettings = Seq(
   SettingKey[Boolean]("ide-skip-project") := true,
   scalaVersion := LatestScala211,
   crossScalaVersions := List(LatestScala211),
+  // disable fatal warnings in doc to avoid "dropping dependency on node with no phase object: mixin",
+  // see https://github.com/scala-js/scala-js/issues/635
+  scalacOptions.in(Compile, doc) -= "-Xfatal-warnings",
   nativeGC := "immix",
   nativeMode := "release",
   nativeLinkStubs := false
