@@ -451,6 +451,8 @@ lazy val semanticdbIntegration = project
     description := "Sources to compile to build SemanticDB for tests.",
     sharedSettings,
     nonPublishableSettings,
+    // the sources in this project intentionally produce warnings to test the
+    // diagnostics pipeline in semanticdb-scalac.
     scalacOptions -= "-Xfatal-warnings",
     scalacOptions ++= {
       val pluginJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
@@ -875,7 +877,6 @@ lazy val nativeSettings = Seq(
   SettingKey[Boolean]("ide-skip-project") := true,
   scalaVersion := LatestScala211,
   crossScalaVersions := List(LatestScala211),
-  scalacOptions -= "-Xfatal-warnings",
   nativeGC := "immix",
   nativeMode := "release",
   nativeLinkStubs := false
