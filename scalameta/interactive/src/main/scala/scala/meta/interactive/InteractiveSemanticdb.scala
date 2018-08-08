@@ -2,6 +2,7 @@ package scala.meta.interactive
 
 import java.io.File
 import java.net.URLClassLoader
+import java.nio.file.Files
 import scala.meta.internal.semanticdb.scalac._
 import scala.reflect.io.VirtualDirectory
 import scala.tools.nsc.Settings
@@ -9,6 +10,7 @@ import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.interactive.Response
 import scala.tools.nsc.reporters.StoreReporter
 import scala.meta.internal.{semanticdb => s}
+import scala.meta.io.AbsolutePath
 
 object InteractiveSemanticdb {
 
@@ -84,7 +86,8 @@ object InteractiveSemanticdb {
     } = new SemanticdbOps {
       val global: compiler.type = compiler
     }
-    semanticdbOps.config = SemanticdbConfig.parse(options, _ => (), compiler.reporter)
+    val d = AbsolutePath(Files.createTempDirectory("semanticdb"))
+    semanticdbOps.config = SemanticdbConfig.parse(options, _ => (), compiler.reporter, d)
     import semanticdbOps._
     unit.body = tree
     val document = unit.asInstanceOf[semanticdbOps.global.CompilationUnit].toTextDocument

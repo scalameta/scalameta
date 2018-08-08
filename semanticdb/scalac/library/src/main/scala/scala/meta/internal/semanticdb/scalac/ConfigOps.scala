@@ -53,6 +53,7 @@ object SemanticdbConfig {
   private val SetInclude = "include:(.*)".r
   private val SetExclude = "exclude:(.*)".r
   private val SetSourceroot = "sourceroot:(.*)".r
+  private val SetTargetroot = "targetroot:(.*)".r
   private val SetText = "text:(.*)".r
   private val SetMd5 = "text:(.*)".r
   private val SetSymbols = "symbols:(.*)".r
@@ -71,7 +72,8 @@ object SemanticdbConfig {
   def parse(
       scalacOptions: List[String],
       errFn: String => Unit,
-      reporter: Reporter
+      reporter: Reporter,
+      outputDir: AbsolutePath
   ): SemanticdbConfig = {
     def deprecated(option: String, instead: String): Unit = {
       reporter.warning(
@@ -84,7 +86,7 @@ object SemanticdbConfig {
       if (instead.nonEmpty) buf.append(s" . Use -P:semanticdb:$instead instead.")
       errFn(buf.toString)
     }
-    var config = default
+    var config = default.copy(targetroot = outputDir)
     val relevantOptions = scalacOptions.filter(_.startsWith("-P:semanticdb:"))
     val strippedOptions = relevantOptions.map(_.stripPrefix("-P:semanticdb:"))
     strippedOptions.foreach {
@@ -98,6 +100,8 @@ object SemanticdbConfig {
         config = config.copy(fileFilter = config.fileFilter.copy(exclude = exclude.r))
       case SetSourceroot(path) =>
         config = config.copy(sourceroot = AbsolutePath(path))
+      case SetTargetroot(path) =>
+        config = config.copy(targetroot = AbsolutePath(path))
       case SetText(BinaryMode(mode)) =>
         config = config.copy(text = mode)
       case SetMd5(BinaryMode(mode)) =>

@@ -265,6 +265,18 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     <td>Current working directory</td>
   </tr>
   <tr>
+    <td><code>-P:semanticdb:targetroot:&lt;value&gt;</code></td>
+    <td>Absolute or relative path</td>
+    <td>
+      The output directory to produce <code>META-INF/semanticdb/**/*.semanticdb</code>
+      files.
+    </td>
+    <td>
+      The compiler output directory, matches the sbt setting key <code>classDirectory</code>
+      and scalac command-line option <code>-d</code>.
+    </td>
+  </tr>
+  <tr>
     <td><code>-P:semanticdb:text:&lt;value&gt;</code></td>
     <td>
         <code>on</code>,<br/>
