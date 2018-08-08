@@ -470,7 +470,7 @@ lazy val semanticdbIntegration = project
     },
     javacSemanticdbDirectory := (target.in(Compile).value / "javac-semanticdb"),
     javaHome in Compile := {
-      // force javac to fork by setting javaHome, otherwise the compiler errors
+      // force javac to fork by setting javaHome to workaround https://github.com/sbt/zinc/issues/520
       Some(file(sys.props("java.home")).getParentFile)
     },
     managedClasspath in Compile += Keys.`package`.in(semanticdbJavacPlugin, Compile).value,
