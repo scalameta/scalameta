@@ -36,7 +36,7 @@ case class SemanticdbConfig(
 }
 object SemanticdbConfig {
   def default = SemanticdbConfig(
-    failures = FailureMode.Warning,
+    failures = FailureMode.Error,
     profiling = BinaryMode.Off,
     fileFilter = FileFilter.matchEverything,
     sourceroot = PathIO.workingDirectory,
