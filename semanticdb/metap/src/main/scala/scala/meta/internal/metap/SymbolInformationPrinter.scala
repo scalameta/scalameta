@@ -3,7 +3,6 @@ package scala.meta.internal.metap
 import scala.collection.mutable
 import scala.math.Ordering
 import scala.meta.internal.semanticdb._
-import scala.meta.internal.semanticdb.Accessibility.Tag._
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.SymbolInformation._
 import scala.meta.internal.semanticdb.SymbolInformation.Kind._
@@ -38,7 +37,7 @@ trait SymbolInformationPrinter extends BasePrinter {
     def pprint(info: SymbolInformation): Unit = {
       notes.visit(info)
       rep(info.annotations, " ", " ")(pprint)
-      opt(info.accessibility)(pprint)
+      pprint(info.access)
       if (info.has(ABSTRACT)) out.print("abstract ")
       if (info.has(FINAL)) out.print("final ")
       if (info.has(SEALED)) out.print("sealed ")
@@ -52,6 +51,7 @@ trait SymbolInformationPrinter extends BasePrinter {
       if (info.has(STATIC)) out.print("static ")
       if (info.has(PRIMARY)) out.print("primary ")
       if (info.has(ENUM)) out.print("enum ")
+      if (info.has(DEFAULT)) out.print("default ")
       info.kind match {
         case LOCAL => out.print("local ")
         case FIELD => out.print("field ")
@@ -87,28 +87,26 @@ trait SymbolInformationPrinter extends BasePrinter {
       }
     }
 
-    private def pprint(acc: Accessibility): Unit = {
-      acc.tag match {
-        case PUBLIC =>
-          out.print("")
-        case PRIVATE =>
+    private def pprint(acc: Access): Unit = {
+      acc match {
+        case PrivateAccess() =>
           out.print("private ")
-        case PRIVATE_THIS =>
+        case PrivateThisAccess() =>
           out.print("private[this] ")
-        case PRIVATE_WITHIN =>
+        case PrivateWithinAccess(sym) =>
           out.print("private[")
-          pprint(acc.symbol, Reference)
+          pprint(sym, Reference)
           out.print("] ")
-        case PROTECTED =>
+        case ProtectedAccess() =>
           out.print("protected ")
-        case PROTECTED_THIS =>
+        case ProtectedThisAccess() =>
           out.print("protected[this] ")
-        case PROTECTED_WITHIN =>
+        case ProtectedWithinAccess(sym) =>
           out.print("protected[")
-          pprint(acc.symbol, Reference)
+          pprint(sym, Reference)
           out.print("] ")
-        case UNKNOWN_ACCESSIBILITY | Accessibility.Tag.Unrecognized(_) =>
-          out.print("<?>")
+        case NoAccess | PublicAccess() =>
+          out.print("")
       }
     }
 
@@ -139,11 +137,12 @@ trait SymbolInformationPrinter extends BasePrinter {
           rep("[", tparams.infos, ", ", "]")(pprintDefn)
           if (lo != hi) {
             lo match {
-              case NothingTpe() => ()
+              case TypeRef(NoType, "scala/Nothing#", Nil) => ()
               case lo => opt(" >: ", lo)(pprint)
             }
             hi match {
-              case AnyTpe() => ()
+              case TypeRef(NoType, "scala/Any#", Nil) => ()
+              case TypeRef(NoType, "java/lang/Object#", Nil) => ()
               case hi => opt(" <: ", hi)(pprint)
             }
           } else {
@@ -253,7 +252,7 @@ trait SymbolInformationPrinter extends BasePrinter {
           // However, deduplicating these two methods leads to very involved code,
           // since there are subtle differences in behavior.
           rep(info.annotations, " ", " ")(pprint)
-          opt(info.accessibility)(pprint)
+          pprint(info.access)
           if (info.has(ABSTRACT) && info.kind == CLASS) out.print("abstract ")
           if (info.has(FINAL) && info.kind != OBJECT) out.print("final ")
           if (info.has(SEALED)) out.print("sealed ")
@@ -267,6 +266,7 @@ trait SymbolInformationPrinter extends BasePrinter {
           if (info.has(STATIC)) out.print("static ")
           if (info.has(PRIMARY)) out.print("")
           if (info.has(ENUM)) out.print("enum ")
+          if (info.has(PRIMARY)) out.print("")
           info.kind match {
             case LOCAL => out.print("")
             case FIELD => out.print("")
@@ -338,20 +338,6 @@ trait SymbolInformationPrinter extends BasePrinter {
               PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE =>
             ""
         }
-      }
-    }
-
-    private object NothingTpe {
-      def unapply(tpe: Type): Boolean = tpe match {
-        case TypeRef(NoType, "scala/Nothing#", Nil) => true
-        case _ => false
-      }
-    }
-
-    private object AnyTpe {
-      def unapply(tpe: Type): Boolean = tpe match {
-        case TypeRef(NoType, "scala/Any#", Nil) => true
-        case _ => false
       }
     }
   }

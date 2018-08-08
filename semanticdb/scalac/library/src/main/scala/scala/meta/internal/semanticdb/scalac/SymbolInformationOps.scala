@@ -4,7 +4,6 @@ import scala.{meta => m}
 import scala.reflect.internal.{Flags => gf}
 import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb => s}
-import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
@@ -48,6 +47,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         case gsym: ClassSymbol =>
           if (gsym.isTrait && gsym.hasFlag(gf.JAVA)) k.INTERFACE
           else if (gsym.isTrait) k.TRAIT
+          else if (gsym.isClassfileAnnotation) k.INTERFACE
           else k.CLASS
         case gsym: TypeSymbol =>
           if (gsym.isParameter) k.TYPE_PARAMETER
@@ -75,6 +75,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         if (gsym.hasFlag(gf.FINAL) || gsym.hasFlag(gf.JAVA_ENUM)) flip(p.FINAL)
         if (gsym.hasFlag(gf.JAVA_ENUM)) flip(p.ENUM)
         if (gsym.hasFlag(gf.STATIC) && !gsym.hasFlag(gf.INTERFACE)) flip(p.STATIC)
+        if (gsym.isDefaultMethod) flip(p.DEFAULT)
       } else {
         if (isAbstractClass || isAbstractMethod || isAbstractType) flip(p.ABSTRACT)
         if (gsym.hasFlag(gf.FINAL) || isObject) flip(p.FINAL)
@@ -99,6 +100,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
           else ()
         }
         if (gsym.isPrimaryConstructor) flip(p.PRIMARY)
+        if (gsym.isDefaultParameter) flip(p.DEFAULT)
       }
       flags
     }
@@ -153,6 +155,36 @@ trait SymbolInformationOps { self: SemanticdbOps =>
             case s.NoType => s.NoSignature
             case stpe => s.ValueSignature(stpe)
           }
+        } else if (gsym.isClassfileAnnotation) {
+          ssig match {
+            case ssig: s.ClassSignature =>
+              val parents1 = ssig.parents.flatMap {
+                case s.TypeRef(s.NoType, "scala/annotation/Annotation#", Nil) =>
+                  Some(s.TypeRef(s.NoType, "java/lang/Object#", Nil))
+                case s.TypeRef(s.NoType, "scala/annotation/ClassfileAnnotation#", Nil) =>
+                  None
+                case sother =>
+                  Some(sother)
+              }
+              ssig.copy(parents = parents1)
+            case _ =>
+              sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
+          }
+        } else if (gsym.hasFlag(gf.JAVA) && kind == k.TYPE_PARAMETER) {
+          ssig match {
+            case ssig: s.TypeSignature =>
+              val upperBound1 = ssig.upperBound match {
+                case s.StructuralType(s.WithType(tpes), _) =>
+                  s.IntersectionType(tpes)
+                case s.TypeRef(s.NoType, "scala/Any#", Nil) =>
+                  s.TypeRef(s.NoType, "java/lang/Object#", Nil)
+                case sother =>
+                  sother
+              }
+              ssig.copy(lowerBound = s.NoType, upperBound = upperBound1)
+            case _ =>
+              sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
+          }
         } else {
           ssig
         }
@@ -166,24 +198,29 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       ganns.map(_.toSemantic)
     }
 
-    // FIXME: https://github.com/scalameta/scalameta/issues/1325
-    private def accessibility: Option[s.Accessibility] = {
-      if (gsym.hasFlag(gf.SYNTHETIC) && gsym.hasFlag(gf.ARTIFACT)) {
-        // NOTE: some sick artifact vals produced by mkPatDef can be
-        // private to method (whatever that means), so here we just ignore them.
-        Some(s.Accessibility(a.PUBLIC))
-      } else {
-        if (gsym.privateWithin == NoSymbol) {
-          if (gsym.isPrivateThis) Some(s.Accessibility(a.PRIVATE_THIS))
-          else if (gsym.isPrivate) Some(s.Accessibility(a.PRIVATE))
-          else if (gsym.isProtectedThis) Some(s.Accessibility(a.PROTECTED_THIS))
-          else if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED))
-          else Some(s.Accessibility(a.PUBLIC))
-        } else {
-          val ssym = gsym.privateWithin.ssym
-          if (gsym.isProtected) Some(s.Accessibility(a.PROTECTED_WITHIN, ssym))
-          else Some(s.Accessibility(a.PRIVATE_WITHIN, ssym))
-        }
+    private def access: s.Access = {
+      kind match {
+        case k.LOCAL | k.PARAMETER | k.SELF_PARAMETER | k.TYPE_PARAMETER | k.PACKAGE |
+            k.PACKAGE_OBJECT =>
+          s.NoAccess
+        case _ =>
+          if (gsym.hasFlag(gf.SYNTHETIC) && gsym.hasFlag(gf.ARTIFACT)) {
+            // NOTE: some sick artifact vals produced by mkPatDef can be
+            // private to method (whatever that means), so here we just ignore them.
+            s.PublicAccess()
+          } else {
+            if (gsym.privateWithin == NoSymbol) {
+              if (gsym.isPrivateThis) s.PrivateThisAccess()
+              else if (gsym.isPrivate) s.PrivateAccess()
+              else if (gsym.isProtectedThis) s.ProtectedThisAccess()
+              else if (gsym.isProtected) s.ProtectedAccess()
+              else s.PublicAccess()
+            } else {
+              val ssym = gsym.privateWithin.ssym
+              if (gsym.isProtected) s.ProtectedWithinAccess(ssym)
+              else s.PrivateWithinAccess(ssym)
+            }
+          }
       }
     }
 
@@ -196,7 +233,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         name = name,
         signature = sig(linkMode),
         annotations = annotations,
-        accessibility = accessibility
+        access = access
       )
     }
   }

@@ -263,8 +263,9 @@ message SymbolInformation {
     STATIC = 0x1000;
     PRIMARY = 0x2000;
     ENUM = 0x4000;
+    DEFAULT = 0x8000;
   }
-  reserved 2, 6, 7, 8, 9, 10, 11, 12, 15;
+  reserved 2, 6, 7, 8, 9, 10, 11, 12, 14, 15;
   string symbol = 1;
   Language language = 16;
   Kind kind = 3;
@@ -272,26 +273,46 @@ message SymbolInformation {
   string name = 5;
   Signature signature = 17;
   repeated Annotation annotations = 13;
-  Accessibility accessibility = 14;
+  Access access = 18;
 }
 
 message Annotation {
   Type tpe = 1;
 }
 
-message Accessibility {
-  enum Tag {
-    UNKNOWN_ACCESSIBILITY = 0;
-    PRIVATE = 1;
-    PRIVATE_THIS = 2;
-    PRIVATE_WITHIN = 3;
-    PROTECTED = 4;
-    PROTECTED_THIS = 5;
-    PROTECTED_WITHIN = 6;
-    PUBLIC = 7;
+message Access {
+  oneof sealed_value {
+    PrivateAccess privateAccess = 1;
+    PrivateThisAccess privateThisAccess = 2;
+    PrivateWithinAccess privateWithinAccess = 3;
+    ProtectedAccess protectedAccess = 4;
+    ProtectedThisAccess protectedThisAccess = 5;
+    ProtectedWithinAccess protectedWithinAccess = 6;
+    PublicAccess publicAccess = 7;
   }
-  Tag tag = 1;
-  string symbol = 2;
+}
+
+message PrivateAccess {
+}
+
+message PrivateThisAccess {
+}
+
+message PrivateWithinAccess {
+  string symbol = 1;
+}
+
+message ProtectedAccess {
+}
+
+message ProtectedThisAccess {
+}
+
+message ProtectedWithinAccess {
+  string symbol = 1;
+}
+
+message PublicAccess {
 }
 
 message SymbolOccurrence {

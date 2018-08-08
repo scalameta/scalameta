@@ -44,11 +44,11 @@ object Javacp {
         symbol = symbol,
         language = l.JAVA,
         kind = kind,
-        properties = sproperties(access),
+        properties = sproperties(access, node),
         name = name,
         signature = sig,
         annotations = sannotations(access),
-        accessibility = saccessibility(access, symbol)
+        access = saccess(access, symbol, kind)
       )
       buf += info
       info
@@ -313,7 +313,10 @@ object Javacp {
       case _ =>
         s.IntersectionType(types = typeParameters)
     }
-    val sig = s.TypeSignature(upperBound = upperBounds)
+    val sig = s.TypeSignature(
+      typeParameters = Some(s.Scope()),
+      upperBound = upperBounds
+    )
 
     s.SymbolInformation(
       symbol = typeParameter.symbol,
@@ -377,15 +380,20 @@ object Javacp {
     else Symbols.EmptyPackage + result.toString
   }
 
-  private def saccessibility(access: Int, symbol: String): Option[s.Accessibility] = {
-    def sacc(tag: s.Accessibility.Tag): Option[s.Accessibility] = Some(s.Accessibility(tag))
-    val a = s.Accessibility.Tag
-    if (access.hasFlag(o.ACC_PUBLIC)) sacc(a.PUBLIC)
-    else if (access.hasFlag(o.ACC_PROTECTED)) sacc(a.PROTECTED)
-    else if (access.hasFlag(o.ACC_PRIVATE)) sacc(a.PRIVATE)
-    else {
-      val within = symbol.ownerChain.reverse.tail.find(_.desc.isPackage).get
-      Some(s.Accessibility(tag = a.PRIVATE_WITHIN, symbol = within))
+  private def saccess(access: Int, symbol: String, kind: s.SymbolInformation.Kind): s.Access = {
+    kind match {
+      case k.LOCAL | k.PARAMETER | k.TYPE_PARAMETER | k.PACKAGE =>
+        s.NoAccess
+      case k.INTERFACE =>
+        s.PublicAccess()
+      case _ =>
+        if (access.hasFlag(o.ACC_PUBLIC)) s.PublicAccess()
+        else if (access.hasFlag(o.ACC_PROTECTED)) s.ProtectedAccess()
+        else if (access.hasFlag(o.ACC_PRIVATE)) s.PrivateAccess()
+        else {
+          val within = symbol.ownerChain.reverse.tail.find(_.desc.isPackage).get
+          s.PrivateWithinAccess(within)
+        }
     }
   }
 
@@ -400,7 +408,7 @@ object Javacp {
     buf.result()
   }
 
-  private def sproperties(access: Int): Int = {
+  private def sproperties(access: Int, ownerNode: ClassNode): Int = {
     val p = s.SymbolInformation.Property
     var bits = 0
     def sflip(p: s.SymbolInformation.Property) = bits ^= p.value
@@ -408,6 +416,9 @@ object Javacp {
     if (access.hasFlag(o.ACC_FINAL)) sflip(p.FINAL)
     if (access.hasFlag(o.ACC_STATIC)) sflip(p.STATIC)
     if (access.hasFlag(o.ACC_ENUM)) sflip(p.ENUM)
+    if (ownerNode.access.hasFlag(o.ACC_INTERFACE) &&
+        !access.hasFlag(o.ACC_ABSTRACT) &&
+        !access.hasFlag(o.ACC_STATIC)) sflip(p.DEFAULT)
     bits
   }
 
@@ -424,9 +435,10 @@ object Javacp {
   private implicit class XtensionTypeArgument(self: TypeArgument) {
     // FIXME: https://github.com/scalameta/scalameta/issues/1563
     def toSemanticTpe(scope: Scope): s.Type = self match {
-      case ReferenceTypeArgument(_, referenceTypeSignature) =>
+      case ReferenceTypeArgument(None, referenceTypeSignature) =>
         referenceTypeSignature.toSemanticTpe(scope)
-      case WildcardTypeArgument =>
+      case ReferenceTypeArgument(Some(_), _) | WildcardTypeArgument =>
+        // FIXME: https://github.com/scalameta/scalameta/issues/1703
         styperef("local_wildcard")
     }
   }

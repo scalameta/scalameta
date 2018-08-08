@@ -161,6 +161,22 @@ advanced/Test.s3. => val method s3: AnyRef { def m(x: Int): Int }
 advanced/Test.s3x. => val method s3x: Int
   Int => scala/Int#
 
+annot/Alias.class
+-----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => annot/Alias.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+annot/Alias. => final object Alias extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+annot/Alias.A# => type A = ClassAnnotation @<?>
+  ClassAnnotation => com/javacp/annot/ClassAnnotation#
+
 annot/Annotations.class
 -----------------------
 
@@ -365,7 +381,7 @@ classes/C3#copy(). => method copy(x: Int): C3
   x => classes/C3#copy().(x)
   Int => scala/Int#
   C3 => classes/C3#
-classes/C3#copy().(x) => param x: Int
+classes/C3#copy().(x) => default param x: Int
   Int => scala/Int#
 classes/C3#equals(). => method equals(x$1: Any): Boolean
   x$1 => classes/C3#equals().(x$1)
@@ -447,7 +463,7 @@ classes/C4#copy(). => method copy(x: Int): C4
   x => classes/C4#copy().(x)
   Int => scala/Int#
   C4 => classes/C4#
-classes/C4#copy().(x) => param x: Int
+classes/C4#copy().(x) => default param x: Int
   Int => scala/Int#
 classes/C4#equals(). => method equals(x$1: Any): Boolean
   x$1 => classes/C4#equals().(x$1)
@@ -525,7 +541,7 @@ classes/C6#copy(). => method copy(x: Int): C6
   x => classes/C6#copy().(x)
   Int => scala/Int#
   C6 => classes/C6#
-classes/C6#copy().(x) => param x: Int
+classes/C6#copy().(x) => default param x: Int
   Int => scala/Int#
 classes/C6#equals(). => method equals(x$1: Any): Boolean
   x$1 => classes/C6#equals().(x$1)
@@ -962,25 +978,23 @@ Symbols => 11 entries
 Symbols:
 com/javacp/ClassSuffix# => class ClassSuffix extends Object { +3 decls }
   Object => java/lang/Object#
-com/javacp/ClassSuffix#Inner# => private[javacp] class Inner[A <: Object] extends Object { +2 decls }
+com/javacp/ClassSuffix#Inner# => private[javacp] class Inner[A] extends Object { +2 decls }
   javacp => com/javacp/
   A => com/javacp/ClassSuffix#Inner#[A]
   Object => java/lang/Object#
 com/javacp/ClassSuffix#Inner#Bar# => private[javacp] class Bar extends Object { +2 decls }
   javacp => com/javacp/
   Object => java/lang/Object#
-com/javacp/ClassSuffix#Inner#Bar#Fuz# => private[javacp] class Fuz[B <: Object] extends Object { +1 decls }
+com/javacp/ClassSuffix#Inner#Bar#Fuz# => private[javacp] class Fuz[B] extends Object { +1 decls }
   javacp => com/javacp/
   B => com/javacp/ClassSuffix#Inner#Bar#Fuz#[B]
   Object => java/lang/Object#
-com/javacp/ClassSuffix#Inner#Bar#Fuz#[B] => typeparam B <: Object
-  Object => java/lang/Object#
+com/javacp/ClassSuffix#Inner#Bar#Fuz#[B] => typeparam B
 com/javacp/ClassSuffix#Inner#Bar#Fuz#`<init>`(). => private[javacp] ctor <init>()
   javacp => com/javacp/
 com/javacp/ClassSuffix#Inner#Bar#`<init>`(). => private[javacp] ctor <init>()
   javacp => com/javacp/
-com/javacp/ClassSuffix#Inner#[A] => typeparam A <: Object
-  Object => java/lang/Object#
+com/javacp/ClassSuffix#Inner#[A] => typeparam A
 com/javacp/ClassSuffix#Inner#`<init>`(). => private[javacp] ctor <init>()
   javacp => com/javacp/
 com/javacp/ClassSuffix#`<init>`(). => ctor <init>()
@@ -1040,11 +1054,17 @@ Schema => SemanticDB v4
 Uri => com/javacp/Interface.class
 Text => empty
 Language => Java
-Symbols => 1 entries
+Symbols => 4 entries
 
 Symbols:
-com/javacp/Interface# => abstract interface Interface extends Object
+com/javacp/Interface# => abstract interface Interface extends Object { +3 decls }
   Object => java/lang/Object#
+com/javacp/Interface#a(). => abstract method a(): Unit
+  Unit => scala/Unit#
+com/javacp/Interface#d(). => default method d(): Unit
+  Unit => scala/Unit#
+com/javacp/Interface#s(). => static method s(): Unit
+  Unit => scala/Unit#
 
 com/javacp/Logger.class
 -----------------------
@@ -1200,12 +1220,10 @@ com/javacp/Recursive#[B] => typeparam B <: Inner[A, B]
   A => com/javacp/Recursive#[A]
   B => com/javacp/Recursive#[B]
 com/javacp/Recursive#`<init>`(). => ctor <init>()
-com/javacp/Recursive#foo(). => method foo[Anon <: Object](): ArrayList[Anon]
+com/javacp/Recursive#foo(). => method foo[Anon](): ArrayList[Anon]
   Anon => com/javacp/Recursive#foo().[Anon]
-  Object => java/lang/Object#
   ArrayList => java/util/ArrayList#
-com/javacp/Recursive#foo().[Anon] => typeparam Anon <: Object
-  Object => java/lang/Object#
+com/javacp/Recursive#foo().[Anon] => typeparam Anon
 
 com/javacp/Test.class
 ---------------------
@@ -1215,15 +1233,14 @@ Schema => SemanticDB v4
 Uri => com/javacp/Test.class
 Text => empty
 Language => Java
-Symbols => 67 entries
+Symbols => 73 entries
 
 Symbols:
-com/javacp/Test# => final class Test[A <: CharSequence & Serializable, B <: Object] extends ArrayList[A] with Comparable[B] with Serializable { +36 decls }
+com/javacp/Test# => final class Test[A <: CharSequence & Serializable, B] extends ArrayList[A] with Comparable[B] with Serializable { +39 decls }
   A => com/javacp/Test#[A]
   CharSequence => java/lang/CharSequence#
   Serializable => java/io/Serializable#
   B => com/javacp/Test#[B]
-  Object => java/lang/Object#
   ArrayList => java/util/ArrayList#
   Comparable => java/lang/Comparable#
 com/javacp/Test#Boolean. => field Boolean: Boolean
@@ -1234,12 +1251,11 @@ com/javacp/Test#Char. => field Char: Char
   Char => scala/Char#
 com/javacp/Test#Float. => field Float: Float
   Float => scala/Float#
-com/javacp/Test#InnerShadowTypeParam# => private[javacp] class InnerShadowTypeParam[A <: Object] extends Object { +2 decls }
+com/javacp/Test#InnerShadowTypeParam# => private[javacp] class InnerShadowTypeParam[A] extends Object { +2 decls }
   javacp => com/javacp/
   A => com/javacp/Test#InnerShadowTypeParam#[A]
   Object => java/lang/Object#
-com/javacp/Test#InnerShadowTypeParam#[A] => typeparam A <: Object
-  Object => java/lang/Object#
+com/javacp/Test#InnerShadowTypeParam#[A] => typeparam A
 com/javacp/Test#InnerShadowTypeParam#`<init>`(). => private[javacp] ctor <init>()
   javacp => com/javacp/
 com/javacp/Test#InnerShadowTypeParam#move(). => method move(a: A, b: B): Unit
@@ -1266,8 +1282,7 @@ com/javacp/Test#StaticClass#`<init>`(). => private[javacp] ctor <init>()
 com/javacp/Test#[A] => typeparam A <: CharSequence & Serializable
   CharSequence => java/lang/CharSequence#
   Serializable => java/io/Serializable#
-com/javacp/Test#[B] => typeparam B <: Object
-  Object => java/lang/Object#
+com/javacp/Test#[B] => typeparam B
 com/javacp/Test#`<init>`(). => ctor <init>()
 com/javacp/Test#anonymous. => field anonymous: Serializable
   Serializable => java/io/Serializable#
@@ -1304,6 +1319,33 @@ com/javacp/Test#genericParams().(a) => param a: A
   A => com/javacp/Test#[A]
 com/javacp/Test#genericParams().(b) => param b: B
   B => com/javacp/Test#[B]
+com/javacp/Test#m1(). => private[javacp] method m1[T <: X](): Unit
+  javacp => com/javacp/
+  T => com/javacp/Test#m1().[T]
+  X => com/javacp/X#
+  Unit => scala/Unit#
+com/javacp/Test#m1().[T] => typeparam T <: X
+  X => com/javacp/X#
+com/javacp/Test#m2(). => private[javacp] method m2[T <: X & Y](): Unit
+  javacp => com/javacp/
+  T => com/javacp/Test#m2().[T]
+  X => com/javacp/X#
+  Y => com/javacp/Y#
+  Unit => scala/Unit#
+com/javacp/Test#m2().[T] => typeparam T <: X & Y
+  X => com/javacp/X#
+  Y => com/javacp/Y#
+com/javacp/Test#m3(). => private[javacp] method m3[T <: X & Y & Z](): Unit
+  javacp => com/javacp/
+  T => com/javacp/Test#m3().[T]
+  X => com/javacp/X#
+  Y => com/javacp/Y#
+  Z => com/javacp/Z#
+  Unit => scala/Unit#
+com/javacp/Test#m3().[T] => typeparam T <: X & Y & Z
+  X => com/javacp/X#
+  Y => com/javacp/Y#
+  Z => com/javacp/Z#
 com/javacp/Test#methodTypeParams(). => private[javacp] method methodTypeParams[C <: Integer](c: C): Unit
   javacp => com/javacp/
   C => com/javacp/Test#methodTypeParams().[C]
@@ -1430,18 +1472,60 @@ com/javacp/Test#wildcard(). => method wildcard(wildcard: ArrayList[local_wildcar
 com/javacp/Test#wildcard().(wildcard) => param wildcard: ArrayList[local_wildcard]
   ArrayList => java/util/ArrayList#
   local_wildcard => local_wildcard
-com/javacp/Test#wildcard(+1). => method wildcard(a: Collection[Number], b: Collection[Number]): Unit
+com/javacp/Test#wildcard(+1). => method wildcard(a: Collection[local_wildcard], b: Collection[local_wildcard]): Unit
   a => com/javacp/Test#wildcard(+1).(a)
   Collection => java/util/Collection#
-  Number => java/lang/Number#
+  local_wildcard => local_wildcard
   b => com/javacp/Test#wildcard(+1).(b)
   Unit => scala/Unit#
-com/javacp/Test#wildcard(+1).(a) => param a: Collection[Number]
+com/javacp/Test#wildcard(+1).(a) => param a: Collection[local_wildcard]
   Collection => java/util/Collection#
-  Number => java/lang/Number#
-com/javacp/Test#wildcard(+1).(b) => param b: Collection[Number]
+  local_wildcard => local_wildcard
+com/javacp/Test#wildcard(+1).(b) => param b: Collection[local_wildcard]
   Collection => java/util/Collection#
-  Number => java/lang/Number#
+  local_wildcard => local_wildcard
+
+com/javacp/X.class
+------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/X.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/X# => abstract interface X extends Object
+  Object => java/lang/Object#
+
+com/javacp/Y.class
+------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/Y.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/Y# => abstract interface Y extends Object
+  Object => java/lang/Object#
+
+com/javacp/Z.class
+------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/Z.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/Z# => abstract interface Z extends Object
+  Object => java/lang/Object#
 
 example/A.class
 ---------------
@@ -1459,35 +1543,35 @@ example/A# => trait A extends AnyRef { +1 decls }
 example/A#foo(). => abstract method foo: Int
   Int => scala/Int#
 
-example/Acc.class
------------------
+example/Access.class
+--------------------
 
 Summary:
 Schema => SemanticDB v4
-Uri => example/Acc.class
+Uri => example/Access.class
 Text => empty
 Language => Scala
 Symbols => 9 entries
 
 Symbols:
-example/Acc# => class Acc extends AnyRef { +8 decls }
+example/Access# => class Access extends AnyRef { +8 decls }
   AnyRef => scala/AnyRef#
-example/Acc#`<init>`(). => primary ctor <init>()
-example/Acc#m1(). => private method m1: Nothing
+example/Access#`<init>`(). => primary ctor <init>()
+example/Access#m1(). => private method m1: Nothing
   Nothing => scala/Nothing#
-example/Acc#m2(). => private[this] method m2: Nothing
+example/Access#m2(). => private[this] method m2: Nothing
   Nothing => scala/Nothing#
-example/Acc#m3(). => private[Acc] method m3: Nothing
-  Acc => example/Acc#
+example/Access#m3(). => private[Access] method m3: Nothing
+  Access => example/Access#
   Nothing => scala/Nothing#
-example/Acc#m4(). => protected method m4: Nothing
+example/Access#m4(). => protected method m4: Nothing
   Nothing => scala/Nothing#
-example/Acc#m5(). => protected[this] method m5: Nothing
+example/Access#m5(). => protected[this] method m5: Nothing
   Nothing => scala/Nothing#
-example/Acc#m6(). => protected[example] method m6: Nothing
+example/Access#m6(). => protected[example] method m6: Nothing
   example => example/
   Nothing => scala/Nothing#
-example/Acc#m7(). => method m7: Nothing
+example/Access#m7(). => method m7: Nothing
   Nothing => scala/Nothing#
 
 example/Anonymous.class
@@ -1657,10 +1741,10 @@ Schema => SemanticDB v4
 Uri => example/Methods.class
 Text => empty
 Language => Scala
-Symbols => 68 entries
+Symbols => 76 entries
 
 Symbols:
-example/Methods# => class Methods[T] extends AnyRef { +32 decls }
+example/Methods# => class Methods[T] extends AnyRef { +35 decls }
   T => example/Methods#[T]
   AnyRef => scala/AnyRef#
 example/Methods#AList# => type AList[T] = List[T]
@@ -1771,6 +1855,28 @@ example/Methods#m18(+1).(b) => param b: String
   String => scala/Predef.String#
 example/Methods#m18. => val method m18: m17.type
   m17 => example/Methods#m17.
+example/Methods#m19$default$2(). => method m19$default$2: Int @<?>
+  Int => scala/Int#
+example/Methods#m19$default$3(). => method m19$default$3(x: Int, y: Int): Int @<?>
+  x => example/Methods#m19$default$3().(x)
+  Int => scala/Int#
+  y => example/Methods#m19$default$3().(y)
+example/Methods#m19$default$3().(x) => param x: Int
+  Int => scala/Int#
+example/Methods#m19$default$3().(y) => param y: Int
+  Int => scala/Int#
+example/Methods#m19(). => method m19(x: Int, y: Int)(z: Int): Nothing
+  x => example/Methods#m19().(x)
+  Int => scala/Int#
+  y => example/Methods#m19().(y)
+  z => example/Methods#m19().(z)
+  Nothing => scala/Nothing#
+example/Methods#m19().(x) => param x: Int
+  Int => scala/Int#
+example/Methods#m19().(y) => default param y: Int
+  Int => scala/Int#
+example/Methods#m19().(z) => default param z: Int
+  Int => scala/Int#
 example/Methods#m2(). => method m2(): Nothing
   Nothing => scala/Nothing#
 example/Methods#m3(). => method m3(x: Int): Nothing

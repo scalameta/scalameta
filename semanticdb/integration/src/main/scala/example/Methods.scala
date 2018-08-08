@@ -35,4 +35,5 @@ class Methods[T] {
   val m18 = m17
   def m18(a: Int) = ???
   def m18(b: String) = ???
+  def m19(x: Int, y: Int = 2)(z: Int = 3) = ???
 }

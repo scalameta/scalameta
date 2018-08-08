@@ -13,7 +13,9 @@ import scala.meta.io.Classpath
 import scala.meta.internal.io.PathIO
 
 /** An index to lookup class directories and classfiles by their JVM names. */
-final class ClasspathIndex private (classpath: Classpath, dirs: collection.Map[String, Classdir]) {
+final class ClasspathIndex private (
+    classpath: Classpath,
+    val dirs: collection.Map[String, Classdir]) {
 
   /** Returns a classfile with the given path. */
   def getClassfile(path: String): Option[Classfile] = {

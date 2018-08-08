@@ -1,8 +1,8 @@
 package annot
 
-import scala.language.experimental.macros
-
 import com.javacp.annot._
+import scala.annotation.meta._
+import scala.language.experimental.macros
 
 @ClassAnnotation
 class Annotations[@TypeParameterAnnotation T](@ParameterAnnotation x: T) { self: AnyRef =>
@@ -32,3 +32,7 @@ object M {
 
 @TraitAnnotation
 trait T
+
+object Alias {
+  type A = ClassAnnotation @param
+}

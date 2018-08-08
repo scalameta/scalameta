@@ -2,7 +2,6 @@ package scala.meta.internal.scalacp
 
 import scala.collection.mutable
 import scala.meta.internal.{semanticdb => s}
-import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
@@ -117,6 +116,7 @@ trait SymbolInformationOps { self: Scalacp =>
           val primaryIndex = primaryCtors.getOrElseUpdate(sym.path, sym.entry.index)
           if (sym.entry.index == primaryIndex) flip(p.PRIMARY)
         }
+        if (sym.isDefaultParameter) flip(p.DEFAULT)
       }
       flags
     }
@@ -207,21 +207,26 @@ trait SymbolInformationOps { self: Scalacp =>
       annots.filterNot(syntheticAnnotations)
     }
 
-    private def accessibility: Option[s.Accessibility] = {
-      // FIXME: https://github.com/scalameta/scalameta/issues/1325
-      sym.symbolInfo.privateWithin match {
-        case None =>
-          if (sym.isPrivate && sym.isLocal) Some(s.Accessibility(a.PRIVATE_THIS))
-          else if (sym.isPrivate) Some(s.Accessibility(a.PRIVATE))
-          else if (sym.isProtected && sym.isLocal) Some(s.Accessibility(a.PROTECTED_THIS))
-          else if (sym.isProtected) Some(s.Accessibility(a.PROTECTED))
-          else Some(s.Accessibility(a.PUBLIC))
-        case Some(privateWithin: Symbol) =>
-          val ssym = privateWithin.ssym
-          if (sym.isProtected) Some(s.Accessibility(a.PROTECTED_WITHIN, ssym))
-          else Some(s.Accessibility(a.PRIVATE_WITHIN, ssym))
-        case Some(other) =>
-          sys.error(s"unsupported privateWithin: ${other.getClass} $other")
+    private def access: s.Access = {
+      kind match {
+        case k.LOCAL | k.PARAMETER | k.SELF_PARAMETER | k.TYPE_PARAMETER | k.PACKAGE |
+            k.PACKAGE_OBJECT =>
+          s.NoAccess
+        case _ =>
+          sym.symbolInfo.privateWithin match {
+            case None =>
+              if (sym.isPrivate && sym.isLocal) s.PrivateThisAccess()
+              else if (sym.isPrivate) s.PrivateAccess()
+              else if (sym.isProtected && sym.isLocal) s.ProtectedThisAccess()
+              else if (sym.isProtected) s.ProtectedAccess()
+              else s.PublicAccess()
+            case Some(privateWithin: Symbol) =>
+              val ssym = privateWithin.ssym
+              if (sym.isProtected) s.ProtectedWithinAccess(ssym)
+              else s.PrivateWithinAccess(ssym)
+            case Some(other) =>
+              sys.error(s"unsupported privateWithin: ${other.getClass} $other")
+          }
       }
     }
 
@@ -234,7 +239,7 @@ trait SymbolInformationOps { self: Scalacp =>
         name = name,
         signature = sig(linkMode),
         annotations = annotations,
-        accessibility = accessibility
+        access = access
       )
     }
   }

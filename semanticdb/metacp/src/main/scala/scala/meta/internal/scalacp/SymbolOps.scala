@@ -277,6 +277,9 @@ trait SymbolOps { _: Scalacp =>
       sym.isRefinementClass
     }
     def isUseful: Boolean = !sym.isUseless
+    def isDefaultParameter: Boolean = {
+      sym.hasFlag(0x02000000) && sym.isParam
+    }
   }
 
   private var nextId = 0

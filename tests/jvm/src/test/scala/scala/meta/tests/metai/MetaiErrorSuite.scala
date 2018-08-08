@@ -25,7 +25,7 @@ class MetaiErrorSuite extends FunSuite with DiffAssertions {
     val (result, out, err) = CliSuite.withReporter { reporter =>
       Metai.process(settings, reporter)
     }
-    assert(!result.success, "metai should error for non-META-INF/semanticdb entries")
+    assert(!result.isSuccess, "metai should error for non-META-INF/semanticdb entries")
     val expectedStdout =
       s"""|{
           |  "status": {

@@ -46,7 +46,7 @@ alias metac="coursier launch org.scalameta:metac_2.12.6:4.0.0-M6 -- -cp $(coursi
 alias metacp='coursier launch org.scalameta:metacp_2.12:4.0.0-M6 -- --dependency-classpath $(echo $JAVA_HOME/jre/lib/rt.jar):$(coursier fetch org.scala-lang:scala-library:2.12.4 -p)'
 alias metap="coursier launch org.scalameta:metap_2.11:4.0.0-M6 --"
 ```
-NOTE. These installation instructions are for the current unstable `master` branch, 
+NOTE. These installation instructions are for the current unstable `master` branch,
 it's recommended to view this document at the latest git tag instead of `master`.
 
 (Optional) Instead of running `metap` on the JVM, you can build a native binary
@@ -370,7 +370,7 @@ phase of the Java compiler. It currently only produces symbol information, not o
 To use it, follow these instructions:
 
 1. Install the plugin by adding a dependency to `org.scalameta:semanticdb-javac` in your build, or by running:
-  
+
     ```$ coursier fetch --intransitive org.scalameta:semanticdb-javac_2.12:4.0.0-M4```
 
 2. Add the plugin to your build's compile classpath. If invoking `javac` directly add it as one of the listed `-cp` entries. Otherwise, adding the plugin as a library dependency in your build tool should be enough.
@@ -646,8 +646,9 @@ documents {
     symbol: "_empty_/Test.main().(args)"
     kind: PARAMETER
     name: "args"
-    accessibility {
-      tag: PUBLIC
+    access {
+      publicAccess {
+      }
     }
     language: SCALA
     signature {

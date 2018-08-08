@@ -7,6 +7,7 @@ import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.reflect.internal.{Flags => gf}
 import scala.reflect.internal.util.{SourceFile => GSourceFile, NoSourceFile => GNoSourceFile}
 import scala.util.control.NonFatal
 
@@ -198,7 +199,9 @@ trait SymbolOps { self: SemanticdbOps =>
       val isInterfaceConstructor = sym.isConstructor && sym.owner.isJavaDefined && sym.owner.isInterface
       val isEnumConstructor = sym.isConstructor && sym.owner.hasJavaEnumFlag
       val isStaticConstructor = sym.name == g.TermName("<clinit>")
-      isModuleConstructor || isTraitConstructor || isInterfaceConstructor || isEnumConstructor || isStaticConstructor
+      val isClassfileAnnotationConstructor = sym.owner.isClassfileAnnotation
+      isModuleConstructor || isTraitConstructor || isInterfaceConstructor ||
+      isEnumConstructor || isStaticConstructor || isClassfileAnnotationConstructor
     }
     def isLocalChild: Boolean =
       sym.name == g.tpnme.LOCAL_CHILD
@@ -277,6 +280,15 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isAnonymousClassConstructor ||
       sym.isSyntheticAbstractType ||
       sym.isAnonymousSelfParameter
+    }
+    def isClassfileAnnotation: Boolean = {
+      sym.isClass && sym.hasFlag(gf.JAVA_ANNOTATION)
+    }
+    def isDefaultParameter: Boolean = {
+      sym.hasFlag(gf.DEFAULTPARAM) && sym.hasFlag(gf.PARAM)
+    }
+    def isDefaultMethod: Boolean = {
+      sym.isJavaDefined && sym.owner.isInterface && !sym.isDeferred && !sym.isStatic
     }
   }
 

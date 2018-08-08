@@ -144,6 +144,23 @@ advanced/Test.s3.
                      name: "x"
 
 
+==============
+annot/Alias.A#
+==============
+--- metac
++++ metacp
+         annotations {
+           tpe {
+-            typeRef {
+-              prefix {
+-              symbol: "scala/annotation/meta/param#"
+         annotations {
+           tpe {
+-            typeRef {
+-              prefix {
+-              symbol: "scala/annotation/meta/param#"
+
+
 ============================
 classes/C3#copy$default$1().
 ============================
@@ -194,47 +211,15 @@ classes/N.anonClass.
              name: "local"
 
 
-========================================
-com/javacp/ClassSuffix#Inner#Bar#Fuz#[B]
-========================================
---- metac
-+++ metacp
- kind: TYPE_PARAMETER
- properties: 0
- name: "B"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
-     upper_bound {
-       typeRef {
-         prefix {
--        symbol: "scala/Any#"
-+        symbol: "java/lang/Object#"
-
-
 ================================================
 com/javacp/ClassSuffix#Inner#Bar#Fuz#`<init>`().
 ================================================
 --- metac
 +++ metacp
- properties: 0
- name: "<init>"
- accessibility {
--  tag: PUBLIC
--  symbol: ""
-+  tag: PRIVATE_WITHIN
-+  symbol: "com/javacp/"
- language: JAVA
- signature {
+ access {
+-  publicAccess {
++  privateWithinAccess {
++    symbol: "com/javacp/"
 
 
 ============================================
@@ -242,42 +227,10 @@ com/javacp/ClassSuffix#Inner#Bar#`<init>`().
 ============================================
 --- metac
 +++ metacp
- properties: 0
- name: "<init>"
- accessibility {
--  tag: PUBLIC
--  symbol: ""
-+  tag: PRIVATE_WITHIN
-+  symbol: "com/javacp/"
- language: JAVA
- signature {
-
-
-================================
-com/javacp/ClassSuffix#Inner#[A]
-================================
---- metac
-+++ metacp
- kind: TYPE_PARAMETER
- properties: 0
- name: "A"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
-     upper_bound {
-       typeRef {
-         prefix {
--        symbol: "scala/Any#"
-+        symbol: "java/lang/Object#"
+ access {
+-  publicAccess {
++  privateWithinAccess {
++    symbol: "com/javacp/"
 
 
 ========================================
@@ -285,15 +238,10 @@ com/javacp/ClassSuffix#Inner#`<init>`().
 ========================================
 --- metac
 +++ metacp
- properties: 0
- name: "<init>"
- accessibility {
--  tag: PUBLIC
--  symbol: ""
-+  tag: PRIVATE_WITHIN
-+  symbol: "com/javacp/"
- language: JAVA
- signature {
+ access {
+-  publicAccess {
++  privateWithinAccess {
++    symbol: "com/javacp/"
 
 
 ==============================
@@ -335,8 +283,8 @@ com/javacp/Coin#value.
 -properties: 0
 +properties: 8
  name: "value"
- accessibility {
-   tag: PRIVATE
+ language: JAVA
+ signature {
 
 
 ==========================
@@ -380,258 +328,15 @@ com/javacp/MetacJava#overload(+1).(a)
          symbol: "com/javacp/MetacJava#Overload2#A#"
 
 
-==============================
-com/javacp/Recursive#Inner#[A]
-==============================
---- metac
-+++ metacp
- kind: TYPE_PARAMETER
- properties: 0
- name: "A"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
-     upper_bound {
--      structuralType {
--        tpe {
--          withType {
--            types {
-+      intersectionType {
-+        types {
-+          typeRef {
-+            prefix {
-+            symbol: "com/javacp/Recursive#"
-+            type_arguments {
-               typeRef {
-                 prefix {
--                symbol: "com/javacp/Recursive#"
--                type_arguments {
--                  typeRef {
--                    prefix {
--                    symbol: "com/javacp/Recursive#Inner#[A]"
--                type_arguments {
--                  typeRef {
--                    prefix {
--                    symbol: "com/javacp/Recursive#Inner#[B]"
-+                symbol: "com/javacp/Recursive#Inner#[A]"
--            types {
-+            type_arguments {
-               typeRef {
-                 prefix {
--                symbol: "java/io/Serializable#"
-+                symbol: "com/javacp/Recursive#Inner#[B]"
--        declarations {
-+        types {
-+          typeRef {
-+            prefix {
-+            symbol: "java/io/Serializable#"
-
-
-==============================
-com/javacp/Recursive#Inner#[B]
-==============================
---- metac
-+++ metacp
- kind: TYPE_PARAMETER
- properties: 0
- name: "B"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
-     upper_bound {
-       typeRef {
-
-
-===============================
-com/javacp/Recursive#Inner2#[C]
-===============================
---- metac
-+++ metacp
- kind: TYPE_PARAMETER
- properties: 0
- name: "C"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
-     upper_bound {
-       typeRef {
-
-
-========================
-com/javacp/Recursive#[A]
-========================
---- metac
-+++ metacp
- kind: TYPE_PARAMETER
- properties: 0
- name: "A"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
-     upper_bound {
--      structuralType {
--        tpe {
--          withType {
--            types {
-+      intersectionType {
-+        types {
-+          typeRef {
-+            prefix {
-+            symbol: "com/javacp/Recursive#"
-+            type_arguments {
-               typeRef {
-                 prefix {
--                symbol: "com/javacp/Recursive#"
--                type_arguments {
--                  typeRef {
--                    prefix {
--                    symbol: "com/javacp/Recursive#[A]"
--                type_arguments {
--                  typeRef {
--                    prefix {
--                    symbol: "com/javacp/Recursive#[B]"
-+                symbol: "com/javacp/Recursive#[A]"
--            types {
-+            type_arguments {
-               typeRef {
-                 prefix {
--                symbol: "java/io/Serializable#"
-+                symbol: "com/javacp/Recursive#[B]"
--        declarations {
-+        types {
-+          typeRef {
-+            prefix {
-+            symbol: "java/io/Serializable#"
-
-
-========================
-com/javacp/Recursive#[B]
-========================
---- metac
-+++ metacp
- kind: TYPE_PARAMETER
- properties: 0
- name: "B"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
-     upper_bound {
-       typeRef {
-
-
-=================================
-com/javacp/Recursive#foo().[Anon]
-=================================
---- metac
-+++ metacp
- kind: TYPE_PARAMETER
- properties: 0
- name: "Anon"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
-     upper_bound {
-       typeRef {
-         prefix {
--        symbol: "scala/Any#"
-+        symbol: "java/lang/Object#"
-
-
-========================================
-com/javacp/Test#InnerShadowTypeParam#[A]
-========================================
---- metac
-+++ metacp
- kind: TYPE_PARAMETER
- properties: 0
- name: "A"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
-     upper_bound {
-       typeRef {
-         prefix {
--        symbol: "scala/Any#"
-+        symbol: "java/lang/Object#"
-
-
 ================================================
 com/javacp/Test#InnerShadowTypeParam#`<init>`().
 ================================================
 --- metac
 +++ metacp
- properties: 0
- name: "<init>"
- accessibility {
--  tag: PUBLIC
--  symbol: ""
-+  tag: PRIVATE_WITHIN
-+  symbol: "com/javacp/"
- language: JAVA
- signature {
+ access {
+-  publicAccess {
++  privateWithinAccess {
++    symbol: "com/javacp/"
 
 
 =======================================
@@ -639,86 +344,10 @@ com/javacp/Test#StaticClass#`<init>`().
 =======================================
 --- metac
 +++ metacp
- properties: 0
- name: "<init>"
- accessibility {
--  tag: PUBLIC
--  symbol: ""
-+  tag: PRIVATE_WITHIN
-+  symbol: "com/javacp/"
- language: JAVA
- signature {
-
-
-===================
-com/javacp/Test#[A]
-===================
---- metac
-+++ metacp
- kind: TYPE_PARAMETER
- properties: 0
- name: "A"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
-     upper_bound {
--      structuralType {
--        tpe {
--          withType {
--            types {
--              typeRef {
--                prefix {
--                symbol: "java/lang/CharSequence#"
-+      intersectionType {
-+        types {
-+          typeRef {
-+            prefix {
--            types {
--              typeRef {
--                prefix {
--                symbol: "java/io/Serializable#"
-+            symbol: "java/lang/CharSequence#"
-+        types {
-+          typeRef {
-+            prefix {
-+            symbol: "java/io/Serializable#"
--        declarations {
-
-
-===================
-com/javacp/Test#[B]
-===================
---- metac
-+++ metacp
- kind: TYPE_PARAMETER
- properties: 0
- name: "B"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
- language: JAVA
- signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
-     upper_bound {
-       typeRef {
-         prefix {
--        symbol: "scala/Any#"
-+        symbol: "java/lang/Object#"
+ access {
+-  publicAccess {
++  privateWithinAccess {
++    symbol: "com/javacp/"
 
 
 ===========================
@@ -731,32 +360,8 @@ com/javacp/Test#arrayField.
 -properties: 0
 +properties: 8
  name: "arrayField"
- accessibility {
-   tag: PRIVATE_WITHIN
-
-
-======================================
-com/javacp/Test#methodTypeParams().[C]
-======================================
---- metac
-+++ metacp
- kind: TYPE_PARAMETER
- properties: 0
- name: "C"
--accessibility {
--  tag: PUBLIC
--  symbol: ""
--}
  language: JAVA
  signature {
-   typeSignature {
--    type_parameters {
-     lower_bound {
--      typeRef {
--        prefix {
--        symbol: "scala/Nothing#"
-     upper_bound {
-       typeRef {
 
 
 ===============================
@@ -764,15 +369,10 @@ com/javacp/Test#protectedField.
 ===============================
 --- metac
 +++ metacp
- properties: 0
- name: "protectedField"
- accessibility {
--  tag: PROTECTED_WITHIN
--  symbol: "com/javacp/"
-+  tag: PROTECTED
-+  symbol: ""
- language: JAVA
- signature {
+ access {
+-  protectedWithinAccess {
+-    symbol: "com/javacp/"
++  protectedAccess {
 
 
 ==================================
@@ -780,15 +380,10 @@ com/javacp/Test#protectedMethod().
 ==================================
 --- metac
 +++ metacp
- properties: 0
- name: "protectedMethod"
- accessibility {
--  tag: PROTECTED_WITHIN
--  symbol: "com/javacp/"
-+  tag: PROTECTED
-+  symbol: ""
- language: JAVA
- signature {
+ access {
+-  protectedWithinAccess {
+-    symbol: "com/javacp/"
++  protectedAccess {
 
 
 =================================
@@ -805,9 +400,9 @@ com/javacp/Test#strictfpMethod().
 +      prefix {
 +      symbol: "scala/annotation/strictfp#"
 +}
- accessibility {
-   tag: PRIVATE_WITHIN
-   symbol: "com/javacp/"
+ language: JAVA
+ signature {
+   methodSignature {
 
 
 =====================================
@@ -838,9 +433,6 @@ com/javacp/Test#wildcard().(wildcard)
 -            kind: TYPE
 -            properties: 4
 -            name: "_"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
 -            language: SCALA
 -            signature {
 -              typeSignature {
@@ -853,6 +445,8 @@ com/javacp/Test#wildcard().(wildcard)
 -                  typeRef {
 -                    prefix {
 -                    symbol: "scala/Any#"
+-            access {
+-              publicAccess {
 
 
 ================================
@@ -876,16 +470,13 @@ com/javacp/Test#wildcard(+1).(a)
 -              typeRef {
 -                prefix {
 -                symbol: "local2"
-+            symbol: "java/lang/Number#"
++            symbol: "local_wildcard"
 -        declarations {
 -          hardlinks {
 -            symbol: "local2"
 -            kind: TYPE
 -            properties: 4
 -            name: "_"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
 -            language: SCALA
 -            signature {
 -              typeSignature {
@@ -898,6 +489,8 @@ com/javacp/Test#wildcard(+1).(a)
 -                  typeRef {
 -                    prefix {
 -                    symbol: "java/lang/Number#"
+-            access {
+-              publicAccess {
 
 
 ================================
@@ -921,16 +514,13 @@ com/javacp/Test#wildcard(+1).(b)
 -              typeRef {
 -                prefix {
 -                symbol: "local4"
-+            symbol: "java/lang/Number#"
++            symbol: "local_wildcard"
 -        declarations {
 -          hardlinks {
 -            symbol: "local4"
 -            kind: TYPE
 -            properties: 4
 -            name: "_"
--            accessibility {
--              tag: PUBLIC
--              symbol: ""
 -            language: SCALA
 -            signature {
 -              typeSignature {
@@ -943,470 +533,57 @@ com/javacp/Test#wildcard(+1).(b)
 -                  typeRef {
 -                    prefix {
 -                    symbol: "scala/Any#"
+-            access {
+-              publicAccess {
 
 
-=================================
-com/javacp/annot/ClassAnnotation#
-=================================
+=============
+com/javacp/X#
+=============
 --- metac
 +++ metacp
- symbol: "com/javacp/annot/ClassAnnotation#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "ClassAnnotation"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/ClassAnnotation#`<init>`()."
+ access {
+-  privateWithinAccess {
+-    symbol: "com/javacp/"
++  publicAccess {
 
 
-=======================================
-com/javacp/annot/ConstructorAnnotation#
-=======================================
+=============
+com/javacp/Y#
+=============
 --- metac
 +++ metacp
- symbol: "com/javacp/annot/ConstructorAnnotation#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "ConstructorAnnotation"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/ConstructorAnnotation#`<init>`()."
+ access {
+-  privateWithinAccess {
+-    symbol: "com/javacp/"
++  publicAccess {
 
 
-=================================
-com/javacp/annot/FieldAnnotation#
-=================================
+=============
+com/javacp/Z#
+=============
 --- metac
 +++ metacp
- symbol: "com/javacp/annot/FieldAnnotation#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "FieldAnnotation"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/FieldAnnotation#`<init>`()."
+ access {
+-  privateWithinAccess {
+-    symbol: "com/javacp/"
++  publicAccess {
 
 
-=====================================
-com/javacp/annot/InterfaceAnnotation#
-=====================================
+===============
+example/Access#
+===============
 --- metac
 +++ metacp
- symbol: "com/javacp/annot/InterfaceAnnotation#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "InterfaceAnnotation"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/InterfaceAnnotation#`<init>`()."
-
-
-=================================
-com/javacp/annot/LocalAnnotation#
-=================================
---- metac
-+++ metacp
- symbol: "com/javacp/annot/LocalAnnotation#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "LocalAnnotation"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/LocalAnnotation#`<init>`()."
-
-
-=================================
-com/javacp/annot/MacroAnnotation#
-=================================
---- metac
-+++ metacp
- symbol: "com/javacp/annot/MacroAnnotation#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "MacroAnnotation"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/MacroAnnotation#`<init>`()."
-
-
-==================================
-com/javacp/annot/MethodAnnotation#
-==================================
---- metac
-+++ metacp
- symbol: "com/javacp/annot/MethodAnnotation#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "MethodAnnotation"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/MethodAnnotation#`<init>`()."
-
-
-==================================
-com/javacp/annot/ObjectAnnotation#
-==================================
---- metac
-+++ metacp
- symbol: "com/javacp/annot/ObjectAnnotation#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "ObjectAnnotation"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/ObjectAnnotation#`<init>`()."
-
-
-===================================
-com/javacp/annot/PackageAnnotation#
-===================================
---- metac
-+++ metacp
- symbol: "com/javacp/annot/PackageAnnotation#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "PackageAnnotation"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/PackageAnnotation#`<init>`()."
-
-
-=========================================
-com/javacp/annot/PackageObjectAnnotation#
-=========================================
---- metac
-+++ metacp
- symbol: "com/javacp/annot/PackageObjectAnnotation#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "PackageObjectAnnotation"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/PackageObjectAnnotation#`<init>`()."
-
-
-=====================================
-com/javacp/annot/ParameterAnnotation#
-=====================================
---- metac
-+++ metacp
- symbol: "com/javacp/annot/ParameterAnnotation#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "ParameterAnnotation"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/ParameterAnnotation#`<init>`()."
-
-
-=========================================
-com/javacp/annot/SelfParameterAnnotation#
-=========================================
---- metac
-+++ metacp
- symbol: "com/javacp/annot/SelfParameterAnnotation#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "SelfParameterAnnotation"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/SelfParameterAnnotation#`<init>`()."
-
-
-=================================
-com/javacp/annot/TraitAnnotation#
-=================================
---- metac
-+++ metacp
- symbol: "com/javacp/annot/TraitAnnotation#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "TraitAnnotation"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/TraitAnnotation#`<init>`()."
-
-
-================================
-com/javacp/annot/TypeAnnotation#
-================================
---- metac
-+++ metacp
- symbol: "com/javacp/annot/TypeAnnotation#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "TypeAnnotation"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/TypeAnnotation#`<init>`()."
-
-
-=========================================
-com/javacp/annot/TypeParameterAnnotation#
-=========================================
---- metac
-+++ metacp
- symbol: "com/javacp/annot/TypeParameterAnnotation#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "TypeParameterAnnotation"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/TypeParameterAnnotation#`<init>`()."
-
-
-==========================================
-com/javacp/annot/usage/AnnotatedInterface#
-==========================================
---- metac
-+++ metacp
- symbol: "com/javacp/annot/usage/AnnotatedInterface#"
--kind: CLASS
--properties: 0
-+kind: INTERFACE
-+properties: 4
- name: "AnnotatedInterface"
- accessibility {
-   tag: PUBLIC
-       typeRef {
-         prefix {
--        symbol: "scala/annotation/Annotation#"
-+        symbol: "java/lang/Object#"
-     parents {
-         symbol: "java/lang/annotation/Annotation#"
--    parents {
--      typeRef {
--        prefix {
--        symbol: "scala/annotation/ClassfileAnnotation#"
-     self {
-     declarations {
--      symlinks: "com/javacp/annot/usage/AnnotatedInterface#`<init>`()."
-
-
-============
-example/Acc#
-============
---- metac
-+++ metacp
-       symlinks: "example/Acc#`<init>`()."
-       symlinks: "example/Acc#m1()."
-       symlinks: "example/Acc#m2()."
--      symlinks: "example/Acc#m3()."
-       symlinks: "example/Acc#m4()."
-       symlinks: "example/Acc#m5()."
-       symlinks: "example/Acc#m6()."
-       symlinks: "example/Acc#m7()."
-+      symlinks: "example/Acc#m3()."
+       symlinks: "example/Access#`<init>`()."
+       symlinks: "example/Access#m1()."
+       symlinks: "example/Access#m2()."
+-      symlinks: "example/Access#m3()."
+       symlinks: "example/Access#m4()."
+       symlinks: "example/Access#m5()."
+       symlinks: "example/Access#m6()."
+       symlinks: "example/Access#m7()."
++      symlinks: "example/Access#m3()."
 
 
 =========================
@@ -1432,18 +609,38 @@ example/Methods#m13().(x)
 +        symbol: "scala/Int#"
 
 
+================================
+example/Methods#m19$default$2().
+================================
+--- metac
++++ metacp
+         annotations {
+           tpe {
+-            typeRef {
+-              prefix {
+-              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
+================================
+example/Methods#m19$default$3().
+================================
+--- metac
++++ metacp
+         annotations {
+           tpe {
+-            typeRef {
+-              prefix {
+-              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
 ======================
 example/Synthetic#x$2.
 ======================
 --- metac
 +++ metacp
- properties: 1024
- name: "x$2"
- accessibility {
--  tag: PUBLIC
-+  tag: PRIVATE_THIS
-   symbol: ""
- language: SCALA
+ access {
+-  publicAccess {
++  privateThisAccess {
 
 
 ================
@@ -1617,6 +814,7 @@ types/Test.Literal.javaEnum.
 ============================
 --- metac
 +++ metacp
+ name: "javaEnum"
  language: SCALA
  signature {
 -  methodSignature {
@@ -1625,5 +823,7 @@ types/Test.Literal.javaEnum.
 -      singleType {
 -        prefix {
 -        symbol: "java/nio/file/LinkOption#NOFOLLOW_LINKS."
+ access {
+   publicAccess {
 
 

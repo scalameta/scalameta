@@ -5,7 +5,6 @@ import javax.lang.model.element._
 import scala.collection.mutable
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb.Accessibility.{Tag => a}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.collection.JavaConverters._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d, _}
@@ -93,16 +92,19 @@ trait Elements {
       case elem: TypeParameterElement => k.TYPE_PARAMETER
     }
 
-    def accessibility: Option[s.Accessibility] = {
-      val mods = elem.getModifiers
-      val enclosingPackageSym = enclosingPackage.sym
-      if (mods.contains(Modifier.PUBLIC) || elem.getKind == ElementKind.PARAMETER)
-        Some(s.Accessibility(tag = a.PUBLIC))
-      else if (mods.contains(Modifier.PRIVATE)) Some(s.Accessibility(tag = a.PRIVATE))
-      else if (mods.contains(Modifier.PROTECTED)) Some(s.Accessibility(tag = a.PROTECTED))
-      else if (elem.getKind != ElementKind.TYPE_PARAMETER)
-        Some(s.Accessibility(tag = a.PRIVATE_WITHIN, symbol = enclosingPackageSym))
-      else None
+    def access: s.Access = {
+      kind match {
+        case k.LOCAL | k.PARAMETER | k.TYPE_PARAMETER | k.PACKAGE =>
+          s.NoAccess
+        case k.INTERFACE =>
+          s.PublicAccess()
+        case _ =>
+          val mods = elem.getModifiers
+          if (mods.contains(Modifier.PUBLIC)) s.PublicAccess()
+          else if (mods.contains(Modifier.PRIVATE)) s.PrivateAccess()
+          else if (mods.contains(Modifier.PROTECTED)) s.ProtectedAccess()
+          else s.PrivateWithinAccess(enclosingPackage.sym)
+      }
     }
 
     def properties: Int = {
@@ -117,6 +119,12 @@ trait Elements {
         case ElementKind.ENUM | ElementKind.ENUM_CONSTANT => prop |= p.ENUM.value
         case ElementKind.INTERFACE => prop |= p.ABSTRACT.value
         case _ =>
+      }
+      if (elem.getKind == ElementKind.METHOD &&
+          (prop & p.ABSTRACT.value) == 0 &&
+          (prop & p.STATIC.value) == 0 &&
+          elem.getEnclosingElement.getKind == ElementKind.INTERFACE) {
+        prop |= p.DEFAULT.value
       }
       prop
     }
@@ -170,6 +178,7 @@ trait Elements {
             }
           }
           s.TypeSignature(
+            typeParameters = Some(s.Scope()),
             upperBound = bounds
           )
         case elem: VariableElement if elem.getKind == ElementKind.PARAMETER =>
@@ -201,7 +210,7 @@ trait Elements {
       kind = kind,
       name = name,
       annotations = annotations,
-      accessibility = accessibility,
+      access = access,
       properties = properties,
       signature = signature
     )

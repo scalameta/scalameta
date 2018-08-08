@@ -26,7 +26,7 @@ object Metacp {
     Settings.parse(expandedArgs, reporter) match {
       case Some(settings) =>
         val result = process(settings, reporter)
-        if (result.success) 0
+        if (result.isSuccess) 0
         else 1
       case None =>
         1
