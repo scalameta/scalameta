@@ -265,6 +265,18 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
     <td>Current working directory</td>
   </tr>
   <tr>
+    <td><code>-P:semanticdb:targetroot:&lt;value&gt;</code></td>
+    <td>Absolute or relative path</td>
+    <td>
+      The output directory to produce <code>META-INF/semanticdb/**/*.semanticdb</code>
+      files.
+    </td>
+    <td>
+      The compiler output directory, matches the sbt setting key <code>classDirectory</code>
+      and scalac command-line option <code>-d</code>.
+    </td>
+  </tr>
+  <tr>
     <td><code>-P:semanticdb:text:&lt;value&gt;</code></td>
     <td>
         <code>on</code>,<br/>
@@ -293,15 +305,17 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
   <tr>
     <td><code>-P:semanticdb:symbols:&lt;value&gt;</code></td>
     <td>
-        <code>on</code>,<br/>
-        <code>off</code>
+        <code>all</code>,<br/>
+        <code>local-only</code>,<br/>
+        <code>none</code>
     </td>
     <td>
-      Specifies whether to save symbol information in
-      <code>TextDocument.symbols</code> (<code>on</code> for yes,
-      <code>off</code> for no).
+      Specifies which symbol informations to save in
+      <code>TextDocument.symbols</code> (<code>all</code> for both local and global symbols,
+      <code>local-only</code> for only local symbols and
+      <code>none</code> for no symbols).
     </td>
-    <td><code>on</code></td>
+    <td><code>all</code></td>
   </tr>
   <tr>
     <td><code>-P:semanticdb:diagnostics:&lt;value&gt;</code></td>

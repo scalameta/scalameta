@@ -451,6 +451,8 @@ lazy val semanticdbIntegration = project
     description := "Sources to compile to build SemanticDB for tests.",
     sharedSettings,
     nonPublishableSettings,
+    // the sources in this project intentionally produce warnings to test the
+    // diagnostics pipeline in semanticdb-scalac.
     scalacOptions -= "-Xfatal-warnings",
     scalacOptions ++= {
       val pluginJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
@@ -468,7 +470,7 @@ lazy val semanticdbIntegration = project
     },
     javacSemanticdbDirectory := (target.in(Compile).value / "javac-semanticdb"),
     javaHome in Compile := {
-      // force javac to fork by setting javaHome, otherwise the compiler errors
+      // force javac to fork by setting javaHome to workaround https://github.com/sbt/zinc/issues/520
       Some(file(sys.props("java.home")).getParentFile)
     },
     managedClasspath in Compile += Keys.`package`.in(semanticdbJavacPlugin, Compile).value,
@@ -875,7 +877,9 @@ lazy val nativeSettings = Seq(
   SettingKey[Boolean]("ide-skip-project") := true,
   scalaVersion := LatestScala211,
   crossScalaVersions := List(LatestScala211),
-  scalacOptions -= "-Xfatal-warnings",
+  // disable fatal warnings in doc to avoid "dropping dependency on node with no phase object: mixin",
+  // see https://github.com/scala-js/scala-js/issues/635
+  scalacOptions.in(Compile, doc) -= "-Xfatal-warnings",
   nativeGC := "immix",
   nativeMode := "release",
   nativeLinkStubs := false

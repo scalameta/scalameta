@@ -46,10 +46,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
     def toTextDocument: s.TextDocument = {
-      if (unit.isJava) toJavaTextDocument
-      else toScalaTextDocument
-    }
-    private def toScalaTextDocument: s.TextDocument = {
       val binders = mutable.Set[m.Position]()
       val occurrences = mutable.Map[m.Position, String]()
       val symbols = mutable.Map[String, s.SymbolInformation]()
@@ -164,12 +160,13 @@ trait TextDocumentOps { self: SemanticdbOps =>
       locally {
         object traverser extends g.Traverser {
           private def trySymbolDefinition(gsym: g.Symbol): Unit = {
-            if (config.symbols.isOff) return
+            if (config.symbols.isNone) return
             if (gsym == null) return
             if (gsym.hasPackageFlag) return
             if (gsym.isUselessSymbolInformation) return
             val symbol = gsym.toSemantic
             if (symbol == Symbols.None) return
+            if (config.symbols.isLocalOnly && !symbol.isLocal) return
 
             def saveSymbol(gs: g.Symbol): Unit = {
               if (gs.isUseful) {
@@ -620,39 +617,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
         occurrences = finalOccurrences,
         diagnostics = diagnostics,
         synthetics = synthetics
-      )
-    }
-    private def toJavaTextDocument: s.TextDocument = {
-      val symbols = List.newBuilder[s.SymbolInformation]
-      object traverser extends g.Traverser {
-        override def traverse(tree: g.Tree): Unit = {
-          tree match {
-            case _: g.PackageDef =>
-              ()
-            case d: g.DefTree =>
-              // Unlike for Scala compilation units, def symbols in Java compilation units
-              // are not initialized during type-checking. Without an explicit call to
-              // initialize, some Java def trees will not have their infos set.
-              d.symbol.initialize
-              if (d.symbol.isUseful && !d.symbol.hasPackageFlag) {
-                symbols += d.symbol.toSymbolInformation(SymlinkChildren)
-              }
-            case _ =>
-          }
-          super.traverse(tree)
-        }
-      }
-      traverser.traverse(unit.body)
-      s.TextDocument(
-        schema = s.Schema.SEMANTICDB4,
-        uri = unit.source.toUri,
-        text = unit.source.toText,
-        md5 = unit.source.toMD5,
-        language = s.Language.JAVA,
-        symbols = symbols.result(),
-        occurrences = Nil,
-        diagnostics = Nil,
-        synthetics = Nil
       )
     }
   }

@@ -2,9 +2,9 @@ package scala.meta.testkit
 
 import scala.meta.io.AbsolutePath
 import java.io.File
+import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import scala.meta.internal.io.FileIO
 import scala.meta.io.RelativePath
@@ -35,7 +35,8 @@ object StringFS {
     */
   def fromString(
       layout: String,
-      root: AbsolutePath = AbsolutePath(Files.createTempDirectory("scalameta"))
+      root: AbsolutePath = AbsolutePath(Files.createTempDirectory("scalameta")),
+      charset: Charset = StandardCharsets.UTF_8
   ): AbsolutePath = {
     if (!layout.trim.isEmpty) {
       layout.split("(?=\n/)").foreach { row =>
@@ -45,7 +46,7 @@ object StringFS {
             Files.createDirectories(file.toNIO.getParent)
             Files.write(
               file.toNIO,
-              contents.getBytes,
+              contents.getBytes(charset),
               StandardOpenOption.CREATE,
               StandardOpenOption.TRUNCATE_EXISTING
             )
@@ -75,7 +76,11 @@ object StringFS {
     * @param root the directory to print as a string
     * @param includePath an optional filter function to exclude files
     */
-  def asString(root: AbsolutePath, includePath: RelativePath => Boolean = _ => true): String = {
+  def asString(
+      root: AbsolutePath,
+      includePath: RelativePath => Boolean = _ => true,
+      charset: Charset = StandardCharsets.UTF_8
+  ): String = {
     import scala.collection.JavaConverters._
     FileIO
       .listAllFilesRecursively(root)
@@ -83,7 +88,7 @@ object StringFS {
       .filter(includePath)
       .sortBy(_.toNIO)
       .map { path =>
-        val contents = FileIO.slurp(root.resolve(path), StandardCharsets.UTF_8)
+        val contents = FileIO.slurp(root.resolve(path), charset)
         s"""|/$path
             |$contents""".stripMargin
       }

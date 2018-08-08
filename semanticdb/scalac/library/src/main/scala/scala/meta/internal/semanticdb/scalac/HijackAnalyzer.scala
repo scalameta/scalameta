@@ -29,7 +29,7 @@ trait HijackAnalyzer extends SemanticdbAnalyzer { self: SemanticdbPlugin =>
     }
 
     val analyzerField =
-      (if (self.isAmmonite()) global.getClass
+      (if (self.isAmmonite) global.getClass
        else classOf[NscGlobal]).getDeclaredField("analyzer")
 
     analyzerField.setAccessible(true)

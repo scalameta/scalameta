@@ -49,9 +49,17 @@ object Position {
         startColumn: Int,
         endLine: Int,
         endColumn: Int): Position.Range = {
-      val start = input.lineToOffset(startLine) + startColumn
-      val end = input.lineToOffset(endLine) + endColumn
-      Range(input, start, end)
+      val inputEnd = Position.Range(input, input.chars.length, input.chars.length)
+      def lineLength(line: Int): Int = {
+        val isLastLine = line == inputEnd.startLine
+        if (isLastLine) inputEnd.endColumn
+        else input.lineToOffset(line + 1) - input.lineToOffset(line) - 1
+      }
+      val start = input.lineToOffset(startLine) +
+        math.min(startColumn, lineLength(startLine))
+      val end = input.lineToOffset(endLine) +
+        math.min(endColumn, lineLength(endLine))
+      Position.Range(input, start, end)
     }
   }
 }

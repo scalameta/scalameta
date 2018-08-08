@@ -23,26 +23,25 @@ class SemanticdbPlugin(val global: Global)
 
   override def init(options: List[String], errFn: String => Unit): Boolean = {
     val originalOptions = options.map(option => "-P:" + name + ":" + option)
-    val parsedConf = SemanticdbConfig.parse(originalOptions, errFn, g.reporter)
-    config = amendTargetRoot(parsedConf)
+    val baseConfig = SemanticdbConfig.default.copy(targetroot = outputDirectory)
+    config = SemanticdbConfig.parse(originalOptions, errFn, g.reporter, baseConfig)
     true
   }
 
-  def isAmmonite(): Boolean = {
+  def isAmmonite: Boolean = {
     global.getClass.getName.startsWith("ammonite")
   }
 
-  private def amendTargetRoot(config: SemanticdbConfig): SemanticdbConfig = {
-    val targetRoot = if (isAmmonite()) {
+  private def outputDirectory: AbsolutePath = {
+    if (isAmmonite) {
       PathIO.workingDirectory.resolve("out/semanticdb-scalac")
-    } else
-      AbsolutePath {
+    } else {
+      AbsolutePath(
         global.settings.outputDirs.getSingleOutput
           .flatMap(so => Option(so.file))
           .map(_.getAbsolutePath)
-          .getOrElse(global.settings.d.value)
-      }
-    config.copy(targetroot = targetRoot)
+          .getOrElse(global.settings.d.value))
+    }
   }
 
 }

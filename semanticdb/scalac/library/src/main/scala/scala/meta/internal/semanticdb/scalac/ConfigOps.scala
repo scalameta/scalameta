@@ -14,7 +14,7 @@ case class SemanticdbConfig(
     targetroot: AbsolutePath,
     text: BinaryMode,
     md5: BinaryMode,
-    symbols: BinaryMode,
+    symbols: SymbolMode,
     diagnostics: BinaryMode,
     synthetics: BinaryMode) {
   def syntax: String = {
@@ -36,14 +36,14 @@ case class SemanticdbConfig(
 }
 object SemanticdbConfig {
   def default = SemanticdbConfig(
-    failures = FailureMode.Warning,
+    failures = FailureMode.Error,
     profiling = BinaryMode.Off,
     fileFilter = FileFilter.matchEverything,
     sourceroot = PathIO.workingDirectory,
     targetroot = PathIO.workingDirectory,
     text = BinaryMode.Off,
     md5 = BinaryMode.On,
-    symbols = BinaryMode.On,
+    symbols = SymbolMode.All,
     diagnostics = BinaryMode.On,
     synthetics = BinaryMode.Off
   )
@@ -53,8 +53,9 @@ object SemanticdbConfig {
   private val SetInclude = "include:(.*)".r
   private val SetExclude = "exclude:(.*)".r
   private val SetSourceroot = "sourceroot:(.*)".r
+  private val SetTargetroot = "targetroot:(.*)".r
   private val SetText = "text:(.*)".r
-  private val SetMd5 = "text:(.*)".r
+  private val SetMd5 = "md5:(.*)".r
   private val SetSymbols = "symbols:(.*)".r
   private val SetDiagnostics = "diagnostics:(.*)".r
   private val SetSynthetics = "synthetics:(.*)".r
@@ -71,7 +72,8 @@ object SemanticdbConfig {
   def parse(
       scalacOptions: List[String],
       errFn: String => Unit,
-      reporter: Reporter
+      reporter: Reporter,
+      base: SemanticdbConfig
   ): SemanticdbConfig = {
     def deprecated(option: String, instead: String): Unit = {
       reporter.warning(
@@ -84,7 +86,7 @@ object SemanticdbConfig {
       if (instead.nonEmpty) buf.append(s" . Use -P:semanticdb:$instead instead.")
       errFn(buf.toString)
     }
-    var config = default
+    var config = base
     val relevantOptions = scalacOptions.filter(_.startsWith("-P:semanticdb:"))
     val strippedOptions = relevantOptions.map(_.stripPrefix("-P:semanticdb:"))
     strippedOptions.foreach {
@@ -98,11 +100,13 @@ object SemanticdbConfig {
         config = config.copy(fileFilter = config.fileFilter.copy(exclude = exclude.r))
       case SetSourceroot(path) =>
         config = config.copy(sourceroot = AbsolutePath(path))
+      case SetTargetroot(path) =>
+        config = config.copy(targetroot = AbsolutePath(path))
       case SetText(BinaryMode(mode)) =>
         config = config.copy(text = mode)
       case SetMd5(BinaryMode(mode)) =>
         config = config.copy(md5 = mode)
-      case SetSymbols(BinaryMode(mode)) =>
+      case SetSymbols(SymbolMode(mode)) =>
         config = config.copy(symbols = mode)
       case SetDiagnostics(BinaryMode(mode)) =>
         config = config.copy(diagnostics = mode)
@@ -173,6 +177,24 @@ object BinaryMode {
   def all = List(On, Off)
   case object On extends BinaryMode
   case object Off extends BinaryMode
+}
+// Same as BinaryMode except additionally supports "Locals"
+sealed abstract class SymbolMode {
+  def name: String = toString.toLowerCase
+  import SymbolMode._
+  def isAll: Boolean = this == All
+  def isLocalOnly: Boolean = this == LocalOnly
+  def isNone: Boolean = this == None
+}
+object SymbolMode {
+  def unapply(arg: String): Option[SymbolMode] = {
+    val query = arg.replaceAllLiterally("-", "")
+    all.find(_.toString.equalsIgnoreCase(query))
+  }
+  def all = List(All, LocalOnly, None)
+  case object All extends SymbolMode
+  case object LocalOnly extends SymbolMode
+  case object None extends SymbolMode
 }
 
 case class FileFilter(include: Regex, exclude: Regex) {
