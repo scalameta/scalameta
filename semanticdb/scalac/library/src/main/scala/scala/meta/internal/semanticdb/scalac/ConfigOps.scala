@@ -55,7 +55,7 @@ object SemanticdbConfig {
   private val SetSourceroot = "sourceroot:(.*)".r
   private val SetTargetroot = "targetroot:(.*)".r
   private val SetText = "text:(.*)".r
-  private val SetMd5 = "text:(.*)".r
+  private val SetMd5 = "md5:(.*)".r
   private val SetSymbols = "symbols:(.*)".r
   private val SetDiagnostics = "diagnostics:(.*)".r
   private val SetSynthetics = "synthetics:(.*)".r
