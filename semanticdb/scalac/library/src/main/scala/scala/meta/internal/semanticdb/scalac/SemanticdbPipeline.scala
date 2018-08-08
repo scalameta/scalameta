@@ -78,6 +78,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
           timestampComputeFinished = System.nanoTime()
           idCache.clear()
           symbolCache.clear()
+          gSourceFileInputCache.clear()
         } catch handleCrash(None)
       }
     }

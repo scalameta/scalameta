@@ -14,7 +14,7 @@ import scala.reflect.io.{PlainFile => GPlainFile}
 
 trait InputOps { self: SemanticdbOps =>
 
-  private lazy val gSourceFileInputCache = mutable.Map[GSourceFile, m.Input]()
+  lazy val gSourceFileInputCache = mutable.Map[GSourceFile, m.Input]()
   implicit class XtensionGSourceFileInput(gsource: GSourceFile) {
     def toUri: String = toInput match {
       case input: m.Input.File =>
