@@ -86,8 +86,8 @@ object InteractiveSemanticdb {
     } = new SemanticdbOps {
       val global: compiler.type = compiler
     }
-    val d = AbsolutePath(Files.createTempDirectory("semanticdb"))
-    semanticdbOps.config = SemanticdbConfig.parse(options, _ => (), compiler.reporter, d)
+    semanticdbOps.config =
+      SemanticdbConfig.parse(options, _ => (), compiler.reporter, SemanticdbConfig.default)
     import semanticdbOps._
     unit.body = tree
     val document = unit.asInstanceOf[semanticdbOps.global.CompilationUnit].toTextDocument

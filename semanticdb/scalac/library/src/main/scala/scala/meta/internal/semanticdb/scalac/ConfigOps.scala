@@ -14,7 +14,7 @@ case class SemanticdbConfig(
     targetroot: AbsolutePath,
     text: BinaryMode,
     md5: BinaryMode,
-    symbols: SymbolsMode,
+    symbols: SymbolMode,
     diagnostics: BinaryMode,
     synthetics: BinaryMode) {
   def syntax: String = {
@@ -43,7 +43,7 @@ object SemanticdbConfig {
     targetroot = PathIO.workingDirectory,
     text = BinaryMode.Off,
     md5 = BinaryMode.On,
-    symbols = SymbolsMode.On,
+    symbols = SymbolMode.All,
     diagnostics = BinaryMode.On,
     synthetics = BinaryMode.Off
   )
@@ -73,7 +73,7 @@ object SemanticdbConfig {
       scalacOptions: List[String],
       errFn: String => Unit,
       reporter: Reporter,
-      outputDir: AbsolutePath
+      base: SemanticdbConfig
   ): SemanticdbConfig = {
     def deprecated(option: String, instead: String): Unit = {
       reporter.warning(
@@ -86,7 +86,7 @@ object SemanticdbConfig {
       if (instead.nonEmpty) buf.append(s" . Use -P:semanticdb:$instead instead.")
       errFn(buf.toString)
     }
-    var config = default.copy(targetroot = outputDir)
+    var config = base
     val relevantOptions = scalacOptions.filter(_.startsWith("-P:semanticdb:"))
     val strippedOptions = relevantOptions.map(_.stripPrefix("-P:semanticdb:"))
     strippedOptions.foreach {
@@ -106,7 +106,7 @@ object SemanticdbConfig {
         config = config.copy(text = mode)
       case SetMd5(BinaryMode(mode)) =>
         config = config.copy(md5 = mode)
-      case SetSymbols(SymbolsMode(mode)) =>
+      case SetSymbols(SymbolMode(mode)) =>
         config = config.copy(symbols = mode)
       case SetDiagnostics(BinaryMode(mode)) =>
         config = config.copy(diagnostics = mode)
@@ -179,19 +179,22 @@ object BinaryMode {
   case object Off extends BinaryMode
 }
 // Same as BinaryMode except additionally supports "Locals"
-sealed abstract class SymbolsMode {
+sealed abstract class SymbolMode {
   def name: String = toString.toLowerCase
-  import SymbolsMode._
-  def isOn: Boolean = this == On
-  def isLocals: Boolean = this == Locals
-  def isOff: Boolean = this == Off
+  import SymbolMode._
+  def isAll: Boolean = this == All
+  def isLocalOnly: Boolean = this == LocalOnly
+  def isNone: Boolean = this == None
 }
-object SymbolsMode {
-  def unapply(arg: String): Option[SymbolsMode] = all.find(_.toString.equalsIgnoreCase(arg))
-  def all = List(On, Locals, Off)
-  case object On extends SymbolsMode
-  case object Locals extends SymbolsMode
-  case object Off extends SymbolsMode
+object SymbolMode {
+  def unapply(arg: String): Option[SymbolMode] = {
+    val query = arg.replaceAllLiterally("-", "")
+    all.find(_.toString.equalsIgnoreCase(query))
+  }
+  def all = List(All, LocalOnly, None)
+  case object All extends SymbolMode
+  case object LocalOnly extends SymbolMode
+  case object None extends SymbolMode
 }
 
 case class FileFilter(include: Regex, exclude: Regex) {

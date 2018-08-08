@@ -66,12 +66,17 @@ class PositionSuite extends ParseSuite {
   test("apply(startLine,startColumn,endLine,endColumn)") {
     val input = Input.String(
       """|  val x = 2 // line 0
-         |            // line 1""".stripMargin
+         |
+         |            // line 2""".stripMargin
     )
     val x = Position.Range(input, 0, 2, 0, 11)
     assert(x.text == "val x = 2")
-    val last = Position.Range(input, 1, 0, 1, Int.MaxValue)
-    assert(last.text == "            // line 1")
+    val x2 = Position.Range(input, 0, 2, 0, Int.MaxValue)
+    assert(x2.text == "val x = 2 // line 0")
+    val empty = Position.Range(input, 1, 0, 1, Int.MaxValue)
+    assert(empty.text == "")
+    val last = Position.Range(input, 2, 0, 2, Int.MaxValue)
+    assert(last.text == "            // line 2")
   }
 
 }

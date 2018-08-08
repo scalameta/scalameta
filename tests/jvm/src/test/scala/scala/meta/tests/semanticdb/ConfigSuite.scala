@@ -2,6 +2,7 @@ package scala.meta.tests.semanticdb
 
 import java.nio.file.Files
 import org.scalatest.FunSuite
+import org.scalatest.tagobjects.Slow
 import scala.meta.cli.Metac
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
 import scala.meta.internal.{semanticdb => s}
@@ -30,9 +31,11 @@ class ConfigSuite extends FunSuite with DiffAssertions {
       fn: s.TextDocument => Unit,
       targetroot: AbsolutePath = generateTargetroot()
   ): Unit = {
-    test(name) {
+    // each test case takes ~1-2 seconds to run so they're modestly fast but still
+    // ~100x slower than regular unit test.
+    test(name, Slow) {
       val sourceroot = StringFS.fromString(input)
-      val (metacIsSuccess, metacOut, _) = CliSuite.withReporter { reporter =>
+      val (metacIsSuccess, metacOut, metacErr) = CliSuite.withReporter { reporter =>
         val settings = metac
           .Settings()
           .withScalacArgs(
@@ -47,8 +50,9 @@ class ConfigSuite extends FunSuite with DiffAssertions {
           )
         Metac.process(settings, reporter)
       }
-      assert(metacIsSuccess, metacOut)
+      assert(metacIsSuccess, metacErr)
       assert(metacOut.isEmpty)
+      assert(metacErr.isEmpty)
       val semanticdbPath = SemanticdbPaths.toSemanticdb(A, targetroot)
       val docs = s.TextDocuments.parseFrom(semanticdbPath.readAllBytes)
       assert(docs.documents.length == 1, docs.toProtoString)
@@ -57,8 +61,8 @@ class ConfigSuite extends FunSuite with DiffAssertions {
   }
 
   check(
-    "symbols:local",
-    List("-P:semanticdb:symbols:locals"),
+    "symbols:local-only",
+    List("-P:semanticdb:symbols:local-only"),
     """
       |/A.scala
       |object A {
@@ -74,6 +78,41 @@ class ConfigSuite extends FunSuite with DiffAssertions {
         symbols,
         """|local0
            |local1
+           |""".stripMargin
+      )
+    }
+  )
+
+  check(
+    "symbols:none",
+    List("-P:semanticdb:symbols:none"),
+    """
+      |/A.scala
+      |object A {
+      |}
+    """.stripMargin, { doc =>
+      assert(doc.symbols.isEmpty)
+    }
+  )
+
+  check(
+    "symbols:all",
+    List("-P:semanticdb:symbols:all"),
+    """
+      |/A.scala
+      |object A {
+      |  val x = {
+      |    val y = 2
+      |    2
+      |  }
+      |}
+    """.stripMargin, { doc =>
+      val obtained = doc.symbols.map(i => i.symbol + " " + i.name).sorted.mkString("\n")
+      assertNoDiffOrPrintExpected(
+        obtained,
+        """|_empty_/A. A
+           |_empty_/A.x. x
+           |local0 y
            |""".stripMargin
       )
     }

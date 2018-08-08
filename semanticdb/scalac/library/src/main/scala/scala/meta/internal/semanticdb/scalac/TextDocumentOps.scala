@@ -160,13 +160,13 @@ trait TextDocumentOps { self: SemanticdbOps =>
       locally {
         object traverser extends g.Traverser {
           private def trySymbolDefinition(gsym: g.Symbol): Unit = {
-            if (config.symbols.isOff) return
+            if (config.symbols.isNone) return
             if (gsym == null) return
             if (gsym.hasPackageFlag) return
             if (gsym.isUselessSymbolInformation) return
             val symbol = gsym.toSemantic
             if (symbol == Symbols.None) return
-            if (config.symbols.isLocals && !symbol.isLocal) return
+            if (config.symbols.isLocalOnly && !symbol.isLocal) return
 
             def saveSymbol(gs: g.Symbol): Unit = {
               if (gs.isUseful) {
