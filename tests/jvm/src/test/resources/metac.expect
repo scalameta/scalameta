@@ -1796,7 +1796,7 @@ Diagnostics:
 [2:24..2:30) [warning] Unused import
 
 Synthetics:
-[9:10..9:37): scala.reflect.classTag[Int] => *((??? : ClassTag[Int]))
+[9:10..9:37): scala.reflect.classTag[Int] => *((`macro-expandee` : ClassTag[Int]))
   ClassTag => scala/reflect/ClassTag#
   Int => scala/Int#
 semanticdb/integration/src/main/scala/example/Example.scala
@@ -3300,7 +3300,7 @@ Synthetics:
   Int => scala/Int#
 [4:2..4:18): Array.empty[Int] => intArrayOps(*)
   intArrayOps => scala/Predef.intArrayOps().
-[4:2..4:18): Array.empty[Int] => *((??? : ClassTag[Int]))
+[4:2..4:18): Array.empty[Int] => *((`macro-expandee` : ClassTag[Int]))
   ClassTag => scala/reflect/ClassTag#
   Int => scala/Int#
 [5:2..5:8): "fooo" => augmentString(*)
