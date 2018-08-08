@@ -67,8 +67,8 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
     }
   }
 
-  private def computeDatabaseFromSnippet(code: String, language: s.Language): s.TextDocument = {
-    val javaFile = File.createTempFile("paradise", "." + language.toString().toLowerCase())
+  private def computeDatabaseFromSnippet(code: String): s.TextDocument = {
+    val javaFile = File.createTempFile("paradise", ".scala")
     val writer = new PrintWriter(javaFile)
     try writer.write(code)
     finally writer.close()
@@ -83,9 +83,7 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
     g.globalPhase = run.parserPhase
     val reporter = new StoreReporter()
     g.reporter = reporter
-    unit.body =
-      if (language.isScala) g.newUnitParser(unit).parse()
-      else new g.syntaxAnalyzer.JavaUnitParser(unit).parse()
+    unit.body = g.newUnitParser(unit).parse()
     assertNoReporterErrors()
 
     val packageobjectsPhase = run.phaseNamed("packageobjects")
@@ -107,58 +105,45 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
     unit.toTextDocument
   }
 
-  private def computeDatabaseSectionFromSnippet(
-      code: String,
-      sectionName: String,
-      language: s.Language): String = {
-    val document = computeDatabaseFromSnippet(code, language)
+  private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
+    val document = computeDatabaseFromSnippet(code)
     val format = scala.meta.metap.Format.Detailed
     val payload = s.Print.document(format, document).toString.split(EOL)
     val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
     section.mkString(EOL)
   }
 
-  def checkSection(
-      code: String,
-      expected: String,
-      section: String,
-      language: s.Language
-  ): Unit = {
+  def checkSection(code: String, expected: String, section: String): Unit = {
     test(code) {
-      val obtained = computeDatabaseSectionFromSnippet(code, section, language)
+      val obtained = computeDatabaseSectionFromSnippet(code, section)
       assertNoDiffOrPrintExpected(obtained, expected)
     }
   }
 
-  def javaSymbols(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Symbols", s.Language.JAVA)
-  }
-
   def occurrences(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Occurrences", s.Language.SCALA)
+    checkSection(code, expected, "Occurrences")
   }
 
   def diagnostics(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Diagnostics", s.Language.SCALA)
+    checkSection(code, expected, "Diagnostics")
   }
 
   def symbols(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Symbols", s.Language.SCALA)
+    checkSection(code, expected, "Symbols")
   }
 
   def synthetics(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Synthetics", s.Language.SCALA)
+    checkSection(code, expected, "Synthetics")
   }
 
   private def computeDatabaseAndOccurrencesFromMarkup(
-      markup: String,
-      language: s.Language
+      markup: String
   ): (s.TextDocument, List[String]) = {
     val chevrons = "<<(.*?)>>".r
     val ps0 = chevrons.findAllIn(markup).matchData.map(m => (m.start, m.end)).toList
     val ps = ps0.zipWithIndex.map { case ((s, e), i) => (s - 4 * i, e - 4 * i - 4) }
     val code = chevrons.replaceAllIn(markup, "$1")
-    val database = computeDatabaseFromSnippet(code, language)
+    val database = computeDatabaseFromSnippet(code)
     val unit = g.currentRun.units.toList.last
     val source = unit.toSource
     val symbols = ps.map {
@@ -185,7 +170,7 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
 
   def targeted(markup: String, fn: s.TextDocument => Unit)(implicit hack: OverloadHack1): Unit = {
     test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup, s.Language.SCALA)
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
       occurrences match {
         case List() => fn(database)
         case _ => sys.error(s"0 chevrons expected, ${occurrences.length} chevrons found")
@@ -196,7 +181,7 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   def targeted(markup: String, fn: (s.TextDocument, String) => Unit)(
       implicit hack: OverloadHack2): Unit = {
     test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup, s.Language.SCALA)
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
       occurrences match {
         case List(name1) => fn(database, name1)
         case _ => sys.error(s"1 chevron expected, ${occurrences.length} chevrons found")
@@ -207,7 +192,7 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   def targeted(markup: String, fn: (s.TextDocument, String, String) => Unit)(
       implicit hack: OverloadHack3): Unit = {
     test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup, s.Language.SCALA)
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
       occurrences match {
         case List(name1, name2) => fn(database, name1, name2)
         case _ => sys.error(s"2 chevrons expected, ${occurrences.length} chevrons found")
@@ -218,7 +203,7 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   def targeted(markup: String, fn: (s.TextDocument, String, String, String) => Unit)(
       implicit hack: OverloadHack4): Unit = {
     test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup, s.Language.SCALA)
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
       occurrences match {
         case List(name1, name2, name3) => fn(database, name1, name2, name3)
         case _ => sys.error(s"3 chevrons expected, ${occurrences.length} chevrons found")
@@ -229,7 +214,7 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   def targeted(markup: String, fn: (s.TextDocument, String, String, String, String) => Unit)(
       implicit hack: OverloadHack5): Unit = {
     test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup, s.Language.SCALA)
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
       occurrences match {
         case List(name1, name2, name3, name4) => fn(database, name1, name2, name3, name4)
         case _ => sys.error(s"4 chevrons expected, ${occurrences.length} chevrons found")

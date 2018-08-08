@@ -73,7 +73,6 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
         try {
           timestampComputeStarted = System.nanoTime()
           super.run()
-          g.currentRun.units.filter(_.isJava).foreach(saveSemanticdbForCompilationUnit)
           synchronizeSourcesAndSemanticdbFiles()
           timestampComputeFinished = System.nanoTime()
           idCache.clear()
