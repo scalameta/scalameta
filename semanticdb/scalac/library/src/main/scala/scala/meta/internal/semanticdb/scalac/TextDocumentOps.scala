@@ -170,6 +170,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
             if (gsym.isUselessSymbolInformation) return
             val symbol = gsym.toSemantic
             if (symbol == Symbols.None) return
+            if (config.symbols.isLocals && !symbol.isLocal) return
 
             def saveSymbol(gs: g.Symbol): Unit = {
               if (gs.isUseful) {

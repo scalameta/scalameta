@@ -14,7 +14,7 @@ case class SemanticdbConfig(
     targetroot: AbsolutePath,
     text: BinaryMode,
     md5: BinaryMode,
-    symbols: BinaryMode,
+    symbols: SymbolsMode,
     diagnostics: BinaryMode,
     synthetics: BinaryMode) {
   def syntax: String = {
@@ -43,7 +43,7 @@ object SemanticdbConfig {
     targetroot = PathIO.workingDirectory,
     text = BinaryMode.Off,
     md5 = BinaryMode.On,
-    symbols = BinaryMode.On,
+    symbols = SymbolsMode.On,
     diagnostics = BinaryMode.On,
     synthetics = BinaryMode.Off
   )
@@ -106,7 +106,7 @@ object SemanticdbConfig {
         config = config.copy(text = mode)
       case SetMd5(BinaryMode(mode)) =>
         config = config.copy(md5 = mode)
-      case SetSymbols(BinaryMode(mode)) =>
+      case SetSymbols(SymbolsMode(mode)) =>
         config = config.copy(symbols = mode)
       case SetDiagnostics(BinaryMode(mode)) =>
         config = config.copy(diagnostics = mode)
@@ -177,6 +177,21 @@ object BinaryMode {
   def all = List(On, Off)
   case object On extends BinaryMode
   case object Off extends BinaryMode
+}
+// Same as BinaryMode except additionally supports "Locals"
+sealed abstract class SymbolsMode {
+  def name: String = toString.toLowerCase
+  import SymbolsMode._
+  def isOn: Boolean = this == On
+  def isLocals: Boolean = this == Locals
+  def isOff: Boolean = this == Off
+}
+object SymbolsMode {
+  def unapply(arg: String): Option[SymbolsMode] = all.find(_.toString.equalsIgnoreCase(arg))
+  def all = List(On, Locals, Off)
+  case object On extends SymbolsMode
+  case object Locals extends SymbolsMode
+  case object Off extends SymbolsMode
 }
 
 case class FileFilter(include: Regex, exclude: Regex) {
