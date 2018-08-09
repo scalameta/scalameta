@@ -15,6 +15,10 @@ import scalapb.compiler.Version.scalapbVersion
 lazy val LanguageVersions = Seq(LatestScala212, LatestScala211)
 lazy val LanguageVersion = LanguageVersions.head
 
+lazy val V = new {
+  val diffutils = "1.3.0"
+}
+
 // ==========================================
 // Projects
 // ==========================================
@@ -223,6 +227,18 @@ lazy val metacp = project
     buildInfoPackage := "scala.meta.internal.metacp"
   )
   .enablePlugins(BuildInfoPlugin)
+  // FIXME: https://github.com/scalameta/scalameta/issues/1688
+  .disablePlugins(BackgroundRunPlugin)
+  .dependsOn(semanticdbJVM, cliJVM, ioJVM)
+
+lazy val metadiff = project
+  .in(file("semanticdb/metadiff"))
+  .settings(
+    publishableSettings,
+    moduleName := "metadiff",
+    libraryDependencies += "com.googlecode.java-diff-utils" % "diffutils" % V.diffutils,
+    mainClass := Some("scala.meta.cli.Metadiff")
+  )
   // FIXME: https://github.com/scalameta/scalameta/issues/1688
   .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdbJVM, cliJVM, ioJVM)
@@ -504,7 +520,7 @@ lazy val testkit = project
       // These are used to download and extract a corpus tar.gz
       "org.rauschig" % "jarchivelib" % "0.7.1",
       "commons-io" % "commons-io" % "2.5",
-      "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0"
+      "com.googlecode.java-diff-utils" % "diffutils" % V.diffutils
     ),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
     description := "Testing utilities for scalameta APIs"
