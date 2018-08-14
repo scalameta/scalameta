@@ -19,9 +19,7 @@ class Main(settings: Settings, reporter: Reporter) {
     builder.result()
   }
 
-  private def diffDocument(
-      docFrom: s.TextDocument,
-      docTo: s.TextDocument): Diff = {
+  private def diffDocument(docFrom: s.TextDocument, docTo: s.TextDocument): Diff = {
 
     val diffSymbols =
       if (settings.compareSymbols) {
@@ -29,21 +27,19 @@ class Main(settings: Settings, reporter: Reporter) {
         val symsFrom = docFrom.symbols.map(s => s.symbol -> s).toMap
         val symsTo = docTo.symbols.map(s => s.symbol -> s).toMap
 
-        val orderDiff = diffLines(
-          docFrom.symbols.map(_.symbol).toList,
-          docTo.symbols.map(_.symbol).toList)
+        val orderDiff =
+          diffLines(docFrom.symbols.map(_.symbol).toList, docTo.symbols.map(_.symbol).toList)
 
         val fullDiff = diffConcat(
-          orderDiff.extractLines.getOrElse(docFrom.symbols.map(_.symbol)).map {
-            sym =>
-              val symDiff =
-                if (symsFrom.contains(sym) && symsTo.contains(sym))
-                  diffLines(symsFrom(sym).toProtoString.lines, symsTo(sym).toProtoString.lines)
-                else if (symsFrom.contains(sym))
-                  diffPatch('-', Some(symsFrom(sym).toProtoString))
-                else
-                  diffPatch('+', Some(symsTo(sym).toProtoString))
-              symDiff.name(s"symbol '$sym'")
+          orderDiff.extractLines.getOrElse(docFrom.symbols.map(_.symbol)).map { sym =>
+            val symDiff =
+              if (symsFrom.contains(sym) && symsTo.contains(sym))
+                diffLines(symsFrom(sym).toProtoString.lines, symsTo(sym).toProtoString.lines)
+              else if (symsFrom.contains(sym))
+                diffPatch('-', Some(symsFrom(sym).toProtoString))
+              else
+                diffPatch('+', Some(symsTo(sym).toProtoString))
+            symDiff.name(s"symbol '$sym'")
           }
         )
 
@@ -87,9 +83,7 @@ class Main(settings: Settings, reporter: Reporter) {
             .map { occ =>
               val occDiff =
                 if (occsFrom.contains(occ) && occsTo.contains(occ))
-                  diffLines(
-                    occsFrom(occ).map(display),
-                    occsTo(occ).map(display))
+                  diffLines(occsFrom(occ).map(display), occsTo(occ).map(display))
                 else if (occsFrom.contains(occ))
                   diffPatch('-', Some(occsFrom(occ).map(displayEOL).mkString))
                 else
@@ -145,8 +139,8 @@ class Main(settings: Settings, reporter: Reporter) {
   }
 
   implicit val pathOrdering: Ordering[Path] = Ordering.by(_.toString)
-  implicit val rangeOrdering: Ordering[Option[s.Range]] = Ordering.by(
-    _.map(r => (r.startLine, r.startCharacter, r.endLine, r.endCharacter)))
+  implicit val rangeOrdering: Ordering[Option[s.Range]] =
+    Ordering.by(_.map(r => (r.startLine, r.startCharacter, r.endLine, r.endCharacter)))
 
   implicit class OptRangeOps(rOpt: Option[s.Range]) {
     def str: String = rOpt.fold("") { r =>

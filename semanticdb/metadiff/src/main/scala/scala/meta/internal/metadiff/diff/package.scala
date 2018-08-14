@@ -33,7 +33,10 @@ package object diff {
 
   }
 
-  def diffLines(linesFrom: TraversableOnce[String], linesTo: TraversableOnce[String], contextSize: Int = 1000000): Diff = {
+  def diffLines(
+      linesFrom: TraversableOnce[String],
+      linesTo: TraversableOnce[String],
+      contextSize: Int = 1000000): Diff = {
     val origLines = linesFrom.toSeq.asJava
     val patch = DiffUtils.diff(origLines, linesTo.toSeq.asJava)
     if (patch.getDeltas.isEmpty) None

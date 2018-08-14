@@ -14,10 +14,7 @@ final case class Settings(
 
 object Settings {
   def parse(args: List[String], reporter: Reporter): Option[Settings] = {
-    def loop(
-        settings: Settings,
-        allowOptions: Boolean,
-        args: List[String]): Option[Settings] = {
+    def loop(settings: Settings, allowOptions: Boolean, args: List[String]): Option[Settings] = {
       args match {
         case "--" +: rest =>
           loop(settings, false, rest)
