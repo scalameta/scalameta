@@ -8,10 +8,10 @@ import scala.tools.scalap.scalax.rules.scalasig._
 final class Scalacp private (
     val symbolIndex: SymbolIndex
 ) extends AnnotationOps
-    with NameOps
     with SymbolInformationOps
     with SymbolOps
-    with TypeOps {
+    with TypeOps
+    with ValueOps {
   def parse(node: ScalaSigNode): ClassfileInfos = {
     val sinfos = node.scalaSig.symbols.toList.flatMap {
       case sym: SymbolInfoSymbol => this.sinfos(sym)

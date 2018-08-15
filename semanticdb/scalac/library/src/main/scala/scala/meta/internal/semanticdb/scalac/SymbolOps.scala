@@ -7,6 +7,7 @@ import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.meta.internal.semanticdb.Scala.{Names => n}
 import scala.reflect.internal.{Flags => gf}
 import scala.reflect.internal.util.{SourceFile => GSourceFile, NoSourceFile => GNoSourceFile}
 import scala.util.control.NonFatal
@@ -24,24 +25,24 @@ trait SymbolOps { self: SemanticdbOps =>
         if (sym.isSemanticdbLocal) return freshSymbol(sym)
 
         val owner = sym.owner.toSemantic
-        val signature = {
+        val desc = {
           if (sym.isValMethod) {
-            d.Term(sym.name.toSemantic)
+            d.Term(n.TermName(sym.name.toSemantic))
           } else if (sym.isMethod || sym.isUsefulField) {
-            d.Method(sym.name.toSemantic, sym.disambiguator)
+            d.Method(n.TermName(sym.name.toSemantic), sym.disambiguator)
           } else if (sym.isTypeParameter) {
-            d.TypeParameter(sym.name.toSemantic)
+            d.TypeParameter(n.TypeName(sym.name.toSemantic))
           } else if (sym.isValueParameter) {
-            d.Parameter(sym.name.toSemantic)
+            d.Parameter(n.TermName(sym.name.toSemantic))
           } else if (sym.isType || sym.isJavaClass) {
-            d.Type(sym.name.toSemantic)
+            d.Type(n.TypeName(sym.name.toSemantic))
           } else if (sym.hasPackageFlag) {
-            d.Package(sym.name.toSemantic)
+            d.Package(n.TermName(sym.name.toSemantic))
           } else {
-            d.Term(sym.name.toSemantic)
+            d.Term(n.TermName(sym.name.toSemantic))
           }
         }
-        Symbols.Global(owner, signature)
+        Symbols.Global(owner, desc)
       }
       val msym = symbolCache.get(sym)
       if (msym != null) {
@@ -155,7 +156,7 @@ trait SymbolOps { self: SemanticdbOps =>
             if (gsym.isUsefulField && gsym.isMutable) {
               if (ssym.isGlobal) {
                 val setterName = ssym.desc.name + "_="
-                val setterSym = Symbols.Global(ssym.owner, d.Method(setterName, "()"))
+                val setterSym = Symbols.Global(ssym.owner, d.Method(n.TermName(setterName), "()"))
                 sbuf += setterSym
               } else {
                 val setterSym = ssym + "+1"

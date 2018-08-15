@@ -22,7 +22,7 @@ class JavacpSuite extends FunSuite {
   checkOrder(
     "methods",
     "com/javacp/MetacJava#",
-    _.desc.name == "overload",
+    _.desc.value == "overload",
     List(
       "com/javacp/MetacJava#overload().",
       "com/javacp/MetacJava#overload(+2).",
@@ -33,9 +33,9 @@ class JavacpSuite extends FunSuite {
   checkOrder(
     "fields",
     "com/javacp/Test#", { s =>
-      s.desc.name == "Int" ||
-      s.desc.name == "Long" ||
-      s.desc.name == "Float"
+      s.desc.value == "Int" ||
+      s.desc.value == "Long" ||
+      s.desc.value == "Float"
     },
     List(
       "com/javacp/Test#Int.",

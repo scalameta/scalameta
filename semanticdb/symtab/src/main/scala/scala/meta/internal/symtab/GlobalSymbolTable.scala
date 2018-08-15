@@ -28,7 +28,7 @@ final class GlobalSymbolTable private (classpath: Classpath) extends SymbolTable
     val toplevel = symbol.ownerChain.find(!_.isPackage).get
     val owner = toplevel.owner
     val classdir = if (owner.isEmptyPackage) "/" else owner
-    val filename = NameTransformer.encode(toplevel.desc.name.decoded) + ".class"
+    val filename = NameTransformer.encode(toplevel.desc.value) + ".class"
     classpathIndex.getClassfile(classdir, filename) match {
       case Some(classfile) =>
         val node = classfile.toClassNode
@@ -49,7 +49,7 @@ final class GlobalSymbolTable private (classpath: Classpath) extends SymbolTable
       if (symbol.isRootPackage || symbol.isEmptyPackage || classpathIndex.isClassdir(symbol)) {
         val info = SymbolInformation(
           symbol = symbol,
-          name = symbol.desc.name,
+          name = symbol.desc.value,
           kind = SymbolInformation.Kind.PACKAGE
         )
         Some(info)

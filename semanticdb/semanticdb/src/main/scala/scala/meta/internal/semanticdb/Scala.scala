@@ -2,7 +2,7 @@ package scala.meta.internal.semanticdb
 
 import scala.compat.Platform.EOL
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
-import scala.meta.internal.semanticdb.Scala.{Names => n}
+import scala.meta.internal.semanticdb.Scala.Names._
 
 object Scala {
   object Symbols {
@@ -121,7 +121,8 @@ object Scala {
     def isPackage: Boolean = this.isInstanceOf[d.Package]
     def isParameter: Boolean = this.isInstanceOf[d.Parameter]
     def isTypeParameter: Boolean = this.isInstanceOf[d.TypeParameter]
-    def name: String
+    def name: Name
+    def value: String = name.value
     override def toString: String = {
       this match {
         case d.None => sys.error("unsupported descriptor")
@@ -135,38 +136,54 @@ object Scala {
     }
   }
   object Descriptor {
-    final case object None extends Descriptor { def name: String = n.None }
-    final case class Term(name: String) extends Descriptor
-    final case class Method(name: String, disambiguator: String) extends Descriptor
-    final case class Type(name: String) extends Descriptor
-    final case class Package(name: String) extends Descriptor
-    final case class Parameter(name: String) extends Descriptor
-    final case class TypeParameter(name: String) extends Descriptor
-  }
-
-  implicit class ScalaNameOps(name: String) {
-    def encoded: String = {
-      if (name == n.None) {
-        "``"
-      } else {
-        val (start, parts) = (name.head, name.tail)
-        val isStartOk = Character.isJavaIdentifierStart(start)
-        val isPartsOk = parts.forall(Character.isJavaIdentifierPart)
-        if (isStartOk && isPartsOk) name
-        else "`" + name + "`"
-      }
-    }
-    def decoded: String = {
-      name.stripPrefix("`").stripSuffix("`")
-    }
+    final case object None extends Descriptor { def name: Name = TermName("") }
+    final case class Term(name: Name) extends Descriptor
+    final case class Method(name: Name, disambiguator: String) extends Descriptor
+    final case class Type(name: Name) extends Descriptor
+    final case class Package(name: Name) extends Descriptor
+    final case class Parameter(name: Name) extends Descriptor
+    final case class TypeParameter(name: Name) extends Descriptor
   }
 
   object Names {
-    val None: String = ""
-    val RootPackage: String = "_root_"
-    val EmptyPackage: String = "_empty_"
-    val Constructor: String = "<init>"
-    val Anonymous: String = "_"
+    // NOTE: This trait is defined inside Names to support the idiom of importing
+    // scala.meta.internal.semanticdb.Scala._ and not being afraid of name conflicts.
+    sealed trait Name {
+      def value: String
+      def encoded: Name
+      def decoded: Name
+      protected def encodedValue: String = {
+        if (value == "") {
+          "``"
+        } else {
+          val (start, parts) = (value.head, value.tail)
+          val isStartOk = Character.isJavaIdentifierStart(start)
+          val isPartsOk = parts.forall(Character.isJavaIdentifierPart)
+          if (isStartOk && isPartsOk) value
+          else "`" + value + "`"
+        }
+      }
+      protected def decodedValue: String = {
+        value.stripPrefix("`").stripSuffix("`")
+      }
+    }
+
+    final case class TermName(value: String) extends Name {
+      def encoded: TermName = TermName(encodedValue)
+      def decoded: TermName = TermName(decodedValue)
+      override def toString: String = value
+    }
+
+    final case class TypeName(value: String) extends Name {
+      def encoded: TypeName = TypeName(encodedValue)
+      def decoded: TypeName = TypeName(decodedValue)
+      override def toString: String = value
+    }
+
+    val RootPackage: TermName = TermName("_root_")
+    val EmptyPackage: TermName = TermName("_empty_")
+    val PackageObject: TermName = TermName("package")
+    val Constructor: TermName = TermName("<init>")
   }
 
   private class DescriptorParser(s: String) {
@@ -196,7 +213,7 @@ object Scala {
       }
     }
 
-    def parseName(): String = {
+    def parseValue(): String = {
       if (currChar == '`') {
         val end = i
         while (readChar() != '`') {}
@@ -223,29 +240,29 @@ object Scala {
         readChar()
         if (currChar == ')') {
           val disambiguator = parseDisambiguator()
-          val name = parseName()
-          d.Method(name, disambiguator)
+          val value = parseValue()
+          d.Method(TermName(value), disambiguator)
         } else {
-          d.Term(parseName())
+          d.Term(TermName(parseValue()))
         }
       } else if (currChar == '#') {
         readChar()
-        d.Type(parseName())
+        d.Type(TypeName(parseValue()))
       } else if (currChar == '/') {
         readChar()
-        d.Package(parseName())
+        d.Package(TermName(parseValue()))
       } else if (currChar == ')') {
         readChar()
-        val name = parseName()
+        val value = parseValue()
         if (currChar != '(') fail()
         else readChar()
-        d.Parameter(name)
+        d.Parameter(TermName(value))
       } else if (currChar == ']') {
         readChar()
-        val name = parseName()
+        val value = parseValue()
         if (currChar != '[') fail()
         else readChar()
-        d.TypeParameter(name)
+        d.TypeParameter(TypeName(value))
       } else {
         fail()
       }

@@ -359,7 +359,7 @@ trait SymbolInformationPrinter extends BasePrinter {
     def visit(sym: String): SymbolInformation = {
       val symtabInfo = noteSymtab.get(sym).orElse(docSymtab.get(sym))
       val info = symtabInfo.getOrElse {
-        val name = if (sym.isGlobal) sym.desc.name else sym
+        val name = if (sym.isGlobal) sym.desc.value else sym
         SymbolInformation(symbol = sym, name = name)
       }
       visit(info)

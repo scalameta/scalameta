@@ -7,7 +7,7 @@ import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.collection.JavaConverters._
-import scala.meta.internal.semanticdb.Scala.{Descriptor => d, _}
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d, Names => n, _}
 
 trait Elements {
 
@@ -39,7 +39,7 @@ trait Elements {
         if (qualName == "") Symbols.EmptyPackage
         else qualName.replace('.', '/') + "/"
       case elem: TypeElement =>
-        Symbols.Global(owner, d.Type(name))
+        Symbols.Global(owner, d.Type(n.TypeName(name)))
       case elem: ExecutableElement =>
         val owner = elem.getEnclosingElement
         val disambig = {
@@ -52,13 +52,13 @@ trait Elements {
           if (methodPlace == 0) "()"
           else s"(+$methodPlace)"
         }
-        Symbols.Global(owner.sym, d.Method(name, disambig))
+        Symbols.Global(owner.sym, d.Method(n.TermName(name), disambig))
       case elem: VariableElement if elem.getKind == ElementKind.PARAMETER =>
-        Symbols.Global(owner, d.Parameter(name))
+        Symbols.Global(owner, d.Parameter(n.TermName(name)))
       case elem: VariableElement =>
-        Symbols.Global(owner, d.Term(name))
+        Symbols.Global(owner, d.Term(n.TermName(name)))
       case elem: TypeParameterElement =>
-        Symbols.Global(owner, d.TypeParameter(name))
+        Symbols.Global(owner, d.TypeParameter(n.TypeName(name)))
     }
 
     def name: String = elem match {

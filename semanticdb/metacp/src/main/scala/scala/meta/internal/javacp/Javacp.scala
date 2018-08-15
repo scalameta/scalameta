@@ -9,6 +9,7 @@ import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.meta.internal.semanticdb.Scala.{Names => n}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.{semanticdb => s}
@@ -95,7 +96,7 @@ object Javacp {
           // Drop the constructor argument that holds the reference to the outer class.
           ()
         } else {
-          val fieldSymbol = Symbols.Global(classSymbol, d.Term(field.name))
+          val fieldSymbol = Symbols.Global(classSymbol, d.Term(n.TermName(field.name)))
           val fieldSignature = JavaTypeSignature.parse(
             if (field.signature == null) field.desc else field.signature,
             new FieldSignatureVisitor
@@ -141,7 +142,7 @@ object Javacp {
             else s"(+${index})"
           }
         }
-        val methodDescriptor = d.Method(method.node.name, methodDisambiguator)
+        val methodDescriptor = d.Method(n.TermName(method.node.name), methodDisambiguator)
         val methodSymbol = Symbols.Global(classSymbol, methodDescriptor)
 
         val (methodScope, methodTypeParameters) = method.signature.typeParameters match {
@@ -167,7 +168,7 @@ object Javacp {
               if (method.node.parameters == null) "param" + i
               else method.node.parameters.get(i).name
             }
-            val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramName))
+            val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(n.TermName(paramName)))
             val isRepeatedType = method.node.access.hasFlag(o.ACC_VARARGS) && i == params.length - 1
             val paramTpe =
               if (isRepeatedType) {
@@ -266,7 +267,7 @@ object Javacp {
         val prefix = styperef(sym, targs.toSemanticTpe(scope))
         val (result, _) = suffix.foldLeft(prefix -> sym) {
           case ((accum, owner), s: ClassTypeSignatureSuffix) =>
-            val desc = Descriptor.Type(s.simpleClassTypeSignature.identifier.encoded)
+            val desc = Descriptor.Type(n.TypeName(s.simpleClassTypeSignature.identifier))
             val symbol = Symbols.Global(owner, desc)
             styperef(
               prefix = accum,
@@ -295,7 +296,7 @@ object Javacp {
     //           A extends Recursive <A, B>,
     //           B extends Recursive.Inner <A , B>>
     val infos = typeParameters.all.map { typeParameter: TypeParameter =>
-      val symbol = Symbols.Global(ownerSymbol, d.TypeParameter(typeParameter.identifier))
+      val symbol = Symbols.Global(ownerSymbol, d.TypeParameter(n.TypeName(typeParameter.identifier)))
       nextScope = nextScope.enter(typeParameter.identifier, symbol)
       TypeParameterInfo(typeParameter, symbol)
     }
@@ -339,7 +340,7 @@ object Javacp {
     var i = asmName.length - 1
     while (i >= 0) {
       asmName.charAt(i) match {
-        case '$' | '/' => return asmName.substring(i + 1).encoded
+        case '$' | '/' => return asmName.substring(i + 1)
         case _ => i -= 1
       }
     }
@@ -355,7 +356,8 @@ object Javacp {
       part.append(c)
     }
     def flush(): Unit = {
-      result.append(part.toString.encoded)
+      val encoded = n.TermName(part.toString).encoded
+      result.append(encoded.toString)
       part.clear()
     }
     while (i < asmName.length) {

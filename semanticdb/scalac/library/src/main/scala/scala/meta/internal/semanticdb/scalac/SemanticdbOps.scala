@@ -9,13 +9,13 @@ trait SemanticdbOps
     with InputOps
     with LanguageOps
     with DiagnosticOps
-    with NameOps
     with ParseOps
     with ReporterOps
     with ReflectionToolkit
     with SymbolOps
     with SyntheticOps
-    with TypeOps {
+    with TypeOps
+    with ValueOps {
   val global: Global
   var config: SemanticdbConfig = SemanticdbConfig.default
 }

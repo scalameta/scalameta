@@ -124,7 +124,7 @@ trait SymbolInformationOps { self: Scalacp =>
     private def name: String = {
       if (sym.isPackageObject) {
         val sowner = sym.ssym.owner
-        sowner.desc.name
+        sowner.desc.value
       } else {
         sym.name.toSemantic
       }
