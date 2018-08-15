@@ -107,7 +107,7 @@ class ConfigSuite extends FunSuite with DiffAssertions {
       |  }
       |}
     """.stripMargin, { doc =>
-      val obtained = doc.symbols.map(i => i.symbol + " " + i.name).sorted.mkString("\n")
+      val obtained = doc.symbols.map(i => i.symbol + " " + i.displayName).sorted.mkString("\n")
       assertNoDiffOrPrintExpected(
         obtained,
         """|_empty_/A. A

@@ -24,7 +24,7 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
         if (!printed(info.symbol)) {
           printed += info.symbol
           out.print("  ")
-          out.print(info.name)
+          out.print(info.displayName)
           out.print(" => ")
           out.println(info.symbol)
         }

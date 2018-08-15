@@ -7,6 +7,7 @@ import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb.Scala.{Names => n}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
+import scala.reflect.NameTransformer
 import scala.tools.scalap.scalax.rules.scalasig._
 
 trait SymbolOps { _: Scalacp =>
@@ -59,24 +60,35 @@ trait SymbolOps { _: Scalacp =>
         }
       }
     }
+    def symbolName: String = {
+      if (sym.isRootPackage) n.RootPackage.value
+      else if (sym.isEmptyPackage) n.EmptyPackage.value
+      else if (sym.isConstructor) n.Constructor.value
+      // FIXME: https://github.com/scalameta/scalameta/issues/1421
+      else if (sym.name.startsWith("_$")) "_"
+      else {
+        def loop(value: String): String = {
+          val i = value.lastIndexOf("$$")
+          if (i > 0) loop(value.substring(i + 2))
+          else NameTransformer.decode(value).stripSuffix(" ")
+        }
+        loop(sym.name)
+      }
+    }
     def descriptor: Descriptor = {
-      val value = sym.name.toSemantic
       sym match {
         case sym: SymbolInfoSymbol =>
           sym.kind match {
             case k.LOCAL | k.OBJECT | k.PACKAGE_OBJECT =>
-              d.Term(n.TermName(value))
+              d.Term(n.TermName(symbolName))
             case k.METHOD if sym.isValMethod =>
-              d.Term(n.TermName(value))
+              d.Term(n.TermName(symbolName))
             case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
               val overloads = {
                 val peers = sym.parent.get.semanticdbDecls.syms
                 peers.filter {
-                  case peer: MethodSymbol =>
-                    peer.name == sym.name &&
-                      !peer.isValMethod
-                  case _ =>
-                    false
+                  case peer: MethodSymbol => peer.symbolName == sym.symbolName && !peer.isValMethod
+                  case _ => false
                 }
               }
               val disambiguator = {
@@ -87,24 +99,24 @@ trait SymbolOps { _: Scalacp =>
                   else s"(+${index})"
                 }
               }
-              d.Method(n.TermName(value), disambiguator)
+              d.Method(n.TermName(symbolName), disambiguator)
             case k.TYPE | k.CLASS | k.TRAIT =>
-              d.Type(n.TypeName(value))
+              d.Type(n.TypeName(symbolName))
             case k.PACKAGE =>
-              d.Package(n.TermName(value))
+              d.Package(n.TermName(symbolName))
             case k.PARAMETER =>
-              d.Parameter(n.TermName(value))
+              d.Parameter(n.TermName(symbolName))
             case k.TYPE_PARAMETER =>
-              d.TypeParameter(n.TypeName(value))
+              d.TypeParameter(n.TypeName(symbolName))
             case skind =>
               sys.error(s"unsupported kind $skind for symbol $sym")
           }
         case sym: ExternalSymbol =>
           symbolIndex.lookup(sym) match {
-            case PackageLookup => d.Package(n.TermName(value))
-            case JavaLookup => d.Type(n.TypeName(value))
-            case ScalaLookup if sym.entry.entryType == 9 => d.Type(n.TypeName(value))
-            case ScalaLookup if sym.entry.entryType == 10 => d.Term(n.TermName(value))
+            case PackageLookup => d.Package(n.TermName(symbolName))
+            case JavaLookup => d.Type(n.TypeName(symbolName))
+            case ScalaLookup if sym.entry.entryType == 9 => d.Type(n.TypeName(symbolName))
+            case ScalaLookup if sym.entry.entryType == 10 => d.Term(n.TermName(symbolName))
             case ScalaLookup => sys.error(s"unsupported symbol $sym")
             case MissingLookup => throw MissingSymbolException(sym.path)
           }
@@ -147,8 +159,8 @@ trait SymbolOps { _: Scalacp =>
             val ssym = sym.ssym
             sbuf += ssym
             if (sym.isUsefulField && sym.isMutable) {
-              val setterName = ssym.desc.name + "_="
-              val setterSym = Symbols.Global(ssym.owner, d.Method(n.TermName(setterName), "()"))
+              val setterSymbolName = ssym.desc.name + "_="
+              val setterSym = Symbols.Global(ssym.owner, d.Method(n.TermName(setterSymbolName), "()"))
               sbuf += setterSym
             }
           }

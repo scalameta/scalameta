@@ -39,29 +39,31 @@ trait Elements {
         if (qualName == "") Symbols.EmptyPackage
         else qualName.replace('.', '/') + "/"
       case elem: TypeElement =>
-        Symbols.Global(owner, d.Type(n.TypeName(name)))
+        Symbols.Global(owner, d.Type(n.TypeName(symbolName)))
       case elem: ExecutableElement =>
         val owner = elem.getEnclosingElement
         val disambig = {
           val siblings = owner.enclosedElements
           val siblingMethods = siblings.collect {
-            case sibling: ExecutableElement if sibling.name == name => sibling
+            case sibling: ExecutableElement if sibling.symbolName == symbolName => sibling
           }
           val (instance, static) = siblingMethods.partition(method => !isStatic(method))
           val methodPlace = (instance ++ static).indexOf(elem)
           if (methodPlace == 0) "()"
           else s"(+$methodPlace)"
         }
-        Symbols.Global(owner.sym, d.Method(n.TermName(name), disambig))
+        Symbols.Global(owner.sym, d.Method(n.TermName(symbolName), disambig))
       case elem: VariableElement if elem.getKind == ElementKind.PARAMETER =>
-        Symbols.Global(owner, d.Parameter(n.TermName(name)))
+        Symbols.Global(owner, d.Parameter(n.TermName(symbolName)))
       case elem: VariableElement =>
-        Symbols.Global(owner, d.Term(n.TermName(name)))
+        Symbols.Global(owner, d.Term(n.TermName(symbolName)))
       case elem: TypeParameterElement =>
-        Symbols.Global(owner, d.TypeParameter(n.TypeName(name)))
+        Symbols.Global(owner, d.TypeParameter(n.TypeName(symbolName)))
     }
 
-    def name: String = elem match {
+    def displayName: String = symbolName
+
+    def symbolName: String = elem match {
       case elem: PackageElement =>
         if (elem.isUnnamed) "_empty_"
         else {
@@ -130,7 +132,7 @@ trait Elements {
     }
 
     def isSynthetic: Boolean = elem match {
-      case elem: ExecutableElement => Set("<init>", "<clinit>").contains(elem.name.toString)
+      case elem: ExecutableElement => Set("<init>", "<clinit>").contains(elem.symbolName)
       case _ => false
     }
 
@@ -208,7 +210,7 @@ trait Elements {
       symbol = sym,
       language = s.Language.JAVA,
       kind = kind,
-      name = name,
+      displayName = displayName,
       annotations = annotations,
       access = access,
       properties = properties,

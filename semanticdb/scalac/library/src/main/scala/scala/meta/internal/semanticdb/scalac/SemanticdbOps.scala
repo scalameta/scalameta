@@ -14,8 +14,7 @@ trait SemanticdbOps
     with ReflectionToolkit
     with SymbolOps
     with SyntheticOps
-    with TypeOps
-    with ValueOps {
+    with TypeOps {
   val global: Global
   var config: SemanticdbConfig = SemanticdbConfig.default
 }

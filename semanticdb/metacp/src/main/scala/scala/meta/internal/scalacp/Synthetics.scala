@@ -12,8 +12,8 @@ object Synthetics {
     val getterSym = getterInfo.symbol
     val setterSym = {
       if (getterSym.isGlobal) {
-        val setterValue = getterSym.desc.value + "_="
-        Symbols.Global(getterSym.owner, d.Method(n.TermName(setterValue), "()"))
+        val setterSymbolName = getterSym.desc.name + "_="
+        Symbols.Global(getterSym.owner, d.Method(n.TermName(setterSymbolName), "()"))
       } else {
         getterSym + "+1"
       }
@@ -32,7 +32,7 @@ object Synthetics {
       language = l.SCALA,
       kind = k.PARAMETER,
       properties = 0,
-      name = "x$1",
+      displayName = "x$1",
       signature = paramSig,
       annotations = Nil,
       access = s.NoAccess)
@@ -52,7 +52,7 @@ object Synthetics {
       language = l.SCALA,
       kind = k.METHOD,
       properties = getterInfo.properties,
-      name = getterInfo.name + "_=",
+      displayName = getterInfo.displayName + "_=",
       signature = setterSig,
       annotations = getterInfo.annotations,
       access = getterInfo.access)

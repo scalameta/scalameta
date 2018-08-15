@@ -6,6 +6,7 @@ import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
+import scala.reflect.NameTransformer
 
 object Scalalib {
   lazy val synthetics: List[ClassfileInfos] = {
@@ -62,20 +63,20 @@ object Scalalib {
   private def builtin(
       kind: s.SymbolInformation.Kind,
       props: List[s.SymbolInformation.Property],
-      name: String,
+      className: String,
       bases: List[String],
       symbols: List[s.SymbolInformation]): ClassfileInfos = {
     val parents = bases.map { base =>
       s.TypeRef(s.NoType, base, Nil)
     }
-    val symbol = "scala/" + name + "#"
+    val symbol = "scala/" + className + "#"
     val ctorSig = s.MethodSignature(Some(s.Scope(Nil)), List(s.Scope(Nil)), s.NoType)
     val ctor = s.SymbolInformation(
       symbol = symbol + "`<init>`().",
       language = l.SCALA,
       kind = k.CONSTRUCTOR,
       properties = p.PRIMARY.value,
-      name = "<init>",
+      displayName = "<init>",
       signature = ctorSig,
       access = s.PublicAccess()
     )
@@ -90,7 +91,7 @@ object Scalalib {
       language = l.SCALA,
       kind = kind,
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
-      name = name,
+      displayName = className,
       signature = builtinSig,
       access = s.PublicAccess()
     )
@@ -98,7 +99,7 @@ object Scalalib {
       if (kind.isClass) ctor :: symbols
       else symbols
     )
-    val relativeUri = "scala/" + name + ".class"
+    val relativeUri = "scala/" + NameTransformer.encode(className) + ".class"
     val syntheticClassfile = ClassfileInfos(relativeUri, s.Language.SCALA, infos)
     syntheticClassfile
   }
@@ -124,7 +125,7 @@ object Scalalib {
         language = l.SCALA,
         kind = k.TYPE_PARAMETER,
         properties = 0,
-        name = tparamName,
+        displayName = tparamName,
         signature = tparamSig,
         access = s.NoAccess)
     }
@@ -137,7 +138,7 @@ object Scalalib {
           language = l.SCALA,
           kind = k.PARAMETER,
           properties = 0,
-          name = paramName,
+          displayName = paramName,
           signature = paramSig)
     }
     val methodSig = {
@@ -150,7 +151,7 @@ object Scalalib {
       language = l.SCALA,
       kind = k.METHOD,
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
-      name = methodName,
+      displayName = methodName,
       signature = methodSig,
       access = s.PublicAccess())
     List(method) ++ tparams ++ params

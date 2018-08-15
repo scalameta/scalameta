@@ -13,7 +13,7 @@ advanced/D#
 +                symbol: "advanced/D#_#"
                  kind: TYPE
                  properties: 4
-                 name: "_"
+                 display_name: "_"
      self {
      declarations {
 +      symlinks: "advanced/D#_#"
@@ -35,7 +35,7 @@ advanced/Existential#e1().
 +            symbol: "local0"
              kind: TYPE
              properties: 4
-             name: "_"
+             display_name: "_"
 
 
 ==========================
@@ -53,7 +53,7 @@ advanced/Existential#e2().
 +                symbol: "local1"
                  kind: TYPE
                  properties: 4
-                 name: "T"
+                 display_name: "T"
 
 
 ==========================
@@ -74,14 +74,14 @@ advanced/Existential#e4().
 +            symbol: "local2"
              kind: TYPE
              properties: 4
-             name: "U"
+             display_name: "U"
                      type_parameters {
                        hardlinks {
 -                        symbol: "local11"
 +                        symbol: "local3"
                          kind: TYPE_PARAMETER
                          properties: 0
-                         name: "T"
+                         display_name: "T"
 
 
 =========================
@@ -95,14 +95,14 @@ advanced/Structural#s3().
 +            symbol: "local2"
              kind: METHOD
              properties: 0
-             name: "m"
+             display_name: "m"
                  parameterLists {
                    hardlinks {
 -                    symbol: "local4"
 +                    symbol: "local3"
                      kind: PARAMETER
                      properties: 0
-                     name: "x"
+                     display_name: "x"
 
 
 =================
@@ -120,7 +120,7 @@ advanced/Test.e2.
 +                symbol: "advanced/Test.T#"
                  kind: TYPE
                  properties: 4
-                 name: "T"
+                 display_name: "T"
 
 
 =================
@@ -134,14 +134,14 @@ advanced/Test.s3.
 +            symbol: "local2"
              kind: METHOD
              properties: 0
-             name: "m"
+             display_name: "m"
                  parameterLists {
                    hardlinks {
 -                    symbol: "local4"
 +                    symbol: "local3"
                      kind: PARAMETER
                      properties: 0
-                     name: "x"
+                     display_name: "x"
 
 
 ==============
@@ -208,7 +208,7 @@ classes/N.anonClass.
 +            symbol: "local0"
              kind: METHOD
              properties: 1024
-             name: "local"
+             display_name: "local"
 
 
 ===============
@@ -347,7 +347,7 @@ types/Test.C#compoundType3.
 +            symbol: "local1"
              kind: METHOD
              properties: 4
-             name: "k"
+             display_name: "k"
 
 
 ===========================
@@ -361,7 +361,7 @@ types/Test.C#compoundType4.
 +            symbol: "local2"
              kind: METHOD
              properties: 0
-             name: "k"
+             display_name: "k"
 
 
 ===========================
@@ -375,7 +375,7 @@ types/Test.C#compoundType6.
 +            symbol: "local3"
              kind: METHOD
              properties: 0
-             name: "k"
+             display_name: "k"
 
 
 ==============================
@@ -393,7 +393,7 @@ types/Test.C#existentialType1.
 +            symbol: "local4"
              kind: TYPE
              properties: 4
-             name: "T"
+             display_name: "T"
 
 
 ==============================
@@ -411,7 +411,7 @@ types/Test.C#existentialType2.
 +            symbol: "local5"
              kind: TYPE
              properties: 4
-             name: "_"
+             display_name: "_"
 
 
 ==============================
@@ -429,7 +429,7 @@ types/Test.C#existentialType3.
 +            symbol: "local6"
              kind: TYPE
              properties: 4
-             name: "?0"
+             display_name: "?0"
 
 
 ==============================
@@ -447,7 +447,7 @@ types/Test.C#existentialType4.
 +            symbol: "local7"
              kind: TYPE
              properties: 4
-             name: "?0"
+             display_name: "?0"
 
 
 ============================
@@ -455,7 +455,7 @@ types/Test.Literal.javaEnum.
 ============================
 --- metac
 +++ metacp
- name: "javaEnum"
+ display_name: "javaEnum"
  language: SCALA
  signature {
 -  methodSignature {

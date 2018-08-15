@@ -186,6 +186,13 @@ object Scala {
     val Constructor: TermName = TermName("<init>")
   }
 
+  object DisplayNames {
+    val RootPackage: String = "_root_"
+    val EmptyPackage: String = "_empty_"
+    val Constructor: String = "<init>"
+    val Anonymous: String = "_"
+  }
+
   private class DescriptorParser(s: String) {
     var i = s.length
     def fail() = {

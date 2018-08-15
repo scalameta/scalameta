@@ -27,19 +27,19 @@ trait SymbolOps { self: SemanticdbOps =>
         val owner = sym.owner.toSemantic
         val desc = {
           if (sym.isValMethod) {
-            d.Term(n.TermName(sym.name.toSemantic))
+            d.Term(n.TermName(sym.symbolName))
           } else if (sym.isMethod || sym.isUsefulField) {
-            d.Method(n.TermName(sym.name.toSemantic), sym.disambiguator)
+            d.Method(n.TermName(sym.symbolName), sym.disambiguator)
           } else if (sym.isTypeParameter) {
-            d.TypeParameter(n.TypeName(sym.name.toSemantic))
+            d.TypeParameter(n.TypeName(sym.symbolName))
           } else if (sym.isValueParameter) {
-            d.Parameter(n.TermName(sym.name.toSemantic))
+            d.Parameter(n.TermName(sym.symbolName))
           } else if (sym.isType || sym.isJavaClass) {
-            d.Type(n.TypeName(sym.name.toSemantic))
+            d.Type(n.TypeName(sym.symbolName))
           } else if (sym.hasPackageFlag) {
-            d.Package(n.TermName(sym.name.toSemantic))
+            d.Package(n.TermName(sym.symbolName))
           } else {
-            d.Term(n.TermName(sym.name.toSemantic))
+            d.Term(n.TermName(sym.symbolName))
           }
         }
         Symbols.Global(owner, desc)
@@ -80,11 +80,19 @@ trait SymbolOps { self: SemanticdbOps =>
       !definitelyGlobal && (definitelyLocal || ownerLocal)
     }
     def isSemanticdbMulti: Boolean = sym.isOverloaded
+    def symbolName: String = {
+      if (sym.name == g.nme.ROOTPKG) n.RootPackage.value
+      else if (sym.name == g.nme.EMPTY_PACKAGE_NAME) n.EmptyPackage.value
+      else if (sym.name == g.nme.CONSTRUCTOR) n.Constructor.value
+      // FIXME: https://github.com/scalameta/scalameta/issues/1421
+      else if (sym.name.startsWith("_$")) "_"
+      else sym.name.decoded.stripSuffix(g.nme.LOCAL_SUFFIX_STRING)
+    }
     def disambiguator: String = {
       val peers = sym.owner.semanticdbDecls.gsyms
       val overloads = peers.filter { peer =>
         peer.isMethod &&
-        peer.name == sym.name &&
+        peer.symbolName == sym.symbolName &&
         !peer.isValMethod
       }
       val suffix = {
@@ -155,8 +163,8 @@ trait SymbolOps { self: SemanticdbOps =>
             sbuf += ssym
             if (gsym.isUsefulField && gsym.isMutable) {
               if (ssym.isGlobal) {
-                val setterName = ssym.desc.name + "_="
-                val setterSym = Symbols.Global(ssym.owner, d.Method(n.TermName(setterName), "()"))
+                val setterSymbolName = ssym.desc.name + "_="
+                val setterSym = Symbols.Global(ssym.owner, d.Method(n.TermName(setterSymbolName), "()"))
                 sbuf += setterSym
               } else {
                 val setterSym = ssym + "+1"

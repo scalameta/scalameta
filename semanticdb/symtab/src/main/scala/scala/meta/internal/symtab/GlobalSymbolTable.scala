@@ -49,8 +49,8 @@ final class GlobalSymbolTable private (classpath: Classpath) extends SymbolTable
       if (symbol.isRootPackage || symbol.isEmptyPackage || classpathIndex.isClassdir(symbol)) {
         val info = SymbolInformation(
           symbol = symbol,
-          name = symbol.desc.value,
-          kind = SymbolInformation.Kind.PACKAGE
+          kind = SymbolInformation.Kind.PACKAGE,
+          displayName = symbol.desc.value
         )
         Some(info)
       } else {

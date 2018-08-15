@@ -419,7 +419,7 @@ object JavacMetacpDiffExpect extends ExpectHelpers {
                 ))
             case sig: s.ValueSignature =>
               info.copy(
-                name = "$enum$name",
+                displayName = "$enum$name",
                 symbol = nameChanges(info.symbol)
               )
             case sig => info
