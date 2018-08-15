@@ -35,12 +35,22 @@ package object inputs {
     def structure: String = input.toString
   }
 
-  implicit class XtensionPositionSemanticDB(pos: Position) {
+  implicit class XtensionPositionToRange(pos: Position) {
     def toRange: s.Range = s.Range(
       startLine = pos.startLine,
       startCharacter = pos.startColumn,
       endLine = pos.endLine,
       endCharacter = pos.endColumn
+    )
+  }
+
+  implicit class XtensionRangeToPosition(range: s.Range) {
+    def toPosition(input: Input): Position = Position.Range(
+      input = input,
+      startLine = range.startLine,
+      startColumn = range.startCharacter,
+      endLine = range.endLine,
+      endColumn = range.endCharacter
     )
   }
 
