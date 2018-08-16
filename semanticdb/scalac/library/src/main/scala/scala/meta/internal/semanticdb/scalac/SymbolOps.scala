@@ -314,7 +314,7 @@ trait SymbolOps { self: SemanticdbOps =>
     else {
       val id = idCache.get(minput.syntax)
       idCache.put(minput.syntax, id + 1)
-      Symbols.Local(id)
+      Symbols.Local(id.toString)
     }
   }
 }

@@ -1196,7 +1196,8 @@ created for which Scala definitions, what their metadata is, etc). See
       <a href="#symbol">↑</a>
     </td>
     <td>
-      Concatenation of <code>local</code> and a decimal number.
+      Concatenation of <code>local</code> and an implementation-dependent
+      suffix that doesn't contain slashes (`/`) and semicolons (`;`).
     </td>
   </tr>
 </table>
@@ -2827,7 +2828,8 @@ In this section, we describe the Java symbol format.
       <a href="#symbol">↑</a>
     </td>
     <td>
-      Concatenation of <code>local</code> and a decimal number.
+      Concatenation of <code>local</code> and an implementation-dependent
+      suffix that doesn't contain slashes (`/`) and semicolons (`;`).
     </td>
   </tr>
 </table>

@@ -295,7 +295,7 @@ trait SymbolOps { _: Scalacp =>
 
   private var nextId = 0
   private def freshSymbol(): String = {
-    val result = Symbols.Local(nextId)
+    val result = Symbols.Local(nextId.toString)
     nextId += 1
     result
   }
