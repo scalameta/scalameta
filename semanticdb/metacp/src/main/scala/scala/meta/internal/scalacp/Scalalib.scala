@@ -4,6 +4,10 @@ import scala.meta.internal.io.PathIO
 import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.meta.internal.semanticdb.Scala.{DisplayNames => dn}
+import scala.meta.internal.semanticdb.Scala.{Names => n}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.reflect.NameTransformer
@@ -60,6 +64,10 @@ object Scalalib {
     builtin(k.TRAIT, Nil, "Singleton", List("scala/Any#"), Nil)
   }
 
+  private def scalaPackage: String = {
+    Symbols.Global(Symbols.RootPackage, d.Package("scala"))
+  }
+
   private def builtin(
       kind: s.SymbolInformation.Kind,
       props: List[s.SymbolInformation.Property],
@@ -69,14 +77,14 @@ object Scalalib {
     val parents = bases.map { base =>
       s.TypeRef(s.NoType, base, Nil)
     }
-    val symbol = "scala/" + className + "#"
+    val symbol = Symbols.Global(scalaPackage, d.Type(className))
     val ctorSig = s.MethodSignature(Some(s.Scope(Nil)), List(s.Scope(Nil)), s.NoType)
     val ctor = s.SymbolInformation(
-      symbol = symbol + "`<init>`().",
+      symbol = Symbols.Global(symbol, d.Method(n.Constructor.value, "()")),
       language = l.SCALA,
       kind = k.CONSTRUCTOR,
       properties = p.PRIMARY.value,
-      displayName = "<init>",
+      displayName = dn.Constructor,
       signature = ctorSig,
       access = s.PublicAccess()
     )
@@ -111,14 +119,10 @@ object Scalalib {
       tparamDsls: List[String],
       paramDsls: List[(String, String)],
       retTpeSymbol: String): List[s.SymbolInformation] = {
-    val classSymbol = "scala/" + className + "#"
-    val encodedMethodName = {
-      if (Character.isJavaIdentifierStart(methodName.head)) methodName
-      else "`" + methodName + "`"
-    }
-    val methodSymbol = classSymbol + encodedMethodName + "()."
+    val classSymbol = Symbols.Global(scalaPackage, d.Type(className))
+    val methodSymbol = Symbols.Global(classSymbol, d.Method(methodName, "()"))
     val tparams = tparamDsls.map { tparamName =>
-      val tparamSymbol = methodSymbol + "[" + tparamName + "]"
+      val tparamSymbol = Symbols.Global(methodSymbol, d.TypeParameter(tparamName))
       val tparamSig = s.TypeSignature()
       s.SymbolInformation(
         symbol = tparamSymbol,
@@ -131,7 +135,7 @@ object Scalalib {
     }
     val params = paramDsls.map {
       case (paramName, paramTpeSymbol) =>
-        val paramSymbol = methodSymbol + "(" + paramName + ")"
+        val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramName))
         val paramSig = s.ValueSignature(s.TypeRef(s.NoType, paramTpeSymbol, Nil))
         s.SymbolInformation(
           symbol = paramSymbol,
