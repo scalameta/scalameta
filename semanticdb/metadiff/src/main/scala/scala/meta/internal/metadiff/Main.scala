@@ -9,14 +9,25 @@ import scala.meta.internal.metadiff.diff._
 
 class Main(settings: Settings, reporter: Reporter) {
 
+  private def merge(doc1: s.TextDocument, doc2: s.TextDocument): s.TextDocument = {
+    doc1.copy(
+      symbols = doc1.symbols ++ doc2.symbols,
+      occurrences = doc1.occurrences ++ doc2.occurrences,
+      diagnostics = doc1.diagnostics ++ doc2.diagnostics,
+      synthetics = doc1.synthetics ++ doc2.synthetics
+    )
+  }
+
   private def collectPayloads(root: Path): Map[String, s.TextDocument] = {
-    val builder = Map.newBuilder[String, s.TextDocument]
+    val builder = List.newBuilder[(String, s.TextDocument)]
     Locator(root) { (path, payload) =>
-      payload.documents foreach { doc =>
-        builder += doc.uri -> doc
+      payload.documents.foreach { doc =>
+        builder += ((doc.uri, doc))
       }
     }
-    builder.result()
+    builder.result().groupBy(_._1).map {
+      case (s, opts) => s -> opts.map(_._2).reduce(merge)
+    }
   }
 
   private def diffDocument(docFrom: s.TextDocument, docTo: s.TextDocument): Diff = {
