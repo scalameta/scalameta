@@ -13,14 +13,14 @@ object Synthetics {
     val setterSym = {
       if (getterSym.isGlobal) {
         val setterSymbolName = getterSym.desc.name + "_="
-        Symbols.Global(getterSym.owner, d.Method(n.TermName(setterSymbolName), "()"))
+        Symbols.Global(getterSym.owner, d.Method(setterSymbolName, "()"))
       } else {
         getterSym + "+1"
       }
     }
 
     val paramSym = {
-      if (getterSym.isGlobal) Symbols.Global(setterSym, d.Parameter(n.TermName("x$1")))
+      if (getterSym.isGlobal) Symbols.Global(setterSym, d.Parameter("x$1"))
       else getterSym + "+2"
     }
     val paramSig = getterInfo.signature match {

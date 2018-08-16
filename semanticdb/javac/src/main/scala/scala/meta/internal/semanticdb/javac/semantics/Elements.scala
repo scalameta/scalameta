@@ -39,7 +39,7 @@ trait Elements {
         if (qualName == "") Symbols.EmptyPackage
         else qualName.replace('.', '/') + "/"
       case elem: TypeElement =>
-        Symbols.Global(owner, d.Type(n.TypeName(symbolName)))
+        Symbols.Global(owner, d.Type(symbolName))
       case elem: ExecutableElement =>
         val owner = elem.getEnclosingElement
         val disambig = {
@@ -52,13 +52,13 @@ trait Elements {
           if (methodPlace == 0) "()"
           else s"(+$methodPlace)"
         }
-        Symbols.Global(owner.sym, d.Method(n.TermName(symbolName), disambig))
+        Symbols.Global(owner.sym, d.Method(symbolName, disambig))
       case elem: VariableElement if elem.getKind == ElementKind.PARAMETER =>
-        Symbols.Global(owner, d.Parameter(n.TermName(symbolName)))
+        Symbols.Global(owner, d.Parameter(symbolName))
       case elem: VariableElement =>
-        Symbols.Global(owner, d.Term(n.TermName(symbolName)))
+        Symbols.Global(owner, d.Term(symbolName))
       case elem: TypeParameterElement =>
-        Symbols.Global(owner, d.TypeParameter(n.TypeName(symbolName)))
+        Symbols.Global(owner, d.TypeParameter(symbolName))
     }
 
     def displayName: String = symbolName

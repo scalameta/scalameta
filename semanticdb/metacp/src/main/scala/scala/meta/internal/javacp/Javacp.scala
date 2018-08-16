@@ -96,7 +96,7 @@ object Javacp {
           // Drop the constructor argument that holds the reference to the outer class.
           ()
         } else {
-          val fieldSymbol = Symbols.Global(classSymbol, d.Term(n.TermName(field.name)))
+          val fieldSymbol = Symbols.Global(classSymbol, d.Term(field.name))
           val fieldDisplayName = field.name
           val fieldSignature = JavaTypeSignature.parse(
             if (field.signature == null) field.desc else field.signature,
@@ -143,7 +143,7 @@ object Javacp {
             else s"(+${index})"
           }
         }
-        val methodDescriptor = d.Method(n.TermName(method.node.name), methodDisambiguator)
+        val methodDescriptor = d.Method(method.node.name, methodDisambiguator)
         val methodSymbol = Symbols.Global(classSymbol, methodDescriptor)
 
         val (methodScope, methodTypeParameters) = method.signature.typeParameters match {
@@ -169,7 +169,7 @@ object Javacp {
               if (method.node.parameters == null) "param" + i
               else method.node.parameters.get(i).name
             }
-            val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(n.TermName(paramDisplayName)))
+            val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramDisplayName))
             val isRepeatedType = method.node.access.hasFlag(o.ACC_VARARGS) && i == params.length - 1
             val paramTpe =
               if (isRepeatedType) {
@@ -270,7 +270,7 @@ object Javacp {
         val prefix = styperef(sym, targs.toSemanticTpe(scope))
         val (result, _) = suffix.foldLeft(prefix -> sym) {
           case ((accum, owner), s: ClassTypeSignatureSuffix) =>
-            val desc = Descriptor.Type(n.TypeName(s.simpleClassTypeSignature.identifier))
+            val desc = Descriptor.Type(s.simpleClassTypeSignature.identifier)
             val symbol = Symbols.Global(owner, desc)
             styperef(
               prefix = accum,
@@ -299,7 +299,7 @@ object Javacp {
     //           A extends Recursive <A, B>,
     //           B extends Recursive.Inner <A , B>>
     val infos = typeParameters.all.map { typeParameter: TypeParameter =>
-      val symbol = Symbols.Global(ownerSymbol, d.TypeParameter(n.TypeName(typeParameter.identifier)))
+      val symbol = Symbols.Global(ownerSymbol, d.TypeParameter(typeParameter.identifier))
       nextScope = nextScope.enter(typeParameter.identifier, symbol)
       TypeParameterInfo(typeParameter, symbol)
     }
@@ -360,8 +360,7 @@ object Javacp {
       part.append(c)
     }
     def flush(): Unit = {
-      val encoded = n.TermName(part.toString).encoded
-      result.append(encoded.toString)
+      result.append(n.encode(part.toString))
       part.clear()
     }
     while (i < asmName.length) {

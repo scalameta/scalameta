@@ -2,7 +2,7 @@ package scala.meta.internal.semanticdb
 
 import scala.compat.Platform.EOL
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
-import scala.meta.internal.semanticdb.Scala.Names._
+import scala.meta.internal.semanticdb.Scala.{Names => n}
 
 object Scala {
   object Symbols {
@@ -121,28 +121,38 @@ object Scala {
     def isPackage: Boolean = this.isInstanceOf[d.Package]
     def isParameter: Boolean = this.isInstanceOf[d.Parameter]
     def isTypeParameter: Boolean = this.isInstanceOf[d.TypeParameter]
-    def name: Name
-    def value: String = name.value
+    def value: String
+    def name: n.Name = {
+      this match {
+        case d.None => n.TermName(value)
+        case d.Term(value) => n.TermName(value)
+        case d.Method(value, disambiguator) => n.TermName(value)
+        case d.Type(value) => n.TypeName(value)
+        case d.Package(value) => n.TermName(value)
+        case d.Parameter(value) => n.TermName(value)
+        case d.TypeParameter(value) => n.TypeName(value)
+      }
+    }
     override def toString: String = {
       this match {
         case d.None => sys.error("unsupported descriptor")
-        case d.Term(name) => s"${name.encoded}."
-        case d.Method(name, disambiguator) => s"${name.encoded}${disambiguator}."
-        case d.Type(name) => s"${name.encoded}#"
-        case d.Package(name) => s"${name.encoded}/"
-        case d.Parameter(name) => s"(${name.encoded})"
-        case d.TypeParameter(name) => s"[${name.encoded}]"
+        case d.Term(value) => s"${n.encode(value)}."
+        case d.Method(value, disambiguator) => s"${n.encode(value)}${disambiguator}."
+        case d.Type(value) => s"${n.encode(value)}#"
+        case d.Package(value) => s"${n.encode(value)}/"
+        case d.Parameter(value) => s"(${n.encode(value)})"
+        case d.TypeParameter(value) => s"[${n.encode(value)}]"
       }
     }
   }
   object Descriptor {
-    final case object None extends Descriptor { def name: Name = TermName("") }
-    final case class Term(name: Name) extends Descriptor
-    final case class Method(name: Name, disambiguator: String) extends Descriptor
-    final case class Type(name: Name) extends Descriptor
-    final case class Package(name: Name) extends Descriptor
-    final case class Parameter(name: Name) extends Descriptor
-    final case class TypeParameter(name: Name) extends Descriptor
+    final case object None extends Descriptor { def value: String = "" }
+    final case class Term(value: String) extends Descriptor
+    final case class Method(value: String, disambiguator: String) extends Descriptor
+    final case class Type(value: String) extends Descriptor
+    final case class Package(value: String) extends Descriptor
+    final case class Parameter(value: String) extends Descriptor
+    final case class TypeParameter(value: String) extends Descriptor
   }
 
   object Names {
@@ -150,40 +160,27 @@ object Scala {
     // scala.meta.internal.semanticdb.Scala._ and not being afraid of name conflicts.
     sealed trait Name {
       def value: String
-      def encoded: Name
-      def decoded: Name
-      protected def encodedValue: String = {
-        if (value == "") {
-          "``"
-        } else {
-          val (start, parts) = (value.head, value.tail)
-          val isStartOk = Character.isJavaIdentifierStart(start)
-          val isPartsOk = parts.forall(Character.isJavaIdentifierPart)
-          if (isStartOk && isPartsOk) value
-          else "`" + value + "`"
-        }
-      }
-      protected def decodedValue: String = {
-        value.stripPrefix("`").stripSuffix("`")
-      }
-    }
-
-    final case class TermName(value: String) extends Name {
-      def encoded: TermName = TermName(encodedValue)
-      def decoded: TermName = TermName(decodedValue)
       override def toString: String = value
     }
-
-    final case class TypeName(value: String) extends Name {
-      def encoded: TypeName = TypeName(encodedValue)
-      def decoded: TypeName = TypeName(decodedValue)
-      override def toString: String = value
-    }
+    final case class TermName(value: String) extends Name
+    final case class TypeName(value: String) extends Name
 
     val RootPackage: TermName = TermName("_root_")
     val EmptyPackage: TermName = TermName("_empty_")
     val PackageObject: TermName = TermName("package")
     val Constructor: TermName = TermName("<init>")
+
+    private[meta] def encode(value: String): String = {
+      if (value == "") {
+        "``"
+      } else {
+        val (start, parts) = (value.head, value.tail)
+        val isStartOk = Character.isJavaIdentifierStart(start)
+        val isPartsOk = parts.forall(Character.isJavaIdentifierPart)
+        if (isStartOk && isPartsOk) value
+        else "`" + value + "`"
+      }
+    }
   }
 
   object DisplayNames {
@@ -248,28 +245,28 @@ object Scala {
         if (currChar == ')') {
           val disambiguator = parseDisambiguator()
           val value = parseValue()
-          d.Method(TermName(value), disambiguator)
+          d.Method(value, disambiguator)
         } else {
-          d.Term(TermName(parseValue()))
+          d.Term(parseValue())
         }
       } else if (currChar == '#') {
         readChar()
-        d.Type(TypeName(parseValue()))
+        d.Type(parseValue())
       } else if (currChar == '/') {
         readChar()
-        d.Package(TermName(parseValue()))
+        d.Package(parseValue())
       } else if (currChar == ')') {
         readChar()
         val value = parseValue()
         if (currChar != '(') fail()
         else readChar()
-        d.Parameter(TermName(value))
+        d.Parameter(value)
       } else if (currChar == ']') {
         readChar()
         val value = parseValue()
         if (currChar != '[') fail()
         else readChar()
-        d.TypeParameter(TypeName(value))
+        d.TypeParameter(value)
       } else {
         fail()
       }

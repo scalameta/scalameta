@@ -27,19 +27,19 @@ trait SymbolOps { self: SemanticdbOps =>
         val owner = sym.owner.toSemantic
         val desc = {
           if (sym.isValMethod) {
-            d.Term(n.TermName(sym.symbolName))
+            d.Term(sym.symbolName)
           } else if (sym.isMethod || sym.isUsefulField) {
-            d.Method(n.TermName(sym.symbolName), sym.disambiguator)
+            d.Method(sym.symbolName, sym.disambiguator)
           } else if (sym.isTypeParameter) {
-            d.TypeParameter(n.TypeName(sym.symbolName))
+            d.TypeParameter(sym.symbolName)
           } else if (sym.isValueParameter) {
-            d.Parameter(n.TermName(sym.symbolName))
+            d.Parameter(sym.symbolName)
           } else if (sym.isType || sym.isJavaClass) {
-            d.Type(n.TypeName(sym.symbolName))
+            d.Type(sym.symbolName)
           } else if (sym.hasPackageFlag) {
-            d.Package(n.TermName(sym.symbolName))
+            d.Package(sym.symbolName)
           } else {
-            d.Term(n.TermName(sym.symbolName))
+            d.Term(sym.symbolName)
           }
         }
         Symbols.Global(owner, desc)
@@ -162,7 +162,7 @@ trait SymbolOps { self: SemanticdbOps =>
             if (gsym.isUsefulField && gsym.isMutable) {
               if (ssym.isGlobal) {
                 val setterSymbolName = ssym.desc.name + "_="
-                val setterSym = Symbols.Global(ssym.owner, d.Method(n.TermName(setterSymbolName), "()"))
+                val setterSym = Symbols.Global(ssym.owner, d.Method(setterSymbolName, "()"))
                 sbuf += setterSym
               } else {
                 val setterSym = ssym + "+1"

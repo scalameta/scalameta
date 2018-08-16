@@ -78,9 +78,9 @@ trait SymbolOps { _: Scalacp =>
         case sym: SymbolInfoSymbol =>
           sym.kind match {
             case k.LOCAL | k.OBJECT | k.PACKAGE_OBJECT =>
-              d.Term(n.TermName(symbolName))
+              d.Term(symbolName)
             case k.METHOD if sym.isValMethod =>
-              d.Term(n.TermName(symbolName))
+              d.Term(symbolName)
             case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
               val overloads = {
                 val peers = sym.parent.get.semanticdbDecls.syms
@@ -97,24 +97,24 @@ trait SymbolOps { _: Scalacp =>
                   else s"(+${index})"
                 }
               }
-              d.Method(n.TermName(symbolName), disambiguator)
+              d.Method(symbolName, disambiguator)
             case k.TYPE | k.CLASS | k.TRAIT =>
-              d.Type(n.TypeName(symbolName))
+              d.Type(symbolName)
             case k.PACKAGE =>
-              d.Package(n.TermName(symbolName))
+              d.Package(symbolName)
             case k.PARAMETER =>
-              d.Parameter(n.TermName(symbolName))
+              d.Parameter(symbolName)
             case k.TYPE_PARAMETER =>
-              d.TypeParameter(n.TypeName(symbolName))
+              d.TypeParameter(symbolName)
             case skind =>
               sys.error(s"unsupported kind $skind for symbol $sym")
           }
         case sym: ExternalSymbol =>
           symbolIndex.lookup(sym) match {
-            case PackageLookup => d.Package(n.TermName(symbolName))
-            case JavaLookup => d.Type(n.TypeName(symbolName))
-            case ScalaLookup if sym.entry.entryType == 9 => d.Type(n.TypeName(symbolName))
-            case ScalaLookup if sym.entry.entryType == 10 => d.Term(n.TermName(symbolName))
+            case PackageLookup => d.Package(symbolName)
+            case JavaLookup => d.Type(symbolName)
+            case ScalaLookup if sym.entry.entryType == 9 => d.Type(symbolName)
+            case ScalaLookup if sym.entry.entryType == 10 => d.Term(symbolName)
             case ScalaLookup => sys.error(s"unsupported symbol $sym")
             case MissingLookup => throw MissingSymbolException(sym.path)
           }
@@ -158,7 +158,7 @@ trait SymbolOps { _: Scalacp =>
             sbuf += ssym
             if (sym.isUsefulField && sym.isMutable) {
               val setterSymbolName = ssym.desc.name + "_="
-              val setterSym = Symbols.Global(ssym.owner, d.Method(n.TermName(setterSymbolName), "()"))
+              val setterSym = Symbols.Global(ssym.owner, d.Method(setterSymbolName, "()"))
               sbuf += setterSym
             }
           }
