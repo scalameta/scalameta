@@ -84,8 +84,6 @@ trait SymbolOps { self: SemanticdbOps =>
       if (sym.name == g.nme.ROOTPKG) n.RootPackage.value
       else if (sym.name == g.nme.EMPTY_PACKAGE_NAME) n.EmptyPackage.value
       else if (sym.name == g.nme.CONSTRUCTOR) n.Constructor.value
-      // FIXME: https://github.com/scalameta/scalameta/issues/1421
-      else if (sym.name.startsWith("_$")) "_"
       else sym.name.decoded.stripSuffix(g.nme.LOCAL_SUFFIX_STRING)
     }
     def disambiguator: String = {

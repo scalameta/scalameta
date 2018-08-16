@@ -6,17 +6,17 @@ advanced/D#
                    typeRef {
                      prefix {
 -                    symbol: "local14"
-+                    symbol: "advanced/D#_#"
++                    symbol: "advanced/D#_$2#"
              declarations {
                hardlinks {
 -                symbol: "local14"
-+                symbol: "advanced/D#_#"
++                symbol: "advanced/D#_$2#"
                  kind: TYPE
                  properties: 4
                  display_name: "_"
      self {
      declarations {
-+      symlinks: "advanced/D#_#"
++      symlinks: "advanced/D#_$2#"
        symlinks: "advanced/D#`<init>`()."
 
 

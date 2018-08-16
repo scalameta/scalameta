@@ -64,8 +64,6 @@ trait SymbolOps { _: Scalacp =>
       if (sym.isRootPackage) n.RootPackage.value
       else if (sym.isEmptyPackage) n.EmptyPackage.value
       else if (sym.isConstructor) n.Constructor.value
-      // FIXME: https://github.com/scalameta/scalameta/issues/1421
-      else if (sym.name.startsWith("_$")) "_"
       else {
         def loop(value: String): String = {
           val i = value.lastIndexOf("$$")
