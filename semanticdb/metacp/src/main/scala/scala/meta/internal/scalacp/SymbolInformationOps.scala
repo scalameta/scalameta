@@ -97,7 +97,8 @@ trait SymbolInformationOps { self: Scalacp =>
               if ((parent.properties & p.PRIMARY.value) != 0) {
                 parent.parent.foreach { grandParent =>
                   val classMembers = grandParent.children
-                  val accessor = classMembers.find(m => m.isParamAccessor && m.symbolName == sym.symbolName)
+                  val accessor =
+                    classMembers.find(m => m.isParamAccessor && m.symbolName == sym.symbolName)
                   accessor.foreach { accessor =>
                     val isStable = {
                       if (accessor.isMethod) accessor.isStable
