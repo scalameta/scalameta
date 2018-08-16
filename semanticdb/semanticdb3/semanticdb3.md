@@ -1250,7 +1250,7 @@ created for which Scala definitions, what their metadata is, etc). See
   * For empty package, `_empty_`.
   * For package object, `package`.
   * For constructor, `<init>`.
-  * For anonymous definition, implementation-dependent unique name.
+  * For anonymous definition, implementation-dependent name.
   * For other definition, the name of the binding introduced by the definition
     [\[70\]][70]. If the name is not a Java identifier [\[22\]][22], it is
     wrapped in backticks.
@@ -2884,7 +2884,7 @@ In this section, we describe the Java symbol format.
   * For root package, `_root_`.
   * For unnamed package, `_empty_`.
   * For constructor, `<init>`.
-  * For anonymous definition, implementation-dependent unique name.
+  * For anonymous definition, implementation-dependent name.
   * For other definition, the name of the binding introduced by the definition.
     If the name is not a Java identifier [\[22\]][22], it is wrapped
     in backticks.
