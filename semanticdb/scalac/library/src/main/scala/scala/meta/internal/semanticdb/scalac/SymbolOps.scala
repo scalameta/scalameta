@@ -7,6 +7,7 @@ import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.meta.internal.semanticdb.Scala.{Names => n}
 import scala.reflect.internal.{Flags => gf}
 import scala.reflect.internal.util.{SourceFile => GSourceFile, NoSourceFile => GNoSourceFile}
 import scala.util.control.NonFatal
@@ -24,24 +25,24 @@ trait SymbolOps { self: SemanticdbOps =>
         if (sym.isSemanticdbLocal) return freshSymbol(sym)
 
         val owner = sym.owner.toSemantic
-        val signature = {
+        val desc = {
           if (sym.isValMethod) {
-            d.Term(sym.name.toSemantic)
+            d.Term(sym.symbolName)
           } else if (sym.isMethod || sym.isUsefulField) {
-            d.Method(sym.name.toSemantic, sym.disambiguator)
+            d.Method(sym.symbolName, sym.disambiguator)
           } else if (sym.isTypeParameter) {
-            d.TypeParameter(sym.name.toSemantic)
+            d.TypeParameter(sym.symbolName)
           } else if (sym.isValueParameter) {
-            d.Parameter(sym.name.toSemantic)
+            d.Parameter(sym.symbolName)
           } else if (sym.isType || sym.isJavaClass) {
-            d.Type(sym.name.toSemantic)
+            d.Type(sym.symbolName)
           } else if (sym.hasPackageFlag) {
-            d.Package(sym.name.toSemantic)
+            d.Package(sym.symbolName)
           } else {
-            d.Term(sym.name.toSemantic)
+            d.Term(sym.symbolName)
           }
         }
-        Symbols.Global(owner, signature)
+        Symbols.Global(owner, desc)
       }
       val msym = symbolCache.get(sym)
       if (msym != null) {
@@ -79,11 +80,17 @@ trait SymbolOps { self: SemanticdbOps =>
       !definitelyGlobal && (definitelyLocal || ownerLocal)
     }
     def isSemanticdbMulti: Boolean = sym.isOverloaded
+    def symbolName: String = {
+      if (sym.name == g.nme.ROOTPKG) n.RootPackage.value
+      else if (sym.name == g.nme.EMPTY_PACKAGE_NAME) n.EmptyPackage.value
+      else if (sym.name == g.nme.CONSTRUCTOR) n.Constructor.value
+      else sym.name.decoded.stripSuffix(g.nme.LOCAL_SUFFIX_STRING)
+    }
     def disambiguator: String = {
       val peers = sym.owner.semanticdbDecls.gsyms
       val overloads = peers.filter { peer =>
         peer.isMethod &&
-        peer.name == sym.name &&
+        peer.symbolName == sym.symbolName &&
         !peer.isValMethod
       }
       val suffix = {
@@ -154,8 +161,8 @@ trait SymbolOps { self: SemanticdbOps =>
             sbuf += ssym
             if (gsym.isUsefulField && gsym.isMutable) {
               if (ssym.isGlobal) {
-                val setterName = ssym.desc.name + "_="
-                val setterSym = Symbols.Global(ssym.owner, d.Method(setterName, "()"))
+                val setterSymbolName = ssym.desc.name + "_="
+                val setterSym = Symbols.Global(ssym.owner, d.Method(setterSymbolName, "()"))
                 sbuf += setterSym
               } else {
                 val setterSym = ssym + "+1"
@@ -307,7 +314,7 @@ trait SymbolOps { self: SemanticdbOps =>
     else {
       val id = idCache.get(minput.syntax)
       idCache.put(minput.syntax, id + 1)
-      Symbols.Local(id)
+      Symbols.Local(id.toString)
     }
   }
 }

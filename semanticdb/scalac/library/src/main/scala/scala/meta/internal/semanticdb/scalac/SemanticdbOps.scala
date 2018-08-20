@@ -9,7 +9,6 @@ trait SemanticdbOps
     with InputOps
     with LanguageOps
     with DiagnosticOps
-    with NameOps
     with ParseOps
     with ReporterOps
     with ReflectionToolkit

@@ -9,6 +9,7 @@ import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.meta.internal.semanticdb.Scala.{Names => n}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.{semanticdb => s}
@@ -37,7 +38,7 @@ object Javacp {
     def addInfo(
         symbol: String,
         kind: s.SymbolInformation.Kind,
-        name: String,
+        displayName: String,
         sig: s.Signature,
         access: Int): s.SymbolInformation = {
       val info = s.SymbolInformation(
@@ -45,7 +46,7 @@ object Javacp {
         language = l.JAVA,
         kind = kind,
         properties = sproperties(access, node),
-        name = name,
+        displayName = displayName,
         signature = sig,
         annotations = sannotations(access),
         access = saccess(access, symbol, kind)
@@ -56,7 +57,7 @@ object Javacp {
 
     if (isAnonymousClass(node)) return Nil
     val classSymbol = ssym(node.name)
-    val className = sname(node.name)
+    val classDisplayName = sdisplayName(node.name)
     val classAccess = node.access | access
     val hasOuterClassReference = node.fields.asScala.exists(isOuterClassReference)
 
@@ -96,6 +97,7 @@ object Javacp {
           ()
         } else {
           val fieldSymbol = Symbols.Global(classSymbol, d.Term(field.name))
+          val fieldDisplayName = field.name
           val fieldSignature = JavaTypeSignature.parse(
             if (field.signature == null) field.desc else field.signature,
             new FieldSignatureVisitor
@@ -103,7 +105,7 @@ object Javacp {
           val fieldInfo = addInfo(
             fieldSymbol,
             k.FIELD,
-            field.name,
+            fieldDisplayName,
             s.ValueSignature(fieldSignature.toSemanticTpe(classScope)),
             field.access
           )
@@ -163,11 +165,11 @@ object Javacp {
 
         val parameters: List[s.SymbolInformation] = params.zipWithIndex.map {
           case (param: JavaTypeSignature, i) =>
-            val paramName = {
+            val paramDisplayName = {
               if (method.node.parameters == null) "param" + i
               else method.node.parameters.get(i).name
             }
-            val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramName))
+            val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramDisplayName))
             val isRepeatedType = method.node.access.hasFlag(o.ACC_VARARGS) && i == params.length - 1
             val paramTpe =
               if (isRepeatedType) {
@@ -175,7 +177,7 @@ object Javacp {
                   case s.TypeRef(s.NoType, "scala/Array#", targ :: Nil) =>
                     s.RepeatedType(targ)
                   case tpe =>
-                    sys.error(s"expected $paramName to be a scala/Array#, found $tpe")
+                    sys.error(s"expected $paramDisplayName to be a scala/Array#, found $tpe")
                 }
               } else {
                 param.toSemanticTpe(methodScope)
@@ -183,7 +185,7 @@ object Javacp {
             addInfo(
               paramSymbol,
               k.PARAMETER,
-              paramName,
+              paramDisplayName,
               s.ValueSignature(paramTpe),
               o.ACC_PUBLIC
             )
@@ -196,6 +198,8 @@ object Javacp {
 
         val methodKind = if (isConstructor) k.CONSTRUCTOR else k.METHOD
 
+        val methodDisplayName = method.node.name
+
         val methodSig = s.MethodSignature(
           typeParameters = Some(s.Scope(methodTypeParameters.map(_.symbol))),
           parameterLists = List(s.Scope(parameters.map(_.symbol))),
@@ -205,7 +209,7 @@ object Javacp {
         val methodInfo = addInfo(
           methodSymbol,
           methodKind,
-          method.node.name,
+          methodDisplayName,
           methodSig,
           method.node.access
         )
@@ -236,7 +240,7 @@ object Javacp {
     addInfo(
       classSymbol,
       classKind,
-      className,
+      classDisplayName,
       classSig,
       classAccess
     )
@@ -266,7 +270,7 @@ object Javacp {
         val prefix = styperef(sym, targs.toSemanticTpe(scope))
         val (result, _) = suffix.foldLeft(prefix -> sym) {
           case ((accum, owner), s: ClassTypeSignatureSuffix) =>
-            val desc = Descriptor.Type(s.simpleClassTypeSignature.identifier.encoded)
+            val desc = Descriptor.Type(s.simpleClassTypeSignature.identifier)
             val symbol = Symbols.Global(owner, desc)
             styperef(
               prefix = accum,
@@ -313,6 +317,7 @@ object Javacp {
       case _ =>
         s.IntersectionType(types = typeParameters)
     }
+    val displayName = typeParameter.value.identifier
     val sig = s.TypeSignature(
       typeParameters = Some(s.Scope()),
       upperBound = upperBounds
@@ -322,7 +327,7 @@ object Javacp {
       symbol = typeParameter.symbol,
       language = l.JAVA,
       kind = k.TYPE_PARAMETER,
-      name = typeParameter.value.identifier,
+      displayName = displayName,
       signature = sig
     )
   }
@@ -335,11 +340,11 @@ object Javacp {
     }
   }
 
-  private def sname(asmName: String): String = {
+  private def sdisplayName(asmName: String): String = {
     var i = asmName.length - 1
     while (i >= 0) {
       asmName.charAt(i) match {
-        case '$' | '/' => return asmName.substring(i + 1).encoded
+        case '$' | '/' => return asmName.substring(i + 1)
         case _ => i -= 1
       }
     }
@@ -355,7 +360,7 @@ object Javacp {
       part.append(c)
     }
     def flush(): Unit = {
-      result.append(part.toString.encoded)
+      result.append(n.encode(part.toString))
       part.clear()
     }
     while (i < asmName.length) {

@@ -4,6 +4,7 @@ import scala.collection.mutable
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.Scala.{DisplayNames => dn}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.tools.scalap.scalax.rules.ScalaSigParserError
@@ -96,7 +97,8 @@ trait SymbolInformationOps { self: Scalacp =>
               if ((parent.properties & p.PRIMARY.value) != 0) {
                 parent.parent.foreach { grandParent =>
                   val classMembers = grandParent.children
-                  val accessor = classMembers.find(m => m.isParamAccessor && m.name == sym.name)
+                  val accessor =
+                    classMembers.find(m => m.isParamAccessor && m.symbolName == sym.symbolName)
                   accessor.foreach { accessor =>
                     val isStable = {
                       if (accessor.isMethod) accessor.isStable
@@ -121,13 +123,13 @@ trait SymbolInformationOps { self: Scalacp =>
       flags
     }
 
-    private def name: String = {
-      if (sym.isPackageObject) {
-        val sowner = sym.ssym.owner
-        sowner.desc.name
-      } else {
-        sym.name.toSemantic
-      }
+    private def displayName: String = {
+      if (sym.isRootPackage) dn.RootPackage
+      else if (sym.isEmptyPackage) dn.EmptyPackage
+      else if (sym.isConstructor) dn.Constructor
+      else if (sym.name.startsWith("_$")) dn.Anonymous
+      else if (sym.isPackageObject) sym.ssym.owner.desc.value
+      else sym.symbolName
     }
 
     private def sig(linkMode: LinkMode): s.Signature = {
@@ -236,7 +238,7 @@ trait SymbolInformationOps { self: Scalacp =>
         language = language,
         kind = kind,
         properties = properties,
-        name = name,
+        displayName = displayName,
         signature = sig(linkMode),
         annotations = annotations,
         access = access

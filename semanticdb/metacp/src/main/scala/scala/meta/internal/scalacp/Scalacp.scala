@@ -8,7 +8,6 @@ import scala.tools.scalap.scalax.rules.scalasig._
 final class Scalacp private (
     val symbolIndex: SymbolIndex
 ) extends AnnotationOps
-    with NameOps
     with SymbolInformationOps
     with SymbolOps
     with TypeOps {

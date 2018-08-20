@@ -628,7 +628,7 @@ message SymbolInformation {
   Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
-  string name = 5;
+  string display_name = 5;
   Signature signature = 17;
   repeated Annotation annotations = 13;
   Access access = 18;
@@ -827,10 +827,13 @@ languages map onto these properties.
   </tr>
 </table>
 
-`name`. Display name of the definition. Usually, it's the same as the name
-of the corresponding [Symbol](#symbol), except for language-specific situations.
-See [Languages](#languages) for more information on which definitions have
-which names in supported languages.
+`display_name`. Display name of the definition, i.e. how this definition
+should be presented to humans, e.g. in code browsers or integrated development
+environments.
+
+This is not necessarily the same as the symbol name of the corresponding
+[Symbol](#symbol). See [Languages](#languages) for more information on which
+definitions have which display and symbol names in supported languages.
 
 `signature`. [Signature](#signature) that represents the definition signature.
 See [Languages](#languages) for more information on which definitions have
@@ -1193,7 +1196,8 @@ created for which Scala definitions, what their metadata is, etc). See
       <a href="#symbol">↑</a>
     </td>
     <td>
-      Concatenation of <code>local</code> and a decimal number.
+      Concatenation of <code>local</code> and an implementation-dependent
+      suffix that doesn't contain slashes (`/`) and semicolons (`;`).
     </td>
   </tr>
 </table>
@@ -1212,20 +1216,20 @@ created for which Scala definitions, what their metadata is, etc). See
 
 **Descriptor** is:
   * For `LOCAL`, unsupported.
-  * For `PACKAGE`, concatenation of its encoded name and a forward slash (`/`).
+  * For `PACKAGE`, concatenation of its symbol name and a forward slash (`/`).
   * For `OBJECT` or `PACKAGE_OBJECT`,
-    concatenation of its encoded name and a dot (`.`).
+    concatenation of its symbol name and a dot (`.`).
   * Exceptionally, for `VAL` `METHOD`,
-    concatenation of its encoded name and a dot (`.`).
+    concatenation of its symbol name and a dot (`.`).
   * For other `METHOD`, `CONSTRUCTOR`, or `MACRO`,
-    concatenation of its encoded name, a disambiguator and a dot (`.`).
+    concatenation of its symbol name, a disambiguator and a dot (`.`).
   * For `TYPE`, `CLASS` or `TRAIT`, concatenation of its
-    encoded name and a pound sign (`#`).
+    symbol name and a pound sign (`#`).
   * For `PARAMETER`, concatenation of a left parenthesis (`(`), its
-    encoded name and a right parenthesis (`)`).
+    symbol name and a right parenthesis (`)`).
   * For `SELF_PARAMETER`, unsupported.
   * For `TYPE_PARAMETER`, concatenation of a left bracket (`[`), its
-    encoded name and a right bracket (`]`).
+    symbol name and a right bracket (`]`).
   * See [SymbolInformation](#scala-symbolinformation) for details on
     which Scala definitions are modelled by which symbols.
 
@@ -1242,18 +1246,15 @@ created for which Scala definitions, what their metadata is, etc). See
       * `+2` for the definition that appears third.
       * ...
 
-**Encoded name** is:
-  * If name is a Java identifier [\[22\]][22], the name itself.
-  * Otherwise, concatenation of a backtick, the name itself and
-    another backtick.
-
-**Name** is:
+**Symbol name** is:
   * For root package, `_root_`.
   * For empty package, `_empty_`.
   * For package object, `package`.
   * For constructor, `<init>`.
+  * For anonymous definition, implementation-dependent name.
   * For other definition, the name of the binding introduced by the definition
-    [\[70\]][70].
+    [\[70\]][70]. If the name is not a Java identifier [\[22\]][22], it is
+    wrapped in backticks.
 
 For example, this is how some of the definitions from the Scala standard library
 must be modelled:
@@ -1455,7 +1456,7 @@ message SymbolInformation {
   Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
-  string name = 5;
+  string display_name = 5;
   Signature signature = 17;
   repeated Annotation annotations = 13;
   Access access = 18;
@@ -1484,8 +1485,8 @@ message SymbolInformation {
     <td>Explained below on per-definition basis.</td>
   </tr>
   <tr>
-    <td><code>name</code></td>
-    <td>See <a href="#scala-symbol">Symbol</a>.</td>
+    <td><code>display_name</code></td>
+    <td>Explained below on per-definition basis.</td>
   </tr>
   <tr>
     <td><code>signature</code></td>
@@ -1604,6 +1605,8 @@ Notes:
     * If a corresponding local symbol exists, set for the local symbol.
   * `LAZY`: set for all corresponding symbols of `lazy` values.
   * `VAL`: set for all corresponding symbols.
+* Display name for value symbols is equal to the name of the binding
+  introduced by the definition [\[70\]][70].
 * If the type of the value is not provided in source code, it is inferred
   from the right-hand side of the value according to the rules described
   in SLS [\[39\]][39]. Corresponding signature is computed from the inferred
@@ -1635,7 +1638,7 @@ Notes:
 * Setter symbols have the following metadata:
   * `kind`: `METHOD`.
   * `properties`: see below.
-  * `name`: concatenation of the name of the variable followed by `_=`.
+  * `display_name`: concatenation of the display name of the variable and `_=`.
   * `signature`: `MethodSignature(List(), List(List(<x$1>)), <Unit>)`, where
     `x$1` is a `PARAMETER` symbol having `signature` equal to the type of the
      variable.
@@ -1704,9 +1707,11 @@ Notes:
   for regular pattern variables, so that they can be distinguished from
   local value definitions.
 * Pattern variable symbols don't support any properties.
+* Display name for pattern variable symbols is equal to the name of the binding
+  introduced by the definition [\[70\]][70].
 * Pattern definitions [\[39\]][39] do not exist as a first-class language
   feature. Instead, they are desugared into zero or more synthetic value
-  definitions and only then encoded into symbols as described in
+  definitions and only then modelled as symbols as described in
   "Value declarations and definitions" and "Variable declarations and
   definitions".
 * Pattern variable symbols don't support any access modifiers.
@@ -1753,6 +1758,8 @@ Notes:
 * Supported properties for type symbols are:
   * `ABSTRACT`: set for type declarations.
   * `FINAL`: set for `final` type aliases.
+* Display name for type symbols is equal to the name of the binding
+  introduced by the definition [\[70\]][70].
 * We leave the mapping between type syntax written in source code and
   `Type` entities deliberately unspecified. For example, a producer may
   represent the signature of `T1` as `TypeSignature(List(), <Nothing>, <Hi>)`.
@@ -1788,9 +1795,10 @@ Notes:
 * In the future, we may decide to introduce a dedicated symbol kind
   for type variables, so that they can be distinguished from
   local type definitions.
-* Type variable symbols are always `ABSTRACT`.
-* Type variables may be anonymous (via `_` syntax). In that case, their `name`
-  must be modelled as `_`, whereas the symbol name is implementation-dependent.
+* Type variable symbols are always `ABSTRACT`.a
+* Display name for type variable symbols is equal to:
+  * The name of the binding introduced by the definition [\[70\]][70].
+  * Except, in case of anonymous type variables via the `_` syntax, `_`.
 * We leave the mapping between type syntax written in source code and
   `Type` entities deliberately unspecified. For example, a producer may
   represent the signature of `t` as `TypeSignature(List(), <Nothing>, <Any>)`.
@@ -1833,9 +1841,10 @@ Notes:
 * Self parameters cannot be referenced outside the document where they are
   located, which means that they are represented by local symbols.
 * Self parameter symbols don't support any properties.
-* Self parameters may be anonymous (via `_: T =>`, `this: T =>` or corresponding
-  typeless syntaxes). In that case, their `name` must be modelled as `_`,
-  whereas the symbol name is implementation-dependent.
+* Display name for self parameter symbols is equal to:
+  * The name of the binding introduced by the definition [\[70\]][70].
+  * Except, in case of anonymous self parameters via `_: T =>`, `this: T =>`
+    or corresponding typeless syntaxes, `_`.
 * Self parameter symbols don't support any access modifiers.
 
 **Type parameters** [\[43\]][43] are represented with `TYPE_PARAMETER` symbols.
@@ -1885,8 +1894,9 @@ Notes:
   * `CONTRAVARIANT`: set for contravariant type parameters.
 * If present, (higher-order) type parameters of type parameters are
   represented as described here in order of their appearance in source code.
-* Type parameters may be anonymous (via `_` syntax). In that case, their `name`
-  must be modelled as `_`, whereas the symbol name is implementation-dependent.
+* Display name for type parameter symbols is equal to:
+  * The name of the binding introduced by the definition [\[70\]][70].
+  * Except, in case of anonymous type variables via the `_` syntax, `_`.
 * We leave the mapping between type syntax written in source code and
   `Type` entities deliberately unspecified. For example, a producer may
   represent the signature of `T1` as `TypeSignature(List(), <Nothing>, <Any>)`.
@@ -1981,8 +1991,9 @@ Notes:
   and `class C(private[this] val x: Int)`. As a result, due to implementation
   restrictions `private[this] val` parameters currently don't have the `VAL`
   property.
-* Parameters may be anonymous (via `_` syntax). In that case, their `name`
-  must be modelled as `_`, whereas the symbol name is implementation-dependent.
+* Display name for parameter symbols is equal to:
+  * The name of the binding introduced by the definition [\[70\]][70].
+  * Except, in case of anonymous type variables via the `_` syntax, `_`.
 * Unlike some other metaprogramming systems for Scala, we do not
   distinguish regular parameters from parameters with default arguments
   [\[45\]][45]. However, we do create method symbols for synthetic methods
@@ -2078,6 +2089,8 @@ Notes:
   * `ABSTRACT`: set for function declarations.
   * `FINAL`: set for `final` methods.
   * `IMPLICIT`: set for `implicit` methods.
+* Display name for method symbols is equal to the name of the binding
+  introduced by the definition [\[70\]][70].
 * If present, type parameters of methods are
   represented as described above in order of their appearance in source code.
 * If present, parameters of methods are
@@ -2122,6 +2135,8 @@ object M {
 Notes:
 * Supported properties for macro symbols are the same as for method symbols,
   except for `ABSTRACT` because macros cannot be `abstract`.
+* Display name for macro symbols is equal to the name of the binding
+  introduced by the definition [\[70\]][70].
 * Return type inference for macros is not supported.
 * At the moment, `SymbolInformation` for macros does not contain information
   about corresponding macro implementations. We may improve this in the future.
@@ -2162,6 +2177,7 @@ Notes:
   synthetic constructor symbols for traits and objects.
 * Supported properties for constructor symbols are:
   * `PRIMARY`: set for primary constructors.
+* Display name for constructor symbols is equal to `<init>`.
 * Constructors don't have type parameters and return types, but we still
   represent their signatures with `MethodSignature`. In these signatures,
   type parameters are equal to `List()` and the return type is `None`.
@@ -2265,6 +2281,8 @@ Notes:
   * `SEALED`: set for `sealed` classes.
   * `IMPLICIT`: set for `implicit` classes.
   * `CASE`: set for `case` classes.
+* Display name for class symbols is equal to the name of the binding
+  introduced by the definition [\[70\]][70].
 * We leave the mapping between parent syntax written in source code and
   `ClassSignature.parents` deliberately unspecified. Some producers are known
   to insert `<AnyRef>` into `parents` under certain circumstances, so we can't
@@ -2299,6 +2317,8 @@ between object symbols and class symbols are:
 * Object symbols are always `FINAL`.
 * Apart from `FINAL`, object symbols only support `CASE` and `IMPLICIT`
   properties.
+* Display name for object symbols is equal to the name of the binding
+  introduced by the definition [\[70\]][70].
 * Objects don't have type parameters, but we still represent their signatures
   with `ClassSignature`. In these signatures, type parameters are equal
   to `List()`.
@@ -2309,14 +2329,13 @@ similarly to object definitions (see above). Concretely, the differences
 between package object symbols and object symbols are:
 * Package object symbols are always `FINAL`.
 * Apart from `FINAL`, package object symbols don't support any properties.
-* Package objects `name` must be modelled as their name in source code.
-  This is different from their symbol name that must be modelled as `package`.
+* Display name for package object symbols is equal to the name of the binding
+  introduced by the definition [\[70\]][70].
 * Package objects don't have annotations.
 * Package objects don't support any access modifiers.
 
-**Packages** [\[61\]][61] are represented by `PACKAGE` symbols.
-The ["Symbols"](#symbolinformation) section does not include
-`SymbolInformation` for `PACKAGE`.
+**Packages** [\[61\]][61] are not included in the
+["Symbols"](#symbolinformation) section.
 
 <a name="scala-annotation"></a>
 #### Annotation
@@ -2809,7 +2828,8 @@ In this section, we describe the Java symbol format.
       <a href="#symbol">↑</a>
     </td>
     <td>
-      Concatenation of <code>local</code> and a decimal number.
+      Concatenation of <code>local</code> and an implementation-dependent
+      suffix that doesn't contain slashes (`/`) and semicolons (`;`).
     </td>
   </tr>
 </table>
@@ -2827,15 +2847,15 @@ In this section, we describe the Java symbol format.
 
 **Descriptor** is:
   * For `LOCAL`, unsupported.
-  * For `PACKAGE`, concatenation of its encoded name and a forward slash (`/`).
-  * For `FIELD`, concatenation of its encoded name and a dot (`.`).
-  * For `METHOD` or `CONSTRUCTOR`, concatenation of its encoded name,
+  * For `PACKAGE`, concatenation of its symbol name and a forward slash (`/`).
+  * For `FIELD`, concatenation of its symbol name and a dot (`.`).
+  * For `METHOD` or `CONSTRUCTOR`, concatenation of its symbol name,
     a disambiguator and a dot (`.`).
-  * For `CLASS` or `INTERFACE`, concatenation of its encoded name and
+  * For `CLASS` or `INTERFACE`, concatenation of its symbol name and
     a pound sign (`#`).
-  * For `PARAMETER`, concatenation of a left parenthesis (`(`), its encoded
+  * For `PARAMETER`, concatenation of a left parenthesis (`(`), its symbol
     name and a right parenthesis (`)`).
-  * For `TYPE_PARAMETER`, concatenation of a left bracket (`[`), its encoded
+  * For `TYPE_PARAMETER`, concatenation of a left bracket (`[`), its symbol
     name and a right bracket (`]`).
   * See [SymbolInformation](#java-symbolinformation) for details on
     which Java definitions are modelled by which symbols.
@@ -2862,16 +2882,14 @@ In this section, we describe the Java symbol format.
 
     See "Class declarations" below for an example.
 
-**Encoded name** is:
-  * If name is a Java identifier [\[22\]][22], the name itself.
-  * Otherwise, concatenation of a backtick, the name itself and
-    another backtick.
-
-**Name** is:
+**Symbol name** is:
   * For root package, `_root_`.
   * For unnamed package, `_empty_`.
   * For constructor, `<init>`.
-  * For other definition, its encoded name.
+  * For anonymous definition, implementation-dependent name.
+  * For other definition, the name of the binding introduced by the definition.
+    If the name is not a Java identifier [\[22\]][22], it is wrapped
+    in backticks.
 
 For example, this is how some of the definitions from the Java standard library
 must be modelled:
@@ -3016,7 +3034,7 @@ message SymbolInformation {
   Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
-  string name = 5;
+  string display_name = 5;
   Signature signature = 17;
   repeated Annotation annotations = 13;
   Access access = 18;
@@ -3044,8 +3062,8 @@ message SymbolInformation {
     <td>Explained below on per-definition basis.</td>
   </tr>
   <tr>
-    <td><code>name</code></td>
-    <td>See <a href="#java-symbol">Symbol</a>.</td>
+    <td><code>display_name</code></td>
+    <td>Explained below on per-definition basis.</td>
   </tr>
   <tr>
     <td><code>signature</code></td>
@@ -3188,6 +3206,8 @@ Notes:
   * `ABSTRACT` set for all abstract classes
   * `STATIC` set for static inner classes
   * `ENUM` set for enum types
+* Display name for class symbols is equal to the name of the binding
+  introduced by the definition.
 * Class declarations support [all Java access modifiers](#java-access).
 * Class members without explicit access modifiers have access
   `PrivateWithinAccess` within the enclosing package.
@@ -3249,6 +3269,8 @@ Notes:
   * `FINAL`: implicitly set for all enum declarations.
   * `STATIC`: implicitly set for all enum declarations.
   * `ENUM`: implicitly set for all enum declarations.
+* Display name for enum symbols is equal to the name of the binding
+  introduced by the definition.
 * JLS mandates the following synthetic members for enum declarations
   [\[86\]][86]:
   * Enum fields have kind `FIELD`, properties `FINAL`, `STATIC` and `ENUM`,
@@ -3298,6 +3320,8 @@ The differences between interface symbols and class symbols are:
 * Interfaces do not have constructors.
 * Supported properties for interface symbols are:
   * `ABSTRACT`: implicitly set for all interface symbols.
+* Display name for interface symbols is equal to the name of the binding
+  introduced by the definition.
 * Interface declarations support
   [all Java access modifiers](#java-access).
 * Interface members without explicit access modifiers have access
@@ -3373,10 +3397,10 @@ Notes:
   For example, a producer may represent the signature of `T2` as
   `TypeSignature(List(), None, <Object>)` instead of
   `TypeSignature(List(), None, None)`.
-* When compiled with the compiler option `-parameters`, the name of method
-  parameters matches their name written in source. Otherwise, parameters have
-  the name `paramN` where `N` is the index of that given parameter starting at
-  index 0.
+* When compiled with the compiler option `-parameters`, both display and symbol
+  names of method parameters match their names written in source. Otherwise,
+  parameters have both display and symbol names `paramN` where `N` is the index
+  of that given parameter starting at index 0.
 * Variable arity parameters have the type equals to `RepeatedType(<tpe>)`,
   where `<tpe>` is their type as declared in original source.
 * Method throws clauses are not modelled in SemanticDB. We may improve on this
@@ -3386,6 +3410,8 @@ Notes:
   * `STATIC`: set for `static` methods.
   * `ABSTRACT`: set for `abstract` methods.
   * `DEFAULT`: set for `default` methods.
+* Display name for method symbols is equal to the name of the binding
+  introduced by the definition.
 * Method declarations support [all Java access modifiers](#java-access),
   however method declarations in interfaces can only be `PublicAccess`.
 
@@ -3424,12 +3450,15 @@ Notes:
 * Supported properties for field symbols are:
   * `FINAL`: set for `final` fields and interface fields.
   * `STATIC`: set for `static` fields and interface fields.
+* Display name for field symbols is equal to the name of the binding
+  introduced by the definition.
 * Field declarations support [all Java access modifiers](#java-access).
   However, field declarations in interfaces can only be `PublicAccess`.
 
 **Constructor declarations** [\[90\]][90] are represented by a single symbol
-with name `<init>` and the `CONSTRUCTOR` kind. Constructor formal parameters
-are represented the same way as method declaration formal parameters.
+with display and symbol name `<init>` and the `CONSTRUCTOR` kind. Constructor
+formal parameters are represented the same way as method declaration formal
+parameters.
 
 ```java
 package a;
@@ -3479,12 +3508,12 @@ Notes:
   represent their signatures with `MethodSignature`. In these signatures,
   type parameters are equal to `List()` and the return type is `None`.
 * Constructor declarations support no properties.
+* Display name for constructor symbols is equal to `<init>`.
 * Constructor declarations support
   [all Java access modifiers](#java-access).
 
-**Packages** [\[94\]][94] are represented by `PACKAGE` symbols.
-The ["Symbols"](#symbolinformation) section does not include
-`SymbolInformation` for `PACKAGE`.
+**Packages** [\[94\]][94] are not included in the
+["Symbols"](#symbolinformation) section.
 
 <a name="java-root-package"></a>
 ##### Root package
@@ -3493,7 +3522,7 @@ The root package is a synthetic package that does not exist in the JLS but
 has an equivalent in the SLS [\[20\]][20].
 The root package is the owner of all unnamed and all top-level named packages.
 The motivation to define a root package for the Java language is to keep
-consistency with how package owners are encoded in
+consistency with how package owners are modelled in
 [Scala symbols](#scala-symbol).
 
 <a name="java-annotation"></a>

@@ -7,7 +7,7 @@ import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.collection.JavaConverters._
-import scala.meta.internal.semanticdb.Scala.{Descriptor => d, _}
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d, Names => n, _}
 
 trait Elements {
 
@@ -39,29 +39,31 @@ trait Elements {
         if (qualName == "") Symbols.EmptyPackage
         else qualName.replace('.', '/') + "/"
       case elem: TypeElement =>
-        Symbols.Global(owner, d.Type(name))
+        Symbols.Global(owner, d.Type(symbolName))
       case elem: ExecutableElement =>
         val owner = elem.getEnclosingElement
         val disambig = {
           val siblings = owner.enclosedElements
           val siblingMethods = siblings.collect {
-            case sibling: ExecutableElement if sibling.name == name => sibling
+            case sibling: ExecutableElement if sibling.symbolName == symbolName => sibling
           }
           val (instance, static) = siblingMethods.partition(method => !isStatic(method))
           val methodPlace = (instance ++ static).indexOf(elem)
           if (methodPlace == 0) "()"
           else s"(+$methodPlace)"
         }
-        Symbols.Global(owner.sym, d.Method(name, disambig))
+        Symbols.Global(owner.sym, d.Method(symbolName, disambig))
       case elem: VariableElement if elem.getKind == ElementKind.PARAMETER =>
-        Symbols.Global(owner, d.Parameter(name))
+        Symbols.Global(owner, d.Parameter(symbolName))
       case elem: VariableElement =>
-        Symbols.Global(owner, d.Term(name))
+        Symbols.Global(owner, d.Term(symbolName))
       case elem: TypeParameterElement =>
-        Symbols.Global(owner, d.TypeParameter(name))
+        Symbols.Global(owner, d.TypeParameter(symbolName))
     }
 
-    def name: String = elem match {
+    def displayName: String = symbolName
+
+    def symbolName: String = elem match {
       case elem: PackageElement =>
         if (elem.isUnnamed) "_empty_"
         else {
@@ -130,7 +132,7 @@ trait Elements {
     }
 
     def isSynthetic: Boolean = elem match {
-      case elem: ExecutableElement => Set("<init>", "<clinit>").contains(elem.name.toString)
+      case elem: ExecutableElement => Set("<init>", "<clinit>").contains(elem.symbolName)
       case _ => false
     }
 
@@ -208,7 +210,7 @@ trait Elements {
       symbol = sym,
       language = s.Language.JAVA,
       kind = kind,
-      name = name,
+      displayName = displayName,
       annotations = annotations,
       access = access,
       properties = properties,

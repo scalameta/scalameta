@@ -12,8 +12,10 @@ object Scala {
     def Global(owner: String, desc: Descriptor): String =
       if (owner != RootPackage) owner + desc.toString
       else desc.toString
-    def Local(id: Int): String =
-      "local" + id.toString
+    def Local(suffix: String): String = {
+      if (suffix.indexOf("/") == -1 && suffix.indexOf(";") == -1) "local" + suffix
+      else throw new IllegalArgumentException(suffix)
+    }
     def Multi(symbols: List[String]): String = {
       symbols.distinct match {
         case List(symbol) =>
@@ -121,48 +123,69 @@ object Scala {
     def isPackage: Boolean = this.isInstanceOf[d.Package]
     def isParameter: Boolean = this.isInstanceOf[d.Parameter]
     def isTypeParameter: Boolean = this.isInstanceOf[d.TypeParameter]
-    def name: String
+    def value: String
+    def name: n.Name = {
+      this match {
+        case d.None => n.TermName(value)
+        case d.Term(value) => n.TermName(value)
+        case d.Method(value, disambiguator) => n.TermName(value)
+        case d.Type(value) => n.TypeName(value)
+        case d.Package(value) => n.TermName(value)
+        case d.Parameter(value) => n.TermName(value)
+        case d.TypeParameter(value) => n.TypeName(value)
+      }
+    }
     override def toString: String = {
       this match {
         case d.None => sys.error("unsupported descriptor")
-        case d.Term(name) => s"${name.encoded}."
-        case d.Method(name, disambiguator) => s"${name.encoded}${disambiguator}."
-        case d.Type(name) => s"${name.encoded}#"
-        case d.Package(name) => s"${name.encoded}/"
-        case d.Parameter(name) => s"(${name.encoded})"
-        case d.TypeParameter(name) => s"[${name.encoded}]"
+        case d.Term(value) => s"${n.encode(value)}."
+        case d.Method(value, disambiguator) => s"${n.encode(value)}${disambiguator}."
+        case d.Type(value) => s"${n.encode(value)}#"
+        case d.Package(value) => s"${n.encode(value)}/"
+        case d.Parameter(value) => s"(${n.encode(value)})"
+        case d.TypeParameter(value) => s"[${n.encode(value)}]"
       }
     }
   }
   object Descriptor {
-    final case object None extends Descriptor { def name: String = n.None }
-    final case class Term(name: String) extends Descriptor
-    final case class Method(name: String, disambiguator: String) extends Descriptor
-    final case class Type(name: String) extends Descriptor
-    final case class Package(name: String) extends Descriptor
-    final case class Parameter(name: String) extends Descriptor
-    final case class TypeParameter(name: String) extends Descriptor
-  }
-
-  implicit class ScalaNameOps(name: String) {
-    def encoded: String = {
-      if (name == n.None) {
-        "``"
-      } else {
-        val (start, parts) = (name.head, name.tail)
-        val isStartOk = Character.isJavaIdentifierStart(start)
-        val isPartsOk = parts.forall(Character.isJavaIdentifierPart)
-        if (isStartOk && isPartsOk) name
-        else "`" + name + "`"
-      }
-    }
-    def decoded: String = {
-      name.stripPrefix("`").stripSuffix("`")
-    }
+    final case object None extends Descriptor { def value: String = "" }
+    final case class Term(value: String) extends Descriptor
+    final case class Method(value: String, disambiguator: String) extends Descriptor
+    final case class Type(value: String) extends Descriptor
+    final case class Package(value: String) extends Descriptor
+    final case class Parameter(value: String) extends Descriptor
+    final case class TypeParameter(value: String) extends Descriptor
   }
 
   object Names {
-    val None: String = ""
+    // NOTE: This trait is defined inside Names to support the idiom of importing
+    // scala.meta.internal.semanticdb.Scala._ and not being afraid of name conflicts.
+    sealed trait Name {
+      def value: String
+      override def toString: String = value
+    }
+    final case class TermName(value: String) extends Name
+    final case class TypeName(value: String) extends Name
+
+    val RootPackage: TermName = TermName("_root_")
+    val EmptyPackage: TermName = TermName("_empty_")
+    val PackageObject: TermName = TermName("package")
+    val Constructor: TermName = TermName("<init>")
+
+    private[meta] def encode(value: String): String = {
+      if (value == "") {
+        "``"
+      } else {
+        val (start, parts) = (value.head, value.tail)
+        val isStartOk = Character.isJavaIdentifierStart(start)
+        val isPartsOk = parts.forall(Character.isJavaIdentifierPart)
+        if (isStartOk && isPartsOk) value
+        else "`" + value + "`"
+      }
+    }
+  }
+
+  object DisplayNames {
     val RootPackage: String = "_root_"
     val EmptyPackage: String = "_empty_"
     val Constructor: String = "<init>"
@@ -196,7 +219,7 @@ object Scala {
       }
     }
 
-    def parseName(): String = {
+    def parseValue(): String = {
       if (currChar == '`') {
         val end = i
         while (readChar() != '`') {}
@@ -223,29 +246,29 @@ object Scala {
         readChar()
         if (currChar == ')') {
           val disambiguator = parseDisambiguator()
-          val name = parseName()
-          d.Method(name, disambiguator)
+          val value = parseValue()
+          d.Method(value, disambiguator)
         } else {
-          d.Term(parseName())
+          d.Term(parseValue())
         }
       } else if (currChar == '#') {
         readChar()
-        d.Type(parseName())
+        d.Type(parseValue())
       } else if (currChar == '/') {
         readChar()
-        d.Package(parseName())
+        d.Package(parseValue())
       } else if (currChar == ')') {
         readChar()
-        val name = parseName()
+        val value = parseValue()
         if (currChar != '(') fail()
         else readChar()
-        d.Parameter(name)
+        d.Parameter(value)
       } else if (currChar == ']') {
         readChar()
-        val name = parseName()
+        val value = parseValue()
         if (currChar != '[') fail()
         else readChar()
-        d.TypeParameter(name)
+        d.TypeParameter(value)
       } else {
         fail()
       }

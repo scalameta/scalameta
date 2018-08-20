@@ -25,7 +25,7 @@ trait SymbolInformationPrinter extends BasePrinter {
         if (!printed(info.symbol)) {
           printed += info.symbol
           out.print("  ")
-          out.print(info.name)
+          out.print(info.displayName)
           out.print(" => ")
           out.println(info.symbol)
         }
@@ -70,7 +70,7 @@ trait SymbolInformationPrinter extends BasePrinter {
         case INTERFACE => out.print("interface ")
         case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
       }
-      pprint(info.name)
+      pprint(info.displayName)
       info.signature match {
         case NoSignature if info.kind == SELF_PARAMETER => ()
         case _ => opt(info.prefixBeforeTpe, info.signature)(pprint)
@@ -246,7 +246,7 @@ trait SymbolInformationPrinter extends BasePrinter {
       val info = notes.visit(sym)
       style match {
         case Reference =>
-          pprint(info.name)
+          pprint(info.displayName)
         case Definition =>
           // NOTE: I am aware of some degree of duplication with pprint(info).
           // However, deduplicating these two methods leads to very involved code,
@@ -285,7 +285,7 @@ trait SymbolInformationPrinter extends BasePrinter {
             case INTERFACE => out.print("interface ")
             case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
           }
-          pprint(info.name)
+          pprint(info.displayName)
           info.signature match {
             case NoSignature if info.kind == SELF_PARAMETER => ()
             case _ => opt(info.prefixBeforeTpe, info.signature)(pprint)
@@ -359,8 +359,8 @@ trait SymbolInformationPrinter extends BasePrinter {
     def visit(sym: String): SymbolInformation = {
       val symtabInfo = noteSymtab.get(sym).orElse(docSymtab.get(sym))
       val info = symtabInfo.getOrElse {
-        val name = if (sym.isGlobal) sym.desc.name else sym
-        SymbolInformation(symbol = sym, name = name)
+        val displayName = if (sym.isGlobal) sym.desc.value else sym
+        SymbolInformation(symbol = sym, displayName = displayName)
       }
       visit(info)
     }

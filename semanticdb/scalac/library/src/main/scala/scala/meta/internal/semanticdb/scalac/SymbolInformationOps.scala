@@ -5,6 +5,7 @@ import scala.reflect.internal.{Flags => gf}
 import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.semanticdb.Scala.{DisplayNames => dn}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 
@@ -105,12 +106,13 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       flags
     }
 
-    private def name: String = {
-      if (gsym.isPackageObject || gsym.isPackageObjectClass) {
-        gsym.owner.name.toSemantic
-      } else {
-        gsym.name.toSemantic
-      }
+    private def displayName: String = {
+      if (gsym.isRootPackage) dn.RootPackage
+      else if (gsym.isEmptyPackage) dn.EmptyPackage
+      else if (gsym.isConstructor) dn.Constructor
+      else if (gsym.name.startsWith("_$")) dn.Anonymous
+      else if (gsym.isPackageObject || gsym.isPackageObjectClass) gsym.owner.symbolName
+      else gsym.symbolName
     }
 
     private def sig(linkMode: LinkMode): s.Signature = {
@@ -230,7 +232,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         language = language,
         kind = kind,
         properties = properties,
-        name = name,
+        displayName = displayName,
         signature = sig(linkMode),
         annotations = annotations,
         access = access

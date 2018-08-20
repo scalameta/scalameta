@@ -2,6 +2,7 @@ package scala.meta.internal.scalacp
 
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.tools.scalap.scalax.rules.scalasig._
 
@@ -29,7 +30,7 @@ trait TypeOps { self: Scalacp =>
               // companion classes, not module classes (see #1392).
               // We assume that it's a mistake and work around accordingly.
               val raw = sym.ssym
-              if (raw.isType) Symbols.Global(raw.owner, Descriptor.Term(raw.desc.name))
+              if (raw.isType) Symbols.Global(raw.owner, d.Term(raw.desc.value))
               else raw
             }
             s.SingleType(spre, ssym)

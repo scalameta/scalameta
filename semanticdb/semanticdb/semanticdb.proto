@@ -270,7 +270,7 @@ message SymbolInformation {
   Language language = 16;
   Kind kind = 3;
   int32 properties = 4;
-  string name = 5;
+  string display_name = 5;
   Signature signature = 17;
   repeated Annotation annotations = 13;
   Access access = 18;

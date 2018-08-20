@@ -4,6 +4,7 @@ import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.meta.internal.semanticdb.Scala.{Names => n}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 
 object Synthetics {
@@ -11,8 +12,8 @@ object Synthetics {
     val getterSym = getterInfo.symbol
     val setterSym = {
       if (getterSym.isGlobal) {
-        val setterName = getterInfo.name + "_="
-        Symbols.Global(getterSym.owner, d.Method(setterName, "()"))
+        val setterSymbolName = getterSym.desc.name + "_="
+        Symbols.Global(getterSym.owner, d.Method(setterSymbolName, "()"))
       } else {
         getterSym + "+1"
       }
@@ -31,7 +32,7 @@ object Synthetics {
       language = l.SCALA,
       kind = k.PARAMETER,
       properties = 0,
-      name = "x$1",
+      displayName = "x$1",
       signature = paramSig,
       annotations = Nil,
       access = s.NoAccess)
@@ -51,7 +52,7 @@ object Synthetics {
       language = l.SCALA,
       kind = k.METHOD,
       properties = getterInfo.properties,
-      name = getterInfo.name + "_=",
+      displayName = getterInfo.displayName + "_=",
       signature = setterSig,
       annotations = getterInfo.annotations,
       access = getterInfo.access)
