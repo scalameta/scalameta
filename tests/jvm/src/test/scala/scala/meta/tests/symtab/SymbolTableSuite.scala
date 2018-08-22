@@ -34,28 +34,28 @@ class SymbolTableSuite extends FunSuite {
   }
 
   // jar classpath entries
-  check("_empty_/")(_.kind.isPackage)
-  check("_root_/")(_.kind.isPackage)
-  check("java/util/ArrayList#size.")(_.kind.isField)
-  check("java/util/Map#Entry#")(_.kind.isInterface)
-  check("scala/Any#asInstanceOf().")(_.kind.isMethod)
-  check("scala/AnyRef#")(_.kind.isClass)
-  check("scala/Option#[A]")(_.kind.isTypeParameter)
-  check("scala/Predef.assert().(assertion)")(_.kind.isParameter)
-  check("scala/Predef.assume().")(_.kind.isMethod)
-  check("scala/collection/immutable/`::`.")(_.kind.isObject)
-  check("scala/collection/mutable/StringBuilder#`<init>`().")(_.kind.isConstructor)
-  check("scala/concurrent/Future#")(_.kind.isTrait)
-  check("scala/package.")(_.kind.isPackageObject)
-  check("scala/package.Either#")(_.kind.isType)
-  check("scala/package.Either.")(_.kind.isMethod)
-  check("scala/reflect/package.materializeClassTag().")(_.kind.isMacro)
-  check("scala/util/")(_.kind.isPackage)
+  check("_empty_/")(_.isPackage)
+  check("_root_/")(_.isPackage)
+  check("java/util/ArrayList#size.")(_.isField)
+  check("java/util/Map#Entry#")(_.isInterface)
+  check("scala/Any#asInstanceOf().")(_.isMethod)
+  check("scala/AnyRef#")(_.isClass)
+  check("scala/Option#[A]")(_.isTypeParameter)
+  check("scala/Predef.assert().(assertion)")(_.isParameter)
+  check("scala/Predef.assume().")(_.isMethod)
+  check("scala/collection/immutable/`::`.")(_.isObject)
+  check("scala/collection/mutable/StringBuilder#`<init>`().")(_.isConstructor)
+  check("scala/concurrent/Future#")(_.isTrait)
+  check("scala/package.")(_.isPackageObject)
+  check("scala/package.Either#")(_.isType)
+  check("scala/package.Either.")(_.isMethod)
+  check("scala/reflect/package.materializeClassTag().")(_.isMacro)
+  check("scala/util/")(_.isPackage)
 
   // directory classpath entries
-  check("example/Example.")(_.kind.isObject)
-  check("_empty_/A#")(_.kind.isClass)
-  check("org/scalameta/data/data#")(_.kind.isClass)
+  check("example/Example.")(_.isObject)
+  check("_empty_/A#")(_.isClass)
+  check("org/scalameta/data/data#")(_.isClass)
 
   checkNotExists("")
   checkNotExists("local20")
@@ -73,7 +73,7 @@ class SymbolTableSuite extends FunSuite {
     val localSymtab = LocalSymbolTable(scope.hardlinks)
     val aggregateSymtab = AggregateSymbolTable(List(localSymtab, globalSymtab))
     val local0 = aggregateSymtab.info("local0").get
-    assert(local0.kind.isType)
+    assert(local0.isType)
     assert(local0.displayName == "_")
   }
 

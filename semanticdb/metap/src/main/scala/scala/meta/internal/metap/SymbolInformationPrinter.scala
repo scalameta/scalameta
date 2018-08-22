@@ -72,7 +72,7 @@ trait SymbolInformationPrinter extends BasePrinter {
       }
       pprint(info.displayName)
       info.signature match {
-        case NoSignature if info.kind == SELF_PARAMETER => ()
+        case NoSignature if info.isSelfParameter => ()
         case _ => opt(info.prefixBeforeTpe, info.signature)(pprint)
       }
     }
@@ -287,7 +287,7 @@ trait SymbolInformationPrinter extends BasePrinter {
           }
           pprint(info.displayName)
           info.signature match {
-            case NoSignature if info.kind == SELF_PARAMETER => ()
+            case NoSignature if info.isSelfParameter => ()
             case _ => opt(info.prefixBeforeTpe, info.signature)(pprint)
           }
       }

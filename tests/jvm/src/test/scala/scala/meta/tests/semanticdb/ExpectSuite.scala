@@ -378,12 +378,12 @@ object JavacMetacpDiffExpect extends ExpectHelpers {
 
     val enumConstructors = for {
       info <- syms.values.toSet
-      if (info.properties & s.SymbolInformation.Property.ENUM.value) != 0 && info.kind == s.SymbolInformation.Kind.CLASS
+      if info.isEnum && info.isClass
     } yield info.symbol + "`<init>`()."
 
     val enumSingleParamConstructors = for {
       info <- syms.values.toList
-      if info.kind == s.SymbolInformation.Kind.PARAMETER
+      if info.isParameter
       constructorSym <- enumConstructors.find(info.symbol.startsWith)
       constructor = syms(constructorSym)
       if hasSingleParameter(constructor)
