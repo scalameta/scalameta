@@ -1,5 +1,9 @@
 package scala.meta.internal
 
+import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
+import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
+
 package object semanticdb {
 
   val NoType = Type.Empty
@@ -9,13 +13,49 @@ package object semanticdb {
   val NoAccess = Access.Empty
 
   implicit class XtensionSemanticdbSymbolInformation(info: SymbolInformation) {
-    def has(
-        prop: SymbolInformation.Property,
-        prop2: SymbolInformation.Property,
-        props: SymbolInformation.Property*): Boolean =
-      has(prop) && has(prop2) && props.forall(has)
-    def has(prop: SymbolInformation.Property): Boolean =
-      (info.properties & prop.value) != 0
+    def isScala: Boolean = info.language == l.SCALA
+    def isJava: Boolean = info.language == l.JAVA
+    def isLocal: Boolean = info.kind == k.LOCAL
+    def isField: Boolean = info.kind == k.FIELD
+    def isMethod: Boolean = info.kind == k.METHOD
+    def isConstructor: Boolean = info.kind == k.CONSTRUCTOR
+    def isMacro: Boolean = info.kind == k.MACRO
+    def isType: Boolean = info.kind == k.TYPE
+    def isParameter: Boolean = info.kind == k.PARAMETER
+    def isSelfParameter: Boolean = info.kind == k.SELF_PARAMETER
+    def isTypeParameter: Boolean = info.kind == k.TYPE_PARAMETER
+    def isObject: Boolean = info.kind == k.OBJECT
+    def isPackage: Boolean = info.kind == k.PACKAGE
+    def isPackageObject: Boolean = info.kind == k.PACKAGE_OBJECT
+    def isClass: Boolean = info.kind == k.CLASS
+    def isInterface: Boolean = info.kind == k.INTERFACE
+    def isTrait: Boolean = info.kind == k.TRAIT
+    def isAbstract: Boolean = (info.properties & p.ABSTRACT.value) != 0
+    def isFinal: Boolean = (info.properties & p.FINAL.value) != 0
+    def isSealed: Boolean = (info.properties & p.SEALED.value) != 0
+    def isImplicit: Boolean = (info.properties & p.IMPLICIT.value) != 0
+    def isLazy: Boolean = (info.properties & p.LAZY.value) != 0
+    def isCase: Boolean = (info.properties & p.CASE.value) != 0
+    def isCovariant: Boolean = (info.properties & p.COVARIANT.value) != 0
+    def isContravariant: Boolean = (info.properties & p.CONTRAVARIANT.value) != 0
+    def isVal: Boolean = (info.properties & p.VAL.value) != 0
+    def isVar: Boolean = (info.properties & p.VAR.value) != 0
+    def isStatic: Boolean = (info.properties & p.STATIC.value) != 0
+    def isPrimary: Boolean = (info.properties & p.PRIMARY.value) != 0
+    def isEnum: Boolean = (info.properties & p.ENUM.value) != 0
+    def isDefault: Boolean = (info.properties & p.DEFAULT.value) != 0
+    def isPrivate: Boolean = info.access.isInstanceOf[PrivateAccess]
+    def isPrivateThis: Boolean = info.access.isInstanceOf[PrivateThisAccess]
+    def isPrivateWithin: Boolean = info.access.isInstanceOf[PrivateWithinAccess]
+    def isProtected: Boolean = info.access.isInstanceOf[ProtectedAccess]
+    def isProtectedThis: Boolean = info.access.isInstanceOf[ProtectedThisAccess]
+    def isProtectedWithin: Boolean = info.access.isInstanceOf[ProtectedWithinAccess]
+    def isPublic: Boolean = info.access.isInstanceOf[PublicAccess]
+    def within: Option[String] = info.access match {
+      case PrivateWithinAccess(symbol) => Some(symbol)
+      case ProtectedWithinAccess(symbol) => Some(symbol)
+      case _ => None
+    }
   }
 
   implicit class XtensionSemanticdbScope(scope: Scope) {
@@ -94,7 +134,7 @@ package object semanticdb {
     def nonEmpty: Boolean = tree.isDefined
   }
 
-  implicit class XtensionSemanticdbSignature(access: Access) {
+  implicit class XtensionSemanticdbAccess(access: Access) {
     def nonEmpty: Boolean = access.isDefined
   }
 }
