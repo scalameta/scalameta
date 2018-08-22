@@ -51,6 +51,8 @@ package object semanticdb {
   }
 
   implicit class XtensionSemanticdbConstant(const: Constant) {
+    def nonEmpty: Boolean = const.isDefined
+
     def value: Option[Any] = {
       const match {
         case NoConstant => None
@@ -86,5 +88,13 @@ package object semanticdb {
         case _ => sys.error("unsupported value ${value.getClass} $value")
       }
     }
+  }
+
+  implicit class XtensionSemanticdbTree(tree: Tree) {
+    def nonEmpty: Boolean = tree.isDefined
+  }
+
+  implicit class XtensionSemanticdbSignature(access: Access) {
+    def nonEmpty: Boolean = access.isDefined
   }
 }
