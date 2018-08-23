@@ -379,16 +379,3 @@ trait SymbolInformationPrinter extends BasePrinter {
     Ordering.by(_.symbol)
   }
 }
-
-object SymbolInformationPrinter {
-  def print(info: SymbolInformation, symtab: PrinterSymtab): String = {
-    val out = new ByteArrayOutputStream()
-    val ps = new PrintStream(out)
-    val settings = Settings().withFormat(Format.Compact)
-    val reporter = Reporter().withOut(ps).withSilentErr()
-    val doc = TextDocument().addSymbols(info)
-    val printer = new DocumentPrinter(settings, reporter, doc, symtab)
-    printer.pprint(info)
-    out.toString().trim
-  }
-}

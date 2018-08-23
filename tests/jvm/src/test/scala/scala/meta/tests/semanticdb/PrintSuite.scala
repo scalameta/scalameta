@@ -1,13 +1,16 @@
-package scala.meta.tests.metap
+package scala.meta.tests.semanticdb
+
 import org.scalatest.FunSuite
 import scala.meta.internal.metap.PrinterSymtab
 import scala.meta.internal.metap.SymbolInformationPrinter
+import scala.meta.internal.semanticdb.Print
 import scala.meta.internal.semanticdb.SymbolInformation
 import scala.meta.internal.symtab.GlobalSymbolTable
+import scala.meta.metap.Format
 import scala.meta.testkit.DiffAssertions
 import scala.meta.tests.metacp.Library
 
-class SymbolInformationPrinterSuite extends FunSuite with DiffAssertions {
+class PrintSuite extends FunSuite with DiffAssertions {
   val symtab = GlobalSymbolTable(
     Library.scalaLibrary.classpath() ++
       Library.jdk.classpath()
@@ -16,25 +19,25 @@ class SymbolInformationPrinterSuite extends FunSuite with DiffAssertions {
     override def info(symbol: String): Option[SymbolInformation] = symtab.info(symbol)
   }
 
-  def check(symbol: String, expected: String): Unit = {
+  def checkInfo(symbol: String, expected: String): Unit = {
     test(symbol) {
       val info = symtab.info(symbol).get
-      val obtained = SymbolInformationPrinter.print(info, printerSymtab)
+      val obtained = Print.info(Format.Compact, info, printerSymtab)
       assertNoDiffOrPrintExpected(obtained, expected)
     }
   }
 
-  check(
+  checkInfo(
     "scala/Predef.assert().",
     """scala/Predef.assert(). => @elidable method assert(assertion: Boolean): Unit"""
   )
 
-  check(
+  checkInfo(
     "scala/Any#",
     """scala/Any# => abstract class Any { +10 decls }"""
   )
 
-  check(
+  checkInfo(
     "java/util/Collections#singletonList().",
     """java/util/Collections#singletonList(). => static method singletonList[T](param0: T): List[T]"""
   )
