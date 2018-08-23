@@ -1,12 +1,16 @@
 package scala.meta.internal.metap
 
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 import scala.collection.mutable
 import scala.math.Ordering
+import scala.meta.cli.Reporter
 import scala.meta.internal.semanticdb._
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.SymbolInformation._
 import scala.meta.internal.semanticdb.SymbolInformation.Kind._
-import scala.meta.internal.semanticdb.SymbolInformation.Property._
+import scala.meta.metap.Format
+import scala.meta.metap.Settings
 
 trait SymbolInformationPrinter extends BasePrinter {
 
@@ -33,7 +37,7 @@ trait SymbolInformationPrinter extends BasePrinter {
     }
   }
 
-  protected class InfoPrinter(notes: InfoNotes) {
+  class InfoPrinter(notes: InfoNotes) {
     def pprint(info: SymbolInformation): Unit = {
       notes.visit(info)
       rep(info.annotations, " ", " ")(pprint)
@@ -342,22 +346,18 @@ trait SymbolInformationPrinter extends BasePrinter {
     }
   }
 
-  private lazy val docSymtab: Map[String, SymbolInformation] = {
-    doc.symbols.map(info => (info.symbol, info)).toMap
-  }
-
-  protected class InfoNotes {
+  class InfoNotes {
     private val buf = mutable.ListBuffer[SymbolInformation]()
     private val noteSymtab = mutable.Map[String, SymbolInformation]()
 
     def discover(info: SymbolInformation): Unit = {
-      if (!docSymtab.contains(info.symbol) && info.kind != UNKNOWN_KIND) {
+      if (symtab.info(info.symbol).isEmpty && info.kind != UNKNOWN_KIND) {
         noteSymtab(info.symbol) = info
       }
     }
 
     def visit(sym: String): SymbolInformation = {
-      val symtabInfo = noteSymtab.get(sym).orElse(docSymtab.get(sym))
+      val symtabInfo = noteSymtab.get(sym).orElse(symtab.info(sym))
       val info = symtabInfo.getOrElse {
         val displayName = if (sym.isGlobal) sym.desc.value else sym
         SymbolInformation(symbol = sym, displayName = displayName)
