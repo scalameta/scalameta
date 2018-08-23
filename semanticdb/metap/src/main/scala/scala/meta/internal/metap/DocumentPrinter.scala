@@ -5,12 +5,18 @@ import scala.meta.internal.semanticdb._
 import scala.meta.internal.semanticdb.Language._
 import scala.meta.metap._
 
-class DocumentPrinter(settings: Settings, reporter: Reporter, doc: TextDocument)
-    extends BasePrinter(settings, reporter, doc)
+class DocumentPrinter(
+    settings: Settings,
+    reporter: Reporter,
+    doc: TextDocument,
+    symtab: PrinterSymtab)
+    extends BasePrinter(settings, reporter, doc, symtab)
     with SymbolInformationPrinter
     with OccurrencePrinter
     with DiagnosticPrinter
     with SyntheticPrinter {
+  def this(settings: Settings, reporter: Reporter, doc: TextDocument) =
+    this(settings, reporter, doc, PrinterSymtab.fromTextDocument(doc))
 
   def print(): Unit = {
     out.println(doc.uri)

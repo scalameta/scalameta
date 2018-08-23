@@ -5,7 +5,11 @@ import scala.meta.cli._
 import scala.meta.internal.semanticdb._
 import scala.meta.metap._
 
-abstract class BasePrinter(val settings: Settings, val reporter: Reporter, val doc: TextDocument) {
+abstract class BasePrinter(
+    val settings: Settings,
+    val reporter: Reporter,
+    val doc: TextDocument,
+    val symtab: PrinterSymtab) {
   def out: PrintStream = {
     reporter.out
   }
