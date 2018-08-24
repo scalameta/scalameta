@@ -42,9 +42,9 @@ Make sure you are using the latest coursier version (1.1.0-M6 or newer).
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.scalameta/scalameta_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.scalameta/scalameta_2.12)
 
 ```bash
-alias metac="coursier launch org.scalameta:metac_2.12.6:4.0.0-M6 -- -cp $(coursier fetch -p org.scala-lang:scala-library:2.12.6)"
+alias metac="coursier launch org.scalameta:metac_2.12.6:4.0.0-M10 -- -cp $(coursier fetch -p org.scala-lang:scala-library:2.12.6)"
 alias metacp='coursier launch org.scalameta:metacp_2.12:4.0.0-M6 -- --dependency-classpath $(echo $JAVA_HOME/jre/lib/rt.jar):$(coursier fetch org.scala-lang:scala-library:2.12.4 -p)'
-alias metap="coursier launch org.scalameta:metap_2.11:4.0.0-M6 --"
+alias metap="coursier launch org.scalameta:metap_2.11:4.0.0-M10 --"
 ```
 NOTE. These installation instructions are for the current unstable `master` branch,
 it's recommended to view this document at the latest git tag instead of `master`.
