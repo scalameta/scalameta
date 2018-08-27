@@ -10,7 +10,7 @@ import scala.meta.metap._
 object Print {
 
   def document(format: Format, doc: TextDocument): String = {
-    val symtab = PrinterSymtab.fromTextDocument(TextDocument())
+    val symtab = PrinterSymtab.fromTextDocument(doc)
     withPrinter(format, doc, symtab) { printer =>
       printer.print()
     }
