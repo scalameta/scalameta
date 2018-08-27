@@ -57,7 +57,7 @@ object Print {
     }.trim
   }
 
-  def withInfoPrinter(format: Format, doc: TextDocument, symtab: PrinterSymtab)(
+  private def withInfoPrinter(format: Format, doc: TextDocument, symtab: PrinterSymtab)(
       fn: DocumentPrinter#InfoPrinter => Unit): String = {
     withPrinter(format, TextDocument(), symtab) { printer =>
       val notes = new printer.InfoNotes()
@@ -66,7 +66,7 @@ object Print {
     }.trim
   }
 
-  def withPrinter(format: Format, doc: TextDocument, symtab: PrinterSymtab)(
+  private def withPrinter(format: Format, doc: TextDocument, symtab: PrinterSymtab)(
       fn: DocumentPrinter => Unit): String = {
     val baos = new ByteArrayOutputStream()
     val ps = new PrintStream(baos)
