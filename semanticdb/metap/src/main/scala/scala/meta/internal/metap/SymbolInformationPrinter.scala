@@ -302,7 +302,7 @@ trait SymbolInformationPrinter extends BasePrinter {
       else out.print("<?>")
     }
 
-    protected def pprint(const: Constant): Unit = {
+    def pprint(const: Constant): Unit = {
       const match {
         case NoConstant =>
           out.print("<?>")

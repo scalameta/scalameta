@@ -34,8 +34,7 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
 
   implicit def syntheticOrder: Ordering[Synthetic] = Ordering.by(_.range)
 
-  private class TreePrinter(notes: InfoNotes, originalRange: Option[Range])
-      extends InfoPrinter(notes) {
+  class TreePrinter(notes: InfoNotes, originalRange: Option[Range]) extends InfoPrinter(notes) {
 
     def pprint(tree: Tree): Unit = {
       tree match {
