@@ -1,19 +1,19 @@
 # SemanticDB Guide
 
 SemanticDB is a data model for semantic information such as symbols and types
-about programs in Scala and other languages. SemanticDB decouples production
-and consumption of semantic information, establishing documented means for
+about programs in Scala and other languages. SemanticDB decouples production and
+consumption of semantic information, establishing documented means for
 communication between tools.
 
-In this document, we introduce practical aspects of working with SemanticDB.
-We describe the tools that can be used to produce SemanticDB payloads, the tools
+In this document, we introduce practical aspects of working with SemanticDB. We
+describe the tools that can be used to produce SemanticDB payloads, the tools
 can be used to consume SemanticDB payloads and useful tips & tricks for working
 with SemanticDB. If you're looking for a comprehensive reference of SemanticDB
 features, check out [the specification](semanticdb3.md).
 
-* [Installation](#installation)
-* [Example](#example)
-* [What is SemanticDB good for?](#what-is-semanticdb-good-for)
+- [Installation](#installation)
+- [Example](#example)
+- [What is SemanticDB good for?](#what-is-semanticdb-good-for)
 * [Producing SemanticDB](#producing-semanticdb)
   * [Scalac compiler plugin](#scalac-compiler-plugin)
   * [Metac](#metac)
@@ -108,19 +108,19 @@ files store protobuf payloads.
 
 ```
 $ xxd META-INF/semanticdb/Test.scala.semanticdb
-00000000: 0aac 0408 0412 0a54 6573 742e 7363 616c  .......Test.scal
-00000010: 612a 5c0a 1a5f 656d 7074 795f 2f54 6573  a*\.._empty_/Tes
+00000000: 0aaa 0408 0412 0a54 6573 742e 7363 616c  .......Test.scal
+00000010: 612a 580a 1a5f 656d 7074 795f 2f54 6573  a*X.._empty_/Tes
 00000020: 742e 6d61 696e 2829 2e28 6172 6773 2918  t.main().(args).
-00000030: 082a 0461 7267 7372 0208 0780 0101 8a01  .*.argsr........
-00000040: 2e22 2c0a 2a12 2812 0c73 6361 6c61 2f41  .",.*.(..scala/A
-00000050: 7272 6179 231a 1812 1612 1473 6361 6c61  rray#......scala
-00000060: 2f50 7265 6465 662e 5374 7269 6e67 232a  /Predef.String#*
-00000070: 520a 0d5f 656d 7074 795f 2f54 6573 742e  R.._empty_/Test.
-00000080: 180a 2008 2a04 5465 7374 7202 0807 8001  .. .*.Testr.....
-00000090: 018a 012f 0a2d 0a00 1211 120f 120d 7363  .../.-........sc
-000000a0: 616c 612f 416e 7952 6566 2322 160a 145f  ala/AnyRef#"..._
-000000b0: 656d 7074 795f 2f54 6573 742e 6d61 696e  empty_/Test.main
-000000c0: 2829 2e2a 5b0a 145f 656d 7074 795f 2f54  ().*[.._empty_/T
+00000030: 082a 0461 7267 7380 0101 8a01 2e22 2c0a  .*.args......",.
+00000040: 2a12 2812 0c73 6361 6c61 2f41 7272 6179  *.(..scala/Array
+00000050: 231a 1812 1612 1473 6361 6c61 2f50 7265  #......scala/Pre
+00000060: 6465 662e 5374 7269 6e67 232a 530a 0d5f  def.String#*S.._
+00000070: 656d 7074 795f 2f54 6573 742e 180a 2008  empty_/Test... .
+00000080: 2a04 5465 7374 8001 018a 012f 0a2d 0a00  *.Test...../.-..
+00000090: 1211 120f 120d 7363 616c 612f 416e 7952  ......scala/AnyR
+000000a0: 6566 2322 160a 145f 656d 7074 795f 2f54  ef#"..._empty_/T
+000000b0: 6573 742e 6d61 696e 2829 2e92 0102 3a00  est.main()....:.
+000000c0: 2a5c 0a14 5f65 6d70 7479 5f2f 5465 7374  *\.._empty_/Test
 ...
 ```
 
@@ -518,17 +518,21 @@ $ tree
 ├── Test.class
 └── Test.scala
 
-$ metacp $(mktemp -d) .
-/var/folders/30/6jlz_xfs46ndvn212mt_wj6m0000gn/T/tmp.IXTbk9Mo/.-1
+$ metacp .
+{
+  "status": {
+    "/Users/ollie/dev/scalameta/target/.": "/Users/ollie/dev/scalameta/target/out/target"
+  },
+  "scalaLibrarySynthetics": ""
+}
+$ tree out
+out
+└── target
+    └── META-INF
+        └── semanticdb
+            └── Test.class.semanticdb
 
-$ tree /var/folders/30/6jlz_xfs46ndvn212mt_wj6m0000gn/T/tmp.IXTbk9Mo/.-1
-/var/folders/30/6jlz_xfs46ndvn212mt_wj6m0000gn/T/tmp.IXTbk9Mo/.-1
-└── META-INF
-    └── semanticdb
-        └── Test.class.semanticdb
-
-2 directories, 1 file
-$ metap /var/folders/pg/v06175sd2_qb9jbg7c28xr040000gn/T/semanticdb8798662205463788559
+$ metap out/target
 Test.class
 ----------
 
@@ -537,14 +541,12 @@ Schema => SemanticDB v4
 Uri => Test.class
 Text => empty
 Language => Scala
-Symbols => 5 entries
+Symbols => 3 entries
 
 Symbols:
-_empty_/ => package _empty_
 _empty_/Test. => final object Test extends AnyRef { +1 decls }
 _empty_/Test.main(). => method main(args: Array[String]): Unit
 _empty_/Test.main().(args) => param args: Array[String]
-_root_/ => package _root_
 ```
 
 ## Consuming SemanticDB
