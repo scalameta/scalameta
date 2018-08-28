@@ -1279,7 +1279,7 @@ Uri => semanticdb/integration/src/main/scala/example/Issue1749.scala
 Text => non-empty
 Language => Scala
 Symbols => 4 entries
-Occurrences => 12 entries
+Occurrences => 14 entries
 Synthetics => 1 entries
 
 Symbols:
@@ -1301,6 +1301,8 @@ Occurrences:
 [5:16..5:16):  <= example/Issue1749#`<init>`().
 [6:6..6:8): x1 <= example/Issue1749#x1.
 [7:6..7:8): x2 <= example/Issue1749#x2.
+[8:3..8:5): x1 => example/Issue1749#x1.
+[8:7..8:9): x1 => example/Issue1749#x1.
 [9:5..9:12): compare => scala/math/Ordered#compare().
 [9:14..9:16): x2 => example/Issue1749#x2.
 [9:18..9:20): x2 => example/Issue1749#x2.
@@ -2284,7 +2286,7 @@ Uri => semanticdb/integration/src/main/scala/example/Synthetic.scala
 Text => non-empty
 Language => Scala
 Symbols => 58 entries
-Occurrences => 111 entries
+Occurrences => 113 entries
 Synthetics => 43 entries
 
 Symbols:
@@ -2508,6 +2510,8 @@ Occurrences:
 [33:6..33:7): f <= example/Synthetic#f.
 [33:9..33:16): Ordered => scala/package.Ordered#
 [33:17..33:18): F => example/Synthetic#F#
+[33:26..33:27): F => example/Synthetic#F#
+[34:0..34:0):  => example/Synthetic#F#`<init>`().
 [35:9..35:14): scala => scala/
 [35:15..35:25): concurrent => scala/concurrent/
 [35:26..35:42): ExecutionContext => scala/concurrent/ExecutionContext.
