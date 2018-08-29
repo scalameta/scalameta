@@ -3,7 +3,7 @@ advanced/D#
 ===========
 --- metac
 +++ metacp
-                   typeRef {
+                   type_ref {
                      prefix {
 -                    symbol: "local14"
 +                    symbol: "advanced/D#_$2#"
@@ -25,7 +25,7 @@ advanced/Existential#e1().
 ==========================
 --- metac
 +++ metacp
-               typeRef {
+               type_ref {
                  prefix {
 -                symbol: "local7"
 +                symbol: "local0"
@@ -43,7 +43,7 @@ advanced/Existential#e2().
 ==========================
 --- metac
 +++ metacp
-                   typeRef {
+                   type_ref {
                      prefix {
 -                    symbol: "local8"
 +                    symbol: "local1"
@@ -61,12 +61,12 @@ advanced/Existential#e4().
 ==========================
 --- metac
 +++ metacp
-           typeRef {
+           type_ref {
              prefix {
 -            symbol: "local10"
 +            symbol: "local2"
              type_arguments {
-               typeRef {
+               type_ref {
                  prefix {
          declarations {
            hardlinks {
@@ -96,7 +96,7 @@ advanced/Structural#s3().
              kind: METHOD
              properties: 0
              display_name: "m"
-                 parameterLists {
+                 parameter_lists {
                    hardlinks {
 -                    symbol: "local4"
 +                    symbol: "local3"
@@ -110,7 +110,7 @@ advanced/Test.e2.
 =================
 --- metac
 +++ metacp
-                   typeRef {
+                   type_ref {
                      prefix {
 -                    symbol: "local8"
 +                    symbol: "advanced/Test.T#"
@@ -135,7 +135,7 @@ advanced/Test.s3.
              kind: METHOD
              properties: 0
              display_name: "m"
-                 parameterLists {
+                 parameter_lists {
                    hardlinks {
 -                    symbol: "local4"
 +                    symbol: "local3"
@@ -151,12 +151,12 @@ annot/Alias.A#
 +++ metacp
          annotations {
            tpe {
--            typeRef {
+-            type_ref {
 -              prefix {
 -              symbol: "scala/annotation/meta/param#"
          annotations {
            tpe {
--            typeRef {
+-            type_ref {
 -              prefix {
 -              symbol: "scala/annotation/meta/param#"
 
@@ -168,7 +168,7 @@ classes/C3#copy$default$1().
 +++ metacp
          annotations {
            tpe {
--            typeRef {
+-            type_ref {
 -              prefix {
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
@@ -180,7 +180,7 @@ classes/C4#copy$default$1().
 +++ metacp
          annotations {
            tpe {
--            typeRef {
+-            type_ref {
 -              prefix {
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
@@ -192,7 +192,7 @@ classes/C6#copy$default$1().
 +++ metacp
          annotations {
            tpe {
--            typeRef {
+-            type_ref {
 -              prefix {
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
@@ -233,18 +233,18 @@ example/Methods#m13().(x)
 --- metac
 +++ metacp
  signature {
-   valueSignature {
+   value_signature {
      tpe {
--      annotatedType {
+-      annotated_type {
 -        tpe {
--          typeRef {
+-          type_ref {
 -            prefix {
 -            symbol: "scala/Int#"
-+      typeRef {
++      type_ref {
 +        prefix {
 -        annotations {
 -          tpe {
--            typeRef {
+-            type_ref {
 -              prefix {
 -              symbol: "scala/unchecked#"
 +        symbol: "scala/Int#"
@@ -257,7 +257,7 @@ example/Methods#m19$default$2().
 +++ metacp
          annotations {
            tpe {
--            typeRef {
+-            type_ref {
 -              prefix {
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
@@ -269,7 +269,7 @@ example/Methods#m19$default$3().
 +++ metacp
          annotations {
            tpe {
--            typeRef {
+-            type_ref {
 -              prefix {
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
@@ -280,8 +280,8 @@ example/Synthetic#x$2.
 --- metac
 +++ metacp
  access {
--  publicAccess {
-+  privateThisAccess {
+-  public_access {
++  private_this_access {
 
 
 ================
@@ -310,11 +310,11 @@ types/Test.C#annType1.
 +++ metacp
          annotations {
            tpe {
--            typeRef {
+-            type_ref {
 -              prefix {
 -              symbol: "types/ann#"
 -              type_arguments {
--                typeRef {
+-                type_ref {
 -                  prefix {
 -                  symbol: "scala/Int#"
 
@@ -326,12 +326,12 @@ types/Test.C#annType2.
 +++ metacp
          annotations {
            tpe {
--            typeRef {
+-            type_ref {
 -              prefix {
 -              symbol: "types/ann1#"
          annotations {
            tpe {
--            typeRef {
+-            type_ref {
 -              prefix {
 -              symbol: "types/ann2#"
 
@@ -383,7 +383,7 @@ types/Test.C#existentialType1.
 ==============================
 --- metac
 +++ metacp
-           typeRef {
+           type_ref {
              prefix {
 -            symbol: "local9"
 +            symbol: "local4"
@@ -401,7 +401,7 @@ types/Test.C#existentialType2.
 ==============================
 --- metac
 +++ metacp
-               typeRef {
+               type_ref {
                  prefix {
 -                symbol: "local11"
 +                symbol: "local5"
@@ -419,7 +419,7 @@ types/Test.C#existentialType3.
 ==============================
 --- metac
 +++ metacp
-               typeRef {
+               type_ref {
                  prefix {
 -                symbol: "local12"
 +                symbol: "local6"
@@ -437,7 +437,7 @@ types/Test.C#existentialType4.
 ==============================
 --- metac
 +++ metacp
-               typeRef {
+               type_ref {
                  prefix {
 -                symbol: "local13"
 +                symbol: "local7"
@@ -458,13 +458,13 @@ types/Test.Literal.javaEnum.
  display_name: "javaEnum"
  language: SCALA
  signature {
--  methodSignature {
+-  method_signature {
 -    type_parameters {
 -    return_type {
--      singleType {
+-      single_type {
 -        prefix {
 -        symbol: "java/nio/file/LinkOption#NOFOLLOW_LINKS."
  access {
-   publicAccess {
+   public_access {
 
 

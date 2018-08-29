@@ -319,17 +319,17 @@ SemanticDB consumers.
 ```protobuf
 message Constant {
   oneof sealed_value {
-    UnitConstant unitConstant = 1;
-    BooleanConstant booleanConstant = 2;
-    ByteConstant byteConstant = 3;
-    ShortConstant shortConstant = 4;
-    CharConstant charConstant = 5;
-    IntConstant intConstant = 6;
-    LongConstant longConstant = 7;
-    FloatConstant floatConstant = 8;
-    DoubleConstant doubleConstant = 9;
-    StringConstant stringConstant = 10;
-    NullConstant nullConstant = 11;
+    UnitConstant unit_constant = 1;
+    BooleanConstant boolean_constant = 2;
+    ByteConstant byte_constant = 3;
+    ShortConstant short_constant = 4;
+    CharConstant char_constant = 5;
+    IntConstant int_constant = 6;
+    LongConstant long_constant = 7;
+    FloatConstant float_constant = 8;
+    DoubleConstant double_constant = 9;
+    StringConstant string_constant = 10;
+    NullConstant null_constant = 11;
   }
 }
 
@@ -385,20 +385,20 @@ values of the nine primitive types on the JVM, as well as strings and `null`.
 message Type {
   reserved 1, 3, 4, 5, 6, 11, 12, 15, 16;
   oneof sealed_value {
-    TypeRef typeRef = 2;
-    SingleType singleType = 20;
-    ThisType thisType = 21;
-    SuperType superType = 22;
-    ConstantType constantType = 23;
-    IntersectionType intersectionType = 17;
-    UnionType unionType = 18;
-    WithType withType = 19;
-    StructuralType structuralType = 7;
-    AnnotatedType annotatedType = 8;
-    ExistentialType existentialType = 9;
-    UniversalType universalType = 10;
-    ByNameType byNameType = 13;
-    RepeatedType repeatedType = 14;
+    TypeRef type_ref = 2;
+    SingleType single_type = 20;
+    ThisType this_type = 21;
+    SuperType super_type = 22;
+    ConstantType constant_type = 23;
+    IntersectionType intersection_type = 17;
+    UnionType union_type = 18;
+    WithType with_type = 19;
+    StructuralType structural_type = 7;
+    AnnotatedType annotated_type = 8;
+    ExistentialType existential_type = 9;
+    UniversalType universal_type = 10;
+    ByNameType by_name_type = 13;
+    RepeatedType repeated_type = 14;
   }
 }
 ```
@@ -555,10 +555,10 @@ message RepeatedType {
 ```protobuf
 message Signature {
   oneof sealed_value {
-    ClassSignature classSignature = 1;
-    MethodSignature methodSignature = 2;
-    TypeSignature typeSignature = 3;
-    ValueSignature valueSignature = 4;
+    ClassSignature class_signature = 1;
+    MethodSignature method_signature = 2;
+    TypeSignature type_signature = 3;
+    ValueSignature value_signature = 4;
   }
 }
 ```
@@ -587,16 +587,16 @@ a [Scope](#scope). `self` represents an optional self-type [\[99\]][99].
 ```protobuf
 message MethodSignature {
   Scope type_parameters = 1;
-  repeated Scope parameterLists = 2;
+  repeated Scope parameter_lists = 2;
   Type return_type = 3;
 }
 ```
 
 `MethodSignature` represents signatures of methods (including getters and
 setters), constructors and macros. It features `type_parameters`,
-`parameterLists` and a `return_type`. Both type parameters and parameters
+`parameter_lists` and a `return_type`. Both type parameters and parameters
 are modelled by [Scopes](#scope). Moreover, in order to support multiple
-parameter lists in Scala methods, `parameterLists` is a list of lists.
+parameter lists in Scala methods, `parameter_lists` is a list of lists.
 
 ```protobuf
 message TypeSignature {
@@ -860,13 +860,13 @@ data structure.
 ```protobuf
 message Access {
   oneof sealed_value {
-    PrivateAccess privateAccess = 1;
-    PrivateThisAccess privateThisAccess = 2;
-    PrivateWithinAccess privateWithinAccess = 3;
-    ProtectedAccess protectedAccess = 4;
-    ProtectedThisAccess protectedThisAccess = 5;
-    ProtectedWithinAccess protectedWithinAccess = 6;
-    PublicAccess publicAccess = 7;
+    PrivateAccess private_access = 1;
+    PrivateThisAccess private_this_access = 2;
+    PrivateWithinAccess private_within_access = 3;
+    ProtectedAccess protected_access = 4;
+    ProtectedThisAccess protected_this_access = 5;
+    ProtectedWithinAccess protected_within_access = 6;
+    PublicAccess public_access = 7;
   }
 }
 
@@ -1010,14 +1010,14 @@ synthetic AST is given as a [Tree](#tree).
 ```protobuf
 message Tree {
   oneof sealed_value {
-    ApplyTree applyTree = 1;
-    FunctionTree functionTree = 2;
-    IdTree idTree = 3;
-    LiteralTree literalTree = 4;
-    MacroExpansionTree macroExpansionTree = 5;
-    OriginalTree originalTree = 6;
-    SelectTree selectTree = 7;
-    TypeApplyTree typeApplyTree = 8;
+    ApplyTree apply_tree = 1;
+    FunctionTree function_tree = 2;
+    IdTree id_tree = 3;
+    LiteralTree literal_tree = 4;
+    MacroExpansionTree macro_expansion_tree = 5;
+    OriginalTree original_tree = 6;
+    SelectTree select_tree = 7;
+    TypeApplyTree type_apply_tree = 8;
   }
 }
 ```
@@ -1031,8 +1031,8 @@ At the moment, we do not have plans to add more trees.
 
 ```protobuf
 message ApplyTree {
-  Tree fn = 1;
-  repeated Tree args = 2;
+  Tree function = 1;
+  repeated Tree arguments = 2;
 }
 ```
 
@@ -1040,8 +1040,8 @@ An `ApplyTree` represents a method application.
 
 ```protobuf
 message FunctionTree {
-  repeated IdTree params = 1;
-  Tree term = 2;
+  repeated IdTree parameters = 1;
+  Tree body = 2;
 }
 ```
 
@@ -1050,7 +1050,7 @@ a body.
 
 ```protobuf
 message IdTree {
-  string sym = 1;
+  string symbol = 1;
 }
 ```
 
@@ -1058,7 +1058,7 @@ An `IdTree` represents a reference to a [Symbol](#symbol) in an identifier.
 
 ```protobuf
 message LiteralTree {
-  Constant const = 1;
+  Constant constant = 1;
 }
 ```
 
@@ -1066,12 +1066,12 @@ A `LiteralTree` represents a [Constant](#constant) literal.
 
 ```protobuf
 message MacroExpansionTree {
-  Tree expandee = 1;
+  Tree before_expansion = 1;
   Type tpe = 2;
 }
 ```
 
-A `MacroExpansionTree` represents a macro expansion. The `expandee` can be
+A `MacroExpansionTree` represents a macro expansion. The `before_expansion` can be
 an `OriginalTree` (expansion of original code) or any other `Tree`
 (expansion of synthetic code).
 
@@ -1088,7 +1088,7 @@ source file.
 
 ```protobuf
 message SelectTree {
-  Tree qual = 1;
+  Tree qualifier = 1;
   IdTree id = 2;
 }
 ```
@@ -1097,8 +1097,8 @@ A `SelectTree` represents a method or field selection on a qualifier.
 
 ```protobuf
 message TypeApplyTree {
-  Tree fn = 1;
-  repeated Type targs = 2;
+  Tree function = 1;
+  repeated Type type_arguments = 2;
 }
 ```
 

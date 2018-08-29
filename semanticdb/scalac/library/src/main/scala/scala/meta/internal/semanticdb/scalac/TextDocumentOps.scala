@@ -397,16 +397,16 @@ trait TextDocumentOps { self: SemanticdbOps =>
               isVisitedParent += gtree
               gtree match {
                 case gtree: g.TypeApply =>
-                  val targs = gtree.args.map(_.tpe.toSemanticTpe)
+                  val typeArguments = gtree.args.map(_.tpe.toSemanticTpe)
                   val innerTree = forMethodSelect(gtree.fun)
                   s.TypeApplyTree(
-                    fn = innerTree,
-                    targs = targs
+                    function = innerTree,
+                    typeArguments = typeArguments
                   )
                 case gtree: g.Select if isForSynthetic(gtree) =>
-                  val qual = forSyntheticOrOrig(gtree.qualifier)
+                  val qualifier = forSyntheticOrOrig(gtree.qualifier)
                   s.SelectTree(
-                    qual = qual,
+                    qualifier = qualifier,
                     id = Some(gtree.toSemanticId)
                   )
               }
@@ -428,15 +428,15 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   val implicitArgs = gtree.args.map(_.toSemanticTree)
                   val innerTree = forSyntheticOrOrig(gtree.fun)
                   s.ApplyTree(
-                    fn = innerTree,
-                    args = implicitArgs
+                    function = innerTree,
+                    arguments = implicitArgs
                   )
                 case gtree: g.Apply if isForSynthetic(gtree) =>
                   val fun = forMethodSelect(gtree.fun)
                   val body = forMethodBody(gtree.args.head)
                   s.ApplyTree(
-                    fn = fun,
-                    args = List(body)
+                    function = fun,
+                    arguments = List(body)
                   )
                 case gtree => gtree.toSemanticOriginal
               }
@@ -449,8 +449,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   synthetics += s.Synthetic(
                     range = Some(pos.toRange),
                     tree = s.ApplyTree(
-                      fn = gview.fun.toSemanticTree,
-                      args = List(
+                      function = gview.fun.toSemanticTree,
+                      arguments = List(
                         s.OriginalTree(
                           range = Some(pos.toRange)
                         ))
@@ -465,14 +465,14 @@ trait TextDocumentOps { self: SemanticdbOps =>
                       synthetics += s.Synthetic(
                         range = Some(range),
                         tree = s.ApplyTree(
-                          fn = s.ApplyTree(
-                            fn = gview.fun.toSemanticTree,
-                            args = List(
+                          function = s.ApplyTree(
+                            function = gview.fun.toSemanticTree,
+                            arguments = List(
                               s.OriginalTree(
                                 range = Some(range)
                               ))
                           ),
-                          args = gimpl.args.map(_.toSemanticTree)
+                          arguments = gimpl.args.map(_.toSemanticTree)
                         )
                       )
                     case gfun if isForSynthetic(gfun) =>
@@ -486,10 +486,10 @@ trait TextDocumentOps { self: SemanticdbOps =>
                       synthetics += s.Synthetic(
                         range = Some(gfun.pos.toMeta.toRange),
                         tree = s.ApplyTree(
-                          fn = s.OriginalTree(
+                          function = s.OriginalTree(
                             range = Some(gfun.pos.toMeta.toRange)
                           ),
-                          args = gimpl.args.map(_.toSemanticTree)
+                          arguments = gimpl.args.map(_.toSemanticTree)
                         )
                       )
                   }
@@ -502,8 +502,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
                       isVisitedParent += fun
                       val symbol = select.symbol.toSemantic
                       s.SelectTree(
-                        qual = s.OriginalTree(range = Some(qual.pos.toMeta.toRange)),
-                        id = Some(s.IdTree(sym = symbol))
+                        qualifier = s.OriginalTree(range = Some(qual.pos.toMeta.toRange)),
+                        id = Some(s.IdTree(symbol = symbol))
                       )
                     case _ =>
                       s.OriginalTree(
@@ -513,8 +513,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   synthetics += s.Synthetic(
                     range = Some(fun.pos.toMeta.toRange),
                     tree = s.TypeApplyTree(
-                      fn = fnTree,
-                      targs = targs.map(_.tpe.toSemanticTpe)
+                      function = fnTree,
+                      typeArguments = targs.map(_.tpe.toSemanticTpe)
                     )
                   )
                 case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
@@ -523,8 +523,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   synthetics += s.Synthetic(
                     range = Some(qual.pos.toMeta.toRange),
                     tree = s.SelectTree(
-                      qual = s.OriginalTree(range = Some(qual.pos.toMeta.toRange)),
-                      id = Some(s.IdTree(sym = symbol))
+                      qualifier = s.OriginalTree(range = Some(qual.pos.toMeta.toRange)),
+                      id = Some(s.IdTree(symbol = symbol))
                     )
                   )
                 case gtree if isForSynthetic(gtree) =>

@@ -12,31 +12,31 @@ trait SyntheticOps { self: SemanticdbOps =>
     def toSemanticTree: s.Tree = gTree match {
       case gTree: g.Apply =>
         s.ApplyTree(
-          fn = gTree.fun.toSemanticId,
-          args = gTree.args.map(_.toSemanticTree)
+          function = gTree.fun.toSemanticId,
+          arguments = gTree.args.map(_.toSemanticTree)
         )
       case gTree: g.TypeApply =>
         s.TypeApplyTree(
-          fn = gTree.fun.toSemanticTree,
-          targs = gTree.args.map(_.tpe.toSemanticTpe)
+          function = gTree.fun.toSemanticTree,
+          typeArguments = gTree.args.map(_.tpe.toSemanticTpe)
         )
       case gTree: g.Select => gTree.toSemanticId
       case gTree: g.Ident => gTree.toSemanticId
       case gTree: g.This => gTree.toSemanticId
       case gTree: g.Typed if gTree.hasAttachment[g.analyzer.MacroExpansionAttachment] =>
         val expandeeTree = gTree.attachments.get[g.analyzer.MacroExpansionAttachment].get.expandee
-        val expandee =
+        val beforeExpansion =
           if (expandeeTree.pos.isRange) expandeeTree.toSemanticOriginal
           else expandeeTree.toSemanticTree
         s.MacroExpansionTree(
-          expandee = expandee,
+          beforeExpansion = beforeExpansion,
           tpe = gTree.tpt.tpe.toSemanticTpe
         )
       case _ =>
         s.NoTree
     }
 
-    def toSemanticId: s.IdTree = s.IdTree(sym = gTree.symbol.toSemantic)
+    def toSemanticId: s.IdTree = s.IdTree(symbol = gTree.symbol.toSemantic)
 
     def toSemanticOriginal: s.Tree = s.OriginalTree(
       range = Some(gTree.pos.toMeta.toRange)

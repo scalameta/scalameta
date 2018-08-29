@@ -39,19 +39,19 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
     def pprint(tree: Tree): Unit = {
       tree match {
         case tree: ApplyTree =>
-          pprint(tree.fn)
+          pprint(tree.function)
           out.print("(")
-          rep(tree.args, ", ")(pprint)
+          rep(tree.arguments, ", ")(pprint)
           out.print(")")
         case tree: FunctionTree =>
           out.print("{")
-          rep("(", tree.params, ", ", ") => ")(pprint)
-          pprint(tree.term)
+          rep("(", tree.parameters, ", ", ") => ")(pprint)
+          pprint(tree.body)
           out.print("}")
         case tree: IdTree =>
-          pprint(tree.sym, Reference)
+          pprint(tree.symbol, Reference)
         case tree: LiteralTree =>
-          pprint(tree.const)
+          pprint(tree.constant)
         case tree: MacroExpansionTree =>
           out.print("(`macro-expandee` : ")
           pprint(tree.tpe)
@@ -65,13 +65,13 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
             out.print(")")
           }
         case tree: SelectTree =>
-          pprint(tree.qual)
+          pprint(tree.qualifier)
           out.print(".")
           opt(tree.id)(pprint)
         case tree: TypeApplyTree =>
-          pprint(tree.fn)
+          pprint(tree.function)
           out.print("[")
-          rep(tree.targs, ", ")(pprint)
+          rep(tree.typeArguments, ", ")(pprint)
           out.print("]")
         case NoTree =>
           out.print("<?>")
