@@ -460,7 +460,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 case gimpl: g.ApplyToImplicitArgs =>
                   gimpl.fun match {
                     case gview: g.ApplyImplicitView =>
-                      isVisited += gview
+                      isVisitedParent += gview
                       val range = gtree.pos.toMeta.toRange
                       synthetics += s.Synthetic(
                         range = Some(range),
