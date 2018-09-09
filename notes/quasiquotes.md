@@ -46,30 +46,30 @@ the end of the document.
 
 ## Types (meta.Type)
 
-|                   | Quasiquote                                                                                                                             |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Literal           | `t"<literal>"`                                                                                                                         |
-| Name              | `t"<name>"`                                                                                                                            |
-| Selection         | `t"$eref.$tname"`                                                                                                                      |
-| Projection        | `t"$tpe#$tname"`                                                                                                                       |
-| Singleton         | `t"$eref.type"`                                                                                                                        |
-| Application       | `t"$tpe[..$tpesnel]` (vote for #519 to support `q"$expr[...$tpess]"`)                                                                  |
-| Infix Application | `t"$tpe $tname $tpe"`                                                                                                                  |
-| With              | `t"$tpe with $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))              |
-| And               | `t"$tpe & $tpe"` (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala))                 |
-| Or                | <code>t"$tpe &#124; $tpe"</code> (only for [supported dialects](/scalameta/dialects/src/main/scala/scala/meta/dialects/package.scala)) |
-| Function          | `t"(..$tpes) => $tpe"`                                                                                                                 |
-| Implicit Function | `t"implicit (..$tpes) => $tpe"`                                                                                                        |
-| Tuple             | `t"(..$tpesnel)"`                                                                                                                      |
-| Refine            | `t"$tpeopt { ..$stats }"`                                                                                                              |
-| Existential       | `t"$tpe forSome { ..$statsnel }"`                                                                                                      |
-| Annotate          | `t"$tpe ..@$annotsnel"`                                                                                                                |
-| Lambda            | `t[..$tparams] => $tpe`                                                                                                                |
-| Method            | `t(...$paramss): $tpe`                                                                                                                 |
-| Placeholder       | `t"_ >: $tpeopt <: $tpeopt"`                                                                                                           |
-| By Name           | `t"=> $tpe"`                                                                                                                           |
-| Repeated          | `t"$tpe*"`                                                                                                                             |
-| Var               | Not supported                                                                                                                          |
+|                   | Quasiquote                                                            |
+| ----------------- | --------------------------------------------------------------------- |
+| Literal           | `t"<literal>"`                                                        |
+| Name              | `t"<name>"`                                                           |
+| Selection         | `t"$eref.$tname"`                                                     |
+| Projection        | `t"$tpe#$tname"`                                                      |
+| Singleton         | `t"$eref.type"`                                                       |
+| Application       | `t"$tpe[..$tpesnel]` (vote for #519 to support `q"$expr[...$tpess]"`) |
+| Infix Application | `t"$tpe $tname $tpe"`                                                 |
+| With              | `t"$tpe with $tpe"` (only for supported dialects)                     |
+| And               | `t"$tpe & $tpe"` (only for supported dialects)                        |
+| Or                | <code>t"$tpe &#124; $tpe"</code> (only for supported dialects)        |
+| Function          | `t"(..$tpes) => $tpe"`                                                |
+| Implicit Function | `t"implicit (..$tpes) => $tpe"`                                       |
+| Tuple             | `t"(..$tpesnel)"`                                                     |
+| Refine            | `t"$tpeopt { ..$stats }"`                                             |
+| Existential       | `t"$tpe forSome { ..$statsnel }"`                                     |
+| Annotate          | `t"$tpe ..@$annotsnel"`                                               |
+| Lambda            | `t[..$tparams] => $tpe`                                               |
+| Method            | `t(...$paramss): $tpe`                                                |
+| Placeholder       | `t"_ >: $tpeopt <: $tpeopt"`                                          |
+| By Name           | `t"=> $tpe"`                                                          |
+| Repeated          | `t"$tpe*"`                                                            |
+| Var               | Not supported                                                         |
 
 ## Patterns (meta.Pat) and Cases (meta.Case)
 
