@@ -178,7 +178,7 @@ enum Language {
 ```
 
 `Language` represents a programming language that defines certain SemanticDB
-entities, e.g. [Document](#document) or [Symbol](#symbol). Currently,
+entities, e.g. [TextDocument](#textdocument) or [Symbol](#symbol). Currently,
 See [Languages](#languages) for the details of how features of supported
 programming languages map onto SemanticDB.
 
@@ -1026,7 +1026,7 @@ A `Tree` represents a typed abstract syntax tree.
 The trees are similar to Scalameta and Rsc trees, except for
 `OriginalTree`, which represents a quote of the original source file.
 We only support a small subset of Scala syntax necessary to model
-[Synthetics](#synthetics).
+[Synthetics](#synthetic).
 At the moment, we do not have plans to add more trees.
 
 ```protobuf
