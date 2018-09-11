@@ -12,7 +12,9 @@ final class Settings private (
     val scalaLibrarySynthetics: Boolean,
     val par: Boolean,
     val verbose: Boolean,
-    val usejavacp: Boolean
+    val usejavacp: Boolean,
+    val stubBrokenSignatures: Boolean,
+    val logBrokenSignatures: Boolean
 ) {
   private def this() = {
     this(
@@ -22,7 +24,9 @@ final class Settings private (
       scalaLibrarySynthetics = false,
       par = false,
       verbose = false,
-      usejavacp = false
+      usejavacp = false,
+      stubBrokenSignatures = false,
+      logBrokenSignatures = false
     )
   }
 
@@ -59,6 +63,14 @@ final class Settings private (
     copy(usejavacp = usejavacp)
   }
 
+  def withStubBrokenSignatures(stubBrokenSignatures: Boolean): Settings = {
+    copy(stubBrokenSignatures = stubBrokenSignatures)
+  }
+
+  def withLogBrokenSignatures(logBrokenSignatures: Boolean): Settings = {
+    copy(logBrokenSignatures = logBrokenSignatures)
+  }
+
   private def copy(
       out: AbsolutePath = out,
       classpath: Classpath = classpath,
@@ -66,7 +78,9 @@ final class Settings private (
       scalaLibrarySynthetics: Boolean = scalaLibrarySynthetics,
       par: Boolean = par,
       verbose: Boolean = verbose,
-      usejavacp: Boolean = usejavacp
+      usejavacp: Boolean = usejavacp,
+      stubBrokenSignatures: Boolean = stubBrokenSignatures,
+      logBrokenSignatures: Boolean = logBrokenSignatures
   ): Settings = {
     new Settings(
       out = out,
@@ -75,7 +89,9 @@ final class Settings private (
       scalaLibrarySynthetics = scalaLibrarySynthetics,
       par = par,
       verbose = verbose,
-      usejavacp = usejavacp
+      usejavacp = usejavacp,
+      stubBrokenSignatures = stubBrokenSignatures,
+      logBrokenSignatures = logBrokenSignatures
     )
   }
 }
@@ -103,6 +119,10 @@ object Settings {
           loop(settings.copy(verbose = true), true, rest)
         case "--usejavacp" +: rest if allowOptions =>
           loop(settings.copy(usejavacp = true), true, rest)
+        case "--stub-broken-signatures" +: rest if allowOptions =>
+          loop(settings.copy(stubBrokenSignatures = true), true, rest)
+        case "--log-broken-signatures" +: rest if allowOptions =>
+          loop(settings.copy(logBrokenSignatures = true), true, rest)
         case flag +: _ if allowOptions && flag.startsWith("-") =>
           reporter.err.println(s"unsupported flag $flag")
           None

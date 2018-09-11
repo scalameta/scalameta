@@ -1,6 +1,7 @@
 package scala.meta.internal.scalacp
 
 import scala.collection.mutable
+import scala.meta.internal.classpath._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.semanticdb.Scala._
@@ -184,6 +185,15 @@ trait SymbolInformationOps { self: Scalacp =>
           }
         }
       } catch {
+        case ex: MissingSymbolException =>
+          if (settings.logBrokenSignatures) {
+            reporter.err.println(s"broken signature for ${sym.ssym}: ${ex.getMessage}")
+          }
+          if (settings.stubBrokenSignatures) {
+            s.NoSignature
+          } else {
+            throw ex
+          }
         case ScalaSigParserError("Unexpected failure") =>
           // FIXME: https://github.com/scalameta/scalameta/issues/1494
           s.NoSignature
