@@ -187,7 +187,7 @@ class Main(settings: Settings, reporter: Reporter) {
             try {
               val abspath = AbsolutePath(path)
               val node = abspath.toClassNode
-              val result = ClassfileInfos.fromClassNode(node, classpathIndex)
+              val result = ClassfileInfos.fromClassNode(node, classpathIndex, settings, reporter)
               result.foreach { infos =>
                 infos.save(out)
               }

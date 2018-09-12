@@ -490,6 +490,54 @@ metacp [options] <classpath>
       <code>--no-par</code>
     </td>
   </tr>
+  <tr>
+    <td><code>--verbose</code></td>
+    <td></td>
+    <td>
+      Toggles periodic progress printouts that help gauge Metacp's progress
+      for long-running invocations.
+    </td>
+    <td>
+      <code></code>
+    </td>
+  </tr>
+  <tr>
+    <td><code>--usejavacp</code></td>
+    <td></td>
+    <td>
+      Attempts to autodetect the locations of JDK libraries and the Scala library
+      based on the Metacp's classloader, so that these libraries don't have to be
+      specified in <code>--dependency-classpath</code>.
+    </td>
+    <td>
+      <code></code>
+    </td>
+  </tr>
+  <tr>
+    <td><code>--stub-broken-signatures</code></td>
+    <td></td>
+    <td>
+      Catches exceptions that arise during generation of `Signature` payloads
+      and stubs these payloads with `NoSignature` values instead of failing Metacp
+      invocations. May be useful for dealing with missing symbol errors arising
+      from missing optional dependencies.
+    </td>
+    <td>
+      <code></code>
+    </td>
+  </tr>
+  <tr>
+    <td><code>--log-broken-signatures</code></td>
+    <td></td>
+    <td>
+      Logs exceptions that arise during generation of `Signature` payloads.
+      May be useful in combination with <code>--stub-broken-signatures</code>
+      to have a sense of what exactly is being stubbed.
+    </td>
+    <td>
+      <code></code>
+    </td>
+  </tr>
 </table>
 
 Metacp understands classfiles produced by both the Scala and Java compiler.

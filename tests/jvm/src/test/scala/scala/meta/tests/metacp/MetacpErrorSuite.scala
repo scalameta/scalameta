@@ -4,7 +4,7 @@ import java.nio.file._
 import org.scalatest.FunSuite
 import org.scalatest.tagobjects.Slow
 import scala.collection.JavaConverters._
-import scala.meta.cli.Metacp
+import scala.meta.cli._
 import scala.meta.io._
 import scala.meta.metacp.Settings
 import scala.meta.testkit.DiffAssertions
@@ -108,5 +108,32 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
     )
     // TODO(olafurpg) fix this assertion before merging PR!
     // assert(!Files.list(output).iterator.hasNext)
+  }
+
+  test("missing symbol 4") {
+    val input = Files.createTempDirectory("a_")
+    input.toFile.deleteOnExit()
+    val aclassFrom = Paths.get(BuildInfo.databaseClasspath).resolve("A.class")
+    val aclassTo = input.resolve("A.class")
+    Files.copy(aclassFrom, aclassTo)
+
+    val output = Files.createTempDirectory("out_")
+    output.toFile.deleteOnExit()
+    val settings = Settings()
+      .withOut(AbsolutePath(output))
+      .withClasspath(Classpath(AbsolutePath(input)))
+      .withStubBrokenSignatures(true)
+      .withLogBrokenSignatures(true)
+
+    val (result, out, err) = CliSuite.withReporter { reporter =>
+      Metacp.process(settings, reporter)
+    }
+    assert(result.isSuccess)
+    assertNoDiffOrPrintExpected(
+      err,
+      s"""|broken signature for _empty_/A#: missing symbol: scala
+          |broken signature for _empty_/A#b().: missing symbol: <empty>.B
+      """.stripMargin
+    )
   }
 }

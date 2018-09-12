@@ -3,10 +3,14 @@ package scala.meta.internal.scalacp
 import scala.meta.internal.classpath._
 import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb => s}
+import scala.meta.cli._
+import scala.meta.metacp._
 import scala.tools.scalap.scalax.rules.scalasig._
 
 final class Scalacp private (
-    val symbolIndex: SymbolIndex
+    val symbolIndex: SymbolIndex,
+    val settings: Settings,
+    val reporter: Reporter
 ) extends AnnotationOps
     with SymbolInformationOps
     with SymbolOps
@@ -37,10 +41,12 @@ final class Scalacp private (
 object Scalacp {
   def parse(
       node: ScalaSigNode,
-      classpathIndex: ClasspathIndex
+      classpathIndex: ClasspathIndex,
+      settings: Settings,
+      reporter: Reporter
   ): ClassfileInfos = {
     val symbolIndex = SymbolIndex(classpathIndex)
-    val scalacp = new Scalacp(symbolIndex)
+    val scalacp = new Scalacp(symbolIndex, settings, reporter)
     scalacp.parse(node)
   }
 }
