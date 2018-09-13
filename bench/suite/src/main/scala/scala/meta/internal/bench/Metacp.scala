@@ -22,15 +22,13 @@ trait Metacp {
   def runImpl(classpath: Classpath, dependencyClasspath: Classpath): Unit = {
     val tmp = Files.createTempDirectory("metacp_")
     val settings = Settings()
-      .withCacheDir(AbsolutePath(tmp))
+      .withOut(AbsolutePath(tmp))
       .withDependencyClasspath(dependencyClasspath)
       .withClasspath(classpath)
       .withScalaLibrarySynthetics(false)
     val reporter = Reporter().withSilentOut().withErr(System.err)
-    scala.meta.cli.Metacp.process(settings, reporter) match {
-      case Some(_) => ()
-      case None => sys.error("conversion failed")
-    }
+    val result = scala.meta.cli.Metacp.process(settings, reporter)
+    if (!result.isSuccess) sys.error("conversion failed")
   }
 }
 
