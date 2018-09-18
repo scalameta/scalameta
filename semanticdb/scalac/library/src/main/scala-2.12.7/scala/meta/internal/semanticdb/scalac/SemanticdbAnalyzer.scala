@@ -40,6 +40,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
     import infer._
     import TyperErrorGen._
     import typeDebug.ptTree
+    val runDefinitions = currentRun.runDefinitions
     import runDefinitions._
 
     override def canTranslateEmptyListToNil = false
@@ -162,7 +163,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
         }
         def advice1(convo: Tree, errors: List[AbsTypeError], err: SilentTypeError): List[AbsTypeError] =
           errors.map { e =>
-            if (e.errPos == tree.pos) {
+            if (e.errPos samePointAs tree.pos) {
               val header = f"${e.errMsg}%n  Expression does not convert to assignment because:%n    "
               val expansion = f"%n    expansion: ${show(convo)}"
               NormalTypeError(tree, err.errors.flatMap(_.errMsg.lines.toList).mkString(header, f"%n    ", expansion))
@@ -170,7 +171,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
           }
         def advice2(errors: List[AbsTypeError]): List[AbsTypeError] =
           errors.map { e =>
-            if (e.errPos == tree.pos) {
+            if (e.errPos samePointAs tree.pos) {
               val msg = f"${e.errMsg}%n  Expression does not convert to assignment because receiver is not assignable."
               NormalTypeError(tree, msg)
             } else e
@@ -229,34 +230,24 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
         }
       }
 
-      // convert new Array[T](len) to evidence[ClassTag[T]].newArray(len)
-      // convert new Array^N[T](len) for N > 1 to evidence[ClassTag[Array[...Array[T]...]]].newArray(len)
-      // where Array HK gets applied (N-1) times
-      object ArrayInstantiation {
-        def unapply(tree: Apply) = tree match {
-          case Apply(Select(New(tpt), name), arg :: Nil) if tpt.tpe != null && tpt.tpe.typeSymbol == ArrayClass =>
-            Some(tpt.tpe) collect {
-              case erasure.GenericArray(level, componentType) =>
-                val tagType = (1 until level).foldLeft(componentType)((res, _) => arrayType(res))
-
-                resolveClassTag(tree.pos, tagType) match {
-                  case EmptyTree => MissingClassTagError(tree, tagType)
-                  case tag       => atPos(tree.pos)(new ApplyToImplicitArgs(Select(tag, nme.newArray), arg :: Nil))
-                }
-            }
-          case _ => None
-        }
-      }
-
       def typedApply(tree: Apply) = tree match {
         case Apply(Block(stats, expr), args) =>
           typed1(atPos(tree.pos)(Block(stats, Apply(expr, args) setPos tree.pos.makeTransparent)), mode, pt)
         case Apply(fun, args) =>
           normalTypedApply(tree, fun, args) match {
-            case tree1 @ ArrayInstantiation(tree2) =>
-              if (tree2.isErrorTyped) tree2
+            case treeInfo.ArrayInstantiation(level, componentType, arg) =>
+              // convert new Array[T](len) to evidence[ClassTag[T]].newArray(len)
+              // convert new Array^N[T](len) for N > 1 to evidence[ClassTag[Array[...Array[T]...]]].newArray(len)
+              // where Array HK gets applied (N-1) times
+              val tagType = (1 until level).foldLeft(componentType)((res, _) => arrayType(res))
+
+              val tree1: Tree = resolveClassTag(tree.pos, tagType) match {
+                case EmptyTree => MissingClassTagError(tree, tagType)
+                case tag       => atPos(tree.pos)(new ApplyToImplicitArgs(Select(tag, nme.newArray), arg :: Nil))
+              }
+              if (tree1.isErrorTyped) tree1
               //+scalac deviation
-              else typed(tree2, mode, pt).rememberNewArrayOf(tree1)
+              else typed(tree1, mode, pt).rememberNewArrayOf(tree1)
               //-scalac deviation
             case Apply(Select(fun, nme.apply), _) if treeInfo.isSuperConstrCall(fun) =>
               TooManyArgumentListsForConstructor(tree) //scala/bug#5696
@@ -304,7 +295,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
           case Select(qualqual, vname) =>
             gen.evalOnce(qualqual, context.owner, context.unit) { qq =>
               val qq1 = qq()
-              mkAssign(Select(qq1, vname) setPos qual.pos)
+              mkAssign(Select(qq1, qual.symbol) setPos qual.pos)
             }
 
           case Apply(fn, indices) =>
@@ -409,8 +400,8 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
           if (tree.isInstanceOf[SelectFromTypeTree]) TypeSelectionFromVolatileTypeError(tree, qual)
           else UnstableTreeError(qual)
         else {
-          def asDynamicCall = dyna.mkInvoke(context, tree, qual, name) map { t =>
-            dyna.wrapErrors(t, (_.typed1(t, mode, pt)))
+          def asDynamicCall = mkInvoke(context, tree, qual, name) map { t =>
+            wrapErrors(t, (_.typed1(t, mode, pt)))
           }
 
           val sym = tree.symbol orElse member(qual, name) orElse inCompanionForJavaStatic(qual.tpe.prefix, qual.symbol, name)
@@ -542,14 +533,14 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
             typedSelect(tree, typedTypeSelectionQualifier(tree.qualifier, WildcardType), name)
           else {
             if (StatisticsStatics.areSomeColdStatsEnabled) statistics.incCounter(typedSelectCount)
-            val qualTyped = checkDead(typedQualifier(qual, mode))
+            val qualTyped = checkDead(context, typedQualifier(qual, mode))
             val tree1 = typedSelect(tree, qualTyped, name)
 
             if (tree.isInstanceOf[PostfixSelect])
-              checkFeature(tree.pos, PostfixOpsFeature, name.decode)
+              checkFeature(tree.pos, currentRun.runDefinitions.PostfixOpsFeature, name.decode)
             val sym = tree1.symbol
             if (sym != null && sym.isOnlyRefinementMember && !sym.isMacro)
-              checkFeature(tree1.pos, ReflectiveCallsFeature, sym.toString)
+              checkFeature(tree1.pos, currentRun.runDefinitions.ReflectiveCallsFeature, sym.toString)
 
             qualTyped.symbol match {
               //+scalac deviation
@@ -657,7 +648,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
         if (sameLength(tparams, args)) {
           val targs = mapList(args)(treeTpe)
           checkBounds(tree, NoPrefix, NoSymbol, tparams, targs, "")
-          if (isPredefClassOf(fun.symbol)) {
+          if (currentRun.runDefinitions.isPredefClassOf(fun.symbol)) {
             //+scalac deviation
             val result = typedClassOf(tree, args.head, noGen = true)
             val original = atPos(tree.pos)(TypeApply(fun, args))
@@ -760,7 +751,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
      *  and should not be used otherwise. (todo) can it be replaced with a tree attachment?
      */
     override protected def adapt(tree: Tree, mode: Mode, pt: Type, original: Tree = EmptyTree): Tree = {
-      def hasUndets           = context.undetparams.nonEmpty
+      def hasUndets           = !context.undetparams.isEmpty
       def hasUndetsInMonoMode = hasUndets && !mode.inPolyMode
 
       def adaptToImplicitMethod(mt: MethodType): Tree = {
@@ -1093,7 +1084,7 @@ trait SemanticdbAnalyzer extends NscAnalyzer with ReflectionToolkit {
           def hasPolymorphicApply = applyMeth.alternatives exists (_.tpe.typeParams.nonEmpty)
           def hasMonomorphicApply = applyMeth.alternatives exists (_.tpe.paramSectionCount > 0)
 
-          dyna.acceptsApplyDynamic(tree.tpe) || (
+          acceptsApplyDynamic(tree.tpe) || (
             if (mode.inTappMode)
               tree.tpe.typeParams.isEmpty && hasPolymorphicApply
             else
