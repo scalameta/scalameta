@@ -60,9 +60,8 @@ commands += CiCommand("ci-publish")(
   "publishSigned" :: Nil
 )
 commands += Command.command("mima") { s =>
-  // MiMa is disabled until we have a 4.0.0-RC1 out.
-  // s"very mimaReportBinaryIssues" ::
-  s
+  s"very mimaReportBinaryIssues" ::
+    s
 }
 commands += Command.command("ci-slow") { s =>
   val out = file("target/scala-library")
@@ -752,10 +751,13 @@ lazy val publishableSettings = Def.settings(
     if (organization.value == "org.scalameta") {
       val rxVersion = """^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+))?$""".r
       val previousVersion = version.value match {
+        case rxVersion(major, "0", "0", suffix) if suffix != null =>
+          if (suffix.startsWith("-M")) None
+          else Some(s"$major.0.0-RC1")
         case rxVersion(major, minor, patch, suffix) if suffix != null =>
           Some(s"$major.$minor.$patch")
         case rxVersion(major, "0", "0", null) =>
-          None
+          Some(s"$major.0.0-RC1")
         case rxVersion(major, minor, "0", null) =>
           Some(s"$major.${minor.toInt - 1}.0")
         case rxVersion(major, minor, patch, null) =>
