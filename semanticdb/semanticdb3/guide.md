@@ -741,9 +741,9 @@ documents {
 but nowadays it's a bit too low-level. It is recommended to use `metap`
 instead of `protoc`.
 
-# SemanticDB-based tools
+## SemanticDB-based tools
 
-## Scalafix
+### Scalafix
 
 [Scalafix](https://github.com/scalacenter/scalafix) is a rewrite and linting
 tool for Scala developed at the Scala Center with the goal to help automate
@@ -765,7 +765,7 @@ Thanks to SemanticDB, Scalafix is:
     rewrites and lints in parallel. (Unlike compiler plugin-based linters
     that are limited by the single-threaded architecture of Scalac).
 
-## Metadoc
+### Metadoc
 
 [Metadoc](https://github.com/scalameta/metadoc) is an experiment with SemanticDB
 to build online code browser with IDE-like features. Check out
@@ -785,7 +785,7 @@ Thanks to SemanticDB, Metadoc is:
     which means that it can seamlessly work with any compiler / compiler version
     that supports [the SemanticDB compiler plugin](#scalac-compiler-plugin).
 
-## Metals
+### Metals
 
 [Metals](https://github.com/scalameta/metals) is an experiment to implement a
 [language server](https://github.com/Microsoft/language-server-protocol) for Scala
