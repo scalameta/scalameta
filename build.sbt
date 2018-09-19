@@ -669,7 +669,8 @@ lazy val sharedSettings = Def.settings(
   scalaVersion := LanguageVersion,
   crossScalaVersions := LanguageVersions,
   organization := "org.scalameta",
-  addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+  addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.fullMapped(x =>
+    if (x.startsWith("2.12.7-bin")) "2.12.6" else x)),
   scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
   scalacOptions.in(Compile, doc) ++= Seq("-skip-packages", ""),
   scalacOptions.in(Compile, doc) ++= Seq("-implicits", "-implicits-hide:."),
@@ -866,7 +867,9 @@ lazy val fullCrossVersionSettings = Seq(
     // not "scala_2.11.8" or "scala_2.12.1" that we need.
     // That's why we have to work around here.
     val base = sourceDirectory.in(Compile).value
-    base / ("scala-" + scalaVersion.value)
+    val versionDir =
+      if (scalaVersion.value.startsWith("2.12.7-bin")) "2.12.7" else scalaVersion.value
+    base / ("scala-" + versionDir)
   }
 )
 
