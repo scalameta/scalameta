@@ -125,4 +125,11 @@ class DottySuite extends ParseSuite {
 
   checkOK("def foo(implicit x: => Int) = 1")
   checkOK("def foo(implicit y: Int, x: => Int) = 1")
+
+  test("trailing commas are allowed") {
+    templStat("""|case class A(
+                 |  x: X,
+                 |)""".stripMargin)
+  }
+
 }

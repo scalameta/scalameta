@@ -212,7 +212,7 @@ package object dialects {
     allowLiteralTypes = true, // New feature in Dotty
     allowMethodTypes = false,
     allowOrTypes = true, // New feature in Dotty
-    allowTrailingCommas = false, // Not yet implemented in Dotty
+    allowTrailingCommas = true,
     allowTraitParameters = true, // New feature in Dotty
     allowTypeLambdas = true, // New feature in Dotty
     allowViewBounds = false, // View bounds have been removed in Dotty
