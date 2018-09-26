@@ -1,4 +1,6 @@
-# Trees.scala
+# Tree Examples
+
+This document lists examples of how Scala source code maps to Scalameta tree nodes.
 
 ## Top level (`meta.Source`, `meta.Pkg`, `meta.Pkg.Object`)
 
@@ -131,8 +133,8 @@ Type.With(lhs = Type.Name("A"), rhs = Type.Name("B"))
 | `Type.Refine`           | `A { def f: Int }`                                        |
 | `Type.Existential`      | `A forSome { type T }`                                    |
 | `Type.Annotate`         | `T @annot`                                                |
-| `Type.Lambda`           | `[T] => (T, T)` see below (only for supported dialects)   |
-| `Type.Method`           | `(x: T): T` see below (only for supported dialects)       |
+| `Type.Lambda`           | `[T] => (T, T)` (only for supported dialects)             |
+| `Type.Method`           | `(x: T): T` (only for supported dialects)                 |
 | `Type.Placeholder`      | `_` in `T[_]`                                             |
 | `Type.Bounds`           | `T >: Lower <: Upper` in `def F[T >: Lower <: Upper] = 1` |
 | `Type.ByName`           | `=>T` in `def f(x: => T) = x`                             |
@@ -244,19 +246,17 @@ Source(
 Lit.Null()
 ```
 
-| Lit        | Example |
-| ---------- | ------- |
-| `Null`     | `null`  |
-| `Boolean`  | `true`  |
-| `Unit`     | `()`    |
-| `Int`      | `1`     |
-| `Double`   | `1.0`   |
-| `Float`    | `1.0F`  |
-| `Long`     | `1L`    |
-| `Byte`[1]  | `1Z`    |
-| `Short`[1] | `1S`    |
-| `Char`     | `'a'`   |
-| `Symbol`   | `'a`    |
-| `String`   | `"A"`   |
-
-[1]: https://github.com/scalameta/scalameta/issues/1324
+| Lit       | Example               |
+| --------- | --------------------- |
+| `Null`    | `null`                |
+| `Boolean` | `true`                |
+| `Unit`    | `()`                  |
+| `Int`     | `1`                   |
+| `Double`  | `1.0`                 |
+| `Float`   | `1.0F`                |
+| `Long`    | `1L`                  |
+| `Byte`    | (no available syntax) |
+| `Short`   | (no available syntax) |
+| `Char`    | `'a'`                 |
+| `Symbol`  | `'a`                  |
+| `String`  | `"A"`                 |
