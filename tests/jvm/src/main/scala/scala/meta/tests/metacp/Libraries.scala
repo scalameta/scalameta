@@ -13,7 +13,7 @@ object Libraries {
       "scalameta_2.12",
       "3.2.0",
       provided = List(
-        ModuleID.scalaReflect("2.12.6")
+        ModuleID.scalaReflect("2.12.7")
       )
     )
     buf += Library("com.typesafe.akka", "akka-testkit_2.12", "2.5.9")
