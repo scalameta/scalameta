@@ -51,7 +51,9 @@ object Jars {
     val res = Resolution(modules.toIterator.map(_.toCoursier).toSet)
     val repositories = Seq(
       Cache.ivy2Local,
-      MavenRepository("https://repo1.maven.org/maven2")
+      MavenRepository("https://repo1.maven.org/maven2"),
+      // For scala-compiler nightly builds
+      MavenRepository("https://scala-ci.typesafe.com/artifactory/scala-integration/")
     )
     val term =
       new TermDisplay(new OutputStreamWriter(out), fallbackMode = true)

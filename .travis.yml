@@ -34,15 +34,15 @@ matrix:
         - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
     - env:
       - CI_TEST: ci-fast
-      - CI_SCALA_VERSION: 2.12.6
+      - CI_SCALA_VERSION: 2.12.7
       - CI_PUBLISH: true
     - env:
       - CI_TEST: ci-fast
-      - CI_SCALA_VERSION: 2.12.6
+      - CI_SCALA_VERSION: 2.12.7
       - CI_SCALA_JS: true
     - env:
       - CI_TEST: ci-slow
-      - CI_SCALA_VERSION: 2.12.6
+      - CI_SCALA_VERSION: 2.12.7
     - env:
       - CI_TEST: mima
 
