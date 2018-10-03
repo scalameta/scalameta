@@ -15,7 +15,7 @@ private[meta] trait Api {
 
     def traverse(fn: PartialFunction[Tree, Unit]): Unit = {
       val liftedFn = fn.lift
-      object traverser extends Traverser {
+      object traverser extends SimpleTraverser {
         override def apply(tree: Tree): Unit = {
           liftedFn(tree)
           super.apply(tree)
@@ -27,7 +27,7 @@ private[meta] trait Api {
     def collect[T](fn: PartialFunction[Tree, T]): List[T] = {
       val liftedFn = fn.lift
       val buf = scala.collection.mutable.ListBuffer[T]()
-      object traverser extends Traverser {
+      object traverser extends SimpleTraverser {
         override def apply(tree: Tree): Unit = {
           liftedFn(tree).foreach(buf += _)
           super.apply(tree)

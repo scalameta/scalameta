@@ -6,6 +6,7 @@ import scala.language.higherKinds
 
 import scala.meta.contrib.equality.Equal
 import scala.meta.contrib.equality.TreeEquality
+import scala.meta.transversers.SimpleTraverser
 
 object TreeOps {
 
@@ -24,7 +25,7 @@ object TreeOps {
 
   def collectFirst[B](tree: Tree)(pf: PartialFunction[Tree, B]): Option[B] = {
     var result = Option.empty[B]
-    object traverser extends Traverser {
+    object traverser extends SimpleTraverser {
       override def apply(t: Tree): Unit = {
         if (result.isEmpty && pf.isDefinedAt(t)) {
           result = Some(pf(t))
@@ -42,7 +43,7 @@ object TreeOps {
 
   def descendants(tree: Tree): List[Tree] = {
     val builder = List.newBuilder[Tree]
-    object traverser extends Traverser {
+    object traverser extends SimpleTraverser {
       override def apply(t: Tree): Unit = {
         if (t ne tree) builder += t
         super.apply(t)
