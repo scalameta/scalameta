@@ -341,7 +341,7 @@ be passed through Scalac in the form of `-P:semanticdb:<option>:<value>`
       the currently unspecified <code>TextDocument.synthetics</code>
       section (<code>on</code> for yes, <code>off</code> for no).
     </td>
-    <td><code>on</code></td>
+    <td><code>off</code></td>
   </tr>
 </table>
 

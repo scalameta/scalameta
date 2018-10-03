@@ -753,11 +753,11 @@ lazy val publishableSettings = Def.settings(
       val previousVersion = version.value match {
         case rxVersion(major, "0", "0", suffix) if suffix != null =>
           if (suffix.startsWith("-M")) None
-          else Some(s"$major.0.0-RC1")
+          else Some(s"$major.0.0")
         case rxVersion(major, minor, patch, suffix) if suffix != null =>
           Some(s"$major.$minor.$patch")
         case rxVersion(major, "0", "0", null) =>
-          Some(s"$major.0.0-RC1")
+          Some(s"$major.0.0")
         case rxVersion(major, minor, "0", null) =>
           Some(s"$major.${minor.toInt - 1}.0")
         case rxVersion(major, minor, patch, null) =>
