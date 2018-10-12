@@ -706,6 +706,13 @@ lazy val mergeSettings = Def.settings(
     IO.copy(List(fatJar -> slimJar), overwrite = true)
     (art, slimJar)
   },
+  assemblyMergeStrategy.in(assembly) := {
+    case PathList("com", "sun", _*) => MergeStrategy.discard
+    case PathList("sun", _*) => MergeStrategy.discard
+    case x =>
+      val oldStrategy = (assemblyMergeStrategy in assembly).value
+      oldStrategy(x)
+  },
   mimaCurrentClassfiles := {
     Keys.`package`.in(Compile).value
   }
