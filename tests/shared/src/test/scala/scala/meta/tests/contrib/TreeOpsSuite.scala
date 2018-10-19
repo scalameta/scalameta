@@ -49,4 +49,18 @@ class TreeOpsSuite extends FunSuite {
     assert(q"val x = { 2 + 3 }".exists(_.syntax == "3"))
   }
 
+  test("contains") {
+    a.foreach(t => assert(a.contains(t)))
+    val b: Defn.Object = q"object Foo { def bar: Any = ??? }"
+    b.foreach(t => assert(!a.contains(t)))
+  }
+
+  test("collectFirst") {
+    assert(a.collectFirst { case t: Tree => t } == Some(a))
+    assert(a.collectFirst { case t: Defn.Val => t }.nonEmpty)
+    assert(a.collectFirst { case t: Lit => t }.nonEmpty)
+    assert(a.collectFirst { case t: Type => t }.nonEmpty)
+    assert(a.collectFirst { case t: Defn.Trait => t }.isEmpty)
+    assert(a.collectFirst { case t: Defn.Def => t }.isEmpty)
+  }
 }
