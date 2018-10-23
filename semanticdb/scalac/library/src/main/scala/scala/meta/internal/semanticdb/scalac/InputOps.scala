@@ -4,7 +4,6 @@ import java.net.URLEncoder
 import java.nio.CharBuffer
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
-import javax.xml.bind.DatatypeConverter
 import scala.collection.mutable
 import scala.{meta => m}
 import scala.meta.internal.io._
@@ -38,7 +37,7 @@ trait InputOps { self: SemanticdbOps =>
         val md5 = MessageDigest.getInstance("MD5")
         val bytes = UTF_8.encode(CharBuffer.wrap(toInput.chars))
         md5.update(bytes)
-        DatatypeConverter.printHexBinary(md5.digest())
+        Hex.bytesToHex(md5.digest())
       }
     }
     def toInput: m.Input =
