@@ -132,6 +132,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.Xml *
       |scala.meta.tokens.Tokens
       |scala.meta.transversers
+      |scala.meta.transversers.SimpleTraverser *
       |scala.meta.transversers.Transformer
       |scala.meta.transversers.Traverser
       |scala.meta.trees

@@ -412,6 +412,10 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
+  test("scala.meta.transversers.SimpleTraverser.toString") {
+    // n/a
+  }
+
   test("scala.meta.transversers.Transformer.toString") {
     // n/a
   }
