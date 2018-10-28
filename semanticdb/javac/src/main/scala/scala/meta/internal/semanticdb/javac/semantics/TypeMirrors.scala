@@ -4,7 +4,7 @@ import javax.lang.model.`type`._
 import scala.meta.internal.{semanticdb => s}
 import scala.collection.JavaConverters._
 
-trait TypeMirrors {
+trait TypeMirrors { semantics: Semantics =>
 
   val ObjectType = s.TypeRef(symbol = "java/lang/Object#")
 

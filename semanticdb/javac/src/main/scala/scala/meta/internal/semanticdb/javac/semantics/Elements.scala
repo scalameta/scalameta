@@ -9,7 +9,7 @@ import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.collection.JavaConverters._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d, Names => n, _}
 
-trait Elements {
+trait Elements { semantics: Semantics =>
 
   implicit class ElementOps(elem: Element) {
 

@@ -1,14 +1,20 @@
-package scala.meta.internal.semanticdb.javac
+  package scala.meta.internal.semanticdb.javac
 
 import java.nio.file.{Files, Path}
+
+import com.sun.source.tree.CompilationUnitTree
+import com.sun.source.util.Trees
 import javax.lang.model.element.TypeElement
+
 import scala.collection.mutable
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.javac.semantics._
 import scala.meta.internal.io.PathIO
 
-class SemanticdbGen(relSourcePath: Path, toplevels: Seq[TypeElement]) {
+class SemanticdbGen(relSourcePath: Path, toplevels: Seq[TypeElement],
+                    val trees: Trees,
+                    val compilationUnitTree: CompilationUnitTree) extends Semantics {
 
   private val infos = mutable.ListBuffer[s.SymbolInformation]()
 

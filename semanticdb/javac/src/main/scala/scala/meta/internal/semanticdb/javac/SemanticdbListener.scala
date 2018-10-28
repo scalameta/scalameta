@@ -7,16 +7,16 @@ import javax.lang.model.element.TypeElement
 import javax.tools.JavaFileObject
 import scala.collection.mutable
 import scala.collection.JavaConverters._
-import scala.meta.io.AbsolutePath
 
 class SemanticdbListener(targetRoot: Path, sourceRoot: Path, trees: Trees) extends TaskListener {
 
   private val toplevelsProcessed =
     mutable.Map[CompilationUnitTree, mutable.Map[TypeElement, Boolean]]()
 
-  private def singleFileGen(sourceFile: JavaFileObject, elems: Seq[TypeElement]): Unit = {
+  private def singleFileGen(cu: CompilationUnitTree, elems: Seq[TypeElement]): Unit = {
+    val sourceFile = cu.getSourceFile
     val sourceRelativePath = sourceRoot.relativize(Paths.get(sourceFile.toUri))
-    val gen = new SemanticdbGen(sourceRelativePath, elems)
+    val gen = new SemanticdbGen(sourceRelativePath, elems, trees, cu)
     gen.populate()
     gen.persist(targetRoot)
   }
@@ -41,9 +41,9 @@ class SemanticdbListener(targetRoot: Path, sourceRoot: Path, trees: Trees) exten
       val elem = e.getTypeElement
       val remainingToplevels = toplevelsProcessed(cu)
       remainingToplevels(elem) = true
-      if (remainingToplevels.values.reduce(_ & _)) {
+      if (remainingToplevels.values.forall(identity)) {
         toplevelsProcessed.remove(cu)
-        singleFileGen(e.getSourceFile, remainingToplevels.keys.toSeq)
+        singleFileGen(cu, remainingToplevels.keys.toSeq)
       }
     case _ => ()
   }
