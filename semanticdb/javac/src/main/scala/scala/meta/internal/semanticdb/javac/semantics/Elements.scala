@@ -255,44 +255,48 @@ trait Elements { semantics: Semantics =>
 
             val executableElementParsed = JavaParser.parseBodyDeclaration(content.toString)
 
-            elem.getKind match {
+            val declarationNameOpt = elem.getKind match {
               case ElementKind.CONSTRUCTOR =>
-                posNone
+                Some(executableElementParsed.asConstructorDeclaration.getName)
 
               case ElementKind.METHOD =>
-                val methodDeclaration = executableElementParsed.asMethodDeclaration
-                val methodNameRangeOpt = methodDeclaration.getName.getRange.asScala
-                for (methodNameRange <- methodNameRangeOpt) yield {
-                  val startLine = startPos.line + methodNameRange.begin.line - 1
-                  val startColumn =
-                    if (methodNameRange.begin.line == 1) {
-                      startPos.column + methodNameRange.begin.column - 1
-                    } else {
-                      methodNameRange.begin.column
-                    }
-                  val endLine = startPos.line + methodNameRange.end.line - 1
-                  val endColumn =
-                    if (methodNameRange.end.line == 1) {
-                      startPos.column + methodNameRange.end.column - 1
-                    } else {
-                      methodNameRange.end.column
-                    }
-
-                  s.Range(
-                    startLine = startLine.toInt,
-                    startCharacter = startColumn.toInt,
-                    endLine = endLine.toInt,
-                    endCharacter = endColumn.toInt)
-                }
+                Some(executableElementParsed.asMethodDeclaration.getName)
 
               case ElementKind.STATIC_INIT | ElementKind.INSTANCE_INIT =>
-                posNone
+                None
 
-              case _ => posNone
+              case _ => None
+            }
+
+            for (declarationName <- declarationNameOpt) yield {
+
+              val methodNameRangeOpt = declarationName.getRange.asScala
+              for (methodNameRange <- methodNameRangeOpt) yield {
+                val startLine = startPos.line + methodNameRange.begin.line - 1
+                val startColumn =
+                  if (methodNameRange.begin.line == 1) {
+                    startPos.column + methodNameRange.begin.column - 1
+                  } else {
+                    methodNameRange.begin.column
+                  }
+                val endLine = startPos.line + methodNameRange.end.line - 1
+                val endColumn =
+                  if (methodNameRange.end.line == 1) {
+                    startPos.column + methodNameRange.end.column - 1
+                  } else {
+                    methodNameRange.end.column
+                  }
+
+                s.Range(
+                  startLine = startLine.toInt,
+                  startCharacter = startColumn.toInt,
+                  endLine = endLine.toInt,
+                  endCharacter = endColumn.toInt)
+              }
             }
           }
 
-          executableElementContent.flatten
+          executableElementContent.flatten.flatten
 
         case _ => posNone
       }

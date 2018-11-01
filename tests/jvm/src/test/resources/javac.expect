@@ -424,12 +424,12 @@ Occurrences:
  <?> com/javacp/Coin#NICKEL.
  <?> com/javacp/Coin#PENNY.
  <?> com/javacp/Coin#QUARTER.
- <= com/javacp/Coin#`<init>`().
  <?> com/javacp/Coin#`<init>`().(value)
  <?> com/javacp/Coin#value.
  <= com/javacp/Coin#valueOf().
  <?> com/javacp/Coin#valueOf().(name)
  <= com/javacp/Coin#values().
+[5:3..5:6) <= com/javacp/Coin#`<init>`().
 [8:14..8:18) <= com/javacp/Coin#value().
 
 semanticdb/integration/src/main/java/com/javacp/Interface.java
