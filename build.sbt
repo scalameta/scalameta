@@ -162,6 +162,10 @@ lazy val semanticdbJavacPlugin = project
     description := "Javac compiler plugin that generates SemanticDB on compile",
     publishableSettings,
     mergeSettings,
+    libraryDependencies ++= Seq(
+      "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.0",
+      "com.github.javaparser" % "javaparser-symbol-solver-core" % "3.6.25"
+    ),
     pomPostProcess := { node =>
       new RuleTransformer(new RewriteRule {
         private def isAbsorbedDependency(node: XmlNode): Boolean = {

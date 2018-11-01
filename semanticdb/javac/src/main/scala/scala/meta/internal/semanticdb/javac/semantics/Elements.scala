@@ -1,15 +1,23 @@
 package scala.meta.internal.semanticdb.javac.semantics
 
+import com.sun.source.tree.Tree
+import com.sun.tools.javac.util.Position
 import javax.lang.model.`type`.TypeKind
 import javax.lang.model.element._
+
 import scala.collection.mutable
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.collection.JavaConverters._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d, Names => n, _}
+import com.github.javaparser.JavaParser
+
+import scala.compat.java8.OptionConverters._
 
 trait Elements { semantics: Semantics =>
+
+  import Elements._
 
   implicit class ElementOps(elem: Element) {
 
@@ -206,6 +214,105 @@ trait Elements { semantics: Semantics =>
       }
     }
 
+    private def getSourceRange(tree: Tree): SourceRange = {
+      val startPos = trees.getSourcePositions.getStartPosition(compilationUnitTree, tree)
+      val endPos = trees.getSourcePositions.getEndPosition(compilationUnitTree, tree)
+
+      val startSourcePosition =
+        if (startPos == Position.NOPOS) None
+        else {
+          val slOpt = compilationUnitTree.getLineMap.getLineNumber(startPos)
+          val scOpt = compilationUnitTree.getLineMap.getColumnNumber(startPos)
+          Some(SourcePosition(slOpt, scOpt, startPos))
+        }
+
+      val endSourcePosition =
+        if (endPos == Position.NOPOS) None
+        else {
+          val elOpt = compilationUnitTree.getLineMap.getLineNumber(endPos)
+          val ecOpt = compilationUnitTree.getLineMap.getColumnNumber(endPos)
+          Some(SourcePosition(elOpt, ecOpt, endPos))
+        }
+
+      SourceRange(startSourcePosition, endSourcePosition)
+    }
+
+    def range: Option[s.Range] = {
+      val posNone = None
+
+      elem match {
+        case elem: ExecutableElement =>
+          val executableElementTree = trees.getTree(elem)
+          val sourceRange = getSourceRange(executableElementTree)
+
+          val executableElementContent = for {
+            startPos <- sourceRange.start
+            endPos <- sourceRange.end
+          } yield {
+            val content = compilationUnitTree.getSourceFile
+              .getCharContent(true)
+              .subSequence(startPos.value.toInt, endPos.value.toInt)
+
+            val executableElementParsed = JavaParser.parseBodyDeclaration(content.toString)
+
+            elem.getKind match {
+              case ElementKind.CONSTRUCTOR =>
+                posNone
+
+              case ElementKind.METHOD =>
+                val methodDeclaration = executableElementParsed.asMethodDeclaration
+                val methodNameRangeOpt = methodDeclaration.getName.getRange.asScala
+                for (methodNameRange <- methodNameRangeOpt) yield {
+                  val startLine = startPos.line + methodNameRange.begin.line - 1
+                  val startColumn =
+                    if (methodNameRange.begin.line == 1) {
+                      startPos.column + methodNameRange.begin.column - 1
+                    } else {
+                      methodNameRange.begin.column
+                    }
+                  val endLine = startPos.line + methodNameRange.end.line - 1
+                  val endColumn =
+                    if (methodNameRange.end.line == 1) {
+                      startPos.column + methodNameRange.end.column - 1
+                    } else {
+                      methodNameRange.end.column
+                    }
+
+                  s.Range(
+                    startLine = startLine.toInt,
+                    startCharacter = startColumn.toInt,
+                    endLine = endLine.toInt,
+                    endCharacter = endColumn.toInt)
+                }
+
+              case ElementKind.STATIC_INIT | ElementKind.INSTANCE_INIT =>
+                posNone
+
+              case _ => posNone
+            }
+          }
+
+          executableElementContent.flatten
+
+        case _ => posNone
+      }
+    }
+
+    def role: s.SymbolOccurrence.Role = elem match {
+      case elem: ExecutableElement =>
+        elem.getKind match {
+          case ElementKind.CONSTRUCTOR | ElementKind.METHOD |
+               ElementKind.STATIC_INIT | ElementKind.INSTANCE_INIT =>
+            s.SymbolOccurrence.Role.DEFINITION
+
+          case _ =>
+            s.SymbolOccurrence.Role.UNKNOWN_ROLE
+        }
+
+      case _ =>
+        s.SymbolOccurrence.Role.UNKNOWN_ROLE
+    }
+
     def info: s.SymbolInformation = s.SymbolInformation(
       symbol = sym,
       language = s.Language.JAVA,
@@ -217,23 +324,32 @@ trait Elements { semantics: Semantics =>
       signature = signature
     )
 
-    def populateInfos(infos: mutable.ListBuffer[s.SymbolInformation]): s.SymbolInformation = {
+    def occurrence: s.SymbolOccurrence =
+      s.SymbolOccurrence(
+        symbol = sym,
+        range = range,
+        role = role)
+
+    def populateInfos(infos: mutable.ListBuffer[s.SymbolInformation],
+                      occurrences: mutable.ListBuffer[s.SymbolOccurrence]): s.SymbolInformation = {
       val myInfo = info
       infos += myInfo
+      occurrences += occurrence
+
       elem match {
         case elem: TypeElement =>
           elem.typeParamElements.foreach { elem =>
-            elem.populateInfos(infos)
+            elem.populateInfos(infos, occurrences)
           }
           elem.enclosedElements.foreach { elem =>
-            elem.populateInfos(infos)
+            elem.populateInfos(infos, occurrences)
           }
         case elem: ExecutableElement =>
           elem.typeParamElements.foreach { elem =>
-            elem.populateInfos(infos)
+            elem.populateInfos(infos, occurrences)
           }
           elem.paramElements.foreach { elem =>
-            elem.populateInfos(infos)
+            elem.populateInfos(infos, occurrences)
           }
         case _ =>
       }
@@ -250,5 +366,13 @@ trait Elements { semantics: Semantics =>
   implicit class TypeElementOps(elem: TypeElement) {
     def typeParamElements: Seq[TypeParameterElement] = elem.getTypeParameters.asScala
   }
+
+}
+
+object Elements {
+
+  case class SourcePosition(line: Long, column: Long, value: Long)
+
+  case class SourceRange(start: Option[SourcePosition], end: Option[SourcePosition])
 
 }

@@ -7,11 +7,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/ClassAnnotation.jav
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/ClassAnnotation# => abstract interface ClassAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/ClassAnnotation#
 
 semanticdb/integration/src/main/java/com/javacp/annot/ConstructorAnnotation.java
 --------------------------------------------------------------------------------
@@ -22,11 +26,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/ConstructorAnnotati
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/ConstructorAnnotation# => abstract interface ConstructorAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/ConstructorAnnotation#
 
 semanticdb/integration/src/main/java/com/javacp/annot/FieldAnnotation.java
 --------------------------------------------------------------------------
@@ -37,11 +45,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/FieldAnnotation.jav
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/FieldAnnotation# => abstract interface FieldAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/FieldAnnotation#
 
 semanticdb/integration/src/main/java/com/javacp/annot/InterfaceAnnotation.java
 ------------------------------------------------------------------------------
@@ -52,11 +64,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/InterfaceAnnotation
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/InterfaceAnnotation# => abstract interface InterfaceAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/InterfaceAnnotation#
 
 semanticdb/integration/src/main/java/com/javacp/annot/LocalAnnotation.java
 --------------------------------------------------------------------------
@@ -67,11 +83,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/LocalAnnotation.jav
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/LocalAnnotation# => abstract interface LocalAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/LocalAnnotation#
 
 semanticdb/integration/src/main/java/com/javacp/annot/MacroAnnotation.java
 --------------------------------------------------------------------------
@@ -82,11 +102,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/MacroAnnotation.jav
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/MacroAnnotation# => abstract interface MacroAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/MacroAnnotation#
 
 semanticdb/integration/src/main/java/com/javacp/annot/MethodAnnotation.java
 ---------------------------------------------------------------------------
@@ -97,11 +121,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/MethodAnnotation.ja
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/MethodAnnotation# => abstract interface MethodAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/MethodAnnotation#
 
 semanticdb/integration/src/main/java/com/javacp/annot/ObjectAnnotation.java
 ---------------------------------------------------------------------------
@@ -112,11 +140,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/ObjectAnnotation.ja
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/ObjectAnnotation# => abstract interface ObjectAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/ObjectAnnotation#
 
 semanticdb/integration/src/main/java/com/javacp/annot/PackageAnnotation.java
 ----------------------------------------------------------------------------
@@ -127,11 +159,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/PackageAnnotation.j
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/PackageAnnotation# => abstract interface PackageAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/PackageAnnotation#
 
 semanticdb/integration/src/main/java/com/javacp/annot/PackageObjectAnnotation.java
 ----------------------------------------------------------------------------------
@@ -142,11 +178,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/PackageObjectAnnota
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/PackageObjectAnnotation# => abstract interface PackageObjectAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/PackageObjectAnnotation#
 
 semanticdb/integration/src/main/java/com/javacp/annot/ParameterAnnotation.java
 ------------------------------------------------------------------------------
@@ -157,11 +197,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/ParameterAnnotation
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/ParameterAnnotation# => abstract interface ParameterAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/ParameterAnnotation#
 
 semanticdb/integration/src/main/java/com/javacp/annot/SelfParameterAnnotation.java
 ----------------------------------------------------------------------------------
@@ -172,11 +216,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/SelfParameterAnnota
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/SelfParameterAnnotation# => abstract interface SelfParameterAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/SelfParameterAnnotation#
 
 semanticdb/integration/src/main/java/com/javacp/annot/TraitAnnotation.java
 --------------------------------------------------------------------------
@@ -187,11 +235,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/TraitAnnotation.jav
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/TraitAnnotation# => abstract interface TraitAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/TraitAnnotation#
 
 semanticdb/integration/src/main/java/com/javacp/annot/TypeAnnotation.java
 -------------------------------------------------------------------------
@@ -202,11 +254,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/TypeAnnotation.java
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/TypeAnnotation# => abstract interface TypeAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/TypeAnnotation#
 
 semanticdb/integration/src/main/java/com/javacp/annot/TypeParameterAnnotation.java
 ----------------------------------------------------------------------------------
@@ -217,11 +273,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/TypeParameterAnnota
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/TypeParameterAnnotation# => abstract interface TypeParameterAnnotation extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/TypeParameterAnnotation#
 
 semanticdb/integration/src/main/java/com/javacp/annot/usage/AnnotatedInterface.java
 -----------------------------------------------------------------------------------
@@ -232,11 +292,15 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/usage/AnnotatedInte
 Text => empty
 Language => Java
 Symbols => 1 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/usage/AnnotatedInterface# => abstract interface AnnotatedInterface extends Object with Annotation
   Object => java/lang/Object#
   Annotation => java/lang/annotation/Annotation#
+
+Occurrences:
+ <?> com/javacp/annot/usage/AnnotatedInterface#
 
 semanticdb/integration/src/main/java/com/javacp/annot/usage/AnnotatedPackage.java
 ---------------------------------------------------------------------------------
@@ -247,11 +311,16 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/usage/AnnotatedPack
 Text => empty
 Language => Java
 Symbols => 2 entries
+Occurrences => 2 entries
 
 Symbols:
 com/javacp/annot/usage/AnnotatedPackage# => class AnnotatedPackage extends Object { +1 decls }
   Object => java/lang/Object#
 com/javacp/annot/usage/AnnotatedPackage#`<init>`(). => ctor <init>()
+
+Occurrences:
+ <?> com/javacp/annot/usage/AnnotatedPackage#
+ <= com/javacp/annot/usage/AnnotatedPackage#`<init>`().
 
 semanticdb/integration/src/main/java/com/javacp/ClassSuffix.java
 ----------------------------------------------------------------
@@ -262,6 +331,7 @@ Uri => semanticdb/integration/src/main/java/com/javacp/ClassSuffix.java
 Text => empty
 Language => Java
 Symbols => 11 entries
+Occurrences => 11 entries
 
 Symbols:
 com/javacp/ClassSuffix# => class ClassSuffix extends Object { +3 decls }
@@ -293,6 +363,19 @@ com/javacp/ClassSuffix#suffix. => field suffix: Inner[String]#Bar#Fuz[Integer]
   Fuz => com/javacp/ClassSuffix#Inner#Bar#Fuz#
   Integer => java/lang/Integer#
 
+Occurrences:
+ <?> com/javacp/ClassSuffix#
+ <?> com/javacp/ClassSuffix#Inner#
+ <?> com/javacp/ClassSuffix#Inner#Bar#
+ <?> com/javacp/ClassSuffix#Inner#Bar#Fuz#
+ <?> com/javacp/ClassSuffix#Inner#Bar#Fuz#[B]
+ <= com/javacp/ClassSuffix#Inner#Bar#Fuz#`<init>`().
+ <= com/javacp/ClassSuffix#Inner#Bar#`<init>`().
+ <?> com/javacp/ClassSuffix#Inner#[A]
+ <= com/javacp/ClassSuffix#Inner#`<init>`().
+ <= com/javacp/ClassSuffix#`<init>`().
+ <?> com/javacp/ClassSuffix#suffix.
+
 semanticdb/integration/src/main/java/com/javacp/Coin.java
 ---------------------------------------------------------
 
@@ -302,6 +385,7 @@ Uri => semanticdb/integration/src/main/java/com/javacp/Coin.java
 Text => empty
 Language => Java
 Symbols => 12 entries
+Occurrences => 12 entries
 
 Symbols:
 com/javacp/Coin# => final enum class Coin extends Enum[Coin] { +9 decls }
@@ -334,6 +418,20 @@ com/javacp/Coin#values(). => static method values(): Array[Coin]
   Array => scala/Array#
   Coin => com/javacp/Coin#
 
+Occurrences:
+ <?> com/javacp/Coin#
+ <?> com/javacp/Coin#DIME.
+ <?> com/javacp/Coin#NICKEL.
+ <?> com/javacp/Coin#PENNY.
+ <?> com/javacp/Coin#QUARTER.
+ <= com/javacp/Coin#`<init>`().
+ <?> com/javacp/Coin#`<init>`().(value)
+ <?> com/javacp/Coin#value.
+ <= com/javacp/Coin#valueOf().
+ <?> com/javacp/Coin#valueOf().(name)
+ <= com/javacp/Coin#values().
+[8:14..8:18) <= com/javacp/Coin#value().
+
 semanticdb/integration/src/main/java/com/javacp/Interface.java
 --------------------------------------------------------------
 
@@ -343,6 +441,7 @@ Uri => semanticdb/integration/src/main/java/com/javacp/Interface.java
 Text => empty
 Language => Java
 Symbols => 4 entries
+Occurrences => 4 entries
 
 Symbols:
 com/javacp/Interface# => abstract interface Interface extends Object { +3 decls }
@@ -354,6 +453,12 @@ com/javacp/Interface#d(). => default method d(): Unit
 com/javacp/Interface#s(). => static method s(): Unit
   Unit => scala/Unit#
 
+Occurrences:
+ <?> com/javacp/Interface#
+[4:8..4:8) <= com/javacp/Interface#a().
+[5:16..5:16) <= com/javacp/Interface#d().
+[6:15..6:15) <= com/javacp/Interface#s().
+
 semanticdb/integration/src/main/java/com/javacp/Logger.java
 -----------------------------------------------------------
 
@@ -363,11 +468,16 @@ Uri => semanticdb/integration/src/main/java/com/javacp/Logger.java
 Text => empty
 Language => Java
 Symbols => 2 entries
+Occurrences => 2 entries
 
 Symbols:
 com/javacp/Logger# => class Logger extends Object { +1 decls }
   Object => java/lang/Object#
 com/javacp/Logger#`<init>`(). => ctor <init>()
+
+Occurrences:
+ <?> com/javacp/Logger#
+ <= com/javacp/Logger#`<init>`().
 
 semanticdb/integration/src/main/java/com/javacp/MetacJava.java
 --------------------------------------------------------------
@@ -378,6 +488,7 @@ Uri => semanticdb/integration/src/main/java/com/javacp/MetacJava.java
 Text => empty
 Language => Java
 Symbols => 28 entries
+Occurrences => 28 entries
 
 Symbols:
 com/javacp/MetacJava# => class MetacJava extends Object { +8 decls }
@@ -436,6 +547,36 @@ com/javacp/MetacJava#overload(+2). => static method overload(a: A): Unit
 com/javacp/MetacJava#overload(+2).(a) => param a: A
   A => com/javacp/MetacJava#Overload3#A#
 
+Occurrences:
+ <?> com/javacp/MetacJava#
+ <?> com/javacp/MetacJava#Overload1#
+ <?> com/javacp/MetacJava#Overload1#A#
+ <= com/javacp/MetacJava#Overload1#A#`<init>`().
+ <= com/javacp/MetacJava#Overload1#`<init>`().
+ <?> com/javacp/MetacJava#Overload2#
+ <?> com/javacp/MetacJava#Overload2#A#
+ <= com/javacp/MetacJava#Overload2#A#`<init>`().
+ <= com/javacp/MetacJava#Overload2#`<init>`().
+ <?> com/javacp/MetacJava#Overload3#
+ <?> com/javacp/MetacJava#Overload3#A#
+ <= com/javacp/MetacJava#Overload3#A#`<init>`().
+ <= com/javacp/MetacJava#Overload3#`<init>`().
+ <?> com/javacp/MetacJava#StaticInner#
+ <?> com/javacp/MetacJava#StaticInner#NonStatic#
+ <= com/javacp/MetacJava#StaticInner#NonStatic#`<init>`().
+ <?> com/javacp/MetacJava#StaticInner#NonStatic#method().(e)
+ <= com/javacp/MetacJava#StaticInner#`<init>`().
+ <= com/javacp/MetacJava#`<init>`().
+ <?> com/javacp/MetacJava#overload().(a)
+ <?> com/javacp/MetacJava#overload(+1).(a)
+ <?> com/javacp/MetacJava#overload(+2).(a)
+[5:21..5:31) <= com/javacp/MetacJava#StaticInner#isNotStatic().
+[6:28..6:35) <= com/javacp/MetacJava#StaticInner#isStatic().
+[8:25..8:30) <= com/javacp/MetacJava#StaticInner#NonStatic#method().
+[16:17..16:24) <= com/javacp/MetacJava#overload().
+[19:24..19:31) <= com/javacp/MetacJava#overload(+2).
+[20:17..20:24) <= com/javacp/MetacJava#overload(+1).
+
 semanticdb/integration/src/main/java/com/javacp/NonGeneric.java
 ---------------------------------------------------------------
 
@@ -445,6 +586,7 @@ Uri => semanticdb/integration/src/main/java/com/javacp/NonGeneric.java
 Text => empty
 Language => Java
 Symbols => 3 entries
+Occurrences => 3 entries
 
 Symbols:
 com/javacp/NonGeneric# => class NonGeneric extends Exception with Serializable with Flushable { +2 decls }
@@ -455,6 +597,11 @@ com/javacp/NonGeneric#`<init>`(). => ctor <init>()
 com/javacp/NonGeneric#flush(). => method flush(): Unit
   Unit => scala/Unit#
 
+Occurrences:
+ <?> com/javacp/NonGeneric#
+ <= com/javacp/NonGeneric#`<init>`().
+[8:17..8:21) <= com/javacp/NonGeneric#flush().
+
 semanticdb/integration/src/main/java/com/javacp/Recursive.java
 --------------------------------------------------------------
 
@@ -464,6 +611,7 @@ Uri => semanticdb/integration/src/main/java/com/javacp/Recursive.java
 Text => empty
 Language => Java
 Symbols => 13 entries
+Occurrences => 13 entries
 
 Symbols:
 com/javacp/Recursive# => abstract class Recursive[A <: Recursive[A, B] & Serializable, B <: Inner[A, B]] extends Object { +4 decls }
@@ -513,6 +661,21 @@ com/javacp/Recursive#foo(). => method foo[Anon](): ArrayList[Anon]
   ArrayList => java/util/ArrayList#
 com/javacp/Recursive#foo().[Anon] => typeparam Anon
 
+Occurrences:
+ <?> com/javacp/Recursive#
+ <?> com/javacp/Recursive#Inner#
+ <?> com/javacp/Recursive#Inner#[A]
+ <?> com/javacp/Recursive#Inner#[B]
+ <= com/javacp/Recursive#Inner#`<init>`().
+ <?> com/javacp/Recursive#Inner2#
+ <?> com/javacp/Recursive#Inner2#[C]
+ <= com/javacp/Recursive#Inner2#`<init>`().
+ <?> com/javacp/Recursive#[A]
+ <?> com/javacp/Recursive#[B]
+ <= com/javacp/Recursive#`<init>`().
+ <?> com/javacp/Recursive#foo().[Anon]
+[17:35..17:37) <= com/javacp/Recursive#foo().
+
 semanticdb/integration/src/main/java/com/javacp/Test.java
 ---------------------------------------------------------
 
@@ -522,6 +685,7 @@ Uri => semanticdb/integration/src/main/java/com/javacp/Test.java
 Text => empty
 Language => Java
 Symbols => 76 entries
+Occurrences => 76 entries
 
 Symbols:
 com/javacp/Test# => final class Test[A <: CharSequence & Serializable, B] extends ArrayList[A] with Comparable[B] with Serializable { +39 decls }
@@ -778,3 +942,81 @@ com/javacp/Y# => abstract interface Y extends Object
   Object => java/lang/Object#
 com/javacp/Z# => abstract interface Z extends Object
   Object => java/lang/Object#
+
+Occurrences:
+ <?> com/javacp/Test#
+ <?> com/javacp/Test#Boolean.
+ <?> com/javacp/Test#Byte.
+ <?> com/javacp/Test#Char.
+ <?> com/javacp/Test#Float.
+ <?> com/javacp/Test#InnerShadowTypeParam#
+ <?> com/javacp/Test#InnerShadowTypeParam#[A]
+ <= com/javacp/Test#InnerShadowTypeParam#`<init>`().
+ <= com/javacp/Test#InnerShadowTypeParam#move().
+ <?> com/javacp/Test#InnerShadowTypeParam#move().(a)
+ <?> com/javacp/Test#InnerShadowTypeParam#move().(b)
+ <?> com/javacp/Test#Int.
+ <?> com/javacp/Test#Long.
+ <?> com/javacp/Test#Short.
+ <?> com/javacp/Test#StaticClass#
+ <= com/javacp/Test#StaticClass#`<init>`().
+ <?> com/javacp/Test#[A]
+ <?> com/javacp/Test#[B]
+ <= com/javacp/Test#`<init>`().
+ <?> com/javacp/Test#anonymous.
+ <?> com/javacp/Test#arrayField.
+ <= com/javacp/Test#arrayMethod().
+ <= com/javacp/Test#compareTo().
+ <?> com/javacp/Test#compareTo().(b)
+ <?> com/javacp/Test#genericField.
+ <= com/javacp/Test#genericMethod().
+ <= com/javacp/Test#genericParams().
+ <?> com/javacp/Test#genericParams().(a)
+ <?> com/javacp/Test#genericParams().(b)
+ <= com/javacp/Test#m1().
+ <?> com/javacp/Test#m1().[T]
+ <= com/javacp/Test#m2().
+ <?> com/javacp/Test#m2().[T]
+ <= com/javacp/Test#m3().
+ <?> com/javacp/Test#m3().[T]
+ <= com/javacp/Test#methodTypeParams().
+ <?> com/javacp/Test#methodTypeParams().(c)
+ <?> com/javacp/Test#methodTypeParams().[C]
+ <= com/javacp/Test#overload().
+ <?> com/javacp/Test#overload().(a)
+ <= com/javacp/Test#overload(+1).
+ <?> com/javacp/Test#overload(+1).(a)
+ <?> com/javacp/Test#packagePrivateField.
+ <= com/javacp/Test#packagePrivateMethod().
+ <= com/javacp/Test#primitiveParams().
+ <?> com/javacp/Test#primitiveParams().(a)
+ <?> com/javacp/Test#primitiveParams().(b)
+ <?> com/javacp/Test#primitiveParams().(c)
+ <?> com/javacp/Test#primitiveParams().(d)
+ <?> com/javacp/Test#primitiveParams().(e)
+ <?> com/javacp/Test#primitiveParams().(f)
+ <?> com/javacp/Test#primitiveParams().(g)
+ <?> com/javacp/Test#primitiveParams().(h)
+ <?> com/javacp/Test#privateField.
+ <= com/javacp/Test#privateMethod().
+ <?> com/javacp/Test#protectedField.
+ <= com/javacp/Test#protectedMethod().
+ <?> com/javacp/Test#publicField.
+ <= com/javacp/Test#publicMethod().
+ <?> com/javacp/Test#staticField.
+ <= com/javacp/Test#staticMethod().
+ <= com/javacp/Test#strictfpMethod().
+ <= com/javacp/Test#typeParams().
+ <?> com/javacp/Test#typeParams().(a)
+ <?> com/javacp/Test#typeParams().(b)
+ <= com/javacp/Test#vararg().
+ <?> com/javacp/Test#vararg().(a)
+ <?> com/javacp/Test#vararg().(args)
+ <= com/javacp/Test#wildcard().
+ <?> com/javacp/Test#wildcard().(wildcard)
+ <= com/javacp/Test#wildcard(+1).
+ <?> com/javacp/Test#wildcard(+1).(a)
+ <?> com/javacp/Test#wildcard(+1).(b)
+ <?> com/javacp/X#
+ <?> com/javacp/Y#
+ <?> com/javacp/Z#

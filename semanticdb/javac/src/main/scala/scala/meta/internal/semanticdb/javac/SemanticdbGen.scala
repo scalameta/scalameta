@@ -17,13 +17,14 @@ class SemanticdbGen(relSourcePath: Path, toplevels: Seq[TypeElement],
                     val compilationUnitTree: CompilationUnitTree) extends Semantics {
 
   private val infos = mutable.ListBuffer[s.SymbolInformation]()
+  private val occurrences = mutable.ListBuffer[s.SymbolOccurrence]()
 
   private lazy val relOutputPath =
     PathIO.toUnix(relSourcePath.toString + ".semanticdb")
 
   def populate(): Unit = {
     toplevels.foreach { toplevel =>
-      toplevel.populateInfos(infos)
+      toplevel.populateInfos(infos, occurrences)
     }
   }
 
@@ -36,7 +37,8 @@ class SemanticdbGen(relSourcePath: Path, toplevels: Seq[TypeElement],
           schema = s.Schema.SEMANTICDB4,
           uri = PathIO.toUnix(relSourcePath.toString),
           language = s.Language.JAVA,
-          symbols = infos.result())))
+          symbols = infos.result(),
+          occurrences = occurrences.result())))
     val os = Files.newOutputStream(outputFile)
     try outputDocuments.writeTo(os)
     finally os.close()
