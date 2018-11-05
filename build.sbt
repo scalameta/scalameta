@@ -360,7 +360,7 @@ lazy val tokenizers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     description := "Scalameta APIs for tokenization and their baseline implementation",
     // NOTE(olafur): use shaded version of fastparse because the latest version v2.0.0
     // has binary incompatibilites with the v1.0.0 version used by Scalameta.
-    libraryDependencies += "com.geirsson" %%% "fastparse" % "1.0.0",
+    libraryDependencies += "org.scalameta" %%% "fastparse" % "1.0.0",
     enableMacros
   )
   .nativeSettings(nativeSettings)
