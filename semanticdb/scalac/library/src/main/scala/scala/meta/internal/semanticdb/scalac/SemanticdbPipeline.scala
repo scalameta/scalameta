@@ -6,6 +6,7 @@ import scala.compat.Platform.EOL
 import scala.tools.nsc.Phase
 import scala.tools.nsc.plugins.PluginComponent
 import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.tokenizers.PlatformTokenizerCache
 import scala.util.control.NonFatal
 
 trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
@@ -58,6 +59,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
           if (unit.isIgnored) return
           val sdoc = unit.toTextDocument
           sdoc.save(config.targetroot)
+          PlatformTokenizerCache.megaCache.clear()
         } catch handleCrash(Some(unit))
       }
 
