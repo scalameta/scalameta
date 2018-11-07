@@ -548,6 +548,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case _ =>
             }
             gtree match {
+              case OriginalTreeOf(original) =>
+                traverse(original)
               case ConstfoldOf(original) =>
                 traverse(original)
               case ClassOf(original) =>

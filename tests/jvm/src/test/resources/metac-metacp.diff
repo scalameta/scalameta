@@ -227,6 +227,51 @@ example/Access#
 +      symlinks: "example/Access#m3()."
 
 
+======================================
+example/InstrumentTyper#AnnotatedType#
+======================================
+--- metac
++++ metacp
+         annotations {
+           tpe {
+-            type_ref {
+-              prefix {
+-              symbol: "scala/annotation/meta/param#"
+         annotations {
+           tpe {
+-            type_ref {
+-              prefix {
+-              symbol: "scala/annotation/meta/param#"
+
+
+======================================
+example/InstrumentTyper#existential().
+======================================
+--- metac
++++ metacp
+           type_ref {
+             prefix {
+-            symbol: "local1"
++            symbol: "local0"
+             type_arguments {
+               type_ref {
+                 prefix {
+         declarations {
+           hardlinks {
+-            symbol: "local1"
++            symbol: "local0"
+             kind: TYPE
+             properties: 4
+             display_name: "U"
+                     type_parameters {
+                       hardlinks {
+-                        symbol: "local2"
++                        symbol: "local1"
+                         kind: TYPE_PARAMETER
+                         properties: 0
+                         display_name: "T"
+
+
 =========================
 example/Methods#m13().(x)
 =========================

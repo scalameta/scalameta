@@ -8,6 +8,7 @@ trait HijackAnalyzer extends SemanticdbAnalyzer { self: SemanticdbPlugin =>
 
   def hijackAnalyzer(): Unit = {
     if (!isSupportedCompiler) return
+    if (config.instrumentAnalyzer.isOff) return
 
     val oldMacroPlugins = {
       val macroPluginsGetter =

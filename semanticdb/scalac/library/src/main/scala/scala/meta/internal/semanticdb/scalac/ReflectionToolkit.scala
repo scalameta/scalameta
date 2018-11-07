@@ -129,6 +129,11 @@ trait ReflectionToolkit {
     def rememberSelectOf(original: Tree) = rememberOriginal("selectOriginal", original)
   }
 
+  object OriginalTreeOf {
+    def unapply[T: Attachable](carrier: T) =
+      carrier.attachments.get[g.analyzer.OriginalTreeAttachment].map(_.original)
+  }
+
   object ConstfoldOf {
     def unapply[T: Attachable](carrier: T) =
       carrier.metadata.get("constantFoldingOriginal").map(_.asInstanceOf[Tree])

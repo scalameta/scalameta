@@ -1270,6 +1270,122 @@ Occurrences:
 Diagnostics:
 [0:26..0:34) [warning] Unused import
 
+semanticdb/integration/src/main/scala/example/InstrumentTyper.scala
+-------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/InstrumentTyper.scala
+Text => non-empty
+Language => Scala
+Symbols => 11 entries
+Occurrences => 61 entries
+Synthetics => 2 entries
+
+Symbols:
+example/InstrumentTyper# => class InstrumentTyper extends AnyRef { self: AnyRef => +6 decls }
+  AnyRef => scala/AnyRef#
+example/InstrumentTyper#AnnotatedType# => type AnnotatedType = Int @param
+  Int => scala/Int#
+  param => scala/annotation/meta/param#
+example/InstrumentTyper#`<init>`(). => primary ctor <init>()
+example/InstrumentTyper#all(). => method all: List[Any]
+  List => scala/collection/immutable/List#
+  Any => scala/Any#
+example/InstrumentTyper#clazzOf. => final val method clazzOf: Class[Option[Int]]
+  Class => java/lang/Class#
+  Option => scala/Option#
+  Int => scala/Int#
+example/InstrumentTyper#existential(). => method existential: U[Int] forSome { type U[T <: Int] => Any }
+  U => local1
+  Int => scala/Int#
+  T => local2
+  Any => scala/Any#
+example/InstrumentTyper#singletonType(). => method singletonType(x: Predef.type): Nothing
+  x => example/InstrumentTyper#singletonType().(x)
+  Predef => scala/Predef.
+  Nothing => scala/Nothing#
+example/InstrumentTyper#singletonType().(x) => param x: Predef.type
+  Predef => scala/Predef.
+local0 => selfparam self: AnyRef
+  AnyRef => scala/AnyRef#
+local3 => abstract type U[T <: Int]
+  T => local4
+  Int => scala/Int#
+local4 => typeparam T <: Int
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:7..2:12): scala => scala/
+[2:13..2:23): annotation => scala/annotation/
+[2:24..2:28): meta => scala/annotation/meta/
+[2:29..2:34): param => scala/annotation/meta/param#
+[3:7..3:12): scala => scala/
+[3:13..3:21): language => scala/language.
+[3:22..3:34): existentials => scala/language.existentials.
+[4:7..4:12): scala => scala/
+[4:13..4:21): language => scala/language.
+[4:22..4:33): higherKinds => scala/language.higherKinds.
+[5:7..5:12): types => types/
+[5:13..5:17): Test => types/Test.
+[7:6..7:21): InstrumentTyper <= example/InstrumentTyper#
+[7:22..7:22):  <= example/InstrumentTyper#`<init>`().
+[7:24..7:28): self <= local0
+[7:30..7:36): AnyRef => scala/AnyRef#
+[8:6..8:9): all <= example/InstrumentTyper#all().
+[8:12..8:16): List => scala/collection/immutable/List.
+[9:4..9:11): Literal => types/Test.Literal.
+[9:12..9:15): int => types/Test.Literal.int.
+[10:4..10:11): Literal => types/Test.Literal.
+[10:12..10:16): long => types/Test.Literal.long.
+[11:4..11:11): Literal => types/Test.Literal.
+[11:12..11:17): float => types/Test.Literal.float.
+[12:4..12:11): Literal => types/Test.Literal.
+[12:12..12:18): double => types/Test.Literal.double.
+[13:4..13:11): Literal => types/Test.Literal.
+[13:12..13:15): nil => types/Test.Literal.nil.
+[14:4..14:11): Literal => types/Test.Literal.
+[14:12..14:16): char => types/Test.Literal.char.
+[15:4..15:11): Literal => types/Test.Literal.
+[15:12..15:18): string => types/Test.Literal.string.
+[16:4..16:11): Literal => types/Test.Literal.
+[16:12..16:16): bool => types/Test.Literal.bool.
+[17:4..17:11): Literal => types/Test.Literal.
+[17:12..17:16): unit => types/Test.Literal.unit.
+[18:4..18:11): Literal => types/Test.Literal.
+[18:12..18:20): javaEnum => types/Test.Literal.javaEnum.
+[19:4..19:11): Literal => types/Test.Literal.
+[19:12..19:19): clazzOf => types/Test.Literal.clazzOf.
+[20:4..20:8): List => scala/collection/immutable/List.
+[22:6..22:17): existential <= example/InstrumentTyper#existential().
+[22:19..22:20): U => local3
+[22:21..22:24): Int => scala/Int#
+[22:41..22:42): U <= local3
+[22:43..22:44): T <= local4
+[22:48..22:51): Int => scala/Int#
+[22:57..22:60): ??? => scala/Predef.`???`().
+[23:7..23:20): AnnotatedType <= example/InstrumentTyper#AnnotatedType#
+[23:23..23:26): Int => scala/Int#
+[23:28..23:33): param => scala/annotation/meta/param#
+[23:33..23:33):  => scala/annotation/meta/param#`<init>`().
+[24:6..24:19): singletonType <= example/InstrumentTyper#singletonType().
+[24:20..24:21): x <= example/InstrumentTyper#singletonType().(x)
+[24:23..24:29): Predef => scala/Predef.
+[24:38..24:41): ??? => scala/Predef.`???`().
+[25:12..25:19): clazzOf <= example/InstrumentTyper#clazzOf.
+[25:22..25:29): classOf => scala/Predef.classOf().
+[25:30..25:36): Option => scala/Option#
+[25:37..25:40): Int => scala/Int#
+
+Synthetics:
+[8:12..8:16): List => *.apply[Any]
+  apply => scala/collection/immutable/List.apply().
+  Any => scala/Any#
+[20:4..20:8): List => *.apply[Nothing]
+  apply => scala/collection/immutable/List.apply().
+  Nothing => scala/Nothing#
+
 semanticdb/integration/src/main/scala/example/Issue1749.scala
 -------------------------------------------------------------
 
