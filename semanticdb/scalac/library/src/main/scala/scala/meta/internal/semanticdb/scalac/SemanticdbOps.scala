@@ -4,6 +4,7 @@ import scala.tools.nsc.Global
 
 trait SemanticdbOps
     extends AnnotationOps
+    with AttachmentOps
     with SymbolInformationOps
     with TextDocumentOps
     with InputOps
