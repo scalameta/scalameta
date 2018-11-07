@@ -1,7 +1,7 @@
 package scala.meta.contrib
 
-import fastparse.all._
-import fastparse.core.Parsed
+import scala.meta.internal.fastparse.all._
+import scala.meta.internal.fastparse.core.Parsed
 
 /**
   * Represents a scaladoc line.

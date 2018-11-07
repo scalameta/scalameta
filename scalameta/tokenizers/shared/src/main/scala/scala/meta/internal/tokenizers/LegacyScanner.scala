@@ -973,7 +973,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   def getXml(): Unit = {
     // 1. Collect positions of scala expressions inside this xml literal.
-    import fastparse.core.Parsed
+    import scala.meta.internal.fastparse.core.Parsed
     val start = offset
     val embeddedScalaExprPositions = new ScalaExprPositionParser(dialect)
     val xmlParser = new XmlParser(embeddedScalaExprPositions)
