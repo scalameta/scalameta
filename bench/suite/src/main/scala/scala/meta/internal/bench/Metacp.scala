@@ -25,6 +25,7 @@ trait Metacp {
       .withDependencyClasspath(dependencyClasspath)
       .withClasspath(classpath)
       .withScalaLibrarySynthetics(false)
+      .withIncludeJdk(true)
     val reporter = Reporter().withSilentOut().withErr(System.err)
     val result = scala.meta.cli.Metacp.process(settings, reporter)
     if (!result.isSuccess) sys.error("conversion failed")
@@ -36,21 +37,9 @@ trait Metacp {
 @Warmup(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
 @Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
-class MetacpJDK extends Metacp {
-  @Benchmark
-  def run(bs: BenchmarkState): Unit = {
-    runImpl(bs.jdk, Classpath(Nil))
-  }
-}
-
-@BenchmarkMode(Array(SampleTime))
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Warmup(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
 class MetacpScalaLibrary extends Metacp {
   @Benchmark
   def run(bs: BenchmarkState): Unit = {
-    runImpl(bs.scalaLibrary, bs.jdk)
+    runImpl(bs.scalaLibrary, Classpath(Nil))
   }
 }
