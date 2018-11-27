@@ -76,7 +76,7 @@ object ClasspathIndex {
                 .foreach(expandJarEntry)
           }
           .getOrElse {
-            throw new IllegalStateException("Unable to detect bootclasspath via --usejavacp")
+            throw new IllegalStateException("Unable to detect bootclasspath")
           }
       }
     }
