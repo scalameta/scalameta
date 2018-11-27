@@ -16,8 +16,7 @@ case class SemanticdbConfig(
     md5: BinaryMode,
     symbols: SymbolMode,
     diagnostics: BinaryMode,
-    synthetics: BinaryMode,
-    instrumentAnalyzer: BinaryMode
+    synthetics: BinaryMode
 ) {
   def syntax: String = {
     val p = SemanticdbPlugin.name
@@ -31,8 +30,7 @@ case class SemanticdbConfig(
       "text" -> text.name,
       "symbols" -> symbols.name,
       "diagnostics" -> diagnostics.name,
-      "synthetics" -> synthetics.name,
-      "instrument-analyzer" -> instrumentAnalyzer.name
+      "synthetics" -> synthetics.name
     ).map { case (k, v) => s"-P:$p:$k:$v" }.mkString(" ")
   }
 
@@ -48,11 +46,7 @@ object SemanticdbConfig {
     md5 = BinaryMode.On,
     symbols = SymbolMode.All,
     diagnostics = BinaryMode.On,
-    synthetics = BinaryMode.Off,
-    instrumentAnalyzer =
-      // NOTE: cannot be parsed from -P:semanticdb because hijacking happens before
-      // command-line argument parsing.
-      BinaryMode.fromBoolean(System.getProperty("semanticdb.instrument-analyzer") != null)
+    synthetics = BinaryMode.Off
   )
 
   private val SetFailures = "failures:(.*)".r
@@ -180,8 +174,6 @@ sealed abstract class BinaryMode {
   def isOff: Boolean = this == Off
 }
 object BinaryMode {
-  def fromBoolean(isOn: Boolean): BinaryMode =
-    if (isOn) On else Off
   def unapply(arg: String): Option[BinaryMode] = all.find(_.toString.equalsIgnoreCase(arg))
   def all = List(On, Off)
   case object On extends BinaryMode
