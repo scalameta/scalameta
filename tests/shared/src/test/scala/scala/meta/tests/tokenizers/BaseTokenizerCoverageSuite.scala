@@ -155,7 +155,7 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
         }
 
       val sep = 
-        if(source.lines.size > 1) nl
+        if(source.linesIterator.size > 1) nl
         else ""
 
       if(!correct) {

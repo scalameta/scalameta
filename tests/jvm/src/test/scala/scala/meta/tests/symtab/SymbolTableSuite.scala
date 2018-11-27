@@ -13,9 +13,8 @@ class SymbolTableSuite extends FunSuite {
   private val classpath =
     Classpath(BuildInfo.databaseClasspath) ++
       Classpath(BuildInfo.commonJVMClassDirectory) ++
-      Library.jdk.classpath() ++
       Library.scalaLibrary.classpath()
-  private val globalSymtab = GlobalSymbolTable(classpath)
+  private val globalSymtab = GlobalSymbolTable(classpath, includeJdk = true)
 
   def checkNotExists(symbol: String): Unit = {
     val name = if (symbol.isEmpty) "<nosymbol>" else symbol

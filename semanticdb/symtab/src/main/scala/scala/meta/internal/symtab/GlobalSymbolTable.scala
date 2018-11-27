@@ -13,11 +13,12 @@ import scala.meta.metacp._
 import scala.reflect.NameTransformer
 
 /** A lazy symbol table that returns global symbols on-the-fly from disk. */
-final class GlobalSymbolTable private (classpath: Classpath) extends SymbolTable {
+final class GlobalSymbolTable private (classpath: Classpath, includeJdk: Boolean)
+    extends SymbolTable {
 
   private val settings = Settings()
   private val reporter = Reporter().withSilentOut().withSilentErr()
-  private val classpathIndex = ClasspathIndex(classpath)
+  private val classpathIndex = ClasspathIndex(classpath, includeJdk)
   private val symbolCache = TrieMap.empty[String, SymbolInformation]
   Scalalib.synthetics.foreach(enter)
 
@@ -73,6 +74,9 @@ final class GlobalSymbolTable private (classpath: Classpath) extends SymbolTable
 
 object GlobalSymbolTable {
   def apply(classpath: Classpath): GlobalSymbolTable = {
-    new GlobalSymbolTable(classpath)
+    new GlobalSymbolTable(classpath, false)
+  }
+  def apply(classpath: Classpath, includeJdk: Boolean): GlobalSymbolTable = {
+    new GlobalSymbolTable(classpath, includeJdk)
   }
 }

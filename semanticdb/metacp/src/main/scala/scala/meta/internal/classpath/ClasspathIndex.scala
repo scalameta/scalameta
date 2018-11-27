@@ -1,5 +1,7 @@
 package scala.meta.internal.classpath
 
+import java.net.URI
+import java.nio.file.FileSystems
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
@@ -11,6 +13,7 @@ import scala.collection.JavaConverters._
 import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
 import scala.meta.internal.io.PathIO
+import scala.util.Properties
 
 /** An index to lookup class directories and classfiles by their JVM names. */
 final class ClasspathIndex private (
@@ -26,7 +29,7 @@ final class ClasspathIndex private (
   def getClassfile(directory: String, filename: String): Option[Classfile] = {
     dirs.get(directory) match {
       case Some(pkg) =>
-        pkg.members.get(filename).collect {
+        pkg.resolve(filename).collect {
           case e: Classfile => e
         }
       case _ =>
@@ -44,16 +47,54 @@ final class ClasspathIndex private (
 }
 
 object ClasspathIndex {
-  def apply(classpath: Classpath): ClasspathIndex = new Builder(classpath).result()
+  def apply(classpath: Classpath): ClasspathIndex = new Builder(classpath, false).result()
+  def apply(classpath: Classpath, includeJdk: Boolean): ClasspathIndex =
+    new Builder(classpath, includeJdk).result()
 
-  private final class Builder(classpath: Classpath) {
+  private final class Builder(classpath: Classpath, includeJdk: Boolean) {
     private val dirs = mutable.Map.empty[String, Classdir]
 
     def result(): ClasspathIndex = {
       val root = Classdir("/")
       dirs(root.relativeUri) = root
+      if (includeJdk) {
+        expandJdkClasspath()
+      }
       classpath.entries.foreach(expandEntry)
       new ClasspathIndex(classpath, dirs)
+    }
+
+    def expandJdkClasspath(): Unit = {
+      if (Properties.isJavaAtLeast("9")) {
+        expandJrtClasspath()
+      } else {
+        sys.props
+          .collectFirst {
+            case (k, v) if k.endsWith(".boot.class.path") =>
+              Classpath(v).entries
+                .filter(_.isFile)
+                .foreach(expandJarEntry)
+          }
+          .getOrElse {
+            throw new IllegalStateException("Unable to detect bootclasspath via --usejavacp")
+          }
+      }
+    }
+
+    private def expandJrtClasspath(): Unit = {
+      val fs = FileSystems.getFileSystem(URI.create("jrt:/"))
+      val dir = fs.getPath("/packages")
+      for {
+        pkg <- Files.newDirectoryStream(dir).iterator().asScala
+        symbol = pkg.toString.stripPrefix("/packages/").replace('.', '/') + "/"
+        classdir = getClassdir(symbol)
+        moduleLink <- Files.list(pkg).iterator().asScala
+      } {
+        val module =
+          if (!Files.isSymbolicLink(moduleLink)) moduleLink
+          else Files.readSymbolicLink(moduleLink)
+        classdir.modules ::= module
+      }
     }
 
     private def expandEntry(path: AbsolutePath): Unit = {

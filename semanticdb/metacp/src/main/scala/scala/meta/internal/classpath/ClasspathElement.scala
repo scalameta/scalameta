@@ -4,6 +4,7 @@ import java.io.File
 import java.io.FilterInputStream
 import java.io.InputStream
 import java.nio.file.Files
+import java.nio.file.Path
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import scala.collection.mutable
@@ -26,7 +27,25 @@ sealed abstract class Classfile extends ClasspathElement {
 
 /** A classpath entry that is a directory. */
 final case class Classdir(relativeUri: String) extends ClasspathElement {
+  def resolve(filename: String): Option[ClasspathElement] = {
+    members.get(filename).orElse {
+      val uri = relativeUri + filename
+      modules.iterator
+        .map(_.resolve(uri))
+        .find(Files.exists(_))
+        .map(x => UncompressedClassfile(uri, AbsolutePath(x)))
+    }
+  }
   val members = mutable.Map.empty[String, ClasspathElement]
+
+  /** Java 9+ modules for this package based on JEP-220
+    *
+    * Details: https://bugs.openjdk.java.net/browse/JDK-8066492
+    *
+    * For example, the package "java/lang/" will have a module "/modules/java.base" which is the
+    * root directory containing classfiles for JDK libraries like `java/lang/Thread#`.
+    */
+  var modules: List[Path] = Nil
 }
 
 /** A classpath entry that is a classfile on disk. */

@@ -13,7 +13,7 @@ trait DiffAssertions extends FunSuiteLike {
     try assertNoDiff(obtained, expected, title)
     catch {
       case ex: Exception =>
-        obtained.lines.toList match {
+        obtained.linesIterator.toList match {
           case head +: tail =>
             println("    \"\"\"|" + head)
             tail.foreach(line => println("       |" + line))

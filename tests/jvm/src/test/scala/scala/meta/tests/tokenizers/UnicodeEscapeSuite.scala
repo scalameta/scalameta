@@ -24,7 +24,7 @@ class UnicodeEscapeSuite extends BaseTokenizerSuite with DiffAssertions {
     }
   }
 
-  tests.lines.foreach { line =>
+  tests.linesIterator.foreach { line =>
     checkRoundtrip(line)
   }
 

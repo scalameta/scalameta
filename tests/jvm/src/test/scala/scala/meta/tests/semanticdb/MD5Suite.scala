@@ -5,11 +5,11 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.DigestInputStream
 import java.security.MessageDigest
-import javax.xml.bind.DatatypeConverter
 import org.scalatest.FunSuite
 import org.scalatest.tagobjects.Slow
 import scala.collection.mutable
 import scala.meta.internal.semanticdb.Locator
+import scala.meta.internal.semanticdb.scalac.Hex
 import scala.meta.io.AbsolutePath
 import scala.meta.tests.BuildInfo
 
@@ -24,13 +24,13 @@ class MD5Suite extends FunSuite {
     } finally {
       fos.close()
     }
-    DatatypeConverter.printHexBinary(md.digest())
+    Hex.bytesToHex(md.digest())
   }
 
   def stringMD5(string: String): String = {
     val md = MessageDigest.getInstance("MD5")
     md.update(string.getBytes(StandardCharsets.UTF_8))
-    DatatypeConverter.printHexBinary(md.digest())
+    Hex.bytesToHex(md.digest())
   }
 
   val md5Fingerprings = mutable.Set.empty[String]

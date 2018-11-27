@@ -13,7 +13,6 @@ import scala.meta.tests.metacp._
 object Metacp {
   @State(Scope.Benchmark)
   class BenchmarkState extends FileFixtures {
-    val jdk = Library.jdk.classpath()
     val scalaLibrary = Library.scalaLibrary.classpath()
   }
 }

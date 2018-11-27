@@ -10,11 +10,7 @@ import scala.meta.tests.semanticdb.ManifestMetacp
 
 class ClasspathIndexSuite extends FunSuite {
   def classpath(path: AbsolutePath) =
-    Classpath(
-      path ::
-        Library.scalaLibrary.classpath().entries ++
-        Library.jdk.classpath().entries
-    )
+    Classpath(path :: Library.scalaLibrary.classpath().entries)
 
   test("manifest") {
     val jar = AbsolutePath(ManifestMetacp.path.getParent.resolve("manifest.jar"))
@@ -24,7 +20,7 @@ class ClasspathIndexSuite extends FunSuite {
 
   test("classpath") {
     val dir = AbsolutePath(BuildInfo.databaseClasspath)
-    val index = ClasspathIndex(classpath(dir))
+    val index = ClasspathIndex(classpath(dir), includeJdk = true)
 
     // JDK
     assert(index.isClassdir("org/xml/"))

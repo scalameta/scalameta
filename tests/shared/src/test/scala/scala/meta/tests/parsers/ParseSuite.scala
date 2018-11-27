@@ -15,8 +15,8 @@ class ParseSuite extends FunSuite with CommonTrees {
 
   //This should eventually be replaced by DiffAssertions.assertNoDiff
   def assertSameLines(actual: String, expected: String) = {
-    val actualLines = actual.lines.toList
-    val expectedLines = expected.lines.toList
+    val actualLines = actual.linesIterator.toList
+    val expectedLines = expected.linesIterator.toList
     assert(actualLines === expectedLines)
   }
 
