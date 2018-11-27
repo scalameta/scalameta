@@ -13,6 +13,7 @@ final class Settings private (
     val par: Boolean,
     val verbose: Boolean,
     val usejavacp: Boolean,
+    val includeJdk: Boolean,
     val stubBrokenSignatures: Boolean,
     val logBrokenSignatures: Boolean
 ) {
@@ -25,6 +26,7 @@ final class Settings private (
       par = false,
       verbose = false,
       usejavacp = false,
+      includeJdk = false,
       stubBrokenSignatures = false,
       logBrokenSignatures = false
     )
@@ -60,7 +62,11 @@ final class Settings private (
   }
 
   def withUsejavacp(usejavacp: Boolean): Settings = {
-    copy(usejavacp = usejavacp)
+    copy(usejavacp = usejavacp, includeJdk = true)
+  }
+
+  def withIncludeJdk(includeJdk: Boolean): Settings = {
+    copy(includeJdk = includeJdk)
   }
 
   def withStubBrokenSignatures(stubBrokenSignatures: Boolean): Settings = {
@@ -79,6 +85,7 @@ final class Settings private (
       par: Boolean = par,
       verbose: Boolean = verbose,
       usejavacp: Boolean = usejavacp,
+      includeJdk: Boolean = includeJdk,
       stubBrokenSignatures: Boolean = stubBrokenSignatures,
       logBrokenSignatures: Boolean = logBrokenSignatures
   ): Settings = {
@@ -90,6 +97,7 @@ final class Settings private (
       par = par,
       verbose = verbose,
       usejavacp = usejavacp,
+      includeJdk = includeJdk,
       stubBrokenSignatures = stubBrokenSignatures,
       logBrokenSignatures = logBrokenSignatures
     )

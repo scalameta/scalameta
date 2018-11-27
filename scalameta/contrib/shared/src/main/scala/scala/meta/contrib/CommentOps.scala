@@ -31,7 +31,7 @@ object CommentOps {
           .dropWhile(scaladocBorderSymbols)
 
       Option(
-        content.lines
+        content.linesIterator
           .map(_.dropWhile(scaladocSymbols)) // Removes leading comments symbols
           .map(_.trim)
           .mkString("\n")

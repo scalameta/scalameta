@@ -60,7 +60,7 @@ Uri => semanticdb/integration/src/main/scala/example/Advanced.scala
 Text => non-empty
 Language => Scala
 Symbols => 42 entries
-Occurrences => 109 entries
+Occurrences => 108 entries
 Synthetics => 1 entries
 
 Symbols:
@@ -221,7 +221,6 @@ Occurrences:
 [19:12..19:15): Int => scala/Int#
 [19:32..19:33): U <= local12
 [19:34..19:35): T <= local13
-[19:39..19:42): Int => scala/Int#
 [19:48..19:51): ??? => scala/Predef.`???`().
 [22:6..22:7): D <= advanced/D#
 [22:8..22:10): CC <= advanced/D#[CC]
@@ -296,7 +295,7 @@ Uri => semanticdb/integration/src/main/scala/example/Annotations.scala
 Text => non-empty
 Language => Scala
 Symbols => 21 entries
-Occurrences => 50 entries
+Occurrences => 47 entries
 
 Symbols:
 annot/Alias. => final object Alias extends AnyRef { +1 decls }
@@ -378,7 +377,6 @@ Occurrences:
 [7:67..7:68): x <= annot/Annotations#x.
 [7:70..7:71): T => annot/Annotations#[T]
 [7:75..7:79): self <= local0
-[7:81..7:87): AnyRef => scala/AnyRef#
 [8:3..8:18): FieldAnnotation => com/javacp/annot/FieldAnnotation#
 [9:6..9:11): field <= annot/Annotations#field.
 [11:3..11:19): MethodAnnotation => com/javacp/annot/MethodAnnotation#
@@ -406,8 +404,6 @@ Occurrences:
 [35:7..35:12): Alias <= annot/Alias.
 [36:7..36:8): A <= annot/Alias.A#
 [36:11..36:26): ClassAnnotation => com/javacp/annot/ClassAnnotation#
-[36:28..36:33): param => scala/annotation/meta/param#
-[37:0..37:0):  => scala/annotation/meta/param#`<init>`().
 
 semanticdb/integration/src/main/scala/example/Anonymous.scala
 -------------------------------------------------------------
@@ -1270,6 +1266,111 @@ Occurrences:
 Diagnostics:
 [0:26..0:34) [warning] Unused import
 
+semanticdb/integration/src/main/scala/example/InstrumentTyper.scala
+-------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/InstrumentTyper.scala
+Text => non-empty
+Language => Scala
+Symbols => 11 entries
+Occurrences => 53 entries
+Synthetics => 1 entries
+
+Symbols:
+example/InstrumentTyper# => class InstrumentTyper extends AnyRef { self: AnyRef => +6 decls }
+  AnyRef => scala/AnyRef#
+example/InstrumentTyper#AnnotatedType# => type AnnotatedType = Int @param
+  Int => scala/Int#
+  param => scala/annotation/meta/param#
+example/InstrumentTyper#`<init>`(). => primary ctor <init>()
+example/InstrumentTyper#all(). => method all: List[Any]
+  List => scala/collection/immutable/List#
+  Any => scala/Any#
+example/InstrumentTyper#clazzOf. => final val method clazzOf: Class[Option[Int]]
+  Class => java/lang/Class#
+  Option => scala/Option#
+  Int => scala/Int#
+example/InstrumentTyper#existential(). => method existential: U[Int] forSome { type U[T <: Int] => Any }
+  U => local1
+  Int => scala/Int#
+  T => local2
+  Any => scala/Any#
+example/InstrumentTyper#singletonType(). => method singletonType(x: Predef.type): Nothing
+  x => example/InstrumentTyper#singletonType().(x)
+  Predef => scala/Predef.
+  Nothing => scala/Nothing#
+example/InstrumentTyper#singletonType().(x) => param x: Predef.type
+  Predef => scala/Predef.
+local0 => selfparam self: AnyRef
+  AnyRef => scala/AnyRef#
+local3 => abstract type U[T <: Int]
+  T => local4
+  Int => scala/Int#
+local4 => typeparam T <: Int
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:7..2:12): scala => scala/
+[2:13..2:23): annotation => scala/annotation/
+[2:24..2:28): meta => scala/annotation/meta/
+[2:29..2:34): param => scala/annotation/meta/param#
+[3:7..3:12): scala => scala/
+[3:13..3:21): language => scala/language.
+[3:22..3:34): existentials => scala/language.existentials.
+[4:7..4:12): scala => scala/
+[4:13..4:21): language => scala/language.
+[4:22..4:33): higherKinds => scala/language.higherKinds.
+[5:7..5:12): types => types/
+[5:13..5:17): Test => types/Test.
+[7:6..7:21): InstrumentTyper <= example/InstrumentTyper#
+[7:22..7:22):  <= example/InstrumentTyper#`<init>`().
+[7:24..7:28): self <= local0
+[8:6..8:9): all <= example/InstrumentTyper#all().
+[8:12..8:16): List => scala/collection/immutable/List.
+[9:4..9:11): Literal => types/Test.Literal.
+[9:12..9:15): int => types/Test.Literal.int.
+[10:4..10:11): Literal => types/Test.Literal.
+[10:12..10:16): long => types/Test.Literal.long.
+[11:4..11:11): Literal => types/Test.Literal.
+[11:12..11:17): float => types/Test.Literal.float.
+[12:4..12:11): Literal => types/Test.Literal.
+[12:12..12:18): double => types/Test.Literal.double.
+[13:4..13:11): Literal => types/Test.Literal.
+[13:12..13:15): nil => types/Test.Literal.nil.
+[14:4..14:11): Literal => types/Test.Literal.
+[14:12..14:16): char => types/Test.Literal.char.
+[15:4..15:11): Literal => types/Test.Literal.
+[15:12..15:18): string => types/Test.Literal.string.
+[16:4..16:11): Literal => types/Test.Literal.
+[16:12..16:16): bool => types/Test.Literal.bool.
+[17:4..17:11): Literal => types/Test.Literal.
+[17:12..17:16): unit => types/Test.Literal.unit.
+[18:4..18:11): Literal => types/Test.Literal.
+[18:12..18:20): javaEnum => types/Test.Literal.javaEnum.
+[19:4..19:11): Literal => types/Test.Literal.
+[19:12..19:19): clazzOf => types/Test.Literal.clazzOf.
+[20:4..20:8): List => scala/collection/immutable/Nil.
+[22:6..22:17): existential <= example/InstrumentTyper#existential().
+[22:19..22:20): U => local3
+[22:21..22:24): Int => scala/Int#
+[22:41..22:42): U <= local3
+[22:43..22:44): T <= local4
+[22:57..22:60): ??? => scala/Predef.`???`().
+[23:7..23:20): AnnotatedType <= example/InstrumentTyper#AnnotatedType#
+[23:23..23:26): Int => scala/Int#
+[24:6..24:19): singletonType <= example/InstrumentTyper#singletonType().
+[24:20..24:21): x <= example/InstrumentTyper#singletonType().(x)
+[24:38..24:41): ??? => scala/Predef.`???`().
+[25:12..25:19): clazzOf <= example/InstrumentTyper#clazzOf.
+
+Synthetics:
+[8:12..8:16): List => *.apply[Any]
+  apply => scala/collection/immutable/List.apply().
+  Any => scala/Any#
+
 semanticdb/integration/src/main/scala/example/Issue1749.scala
 -------------------------------------------------------------
 
@@ -1527,7 +1628,7 @@ Uri => semanticdb/integration/src/main/scala/example/Methods.scala
 Text => non-empty
 Language => Scala
 Symbols => 78 entries
-Occurrences => 149 entries
+Occurrences => 146 entries
 
 Symbols:
 example/Methods# => class Methods[T] extends AnyRef { +35 decls }
@@ -1852,7 +1953,6 @@ Occurrences:
 [22:25..22:28): ??? => scala/Predef.`???`().
 [23:6..23:9): m11 <= example/Methods#m11().
 [23:10..23:11): x <= example/Methods#m11().(x)
-[23:13..23:19): Predef => scala/Predef.
 [23:28..23:31): ??? => scala/Predef.`???`().
 [24:6..24:9): m11 <= example/Methods#m11(+1).
 [24:10..24:11): x <= example/Methods#m11(+1).(x)
@@ -1869,8 +1969,6 @@ Occurrences:
 [27:6..27:9): m13 <= example/Methods#m13().
 [27:10..27:11): x <= example/Methods#m13().(x)
 [27:13..27:16): Int => scala/Int#
-[27:18..27:27): unchecked => scala/unchecked#
-[27:27..27:27):  => scala/unchecked#`<init>`().
 [27:31..27:34): ??? => scala/Predef.`???`().
 [28:6..28:9): m14 <= example/Methods#m14().
 [28:10..28:11): x <= example/Methods#m14().(x)
@@ -2741,7 +2839,7 @@ Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
 Symbols => 139 entries
-Occurrences => 250 entries
+Occurrences => 243 entries
 
 Symbols:
 local0 => abstract method k: Int
@@ -3136,11 +3234,8 @@ Occurrences:
 [41:23..41:26): Int => scala/Int#
 [41:30..41:33): ??? => scala/Predef.`???`().
 [43:8..43:19): singleType1 <= types/Test.C#singleType1.
-[43:21..43:22): x => types/Test.C#x.
 [43:30..43:33): ??? => scala/Predef.`???`().
 [44:8..44:19): singleType2 <= types/Test.C#singleType2.
-[44:21..44:22): p => types/Test.C#p.
-[44:23..44:24): x => types/P#x.
 [44:32..44:35): ??? => scala/Predef.`???`().
 [45:8..45:14): Either <= types/Test.C#Either.
 [45:17..45:22): scala => scala/
@@ -3192,7 +3287,6 @@ Occurrences:
 [61:8..61:16): annType1 <= types/Test.C#annType1.
 [61:18..61:19): T => types/T#
 [61:21..61:24): ann => types/ann#
-[61:24..61:24):  => types/ann#`<init>`().
 [61:31..61:34): ??? => scala/Predef.`???`().
 [62:8..62:16): annType2 <= types/Test.C#annType2.
 [62:18..62:19): T => types/T#
@@ -3302,9 +3396,6 @@ Occurrences:
 [112:39..112:49): LinkOption => java/nio/file/LinkOption#
 [112:50..112:64): NOFOLLOW_LINKS => java/nio/file/LinkOption#NOFOLLOW_LINKS.
 [113:14..113:21): clazzOf <= types/Test.Literal.clazzOf.
-[113:24..113:31): classOf => scala/Predef.classOf().
-[113:32..113:38): Option => scala/Option#
-[113:39..113:42): Int => scala/Int#
 
 semanticdb/integration/src/main/scala/example/Vals.scala
 --------------------------------------------------------

@@ -16,7 +16,8 @@ case class SemanticdbConfig(
     md5: BinaryMode,
     symbols: SymbolMode,
     diagnostics: BinaryMode,
-    synthetics: BinaryMode) {
+    synthetics: BinaryMode
+) {
   def syntax: String = {
     val p = SemanticdbPlugin.name
     List(

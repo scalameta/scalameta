@@ -6,7 +6,6 @@ import scala.meta.tests._
 object Libraries {
   lazy val suite: List[Library] = {
     val buf = List.newBuilder[Library]
-    buf += Library.jdk
     buf += Library.scalaLibrary
     buf += Library(
       "org.scalameta",
@@ -66,13 +65,6 @@ object Library {
         Classpath(jars)
       }
     )
-  lazy val jdk: Library = {
-    val bootClasspath = Classpath(
-      sys.props
-        .collectFirst { case (k, v) if k.endsWith(".boot.class.path") => v }
-        .getOrElse("")).entries.filter(_.isFile)
-    Library("JDK", () => Classpath(bootClasspath))
-  }
   lazy val scalaLibrary: Library = {
     Library("scala-library", () => {
       val version = BuildInfo.scalaVersion

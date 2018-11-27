@@ -7,22 +7,23 @@ import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.concurrent.ConcurrentHashMap
 import java.util.jar._
+import scala.collection.GenSeq
 import scala.collection.immutable
-import scala.collection.JavaConverters._
+import scala.collection.mutable
 import scala.meta.cli._
-import scala.meta.internal.cli._
 import scala.meta.internal.classpath._
-import scala.meta.internal.scalacp._
+import scala.meta.internal.cli._
 import scala.meta.internal.io._
+import scala.meta.internal.scalacp._
 import scala.meta.io._
 import scala.meta.metacp._
-import scala.collection.GenSeq
-import scala.collection.mutable
 
 class Main(settings: Settings, reporter: Reporter) {
 
   val classpathIndex =
-    ClasspathIndex(settings.classpath ++ settings.dependencyClasspath ++ detectJavacp)
+    ClasspathIndex(
+      settings.classpath ++ settings.dependencyClasspath ++ detectJavacp,
+      includeJdk = settings.includeJdk)
   private val missingSymbols = mutable.Set.empty[String]
 
   def process(): Result = {
@@ -218,14 +219,6 @@ class Main(settings: Settings, reporter: Reporter) {
 
   private def detectJavacp: Classpath = {
     if (settings.usejavacp) {
-      val jdk = sys.props
-        .collectFirst {
-          case (k, v) if k.endsWith(".boot.class.path") =>
-            Classpath(v).entries.filter(_.isFile)
-        }
-        .getOrElse {
-          throw new IllegalStateException("Unable to detect bootclasspath via --usejavacp")
-        }
       val scalaLibrary = this.getClass.getClassLoader match {
         case loader: URLClassLoader =>
           loader.getURLs
@@ -241,7 +234,7 @@ class Main(settings: Settings, reporter: Reporter) {
             s"Expected this.getClass.getClassLoader to be URLClassLoader. " +
               s"Obtained $unexpected")
       }
-      Classpath(scalaLibrary :: jdk)
+      Classpath(scalaLibrary)
     } else {
       Classpath(Nil)
     }

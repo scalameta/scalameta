@@ -3,7 +3,6 @@ package scala.meta.tests.semanticdb
 import org.scalatest.FunSuite
 import scala.meta.interactive.InteractiveSemanticdb
 import scala.meta.internal.metap.PrinterSymtab
-import scala.meta.internal.metap.SymbolInformationPrinter
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Print
 import scala.meta.internal.semanticdb.SymbolInformation
@@ -14,8 +13,8 @@ import scala.meta.tests.metacp.Library
 
 class PrintSuite extends FunSuite with DiffAssertions {
   val symtab = GlobalSymbolTable(
-    Library.scalaLibrary.classpath() ++
-      Library.jdk.classpath()
+    Library.scalaLibrary.classpath(),
+    includeJdk = true
   )
 
   val compiler = InteractiveSemanticdb.newCompiler()

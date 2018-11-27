@@ -15,7 +15,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
 
   private val tmp = AbsolutePath(Files.createTempDirectory("metacp"))
   tmp.toFile.deleteOnExit()
-  private val settings = Settings().withOut(tmp)
+  private val settings = Settings().withOut(tmp).withIncludeJdk(true)
 
   test("missing symbol 1", Slow) {
     val (result, out, err) = CliSuite.withReporter { reporter =>
@@ -35,8 +35,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
     assert(out.nonEmpty)
     assertNoDiffOrPrintExpected(
       err.replaceAll("(missing symbol: .*?) .*", "$1"),
-      """|missing symbol: java
-         |missing symbol: scala.reflect.macros.whitebox
+      """|missing symbol: scala.reflect.macros.whitebox
          |missing symbol: scala.reflect.macros.blackbox
          |missing symbol: scala.reflect.macros.Aliases
          |missing symbol: scala.reflect.api
@@ -49,9 +48,11 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
   test("missing symbol 2") {
     val tmp = Files.createTempDirectory("a_")
     tmp.toFile.deleteOnExit()
-    val aclassFrom = Paths.get(BuildInfo.databaseClasspath).resolve("A.class")
-    val aclassTo = tmp.resolve("A.class")
-    Files.copy(aclassFrom, aclassTo)
+    List("A", "B").foreach { ch =>
+      val source = Paths.get(BuildInfo.databaseClasspath).resolve(s"$ch.class")
+      val destination = tmp.resolve(s"$ch.class")
+      Files.copy(source, destination)
+    }
 
     val (result, out, err) = CliSuite.withReporter { reporter =>
       val classpath = Classpath(AbsolutePath(tmp))
@@ -68,6 +69,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
           |}
           |""".stripMargin
     )
+
     assertNoDiffOrPrintExpected(
       err,
       s"""|missing symbol: scala in $tmp

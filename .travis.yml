@@ -36,6 +36,10 @@ matrix:
       - CI_TEST: ci-fast
       - CI_SCALA_VERSION: 2.12.7
       - CI_PUBLISH: true
+    - jdk: openjdk11 # Run 2.12.7 JVM tests on Java 11.
+      env:
+      - CI_TEST: ci-fast
+      - CI_SCALA_VERSION: 2.12.7
     - env:
       - CI_TEST: ci-fast
       - CI_SCALA_VERSION: 2.12.7

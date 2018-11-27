@@ -28,10 +28,6 @@ version.in(ThisBuild) ~= { old =>
 }
 name := {
   println(s"[info] Welcome to scalameta ${version.value}")
-  if (!sys.props.isDefinedAt("scalameta.allow-any-jdk")) { // escape hatch for Scala community build
-    val javaVersion = sys.props("java.specification.version")
-    if (javaVersion != "1.8") sys.error(s"Obtained Java version $javaVersion. Expected 1.8")
-  }
   "scalametaRoot"
 }
 nonPublishableSettings
@@ -472,7 +468,11 @@ lazy val semanticdbIntegration = project
     javacSemanticdbDirectory := (target.in(Compile).value / "javac-semanticdb"),
     javaHome in Compile := {
       // force javac to fork by setting javaHome to workaround https://github.com/sbt/zinc/issues/520
-      Some(file(sys.props("java.home")).getParentFile)
+      val home = file(sys.props("java.home"))
+      val actualHome =
+        if (System.getProperty("java.version").startsWith("1.8")) home.getParentFile
+        else home
+      Some(actualHome)
     },
     managedClasspath in Compile += Keys.`package`.in(semanticdbJavacPlugin, Compile).value,
     javacOptions ++= {
@@ -676,7 +676,15 @@ lazy val sharedSettings = Def.settings(
   scalacOptions.in(Compile, doc) ++= Seq("-skip-packages", ""),
   scalacOptions.in(Compile, doc) ++= Seq("-implicits", "-implicits-hide:."),
   scalacOptions.in(Compile, doc) ++= Seq("-groups"),
-  scalacOptions ++= Seq("-Xfatal-warnings"),
+  scalacOptions ++= {
+    if (scalaVersion.value == LatestScala212) {
+      Seq("-Xfatal-warnings")
+    } else {
+      // disable fatal warnings on 2.11 since we use the deprecated `String.linesIterator`
+      // for Java 11 support. The `linesIterator` method was un-deprecated in v2.12.7.
+      Seq()
+    }
+  },
   parallelExecution.in(Test) := false, // hello, reflection sync!!
   logBuffered := false,
   updateOptions := updateOptions.value.withCachedResolution(true),
