@@ -55,17 +55,11 @@
   * Wait for up to several hours (for 3.2.0, we waited for 15 minutes;
     for 3.3.0, we waited for 1.5 hours).
   * Make sure that the release shows up at https://search.maven.org/#search%7Cga%7C1%7Corg.scalameta%20a%3A%22scalameta_2.12%22.
-  * Make sure that `coursier fetch org.scalameta:semanticdb-scalac-core_a.b.c:x.y.z`
-    succeeds for the supported Scala versions.
   * If it's been a while, and the release doesn't show up at Maven Central,
     ping Sonatype at [OSSRH-10192](https://issues.sonatype.org/browse/OSSRH-10192).
-* Upgrade the downstream projects:
+* Upgrade downstream projects:
   * https://github.com/scalacenter/scalafix
-    (upgrade to Scalameta 3.4+ is currently blocked, so feel free to
-    skip upgrading this project for the time being).
+  * https://github.com/scalameta/scalafmt
   * https://github.com/scalameta/metadoc
-    (upgrade to Scalameta 3.0+ is currently blocked, so feel free to
-    skip upgrading this project for the time being).
   * https://github.com/scalameta/metals
-    (upgrade to Scalameta 3.0+ is currently blocked, so feel free to
-    skip upgrading this project for the time being).
+  * https://github.com/sbt/sbt (see `SemanticdbPlugin`)
