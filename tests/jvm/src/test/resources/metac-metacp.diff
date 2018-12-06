@@ -14,10 +14,9 @@ advanced/D#
                  kind: TYPE
                  properties: 4
                  display_name: "_"
-     self {
      declarations {
-+      symlinks: "advanced/D#_$2#"
        symlinks: "advanced/D#`<init>`()."
++      symlinks: "advanced/D#_$2#"
 
 
 ==========================
@@ -327,25 +326,6 @@ example/Synthetic#x$2.
  access {
 -  public_access {
 +  private_this_access {
-
-
-================
-flags/p/package.
-================
---- metac
-+++ metacp
-       symlinks: "flags/p/package.C#"
-       symlinks: "flags/p/package.T1#"
-       symlinks: "flags/p/package.T2#"
-+      symlinks: "flags/p/package.S#"
-       symlinks: "flags/p/package.U#"
-       symlinks: "flags/p/package.V#"
-       symlinks: "flags/p/package.X."
-       symlinks: "flags/p/package.Y#"
-       symlinks: "flags/p/package.Z#"
-       symlinks: "flags/p/package.AA#"
--      symlinks: "flags/p/package.S#"
-       symlinks: "flags/p/package.xs1."
 
 
 ======================
