@@ -884,7 +884,8 @@ lazy val fullCrossVersionSettings = Seq(
     // That's why we have to work around here.
     val base = sourceDirectory.in(Compile).value
     val versionDir =
-      if (scalaVersion.value.startsWith(s"$LatestScala212-bin")) LatestScala212 else scalaVersion.value
+      if (scalaVersion.value.startsWith(s"$LatestScala212-bin")) LatestScala212
+      else scalaVersion.value
     base / ("scala-" + versionDir)
   }
 )
