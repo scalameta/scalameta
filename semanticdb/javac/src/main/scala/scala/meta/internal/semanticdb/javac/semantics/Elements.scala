@@ -10,10 +10,7 @@ import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.collection.JavaConverters._
-import scala.meta.internal.semanticdb.Scala.{Descriptor => d, Names => n, _}
-import com.github.javaparser.JavaParser
-
-import scala.compat.java8.OptionConverters._
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d, _}
 
 trait Elements { semantics: Semantics =>
 
@@ -238,67 +235,16 @@ trait Elements { semantics: Semantics =>
     }
 
     def range: Option[s.Range] = {
-      val posNone = None
-
-      elem match {
-        case elem: ExecutableElement =>
-          val executableElementTree = trees.getTree(elem)
-          val sourceRange = getSourceRange(executableElementTree)
-
-          val executableElementContent = for {
-            startPos <- sourceRange.start
-            endPos <- sourceRange.end
-          } yield {
-            val content = compilationUnitTree.getSourceFile
-              .getCharContent(true)
-              .subSequence(startPos.value.toInt, endPos.value.toInt)
-
-            val executableElementParsed = JavaParser.parseBodyDeclaration(content.toString)
-
-            val declarationNameOpt = elem.getKind match {
-              case ElementKind.CONSTRUCTOR =>
-                Some(executableElementParsed.asConstructorDeclaration.getName)
-
-              case ElementKind.METHOD =>
-                Some(executableElementParsed.asMethodDeclaration.getName)
-
-              case ElementKind.STATIC_INIT | ElementKind.INSTANCE_INIT =>
-                None
-
-              case _ => None
-            }
-
-            for (declarationName <- declarationNameOpt) yield {
-
-              val methodNameRangeOpt = declarationName.getRange.asScala
-              for (methodNameRange <- methodNameRangeOpt) yield {
-                val startLine = startPos.line + methodNameRange.begin.line - 1
-                val startColumn =
-                  if (methodNameRange.begin.line == 1) {
-                    startPos.column + methodNameRange.begin.column - 1
-                  } else {
-                    methodNameRange.begin.column
-                  }
-                val endLine = startPos.line + methodNameRange.end.line - 1
-                val endColumn =
-                  if (methodNameRange.end.line == 1) {
-                    startPos.column + methodNameRange.end.column - 1
-                  } else {
-                    methodNameRange.end.column
-                  }
-
-                s.Range(
-                  startLine = startLine.toInt,
-                  startCharacter = startColumn.toInt,
-                  endLine = endLine.toInt,
-                  endCharacter = endColumn.toInt)
-              }
-            }
-          }
-
-          executableElementContent.flatten.flatten
-
-        case _ => posNone
+      for {
+        rangeOpt <- symbolsTable.get(sym)
+        range <- rangeOpt
+      } yield {
+        s.Range(
+          startLine = range.begin.line - 1,
+          startCharacter = range.begin.column - 1,
+          endLine = range.end.line,
+          endCharacter = range.end.column
+        )
       }
     }
 
@@ -336,6 +282,18 @@ trait Elements { semantics: Semantics =>
 
     def populateInfos(infos: mutable.ListBuffer[s.SymbolInformation],
                       occurrences: mutable.ListBuffer[s.SymbolOccurrence]): s.SymbolInformation = {
+      // WIP: Proof that all symbols are in symTable
+      symbolsTable.get(sym) match {
+        case Some(x)  =>
+          if (x != null) {
+            println(x)
+          }
+        case None if isSynthetic => ()
+        case None =>
+          println(info)
+          ???
+      }
+
       val myInfo = info
       infos += myInfo
       occurrences += occurrence
