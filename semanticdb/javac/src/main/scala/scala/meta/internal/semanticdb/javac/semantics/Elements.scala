@@ -248,19 +248,15 @@ trait Elements { semantics: Semantics =>
       }
     }
 
-    def role: s.SymbolOccurrence.Role = elem match {
-      case elem: ExecutableElement =>
-        elem.getKind match {
-          case ElementKind.CONSTRUCTOR | ElementKind.METHOD |
-               ElementKind.STATIC_INIT | ElementKind.INSTANCE_INIT =>
-            s.SymbolOccurrence.Role.DEFINITION
+    def role: s.SymbolOccurrence.Role = elem.getKind match {
+      case ElementKind.PACKAGE | ElementKind.ENUM | ElementKind.CLASS |
+           ElementKind.ANNOTATION_TYPE | ElementKind.INTERFACE | ElementKind.ENUM_CONSTANT |
+           ElementKind.FIELD | ElementKind.PARAMETER |
+           ElementKind.METHOD | ElementKind.CONSTRUCTOR |
+           ElementKind.STATIC_INIT | ElementKind.INSTANCE_INIT | ElementKind.TYPE_PARAMETER =>
+        s.SymbolOccurrence.Role.DEFINITION
 
-          case _ =>
-            s.SymbolOccurrence.Role.UNKNOWN_ROLE
-        }
-
-      case _ =>
-        s.SymbolOccurrence.Role.UNKNOWN_ROLE
+      case _ => s.SymbolOccurrence.Role.UNKNOWN_ROLE
     }
 
     def info: s.SymbolInformation = s.SymbolInformation(
