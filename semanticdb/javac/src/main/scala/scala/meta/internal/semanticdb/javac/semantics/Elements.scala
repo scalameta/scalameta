@@ -211,29 +211,6 @@ trait Elements { semantics: Semantics =>
       }
     }
 
-    private def getSourceRange(tree: Tree): SourceRange = {
-      val startPos = trees.getSourcePositions.getStartPosition(compilationUnitTree, tree)
-      val endPos = trees.getSourcePositions.getEndPosition(compilationUnitTree, tree)
-
-      val startSourcePosition =
-        if (startPos == Position.NOPOS) None
-        else {
-          val slOpt = compilationUnitTree.getLineMap.getLineNumber(startPos)
-          val scOpt = compilationUnitTree.getLineMap.getColumnNumber(startPos)
-          Some(SourcePosition(slOpt, scOpt, startPos))
-        }
-
-      val endSourcePosition =
-        if (endPos == Position.NOPOS) None
-        else {
-          val elOpt = compilationUnitTree.getLineMap.getLineNumber(endPos)
-          val ecOpt = compilationUnitTree.getLineMap.getColumnNumber(endPos)
-          Some(SourcePosition(elOpt, ecOpt, endPos))
-        }
-
-      SourceRange(startSourcePosition, endSourcePosition)
-    }
-
     def range: Option[s.Range] = {
       for {
         rangeOpt <- symbolsTable.get(sym)
@@ -242,7 +219,7 @@ trait Elements { semantics: Semantics =>
         s.Range(
           startLine = range.begin.line - 1,
           startCharacter = range.begin.column - 1,
-          endLine = range.end.line,
+          endLine = range.end.line - 1,
           endCharacter = range.end.column
         )
       }
