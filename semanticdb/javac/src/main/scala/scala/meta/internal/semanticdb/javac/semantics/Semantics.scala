@@ -85,7 +85,6 @@ trait Semantics extends Elements with TypeMirrors {
     }
   }
 
-
   implicit class NodeOps(node: jp.ast.Node) {
     def owner: String = {
       node.getParentNode.asScala match {
@@ -94,10 +93,10 @@ trait Semantics extends Elements with TypeMirrors {
             case elem: jp.ast.CompilationUnit =>
               elem.getPackageDeclaration.asScala.map { _.sym }.getOrElse("")
             case elem @ (
-              _: jp.ast.body.TypeDeclaration[_] |
-              _: jp.ast.body.CallableDeclaration[_] |
-              _: jp.ast.PackageDeclaration
-            ) => elem.sym
+                  _: jp.ast.body.TypeDeclaration[_] | _: jp.ast.body.CallableDeclaration[_] |
+                  _: jp.ast.PackageDeclaration
+                ) =>
+              elem.sym
             case _ =>
               parent.owner
           }
@@ -144,8 +143,10 @@ trait Semantics extends Elements with TypeMirrors {
             val disambig = {
               val siblingMethods: mutable.Buffer[jp.ast.body.CallableDeclaration[_]] = {
                 if (elem.isConstructorDeclaration) {
-                  val siblingMethods = owner.asInstanceOf[jp.ast.nodeTypes.NodeWithConstructors[_]]
-                                            .getConstructors.asScala
+                  val siblingMethods = owner
+                    .asInstanceOf[jp.ast.nodeTypes.NodeWithConstructors[_]]
+                    .getConstructors
+                    .asScala
                   siblingMethods.map { _.asCallableDeclaration }
                 } else {
                   val siblingMethods = owner.getMethodsByName(symbolName).asScala

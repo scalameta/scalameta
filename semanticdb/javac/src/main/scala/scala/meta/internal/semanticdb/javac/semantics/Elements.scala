@@ -223,10 +223,9 @@ trait Elements { semantics: Semantics =>
 
     def role: s.SymbolOccurrence.Role = elem.getKind match {
       case ElementKind.PACKAGE | ElementKind.ENUM | ElementKind.CLASS |
-           ElementKind.ANNOTATION_TYPE | ElementKind.INTERFACE | ElementKind.ENUM_CONSTANT |
-           ElementKind.FIELD | ElementKind.PARAMETER |
-           ElementKind.METHOD | ElementKind.CONSTRUCTOR |
-           ElementKind.STATIC_INIT | ElementKind.INSTANCE_INIT | ElementKind.TYPE_PARAMETER =>
+          ElementKind.ANNOTATION_TYPE | ElementKind.INTERFACE | ElementKind.ENUM_CONSTANT |
+          ElementKind.FIELD | ElementKind.PARAMETER | ElementKind.METHOD | ElementKind.CONSTRUCTOR |
+          ElementKind.STATIC_INIT | ElementKind.INSTANCE_INIT | ElementKind.TYPE_PARAMETER =>
         s.SymbolOccurrence.Role.DEFINITION
 
       case _ => s.SymbolOccurrence.Role.UNKNOWN_ROLE
@@ -244,13 +243,11 @@ trait Elements { semantics: Semantics =>
     )
 
     def occurrence: s.SymbolOccurrence =
-      s.SymbolOccurrence(
-        symbol = sym,
-        range = range,
-        role = role)
+      s.SymbolOccurrence(symbol = sym, range = range, role = role)
 
-    def populateInfos(infos: mutable.ListBuffer[s.SymbolInformation],
-                      occurrences: mutable.ListBuffer[s.SymbolOccurrence]): s.SymbolInformation = {
+    def populateInfos(
+        infos: mutable.ListBuffer[s.SymbolInformation],
+        occurrences: mutable.ListBuffer[s.SymbolOccurrence]): s.SymbolInformation = {
       val myInfo = info
       infos += myInfo
       if (range.isDefined) {
