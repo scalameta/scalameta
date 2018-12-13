@@ -269,7 +269,9 @@ trait Elements { semantics: Semantics =>
 
       val myInfo = info
       infos += myInfo
-      occurrences += occurrence
+      if (range.isDefined) {
+        occurrences += occurrence
+      }
 
       elem match {
         case elem: TypeElement =>

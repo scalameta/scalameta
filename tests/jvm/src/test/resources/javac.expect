@@ -311,7 +311,7 @@ Uri => semanticdb/integration/src/main/java/com/javacp/annot/usage/AnnotatedPack
 Text => empty
 Language => Java
 Symbols => 2 entries
-Occurrences => 2 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/annot/usage/AnnotatedPackage# => class AnnotatedPackage extends Object { +1 decls }
@@ -319,7 +319,6 @@ com/javacp/annot/usage/AnnotatedPackage# => class AnnotatedPackage extends Objec
 com/javacp/annot/usage/AnnotatedPackage#`<init>`(). => ctor <init>()
 
 Occurrences:
- <= com/javacp/annot/usage/AnnotatedPackage#`<init>`().
 [4:13..4:29) <= com/javacp/annot/usage/AnnotatedPackage#
 
 semanticdb/integration/src/main/java/com/javacp/ClassSuffix.java
@@ -331,7 +330,7 @@ Uri => semanticdb/integration/src/main/java/com/javacp/ClassSuffix.java
 Text => empty
 Language => Java
 Symbols => 11 entries
-Occurrences => 11 entries
+Occurrences => 7 entries
 
 Symbols:
 com/javacp/ClassSuffix# => class ClassSuffix extends Object { +3 decls }
@@ -364,10 +363,6 @@ com/javacp/ClassSuffix#suffix. => field suffix: Inner[String]#Bar#Fuz[Integer]
   Integer => java/lang/Integer#
 
 Occurrences:
- <= com/javacp/ClassSuffix#Inner#Bar#Fuz#`<init>`().
- <= com/javacp/ClassSuffix#Inner#Bar#`<init>`().
- <= com/javacp/ClassSuffix#Inner#`<init>`().
- <= com/javacp/ClassSuffix#`<init>`().
 [2:13..2:24) <= com/javacp/ClassSuffix#
 [3:10..3:15) <= com/javacp/ClassSuffix#Inner#
 [3:16..3:17) <= com/javacp/ClassSuffix#Inner#[A]
@@ -385,7 +380,7 @@ Uri => semanticdb/integration/src/main/java/com/javacp/Coin.java
 Text => empty
 Language => Java
 Symbols => 12 entries
-Occurrences => 12 entries
+Occurrences => 8 entries
 
 Symbols:
 com/javacp/Coin# => final enum class Coin extends Enum[Coin] { +9 decls }
@@ -419,10 +414,6 @@ com/javacp/Coin#values(). => static method values(): Array[Coin]
   Coin => com/javacp/Coin#
 
 Occurrences:
- <= com/javacp/Coin#`<init>`().
- <= com/javacp/Coin#valueOf().
- <= com/javacp/Coin#valueOf().(name)
- <= com/javacp/Coin#values().
 [2:12..2:16) <= com/javacp/Coin#
 [3:2..3:7) <= com/javacp/Coin#PENNY.
 [3:12..3:18) <= com/javacp/Coin#NICKEL.
@@ -468,7 +459,7 @@ Uri => semanticdb/integration/src/main/java/com/javacp/Logger.java
 Text => empty
 Language => Java
 Symbols => 2 entries
-Occurrences => 2 entries
+Occurrences => 1 entries
 
 Symbols:
 com/javacp/Logger# => class Logger extends Object { +1 decls }
@@ -476,7 +467,6 @@ com/javacp/Logger# => class Logger extends Object { +1 decls }
 com/javacp/Logger#`<init>`(). => ctor <init>()
 
 Occurrences:
- <= com/javacp/Logger#`<init>`().
 [2:13..2:19) <= com/javacp/Logger#
 
 semanticdb/integration/src/main/java/com/javacp/MetacJava.java
@@ -488,7 +478,7 @@ Uri => semanticdb/integration/src/main/java/com/javacp/MetacJava.java
 Text => empty
 Language => Java
 Symbols => 28 entries
-Occurrences => 28 entries
+Occurrences => 19 entries
 
 Symbols:
 com/javacp/MetacJava# => class MetacJava extends Object { +8 decls }
@@ -548,15 +538,6 @@ com/javacp/MetacJava#overload(+2).(a) => param a: A
   A => com/javacp/MetacJava#Overload3#A#
 
 Occurrences:
- <= com/javacp/MetacJava#Overload1#A#`<init>`().
- <= com/javacp/MetacJava#Overload1#`<init>`().
- <= com/javacp/MetacJava#Overload2#A#`<init>`().
- <= com/javacp/MetacJava#Overload2#`<init>`().
- <= com/javacp/MetacJava#Overload3#A#`<init>`().
- <= com/javacp/MetacJava#Overload3#`<init>`().
- <= com/javacp/MetacJava#StaticInner#NonStatic#`<init>`().
- <= com/javacp/MetacJava#StaticInner#`<init>`().
- <= com/javacp/MetacJava#`<init>`().
 [2:13..2:22) <= com/javacp/MetacJava#
 [3:24..3:35) <= com/javacp/MetacJava#StaticInner#
 [4:20..4:31) <= com/javacp/MetacJava#StaticInner#isNotStatic().
@@ -586,7 +567,7 @@ Uri => semanticdb/integration/src/main/java/com/javacp/NonGeneric.java
 Text => empty
 Language => Java
 Symbols => 3 entries
-Occurrences => 3 entries
+Occurrences => 2 entries
 
 Symbols:
 com/javacp/NonGeneric# => class NonGeneric extends Exception with Serializable with Flushable { +2 decls }
@@ -598,7 +579,6 @@ com/javacp/NonGeneric#flush(). => method flush(): Unit
   Unit => scala/Unit#
 
 Occurrences:
- <= com/javacp/NonGeneric#`<init>`().
 [5:13..5:23) <= com/javacp/NonGeneric#
 [7:16..7:21) <= com/javacp/NonGeneric#flush().
 
@@ -611,7 +591,7 @@ Uri => semanticdb/integration/src/main/java/com/javacp/Recursive.java
 Text => empty
 Language => Java
 Symbols => 13 entries
-Occurrences => 13 entries
+Occurrences => 10 entries
 
 Symbols:
 com/javacp/Recursive# => abstract class Recursive[A <: Recursive[A, B] & Serializable, B <: Inner[A, B]] extends Object { +4 decls }
@@ -662,9 +642,6 @@ com/javacp/Recursive#foo(). => method foo[Anon](): ArrayList[Anon]
 com/javacp/Recursive#foo().[Anon] => typeparam Anon
 
 Occurrences:
- <= com/javacp/Recursive#Inner#`<init>`().
- <= com/javacp/Recursive#Inner2#`<init>`().
- <= com/javacp/Recursive#`<init>`().
 [5:22..5:31) <= com/javacp/Recursive#
 [6:8..6:9) <= com/javacp/Recursive#[A]
 [7:8..7:9) <= com/javacp/Recursive#[B]
@@ -685,7 +662,7 @@ Uri => semanticdb/integration/src/main/java/com/javacp/Test.java
 Text => empty
 Language => Java
 Symbols => 76 entries
-Occurrences => 76 entries
+Occurrences => 73 entries
 
 Symbols:
 com/javacp/Test# => final class Test[A <: CharSequence & Serializable, B] extends ArrayList[A] with Comparable[B] with Serializable { +39 decls }
@@ -944,9 +921,6 @@ com/javacp/Z# => abstract interface Z extends Object
   Object => java/lang/Object#
 
 Occurrences:
- <= com/javacp/Test#InnerShadowTypeParam#`<init>`().
- <= com/javacp/Test#StaticClass#`<init>`().
- <= com/javacp/Test#`<init>`().
 [9:19..9:23) <= com/javacp/Test#
 [9:24..9:25) <= com/javacp/Test#[A]
 [9:63..9:64) <= com/javacp/Test#[B]
