@@ -1,7 +1,5 @@
 package scala.meta.internal.semanticdb.javac.semantics
 
-import com.sun.source.tree.Tree
-import com.sun.tools.javac.util.Position
 import javax.lang.model.`type`.TypeKind
 import javax.lang.model.element._
 
@@ -13,8 +11,6 @@ import scala.collection.JavaConverters._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d, _}
 
 trait Elements { semantics: Semantics =>
-
-  import Elements._
 
   implicit class ElementOps(elem: Element) {
 
@@ -255,18 +251,6 @@ trait Elements { semantics: Semantics =>
 
     def populateInfos(infos: mutable.ListBuffer[s.SymbolInformation],
                       occurrences: mutable.ListBuffer[s.SymbolOccurrence]): s.SymbolInformation = {
-      // WIP: Proof that all symbols are in symTable
-      symbolsTable.get(sym) match {
-        case Some(x)  =>
-          if (x != null) {
-            println(x)
-          }
-        case None if isSynthetic => ()
-        case None =>
-          println(info)
-          ???
-      }
-
       val myInfo = info
       infos += myInfo
       if (range.isDefined) {
