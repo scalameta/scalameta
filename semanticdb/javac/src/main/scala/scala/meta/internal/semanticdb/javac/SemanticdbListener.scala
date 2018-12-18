@@ -13,10 +13,9 @@ class SemanticdbListener(targetRoot: Path, sourceRoot: Path, trees: Trees) exten
   private val toplevelsProcessed =
     mutable.Map[CompilationUnitTree, mutable.Map[TypeElement, Boolean]]()
 
-  private def singleFileGen(cu: CompilationUnitTree, elems: Seq[TypeElement]): Unit = {
-    val sourceFile = cu.getSourceFile
+  private def singleFileGen(sourceFile: JavaFileObject, elems: Seq[TypeElement]): Unit = {
     val sourceRelativePath = sourceRoot.relativize(Paths.get(sourceFile.toUri))
-    val gen = new SemanticdbGen(sourceRelativePath, elems, trees, cu)
+    val gen = new SemanticdbGen(sourceRelativePath, elems, sourceFile)
     gen.populate()
     gen.persist(targetRoot)
   }
@@ -43,7 +42,7 @@ class SemanticdbListener(targetRoot: Path, sourceRoot: Path, trees: Trees) exten
       remainingToplevels(elem) = true
       if (remainingToplevels.values.forall(identity)) {
         toplevelsProcessed.remove(cu)
-        singleFileGen(cu, remainingToplevels.keys.toSeq)
+        singleFileGen(e.getSourceFile, remainingToplevels.keys.toSeq)
       }
     case _ => ()
   }

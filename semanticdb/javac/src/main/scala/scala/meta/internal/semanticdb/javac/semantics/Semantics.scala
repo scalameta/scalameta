@@ -1,13 +1,11 @@
 package scala.meta.internal.semanticdb.javac.semantics
 
-import com.sun.source.tree.CompilationUnitTree
-import com.sun.source.util.Trees
 import com.github.{javaparser => jp}
-
+import javax.tools.JavaFileObject
 import scala.annotation.switch
-import scala.compat.java8.OptionConverters._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.compat.java8.OptionConverters._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d, _}
 
 trait Semantics extends Elements with TypeMirrors {
@@ -131,7 +129,6 @@ trait Semantics extends Elements with TypeMirrors {
         Symbols.Global(owner, d.Type(symbolName))
 
       case elem: jp.ast.stmt.LocalClassDeclarationStmt =>
-        // Symbols.Global(owner, d.Type(elem.getClassDeclaration.symbolName))
         ""
 
       case elem: jp.ast.body.Parameter =>
@@ -167,7 +164,7 @@ trait Semantics extends Elements with TypeMirrors {
             Symbols.Global(owner.sym, d.Method(symbolName, disambig))
 
           case Some(owner: jp.ast.expr.ObjectCreationExpr) =>
-            Symbols.Global(s"new_${owner.getType.toString}", d.Type(symbolName))
+            ""
 
           case x =>
             ???
@@ -188,15 +185,14 @@ trait Semantics extends Elements with TypeMirrors {
     }
   }
 
-  val trees: Trees
-  val compilationUnitTree: CompilationUnitTree
-  val symbolsTable: SymbolsTable = {
-    val content =
-      compilationUnitTree.getSourceFile.getCharContent(true).toString
+  val sourceFile: JavaFileObject
+
+  val symbolTable: SymbolsTable = {
+    val content = sourceFile.getCharContent(true).toString
     val cu = jp.JavaParser.parse(content)
     val stg = new SymbolTableGenerator()
-    val symbolsTable = emptySymbolsTable
-    stg.visit(cu, symbolsTable)
-    symbolsTable
+    val symbolTable = emptySymbolsTable
+    stg.visit(cu, symbolTable)
+    symbolTable
   }
 }

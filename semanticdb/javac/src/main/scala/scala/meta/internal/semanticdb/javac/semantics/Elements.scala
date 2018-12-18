@@ -2,7 +2,6 @@ package scala.meta.internal.semanticdb.javac.semantics
 
 import javax.lang.model.`type`.TypeKind
 import javax.lang.model.element._
-
 import scala.collection.mutable
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
@@ -209,7 +208,7 @@ trait Elements { semantics: Semantics =>
 
     def range: Option[s.Range] = {
       for {
-        rangeOpt <- symbolsTable.get(sym)
+        rangeOpt <- symbolTable.get(sym)
         range <- rangeOpt
       } yield {
         s.Range(
@@ -284,13 +283,5 @@ trait Elements { semantics: Semantics =>
   implicit class TypeElementOps(elem: TypeElement) {
     def typeParamElements: Seq[TypeParameterElement] = elem.getTypeParameters.asScala
   }
-
-}
-
-object Elements {
-
-  case class SourcePosition(line: Long, column: Long, value: Long)
-
-  case class SourceRange(start: Option[SourcePosition], end: Option[SourcePosition])
 
 }
