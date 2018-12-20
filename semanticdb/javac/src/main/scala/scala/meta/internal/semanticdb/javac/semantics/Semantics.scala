@@ -65,17 +65,21 @@ trait Semantics extends Elements with TypeMirrors {
     override def visit(ed: jp.ast.body.EnumDeclaration, arg: SymbolsTable): Unit = {
       super.visit(ed, arg)
 
-      for (meth <- List("values", "valueOf")) {
-        if (ed.getMethodsByName(meth).isEmpty) {
-          val s = Symbols.Global(ed.sym, d.Method(meth, "()"))
-          arg += s -> None
-        }
+      // add synthetic `values` method
+      val valuesMethodName = "values"
+      if (ed.getMethodsByName(valuesMethodName).isEmpty) {
+        val methodSymbol = Symbols.Global(ed.sym, d.Method(valuesMethodName, "()"))
+        arg += methodSymbol -> None
       }
 
-      {
-        val s1 = Symbols.Global(ed.sym, d.Method("valueOf", "()"))
-        val s2 = Symbols.Global(s1, d.Parameter("name"))
-        arg += s2 -> None
+      // add synthetic `valueOf(string)` method
+      val valueOfMethodName = "valueOf"
+      if (ed.getMethodsByName(valueOfMethodName).isEmpty) {
+        val methodSymbol = Symbols.Global(ed.sym, d.Method(valueOfMethodName, "()"))
+        arg += methodSymbol -> None
+
+        val parameterSymbol = Symbols.Global(methodSymbol, d.Parameter("name"))
+        arg += parameterSymbol -> None
       }
 
       val range = ed.getName.getRange
