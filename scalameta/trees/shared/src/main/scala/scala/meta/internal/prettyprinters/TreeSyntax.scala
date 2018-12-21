@@ -285,8 +285,17 @@ object TreeSyntax {
             case (Lit.Unit()) :: Nil =>
               s("(())")
             case (arg: Term) :: Nil =>
-              s(p(InfixExpr(t.op.value), arg, right = true))
-            case args => s(args)
+              def hasPlaceHolderArgument(term: Term.Apply) = term.args.exists({
+                case _: Term.Placeholder => true
+                case _ => false
+              })
+              arg match {
+                case apply: Term.Apply if hasPlaceHolderArgument(apply) =>
+                  s("(", p(InfixExpr(t.op.value), arg, right = true), ")")
+                case _ =>
+                  s(p(InfixExpr(t.op.value), arg, right = true))
+              }
+              case args => s(args)
           }
 
           m(InfixExpr(t.op.value), s(p(InfixExpr(t.op.value), t.lhs, left = true), " ", t.op, t.targs, " ", args))
