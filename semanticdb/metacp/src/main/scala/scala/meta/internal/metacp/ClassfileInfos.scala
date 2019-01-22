@@ -51,7 +51,8 @@ object ClassfileInfos {
         } else {
           val innerClassNode = node.innerClasses.asScala.find(_.name == node.name)
           if (innerClassNode.isEmpty) {
-            Some(Javacp.parse(node, classpathIndex))
+            if (node.name != "module-info") Some(Javacp.parse(node, classpathIndex))
+            else None
           } else {
             None
           }
