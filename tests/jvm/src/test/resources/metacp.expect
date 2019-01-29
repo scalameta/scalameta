@@ -2220,6 +2220,59 @@ example/Synthetic#xs. => val method xs: Stream[Int]
   Stream => scala/collection/immutable/Stream#
   Int => scala/Int#
 
+example/ValPattern.class
+------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/ValPattern.class
+Text => empty
+Language => Scala
+Symbols => 17 entries
+
+Symbols:
+example/ValPattern# => class ValPattern extends AnyRef { +13 decls }
+  AnyRef => scala/AnyRef#
+example/ValPattern#`<init>`(). => primary ctor <init>()
+example/ValPattern#`leftVar_=`(). => var method leftVar_=(x$1: Int): Unit
+  x$1 => example/ValPattern#`leftVar_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/ValPattern#`leftVar_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/ValPattern#`number1Var_=`(). => var method number1Var_=(x$1: Int): Unit
+  x$1 => example/ValPattern#`number1Var_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/ValPattern#`number1Var_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/ValPattern#`rightVar_=`(). => var method rightVar_=(x$1: Int): Unit
+  x$1 => example/ValPattern#`rightVar_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/ValPattern#`rightVar_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/ValPattern#app(). => method app(): Unit
+  Unit => scala/Unit#
+example/ValPattern#left. => val method left: Int
+  Int => scala/Int#
+example/ValPattern#leftVar(). => var method leftVar: Int
+  Int => scala/Int#
+example/ValPattern#number1. => val method number1: Int
+  Int => scala/Int#
+example/ValPattern#number1Var(). => var method number1Var: Int
+  Int => scala/Int#
+example/ValPattern#right. => val method right: Int
+  Int => scala/Int#
+example/ValPattern#rightVar(). => var method rightVar: Int
+  Int => scala/Int#
+example/ValPattern#x$1. => private[this] val method x$1: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+example/ValPattern#x$2. => private[this] val method x$2: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+
 example/Vals.class
 ------------------
 

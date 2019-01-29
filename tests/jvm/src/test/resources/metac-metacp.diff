@@ -286,6 +286,26 @@ example/Synthetic#x$2.
 +  private_this_access {
 
 
+=======================
+example/ValPattern#x$1.
+=======================
+--- metac
++++ metacp
+ access {
+-  public_access {
++  private_this_access {
+
+
+=======================
+example/ValPattern#x$2.
+=======================
+--- metac
++++ metacp
+ access {
+-  public_access {
++  private_this_access {
+
+
 ======================
 types/Test.C#annType1.
 ======================

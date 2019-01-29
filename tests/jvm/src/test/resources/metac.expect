@@ -3588,6 +3588,111 @@ Occurrences:
 [112:50..112:64): NOFOLLOW_LINKS => java/nio/file/LinkOption#NOFOLLOW_LINKS.
 [113:14..113:21): clazzOf <= types/Test.Literal.clazzOf.
 
+semanticdb/integration/src/main/scala/example/ValPattern.scala
+--------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/ValPattern.scala
+Text => non-empty
+Language => Scala
+Symbols => 23 entries
+Occurrences => 22 entries
+Synthetics => 4 entries
+
+Symbols:
+example/ValPattern# => class ValPattern extends AnyRef { +13 decls }
+  AnyRef => scala/AnyRef#
+example/ValPattern#`<init>`(). => primary ctor <init>()
+example/ValPattern#`leftVar_=`(). => var method leftVar_=(x$1: Int): Unit
+  x$1 => example/ValPattern#`leftVar_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/ValPattern#`leftVar_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/ValPattern#`number1Var_=`(). => var method number1Var_=(x$1: Int): Unit
+  x$1 => example/ValPattern#`number1Var_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/ValPattern#`number1Var_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/ValPattern#`rightVar_=`(). => var method rightVar_=(x$1: Int): Unit
+  x$1 => example/ValPattern#`rightVar_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/ValPattern#`rightVar_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/ValPattern#app(). => method app(): Unit
+  Unit => scala/Unit#
+example/ValPattern#left. => val method left: Int
+  Int => scala/Int#
+example/ValPattern#leftVar(). => var method leftVar: Int
+  Int => scala/Int#
+example/ValPattern#number1. => val method number1: Int
+  Int => scala/Int#
+example/ValPattern#number1Var(). => var method number1Var: Int
+  Int => scala/Int#
+example/ValPattern#right. => val method right: Int
+  Int => scala/Int#
+example/ValPattern#rightVar(). => var method rightVar: Int
+  Int => scala/Int#
+example/ValPattern#x$1. => val method x$1: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+example/ValPattern#x$2. => val method x$2: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+local0 => val local left: Int
+  Int => scala/Int#
+local1 => val local right: Int
+  Int => scala/Int#
+local2 => val local number1: Int
+  Int => scala/Int#
+local3 => val local leftVar: Int
+  Int => scala/Int#
+local4 => val local rightVar: Int
+  Int => scala/Int#
+local5 => val local number1Var: Int
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:6..2:16): ValPattern <= example/ValPattern#
+[2:17..2:17):  <= example/ValPattern#`<init>`().
+[4:7..4:11): left <= local0
+[4:13..4:18): right <= local1
+[5:6..5:10): Some => scala/Some.
+[5:11..5:18): number1 <= local2
+[6:4..6:8): Some => scala/Some.
+[8:7..8:14): leftVar <= local3
+[8:16..8:24): rightVar <= local4
+[9:6..9:10): Some => scala/Some.
+[9:11..9:21): number1Var <= local5
+[10:4..10:8): Some => scala/Some.
+[12:6..12:9): app <= example/ValPattern#app().
+[12:13..12:17): Unit => scala/Unit#
+[13:4..13:11): println => scala/Predef.println(+1).
+[15:8..15:15): number1 => example/ValPattern#number1.
+[16:8..16:12): left => example/ValPattern#left.
+[17:8..17:13): right => example/ValPattern#right.
+[18:8..18:18): number1Var => example/ValPattern#number1Var().
+[19:8..19:15): leftVar => example/ValPattern#leftVar().
+[20:8..20:16): rightVar => example/ValPattern#rightVar().
+
+Synthetics:
+[4:6..4:19): (left, right) => *.apply[Int, Int]
+  apply => scala/Tuple2.apply().
+  Int => scala/Int#
+[6:4..6:8): Some => *.apply[Int]
+  apply => scala/Some.apply().
+  Int => scala/Int#
+[8:6..8:25): (leftVar, rightVar) => *.apply[Int, Int]
+  apply => scala/Tuple2.apply().
+  Int => scala/Int#
+[10:4..10:8): Some => *.apply[Int]
+  apply => scala/Some.apply().
+  Int => scala/Int#
+
 semanticdb/integration/src/main/scala/example/Vals.scala
 --------------------------------------------------------
 
