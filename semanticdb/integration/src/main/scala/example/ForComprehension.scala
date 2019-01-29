@@ -17,7 +17,7 @@ class ForComprehension {
     (
       c,
       d
-      ) <- List((a, b))
+    ) <- List((a, b))
     if (
       a,
       b,
