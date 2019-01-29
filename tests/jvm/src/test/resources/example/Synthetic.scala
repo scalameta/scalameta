@@ -7,8 +7,8 @@ class Synthetic/*example.Synthetic#*/ {
 
   // See https://github.com/scalameta/scalameta/issues/977
   val Name/*example.Synthetic#Name.*/ = "name:(.*)".r/*scala.collection.immutable.StringLike#r().*/
-  val x/*local0*/ #::/*scala.package.`#::`.*/ xs/*local1*/ = Stream/*scala.package.Stream.*/(1, 2)
-  val Name/*example.Synthetic#Name.*/(name/*local2*/) = "name:foo"
+  val x/*example.Synthetic#x.*/ #::/*scala.package.`#::`.*/ xs/*example.Synthetic#xs.*/ = Stream/*scala.package.Stream.*/(1, 2)
+  val Name/*example.Synthetic#Name.*/(name/*example.Synthetic#name.*/) = "name:foo"
   1 #::/*scala.collection.immutable.Stream.ConsWrapper#`#::`().*/ 2 #::/*scala.collection.immutable.Stream.ConsWrapper#`#::`().*/ Stream/*scala.package.Stream.*/.empty/*scala.collection.immutable.Stream.empty().*/
 
   val lst/*example.Synthetic#lst.*/ = 1 #::/*scala.collection.immutable.Stream.ConsWrapper#`#::`().*/ 2 #::/*scala.collection.immutable.Stream.ConsWrapper#`#::`().*/ Stream/*scala.package.Stream.*/.empty/*scala.collection.immutable.Stream.empty().*/
