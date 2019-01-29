@@ -1,0 +1,11 @@
+// See https://github.com/scalameta/scalameta/issues/1749
+package example
+
+import scala.math.Ordered/*scala.math.Ordered.*/.orderingToOrdered/*scala.math.Ordered.orderingToOrdered().*/
+
+class Issue1749/*example.Issue1749#*/ {
+  val x1/*example.Issue1749#x1.*/ = 42
+  val x2/*example.Issue1749#x2.*/ = 42
+  (x1/*example.Issue1749#x1.*/, x1/*example.Issue1749#x1.*/)
+    .compare/*scala.math.Ordered#compare().*/((x2/*example.Issue1749#x2.*/, x2/*example.Issue1749#x2.*/))
+}

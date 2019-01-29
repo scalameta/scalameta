@@ -483,6 +483,7 @@ object SaveExpectTest {
     ManifestMetacp.saveExpected()
     MetacpUndefined.saveExpected()
     MetaiExpect.saveExpected()
+    OccurrenceSuite.saveExpected()
   }
 }
 
