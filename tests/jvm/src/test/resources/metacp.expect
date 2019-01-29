@@ -1662,6 +1662,42 @@ example/Example.x. => val method x: ClassTag[Int]
   ClassTag => scala/reflect/ClassTag#
   Int => scala/Int#
 
+example/ImplicitConversion.class
+--------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/ImplicitConversion.class
+Text => empty
+Language => Scala
+Symbols => 11 entries
+
+Symbols:
+example/ImplicitConversion# => class ImplicitConversion extends AnyRef { +9 decls }
+  AnyRef => scala/AnyRef#
+example/ImplicitConversion#`<init>`(). => primary ctor <init>()
+example/ImplicitConversion#a. => val method a: Int
+  Int => scala/Int#
+example/ImplicitConversion#b. => val method b: Long
+  Long => scala/Long#
+example/ImplicitConversion#char. => val method char: Char
+  Char => scala/Char#
+example/ImplicitConversion#message. => val method message: String
+  String => java/lang/String#
+example/ImplicitConversion#number. => val method number: Int
+  Int => scala/Int#
+example/ImplicitConversion#string2Number(). => implicit method string2Number(string: String): Int
+  string => example/ImplicitConversion#string2Number().(string)
+  String => scala/Predef.String#
+  Int => scala/Int#
+example/ImplicitConversion#string2Number().(string) => param string: String
+  String => scala/Predef.String#
+example/ImplicitConversion#tuple. => val method tuple: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+example/ImplicitConversion#x. => val method x: Int
+  Int => scala/Int#
+
 example/InstrumentTyper.class
 -----------------------------
 

@@ -1246,6 +1246,99 @@ Synthetics:
   unapplySeq => scala/collection/generic/SeqFactory#unapplySeq().
   Nothing => scala/Nothing#
 
+semanticdb/integration/src/main/scala/example/ImplicitConversion.scala
+----------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/ImplicitConversion.scala
+Text => non-empty
+Language => Scala
+Symbols => 11 entries
+Occurrences => 35 entries
+Synthetics => 6 entries
+
+Symbols:
+example/ImplicitConversion# => class ImplicitConversion extends AnyRef { +9 decls }
+  AnyRef => scala/AnyRef#
+example/ImplicitConversion#`<init>`(). => primary ctor <init>()
+example/ImplicitConversion#a. => val method a: Int
+  Int => scala/Int#
+example/ImplicitConversion#b. => val method b: Long
+  Long => scala/Long#
+example/ImplicitConversion#char. => val method char: Char
+  Char => scala/Char#
+example/ImplicitConversion#message. => val method message: String
+  String => java/lang/String#
+example/ImplicitConversion#number. => val method number: Int
+  Int => scala/Int#
+example/ImplicitConversion#string2Number(). => implicit method string2Number(string: String): Int
+  string => example/ImplicitConversion#string2Number().(string)
+  String => scala/Predef.String#
+  Int => scala/Int#
+example/ImplicitConversion#string2Number().(string) => param string: String
+  String => scala/Predef.String#
+example/ImplicitConversion#tuple. => val method tuple: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+example/ImplicitConversion#x. => val method x: Int
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:7..2:12): scala => scala/
+[2:13..2:21): language => scala/language.
+[2:22..2:41): implicitConversions => scala/language.implicitConversions.
+[4:6..4:24): ImplicitConversion <= example/ImplicitConversion#
+[4:25..4:25):  <= example/ImplicitConversion#`<init>`().
+[5:15..5:28): string2Number <= example/ImplicitConversion#string2Number().
+[6:6..6:12): string <= example/ImplicitConversion#string2Number().(string)
+[6:14..6:20): String => scala/Predef.String#
+[7:5..7:8): Int => scala/Int#
+[8:6..8:13): message <= example/ImplicitConversion#message.
+[9:6..9:12): number <= example/ImplicitConversion#number.
+[10:6..10:11): tuple <= example/ImplicitConversion#tuple.
+[11:6..11:10): char <= example/ImplicitConversion#char.
+[11:12..11:16): Char => scala/Char#
+[14:2..14:9): message => example/ImplicitConversion#message.
+[15:5..15:16): stripSuffix => scala/collection/immutable/StringLike#stripSuffix().
+[16:2..16:7): tuple => example/ImplicitConversion#tuple.
+[16:8..16:9): + => scala/Predef.any2stringadd#`+`().
+[19:6..19:7): x <= example/ImplicitConversion#x.
+[19:9..19:12): Int => scala/Int#
+[19:15..19:22): message => example/ImplicitConversion#message.
+[22:2..22:3): s => scala/StringContext#s().
+[22:11..22:18): message => example/ImplicitConversion#message.
+[22:20..22:26): number => example/ImplicitConversion#number.
+[23:2..23:3): s => scala/StringContext#s().
+[24:7..24:14): message => example/ImplicitConversion#message.
+[25:7..25:13): number => example/ImplicitConversion#number.
+[25:17..25:28): stripMargin => scala/collection/immutable/StringLike#stripMargin(+1).
+[27:6..27:7): a <= example/ImplicitConversion#a.
+[27:9..27:12): Int => scala/Int#
+[27:15..27:19): char => scala/Char#toInt().
+[28:6..28:7): b <= example/ImplicitConversion#b.
+[28:9..28:13): Long => scala/Long#
+[28:16..28:20): char => scala/Char#toLong().
+
+Synthetics:
+[14:2..14:9): message => augmentString(*)
+  augmentString => scala/Predef.augmentString().
+[16:2..16:7): tuple => any2stringadd[Tuple2[Int, Int]](*)
+  any2stringadd => scala/Predef.any2stringadd().
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+[19:15..19:22): message => string2Number(*)
+  string2Number => example/ImplicitConversion#string2Number().
+[22:2..22:2):  => *.apply
+  apply => scala/StringContext.apply().
+[23:2..23:2):  => *.apply
+  apply => scala/StringContext.apply().
+[23:2..25:16): s"""Hello
+     |$message
+     |$number""" => augmentString(*)
+  augmentString => scala/Predef.augmentString().
+
 semanticdb/integration/src/main/scala/example/Imports.scala
 -----------------------------------------------------------
 
