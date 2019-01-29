@@ -1297,9 +1297,9 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/ForComprehension.scala
 Text => non-empty
 Language => Scala
-Symbols => 5 entries
-Occurrences => 16 entries
-Synthetics => 3 entries
+Symbols => 13 entries
+Occurrences => 50 entries
+Synthetics => 12 entries
 
 Symbols:
 example/ForComprehension# => class ForComprehension extends AnyRef { +1 decls }
@@ -1309,7 +1309,27 @@ local0 => param a: Int
   Int => scala/Int#
 local1 => val local b: Int
   Int => scala/Int#
+local11 => val local c: Int
+  Int => scala/Int#
+local12 => val local d: Int
+  Int => scala/Int#
+local13 => val local x$3: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+local14 => val local e: Tuple4[Int, Int, Int, Int]
+  Tuple4 => scala/Tuple4#
+  Int => scala/Int#
+local15 => param f: Tuple4[Int, Int, Int, Int]
+  Tuple4 => scala/Tuple4#
+  Int => scala/Int#
 local3 => val local c: Int
+  Int => scala/Int#
+local4 => param a: Int
+  Int => scala/Int#
+local5 => param b: Int
+  Int => scala/Int#
+local6 => param check$ifrefutable$1: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
   Int => scala/Int#
 
 Occurrences:
@@ -1329,6 +1349,40 @@ Occurrences:
 [8:11..8:12): a => local0
 [8:14..8:15): b => local1
 [8:17..8:18): c => local3
+[10:4..10:5): a <= local4
+[10:9..10:13): List => scala/collection/immutable/List.
+[11:4..11:5): b <= local5
+[11:9..11:13): List => scala/collection/immutable/List.
+[11:14..11:15): a => local4
+[13:6..13:7): a => local4
+[14:6..14:7): b => local5
+[15:6..15:8): == => java/lang/Object#`==`().
+[17:6..17:7): c <= local11
+[18:6..18:7): d <= local12
+[19:11..19:15): List => scala/collection/immutable/List.
+[19:17..19:18): a => local4
+[19:20..19:21): b => local5
+[21:6..21:7): a => local4
+[22:6..22:7): b => local5
+[23:6..23:7): c => local11
+[24:6..24:7): d => local12
+[25:6..25:8): == => java/lang/Object#`==`().
+[26:4..26:5): e <= local14
+[27:6..27:7): a => local4
+[28:6..28:7): b => local5
+[29:6..29:7): c => local11
+[30:6..30:7): d => local12
+[32:7..32:8): e => local14
+[32:9..32:11): == => java/lang/Object#`==`().
+[33:4..33:5): f <= local15
+[33:9..33:13): List => scala/collection/immutable/List.
+[33:14..33:15): e => local14
+[36:6..36:7): a => local4
+[37:6..37:7): b => local5
+[38:6..38:7): c => local11
+[39:6..39:7): d => local12
+[40:6..40:7): e => local14
+[41:6..41:7): f => local15
 
 Synthetics:
 [3:2..8:19): for {
@@ -1354,6 +1408,145 @@ Synthetics:
   Int => scala/Int#
 [5:9..5:13): List => *.apply[Int]
   apply => scala/collection/immutable/List.apply().
+  Int => scala/Int#
+[9:2..42:5): for {
+    a <- List(1)
+    b <- List(a)
+    if (
+      a,
+      b
+    ) == (1, 2)
+    (
+      c,
+      d
+      ) <- List((a, b))
+    if (
+      a,
+      b,
+      c,
+      d
+    ) == (1, 2, 3, 4)
+    e = (
+      a,
+      b,
+      c,
+      d
+    )
+    if e == (1, 2, 3, 4)
+    f <- List(e)
+  } yield {
+    (
+      a,
+      b,
+      c,
+      d,
+      e,
+      f
+    ) => orig(List(1)).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]], List[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]]({(a) => orig(List(a)).withFilter({(b) => orig((
+      a,
+      b
+    ) == (1, 2))}).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]], List[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]]({(b) => orig(List((a, b))).withFilter({(check$ifrefutable$1) => orig()}).withFilter({(local7) => orig((
+      a,
+      b,
+      c,
+      d
+    ) == (1, 2, 3, 4))}).map[Tuple2[Tuple2[Int, Int], Tuple4[Int, Int, Int, Int]], List[Tuple2[Tuple2[Int, Int], Tuple4[Int, Int, Int, Int]]]]({(local8) => orig((
+      c,
+      d
+      ) <- List((a, b))
+    if (
+      a,
+      b,
+      c,
+      d
+    ) == (1, 2, 3, 4)
+    e = (
+      a,
+      b,
+      c,
+      d
+    ))})(canBuildFrom[Tuple2[Tuple2[Int, Int], Tuple4[Int, Int, Int, Int]]]).withFilter({(local9) => orig(e == (1, 2, 3, 4))}).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]], List[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]]({(local10) => orig(f <- List(e)
+  } yield {
+    (
+      a,
+      b,
+      c,
+      d,
+      e,
+      f
+    ))})(canBuildFrom[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]])})(canBuildFrom[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]])})(canBuildFrom[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]])
+  flatMap => scala/collection/immutable/List#flatMap().
+  Tuple6 => scala/Tuple6#
+  Int => scala/Int#
+  Tuple4 => scala/Tuple4#
+  List => scala/collection/immutable/List#
+  a => local4
+  withFilter => scala/collection/TraversableLike#withFilter().
+  b => local5
+  flatMap => scala/collection/generic/FilterMonadic#flatMap().
+  check$ifrefutable$1 => local6
+  withFilter => scala/collection/generic/FilterMonadic#withFilter().
+  local7 => local7
+  map => scala/collection/generic/FilterMonadic#map().
+  Tuple2 => scala/Tuple2#
+  local8 => local8
+  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+  local9 => local9
+  local10 => local10
+[10:9..10:13): List => *.apply[Int]
+  apply => scala/collection/immutable/List.apply().
+  Int => scala/Int#
+[11:9..11:13): List => *.apply[Int]
+  apply => scala/collection/immutable/List.apply().
+  Int => scala/Int#
+[12:7..15:15): (
+      a,
+      b
+    ) == (1, 2) => *.apply[Int, Int]
+  apply => scala/Tuple2.apply().
+  Int => scala/Int#
+[19:11..19:15): List => *.apply[Tuple2[Int, Int]]
+  apply => scala/collection/immutable/List.apply().
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+[20:7..25:21): (
+      a,
+      b,
+      c,
+      d
+    ) == (1, 2, 3, 4) => *.apply[Int, Int, Int, Int]
+  apply => scala/Tuple4.apply().
+  Int => scala/Int#
+[32:7..32:24): e == (1, 2, 3, 4) => *.apply[Int, Int, Int, Int]
+  apply => scala/Tuple4.apply().
+  Int => scala/Int#
+[33:4..42:5): f <- List(e)
+  } yield {
+    (
+      a,
+      b,
+      c,
+      d,
+      e,
+      f
+    ) => orig(List(e)).map[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]], List[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]]({(f) => orig((
+      a,
+      b,
+      c,
+      d,
+      e,
+      f
+    ))})(canBuildFrom[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]])
+  map => scala/collection/immutable/List#map().
+  Tuple6 => scala/Tuple6#
+  Int => scala/Int#
+  Tuple4 => scala/Tuple4#
+  List => scala/collection/immutable/List#
+  f => local15
+  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+[33:9..33:13): List => *.apply[Tuple4[Int, Int, Int, Int]]
+  apply => scala/collection/immutable/List.apply().
+  Tuple4 => scala/Tuple4#
   Int => scala/Int#
 
 semanticdb/integration/src/main/scala/example/ImplicitConversion.scala
