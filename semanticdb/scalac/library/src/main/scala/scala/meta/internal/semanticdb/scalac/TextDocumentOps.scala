@@ -568,7 +568,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 traverse(original)
               case SelectOf(original) =>
                 traverse(original)
-              case g.Function(params, body) if params.exists(_.name.decoded.startsWith("x$")) =>
+              case g.Function(param :: Nil, body) if param.symbol.isSynthetic =>
                 traverse(body)
               case gtree: g.TypeTree if gtree.original != null =>
                 traverse(gtree.original)

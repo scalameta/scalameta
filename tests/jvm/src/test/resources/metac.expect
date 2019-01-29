@@ -951,14 +951,14 @@ Uri => semanticdb/integration/src/main/scala/example/EtaExpansion.scala
 Text => non-empty
 Language => Scala
 Symbols => 3 entries
-Occurrences => 6 entries
-Synthetics => 3 entries
+Occurrences => 9 entries
+Synthetics => 5 entries
 
 Symbols:
 example/EtaExpansion# => class EtaExpansion extends AnyRef { +1 decls }
   AnyRef => scala/AnyRef#
 example/EtaExpansion#`<init>`(). => primary ctor <init>()
-local1 => param x: Int
+local0 => param x: Int
   Int => scala/Int#
 
 Occurrences:
@@ -967,7 +967,10 @@ Occurrences:
 [2:19..2:19):  <= example/EtaExpansion#`<init>`().
 [3:2..3:6): Some => scala/Some.
 [3:10..3:13): map => scala/Option#map().
-[3:14..3:22): identity => local0
+[3:14..3:22): identity => scala/Predef.identity().
+[4:2..4:6): List => scala/collection/immutable/List.
+[4:10..4:18): foldLeft => scala/collection/LinearSeqOptimized#foldLeft().
+[4:25..4:26): + => java/lang/String#`+`().
 
 Synthetics:
 [3:2..3:6): Some => *.apply[Int]
@@ -977,6 +980,11 @@ Synthetics:
   Int => scala/Int#
 [3:14..3:22): identity => *[Int]
   Int => scala/Int#
+[4:2..4:6): List => *.apply[Int]
+  apply => scala/collection/immutable/List.apply().
+  Int => scala/Int#
+[4:2..4:18): List(1).foldLeft => *[String]
+  String => java/lang/String#
 
 semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
