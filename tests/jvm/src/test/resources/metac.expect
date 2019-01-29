@@ -2340,7 +2340,7 @@ Uri => semanticdb/integration/src/main/scala/example/NamedArguments.scala
 Text => non-empty
 Language => Scala
 Symbols => 27 entries
-Occurrences => 11 entries
+Occurrences => 12 entries
 Synthetics => 1 entries
 
 Symbols:
@@ -2428,6 +2428,7 @@ Occurrences:
 [3:18..3:22): name <= example/NamedArguments#User#name.
 [3:24..3:30): String => scala/Predef.String#
 [4:2..4:6): User => example/NamedArguments#User.
+[4:7..4:11): name => example/NamedArguments#User.apply().(name)
 [5:2..5:6): User => example/NamedArguments#User.
 [5:7..5:12): apply => example/NamedArguments#User.apply().
 [5:13..5:17): name => example/NamedArguments#User.apply().(name)

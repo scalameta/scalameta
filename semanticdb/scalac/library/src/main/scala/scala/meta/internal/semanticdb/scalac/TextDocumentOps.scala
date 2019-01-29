@@ -220,55 +220,68 @@ trait TextDocumentOps { self: SemanticdbOps =>
               }
             }
           }
-          private def tryFindMtree(gtree: g.Tree): Unit = {
-            def success(mtree: m.Name, gsym0: g.Symbol): Unit = {
-              // We cannot be guaranteed that all symbols have a position, see
-              // https://github.com/scalameta/scalameta/issues/665
-              // Instead of crashing with "unsupported file", we ignore these cases.
-              if (gsym0 == null) return
-              if (gsym0.isUselessOccurrence) return
-              if (mtree.pos == m.Position.None) return
-              if (occurrences.contains(mtree.pos)) return
+          private def success(mtree: m.Name, gsym0: g.Symbol): Unit = {
+            // We cannot be guaranteed that all symbols have a position, see
+            // https://github.com/scalameta/scalameta/issues/665
+            // Instead of crashing with "unsupported file", we ignore these cases.
+            if (gsym0 == null) return
+            if (gsym0.isUselessOccurrence) return
+            if (mtree.pos == m.Position.None) return
+            if (occurrences.contains(mtree.pos)) return
 
-              val gsym = {
-                def isClassRefInCtorCall = gsym0.isConstructor && mtree.isNot[m.Name.Anonymous]
-                if (gsym0 != null && isClassRefInCtorCall) gsym0.owner
-                else gsym0
-              }
-              val symbol = gsym.toSemantic
-              if (symbol == Symbols.None) return
+            val gsym = {
+              def isClassRefInCtorCall = gsym0.isConstructor && mtree.isNot[m.Name.Anonymous]
+              if (gsym0 != null && isClassRefInCtorCall) gsym0.owner
+              else gsym0
+            }
+            val symbol = gsym.toSemantic
+            if (symbol == Symbols.None) return
 
-              todo -= mtree
+            todo -= mtree
 
-              if (mtree.isDefinition) {
-                binders += mtree.pos
-                if (mvalpatstart.contains(mtree.pos.start)) {
-                  if ( gsym.name.endsWith(mtree.value) ) {
-                    mpatoccurrences(mtree.pos) = symbol
-                  }
-                } else {
-                  occurrences(mtree.pos) = symbol
+            if (mtree.isDefinition) {
+              binders += mtree.pos
+              if (mvalpatstart.contains(mtree.pos.start)) {
+                if ( gsym.name.endsWith(mtree.value) ) {
+                  mpatoccurrences(mtree.pos) = symbol
                 }
               } else {
-                val selectionFromStructuralType = gsym.owner.isRefinementClass
-                if (!selectionFromStructuralType) occurrences(mtree.pos) = symbol
+                occurrences(mtree.pos) = symbol
               }
-
-              def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
-                if (map.contains(mtree)) {
-                  val gsym = gsym0.getterIn(gsym0.owner).orElse(gsym0)
-                  if (!gsym.hasAccessBoundary) return
-                  val within1 = gsym.privateWithin
-                  val within2 = within1.owner.info.member({
-                    if (within1.name.isTermName) within1.name.toTypeName
-                    else within1.name.toTermName
-                  })
-                  success(map(mtree), wrapAlternatives("<within " + symbol + ">", within1, within2))
-                }
-              }
-              tryWithin(mwithins, gsym)
-              tryWithin(mwithinctors, gsym.primaryConstructor)
+            } else {
+              val selectionFromStructuralType = gsym.owner.isRefinementClass
+              if (!selectionFromStructuralType) occurrences(mtree.pos) = symbol
             }
+
+            def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
+              if (map.contains(mtree)) {
+                val gsym = gsym0.getterIn(gsym0.owner).orElse(gsym0)
+                if (!gsym.hasAccessBoundary) return
+                val within1 = gsym.privateWithin
+                val within2 = within1.owner.info.member({
+                  if (within1.name.isTermName) within1.name.toTypeName
+                  else within1.name.toTermName
+                })
+                success(map(mtree), wrapAlternatives("<within " + symbol + ">", within1, within2))
+              }
+            }
+            tryWithin(mwithins, gsym)
+            tryWithin(mwithinctors, gsym.primaryConstructor)
+          }
+          private def tryNamedArg(gtree: g.Tree, gstart: Int, gpoint: Int): Unit = {
+            if (margnames.contains(gstart) || margnames.contains(gpoint)) {
+              for {
+                margnames <- margnames.get(gstart) ++ margnames.get(gpoint)
+                margname <- margnames
+                if gtree.symbol != null && gtree.symbol.isMethod
+                gparams <- gtree.symbol.paramss
+                gparam <- gparams.find(_.name.decoded == margname.value)
+              } {
+                success(margname, gparam)
+              }
+            }
+          }
+          private def tryFindMtree(gtree: g.Tree): Unit = {
             def tryMstart(start: Int): Boolean = {
               if (!mstarts.contains(start)) return false
               success(mstarts(start), gtree.symbol)
@@ -301,14 +314,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case _ =>
             }
 
-            if (margnames.contains(gstart) || margnames.contains(gpoint)) {
-              (margnames.get(gstart) ++ margnames.get(gpoint)).flatten.foreach(margname => {
-                if (gtree.symbol != null && gtree.symbol.isMethod) {
-                  val gsym = gtree.symbol.paramss.flatten.find(_.name.decoded == margname.value)
-                  gsym.foreach(success(margname, _))
-                }
-              })
-            }
+            tryNamedArg(gtree, gstart, gpoint)
 
             if (mctordefs.contains(gstart)) {
               val mname = mctordefs(gstart)
@@ -622,6 +628,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 }
               case _: g.Apply | _: g.TypeApply =>
                 tryFindSynthetic(gtree)
+                tryNamedArg(gtree, gtree.pos.start, gtree.pos.point)
               case select: g.Select if isSyntheticName(select) =>
                 tryFindMtree(select.qualifier)
                 tryFindSynthetic(select)
