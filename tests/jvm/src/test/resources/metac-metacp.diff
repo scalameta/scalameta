@@ -276,6 +276,18 @@ example/Methods#m19$default$3().
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
+=============================================
+example/NamedArguments#User#copy$default$1().
+=============================================
+--- metac
++++ metacp
+         annotations {
+           tpe {
+-            type_ref {
+-              prefix {
+-              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
 ======================
 example/Synthetic#x$2.
 ======================

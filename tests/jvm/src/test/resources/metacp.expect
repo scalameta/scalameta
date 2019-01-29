@@ -2109,6 +2109,89 @@ example/MethodUsages#m. => val method m: Methods[Int]
   Methods => example/Methods#
   Int => scala/Int#
 
+example/NamedArguments.class
+----------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/NamedArguments.class
+Text => empty
+Language => Scala
+Symbols => 26 entries
+
+Symbols:
+example/NamedArguments# => class NamedArguments extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/NamedArguments#User# => case class User extends AnyRef with Product with Serializable { +12 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/Serializable#
+example/NamedArguments#User#`<init>`(). => primary ctor <init>(val name: String)
+  name => example/NamedArguments#User#`<init>`().(name)
+  String => scala/Predef.String#
+example/NamedArguments#User#`<init>`().(name) => val param name: String
+  String => scala/Predef.String#
+example/NamedArguments#User#canEqual(). => method canEqual(x$1: Any): Boolean
+  x$1 => example/NamedArguments#User#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/NamedArguments#User#canEqual().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/NamedArguments#User#copy$default$1(). => method copy$default$1: String @<?>
+  String => scala/Predef.String#
+example/NamedArguments#User#copy(). => method copy(name: String): User
+  name => example/NamedArguments#User#copy().(name)
+  String => scala/Predef.String#
+  User => example/NamedArguments#User#
+example/NamedArguments#User#copy().(name) => default param name: String
+  String => scala/Predef.String#
+example/NamedArguments#User#equals(). => method equals(x$1: Any): Boolean
+  x$1 => example/NamedArguments#User#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/NamedArguments#User#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/NamedArguments#User#hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+example/NamedArguments#User#name. => val method name: String
+  String => scala/Predef.String#
+example/NamedArguments#User#productArity(). => method productArity: Int
+  Int => scala/Int#
+example/NamedArguments#User#productElement(). => method productElement(x$1: Int): Any
+  x$1 => example/NamedArguments#User#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+example/NamedArguments#User#productElement().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/NamedArguments#User#productIterator(). => method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+example/NamedArguments#User#productPrefix(). => method productPrefix: String
+  String => java/lang/String#
+example/NamedArguments#User#toString(). => method toString(): String
+  String => java/lang/String#
+example/NamedArguments#User. => final object User extends AbstractFunction1[String, User] with Serializable { +3 decls }
+  AbstractFunction1 => scala/runtime/AbstractFunction1#
+  String => scala/Predef.String#
+  User => example/NamedArguments#User#
+  Serializable => scala/Serializable#
+example/NamedArguments#User.apply(). => method apply(name: String): User
+  name => example/NamedArguments#User.apply().(name)
+  String => scala/Predef.String#
+  User => example/NamedArguments#User#
+example/NamedArguments#User.apply().(name) => param name: String
+  String => scala/Predef.String#
+example/NamedArguments#User.toString(). => final method toString(): String
+  String => java/lang/String#
+example/NamedArguments#User.unapply(). => method unapply(x$0: User): Option[String]
+  x$0 => example/NamedArguments#User.unapply().(x$0)
+  User => example/NamedArguments#User#
+  Option => scala/Option#
+  String => scala/Predef.String#
+example/NamedArguments#User.unapply().(x$0) => param x$0: User
+  User => example/NamedArguments#User#
+example/NamedArguments#`<init>`(). => primary ctor <init>()
+
 example/Synthetic.class
 -----------------------
 

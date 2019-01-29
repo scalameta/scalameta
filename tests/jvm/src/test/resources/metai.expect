@@ -46,6 +46,7 @@ example/MacroAnnotations. => semanticdb/integration/src/main/scala/example/Macro
 example/MetacJava# => semanticdb/integration/src/main/scala/example/MetacJava.scala.semanticdb
 example/MethodUsages# => semanticdb/integration/src/main/scala/example/MethodUsages.scala.semanticdb
 example/Methods# => semanticdb/integration/src/main/scala/example/Methods.scala.semanticdb
+example/NamedArguments# => semanticdb/integration/src/main/scala/example/NamedArguments.scala.semanticdb
 example/Synthetic# => semanticdb/integration/src/main/scala/example/Synthetic.scala.semanticdb
 example/ValPattern# => semanticdb/integration/src/main/scala/example/ValPattern.scala.semanticdb
 example/ValUsages. => semanticdb/integration/src/main/scala/example/Vals.scala.semanticdb
