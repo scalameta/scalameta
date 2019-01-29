@@ -1,7 +1,6 @@
 package scala.meta.internal.semanticdb.scalac
 
 import java.util.HashMap
-import scala.collection.mutable
 import scala.{meta => m}
 import scala.meta.internal.inputs._
 import scala.meta.internal.scalacp._
@@ -10,7 +9,7 @@ import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb.Scala.{Names => n}
 import scala.reflect.internal.{Flags => gf}
-import scala.reflect.internal.util.{NoSourceFile => GNoSourceFile, SourceFile => GSourceFile}
+import scala.reflect.internal.util.{SourceFile => GSourceFile, NoSourceFile => GNoSourceFile}
 import scala.util.control.NonFatal
 
 trait SymbolOps { self: SemanticdbOps =>
@@ -314,7 +313,7 @@ trait SymbolOps { self: SemanticdbOps =>
     val minput = loop(sym).toInput
     if (minput == m.Input.None) Symbols.None
     else {
-      val hasPosition =sym.pos.isDefined
+      val hasPosition = sym.pos.isDefined
       val conflict =
         if (hasPosition) pointsCache.get(sym.pos.point)
         else null

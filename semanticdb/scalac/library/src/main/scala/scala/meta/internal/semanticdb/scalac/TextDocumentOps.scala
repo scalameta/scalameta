@@ -242,7 +242,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
             if (mtree.isDefinition) {
               binders += mtree.pos
               if (mvalpatstart.contains(mtree.pos.start)) {
-                if ( gsym.name.endsWith(mtree.value) ) {
+                if (gsym.name.endsWith(mtree.value)) {
                   mpatoccurrences(mtree.pos) = symbol
                 }
               } else {
@@ -583,8 +583,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
           }
 
           override def traverse(gtree: g.Tree): Unit = {
-            if (isVisited(gtree)) return
-            else isVisited += gtree
+            if (isVisited(gtree)) return else isVisited += gtree
             gtree.attachments.all.foreach {
               case att: g.analyzer.MacroExpansionAttachment =>
                 traverse(att.expandee)
