@@ -1677,6 +1677,21 @@ example/Example.x. => val method x: ClassTag[Int]
   ClassTag => scala/reflect/ClassTag#
   Int => scala/Int#
 
+example/ForComprehension.class
+------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/ForComprehension.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+example/ForComprehension# => class ForComprehension extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/ForComprehension#`<init>`(). => primary ctor <init>()
+
 example/ImplicitConversion.class
 --------------------------------
 

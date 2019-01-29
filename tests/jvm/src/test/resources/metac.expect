@@ -1290,6 +1290,80 @@ Synthetics:
   unapplySeq => scala/collection/generic/SeqFactory#unapplySeq().
   Nothing => scala/Nothing#
 
+semanticdb/integration/src/main/scala/example/ForComprehension.scala
+--------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/ForComprehension.scala
+Text => non-empty
+Language => Scala
+Symbols => 8 entries
+Occurrences => 16 entries
+Synthetics => 3 entries
+
+Symbols:
+example/ForComprehension# => class ForComprehension extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/ForComprehension#`<init>`(). => primary ctor <init>()
+local0 => param a: Int
+  Int => scala/Int#
+local1 => param b: Int
+  Int => scala/Int#
+local2 => param b: Int
+  Int => scala/Int#
+local4 => val local c: Int
+  Int => scala/Int#
+local5 => val local b: Int
+  Int => scala/Int#
+local6 => val local c: Int
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:6..2:22): ForComprehension <= example/ForComprehension#
+[2:23..2:23):  <= example/ForComprehension#`<init>`().
+[4:4..4:5): a <= local0
+[4:9..4:13): List => scala/collection/immutable/List.
+[5:4..5:5): b <= local1
+[5:9..5:13): List => scala/collection/immutable/List.
+[6:7..6:8): b => local1
+[6:9..6:10): > => scala/Int#`>`(+3).
+[7:4..7:5): c <= local4
+[7:8..7:9): a => local0
+[7:10..7:11): + => scala/Int#`+`(+4).
+[7:12..7:13): b => local2
+[8:11..8:12): a => local0
+[8:14..8:15): b => local5
+[8:17..8:18): c => local6
+
+Synthetics:
+[3:2..8:19): for {
+    a <- List(1)
+    b <- List(1)
+    if b > 1
+    c = a + b
+  } yield (a, b, c) => orig(List(1)).flatMap[Tuple3[Int, Int, Int], List[Tuple3[Int, Int, Int]]]({(a) => orig(List(1)).withFilter({(b) => orig(b > 1)}).map[Tuple2[Int, Int], List[Tuple2[Int, Int]]]({(b) => orig(c = a + b)})(canBuildFrom[Tuple2[Int, Int]]).map[Tuple3[Int, Int, Int], List[Tuple3[Int, Int, Int]]]({(local3) => orig((a, b, c))})(canBuildFrom[Tuple3[Int, Int, Int]])})(canBuildFrom[Tuple3[Int, Int, Int]])
+  flatMap => scala/collection/immutable/List#flatMap().
+  Tuple3 => scala/Tuple3#
+  Int => scala/Int#
+  List => scala/collection/immutable/List#
+  a => local0
+  withFilter => scala/collection/TraversableLike#withFilter().
+  b => local1
+  map => scala/collection/generic/FilterMonadic#map().
+  Tuple2 => scala/Tuple2#
+  b => local2
+  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+  map => scala/collection/immutable/List#map().
+  local3 => local3
+[4:9..4:13): List => *.apply[Int]
+  apply => scala/collection/immutable/List.apply().
+  Int => scala/Int#
+[5:9..5:13): List => *.apply[Int]
+  apply => scala/collection/immutable/List.apply().
+  Int => scala/Int#
+
 semanticdb/integration/src/main/scala/example/ImplicitConversion.scala
 ----------------------------------------------------------------------
 
