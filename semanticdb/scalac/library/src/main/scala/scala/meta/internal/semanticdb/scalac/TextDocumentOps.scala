@@ -625,6 +625,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 gtree.symbol.annotations.foreach(ann => traverse(ann.original))
                 tryFindMtree(gtree)
                 if (!gtree.symbol.isSynthetic && msinglevalpats.contains(gtree.pos.start)) {
+                  // Map Defn.Val position of val pattern with single binder to the position
+                  // of the single binder. For example, map `val Foo(x) = ..` to the position of `x`.
                   val mpos = msinglevalpats(gtree.pos.start)
                   occurrences(mpos) = gtree.symbol.toSemantic
                 }
