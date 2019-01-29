@@ -942,6 +942,42 @@ Occurrences:
 [0:8..0:15): example <= example/
 [2:7..2:18): EmptyObject <= example/EmptyObject.
 
+semanticdb/integration/src/main/scala/example/EtaExpansion.scala
+----------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/EtaExpansion.scala
+Text => non-empty
+Language => Scala
+Symbols => 3 entries
+Occurrences => 6 entries
+Synthetics => 3 entries
+
+Symbols:
+example/EtaExpansion# => class EtaExpansion extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/EtaExpansion#`<init>`(). => primary ctor <init>()
+local1 => param x: Int
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:6..2:18): EtaExpansion <= example/EtaExpansion#
+[2:19..2:19):  <= example/EtaExpansion#`<init>`().
+[3:2..3:6): Some => scala/Some.
+[3:10..3:13): map => scala/Option#map().
+[3:14..3:22): identity => local0
+
+Synthetics:
+[3:2..3:6): Some => *.apply[Int]
+  apply => scala/Some.apply().
+  Int => scala/Int#
+[3:2..3:13): Some(1).map => *[Int]
+  Int => scala/Int#
+[3:14..3:22): identity => *[Int]
+  Int => scala/Int#
+
 semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
 

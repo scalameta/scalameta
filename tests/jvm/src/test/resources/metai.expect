@@ -35,6 +35,7 @@ example/Access# => semanticdb/integration/src/main/scala/example/Access.scala.se
 example/Anonymous# => semanticdb/integration/src/main/scala/example/Anonymous.scala.semanticdb
 example/B# => semanticdb/integration/src/main/scala/example/Overrides.scala.semanticdb
 example/EmptyObject. => semanticdb/integration/src/main/scala/example/EmptyObject.scala.semanticdb
+example/EtaExpansion# => semanticdb/integration/src/main/scala/example/EtaExpansion.scala.semanticdb
 example/Example. => semanticdb/integration/src/main/scala/example/Example.scala.semanticdb
 example/ImplicitConversion# => semanticdb/integration/src/main/scala/example/ImplicitConversion.scala.semanticdb
 example/InstrumentTyper# => semanticdb/integration/src/main/scala/example/InstrumentTyper.scala.semanticdb
