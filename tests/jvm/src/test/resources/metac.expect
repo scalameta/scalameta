@@ -1359,9 +1359,9 @@ Occurrences:
 [15:6..15:8): == => java/lang/Object#`==`().
 [17:6..17:7): c <= local11
 [18:6..18:7): d <= local12
-[19:11..19:15): List => scala/collection/immutable/List.
-[19:17..19:18): a => local4
-[19:20..19:21): b => local5
+[19:9..19:13): List => scala/collection/immutable/List.
+[19:15..19:16): a => local4
+[19:18..19:19): b => local5
 [21:6..21:7): a => local4
 [22:6..22:7): b => local5
 [23:6..23:7): c => local11
@@ -1419,7 +1419,7 @@ Synthetics:
     (
       c,
       d
-      ) <- List((a, b))
+    ) <- List((a, b))
     if (
       a,
       b,
@@ -1453,7 +1453,7 @@ Synthetics:
     ) == (1, 2, 3, 4))}).map[Tuple2[Tuple2[Int, Int], Tuple4[Int, Int, Int, Int]], List[Tuple2[Tuple2[Int, Int], Tuple4[Int, Int, Int, Int]]]]({(local8) => orig((
       c,
       d
-      ) <- List((a, b))
+    ) <- List((a, b))
     if (
       a,
       b,
@@ -1505,7 +1505,7 @@ Synthetics:
     ) == (1, 2) => *.apply[Int, Int]
   apply => scala/Tuple2.apply().
   Int => scala/Int#
-[19:11..19:15): List => *.apply[Tuple2[Int, Int]]
+[19:9..19:13): List => *.apply[Tuple2[Int, Int]]
   apply => scala/collection/immutable/List.apply().
   Tuple2 => scala/Tuple2#
   Int => scala/Int#

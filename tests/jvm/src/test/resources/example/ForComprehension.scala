@@ -17,7 +17,7 @@ class ForComprehension/*example.ForComprehension#*/ {
     (
       c/*local11*/,
       d/*local12*/
-      ) <- List/*scala.collection.immutable.List.*/((a/*local4*/, b/*local5*/))
+    ) <- List/*scala.collection.immutable.List.*/((a/*local4*/, b/*local5*/))
     if (
       a/*local4*/,
       b/*local5*/,
