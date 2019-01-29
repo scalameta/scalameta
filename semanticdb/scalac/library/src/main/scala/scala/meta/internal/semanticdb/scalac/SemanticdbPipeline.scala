@@ -80,6 +80,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
           idCache.clear()
           symbolCache.clear()
           gSourceFileInputCache.clear()
+          pointsCache.clear()
         } catch handleCrash(None)
       }
     }

@@ -16,7 +16,7 @@ class Synthetic/*example.Synthetic#*/ {
 
   for (x/*local7*/ <- 1 to/*scala.runtime.RichInt#to().*/ 10; y/*local8*/ <- 0 until/*scala.runtime.RichInt#until().*/ 10) println/*scala.Predef.println(+1).*/(x/*local7*/ ->/*scala.Predef.ArrowAssoc#`->`().*/ x/*local7*/)
   for (i/*local9*/ <- 1 to/*scala.runtime.RichInt#to().*/ 10; j/*local10*/ <- 0 until/*scala.runtime.RichInt#until().*/ 10) yield (i/*local9*/, j/*local10*/)
-  for (i/*local11*/ <- 1 to/*scala.runtime.RichInt#to().*/ 10; j/*local12*/ <- 0 until/*scala.runtime.RichInt#until().*/ 10 if i/*local11*/ %/*scala.Int#`%`(+3).*/ 2 ==/*scala.Int#`==`(+3).*/ 0) yield (i/*local11*/, j/*local13*/)
+  for (i/*local11*/ <- 1 to/*scala.runtime.RichInt#to().*/ 10; j/*local12*/ <- 0 until/*scala.runtime.RichInt#until().*/ 10 if i/*local11*/ %/*scala.Int#`%`(+3).*/ 2 ==/*scala.Int#`==`(+3).*/ 0) yield (i/*local11*/, j/*local12*/)
 
   object s/*example.Synthetic#s.*/ {
     def apply/*example.Synthetic#s.apply().*/() = 2
@@ -35,13 +35,13 @@ class Synthetic/*example.Synthetic#*/ {
 
   import scala.concurrent.ExecutionContext/*scala.concurrent.ExecutionContext.*/.Implicits/*scala.concurrent.ExecutionContext.Implicits.*/.global/*scala.concurrent.ExecutionContext.Implicits.global.*/
   for {
-    a/*local14*/ <- scala.concurrent.Future/*scala.concurrent.Future.*/.successful/*scala.concurrent.Future.successful().*/(1)
-    b/*local15*/ <- scala.concurrent.Future/*scala.concurrent.Future.*/.successful/*scala.concurrent.Future.successful().*/(2)
-  } println/*scala.Predef.println(+1).*/(a/*local14*/)
+    a/*local13*/ <- scala.concurrent.Future/*scala.concurrent.Future.*/.successful/*scala.concurrent.Future.successful().*/(1)
+    b/*local14*/ <- scala.concurrent.Future/*scala.concurrent.Future.*/.successful/*scala.concurrent.Future.successful().*/(2)
+  } println/*scala.Predef.println(+1).*/(a/*local13*/)
   for {
-    a/*local16*/ <- scala.concurrent.Future/*scala.concurrent.Future.*/.successful/*scala.concurrent.Future.successful().*/(1)
-    b/*local17*/ <- scala.concurrent.Future/*scala.concurrent.Future.*/.successful/*scala.concurrent.Future.successful().*/(2)
-    if a/*local16*/ </*scala.Int#`<`(+3).*/ b/*local17*/
-  } yield a/*local16*/
+    a/*local15*/ <- scala.concurrent.Future/*scala.concurrent.Future.*/.successful/*scala.concurrent.Future.successful().*/(1)
+    b/*local16*/ <- scala.concurrent.Future/*scala.concurrent.Future.*/.successful/*scala.concurrent.Future.successful().*/(2)
+    if a/*local15*/ </*scala.Int#`<`(+3).*/ b/*local16*/
+  } yield a/*local15*/
 
 }

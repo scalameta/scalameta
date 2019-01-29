@@ -46,6 +46,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
     def toTextDocument: s.TextDocument = {
+      pointsCache.clear()
       val binders = mutable.Set[m.Position]()
       val occurrences = mutable.Map[m.Position, String]()
       val symbols = mutable.Map[String, s.SymbolInformation]()
@@ -590,8 +591,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
         }
         traverser.traverse(unit.body)
       }
-
-      val input = unit.source.toInput
 
       val finalSymbols = symbols.values.toList
 
