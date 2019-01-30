@@ -18,10 +18,12 @@ import scala.meta.testkit.DiffAssertions
 import scala.meta.tests.BuildInfo
 
 class OccurrenceSuite extends FunSuite with DiffAssertions {
-  OccurrenceSuite.testCases().foreach { t =>
-    test(t.name) {
-      val body = t.body()
-      assertNoDiff(body.obtained, body.expected)
+  ScalaVersion.doIf212("OccurrenceSuite") {
+    OccurrenceSuite.testCases().foreach { t =>
+      test(t.name) {
+        val body = t.body()
+        assertNoDiff(body.obtained, body.expected)
+      }
     }
   }
 }

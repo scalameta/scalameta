@@ -23,55 +23,47 @@ import scala.meta.tests.metacp.Library
 import scala.meta.tests.metacp.MetacpOps
 
 class ExpectSuite extends FunSuite with DiffAssertions {
-  BuildInfo.scalaVersion.split("\\.").take(2).toList match {
-    // both the compiler and stdlib are different between Scala versions.
-    // For the sake of simplicity, we only run the expect test against the
-    // output of 2.12. It's possible to add another expect file for 2.11
-    // later down the road if that turns out to be useful.
-    case "2" :: "12" :: Nil =>
-      test("scalalib.expect") {
-        import ScalalibExpect._
-        assertNoDiff(loadObtained, loadExpected)
-      }
-      test("metacp.expect") {
-        import MetacpExpect._
-        assertNoDiff(loadObtained, loadExpected)
-      }
-      test("metac.expect") {
-        import MetacExpect._
-        assertNoDiff(loadObtained, loadExpected)
-      }
-      test("javac.expect") {
-        import JavacExpect._
-        assertNoDiff(loadObtained, loadExpected)
-      }
-      test("metac-metacp.diff") {
-        import MetacMetacpDiffExpect._
-        assertNoDiff(loadObtained, loadExpected)
-      }
-      test("javac-metacp.diff") {
-        import JavacMetacpDiffExpect._
-        assertNoDiff(loadObtained, loadExpected)
-      }
-      test("manifest.metap") {
-        import ManifestMetap._
-        assertNoDiff(loadObtained, loadExpected)
-      }
-      test("manifest.metacp") {
-        import ManifestMetacp._
-        assertNoDiff(loadObtained, loadExpected)
-      }
-      test("metacp.undefined") {
-        import MetacpUndefined._
-        assertNoDiff(loadObtained, loadExpected)
-      }
-      test("metai.expect") {
-        import MetaiExpect._
-        assertNoDiff(loadObtained, loadExpected)
-      }
-    case _ =>
-      println(s"Skipping ExpectSuite because scalaVersion is ${BuildInfo.scalaVersion}")
-      ()
+  ScalaVersion.doIf212("ExpectSuite") {
+    test("scalalib.expect") {
+      import ScalalibExpect._
+      assertNoDiff(loadObtained, loadExpected)
+    }
+    test("metacp.expect") {
+      import MetacpExpect._
+      assertNoDiff(loadObtained, loadExpected)
+    }
+    test("metac.expect") {
+      import MetacExpect._
+      assertNoDiff(loadObtained, loadExpected)
+    }
+    test("javac.expect") {
+      import JavacExpect._
+      assertNoDiff(loadObtained, loadExpected)
+    }
+    test("metac-metacp.diff") {
+      import MetacMetacpDiffExpect._
+      assertNoDiff(loadObtained, loadExpected)
+    }
+    test("javac-metacp.diff") {
+      import JavacMetacpDiffExpect._
+      assertNoDiff(loadObtained, loadExpected)
+    }
+    test("manifest.metap") {
+      import ManifestMetap._
+      assertNoDiff(loadObtained, loadExpected)
+    }
+    test("manifest.metacp") {
+      import ManifestMetacp._
+      assertNoDiff(loadObtained, loadExpected)
+    }
+    test("metacp.undefined") {
+      import MetacpUndefined._
+      assertNoDiff(loadObtained, loadExpected)
+    }
+    test("metai.expect") {
+      import MetaiExpect._
+      assertNoDiff(loadObtained, loadExpected)
+    }
   }
 }
 
