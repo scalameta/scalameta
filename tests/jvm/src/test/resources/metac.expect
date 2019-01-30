@@ -2376,7 +2376,7 @@ Occurrences:
 [29:23..29:26): ??? => scala/Predef.`???`().
 [30:6..30:9): m16 <= example/Methods#m16().
 [30:10..30:11): x <= example/Methods#m16().(x)
-[30:13..30:16): Int => scala/`<repeated>`#
+[30:13..30:16): Int => scala/Int#
 [30:21..30:24): ??? => scala/Predef.`???`().
 [31:9..31:12): m17 <= example/Methods#m17.
 [31:19..31:20): m <= example/Methods#m17.m().
@@ -3847,10 +3847,10 @@ Occurrences:
 [89:15..89:27): RepeatedType <= types/Test.C#RepeatedType#
 [89:27..89:27):  <= types/Test.C#RepeatedType#`<init>`().
 [89:28..89:29): s <= types/Test.C#RepeatedType#s.
-[89:31..89:37): String => scala/`<repeated>`#
+[89:31..89:37): String => java/lang/String#
 [90:10..90:12): m1 <= types/Test.C#RepeatedType#m1().
 [90:13..90:14): x <= types/Test.C#RepeatedType#m1().(x)
-[90:16..90:19): Int => scala/`<repeated>`#
+[90:16..90:19): Int => scala/Int#
 [90:23..90:26): Int => scala/Int#
 [90:29..90:30): s => types/Test.C#RepeatedType#s.
 [90:31..90:37): length => scala/collection/SeqLike#length().
@@ -4309,9 +4309,9 @@ Occurrences:
 [2:13..2:13):  <= example/Vararg#`<init>`().
 [3:6..3:10): add1 <= example/Vararg#add1().
 [3:11..3:12): a <= example/Vararg#add1().(a)
-[3:14..3:17): Int => scala/`<repeated>`#
+[3:14..3:17): Int => scala/Int#
 [4:6..4:10): add2 <= example/Vararg#add2().
 [4:11..4:12): a <= example/Vararg#add2().(a)
-[4:14..4:17): Seq => scala/`<repeated>`#
+[4:14..4:17): Seq => scala/collection/Seq#
 [4:18..4:21): Int => scala/Int#
 [4:26..4:30): Unit => scala/Unit#

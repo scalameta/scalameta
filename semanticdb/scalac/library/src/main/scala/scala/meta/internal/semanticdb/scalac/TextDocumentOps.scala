@@ -404,6 +404,12 @@ trait TextDocumentOps { self: SemanticdbOps =>
                         import1,
                         import2))
                 }
+              case gtree: g.AppliedTypeTree =>
+                if (gtree.symbol.name == g.typeNames.REPEATED_PARAM_CLASS_NAME &&
+                    mstarts.contains(gstart) &&
+                    gtree.args.nonEmpty) {
+                  success(mstarts(gstart), gtree.args.head.symbol)
+                }
               case _ =>
             }
           }
@@ -637,6 +643,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case select: g.Select if isSyntheticName(select) =>
                 tryFindMtree(select.qualifier)
                 tryFindSynthetic(select)
+              case gtree: g.AppliedTypeTree =>
+                tryFindMtree(gtree)
               case _ =>
                 tryFindMtree(gtree)
             }
