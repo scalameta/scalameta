@@ -1797,6 +1797,23 @@ example/`local-file`# => class local-file extends AnyRef { +1 decls }
   AnyRef => scala/AnyRef#
 example/`local-file`#`<init>`(). => primary ctor <init>()
 
+example/Local.class
+-------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Local.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+example/Local# => class Local extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/Local#`<init>`(). => primary ctor <init>()
+example/Local#a(). => method a(): Int
+  Int => scala/Int#
+
 example/MacroAnnotations.class
 ------------------------------
 
@@ -2464,6 +2481,35 @@ example/ValUsages. => final object ValUsages extends AnyRef { +1 decls }
   AnyRef => scala/AnyRef#
 example/ValUsages.v. => val method v: Vals
   Vals => example/Vals#
+
+example/Vararg.class
+--------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Vararg.class
+Text => empty
+Language => Scala
+Symbols => 6 entries
+
+Symbols:
+example/Vararg# => class Vararg extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/Vararg#`<init>`(). => primary ctor <init>()
+example/Vararg#add1(). => method add1(a: Int*): Unit
+  a => example/Vararg#add1().(a)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/Vararg#add1().(a) => param a: Int*
+  Int => scala/Int#
+example/Vararg#add2(). => method add2(a: Seq[Int]*): Unit
+  a => example/Vararg#add2().(a)
+  Seq => scala/package.Seq#
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/Vararg#add2().(a) => param a: Seq[Int]*
+  Seq => scala/package.Seq#
+  Int => scala/Int#
 
 exclude/Exclude.class
 ---------------------
