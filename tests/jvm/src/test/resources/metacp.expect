@@ -1637,6 +1637,21 @@ Symbols:
 example/EmptyObject. => final object EmptyObject extends AnyRef
   AnyRef => scala/AnyRef#
 
+example/EtaExpansion.class
+--------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/EtaExpansion.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+example/EtaExpansion# => class EtaExpansion extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/EtaExpansion#`<init>`(). => primary ctor <init>()
+
 example/Example.class
 ---------------------
 
@@ -1660,6 +1675,57 @@ example/Example.main().(args) => param args: Array[String]
   String => scala/Predef.String#
 example/Example.x. => val method x: ClassTag[Int]
   ClassTag => scala/reflect/ClassTag#
+  Int => scala/Int#
+
+example/ForComprehension.class
+------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/ForComprehension.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+example/ForComprehension# => class ForComprehension extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/ForComprehension#`<init>`(). => primary ctor <init>()
+
+example/ImplicitConversion.class
+--------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/ImplicitConversion.class
+Text => empty
+Language => Scala
+Symbols => 11 entries
+
+Symbols:
+example/ImplicitConversion# => class ImplicitConversion extends AnyRef { +9 decls }
+  AnyRef => scala/AnyRef#
+example/ImplicitConversion#`<init>`(). => primary ctor <init>()
+example/ImplicitConversion#a. => val method a: Int
+  Int => scala/Int#
+example/ImplicitConversion#b. => val method b: Long
+  Long => scala/Long#
+example/ImplicitConversion#char. => val method char: Char
+  Char => scala/Char#
+example/ImplicitConversion#message. => val method message: String
+  String => java/lang/String#
+example/ImplicitConversion#number. => val method number: Int
+  Int => scala/Int#
+example/ImplicitConversion#string2Number(). => implicit method string2Number(string: String): Int
+  string => example/ImplicitConversion#string2Number().(string)
+  String => scala/Predef.String#
+  Int => scala/Int#
+example/ImplicitConversion#string2Number().(string) => param string: String
+  String => scala/Predef.String#
+example/ImplicitConversion#tuple. => val method tuple: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+example/ImplicitConversion#x. => val method x: Int
   Int => scala/Int#
 
 example/InstrumentTyper.class
@@ -2043,6 +2109,89 @@ example/MethodUsages#m. => val method m: Methods[Int]
   Methods => example/Methods#
   Int => scala/Int#
 
+example/NamedArguments.class
+----------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/NamedArguments.class
+Text => empty
+Language => Scala
+Symbols => 26 entries
+
+Symbols:
+example/NamedArguments# => class NamedArguments extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/NamedArguments#User# => case class User extends AnyRef with Product with Serializable { +12 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/Serializable#
+example/NamedArguments#User#`<init>`(). => primary ctor <init>(val name: String)
+  name => example/NamedArguments#User#`<init>`().(name)
+  String => scala/Predef.String#
+example/NamedArguments#User#`<init>`().(name) => val param name: String
+  String => scala/Predef.String#
+example/NamedArguments#User#canEqual(). => method canEqual(x$1: Any): Boolean
+  x$1 => example/NamedArguments#User#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/NamedArguments#User#canEqual().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/NamedArguments#User#copy$default$1(). => method copy$default$1: String @<?>
+  String => scala/Predef.String#
+example/NamedArguments#User#copy(). => method copy(name: String): User
+  name => example/NamedArguments#User#copy().(name)
+  String => scala/Predef.String#
+  User => example/NamedArguments#User#
+example/NamedArguments#User#copy().(name) => default param name: String
+  String => scala/Predef.String#
+example/NamedArguments#User#equals(). => method equals(x$1: Any): Boolean
+  x$1 => example/NamedArguments#User#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/NamedArguments#User#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/NamedArguments#User#hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+example/NamedArguments#User#name. => val method name: String
+  String => scala/Predef.String#
+example/NamedArguments#User#productArity(). => method productArity: Int
+  Int => scala/Int#
+example/NamedArguments#User#productElement(). => method productElement(x$1: Int): Any
+  x$1 => example/NamedArguments#User#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+example/NamedArguments#User#productElement().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/NamedArguments#User#productIterator(). => method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+example/NamedArguments#User#productPrefix(). => method productPrefix: String
+  String => java/lang/String#
+example/NamedArguments#User#toString(). => method toString(): String
+  String => java/lang/String#
+example/NamedArguments#User. => final object User extends AbstractFunction1[String, User] with Serializable { +3 decls }
+  AbstractFunction1 => scala/runtime/AbstractFunction1#
+  String => scala/Predef.String#
+  User => example/NamedArguments#User#
+  Serializable => scala/Serializable#
+example/NamedArguments#User.apply(). => method apply(name: String): User
+  name => example/NamedArguments#User.apply().(name)
+  String => scala/Predef.String#
+  User => example/NamedArguments#User#
+example/NamedArguments#User.apply().(name) => param name: String
+  String => scala/Predef.String#
+example/NamedArguments#User.toString(). => final method toString(): String
+  String => java/lang/String#
+example/NamedArguments#User.unapply(). => method unapply(x$0: User): Option[String]
+  x$0 => example/NamedArguments#User.unapply().(x$0)
+  User => example/NamedArguments#User#
+  Option => scala/Option#
+  String => scala/Predef.String#
+example/NamedArguments#User.unapply().(x$0) => param x$0: User
+  User => example/NamedArguments#User#
+example/NamedArguments#`<init>`(). => primary ctor <init>()
+
 example/Synthetic.class
 -----------------------
 
@@ -2152,6 +2301,59 @@ example/Synthetic#x. => val method x: Int
   Int => scala/Int#
 example/Synthetic#xs. => val method xs: Stream[Int]
   Stream => scala/collection/immutable/Stream#
+  Int => scala/Int#
+
+example/ValPattern.class
+------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/ValPattern.class
+Text => empty
+Language => Scala
+Symbols => 17 entries
+
+Symbols:
+example/ValPattern# => class ValPattern extends AnyRef { +13 decls }
+  AnyRef => scala/AnyRef#
+example/ValPattern#`<init>`(). => primary ctor <init>()
+example/ValPattern#`leftVar_=`(). => var method leftVar_=(x$1: Int): Unit
+  x$1 => example/ValPattern#`leftVar_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/ValPattern#`leftVar_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/ValPattern#`number1Var_=`(). => var method number1Var_=(x$1: Int): Unit
+  x$1 => example/ValPattern#`number1Var_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/ValPattern#`number1Var_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/ValPattern#`rightVar_=`(). => var method rightVar_=(x$1: Int): Unit
+  x$1 => example/ValPattern#`rightVar_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/ValPattern#`rightVar_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/ValPattern#app(). => method app(): Unit
+  Unit => scala/Unit#
+example/ValPattern#left. => val method left: Int
+  Int => scala/Int#
+example/ValPattern#leftVar(). => var method leftVar: Int
+  Int => scala/Int#
+example/ValPattern#number1. => val method number1: Int
+  Int => scala/Int#
+example/ValPattern#number1Var(). => var method number1Var: Int
+  Int => scala/Int#
+example/ValPattern#right. => val method right: Int
+  Int => scala/Int#
+example/ValPattern#rightVar(). => var method rightVar: Int
+  Int => scala/Int#
+example/ValPattern#x$1. => private[this] val method x$1: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+example/ValPattern#x$2. => private[this] val method x$2: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
   Int => scala/Int#
 
 example/Vals.class

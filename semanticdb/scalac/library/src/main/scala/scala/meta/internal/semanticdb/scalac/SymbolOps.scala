@@ -300,6 +300,7 @@ trait SymbolOps { self: SemanticdbOps =>
   }
 
   lazy val idCache = new HashMap[String, Int]
+  lazy val pointsCache = new HashMap[Int, g.Symbol]
   private def freshSymbol(sym: g.Symbol): String = {
     def loop(sym: g.Symbol): GSourceFile = {
       if (sym.pos.source != GNoSourceFile) {
@@ -312,9 +313,23 @@ trait SymbolOps { self: SemanticdbOps =>
     val minput = loop(sym).toInput
     if (minput == m.Input.None) Symbols.None
     else {
-      val id = idCache.get(minput.syntax)
-      idCache.put(minput.syntax, id + 1)
-      Symbols.Local(id.toString)
+      val hasPosition = sym.pos.isDefined
+      val conflict =
+        if (hasPosition) pointsCache.get(sym.pos.point)
+        else null
+      if (conflict != null && sym.name == conflict.name) {
+        // Use conflicting symbol instead of this local symbol.
+        // This can happen for example in for comprehensions when the same binder
+        // results in multiple parameter symbols for each flatMap/withFilter/map/foreach.
+        conflict.toSemantic
+      } else {
+        if (hasPosition) {
+          pointsCache.put(sym.pos.point, sym)
+        }
+        val id = idCache.get(minput.syntax)
+        idCache.put(minput.syntax, id + 1)
+        Symbols.Local(id.toString)
+      }
     }
   }
 }

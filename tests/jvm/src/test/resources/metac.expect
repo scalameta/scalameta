@@ -75,7 +75,7 @@ advanced/D# => class D[CC[_]] extends C[CC[_] forSome { type _ }] { +1 decls }
   CC => advanced/D#[CC]
   _ => advanced/D#[CC][_]
   C => advanced/C#
-  _ => local14
+  _ => local8
 advanced/D#[CC] => typeparam CC[_]
   _ => advanced/D#[CC][_]
 advanced/D#[CC][_] => typeparam _
@@ -85,16 +85,15 @@ advanced/Existential# => class Existential extends AnyRef { +4 decls }
 advanced/Existential#`<init>`(). => primary ctor <init>()
 advanced/Existential#e1(). => method e1: List[_] forSome { type _ }
   List => scala/package.List#
-  _ => local7
+  _ => local4
 advanced/Existential#e2(). => method e2: C[List[T] forSome { type T }]
   C => advanced/C#
   List => scala/package.List#
-  T => local8
-advanced/Existential#e4(). => method e4: U[Int] forSome { type U[T <: Int] => Any }
-  U => local10
+  T => local5
+advanced/Existential#e4(). => method e4: U[Int] forSome { type U[T <: Int] }
+  U => local6
   Int => scala/Int#
-  T => local11
-  Any => scala/Any#
+  T => local7
 advanced/Structural# => class Structural extends AnyRef { +4 decls }
   AnyRef => scala/AnyRef#
 advanced/Structural#`<init>`(). => primary ctor <init>()
@@ -108,8 +107,8 @@ advanced/Structural#s2(). => method s2: AnyRef { val def x: Int }
   Int => scala/Int#
 advanced/Structural#s3(). => method s3: AnyRef { def m(x: Int): Int }
   AnyRef => scala/AnyRef#
-  m => local3
-  x => local4
+  m => local2
+  x => local3
   Int => scala/Int#
 advanced/Test. => final object Test extends AnyRef { +13 decls }
   AnyRef => scala/AnyRef#
@@ -123,7 +122,7 @@ advanced/Test.e1x. => val method e1x: Any
 advanced/Test.e2. => val method e2: C[List[T] forSome { type T }]
   C => advanced/C#
   List => scala/package.List#
-  T => local8
+  T => local5
 advanced/Test.e2x. => val method e2x: List[Any]
   List => scala/collection/immutable/List#
   Any => scala/Any#
@@ -145,32 +144,32 @@ advanced/Test.s2x. => val method s2x: Int
   Int => scala/Int#
 advanced/Test.s3. => val method s3: AnyRef { def m(x: Int): Int }
   AnyRef => scala/AnyRef#
-  m => local3
-  x => local4
+  m => local2
+  x => local3
   Int => scala/Int#
 advanced/Test.s3x. => val method s3x: Int
   Int => scala/Int#
 local0 => abstract val method x: Int
   Int => scala/Int#
-local12 => abstract type U[T <: Int]
-  T => local13
+local1 => val method x: Int
   Int => scala/Int#
-local13 => typeparam T <: Int
+local10 => abstract type _
+local11 => val local e3x: _
+  _ => local10
+local2 => method m(x: Int): Int
+  x => local3
   Int => scala/Int#
-local15 => val local e3: List[_]
+local3 => param x: Int
+  Int => scala/Int#
+local5 => abstract type T
+local6 => abstract type U[T <: Int]
+  T => local7
+  Int => scala/Int#
+local7 => typeparam T <: Int
+  Int => scala/Int#
+local9 => val local e3: List[_]
   List => scala/package.List#
-  _ => local16
-local16 => abstract type _
-local17 => val local e3x: _
-  _ => local16
-local2 => val method x: Int
-  Int => scala/Int#
-local5 => method m(x: Int): Int
-  x => local6
-  Int => scala/Int#
-local6 => param x: Int
-  Int => scala/Int#
-local9 => abstract type T
+  _ => local10
 
 Occurrences:
 [0:8..0:16): advanced <= advanced/
@@ -196,12 +195,12 @@ Occurrences:
 [11:19..11:22): Int => scala/Int#
 [11:27..11:30): ??? => scala/Predef.`???`().
 [12:6..12:8): s2 <= advanced/Structural#s2().
-[12:21..12:22): x <= local2
+[12:21..12:22): x <= local1
 [12:24..12:27): Int => scala/Int#
 [12:30..12:33): ??? => scala/Predef.`???`().
 [13:6..13:8): s3 <= advanced/Structural#s3().
-[13:21..13:22): m <= local5
-[13:23..13:24): x <= local6
+[13:21..13:22): m <= local2
+[13:23..13:24): x <= local3
 [13:26..13:29): Int => scala/Int#
 [13:32..13:35): Int => scala/Int#
 [13:38..13:41): ??? => scala/Predef.`???`().
@@ -213,14 +212,14 @@ Occurrences:
 [18:6..18:8): e2 <= advanced/Existential#e2().
 [18:10..18:11): C => advanced/C#
 [18:12..18:16): List => scala/package.List#
-[18:17..18:18): T => local9
-[18:35..18:36): T <= local9
+[18:17..18:18): T => local5
+[18:35..18:36): T <= local5
 [18:42..18:45): ??? => scala/Predef.`???`().
 [19:6..19:8): e4 <= advanced/Existential#e4().
-[19:10..19:11): U => local12
+[19:10..19:11): U => local6
 [19:12..19:15): Int => scala/Int#
-[19:32..19:33): U <= local12
-[19:34..19:35): T <= local13
+[19:32..19:33): U <= local6
+[19:34..19:35): T <= local7
 [19:48..19:51): ??? => scala/Predef.`???`().
 [22:6..22:7): D <= advanced/D#
 [22:8..22:10): CC <= advanced/D#[CC]
@@ -276,10 +275,10 @@ Occurrences:
 [39:2..39:9): locally => scala/Predef.locally().
 [40:5..40:8): ??? => scala/Predef.`???`().
 [40:11..40:14): Any => scala/Any#
-[41:11..41:13): e3 <= local15
+[41:11..41:13): e3 <= local9
 [41:15..41:19): List => scala/package.List#
-[42:12..42:15): e3x <= local17
-[42:18..42:20): e3 => local15
+[42:12..42:15): e3x <= local11
+[42:18..42:20): e3 => local9
 [42:21..42:25): head => scala/collection/IterableLike#head().
 
 Synthetics:
@@ -787,7 +786,7 @@ classes/N. => final object N extends AnyRef { +2 decls }
   AnyRef => scala/AnyRef#
 classes/N.anonClass. => val method anonClass: C7 { val def local: Nothing }
   C7 => classes/C7#
-  local => local9
+  local => local8
   Nothing => scala/Nothing#
 classes/N.anonFun. => val method anonFun: List[Int]
   List => scala/collection/immutable/List#
@@ -796,9 +795,7 @@ local0 => val local C1$1: C1
   C1 => classes/C1#
 local1 => val local C2$1: C2
   C2 => classes/C2#
-local10 => param i: Int
-  Int => scala/Int#
-local11 => val local local: Int
+local10 => val local local: Int
   Int => scala/Int#
 local2 => var local acc: Int
   Int => scala/Int#
@@ -814,6 +811,8 @@ local7 => val local C6$1: C6
   C6 => classes/C6#
 local8 => val method local: Nothing
   Nothing => scala/Nothing#
+local9 => param i: Int
+  Int => scala/Int#
 
 Occurrences:
 [0:8..0:15): classes <= classes/
@@ -869,9 +868,9 @@ Occurrences:
 [28:6..28:13): anonFun <= classes/N.anonFun.
 [28:16..28:20): List => scala/collection/immutable/List.
 [28:24..28:27): map => scala/collection/immutable/List#map().
-[28:30..28:31): i <= local10
-[29:8..29:13): local <= local11
-[30:4..30:9): local => local11
+[28:30..28:31): i <= local9
+[29:8..29:13): local <= local10
+[30:4..30:9): local => local10
 [30:10..30:11): + => scala/Int#`+`(+4).
 
 Synthetics:
@@ -941,6 +940,50 @@ example/EmptyObject. => final object EmptyObject extends AnyRef
 Occurrences:
 [0:8..0:15): example <= example/
 [2:7..2:18): EmptyObject <= example/EmptyObject.
+
+semanticdb/integration/src/main/scala/example/EtaExpansion.scala
+----------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/EtaExpansion.scala
+Text => non-empty
+Language => Scala
+Symbols => 3 entries
+Occurrences => 9 entries
+Synthetics => 5 entries
+
+Symbols:
+example/EtaExpansion# => class EtaExpansion extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/EtaExpansion#`<init>`(). => primary ctor <init>()
+local0 => param x: Int
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:6..2:18): EtaExpansion <= example/EtaExpansion#
+[2:19..2:19):  <= example/EtaExpansion#`<init>`().
+[3:2..3:6): Some => scala/Some.
+[3:10..3:13): map => scala/Option#map().
+[3:14..3:22): identity => scala/Predef.identity().
+[4:2..4:6): List => scala/collection/immutable/List.
+[4:10..4:18): foldLeft => scala/collection/LinearSeqOptimized#foldLeft().
+[4:25..4:26): + => java/lang/String#`+`().
+
+Synthetics:
+[3:2..3:6): Some => *.apply[Int]
+  apply => scala/Some.apply().
+  Int => scala/Int#
+[3:2..3:13): Some(1).map => *[Int]
+  Int => scala/Int#
+[3:14..3:22): identity => *[Int]
+  Int => scala/Int#
+[4:2..4:6): List => *.apply[Int]
+  apply => scala/collection/immutable/List.apply().
+  Int => scala/Int#
+[4:2..4:18): List(1).foldLeft => *[String]
+  String => java/lang/String#
 
 semanticdb/integration/src/main/scala/example/Example.scala
 -----------------------------------------------------------
@@ -1227,7 +1270,7 @@ Occurrences:
 [21:23..21:24): T <= flags/p/package.S#[T]
 [21:25..21:25):  <= flags/p/package.S#`<init>`().
 [22:6..22:10): List => scala/collection/immutable/List.
-[22:11..22:14): xs1 <= local0
+[22:11..22:14): xs1 => flags/p/package.xs1.
 [22:18..22:21): ??? => scala/Predef.`???`().
 [23:2..23:5): ??? => scala/Predef.`???`().
 [23:19..23:23): List => scala/collection/immutable/List.
@@ -1245,6 +1288,359 @@ Synthetics:
 [23:19..23:23): List => *.unapplySeq[Nothing]
   unapplySeq => scala/collection/generic/SeqFactory#unapplySeq().
   Nothing => scala/Nothing#
+
+semanticdb/integration/src/main/scala/example/ForComprehension.scala
+--------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/ForComprehension.scala
+Text => non-empty
+Language => Scala
+Symbols => 13 entries
+Occurrences => 50 entries
+Synthetics => 12 entries
+
+Symbols:
+example/ForComprehension# => class ForComprehension extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/ForComprehension#`<init>`(). => primary ctor <init>()
+local0 => param a: Int
+  Int => scala/Int#
+local1 => val local b: Int
+  Int => scala/Int#
+local11 => val local c: Int
+  Int => scala/Int#
+local12 => val local d: Int
+  Int => scala/Int#
+local13 => val local x$3: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+local14 => val local e: Tuple4[Int, Int, Int, Int]
+  Tuple4 => scala/Tuple4#
+  Int => scala/Int#
+local15 => param f: Tuple4[Int, Int, Int, Int]
+  Tuple4 => scala/Tuple4#
+  Int => scala/Int#
+local3 => val local c: Int
+  Int => scala/Int#
+local4 => param a: Int
+  Int => scala/Int#
+local5 => param b: Int
+  Int => scala/Int#
+local6 => param check$ifrefutable$1: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:6..2:22): ForComprehension <= example/ForComprehension#
+[2:23..2:23):  <= example/ForComprehension#`<init>`().
+[4:4..4:5): a <= local0
+[4:9..4:13): List => scala/collection/immutable/List.
+[5:4..5:5): b <= local1
+[5:9..5:13): List => scala/collection/immutable/List.
+[6:7..6:8): b => local1
+[6:9..6:10): > => scala/Int#`>`(+3).
+[7:4..7:5): c <= local3
+[7:8..7:9): a => local0
+[7:10..7:11): + => scala/Int#`+`(+4).
+[7:12..7:13): b => local1
+[8:11..8:12): a => local0
+[8:14..8:15): b => local1
+[8:17..8:18): c => local3
+[10:4..10:5): a <= local4
+[10:9..10:13): List => scala/collection/immutable/List.
+[11:4..11:5): b <= local5
+[11:9..11:13): List => scala/collection/immutable/List.
+[11:14..11:15): a => local4
+[13:6..13:7): a => local4
+[14:6..14:7): b => local5
+[15:6..15:8): == => java/lang/Object#`==`().
+[17:6..17:7): c <= local11
+[18:6..18:7): d <= local12
+[19:9..19:13): List => scala/collection/immutable/List.
+[19:15..19:16): a => local4
+[19:18..19:19): b => local5
+[21:6..21:7): a => local4
+[22:6..22:7): b => local5
+[23:6..23:7): c => local11
+[24:6..24:7): d => local12
+[25:6..25:8): == => java/lang/Object#`==`().
+[26:4..26:5): e <= local14
+[27:6..27:7): a => local4
+[28:6..28:7): b => local5
+[29:6..29:7): c => local11
+[30:6..30:7): d => local12
+[32:7..32:8): e => local14
+[32:9..32:11): == => java/lang/Object#`==`().
+[33:4..33:5): f <= local15
+[33:9..33:13): List => scala/collection/immutable/List.
+[33:14..33:15): e => local14
+[36:6..36:7): a => local4
+[37:6..37:7): b => local5
+[38:6..38:7): c => local11
+[39:6..39:7): d => local12
+[40:6..40:7): e => local14
+[41:6..41:7): f => local15
+
+Synthetics:
+[3:2..8:19): for {
+    a <- List(1)
+    b <- List(1)
+    if b > 1
+    c = a + b
+  } yield (a, b, c) => orig(List(1)).flatMap[Tuple3[Int, Int, Int], List[Tuple3[Int, Int, Int]]]({(a) => orig(List(1)).withFilter({(b) => orig(b > 1)}).map[Tuple2[Int, Int], List[Tuple2[Int, Int]]]({(b) => orig(c = a + b)})(canBuildFrom[Tuple2[Int, Int]]).map[Tuple3[Int, Int, Int], List[Tuple3[Int, Int, Int]]]({(local2) => orig((a, b, c))})(canBuildFrom[Tuple3[Int, Int, Int]])})(canBuildFrom[Tuple3[Int, Int, Int]])
+  flatMap => scala/collection/immutable/List#flatMap().
+  Tuple3 => scala/Tuple3#
+  Int => scala/Int#
+  List => scala/collection/immutable/List#
+  a => local0
+  withFilter => scala/collection/TraversableLike#withFilter().
+  b => local1
+  map => scala/collection/generic/FilterMonadic#map().
+  Tuple2 => scala/Tuple2#
+  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+  map => scala/collection/immutable/List#map().
+  local2 => local2
+[4:9..4:13): List => *.apply[Int]
+  apply => scala/collection/immutable/List.apply().
+  Int => scala/Int#
+[5:9..5:13): List => *.apply[Int]
+  apply => scala/collection/immutable/List.apply().
+  Int => scala/Int#
+[9:2..42:5): for {
+    a <- List(1)
+    b <- List(a)
+    if (
+      a,
+      b
+    ) == (1, 2)
+    (
+      c,
+      d
+    ) <- List((a, b))
+    if (
+      a,
+      b,
+      c,
+      d
+    ) == (1, 2, 3, 4)
+    e = (
+      a,
+      b,
+      c,
+      d
+    )
+    if e == (1, 2, 3, 4)
+    f <- List(e)
+  } yield {
+    (
+      a,
+      b,
+      c,
+      d,
+      e,
+      f
+    ) => orig(List(1)).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]], List[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]]({(a) => orig(List(a)).withFilter({(b) => orig((
+      a,
+      b
+    ) == (1, 2))}).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]], List[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]]({(b) => orig(List((a, b))).withFilter({(check$ifrefutable$1) => orig()}).withFilter({(local7) => orig((
+      a,
+      b,
+      c,
+      d
+    ) == (1, 2, 3, 4))}).map[Tuple2[Tuple2[Int, Int], Tuple4[Int, Int, Int, Int]], List[Tuple2[Tuple2[Int, Int], Tuple4[Int, Int, Int, Int]]]]({(local8) => orig((
+      c,
+      d
+    ) <- List((a, b))
+    if (
+      a,
+      b,
+      c,
+      d
+    ) == (1, 2, 3, 4)
+    e = (
+      a,
+      b,
+      c,
+      d
+    ))})(canBuildFrom[Tuple2[Tuple2[Int, Int], Tuple4[Int, Int, Int, Int]]]).withFilter({(local9) => orig(e == (1, 2, 3, 4))}).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]], List[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]]({(local10) => orig(f <- List(e)
+  } yield {
+    (
+      a,
+      b,
+      c,
+      d,
+      e,
+      f
+    ))})(canBuildFrom[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]])})(canBuildFrom[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]])})(canBuildFrom[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]])
+  flatMap => scala/collection/immutable/List#flatMap().
+  Tuple6 => scala/Tuple6#
+  Int => scala/Int#
+  Tuple4 => scala/Tuple4#
+  List => scala/collection/immutable/List#
+  a => local4
+  withFilter => scala/collection/TraversableLike#withFilter().
+  b => local5
+  flatMap => scala/collection/generic/FilterMonadic#flatMap().
+  check$ifrefutable$1 => local6
+  withFilter => scala/collection/generic/FilterMonadic#withFilter().
+  local7 => local7
+  map => scala/collection/generic/FilterMonadic#map().
+  Tuple2 => scala/Tuple2#
+  local8 => local8
+  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+  local9 => local9
+  local10 => local10
+[10:9..10:13): List => *.apply[Int]
+  apply => scala/collection/immutable/List.apply().
+  Int => scala/Int#
+[11:9..11:13): List => *.apply[Int]
+  apply => scala/collection/immutable/List.apply().
+  Int => scala/Int#
+[12:7..15:15): (
+      a,
+      b
+    ) == (1, 2) => *.apply[Int, Int]
+  apply => scala/Tuple2.apply().
+  Int => scala/Int#
+[19:9..19:13): List => *.apply[Tuple2[Int, Int]]
+  apply => scala/collection/immutable/List.apply().
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+[20:7..25:21): (
+      a,
+      b,
+      c,
+      d
+    ) == (1, 2, 3, 4) => *.apply[Int, Int, Int, Int]
+  apply => scala/Tuple4.apply().
+  Int => scala/Int#
+[32:7..32:24): e == (1, 2, 3, 4) => *.apply[Int, Int, Int, Int]
+  apply => scala/Tuple4.apply().
+  Int => scala/Int#
+[33:4..42:5): f <- List(e)
+  } yield {
+    (
+      a,
+      b,
+      c,
+      d,
+      e,
+      f
+    ) => orig(List(e)).map[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]], List[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]]({(f) => orig((
+      a,
+      b,
+      c,
+      d,
+      e,
+      f
+    ))})(canBuildFrom[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]])
+  map => scala/collection/immutable/List#map().
+  Tuple6 => scala/Tuple6#
+  Int => scala/Int#
+  Tuple4 => scala/Tuple4#
+  List => scala/collection/immutable/List#
+  f => local15
+  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
+[33:9..33:13): List => *.apply[Tuple4[Int, Int, Int, Int]]
+  apply => scala/collection/immutable/List.apply().
+  Tuple4 => scala/Tuple4#
+  Int => scala/Int#
+
+semanticdb/integration/src/main/scala/example/ImplicitConversion.scala
+----------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/ImplicitConversion.scala
+Text => non-empty
+Language => Scala
+Symbols => 11 entries
+Occurrences => 35 entries
+Synthetics => 6 entries
+
+Symbols:
+example/ImplicitConversion# => class ImplicitConversion extends AnyRef { +9 decls }
+  AnyRef => scala/AnyRef#
+example/ImplicitConversion#`<init>`(). => primary ctor <init>()
+example/ImplicitConversion#a. => val method a: Int
+  Int => scala/Int#
+example/ImplicitConversion#b. => val method b: Long
+  Long => scala/Long#
+example/ImplicitConversion#char. => val method char: Char
+  Char => scala/Char#
+example/ImplicitConversion#message. => val method message: String
+  String => java/lang/String#
+example/ImplicitConversion#number. => val method number: Int
+  Int => scala/Int#
+example/ImplicitConversion#string2Number(). => implicit method string2Number(string: String): Int
+  string => example/ImplicitConversion#string2Number().(string)
+  String => scala/Predef.String#
+  Int => scala/Int#
+example/ImplicitConversion#string2Number().(string) => param string: String
+  String => scala/Predef.String#
+example/ImplicitConversion#tuple. => val method tuple: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+example/ImplicitConversion#x. => val method x: Int
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:7..2:12): scala => scala/
+[2:13..2:21): language => scala/language.
+[2:22..2:41): implicitConversions => scala/language.implicitConversions.
+[4:6..4:24): ImplicitConversion <= example/ImplicitConversion#
+[4:25..4:25):  <= example/ImplicitConversion#`<init>`().
+[5:15..5:28): string2Number <= example/ImplicitConversion#string2Number().
+[6:6..6:12): string <= example/ImplicitConversion#string2Number().(string)
+[6:14..6:20): String => scala/Predef.String#
+[7:5..7:8): Int => scala/Int#
+[8:6..8:13): message <= example/ImplicitConversion#message.
+[9:6..9:12): number <= example/ImplicitConversion#number.
+[10:6..10:11): tuple <= example/ImplicitConversion#tuple.
+[11:6..11:10): char <= example/ImplicitConversion#char.
+[11:12..11:16): Char => scala/Char#
+[14:2..14:9): message => example/ImplicitConversion#message.
+[15:5..15:16): stripSuffix => scala/collection/immutable/StringLike#stripSuffix().
+[16:2..16:7): tuple => example/ImplicitConversion#tuple.
+[16:8..16:9): + => scala/Predef.any2stringadd#`+`().
+[19:6..19:7): x <= example/ImplicitConversion#x.
+[19:9..19:12): Int => scala/Int#
+[19:15..19:22): message => example/ImplicitConversion#message.
+[22:2..22:3): s => scala/StringContext#s().
+[22:11..22:18): message => example/ImplicitConversion#message.
+[22:20..22:26): number => example/ImplicitConversion#number.
+[23:2..23:3): s => scala/StringContext#s().
+[24:7..24:14): message => example/ImplicitConversion#message.
+[25:7..25:13): number => example/ImplicitConversion#number.
+[25:17..25:28): stripMargin => scala/collection/immutable/StringLike#stripMargin(+1).
+[27:6..27:7): a <= example/ImplicitConversion#a.
+[27:9..27:12): Int => scala/Int#
+[27:15..27:19): char => scala/Char#toInt().
+[28:6..28:7): b <= example/ImplicitConversion#b.
+[28:9..28:13): Long => scala/Long#
+[28:16..28:20): char => scala/Char#toLong().
+
+Synthetics:
+[14:2..14:9): message => augmentString(*)
+  augmentString => scala/Predef.augmentString().
+[16:2..16:7): tuple => any2stringadd[Tuple2[Int, Int]](*)
+  any2stringadd => scala/Predef.any2stringadd().
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+[19:15..19:22): message => string2Number(*)
+  string2Number => example/ImplicitConversion#string2Number().
+[22:2..22:2):  => *.apply
+  apply => scala/StringContext.apply().
+[23:2..23:2):  => *.apply
+  apply => scala/StringContext.apply().
+[23:2..25:16): s"""Hello
+     |$message
+     |$number""" => augmentString(*)
+  augmentString => scala/Predef.augmentString().
 
 semanticdb/integration/src/main/scala/example/Imports.scala
 -----------------------------------------------------------
@@ -1292,11 +1688,10 @@ example/InstrumentTyper#clazzOf. => final val method clazzOf: Class[Option[Int]]
   Class => java/lang/Class#
   Option => scala/Option#
   Int => scala/Int#
-example/InstrumentTyper#existential(). => method existential: U[Int] forSome { type U[T <: Int] => Any }
+example/InstrumentTyper#existential(). => method existential: U[Int] forSome { type U[T <: Int] }
   U => local1
   Int => scala/Int#
   T => local2
-  Any => scala/Any#
 example/InstrumentTyper#singletonType(). => method singletonType(x: Predef.type): Nothing
   x => example/InstrumentTyper#singletonType().(x)
   Predef => scala/Predef.
@@ -1305,10 +1700,10 @@ example/InstrumentTyper#singletonType().(x) => param x: Predef.type
   Predef => scala/Predef.
 local0 => selfparam self: AnyRef
   AnyRef => scala/AnyRef#
-local3 => abstract type U[T <: Int]
-  T => local4
+local1 => abstract type U[T <: Int]
+  T => local2
   Int => scala/Int#
-local4 => typeparam T <: Int
+local2 => typeparam T <: Int
   Int => scala/Int#
 
 Occurrences:
@@ -1354,10 +1749,10 @@ Occurrences:
 [19:12..19:19): clazzOf => types/Test.Literal.clazzOf.
 [20:4..20:8): List => scala/collection/immutable/Nil.
 [22:6..22:17): existential <= example/InstrumentTyper#existential().
-[22:19..22:20): U => local3
+[22:19..22:20): U => local1
 [22:21..22:24): Int => scala/Int#
-[22:41..22:42): U <= local3
-[22:43..22:44): T <= local4
+[22:41..22:42): U <= local1
+[22:43..22:44): T <= local2
 [22:57..22:60): ??? => scala/Predef.`???`().
 [23:7..23:20): AnnotatedType <= example/InstrumentTyper#AnnotatedType#
 [23:23..23:26): Int => scala/Int#
@@ -1863,7 +2258,7 @@ example/Methods#m9().(x) => param x: m9().
   m9(). => example/Methods#`m9().`#
 local0 => abstract val method x: Int
   Int => scala/Int#
-local2 => abstract type T
+local1 => abstract type T
 
 Occurrences:
 [0:8..0:15): example <= example/
@@ -1972,8 +2367,8 @@ Occurrences:
 [27:31..27:34): ??? => scala/Predef.`???`().
 [28:6..28:9): m14 <= example/Methods#m14().
 [28:10..28:11): x <= example/Methods#m14().(x)
-[28:13..28:14): T => local2
-[28:30..28:31): T <= local2
+[28:13..28:14): T => local1
+[28:30..28:31): T <= local1
 [28:37..28:40): ??? => scala/Predef.`???`().
 [29:6..29:9): m15 <= example/Methods#m15().
 [29:10..29:11): x <= example/Methods#m15().(x)
@@ -2128,6 +2523,112 @@ Synthetics:
 [14:2..14:24): m.m7b(new m.List[Int]) => *($conforms[Int])
   $conforms => scala/Predef.$conforms().
   Int => scala/Int#
+
+semanticdb/integration/src/main/scala/example/NamedArguments.scala
+------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/NamedArguments.scala
+Text => non-empty
+Language => Scala
+Symbols => 27 entries
+Occurrences => 12 entries
+Synthetics => 1 entries
+
+Symbols:
+example/NamedArguments# => class NamedArguments extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/NamedArguments#User# => case class User extends AnyRef with Product with Serializable { +12 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/Serializable#
+example/NamedArguments#User#`<init>`(). => primary ctor <init>(val name: String)
+  name => example/NamedArguments#User#`<init>`().(name)
+  String => scala/Predef.String#
+example/NamedArguments#User#`<init>`().(name) => val param name: String
+  String => scala/Predef.String#
+example/NamedArguments#User#canEqual(). => method canEqual(x$1: Any): Boolean
+  x$1 => example/NamedArguments#User#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/NamedArguments#User#canEqual().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/NamedArguments#User#copy$default$1(). => method copy$default$1: String @uncheckedVariance
+  String => scala/Predef.String#
+  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+example/NamedArguments#User#copy(). => method copy(name: String): User
+  name => example/NamedArguments#User#copy().(name)
+  String => scala/Predef.String#
+  User => example/NamedArguments#User#
+example/NamedArguments#User#copy().(name) => default param name: String
+  String => scala/Predef.String#
+example/NamedArguments#User#equals(). => method equals(x$1: Any): Boolean
+  x$1 => example/NamedArguments#User#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/NamedArguments#User#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/NamedArguments#User#hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+example/NamedArguments#User#name. => val method name: String
+  String => scala/Predef.String#
+example/NamedArguments#User#productArity(). => method productArity: Int
+  Int => scala/Int#
+example/NamedArguments#User#productElement(). => method productElement(x$1: Int): Any
+  x$1 => example/NamedArguments#User#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+example/NamedArguments#User#productElement().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/NamedArguments#User#productIterator(). => method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+example/NamedArguments#User#productPrefix(). => method productPrefix: String
+  String => java/lang/String#
+example/NamedArguments#User#toString(). => method toString(): String
+  String => java/lang/String#
+example/NamedArguments#User. => final object User extends AbstractFunction1[String, User] with Serializable { +3 decls }
+  AbstractFunction1 => scala/runtime/AbstractFunction1#
+  String => scala/Predef.String#
+  User => example/NamedArguments#User#
+  Serializable => scala/Serializable#
+example/NamedArguments#User.apply(). => method apply(name: String): User
+  name => example/NamedArguments#User.apply().(name)
+  String => scala/Predef.String#
+  User => example/NamedArguments#User#
+example/NamedArguments#User.apply().(name) => param name: String
+  String => scala/Predef.String#
+example/NamedArguments#User.toString(). => final method toString(): String
+  String => java/lang/String#
+example/NamedArguments#User.unapply(). => method unapply(x$0: User): Option[String]
+  x$0 => example/NamedArguments#User.unapply().(x$0)
+  User => example/NamedArguments#User#
+  Option => scala/Option#
+  String => scala/Predef.String#
+example/NamedArguments#User.unapply().(x$0) => param x$0: User
+  User => example/NamedArguments#User#
+example/NamedArguments#`<init>`(). => primary ctor <init>()
+local0 => val local User$1: User
+  User => example/NamedArguments#User#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:6..2:20): NamedArguments <= example/NamedArguments#
+[2:21..2:21):  <= example/NamedArguments#`<init>`().
+[3:13..3:17): User <= example/NamedArguments#User#
+[3:17..3:17):  <= example/NamedArguments#User#`<init>`().
+[3:18..3:22): name <= example/NamedArguments#User#name.
+[3:24..3:30): String => scala/Predef.String#
+[4:2..4:6): User => example/NamedArguments#User.
+[4:7..4:11): name => example/NamedArguments#User.apply().(name)
+[5:2..5:6): User => example/NamedArguments#User.
+[5:7..5:12): apply => example/NamedArguments#User.apply().
+[5:13..5:17): name => example/NamedArguments#User.apply().(name)
+
+Synthetics:
+[4:2..4:6): User => *.apply
+  apply => example/NamedArguments#User.apply().
 
 semanticdb/integration/src/main/scala/example/Objects.scala
 -----------------------------------------------------------
@@ -2383,7 +2884,7 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Synthetic.scala
 Text => non-empty
 Language => Scala
-Symbols => 58 entries
+Symbols => 56 entries
 Occurrences => 113 entries
 Synthetics => 43 entries
 
@@ -2498,17 +2999,13 @@ local11 => param i: Int
   Int => scala/Int#
 local12 => param j: Int
   Int => scala/Int#
-local13 => param j: Int
+local13 => param a: Int
   Int => scala/Int#
-local14 => param a: Int
+local14 => param b: Int
   Int => scala/Int#
-local15 => param b: Int
+local15 => param a: Int
   Int => scala/Int#
-local16 => param a: Int
-  Int => scala/Int#
-local17 => param b: Int
-  Int => scala/Int#
-local18 => param b: Int
+local16 => param b: Int
   Int => scala/Int#
 local2 => val local name: String
   String => scala/Predef.String#
@@ -2541,12 +3038,12 @@ Occurrences:
 [5:9..5:20): stripPrefix => scala/collection/immutable/StringLike#stripPrefix().
 [8:6..8:10): Name <= example/Synthetic#Name.
 [8:25..8:26): r => scala/collection/immutable/StringLike#r().
-[9:6..9:7): x <= local0
+[9:6..9:7): x <= example/Synthetic#x.
 [9:8..9:11): #:: => scala/package.`#::`.
-[9:12..9:14): xs <= local1
+[9:12..9:14): xs <= example/Synthetic#xs.
 [9:17..9:23): Stream => scala/package.Stream.
 [10:6..10:10): Name => example/Synthetic#Name.
-[10:11..10:15): name <= local2
+[10:11..10:15): name => example/Synthetic#name.
 [11:4..11:7): #:: => scala/collection/immutable/Stream.ConsWrapper#`#::`().
 [11:10..11:13): #:: => scala/collection/immutable/Stream.ConsWrapper#`#::`().
 [11:14..11:20): Stream => scala/package.Stream.
@@ -2580,7 +3077,7 @@ Occurrences:
 [18:42..18:43): % => scala/Int#`%`(+3).
 [18:46..18:48): == => scala/Int#`==`(+3).
 [18:59..18:60): i => local11
-[18:62..18:63): j => local13
+[18:62..18:63): j => local12
 [20:9..20:10): s <= example/Synthetic#s.
 [21:8..21:13): apply <= example/Synthetic#s.apply().
 [22:4..22:5): s => example/Synthetic#s.
@@ -2615,32 +3112,32 @@ Occurrences:
 [35:26..35:42): ExecutionContext => scala/concurrent/ExecutionContext.
 [35:43..35:52): Implicits => scala/concurrent/ExecutionContext.Implicits.
 [35:53..35:59): global => scala/concurrent/ExecutionContext.Implicits.global.
-[37:4..37:5): a <= local14
+[37:4..37:5): a <= local13
 [37:9..37:14): scala => scala/
 [37:15..37:25): concurrent => scala/concurrent/
 [37:26..37:32): Future => scala/concurrent/Future.
 [37:33..37:43): successful => scala/concurrent/Future.successful().
-[38:4..38:5): b <= local15
+[38:4..38:5): b <= local14
 [38:9..38:14): scala => scala/
 [38:15..38:25): concurrent => scala/concurrent/
 [38:26..38:32): Future => scala/concurrent/Future.
 [38:33..38:43): successful => scala/concurrent/Future.successful().
 [39:4..39:11): println => scala/Predef.println(+1).
-[39:12..39:13): a => local14
-[41:4..41:5): a <= local16
+[39:12..39:13): a => local13
+[41:4..41:5): a <= local15
 [41:9..41:14): scala => scala/
 [41:15..41:25): concurrent => scala/concurrent/
 [41:26..41:32): Future => scala/concurrent/Future.
 [41:33..41:43): successful => scala/concurrent/Future.successful().
-[42:4..42:5): b <= local17
+[42:4..42:5): b <= local16
 [42:9..42:14): scala => scala/
 [42:15..42:25): concurrent => scala/concurrent/
 [42:26..42:32): Future => scala/concurrent/Future.
 [42:33..42:43): successful => scala/concurrent/Future.successful().
-[43:7..43:8): a => local16
+[43:7..43:8): a => local15
 [43:9..43:10): < => scala/Int#`<`(+3).
-[43:11..43:12): b => local17
-[44:10..44:11): a => local16
+[43:11..43:12): b => local16
+[44:10..44:11): a => local15
 
 Synthetics:
 [3:2..3:6): List => *.apply[Int]
@@ -2734,7 +3231,6 @@ Synthetics:
   withFilter => scala/collection/TraversableLike#withFilter().
   j => local12
   map => scala/collection/generic/FilterMonadic#map().
-  j => local13
   canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
 [18:12..18:13): 1 => intWrapper(*)
   intWrapper => scala/LowPriorityImplicits#intWrapper().
@@ -2758,8 +3254,8 @@ Synthetics:
   } println(a) => orig(scala.concurrent.Future.successful(1)).foreach[Unit]({(a) => orig(scala.concurrent.Future.successful(2)).foreach[Unit]({(b) => orig(println(a))})(global)})(global)
   foreach => scala/concurrent/Future#foreach().
   Unit => scala/Unit#
-  a => local14
-  b => local15
+  a => local13
+  b => local14
   global => scala/concurrent/ExecutionContext.Implicits.global.
 [37:9..37:43): scala.concurrent.Future.successful => *[Int]
   Int => scala/Int#
@@ -2772,12 +3268,11 @@ Synthetics:
   } yield a => orig(scala.concurrent.Future.successful(1)).flatMap[Int]({(a) => orig(scala.concurrent.Future.successful(2)).withFilter({(b) => orig(a < b)})(global).map[Int]({(b) => orig(a)})(global)})(global)
   flatMap => scala/concurrent/Future#flatMap().
   Int => scala/Int#
-  a => local16
+  a => local15
   withFilter => scala/concurrent/Future#withFilter().
-  b => local17
+  b => local16
   global => scala/concurrent/ExecutionContext.Implicits.global.
   map => scala/concurrent/Future#map().
-  b => local18
 [41:9..41:43): scala.concurrent.Future.successful => *[Int]
   Int => scala/Int#
 [42:9..42:43): scala.concurrent.Future.successful => *[Int]
@@ -2838,7 +3333,7 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
-Symbols => 139 entries
+Symbols => 136 entries
 Occurrences => 243 entries
 
 Symbols:
@@ -2846,22 +3341,17 @@ local0 => abstract method k: Int
   Int => scala/Int#
 local1 => abstract method k: Int
   Int => scala/Int#
-local10 => abstract type T
-local14 => type L[T] = List[T]
-  T => local15
-  List => scala/package.List#
-local15 => typeparam T
-local16 => val local RepeatedType$1: RepeatedType
+local10 => val local RepeatedType$1: RepeatedType
   RepeatedType => types/Test.C#RepeatedType#
-local2 => abstract method k: Int
+local2 => method k: Int
   Int => scala/Int#
-local3 => abstract method k: Int
+local3 => method k: Int
   Int => scala/Int#
-local4 => method k: Int
-  Int => scala/Int#
-local6 => method k: Int
-  Int => scala/Int#
-local8 => abstract type T
+local4 => abstract type T
+local8 => type L[T] = List[T]
+  T => local9
+  List => scala/package.List#
+local9 => typeparam T
 types/B# => class B extends AnyRef { +1 decls }
   AnyRef => scala/AnyRef#
 types/B#`<init>`(). => primary ctor <init>()
@@ -3041,11 +3531,11 @@ types/Test.C#compoundType2. => val method compoundType2: M with N {}
 types/Test.C#compoundType3. => val method compoundType3: M with N { def k: Int }
   M => types/Test.M#
   N => types/Test.N#
-  k => local2
+  k => local1
   Int => scala/Int#
 types/Test.C#compoundType4. => val method compoundType4: AnyRef { def k: Int }
   AnyRef => scala/AnyRef#
-  k => local5
+  k => local2
   Int => scala/Int#
 types/Test.C#compoundType5. => val method compoundType5: M with N {}
   M => types/Test.M#
@@ -3053,19 +3543,19 @@ types/Test.C#compoundType5. => val method compoundType5: M with N {}
 types/Test.C#compoundType6. => val method compoundType6: M with N { def k: Int }
   M => types/Test.M#
   N => types/Test.N#
-  k => local7
+  k => local3
   Int => scala/Int#
 types/Test.C#existentialType1. => val method existentialType1: T forSome { type T }
-  T => local9
+  T => local4
 types/Test.C#existentialType2. => val method existentialType2: List[_] forSome { type _ }
   List => scala/package.List#
-  _ => local11
+  _ => local5
 types/Test.C#existentialType3. => val method existentialType3: Class[?0] forSome { type ?0 }
   Class => java/lang/Class#
-  ?0 => local12
+  ?0 => local6
 types/Test.C#existentialType4. => val method existentialType4: Class[?0] forSome { type ?0 }
   Class => java/lang/Class#
-  ?0 => local13
+  ?0 => local7
 types/Test.C#p. => val method p: P
   P => types/P#
 types/Test.C#singleType1. => val method singleType1: x.type
@@ -3266,11 +3756,11 @@ Occurrences:
 [56:8..56:21): compoundType3 <= types/Test.C#compoundType3.
 [56:23..56:24): M => types/Test.M#
 [56:30..56:31): N => types/Test.N#
-[56:38..56:39): k <= local2
+[56:38..56:39): k <= local1
 [56:41..56:44): Int => scala/Int#
 [56:49..56:52): ??? => scala/Predef.`???`().
 [57:8..57:21): compoundType4 <= types/Test.C#compoundType4.
-[57:34..57:35): k <= local4
+[57:34..57:35): k <= local2
 [57:37..57:40): Int => scala/Int#
 [57:43..57:46): ??? => scala/Predef.`???`().
 [58:8..58:21): compoundType5 <= types/Test.C#compoundType5.
@@ -3281,7 +3771,7 @@ Occurrences:
 [59:28..59:29): M => types/Test.M#
 [59:30..59:30):  => types/Test.M#`<init>`().
 [59:35..59:36): N => types/Test.N#
-[59:43..59:44): k <= local6
+[59:43..59:44): k <= local3
 [59:46..59:49): Int => scala/Int#
 [59:52..59:55): ??? => scala/Predef.`???`().
 [61:8..61:16): annType1 <= types/Test.C#annType1.
@@ -3296,8 +3786,8 @@ Occurrences:
 [62:32..62:32):  => types/ann2#`<init>`().
 [62:34..62:37): ??? => scala/Predef.`???`().
 [64:8..64:24): existentialType1 <= types/Test.C#existentialType1.
-[64:26..64:27): T => local8
-[64:43..64:44): T <= local8
+[64:26..64:27): T => local4
+[64:43..64:44): T <= local4
 [64:49..64:52): ??? => scala/Predef.`???`().
 [65:8..65:24): existentialType2 <= types/Test.C#existentialType2.
 [65:26..65:30): List => scala/package.List#
@@ -3312,10 +3802,10 @@ Occurrences:
 [69:20..69:21): M <= types/Test.C#typeLambda1().[M]
 [69:28..69:31): ??? => scala/Predef.`???`().
 [70:4..70:15): typeLambda1 => types/Test.C#typeLambda1().
-[70:24..70:25): L <= local14
-[70:26..70:27): T <= local15
+[70:24..70:25): L <= local8
+[70:26..70:27): T <= local9
 [70:31..70:35): List => scala/package.List#
-[70:36..70:37): T => local15
+[70:36..70:37): T => local9
 [72:11..72:25): ClassInfoType1 <= types/Test.C#ClassInfoType1.
 [73:10..73:24): ClassInfoType2 <= types/Test.C#ClassInfoType2#
 [73:25..73:25):  <= types/Test.C#ClassInfoType2#`<init>`().
@@ -3396,6 +3886,165 @@ Occurrences:
 [112:39..112:49): LinkOption => java/nio/file/LinkOption#
 [112:50..112:64): NOFOLLOW_LINKS => java/nio/file/LinkOption#NOFOLLOW_LINKS.
 [113:14..113:21): clazzOf <= types/Test.Literal.clazzOf.
+
+semanticdb/integration/src/main/scala/example/ValPattern.scala
+--------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/ValPattern.scala
+Text => non-empty
+Language => Scala
+Symbols => 33 entries
+Occurrences => 40 entries
+Synthetics => 9 entries
+
+Symbols:
+example/ValPattern# => class ValPattern extends AnyRef { +13 decls }
+  AnyRef => scala/AnyRef#
+example/ValPattern#`<init>`(). => primary ctor <init>()
+example/ValPattern#`leftVar_=`(). => var method leftVar_=(x$1: Int): Unit
+  x$1 => example/ValPattern#`leftVar_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/ValPattern#`leftVar_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/ValPattern#`number1Var_=`(). => var method number1Var_=(x$1: Int): Unit
+  x$1 => example/ValPattern#`number1Var_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/ValPattern#`number1Var_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/ValPattern#`rightVar_=`(). => var method rightVar_=(x$1: Int): Unit
+  x$1 => example/ValPattern#`rightVar_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/ValPattern#`rightVar_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/ValPattern#app(). => method app(): Unit
+  Unit => scala/Unit#
+example/ValPattern#left. => val method left: Int
+  Int => scala/Int#
+example/ValPattern#leftVar(). => var method leftVar: Int
+  Int => scala/Int#
+example/ValPattern#number1. => val method number1: Int
+  Int => scala/Int#
+example/ValPattern#number1Var(). => var method number1Var: Int
+  Int => scala/Int#
+example/ValPattern#right. => val method right: Int
+  Int => scala/Int#
+example/ValPattern#rightVar(). => var method rightVar: Int
+  Int => scala/Int#
+example/ValPattern#x$1. => val method x$1: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+example/ValPattern#x$2. => val method x$2: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+local0 => val local left: Int
+  Int => scala/Int#
+local1 => val local right: Int
+  Int => scala/Int#
+local10 => val local number1: Int
+  Int => scala/Int#
+local11 => val local x$4: : Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+local12 => var local leftVar: Int
+  Int => scala/Int#
+local13 => var local rightVar: Int
+  Int => scala/Int#
+local14 => var local number1Var: Int
+  Int => scala/Int#
+local15 => val local number1Var: Int
+  Int => scala/Int#
+local2 => val local number1: Int
+  Int => scala/Int#
+local3 => val local leftVar: Int
+  Int => scala/Int#
+local4 => val local rightVar: Int
+  Int => scala/Int#
+local5 => val local number1Var: Int
+  Int => scala/Int#
+local6 => val local x$3: : Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+local7 => val local left: Int
+  Int => scala/Int#
+local8 => val local right: Int
+  Int => scala/Int#
+local9 => val local number1: Int
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:6..2:16): ValPattern <= example/ValPattern#
+[2:17..2:17):  <= example/ValPattern#`<init>`().
+[4:7..4:11): left <= example/ValPattern#left.
+[4:13..4:18): right <= example/ValPattern#right.
+[5:6..5:10): Some => scala/Some.
+[5:11..5:18): number1 => example/ValPattern#number1.
+[6:4..6:8): Some => scala/Some.
+[8:7..8:14): leftVar <= example/ValPattern#leftVar().
+[8:16..8:24): rightVar <= example/ValPattern#rightVar().
+[9:6..9:10): Some => scala/Some.
+[9:11..9:21): number1Var => example/ValPattern#number1Var.
+[10:4..10:8): Some => scala/Some.
+[12:6..12:9): app <= example/ValPattern#app().
+[12:13..12:17): Unit => scala/Unit#
+[13:4..13:11): println => scala/Predef.println(+1).
+[15:8..15:15): number1 => example/ValPattern#number1.
+[16:8..16:12): left => example/ValPattern#left.
+[17:8..17:13): right => example/ValPattern#right.
+[18:8..18:18): number1Var => example/ValPattern#number1Var().
+[19:8..19:15): leftVar => example/ValPattern#leftVar().
+[20:8..20:16): rightVar => example/ValPattern#rightVar().
+[23:4..23:11): locally => scala/Predef.locally().
+[24:11..24:15): left <= local7
+[24:17..24:22): right <= local8
+[25:10..25:14): Some => scala/Some.
+[25:15..25:22): number1 => local9
+[26:8..26:12): Some => scala/Some.
+[28:11..28:18): leftVar <= local12
+[28:20..28:28): rightVar <= local13
+[29:10..29:14): Some => scala/Some.
+[29:15..29:25): number1Var => local14
+[30:8..30:12): Some => scala/Some.
+[31:6..31:13): println => scala/Predef.println(+1).
+[33:10..33:17): number1 => local9
+[34:10..34:14): left => local7
+[35:10..35:15): right => local8
+[36:10..36:20): number1Var => local14
+[37:10..37:17): leftVar => local12
+[38:10..38:18): rightVar => local13
+
+Synthetics:
+[4:6..4:19): (left, right) => *.apply[Int, Int]
+  apply => scala/Tuple2.apply().
+  Int => scala/Int#
+[6:4..6:8): Some => *.apply[Int]
+  apply => scala/Some.apply().
+  Int => scala/Int#
+[8:6..8:25): (leftVar, rightVar) => *.apply[Int, Int]
+  apply => scala/Tuple2.apply().
+  Int => scala/Int#
+[10:4..10:8): Some => *.apply[Int]
+  apply => scala/Some.apply().
+  Int => scala/Int#
+[23:4..23:11): locally => *[Unit]
+  Unit => scala/Unit#
+[24:10..24:23): (left, right) => *.apply[Int, Int]
+  apply => scala/Tuple2.apply().
+  Int => scala/Int#
+[26:8..26:12): Some => *.apply[Int]
+  apply => scala/Some.apply().
+  Int => scala/Int#
+[28:10..28:29): (leftVar, rightVar) => *.apply[Int, Int]
+  apply => scala/Tuple2.apply().
+  Int => scala/Int#
+[30:8..30:12): Some => *.apply[Int]
+  apply => scala/Some.apply().
+  Int => scala/Int#
 
 semanticdb/integration/src/main/scala/example/Vals.scala
 --------------------------------------------------------

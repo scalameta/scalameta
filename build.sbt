@@ -576,7 +576,9 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
     "javacSemanticdbPath" -> javacSemanticdbDirectory
       .in(semanticdbIntegration)
       .value
-      .getAbsolutePath
+      .getAbsolutePath,
+    "integrationSourceDirectories" ->
+      sourceDirectories.in(semanticdbIntegration, Compile).value
   ),
   buildInfoPackage := "scala.meta.tests",
   libraryDependencies ++= List(
