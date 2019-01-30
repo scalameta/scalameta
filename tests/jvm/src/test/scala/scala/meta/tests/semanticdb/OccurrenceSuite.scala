@@ -102,7 +102,7 @@ object OccurrenceSuite {
       val isPrimaryConstructor =
         symtab.get(occ.symbol).exists(_.isPrimary)
       if (!occ.symbol.isPackage && !isPrimaryConstructor) {
-        printSymbol(sb, occ.symbol)
+        printSymbol(sb, occ.symbol, occ.role)
       }
       offset = pos.end
     }
@@ -110,8 +110,10 @@ object OccurrenceSuite {
     sb.toString()
   }
 
-  def printSymbol(sb: StringBuilder, symbol: String): Unit = {
+  def printSymbol(sb: StringBuilder, symbol: String, role: SymbolOccurrence.Role): Unit = {
+    val arrow = if (role.isDefinition) "<=" else "=>"
     sb.append("/*")
+      .append(arrow)
       // replace package / with dot . to not upset GitHub syntax highlighting.
       .append(symbol.replace('/', '.'))
       .append("*/")

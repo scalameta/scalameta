@@ -1270,7 +1270,7 @@ Occurrences:
 [21:23..21:24): T <= flags/p/package.S#[T]
 [21:25..21:25):  <= flags/p/package.S#`<init>`().
 [22:6..22:10): List => scala/collection/immutable/List.
-[22:11..22:14): xs1 => flags/p/package.xs1.
+[22:11..22:14): xs1 <= flags/p/package.xs1.
 [22:18..22:21): ??? => scala/Predef.`???`().
 [23:2..23:5): ??? => scala/Predef.`???`().
 [23:19..23:23): List => scala/collection/immutable/List.
@@ -3043,7 +3043,7 @@ Occurrences:
 [9:12..9:14): xs <= example/Synthetic#xs.
 [9:17..9:23): Stream => scala/package.Stream.
 [10:6..10:10): Name => example/Synthetic#Name.
-[10:11..10:15): name => example/Synthetic#name.
+[10:11..10:15): name <= example/Synthetic#name.
 [11:4..11:7): #:: => scala/collection/immutable/Stream.ConsWrapper#`#::`().
 [11:10..11:13): #:: => scala/collection/immutable/Stream.ConsWrapper#`#::`().
 [11:14..11:20): Stream => scala/package.Stream.
@@ -3983,12 +3983,12 @@ Occurrences:
 [4:7..4:11): left <= example/ValPattern#left.
 [4:13..4:18): right <= example/ValPattern#right.
 [5:6..5:10): Some => scala/Some.
-[5:11..5:18): number1 => example/ValPattern#number1.
+[5:11..5:18): number1 <= example/ValPattern#number1.
 [6:4..6:8): Some => scala/Some.
 [8:7..8:14): leftVar <= example/ValPattern#leftVar().
 [8:16..8:24): rightVar <= example/ValPattern#rightVar().
 [9:6..9:10): Some => scala/Some.
-[9:11..9:21): number1Var => example/ValPattern#number1Var.
+[9:11..9:21): number1Var <= example/ValPattern#number1Var.
 [10:4..10:8): Some => scala/Some.
 [12:6..12:9): app <= example/ValPattern#app().
 [12:13..12:17): Unit => scala/Unit#
@@ -4003,12 +4003,12 @@ Occurrences:
 [24:11..24:15): left <= local7
 [24:17..24:22): right <= local8
 [25:10..25:14): Some => scala/Some.
-[25:15..25:22): number1 => local9
+[25:15..25:22): number1 <= local9
 [26:8..26:12): Some => scala/Some.
 [28:11..28:18): leftVar <= local12
 [28:20..28:28): rightVar <= local13
 [29:10..29:14): Some => scala/Some.
-[29:15..29:25): number1Var => local14
+[29:15..29:25): number1Var <= local14
 [30:8..30:12): Some => scala/Some.
 [31:6..31:13): println => scala/Predef.println(+1).
 [33:10..33:17): number1 => local9

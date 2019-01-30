@@ -629,6 +629,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   // of the single binder. For example, map `val Foo(x) = ..` to the position of `x`.
                   val mpos = msinglevalpats(gtree.pos.start)
                   occurrences(mpos) = gtree.symbol.toSemantic
+                  binders += mpos
                 }
               case _: g.Apply | _: g.TypeApply =>
                 tryFindSynthetic(gtree)
