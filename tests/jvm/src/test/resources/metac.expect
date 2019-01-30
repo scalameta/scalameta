@@ -4272,3 +4272,46 @@ Occurrences:
 [45:16..45:17): + => scala/Int#`+`(+4).
 [45:18..45:19): v => example/ValUsages.v.
 [45:20..45:23): yim => example/Vals#yim().
+
+semanticdb/integration/src/main/scala/example/Vararg.scala
+----------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Vararg.scala
+Text => non-empty
+Language => Scala
+Symbols => 6 entries
+Occurrences => 11 entries
+
+Symbols:
+example/Vararg# => class Vararg extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/Vararg#`<init>`(). => primary ctor <init>()
+example/Vararg#add1(). => method add1(a: Int*): Unit
+  a => example/Vararg#add1().(a)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/Vararg#add1().(a) => param a: Int*
+  Int => scala/Int#
+example/Vararg#add2(). => method add2(a: Seq[Int]*): Unit
+  a => example/Vararg#add2().(a)
+  Seq => scala/package.Seq#
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/Vararg#add2().(a) => param a: Seq[Int]*
+  Seq => scala/package.Seq#
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:6..2:12): Vararg <= example/Vararg#
+[2:13..2:13):  <= example/Vararg#`<init>`().
+[3:6..3:10): add1 <= example/Vararg#add1().
+[3:11..3:12): a <= example/Vararg#add1().(a)
+[3:14..3:17): Int => scala/`<repeated>`#
+[4:6..4:10): add2 <= example/Vararg#add2().
+[4:11..4:12): a <= example/Vararg#add2().(a)
+[4:14..4:17): Seq => scala/`<repeated>`#
+[4:18..4:21): Int => scala/Int#
+[4:26..4:30): Unit => scala/Unit#

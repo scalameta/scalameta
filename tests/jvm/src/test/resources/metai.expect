@@ -51,6 +51,7 @@ example/Synthetic# => semanticdb/integration/src/main/scala/example/Synthetic.sc
 example/ValPattern# => semanticdb/integration/src/main/scala/example/ValPattern.scala.semanticdb
 example/ValUsages. => semanticdb/integration/src/main/scala/example/Vals.scala.semanticdb
 example/Vals# => semanticdb/integration/src/main/scala/example/Vals.scala.semanticdb
+example/Vararg# => semanticdb/integration/src/main/scala/example/Vararg.scala.semanticdb
 example/`local-file`# => semanticdb/integration/src/main/scala/example/local-file.scala.semanticdb
 flags/ => package flags
 flags/p/ => package p
