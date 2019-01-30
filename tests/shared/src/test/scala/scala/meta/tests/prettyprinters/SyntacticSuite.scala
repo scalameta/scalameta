@@ -653,4 +653,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(q"val `//` = 2".syntax == "val `//` = 2")
     assert(q"val `a_//` = 2".syntax == "val `a_//` = 2")
   }
+
+  test("#1817 ApplyInfix parentheses") {
+    assert(q"list map (println)".syntax == "list map println")
+    assert(q"list map (add(1))".syntax == "list map add(1)")
+    assert(q"list map (add(_, 1))".syntax == "list map (add(_, 1))")
+    assert(q"list map (bar:_*)".syntax == "list map (bar: _*)")
+  }
 }
