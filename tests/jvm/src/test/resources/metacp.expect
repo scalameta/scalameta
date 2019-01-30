@@ -1797,6 +1797,23 @@ example/`local-file`# => class local-file extends AnyRef { +1 decls }
   AnyRef => scala/AnyRef#
 example/`local-file`#`<init>`(). => primary ctor <init>()
 
+example/Local.class
+-------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Local.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+example/Local# => class Local extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/Local#`<init>`(). => primary ctor <init>()
+example/Local#a(). => method a(): Int
+  Int => scala/Int#
+
 example/MacroAnnotations.class
 ------------------------------
 

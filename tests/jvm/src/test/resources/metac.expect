@@ -1843,6 +1843,48 @@ Synthetics:
 [3:2..3:9): locally => *[Int]
   Int => scala/Int#
 
+semanticdb/integration/src/main/scala/example/Local.scala
+---------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Local.scala
+Text => non-empty
+Language => Scala
+Symbols => 6 entries
+Occurrences => 11 entries
+Synthetics => 1 entries
+
+Symbols:
+example/Local# => class Local extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/Local#`<init>`(). => primary ctor <init>()
+example/Local#a(). => method a(): Int
+  Int => scala/Int#
+local0 => method id[A](a: A): A
+  A => local2
+  a => local1
+local1 => param a: A
+  A => local2
+local2 => typeparam A
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:6..2:11): Local <= example/Local#
+[2:12..2:12):  <= example/Local#`<init>`().
+[3:6..3:7): a <= example/Local#a().
+[4:8..4:10): id <= local0
+[4:11..4:12): A <= local2
+[4:14..4:15): a <= local1
+[4:17..4:18): A => local2
+[4:21..4:22): A => local2
+[4:25..4:26): a => local1
+[5:4..5:6): id => local0
+
+Synthetics:
+[5:4..5:6): id => *[Int]
+  Int => scala/Int#
+
 semanticdb/integration/src/main/scala/example/Locals.scala
 ----------------------------------------------------------
 
