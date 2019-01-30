@@ -285,16 +285,21 @@ object TreeSyntax {
             case (Lit.Unit()) :: Nil =>
               s("(())")
             case (arg: Term) :: Nil =>
-              def hasPlaceHolderArgument(term: Term.Apply) = term.args.exists({
-                case _: Term.Placeholder => true
-                case _ => false
-              })
-              arg match {
-                case apply: Term.Apply if hasPlaceHolderArgument(apply) =>
-                  s("(", p(InfixExpr(t.op.value), arg, right = true), ")")
+              val needsParens = arg match {
+                // Include parentheses for `a op (apply(b, _))`
+                case apply: Term.Apply if apply.args.exists {
+                    case _: Term.Placeholder => true
+                    case _ => false
+                  } =>
+                  true
+                // Include parentheses for `a op (bar: _*)`
+                case repeated: Term.Repeated =>
+                  true
                 case _ =>
-                  s(p(InfixExpr(t.op.value), arg, right = true))
+                  false
               }
+              if (needsParens) s("(", p(InfixExpr(t.op.value), arg, right = true), ")")
+              else s(p(InfixExpr(t.op.value), arg, right = true))
               case args => s(args)
           }
 

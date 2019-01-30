@@ -658,5 +658,6 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(q"list map (println)".syntax == "list map println")
     assert(q"list map (add(1))".syntax == "list map add(1)")
     assert(q"list map (add(_, 1))".syntax == "list map (add(_, 1))")
+    assert(q"list map (bar:_*)".syntax == "list map (bar: _*)")
   }
 }
