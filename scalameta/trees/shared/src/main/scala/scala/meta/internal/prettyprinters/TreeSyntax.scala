@@ -299,8 +299,8 @@ object TreeSyntax {
                     case _ => false
                   } =>
                   true
-                // Include parentheses for `a op (bar: _*)`
-                case repeated: Term.Repeated =>
+                // Include parentheses for `a op (b: _*)`, tuple `a op ((b, c))`, `a op (_.bar), a op (_.opTwo(b))`, `a op (_ opTwo b)`
+                case _: Term.Repeated | _: Term.Tuple |  Term.Select(_: Term.Placeholder, _) | Term.Apply(Term.Select(_: Term.Placeholder, _), _) | Term.ApplyInfix(_: Term.Placeholder, _, _, _) =>
                   true
                 case _ =>
                   false
