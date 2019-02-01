@@ -701,4 +701,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(q"list map (add(_, 1))".syntax == "list map (add(_, 1))")
     assert(q"list map (bar:_*)".syntax == "list map (bar: _*)")
   }
+
+  test("#1826 ApplyInfix parentheses on Tuple and Select") {
+    assert(q"list map (_.bar)".syntax == "list map (_.bar)")
+    assert(q"list map (_ diff foo)".syntax == "list map (_ diff foo)")
+    assert(q"list map ((_, foo))".syntax == "list map ((_, foo))")
+    assert(q"list map (_ -> foo)".syntax == "list map (_ -> foo)")
+    assert(q"list map (_.->(foo))".syntax == "list map (_.->(foo))")
+    assert(q"list map (_ => foo)".syntax == "list map (_ => foo)")
+  }
 }
