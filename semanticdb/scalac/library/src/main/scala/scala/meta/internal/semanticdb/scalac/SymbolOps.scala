@@ -313,7 +313,7 @@ trait SymbolOps { self: SemanticdbOps =>
     val minput = loop(sym).toInput
     if (minput == m.Input.None) Symbols.None
     else {
-      val hasPosition = sym.pos.isDefined
+      val hasPosition = sym.pos != null && sym.pos.isDefined
       val conflict =
         if (hasPosition) pointsCache.get(sym.pos.point)
         else null
