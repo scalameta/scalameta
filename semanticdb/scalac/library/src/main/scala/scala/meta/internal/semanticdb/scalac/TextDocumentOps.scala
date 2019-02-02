@@ -630,7 +630,9 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case gtree: g.MemberDef =>
                 gtree.symbol.annotations.foreach(ann => traverse(ann.original))
                 tryFindMtree(gtree)
-                if (!gtree.symbol.isSynthetic &&
+                if (gtree.symbol != null &&
+                    !gtree.symbol.isSynthetic &&
+                    gtree.pos != null &&
                     gtree.pos.isRange &&
                     msinglevalpats.contains(gtree.pos.start)) {
                   // Map Defn.Val position of val pattern with single binder to the position
@@ -641,7 +643,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 }
               case _: g.Apply | _: g.TypeApply =>
                 tryFindSynthetic(gtree)
-                if (gtree.pos.isRange) {
+                if (gtree.pos != null && gtree.pos.isRange) {
                   tryNamedArg(gtree, gtree.pos.start, gtree.pos.point)
                 }
               case select: g.Select if isSyntheticName(select) =>
