@@ -11,7 +11,6 @@ If you'd like to find out how to use scalameta, see this [tutorial](http://scala
 ### Team
 The current maintainers (people who can merge pull requests) are:
 
-* Eugene Burmako - [`@xeno-by`](https://github.com/xeno-by)
 * David Dudson - [`@DavidDudson`](https://github.com/DavidDudson)
 * Ólafur Páll Geirsson - [`@olafurpg`](https://github.com/olafurpg)
 * Mikhail Mutcianko - [`@mutcianm`](https://github.com/mutcianm)
