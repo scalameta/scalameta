@@ -696,33 +696,41 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#1817 ApplyInfix parentheses") {
-    assert(q"list map (println)".syntax == "list map println")
-    assert(q"list map (add(1))".syntax == "list map add(1)")
-    assert(q"list map (add(_, 1))".syntax == "list map (add(_, 1))")
-    assert(q"list map (bar:_*)".syntax == "list map (bar: _*)")
+    checkTree(q"list map (println)", "list map println")
+    checkTree(q"list map (add(1))", "list map add(1)")
+    checkTree(q"list map (add(_, 1))", "list map (add(_, 1))")
+    checkTree(q"list map (bar:_*)", "list map (bar: _*)")
   }
   test("#1826 ApplyInfix parentheses on Select") {
-    assert(q"list map (_.bar)".syntax == "list map (_.bar)")
-    assert(q"list map (Foo.bar)".syntax == "list map Foo.bar")
+    checkTree(q"list map (_.bar)", "list map (_.bar)")
+    checkTree(q"list map (Foo.bar)", "list map Foo.bar")
   }
   test("#1826 ApplyInfix parentheses on tuple") {
-    assert(q"list map ((_, foo))".syntax == "list map ((_, foo))")
+    checkTree(q"list map ((_, foo))", "list map ((_, foo))")
   }
   test("#1826 ApplyInfix parentheses on Apply") {
-    assert(q"list map (_.->(foo))".syntax == "list map (_.->(foo))")
-    assert(q"list map a.->(foo)".syntax == "list map a.->(foo)")
-    assert(q"list map (_.diff(foo))".syntax == "list map (_.diff(foo))")
-    assert(q"list map a.diff(foo)".syntax == "list map a.diff(foo)")
+    checkTree(q"list map (_.->(foo))", "list map (_.->(foo))")
+    checkTree(q"list map a.->(foo)", "list map a.->(foo)")
+    checkTree(q"list map (_.diff(foo))", "list map (_.diff(foo))")
+    checkTree(q"list map a.diff(foo)", "list map a.diff(foo)")
   }
   test("#1826 ApplyInfix parentheses on Function") {
-    assert(q"list map (_ => foo)".syntax == "list map (_ => foo)")
+    checkTree(q"list map (_ => foo)", "list map (_ => foo)")
   }
   test("#1826 ApplyInfix parentheses on ApplyInfix function") {
-    assert(q"list map (_ diff foo)".syntax == "list map (_ diff foo)")
-    assert(q"list map (a diff foo)".syntax == "list map a diff foo")
+    checkTree(q"list map (_ diff foo)", "list map (_ diff foo)")
+    checkTree(q"list map (a diff foo)", "list map a diff foo")
   }
   test("#1826 ApplyInfix parentheses on ApplyInfix operator") {
-    assert(q"list map (_ -> foo)".syntax == "list map (_ -> foo)")
-    assert(q"list map (a -> foo)".syntax == "list map a -> foo")
+    checkTree(q"list map (_ -> foo)", "list map (_ -> foo)")
+    checkTree(q"list map (a -> foo)", "list map a -> foo")
+  }
+  test("1826 ApplyInfix parentheses on Term.Match") {
+    checkTree(q"list map (_ match { case 1 => 2})", s"list map (_ match {${EOL}  case 1 => 2${EOL}})")
+  }
+
+  def checkTree(original: Tree, expected: String): Unit = {
+    assert(original.syntax == expected)
+    assert(original.structure == (expected.parse[Stat]).get.structure)
   }
 }
