@@ -701,14 +701,28 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(q"list map (add(_, 1))".syntax == "list map (add(_, 1))")
     assert(q"list map (bar:_*)".syntax == "list map (bar: _*)")
   }
-
-  test("#1826 ApplyInfix parentheses on Tuple and Select") {
+  test("#1826 ApplyInfix parentheses on Select") {
     assert(q"list map (_.bar)".syntax == "list map (_.bar)")
     assert(q"list map (Foo.bar)".syntax == "list map Foo.bar")
+  }
+  test("#1826 ApplyInfix parentheses on tuple") {
     assert(q"list map ((_, foo))".syntax == "list map ((_, foo))")
-    assert(q"list map (_ -> foo)".syntax == "list map (_ -> foo)")
+  }
+  test("#1826 ApplyInfix parentheses on Apply") {
     assert(q"list map (_.->(foo))".syntax == "list map (_.->(foo))")
+    assert(q"list map a.->(foo)".syntax == "list map a.->(foo)")
+    assert(q"list map (_.diff(foo))".syntax == "list map (_.diff(foo))")
+    assert(q"list map a.diff(foo)".syntax == "list map a.diff(foo)")
+  }
+  test("#1826 ApplyInfix parentheses on Function") {
     assert(q"list map (_ => foo)".syntax == "list map (_ => foo)")
+  }
+  test("#1826 ApplyInfix parentheses on ApplyInfix function") {
     assert(q"list map (_ diff foo)".syntax == "list map (_ diff foo)")
+    assert(q"list map (a diff foo)".syntax == "list map a diff foo")
+  }
+  test("#1826 ApplyInfix parentheses on ApplyInfix operator") {
+    assert(q"list map (_ -> foo)".syntax == "list map (_ -> foo)")
+    assert(q"list map (a -> foo)".syntax == "list map a -> foo")
   }
 }
