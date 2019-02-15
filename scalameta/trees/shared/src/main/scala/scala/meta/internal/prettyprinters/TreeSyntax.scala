@@ -293,17 +293,17 @@ object TreeSyntax {
               s("(())")
             case (arg: Term) :: Nil =>
               val needsParens = arg match {
-                case apply: Term.Apply if apply.args.exists { // `a op (apply(b, _))`
-                    case _: Term.Placeholder => true
-                    case _ => false
-                  } => true
                 case Term.Select(_: Term.Placeholder, _) => // `a op (_.b)`
                   true
                 case Term.Apply(Term.Select(lhs: Term.Placeholder, _), _) => // `a op (_.b(c))`
                   true
+                case apply: Term.Apply => apply.args.exists { // `a op (apply(b, _))`
+                    case _: Term.Placeholder => true
+                    case _ => false
+                  }
                 case Term.ApplyInfix(lhs, _, _, _) if !lhs.isInstanceOf[Term.Placeholder] => // Not `a op (_ b c)`
                   false
-                case _: Lit | _: Term.Ref | _: Term.Function | _: Term.Apply | _: Term.If | _: Term.Match =>
+                case _: Lit | _: Term.Ref | _: Term.Function | _: Term.If | _: Term.Match =>
                   false
                 case _ =>
                   true
