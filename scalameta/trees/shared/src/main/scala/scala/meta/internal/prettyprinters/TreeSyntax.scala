@@ -266,10 +266,17 @@ object TreeSyntax {
         case t: Term.Name            => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
         case t: Term.Select          => m(Path, s(p(SimpleExpr, t.qual), if (guessIsPostfix(t)) " " else ".", t.name))
         case t: Term.Interpolate     =>
-          val parts = t.parts.map{ case Lit(part: String) => part }
-          val zipped = parts.zip(t.args).map {
-            case (part, id: Name) if !guessIsBackquoted(id) => s(part, "$", id.value)
-            case (part, arg) => s(part, "${", p(Expr, arg), "}")
+          def needBraces(id: String, charAfter: Option[Char]): Boolean = {
+            val isOpId = isOperatorPart(id.head)
+            val charAfterIsOp = charAfter.exists(isOperatorPart)
+            val charAfterIsIdPart = charAfter.exists(chr => isNameStart(chr) || Character.isDigit(chr))
+            if (isOpId) charAfterIsOp else charAfterIsIdPart
+          }
+
+          val parts = t.parts.map { case Lit(part: String) => part.replace("$", "$$") }
+          val zipped = parts.zip(t.args).zip(parts.tail).map {
+            case ((part, id: Name), next) if !guessIsBackquoted(id) && !needBraces(id.value, next.headOption) => s(part, "$", id.value)
+            case ((part, arg), _) => s(part, "${", p(Expr, arg), "}")
           }
           val quote = if (parts.exists(s => s.contains("\n") || s.contains("\""))) "\"\"\"" else "\""
           m(SimpleExpr1, s(t.prefix, quote, r(zipped), parts.last, quote))

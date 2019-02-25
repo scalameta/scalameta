@@ -541,6 +541,28 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(tree.syntax == """s"Hello${{}}World"""")
   }
 
+  test("interpolator with $ character") {
+    val tree = term("""s"$$$foo$$"""")
+    assert(tree.structure == """Term.Interpolate(Term.Name("s"), List(Lit.String("$"), Lit.String("$")), List(Term.Name("foo")))""")
+    assert(tree.syntax == """s"$$$foo$$"""")
+  }
+
+  test("interpolator braces for operator identifiers") {
+    assert(q"""s"$${+++}bar"""".syntax == """s"$+++bar"""")
+    assert(q"""s"$${+++}_bar"""".syntax == """s"$+++_bar"""")
+    assert(q"""s"$${+++}123"""".syntax == """s"$+++123"""")
+    assert(q"""s"$${+++}***"""".syntax == """s"${+++}***"""")
+    assert(q"""s"$${+++} ***"""".syntax == """s"$+++ ***"""")
+  }
+
+  test("interpolator braces for plain identifiers") {
+    assert(q"""s"$${foo}bar"""".syntax == """s"${foo}bar"""")
+    assert(q"""s"$${foo}_bar"""".syntax == """s"${foo}_bar"""")
+    assert(q"""s"$${foo}123"""".syntax == """s"${foo}123"""")
+    assert(q"""s"$${foo}***"""".syntax == """s"$foo***"""")
+    assert(q"""s"$${foo} ***"""".syntax == """s"$foo ***"""")
+  }
+
   test("empty-arglist application") {
     val tree = term("foo.toString()")
     assert(tree.structure === "Term.Apply(Term.Select(Term.Name(\"foo\"), Term.Name(\"toString\")), Nil)")
