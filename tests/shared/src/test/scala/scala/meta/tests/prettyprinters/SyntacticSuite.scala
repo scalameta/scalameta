@@ -413,6 +413,25 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(templStat("class C(x: Int)(implicit y: String, z: Boolean)").syntax === "class C(x: Int)(implicit y: String, z: Boolean)")
   }
 
+  test("#1837 class C(x: Int, implicit val|var y: String)") {
+    assert(templStat("class C(x: Int, implicit val y: String)").syntax === "class C(x: Int, implicit val y: String)")
+    assert(templStat("class C(x: Int, implicit var y: String)").syntax === "class C(x: Int, implicit var y: String)")
+  }
+
+  test("#1837 class C(<keyword> implicit val x: Int, y: String)(implicit z: Boolean)") {
+    def checkSyntax(stat: String) = assert(templStat(stat).syntax === stat)
+
+    checkSyntax("class C(private implicit val x: Int, y: String)(implicit z: Boolean)")
+    checkSyntax("class C(protected implicit val x: Int, y: String)(implicit z: Boolean)")
+    checkSyntax("class C(final implicit val x: Int, y: String)(implicit z: Boolean)")
+    checkSyntax("class C(override implicit val x: Int, y: String)(implicit z: Boolean) extends T")
+  }
+
+  test("#1837 class C(private implicit val x: Int, implicit final val y: String, protected implicit var z: Boolean)") {
+    assert(templStat("class C(private implicit val x: Int, implicit final val y: String, protected implicit var z: Boolean)").syntax ===
+                     "class C(private implicit val x: Int, final val y: String, protected var z: Boolean)")
+  }
+
   test("class C(var x: Int)") {
     assert(templStat("class C(var x: Int)").syntax === "class C(var x: Int)")
   }
