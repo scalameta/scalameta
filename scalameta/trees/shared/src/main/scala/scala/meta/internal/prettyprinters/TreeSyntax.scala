@@ -523,7 +523,24 @@ object TreeSyntax {
           if (guessHasBraces(t)) s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
           else s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
         case t: Pkg.Object     => s(kw("package"), " ", w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
-        case t: Ctor.Primary   => s(w(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), t.paramss)
+        case t: Ctor.Primary   =>
+          def printParam(t: Term.Param) =
+            s(w(t.mods, " "), t.name, t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
+
+          val paramss =
+            r(t.paramss.map(params => {
+              val firstParamModIsImplicit = params.headOption.exists(_.mods.headOption.exists(_.is[Mod.Implicit]))
+              val firstParamContainsImplicit = params.headOption.exists(_.mods.exists(_.is[Mod.Implicit]))
+
+              if (firstParamModIsImplicit)
+                s("(implicit ", r(params, ", "), ")")
+              else if (firstParamContainsImplicit)
+                s("(", printParam(params.head), w(", ", r(params.tail, ", "), params.tail.nonEmpty), ")")
+              else
+                s("(", r(params.map(printParam), ", "), ")")
+            }), "")
+
+          s(w(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), paramss)
         case t: Ctor.Secondary =>
           if (t.stats.isEmpty) s(w(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, " = ", t.init)
           else s(w(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, " {", i(t.init), "", r(t.stats.map(i(_)), ""), n("}"))
