@@ -301,14 +301,22 @@ object TreeSyntax {
                     case _: Term.Placeholder => true
                     case _ => false
                   }
-                case Term.ApplyInfix(lhs, _, _, _) if !lhs.isInstanceOf[Term.Placeholder] => // Not `a op (_ b c)`
-                  false
-                case _: Lit | _: Term.Ref | _: Term.Function | _: Term.If | _: Term.Match =>
+                case Term.ApplyInfix(_: Term.Placeholder, _, _, _) =>  // `a op (_ b c)`
+                  true
+                case _: Lit | _: Term.Ref | _: Term.Function | _: Term.If | _: Term.Match | _: Term.ApplyInfix =>
                   false
                 case _ =>
                   true
               }
-              if (needsParens) s("(", p(InfixExpr(t.op.value), arg, right = true), ")")
+              val checkPrecedence = arg match {
+                case Term.ApplyInfix(_: Term.Placeholder, _, _, _) =>
+                  false
+                case _ =>
+                  true
+              }
+              if (needsParens) 
+                if (checkPrecedence) s("(", p(InfixExpr(t.op.value), arg, right = true), ")")
+                else s("(", arg, ")")
               else s(p(InfixExpr(t.op.value), arg, right = true))
               case args => s(args)
           }

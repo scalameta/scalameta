@@ -719,10 +719,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
   test("#1826 ApplyInfix parentheses on ApplyInfix function") {
     checkTree(q"list map (_ diff foo)", "list map (_ diff foo)")
-    checkTree(q"list map (a diff foo)", "list map a diff foo")
+    // 'diff' has same precedence as 'map', so parentheses should be added
+    checkTree(q"list map (a diff foo)", "list map (a diff foo)")
   }
   test("#1826 ApplyInfix parentheses on ApplyInfix operator") {
     checkTree(q"list map (_ -> foo)", "list map (_ -> foo)")
+    // '->' has greater precendence than 'map', so parentheses are not needed
     checkTree(q"list map (a -> foo)", "list map a -> foo")
   }
   test("1826 ApplyInfix parentheses on Term.Match") {
