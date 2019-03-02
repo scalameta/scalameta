@@ -696,9 +696,43 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#1817 ApplyInfix parentheses") {
-    assert(q"list map (println)".syntax == "list map println")
-    assert(q"list map (add(1))".syntax == "list map add(1)")
-    assert(q"list map (add(_, 1))".syntax == "list map (add(_, 1))")
-    assert(q"list map (bar:_*)".syntax == "list map (bar: _*)")
+    checkTree(q"list map (println)", "list map println")
+    checkTree(q"list map (add(1))", "list map add(1)")
+    checkTree(q"list map (add(_, 1))", "list map (add(_, 1))")
+    checkTree(q"list map (bar:_*)", "list map (bar: _*)")
+  }
+  test("#1826 ApplyInfix parentheses on Select") {
+    checkTree(q"list map (_.bar)", "list map (_.bar)")
+    checkTree(q"list map (Foo.bar)", "list map Foo.bar")
+  }
+  test("#1826 ApplyInfix parentheses on tuple") {
+    checkTree(q"list map ((_, foo))", "list map ((_, foo))")
+  }
+  test("#1826 ApplyInfix parentheses on Apply") {
+    checkTree(q"list map (_.->(foo))", "list map (_.->(foo))")
+    checkTree(q"list map a.->(foo)", "list map a.->(foo)")
+    checkTree(q"list map (_.diff(foo))", "list map (_.diff(foo))")
+    checkTree(q"list map a.diff(foo)", "list map a.diff(foo)")
+  }
+  test("#1826 ApplyInfix parentheses on Function") {
+    checkTree(q"list map (_ => foo)", "list map (_ => foo)")
+  }
+  test("#1826 ApplyInfix parentheses on ApplyInfix function") {
+    checkTree(q"list map (_ diff foo)", "list map (_ diff foo)")
+    // 'diff' has same precedence as 'map', so parentheses should be added
+    checkTree(q"list map (a diff foo)", "list map (a diff foo)")
+  }
+  test("#1826 ApplyInfix parentheses on ApplyInfix operator") {
+    checkTree(q"list map (_ -> foo)", "list map (_ -> foo)")
+    // '->' has greater precendence than 'map', so parentheses are not needed
+    checkTree(q"list map (a -> foo)", "list map a -> foo")
+  }
+  test("1826 ApplyInfix parentheses on Term.Match") {
+    checkTree(q"list map (_ match { case 1 => 2})", s"list map (_ match {${EOL}  case 1 => 2${EOL}})")
+  }
+
+  def checkTree(original: Tree, expected: String): Unit = {
+    assert(original.syntax == expected)
+    assert(original.structure == (expected.parse[Stat]).get.structure)
   }
 }

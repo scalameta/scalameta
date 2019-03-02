@@ -293,19 +293,30 @@ object TreeSyntax {
               s("(())")
             case (arg: Term) :: Nil =>
               val needsParens = arg match {
-                // Include parentheses for `a op (apply(b, _))`
-                case apply: Term.Apply if apply.args.exists {
+                case Term.Select(_: Term.Placeholder, _) => // `a op (_.b)`
+                  true
+                case Term.Apply(Term.Select(lhs: Term.Placeholder, _), _) => // `a op (_.b(c))`
+                  true
+                case apply: Term.Apply => apply.args.exists { // `a op (apply(b, _))`
                     case _: Term.Placeholder => true
                     case _ => false
-                  } =>
+                  }
+                case Term.ApplyInfix(_: Term.Placeholder, _, _, _) =>  // `a op (_ b c)`
                   true
-                // Include parentheses for `a op (bar: _*)`
-                case repeated: Term.Repeated =>
-                  true
-                case _ =>
+                case _: Lit | _: Term.Ref | _: Term.Function | _: Term.If | _: Term.Match | _: Term.ApplyInfix =>
                   false
+                case _ =>
+                  true
               }
-              if (needsParens) s("(", p(InfixExpr(t.op.value), arg, right = true), ")")
+              val checkPrecedence = arg match {
+                case Term.ApplyInfix(_: Term.Placeholder, _, _, _) =>
+                  false
+                case _ =>
+                  true
+              }
+              if (needsParens) 
+                if (checkPrecedence) s("(", p(InfixExpr(t.op.value), arg, right = true), ")")
+                else s("(", arg, ")")
               else s(p(InfixExpr(t.op.value), arg, right = true))
               case args => s(args)
           }
