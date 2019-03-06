@@ -712,7 +712,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkTree(q"list map (_.->(foo))", "list map (_.->(foo))")
     checkTree(q"list map a.->(foo)", "list map a.->(foo)")
     checkTree(q"list map (_.diff(foo))", "list map (_.diff(foo))")
+    checkTree(q"list map (_.diff.bar(foo))", "list map (_.diff.bar(foo))")
     checkTree(q"list map a.diff(foo)", "list map a.diff(foo)")
+    checkTree(q"list map a.diff.bar(foo)", "list map a.diff.bar(foo)")
   }
   test("#1826 ApplyInfix parentheses on Function") {
     checkTree(q"list map (_ => foo)", "list map (_ => foo)")
@@ -729,6 +731,14 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
   test("1826 ApplyInfix parentheses on Term.Match") {
     checkTree(q"list map (_ match { case 1 => 2})", s"list map (_ match {${EOL}  case 1 => 2${EOL}})")
+  }
+
+  test("#1839 ApplyInfix parentheses on Term.Placeholder") {
+    checkTree(q"list reduce (_ + _)", "list reduce (_ + _)")
+    checkTree(q"list reduce (_ + (_))", "list reduce (_ + _)")
+    checkTree(q"list reduce (_.foo + _.bar)", "list reduce (_.foo + _.bar)")
+    checkTree(q"list reduce (_.a.b.c + _.d.e.f)", "list reduce (_.a.b.c + _.d.e.f)")
+    checkTree(q"list reduce (_.a(foo) + _.b(bar))", "list reduce (_.a(foo) + _.b(bar))")
   }
 
   def checkTree(original: Tree, expected: String): Unit = {
