@@ -25,7 +25,7 @@ object PlatformFileIO {
     }
 
   def readAllBytes(path: AbsolutePath): Array[Byte] = JSIO.inNode {
-    val jsArray = JSIO.fs.readFileSync(path.toString)
+    val jsArray = JSFs.readFileSync(path.toString)
     val len = jsArray.length
     val result = new Array[Byte](len)
     var curr = 0
@@ -42,20 +42,20 @@ object PlatformFileIO {
   }
 
   def write(path: AbsolutePath, proto: GeneratedMessage): Unit = JSIO.inNode {
-    JSIO.fs.mkdirSync(path.toNIO.getParent.toString)
+    JSFs.mkdirSync(path.toNIO.getParent.toString)
     val os = new ByteArrayOutputStream
     proto.writeTo(os)
     val buffer = os.toByteArray.map(_.toInt).toJSArray
-    JSIO.fs.writeFileSync(path.toString, buffer)
+    JSFs.writeFileSync(path.toString, buffer)
   }
 
   def slurp(path: AbsolutePath, charset: Charset): String =
-    JSIO.inNode(JSIO.fs.readFileSync(path.toString, charset.toString))
+    JSIO.inNode(JSFs.readFileSync(path.toString, charset.toString))
 
   def listFiles(path: AbsolutePath): ListFiles = JSIO.inNode {
     if (path.isFile) new ListFiles(path, Nil)
     else {
-      val jsArray = JSIO.fs.readdirSync(path.toString)
+      val jsArray = JSFs.readdirSync(path.toString)
       val builder = List.newBuilder[RelativePath]
       builder.sizeHint(jsArray.length)
       var curr = 0
