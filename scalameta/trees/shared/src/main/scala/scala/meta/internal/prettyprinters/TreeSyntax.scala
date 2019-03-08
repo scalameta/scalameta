@@ -264,7 +264,11 @@ object TreeSyntax {
           val superqual = if (t.superp.is[Name.Anonymous]) s() else s("[", t.superp, "]")
           m(Path, s(thisqual, kw("super"), superqual))
         case t: Term.Name            => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
-        case t: Term.Select          => m(Path, s(p(SimpleExpr, t.qual), if (guessIsPostfix(t)) " " else ".", t.name))
+        case t: Term.Select          =>
+          t.qual match {
+            case Term.New(Init(_, _, Nil)) => m(Path, s("(", t.qual, ")", if (guessIsPostfix(t)) " " else ".", t.name))
+            case _ => m(Path, s(p(SimpleExpr, t.qual), if (guessIsPostfix(t)) " " else ".", t.name))
+          }
         case t: Term.Interpolate     =>
           def needBraces(id: String, charAfter: Option[Char]): Boolean = {
             val isOpId = isOperatorPart(id.head)

@@ -157,6 +157,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(templStat("new X {}").syntax === "new X {}")
   }
 
+  test("(new X).bar") {
+    assert(templStat("(new X).bar").syntax === "(new X).bar")
+    assert(templStat("new X {}.bar").syntax === "new X {}.bar")
+    assert(templStat("new X().bar").syntax === "new X().bar")
+  }
+
   test("ascribe and annotate") {
     assert(templStat("_: Int").syntax === "_: Int")
     assert(templStat("(_: Int) + 2").syntax === "(_: Int) + 2")
