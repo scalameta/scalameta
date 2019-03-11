@@ -296,33 +296,34 @@ object TreeSyntax {
             case (Lit.Unit()) :: Nil =>
               s("(())")
             case (arg: Term) :: Nil =>
-              val needsParens = arg match {
+              def lhsIsPlaceHolder(left: Term): Boolean = left match {
+                case _: Term.Placeholder => true
+                case Term.Select(lhs, _) => lhsIsPlaceHolder(lhs)
+                case Term.Apply(lhs, _) => lhsIsPlaceHolder(lhs)
+                case _ => false
+              }
+
+              def needsParens: Boolean = arg match {
                 case Term.Select(_: Term.Placeholder, _) => // `a op (_.b)`
                   true
-                case Term.Apply(Term.Select(lhs: Term.Placeholder, _), _) => // `a op (_.b(c))`
+                case Term.Apply(lhs, _) if lhsIsPlaceHolder(lhs) => // `a op (_.b(c))`
                   true
                 case apply: Term.Apply => apply.args.exists { // `a op (apply(b, _))`
                     case _: Term.Placeholder => true
                     case _ => false
                   }
-                case Term.ApplyInfix(_: Term.Placeholder, _, _, _) =>  // `a op (_ b c)`
+                case Term.ApplyInfix(lhs, _, _, _) if lhsIsPlaceHolder(lhs) =>  // `a op (_ b c)`
                   true
                 case _: Lit | _: Term.Ref | _: Term.Function | _: Term.If | _: Term.Match | _: Term.ApplyInfix =>
                   false
                 case _ =>
                   true
               }
-              val checkPrecedence = arg match {
-                case Term.ApplyInfix(_: Term.Placeholder, _, _, _) =>
-                  false
-                case _ =>
-                  true
-              }
-              if (needsParens) 
-                if (checkPrecedence) s("(", p(InfixExpr(t.op.value), arg, right = true), ")")
-                else s("(", arg, ")")
+
+              if (lhsIsPlaceHolder(t.lhs)) s(arg)
+              else if (needsParens) s("(", arg, ")")
               else s(p(InfixExpr(t.op.value), arg, right = true))
-              case args => s(args)
+            case args => s(args)
           }
 
           m(InfixExpr(t.op.value), s(p(InfixExpr(t.op.value), t.lhs, left = true), " ", t.op, t.targs, " ", args))
