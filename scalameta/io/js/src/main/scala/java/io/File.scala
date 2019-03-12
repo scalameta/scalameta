@@ -49,7 +49,7 @@ class File(path: String) {
 object File {
   def listRoots(): Array[File] = Array(
     new File(
-      if (JSIO.isNode) JSIO.path.parse(JSIO.path.resolve()).root
+      if (JSIO.isNode) JSPath.parse(JSPath.resolve()).root
       else "/"
     )
   )
@@ -58,10 +58,10 @@ object File {
     separator.charAt(0)
 
   def separator: String =
-    if (JSIO.isNode) JSIO.path.sep
+    if (JSIO.isNode) JSPath.sep
     else "/"
 
   def pathSeparator: String =
-    if (JSIO.isNode) JSIO.path.delimiter
+    if (JSIO.isNode) JSPath.delimiter
     else ":"
 }

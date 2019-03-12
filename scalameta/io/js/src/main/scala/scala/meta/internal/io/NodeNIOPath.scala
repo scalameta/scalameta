@@ -22,7 +22,7 @@ case class NodeNIOPath(filename: String) extends Path {
   override def toFile: File =
     new File(filename)
   override def isAbsolute: Boolean =
-    if (JSIO.isNode) JSIO.path.isAbsolute(filename)
+    if (JSIO.isNode) JSPath.isAbsolute(filename)
     else filename.startsWith(File.separator)
   override def getName(index: Int): Path =
     NodeNIOPath(
@@ -31,12 +31,12 @@ case class NodeNIOPath(filename: String) extends Path {
         .lift(adjustIndex(index))
         .getOrElse(throw new IllegalArgumentException))
   override def getParent: Path =
-    NodeNIOPath(JSIO.path.dirname(filename))
+    NodeNIOPath(JSPath.dirname(filename))
   override def toAbsolutePath: Path =
     if (isAbsolute) this
     else NodeNIOPath.workingDirectory.resolve(this)
   override def relativize(other: Path): Path =
-    NodeNIOPath(JSIO.path.relative(filename, other.toString))
+    NodeNIOPath(JSPath.relative(filename, other.toString))
   override def getNameCount: Int = {
     val strippeddrive =
       if ((filename.length > 1) && (filename(1) == ':')) filename.substring(2) else filename
@@ -46,18 +46,18 @@ case class NodeNIOPath(filename: String) extends Path {
   }
   override def toUri: URI = toFile.toURI
   override def getFileName: Path =
-    NodeNIOPath(JSIO.path.basename(filename))
+    NodeNIOPath(JSPath.basename(filename))
   override def getRoot: Path =
     if (!isAbsolute) null
     else NodeNIOPath(File.separator)
   override def normalize(): Path =
-    if (JSIO.isNode) NodeNIOPath(JSIO.path.normalize(filename))
+    if (JSIO.isNode) NodeNIOPath(JSPath.normalize(filename))
     else this
   override def endsWith(other: Path): Boolean =
     endsWith(other.toString)
   override def endsWith(other: String): Boolean =
     paths(filename).endsWith(paths(other))
-  // JSIO.path.resolve(relpath, relpath) produces an absolute path from cwd.
+  // JSPath.resolve(relpath, relpath) produces an absolute path from cwd.
   // This method turns the generated absolute path back into a relative path.
   private def adjustResolvedPath(resolved: Path): Path =
     if (isAbsolute) resolved
@@ -65,11 +65,11 @@ case class NodeNIOPath(filename: String) extends Path {
   override def resolveSibling(other: Path): Path =
     resolveSibling(other.toString)
   override def resolveSibling(other: String): Path =
-    adjustResolvedPath(NodeNIOPath(JSIO.path.resolve(JSIO.path.dirname(filename), other)))
+    adjustResolvedPath(NodeNIOPath(JSPath.resolve(JSPath.dirname(filename), other)))
   override def resolve(other: Path): Path =
     resolve(other.toString)
   override def resolve(other: String): Path =
-    adjustResolvedPath(NodeNIOPath(JSIO.path.resolve(filename, other)))
+    adjustResolvedPath(NodeNIOPath(JSPath.resolve(filename, other)))
   override def startsWith(other: Path): Boolean =
     startsWith(other.toString)
   override def startsWith(other: String): Boolean =

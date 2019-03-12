@@ -539,6 +539,9 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .jvmConfigure(
     _.dependsOn(testkit, interactive, metac, metacp, metai, symtab, semanticdbIntegration)
   )
+  .jsSettings(
+    scalaJSModuleKind := ModuleKind.CommonJSModule
+  )
   .nativeSettings(
     nativeSettings,
     // FIXME: https://github.com/scalatest/scalatest/issues/1112
