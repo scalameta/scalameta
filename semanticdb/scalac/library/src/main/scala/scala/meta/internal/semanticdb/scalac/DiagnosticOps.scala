@@ -19,7 +19,7 @@ trait DiagnosticOps { self: SemanticdbOps =>
                 case Some(name) => name.pos
                 case None =>
                   if (unit.source.content(gpos.point) == '_') // Importee.Wildcard()
-                    gpos.withStart(gpos.point).withEnd(gpos.point + 1).toMeta
+                    m.Position.Range(gpos.source.toInput, gpos.point, gpos.point + 1)
                   else gpos.toMeta
               }
             } else gpos.toMeta
