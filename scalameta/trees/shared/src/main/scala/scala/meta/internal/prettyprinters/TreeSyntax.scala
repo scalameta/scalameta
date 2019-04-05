@@ -308,20 +308,17 @@ object TreeSyntax {
               case _: Term.Placeholder => true
               case Term.Select(lhs, _) => lhsIsPlaceHolder(lhs)
               case Term.Apply(lhs, _) => lhsIsPlaceHolder(lhs)
+              case Term.ApplyInfix(lhs, _, _, _) => lhsIsPlaceHolder(lhs)
               case _ => false
             }
 
             def needsParens: Boolean = arg match {
-              case Term.Select(_: Term.Placeholder, _) => // `a op (_.b)`
-                true
-              case Term.Apply(lhs, _) if lhsIsPlaceHolder(lhs) => // `a op (_.b(c))`
+              case placeholder if lhsIsPlaceHolder(placeholder) => // `a op (_.b)`
                 true
               case apply: Term.Apply => apply.args.exists { // `a op (apply(b, _))`
                 case _: Term.Placeholder => true
                 case _ => false
               }
-              case Term.ApplyInfix(lhs, _, _, _) if lhsIsPlaceHolder(lhs) =>  // `a op (_ b c)`
-                true
               case _: Lit | _: Term.Ref | _: Term.Function | _: Term.If | _: Term.Match | _: Term.ApplyInfix =>
                 false
               case _ =>

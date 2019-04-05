@@ -711,6 +711,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkTree(q"list map (_.bar)", "list map (_.bar)")
     checkTree(q"list map (Foo.bar)", "list map Foo.bar")
   }
+  test("1826 ApplyInfix parentheses on multiple Select") {
+    checkTree(q"list map (_.foo.bar)", "list map (_.foo.bar)")
+  }
   test("#1826 ApplyInfix parentheses on tuple") {
     checkTree(q"list map ((_, foo))", "list map ((_, foo))")
   }
