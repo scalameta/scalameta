@@ -72,7 +72,8 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
        |[3:10..3:27): _root_.scala.List => *.apply[Nothing]
        |  apply => scala/collection/immutable/List.apply().
        |  Nothing => scala/Nothing#
-       |[4:2..4:3): x => any2stringadd[List[Nothing]](*)
+       |[4:2..4:3): x => Predef.any2stringadd[List[Nothing]](*)
+       |  Predef => scala/Predef.
        |  any2stringadd => scala/Predef.any2stringadd().
        |  List => scala/collection/immutable/List#
        |  Nothing => scala/Nothing#
