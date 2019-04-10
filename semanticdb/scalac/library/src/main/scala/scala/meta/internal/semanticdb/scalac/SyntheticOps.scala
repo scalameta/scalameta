@@ -12,12 +12,12 @@ trait SyntheticOps { self: SemanticdbOps =>
     def toSemanticTree: s.Tree = gTree match {
       case gTree: g.Apply =>
         s.ApplyTree(
-          function = gTree.fun.toSemanticId,
+          function = gTree.fun.toSemanticQualifierTree,
           arguments = gTree.args.map(_.toSemanticTree)
         )
       case gTree: g.TypeApply =>
         s.TypeApplyTree(
-          function = gTree.fun.toSemanticTree,
+          function = gTree.fun.toSemanticQualifierTree,
           typeArguments = gTree.args.map(_.tpe.toSemanticTpe)
         )
       case gTree: g.Select => gTree.toSemanticId
@@ -34,6 +34,12 @@ trait SyntheticOps { self: SemanticdbOps =>
         )
       case _ =>
         s.NoTree
+    }
+
+    def toSemanticQualifierTree: s.Tree = gTree match {
+      case sel @ Select(qual, _) if sel.symbol.owner != qual.symbol =>
+        s.SelectTree(qualifier = qual.toSemanticId, id = Some(sel.toSemanticId))
+      case fun => fun.toSemanticId
     }
 
     def toSemanticId: s.IdTree = s.IdTree(symbol = gTree.symbol.toSemantic)

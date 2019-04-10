@@ -48,7 +48,11 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   }
   private lazy val databaseOps: SemanticdbOps { val global: self.g.type } = new SemanticdbOps {
     val global: self.g.type = self.g
-    config = config.copy(failures = FailureMode.Error, text = BinaryMode.On)
+    config = config.copy(
+      failures = FailureMode.Error,
+      text = BinaryMode.On,
+      synthetics = BinaryMode.On
+    )
     config = customizeConfig(config)
   }
   def customizeConfig(config: SemanticdbConfig): SemanticdbConfig = config

@@ -132,7 +132,7 @@ $original
 
   checkSynthetics(
     "List(1).map(_ + 2)",
-    """|[2:0..2:18): List(1).map(_ + 2) => *(canBuildFrom[Int])
+    """|[2:0..2:18): List(1).map(_ + 2) => *(List.canBuildFrom[Int])
        |[2:0..2:11): List(1).map => *[Int, List[Int]]
        |[2:0..2:4): List => *.apply[Int]
        |""".stripMargin
@@ -140,7 +140,7 @@ $original
 
   checkTrees(
     "List(1).map(_ + 2)",
-    """|orig(List(1).map(_ + 2))(canBuildFrom[Int])
+    """|orig(List(1).map(_ + 2))(List.canBuildFrom[Int])
        |orig(List(1).map)[Int, List[Int]]
        |orig(List).apply[Int]
        |""".stripMargin
