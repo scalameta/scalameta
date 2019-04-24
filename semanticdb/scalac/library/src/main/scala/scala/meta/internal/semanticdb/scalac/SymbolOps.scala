@@ -119,7 +119,7 @@ trait SymbolOps { self: SemanticdbOps =>
                 loop(info)
               case g.ClassInfoType(_, gdecls, _) =>
                 val gbuf = List.newBuilder[g.Symbol]
-                gdecls.sorted.filter(_.isUseful).foreach(gbuf.+=)
+                gdecls.sorted.filter(_.isUsefulSymbolInformation).foreach(gbuf.+=)
                 if (sym.isJavaDefined) {
                   sym.companionModule.info.decls.filter(_.isUseful).foreach(gbuf.+=)
                 }
@@ -266,7 +266,6 @@ trait SymbolOps { self: SemanticdbOps =>
     }
     def isUseless: Boolean = {
       sym == g.NoSymbol ||
-      sym.isAnonymousClass ||
       sym.isSyntheticConstructor ||
       sym.isStaticConstructor ||
       sym.isLocalChild ||
@@ -278,8 +277,10 @@ trait SymbolOps { self: SemanticdbOps =>
     }
     def isUseful: Boolean = !sym.isUseless
     def isUselessOccurrence: Boolean = {
-      sym.isUseless &&
-      !sym.isSyntheticJavaModule // references to static Java inner classes should have occurrences
+      sym.isAnonymousClass || {
+        sym.isUseless &&
+        !sym.isSyntheticJavaModule // references to static Java inner classes should have occurrences
+      }
     }
     def isUselessSymbolInformation: Boolean = {
       sym.isUseless ||
@@ -288,6 +289,8 @@ trait SymbolOps { self: SemanticdbOps =>
       sym.isSyntheticAbstractType ||
       sym.isAnonymousSelfParameter
     }
+    def isUsefulSymbolInformation: Boolean =
+      !isUselessSymbolInformation
     def isClassfileAnnotation: Boolean = {
       sym.isClass && sym.hasFlag(gf.JAVA_ANNOTATION)
     }

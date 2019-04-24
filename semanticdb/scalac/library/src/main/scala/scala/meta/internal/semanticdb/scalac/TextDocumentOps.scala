@@ -195,7 +195,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
             if (config.symbols.isLocalOnly && !symbol.isLocal) return
 
             def saveSymbol(gs: g.Symbol): Unit = {
-              if (gs.isUseful) {
+              if (gs.isUsefulSymbolInformation) {
                 symbols(gs.toSemantic) = gs.toSymbolInformation(SymlinkChildren)
               }
             }

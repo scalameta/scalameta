@@ -11,13 +11,13 @@ class C/*<=advanced.C#*/[T/*<=advanced.C#[T]*/] {
 class Structural/*<=advanced.Structural#*/ {
   def s1/*<=advanced.Structural#s1().*/: { val x/*<=local0*/: Int/*=>scala.Int#*/ } = ???/*=>scala.Predef.`???`().*/
   def s2/*<=advanced.Structural#s2().*/ = new { val x/*<=local1*/: Int/*=>scala.Int#*/ = ???/*=>scala.Predef.`???`().*/ }
-  def s3/*<=advanced.Structural#s3().*/ = new { def m/*<=local2*/(x/*<=local3*/: Int/*=>scala.Int#*/): Int/*=>scala.Int#*/ = ???/*=>scala.Predef.`???`().*/ }
+  def s3/*<=advanced.Structural#s3().*/ = new { def m/*<=local3*/(x/*<=local4*/: Int/*=>scala.Int#*/): Int/*=>scala.Int#*/ = ???/*=>scala.Predef.`???`().*/ }
 }
 
 class Existential/*<=advanced.Existential#*/ {
   def e1/*<=advanced.Existential#e1().*/: List/*=>scala.package.List#*/[_] = ???/*=>scala.Predef.`???`().*/
-  def e2/*<=advanced.Existential#e2().*/: C/*=>advanced.C#*/[List/*=>scala.package.List#*/[T/*=>local5*/] forSome { type T/*<=local5*/ }] = ???/*=>scala.Predef.`???`().*/
-  def e4/*<=advanced.Existential#e4().*/: U/*=>local6*/[Int/*=>scala.Int#*/] forSome { type U/*<=local6*/[T/*<=local7*/ <: Int] } = ???/*=>scala.Predef.`???`().*/
+  def e2/*<=advanced.Existential#e2().*/: C/*=>advanced.C#*/[List/*=>scala.package.List#*/[T/*=>local7*/] forSome { type T/*<=local7*/ }] = ???/*=>scala.Predef.`???`().*/
+  def e4/*<=advanced.Existential#e4().*/: U/*=>local8*/[Int/*=>scala.Int#*/] forSome { type U/*<=local8*/[T/*<=local9*/ <: Int] } = ???/*=>scala.Predef.`???`().*/
 }
 
 class D/*<=advanced.D#*/[CC/*<=advanced.D#[CC]*/[_]] extends C/*=>advanced.C#*/[CC/*=>advanced.D#[CC]*/[_]]
@@ -39,8 +39,8 @@ object Test/*<=advanced.Test.*/ {
   val e2xx/*<=advanced.Test.e2xx.*/ = e/*=>advanced.Test.e.*/.e2/*=>advanced.Existential#e2().*/.t/*=>advanced.C#t().*/.head/*=>scala.collection.IterableLike#head().*/
   locally/*=>scala.Predef.locally().*/ {
     (???/*=>scala.Predef.`???`().*/ : Any/*=>scala.Any#*/) match {
-      case e3/*<=local9*/: List/*=>scala.package.List#*/[_] =>
-        val e3x/*<=local11*/ = e3/*=>local9*/.head/*=>scala.collection.IterableLike#head().*/
+      case e3/*<=local11*/: List/*=>scala.package.List#*/[_] =>
+        val e3x/*<=local13*/ = e3/*=>local11*/.head/*=>scala.collection.IterableLike#head().*/
         ()
     }
   }
