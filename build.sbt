@@ -48,7 +48,7 @@ commands += Command.command("ci-windows") { s =>
     s
 }
 commands += Command.command("ci-publish") { s =>
-  "+publishSigned" ::
+  "very publishSigned" ::
     "sonatypeReleaseAll" ::
     s
 }
