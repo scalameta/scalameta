@@ -54,7 +54,6 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.cli
       |scala.meta.cli.Metac *
       |scala.meta.cli.Metacp *
-      |scala.meta.cli.Metai *
       |scala.meta.cli.Metap *
       |scala.meta.cli.Reporter *
       |scala.meta.common
@@ -97,9 +96,6 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.metacp
       |scala.meta.metacp.Result *
       |scala.meta.metacp.Settings *
-      |scala.meta.metai
-      |scala.meta.metai.Result *
-      |scala.meta.metai.Settings *
       |scala.meta.metap
       |scala.meta.metap.Format *
       |scala.meta.metap.Format.Compact *

@@ -76,9 +76,7 @@ commands += Command.command("ci-slow") { s =>
 }
 commands += Command.command("save-expect") { s =>
   "metapJVM/compile" ::
-    "metacp/compile" ::
     "semanticdbScalacPlugin/compile" ::
-    "semanticdbJavacPlugin/compile" ::
     "semanticdbIntegration/clean" ::
     "semanticdbIntegration/compile" ::
     "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
@@ -101,24 +99,6 @@ unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalametaJVM, Compile).value
 
 /** ======================== SEMANTICDB ======================== **/
-lazy val semanticdb = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .crossType(CrossType.Pure)
-  .in(file("semanticdb/semanticdb"))
-  .settings(
-    publishableSettings,
-    protobufSettings
-  )
-  .nativeSettings(nativeSettings)
-  .jvmSettings(
-    crossScalaVersions := List(LatestScala211, LatestScala212)
-  )
-  .jsSettings(
-    crossScalaVersions := List(LatestScala211, LatestScala212)
-  )
-lazy val semanticdbJVM = semanticdb.jvm
-lazy val semanticdbJS = semanticdb.js
-lazy val semanticdbNative = semanticdb.native
-
 lazy val semanticdbScalacCore = project
   .in(file("semanticdb/scalac/library"))
   .settings(
@@ -128,7 +108,7 @@ lazy val semanticdbScalacCore = project
     description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
   )
-  .dependsOn(scalametaJVM, metacp)
+  .dependsOn(scalametaJVM)
 
 lazy val semanticdbScalacPlugin = project
   .in(file("semanticdb/scalac/plugin"))
@@ -156,109 +136,19 @@ lazy val semanticdbScalacPlugin = project
   )
   .dependsOn(semanticdbScalacCore)
 
-lazy val semanticdbJavacPlugin = project
-  .in(file("semanticdb/javac"))
-  .settings(
-    moduleName := "semanticdb-javac",
-    description := "Javac compiler plugin that generates SemanticDB on compile",
-    publishableSettings,
-    mergeSettings,
-    pomPostProcess := { node =>
-      new RuleTransformer(new RewriteRule {
-        private def isAbsorbedDependency(node: XmlNode): Boolean = {
-          def isArtifactId(node: XmlNode, fn: String => Boolean) =
-            node.label == "artifactId" && fn(node.text)
-          node.label == "dependency" && node.child.exists(child =>
-            isArtifactId(child, _.startsWith("semanticdb-javac")))
-        }
-        override def transform(node: XmlNode): XmlNodeSeq = node match {
-          case e: Elem if isAbsorbedDependency(node) =>
-            Comment("the dependency that was here has been absorbed via sbt-assembly")
-          case _ => node
-        }
-      }).transform(node).head
-    }
-  )
-  .dependsOn(semanticdbJVM, ioJVM)
-
-lazy val cli = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .crossType(CrossType.Pure)
-  .in(file("semanticdb/cli"))
-  .settings(
-    publishableSettings,
-    description := "Shared CLI infrastructure for Scalameta tools"
-  )
-  .nativeSettings(nativeSettings)
-lazy val cliJVM = cli.jvm
-lazy val cliJS = cli.js
-lazy val cliNative = cli.native
-
 lazy val metac = project
   .in(file("semanticdb/metac"))
   .settings(
     publishableSettings,
     fullCrossVersionSettings,
+    crossScalaVersions := List(LatestScala212, LatestScala211),
     description := "Scalac 2.x launcher that generates SemanticDB on compile",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     mainClass := Some("scala.meta.cli.Metac")
   )
   // FIXME: https://github.com/scalameta/scalameta/issues/1688
   .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(cliJVM, semanticdbScalacPlugin)
-
-lazy val metacp = project
-  .in(file("semanticdb/metacp"))
-  .settings(
-    publishableSettings,
-    description := "Scala 2.x and Java classpath to SemanticDB converter",
-    libraryDependencies ++= List(
-      "org.scala-lang" % "scalap" % scalaVersion.value
-    ),
-    mainClass := Some("scala.meta.cli.Metacp"),
-    buildInfoKeys := Seq[BuildInfoKey](version),
-    buildInfoPackage := "scala.meta.internal.metacp"
-  )
-  .enablePlugins(BuildInfoPlugin)
-  // FIXME: https://github.com/scalameta/scalameta/issues/1688
-  .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(semanticdbJVM, cliJVM, ioJVM)
-
-lazy val metai = project
-  .in(file("semanticdb/metai"))
-  .settings(
-    publishableSettings,
-    description := "SemanticDB classpath indexer",
-    mainClass := Some("scala.meta.cli.Metai")
-  )
-  // FIXME: https://github.com/scalameta/scalameta/issues/1688
-  .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(semanticdbJVM, cliJVM, ioJVM)
-
-lazy val symtab = project
-  .in(file("semanticdb/symtab"))
-  .settings(
-    publishableSettings,
-    description := "SemanticDB symbol table for Scala 2.x and Java classpaths"
-  )
-  // FIXME: https://github.com/scalameta/scalameta/issues/1688
-  .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(metacp)
-
-lazy val metap = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .crossType(CrossType.Pure)
-  .in(file("semanticdb/metap"))
-  .settings(
-    publishableSettings,
-    description := "SemanticDB decompiler",
-    mainClass := Some("scala.meta.cli.Metap")
-  )
-  .nativeSettings(nativeSettings)
-  // FIXME: https://github.com/scalameta/scalameta/issues/1688
-  .disablePlugins(BackgroundRunPlugin)
-  .dependsOn(semanticdb, cli, inputs)
-lazy val metapJVM = metap.jvm
-lazy val metapJS = metap.js
-lazy val metapNative = metap.native
+  .dependsOn(semanticdbScalacPlugin)
 
 /** ======================== SCALAMETA ======================== **/
 lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
@@ -270,128 +160,9 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     enableMacros
   )
   .nativeSettings(nativeSettings)
-  .dependsOn(semanticdb)
 lazy val commonJVM = common.jvm
 lazy val commonJS = common.js
 lazy val commonNative = common.native
-
-lazy val io = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .in(file("scalameta/io"))
-  .settings(
-    publishableSettings,
-    description := "Scalameta APIs for input/output"
-  )
-  .nativeSettings(nativeSettings)
-  .dependsOn(common)
-
-lazy val ioJVM = io.jvm
-lazy val ioJS = io.js
-lazy val ioNative = io.native
-
-lazy val dialects = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .in(file("scalameta/dialects"))
-  .settings(
-    publishableSettings,
-    description := "Scalameta dialects",
-    enableMacros
-  )
-  .nativeSettings(nativeSettings)
-  .dependsOn(common)
-lazy val dialectsJVM = dialects.jvm
-lazy val dialectsJS = dialects.js
-lazy val dialectsNative = dialects.native
-
-lazy val inputs = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .in(file("scalameta/inputs"))
-  .settings(
-    publishableSettings,
-    description := "Scalameta APIs for source code",
-    enableMacros
-  )
-  .nativeSettings(nativeSettings)
-  .dependsOn(common, io)
-lazy val inputsJVM = inputs.jvm
-lazy val inputsJS = inputs.js
-lazy val inputsNative = inputs.native
-
-lazy val interactive = project
-  .in(file("scalameta/interactive"))
-  .settings(
-    publishableSettings,
-    fullCrossVersionSettings,
-    description := "Scalameta APIs for interactive building of SemanticDB",
-    enableMacros
-  )
-  .dependsOn(semanticdbScalacCore)
-
-lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .in(file("scalameta/parsers"))
-  .settings(
-    publishableSettings,
-    description := "Scalameta APIs for parsing and their baseline implementation",
-    scalaJSModuleKind := ModuleKind.CommonJSModule
-  )
-  .nativeSettings(nativeSettings)
-  .dependsOn(common, dialects, inputs, tokens, tokenizers, trees)
-lazy val parsersJVM = parsers.jvm
-lazy val parsersJS = parsers.js
-lazy val parsersNative = parsers.native
-
-lazy val quasiquotes = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .in(file("scalameta/quasiquotes"))
-  .settings(
-    publishableSettings,
-    description := "Scalameta quasiquotes for abstract syntax trees",
-    enableHardcoreMacros
-  )
-  .nativeSettings(nativeSettings)
-  .dependsOn(common, dialects, inputs, trees, parsers)
-lazy val quasiquotesJVM = quasiquotes.jvm
-lazy val quasiquotesJS = quasiquotes.js
-lazy val quasiquotesNative = quasiquotes.native
-
-lazy val tokenizers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .in(file("scalameta/tokenizers"))
-  .settings(
-    publishableSettings,
-    description := "Scalameta APIs for tokenization and their baseline implementation",
-    // NOTE(olafur): use shaded version of fastparse because the latest version v2.0.0
-    // has binary incompatibilites with the v1.0.0 version used by Scalameta.
-    libraryDependencies += "org.scalameta" %%% "fastparse" % "1.0.0",
-    enableMacros
-  )
-  .nativeSettings(nativeSettings)
-  .dependsOn(common, dialects, inputs, tokens)
-lazy val tokenizersJVM = tokenizers.jvm
-lazy val tokenizersJS = tokenizers.js
-lazy val tokenizersNative = tokenizers.native
-
-lazy val tokens = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .in(file("scalameta/tokens"))
-  .settings(
-    publishableSettings,
-    description := "Scalameta tokens and token-based abstractions (inputs and positions)",
-    enableMacros
-  )
-  .nativeSettings(nativeSettings)
-  .dependsOn(common, dialects, inputs)
-lazy val tokensJVM = tokens.jvm
-lazy val tokensJS = tokens.js
-lazy val tokensNative = tokens.native
-
-lazy val transversers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .in(file("scalameta/transversers"))
-  .settings(
-    requiresMacrosSetting,
-    publishableSettings,
-    description := "Scalameta traversal and transformation infrastructure for abstract syntax trees",
-    enableMacros
-  )
-  .nativeSettings(nativeSettings)
-  .dependsOn(common, trees)
-lazy val transversersJVM = transversers.jvm
-lazy val transversersJS = transversers.js
-lazy val transversersNative = transversers.native
 
 lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/trees"))
@@ -400,47 +171,102 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     description := "Scalameta abstract syntax trees",
     // NOTE: uncomment this to update ast.md
     // scalacOptions += "-Xprint:typer",
-    enableMacros
+    enableHardcoreMacros,
+    protobufSettings,
+    libraryDependencies ++= List(
+      // NOTE(olafur): use shaded version of fastparse because the latest version v2.0.0
+      // has binary incompatibilites with the v1.0.0 version used by Scalameta.
+      "org.scalameta" %%% "fastparse" % "1.0.0"
+    ),
+    mergedModule({ base =>
+      val scalameta = base / "scalameta"
+      List(
+        scalameta / "io",
+        scalameta / "tokenizers",
+        scalameta / "tokens",
+        scalameta / "dialects",
+        scalameta / "inputs"
+      )
+    })
   )
   .nativeSettings(nativeSettings)
-  .dependsOn(common, dialects, inputs, tokens, tokenizers) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
+  .dependsOn(common) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
 lazy val treesJVM = trees.jvm
 lazy val treesJS = trees.js
 lazy val treesNative = trees.native
+
+lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+  .in(file("scalameta/parsers"))
+  .settings(
+    publishableSettings,
+    description := "Scalameta APIs for parsing and their baseline implementation",
+    enableHardcoreMacros,
+    mergedModule({ base =>
+      List(
+        base / "scalameta" / "quasiquotes",
+        base / "scalameta" / "transversers"
+      )
+    })
+  )
+  .nativeSettings(nativeSettings)
+  .dependsOn(trees)
+lazy val parsersJVM = parsers.jvm
+lazy val parsersJS = parsers.js
+lazy val parsersNative = parsers.native
+
+def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
+  unmanagedSourceDirectories.in(Compile) ++= {
+    val base = baseDirectory.in(ThisBuild).value
+    val isNative = SettingKey[Boolean]("nativeLinkStubs").?.value.isDefined
+    val isJS = SettingKey[Boolean]("scalaJSUseMainModuleInitializer").?.value.isDefined
+    val platform =
+      if (isNative) "native"
+      else if (isJS) "js"
+      else "jvm"
+    val scalaBinary = "scala-" + scalaBinaryVersion.value
+    projects(base).flatMap { project =>
+      List(
+        project / "shared" / "src" / "main" / scalaBinary,
+        project / "shared" / "src" / "main" / "scala",
+        project / platform / "src" / "main" / "scala"
+      )
+    }
+  }
+)
 
 lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/scalameta"))
   .settings(
     publishableSettings,
-    description := "Scalameta umbrella module that includes all public APIs"
+    description := "Scalameta umbrella module that includes all public APIs",
+    libraryDependencies ++= List(
+      "org.scala-lang" % "scalap" % scalaVersion.value
+    ),
+    unmanagedSourceDirectories.in(Compile) ++= {
+      val base = baseDirectory.in(ThisBuild).value
+      List(
+        base / "semanticdb" / "metap",
+        base / "semanticdb" / "cli",
+        base / "semanticdb" / "semanticdb"
+      )
+    },
+    mergedModule({ base =>
+      List(
+        base / "scalameta" / "contrib"
+      )
+    })
+  )
+  .jvmSettings(
+    unmanagedSourceDirectories.in(Compile) ++= List(
+      baseDirectory.in(ThisBuild).value / "semanticdb" / "metacp",
+      baseDirectory.in(ThisBuild).value / "semanticdb" / "symtab"
+    )
   )
   .nativeSettings(nativeSettings)
-  .dependsOn(
-    common,
-    dialects,
-    parsers,
-    quasiquotes,
-    tokenizers,
-    transversers,
-    trees,
-    inputs,
-    io
-  )
+  .dependsOn(parsers)
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
 lazy val scalametaNative = scalameta.native
-
-lazy val contrib = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .in(file("scalameta/contrib"))
-  .settings(
-    publishableSettings,
-    description := "Incubator for Scalameta APIs"
-  )
-  .nativeSettings(nativeSettings)
-  .dependsOn(scalameta)
-lazy val contribJVM = contrib.jvm
-lazy val contribJS = contrib.js
-lazy val contribNative = contrib.native
 
 /** ======================== TESTS ======================== **/
 lazy val semanticdbIntegration = project
@@ -475,7 +301,6 @@ lazy val semanticdbIntegration = project
         else home
       Some(actualHome)
     },
-    managedClasspath in Compile += Keys.`package`.in(semanticdbJavacPlugin, Compile).value,
     javacOptions ++= {
       import Path._
       val outDir = javacSemanticdbDirectory.value.absolutePath
@@ -511,7 +336,7 @@ lazy val testkit = project
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
     description := "Testing utilities for scalameta APIs"
   )
-  .dependsOn(contribJVM)
+  .dependsOn(scalametaJVM)
 
 lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("tests"))
@@ -538,7 +363,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     )
   )
   .jvmConfigure(
-    _.dependsOn(testkit, interactive, metac, metacp, metai, symtab, semanticdbIntegration)
+    _.dependsOn(testkit, metac, semanticdbIntegration)
   )
   .jsSettings(
     scalaJSModuleKind := ModuleKind.CommonJSModule
@@ -553,7 +378,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     nativeMode := "debug"
   )
   .enablePlugins(BuildInfoPlugin)
-  .dependsOn(scalameta, contrib, metap)
+  .dependsOn(scalameta)
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
 lazy val testsNative = tests.native
