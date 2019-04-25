@@ -15,9 +15,7 @@ addons:
 
 stages:
   - name: test
-  - name: release-one
-    if: (branch = master AND type = push) OR (tag IS present)
-  - name: release-two
+  - name: release
     if: (branch = master AND type = push) OR (tag IS present)
 
 jobs:
@@ -53,14 +51,10 @@ jobs:
       - CI_SCALA_VERSION: 2.12.8
     - env:
       - CI_TEST: mima
-    - stage: release-one
+    - stage: release
       script:
         - git fetch --tags
-        - "./bin/ci-publish.sh ci-publish-one"
-    - stage: release-two
-      script:
-        - git fetch --tags
-        - "./bin/ci-publish.sh ci-publish-two"
+        - "./bin/ci-publish.sh ci-publish"
 
 cache:
   directories:

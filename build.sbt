@@ -47,17 +47,10 @@ commands += Command.command("ci-windows") { s =>
   s"testsJVM/all:testOnly -- -l SkipWindows" ::
     s
 }
-commands += Command.command("ci-publish-one") { s =>
+commands += Command.command("ci-publish") { s =>
   "very publishSigned" ::
     "sonatypeReleaseAll" ::
     s
-}
-commands += Command.command("ci-publish-two") { s =>
-  "++2.12.7" ::
-  "semanticdbScalacPlugin/publishSigned" ::
-  "semanticdbScalacCore/publishSigned" ::
-  "sonatypeReleaseAll" ::
-  s
 }
 commands += Command.command("mima") { s =>
   "mimaReportBinaryIssues" ::
@@ -702,6 +695,7 @@ def compatibilityPolicyViolation(ticket: String) = Seq(
 
 lazy val fullCrossVersionSettings = Seq(
   crossVersion := CrossVersion.full,
+  crossScalaVersions := LanguageVersions ++ LegacyScalaVersions,
   unmanagedSourceDirectories.in(Compile) += {
     // NOTE: sbt 0.13.8 provides cross-version support for Scala sources
     // (http://www.scala-sbt.org/0.13/docs/sbt-0.13-Tech-Previews.html#Cross-version+support+for+Scala+sources).
