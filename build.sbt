@@ -695,7 +695,6 @@ def compatibilityPolicyViolation(ticket: String) = Seq(
 
 lazy val fullCrossVersionSettings = Seq(
   crossVersion := CrossVersion.full,
-  crossScalaVersions := SupportedScalaVersions,
   unmanagedSourceDirectories.in(Compile) += {
     // NOTE: sbt 0.13.8 provides cross-version support for Scala sources
     // (http://www.scala-sbt.org/0.13/docs/sbt-0.13-Tech-Previews.html#Cross-version+support+for+Scala+sources).
