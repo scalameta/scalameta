@@ -47,10 +47,17 @@ commands += Command.command("ci-windows") { s =>
   s"testsJVM/all:testOnly -- -l SkipWindows" ::
     s
 }
-commands += Command.command("ci-publish") { s =>
+commands += Command.command("ci-publish-one") { s =>
   "very publishSigned" ::
     "sonatypeReleaseAll" ::
     s
+}
+commands += Command.command("ci-publish-two") { s =>
+  "++2.12.7" ::
+  "semanticdbScalacPlugin/publishSigned" ::
+  "semanticdbScalacCore/publishSigned" ::
+  "sonatypeReleaseAll" ::
+  s
 }
 commands += Command.command("mima") { s =>
   "mimaReportBinaryIssues" ::

@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 set -eu
 SECURE_VAR=${TRAVIS_SECURE_ENV_VARS:-false}
+SBT_COMMAND=$1
 
 if [[ "$TRAVIS_SECURE_ENV_VARS" == true ]]; then
   git log | head -n 20
   echo "$PGP_SECRET" | base64 --decode | gpg --import
   if [ -n "$TRAVIS_TAG" ]; then
-    sbt ci-publish
+    sbt $SBT_COMMAND
   else
     echo "Skipping publish, not a tag push"
   fi

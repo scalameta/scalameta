@@ -1,6 +1,5 @@
 sudo: required
-os: linux
-dist: trusty
+os: linux dist: trusty
 jdk: oraclejdk8
 language: scala
 git:
@@ -16,7 +15,9 @@ addons:
 
 stages:
   - name: test
-  - name: release
+  - name: release-one
+    if: (branch = master AND type = push) OR (tag IS present)
+  - name: release-two
     if: (branch = master AND type = push) OR (tag IS present)
 
 jobs:
@@ -52,10 +53,14 @@ jobs:
       - CI_SCALA_VERSION: 2.12.8
     - env:
       - CI_TEST: mima
-    - stage: release
+    - stage: release-one
       script:
         - git fetch --tags
-        - "./bin/ci-publish.sh"
+        - "./bin/ci-publish.sh ci-publish-one"
+    - stage: release-two
+      script:
+        - git fetch --tags
+        - "./bin/ci-publish.sh ci-publish-two"
 
 cache:
   directories:
