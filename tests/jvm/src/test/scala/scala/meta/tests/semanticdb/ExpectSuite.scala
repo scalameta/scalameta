@@ -36,16 +36,8 @@ class ExpectSuite extends FunSuite with DiffAssertions {
       import MetacExpect._
       assertNoDiff(loadObtained, loadExpected)
     }
-    test("javac.expect") {
-      import JavacExpect._
-      assertNoDiff(loadObtained, loadExpected)
-    }
     test("metac-metacp.diff") {
       import MetacMetacpDiffExpect._
-      assertNoDiff(loadObtained, loadExpected)
-    }
-    test("javac-metacp.diff") {
-      import JavacMetacpDiffExpect._
       assertNoDiff(loadObtained, loadExpected)
     }
     test("manifest.metap") {
@@ -58,10 +50,6 @@ class ExpectSuite extends FunSuite with DiffAssertions {
     }
     test("metacp.undefined") {
       import MetacpUndefined._
-      assertNoDiff(loadObtained, loadExpected)
-    }
-    test("metai.expect") {
-      import MetaiExpect._
       assertNoDiff(loadObtained, loadExpected)
     }
   }
@@ -162,37 +150,6 @@ trait ExpectHelpers extends FunSuiteLike {
     outPath.toNIO
   }
 
-  protected def metai(path: Path): String = {
-    val classpath = Classpath(path)
-    val settings = scala.meta.metai.Settings().withClasspath(classpath)
-    val result = cli.Metai.process(settings, Reporter().withSilentOut())
-    if (!result.isSuccess) {
-      sys.error("metai error")
-    }
-    val buf = List.newBuilder[i.Index]
-    classpath.foreach { root =>
-      val semanticidx = root.path.resolve("META-INF/semanticdb.semanticidx")
-      if (semanticidx.isFile) {
-        val indexes = i.Indexes.parseFrom(semanticidx.readAllBytes)
-        buf ++= indexes.indexes
-      }
-    }
-    val indexes = buf.result()
-    val sb = new StringBuilder
-    val bySymbol = indexes.flatMap(_.entries).sortBy(_._1)
-    bySymbol.foreach {
-      case (sym, entry) =>
-        sb.append(sym).append(" => ")
-        entry match {
-          case i.PackageEntry() => sb.append(s"package ").append(sym.desc.name)
-          case i.ToplevelEntry(uri) => sb.append(uri)
-          case i.Entry.Empty => sys.error(sym)
-        }
-        sb.append("\n")
-    }
-    sb.toString()
-  }
-
 }
 
 object ScalalibExpect extends ExpectHelpers {
@@ -221,11 +178,6 @@ object MetacpExpect extends ExpectHelpers {
 object MetacExpect extends ExpectHelpers {
   def filename: String = "metac.expect"
   def loadObtained: String = metap(classDirectory)
-}
-
-object JavacExpect extends ExpectHelpers {
-  def filename: String = "javac.expect"
-  def loadObtained: String = metap(Paths.get(BuildInfo.javacSemanticdbPath))
 }
 
 object MetacMetacpDiffExpect extends ExpectHelpers {
@@ -294,135 +246,6 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
   }
 }
 
-object JavacMetacpDiffExpect extends ExpectHelpers {
-  def filename: String = "javac-metacp.diff"
-  def loadObtained: String = {
-    val metacp = sortDeclarations(metacpSymbols)
-    val javac = normalizeEnumConstructorParams(sortDeclarations(javacSymbols)).valuesIterator.toSeq
-      .sortBy(_.symbol)
-    val symbols = for {
-      sym <- javac.iterator
-      javasym <- {
-        if (sym.symbol.contains("com.javacp")) {
-          // javac references to java defined symbols in com.javacp must have a corresponding metacp entry.
-          Some(metacp.getOrElse(sym.symbol, s.SymbolInformation()))
-        } else {
-          metacp.get(sym.symbol)
-        }
-      }
-    } yield {
-      val header = "=" * sym.symbol.length
-      val diff = unifiedDiff(
-        "javac",
-        "metacp",
-        sym.toProtoString,
-        javasym.toProtoString
-      )
-      if (diff.isEmpty) ""
-      else {
-        s"""$header
-           |${sym.symbol}
-           |$header
-           |$diff
-           |
-           |
-           |""".stripMargin
-      }
-    }
-    symbols.mkString
-  }
-  def metacpSymbols = loadMiniSymtab(metacp(Paths.get(BuildInfo.databaseClasspath)))
-  def javacSymbols = loadMiniSymtab(Paths.get(BuildInfo.javacSemanticdbPath))
-
-  // FIXME: https://github.com/scalameta/scalameta/issues/1642
-  // We sort class signature declarations to make it easier to eye-ball actual bugs
-  // in metac-metacp.diff. Without sorting, the diffs become noisy for questionable
-  // benefit since at the moment the biggest priority is to fix all metac/metacp
-  // differences in symbol formats, signatures, accessibilities, etc.
-  // Presevering the source ordering of declarations is important for documentation tools
-  // so we should eventually stop sorting them here.
-  private def sortDeclarations(
-      symtab: Map[String, SymbolInformation]
-  ): Map[String, SymbolInformation] = symtab.map {
-    case (key, sym) =>
-      val newSymbol = sym.signature match {
-        case c: ClassSignature if sym.language.isJava =>
-          val sortedJavaDeclarations = c.declarations.get.symlinks.sorted
-          sym.copy(
-            signature = c.copy(
-              declarations = Some(
-                c.declarations.get.copy(symlinks = sortedJavaDeclarations)
-              )
-            )
-          )
-        case _ => sym
-      }
-      key -> newSymbol
-  }
-
-  // Convert enum constructor params for one-argument constructors to be called $enum$name
-  private def normalizeEnumConstructorParams(syms: Map[String, s.SymbolInformation]) = {
-
-    def hasSingleParameter(info: s.SymbolInformation) = info.signature match {
-      case sig: s.MethodSignature if sig.parameterLists.flatMap(_.symlinks).length == 1 => true
-      case _ => false
-    }
-
-    val enumConstructors = for {
-      info <- syms.values.toSet
-      if info.isEnum && info.isClass
-    } yield info.symbol + "`<init>`()."
-
-    val enumSingleParamConstructors = for {
-      info <- syms.values.toList
-      if info.isParameter
-      constructorSym <- enumConstructors.find(info.symbol.startsWith)
-      constructor = syms(constructorSym)
-      if hasSingleParameter(constructor)
-    } yield (constructor, info)
-
-    val shouldMap = enumSingleParamConstructors
-      .flatMap {
-        case (constructor, info) => Seq(constructor, info)
-      }
-      .map(_.symbol)
-      .toSet
-
-    val nameChanges = enumSingleParamConstructors.map {
-      case (_, info) =>
-        val sym = info.symbol
-        val newSym = sym.substring(0, sym.lastIndexOf('(')) + "($enum$name)"
-        sym -> newSym
-    }.toMap
-
-    for {
-      (sym, info) <- syms
-      normalized = sym match {
-        case sym if shouldMap(sym) =>
-          info.signature match {
-            case sig: s.MethodSignature =>
-              val Seq(params) = sig.parameterLists
-              info.copy(
-                signature = sig.copy(
-                  parameterLists = Seq(
-                    params.copy(
-                      symlinks = params.symlinks.map(nameChanges)
-                    ))
-                ))
-            case sig: s.ValueSignature =>
-              info.copy(
-                displayName = "$enum$name",
-                symbol = nameChanges(info.symbol)
-              )
-            case sig => info
-          }
-        case _ => info
-      }
-    } yield normalized.symbol -> normalized
-  }
-
-}
-
 object ManifestMetap extends ExpectHelpers {
   def filename: String = "manifest.metap"
   def loadObtained: String = {
@@ -455,26 +278,16 @@ object MetacpUndefined extends ExpectHelpers {
   }
 }
 
-object MetaiExpect extends ExpectHelpers {
-  def filename: String = "metai.expect"
-  def loadObtained: String = {
-    metai(classDirectory)
-  }
-}
-
 // To save the current behavior, run `sbt save-expect`.
 object SaveExpectTest {
   def main(args: Array[String]): Unit = {
     ScalalibExpect.saveExpected()
     MetacpExpect.saveExpected()
     MetacExpect.saveExpected()
-    JavacExpect.saveExpected()
     MetacMetacpDiffExpect.saveExpected()
-    JavacMetacpDiffExpect.saveExpected()
     ManifestMetap.saveExpected()
     ManifestMetacp.saveExpected()
     MetacpUndefined.saveExpected()
-    MetaiExpect.saveExpected()
     OccurrenceSuite.saveExpected()
   }
 }
