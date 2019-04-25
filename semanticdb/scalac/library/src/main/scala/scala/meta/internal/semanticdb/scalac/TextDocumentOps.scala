@@ -385,7 +385,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 }
                 if (prohibited(gtree.name.decoded)) return
                 tryMstart(gpoint)
-              case gtree: g.Import =>
+              case gtree: g.Import if gtree.expr != null && gtree.expr.tpe != null =>
                 val sels = gtree.selectors.flatMap { sel =>
                   if (sel.name == g.nme.WILDCARD) {
                     Nil
