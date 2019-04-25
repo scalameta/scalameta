@@ -1,5 +1,6 @@
 sudo: required
-os: linux dist: trusty
+os: linux
+dist: trusty
 jdk: oraclejdk8
 language: scala
 git:
