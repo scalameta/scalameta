@@ -385,7 +385,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 }
                 if (prohibited(gtree.name.decoded)) return
                 tryMstart(gpoint)
-              case gtree: g.Import =>
+              case gtree: g.Import if gtree.expr != null && gtree.expr.tpe != null =>
                 val sels = gtree.selectors.flatMap { sel =>
                   if (sel.name == g.nme.WILDCARD) {
                     Nil
@@ -693,6 +693,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
   private def isSyntheticName(select: g.Select): Boolean =
     select.pos == select.qualifier.pos &&
       (select.name == g.nme.apply ||
+        select.name == g.nme.update ||
         select.name == g.nme.foreach ||
         select.name == g.nme.withFilter ||
         select.name == g.nme.flatMap ||
