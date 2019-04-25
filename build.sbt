@@ -40,7 +40,6 @@ addCommandAlias("benchQuick", benchQuick.command)
 commands += Command.command("ci-fast") { s =>
   s"wow $ciScalaVersion" ::
     ("tests" + ciPlatform + "/test") ::
-    ci("doc") ::
     s
 }
 commands += Command.command("ci-windows") { s =>
@@ -53,7 +52,9 @@ commands += Command.command("ci-native") { s =>
     s
 }
 commands += CiCommand("ci-publish")(
-  "publishSigned" :: Nil
+  "+publishSigned" ::
+    "sonatypeReleaseAll" ::
+    Nil
 )
 commands += Command.command("mima") { s =>
   s"very mimaReportBinaryIssues" ::
@@ -881,6 +882,7 @@ def compatibilityPolicyViolation(ticket: String) = Seq(
 
 lazy val fullCrossVersionSettings = Seq(
   crossVersion := CrossVersion.full,
+  crossScalaVersions := SupportedScalaVersions,
   unmanagedSourceDirectories.in(Compile) += {
     // NOTE: sbt 0.13.8 provides cross-version support for Scala sources
     // (http://www.scala-sbt.org/0.13/docs/sbt-0.13-Tech-Previews.html#Cross-version+support+for+Scala+sources).

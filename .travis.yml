@@ -14,14 +14,18 @@ addons:
   apt:
     update: true
 
-matrix:
+stages:
+  - name: test
+  - name: release
+    if: (branch = master AND type = push) OR (tag IS present)
+
+jobs:
   include:
     - env:
       - CI_TEST: check
     - env:
       - CI_TEST: ci-fast
       - CI_SCALA_VERSION: 2.11.12
-      - CI_PUBLISH: true
     - env:
       - CI_TEST: ci-fast
       - CI_SCALA_VERSION: 2.11.12
@@ -35,7 +39,6 @@ matrix:
     - env:
       - CI_TEST: ci-fast
       - CI_SCALA_VERSION: 2.12.8
-      - CI_PUBLISH: true
     - jdk: openjdk11 # Run 2.12.8 JVM tests on Java 11.
       env:
       - CI_TEST: ci-fast
@@ -49,6 +52,10 @@ matrix:
       - CI_SCALA_VERSION: 2.12.8
     - env:
       - CI_TEST: mima
+    - stage: release
+      script:
+        - git fetch --tags
+        - "./bin/ci-publish.sh"
 
 cache:
   directories:
@@ -68,5 +75,3 @@ before_cache:
   - find $HOME/.ivy2/cache -name "*scalafix*.xml" -type f -delete
   - rm -rf $HOME/.ivy2/local
 
-after_success:
-- "./bin/ci-publish.sh"
