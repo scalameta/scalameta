@@ -9,3 +9,8 @@ class Issue1749 {
   (x1, x1)
     .compare((x2, x2))
 }
+
+class Issue1854 {
+  val map = collection.mutable.Map.empty[String, String]
+  map("a") = "b"
+}

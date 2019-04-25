@@ -41,6 +41,7 @@ example/ForComprehension# => semanticdb/integration/src/main/scala/example/ForCo
 example/ImplicitConversion# => semanticdb/integration/src/main/scala/example/ImplicitConversion.scala.semanticdb
 example/InstrumentTyper# => semanticdb/integration/src/main/scala/example/InstrumentTyper.scala.semanticdb
 example/Issue1749# => semanticdb/integration/src/main/scala/example/Issue1749.scala.semanticdb
+example/Issue1854# => semanticdb/integration/src/main/scala/example/Issue1749.scala.semanticdb
 example/Local# => semanticdb/integration/src/main/scala/example/Local.scala.semanticdb
 example/MacroAnnotations# => semanticdb/integration/src/main/scala/example/MacroAnnotations.scala.semanticdb
 example/MacroAnnotations. => semanticdb/integration/src/main/scala/example/MacroAnnotations.scala.semanticdb

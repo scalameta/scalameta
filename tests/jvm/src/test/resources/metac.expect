@@ -1788,9 +1788,9 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Issue1749.scala
 Text => non-empty
 Language => Scala
-Symbols => 4 entries
-Occurrences => 14 entries
-Synthetics => 1 entries
+Symbols => 7 entries
+Occurrences => 24 entries
+Synthetics => 2 entries
 
 Symbols:
 example/Issue1749# => class Issue1749 extends AnyRef { +3 decls }
@@ -1800,6 +1800,12 @@ example/Issue1749#x1. => val method x1: Int
   Int => scala/Int#
 example/Issue1749#x2. => val method x2: Int
   Int => scala/Int#
+example/Issue1854# => class Issue1854 extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/Issue1854#`<init>`(). => primary ctor <init>()
+example/Issue1854#map. => val method map: Map[String, String]
+  Map => scala/collection/mutable/Map#
+  String => scala/Predef.String#
 
 Occurrences:
 [1:8..1:15): example <= example/
@@ -1816,6 +1822,16 @@ Occurrences:
 [9:5..9:12): compare => scala/math/Ordered#compare().
 [9:14..9:16): x2 => example/Issue1749#x2.
 [9:18..9:20): x2 => example/Issue1749#x2.
+[12:6..12:15): Issue1854 <= example/Issue1854#
+[12:16..12:16):  <= example/Issue1854#`<init>`().
+[13:6..13:9): map <= example/Issue1854#map.
+[13:12..13:22): collection => scala/collection/
+[13:23..13:30): mutable => scala/collection/mutable/
+[13:31..13:34): Map => scala/collection/mutable/Map.
+[13:35..13:40): empty => scala/collection/mutable/Map.empty().
+[13:41..13:47): String => scala/Predef.String#
+[13:49..13:55): String => scala/Predef.String#
+[14:2..14:5): map => example/Issue1854#map.
 
 Synthetics:
 [8:2..8:10): (x1, x1) => Ordered.orderingToOrdered[Tuple2[Int, Int]](*)(Tuple2(Int, Int))
@@ -1825,6 +1841,8 @@ Synthetics:
   Int => scala/Int#
   Tuple2 => scala/math/Ordering.Tuple2().
   Int => scala/math/Ordering.Int.
+[14:2..14:5): map => *.update
+  update => scala/collection/mutable/MapLike#update().
 
 semanticdb/integration/src/main/scala/example/local-file.scala
 --------------------------------------------------------------

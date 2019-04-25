@@ -693,6 +693,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
   private def isSyntheticName(select: g.Select): Boolean =
     select.pos == select.qualifier.pos &&
       (select.name == g.nme.apply ||
+        select.name == g.nme.update ||
         select.name == g.nme.foreach ||
         select.name == g.nme.withFilter ||
         select.name == g.nme.flatMap ||
