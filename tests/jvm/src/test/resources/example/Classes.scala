@@ -24,10 +24,10 @@ class C9/*<=classes.C9#*/(private[this] var x/*<=classes.C9#x().*/: Int/*=>scala
 
 object N/*<=classes.N.*/ {
   val anonClass/*<=classes.N.anonClass.*/ = new C7/*=>classes.C7#*/(42) {
-    val local/*<=local8*/ = ???/*=>scala.Predef.`???`().*/
+    val local/*<=local9*/ = ???/*=>scala.Predef.`???`().*/
   }
-  val anonFun/*<=classes.N.anonFun.*/ = List/*=>scala.collection.immutable.List.*/(1).map/*=>scala.collection.immutable.List#map().*/ { i/*<=local9*/ =>
-    val local/*<=local10*/ = 2
-    local/*=>local10*/ +/*=>scala.Int#`+`(+4).*/ 2
+  val anonFun/*<=classes.N.anonFun.*/ = List/*=>scala.collection.immutable.List.*/(1).map/*=>scala.collection.immutable.List#map().*/ { i/*<=local10*/ =>
+    val local/*<=local11*/ = 2
+    local/*=>local11*/ +/*=>scala.Int#`+`(+4).*/ 2
   }
 }

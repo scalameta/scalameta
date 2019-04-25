@@ -376,6 +376,6 @@ trait SymbolInformationPrinter extends BasePrinter {
   }
 
   implicit def infoOrder: Ordering[SymbolInformation] = {
-    Ordering.by(_.symbol)
+    Ordering.by[SymbolInformation, String](_.symbol)(new IdentifierOrdering)
   }
 }
