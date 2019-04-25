@@ -51,11 +51,11 @@ commands += Command.command("ci-native") { s =>
     "ci-fast" ::
     s
 }
-commands += CiCommand("ci-publish")(
+commands += Command.command("ci-publish") { s =>
   "+publishSigned" ::
     "sonatypeReleaseAll" ::
     Nil
-)
+}
 commands += Command.command("mima") { s =>
   s"very mimaReportBinaryIssues" ::
     s
