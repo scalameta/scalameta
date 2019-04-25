@@ -54,7 +54,7 @@ commands += Command.command("ci-native") { s =>
 commands += Command.command("ci-publish") { s =>
   "+publishSigned" ::
     "sonatypeReleaseAll" ::
-    Nil
+    s
 }
 commands += Command.command("mima") { s =>
   s"very mimaReportBinaryIssues" ::
