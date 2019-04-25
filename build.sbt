@@ -31,6 +31,7 @@ name := {
   "scalametaRoot"
 }
 nonPublishableSettings
+crossScalaVersions := Nil
 unidocSettings
 addCommandAlias("benchAll", benchAll.command)
 addCommandAlias("benchLSP", benchLSP.command)
@@ -46,18 +47,14 @@ commands += Command.command("ci-windows") { s =>
   s"testsJVM/all:testOnly -- -l SkipWindows" ::
     s
 }
-commands += Command.command("ci-native") { s =>
-  "metapNative/nativeLink" ::
-    "ci-fast" ::
-    s
-}
 commands += Command.command("ci-publish") { s =>
   "+publishSigned" ::
     "sonatypeReleaseAll" ::
     s
 }
 commands += Command.command("mima") { s =>
-  s"very mimaReportBinaryIssues" ::
+  "mimaReportBinaryIssues" ::
+    "doc" ::
     s
 }
 commands += Command.command("ci-slow") { s =>
@@ -104,6 +101,7 @@ lazy val semanticdbScalacCore = project
   .settings(
     publishableSettings,
     fullCrossVersionSettings,
+    mimaPreviousArtifacts := Set.empty,
     moduleName := "semanticdb-scalac-core",
     description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
@@ -116,6 +114,7 @@ lazy val semanticdbScalacPlugin = project
     moduleName := "semanticdb-scalac",
     description := "Scalac 2.x compiler plugin that generates SemanticDB on compile",
     publishableSettings,
+    mimaPreviousArtifacts := Set.empty,
     mergeSettings,
     fullCrossVersionSettings,
     pomPostProcess := { node =>
@@ -141,7 +140,8 @@ lazy val metac = project
   .settings(
     publishableSettings,
     fullCrossVersionSettings,
-    crossScalaVersions := List(LatestScala212, LatestScala211),
+    crossScalaVersions := LanguageVersions,
+    mimaPreviousArtifacts := Set.empty,
     description := "Scalac 2.x launcher that generates SemanticDB on compile",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     mainClass := Some("scala.meta.cli.Metac")
@@ -292,7 +292,6 @@ lazy val semanticdbIntegration = project
         s"-P:semanticdb:synthetics:on"
       )
     },
-    javacSemanticdbDirectory := (target.in(Compile).value / "javac-semanticdb"),
     javaHome in Compile := {
       // force javac to fork by setting javaHome to workaround https://github.com/sbt/zinc/issues/520
       val home = file(sys.props("java.home"))
@@ -301,14 +300,7 @@ lazy val semanticdbIntegration = project
         else home
       Some(actualHome)
     },
-    javacOptions ++= {
-      import Path._
-      val outDir = javacSemanticdbDirectory.value.absolutePath
-      Seq(
-        s"-Xplugin:semanticdb $outDir --sourceroot ${baseDirectory.in(ThisBuild).value}",
-        "-parameters"
-      )
-    }
+    javacOptions += "-parameters"
   )
   .dependsOn(semanticdbIntegrationMacros)
 
@@ -400,10 +392,6 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
       .getAbsolutePath,
     "databaseClasspath" -> classDirectory
       .in(semanticdbIntegration, Compile)
-      .value
-      .getAbsolutePath,
-    "javacSemanticdbPath" -> javacSemanticdbDirectory
-      .in(semanticdbIntegration)
       .value
       .getAbsolutePath,
     "integrationSourceDirectories" ->
