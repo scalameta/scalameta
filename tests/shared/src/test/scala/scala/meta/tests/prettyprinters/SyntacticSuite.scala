@@ -750,6 +750,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkTree(q"list reduce (_.a(foo) + _.b(bar))", "list reduce (_.a(foo) + _.b(bar))")
   }
 
+  test("#1864 Terms with leading numerics are backquoted") {
+    checkTree(Term.Name("123foo"), "`123foo`")
+    checkTree(q""" val `123foo` = "hello" """, """val `123foo` = "hello"""")
+  }
+
   def checkTree(original: Tree, expected: String): Unit = {
     assert(original.syntax == expected)
     assert(original.structure == (expected.parse[Stat]).get.structure)
