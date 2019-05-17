@@ -755,6 +755,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkTree(q""" val `123foo` = "hello" """, """val `123foo` = "hello"""")
   }
 
+  test("#1868 Term.Eta preserves structure") {
+    checkTree(Term.Select(Term.Eta(Term.Name("x")), Term.Name("y")), "(x _).y")
+    checkTree(q"""(x _).y""", "(x _).y")
+    checkTree(Term.Eta(Term.Name("x")), "x _")
+    checkTree(q"""x _""", "x _")
+  }
+
   def checkTree(original: Tree, expected: String): Unit = {
     assert(original.syntax == expected)
     assert(original.structure == (expected.parse[Stat]).get.structure)

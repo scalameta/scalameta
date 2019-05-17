@@ -391,7 +391,7 @@ object TreeSyntax {
         }
         m(SimpleExpr, s(kw("new"), " ", t.templ), w(" {", "", "}", needsExplicitBraces))
       case _: Term.Placeholder     => m(SimpleExpr1, kw("_"))
-      case t: Term.Eta             => m(SimpleExpr, s(p(SimpleExpr1, t.expr), " ", kw("_")))
+      case t: Term.Eta             => m(PostfixExpr, s(p(SimpleExpr1, t.expr), " ", kw("_")))
       case t: Term.Repeated        => s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
       case t: Term.Param           =>
         val mods = t.mods.filter(!_.is[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
