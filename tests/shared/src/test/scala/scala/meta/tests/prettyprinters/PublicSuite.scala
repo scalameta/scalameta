@@ -126,6 +126,10 @@ class PublicSuite extends FunSuite {
     assert(scala.meta.dialects.Scala212.toString === "Scala212")
   }
 
+  test("scala.meta.dialects.Scala213.toString") {
+    assert(scala.meta.dialects.Scala213.toString === "Scala213")
+  }
+
   test("scala.meta.dialects.Scala.toString") {
     assert(scala.meta.dialects.Scala.toString === "Scala212")
   }

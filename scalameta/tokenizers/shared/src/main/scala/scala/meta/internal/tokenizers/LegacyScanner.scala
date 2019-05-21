@@ -30,7 +30,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     case '$' if !getDollar() => syntaxError("can't unquote into single-line comments", at = charOffset - 1)
     case _                   => nextChar() ; skipLineComment()
   }
-  private def maybeOpen() {
+  private def maybeOpen(): Unit = {
     putCommentChar()
     if (ch == '*') {
       putCommentChar()
@@ -55,7 +55,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   def skipDocComment(): Unit = skipNestedComments()
   def skipBlockComment(): Unit = skipNestedComments()
 
-  private def skipToCommentEnd(isLineComment: Boolean) {
+  private def skipToCommentEnd(isLineComment: Boolean): Unit = {
     nextChar()
     if (isLineComment) skipLineComment()
     else {
@@ -103,7 +103,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   /** append Unicode character to "cbuf" buffer
    */
-  protected def putChar(c: Char) {
+  protected def putChar(c: Char): Unit = {
 //      assert(cbuf.size < 10000, cbuf)
     cbuf.append(c)
   }
@@ -114,7 +114,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   protected def emitIdentifierDeprecationWarnings = true
 
   /** Clear buffer and set name and token */
-  private def finishNamed(idtoken: LegacyToken = IDENTIFIER) {
+  private def finishNamed(idtoken: LegacyToken = IDENTIFIER): Unit = {
     name = cbuf.toString
     cbuf.clear()
     token = idtoken
@@ -132,7 +132,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   }
 
   /* much like endOffset, end is inclusive */
-  private def finishComposite(token: LegacyToken, end: Offset) {
+  private def finishComposite(token: LegacyToken, end: Offset): Unit = {
     val start = offset
     curr.token = token
     curr.strVal = new String(input.chars, start, end - start + 1)
@@ -142,7 +142,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   }
 
   /** Clear buffer and set string */
-  private def setStrVal() {
+  private def setStrVal(): Unit = {
     strVal = cbuf.toString
     cbuf.clear()
   }
@@ -305,7 +305,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   /** read next token, filling TokenData fields of Scanner.
    */
-  protected final def fetchToken() {
+  protected final def fetchToken(): Unit = {
     offset = charOffset - 1
 
     if (inStringInterpolation) return fetchStringPart()
@@ -513,7 +513,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
 // Identifiers ---------------------------------------------------------------
 
-  private def getBackquotedIdent() {
+  private def getBackquotedIdent(): Unit = {
     nextChar()
     getLitChars('`')
     if (ch == '`') {
@@ -583,7 +583,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       else finishNamed()
   }
 
-  private def getIdentOrOperatorRest() {
+  private def getIdentOrOperatorRest(): Unit = {
     if (isIdentifierPart(ch))
       getIdentRest()
     else ch match {
@@ -829,7 +829,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   /** read fractional part and exponent of floating point number
    *  if one is present.
    */
-  protected def getFraction() {
+  protected def getFraction(): Unit = {
     token = DOUBLELIT
     while ('0' <= ch && ch <= '9') {
       putChar(ch)
@@ -868,14 +868,14 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     setStrVal()
   }
 
-  def checkNoLetter() {
+  def checkNoLetter(): Unit = {
     if (isIdentifierPart(ch) && ch >= ' ')
       syntaxError("Invalid literal number", at = offset)
   }
 
   /** Read a number into strVal and set base
   */
-  protected def getNumber() {
+  protected def getNumber(): Unit = {
     val base1 = if (base < 10) 10 else base
     // Read 8,9's even if format is octal, produce a malformed number error afterwards.
     // At this point, we have already read the first digit, so to tell an innocent 0 apart
@@ -957,7 +957,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   /** Parse character literal if current character is followed by \',
    *  or follow with given op and return a symbol literal token
    */
-  def charLitOr(op: () => Unit) {
+  def charLitOr(op: () => Unit): Unit = {
     putChar(ch)
     nextChar()
     if (ch == '\'') {
@@ -1003,7 +1003,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
 // Unquotes -----------------------------------------------------------------
 
-  def getUnquote() {
+  def getUnquote(): Unit = {
     require(ch == '$')
     val start = charOffset
     val endInclusive = {
@@ -1048,7 +1048,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   /** Initialize scanner; call f on each scanned token data
    */
-  def foreach(f: LegacyTokenData => Unit) {
+  def foreach(f: LegacyTokenData => Unit): Unit = {
     nextChar()
     do {
       nextToken()

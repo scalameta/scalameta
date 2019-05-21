@@ -3,6 +3,7 @@ package tokens
 
 import scala.collection.immutable
 import org.scalameta.data._
+import org.scalameta.internal.ScalaCompat.IndexedSeqOptimized
 import scala.meta.common._
 import scala.meta.inputs._
 import scala.meta.prettyprinters._
@@ -26,7 +27,7 @@ import scala.meta.internal.prettyprinters._
 // i.e. `start` is inclusive and `end` is not.
 // Therefore `end` can point to the last token plus one.
 @data class Tokens private (private val tokens: Array[Token], private val start: Int, private val end: Int)
-extends immutable.IndexedSeq[Token] with collection.IndexedSeqOptimized[Token, immutable.IndexedSeq[Token]] {
+extends immutable.IndexedSeq[Token] with IndexedSeqOptimized[Token] {
   def apply(idx: Int): Token = tokens(start + idx)
   def length: Int = end - start
   override def slice(from: Int, until: Int): Tokens = {

@@ -67,7 +67,7 @@ class XmlParser(Block: P0, Patterns: P0 = Fail) {
     val CharA  = P( !"'" ~ Char1 )
     val CharB  = P( !("{" | "}") ~ Char1 )
 
-    val Name: P0  = P( NameStart ~ NameChar.rep ).!.filter(_.last != ':').opaque("Name").map(_ => Unit) // discard result
+    val Name: P0  = P( NameStart ~ NameChar.rep ).!.filter(_.last != ':').opaque("Name").map(_ => ()) // discard result
     val NameStart = P( CharPred.raw(isNameStart) )
     val NameChar  = P( CharPred.raw(isNameChar) )
 

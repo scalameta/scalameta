@@ -14,7 +14,7 @@ addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.7.0")
 addSbtPlugin("com.eed3si9n" % "sbt-doge" % "0.1.5")
 
 addSbtPlugin("com.thesamet" % "sbt-protoc" % "0.99.18")
-libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin-shaded" % "0.8.0-RC1"
+libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin-shaded" % "0.9.0-M4"
 
 libraryDependencies += "org.scala-sbt" % "scripted-plugin" % sbtVersion.value
 
@@ -32,7 +32,7 @@ addSbtPlugin("org.portable-scala" % "sbt-scala-native-crossproject" % "0.4.0")
 
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "0.6.0")
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.25")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.27")
 
 addSbtPlugin("org.scala-native" %% "sbt-scala-native" % "0.3.8")
 

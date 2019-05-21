@@ -1,5 +1,6 @@
 package scala.meta.internal.semanticdb.scalac
 
+import org.scalameta.internal.ScalaCompat._
 import scala.collection.mutable
 import scala.meta.internal.inputs._
 import scala.meta.internal.io.PathIO
@@ -685,7 +686,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
         symbols = finalSymbols,
         occurrences = finalOccurrences,
         diagnostics = diagnostics,
-        synthetics = synthetics
+        synthetics = synthetics.toScalaSeq
       )
     }
   }

@@ -41,7 +41,7 @@ object OccurrenceSuite {
       name: String,
       body: () => TestBody
   )
-  def testCases(): Seq[TestCase] = {
+  def testCases(): collection.Seq[TestCase] = {
     for {
       dir <- BuildInfo.integrationSourceDirectories
       absdir = AbsolutePath(dir)

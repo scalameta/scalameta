@@ -147,20 +147,22 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       }
     }
 
-    val legacyTokens = {
+    val legacyTokens: Array[LegacyTokenData] = {
       val scanner = new LegacyScanner(input, dialect)
-      val legacyTokenBuf = mutable.ArrayBuilder.make[LegacyTokenData]()
-      scanner.foreach(curr => legacyTokenBuf += new LegacyTokenData{}.copyFrom(curr))
-      legacyTokenBuf.result
+      val legacyTokenBuf = new java.util.ArrayList[LegacyTokenData]()
+      scanner.foreach(curr => legacyTokenBuf.add(new LegacyTokenData{}.copyFrom(curr)))
+      val underlying = new Array[LegacyTokenData](legacyTokenBuf.size())
+      legacyTokenBuf.toArray(underlying)
+      underlying
     }
-    val tokens = mutable.ArrayBuilder.make[Token]()
-    tokens += Token.BOF(input, dialect)
+    val tokens = new java.util.ArrayList[Token]()
+    tokens.add(Token.BOF(input, dialect))
 
     def loop(startingFrom: Int, braceBalance: Int = 0, returnWhenBraceBalanceHitsZero: Boolean = false): Int = {
       var legacyIndex = startingFrom
       def prev = legacyTokens(legacyIndex - 1)
       def curr = legacyTokens(legacyIndex)
-      def emitToken() = tokens += legacyTokenToToken(curr)
+      def emitToken() = tokens.add(legacyTokenToToken(curr))
       def nextToken() = legacyIndex += 1
       if (legacyIndex >= legacyTokens.length) return legacyIndex
 
@@ -182,16 +184,16 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         while (startEnd < input.chars.length && input.chars(startEnd) == '\"') startEnd += 1
         val numStartQuotes = startEnd - prev.endOffset - 1
         val numQuotes = if (numStartQuotes <= 2) 1 else 3
-        def emitStart(offset: Offset) = tokens += Token.Interpolation.Start(input, dialect, offset, offset + numQuotes)
-        def emitEnd(offset: Offset) = tokens += Token.Interpolation.End(input, dialect, offset, offset + numQuotes)
+        def emitStart(offset: Offset) = tokens.add(Token.Interpolation.Start(input, dialect, offset, offset + numQuotes))
+        def emitEnd(offset: Offset) = tokens.add(Token.Interpolation.End(input, dialect, offset, offset + numQuotes))
         def emitContents(): Unit = {
           require(curr.token == STRINGPART || curr.token == STRINGLIT)
           if (curr.token == STRINGPART) {
-            tokens += Token.Interpolation.Part(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
+            tokens.add(Token.Interpolation.Part(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal))
             require(input.chars(curr.endOffset + 1) == '$')
             val dollarOffset = curr.endOffset + 1
-            def emitSpliceStart(offset: Offset) = tokens += Token.Interpolation.SpliceStart(input, dialect, offset, offset + 1)
-            def emitSpliceEnd(offset: Offset) = tokens += Token.Interpolation.SpliceEnd(input, dialect, offset, offset)
+            def emitSpliceStart(offset: Offset) = tokens.add(Token.Interpolation.SpliceStart(input, dialect, offset, offset + 1))
+            def emitSpliceEnd(offset: Offset) = tokens.add(Token.Interpolation.SpliceEnd(input, dialect, offset, offset))
             def requireExpectedToken(expected: LegacyToken) = { require(curr.token == expected) }
             def emitExpectedToken(expected: LegacyToken) = { require(curr.token == expected); emitToken() }
             if (input.chars(dollarOffset + 1) == '{') {
@@ -218,7 +220,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
             }
           } else {
             curr.endOffset -= numQuotes
-            tokens += Token.Interpolation.Part(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
+            tokens.add(Token.Interpolation.Part(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal))
             require(input.chars(curr.endOffset + 1) == '\"')
             nextToken()
           }
@@ -236,10 +238,10 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       }
 
       if (prev.token == XMLLIT) {
-        def emitSpliceStart(offset: Offset) = tokens += Token.Xml.SpliceStart(input, dialect, offset, offset)
-        def emitSpliceEnd(offset: Offset) = tokens += Token.Xml.SpliceEnd(input, dialect, offset, offset)
+        def emitSpliceStart(offset: Offset) = tokens.add(Token.Xml.SpliceStart(input, dialect, offset, offset))
+        def emitSpliceEnd(offset: Offset) = tokens.add(Token.Xml.SpliceEnd(input, dialect, offset, offset))
         def emitPart(from: Int, to: Int) = {
-          tokens += Token.Xml.Part(input, dialect, from, to, new String(input.chars, from , to - from))
+          tokens.add(Token.Xml.Part(input, dialect, from, to, new String(input.chars, from , to - from)))
         }
 
         @tailrec def emitContents(): Unit = {
@@ -267,14 +269,15 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         emitContents()
         assert(prev.token == XMLLITEND)
         val xmlEndIndex = prev.endOffset + 1
-        tokens += Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex)
+        tokens.add(Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex))
       }
 
       loop(legacyIndex, braceBalance1, returnWhenBraceBalanceHitsZero)
     }
 
     loop(startingFrom = 0)
-    val underlying = tokens.result
+    val underlying = new Array[Token](tokens.size())
+    tokens.toArray(underlying)
     Tokens(underlying, 0, underlying.length)
   }
 }

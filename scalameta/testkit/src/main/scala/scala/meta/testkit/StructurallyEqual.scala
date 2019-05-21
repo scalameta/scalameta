@@ -33,7 +33,7 @@ object StructurallyEqual {
     }
     try {
       loop(a, b)
-      Right(Unit)
+      Right(())
     } catch {
       case t: AnyDiff => Left(t)
     }

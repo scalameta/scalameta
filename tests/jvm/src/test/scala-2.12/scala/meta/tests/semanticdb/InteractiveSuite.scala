@@ -9,7 +9,7 @@ import scala.meta.internal.semanticdb.Print
 import scala.tools.nsc.interactive.Global
 
 class InteractiveSuite extends FunSuite with DiffAssertions {
-  val compiler: Global = newCompiler(scalacOptions = "-Ywarn-unused-import" :: Nil)
+  val compiler: Global = newCompiler(scalacOptions = "-Ywarn-unused:imports" :: Nil)
   def check(
       original: String,
       expected: String

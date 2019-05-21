@@ -23,18 +23,24 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
     super.test(name, SkipWindows)(fn)
   }
 
+  def yMacroAnnotations: String = {
+    if (util.Properties.versionNumberString.startsWith("2.13")) "-Ymacro-annotations"
+    else {
+      val paradiseJar =
+        sys.props("sbt.paths.tests.test.options").split(" ").find(_.contains("paradise")).orNull
+      if (paradiseJar == null) fail("Missing scalamacros/paradise from scalacOptions")
+  paradiseJar + " -Xplugin-require:macro-paradise-plugin"
+    }
+  }
+
   lazy val g: Global = {
     def fail(msg: String) = sys.error(s"SemanticdbSuite initialization failed: $msg")
     val classpath = sys.props("sbt.paths.tests.test.classes")
     if (classpath == null) fail("classpath not set. broken build?")
     val pluginjar = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
     if (pluginjar == null) fail("pluginjar not set. broken build?")
-    val paradiseJar =
-      sys.props("sbt.paths.tests.test.options").split(" ").find(_.contains("paradise")).orNull
-    if (paradiseJar == null) fail("Missing scalamacros/paradise from scalacOptions")
-    val options = "-Yrangepos -Ywarn-unused-import -Ywarn-unused -cp " + classpath +
-      " -Xplugin:" + pluginjar + " -Xplugin-require:semanticdb " +
-      paradiseJar + " -Xplugin-require:macro-paradise-plugin"
+    val options = "-Yrangepos -Ywarn-unused:imports -Ywarn-unused -cp " + classpath +
+      " -Xplugin:" + pluginjar + " -Xplugin-require:semanticdb " + yMacroAnnotations
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
     val reporter = new StoreReporter()

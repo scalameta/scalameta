@@ -185,8 +185,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     case Tokenized.Error(_, _, details) => throw details
   }
   lazy val (parserTokens, parserTokenPositions) = {
-    val parserTokens = mutable.ArrayBuilder.make[Token]()
-    val parserTokenPositions = mutable.ArrayBuilder.make[Int]()
+    val parserTokens = mutable.ArrayBuilder.make[Token]
+    val parserTokenPositions = mutable.ArrayBuilder.make[Int]
     @tailrec def loop(prevPos: Int, currPos: Int, sepRegions: List[Char]): Unit = {
       if (currPos >= scannerTokens.length) return
       val prev = if (prevPos >= 0) scannerTokens(prevPos) else null

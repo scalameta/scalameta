@@ -12,7 +12,7 @@ import sbt.ScriptedPlugin._
 import complete.DefaultParsers._
 import scalapb.compiler.Version.scalapbVersion
 
-lazy val LanguageVersions = Seq(LatestScala212, LatestScala211)
+lazy val LanguageVersions = Seq(LatestScala212, LatestScala211, LatestScala213)
 lazy val LanguageVersion = LanguageVersions.head
 
 // ==========================================
@@ -155,7 +155,7 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/common"))
   .settings(
     publishableSettings,
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.1.4",
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.1.6",
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros
   )
@@ -176,7 +176,7 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies ++= List(
       // NOTE(olafur): use shaded version of fastparse because the latest version v2.0.0
       // has binary incompatibilites with the v1.0.0 version used by Scalameta.
-      "org.scalameta" %%% "fastparse" % "1.0.0"
+      "org.scalameta" %%% "fastparse" % "1.0.1"
     ),
     mergedModule({ base =>
       val scalameta = base / "scalameta"
@@ -283,7 +283,7 @@ lazy val semanticdbIntegration = project
       Seq(
         s"-Xplugin:$pluginJar",
         s"-Xplugin-require:semanticdb",
-        s"-Ywarn-unused-import",
+        s"-Ywarn-unused:imports",
         s"-Yrangepos",
         s"-P:semanticdb:text:on", // include text to print occurrences in expect suite
         s"-P:semanticdb:failures:error", // fail fast during development.
@@ -317,9 +317,12 @@ lazy val testkit = project
   .settings(
     publishableSettings,
     hasLargeIntegrationTests,
+    libraryDependencies ++= {
+      if (isScala212.value) List("com.lihaoyi" %% "geny" % "0.1.2")
+      else Nil
+    },
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.2.0-SNAP10",
-      "com.lihaoyi" %% "geny" % "0.1.2",
+      "org.scalatest" %% "scalatest" % "3.1.0-SNAP10",
       // These are used to download and extract a corpus tar.gz
       "org.rauschig" % "jarchivelib" % "0.7.1",
       "commons-io" % "commons-io" % "2.5",
@@ -348,10 +351,16 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     // [trace] Stack trace suppressed: run last testsJVM/test:executeTests for the full output.
     // [error] (testsJVM/test:executeTests) java.lang.NoClassDefFoundError: org/scalacheck/Test$TestCallback
     // [error] Total time: 19 s, completed Feb 1, 2018 3:12:34 PM
+    libraryDependencies ++= {
+      if (isScala212.value)
+        List(
+          "io.get-coursier" %% "coursier" % coursier.util.Properties.version,
+          "io.get-coursier" %% "coursier-cache" % coursier.util.Properties.version
+        )
+        else Nil
+    },
     libraryDependencies ++= List(
-      "org.scalacheck" %% "scalacheck" % "1.13.5",
-      "io.get-coursier" %% "coursier" % coursier.util.Properties.version,
-      "io.get-coursier" %% "coursier-cache" % coursier.util.Properties.version
+      "org.scalacheck" %% "scalacheck" % "1.14.0"
     )
   )
   .jvmConfigure(
@@ -398,9 +407,12 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
       sourceDirectories.in(semanticdbIntegration, Compile).value
   ),
   buildInfoPackage := "scala.meta.tests",
+  libraryDependencies ++= {
+    if (isScala212.value) List( "com.lihaoyi" %%% "fansi" % "0.2.5" % "test")
+    else Nil
+  },
   libraryDependencies ++= List(
-    "com.lihaoyi" %%% "fansi" % "0.2.5" % "test",
-    "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % "test"
+    "org.scalatest" %%% "scalatest" % "3.1.0-SNAP10" % "test"
   ),
   testOptions.in(Test) += Tests.Argument("-l", "org.scalatest.tags.Slow"),
   inConfig(Slow)(Defaults.testTasks),
@@ -486,11 +498,26 @@ lazy val requiresMacrosSetting = Def.settings(
   }
 )
 
+lazy val isScala212 = Def.setting {
+  scalaVersion.value.startsWith("2.12")
+}
+
+lazy val isScala213 = Def.setting {
+  scalaVersion.value.startsWith("2.13")
+}
+
 lazy val sharedSettings = Def.settings(
   scalaVersion := LanguageVersion,
   crossScalaVersions := LanguageVersions,
   organization := "org.scalameta",
-  addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+  libraryDependencies ++= {
+    if (isScala213.value) Nil
+    else List(compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full))
+  },
+  scalacOptions ++= {
+    if (isScala213.value) List("-Ymacro-annotations")
+    else Nil
+  },
   scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
   scalacOptions.in(Compile, doc) ++= Seq("-skip-packages", ""),
   scalacOptions.in(Compile, doc) ++= Seq("-implicits", "-implicits-hide:."),
@@ -703,9 +730,7 @@ lazy val fullCrossVersionSettings = Seq(
     // not "scala_2.11.8" or "scala_2.12.1" that we need.
     // That's why we have to work around here.
     val base = sourceDirectory.in(Compile).value
-    val versionDir =
-      if (scalaVersion.value.startsWith(s"$LatestScala212-bin")) LatestScala212
-      else scalaVersion.value
+    val versionDir = scalaVersion.value.replaceAll("-.*", "")
     base / ("scala-" + versionDir)
   }
 )

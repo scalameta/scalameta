@@ -27,7 +27,7 @@ class B @ConstructorAnnotation()(x: Int) {
 @ObjectAnnotation
 object M {
   @MacroAnnotation
-  def m[TT] = macro ???
+  def m[TT]: Int = macro ???
 }
 
 @TraitAnnotation

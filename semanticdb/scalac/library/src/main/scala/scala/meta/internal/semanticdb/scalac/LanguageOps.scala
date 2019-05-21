@@ -14,6 +14,8 @@ trait LanguageOps { self: SemanticdbOps =>
     } else if (version.startsWith("2.12")) {
       if (!version.endsWith("-bin-typelevel-4")) "Scala212"
       else "Typelevel212"
+    } else if (version.startsWith("2.13")) {
+      "Scala213"
     } else sys.error(s"unsupported Scala version $version")
   }
 }

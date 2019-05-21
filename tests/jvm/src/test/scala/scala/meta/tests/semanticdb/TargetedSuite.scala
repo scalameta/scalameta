@@ -95,7 +95,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[7:6..7:7): k <= e/x.k.
        |[7:10..7:20): sourcecode => sourcecode/
        |[7:21..7:25): Name => sourcecode/Name.
-       |[7:26..7:34): generate => sourcecode/Name.generate().
+       |[7:26..7:34): generate => sourcecode/NameMacros#generate().
        |[8:2..8:8): assert => org/scalatest/Assertions#assert().
        |[8:9..8:10): x => e/x.x.
        |[8:11..8:16): value => scala/meta/Term.Name#value().
