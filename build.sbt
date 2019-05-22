@@ -525,15 +525,6 @@ lazy val sharedSettings = Def.settings(
   scalacOptions.in(Compile, doc) ++= Seq("-skip-packages", ""),
   scalacOptions.in(Compile, doc) ++= Seq("-implicits", "-implicits-hide:."),
   scalacOptions.in(Compile, doc) ++= Seq("-groups"),
-  scalacOptions ++= {
-    if (scalaVersion.value == LatestScala212) {
-      Seq("-Xfatal-warnings")
-    } else {
-      // disable fatal warnings on 2.11 since we use the deprecated `String.linesIterator`
-      // for Java 11 support. The `linesIterator` method was un-deprecated in v2.12.7.
-      Seq()
-    }
-  },
   parallelExecution.in(Test) := false, // hello, reflection sync!!
   logBuffered := false,
   updateOptions := updateOptions.value.withCachedResolution(true),
