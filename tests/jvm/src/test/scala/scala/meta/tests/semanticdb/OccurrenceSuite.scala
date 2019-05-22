@@ -87,7 +87,7 @@ object OccurrenceSuite {
     val symtab = doc.symbols.iterator.map(info => info.symbol -> info).toMap
     val sb = new StringBuilder
     val occurrences = doc.occurrences.sorted
-    val input = Input.String(doc.text)
+    val input = Input.VirtualFile(doc.uri, doc.text)
     var offset = 0
     occurrences.foreach { occ =>
       val range = occ.range.get
@@ -98,13 +98,15 @@ object OccurrenceSuite {
         range.endLine,
         range.endCharacter
       )
-      sb.append(doc.text.substring(offset, pos.end))
-      val isPrimaryConstructor =
-        symtab.get(occ.symbol).exists(_.isPrimary)
-      if (!occ.symbol.isPackage && !isPrimaryConstructor) {
-        printSymbol(sb, occ.symbol, occ.role)
+      if (pos.end >= offset) {
+        sb.append(doc.text.substring(offset, pos.end))
+        val isPrimaryConstructor =
+          symtab.get(occ.symbol).exists(_.isPrimary)
+        if (!occ.symbol.isPackage && !isPrimaryConstructor) {
+          printSymbol(sb, occ.symbol, occ.role)
+        }
+        offset = pos.end
       }
-      offset = pos.end
     }
     sb.append(doc.text.substring(offset))
     sb.toString()

@@ -72,8 +72,7 @@ commands += Command.command("ci-slow") { s =>
     s
 }
 commands += Command.command("save-expect") { s =>
-  "metapJVM/compile" ::
-    "semanticdbScalacPlugin/compile" ::
+  "semanticdbScalacPlugin/compile" ::
     "semanticdbIntegration/clean" ::
     "semanticdbIntegration/compile" ::
     "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
