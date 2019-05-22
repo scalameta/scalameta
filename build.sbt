@@ -151,7 +151,7 @@ lazy val metac = project
   .dependsOn(semanticdbScalacPlugin)
 
 /** ======================== SCALAMETA ======================== **/
-lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val common = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ )
   .in(file("scalameta/common"))
   .settings(
     publishableSettings,
@@ -159,12 +159,12 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros
   )
-  .nativeSettings(nativeSettings)
+//.nativeSettings(nativeSettings)
 lazy val commonJVM = common.jvm
 lazy val commonJS = common.js
-lazy val commonNative = common.native
+//lazy val commonNative = common.native
 
-lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val trees = crossProject(JSPlatform, JVMPlatform /*, NativePlatform*/ )
   .in(file("scalameta/trees"))
   .settings(
     publishableSettings,
@@ -189,13 +189,13 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       )
     })
   )
-  .nativeSettings(nativeSettings)
+  // .nativeSettings(nativeSettings)
   .dependsOn(common) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
 lazy val treesJVM = trees.jvm
 lazy val treesJS = trees.js
-lazy val treesNative = trees.native
+// lazy val treesNative = trees.native
 
-lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val parsers = crossProject(JSPlatform, JVMPlatform /*, NativePlatform*/ )
   .in(file("scalameta/parsers"))
   .settings(
     publishableSettings,
@@ -208,19 +208,22 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       )
     })
   )
-  .nativeSettings(nativeSettings)
+  // .nativeSettings(nativeSettings)
   .dependsOn(trees)
 lazy val parsersJVM = parsers.jvm
 lazy val parsersJS = parsers.js
-lazy val parsersNative = parsers.native
+// lazy val parsersNative = parsers.native
+
+lazy val isNative = Def.setting {
+  SettingKey[Boolean]("nativeLinkStubs").?.value.isDefined
+}
 
 def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
   unmanagedSourceDirectories.in(Compile) ++= {
     val base = baseDirectory.in(ThisBuild).value
-    val isNative = SettingKey[Boolean]("nativeLinkStubs").?.value.isDefined
     val isJS = SettingKey[Boolean]("scalaJSUseMainModuleInitializer").?.value.isDefined
     val platform =
-      if (isNative) "native"
+      if (isNative.value) "native"
       else if (isJS) "js"
       else "jvm"
     val scalaBinary = "scala-" + scalaBinaryVersion.value
@@ -234,7 +237,7 @@ def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
   }
 )
 
-lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val scalameta = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ )
   .in(file("scalameta/scalameta"))
   .settings(
     publishableSettings,
@@ -262,11 +265,11 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       baseDirectory.in(ThisBuild).value / "semanticdb" / "symtab"
     )
   )
-  .nativeSettings(nativeSettings)
+  // .nativeSettings(nativeSettings)
   .dependsOn(parsers)
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
-lazy val scalametaNative = scalameta.native
+// lazy val scalametaNative = scalameta.native
 
 /** ======================== TESTS ======================== **/
 lazy val semanticdbIntegration = project
@@ -336,7 +339,7 @@ lazy val testkit = project
   )
   .dependsOn(scalametaJVM)
 
-lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val tests = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ )
   .in(file("tests"))
   .configs(Slow, All)
   .settings(
@@ -372,20 +375,20 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .jsSettings(
     scalaJSModuleKind := ModuleKind.CommonJSModule
   )
-  .nativeSettings(
-    nativeSettings,
-    // FIXME: https://github.com/scalatest/scalatest/issues/1112
-    // discussion: https://github.com/scalameta/scalameta/pull/1243/files#r165529377
-    // [error] cannot link: @java.lang.Thread::getStackTrace_scala.scalanative.runtime.ObjectArray
-    // [error] unable to link
-    nativeLinkStubs := true,
-    nativeMode := "debug"
-  )
+  // .nativeSettings(
+  //   nativeSettings,
+  //   // FIXME: https://github.com/scalatest/scalatest/issues/1112
+  //   // discussion: https://github.com/scalameta/scalameta/pull/1243/files#r165529377
+  //   // [error] cannot link: @java.lang.Thread::getStackTrace_scala.scalanative.runtime.ObjectArray
+  //   // [error] unable to link
+  //   nativeLinkStubs := true,
+  //   nativeMode := "debug"
+  // )
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta)
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
-lazy val testsNative = tests.native
+// lazy val testsNative = tests.native
 
 lazy val testSettings: List[Def.SettingsDefinition] = List(
   fullClasspath.in(Test) := {
@@ -584,8 +587,7 @@ lazy val adhocRepoCredentials = sys.props("scalameta.repository.credentials")
 lazy val isCustomRepository = adhocRepoUri != null && adhocRepoCredentials != null
 
 lazy val publishableSettings = Def.settings(
-  SettingKey[Boolean]("ide-skip-project") :=
-    platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary,
+  SettingKey[Boolean]("ide-skip-project") := isNative.value,
   publishTo := Some {
     if (isCustomRepository) "adhoc" at adhocRepoUri
     // NOTE: isSnapshot.value does not work with sbt-dynver
@@ -629,8 +631,7 @@ lazy val publishableSettings = Def.settings(
         //   val isJVM = platformDepsCrossVersion.value == CrossVersion.binary
         val isJVM = {
           val isJS = platformDepsCrossVersion.value == ScalaJSCrossVersion.binary
-          val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
-          !isJS && !isNative
+          !isJS && !isNative.value
         }
         if (isJVM) {
           previousVersion.map { previousVersion =>

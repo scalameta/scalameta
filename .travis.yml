@@ -30,12 +30,12 @@ jobs:
       - CI_TEST: ci-fast
       - CI_SCALA_VERSION: 2.11.12
       - CI_SCALA_JS: true
-    - env:
-        - CI_TEST: ci-fast
-        - CI_SCALA_VERSION: 2.11.12
-        - CI_SCALA_NATIVE: true
-      before_install:
-        - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
+    # - env:
+    #     - CI_TEST: ci-fast
+    #     - CI_SCALA_VERSION: 2.11.12
+    #     - CI_SCALA_NATIVE: true
+    #   before_install:
+    #     - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
     - env:
       - CI_TEST: ci-fast
       - CI_SCALA_VERSION: 2.12.8
