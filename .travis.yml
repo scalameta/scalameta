@@ -51,18 +51,18 @@ jobs:
       - CI_TEST: ci-slow
       - CI_SCALA_VERSION: 2.12.8
     - env:
-      - CI_TEST: mima
-    - stage: release
-      script:
-        - git fetch --tags
-        - "./bin/ci-publish.sh ci-publish"
-    - env:
       - CI_TEST: ci-fast
       - CI_SCALA_VERSION: 2.13.0-RC1
     - env:
       - CI_TEST: ci-fast
       - CI_SCALA_VERSION: 2.13.0-RC1
       - CI_SCALA_JS: true
+    - env:
+      - CI_TEST: mima
+    - stage: release
+      script:
+        - git fetch --tags
+        - "./bin/ci-publish.sh ci-publish"
 
 cache:
   directories:

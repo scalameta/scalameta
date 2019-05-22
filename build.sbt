@@ -280,10 +280,13 @@ lazy val semanticdbIntegration = project
     scalacOptions -= "-Xfatal-warnings",
     scalacOptions ++= {
       val pluginJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
+      val warnUnusedImports =
+        if (isScala213.value) "-Wunused:imports"
+        else "-Ywarn-unused-import"
       Seq(
         s"-Xplugin:$pluginJar",
         s"-Xplugin-require:semanticdb",
-        s"-Ywarn-unused:imports",
+        warnUnusedImports,
         s"-Yrangepos",
         s"-P:semanticdb:text:on", // include text to print occurrences in expect suite
         s"-P:semanticdb:failures:error", // fail fast during development.
@@ -357,7 +360,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
           "io.get-coursier" %% "coursier" % coursier.util.Properties.version,
           "io.get-coursier" %% "coursier-cache" % coursier.util.Properties.version
         )
-        else Nil
+      else Nil
     },
     libraryDependencies ++= List(
       "org.scalacheck" %% "scalacheck" % "1.14.0"
@@ -408,7 +411,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
   ),
   buildInfoPackage := "scala.meta.tests",
   libraryDependencies ++= {
-    if (isScala212.value) List( "com.lihaoyi" %%% "fansi" % "0.2.5" % "test")
+    if (isScala212.value) List("com.lihaoyi" %%% "fansi" % "0.2.5" % "test")
     else Nil
   },
   libraryDependencies ++= List(

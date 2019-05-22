@@ -24,7 +24,7 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   }
 
   def yMacroAnnotations: String = {
-    if (util.Properties.versionNumberString.startsWith("2.13")) "-Ymacro-annotations"
+    if (isScala213) "-Ymacro-annotations"
     else {
       val paradiseJar =
         sys.props("sbt.paths.tests.test.options").split(" ").find(_.contains("paradise")).orNull
@@ -33,13 +33,17 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
     }
   }
 
+  def isScala213: Boolean =
+    scala.util.Properties.versionNumberString.startsWith("2.13")
+
   lazy val g: Global = {
     def fail(msg: String) = sys.error(s"SemanticdbSuite initialization failed: $msg")
     val classpath = sys.props("sbt.paths.tests.test.classes")
     if (classpath == null) fail("classpath not set. broken build?")
     val pluginjar = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
     if (pluginjar == null) fail("pluginjar not set. broken build?")
-    val options = "-Yrangepos -Ywarn-unused:imports -Ywarn-unused -cp " + classpath +
+    val warnUnusedImports = if (isScala213) "-Wunused:imports" else "-Ywarn-unused-import"
+    val options = s"-Yrangepos $warnUnusedImports -Ywarn-unused -cp " + classpath +
       " -Xplugin:" + pluginjar + " -Xplugin-require:semanticdb " + yMacroAnnotations
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
