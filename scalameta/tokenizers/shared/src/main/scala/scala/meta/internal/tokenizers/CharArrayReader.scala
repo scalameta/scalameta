@@ -56,7 +56,7 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extend
    *  This is for use in multi-line strings, so there are no
    *  "potential line ends" here.
    */
-  final def nextRawChar() {
+  final def nextRawChar(): Unit = {
     if(isUnicodeEscape) charOffset = lastUnicodeOffset
     isUnicodeEscape = false
     if (charOffset >= buf.length) {
@@ -121,7 +121,7 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extend
       }
 
   /** Handle line ends */
-  private def potentialLineEnd() {
+  private def potentialLineEnd(): Unit = {
     if (ch == LF || ch == FF) {
       if (!dialect.allowMultilinePrograms) {
         readerError("line breaks are not allowed in single-line quasiquotes", at = charOffset - 1)

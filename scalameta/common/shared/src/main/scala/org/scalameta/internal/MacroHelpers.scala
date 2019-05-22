@@ -3,6 +3,7 @@ package internal
 
 
 trait MacroHelpers extends DebugFinder
+                      with MacroCompat
                       with FreeLocalFinder
                       with ImplTransformers {
   import c.universe._

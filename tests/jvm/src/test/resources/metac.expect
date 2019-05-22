@@ -298,7 +298,7 @@ Uri => semanticdb/integration/src/main/scala/example/Annotations.scala
 Text => non-empty
 Language => Scala
 Symbols => 21 entries
-Occurrences => 47 entries
+Occurrences => 48 entries
 
 Symbols:
 annot/Alias. => final object Alias extends AnyRef { +1 decls }
@@ -345,10 +345,10 @@ annot/B#x. => private[this] val method x: Int
 annot/M. => @ObjectAnnotation final object M extends AnyRef { +1 decls }
   ObjectAnnotation => com/javacp/annot/ObjectAnnotation#
   AnyRef => scala/AnyRef#
-annot/M.m(). => @MacroAnnotation macro m[TT]: Nothing
+annot/M.m(). => @MacroAnnotation macro m[TT]: Int
   MacroAnnotation => com/javacp/annot/MacroAnnotation#
   TT => annot/M.m().[TT]
-  Nothing => scala/Nothing#
+  Int => scala/Int#
 annot/M.m().[TT] => typeparam TT
 annot/T# => @TraitAnnotation trait T extends AnyRef
   TraitAnnotation => com/javacp/annot/TraitAnnotation#
@@ -401,7 +401,8 @@ Occurrences:
 [28:3..28:18): MacroAnnotation => com/javacp/annot/MacroAnnotation#
 [29:6..29:7): m <= annot/M.m().
 [29:8..29:10): TT <= annot/M.m().[TT]
-[29:20..29:23): ??? => scala/Predef.`???`().
+[29:13..29:16): Int => scala/Int#
+[29:25..29:28): ??? => scala/Predef.`???`().
 [32:1..32:16): TraitAnnotation => com/javacp/annot/TraitAnnotation#
 [33:6..33:7): T <= annot/T#
 [35:7..35:12): Alias <= annot/Alias.
@@ -1079,7 +1080,7 @@ Uri => semanticdb/integration/src/main/scala/example/Flags.scala
 Text => non-empty
 Language => Scala
 Symbols => 58 entries
-Occurrences => 71 entries
+Occurrences => 72 entries
 Synthetics => 2 entries
 
 Symbols:
@@ -1197,9 +1198,9 @@ flags/p/package.`y_=`(). => protected var method y_=(x$1: Int): Unit
   Unit => scala/Unit#
 flags/p/package.`y_=`().(x$1) => param x$1: Int
   Int => scala/Int#
-flags/p/package.m(). => macro m[TT]: Nothing
+flags/p/package.m(). => macro m[TT]: Int
   TT => flags/p/package.m().[TT]
-  Nothing => scala/Nothing#
+  Int => scala/Int#
 flags/p/package.m().[TT] => typeparam TT
 flags/p/package.x. => private lazy val method x: Int
   Int => scala/Int#
@@ -1233,7 +1234,8 @@ Occurrences:
 [7:12..7:15): Int => scala/Int#
 [8:6..8:7): m <= flags/p/package.m().
 [8:8..8:10): TT <= flags/p/package.m().[TT]
-[8:20..8:23): ??? => scala/Predef.`???`().
+[8:13..8:16): Int => scala/Int#
+[8:25..8:28): ??? => scala/Predef.`???`().
 [9:17..9:18): C <= flags/p/package.C#
 [9:20..9:21): T <= flags/p/package.C#[T]
 [9:24..9:25): U <= flags/p/package.C#[U]

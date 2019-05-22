@@ -13,10 +13,10 @@ trait FreeLocalFinder {
     object freeLocalFinder extends Traverser {
       private val localRefs = scala.collection.mutable.ListBuffer[Tree]()
       private val localSyms = scala.collection.mutable.Set[Symbol]()
-      def registerLocalSym(sym: Symbol) {
+      def registerLocalSym(sym: Symbol): Unit = {
         if (sym != null && sym != NoSymbol) localSyms += sym
       }
-      def processLocalDef(tree: Tree) {
+      def processLocalDef(tree: Tree): Unit = {
         if (tree.symbol != null && tree.symbol != NoSymbol) {
           val sym = tree.symbol
           registerLocalSym(sym)

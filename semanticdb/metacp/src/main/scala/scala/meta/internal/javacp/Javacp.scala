@@ -1,5 +1,6 @@
 package scala.meta.internal.javacp
 
+import org.scalameta.internal.ScalaCompat._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
@@ -30,7 +31,7 @@ object Javacp {
       node: ClassNode,
       classpathIndex: ClasspathIndex,
       access: Int,
-      scope: Scope): Seq[s.SymbolInformation] = {
+      scope: Scope): collection.Seq[s.SymbolInformation] = {
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
     val decls = ListBuffer.empty[String]
@@ -234,7 +235,7 @@ object Javacp {
       typeParameters = Some(s.Scope(classTypeParameters.map(_.symbol))),
       parents = classParents,
       self = s.NoType,
-      declarations = Some(s.Scope(decls))
+      declarations = Some(s.Scope(decls.toScalaSeq))
     )
 
     addInfo(

@@ -4,10 +4,11 @@ package api
 import org.scalatest._
 import org.scalameta.explore
 import scala.compat.Platform.EOL
+import scala.meta.testkit.DiffAssertions
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}
 
-class SurfaceSuite extends FunSuite {
+class SurfaceSuite extends FunSuite with DiffAssertions {
   object CoreReflection extends {
     val u: ru.type = ru
     val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
@@ -45,7 +46,7 @@ class SurfaceSuite extends FunSuite {
       s"$fullName$suffix"
     }).mkString(EOL)
     // println(diagnostic)
-    assert(diagnostic === """
+    assertNoDiff(diagnostic, """
       |scala.meta.Dialect
       |scala.meta.Tree
       |scala.meta.classifiers
@@ -73,6 +74,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.dialects.Scala210 *
       |scala.meta.dialects.Scala211 *
       |scala.meta.dialects.Scala212 *
+      |scala.meta.dialects.Scala213 *
       |scala.meta.dialects.Typelevel211 *
       |scala.meta.dialects.Typelevel212 *
       |scala.meta.inputs
@@ -150,7 +152,7 @@ class SurfaceSuite extends FunSuite {
     // However, extension methods are few enough to digest and interesting enough to warrant printing out.
 
     // println(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL))
-    assert(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL) === """
+    assertNoDiff(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL), """
       |* (scala.meta.Dialect, scala.meta.Tree).syntax: String
       |* (scala.meta.Dialect, scala.meta.inputs.Input).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
       |* (scala.meta.Dialect, scala.meta.inputs.Input).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
@@ -179,7 +181,7 @@ class SurfaceSuite extends FunSuite {
 
   test("statics (trees)") {
     // println(trees.toList.sorted.mkString(EOL))
-    assert(trees.toList.sorted.mkString(EOL) === """
+    assertNoDiff(trees.toList.sorted.mkString(EOL), """
       |scala.meta.Case
       |scala.meta.Ctor
       |scala.meta.Ctor.Primary
@@ -329,7 +331,7 @@ class SurfaceSuite extends FunSuite {
 
   test("statics (tokens)") {
     // println(tokens.toList.sorted.mkString(EOL))
-    assert(tokens.toList.sorted.mkString(EOL) === """
+    assertNoDiff(tokens.toList.sorted.mkString(EOL), """
       |scala.meta.tokens.Token.At
       |scala.meta.tokens.Token.BOF
       |scala.meta.tokens.Token.CR

@@ -75,7 +75,7 @@ class SimpleTraverserSuite extends FunSuite {
     }
     q"A".collect(fn)
     i = 0
-    q"A".traverse(fn.andThen(_ => Unit))
+    q"A".traverse(fn.andThen(_ => ()))
     i = 0
     q"A".transform(fn)
   }

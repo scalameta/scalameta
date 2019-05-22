@@ -251,10 +251,10 @@ Symbols:
 annot/M. => @ObjectAnnotation final object M extends AnyRef { +1 decls }
   ObjectAnnotation => com/javacp/annot/ObjectAnnotation#
   AnyRef => scala/AnyRef#
-annot/M.m(). => @MacroAnnotation macro m[TT]: Nothing
+annot/M.m(). => @MacroAnnotation macro m[TT]: Int
   MacroAnnotation => com/javacp/annot/MacroAnnotation#
   TT => annot/M.m().[TT]
-  Nothing => scala/Nothing#
+  Int => scala/Int#
 annot/M.m().[TT] => typeparam TT
 
 annot/T.class
@@ -2669,9 +2669,9 @@ flags/p/package.`y_=`(). => protected var method y_=(x$1: Int): Unit
   Unit => scala/Unit#
 flags/p/package.`y_=`().(x$1) => param x$1: Int
   Int => scala/Int#
-flags/p/package.m(). => macro m[TT]: Nothing
+flags/p/package.m(). => macro m[TT]: Int
   TT => flags/p/package.m().[TT]
-  Nothing => scala/Nothing#
+  Int => scala/Int#
 flags/p/package.m().[TT] => typeparam TT
 flags/p/package.x. => private lazy val method x: Int
   Int => scala/Int#

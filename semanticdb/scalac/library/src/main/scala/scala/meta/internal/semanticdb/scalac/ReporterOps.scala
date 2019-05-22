@@ -27,7 +27,7 @@ trait ReporterOps { self: SemanticdbOps =>
               case RelevantMessage(pos, severity, msg) =>
                 (pos, severity, msg)
             }
-            .to[List]
+            .toList
         case _ =>
           Nil
       }

@@ -12,7 +12,7 @@ import sbt.ScriptedPlugin._
 import complete.DefaultParsers._
 import scalapb.compiler.Version.scalapbVersion
 
-lazy val LanguageVersions = Seq(LatestScala212, LatestScala211)
+lazy val LanguageVersions = Seq(LatestScala212, LatestScala211, LatestScala213)
 lazy val LanguageVersion = LanguageVersions.head
 
 // ==========================================
@@ -72,8 +72,7 @@ commands += Command.command("ci-slow") { s =>
     s
 }
 commands += Command.command("save-expect") { s =>
-  "metapJVM/compile" ::
-    "semanticdbScalacPlugin/compile" ::
+  "semanticdbScalacPlugin/compile" ::
     "semanticdbIntegration/clean" ::
     "semanticdbIntegration/compile" ::
     "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
@@ -151,20 +150,20 @@ lazy val metac = project
   .dependsOn(semanticdbScalacPlugin)
 
 /** ======================== SCALAMETA ======================== **/
-lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val common = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ )
   .in(file("scalameta/common"))
   .settings(
     publishableSettings,
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.1.4",
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.1.6",
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros
   )
-  .nativeSettings(nativeSettings)
+//.nativeSettings(nativeSettings)
 lazy val commonJVM = common.jvm
 lazy val commonJS = common.js
-lazy val commonNative = common.native
+//lazy val commonNative = common.native
 
-lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val trees = crossProject(JSPlatform, JVMPlatform /*, NativePlatform*/ )
   .in(file("scalameta/trees"))
   .settings(
     publishableSettings,
@@ -176,7 +175,7 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies ++= List(
       // NOTE(olafur): use shaded version of fastparse because the latest version v2.0.0
       // has binary incompatibilites with the v1.0.0 version used by Scalameta.
-      "org.scalameta" %%% "fastparse" % "1.0.0"
+      "org.scalameta" %%% "fastparse" % "1.0.1"
     ),
     mergedModule({ base =>
       val scalameta = base / "scalameta"
@@ -189,13 +188,13 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       )
     })
   )
-  .nativeSettings(nativeSettings)
+  // .nativeSettings(nativeSettings)
   .dependsOn(common) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
 lazy val treesJVM = trees.jvm
 lazy val treesJS = trees.js
-lazy val treesNative = trees.native
+// lazy val treesNative = trees.native
 
-lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val parsers = crossProject(JSPlatform, JVMPlatform /*, NativePlatform*/ )
   .in(file("scalameta/parsers"))
   .settings(
     publishableSettings,
@@ -208,19 +207,22 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       )
     })
   )
-  .nativeSettings(nativeSettings)
+  // .nativeSettings(nativeSettings)
   .dependsOn(trees)
 lazy val parsersJVM = parsers.jvm
 lazy val parsersJS = parsers.js
-lazy val parsersNative = parsers.native
+// lazy val parsersNative = parsers.native
+
+lazy val isNative = Def.setting {
+  SettingKey[Boolean]("nativeLinkStubs").?.value.isDefined
+}
 
 def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
   unmanagedSourceDirectories.in(Compile) ++= {
     val base = baseDirectory.in(ThisBuild).value
-    val isNative = SettingKey[Boolean]("nativeLinkStubs").?.value.isDefined
     val isJS = SettingKey[Boolean]("scalaJSUseMainModuleInitializer").?.value.isDefined
     val platform =
-      if (isNative) "native"
+      if (isNative.value) "native"
       else if (isJS) "js"
       else "jvm"
     val scalaBinary = "scala-" + scalaBinaryVersion.value
@@ -234,7 +236,7 @@ def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
   }
 )
 
-lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val scalameta = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ )
   .in(file("scalameta/scalameta"))
   .settings(
     publishableSettings,
@@ -262,11 +264,11 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       baseDirectory.in(ThisBuild).value / "semanticdb" / "symtab"
     )
   )
-  .nativeSettings(nativeSettings)
+  // .nativeSettings(nativeSettings)
   .dependsOn(parsers)
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
-lazy val scalametaNative = scalameta.native
+// lazy val scalametaNative = scalameta.native
 
 /** ======================== TESTS ======================== **/
 lazy val semanticdbIntegration = project
@@ -280,10 +282,13 @@ lazy val semanticdbIntegration = project
     scalacOptions -= "-Xfatal-warnings",
     scalacOptions ++= {
       val pluginJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
+      val warnUnusedImports =
+        if (isScala213.value) "-Wunused:imports"
+        else "-Ywarn-unused-import"
       Seq(
         s"-Xplugin:$pluginJar",
         s"-Xplugin-require:semanticdb",
-        s"-Ywarn-unused-import",
+        warnUnusedImports,
         s"-Yrangepos",
         s"-P:semanticdb:text:on", // include text to print occurrences in expect suite
         s"-P:semanticdb:failures:error", // fail fast during development.
@@ -317,9 +322,12 @@ lazy val testkit = project
   .settings(
     publishableSettings,
     hasLargeIntegrationTests,
+    libraryDependencies ++= {
+      if (isScala212.value) List("com.lihaoyi" %% "geny" % "0.1.2")
+      else Nil
+    },
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.2.0-SNAP10",
-      "com.lihaoyi" %% "geny" % "0.1.2",
+      "org.scalatest" %% "scalatest" % "3.1.0-SNAP10",
       // These are used to download and extract a corpus tar.gz
       "org.rauschig" % "jarchivelib" % "0.7.1",
       "commons-io" % "commons-io" % "2.5",
@@ -330,7 +338,7 @@ lazy val testkit = project
   )
   .dependsOn(scalametaJVM)
 
-lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val tests = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ )
   .in(file("tests"))
   .configs(Slow, All)
   .settings(
@@ -348,10 +356,16 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     // [trace] Stack trace suppressed: run last testsJVM/test:executeTests for the full output.
     // [error] (testsJVM/test:executeTests) java.lang.NoClassDefFoundError: org/scalacheck/Test$TestCallback
     // [error] Total time: 19 s, completed Feb 1, 2018 3:12:34 PM
+    libraryDependencies ++= {
+      if (isScala212.value)
+        List(
+          "io.get-coursier" %% "coursier" % coursier.util.Properties.version,
+          "io.get-coursier" %% "coursier-cache" % coursier.util.Properties.version
+        )
+      else Nil
+    },
     libraryDependencies ++= List(
-      "org.scalacheck" %% "scalacheck" % "1.13.5",
-      "io.get-coursier" %% "coursier" % coursier.util.Properties.version,
-      "io.get-coursier" %% "coursier-cache" % coursier.util.Properties.version
+      "org.scalacheck" %% "scalacheck" % "1.14.0"
     )
   )
   .jvmConfigure(
@@ -360,20 +374,20 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .jsSettings(
     scalaJSModuleKind := ModuleKind.CommonJSModule
   )
-  .nativeSettings(
-    nativeSettings,
-    // FIXME: https://github.com/scalatest/scalatest/issues/1112
-    // discussion: https://github.com/scalameta/scalameta/pull/1243/files#r165529377
-    // [error] cannot link: @java.lang.Thread::getStackTrace_scala.scalanative.runtime.ObjectArray
-    // [error] unable to link
-    nativeLinkStubs := true,
-    nativeMode := "debug"
-  )
+  // .nativeSettings(
+  //   nativeSettings,
+  //   // FIXME: https://github.com/scalatest/scalatest/issues/1112
+  //   // discussion: https://github.com/scalameta/scalameta/pull/1243/files#r165529377
+  //   // [error] cannot link: @java.lang.Thread::getStackTrace_scala.scalanative.runtime.ObjectArray
+  //   // [error] unable to link
+  //   nativeLinkStubs := true,
+  //   nativeMode := "debug"
+  // )
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta)
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
-lazy val testsNative = tests.native
+// lazy val testsNative = tests.native
 
 lazy val testSettings: List[Def.SettingsDefinition] = List(
   fullClasspath.in(Test) := {
@@ -398,9 +412,12 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
       sourceDirectories.in(semanticdbIntegration, Compile).value
   ),
   buildInfoPackage := "scala.meta.tests",
+  libraryDependencies ++= {
+    if (isScala212.value) List("com.lihaoyi" %%% "fansi" % "0.2.5" % "test")
+    else Nil
+  },
   libraryDependencies ++= List(
-    "com.lihaoyi" %%% "fansi" % "0.2.5" % "test",
-    "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % "test"
+    "org.scalatest" %%% "scalatest" % "3.1.0-SNAP10" % "test"
   ),
   testOptions.in(Test) += Tests.Argument("-l", "org.scalatest.tags.Slow"),
   inConfig(Slow)(Defaults.testTasks),
@@ -486,24 +503,30 @@ lazy val requiresMacrosSetting = Def.settings(
   }
 )
 
+lazy val isScala212 = Def.setting {
+  scalaVersion.value.startsWith("2.12")
+}
+
+lazy val isScala213 = Def.setting {
+  scalaVersion.value.startsWith("2.13")
+}
+
 lazy val sharedSettings = Def.settings(
   scalaVersion := LanguageVersion,
   crossScalaVersions := LanguageVersions,
   organization := "org.scalameta",
-  addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+  libraryDependencies ++= {
+    if (isScala213.value) Nil
+    else List(compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full))
+  },
+  scalacOptions ++= {
+    if (isScala213.value) List("-Ymacro-annotations")
+    else Nil
+  },
   scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
   scalacOptions.in(Compile, doc) ++= Seq("-skip-packages", ""),
   scalacOptions.in(Compile, doc) ++= Seq("-implicits", "-implicits-hide:."),
   scalacOptions.in(Compile, doc) ++= Seq("-groups"),
-  scalacOptions ++= {
-    if (scalaVersion.value == LatestScala212) {
-      Seq("-Xfatal-warnings")
-    } else {
-      // disable fatal warnings on 2.11 since we use the deprecated `String.linesIterator`
-      // for Java 11 support. The `linesIterator` method was un-deprecated in v2.12.7.
-      Seq()
-    }
-  },
   parallelExecution.in(Test) := false, // hello, reflection sync!!
   logBuffered := false,
   updateOptions := updateOptions.value.withCachedResolution(true),
@@ -563,8 +586,7 @@ lazy val adhocRepoCredentials = sys.props("scalameta.repository.credentials")
 lazy val isCustomRepository = adhocRepoUri != null && adhocRepoCredentials != null
 
 lazy val publishableSettings = Def.settings(
-  SettingKey[Boolean]("ide-skip-project") :=
-    platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary,
+  SettingKey[Boolean]("ide-skip-project") := isNative.value,
   publishTo := Some {
     if (isCustomRepository) "adhoc" at adhocRepoUri
     // NOTE: isSnapshot.value does not work with sbt-dynver
@@ -608,8 +630,7 @@ lazy val publishableSettings = Def.settings(
         //   val isJVM = platformDepsCrossVersion.value == CrossVersion.binary
         val isJVM = {
           val isJS = platformDepsCrossVersion.value == ScalaJSCrossVersion.binary
-          val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
-          !isJS && !isNative
+          !isJS && !isNative.value
         }
         if (isJVM) {
           previousVersion.map { previousVersion =>
@@ -703,9 +724,7 @@ lazy val fullCrossVersionSettings = Seq(
     // not "scala_2.11.8" or "scala_2.12.1" that we need.
     // That's why we have to work around here.
     val base = sourceDirectory.in(Compile).value
-    val versionDir =
-      if (scalaVersion.value.startsWith(s"$LatestScala212-bin")) LatestScala212
-      else scalaVersion.value
+    val versionDir = scalaVersion.value.replaceAll("-.*", "")
     base / ("scala-" + versionDir)
   }
 )

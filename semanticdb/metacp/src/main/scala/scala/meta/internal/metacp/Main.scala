@@ -33,9 +33,7 @@ class Main(settings: Settings, reporter: Reporter) {
       Files.createDirectories(settings.out.toNIO)
     }
 
-    val classpath: GenSeq[AbsolutePath] =
-      if (settings.par) settings.classpath.entries.par
-      else settings.classpath.entries
+    val classpath = settings.classpath.entries
 
     val status = new ConcurrentHashMap[AbsolutePath, Option[AbsolutePath]]()
     def processEntry(entry: AbsolutePath): OutputEntry = {

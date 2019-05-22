@@ -27,5 +27,6 @@ object Mima {
   }
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
+    ProblemFilters.exclude[MissingTypesProblem]("scala.meta.testkit.DiffAssertions")
   )
 }
