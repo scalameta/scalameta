@@ -1,5 +1,5 @@
 ### scalameta
-[![Build Status](https://travis-ci.org/scalameta/scalameta.svg?branch=master)](https://travis-ci.org/scalameta/scalameta)
+[![Build Status](https://travis-ci.org/scalameta/scalameta.svg?branch=master)](https://travis-ci.org/scalameta/scalameta) [![Join the chat at https://gitter.im/scalameta/scalameta](https://badges.gitter.im/scalameta/scalameta.svg)](https://gitter.im/scalameta/scalameta?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ### User documentation
 Head over to [the user docs][docs] to learn more about the project and its roadmap.
