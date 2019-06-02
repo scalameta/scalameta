@@ -19,7 +19,6 @@ features, check out [the specification](semanticdb3.md).
   * [Metac](#metac)
   * [sbt](#sbt)
   * [Javac compiler plugin](#javac-compiler-plugin)
-  * [Metacp](#metacp)
 * [Consuming SemanticDB](#consuming-semanticdb)
   * [Scala bindings](#scala-bindings)
   * [Metap](#metap)
@@ -31,20 +30,22 @@ features, check out [the specification](semanticdb3.md).
 
 ## Installation
 
-This guide covers several non-standard command-line tools: `metac`, `metacp`,
+This guide covers several non-standard command-line tools: `metac` and
 `metap`. To install these tools on your computer, you can do the following:
 
-1. Install the `coursier` command-line tool by following the
+- Install the `coursier` command-line tool by following the
 [instructions here](https://github.com/coursier/coursier/#command-line).
 Make sure you are using the latest coursier version (1.1.0-M6 or newer).
-2. Add the following aliases to your shell:
+```bash
+curl -Lo coursier https://git.io/coursier-cli && chmod +x coursier
+```
+- Add the following aliases to your shell:
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.scalameta/scalameta_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.scalameta/scalameta_2.12)
 
 ```bash
-alias metac="coursier launch org.scalameta:metac_2.12.7:4.1.0 -- -cp $(coursier fetch -p org.scala-lang:scala-library:2.12.7)"
-alias metacp='coursier launch org.scalameta:metacp_2.12:4.1.0 -- --dependency-classpath $(echo $JAVA_HOME/jre/lib/rt.jar):$(coursier fetch org.scala-lang:scala-library:2.12.7 -p)'
-alias metap="coursier launch org.scalameta:metap_2.11:4.1.0 --"
+alias metac="coursier launch org.scalameta:metac_2.12.7:4.1.9 -- -cp $(coursier fetch -p org.scala-lang:scala-library:2.12.7)"
+alias metap="coursier launch  -M scala.meta.cli.Metap org.scalameta:scalameta_2.11:4.1.9 --"
 ```
 NOTE. These installation instructions are for the current unstable `master` branch,
 it's recommended to view this document at the latest git tag instead of `master`.
@@ -408,194 +409,6 @@ javac "-Xplugin:semanticdb java-project/target/semanticdb --sourceroot java-proj
   java-project/src/main/File1.java java-project/src/main/File2.java
 ```
 
-### Metacp
-
-Metacp is a command-line tool that takes a classpath, generates SemanticDB files
-for all classfiles and returns a new classpath that contains the SemanticDB files.
-Advanced command-line options control caching, parallelization and interaction
-with some quirks of the Scala standard library.
-
-```
-metacp [options] <classpath>
-```
-
-<table>
-  <tr>
-    <td width="200px">Option</td>
-    <td width="100px">Value</td>
-    <td>Explanation</td>
-    <td>Default</td>
-  </tr>
-  <tr>
-    <td><code>&lt;classpath&gt;</code></td>
-    <td>Java classpath</td>
-    <td>
-      Specifies classpath to be converted to SemanticDB.
-    </td>
-    <td></td>
-  </tr>
-  <tr>
-    <td><code>--dependency-classpath &lt;value&gt</code></td>
-    <td>Java classpath</td>
-    <td>
-      The classpath for library dependencies to compute external library references.
-      For example, should include the JDK and scala-library if those are not
-      part of <code>&lt;classpath&gt;</code>. The difference between
-      <code>&lt;classpath&gt;</code> and <code>--dependency-classpath</code> is
-      that entries in <code>--dependency-classpath</code> will not be processed
-      for <code>--out</code>.
-    </td>
-    <td>
-      Empty.
-    </td>
-  </tr>
-  <tr>
-    <td><code>--out &lt;value&gt</code></td>
-    <td>Absolute or relative path</td>
-    <td>
-      Says where Metacp should output conversion results.
-    </td>
-    <td>
-      See below
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <code>--exclude-scala-library-synthetics</code>,<br/>
-      <code>--include-scala-library-synthetics</code>
-    </td>
-    <td></td>
-    <td>
-      Specifies whether the output classpath should include a jar that contains
-      SemanticDB files corresponding to definitions missing from
-      <code>scala-library.jar</code>, e.g. <code>scala.Any</code>,
-      <code>scala.AnyRef</code> and others.
-    </td>
-    <td>
-      <code>--exclude-scala-library-synthetics</code>
-    </td>
-  </tr>
-  <tr>
-    <td><code>--par</code>,<br/><code>--no-par</code></td>
-    <td></td>
-    <td>
-      Toggles parallel processing. If enabled, classpath entries
-      will be converted in parallel.
-      <br/>
-      <br/>
-      NOTE: Some of our users <a href="https://github.com/scalameta/scalameta/issues/1398">have reported deadlocks</a>
-      supposedly caused by enabling <code>--par</code>. Proceed at your own risk.
-    </td>
-    <td>
-      <code>--no-par</code>
-    </td>
-  </tr>
-  <tr>
-    <td><code>--verbose</code></td>
-    <td></td>
-    <td>
-      Toggles periodic progress printouts that help gauge Metacp's progress
-      for long-running invocations.
-    </td>
-    <td>
-      <code></code>
-    </td>
-  </tr>
-  <tr>
-    <td><code>--usejavacp</code></td>
-    <td></td>
-    <td>
-      Attempts to autodetect the locations of JDK libraries and the Scala library
-      based on the Metacp's classloader, so that these libraries don't have to be
-      specified in <code>--dependency-classpath</code>.
-    </td>
-    <td>
-      <code></code>
-    </td>
-  </tr>
-  <tr>
-    <td><code>--stub-broken-signatures</code></td>
-    <td></td>
-    <td>
-      Catches exceptions that arise during generation of `Signature` payloads
-      and stubs these payloads with `NoSignature` values instead of failing Metacp
-      invocations. May be useful for dealing with missing symbol errors arising
-      from missing optional dependencies.
-    </td>
-    <td>
-      <code></code>
-    </td>
-  </tr>
-  <tr>
-    <td><code>--log-broken-signatures</code></td>
-    <td></td>
-    <td>
-      Logs exceptions that arise during generation of `Signature` payloads.
-      May be useful in combination with <code>--stub-broken-signatures</code>
-      to have a sense of what exactly is being stubbed.
-    </td>
-    <td>
-      <code></code>
-    </td>
-  </tr>
-</table>
-
-Metacp understands classfiles produced by both the Scala and Java compiler.
-Since Metacp is a standalone application independent from the Scala compiler,
-the [compiler plugin](#scalac-compiler-plugin) is not required when using Metacp.
-
-Because Metacp only works with classfiles and not sources, SemanticDB files
-that it produces only contain the `Symbols` section. Neither `Occurrences`
-nor `Diagnostics` sections are present, because they both require source
-information. For more information about the SemanticDB format, check out
-[the specification](semanticdb3.md).
-
-As an example of using Metacp, let's compile Test.scala from
-[Example](#example) using Scalac and then convert
-the resulting classfiles to SemanticDB. Note that newer versions of Metac
-may also generate an accompanying .semanticidx file, but it's an experimental
-feature, so we won't be discussing it in this document.
-
-```
-$ scalac Test.scala
-<success>
-
-$ tree
-.
-├── Test$.class
-├── Test.class
-└── Test.scala
-
-$ metacp .
-{
-  "status": {
-    "/Users/ollie/dev/scalameta/target/.": "/Users/ollie/dev/scalameta/target/out/target"
-  },
-  "scalaLibrarySynthetics": ""
-}
-$ tree out
-out
-└── target
-    └── META-INF
-        └── semanticdb
-            └── Test.class.semanticdb
-
-$ metap out/target
-Test.class
-----------
-
-Summary:
-Schema => SemanticDB v4
-Uri => Test.class
-Text => empty
-Language => Scala
-Symbols => 3 entries
-
-Symbols:
-_empty_/Test. => final object Test extends AnyRef { +1 decls }
-_empty_/Test.main(). => method main(args: Array[String]): Unit
-_empty_/Test.main().(args) => param args: Array[String]
-```
 
 ## Consuming SemanticDB
 
@@ -753,7 +566,7 @@ Scalafix provides syntactic and semantic APIs that tool developers can use
 to write custom rewrite and linting rules. Syntactic information is obtained from
 [the Scalameta parser](https://github.com/scalameta/scalameta), and semantic
 information is loaded from SemanticDB files produced by
-[the Scalac compiler plugin](#scalac-compiler-plugin) and [Metacp](#metacp).
+[the Scalac compiler plugin](#scalac-compiler-plugin).
 
 Thanks to SemanticDB, Scalafix is:
   * **Accessible**: Scalafix enables novices to implement advanced rules without
