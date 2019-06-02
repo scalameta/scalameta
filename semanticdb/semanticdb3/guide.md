@@ -44,7 +44,7 @@ curl -Lo coursier https://git.io/coursier-cli && chmod +x coursier
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.scalameta/scalameta_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.scalameta/scalameta_2.12)
 
 ```bash
-alias metac="coursier launch org.scalameta:metac_2.12.7:4.1.9 -- -cp $(coursier fetch -p org.scala-lang:scala-library:2.12.7)"
+alias metac="coursier launch org.scalameta:metac_2.12.8:4.1.9 -- -cp $(coursier fetch -p org.scala-lang:scala-library:2.12.8)"
 alias metap="coursier launch  -M scala.meta.cli.Metap org.scalameta:scalameta_2.11:4.1.9 --"
 ```
 NOTE. These installation instructions are for the current unstable `master` branch,
