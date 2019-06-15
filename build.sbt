@@ -154,7 +154,7 @@ lazy val common = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ )
   .in(file("scalameta/common"))
   .settings(
     publishableSettings,
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.1.6",
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.1.7",
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros
   )
@@ -327,7 +327,7 @@ lazy val testkit = project
       else Nil
     },
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.1.0-SNAP10",
+      "org.scalatest" %% "scalatest" % "3.0.8",
       // These are used to download and extract a corpus tar.gz
       "org.rauschig" % "jarchivelib" % "0.7.1",
       "commons-io" % "commons-io" % "2.5",
@@ -417,7 +417,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
     else Nil
   },
   libraryDependencies ++= List(
-    "org.scalatest" %%% "scalatest" % "3.1.0-SNAP10" % "test"
+    "org.scalatest" %%% "scalatest" % "3.0.8" % "test"
   ),
   testOptions.in(Test) += Tests.Argument("-l", "org.scalatest.tags.Slow"),
   inConfig(Slow)(Defaults.testTasks),
