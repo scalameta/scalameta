@@ -165,6 +165,7 @@ package object dialects {
   )
 
   implicit val Scala213 = Scala212.copy(
+    allowImplicitByNameParameters = true,
     allowLiteralTypes = true
   )
 
