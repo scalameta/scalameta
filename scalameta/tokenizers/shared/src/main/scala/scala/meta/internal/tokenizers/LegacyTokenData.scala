@@ -56,7 +56,7 @@ trait LegacyTokenData {
    *  This is tricky because of max negative value.
    */
   private def integerVal: BigInt = {
-    var input = strVal
+    var input = removeNumberSeparators(strVal)
     if (input.startsWith("0x") || input.startsWith("0X")) input = input.substring(2)
     if (input.endsWith("l") || input.endsWith("L")) input = input.substring(0, input.length - 1)
     var value: BigInt = 0
@@ -74,22 +74,26 @@ trait LegacyTokenData {
     value
   }
 
+  @inline private def removeNumberSeparators(s: String): String =
+    if (s.indexOf('_') > 0) s.replaceAllLiterally("_", "") else s
+
   /** Convert current strVal, base to double value
   */
   private def floatingVal: BigDecimal = {
+    val text = removeNumberSeparators(strVal)
     def isDeprecatedForm = {
-      val idx = strVal indexOf '.'
-      (idx == strVal.length - 1) || (
+      val idx = text indexOf '.'
+      (idx == text.length - 1) || (
            (idx >= 0)
-        && (idx + 1 < strVal.length)
-        && (!Character.isDigit(strVal charAt (idx + 1)))
+        && (idx + 1 < text.length)
+        && (!Character.isDigit(text charAt (idx + 1)))
       )
     }
     if (isDeprecatedForm) {
       syntaxError("floating point number is missing digit after dot", at = offset)
     } else {
       val designatorSuffixes = List('d', 'D', 'f', 'F')
-      val parsee = if (strVal.nonEmpty && designatorSuffixes.contains(strVal.last)) strVal.dropRight(1) else strVal
+      val parsee = if (text.nonEmpty && designatorSuffixes.contains(text.last)) text.dropRight(1) else text
       try BigDecimal(parsee)
       catch { case ex: Exception => syntaxError("malformed floating point number", at = offset) }
     }

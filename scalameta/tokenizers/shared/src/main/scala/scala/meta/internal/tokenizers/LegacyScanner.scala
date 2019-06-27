@@ -826,15 +826,28 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     while (!isAtEnd && !stop) getLitChar()
   }
 
+  @inline private def isNumberSeparator(c: Char): Boolean = {
+    val isSeparator = c == '_'
+    if (isSeparator && !dialect.allowNumericLiteralSeparators) 
+      syntaxError("numeric separators are not allowed", at = offset)
+    else isSeparator
+  }
+
+  def checkNoTrailingSeparator(): Unit =
+    if (cbuf.nonEmpty && isNumberSeparator(cbuf.last)) {
+      syntaxError("trailing separator is not allowed", at = offset + cbuf.length - 1)
+      cbuf.setLength(cbuf.length - 1)
+    }
+
   /** read fractional part and exponent of floating point number
    *  if one is present.
    */
   protected def getFraction(): Unit = {
-    token = DOUBLELIT
-    while ('0' <= ch && ch <= '9') {
+    while ('0' <= ch && ch <= '9' || isNumberSeparator(ch)) {
       putChar(ch)
       nextChar()
     }
+    checkNoTrailingSeparator()
     if (ch == 'e' || ch == 'E') {
       val lookahead = lookaheadReader
       lookahead.nextChar()
@@ -848,10 +861,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           putChar(ch)
           nextChar()
         }
-        while ('0' <= ch && ch <= '9') {
+        while ('0' <= ch && ch <= '9' || isNumberSeparator(ch)) {
           putChar(ch)
           nextChar()
         }
+        checkNoTrailingSeparator()
       }
       token = DOUBLELIT
     }
@@ -863,13 +877,15 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       putChar(ch)
       nextChar()
       token = FLOATLIT
+    } else {
+      token = DOUBLELIT
     }
     checkNoLetter()
     setStrVal()
   }
 
   def checkNoLetter(): Unit = {
-    if (isIdentifierPart(ch) && ch >= ' ')
+    if (isIdentifierPart(ch) && ch >= ' ' && !isNumberSeparator(ch))
       syntaxError("Invalid literal number", at = offset)
   }
 
@@ -882,7 +898,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     // from an octal literal 0123... (which we want to disallow), we check whether there
     // are any additional digits coming after the first one we have already read.
     var notSingleZero = false
-    while (digit2int(ch, base1) >= 0) {
+    while (isNumberSeparator(ch) || digit2int(ch, base1) >= 0) {
       putChar(ch)
       nextChar()
       notSingleZero = true
@@ -916,6 +932,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         }
       }
     }
+
+    checkNoTrailingSeparator()
 
     if (base > 10 || ch != '.')
       restOfUncertainToken()

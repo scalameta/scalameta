@@ -908,4 +908,23 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
     assert(dialects.Dotty("s\"$enum\"").tokenize.isInstanceOf[Tokenized.Error])
   }
+
+  test("numeric literal separator") {
+    dialects.Scala213("1_024").tokenize.get
+    dialects.Scala213("1_024L").tokenize.get
+    dialects.Scala213("3_14e-2").tokenize.get
+    dialects.Scala213("3_14E-2_1").tokenize.get
+
+    assert(dialects.Scala213("123_456_").tokenize.isInstanceOf[Tokenized.Error])
+    assert(dialects.Scala213("123_456_L").tokenize.isInstanceOf[Tokenized.Error])
+    assert(dialects.Scala213("3_14_E-2").tokenize.isInstanceOf[Tokenized.Error])
+    assert(dialects.Scala213("3_14E-_2").tokenize.isInstanceOf[Tokenized.Error])
+    assert(dialects.Scala213("3_14E-2_").tokenize.isInstanceOf[Tokenized.Error])
+    assert(dialects.Scala213("3.1_4_").tokenize.isInstanceOf[Tokenized.Error])
+    assert(dialects.Scala213("3.1_4_d").tokenize.isInstanceOf[Tokenized.Error])
+    assert(dialects.Scala213("3.1_4_dd").tokenize.isInstanceOf[Tokenized.Error])
+    assert(dialects.Scala213("3.1_4_dd").tokenize.isInstanceOf[Tokenized.Error])
+
+    assert(dialects.Scala212("1_024").tokenize.isInstanceOf[Tokenized.Error])
+  }
 }

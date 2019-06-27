@@ -50,6 +50,9 @@ import scala.compat.Platform.EOL
   // Some quasiquotes only support single-line snippets.
   allowMultilinePrograms: Boolean,
 
+  // Are numeric literal separators, i.e. `1_000_000` legal or not?
+  allowNumericLiteralSeparators: Boolean,
+
   // Are `|` (union types) supported by this dialect?
   allowOrTypes: Boolean,
 
@@ -127,6 +130,7 @@ package object dialects {
     allowLiteralTypes = false,
     allowMethodTypes = false,
     allowMultilinePrograms = true,
+    allowNumericLiteralSeparators = false,
     allowOrTypes = false,
     allowPatUnquotes = false,
     allowSpliceUnderscores = false, // SI-7715, only fixed in 2.11.0-M5
@@ -166,7 +170,8 @@ package object dialects {
 
   implicit val Scala213 = Scala212.copy(
     allowImplicitByNameParameters = true,
-    allowLiteralTypes = true
+    allowLiteralTypes = true,
+    allowNumericLiteralSeparators = true
   )
 
   implicit val Scala = Scala212 // alias for latest Scala dialect.
