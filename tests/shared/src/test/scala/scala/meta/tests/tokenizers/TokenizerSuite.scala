@@ -926,5 +926,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
     assert(dialects.Scala213("3.1_4_dd").tokenize.isInstanceOf[Tokenized.Error])
 
     assert(dialects.Scala212("1_024").tokenize.isInstanceOf[Tokenized.Error])
+
+    val intConstant = dialects.Scala213(" 1_000_000 ").tokenize.get(2).asInstanceOf[Token.Constant.Int]
+    assert(intConstant.pos.text == "1_000_000") // assert token position includes underscores
+    assert(intConstant.value == BigInt(1000000))
   }
 }
