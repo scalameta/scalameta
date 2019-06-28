@@ -94,8 +94,26 @@ import scala.compat.Platform.EOL
   // Normally none is required, but scripts may have their own rules.
   toplevelSeparator: String
 ) {
+
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
   def allowUnquotes: Boolean = allowTermUnquotes || allowPatUnquotes
+
+  // Are numeric literal underscore separators, i.e. `1_000_000` legal or not?
+  def allowNumericLiteralUnderscoreSeparators: Boolean = internalAllowNumericLiteralUnderscoreSeparators
+  private var internalAllowNumericLiteralUnderscoreSeparators: Boolean = false
+  // IMPORTANT: Methods like `withAllowNumericLiteralUnderscoreSeparators()`
+  // must always come last in the method chain, it's not supported to change a
+  // dialect using a pattern like this:
+  // `.withAllowNumericLiteralUnderscoreSeparators(true).copy(...)`
+  def withAllowNumericLiteralUnderscoreSeparators(allowNumericLiteralUnderscoreSeparators: Boolean): Dialect = {
+    val result = copyWithInternalVars()
+    result.internalAllowNumericLiteralUnderscoreSeparators = allowNumericLiteralUnderscoreSeparators
+    result
+  }
+
+  // NOTE(olafur): new fields to the `Dialect` class must be added as private
+  // vars using the same pattern as `internalAllowNumericLiteralUnderscoreSeparators`
+  // in order to preservere binary compatibility with older Scalameta versions.
 
   // Dialects have reference equality semantics,
   // because sometimes dialects representing distinct Scala versions
@@ -103,6 +121,12 @@ import scala.compat.Platform.EOL
   override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   override def equals(other: Any): Boolean = this eq other.asInstanceOf[AnyRef]
   override def hashCode: Int = System.identityHashCode(this)
+  // Create new reference that copies over internal var settings from this instance.
+  private def copyWithInternalVars(): Dialect = {
+    val result = copy()
+    result.internalAllowNumericLiteralUnderscoreSeparators = this.internalAllowNumericLiteralUnderscoreSeparators
+    result
+  }
 
   // Smart prettyprinting that knows about standard dialects.
   override def toString = {
@@ -167,9 +191,9 @@ package object dialects {
   implicit val Scala213 = Scala212.copy(
     allowImplicitByNameParameters = true,
     allowLiteralTypes = true
-  )
+  ).withAllowNumericLiteralUnderscoreSeparators(true)
 
-  implicit val Scala = Scala212 // alias for latest Scala dialect.
+  implicit val Scala = Scala213 // alias for latest Scala dialect.
 
   implicit val Sbt0136 = Scala210.copy(
     allowToplevelTerms = true,
