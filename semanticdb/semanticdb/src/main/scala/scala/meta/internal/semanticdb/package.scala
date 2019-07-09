@@ -125,7 +125,7 @@ package object semanticdb {
         case value: Double => DoubleConstant(value)
         case value: String => StringConstant(value)
         case null => NullConstant()
-        case _ => sys.error("unsupported value ${value.getClass} $value")
+        case _ => sys.error(s"unsupported value ${value.getClass} $value")
       }
     }
   }
