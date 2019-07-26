@@ -207,6 +207,9 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform /*, NativePlatform*/ )
       )
     })
   )
+  .jsSettings(
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+  )
   // .nativeSettings(nativeSettings)
   .dependsOn(trees)
 lazy val parsersJVM = parsers.jvm
