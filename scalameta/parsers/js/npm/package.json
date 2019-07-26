@@ -1,6 +1,6 @@
 {
   "name": "scalameta-parsers",
-  "version": "2.0.1",
+  "version": "4.2.1",
   "main": "index.js",
   "files": [
     "index.js"
