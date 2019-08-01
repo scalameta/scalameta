@@ -652,6 +652,36 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 tryFindSynthetic(select)
               case gtree: g.AppliedTypeTree =>
                 tryFindMtree(gtree)
+              case gblock @ NamedApplyBlock(_) =>
+                // Given the result of NamesDefaults.transformNamedApplication, such as:
+                //    BLOCK: {
+                //      <artifact> val x$1: Int = ao.this.local;
+                //      <artifact> val x$2: Int = 3;
+                //      <artifact> val x$3: Int = ao.this.foo$default$2;
+                //      ao.this.foo(x$1, x$3, x$2)
+                //    }
+                //
+                // Two issues:
+                // 1 - In the case of an explicitly passed argument (ex: x$1 above), the generated ValDef and its RHS
+                //     both have a Position identical to the original argument. We want to avoid matching the original
+                //     argument to the ValDef, which has its own Symbol, and ensure we match it to the RHS.
+                // 2 - In the case of a default-valued argument (ex: x$3 above), the generated ValDef, and several of
+                //     its RHS sub-trees, have Positions starting and ending at the start of the method name in the
+                //     original source. We want to avoid matching any of these w/ our "tryMstart" implementations.
+                //
+                // Current Solution:
+                // For case #1, explicitly traverse the ValDef RHS, to claim the proper association before general
+                // recursion continues.
+                // For case #2, explicitly traverse the function invocation, to claim the proper association before
+                // recursion continues.
+                gblock.stats.foreach {
+                  case g.ValDef(_, _, _, rhs) =>
+                    if (rhs.symbol == null || !rhs.symbol.isDefaultGetter) {
+                      traverse(rhs)
+                    }
+                  case _ =>
+                }
+                traverse(gblock.expr)
               case _ =>
                 tryFindMtree(gtree)
             }
