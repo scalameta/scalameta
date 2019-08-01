@@ -17,7 +17,7 @@ trait InputOps { self: SemanticdbOps =>
   implicit class XtensionGSourceFileInput(gsource: GSourceFile) {
     def toUri: String = toInput match {
       case input: m.Input.File =>
-        config.sourceroot.toURI.relativize(input.path.toURI).toString
+        config.sourceroot.toURI(isDirectory = true).relativize(input.path.toURI(isDirectory = false)).toString
       case input: m.Input.VirtualFile =>
         input.path
       case _ =>
@@ -46,7 +46,7 @@ trait InputOps { self: SemanticdbOps =>
           case gfile: GPlainFile =>
             if (config.text.isOn) {
               val path = m.AbsolutePath(gfile.file)
-              val label = config.sourceroot.toURI.relativize(path.toURI).toString
+              val label = config.sourceroot.toURI(isDirectory = true).relativize(path.toURI(isDirectory = false)).toString
               // NOTE: Can't use gsource.content because it's preprocessed by scalac.
               val contents = FileIO.slurp(path, UTF_8)
               m.Input.VirtualFile(label, contents)
