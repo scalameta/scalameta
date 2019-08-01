@@ -282,9 +282,15 @@ object Scala {
   }
 
   private[meta] object DescriptorParser {
-    def apply(symbol: String): (Descriptor, String) = {
+    private final val _cache = new java.util.HashMap[String, (Descriptor, String)]()
+
+    private def compute(symbol: String): (Descriptor, String) = {
       val parser = new DescriptorParser(symbol)
       parser.entryPoint()
+    }
+
+    def apply(symbol: String): (Descriptor, String) = {
+      _cache.computeIfAbsent(symbol, compute)
     }
   }
 }
