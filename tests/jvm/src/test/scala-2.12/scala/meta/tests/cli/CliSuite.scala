@@ -4,26 +4,30 @@ import java.io._
 import java.nio.charset.StandardCharsets._
 import java.nio.file._
 import org.scalatest.FunSuite
+import scala.collection.JavaConverters._
 import scala.meta.cli._
 import scala.meta.testkit._
 import scala.meta.tests.metacp._
 
 class CliSuite extends FunSuite with DiffAssertions {
-  val sourceroot = Files.createTempDirectory("sourceroot_")
-  val helloWorldScala = sourceroot.resolve("HelloWorld.scala")
-  Files.write(
-    helloWorldScala,
-    """
-    object HelloWorld {
-      def main(args: Array[String]): Unit = {
-        println("hello world")
-      }
-    }
-  """.getBytes(UTF_8))
-  val target = Files.createTempDirectory("target_")
-  val helloWorldSemanticdb = target.resolve("META-INF/semanticdb/HelloWorld.scala.semanticdb")
+  object HelloWorld {
+    val sourceroot = Files.createTempDirectory("sourceroot_")
+    val scalaFile = sourceroot.resolve("HelloWorld.scala")
+    Files.write(
+      scalaFile,
+      """
+      |object HelloWorld {
+      |  def main(args: Array[String]): Unit = {
+      |    println("hello world")
+      |  }
+      |}
+    """.trim.stripMargin.getBytes(UTF_8))
+    val target = Files.createTempDirectory("target_")
+    val semanticdb = target.resolve("META-INF/semanticdb/HelloWorld.scala.semanticdb")
+  }
 
-  test("metac " + helloWorldScala) {
+  test("metac " + HelloWorld.scalaFile) {
+    import HelloWorld._
     val (success, out, err) = CliSuite.communicate { (out, err) =>
       val scalacArgs = List(
         "-cp",
@@ -32,21 +36,22 @@ class CliSuite extends FunSuite with DiffAssertions {
         "-P:semanticdb:text:on",
         "-d",
         target.toString,
-        helloWorldScala.toString)
+        scalaFile.toString)
       val settings = scala.meta.metac.Settings().withScalacArgs(scalacArgs)
       val reporter = Reporter()
       Metac.process(settings, reporter)
     }
     assert(success)
     assert(out.isEmpty)
-    assert(Files.exists(helloWorldSemanticdb))
+    assert(Files.exists(semanticdb))
   }
 
-  test("metap " + helloWorldSemanticdb) {
+  test("metap " + HelloWorld.scalaFile) {
+    import HelloWorld._
     val (success, out, err) = CliSuite.withReporter { reporter =>
       val format = scala.meta.metap.Format.Detailed
       val settings =
-        scala.meta.metap.Settings().withFormat(format).withPaths(List(helloWorldSemanticdb))
+        scala.meta.metap.Settings().withFormat(format).withPaths(List(semanticdb))
       Metap.process(settings, reporter)
     }
     assert(success)
@@ -76,15 +81,74 @@ class CliSuite extends FunSuite with DiffAssertions {
        |  String => scala/Predef.String#
        |
        |Occurrences:
-       |[1:11..1:21): HelloWorld <= _empty_/HelloWorld.
-       |[2:10..2:14): main <= _empty_/HelloWorld.main().
-       |[2:15..2:19): args <= _empty_/HelloWorld.main().(args)
-       |[2:21..2:26): Array => scala/Array#
-       |[2:27..2:33): String => scala/Predef.String#
-       |[2:37..2:41): Unit => scala/Unit#
-       |[3:8..3:15): println => scala/Predef.println(+1).
+       |[0:7..0:17): HelloWorld <= _empty_/HelloWorld.
+       |[1:6..1:10): main <= _empty_/HelloWorld.main().
+       |[1:11..1:15): args <= _empty_/HelloWorld.main().(args)
+       |[1:17..1:22): Array => scala/Array#
+       |[1:23..1:29): String => scala/Predef.String#
+       |[1:33..1:37): Unit => scala/Unit#
+       |[2:4..2:11): println => scala/Predef.println(+1).
     """.trim.stripMargin)
     assert(err.isEmpty)
+  }
+
+  test("metac only outputs semanticdb for files in sourceroot") {
+    val projectroot = Files.createTempDirectory("projectroot_")
+
+    val sourceroot = projectroot.resolve("sourceroot_")
+    Files.createDirectories(sourceroot)
+
+    val notSourceroot = projectroot.resolve("not_sourceroot_")
+    Files.createDirectories(notSourceroot)
+
+    val inSourcerootScala = sourceroot.resolve("Left.scala")
+    Files.write(
+      inSourcerootScala,
+      """
+        object Left {
+          def right = Right
+        }
+      """.getBytes(UTF_8))
+
+    val notInSourcerootScala = notSourceroot.resolve("Right.scala")
+    Files.write(
+      notInSourcerootScala,
+      """
+        object Right {
+          def left = Left
+        }
+      """.getBytes(UTF_8))
+
+    val target = Files.createTempDirectory("target_")
+    val inSourcerootSemanticdb = target.resolve("META-INF/semanticdb/Left.scala.semanticdb")
+
+    val (success, out, err) = CliSuite.communicate { (out, err) =>
+      val scalacArgs = List(
+        "-cp",
+        Library.scalaLibrary.classpath().syntax,
+        "-P:semanticdb:sourceroot:" + sourceroot.toString,
+        "-P:semanticdb:text:on",
+        "-d",
+        target.toString,
+        inSourcerootScala.toString,
+        notInSourcerootScala.toString)
+      val settings = scala.meta.metac.Settings().withScalacArgs(scalacArgs)
+      val reporter = Reporter()
+      Metac.process(settings, reporter)
+    }
+
+    assert(success)
+    assert(out.isEmpty)
+    assert(Files.exists(inSourcerootSemanticdb))
+
+    def searchForRightScalaSemanticdbIn(in: Path): Iterator[Path] = Files
+      .walk(in)
+      .iterator()
+      .asScala
+      .filter(_.toString.contains("Right.scala.semanticdb"))
+
+    val rightResults = searchForRightScalaSemanticdbIn(projectroot) ++ searchForRightScalaSemanticdbIn(target)
+    assert(rightResults.isEmpty)
   }
 }
 

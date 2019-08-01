@@ -56,7 +56,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
 
       def saveSemanticdbForCompilationUnit(unit: g.CompilationUnit): Unit = {
         try {
-          if (unit.isIgnored) return
+          if (unit.isIgnored || !unit.source.isInSourceroot(config.sourceroot)) return
           val sdoc = unit.toTextDocument
           sdoc.save(config.targetroot)
           PlatformTokenizerCache.megaCache.clear()
@@ -100,7 +100,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
         try {
           if (config.diagnostics.isOn) {
             val diagnostics = unit.reportedDiagnostics(Map.empty)
-            if (diagnostics.nonEmpty) {
+            if (diagnostics.nonEmpty && unit.source.isInSourceroot(config.sourceroot)) {
               val sdoc = s.TextDocument(
                 schema = s.Schema.SEMANTICDB4,
                 uri = unit.source.toUri,
@@ -137,7 +137,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
       var where = config.targetroot.toString
       where = where.stripSuffix("/").stripSuffix("/.")
       where = where + "/META-INF/semanticdb"
-      s"Created $howMany semanticdb $what in $where"
+      s"Processed $howMany sources into semanticdb $what in $where"
     }
     def performanceOverheadMessage = {
       val computeMs = (timestampComputeFinished - timestampComputeStarted) / 1000000
