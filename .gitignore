@@ -4,6 +4,9 @@ sandbox/
 .Trash-*
 *.iml
 .idea/
+.bloop/
+.metals/
+.vscode/
 *.ipr
 *.iws
 /out/
