@@ -31,7 +31,7 @@ trait InputOps { self: SemanticdbOps =>
 
     def isInSourceroot(sourceroot: AbsolutePath): Boolean = gsource.file match {
       case gfile: GPlainFile =>
-        !config.sourceroot.toNIO.relativize(gfile.file.toPath).toString.contains("..")
+        gfile.file.toPath.startsWith(config.sourceroot.toNIO)
       case _: VirtualFile =>
         true // Would anyone go to the trouble of building a VirtualFile that's outside of sourceroot?
       case _ =>

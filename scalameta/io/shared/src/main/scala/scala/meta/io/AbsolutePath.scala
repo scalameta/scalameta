@@ -3,6 +3,7 @@ package scala.meta.io
 import java.io._
 import java.nio.{file => nio}
 import java.net._
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import scalapb.GeneratedMessage
@@ -14,6 +15,7 @@ import scala.meta.internal.io.PathIO
 sealed abstract case class AbsolutePath(toNIO: nio.Path) {
   require(toNIO.isAbsolute, s"$toNIO is not absolute!")
   def toFile: File = toNIO.toFile
+  def toURI: URI = toURI(Files.isDirectory(toNIO))
   def toURI(isDirectory: Boolean): URI = {
     val uri = toNIO.toUri
     if (isDirectory && !uri.getPath.endsWith("/")) {
