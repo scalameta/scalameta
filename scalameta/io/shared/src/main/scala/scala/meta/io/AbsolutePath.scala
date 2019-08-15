@@ -3,6 +3,7 @@ package scala.meta.io
 import java.io._
 import java.nio.{file => nio}
 import java.net._
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import scalapb.GeneratedMessage
@@ -14,7 +15,22 @@ import scala.meta.internal.io.PathIO
 sealed abstract case class AbsolutePath(toNIO: nio.Path) {
   require(toNIO.isAbsolute, s"$toNIO is not absolute!")
   def toFile: File = toNIO.toFile
-  def toURI: URI = toNIO.toUri
+  def toURI: URI = toURI(Files.isDirectory(toNIO))
+  def toURI(isDirectory: Boolean): URI = {
+    val uri = toNIO.toUri
+    if (isDirectory && !uri.getPath.endsWith("/")) {
+      // If toNIO exists, toUri will return a trailing slash, otherwise it won't (at least on JDK 8).
+      // This is important because URI.resolve(String) will drop the last segment of the URI's path if
+      // there is not a trailing slash:
+      //    scala> Paths.get("/tmp/test/doesNotExist").toUri.resolve("bar")
+      //    res1: java.net.URI = file:/tmp/test/bar
+      //    scala> Paths.get("/tmp/test/doesExist").toUri.resolve("bar")
+      //    res2: java.net.URI = file:/tmp/test/doesExist/bar
+      URI.create(uri.toString + "/")
+    } else {
+      uri
+    }
+  }
 
   def syntax: String = toString
   def structure: String = s"""AbsolutePath("$syntax")"""
@@ -48,4 +64,8 @@ object AbsolutePath {
     } else {
       cwd.resolve(path.toString)
     }
+  def fromAbsoluteUri(uri: URI)(implicit cwd: AbsolutePath): AbsolutePath = {
+    require(uri.isAbsolute, "This method only works on absolute URIs at present.") // Limitation of Paths.get(URI)
+    apply(Paths.get(uri))(cwd)
+  }
 }

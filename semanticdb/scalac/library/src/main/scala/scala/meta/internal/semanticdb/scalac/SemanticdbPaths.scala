@@ -47,6 +47,11 @@ object SemanticdbPaths {
   }
 
   def toSemanticdb(doc: s.TextDocument, targetroot: AbsolutePath): AbsolutePath = {
-    targetroot.resolve(semanticdbPrefix).resolve(doc.uri + "." + semanticdbExtension)
+    val targetrootWithSemanticdbPrefix = targetroot.resolve(semanticdbPrefix)
+    // Doing this operation in URI space is important if doc.uri contains encoded chars:
+    val uri = targetrootWithSemanticdbPrefix
+      .toURI(isDirectory = true)
+      .resolve(doc.uri + "." + semanticdbExtension)
+    AbsolutePath.fromAbsoluteUri(uri)
   }
 }

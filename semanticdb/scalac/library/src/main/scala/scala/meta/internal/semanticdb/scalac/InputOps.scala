@@ -1,12 +1,13 @@
 package scala.meta.internal.semanticdb.scalac
 
-import java.net.URLEncoder
+import java.net.{URI, URLEncoder}
 import java.nio.CharBuffer
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import scala.collection.mutable
 import scala.{meta => m}
 import scala.meta.internal.io._
+import scala.meta.io.AbsolutePath
 import scala.reflect.internal.util.{Position => GPosition, SourceFile => GSourceFile}
 import scala.reflect.io.VirtualFile
 import scala.reflect.io.{PlainFile => GPlainFile}
@@ -15,9 +16,31 @@ trait InputOps { self: SemanticdbOps =>
 
   lazy val gSourceFileInputCache = mutable.Map[GSourceFile, m.Input]()
   implicit class XtensionGSourceFileInput(gsource: GSourceFile) {
+    private def uriRelativeToSourceRoot(file: AbsolutePath): URI = {
+      val fileUri = file.toURI(isDirectory = false)
+      val result = config.sourceroot.toURI(isDirectory = true).relativize(fileUri)
+      if (result == fileUri) {
+        // java.net.URI.relativize returns `fileUri` unchanged when it is not contained within our sourceroot.
+        // We could attempt to return a ".." URI, but java.net doesn't provide facilities for that. While nio's Path
+        // does contain facilities for that, such relative paths cannot then be used to produce a percent-encoded,
+        // relative URI. It doesn't seem worth fighting this battle at the moment, so:
+        sys.error(s"'$file' is not located within sourceroot '${config.sourceroot}'.")
+      }
+      result
+    }
+
+    def isInSourceroot(sourceroot: AbsolutePath): Boolean = gsource.file match {
+      case gfile: GPlainFile =>
+        gfile.file.toPath.startsWith(config.sourceroot.toNIO)
+      case _: VirtualFile =>
+        true // Would anyone go to the trouble of building a VirtualFile that's outside of sourceroot?
+      case _ =>
+        false
+    }
+
     def toUri: String = toInput match {
       case input: m.Input.File =>
-        config.sourceroot.toURI.relativize(input.path.toURI).toString
+        uriRelativeToSourceRoot(input.path).toString
       case input: m.Input.VirtualFile =>
         input.path
       case _ =>
@@ -46,7 +69,7 @@ trait InputOps { self: SemanticdbOps =>
           case gfile: GPlainFile =>
             if (config.text.isOn) {
               val path = m.AbsolutePath(gfile.file)
-              val label = config.sourceroot.toURI.relativize(path.toURI).toString
+              val label = uriRelativeToSourceRoot(path).toString
               // NOTE: Can't use gsource.content because it's preprocessed by scalac.
               val contents = FileIO.slurp(path, UTF_8)
               m.Input.VirtualFile(label, contents)
