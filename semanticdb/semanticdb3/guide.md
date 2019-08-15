@@ -91,8 +91,8 @@ $ metac Test.scala
 `metac` is a thin wrapper over the Scala compiler. It supports the same
 command-line arguments as `scalac` supports, but instead of generating .class
 files it generates .semanticdb files. Newer versions of Metac may also generate
-an accompanying .semanticidx file, but it's an experimental feature, so we won't
-won't be discussing it in this document.
+an accompanying .semanticidx file, but it's an experimental feature, so we won't 
+be discussing it in this document.
 
 ```
 $ tree
