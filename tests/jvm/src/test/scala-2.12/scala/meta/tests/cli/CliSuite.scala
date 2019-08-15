@@ -93,31 +93,17 @@ class CliSuite extends FunSuite with DiffAssertions {
   }
 
   test("metac only outputs semanticdb for files in sourceroot") {
-    val projectroot = Files.createTempDirectory("projectroot_")
-
+    val projectroot = StringFS.fromString(
+      """|/sourceroot_/Left.scala
+         |object Left { def right = 42 }
+         |/not_sourceroot_/Right.scala
+         |object Right { def left = 41 }
+         |""".stripMargin
+    ).toNIO
     val sourceroot = projectroot.resolve("sourceroot_")
-    Files.createDirectories(sourceroot)
-
     val notSourceroot = projectroot.resolve("not_sourceroot_")
-    Files.createDirectories(notSourceroot)
-
     val inSourcerootScala = sourceroot.resolve("Left.scala")
-    Files.write(
-      inSourcerootScala,
-      """
-        object Left {
-          def right = Right
-        }
-      """.getBytes(UTF_8))
-
     val notInSourcerootScala = notSourceroot.resolve("Right.scala")
-    Files.write(
-      notInSourcerootScala,
-      """
-        object Right {
-          def left = Left
-        }
-      """.getBytes(UTF_8))
 
     val target = Files.createTempDirectory("target_")
     val inSourcerootSemanticdb = target.resolve("META-INF/semanticdb/Left.scala.semanticdb")
