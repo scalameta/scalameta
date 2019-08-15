@@ -45,6 +45,12 @@ trait TypeOps { self: Scalacp =>
           // // https://github.com/scalameta/scalameta/issues/1494
           // case g.ConstantType(g.Constant(sym: g.TermSymbol)) if sym.hasFlag(gf.JAVA_ENUM) =>
           //   ???
+          case ConstantType(underlying: ExternalSymbol) =>
+            // NOTE(olafur): manually construct a term symbol for external Java
+            // enum symbols because `underlying.entry.entryType == 9` which by
+            // default becomes a type symbol.
+            val ssym = Symbols.Global(underlying.parent.get.ssym, d.Term(underlying.name))
+            s.SingleType(s.NoType, ssym)
           case ConstantType(underlying: Type) =>
             loop(underlying) match {
               case s.NoType => s.NoType
