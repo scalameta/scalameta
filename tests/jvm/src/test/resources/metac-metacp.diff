@@ -493,21 +493,3 @@ types/Test.C#existentialType4.
              display_name: "?0"
 
 
-============================
-types/Test.Literal.javaEnum.
-============================
---- metac
-+++ metacp
- display_name: "javaEnum"
- language: SCALA
- signature {
--  method_signature {
--    type_parameters {
--    return_type {
--      single_type {
--        prefix {
--        symbol: "java/nio/file/LinkOption#NOFOLLOW_LINKS."
- access {
-   public_access {
-
-
