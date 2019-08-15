@@ -236,4 +236,26 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
     }
   }
 
+  def targeted(markup: String, fn: (s.TextDocument, String, String, String, String, String) => Unit)(
+    implicit hack: OverloadHack5): Unit = {
+    test(markup) {
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+      occurrences match {
+        case List(name1, name2, name3, name4, name5) => fn(database, name1, name2, name3, name4, name5)
+        case _ => sys.error(s"5 chevrons expected, ${occurrences.length} chevrons found")
+      }
+    }
+  }
+
+  def targeted(markup: String, fn: (s.TextDocument, String, String, String, String, String, String) => Unit)(
+    implicit hack: OverloadHack5): Unit = {
+    test(markup) {
+      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+      occurrences match {
+        case List(name1, name2, name3, name4, name5, name6) => fn(database, name1, name2, name3, name4, name5, name6)
+        case _ => sys.error(s"6 chevrons expected, ${occurrences.length} chevrons found")
+      }
+    }
+  }
+
 }

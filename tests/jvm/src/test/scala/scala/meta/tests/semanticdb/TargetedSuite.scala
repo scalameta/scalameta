@@ -7,7 +7,7 @@ package semanticdb
 // - On test failure, the obtained output is printed to the console for
 //   easy copy-paste to replace the current expected output.
 // - Try to follow the alphabetical order of the enclosing package, at the time
-//   of this writing the latest package is `g`, so the next package should be `h`.
+//   of this writing the latest package is `j`, so the next package should be `k`.
 // - glhf, and if you have any questions don't hesitate to ask in the gitter channel :)
 class TargetedSuite extends SemanticdbSuite {
 
@@ -132,4 +132,50 @@ class TargetedSuite extends SemanticdbSuite {
     }
   )
 
+  targeted(
+    """package h
+      |object ao {
+      |  val local = 1
+      |  def foo(a: Int = 1, b: Int = 2, c: Int = 3): Int = a + b + c
+      |  def baseCase = <<foo>>(<<local>>, <<c>> = 3)
+      |}
+    """.stripMargin,
+    (doc, foo1, local, c) => {
+      assert(foo1 == "h/ao.foo().")
+      assert(local == "h/ao.local.")
+      assert(c == "h/ao.foo().(c)")
+    }
+  )
+
+  targeted(
+    """package i
+      |object ao {
+      |  val local = 1
+      |  def foo(a: Int = 1, b: Int = 2, c: Int = 3): Int = a + b + c
+      |  def recursive = <<foo>>(<<local>>, <<c>> = <<foo>>(<<local>>, <<c>> = 3))
+      |}
+    """.stripMargin,
+    (doc, foo1, local1, c1, foo2, local2, c2) => {
+      assert(foo1 == "i/ao.foo().")
+      assert(foo2 == "i/ao.foo().")
+      assert(local1 == "i/ao.local.")
+      assert(local2 == "i/ao.local.")
+      assert(c1 == "i/ao.foo().(c)")
+      assert(c2 == "i/ao.foo().(c)")
+    }
+  )
+
+  targeted(
+    """package j
+      |object ao {
+      |  case class Msg(body: String, head: String = "default", tail: String)
+      |  val bodyText = "body"
+      |  val msg = <<Msg>>(<<bodyText>>, tail = "tail")
+      |}
+    """.stripMargin,
+    (doc, msg, bodyText) => {
+      assert(msg == "j/ao.Msg.")
+      assert(bodyText == "j/ao.bodyText.")
+    }
+  )
 }

@@ -2144,6 +2144,162 @@ example/MethodUsages#m. => val method m: Methods[Int]
   Methods => example/Methods#
   Int => scala/Int#
 
+example/NamedApplyBlockCaseClassConstruction.class
+--------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/NamedApplyBlockCaseClassConstruction.class
+Text => empty
+Language => Scala
+Symbols => 40 entries
+
+Symbols:
+example/NamedApplyBlockCaseClassConstruction. => final object NamedApplyBlockCaseClassConstruction extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+example/NamedApplyBlockCaseClassConstruction.Msg# => case class Msg extends AnyRef with Product with Serializable { +16 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/Serializable#
+example/NamedApplyBlockCaseClassConstruction.Msg#`<init>`(). => primary ctor <init>(val body: String, val head: String, val tail: String)
+  body => example/NamedApplyBlockCaseClassConstruction.Msg#`<init>`().(body)
+  String => scala/Predef.String#
+  head => example/NamedApplyBlockCaseClassConstruction.Msg#`<init>`().(head)
+  tail => example/NamedApplyBlockCaseClassConstruction.Msg#`<init>`().(tail)
+example/NamedApplyBlockCaseClassConstruction.Msg#`<init>`().(body) => val param body: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#`<init>`().(head) => val default param head: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#`<init>`().(tail) => val param tail: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#body. => val method body: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#canEqual(). => method canEqual(x$1: Any): Boolean
+  x$1 => example/NamedApplyBlockCaseClassConstruction.Msg#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/NamedApplyBlockCaseClassConstruction.Msg#canEqual().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/NamedApplyBlockCaseClassConstruction.Msg#copy$default$1(). => method copy$default$1: String @<?>
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#copy$default$2(). => method copy$default$2: String @<?>
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#copy$default$3(). => method copy$default$3: String @<?>
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#copy(). => method copy(body: String, head: String, tail: String): Msg
+  body => example/NamedApplyBlockCaseClassConstruction.Msg#copy().(body)
+  String => scala/Predef.String#
+  head => example/NamedApplyBlockCaseClassConstruction.Msg#copy().(head)
+  tail => example/NamedApplyBlockCaseClassConstruction.Msg#copy().(tail)
+  Msg => example/NamedApplyBlockCaseClassConstruction.Msg#
+example/NamedApplyBlockCaseClassConstruction.Msg#copy().(body) => default param body: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#copy().(head) => default param head: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#copy().(tail) => default param tail: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#equals(). => method equals(x$1: Any): Boolean
+  x$1 => example/NamedApplyBlockCaseClassConstruction.Msg#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/NamedApplyBlockCaseClassConstruction.Msg#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/NamedApplyBlockCaseClassConstruction.Msg#hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+example/NamedApplyBlockCaseClassConstruction.Msg#head. => val method head: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#productArity(). => method productArity: Int
+  Int => scala/Int#
+example/NamedApplyBlockCaseClassConstruction.Msg#productElement(). => method productElement(x$1: Int): Any
+  x$1 => example/NamedApplyBlockCaseClassConstruction.Msg#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+example/NamedApplyBlockCaseClassConstruction.Msg#productElement().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/NamedApplyBlockCaseClassConstruction.Msg#productIterator(). => method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+example/NamedApplyBlockCaseClassConstruction.Msg#productPrefix(). => method productPrefix: String
+  String => java/lang/String#
+example/NamedApplyBlockCaseClassConstruction.Msg#tail. => val method tail: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#toString(). => method toString(): String
+  String => java/lang/String#
+example/NamedApplyBlockCaseClassConstruction.Msg. => final object Msg extends AbstractFunction3[String, String, String, Msg] with Serializable { +6 decls }
+  AbstractFunction3 => scala/runtime/AbstractFunction3#
+  String => scala/Predef.String#
+  Msg => example/NamedApplyBlockCaseClassConstruction.Msg#
+  Serializable => scala/Serializable#
+example/NamedApplyBlockCaseClassConstruction.Msg.`<init>$default$2`(). => method <init>$default$2: String @<?>
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg.apply$default$2(). => method apply$default$2: String @<?>
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg.apply(). => method apply(body: String, head: String, tail: String): Msg
+  body => example/NamedApplyBlockCaseClassConstruction.Msg.apply().(body)
+  String => scala/Predef.String#
+  head => example/NamedApplyBlockCaseClassConstruction.Msg.apply().(head)
+  tail => example/NamedApplyBlockCaseClassConstruction.Msg.apply().(tail)
+  Msg => example/NamedApplyBlockCaseClassConstruction.Msg#
+example/NamedApplyBlockCaseClassConstruction.Msg.apply().(body) => param body: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg.apply().(head) => default param head: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg.apply().(tail) => param tail: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg.readResolve(). => private method readResolve(): Object
+  Object => java/lang/Object#
+example/NamedApplyBlockCaseClassConstruction.Msg.toString(). => final method toString(): String
+  String => java/lang/String#
+example/NamedApplyBlockCaseClassConstruction.Msg.unapply(). => method unapply(x$0: Msg): Option[Tuple3[String, String, String]]
+  x$0 => example/NamedApplyBlockCaseClassConstruction.Msg.unapply().(x$0)
+  Msg => example/NamedApplyBlockCaseClassConstruction.Msg#
+  Option => scala/Option#
+  Tuple3 => scala/Tuple3#
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg.unapply().(x$0) => param x$0: Msg
+  Msg => example/NamedApplyBlockCaseClassConstruction.Msg#
+example/NamedApplyBlockCaseClassConstruction.bodyText. => val method bodyText: String
+  String => java/lang/String#
+example/NamedApplyBlockCaseClassConstruction.msg. => val method msg: Msg
+  Msg => example/NamedApplyBlockCaseClassConstruction.Msg#
+
+example/NamedApplyBlockMethods.class
+------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/NamedApplyBlockMethods.class
+Text => empty
+Language => Scala
+Symbols => 11 entries
+
+Symbols:
+example/NamedApplyBlockMethods. => final object NamedApplyBlockMethods extends AnyRef { +7 decls }
+  AnyRef => scala/AnyRef#
+example/NamedApplyBlockMethods.baseCase(). => method baseCase: Int
+  Int => scala/Int#
+example/NamedApplyBlockMethods.foo$default$1(). => method foo$default$1: Int @<?>
+  Int => scala/Int#
+example/NamedApplyBlockMethods.foo$default$2(). => method foo$default$2: Int @<?>
+  Int => scala/Int#
+example/NamedApplyBlockMethods.foo$default$3(). => method foo$default$3: Int @<?>
+  Int => scala/Int#
+example/NamedApplyBlockMethods.foo(). => method foo(a: Int, b: Int, c: Int): Int
+  a => example/NamedApplyBlockMethods.foo().(a)
+  Int => scala/Int#
+  b => example/NamedApplyBlockMethods.foo().(b)
+  c => example/NamedApplyBlockMethods.foo().(c)
+example/NamedApplyBlockMethods.foo().(a) => default param a: Int
+  Int => scala/Int#
+example/NamedApplyBlockMethods.foo().(b) => default param b: Int
+  Int => scala/Int#
+example/NamedApplyBlockMethods.foo().(c) => default param c: Int
+  Int => scala/Int#
+example/NamedApplyBlockMethods.local. => val method local: Int
+  Int => scala/Int#
+example/NamedApplyBlockMethods.recursive(). => method recursive: Int
+  Int => scala/Int#
+
 example/NamedArguments.class
 ----------------------------
 
