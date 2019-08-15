@@ -588,6 +588,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(q"""s"$${foo} ***"""".syntax == """s"$foo ***"""")
   }
 
+  test("interpolator braces for term names beginning with '_'") {
+    def interpolate(before: String, after: String): Term.Interpolate = Term.Interpolate(prefix = Term.Name("s"), parts = List(Lit.String(before), Lit.String(after)), args = List(Term.Name("_foo")))
+    assert(interpolate("", "").syntax == """s"${_foo}"""")
+    assert(interpolate("bar", "baz").syntax == """s"bar${_foo}baz"""")
+    assert(interpolate("[", "]").syntax == """s"[${_foo}]"""")
+  }
+
   test("empty-arglist application") {
     val tree = term("foo.toString()")
     assert(tree.structure === "Term.Apply(Term.Select(Term.Name(\"foo\"), Term.Name(\"toString\")), Nil)")

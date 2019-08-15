@@ -279,10 +279,13 @@ object TreeSyntax {
         }
       case t: Term.Interpolate     =>
         def needBraces(id: String, charAfter: Option[Char]): Boolean = {
-          val isOpId = isOperatorPart(id.head)
-          val charAfterIsOp = charAfter.exists(isOperatorPart)
-          val charAfterIsIdPart = charAfter.exists(chr => isNameStart(chr) || Character.isDigit(chr))
-          if (isOpId) charAfterIsOp else charAfterIsIdPart
+          val startsWithUnderscore = id.startsWith("_")
+          startsWithUnderscore || {
+            val isOpId = isOperatorPart(id.head)
+            val charAfterIsOp = charAfter.exists(isOperatorPart)
+            val charAfterIsIdPart = charAfter.exists(chr => isNameStart(chr) || Character.isDigit(chr))
+            if (isOpId) charAfterIsOp else charAfterIsIdPart
+          }
         }
 
         val parts = t.parts.map { case Lit(part: String) => part.replace("$", "$$") }
