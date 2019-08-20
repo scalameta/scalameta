@@ -12,13 +12,17 @@ trait VersionSpecificOps { self: SemanticdbOps =>
     */
   object NamedApplyBlock {
     def unapply(block: g.Block): Option[Option[g.analyzer.NamedApplyInfo]] =
-      if (block.stats.forall(stat =>
-            stat.symbol != null &&
-              stat.symbol.isArtifact &&
-              (stat match {
-                case g.ValDef(_, name, _, _) if name.startsWith(g.termNames.NAMEDARG_PREFIX) => true
-                case _ => false
-              }))) {
+      if (block.stats.forall(
+            stat =>
+              stat.symbol != null &&
+                stat.symbol.isArtifact &&
+                (stat match {
+                  case g.ValDef(_, name, _, _)
+                      if name.startsWith(g.termNames.NAMEDARG_PREFIX) ||
+                        name.startsWith(g.termNames.QUAL_PREFIX) =>
+                    true
+                  case _ => false
+                }))) {
         Some(None)
       } else {
         None
