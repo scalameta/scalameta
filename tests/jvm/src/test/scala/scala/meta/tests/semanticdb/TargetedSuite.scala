@@ -7,7 +7,7 @@ package semanticdb
 // - On test failure, the obtained output is printed to the console for
 //   easy copy-paste to replace the current expected output.
 // - Try to follow the alphabetical order of the enclosing package, at the time
-//   of this writing the latest package is `j`, so the next package should be `k`.
+//   of this writing the latest package is `j`, so the next package should be `l`.
 // - glhf, and if you have any questions don't hesitate to ask in the gitter channel :)
 class TargetedSuite extends SemanticdbSuite {
 
@@ -176,6 +176,22 @@ class TargetedSuite extends SemanticdbSuite {
     (doc, msg, bodyText) => {
       assert(msg == "j/ao.Msg.")
       assert(bodyText == "j/ao.bodyText.")
+    }
+  )
+
+  targeted(
+    """package k
+      |class target {
+      |  def foo(a: Int, b: Int = 1, c: Int = 2): Int = ???
+      |}
+      |object consumer {
+      |  def unstableQual = new target
+      |  unstableQual.<<foo>>(1, <<c>> = 1)
+      |}
+    """.stripMargin,
+    (doc, foo, c) => {
+      assert(foo == "k/target#foo().")
+      assert(c == "k/target#foo().(c)")
     }
   )
 }

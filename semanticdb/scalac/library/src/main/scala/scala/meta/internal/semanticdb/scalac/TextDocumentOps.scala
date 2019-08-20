@@ -380,6 +380,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case gtree: g.Select if gtree.symbol == g.definitions.NilModule =>
                 // NOTE: List() gets desugared into mkAttributedRef(NilModule)
                 tryMstart(gstart)
+              case g.Select(g.Ident(qualTerm), _) if qualTerm.startsWith(g.nme.QUAL_PREFIX) =>
+                tryMend(gend) // transformNamedApplication blockWithQualifier case
               case gtree: g.RefTree =>
                 def prohibited(name: String) = {
                   name.contains(g.nme.DEFAULT_GETTER_STRING)
@@ -655,25 +657,31 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case gblock @ NamedApplyBlock(_) =>
                 // Given the result of NamesDefaults.transformNamedApplication, such as:
                 //    BLOCK: {
+                //      <artifact> val qual$1: helper = test.this.qualifier
                 //      <artifact> val x$1: Int = ao.this.local;
                 //      <artifact> val x$2: Int = 3;
                 //      <artifact> val x$3: Int = ao.this.foo$default$2;
-                //      ao.this.foo(x$1, x$3, x$2)
+                //      qual1$.foo(x$1, x$3, x$2)
                 //    }
                 //
-                // Two issues:
+                // Three issues:
                 // 1 - In the case of an explicitly passed argument (ex: x$1 above), the generated ValDef and its RHS
                 //     both have a Position identical to the original argument. We want to avoid matching the original
-                //     argument to the ValDef, which has its own Symbol, and ensure we match it to the RHS.
+                //     argument with this ValDef, which has its own Symbol, and ensure we match it to the RHS.
                 // 2 - In the case of a default-valued argument (ex: x$3 above), the generated ValDef, and several of
                 //     its RHS sub-trees, have Positions starting and ending at the start of the method name in the
                 //     original source. We want to avoid matching any of these w/ our "tryMstart" implementations.
+                // 3 - In the case of a non-stable qualifier reference, a qual$ ValDef is generated. In these cases
+                //     the Select(qual$1, foo) has a position which corresponds to `.foo` in the originating source
+                //     (the period is captured).
                 //
-                // Current Solution:
+                // Current Solutions:
                 // For case #1, explicitly traverse the ValDef RHS, to claim the proper association before general
                 // recursion continues.
                 // For case #2, explicitly traverse the function invocation, to claim the proper association before
                 // recursion continues.
+                // For case #3, we do not change traversal order, but have added an additional end-only match case
+                // for Select's against a qual$ Ident.
                 gblock.stats.foreach {
                   case g.ValDef(_, _, _, rhs) =>
                     if (rhs.symbol == null || !rhs.symbol.isDefaultGetter) {
