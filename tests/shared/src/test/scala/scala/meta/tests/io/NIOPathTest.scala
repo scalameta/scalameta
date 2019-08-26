@@ -4,8 +4,10 @@ package io
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
+import scala.meta.io._
 import scala.meta.internal.io._
 import org.scalatest.FunSuite
+import java.nio.file.Files
 
 class NIOPathTest extends FunSuite {
 
@@ -79,13 +81,25 @@ class NIOPathTest extends FunSuite {
   test(".relativize(Path)") {
     assert(abs.relativize(abs.resolve("qux")) == Paths.get("qux"))
   }
-  test(".toUri") {
+  test("file.toUri") {
     assert(file.toUri.getPath.endsWith("build.sbt"))
     // NOTE: Paths API seems to work inconsistently under Scala Native.
     // [info] - .toUri *** FAILED ***
     // [info]   "/Users/eburmako/Projects/scalameta/project" did not end with "project/" (NIOPathTest.scala:84)
     // assert(project.toUri.getPath.endsWith("project/"))
   }
+
+  test("jar.toUri") {
+    if (scala.meta.internal.platform.isJVM) {
+      val jar = Files.createTempDirectory("scalameta").resolve("foo.jar")
+      FileIO.withJarFileSystem(AbsolutePath(jar), true, true) { root =>
+        val hello = root.resolve("hello")
+        Files.createDirectories(hello.toNIO)
+        assert(hello.toURI.toString.endsWith("hello"))
+      }
+    }
+  }
+
   test(".toAbsolutePath") {
     assert(file.toAbsolutePath.endsWith(file))
     // NOTE: Paths API seems to work inconsistently under Scala Native.

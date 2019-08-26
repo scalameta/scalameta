@@ -18,7 +18,7 @@ sealed abstract case class AbsolutePath(toNIO: nio.Path) {
   def toURI: URI = toURI(Files.isDirectory(toNIO))
   def toURI(isDirectory: Boolean): URI = {
     val uri = toNIO.toUri
-    if (isDirectory && !uri.getPath.endsWith("/")) {
+    if (isDirectory && uri.getPath != null && !uri.getPath.endsWith("/")) {
       // If toNIO exists, toUri will return a trailing slash, otherwise it won't (at least on JDK 8).
       // This is important because URI.resolve(String) will drop the last segment of the URI's path if
       // there is not a trailing slash:
