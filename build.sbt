@@ -283,6 +283,7 @@ lazy val semanticdbIntegration = project
     // the sources in this project intentionally produce warnings to test the
     // diagnostics pipeline in semanticdb-scalac.
     scalacOptions -= "-Xfatal-warnings",
+    scalacOptions += "-deprecation",
     scalacOptions ++= {
       val pluginJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
       val warnUnusedImports =
@@ -359,15 +360,8 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ )
     // [trace] Stack trace suppressed: run last testsJVM/test:executeTests for the full output.
     // [error] (testsJVM/test:executeTests) java.lang.NoClassDefFoundError: org/scalacheck/Test$TestCallback
     // [error] Total time: 19 s, completed Feb 1, 2018 3:12:34 PM
-    libraryDependencies ++= {
-      if (isScala212.value)
-        List(
-          "io.get-coursier" %% "coursier" % coursier.util.Properties.version,
-          "io.get-coursier" %% "coursier-cache" % coursier.util.Properties.version
-        )
-      else Nil
-    },
     libraryDependencies ++= List(
+      "io.get-coursier" %% "coursier" % "2.0.0-RC3-3",
       "org.scalacheck" %% "scalacheck" % "1.14.0"
     )
   )
@@ -526,7 +520,7 @@ lazy val sharedSettings = Def.settings(
     if (isScala213.value) List("-Ymacro-annotations")
     else Nil
   },
-  scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked"),
+  scalacOptions ++= Seq("-feature", "-unchecked"),
   scalacOptions.in(Compile, doc) ++= Seq("-skip-packages", ""),
   scalacOptions.in(Compile, doc) ++= Seq("-implicits", "-implicits-hide:."),
   scalacOptions.in(Compile, doc) ++= Seq("-groups"),

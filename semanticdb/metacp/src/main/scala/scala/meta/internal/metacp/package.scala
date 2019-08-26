@@ -43,7 +43,7 @@ package object metacp {
               if annot.desc == Main.SCALA_SIG_ANNOTATION ||
                 annot.desc == Main.SCALA_LONG_SIG_ANNOTATION =>
             annot.values.asScala match {
-              case Seq("bytes", anyBytes) =>
+              case collection.Seq("bytes", anyBytes) =>
                 val baos = new ByteArrayOutputStream()
                 val bytes: Array[Byte] = anyBytes match {
                   case bytesString: String =>

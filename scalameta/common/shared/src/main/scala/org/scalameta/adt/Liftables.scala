@@ -46,7 +46,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     if (adts.isEmpty) {
       val message =
         s"materialization failed for Liftable[${weakTypeOf[T]}] " +
-        s"(the most common reason for that is that you cannot materialize ADTs that haven't been compiled yet, "
+        s"(the most common reason for that is that you cannot materialize ADTs that haven't been compiled yet, " +
         s"i.e. materialization will fail if the file with ADT definitions comes after the file with the materialization call)"
       c.abort(c.enclosingPosition, message)
     }
