@@ -33,15 +33,16 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
     }
     assert(result.classpath.isEmpty)
     assert(out.nonEmpty)
+    val errSorted = err.linesIterator.toSeq.sorted.mkString("\n")
     assertNoDiffOrPrintExpected(
-      err.replaceAll("(missing symbol: .*?) .*", "$1"),
-      """|missing symbol: scala.reflect.macros.whitebox
-         |missing symbol: scala.reflect.macros.blackbox
-         |missing symbol: scala.reflect.macros.Aliases
+      errSorted.replaceAll("(missing symbol: .*?) .*", "$1"),
+      """|NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
          |missing symbol: scala.reflect.api
+         |missing symbol: scala.reflect.macros.Aliases
          |missing symbol: scala.reflect.macros.Universe
-         |NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
-      """.stripMargin
+         |missing symbol: scala.reflect.macros.blackbox
+         |missing symbol: scala.reflect.macros.whitebox
+         |""".stripMargin
     )
   }
 
