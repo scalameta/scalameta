@@ -508,13 +508,19 @@ lazy val isScala213 = Def.setting {
   scalaVersion.value.startsWith("2.13")
 }
 
+lazy val paradiseVersion = Def.setting {
+  scalaVersion.value match {
+    case "2.12.10" => "2.12.9"
+    case v => v
+  }
+}
 lazy val sharedSettings = Def.settings(
   scalaVersion := LanguageVersion,
   crossScalaVersions := LanguageVersions,
   organization := "org.scalameta",
   libraryDependencies ++= {
     if (isScala213.value) Nil
-    else List(compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full))
+    else List(compilerPlugin("org.scalamacros" % s"paradise_${paradiseVersion.value}" % "2.1.0"))
   },
   scalacOptions ++= {
     if (isScala213.value) List("-Ymacro-annotations")
