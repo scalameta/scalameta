@@ -38,18 +38,18 @@ jobs:
     #     - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
     - env:
       - CI_TEST: ci-fast
-      - CI_SCALA_VERSION: 2.12.9
-    - jdk: openjdk11 # Run 2.12.9 JVM tests on Java 11.
+      - CI_SCALA_VERSION: 2.12.10
+    - jdk: openjdk11 # Run 2.12.10 JVM tests on Java 11.
       env:
       - CI_TEST: ci-fast
-      - CI_SCALA_VERSION: 2.12.9
+      - CI_SCALA_VERSION: 2.12.10
     - env:
       - CI_TEST: ci-fast
-      - CI_SCALA_VERSION: 2.12.9
+      - CI_SCALA_VERSION: 2.12.10
       - CI_SCALA_JS: true
     - env:
       - CI_TEST: ci-slow
-      - CI_SCALA_VERSION: 2.12.9
+      - CI_SCALA_VERSION: 2.12.10
     - env:
       - CI_TEST: ci-fast
       - CI_SCALA_VERSION: 2.13.0
