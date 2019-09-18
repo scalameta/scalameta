@@ -52,10 +52,10 @@ jobs:
       - CI_SCALA_VERSION: 2.12.10
     - env:
       - CI_TEST: ci-fast
-      - CI_SCALA_VERSION: 2.13.0
+      - CI_SCALA_VERSION: 2.13.1
     - env:
       - CI_TEST: ci-fast
-      - CI_SCALA_VERSION: 2.13.0
+      - CI_SCALA_VERSION: 2.13.1
       - CI_SCALA_JS: true
     - env:
       - CI_TEST: mima
