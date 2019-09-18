@@ -60,7 +60,7 @@ Uri => semanticdb/integration/src/main/scala/example/Advanced.scala
 Text => non-empty
 Language => Scala
 Symbols => 44 entries
-Occurrences => 108 entries
+Occurrences => 110 entries
 Synthetics => 1 entries
 
 Symbols:
@@ -199,10 +199,12 @@ Occurrences:
 [11:19..11:22): Int => scala/Int#
 [11:27..11:30): ??? => scala/Predef.`???`().
 [12:6..12:8): s2 <= advanced/Structural#s2().
+[12:15..12:15):  <= local2
 [12:21..12:22): x <= local1
 [12:24..12:27): Int => scala/Int#
 [12:30..12:33): ??? => scala/Predef.`???`().
 [13:6..13:8): s3 <= advanced/Structural#s3().
+[13:15..13:15):  <= local5
 [13:21..13:22): m <= local3
 [13:23..13:24): x <= local4
 [13:26..13:29): Int => scala/Int#
@@ -418,7 +420,7 @@ Uri => semanticdb/integration/src/main/scala/example/Anonymous.scala
 Text => non-empty
 Language => Scala
 Symbols => 11 entries
-Occurrences => 25 entries
+Occurrences => 26 entries
 Synthetics => 2 entries
 
 Symbols:
@@ -473,6 +475,7 @@ Occurrences:
 [12:18..12:21): Int => scala/Int#
 [12:29..12:32): ??? => scala/Predef.`???`().
 [15:8..15:11): Foo <= example/Anonymous#Foo#
+[16:6..16:6):  <= local4
 [16:6..16:9): Foo => example/Anonymous#Foo#
 [16:10..16:10):  => java/lang/Object#`<init>`().
 
@@ -491,7 +494,7 @@ Uri => semanticdb/integration/src/main/scala/example/Classes.scala
 Text => non-empty
 Language => Scala
 Symbols => 125 entries
-Occurrences => 57 entries
+Occurrences => 58 entries
 Synthetics => 3 entries
 
 Symbols:
@@ -871,6 +874,7 @@ Occurrences:
 [22:30..22:33): Int => scala/Int#
 [24:7..24:8): N <= classes/N.
 [25:6..25:15): anonClass <= classes/N.anonClass.
+[25:22..25:22):  <= local8
 [25:22..25:24): C7 => classes/C7#
 [25:24..25:24):  => classes/C7#`<init>`().
 [26:8..26:13): local <= local9
@@ -3623,7 +3627,7 @@ Uri => semanticdb/integration/src/main/scala/example/Traits.scala
 Text => non-empty
 Language => Scala
 Symbols => 10 entries
-Occurrences => 14 entries
+Occurrences => 15 entries
 
 Symbols:
 local0 => final class $anon extends AnyRef with U
@@ -3656,6 +3660,7 @@ Occurrences:
 [7:7..7:8): U <= traits/U.
 [8:6..8:7): u <= traits/U.u().
 [8:9..8:10): U => traits/U#
+[8:17..8:17):  <= local0
 [8:17..8:18): U => traits/U#
 [8:19..8:19):  => java/lang/Object#`<init>`().
 [11:6..11:7): C <= traits/C#
@@ -3673,7 +3678,7 @@ Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
 Symbols => 139 entries
-Occurrences => 243 entries
+Occurrences => 246 entries
 
 Symbols:
 local0 => abstract method k: Int
@@ -4107,14 +4112,17 @@ Occurrences:
 [56:41..56:44): Int => scala/Int#
 [56:49..56:52): ??? => scala/Predef.`???`().
 [57:8..57:21): compoundType4 <= types/Test.C#compoundType4.
+[57:28..57:28):  <= local2
 [57:34..57:35): k <= local3
 [57:37..57:40): Int => scala/Int#
 [57:43..57:46): ??? => scala/Predef.`???`().
 [58:8..58:21): compoundType5 <= types/Test.C#compoundType5.
+[58:28..58:28):  <= local4
 [58:28..58:29): M => types/Test.M#
 [58:30..58:30):  => types/Test.M#`<init>`().
 [58:35..58:36): N => types/Test.N#
 [59:8..59:21): compoundType6 <= types/Test.C#compoundType6.
+[59:28..59:28):  <= local5
 [59:28..59:29): M => types/Test.M#
 [59:30..59:30):  => types/Test.M#`<init>`().
 [59:35..59:36): N => types/Test.N#

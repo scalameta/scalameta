@@ -203,6 +203,11 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
             saveSymbol(gsym)
             if (gsym.isClass && !gsym.isTrait) {
+              if (gsym.isAnonymousClass) {
+                val pos = gsym.pos.focus.toMeta
+                binders += pos
+                occurrences(pos) = gsym.toSemantic
+              }
               val gprim = gsym.primaryConstructor
               saveSymbol(gprim)
               gprim.info.paramss.flatten.foreach(saveSymbol)
