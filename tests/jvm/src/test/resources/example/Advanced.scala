@@ -10,8 +10,8 @@ class C/*<=advanced.C#*/[T/*<=advanced.C#[T]*/] {
 
 class Structural/*<=advanced.Structural#*/ {
   def s1/*<=advanced.Structural#s1().*/: { val x/*<=local0*/: Int/*=>scala.Int#*/ } = ???/*=>scala.Predef.`???`().*/
-  def s2/*<=advanced.Structural#s2().*/ = new { val x/*<=local1*/: Int/*=>scala.Int#*/ = ???/*=>scala.Predef.`???`().*/ }
-  def s3/*<=advanced.Structural#s3().*/ = new { def m/*<=local3*/(x/*<=local4*/: Int/*=>scala.Int#*/): Int/*=>scala.Int#*/ = ???/*=>scala.Predef.`???`().*/ }
+  def s2/*<=advanced.Structural#s2().*/ = new /*<=local2*/{ val x/*<=local1*/: Int/*=>scala.Int#*/ = ???/*=>scala.Predef.`???`().*/ }
+  def s3/*<=advanced.Structural#s3().*/ = new /*<=local5*/{ def m/*<=local3*/(x/*<=local4*/: Int/*=>scala.Int#*/): Int/*=>scala.Int#*/ = ???/*=>scala.Predef.`???`().*/ }
 }
 
 class Existential/*<=advanced.Existential#*/ {
