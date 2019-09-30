@@ -232,8 +232,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         numStartQuotes match {
           case 1 => emitStart(curr.offset - 1); emitContents(); emitEnd(curr.offset - 1)
           case 2 => emitStart(curr.offset); curr.offset += 1; emitContents(); emitEnd(curr.offset - 1)
-          case n if 3 <= n && n < 6 => emitStart(curr.offset - 3); emitContents(); emitEnd(curr.offset - 3)
-          case 6 => emitStart(curr.offset - 3); emitContents(); emitEnd(curr.offset - 3)
+          case _ => emitStart(curr.offset - 3); emitContents(); emitEnd(curr.offset - 3)
         }
       }
 

@@ -103,5 +103,12 @@ class LitSuite extends ParseSuite {
     val result = """ "sobaka """.parse[Stat]
     assert(result.isInstanceOf[Parsed.Error])
   }
-}
 
+  test("#1382") {
+    val Lit("\"\"") = term("\"\"\"\"\"\"\"\"")
+    val Lit("\"\"\"\"\"\"\"") = term("\"\"\"\"\"\"\"\"\"\"\"\"\"")
+
+    val Term.Interpolate(Name("raw"), List(Lit("\"\"")), Nil) = term("raw\"\"\"\"\"\"\"\"")
+    val Term.Interpolate(Name("raw"), List(Lit("\"\"\"\"\"\"\"")), Nil) = term("raw\"\"\"\"\"\"\"\"\"\"\"\"\"")
+  }
+}
