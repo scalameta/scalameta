@@ -73,7 +73,6 @@ trait SymbolInformationOps { self: Scalacp =>
         // NOTE: Scalap doesn't expose JAVA_ENUM.
         // if (sym.isJavaEnum) flip(p.ENUM)
         if (sym.isStatic) flip(p.STATIC)
-        ???
       } else {
         if (isAbstractClass || isAbstractMethod || isAbstractType) flip(p.ABSTRACT)
         if (sym.isFinal || sym.isModule) flip(p.FINAL)
