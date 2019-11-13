@@ -111,6 +111,8 @@ object Test {
     final val bool = true
     final val unit = ()
     final val javaEnum = java.nio.file.LinkOption.NOFOLLOW_LINKS
-    final val clazzOf = classOf[Option[Int]]
+    final val clazzOfInt = classOf[Int]
+    final val clazzOfOption = classOf[Option[Int]]
+
   }
 }

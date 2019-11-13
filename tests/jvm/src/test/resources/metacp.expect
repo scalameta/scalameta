@@ -3303,7 +3303,7 @@ Schema => SemanticDB v4
 Uri => types/Test.class
 Text => empty
 Language => Scala
-Symbols => 101 entries
+Symbols => 102 entries
 
 Symbols:
 types/Test. => final object Test extends AnyRef { +4 decls }
@@ -3516,11 +3516,14 @@ types/Test.C#typeRef4. => val method typeRef4: List[Int]
 types/Test.C#x. => val method x: p.X
   p => types/Test.C#p.
   X => types/P#X#
-types/Test.Literal. => final object Literal extends AnyRef { +11 decls }
+types/Test.Literal. => final object Literal extends AnyRef { +12 decls }
   AnyRef => scala/AnyRef#
 types/Test.Literal.bool. => final val method bool: true
 types/Test.Literal.char. => final val method char: 'a'
-types/Test.Literal.clazzOf. => final val method clazzOf: Class[Option[Int]]
+types/Test.Literal.clazzOfInt. => final val method clazzOfInt: Class[Int]
+  Class => java/lang/Class#
+  Int => scala/Int#
+types/Test.Literal.clazzOfOption. => final val method clazzOfOption: Class[Option[Int]]
   Class => java/lang/Class#
   Option => scala/Option#
   Int => scala/Int#

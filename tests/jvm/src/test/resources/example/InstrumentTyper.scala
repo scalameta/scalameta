@@ -17,11 +17,12 @@ class InstrumentTyper/*<=example.InstrumentTyper#*/ { self/*<=local0*/: AnyRef =
     Literal/*=>types.Test.Literal.*/.bool/*=>types.Test.Literal.bool.*/,
     Literal/*=>types.Test.Literal.*/.unit/*=>types.Test.Literal.unit.*/,
     Literal/*=>types.Test.Literal.*/.javaEnum/*=>types.Test.Literal.javaEnum.*/,
-    Literal/*=>types.Test.Literal.*/.clazzOf/*=>types.Test.Literal.clazzOf.*/,
+    Literal/*=>types.Test.Literal.*/.clazzOfInt/*=>types.Test.Literal.clazzOfInt.*/,
+    Literal/*=>types.Test.Literal.*/.clazzOfOption/*=>types.Test.Literal.clazzOfOption.*/,
     List/*=>scala.collection.immutable.Nil.*/()
   )
   def existential/*<=example.InstrumentTyper#existential().*/: U/*=>local1*/[Int/*=>scala.Int#*/] forSome { type U/*<=local1*/[T/*<=local2*/ <: Int] } = ???/*=>scala.Predef.`???`().*/
   type AnnotatedType/*<=example.InstrumentTyper#AnnotatedType#*/ = Int/*=>scala.Int#*/ @param
   def singletonType/*<=example.InstrumentTyper#singletonType().*/(x/*<=example.InstrumentTyper#singletonType().(x)*/: Predef.type) = ???/*=>scala.Predef.`???`().*/
-  final val clazzOf/*<=example.InstrumentTyper#clazzOf.*/ = classOf[Option[Int]]
+  final val clazzOf/*<=example.InstrumentTyper#clazzOf.*/ = classOf/*=>scala.Predef.classOf().*/[Option[Int]]
 }
