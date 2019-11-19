@@ -844,11 +844,11 @@ Occurrences:
 [5:7..5:9): C2 <= classes/C2.
 [7:11..7:13): C3 <= classes/C3#
 [7:13..7:13):  <= classes/C3#`<init>`().
-[7:14..7:15): x <= classes/C3#x.
+[7:14..7:15): x <= classes/C3.apply().(x)
 [7:17..7:20): Int => scala/Int#
 [9:11..9:13): C4 <= classes/C4#
 [9:13..9:13):  <= classes/C4#`<init>`().
-[9:14..9:15): x <= classes/C4#x.
+[9:14..9:15): x <= classes/C4.apply().(x)
 [9:17..9:20): Int => scala/Int#
 [10:7..10:9): C4 <= classes/C4.
 [12:7..12:8): M <= classes/M.
@@ -858,7 +858,7 @@ Occurrences:
 [13:23..13:26): Int => scala/Int#
 [16:11..16:13): C6 <= classes/C6#
 [16:13..16:13):  <= classes/C6#`<init>`().
-[16:26..16:27): x <= classes/C6#
+[16:26..16:27): x <= classes/C6.apply().(x)
 [16:29..16:32): Int => scala/Int#
 [18:6..18:8): C7 <= classes/C7#
 [18:8..18:8):  <= classes/C7#`<init>`().
@@ -2838,11 +2838,11 @@ Occurrences:
 [9:7..9:43): NamedApplyBlockCaseClassConstruction <= example/NamedApplyBlockCaseClassConstruction.
 [10:13..10:16): Msg <= example/NamedApplyBlockCaseClassConstruction.Msg#
 [10:16..10:16):  <= example/NamedApplyBlockCaseClassConstruction.Msg#`<init>`().
-[10:17..10:21): body <= example/NamedApplyBlockCaseClassConstruction.Msg#body.
+[10:17..10:21): body <= example/NamedApplyBlockCaseClassConstruction.Msg.apply().(body)
 [10:23..10:29): String => scala/Predef.String#
-[10:31..10:35): head <= example/NamedApplyBlockCaseClassConstruction.Msg#head.
+[10:31..10:35): head <= example/NamedApplyBlockCaseClassConstruction.Msg.apply().(head)
 [10:37..10:43): String => scala/Predef.String#
-[10:57..10:61): tail <= example/NamedApplyBlockCaseClassConstruction.Msg#tail.
+[10:57..10:61): tail <= example/NamedApplyBlockCaseClassConstruction.Msg.apply().(tail)
 [10:63..10:69): String => scala/Predef.String#
 [11:6..11:14): bodyText <= example/NamedApplyBlockCaseClassConstruction.bodyText.
 [12:6..12:9): msg <= example/NamedApplyBlockCaseClassConstruction.msg.
@@ -2948,7 +2948,7 @@ Occurrences:
 [2:21..2:21):  <= example/NamedArguments#`<init>`().
 [3:13..3:17): User <= example/NamedArguments#User#
 [3:17..3:17):  <= example/NamedArguments#User#`<init>`().
-[3:18..3:22): name <= example/NamedArguments#User#name.
+[3:18..3:22): name <= example/NamedArguments#User.apply().(name)
 [3:24..3:30): String => scala/Predef.String#
 [4:2..4:6): User => example/NamedArguments#User.
 [4:7..4:11): name => example/NamedArguments#User.apply().(name)
@@ -4201,7 +4201,7 @@ Occurrences:
 [86:31..86:34): ??? => scala/Predef.`???`().
 [89:15..89:27): RepeatedType <= types/Test.C#RepeatedType#
 [89:27..89:27):  <= types/Test.C#RepeatedType#`<init>`().
-[89:28..89:29): s <= types/Test.C#RepeatedType#s.
+[89:28..89:29): s <= types/Test.C#RepeatedType.apply().(s)
 [89:31..89:37): String => java/lang/String#
 [90:10..90:12): m1 <= types/Test.C#RepeatedType#m1().
 [90:13..90:14): x <= types/Test.C#RepeatedType#m1().(x)

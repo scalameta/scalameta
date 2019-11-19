@@ -87,7 +87,7 @@ object Test/*<=types.Test.*/ {
       def m1/*<=types.Test.C#ByNameType.m1().*/(x/*<=types.Test.C#ByNameType.m1().(x)*/: => Int/*=>scala.Int#*/): Int/*=>scala.Int#*/ = ???/*=>scala.Predef.`???`().*/
     }
 
-    case class RepeatedType/*<=types.Test.C#RepeatedType#*/(s/*<=types.Test.C#RepeatedType#s.*/: String/*=>java.lang.String#*/*) {
+    case class RepeatedType/*<=types.Test.C#RepeatedType#*/(s/*<=types.Test.C#RepeatedType.apply().(s)*/: String/*=>java.lang.String#*/*) {
       def m1/*<=types.Test.C#RepeatedType#m1().*/(x/*<=types.Test.C#RepeatedType#m1().(x)*/: Int/*=>scala.Int#*/*): Int/*=>scala.Int#*/ = s/*=>types.Test.C#RepeatedType#s.*/.length/*=>scala.collection.SeqLike#length().*/
     }
 

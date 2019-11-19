@@ -3,13 +3,11 @@ package scala.meta.internal.semanticdb.scalac
 import org.scalameta.internal.ScalaCompat._
 import scala.collection.mutable
 import scala.meta.internal.inputs._
-import scala.meta.internal.io.PathIO
 import scala.meta.internal.scalacp._
 import scala.meta.internal.{semanticdb => s}
 import scala.reflect.internal._
 import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
-import scala.reflect.io.{PlainFile => GPlainFile}
 import scala.{meta => m}
 import scala.meta.internal.semanticdb.Scala._
 
@@ -605,6 +603,26 @@ trait TextDocumentOps { self: SemanticdbOps =>
             }
 
             gtree match {
+              case _ if gtree.symbol != null && gtree.symbol.isCaseClass =>
+                def flattenRec(t: g.Tree, tail: List[g.Tree] = Nil): List[g.Tree] = {
+                  val ch = t.children
+
+                  if (ch.isEmpty) tail
+                  else ch.flatMap(flattenRec(_, ch ++ tail))
+                }
+
+                val caseObj = gtree.symbol.caseModule
+                val caseTree = unit.body.collect { case t: g.ModuleDef if t.symbol == caseObj => t }
+
+                val caseChildren =
+                  caseTree
+                    .flatMap(t => flattenRec(t))
+                    .distinct
+                    .filter(t => t.symbol != null && t.symbol.isCaseApplyOrUnapply && t.isDef)
+
+                tryFindMtree(gtree)
+                caseChildren.foreach(traverse)
+                gtree.children.foreach(traverse)
               case OriginalTreeOf(original) =>
                 traverse(original)
               case ConstfoldOf(original) =>
