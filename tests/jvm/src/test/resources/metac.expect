@@ -2636,7 +2636,7 @@ Uri => semanticdb/integration/src/main/scala/example/NamedApplyBlock.scala
 Text => non-empty
 Language => Scala
 Symbols => 64 entries
-Occurrences => 41 entries
+Occurrences => 42 entries
 Synthetics => 1 entries
 
 Symbols:
@@ -2846,6 +2846,7 @@ Occurrences:
 [10:63..10:69): String => scala/Predef.String#
 [11:6..11:14): bodyText <= example/NamedApplyBlockCaseClassConstruction.bodyText.
 [12:6..12:9): msg <= example/NamedApplyBlockCaseClassConstruction.msg.
+[12:12..12:12):  => example/NamedApplyBlockCaseClassConstruction.Msg.apply$default$2().
 [12:12..12:15): Msg => example/NamedApplyBlockCaseClassConstruction.Msg.
 [12:16..12:24): bodyText => example/NamedApplyBlockCaseClassConstruction.bodyText.
 [12:26..12:30): tail => example/NamedApplyBlockCaseClassConstruction.Msg.apply().(tail)
