@@ -131,4 +131,20 @@ class TokensApiSuite extends FunSuite {
     assert(slice(0) === tokens(11))
     assert(slice(1) === tokens(12))
   }
+
+  test("Tokens.span - predicate is always true") {
+    val tokens = tokenize("val foo = 0")
+    val (before, after) = tokens.span(_ => true)
+
+    assert(before == tokens)
+    assert(after.isEmpty)
+  }
+
+  test("Tokens.spanRight - predicate is always true") {
+    val tokens = tokenize("val foo = 0")
+    val (before, after) = tokens.spanRight(_ => true)
+
+    assert(after == tokens)
+    assert(before.isEmpty)
+  }
 }
