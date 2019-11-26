@@ -59,9 +59,17 @@ extends immutable.IndexedSeq[Token] with IndexedSeqOptimized[Token] {
 
   override def splitAt(n: Int): (Tokens, Tokens) = (take(n), drop(n))
 
-  override def span(p: Token => Boolean): (Tokens, Tokens) = splitAt(indexWhere(!p.apply(_)))
+  override def span(p: Token => Boolean): (Tokens, Tokens) = {
+    val index = indexWhere(!p.apply(_))
 
-  def spanRight(p: Token => Boolean): (Tokens, Tokens) = splitAt(length - reverseIterator.indexWhere(!p.apply(_)))
+    splitAt(if (index < 0) length else index)
+  }
+
+  def spanRight(p: Token => Boolean): (Tokens, Tokens) = {
+    val index = reverseIterator.indexWhere(!p.apply(_))
+
+    splitAt(length - (if (index < 0) length else index))
+  }
 }
 
 object Tokens {
