@@ -10,28 +10,10 @@ import scala.annotation.tailrec
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokenizers._
-import scala.meta.internal.tokenizers.PlatformTokenizerCache._
 
 class ScalametaTokenizer(input: Input, dialect: Dialect) {
   def tokenize(): Tokens = {
-    val miniCache = {
-      var result = megaCache.get(dialect)
-      if (result == null) {
-        val unsyncResult = newUnsyncResult
-        val syncResult = putIfAbsent(dialect, unsyncResult)
-        result = if (syncResult != null) syncResult else unsyncResult
-      }
-      result
-    }
-    val entry = miniCacheSyncRoot.synchronized { miniCache.get(input) }
-    entry match {
-      case Some(tokens) =>
-        tokens
-      case None =>
-        val tokens = uncachedTokenize()
-        miniCacheSyncRoot.synchronized { miniCache.update(input, tokens) }
-        tokens
-    }
+    input.tokenCache.getOrElseUpdate(dialect, uncachedTokenize())
   }
 
   private def uncachedTokenize(): Tokens = {
