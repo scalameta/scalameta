@@ -2,10 +2,15 @@ package scala.meta.internal
 package inputs
 
 import scala.collection.mutable
+import scala.collection.concurrent.TrieMap
 import scala.meta.inputs._
+import scala.meta.Dialect
+import scala.meta.tokens.Tokens
 
 trait InternalInput {
   self: Input =>
+
+  private [meta] lazy val tokenCache: TrieMap[Dialect, Tokens] = TrieMap.empty
 
   // NOTE: It's regrettable that we need to taint the pure abstraction of Input.
   // However, as #334 shows, we just can't redo offset -> line conversions over and over again.
