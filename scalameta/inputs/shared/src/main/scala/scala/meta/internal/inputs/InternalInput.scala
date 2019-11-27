@@ -6,11 +6,13 @@ import scala.collection.concurrent.TrieMap
 import scala.meta.inputs._
 import scala.meta.Dialect
 import scala.meta.tokens.Tokens
+import scala.meta.internal.tokenizers.Compat
 
 trait InternalInput {
   self: Input =>
 
-  private [meta] lazy val tokenCache: TrieMap[Dialect, Tokens] = TrieMap.empty
+  private [meta] lazy val tokenCache: mutable.Map[Dialect, Tokens] =
+    Compat.newMutableMap[Dialect, Tokens]
 
   // NOTE: It's regrettable that we need to taint the pure abstraction of Input.
   // However, as #334 shows, we just can't redo offset -> line conversions over and over again.
