@@ -604,6 +604,14 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case _ =>
             }
 
+            def isClassOf(pos: m.Position): Boolean = {
+              val chars = pos.input.chars
+              val classOfChars = "classOf".toCharArray
+
+              chars.length >= (classOfChars.length + pos.start) &&
+              (0 until classOfChars.length).forall(i => chars(i + pos.start) == classOfChars(i))
+            }
+
             gtree match {
               case OriginalTreeOf(original) =>
                 traverse(original)
@@ -634,6 +642,17 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 traverse(gtree.original)
               case gtree: g.TypeTreeWithDeferredRefCheck =>
                 traverse(gtree.check())
+
+              case gtree: g.Literal
+                  if gtree.tpe != null &&
+                    gtree.tpe.typeSymbol == g.definitions.ClassClass &&
+                    gtree.pos.isRange &&
+                    isClassOf(gtree.pos.toMeta) =>
+                val coLen = "classOf".length
+                val mpos = gtree.pos.toMeta
+                val mposFix = new m.Position.Range(mpos.input, mpos.start, mpos.start + coLen)
+
+                occurrences(mposFix) = "scala/Predef.classOf()."
 
               case gtree: g.MemberDef =>
                 gtree.symbol.annotations.foreach(ann => traverse(ann.original))

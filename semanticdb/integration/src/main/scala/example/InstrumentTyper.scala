@@ -17,7 +17,8 @@ class InstrumentTyper { self: AnyRef =>
     Literal.bool,
     Literal.unit,
     Literal.javaEnum,
-    Literal.clazzOf,
+    Literal.clazzOfInt,
+    Literal.clazzOfOption,
     List()
   )
   def existential: U[Int] forSome { type U[T <: Int] } = ???
