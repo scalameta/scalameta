@@ -226,42 +226,6 @@ example/Access#
 +      symlinks: "example/Access#m3()."
 
 
-=============================================
-example/CaseClasses1.CClass#copy$default$1().
-=============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
-=============================================
-example/CaseClasses1.CClass#copy$default$2().
-=============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
-=============================================
-example/CaseClasses2.CClass#copy$default$1().
-=============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
 ======================================
 example/InstrumentTyper#AnnotatedType#
 ======================================

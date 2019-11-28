@@ -239,16 +239,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
               else gsym0
             }
 
-            if (gsym.owner.isCaseApplyOrUnapply) {
-              val sym = gsym.owner.asMethod.returnType
-                .findMembers(Flags.METHOD, 0)
-                .find(_.name.decode.trim == mtree.value)
-                .getOrElse(gsym)
-                .toSemantic
-              occurrences(mtree.pos) = sym
-              return
-            }
-
             val symbol = gsym.toSemantic
             if (symbol == Symbols.None) return
 
