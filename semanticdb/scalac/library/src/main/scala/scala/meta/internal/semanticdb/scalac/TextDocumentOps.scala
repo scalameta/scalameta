@@ -644,10 +644,10 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 traverse(gtree.check())
 
               case gtree: g.Literal
-                  if isClassOf(gtree.pos.toMeta) &&
-                    gtree.tpe != null &&
+                  if gtree.tpe != null &&
                     gtree.tpe.typeSymbol == g.definitions.ClassClass &&
-                    gtree.pos.isRange =>
+                    gtree.pos.isRange &&
+                    isClassOf(gtree.pos.toMeta) =>
                 val coLen = "classOf".length
                 val mpos = gtree.pos.toMeta
                 val mposFix = new m.Position.Range(mpos.input, mpos.start, mpos.start + coLen)
