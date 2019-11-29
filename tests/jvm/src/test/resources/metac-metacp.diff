@@ -196,6 +196,18 @@ classes/C6#copy$default$1().
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
+=============================================
+classes/CaseClasses1.CClass#copy$default$1().
+=============================================
+--- metac
++++ metacp
+         annotations {
+           tpe {
+-            type_ref {
+-              prefix {
+-              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
 ====================
 classes/N.anonClass.
 ====================
@@ -224,42 +236,6 @@ example/Access#
        symlinks: "example/Access#m6()."
        symlinks: "example/Access#m7()."
 +      symlinks: "example/Access#m3()."
-
-
-=============================================
-example/CaseClasses1.CClass#copy$default$1().
-=============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
-=============================================
-example/CaseClasses1.CClass#copy$default$2().
-=============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
-=============================================
-example/CaseClasses2.CClass#copy$default$1().
-=============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
 ======================================

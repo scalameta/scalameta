@@ -613,7 +613,10 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
             gtree match {
               case apply: g.Apply
-                  if gtree.pos != null && gtree.pos.isRange && apply.fun.symbol.isCaseApplyOrUnapply && apply.tpe.typeSymbol.isCaseClass =>
+                  if gtree.pos != null &&
+                    gtree.pos.isRange &&
+                    apply.fun.symbol.isCaseApplyOrUnapply &&
+                    apply.tpe.typeSymbol.isCaseClass =>
                 tryFindSynthetic(apply)
                 tryNamedArg(gtree, gtree.pos.start, gtree.pos.point)
               case OriginalTreeOf(original) =>

@@ -31,3 +31,13 @@ object N/*<=classes.N.*/ {
     local/*=>local11*/ +/*=>scala.Int#`+`(+4).*/ 2
   }
 }
+
+
+
+object CaseClasses1/*<=classes.CaseClasses1.*/ {
+  case class CClass/*<=classes.CaseClasses1.CClass#*/(i/*<=classes.CaseClasses1.CClass#i.*/: String/*=>scala.Predef.String#*/)
+
+  val cclass1/*<=classes.CaseClasses1.cclass1.*/ = CClass/*=>classes.CaseClasses1.CClass.*/(i/*=>classes.CaseClasses1.CClass.apply().(i)*/ = "")
+  val cclass2/*<=classes.CaseClasses1.cclass2.*/ = CClass/*=>classes.CaseClasses1.CClass.*/.apply/*=>classes.CaseClasses1.CClass.apply().*/(i/*=>classes.CaseClasses1.CClass.apply().(i)*/ = "")
+}
+

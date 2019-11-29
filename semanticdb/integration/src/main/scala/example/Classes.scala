@@ -31,3 +31,13 @@ object N {
     local + 2
   }
 }
+
+
+
+object CaseClasses1 {
+  case class CClass(i: String)
+
+  val cclass1 = CClass(i = "")
+  val cclass2 = CClass.apply(i = "")
+}
+
