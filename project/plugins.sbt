@@ -20,7 +20,7 @@ addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "2.0")
 
 addSbtPlugin("com.dwijnand" % "sbt-dynver" % "2.0.0")
 
-addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.18")
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.6.1")
 
 addSbtPlugin("org.portable-scala" % "sbt-crossproject" % "0.4.0")
 
