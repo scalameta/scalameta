@@ -360,7 +360,9 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ )
     libraryDependencies ++= List(
       "io.get-coursier" %% "coursier" % "2.0.0-RC3-3",
       "org.scalacheck" %% "scalacheck" % "1.14.0"
-    )
+    ),
+    // Needed because some tests rely on the --usejavacp option
+    classLoaderLayeringStrategy.in(Test) := ClassLoaderLayeringStrategy.Flat,
   )
   .jvmConfigure(
     _.dependsOn(testkit, metac, semanticdbIntegration)
