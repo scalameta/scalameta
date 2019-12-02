@@ -38,7 +38,7 @@ addCommandAlias("benchQuick", benchQuick.command)
 // ci-fast is not a CiCommand because `plz x.y.z test` is super slow,
 // it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
-  s"wow $ciScalaVersion" ::
+  s"++$ciScalaVersion" ::
     ("tests" + ciPlatform + "/test") ::
     s
 }
@@ -47,7 +47,7 @@ commands += Command.command("ci-windows") { s =>
     s
 }
 commands += Command.command("ci-publish") { s =>
-  "very publishSigned" ::
+  "+publishSigned" ::
     "sonatypeReleaseAll" ::
     s
 }
@@ -65,7 +65,7 @@ commands += Command.command("ci-slow") { s =>
       filter = s"scala-$LatestScala212/src/library/*"
     )
   }
-  s"wow $ciScalaVersion" ::
+  s"++$ciScalaVersion" ::
     "testsJVM/test:runMain scala.meta.tests.semanticdb.MetacScalaLibrary" ::
     "testsJVM/slow:test" ::
     s
