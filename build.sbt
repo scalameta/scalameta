@@ -524,7 +524,7 @@ lazy val sharedSettings = Def.settings(
   parallelExecution.in(Test) := false, // hello, reflection sync!!
   logBuffered := false,
   updateOptions := updateOptions.value.withCachedResolution(true),
-  triggeredMessage.in(ThisBuild) := Watched.clearWhenTriggered,
+  watchTriggeredMessage.in(ThisBuild) := Watch.clearScreenOnTrigger,
   incOptions := incOptions.value.withLogRecompileOnMacro(false)
 )
 
