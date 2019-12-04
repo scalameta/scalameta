@@ -92,14 +92,25 @@ trait TextDocumentOps { self: SemanticdbOps =>
           private def indexArgNames(mapp: m.Tree, mnames: List[m.Name]): Unit = {
             if (mnames.isEmpty) return
             todo ++= mnames
-            val mstart1 = mapp.tokens
-              .dropWhile(_.is[m.Token.LeftParen])
-              .headOption
-              .map(_.start)
-              .getOrElse(-1)
-            // only add names for the top-level term.apply of a curried function application.
-            if (!margnames.contains(mstart1))
-              margnames(mstart1) = mnames
+            val mappTokens = mapp.tokens.reverse
+            mappTokens.indices.find(mappTokens(_).is[m.Token.LeftParen]) match {
+              case Some(i) if {
+                val h = mappTokens.filter(_.isNot[m.Token.Space]).headOption
+                h.isDefined && h.get.is[m.Token.RightParen]
+              } =>
+                val tokens = mappTokens.take(i + 1).reverse
+
+                val idents = tokens
+                  .filter(t => t.is[m.Token.Ident])
+
+                tokens.headOption match {
+                  case Some(t) if t.is[m.Token.LeftParen] && !margnames.contains(t.start) =>
+                    margnames(t.start) = mnames
+                  case _ =>
+                }
+              case _ =>
+            }
+
           }
           private def indexWithin(mname: m.Name.Indeterminate): Unit = {
             todo += mname
@@ -147,7 +158,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
           }
           override def apply(mtree: m.Tree): Unit = {
             mtree match {
-              case mtree @ m.Term.Apply(_, margs) =>
+              case mtree @ m.Term.Apply(fun, _) =>
                 def loop(term: m.Term): List[m.Term.Name] = term match {
                   case m.Term.Apply(mfn, margs) =>
                     margs.toList.collect {
@@ -156,6 +167,17 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   case _ => Nil
                 }
                 indexArgNames(mtree, loop(mtree))
+
+                @scala.annotation.tailrec
+                def indexLoop(term: m.Term): Unit = term match {
+                  case m.Term.Select(fun, _) =>
+                    indexLoop(fun)
+                  case mtree @ m.Term.Apply(fun, _) =>
+                    indexArgNames(mtree, loop(mtree))
+                    indexLoop(fun)
+                  case _ =>
+                }
+                indexLoop(fun)
               case mtree @ m.Mod.Private(mname: m.Name.Indeterminate) =>
                 indexWithin(mname)
               case mtree @ m.Mod.Protected(mname: m.Name.Indeterminate) =>
@@ -276,6 +298,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
             tryWithin(mwithinctors, gsym.primaryConstructor)
           }
           private def tryNamedArg(gtree: g.Tree, gstart: Int, gpoint: Int): Unit = {
+            val gpos = gtree.pos.toMeta
+            val pmarg = margnames.values.flatten
             if (margnames.contains(gstart) || margnames.contains(gpoint)) {
               for {
                 margnames <- margnames.get(gstart) ++ margnames.get(gpoint)

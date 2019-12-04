@@ -31,3 +31,25 @@ object N {
     local + 2
   }
 }
+
+object CaseClasses1 {
+  case class CClass(i: String)
+
+  val cclass1 = CClass.apply(i = "").copy(i = "")
+  val cclass2 = CClass.apply(i = "")
+
+}
+
+object Chain {
+  class A {
+    def tst1(i: Int): A = this
+    def tst2(i: Int): A = this
+    def tst3(i: Int, j: Int): A = this
+  }
+
+  val a = new A
+  a.tst1(i = 1).tst2(i = 2)
+  a.tst2(i = 1).tst1(i = 2)
+  a.tst2(i = 1).tst1(i = 2).tst3(i = 1, 2)
+  a.tst2(i = 1).tst1(i = 2).tst3(1, j = 2)
+}

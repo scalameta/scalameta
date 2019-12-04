@@ -31,3 +31,25 @@ object N/*<=classes.N.*/ {
     local/*=>local11*/ +/*=>scala.Int#`+`(+4).*/ 2
   }
 }
+
+object CaseClasses1/*<=classes.CaseClasses1.*/ {
+  case class CClass/*<=classes.CaseClasses1.CClass#*/(i/*<=classes.CaseClasses1.CClass#i.*/: String/*=>scala.Predef.String#*/)
+
+  val cclass1/*<=classes.CaseClasses1.cclass1.*/ = CClass/*=>classes.CaseClasses1.CClass.*/.apply/*=>classes.CaseClasses1.CClass.apply().*/(i/*=>classes.CaseClasses1.CClass.apply().(i)*/ = "").copy/*=>classes.CaseClasses1.CClass#copy().*/(i/*=>classes.CaseClasses1.CClass#copy().(i)*/ = "")
+  val cclass2/*<=classes.CaseClasses1.cclass2.*/ = CClass/*=>classes.CaseClasses1.CClass.*/.apply/*=>classes.CaseClasses1.CClass.apply().*/(i/*=>classes.CaseClasses1.CClass.apply().(i)*/ = "")
+
+}
+
+object Chain/*<=classes.Chain.*/ {
+  class A/*<=classes.Chain.A#*/ {
+    def tst1/*<=classes.Chain.A#tst1().*/(i/*<=classes.Chain.A#tst1().(i)*/: Int/*=>scala.Int#*/): A/*=>classes.Chain.A#*/ = this
+    def tst2/*<=classes.Chain.A#tst2().*/(i/*<=classes.Chain.A#tst2().(i)*/: Int/*=>scala.Int#*/): A/*=>classes.Chain.A#*/ = this
+    def tst3/*<=classes.Chain.A#tst3().*/(i/*<=classes.Chain.A#tst3().(i)*/: Int/*=>scala.Int#*/, j/*<=classes.Chain.A#tst3().(j)*/: Int/*=>scala.Int#*/): A/*=>classes.Chain.A#*/ = this
+  }
+
+  val a/*<=classes.Chain.a.*/ = new A/*=>classes.Chain.A#*/
+  a/*=>classes.Chain.a.*/.tst1/*=>classes.Chain.A#tst1().*/(i/*=>classes.Chain.A#tst1().(i)*/ = 1).tst2/*=>classes.Chain.A#tst2().*/(i/*=>classes.Chain.A#tst2().(i)*/ = 2)
+  a/*=>classes.Chain.a.*/.tst2/*=>classes.Chain.A#tst2().*/(i/*=>classes.Chain.A#tst2().(i)*/ = 1).tst1/*=>classes.Chain.A#tst1().*/(i/*=>classes.Chain.A#tst1().(i)*/ = 2)
+  a/*=>classes.Chain.a.*/.tst2/*=>classes.Chain.A#tst2().*/(i/*=>classes.Chain.A#tst2().(i)*/ = 1).tst1/*=>classes.Chain.A#tst1().*/(i/*=>classes.Chain.A#tst1().(i)*/ = 2).tst3/*=>classes.Chain.A#tst3().*/(i/*=>classes.Chain.A#tst3().(i)*/ = 1, 2)
+  a/*=>classes.Chain.a.*/.tst2/*=>classes.Chain.A#tst2().*/(i/*=>classes.Chain.A#tst2().(i)*/ = 1).tst1/*=>classes.Chain.A#tst1().*/(i/*=>classes.Chain.A#tst1().(i)*/ = 2).tst3/*=>classes.Chain.A#tst3().*/(1, j/*=>classes.Chain.A#tst3().(j)*/ = 2)
+}

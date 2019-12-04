@@ -660,6 +660,134 @@ classes/C9#`x_=`().(x$1) => param x$1: Int
 classes/C9#x(). => private[this] var method x: Int
   Int => scala/Int#
 
+classes/CaseClasses1.class
+--------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => classes/CaseClasses1.class
+Text => empty
+Language => Scala
+Symbols => 28 entries
+
+Symbols:
+classes/CaseClasses1. => final object CaseClasses1 extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+classes/CaseClasses1.CClass# => case class CClass extends AnyRef with Product with Serializable { +12 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/Serializable#
+classes/CaseClasses1.CClass#`<init>`(). => primary ctor <init>(val i: String)
+  i => classes/CaseClasses1.CClass#`<init>`().(i)
+  String => scala/Predef.String#
+classes/CaseClasses1.CClass#`<init>`().(i) => val param i: String
+  String => scala/Predef.String#
+classes/CaseClasses1.CClass#canEqual(). => method canEqual(x$1: Any): Boolean
+  x$1 => classes/CaseClasses1.CClass#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+classes/CaseClasses1.CClass#canEqual().(x$1) => param x$1: Any
+  Any => scala/Any#
+classes/CaseClasses1.CClass#copy$default$1(). => method copy$default$1: String @<?>
+  String => scala/Predef.String#
+classes/CaseClasses1.CClass#copy(). => method copy(i: String): CClass
+  i => classes/CaseClasses1.CClass#copy().(i)
+  String => scala/Predef.String#
+  CClass => classes/CaseClasses1.CClass#
+classes/CaseClasses1.CClass#copy().(i) => default param i: String
+  String => scala/Predef.String#
+classes/CaseClasses1.CClass#equals(). => method equals(x$1: Any): Boolean
+  x$1 => classes/CaseClasses1.CClass#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+classes/CaseClasses1.CClass#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+classes/CaseClasses1.CClass#hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+classes/CaseClasses1.CClass#i. => val method i: String
+  String => scala/Predef.String#
+classes/CaseClasses1.CClass#productArity(). => method productArity: Int
+  Int => scala/Int#
+classes/CaseClasses1.CClass#productElement(). => method productElement(x$1: Int): Any
+  x$1 => classes/CaseClasses1.CClass#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+classes/CaseClasses1.CClass#productElement().(x$1) => param x$1: Int
+  Int => scala/Int#
+classes/CaseClasses1.CClass#productIterator(). => method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+classes/CaseClasses1.CClass#productPrefix(). => method productPrefix: String
+  String => java/lang/String#
+classes/CaseClasses1.CClass#toString(). => method toString(): String
+  String => java/lang/String#
+classes/CaseClasses1.CClass. => final object CClass extends AbstractFunction1[String, CClass] with Serializable { +4 decls }
+  AbstractFunction1 => scala/runtime/AbstractFunction1#
+  String => scala/Predef.String#
+  CClass => classes/CaseClasses1.CClass#
+  Serializable => scala/Serializable#
+classes/CaseClasses1.CClass.apply(). => method apply(i: String): CClass
+  i => classes/CaseClasses1.CClass.apply().(i)
+  String => scala/Predef.String#
+  CClass => classes/CaseClasses1.CClass#
+classes/CaseClasses1.CClass.apply().(i) => param i: String
+  String => scala/Predef.String#
+classes/CaseClasses1.CClass.readResolve(). => private method readResolve(): Object
+  Object => java/lang/Object#
+classes/CaseClasses1.CClass.toString(). => final method toString(): String
+  String => java/lang/String#
+classes/CaseClasses1.CClass.unapply(). => method unapply(x$0: CClass): Option[String]
+  x$0 => classes/CaseClasses1.CClass.unapply().(x$0)
+  CClass => classes/CaseClasses1.CClass#
+  Option => scala/Option#
+  String => scala/Predef.String#
+classes/CaseClasses1.CClass.unapply().(x$0) => param x$0: CClass
+  CClass => classes/CaseClasses1.CClass#
+classes/CaseClasses1.cclass1. => val method cclass1: CClass
+  CClass => classes/CaseClasses1.CClass#
+classes/CaseClasses1.cclass2. => val method cclass2: CClass
+  CClass => classes/CaseClasses1.CClass#
+
+classes/Chain.class
+-------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => classes/Chain.class
+Text => empty
+Language => Scala
+Symbols => 11 entries
+
+Symbols:
+classes/Chain. => final object Chain extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+classes/Chain.A# => class A extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+classes/Chain.A#`<init>`(). => primary ctor <init>()
+classes/Chain.A#tst1(). => method tst1(i: Int): A
+  i => classes/Chain.A#tst1().(i)
+  Int => scala/Int#
+  A => classes/Chain.A#
+classes/Chain.A#tst1().(i) => param i: Int
+  Int => scala/Int#
+classes/Chain.A#tst2(). => method tst2(i: Int): A
+  i => classes/Chain.A#tst2().(i)
+  Int => scala/Int#
+  A => classes/Chain.A#
+classes/Chain.A#tst2().(i) => param i: Int
+  Int => scala/Int#
+classes/Chain.A#tst3(). => method tst3(i: Int, j: Int): A
+  i => classes/Chain.A#tst3().(i)
+  Int => scala/Int#
+  j => classes/Chain.A#tst3().(j)
+  A => classes/Chain.A#
+classes/Chain.A#tst3().(i) => param i: Int
+  Int => scala/Int#
+classes/Chain.A#tst3().(j) => param j: Int
+  Int => scala/Int#
+classes/Chain.a. => val method a: A
+  A => classes/Chain.A#
+
 classes/M.class
 ---------------
 
