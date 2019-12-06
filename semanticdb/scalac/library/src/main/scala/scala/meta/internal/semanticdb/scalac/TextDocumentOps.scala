@@ -89,28 +89,17 @@ trait TextDocumentOps { self: SemanticdbOps =>
             mstarts(mstart1) = mname
             mends(mend1) = mname
           }
-          private def indexArgNames(mapp: m.Tree, mnames: List[m.Name]): Unit = {
-            if (mnames.isEmpty) return
-            todo ++= mnames
-            val mappTokens = mapp.tokens.reverse
-            mappTokens.indices.find(mappTokens(_).is[m.Token.LeftParen]) match {
-              case Some(i) if {
-                val h = mappTokens.filter(_.isNot[m.Token.Space]).headOption
-                h.isDefined && h.get.is[m.Token.RightParen]
-              } =>
-                val tokens = mappTokens.take(i + 1).reverse
-
-                val idents = tokens
-                  .filter(t => t.is[m.Token.Ident])
-
-                tokens.headOption match {
-                  case Some(t) if t.is[m.Token.LeftParen] && !margnames.contains(t.start) =>
-                    margnames(t.start) = mnames
-                  case _ =>
+          private def indexArgNames(mapp: m.Tree): Unit = {
+            mapp match {
+              case m.Term.Apply(fun, args) =>
+                margnames(fun.pos.end) = args.collect {
+                  case m.Term.Assign(lhs: m.Term.Name, _) => lhs
                 }
+                args.collect { case m.Term.Assign(_, rhs) => rhs }.foreach(indexArgNames)
+              case m.Term.Select(qual, _) =>
+                indexArgNames(qual)
               case _ =>
             }
-
           }
           private def indexWithin(mname: m.Name.Indeterminate): Unit = {
             todo += mname
@@ -166,18 +155,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                     } ++ loop(mfn)
                   case _ => Nil
                 }
-                indexArgNames(mtree, loop(mtree))
-
-                @scala.annotation.tailrec
-                def indexLoop(term: m.Term): Unit = term match {
-                  case m.Term.Select(fun, _) =>
-                    indexLoop(fun)
-                  case mtree @ m.Term.Apply(fun, _) =>
-                    indexArgNames(mtree, loop(mtree))
-                    indexLoop(fun)
-                  case _ =>
-                }
-                indexLoop(fun)
+                indexArgNames(mtree)
               case mtree @ m.Mod.Private(mname: m.Name.Indeterminate) =>
                 indexWithin(mname)
               case mtree @ m.Mod.Protected(mname: m.Name.Indeterminate) =>
