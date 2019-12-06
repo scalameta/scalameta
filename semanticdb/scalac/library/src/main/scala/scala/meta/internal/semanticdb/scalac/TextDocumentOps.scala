@@ -298,8 +298,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
             tryWithin(mwithinctors, gsym.primaryConstructor)
           }
           private def tryNamedArg(gtree: g.Tree, gstart: Int, gpoint: Int): Unit = {
-            val gpos = gtree.pos.toMeta
-            val pmarg = margnames.values.flatten
             if (margnames.contains(gstart) || margnames.contains(gpoint)) {
               for {
                 margnames <- margnames.get(gstart) ++ margnames.get(gpoint)
