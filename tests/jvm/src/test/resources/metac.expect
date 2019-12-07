@@ -1691,14 +1691,21 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Imports.scala
 Text => non-empty
 Language => Scala
-Occurrences => 4 entries
+Symbols => 2 entries
+Occurrences => 5 entries
 Diagnostics => 1 entries
+
+Symbols:
+_empty_/Imports# => class Imports extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+_empty_/Imports#`<init>`(). => primary ctor <init>()
 
 Occurrences:
 [0:7..0:12): scala => scala/
 [0:13..0:17): util => scala/util/
 [0:18..0:25): control => scala/util/control/
 [0:26..0:34): NonFatal => scala/util/control/NonFatal.
+[2:6..2:13): Imports <= _empty_/Imports#
 
 Diagnostics:
 [0:26..0:34) [warning] Unused import

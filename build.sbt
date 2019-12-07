@@ -7,7 +7,6 @@ import sbtcrossproject.{crossProject, CrossType}
 import org.scalameta.build._
 import org.scalameta.build.Versions._
 import org.scalameta.os
-import UnidocKeys._
 import sbt.ScriptedPlugin._
 import complete.DefaultParsers._
 import scalapb.compiler.Version.scalapbVersion
@@ -32,14 +31,14 @@ name := {
 }
 nonPublishableSettings
 crossScalaVersions := Nil
-unidocSettings
+enablePlugins(ScalaUnidocPlugin)
 addCommandAlias("benchAll", benchAll.command)
 addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
 // ci-fast is not a CiCommand because `plz x.y.z test` is super slow,
 // it runs `test` sequentially in every defined module.
 commands += Command.command("ci-fast") { s =>
-  s"wow $ciScalaVersion" ::
+  s"++$ciScalaVersion" ::
     ("tests" + ciPlatform + "/test") ::
     s
 }
@@ -48,7 +47,7 @@ commands += Command.command("ci-windows") { s =>
     s
 }
 commands += Command.command("ci-publish") { s =>
-  "very publishSigned" ::
+  "+publishSigned" ::
     "sonatypeReleaseAll" ::
     s
 }
@@ -66,7 +65,7 @@ commands += Command.command("ci-slow") { s =>
       filter = s"scala-$LatestScala212/src/library/*"
     )
   }
-  s"wow $ciScalaVersion" ::
+  s"++$ciScalaVersion" ::
     "testsJVM/test:runMain scala.meta.tests.semanticdb.MetacScalaLibrary" ::
     "testsJVM/slow:test" ::
     s
@@ -145,12 +144,10 @@ lazy val metac = project
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     mainClass := Some("scala.meta.cli.Metac")
   )
-  // FIXME: https://github.com/scalameta/scalameta/issues/1688
-  .disablePlugins(BackgroundRunPlugin)
   .dependsOn(semanticdbScalacPlugin)
 
 /** ======================== SCALAMETA ======================== **/
-lazy val common = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ )
+lazy val common = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/common"))
   .settings(
     publishableSettings,
@@ -158,12 +155,10 @@ lazy val common = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ )
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros
   )
-//.nativeSettings(nativeSettings)
 lazy val commonJVM = common.jvm
 lazy val commonJS = common.js
-//lazy val commonNative = common.native
 
-lazy val trees = crossProject(JSPlatform, JVMPlatform /*, NativePlatform*/ )
+lazy val trees = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/trees"))
   .settings(
     publishableSettings,
@@ -188,13 +183,11 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform /*, NativePlatform*/ )
       )
     })
   )
-  // .nativeSettings(nativeSettings)
   .dependsOn(common) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
 lazy val treesJVM = trees.jvm
 lazy val treesJS = trees.js
-// lazy val treesNative = trees.native
 
-lazy val parsers = crossProject(JSPlatform, JVMPlatform /*, NativePlatform*/ )
+lazy val parsers = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/parsers"))
   .settings(
     publishableSettings,
@@ -210,23 +203,16 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform /*, NativePlatform*/ )
   .jsSettings(
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
-  // .nativeSettings(nativeSettings)
   .dependsOn(trees)
 lazy val parsersJVM = parsers.jvm
 lazy val parsersJS = parsers.js
-// lazy val parsersNative = parsers.native
-
-lazy val isNative = Def.setting {
-  SettingKey[Boolean]("nativeLinkStubs").?.value.isDefined
-}
 
 def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
   unmanagedSourceDirectories.in(Compile) ++= {
     val base = baseDirectory.in(ThisBuild).value
     val isJS = SettingKey[Boolean]("scalaJSUseMainModuleInitializer").?.value.isDefined
     val platform =
-      if (isNative.value) "native"
-      else if (isJS) "js"
+      if (isJS) "js"
       else "jvm"
     val scalaBinary = "scala-" + scalaBinaryVersion.value
     projects(base).flatMap { project =>
@@ -239,7 +225,7 @@ def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
   }
 )
 
-lazy val scalameta = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ )
+lazy val scalameta = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/scalameta"))
   .settings(
     publishableSettings,
@@ -267,11 +253,9 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ 
       baseDirectory.in(ThisBuild).value / "semanticdb" / "symtab"
     )
   )
-  // .nativeSettings(nativeSettings)
   .dependsOn(parsers)
 lazy val scalametaJVM = scalameta.jvm
 lazy val scalametaJS = scalameta.js
-// lazy val scalametaNative = scalameta.native
 
 /** ======================== TESTS ======================== **/
 lazy val semanticdbIntegration = project
@@ -342,7 +326,7 @@ lazy val testkit = project
   )
   .dependsOn(scalametaJVM)
 
-lazy val tests = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ )
+lazy val tests = crossProject(JSPlatform, JVMPlatform)
   .in(file("tests"))
   .configs(Slow, All)
   .settings(
@@ -363,7 +347,9 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ )
     libraryDependencies ++= List(
       "io.get-coursier" %% "coursier" % "2.0.0-RC3-3",
       "org.scalacheck" %% "scalacheck" % "1.14.0"
-    )
+    ),
+    // Needed because some tests rely on the --usejavacp option
+    classLoaderLayeringStrategy.in(Test) := ClassLoaderLayeringStrategy.Flat
   )
   .jvmConfigure(
     _.dependsOn(testkit, metac, semanticdbIntegration)
@@ -371,20 +357,10 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform /*, NativePlatform */ )
   .jsSettings(
     scalaJSModuleKind := ModuleKind.CommonJSModule
   )
-  // .nativeSettings(
-  //   nativeSettings,
-  //   // FIXME: https://github.com/scalatest/scalatest/issues/1112
-  //   // discussion: https://github.com/scalameta/scalameta/pull/1243/files#r165529377
-  //   // [error] cannot link: @java.lang.Thread::getStackTrace_scala.scalanative.runtime.ObjectArray
-  //   // [error] unable to link
-  //   nativeLinkStubs := true,
-  //   nativeMode := "debug"
-  // )
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta)
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
-// lazy val testsNative = tests.native
 
 lazy val testSettings: List[Def.SettingsDefinition] = List(
   fullClasspath.in(Test) := {
@@ -527,7 +503,7 @@ lazy val sharedSettings = Def.settings(
   parallelExecution.in(Test) := false, // hello, reflection sync!!
   logBuffered := false,
   updateOptions := updateOptions.value.withCachedResolution(true),
-  triggeredMessage.in(ThisBuild) := Watched.clearWhenTriggered,
+  watchTriggeredMessage.in(ThisBuild) := Watch.clearScreenOnTrigger,
   incOptions := incOptions.value.withLogRecompileOnMacro(false)
 )
 
@@ -543,7 +519,7 @@ lazy val mergeSettings = Def.settings(
     val fatJar =
       new File(crossTarget.value + "/" + assemblyJarName.in(assembly).value)
     val _ = assembly.value
-    IO.copy(List(fatJar -> slimJar), overwrite = true)
+    IO.copy(List(fatJar -> slimJar), CopyOptions().withOverwrite(true))
     slimJar
   },
   packagedArtifact.in(Compile).in(packageBin) := {
@@ -552,7 +528,7 @@ lazy val mergeSettings = Def.settings(
     val fatJar =
       new File(crossTarget.value + "/" + assemblyJarName.in(assembly).value)
     val _ = assembly.value
-    IO.copy(List(fatJar -> slimJar), overwrite = true)
+    IO.copy(List(fatJar -> slimJar), CopyOptions().withOverwrite(true))
     (art, slimJar)
   },
   assemblyMergeStrategy.in(assembly) := {
@@ -583,7 +559,6 @@ lazy val adhocRepoCredentials = sys.props("scalameta.repository.credentials")
 lazy val isCustomRepository = adhocRepoUri != null && adhocRepoCredentials != null
 
 lazy val publishableSettings = Def.settings(
-  SettingKey[Boolean]("ide-skip-project") := isNative.value,
   publishTo := Some {
     if (isCustomRepository) "adhoc" at adhocRepoUri
     // NOTE: isSnapshot.value does not work with sbt-dynver
@@ -627,7 +602,7 @@ lazy val publishableSettings = Def.settings(
         //   val isJVM = platformDepsCrossVersion.value == CrossVersion.binary
         val isJVM = {
           val isJS = platformDepsCrossVersion.value == ScalaJSCrossVersion.binary
-          !isJS && !isNative.value
+          !isJS
         }
         if (isJVM) {
           previousVersion.map { previousVersion =>
@@ -731,18 +706,6 @@ lazy val hasLargeIntegrationTests = Seq(
   javaOptions in (Test, run) += "-Xss4m"
 )
 
-lazy val nativeSettings = Seq(
-  SettingKey[Boolean]("ide-skip-project") := true,
-  scalaVersion := LatestScala211,
-  crossScalaVersions := List(LatestScala211),
-  // disable fatal warnings in doc to avoid "dropping dependency on node with no phase object: mixin",
-  // see https://github.com/scala-js/scala-js/issues/635
-  scalacOptions.in(Compile, doc) -= "-Xfatal-warnings",
-  nativeGC := "immix",
-  nativeMode := "release",
-  nativeLinkStubs := false
-)
-
 def exposePaths(projectName: String, config: Configuration) = {
   def uncapitalize(s: String) =
     if (s.length == 0) ""
@@ -796,7 +759,6 @@ lazy val isTagPush = sys.env.get("TRAVIS_TAG").exists(_.nonEmpty)
 lazy val isCiPublish = sys.env.contains("CI_PUBLISH")
 lazy val ciPlatform =
   if (sys.env.contains("CI_SCALA_JS")) "JS"
-  else if (sys.env.contains("CI_SCALA_NATIVE")) "Native"
   else "JVM"
 lazy val ciScalaVersion = sys.env("CI_SCALA_VERSION")
 def CiCommand(name: String)(commands: List[String]): Command = Command.command(name) { initState =>

@@ -8,8 +8,8 @@ import com.typesafe.tools.mima.core._
 object Mima {
   val languageAgnosticCompatibilityPolicy: ProblemFilter = (problem: Problem) => {
     val (ref, fullName) = problem match {
-      case problem: TemplateRef => (problem.ref, problem.ref.fullName)
-      case problem: MemberRef => (problem.ref, problem.ref.fullName)
+      case problem: TemplateProblem => (problem.ref, problem.ref.fullName)
+      case problem: MemberProblem => (problem.ref, problem.ref.fullName)
     }
     val public = ref.isPublic
     val include = fullName.startsWith("scala.meta.")
