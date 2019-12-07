@@ -2856,6 +2856,21 @@ flags/p/package.z(). => method z(pp: Int): Int
 flags/p/package.z().(pp) => param pp: Int
   Int => scala/Int#
 
+Imports.class
+-------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => Imports.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+_empty_/Imports# => class Imports extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+_empty_/Imports#`<init>`(). => primary ctor <init>()
+
 locals/Test.class
 -----------------
 
