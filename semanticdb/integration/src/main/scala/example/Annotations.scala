@@ -19,7 +19,7 @@ class Annotations[@TypeParameterAnnotation T](@ParameterAnnotation x: T) { self:
   type T
 }
 
-class B @ConstructorAnnotation()(x: Int) {
+class B @ConstructorAnnotation() (x: Int) {
   @ConstructorAnnotation
   def this() = this(42)
 }

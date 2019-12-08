@@ -15,7 +15,8 @@ import scala.tools.asm.tree.ClassNode
 final case class ClassfileInfos(
     relativeUri: String,
     language: s.Language,
-    infos: List[s.SymbolInformation]) {
+    infos: List[s.SymbolInformation]
+) {
   def toTextDocuments: s.TextDocuments = {
     val semanticdbDocument = s.TextDocument(
       schema = s.Schema.SEMANTICDB4,

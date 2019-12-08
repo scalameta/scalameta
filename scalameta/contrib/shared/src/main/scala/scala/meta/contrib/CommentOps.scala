@@ -35,7 +35,8 @@ object CommentOps {
           .map(_.dropWhile(scaladocSymbols)) // Removes leading comments symbols
           .map(_.trim)
           .mkString("\n")
-          .trim)
+          .trim
+      )
     } else {
       Option.empty
     }

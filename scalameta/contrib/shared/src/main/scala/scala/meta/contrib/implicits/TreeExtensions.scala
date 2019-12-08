@@ -39,7 +39,8 @@ trait TreeExtensions {
 
     @inline
     def contains[F[x <: Tree] <: TreeEquality[x]](
-        toFind: Tree)(implicit conv: Tree => F[Tree], eqEv: Equal[F[Tree]]): Boolean =
+        toFind: Tree
+    )(implicit conv: Tree => F[Tree], eqEv: Equal[F[Tree]]): Boolean =
       TreeOps.contains(a)(toFind)
   }
 }

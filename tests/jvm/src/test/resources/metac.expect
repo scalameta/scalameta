@@ -393,9 +393,9 @@ Occurrences:
 [18:7..18:8): T <= annot/Annotations#T#
 [21:6..21:7): B <= annot/B#
 [21:9..21:30): ConstructorAnnotation => com/javacp/annot/ConstructorAnnotation#
-[21:32..21:32):  <= annot/B#`<init>`().
-[21:33..21:34): x <= annot/B#x.
-[21:36..21:39): Int => scala/Int#
+[21:33..21:33):  <= annot/B#`<init>`().
+[21:34..21:35): x <= annot/B#x.
+[21:37..21:40): Int => scala/Int#
 [22:3..22:24): ConstructorAnnotation => com/javacp/annot/ConstructorAnnotation#
 [23:19..23:19):  => annot/B#`<init>`().
 [26:1..26:17): ObjectAnnotation => com/javacp/annot/ObjectAnnotation#
@@ -1084,7 +1084,7 @@ Uri => semanticdb/integration/src/main/scala/example/filename%20with%20spaces.sc
 Text => non-empty
 Language => Scala
 Symbols => 2 entries
-Occurrences => 3 entries
+Occurrences => 2 entries
 
 Symbols:
 example/FilenameWithSpaces# => class FilenameWithSpaces extends AnyRef { +1 decls }
@@ -1094,7 +1094,6 @@ example/FilenameWithSpaces#`<init>`(). => primary ctor <init>()
 Occurrences:
 [0:8..0:15): example <= example/
 [2:6..2:24): FilenameWithSpaces <= example/FilenameWithSpaces#
-[2:24..2:24):  <= example/FilenameWithSpaces#`<init>`().
 
 semanticdb/integration/src/main/scala/example/Flags.scala
 ---------------------------------------------------------

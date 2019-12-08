@@ -11,8 +11,8 @@ object ScaladocParser {
   private[this] val numberOfSupportedHeadingLevels = 6
 
   /**
-    * Parses a scaladoc comment.
-    */
+   * Parses a scaladoc comment.
+   */
   def parseScaladoc(comment: Comment): Option[List[DocToken]] = {
 
     def parseRec(toParse: String): List[DocToken] = {
@@ -58,8 +58,8 @@ object ScaladocParser {
   }
 
   /**
-    * Set containing all the scaladoc parsers.
-    */
+   * Set containing all the scaladoc parsers.
+   */
   private[this] val parsers: List[Parser[DocToken]] = {
 
     val bodyParser = ((AnyChar ~ !("\n@" | "{{{" | "\n\n" | End)).rep ~ AnyChar).!.map(_.trim)

@@ -38,7 +38,8 @@ class SemanticdbPlugin(val global: Global)
         global.settings.outputDirs.getSingleOutput
           .flatMap(so => Option(so.file))
           .map(_.getAbsolutePath)
-          .getOrElse(global.settings.d.value))
+          .getOrElse(global.settings.d.value)
+      )
     }
   }
 
