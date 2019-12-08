@@ -3,7 +3,7 @@ addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.10" exclude("org.apache.mav
 
 addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.4.2")
 
-addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.9.0")
+addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.9.2")
 
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.2.27")
 
