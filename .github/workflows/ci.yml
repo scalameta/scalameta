@@ -33,19 +33,6 @@ jobs:
         with:
           java-version: adopt@1.11
       - run: sbt ++2.12.10 testsJVM/test
-  windows:
-    name: Windows tests
-    runs-on: windows-latest
-    env:
-      JAVA_OPTS: -Xss2m -Xmx1024m -XX:-TieredCompilation -XX:ReservedCodeCacheSize=48m -Dfile.encoding=UTF-8 -Djna.nosys=true
-    steps:
-      - uses: actions/checkout@v1
-      - uses: olafurpg/setup-scala@v7
-      - name: sbt ci-windows
-        run: |
-          rm .jvmopts
-          sbt "-Djna.nosys=true" ci-windows
-        shell: bash
   checks:
     name: Scalafmt
     runs-on: ubuntu-latest
