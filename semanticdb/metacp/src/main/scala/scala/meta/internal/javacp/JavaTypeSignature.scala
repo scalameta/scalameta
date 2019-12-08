@@ -4,20 +4,20 @@ import scala.meta.internal.javacp.asm._
 import scala.tools.asm.signature.SignatureReader
 
 /** Translation of "Signature" section from the JVM spec to Scala.
-  *
-  * @see https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.9.1
-  */
+ *
+ * @see https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.9.1
+ */
 sealed trait JavaTypeSignature extends Printable
 object JavaTypeSignature {
 
   /** Parse JVM signature using a custom traverser.
-    *
-    * Example:
-    *
-    * {{{
-    *   parse("...", new ClassSignatureVisitor)
-    * }}}
-    */
+   *
+   * Example:
+   *
+   * {{{
+   *   parse("...", new ClassSignatureVisitor)
+   * }}}
+   */
   final def parse[T](signature: String, visitor: TypedSignatureVisitor[T]): T = {
     val signatureReader = new SignatureReader(signature)
     signatureReader.accept(visitor)
@@ -115,8 +115,8 @@ case object WildcardTypeArgument extends TypeArgument {
 }
 case class ReferenceTypeArgument(
     wildcard: Option[WildcardIndicator],
-    referenceTypeSignature: ReferenceTypeSignature)
-    extends TypeArgument {
+    referenceTypeSignature: ReferenceTypeSignature
+) extends TypeArgument {
   override def print(sb: StringBuilder): Unit = {
     wildcard match {
       case Some(w: WildcardIndicator) => w.print(sb)
@@ -147,8 +147,8 @@ case class ClassTypeSignatureSuffix(simpleClassTypeSignature: SimpleClassTypeSig
 case class ClassSignature(
     typeParameters: Option[TypeParameters],
     superclassSignature: ClassTypeSignature,
-    superinterfaceSignatures: List[ClassTypeSignature])
-    extends Printable {
+    superinterfaceSignatures: List[ClassTypeSignature]
+) extends Printable {
   def parents: List[ClassTypeSignature] = superclassSignature :: superinterfaceSignatures
   override def print(sb: StringBuilder): Unit = {
     typeParameters match {
@@ -183,8 +183,8 @@ case class TypeParameters(head: TypeParameter, tail: List[TypeParameter]) extend
 case class TypeParameter(
     identifier: String,
     classBound: ClassBound,
-    interfaceBounds: List[InterfaceBound])
-    extends Printable {
+    interfaceBounds: List[InterfaceBound]
+) extends Printable {
   def upperBounds: List[ReferenceTypeSignature] = classBound match {
     case ClassBound(Some(sig)) => sig :: interfaceBounds.map(_.referenceTypeSignature)
     case ClassBound(_) => interfaceBounds.map(_.referenceTypeSignature)
@@ -217,8 +217,8 @@ case class MethodSignature(
     typeParameters: Option[TypeParameters],
     params: List[JavaTypeSignature],
     result: JavaTypeSignature,
-    throws: List[ThrowsSignature])
-    extends Printable {
+    throws: List[ThrowsSignature]
+) extends Printable {
   override def print(sb: StringBuilder): Unit = {
     typeParameters match {
       case Some(tp: TypeParameters) =>

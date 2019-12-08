@@ -9,10 +9,21 @@ import scala.meta.internal.io.FileIO
 import scala.meta.io.AbsolutePath
 import scala.meta.metac._
 import scala.meta.tests.BuildInfo
+import org.scalatest.tagobjects.Slow
+import org.scalatest.FunSuite
 
-// Compile all of scala-library with metac and report any semanticdb errors.
+class MetacScalaLibrary extends FunSuite {
+  test("compile scala-library", Slow) {
+    val exit = MetacScalaLibrary.process(Array())
+    require(exit == 0, "failed to compile scala-library")
+  }
+}
 object MetacScalaLibrary {
   def main(args: Array[String]): Unit = {
+    sys.exit(process(args))
+  }
+  // Compile all of scala-library with metac and report any semanticdb errors.
+  def process(args: Array[String]): Int = {
     val library = Paths
       .get("target")
       .resolve("scala-library")
@@ -20,7 +31,7 @@ object MetacScalaLibrary {
       .resolve("src")
       .resolve("library")
       .toAbsolutePath
-    assert(Files.isDirectory(library), s"$library is not a directory! Run `sbt ci-metac`")
+    assert(Files.isDirectory(library), s"$library is not a directory! Run `sbt download-scala-library`")
     val classpath = this.getClass.getClassLoader
       .asInstanceOf[URLClassLoader]
       .getURLs
@@ -44,6 +55,6 @@ object MetacScalaLibrary {
     val reporter = Reporter()
     val success = Metac.process(settings, reporter)
     println(out)
-    sys.exit(if (success) 0 else 1)
+    if (success) 0 else 1
   }
 }

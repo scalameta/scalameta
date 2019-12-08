@@ -8,8 +8,8 @@ trait VersionSpecificOps { self: SemanticdbOps =>
   }
 
   /**
-    * NamedApplyInfo is only returned in Scala 2.12 or newer.
-    */
+   * NamedApplyInfo is only returned in Scala 2.12 or newer.
+   */
   object NamedApplyBlock {
     def unapply(block: g.Block): Option[Option[g.analyzer.NamedApplyInfo]] = {
       block.attachments.get[g.analyzer.NamedApplyInfo].map(Some(_))

@@ -35,20 +35,8 @@ enablePlugins(ScalaUnidocPlugin)
 addCommandAlias("benchAll", benchAll.command)
 addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
-// ci-fast is not a CiCommand because `plz x.y.z test` is super slow,
-// it runs `test` sequentially in every defined module.
-commands += Command.command("ci-fast") { s =>
-  s"++$ciScalaVersion" ::
-    ("tests" + ciPlatform + "/test") ::
-    s
-}
 commands += Command.command("ci-windows") { s =>
   s"testsJVM/all:testOnly -- -l SkipWindows" ::
-    s
-}
-commands += Command.command("ci-publish") { s =>
-  "+publishSigned" ::
-    "sonatypeReleaseAll" ::
     s
 }
 commands += Command.command("mima") { s =>
@@ -56,19 +44,14 @@ commands += Command.command("mima") { s =>
     "doc" ::
     s
 }
-commands += Command.command("ci-slow") { s =>
+commands += Command.command("download-scala-library") { s =>
   val out = file("target/scala-library")
-  if (!out.exists()) {
-    IO.unzipURL(
-      new URL(s"https://github.com/scala/scala/archive/v$LatestScala212.zip"),
-      toDirectory = out,
-      filter = s"scala-$LatestScala212/src/library/*"
-    )
-  }
-  s"++$ciScalaVersion" ::
-    "testsJVM/test:runMain scala.meta.tests.semanticdb.MetacScalaLibrary" ::
-    "testsJVM/slow:test" ::
-    s
+  IO.unzipURL(
+    new URL(s"https://github.com/scala/scala/archive/v$LatestScala212.zip"),
+    toDirectory = out,
+    filter = s"scala-$LatestScala212/src/library/*"
+  )
+  s
 }
 commands += Command.command("save-expect") { s =>
   "semanticdbScalacPlugin/compile" ::
@@ -121,7 +104,8 @@ lazy val semanticdbScalacPlugin = project
           def isArtifactId(node: XmlNode, fn: String => Boolean) =
             node.label == "artifactId" && fn(node.text)
           node.label == "dependency" && node.child.exists(child =>
-            isArtifactId(child, _.startsWith("semanticdb-scalac-core")))
+            isArtifactId(child, _.startsWith("semanticdb-scalac-core"))
+          )
         }
         override def transform(node: XmlNode): XmlNodeSeq = node match {
           case e: Elem if isAbsorbedDependency(node) =>
@@ -151,7 +135,7 @@ lazy val common = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/common"))
   .settings(
     publishableSettings,
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.1.7",
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.1.8",
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros
   )
@@ -318,7 +302,7 @@ lazy val testkit = project
       "org.scalatest" %% "scalatest" % "3.0.8",
       // These are used to download and extract a corpus tar.gz
       "org.rauschig" % "jarchivelib" % "0.7.1",
-      "commons-io" % "commons-io" % "2.5",
+      "commons-io" % "commons-io" % "2.6",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0"
     ),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
@@ -345,8 +329,8 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
     // [error] (testsJVM/test:executeTests) java.lang.NoClassDefFoundError: org/scalacheck/Test$TestCallback
     // [error] Total time: 19 s, completed Feb 1, 2018 3:12:34 PM
     libraryDependencies ++= List(
-      "io.get-coursier" %% "coursier" % "2.0.0-RC5-3",
-      "org.scalacheck" %% "scalacheck" % "1.14.0"
+      "io.get-coursier" %% "coursier" % "2.0.0-RC3-3",
+      "org.scalacheck" %% "scalacheck" % "1.14.2"
     ),
     // Needed because some tests rely on the --usejavacp option
     classLoaderLayeringStrategy.in(Test) := ClassLoaderLayeringStrategy.Flat
@@ -758,7 +742,7 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
 lazy val isTagPush = sys.env.get("TRAVIS_TAG").exists(_.nonEmpty)
 lazy val isCiPublish = sys.env.contains("CI_PUBLISH")
 lazy val ciPlatform =
-  if (sys.env.contains("CI_SCALA_JS")) "JS"
+  if ("true" == System.getenv("CI_SCALA_JS")) "JS"
   else "JVM"
 lazy val ciScalaVersion = sys.env("CI_SCALA_VERSION")
 def CiCommand(name: String)(commands: List[String]): Command = Command.command(name) { initState =>
@@ -775,8 +759,12 @@ inScope(Global)(
     credentials ++= (for {
       username <- sys.env.get("SONATYPE_USERNAME")
       password <- sys.env.get("SONATYPE_PASSWORD")
-    } yield
-      Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)).toSeq,
+    } yield Credentials(
+      "Sonatype Nexus Repository Manager",
+      "oss.sonatype.org",
+      username,
+      password
+    )).toSeq,
     PgpKeys.pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray())
   )
 )

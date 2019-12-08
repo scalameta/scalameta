@@ -155,7 +155,8 @@ trait ReflectionToolkit {
         val att = templ.attachments.get[CompoundTypeTreeOriginalAttachment]
         templ.removeAttachment[CompoundTypeTreeOriginalAttachment]
         att.map(att =>
-          CompoundTypeTree(treeCopy.Template(templ, att.parents, templ.self, att.stats)))
+          CompoundTypeTree(treeCopy.Template(templ, att.parents, templ.self, att.stats))
+        )
       case _ =>
         None
     }

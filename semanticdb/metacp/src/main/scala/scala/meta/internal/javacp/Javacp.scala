@@ -31,7 +31,8 @@ object Javacp {
       node: ClassNode,
       classpathIndex: ClasspathIndex,
       access: Int,
-      scope: Scope): collection.Seq[s.SymbolInformation] = {
+      scope: Scope
+  ): collection.Seq[s.SymbolInformation] = {
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
     val decls = ListBuffer.empty[String]
@@ -41,7 +42,8 @@ object Javacp {
         kind: s.SymbolInformation.Kind,
         displayName: String,
         sig: s.Signature,
-        access: Int): s.SymbolInformation = {
+        access: Int
+    ): s.SymbolInformation = {
       val info = s.SymbolInformation(
         symbol = symbol,
         language = l.JAVA,
@@ -155,9 +157,9 @@ object Javacp {
 
         val params =
           if (isConstructor && hasOuterClassReference &&
-              // Guard against an empty parameter list, which seems to only happen
-              // in the JDK for java/util/regex/Pattern.class
-              method.signature.params.nonEmpty) {
+            // Guard against an empty parameter list, which seems to only happen
+            // in the JDK for java/util/regex/Pattern.class
+            method.signature.params.nonEmpty) {
             // Drop the constructor argument that holds the reference to the outer class.
             method.signature.params.tail
           } else {
@@ -292,7 +294,8 @@ object Javacp {
   private def addTypeParameters(
       typeParameters: TypeParameters,
       ownerSymbol: String,
-      scope: Scope): (Scope, List[s.SymbolInformation]) = {
+      scope: Scope
+  ): (Scope, List[s.SymbolInformation]) = {
     var nextScope = scope
     // Enter all type variables before computing types for right hand side type parameter bounds.
     // The bounds may forward reference type variables like here below:
@@ -310,7 +313,8 @@ object Javacp {
   private def addTypeParameter(
       typeParameter: TypeParameterInfo,
       ownerSymbol: String,
-      scope: Scope): s.SymbolInformation = {
+      scope: Scope
+  ): s.SymbolInformation = {
     val typeParameters = typeParameter.value.upperBounds.map(fromJavaTypeSignature(_, scope))
     val upperBounds = typeParameters match {
       case upperBound :: Nil =>
@@ -423,8 +427,8 @@ object Javacp {
     if (access.hasFlag(o.ACC_STATIC)) sflip(p.STATIC)
     if (access.hasFlag(o.ACC_ENUM)) sflip(p.ENUM)
     if (ownerNode.access.hasFlag(o.ACC_INTERFACE) &&
-        !access.hasFlag(o.ACC_ABSTRACT) &&
-        !access.hasFlag(o.ACC_STATIC)) sflip(p.DEFAULT)
+      !access.hasFlag(o.ACC_ABSTRACT) &&
+      !access.hasFlag(o.ACC_STATIC)) sflip(p.DEFAULT)
     bits
   }
 
@@ -434,7 +438,8 @@ object Javacp {
   private def styperef(
       symbol: String,
       args: List[s.Type] = Nil,
-      prefix: s.Type = s.NoType): s.Type = {
+      prefix: s.Type = s.NoType
+  ): s.Type = {
     s.TypeRef(prefix, symbol, args)
   }
 

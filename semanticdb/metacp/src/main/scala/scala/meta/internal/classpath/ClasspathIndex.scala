@@ -18,7 +18,8 @@ import scala.util.Properties
 /** An index to lookup class directories and classfiles by their JVM names. */
 final class ClasspathIndex private (
     classpath: Classpath,
-    val dirs: collection.Map[String, Classdir]) {
+    val dirs: collection.Map[String, Classdir]
+) {
 
   /** Returns a classfile with the given path. */
   def getClassfile(path: String): Option[Classfile] = {
@@ -164,31 +165,34 @@ object ClasspathIndex {
     }
 
     private def expandDirEntry(root: AbsolutePath): Unit = {
-      Files.walkFileTree(root.toNIO, new SimpleFileVisitor[Path] {
-        override def visitFile(
-            file: Path,
-            attrs: BasicFileAttributes
-        ): FileVisitResult = {
-          val name = file.getFileName.toString
-          if (name.endsWith(".class")) {
-            val relpath = AbsolutePath(file).toRelative(root)
-            val reluri = relpath.toURI(isDirectory = false).toString
-            val basename = PathIO.basename(reluri)
-            val dirname = PathIO.dirname(reluri)
-            val classdir = getClassdir(dirname)
-            val element = UncompressedClassfile(reluri, AbsolutePath(file))
-            addMember(classdir, basename, element)
+      Files.walkFileTree(
+        root.toNIO,
+        new SimpleFileVisitor[Path] {
+          override def visitFile(
+              file: Path,
+              attrs: BasicFileAttributes
+          ): FileVisitResult = {
+            val name = file.getFileName.toString
+            if (name.endsWith(".class")) {
+              val relpath = AbsolutePath(file).toRelative(root)
+              val reluri = relpath.toURI(isDirectory = false).toString
+              val basename = PathIO.basename(reluri)
+              val dirname = PathIO.dirname(reluri)
+              val classdir = getClassdir(dirname)
+              val element = UncompressedClassfile(reluri, AbsolutePath(file))
+              addMember(classdir, basename, element)
+            }
+            super.visitFile(file, attrs)
           }
-          super.visitFile(file, attrs)
+          override def preVisitDirectory(
+              dir: Path,
+              attrs: BasicFileAttributes
+          ): FileVisitResult = {
+            if (dir.endsWith("META-INF")) FileVisitResult.SKIP_SUBTREE
+            else FileVisitResult.CONTINUE
+          }
         }
-        override def preVisitDirectory(
-            dir: Path,
-            attrs: BasicFileAttributes
-        ): FileVisitResult = {
-          if (dir.endsWith("META-INF")) FileVisitResult.SKIP_SUBTREE
-          else FileVisitResult.CONTINUE
-        }
-      })
+      )
     }
   }
 }

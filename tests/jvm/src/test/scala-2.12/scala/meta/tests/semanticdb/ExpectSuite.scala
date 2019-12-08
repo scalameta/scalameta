@@ -74,7 +74,8 @@ trait ExpectHelpers extends FunSuiteLike {
       originalTitle: String,
       revisedTitle: String,
       original: String,
-      revised: String): String = {
+      revised: String
+  ): String = {
     import scala.collection.JavaConverters._
     val originalLines = original.split("\n").toSeq.asJava
     val revisedLines = revised.split("\n").toSeq.asJava

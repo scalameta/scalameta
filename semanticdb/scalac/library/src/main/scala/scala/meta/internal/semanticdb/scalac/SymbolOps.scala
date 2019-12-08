@@ -48,14 +48,15 @@ trait SymbolOps { self: SemanticdbOps =>
       if (msym != null) {
         msym
       } else {
-        val msym = try {
-          uncached(sym)
-        } catch {
-          case NonFatal(e) if isInteractiveCompiler =>
-            // happens regularly for broken code with the pc, see
-            // https://github.com/scalameta/scalameta/issues/1194
-            Symbols.None
-        }
+        val msym =
+          try {
+            uncached(sym)
+          } catch {
+            case NonFatal(e) if isInteractiveCompiler =>
+              // happens regularly for broken code with the pc, see
+              // https://github.com/scalameta/scalameta/issues/1194
+              Symbols.None
+          }
         symbolCache.put(sym, msym)
         msym
       }
