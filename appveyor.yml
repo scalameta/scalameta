@@ -1,0 +1,18 @@
+version: '{build}'
+os: Windows Server 2012
+install:
+  - cmd: SET JAVA_HOME=C:\Program Files\Java\jdk1.8.0
+  - cmd: SET PATH=%JAVA_HOME%\bin;%PATH%
+  - cmd: choco install sbt -ia "INSTALLDIR=""C:\sbt"""
+  - cmd: SET PATH=C:\sbt\bin;%JAVA_HOME%\bin;%PATH%
+  # disable dynVer
+  - ps: Remove-Item Env:\CI
+  - cmd: sbt version & exit 0
+
+environment:
+  APPVEYOR_CACHE_ENTRY_ZIP_ARGS: "-t7z -m0=lzma -mx=9"
+  JAVA_OPTS: -Xss2m -Xmx1024m -XX:-TieredCompilation -XX:ReservedCodeCacheSize=48m -Dfile.encoding=UTF-8 -Djna.nosys=true
+build_script:
+  - sbt version # dummy step, a build_script step is required by appveyor.
+test_script:
+  - sbt "-Djna.nosys=true" ci-windows
