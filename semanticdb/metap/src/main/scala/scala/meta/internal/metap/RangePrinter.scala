@@ -29,7 +29,8 @@ trait RangePrinter extends BasePrinter {
             range.startLine,
             range.startCharacter,
             range.endLine,
-            range.endCharacter)
+            range.endCharacter
+          )
           Some(pos.text)
         } else {
           None

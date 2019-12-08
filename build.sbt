@@ -104,7 +104,8 @@ lazy val semanticdbScalacPlugin = project
           def isArtifactId(node: XmlNode, fn: String => Boolean) =
             node.label == "artifactId" && fn(node.text)
           node.label == "dependency" && node.child.exists(child =>
-            isArtifactId(child, _.startsWith("semanticdb-scalac-core")))
+            isArtifactId(child, _.startsWith("semanticdb-scalac-core"))
+          )
         }
         override def transform(node: XmlNode): XmlNodeSeq = node match {
           case e: Elem if isAbsorbedDependency(node) =>
@@ -758,8 +759,12 @@ inScope(Global)(
     credentials ++= (for {
       username <- sys.env.get("SONATYPE_USERNAME")
       password <- sys.env.get("SONATYPE_PASSWORD")
-    } yield
-      Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)).toSeq,
+    } yield Credentials(
+      "Sonatype Nexus Repository Manager",
+      "oss.sonatype.org",
+      username,
+      password
+    )).toSeq,
     PgpKeys.pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray())
   )
 )

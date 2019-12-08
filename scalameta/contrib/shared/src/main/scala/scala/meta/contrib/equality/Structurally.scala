@@ -4,11 +4,11 @@ import scala.language.implicitConversions
 import scala.meta.Tree
 
 /** Represents structural equality between trees
-  *
-  * Two trees are structurally equal if their .structure is equal.
-  * This implementation is however more efficient that doing
-  * a.structure == b.structure.
-  */
+ *
+ * Two trees are structurally equal if their .structure is equal.
+ * This implementation is however more efficient that doing
+ * a.structure == b.structure.
+ */
 class Structurally[+A <: Tree](val tree: A) extends TreeEquality[A] {
   // TODO(olafur) more efficient hashCode
   private lazy val hash: Int = tree.structure.hashCode

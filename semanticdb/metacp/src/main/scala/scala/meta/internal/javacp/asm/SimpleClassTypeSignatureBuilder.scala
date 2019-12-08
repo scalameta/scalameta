@@ -12,7 +12,8 @@ class SimpleClassTypeSignatureBuilder(identifier: String) {
       case head :: tail =>
         SimpleClassTypeSignature(
           identifier,
-          Some(TypeArguments(head.result(), tail.map(_.result()))))
+          Some(TypeArguments(head.result(), tail.map(_.result())))
+        )
     }
 
   def visitTypeArgument(): Unit = {

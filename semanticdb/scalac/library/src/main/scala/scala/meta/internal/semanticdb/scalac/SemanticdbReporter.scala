@@ -9,7 +9,8 @@ class SemanticdbReporter(underlying: Reporter) extends StoreReporter {
       pos: Position,
       msg: String,
       severity: Severity,
-      force: Boolean): Unit = {
+      force: Boolean
+  ): Unit = {
     super.info0(pos, msg, severity, force)
     severity.id match {
       case 0 => underlying.info(pos, msg, force)

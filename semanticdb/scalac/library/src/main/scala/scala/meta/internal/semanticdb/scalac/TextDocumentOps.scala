@@ -27,7 +27,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
     val analyzerClassName = g.analyzer.getClass.getName
     if (!analyzerClassName.contains("HijackAnalyzer")) {
       sys.error(
-        s"the compiler instance must use a hijacked analyzer, instead of $analyzerClassName")
+        s"the compiler instance must use a hijacked analyzer, instead of $analyzerClassName"
+      )
     }
     if (g.currentRun.phaseNamed("typer") != NoPhase) {
       if (g.phase.id < g.currentRun.phaseNamed("typer").id) {
@@ -410,12 +411,14 @@ trait TextDocumentOps { self: SemanticdbOps =>
                       wrapAlternatives(
                         "<import " + gtree.expr + "." + gname + ">",
                         import1,
-                        import2))
+                        import2
+                      )
+                    )
                 }
               case gtree: g.AppliedTypeTree =>
                 if (gtree.symbol.name == g.typeNames.REPEATED_PARAM_CLASS_NAME &&
-                    mstarts.contains(gstart) &&
-                    gtree.args.nonEmpty) {
+                  mstarts.contains(gstart) &&
+                  gtree.args.nonEmpty) {
                   success(mstarts(gstart), gtree.args.head.symbol)
                 }
               case _ =>
@@ -509,7 +512,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
                       arguments = List(
                         s.OriginalTree(
                           range = Some(pos.toRange)
-                        ))
+                        )
+                      )
                     )
                   )
                   isVisited += gview.fun
@@ -526,7 +530,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
                             arguments = List(
                               s.OriginalTree(
                                 range = Some(range)
-                              ))
+                              )
+                            )
                           ),
                           arguments = gimpl.args.map(_.toSemanticTree)
                         )
@@ -597,7 +602,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
           }
 
           override def traverse(gtree: g.Tree): Unit = {
-            if (isVisited(gtree)) return else isVisited += gtree
+            if (isVisited(gtree)) return
+            else isVisited += gtree
             gtree.attachments.all.foreach {
               case att: g.analyzer.MacroExpansionAttachment =>
                 traverse(att.expandee)
@@ -658,10 +664,10 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 gtree.symbol.annotations.foreach(ann => traverse(ann.original))
                 tryFindMtree(gtree)
                 if (gtree.symbol != null &&
-                    !gtree.symbol.isSynthetic &&
-                    gtree.pos != null &&
-                    gtree.pos.isRange &&
-                    msinglevalpats.contains(gtree.pos.start)) {
+                  !gtree.symbol.isSynthetic &&
+                  gtree.pos != null &&
+                  gtree.pos.isRange &&
+                  msinglevalpats.contains(gtree.pos.start)) {
                   // Map Defn.Val position of val pattern with single binder to the position
                   // of the single binder. For example, map `val Foo(x) = ..` to the position of `x`.
                   val mpos = msinglevalpats(gtree.pos.start)

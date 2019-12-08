@@ -64,25 +64,27 @@ trait InputOps { self: SemanticdbOps =>
       }
     }
     def toInput: m.Input =
-      gSourceFileInputCache.getOrElseUpdate(gsource, {
-        gsource.file match {
-          case gfile: GPlainFile =>
-            if (config.text.isOn) {
-              val path = m.AbsolutePath(gfile.file)
-              val label = uriRelativeToSourceRoot(path).toString
-              // NOTE: Can't use gsource.content because it's preprocessed by scalac.
-              val contents = FileIO.slurp(path, UTF_8)
-              m.Input.VirtualFile(label, contents)
-            } else {
-              m.Input.File(gfile.file)
-            }
-          case gfile: VirtualFile =>
-            val uri = URLEncoder.encode(gfile.path, UTF_8.name)
-            m.Input.VirtualFile(uri, gsource.content.mkString)
-          case _ =>
-            m.Input.None
+      gSourceFileInputCache.getOrElseUpdate(
+        gsource, {
+          gsource.file match {
+            case gfile: GPlainFile =>
+              if (config.text.isOn) {
+                val path = m.AbsolutePath(gfile.file)
+                val label = uriRelativeToSourceRoot(path).toString
+                // NOTE: Can't use gsource.content because it's preprocessed by scalac.
+                val contents = FileIO.slurp(path, UTF_8)
+                m.Input.VirtualFile(label, contents)
+              } else {
+                m.Input.File(gfile.file)
+              }
+            case gfile: VirtualFile =>
+              val uri = URLEncoder.encode(gfile.path, UTF_8.name)
+              m.Input.VirtualFile(uri, gsource.content.mkString)
+            case _ =>
+              m.Input.None
+          }
         }
-      })
+      )
   }
 
   implicit class XtensionGPositionMPosition(pos: GPosition) {

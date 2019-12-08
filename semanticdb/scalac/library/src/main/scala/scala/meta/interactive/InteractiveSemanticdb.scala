@@ -46,30 +46,32 @@ object InteractiveSemanticdb {
       compiler: Global,
       code: String,
       filename: String,
-      timeout: Long): s.TextDocument = {
+      timeout: Long
+  ): s.TextDocument = {
     toTextDocument(compiler, code, filename, timeout, Nil)
   }
 
   /**
-    * Build semanticdb document from this snippet of code.
-    *
-    * @param compiler an instance of scalac interactive global.
-    * @param code the code to be compiled.
-    * @param filename the name of the source file.
-    * @param timeout max number of milliseconds to allow the presentation compiler
-    *                to typecheck this file.
-    * @param options configuration options to influence how the document is built.
-    *                Must start with -P:semanticdb: prefix, for example "-P:semanticdb:symbols:all".
-    *  @throws Exception note that this method can fail in many different ways
-    *                    with exceptions, including but not limited to tokenize/parse/type
-    *                    errors.
-    */
+   * Build semanticdb document from this snippet of code.
+   *
+   * @param compiler an instance of scalac interactive global.
+   * @param code the code to be compiled.
+   * @param filename the name of the source file.
+   * @param timeout max number of milliseconds to allow the presentation compiler
+   *                to typecheck this file.
+   * @param options configuration options to influence how the document is built.
+   *                Must start with -P:semanticdb: prefix, for example "-P:semanticdb:symbols:all".
+   *  @throws Exception note that this method can fail in many different ways
+   *                    with exceptions, including but not limited to tokenize/parse/type
+   *                    errors.
+   */
   def toTextDocument(
       compiler: Global,
       code: String,
       filename: String,
       timeout: Long,
-      options: List[String]): s.TextDocument = {
+      options: List[String]
+  ): s.TextDocument = {
     val unit = addCompilationUnit(compiler, code, filename)
     // reload seems to be necessary before askLoadedType.
     ask[Unit](r => compiler.askReload(unit.source :: Nil, r)).get
@@ -95,12 +97,12 @@ object InteractiveSemanticdb {
   }
 
   /**
-    * Inserts "_CURSOR_" at given offset.
-    *
-    * _CURSOR_ hints to the presentation compiler that this file is being edited
-    * with the cursor at that offset. This hint helps completions amongst
-    * other things.
-    */
+   * Inserts "_CURSOR_" at given offset.
+   *
+   * _CURSOR_ hints to the presentation compiler that this file is being edited
+   * with the cursor at that offset. This hint helps completions amongst
+   * other things.
+   */
   def addCursor(code: String, offset: Int): String = {
     new StringBuilder(code.length + "_CURSOR_".length)
       .append(code.substring(0, offset))
