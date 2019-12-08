@@ -33,6 +33,14 @@ jobs:
         with:
           java-version: adopt@1.11
       - run: sbt ++2.12.10 testsJVM/test
+  windows:
+    name: Windows tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: olafurpg/setup-scala@v7
+      - run: sbt ci-windows
+        shell: bash
   checks:
     name: Scalafmt
     runs-on: ubuntu-latest
