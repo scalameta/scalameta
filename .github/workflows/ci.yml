@@ -1,0 +1,55 @@
+name: CI
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+jobs:
+  test:
+    name: ${{ matrix.command }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        command:
+          - "++2.11.12 testsJVM/test"
+          - "++2.12.10 testsJVM/test"
+          - "++2.13.1 testsJVM/test"
+          - "download-scala-library ++2.12.10 testsJVM/slow:test"
+          - "++2.11.12 testsJS/test"
+          - "++2.12.10 testsJS/test"
+          - "++2.13.1 testsJS/test"
+          - "mima"
+    steps:
+      - uses: actions/checkout@v1
+      - uses: olafurpg/setup-scala@v7
+      - run: sbt ${{ matrix.command }}
+  jdk11:
+    name: JDK11 tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: olafurpg/setup-scala@v7
+        with:
+          java-version: adopt@1.11
+      - run: sbt ++2.12.10 testsJVM/test
+  windows:
+    name: Windows tests
+    runs-on: windows-latest
+    env:
+      JAVA_OPTS: -Xss2m -Xmx1024m -XX:-TieredCompilation -XX:ReservedCodeCacheSize=48m -Dfile.encoding=UTF-8 -Djna.nosys=true
+    steps:
+      - uses: actions/checkout@v1
+      - uses: olafurpg/setup-scala@v7
+      - name: sbt ci-windows
+        run: |
+          rm .jvmopts
+          sbt "-Djna.nosys=true" ci-windows
+        shell: bash
+  checks:
+    name: Scalafmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: olafurpg/setup-scala@v7
+      - run: ./bin/scalafmt --test
