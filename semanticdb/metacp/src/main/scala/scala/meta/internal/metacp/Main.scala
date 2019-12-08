@@ -23,7 +23,8 @@ class Main(settings: Settings, reporter: Reporter) {
   val classpathIndex =
     ClasspathIndex(
       settings.classpath ++ settings.dependencyClasspath ++ detectJavacp,
-      includeJdk = settings.includeJdk)
+      includeJdk = settings.includeJdk
+    )
   private val missingSymbols = mutable.Set.empty[String]
 
   def process(): Result = {
@@ -101,7 +102,11 @@ class Main(settings: Settings, reporter: Reporter) {
     Result(orderedStatus, scalaLibrarySynthetics)
   }
 
-  private def processManifest(entry: AbsolutePath, manifest: Manifest, out: AbsolutePath): Boolean = {
+  private def processManifest(
+      entry: AbsolutePath,
+      manifest: Manifest,
+      out: AbsolutePath
+  ): Boolean = {
     var success = true
     val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
     if (classpathAttr != null) {
@@ -146,10 +151,10 @@ class Main(settings: Settings, reporter: Reporter) {
   }
 
   /** An output entry that is either a directory or a jar.
-    *
-    * @param output the output directory or jar file on disk that is returned to the user.
-    * @param root the output directory or the NIO FileSystem jar root path if output is a jar file.
-    */
+   *
+   * @param output the output directory or jar file on disk that is returned to the user.
+   * @param root the output directory or the NIO FileSystem jar root path if output is a jar file.
+   */
   private case class OutputEntry(output: AbsolutePath, root: AbsolutePath)
 
   private def withOutputEntry[T](entry: AbsolutePath)(f: OutputEntry => T): T = {
@@ -230,7 +235,8 @@ class Main(settings: Settings, reporter: Reporter) {
         case unexpected =>
           throw new IllegalStateException(
             s"Expected this.getClass.getClassLoader to be URLClassLoader. " +
-              s"Obtained $unexpected")
+              s"Obtained $unexpected"
+          )
       }
       Classpath(scalaLibrary)
     } else {

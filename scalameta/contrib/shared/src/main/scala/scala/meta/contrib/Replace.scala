@@ -1,16 +1,16 @@
 package scala.meta.contrib
 
 /**
-  *
-  * The purpose of this typeclass is to replace
-  * one list of things with another of that type.
-  *
-  * eg. replacing the statements of a Defn.Class
-  * with a new set of statements
-  *
-  * @tparam A the object you are replacing the items in
-  * @tparam B the type of items you are replacing
-  */
+ *
+ * The purpose of this typeclass is to replace
+ * one list of things with another of that type.
+ *
+ * eg. replacing the statements of a Defn.Class
+ * with a new set of statements
+ *
+ * @tparam A the object you are replacing the items in
+ * @tparam B the type of items you are replacing
+ */
 trait Replace[A, B] {
   def replace(a: A, bs: List[B]): A
 }

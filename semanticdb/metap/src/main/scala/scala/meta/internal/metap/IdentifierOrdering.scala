@@ -1,14 +1,14 @@
 package scala.meta.internal.metap
 
 /**
-  * A comparator for identifier like "Predef" or "Function10".
-  *
-  * Differences from the default string comparator:
-  * - works with CharSequences like compiler `Name`
-  * - orders numbers by their numerical value instead of lexicographical
-  *   - Good: `Function1`, `Function2`,  `Function10`
-  *   - Bad:  `Function1`, `Function10`, `Function2`
-  */
+ * A comparator for identifier like "Predef" or "Function10".
+ *
+ * Differences from the default string comparator:
+ * - works with CharSequences like compiler `Name`
+ * - orders numbers by their numerical value instead of lexicographical
+ *   - Good: `Function1`, `Function2`,  `Function10`
+ *   - Bad:  `Function1`, `Function10`, `Function2`
+ */
 class IdentifierOrdering[T <: CharSequence] extends Ordering[T] {
   override def compare(o1: T, o2: T): Int = {
     val len = math.min(o1.length(), o2.length())

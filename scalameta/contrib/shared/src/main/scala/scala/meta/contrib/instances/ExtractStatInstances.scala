@@ -32,7 +32,8 @@ trait ExtractStatInstances {
     Extract(
       _.rhs
         .map(extractStatsFromTerm)
-        .getOrElse(Nil))
+        .getOrElse(Nil)
+    )
 
   private def extractStatsFromTerm(term: Term): List[Stat] =
     term match {

@@ -19,9 +19,9 @@ sealed abstract class ClasspathElement {
 sealed abstract class Classfile extends ClasspathElement {
 
   /** Returns an input stream to read the bytes of this classpath entry.
-    *
-    * @note The caller is responsible for closing the InputStream.
-    */
+   *
+   * @note The caller is responsible for closing the InputStream.
+   */
   def openInputStream(): InputStream
 }
 
@@ -39,12 +39,12 @@ final case class Classdir(relativeUri: String) extends ClasspathElement {
   val members = mutable.Map.empty[String, ClasspathElement]
 
   /** Java 9+ modules for this package based on JEP-220
-    *
-    * Details: https://bugs.openjdk.java.net/browse/JDK-8066492
-    *
-    * For example, the package "java/lang/" will have a module "/modules/java.base" which is the
-    * root directory containing classfiles for JDK libraries like `java/lang/Thread#`.
-    */
+   *
+   * Details: https://bugs.openjdk.java.net/browse/JDK-8066492
+   *
+   * For example, the package "java/lang/" will have a module "/modules/java.base" which is the
+   * root directory containing classfiles for JDK libraries like `java/lang/Thread#`.
+   */
   var modules: List[Path] = Nil
 }
 

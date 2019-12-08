@@ -19,7 +19,7 @@ class Annotations/*<=annot.Annotations#*/[@TypeParameterAnnotation/*=>com.javacp
   type T/*<=annot.Annotations#T#*/
 }
 
-class B/*<=annot.B#*/ @ConstructorAnnotation/*=>com.javacp.annot.ConstructorAnnotation#*/()(x/*<=annot.B#x.*/: Int/*=>scala.Int#*/) {
+class B/*<=annot.B#*/ @ConstructorAnnotation/*=>com.javacp.annot.ConstructorAnnotation#*/() (x/*<=annot.B#x.*/: Int/*=>scala.Int#*/) {
   @ConstructorAnnotation/*=>com.javacp.annot.ConstructorAnnotation#*/
   def this() = this(42)
 }

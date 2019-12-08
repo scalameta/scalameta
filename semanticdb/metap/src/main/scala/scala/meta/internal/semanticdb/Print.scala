@@ -45,7 +45,8 @@ object Print {
       format: Format,
       doc: TextDocument,
       synthetic: Synthetic,
-      symtab: PrinterSymtab): String = {
+      symtab: PrinterSymtab
+  ): String = {
     withPrinter(format, doc, symtab) { printer =>
       printer.pprint(synthetic)
     }.trim
@@ -58,7 +59,8 @@ object Print {
   }
 
   private def withInfoPrinter(format: Format, doc: TextDocument, symtab: PrinterSymtab)(
-      fn: DocumentPrinter#InfoPrinter => Unit): String = {
+      fn: DocumentPrinter#InfoPrinter => Unit
+  ): String = {
     withPrinter(format, TextDocument(), symtab) { printer =>
       val notes = new printer.InfoNotes()
       val infoPrinter = new printer.InfoPrinter(notes)
@@ -67,7 +69,8 @@ object Print {
   }
 
   private def withPrinter(format: Format, doc: TextDocument, symtab: PrinterSymtab)(
-      fn: DocumentPrinter => Unit): String = {
+      fn: DocumentPrinter => Unit
+  ): String = {
     val baos = new ByteArrayOutputStream()
     val ps = new PrintStream(baos)
     val settings = Settings().withFormat(format)
