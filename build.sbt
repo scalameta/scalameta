@@ -315,7 +315,7 @@ lazy val testkit = project
       else Nil
     },
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.0.8",
+      "org.scalatest" %% "scalatest" % "3.1.0",
       // These are used to download and extract a corpus tar.gz
       "org.rauschig" % "jarchivelib" % "0.7.1",
       "commons-io" % "commons-io" % "2.5",
@@ -390,7 +390,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
     else Nil
   },
   libraryDependencies ++= List(
-    "org.scalatest" %%% "scalatest" % "3.0.8" % "test"
+    "org.scalatest" %%% "scalatest" % "3.1.0" % "test"
   ),
   testOptions.in(Test) += Tests.Argument("-l", "org.scalatest.tags.Slow"),
   inConfig(Slow)(Defaults.testTasks),
