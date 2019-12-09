@@ -142,8 +142,11 @@ object TreeSyntax {
       })
 
     def templ(templ: Template) =
-      if (templ.early.isEmpty && templ.inits.isEmpty && templ.self.name
-          .is[Name.Anonymous] && templ.self.decltpe.isEmpty && templ.stats.isEmpty) s()
+      if (templ.early.isEmpty &&
+        templ.inits.isEmpty &&
+        templ.self.name.is[Name.Anonymous] &&
+        templ.self.decltpe.isEmpty &&
+        templ.stats.isEmpty) s()
       else if (templ.inits.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
       else s(" ", templ)
 
@@ -183,13 +186,14 @@ object TreeSyntax {
         def lexicalDelimiter(codepoint: Int): Boolean =
           Set[Int]('`', '\'', '"', '.', ';', ',').contains(codepoint)
         def lexicalOperator(codepoint: Int): Boolean = (
-          '\u0020' <= codepoint && codepoint <= '\u007E'
-            && (!lexicalWhitespace(codepoint)
+          '\u0020' <= codepoint &&
+            codepoint <= '\u007E' &&
+            (!lexicalWhitespace(codepoint)
               && !lexicalLetter(codepoint)
               && !lexicalDigit(codepoint)
               && !lexicalParentheses(codepoint)
-              && !lexicalDelimiter(codepoint))
-            || Set[Int](Character.MATH_SYMBOL, Character.OTHER_SYMBOL)
+              && !lexicalDelimiter(codepoint)) ||
+            Set[Int](Character.MATH_SYMBOL, Character.OTHER_SYMBOL)
               .contains(Character.getType(codepoint))
         )
 
@@ -299,8 +303,11 @@ object TreeSyntax {
         if (t.rank > 0) {
           s("." * (t.rank + 1), w("{", t.tree, "}", !t.tree.is[Quasi]))
         } else {
-          val allowBraceless = t.tree.is[Term.Name] || t.tree.is[Pat.Var] || t.tree
-            .is[Term.This] || t.tree.is[Pat.Wildcard]
+          val allowBraceless =
+            t.tree.is[Term.Name] ||
+              t.tree.is[Pat.Var] ||
+              t.tree.is[Term.This] ||
+              t.tree.is[Pat.Wildcard]
           implicit val syntaxDialect = dialect.copy(
             allowTermUnquotes = false,
             allowPatUnquotes = false,
@@ -877,8 +884,9 @@ object TreeSyntax {
           val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
           val pparents = w(r(t.inits, " with "), " ", !t.inits.isEmpty && !isBodyEmpty)
           val pbody = {
-            val isOneLiner = t.stats.length == 0 || (t.stats.length == 1 && !s(t.stats.head).toString
-              .contains(EOL))
+            val isOneLiner =
+              t.stats.length == 0 ||
+                (t.stats.length == 1 && !s(t.stats.head).toString.contains(EOL))
             (isSelfNonEmpty, t.stats) match {
               case (false, Nil) => s()
               case (false, List(stat)) if isOneLiner => s("{ ", stat, " }")

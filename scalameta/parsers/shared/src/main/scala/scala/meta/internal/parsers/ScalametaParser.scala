@@ -614,10 +614,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[KwCatch] || token.is[KwElse] || token.is[KwExtends] ||
       token.is[KwFinally] || token.is[KwForsome] || token.is[KwMatch] ||
       token.is[KwWith] || token.is[KwYield] ||
-      token.is[RightParen] || token.is[LeftBracket] || token.is[RightBracket] || token
-        .is[RightBrace] ||
-      token.is[Comma] || token.is[Colon] || token.is[Dot] || token.is[Equals] ||
-      token.is[Semicolon] || token.is[Hash] || token.is[RightArrow] || token.is[LeftArrow] ||
+      token.is[RightParen] || token.is[LeftBracket] || token.is[RightBracket] ||
+      token.is[RightBrace] || token.is[Comma] || token.is[Colon] ||
+      token.is[Dot] || token.is[Equals] || token.is[Semicolon] ||
+      token.is[Hash] || token.is[RightArrow] || token.is[LeftArrow] ||
       token.is[Subtype] || token.is[Supertype] || token.is[Viewbound] ||
       token.is[LF] || token.is[LFLF] || token.is[EOF]
     }
@@ -718,8 +718,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                     // For example, in `new { ..$stats }`, ellipsis's pt is List[Stat], but quasi's pt is Term.
                     // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
                     require(
-                      classTag[T].runtimeClass
-                        .isAssignableFrom(quasi.pt) && debug(ellipsis, result, result.structure)
+                      classTag[T].runtimeClass.isAssignableFrom(quasi.pt) &&
+                        debug(ellipsis, result, result.structure)
                     )
                     atPos(quasi, quasi)(astInfo.quasi(quasi.rank, quasi.tree))
                   case other =>
@@ -983,8 +983,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def infixTypeRest(t: Type, mode: InfixMode.Value): Type = atPos(t, auto) {
       if (isIdent || token.is[Unquote]) {
         if (isStar && ahead(
-            token.is[RightParen] || token.is[Comma] || token.is[Equals] || token
-              .is[RightBrace] || token.is[EOF]
+            token.is[RightParen] || token.is[Comma] || token.is[Equals] ||
+              token.is[RightBrace] || token.is[EOF]
           )) {
           // we assume that this is a type specification for a vararg parameter
           t
@@ -1614,8 +1614,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           // even if it's not parsing the first statement in the template. E.g. `class C { foo; x => x }` will be
           // a parse error, because `x => x` will be deemed a self-type annotation, which ends up being inapplicable there.
           val looksLikeLambda = {
-            val inParens = t.tokens.nonEmpty && t.tokens.head.is[LeftParen] && t.tokens.last
-              .is[RightParen]
+            val inParens =
+              t.tokens.nonEmpty &&
+                t.tokens.head.is[LeftParen] &&
+                t.tokens.last.is[RightParen]
             object NameLike {
               def unapply(tree: Tree): Boolean = tree match {
                 case Term.Quasi(0, _) => true
@@ -2151,8 +2153,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (token.is[KwIf] && !isFirst) autoPos(Enumerator.Guard(guard().get)) :: Nil
     else if (token.is[Ellipsis]) {
       ellipsis(1, astInfo[Enumerator]) :: Nil
-    } else if (token
-        .is[Unquote] && ahead(!token.is[Equals] && !token.is[LeftArrow])) { // support for q"for ($enum1; ..$enums; $enum2)"
+    } else if (token.is[Unquote] &&
+      ahead(!token.is[Equals] && !token.is[LeftArrow])) { // support for q"for ($enum1; ..$enums; $enum2)"
       unquote[Enumerator] :: Nil
     } else generator(!isFirst, allowNestedIf)
   }
@@ -2602,8 +2604,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     // but in the case of the latter, we need to take care to not hastily parse those names as modifiers
     def continueLoop =
       ahead(
-        token.is[Colon] || token.is[Equals] || token.is[EOF] || token.is[LeftBracket] || token
-          .is[Subtype] || token.is[Supertype] || token.is[Viewbound]
+        token.is[Colon] || token.is[Equals] || token.is[EOF] || token.is[LeftBracket] ||
+          token.is[Subtype] || token.is[Supertype] || token.is[Viewbound]
       )
     def loop(mods: List[Mod]): List[Mod] = token match {
       case Unquote() => if (continueLoop) mods else loop(appendMod(mods, modifier()))
@@ -2980,8 +2982,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (token.is[StatSep] || token.is[RightBrace]) {
       if (restype.isEmpty) {
         warnProcedureDeprecation
-        Decl
-          .Def(mods, name, tparams, paramss, atPos(in.tokenPos, in.prevTokenPos)(Type.Name("Unit")))
+        Decl.Def(
+          mods,
+          name,
+          tparams,
+          paramss,
+          atPos(in.tokenPos, in.prevTokenPos)(Type.Name("Unit"))
+        )
       } else
         Decl.Def(mods, name, tparams, paramss, restype.get)
     } else if (restype.isEmpty && token.is[LeftBrace]) {
@@ -3314,8 +3321,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       next()
       if (token.is[Unquote] && ahead(
           !token.is[Dot] && !token.is[Hash] && !token.is[At] && !token.is[Ellipsis] &&
-            !token.is[LeftParen] && !token.is[LeftBracket] && !token.is[LeftBrace] && !token
-            .is[KwWith]
+            !token.is[LeftParen] && !token.is[LeftBracket] && !token.is[LeftBrace] &&
+            !token.is[KwWith]
         )) {
         unquote[Template]
       } else {

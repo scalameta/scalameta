@@ -109,13 +109,13 @@ object Term {
   @ast class Function(params: List[Term.Param], body: Term) extends Term {
     checkFields(
       params.forall(param =>
-        param.is[Term.Param.Quasi] || (param.name
-          .is[scala.meta.Name.Anonymous] ==> param.default.isEmpty)
+        param.is[Term.Param.Quasi] ||
+          (param.name.is[scala.meta.Name.Anonymous] ==> param.default.isEmpty)
       )
     )
     checkFields(
-      params.exists(_.is[Term.Param.Quasi]) || params
-        .exists(_.mods.exists(_.is[Mod.Implicit])) ==> (params.length == 1)
+      params.exists(_.is[Term.Param.Quasi]) ||
+        params.exists(_.mods.exists(_.is[Mod.Implicit])) ==> (params.length == 1)
     )
   }
   @ast class PartialFunction(cases: List[Case] @nonEmpty) extends Term

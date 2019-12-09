@@ -932,8 +932,8 @@ class SuccessSuite extends FunSuite {
     val tpes: List[Type] = List(t"X", t"Y")
     val tpe = t"Z"
     assert(
-      t"implicit (..$tpes) => $tpe"
-        .show[Structure] === "Type.ImplicitFunction(List(Type.Name(\"X\"), Type.Name(\"Y\")), Type.Name(\"Z\"))"
+      t"implicit (..$tpes) => $tpe".show[Structure] ===
+        "Type.ImplicitFunction(List(Type.Name(\"X\"), Type.Name(\"Y\")), Type.Name(\"Z\"))"
     )
   }
 
