@@ -31,7 +31,8 @@ object RoundtripSuite {
     case q"{ ..$stats }" => q"{ ..$stats }"
     case q"if ($expr1) $expr2 else $expr3" => q"if ($expr1) $expr2 else $expr3"
     case q"$expr match { ..case $casesnel }" => q"$expr match { ..case $casesnel }"
-    case q"try $expr catch { ..case $cases } finally $expropt" => q"try $expr catch { ..case $cases } finally $expropt"
+    case q"try $expr catch { ..case $cases } finally $expropt" =>
+      q"try $expr catch { ..case $cases } finally $expropt"
     case q"try $expr1 catch $expr2 finally $expropt" => q"try $expr1 catch $expr2 finally $expropt"
     case q"(..$params) => $expr" => q"(..$params) => $expr"
     case q"{ ..case $casesnel }" => q"{ ..case $casesnel }"
@@ -39,7 +40,8 @@ object RoundtripSuite {
     case q"do $expr1 while($expr2)" => q"do $expr1 while($expr2)"
     case q"for (..$enumeratorsnel) $expr" => q"for (..$enumeratorsnel) $expr"
     case q"for (..$enumeratorsnel) yield $expr" => q"for (..$enumeratorsnel) yield $expr"
-    case q"new { ..$stat } with ..$ctorcalls { $param => ..$stats }" => q"new { ..$stat } with ..$ctorcalls { $param => ..$stats }"
+    case q"new { ..$stat } with ..$ctorcalls { $param => ..$stats }" =>
+      q"new { ..$stat } with ..$ctorcalls { $param => ..$stats }"
     case q"$expr _" => q"$expr _"
     case q"$expr: _*" => q"$expr: _*"
     case q"${lit: Lit}" => q"${lit: Lit}"
@@ -71,24 +73,34 @@ object RoundtripSuite {
     case q"import ..$importersnel" => q"import ..$importersnel"
     case q"..$mods val ..$patsnel: $tpe" => q"..$mods val ..$patsnel: $tpe"
     case q"..$mods var ..$patsnel: $tpe" => q"..$mods var ..$patsnel: $tpe"
-    case q"..$mods def $name[..$tparams](...$paramss): $tpe" => q"..$mods def $name[..$tparams](...$paramss): $tpe"
-    case q"..$mods type $tname[..$tparams] >: $tpeopt1 <: $tpeopt2" => q"..$mods type $tname[..$tparams] >: $tpeopt1 <: $tpeopt2"
+    case q"..$mods def $name[..$tparams](...$paramss): $tpe" =>
+      q"..$mods def $name[..$tparams](...$paramss): $tpe"
+    case q"..$mods type $tname[..$tparams] >: $tpeopt1 <: $tpeopt2" =>
+      q"..$mods type $tname[..$tparams] >: $tpeopt1 <: $tpeopt2"
     case q"..$mods val ..$patsnel: $tpeopt = $expr" => q"..$mods val ..$patsnel: $tpeopt = $expr"
-    case q"..$mods var ..$patsnel: $tpeopt = $expropt" => q"..$mods var ..$patsnel: $tpeopt = $expropt"
-    case q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr" => q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"
-    case q"..$mods def $name[..$tparams](...$paramss): $tpeopt = macro $expr" => q"..$mods def $name[..$tparams](...$paramss): $tpeopt = macro $expr"
+    case q"..$mods var ..$patsnel: $tpeopt = $expropt" =>
+      q"..$mods var ..$patsnel: $tpeopt = $expropt"
+    case q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr" =>
+      q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr"
+    case q"..$mods def $name[..$tparams](...$paramss): $tpeopt = macro $expr" =>
+      q"..$mods def $name[..$tparams](...$paramss): $tpeopt = macro $expr"
     case q"..$mods type $tname[..$tparams] = $tpe" => q"..$mods type $tname[..$tparams] = $tpe"
-    case q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends $template" => q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends $template"
-    case q"..$mods trait $tname[..$tparams] extends $template" => q"..$mods trait $tname[..$tparams] extends $template"
+    case q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends $template" =>
+      q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends $template"
+    case q"..$mods trait $tname[..$tparams] extends $template" =>
+      q"..$mods trait $tname[..$tparams] extends $template"
     case q"..$mods object $name extends $template" => q"..$mods object $name extends $template"
     case q"package object $name extends $template" => q"package object $name extends $template"
     case q"package $ref { ..$stats }" => q"package $ref { ..$stats }"
     case q"..$mods def this(...$paramss)" => q"..$mods def this(...$paramss)"
     case q"..$mods def this(...$paramss) = $expr" => q"..$mods def this(...$paramss) = $expr"
-    case param"..$mods $paramname: $tpeopt = $expropt" => param"..$mods $paramname: $tpeopt = $expropt"
-    case tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2" => tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2"
+    case param"..$mods $paramname: $tpeopt = $expropt" =>
+      param"..$mods $paramname: $tpeopt = $expropt"
+    case tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2" =>
+      tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2"
     case init"$tpe(...$exprss)" => init"$tpe(...$exprss)"
-    case template"{ ..$stats1 } with ..$ctorcalls { $param => ..$stats2 }" => template"{ ..$stats1 } with ..$ctorcalls { $param => ..$stats2 }"
+    case template"{ ..$stats1 } with ..$ctorcalls { $param => ..$stats2 }" =>
+      template"{ ..$stats1 } with ..$ctorcalls { $param => ..$stats2 }"
     case mod"@$annot" => mod"@$annot"
     case mod"private[$name]" => mod"private[$name]"
     case mod"protected[$name]" => mod"protected[$name]"

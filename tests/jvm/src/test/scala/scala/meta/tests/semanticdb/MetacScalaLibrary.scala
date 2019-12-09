@@ -32,7 +32,10 @@ object MetacScalaLibrary {
       .resolve("src")
       .resolve("library")
       .toAbsolutePath
-    assert(Files.isDirectory(library), s"$library is not a directory! Run `sbt download-scala-library`")
+    assert(
+      Files.isDirectory(library),
+      s"$library is not a directory! Run `sbt download-scala-library`"
+    )
     val classpath = this.getClass.getClassLoader
       .asInstanceOf[URLClassLoader]
       .getURLs

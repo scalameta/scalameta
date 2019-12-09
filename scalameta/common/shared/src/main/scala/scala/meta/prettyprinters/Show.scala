@@ -56,7 +56,12 @@ object Show {
   private[meta] final case class Indent(res: Result) extends Result
   private[meta] final case class Newline(res: Result) extends Result
   private[meta] final case class Meta(data: Any, res: Result) extends Result
-  private[meta] final case class Wrap(prefix: String, res: Result, suffix: String, cond: String => Boolean) extends Result
+  private[meta] final case class Wrap(
+      prefix: String,
+      res: Result,
+      suffix: String,
+      cond: String => Boolean
+  ) extends Result
   private[meta] final case class Function(fn: StringBuilder => Result) extends Result
 
   def apply[T](f: T => Result): Show[T] =
@@ -73,12 +78,18 @@ object Show {
 
   def meta[T](data: Any, xs: T*): Result = macro scala.meta.internal.prettyprinters.ShowMacros.meta
 
-  def wrap[T](x: T, suffix: String)(implicit show: Show[T]): Result = Wrap("", show(x), suffix, _.nonEmpty)
-  def wrap[T](x: T, suffix: String, cond: Boolean)(implicit show: Show[T]): Result = Wrap("", show(x), suffix, _ => cond)
-  def wrap[T](prefix: String, x: T)(implicit show: Show[T]): Result = Wrap(prefix, show(x), "", _.nonEmpty)
-  def wrap[T](prefix: String, x: T, cond: Boolean)(implicit show: Show[T]): Result = Wrap(prefix, show(x), "", _ => cond)
-  def wrap[T](prefix: String, x: T, suffix: String)(implicit show: Show[T]): Result = Wrap(prefix, show(x), suffix, _.nonEmpty)
-  def wrap[T](prefix: String, x: T, suffix: String, cond: Boolean)(implicit show: Show[T]): Result = Wrap(prefix, show(x), suffix, _ => cond)
+  def wrap[T](x: T, suffix: String)(implicit show: Show[T]): Result =
+    Wrap("", show(x), suffix, _.nonEmpty)
+  def wrap[T](x: T, suffix: String, cond: Boolean)(implicit show: Show[T]): Result =
+    Wrap("", show(x), suffix, _ => cond)
+  def wrap[T](prefix: String, x: T)(implicit show: Show[T]): Result =
+    Wrap(prefix, show(x), "", _.nonEmpty)
+  def wrap[T](prefix: String, x: T, cond: Boolean)(implicit show: Show[T]): Result =
+    Wrap(prefix, show(x), "", _ => cond)
+  def wrap[T](prefix: String, x: T, suffix: String)(implicit show: Show[T]): Result =
+    Wrap(prefix, show(x), suffix, _.nonEmpty)
+  def wrap[T](prefix: String, x: T, suffix: String, cond: Boolean)(implicit show: Show[T]): Result =
+    Wrap(prefix, show(x), suffix, _ => cond)
 
   def function(fn: StringBuilder => Result): Result = Function(fn)
 

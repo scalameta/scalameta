@@ -8,7 +8,8 @@ import scala.meta.dialects.Scala211
 
 class BootstrapSuite extends ParseSuite {
   var dir = new File(new File(sys.props("sbt.paths.tests.test.sources")).getAbsolutePath)
-  def isProjectRoot(dir: File) = dir != null && new File(dir.getAbsolutePath + File.separatorChar + "build.sbt").exists
+  def isProjectRoot(dir: File) =
+    dir != null && new File(dir.getAbsolutePath + File.separatorChar + "build.sbt").exists
   while (dir != null && !isProjectRoot(dir)) dir = dir.getParentFile
   test("ProjectDir (" + dir.getAbsolutePath + ")")(assert(isProjectRoot(dir)))
 
@@ -37,7 +38,9 @@ class BootstrapSuite extends ParseSuite {
               i += 1
             }
           })
-          bitmap.zipWithIndex.filter(!_._1).foreach{ case (_, i) => fail("TOKENS DON'T COVER " + i) }
+          bitmap.zipWithIndex.filter(!_._1).foreach {
+            case (_, i) => fail("TOKENS DON'T COVER " + i)
+          }
           // check #2: syntax works
           if (!isFail && content != tokens.syntax.mkString) {
             isFail = true

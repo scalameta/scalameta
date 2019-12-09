@@ -1,7 +1,6 @@
 package scala.meta
 package classifiers
 
-
 private[meta] trait Api {
   implicit class XtensionClassifiable[T: Classifiable](x: T) {
     def is[U](implicit classifier: Classifier[T, U]): Boolean = {
@@ -14,5 +13,4 @@ private[meta] trait Api {
   }
 }
 
-private[meta] trait Aliases {
-}
+private[meta] trait Aliases {}

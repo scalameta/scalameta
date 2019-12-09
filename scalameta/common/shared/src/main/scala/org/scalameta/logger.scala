@@ -13,6 +13,7 @@ object FileLine {
 }
 
 object logger {
+
   /** Same as println except includes the file+line number of call-site. */
   def debug(x: Any)(implicit fileLine: FileLine): Unit = {
     println(s"$fileLine $x")
@@ -27,8 +28,8 @@ object logger {
   }
 
   /** Prints out the value with and it's source code representation
-    *
-    * Example: logger.elem(x) // prints "MyFile:24 [x]: 42"
+   *
+   * Example: logger.elem(x) // prints "MyFile:24 [x]: 42"
     **/
   def elem(values: sourcecode.Text[Any]*)(implicit fileLine: FileLine): Unit = {
     values.foreach { t =>

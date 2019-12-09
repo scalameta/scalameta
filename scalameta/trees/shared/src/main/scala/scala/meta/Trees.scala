@@ -22,8 +22,10 @@ import scala.meta.internal.trees._
 
 object Tree extends InternalTreeXtensions {
   implicit def classifiable[T <: Tree]: Classifiable[T] = null
-  implicit def showStructure[T <: Tree]: Structure[T] = scala.meta.internal.prettyprinters.TreeStructure.apply[T]
-  implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] = scala.meta.internal.prettyprinters.TreeSyntax.apply[T](dialect)
+  implicit def showStructure[T <: Tree]: Structure[T] =
+    scala.meta.internal.prettyprinters.TreeStructure.apply[T]
+  implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] =
+    scala.meta.internal.prettyprinters.TreeSyntax.apply[T](dialect)
 }
 
 @branch trait Ref extends Tree
@@ -52,9 +54,9 @@ object Lit {
   // 1.4f.toString == "1.4"               // in JVM
   // See https://www.scala-js.org/doc/semantics.html#tostring-of-float-double-and-unit
   @ast class Double(format: scala.Predef.String) extends Lit { val value = format.toDouble }
-  object Double { def apply(double: scala.Double): Double = Lit.Double(double.toString)  }
+  object Double { def apply(double: scala.Double): Double = Lit.Double(double.toString) }
   @ast class Float(format: scala.Predef.String) extends Lit { val value = format.toFloat }
-  object Float { def apply(float: scala.Float): Float = Lit.Float(float.toString)  }
+  object Float { def apply(float: scala.Float): Float = Lit.Float(float.toString) }
   @ast class Byte(value: scala.Byte) extends Lit
   @ast class Short(value: scala.Short) extends Lit
   @ast class Char(value: scala.Char) extends Lit
@@ -105,8 +107,16 @@ object Term {
   @ast class Try(expr: Term, catchp: List[Case], finallyp: Option[Term]) extends Term
   @ast class TryWithHandler(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
   @ast class Function(params: List[Term.Param], body: Term) extends Term {
-    checkFields(params.forall(param => param.is[Term.Param.Quasi] || (param.name.is[scala.meta.Name.Anonymous] ==> param.default.isEmpty)))
-    checkFields(params.exists(_.is[Term.Param.Quasi]) || params.exists(_.mods.exists(_.is[Mod.Implicit])) ==> (params.length == 1))
+    checkFields(
+      params.forall(param =>
+        param.is[Term.Param.Quasi] || (param.name
+          .is[scala.meta.Name.Anonymous] ==> param.default.isEmpty)
+      )
+    )
+    checkFields(
+      params.exists(_.is[Term.Param.Quasi]) || params
+        .exists(_.mods.exists(_.is[Mod.Implicit])) ==> (params.length == 1)
+    )
   }
   @ast class PartialFunction(cases: List[Case] @nonEmpty) extends Term
   @ast class While(expr: Term, body: Term) extends Term
@@ -122,7 +132,8 @@ object Term {
   @ast class Repeated(expr: Term) extends Term {
     checkParent(ParentChecks.TermRepeated)
   }
-  @ast class Param(mods: List[Mod], name: meta.Name, decltpe: Option[Type], default: Option[Term]) extends Member
+  @ast class Param(mods: List[Mod], name: meta.Name, decltpe: Option[Type], default: Option[Term])
+      extends Member
   def fresh(): Term.Name = fresh("fresh")
   def fresh(prefix: String): Term.Name = Term.Name(prefix + Fresh.nextId())
 }
@@ -173,12 +184,14 @@ object Type {
     checkFields(name.value(0).isLower)
     checkParent(ParentChecks.TypeVar)
   }
-  @ast class Param(mods: List[Mod],
-                   name: meta.Name,
-                   tparams: List[Type.Param],
-                   tbounds: Type.Bounds,
-                   vbounds: List[Type],
-                   cbounds: List[Type]) extends Member
+  @ast class Param(
+      mods: List[Mod],
+      name: meta.Name,
+      tparams: List[Type.Param],
+      tbounds: Type.Bounds,
+      vbounds: List[Type],
+      cbounds: List[Type]
+  ) extends Member
   def fresh(): Type.Name = fresh("fresh")
   def fresh(prefix: String): Type.Name = Type.Name(prefix + Fresh.nextId())
 }
@@ -205,7 +218,8 @@ object Pat {
     checkFields(fun.isExtractor)
   }
   @ast class ExtractInfix(lhs: Pat, op: Term.Name, rhs: List[Pat]) extends Pat
-  @ast class Interpolate(prefix: Term.Name, parts: List[Lit] @nonEmpty, args: List[Pat]) extends Pat {
+  @ast class Interpolate(prefix: Term.Name, parts: List[Lit] @nonEmpty, args: List[Pat])
+      extends Pat {
     checkFields(parts.length == args.length + 1)
   }
   @ast class Xml(parts: List[Lit] @nonEmpty, args: List[Pat]) extends Pat {
@@ -233,76 +247,96 @@ object Member {
 
 @branch trait Decl extends Stat
 object Decl {
-  @ast class Val(mods: List[Mod],
-                 pats: List[Pat] @nonEmpty,
-                 decltpe: scala.meta.Type) extends Decl
-  @ast class Var(mods: List[Mod],
-                 pats: List[Pat] @nonEmpty,
-                 decltpe: scala.meta.Type) extends Decl
-  @ast class Def(mods: List[Mod],
-                 name: Term.Name,
-                 tparams: List[scala.meta.Type.Param],
-                 paramss: List[List[Term.Param]],
-                 decltpe: scala.meta.Type) extends Decl with Member.Term
-  @ast class Type(mods: List[Mod],
-                  name: scala.meta.Type.Name,
-                  tparams: List[scala.meta.Type.Param],
-                  bounds: scala.meta.Type.Bounds) extends Decl with Member.Type
+  @ast class Val(mods: List[Mod], pats: List[Pat] @nonEmpty, decltpe: scala.meta.Type) extends Decl
+  @ast class Var(mods: List[Mod], pats: List[Pat] @nonEmpty, decltpe: scala.meta.Type) extends Decl
+  @ast class Def(
+      mods: List[Mod],
+      name: Term.Name,
+      tparams: List[scala.meta.Type.Param],
+      paramss: List[List[Term.Param]],
+      decltpe: scala.meta.Type
+  ) extends Decl
+      with Member.Term
+  @ast class Type(
+      mods: List[Mod],
+      name: scala.meta.Type.Name,
+      tparams: List[scala.meta.Type.Param],
+      bounds: scala.meta.Type.Bounds
+  ) extends Decl
+      with Member.Type
 }
 
 @branch trait Defn extends Stat
 object Defn {
-  @ast class Val(mods: List[Mod],
-                 pats: List[Pat] @nonEmpty,
-                 decltpe: Option[scala.meta.Type],
-                 rhs: Term) extends Defn {
+  @ast class Val(
+      mods: List[Mod],
+      pats: List[Pat] @nonEmpty,
+      decltpe: Option[scala.meta.Type],
+      rhs: Term
+  ) extends Defn {
     checkFields(pats.forall(!_.is[Term.Name]))
   }
-  @ast class Var(mods: List[Mod],
-                 pats: List[Pat] @nonEmpty,
-                 decltpe: Option[scala.meta.Type],
-                 rhs: Option[Term]) extends Defn {
+  @ast class Var(
+      mods: List[Mod],
+      pats: List[Pat] @nonEmpty,
+      decltpe: Option[scala.meta.Type],
+      rhs: Option[Term]
+  ) extends Defn {
     checkFields(pats.forall(!_.is[Term.Name]))
     checkFields(decltpe.nonEmpty || rhs.nonEmpty)
     checkFields(rhs.isEmpty ==> pats.forall(_.is[Pat.Var]))
   }
-  @ast class Def(mods: List[Mod],
-                 name: Term.Name,
-                 tparams: List[scala.meta.Type.Param],
-                 paramss: List[List[Term.Param]],
-                 decltpe: Option[scala.meta.Type],
-                 body: Term) extends Defn with Member.Term
-  @ast class Macro(mods: List[Mod],
-                   name: Term.Name,
-                   tparams: List[scala.meta.Type.Param],
-                   paramss: List[List[Term.Param]],
-                   decltpe: Option[scala.meta.Type],
-                   body: Term) extends Defn with Member.Term
-  @ast class Type(mods: List[Mod],
-                  name: scala.meta.Type.Name,
-                  tparams: List[scala.meta.Type.Param],
-                  body: scala.meta.Type) extends Defn with Member.Type
-  @ast class Class(mods: List[Mod],
-                   name: scala.meta.Type.Name,
-                   tparams: List[scala.meta.Type.Param],
-                   ctor: Ctor.Primary,
-                   templ: Template) extends Defn with Member.Type
-  @ast class Trait(mods: List[Mod],
-                   name: scala.meta.Type.Name,
-                   tparams: List[scala.meta.Type.Param],
-                   ctor: Ctor.Primary,
-                   templ: Template) extends Defn with Member.Type {
+  @ast class Def(
+      mods: List[Mod],
+      name: Term.Name,
+      tparams: List[scala.meta.Type.Param],
+      paramss: List[List[Term.Param]],
+      decltpe: Option[scala.meta.Type],
+      body: Term
+  ) extends Defn
+      with Member.Term
+  @ast class Macro(
+      mods: List[Mod],
+      name: Term.Name,
+      tparams: List[scala.meta.Type.Param],
+      paramss: List[List[Term.Param]],
+      decltpe: Option[scala.meta.Type],
+      body: Term
+  ) extends Defn
+      with Member.Term
+  @ast class Type(
+      mods: List[Mod],
+      name: scala.meta.Type.Name,
+      tparams: List[scala.meta.Type.Param],
+      body: scala.meta.Type
+  ) extends Defn
+      with Member.Type
+  @ast class Class(
+      mods: List[Mod],
+      name: scala.meta.Type.Name,
+      tparams: List[scala.meta.Type.Param],
+      ctor: Ctor.Primary,
+      templ: Template
+  ) extends Defn
+      with Member.Type
+  @ast class Trait(
+      mods: List[Mod],
+      name: scala.meta.Type.Name,
+      tparams: List[scala.meta.Type.Param],
+      ctor: Ctor.Primary,
+      templ: Template
+  ) extends Defn
+      with Member.Type {
     checkFields(templ.is[Template.Quasi] || templ.stats.forall(!_.is[Ctor]))
   }
-  @ast class Object(mods: List[Mod],
-                    name: Term.Name,
-                    templ: Template) extends Defn with Member.Term {
+  @ast class Object(mods: List[Mod], name: Term.Name, templ: Template)
+      extends Defn
+      with Member.Term {
     checkFields(templ.is[Template.Quasi] || templ.stats.forall(!_.is[Ctor]))
   }
 }
 
-@ast class Pkg(ref: Term.Ref, stats: List[Stat])
-     extends Member.Term with Stat {
+@ast class Pkg(ref: Term.Ref, stats: List[Stat]) extends Member.Term with Stat {
   checkFields(ref.isQualId)
   checkFields(stats.forall(_.isTopLevelStat))
   def name: Term.Name = ref match {
@@ -312,7 +346,8 @@ object Defn {
 }
 object Pkg {
   @ast class Object(mods: List[Mod], name: Term.Name, templ: Template)
-       extends Member.Term with Stat {
+      extends Member.Term
+      with Stat {
     checkFields(templ.is[Template.Quasi] || templ.stats.forall(!_.is[Ctor]))
   }
 }
@@ -322,14 +357,15 @@ object Pkg {
 // "every definition and every reference should carry a name".
 @branch trait Ctor extends Tree with Member
 object Ctor {
-  @ast class Primary(mods: List[Mod],
-                     name: Name,
-                     paramss: List[List[Term.Param]]) extends Ctor
-  @ast class Secondary(mods: List[Mod],
-                       name: Name,
-                       paramss: List[List[Term.Param]] @nonEmpty,
-                       init: Init,
-                       stats: List[Stat]) extends Ctor with Stat {
+  @ast class Primary(mods: List[Mod], name: Name, paramss: List[List[Term.Param]]) extends Ctor
+  @ast class Secondary(
+      mods: List[Mod],
+      name: Name,
+      paramss: List[List[Term.Param]] @nonEmpty,
+      init: Init,
+      stats: List[Stat]
+  ) extends Ctor
+      with Stat {
     checkFields(stats.forall(_.isBlockStat))
   }
 }
@@ -343,10 +379,8 @@ object Ctor {
 
 @ast class Self(name: Name, decltpe: Option[Type]) extends Member
 
-@ast class Template(early: List[Stat],
-                    inits: List[Init],
-                    self: Self,
-                    stats: List[Stat]) extends Tree {
+@ast class Template(early: List[Stat], inits: List[Init], self: Self, stats: List[Stat])
+    extends Tree {
   checkFields(early.forall(_.isEarlyStat && inits.nonEmpty))
   checkFields(stats.forall(_.isTemplateStat))
 }
@@ -428,7 +462,7 @@ package internal.trees {
     def rank: Int
     def tree: Tree
     def pt: Class[_]
-    def become[T <: Quasi : AstInfo]: T
+    def become[T <: Quasi: AstInfo]: T
   }
 
   @registry object All

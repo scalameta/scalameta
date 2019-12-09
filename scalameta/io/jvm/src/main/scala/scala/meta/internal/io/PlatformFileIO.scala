@@ -72,7 +72,8 @@ object PlatformFileIO {
   }
 
   def withJarFileSystem[T](path: AbsolutePath, create: Boolean, close: Boolean = false)(
-      f: AbsolutePath => T): T = {
+      f: AbsolutePath => T
+  ): T = {
     val fs = newJarFileSystem(path, create)
     val root = AbsolutePath(fs.getPath("/"))
     if (create || close) {

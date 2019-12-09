@@ -22,7 +22,8 @@ class SimpleTraverserSuite extends FunSuite {
       }
     }
     traverser(tree0)
-    assert(log.mkString("\n").replace("\r", "") === """
+    assert(
+      log.mkString("\n").replace("\r", "") === """
       |{   def foo(x: x)(x: Int) = x + x   class C(x: x) { def bar(x: x) = ??? } }
       |def foo(x: x)(x: Int) = x + x
       |foo
@@ -52,7 +53,8 @@ class SimpleTraverserSuite extends FunSuite {
       |x
       |x
       |???
-    """.trim.stripMargin)
+    """.trim.stripMargin
+    )
   }
 
   test("Tree.traverse") {
@@ -71,7 +73,7 @@ class SimpleTraverserSuite extends FunSuite {
   test("#1200") {
     var i = 0
     val fn: PartialFunction[Tree, Tree] = {
-      case q"A" if { i += 1; i < 2 } =>  q"B"
+      case q"A" if { i += 1; i < 2 } => q"B"
     }
     q"A".collect(fn)
     i = 0

@@ -24,40 +24,43 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
   def leafHandler(l: Leaf): Tree
   def generatedMethods(cases: List[CaseDef]): Tree
 
-  def impl(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
-    override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
-      val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" = cdef
+  def impl(annottees: Tree*): Tree =
+    annottees.transformAnnottees(new ImplTransformer {
+      override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+        val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" =
+          cdef
 
-      val relevantLeafs = TreeAdt.allLeafs.filter(l => !(l <:< QuasiAdt))
-      val highPriority = List(
-        "Term.Name",
-        "Term.Apply",
-        "Lit",
-        "Type.Name",
-        "Term.Param",
-        "Type.Apply",
-        "Term.ApplyInfix"
-      )
-      val orderedRelevantLeafs = relevantLeafs.sortBy(l => {
-        val idx = highPriority.indexOf(l.prefix)
-        if (idx != -1) idx else highPriority.length
-      })
+        val relevantLeafs = TreeAdt.allLeafs.filter(l => !(l <:< QuasiAdt))
+        val highPriority = List(
+          "Term.Name",
+          "Term.Apply",
+          "Lit",
+          "Type.Name",
+          "Term.Param",
+          "Type.Apply",
+          "Term.ApplyInfix"
+        )
+        val orderedRelevantLeafs = relevantLeafs.sortBy(l => {
+          val idx = highPriority.indexOf(l.prefix)
+          if (idx != -1) idx else highPriority.length
+        })
 
-      val cases = orderedRelevantLeafs.map(l => {
-        val extractor = hygienicRef(l.sym.companion)
-        val binders = l.fields.map(f => pq"${f.name}")
-        val relevantFields = l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
-        cq"tree @ $extractor(..$binders) => ${leafHandler(l)}"
-      })
-      val generatedMethods = TransverserMacros.this.generatedMethods(cases)
+        val cases = orderedRelevantLeafs.map(l => {
+          val extractor = hygienicRef(l.sym.companion)
+          val binders = l.fields.map(f => pq"${f.name}")
+          val relevantFields =
+            l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
+          cq"tree @ $extractor(..$binders) => ${leafHandler(l)}"
+        })
+        val generatedMethods = TransverserMacros.this.generatedMethods(cases)
 
-      val cdef1 = q"""
+        val cdef1 = q"""
         $mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self =>
           ..$stats
           ..$generatedMethods
         }
       """
-      List(cdef1, mdef)
-    }
-  })
+        List(cdef1, mdef)
+      }
+    })
 }

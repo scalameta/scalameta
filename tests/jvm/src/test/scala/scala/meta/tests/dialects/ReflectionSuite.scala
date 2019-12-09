@@ -15,7 +15,8 @@ class ReflectionSuite extends FunSuite {
       "Scala" -> m.dialects.Scala,
       "Sbt" -> m.dialects.Sbt
     )
-    val reflectiveStandards = dialectGetters.map(m => (m.getName, m.invoke(dialects).asInstanceOf[Dialect]))
+    val reflectiveStandards =
+      dialectGetters.map(m => (m.getName, m.invoke(dialects).asInstanceOf[Dialect]))
     val mismatch = reflectiveStandards.toSet -- Dialect.standards.toSet -- aliases
     assert(mismatch.isEmpty)
   }

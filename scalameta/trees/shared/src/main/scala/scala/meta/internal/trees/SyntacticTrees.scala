@@ -14,7 +14,8 @@ object Syntactic {
 
       def unapply(tree: scala.meta.Tree): Option[(scala.meta.Term, List[List[scala.meta.Term]])] = {
         tree match {
-          case scala.meta.Term.Apply(Syntactic.Term.Apply(core, argss), args) => Some((core, argss :+ args))
+          case scala.meta.Term.Apply(Syntactic.Term.Apply(core, argss), args) =>
+            Some((core, argss :+ args))
           case tree: scala.meta.Term => Some((tree, Nil))
           case _ => None
         }

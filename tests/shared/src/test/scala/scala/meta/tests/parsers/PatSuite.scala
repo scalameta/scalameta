@@ -34,15 +34,20 @@ class PatSuite extends ParseSuite {
   }
 
   test("_: F[t]") {
-    val Typed(Wildcard(), Type.Apply(Type.Name("F"), Type.Var(Type.Name("t")) :: Nil)) = pat("_: F[t]")
+    val Typed(Wildcard(), Type.Apply(Type.Name("F"), Type.Var(Type.Name("t")) :: Nil)) =
+      pat("_: F[t]")
   }
 
   test("_: F[_]") {
-    val Typed(Wildcard(), Type.Apply(Type.Name("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)) = pat("_: F[_]")
+    val Typed(
+      Wildcard(),
+      Type.Apply(Type.Name("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
+    ) = pat("_: F[_]")
   }
 
   test("_: (t Map u)") {
-    val Typed(Wildcard(), Type.ApplyInfix(Type.Name("t"), Type.Name("Map"), Type.Name("u"))) = pat("_: (t Map u)")
+    val Typed(Wildcard(), Type.ApplyInfix(Type.Name("t"), Type.Name("Map"), Type.Name("u"))) =
+      pat("_: (t Map u)")
   }
 
   test("_: T Map U") {
@@ -54,7 +59,8 @@ class PatSuite extends ParseSuite {
   }
 
   test("x@(__ : Y)") {
-    val Pat.Bind(Pat.Var(Term.Name("x")), Pat.Typed(Pat.Var(Term.Name("__")), Type.Name("Y"))) = pat("x@(__ : Y)")
+    val Pat.Bind(Pat.Var(Term.Name("x")), Pat.Typed(Pat.Var(Term.Name("__")), Type.Name("Y"))) =
+      pat("x@(__ : Y)")
   }
 
   test("foo(x)") {
@@ -66,11 +72,13 @@ class PatSuite extends ParseSuite {
   }
 
   test("foo(x @ _*)") {
-    val Extract(Term.Name("foo"), Bind(Var(Term.Name("x")), SeqWildcard()) :: Nil) = pat("foo(x @ _*)")
+    val Extract(Term.Name("foo"), Bind(Var(Term.Name("x")), SeqWildcard()) :: Nil) =
+      pat("foo(x @ _*)")
   }
 
   test("a :: b") {
-    val ExtractInfix(Var(Term.Name("a")), Term.Name("::"), Var(Term.Name("b")) :: Nil) = pat("a :: b")
+    val ExtractInfix(Var(Term.Name("a")), Term.Name("::"), Var(Term.Name("b")) :: Nil) =
+      pat("a :: b")
   }
 
   test("a :: ()") {
@@ -95,15 +103,21 @@ class PatSuite extends ParseSuite {
   }
 
   test("foo\"a $b c\"") {
-    val Interpolate(Term.Name("foo"), Lit("a ") :: Lit(" c") :: Nil, Var(Term.Name("b")) :: Nil) = pat("foo\"a $b c\"")
+    val Interpolate(Term.Name("foo"), Lit("a ") :: Lit(" c") :: Nil, Var(Term.Name("b")) :: Nil) =
+      pat("foo\"a $b c\"")
   }
 
   test("foo\"${b @ foo()}\"") {
-    val Interpolate(Term.Name("foo"), Lit("") :: Lit("") :: Nil, Bind(Var(Term.Name("b")), Extract(Term.Name("foo"), Nil)) :: Nil) = pat("foo\"${b @ foo()}\"")
+    val Interpolate(
+      Term.Name("foo"),
+      Lit("") :: Lit("") :: Nil,
+      Bind(Var(Term.Name("b")), Extract(Term.Name("foo"), Nil)) :: Nil
+    ) = pat("foo\"${b @ foo()}\"")
   }
 
   test("$_") {
-    val Pat.Interpolate(Term.Name("q"), List(Lit("x + "), Lit("")), List(Pat.Wildcard())) = pat(""" q"x + $_" """)
+    val Pat.Interpolate(Term.Name("q"), List(Lit("x + "), Lit("")), List(Pat.Wildcard())) =
+      pat(""" q"x + $_" """)
   }
 
   test("#501") {
@@ -115,7 +129,8 @@ class PatSuite extends ParseSuite {
   }
 
   test("<a>{ns @ _*}</a>") {
-    val Pat.Xml(List(Lit("<a>"), Lit("</a>")), List(Bind(Var(Term.Name("ns")), SeqWildcard()))) = pat("<a>{ns @ _*}</a>")
+    val Pat.Xml(List(Lit("<a>"), Lit("</a>")), List(Bind(Var(Term.Name("ns")), SeqWildcard()))) =
+      pat("<a>{ns @ _*}</a>")
   }
 
 }

@@ -1,11 +1,7 @@
 package org.scalameta
 package internal
 
-
-trait MacroHelpers extends DebugFinder
-                      with MacroCompat
-                      with FreeLocalFinder
-                      with ImplTransformers {
+trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder with ImplTransformers {
   import c.universe._
   import definitions._
   import scala.reflect.internal.Flags._
@@ -32,12 +28,14 @@ trait MacroHelpers extends DebugFinder
         case AnnotatedType(anns, _) => anns
         case _ => Nil
       }
-      def hasNonEmpty(anns: List[Annotation]) = anns.exists(_.tree.tpe =:= typeOf[org.scalameta.invariants.nonEmpty])
+      def hasNonEmpty(anns: List[Annotation]) =
+        anns.exists(_.tree.tpe =:= typeOf[org.scalameta.invariants.nonEmpty])
       hasNonEmpty(sym.annotations) || hasNonEmpty(tptAnns)
     }
   }
 
-  lazy val InvariantFailedRaiseMethod = q"${hygienicRef(org.scalameta.invariants.InvariantFailedException)}.raise"
+  lazy val InvariantFailedRaiseMethod =
+    q"${hygienicRef(org.scalameta.invariants.InvariantFailedException)}.raise"
   lazy val InvariantsRequireMethod = q"${hygienicRef(org.scalameta.invariants.`package`)}.require"
   lazy val UnreachableErrorModule = hygienicRef(org.scalameta.UnreachableError)
   lazy val DataAnnotation = tq"_root_.org.scalameta.data.data"
@@ -85,9 +83,10 @@ trait MacroHelpers extends DebugFinder
     val prefix :+ last = fqName.split("\\.").toList
     if (isTerm) q"${loop(prefix)}.${TermName(last)}" else tq"${loop(prefix)}.${TypeName(last)}"
   }
-  def hygienicRef(sym: Symbol): Tree = fqRef("_root_." + sym.fullName, isTerm = sym.isTerm || sym.isModuleClass)
+  def hygienicRef(sym: Symbol): Tree =
+    fqRef("_root_." + sym.fullName, isTerm = sym.isTerm || sym.isModuleClass)
   def hygienicRef[T: TypeTag]: Tree = hygienicRef(symbolOf[T])
-  def hygienicRef[T <: Singleton : TypeTag](x: T): Tree = hygienicRef(symbolOf[T])
+  def hygienicRef[T <: Singleton: TypeTag](x: T): Tree = hygienicRef(symbolOf[T])
 
   def typeRef(cdef: ClassDef, requireHk: Boolean, requireWildcards: Boolean): Tree = {
     if (requireWildcards && requireHk) sys.error("invalid combination of arguments")
@@ -115,9 +114,11 @@ trait MacroHelpers extends DebugFinder
   object PrimitiveTpe {
     def unapply(tpe: Type): Option[Type] = {
       if (tpe =:= typeOf[String] ||
-          tpe =:= typeOf[scala.Symbol] ||
-          ScalaPrimitiveValueClasses.contains(tpe.typeSymbol)) Some(tpe)
-      else if (tpe.typeSymbol == definitions.OptionClass && PrimitiveTpe.unapply(tpe.typeArgs.head).nonEmpty) Some(tpe)
+        tpe =:= typeOf[scala.Symbol] ||
+        ScalaPrimitiveValueClasses.contains(tpe.typeSymbol)) Some(tpe)
+      else if (tpe.typeSymbol == definitions.OptionClass && PrimitiveTpe
+          .unapply(tpe.typeArgs.head)
+          .nonEmpty) Some(tpe)
       else if (tpe.typeSymbol == definitions.ClassClass) Some(tpe)
       else None
     }

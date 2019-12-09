@@ -48,7 +48,8 @@ object secret {
       try {
         import scala.xml._
         val settings = XML.loadFile(credentialsFile)
-        def readServerConfig(key: String) = (settings \\ "settings" \\ "servers" \\ "server" \\ key).head.text
+        def readServerConfig(key: String) =
+          (settings \\ "settings" \\ "servers" \\ "server" \\ key).head.text
         Some((readServerConfig("username"), readServerConfig("password")))
       } catch {
         case ex: Exception => None
@@ -67,8 +68,10 @@ object secret {
 object temp {
   def mkdir(): File = {
     val temp = File.createTempFile("temp", System.nanoTime.toString)
-    if (!temp.delete) sys.error("failed to create a temporary directory: can't delete " + temp.getAbsolutePath)
-    if (!temp.mkdir) sys.error("failed to create a temporary directory: can't mkdir " + temp.getAbsolutePath)
+    if (!temp.delete)
+      sys.error("failed to create a temporary directory: can't delete " + temp.getAbsolutePath)
+    if (!temp.mkdir)
+      sys.error("failed to create a temporary directory: can't mkdir " + temp.getAbsolutePath)
     temp
   }
 }
@@ -126,7 +129,8 @@ object git {
   }
 
   def distance(from: String, to: String): Int = {
-    def ncommits(ref: String) = shell.check_output(s"git rev-list $ref --count", cwd = ".").trim.toInt
+    def ncommits(ref: String) =
+      shell.check_output(s"git rev-list $ref --count", cwd = ".").trim.toInt
     ncommits(to) - ncommits(from)
   }
 
@@ -134,4 +138,3 @@ object git {
     shell.check_output("git rev-parse HEAD", cwd = ".").trim
   }
 }
-

@@ -10,8 +10,8 @@ import scala.meta._
 import org.scalatest.FunSuite
 
 /**
-  * Test for [[ScaladocParser]]
-  */
+ * Test for [[ScaladocParser]]
+ */
 class ScaladocParserSuite extends FunSuite {
 
   private[this] def parseString(commentCode: String): Option[List[DocToken]] = {

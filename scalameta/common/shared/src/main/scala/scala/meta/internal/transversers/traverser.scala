@@ -14,7 +14,8 @@ class TraverserMacros(val c: Context) extends TransverserMacros {
   import c.universe._
 
   def leafHandler(l: Leaf): Tree = {
-    val relevantFields = l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && PrimitiveTpe.unapply(f.tpe).isEmpty)
+    val relevantFields =
+      l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && PrimitiveTpe.unapply(f.tpe).isEmpty)
     val recursiveTraversals = relevantFields.map(f => q"this.apply(${f.name})")
     q"..$recursiveTraversals"
   }

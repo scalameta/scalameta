@@ -46,7 +46,9 @@ class PositionSuite extends ParseSuite {
   test("#331") {
     val tree = caseClause("foo if bar || baz => ")
     val cond = tree.children(1)
-    assert(cond.tokens.structure == "Tokens(bar [7..10),   [10..11), || [11..13),   [13..14), baz [14..17))")
+    assert(
+      cond.tokens.structure == "Tokens(bar [7..10),   [10..11), || [11..13),   [13..14), baz [14..17))"
+    )
   }
   test("a + b + c") {
     val tree = term("a + b + c")

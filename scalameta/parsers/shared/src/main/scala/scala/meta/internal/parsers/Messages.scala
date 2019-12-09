@@ -15,8 +15,8 @@ object Messages {
 
   def QuasiquoteAdjacentEllipsesInPattern(rank: Int): String = {
     val hint = {
-      "Note that you can extract a list into an unquote when pattern matching," + EOL+
-      "it just cannot follow another list either directly or indirectly."
+      "Note that you can extract a list into an unquote when pattern matching," + EOL +
+        "it just cannot follow another list either directly or indirectly."
     }
     QuasiquoteRankMismatch(rank, rank - 1, hint)
   }
@@ -25,7 +25,8 @@ object Messages {
     s"illegal combination of modifiers: $mod1 and $mod2"
 
   val InvalidSealed = "`sealed' modifier can be used only for classes"
-  val InvalidImplicit ="`implicit' modifier can be used only for values, variables, methods and classes"
+  val InvalidImplicit =
+    "`implicit' modifier can be used only for values, variables, methods and classes"
   val InvalidImplicitTrait = "traits cannot be implicit"
   val InvalidImplicitClass = "classes cannot be implicit"
   val InvalidAbstract = "`abstract' modifier can be used only for classes"

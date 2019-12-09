@@ -110,7 +110,7 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
   // Import
   check[Import]("import →a.b←")
   check[Import]("import →a.b←, →c.d←")
-  check[Importer, Import]("import →a←.→_←")          // Wildcard
+  check[Importer, Import]("import →a←.→_←") // Wildcard
   check[Importer, Import]("import →a←.{ →b←, →c← }") // Name
   check[Importer, Import]("import →a←.{ →b => c← }") // Rename
   check[Importer, Import]("import →a←.{ →b => _← }") // Unimport

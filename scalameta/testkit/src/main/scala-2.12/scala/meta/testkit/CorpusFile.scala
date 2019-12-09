@@ -3,11 +3,11 @@ package scala.meta.testkit
 import java.io.File
 
 /** A Scala source file taken from some Github repo
-  *
-  * @param filename Path to the file relative to the "target/repos" root directory.
-  * @param projectUrl The url of the Github project containing this source file.
-  * @param commit The commit has at where this ScalaFile originates from.
-  */
+ *
+ * @param filename Path to the file relative to the "target/repos" root directory.
+ * @param projectUrl The url of the Github project containing this source file.
+ * @param commit The commit has at where this ScalaFile originates from.
+ */
 case class CorpusFile(filename: String, projectUrl: String, commit: String) {
 
   /** Github "raw" url for this ScalaFile */

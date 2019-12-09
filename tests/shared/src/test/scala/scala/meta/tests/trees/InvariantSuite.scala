@@ -9,11 +9,19 @@ import scala.meta.dialects.Scala211
 class InvariantSuite extends FunSuite {
   test("secondary constructors in templates") {
     val primaryCtor = Ctor.Primary(Nil, Name.Anonymous(), Nil)
-    val secondaryCtor = Ctor.Secondary(Nil, Name.Anonymous(), List(List()), Init(Type.Singleton(Term.This(Name.Anonymous())), Name.Anonymous(), Nil), Nil)
+    val secondaryCtor = Ctor.Secondary(
+      Nil,
+      Name.Anonymous(),
+      List(List()),
+      Init(Type.Singleton(Term.This(Name.Anonymous())), Name.Anonymous(), Nil),
+      Nil
+    )
     val stats = List(secondaryCtor)
     val template = Template(Nil, Nil, Self(Name.Anonymous(), None), stats)
     Defn.Class(Nil, Type.Name("test"), Nil, primaryCtor, template)
-    intercept[InvariantFailedException] { Defn.Trait(Nil, Type.Name("test"), Nil, primaryCtor, template) }
+    intercept[InvariantFailedException] {
+      Defn.Trait(Nil, Type.Name("test"), Nil, primaryCtor, template)
+    }
     intercept[InvariantFailedException] { Defn.Object(Nil, Term.Name("test"), template) }
     intercept[InvariantFailedException] { Pkg(Term.Name("test"), stats) }
     intercept[InvariantFailedException] { Pkg.Object(Nil, Term.Name("test"), template) }

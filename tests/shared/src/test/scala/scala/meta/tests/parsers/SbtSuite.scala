@@ -14,7 +14,7 @@ class SbtSuite extends FunSuite {
   }
 
   test("\"...\".parse[Stat]") {
-    intercept[ParseException]{ simpleBuildSyntax.parse[Stat].get }
+    intercept[ParseException] { simpleBuildSyntax.parse[Stat].get }
   }
 
   test("source\"...\"") {
@@ -32,10 +32,12 @@ class SbtSuite extends FunSuite {
         )
     """
     // NOTE: not checking against simpleBuildSyntax because quasiquotes don't retain tokens
-    assert(tree.syntax === """
+    assert(
+      tree.syntax === """
       |lazy val commonSettings = Seq(organization := "com.example", version := "0.1.0", scalaVersion := "2.11.7")
       |lazy val root = (project in file(".")).settings(commonSettings: _*).settings(name := "hello")
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    """.trim.stripMargin.split('\n').mkString(EOL)
+    )
     assert(tree.structure === simpleBuildStructure)
   }
 

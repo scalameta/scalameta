@@ -26,7 +26,8 @@ class PrintSuite extends FunSuite with DiffAssertions {
       name: String,
       original: String,
       expected: String,
-      fn: s.TextDocument => Unit): Unit = {
+      fn: s.TextDocument => Unit
+  ): Unit = {
     test(name) {
       val wrapped =
         s"""
@@ -83,21 +84,29 @@ $original
   }
 
   def checkSynthetics(original: String, expected: String): Unit = {
-    checkDocument("synthetic - " + original, original, expected, { doc =>
-      val obtained = doc.synthetics.map { synthetic =>
-        Print.synthetic(Format.Compact, doc, synthetic, printerSymtab)
+    checkDocument(
+      "synthetic - " + original,
+      original,
+      expected, { doc =>
+        val obtained = doc.synthetics.map { synthetic =>
+          Print.synthetic(Format.Compact, doc, synthetic, printerSymtab)
+        }
+        assertNoDiffOrPrintExpected(obtained.mkString("\n"), expected)
       }
-      assertNoDiffOrPrintExpected(obtained.mkString("\n"), expected)
-    })
+    )
   }
 
   def checkTrees(original: String, expected: String): Unit = {
-    checkDocument("trees - " + original, original, expected, { doc =>
-      val obtained = doc.synthetics.map { synthetic =>
-        Print.tree(Format.Compact, doc, synthetic.tree, printerSymtab)
+    checkDocument(
+      "trees - " + original,
+      original,
+      expected, { doc =>
+        val obtained = doc.synthetics.map { synthetic =>
+          Print.tree(Format.Compact, doc, synthetic.tree, printerSymtab)
+        }
+        assertNoDiffOrPrintExpected(obtained.mkString("\n"), expected)
       }
-      assertNoDiffOrPrintExpected(obtained.mkString("\n"), expected)
-    })
+    )
   }
 
   checkType("java/io/ByteArrayOutputStream#buf.", "Array[Byte]")

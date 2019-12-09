@@ -48,7 +48,8 @@ object Position {
         startLine: Int,
         startColumn: Int,
         endLine: Int,
-        endColumn: Int): Position.Range = {
+        endColumn: Int
+    ): Position.Range = {
       val inputEnd = Position.Range(input, input.chars.length, input.chars.length)
       def lineLength(line: Int): Int = {
         val isLastLine = line == inputEnd.startLine

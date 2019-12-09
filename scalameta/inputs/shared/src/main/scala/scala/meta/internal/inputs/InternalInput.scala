@@ -11,7 +11,7 @@ import scala.meta.internal.tokenizers.Compat
 trait InternalInput {
   self: Input =>
 
-  private [meta] lazy val tokenCache: mutable.Map[Dialect, Tokens] =
+  private[meta] lazy val tokenCache: mutable.Map[Dialect, Tokens] =
     Compat.newMutableMap[Dialect, Tokens]
 
   // NOTE: It's regrettable that we need to taint the pure abstraction of Input.
@@ -33,7 +33,8 @@ trait InternalInput {
   private[meta] def lineToOffset(line: Int): Int = {
     // NOTE: The length-1 part is not a typo, it's to accommodate the sentinel value.
     if (!(0 <= line && line <= cachedLineIndices.length - 1)) {
-      val message = s"$line is not a valid line number, allowed [0..${cachedLineIndices.length - 1}]"
+      val message =
+        s"$line is not a valid line number, allowed [0..${cachedLineIndices.length - 1}]"
       throw new IllegalArgumentException(message)
     }
     cachedLineIndices(line)

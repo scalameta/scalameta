@@ -736,4 +736,3 @@ class ErrorSuite extends FunSuite {
     """.trim.stripMargin)
   }
 }
-

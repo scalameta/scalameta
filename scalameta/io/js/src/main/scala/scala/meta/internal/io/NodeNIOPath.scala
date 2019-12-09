@@ -18,7 +18,8 @@ case class NodeNIOPath(filename: String) extends Path {
       filename
         .split(escapedSeparator)
         .slice(adjustIndex(beginIndex), adjustIndex(endIndex))
-        .mkString)
+        .mkString
+    )
   override def toFile: File =
     new File(filename)
   override def isAbsolute: Boolean =
@@ -29,7 +30,8 @@ case class NodeNIOPath(filename: String) extends Path {
       filename
         .split(escapedSeparator)
         .lift(adjustIndex(index))
-        .getOrElse(throw new IllegalArgumentException))
+        .getOrElse(throw new IllegalArgumentException)
+    )
   override def getParent: Path =
     NodeNIOPath(JSPath.dirname(filename))
   override def toAbsolutePath: Path =

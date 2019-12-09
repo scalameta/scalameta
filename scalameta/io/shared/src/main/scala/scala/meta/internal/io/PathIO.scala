@@ -28,17 +28,17 @@ object PathIO {
   }
 
   /** Returns the parent directory of the absolute string path
-    *
-    * Examples:
-    *
-    * {{{
-    *   dirname("/a/b/") == "/a/"
-    *   dirname("/a/b") == "/a/"
-    *   dirname("/") == "/"
-    * }}}
-    *
-    * @param abspath a string path that matches the syntax of ZipFile entries.
-    */
+   *
+   * Examples:
+   *
+   * {{{
+   *   dirname("/a/b/") == "/a/"
+   *   dirname("/a/b") == "/a/"
+   *   dirname("/") == "/"
+   * }}}
+   *
+   * @param abspath a string path that matches the syntax of ZipFile entries.
+   */
   def dirname(abspath: String): String = {
     val isDir = abspath.endsWith("/")
     val end =
@@ -49,17 +49,17 @@ object PathIO {
   }
 
   /** Returns the name of top-level file or directory of the absolute string path
-    *
-    * Examples:
-    *
-    * {{{
-    *   basename("/a/b/") == "b"
-    *   basename("/a/b") == "b"
-    *   basename("/") == ""
-    * }}}
-    *
-    * @param abspath a string path that matches the syntax of ZipFile entries.
-    */
+   *
+   * Examples:
+   *
+   * {{{
+   *   basename("/a/b/") == "b"
+   *   basename("/a/b") == "b"
+   *   basename("/") == ""
+   * }}}
+   *
+   * @param abspath a string path that matches the syntax of ZipFile entries.
+   */
   def basename(abspath: String): String = {
     val end = abspath.lastIndexOf('/')
     val isDir = end == abspath.length - 1

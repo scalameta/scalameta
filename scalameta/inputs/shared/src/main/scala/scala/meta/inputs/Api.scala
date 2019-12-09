@@ -1,7 +1,6 @@
 package scala.meta.inputs
 
-private[meta] trait Api {
-}
+private[meta] trait Api {}
 
 private[meta] trait Aliases {
   type Input = scala.meta.inputs.Input

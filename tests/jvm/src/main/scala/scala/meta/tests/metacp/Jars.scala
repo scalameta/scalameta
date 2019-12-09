@@ -7,7 +7,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.meta.AbsolutePath
 
 case class ModuleID(organization: String, name: String, version: String) {
-  def toCoursier: Dependency = Dependency(Module(Organization(organization), ModuleName(name)), version)
+  def toCoursier: Dependency =
+    Dependency(Module(Organization(organization), ModuleName(name)), version)
   override def toString: String = s"$organization:$name:$version"
 }
 object ModuleID {

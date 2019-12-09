@@ -17,7 +17,6 @@ object PlatformTokenizerCache {
     new juc.ConcurrentHashMap[Dialect, mutable.Map[Input, Tokens]]()
   val miniCacheSyncRoot = new Object
   def newUnsyncResult: mutable.Map[Input, Tokens] = mutable.WeakHashMap.empty[Input, Tokens]
-  def putIfAbsent(dialect: Dialect,
-                  cache: mutable.Map[Input, Tokens]): mutable.Map[Input, Tokens] =
+  def putIfAbsent(dialect: Dialect, cache: mutable.Map[Input, Tokens]): mutable.Map[Input, Tokens] =
     megaCache.putIfAbsent(dialect, cache)
 }

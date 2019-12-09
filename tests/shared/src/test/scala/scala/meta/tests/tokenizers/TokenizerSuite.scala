@@ -9,7 +9,11 @@ import scala.meta.dialects.Scala211
 class TokenizerSuite extends BaseTokenizerSuite {
 
   test("showCode without comments - simple") {
-    assert(tokenize("class C  {\t val x = 2}\n\n").map(_.syntax).mkString === "class C  {\t val x = 2}\n\n")
+    assert(
+      tokenize("class C  {\t val x = 2}\n\n")
+        .map(_.syntax)
+        .mkString === "class C  {\t val x = 2}\n\n"
+    )
   }
 
   test("showcode without comments - hard") {
@@ -107,7 +111,11 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("showCode with comments - easy") {
-    assert(tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n").map(_.syntax).mkString === "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n")
+    assert(
+      tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n")
+        .map(_.syntax)
+        .mkString === "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n"
+    )
   }
 
   test("showCode with comments - tricky") {
@@ -140,7 +148,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("showRaw without comments - hard") {
-    assert(tokenize("""
+    assert(
+      tokenize("""
       |class C {
       |  val x1a = 2
       |  val x1b = 0x002
@@ -170,7 +179,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |  val hello = 42
       |  val `world` = 42
       |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.structure).mkString("\n") === """
+    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+        .map(_.structure)
+        .mkString("\n") === """
       |BOF [0..0)
       |class [0..5)
       |  [5..6)
@@ -450,11 +461,13 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |\n [470..471)
       |} [471..472)
       |EOF [472..472)
-    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")
+    )
   }
 
   test("showRaw without comments - insane") {
-    assert(tokenize("""
+    assert(
+      tokenize("""
       |class C {
       |  q""
       |  q"$b + 2"
@@ -467,7 +480,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |  qQQQclass $YQQQ
       |  qQQQclass ${Y}QQQ
       |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.structure).mkString("\n") === """
+    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+        .map(_.structure)
+        .mkString("\n") === """
       |BOF [0..0)
       |class [0..5)
       |  [5..6)
@@ -587,11 +602,15 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |\n [153..154)
       |} [154..155)
       |EOF [155..155)
-    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")
+    )
   }
 
   test("showRaw with comments - easy") {
-    assert(tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n").map(_.structure).mkString("\n") === """
+    assert(
+      tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n")
+        .map(_.structure)
+        .mkString("\n") === """
       |BOF [0..0)
       |class [0..5)
       |  [5..6)
@@ -614,7 +633,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |//bye-bye world [38..53)
       |\n [53..54)
       |EOF [54..54)
-    """.trim.stripMargin)
+    """.trim.stripMargin
+    )
   }
 
   test("showRaw with comments - tricky") {
@@ -768,7 +788,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |x [4..5)
       |EOF [5..5)
     """.trim.stripMargin)
-    assert(tokenize("for (x <- xs) println(x)").map(_.structure).mkString("\n") === """
+    assert(
+      tokenize("for (x <- xs) println(x)").map(_.structure).mkString("\n") === """
       |BOF [0..0)
       |for [0..3)
       |  [3..4)
@@ -785,7 +806,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |x [22..23)
       |) [23..24)
       |EOF [24..24)
-    """.trim.stripMargin)
+    """.trim.stripMargin
+    )
     assert(tokenize("for (x ← xs) println(x)").map(_.structure).mkString("\n") === """
       |BOF [0..0)
       |for [0..3)
@@ -839,13 +861,17 @@ class TokenizerSuite extends BaseTokenizerSuite {
   test("parsed trees don't have BOF/EOF in their tokens") {
     val tree = "foo + bar".parse[Term].get
     assert(tree.pos != Position.None)
-    assert(tree.tokens.structure === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))")
+    assert(
+      tree.tokens.structure === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))"
+    )
   }
 
   test("synthetic trees don't have BOF/EOF in their tokens") {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
     assert(tree.pos == Position.None)
-    assert(tree.tokens.structure === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))")
+    assert(
+      tree.tokens.structure === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))"
+    )
   }
 
   test("Ident.value for normal") {
@@ -879,7 +905,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("Interpolated tree parsed succesfully with unix newline") {
-    val Tokens(bof, _, _, _, part: Interpolation.Part, _, lf: LF, eof) = (""" q"foo"""" + "\n").tokenize.get
+    val Tokens(bof, _, _, _, part: Interpolation.Part, _, lf: LF, eof) =
+      (""" q"foo"""" + "\n").tokenize.get
     assert(part.value === "foo")
     assert(lf.syntax === "\n")
   }
@@ -927,7 +954,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
     assert(dialects.Scala212("1_024").tokenize.isInstanceOf[Tokenized.Error])
 
-    val intConstant = dialects.Scala213(" 1_000_000 ").tokenize.get(2).asInstanceOf[Token.Constant.Int]
+    val intConstant =
+      dialects.Scala213(" 1_000_000 ").tokenize.get(2).asInstanceOf[Token.Constant.Int]
     assert(intConstant.pos.text == "1_000_000") // assert token position includes underscores
     assert(intConstant.value == BigInt(1000000))
   }

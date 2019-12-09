@@ -18,7 +18,8 @@ class TreeOpsSuite extends FunSuite {
           "Term.Name(\"x\")",
           "Pat.Var(Term.Name(\"x\"))",
           "Defn.Val(Nil, List(Pat.Var(Term.Name(\"x\"))), None, Lit.Int(2))"
-        ))
+        )
+    )
   }
 
   test("ancestors") {

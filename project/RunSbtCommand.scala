@@ -20,7 +20,8 @@ object RunSbtCommand {
       }
       nextState.remainingCommands.toList match {
         case Nil => nextState.copy(remainingCommands = initState.remainingCommands)
-        case FailureCommand :: tail => nextState.copy(remainingCommands = FailureCommand +: initState.remainingCommands)
+        case FailureCommand :: tail =>
+          nextState.copy(remainingCommands = FailureCommand +: initState.remainingCommands)
         case head :: tail => runCommand(head, nextState.copy(remainingCommands = tail))
       }
     }

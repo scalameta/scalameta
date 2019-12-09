@@ -18,12 +18,13 @@ object Paths {
   }
 
   def get(uri: URI): Path = {
-    if(uri.getScheme != "file") throw new IllegalArgumentException("only file: URIs are supported")
+    if (uri.getScheme != "file") throw new IllegalArgumentException("only file: URIs are supported")
     val uripath = uri.getPath
     val parts = uripath.split('/').toList
     val (leading, trailing) = parts.span(_ == "")
     trailing match {
-      case drive :: path if (drive.length == 2 && drive(1) == ':') => NodeNIOPath(trailing.mkString("\\"))
+      case drive :: path if (drive.length == 2 && drive(1) == ':') =>
+        NodeNIOPath(trailing.mkString("\\"))
       case _ => NodeNIOPath(uripath)
     }
   }

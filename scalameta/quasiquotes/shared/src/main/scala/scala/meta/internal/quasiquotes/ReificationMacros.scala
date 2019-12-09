@@ -40,7 +40,8 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
   }
   object Mode {
     case class Term(multiline: Boolean, holes: List[Hole]) extends Mode
-    case class Pattern(multiline: Boolean, holes: List[Hole], unapplySelector: ReflectTree) extends Mode
+    case class Pattern(multiline: Boolean, holes: List[Hole], unapplySelector: ReflectTree)
+        extends Mode
   }
 
   import definitions._
@@ -84,7 +85,10 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         }
       } catch {
         case ex: Exception =>
-          c.abort(c.macroApplication.pos, s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}")
+          c.abort(
+            c.macroApplication.pos,
+            s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}"
+          )
       }
     }
     val metaInput = {
@@ -135,11 +139,15 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       }
       val standardDialectReference = instantiateStandardDialect(dialectTree.symbol) // allow `scala.meta.dialects.Scala211`
       val standardDialectSingleton = instantiateStandardDialect(dialectTree.tpe.termSymbol) // allow `scala.meta.Dialect.current`
-      standardDialectReference.orElse(standardDialectSingleton).getOrElse({
-        val suggestion = s"to fix this, import something from scala.meta.dialects, e.g. scala.meta.dialects.${Dialect.current}"
-        val message = s"$dialectTree of type ${dialectTree.tpe} is not supported by quasiquotes ($suggestion)"
-        c.abort(c.enclosingPosition, message)
-      })
+      standardDialectReference
+        .orElse(standardDialectSingleton)
+        .getOrElse({
+          val suggestion =
+            s"to fix this, import something from scala.meta.dialects, e.g. scala.meta.dialects.${Dialect.current}"
+          val message =
+            s"$dialectTree of type ${dialectTree.tpe} is not supported by quasiquotes ($suggestion)"
+          c.abort(c.enclosingPosition, message)
+        })
     }
     if (mode.isTerm) dialects.QuasiquoteTerm(underlyingDialect, mode.multiline)
     else dialects.QuasiquotePat(underlyingDialect, mode.multiline)
@@ -147,11 +155,13 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
 
   private def instantiateParser(interpolator: ReflectSymbol): MetaParser = {
     val parserModule = interpolator.owner.owner.companion
-    val parsersModuleClass = Class.forName("scala.meta.quasiquotes.package$", true, this.getClass.getClassLoader)
+    val parsersModuleClass =
+      Class.forName("scala.meta.quasiquotes.package$", true, this.getClass.getClassLoader)
     val parsersModule = parsersModuleClass.getField("MODULE$").get(null)
     val parserModuleGetter = parsersModule.getClass.getDeclaredMethod(parserModule.name.toString)
     val parserModuleInstance = parserModuleGetter.invoke(parsersModule)
-    val parserMethod = parserModuleInstance.getClass.getDeclaredMethods().find(_.getName == "parse").head
+    val parserMethod =
+      parserModuleInstance.getClass.getDeclaredMethods().find(_.getName == "parse").head
     (input: Input, dialect: Dialect) => {
       try parserMethod.invoke(parserModuleInstance, input, dialect).asInstanceOf[MetaTree]
       catch { case ex: java.lang.reflect.InvocationTargetException => throw ex.getTargetException }
@@ -206,8 +216,11 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     implicit class XtensionQuasiHole(quasi: Quasi) {
       def hole: Hole = {
         val pos = quasi.pos.absolutize
-        val maybeHole = mode.holes.find(h => pos.start <= h.arg.pos.point && h.arg.pos.point <= pos.end)
-        maybeHole.getOrElse(unreachable(debug(quasi, quasi.pos.absolutize, mode.holes, mode.holes.map(_.arg.pos))))
+        val maybeHole =
+          mode.holes.find(h => pos.start <= h.arg.pos.point && h.arg.pos.point <= pos.end)
+        maybeHole.getOrElse(
+          unreachable(debug(quasi, quasi.pos.absolutize, mode.holes, mode.holes.map(_.arg.pos)))
+        )
       }
     }
     object Lifts {
@@ -222,50 +235,61 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         }
       }
       def liftTrees(trees: List[MetaTree]): ReflectTree = {
-        def loop(trees: List[MetaTree], acc: ReflectTree, prefix: List[MetaTree]): ReflectTree = trees match {
-          case (quasi: Quasi) +: rest if quasi.rank == 1 =>
-            if (acc.isEmpty) {
-              if (prefix.isEmpty) loop(rest, liftQuasi(quasi), Nil)
-              else loop(rest, prefix.foldRight(acc)((curr, acc) => {
-                // NOTE: We cannot do just q"${liftTree(curr)} +: ${liftQuasi(quasi)}"
-                // because that creates a synthetic temp variable that doesn't make any sense in a pattern.
-                // Neither can we do q"${liftQuasi(quasi)}.+:(${liftTree(curr)})",
-                // because that still wouldn't work in pattern mode.
-                // Finally, we can't do something like q"+:(${liftQuasi(quasi)}, (${liftTree(curr)}))",
-                // because would violate evaluation order guarantees that we must keep.
-                val currElement = liftTree(curr)
-                val alreadyLiftedList = acc.orElse(liftQuasi(quasi))
-                if (mode.isTerm) q"$currElement +: $alreadyLiftedList"
-                else pq"$currElement +: $alreadyLiftedList"
-              }), Nil)
-            } else {
-              require(prefix.isEmpty && debug(trees, acc, prefix))
-              if (mode.isTerm) loop(rest, q"$acc ++ ${liftQuasi(quasi)}", Nil)
-              else c.abort(quasi.pos, Messages.QuasiquoteAdjacentEllipsesInPattern(quasi.rank))
-            }
-          case other +: rest =>
-            if (acc.isEmpty) loop(rest, acc, prefix :+ other)
-            else {
-              require(prefix.isEmpty && debug(trees, acc, prefix))
-              if (mode.isTerm) loop(rest, q"$acc :+ ${liftTree(other)}", Nil)
-              else loop(rest, pq"$acc :+ ${liftTree(other)}", Nil)
-            }
-          case Nil =>
-            // NOTE: Luckily, at least this quasiquote works fine both in term and pattern modes
-            if (acc.isEmpty) q"$ListModule(..${prefix.map(liftTree)})"
-            else acc
-        }
+        def loop(trees: List[MetaTree], acc: ReflectTree, prefix: List[MetaTree]): ReflectTree =
+          trees match {
+            case (quasi: Quasi) +: rest if quasi.rank == 1 =>
+              if (acc.isEmpty) {
+                if (prefix.isEmpty) loop(rest, liftQuasi(quasi), Nil)
+                else
+                  loop(
+                    rest,
+                    prefix.foldRight(acc)((curr, acc) => {
+                      // NOTE: We cannot do just q"${liftTree(curr)} +: ${liftQuasi(quasi)}"
+                      // because that creates a synthetic temp variable that doesn't make any sense in a pattern.
+                      // Neither can we do q"${liftQuasi(quasi)}.+:(${liftTree(curr)})",
+                      // because that still wouldn't work in pattern mode.
+                      // Finally, we can't do something like q"+:(${liftQuasi(quasi)}, (${liftTree(curr)}))",
+                      // because would violate evaluation order guarantees that we must keep.
+                      val currElement = liftTree(curr)
+                      val alreadyLiftedList = acc.orElse(liftQuasi(quasi))
+                      if (mode.isTerm) q"$currElement +: $alreadyLiftedList"
+                      else pq"$currElement +: $alreadyLiftedList"
+                    }),
+                    Nil
+                  )
+              } else {
+                require(prefix.isEmpty && debug(trees, acc, prefix))
+                if (mode.isTerm) loop(rest, q"$acc ++ ${liftQuasi(quasi)}", Nil)
+                else c.abort(quasi.pos, Messages.QuasiquoteAdjacentEllipsesInPattern(quasi.rank))
+              }
+            case other +: rest =>
+              if (acc.isEmpty) loop(rest, acc, prefix :+ other)
+              else {
+                require(prefix.isEmpty && debug(trees, acc, prefix))
+                if (mode.isTerm) loop(rest, q"$acc :+ ${liftTree(other)}", Nil)
+                else loop(rest, pq"$acc :+ ${liftTree(other)}", Nil)
+              }
+            case Nil =>
+              // NOTE: Luckily, at least this quasiquote works fine both in term and pattern modes
+              if (acc.isEmpty) q"$ListModule(..${prefix.map(liftTree)})"
+              else acc
+          }
         loop(trees.toList, EmptyTree, Nil)
       }
       def liftTreess(treess: List[List[MetaTree]]): ReflectTree = {
-        val tripleDotQuasis = treess.flatten.collect{ case quasi: Quasi if quasi.rank == 2 => quasi }
+        val tripleDotQuasis = treess.flatten.collect {
+          case quasi: Quasi if quasi.rank == 2 => quasi
+        }
         if (tripleDotQuasis.length == 0) {
           Liftable.liftList[List[MetaTree]](Liftables.liftableSubTrees).apply(treess.toList)
         } else if (tripleDotQuasis.length == 1) {
           if (treess.flatten.length == 1) liftQuasi(tripleDotQuasis(0))
-          else c.abort(tripleDotQuasis(0).pos,
-            "implementation restriction: can't mix ...$ with anything else in parameter lists." + EOL +
-            "See https://github.com/scalameta/scalameta/issues/406 for details.")
+          else
+            c.abort(
+              tripleDotQuasis(0).pos,
+              "implementation restriction: can't mix ...$ with anything else in parameter lists." + EOL +
+                "See https://github.com/scalameta/scalameta/issues/406 for details."
+            )
         } else {
           c.abort(tripleDotQuasis(1).pos, Messages.QuasiquoteAdjacentEllipsesInPattern(2))
         }
@@ -295,7 +319,8 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
                   case pq"$_: $explicitPt" => explicitPt
                   case _ => TypeTree(inferredPt)
                 }
-                hole.reifier = atPos(quasi.pos)(q"$InternalUnlift.unapply[$unliftedPt](${hole.name})")
+                hole.reifier =
+                  atPos(quasi.pos)(q"$InternalUnlift.unapply[$unliftedPt](${hole.name})")
                 pq"${hole.name}"
             }
             atPos(quasi.pos)(lifted)
@@ -313,10 +338,14 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     object Liftables {
       // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
       // but that would bloat the code significantly with duplicated instances for denotations and sigmas
-      implicit def liftableSubTree[T <: MetaTree]: Liftable[T] = Liftable((tree: T) => materializeAst[MetaTree].apply(tree))
-      implicit def liftableSubTrees[T <:MetaTree]: Liftable[List[T]] = Liftable((trees: List[T]) => Lifts.liftTrees(trees))
-      implicit def liftableSubTreess[T <: MetaTree]: Liftable[List[List[T]]] = Liftable((treess: List[List[T]]) => Lifts.liftTreess(treess))
-      implicit def liftableOptionSubTree[T <: MetaTree]: Liftable[Option[T]] = Liftable((x: Option[T]) => Lifts.liftOptionTree(x))
+      implicit def liftableSubTree[T <: MetaTree]: Liftable[T] =
+        Liftable((tree: T) => materializeAst[MetaTree].apply(tree))
+      implicit def liftableSubTrees[T <: MetaTree]: Liftable[List[T]] =
+        Liftable((trees: List[T]) => Lifts.liftTrees(trees))
+      implicit def liftableSubTreess[T <: MetaTree]: Liftable[List[List[T]]] =
+        Liftable((treess: List[List[T]]) => Lifts.liftTreess(treess))
+      implicit def liftableOptionSubTree[T <: MetaTree]: Liftable[Option[T]] =
+        Liftable((x: Option[T]) => Lifts.liftOptionTree(x))
     }
     mode match {
       case Mode.Term(_, _) =>
@@ -332,7 +361,9 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         val (thenp, elsep) = {
           if (holes.isEmpty) (q"true", q"false")
           else {
-            val resultNames = holes.zipWithIndex.map({ case (_, i) => TermName(QuasiquotePrefix + "$result$" + i) })
+            val resultNames = holes.zipWithIndex.map({
+              case (_, i) => TermName(QuasiquotePrefix + "$result$" + i)
+            })
             val resultPatterns = resultNames.map(name => pq"_root_.scala.Some($name)")
             val resultTerms = resultNames.map(name => q"$name")
             val thenp = q"""
@@ -348,7 +379,8 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
           case Bind(_, Ident(termNames.WILDCARD)) => q"input match { case $pattern => $thenp }"
           case _ => q"input match { case $pattern => $thenp; case _ => $elsep }"
         }
-        val internalResult = q"new { def unapply(input: _root_.scala.meta.Tree) = $matchp }.unapply($unapplySelector)"
+        val internalResult =
+          q"new { def unapply(input: _root_.scala.meta.Tree) = $matchp }.unapply($unapplySelector)"
         if (sys.props("quasiquote.debug") != null) {
           println(internalResult)
           // println(showRaw(internalResult))

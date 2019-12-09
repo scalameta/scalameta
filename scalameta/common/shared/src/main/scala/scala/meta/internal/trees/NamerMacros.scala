@@ -34,7 +34,12 @@ trait CommonNamerMacros extends MacroHelpers {
     classifierBoilerplate
   }
 
-  def mkQuasi(name: TypeName, parents: List[Tree], paramss: List[List[ValDef]], extraStubs: String*): ClassDef = {
+  def mkQuasi(
+      name: TypeName,
+      parents: List[Tree],
+      paramss: List[List[ValDef]],
+      extraStubs: String*
+  ): ClassDef = {
     val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new $AstAnnotation"))
     val qname = TypeName("Quasi")
     val qparents = tq"$name" +: tq"$QuasiClass" +: parents.map({
@@ -53,12 +58,15 @@ trait CommonNamerMacros extends MacroHelpers {
     def stub() = {
       val unsupportedUnquotingPosition = "unsupported unquoting position"
       val unsupportedSplicingPosition = "unsupported splicing position"
-      val message = q"if (this.rank == 0) $unsupportedUnquotingPosition else $unsupportedSplicingPosition"
+      val message =
+        q"if (this.rank == 0) $unsupportedUnquotingPosition else $unsupportedSplicingPosition"
       q"throw new $UnsupportedOperationException($message)"
     }
     val qstubs = (paramss.flatten.map(_.name.toString) ++ extraStubs).distinct.map(TermName.apply)
     qstubs.foreach(name => qstats += q"def $name: $NothingClass = ${stub()}")
-    val qcopyParamss = paramss.map(_.map{ case ValDef(mods, name, tpt, _) => q"val $name: $tpt = this.$name" })
+    val qcopyParamss = paramss.map(_.map {
+      case ValDef(mods, name, tpt, _) => q"val $name: $tpt = this.$name"
+    })
     qstats += q"def copy(...$qcopyParamss): $name = ${stub()}"
 
     q"$qmods class $qname(rank: $IntClass, tree: $TreeClass) extends ..$qparents { ..$qstats }"

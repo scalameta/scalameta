@@ -16,11 +16,11 @@ class QuasiquoteSuite extends ParseSuite {
     }
 
     test("single-line disallow line breaks") {
-      intercept[TokenizeException]{ term("foo + \n bar") }
+      intercept[TokenizeException] { term("foo + \n bar") }
     }
 
     test("single-line disallow double quotes") {
-      intercept[TokenizeException]{ term("\"a\"") }
+      intercept[TokenizeException] { term("\"a\"") }
     }
   }
 
@@ -36,7 +36,9 @@ class QuasiquoteSuite extends ParseSuite {
     }
 
     test("multi-line allow line breaks") {
-      assert(term("foo + \n bar").structure === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))""")
+      assert(
+        term("foo + \n bar").structure === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))"""
+      )
     }
 
     test("multi-line allow double quotes") {

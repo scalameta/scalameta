@@ -9,7 +9,8 @@ import org.scalatest.exceptions.StackDepthException
 trait DiffAssertions extends FunSuiteLike {
 
   def assertNoDiffOrPrintExpected(obtained: String, expected: String, title: String = "")(
-      implicit source: Position): Boolean = {
+      implicit source: Position
+  ): Boolean = {
     try assertNoDiff(obtained, expected, title)
     catch {
       case ex: Exception =>
@@ -27,7 +28,8 @@ trait DiffAssertions extends FunSuiteLike {
   }
 
   def assertNoDiff(obtained: String, expected: String, title: String = "")(
-      implicit source: Position): Boolean = {
+      implicit source: Position
+  ): Boolean = {
     if (obtained.isEmpty && !expected.isEmpty) fail("Obtained empty output!")
     val result = compareContents(obtained, expected)
     if (result.isEmpty) true

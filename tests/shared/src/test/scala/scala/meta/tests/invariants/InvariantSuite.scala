@@ -29,14 +29,16 @@ class InvariantSuite extends FunSuite {
       new C(3)
     } catch {
       case ex: InvariantFailedException =>
-        assert(ex.getMessage === """
+        assert(
+          ex.getMessage === """
           |invariant failed:
           |when verifying C.this.x.!=(3).&&(org.scalameta.`package`.debug(C.this.x, y))
           |found that C.this.x is equal to 3
           |where C = C(3)
           |where C.this.x = 3
           |where y = 2
-        """.trim.stripMargin.split('\n').mkString(EOL))
+        """.trim.stripMargin.split('\n').mkString(EOL)
+        )
     }
   }
 
@@ -66,7 +68,7 @@ class InvariantSuite extends FunSuite {
     }
   }
 
-  test("don't evaluate debug")  {
+  test("don't evaluate debug") {
     require(true && debug(throw new Exception))
   }
 }

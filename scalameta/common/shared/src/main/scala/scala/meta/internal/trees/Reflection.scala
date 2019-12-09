@@ -19,7 +19,11 @@ trait Reflection extends AdtReflection {
   lazy val TreeSymbol = mirror.staticClass("scala.meta.Tree")
   lazy val QuasiSymbol = mirror.staticClass("scala.meta.internal.trees.Quasi")
   lazy val AllModule = mirror.staticModule("scala.meta.internal.trees.All")
-  lazy val RegistryAnnotation = mirror.staticModule("scala.meta.internal.trees.Metadata").info.member(TypeName("registry")).asClass
+  lazy val RegistryAnnotation = mirror
+    .staticModule("scala.meta.internal.trees.Metadata")
+    .info
+    .member(TypeName("registry"))
+    .asClass
 
   override protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
     def fail = sys.error(s"failed to figure out direct subclasses for ${sym.fullName}")
@@ -44,7 +48,8 @@ trait Reflection extends AdtReflection {
         val entireHierarchy = {
           var result = astClasses.flatMap(_.baseClasses.map(_.asClass))
           result = result.filter(sym => sym.toType <:< TreeSymbol.toType)
-          result = result.flatMap(sym => List(sym, sym.companion.info.member(TypeName("Quasi")).asClass))
+          result =
+            result.flatMap(sym => List(sym, sym.companion.info.member(TypeName("Quasi")).asClass))
           result :+= QuasiSymbol
           result.distinct
         }
@@ -52,7 +57,8 @@ trait Reflection extends AdtReflection {
         entireHierarchy.foreach(sym => registry(sym) = Nil)
         entireHierarchy.foreach(sym => {
           val parents = sym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
-          val relevantParents = parents.filter(p => p.isClass && p.asClass.baseClasses.contains(TreeSymbol))
+          val relevantParents =
+            parents.filter(p => p.isClass && p.asClass.baseClasses.contains(TreeSymbol))
           relevantParents.foreach(parent => registry(parent) :+= sym)
         })
         registry.toMap
@@ -92,7 +98,8 @@ trait Reflection extends AdtReflection {
           case ClassDef(Modifiers(_, _, anns), name, _, impl) =>
             if (anns.exists(_.toString == "new ast()")) {
               if (inner) sys.error("@ast classes can't be inner: " + name)
-              val q"$_ class $_[..$_] $_(...$paramss) extends { ..$_ } with ..$parents { $_ => ..$_ }" = tree
+              val q"$_ class $_[..$_] $_(...$paramss) extends { ..$_ } with ..$parents { $_ => ..$_ }" =
+                tree
               drilldown(name, inner = true)(result += module)
             }
             drilldown(name, inner = true)(super.traverse(tree))

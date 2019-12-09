@@ -13,7 +13,8 @@ class UnicodeEscapeSuite extends BaseTokenizerSuite with DiffAssertions {
   // as 6 characters instead of one.
   val tests = new String(
     InputStreamIO.readBytes(this.getClass.getClassLoader.getResourceAsStream("unicode.txt")),
-    StandardCharsets.UTF_8)
+    StandardCharsets.UTF_8
+  )
 
   // asserts that tokenize(code).syntax == code
   def checkRoundtrip(original: String): Unit = {

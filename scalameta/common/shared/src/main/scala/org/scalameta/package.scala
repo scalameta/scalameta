@@ -33,7 +33,8 @@ package scalameta {
 
   object UnreachableError {
     def raise(debuggees: Map[String, Any]): Nothing = {
-      def relevantValues = debuggees.toList.sortBy(_._1).map({ case (k, v) => s"where $k = $v"}).mkString(EOL)
+      def relevantValues =
+        debuggees.toList.sortBy(_._1).map({ case (k, v) => s"where $k = $v" }).mkString(EOL)
       val mandatory = "this code path should've been unreachable"
       val optional = if (debuggees.nonEmpty) EOL + relevantValues else ""
       throw new UnreachableError(mandatory + optional)
@@ -43,6 +44,7 @@ package scalameta {
   class UnreachableMacros(val c: Context) extends MacroHelpers {
     import c.universe._
     def unreachable: c.Tree = q"$UnreachableErrorModule.raise(${Map.empty[String, Tree]})"
-    def unreachableWithDebug(dsl: c.Tree): c.Tree = q"$UnreachableErrorModule.raise(${debuggees(dsl)})"
+    def unreachableWithDebug(dsl: c.Tree): c.Tree =
+      q"$UnreachableErrorModule.raise(${debuggees(dsl)})"
   }
 }

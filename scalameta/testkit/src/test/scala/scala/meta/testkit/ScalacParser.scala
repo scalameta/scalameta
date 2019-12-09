@@ -7,9 +7,9 @@ import scala.tools.nsc.Settings
 import java.io.File
 
 /**
-  * Borrowed from
-  * https://github.com/lihaoyi/fastparse/blob/0d67eca8f9264bfaff68e5cbb227045ceac4a15f/scalaparse/jvm/src/test/scala/scalaparse/ProjectTests.scala
-  */
+ * Borrowed from
+ * https://github.com/lihaoyi/fastparse/blob/0d67eca8f9264bfaff68e5cbb227045ceac4a15f/scalaparse/jvm/src/test/scala/scalaparse/ProjectTests.scala
+ */
 object ScalacParser {
   var current: ClassLoader = Thread.currentThread().getContextClassLoader
   val files: mutable.Buffer[File] =
@@ -19,7 +19,8 @@ object ScalacParser {
     System
       .getProperty("sun.boot.class.path")
       .split(":")
-      .map(new java.io.File(_)))
+      .map(new java.io.File(_))
+  )
   while (current != null) {
     current match {
       case t: java.net.URLClassLoader =>

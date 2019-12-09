@@ -6,6 +6,7 @@ import Chars._
 import scala.meta.inputs._
 
 trait CharArrayReaderData {
+
   /** the last read character */
   var ch: Char = _
 
@@ -21,7 +22,8 @@ trait CharArrayReaderData {
   protected var lastUnicodeOffset = -1
 }
 
-class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extends CharArrayReaderData { self =>
+class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter)
+    extends CharArrayReaderData { self =>
   val buf = input.chars
   import reporter._
 
@@ -33,7 +35,7 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extend
     // If the last character is a unicode escape, skip charOffset to the end of
     // the last character. In case `potentialUnicode` restores charOffset
     // to the head of last character.
-    if(isUnicodeEscape) charOffset = lastUnicodeOffset
+    if (isUnicodeEscape) charOffset = lastUnicodeOffset
     isUnicodeEscape = false
     if (charOffset >= buf.length) {
       ch = SU
@@ -57,7 +59,7 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extend
    *  "potential line ends" here.
    */
   final def nextRawChar(): Unit = {
-    if(isUnicodeEscape) charOffset = lastUnicodeOffset
+    if (isUnicodeEscape) charOffset = lastUnicodeOffset
     isUnicodeEscape = false
     if (charOffset >= buf.length) {
       ch = SU
@@ -83,8 +85,7 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extend
         // we are one past EOF.  This happens with e.g. val x = \ u 1 <EOF>
         readerError("incomplete unicode escape", at = charOffset - 1)
         SU
-      }
-      else {
+      } else {
         val d = digit2int(buf(charOffset), 16)
         if (d >= 0) charOffset += 1
         else readerError("error in unicode escape", at = charOffset)
@@ -98,8 +99,7 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extend
     // an example why this this is necessary.
     val end = charOffset
     if (charOffset < buf.length && buf(charOffset) == 'u' && evenSlashPrefix) {
-      do charOffset += 1
-      while (charOffset < buf.length && buf(charOffset) == 'u')
+      do charOffset += 1 while (charOffset < buf.length && buf(charOffset) == 'u')
       val code = udigit << 12 | udigit << 8 | udigit << 4 | udigit
       lastUnicodeOffset = charOffset
       isUnicodeEscape = true
@@ -137,8 +137,11 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter) extend
   class CharArrayLookaheadReader extends CharArrayReader(input, dialect, reporter) {
     charOffset = self.charOffset
     ch = self.ch
+
     /** A mystery why CharArrayReader.nextChar() returns Unit */
-    def getc() = { nextChar() ; ch }
-    def getu() = { require(buf(charOffset) == '\\') ; ch = '\\' ; charOffset += 1 ; potentialUnicode() ; ch }
+    def getc() = { nextChar(); ch }
+    def getu() = {
+      require(buf(charOffset) == '\\'); ch = '\\'; charOffset += 1; potentialUnicode(); ch
+    }
   }
 }

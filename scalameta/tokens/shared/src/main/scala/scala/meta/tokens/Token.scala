@@ -127,7 +127,9 @@ object Token {
   @fixed("\f") class FF extends Token
   @freeform("comment") class Comment(value: String) extends Token
   @freeform("beginning of file") class BOF extends Token { def start = 0; def end = 0 }
-  @freeform("end of file") class EOF extends Token { def start = input.chars.length; def end = input.chars.length }
+  @freeform("end of file") class EOF extends Token {
+    def start = input.chars.length; def end = input.chars.length
+  }
 
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
@@ -137,5 +139,6 @@ object Token {
 
   implicit def classifiable[T <: Token]: Classifiable[T] = null
   implicit def showStructure[T <: Token]: Structure[T] = TokenStructure.apply[T]
-  implicit def showSyntax[T <: Token](implicit dialect: Dialect): Syntax[T] = TokenSyntax.apply[T](dialect)
+  implicit def showSyntax[T <: Token](implicit dialect: Dialect): Syntax[T] =
+    TokenSyntax.apply[T](dialect)
 }
