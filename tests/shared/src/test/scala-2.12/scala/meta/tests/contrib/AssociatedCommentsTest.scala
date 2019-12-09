@@ -243,29 +243,40 @@ class AssociatedCommentsTest extends FunSuite {
     )
   }
 
-
-  private def assertExpectations(input: Source)
-                                (leading: Map[Tree, Set[String]] = Map.empty, trailing: Map[Tree, Set[String]] = Map.empty): Unit = {
+  private def assertExpectations(input: Source)(
+      leading: Map[Tree, Set[String]] = Map.empty,
+      trailing: Map[Tree, Set[String]] = Map.empty
+  ): Unit = {
     val associatedComments = AssociatedComments(input.tokens)
     // check expected leading comments
     for ((t, comments) <- leading) {
-      assert(associatedComments.leading(t).map(_.text) === comments,
-        s"actual leading comments didn't match expectation for ${t.syntax}")
+      assert(
+        associatedComments.leading(t).map(_.text) === comments,
+        s"actual leading comments didn't match expectation for ${t.syntax}"
+      )
     }
     // check unexpected leading comments
     input.foreach { t =>
       if (!leading.contains(t))
-        assert(associatedComments.leading(t).isEmpty, s"unexpected leading comments for ${t.syntax}")
+        assert(
+          associatedComments.leading(t).isEmpty,
+          s"unexpected leading comments for ${t.syntax}"
+        )
     }
     // check expected trailing comments
     for ((t, comments) <- trailing) {
-      assert(associatedComments.trailing(t).map(_.text) === comments,
-        s"actual trailing comments didn't match expectation for ${t.syntax}")
+      assert(
+        associatedComments.trailing(t).map(_.text) === comments,
+        s"actual trailing comments didn't match expectation for ${t.syntax}"
+      )
     }
     // check unexpected trailing comments
     input.foreach { t =>
       if (!trailing.contains(t))
-        assert(associatedComments.trailing(t).isEmpty, s"unexpected trailing comments for ${t.getClass}")
+        assert(
+          associatedComments.trailing(t).isEmpty,
+          s"unexpected trailing comments for ${t.getClass}"
+        )
     }
   }
 }

@@ -17,7 +17,8 @@ class LiftableMacros(val c: Context) extends AdtReflection {
   import c.universe._
   def customAdts(root: Root): Option[List[Adt]] = None
   def customMatcher(adt: Adt, defName: TermName, localName: TermName): Option[DefDef] = None
-  def customWrapper(adt: Adt, defName: TermName, localName: TermName, body: Tree): Option[Tree] = None
+  def customWrapper(adt: Adt, defName: TermName, localName: TermName, body: Tree): Option[Tree] =
+    None
   def impl[T: WeakTypeTag]: c.Tree = {
     val root = weakTypeOf[T].typeSymbol.asAdt.root
     val unsortedAdts = customAdts(root).getOrElse(root.allLeafs)
@@ -46,8 +47,8 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     if (adts.isEmpty) {
       val message =
         s"materialization failed for Liftable[${weakTypeOf[T]}] " +
-        s"(the most common reason for that is that you cannot materialize ADTs that haven't been compiled yet, " +
-        s"i.e. materialization will fail if the file with ADT definitions comes after the file with the materialization call)"
+          s"(the most common reason for that is that you cannot materialize ADTs that haven't been compiled yet, " +
+          s"i.e. materialization will fail if the file with ADT definitions comes after the file with the materialization call)"
       c.abort(c.enclosingPosition, message)
     }
     val u = q"${c.prefix}.u"
@@ -55,30 +56,46 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val mainModule = c.freshName(TermName("Module"))
     val mainMethod = TermName("liftableSub" + root.prefix.capitalize.replace(".", ""))
     val localName = c.freshName(TermName("x"))
-    val defNames = adts.map(adt => c.freshName(TermName("lift" + adt.prefix.capitalize.replace(".", ""))))
-    val liftAdts = adts.zip(defNames).map{ case (adt, defName) =>
-      val matcher: DefDef = customMatcher(adt, defName, localName).getOrElse({
-        val init = q"""$u.Ident($u.TermName("_root_"))""": Tree
-        val namePath = adt.sym.fullName.split('.').foldLeft(init)((acc, part) => q"$u.Select($acc, $u.TermName($part))")
-        val fields = adt match { case leaf: Leaf => leaf.fields; case _ => Nil }
-        val args = fields.map(f => {
-          val fieldName = q"$u.Ident($u.TermName(${f.name.toString}))"
-          val fieldValue = q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})"
-          // NOTE: we can't really use AssignOrNamedArg here, sorry
-          // Test.scala:10: warning: type-checking the invocation of method apply checks if the named argument expression 'stats = ...' is a valid assignment
-          // in the current scope. The resulting type inference error (see above) can be fixed by providing an explicit type in the local definition for stats.
-          // q"$u.AssignOrNamedArg($fieldName, $fieldValue)"
-          q"$fieldValue"
+    val defNames =
+      adts.map(adt => c.freshName(TermName("lift" + adt.prefix.capitalize.replace(".", ""))))
+    val liftAdts = adts.zip(defNames).map {
+      case (adt, defName) =>
+        val matcher: DefDef = customMatcher(adt, defName, localName).getOrElse({
+          val init = q"""$u.Ident($u.TermName("_root_"))""": Tree
+          val namePath = adt.sym.fullName
+            .split('.')
+            .foldLeft(init)((acc, part) => q"$u.Select($acc, $u.TermName($part))")
+          val fields = adt match { case leaf: Leaf => leaf.fields; case _ => Nil }
+          val args = fields.map(f => {
+            val fieldName = q"$u.Ident($u.TermName(${f.name.toString}))"
+            val fieldValue =
+              q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})"
+            // NOTE: we can't really use AssignOrNamedArg here, sorry
+            // Test.scala:10: warning: type-checking the invocation of method apply checks if the named argument expression 'stats = ...' is a valid assignment
+            // in the current scope. The resulting type inference error (see above) can be fixed by providing an explicit type in the local definition for stats.
+            // q"$u.AssignOrNamedArg($fieldName, $fieldValue)"
+            q"$fieldValue"
+          })
+          val body = if (adt.sym.isClass) q"$u.Apply($namePath, $args)" else q"$namePath"
+          q"def $defName($localName: ${adt.tpe}): $u.Tree = $body"
         })
-        val body = if (adt.sym.isClass) q"$u.Apply($namePath, $args)" else q"$namePath"
-        q"def $defName($localName: ${adt.tpe}): $u.Tree = $body"
-      })
-      val body: Tree = customWrapper(adt, defName, localName, matcher.rhs).getOrElse(matcher.rhs)
-      treeCopy.DefDef(matcher, matcher.mods, matcher.name, matcher.tparams, matcher.vparamss, matcher.tpt, body)
+        val body: Tree = customWrapper(adt, defName, localName, matcher.rhs).getOrElse(matcher.rhs)
+        treeCopy.DefDef(
+          matcher,
+          matcher.mods,
+          matcher.name,
+          matcher.tparams,
+          matcher.vparamss,
+          matcher.tpt,
+          body
+        )
     }
-    val clauses = adts.zip(defNames).map({ case (adt, name) =>
-      cq"$localName: ${adt.tpe} => $name($localName.asInstanceOf[${adt.tpe}])"
-    })
+    val clauses = adts
+      .zip(defNames)
+      .map({
+        case (adt, name) =>
+          cq"$localName: ${adt.tpe} => $name($localName.asInstanceOf[${adt.tpe}])"
+      })
     q"""
       $u.Liftable(($mainParam: ${weakTypeOf[T]}) => {
         object $mainModule {

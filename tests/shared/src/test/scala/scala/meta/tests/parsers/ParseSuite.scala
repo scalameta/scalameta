@@ -39,8 +39,7 @@ class ParseSuite extends FunSuite with CommonTrees {
         case t: TestFailedException =>
           val msg = "no exception was thrown"
           val richFeedback = t.message.map(_.replace(msg, s"$msg for '$stat'"))
-          throw new TestFailedException(richFeedback.get,
-            t.failedCodeStackDepth)
+          throw new TestFailedException(richFeedback.get, t.failedCodeStackDepth)
       }
     }
   }

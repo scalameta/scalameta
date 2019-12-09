@@ -15,7 +15,8 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
 
   def leafHandler(l: Leaf): Tree = {
     val constructor = hygienicRef(l.sym.companion)
-    val relevantFields = l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
+    val relevantFields =
+      l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
     if (relevantFields.isEmpty) return q"tree"
     val transformedFields: List[ValDef] = relevantFields.map(f => {
       def treeTransformer(input: Tree, tpe: Type): Tree = {

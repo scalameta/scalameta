@@ -15,9 +15,8 @@ class RemoveOrphanSemantidbFilesSuite extends FunSuite {
   test("orphan files are removed") {
     val sourceroot = Files.createTempDirectory("scalameta")
     val targetroot = Files.createTempDirectory("scalameta")
-    val config = SemanticdbConfig.default.copy(
-      sourceroot = AbsolutePath(sourceroot),
-      targetroot = AbsolutePath(targetroot))
+    val config = SemanticdbConfig.default
+      .copy(sourceroot = AbsolutePath(sourceroot), targetroot = AbsolutePath(targetroot))
 
     val hello = Paths.get("src").resolve("Hello.scala")
 
@@ -46,7 +45,8 @@ class RemoveOrphanSemantidbFilesSuite extends FunSuite {
     val config = SemanticdbConfig.default.copy(
       sourceroot = AbsolutePath(sourceroot),
       targetroot = AbsolutePath(targetroot),
-      fileFilter = FileFilter(".*", "Hello"))
+      fileFilter = FileFilter(".*", "Hello")
+    )
 
     val hello = Paths.get("src").resolve("Hello.scala")
 

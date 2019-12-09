@@ -29,7 +29,7 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
       val paradiseJar =
         sys.props("sbt.paths.tests.test.options").split(" ").find(_.contains("paradise")).orNull
       if (paradiseJar == null) fail("Missing scalamacros/paradise from scalacOptions")
-  paradiseJar + " -Xplugin-require:macro-paradise-plugin"
+      paradiseJar + " -Xplugin-require:macro-paradise-plugin"
     }
   }
 
@@ -193,7 +193,8 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   }
 
   def targeted(markup: String, fn: (s.TextDocument, String) => Unit)(
-      implicit hack: OverloadHack2): Unit = {
+      implicit hack: OverloadHack2
+  ): Unit = {
     test(markup) {
       val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
       occurrences match {
@@ -204,7 +205,8 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   }
 
   def targeted(markup: String, fn: (s.TextDocument, String, String) => Unit)(
-      implicit hack: OverloadHack3): Unit = {
+      implicit hack: OverloadHack3
+  ): Unit = {
     test(markup) {
       val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
       occurrences match {
@@ -215,7 +217,8 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   }
 
   def targeted(markup: String, fn: (s.TextDocument, String, String, String) => Unit)(
-      implicit hack: OverloadHack4): Unit = {
+      implicit hack: OverloadHack4
+  ): Unit = {
     test(markup) {
       val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
       occurrences match {
@@ -226,7 +229,8 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
   }
 
   def targeted(markup: String, fn: (s.TextDocument, String, String, String, String) => Unit)(
-      implicit hack: OverloadHack5): Unit = {
+      implicit hack: OverloadHack5
+  ): Unit = {
     test(markup) {
       val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
       occurrences match {
@@ -236,23 +240,29 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
     }
   }
 
-  def targeted(markup: String, fn: (s.TextDocument, String, String, String, String, String) => Unit)(
-    implicit hack: OverloadHack5): Unit = {
+  def targeted(
+      markup: String,
+      fn: (s.TextDocument, String, String, String, String, String) => Unit
+  )(implicit hack: OverloadHack5): Unit = {
     test(markup) {
       val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
       occurrences match {
-        case List(name1, name2, name3, name4, name5) => fn(database, name1, name2, name3, name4, name5)
+        case List(name1, name2, name3, name4, name5) =>
+          fn(database, name1, name2, name3, name4, name5)
         case _ => sys.error(s"5 chevrons expected, ${occurrences.length} chevrons found")
       }
     }
   }
 
-  def targeted(markup: String, fn: (s.TextDocument, String, String, String, String, String, String) => Unit)(
-    implicit hack: OverloadHack5): Unit = {
+  def targeted(
+      markup: String,
+      fn: (s.TextDocument, String, String, String, String, String, String) => Unit
+  )(implicit hack: OverloadHack5): Unit = {
     test(markup) {
       val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
       occurrences match {
-        case List(name1, name2, name3, name4, name5, name6) => fn(database, name1, name2, name3, name4, name5, name6)
+        case List(name1, name2, name3, name4, name5, name6) =>
+          fn(database, name1, name2, name3, name4, name5, name6)
         case _ => sys.error(s"6 chevrons expected, ${occurrences.length} chevrons found")
       }
     }

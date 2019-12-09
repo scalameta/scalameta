@@ -21,7 +21,8 @@ class CliSuite extends FunSuite with DiffAssertions {
       |    println("hello world")
       |  }
       |}
-    """.trim.stripMargin.getBytes(UTF_8))
+    """.trim.stripMargin.getBytes(UTF_8)
+    )
     val target = Files.createTempDirectory("target_")
     val semanticdb = target.resolve("META-INF/semanticdb/HelloWorld.scala.semanticdb")
   }
@@ -36,7 +37,8 @@ class CliSuite extends FunSuite with DiffAssertions {
         "-P:semanticdb:text:on",
         "-d",
         target.toString,
-        scalaFile.toString)
+        scalaFile.toString
+      )
       val settings = scala.meta.metac.Settings().withScalacArgs(scalacArgs)
       val reporter = Reporter()
       Metac.process(settings, reporter)
@@ -88,18 +90,21 @@ class CliSuite extends FunSuite with DiffAssertions {
        |[1:23..1:29): String => scala/Predef.String#
        |[1:33..1:37): Unit => scala/Unit#
        |[2:4..2:11): println => scala/Predef.println(+1).
-    """.trim.stripMargin)
+    """.trim.stripMargin
+    )
     assert(err.isEmpty)
   }
 
   test("metac only outputs semanticdb for files in sourceroot") {
-    val projectroot = StringFS.fromString(
-      """|/sourceroot_/Left.scala
-         |object Left { def right = 42 }
-         |/not_sourceroot_/Right.scala
-         |object Right { def left = 41 }
-         |""".stripMargin
-    ).toNIO
+    val projectroot = StringFS
+      .fromString(
+        """|/sourceroot_/Left.scala
+           |object Left { def right = 42 }
+           |/not_sourceroot_/Right.scala
+           |object Right { def left = 41 }
+           |""".stripMargin
+      )
+      .toNIO
     val sourceroot = projectroot.resolve("sourceroot_")
     val notSourceroot = projectroot.resolve("not_sourceroot_")
     val inSourcerootScala = sourceroot.resolve("Left.scala")
@@ -117,7 +122,8 @@ class CliSuite extends FunSuite with DiffAssertions {
         "-d",
         target.toString,
         inSourcerootScala.toString,
-        notInSourcerootScala.toString)
+        notInSourcerootScala.toString
+      )
       val settings = scala.meta.metac.Settings().withScalacArgs(scalacArgs)
       val reporter = Reporter()
       Metac.process(settings, reporter)
@@ -127,13 +133,16 @@ class CliSuite extends FunSuite with DiffAssertions {
     assert(out.isEmpty)
     assert(Files.exists(inSourcerootSemanticdb))
 
-    def searchForRightScalaSemanticdbIn(in: Path): Iterator[Path] = Files
-      .walk(in)
-      .iterator()
-      .asScala
-      .filter(_.toString.contains("Right.scala.semanticdb"))
+    def searchForRightScalaSemanticdbIn(in: Path): Iterator[Path] =
+      Files
+        .walk(in)
+        .iterator()
+        .asScala
+        .filter(_.toString.contains("Right.scala.semanticdb"))
 
-    val rightResults = searchForRightScalaSemanticdbIn(projectroot) ++ searchForRightScalaSemanticdbIn(target)
+    val rightResults = searchForRightScalaSemanticdbIn(projectroot) ++ searchForRightScalaSemanticdbIn(
+      target
+    )
     assert(rightResults.isEmpty)
   }
 }

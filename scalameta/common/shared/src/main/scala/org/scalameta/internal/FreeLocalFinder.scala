@@ -32,9 +32,12 @@ trait FreeLocalFinder {
       override def traverse(tree: Tree): Unit = {
         val sym = tree.symbol
         tree match {
-          case tree: Ident if !sym.owner.isClass && tree.name != termNames.WILDCARD && !sym.isMethod => localRefs += tree
+          case tree: Ident
+              if !sym.owner.isClass && tree.name != termNames.WILDCARD && !sym.isMethod =>
+            localRefs += tree
           case tree: This if !sym.isPackageClass => localRefs += tree
-          case _: DefTree | Function(_, _) | Template(_, _, _) => processLocalDef(tree); super.traverse(tree)
+          case _: DefTree | Function(_, _) | Template(_, _, _) =>
+            processLocalDef(tree); super.traverse(tree)
           case _ => super.traverse(tree)
         }
       }

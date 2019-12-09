@@ -38,7 +38,8 @@ class ConversionMacros(val c: Context) extends AstReflection {
     val foundReqMessage = msg.replace("meta.", "scala.meta.").replace("scala.scala.", "scala.")
     var wholeMessage = "type mismatch when unquoting" + foundReqMessage
     if (req.typeSymbol == MetaTemplate) {
-      var hint = "Note: This shape of a quasiquote tells scala.meta that you're unquoting a template."
+      var hint =
+        "Note: This shape of a quasiquote tells scala.meta that you're unquoting a template."
       hint += (EOL + "If you'd like to unquote a parent reference, add {} immediately after the unquote.")
       hint += (EOL + "For more details, see https://github.com/scalameta/scalameta/issues/223.")
       wholeMessage = wholeMessage + EOL + hint
@@ -54,7 +55,8 @@ class ConversionMacros(val c: Context) extends AstReflection {
       if (needsCast) q"$outside.asInstanceOf[$insideTpe]"
       else outside
     } else {
-      val liftable = c.inferImplicitValue(appliedType(MetaLift, outsideTpe, insideTpe), silent = true)
+      val liftable =
+        c.inferImplicitValue(appliedType(MetaLift, outsideTpe, insideTpe), silent = true)
       if (liftable.nonEmpty) {
         q"$liftable.apply($outside)"
       } else {
@@ -82,7 +84,8 @@ class ConversionMacros(val c: Context) extends AstReflection {
     if (insideTpe <:< outsideTpe) {
       q"_root_.scala.Some($inside: $insideTpe)"
     } else {
-      val unliftable = c.inferImplicitValue(appliedType(MetaUnlift, insideTpe, outsideTpe), silent = true)
+      val unliftable =
+        c.inferImplicitValue(appliedType(MetaUnlift, insideTpe, outsideTpe), silent = true)
       if (unliftable.nonEmpty) {
         q"$unliftable.apply($inside)"
       } else {
@@ -91,4 +94,3 @@ class ConversionMacros(val c: Context) extends AstReflection {
     }
   }
 }
-

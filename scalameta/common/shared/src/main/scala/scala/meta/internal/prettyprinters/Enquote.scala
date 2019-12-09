@@ -10,7 +10,7 @@ case object TripleQuotes extends QuoteStyle { override def toString = "\"\"\"" }
 object enquote {
   def apply(s: String, style: QuoteStyle): String = {
     val sb = new StringBuilder(style.toString)
-    if(style == TripleQuotes)
+    if (style == TripleQuotes)
       sb.append(s)
     else {
       s.foreach {

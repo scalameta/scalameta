@@ -6,7 +6,11 @@ import scala.meta.inputs._
 
 private[meta] trait Api {
   implicit class XtensionParseInputLike[T](inputLike: T) {
-    def parse[U](implicit convert: Convert[T, Input], parse: Parse[U], dialect: Dialect): Parsed[U] = {
+    def parse[U](
+        implicit convert: Convert[T, Input],
+        parse: Parse[U],
+        dialect: Dialect
+    ): Parsed[U] = {
       (dialect, convert(inputLike)).parse[U]
     }
   }

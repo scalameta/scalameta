@@ -11,7 +11,8 @@ class JavacpSuite extends FunSuite {
       name: String,
       symbol: String,
       filter: String => Boolean,
-      expected: List[String]): Unit =
+      expected: List[String]
+  ): Unit =
     test(name) {
       val info = infos(symbol)
       val ClassSignature(_, _, _, Some(declarations)) = info.signature

@@ -8,34 +8,33 @@ import org.apache.commons.io.FileUtils
 import org.rauschig.jarchivelib.ArchiverFactory
 
 /** A collection of Scala source files to run [[SyntaxAnalysis]].
-  *
-  * @param url A zip file that matches the following structure:
-  *            repos/
-  *              project1/
-  *                COMMIT // <- git commit hash of project1 snapshot
-  *                URL    // <- Github project url
-  *                src/main/...
-  *                Code.scala
-  *              project2/
-  *              ...
-  *              projectN/
-  *            In particular, each project directory must contain a
-  *            `COMMIT` and `URL` file. These files are used to construct
-  *            links to the source files on Github.
-  * @param filter Files that don't match the filter are excluded from the
-  *               analysis.
-  */
+ *
+ * @param url A zip file that matches the following structure:
+ *            repos/
+ *              project1/
+ *                COMMIT // <- git commit hash of project1 snapshot
+ *                URL    // <- Github project url
+ *                src/main/...
+ *                Code.scala
+ *              project2/
+ *              ...
+ *              projectN/
+ *            In particular, each project directory must contain a
+ *            `COMMIT` and `URL` file. These files are used to construct
+ *            links to the source files on Github.
+ * @param filter Files that don't match the filter are excluded from the
+ *               analysis.
+ */
 case class Corpus(url: String, filter: String => Boolean)
 
 object Corpus {
 
   /** Corpus of ~3 million lines of code, 22 mb compressed.
-    * The list of repos is originally taken from fastparse:
-    * https://github.com/lihaoyi/fastparse/blob/6cf2cb23cd5f628c4e956d5846228ee4ca988f5c/scalaparse/jvm/src/test/scala/scalaparse/ProjectTests.scala#L63-L115
-    */
+   * The list of repos is originally taken from fastparse:
+   * https://github.com/lihaoyi/fastparse/blob/6cf2cb23cd5f628c4e956d5846228ee4ca988f5c/scalaparse/jvm/src/test/scala/scalaparse/ProjectTests.scala#L63-L115
+   */
   val fastparse = Corpus(
-    url =
-      "https://github.com/scalameta/scalafmt/releases/download/v0.1.4/repos.tar.gz",
+    url = "https://github.com/scalameta/scalafmt/releases/download/v0.1.4/repos.tar.gz",
     x =>
       !List(
         // sbt/sbt
@@ -98,17 +97,18 @@ object Corpus {
   }
 
   /** Downloads the zip file, extracts it and parses into a list of [[CorpusFile]].
-    *
-    * @param corpus See [[Corpus]].
-    * @return A generator of [[CorpusFile]]. Use Generator.take to limit the
-    *         size of your experiment and Generator.toBuffer.par to run
-    *         analysis using all available cores on the machine.
-    */
+   *
+   * @param corpus See [[Corpus]].
+   * @return A generator of [[CorpusFile]]. Use Generator.take to limit the
+   *         size of your experiment and Generator.toBuffer.par to run
+   *         analysis using all available cores on the machine.
+   */
   def files(corpus: Corpus): Generator[CorpusFile] = {
     val repos = createReposDir(corpus)
     val files = Option(repos.listFiles()).getOrElse {
       throw new IllegalStateException(
-        s"${repos.getAbsolutePath} is not a directory! Please delete if it's a file and retry.")
+        s"${repos.getAbsolutePath} is not a directory! Please delete if it's a file and retry."
+      )
     }
     Generator.from(files.toIterable).flatMap { repo =>
       val commit = FileOps.readFile(new File(repo, "COMMIT")).trim

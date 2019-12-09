@@ -247,4 +247,3 @@ class JSFacadeSuite extends FunSuite {
   }
 
 }
-

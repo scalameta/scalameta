@@ -10,102 +10,82 @@ import scala.compat.Platform.EOL
 // because then implicit scope for Dialect lookups will contain members of the package object
 // i.e. both Scala211 and Dotty, which is definitely not what we want
 @data class Dialect(
-  // Are `&` intersection types supported by this dialect?
-  allowAndTypes: Boolean,
-
-  // Are extractor varargs specified using ats, i.e. is `case Extractor(xs @ _*)` legal or not?
-  allowAtForExtractorVarargs: Boolean,
-
-  // Can case classes be declared without a parameter list?
-  // Deprecated in 2.10, not supported in 2.11 and newer.
-  allowCaseClassWithoutParameterList: Boolean,
-
-  // Are extractor varargs specified using colons, i.e. is `case Extractor(xs: _*)` legal or not?
-  allowColonForExtractorVarargs: Boolean,
-
-  // Are enums allowed?
-  // They are in Dotty, but not in Scala 2.12 or older.
-  allowEnums: Boolean,
-
-  // Are implicit by name parameters supported?
-  // They are in Dotty, but not in Scala 2.12 or older.
-  allowImplicitByNameParameters: Boolean,
-
-  // Are implicit functions supported by this dialect?
-  allowImplicitFunctionTypes: Boolean,
-
-  // Are `inline` identifiers supported by this dialect?
-  allowInlineIdents: Boolean,
-
-  // Are inline vals and defs supported by this dialect?
-  allowInlineMods: Boolean,
-
-  // Are literal types allowed, i.e. is `val a : 42 = 42` legal or not?
-  allowLiteralTypes: Boolean,
-
-  // Are method types allowed, i.e. is `(x: X): x.T` legal or not?
-  allowMethodTypes: Boolean,
-
-  // Are multiline programs allowed?
-  // Some quasiquotes only support single-line snippets.
-  allowMultilinePrograms: Boolean,
-
-  // Are `|` (union types) supported by this dialect?
-  allowOrTypes: Boolean,
-
-  // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
-  // If yes, they will be parsed as patterns.
-  allowPatUnquotes: Boolean,
-
-  // Are naked underscores allowed after $ in pattern interpolators, i.e. is `case q"$_ + $_" =>` legal or not?
-  allowSpliceUnderscores: Boolean,
-
-  // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
-  // If yes, they will be parsed as terms.
-  allowTermUnquotes: Boolean,
-
-  // Are terms on the top level supported by this dialect?
-  // Necessary to support popular script-like DSLs.
-  allowToplevelTerms: Boolean,
-
-  // Are trailing commas allowed? SIP-27.
-  allowTrailingCommas: Boolean,
-
-  // Are trait allowed to have parameters?
-  // They are in Dotty, but not in Scala 2.12 or older.
-  allowTraitParameters: Boolean,
-
-  // Are type lambdas allowed, i.e. is `[T] => (T, T)` legal or not?
-  allowTypeLambdas: Boolean,
-
-  // Are view bounds supported by this dialect?
-  // Removed in Dotty.
-  allowViewBounds: Boolean,
-
-  // Are `with` intersection types supported by this dialect?
-  allowWithTypes: Boolean,
-
-  // Are XML literals supported by this dialect?
-  // We plan to deprecate XML literal syntax, and some dialects
-  // might go ahead and drop support completely.
-  allowXmlLiterals: Boolean,
-
-  // What kind of separator is necessary to split top-level statements?
-  // Normally none is required, but scripts may have their own rules.
-  toplevelSeparator: String
+    // Are `&` intersection types supported by this dialect?
+    allowAndTypes: Boolean,
+    // Are extractor varargs specified using ats, i.e. is `case Extractor(xs @ _*)` legal or not?
+    allowAtForExtractorVarargs: Boolean,
+    // Can case classes be declared without a parameter list?
+    // Deprecated in 2.10, not supported in 2.11 and newer.
+    allowCaseClassWithoutParameterList: Boolean,
+    // Are extractor varargs specified using colons, i.e. is `case Extractor(xs: _*)` legal or not?
+    allowColonForExtractorVarargs: Boolean,
+    // Are enums allowed?
+    // They are in Dotty, but not in Scala 2.12 or older.
+    allowEnums: Boolean,
+    // Are implicit by name parameters supported?
+    // They are in Dotty, but not in Scala 2.12 or older.
+    allowImplicitByNameParameters: Boolean,
+    // Are implicit functions supported by this dialect?
+    allowImplicitFunctionTypes: Boolean,
+    // Are `inline` identifiers supported by this dialect?
+    allowInlineIdents: Boolean,
+    // Are inline vals and defs supported by this dialect?
+    allowInlineMods: Boolean,
+    // Are literal types allowed, i.e. is `val a : 42 = 42` legal or not?
+    allowLiteralTypes: Boolean,
+    // Are method types allowed, i.e. is `(x: X): x.T` legal or not?
+    allowMethodTypes: Boolean,
+    // Are multiline programs allowed?
+    // Some quasiquotes only support single-line snippets.
+    allowMultilinePrograms: Boolean,
+    // Are `|` (union types) supported by this dialect?
+    allowOrTypes: Boolean,
+    // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
+    // If yes, they will be parsed as patterns.
+    allowPatUnquotes: Boolean,
+    // Are naked underscores allowed after $ in pattern interpolators, i.e. is `case q"$_ + $_" =>` legal or not?
+    allowSpliceUnderscores: Boolean,
+    // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
+    // If yes, they will be parsed as terms.
+    allowTermUnquotes: Boolean,
+    // Are terms on the top level supported by this dialect?
+    // Necessary to support popular script-like DSLs.
+    allowToplevelTerms: Boolean,
+    // Are trailing commas allowed? SIP-27.
+    allowTrailingCommas: Boolean,
+    // Are trait allowed to have parameters?
+    // They are in Dotty, but not in Scala 2.12 or older.
+    allowTraitParameters: Boolean,
+    // Are type lambdas allowed, i.e. is `[T] => (T, T)` legal or not?
+    allowTypeLambdas: Boolean,
+    // Are view bounds supported by this dialect?
+    // Removed in Dotty.
+    allowViewBounds: Boolean,
+    // Are `with` intersection types supported by this dialect?
+    allowWithTypes: Boolean,
+    // Are XML literals supported by this dialect?
+    // We plan to deprecate XML literal syntax, and some dialects
+    // might go ahead and drop support completely.
+    allowXmlLiterals: Boolean,
+    // What kind of separator is necessary to split top-level statements?
+    // Normally none is required, but scripts may have their own rules.
+    toplevelSeparator: String
 ) {
 
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
   def allowUnquotes: Boolean = allowTermUnquotes || allowPatUnquotes
 
   // Are numeric literal underscore separators, i.e. `1_000_000` legal or not?
-  def allowNumericLiteralUnderscoreSeparators: Boolean = internalAllowNumericLiteralUnderscoreSeparators
+  def allowNumericLiteralUnderscoreSeparators: Boolean =
+    internalAllowNumericLiteralUnderscoreSeparators
   private var internalAllowNumericLiteralUnderscoreSeparators: Boolean = false
   // IMPORTANT: Methods like `withAllowNumericLiteralUnderscoreSeparators()`
   // must always come last in the method chain, it's not supported to change a
   // dialect using a pattern like this:
   // `.withAllowNumericLiteralUnderscoreSeparators(true).copy(...)`
-  def withAllowNumericLiteralUnderscoreSeparators(allowNumericLiteralUnderscoreSeparators: Boolean): Dialect = {
+  def withAllowNumericLiteralUnderscoreSeparators(
+      allowNumericLiteralUnderscoreSeparators: Boolean
+  ): Dialect = {
     val result = copyWithInternalVars()
     result.internalAllowNumericLiteralUnderscoreSeparators = allowNumericLiteralUnderscoreSeparators
     result
@@ -124,7 +104,8 @@ import scala.compat.Platform.EOL
   // Create new reference that copies over internal var settings from this instance.
   private def copyWithInternalVars(): Dialect = {
     val result = copy()
-    result.internalAllowNumericLiteralUnderscoreSeparators = this.internalAllowNumericLiteralUnderscoreSeparators
+    result.internalAllowNumericLiteralUnderscoreSeparators =
+      this.internalAllowNumericLiteralUnderscoreSeparators
     result
   }
 
@@ -188,10 +169,12 @@ package object dialects {
     allowTrailingCommas = true
   )
 
-  implicit val Scala213 = Scala212.copy(
-    allowImplicitByNameParameters = true,
-    allowLiteralTypes = true
-  ).withAllowNumericLiteralUnderscoreSeparators(true)
+  implicit val Scala213 = Scala212
+    .copy(
+      allowImplicitByNameParameters = true,
+      allowLiteralTypes = true
+    )
+    .withAllowNumericLiteralUnderscoreSeparators(true)
 
   implicit val Scala = Scala213 // alias for latest Scala dialect.
 
@@ -248,12 +231,22 @@ package object dialects {
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)
-    underlying.copy(allowTermUnquotes = true, allowMethodTypes = true, allowMultilinePrograms = multiline, allowTypeLambdas = true)
+    underlying.copy(
+      allowTermUnquotes = true,
+      allowMethodTypes = true,
+      allowMultilinePrograms = multiline,
+      allowTypeLambdas = true
+    )
   }
 
   private[meta] def QuasiquotePat(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)
-    underlying.copy(allowPatUnquotes = true, allowMethodTypes = true, allowMultilinePrograms = multiline, allowTypeLambdas = true)
+    underlying.copy(
+      allowPatUnquotes = true,
+      allowMethodTypes = true,
+      allowMultilinePrograms = multiline,
+      allowTypeLambdas = true
+    )
   }
 }
 

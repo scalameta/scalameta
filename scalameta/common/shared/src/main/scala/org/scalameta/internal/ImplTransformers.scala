@@ -20,7 +20,10 @@ trait ImplTransformers {
     def transformModule(mdef: ModuleDef): ModuleDef = ???
 
     def transform(annottees: Tree*): Tree = {
-      def isImplemented(body: => Any): Boolean = try { body; true } catch { case _: NotImplementedError => false; case _: Throwable => true }
+      def isImplemented(body: => Any): Boolean =
+        try {
+          body; true
+        } catch { case _: NotImplementedError => false; case _: Throwable => true }
       val allowClasses = isImplemented(transformClass(null, null))
       val allowTraits = isImplemented(transformTrait(null, null))
       val allowModules = isImplemented(transformModule(null))

@@ -23,12 +23,16 @@ object Input {
   }
 
   final case class Stream(stream: java.io.InputStream, charset: Charset) extends Input {
-    lazy val chars = new scala.Predef.String(scala.meta.internal.io.InputStreamIO.readBytes(stream), charset).toArray
+    lazy val chars = new scala.Predef.String(
+      scala.meta.internal.io.InputStreamIO.readBytes(stream),
+      charset
+    ).toArray
     protected def writeReplace(): AnyRef = new Stream.SerializationProxy(this)
     override def toString = s"""Input.Stream(<stream>, Charset.forName("${charset.name}"))"""
   }
   object Stream {
-    @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: Stream) extends Serializable {
+    @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: Stream)
+        extends Serializable {
       private def writeObject(out: java.io.ObjectOutputStream): Unit = {
         out.writeObject(orig.chars)
         out.writeObject(orig.charset.name)
@@ -47,7 +51,8 @@ object Input {
   final case class File(path: AbsolutePath, charset: Charset) extends Input {
     lazy val chars = scala.meta.internal.io.FileIO.slurp(path, charset).toArray
     protected def writeReplace(): AnyRef = new File.SerializationProxy(this)
-    override def toString = s"""Input.File(new File("${path.syntax}"), Charset.forName("${charset.name}"))"""
+    override def toString =
+      s"""Input.File(new File("${path.syntax}"), Charset.forName("${charset.name}"))"""
   }
   object File {
     def apply(path: AbsolutePath): Input.File = apply(path, Charset.forName("UTF-8"))
@@ -56,7 +61,8 @@ object Input {
     def apply(path: nio.Path, charset: Charset): Input.File = apply(AbsolutePath(path), charset)
     def apply(path: nio.Path): Input.File = apply(AbsolutePath(path))
 
-    @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: File) extends Serializable {
+    @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: File)
+        extends Serializable {
       private def writeObject(out: java.io.ObjectOutputStream): Unit = {
         out.writeObject(orig.path)
         out.writeObject(orig.charset.name)
@@ -71,7 +77,8 @@ object Input {
     }
   }
 
-  final case class VirtualFile(path: scala.Predef.String, value: scala.Predef.String) extends Input {
+  final case class VirtualFile(path: scala.Predef.String, value: scala.Predef.String)
+      extends Input {
     lazy val chars = value.toArray
     override def text: scala.Predef.String = value
     override def toString = s"""Input.VirtualFile("$path", "$value")"""
@@ -85,9 +92,11 @@ object Input {
     override def toString = s"Input.Slice($input, $start, $end)"
   }
 
-  implicit val charsToInput: Convert[Array[Char], Input] = Convert(chars => Input.String(new scala.Predef.String(chars)))
+  implicit val charsToInput: Convert[Array[Char], Input] =
+    Convert(chars => Input.String(new scala.Predef.String(chars)))
   implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert(Input.String(_))
-  implicit def streamToInput[T <: java.io.InputStream]: Convert[T, Input] = Convert(is => Input.Stream(is, Charset.forName("UTF-8")))
+  implicit def streamToInput[T <: java.io.InputStream]: Convert[T, Input] =
+    Convert(is => Input.Stream(is, Charset.forName("UTF-8")))
   // NOTE: fileToInput is lazy to avoid linking errors in Scala.js
   implicit lazy val fileToInput: Convert[java.io.File, Input] = Convert(Input.File.apply)
   implicit lazy val nioPathToInput: Convert[java.nio.file.Path, Input] = Convert(Input.File.apply)

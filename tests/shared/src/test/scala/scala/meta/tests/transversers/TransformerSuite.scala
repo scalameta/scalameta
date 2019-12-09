@@ -45,7 +45,7 @@ class TransformerSuite extends FunSuite {
         else super.apply(tree)
       }
     }
-    intercept[UnsupportedOperationException]{ transformer(tree0) }
+    intercept[UnsupportedOperationException] { transformer(tree0) }
   }
 
   test("Tree.transform") {

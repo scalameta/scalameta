@@ -96,7 +96,9 @@ class LitSuite extends ParseSuite {
   }
 
   test("#342") {
-    assert(term("""( 50).toString""").structure === "Term.Select(Lit.Int(50), Term.Name(\"toString\"))")
+    assert(
+      term("""( 50).toString""").structure === "Term.Select(Lit.Int(50), Term.Name(\"toString\"))"
+    )
   }
 
   test("#360") {
@@ -109,6 +111,7 @@ class LitSuite extends ParseSuite {
     val Lit("\"\"\"\"\"\"\"") = term("\"\"\"\"\"\"\"\"\"\"\"\"\"")
 
     val Term.Interpolate(Name("raw"), List(Lit("\"\"")), Nil) = term("raw\"\"\"\"\"\"\"\"")
-    val Term.Interpolate(Name("raw"), List(Lit("\"\"\"\"\"\"\"")), Nil) = term("raw\"\"\"\"\"\"\"\"\"\"\"\"\"")
+    val Term.Interpolate(Name("raw"), List(Lit("\"\"\"\"\"\"\"")), Nil) =
+      term("raw\"\"\"\"\"\"\"\"\"\"\"\"\"")
   }
 }

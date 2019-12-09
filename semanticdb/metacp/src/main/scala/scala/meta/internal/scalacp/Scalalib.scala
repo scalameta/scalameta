@@ -25,9 +25,30 @@ object Scalalib {
   }
   private def anyClass: ClassfileInfos = {
     val symbols = List(
-      builtinMethod("Any", List(p.ABSTRACT), "equals", Nil, List("that" -> "scala/Any#"), "scala/Boolean#"),
-      builtinMethod("Any", List(p.FINAL), "==", Nil, List("that" -> "scala/Any#"), "scala/Boolean#"),
-      builtinMethod("Any", List(p.FINAL), "!=", Nil, List("that" -> "scala/Any#"), "scala/Boolean#"),
+      builtinMethod(
+        "Any",
+        List(p.ABSTRACT),
+        "equals",
+        Nil,
+        List("that" -> "scala/Any#"),
+        "scala/Boolean#"
+      ),
+      builtinMethod(
+        "Any",
+        List(p.FINAL),
+        "==",
+        Nil,
+        List("that" -> "scala/Any#"),
+        "scala/Boolean#"
+      ),
+      builtinMethod(
+        "Any",
+        List(p.FINAL),
+        "!=",
+        Nil,
+        List("that" -> "scala/Any#"),
+        "scala/Boolean#"
+      ),
       builtinMethod("Any", List(p.ABSTRACT), "hashCode", Nil, Nil, "scala/Int#"),
       builtinMethod("Any", List(p.FINAL), "##", Nil, Nil, "scala/Int#"),
       builtinMethod("Any", List(p.ABSTRACT), "toString", Nil, Nil, "java/lang/String#"),
@@ -35,7 +56,15 @@ object Scalalib {
       // The method is special-cased in both the Java and Scala compilers, so we'll slack a little bit too for the time being.
       builtinMethod("Any", List(p.FINAL), "getClass", Nil, Nil, "java/lang/Class#"),
       builtinMethod("Any", List(p.FINAL), "isInstanceOf", List("A"), Nil, "scala/Boolean#"),
-      builtinMethod("Any", List(p.FINAL), "asInstanceOf", List("A"), Nil, "scala/Any#asInstanceOf().[A]"))
+      builtinMethod(
+        "Any",
+        List(p.FINAL),
+        "asInstanceOf",
+        List("A"),
+        Nil,
+        "scala/Any#asInstanceOf().[A]"
+      )
+    )
     builtin(k.CLASS, List(p.ABSTRACT), "Any", Nil, symbols.flatten)
   }
 
@@ -46,9 +75,31 @@ object Scalalib {
   private def anyRefClass: ClassfileInfos = {
     // FIXME: https://github.com/scalameta/scalameta/issues/1564
     val symbols = List(
-      builtinMethod("AnyRef", List(p.FINAL), "eq", Nil, List("that" -> "scala/AnyRef#"), "scala/Boolean#"),
-      builtinMethod("AnyRef", List(p.FINAL), "ne", Nil, List("that" -> "scala/AnyRef#"), "scala/Boolean#"),
-      builtinMethod("AnyRef", List(p.FINAL), "synchronized", List("T"), List("body" -> "scala/AnyRef#synchronized().[T]"), "scala/AnyRef#synchronized().[T]"))
+      builtinMethod(
+        "AnyRef",
+        List(p.FINAL),
+        "eq",
+        Nil,
+        List("that" -> "scala/AnyRef#"),
+        "scala/Boolean#"
+      ),
+      builtinMethod(
+        "AnyRef",
+        List(p.FINAL),
+        "ne",
+        Nil,
+        List("that" -> "scala/AnyRef#"),
+        "scala/Boolean#"
+      ),
+      builtinMethod(
+        "AnyRef",
+        List(p.FINAL),
+        "synchronized",
+        List("T"),
+        List("body" -> "scala/AnyRef#synchronized().[T]"),
+        "scala/AnyRef#synchronized().[T]"
+      )
+    )
     builtin(k.CLASS, Nil, "AnyRef", List("scala/Any#"), symbols.flatten)
   }
 
@@ -73,7 +124,8 @@ object Scalalib {
       props: List[s.SymbolInformation.Property],
       className: String,
       bases: List[String],
-      symbols: List[s.SymbolInformation]): ClassfileInfos = {
+      symbols: List[s.SymbolInformation]
+  ): ClassfileInfos = {
     val parents = bases.map { base =>
       s.TypeRef(s.NoType, base, Nil)
     }
@@ -118,7 +170,8 @@ object Scalalib {
       methodName: String,
       tparamDsls: List[String],
       paramDsls: List[(String, String)],
-      retTpeSymbol: String): List[s.SymbolInformation] = {
+      retTpeSymbol: String
+  ): List[s.SymbolInformation] = {
     val classSymbol = Symbols.Global(scalaPackage, d.Type(className))
     val methodSymbol = Symbols.Global(classSymbol, d.Method(methodName, "()"))
     val tparams = tparamDsls.map { tparamName =>
@@ -131,7 +184,8 @@ object Scalalib {
         properties = 0,
         displayName = tparamName,
         signature = tparamSig,
-        access = s.NoAccess)
+        access = s.NoAccess
+      )
     }
     val params = paramDsls.map {
       case (paramName, paramTpeSymbol) =>
@@ -143,7 +197,8 @@ object Scalalib {
           kind = k.PARAMETER,
           properties = 0,
           displayName = paramName,
-          signature = paramSig)
+          signature = paramSig
+        )
     }
     val methodSig = {
       val tps = Some(s.Scope(tparams.map(_.symbol)))
@@ -157,7 +212,8 @@ object Scalalib {
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       displayName = methodName,
       signature = methodSig,
-      access = s.PublicAccess())
+      access = s.PublicAccess()
+    )
     List(method) ++ tparams ++ params
   }
 }

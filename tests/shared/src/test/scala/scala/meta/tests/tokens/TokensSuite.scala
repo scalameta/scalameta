@@ -18,9 +18,10 @@ class TokensSuite {
   val d5b: Seq[Token] = d5a.map(_ => newToken)
   val d5c: Seq[Token] = d.map(_.toString).flatMap(_ => List(newToken))
   val d5d: Seq[Token] = d.flatMap(_ => d)
-  val d6a: Seq[String] = d.zip(List(3, 4, 5)).zipWithIndex.map{ case ((x, y), _) => x.toString + y.toString }
-  val d6b: Seq[Token] = d.zip(List(3, 4, 5)).zipWithIndex.map{ case ((x, y), _) => newToken }
-  val d6c: Seq[Token] = d.zip(List(3, 4, 5)).zipWithIndex.flatMap{ case ((x, y), _) => d }
+  val d6a: Seq[String] =
+    d.zip(List(3, 4, 5)).zipWithIndex.map { case ((x, y), _) => x.toString + y.toString }
+  val d6b: Seq[Token] = d.zip(List(3, 4, 5)).zipWithIndex.map { case ((x, y), _) => newToken }
+  val d6c: Seq[Token] = d.zip(List(3, 4, 5)).zipWithIndex.flatMap { case ((x, y), _) => d }
   val d7a: Seq[(Token, Int)] = d.zipWithIndex
 
   //Return Tokens where possible when using collections API
@@ -38,8 +39,6 @@ class TokensSuite {
   def span: (Tokens, Tokens) = d.span(_.isNot[RightParen])
   def spanRight: (Tokens, Tokens) = d.spanRight(_.isNot[LeftParen])
 }
-
-
 
 class TokensApiSuite extends FunSuite {
   def tokenize(code: String): Tokens = {
@@ -67,15 +66,15 @@ class TokensApiSuite extends FunSuite {
     assert(tokens.segmentLength(_.is[LeftParen]) == 2)
     assert(tokens.dropWhile(_.is[LeftParen]).syntax === "1 + 1) == 2)")
     assert(tokens.dropRightWhile(_.is[RightParen]).syntax === "((1 + 1) == 2")
-    assert{
+    assert {
       val (front, back) = tokens.splitAt(8)
       front.syntax === "((1 + 1)" && back.syntax === " == 2)"
     }
-    assert{
+    assert {
       val (front, back) = tokens.span(_.isNot[RightParen])
       front.syntax === "((1 + 1" && back.syntax === ") == 2)"
     }
-    assert{
+    assert {
       val (front, back) = tokens.spanRight(_.isNot[LeftParen])
       front.syntax === "((" && back.syntax === "1 + 1) == 2)"
     }

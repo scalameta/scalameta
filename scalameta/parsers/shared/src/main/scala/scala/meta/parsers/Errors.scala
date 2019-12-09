@@ -32,7 +32,7 @@ object Parsed {
 }
 
 @data class ParseException(pos: Position, shortMessage: String)
-extends Exception(pos.formatMessage("error", shortMessage)) {
+    extends Exception(pos.formatMessage("error", shortMessage)) {
   def fullMessage = getMessage
   override def toString = fullMessage
 }

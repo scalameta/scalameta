@@ -285,8 +285,7 @@ class XmlSuite extends ParseSuite {
   checkOK("e match { case <a>{_*}</a> => }")
   checkOK("<a>{{</a>")
   checkOK("<a>}}</a>")
-  checkOK(
-    """
+  checkOK("""
       |<a>
       |  <b/>
       |</a>
@@ -302,8 +301,7 @@ class XmlSuite extends ParseSuite {
        |}""".stripMargin
   )
   checkOK("<a>{<b>{1}</b>}</a>")
-  checkOK(
-    """
+  checkOK("""
       |val ips = <ips>{
       |  for {
       |    field <-ipsList

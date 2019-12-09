@@ -1,7 +1,6 @@
 package scala.meta.io
 
-private[meta] trait Api {
-}
+private[meta] trait Api {}
 
 private[meta] trait Aliases {
   type AbsolutePath = scala.meta.io.AbsolutePath

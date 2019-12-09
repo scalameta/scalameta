@@ -18,7 +18,9 @@ trait Reflection {
     def hasAnnotation[T: ClassTag]: Boolean = getAnnotation[T].nonEmpty
     def getAnnotation[T: ClassTag]: Option[Tree] = {
       sym.initialize
-      val ann = sym.annotations.find(_.tree.tpe.typeSymbol.fullName == classTag[T].runtimeClass.getCanonicalName)
+      val ann = sym.annotations.find(
+        _.tree.tpe.typeSymbol.fullName == classTag[T].runtimeClass.getCanonicalName
+      )
       ann.map(_.tree)
     }
   }
@@ -26,7 +28,8 @@ trait Reflection {
   implicit class XtensionAdtSymbol(sym: Symbol) {
     def isAdt: Boolean = {
       def inheritsFromAdt = sym.isClass && (sym.asClass.toType <:< typeOf[AdtMetadata.Adt])
-      def isBookkeeping = sym.asClass == symbolOf[AdtMetadata.Adt] || sym.asClass == symbolOf[AstMetadata.Ast]
+      def isBookkeeping =
+        sym.asClass == symbolOf[AdtMetadata.Adt] || sym.asClass == symbolOf[AstMetadata.Ast]
       inheritsFromAdt && !isBookkeeping
     }
     def isRoot: Boolean = sym.hasAnnotation[AdtMetadata.root]
@@ -41,7 +44,11 @@ trait Reflection {
     def isPayload: Boolean = sym.isField && !sym.isAuxiliary
     def isAuxiliary: Boolean = sym.isField && sym.hasAnnotation[AstMetadata.auxiliary]
     def isByNeed: Boolean = sym.isField && sym.hasAnnotation[AdtMetadata.byNeedField]
-    def asAdt: Adt = if (isRoot) sym.asRoot else if (isBranch) sym.asBranch else if (isLeaf) sym.asLeaf else sys.error("not an adt: " + sym)
+    def asAdt: Adt =
+      if (isRoot) sym.asRoot
+      else if (isBranch) sym.asBranch
+      else if (isLeaf) sym.asLeaf
+      else sys.error("not an adt: " + sym)
     def asRoot: Root = new Root(sym)
     def asBranch: Branch = new Branch(sym)
     def asLeaf: Leaf = new Leaf(sym)
@@ -54,11 +61,18 @@ trait Reflection {
   }
 
   private implicit class PrivateXtensionAdtSymbol(sym: Symbol) {
-    private def ensureModule(sym: Symbol): Symbol = if (sym.isModuleClass) sym.owner.info.member(sym.name.toTermName) else sym
-    def branches: List[Symbol] = { sym.initialize; figureOutDirectSubclasses(sym.asClass).toList.filter(_.isBranch) }
+    private def ensureModule(sym: Symbol): Symbol =
+      if (sym.isModuleClass) sym.owner.info.member(sym.name.toTermName) else sym
+    def branches: List[Symbol] = {
+      sym.initialize; figureOutDirectSubclasses(sym.asClass).toList.filter(_.isBranch)
+    }
     def allBranches: List[Symbol] = (sym.branches ++ sym.branches.flatMap(_.allBranches)).distinct
-    def leafs: List[Symbol] = { sym.initialize; figureOutDirectSubclasses(sym.asClass).toList.filter(_.isLeaf).map(ensureModule) }
-    def allLeafs: List[Symbol] = (sym.leafs ++ sym.branches.flatMap(_.allLeafs)).map(ensureModule).distinct
+    def leafs: List[Symbol] = {
+      sym.initialize;
+      figureOutDirectSubclasses(sym.asClass).toList.filter(_.isLeaf).map(ensureModule)
+    }
+    def allLeafs: List[Symbol] =
+      (sym.leafs ++ sym.branches.flatMap(_.allLeafs)).map(ensureModule).distinct
 
     def root: Symbol = sym.asClass.baseClasses.reverse.find(_.isRoot).getOrElse(NoSymbol)
     def fields: List[Symbol] = allFields.filter(p => p.isPayload)
@@ -77,7 +91,7 @@ trait Reflection {
     }
     def root = sym.root.asRoot
     def parents = sym.asClass.baseClasses.filter(sym1 => sym1 != sym && sym1.isAdt).map(_.asAdt)
-    def <:< (other: Adt) = sym.asClass.toType <:< other.sym.asClass.toType
+    def <:<(other: Adt) = sym.asClass.toType <:< other.sym.asClass.toType
     override def equals(that: Any) = that match {
       case that: Adt => this.sym == that.sym
       case _ => false
@@ -113,6 +127,7 @@ trait Reflection {
     def isPayload: Boolean = sym.isPayload
     def isAuxiliary: Boolean = sym.isAuxiliary
     def isByNeed: Boolean = sym.isByNeed
-    override def toString = s"field ${owner.prefix}.$name: $tpe" + (if (isAuxiliary) " (auxiliary)" else "")
+    override def toString =
+      s"field ${owner.prefix}.$name: $tpe" + (if (isAuxiliary) " (auxiliary)" else "")
   }
 }

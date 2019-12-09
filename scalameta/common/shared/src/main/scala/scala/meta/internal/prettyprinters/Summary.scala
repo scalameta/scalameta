@@ -3,7 +3,7 @@ package internal
 package prettyprinters
 
 import scala.meta.prettyprinters._
-import Show.{ sequence => _, _ }
+import Show.{sequence => _, _}
 import scala.compat.Platform.EOL
 import scala.annotation.implicitNotFound
 

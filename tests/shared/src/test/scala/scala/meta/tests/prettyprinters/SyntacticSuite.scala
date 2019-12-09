@@ -6,19 +6,27 @@ import scala.meta.dialects.Scala211
 import scala.meta.internal.trees._
 
 class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
-  override def term(code: String)(implicit dialect: Dialect)       = super.term(code)(dialect).resetAllOrigins
-  override def pat(code: String)(implicit dialect: Dialect)        = super.pat(code)(dialect).resetAllOrigins
-  override def tpe(code: String)(implicit dialect: Dialect)        = super.tpe(code)(dialect).resetAllOrigins
-  override def topStat(code: String)(implicit dialect: Dialect)    = super.topStat(code)(dialect).resetAllOrigins
-  override def templStat(code: String)(implicit dialect: Dialect)  = super.templStat(code)(dialect).resetAllOrigins
-  override def blockStat(code: String)(implicit dialect: Dialect)  = super.blockStat(code)(dialect).resetAllOrigins
-  override def caseClause(code: String)(implicit dialect: Dialect) = super.caseClause(code)(dialect).resetAllOrigins
-  override def source(code: String)(implicit dialect: Dialect)     = super.source(code)(dialect).resetAllOrigins
+  override def term(code: String)(implicit dialect: Dialect) =
+    super.term(code)(dialect).resetAllOrigins
+  override def pat(code: String)(implicit dialect: Dialect) =
+    super.pat(code)(dialect).resetAllOrigins
+  override def tpe(code: String)(implicit dialect: Dialect) =
+    super.tpe(code)(dialect).resetAllOrigins
+  override def topStat(code: String)(implicit dialect: Dialect) =
+    super.topStat(code)(dialect).resetAllOrigins
+  override def templStat(code: String)(implicit dialect: Dialect) =
+    super.templStat(code)(dialect).resetAllOrigins
+  override def blockStat(code: String)(implicit dialect: Dialect) =
+    super.blockStat(code)(dialect).resetAllOrigins
+  override def caseClause(code: String)(implicit dialect: Dialect) =
+    super.caseClause(code)(dialect).resetAllOrigins
+  override def source(code: String)(implicit dialect: Dialect) =
+    super.source(code)(dialect).resetAllOrigins
   implicit class XtensionResetOrigin[T <: Tree](tree: T) {
     // NOTE: Ensures that neither the given tree nor its subtrees have their origins set.
     // This is necessary to force prettyprinting as opposed to reusing original syntax.
     def resetAllOrigins: T = {
-      tree.transform{ case tree: Tree => tree.withOrigin(Origin.None) }.asInstanceOf[T]
+      tree.transform { case tree: Tree => tree.withOrigin(Origin.None) }.asInstanceOf[T]
     }
   }
 
@@ -70,7 +78,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       QQQ
       val y = "\""
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.structure === """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("\""))))""".replace("%n", "\\n"))
+    assert(
+      tree.structure === """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("\""))))"""
+        .replace("%n", "\\n")
+    )
     assertSameLines(tree.syntax, """
     |{
     |  val x = QQQ
@@ -90,8 +101,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         ..$z
       QQQ
     }""".replace("QQQ", "\"\"\""))
-    assert(tree.structure === """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.Interpolate(Term.Name("q"), List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123)))))), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("%n        $x%n        $y%n        ..$z%n      "))))""".replace("%n", "\\n"))
-    assertSameLines(tree.syntax, """
+    assert(
+      tree.structure === """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.Interpolate(Term.Name("q"), List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123)))))), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("%n        $x%n        $y%n        ..$z%n      "))))"""
+        .replace("%n", "\\n")
+    )
+    assertSameLines(
+      tree.syntax,
+      """
     |{
     |  val x = q"123 + $x + ${foo(123)} + 456"
     |  val y = QQQ
@@ -100,7 +116,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     |        ..$z
     |      QQQ
     |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")
+    )
   }
 
   test("foo.bar(bar) { baz }") {
@@ -174,11 +191,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(tpe("Foo").syntax === "Foo")
     assert(tpe("Foo {}").syntax === "Foo {}")
     assert(tpe("Foo { type T = Int }").syntax === "Foo { type T = Int }")
-    assert(tpe("Foo { type T = Int; type U <: String }").syntax === "Foo { type T = Int; type U <: String }")
+    assert(
+      tpe("Foo { type T = Int; type U <: String }").syntax === "Foo { type T = Int; type U <: String }"
+    )
     assert(tpe("Foo with Bar").syntax === "Foo with Bar")
     assert(tpe("Foo with Bar {}").syntax === "Foo with Bar {}")
     assert(tpe("Foo with Bar { type T = Int }").syntax === "Foo with Bar { type T = Int }")
-    assert(tpe("Foo with Bar { type T = Int; type U <: String }").syntax === "Foo with Bar { type T = Int; type U <: String }")
+    assert(
+      tpe("Foo with Bar { type T = Int; type U <: String }").syntax === "Foo with Bar { type T = Int; type U <: String }"
+    )
   }
 
   test("infix types") {
@@ -219,7 +240,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(q"val a: 42.0f = 42.0f".syntax === "val a: 42.0f = 42.0f")
     assert(q"val a: true = true".syntax === "val a: true = true")
     assert(q"val a: false = false".syntax === "val a: false = false")
-    assert(dialects.Dotty("val a: \"42\" = \"42\"").parse[Stat].get.syntax === "val a: \"42\" = \"42\"")
+    assert(
+      dialects.Dotty("val a: \"42\" = \"42\"").parse[Stat].get.syntax === "val a: \"42\" = \"42\""
+    )
     assert(pat("_: 42").syntax === "_: 42")
     assert(pat("_: 42f").syntax === "_: 42f")
     assert(pat("_: 42d").syntax === "_: 42d")
@@ -232,9 +255,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("packages") {
     assert(source("package foo.bar; class C").syntax === s"package foo.bar${EOL}class C")
-    assert(source("package foo.bar; class C; class D").syntax === s"package foo.bar${EOL}class C${EOL}class D")
+    assert(
+      source("package foo.bar; class C; class D").syntax === s"package foo.bar${EOL}class C${EOL}class D"
+    )
     assert(source("package foo.bar { class C }").syntax === s"package foo.bar${EOL}class C")
-    assert(source("package foo.bar { class C; class D }").syntax === s"package foo.bar${EOL}class C${EOL}class D")
+    assert(
+      source("package foo.bar { class C; class D }").syntax === s"package foo.bar${EOL}class C${EOL}class D"
+    )
   }
 
   test("type parameter mods") {
@@ -255,35 +282,43 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("parentheses in patterns") {
-    assert(templStat("x match { case (xs: List[Int]) :+ x => ??? }").syntax === """
+    assert(
+      templStat("x match { case (xs: List[Int]) :+ x => ??? }").syntax === """
       |x match {
       |  case (xs: List[Int]) :+ x => ???
       |}
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    """.trim.stripMargin.split('\n').mkString(EOL)
+    )
   }
 
   test("List(x, y) :: z") {
     assert(templStat("List(x, y) :: z").syntax == "List(x, y) :: z")
-    assert(templStat("x match { case List(x, y) :: z => ??? }").syntax === """
+    assert(
+      templStat("x match { case List(x, y) :: z => ??? }").syntax === """
       |x match {
       |  case List(x, y) :: z => ???
       |}
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    """.trim.stripMargin.split('\n').mkString(EOL)
+    )
   }
 
   test("secondary ctor - expr") {
-    assert(source("class C(x: Int) { def this() = this(2) }").syntax === "class C(x: Int) { def this() = this(2) }")
+    assert(
+      source("class C(x: Int) { def this() = this(2) }").syntax === "class C(x: Int) { def this() = this(2) }"
+    )
   }
 
   test("secondary ctor - block") {
-    assert(source("class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }").syntax === """
+    assert(
+      source("class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }").syntax === """
       |class C(x: Int) {
       |  def this() {
       |    this(2)
       |    println("OBLIVION!!!")
       |  }
       |}
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    """.trim.stripMargin.split('\n').mkString(EOL)
+    )
   }
 
   test("case semicolons") {
@@ -356,20 +391,46 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("some tricky parenthesization") {
     assert(templStat("if (1) 2 else 3 + 4").syntax === "if (1) 2 else 3 + 4")
     assert(templStat("(if (1) 2 else 3) + 4").syntax === "(if (1) 2 else 3) + 4")
-    assert(templStat("if (1) 2 else 3 match { case _ => }").syntax === s"if (1) 2 else 3 match {${EOL}  case _ =>${EOL}}")
-    assert(templStat("(if (1) 2 else 3) match { case _ => }").syntax === s"(if (1) 2 else 3) match {${EOL}  case _ =>${EOL}}")
+    assert(
+      templStat("if (1) 2 else 3 match { case _ => }").syntax === s"if (1) 2 else 3 match {${EOL}  case _ =>${EOL}}"
+    )
+    assert(
+      templStat("(if (1) 2 else 3) match { case _ => }").syntax === s"(if (1) 2 else 3) match {${EOL}  case _ =>${EOL}}"
+    )
     assert(templStat("unit.toCheck += (() => body)").syntax === "unit.toCheck += (() => body)")
-    assert(templStat("({ foo1; foo2 }).orElse(bar)").syntax === s"{${EOL}  foo1${EOL}  foo2${EOL}}.orElse(bar)")
-    assert(templStat("(foo match { case _ => }).orElse(bar)").syntax === s"(foo match {${EOL}  case _ =>${EOL}}).orElse(bar)")
-    assert(templStat("foo || (if (cond) bar else baz)").syntax === "foo || (if (cond) bar else baz)")
-    assert(templStat("foo && (bar match { case _ => })").syntax === s"foo && (bar match {${EOL}  case _ =>${EOL}})")
-    assert(templStat("\"foo \" + (if (cond) bar else baz)").syntax === "\"foo \" + (if (cond) bar else baz)")
-    assert(templStat("foo match { case bar @ (_: T1 | _: T2) => }").syntax === s"foo match {${EOL}  case bar @ (_: T1 | _: T2) =>${EOL}}")
-    assert(templStat("foo match { case A + B / C => }").syntax === s"foo match {${EOL}  case A + B / C =>${EOL}}")
-    assert(templStat("foo match { case (A + B) / C => }").syntax === s"foo match {${EOL}  case (A + B) / C =>${EOL}}")
-    assert(templStat("foo match { case A + (B / C) => }").syntax === s"foo match {${EOL}  case A + B / C =>${EOL}}")
-    assert(templStat("foo match { case bar :: Nil :: Nil => }").syntax === s"foo match {${EOL}  case bar :: Nil :: Nil =>${EOL}}")
-    assert(templStat("foo match { case (bar :: Nil) :: Nil => }").syntax === s"foo match {${EOL}  case (bar :: Nil) :: Nil =>${EOL}}")
+    assert(
+      templStat("({ foo1; foo2 }).orElse(bar)").syntax === s"{${EOL}  foo1${EOL}  foo2${EOL}}.orElse(bar)"
+    )
+    assert(
+      templStat("(foo match { case _ => }).orElse(bar)").syntax === s"(foo match {${EOL}  case _ =>${EOL}}).orElse(bar)"
+    )
+    assert(
+      templStat("foo || (if (cond) bar else baz)").syntax === "foo || (if (cond) bar else baz)"
+    )
+    assert(
+      templStat("foo && (bar match { case _ => })").syntax === s"foo && (bar match {${EOL}  case _ =>${EOL}})"
+    )
+    assert(
+      templStat("\"foo \" + (if (cond) bar else baz)").syntax === "\"foo \" + (if (cond) bar else baz)"
+    )
+    assert(
+      templStat("foo match { case bar @ (_: T1 | _: T2) => }").syntax === s"foo match {${EOL}  case bar @ (_: T1 | _: T2) =>${EOL}}"
+    )
+    assert(
+      templStat("foo match { case A + B / C => }").syntax === s"foo match {${EOL}  case A + B / C =>${EOL}}"
+    )
+    assert(
+      templStat("foo match { case (A + B) / C => }").syntax === s"foo match {${EOL}  case (A + B) / C =>${EOL}}"
+    )
+    assert(
+      templStat("foo match { case A + (B / C) => }").syntax === s"foo match {${EOL}  case A + B / C =>${EOL}}"
+    )
+    assert(
+      templStat("foo match { case bar :: Nil :: Nil => }").syntax === s"foo match {${EOL}  case bar :: Nil :: Nil =>${EOL}}"
+    )
+    assert(
+      templStat("foo match { case (bar :: Nil) :: Nil => }").syntax === s"foo match {${EOL}  case (bar :: Nil) :: Nil =>${EOL}}"
+    )
     assert(templStat("@(foo @foo) class Bar").syntax === "@(foo @foo) class Bar")
     assert(templStat("(foo: Foo): @foo").syntax === "(foo: Foo): @foo")
     assert(templStat("type T = A + B / C").syntax === "type T = A + B / C")
@@ -377,8 +438,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(templStat("type T = A + (B / C)").syntax === "type T = A + (B / C)")
     assert(templStat("type T = A :: B :: C").syntax === "type T = A :: B :: C")
     assert(templStat("type T = (A :: B) :: C").syntax === "type T = (A :: B) :: C")
-    assert(templStat("foo match { case _: A | _: B => }").syntax === s"foo match {${EOL}  case _: A | _: B =>${EOL}}")
-    assert(templStat("foo match { case _: A | _: B | _: C => }").syntax === s"foo match {${EOL}  case _: A | _: B | _: C =>${EOL}}")
+    assert(
+      templStat("foo match { case _: A | _: B => }").syntax === s"foo match {${EOL}  case _: A | _: B =>${EOL}}"
+    )
+    assert(
+      templStat("foo match { case _: A | _: B | _: C => }").syntax === s"foo match {${EOL}  case _: A | _: B | _: C =>${EOL}}"
+    )
   }
 
   test("Type projections") {
@@ -388,9 +453,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
           type C = A#B
         """.syntax ===
         """{
-            |  class A { class B }
-            |  type C = A#B
-            |}""".stripMargin.split('\n').mkString(EOL)
+          |  class A { class B }
+          |  type C = A#B
+          |}""".stripMargin.split('\n').mkString(EOL)
     )
     // With lambda trick
     assert(
@@ -399,9 +464,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       foo[({ type T[A] = Either[Int, A] })#T]
         """.syntax ===
         """{
-            |  def foo[F[_]]: Unit = ???
-            |  foo[({ type T[A] = Either[Int, A] })#T]
-            |}""".stripMargin.split('\n').mkString(EOL)
+          |  def foo[F[_]]: Unit = ???
+          |  foo[({ type T[A] = Either[Int, A] })#T]
+          |}""".stripMargin.split('\n').mkString(EOL)
     )
   }
 
@@ -416,12 +481,18 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("class C(x: Int)(implicit y: String, z: Boolean)") {
-    assert(templStat("class C(x: Int)(implicit y: String, z: Boolean)").syntax === "class C(x: Int)(implicit y: String, z: Boolean)")
+    assert(
+      templStat("class C(x: Int)(implicit y: String, z: Boolean)").syntax === "class C(x: Int)(implicit y: String, z: Boolean)"
+    )
   }
 
   test("#1837 class C(x: Int, implicit val|var y: String)") {
-    assert(templStat("class C(x: Int, implicit val y: String)").syntax === "class C(x: Int, implicit val y: String)")
-    assert(templStat("class C(x: Int, implicit var y: String)").syntax === "class C(x: Int, implicit var y: String)")
+    assert(
+      templStat("class C(x: Int, implicit val y: String)").syntax === "class C(x: Int, implicit val y: String)"
+    )
+    assert(
+      templStat("class C(x: Int, implicit var y: String)").syntax === "class C(x: Int, implicit var y: String)"
+    )
   }
 
   test("#1837 class C(<keyword> implicit val x: Int, y: String)(implicit z: Boolean)") {
@@ -433,9 +504,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkSyntax("class C(override implicit val x: Int, y: String)(implicit z: Boolean) extends T")
   }
 
-  test("#1837 class C(private implicit val x: Int, implicit final val y: String, protected implicit var z: Boolean)") {
-    assert(templStat("class C(private implicit val x: Int, implicit final val y: String, protected implicit var z: Boolean)").syntax ===
-                     "class C(private implicit val x: Int, final val y: String, protected var z: Boolean)")
+  test(
+    "#1837 class C(private implicit val x: Int, implicit final val y: String, protected implicit var z: Boolean)"
+  ) {
+    assert(
+      templStat(
+        "class C(private implicit val x: Int, implicit final val y: String, protected implicit var z: Boolean)"
+      ).syntax ===
+        "class C(private implicit val x: Int, final val y: String, protected var z: Boolean)"
+    )
   }
 
   test("class C(var x: Int)") {
@@ -451,36 +528,44 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         protected[D] val w = 4
       }
     """).syntax === """
-      |class C {
-      |  private[this] val x = 1
-      |  private[D] val y = 2
-      |  protected[this] val z = 3
-      |  protected[D] val w = 4
-      |}
+                      |class C {
+                      |  private[this] val x = 1
+                      |  private[D] val y = 2
+                      |  protected[this] val z = 3
+                      |  protected[D] val w = 4
+                      |}
     """.stripMargin.trim.split('\n').mkString(EOL))
   }
 
   test("case List(xs @ _*)") {
     val tree = pat("List(xs @ _*)")
-    assert(tree.structure === "Pat.Extract(Term.Name(\"List\"), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))")
+    assert(
+      tree.structure === "Pat.Extract(Term.Name(\"List\"), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))"
+    )
     assert(tree.syntax === "List(xs @ _*)")
   }
 
   test("case List[t](xs @ _*)") {
     val tree = pat("List[t](xs @ _*)")
-    assert(tree.structure === "Pat.Extract(Term.ApplyType(Term.Name(\"List\"), List(Type.Var(Type.Name(\"t\")))), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))")
+    assert(
+      tree.structure === "Pat.Extract(Term.ApplyType(Term.Name(\"List\"), List(Type.Var(Type.Name(\"t\")))), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))"
+    )
     assert(tree.syntax === "List[t](xs @ _*)")
   }
 
   test("case List[_](xs @ _*)") {
     val tree = pat("List[_](xs @ _*)")
-    assert(tree.structure === "Pat.Extract(Term.ApplyType(Term.Name(\"List\"), List(Type.Placeholder(Type.Bounds(None, None)))), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))")
+    assert(
+      tree.structure === "Pat.Extract(Term.ApplyType(Term.Name(\"List\"), List(Type.Placeholder(Type.Bounds(None, None)))), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))"
+    )
     assert(tree.syntax === "List[_](xs @ _*)")
   }
 
   test("package foo; class C; package baz { class D }") {
     val tree = source("package foo; class C; package baz { class D }")
-    assert(tree.structure === "Source(List(Pkg(Term.Name(\"foo\"), List(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil)), Pkg(Term.Name(\"baz\"), List(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil))))))))")
+    assert(
+      tree.structure === "Source(List(Pkg(Term.Name(\"foo\"), List(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil)), Pkg(Term.Name(\"baz\"), List(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil))))))))"
+    )
     assert(tree.syntax === s"package foo${EOL}class C${EOL}package baz {$EOL  class D${EOL}}")
   }
 
@@ -515,7 +600,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("constructors") {
-    val tree @ Defn.Class(_, _, _, primary, Template(_, _, _, List(secondary))) = templStat("class C(x: Int) { def this() = this(42) }")
+    val tree @ Defn.Class(_, _, _, primary, Template(_, _, _, List(secondary))) =
+      templStat("class C(x: Int) { def this() = this(42) }")
     assert(tree.syntax === "class C(x: Int) { def this() = this(42) }")
     assert(primary.syntax === "(x: Int)")
     assert(secondary.syntax === "def this() = this(42)")
@@ -530,7 +616,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("smart case printing - oneliner in multiple lines") {
-    val Term.Match(_, case1 :: case2 :: Nil) = templStat("??? match { case x => x; case List(x, y) => println(x); println(y) }")
+    val Term.Match(_, case1 :: case2 :: Nil) =
+      templStat("??? match { case x => x; case List(x, y) => println(x); println(y) }")
     assertSameLines(case1.toString, """
       |case x =>
       |  x
@@ -544,13 +631,17 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("xml literals") {
     val tree = term("<foo>{bar}</foo>")
-    assert(tree.structure === """Term.Xml(List(Lit.String("<foo>"), Lit.String("</foo>")), List(Term.Name("bar")))""")
+    assert(
+      tree.structure === """Term.Xml(List(Lit.String("<foo>"), Lit.String("</foo>")), List(Term.Name("bar")))"""
+    )
     assert(tree.syntax === "<foo>{bar}</foo>")
   }
 
   test("xml literals unit") {
     val tree = term("<foo>{}</foo>")
-    assert(tree.structure == """Term.Xml(List(Lit.String("<foo>"), Lit.String("</foo>")), List(Term.Block(Nil)))""")
+    assert(
+      tree.structure == """Term.Xml(List(Lit.String("<foo>"), Lit.String("</foo>")), List(Term.Block(Nil)))"""
+    )
     assert(tree.syntax == "<foo>{{}}</foo>")
   }
 
@@ -562,13 +653,17 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("interpolator unit") {
     val tree = term("""s"Hello${}World"""")
-    assert(tree.structure == """Term.Interpolate(Term.Name("s"), List(Lit.String("Hello"), Lit.String("World")), List(Term.Block(Nil)))""")
+    assert(
+      tree.structure == """Term.Interpolate(Term.Name("s"), List(Lit.String("Hello"), Lit.String("World")), List(Term.Block(Nil)))"""
+    )
     assert(tree.syntax == """s"Hello${{}}World"""")
   }
 
   test("interpolator with $ character") {
     val tree = term("""s"$$$foo$$"""")
-    assert(tree.structure == """Term.Interpolate(Term.Name("s"), List(Lit.String("$"), Lit.String("$")), List(Term.Name("foo")))""")
+    assert(
+      tree.structure == """Term.Interpolate(Term.Name("s"), List(Lit.String("$"), Lit.String("$")), List(Term.Name("foo")))"""
+    )
     assert(tree.syntax == """s"$$$foo$$"""")
   }
 
@@ -589,7 +684,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("interpolator braces for term names beginning with '_'") {
-    def interpolate(before: String, after: String): Term.Interpolate = Term.Interpolate(prefix = Term.Name("s"), parts = List(Lit.String(before), Lit.String(after)), args = List(Term.Name("_foo")))
+    def interpolate(before: String, after: String): Term.Interpolate =
+      Term.Interpolate(
+        prefix = Term.Name("s"),
+        parts = List(Lit.String(before), Lit.String(after)),
+        args = List(Term.Name("_foo"))
+      )
     assert(interpolate("", "").syntax == """s"${_foo}"""")
     assert(interpolate("bar", "baz").syntax == """s"bar${_foo}baz"""")
     assert(interpolate("[", "]").syntax == """s"[${_foo}]"""")
@@ -597,13 +697,17 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("empty-arglist application") {
     val tree = term("foo.toString()")
-    assert(tree.structure === "Term.Apply(Term.Select(Term.Name(\"foo\"), Term.Name(\"toString\")), Nil)")
+    assert(
+      tree.structure === "Term.Apply(Term.Select(Term.Name(\"foo\"), Term.Name(\"toString\")), Nil)"
+    )
     assert(tree.syntax === "foo.toString()")
   }
 
   test("type parameters with type bounds") {
     val Defn.Def(_, _, List(tree), _, _, _) = templStat("def foo[T <: Int] = ???")
-    assert(tree.structure === "Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, Some(Type.Name(\"Int\"))), Nil, Nil)")
+    assert(
+      tree.structure === "Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, Some(Type.Name(\"Int\"))), Nil, Nil)"
+    )
     assert(tree.syntax === "T <: Int")
   }
 
@@ -620,15 +724,34 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("Type.Function(Tuple, _) #557") {
-    assert(t"((a, b)) => c".syntax    == "((a, b)) => c")
+    assert(t"((a, b)) => c".syntax == "((a, b)) => c")
     assert(t"((a, b), c) => c".syntax == "((a, b), c) => c")
   }
 
   test("Term.Apply(_, List(Term.Function(...))) #572, #574") {
     import scala.collection.immutable.List
-    val tree1 = Term.Apply(Term.Name("foo"), List(Term.Function(List(Term.Param(List(), Term.Name("i"), Some(Type.Name("Int")), None)), Lit.Unit())))
-    val tree2 = Term.Apply(Term.Name("foo"), List(Term.Function(List(Term.Param(List(Mod.Implicit()), Term.Name("i"), Some(Type.Name("Int")), None)), Lit.Unit())))
-    val tree3 = Term.Apply(Term.Name("foo"), List(Term.Function(List(Term.Param(List(), Term.Name("i"), None, None)), Lit.Unit())))
+    val tree1 = Term.Apply(
+      Term.Name("foo"),
+      List(
+        Term.Function(
+          List(Term.Param(List(), Term.Name("i"), Some(Type.Name("Int")), None)),
+          Lit.Unit()
+        )
+      )
+    )
+    val tree2 = Term.Apply(
+      Term.Name("foo"),
+      List(
+        Term.Function(
+          List(Term.Param(List(Mod.Implicit()), Term.Name("i"), Some(Type.Name("Int")), None)),
+          Lit.Unit()
+        )
+      )
+    )
+    val tree3 = Term.Apply(
+      Term.Name("foo"),
+      List(Term.Function(List(Term.Param(List(), Term.Name("i"), None, None)), Lit.Unit()))
+    )
     assert(tree1.syntax == "foo { (i: Int) => () }")
     assert(tree2.syntax == "foo { implicit i: Int => () }")
     assert(tree3.syntax == "foo(i => ())")
@@ -655,21 +778,24 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("show[Structure] should uppercase long literals suffix: '2l' -> '2L'") {
     assert(
       templStat("foo(1l, 1L)").structure ==
-          """Term.Apply(Term.Name("foo"), List(Lit.Long(1L), Lit.Long(1L)))""")
+        """Term.Apply(Term.Name("foo"), List(Lit.Long(1L), Lit.Long(1L)))"""
+    )
     assert(q"val x = 1l".structure == q"val x = 1L".structure)
   }
 
   test("show[Structure] should lowercase float literals suffix: '0.01F' -> '0.01f'") {
     assert(
       templStat("foo(0.01f, 0.01F)").structure ==
-          """Term.Apply(Term.Name("foo"), List(Lit.Float(0.01f), Lit.Float(0.01f)))""")
+        """Term.Apply(Term.Name("foo"), List(Lit.Float(0.01f), Lit.Float(0.01f)))"""
+    )
     assert(q"val x = 1f".structure == q"val x = 1F".structure)
   }
 
   test("show[Structure] should lowercase double literals suffix: '0.01D' -> '0.01d'") {
     assert(
       templStat("foo(0.02d, 0.02D, 0.02)").structure ==
-          """Term.Apply(Term.Name("foo"), List(Lit.Double(0.02d), Lit.Double(0.02d), Lit.Double(0.02d)))""")
+        """Term.Apply(Term.Name("foo"), List(Lit.Double(0.02d), Lit.Double(0.02d), Lit.Double(0.02d)))"""
+    )
     assert(q"val x = 1d".structure == q"val x = 1D".structure)
     assert(q"val x = 1.0d".structure == q"val x = 1.0".structure)
   }
@@ -746,7 +872,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkTree(q"list map (a -> foo)", "list map a -> foo")
   }
   test("1826 ApplyInfix parentheses on Term.Match") {
-    checkTree(q"list map (_ match { case 1 => 2})", s"list map (_ match {${EOL}  case 1 => 2${EOL}})")
+    checkTree(
+      q"list map (_ match { case 1 => 2})",
+      s"list map (_ match {${EOL}  case 1 => 2${EOL}})"
+    )
   }
 
   test("#1839 ApplyInfix parentheses on Term.Placeholder") {

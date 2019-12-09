@@ -14,11 +14,13 @@ class PublicSuite extends FunSuite {
 
   test("quasiquotes without static dialect") {
     val currentDialect = scala.meta.Dialect.current.toString
-    assert(typecheckError("""
+    assert(
+      typecheckError("""
       import scala.meta._
       implicit val dialect: scala.meta.Dialect = ???
       q"hello"
-    """) === s"dialect of type scala.meta.Dialect is not supported by quasiquotes (to fix this, import something from scala.meta.dialects, e.g. scala.meta.dialects.${currentDialect})")
+    """) === s"dialect of type scala.meta.Dialect is not supported by quasiquotes (to fix this, import something from scala.meta.dialects, e.g. scala.meta.dialects.${currentDialect})"
+    )
   }
 
   test("quasiquotes when everything's correct") {
@@ -100,13 +102,15 @@ class PublicSuite extends FunSuite {
   }
 
   test("Dialect.parse with various input types") {
-    assert(typecheckError("""
+    assert(
+      typecheckError("""
       scala.meta.dialects.Scala211(??? : scala.meta.Input).parse[scala.meta.Term]
       scala.meta.dialects.Scala211(??? : String).parse[scala.meta.Term]
       scala.meta.dialects.Scala211(??? : java.io.File).parse[scala.meta.Term]
       scala.meta.dialects.Scala211(??? : scala.meta.Tokens).parse[scala.meta.Term]
       scala.meta.dialects.Scala211(??? : Array[Char]).parse[scala.meta.Term]
-    """) === "")
+    """) === ""
+    )
   }
 
   test("tokenize without import") {

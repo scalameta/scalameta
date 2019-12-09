@@ -25,30 +25,45 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
 
   def hierarchyCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     val sym = T.tpe.typeSymbol.asClass
-    val designation = if (sym.isRoot) "root" else if (sym.isBranch) "branch" else if (sym.isLeaf) "leaf" else "unknown"
+    val designation =
+      if (sym.isRoot) "root"
+      else if (sym.isBranch) "branch"
+      else if (sym.isLeaf) "leaf"
+      else "unknown"
     val roots = sym.baseClasses.filter(_.isRoot)
-    if (roots.length == 0 && sym.isLeaf) c.abort(c.enclosingPosition, s"rootless leaf is disallowed")
-    else if (roots.length > 1) c.abort(c.enclosingPosition, s"multiple roots for a $designation: " + (roots.map(_.fullName).init.mkString(", ")) + " and " + roots.last.fullName)
+    if (roots.length == 0 && sym.isLeaf)
+      c.abort(c.enclosingPosition, s"rootless leaf is disallowed")
+    else if (roots.length > 1)
+      c.abort(
+        c.enclosingPosition,
+        s"multiple roots for a $designation: " + (roots
+          .map(_.fullName)
+          .init
+          .mkString(", ")) + " and " + roots.last.fullName
+      )
     val root = roots.headOption.getOrElse(NoSymbol)
-    sym.baseClasses.map(_.asClass).foreach{bsym =>
+    sym.baseClasses.map(_.asClass).foreach { bsym =>
       val exempt =
         bsym.isModuleClass ||
-        bsym == symbolOf[Object] ||
-        bsym == symbolOf[Any] ||
-        bsym == symbolOf[scala.Serializable] ||
-        bsym == symbolOf[java.io.Serializable] ||
-        bsym == symbolOf[scala.Product] ||
-        bsym == symbolOf[scala.Equals] ||
-        root.info.baseClasses.contains(bsym)
-      if (!exempt && !bsym.isRoot && !bsym.isBranch && !bsym.isLeaf) c.abort(c.enclosingPosition, s"outsider parent of a $designation: ${bsym.fullName}")
-      // NOTE: sealedness is turned off because we can't have @ast hierarchy sealed anymore
-      // hopefully, in the future we'll find a way to restore sealedness
-      // if (!exempt && !bsym.isSealed && !bsym.isFinal) c.abort(c.enclosingPosition, s"unsealed parent of a $designation: ${bsym.fullName}")
+          bsym == symbolOf[Object] ||
+          bsym == symbolOf[Any] ||
+          bsym == symbolOf[scala.Serializable] ||
+          bsym == symbolOf[java.io.Serializable] ||
+          bsym == symbolOf[scala.Product] ||
+          bsym == symbolOf[scala.Equals] ||
+          root.info.baseClasses.contains(bsym)
+      if (!exempt && !bsym.isRoot && !bsym.isBranch && !bsym.isLeaf)
+        c.abort(c.enclosingPosition, s"outsider parent of a $designation: ${bsym.fullName}")
+    // NOTE: sealedness is turned off because we can't have @ast hierarchy sealed anymore
+    // hopefully, in the future we'll find a way to restore sealedness
+    // if (!exempt && !bsym.isSealed && !bsym.isFinal) c.abort(c.enclosingPosition, s"unsealed parent of a $designation: ${bsym.fullName}")
     }
     q"()"
   }
 
-  def interfaceToApi[I, A](interface: c.Tree)(implicit I: c.WeakTypeTag[I], A: c.WeakTypeTag[A]): c.Tree = {
+  def interfaceToApi[I, A](
+      interface: c.Tree
+  )(implicit I: c.WeakTypeTag[I], A: c.WeakTypeTag[A]): c.Tree = {
     q"$interface.asInstanceOf[$A]"
   }
 
@@ -60,7 +75,8 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
     val q"this.$finternalName" = f
     val fname = TermName(finternalName.toString.stripPrefix("_"))
     def lazyLoad(fn: c.Tree => c.Tree) = {
-      val assertionMessage = s"internal error when initializing ${c.internal.enclosingOwner.owner.name}.$fname"
+      val assertionMessage =
+        s"internal error when initializing ${c.internal.enclosingOwner.owner.name}.$fname"
       q"""
         if ($f == null) {
           // there's not much sense in using org.scalameta.invariants.require here
@@ -81,8 +97,10 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       case TreeTpe(tpe) => lazyLoad(pf => q"${copySubtree(pf, tpe)}")
       case OptionTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el", tpe)})")
       case ListTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el", tpe)})")
-      case OptionListTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
-      case ListListTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
+      case OptionListTreeTpe(tpe) =>
+        lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
+      case ListListTreeTpe(tpe) =>
+        lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
       case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
     }
   }
@@ -122,25 +140,27 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       streak = Nil
       result
     }
-    val acc = T.tpe.typeSymbol.asLeaf.fields.foldLeft(q"": Tree)((acc, f) => f.tpe match {
-      case TreeTpe(_) =>
-        streak :+= q"this.${f.sym}"
-        acc
-      case OptionTreeTpe(_) =>
-        val acc1 = flushStreak(acc)
-        q"$acc1 ++ this.${f.sym}.toList"
-      case ListTreeTpe(_) =>
-        val acc1 = flushStreak(acc)
-        q"$acc1 ++ this.${f.sym}"
-      case OptionListTreeTpe(_) =>
-        val acc1 = flushStreak(acc)
-        q"$acc1 ++ this.${f.sym}.getOrElse(_root_.scala.collection.immutable.Nil)"
-      case ListListTreeTpe(_) =>
-        val acc1 = flushStreak(acc)
-        q"$acc1 ++ this.${f.sym}.flatten"
-      case _ =>
-        acc
-    })
+    val acc = T.tpe.typeSymbol.asLeaf.fields.foldLeft(q"": Tree)((acc, f) =>
+      f.tpe match {
+        case TreeTpe(_) =>
+          streak :+= q"this.${f.sym}"
+          acc
+        case OptionTreeTpe(_) =>
+          val acc1 = flushStreak(acc)
+          q"$acc1 ++ this.${f.sym}.toList"
+        case ListTreeTpe(_) =>
+          val acc1 = flushStreak(acc)
+          q"$acc1 ++ this.${f.sym}"
+        case OptionListTreeTpe(_) =>
+          val acc1 = flushStreak(acc)
+          q"$acc1 ++ this.${f.sym}.getOrElse(_root_.scala.collection.immutable.Nil)"
+        case ListListTreeTpe(_) =>
+          val acc1 = flushStreak(acc)
+          q"$acc1 ++ this.${f.sym}.flatten"
+        case _ =>
+          acc
+      }
+    )
     flushStreak(acc)
   }
 }

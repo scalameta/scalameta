@@ -17,11 +17,16 @@ trait Liftables {
 class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with AstReflection {
   import c.universe._
 
-  lazy val TermApplySymbol = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Apply")).asClass
-  lazy val DefnValSymbol = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Val")).asClass
-  lazy val DefnVarSymbol = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Var")).asClass
-  lazy val PatBindSymbol = c.mirror.staticModule("scala.meta.Pat").info.member(TypeName("Bind")).asClass
-  lazy val PatTypedSymbol = c.mirror.staticModule("scala.meta.Pat").info.member(TypeName("Typed")).asClass
+  lazy val TermApplySymbol =
+    c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Apply")).asClass
+  lazy val DefnValSymbol =
+    c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Val")).asClass
+  lazy val DefnVarSymbol =
+    c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Var")).asClass
+  lazy val PatBindSymbol =
+    c.mirror.staticModule("scala.meta.Pat").info.member(TypeName("Bind")).asClass
+  lazy val PatTypedSymbol =
+    c.mirror.staticModule("scala.meta.Pat").info.member(TypeName("Typed")).asClass
   lazy val LitSymbol = c.mirror.staticClass("scala.meta.Lit")
   lazy val TokensSymbol = c.mirror.staticClass("scala.meta.tokens.Tokens")
 
@@ -29,7 +34,12 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
     var nonQuasis = root.allLeafs.filter(leaf => !(leaf.tpe <:< QuasiSymbol.toType))
     Some(QuasiSymbol.asBranch +: nonQuasis)
   }
-  override def customWrapper(adt: Adt, defName: TermName, localName: TermName, body: Tree): Option[Tree] = {
+  override def customWrapper(
+      adt: Adt,
+      defName: TermName,
+      localName: TermName,
+      body: Tree
+  ): Option[Tree] = {
     // NOTE: We have this check as a special case here, in addition to requires in Trees.scala,
     // because I think this is going to be a very common mistake that new users are going to make,
     // so I'd like that potential mistake to receive extra attention in form of quality error reporting.
@@ -54,7 +64,9 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
     def specialcaseTermApply(body: Tree): Tree = {
       def liftPath(path: String) = {
         val init = q"""c.universe.Ident(c.universe.TermName("_root_"))""": Tree
-        path.split('.').foldLeft(init)((acc, part) => q"c.universe.Select($acc, c.universe.TermName($part))")
+        path
+          .split('.')
+          .foldLeft(init)((acc, part) => q"c.universe.Select($acc, c.universe.TermName($part))")
       }
       def liftField(value: Tree, tpe: Tree) = {
         q"_root_.scala.Predef.implicitly[c.universe.Liftable[$tpe]].apply($value)"
@@ -80,7 +92,10 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
               ${liftPath("scala.meta.internal.trees.Syntactic.Term.Apply")},
               _root_.scala.collection.immutable.List(
                 ${liftField(q"fn", tq"_root_.scala.meta.Term")},
-                ${liftField(q"List(List(tripleQuasi))", tq"List[List[_root_.scala.meta.Term.Quasi]]")}))
+                ${liftField(
+        q"List(List(tripleQuasi))",
+        tq"List[List[_root_.scala.meta.Term.Quasi]]"
+      )}))
           case _ =>
             $body
         }
@@ -89,10 +104,14 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
     def customize(body: Tree): Option[Tree] = {
       if (adt.tpe <:< QuasiSymbol.toType) Some(q"Lifts.liftQuasi($localName)")
       else if (adt.tpe <:< TermApplySymbol.toType) Some(specialcaseTermApply(body))
-      else if (adt.tpe <:< DefnValSymbol.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
-      else if (adt.tpe <:< DefnVarSymbol.toType) Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
-      else if (adt.tpe <:< PatBindSymbol.toType) Some(q"{ ${prohibitName(q"$localName.lhs")}; $body }")
-      else if (adt.tpe <:< PatTypedSymbol.toType) Some(q"{ ${prohibitName(q"$localName.lhs")}; $body }")
+      else if (adt.tpe <:< DefnValSymbol.toType)
+        Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
+      else if (adt.tpe <:< DefnVarSymbol.toType)
+        Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
+      else if (adt.tpe <:< PatBindSymbol.toType)
+        Some(q"{ ${prohibitName(q"$localName.lhs")}; $body }")
+      else if (adt.tpe <:< PatTypedSymbol.toType)
+        Some(q"{ ${prohibitName(q"$localName.lhs")}; $body }")
       else None
     }
     // NOTE: we ignore tokens here for the time being

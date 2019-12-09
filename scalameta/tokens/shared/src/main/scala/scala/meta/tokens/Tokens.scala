@@ -26,8 +26,12 @@ import scala.meta.internal.prettyprinters._
 // NOTE: `start` and `end` are String.substring-style,
 // i.e. `start` is inclusive and `end` is not.
 // Therefore `end` can point to the last token plus one.
-@data class Tokens private (private val tokens: Array[Token], private val start: Int, private val end: Int)
-extends immutable.IndexedSeq[Token] with IndexedSeqOptimized[Token] {
+@data class Tokens private (
+    private val tokens: Array[Token],
+    private val start: Int,
+    private val end: Int
+) extends immutable.IndexedSeq[Token]
+    with IndexedSeqOptimized[Token] {
   def apply(idx: Int): Token = tokens(start + idx)
   def length: Int = end - start
   override def slice(from: Int, until: Int): Tokens = {
@@ -39,7 +43,8 @@ extends immutable.IndexedSeq[Token] with IndexedSeqOptimized[Token] {
 
   override def segmentLength(p: Token => Boolean, from: Int = 0): Int = super.segmentLength(p, from)
 
-  def segmentLengthRight(p: Token => Boolean, from: Int = 0): Int = reverseIterator.drop(from).takeWhile(p).length
+  def segmentLengthRight(p: Token => Boolean, from: Int = 0): Int =
+    reverseIterator.drop(from).takeWhile(p).length
 
   override def take(n: Int): Tokens = slice(0, n)
 
@@ -73,11 +78,15 @@ extends immutable.IndexedSeq[Token] with IndexedSeqOptimized[Token] {
 }
 
 object Tokens {
-  private[meta] def apply(tokens: Array[Token], start: Int, end: Int): Tokens = new Tokens(tokens, start, end)
+  private[meta] def apply(tokens: Array[Token], start: Int, end: Int): Tokens =
+    new Tokens(tokens, start, end)
   def unapplySeq(tokens: Tokens): Option[Seq[Token]] = Some(tokens)
 
-  implicit val tokensToInput: Convert[Tokens, Input] = Convert(tokens => Input.String(tokens.syntax))
-  implicit val listTokenToInput: Convert[List[Token], Input] = Convert(tokens => Input.String(Tokens(tokens.toArray, 0, tokens.length).syntax))
+  implicit val tokensToInput: Convert[Tokens, Input] = Convert(tokens => Input.String(tokens.syntax)
+  )
+  implicit val listTokenToInput: Convert[List[Token], Input] =
+    Convert(tokens => Input.String(Tokens(tokens.toArray, 0, tokens.length).syntax))
   implicit def showStructure[T <: Tokens]: Structure[T] = TokensStructure.apply[T]
-  implicit def showSyntax[T <: Tokens](implicit dialect: Dialect): Syntax[T] = TokensSyntax.apply[T](dialect)
+  implicit def showSyntax[T <: Tokens](implicit dialect: Dialect): Syntax[T] =
+    TokensSyntax.apply[T](dialect)
 }

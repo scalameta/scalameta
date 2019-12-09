@@ -18,7 +18,8 @@ class TraverserOrder extends FunSuite {
       if (trees1.size != trees2.size) List(ast)
       else {
         val firstDiff =
-          trees1.zip(trees2)
+          trees1
+            .zip(trees2)
             .collectFirst { case (a, b) if a != b => a }
         firstDiff.toList
       }

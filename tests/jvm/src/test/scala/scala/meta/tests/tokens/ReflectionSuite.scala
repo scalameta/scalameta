@@ -16,7 +16,8 @@ class ReflectionSuite extends FunSuite {
 
   test("freeform tokens") {
     // tokens.filter(_.isFreeform).map(_.prefix).foreach(println)
-    assert(tokens.filter(_.isFreeform).map(_.prefix).mkString(EOL) === """
+    assert(
+      tokens.filter(_.isFreeform).map(_.prefix).mkString(EOL) === """
       |Token.BOF
       |Token.Comment
       |Token.Constant.Char
@@ -44,6 +45,7 @@ class ReflectionSuite extends FunSuite {
       |Token.Xml.SpliceEnd
       |Token.Xml.SpliceStart
       |Token.Xml.Start
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    """.trim.stripMargin.split('\n').mkString(EOL)
+    )
   }
 }

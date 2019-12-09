@@ -19,88 +19,103 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
   private def uncachedTokenize(): Tokens = {
     def legacyTokenToToken(curr: LegacyTokenData): Token = {
       (curr.token: @scala.annotation.switch) match {
-        case IDENTIFIER       => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
-        case BACKQUOTED_IDENT => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
+        case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
+        case BACKQUOTED_IDENT =>
+          Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
 
-        case INTLIT          => Token.Constant.Int(input, dialect, curr.offset, curr.endOffset + 1, curr.intVal)
-        case LONGLIT         => Token.Constant.Long(input, dialect, curr.offset, curr.endOffset + 1, curr.longVal)
-        case FLOATLIT        => Token.Constant.Float(input, dialect, curr.offset, curr.endOffset + 1, curr.floatVal)
-        case DOUBLELIT       => Token.Constant.Double(input, dialect, curr.offset, curr.endOffset + 1, curr.doubleVal)
-        case CHARLIT         => Token.Constant.Char(input, dialect, curr.offset, curr.endOffset + 1, curr.charVal)
-        case SYMBOLLIT       => Token.Constant.Symbol(input, dialect, curr.offset, curr.endOffset + 1, scala.Symbol(curr.strVal))
-        case STRINGLIT       => Token.Constant.String(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
-        case STRINGPART      => unreachable
-        case TRUE            => Token.KwTrue(input, dialect, curr.offset)
-        case FALSE           => Token.KwFalse(input, dialect, curr.offset)
-        case NULL            => Token.KwNull(input, dialect, curr.offset)
+        case INTLIT =>
+          Token.Constant.Int(input, dialect, curr.offset, curr.endOffset + 1, curr.intVal)
+        case LONGLIT =>
+          Token.Constant.Long(input, dialect, curr.offset, curr.endOffset + 1, curr.longVal)
+        case FLOATLIT =>
+          Token.Constant.Float(input, dialect, curr.offset, curr.endOffset + 1, curr.floatVal)
+        case DOUBLELIT =>
+          Token.Constant.Double(input, dialect, curr.offset, curr.endOffset + 1, curr.doubleVal)
+        case CHARLIT =>
+          Token.Constant.Char(input, dialect, curr.offset, curr.endOffset + 1, curr.charVal)
+        case SYMBOLLIT =>
+          Token.Constant.Symbol(
+            input,
+            dialect,
+            curr.offset,
+            curr.endOffset + 1,
+            scala.Symbol(curr.strVal)
+          )
+        case STRINGLIT =>
+          Token.Constant.String(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
+        case STRINGPART => unreachable
+        case TRUE => Token.KwTrue(input, dialect, curr.offset)
+        case FALSE => Token.KwFalse(input, dialect, curr.offset)
+        case NULL => Token.KwNull(input, dialect, curr.offset)
 
-        case INTERPOLATIONID => Token.Interpolation.Id(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
-        case XMLLIT          => Token.Xml.Start(input, dialect, curr.offset, curr.offset)
-        case XMLLITEND       => unreachable
+        case INTERPOLATIONID =>
+          Token.Interpolation.Id(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
+        case XMLLIT => Token.Xml.Start(input, dialect, curr.offset, curr.offset)
+        case XMLLITEND => unreachable
 
-        case NEW   => Token.KwNew(input, dialect, curr.offset)
-        case THIS  => Token.KwThis(input, dialect, curr.offset)
+        case NEW => Token.KwNew(input, dialect, curr.offset)
+        case THIS => Token.KwThis(input, dialect, curr.offset)
         case SUPER => Token.KwSuper(input, dialect, curr.offset)
 
-        case IMPLICIT  => Token.KwImplicit(input, dialect, curr.offset)
-        case OVERRIDE  => Token.KwOverride(input, dialect, curr.offset)
+        case IMPLICIT => Token.KwImplicit(input, dialect, curr.offset)
+        case OVERRIDE => Token.KwOverride(input, dialect, curr.offset)
         case PROTECTED => Token.KwProtected(input, dialect, curr.offset)
-        case PRIVATE   => Token.KwPrivate(input, dialect, curr.offset)
-        case ABSTRACT  => Token.KwAbstract(input, dialect, curr.offset)
-        case FINAL     => Token.KwFinal(input, dialect, curr.offset)
-        case SEALED    => Token.KwSealed(input, dialect, curr.offset)
-        case LAZY      => Token.KwLazy(input, dialect, curr.offset)
-        case MACRO     => Token.KwMacro(input, dialect, curr.offset)
+        case PRIVATE => Token.KwPrivate(input, dialect, curr.offset)
+        case ABSTRACT => Token.KwAbstract(input, dialect, curr.offset)
+        case FINAL => Token.KwFinal(input, dialect, curr.offset)
+        case SEALED => Token.KwSealed(input, dialect, curr.offset)
+        case LAZY => Token.KwLazy(input, dialect, curr.offset)
+        case MACRO => Token.KwMacro(input, dialect, curr.offset)
 
-        case PACKAGE    => Token.KwPackage(input, dialect, curr.offset)
-        case IMPORT     => Token.KwImport(input, dialect, curr.offset)
-        case CLASS      => Token.KwClass(input, dialect, curr.offset)
-        case CASECLASS  => unreachable
-        case OBJECT     => Token.KwObject(input, dialect, curr.offset)
+        case PACKAGE => Token.KwPackage(input, dialect, curr.offset)
+        case IMPORT => Token.KwImport(input, dialect, curr.offset)
+        case CLASS => Token.KwClass(input, dialect, curr.offset)
+        case CASECLASS => unreachable
+        case OBJECT => Token.KwObject(input, dialect, curr.offset)
         case CASEOBJECT => unreachable
-        case TRAIT      => Token.KwTrait(input, dialect, curr.offset)
-        case EXTENDS    => Token.KwExtends(input, dialect, curr.offset)
-        case WITH       => Token.KwWith(input, dialect, curr.offset)
-        case TYPE       => Token.KwType(input, dialect, curr.offset)
-        case FORSOME    => Token.KwForsome(input, dialect, curr.offset)
-        case DEF        => Token.KwDef(input, dialect, curr.offset)
-        case VAL        => Token.KwVal(input, dialect, curr.offset)
-        case VAR        => Token.KwVar(input, dialect, curr.offset)
-        case ENUM       => Token.KwEnum(input, dialect, curr.offset)
+        case TRAIT => Token.KwTrait(input, dialect, curr.offset)
+        case EXTENDS => Token.KwExtends(input, dialect, curr.offset)
+        case WITH => Token.KwWith(input, dialect, curr.offset)
+        case TYPE => Token.KwType(input, dialect, curr.offset)
+        case FORSOME => Token.KwForsome(input, dialect, curr.offset)
+        case DEF => Token.KwDef(input, dialect, curr.offset)
+        case VAL => Token.KwVal(input, dialect, curr.offset)
+        case VAR => Token.KwVar(input, dialect, curr.offset)
+        case ENUM => Token.KwEnum(input, dialect, curr.offset)
 
-        case IF      => Token.KwIf(input, dialect, curr.offset)
-        case THEN    => unreachable
-        case ELSE    => Token.KwElse(input, dialect, curr.offset)
-        case WHILE   => Token.KwWhile(input, dialect, curr.offset)
-        case DO      => Token.KwDo(input, dialect, curr.offset)
-        case FOR     => Token.KwFor(input, dialect, curr.offset)
-        case YIELD   => Token.KwYield(input, dialect, curr.offset)
-        case THROW   => Token.KwThrow(input, dialect, curr.offset)
-        case TRY     => Token.KwTry(input, dialect, curr.offset)
-        case CATCH   => Token.KwCatch(input, dialect, curr.offset)
+        case IF => Token.KwIf(input, dialect, curr.offset)
+        case THEN => unreachable
+        case ELSE => Token.KwElse(input, dialect, curr.offset)
+        case WHILE => Token.KwWhile(input, dialect, curr.offset)
+        case DO => Token.KwDo(input, dialect, curr.offset)
+        case FOR => Token.KwFor(input, dialect, curr.offset)
+        case YIELD => Token.KwYield(input, dialect, curr.offset)
+        case THROW => Token.KwThrow(input, dialect, curr.offset)
+        case TRY => Token.KwTry(input, dialect, curr.offset)
+        case CATCH => Token.KwCatch(input, dialect, curr.offset)
         case FINALLY => Token.KwFinally(input, dialect, curr.offset)
-        case CASE    => Token.KwCase(input, dialect, curr.offset)
-        case RETURN  => Token.KwReturn(input, dialect, curr.offset)
-        case MATCH   => Token.KwMatch(input, dialect, curr.offset)
+        case CASE => Token.KwCase(input, dialect, curr.offset)
+        case RETURN => Token.KwReturn(input, dialect, curr.offset)
+        case MATCH => Token.KwMatch(input, dialect, curr.offset)
 
-        case LPAREN   => Token.LeftParen(input, dialect, curr.offset)
-        case RPAREN   => Token.RightParen(input, dialect, curr.offset)
+        case LPAREN => Token.LeftParen(input, dialect, curr.offset)
+        case RPAREN => Token.RightParen(input, dialect, curr.offset)
         case LBRACKET => Token.LeftBracket(input, dialect, curr.offset)
         case RBRACKET => Token.RightBracket(input, dialect, curr.offset)
-        case LBRACE   => Token.LeftBrace(input, dialect, curr.offset)
-        case RBRACE   => Token.RightBrace(input, dialect, curr.offset)
+        case LBRACE => Token.LeftBrace(input, dialect, curr.offset)
+        case RBRACE => Token.RightBrace(input, dialect, curr.offset)
 
-        case COMMA     => Token.Comma(input, dialect, curr.offset)
-        case SEMI      => Token.Semicolon(input, dialect, curr.offset)
-        case DOT       => Token.Dot(input, dialect, curr.offset)
-        case COLON     => Token.Colon(input, dialect, curr.offset)
-        case EQUALS    => Token.Equals(input, dialect, curr.offset)
-        case AT        => Token.At(input, dialect, curr.offset)
-        case HASH      => Token.Hash(input, dialect, curr.offset)
-        case USCORE    => Token.Underscore(input, dialect, curr.offset)
-        case ARROW     => Token.RightArrow(input, dialect, curr.offset, curr.endOffset + 1)
-        case LARROW    => Token.LeftArrow(input, dialect, curr.offset, curr.endOffset + 1)
-        case SUBTYPE   => Token.Subtype(input, dialect, curr.offset)
+        case COMMA => Token.Comma(input, dialect, curr.offset)
+        case SEMI => Token.Semicolon(input, dialect, curr.offset)
+        case DOT => Token.Dot(input, dialect, curr.offset)
+        case COLON => Token.Colon(input, dialect, curr.offset)
+        case EQUALS => Token.Equals(input, dialect, curr.offset)
+        case AT => Token.At(input, dialect, curr.offset)
+        case HASH => Token.Hash(input, dialect, curr.offset)
+        case USCORE => Token.Underscore(input, dialect, curr.offset)
+        case ARROW => Token.RightArrow(input, dialect, curr.offset, curr.endOffset + 1)
+        case LARROW => Token.LeftArrow(input, dialect, curr.offset, curr.endOffset + 1)
+        case SUBTYPE => Token.Subtype(input, dialect, curr.offset)
         case SUPERTYPE => Token.Supertype(input, dialect, curr.offset)
         case VIEWBOUND => Token.Viewbound(input, dialect, curr.offset)
 
@@ -112,27 +127,27 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
           else if (curr.strVal == "\f") Token.FF(input, dialect, curr.offset)
           else unreachable(debug(curr.strVal))
 
-        case COMMENT   =>
+        case COMMENT =>
           var value = new String(input.chars, curr.offset, curr.endOffset - curr.offset + 1)
           if (value.startsWith("//")) value = value.stripPrefix("//")
           if (value.startsWith("/*")) value = value.stripPrefix("/*").stripSuffix("*/")
           Token.Comment(input, dialect, curr.offset, curr.endOffset + 1, value)
 
-        case ELLIPSIS  => Token.Ellipsis(input, dialect, curr.offset, curr.endOffset + 1, curr.base)
-        case UNQUOTE   => Token.Unquote(input, dialect, curr.offset, curr.endOffset + 1)
+        case ELLIPSIS => Token.Ellipsis(input, dialect, curr.offset, curr.endOffset + 1, curr.base)
+        case UNQUOTE => Token.Unquote(input, dialect, curr.offset, curr.endOffset + 1)
 
-        case EOF       => Token.EOF(input, dialect)
+        case EOF => Token.EOF(input, dialect)
 
-        case EMPTY    => unreachable
-        case UNDEF    => unreachable
-        case ERROR    => unreachable
+        case EMPTY => unreachable
+        case UNDEF => unreachable
+        case ERROR => unreachable
       }
     }
 
     val legacyTokens: Array[LegacyTokenData] = {
       val scanner = new LegacyScanner(input, dialect)
       val legacyTokenBuf = new java.util.ArrayList[LegacyTokenData]()
-      scanner.foreach(curr => legacyTokenBuf.add(new LegacyTokenData{}.copyFrom(curr)))
+      scanner.foreach(curr => legacyTokenBuf.add(new LegacyTokenData {}.copyFrom(curr)))
       val underlying = new Array[LegacyTokenData](legacyTokenBuf.size())
       legacyTokenBuf.toArray(underlying)
       underlying
@@ -140,7 +155,11 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     val tokens = new java.util.ArrayList[Token]()
     tokens.add(Token.BOF(input, dialect))
 
-    def loop(startingFrom: Int, braceBalance: Int = 0, returnWhenBraceBalanceHitsZero: Boolean = false): Int = {
+    def loop(
+        startingFrom: Int,
+        braceBalance: Int = 0,
+        returnWhenBraceBalanceHitsZero: Boolean = false
+    ): Int = {
       var legacyIndex = startingFrom
       def prev = legacyTokens(legacyIndex - 1)
       def curr = legacyTokens(legacyIndex)
@@ -166,22 +185,31 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         while (startEnd < input.chars.length && input.chars(startEnd) == '\"') startEnd += 1
         val numStartQuotes = startEnd - prev.endOffset - 1
         val numQuotes = if (numStartQuotes <= 2) 1 else 3
-        def emitStart(offset: Offset) = tokens.add(Token.Interpolation.Start(input, dialect, offset, offset + numQuotes))
-        def emitEnd(offset: Offset) = tokens.add(Token.Interpolation.End(input, dialect, offset, offset + numQuotes))
+        def emitStart(offset: Offset) =
+          tokens.add(Token.Interpolation.Start(input, dialect, offset, offset + numQuotes))
+        def emitEnd(offset: Offset) =
+          tokens.add(Token.Interpolation.End(input, dialect, offset, offset + numQuotes))
         def emitContents(): Unit = {
           require(curr.token == STRINGPART || curr.token == STRINGLIT)
           if (curr.token == STRINGPART) {
-            tokens.add(Token.Interpolation.Part(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal))
+            tokens.add(
+              Token.Interpolation.Part(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
+            )
             require(input.chars(curr.endOffset + 1) == '$')
             val dollarOffset = curr.endOffset + 1
-            def emitSpliceStart(offset: Offset) = tokens.add(Token.Interpolation.SpliceStart(input, dialect, offset, offset + 1))
-            def emitSpliceEnd(offset: Offset) = tokens.add(Token.Interpolation.SpliceEnd(input, dialect, offset, offset))
+            def emitSpliceStart(offset: Offset) =
+              tokens.add(Token.Interpolation.SpliceStart(input, dialect, offset, offset + 1))
+            def emitSpliceEnd(offset: Offset) =
+              tokens.add(Token.Interpolation.SpliceEnd(input, dialect, offset, offset))
             def requireExpectedToken(expected: LegacyToken) = { require(curr.token == expected) }
-            def emitExpectedToken(expected: LegacyToken) = { require(curr.token == expected); emitToken() }
+            def emitExpectedToken(expected: LegacyToken) = {
+              require(curr.token == expected); emitToken()
+            }
             if (input.chars(dollarOffset + 1) == '{') {
               emitSpliceStart(dollarOffset)
               nextToken()
-              legacyIndex = loop(legacyIndex, braceBalance = 0, returnWhenBraceBalanceHitsZero = true)
+              legacyIndex =
+                loop(legacyIndex, braceBalance = 0, returnWhenBraceBalanceHitsZero = true)
               emitSpliceEnd(curr.offset)
               emitContents()
             } else if (input.chars(dollarOffset + 1) == '_') {
@@ -202,7 +230,9 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
             }
           } else {
             curr.endOffset -= numQuotes
-            tokens.add(Token.Interpolation.Part(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal))
+            tokens.add(
+              Token.Interpolation.Part(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
+            )
             require(input.chars(curr.endOffset + 1) == '\"')
             nextToken()
           }
@@ -213,16 +243,21 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         // for example, EOF in the case of `q""` or `q"$foobar"`
         numStartQuotes match {
           case 1 => emitStart(curr.offset - 1); emitContents(); emitEnd(curr.offset - 1)
-          case 2 => emitStart(curr.offset); curr.offset += 1; emitContents(); emitEnd(curr.offset - 1)
+          case 2 =>
+            emitStart(curr.offset); curr.offset += 1; emitContents(); emitEnd(curr.offset - 1)
           case _ => emitStart(curr.offset - 3); emitContents(); emitEnd(curr.offset - 3)
         }
       }
 
       if (prev.token == XMLLIT) {
-        def emitSpliceStart(offset: Offset) = tokens.add(Token.Xml.SpliceStart(input, dialect, offset, offset))
-        def emitSpliceEnd(offset: Offset) = tokens.add(Token.Xml.SpliceEnd(input, dialect, offset, offset))
+        def emitSpliceStart(offset: Offset) =
+          tokens.add(Token.Xml.SpliceStart(input, dialect, offset, offset))
+        def emitSpliceEnd(offset: Offset) =
+          tokens.add(Token.Xml.SpliceEnd(input, dialect, offset, offset))
         def emitPart(from: Int, to: Int) = {
-          tokens.add(Token.Xml.Part(input, dialect, from, to, new String(input.chars, from , to - from)))
+          tokens.add(
+            Token.Xml.Part(input, dialect, from, to, new String(input.chars, from, to - from))
+          )
         }
 
         @tailrec def emitContents(): Unit = {
@@ -235,7 +270,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
             case LBRACE =>
               // We are at the start of an embedded scala expression
               emitSpliceStart(curr.offset)
-              legacyIndex = loop(legacyIndex, braceBalance = 0, returnWhenBraceBalanceHitsZero = true)
+              legacyIndex =
+                loop(legacyIndex, braceBalance = 0, returnWhenBraceBalanceHitsZero = true)
               emitSpliceEnd(curr.offset)
               emitContents()
 

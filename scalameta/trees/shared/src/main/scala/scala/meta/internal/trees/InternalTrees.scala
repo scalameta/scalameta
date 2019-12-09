@@ -25,10 +25,11 @@ trait InternalTree extends Product {
   private[meta] def privateParent: Tree
   private[meta] def privateOrigin: Origin
   private[meta] def privateCopy(
-    prototype: Tree = this,
-    parent: Tree = privateParent,
-    destination: String = null,
-    origin: Origin = privateOrigin): Tree
+      prototype: Tree = this,
+      parent: Tree = privateParent,
+      destination: String = null,
+      origin: Origin = privateOrigin
+  ): Tree
 
   // =============================================================================================
   // Getters for pieces of internal state defined above.

@@ -34,19 +34,30 @@ class SurfaceSuite extends FunSuite with DiffAssertions {
     fullName.startsWith("scala.meta.jsonrpc")
   }
   lazy val allStatics = explore.allStatics("scala.meta").filterNot(lsp4s)
-  lazy val trees = wildcardImportStatics.filter(s => s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api")))
+  lazy val trees = wildcardImportStatics.filter(s =>
+    s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api"))
+  )
   lazy val tokens = reflectedTokens
-  lazy val core = allStatics.diff(trees).diff(tokens).map(fullName => (fullName, wildcardImportStatics.contains(fullName))).toMap
+  lazy val core = allStatics
+    .diff(trees)
+    .diff(tokens)
+    .map(fullName => (fullName, wildcardImportStatics.contains(fullName)))
+    .toMap
   lazy val allSurface = explore.allSurface("scala.meta").filterNot(lsp4s)
-  lazy val coreSurface = allSurface.filter(entry => !(tokens ++ trees).exists(noncore => entry.startsWith(noncore)))
+  lazy val coreSurface =
+    allSurface.filter(entry => !(tokens ++ trees).exists(noncore => entry.startsWith(noncore)))
 
   test("statics (core)") {
-    val diagnostic = core.keys.toList.sorted.map(fullName => {
-      val suffix = if (core(fullName)) "" else " *"
-      s"$fullName$suffix"
-    }).mkString(EOL)
+    val diagnostic = core.keys.toList.sorted
+      .map(fullName => {
+        val suffix = if (core(fullName)) "" else " *"
+        s"$fullName$suffix"
+      })
+      .mkString(EOL)
     // println(diagnostic)
-    assertNoDiff(diagnostic, """
+    assertNoDiff(
+      diagnostic,
+      """
       |scala.meta.Dialect
       |scala.meta.Tree
       |scala.meta.classifiers
@@ -134,7 +145,8 @@ class SurfaceSuite extends FunSuite with DiffAssertions {
       |scala.meta.transversers.Transformer
       |scala.meta.transversers.Traverser
       |scala.meta.trees
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    """.trim.stripMargin.split('\n').mkString(EOL)
+    )
   }
 
   test("prettyprinters for statics (core)") {
@@ -152,7 +164,9 @@ class SurfaceSuite extends FunSuite with DiffAssertions {
     // However, extension methods are few enough to digest and interesting enough to warrant printing out.
 
     // println(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL))
-    assertNoDiff(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL), """
+    assertNoDiff(
+      coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL),
+      """
       |* (scala.meta.Dialect, scala.meta.Tree).syntax: String
       |* (scala.meta.Dialect, scala.meta.inputs.Input).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
       |* (scala.meta.Dialect, scala.meta.inputs.Input).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
@@ -176,12 +190,15 @@ class SurfaceSuite extends FunSuite with DiffAssertions {
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    """.trim.stripMargin.split('\n').mkString(EOL)
+    )
   }
 
   test("statics (trees)") {
     // println(trees.toList.sorted.mkString(EOL))
-    assertNoDiff(trees.toList.sorted.mkString(EOL), """
+    assertNoDiff(
+      trees.toList.sorted.mkString(EOL),
+      """
       |scala.meta.Case
       |scala.meta.Ctor
       |scala.meta.Ctor.Primary
@@ -326,12 +343,15 @@ class SurfaceSuite extends FunSuite with DiffAssertions {
       |scala.meta.Type.Tuple
       |scala.meta.Type.Var
       |scala.meta.Type.With
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    """.trim.stripMargin.split('\n').mkString(EOL)
+    )
   }
 
   test("statics (tokens)") {
     // println(tokens.toList.sorted.mkString(EOL))
-    assertNoDiff(tokens.toList.sorted.mkString(EOL), """
+    assertNoDiff(
+      tokens.toList.sorted.mkString(EOL),
+      """
       |scala.meta.tokens.Token.At
       |scala.meta.tokens.Token.BOF
       |scala.meta.tokens.Token.CR
@@ -419,6 +439,7 @@ class SurfaceSuite extends FunSuite with DiffAssertions {
       |scala.meta.tokens.Token.Xml.SpliceEnd
       |scala.meta.tokens.Token.Xml.SpliceStart
       |scala.meta.tokens.Token.Xml.Start
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    """.trim.stripMargin.split('\n').mkString(EOL)
+    )
   }
 }

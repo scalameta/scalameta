@@ -46,8 +46,9 @@ object typecheckError {
         c.abort(c.enclosingPosition, s"unsupported option: ${options.tpe}")
       }
     }
-    try { c.typecheck(tree, silent = false); q"${""}" }
-    catch { case ex: TypecheckException => q"${format(ex)}" }
+    try {
+      c.typecheck(tree, silent = false); q"${""}"
+    } catch { case ex: TypecheckException => q"${format(ex)}" }
   }
 
   trait Options

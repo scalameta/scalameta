@@ -139,7 +139,8 @@ package invariants {
       }
       case class Imply(atom1: Atom, atom2: Atom) extends Prop with Simple {
         override def tree = q"!${atom1.tree} || ${atom2.tree}"
-        override def diagnostic = showCode(atom1.tree) + " is true, but " + showCode(atom2.tree) + " is false"
+        override def diagnostic =
+          showCode(atom1.tree) + " is true, but " + showCode(atom2.tree) + " is false"
       }
 
       def propify(tree: Tree): Prop = tree match {

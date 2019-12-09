@@ -14,8 +14,7 @@ object PlatformTokenizerCache {
   val megaCache = new ju.HashMap[Dialect, mutable.Map[Input, Tokens]]()
   val miniCacheSyncRoot = new Object
   def newUnsyncResult: mutable.Map[Input, Tokens] = mutable.HashMap.empty[Input, Tokens]
-  def putIfAbsent(dialect: Dialect,
-                  cache: mutable.Map[Input, Tokens]): mutable.Map[Input, Tokens] =
+  def putIfAbsent(dialect: Dialect, cache: mutable.Map[Input, Tokens]): mutable.Map[Input, Tokens] =
     if (!megaCache.containsKey(dialect)) megaCache.put(dialect, cache)
     else megaCache.get(dialect)
 }

@@ -7,7 +7,6 @@ import org.scalatest._
 import scala.meta._
 import compat.Platform.EOL
 
-
 class PublicSuite extends FunSuite {
   test("scala.meta.Dialect.toString") {
     // covered below
@@ -20,7 +19,9 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.Tree.structure (manual)") {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
-    assert(tree.structure === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))""")
+    assert(
+      tree.structure === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))"""
+    )
   }
 
   test("scala.meta.Tree.syntax") {
@@ -35,7 +36,9 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.Tree.structure (parsed)") {
     val tree = "foo + bar // baz".parse[Term].get
-    assert(tree.structure === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))""")
+    assert(
+      tree.structure === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))"""
+    )
   }
 
   test("scala.meta.Tree.syntax (parsed)") {
@@ -50,7 +53,9 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.Tree.structure (quasiquoted)") {
     val tree = q"foo + bar // baz"
-    assert(tree.structure === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))""")
+    assert(
+      tree.structure === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))"""
+    )
   }
 
   test("scala.meta.Tree.syntax (quasiquoted)") {
@@ -220,7 +225,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.inputs.Position.Range.toString") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
-    lhs.pos match { case _: Position.Range =>; case _ => }
+    lhs.pos match { case _: Position.Range => ; case _ => }
     assert(lhs.pos.toString === """[0..3) in Input.String("foo + bar")""")
   }
 
@@ -305,7 +310,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.parsers.Parsed.Error.toString") {
     val parsed = "foo + class".parse[Term]
-    parsed match { case _: Parsed.Error =>; case _ => }
+    parsed match { case _: Parsed.Error => ; case _ => }
     assert(parsed.toString === """
       |<input>:1: error: end of file expected but class found
       |foo + class
@@ -315,7 +320,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.parsers.Parsed.Success.toString") {
     val parsed = "foo + bar".parse[Term]
-    parsed match { case _: Parsed.Success[_] =>; case _ => }
+    parsed match { case _: Parsed.Success[_] => ; case _ => }
     assert(parsed.toString === "foo + bar")
   }
 
@@ -360,7 +365,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.tokenizers.Tokenized.Error.toString") {
     val tokenized = """"c""".tokenize
-    tokenized match { case _: Tokenized.Error =>; case _ => }
+    tokenized match { case _: Tokenized.Error => ; case _ => }
     assert(tokenized.toString === """
       |<input>:1: error: unclosed string literal
       |"c
@@ -370,7 +375,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.tokenizers.Tokenized.Success.toString") {
     val tokenized = "foo + bar".tokenize
-    tokenized match { case _: Tokenized.Success =>; case _ => }
+    tokenized match { case _: Tokenized.Success => ; case _ => }
     assert(tokenized.toString === "foo + bar")
   }
 
@@ -396,7 +401,9 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.tokens.Tokens.structure") {
     val tokens = "foo + bar".tokenize.get
-    assert(tokens.structure === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))")
+    assert(
+      tokens.structure === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))"
+    )
   }
 
   test("scala.meta.tokens.Tokens.syntax") {

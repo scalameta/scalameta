@@ -13,12 +13,12 @@ object ScalametaParserProperties {
   sealed abstract class BugKind
 
   /** The following property did not hold:
-    * scalac can parse file implies that scala.meta can parse file
+   * scalac can parse file implies that scala.meta can parse file
     **/
   case object ParserBroken extends BugKind
 
   /** The following property did not hold:
-    * syntheticTree.structure == synthethicTree.syntax.parse.structure
+   * syntheticTree.structure == synthethicTree.syntax.parse.structure
     **/
   case object PrettyPrinterBroken extends BugKind
 
@@ -28,10 +28,7 @@ object ScalametaParserProperties {
       case Parsed.Success(parsedFromSyntheticTree) =>
         StructurallyEqual(syntheticTree, parsedFromSyntheticTree) match {
           case Left(err) =>
-            List(
-              ParserBug(err.mismatchClass,
-                        err.lineNumber,
-                        PrettyPrinterBroken))
+            List(ParserBug(err.mismatchClass, err.lineNumber, PrettyPrinterBroken))
           case _ => Nil
         }
       case _ =>

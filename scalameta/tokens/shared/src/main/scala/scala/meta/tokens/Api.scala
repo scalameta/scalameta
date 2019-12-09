@@ -1,8 +1,7 @@
 package scala.meta
 package tokens
 
-private[meta] trait Api {
-}
+private[meta] trait Api {}
 
 private[meta] trait Aliases {
   type Token = scala.meta.tokens.Token
