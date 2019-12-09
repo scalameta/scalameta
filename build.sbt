@@ -301,7 +301,7 @@ lazy val testkit = project
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % "3.0.8",
       // These are used to download and extract a corpus tar.gz
-      "org.rauschig" % "jarchivelib" % "0.7.1",
+      "org.rauschig" % "jarchivelib" % "0.8.0",
       "commons-io" % "commons-io" % "2.6",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0"
     ),
