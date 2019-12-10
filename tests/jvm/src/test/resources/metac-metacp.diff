@@ -196,42 +196,6 @@ classes/C6#copy$default$1().
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
-=============================================
-classes/CaseClasses1.CClass#copy$default$1().
-=============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
-==============================================
-classes/CaseClasses1.CClassB#copy$default$1().
-==============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
-==============================================
-classes/CaseClasses1.CClassB#copy$default$2().
-==============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
 ==============================
 classes/Chain.tst$default$2().
 ==============================

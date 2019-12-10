@@ -148,13 +148,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
           override def apply(mtree: m.Tree): Unit = {
             mtree match {
               case mtree @ m.Term.Apply(fun, _) =>
-                def loop(term: m.Term): List[m.Term.Name] = term match {
-                  case m.Term.Apply(mfn, margs) =>
-                    margs.toList.collect {
-                      case m.Term.Assign(mname: m.Term.Name, _) => mname
-                    } ++ loop(mfn)
-                  case _ => Nil
-                }
                 indexArgNames(mtree)
               case mtree @ m.Mod.Private(mname: m.Name.Indeterminate) =>
                 indexWithin(mname)

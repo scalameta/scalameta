@@ -32,20 +32,6 @@ object N/*<=classes.N.*/ {
   }
 }
 
-object CaseClasses1/*<=classes.CaseClasses1.*/ {
-  case class CClass/*<=classes.CaseClasses1.CClass#*/(i/*<=classes.CaseClasses1.CClass#i.*/: String/*=>scala.Predef.String#*/)
-
-  val cclass1/*<=classes.CaseClasses1.cclass1.*/ = CClass/*=>classes.CaseClasses1.CClass.*/.apply/*=>classes.CaseClasses1.CClass.apply().*/(i/*=>classes.CaseClasses1.CClass.apply().(i)*/ = "").copy/*=>classes.CaseClasses1.CClass#copy().*/(i/*=>classes.CaseClasses1.CClass#copy().(i)*/ = "")
-  val cclass2/*<=classes.CaseClasses1.cclass2.*/ = CClass/*=>classes.CaseClasses1.CClass.*/.apply/*=>classes.CaseClasses1.CClass.apply().*/(i/*=>classes.CaseClasses1.CClass.apply().(i)*/ = "")
-
-  case class CClassB/*<=classes.CaseClasses1.CClassB#*/(i/*<=classes.CaseClasses1.CClassB#i.*/: Int/*=>scala.Int#*/, j/*<=classes.CaseClasses1.CClassB#j.*/: Int/*=>scala.Int#*/)
-
-  val cclass1b/*<=classes.CaseClasses1.cclass1b.*/ = CClassB/*=>classes.CaseClasses1.CClassB.*/(i/*=>classes.CaseClasses1.CClassB.apply().(i)*/ = 1, j/*=>classes.CaseClasses1.CClassB.apply().(j)*/ = 2)
-  val cclass2b/*<=classes.CaseClasses1.cclass2b.*/ = CClassB/*=>classes.CaseClasses1.CClassB.*/(i/*=>classes.CaseClasses1.CClassB.apply().(i)*/ = 1, 2)
-  val cclass3b/*<=classes.CaseClasses1.cclass3b.*/ = CClassB/*=>classes.CaseClasses1.CClassB.*/(1, j/*=>classes.CaseClasses1.CClassB.apply().(j)*/ = 2)
-
-}
-
 object Chain/*<=classes.Chain.*/ {
   class A/*<=classes.Chain.A#*/ {
     def tst1/*<=classes.Chain.A#tst1().*/(i/*<=classes.Chain.A#tst1().(i)*/: Int/*=>scala.Int#*/): A/*=>classes.Chain.A#*/ = this

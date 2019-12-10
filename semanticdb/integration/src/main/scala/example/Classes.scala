@@ -32,20 +32,6 @@ object N {
   }
 }
 
-object CaseClasses1 {
-  case class CClass(i: String)
-
-  val cclass1 = CClass.apply(i = "").copy(i = "")
-  val cclass2 = CClass.apply(i = "")
-
-  case class CClassB(i: Int, j: Int)
-
-  val cclass1b = CClassB(i = 1, j = 2)
-  val cclass2b = CClassB(i = 1, 2)
-  val cclass3b = CClassB(1, j = 2)
-
-}
-
 object Chain {
   class A {
     def tst1(i: Int): A = this
