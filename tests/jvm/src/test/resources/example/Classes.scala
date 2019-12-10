@@ -23,7 +23,7 @@ class C8/*<=classes.C8#*/(private[this] val x/*<=classes.C8#x.*/: Int/*=>scala.I
 class C9/*<=classes.C9#*/(private[this] var x/*<=classes.C9#x().*/: Int/*=>scala.Int#*/)
 
 object N/*<=classes.N.*/ {
-  val anonClass/*<=classes.N.anonClass.*/ = new C7/*=>classes.C7#*/(42) {
+  val anonClass/*<=classes.N.anonClass.*/ = new /*<=local8*/C7/*=>classes.C7#*/(42) {
     val local/*<=local9*/ = ???/*=>scala.Predef.`???`().*/
   }
   val anonFun/*<=classes.N.anonFun.*/ = List/*=>scala.collection.immutable.List.*/(1).map/*=>scala.collection.immutable.List#map().*/ { i/*<=local10*/ =>
@@ -57,8 +57,24 @@ object Chain/*<=classes.Chain.*/ {
   def tst/*<=classes.Chain.tst().*/(i/*<=classes.Chain.tst().(i)*/: Int/*=>scala.Int#*/, j/*<=classes.Chain.tst().(j)*/: A/*=>classes.Chain.A#*/ = new A/*=>classes.Chain.A#*/()) = j/*=>classes.Chain.tst().(j)*/
 
   val a/*<=classes.Chain.a.*/ = new A/*=>classes.Chain.A#*/
-  a/*=>classes.Chain.a.*/.tst1/*=>classes.Chain.A#tst1().*/(i/*=>classes.Chain.A#tst1().(i)*/ = 1).tst2/*=>classes.Chain.A#tst2().*/(i/*=>classes.Chain.A#tst2().(i)*/ = 2)
-  a/*=>classes.Chain.a.*/.tst2/*=>classes.Chain.A#tst2().*/(i/*=>classes.Chain.A#tst2().(i)*/ = 1).tst3/*=>classes.Chain.A#tst3().*/(i/*=>classes.Chain.A#tst3().(i)*/ = 1, 2).tst1/*=>classes.Chain.A#tst1().*/(i/*=>classes.Chain.A#tst1().(i)*/ = 2)
-  a/*=>classes.Chain.a.*/.tst2/*=>classes.Chain.A#tst2().*/(i/*=>classes.Chain.A#tst2().(i)*/ = 1).tst3/*=>classes.Chain.A#tst3().*/(i/*=>classes.Chain.A#tst3().(i)*/ = 1, j/*=>classes.Chain.A#tst3().(j)*/ = 2).tst1/*=>classes.Chain.A#tst1().*/(i/*=>classes.Chain.A#tst1().(i)*/ = 2)
-  a/*=>classes.Chain.a.*/.tst2/*=>classes.Chain.A#tst2().*/(i/*=>classes.Chain.A#tst2().(i)*/ = 1).tst4/*=>classes.Chain.A#tst4().*/(i/*=>classes.Chain.A#tst4().(i)*/ = 1, j/*=>classes.Chain.A#tst4().(j)*/ = tst/*=>classes.Chain.tst().*/(i/*=>classes.Chain.tst().(i)*/ = 1, j/*=>classes.Chain.tst().(j)*/ = new A/*=>classes.Chain.A#*/())).tst1/*=>classes.Chain.A#tst1().*/(i/*=>classes.Chain.A#tst1().(i)*/ = 2)
+  a/*=>classes.Chain.a.*/
+    .tst1/*=>classes.Chain.A#tst1().*/(i/*=>classes.Chain.A#tst1().(i)*/ = 1)
+    .tst2/*=>classes.Chain.A#tst2().*/(i/*=>classes.Chain.A#tst2().(i)*/ = 2)
+
+  a/*=>classes.Chain.a.*/
+    .tst2/*=>classes.Chain.A#tst2().*/(i/*=>classes.Chain.A#tst2().(i)*/ = 1)
+    .tst3/*=>classes.Chain.A#tst3().*/(i/*=>classes.Chain.A#tst3().(i)*/ = 1, 2)
+    .tst1/*=>classes.Chain.A#tst1().*/(i/*=>classes.Chain.A#tst1().(i)*/ = 2)
+
+  a/*=>classes.Chain.a.*/
+    .tst2/*=>classes.Chain.A#tst2().*/(i/*=>classes.Chain.A#tst2().(i)*/ = 1)
+    .tst3/*=>classes.Chain.A#tst3().*/(i/*=>classes.Chain.A#tst3().(i)*/ = 1, j/*=>classes.Chain.A#tst3().(j)*/ = 2)
+    .tst1/*=>classes.Chain.A#tst1().*/(i/*=>classes.Chain.A#tst1().(i)*/ = 2)
+
+  a/*=>classes.Chain.a.*/
+    .tst2/*=>classes.Chain.A#tst2().*/(i/*=>classes.Chain.A#tst2().(i)*/ = 1)
+    .tst4/*=>classes.Chain.A#tst4().*/(
+      i/*=>classes.Chain.A#tst4().(i)*/ = 1,
+      j/*=>classes.Chain.A#tst4().(j)*/ = tst/*=>classes.Chain.tst().*/(i/*=>classes.Chain.tst().(i)*/ = 1, j/*=>classes.Chain.tst().(j)*/ = new A/*=>classes.Chain.A#*/()))
+    .tst1/*=>classes.Chain.A#tst1().*/(i/*=>classes.Chain.A#tst1().(i)*/ = 2)
 }
