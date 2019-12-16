@@ -660,6 +660,66 @@ classes/C9#`x_=`().(x$1) => param x$1: Int
 classes/C9#x(). => private[this] var method x: Int
   Int => scala/Int#
 
+classes/Chain.class
+-------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => classes/Chain.class
+Text => empty
+Language => Scala
+Symbols => 18 entries
+
+Symbols:
+classes/Chain. => final object Chain extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+classes/Chain.A# => class A extends AnyRef { +5 decls }
+  AnyRef => scala/AnyRef#
+classes/Chain.A#`<init>`(). => primary ctor <init>()
+classes/Chain.A#tst1(). => method tst1(i: Int): A
+  i => classes/Chain.A#tst1().(i)
+  Int => scala/Int#
+  A => classes/Chain.A#
+classes/Chain.A#tst1().(i) => param i: Int
+  Int => scala/Int#
+classes/Chain.A#tst2(). => method tst2(i: Int): A
+  i => classes/Chain.A#tst2().(i)
+  Int => scala/Int#
+  A => classes/Chain.A#
+classes/Chain.A#tst2().(i) => param i: Int
+  Int => scala/Int#
+classes/Chain.A#tst3(). => method tst3(i: Int, j: Int): A
+  i => classes/Chain.A#tst3().(i)
+  Int => scala/Int#
+  j => classes/Chain.A#tst3().(j)
+  A => classes/Chain.A#
+classes/Chain.A#tst3().(i) => param i: Int
+  Int => scala/Int#
+classes/Chain.A#tst3().(j) => param j: Int
+  Int => scala/Int#
+classes/Chain.A#tst4(). => method tst4(i: Int, j: A): A
+  i => classes/Chain.A#tst4().(i)
+  Int => scala/Int#
+  j => classes/Chain.A#tst4().(j)
+  A => classes/Chain.A#
+classes/Chain.A#tst4().(i) => param i: Int
+  Int => scala/Int#
+classes/Chain.A#tst4().(j) => param j: A
+  A => classes/Chain.A#
+classes/Chain.a. => val method a: A
+  A => classes/Chain.A#
+classes/Chain.tst$default$2(). => method tst$default$2: A @<?>
+  A => classes/Chain.A#
+classes/Chain.tst(). => method tst(i: Int, j: A): A
+  i => classes/Chain.tst().(i)
+  Int => scala/Int#
+  j => classes/Chain.tst().(j)
+  A => classes/Chain.A#
+classes/Chain.tst().(i) => param i: Int
+  Int => scala/Int#
+classes/Chain.tst().(j) => default param j: A
+  A => classes/Chain.A#
+
 classes/M.class
 ---------------
 

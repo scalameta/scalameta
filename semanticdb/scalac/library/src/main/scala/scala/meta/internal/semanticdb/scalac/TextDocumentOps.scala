@@ -89,17 +89,17 @@ trait TextDocumentOps { self: SemanticdbOps =>
             mstarts(mstart1) = mname
             mends(mend1) = mname
           }
-          private def indexArgNames(mapp: m.Tree, mnames: List[m.Name]): Unit = {
-            if (mnames.isEmpty) return
-            todo ++= mnames
-            val mstart1 = mapp.tokens
-              .dropWhile(_.is[m.Token.LeftParen])
-              .headOption
-              .map(_.start)
-              .getOrElse(-1)
-            // only add names for the top-level term.apply of a curried function application.
-            if (!margnames.contains(mstart1))
-              margnames(mstart1) = mnames
+          private def indexArgNames(mapp: m.Tree): Unit = {
+            mapp match {
+              case m.Term.Apply(fun, args) =>
+                margnames(fun.pos.end) = args.collect {
+                  case m.Term.Assign(lhs: m.Term.Name, _) => lhs
+                }
+                args.collect { case m.Term.Assign(_, rhs) => rhs }.foreach(indexArgNames)
+              case m.Term.Select(qual, _) =>
+                indexArgNames(qual)
+              case _ =>
+            }
           }
           private def indexWithin(mname: m.Name.Indeterminate): Unit = {
             todo += mname
@@ -147,15 +147,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
           }
           override def apply(mtree: m.Tree): Unit = {
             mtree match {
-              case mtree @ m.Term.Apply(_, margs) =>
-                def loop(term: m.Term): List[m.Term.Name] = term match {
-                  case m.Term.Apply(mfn, margs) =>
-                    margs.toList.collect {
-                      case m.Term.Assign(mname: m.Term.Name, _) => mname
-                    } ++ loop(mfn)
-                  case _ => Nil
-                }
-                indexArgNames(mtree, loop(mtree))
+              case mtree @ m.Term.Apply(fun, _) =>
+                indexArgNames(mtree)
               case mtree @ m.Mod.Private(mname: m.Name.Indeterminate) =>
                 indexWithin(mname)
               case mtree @ m.Mod.Protected(mname: m.Name.Indeterminate) =>
