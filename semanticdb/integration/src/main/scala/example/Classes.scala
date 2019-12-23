@@ -31,3 +31,30 @@ object N {
     local + 2
   }
 }
+
+object Chain {
+  class A {
+    def tst1(i: Int): A = this
+    def tst2(i: Int): A = this
+    def tst3(i: Int, j: Int): A = this
+    def tst4(i: Int, j: A): A = j
+  }
+
+  def tst(i: Int, j: A = new A()) = j
+
+  val a = new A
+  a.tst1(i = 1)
+    .tst2(i = 2)
+
+  a.tst2(i = 1)
+    .tst3(i = 1, 2)
+    .tst1(i = 2)
+
+  a.tst2(i = 1)
+    .tst3(i = 1, j = 2)
+    .tst1(i = 2)
+
+  a.tst2(i = 1)
+    .tst4(i = 1, j = tst(i = 1, j = new A()))
+    .tst1(i = 2)
+}
