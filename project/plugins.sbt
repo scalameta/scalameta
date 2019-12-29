@@ -16,7 +16,7 @@ libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin-shaded" % "0.9.
 
 libraryDependencies += "org.scala-sbt" %% "scripted-plugin" % sbtVersion.value
 
-addSbtPlugin("com.geirsson" % "sbt-ci-release" % "1.4.31")
+addSbtPlugin("com.geirsson" % "sbt-ci-release" % "1.5.0")
 
 addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.6.1")
 
