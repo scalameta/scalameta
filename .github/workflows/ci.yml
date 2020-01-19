@@ -21,14 +21,14 @@ jobs:
           - "++2.13.1 testsJS/test"
           - "mima"
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - uses: olafurpg/setup-scala@v7
       - run: sbt ${{ matrix.command }}
   jdk11:
     name: JDK11 tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - uses: olafurpg/setup-scala@v7
         with:
           java-version: adopt@1.11
@@ -37,7 +37,7 @@ jobs:
     name: Windows tests
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - uses: olafurpg/setup-scala@v7
       - run: sbt ci-windows
         shell: bash
@@ -45,6 +45,6 @@ jobs:
     name: Scalafmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - uses: olafurpg/setup-scala@v7
       - run: ./bin/scalafmt --test
