@@ -202,7 +202,7 @@ package invariants {
       // println(tree)
       // println(prop)
       // println(prop.emit)
-      // println("=======")
+      // println("=====")
       c.untypecheck(prop.emit)
     }
   }

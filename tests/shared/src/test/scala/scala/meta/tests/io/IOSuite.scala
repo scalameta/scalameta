@@ -3,7 +3,7 @@ package io
 
 import scala.meta._
 import scala.meta.internal.io._
-import org.scalatest.FunSuite
+import munit.FunSuite
 
 class IOSuite extends FunSuite {
   val buildSbt: AbsolutePath = RelativePath("build.sbt").toAbsolute

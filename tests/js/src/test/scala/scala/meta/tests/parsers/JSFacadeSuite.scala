@@ -1,7 +1,7 @@
 package scala.meta.tests
 package parsers
 
-import org.scalatest._
+import munit._
 import scala.scalajs.js
 import scala.collection.mutable
 import scala.meta.parsers._

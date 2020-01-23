@@ -1,14 +1,13 @@
 package scala.meta.tests
 package trees
 
-import org.scalatest._
+import munit._
 import scala.compat.Platform.EOL
 import scala.collection.mutable.ListBuffer
-import scala.meta.testkit.DiffAssertions
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}
 
-class ReflectionSuite extends FunSuite with DiffAssertions {
+class ReflectionSuite extends FunSuite {
   object TreeReflection extends {
     val u: ru.type = ru
     val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
@@ -21,28 +20,28 @@ class ReflectionSuite extends FunSuite with DiffAssertions {
   // but please deal with that (or come up with a more effective way of testing TreeReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length === 19)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length === 271)
+    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length == 19)
+    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length == 271)
   }
 
   test("If") {
     val iff = symbolOf[scala.meta.Term.If].asLeaf
     val List(f1, f2, f3) = iff.fields
-    assert(f1.toString === "field Term.If.cond: scala.meta.Term")
-    assert(f2.toString === "field Term.If.thenp: scala.meta.Term")
-    assert(f3.toString === "field Term.If.elsep: scala.meta.Term")
+    assert(f1.toString == "field Term.If.cond: scala.meta.Term")
+    assert(f2.toString == "field Term.If.thenp: scala.meta.Term")
+    assert(f3.toString == "field Term.If.elsep: scala.meta.Term")
     val List(a1, a2, a3) = iff.allFields
-    assert(a1.toString === "field Term.If.cond: scala.meta.Term")
-    assert(a2.toString === "field Term.If.thenp: scala.meta.Term")
-    assert(a3.toString === "field Term.If.elsep: scala.meta.Term")
+    assert(a1.toString == "field Term.If.cond: scala.meta.Term")
+    assert(a2.toString == "field Term.If.thenp: scala.meta.Term")
+    assert(a3.toString == "field Term.If.elsep: scala.meta.Term")
   }
 
   test("Term.Name") {
     val iff = symbolOf[scala.meta.Term.Name].asLeaf
     val List(f1) = iff.fields
-    assert(f1.toString === "field Term.Name.value: String @org.scalameta.invariants.nonEmpty")
+    assert(f1.toString == "field Term.Name.value: String @org.scalameta.invariants.nonEmpty")
     val List(a1) = iff.allFields
-    assert(a1.toString === "field Term.Name.value: String @org.scalameta.invariants.nonEmpty")
+    assert(a1.toString == "field Term.Name.value: String @org.scalameta.invariants.nonEmpty")
   }
 
   test("allFields") {

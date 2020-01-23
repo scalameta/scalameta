@@ -60,7 +60,7 @@ object SemanticdbConfig {
   private val SetSymbols = "symbols:(.*)".r
   private val SetDiagnostics = "diagnostics:(.*)".r
   private val SetSynthetics = "synthetics:(.*)".r
-  // ============ COMPATIBILITY WITH 3.X STARTS ============
+  // ======== COMPATIBILITY WITH 3.X STARTS ========
   private val SetMode = "mode:(.*)".r
   private val SetOwners = "owners:(.*)".r
   private val SetDenotations = "denotations:(.*)".r
@@ -68,7 +68,7 @@ object SemanticdbConfig {
   private val SetMembers = "members:(.*)".r
   private val SetOverrides = "overrides:(.*)".r
   private val SetMessages = "messages:(.*)".r
-  // ============ COMPATIBILITY WITH 3.X ENDS ============
+  // ======== COMPATIBILITY WITH 3.X ENDS ========
 
   def parse(
       scalacOptions: List[String],
@@ -114,7 +114,7 @@ object SemanticdbConfig {
         config = config.copy(diagnostics = mode)
       case SetSynthetics(BinaryMode(mode)) =>
         config = config.copy(synthetics = mode)
-      // ============ COMPATIBILITY WITH 3.X STARTS ============
+      // ======== COMPATIBILITY WITH 3.X STARTS ========
       case option @ SetMode("fat") =>
         deprecated(option, "text:on")
         config = config.copy(text = BinaryMode.On)
@@ -148,7 +148,7 @@ object SemanticdbConfig {
         config = config.copy(synthetics = BinaryMode.Off)
       case option @ SetOwners(_) =>
         unsupported(option)
-      // ============ COMPATIBILITY WITH 3.X ENDS ============
+      // ======== COMPATIBILITY WITH 3.X ENDS ========
       case els =>
         errFn(s"Ignoring unknown option $els")
     }

@@ -3,7 +3,7 @@ package contrib
 
 import scala.meta._
 import scala.meta.contrib._
-import org.scalatest.FunSuite
+import munit.FunSuite
 
 class AssociatedCommentsTest extends FunSuite {
   test("leading") {
@@ -86,7 +86,7 @@ class AssociatedCommentsTest extends FunSuite {
     )
   }
 
-  ignore("multiple leading comments in different lines at the beginning of a file") {
+  test("multiple leading comments in different lines at the beginning of a file".ignore) {
     val input =
       """|/** leading 1 */
          |/* leading 2 */
@@ -103,7 +103,7 @@ class AssociatedCommentsTest extends FunSuite {
     )
   }
 
-  ignore("single trailing comment at the end of a file") {
+  test("single trailing comment at the end of a file".ignore) {
     val input =
       """|object A {
          |} // trailing
@@ -251,7 +251,7 @@ class AssociatedCommentsTest extends FunSuite {
     // check expected leading comments
     for ((t, comments) <- leading) {
       assert(
-        associatedComments.leading(t).map(_.text) === comments,
+        associatedComments.leading(t).map(_.text) == comments,
         s"actual leading comments didn't match expectation for ${t.syntax}"
       )
     }
@@ -266,7 +266,7 @@ class AssociatedCommentsTest extends FunSuite {
     // check expected trailing comments
     for ((t, comments) <- trailing) {
       assert(
-        associatedComments.trailing(t).map(_.text) === comments,
+        associatedComments.trailing(t).map(_.text) == comments,
         s"actual trailing comments didn't match expectation for ${t.syntax}"
       )
     }

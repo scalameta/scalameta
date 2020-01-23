@@ -1,7 +1,7 @@
 package scala.meta.tests
 package tokenizers
 
-import org.scalatest._
+import munit._
 import scala.meta._
 import scala.meta.tokens.Token._
 import scala.meta.dialects.Scala211
@@ -12,7 +12,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     assert(
       tokenize("class C  {\t val x = 2}\n\n")
         .map(_.syntax)
-        .mkString === "class C  {\t val x = 2}\n\n"
+        .mkString == "class C  {\t val x = 2}\n\n"
     )
   }
 
@@ -47,7 +47,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |  val hello = 42
       |  val `world` = 42
       |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.syntax).mkString === """
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.syntax).mkString == """
       |class C {
       |  val x1a = 2
       |  val x1b = 0x002
@@ -94,7 +94,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |  qQQQclass $YQQQ
       |  qQQQclass ${Y}QQQ
       |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.syntax).mkString === """
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.syntax).mkString == """
       |class C {
       |  q""
       |  q"$b + 2"
@@ -114,16 +114,16 @@ class TokenizerSuite extends BaseTokenizerSuite {
     assert(
       tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n")
         .map(_.syntax)
-        .mkString === "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n"
+        .mkString == "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n"
     )
   }
 
   test("showCode with comments - tricky") {
-    assert(tokenize("x ~/**/y").map(_.syntax).mkString === "x ~/**/y")
+    assert(tokenize("x ~/**/y").map(_.syntax).mkString == "x ~/**/y")
   }
 
   test("showRaw without comments - easy") {
-    assert(tokenize("class C  {\t val x = 2}\n\n").map(_.structure).mkString("\n") === """
+    assert(tokenize("class C  {\t val x = 2}\n\n").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |class [0..5)
       |  [5..6)
@@ -181,7 +181,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |}
     """.trim.stripMargin.replace("QQQ", "\"\"\""))
         .map(_.structure)
-        .mkString("\n") === """
+        .mkString("\n") == """
       |BOF [0..0)
       |class [0..5)
       |  [5..6)
@@ -482,7 +482,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |}
     """.trim.stripMargin.replace("QQQ", "\"\"\""))
         .map(_.structure)
-        .mkString("\n") === """
+        .mkString("\n") == """
       |BOF [0..0)
       |class [0..5)
       |  [5..6)
@@ -610,7 +610,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     assert(
       tokenize("class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n")
         .map(_.structure)
-        .mkString("\n") === """
+        .mkString("\n") == """
       |BOF [0..0)
       |class [0..5)
       |  [5..6)
@@ -638,7 +638,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("showRaw with comments - tricky") {
-    assert(tokenize("x ~/**/y").map(_.structure).mkString("\n") === """
+    assert(tokenize("x ~/**/y").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |x [0..1)
       |  [1..2)
@@ -650,7 +650,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("interpolation start & end - episode 01") {
-    assert(tokenize("q\"\"").map(_.structure).mkString("\n") === """
+    assert(tokenize("q\"\"").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |q [0..1)
       |" [1..2)
@@ -661,7 +661,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("interpolation start & end - episode 02") {
-    assert(tokenize("q\"\";").map(_.structure).mkString("\n") === """
+    assert(tokenize("q\"\";").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |q [0..1)
       |" [1..2)
@@ -673,7 +673,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("interpolation start & end - episode 03") {
-    assert(tokenize("q\"a\"").map(_.structure).mkString("\n") === """
+    assert(tokenize("q\"a\"").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |q [0..1)
       |" [1..2)
@@ -684,7 +684,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("interpolation start & end - episode 04") {
-    assert(tokenize("q\"a\";").map(_.structure).mkString("\n") === """
+    assert(tokenize("q\"a\";").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |q [0..1)
       |" [1..2)
@@ -696,7 +696,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("interpolation start & end - episode 05") {
-    assert(tokenize("q\"\"\"\"\"\"").map(_.structure).mkString("\n") === """
+    assert(tokenize("q\"\"\"\"\"\"").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |q [0..1)
       |QQQ [1..4)
@@ -707,7 +707,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("interpolation start & end - episode 06") {
-    assert(tokenize("q\"\"\"\"\"\";").map(_.structure).mkString("\n") === """
+    assert(tokenize("q\"\"\"\"\"\";").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |q [0..1)
       |QQQ [1..4)
@@ -719,7 +719,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("interpolation start & end - episode 07") {
-    assert(tokenize("q\"\"\"a\"\"\"").map(_.structure).mkString("\n") === """
+    assert(tokenize("q\"\"\"a\"\"\"").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |q [0..1)
       |QQQ [1..4)
@@ -730,7 +730,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("interpolation start & end - episode 08") {
-    assert(tokenize("q\"\"\"a\"\"\";").map(_.structure).mkString("\n") === """
+    assert(tokenize("q\"\"\"a\"\"\";").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |q [0..1)
       |QQQ [1..4)
@@ -742,7 +742,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("interpolation start & end - episode 09") {
-    assert(tokenize("q\"a\"\r\n").map(_.structure).mkString("\n") === """
+    assert(tokenize("q\"a\"\r\n").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |q [0..1)
       |" [1..2)
@@ -755,7 +755,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("$this") {
-    assert(tokenize("q\"$this\"").map(_.structure).mkString("\n") === """
+    assert(tokenize("q\"$this\"").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |q [0..1)
       |" [1..2)
@@ -770,7 +770,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("monocle") {
-    assert(tokenize("x => x").map(_.structure).mkString("\n") === """
+    assert(tokenize("x => x").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |x [0..1)
       |  [1..2)
@@ -779,7 +779,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |x [5..6)
       |EOF [6..6)
     """.trim.stripMargin)
-    assert(tokenize("x ⇒ x").map(_.structure).mkString("\n") === """
+    assert(tokenize("x ⇒ x").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |x [0..1)
       |  [1..2)
@@ -789,7 +789,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |EOF [5..5)
     """.trim.stripMargin)
     assert(
-      tokenize("for (x <- xs) println(x)").map(_.structure).mkString("\n") === """
+      tokenize("for (x <- xs) println(x)").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |for [0..3)
       |  [3..4)
@@ -808,7 +808,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |EOF [24..24)
     """.trim.stripMargin
     )
-    assert(tokenize("for (x ← xs) println(x)").map(_.structure).mkString("\n") === """
+    assert(tokenize("for (x ← xs) println(x)").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |for [0..3)
       |  [3..4)
@@ -829,7 +829,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("-2147483648") {
-    assert(tokenize("-2147483648").map(_.structure).mkString("\n") === """
+    assert(tokenize("-2147483648").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |- [0..1)
       |2147483648 [1..11)
@@ -838,7 +838,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("simple xml literal - 1") {
-    assert(tokenize("<foo>bar</foo>").map(_.structure).mkString("\n") === """
+    assert(tokenize("<foo>bar</foo>").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       | [0..0)
       |<foo>bar</foo> [0..14)
@@ -848,7 +848,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("simple xml literal - 2") {
-    assert(tokenize("<foo>bar</foo> ").map(_.structure).mkString("\n") === """
+    assert(tokenize("<foo>bar</foo> ").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       | [0..0)
       |<foo>bar</foo> [0..14)
@@ -862,7 +862,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     val tree = "foo + bar".parse[Term].get
     assert(tree.pos != Position.None)
     assert(
-      tree.tokens.structure === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))"
+      tree.tokens.structure == "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))"
     )
   }
 
@@ -870,50 +870,50 @@ class TokenizerSuite extends BaseTokenizerSuite {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
     assert(tree.pos == Position.None)
     assert(
-      tree.tokens.structure === "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))"
+      tree.tokens.structure == "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))"
     )
   }
 
   test("Ident.value for normal") {
     val Tokens(bof, foo: Ident, eof) = "foo".parse[Term].get.tokens
-    assert(foo.value === "foo")
+    assert(foo.value == "foo")
   }
 
   test("Ident.value for backquoted") {
     val Tokens(bof, foo: Ident, eof) = "`foo`".parse[Term].get.tokens
-    assert(foo.value === "foo")
-    assert(foo.syntax === "`foo`")
+    assert(foo.value == "foo")
+    assert(foo.syntax == "`foo`")
   }
 
   test("Interpolation.Id.value") {
     val Tokens(bof, _, id: Interpolation.Id, _, _, _, _, eof) = """ q"" """.tokenize.get
-    assert(id.value === "q")
+    assert(id.value == "q")
   }
 
   test("Interpolation.Part.value") {
     val Tokens(bof, _, _, _, part: Interpolation.Part, _, _, eof) = """ q"foo" """.tokenize.get
-    assert(part.value === "foo")
+    assert(part.value == "foo")
   }
 
   test("Interpolated tree parsed succesfully with windows newline") {
     val foo = (""" q"foo"""" + "\r\n").tokenize.get
     println(foo)
     val Tokens(bof, _, _, _, part: Interpolation.Part, _, cr: CR, lf: LF, eof) = foo
-    assert(part.value === "foo")
-    assert(cr.syntax === "\r")
-    assert(lf.syntax === "\n")
+    assert(part.value == "foo")
+    assert(cr.syntax == "\r")
+    assert(lf.syntax == "\n")
   }
 
   test("Interpolated tree parsed succesfully with unix newline") {
     val Tokens(bof, _, _, _, part: Interpolation.Part, _, lf: LF, eof) =
       (""" q"foo"""" + "\n").tokenize.get
-    assert(part.value === "foo")
-    assert(lf.syntax === "\n")
+    assert(part.value == "foo")
+    assert(lf.syntax == "\n")
   }
 
   test("Comment.value") {
     val Tokens(bof, comment: Comment, eof) = "//foo".tokenize.get
-    assert(comment.value === "foo")
+    assert(comment.value == "foo")
   }
 
   test("enum") {

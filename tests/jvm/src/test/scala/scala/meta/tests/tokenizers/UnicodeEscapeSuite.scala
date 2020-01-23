@@ -2,10 +2,9 @@ package scala.meta.tests.tokenizers
 
 import java.nio.charset.StandardCharsets
 import scala.meta.internal.io.InputStreamIO
-import scala.meta.testkit.DiffAssertions
 import org.scalameta.logger
 
-class UnicodeEscapeSuite extends BaseTokenizerSuite with DiffAssertions {
+class UnicodeEscapeSuite extends BaseTokenizerSuite {
   // Read tests from external file because scalac processes string literals in source
   // @ """ s"${x}\uef17" """.length
   // res0: Int = 10

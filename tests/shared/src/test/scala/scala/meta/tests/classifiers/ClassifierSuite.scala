@@ -1,7 +1,7 @@
 package org.scalameta.tests
 package classifiers
 
-import org.scalatest._
+import munit._
 import scala.meta.internal.classifiers.classifier
 import scala.meta.classifiers._
 
@@ -40,7 +40,7 @@ class ClassifierSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       (??? : Unclassifiable).is[Derived]
-    """) === """
+    """) == """
       |value is is not a member of org.scalameta.tests.classifiers.Unclassifiable
     """.trim.stripMargin)
   }
@@ -51,7 +51,7 @@ class ClassifierSuite extends FunSuite {
       (??? : Unclassifiable).is[Manual]
       (??? : Unclassifiable).is[Auto1]
       (??? : Unclassifiable).is[Auto2]
-    """) === """
+    """) == """
       |value is is not a member of org.scalameta.tests.classifiers.Unclassifiable
     """.trim.stripMargin)
   }
@@ -60,14 +60,14 @@ class ClassifierSuite extends FunSuite {
     assert(typecheckError("""
       import scala.meta._
       (??? : MyToken).is[MyIdent]
-    """) === """
+    """) == """
       |don't know how to check whether org.scalameta.tests.classifiers.MyToken is org.scalameta.tests.classifiers.MyIdent
     """.trim.stripMargin)
 
     assert(typecheckError("""
       import scala.meta._
       (??? : MyIdent).is[MyIdent]
-    """) === """
+    """) == """
       |don't know how to check whether org.scalameta.tests.classifiers.MyIdent is org.scalameta.tests.classifiers.MyIdent
     """.trim.stripMargin)
   }

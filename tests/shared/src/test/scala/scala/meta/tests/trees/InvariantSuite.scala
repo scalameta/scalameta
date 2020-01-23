@@ -1,7 +1,7 @@
 package scala.meta.tests
 package trees
 
-import org.scalatest._
+import munit._
 import org.scalameta.invariants._
 import scala.meta._
 import scala.meta.dialects.Scala211

@@ -1,20 +1,19 @@
 package scala.meta.tests.semanticdb
 
 import java.nio.file.Files
-import org.scalatest.FunSuite
-import org.scalatest.tagobjects.Slow
+import munit.FunSuite
+import scala.meta.tests.Slow
 import scala.meta.cli.Metac
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.AbsolutePath
 import scala.meta.io.RelativePath
 import scala.meta.metac
-import scala.meta.testkit.DiffAssertions
 import scala.meta.testkit.StringFS
 import scala.meta.tests.cli.CliSuite
 import scala.meta.tests.metacp.Library
 
-class ConfigSuite extends FunSuite with DiffAssertions {
+class ConfigSuite extends FunSuite {
 
   val A = RelativePath("A.scala")
 
@@ -33,7 +32,7 @@ class ConfigSuite extends FunSuite with DiffAssertions {
   ): Unit = {
     // each test case takes ~1-2 seconds to run so they're modestly fast but still
     // ~100x slower than regular unit test.
-    test(name, Slow) {
+    test(name.tag(Slow)) {
       val sourceroot = StringFS.fromString(input)
       val (metacIsSuccess, metacOut, metacErr) = CliSuite.withReporter { reporter =>
         val settings = metac
@@ -74,7 +73,7 @@ class ConfigSuite extends FunSuite with DiffAssertions {
       |}
     """.stripMargin, { doc =>
       val symbols = doc.symbols.map(_.symbol).sorted.mkString("\n")
-      assertNoDiffOrPrintExpected(
+      assertNoDiff(
         symbols,
         """|local0
            |local1
@@ -108,7 +107,7 @@ class ConfigSuite extends FunSuite with DiffAssertions {
       |}
     """.stripMargin, { doc =>
       val obtained = doc.symbols.map(i => i.symbol + " " + i.displayName).sorted.mkString("\n")
-      assertNoDiffOrPrintExpected(
+      assertNoDiff(
         obtained,
         """|_empty_/A. A
            |_empty_/A.x. x

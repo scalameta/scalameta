@@ -9,12 +9,12 @@ import scala.meta.internal.io.FileIO
 import scala.meta.io.AbsolutePath
 import scala.meta.metac._
 import scala.meta.tests.BuildInfo
-import org.scalatest.tagobjects.Slow
-import org.scalatest.FunSuite
+import scala.meta.tests.Slow
+import munit.FunSuite
 import scala.meta.tests.SkipWindows
 
 class MetacScalaLibrary extends FunSuite {
-  test("compile scala-library", Slow, SkipWindows) {
+  test("compile scala-library".tag(Slow).tag(SkipWindows)) {
     val exit = MetacScalaLibrary.process(Array())
     require(exit == 0, "failed to compile scala-library")
   }

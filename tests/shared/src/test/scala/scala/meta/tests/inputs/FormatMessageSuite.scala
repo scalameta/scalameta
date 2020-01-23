@@ -1,7 +1,7 @@
 package scala.meta.tests
 package inputs
 
-import org.scalatest._
+import munit._
 import scala.compat.Platform.EOL
 import scala.meta._
 import scala.meta.internal.inputs._
@@ -14,7 +14,7 @@ class FormatMessageSuite extends FunSuite {
       val points = 0.to(content.chars.length).map(i => Position.Range(content, i, i))
       val actual = points.map(p => s"${p.formatMessage("error", "foo")}").mkString(EOL)
       if (actual != expected) Console.err.println(actual)
-      assert(actual === expected)
+      assert(actual == expected)
     }
   }
 

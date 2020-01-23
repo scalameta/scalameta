@@ -1,7 +1,7 @@
 package scala.meta.tests
 package contrib
 
-import org.scalatest.FunSuite
+import munit.FunSuite
 import scala.meta._
 import scala.meta.contrib._
 
@@ -22,7 +22,6 @@ class EqualSuite extends FunSuite {
   }
 
   test("structural") {
-    assertTypeError("""c.isEqual(d)""") // Defn.Val cannot be Defn.Def
     assert(a.isEqual(b))
     assert(b.isEqual(c))
     assert(e.contains(a))

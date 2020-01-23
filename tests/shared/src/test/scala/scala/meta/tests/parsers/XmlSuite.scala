@@ -7,7 +7,8 @@ import org.scalameta.logger
 
 class XmlSuite extends ParseSuite {
 
-  def skip(original: String, expected: String): Unit = ignore(logger.revealWhitespace(original)) {}
+  def skip(original: String, expected: String): Unit =
+    test(logger.revealWhitespace(original).ignore) {}
 
   def checkToken(original: String, expected: String): Unit = {
     def tokensStructure(tokenized: Tokens): String = {

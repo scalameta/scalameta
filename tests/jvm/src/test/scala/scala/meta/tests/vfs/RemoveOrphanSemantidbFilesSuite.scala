@@ -2,7 +2,7 @@ package scala.meta.tests.vfs
 
 import java.nio.file.Files
 import java.nio.file.Paths
-import org.scalatest.FunSuite
+import munit.FunSuite
 import scala.meta.internal.semanticdb.scalac.FileFilter
 import scala.meta.internal.semanticdb.scalac.SemanticdbConfig
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths._

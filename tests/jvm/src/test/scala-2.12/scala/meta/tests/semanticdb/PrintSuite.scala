@@ -1,6 +1,6 @@
 package scala.meta.tests.semanticdb
 
-import org.scalatest.FunSuite
+import munit.FunSuite
 import scala.meta.interactive.InteractiveSemanticdb
 import scala.meta.internal.metap.PrinterSymtab
 import scala.meta.internal.{semanticdb => s}
@@ -8,10 +8,9 @@ import scala.meta.internal.semanticdb.Print
 import scala.meta.internal.semanticdb.SymbolInformation
 import scala.meta.internal.symtab.GlobalSymbolTable
 import scala.meta.metap.Format
-import scala.meta.testkit.DiffAssertions
 import scala.meta.tests.metacp.Library
 
-class PrintSuite extends FunSuite with DiffAssertions {
+class PrintSuite extends FunSuite {
   val symtab = GlobalSymbolTable(
     Library.scalaLibrary.classpath(),
     includeJdk = true
@@ -56,14 +55,14 @@ $original
         case e => throw new MatchError(e)
       }
       val obtained = Print.tpe(Format.Compact, tpe, printerSymtab)
-      assertNoDiffOrPrintExpected(obtained, expected)
+      assertNoDiff(obtained, expected)
     }
   }
 
   def checkConstant(constant: s.Constant, expected: String): Unit = {
     test(constant.toString) {
       val obtained = Print.constant(constant)
-      assertNoDiffOrPrintExpected(obtained, expected)
+      assertNoDiff(obtained, expected)
     }
   }
 
@@ -71,7 +70,7 @@ $original
     test("signature - " + symbol) {
       val info = symtab.info(symbol).get
       val obtained = Print.signature(Format.Compact, info.signature, printerSymtab)
-      assertNoDiffOrPrintExpected(obtained, expected)
+      assertNoDiff(obtained, expected)
     }
   }
 
@@ -79,7 +78,7 @@ $original
     test("info - " + symbol) {
       val info = symtab.info(symbol).get
       val obtained = Print.info(Format.Compact, info, printerSymtab)
-      assertNoDiffOrPrintExpected(obtained, expected)
+      assertNoDiff(obtained, expected)
     }
   }
 
@@ -91,7 +90,7 @@ $original
         val obtained = doc.synthetics.map { synthetic =>
           Print.synthetic(Format.Compact, doc, synthetic, printerSymtab)
         }
-        assertNoDiffOrPrintExpected(obtained.mkString("\n"), expected)
+        assertNoDiff(obtained.mkString("\n"), expected)
       }
     )
   }
@@ -104,7 +103,7 @@ $original
         val obtained = doc.synthetics.map { synthetic =>
           Print.tree(Format.Compact, doc, synthetic.tree, printerSymtab)
         }
-        assertNoDiffOrPrintExpected(obtained.mkString("\n"), expected)
+        assertNoDiff(obtained.mkString("\n"), expected)
       }
     )
   }

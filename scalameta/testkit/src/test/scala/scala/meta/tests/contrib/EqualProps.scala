@@ -5,7 +5,7 @@ import scala.meta._
 import scala.meta.contrib._
 import scala.meta.testkit._
 
-class EqualProps extends org.scalatest.FunSuite {
+class EqualProps extends munit.FunSuite {
   test("isEqual > referential") {
     val errors = SyntaxAnalysis.onParsed[Tree](ContribSuite.corpus) { ast =>
       // empty transformation preserve structural equality

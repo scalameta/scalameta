@@ -1,6 +1,6 @@
 package scala.meta.tests.transversers
 
-import org.scalatest._
+import munit._
 
 import scala.compat.Platform.EOL
 import scala.meta._
@@ -23,7 +23,7 @@ class TransformerSuite extends FunSuite {
       }
     }
     val tree1 = transformer(tree0)
-    assert(tree1.toString === """
+    assert(tree1.toString == """
       |{
       |  def foo(y: y)(y: Int) = y + y
       |  class C(y: y) { def bar(y: y) = ??? }

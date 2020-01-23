@@ -1,6 +1,6 @@
 package scala.meta.tests.metacp
 
-import org.scalatest.FunSuite
+import munit.FunSuite
 import scala.meta.internal.classpath.ClasspathIndex
 import scala.meta.internal.io.PathIO
 import scala.meta.io.AbsolutePath

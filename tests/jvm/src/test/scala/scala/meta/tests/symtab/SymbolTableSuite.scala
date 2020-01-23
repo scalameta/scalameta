@@ -1,6 +1,6 @@
 package scala.meta.tests.symtab
 
-import org.scalatest.FunSuite
+import munit.FunSuite
 import scala.meta.internal.symtab.AggregateSymbolTable
 import scala.meta.internal.symtab.GlobalSymbolTable
 import scala.meta.internal.symtab.LocalSymbolTable

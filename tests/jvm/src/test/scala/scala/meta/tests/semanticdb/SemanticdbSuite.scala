@@ -1,7 +1,7 @@
 package scala.meta.tests
 package semanticdb
 
-import org.scalatest._
+import munit._
 import java.io.{File, PrintWriter}
 import scala.reflect.io._
 import scala.tools.cmd.CommandLineParser
@@ -13,14 +13,13 @@ import scala.meta.internal.inputs._
 import scala.meta.internal.semanticdb.scalac._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io._
-import scala.meta.testkit.DiffAssertions
 import scala.meta.tests.SkipWindows
 
-abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
+abstract class SemanticdbSuite extends FunSuite { self =>
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
     if (name.length > 50) name = name.take(50) + "..."
-    super.test(name, SkipWindows)(fn)
+    super.test(name.tag(SkipWindows))(fn)
   }
 
   def yMacroAnnotations: String = {
@@ -127,14 +126,16 @@ abstract class SemanticdbSuite extends FunSuite with DiffAssertions { self =>
     section.mkString(EOL)
   }
 
-  def checkSection(code: String, expected: String, section: String): Unit = {
+  def checkSection(code: String, expected: String, section: String)(
+      implicit loc: munit.Location
+  ): Unit = {
     test(code) {
       val obtained = computeDatabaseSectionFromSnippet(code, section)
-      assertNoDiffOrPrintExpected(obtained, expected)
+      assertNoDiff(obtained, expected)
     }
   }
 
-  def occurrences(code: String, expected: String): Unit = {
+  def occurrences(code: String, expected: String)(implicit loc: munit.Location): Unit = {
     checkSection(code, expected, "Occurrences")
   }
 

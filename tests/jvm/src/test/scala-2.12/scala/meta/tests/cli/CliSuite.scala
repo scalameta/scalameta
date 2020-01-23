@@ -3,13 +3,13 @@ package scala.meta.tests.cli
 import java.io._
 import java.nio.charset.StandardCharsets._
 import java.nio.file._
-import org.scalatest.FunSuite
+import munit.FunSuite
 import scala.collection.JavaConverters._
 import scala.meta.cli._
 import scala.meta.testkit._
 import scala.meta.tests.metacp._
 
-class CliSuite extends FunSuite with DiffAssertions {
+class CliSuite extends FunSuite {
   object HelloWorld {
     val sourceroot = Files.createTempDirectory("sourceroot_")
     val scalaFile = sourceroot.resolve("HelloWorld.scala")
@@ -57,7 +57,7 @@ class CliSuite extends FunSuite with DiffAssertions {
       Metap.process(settings, reporter)
     }
     assert(success)
-    assertNoDiffOrPrintExpected(
+    assertNoDiff(
       out,
       """|HelloWorld.scala
        |----------------

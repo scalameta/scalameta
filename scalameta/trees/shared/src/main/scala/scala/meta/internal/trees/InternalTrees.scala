@@ -13,13 +13,13 @@ import scala.meta.tokenizers._
 trait InternalTree extends Product {
   self: Tree =>
 
-  // =============================================================================================
+  // ==============================================================
   // Pieces of internal state of scala.meta ASTs.
   // Some nodes define all of them as fields, some nodes define only a subset.
   // However, all nodes have corresponding defs to simplify uniform treatment.
   // Everyone except for scala.meta's core should be using "private"-less versions of these methods,
   // because those are only available on appropriate trees.
-  // =============================================================================================
+  // ==============================================================
 
   private[meta] def privatePrototype: Tree
   private[meta] def privateParent: Tree
@@ -31,9 +31,9 @@ trait InternalTree extends Product {
       origin: Origin = privateOrigin
   ): Tree
 
-  // =============================================================================================
+  // ==============================================================
   // Getters for pieces of internal state defined above.
-  // =============================================================================================
+  // ==============================================================
 
   def parent: Option[Tree] = {
     if (privateParent != null) scala.Some(privateParent) else None
@@ -73,20 +73,20 @@ trait InternalTree extends Product {
     }
   }
 
-  // =============================================================================================
+  // ==============================================================
   // Setters for pieces of internal state defined above.
   // Everyone except for scala.meta's core should be using "private"-less versions of these methods,
   // because those are only available on appropriate trees.
-  // =============================================================================================
+  // ==============================================================
 
   private[meta] def privateWithOrigin(origin: Origin): Tree = {
     this.privateCopy(origin = origin)
   }
 
-  // =============================================================================================
+  // ==============================================================
   // Intellij-friendly stubs.
   // See https://github.com/scalameta/scalameta/pull/907#discussion_r120090447.
-  // =============================================================================================
+  // ==============================================================
 
   protected def checkFields(x: Any): Unit = ()
   protected def checkParent(x: Any): Unit = ()

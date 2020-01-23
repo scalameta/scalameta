@@ -1,14 +1,13 @@
 package scala.meta.tests
 package api
 
-import org.scalatest._
+import munit._
 import org.scalameta.explore
 import scala.compat.Platform.EOL
-import scala.meta.testkit.DiffAssertions
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}
 
-class SurfaceSuite extends FunSuite with DiffAssertions {
+class SurfaceSuite extends FunSuite {
   object CoreReflection extends {
     val u: ru.type = ru
     val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
@@ -150,7 +149,8 @@ class SurfaceSuite extends FunSuite with DiffAssertions {
   }
 
   test("prettyprinters for statics (core)") {
-    val prettyprinterTests = new scala.meta.tests.prettyprinters.PublicSuite().testNames
+    val prettyprinterTests =
+      new scala.meta.tests.prettyprinters.PublicSuite().munitTests().map(_.name)
     val nonPackageStatics = core.keys.filter(_.exists(_.isUpper))
     nonPackageStatics.foreach(name => {
       val isTested = prettyprinterTests.exists(testName => testName.startsWith(name))

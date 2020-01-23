@@ -16,46 +16,44 @@ import scala.meta.internal.semanticdb._
 import scala.meta.io.Classpath
 import scala.meta.io.AbsolutePath
 import scala.meta.tests.cli._
-import scala.meta.testkit.DiffAssertions
-import org.scalatest.FunSuite
-import org.scalatest.FunSuiteLike
+import munit.FunSuite
 import scala.meta.tests.metacp.Library
 import scala.meta.tests.metacp.MetacpOps
 
-class ExpectSuite extends FunSuite with DiffAssertions {
+class ExpectSuite extends FunSuite {
   ScalaVersion.doIf212("ExpectSuite") {
     test("scalalib.expect") {
       import ScalalibExpect._
-      assertNoDiff(loadObtained, loadExpected)
+      this.assertNoDiff(loadObtained, loadExpected)
     }
     test("metacp.expect") {
       import MetacpExpect._
-      assertNoDiff(loadObtained, loadExpected)
+      this.assertNoDiff(loadObtained, loadExpected)
     }
     test("metac.expect") {
       import MetacExpect._
-      assertNoDiff(loadObtained, loadExpected)
+      this.assertNoDiff(loadObtained, loadExpected)
     }
     test("metac-metacp.diff") {
       import MetacMetacpDiffExpect._
-      assertNoDiff(loadObtained, loadExpected)
+      this.assertNoDiff(loadObtained, loadExpected)
     }
     test("manifest.metap") {
       import ManifestMetap._
-      assertNoDiff(loadObtained, loadExpected)
+      this.assertNoDiff(loadObtained, loadExpected)
     }
     test("manifest.metacp") {
       import ManifestMetacp._
-      assertNoDiff(loadObtained, loadExpected)
+      this.assertNoDiff(loadObtained, loadExpected)
     }
     test("metacp.undefined") {
       import MetacpUndefined._
-      assertNoDiff(loadObtained, loadExpected)
+      this.assertNoDiff(loadObtained, loadExpected)
     }
   }
 }
 
-trait ExpectHelpers extends FunSuiteLike {
+trait ExpectHelpers extends munit.Assertions {
   def filename: String
 
   def loadExpected: String =

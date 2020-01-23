@@ -1,8 +1,7 @@
 package scala.meta.tests
 package parsers
 
-import org.scalatest._
-import org.scalatest.exceptions.TestFailedException
+import munit._
 import scala.meta._
 import scala.meta.internal.parsers._
 import MoreHelpers._
@@ -17,7 +16,7 @@ class ParseSuite extends FunSuite with CommonTrees {
   def assertSameLines(actual: String, expected: String) = {
     val actualLines = actual.linesIterator.toList
     val expectedLines = expected.linesIterator.toList
-    assert(actualLines === expectedLines)
+    assert(actualLines == expectedLines)
   }
 
   def stat(code: String)(implicit dialect: Dialect) = code.applyRule(_.parseStat())
@@ -29,17 +28,17 @@ class ParseSuite extends FunSuite with CommonTrees {
   def blockStat(code: String)(implicit dialect: Dialect) = code.parseRule(_.blockStatSeq().head)
   def caseClause(code: String)(implicit dialect: Dialect) = code.parseRule(_.caseClause())
   def source(code: String)(implicit dialect: Dialect) = code.parseRule(_.source())
-  def interceptParseErrors(stats: String*) = {
+  def interceptParseErrors(stats: String*)(implicit loc: munit.Location) = {
     stats.foreach { stat =>
       try {
         intercept[parsers.ParseException] {
           templStat(stat)
         }
       } catch {
-        case t: TestFailedException =>
+        case scala.util.control.NonFatal(t) =>
           val msg = "no exception was thrown"
-          val richFeedback = t.message.map(_.replace(msg, s"$msg for '$stat'"))
-          throw new TestFailedException(richFeedback.get, t.failedCodeStackDepth)
+          val richFeedback = t.getMessage.replace(msg, s"$msg for '$stat'")
+          fail(richFeedback)
       }
     }
   }

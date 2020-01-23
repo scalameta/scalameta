@@ -7,7 +7,7 @@ import scala.meta.tokens.Token.Comment
 import scala.meta.Defn
 import scala.meta._
 
-import org.scalatest.FunSuite
+import munit.FunSuite
 
 /**
  * Test for [[ScaladocParser]]
@@ -32,7 +32,7 @@ class ScaladocParserSuite extends FunSuite {
           | /** Example scaladoc **/
           | case class foo(bar: String)
         """.stripMargin
-      ).toString === "Some(List(Description(Example scaladoc)))"
+      ).toString == "Some(List(Description(Example scaladoc)))"
     )
   }
 
@@ -47,7 +47,7 @@ class ScaladocParserSuite extends FunSuite {
          /** $expectedBody*/
           case class foo(bar: String)
          """
-      ) === expectedResult
+      ) == expectedResult
     )
     assert(
       parseString(
@@ -56,7 +56,7 @@ class ScaladocParserSuite extends FunSuite {
           */
           case class foo(bar: String)
          """
-      ) === expectedResult
+      ) == expectedResult
     )
     assert(
       parseString(
@@ -65,7 +65,7 @@ class ScaladocParserSuite extends FunSuite {
           */
           case class foo(bar: String)
          """
-      ) === expectedResult
+      ) == expectedResult
     )
     assert(
       parseString(
@@ -75,7 +75,7 @@ class ScaladocParserSuite extends FunSuite {
           */
           case class foo(bar: String)
          """
-      ) === expectedResult
+      ) == expectedResult
     )
   }
 
@@ -93,7 +93,7 @@ class ScaladocParserSuite extends FunSuite {
           */
           case class foo(bar: String)
          """
-      ) === Option(
+      ) == Option(
         List(
           DocToken(Description, descriptionBody),
           DocToken(Paragraph),
@@ -147,7 +147,7 @@ class ScaladocParserSuite extends FunSuite {
         DocToken(CodeBlock, complexCodeBlock)
       )
     )
-    assert(result === expectation)
+    assert(result == expectation)
   }
 
   test("headings") {
@@ -182,7 +182,7 @@ class ScaladocParserSuite extends FunSuite {
         DocToken(Heading6, level6HeadingBody)
       )
     )
-    assert(result === expectation)
+    assertEquals(result, expectation)
   }
 
   test("label parsing/merging") {
@@ -201,7 +201,7 @@ class ScaladocParserSuite extends FunSuite {
     val parsedScaladoc: Option[List[DocToken]] = parseString(codeToParse)
 
     // Inherit doc does not merge
-    assert(parsedScaladoc.map(_.size) === Option(DocToken.tagTokenKinds.size))
+    assert(parsedScaladoc.map(_.size) == Option(DocToken.tagTokenKinds.size))
 
     // Inherit doc does not merge
     assert(
@@ -221,7 +221,7 @@ class ScaladocParserSuite extends FunSuite {
           /** Example scaladoc **/
           case class foo(bar: String)
         """.stripMargin
-      ).exists(_.head.references === Nil)
+      ).exists(_.head.references == Nil)
     )
     // Scaladoc with references
     val reference1 = "Scala.some"
@@ -237,7 +237,7 @@ class ScaladocParserSuite extends FunSuite {
 
     assert(
       parseString(codeToParse).exists(
-        _.head.references === List(DocToken.Reference(reference1), DocToken.Reference(reference2))
+        _.head.references == List(DocToken.Reference(reference1), DocToken.Reference(reference2))
       )
     )
   }

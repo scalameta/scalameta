@@ -1,7 +1,7 @@
 package scala.meta.tests
 package trees
 
-import org.scalatest._
+import munit._
 import scala.meta._
 import scala.meta.dialects.Scala211
 
@@ -13,7 +13,7 @@ class ChildrenSuite extends FunSuite {
         import bar.baz.two
       }
     """
-    assert(tree.children.length === 3)
+    assert(tree.children.length == 3)
     assert(tree.children(0).productPrefix == "Type.Name")
     assert(tree.children(1).productPrefix == "Ctor.Primary")
     assert(tree.children(2).productPrefix == "Template")

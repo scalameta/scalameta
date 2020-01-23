@@ -2,7 +2,7 @@ package scala.meta.tests
 package io
 
 import java.io.File
-import org.scalatest.FunSuite
+import munit.FunSuite
 import scala.meta._
 
 class MultipathSuite extends FunSuite {

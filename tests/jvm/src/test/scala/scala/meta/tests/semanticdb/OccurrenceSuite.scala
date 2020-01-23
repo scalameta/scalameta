@@ -3,7 +3,7 @@ package scala.meta.tests.semanticdb
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
-import org.scalatest.FunSuite
+import munit.FunSuite
 import scala.meta.inputs.Input
 import scala.meta.inputs.Position
 import scala.meta.internal.io.FileIO
@@ -14,10 +14,9 @@ import scala.meta.internal.semanticdb.TextDocument
 import scala.meta.internal.semanticdb.TextDocuments
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
 import scala.meta.io.AbsolutePath
-import scala.meta.testkit.DiffAssertions
 import scala.meta.tests.BuildInfo
 
-class OccurrenceSuite extends FunSuite with DiffAssertions {
+class OccurrenceSuite extends FunSuite {
   ScalaVersion.doIf212("OccurrenceSuite") {
     OccurrenceSuite.testCases().foreach { t =>
       test(t.name) {

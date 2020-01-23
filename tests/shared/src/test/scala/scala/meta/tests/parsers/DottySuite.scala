@@ -8,9 +8,9 @@ class DottySuite extends ParseSuite {
   test("case List(xs: _*)") {
     val tree = pat("List(xs: _*)")
     assert(
-      tree.structure === "Pat.Extract(Term.Name(\"List\"), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))"
+      tree.structure == "Pat.Extract(Term.Name(\"List\"), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))"
     )
-    assert(tree.syntax === "List(xs: _*)")
+    assert(tree.syntax == "List(xs: _*)")
   }
   test("xml literals") {
     intercept[TokenizeException] { term("<foo>{bar}</foo>") }
@@ -22,17 +22,17 @@ class DottySuite extends ParseSuite {
     val tree2 @ Defn.Def(List(Mod.Inline()), Term.Name("x"), Nil, Nil, None, Lit(42)) =
       blockStat("inline def x = 42")
 
-    assert(tree1.syntax === "inline def x = 42")
-    assert(tree2.syntax === "inline def x = 42")
+    assert(tree1.syntax == "inline def x = 42")
+    assert(tree2.syntax == "inline def x = 42")
   }
 
   test("inline can be used as a modifier") {
     val tree = dialects.Dotty("{ inline def x = 42 }").parse[Term].get
-    assert(tree.syntax === "{ inline def x = 42 }")
+    assert(tree.syntax == "{ inline def x = 42 }")
   }
 
   test("mod\"inline\"") {
-    assert(mod"inline".structure === "Mod.Inline()")
+    assert(mod"inline".structure == "Mod.Inline()")
   }
 
   test("inline cannot be used as an identifier") {
@@ -43,8 +43,8 @@ class DottySuite extends ParseSuite {
 
   test("trait parameters are allowed") {
     val tree = dialects.Dotty("trait Foo(bar: Int)").parse[Stat].get
-    assert(tree.syntax === "trait Foo(bar: Int)")
-    assert(q"trait Foo(bar: Int)".syntax === "trait Foo(bar: Int)")
+    assert(tree.syntax == "trait Foo(bar: Int)")
+    assert(q"trait Foo(bar: Int)".syntax == "trait Foo(bar: Int)")
   }
 
   test("view bounds not allowed") {
@@ -74,7 +74,7 @@ class DottySuite extends ParseSuite {
 
   test("literal types are allowed") {
     val tree = dialects.Dotty("val a: 42 = 42").parse[Stat].get
-    assert(tree.syntax === "val a: 42 = 42")
+    assert(tree.syntax == "val a: 42 = 42")
   }
 
   test("implicit function type") {

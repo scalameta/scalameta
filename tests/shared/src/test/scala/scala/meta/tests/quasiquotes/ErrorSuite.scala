@@ -6,7 +6,7 @@
 // package scala.meta.tests
 package quasiquotes
 
-import org.scalatest._
+import munit._
 import org.scalameta.tests._
 import typecheckError.Options.WithPositions
 import compat.Platform.EOL
@@ -23,7 +23,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       val q"type $name[$X] = $Y" = q"type List[+A] = List[A]"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:4: not found: value X
       |      val q"type $name[$X] = $Y" = q"type List[+A] = List[A]"
       |                        ^
@@ -35,7 +35,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       q"foo + class"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:4: ; expected but class found
       |      q"foo + class"
       |              ^
@@ -49,7 +49,7 @@ class ErrorSuite extends FunSuite {
       class Dummy
       val x = new Dummy
       q"foo($x)"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:6: type mismatch when unquoting;
       | found   : Dummy
       | required: scala.meta.Term
@@ -65,7 +65,7 @@ class ErrorSuite extends FunSuite {
       class Dummy
       val x = new Dummy
       q"$x"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:6: type mismatch when unquoting;
       | found   : Dummy
       | required: scala.meta.Stat
@@ -81,7 +81,7 @@ class ErrorSuite extends FunSuite {
       class Dummy
       val xs = List(new Dummy)
       q"foo(..$xs)"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:6: type mismatch when unquoting;
       | found   : List[Dummy]
       | required: List[scala.meta.Term]
@@ -96,7 +96,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val xs = List(q"x")
       q"foo($xs)"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: type mismatch when unquoting;
       | found   : List[scala.meta.Term.Name]
       | required: scala.meta.Term
@@ -111,7 +111,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val xs = List(q"x")
       q"$xs"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: type mismatch when unquoting;
       | found   : List[scala.meta.Term.Name]
       | required: scala.meta.Stat
@@ -126,7 +126,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val xss = List(List(q"x"))
       q"...$xss"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
@@ -141,7 +141,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val xss = List(List(q"x"))
       q"$xss"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: type mismatch when unquoting;
       | found   : List[List[scala.meta.Term.Name]]
       | required: scala.meta.Stat
@@ -156,7 +156,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val terms = List(q"T", q"U")
       q"foo[..$terms]"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: type mismatch when unquoting;
       | found   : List[scala.meta.Term.Name]
       | required: List[scala.meta.Type]
@@ -176,7 +176,7 @@ class ErrorSuite extends FunSuite {
           println(ys)
           println(z)
       }
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:6: rank mismatch when unquoting;
       | found   : ..$
       | required: $
@@ -193,7 +193,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val x = "hello"
       qQQQ "$x" QQQ
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: can't unquote into string literals
       |      qQQQ "$x" QQQ
       |            ^
@@ -206,7 +206,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val name = q"x"
       q"val $name = foo"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
       |      q"val $name = foo"
       |            ^
@@ -219,7 +219,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val name = q"x"
       q"var $name = foo"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
       |      q"var $name = foo"
       |            ^
@@ -232,7 +232,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val name = q"x"
       p"$name: T"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
       |      p"$name: T"
       |        ^
@@ -245,7 +245,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val name = t"x"
       q"$name"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: type mismatch when unquoting;
       | found   : scala.meta.Type.Name
       | required: scala.meta.Stat
@@ -260,7 +260,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val tpe = q"T"
       q"expr: $tpe"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: type mismatch when unquoting;
       | found   : scala.meta.Term.Name
       | required: scala.meta.Type
@@ -275,7 +275,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val expr = t"x"
       q"$expr: tpe"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: type mismatch when unquoting;
       | found   : scala.meta.Type.Name
       | required: scala.meta.Term
@@ -290,7 +290,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val tpes = List(q"T")
       q"expr: ..$tpes"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: identifier expected but ellipsis found
       |      q"expr: ..$tpes"
       |              ^
@@ -303,7 +303,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val name = t"T"
       q"expr.$name"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: type mismatch when unquoting;
       | found   : scala.meta.Type.Name
       | required: scala.meta.Term.Name
@@ -318,7 +318,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val expr = t"T"
       q"$expr.name"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: type mismatch when unquoting;
       | found   : scala.meta.Type.Name
       | required: scala.meta.Term
@@ -333,7 +333,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val names = List(q"T")
       q"expr. ..$names"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: identifier expected but ellipsis found
       |      q"expr. ..$names"
       |              ^
@@ -347,7 +347,7 @@ class ErrorSuite extends FunSuite {
       val pat1 = p"`x`"
       val pat2 = p"y"
       p"$pat1 @ $pat2"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:6: can't unquote a name here, use a pattern instead (e.g. p"x")
       |      p"$pat1 @ $pat2"
       |        ^
@@ -359,7 +359,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       val p"$ref[..$tpes](..$pats)" = p"x[A, B]"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:4: pattern must be a value
       |      val p"$ref[..$tpes](..$pats)" = p"x[A, B]"
       |                                               ^
@@ -373,7 +373,7 @@ class ErrorSuite extends FunSuite {
       val pat = p"`x`"
       val tpe = t"T"
       p"$pat: $tpe"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:6: can't unquote a name here, use a pattern instead (e.g. p"x")
       |      p"$pat: $tpe"
       |        ^
@@ -385,7 +385,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       val p"case $X: T => " = p"case x: T =>"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:4: not found: value X
       |      val p"case $X: T => " = p"case x: T =>"
       |                  ^
@@ -397,7 +397,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       q"private final def this(x: X, y: Y) = foo"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:4: this expected but identifier found
       |      q"private final def this(x: X, y: Y) = foo"
       |                                             ^
@@ -410,7 +410,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val stats = List(q"def x = 42")
       q"class C { $stats }"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: type mismatch when unquoting;
       | found   : List[scala.meta.Defn.Def]
       | required: scala.meta.Stat
@@ -425,7 +425,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val stats = Some(List(q"def x = 42"))
       q"class C { $stats }"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: type mismatch when unquoting;
       | found   : Some[List[scala.meta.Defn.Def]]
       | required: scala.meta.Stat
@@ -439,7 +439,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       q"package foo {}; package bar {}"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:4: these statements can't be mixed together, try source"..." instead
       |      q"package foo {}; package bar {}"
       |        ^
@@ -452,7 +452,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val foo = 'f'
       q"'$foo'"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: can't unquote into character literals
       |      q"'$foo'"
       |         ^
@@ -465,7 +465,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val foo = "foo"
       qQQQ "$foo" QQQ
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: can't unquote into string literals
       |      qQQQ "$foo" QQQ
       |            ^
@@ -478,7 +478,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val foo = "foo"
       qQQQ s"$foo" QQQ
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: can't unquote into string interpolations
       |      qQQQ s"$foo" QQQ
       |             ^
@@ -491,7 +491,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val foo = "foo"
       q"<$foo></foo>"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: type mismatch when unquoting;
       | found   : String
       | required: scala.meta.Term.Name
@@ -506,7 +506,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val foo = "foo"
       q"`$foo`"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: can't unquote into quoted identifiers
       |      q"`$foo`"
       |         ^
@@ -519,7 +519,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val content = "content"
       q"// $content has been unquoted"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: can't unquote into single-line comments
       |      q"// $content has been unquoted"
       |           ^
@@ -532,7 +532,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val content = "content"
       q"/* $content has been unquoted */"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: can't unquote into multi-line comments
       |      q"/* $content has been unquoted */"
       |           ^
@@ -544,7 +544,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       q"..x${???}"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:4: $, ( or { expected but identifier found
       |      q"..x${???}"
       |          ^
@@ -556,7 +556,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta._
       import scala.meta.dialects.Scala211
       q"foo(...x${???})"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:4: $, ( or { expected but identifier found
       |      q"foo(...x${???})"
       |               ^
@@ -569,7 +569,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val xss = List(List(q"x"))
       q"foo(x, ...$xss)"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
@@ -585,7 +585,7 @@ class ErrorSuite extends FunSuite {
       val x = q"x"
       val xss = List(List(q"x"))
       q"foo($x, ...$xss)"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:6: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
@@ -601,7 +601,7 @@ class ErrorSuite extends FunSuite {
       val xs = List(q"x")
       val xss = List(List(q"x"))
       q"foo(..$xs, ...$xss)"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:6: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
@@ -616,7 +616,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val xss = List(List(q"x"))
       q"foo(...$xss, ...$xss)"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: ) expected but , found
       |      q"foo(...$xss, ...$xss)"
       |                   ^
@@ -631,7 +631,7 @@ class ErrorSuite extends FunSuite {
         case q"$_(...$argss)(...$_)" =>
         case q"$_(...$argss)(foo)(...$_)" =>
       }
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
@@ -649,7 +649,7 @@ class ErrorSuite extends FunSuite {
       ??? match {
         case q"$_(...$argss)(foo)(...$_)" =>
       }
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
@@ -666,7 +666,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val paramss = List(List(param"x: Int"))
       q"def foo(...$paramss)(y: Int) = ???"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: implementation restriction: can't mix ...$ with anything else in parameter lists.
       |See https://github.com/scalameta/scalameta/issues/406 for details.
       |      q"def foo(...$paramss)(y: Int) = ???"
@@ -680,7 +680,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val argss = List(List("y"))
       q"x + (...$argss)"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
@@ -695,7 +695,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val patss = List(List("x"))
       p"Foo(...$patss)"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
@@ -710,7 +710,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       val patss = List(List("x"))
       p"x Foo (...$patss)"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:5: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
@@ -724,7 +724,7 @@ class ErrorSuite extends FunSuite {
       import scala.meta._
       val notReallyAParent = t"_root_.scala.AnyVal"
       q"class C extends $notReallyAParent"
-    """).replace("\r", "") === """
+    """).replace("\r", "") == """
       |<macro>:4: type mismatch when unquoting;
       | found   : scala.meta.Type.Select
       | required: scala.meta.Template

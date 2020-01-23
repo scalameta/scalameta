@@ -8,11 +8,11 @@ class QuasiquoteSuite extends ParseSuite {
     implicit val dialect = dialects.QuasiquoteTerm(dialects.Scala211, multiline = false)
 
     test("single-line disallow normal escaping") {
-      assert(term("\\n").structure === """Term.Select(Term.Name("\\"), Term.Name("n"))""")
+      assert(term("\\n").structure == """Term.Select(Term.Name("\\"), Term.Name("n"))""")
     }
 
     test("single-line allow unicode escaping") {
-      assert(term("\\u0061").structure === """Term.Name("a")""")
+      assert(term("\\u0061").structure == """Term.Name("a")""")
     }
 
     test("single-line disallow line breaks") {
@@ -28,21 +28,21 @@ class QuasiquoteSuite extends ParseSuite {
     implicit val dialect = dialects.QuasiquoteTerm(dialects.Scala211, multiline = true)
 
     test("multi-line disallow do normal escaping") {
-      assert(term("\\n").structure === """Term.Select(Term.Name("\\"), Term.Name("n"))""")
+      assert(term("\\n").structure == """Term.Select(Term.Name("\\"), Term.Name("n"))""")
     }
 
     test("multi-line allow unicode escaping") {
-      assert(term("\\u0061").structure === """Term.Name("a")""")
+      assert(term("\\u0061").structure == """Term.Name("a")""")
     }
 
     test("multi-line allow line breaks") {
       assert(
-        term("foo + \n bar").structure === """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))"""
+        term("foo + \n bar").structure == """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))"""
       )
     }
 
     test("multi-line allow double quotes") {
-      assert(term("\"a\"").structure === """Lit.String("a")""")
+      assert(term("\"a\"").structure == """Lit.String("a")""")
     }
   }
 }

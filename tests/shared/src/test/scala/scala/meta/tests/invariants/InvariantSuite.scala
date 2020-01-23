@@ -1,7 +1,7 @@
 package scala.meta.tests
 package invariants
 
-import org.scalatest._
+import munit._
 import org.scalameta._
 import org.scalameta.invariants._
 
@@ -13,7 +13,7 @@ class InvariantSuite extends FunSuite {
     try require(x > 3)
     catch {
       case ex: InvariantFailedException =>
-        assert(ex.getMessage === """
+        assert(ex.getMessage == """
           |invariant failed:
           |when verifying x.>(3)
           |found that x.>(3) is false
@@ -30,7 +30,7 @@ class InvariantSuite extends FunSuite {
     } catch {
       case ex: InvariantFailedException =>
         assert(
-          ex.getMessage === """
+          ex.getMessage == """
           |invariant failed:
           |when verifying C.this.x.!=(3).&&(org.scalameta.`package`.debug(C.this.x, y))
           |found that C.this.x is equal to 3
@@ -47,7 +47,7 @@ class InvariantSuite extends FunSuite {
       unreachable
     } catch {
       case ex: UnreachableError =>
-        assert(ex.getMessage === """
+        assert(ex.getMessage == """
           |this code path should've been unreachable
         """.trim.stripMargin.split('\n').mkString(EOL))
     }
@@ -60,7 +60,7 @@ class InvariantSuite extends FunSuite {
       new C(3)
     } catch {
       case ex: UnreachableError =>
-        assert(ex.getMessage === """
+        assert(ex.getMessage == """
           |this code path should've been unreachable
           |where C.this.x = 3
           |where y = 2
