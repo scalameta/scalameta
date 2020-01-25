@@ -35,7 +35,7 @@ enablePlugins(ScalaUnidocPlugin)
 addCommandAlias("benchAll", benchAll.command)
 addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
-val munitVersion = "0.3.6"
+val munitVersion = "0.4.0"
 commands += Command.command("ci-windows") { s =>
   s"testsJVM/all:testOnly -- --exclude-tags=SkipWindows" ::
     s
