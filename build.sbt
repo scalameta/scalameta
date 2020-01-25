@@ -37,7 +37,7 @@ addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
 val munitVersion = "0.3.4"
 commands += Command.command("ci-windows") { s =>
-  s"testsJVM/all:testOnly -- -l SkipWindows" ::
+  s"testsJVM/all:testOnly -- --exclude-tags=SkipWindows" ::
     s
 }
 commands += Command.command("mima") { s =>
