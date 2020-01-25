@@ -1,7 +1,7 @@
 package scala.meta.tests
 package transversers
 
-import org.scalatest._
+import munit._
 import scala.meta._
 
 class TraverserSuite extends FunSuite {
@@ -24,7 +24,7 @@ class TraverserSuite extends FunSuite {
     assert(
       log
         .mkString("\n")
-        .replace("\r", "") === """
+        .replace("\r", "") == """
       |{   def foo(x: x)(x: Int) = x + x   class C(x: x) { def bar(x: x) = ??? } }
       |def foo(x: x)(x: Int) = x + x
       |foo

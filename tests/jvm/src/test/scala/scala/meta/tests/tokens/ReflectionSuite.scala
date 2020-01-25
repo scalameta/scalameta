@@ -1,7 +1,7 @@
 package scala.meta.tests
 package tokens
 
-import org.scalatest._
+import munit._
 import scala.compat.Platform.EOL
 import scala.reflect.runtime.{universe => ru}
 import scala.reflect.runtime.universe._
@@ -17,7 +17,7 @@ class ReflectionSuite extends FunSuite {
   test("freeform tokens") {
     // tokens.filter(_.isFreeform).map(_.prefix).foreach(println)
     assert(
-      tokens.filter(_.isFreeform).map(_.prefix).mkString(EOL) === """
+      tokens.filter(_.isFreeform).map(_.prefix).mkString(EOL) == """
       |Token.BOF
       |Token.Comment
       |Token.Constant.Char

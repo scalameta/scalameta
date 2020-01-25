@@ -35,8 +35,9 @@ enablePlugins(ScalaUnidocPlugin)
 addCommandAlias("benchAll", benchAll.command)
 addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
+val munitVersion = "0.3.6"
 commands += Command.command("ci-windows") { s =>
-  s"testsJVM/all:testOnly -- -l SkipWindows" ::
+  s"testsJVM/all:testOnly -- --exclude-tags=SkipWindows" ::
     s
 }
 commands += Command.command("mima") { s =>
@@ -299,7 +300,7 @@ lazy val testkit = project
       else Nil
     },
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.0.8",
+      "org.scalameta" %% "munit" % munitVersion,
       // These are used to download and extract a corpus tar.gz
       "org.rauschig" % "jarchivelib" % "0.8.0",
       "commons-io" % "commons-io" % "2.6",
@@ -315,6 +316,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
   .configs(Slow, All)
   .settings(
     sharedSettings,
+    testFrameworks := List(new TestFramework("munit.Framework")),
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
     exposePaths("tests", Test)
@@ -374,14 +376,14 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
     else Nil
   },
   libraryDependencies ++= List(
-    "org.scalatest" %%% "scalatest" % "3.0.8" % "test"
+    "org.scalameta" %%% "munit" % munitVersion
   ),
-  testOptions.in(Test) += Tests.Argument("-l", "org.scalatest.tags.Slow"),
+  testOptions.in(Test) += Tests.Argument("--exclude-tags=Slow"),
   inConfig(Slow)(Defaults.testTasks),
   inConfig(All)(Defaults.testTasks),
   testOptions.in(All) := Nil,
-  testOptions.in(Slow) -= Tests.Argument("-l", "org.scalatest.tags.Slow"),
-  testOptions.in(Slow) += Tests.Argument("-n", "org.scalatest.tags.Slow")
+  testOptions.in(Slow) -= Tests.Argument("--exclude-tags=Slow"),
+  testOptions.in(Slow) += Tests.Argument("--include-tags=Slow")
 )
 
 /** ======================== BENCHES ======================== **/

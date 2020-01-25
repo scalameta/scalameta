@@ -6,7 +6,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import scala.meta.io._
 import scala.meta.internal.io._
-import org.scalatest.FunSuite
+import munit.FunSuite
 import java.nio.file.Files
 
 class NIOPathTest extends FunSuite {

@@ -1,23 +1,22 @@
 package scala.meta.tests.metacp
 
 import java.nio.file._
-import org.scalatest.FunSuite
-import org.scalatest.tagobjects.Slow
+import munit.FunSuite
+import scala.meta.tests.Slow
 import scala.collection.JavaConverters._
 import scala.meta.cli._
 import scala.meta.io._
 import scala.meta.metacp.Settings
-import scala.meta.testkit.DiffAssertions
 import scala.meta.tests._
 import scala.meta.tests.cli.CliSuite
 
-class MetacpErrorSuite extends FunSuite with DiffAssertions {
+class MetacpErrorSuite extends FunSuite {
 
   private val tmp = AbsolutePath(Files.createTempDirectory("metacp"))
   tmp.toFile.deleteOnExit()
   private val settings = Settings().withOut(tmp).withIncludeJdk(true)
 
-  test("missing symbol 1", Slow) {
+  test("missing symbol 1".tag(Slow)) {
     val (result, out, err) = CliSuite.withReporter { reporter =>
       val scalametaSettings = settings.withClasspath(
         Library(
@@ -34,7 +33,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
     assert(result.classpath.isEmpty)
     assert(out.nonEmpty)
     val errSorted = err.linesIterator.toSeq.sorted.mkString("\n")
-    assertNoDiffOrPrintExpected(
+    assertNoDiff(
       errSorted.replaceAll("(missing symbol: .*?) .*", "$1"),
       """|NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
          |missing symbol: scala.reflect.api
@@ -60,7 +59,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
       Metacp.process(settings.withClasspath(classpath), reporter)
     }
     assert(result.classpath.isEmpty)
-    assertNoDiffOrPrintExpected(
+    assertNoDiff(
       out,
       s"""|{
           |  "status": {
@@ -71,7 +70,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
           |""".stripMargin
     )
 
-    assertNoDiffOrPrintExpected(
+    assertNoDiff(
       err,
       s"""|missing symbol: scala in $tmp
           |NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
@@ -93,7 +92,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
       Metacp.process(settings, reporter)
     }
     assert(result.classpath.isEmpty)
-    assertNoDiffOrPrintExpected(
+    assertNoDiff(
       out,
       s"""|{
           |  "status": {
@@ -103,7 +102,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
           |}
           |""".stripMargin
     )
-    assertNoDiffOrPrintExpected(
+    assertNoDiff(
       err,
       s"""|missing symbol: scala in ${AbsolutePath(manifest)}
           |NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
@@ -132,7 +131,7 @@ class MetacpErrorSuite extends FunSuite with DiffAssertions {
       Metacp.process(settings, reporter)
     }
     assert(result.isSuccess)
-    assertNoDiffOrPrintExpected(
+    assertNoDiff(
       err,
       s"""|broken signature for _empty_/A#: missing symbol: scala
           |broken signature for _empty_/A#b().: missing symbol: <empty>.B

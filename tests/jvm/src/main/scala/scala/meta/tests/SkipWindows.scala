@@ -1,5 +1,5 @@
 package scala.meta.tests
 
-import org.scalatest.Tag
+import munit.Tag
 
 object SkipWindows extends Tag("SkipWindows")

@@ -2,7 +2,7 @@ package scala.meta.tests.tokenizers
 
 import scala.meta._
 import scala.meta.dialects.Scala211
-import org.scalatest.FunSuite
+import munit.FunSuite
 
 abstract class BaseTokenizerSuite extends FunSuite {
 

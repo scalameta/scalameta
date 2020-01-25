@@ -4,7 +4,7 @@ package contrib
 import scala.meta._
 import scala.meta.contrib._
 import scala.meta.testkit.SyntaxAnalysis
-import org.scalatest.FunSuite
+import munit.FunSuite
 
 class TreeOpsProps extends FunSuite {
   test("find uses Structural equality") {

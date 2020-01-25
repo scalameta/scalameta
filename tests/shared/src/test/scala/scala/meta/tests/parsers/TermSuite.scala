@@ -562,7 +562,7 @@ class TermSuite extends ParseSuite {
       // sobaka
       case y => y
     }""")
-    assert(rhs.tokens.structure === "Tokens(true [26..30))")
+    assert(rhs.tokens.structure == "Tokens(true [26..30))")
   }
 
   test("a + (bs: _*) * c") {

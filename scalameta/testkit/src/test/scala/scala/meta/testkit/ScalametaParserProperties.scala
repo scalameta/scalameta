@@ -3,7 +3,7 @@ package scala.meta.testkit
 import scala.collection.mutable
 import scala.meta._
 import scala.meta.parsers.Parsed
-import org.scalatest.FunSuiteLike
+import munit.FunSuiteLike
 
 object ScalametaParserProperties {
 

@@ -1,7 +1,7 @@
 package scala.meta.tests
 package api
 
-import org.scalatest._
+import munit._
 
 class NameclashSuite extends FunSuite {
   import scala.reflect.runtime.{universe => ru}
@@ -20,6 +20,6 @@ class NameclashSuite extends FunSuite {
     val tlTrees = TreeRoot.all.map(_.prefix)
     val tlTokens = TokenRoot.all.map(_.prefix).map(_.stripPrefix("Token."))
     val nameClashes = tlTrees.intersect(tlTokens).sorted
-    assert(nameClashes.mkString(", ") === "")
+    assert(nameClashes.mkString(", ") == "")
   }
 }

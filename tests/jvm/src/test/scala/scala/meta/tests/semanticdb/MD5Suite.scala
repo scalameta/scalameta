@@ -5,8 +5,8 @@ import java.nio.file.{Files, Path, Paths}
 import java.security.DigestInputStream
 import java.security.MessageDigest
 
-import org.scalatest.FunSuite
-import org.scalatest.tagobjects.Slow
+import munit.FunSuite
+import scala.meta.tests.Slow
 
 import scala.collection.mutable
 import scala.meta.internal.semanticdb.Locator
@@ -39,7 +39,7 @@ class MD5Suite extends FunSuite {
   private val databaseClasspath: Path = Paths.get(BuildInfo.databaseClasspath)
   Locator(databaseClasspath) { (_, docs) =>
     val doc = docs.documents.head
-    test(doc.uri, Slow) {
+    test(doc.uri.tag(Slow)) {
       val fromText = stringMD5(doc.text)
       assert(
         doc.md5 == fromText,

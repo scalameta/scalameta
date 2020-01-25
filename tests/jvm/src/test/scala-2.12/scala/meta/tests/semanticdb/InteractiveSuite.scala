@@ -2,13 +2,12 @@ package scala.meta.tests
 package semanticdb
 
 import org.scalameta.logger
-import org.scalatest.FunSuite
+import munit.FunSuite
 import scala.meta.interactive.InteractiveSemanticdb._
-import scala.meta.testkit.DiffAssertions
 import scala.meta.internal.semanticdb.Print
 import scala.tools.nsc.interactive.Global
 
-class InteractiveSuite extends FunSuite with DiffAssertions {
+class InteractiveSuite extends FunSuite {
   val compiler: Global = newCompiler(scalacOptions = "-Ywarn-unused:imports" :: Nil)
   def check(
       original: String,
@@ -19,7 +18,7 @@ class InteractiveSuite extends FunSuite with DiffAssertions {
       val document = toTextDocument(compiler, original, options)
       val format = scala.meta.metap.Format.Detailed
       val syntax = Print.document(format, document)
-      assertNoDiffOrPrintExpected(syntax, expected)
+      assertNoDiff(syntax, expected)
     }
   }
 

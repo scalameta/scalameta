@@ -4,7 +4,7 @@ package tokens
 import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.Token._
-import org.scalatest._
+import munit._
 
 // NOTE: don't run anything, just make sure that stuff compiles
 class TokensSuite {
@@ -53,30 +53,30 @@ class TokensApiSuite extends FunSuite {
     val tokens = tokenize("((1 + 1) == 2)").drop(1).dropRight(1)
 
     assert(tokens.length == 13)
-    assert(tokens.segmentLength(_.is[LeftParen]) === 2)
-    assert(tokens.segmentLengthRight(_.is[RightParen]) === 1)
-    assert(tokens.take(2).syntax === "((")
-    assert(tokens.slice(11, 13).syntax === "2)")
-    assert(tokens.takeRight(2).syntax === "2)")
-    assert(tokens.drop(11).syntax === "2)")
-    assert(tokens.dropRight(11).syntax === "((")
-    assert(tokens.takeWhile(_.is[LeftParen]).syntax === "((")
-    assert(tokens.segmentLengthRight(_.is[RightParen]) == 1)
-    assert(tokens.takeRightWhile(_.is[RightParen]).syntax === ")")
     assert(tokens.segmentLength(_.is[LeftParen]) == 2)
-    assert(tokens.dropWhile(_.is[LeftParen]).syntax === "1 + 1) == 2)")
-    assert(tokens.dropRightWhile(_.is[RightParen]).syntax === "((1 + 1) == 2")
+    assert(tokens.segmentLengthRight(_.is[RightParen]) == 1)
+    assert(tokens.take(2).syntax == "((")
+    assert(tokens.slice(11, 13).syntax == "2)")
+    assert(tokens.takeRight(2).syntax == "2)")
+    assert(tokens.drop(11).syntax == "2)")
+    assert(tokens.dropRight(11).syntax == "((")
+    assert(tokens.takeWhile(_.is[LeftParen]).syntax == "((")
+    assert(tokens.segmentLengthRight(_.is[RightParen]) == 1)
+    assert(tokens.takeRightWhile(_.is[RightParen]).syntax == ")")
+    assert(tokens.segmentLength(_.is[LeftParen]) == 2)
+    assert(tokens.dropWhile(_.is[LeftParen]).syntax == "1 + 1) == 2)")
+    assert(tokens.dropRightWhile(_.is[RightParen]).syntax == "((1 + 1) == 2")
     assert {
       val (front, back) = tokens.splitAt(8)
-      front.syntax === "((1 + 1)" && back.syntax === " == 2)"
+      front.syntax == "((1 + 1)" && back.syntax == " == 2)"
     }
     assert {
       val (front, back) = tokens.span(_.isNot[RightParen])
-      front.syntax === "((1 + 1" && back.syntax === ") == 2)"
+      front.syntax == "((1 + 1" && back.syntax == ") == 2)"
     }
     assert {
       val (front, back) = tokens.spanRight(_.isNot[LeftParen])
-      front.syntax === "((" && back.syntax === "1 + 1) == 2)"
+      front.syntax == "((" && back.syntax == "1 + 1) == 2)"
     }
   }
 
@@ -84,20 +84,20 @@ class TokensApiSuite extends FunSuite {
     val tokens = tokenize("val foo = List(1, 2, 3)")
 
     val slice = tokens.slice(0, 5)
-    assert(slice.length === 5)
-    for (i <- 0 until 5) assert(slice(i) === tokens(i))
+    assert(slice.length == 5)
+    for (i <- 0 until 5) assert(slice(i) == tokens(i))
   }
 
   test("Tokens.slice - 'from' == 'until'") {
     val tokens = tokenize("val foo = 1")
 
-    assert(tokens.slice(1, 1).length === 0)
+    assert(tokens.slice(1, 1).length == 0)
   }
 
   test("Tokens.slice - 'from' > 'until'") {
     val tokens = tokenize("val foo = 1")
 
-    assert(tokens.slice(5, 1).length === 0)
+    assert(tokens.slice(5, 1).length == 0)
   }
 
   test("Tokens.slice - 'from' < 0") {
@@ -105,20 +105,20 @@ class TokensApiSuite extends FunSuite {
 
     val slice = tokens.slice(-100, 1)
 
-    assert(slice.length === 1)
-    assert(slice.head === tokens.head)
+    assert(slice.length == 1)
+    assert(slice.head == tokens.head)
   }
 
   test("Tokens.slice - 'from' > 'length'") {
     val tokens = tokenize("1 + 2")
 
-    assert(tokens.slice(100, 101).length === 0)
+    assert(tokens.slice(100, 101).length == 0)
   }
 
   test("Tokens.slice - 'until' > 'length'") {
     val tokens = tokenize("val foo = 0")
 
-    assert(tokens.slice(0, 100) === tokens)
+    assert(tokens.slice(0, 100) == tokens)
   }
 
   test("Tokens.slice - multiple calls") {
@@ -126,9 +126,9 @@ class TokensApiSuite extends FunSuite {
 
     val slice = tokens.slice(0, 18).slice(5, 15).slice(6, 8)
 
-    assert(slice.length === 2)
-    assert(slice(0) === tokens(11))
-    assert(slice(1) === tokens(12))
+    assert(slice.length == 2)
+    assert(slice(0) == tokens(11))
+    assert(slice(1) == tokens(12))
   }
 
   test("Tokens.span - predicate is always true") {

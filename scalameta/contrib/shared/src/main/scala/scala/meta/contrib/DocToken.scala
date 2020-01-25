@@ -281,28 +281,28 @@ object DocToken {
   /**
    * Represents a third level heading:
    *
-   * i.e: '===HEADING==='
+   * i.e: '==HEADING=='
    */
   case object Heading3 extends Heading(3)
 
   /**
    * Represents a fourth level heading:
    *
-   * i.e: '====HEADING===='
+   * i.e: '===HEADING==='
    */
   case object Heading4 extends Heading(4)
 
   /**
    * Represents a fifth level heading:
    *
-   * i.e: '=====HEADING====='
+   * i.e: '====HEADING===='
    */
   case object Heading5 extends Heading(5)
 
   /**
    * Represents a sixth level heading:
    *
-   * i.e: '======HEADING======'
+   * i.e: '====HEADING===='
    */
   case object Heading6 extends Heading(6)
 

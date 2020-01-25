@@ -1,8 +1,8 @@
 package scala.meta.tests.metacp
 
 import java.nio.file._
-import org.scalatest._
-import org.scalatest.tagobjects._
+import munit._
+import scala.meta.tests._
 import scala.meta.cli._
 import scala.meta.io._
 import scala.meta.metacp._
@@ -25,7 +25,7 @@ class ConvertSuite extends FunSuite {
     assert(output.isSuccess)
   }
   private def checkConversionSucceeds(library: Library): Unit = {
-    test(library.name, Slow) {
+    test(library.name.tag(Slow)) {
       runConversion(library.name, library.classpath())
     }
   }

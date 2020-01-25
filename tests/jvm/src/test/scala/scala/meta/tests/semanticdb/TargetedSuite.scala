@@ -19,7 +19,7 @@ class TargetedSuite extends SemanticdbSuite {
       |  <<bar>>(children = 4)(3)
       |}
     """.trim.stripMargin, { (_, second) =>
-      assert(second === "a/Curry.bar().")
+      assert(second == "a/Curry.bar().")
     }
   )
 
@@ -32,8 +32,8 @@ class TargetedSuite extends SemanticdbSuite {
       |  u.<<copy>>(<<age>> = 43)
       |}
     """.trim.stripMargin, { (_, copy, age) =>
-      assert(copy === "b/User#copy().")
-      assert(age === "b/User#copy().(age)")
+      assert(copy == "b/User#copy().")
+      assert(age == "b/User#copy().(age)")
     }
   )
 
@@ -67,7 +67,7 @@ class TargetedSuite extends SemanticdbSuite {
   occurrences(
     """|package e
        |import scala.meta._
-       |import org.scalatest._
+       |import munit._
        |object x extends FunSuite {
        |  val x = q"Foo"
        |  val y = q"Bar"
@@ -79,11 +79,10 @@ class TargetedSuite extends SemanticdbSuite {
     """|[0:8..0:9): e <= e/
        |[1:7..1:12): scala => scala/
        |[1:13..1:17): meta => scala/meta/
-       |[2:7..2:10): org => org/
-       |[2:11..2:20): scalatest => org/scalatest/
+       |[2:7..2:12): munit => munit/
        |[3:7..3:8): x <= e/x.
-       |[3:17..3:25): FunSuite => org/scalatest/FunSuite#
-       |[3:26..3:26):  => org/scalatest/FunSuite#`<init>`().
+       |[3:17..3:25): FunSuite => munit/FunSuite#
+       |[3:26..3:26):  => munit/FunSuite#`<init>`().
        |[4:6..4:7): x <= e/x.x.
        |[4:10..4:11): q => scala/meta/internal/quasiquotes/Unlift.
        |[5:6..5:7): y <= e/x.y.
@@ -96,7 +95,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[7:10..7:20): sourcecode => sourcecode/
        |[7:21..7:25): Name => sourcecode/Name.
        |[7:26..7:34): generate => sourcecode/NameMacros#generate().
-       |[8:2..8:8): assert => org/scalatest/Assertions#assert().
+       |[8:2..8:8): assert => munit/Assertions#assert().
        |[8:9..8:10): x => e/x.x.
        |[8:11..8:16): value => scala/meta/Term.Name#value().
        |[8:17..8:19): == => java/lang/Object#`==`().

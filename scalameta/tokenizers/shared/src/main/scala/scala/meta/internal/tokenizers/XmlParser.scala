@@ -78,9 +78,9 @@ class XmlParser(Block: P0, Patterns: P0 = Fail) {
     val ScalaPatterns = P("{" ~ Patterns ~ "}")
     val CharDataP = P("&" ~ CharData.? | CharData) // matches weirdness of scalac parser on xml reference.
 
-    //================================================================================
+    //======================================================
     // From `scala.xml.parsing.TokenTests`
-    //================================================================================
+    //======================================================
 
     /**
      * {{{

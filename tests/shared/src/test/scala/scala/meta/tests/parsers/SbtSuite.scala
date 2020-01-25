@@ -1,7 +1,7 @@
 package scala.meta.tests
 package parsers
 
-import org.scalatest._
+import munit._
 import scala.compat.Platform.EOL
 import scala.meta._
 import scala.meta.dialects.Sbt0137
@@ -9,8 +9,8 @@ import scala.meta.dialects.Sbt0137
 class SbtSuite extends FunSuite {
   test("\"...\".parse[Source]") {
     val tree = simpleBuildSyntax.parse[Source].get
-    assert(tree.syntax === simpleBuildSyntax)
-    assert(tree.structure === simpleBuildStructure)
+    assert(tree.syntax == simpleBuildSyntax)
+    assert(tree.structure == simpleBuildStructure)
   }
 
   test("\"...\".parse[Stat]") {
@@ -33,12 +33,12 @@ class SbtSuite extends FunSuite {
     """
     // NOTE: not checking against simpleBuildSyntax because quasiquotes don't retain tokens
     assert(
-      tree.syntax === """
+      tree.syntax == """
       |lazy val commonSettings = Seq(organization := "com.example", version := "0.1.0", scalaVersion := "2.11.7")
       |lazy val root = (project in file(".")).settings(commonSettings: _*).settings(name := "hello")
     """.trim.stripMargin.split('\n').mkString(EOL)
     )
-    assert(tree.structure === simpleBuildStructure)
+    assert(tree.structure == simpleBuildStructure)
   }
 
   private def simpleBuildSyntax = """

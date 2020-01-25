@@ -1,7 +1,7 @@
 package scala.meta.tests
 package contrib
 
-import org.scalatest.FunSuite
+import munit.FunSuite
 import scala.meta.testkit._
 import scala.meta.tokens.Token.Comment
 import scala.meta._

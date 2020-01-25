@@ -46,8 +46,8 @@ object Corpus {
         // ornicar/lila
         "target/repos/lila/modules/lobby/src/main/SocketHandler.scala",
         // scalatest/scalatest
-        "target/repos/scalatest/common-test/src/main/scala/org/scalatest/OperatorNames.scala",
-        "target/repos/scalatest/scalatest-test/src/test/scala/org/scalatest/OperatorNames.scala",
+        "target/repos/scalatest/common-test/src/main/scala/munit.OperatorNames.scala",
+        "target/repos/scalatest/scalatest-test/src/test/scala/munit.OperatorNames.scala",
         // scala/scala
         // This fella seems to make the scalac parser hang (???)
         "target/repos/scala/test/files/neg/t5510.scala",

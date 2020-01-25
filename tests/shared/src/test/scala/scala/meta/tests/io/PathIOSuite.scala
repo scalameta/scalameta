@@ -1,6 +1,6 @@
 package scala.meta.tests.io
 
-import org.scalatest.FunSuite
+import munit.FunSuite
 import scala.meta.internal.io.PathIO
 
 class PathIOSuite extends FunSuite {

@@ -1,7 +1,7 @@
 package scala.meta.tests
 package dialects
 
-import org.scalatest.FunSuite
+import munit.FunSuite
 import scala.meta.Dialect
 
 class DialectSuite extends FunSuite {

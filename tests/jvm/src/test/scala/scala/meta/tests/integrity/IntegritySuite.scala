@@ -1,7 +1,7 @@
 package scala.meta.tests
 package integrity
 
-import org.scalatest._
+import munit._
 import java.io.File
 import java.io.File.{separator, pathSeparator}
 

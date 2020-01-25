@@ -3,7 +3,7 @@ package scala.meta.tests.tokenizers
 import scala.meta._
 import scala.meta.parsers.Parse
 
-import org.scalatest.FunSuite
+import munit.FunSuite
 
 abstract class BaseTokenizerCoverageSuite extends FunSuite {
   private val nl = "\n"

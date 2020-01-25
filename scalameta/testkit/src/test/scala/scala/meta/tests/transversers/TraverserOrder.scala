@@ -1,7 +1,7 @@
 package scala.meta.tests
 package transversers
 
-import org.scalatest.FunSuite
+import munit.FunSuite
 
 import scala.collection.mutable
 import scala.meta.Tree

@@ -8,7 +8,7 @@ import scala.meta.internal.prettyprinters._
 class PositionSuite extends ParseSuite {
   test("1 + (2 / 3) * 4") {
     val tree = term("1 + (2 / 3) * 4")
-    assert(tree.show[Positions] === """
+    assert(tree.show[Positions] == """
       |Term.ApplyInfix{0..15}(
         |Lit.Int{0..1}(1),
         | Term.Name{2..3}("+"),
@@ -27,7 +27,7 @@ class PositionSuite extends ParseSuite {
   }
   test("(1 + 2).foo") {
     val tree = term("(1 + 2).foo")
-    assert(tree.show[Positions] === """
+    assert(tree.show[Positions] == """
       |Term.Select{0..11}(
         |Term.ApplyInfix{0..7}(
           |Lit.Int{1..2}(1),
@@ -52,7 +52,7 @@ class PositionSuite extends ParseSuite {
   }
   test("a + b + c") {
     val tree = term("a + b + c")
-    assert(tree.show[Positions] === """
+    assert(tree.show[Positions] == """
       |Term.ApplyInfix{0..9}(
         |Term.ApplyInfix{0..5}(
           |Term.Name{0..1}("a"),

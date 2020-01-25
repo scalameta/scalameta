@@ -1,7 +1,7 @@
 package scala.meta.tests
 package trees
 
-import org.scalatest._
+import munit._
 import scala.meta._
 
 class TreeSuite extends FunSuite {

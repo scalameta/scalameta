@@ -20,7 +20,7 @@ object typecheckError {
   //     import scala.meta.quasiquotes._
   //     import scala.meta.dialects.Scala211
   //     val q"type $name[$X] = $Y" = q"type List[+A] = List[A]"
-  //   """) === """
+  //   """) == """
   //     |<macro>:4: not found: value X
   //     |      val q"type $name[$X] = $Y" = q"type List[+A] = List[A]"
   //     |                        ^
