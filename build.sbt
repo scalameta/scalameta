@@ -35,7 +35,7 @@ enablePlugins(ScalaUnidocPlugin)
 addCommandAlias("benchAll", benchAll.command)
 addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
-val munitVersion = "0.3.4"
+val munitVersion = "0.3.6"
 commands += Command.command("ci-windows") { s =>
   s"testsJVM/all:testOnly -- --exclude-tags=SkipWindows" ::
     s
@@ -334,7 +334,6 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
       "io.get-coursier" %% "coursier" % "2.0.0-RC5-4",
       "org.scalacheck" %% "scalacheck" % "1.14.3"
     ),
-    dependencyOverrides += "com.geirsson" % "junit-interface" % "0.11.9",
     // Needed because some tests rely on the --usejavacp option
     classLoaderLayeringStrategy.in(Test) := ClassLoaderLayeringStrategy.Flat
   )
