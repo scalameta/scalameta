@@ -296,7 +296,7 @@ lazy val testkit = project
     publishableSettings,
     hasLargeIntegrationTests,
     libraryDependencies ++= {
-      if (isScala212.value) List("com.lihaoyi" %% "geny" % "0.1.8")
+      if (isScala212.value) List("com.lihaoyi" %% "geny" % "0.5.0")
       else Nil
     },
     libraryDependencies ++= Seq(
