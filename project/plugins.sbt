@@ -3,7 +3,7 @@ addSbtPlugin(
   "com.eed3si9n" % "sbt-assembly" % "0.14.10" exclude ("org.apache.maven", "maven-plugin-api")
 )
 
-addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.4.2")
+addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.4.3")
 
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.9.2")
 
