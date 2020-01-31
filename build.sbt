@@ -78,11 +78,14 @@ unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalametaJVM, Compile).value
 
 val commonJsSettings = Seq(
-  scalacOptions ++= (if(isSnapshot.value) Seq.empty else {
-    val localDir = (baseDirectory in ThisBuild).value.toURI.toString
-    val githubDir = "https://raw.githubusercontent.com/scalameta/scalameta"
-    Seq(s"-P:scalajs:mapSourceURI:$localDir->$githubDir/v${version.value}/")
-  }),
+  scalacOptions ++= {
+    if (isSnapshot.value) Seq.empty
+    else {
+      val localDir = (baseDirectory in ThisBuild).value.toURI.toString
+      val githubDir = "https://raw.githubusercontent.com/scalameta/scalameta"
+      Seq(s"-P:scalajs:mapSourceURI:$localDir->$githubDir/v${version.value}/")
+    }
+  }
 )
 
 /** ======================== SEMANTICDB ======================== **/
