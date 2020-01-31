@@ -77,6 +77,14 @@ packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalametaJVM, Compile).value
 
+val commonJsSettings = Seq(
+  scalacOptions ++= (if(isSnapshot.value) Seq.empty else {
+    val localDir = (baseDirectory in ThisBuild).value.toURI.toString
+    val githubDir = "https://raw.githubusercontent.com/scalameta/scalameta"
+    Seq(s"-P:scalajs:mapSourceURI:$localDir->$githubDir/v${version.value}/")
+  }),
+)
+
 /** ======================== SEMANTICDB ======================== **/
 lazy val semanticdbScalacCore = project
   .in(file("semanticdb/scalac/library"))
@@ -140,6 +148,9 @@ lazy val common = crossProject(JSPlatform, JVMPlatform)
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros
   )
+  .jsSettings(
+    commonJsSettings
+  )
 lazy val commonJVM = common.jvm
 lazy val commonJS = common.js
 
@@ -168,6 +179,9 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform)
       )
     })
   )
+  .jsSettings(
+    commonJsSettings
+  )
   .dependsOn(common) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
 lazy val treesJVM = trees.jvm
 lazy val treesJS = trees.js
@@ -186,6 +200,7 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform)
     })
   )
   .jsSettings(
+    commonJsSettings,
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
   .dependsOn(trees)
@@ -237,6 +252,9 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform)
       baseDirectory.in(ThisBuild).value / "semanticdb" / "metacp",
       baseDirectory.in(ThisBuild).value / "semanticdb" / "symtab"
     )
+  )
+  .jsSettings(
+    commonJsSettings
   )
   .dependsOn(parsers)
 lazy val scalametaJVM = scalameta.jvm
@@ -341,6 +359,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
     _.dependsOn(testkit, metac, semanticdbIntegration)
   )
   .jsSettings(
+    commonJsSettings,
     scalaJSModuleKind := ModuleKind.CommonJSModule
   )
   .enablePlugins(BuildInfoPlugin)
