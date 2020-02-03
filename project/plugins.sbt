@@ -18,7 +18,7 @@ libraryDependencies += "org.scala-sbt" %% "scripted-plugin" % sbtVersion.value
 
 addSbtPlugin("com.geirsson" % "sbt-ci-release" % "1.4.31")
 
-addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.6.1")
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.6.3")
 
 addSbtPlugin("org.portable-scala" % "sbt-crossproject" % "0.6.1")
 
