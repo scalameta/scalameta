@@ -20,6 +20,9 @@ def customVersion = sys.props.get("scalameta.version")
 // ==========================================
 
 sharedSettings
+version.in(ThisBuild) ~= { old =>
+  old.replace('+', '-')
+}
 name := {
   println(s"[info] Welcome to scalameta ${version.value}")
   "scalametaRoot"
