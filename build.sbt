@@ -806,6 +806,7 @@ lazy val docs = project
       "VERSION" -> version.value.replaceFirst("\\+.*", ""),
       "SCALA_VERSION" -> scalaVersion.value
     ),
-    mdocOut := baseDirectory.in(ThisBuild).value / "website" / "target" / "docs"
+    mdocOut := baseDirectory.in(ThisBuild).value / "website" / "target" / "docs",
+    mimaPreviousArtifacts := Set.empty
   )
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin)
