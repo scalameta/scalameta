@@ -20,9 +20,6 @@ def customVersion = sys.props.get("scalameta.version")
 // ==========================================
 
 sharedSettings
-version.in(ThisBuild) ~= { old =>
-  old.replace('+', '-')
-}
 name := {
   println(s"[info] Welcome to scalameta ${version.value}")
   "scalametaRoot"
@@ -585,7 +582,7 @@ lazy val publishableSettings = Def.settings(
   },
   mimaPreviousArtifacts := {
     if (organization.value == "org.scalameta") {
-      val rxVersion = """^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+))?$""".r
+      val rxVersion = """^(\d+)\.(\d+)\.(\d+)(.+)?$""".r
       val previousVersion = version.value match {
         case rxVersion(major, "0", "0", suffix) if suffix != null =>
           if (suffix.startsWith("-M")) None
