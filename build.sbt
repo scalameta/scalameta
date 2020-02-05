@@ -792,3 +792,20 @@ inScope(Global)(
     PgpKeys.pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray())
   )
 )
+
+lazy val docs = project
+  .in(file("scalameta-docs"))
+  .dependsOn(scalametaJVM)
+  .settings(
+    buildInfoKeys := Seq[BuildInfoKey](
+      "scalameta" -> scalameta
+    ),
+    buildInfoPackage := "docs",
+    moduleName := "scalameta-docs",
+    mdocVariables := Map(
+      "VERSION" -> version.value.replaceFirst("\\+.*", ""),
+      "SCALA_VERSION" -> scalaVersion.value
+    ),
+    mdocOut := baseDirectory.in(ThisBuild).value / "website" / "target" / "docs",
+  )
+  .enablePlugins(BuildInfoPlugin, DocusaurusPlugin)
