@@ -37,9 +37,7 @@ object ScalametaDocs {
   val repoPath =
     s"https://github.com/$orgRepo/blob/$branch"
 
-  def applyReplacements(
-      string: String,
-      replacements: (Pattern, String)*): String =
+  def applyReplacements(string: String, replacements: (Pattern, String)*): String =
     replacements.iterator.foldLeft(string) {
       case (nextString, (nextPattern, replacement)) =>
         nextPattern.matcher(nextString).replaceAll(replacement)
@@ -79,9 +77,7 @@ object ScalametaDocs {
       url = s"$root/semanticdb/semanticdb3/guide.md",
       postProcess = { guide =>
         val toc =
-          Pattern.compile(
-            "- \\[Installation.*\\  \\* \\[Metals\\]\\(#metals\\)",
-            Pattern.DOTALL)
+          Pattern.compile("- \\[Installation.*\\  \\* \\[Metals\\]\\(#metals\\)", Pattern.DOTALL)
         val header = Pattern.compile("^# SemanticDB.*")
         val semanticdb3 = Pattern.compile("\\(semanticdb3.md\\)")
         applyReplacements(

@@ -12,7 +12,7 @@ object Main {
       .withSiteVariables(
         Map(
           "VERSION" -> BuildInfo.scalameta,
-          "SCALA_VERSION" -> util.Properties.versionNumberString,
+          "SCALA_VERSION" -> util.Properties.versionNumberString
         )
       )
       .withArgs(args.toList)
