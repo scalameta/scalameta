@@ -761,7 +761,6 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
   scalaReflect ++ scalaCompiler
 }
 
-
 lazy val docs = project
   .in(file("scalameta-docs"))
   .dependsOn(scalametaJVM)
