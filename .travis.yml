@@ -17,7 +17,7 @@ jobs:
         - nvm install 'lts/*' && nvm use 'lts/*'
         - git fetch --unshallow
         - git fetch --tags
-        - sbt ci-release
+        - ./sbt ci-release
 
 cache:
   directories:
