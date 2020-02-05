@@ -771,6 +771,7 @@ lazy val docs = project
     ),
     buildInfoPackage := "docs",
     moduleName := "scalameta-docs",
+    mdocExtraArguments := List("--no-link-hygiene"),
     mdocVariables := Map(
       "VERSION" -> version.value.replaceFirst("\\+.*", ""),
       "SCALA_VERSION" -> scalaVersion.value
