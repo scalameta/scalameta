@@ -3,6 +3,7 @@ package scala.meta.internal.semanticdb.scalac
 import java.net.{URI, URLEncoder}
 import java.nio.CharBuffer
 import java.nio.charset.StandardCharsets.UTF_8
+import java.nio.file.Paths
 import java.security.MessageDigest
 import scala.collection.mutable
 import scala.{meta => m}
@@ -31,7 +32,7 @@ trait InputOps { self: SemanticdbOps =>
 
     def isInSourceroot(sourceroot: AbsolutePath): Boolean = gsource.file match {
       case gfile: GPlainFile =>
-        gfile.file.toPath.startsWith(config.sourceroot.toNIO)
+        gfile.file.toPath.startsWith(config.sourceroot.toNIO) || !gfile.file.toPath.isAbsolute
       case _: VirtualFile =>
         true // Would anyone go to the trouble of building a VirtualFile that's outside of sourceroot?
       case _ =>
