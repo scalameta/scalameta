@@ -13,18 +13,13 @@ import scalapb.compiler.Version.scalapbVersion
 
 lazy val LanguageVersions = Seq(LatestScala212, LatestScala211, LatestScala213)
 lazy val LanguageVersion = LanguageVersions.head
+def customVersion = sys.props.get("scalameta.version")
 
 // ==========================================
 // Projects
 // ==========================================
 
 sharedSettings
-version.in(ThisBuild) ~= { old =>
-  val suffix =
-    if (sys.props.contains("scalameta.snapshot")) "-SNAPSHOT"
-    else ""
-  customVersion.getOrElse(old.replace('+', '-') + suffix)
-}
 name := {
   println(s"[info] Welcome to scalameta ${version.value}")
   "scalametaRoot"
@@ -763,40 +758,12 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
   scalaReflect ++ scalaCompiler
 }
 
-lazy val isTagPush = sys.env.get("TRAVIS_TAG").exists(_.nonEmpty)
-lazy val isCiPublish = sys.env.contains("CI_PUBLISH")
-lazy val ciPlatform =
-  if ("true" == System.getenv("CI_SCALA_JS")) "JS"
-  else "JVM"
-lazy val ciScalaVersion = sys.env("CI_SCALA_VERSION")
-def CiCommand(name: String)(commands: List[String]): Command = Command.command(name) { initState =>
-  commands.foldLeft(initState) {
-    case (state, command) => ci(command) :: state
-  }
-}
-def ci(command: String) = s"plz $ciScalaVersion $command"
-def customVersion = sys.props.get("scalameta.version")
-
-// Defining these here so it's only defined once and for all projects (including root)
-inScope(Global)(
-  Seq(
-    credentials ++= (for {
-      username <- sys.env.get("SONATYPE_USERNAME")
-      password <- sys.env.get("SONATYPE_PASSWORD")
-    } yield Credentials(
-      "Sonatype Nexus Repository Manager",
-      "oss.sonatype.org",
-      username,
-      password
-    )).toSeq,
-    PgpKeys.pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray())
-  )
-)
 
 lazy val docs = project
   .in(file("scalameta-docs"))
   .dependsOn(scalametaJVM)
   .settings(
+    nonPublishableSettings,
     buildInfoKeys := Seq[BuildInfoKey](
       "scalameta" -> scalameta
     ),
