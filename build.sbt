@@ -142,7 +142,7 @@ lazy val common = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/common"))
   .settings(
     publishableSettings,
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.0",
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.1",
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros
   )
