@@ -827,6 +827,27 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
+  def inParensOrTupleOrUnit(location: Location, allowRepeated: Boolean): Term = {
+    // NOTE: we can't make this autoPos
+    // see comments to makeTupleType for discussion
+    val maybeTupleArgs = inParens({
+      if (token.is[RightParen]) Nil
+      else commaSeparated(expr(location = location, allowRepeated = allowRepeated))
+    })
+    maybeTupleArgs match {
+      case List(Term.Quasi(1, _)) =>
+        makeTupleTerm(maybeTupleArgs)
+      case List(singleArg) =>
+        singleArg
+      case multipleArgs =>
+        val repeatedArgs = multipleArgs.collect { case repeated: Term.Repeated => repeated }
+        repeatedArgs.foreach(arg =>
+          syntaxError("repeated argument not allowed here", at = arg.tokens.last.prev)
+        )
+        makeTupleTerm(multipleArgs)
+    }
+  }
+
   /* -------- IDENTIFIERS AND LITERALS ------------------------------------------- */
 
   /** Methods which implicitly propagate the context in which they were
@@ -1500,7 +1521,17 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         next()
         val body: Term = token match {
           case LeftBrace() => autoPos(inBracesOrUnit(block()))
-          case LeftParen() => inParensOrUnit(expr())
+          case p @ LeftParen() =>
+            val term = inParensOrTupleOrUnit(location, allowRepeated)
+            term match {
+              case _: Lit.Unit | _: Term.Tuple =>
+                // NOTE: the position needs to be adapted to include parentheses
+                // when parsing a tuple or unit.
+                // See comments to makeTupleType for discussion
+                atPos(p, auto)(term)
+              case _ =>
+                term
+            }
           case _ => expr()
         }
         val catchopt =
@@ -1956,24 +1987,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           next()
           atPos(in.prevTokenPos, in.prevTokenPos)(Term.Placeholder())
         case LeftParen() =>
-          autoPos {
-            val maybeTupleArgs = inParens({
-              if (token.is[RightParen]) Nil
-              else commaSeparated(expr(location = NoStat, allowRepeated = allowRepeated))
-            })
-            maybeTupleArgs match {
-              case List(Term.Quasi(1, _)) =>
-                makeTupleTerm(maybeTupleArgs)
-              case List(singleArg) =>
-                singleArg
-              case multipleArgs =>
-                val repeatedArgs = multipleArgs.collect { case repeated: Term.Repeated => repeated }
-                repeatedArgs.foreach(arg =>
-                  syntaxError("repeated argument not allowed here", at = arg.tokens.last.prev)
-                )
-                makeTupleTerm(multipleArgs)
-            }
-          }
+          autoPos(inParensOrTupleOrUnit(location = NoStat, allowRepeated = allowRepeated))
         case LeftBrace() =>
           canApply = false
           blockExpr()
