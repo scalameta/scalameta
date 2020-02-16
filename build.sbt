@@ -577,9 +577,7 @@ lazy val publishableSettings = Def.settings(
   publishArtifact.in(Compile) := true,
   publishArtifact.in(Test) := false,
   publishMavenStyle := true,
-  pomIncludeRepository := { x =>
-    false
-  },
+  pomIncludeRepository := { x => false },
   mimaPreviousArtifacts := {
     if (organization.value == "org.scalameta") {
       val rxVersion = """^(\d+)\.(\d+)\.(\d+)(.+)?$""".r

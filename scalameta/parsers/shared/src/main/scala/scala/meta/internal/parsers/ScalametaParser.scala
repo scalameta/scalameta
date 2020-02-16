@@ -269,7 +269,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   var in: TokenIterator = new SimpleTokenIterator()
   private class SimpleTokenIterator(var i: Int = -1) extends TokenIterator {
     require(parserTokens.nonEmpty)
-    if (i == -1) next() // NOTE: only do next() if we've been just created. forks can't go for next()
+    if (i == -1)
+      next() // NOTE: only do next() if we've been just created. forks can't go for next()
     def hasNext: Boolean = i < parserTokens.length - 1
     def next(): Token = {
       if (!hasNext) throw new NoSuchElementException(); i += 1; parserTokens(i)
@@ -449,9 +450,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val errorMsg = invalidMod.errorMessage
     val forCulprit = if (culprit.nonEmpty) s" for: $culprit" else ""
     val enrichedErrorMsg = errorMsg + forCulprit
-    mods.getIncompatible[M1, M2].foreach { m =>
-      syntaxError(enrichedErrorMsg, at = m._1)
-    }
+    mods.getIncompatible[M1, M2].foreach { m => syntaxError(enrichedErrorMsg, at = m._1) }
   }
 
   def onlyAcceptMod[M <: Mod, T <: Token](

@@ -126,9 +126,7 @@ object Scalalib {
       bases: List[String],
       symbols: List[s.SymbolInformation]
   ): ClassfileInfos = {
-    val parents = bases.map { base =>
-      s.TypeRef(s.NoType, base, Nil)
-    }
+    val parents = bases.map { base => s.TypeRef(s.NoType, base, Nil) }
     val symbol = Symbols.Global(scalaPackage, d.Type(className))
     val ctorSig = s.MethodSignature(Some(s.Scope(Nil)), List(s.Scope(Nil)), s.NoType)
     val ctor = s.SymbolInformation(

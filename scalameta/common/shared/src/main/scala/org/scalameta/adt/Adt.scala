@@ -57,7 +57,8 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
         val flags1 = flags | SEALED
         mstats1 += q"$AdtTyperMacrosModule.hierarchyCheck[$classRef]"
         val anns1 = anns :+ q"new $AdtMetadataModule.root"
-        val parents1 = parents :+ tq"$AdtMetadataModule.Adt" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
+        val parents1 =
+          parents :+ tq"$AdtMetadataModule.Adt" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
 
         val cdef1 = ClassDef(
           Modifiers(flags1, privateWithin, anns1),

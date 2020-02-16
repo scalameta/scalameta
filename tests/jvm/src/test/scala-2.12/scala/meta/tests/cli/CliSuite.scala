@@ -140,18 +140,17 @@ class CliSuite extends FunSuite {
         .asScala
         .filter(_.toString.contains("Right.scala.semanticdb"))
 
-    val rightResults = searchForRightScalaSemanticdbIn(projectroot) ++ searchForRightScalaSemanticdbIn(
-      target
-    )
+    val rightResults =
+      searchForRightScalaSemanticdbIn(projectroot) ++ searchForRightScalaSemanticdbIn(
+        target
+      )
     assert(rightResults.isEmpty)
   }
 }
 
 object CliSuite {
   def withReporter[T](op: Reporter => T): (T, String, String) = {
-    communicate { (out, err) =>
-      op(Reporter().withOut(out).withErr(err))
-    }
+    communicate { (out, err) => op(Reporter().withOut(out).withErr(err)) }
   }
   def communicate[T](op: (PrintStream, PrintStream) => T): (T, String, String) = {
     val outbaos = new ByteArrayOutputStream

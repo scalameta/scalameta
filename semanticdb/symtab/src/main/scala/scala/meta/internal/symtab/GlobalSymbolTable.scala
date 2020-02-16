@@ -25,9 +25,7 @@ final class GlobalSymbolTable private (classpath: Classpath, includeJdk: Boolean
   override def toString: String = s"GlobalSymbolTable($classpath)"
 
   private def enter(infos: ClassfileInfos): Unit =
-    infos.infos.foreach { info =>
-      symbolCache(info.symbol) = info
-    }
+    infos.infos.foreach { info => symbolCache(info.symbol) = info }
 
   private def loadSymbol(symbol: String): Unit = {
     val toplevel = symbol.ownerChain.find(!_.isPackage).get
