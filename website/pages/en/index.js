@@ -109,7 +109,7 @@ const Features = props => {
     {
       title: "Industrial adoption",
       content:
-        "Scalameta has over 100,000 unique module downloads a month, " +
+        "Scalameta libraries get downloaded from over 100,000 unique IP addresses each month, " +
         "Scalameta quasiquotes have built-in support in IntelliJ, and " +
         "Scalameta is actively developed and maintained by engineers at Twitter, " +
         "the Scala Center and members from the community.",
