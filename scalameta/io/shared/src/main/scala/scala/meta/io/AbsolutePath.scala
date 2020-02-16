@@ -65,7 +65,10 @@ object AbsolutePath {
       cwd.resolve(path.toString)
     }
   def fromAbsoluteUri(uri: URI)(implicit cwd: AbsolutePath): AbsolutePath = {
-    require(uri.isAbsolute, "This method only works on absolute URIs at present.") // Limitation of Paths.get(URI)
+    require(
+      uri.isAbsolute,
+      "This method only works on absolute URIs at present."
+    ) // Limitation of Paths.get(URI)
     apply(Paths.get(uri))(cwd)
   }
 }

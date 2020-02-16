@@ -62,20 +62,14 @@ object MetacpOps {
       case s.WithType(types) =>
         types.foreach(visitType)
       case s.StructuralType(tpe, declarations) =>
-        visitScope(declarations) { () =>
-          visitType(tpe)
-        }
+        visitScope(declarations) { () => visitType(tpe) }
       case s.AnnotatedType(annotations, tpe) =>
         annotations.foreach(annot => visitType(annot.tpe))
         visitType(tpe)
       case s.ExistentialType(tpe, declarations) =>
-        visitScope(declarations) { () =>
-          visitType(tpe)
-        }
+        visitScope(declarations) { () => visitType(tpe) }
       case s.UniversalType(typeParameters, tpe) =>
-        visitScope(typeParameters) { () =>
-          visitType(tpe)
-        }
+        visitScope(typeParameters) { () => visitType(tpe) }
       case s.ByNameType(tpe) =>
         visitType(tpe)
       case s.RepeatedType(tpe) =>
@@ -92,9 +86,7 @@ object MetacpOps {
         }
       case s.MethodSignature(typeParameters, parameterLists, returnType) =>
         parameterLists.foreach(s => visitScope(Some(s))(() => ()))
-        visitScope(typeParameters) { () =>
-          visitType(returnType)
-        }
+        visitScope(typeParameters) { () => visitType(returnType) }
       case s.TypeSignature(typeParameters, lowerBound, upperBound) =>
         visitScope(typeParameters) { () =>
           visitType(lowerBound)

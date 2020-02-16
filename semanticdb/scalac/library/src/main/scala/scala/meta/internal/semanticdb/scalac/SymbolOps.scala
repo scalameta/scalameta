@@ -204,7 +204,8 @@ trait SymbolOps { self: SemanticdbOps =>
     def isSyntheticConstructor: Boolean = {
       val isModuleConstructor = sym.isConstructor && sym.owner.isModuleClass
       val isTraitConstructor = sym.isMixinConstructor
-      val isInterfaceConstructor = sym.isConstructor && sym.owner.isJavaDefined && sym.owner.isInterface
+      val isInterfaceConstructor =
+        sym.isConstructor && sym.owner.isJavaDefined && sym.owner.isInterface
       val isEnumConstructor = sym.isConstructor && sym.owner.hasJavaEnumFlag
       val isStaticConstructor = sym.name == g.TermName("<clinit>")
       val isClassfileAnnotationConstructor = sym.owner.isClassfileAnnotation
@@ -262,7 +263,9 @@ trait SymbolOps { self: SemanticdbOps =>
     def isAnonymousSelfParameter: Boolean = {
       sym.isSelfParameter && {
         sym.name == g.nme.this_ || // hardlinked in ClassSignature.self
-        sym.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX) // wildcards can't be referenced: class A { _: B => }
+        sym.name.startsWith(
+          g.nme.FRESH_TERM_NAME_PREFIX
+        ) // wildcards can't be referenced: class A { _: B => }
       }
     }
     def isUseless: Boolean = {

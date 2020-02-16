@@ -48,9 +48,7 @@ package object io {
           ()
         }
       }
-      cp.entries.foreach { entry =>
-        processEntry(entry, manifestJar = None)
-      }
+      cp.entries.foreach { entry => processEntry(entry, manifestJar = None) }
     }
   }
 

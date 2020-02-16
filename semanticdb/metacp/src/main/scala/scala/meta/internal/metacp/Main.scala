@@ -66,9 +66,7 @@ class Main(settings: Settings, reporter: Reporter) {
     val scalaLibrarySynthetics = {
       if (settings.scalaLibrarySynthetics) {
         withOutputEntry(settings.out.resolve("scala-library-synthetics.jar")) { out =>
-          Scalalib.synthetics.foreach { infos =>
-            infos.save(out.root)
-          }
+          Scalalib.synthetics.foreach { infos => infos.save(out.root) }
           Some(out.output)
         }
       } else {
@@ -192,9 +190,7 @@ class Main(settings: Settings, reporter: Reporter) {
               val abspath = AbsolutePath(path)
               val node = abspath.toClassNode
               val result = ClassfileInfos.fromClassNode(node, classpathIndex, settings, reporter)
-              result.foreach { infos =>
-                infos.save(out)
-              }
+              result.foreach { infos => infos.save(out) }
             } catch {
               case e @ MissingSymbolException(symbol) =>
                 if (!missingSymbols(symbol)) {

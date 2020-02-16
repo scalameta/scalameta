@@ -190,7 +190,8 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
       var result = static.info.members.filter(mem => {
         val relevant = mem.isRelevant
         val extension = static.isImplicitClass || mem.isImplicitClass
-        val synthetic = mem.isConstructor && ((static.isClass && static.asClass.isTrait) || static.isModule || static.isModuleClass)
+        val synthetic =
+          mem.isConstructor && ((static.isClass && static.asClass.isTrait) || static.isModule || static.isModuleClass)
         val unnameable = mem.isMethod && mem.isImplicit // NOTE: this is a big assumption
         relevant && !extension && !synthetic && !unnameable
       })

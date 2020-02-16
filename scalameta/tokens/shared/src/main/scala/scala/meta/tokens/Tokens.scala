@@ -82,8 +82,8 @@ object Tokens {
     new Tokens(tokens, start, end)
   def unapplySeq(tokens: Tokens): Option[Seq[Token]] = Some(tokens)
 
-  implicit val tokensToInput: Convert[Tokens, Input] = Convert(tokens => Input.String(tokens.syntax)
-  )
+  implicit val tokensToInput: Convert[Tokens, Input] =
+    Convert(tokens => Input.String(tokens.syntax))
   implicit val listTokenToInput: Convert[List[Token], Input] =
     Convert(tokens => Input.String(Tokens(tokens.toArray, 0, tokens.length).syntax))
   implicit def showStructure[T <: Tokens]: Structure[T] = TokensStructure.apply[T]

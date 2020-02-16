@@ -24,8 +24,6 @@ class UnicodeEscapeSuite extends BaseTokenizerSuite {
     }
   }
 
-  tests.linesIterator.foreach { line =>
-    checkRoundtrip(line)
-  }
+  tests.linesIterator.foreach { line => checkRoundtrip(line) }
 
 }

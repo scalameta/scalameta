@@ -10,5 +10,4 @@ object U {
 }
 
 class C
-trait V { self: C =>
-}
+trait V { self: C => }

@@ -72,17 +72,13 @@ class SignatureSuite extends FunSuite {
   def checkFields(node: ClassNode): List[(String, () => Unit)] =
     node.fields.asScala.map { field: FieldNode =>
       val signature = if (field.signature == null) field.desc else field.signature
-      (signature, { () =>
-        assertSignatureRoundtrip(signature, new FieldSignatureVisitor())
-      })
+      (signature, { () => assertSignatureRoundtrip(signature, new FieldSignatureVisitor()) })
     }.toList
 
   def checkMethods(node: ClassNode): List[(String, () => Unit)] =
     node.methods.asScala.map { method: MethodNode =>
       val signature = if (method.signature == null) method.desc else method.signature
-      (signature, { () =>
-        assertSignatureRoundtrip(signature, new MethodSignatureVisitor())
-      })
+      (signature, { () => assertSignatureRoundtrip(signature, new MethodSignatureVisitor()) })
     }.toList
 
   def checkClass(node: ClassNode): List[(String, () => Unit)] =

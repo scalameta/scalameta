@@ -472,9 +472,7 @@ object TreeSyntax {
             if (t.catchp.nonEmpty) s(" ", kw("catch"), " {", r(t.catchp.map(i(_)), ""), n("}"))
             else s(""),
             t.finallyp
-              .map { finallyp =>
-                s(" ", kw("finally"), " ", finallyp)
-              }
+              .map { finallyp => s(" ", kw("finally"), " ", finallyp) }
               .getOrElse(s())
           )
         )
@@ -490,9 +488,7 @@ object TreeSyntax {
             " ",
             t.catchp,
             t.finallyp
-              .map { finallyp =>
-                s(" ", kw("finally"), " ", finallyp)
-              }
+              .map { finallyp => s(" ", kw("finally"), " ", finallyp) }
               .getOrElse(s())
           )
         )
@@ -975,9 +971,7 @@ object TreeSyntax {
       if (targs.isEmpty) s()
       else s("[", r(targs, ", "), "]")
     }
-    implicit def syntaxPats: Syntax[List[Pat]] = Syntax { pats =>
-      s("(", r(pats, ", "), ")")
-    }
+    implicit def syntaxPats: Syntax[List[Pat]] = Syntax { pats => s("(", r(pats, ", "), ")") }
     implicit def syntaxMods: Syntax[List[Mod]] = Syntax { mods =>
       if (mods.nonEmpty) r(mods, " ") else s()
     }
@@ -1000,9 +994,7 @@ object TreeSyntax {
       if (tparams.nonEmpty) s("[", r(tparams, ", "), "]") else s()
     }
     implicit def syntaxTypeOpt: Syntax[Option[Type]] = Syntax {
-      _.map { t =>
-        s(kw(":"), " ", t)
-      }.getOrElse(s())
+      _.map { t => s(kw(":"), " ", t) }.getOrElse(s())
     }
     implicit def syntaxImportee: Syntax[List[Importee]] = Syntax {
       case (t: Importee.Name) :: Nil => s(t)

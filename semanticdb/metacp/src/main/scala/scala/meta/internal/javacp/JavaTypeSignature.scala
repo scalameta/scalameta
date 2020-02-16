@@ -226,9 +226,7 @@ case class MethodSignature(
       case _ =>
     }
     sb.append('(')
-    params.foreach { param =>
-      param.print(sb)
-    }
+    params.foreach { param => param.print(sb) }
     sb.append(')')
     result.print(sb)
     throws.foreach(_.print(sb))

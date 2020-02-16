@@ -89,9 +89,7 @@ class ConfigSuite extends FunSuite {
       |/A.scala
       |object A {
       |}
-    """.stripMargin, { doc =>
-      assert(doc.symbols.isEmpty)
-    }
+    """.stripMargin, { doc => assert(doc.symbols.isEmpty) }
   )
 
   check(
@@ -135,9 +133,7 @@ class ConfigSuite extends FunSuite {
     List(s"-P:semanticdb:md5:off"),
     """|/A.scala
        |object A
-    """.stripMargin, { doc =>
-      assert(doc.md5.isEmpty)
-    }
+    """.stripMargin, { doc => assert(doc.md5.isEmpty) }
   )
 
   check(
@@ -147,9 +143,7 @@ class ConfigSuite extends FunSuite {
        |object A {
        |   List(1).map(_ + 1)
        |}
-       |""".stripMargin, { doc =>
-      assert(doc.synthetics.isEmpty)
-    }
+       |""".stripMargin, { doc => assert(doc.synthetics.isEmpty) }
   )
 
   check(
@@ -159,9 +153,7 @@ class ConfigSuite extends FunSuite {
        |object A {
        |   List(1).map(_ + 1)
        |}
-       |""".stripMargin, { doc =>
-      assert(doc.synthetics.nonEmpty)
-    }
+       |""".stripMargin, { doc => assert(doc.synthetics.nonEmpty) }
   )
 
 }

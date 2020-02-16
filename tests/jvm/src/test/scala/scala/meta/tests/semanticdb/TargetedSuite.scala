@@ -18,9 +18,7 @@ class TargetedSuite extends SemanticdbSuite {
       |  def bar(children: Int)(x: Int) = children + x
       |  <<bar>>(children = 4)(3)
       |}
-    """.trim.stripMargin, { (_, second) =>
-      assert(second == "a/Curry.bar().")
-    }
+    """.trim.stripMargin, { (_, second) => assert(second == "a/Curry.bar().") }
   )
 
   targeted(

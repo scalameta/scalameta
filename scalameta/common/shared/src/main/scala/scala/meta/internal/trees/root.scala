@@ -34,7 +34,8 @@ class RootNamerMacros(val c: Context) extends AstReflection with CommonNamerMacr
         val flags1 = flags
         mstats1 += q"$CommonTyperMacrosModule.hierarchyCheck[$name]"
         val anns1 = anns :+ q"new $AdtMetadataModule.root" :+ q"new $AstMetadataModule.root"
-        val parents1 = parents :+ tq"$AstMetadataModule.Ast" :+ tq"$ProductClass" :+ tq"$SerializableClass"
+        val parents1 =
+          parents :+ tq"$AstMetadataModule.Ast" :+ tq"$ProductClass" :+ tq"$SerializableClass"
         mstats1 ++= mkClassifier(name)
         mstats1 += mkQuasi(name, Nil, Nil)
 

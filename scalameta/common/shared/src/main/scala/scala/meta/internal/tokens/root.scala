@@ -42,7 +42,8 @@ class RootNamerMacros(val c: Context) extends MacroHelpers {
       """
         mstats1 ++= classifierBoilerplate
 
-        val parents1 = parents :+ tq"$TokenMetadataModule.Token" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
+        val parents1 =
+          parents :+ tq"$TokenMetadataModule.Token" :+ tq"_root_.scala.Product" :+ tq"_root_.scala.Serializable"
         val cdef1 = ClassDef(
           Modifiers(flags, privateWithin, anns1),
           name,

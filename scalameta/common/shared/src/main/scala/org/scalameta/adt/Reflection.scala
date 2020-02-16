@@ -37,7 +37,8 @@ trait Reflection {
     def isLeaf: Boolean = sym.hasAnnotation[AdtMetadata.leafClass]
     def isField: Boolean = {
       val isMethodInLeafClass = sym.isMethod && sym.owner.isLeaf
-      val isParamGetter = sym.isTerm && sym.asTerm.isParamAccessor && sym.asTerm.isGetter && sym.isPublic
+      val isParamGetter =
+        sym.isTerm && sym.asTerm.isParamAccessor && sym.asTerm.isGetter && sym.isPublic
       val isAstField = sym.hasAnnotation[AstMetadata.astField]
       isMethodInLeafClass && (isParamGetter || isAstField)
     }
