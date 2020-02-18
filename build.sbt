@@ -102,7 +102,7 @@ lazy val semanticdbScalacCore = project
           case _ => file(dir.getPath ++ "-2.13.1+")
         }
       }
-    },
+    }
   )
   .dependsOn(scalametaJVM)
 
