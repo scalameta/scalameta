@@ -1,8 +1,7 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.reflect.internal.util.Position
-import scala.tools.nsc.reporters.Reporter
-import scala.tools.nsc.reporters.StoreReporter
+import scala.tools.nsc.reporters.{Reporter, StoreReporter}
 
 class SemanticdbReporter(underlying: Reporter) extends StoreReporter {
   override protected def info0(
@@ -18,5 +17,13 @@ class SemanticdbReporter(underlying: Reporter) extends StoreReporter {
       case 2 => underlying.error(pos, msg)
       case _ =>
     }
+    // underlying reporter may have filtered out the message
+    updateCounts()
+  }
+
+  private def updateCounts(): Unit = {
+    INFO.count = underlying.INFO.count
+    WARNING.count = underlying.WARNING.count
+    ERROR.count = underlying.ERROR.count
   }
 }

@@ -92,7 +92,17 @@ lazy val semanticdbScalacCore = project
     mimaPreviousArtifacts := Set.empty,
     moduleName := "semanticdb-scalac-core",
     description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+    unmanagedSourceDirectories in Compile ++= {
+      (unmanagedSourceDirectories in Compile).value.map { dir =>
+        val sv = scalaVersion.value
+        val is130 = sv == "2.13.0" // reporters changed in 2.13.1
+        CrossVersion.partialVersion(sv) match {
+          case Some((2, n)) if n < 13 || is130 => file(dir.getPath ++ "-2.13.0-")
+          case _ => file(dir.getPath ++ "-2.13.1+")
+        }
+      }
+    }
   )
   .dependsOn(scalametaJVM)
 
