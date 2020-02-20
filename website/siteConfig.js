@@ -37,7 +37,7 @@ const siteConfig = {
   /* path to images for header/footer */
   headerIcon: "img/scalameta.png",
   footerIcon: "img/scalameta.png",
-  favicon: "img/favicon.png",
+  favicon: "img/favicon.ico",
 
   /* colors for website */
   colors: {
