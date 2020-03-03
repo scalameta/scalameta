@@ -53,9 +53,6 @@ Tips to make your edit/test/debug worflow as productive as possible:
   - pass [CI](http://drone.geirsson.com:8001/scalameta/scalameta), which
     automatically runs when your pull request is submitted.
   - be reformatted with `./bin/scalafmt`
-  - add a relevant entry to the
-    [changelog](https://github.com/scalameta/scalameta/tree/master/changelog)
-    for the next stable release
 - **Be prepared to discuss/argue-for your changes if you want them merged**!
   You will probably need to refactor so your changes fit into the larger
   codebase
@@ -69,6 +66,8 @@ Tips to make your edit/test/debug worflow as productive as possible:
   least three lines were tried, committed, and reverted/refactored, and more
   than 10 were tried without committing.
 - **Feel free to send Proof-Of-Concept PRs** that you don't intend to get merged.
+- **Sign the Scala CLA**. Signed [CLA](https://www.lightbend.com/contribute/cla/scala)
+  is necessary to merge your PR.
 
 ## Documentation Guidelines
 
