@@ -325,8 +325,11 @@ lazy val testkit = project
       if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "0.2.0")
       else Nil
     },
+    libraryDependencies ++= {
+      if (isScala211.value) List("com.lihaoyi" %% "geny" % "0.1.6")
+      else List("com.lihaoyi" %% "geny" % "0.1.8")
+    },
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "geny" % "0.1.8",
       "org.scalameta" %% "munit" % munitVersion,
       // These are used to download and extract a corpus tar.gz
       "org.rauschig" % "jarchivelib" % "0.8.0",
@@ -490,6 +493,10 @@ lazy val requiresMacrosSetting = Def.settings(
     "-J" + flat.hashCode
   }
 )
+
+lazy val isScala211 = Def.setting {
+  scalaVersion.value.startsWith("2.11")
+}
 
 lazy val isScala212 = Def.setting {
   scalaVersion.value.startsWith("2.12")
