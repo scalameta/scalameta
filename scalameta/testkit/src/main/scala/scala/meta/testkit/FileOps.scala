@@ -1,8 +1,7 @@
 package scala.meta.testkit
 
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths}
 
 import geny.Generator
 

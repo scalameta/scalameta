@@ -322,10 +322,11 @@ lazy val testkit = project
     publishableSettings,
     hasLargeIntegrationTests,
     libraryDependencies ++= {
-      if (isScala212.value) List("com.lihaoyi" %% "geny" % "0.1.8")
+      if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "0.2.0")
       else Nil
     },
     libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "geny" % "0.1.8",
       "org.scalameta" %% "munit" % munitVersion,
       // These are used to download and extract a corpus tar.gz
       "org.rauschig" % "jarchivelib" % "0.8.0",
@@ -333,6 +334,7 @@ lazy val testkit = project
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0"
     ),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
+    testFrameworks := List(new TestFramework("munit.Framework")),
     description := "Testing utilities for scalameta APIs"
   )
   .dependsOn(scalametaJVM)
