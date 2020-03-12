@@ -1,9 +1,9 @@
 package scala.meta.testkit
 
-import scala.collection.mutable
+import munit.FunSuite
 import scala.meta._
 import scala.meta.parsers.Parsed
-import munit.FunSuiteLike
+import CompatParCollections.Converters._
 
 object ScalametaParserProperties {
 
@@ -67,7 +67,7 @@ object ScalametaParserProperties {
   }
 }
 
-object ScalametaParserPropertyTest extends FunSuiteLike {
+class ScalametaParserPropertyTest extends FunSuite {
   import ScalametaParserProperties._
   def main(args: Array[String]): Unit = {
     val result = runAnalysis()

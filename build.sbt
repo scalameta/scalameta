@@ -322,8 +322,12 @@ lazy val testkit = project
     publishableSettings,
     hasLargeIntegrationTests,
     libraryDependencies ++= {
-      if (isScala212.value) List("com.lihaoyi" %% "geny" % "0.1.8")
+      if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "0.2.0")
       else Nil
+    },
+    libraryDependencies ++= {
+      if (isScala211.value) List("com.lihaoyi" %% "geny" % "0.1.6")
+      else List("com.lihaoyi" %% "geny" % "0.1.8")
     },
     libraryDependencies ++= Seq(
       "org.scalameta" %% "munit" % munitVersion,
@@ -333,6 +337,7 @@ lazy val testkit = project
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0"
     ),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
+    testFrameworks := List(new TestFramework("munit.Framework")),
     description := "Testing utilities for scalameta APIs"
   )
   .dependsOn(scalametaJVM)
@@ -488,6 +493,10 @@ lazy val requiresMacrosSetting = Def.settings(
     "-J" + flat.hashCode
   }
 )
+
+lazy val isScala211 = Def.setting {
+  scalaVersion.value.startsWith("2.11")
+}
 
 lazy val isScala212 = Def.setting {
   scalaVersion.value.startsWith("2.12")

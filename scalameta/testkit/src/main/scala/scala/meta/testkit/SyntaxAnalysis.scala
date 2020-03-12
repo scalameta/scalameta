@@ -2,9 +2,9 @@ package scala.meta.testkit
 
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
-import scala.collection.GenIterable
+
+import scala.collection.{GenIterable, GenTraversableOnce, mutable}
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 import scala.meta._
 import scala.util.control.NonFatal
 
@@ -12,13 +12,13 @@ object SyntaxAnalysis {
 
   /** Run syntactic analysis on a corpus of [[CorpusFile]].
    *
-   * @param corpus The corpus to run analysis on. Has type GenIterable
+   * @param corpus The corpus to run analysis on. Has type GenTraversableOnce
    *               to support both parallel and synchronous collections.
    * @param f      Callback to analyse a single [[CorpusFile]].
    * @tparam T The kind of analysis we want to collect.
    * @return The aggregate sum of all analysis results.
    */
-  def run[T](corpus: GenIterable[CorpusFile])(
+  def run[T](corpus: GenTraversableOnce[CorpusFile])(
       f: CorpusFile => List[T]
   ): mutable.Buffer[(CorpusFile, T)] = Phase.run("syntax analysis") {
     val results = new CopyOnWriteArrayList[(CorpusFile, T)]

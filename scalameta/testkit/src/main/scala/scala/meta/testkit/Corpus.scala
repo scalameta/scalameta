@@ -110,7 +110,7 @@ object Corpus {
         s"${repos.getAbsolutePath} is not a directory! Please delete if it's a file and retry."
       )
     }
-    Generator.from(files.toIterable).flatMap { repo =>
+    Generator.from(files.toList).flatMap { repo =>
       val commit = FileOps.readFile(new File(repo, "COMMIT")).trim
       val url = FileOps.readFile(new File(repo, "URL")).trim
       FileOps
