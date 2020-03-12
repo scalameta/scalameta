@@ -492,17 +492,17 @@ metap [options] <classpath>
     <td></td>
   </tr>
   <tr>
-    <td><code>--compact</code>,<br/><code>--detailed</code>,<br/><code>--proto</code></td>
+    <td><code>-compact</code>,<br/><code>-detailed</code>,<br/><code>-proto</code></td>
     <td></td>
     <td>
-      Specifies prettyprinting format, which can be either <code>--compact</code>
+      Specifies prettyprinting format, which can be either <code>-compact</code>
       (prints the most important parts of the payload in a condensed fashion),
-      <code>--detailed</code> (more detailed than --compact, but still pretty
-      condensed), or <code>--proto</code> (prints the same output as
+      <code>-detailed</code> (more detailed than -compact, but still pretty
+      condensed), or <code>-proto</code> (prints the same output as
       <code>protoc</code> would print, <a href="#protoc">see below</a>).
     </td>
     <td>
-      <code>--compact</code>
+      <code>-compact</code>
     </td>
   </tr>
 </table>
