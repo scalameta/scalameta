@@ -6,6 +6,7 @@ sandbox/
 .idea/
 .bloop/
 .metals/
+project/metals.sbt
 .vscode/
 *.ipr
 *.iws
