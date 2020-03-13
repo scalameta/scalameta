@@ -722,4 +722,29 @@ class TermSuite extends ParseSuite {
       Nil
     ) = term(" new C()[String]() ")
   }
+
+  test("#492 parse Unit in infix operations") {
+    val Term.ApplyInfix(
+      Term.Name("x"),
+      Term.Name("=="),
+      Nil,
+      List(Term.ApplyInfix(Lit.Unit(), Term.Name("::"), Nil, List(Term.Name("Nil"))))
+    ) = term("x == () :: Nil")
+  }
+
+  test("#492 parse hlist with Unit") {
+    val Term.ApplyInfix(
+      Lit.String("foo"),
+      Term.Name("::"),
+      Nil,
+      List(
+        Term.ApplyInfix(
+          Lit.Unit(),
+          Term.Name("::"),
+          Nil,
+          List(Term.ApplyInfix(Lit.Boolean(true), Term.Name("::"), Nil, List(Term.Name("HNil"))))
+        )
+      )
+    ) = term(""""foo" :: () :: true :: HNil""")
+  }
 }

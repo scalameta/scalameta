@@ -1905,9 +1905,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         // If we were parsing `val c = a b`, then we'd be at `val c = a b[]` (postfix).
         newLineOptWhenFollowing(_.is[ExprIntro])
         if (token.is[ExprIntro]) {
+          // There is only one case when we here with empty rhsK: Unit inside infix chain.
+          // For example `xs == () :: Nil`. In this case `()` treated as empty argument list but infix chain continues
+          // and now we can argue that it was Unit.
+          val rhsKWithFallback =
+            if (rhsK.isEmpty) atPos(rhsStartK, rhsEndK)(Lit.Unit()) :: Nil else rhsK
           // Infix chain continues, so we need to reduce the stack.
           // In the running example, base = List(), rhsK = [a].
-          val lhsK = ctx.reduceStack(base, rhsK, rhsEndK, Some(op)) // lhsK = [a]
+          val lhsK = ctx.reduceStack(base, rhsKWithFallback, rhsEndK, Some(op)) // lhsK = [a]
           val lhsStartK = Math.min(rhsStartK.startTokenPos, lhsK.head.startTokenPos)
           ctx.push(lhsStartK, lhsK, rhsEndK, op, targs) // afterwards, ctx.stack = List([a +])
 
