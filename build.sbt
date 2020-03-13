@@ -638,10 +638,6 @@ lazy val publishableSettings = Def.settings(
   pomExtra := (
     <url>https://github.com/scalameta/scalameta</url>
     <inceptionYear>2014</inceptionYear>
-    <scm>
-      <url>git://github.com/scalameta/scalameta.git</url>
-      <connection>scm:git:git://github.com/scalameta/scalameta.git</connection>
-    </scm>
     <issueManagement>
       <system>GitHub</system>
       <url>https://github.com/scalameta/scalameta/issues</url>
