@@ -581,12 +581,6 @@ lazy val adhocRepoCredentials = sys.props("scalameta.repository.credentials")
 lazy val isCustomRepository = adhocRepoUri != null && adhocRepoCredentials != null
 
 lazy val publishableSettings = Def.settings(
-  publishTo := Some {
-    if (isCustomRepository) "adhoc" at adhocRepoUri
-    // NOTE: isSnapshot.value does not work with sbt-dynver
-    else if (version.value.endsWith("SNAPSHOT")) Opts.resolver.sonatypeSnapshots
-    else Opts.resolver.sonatypeStaging
-  },
   credentials ++= {
     val credentialsFile = if (adhocRepoCredentials != null) new File(adhocRepoCredentials) else null
     if (credentialsFile != null) List(new FileCredentials(credentialsFile))
