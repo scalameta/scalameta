@@ -693,6 +693,7 @@ lazy val publishableSettings = Def.settings(
 )
 
 lazy val nonPublishableSettings = Seq(
+  skip in publish := true,
   mimaPreviousArtifacts := Set.empty,
   publishArtifact in (Compile, packageDoc) := false,
   publishArtifact in packageDoc := false,
