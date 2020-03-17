@@ -103,4 +103,40 @@ class PackageSuite extends ParseSuite {
     ) =
       source("package foo; package bar; package baz")
   }
+
+  test("package { in newline") {
+      println(source(
+        """|
+           |package foo  // foo package left brace in newline
+           |/* still okay */
+           |{
+           |  package bar /* also in newline */
+           |  // open
+           |  {
+           |    package baz
+           |    { }
+           |  }
+           |}
+           |""".stripMargin
+           ).structure)
+
+    val Source(
+      List(Pkg(Term.Name("foo"), List(Pkg(Term.Name("bar"), List(Pkg(Term.Name("baz"), List()))))))
+    ) =
+      source(
+        """|
+           |package foo  // foo package left brace in newline
+           |/* still okay */
+           |{
+           |  package bar /* also in newline */
+           |  // open
+           |  {
+           |    package baz
+           |    { }
+           |  }
+           |}
+           |""".stripMargin
+           )
+
+  }
 }

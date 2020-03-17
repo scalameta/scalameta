@@ -328,11 +328,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     accept[RightBrace]
     ret
   }
-  @inline final def inBracesOrError[T](body: => T, alt: T): T =
+  @inline final def inBracesOrError[T](body: => T, alt: T): T = {
+    if (token.is[LF]) { accept[LF] }
     if (token.is[LeftBrace]) inBraces(body)
     else {
       accept[LeftBrace]; alt
     }
+  }
 
   @inline final def inBracesOrNil[T](body: => List[T]): List[T] = inBracesOrError(body, Nil)
   @inline final def inBracesOrUnit[T](body: => Term): Term = inBracesOrError(body, Lit.Unit())
@@ -3603,8 +3605,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def batchSource(): Source = autoPos {
-    def inBracelessPackage() = token.is[KwPackage] && !ahead(token.is[KwObject]) && ahead {
-      qualId(); token.isNot[LeftBrace]
+    def inBracelessPackage(): Boolean = token.is[KwPackage] && !ahead(token.is[KwObject]) && ahead {
+      qualId()
+      if (token.is[LF]) { next() }
+      token.isNot[LeftBrace]
     }
     def bracelessPackageStats(): List[Stat] = {
       if (token.is[EOF]) {
