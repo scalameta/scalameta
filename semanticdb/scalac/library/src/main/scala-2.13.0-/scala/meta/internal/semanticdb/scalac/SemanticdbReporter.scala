@@ -17,13 +17,11 @@ class SemanticdbReporter(underlying: Reporter) extends StoreReporter {
       case 2 => underlying.error(pos, msg)
       case _ =>
     }
-    // underlying reporter may have filtered out the message
-    updateCounts()
+
   }
 
-  private def updateCounts(): Unit = {
-    INFO.count = underlying.INFO.count
-    WARNING.count = underlying.WARNING.count
-    ERROR.count = underlying.ERROR.count
-  }
+  override def hasErrors: Boolean = underlying.hasErrors
+
+  override def hasWarnings: Boolean = underlying.hasWarnings
+
 }
