@@ -11,13 +11,13 @@ coursier fetch \
   org.scalameta:scalameta_sjs0.6_2.12:$version \
   org.scalameta:scalameta_sjs0.6_2.11:$version \
   org.scalameta:metac_2.13.1:$version \
-  org.scalameta:metac_2.12.10:$version \
+  org.scalameta:metac_2.12.11:$version \
   org.scalameta:metac_2.11.12:$version \
   org.scalameta:semanticdb-scalac-core_2.13.1:$version \
-  org.scalameta:semanticdb-scalac-core_2.12.10:$version \
+  org.scalameta:semanticdb-scalac-core_2.12.11:$version \
   org.scalameta:semanticdb-scalac-core_2.11.12:$version \
   org.scalameta:semanticdb-scalac_2.13.1:$version \
-  org.scalameta:semanticdb-scalac_2.12.10:$version \
+  org.scalameta:semanticdb-scalac_2.12.11:$version \
   org.scalameta:semanticdb-scalac_2.11.12:$version \
   -r sonatype:public
 
@@ -28,9 +28,11 @@ coursier fetch \
 # These artfacts will be dropped in the next release.
 coursier fetch \
   org.scalameta:semanticdb-scalac-core_2.13.0:$version \
+  org.scalameta:semanticdb-scalac-core_2.12.10:$version \
   org.scalameta:semanticdb-scalac-core_2.12.9:$version \
   org.scalameta:semanticdb-scalac-core_2.12.8:$version \
   org.scalameta:semanticdb-scalac_2.13.1:$version \
+  org.scalameta:semanticdb-scalac_2.12.10:$version \
   org.scalameta:semanticdb-scalac_2.12.9:$version \
   org.scalameta:semanticdb-scalac_2.12.8:$version \
   -r sonatype:public
