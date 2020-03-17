@@ -90,7 +90,9 @@ package object metacp {
       new ClassReader(in).accept(
         node,
         Array(ScalaSigAttribute),
-        SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES
+        // NOTE(olafur): don't use SKIP_DEBUG field since it strips away Java
+        // method parameter names since 2.12.11.
+        SKIP_CODE | SKIP_FRAMES
       )
       node
     } finally {
