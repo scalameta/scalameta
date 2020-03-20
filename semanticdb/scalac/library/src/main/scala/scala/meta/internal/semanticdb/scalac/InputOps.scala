@@ -18,16 +18,14 @@ trait InputOps { self: SemanticdbOps =>
   lazy val gSourceFileInputCache = mutable.Map[GSourceFile, m.Input]()
   implicit class XtensionGSourceFileInput(gsource: GSourceFile) {
     private def uriRelativeToSourceRoot(file: AbsolutePath): URI = {
-      val fileUri = file.toURI(isDirectory = false)
-      val result = config.sourceroot.toURI(isDirectory = true).relativize(fileUri)
-      if (result == fileUri) {
+      if (!file.toNIO.startsWith(config.sourceroot.toNIO)) {
         // java.net.URI.relativize returns `fileUri` unchanged when it is not contained within our sourceroot.
         // We could attempt to return a ".." URI, but java.net doesn't provide facilities for that. While nio's Path
         // does contain facilities for that, such relative paths cannot then be used to produce a percent-encoded,
         // relative URI. It doesn't seem worth fighting this battle at the moment, so:
         sys.error(s"'$file' is not located within sourceroot '${config.sourceroot}'.")
       }
-      result
+      file.toRelative(config.sourceroot).toURI(isDirectory = false)
     }
 
     def isInSourceroot(sourceroot: AbsolutePath): Boolean = gsource.file match {
