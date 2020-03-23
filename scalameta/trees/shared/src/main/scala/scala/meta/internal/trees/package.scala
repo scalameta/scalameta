@@ -215,4 +215,8 @@ package object trees {
     if (rank == 0) clazz
     else arrayClass(ScalaRunTime.arrayClass(clazz), rank - 1)
   }
+
+  def onlyLastParamCanBeRepeated(params: List[Term.Param]): Boolean = {
+    params.reverse.tail.forall(!_.decltpe.exists(_.isInstanceOf[Type.Repeated]))
+  }
 }
