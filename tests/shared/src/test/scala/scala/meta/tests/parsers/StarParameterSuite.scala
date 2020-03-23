@@ -7,67 +7,83 @@ import scala.meta.dialects.Scala211
 class StarParameterSuite extends ParseSuite {
 
   test("star parameter single argument") {
-    val obj = Defn.Def(Nil, Term.Name("obj"), Nil,
-            List(List(Term.Param(
-              Nil,
-              Term.Name("f"),
-              Some(Type.Repeated(Type.Name("Int"))),
-              None
-            ))),
-            Some(Type.Name("Boolean")),
-            Lit.Boolean(true)
+    val obj = Defn.Def(
+      Nil,
+      Term.Name("obj"),
+      Nil,
+      List(
+        List(
+          Term.Param(
+            Nil,
+            Term.Name("f"),
+            Some(Type.Repeated(Type.Name("Int"))),
+            None
           )
+        )
+      ),
+      Some(Type.Name("Boolean")),
+      Lit.Boolean(true)
+    )
     check("def obj(f: Int*): Boolean = true", obj)
   }
 
   test("star parameter multiple arguments") {
-    val obj = Defn.Def(Nil, Term.Name("obj"), Nil,
-            List(List(
-            Term.Param(Nil, Term.Name("a"), Some(Type.Name("String")), None),
-            Term.Param(Nil, Term.Name("b"), Some(Type.Name("Boolean")), None),
-            Term.Param(
-              Nil,
-              Term.Name("f"),
-              Some(Type.Repeated(Type.Name("Int"))),
-              None
-            ))),
-            Some(Type.Name("Boolean")),
-            Lit.Boolean(true)
+    val obj = Defn.Def(
+      Nil,
+      Term.Name("obj"),
+      Nil,
+      List(
+        List(
+          Term.Param(Nil, Term.Name("a"), Some(Type.Name("String")), None),
+          Term.Param(Nil, Term.Name("b"), Some(Type.Name("Boolean")), None),
+          Term.Param(
+            Nil,
+            Term.Name("f"),
+            Some(Type.Repeated(Type.Name("Int"))),
+            None
           )
+        )
+      ),
+      Some(Type.Name("Boolean")),
+      Lit.Boolean(true)
+    )
     check("def obj(a: String, b: Boolean, f: Int*): Boolean = true", obj)
   }
 
   test("star parameter partially applied arguments") {
-    val obj = Defn.Def(Nil, Term.Name("obj"), Nil,
-            List(List(
-            Term.Param(Nil, Term.Name("fa"),
-              Some(Type.Repeated(Type.Name("Int"))),
-              None)),
-              List(
-            Term.Param(Nil, Term.Name("fb"),
-              Some(Type.Repeated(Type.Name("Int"))),
-              None
-            ))),
-            Some(Type.Name("Boolean")),
-            Lit.Boolean(true)
-          )
+    val obj = Defn.Def(
+      Nil,
+      Term.Name("obj"),
+      Nil,
+      List(
+        List(Term.Param(Nil, Term.Name("fa"), Some(Type.Repeated(Type.Name("Int"))), None)),
+        List(Term.Param(Nil, Term.Name("fb"), Some(Type.Repeated(Type.Name("Int"))), None))
+      ),
+      Some(Type.Name("Boolean")),
+      Lit.Boolean(true)
+    )
     check("def obj(fa: Int*)(fb: Int*): Boolean = true", obj)
   }
 
   test("star parameter implicit argument") {
-    val obj = Defn.Def(Nil, Term.Name("obj"), Nil,
-            List(List(
-            Term.Param(Nil, Term.Name("fa"),
-              Some(Type.Repeated(Type.Name("Int"))),
-              None)),
-              List(
-            Term.Param(List(Mod.Implicit()), Term.Name("fb"),
-              Some(Type.Repeated(Type.Name("Int"))),
-              None
-            ))),
-            Some(Type.Name("Boolean")),
-            Lit.Boolean(true)
+    val obj = Defn.Def(
+      Nil,
+      Term.Name("obj"),
+      Nil,
+      List(
+        List(Term.Param(Nil, Term.Name("fa"), Some(Type.Repeated(Type.Name("Int"))), None)),
+        List(
+          Term.Param(
+            List(Mod.Implicit()),
+            Term.Name("fb"),
+            Some(Type.Repeated(Type.Name("Int"))),
+            None
           )
+        )
+      ),
+      Some(Type.Name("Boolean")),
+      Lit.Boolean(true)
+    )
     check("def obj(fa: Int*)(implicit fb: Int*): Boolean = true", obj)
   }
 
@@ -109,9 +125,12 @@ class StarParameterSuite extends ParseSuite {
   }
 
   private def check(definition: String, expected: scala.meta.Stat): Unit = {
-    val wrappedExpected: scala.meta.Source = Source(List(
-      Defn.Object(Nil, Term.Name("Test"), Template(Nil, Nil, Self(Name(""), None), List(expected)))
-    ))
+    val wrappedExpected: scala.meta.Source = Source(
+      List(
+        Defn
+          .Object(Nil, Term.Name("Test"), Template(Nil, Nil, Self(Name(""), None), List(expected)))
+      )
+    )
     assertEquals(source(s"object Test { ${definition} }"), wrappedExpected)
   }
 }

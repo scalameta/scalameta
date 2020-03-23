@@ -294,9 +294,9 @@ object Defn {
       decltpe: Option[scala.meta.Type],
       body: Term
   ) extends Defn
-    with Member.Term {
-      checkFields(paramss.forall(onlyLastParamCanBeRepeated))
-    }
+      with Member.Term {
+    checkFields(paramss.forall(onlyLastParamCanBeRepeated))
+  }
   @ast class Macro(
       mods: List[Mod],
       name: Term.Name,

@@ -2999,11 +2999,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val paramss = paramClauses(ownerIsType = false).require[List[List[Term.Param]]]
 
     def onlyLastParameterCanBeRepeated(params: List[Term.Param]): Unit = {
-      params.reverse.tail.foreach(p =>
-        if (p.decltpe.exists(_.isInstanceOf[Type.Repeated])) {
-          syntaxError("*-parameter must come last", p)
-        }
-      )
+      params
+        .take(params.length - 1)
+        .foreach(p =>
+          if (p.decltpe.exists(_.isInstanceOf[Type.Repeated])) {
+            syntaxError("*-parameter must come last", p)
+          }
+        )
     }
 
     paramss.foreach(onlyLastParameterCanBeRepeated)
