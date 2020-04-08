@@ -69,7 +69,9 @@ import scala.compat.Platform.EOL
     allowXmlLiterals: Boolean,
     // What kind of separator is necessary to split top-level statements?
     // Normally none is required, but scripts may have their own rules.
-    toplevelSeparator: String
+    toplevelSeparator: String,
+    // Given/using introduced in dotty
+    allowGivenUsing: Boolean
 ) {
 
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
@@ -143,7 +145,8 @@ package object dialects {
     allowViewBounds = true,
     allowWithTypes = true,
     allowXmlLiterals = true, // Not even deprecated yet, so we need to support xml literals
-    toplevelSeparator = ""
+    toplevelSeparator = "",
+    allowGivenUsing = false
   )
 
   implicit val Scala211 = Scala210.copy(
@@ -175,7 +178,7 @@ package object dialects {
       allowLiteralTypes = true
     )
     .withAllowNumericLiteralUnderscoreSeparators(true)
-
+  
   implicit val Scala = Scala213 // alias for latest Scala dialect.
 
   implicit val Sbt0136 = Scala210.copy(
@@ -226,7 +229,8 @@ package object dialects {
     allowTypeLambdas = true, // New feature in Dotty
     allowViewBounds = false, // View bounds have been removed in Dotty
     allowWithTypes = false, // New feature in Dotty
-    allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
+    allowXmlLiterals = false, // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
+    allowGivenUsing = true
   )
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {

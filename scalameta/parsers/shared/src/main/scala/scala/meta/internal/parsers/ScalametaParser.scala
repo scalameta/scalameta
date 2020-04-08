@@ -23,6 +23,8 @@ import scala.meta.classifiers._
 import scala.meta.internal.classifiers._
 import org.scalameta._
 import org.scalameta.invariants._
+import scala.meta.Defn.Given
+import SoftKeyword._
 
 class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   require(Set("", EOL).contains(dialect.toplevelSeparator))
@@ -300,6 +302,29 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     finally in = forked
   }
 
+  case class ParseError(msg: String, token: Token)
+  type ParseResult[T] = Either[ParseError, T]
+
+  @inline final def parseOneOf[T](parseA: => ParseResult[T], parseB: => ParseResult[T]): ParseResult[T] = {
+    tryParse(parseA) match {
+      case Left(_) => tryParse(parseB)
+      case r@Right(_) => r
+    }
+  }
+
+  @inline final def tryParse[T](body: => ParseResult[T]): ParseResult[T] = {
+    val forked = in.fork
+    var reset = false
+    try {
+      val result = body
+      if (result.isLeft) reset = true
+      result
+    } finally {
+      if (reset) in = forked
+    }
+
+  }
+
   /** Methods inParensOrError and similar take a second argument which, should
    *  the next token not be the expected opener (e.g. token.LeftParen) will be returned
    *  instead of the contents of the groupers.  However in all cases accept[LeftParen]
@@ -491,6 +516,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def isBar: Boolean = isIdentOf("|")
   def isAmpersand: Boolean = isIdentOf("&")
 
+  def isSoftKw(skw: SoftKeyword.SoftKeyword): Boolean = isIdentAnd(_ == skw.name)
+
   def isColonWildcardStar: Boolean = token.is[Colon] && ahead(token.is[Underscore] && ahead(isStar))
   def isSpliceFollowedBy(check: => Boolean): Boolean =
     token.is[Ellipsis] && ahead(token.is[Unquote] && ahead(token.is[Ident] || check))
@@ -563,6 +590,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def unapply(token: Token): Boolean = {
       token.is[KwDef] || token.is[KwType] ||
       token.is[KwVal] || token.is[KwVar] ||
+      (token.is[KwGiven] && dialect.allowGivenUsing) ||
       (token.is[Unquote] && token.next.is[DclIntro])
     }
   }
@@ -974,6 +1002,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         typRest()
       }
     }
+    
+    def givenType(): Type = autoPos {
+      if (token.is[LeftParen]) tupleInfixType()
+      else if (token.is[LeftBracket] && dialect.allowTypeLambdas) typeLambda()
+      else infixType(InfixMode.FirstOp, tryRefinement = false)
+    }
 
     def typRest(): Type = autoPos {
       if (token.is[Colon] && dialect.allowMethodTypes) {
@@ -999,8 +1033,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     def typeArgs(): List[Type] = inBrackets(types())
 
-    def infixType(mode: InfixMode.Value): Type =
-      infixTypeRest(compoundType(), mode)
+    def infixType(mode: InfixMode.Value, tryRefinement: Boolean = true): Type =
+      infixTypeRest(compoundType(tryRefinement), mode)
 
     def infixTypeRest(t: Type, mode: InfixMode.Value): Type = atPos(t, auto) {
       if (isIdent || token.is[Unquote]) {
@@ -1039,14 +1073,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
     }
 
-    def compoundType(): Type = compoundTypeRest {
-      if (token.is[LeftBrace])
+    def compoundType(tryRefinement: Boolean = true): Type = {
+      val optType = if (token.is[LeftBrace] && tryRefinement)
         None
       else
         Some(annotType())
-    }
+      compoundTypeRest(optType, tryRefinement)
+  }
 
-    def compoundTypeRest(t0: Option[Type]): Type = atPos(t0, auto) {
+    def compoundTypeRest(t0: Option[Type], tryRefinement: Boolean = true): Type = atPos(t0, auto) {
       t0 match {
         case Some(t0) =>
           var t = t0
@@ -1059,7 +1094,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             })
           }
           newLineOptWhenFollowedBy[LeftBrace]
-          if (token.is[LeftBrace]) Type.Refine(Some(t), refinement())
+          if (tryRefinement && token.is[LeftBrace]) Type.Refine(Some(t), refinement())
           else t
         case None =>
           Type.Refine(None, refinement())
@@ -2473,6 +2508,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  they are all initiated from non-pattern context.
    */
   def typ() = outPattern.typ()
+  def givenType() = outPattern.givenType()
   def quasiquoteType() = outPattern.quasiquoteType()
   def entrypointType() = outPattern.entrypointType()
   def startInfixType() = outPattern.infixType(InfixMode.FirstOp)
@@ -2712,6 +2748,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (!mods.has[Mod.Override])
         rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     }
+    if (isSoftKw(SoftKeyword.SkUsing) && dialect.allowGivenUsing) {
+      mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.Using())
+      next()
+    }
     val (isValParam, isVarParam) = (ownerIsType && token.is[KwVal], ownerIsType && token.is[KwVar])
     if (isValParam) {
       mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.ValParam()); next()
@@ -2932,6 +2972,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     token match {
       case KwVal() | KwVar() =>
         patDefOrDcl(mods)
+      case KwGiven() =>
+        givenDecl(mods)
       case KwDef() =>
         funDefOrDclOrSecondaryCtor(mods)
       case KwType() =>
@@ -2977,6 +3019,88 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (isMutable) Decl.Var(mods, ids, tp.get)
       else Decl.Val(mods, ids, tp.get)
     }
+  }
+
+  private def tryGivenSig(): GivenSig = {
+    // GivenSig ::= [id] [DefTypeParamClause] {UsingParamClause} ‘as’
+
+    val anonymousName = scala.meta.Name.Anonymous()
+    tryParse[GivenSig] {
+      val name: meta.Name = if (token.is[Ident]) typeName() else anonymousName
+      val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
+      val uparamss = paramClauses(ownerIsType = false)
+
+      if (isSoftKw(SkAs)) {
+        next()
+        Right(GivenSig(name, tparams, uparamss))
+      } else {
+        Left(ParseError("as keyword not found", token))
+      }
+    } match {
+      case Right(givenSig) => givenSig
+      case Left(error) => GivenSig(anonymousName, List.empty, List.empty)
+    }
+  }
+
+  private def givenSigTypeExpr(givenSig: GivenSig): Either[ParseError, Defn.Given] = {
+    // [‘_’ ‘<:’] Type ‘=’ Expr
+    
+    if (token.is[Underscore]) {
+      accept[Underscore]
+      accept[Subtype]
+    }
+
+    //TODO: Fix to use normal Type and allow refinement?
+    val decltpe = startModType() 
+
+    if (token.is[Equals]) {
+      accept[Equals]
+      val rhs = expr()
+      Right(Defn.Given(Nil, givenSig.name, givenSig.tparams, givenSig.paramss, decltpe, rhs))
+    } else {
+      Left(ParseError("Given expression lacks = token", token))
+    }
+  }
+
+  private def givenSigConstrBody(givenSig: GivenSig): Either[ParseError, Defn.Given] = {
+    // ConstrApps [TemplateBody]
+
+    val decltpe = startModType()
+
+    // TODO: Optionally!
+    val rhs = block()
+
+    Right(Defn.Given(Nil, givenSig.name, givenSig.tparams, givenSig.paramss, decltpe, rhs))
+  }
+
+  private def givenDecl(mods: List[Mod]): Stat = {
+    // Given             ::= 'given' GivenDef
+    accept[KwGiven]
+    givenDef(mods)
+  }
+
+  case class GivenSig(name: meta.Name, tparams: List[scala.meta.Type.Param], paramss: List[List[Term.Param]])
+
+  private def givenDef(mods: List[Mod]): Stat = {
+    // GivenDef          ::=  [GivenSig] [‘_’ ‘<:’] Type ‘=’ Expr
+    //                     |  [GivenSig] ConstrApps [TemplateBody]
+    val givenSig = tryGivenSig()
+    // parseOneOf(givenSigTypeExpr(givenSig), givenSigConstrBody(givenSig)) match {
+      // case Left(ParseError(message, token)) => syntaxError(message, token)
+      // case Right(defnGiven) => defnGiven
+    // }
+
+    val decltpe = startModType()
+
+    val rhs = if (token.is[Equals]) {
+      accept[Equals]
+      expr()
+    } else {
+      // must be block!!!
+      expr()
+    }
+
+    Defn.Given(mods, givenSig.name, givenSig.tparams, givenSig.paramss, decltpe, rhs)
   }
 
   def funDefOrDclOrSecondaryCtor(mods: List[Mod]): Stat = {
@@ -3673,4 +3797,11 @@ object Location {
 
 object InfixMode extends Enumeration {
   val FirstOp, LeftOp, RightOp = Value
+}
+
+object SoftKeyword {
+  sealed trait SoftKeyword { val name: String }
+  case object SkAs extends SoftKeyword { override val name: String = "as" }
+  case object SkUsing extends SoftKeyword { override val name: String = "using" }
+  case object SkInline extends SoftKeyword { override val name: String = "inline" }
 }

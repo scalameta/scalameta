@@ -286,6 +286,14 @@ object Defn {
     checkFields(decltpe.nonEmpty || rhs.nonEmpty)
     checkFields(rhs.isEmpty ==> pats.forall(_.is[Pat.Var]))
   }
+  @ast class Given(
+    mods: List[Mod],
+    name: scala.meta.Name,
+    tparams: List[scala.meta.Type.Param],
+    sparams: List[List[Term.Param]],
+    decltpe: scala.meta.Type,
+    body: Term
+  ) extends Defn
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
@@ -409,6 +417,7 @@ object Mod {
   @ast class ValParam() extends Mod
   @ast class VarParam() extends Mod
   @ast class Inline() extends Mod
+  @ast class Using() extends Mod
 }
 
 @branch trait Enumerator extends Tree

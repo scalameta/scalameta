@@ -67,6 +67,7 @@ object LegacyToken {
   final val VAL = 73
   final val VAR = 74
   final val ENUM = 75
+  final val GIVEN = 76
 
   /** control structures */
   final val IF = 80
@@ -168,6 +169,7 @@ object LegacyToken {
     "@"         -> AT,
     "macro"     -> MACRO,
     "then"      -> IDENTIFIER,
-    "enum"      -> ENUM
+    "enum"      -> ENUM,
+    "given"     -> GIVEN
   )
 }

@@ -4,6 +4,7 @@ package trees
 
 import org.scalameta.invariants._
 import scala.meta.classifiers._
+import scala.meta.Defn.Given
 
 object ParentChecks {
   private def termArgument(parent: Tree, destination: String): Boolean = {
@@ -75,8 +76,9 @@ object ParentChecks {
     def privateWithin = parent.is[Mod.Private] && destination == "within"
     def protectedWithin = parent.is[Mod.Protected] && destination == "within"
     def thisQualifier = parent.is[Term.This]
+    def givenName = parent.is[Given]
     def superQualifier = parent.is[Term.Super]
-    primaryCtorName || secondaryCtorName || termParamName || typeParamName ||
+    primaryCtorName || secondaryCtorName || termParamName || typeParamName || givenName ||
     initName || selfName || privateWithin || protectedWithin || thisQualifier || superQualifier
   }
 
