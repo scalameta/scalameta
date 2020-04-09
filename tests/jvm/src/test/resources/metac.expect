@@ -1081,14 +1081,18 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/EtaExpansion.scala
 Text => non-empty
 Language => Scala
-Symbols => 3 entries
-Occurrences => 9 entries
+Symbols => 5 entries
+Occurrences => 13 entries
 Synthetics => 5 entries
 
 Symbols:
-example/EtaExpansion# => class EtaExpansion extends AnyRef { +1 decls }
+example/EtaExpansion# => class EtaExpansion extends AnyRef { +3 decls }
   AnyRef => scala/AnyRef#
 example/EtaExpansion#`<init>`(). => primary ctor <init>()
+example/EtaExpansion#meth(). => method meth(): String
+  String => java/lang/String#
+example/EtaExpansion#prop(). => method prop: String
+  String => java/lang/String#
 local0 => param x: Int
   Int => scala/Int#
 
@@ -1102,6 +1106,10 @@ Occurrences:
 [4:2..4:6): List => scala/collection/immutable/List.
 [4:10..4:18): foldLeft => scala/collection/LinearSeqOptimized#foldLeft().
 [4:25..4:26): + => java/lang/String#`+`().
+[6:6..6:10): prop <= example/EtaExpansion#prop().
+[7:6..7:10): meth <= example/EtaExpansion#meth().
+[9:2..9:6): prop => local1
+[10:2..10:6): meth => local2
 
 Synthetics:
 [3:2..3:6): Some => *.apply[Int]
