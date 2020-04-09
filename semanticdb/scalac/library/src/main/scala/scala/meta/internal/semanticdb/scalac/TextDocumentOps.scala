@@ -632,7 +632,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 traverse(original)
               case SelectOf(original) =>
                 traverse(original)
-              case g.Function(params, body) if params.exists { param =>
+              case g.Function(params, body) if params.forall { param =>
                     param.symbol.isSynthetic ||
                     param.name.decoded.startsWith("x$")
                   } =>

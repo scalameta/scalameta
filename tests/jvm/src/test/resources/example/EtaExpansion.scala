@@ -7,6 +7,6 @@ class EtaExpansion/*<=example.EtaExpansion#*/ {
   def prop/*<=example.EtaExpansion#prop().*/ = ""
   def meth/*<=example.EtaExpansion#meth().*/() = ""
 
-  prop/*=>local1*/ _
-  meth/*=>local2*/ _
+  prop/*=>example.EtaExpansion#prop().*/ _
+  meth/*=>example.EtaExpansion#meth().*/ _
 }

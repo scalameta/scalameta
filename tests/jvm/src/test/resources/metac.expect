@@ -1108,8 +1108,8 @@ Occurrences:
 [4:25..4:26): + => java/lang/String#`+`().
 [6:6..6:10): prop <= example/EtaExpansion#prop().
 [7:6..7:10): meth <= example/EtaExpansion#meth().
-[9:2..9:6): prop => local1
-[10:2..10:6): meth => local2
+[9:2..9:6): prop => example/EtaExpansion#prop().
+[10:2..10:6): meth => example/EtaExpansion#meth().
 
 Synthetics:
 [3:2..3:6): Some => *.apply[Int]
