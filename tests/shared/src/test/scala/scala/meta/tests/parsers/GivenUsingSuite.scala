@@ -304,8 +304,8 @@ class GivenUsingSuite extends ParseSuite {
     runTestError("def f(using => String): Unit = ???", "anonymous using by-name invalid")
   }
 
-  test("using-call-site".ignore) {
-    // HOW TO TRANSLATE USING HERE???
+  test("using-call-site") {
+    //TODO: HOW TO TRANSLATE USING HERE???
     runTest("val a = f()(using a)(using 3, 'c')") { stat =>
       val Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), None, Term.Apply(Term.Apply(Term.Apply(Term.Name("f"), Nil),
         List(Term.Select(Term.Name("using"), Term.Name("a")))), List(Term.Select(Term.Name("using"),

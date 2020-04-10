@@ -26,10 +26,6 @@ private[meta] trait Aliases {
     val KwEnum = scala.meta.tokens.Token.KwEnum
     type KwGiven = scala.meta.tokens.Token.KwGiven
     val KwGiven = scala.meta.tokens.Token.KwGiven
-    type KwAs = scala.meta.tokens.Token.KwAs
-    val KwAs = scala.meta.tokens.Token.KwAs
-    type KwUsing = scala.meta.tokens.Token.KwUsing
-    val KwUsing = scala.meta.tokens.Token.KwUsing
     type KwExtends = scala.meta.tokens.Token.KwExtends
     val KwExtends = scala.meta.tokens.Token.KwExtends
     type KwFalse = scala.meta.tokens.Token.KwFalse

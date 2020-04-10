@@ -34,8 +34,6 @@ object Token {
   @fixed("else") class KwElse extends Token
   @fixed("enum") class KwEnum extends Token
   @fixed("given") class KwGiven extends Token
-  @fixed("as") class KwAs extends Token
-  @fixed("using") class KwUsing extends Token
   @fixed("extends") class KwExtends extends Token
   @fixed("false") class KwFalse extends Token
   @fixed("final") class KwFinal extends Token

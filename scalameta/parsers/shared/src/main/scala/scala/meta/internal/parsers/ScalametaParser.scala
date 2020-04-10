@@ -305,12 +305,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   case class ParseError(msg: String, token: Token)
   type ParseResult[T] = Either[ParseError, T]
 
-  @inline final def parseOneOf[T](parseA: => ParseResult[T], parseB: => ParseResult[T]): ParseResult[T] = {
-    tryParse(parseA) match {
-      case Left(_) => tryParse(parseB)
-      case r@Right(_) => r
-    }
-  }
+  // @inline final def parseOneOf[T](parseA: => ParseResult[T], parseB: => ParseResult[T]): ParseResult[T] = {
+  //   tryParse(parseA) match {
+  //     case Left(_) => tryParse(parseB)
+  //     case r@Right(_) => r
+  //   }
+  // }
 
   @inline final def tryParse[T](body: => ParseResult[T]): ParseResult[T] = {
     val forked = in.fork
