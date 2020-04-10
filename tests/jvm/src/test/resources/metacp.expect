@@ -1705,12 +1705,16 @@ Schema => SemanticDB v4
 Uri => example/EtaExpansion.class
 Text => empty
 Language => Scala
-Symbols => 2 entries
+Symbols => 4 entries
 
 Symbols:
-example/EtaExpansion# => class EtaExpansion extends AnyRef { +1 decls }
+example/EtaExpansion# => class EtaExpansion extends AnyRef { +3 decls }
   AnyRef => scala/AnyRef#
 example/EtaExpansion#`<init>`(). => primary ctor <init>()
+example/EtaExpansion#meth(). => method meth(): String
+  String => java/lang/String#
+example/EtaExpansion#prop(). => method prop: String
+  String => java/lang/String#
 
 example/Example.class
 ---------------------
