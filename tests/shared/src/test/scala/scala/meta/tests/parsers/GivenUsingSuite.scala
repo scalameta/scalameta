@@ -135,7 +135,7 @@ class GivenUsingSuite extends ParseSuite {
     }
   }
 
-  test("given-subtype-invalid".ignore) {
+  test("given-subtype-error".ignore) {
     // it is treaten as alias without '=' sign at the end and {...} is refinement part
     runTestError("given intOrd as _ <: Ord[Int] { def f(): Int = 1 }", "missing = at the end")
   }
@@ -171,7 +171,7 @@ class GivenUsingSuite extends ParseSuite {
     }
   }
 
-  test("given-alias-invalid-override-block".ignore) {
+  test("given-alias-override-block-error".ignore) {
     runTestError("given global as Option[Int] = { override def fx(): Int = 3; Some(3) }", "no modifier allowed here")
   }
 
@@ -201,7 +201,7 @@ class GivenUsingSuite extends ParseSuite {
     }
   }
 
-  test("given-alias-invalid-subtype-noinline".ignore) {
+  test("given-alias-subtype-noinline-error".ignore) {
     runTestError("given intOrd as _ <: Ord[Int] = ???", "is only allowed for given with inline modifier")
   }
 
@@ -284,11 +284,11 @@ class GivenUsingSuite extends ParseSuite {
     runTestError("def f(using Int, b: String): Unit = ???", "unable to mix named and anonymous using")
   }
 
-  test("using-multiple-using-single-parent".ignore) {
+  test("using-multiple-using-single-parent-error".ignore) {
     runTestError("def f(using a: Int, using b: String): Unit = ???", "using only for first parameter")
   }
 
-  test("using-added-middle-paren".ignore) {
+  test("using-added-middle-paren-error".ignore) {
     runTestError("def f(a: Int, using b: String): Unit = ???", "using only for first parameter")
   }
 
@@ -300,7 +300,7 @@ class GivenUsingSuite extends ParseSuite {
     }
   }
 
-  test("using-anonymous-with-by-name-parameter".ignore) {
+  test("using-anonymous-with-by-name-parameter-error".ignore) {
     runTestError("def f(using => String): Unit = ???", "anonymous using by-name invalid")
   }
 
