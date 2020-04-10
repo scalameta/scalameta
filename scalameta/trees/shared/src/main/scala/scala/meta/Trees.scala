@@ -292,6 +292,14 @@ object Defn {
     tparams: List[scala.meta.Type.Param],
     sparams: List[List[Term.Param]],
     decltpe: scala.meta.Type,
+    templ: Template
+  ) extends Defn
+  @ast class GivenAlias(
+    mods: List[Mod],
+    name: scala.meta.Name,
+    tparams: List[scala.meta.Type.Param],
+    sparams: List[List[Term.Param]],
+    decltpe: scala.meta.Type,
     body: Term
   ) extends Defn
   @ast class Def(

@@ -14,14 +14,10 @@ class Scala3TokensSuite extends FunSuite {
   
   test("first test") {
     val dialect = scala.meta.dialects.Dotty
-    for (f <- new File(testDir).listFiles.filter(_.getName.endsWith(".scala")).take(1)) {
+    for (f <- new File(testDir).listFiles.filter(_.getName.endsWith(".scala")).take(5)) {
+      println(s"Checking ${f.toPath.toString}")
       val result = ScalametaTokenizer.toTokenize(MetaFile(f), dialect).get
-      for (t <- result.tokens) {
-        println(s"TOKEN [${t.name}]")
-      }
-
       val source = new ScalametaParser(MetaFile(f), dialect).parseSource()
     }
-    // ScalametaTokenizer.toTokenize(input, dialect)
   }
 }

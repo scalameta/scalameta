@@ -909,7 +909,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             if (hasTypes)
               syntaxError("can't mix function type and method type syntaxes", at = token)
             hasParams = true
-            param(ownerIsCase = false, ownerIsType = false, isImplicit = hasImplicits)
+            //TODO: check if it should be false here
+            param(ownerIsCase = false, ownerIsType = false, isImplicit = hasImplicits, isUsing = false)
           case _ =>
             if (hasParams)
               syntaxError("can't mix function type and method type syntaxes", at = token)
@@ -1003,12 +1004,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
     }
     
-    def givenType(): Type = autoPos {
-      if (token.is[LeftParen]) tupleInfixType()
-      else if (token.is[LeftBracket] && dialect.allowTypeLambdas) typeLambda()
-      else infixType(InfixMode.FirstOp, tryRefinement = false)
-    }
-
     def typRest(): Type = autoPos {
       if (token.is[Colon] && dialect.allowMethodTypes) {
         next()
@@ -1033,8 +1028,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     def typeArgs(): List[Type] = inBrackets(types())
 
-    def infixType(mode: InfixMode.Value, tryRefinement: Boolean = true): Type =
-      infixTypeRest(compoundType(tryRefinement), mode)
+    def infixType(mode: InfixMode.Value): Type =
+      infixTypeRest(compoundType, mode)
 
     def infixTypeRest(t: Type, mode: InfixMode.Value): Type = atPos(t, auto) {
       if (isIdent || token.is[Unquote]) {
@@ -1073,15 +1068,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
     }
 
-    def compoundType(tryRefinement: Boolean = true): Type = {
-      val optType = if (token.is[LeftBrace] && tryRefinement)
+    def compoundType(): Type = {
+      val optType = if (token.is[LeftBrace])
         None
       else
         Some(annotType())
-      compoundTypeRest(optType, tryRefinement)
+      compoundTypeRest(optType)
   }
 
-    def compoundTypeRest(t0: Option[Type], tryRefinement: Boolean = true): Type = atPos(t0, auto) {
+    def compoundTypeRest(t0: Option[Type]): Type = atPos(t0, auto) {
       t0 match {
         case Some(t0) =>
           var t = t0
@@ -1094,7 +1089,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             })
           }
           newLineOptWhenFollowedBy[LeftBrace]
-          if (tryRefinement && token.is[LeftBrace]) Type.Refine(Some(t), refinement())
+          if (token.is[LeftBrace]) Type.Refine(Some(t), refinement())
           else t
         case None =>
           Type.Refine(None, refinement())
@@ -2508,7 +2503,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  they are all initiated from non-pattern context.
    */
   def typ() = outPattern.typ()
-  def givenType() = outPattern.givenType()
   def quasiquoteType() = outPattern.quasiquoteType()
   def entrypointType() = outPattern.entrypointType()
   def startInfixType() = outPattern.infixType(InfixMode.FirstOp)
@@ -2702,11 +2696,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case tok: Ellipsis if tok.rank == 2 =>
         List(ellipsis(2, astInfo[Term.Param]))
       case _ =>
+        var parsedUsing = false
         if (token.is[KwImplicit]) {
           next()
           parsedImplicits = true
+        } else if (isSoftKw(SoftKeyword.SkUsing) && dialect.allowGivenUsing) {
+          next()
+          parsedUsing = true
         }
-        commaSeparated(param(ownerIsCase && first, ownerIsType, isImplicit = parsedImplicits))
+        commaSeparated(param(ownerIsCase && first, ownerIsType, isImplicit = parsedImplicits, isUsing = parsedUsing))
     }
     var first = true
     val paramss = new ListBuffer[List[Term.Param]]
@@ -2735,9 +2733,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         }
     })
 
-  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean): Term.Param = autoPos {
+  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean, isUsing: Boolean): Term.Param = autoPos {
     var mods: List[Mod] = annots(skipNewLines = false)
     if (isImplicit) mods ++= List(atPos(in.tokenPos, in.prevTokenPos)(Mod.Implicit()))
+    if (isUsing) mods ++= List(atPos(in.tokenPos, in.prevTokenPos)(Mod.Using()))
     if (ownerIsType) {
       mods ++= modifiers()
       rejectMod[Mod.Lazy](
@@ -2748,10 +2747,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (!mods.has[Mod.Override])
         rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     }
-    if (isSoftKw(SoftKeyword.SkUsing) && dialect.allowGivenUsing) {
-      mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.Using())
-      next()
-    }
+    
     val (isValParam, isVarParam) = (ownerIsType && token.is[KwVal], ownerIsType && token.is[KwVar])
     if (isValParam) {
       mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.ValParam()); next()
@@ -2764,9 +2760,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case Some(q: Mod.Quasi) if endParamQuasi =>
         q.become[Term.Param.Quasi]
       case _ =>
-        val name = termName() match {
-          case q: Quasi => q.become[Name.Quasi]
-          case other => other
+        var anonymousUsing = false
+        val name = if (isUsing && ahead(!token.is[Colon])) { //anonymous using
+          anonymousUsing = true
+          meta.Name.Anonymous()
+        } else {
+          termName() match {
+            case q: Quasi => q.become[Name.Quasi]
+            case other => other
+          }
         }
         name match {
           case q: Quasi if endParamQuasi =>
@@ -2776,7 +2778,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
               if (token.isNot[Colon] && name.is[Name.Quasi])
                 None
               else {
-                accept[Colon]
+                if (!anonymousUsing) accept[Colon]
                 val tpt = paramType()
                 if (tpt.is[Type.ByName]) {
                   def mayNotBeByName(subj: String) =
@@ -2812,7 +2814,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def quasiquoteTermParam(): Term.Param = entrypointTermParam()
 
   def entrypointTermParam(): Term.Param =
-    param(ownerIsCase = false, ownerIsType = true, isImplicit = false)
+    param(ownerIsCase = false, ownerIsType = true, isImplicit = false, isUsing = false)
 
   def typeParamClauseOpt(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): List[Type.Param] = {
     newLineOptWhenFollowedBy[LeftBracket]
@@ -3025,6 +3027,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     // GivenSig ::= [id] [DefTypeParamClause] {UsingParamClause} ‘as’
 
     val anonymousName = scala.meta.Name.Anonymous()
+
     tryParse[GivenSig] {
       val name: meta.Name = if (token.is[Ident]) typeName() else anonymousName
       val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
@@ -3038,48 +3041,48 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
     } match {
       case Right(givenSig) => givenSig
-      case Left(error) => GivenSig(anonymousName, List.empty, List.empty)
+      case Left(_) => GivenSig(anonymousName, List.empty, List.empty)
     }
   }
 
-  private def givenSigTypeExpr(givenSig: GivenSig): Either[ParseError, Defn.Given] = {
-    // [‘_’ ‘<:’] Type ‘=’ Expr
+  // private def givenSigTypeExpr(givenSig: GivenSig): Either[ParseError, Defn.Given] = {
+  //   // [‘_’ ‘<:’] Type ‘=’ Expr
     
-    if (token.is[Underscore]) {
-      accept[Underscore]
-      accept[Subtype]
-    }
+  //   if (token.is[Underscore]) {
+  //     accept[Underscore]
+  //     accept[Subtype]
+  //   }
 
-    //TODO: Fix to use normal Type and allow refinement?
-    val decltpe = startModType() 
+  //   //TODO: Fix to use normal Type and allow refinement?
+  //   val decltpe = startModType() 
 
-    if (token.is[Equals]) {
-      accept[Equals]
-      val rhs = expr()
-      Right(Defn.Given(Nil, givenSig.name, givenSig.tparams, givenSig.paramss, decltpe, rhs))
-    } else {
-      Left(ParseError("Given expression lacks = token", token))
-    }
-  }
+  //   if (token.is[Equals]) {
+  //     accept[Equals]
+  //     val rhs = expr()
+  //     Right(Defn.Given(Nil, givenSig.name, givenSig.tparams, givenSig.paramss, decltpe, rhs))
+  //   } else {
+  //     Left(ParseError("Given expression lacks = token", token))
+  //   }
+  // }
 
-  private def givenSigConstrBody(givenSig: GivenSig): Either[ParseError, Defn.Given] = {
-    // ConstrApps [TemplateBody]
+  // private def givenSigConstrBody(givenSig: GivenSig): Either[ParseError, Defn.Given] = {
+  //   // ConstrApps [TemplateBody]
 
-    val decltpe = startModType()
+  //   val decltpe = startModType()
 
-    // TODO: Optionally!
-    val rhs = block()
+  //   // TODO: Optionally!
+  //   val rhs = block()
 
-    Right(Defn.Given(Nil, givenSig.name, givenSig.tparams, givenSig.paramss, decltpe, rhs))
-  }
+  //   Right(Defn.Given(Nil, givenSig.name, givenSig.tparams, givenSig.paramss, decltpe, rhs))
+  // }
+
+  case class GivenSig(name: meta.Name, tparams: List[scala.meta.Type.Param], paramss: List[List[Term.Param]])
 
   private def givenDecl(mods: List[Mod]): Stat = {
     // Given             ::= 'given' GivenDef
     accept[KwGiven]
     givenDef(mods)
   }
-
-  case class GivenSig(name: meta.Name, tparams: List[scala.meta.Type.Param], paramss: List[List[Term.Param]])
 
   private def givenDef(mods: List[Mod]): Stat = {
     // GivenDef          ::=  [GivenSig] [‘_’ ‘<:’] Type ‘=’ Expr
@@ -3092,15 +3095,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     val decltpe = startModType()
 
-    val rhs = if (token.is[Equals]) {
+    if (token.is[Equals]) {
       accept[Equals]
-      expr()
+      val rhs = expr()
+      Defn.GivenAlias(mods, givenSig.name, givenSig.tparams, givenSig.paramss, decltpe, rhs)
     } else {
-      // must be block!!!
-      expr()
+      val (slf, stats) = templateBodyOpt(true)
+      val rhs = Template(List.empty, List.empty, slf, stats)
+      Defn.Given(mods, givenSig.name, givenSig.tparams, givenSig.paramss, decltpe, rhs)
     }
-
-    Defn.Given(mods, givenSig.name, givenSig.tparams, givenSig.paramss, decltpe, rhs)
   }
 
   def funDefOrDclOrSecondaryCtor(mods: List[Mod]): Stat = {
