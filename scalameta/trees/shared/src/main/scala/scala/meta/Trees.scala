@@ -302,6 +302,24 @@ object Defn {
     decltpe: scala.meta.Type,
     body: Term
   ) extends Defn
+  @ast class ExtensionGroup(
+    mods: List[Mod],
+    name: scala.meta.Name,
+    tparams: List[scala.meta.Type.Param],
+    sparams: List[List[Term.Param]],
+    baseterm: Term.Param,
+    templ: Template
+  ) extends Defn
+  @ast class ExtensionMethod(
+      mods: List[Mod],
+      baseterm: Term.Param,
+      name: Term.Name,
+      tparams: List[scala.meta.Type.Param],
+      paramss: List[List[Term.Param]],
+      decltpe: Option[scala.meta.Type],
+      body: Term
+  ) extends Defn
+    with Member.Term
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,

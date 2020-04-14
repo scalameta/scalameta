@@ -71,7 +71,9 @@ import scala.compat.Platform.EOL
     // Normally none is required, but scripts may have their own rules.
     toplevelSeparator: String,
     // Given/using introduced in dotty
-    allowGivenUsing: Boolean
+    allowGivenUsing: Boolean,
+    // Extension methods introduced in dotty
+    allowExtensionMethods: Boolean
 ) {
 
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
@@ -146,7 +148,8 @@ package object dialects {
     allowWithTypes = true,
     allowXmlLiterals = true, // Not even deprecated yet, so we need to support xml literals
     toplevelSeparator = "",
-    allowGivenUsing = false
+    allowGivenUsing = false,
+    allowExtensionMethods = false
   )
 
   implicit val Scala211 = Scala210.copy(
@@ -230,7 +233,8 @@ package object dialects {
     allowViewBounds = false, // View bounds have been removed in Dotty
     allowWithTypes = false, // New feature in Dotty
     allowXmlLiterals = false, // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
-    allowGivenUsing = true
+    allowGivenUsing = true,
+    allowExtensionMethods = true
   )
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {

@@ -6,6 +6,7 @@ import org.scalameta.invariants._
 import scala.meta.classifiers._
 import scala.meta.Defn.Given
 import scala.meta.Defn.GivenAlias
+import scala.meta.Defn.ExtensionGroup
 
 object ParentChecks {
   private def termArgument(parent: Tree, destination: String): Boolean = {
@@ -78,9 +79,11 @@ object ParentChecks {
     def protectedWithin = parent.is[Mod.Protected] && destination == "within"
     def thisQualifier = parent.is[Term.This]
     def givenName = parent.is[Given] || parent.is[GivenAlias]
+    def extensionName = parent.is[ExtensionGroup]
     def superQualifier = parent.is[Term.Super]
-    primaryCtorName || secondaryCtorName || termParamName || typeParamName || givenName ||
-    initName || selfName || privateWithin || protectedWithin || thisQualifier || superQualifier
+    primaryCtorName || secondaryCtorName || termParamName || typeParamName ||
+    initName || selfName || privateWithin || protectedWithin || thisQualifier ||
+    superQualifier || givenName || extensionName
   }
 
   def TypeVar(tree: Type.Var, parent: Tree, destination: String): Boolean = {

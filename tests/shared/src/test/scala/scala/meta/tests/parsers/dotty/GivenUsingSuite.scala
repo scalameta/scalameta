@@ -1,7 +1,6 @@
-package scala.meta.tests.parsers
+package scala.meta.tests.parsers.dotty
 
-import scala.meta.Source
-import scala.meta.Dialect
+import scala.meta.tests.parsers._
 import scala.meta._
 
 class GivenUsingSuite extends ParseSuite {

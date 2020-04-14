@@ -25,6 +25,8 @@ import org.scalameta._
 import org.scalameta.invariants._
 import scala.meta.Defn.Given
 import SoftKeyword._
+import scala.meta.Defn.ExtensionGroup
+import scala.meta.Defn.ExtensionMethod
 
 class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   require(Set("", EOL).contains(dialect.toplevelSeparator))
@@ -504,7 +506,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   /* -------------- TOKEN CLASSES ------------------------------------------- */
 
-  def isIdentAnd(pred: String => Boolean) = token match {
+  def isIdentAnd(pred: String => Boolean): Boolean = isIdentAnd(token, pred) 
+
+  def isIdentAnd(token: Token, pred: String => Boolean): Boolean = token match {
     case Ident(value) if pred(value.stripPrefix("`").stripSuffix("`")) => true
     case _ => false
   }
@@ -516,7 +520,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def isBar: Boolean = isIdentOf("|")
   def isAmpersand: Boolean = isIdentOf("&")
 
-  def isSoftKw(skw: SoftKeyword.SoftKeyword): Boolean = isIdentAnd(_ == skw.name)
+  def isSoftKw(token: Token, skw: SoftKeyword.SoftKeyword): Boolean =
+    isIdentAnd(token, _ == skw.name)
 
   def isColonWildcardStar: Boolean = token.is[Colon] && ahead(token.is[Underscore] && ahead(isStar))
   def isSpliceFollowedBy(check: => Boolean): Boolean =
@@ -591,6 +596,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[KwDef] || token.is[KwType] ||
       token.is[KwVal] || token.is[KwVar] ||
       (token.is[KwGiven] && dialect.allowGivenUsing) ||
+      (isSoftKw(token, SoftKeyword.SkExtension) && dialect.allowExtensionMethods) ||
       (token.is[Unquote] && token.next.is[DclIntro])
     }
   }
@@ -2700,7 +2706,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         if (token.is[KwImplicit]) {
           next()
           parsedImplicits = true
-        } else if (isSoftKw(SoftKeyword.SkUsing) && dialect.allowGivenUsing) {
+        } else if (isSoftKw(token, SoftKeyword.SkUsing) && dialect.allowGivenUsing) {
           next()
           parsedUsing = true
         }
@@ -2977,9 +2983,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwGiven() =>
         givenDecl(mods)
       case KwDef() =>
-        funDefOrDclOrSecondaryCtor(mods)
+        funDefOrDclOrExtensionOrSecondaryCtor(mods)
       case KwType() =>
         typeDefOrDcl(mods)
+      case _ if isSoftKw(token, SoftKeyword.SkExtension) && dialect.allowExtensionMethods =>
+        extensionGroupDecl(mods)
       case _ =>
         tmplDef(mods)
     }
@@ -3033,7 +3041,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
       val uparamss = paramClauses(ownerIsType = false)
 
-      if (isSoftKw(SkAs)) {
+      if (isSoftKw(token, SkAs)) {
         next()
         Right(GivenSig(name, tparams, uparamss))
       } else {
@@ -3106,13 +3114,130 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  def funDefOrDclOrSecondaryCtor(mods: List[Mod]): Stat = {
-    if (ahead(token.isNot[KwThis])) funDefRest(mods)
+  def funDefOrDclOrExtensionOrSecondaryCtor(mods: List[Mod]): Stat = {
+    if (ahead(token.isNot[KwThis])) funDefExtRest(mods)
     else secondaryCtor(mods)
   }
 
-  def funDefRest(mods: List[Mod]): Stat = atPos(mods, auto) {
+  def funDefExtRest(mods: List[Mod]): Stat = {
     accept[KwDef]
+    if ((token.is[LeftParen] || token.is[LeftBracket]) && dialect.allowExtensionMethods) extMethod(mods)
+    else funDefRest(mods)
+  }
+
+  def extensionGroupDecl(mods: List[Mod]): Defn.ExtensionGroup = {
+    // TmplDef           ::= ‘extension’ ExtensionDef
+    // ExtensionDef      ::=  [id] [‘on’ ExtParamClause {GivenParamClause}] TemplateBody
+    // ExtParamClause    ::=  [DefTypeParamClause] ‘(’ DefParam ‘)’
+    // TemplateBody      ::=  [nl | colonEol] '{' ... '}'
+
+    next() // 'extension'
+
+    val name = if (token.is[Ident] && !isSoftKw(token, SoftKeyword.SkOn)) typeName()
+      else meta.Name.Anonymous()
+
+    val (tp, bt, sp) = if (isSoftKw(token, SoftKeyword.SkOn)) {
+      next()
+      val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
+      accept[LeftParen]
+      val baseterm = param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false)
+      accept[RightParen]
+      val sparams = paramClauses(ownerIsType = false)
+      (tparams, baseterm, sparams)
+    } else {
+      (Nil, Term.Param(Nil, meta.Name.Anonymous(), None, None), Nil)
+    }
+
+    newLineOptWhenFollowedBy[LeftBrace]
+    val (slf, statSeq) = inBraces(templateStatSeq())
+    val body = Template(List.empty, List.empty, slf, statSeq)
+    assertExtensionGroup(ExtensionGroup(mods, name, tp, sp, bt, body))
+  }
+
+  private def assertExtensionGroup(eg: ExtensionGroup): ExtensionGroup = {
+    def onlyMethodsOrExtensionMethods: Unit = {
+      for (f <- eg.templ.stats) {
+        if (!f.is[Defn.Def] && !f.is[Defn.ExtensionMethod]) {
+          syntaxError("Extension clause can only define methods", f)
+        }
+      }
+    }
+    def atLeastOneMethod: Unit = {
+      if (eg.name.value == "" && eg.templ.stats.isEmpty) {
+        syntaxError("Anonymous instance must have at least one extension method", eg)
+      }
+    }
+
+    def baseTypeDefinedOnce: Unit = {
+      if (eg.tparams.nonEmpty) {
+        for (f <- eg.templ.stats) {
+          if (f.is[Defn.ExtensionMethod]) {
+            val m = f.asInstanceOf[Defn.ExtensionMethod]
+            if (m.tparams.nonEmpty) {
+              syntaxError("extension method cannot have type parameters since some were already given previously", m.tparams.head)
+            }
+          }
+          if (f.is[Defn.Def]) {
+            val m = f.asInstanceOf[Defn.Def]
+            if (m.tparams.nonEmpty) {
+              syntaxError("extension method cannot have type parameters since some were already given previously", m.tparams.head)
+            }
+
+          }
+        }
+
+      }
+    }
+
+    def baseTermDefinedOnce: Unit = {
+      if (eg.baseterm.name.value != "") {
+        for (f <- eg.templ.stats) {
+          if (f.is[Defn.ExtensionMethod]) {
+            val term = f.asInstanceOf[Defn.ExtensionMethod].baseterm
+            if (term.name.value != "") {
+              syntaxError("no extension method allowed here since leading parameter was already given", term)
+            }
+          }
+        }
+      }
+    }
+
+    onlyMethodsOrExtensionMethods
+    atLeastOneMethod
+    baseTermDefinedOnce
+    baseTypeDefinedOnce
+
+    eg
+  }
+
+  def extMethod(mods: List[Mod]): Stat = {
+    // DefDef             ::=  DefSig [(‘:’ | ‘<:’) Type] ‘=’ Expr
+    // DefSig             ::=  ExtParamClause [nl] [‘.’] id DefParamClauses
+    // ExtParamClause     ::=  [DefTypeParamClause] ‘(’ DefParam ‘)’
+    // DefTypeParamClause ::=  ‘[’ DefTypeParam {‘,’ DefTypeParam} ‘]’
+    // DefParamClauses    ::=  {DefParamClause} [[nl] ‘(’ [‘implicit’] DefParams ‘)’]
+
+    val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
+
+    accept[LeftParen]
+    val basetype = param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false)
+    accept[RightParen]
+
+    acceptOpt[LF]
+    acceptOpt[Dot]
+
+    val name = termName()
+    val paramss = paramClauses(ownerIsType = false)
+
+    // val decltpe = startModType()
+    val decltpe = fromWithinReturnType(typedOpt())
+
+    accept[Equals]
+    val body = expr()
+   Defn.ExtensionMethod(mods, basetype, name, tparams, paramss, decltpe, body)
+  }
+
+  def funDefRest(mods: List[Mod]): Stat = atPos(mods, auto) {
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     if (!mods.has[Mod.Override])
       rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
@@ -3434,7 +3559,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     newLineOptWhenFollowedBy[LeftBrace]
     if (token.is[LeftBrace]) {
       // @S: pre template body cannot stub like post body can!
-      val (self, body) = templateBody(isPre = true)
+      val (self, body) = templateBody()
       if (token.is[KwWith] && self.name.is[Name.Anonymous] && self.decltpe.isEmpty) {
         val edefs = body.map(ensureEarlyDef)
         next()
@@ -3482,13 +3607,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  def templateBody(isPre: Boolean): (Self, List[Stat]) =
-    inBraces(templateStatSeq(isPre = isPre))
+  def templateBody(): (Self, List[Stat]) =
+    inBraces(templateStatSeq())
 
   def templateBodyOpt(parenMeansSyntaxError: Boolean): (Self, List[Stat]) = {
     newLineOptWhenFollowedBy[LeftBrace]
     if (token.is[LeftBrace]) {
-      templateBody(isPre = false)
+      templateBody()
     } else {
       if (token.is[LeftParen]) {
         if (parenMeansSyntaxError) {
@@ -3588,7 +3713,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       topLevelTmplDef
   }
 
-  def templateStatSeq(isPre: Boolean): (Self, List[Stat]) = {
+  def templateStatSeq(): (Self, List[Stat]) = {
     val emptySelf = autoPos(Self(autoPos(Name.Anonymous()), None))
     var selfOpt: Option[Self] = None
     var firstOpt: Option[Stat] = None
@@ -3804,7 +3929,11 @@ object InfixMode extends Enumeration {
 
 object SoftKeyword {
   sealed trait SoftKeyword { val name: String }
-  case object SkAs extends SoftKeyword { override val name: String = "as" }
-  case object SkUsing extends SoftKeyword { override val name: String = "using" }
-  case object SkInline extends SoftKeyword { override val name: String = "inline" }
+  case object SkAs extends SoftKeyword { override val name = "as" }
+  case object SkUsing extends SoftKeyword { override val name = "using" }
+  case object SkInline extends SoftKeyword { override val name = "inline" }
+
+  case object SkExtension extends SoftKeyword { override val name = "extension" }
+
+  case object SkOn extends SoftKeyword { override val name = "on" }
 }
