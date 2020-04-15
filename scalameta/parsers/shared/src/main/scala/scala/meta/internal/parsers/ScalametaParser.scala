@@ -2986,6 +2986,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def defOrDclOrSecondaryCtor(mods: List[Mod]): Stat = {
     onlyAcceptMod[Mod.Lazy, KwVal](mods, "lazy not allowed here. Only vals can be lazy")
+    onlyAcceptMod[Mod.Opaque, KwType](mods, "opaque not allowed here. Only types can be opaque.")
     token match {
       case KwVal() | KwVar() =>
         patDefOrDcl(mods)

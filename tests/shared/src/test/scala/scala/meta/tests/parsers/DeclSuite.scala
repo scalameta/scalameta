@@ -100,7 +100,6 @@ class DeclSuite extends ParseSuite {
   }
 
   test("opaque type F <: A & B") {
-    println(s"${templStat("opaque type F <: A & B")(dialects.Dotty).structure}")
     val Decl.Type(
       List(Mod.Opaque()),
       Type.Name("F"),
