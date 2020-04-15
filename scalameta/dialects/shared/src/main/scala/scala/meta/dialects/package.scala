@@ -215,7 +215,7 @@ package object dialects {
     allowInlineMods = true
   )
 
-  implicit val Dotty = Scala212.copy(
+  implicit val Dotty = Scala213.copy(
     allowAndTypes = true, // New feature in Dotty
     allowAtForExtractorVarargs = false, // New feature in Dotty
     allowColonForExtractorVarargs = true, // New feature in Dotty

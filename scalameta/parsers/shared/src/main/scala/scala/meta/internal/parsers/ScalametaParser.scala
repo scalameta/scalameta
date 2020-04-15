@@ -609,6 +609,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[KwSealed] || token.is[KwImplicit] ||
       token.is[KwLazy] || token.is[KwPrivate] ||
       token.is[KwProtected] || token.is[KwOverride] ||
+      (token.is[Ident] && token.syntax == SoftKeyword.SkOpaque.name) ||
       (token.is[Ident] && token.syntax == "inline" && dialect.allowInlineMods)
     }
   }
@@ -2583,6 +2584,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwPrivate() => accessModifier()
       case KwProtected() => accessModifier()
       case Ident("inline") if dialect.allowInlineMods => next(); Mod.Inline()
+      case Ident(SoftKeyword.SkOpaque.name) => next(); Mod.Opaque()
       case _ => syntaxError(s"modifier expected but ${token.name} found", at = token)
     })
 
@@ -3941,4 +3943,6 @@ object SoftKeyword {
   case object SkExtension extends SoftKeyword { override val name = "extension" }
 
   case object SkOn extends SoftKeyword { override val name = "on" }
+  
+  case object SkOpaque extends SoftKeyword { override val name = "opaque" }
 }

@@ -448,6 +448,7 @@ object Mod {
   @ast class VarParam() extends Mod
   @ast class Inline() extends Mod
   @ast class Using() extends Mod
+  @ast class Opaque() extends Mod
 }
 
 @branch trait Enumerator extends Tree
