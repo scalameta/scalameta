@@ -27,6 +27,7 @@ import scala.meta.Defn.Given
 import SoftKeyword._
 import scala.meta.Defn.ExtensionGroup
 import scala.meta.Defn.ExtensionMethod
+import scala.meta.Type.NamedParam
 
 class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   require(Set("", EOL).contains(dialect.toplevelSeparator))
@@ -996,7 +997,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       Type.Lambda(quants, tpe)
     }
 
-    def typ(): Type = autoPos {
+    def typ(allowNamedParam: Boolean = false): Type = autoPos {
       if (token.is[KwImplicit] && dialect.allowImplicitFunctionTypes) {
         next()
         typRest() match {
@@ -1006,7 +1007,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             syntaxError("function type expected", at = t)
         }
       } else {
-        typRest()
+        if (token.is[Ident] && ahead(token.is[Equals]) && allowNamedParam) {
+          val name = typeName()
+          accept[Equals]
+          NamedParam(name, typRest())
+        } else {
+          typRest()
+        }
       }
     }
     
@@ -1080,7 +1087,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       else
         Some(annotType())
       compoundTypeRest(optType)
-  }
+    }
 
     def compoundTypeRest(t0: Option[Type]): Type = atPos(t0, auto) {
       t0 match {
@@ -1155,7 +1162,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case _ => t
     }
 
-    def types(): List[Type] = commaSeparated(typ())
+    def types(): List[Type] = commaSeparated(typ(allowNamedParam = true))
 
     def patternTyp(allowInfix: Boolean, allowImmediateTypevars: Boolean): Type = {
       def loop(tpe: Type, convertTypevars: Boolean): Type = tpe match {
@@ -3182,10 +3189,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             if (m.tparams.nonEmpty) {
               syntaxError("extension method cannot have type parameters since some were already given previously", m.tparams.head)
             }
-
           }
         }
-
       }
     }
 
