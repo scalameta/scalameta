@@ -354,7 +354,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
   )
   .jsSettings(
     commonJsSettings,
-    scalaJSModuleKind := ModuleKind.CommonJSModule
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta)
