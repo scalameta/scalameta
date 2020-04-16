@@ -152,6 +152,7 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
   checkSelf[Mod.Implicit, Defn.Val]("→implicit← val a = 1")
   checkSelf[Mod.Final, Defn.Val]("→final← val a = 1")
   checkSelf[Mod.Sealed, Defn.Trait]("→sealed← trait a")
+  checkSelf[Mod.Open, Defn.Trait]("→open← trait a", dotty)
   checkSelf[Mod.Override, Defn.Def]("→override← def f = 1")
   checkSelf[Mod.Case, Defn.Object]("→case← object B")
   checkSelf[Mod.Abstract, Defn.Class]("→abstract← class A")

@@ -438,6 +438,7 @@ object Mod {
   @ast class Implicit() extends Mod
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod
+  @ast class Open() extends Mod
   @ast class Override() extends Mod
   @ast class Case() extends Mod
   @ast class Abstract() extends Mod

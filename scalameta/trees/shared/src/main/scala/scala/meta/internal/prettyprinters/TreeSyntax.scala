@@ -904,6 +904,7 @@ object TreeSyntax {
       case _: Mod.Implicit => kw("implicit")
       case _: Mod.Final => kw("final")
       case _: Mod.Sealed => kw("sealed")
+      case _: Mod.Open => kw("open")
       case _: Mod.Override => kw("override")
       case _: Mod.Case => kw("case")
       case _: Mod.Abstract => kw("abstract")

@@ -496,6 +496,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def errorMessage: String = Messages.IllegalCombinationModifiers(m1, m2)
   }
 
+  implicit object InvalidOpenFinal extends InvalidModCombination(Mod.Open(), Mod.Final())
+  implicit object InvalidOpenSealed extends InvalidModCombination(Mod.Open(), Mod.Sealed())
+  implicit object InvalidCaseImplicit extends InvalidModCombination(Mod.Case(), Mod.Implicit())
   implicit object InvalidFinalAbstract extends InvalidModCombination(Mod.Final(), Mod.Abstract())
   implicit object InvalidFinalSealed extends InvalidModCombination(Mod.Final(), Mod.Sealed())
   implicit object InvalidOverrideAbstract
@@ -609,7 +612,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[KwSealed] || token.is[KwImplicit] ||
       token.is[KwLazy] || token.is[KwPrivate] ||
       token.is[KwProtected] || token.is[KwOverride] ||
-      (token.is[Ident] && token.syntax == SoftKeyword.SkOpaque.name) ||
+      (isSoftKw(token, SoftKeyword.SkOpaque)) ||
+      (isSoftKw(token, SoftKeyword.SkOpen) && dialect.allowOpenClass) ||
       (token.is[Ident] && token.syntax == "inline" && dialect.allowInlineMods)
     }
   }
@@ -2584,6 +2588,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwPrivate() => accessModifier()
       case KwProtected() => accessModifier()
       case Ident("inline") if dialect.allowInlineMods => next(); Mod.Inline()
+      case Ident(SoftKeyword.SkOpen.name) if dialect.allowOpenClass => next(); Mod.Open()
       case Ident(SoftKeyword.SkOpaque.name) => next(); Mod.Opaque()
       case _ => syntaxError(s"modifier expected but ${token.name} found", at = token)
     })
@@ -2614,6 +2619,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwLazy() => next(); Mod.Lazy()
       case KwVal() if !dialect.allowUnquotes => next(); Mod.ValParam()
       case KwVar() if !dialect.allowUnquotes => next(); Mod.VarParam()
+      case Ident(SoftKeyword.SkOpen.name) if dialect.allowOpenClass => next(); Mod.Open() 
       case Ident("valparam") if dialect.allowUnquotes => next(); Mod.ValParam()
       case Ident("varparam") if dialect.allowUnquotes => next(); Mod.VarParam()
       case Ident("inline") if dialect.allowInlineMods => next(); Mod.Inline()
@@ -2752,6 +2758,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     var mods: List[Mod] = annots(skipNewLines = false)
     if (isImplicit) mods ++= List(atPos(in.tokenPos, in.prevTokenPos)(Mod.Implicit()))
     if (isUsing) mods ++= List(atPos(in.tokenPos, in.prevTokenPos)(Mod.Using()))
+    rejectMod[Mod.Open](mods, "Open modifier only applied to classes")
     if (ownerIsType) {
       mods ++= modifiers()
       rejectMod[Mod.Lazy](
@@ -3351,8 +3358,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     accept[KwTrait]
     rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitTrait)
     val traitName = typeName()
-    rejectModCombination[Mod.Final, Mod.Abstract](fullMods, s"trait $traitName")
-    rejectModCombination[Mod.Override, Mod.Abstract](fullMods, s"trait $traitName")
+    val culprit = s"trait $traitName"
+    rejectModCombination[Mod.Final, Mod.Abstract](fullMods, culprit)
+    rejectModCombination[Mod.Override, Mod.Abstract](fullMods, culprit)
+    rejectModCombination[Mod.Open, Mod.Final](mods, culprit)
+    rejectModCombination[Mod.Open, Mod.Sealed](mods, culprit)
     Defn.Trait(
       mods,
       traitName,
@@ -3365,11 +3375,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def classDef(mods: List[Mod]): Defn.Class = atPos(mods, auto) {
     accept[KwClass]
     rejectMod[Mod.Override](mods, Messages.InvalidOverrideClass)
-    if (mods.has[Mod.Case]) {
-      rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitClass)
-    }
+
     val className = typeName()
-    rejectModCombination[Mod.Final, Mod.Sealed](mods, s"class $className")
+    val culprit = s"class $className"
+    rejectModCombination[Mod.Final, Mod.Sealed](mods, culprit)
+    rejectModCombination[Mod.Open, Mod.Final](mods, culprit)
+    rejectModCombination[Mod.Open, Mod.Sealed](mods, culprit)
+    rejectModCombination[Mod.Case, Mod.Implicit](mods, culprit)
     val typeParams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true)
     val ctor = primaryCtor(if (mods.has[Mod.Case]) OwnedByCaseClass else OwnedByClass)
 
@@ -3385,10 +3397,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def objectDef(mods: List[Mod]): Defn.Object = atPos(mods, auto) {
     accept[KwObject]
+    val objectName = termName()
+    val culprit = s"object $objectName"
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
-    if (!mods.has[Mod.Override])
-      rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
-    Defn.Object(mods, termName(), templateOpt(OwnedByObject))
+    rejectModCombination[Mod.Open, Mod.Final](mods, culprit)
+    rejectModCombination[Mod.Open, Mod.Sealed](mods, culprit)
+    rejectModCombination[Mod.Override, Mod.Abstract](mods, culprit)
+    Defn.Object(mods, objectName, templateOpt(OwnedByObject))
   }
 
   /* -------- CONSTRUCTORS ------------------------------------------- */
@@ -3946,4 +3961,6 @@ object SoftKeyword {
   case object SkOn extends SoftKeyword { override val name = "on" }
   
   case object SkOpaque extends SoftKeyword { override val name = "opaque" }
+
+  case object SkOpen extends SoftKeyword { override val name = "open" }
 }
