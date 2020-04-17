@@ -61,6 +61,9 @@ class DottySuite extends ParseSuite {
     val And(And(TypeName("A"), TypeName("B")), TypeName("C")) = tpe("A & B & C")
   }
 
+  // test T[A&B]
+  // test  
+
   test("A & B") {
     val And(TypeName("A"), TypeName("B")) = tpe("A & B")
   }

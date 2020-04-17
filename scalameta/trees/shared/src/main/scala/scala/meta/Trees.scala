@@ -247,6 +247,30 @@ object Member {
   @branch trait Type extends Member {
     def name: scala.meta.Type.Name
   }
+  @branch trait Case extends Member {
+    def name: scala.meta.Name
+  }
+}
+
+@branch trait Enum extends Stat
+object Enum {
+  @ast class Case(
+    mods: List[Mod],
+    name: Term.Name,
+    tparams: List[scala.meta.Type.Param],
+    ctor: Ctor.Primary,
+    inits: List[Init]
+  ) extends Enum with Member.Term {
+    // checkParent(ParentChecks.TermRepeated)
+    // checkFields {
+    //   val p = parent.get
+    //   p.is[Template] && (p.parent.isEmpty || p.parent.get.is[Defn.Enum])
+    // }
+  }
+  @ast class RepeatedCase(
+    mods: List[Mod],
+    cases: List[Term.Name]
+  ) extends Enum
 }
 
 @branch trait Decl extends Stat
@@ -298,6 +322,13 @@ object Defn {
     decltpe: scala.meta.Type,
     templ: Template
   ) extends Defn
+  @ast class Enum(
+    mods: List[Mod],
+    name: scala.meta.Type.Name,
+    tparams: List[scala.meta.Type.Param],
+    ctor: Ctor.Primary,
+    templ: Template
+  ) extends Defn with Member.Type
   @ast class GivenAlias(
     mods: List[Mod],
     name: scala.meta.Name,

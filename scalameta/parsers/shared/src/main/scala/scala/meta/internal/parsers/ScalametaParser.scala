@@ -470,7 +470,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     mods.getAll[M].foreach(m => syntaxError(errorMsg, at = m))
   }
 
-  def rejectModCombination[M1 <: Mod, M2 <: Mod](mods: List[Mod], culprit: String)(
+  def rejectModCombination[M1 <: Mod, M2 <: Mod](mods: List[Mod], culpritOpt: Option[String] = None)(
       implicit invalidMod: InvalidModCombination[M1, M2],
       classifier1: Classifier[Mod, M1],
       tag1: ClassTag[M1],
@@ -478,9 +478,19 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       tag2: ClassTag[M2]
   ) = {
     val errorMsg = invalidMod.errorMessage
-    val forCulprit = if (culprit.nonEmpty) s" for: $culprit" else ""
+    val forCulprit = culpritOpt.map(formatCulprit).getOrElse("")
     val enrichedErrorMsg = errorMsg + forCulprit
     mods.getIncompatible[M1, M2].foreach { m => syntaxError(enrichedErrorMsg, at = m._1) }
+  }
+
+  private def formatCulprit(culprit: String): String = s" for: $culprit" 
+
+  def onlyAllowedMods[M1 <: Mod, M2 <: Mod](mods: List[Mod], culprit: String)(
+    implicit classifier1: Classifier[Mod, M1], tag1: ClassTag[M1], 
+    tag2: ClassTag[M2], classifier2: Classifier[Mod, M2]
+  ) = {
+    mods.diff(mods.getAll[M1] ++ mods.getAll[M2])
+      .foreach(m => syntaxError(s" Invalid modifier ${m}${formatCulprit(culprit)}", at = m))
   }
 
   def onlyAcceptMod[M <: Mod, T <: Token](
@@ -535,6 +545,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   private implicit class XtensionTokenClass(token: Token) {
     def isCaseClassOrObject =
       token.is[KwCase] && (token.next.is[KwClass] || token.next.is[KwObject])
+
+    def isCaseClassOrObjectOrEnum =
+      isCaseClassOrObject || (token.is[KwCase] && token.next.is[Ident])
+       // && (token.next.next.is[Comma] || token.next.next.is[LF]))
   }
 
   @classifier
@@ -580,7 +594,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[TemplateIntro] || token.is[DclIntro] ||
       (token.is[Unquote] && token.next.is[DefIntro]) ||
       (token.is[Ellipsis] && token.next.is[DefIntro]) ||
-      (token.is[KwCase] && token.isCaseClassOrObject)
+      (token.is[KwCase] && token.isCaseClassOrObjectOrEnum)
     }
   }
 
@@ -590,7 +604,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[Modifier] || token.is[At] ||
       token.is[KwClass] || token.is[KwObject] || token.is[KwTrait] ||
       (token.is[Unquote] && token.next.is[TemplateIntro]) ||
-      (token.is[KwCase] && token.isCaseClassOrObject)
+      (token.is[KwCase] && token.isCaseClassOrObjectOrEnum)
     }
   }
 
@@ -2659,9 +2673,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           }
           if (mods.exists(_.isNakedAccessMod) && mod.isNakedAccessMod) {
             if (mod.is[Mod.Protected])
-              rejectModCombination[Mod.Private, Mod.Protected](mods :+ mod, "")
+              rejectModCombination[Mod.Private, Mod.Protected](mods :+ mod)
             if (mod.is[Mod.Private])
-              rejectModCombination[Mod.Protected, Mod.Private](mods :+ mod, "")
+              rejectModCombination[Mod.Protected, Mod.Private](mods :+ mod)
           }
           if (mods.exists(_.isQualifiedAccessMod) && mod.isQualifiedAccessMod) {
             syntaxError("duplicate private/protected qualifier", at = mod)
@@ -3005,6 +3019,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         typeDefOrDcl(mods)
       case _ if isSoftKw(token, SoftKeyword.SkExtension) && dialect.allowExtensionMethods =>
         extensionGroupDecl(mods)
+      case KwCase() if ahead(token.is[Ident]) =>
+        enumCaseDef(mods)
       case _ =>
         tmplDef(mods)
     }
@@ -3359,10 +3375,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitTrait)
     val traitName = typeName()
     val culprit = s"trait $traitName"
-    rejectModCombination[Mod.Final, Mod.Abstract](fullMods, culprit)
-    rejectModCombination[Mod.Override, Mod.Abstract](fullMods, culprit)
-    rejectModCombination[Mod.Open, Mod.Final](mods, culprit)
-    rejectModCombination[Mod.Open, Mod.Sealed](mods, culprit)
+    rejectModCombination[Mod.Final, Mod.Abstract](fullMods, Some(culprit))
+    rejectModCombination[Mod.Override, Mod.Abstract](fullMods, Some(culprit))
+    rejectModCombination[Mod.Open, Mod.Final](mods, Some(culprit))
+    rejectModCombination[Mod.Open, Mod.Sealed](mods, Some(culprit))
     Defn.Trait(
       mods,
       traitName,
@@ -3378,10 +3394,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     val className = typeName()
     val culprit = s"class $className"
-    rejectModCombination[Mod.Final, Mod.Sealed](mods, culprit)
-    rejectModCombination[Mod.Open, Mod.Final](mods, culprit)
-    rejectModCombination[Mod.Open, Mod.Sealed](mods, culprit)
-    rejectModCombination[Mod.Case, Mod.Implicit](mods, culprit)
+    rejectModCombination[Mod.Final, Mod.Sealed](mods, Some(culprit))
+    rejectModCombination[Mod.Open, Mod.Final](mods, Some(culprit))
+    rejectModCombination[Mod.Open, Mod.Sealed](mods, Some(culprit))
+    rejectModCombination[Mod.Case, Mod.Implicit](mods, Some(culprit))
     val typeParams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true)
     val ctor = primaryCtor(if (mods.has[Mod.Case]) OwnedByCaseClass else OwnedByClass)
 
@@ -3395,14 +3411,57 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     Defn.Class(mods, className, typeParams, ctor, templateOpt(OwnedByClass))
   }
 
+  def enumDef(mods: List[Mod]): Defn.Enum = atPos(mods, auto) {
+    // EnumDef           ::=  id ClassConstr InheritClauses EnumBody   
+    accept[KwEnum]
+
+    val enumName = typeName()
+    val culprit = s"enum $enumName"
+    onlyAllowedMods[Mod.Private, Mod.Protected](mods, culprit)
+
+
+    val typeParams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true)
+    val ctor = primaryCtor(OwnedByEnum)
+
+    Defn.Enum(mods, enumName, typeParams, ctor, templateOpt(OwnedByEnum))
+  }
+
+  def enumCaseDef(mods: List[Mod]): Enum = atPos(mods, auto) {
+    // EnumCase          ::=  ‘case’ (id ClassConstr [‘extends’ ConstrApps]] | ids)
+    // ids               ::=  id {‘,’ id}
+    // ClassConstr       ::=  [ClsTypeParamClause] [ConstrMods] ClsParamClauses
+
+    accept[KwCase]
+    if (token.is[Ident] && ahead(token.is[Comma])) {
+      enumRepeatedCaseDef(mods)
+    } else {
+      enumSingleCaseDef(mods)
+    }
+  }
+
+  def enumRepeatedCaseDef(mods: List[Mod]): Enum.RepeatedCase = {
+    val values = commaSeparated(termName())
+    Enum.RepeatedCase(mods, values)
+  }
+
+  def enumSingleCaseDef(mods: List[Mod]): Enum.Case = {
+    val name = termName()
+    val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true)
+    val inits = if (token.is[KwExtends]) {
+      accept[KwExtends]
+      templateParents()
+    } else { List() }
+    Enum.Case(mods, name, tparams, primaryCtor(OwnedByEnum), inits)
+  }
+
   def objectDef(mods: List[Mod]): Defn.Object = atPos(mods, auto) {
     accept[KwObject]
     val objectName = termName()
     val culprit = s"object $objectName"
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
-    rejectModCombination[Mod.Open, Mod.Final](mods, culprit)
-    rejectModCombination[Mod.Open, Mod.Sealed](mods, culprit)
-    rejectModCombination[Mod.Override, Mod.Abstract](mods, culprit)
+    rejectModCombination[Mod.Open, Mod.Final](mods, Some(culprit))
+    rejectModCombination[Mod.Open, Mod.Sealed](mods, Some(culprit))
+    rejectModCombination[Mod.Override, Mod.Abstract](mods, Some(culprit))
     Defn.Object(mods, objectName, templateOpt(OwnedByObject))
   }
 
@@ -3422,6 +3481,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       Ctor.Primary(mods, name, paramss)
     } else if (owner.isTrait) {
       Ctor.Primary(Nil, atPos(in.tokenPos, in.tokenPos)(Name.Anonymous()), Nil)
+    } else if (owner.isEnum) {
+      val mods = constructorAnnots() ++ ctorModifiers()
+      val name = autoPos(Name.Anonymous())
+      val paramss = paramClauses(ownerIsType = true, false)
+      Ctor.Primary(mods, name, paramss)
     } else {
       unreachable(debug(owner))
     }
@@ -3561,10 +3625,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def isTerm = this eq OwnedByObject
     def isClass = (this eq OwnedByCaseClass) || (this eq OwnedByClass)
     def isTrait = this eq OwnedByTrait
+    def isEnum = this eq OwnedByEnum
   }
   object OwnedByTrait extends TemplateOwner
   object OwnedByCaseClass extends TemplateOwner
   object OwnedByClass extends TemplateOwner
+  object OwnedByEnum extends TemplateOwner
   object OwnedByObject extends TemplateOwner
 
   def templateParents(): List[Init] = {

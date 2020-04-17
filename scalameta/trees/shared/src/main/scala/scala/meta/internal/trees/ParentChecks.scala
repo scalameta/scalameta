@@ -80,10 +80,11 @@ object ParentChecks {
     def thisQualifier = parent.is[Term.This]
     def givenName = parent.is[Given] || parent.is[GivenAlias]
     def extensionName = parent.is[ExtensionGroup]
+    def repeatedCase = parent.is[Enum.RepeatedCase]
     def superQualifier = parent.is[Term.Super]
     primaryCtorName || secondaryCtorName || termParamName || typeParamName ||
     initName || selfName || privateWithin || protectedWithin || thisQualifier ||
-    superQualifier || givenName || extensionName
+    superQualifier || givenName || extensionName || repeatedCase
   }
 
   def TypeVar(tree: Type.Var, parent: Tree, destination: String): Boolean = {

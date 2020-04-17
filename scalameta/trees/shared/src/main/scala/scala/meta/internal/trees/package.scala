@@ -169,6 +169,8 @@ package object trees {
       case _: Term => true
       case _: Decl => true
       case _: Defn => true
+      case _: Enum.RepeatedCase => true
+      case _: Enum.Case => true
       case _: Ctor.Secondary => true
       case _ => false
     }
