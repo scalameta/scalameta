@@ -18,45 +18,14 @@ features, check out [the specification](specification.html).
 ## Installation
 
 This guide covers several non-standard command-line tools: `metac` and `metap`.
-To install these tools on your computer, you can do the following:
-
-- Install the `coursier` command-line tool by following the
-  [instructions here](https://github.com/coursier/coursier/#command-line). Make
-  sure you are using the latest coursier version (1.1.0-M6 or newer).
-
-```bash
-curl -Lo coursier https://git.io/coursier-cli && chmod +x coursier
-```
-
-- Add the following aliases to your shell:
+First, install the `coursier` command-line tool by following the
+[instructions here](https://get-coursier.io/docs/cli-installation). Next, use
+coursier to install metac and metap.
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.scalameta/scalameta_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.scalameta/scalameta_2.12)
 
-```bash
-alias metac="coursier launch org.scalameta:metac_2.12.8:4.1.9 -- -cp $(coursier fetch -p org.scala-lang:scala-library:2.12.8)"
-alias metap="coursier launch  -M scala.meta.cli.Metap org.scalameta:scalameta_2.11:4.1.9 --"
 ```
-
-NOTE. These installation instructions are for the current unstable `master`
-branch, it's recommended to view this document at the latest git tag instead of
-`master`.
-
-(Optional) Instead of running `metap` on the JVM, you can build a native binary
-on macOS or Linux. Thanks to
-[Scala Native](https://scala-native.readthedocs.io/en/latest/), native Metap
-works much faster than regular Metap (on a personal laptop of one of the authors
-of this guide, a simple Metap invocation takes 500+ ms on JVM and 10 ms on
-native).
-
-1. Install the
-   [`coursier`](https://github.com/coursier/coursier/#command-line-1)
-   command-line version 1.1.0-M6 or later.
-1. Setup the
-   [development environment for Scala Native](http://www.scala-native.org/en/latest/user/setup.html#installing-clang-and-runtime-dependencies).
-1. Link a native `metap` binary.
-
-```bash
-coursier bootstrap org.scalameta:metap_native0.3_2.11:4.1.0 -o metap -f --native --main scala.meta.cli.Metap
+cs install metac metap
 ```
 
 ## Example
@@ -80,15 +49,13 @@ In order to obtain a SemanticDB corresponding to this program, let's use the
 Metac command-line tool. For more information on other tools that can produce
 SemanticDB, [see below](#producing-semanticdb).
 
-```
-$ metac Test.scala
+```sh
+metac Test.scala
 ```
 
 `metac` is a thin wrapper over the Scala compiler. It supports the same
 command-line arguments as `scalac` supports, but instead of generating .class
-files it generates .semanticdb files. Newer versions of Metac may also generate
-an accompanying .semanticidx file, but it's an experimental feature, so we won't
-be discussing it in this document.
+files it generates .semanticdb files.
 
 ```
 $ tree
@@ -372,49 +339,8 @@ to your build. Note that the compiler plugin requires the `-Yrangepos` compiler
 option to be enabled.
 
 ```scala
-addCompilerPlugin("org.scalameta" % "semanticdb-scalac" % "4.1.0" cross CrossVersion.full)
+addCompilerPlugin("org.scalameta" % "semanticdb-scalac" % "@VERSION@" cross CrossVersion.full)
 scalacOptions += "-Yrangepos"
-```
-
-### Javac compiler plugin
-
-The `semanticdb-javac` compiler plugin collects and dumps SemanticDB information
-after the analyze phase of the Java compiler. It currently only produces symbol
-information, not occurrences.
-
-To use it, follow these instructions:
-
-1. Install the plugin by adding a dependency to `org.scalameta:semanticdb-javac`
-   in your build, or by running:
-
-   `$ coursier fetch --intransitive org.scalameta:semanticdb-javac_2.12:4.1.0`
-
-2. Add the plugin to your build's compile classpath. If invoking `javac`
-   directly add it as one of the listed `-cp` entries. Otherwise, adding the
-   plugin as a library dependency in your build tool should be enough.
-
-3. Add the following javac option:
-
-   `"-Xplugin:semanticdb <target-dir> --sourceroot <source-root>"`
-
-   > **Note**: Giving quotes around this option is necessary on the command
-   > line, as that is how javac is able to tell what arguments belong to the
-   > plugin. If you are constructing the javac command programmatically as a
-   > sequence of string arguments, then this should be a single string without
-   > quotes.
-
-   Replace `<target-dir>` with whatever directory you want the generated
-   SemanticDB to live in, and replace `<source-root>` with the root you want
-   source file URIs to be relative to. If `<source-root>` is omitted, it
-   defaults to the current working directory.
-
-For example, a full javac invocation using the plugin would look like:
-
-```
-javac "-Xplugin:semanticdb java-project/target/semanticdb --sourceroot java-project/" \
-  -cp <classpath>:<path-to-semanticdb-javac.jar> \
-  -d java-project/target/classes \
-  java-project/src/main/File1.java java-project/src/main/File2.java
 ```
 
 ## Consuming SemanticDB
@@ -428,14 +354,8 @@ Using this library, one can model SemanticDB entities as Scala case classes and
 serialize/deserialize them into bytes and streams.
 
 ```
-libraryDependencies += "org.scalameta" %% "semanticdb" % "4.1.0"
+libraryDependencies += "org.scalameta" %% "semanticdb" % "@VERSION@"
 ```
-
-`semanticdb` is available for all supported Scala platforms - JVM, Scala.js and
-Scala Native. For more information, check out autogenerated documentation for
-[Scala 2.11](https://static.javadoc.io/org.scalameta/semanticdb_2.11/4.1.0/scala/meta/internal/semanticdb/TextDocuments.html)
-and
-[Scala 2.12](https://static.javadoc.io/org.scalameta/semanticdb_2.12/4.1.0/scala/meta/internal/semanticdb/TextDocuments.html).
 
 Caveats:
 

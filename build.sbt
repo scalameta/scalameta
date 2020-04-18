@@ -779,6 +779,7 @@ lazy val docs = project
     mdocExtraArguments := List("--no-link-hygiene"),
     mdocVariables := Map(
       "VERSION" -> version.value.replaceFirst("\\+.*", ""),
+      "SCALA_BINARY_VERSION" -> scalaBinaryVersion.value,
       "SCALA_VERSION" -> scalaVersion.value
     ),
     mdocOut := baseDirectory.in(ThisBuild).value / "website" / "target" / "docs",
