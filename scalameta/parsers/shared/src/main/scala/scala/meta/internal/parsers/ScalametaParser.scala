@@ -219,7 +219,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           if (curr.is[LeftParen]) ')' :: sepRegions
           else if (curr.is[LeftBracket]) ']' :: sepRegions
           else if (curr.is[LeftBrace]) '}' :: sepRegions
-          else if (curr.is[CaseIntro]) '\u21d2' :: sepRegions
+          //TODO: this must be handled better
+          else if (curr.is[CaseIntro] && !dialect.allowEnums) '\u21d2' :: sepRegions
           else if (curr.is[RightBrace]) {
             var sepRegions1 = sepRegions
             while (!sepRegions1.isEmpty && sepRegions1.head != '}') sepRegions1 = sepRegions1.tail
@@ -546,9 +547,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def isCaseClassOrObject =
       token.is[KwCase] && (token.next.is[KwClass] || token.next.is[KwObject])
 
-    def isCaseClassOrObjectOrEnum =
-      isCaseClassOrObject || (token.is[KwCase] && token.next.is[Ident])
-       // && (token.next.next.is[Comma] || token.next.next.is[LF]))
+    def isCaseClassOrObjectOrEnum = //TODO: conflicting with match case, must be addresed
+      (isCaseClassOrObject || (token.is[KwCase] && token.next.is[Ident])) && dialect.allowEnums
   }
 
   @classifier
@@ -590,7 +590,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   @classifier
   trait DefIntro {
     def unapply(token: Token): Boolean = {
-      token.is[Modifier] || token.is[At] ||
+      token.is[Modifier] || token.is[At]
       token.is[TemplateIntro] || token.is[DclIntro] ||
       (token.is[Unquote] && token.next.is[DefIntro]) ||
       (token.is[Ellipsis] && token.next.is[DefIntro]) ||
@@ -611,7 +611,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   @classifier
   trait DclIntro {
     def unapply(token: Token): Boolean = {
-      token.is[KwDef] || token.is[KwType] ||
+      token.is[KwDef] || token.is[KwType] || token.is[KwEnum] ||
       token.is[KwVal] || token.is[KwVar] ||
       (token.is[KwGiven] && dialect.allowGivenUsing) ||
       (isSoftKw(token, SoftKeyword.SkExtension) && dialect.allowExtensionMethods) ||
@@ -3019,7 +3019,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         typeDefOrDcl(mods)
       case _ if isSoftKw(token, SoftKeyword.SkExtension) && dialect.allowExtensionMethods =>
         extensionGroupDecl(mods)
-      case KwCase() if ahead(token.is[Ident]) =>
+      case KwCase() if ahead(token.is[Ident]) && dialect.allowEnums =>
         enumCaseDef(mods)
       case _ =>
         tmplDef(mods)
@@ -3349,6 +3349,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     token match {
       case KwTrait() =>
         traitDef(mods)
+      case KwEnum() =>
+        enumDef(mods)
       case KwClass() =>
         classDef(mods)
       case KwCase() if ahead(token.is[KwClass]) =>
@@ -3408,22 +3410,24 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       )
     }
 
-    Defn.Class(mods, className, typeParams, ctor, templateOpt(OwnedByClass))
+    val tmpl = templateOpt(OwnedByClass)
+    Defn.Class(mods, className, typeParams, ctor, tmpl)
   }
 
   def enumDef(mods: List[Mod]): Defn.Enum = atPos(mods, auto) {
-    // EnumDef           ::=  id ClassConstr InheritClauses EnumBody   
+    // EnumDef           ::=  id ClassConstr InheritClauses EnumBody
     accept[KwEnum]
 
     val enumName = typeName()
     val culprit = s"enum $enumName"
     onlyAllowedMods[Mod.Private, Mod.Protected](mods, culprit)
 
-
     val typeParams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true)
     val ctor = primaryCtor(OwnedByEnum)
-
-    Defn.Enum(mods, enumName, typeParams, ctor, templateOpt(OwnedByEnum))
+    val tmpl = templateOpt(OwnedByEnum)
+    val cases = tmpl.stats.collect { case _: Enum.Case | _: Enum.RepeatedCase => true }
+    if (cases.isEmpty) { syntaxError("Enumerations must contain at least one case", token) }
+    Defn.Enum(mods, enumName, typeParams, ctor, tmpl)
   }
 
   def enumCaseDef(mods: List[Mod]): Enum = atPos(mods, auto) {
@@ -3447,11 +3451,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def enumSingleCaseDef(mods: List[Mod]): Enum.Case = {
     val name = termName()
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true)
+    val ctor = primaryCtor(OwnedByEnum)
     val inits = if (token.is[KwExtends]) {
       accept[KwExtends]
       templateParents()
     } else { List() }
-    Enum.Case(mods, name, tparams, primaryCtor(OwnedByEnum), inits)
+    Enum.Case(mods, name, tparams, ctor, inits)
   }
 
   def objectDef(mods: List[Mod]): Defn.Object = atPos(mods, auto) {

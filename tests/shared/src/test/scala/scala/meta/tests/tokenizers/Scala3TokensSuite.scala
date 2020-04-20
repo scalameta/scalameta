@@ -12,7 +12,7 @@ class Scala3TokensSuite extends FunSuite {
 
   val testDir = "/home/kpbochenek/vl/github/official/dotty-example-project/src/main/scala"
   
-  test("first test".ignore) {
+  test("first test") {
     val dialect = scala.meta.dialects.Dotty
     for (f <- new File(testDir).listFiles.filter(_.getName.endsWith(".scala"))) {
       println(s"Checking ${f.toPath.toString}")
