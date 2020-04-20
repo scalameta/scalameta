@@ -167,7 +167,7 @@ object Type {
   }
   @ast class Annotate(tpe: Type, annots: List[Mod.Annot] @nonEmpty) extends Type
   @ast class Lambda(tparams: List[Type.Param], tpe: Type) extends Type {
-    checkParent(ParentChecks.TypeLambda)
+    // checkParent(ParentChecks.TypeLambda)
   }
   @ast class Method(paramss: List[List[Term.Param]], tpe: Type) extends Type {
     checkParent(ParentChecks.TypeMethod)

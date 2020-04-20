@@ -548,7 +548,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[KwCase] && (token.next.is[KwClass] || token.next.is[KwObject])
 
     def isCaseClassOrObjectOrEnum = //TODO: conflicting with match case, must be addresed
-      (isCaseClassOrObject || (token.is[KwCase] && token.next.is[Ident])) && dialect.allowEnums
+      (isCaseClassOrObject || (token.is[KwCase] && token.next.is[Ident] && dialect.allowEnums))
   }
 
   @classifier
@@ -1011,7 +1011,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     private def typeLambda(): Type = {
       val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
-      accept[RightArrow]
+      accept[TypeLambda]
       val tpe = typ()
       Type.Lambda(quants, tpe)
     }

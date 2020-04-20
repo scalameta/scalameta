@@ -2,6 +2,8 @@ package scala.meta.tests.parsers.dotty
 
 import scala.meta.tests.parsers._
 import scala.meta._
+import scala.meta.Type.Apply
+import scala.meta.Type.Placeholder
 
 class MinorDottySuite extends ParseSuite {
   
@@ -12,6 +14,7 @@ class MinorDottySuite extends ParseSuite {
    *  All examples based on dotty documentation:
    *  https://dotty.epfl.ch/docs/reference/other-new-features/named-typeargs.html
    *  https://dotty.epfl.ch/docs/reference/other-new-features/open-classes.html
+   *  https://dotty.epfl.ch/docs/reference/new-types/type-lambdas.html
    *  
    */
 
@@ -47,6 +50,27 @@ class MinorDottySuite extends ParseSuite {
     stat("def open(open: open): open = ???").structure
   }
 
+  def ptype(a: String): Type.Param = Type.Param(Nil, Type.Name(a), Nil, Type.Bounds(None, None), Nil, Nil)
+  test("type-lambda") {
+    // cannot carry +/- but can carry bounds >: , <:
+    runTestAssert("[X, Y] =>> Map[Y, X]")(
+      Type.Lambda(List(ptype("X"), ptype("Y")),
+        Type.Apply(Type.Name("Map"), List(Type.Name("Y"), Type.Name("X"))))
+    ) 
+    runTestAssert("[X >: L <: U] =>> R")(
+      Type.Lambda(List(Type.Param(Nil, Type.Name("X"), Nil,
+        Type.Bounds(Some(Type.Name("L")), Some(Type.Name("U"))), Nil, Nil)),
+        Type.Name("R"))
+    )
+    runTestAssert("[X] =>> (X, X)")(
+      Type.Lambda(List(ptype("X")), Type.Tuple(List(Type.Name("X"), Type.Name("X"))))
+    )
+    runTestAssert("[X] =>> [Y] =>> (X, Y)")(
+      Type.Lambda(List(ptype("X")), Type.Lambda(List(ptype("Y")),
+        Type.Tuple(List(Type.Name("X"), Type.Name("Y")))))
+    )
+  }
+
   private def runTestError(code: String, expected: String) {
     implicit val dialect: Dialect = scala.meta.dialects.Dotty
     val error = intercept[ParseException] {
@@ -57,5 +81,17 @@ class MinorDottySuite extends ParseSuite {
       println(s"Expected [${error.getMessage}] to contain [${expected}].")
     }
     assert(error.getMessage.contains(expected))
+  }
+
+  private def runTestAssert(code: String)(expected: meta.Type) {
+    implicit val dialect: Dialect = scala.meta.dialects.Dotty
+    val obtained: meta.Type = tpe(code)
+    try {
+      assertEquals(obtained, expected)
+    } catch {
+      case e: Throwable =>
+        println(s"Generated tpe: \n ${obtained.structure}")
+        throw e
+    }
   }
 }

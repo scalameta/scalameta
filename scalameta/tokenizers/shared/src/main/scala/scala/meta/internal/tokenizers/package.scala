@@ -52,6 +52,7 @@ package object tokenizers {
     "<-",
     "<:",
     "<%",
+    "=>>",
     ">:",
     "#",
     "@",

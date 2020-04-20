@@ -1008,8 +1008,8 @@ class SuccessSuite extends FunSuite {
     )
   }
 
-  test("1 t\"[..tparams] => tpe\"") {
-    val t"[..$tparams] => $tpe" = t"[T] => (T, T)"
+  test("1 t\"[..tparams] =>> tpe\"") {
+    val t"[..$tparams] =>> $tpe" = t"[T] =>> (T, T)"
     assert(tparams.toString == "List(T)")
     assert(
       tparams(0).structure == "Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil)"
@@ -1017,11 +1017,11 @@ class SuccessSuite extends FunSuite {
     assert(tpe.toString == "(T, T)")
   }
 
-  test("2 t\"(..tparams) => tpe\"") {
+  test("2 t\"(..tparams) =>> tpe\"") {
     val tparams = List(tparam"T")
     val tpe = t"(T, T)"
     assert(
-      t"[..$tparams] => $tpe".structure == "Type.Lambda(List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Tuple(List(Type.Name(\"T\"), Type.Name(\"T\"))))"
+      t"[..$tparams] =>> $tpe".structure == "Type.Lambda(List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Tuple(List(Type.Name(\"T\"), Type.Name(\"T\"))))"
     )
   }
 
