@@ -3,8 +3,10 @@ package scala.meta.tests.parsers.dotty
 import scala.meta.tests.parsers._
 import scala.meta._
 
-class ExtensionMethodsSuite extends ParseSuite {
+class ExtensionMethodsSuite extends BaseDottySuite {
   
+  implicit val parseBlock: String => Stat = code => blockStat(code)
+
   /** For checking examples in repl declare:
    *  case class Circle(x: Int)
    * 
@@ -21,17 +23,17 @@ class ExtensionMethodsSuite extends ParseSuite {
       "def (c: Circle).circumference: Int = 2",
       "def (c: Circle) circumference: Int = 2"
     ).foreach { code =>
-      runTestAssert(code)(
-        Defn.ExtensionMethod(Nil, cparam, Term.Name("circumference"), Nil, Nil,
-          Some(Type.Name("Int")), Lit.Int(2))
+      runTestAssert[Stat](code)(
+        Defn.ExtensionMethod(Nil, cparam, tname("circumference"), Nil, Nil,
+          Some(pname("Int")), int(2))
       )
     }
   }
   
   test("no-return-type") {
-    runTestAssert("def (c: Circle) circumference = 2")(
-      Defn.ExtensionMethod(Nil, cparam, Term.Name("circumference"), Nil, Nil,
-        None, Lit.Int(2))
+    runTestAssert[Stat]("def (c: Circle) circumference = 2")(
+      Defn.ExtensionMethod(Nil, cparam, tname("circumference"), Nil, Nil,
+        None, int(2))
     )
   }
 
@@ -40,54 +42,54 @@ class ExtensionMethodsSuite extends ParseSuite {
       "def (c: Circle).circumference(a: Int)(b: String): Int = 2",
       "def (c: Circle) circumference(a: Int)(b: String): Int = 2"
     ).foreach { code =>
-      runTestAssert(code)(
-        Defn.ExtensionMethod(Nil, cparam, Term.Name("circumference"), Nil,
-         List(List(termParam("a", "Int")), List(termParam("b", "String"))), Some(Type.Name("Int")), Lit.Int(2))
+      runTestAssert[Stat](code)(
+        Defn.ExtensionMethod(Nil, cparam, tname("circumference"), Nil,
+         List(List(tparam("a", "Int")), List(tparam("b", "String"))), Some(pname("Int")), int(2))
       )
     }
   }
 
   test("with-using-parameters") {
-    runTestAssert("def (c: Circle).circumference(using s: String)(using Int): Int = 2")(
-        Defn.ExtensionMethod(Nil, cparam, Term.Name("circumference"), Nil, List(
-          List(Term.Param(List(Mod.Using()), Term.Name("s"), Some(Type.Name("String")), None)),
-          List(Term.Param(List(Mod.Using()), meta.Name.Anonymous(), Some(Type.Name("Int")), None))
-          ), Some(Type.Name("Int")), Lit.Int(2))
+    runTestAssert[Stat]("def (c: Circle).circumference(using s: String)(using Int): Int = 2")(
+        Defn.ExtensionMethod(Nil, cparam, tname("circumference"), Nil, List(
+          List(tparamUsing("s", "String")),
+          List(tparamUsing("", "Int"))
+          ), Some(pname("Int")), int(2))
     )
   }
 
   test("with-rhs-block") {
     val rhs = Term.Block(List(Defn.Val(
-      Nil, List(Pat.Var(Term.Name("p"))),
-      None, Lit.Int(314)),
-    Term.Select(Term.Name("c"),
-      Term.Name("x"))))
+      Nil, List(Pat.Var(tname("p"))),
+      None, int(314)),
+    Term.Select(tname("c"),
+      tname("x"))))
 
-    runTestAssert("def (c: Circle) circumference: Int = { val p = 314; c.x }")(
-      Defn.ExtensionMethod(Nil, cparam, Term.Name("circumference"), Nil,
-        Nil, Some(Type.Name("Int")), rhs)
+    runTestAssert[Stat]("def (c: Circle) circumference: Int = { val p = 314; c.x }")(
+      Defn.ExtensionMethod(Nil, cparam, tname("circumference"), Nil,
+        Nil, Some(pname("Int")), rhs)
     )
   }
 
   test("generics") {
-    val objTpe = Term.Param(Nil, Term.Name("xs"), Some(Type.Apply(Type.Name("List"), List(
-      Type.Placeholder(Type.Bounds(None, Some(Type.Name("T"))))))), None)
-    val tTpe = Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, List(Type.Name("Ord")))
+    val objTpe = Term.Param(Nil, tname("xs"), Some(Type.Apply(pname("List"), List(
+      Type.Placeholder(Type.Bounds(None, Some(pname("T"))))))), None)
+    val tTpe = Type.Param(Nil, pname("T"), Nil, Type.Bounds(None, None), Nil, List(pname("Ord")))
 
-    runTestAssert("def [T : Ord](xs: List[_ <: T]).second = 2")(
-      Defn.ExtensionMethod(Nil, objTpe, Term.Name("second"), List(tTpe),
-        Nil, None, Lit.Int(2))
+    runTestAssert[Stat]("def [T : Ord](xs: List[_ <: T]).second = 2")(
+      Defn.ExtensionMethod(Nil, objTpe, tname("second"), List(tTpe),
+        Nil, None, int(2))
     )
   }
 
   test("operators") {
-    runTestAssert("def (x: String) < (y: String) = 2")(
-      Defn.ExtensionMethod(Nil, termParam("x", "String"), Term.Name("<"), Nil,
-        List(List(termParam("y", "String"))), None, Lit.Int(2))
+    runTestAssert[Stat]("def (x: String) < (y: String) = 2")(
+      Defn.ExtensionMethod(Nil, tparam("x", "String"), tname("<"), Nil,
+        List(List(tparam("y", "String"))), None, int(2))
     )
-    runTestAssert("def (x: String) +: (y: String) = 2")(
-      Defn.ExtensionMethod(Nil, termParam("x", "String"), Term.Name("+:"), Nil,
-        List(List(termParam("y", "String"))), None, Lit.Int(2))
+    runTestAssert[Stat]("def (x: String) +: (y: String) = 2")(
+      Defn.ExtensionMethod(Nil, tparam("x", "String"), tname("+:"), Nil,
+        List(List(tparam("y", "String"))), None, int(2))
     )
   }
 
@@ -96,10 +98,9 @@ class ExtensionMethodsSuite extends ParseSuite {
   // ---------------------------------
 
   test("extension-anonymous") {
-    runTestAssert("extension { \n def (c1: Circle).cf1: Int = 2 \n def (c2: Circle).cf2: Int = 2}")(
-      Defn.ExtensionGroup(Nil, meta.Name.Anonymous(), Nil, Nil,
-        Term.Param(Nil, meta.Name.Anonymous(), None, None),
-          Template(Nil, Nil, meta.Self(meta.Name.Anonymous(), None), List(
+    runTestAssert[Stat]("extension { \n def (c1: Circle).cf1: Int = 2 \n def (c2: Circle).cf2: Int = 2}")(
+      Defn.ExtensionGroup(Nil, anon, Nil, Nil,
+        Term.Param(Nil, anon, None, None), tpl(List(
         circleExtMethod("c1", "cf1"),
         circleExtMethod("c2", "cf2")
       )))
@@ -107,10 +108,9 @@ class ExtensionMethodsSuite extends ParseSuite {
   }
 
   test("extension-named") {
-    runTestAssert("extension ext { \n def (c1: Circle).cf1: Int = 2 \n def (c2: Circle).cf2: Int = 2}")(
-      Defn.ExtensionGroup(Nil, Type.Name("ext"), Nil, Nil,
-        Term.Param(Nil, meta.Name.Anonymous(), None, None),
-          Template(Nil, Nil, meta.Self(meta.Name.Anonymous(), None), List(
+    runTestAssert[Stat]("extension ext { \n def (c1: Circle).cf1: Int = 2 \n def (c2: Circle).cf2: Int = 2}")(
+      Defn.ExtensionGroup(Nil, pname("ext"), Nil, Nil,
+        Term.Param(Nil, anon, None, None), tpl(List(
         circleExtMethod("c1", "cf1"),
         circleExtMethod("c2", "cf2")
       )))
@@ -118,18 +118,16 @@ class ExtensionMethodsSuite extends ParseSuite {
   }
 
   test("extension-on") {
-    runTestAssert("extension on (c: Circle) { \n def cf1: Int = 2 \n def cf2: Int = 2}")(
-      Defn.ExtensionGroup(Nil, meta.Name.Anonymous(), Nil, Nil,
-          termParam("c", "Circle"),
-          Template(Nil, Nil, meta.Self(meta.Name.Anonymous(), None), List(
+    runTestAssert[Stat]("extension on (c: Circle) { \n def cf1: Int = 2 \n def cf2: Int = 2}")(
+      Defn.ExtensionGroup(Nil, anon, Nil, Nil,
+          tparam("c", "Circle"), tpl(List(
         circleAnonExtMethod("cf1"),
         circleAnonExtMethod("cf2")
       )))
     )
-    runTestAssert("extension ext on (c: Circle) { \n def cf1: Int = 2 \n def cf2: Int = 2}")(
-      Defn.ExtensionGroup(Nil, Type.Name("ext"), Nil, Nil,
-          termParam("c", "Circle"),
-          Template(Nil, Nil, meta.Self(meta.Name.Anonymous(), None), List(
+    runTestAssert[Stat]("extension ext on (c: Circle) { \n def cf1: Int = 2 \n def cf2: Int = 2}")(
+      Defn.ExtensionGroup(Nil, pname("ext"), Nil, Nil,
+          tparam("c", "Circle"), tpl(List(
         circleAnonExtMethod("cf1"),
         circleAnonExtMethod("cf2")
       )))
@@ -137,12 +135,11 @@ class ExtensionMethodsSuite extends ParseSuite {
   }
 
   test("extension-generis-group") {
-    val tTpe = Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, List(Type.Name("Ord")))
-    runTestAssert("extension ext on [T : Ord](c: Circle) { def f: Int = 2 }")(
-      Defn.ExtensionGroup(Nil, Type.Name("ext"), List(tTpe), Nil,
-          termParam("c", "Circle"),
-          Template(Nil, Nil, meta.Self(meta.Name.Anonymous(), None), List(
-            circleAnonExtMethod("f")
+    val tTpe = Type.Param(Nil, pname("T"), Nil, Type.Bounds(None, None), Nil, List(pname("Ord")))
+    runTestAssert[Stat]("extension ext on [T : Ord](c: Circle) { def f: Int = 2 }")(
+      Defn.ExtensionGroup(Nil, pname("ext"), List(tTpe), Nil,
+        tparam("c", "Circle"), tpl(List(
+          circleAnonExtMethod("f")
       )))
     )
   }
@@ -160,36 +157,34 @@ class ExtensionMethodsSuite extends ParseSuite {
   }
 
   test("extension-on-using") {
-    runTestAssert("extension ext on (c: Circle)(using a: Int)(using String) { def f: Int = 2 }")(
-      Defn.ExtensionGroup(Nil, Type.Name("ext"), Nil, List(
-        List(Term.Param(List(Mod.Using()), Term.Name("a"), Some(Type.Name("Int")), None)),
-        List(Term.Param(List(Mod.Using()), meta.Name.Anonymous(), Some(Type.Name("String")), None))
-      ), termParam("c", "Circle"),
-          Template(Nil, Nil, meta.Self(meta.Name.Anonymous(), None), List(
+    runTestAssert[Stat]("extension ext on (c: Circle)(using a: Int)(using String) { def f: Int = 2 }")(
+      Defn.ExtensionGroup(Nil, pname("ext"), Nil, List(
+        List(tparamUsing("a", "Int")),
+        List(tparamUsing("", "String"))
+      ), tparam("c", "Circle"), tpl(List(
         circleAnonExtMethod("f")
       )))
     )
   }
 
   test("extension-selftype") {
-    runTestAssert("extension ext on (c: Circle) { slf => def f: Int = 2 }")(
-      Defn.ExtensionGroup(Nil, Type.Name("ext"), Nil, Nil,
-          termParam("c", "Circle"),
-          Template(Nil, Nil, meta.Self(Term.Name("slf"), None), List(
+    runTestAssert[Stat]("extension ext on (c: Circle) { slf => def f: Int = 2 }")(
+      Defn.ExtensionGroup(Nil, pname("ext"), Nil, Nil, tparam("c", "Circle"),
+          Template(Nil, Nil, meta.Self(tname("slf"), None), List(
         circleAnonExtMethod("f")
       )))
     )
   }
 
   test("extension-mods".ignore) {
-    runTestAssert("private extension ext { def (c: Circle).f(using s: String)(using Int): Int = 2 }")(
-      Defn.ExtensionGroup(List(Mod.Lazy()), Type.Name("ext"), Nil, Nil,
-          Term.Param(Nil, meta.Name.Anonymous(), None, None),
-          Template(Nil, Nil, meta.Self(meta.Name.Anonymous(), None), List(
-            Defn.ExtensionMethod(Nil, termParam("c", "Circle"), Term.Name("f"), Nil, List(
-              List(Term.Param(List(Mod.Using()), Term.Name("s"), Some(Type.Name("String")), None)),
-              List(Term.Param(List(Mod.Using()), meta.Name.Anonymous(), Some(Type.Name("Int")), None)),
-            ), Some(Type.Name("Int")), Lit.Int(2))
+    runTestAssert[Stat]("private extension ext { def (c: Circle).f(using s: String)(using Int): Int = 2 }")(
+      Defn.ExtensionGroup(List(Mod.Lazy()), pname("ext"), Nil, Nil,
+          Term.Param(Nil, anon, None, None),
+          tpl(List(
+            Defn.ExtensionMethod(Nil, tparam("c", "Circle"), tname("f"), Nil, List(
+              List(Term.Param(List(Mod.Using()), tname("s"), Some(pname("String")), None)),
+              List(Term.Param(List(Mod.Using()), anon, Some(pname("Int")), None)),
+            ), Some(pname("Int")), int(2))
       )))
     )
   }
@@ -202,39 +197,11 @@ class ExtensionMethodsSuite extends ParseSuite {
   // def [T](c: Circle)f(x: T): T{val x: String} = ???
 
   def circleExtMethod(on: String, name: String): Defn.ExtensionMethod =
-    Defn.ExtensionMethod(Nil, termParam(on, "Circle"), Term.Name(name), Nil,
-      List(), Some(Type.Name("Int")), Lit.Int(2))
+    Defn.ExtensionMethod(Nil, tparam(on, "Circle"), tname(name), Nil,
+      List(), Some(pname("Int")), int(2))
 
   def circleAnonExtMethod(name: String): Defn.Def =
-    Defn.Def(Nil, Term.Name(name), Nil,
-      Nil, Some(Type.Name("Int")), Lit.Int(2))
+    Defn.Def(Nil, tname(name), Nil, Nil, Some(pname("Int")), int(2))
 
-  def termParam(name: String, tpe: String): Term.Param =
-    Term.Param(Nil, Term.Name(name), Some(Type.Name(tpe)), None)
-
-  val cparam = termParam("c", "Circle")
-   
-  private def runTestAssert(code: String)(expected: Stat) {
-    implicit val dialect: Dialect = scala.meta.dialects.Dotty
-    val obtained: Stat = blockStat(code)
-    try {
-      assertEquals(obtained, expected)
-    } catch {
-      case e: Throwable =>
-        println(s"Generated stat: \n ${obtained.structure}")
-        throw e
-    }
-  }
-
-  private def runTestError(code: String, expected: String) {
-    implicit val dialect: Dialect = scala.meta.dialects.Dotty
-    val error = intercept[ParseException] {
-      val result = blockStat(code)
-      println(s"Statement ${code} should not parse! Got result ${result.structure}")
-    }
-    if (!error.getMessage().contains(expected)) {
-      println(s"Expected [${error.getMessage}] to contain [${expected}].")
-    }
-    assert(error.getMessage.contains(expected))
-  }
+  final val cparam = tparam("c", "Circle")
 }

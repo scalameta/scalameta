@@ -12,10 +12,6 @@ class DottySuite extends ParseSuite {
     )
     assert(tree.syntax == "List(xs: _*)")
   }
-  test("xml literals") {
-    intercept[TokenizeException] { term("<foo>{bar}</foo>") }
-  }
-
   test("inline def x = 42") {
     val tree1 @ Defn.Def(List(Mod.Inline()), Term.Name("x"), Nil, Nil, None, Lit(42)) =
       templStat("inline def x = 42")
@@ -47,42 +43,6 @@ class DottySuite extends ParseSuite {
     assert(q"trait Foo(bar: Int)".syntax == "trait Foo(bar: Int)")
   }
 
-  test("view bounds not allowed") {
-    intercept[ParseException] {
-      dialects.Dotty("{ def foo[T <% Int](t: T) = ??? }").parse[Term].get
-    }
-  }
-
-  test("A with B") {
-    val And(TypeName("A"), TypeName("B")) = tpe("A with B")
-  }
-
-  test("A & B & C") {
-    val And(And(TypeName("A"), TypeName("B")), TypeName("C")) = tpe("A & B & C")
-  }
-
-  // test T[A&B]
-  // test  
-
-  test("A & B") {
-    val And(TypeName("A"), TypeName("B")) = tpe("A & B")
-  }
-
-  test("A | B") {
-    val Or(TypeName("A"), TypeName("B")) = tpe("A | B")
-  }
-
-  test("[T] => (T, T)") {
-    val Type.Lambda(
-      List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
-      Type.Tuple(List(TypeName("T"), TypeName("T")))
-    ) = tpe("[T] => (T, T)")
-  }
-
-  test("literal types are allowed") {
-    val tree = dialects.Dotty("val a: 42 = 42").parse[Stat].get
-    assert(tree.syntax == "val a: 42 = 42")
-  }
 
   test("implicit function type") {
     val Type.ImplicitFunction(List(Type.Name("String")), Type.Name("Int")) =
@@ -149,12 +109,6 @@ class DottySuite extends ParseSuite {
     intercept[ParseException](templStat("case class A"))
     intercept[ParseException](templStat("case class A[T]"))
     intercept[ParseException](templStat("case class A[T] private"))
-  }
-
-  test("case classes with an empty parameter list are allowed") {
-    templStat("case class A()")
-    templStat("case class A @Inject() ()")
-    templStat("case class A private ()")
   }
 
   checkOK("def foo(implicit x: => Int) = 1")
