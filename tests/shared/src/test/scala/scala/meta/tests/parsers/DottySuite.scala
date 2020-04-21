@@ -43,7 +43,6 @@ class DottySuite extends ParseSuite {
     assert(q"trait Foo(bar: Int)".syntax == "trait Foo(bar: Int)")
   }
 
-
   test("implicit function type") {
     val Type.ImplicitFunction(List(Type.Name("String")), Type.Name("Int")) =
       tpe("implicit String => Int")

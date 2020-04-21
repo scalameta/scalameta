@@ -464,7 +464,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     mods.getAll[M].foreach(m => syntaxError(errorMsg, at = m))
   }
 
-  def rejectModCombination[M1 <: Mod, M2 <: Mod](mods: List[Mod], culpritOpt: Option[String] = None)(
+  def rejectModCombination[M1 <: Mod, M2 <: Mod](
+      mods: List[Mod],
+      culpritOpt: Option[String] = None
+  )(
       implicit invalidMod: InvalidModCombination[M1, M2],
       classifier1: Classifier[Mod, M1],
       tag1: ClassTag[M1],
@@ -477,13 +480,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     mods.getIncompatible[M1, M2].foreach { m => syntaxError(enrichedErrorMsg, at = m._1) }
   }
 
-  private def formatCulprit(culprit: String): String = s" for: $culprit" 
+  private def formatCulprit(culprit: String): String = s" for: $culprit"
 
   def onlyAllowedMods[M1 <: Mod, M2 <: Mod](mods: List[Mod], culprit: String)(
-    implicit classifier1: Classifier[Mod, M1], tag1: ClassTag[M1], 
-    tag2: ClassTag[M2], classifier2: Classifier[Mod, M2]
+      implicit classifier1: Classifier[Mod, M1],
+      tag1: ClassTag[M1],
+      tag2: ClassTag[M2],
+      classifier2: Classifier[Mod, M2]
   ) = {
-    mods.diff(mods.getAll[M1] ++ mods.getAll[M2])
+    mods
+      .diff(mods.getAll[M1] ++ mods.getAll[M2])
       .foreach(m => syntaxError(s" Invalid modifier ${m}${formatCulprit(culprit)}", at = m))
   }
 
@@ -514,7 +520,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   /* -------------- TOKEN CLASSES ------------------------------------------- */
 
-  def isIdentAnd(pred: String => Boolean): Boolean = isIdentAnd(token, pred) 
+  def isIdentAnd(pred: String => Boolean): Boolean = isIdentAnd(token, pred)
 
   def isIdentAnd(token: Token, pred: String => Boolean): Boolean = token match {
     case Ident(value) if pred(value.stripPrefix("`").stripSuffix("`")) => true
@@ -930,7 +936,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             hasParams = true
             //TODO: check if `isUsing=false` is correct in this case
             // what is this place handling? is using allowed here?
-            param(ownerIsCase = false, ownerIsType = false, isImplicit = hasImplicits, isUsing = false)
+            param(
+              ownerIsCase = false,
+              ownerIsType = false,
+              isImplicit = hasImplicits,
+              isUsing = false
+            )
           case _ =>
             if (hasParams)
               syntaxError("can't mix function type and method type syntaxes", at = token)
@@ -1029,7 +1040,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         }
       }
     }
-    
+
     def typRest(): Type = autoPos {
       if (token.is[Colon] && dialect.allowMethodTypes) {
         next()
@@ -1095,10 +1106,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
 
     def compoundType(): Type = {
-      val optType = if (token.is[LeftBrace])
-        None
-      else
-        Some(annotType())
+      val optType =
+        if (token.is[LeftBrace])
+          None
+        else
+          Some(annotType())
       compoundTypeRest(optType)
     }
 
@@ -2148,8 +2160,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case tok: Ellipsis if tok.rank == 2 =>
           (List(ellipsis(2, astInfo[Term])), false)
         case _ =>
-          val using = if (isSoftKw(token, SoftKeyword.SkUsing) && dialect.allowGivenUsing) {next(); true}
-                      else false
+          val using = if (isSoftKw(token, SoftKeyword.SkUsing) && dialect.allowGivenUsing) {
+            next(); true
+          } else false
           (commaSeparated(argumentExpr), using)
       })
     case _ =>
@@ -2637,7 +2650,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwLazy() => next(); Mod.Lazy()
       case KwVal() if !dialect.allowUnquotes => next(); Mod.ValParam()
       case KwVar() if !dialect.allowUnquotes => next(); Mod.VarParam()
-      case Ident(SoftKeyword.SkOpen.name) if dialect.allowOpenClass => next(); Mod.Open() 
+      case Ident(SoftKeyword.SkOpen.name) if dialect.allowOpenClass => next(); Mod.Open()
       case Ident("valparam") if dialect.allowUnquotes => next(); Mod.ValParam()
       case Ident("varparam") if dialect.allowUnquotes => next(); Mod.VarParam()
       case Ident("inline") if dialect.allowInlineMods => next(); Mod.Inline()
@@ -2743,7 +2756,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           next()
           parsedUsing = true
         }
-        commaSeparated(param(ownerIsCase && first, ownerIsType, isImplicit = parsedImplicits, isUsing = parsedUsing))
+        commaSeparated(
+          param(
+            ownerIsCase && first,
+            ownerIsType,
+            isImplicit = parsedImplicits,
+            isUsing = parsedUsing
+          )
+        )
     }
     var first = true
     val paramss = new ListBuffer[List[Term.Param]]
@@ -2772,7 +2792,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         }
     })
 
-  def param(ownerIsCase: Boolean, ownerIsType: Boolean, isImplicit: Boolean, isUsing: Boolean): Term.Param = autoPos {
+  def param(
+      ownerIsCase: Boolean,
+      ownerIsType: Boolean,
+      isImplicit: Boolean,
+      isUsing: Boolean
+  ): Term.Param = autoPos {
     var mods: List[Mod] = annots(skipNewLines = false)
     if (isImplicit) mods ++= List(atPos(in.tokenPos, in.prevTokenPos)(Mod.Implicit()))
     if (isUsing) mods ++= List(atPos(in.tokenPos, in.prevTokenPos)(Mod.Using()))
@@ -2787,7 +2812,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (!mods.has[Mod.Override])
         rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     }
-    
+
     val (isValParam, isVarParam) = (ownerIsType && token.is[KwVal], ownerIsType && token.is[KwVar])
     if (isValParam) {
       mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.ValParam()); next()
@@ -3090,7 +3115,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  case class GivenSig(name: meta.Name, tparams: List[scala.meta.Type.Param], paramss: List[List[Term.Param]])
+  case class GivenSig(
+      name: meta.Name,
+      tparams: List[scala.meta.Type.Param],
+      paramss: List[List[Term.Param]]
+  )
 
   private def givenDecl(mods: List[Mod]): Stat = {
     // Given             ::= 'given' GivenDef
@@ -3123,7 +3152,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def funDefExtRest(mods: List[Mod]): Stat = {
     accept[KwDef]
-    if ((token.is[LeftParen] || token.is[LeftBracket]) && dialect.allowExtensionMethods) extMethod(mods)
+    if ((token.is[LeftParen] || token.is[LeftBracket]) && dialect.allowExtensionMethods)
+      extMethod(mods)
     else funDefRest(mods)
   }
 
@@ -3135,14 +3165,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     next() // 'extension'
 
-    val name = if (token.is[Ident] && !isSoftKw(token, SoftKeyword.SkOn)) typeName()
+    val name =
+      if (token.is[Ident] && !isSoftKw(token, SoftKeyword.SkOn)) typeName()
       else meta.Name.Anonymous()
 
     val (tp, bt, sp) = if (isSoftKw(token, SoftKeyword.SkOn)) {
       next()
       val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
       accept[LeftParen]
-      val baseterm = param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false)
+      val baseterm =
+        param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false)
       accept[RightParen]
       val sparams = paramClauses(ownerIsType = false)
       (tparams, baseterm, sparams)
@@ -3176,13 +3208,19 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           if (f.is[Defn.ExtensionMethod]) {
             val m = f.asInstanceOf[Defn.ExtensionMethod]
             if (m.tparams.nonEmpty) {
-              syntaxError("extension method cannot have type parameters since some were already given previously", m.tparams.head)
+              syntaxError(
+                "extension method cannot have type parameters since some were already given previously",
+                m.tparams.head
+              )
             }
           }
           if (f.is[Defn.Def]) {
             val m = f.asInstanceOf[Defn.Def]
             if (m.tparams.nonEmpty) {
-              syntaxError("extension method cannot have type parameters since some were already given previously", m.tparams.head)
+              syntaxError(
+                "extension method cannot have type parameters since some were already given previously",
+                m.tparams.head
+              )
             }
           }
         }
@@ -3195,7 +3233,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           if (f.is[Defn.ExtensionMethod]) {
             val term = f.asInstanceOf[Defn.ExtensionMethod].baseterm
             if (term.name.value != "") {
-              syntaxError("no extension method allowed here since leading parameter was already given", term)
+              syntaxError(
+                "no extension method allowed here since leading parameter was already given",
+                term
+              )
             }
           }
         }
@@ -3220,7 +3261,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
 
     accept[LeftParen]
-    val basetype = param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false)
+    val basetype =
+      param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false)
     accept[RightParen]
 
     acceptOpt[LF]
@@ -3234,7 +3276,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     accept[Equals]
     val body = expr()
-   Defn.ExtensionMethod(mods, basetype, name, tparams, paramss, decltpe, body)
+    Defn.ExtensionMethod(mods, basetype, name, tparams, paramss, decltpe, body)
   }
 
   def funDefRest(mods: List[Mod]): Stat = atPos(mods, auto) {
@@ -3999,7 +4041,7 @@ object SoftKeyword {
   case object SkExtension extends SoftKeyword { override val name = "extension" }
 
   case object SkOn extends SoftKeyword { override val name = "on" }
-  
+
   case object SkOpaque extends SoftKeyword { override val name = "opaque" }
 
   case object SkOpen extends SoftKeyword { override val name = "open" }

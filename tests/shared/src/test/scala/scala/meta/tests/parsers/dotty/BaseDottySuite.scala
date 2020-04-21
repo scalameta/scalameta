@@ -26,7 +26,7 @@ trait BaseDottySuite extends ParseSuite {
 
   final def int(i: Int) = Lit.Int(i)
   final def init(name: String): Init = Init(pname(name), anon, Nil)
-  
+
   protected def runTestAssert[T <: Tree](code: String)(expected: T)(implicit parser: String => T) {
     val obtained: T = parser(code)
     try {
@@ -38,7 +38,9 @@ trait BaseDottySuite extends ParseSuite {
     }
   }
 
-  protected def runTestError[T <: Tree](code: String, expected: String)(implicit parser: String => T) {
+  protected def runTestError[T <: Tree](code: String, expected: String)(
+      implicit parser: String => T
+  ) {
     val error = intercept[ParseException] {
       val result = parser(code)
       println(s"Statement ${code} should not parse! Got result ${result.structure}")

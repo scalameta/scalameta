@@ -187,9 +187,10 @@ object Type {
     checkParent(ParentChecks.TypeVar)
   }
   @ast class NamedParam(
-    name: Name,
-    param: Type
-  ) extends Type with Member.Type
+      name: Name,
+      param: Type
+  ) extends Type
+      with Member.Type
   @ast class Param(
       mods: List[Mod],
       name: meta.Name,
@@ -257,17 +258,18 @@ object Member {
 @branch trait Enum extends Stat
 object Enum {
   @ast class Case(
-    mods: List[Mod],
-    name: Term.Name,
-    tparams: List[scala.meta.Type.Param],
-    ctor: Ctor.Primary,
-    inits: List[Init]
-  ) extends Enum with Member.Term {
+      mods: List[Mod],
+      name: Term.Name,
+      tparams: List[scala.meta.Type.Param],
+      ctor: Ctor.Primary,
+      inits: List[Init]
+  ) extends Enum
+      with Member.Term {
     // TODO: check parent(tpl) -> parent(enum) is actually enum
   }
   @ast class RepeatedCase(
-    mods: List[Mod],
-    cases: List[Term.Name]
+      mods: List[Mod],
+      cases: List[Term.Name]
   ) extends Enum
 }
 
@@ -313,35 +315,36 @@ object Defn {
     checkFields(rhs.isEmpty ==> pats.forall(_.is[Pat.Var]))
   }
   @ast class Given(
-    mods: List[Mod],
-    name: scala.meta.Name,
-    tparams: List[scala.meta.Type.Param],
-    sparams: List[List[Term.Param]],
-    decltpe: scala.meta.Type,
-    templ: Template
+      mods: List[Mod],
+      name: scala.meta.Name,
+      tparams: List[scala.meta.Type.Param],
+      sparams: List[List[Term.Param]],
+      decltpe: scala.meta.Type,
+      templ: Template
   ) extends Defn
   @ast class Enum(
-    mods: List[Mod],
-    name: scala.meta.Type.Name,
-    tparams: List[scala.meta.Type.Param],
-    ctor: Ctor.Primary,
-    templ: Template
-  ) extends Defn with Member.Type
+      mods: List[Mod],
+      name: scala.meta.Type.Name,
+      tparams: List[scala.meta.Type.Param],
+      ctor: Ctor.Primary,
+      templ: Template
+  ) extends Defn
+      with Member.Type
   @ast class GivenAlias(
-    mods: List[Mod],
-    name: scala.meta.Name,
-    tparams: List[scala.meta.Type.Param],
-    sparams: List[List[Term.Param]],
-    decltpe: scala.meta.Type,
-    body: Term
+      mods: List[Mod],
+      name: scala.meta.Name,
+      tparams: List[scala.meta.Type.Param],
+      sparams: List[List[Term.Param]],
+      decltpe: scala.meta.Type,
+      body: Term
   ) extends Defn
   @ast class ExtensionGroup(
-    mods: List[Mod],
-    name: scala.meta.Name,
-    tparams: List[scala.meta.Type.Param],
-    sparams: List[List[Term.Param]],
-    baseterm: Term.Param,
-    templ: Template
+      mods: List[Mod],
+      name: scala.meta.Name,
+      tparams: List[scala.meta.Type.Param],
+      sparams: List[List[Term.Param]],
+      baseterm: Term.Param,
+      templ: Template
   ) extends Defn
   @ast class ExtensionMethod(
       mods: List[Mod],
@@ -352,7 +355,7 @@ object Defn {
       decltpe: Option[scala.meta.Type],
       body: Term
   ) extends Defn
-    with Member.Term
+      with Member.Term
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,

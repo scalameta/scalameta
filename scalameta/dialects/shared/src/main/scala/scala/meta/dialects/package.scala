@@ -184,7 +184,7 @@ package object dialects {
       allowLiteralTypes = true
     )
     .withAllowNumericLiteralUnderscoreSeparators(true)
-  
+
   implicit val Scala = Scala213 // alias for latest Scala dialect.
 
   implicit val Sbt0136 = Scala210.copy(

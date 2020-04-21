@@ -12,9 +12,8 @@ class AndOrTypesSuite extends BaseDottySuite {
    *  All examples based on dotty documentation:
    *  https://dotty.epfl.ch/docs/reference/new-types/intersection-types.html
    *  https://dotty.epfl.ch/docs/reference/new-types/union-types.html
-   * 
+   *
    */
-
   test("view bounds not allowed") {
     intercept[ParseException] {
       dialects.Dotty("{ def foo[T <% Int](t: T) = ??? }").parse[Term].get
@@ -39,24 +38,51 @@ class AndOrTypesSuite extends BaseDottySuite {
 
   test("ortype-example") {
     runTestAssert[Stat]("def help(id: UserName | Password)")(
-      Decl.Def(Nil, tname("help"), Nil, List(List(Term.Param(Nil, tname("id"),
-        Some(Type.Or(pname("UserName"), pname("Password"))), None))), pname("Unit"))
-     )
+      Decl.Def(
+        Nil,
+        tname("help"),
+        Nil,
+        List(
+          List(
+            Term.Param(Nil, tname("id"), Some(Type.Or(pname("UserName"), pname("Password"))), None)
+          )
+        ),
+        pname("Unit")
+      )
+    )
 
     runTestAssert[Stat]("val either: Password | UserName")(
       Decl.Val(Nil, List(Pat.Var(tname("either"))), Type.Or(pname("Password"), pname("UserName")))
     )
   }
-    //TODO: pattern match `case _: A | B => ...` should be equal to `case (_: A) | B => ...`
-    // check if we create case with (_: A) | B or WRONGLY _: (A | B)
+  //TODO: pattern match `case _: A | B => ...` should be equal to `case (_: A) | B => ...`
+  // check if we create case with (_: A) | B or WRONGLY _: (A | B)
 
   test("andtype-example") {
     runTestAssert[Stat]("val x: Reset & Ord[Int]")(
-      Decl.Val(Nil, List(Pat.Var(tname("x"))), Type.And(pname("Reset"), Type.Apply(Type.Name("Ord"), List(pname("Int")))))
+      Decl.Val(
+        Nil,
+        List(Pat.Var(tname("x"))),
+        Type.And(pname("Reset"), Type.Apply(Type.Name("Ord"), List(pname("Int"))))
+      )
     )
     runTestAssert[Stat]("def fx(a: List[A & B]): Unit")(
-      Decl.Def(Nil, tname("fx"), Nil, List(List(Term.Param(Nil, tname("a"), Some(Type.Apply(pname("List"), List(Type.And(Type.Name("A"), pname("B"))))), None))), pname("Unit"))
+      Decl.Def(
+        Nil,
+        tname("fx"),
+        Nil,
+        List(
+          List(
+            Term.Param(
+              Nil,
+              tname("a"),
+              Some(Type.Apply(pname("List"), List(Type.And(Type.Name("A"), pname("B"))))),
+              None
+            )
+          )
+        ),
+        pname("Unit")
+      )
     )
   }
 }
-
