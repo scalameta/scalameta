@@ -4,10 +4,8 @@ import scala.meta.tests.parsers._
 import scala.meta._
 import scala.meta.tests.tokenizers.TokenizerSuite
 
-class EnumSuite extends ParseSuite {
+class EnumSuite extends BaseDottySuite {
   
-  implicit val dialect: Dialect = scala.meta.dialects.Dotty
-
   /**
    *  All examples based on dotty documentation:
    *  https://dotty.epfl.ch/docs/reference/enums/enums.html
@@ -18,31 +16,29 @@ class EnumSuite extends ParseSuite {
   // ENUM
   // ---------------------------------
 
-  val insideCase = Enum.RepeatedCase(Nil, List(Term.Name("R"), Term.Name("G")))
+  val RGCase = Enum.RepeatedCase(Nil, List(tname("R"), tname("G")))
+
   test("enum") {
-    runTestAssert("enum Color { case R, G }")(
-      Defn.Enum(Nil, Type.Name("Color"), Nil, ctor, Template(Nil, Nil, slf, List(insideCase)))
+    runTestAssert[Stat]("enum Color { case R, G }")(
+      Defn.Enum(Nil, pname("Color"), Nil, ctor, tpl(List(RGCase)))
     )
   }
    
   test("enum-parametrized") {
-    val enumArg = Term.Param(Nil, Term.Name("i"), Some(Type.Name("Int")), None)
-    runTestAssert("enum C(i: Int) { case R, G }")(
-      Defn.Enum(Nil, Type.Name("C"), Nil, ctor.copy(paramss=List(List(enumArg))), Template(Nil, Nil, slf, List(insideCase)))
+    runTestAssert[Stat]("enum C(i: Int) { case R, G }")(
+      Defn.Enum(Nil, pname("C"), Nil, ctorp(List(tparam("i", "Int"))), tpl(List(RGCase)))
     )
   }
 
   test("enum-extends") {
-    val inits = List(Init(Type.Name("T"), anon, Nil), Init(Type.Name("R"), anon, Nil))
-    runTestAssert("enum C extends T with R { case R, G }")(
-      Defn.Enum(Nil, Type.Name("C"), Nil, ctor, Template(Nil, inits, slf, List(insideCase)))
+    runTestAssert[Stat]("enum C extends T with R { case R, G }")(
+      Defn.Enum(Nil, pname("C"), Nil, ctor, Template(Nil, List(init("T"), init("R")), slf, List(RGCase)))
     )
   }
 
   test("enum-generics") {
-    def tparam(s: String): Type.Param = Type.Param(Nil, Type.Name(s), Nil, Type.Bounds(None, None), Nil, Nil)
-    runTestAssert("enum C[X,Y] { case R, G }")(
-      Defn.Enum(Nil, Type.Name("C"), List(tparam("X"), tparam("Y")), ctor, Template(Nil, Nil, slf, List(insideCase)))
+    runTestAssert[Stat]("enum C[X,Y] { case R, G }")(
+      Defn.Enum(Nil, pname("C"), List(pparam("X"), pparam("Y")), ctor, tpl(List(RGCase)))
     )
   }
 
@@ -52,25 +48,27 @@ class EnumSuite extends ParseSuite {
   }
 
   test("enum-single-case") {
-    runTestAssert("enum Color { case R extends Color }")(
-      Defn.Enum(Nil, Type.Name("Color"), Nil, ctor, Template(Nil, Nil, slf, List(
-        Enum.Case(Nil, Term.Name("R"), Nil, ctor, List(Init(Type.Name("Color"), anon, Nil)))
+    runTestAssert[Stat]("enum Color { case R extends Color }")(
+      Defn.Enum(Nil, pname("Color"), Nil, ctor, tpl(List(
+        Enum.Case(Nil, tname("R"), Nil, ctor, List(init("Color")))
       )))
     )
   }
 
-  // test("enum-other-stat") {
-  //   runTestAssert("enum C { val PI=3.14; def r: Double = PI * 4; case R }")(Lit(3))
-  // }
-
-  // test("case-caseclass-diff") {
-  //   // enum X { case R; case class D(); case T }
-  // }
+  test("enum-other-stat") {
+    runTestAssert[Stat]("enum C { val PI=3; def r: Int = 4; case R }")(
+      Defn.Enum(Nil, pname("C"), Nil, ctor, tpl(List(
+        Defn.Val(Nil, List(Pat.Var(tname("PI"))), None, int(3)),
+        Defn.Def(Nil, tname("r"), Nil, Nil, Some(pname("Int")), int(4)),
+        Enum.Case(Nil, tname("R"), Nil, ctor, Nil))
+      ))
+    )
+  }
 
   test("enum-parse-option") {
-    val tparam = Type.Param(List(Mod.Covariant()), Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)
-    val xparam = List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("T")), None))
-    def ext(tp: String) = Init(Type.Apply(Type.Name("Option"), List(Type.Name(tp))), Name.Anonymous(), Nil)
+    val tparam = Type.Param(List(Mod.Covariant()), pname("T"), Nil, Type.Bounds(None, None), Nil, Nil)
+    val xparam = List(Term.Param(Nil, tname("x"), Some(pname("T")), None))
+    def ext(tp: String) = Init(Type.Apply(pname("Option"), List(pname(tp))), anon, Nil)
 
     {
       val opt = """
@@ -79,10 +77,10 @@ class EnumSuite extends ParseSuite {
         case None
       }
       """
-      runTestAssert(opt)(
-        Defn.Enum(Nil, Type.Name("Option"), List(tparam), ctor, Template(Nil, Nil, slf, List(
-          Enum.Case(Nil, Term.Name("Some"), Nil, Ctor.Primary(Nil, Name(""), List(xparam)), Nil),
-          Enum.Case(Nil, Term.Name("None"), Nil, Ctor.Primary(Nil, Name(""), Nil), Nil))
+      runTestAssert[Stat](opt)(
+        Defn.Enum(Nil, pname("Option"), List(tparam), ctor, tpl(List(
+          Enum.Case(Nil, tname("Some"), Nil, ctorp(xparam), Nil),
+          Enum.Case(Nil, tname("None"), Nil, ctor, Nil))
         ))
       )
     }
@@ -93,13 +91,32 @@ class EnumSuite extends ParseSuite {
       |  case Some(x: T) extends Option[T]
       |  case None       extends Option[Nothing]
       |}""".stripMargin
-      runTestAssert(opt)(
-        Defn.Enum(Nil, Type.Name("Option"), List(tparam), ctor, Template(Nil, Nil, slf, List(
-          Enum.Case(Nil, Term.Name("Some"), Nil, Ctor.Primary(Nil, Name(""), List(xparam)), List(ext("T"))),
-          Enum.Case(Nil, Term.Name("None"), Nil, Ctor.Primary(Nil, Name(""), Nil), List(ext("Nothing"))))
-        ))
+      runTestAssert[Stat](opt)(
+        Defn.Enum(Nil, pname("Option"), List(tparam), ctor, tpl(List(
+          Enum.Case(Nil, tname("Some"), Nil, ctorp(xparam), List(ext("T"))),
+          Enum.Case(Nil, tname("None"), Nil, ctor, List(ext("Nothing")))
+        )))
       )
     }
+  }
+
+  test("case-caseother-diff") {
+    val code = """
+    |enum X {
+    |  case R
+    |  v match {
+    |    case Unap => 5
+    |  }
+    |  case G
+    |}
+    """.stripMargin
+    runTestAssert[Stat](code)(
+      Defn.Enum(Nil, pname("X"), Nil, ctor, tpl(List(
+        Enum.Case(Nil, tname("R"), Nil, ctor, List()),
+        Term.Match(tname("v"), List(Case(tname("Unap"), None, int(5)))),
+        Enum.Case(Nil, tname("G"), Nil, ctor, Nil))
+      ))
+    )
   }
 
   // ---------------------------------
@@ -107,90 +124,55 @@ class EnumSuite extends ParseSuite {
   // ---------------------------------
 
   test("case-repeated") {
-    runTestAssert("case A, B, C")(
-      Enum.RepeatedCase(Nil, List(Term.Name("A"), Term.Name("B"), Term.Name("C")))
+    runTestAssert[Stat]("case A, B, C")(
+      Enum.RepeatedCase(Nil, List(tname("A"), tname("B"), tname("C")))
     )
   }
 
   test("case-single") {
-    runTestAssert("case A")(
-      Enum.Case(Nil, Term.Name("A"), Nil, ctor, Nil)
+    runTestAssert[Stat]("case A")(
+      Enum.Case(Nil, tname("A"), Nil, ctor, Nil)
     )
-    runTestAssert("case A()")(
-      Enum.Case(Nil, Term.Name("A"), Nil, ctorp, Nil)
+    runTestAssert[Stat]("case A()")(
+      Enum.Case(Nil, tname("A"), Nil, ctorp(), Nil)
     )
   }
 
   test("case-arguments") {
-    runTestAssert("case Some(x: Int)")(
-      Enum.Case(Nil, Term.Name("Some"), Nil,
-        Ctor.Primary(Nil, Name.Anonymous(), List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)))),
-        Nil
-      )
+    runTestAssert[Stat]("case Some(x: Int)")(
+      Enum.Case(Nil, tname("Some"), Nil, ctorp(List(tparam("x", "Int"))), Nil)
     )
   }
 
   test("case-generic") {
-    val generic = Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, List(Type.Name("Ord")))
-    runTestAssert("case A[X : Ord]()")(
-      Enum.Case(Nil, Term.Name("A"), List(generic), ctorp, Nil)
+    val generic = Type.Param(Nil, pname("X"), Nil, Type.Bounds(None, None), Nil, List(pname("Ord")))
+    runTestAssert[Stat]("case A[X : Ord]()")(
+      Enum.Case(Nil, tname("A"), List(generic), ctorp(), Nil)
     )
-    runTestAssert("case A[X : Ord]")(
-      Enum.Case(Nil, Term.Name("A"), List(generic), ctor, Nil)
+    runTestAssert[Stat]("case A[X : Ord]")(
+      Enum.Case(Nil, tname("A"), List(generic), ctor, Nil)
     )
   }
 
   test("case-extends") {
-    val init = Init(Type.Apply(Type.Name("Option"), List(Type.Name("Nothing"))), anon, Nil)
-    runTestAssert("case None extends Option[Nothing]")(
-      Enum.Case(Nil, Term.Name("None"), Nil, ctor, List(init))
+    val init = Init(Type.Apply(pname("Option"), List(pname("Nothing"))), anon, Nil)
+    runTestAssert[Stat]("case None extends Option[Nothing]")(
+      Enum.Case(Nil, tname("None"), Nil, ctor, List(init))
     )
   }
 
   test("case-extends-argument") {
-    val init = Init(Type.Name("Color"), anon, List(List(Lit.Int(0xFF00))))
-    runTestAssert("case Red extends Color(0xFF00)")(
-      Enum.Case(Nil, Term.Name("Red"), Nil, ctor, List(init))
+    val init = Init(pname("Color"), anon, List(List(Lit.Int(0xFF00))))
+    runTestAssert[Stat]("case Red extends Color(0xFF00)")(
+      Enum.Case(Nil, tname("Red"), Nil, ctor, List(init))
     )
   }
 
   test("case-extends-argument-generic") {
-    val init = Init(Type.Name("Color"), anon, List(List(Lit.Int(0xFF00))))
-    val tparam = Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)
-    val a = Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)
-    runTestAssert("case Red[T](a: Int) extends Color(0xFF00)")(
-      Enum.Case(Nil, Term.Name("Red"), List(tparam), Ctor.Primary(Nil, Name(""), List(List(a))),
-       List(Init(Type.Name("Color"), anon, List(List(Lit.Int(0xFF00))))))
+    val init = Init(pname("Color"), anon, List(List(Lit.Int(0xFF00))))
+    runTestAssert[Stat]("case Red[T](a: Int) extends Color(0xFF00)")(
+      Enum.Case(Nil, tname("Red"), List(pparam("T")), ctorp(List(tparam("a", "Int"))),
+       List(init))
     )
   }
-
-  final val ctor = Ctor.Primary(Nil, Name.Anonymous(), Nil)
-  final val ctorp = Ctor.Primary(Nil, Name.Anonymous(), List(List()))
-  final val anon = meta.Name.Anonymous()
-  val slf = meta.Self(anon, None)
-
-  private def runTestAssert(code: String)(expected: Stat) {
-    implicit val dialect: Dialect = scala.meta.dialects.Dotty
-    val obtained: Stat = templStat(code)
-    try {
-      assertEquals(obtained, expected)
-    } catch {
-      case e: Throwable =>
-        println(s"Generated stat: \n ${obtained.structure}")
-        throw e
-    }
-  }
-
-  private def runTestError(code: String, expected: String) {
-    implicit val dialect: Dialect = scala.meta.dialects.Dotty
-    val error = intercept[ParseException] {
-      val result = templStat(code)
-      println(s"Statement ${code} should not parse! Got result ${result.structure}")
-    }
-    if (!error.getMessage().contains(expected)) {
-      println(s"Expected [${error.getMessage}] to contain [${expected}].")
-    }
-    assert(error.getMessage.contains(expected))
-  }
-
 }
