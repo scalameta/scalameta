@@ -2154,7 +2154,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case tok: Ellipsis if tok.rank == 2 =>
           (List(ellipsis(2, astInfo[Term])), false)
         case _ =>
-          val using = if (isSoftKw(token, SoftKeyword.SkUsing)) {next(); true}
+          val using = if (isSoftKw(token, SoftKeyword.SkUsing) && dialect.allowGivenUsing) {next(); true}
                       else false
           (commaSeparated(argumentExpr), using)
       })
