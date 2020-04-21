@@ -3,7 +3,10 @@ package scala.meta.tests.parsers.dotty
 import scala.meta.tests.parsers._
 import scala.meta._
 
-class GivenUsingSuite extends ParseSuite {
+class GivenUsingSuite extends BaseDottySuite {
+
+  implicit val parseBlock: String => Stat = code => blockStat(code)
+
   /** For checking examples in repl declare:
    *  trait Ord[T] { def f(): Int }
    * 
@@ -13,49 +16,47 @@ class GivenUsingSuite extends ParseSuite {
    *  https://dotty.epfl.ch/docs/reference/contextual/given-imports.html
    */
 
-  //TODO: CHECK ALL STATEMENTS COMPILE IN DOTTY here in tests!
-
   // ---------------------------------
   // GIVEN
   // ---------------------------------
 
+  val defone = Defn.Def(Nil, tname("f"), Nil, List(Nil), Some(pname("Int")), int(1))
+
   test("given-named") {
-    runTest("given intOrd as Ord[Int] { def f(): Int = 1 }") { stat =>
-      val Defn.Given(Nil, meta.Name("intOrd"), Nil, Nil, Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))),
-        Template(Nil, Nil, Self(Name(""), None), List(Defn.Def(Nil, Term.Name("f"), Nil, List(List()), Some(Type.Name("Int")), Lit.Int(1))))
-      ) = stat
-    }
+    runTestAssert[Stat]("given intOrd as Ord[Int] { def f(): Int = 1 }")(
+      Defn.Given(Nil, pname("intOrd"), Nil, Nil, Type.Apply(pname("Ord"), List(pname("Int"))),
+        tpl(List(defone)))
+    )
   }
 
   test("given-named-newline") {
-    runTest("given intOrd as Ord[Int] \n { def f(): Int = 1 }") { stat =>
-      val Defn.Given(Nil, meta.Name("intOrd"), Nil, Nil, Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))),
-        Template(Nil, Nil, Self(Name(""), None), List(Defn.Def(Nil, Term.Name("f"), Nil, List(List()), Some(Type.Name("Int")), Lit.Int(1))))
-      ) = stat
-    }
+    runTestAssert[Stat]("given intOrd as Ord[Int] \n { def f(): Int = 1 }")(
+      Defn.Given(Nil, pname("intOrd"), Nil, Nil, Type.Apply(pname("Ord"), List(pname("Int"))),
+        tpl(List(defone))
+      )
+    )
   }
 
   test("given-anonymous") {
-    runTest("given Ord[Int] { def f(): Int = 1 }") { stat =>
-      val Defn.Given(Nil, meta.Name.Anonymous(), Nil, Nil, Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))),
-        _) = stat
-    }
+    runTestAssert[Stat]("given Ord[Int] { def f(): Int = 1 }")(
+      Defn.Given(Nil, anon, Nil, Nil, Type.Apply(pname("Ord"), List(pname("Int"))),
+        tpl(List(defone)))
+    )
   }
 
   test("given-override-def") {
-    runTest("given intOrd as Ord[Int] { override def f(): Int = 1 }") { stat =>
-      val Defn.Given(Nil, meta.Name("intOrd"), Nil, Nil, Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))),
-        Template(Nil, Nil, Self(Name(""), None), List(Defn.Def(List(Mod.Override()), Term.Name("f"), Nil, List(List()), Some(Type.Name("Int")), Lit.Int(1)
-      )))) = stat
-    }
+    runTestAssert[Stat]("given intOrd as Ord[Int] { override def f(): Int = 1 }")(
+      Defn.Given(Nil, pname("intOrd"), Nil, Nil, Type.Apply(pname("Ord"), List(pname("Int"))),
+        tpl(List(defone.copy(mods = List(Mod.Override())))))
+    )
   }
 
   test("given-self") {
-    runTest("given intOrd as Ord[Int] { current => }") { stat =>
-      val Defn.Given(Nil, meta.Name("intOrd"), Nil, Nil, Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))),
-        Template(Nil, Nil, Self(Name("current"), None), List())
-      ) = stat
-    }
+    runTestAssert[Stat]("given intOrd as Ord[Int] { current => }")(
+      Defn.Given(Nil, pname("intOrd"), Nil, Nil, Type.Apply(pname("Ord"), List(pname("Int"))),
+        Template(Nil, Nil, Self(Term.Name("current"), None), Nil)
+      )
+    )
   }
 
   test("given-selftype-error".ignore) {
@@ -63,75 +64,74 @@ class GivenUsingSuite extends ParseSuite {
   }
 
   test("given-no-block") {
-    runTest("given intOrd as Ord[Int]") { stat =>
-      val Defn.Given(Nil, meta.Name("intOrd"), Nil, Nil, Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))),
-        Template(Nil, Nil, Self(Name(""), None), List())
-      ) = stat
-    }
+    runTestAssert[Stat]("given intOrd as Ord[Int]")(
+      Defn.Given(Nil, pname("intOrd"), Nil, Nil, Type.Apply(pname("Ord"), List(pname("Int"))),
+        tpl(Nil)
+      )
+    )
   }
 
   test("given-anonymous-no-block") {
-    runTest("given Ord[Int]") { stat =>
-      val Defn.Given(Nil, meta.Name.Anonymous(), Nil, Nil, Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))),
-        Template(Nil, Nil, Self(Name(""), None), List())
-      ) = stat
-    }
+    runTestAssert[Stat]("given Ord[Int]")(
+      Defn.Given(Nil, anon, Nil, Nil, Type.Apply(pname("Ord"), List(pname("Int"))),
+        tpl(Nil)
+      )
+    )
   }
 
   test("given-generic-named") {
-    runTest("given listOrd[T] as Ord[List[T]] { def f(): Int = 1 }") { stat =>
-    val Defn.Given(Nil, meta.Name("listOrd"), List(Type.Param(Nil, Type.Name("T"), Nil, _, Nil, Nil)), Nil,
-      Type.Apply(Type.Name("Ord"), List(Type.Apply(Type.Name("List"), List(Type.Name("T"))))),
-        Template(Nil, Nil, _, List(Defn.Def(Nil, Term.Name("f"), Nil, List(List()), Some(Type.Name("Int")), Lit.Int(1))))
-        ) = stat
-    }
+    runTestAssert[Stat]("given listOrd[T] as Ord[List[T]] { def f(): Int = 1 }")(
+    Defn.Given(Nil, pname("listOrd"), List(pparam("T")), Nil,
+      Type.Apply(pname("Ord"), List(Type.Apply(pname("List"), List(pname("T"))))),
+        tpl(List(defone))
+        )
+    )
   }
 
   test("given-generic-anonymous") {
-    runTest("given Ord[List[T]] { def f(): Int = 1 }") { stat =>
-      val Defn.Given(Nil, meta.Name.Anonymous(), Nil, Nil, Type.Apply(Type.Name("Ord"),
-       List(Type.Apply(Type.Name("List"), List(Type.Name("T"))))),
-         Template(Nil, Nil, _, List(Defn.Def(Nil, Term.Name("f"), Nil, List(List()), Some(Type.Name("Int")), Lit.Int(1))))
-      ) = stat
-    }
+    runTestAssert[Stat]("given Ord[List[T]] { def f(): Int = 1 }")(
+      Defn.Given(Nil, anon, Nil, Nil,
+        Type.Apply(pname("Ord"), List(Type.Apply(pname("List"), List(pname("T"))))),
+          tpl(List(defone))
+      )
+    )
   }
 
   test("given-depend-given-named") {
-    runTest("given setOrd[T](using ord: Ord[T]) as Ord[Set[T]]") { stat =>
-      val Defn.Given(Nil, meta.Name("setOrd"), List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
-        List(List(Term.Param(List(Mod.Using()), Term.Name("ord"), Some(Type.Apply(Type.Name("Ord"), List(Type.Name("T")))), None))),
-        Type.Apply(Type.Name("Ord"), List(Type.Apply(Type.Name("Set"), List(Type.Name("T"))))),
-        Template(Nil, Nil, _, List())
-      ) = stat
-    }
+    runTestAssert[Stat]("given setOrd[T](using ord: Ord[T]) as Ord[Set[T]]")(
+      Defn.Given(Nil, pname("setOrd"), List(pparam("T")),
+        List(List(Term.Param(List(Mod.Using()), tname("ord"), Some(Type.Apply(pname("Ord"), List(pname("T")))), None))),
+        Type.Apply(pname("Ord"), List(Type.Apply(pname("Set"), List(pname("T"))))),
+        tpl(Nil)
+      )
+    )
   }
 
   test("given-depend-given-anonymous") {
-    runTest("given [T](using ord: Ord[T]) as Ord[Set[T]]") { stat =>
-      val Defn.Given(Nil, meta.Name.Anonymous(), List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
-        List(List(Term.Param(List(Mod.Using()), Term.Name("ord"), Some(Type.Apply(Type.Name("Ord"), List(Type.Name("T")))), None))),
-        Type.Apply(Type.Name("Ord"), List(Type.Apply(Type.Name("Set"), List(Type.Name("T"))))),
-        Template(Nil, Nil, _, List())
-      ) = stat
-    }
+    runTestAssert[Stat]("given [T](using ord: Ord[T]) as Ord[Set[T]]")(
+      Defn.Given(Nil, anon, List(pparam("T")),
+        List(List(Term.Param(List(Mod.Using()), tname("ord"), Some(Type.Apply(pname("Ord"), List(pname("T")))), None))),
+        Type.Apply(pname("Ord"), List(Type.Apply(pname("Set"), List(pname("T"))))),
+        tpl(Nil)
+      )
+    )
   }
 
   test("given-depend-given-anonymous-using") {
-    runTest("given (using Ord[String]) as Ord[Int]") { stat =>
-      val Defn.Given(Nil, Name(""), Nil, List(List(Term.Param(List(Mod.Using()), Name(""), Some(Type.Apply(Type.Name("Ord"),
-        List(Type.Name("String")))), None))), Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))),
-         Template(_, _, _, _)
-      ) = stat
-    }
-
+    runTestAssert[Stat]("given (using Ord[String]) as Ord[Int]")(
+      Defn.Given(Nil, anon, Nil, List(List(Term.Param(List(Mod.Using()), anon, Some(Type.Apply(pname("Ord"),
+        List(pname("String")))), None))), Type.Apply(pname("Ord"), List(pname("Int"))),
+         tpl(Nil)
+      )
+    )
   }
 
   test("given-inline") {
-    runTest("inline given intOrd as Ord[Int] { def f(): Int = 1 }") { stat =>
-      val Defn.Given(List(Mod.Inline()), meta.Name("intOrd"), Nil, Nil, Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))),
-        Template(Nil, Nil, _, _)
-      ) = stat
-    }
+    runTestAssert[Stat]("inline given intOrd as Ord[Int] { def f(): Int = 1 }")(
+      Defn.Given(List(Mod.Inline()), pname("intOrd"), Nil, Nil, Type.Apply(pname("Ord"), List(pname("Int"))),
+        tpl(List(defone))
+      )
+    )
   }
 
   test("given-subtype-error".ignore) {
@@ -144,60 +144,57 @@ class GivenUsingSuite extends ParseSuite {
   // ---------------------------------
 
   test("given-alias-named") {
-    runTest("given global as Option[Int] = Some(3)") { stat =>
-      val Defn.GivenAlias(Nil, meta.Name("global"), Nil, Nil, Type.Apply(Type.Name("Option"), List(Type.Name("Int"))),
-        Term.Apply(Term.Name("Some"), List(Lit.Int(3)))
-      ) = stat
-    }
+    runTestAssert[Stat]("given global as Option[Int] = Some(3)")(
+      Defn.GivenAlias(Nil, pname("global"), Nil, Nil, Type.Apply(pname("Option"), List(pname("Int"))),
+        Term.Apply(tname("Some"), List(int(3)))
+      )
+    )
   }
 
   test("given-alias-anonymous") {
-    runTest("given Option[Int] = Some(3)") { stat =>
-      val Defn.GivenAlias(Nil, meta.Name.Anonymous(), Nil, Nil, Type.Apply(Type.Name("Option"), List(Type.Name("Int"))),
-        Term.Apply(Term.Name("Some"), List(Lit.Int(3)))
-      ) = stat
-    }
-
+    runTestAssert[Stat]("given Option[Int] = Some(3)")(
+      Defn.GivenAlias(Nil, anon, Nil, Nil, Type.Apply(pname("Option"), List(pname("Int"))),
+        Term.Apply(tname("Some"), List(int(3)))
+      )
+    )
   }
 
   test("given-alias-block") {
-    runTest("given global as Option[Int] = { def fx(): Int = 3; Some(3) }") { stat =>
-      val Defn.GivenAlias(Nil, Type.Name("global"), Nil, Nil, Type.Apply(Type.Name("Option"), List(Type.Name("Int"))),
-       Term.Block(List(Defn.Def(Nil, Term.Name("fx"), Nil, List(List()), Some(Type.Name("Int")), Lit.Int(3)),
-        Term.Apply(Term.Name("Some"), List(Lit.Int(3)))))
-         ) = stat
-
-    }
+    runTestAssert[Stat]("given global as Option[Int] = { def f(): Int = 1; Some(3) }")(
+      Defn.GivenAlias(Nil, pname("global"), Nil, Nil, Type.Apply(pname("Option"), List(pname("Int"))),
+        Term.Block(List(defone, Term.Apply(tname("Some"), List(int(3)))))
+      )
+    )
   }
 
   test("given-alias-override-block-error".ignore) {
-    runTestError("given global as Option[Int] = { override def fx(): Int = 3; Some(3) }", "no modifier allowed here")
+    runTestError("given global as Option[Int] = { override def f(): Int = 1; Some(3) }", "no modifier allowed here")
   }
 
   test("given-alias-using-named") {
-    runTest("given ordInt(using ord: Ord[Int]) as Ord[List[Int]] = ???") { stat =>
-      val Defn.GivenAlias(Nil, meta.Name("ordInt"), Nil, List(List(Term.Param(List(Mod.Using()), Term.Name("ord"),
-       Some(Type.Apply(Type.Name("Ord"), List(Type.Name("Int")))), None))), Type.Apply(Type.Name("Ord"),
-        List(Type.Apply(Type.Name("List"), List(Type.Name("Int"))))), Term.Name("???")
-         ) = stat
-    }
+    runTestAssert[Stat]("given ordInt(using ord: Ord[Int]) as Ord[List[Int]] = ???")(
+      Defn.GivenAlias(Nil, pname("ordInt"), Nil, List(List(Term.Param(List(Mod.Using()), tname("ord"),
+       Some(Type.Apply(pname("Ord"), List(pname("Int")))), None))), Type.Apply(pname("Ord"),
+        List(Type.Apply(pname("List"), List(pname("Int"))))), tname("???")
+         )
+    )
   }
 
   test("given-alias-using-anonymous") {
-   runTest("given (using ord: Ord[Int]) as Ord[List[Int]] = ???") { stat =>
-      val Defn.GivenAlias(Nil, meta.Name.Anonymous(), Nil, List(List(Term.Param(List(Mod.Using()), Term.Name("ord"),
-       Some(Type.Apply(Type.Name("Ord"), List(Type.Name("Int")))), None))), Type.Apply(Type.Name("Ord"),
-        List(Type.Apply(Type.Name("List"), List(Type.Name("Int"))))), Term.Name("???")
-         ) = stat
-   }
+   runTestAssert[Stat]("given (using ord: Ord[Int]) as Ord[List[Int]] = ???")(
+      Defn.GivenAlias(Nil, anon, Nil, List(List(Term.Param(List(Mod.Using()), tname("ord"),
+       Some(Type.Apply(pname("Ord"), List(pname("Int")))), None))), Type.Apply(pname("Ord"),
+        List(Type.Apply(pname("List"), List(pname("Int"))))), tname("???")
+         )
+   )
   }
 
   test("given-alias-inline-subtype") {
-    runTest("inline given intOrd as _ <: Ord[Int] = ???") { stat =>
-      val Defn.GivenAlias(List(Mod.Inline()), Type.Name("intOrd"), Nil, Nil,
-        Type.Placeholder(Type.Bounds(None, Some(Type.Apply(Type.Name("Ord"), List(Type.Name("Int")))))), Term.Name("???")
-        ) = stat
-    }
+    runTestAssert[Stat]("inline given intOrd as _ <: Ord[Int] = ???")(
+      Defn.GivenAlias(List(Mod.Inline()), pname("intOrd"), Nil, Nil,
+        Type.Placeholder(Type.Bounds(None, Some(Type.Apply(pname("Ord"), List(pname("Int")))))), tname("???")
+        )
+    )
   }
 
   test("given-alias-subtype-noinline-error".ignore) {
@@ -205,12 +202,12 @@ class GivenUsingSuite extends ParseSuite {
   }
 
   test("given-alias-combo") {
-    runTest("inline given intOrd as _ <: Ord[Int] { val c: String } = ???") { stat =>
-      val Defn.GivenAlias(List(Mod.Inline()), Type.Name("intOrd"), Nil, Nil,
-        Type.Placeholder(Type.Bounds(None, Some(Type.Refine(Some(Type.Apply(Type.Name("Ord"), List(Type.Name("Int")))),
-          List(Decl.Val(Nil, List(Pat.Var(Term.Name("c"))), Type.Name("String"))))))), Term.Name("???")
-      ) = stat
-    }
+    runTestAssert[Stat]("inline given intOrd as _ <: Ord[Int] { val c: String } = ???")(
+      Defn.GivenAlias(List(Mod.Inline()), pname("intOrd"), Nil, Nil,
+        Type.Placeholder(Type.Bounds(None, Some(Type.Refine(Some(Type.Apply(pname("Ord"), List(pname("Int")))),
+          List(Decl.Val(Nil, List(Pat.Var(tname("c"))), pname("String"))))))), tname("???")
+      )
+    )
   }
 
 
@@ -219,63 +216,62 @@ class GivenUsingSuite extends ParseSuite {
   // ---------------------------------
 
   test("using-named") {
-    runTest("def f(a: Int)(using ord: UInt): Int = ???") { stat =>
-      val Defn.Def(Nil, Term.Name("f"), Nil, List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)),
-       List(Term.Param(List(Mod.Using()), Term.Name("ord"), Some(Type.Name("UInt")), None))), Some(Type.Name("Int")),
-        Term.Name("???")
-      ) = stat
-    }
+    runTestAssert[Stat]("def f(a: Int)(using ord: UInt): Int = ???")(
+      Defn.Def(Nil, tname("f"), Nil, List(List(tparam("a", "Int")),
+        List(tparamUsing("ord", "UInt"))), Some(pname("Int")), tname("???")
+      )
+    )
   }
 
   test("using-anonymous") {
-    runTest("def f(a: Int)(using UInt): Int = ???") { stat =>
-      val Defn.Def(Nil, Term.Name("f"), Nil, List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)),
-       List(Term.Param(List(Mod.Using()), meta.Name.Anonymous(), Some(Type.Name("UInt")), None))), Some(Type.Name("Int")),
-        Term.Name("???")
-      ) = stat
-    }
+    runTestAssert[Stat]("def f(a: Int)(using UInt): Int = ???")(
+      Defn.Def(Nil, tname("f"), Nil, List(List(tparam("a", "Int")),
+        List(tparamUsing("", "UInt"))), Some(pname("Int")), tname("???")
+      )
+    )
   }
 
   test("using-multiple-parens") {
-    runTest("def f(a: Int)(using ui: UInt)(using us: UString): Boolean = ???") { stat =>
-      val Defn.Def(Nil, Term.Name("f"), Nil, List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)),
-       List(Term.Param(List(Mod.Using()), Term.Name("ui"), Some(Type.Name("UInt")), None)),
-        List(Term.Param(List(Mod.Using()), Term.Name("us"), Some(Type.Name("UString")), None))),
-         Some(Type.Name("Boolean")), Term.Name("???")
-         ) = stat
-    }
-    runTest("def f(a: Int)(using UInt)(using UString): Boolean = ???") { stat =>
-      val Defn.Def(Nil, Term.Name("f"), Nil, List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)),
-       List(Term.Param(List(Mod.Using()), meta.Name.Anonymous(), Some(Type.Name("UInt")), None)),
-        List(Term.Param(List(Mod.Using()), meta.Name.Anonymous(), Some(Type.Name("UString")), None))),
-         Some(Type.Name("Boolean")), Term.Name("???")
-         ) = stat
-    }
+    runTestAssert[Stat]("def f(a: Int)(using ui: UInt)(using us: UString): Boolean = ???")(
+      Defn.Def(Nil, tname("f"), Nil, List(List(tparam("a", "Int")),
+       List(tparamUsing("ui", "UInt")),
+        List(tparamUsing("us", "UString"))),
+         Some(pname("Boolean")), tname("???")
+      )
+    )
+    runTestAssert[Stat]("def f(a: Int)(using UInt)(using UString): Boolean = ???")(
+      Defn.Def(Nil, tname("f"), Nil, List(List(tparam("a", "Int")),
+       List(tparamUsing("", "UInt")),
+        List(tparamUsing("", "UString"))),
+         Some(pname("Boolean")), tname("???")
+      )
+    )
   }
 
   test("using-many-single-paren") {
-    runTest("def f(a: Int)(using ui: UInt, us: => UString): Boolean = ???") { stat =>
-      val Defn.Def(Nil, Term.Name("f"), Nil, List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)),
-        List(Term.Param(List(Mod.Using()), Term.Name("ui"), Some(Type.Name("UInt")), None), Term.Param(List(Mod.Using()),
-         Term.Name("us"), Some(Type.ByName(Type.Name("UString"))), None))), Some(Type.Name("Boolean")), Term.Name("???")
-      ) = stat
-    }
-    runTest("def f(a: Int)(using UInt, UString): Boolean = ???") { stat =>
-      val  Defn.Def(Nil, Term.Name("f"), Nil, List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)),
-        List(Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("UInt")), None), Term.Param(List(Mod.Using()), Name(""),
-          Some(Type.Name("UString")), None))), Some(Type.Name("Boolean")), Term.Name("???")
-          ) = stat
-    }
+    val paramByName = Term.Param(List(Mod.Using()), tname("us"), Some(Type.ByName(pname("UString"))), None)
+    runTestAssert[Stat]("def f(a: Int)(using ui: UInt, us: => UString): Boolean = ???")(
+      Defn.Def(Nil, tname("f"), Nil, List(List(tparam("a", "Int")),
+        List(tparamUsing("ui", "UInt"), paramByName)), Some(pname("Boolean")), tname("???")
+      )
+    )
+    runTestAssert[Stat]("def f(a: Int)(using UInt, UString): Boolean = ???")(
+      Defn.Def(Nil, tname("f"), Nil, List(List(tparam("a", "Int")),
+        List(tparamUsing("", "UInt"), tparamUsing("", "UString"))),
+          Some(pname("Boolean")), tname("???")
+      )
+    )
   }
 
   test("using-complex") {
-    runTest("def f(x: String)(using Int)(y: String)(using b: Int): Unit = ???") { stat =>
-      val Defn.Def(Nil, Term.Name("f"), Nil, List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("String")), None)),
-        List(Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Int")), None)), List(Term.Param(Nil, Term.Name("y"),
-          Some(Type.Name("String")), None)), List(Term.Param(List(Mod.Using()), Term.Name("b"), Some(Type.Name("Int")), None))),
-            Some(Type.Name("Unit")), Term.Name("???")
-      ) = stat
-    }
+    runTestAssert[Stat]("def f(x: String)(using Int)(y: String)(using b: Int): Unit = ???")(
+      Defn.Def(Nil, tname("f"), Nil, List(
+        List(tparam("x", "String")),
+        List(tparamUsing("", "Int")),
+        List(tparam("y", "String")),
+        List(tparamUsing("b", "Int"))
+      ), Some(pname("Unit")), tname("???"))
+    )
   }
 
   test("using-mix-named-anonymous-error".ignore) {
@@ -292,25 +288,29 @@ class GivenUsingSuite extends ParseSuite {
   }
 
   test("using-named-with-by-name-parameter") {
-    runTest("def f(using a: => Int): Unit = ???") { stat =>
-      val Defn.Def(Nil, Term.Name("f"), Nil, List(List(Term.Param(List(Mod.Using()), Term.Name("a"),
-        Some(Type.ByName(Type.Name("Int"))), None))), Some(Type.Name("Unit")), Term.Name("???")
-      ) = stat
-    }
+    val usingByName = Term.Param(List(Mod.Using()), tname("a"), Some(Type.ByName(pname("Int"))), None)
+    runTestAssert[Stat]("def f(using a: => Int): Unit = ???")(
+      Defn.Def(Nil, tname("f"), Nil, List(List(usingByName)), Some(pname("Unit")), tname("???")
+      )
+    )
   }
 
   test("using-anonymous-with-by-name-parameter-error".ignore) {
     runTestError("def f(using => String): Unit = ???", "anonymous using by-name invalid")
   }
 
-  test("using-call-site".ignore) {
-    //TODO: HOW TO TRANSLATE USING HERE???
-    runTest("val a = f()(using a)(using 3, 'c')") { stat =>
-      val Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), None, Term.Apply(Term.Apply(Term.Apply(Term.Name("f"), Nil),
-        List(Term.Select(Term.Name("using"), Term.Name("a")))), List(Term.Select(Term.Name("using"),
-         Term.Name("b")), Term.Name("c")))
-         ) = stat
-    }
+  test("using-call-site") {
+    runTestAssert[Stat]("val a = f()(using a)(using 3, true)")(
+      Defn.Val(Nil, List(Pat.Var(tname("a"))), None, 
+        Term.ApplyUsing(
+          Term.ApplyUsing(
+            Term.Apply(tname("f"),
+              Nil),
+            List(tname("a"))),
+          List(int(3), Lit.Boolean(true))
+        )
+      )
+    )
   }
 
   // ---------------------------------
@@ -318,24 +318,4 @@ class GivenUsingSuite extends ParseSuite {
   // ---------------------------------
 
   // TODO: Add tests here
-
-  private def runTest(code: String)(check: Stat => Unit) {
-    implicit val dialect: Dialect = scala.meta.dialects.Dotty
-    val stat = blockStat(code)
-    try {
-      check(stat)
-    } catch {
-      case e: MatchError =>
-        println(s"Generated stat: \n ${stat.structure}")
-        throw e
-    }
-  }
-
-  private def runTestError(code: String, expected: String) {
-    val error = intercept[ParseException](templStat(code))
-    if (!error.getMessage().contains(error)) {
-      println(s"Expected [${error.getMessage}] to contain [${expected}].")
-    }
-    assert(error.getMessage.contains(expected))
-  }
 }

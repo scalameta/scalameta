@@ -16,6 +16,9 @@ trait BaseDottySuite extends ParseSuite {
   final def tpl(stats: List[Stat]): Template = Template(Nil, Nil, slf, stats)
   final def tparam(name: String, tpe: String) =
     Term.Param(Nil, Term.Name(name), Some(pname(tpe)), None)
+  final def tparamUsing(name: String, tpe: String) =
+    if (name.nonEmpty) Term.Param(List(Mod.Using()), Term.Name(name), Some(pname(tpe)), None)
+    else Term.Param(List(Mod.Using()), anon, Some(pname(tpe)), None)
 
   final def pname(name: String): Type.Name = Type.Name(name)
   final def pparam(s: String): Type.Param =
@@ -45,6 +48,4 @@ trait BaseDottySuite extends ParseSuite {
     }
     assert(error.getMessage.contains(expected))
   }
-
-  implicit val parseStat: String => Stat = code => templStat(code)
 }

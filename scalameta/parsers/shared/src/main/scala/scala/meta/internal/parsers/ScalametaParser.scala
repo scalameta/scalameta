@@ -2096,7 +2096,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             t
         }
       case LeftParen() | LeftBrace() if (canApply) =>
-        simpleExprRest(atPos(t, auto)(Term.Apply(t, argumentExprs())), canApply = true)
+        val arguments = atPos(t, auto) {
+          argumentExprsWithUsing() match {
+            case (args, true) => Term.ApplyUsing(t, args)
+            case (args, false) => Term.Apply(t, args)
+          }
+        }
+        simpleExprRest(arguments, canApply = true)
       case Underscore() =>
         next()
         Term.Eta(t)
@@ -2138,21 +2144,25 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     expr(location = NoStat, allowRepeated = true)
   }
 
-  def argumentExprs(): List[Term] = token match {
+  def argumentExprsWithUsing(): (List[Term], Boolean) = token match {
     case LeftBrace() =>
-      List(blockExpr())
+      (List(blockExpr()), false)
     case LeftParen() =>
       inParens(token match {
         case RightParen() =>
-          Nil
+          (Nil, false)
         case tok: Ellipsis if tok.rank == 2 =>
-          List(ellipsis(2, astInfo[Term]))
+          (List(ellipsis(2, astInfo[Term])), false)
         case _ =>
-          commaSeparated(argumentExpr)
+          val using = if (isSoftKw(token, SoftKeyword.SkUsing)) {next(); true}
+                      else false
+          (commaSeparated(argumentExpr), using)
       })
     case _ =>
-      Nil
+      (Nil, false)
   }
+
+  def argumentExprs(): List[Term] = argumentExprsWithUsing()._1
 
   private def checkNoTripleDots[T <: Tree](trees: List[T]): List[T] = {
     val illegalQuasis = trees.collect { case q: Quasi if q.rank == 2 => q }

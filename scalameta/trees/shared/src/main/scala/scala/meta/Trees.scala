@@ -81,6 +81,7 @@ object Term {
     checkFields(parts.length == args.length + 1)
   }
   @ast class Apply(fun: Term, args: List[Term]) extends Term
+  @ast class ApplyUsing(fun: Term, args: List[Term]) extends Term
   @ast class ApplyType(fun: Term, targs: List[Type] @nonEmpty) extends Term
   @ast class ApplyInfix(lhs: Term, op: Name, targs: List[Type], args: List[Term]) extends Term
   @ast class ApplyUnary(op: Name, arg: Term) extends Term.Ref {
