@@ -168,6 +168,7 @@ object Type {
   }
   @ast class Annotate(tpe: Type, annots: List[Mod.Annot] @nonEmpty) extends Type
   @ast class Lambda(tparams: List[Type.Param], tpe: Type) extends Type {
+    // TODO: check why it fails
     // checkParent(ParentChecks.TypeLambda)
   }
   @ast class Method(paramss: List[List[Term.Param]], tpe: Type) extends Type {
@@ -262,11 +263,7 @@ object Enum {
     ctor: Ctor.Primary,
     inits: List[Init]
   ) extends Enum with Member.Term {
-    // checkParent(ParentChecks.TermRepeated)
-    // checkFields {
-    //   val p = parent.get
-    //   p.is[Template] && (p.parent.isEmpty || p.parent.get.is[Defn.Enum])
-    // }
+    // TODO: check parent(tpl) -> parent(enum) is actually enum
   }
   @ast class RepeatedCase(
     mods: List[Mod],

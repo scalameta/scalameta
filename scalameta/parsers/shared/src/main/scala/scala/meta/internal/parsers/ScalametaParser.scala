@@ -309,13 +309,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   case class ParseError(msg: String, token: Token)
   type ParseResult[T] = Either[ParseError, T]
 
-  // @inline final def parseOneOf[T](parseA: => ParseResult[T], parseB: => ParseResult[T]): ParseResult[T] = {
-  //   tryParse(parseA) match {
-  //     case Left(_) => tryParse(parseB)
-  //     case r@Right(_) => r
-  //   }
-  // }
-
   @inline final def tryParse[T](body: => ParseResult[T]): ParseResult[T] = {
     val forked = in.fork
     var reset = false
@@ -590,7 +583,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   @classifier
   trait DefIntro {
     def unapply(token: Token): Boolean = {
-      token.is[Modifier] || token.is[At]
+      token.is[Modifier] || token.is[At] ||
       token.is[TemplateIntro] || token.is[DclIntro] ||
       (token.is[Unquote] && token.next.is[DefIntro]) ||
       (token.is[Ellipsis] && token.next.is[DefIntro]) ||
@@ -935,7 +928,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             if (hasTypes)
               syntaxError("can't mix function type and method type syntaxes", at = token)
             hasParams = true
-            //TODO: check if it should be false here
+            //TODO: check if `isUsing=false` is correct in this case
+            // what is this place handling? is using allowed here?
             param(ownerIsCase = false, ownerIsType = false, isImplicit = hasImplicits, isUsing = false)
           case _ =>
             if (hasParams)
@@ -3096,37 +3090,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  // private def givenSigTypeExpr(givenSig: GivenSig): Either[ParseError, Defn.Given] = {
-  //   // [‘_’ ‘<:’] Type ‘=’ Expr
-    
-  //   if (token.is[Underscore]) {
-  //     accept[Underscore]
-  //     accept[Subtype]
-  //   }
-
-  //   //TODO: Fix to use normal Type and allow refinement?
-  //   val decltpe = startModType() 
-
-  //   if (token.is[Equals]) {
-  //     accept[Equals]
-  //     val rhs = expr()
-  //     Right(Defn.Given(Nil, givenSig.name, givenSig.tparams, givenSig.paramss, decltpe, rhs))
-  //   } else {
-  //     Left(ParseError("Given expression lacks = token", token))
-  //   }
-  // }
-
-  // private def givenSigConstrBody(givenSig: GivenSig): Either[ParseError, Defn.Given] = {
-  //   // ConstrApps [TemplateBody]
-
-  //   val decltpe = startModType()
-
-  //   // TODO: Optionally!
-  //   val rhs = block()
-
-  //   Right(Defn.Given(Nil, givenSig.name, givenSig.tparams, givenSig.paramss, decltpe, rhs))
-  // }
-
   case class GivenSig(name: meta.Name, tparams: List[scala.meta.Type.Param], paramss: List[List[Term.Param]])
 
   private def givenDecl(mods: List[Mod]): Stat = {
@@ -3139,10 +3102,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     // GivenDef          ::=  [GivenSig] [‘_’ ‘<:’] Type ‘=’ Expr
     //                     |  [GivenSig] ConstrApps [TemplateBody]
     val givenSig = tryGivenSig()
-    // parseOneOf(givenSigTypeExpr(givenSig), givenSigConstrBody(givenSig)) match {
-      // case Left(ParseError(message, token)) => syntaxError(message, token)
-      // case Right(defnGiven) => defnGiven
-    // }
 
     val decltpe = startModType()
 
