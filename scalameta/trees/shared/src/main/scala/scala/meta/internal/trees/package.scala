@@ -217,7 +217,7 @@ package object trees {
   }
 
   def onlyLastParamCanBeRepeated(params: List[Term.Param]): Boolean = {
-    params
+    params.iterator
       .take(params.length - 1)
       .forall(p => p.is[Term.Param.Quasi] || !p.decltpe.exists(_.is[Type.Repeated]))
   }
