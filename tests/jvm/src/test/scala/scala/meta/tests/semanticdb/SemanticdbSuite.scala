@@ -42,7 +42,7 @@ abstract class SemanticdbSuite extends FunSuite { self =>
     val pluginjar = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
     if (pluginjar == null) fail("pluginjar not set. broken build?")
     val warnUnusedImports = if (isScala213) "-Wunused:imports" else "-Ywarn-unused-import"
-    val options = s"-Yrangepos $warnUnusedImports -Ywarn-unused -cp " + classpath +
+    val options = s"-Yrangepos $warnUnusedImports -cp " + classpath +
       " -Xplugin:" + pluginjar + " -Xplugin-require:semanticdb " + yMacroAnnotations
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
@@ -129,7 +129,12 @@ abstract class SemanticdbSuite extends FunSuite { self =>
   def checkSection(code: String, expected: String, section: String)(
       implicit loc: munit.Location
   ): Unit = {
-    test(code) {
+    checkSection(code, code, expected, section)
+  }
+  def checkSection(name: TestOptions, code: String, expected: String, section: String)(
+      implicit loc: munit.Location
+  ): Unit = {
+    test(name) {
       val obtained = computeDatabaseSectionFromSnippet(code, section)
       assertNoDiff(obtained, expected)
     }
@@ -139,15 +144,19 @@ abstract class SemanticdbSuite extends FunSuite { self =>
     checkSection(code, expected, "Occurrences")
   }
 
-  def diagnostics(code: String, expected: String): Unit = {
-    checkSection(code, expected, "Diagnostics")
+  def diagnostics(code: String, expected: String)(
+      implicit loc: munit.Location
+  ): Unit = {
+    throw new UnsupportedOperationException(
+      "SemanticdbSuite is not able to test against diagnostics. Use ExpectSuite instead."
+    )
   }
 
-  def symbols(code: String, expected: String): Unit = {
+  def symbols(code: String, expected: String)(implicit loc: munit.Location): Unit = {
     checkSection(code, expected, "Symbols")
   }
 
-  def synthetics(code: String, expected: String): Unit = {
+  def synthetics(code: String, expected: String)(implicit loc: munit.Location): Unit = {
     checkSection(code, expected, "Synthetics")
   }
 
