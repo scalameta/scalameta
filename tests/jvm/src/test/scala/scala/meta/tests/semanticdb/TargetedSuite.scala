@@ -35,32 +35,6 @@ class TargetedSuite extends SemanticdbSuite {
     }
   )
 
-  diagnostics(
-    """
-      |package c
-      |import scala.collection.mutable. /* comment */{ Map, Set, ListBuffer }
-      |import scala.concurrent._, collection.mutable.{HashSet, Buffer}
-      |import scala.collection.{ /* comment */mutable /* comment */ => m}
-      |object a {
-      |  ListBuffer.empty[Int]
-      |  HashSet.empty[Int]
-      |}
-    """.stripMargin.trim,
-    """|[1:48..1:51) [warning] Unused import
-       |[1:53..1:56) [warning] Unused import
-       |[2:24..2:25) [warning] Unused import
-       |[2:56..2:62) [warning] Unused import
-       |[3:39..3:46) [warning] Unused import
-    """.stripMargin.trim
-  )
-
-  diagnostics(
-    // See https://github.com/scalameta/scalameta/issues/899
-    """import scala.io._
-      |object d""".stripMargin,
-    "[0:16..0:17) [warning] Unused import"
-  )
-
   // Checks def macros that we can't test in expect tests because expect tests have no dependencies.
   occurrences(
     """|package e
