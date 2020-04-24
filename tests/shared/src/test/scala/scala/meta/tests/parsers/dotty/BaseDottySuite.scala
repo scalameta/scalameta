@@ -31,6 +31,7 @@ trait BaseDottySuite extends ParseSuite {
     val obtained: T = parser(code)
     try {
       assertEquals(obtained, expected)
+      assertEquals(code, obtained.syntax)
     } catch {
       case e: Throwable =>
         println(s"Generated stat: \n ${obtained.structure}")
