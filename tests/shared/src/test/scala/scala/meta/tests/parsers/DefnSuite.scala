@@ -71,7 +71,7 @@ class DefnSuite extends ParseSuite {
   }
 
   test("type A = B") {
-    val Defn.Type(Nil, Type.Name("A"), Nil, Type.Name("B")) = templStat("type A = B")
+    val Defn.Type(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Type.Name("B")) = templStat("type A = B")
   }
 
   test("type F[T] = List[T]") {
@@ -79,6 +79,7 @@ class DefnSuite extends ParseSuite {
       Nil,
       Type.Name("F"),
       Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil,
+      Type.Bounds(None, None),
       Type.Apply(Type.Name("List"), Type.Name("T") :: Nil)
     ) = templStat("type F[T] = List[T]")
   }

@@ -378,6 +378,7 @@ object Defn {
       mods: List[Mod],
       name: scala.meta.Type.Name,
       tparams: List[scala.meta.Type.Param],
+      bounds: scala.meta.Type.Bounds,
       body: scala.meta.Type
   ) extends Defn
       with Member.Type

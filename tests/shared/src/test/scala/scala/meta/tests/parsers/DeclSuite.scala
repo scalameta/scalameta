@@ -90,33 +90,6 @@ class DeclSuite extends ParseSuite {
     ) = templStat("type F[-T]")
   }
 
-  test("opaque type F[T]") {
-    val Decl.Type(
-      List(Mod.Opaque()),
-      Type.Name("F"),
-      List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
-      Type.Bounds(None, None)
-    ) = templStat("opaque type F[T]")(dialects.Dotty)
-  }
-
-  test("opaque type F <: Bound = X") {
-    val Decl.Type(
-      List(Mod.Opaque()),
-      Type.Name("F"),
-      List(),
-      Type.Bounds(None, None)
-    ) = templStat("opaque type F <: Bound = X")(dialects.Dotty)
-  }
-
-  test("opaque type F <: A & B") {
-    val Decl.Type(
-      List(Mod.Opaque()),
-      Type.Name("F"),
-      Nil,
-      Type.Bounds(None, Some(Type.And(Type.Name("A"), Type.Name("B"))))
-    ) = templStat("opaque type F <: A & B")(dialects.Dotty)
-  }
-
   test("def f") {
     val Decl.Def(Nil, Term.Name("f"), Nil, Nil, Type.Name("Unit")) = templStat("def f")
   }

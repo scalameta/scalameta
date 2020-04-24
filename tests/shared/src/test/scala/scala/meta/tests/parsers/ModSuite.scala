@@ -73,7 +73,7 @@ class ModSuite extends ParseSuite {
 
     val Defn.Var(List(Mod.Final()), _, _, _) = templStat("final var a: Int = 1")
     val Decl.Var(List(Mod.Final()), _, _) = templStat("final var a: Int")
-    val Defn.Type(List(Mod.Final()), _, _, _) = templStat("final type A = Int")
+    val Defn.Type(List(Mod.Final()), _, _, _, _) = templStat("final type A = Int")
 
     interceptParseErrors(
       "final final var a: Int",
@@ -130,7 +130,7 @@ class ModSuite extends ParseSuite {
       templStat("override def foo(a: Int): Int = a")
     val Defn.Val(List(Mod.Override()), _, _, _) = templStat("override val a: Int = 1")
     val Defn.Var(List(Mod.Override()), _, _, _) = templStat("override var a: Int = 1")
-    val Defn.Type(List(Mod.Override()), _, _, _) = templStat("override type A = Int")
+    val Defn.Type(List(Mod.Override()), _, _, _, _) = templStat("override type A = Int")
 
     val Decl.Def(List(Mod.Override()), _, _, _, _) = templStat("override def foo(a: Int): Int")
     val Decl.Val(List(Mod.Override()), _, _) = templStat("override val a: Int")
@@ -254,7 +254,7 @@ class ModSuite extends ParseSuite {
       templStat("abstract override val a: Int = 1")
     val Defn.Var(List(Mod.Abstract(), Mod.Override()), _, _, _) =
       templStat("abstract override var a: Int = 1")
-    val Defn.Type(List(Mod.Abstract(), Mod.Override()), _, _, _) =
+    val Defn.Type(List(Mod.Abstract(), Mod.Override()), _, _, _, _) =
       templStat("abstract override type A = Int")
 
     val Decl.Def(List(Mod.Abstract(), Mod.Override()), _, _, _, _) =
@@ -289,7 +289,7 @@ class ModSuite extends ParseSuite {
     val Defn.Class(_, _, List(Type.Param(List(Mod.Covariant()), _, _, _, _, _)), _, _) =
       templStat("class A[+T](t: T)")
 
-    val Defn.Type(_, _, List(Type.Param(List(Mod.Covariant()), _, _, _, _, _)), _) =
+    val Defn.Type(_, _, List(Type.Param(List(Mod.Covariant()), _, _, _, _, _)), _, _) =
       templStat("type A[+T] = B[T]")
 
     interceptParseErrors(
@@ -304,7 +304,7 @@ class ModSuite extends ParseSuite {
     val Defn.Class(_, _, List(Type.Param(List(Mod.Contravariant()), _, _, _, _, _)), _, _) =
       templStat("class A[-T](t: T)")
 
-    val Defn.Type(_, _, List(Type.Param(List(Mod.Contravariant()), _, _, _, _, _)), _) =
+    val Defn.Type(_, _, List(Type.Param(List(Mod.Contravariant()), _, _, _, _, _)), _, _) =
       templStat("type A[-T] = B[T]")
 
     interceptParseErrors(

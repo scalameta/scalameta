@@ -10,6 +10,7 @@ class MinorDottySuite extends BaseDottySuite {
   implicit val parseBlock: String => Stat = code => blockStat(code)
   implicit val parseType: String => Type = code => tpe(code)
 
+  val parseTempl: String => Stat = code => templStat(code)
   /**
    *
    *  All examples based on dotty documentation:
@@ -93,8 +94,41 @@ class MinorDottySuite extends BaseDottySuite {
     templStat("case class A private ()")
   }
 
-  test("xml literals") {
+  test("xml-literals") {
     intercept[TokenizeException] { term("<foo>{bar}</foo>") }
+  }
+
+  test("opaque-type-generic") {
+    runTestAssert[Stat]("opaque type F[T]")(
+      Decl.Type(
+        List(Mod.Opaque()),
+        pname("F"),
+        List(pparam("T")),
+        Type.Bounds(None, None)
+      )
+    )(parseTempl)
+  }
+
+  test("opaque-type-bounded") {
+    runTestAssert[Stat]("opaque type F <: A & B")(
+      Decl.Type(
+      List(Mod.Opaque()),
+      Type.Name("F"),
+      Nil,
+      Type.Bounds(None, Some(Type.And(Type.Name("A"), Type.Name("B"))))
+      ))(parseTempl)
+  }
+
+  test("opaque-type-bounded-alias") {
+    runTestAssert[Stat]("opaque type F <: Bound = X")(
+      Defn.Type(
+      List(Mod.Opaque()),
+      pname("F"),
+      Nil,
+      Type.Bounds(None, Some(Type.Name("Bound"))),
+      pname("X")
+      )
+    )(parseTempl)
   }
 
 }
