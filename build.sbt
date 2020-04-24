@@ -10,6 +10,7 @@ import org.scalameta.os
 import sbt.ScriptedPlugin._
 import complete.DefaultParsers._
 import scalapb.compiler.Version.scalapbVersion
+import munit.sbtmunit.BuildInfo.munitVersion
 
 lazy val LanguageVersions = Seq(LatestScala213, LatestScala212, LatestScala211)
 lazy val LanguageVersion = LanguageVersions.head
@@ -30,7 +31,6 @@ enablePlugins(ScalaUnidocPlugin)
 addCommandAlias("benchAll", benchAll.command)
 addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
-val munitVersion = "0.4.3"
 commands += Command.command("ci-windows") { s =>
   s"testsJVM/all:testOnly -- --exclude-tags=SkipWindows" ::
     s
