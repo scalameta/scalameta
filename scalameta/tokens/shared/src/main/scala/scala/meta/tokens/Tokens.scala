@@ -39,6 +39,15 @@ import scala.meta.internal.prettyprinters._
     val hi = lo.max(start + until.min(length))
     Tokens(tokens, lo, hi)
   }
+
+  /* Both head and headOption need to be implemented here due to
+   * binary incompatibility caused by
+   * https://github.com/scala/scala/commit/b20dd00b11f06c14c823d277cdfb58043a2586fc
+   */
+  override def head: Token = apply(0)
+
+  override def headOption: Option[Token] = if (isEmpty) None else Some(head)
+
   override def toString = scala.meta.internal.prettyprinters.TokensToString(this)
 
   override def segmentLength(p: Token => Boolean, from: Int = 0): Int = super.segmentLength(p, from)
