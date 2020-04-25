@@ -1,7 +1,6 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta._
 import scala.meta.dialects.Scala213
 
 class Scala213Suite extends ParseSuite {
@@ -38,13 +37,13 @@ class Scala213Suite extends ParseSuite {
 
   test("identifier-types") {
     // "x" is a class with def =>>(x: Int): Int, in dotty ==> is keyword and it will be error here
-    assertNoDiff(
-      templStat("val c = x =>> 3").structure,
+    runAssert(
+      "val c = x =>> 3",
       """Defn.Val(Nil, List(Pat.Var(Term.Name("c"))), None, Term.ApplyInfix(Term.Name("x"), Term.Name("=>>"), Nil, List(Lit.Int(3))))"""
     )
 
-    assertNoDiff(
-      templStat("val given = 3").structure,
+    runAssert(
+      "val given = 3",
       """Defn.Val(Nil, List(Pat.Var(Term.Name("given"))), None, Lit.Int(3))"""
     )
 
@@ -54,10 +53,26 @@ class Scala213Suite extends ParseSuite {
     )
   }
 
+  test("try with any expr") {
+    runAssert(
+      "try (1 + 2).toString",
+      """Term.Try(Term.Select(Term.ApplyInfix(Lit.Int(1), Term.Name("+"), Nil, List(Lit.Int(2))), Term.Name("toString")), Nil, None)"""
+    )
+    runAssert(
+      "try { 1 + 2 }.toString",
+      """Term.Try(Term.Select(Term.Block(List(Term.ApplyInfix(Lit.Int(1), Term.Name("+"), Nil, List(Lit.Int(2))))), Term.Name("toString")), Nil, None)"""
+    )
+    runAssert(
+      "try (1 :: Nil) map fn",
+      """Term.Try(Term.ApplyInfix(Term.ApplyInfix(Lit.Int(1), Term.Name("::"), Nil, List(Term.Name("Nil"))), Term.Name("map"), Nil, List(Term.Name("fn"))), Nil, None)"""
+    )
+  }
+
   private def runAssert(code: String, expected: String): Unit = {
     assertNoDiff(
       templStat(code).structure,
       expected
     )
   }
+
 }

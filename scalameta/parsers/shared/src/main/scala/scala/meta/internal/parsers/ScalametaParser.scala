@@ -1604,6 +1604,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwTry() =>
         next()
         val body: Term = token match {
+          case _ if dialect.allowTryWithAnyExpr => expr()
           case LeftBrace() => autoPos(inBracesOrUnit(block()))
           case p @ LeftParen() =>
             val term = inParensOrTupleOrUnit(location, allowRepeated)
