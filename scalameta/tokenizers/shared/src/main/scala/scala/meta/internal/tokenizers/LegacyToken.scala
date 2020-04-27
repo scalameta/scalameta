@@ -109,7 +109,7 @@ object LegacyToken {
   final val SUBTYPE = 134
   final val SUPERTYPE = 135
   final val VIEWBOUND = 136
-  final val TYPELAMBDA = 137
+  final val TYPELAMBDAARROW = 137
 
   final val WHITESPACE = 201
   final val COMMENT = 300
@@ -165,7 +165,7 @@ object LegacyToken {
     "<-"        -> LARROW,
     "<:"        -> SUBTYPE,
     "<%"        -> VIEWBOUND,
-    "=>>"       -> TYPELAMBDA,
+    "=>>"       -> TYPELAMBDAARROW,
     ">:"        -> SUPERTYPE,
     "#"         -> HASH,
     "@"         -> AT,

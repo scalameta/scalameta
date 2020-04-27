@@ -119,7 +119,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case SUBTYPE => Token.Subtype(input, dialect, curr.offset)
         case SUPERTYPE => Token.Supertype(input, dialect, curr.offset)
         case VIEWBOUND => Token.Viewbound(input, dialect, curr.offset)
-        case TYPELAMBDA => Token.TypeLambda(input, dialect, curr.offset)
+        case TYPELAMBDAARROW => Token.TypeLambdaArrow(input, dialect, curr.offset)
 
         case WHITESPACE =>
           if (curr.strVal == " ") Token.Space(input, dialect, curr.offset)

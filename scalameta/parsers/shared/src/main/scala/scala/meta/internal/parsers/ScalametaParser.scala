@@ -1016,7 +1016,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     private def typeLambda(): Type = {
       val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
-      accept[TypeLambda]
+      accept[TypeLambdaArrow]
       val tpe = typ()
       Type.Lambda(quants, tpe)
     }

@@ -5,7 +5,7 @@ import scala.meta._
 
 trait BaseDottySuite extends ParseSuite {
 
-  implicit val dialect: Dialect = scala.meta.dialects.Dotty
+  // implicit val dialect: Dialect = scala.meta.dialects.Dotty
 
   final val anon = meta.Name.Anonymous()
   final val ctor = Ctor.Primary(Nil, anon, Nil)
@@ -27,11 +27,18 @@ trait BaseDottySuite extends ParseSuite {
   final def int(i: Int) = Lit.Int(i)
   final def init(name: String): Init = Init(pname(name), anon, Nil)
 
-  protected def runTestAssert[T <: Tree](code: String)(expected: T)(implicit parser: String => T) {
+  protected def runTestAssert[T <: Tree](code: String, assertLayout: Boolean = true)(expected: T)(implicit parser: String => T) {
+    import scala.meta.dialects.Dotty
     val obtained: T = parser(code)
     try {
       assertEquals(obtained, expected)
-      assertEquals(code, obtained.syntax)
+
+      // check bijection
+      val r = scala.meta.internal.prettyprinters.TreeSyntax.reprint[T](obtained)(dialects.Dotty)
+      assertEquals(parser(r.toString), expected)
+      if (assertLayout) {
+        assertEquals(r.toString, code)
+      }
     } catch {
       case e: Throwable =>
         println(s"Generated stat: \n ${obtained.structure}")

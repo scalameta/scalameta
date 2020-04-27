@@ -5,7 +5,7 @@ import scala.meta._
 
 class GivenUsingSuite extends BaseDottySuite {
 
-  implicit val parseBlock: String => Stat = code => blockStat(code)
+  implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Dotty)
 
   /** For checking examples in repl declare:
    *  trait Ord[T] { def f(): Int }
@@ -35,7 +35,7 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-named-newline") {
-    runTestAssert[Stat]("given intOrd as Ord[Int] \n { def f(): Int = 1 }")(
+    runTestAssert[Stat]("given intOrd as Ord[Int] \n { def f(): Int = 1 }", false)(
       Defn.Given(
         Nil,
         pname("intOrd"),
@@ -247,7 +247,7 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-alias-block") {
-    runTestAssert[Stat]("given global as Option[Int] = { def f(): Int = 1; Some(3) }")(
+    runTestAssert[Stat]("given global as Option[Int] = { def f(): Int = 1; Some(3) }", false)(
       Defn.GivenAlias(
         Nil,
         pname("global"),

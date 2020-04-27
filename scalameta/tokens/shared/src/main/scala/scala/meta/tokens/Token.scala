@@ -79,7 +79,7 @@ object Token {
   @fixed(">:") class Supertype extends Token
   @fixed("@") class At extends Token
   @fixed("_") class Underscore extends Token
-  @fixed("=>>") class TypeLambda extends Token
+  @fixed("=>>") class TypeLambdaArrow extends Token
 
   // Delimiters
   @fixed("(") class LeftParen extends Token

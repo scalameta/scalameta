@@ -363,6 +363,9 @@ object TreeSyntax {
         val zipped = parts.zip(t.args).map { case (part, arg) => s(part, "{", p(Expr, arg), "}") }
         m(SimpleExpr1, s(r(zipped), parts.last))
       case t: Term.Apply => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), t.args))
+      case t: Term.ApplyUsing =>
+        val args = s("(", kw("using"), " ", r(t.args, ", "), ")")
+        m(SimpleExpr1, s(p(SimpleExpr1, t.fun), args))
       case t: Term.ApplyType => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targs))
       case t: Term.ApplyInfix =>
         val args = t.args match {
@@ -538,8 +541,15 @@ object TreeSyntax {
       case t: Term.Eta => m(PostfixExpr, s(p(SimpleExpr1, t.expr), " ", kw("_")))
       case t: Term.Repeated => s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
       case t: Term.Param =>
-        val mods = t.mods.filter(!_.is[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
-        s(w(mods, " "), t.name, t.decltpe, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
+        val mods = t.mods
+          .filter(!_.is[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
+          .filter(!_.is[Mod.Using])  // NOTE: `using` is skipped as it applies to whole list
+        val nameType = if (t.mods.exists(_.is[Mod.Using]) && t.name.is[Name.Anonymous]) {
+          s(t.decltpe.get)
+        } else {
+          s(t.name, t.decltpe)
+        }
+        s(w(mods, " "), nameType, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
 
       // Type
       case t: Type.Name => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
@@ -790,6 +800,27 @@ object TreeSyntax {
         } else {
           throw new UnsupportedOperationException(s"$dialect doesn't support trait parameters")
         }
+      case t: Defn.GivenAlias =>
+        s(
+          w(t.mods, " "),
+          kw("given"),
+          " ",
+          givenName(t.name, t.tparams, t.sparams),
+          t.decltpe,
+          " ",
+          kw("="),
+          " ",
+          t.body
+        )
+      case t: Defn.Given =>
+        s(
+          w(t.mods, " "),
+          kw("given"),
+          " ",
+          givenName(t.name, t.tparams, t.sparams),
+          t.decltpe,
+          templ(t.templ)
+        )
       case t: Defn.Object => s(w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
       case t: Defn.Def =>
         s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
@@ -905,6 +936,8 @@ object TreeSyntax {
       case _: Mod.Final => kw("final")
       case _: Mod.Sealed => kw("sealed")
       case _: Mod.Open => kw("open")
+      case _: Mod.Opaque => kw("opaque")
+      case _: Mod.Using => kw("using")
       case _: Mod.Override => kw("override")
       case _: Mod.Case => kw("case")
       case _: Mod.Abstract => kw("abstract")
@@ -958,6 +991,18 @@ object TreeSyntax {
       case t: Source => r(t.stats, EOL)
     }
 
+    private def givenName(name: meta.Name, tparams: List[Type.Param], sparams: List[List[Term.Param]]): Show.Result = {
+      if (!name.is[meta.Name.Anonymous]) {
+        s(name, tparams, sparams, " ", kw("as"), " ")
+      } else {
+        if (tparams.nonEmpty || sparams.nonEmpty) {
+          s(tparams, sparams, " as ")
+        } else {
+          s()
+        }
+      }
+    }
+
     // Multiples and optionals
     implicit def syntaxArgs: Syntax[List[Term]] = Syntax {
       case (b: Term.Block) :: Nil => s(" ", b)
@@ -983,10 +1028,16 @@ object TreeSyntax {
       s("(", r(params, ", "), ")")
     }
     implicit def syntaxParamss: Syntax[List[List[Term.Param]]] = Syntax { paramss =>
+      def usingImplicit(params: List[Term.Param]): Show.Result = {
+        if (params.exists(_.mods.exists(_.is[Mod.Using]))) 
+          s("using ", r(params, ", "))
+        else
+          w("implicit ", r(params, ", "), params.exists(_.mods.exists(_.is[Mod.Implicit])))
+      }
       r(paramss.map(params => {
         s(
           "(",
-          w("implicit ", r(params, ", "), params.exists(_.mods.exists(_.is[Mod.Implicit]))),
+            usingImplicit(params),
           ")"
         )
       }), "")
@@ -1019,5 +1070,9 @@ object TreeSyntax {
         case _ => new SyntaxInstances(dialect).syntaxTree[T].apply(x)
       }
     }
+  }
+
+  def reprint[T <: Tree](x: T)(dialect: Dialect): Show.Result = {
+    new SyntaxInstances(dialect).syntaxTree[T].apply(x)
   }
 }

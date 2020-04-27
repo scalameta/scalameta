@@ -98,8 +98,8 @@ private[meta] trait Aliases {
     val Colon = scala.meta.tokens.Token.Colon
     type Viewbound = scala.meta.tokens.Token.Viewbound
     val Viewbound = scala.meta.tokens.Token.Viewbound
-    type TypeLambda = scala.meta.tokens.Token.TypeLambda
-    val TypeLambda = scala.meta.tokens.Token.TypeLambda
+    type TypeLambdaArrow = scala.meta.tokens.Token.TypeLambdaArrow
+    val TypeLambdaArrow = scala.meta.tokens.Token.TypeLambdaArrow
     type LeftArrow = scala.meta.tokens.Token.LeftArrow
     val LeftArrow = scala.meta.tokens.Token.LeftArrow
     type Subtype = scala.meta.tokens.Token.Subtype

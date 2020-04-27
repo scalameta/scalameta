@@ -45,6 +45,7 @@ package object tokenizers {
     "protected",
     "throw",
     "val",
+    "given",
     "_",
     ":",
     "=",
@@ -57,7 +58,6 @@ package object tokenizers {
     "#",
     "@",
     "\u21D2",
-    "\u2190",
-    "given"
+    "\u2190"
   )
 }
