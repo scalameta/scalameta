@@ -17,6 +17,7 @@ class MinorDottySuite extends BaseDottySuite {
    *  All examples based on dotty documentation:
    *  https://dotty.epfl.ch/docs/reference/other-new-features/open-classes.html
    *  https://dotty.epfl.ch/docs/reference/new-types/type-lambdas.html
+   *  https://dotty.epfl.ch/docs/reference/other-new-features/trait-parameters.html
    *
    */
   test("open-class") {
@@ -123,4 +124,40 @@ class MinorDottySuite extends BaseDottySuite {
     )(parseTempl)
   }
 
+  test("trait-parameters") {
+    runTestAssert[Stat]("trait Foo(val foo: Int)(bar: Int)")(
+      Defn.Trait(Nil, pname("Foo"), Nil, Ctor.Primary(Nil, anon,
+        List(
+          List(tparamval("foo", "Int")),
+          List(tparam("bar", "Int"))
+          )
+        ), tpl(Nil))
+    )
+  }
+
+  test("trait-parameters-generic") {
+    runTestAssert[Stat]("trait Foo[T](bar: T)")(
+      Defn.Trait(Nil, pname("Foo"), List(pparam("T")),
+       ctorp(List(tparam("bar", "T"))), tpl(Nil))
+    )
+  }
+
+  test("class-parameters-using") {
+    runTestAssert[Stat]("trait A(using String)")(
+      Defn.Trait(Nil, pname("A"), Nil,
+       ctorp(List(tparamUsing("", "String"))), tpl(Nil))
+    )
+
+    runTestAssert[Stat]("class A(using String)")(
+      Defn.Class(Nil, pname("A"), Nil,
+       ctorp(List(tparamUsing("", "String"))), tpl(Nil))
+    )
+
+    runTestAssert[Stat]("case class A(a: Int)(using b: String)")(
+      Defn.Class(List(Mod.Case()), pname("A"), Nil,
+      Ctor.Primary(Nil, anon, List(List(tparam("a", "Int")), List(tparamUsing("b", "String")))),
+        tpl(Nil))
+    )
+  }
+          // List(tparamUsing("", "String"))
 }

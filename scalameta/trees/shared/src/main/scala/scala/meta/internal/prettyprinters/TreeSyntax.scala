@@ -542,10 +542,10 @@ object TreeSyntax {
       case t: Term.Repeated => s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
       case t: Term.Param =>
         val mods = t.mods
-          .filter(
-            !_.is[Mod.Implicit]
-          ) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
-          .filter(!_.is[Mod.Using]) // NOTE: `using` is skipped as it applies to whole list
+          // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
+          .filter(!_.is[Mod.Implicit])
+          // NOTE: `using` is skipped as it applies to whole list
+          .filter(!_.is[Mod.Using])
         val nameType = if (t.mods.exists(_.is[Mod.Using]) && t.name.is[Name.Anonymous]) {
           s(t.decltpe.get)
         } else {
@@ -907,13 +907,18 @@ object TreeSyntax {
       case t: Pkg.Object =>
         s(kw("package"), " ", w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
       case t: Ctor.Primary =>
-        def printParam(t: Term.Param) =
+        def printParam(t: Term.Param) = {
+          val name = if (t.mods.exists(_.is[Mod.Using]) && t.name.is[Name.Anonymous]) {
+            s(t.decltpe.get)
+          } else {
+            s(t.name, t.decltpe)
+          }
           s(
             w(t.mods, " "),
-            t.name,
-            t.decltpe,
+            name,
             t.default.map(s(" ", kw("="), " ", _)).getOrElse(s())
           )
+        }
 
         val paramss =
           r(
