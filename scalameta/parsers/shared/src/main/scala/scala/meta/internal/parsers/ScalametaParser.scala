@@ -3491,10 +3491,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     accept[KwObject]
     val objectName = termName()
     val culprit = s"object $objectName"
+    if (!mods.has[Mod.Override]) rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     rejectModCombination[Mod.Open, Mod.Final](mods, Some(culprit))
     rejectModCombination[Mod.Open, Mod.Sealed](mods, Some(culprit))
-    rejectModCombination[Mod.Override, Mod.Abstract](mods, Some(culprit))
     Defn.Object(mods, objectName, templateOpt(OwnedByObject))
   }
 

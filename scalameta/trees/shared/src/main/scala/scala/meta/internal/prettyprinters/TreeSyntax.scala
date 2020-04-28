@@ -855,7 +855,7 @@ object TreeSyntax {
       case t: Defn.ExtensionMethodInfix =>
         s(w(t.mods, " "), kw("def"), " ", t.tparams, w("(", t.baseterm, ")"), " ", t.name, t.paramss, t.decltpe, " = ", t.body)
 
-      case t: Defn.Object => s(w(t.mods, " "), kw("object"), ", ", t.name, templ(t.templ))
+      case t: Defn.Object => s(w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
       case t: Defn.Def =>
         s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
       case t: Defn.Macro =>

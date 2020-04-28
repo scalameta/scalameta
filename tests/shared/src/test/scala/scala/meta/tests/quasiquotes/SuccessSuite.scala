@@ -158,8 +158,9 @@ class SuccessSuite extends FunSuite {
     val name = t"List"
     val a = tparam"+A"
     val b = t"B"
-    assert(
-      q"type $name[$a] = $b".structure == "Defn.Type(Nil, Type.Name(\"List\"), List(Type.Param(List(Mod.Covariant()), Type.Name(\"A\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Name(\"B\"))"
+    assertNoDiff(
+      q"type $name[$a] = $b".structure,
+      "Defn.Type(Nil, Type.Name(\"List\"), List(Type.Param(List(Mod.Covariant()), Type.Name(\"A\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Bounds(None, None), Type.Name(\"B\"))"
     )
   }
 
@@ -1729,13 +1730,13 @@ class SuccessSuite extends FunSuite {
 
   test("1 q\"package ref { ..stats }\"") {
     val q"package $ref { ..$stats }" = q"package p { class A; object B }"
-    assert(ref.structure == "Term.Name(\"p\")")
-    assert(stats.toString == "List(class A, object B)")
-    assert(
-      stats(0).structure == "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil))"
+    assertEquals(ref.structure, "Term.Name(\"p\")")
+    assertEquals(stats.toString, "List(class A, object B)")
+    assertEquals(
+      stats(0).structure, "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil))"
     )
-    assert(
-      stats(1).structure == "Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Self(Name(\"\"), None), Nil))"
+    assertEquals(
+      stats(1).structure, "Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Self(Name(\"\"), None), Nil))"
     )
   }
 
@@ -2261,7 +2262,7 @@ class SuccessSuite extends FunSuite {
         ..$defDefns
       }
     """
-    assert(objectDefn.syntax == """
+    assertEquals(objectDefn.syntax, """
       |object M {
       |  def foo = bar
       |  println("another stat")
