@@ -126,38 +126,46 @@ class MinorDottySuite extends BaseDottySuite {
 
   test("trait-parameters") {
     runTestAssert[Stat]("trait Foo(val foo: Int)(bar: Int)")(
-      Defn.Trait(Nil, pname("Foo"), Nil, Ctor.Primary(Nil, anon,
-        List(
-          List(tparamval("foo", "Int")),
-          List(tparam("bar", "Int"))
+      Defn.Trait(
+        Nil,
+        pname("Foo"),
+        Nil,
+        Ctor.Primary(
+          Nil,
+          anon,
+          List(
+            List(tparamval("foo", "Int")),
+            List(tparam("bar", "Int"))
           )
-        ), tpl(Nil))
+        ),
+        tpl(Nil)
+      )
     )
   }
 
   test("trait-parameters-generic") {
     runTestAssert[Stat]("trait Foo[T](bar: T)")(
-      Defn.Trait(Nil, pname("Foo"), List(pparam("T")),
-       ctorp(List(tparam("bar", "T"))), tpl(Nil))
+      Defn.Trait(Nil, pname("Foo"), List(pparam("T")), ctorp(List(tparam("bar", "T"))), tpl(Nil))
     )
   }
 
   test("class-parameters-using") {
     runTestAssert[Stat]("trait A(using String)")(
-      Defn.Trait(Nil, pname("A"), Nil,
-       ctorp(List(tparamUsing("", "String"))), tpl(Nil))
+      Defn.Trait(Nil, pname("A"), Nil, ctorp(List(tparamUsing("", "String"))), tpl(Nil))
     )
 
     runTestAssert[Stat]("class A(using String)")(
-      Defn.Class(Nil, pname("A"), Nil,
-       ctorp(List(tparamUsing("", "String"))), tpl(Nil))
+      Defn.Class(Nil, pname("A"), Nil, ctorp(List(tparamUsing("", "String"))), tpl(Nil))
     )
 
     runTestAssert[Stat]("case class A(a: Int)(using b: String)")(
-      Defn.Class(List(Mod.Case()), pname("A"), Nil,
-      Ctor.Primary(Nil, anon, List(List(tparam("a", "Int")), List(tparamUsing("b", "String")))),
-        tpl(Nil))
+      Defn.Class(
+        List(Mod.Case()),
+        pname("A"),
+        Nil,
+        Ctor.Primary(Nil, anon, List(List(tparam("a", "Int")), List(tparamUsing("b", "String")))),
+        tpl(Nil)
+      )
     )
   }
-          // List(tparamUsing("", "String"))
 }

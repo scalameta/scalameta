@@ -542,7 +542,7 @@ object TreeSyntax {
       case t: Term.Repeated => s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
       case t: Term.Param =>
         val mods = t.mods
-          // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
+        // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
           .filter(!_.is[Mod.Implicit])
           // NOTE: `using` is skipped as it applies to whole list
           .filter(!_.is[Mod.Using])
