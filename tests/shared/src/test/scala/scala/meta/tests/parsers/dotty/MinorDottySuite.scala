@@ -14,20 +14,10 @@ class MinorDottySuite extends BaseDottySuite {
   /**
    *
    *  All examples based on dotty documentation:
-   *  https://dotty.epfl.ch/docs/reference/other-new-features/named-typeargs.html
    *  https://dotty.epfl.ch/docs/reference/other-new-features/open-classes.html
    *  https://dotty.epfl.ch/docs/reference/new-types/type-lambdas.html
    *
    */
-  test("named-type-arguments") {
-    val namedParam1 = Type.NamedParam(pname("A"), pname("Int"))
-    val namedParam2 = Type.NamedParam(pname("B"), pname("List"))
-    assertEquals(
-      stat("f[A = Int, B = List]()"),
-      Term.Apply(Term.ApplyType(tname("f"), List(namedParam1, namedParam2)), Nil): Stat
-    )
-  }
-
   test("open-class") {
     val Defn.Class(List(Mod.Open()), Type.Name("A"), _, _, _) =
       templStat("open class A {}")

@@ -27,7 +27,6 @@ import scala.meta.Defn.Given
 import SoftKeyword._
 import scala.meta.Defn.ExtensionGroup
 import scala.meta.Defn.ExtensionMethod
-import scala.meta.Type.NamedParam
 
 class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   require(Set("", EOL).contains(dialect.toplevelSeparator))
@@ -1021,7 +1020,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       Type.Lambda(quants, tpe)
     }
 
-    def typ(allowNamedParam: Boolean = false): Type = autoPos {
+    def typ(): Type = autoPos {
       if (token.is[KwImplicit] && dialect.allowImplicitFunctionTypes) {
         next()
         typRest() match {
@@ -1031,13 +1030,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             syntaxError("function type expected", at = t)
         }
       } else {
-        if (token.is[Ident] && ahead(token.is[Equals]) && allowNamedParam) {
-          val name = typeName()
-          accept[Equals]
-          NamedParam(name, typRest())
-        } else {
-          typRest()
-        }
+        typRest()
       }
     }
 
@@ -1187,7 +1180,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case _ => t
     }
 
-    def types(): List[Type] = commaSeparated(typ(allowNamedParam = true))
+    def types(): List[Type] = commaSeparated(typ())
 
     def patternTyp(allowInfix: Boolean, allowImmediateTypevars: Boolean): Type = {
       def loop(tpe: Type, convertTypevars: Boolean): Type = tpe match {
@@ -3442,12 +3435,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val typeParams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true)
     val ctor = primaryCtor(OwnedByEnum)
     val tmpl = templateOpt(OwnedByEnum)
-    val cases = tmpl.stats.collect { case _: Enum.Case | _: Enum.RepeatedCase => true }
+    val cases = tmpl.stats.collect { case _: Defn.Case | _: Defn.RepeatedCase => true }
     if (cases.isEmpty) { syntaxError("Enumerations must contain at least one case", token) }
     Defn.Enum(mods, enumName, typeParams, ctor, tmpl)
   }
 
-  def enumCaseDef(mods: List[Mod]): Enum = atPos(mods, auto) {
+  def enumCaseDef(mods: List[Mod]): Stat = atPos(mods, auto) {
     // EnumCase          ::=  ‘case’ (id ClassConstr [‘extends’ ConstrApps]] | ids)
     // ids               ::=  id {‘,’ id}
     // ClassConstr       ::=  [ClsTypeParamClause] [ConstrMods] ClsParamClauses
@@ -3460,12 +3453,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  def enumRepeatedCaseDef(mods: List[Mod]): Enum.RepeatedCase = {
+  def enumRepeatedCaseDef(mods: List[Mod]): Defn.RepeatedCase = {
     val values = commaSeparated(termName())
-    Enum.RepeatedCase(mods, values)
+    Defn.RepeatedCase(mods, values)
   }
 
-  def enumSingleCaseDef(mods: List[Mod]): Enum.Case = {
+  def enumSingleCaseDef(mods: List[Mod]): Defn.Case = {
     val name = termName()
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true)
     val ctor = primaryCtor(OwnedByEnum)
@@ -3473,7 +3466,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       accept[KwExtends]
       templateParents()
     } else { List() }
-    Enum.Case(mods, name, tparams, ctor, inits)
+    Defn.Case(mods, name, tparams, ctor, inits)
   }
 
   def objectDef(mods: List[Mod]): Defn.Object = atPos(mods, auto) {

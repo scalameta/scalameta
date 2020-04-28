@@ -821,7 +821,21 @@ object TreeSyntax {
           t.decltpe,
           templ(t.templ)
         )
-      case t: Defn.Object => s(w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
+      case t: Defn.Enum =>
+        s(
+          kw("enum"),
+          " ",
+          t.name,
+          t.tparams,
+          t.ctor,
+          templ(t.templ)
+        )
+      case t: Defn.RepeatedCase =>
+        s(kw("case"), " ", r(t.cases, ", "))
+      case t: Defn.Case =>
+        def init() = if (t.inits.nonEmpty) s(" extends ", r(t.inits, ", ")) else s("")
+        s("case", " ", t.name, t.tparams, t.ctor, init())
+      case t: Defn.Object => s(w(t.mods, " "), kw("object"), ", ", t.name, templ(t.templ))
       case t: Defn.Def =>
         s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
       case t: Defn.Macro =>
@@ -993,7 +1007,7 @@ object TreeSyntax {
 
     private def givenName(name: meta.Name, tparams: List[Type.Param], sparams: List[List[Term.Param]]): Show.Result = {
       if (!name.is[meta.Name.Anonymous]) {
-        s(name, tparams, sparams, " ", kw("as"), " ")
+        s(name, tparams, sparams, " as ")
       } else {
         if (tparams.nonEmpty || sparams.nonEmpty) {
           s(tparams, sparams, " as ")

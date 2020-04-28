@@ -186,11 +186,6 @@ object Type {
     checkFields(name.value(0).isLower)
     checkParent(ParentChecks.TypeVar)
   }
-  @ast class NamedParam(
-      name: Name,
-      param: Type
-  ) extends Type
-      with Member.Type
   @ast class Param(
       mods: List[Mod],
       name: meta.Name,
@@ -255,24 +250,6 @@ object Member {
   }
 }
 
-@branch trait Enum extends Stat
-object Enum {
-  @ast class Case(
-      mods: List[Mod],
-      name: Term.Name,
-      tparams: List[scala.meta.Type.Param],
-      ctor: Ctor.Primary,
-      inits: List[Init]
-  ) extends Enum
-      with Member.Term {
-    // TODO: check parent(tpl) -> parent(enum) is actually enum
-  }
-  @ast class RepeatedCase(
-      mods: List[Mod],
-      cases: List[Term.Name]
-  ) extends Enum
-}
-
 @branch trait Decl extends Stat
 object Decl {
   @ast class Val(mods: List[Mod], pats: List[Pat] @nonEmpty, decltpe: scala.meta.Type) extends Decl
@@ -330,6 +307,20 @@ object Defn {
       templ: Template
   ) extends Defn
       with Member.Type
+  @ast class Case(
+      mods: List[Mod],
+      name: Term.Name,
+      tparams: List[scala.meta.Type.Param],
+      ctor: Ctor.Primary,
+      inits: List[Init]
+  ) extends Defn
+      with Member.Term {
+    // TODO: check parent(tpl) -> parent(enum) is actually enum
+  }
+  @ast class RepeatedCase(
+      mods: List[Mod],
+      cases: List[Term.Name]
+  ) extends Defn
   @ast class GivenAlias(
       mods: List[Mod],
       name: scala.meta.Name,
