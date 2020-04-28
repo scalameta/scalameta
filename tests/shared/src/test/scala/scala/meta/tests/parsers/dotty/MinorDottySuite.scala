@@ -7,10 +7,10 @@ import scala.meta.Type.Placeholder
 
 class MinorDottySuite extends BaseDottySuite {
 
-  implicit val parseBlock: String => Stat = code => blockStat(code)
-  implicit val parseType: String => Type = code => tpe(code)
+  implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Dotty)
+  implicit val parseType: String => Type = code => tpe(code)(dialects.Dotty)
 
-  val parseTempl: String => Stat = code => templStat(code)
+  val parseTempl: String => Stat = code => templStat(code)(dialects.Dotty)
   /**
    *
    *  All examples based on dotty documentation:
@@ -20,13 +20,13 @@ class MinorDottySuite extends BaseDottySuite {
    */
   test("open-class") {
     val Defn.Class(List(Mod.Open()), Type.Name("A"), _, _, _) =
-      templStat("open class A {}")
+      templStat("open class A {}")(dialects.Dotty)
 
     val Defn.Trait(List(Mod.Open()), Type.Name("C"), _, _, _) =
-      templStat("open trait C {}")
+      templStat("open trait C {}")(dialects.Dotty)
 
     val Defn.Object(List(Mod.Open()), Term.Name("X"), _) =
-      templStat("open object X {}")
+      templStat("open object X {}")(dialects.Dotty)
 
   }
 
@@ -79,13 +79,13 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("case-classes-empty-plist") {
-    templStat("case class A()")
-    templStat("case class A @deprecated() ()")
-    templStat("case class A private ()")
+    templStat("case class A()")(dialects.Dotty)
+    templStat("case class A @deprecated() ()")(dialects.Dotty)
+    templStat("case class A private ()")(dialects.Dotty)
   }
 
   test("xml-literals") {
-    intercept[TokenizeException] { term("<foo>{bar}</foo>") }
+    intercept[TokenizeException] { term("<foo>{bar}</foo>")(dialects.Dotty) }
   }
 
   test("opaque-type-generic") {

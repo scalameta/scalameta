@@ -6,7 +6,8 @@ import scala.meta._, Type._
 
 class AndOrTypesSuite extends BaseDottySuite {
 
-  implicit val parseBlock: String => Stat = code => templStat(code)
+  implicit val parseBlock: String => Stat = code => templStat(code)(dialects.Dotty)
+  implicit val parseType: String => Type = code => tpe(code)(dialects.Dotty)
 
   /**
    *  All examples based on dotty documentation:
@@ -21,23 +22,31 @@ class AndOrTypesSuite extends BaseDottySuite {
   }
 
   test("A with B") {
-    val And(Type.Name("A"), Type.Name("B")) = tpe("A with B")
+    runTestAssert[Type]("A with B", false)(
+      And(Type.Name("A"), Type.Name("B"))
+    )
   }
 
   test("A & B & C") {
-    val And(And(Type.Name("A"), Type.Name("B")), Type.Name("C")) = tpe("A & B & C")
+    runTestAssert[Type]("A & B & C")(
+      And(And(Type.Name("A"), Type.Name("B")), Type.Name("C"))
+    )
   }
 
   test("A & B") {
-    val And(Type.Name("A"), Type.Name("B")) = tpe("A & B")
+    runTestAssert[Type]("A & B")(
+      And(Type.Name("A"), Type.Name("B"))
+    )
   }
 
   test("A | B") {
-    val Or(Type.Name("A"), Type.Name("B")) = tpe("A | B")
+    runTestAssert[Type]("A | B")(
+      Or(Type.Name("A"), Type.Name("B"))
+    )
   }
 
   test("ortype-example") {
-    runTestAssert[Stat]("def help(id: UserName | Password)")(
+    runTestAssert[Stat]("def help(id: UserName | Password): Unit")(
       Decl.Def(
         Nil,
         tname("help"),

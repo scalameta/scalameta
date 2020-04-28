@@ -624,7 +624,7 @@ object TreeSyntax {
       case t: Type.Existential =>
         m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.stats, "; "), " }"))
       case t: Type.Annotate => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
-      case t: Type.Lambda => m(Typ, t.tparams, " ", kw("=>"), " ", p(Typ, t.tpe))
+      case t: Type.Lambda => m(Typ, t.tparams, " ", kw("=>>"), " ", p(Typ, t.tpe))
       case t: Type.Method => m(Typ, t.paramss, kw(":"), " ", p(Typ, t.tpe))
       case t: Type.Placeholder => m(SimpleTyp, s(kw("_"), t.bounds))
       case t: Type.Bounds =>
@@ -775,7 +775,7 @@ object TreeSyntax {
           t.rhs.map(s(_)).getOrElse(s(kw("_")))
         )
       case t: Defn.Type =>
-        s(w(t.mods, " "), kw("type"), " ", t.name, t.tparams, " ", kw("="), " ", t.body)
+        s(w(t.mods, " "), kw("type"), " ", t.name, t.tparams, t.bounds, " ", kw("="), " ", t.body)
       case t: Defn.Class =>
         s(
           w(t.mods, " "),
