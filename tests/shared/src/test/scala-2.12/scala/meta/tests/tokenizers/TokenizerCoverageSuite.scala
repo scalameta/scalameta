@@ -45,7 +45,7 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
   checkType[Type.Refine]("{ →def f: B← }")
   checkType[Type.Existential]("→A← forSome { →type T← }")
   checkType[Type.Annotate]("→T← →@A←")
-  checkType[Type.Lambda]("[→X←] => →(X, X)←", dotty)
+  checkType[Type.Lambda]("[→X←] =>> →(X, X)←", dotty)
   checkType[Type.Placeholder]("_")
   checkType[Type.Bounds]("_ →>: A <: B←")
   checkType[Type.Bounds]("_ →<: B←")

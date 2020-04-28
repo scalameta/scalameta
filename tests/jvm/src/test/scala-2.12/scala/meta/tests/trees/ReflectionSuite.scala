@@ -20,8 +20,8 @@ class ReflectionSuite extends FunSuite {
   // but please deal with that (or come up with a more effective way of testing TreeReflection)
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
-    assert(symbolOf[scala.meta.Tree].asRoot.allBranches.length == 19)
-    assert(symbolOf[scala.meta.Tree].asRoot.allLeafs.length == 271)
+    assertEquals(symbolOf[scala.meta.Tree].asRoot.allBranches.length, 19)
+    assertEquals(symbolOf[scala.meta.Tree].asRoot.allLeafs.length, 295)
   }
 
   test("If") {
@@ -75,6 +75,7 @@ class ReflectionSuite extends FunSuite {
       |List[scala.meta.Mod]
       |List[scala.meta.Pat]
       |List[scala.meta.Stat]
+      |List[scala.meta.Term.Name]
       |List[scala.meta.Term.Param]
       |List[scala.meta.Term]
       |List[scala.meta.Type.Param]
@@ -94,6 +95,7 @@ class ReflectionSuite extends FunSuite {
       |scala.meta.Template
       |scala.meta.Term
       |scala.meta.Term.Name
+      |scala.meta.Term.Param
       |scala.meta.Term.Ref
       |scala.meta.Type
       |scala.meta.Type.Bounds

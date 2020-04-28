@@ -3355,7 +3355,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def aliasType(bounds: Type.Bounds) = Defn.Type(mods, name, tparams, bounds, typ())
     def abstractType(): Member.Type with Stat = Decl.Type(mods, name, tparams, typeBounds())
     token match {
-      case Equals() => next(); aliasType(Type.Bounds(None, None))
+      case Equals() => next(); aliasType(autoPos(Type.Bounds(None, None)))
       case Supertype() | Subtype() | Comma() | RightBrace() =>
         val bounds = typeBounds()
         if (token.is[Equals] && mods.exists(_.is[Mod.Opaque])) {
