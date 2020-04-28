@@ -3184,7 +3184,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   private def assertExtensionGroup(eg: ExtensionGroup): ExtensionGroup = {
     def onlyMethodsOrExtensionMethods: Unit = {
       for (f <- eg.templ.stats) {
-        if (!f.is[Defn.Def] && !f.is[Defn.ExtensionMethod]) {
+        if (!f.is[Defn.Def] && !f.is[Defn.ExtensionMethod] && !f.is[Defn.ExtensionMethodInfix]) {
           syntaxError("Extension clause can only define methods", f)
         }
       }
@@ -3200,6 +3200,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         for (f <- eg.templ.stats) {
           if (f.is[Defn.ExtensionMethod]) {
             val m = f.asInstanceOf[Defn.ExtensionMethod]
+            if (m.tparams.nonEmpty) {
+              syntaxError(
+                "extension method cannot have type parameters since some were already given previously",
+                m.tparams.head
+              )
+            }
+          } else if (f.is[Defn.ExtensionMethodInfix]) {
+            val m = f.asInstanceOf[Defn.ExtensionMethodInfix]
             if (m.tparams.nonEmpty) {
               syntaxError(
                 "extension method cannot have type parameters since some were already given previously",
@@ -3225,6 +3233,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         for (f <- eg.templ.stats) {
           if (f.is[Defn.ExtensionMethod]) {
             val term = f.asInstanceOf[Defn.ExtensionMethod].baseterm
+            if (term.name.value != "") {
+              syntaxError(
+                "no extension method allowed here since leading parameter was already given",
+                term
+              )
+            }
+          } else if (f.is[Defn.ExtensionMethodInfix]) {
+            val term = f.asInstanceOf[Defn.ExtensionMethodInfix].baseterm
             if (term.name.value != "") {
               syntaxError(
                 "no extension method allowed here since leading parameter was already given",
@@ -3259,6 +3275,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     accept[RightParen]
 
     acceptOpt[LF]
+    val isInfix = token.isNot[Dot]
     acceptOpt[Dot]
 
     val name = termName()
@@ -3269,7 +3286,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     accept[Equals]
     val body = expr()
-    Defn.ExtensionMethod(mods, basetype, name, tparams, paramss, decltpe, body)
+    if (isInfix) Defn.ExtensionMethodInfix(mods, basetype, name, tparams, paramss, decltpe, body)
+    else Defn.ExtensionMethod(mods, basetype, name, tparams, paramss, decltpe, body)
   }
 
   def funDefRest(mods: List[Mod]): Stat = atPos(mods, auto) {

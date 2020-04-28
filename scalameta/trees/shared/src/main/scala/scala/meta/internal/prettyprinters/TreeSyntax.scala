@@ -800,6 +800,7 @@ object TreeSyntax {
         } else {
           throw new UnsupportedOperationException(s"$dialect doesn't support trait parameters")
         }
+
       case t: Defn.GivenAlias =>
         s(
           w(t.mods, " "),
@@ -821,6 +822,7 @@ object TreeSyntax {
           t.decltpe,
           templ(t.templ)
         )
+
       case t: Defn.Enum =>
         s(
           kw("enum"),
@@ -835,6 +837,24 @@ object TreeSyntax {
       case t: Defn.Case =>
         def init() = if (t.inits.nonEmpty) s(" extends ", r(t.inits, ", ")) else s("")
         s("case", " ", t.name, t.tparams, t.ctor, init())
+
+      case t: Defn.ExtensionGroup =>
+        def name = if (t.name.is[Name.Anonymous]) s("") else s(" ", t.name)
+        def base = if (t.baseterm.name.is[Name.Anonymous]) s("")
+          else s(" on ", t.tparams, w("(", t.baseterm, ")"))
+        s(
+          w(t.mods, " "),
+          kw("extension"),
+          name,
+          base,
+          t.sparams,
+          templ(t.templ)
+        )
+      case t: Defn.ExtensionMethod =>
+         s(w(t.mods, " "), kw("def"), " ", t.tparams, w("(", t.baseterm, ")"), ".", t.name, t.paramss, t.decltpe, " = ", t.body)
+      case t: Defn.ExtensionMethodInfix =>
+        s(w(t.mods, " "), kw("def"), " ", t.tparams, w("(", t.baseterm, ")"), " ", t.name, t.paramss, t.decltpe, " = ", t.body)
+
       case t: Defn.Object => s(w(t.mods, " "), kw("object"), ", ", t.name, templ(t.templ))
       case t: Defn.Def =>
         s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)

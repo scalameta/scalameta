@@ -347,6 +347,16 @@ object Defn {
       body: Term
   ) extends Defn
       with Member.Term
+  @ast class ExtensionMethodInfix(
+      mods: List[Mod],
+      baseterm: Term.Param,
+      name: Term.Name,
+      tparams: List[scala.meta.Type.Param],
+      paramss: List[List[Term.Param]],
+      decltpe: Option[scala.meta.Type],
+      body: Term
+  ) extends Defn
+      with Member.Term
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,

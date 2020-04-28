@@ -5,7 +5,7 @@ import scala.meta._
 
 class ExtensionMethodsSuite extends BaseDottySuite {
 
-  implicit val parseBlock: String => Stat = code => blockStat(code)
+  implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Dotty)
 
   /** For checking examples in repl declare:
    *  case class Circle(x: Int)
@@ -17,48 +17,66 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   // EXTENSION METHOD
   // ---------------------------------
 
-  test("simple") {
-    List(
-      "def (c: Circle).circumference: Int = 2",
-      "def (c: Circle) circumference: Int = 2"
-    ).foreach { code =>
-      runTestAssert[Stat](code)(
-        Defn.ExtensionMethod(
-          Nil,
-          cparam,
-          tname("circumference"),
-          Nil,
-          Nil,
-          Some(pname("Int")),
-          int(2)
-        )
+  test("simple-method") {
+    runTestAssert[Stat]("def (c: Circle).circumference: Int = 2")(
+      Defn.ExtensionMethod(
+        Nil,
+        cparam,
+        tname("circumference"),
+        Nil,
+        Nil,
+        Some(pname("Int")),
+        int(2)
       )
-    }
+    )
+  }
+
+  test("simple-method-infix") {
+    runTestAssert[Stat]("def (c: Circle) circumference: Int = 2")(
+      Defn.ExtensionMethodInfix(
+        Nil,
+        cparam,
+        tname("circumference"),
+        Nil,
+        Nil,
+        Some(pname("Int")),
+        int(2)
+      )
+    )
   }
 
   test("no-return-type") {
     runTestAssert[Stat]("def (c: Circle) circumference = 2")(
-      Defn.ExtensionMethod(Nil, cparam, tname("circumference"), Nil, Nil, None, int(2))
+      Defn.ExtensionMethodInfix(Nil, cparam, tname("circumference"), Nil, Nil, None, int(2))
     )
   }
 
   test("with-parameters") {
-    List(
-      "def (c: Circle).circumference(a: Int)(b: String): Int = 2",
-      "def (c: Circle) circumference(a: Int)(b: String): Int = 2"
-    ).foreach { code =>
-      runTestAssert[Stat](code)(
-        Defn.ExtensionMethod(
-          Nil,
-          cparam,
-          tname("circumference"),
-          Nil,
-          List(List(tparam("a", "Int")), List(tparam("b", "String"))),
-          Some(pname("Int")),
-          int(2)
-        )
+    runTestAssert[Stat]("def (c: Circle).circumference(a: Int)(b: String): Int = 2")(
+      Defn.ExtensionMethod(
+        Nil,
+        cparam,
+        tname("circumference"),
+        Nil,
+        List(List(tparam("a", "Int")), List(tparam("b", "String"))),
+        Some(pname("Int")),
+        int(2)
       )
-    }
+    )
+  }
+
+  test("with-parameters-infix") {
+    runTestAssert[Stat]("def (c: Circle) circumference(a: Int)(b: String): Int = 2")(
+      Defn.ExtensionMethodInfix(
+        Nil,
+        cparam,
+        tname("circumference"),
+        Nil,
+        List(List(tparam("a", "Int")), List(tparam("b", "String"))),
+        Some(pname("Int")),
+        int(2)
+      )
+    )
   }
 
   test("with-using-parameters") {
@@ -86,8 +104,8 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       )
     )
 
-    runTestAssert[Stat]("def (c: Circle) circumference: Int = { val p = 314; c.x }")(
-      Defn.ExtensionMethod(Nil, cparam, tname("circumference"), Nil, Nil, Some(pname("Int")), rhs)
+    runTestAssert[Stat]("def (c: Circle) circumference: Int = { val p = 314; c.x }", false)(
+      Defn.ExtensionMethodInfix(Nil, cparam, tname("circumference"), Nil, Nil, Some(pname("Int")), rhs)
     )
   }
 
@@ -100,14 +118,14 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
     val tTpe = Type.Param(Nil, pname("T"), Nil, Type.Bounds(None, None), Nil, List(pname("Ord")))
 
-    runTestAssert[Stat]("def [T : Ord](xs: List[_ <: T]).second = 2")(
+    runTestAssert[Stat]("def [T: Ord](xs: List[_ <: T]).second = 2")(
       Defn.ExtensionMethod(Nil, objTpe, tname("second"), List(tTpe), Nil, None, int(2))
     )
   }
 
   test("operators") {
-    runTestAssert[Stat]("def (x: String) < (y: String) = 2")(
-      Defn.ExtensionMethod(
+    runTestAssert[Stat]("def (x: String) <(y: String) = 2")(
+      Defn.ExtensionMethodInfix(
         Nil,
         tparam("x", "String"),
         tname("<"),
@@ -117,8 +135,8 @@ class ExtensionMethodsSuite extends BaseDottySuite {
         int(2)
       )
     )
-    runTestAssert[Stat]("def (x: String) +: (y: String) = 2")(
-      Defn.ExtensionMethod(
+    runTestAssert[Stat]("def (x: String) +:(y: String) = 2")(
+      Defn.ExtensionMethodInfix(
         Nil,
         tparam("x", "String"),
         tname("+:"),
@@ -136,7 +154,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
 
   test("extension-anonymous") {
     runTestAssert[Stat](
-      "extension { \n def (c1: Circle).cf1: Int = 2 \n def (c2: Circle).cf2: Int = 2}"
+      "extension {\n  def (c1: Circle).cf1: Int = 2\n  def (c2: Circle).cf2: Int = 2\n}"
     )(
       Defn.ExtensionGroup(
         Nil,
@@ -156,7 +174,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
 
   test("extension-named") {
     runTestAssert[Stat](
-      "extension ext { \n def (c1: Circle).cf1: Int = 2 \n def (c2: Circle).cf2: Int = 2}"
+      "extension ext {\n  def (c1: Circle).cf1: Int = 2\n  def (c2: Circle).cf2: Int = 2\n}"
     )(
       Defn.ExtensionGroup(
         Nil,
@@ -175,7 +193,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("extension-on") {
-    runTestAssert[Stat]("extension on (c: Circle) { \n def cf1: Int = 2 \n def cf2: Int = 2}")(
+    runTestAssert[Stat]("extension on (c: Circle) {\n  def cf1: Int = 2\n  def cf2: Int = 2\n}")(
       Defn.ExtensionGroup(
         Nil,
         anon,
@@ -190,7 +208,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
         )
       )
     )
-    runTestAssert[Stat]("extension ext on (c: Circle) { \n def cf1: Int = 2 \n def cf2: Int = 2}")(
+    runTestAssert[Stat]("extension ext on (c: Circle) {\n  def cf1: Int = 2\n  def cf2: Int = 2\n}")(
       Defn.ExtensionGroup(
         Nil,
         pname("ext"),
@@ -209,7 +227,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
 
   test("extension-generis-group") {
     val tTpe = Type.Param(Nil, pname("T"), Nil, Type.Bounds(None, None), Nil, List(pname("Ord")))
-    runTestAssert[Stat]("extension ext on [T : Ord](c: Circle) { def f: Int = 2 }")(
+    runTestAssert[Stat]("extension ext on [T: Ord](c: Circle) { def f: Int = 2 }")(
       Defn.ExtensionGroup(
         Nil,
         pname("ext"),
