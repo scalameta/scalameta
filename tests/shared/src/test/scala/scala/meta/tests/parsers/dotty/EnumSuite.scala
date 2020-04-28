@@ -96,10 +96,10 @@ class EnumSuite extends BaseDottySuite {
 
     {
       val opt = """
-      |enum Option[+T] {
-      |  case Some(x: T)
-      |  case None
-      |}
+                  |enum Option[+T] {
+                  |  case Some(x: T)
+                  |  case None
+                  |}
       """.stripMargin
       runTestAssert[Stat](opt)(
         Defn.Enum(

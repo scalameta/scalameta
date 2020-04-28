@@ -25,7 +25,9 @@ trait BaseDottySuite extends ParseSuite {
   final def int(i: Int) = Lit.Int(i)
   final def init(name: String): Init = Init(pname(name), anon, Nil)
 
-  protected def runTestAssert[T <: Tree](code: String, assertLayout: Boolean = true)(expected: T)(implicit parser: String => T) {
+  protected def runTestAssert[T <: Tree](code: String, assertLayout: Boolean = true)(
+      expected: T
+  )(implicit parser: String => T) {
     import scala.meta.dialects.Dotty
     val obtained: T = parser(code)
     try {

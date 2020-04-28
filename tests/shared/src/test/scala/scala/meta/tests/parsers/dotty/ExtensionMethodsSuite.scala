@@ -105,7 +105,15 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
 
     runTestAssert[Stat]("def (c: Circle) circumference: Int = { val p = 314; c.x }", false)(
-      Defn.ExtensionMethodInfix(Nil, cparam, tname("circumference"), Nil, Nil, Some(pname("Int")), rhs)
+      Defn.ExtensionMethodInfix(
+        Nil,
+        cparam,
+        tname("circumference"),
+        Nil,
+        Nil,
+        Some(pname("Int")),
+        rhs
+      )
     )
   }
 
@@ -208,7 +216,9 @@ class ExtensionMethodsSuite extends BaseDottySuite {
         )
       )
     )
-    runTestAssert[Stat]("extension ext on (c: Circle) {\n  def cf1: Int = 2\n  def cf2: Int = 2\n}")(
+    runTestAssert[Stat](
+      "extension ext on (c: Circle) {\n  def cf1: Int = 2\n  def cf2: Int = 2\n}"
+    )(
       Defn.ExtensionGroup(
         Nil,
         pname("ext"),

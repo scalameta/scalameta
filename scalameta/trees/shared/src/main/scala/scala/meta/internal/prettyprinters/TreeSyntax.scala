@@ -542,8 +542,10 @@ object TreeSyntax {
       case t: Term.Repeated => s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
       case t: Term.Param =>
         val mods = t.mods
-          .filter(!_.is[Mod.Implicit]) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
-          .filter(!_.is[Mod.Using])  // NOTE: `using` is skipped as it applies to whole list
+          .filter(
+            !_.is[Mod.Implicit]
+          ) // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
+          .filter(!_.is[Mod.Using]) // NOTE: `using` is skipped as it applies to whole list
         val nameType = if (t.mods.exists(_.is[Mod.Using]) && t.name.is[Name.Anonymous]) {
           s(t.decltpe.get)
         } else {
@@ -840,7 +842,8 @@ object TreeSyntax {
 
       case t: Defn.ExtensionGroup =>
         def name = if (t.name.is[Name.Anonymous]) s("") else s(" ", t.name)
-        def base = if (t.baseterm.name.is[Name.Anonymous]) s("")
+        def base =
+          if (t.baseterm.name.is[Name.Anonymous]) s("")
           else s(" on ", t.tparams, w("(", t.baseterm, ")"))
         s(
           w(t.mods, " "),
@@ -851,9 +854,33 @@ object TreeSyntax {
           templ(t.templ)
         )
       case t: Defn.ExtensionMethod =>
-         s(w(t.mods, " "), kw("def"), " ", t.tparams, w("(", t.baseterm, ")"), ".", t.name, t.paramss, t.decltpe, " = ", t.body)
+        s(
+          w(t.mods, " "),
+          kw("def"),
+          " ",
+          t.tparams,
+          w("(", t.baseterm, ")"),
+          ".",
+          t.name,
+          t.paramss,
+          t.decltpe,
+          " = ",
+          t.body
+        )
       case t: Defn.ExtensionMethodInfix =>
-        s(w(t.mods, " "), kw("def"), " ", t.tparams, w("(", t.baseterm, ")"), " ", t.name, t.paramss, t.decltpe, " = ", t.body)
+        s(
+          w(t.mods, " "),
+          kw("def"),
+          " ",
+          t.tparams,
+          w("(", t.baseterm, ")"),
+          " ",
+          t.name,
+          t.paramss,
+          t.decltpe,
+          " = ",
+          t.body
+        )
 
       case t: Defn.Object => s(w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
       case t: Defn.Def =>
@@ -1025,7 +1052,11 @@ object TreeSyntax {
       case t: Source => r(t.stats, EOL)
     }
 
-    private def givenName(name: meta.Name, tparams: List[Type.Param], sparams: List[List[Term.Param]]): Show.Result = {
+    private def givenName(
+        name: meta.Name,
+        tparams: List[Type.Param],
+        sparams: List[List[Term.Param]]
+    ): Show.Result = {
       if (!name.is[meta.Name.Anonymous]) {
         s(name, tparams, sparams, " as ")
       } else {
@@ -1063,7 +1094,7 @@ object TreeSyntax {
     }
     implicit def syntaxParamss: Syntax[List[List[Term.Param]]] = Syntax { paramss =>
       def usingImplicit(params: List[Term.Param]): Show.Result = {
-        if (params.exists(_.mods.exists(_.is[Mod.Using]))) 
+        if (params.exists(_.mods.exists(_.is[Mod.Using])))
           s("using ", r(params, ", "))
         else
           w("implicit ", r(params, ", "), params.exists(_.mods.exists(_.is[Mod.Implicit])))
@@ -1071,7 +1102,7 @@ object TreeSyntax {
       r(paramss.map(params => {
         s(
           "(",
-            usingImplicit(params),
+          usingImplicit(params),
           ")"
         )
       }), "")

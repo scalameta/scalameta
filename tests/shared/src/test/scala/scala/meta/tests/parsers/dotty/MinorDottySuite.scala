@@ -11,6 +11,7 @@ class MinorDottySuite extends BaseDottySuite {
   implicit val parseType: String => Type = code => tpe(code)(dialects.Dotty)
 
   val parseTempl: String => Stat = code => templStat(code)(dialects.Dotty)
+
   /**
    *
    *  All examples based on dotty documentation:
@@ -102,21 +103,22 @@ class MinorDottySuite extends BaseDottySuite {
   test("opaque-type-bounded") {
     runTestAssert[Stat]("opaque type F <: A & B")(
       Decl.Type(
-      List(Mod.Opaque()),
-      Type.Name("F"),
-      Nil,
-      Type.Bounds(None, Some(Type.And(Type.Name("A"), Type.Name("B"))))
-      ))(parseTempl)
+        List(Mod.Opaque()),
+        Type.Name("F"),
+        Nil,
+        Type.Bounds(None, Some(Type.And(Type.Name("A"), Type.Name("B"))))
+      )
+    )(parseTempl)
   }
 
   test("opaque-type-bounded-alias") {
     runTestAssert[Stat]("opaque type F <: Bound = X")(
       Defn.Type(
-      List(Mod.Opaque()),
-      pname("F"),
-      Nil,
-      Type.Bounds(None, Some(Type.Name("Bound"))),
-      pname("X")
+        List(Mod.Opaque()),
+        pname("F"),
+        Nil,
+        Type.Bounds(None, Some(Type.Name("Bound"))),
+        pname("X")
       )
     )(parseTempl)
   }

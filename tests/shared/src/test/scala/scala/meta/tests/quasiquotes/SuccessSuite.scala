@@ -1735,10 +1735,12 @@ class SuccessSuite extends FunSuite {
     assertEquals(ref.structure, "Term.Name(\"p\")")
     assertEquals(stats.toString, "List(class A, object B)")
     assertEquals(
-      stats(0).structure, "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil))"
+      stats(0).structure,
+      "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil))"
     )
     assertEquals(
-      stats(1).structure, "Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Self(Name(\"\"), None), Nil))"
+      stats(1).structure,
+      "Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Self(Name(\"\"), None), Nil))"
     )
   }
 
@@ -2264,13 +2266,16 @@ class SuccessSuite extends FunSuite {
         ..$defDefns
       }
     """
-    assertEquals(objectDefn.syntax, """
+    assertEquals(
+      objectDefn.syntax,
+      """
       |object M {
       |  def foo = bar
       |  println("another stat")
       |  def baz: Unit = {}
       |}
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    """.trim.stripMargin.split('\n').mkString(EOL)
+    )
   }
 
   test("#458") {

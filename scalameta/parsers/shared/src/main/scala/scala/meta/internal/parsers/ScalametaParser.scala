@@ -3360,9 +3360,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         val bounds = typeBounds()
         if (token.is[Equals] && mods.exists(_.is[Mod.Opaque])) {
           next(); aliasType(bounds)
-          } else {
-            Decl.Type(mods, name, tparams, bounds)
-          }
+        } else {
+          Decl.Type(mods, name, tparams, bounds)
+        }
       case StatSep() => abstractType()
       case _ => syntaxError("`=', `>:', or `<:' expected", at = token)
     }

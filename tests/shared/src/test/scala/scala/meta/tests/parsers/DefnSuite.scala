@@ -71,7 +71,8 @@ class DefnSuite extends ParseSuite {
   }
 
   test("type A = B") {
-    val Defn.Type(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Type.Name("B")) = templStat("type A = B")
+    val Defn.Type(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Type.Name("B")) =
+      templStat("type A = B")
   }
 
   test("type F[T] = List[T]") {
