@@ -58,6 +58,7 @@ class SurfaceSuite extends FunSuite {
       diagnostic,
       """
       |scala.meta.Dialect
+      |scala.meta.Member.Case
       |scala.meta.Tree
       |scala.meta.classifiers
       |scala.meta.classifiers.Classifiable *
@@ -209,10 +210,18 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Decl.Val
       |scala.meta.Decl.Var
       |scala.meta.Defn
+      |scala.meta.Defn.Case
       |scala.meta.Defn.Class
       |scala.meta.Defn.Def
+      |scala.meta.Defn.Enum
+      |scala.meta.Defn.ExtensionGroup
+      |scala.meta.Defn.ExtensionMethod
+      |scala.meta.Defn.ExtensionMethodInfix
+      |scala.meta.Defn.Given
+      |scala.meta.Defn.GivenAlias
       |scala.meta.Defn.Macro
       |scala.meta.Defn.Object
+      |scala.meta.Defn.RepeatedCase
       |scala.meta.Defn.Trait
       |scala.meta.Defn.Type
       |scala.meta.Defn.Val
@@ -255,10 +264,13 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Mod.Implicit
       |scala.meta.Mod.Inline
       |scala.meta.Mod.Lazy
+      |scala.meta.Mod.Opaque
+      |scala.meta.Mod.Open
       |scala.meta.Mod.Override
       |scala.meta.Mod.Private
       |scala.meta.Mod.Protected
       |scala.meta.Mod.Sealed
+      |scala.meta.Mod.Using
       |scala.meta.Mod.ValParam
       |scala.meta.Mod.VarParam
       |scala.meta.Name
@@ -289,6 +301,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Term.ApplyInfix
       |scala.meta.Term.ApplyType
       |scala.meta.Term.ApplyUnary
+      |scala.meta.Term.ApplyUsing
       |scala.meta.Term.Ascribe
       |scala.meta.Term.Assign
       |scala.meta.Term.Block
@@ -391,6 +404,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.KwFinally
       |scala.meta.tokens.Token.KwFor
       |scala.meta.tokens.Token.KwForsome
+      |scala.meta.tokens.Token.KwGiven
       |scala.meta.tokens.Token.KwIf
       |scala.meta.tokens.Token.KwImplicit
       |scala.meta.tokens.Token.KwImport
@@ -432,6 +446,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.Subtype
       |scala.meta.tokens.Token.Supertype
       |scala.meta.tokens.Token.Tab
+      |scala.meta.tokens.Token.TypeLambdaArrow
       |scala.meta.tokens.Token.Underscore
       |scala.meta.tokens.Token.Viewbound
       |scala.meta.tokens.Token.Xml.End

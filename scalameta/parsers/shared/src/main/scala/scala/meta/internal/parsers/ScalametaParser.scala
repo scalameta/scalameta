@@ -3143,7 +3143,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     else secondaryCtor(mods)
   }
 
-  def funDefExtRest(mods: List[Mod]): Stat = {
+  def funDefExtRest(mods: List[Mod]): Stat = atPos(mods, auto) {
     accept[KwDef]
     if ((token.is[LeftParen] || token.is[LeftBracket]) && dialect.allowExtensionMethods)
       extMethod(mods)

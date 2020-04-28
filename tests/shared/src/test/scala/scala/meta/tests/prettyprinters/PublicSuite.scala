@@ -171,6 +171,10 @@ class PublicSuite extends FunSuite {
     // Satisfy surface suite.
   }
 
+  test("scala.meta.Member.Case.toString") {
+    // Satisfy surface suite.
+  }
+
   test("scala.meta.inputs.Input.None.toString") {
     assert(Input.None.toString == "Input.None")
   }

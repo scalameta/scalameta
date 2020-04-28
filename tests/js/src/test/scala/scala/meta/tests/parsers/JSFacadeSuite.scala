@@ -16,7 +16,7 @@ class JSFacadeSuite extends FunSuite {
     js.JSON.stringify(a.asInstanceOf[js.Any], space = 2)
 
   private[this] def check(a: js.Dictionary[Any], b: js.Dictionary[Any]) = {
-    assert(toJSON(a) == toJSON(b))
+    assertEquals(toJSON(a), toJSON(b))
   }
 
   test("parseSource") {
