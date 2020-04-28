@@ -3002,7 +3002,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       params.iterator
         .take(params.length - 1)
         .filter(p => !p.is[Term.Param.Quasi] && p.decltpe.exists(_.is[Type.Repeated]))
-        .foreach(syntaxError("*-parameter must come last", _))
+        .foreach(p => syntaxError("*-parameter must come last", p))
     }
 
     paramss.foreach(onlyLastParameterCanBeRepeated)
