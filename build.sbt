@@ -354,16 +354,8 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
   )
   .settings(testSettings: _*)
   .jvmSettings(
-    // FIXME: https://github.com/scalatest/scalatest/issues/1112
-    // Without adding scalacheck to library dependencies, we get the following error:
-    // > testsJVM/test
-    // [info] Compiling 79 Scala sources to /Users/eburmako/Projects/scalameta/tests/jvm/target/scala-2.12/test-classes...
-    // [trace] Stack trace suppressed: run last testsJVM/test:executeTests for the full output.
-    // [error] (testsJVM/test:executeTests) java.lang.NoClassDefFoundError: org/scalacheck/Test$TestCallback
-    // [error] Total time: 19 s, completed Feb 1, 2018 3:12:34 PM
     libraryDependencies ++= List(
-      "io.get-coursier" %% "coursier" % "2.0.0-RC5-6",
-      "org.scalacheck" %% "scalacheck" % "1.14.3"
+      "io.get-coursier" %% "coursier" % "2.0.0-RC5-6"
     ),
     // Needed because some tests rely on the --usejavacp option
     classLoaderLayeringStrategy.in(Test) := ClassLoaderLayeringStrategy.Flat
