@@ -2997,6 +2997,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       )
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
     val paramss = paramClauses(ownerIsType = false).require[List[List[Term.Param]]]
+
+    def onlyLastParameterCanBeRepeated(params: List[Term.Param]): Unit = {
+      params.iterator
+        .take(params.length - 1)
+        .filter(p => !p.is[Term.Param.Quasi] && p.decltpe.exists(_.is[Type.Repeated]))
+        .foreach(p => syntaxError("*-parameter must come last", p))
+    }
+
+    paramss.foreach(onlyLastParameterCanBeRepeated)
+
     newLineOptWhenFollowedBy[LeftBrace]
     val restype = fromWithinReturnType(typedOpt())
     if (token.is[StatSep] || token.is[RightBrace]) {
