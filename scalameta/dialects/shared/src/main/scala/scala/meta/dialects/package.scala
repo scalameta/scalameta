@@ -101,11 +101,15 @@ import scala.compat.Platform.EOL
   override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   override def equals(other: Any): Boolean = this eq other.asInstanceOf[AnyRef]
   override def hashCode: Int = System.identityHashCode(this)
+
   // Create new reference that copies over internal var settings from this instance.
   private def copyWithInternalVars(): Dialect = {
+    copyWithInternalVarsFrom(this)
+  }
+  def copyWithInternalVarsFrom(from: Dialect): Dialect = {
     val result = copy()
     result.internalAllowNumericLiteralUnderscoreSeparators =
-      this.internalAllowNumericLiteralUnderscoreSeparators
+      from.internalAllowNumericLiteralUnderscoreSeparators
     result
   }
 
