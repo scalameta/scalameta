@@ -67,7 +67,7 @@ testOnly := helloContributor()
 aggregate in testOnly := false
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
-console := console.in(scalametaJVM, Compile).value
+console := console.in(scalameta.jvm, Compile).value
 
 val commonJsSettings = Seq(
   scalacOptions ++= {
@@ -101,7 +101,7 @@ lazy val semanticdbScalacCore = project
       }
     }
   )
-  .dependsOn(scalametaJVM)
+  .dependsOn(scalameta.jvm)
 
 lazy val semanticdbScalacPlugin = project
   .in(file("semanticdb/scalac/plugin"))
@@ -156,8 +156,6 @@ lazy val common = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
     commonJsSettings
   )
-lazy val commonJVM = common.jvm
-lazy val commonJS = common.js
 
 lazy val trees = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/trees"))
@@ -188,8 +186,6 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform)
     commonJsSettings
   )
   .dependsOn(common) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
-lazy val treesJVM = trees.jvm
-lazy val treesJS = trees.js
 
 lazy val parsers = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/parsers"))
@@ -209,8 +205,6 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform)
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
   .dependsOn(trees)
-lazy val parsersJVM = parsers.jvm
-lazy val parsersJS = parsers.js
 
 def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
   unmanagedSourceDirectories.in(Compile) ++= {
@@ -262,8 +256,6 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform)
     commonJsSettings
   )
   .dependsOn(parsers)
-lazy val scalametaJVM = scalameta.jvm
-lazy val scalametaJS = scalameta.js
 
 /** ======================== TESTS ======================== **/
 lazy val semanticdbIntegration = project
@@ -337,7 +329,7 @@ lazy val testkit = project
     testFrameworks := List(new TestFramework("munit.Framework")),
     description := "Testing utilities for scalameta APIs"
   )
-  .dependsOn(scalametaJVM)
+  .dependsOn(scalameta.jvm)
 
 lazy val tests = crossProject(JSPlatform, JVMPlatform)
   .in(file("tests"))
@@ -366,8 +358,6 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
   )
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta)
-lazy val testsJVM = tests.jvm
-lazy val testsJS = tests.js
 
 lazy val testSettings: List[Def.SettingsDefinition] = List(
   fullClasspath.in(Test) := {
@@ -381,7 +371,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
     "databaseSourcepath" ->
       baseDirectory.in(ThisBuild).value.getAbsolutePath,
     "commonJVMClassDirectory" -> classDirectory
-      .in(commonJVM, Compile)
+      .in(common.jvm, Compile)
       .value
       .getAbsolutePath,
     "databaseClasspath" -> classDirectory
@@ -432,7 +422,7 @@ lazy val bench = project
       runMain.in(Jmh).toTask(s"  ${buf.result.mkString(" ")}")
     }).evaluated
   )
-  .dependsOn(testsJVM)
+  .dependsOn(tests.jvm)
 
 // ==========================================
 // Settings
@@ -757,7 +747,7 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
 
 lazy val docs = project
   .in(file("scalameta-docs"))
-  .dependsOn(scalametaJVM)
+  .dependsOn(scalameta.jvm)
   .settings(
     sharedSettings,
     nonPublishableSettings,
