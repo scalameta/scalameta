@@ -672,6 +672,11 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 if (gtree.pos != null && gtree.pos.isRange) {
                   tryNamedArg(gtree, gtree.pos.start, gtree.pos.point)
                 }
+                // fix #2040
+                gtree match {
+                  case view: g.ApplyImplicitView if view.args.nonEmpty => traverse(view.args.head)
+                  case _ =>
+                }
               case select: g.Select if isSyntheticName(select) =>
                 tryFindMtree(select.qualifier)
                 tryFindSynthetic(select)
