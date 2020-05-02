@@ -1,7 +1,7 @@
 package scala.meta.tests.metacp
 
 import java.nio.file._
-import munit._
+import munit.FunSuite
 import scala.meta.tests._
 import scala.meta.cli._
 import scala.meta.io._
