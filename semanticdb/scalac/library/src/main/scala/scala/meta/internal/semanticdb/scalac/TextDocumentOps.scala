@@ -226,8 +226,9 @@ trait TextDocumentOps { self: SemanticdbOps =>
             // Instead of crashing with "unsupported file", we ignore these cases.
             if (gsym0 == null) return
             if (gsym0.isUselessOccurrence) return
-            if (mtree.pos == m.Position.None) return
-            if (occurrences.contains(mtree.pos)) return
+            val pos = mtree.pos
+            if (pos == m.Position.None) return
+            if (occurrences.contains(pos)) return
 
             val gsym = {
               def isClassRefInCtorCall = gsym0.isConstructor && mtree.isNot[m.Name.Anonymous]
@@ -240,17 +241,17 @@ trait TextDocumentOps { self: SemanticdbOps =>
             todo -= mtree
 
             if (mtree.isDefinition) {
-              binders += mtree.pos
-              if (mvalpatstart.contains(mtree.pos.start)) {
+              binders += pos
+              if (mvalpatstart.contains(pos.start)) {
                 if (gsym.name.endsWith(mtree.value)) {
-                  mpatoccurrences(mtree.pos) = symbol
+                  mpatoccurrences(pos) = symbol
                 }
               } else {
-                occurrences(mtree.pos) = symbol
+                occurrences(pos) = symbol
               }
             } else {
               val selectionFromStructuralType = gsym.owner.isRefinementClass
-              if (!selectionFromStructuralType) occurrences(mtree.pos) = symbol
+              if (!selectionFromStructuralType) occurrences(pos) = symbol
             }
 
             def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
