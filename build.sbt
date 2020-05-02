@@ -1,13 +1,10 @@
 import java.io._
-import scala.util.Try
 import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import org.scalajs.sbtplugin.ScalaJSCrossVersion
-import sbtcrossproject.{crossProject, CrossType}
+import sbtcrossproject.CrossPlugin.autoImport.crossProject
 import org.scalameta.build._
 import org.scalameta.build.Versions._
-import org.scalameta.os
-import sbt.ScriptedPlugin._
 import complete.DefaultParsers._
 import scalapb.compiler.Version.scalapbVersion
 import munit.sbtmunit.BuildInfo.munitVersion
