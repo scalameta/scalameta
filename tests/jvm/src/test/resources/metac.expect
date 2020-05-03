@@ -2005,6 +2005,106 @@ Synthetics:
 [14:2..14:5): map => *.update
   update => scala/collection/mutable/MapLike#update().
 
+semanticdb/integration/src/main/scala/example/Issue2040.scala
+-------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Issue2040.scala
+Text => non-empty
+Language => Scala
+Symbols => 16 entries
+Occurrences => 35 entries
+Synthetics => 2 entries
+
+Symbols:
+example/Issue2040. => final object Issue2040 extends AnyRef { +6 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2040.AnyShouldWrapper# => trait AnyShouldWrapper extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2040.AnyShouldWrapper#shouldBe(). => abstract method shouldBe(right: Any): Boolean
+  right => example/Issue2040.AnyShouldWrapper#shouldBe().(right)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/Issue2040.AnyShouldWrapper#shouldBe().(right) => param right: Any
+  Any => scala/Any#
+example/Issue2040.BarSpec# => trait BarSpec extends AnyRef with Base { +1 decls }
+  AnyRef => scala/AnyRef#
+  Base => example/Issue2040.Base#
+example/Issue2040.BarSpec#convertToAnyShouldWrapper(). => abstract implicit method convertToAnyShouldWrapper(o: Any)(implicit prettifier: Prettifier): AnyShouldWrapper
+  o => example/Issue2040.BarSpec#convertToAnyShouldWrapper().(o)
+  Any => scala/Any#
+  prettifier => example/Issue2040.BarSpec#convertToAnyShouldWrapper().(prettifier)
+  Prettifier => example/Issue2040.Prettifier#
+  AnyShouldWrapper => example/Issue2040.AnyShouldWrapper#
+example/Issue2040.BarSpec#convertToAnyShouldWrapper().(o) => param o: Any
+  Any => scala/Any#
+example/Issue2040.BarSpec#convertToAnyShouldWrapper().(prettifier) => implicit param prettifier: Prettifier
+  Prettifier => example/Issue2040.Prettifier#
+example/Issue2040.Base# => trait Base extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2040.Base#i(). => method i(): Int
+  Int => scala/Int#
+example/Issue2040.FooSpec# => trait FooSpec extends AnyRef with Base { +1 decls }
+  AnyRef => scala/AnyRef#
+  Base => example/Issue2040.Base#
+example/Issue2040.FooSpec#convertToAnyShouldWrapper(). => abstract implicit method convertToAnyShouldWrapper(o: Any): AnyShouldWrapper
+  o => example/Issue2040.FooSpec#convertToAnyShouldWrapper().(o)
+  Any => scala/Any#
+  AnyShouldWrapper => example/Issue2040.AnyShouldWrapper#
+example/Issue2040.FooSpec#convertToAnyShouldWrapper().(o) => param o: Any
+  Any => scala/Any#
+example/Issue2040.Prettifier# => trait Prettifier extends AnyRef
+  AnyRef => scala/AnyRef#
+example/Issue2040.Prettifier. => final object Prettifier extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2040.Prettifier.default. => implicit val method default: Prettifier
+  Prettifier => example/Issue2040.Prettifier#
+
+Occurrences:
+[1:8..1:15): example <= example/
+[3:7..3:12): scala => scala/
+[3:13..3:21): language => scala/language.
+[3:22..3:41): implicitConversions => scala/language.implicitConversions.
+[5:7..5:16): Issue2040 <= example/Issue2040.
+[6:8..6:18): Prettifier <= example/Issue2040.Prettifier#
+[7:9..7:19): Prettifier <= example/Issue2040.Prettifier.
+[8:17..8:24): default <= example/Issue2040.Prettifier.default.
+[8:26..8:36): Prettifier => example/Issue2040.Prettifier#
+[8:39..8:42): ??? => scala/Predef.`???`().
+[11:8..11:24): AnyShouldWrapper <= example/Issue2040.AnyShouldWrapper#
+[12:8..12:16): shouldBe <= example/Issue2040.AnyShouldWrapper#shouldBe().
+[12:17..12:22): right <= example/Issue2040.AnyShouldWrapper#shouldBe().(right)
+[12:24..12:27): Any => scala/Any#
+[12:30..12:37): Boolean => scala/Boolean#
+[15:8..15:12): Base <= example/Issue2040.Base#
+[16:8..16:9): i <= example/Issue2040.Base#i().
+[19:8..19:15): FooSpec <= example/Issue2040.FooSpec#
+[19:24..19:28): Base => example/Issue2040.Base#
+[20:17..20:42): convertToAnyShouldWrapper <= example/Issue2040.FooSpec#convertToAnyShouldWrapper().
+[20:43..20:44): o <= example/Issue2040.FooSpec#convertToAnyShouldWrapper().(o)
+[20:46..20:49): Any => scala/Any#
+[20:52..20:68): AnyShouldWrapper => example/Issue2040.AnyShouldWrapper#
+[22:4..22:5): i => example/Issue2040.Base#i().
+[22:6..22:14): shouldBe => example/Issue2040.AnyShouldWrapper#shouldBe().
+[25:8..25:15): BarSpec <= example/Issue2040.BarSpec#
+[25:24..25:28): Base => example/Issue2040.Base#
+[26:17..26:42): convertToAnyShouldWrapper <= example/Issue2040.BarSpec#convertToAnyShouldWrapper().
+[26:43..26:44): o <= example/Issue2040.BarSpec#convertToAnyShouldWrapper().(o)
+[26:46..26:49): Any => scala/Any#
+[27:17..27:27): prettifier <= example/Issue2040.BarSpec#convertToAnyShouldWrapper().(prettifier)
+[27:29..27:39): Prettifier => example/Issue2040.Prettifier#
+[28:7..28:23): AnyShouldWrapper => example/Issue2040.AnyShouldWrapper#
+[30:4..30:5): i => example/Issue2040.Base#i().
+[30:6..30:14): shouldBe => example/Issue2040.AnyShouldWrapper#shouldBe().
+
+Synthetics:
+[22:4..22:5): i => convertToAnyShouldWrapper(*)
+  convertToAnyShouldWrapper => example/Issue2040.FooSpec#convertToAnyShouldWrapper().
+[30:4..30:5): i => convertToAnyShouldWrapper(*)(default)
+  convertToAnyShouldWrapper => example/Issue2040.BarSpec#convertToAnyShouldWrapper().
+  default => example/Issue2040.Prettifier.default.
+
 semanticdb/integration/src/main/scala/example/local-file.scala
 --------------------------------------------------------------
 
