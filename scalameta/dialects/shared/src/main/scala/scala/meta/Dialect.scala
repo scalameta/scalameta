@@ -137,87 +137,88 @@ final class Dialect private (
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
   def allowUnquotes: Boolean = allowTermUnquotes || allowPatUnquotes
 
-  def withAllowAndTypes(allowAndTypes: Boolean): Dialect = {
-    privateCopy(allowAndTypes = allowAndTypes)
+  def withAllowAndTypes(newValue: Boolean): Dialect = {
+    privateCopy(allowAndTypes = newValue)
   }
-  def withAllowAtForExtractorVarargs(allowAtForExtractorVarargs: Boolean): Dialect = {
-    privateCopy(allowAtForExtractorVarargs = allowAtForExtractorVarargs)
+  def withAllowAtForExtractorVarargs(newValue: Boolean): Dialect = {
+    privateCopy(allowAtForExtractorVarargs = newValue)
   }
   def withAllowCaseClassWithoutParameterList(
-      allowCaseClassWithoutParameterList: Boolean
+      newValue: Boolean
   ): Dialect = {
-    privateCopy(allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList)
+    privateCopy(allowCaseClassWithoutParameterList = newValue)
   }
-  def withAllowColonForExtractorVarargs(allowColonForExtractorVarargs: Boolean): Dialect = {
-    privateCopy(allowColonForExtractorVarargs = allowColonForExtractorVarargs)
+  def withAllowColonForExtractorVarargs(newValue: Boolean): Dialect = {
+    privateCopy(allowColonForExtractorVarargs = newValue)
   }
-  def withAllowEnums(allowEnums: Boolean): Dialect = {
-    privateCopy(allowEnums = allowEnums)
+  def withAllowEnums(newValue: Boolean): Dialect = {
+    privateCopy(allowEnums = newValue)
   }
-  def withAllowImplicitByNameParameters(allowImplicitByNameParameters: Boolean): Dialect = {
-    privateCopy(allowImplicitByNameParameters = allowImplicitByNameParameters)
+  def withAllowImplicitByNameParameters(newValue: Boolean): Dialect = {
+    privateCopy(allowImplicitByNameParameters = newValue)
   }
-  def withAllowImplicitFunctionTypes(allowImplicitFunctionTypes: Boolean): Dialect = {
-    privateCopy(allowImplicitFunctionTypes = allowImplicitFunctionTypes)
+  def withAllowImplicitFunctionTypes(newValue: Boolean): Dialect = {
+    privateCopy(allowImplicitFunctionTypes = newValue)
   }
-  def withAllowInlineIdents(allowInlineIdents: Boolean): Dialect = {
-    privateCopy(allowInlineIdents = allowInlineIdents)
+  def withAllowInlineIdents(newValue: Boolean): Dialect = {
+    privateCopy(allowInlineIdents = newValue)
   }
-  def withAllowInlineMods(allowInlineMods: Boolean): Dialect = {
-    privateCopy(allowInlineMods = allowInlineMods)
+  def withAllowInlineMods(newValue: Boolean): Dialect = {
+    privateCopy(allowInlineMods = newValue)
   }
-  def withAllowLiteralTypes(allowLiteralTypes: Boolean): Dialect = {
-    privateCopy(allowLiteralTypes = allowLiteralTypes)
+  def withAllowLiteralTypes(newValue: Boolean): Dialect = {
+    privateCopy(allowLiteralTypes = newValue)
   }
-  def withAllowMethodTypes(allowMethodTypes: Boolean): Dialect = {
-    privateCopy(allowMethodTypes = allowMethodTypes)
+  def withAllowMethodTypes(newValue: Boolean): Dialect = {
+    privateCopy(allowMethodTypes = newValue)
   }
-  def withAllowMultilinePrograms(allowMultilinePrograms: Boolean): Dialect = {
-    privateCopy(allowMultilinePrograms = allowMultilinePrograms)
+  def withAllowMultilinePrograms(newValue: Boolean): Dialect = {
+    privateCopy(allowMultilinePrograms = newValue)
   }
-  def withAllowOrTypes(allowOrTypes: Boolean): Dialect = {
-    privateCopy(allowOrTypes = allowOrTypes)
+  def withAllowOrTypes(newValue: Boolean): Dialect = {
+    privateCopy(allowOrTypes = newValue)
   }
-  def withAllowPatUnquotes(allowPatUnquotes: Boolean): Dialect = {
-    privateCopy(allowPatUnquotes = allowPatUnquotes)
+  def withAllowPatUnquotes(newValue: Boolean): Dialect = {
+    privateCopy(allowPatUnquotes = newValue)
   }
-  def withAllowSpliceUnderscores(allowSpliceUnderscores: Boolean): Dialect = {
-    privateCopy(allowSpliceUnderscores = allowSpliceUnderscores)
+  def withAllowSpliceUnderscores(newValue: Boolean): Dialect = {
+    privateCopy(allowSpliceUnderscores = newValue)
   }
-  def withAllowTermUnquotes(allowTermUnquotes: Boolean): Dialect = {
-    privateCopy(allowTermUnquotes = allowTermUnquotes)
+  def withAllowTermUnquotes(newValue: Boolean): Dialect = {
+    privateCopy(allowTermUnquotes = newValue)
   }
-  def withAllowToplevelTerms(allowToplevelTerms: Boolean): Dialect = {
-    privateCopy(allowToplevelTerms = allowToplevelTerms)
+  def withAllowToplevelTerms(newValue: Boolean): Dialect = {
+    privateCopy(allowToplevelTerms = newValue)
   }
-  def withAllowTrailingCommas(allowTrailingCommas: Boolean): Dialect = {
-    privateCopy(allowTrailingCommas = allowTrailingCommas)
+  def withAllowTrailingCommas(newValue: Boolean): Dialect = {
+    privateCopy(allowTrailingCommas = newValue)
   }
-  def withAllowTraitParameters(allowTraitParameters: Boolean): Dialect = {
-    privateCopy(allowTraitParameters = allowTraitParameters)
+  def withAllowTraitParameters(newValue: Boolean): Dialect = {
+    privateCopy(allowTraitParameters = newValue)
   }
-  def withAllowTypeLambdas(allowTypeLambdas: Boolean): Dialect = {
-    privateCopy(allowTypeLambdas = allowTypeLambdas)
+  def withAllowTypeLambdas(newValue: Boolean): Dialect = {
+    privateCopy(allowTypeLambdas = newValue)
   }
-  def withAllowViewBounds(allowViewBounds: Boolean): Dialect = {
-    privateCopy(allowViewBounds = allowViewBounds)
+  def withAllowViewBounds(newValue: Boolean): Dialect = {
+    privateCopy(allowViewBounds = newValue)
   }
-  def withAllowWithTypes(allowWithTypes: Boolean): Dialect = {
-    privateCopy(allowWithTypes = allowWithTypes)
+  def withAllowWithTypes(newValue: Boolean): Dialect = {
+    privateCopy(allowWithTypes = newValue)
   }
-  def withAllowXmlLiterals(allowXmlLiterals: Boolean): Dialect = {
-    privateCopy(allowXmlLiterals = allowXmlLiterals)
+  def withAllowXmlLiterals(newValue: Boolean): Dialect = {
+    privateCopy(allowXmlLiterals = newValue)
   }
-  def withToplevelSeparator(toplevelSeparator: String): Dialect = {
-    privateCopy(toplevelSeparator = toplevelSeparator)
+  def withToplevelSeparator(newValue: String): Dialect = {
+    privateCopy(toplevelSeparator = newValue)
   }
   def withAllowNumericLiteralUnderscoreSeparators(
-      allowNumericLiteralUnderscoreSeparators: Boolean
+      newValue: Boolean
   ): Dialect = {
-    privateCopy(allowNumericLiteralUnderscoreSeparators = allowNumericLiteralUnderscoreSeparators)
+    privateCopy(allowNumericLiteralUnderscoreSeparators = newValue)
   }
-
-  // NOTE(olafur): add the next `withX()` method above this comment.
+  // NOTE(olafur): add the next `withX()` method above this comment. Please try
+  // to use consistent formatting, use `newValue` as the parameter name and wrap
+  // the body inside curly braces.
 
   private[this] def privateCopy(
       allowAndTypes: Boolean = this.allowAndTypes,
@@ -246,6 +247,7 @@ final class Dialect private (
       toplevelSeparator: String = this.toplevelSeparator,
       allowNumericLiteralUnderscoreSeparators: Boolean =
         this.allowNumericLiteralUnderscoreSeparators
+      // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
       allowAndTypes,
@@ -273,13 +275,17 @@ final class Dialect private (
       allowXmlLiterals,
       toplevelSeparator,
       allowNumericLiteralUnderscoreSeparators
+      // NOTE(olafur): add the next argument above this comment.
     )
   }
 
   // NOTE(olafur): Do not edit below here, these methods can remain unchanged.
 
+  @deprecated("Dialect should not be a Product", "4.3.11")
   override def productPrefix: String = "Dialect"
+  @deprecated("Dialect should not be a Product", "4.3.11")
   def productArity: Int = 0
+  @deprecated("Dialect should not be a Product", "4.3.11")
   def productElement(n: Int): Any = throw new IndexOutOfBoundsException(n.toString())
 
   // Dialects have reference equality semantics,
@@ -292,7 +298,7 @@ final class Dialect private (
   override def toString = {
     Dialect.standards.find(_._2 == this) match {
       case Some((name, _)) => name
-      case None => s"Dialect(/* with custom parameters */)"
+      case None => s"Dialect()"
     }
   }
 

@@ -34,88 +34,79 @@ package object dialects {
     toplevelSeparator = ""
   )
 
-  implicit val Scala211 = Scala210.copy(
-    allowCaseClassWithoutParameterList = false,
-    allowSpliceUnderscores = true // SI-7715, only fixed in 2.11.0-M5
-  )
+  implicit val Scala211 = Scala210
+    .withAllowCaseClassWithoutParameterList(false)
+    .withAllowSpliceUnderscores(true) // SI-7715, only fixed in 2.11.0-M5
 
-  implicit val Typelevel211 = Scala211.copy(
-    allowLiteralTypes = true
-  )
+  implicit val Typelevel211 = Scala211
+    .withAllowLiteralTypes(true)
 
-  implicit val Paradise211 = Scala211.copy(
-    allowInlineIdents = true,
-    allowInlineMods = true
-  )
+  @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
+  implicit val Paradise211 = Scala211
+    .withAllowInlineIdents(true)
+    .withAllowInlineMods(true)
 
-  implicit val ParadiseTypelevel211 = Typelevel211.copy(
-    allowInlineIdents = true,
-    allowInlineMods = true
-  )
+  @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
+  implicit val ParadiseTypelevel211 = Typelevel211
+    .withAllowInlineMods(true)
+    .withAllowInlineMods(true)
 
-  implicit val Scala212 = Scala211.copy(
-    allowTrailingCommas = true
-  )
+  implicit val Scala212 = Scala211
+    .withAllowTrailingCommas(true)
 
   implicit val Scala213 = Scala212
-    .copy(
-      allowImplicitByNameParameters = true,
-      allowLiteralTypes = true
-    )
+    .withAllowImplicitByNameParameters(true)
+    .withAllowLiteralTypes(true)
     .withAllowNumericLiteralUnderscoreSeparators(true)
 
   implicit val Scala = Scala213 // alias for latest Scala dialect.
 
-  implicit val Sbt0136 = Scala210.copy(
-    allowToplevelTerms = true,
-    toplevelSeparator = EOL
-  )
+  implicit val Sbt0136 = Scala210
+    .withAllowToplevelTerms(true)
+    .withToplevelSeparator(EOL)
 
-  implicit val Sbt0137 = Scala210.copy(
-    allowToplevelTerms = true,
-    toplevelSeparator = ""
-  )
+  implicit val Sbt0137 = Sbt0136
+    .withToplevelSeparator("")
 
-  implicit val Sbt1 = Scala212.copy(
-    allowToplevelTerms = true,
-    toplevelSeparator = ""
-  )
+  implicit val Sbt1 = Scala212
+    .withAllowToplevelTerms(true)
+    .withToplevelSeparator("")
 
   implicit val Sbt = Sbt1 // alias for latest Sbt dialect.
 
-  implicit val Typelevel212 = Scala212.copy(
-    allowLiteralTypes = true
-  )
+  implicit val Typelevel212 = Scala212
+    .withAllowLiteralTypes(true)
 
-  implicit val Paradise212 = Scala212.copy(
-    allowInlineIdents = true,
-    allowInlineMods = true
-  )
+  @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
+  implicit val Paradise212 = Scala212
+    .withAllowInlineIdents(true)
+    .withAllowInlineMods(true)
 
-  implicit val ParadiseTypelevel212 = Typelevel212.copy(
-    allowInlineIdents = true,
-    allowInlineMods = true
-  )
+  @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
+  implicit val ParadiseTypelevel212 = Typelevel212
+    .withAllowInlineIdents(true)
+    .withAllowInlineMods(true)
 
-  implicit val Dotty = Scala212.copy(
-    allowAndTypes = true, // New feature in Dotty
-    allowAtForExtractorVarargs = false, // New feature in Dotty
-    allowColonForExtractorVarargs = true, // New feature in Dotty
-    allowEnums = true, // New feature in Dotty
-    allowImplicitByNameParameters = true, // New feature in Dotty
-    allowImplicitFunctionTypes = true, // New feature in Dotty
-    allowInlineIdents = false, // New feature in Dotty
-    allowInlineMods = true, // New feature in Dotty
-    allowLiteralTypes = true, // New feature in Dotty
-    allowMethodTypes = false,
-    allowOrTypes = true, // New feature in Dotty
-    allowTrailingCommas = true,
-    allowTraitParameters = true, // New feature in Dotty
-    allowTypeLambdas = true, // New feature in Dotty
-    allowViewBounds = false, // View bounds have been removed in Dotty
-    allowWithTypes = false, // New feature in Dotty
-    allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
-  )
+  implicit val Dotty = Scala212
+    .copy(
+      allowAndTypes = true, // New feature in Dotty
+      allowAtForExtractorVarargs = false, // New feature in Dotty
+      allowColonForExtractorVarargs = true, // New feature in Dotty
+      allowEnums = true, // New feature in Dotty
+      allowImplicitByNameParameters = true, // New feature in Dotty
+      allowImplicitFunctionTypes = true, // New feature in Dotty
+      allowInlineIdents = false, // New feature in Dotty
+      allowInlineMods = true, // New feature in Dotty
+      allowLiteralTypes = true, // New feature in Dotty
+      allowMethodTypes = false,
+      allowOrTypes = true, // New feature in Dotty
+      allowTrailingCommas = true,
+      allowTraitParameters = true, // New feature in Dotty
+      allowTypeLambdas = true, // New feature in Dotty
+      allowViewBounds = false, // View bounds have been removed in Dotty
+      allowWithTypes = false, // New feature in Dotty
+      allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
+    )
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)
