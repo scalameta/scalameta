@@ -6,124 +6,6 @@ import scala.meta.dialects._
 import scala.meta.internal.dialects._
 import scala.compat.Platform.EOL
 
-// NOTE: can't put Dialect into scala.meta.Dialects
-// because then implicit scope for Dialect lookups will contain members of the package object
-// i.e. both Scala211 and Dotty, which is definitely not what we want
-@data class Dialect(
-    // Are `&` intersection types supported by this dialect?
-    allowAndTypes: Boolean,
-    // Are extractor varargs specified using ats, i.e. is `case Extractor(xs @ _*)` legal or not?
-    allowAtForExtractorVarargs: Boolean,
-    // Can case classes be declared without a parameter list?
-    // Deprecated in 2.10, not supported in 2.11 and newer.
-    allowCaseClassWithoutParameterList: Boolean,
-    // Are extractor varargs specified using colons, i.e. is `case Extractor(xs: _*)` legal or not?
-    allowColonForExtractorVarargs: Boolean,
-    // Are enums allowed?
-    // They are in Dotty, but not in Scala 2.12 or older.
-    allowEnums: Boolean,
-    // Are implicit by name parameters supported?
-    // They are in Dotty, but not in Scala 2.12 or older.
-    allowImplicitByNameParameters: Boolean,
-    // Are implicit functions supported by this dialect?
-    allowImplicitFunctionTypes: Boolean,
-    // Are `inline` identifiers supported by this dialect?
-    allowInlineIdents: Boolean,
-    // Are inline vals and defs supported by this dialect?
-    allowInlineMods: Boolean,
-    // Are literal types allowed, i.e. is `val a : 42 = 42` legal or not?
-    allowLiteralTypes: Boolean,
-    // Are method types allowed, i.e. is `(x: X): x.T` legal or not?
-    allowMethodTypes: Boolean,
-    // Are multiline programs allowed?
-    // Some quasiquotes only support single-line snippets.
-    allowMultilinePrograms: Boolean,
-    // Are `|` (union types) supported by this dialect?
-    allowOrTypes: Boolean,
-    // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
-    // If yes, they will be parsed as patterns.
-    allowPatUnquotes: Boolean,
-    // Are naked underscores allowed after $ in pattern interpolators, i.e. is `case q"$_ + $_" =>` legal or not?
-    allowSpliceUnderscores: Boolean,
-    // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
-    // If yes, they will be parsed as terms.
-    allowTermUnquotes: Boolean,
-    // Are terms on the top level supported by this dialect?
-    // Necessary to support popular script-like DSLs.
-    allowToplevelTerms: Boolean,
-    // Are trailing commas allowed? SIP-27.
-    allowTrailingCommas: Boolean,
-    // Are trait allowed to have parameters?
-    // They are in Dotty, but not in Scala 2.12 or older.
-    allowTraitParameters: Boolean,
-    // Are type lambdas allowed, i.e. is `[T] => (T, T)` legal or not?
-    allowTypeLambdas: Boolean,
-    // Are view bounds supported by this dialect?
-    // Removed in Dotty.
-    allowViewBounds: Boolean,
-    // Are `with` intersection types supported by this dialect?
-    allowWithTypes: Boolean,
-    // Are XML literals supported by this dialect?
-    // We plan to deprecate XML literal syntax, and some dialects
-    // might go ahead and drop support completely.
-    allowXmlLiterals: Boolean,
-    // What kind of separator is necessary to split top-level statements?
-    // Normally none is required, but scripts may have their own rules.
-    toplevelSeparator: String,
-    // Given/using introduced in dotty
-    allowGivenUsing: Boolean,
-    // Extension methods introduced in dotty
-    allowExtensionMethods: Boolean,
-    // Open modifier for classes introduced in dotty
-    allowOpenClass: Boolean
-) {
-
-  // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
-  def allowUnquotes: Boolean = allowTermUnquotes || allowPatUnquotes
-
-  // Are numeric literal underscore separators, i.e. `1_000_000` legal or not?
-  def allowNumericLiteralUnderscoreSeparators: Boolean =
-    internalAllowNumericLiteralUnderscoreSeparators
-  private var internalAllowNumericLiteralUnderscoreSeparators: Boolean = false
-  // IMPORTANT: Methods like `withAllowNumericLiteralUnderscoreSeparators()`
-  // must always come last in the method chain, it's not supported to change a
-  // dialect using a pattern like this:
-  // `.withAllowNumericLiteralUnderscoreSeparators(true).copy(...)`
-  def withAllowNumericLiteralUnderscoreSeparators(
-      allowNumericLiteralUnderscoreSeparators: Boolean
-  ): Dialect = {
-    val result = copyWithInternalVars()
-    result.internalAllowNumericLiteralUnderscoreSeparators = allowNumericLiteralUnderscoreSeparators
-    result
-  }
-
-  // NOTE(olafur): new fields to the `Dialect` class must be added as private
-  // vars using the same pattern as `internalAllowNumericLiteralUnderscoreSeparators`
-  // in order to preservere binary compatibility with older Scalameta versions.
-
-  // Dialects have reference equality semantics,
-  // because sometimes dialects representing distinct Scala versions
-  // can be structurally equal to each other.
-  override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
-  override def equals(other: Any): Boolean = this eq other.asInstanceOf[AnyRef]
-  override def hashCode: Int = System.identityHashCode(this)
-  // Create new reference that copies over internal var settings from this instance.
-  private def copyWithInternalVars(): Dialect = {
-    val result = copy()
-    result.internalAllowNumericLiteralUnderscoreSeparators =
-      this.internalAllowNumericLiteralUnderscoreSeparators
-    result
-  }
-
-  // Smart prettyprinting that knows about standard dialects.
-  override def toString = {
-    Dialect.standards.find(_._2 == this) match {
-      case Some((name, _)) => name
-      case None => s"Dialect(${this.productIterator.map(_.toString).mkString(", ")})"
-    }
-  }
-}
-
 package object dialects {
   implicit val Scala210 = Dialect(
     allowAndTypes = false,
@@ -155,91 +37,82 @@ package object dialects {
     allowOpenClass = false
   )
 
-  implicit val Scala211 = Scala210.copy(
-    allowCaseClassWithoutParameterList = false,
-    allowSpliceUnderscores = true // SI-7715, only fixed in 2.11.0-M5
-  )
+  implicit val Scala211 = Scala210
+    .withAllowCaseClassWithoutParameterList(false)
+    .withAllowSpliceUnderscores(true) // SI-7715, only fixed in 2.11.0-M5
 
-  implicit val Typelevel211 = Scala211.copy(
-    allowLiteralTypes = true
-  )
+  implicit val Typelevel211 = Scala211
+    .withAllowLiteralTypes(true)
 
-  implicit val Paradise211 = Scala211.copy(
-    allowInlineIdents = true,
-    allowInlineMods = true
-  )
+  @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
+  implicit val Paradise211 = Scala211
+    .withAllowInlineIdents(true)
+    .withAllowInlineMods(true)
 
-  implicit val ParadiseTypelevel211 = Typelevel211.copy(
-    allowInlineIdents = true,
-    allowInlineMods = true
-  )
+  @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
+  implicit val ParadiseTypelevel211 = Typelevel211
+    .withAllowInlineMods(true)
+    .withAllowInlineMods(true)
 
-  implicit val Scala212 = Scala211.copy(
-    allowTrailingCommas = true
-  )
+  implicit val Scala212 = Scala211
+    .withAllowTrailingCommas(true)
 
   implicit val Scala213 = Scala212
-    .copy(
-      allowImplicitByNameParameters = true,
-      allowLiteralTypes = true
-    )
+    .withAllowImplicitByNameParameters(true)
+    .withAllowLiteralTypes(true)
     .withAllowNumericLiteralUnderscoreSeparators(true)
 
   implicit val Scala = Scala213 // alias for latest Scala dialect.
 
-  implicit val Sbt0136 = Scala210.copy(
-    allowToplevelTerms = true,
-    toplevelSeparator = EOL
-  )
+  implicit val Sbt0136 = Scala210
+    .withAllowToplevelTerms(true)
+    .withToplevelSeparator(EOL)
 
-  implicit val Sbt0137 = Scala210.copy(
-    allowToplevelTerms = true,
-    toplevelSeparator = ""
-  )
+  implicit val Sbt0137 = Sbt0136
+    .withToplevelSeparator("")
 
-  implicit val Sbt1 = Scala212.copy(
-    allowToplevelTerms = true,
-    toplevelSeparator = ""
-  )
+  implicit val Sbt1 = Scala212
+    .withAllowToplevelTerms(true)
+    .withToplevelSeparator("")
 
   implicit val Sbt = Sbt1 // alias for latest Sbt dialect.
 
-  implicit val Typelevel212 = Scala212.copy(
-    allowLiteralTypes = true
-  )
+  implicit val Typelevel212 = Scala212
+    .withAllowLiteralTypes(true)
 
-  implicit val Paradise212 = Scala212.copy(
-    allowInlineIdents = true,
-    allowInlineMods = true
-  )
+  @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
+  implicit val Paradise212 = Scala212
+    .withAllowInlineIdents(true)
+    .withAllowInlineMods(true)
 
-  implicit val ParadiseTypelevel212 = Typelevel212.copy(
-    allowInlineIdents = true,
-    allowInlineMods = true
-  )
+  @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
+  implicit val ParadiseTypelevel212 = Typelevel212
+    .withAllowInlineIdents(true)
+    .withAllowInlineMods(true)
 
-  implicit val Dotty = Scala213.copy(
-    allowAndTypes = true, // New feature in Dotty
-    allowAtForExtractorVarargs = false, // New feature in Dotty
-    allowColonForExtractorVarargs = true, // New feature in Dotty
-    allowEnums = true, // New feature in Dotty
-    allowImplicitByNameParameters = true, // New feature in Dotty
-    allowImplicitFunctionTypes = true, // New feature in Dotty
-    allowInlineIdents = false, // New feature in Dotty
-    allowInlineMods = true, // New feature in Dotty
-    allowLiteralTypes = true, // New feature in Dotty
-    allowMethodTypes = false,
-    allowOrTypes = true, // New feature in Dotty
-    allowTrailingCommas = true,
-    allowTraitParameters = true, // New feature in Dotty
-    allowTypeLambdas = true, // New feature in Dotty
-    allowViewBounds = false, // View bounds have been removed in Dotty
-    allowWithTypes = false, // New feature in Dotty
-    allowXmlLiterals = false, // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
-    allowGivenUsing = true,
-    allowExtensionMethods = true,
-    allowOpenClass = true
-  )
+  implicit val Dotty = Scala213
+    .copy(
+      allowAndTypes = true, // New feature in Dotty
+      allowAtForExtractorVarargs = false, // New feature in Dotty
+      allowColonForExtractorVarargs = true, // New feature in Dotty
+      allowEnums = true, // New feature in Dotty
+      allowImplicitByNameParameters = true, // New feature in Dotty
+      allowImplicitFunctionTypes = true, // New feature in Dotty
+      allowInlineIdents = false, // New feature in Dotty
+      allowInlineMods = true, // New feature in Dotty
+      allowLiteralTypes = true, // New feature in Dotty
+      allowMethodTypes = false,
+      allowOrTypes = true, // New feature in Dotty
+      allowTrailingCommas = true,
+      allowTraitParameters = true, // New feature in Dotty
+      allowTypeLambdas = true, // New feature in Dotty
+      allowViewBounds = false, // View bounds have been removed in Dotty
+      allowWithTypes = false, // New feature in Dotty
+      allowXmlLiterals = false, // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
+      allowGivenUsing = true,
+      allowExtensionMethods = true,
+      allowOpenClass = true
+    )
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)
@@ -260,27 +133,6 @@ package object dialects {
       allowTypeLambdas = true
     )
   }
-}
-
-object Dialect extends InternalDialect {
-  // NOTE: Spinning up a macro just for this is too hard.
-  // Using JVM reflection won't be portable to Scala.js.
-  private[meta] lazy val standards: Map[String, Dialect] = Map(
-    "Dotty" -> Dotty,
-    "Paradise211" -> Paradise211,
-    "Paradise212" -> Paradise212,
-    "ParadiseTypelevel211" -> ParadiseTypelevel211,
-    "ParadiseTypelevel212" -> ParadiseTypelevel212,
-    "Sbt0136" -> Sbt0136,
-    "Sbt0137" -> Sbt0137,
-    "Sbt1" -> Sbt1,
-    "Scala210" -> Scala210,
-    "Scala211" -> Scala211,
-    "Scala212" -> Scala212,
-    "Scala213" -> Scala213,
-    "Typelevel211" -> Typelevel211,
-    "Typelevel212" -> Typelevel212
-  )
 }
 
 // NOTE: Need this code in this very file in order to avoid issues with knownDirectSubclasses.

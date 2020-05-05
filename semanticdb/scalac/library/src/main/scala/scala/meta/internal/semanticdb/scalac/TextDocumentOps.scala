@@ -226,8 +226,9 @@ trait TextDocumentOps { self: SemanticdbOps =>
             // Instead of crashing with "unsupported file", we ignore these cases.
             if (gsym0 == null) return
             if (gsym0.isUselessOccurrence) return
-            if (mtree.pos == m.Position.None) return
-            if (occurrences.contains(mtree.pos)) return
+            val pos = mtree.pos
+            if (pos == m.Position.None) return
+            if (occurrences.contains(pos)) return
 
             val gsym = {
               def isClassRefInCtorCall = gsym0.isConstructor && mtree.isNot[m.Name.Anonymous]
@@ -240,17 +241,17 @@ trait TextDocumentOps { self: SemanticdbOps =>
             todo -= mtree
 
             if (mtree.isDefinition) {
-              binders += mtree.pos
-              if (mvalpatstart.contains(mtree.pos.start)) {
+              binders += pos
+              if (mvalpatstart.contains(pos.start)) {
                 if (gsym.name.endsWith(mtree.value)) {
-                  mpatoccurrences(mtree.pos) = symbol
+                  mpatoccurrences(pos) = symbol
                 }
               } else {
-                occurrences(mtree.pos) = symbol
+                occurrences(pos) = symbol
               }
             } else {
               val selectionFromStructuralType = gsym.owner.isRefinementClass
-              if (!selectionFromStructuralType) occurrences(mtree.pos) = symbol
+              if (!selectionFromStructuralType) occurrences(pos) = symbol
             }
 
             def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
@@ -632,7 +633,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 traverse(original)
               case SelectOf(original) =>
                 traverse(original)
-              case g.Function(params, body) if params.exists { param =>
+              case g.Function(params, body) if params.forall { param =>
                     param.symbol.isSynthetic ||
                     param.name.decoded.startsWith("x$")
                   } =>
@@ -671,6 +672,11 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 tryFindSynthetic(gtree)
                 if (gtree.pos != null && gtree.pos.isRange) {
                   tryNamedArg(gtree, gtree.pos.start, gtree.pos.point)
+                }
+                // fix #2040
+                gtree match {
+                  case view: g.ApplyImplicitView if view.args.nonEmpty => traverse(view.args.head)
+                  case _ =>
                 }
               case select: g.Select if isSyntheticName(select) =>
                 tryFindMtree(select.qualifier)

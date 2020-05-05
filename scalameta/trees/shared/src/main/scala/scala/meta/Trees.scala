@@ -365,7 +365,9 @@ object Defn {
       decltpe: Option[scala.meta.Type],
       body: Term
   ) extends Defn
-      with Member.Term
+      with Member.Term {
+    checkFields(paramss.forall(onlyLastParamCanBeRepeated))
+  }
   @ast class Macro(
       mods: List[Mod],
       name: Term.Name,
@@ -375,11 +377,18 @@ object Defn {
       body: Term
   ) extends Defn
       with Member.Term
-  @ast class Type(
+  @ast class OpaqueTypeAlias(
       mods: List[Mod],
       name: scala.meta.Type.Name,
       tparams: List[scala.meta.Type.Param],
       bounds: scala.meta.Type.Bounds,
+      body: scala.meta.Type
+  ) extends Defn
+      with Member.Type
+  @ast class Type(
+      mods: List[Mod],
+      name: scala.meta.Type.Name,
+      tparams: List[scala.meta.Type.Param],
       body: scala.meta.Type
   ) extends Defn
       with Member.Type

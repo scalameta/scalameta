@@ -3302,6 +3302,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       )
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
     val paramss = paramClauses(ownerIsType = false).require[List[List[Term.Param]]]
+
+    def onlyLastParameterCanBeRepeated(params: List[Term.Param]): Unit = {
+      params.iterator
+        .take(params.length - 1)
+        .filter(p => !p.is[Term.Param.Quasi] && p.decltpe.exists(_.is[Type.Repeated]))
+        .foreach(p => syntaxError("*-parameter must come last", p))
+    }
+
+    paramss.foreach(onlyLastParameterCanBeRepeated)
+
     newLineOptWhenFollowedBy[LeftBrace]
     val restype = fromWithinReturnType(typedOpt())
     if (token.is[StatSep] || token.is[RightBrace]) {
@@ -3352,19 +3362,20 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     newLinesOpt()
     val name = typeName()
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
-    def aliasType(bounds: Type.Bounds) = Defn.Type(mods, name, tparams, bounds, typ())
-    def abstractType(): Member.Type with Stat = Decl.Type(mods, name, tparams, typeBounds())
-    token match {
-      case Equals() => next(); aliasType(autoPos(Type.Bounds(None, None)))
-      case Supertype() | Subtype() | Comma() | RightBrace() =>
-        val bounds = typeBounds()
-        if (token.is[Equals] && mods.exists(_.is[Mod.Opaque])) {
-          next(); aliasType(bounds)
-        } else {
-          Decl.Type(mods, name, tparams, bounds)
-        }
-      case StatSep() => abstractType()
-      case _ => syntaxError("`=', `>:', or `<:' expected", at = token)
+
+    def aliasType() = Defn.Type(mods, name, tparams, typ())
+    def abstractType() = Decl.Type(mods, name, tparams, typeBounds())
+    if (mods.exists(_.is[Mod.Opaque])) {
+      val bounds = typeBounds()
+      accept[Equals]
+      Defn.OpaqueTypeAlias(mods, name, tparams, bounds, typ())
+    } else {
+      token match {
+        case Equals() => next(); aliasType()
+        case Supertype() | Subtype() | Comma() | RightBrace() => abstractType()
+        case StatSep() => abstractType()
+        case _ => syntaxError("`=', `>:', or `<:' expected", at = token)
+      }
     }
   }
 

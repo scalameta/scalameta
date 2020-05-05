@@ -160,7 +160,7 @@ class SuccessSuite extends FunSuite {
     val b = t"B"
     assertNoDiff(
       q"type $name[$a] = $b".structure,
-      "Defn.Type(Nil, Type.Name(\"List\"), List(Type.Param(List(Mod.Covariant()), Type.Name(\"A\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Bounds(None, None), Type.Name(\"B\"))"
+      "Defn.Type(Nil, Type.Name(\"List\"), List(Type.Param(List(Mod.Covariant()), Type.Name(\"A\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Name(\"B\"))"
     )
   }
 
@@ -1555,7 +1555,7 @@ class SuccessSuite extends FunSuite {
     val tpe = t"R"
     assertEquals(
       q"..$mods type $tname[..$tparams] = $tpe".structure,
-      "Defn.Type(List(Mod.Private(Name(\"\")), Mod.Final()), Type.Name(\"Q\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Bounds(None, None), Type.Name(\"R\"))"
+      "Defn.Type(List(Mod.Private(Name(\"\")), Mod.Final()), Type.Name(\"Q\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Name(\"R\"))"
     )
   }
 

@@ -90,36 +90,26 @@ class MinorDottySuite extends BaseDottySuite {
     intercept[TokenizeException] { term("<foo>{bar}</foo>")(dialects.Dotty) }
   }
 
-  test("opaque-type-generic") {
-    runTestAssert[Stat]("opaque type F[T]")(
-      Decl.Type(
+  test("opaque-type-alias") {
+    runTestAssert[Stat]("opaque type F = X")(
+      Defn.OpaqueTypeAlias(
         List(Mod.Opaque()),
         pname("F"),
-        List(pparam("T")),
-        Type.Bounds(None, None)
-      )
-    )(parseTempl)
-  }
-
-  test("opaque-type-bounded") {
-    runTestAssert[Stat]("opaque type F <: A & B")(
-      Decl.Type(
-        List(Mod.Opaque()),
-        Type.Name("F"),
         Nil,
-        Type.Bounds(None, Some(Type.And(Type.Name("A"), Type.Name("B"))))
+        Type.Bounds(None, None),
+        pname("X")
       )
     )(parseTempl)
   }
 
   test("opaque-type-bounded-alias") {
-    runTestAssert[Stat]("opaque type F <: Bound = X")(
-      Defn.Type(
+    runTestAssert[Stat]("opaque type F <: A & B = AB")(
+      Defn.OpaqueTypeAlias(
         List(Mod.Opaque()),
         pname("F"),
         Nil,
-        Type.Bounds(None, Some(Type.Name("Bound"))),
-        pname("X")
+        Type.Bounds(None, Some(Type.And(Type.Name("A"), Type.Name("B")))),
+        pname("AB")
       )
     )(parseTempl)
   }

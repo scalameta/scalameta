@@ -1,17 +1,15 @@
 import java.io._
-import scala.util.Try
 import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import org.scalajs.sbtplugin.ScalaJSCrossVersion
-import sbtcrossproject.{crossProject, CrossType}
+import sbtcrossproject.CrossPlugin.autoImport.crossProject
 import org.scalameta.build._
 import org.scalameta.build.Versions._
-import org.scalameta.os
-import sbt.ScriptedPlugin._
 import complete.DefaultParsers._
 import scalapb.compiler.Version.scalapbVersion
+import munit.sbtmunit.BuildInfo.munitVersion
 
-lazy val LanguageVersions = Seq(LatestScala212, LatestScala211, LatestScala213)
+lazy val LanguageVersions = Seq(LatestScala213, LatestScala212, LatestScala211)
 lazy val LanguageVersion = LanguageVersions.head
 def customVersion = sys.props.get("scalameta.version")
 
@@ -30,7 +28,6 @@ enablePlugins(ScalaUnidocPlugin)
 addCommandAlias("benchAll", benchAll.command)
 addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
-val munitVersion = "0.4.3"
 commands += Command.command("ci-windows") { s =>
   s"testsJVM/all:testOnly -- --exclude-tags=SkipWindows" ::
     s
@@ -70,7 +67,7 @@ testOnly := helloContributor()
 aggregate in testOnly := false
 packagedArtifacts := Map.empty
 unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
-console := console.in(scalametaJVM, Compile).value
+console := console.in(scalameta.jvm, Compile).value
 
 val commonJsSettings = Seq(
   scalacOptions ++= {
@@ -104,7 +101,7 @@ lazy val semanticdbScalacCore = project
       }
     }
   )
-  .dependsOn(scalametaJVM)
+  .dependsOn(scalameta.jvm)
 
 lazy val semanticdbScalacPlugin = project
   .in(file("semanticdb/scalac/plugin"))
@@ -152,15 +149,13 @@ lazy val common = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/common"))
   .settings(
     publishableSettings,
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.0",
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.1",
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros
   )
   .jsSettings(
     commonJsSettings
   )
-lazy val commonJVM = common.jvm
-lazy val commonJS = common.js
 
 lazy val trees = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/trees"))
@@ -191,8 +186,6 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform)
     commonJsSettings
   )
   .dependsOn(common) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
-lazy val treesJVM = trees.jvm
-lazy val treesJS = trees.js
 
 lazy val parsers = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/parsers"))
@@ -212,8 +205,6 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform)
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
   .dependsOn(trees)
-lazy val parsersJVM = parsers.jvm
-lazy val parsersJS = parsers.js
 
 def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
   unmanagedSourceDirectories.in(Compile) ++= {
@@ -265,8 +256,6 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform)
     commonJsSettings
   )
   .dependsOn(parsers)
-lazy val scalametaJVM = scalameta.jvm
-lazy val scalametaJS = scalameta.js
 
 /** ======================== TESTS ======================== **/
 lazy val semanticdbIntegration = project
@@ -327,7 +316,7 @@ lazy val testkit = project
     },
     libraryDependencies ++= {
       if (isScala211.value) List("com.lihaoyi" %% "geny" % "0.1.6")
-      else List("com.lihaoyi" %% "geny" % "0.1.8")
+      else List("com.lihaoyi" %% "geny" % "0.6.0")
     },
     libraryDependencies ++= Seq(
       "org.scalameta" %% "munit" % munitVersion,
@@ -340,7 +329,7 @@ lazy val testkit = project
     testFrameworks := List(new TestFramework("munit.Framework")),
     description := "Testing utilities for scalameta APIs"
   )
-  .dependsOn(scalametaJVM)
+  .dependsOn(scalameta.jvm)
 
 lazy val tests = crossProject(JSPlatform, JVMPlatform)
   .in(file("tests"))
@@ -354,16 +343,8 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
   )
   .settings(testSettings: _*)
   .jvmSettings(
-    // FIXME: https://github.com/scalatest/scalatest/issues/1112
-    // Without adding scalacheck to library dependencies, we get the following error:
-    // > testsJVM/test
-    // [info] Compiling 79 Scala sources to /Users/eburmako/Projects/scalameta/tests/jvm/target/scala-2.12/test-classes...
-    // [trace] Stack trace suppressed: run last testsJVM/test:executeTests for the full output.
-    // [error] (testsJVM/test:executeTests) java.lang.NoClassDefFoundError: org/scalacheck/Test$TestCallback
-    // [error] Total time: 19 s, completed Feb 1, 2018 3:12:34 PM
     libraryDependencies ++= List(
-      "io.get-coursier" %% "coursier" % "2.0.0-RC5-6",
-      "org.scalacheck" %% "scalacheck" % "1.14.3"
+      "io.get-coursier" %% "coursier" % "2.0.0-RC5-6"
     ),
     // Needed because some tests rely on the --usejavacp option
     classLoaderLayeringStrategy.in(Test) := ClassLoaderLayeringStrategy.Flat
@@ -377,8 +358,6 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
   )
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta)
-lazy val testsJVM = tests.jvm
-lazy val testsJS = tests.js
 
 lazy val testSettings: List[Def.SettingsDefinition] = List(
   fullClasspath.in(Test) := {
@@ -392,7 +371,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
     "databaseSourcepath" ->
       baseDirectory.in(ThisBuild).value.getAbsolutePath,
     "commonJVMClassDirectory" -> classDirectory
-      .in(commonJVM, Compile)
+      .in(common.jvm, Compile)
       .value
       .getAbsolutePath,
     "databaseClasspath" -> classDirectory
@@ -443,7 +422,7 @@ lazy val bench = project
       runMain.in(Jmh).toTask(s"  ${buf.result.mkString(" ")}")
     }).evaluated
   )
-  .dependsOn(testsJVM)
+  .dependsOn(tests.jvm)
 
 // ==========================================
 // Settings
@@ -768,8 +747,9 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
 
 lazy val docs = project
   .in(file("scalameta-docs"))
-  .dependsOn(scalametaJVM)
+  .dependsOn(scalameta.jvm)
   .settings(
+    sharedSettings,
     nonPublishableSettings,
     buildInfoKeys := Seq[BuildInfoKey](
       "scalameta" -> scalameta
@@ -779,6 +759,7 @@ lazy val docs = project
     mdocExtraArguments := List("--no-link-hygiene"),
     mdocVariables := Map(
       "VERSION" -> version.value.replaceFirst("\\+.*", ""),
+      "SCALA_BINARY_VERSION" -> scalaBinaryVersion.value,
       "SCALA_VERSION" -> scalaVersion.value
     ),
     mdocOut := baseDirectory.in(ThisBuild).value / "website" / "target" / "docs",

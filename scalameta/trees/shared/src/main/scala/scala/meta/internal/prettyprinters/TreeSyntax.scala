@@ -776,8 +776,10 @@ object TreeSyntax {
           " ",
           t.rhs.map(s(_)).getOrElse(s(kw("_")))
         )
-      case t: Defn.Type =>
+      case t: Defn.OpaqueTypeAlias =>
         s(w(t.mods, " "), kw("type"), " ", t.name, t.tparams, t.bounds, " ", kw("="), " ", t.body)
+      case t: Defn.Type =>
+        s(w(t.mods, " "), kw("type"), " ", t.name, t.tparams, " ", kw("="), " ", t.body)
       case t: Defn.Class =>
         s(
           w(t.mods, " "),
