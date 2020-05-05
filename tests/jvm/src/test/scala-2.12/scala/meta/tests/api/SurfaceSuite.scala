@@ -221,6 +221,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Defn.GivenAlias
       |scala.meta.Defn.Macro
       |scala.meta.Defn.Object
+      |scala.meta.Defn.OpaqueTypeAlias
       |scala.meta.Defn.RepeatedCase
       |scala.meta.Defn.Trait
       |scala.meta.Defn.Type
