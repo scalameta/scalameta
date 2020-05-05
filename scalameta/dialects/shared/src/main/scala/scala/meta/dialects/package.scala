@@ -88,25 +88,24 @@ package object dialects {
     .withAllowInlineMods(true)
 
   implicit val Dotty = Scala213
-    .copy(
-      allowAndTypes = true, // New feature in Dotty
-      allowAtForExtractorVarargs = false, // New feature in Dotty
-      allowColonForExtractorVarargs = true, // New feature in Dotty
-      allowEnums = true, // New feature in Dotty
-      allowImplicitByNameParameters = true, // New feature in Dotty
-      allowImplicitFunctionTypes = true, // New feature in Dotty
-      allowInlineIdents = false, // New feature in Dotty
-      allowInlineMods = true, // New feature in Dotty
-      allowLiteralTypes = true, // New feature in Dotty
-      allowMethodTypes = false,
-      allowOrTypes = true, // New feature in Dotty
-      allowTrailingCommas = true,
-      allowTraitParameters = true, // New feature in Dotty
-      allowTypeLambdas = true, // New feature in Dotty
-      allowViewBounds = false, // View bounds have been removed in Dotty
-      allowWithTypes = false, // New feature in Dotty
-      allowXmlLiterals = false, // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
-    ).withAllowGivenUsing(true)
+    .withAllowAndTypes(true) // New feature in Dotty
+    .withAllowAtForExtractorVarargs(false)
+    .withAllowColonForExtractorVarargs(true) // New feature in Dotty
+    .withAllowEnums(true) // New feature in Dotty
+    .withAllowImplicitByNameParameters(true) // New feature in Dotty
+    .withAllowImplicitFunctionTypes(true) // New feature in Dotty
+    .withAllowInlineIdents(false)
+    .withAllowInlineMods(true) // New feature in Dotty
+    .withAllowLiteralTypes(true) // New feature in Dotty
+    .withAllowMethodTypes(false)
+    .withAllowOrTypes(true) // New feature in Dotty
+    .withAllowTrailingCommas(true)
+    .withAllowTraitParameters(true) // New feature in Dotty
+    .withAllowTypeLambdas(true) // New feature in Dotty
+    .withAllowViewBounds(false) // View bounds have been removed in Dotty
+    .withAllowWithTypes(false)
+    .withAllowXmlLiterals(false) // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
+    .withAllowGivenUsing(true)
     .withAllowExtensionMethods(true)
     .withAllowOpenClass(true)
 
