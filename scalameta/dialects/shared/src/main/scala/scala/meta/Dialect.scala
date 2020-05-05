@@ -108,10 +108,7 @@ final class Dialect private (
       allowViewBounds: Boolean,
       allowWithTypes: Boolean,
       allowXmlLiterals: Boolean,
-      toplevelSeparator: String,
-      allowGivenUsing: Boolean,
-      allowExtensionMethods: Boolean,
-      allowOpenClass: Boolean
+      toplevelSeparator: String
   ) = {
     this(
       allowAndTypes,
@@ -139,9 +136,9 @@ final class Dialect private (
       allowXmlLiterals,
       toplevelSeparator,
       allowNumericLiteralUnderscoreSeparators = false,
-      allowGivenUsing,
-      allowExtensionMethods,
-      allowOpenClass
+      allowGivenUsing = false,
+      allowExtensionMethods = false,
+      allowOpenClass = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -355,10 +352,7 @@ final class Dialect private (
       allowViewBounds: Boolean = this.allowViewBounds,
       allowWithTypes: Boolean = this.allowWithTypes,
       allowXmlLiterals: Boolean = this.allowXmlLiterals,
-      toplevelSeparator: String = this.toplevelSeparator,
-      allowGivenUsing: Boolean = this.allowGivenUsing,
-      allowExtensionMethods: Boolean = this.allowExtensionMethods,
-      allowOpenClass: Boolean = this.allowOpenClass
+      toplevelSeparator: String = this.toplevelSeparator
   ): Dialect = {
     privateCopy(
       allowAndTypes,
@@ -384,10 +378,7 @@ final class Dialect private (
       allowViewBounds,
       allowWithTypes,
       allowXmlLiterals,
-      toplevelSeparator,
-      allowGivenUsing = allowGivenUsing,
-      allowExtensionMethods = allowExtensionMethods,
-      allowOpenClass = allowOpenClass
+      toplevelSeparator
     )
   }
 }
@@ -417,10 +408,7 @@ object Dialect extends InternalDialect {
       allowViewBounds: Boolean,
       allowWithTypes: Boolean,
       allowXmlLiterals: Boolean,
-      toplevelSeparator: String,
-      allowGivenUsing: Boolean,
-      allowExtensionMethods: Boolean,
-      allowOpenClass: Boolean
+      toplevelSeparator: String
   ): Dialect = {
     new Dialect(
       allowAndTypes,
@@ -446,10 +434,7 @@ object Dialect extends InternalDialect {
       allowViewBounds,
       allowWithTypes,
       allowXmlLiterals,
-      toplevelSeparator,
-      allowGivenUsing,
-      allowExtensionMethods,
-      allowOpenClass
+      toplevelSeparator
     )
   }
   // NOTE: Spinning up a macro just for this is too hard.

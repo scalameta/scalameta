@@ -31,10 +31,7 @@ package object dialects {
     allowViewBounds = true,
     allowWithTypes = true,
     allowXmlLiterals = true, // Not even deprecated yet, so we need to support xml literals
-    toplevelSeparator = "",
-    allowGivenUsing = false,
-    allowExtensionMethods = false,
-    allowOpenClass = false
+    toplevelSeparator = ""
   )
 
   implicit val Scala211 = Scala210
@@ -109,10 +106,9 @@ package object dialects {
       allowViewBounds = false, // View bounds have been removed in Dotty
       allowWithTypes = false, // New feature in Dotty
       allowXmlLiterals = false, // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
-      allowGivenUsing = true,
-      allowExtensionMethods = true,
-      allowOpenClass = true
-    )
+    ).withAllowGivenUsing(true)
+    .withAllowExtensionMethods(true)
+    .withAllowOpenClass(true)
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)
