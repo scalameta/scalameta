@@ -549,9 +549,11 @@ lazy val protobufSettings = Def.settings(
     protocbridge.Target(
       generator = PB.gens.plugin("scala"),
       outputPath = (sourceManaged in Compile).value,
-      options = scalapb.gen(
-        flatPackage = true // Don't append filename to package
-      )._2
+      options = scalapb
+        .gen(
+          flatPackage = true // Don't append filename to package
+        )
+        ._2
     )
   ),
   PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb")),
@@ -566,7 +568,7 @@ lazy val protobufSettings = Def.settings(
     Seq(
       "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
       "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion % "protobuf",
-      "com.thesamet.scalapb" % "protoc-gen-scala" % scalapbVersion % "protobuf" artifacts(
+      "com.thesamet.scalapb" % "protoc-gen-scala" % scalapbVersion % "protobuf" artifacts (
         if (scala.util.Properties.isWin) {
           Artifact("protoc-gen-scala", PB.ProtocPlugin, "bat", "windows")
         } else {
