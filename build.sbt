@@ -382,7 +382,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
   ),
   buildInfoPackage := "scala.meta.tests",
   libraryDependencies ++= {
-    if (isScala212.value) List("com.lihaoyi" %%% "fansi" % "0.2.8" % "test")
+    if (isScala212.value) List("com.lihaoyi" %%% "fansi" % "0.2.9" % "test")
     else Nil
   },
   libraryDependencies ++= List(
