@@ -4,9 +4,9 @@ package parsers
 import scala.scalajs.js
 import js.JSConverters._
 import js.annotation._
-
 import prettyprinters._
 import inputs._
+import scala.scalajs.js.UndefOr
 
 object JSFacade {
 
@@ -76,7 +76,7 @@ object JSFacade {
   }
 
   private[this] type Settings = js.UndefOr[js.Dictionary[String]]
-  private[this] val defaultSettings = None.orUndefined
+  private[this] val defaultSettings = js.undefined.asInstanceOf[Settings]
 
   private[this] def extractDialect(s: Settings): Either[String, Dialect] = {
     s.toOption.flatMap(_.get("dialect")) match {
