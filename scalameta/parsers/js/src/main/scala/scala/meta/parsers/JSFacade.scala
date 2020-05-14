@@ -108,14 +108,11 @@ object JSFacade {
         }
     }
 
-  @JSExportTopLevel("default")
-  @JSExportTopLevel("parseSource")
   def parseSource(
       code: String,
       settings: Settings = defaultSettings
   ): js.Dictionary[Any] = parse[Source](code, settings)
 
-  @JSExportTopLevel("parseStat")
   def parseStat(
       code: String,
       settings: Settings = defaultSettings
