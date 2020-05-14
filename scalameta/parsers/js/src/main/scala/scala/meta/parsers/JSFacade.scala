@@ -3,10 +3,8 @@ package parsers
 
 import scala.scalajs.js
 import js.JSConverters._
-import js.annotation._
 import prettyprinters._
 import inputs._
-import scala.scalajs.js.UndefOr
 
 object JSFacade {
 
