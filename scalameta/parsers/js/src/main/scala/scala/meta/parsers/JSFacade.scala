@@ -3,13 +3,15 @@ package parsers
 
 import scala.scalajs.js
 import js.JSConverters._
+import js.annotation._
+
 import prettyprinters._
 import inputs._
 
 object JSFacade {
 
   // https://stackoverflow.com/a/36573183/846273
-  private[this] def mergeJSObjects(objs: js.Dynamic*): js.Dynamic = {
+  private def mergeJSObjects(objs: js.Dynamic*): js.Dynamic = {
     val result = js.Dictionary.empty[Any]
     for (source <- objs) {
       for ((key, value) <- source.asInstanceOf[js.Dictionary[Any]])
@@ -20,28 +22,28 @@ object JSFacade {
 
   // https://github.com/scala-js/scala-js/issues/2170#issuecomment-176795604
   @js.native
-  private[this] sealed trait JSLong extends js.Any
-  implicit private[this] class LongJSOps(val x: Long) extends AnyVal {
+  private sealed trait JSLong extends js.Any
+  implicit private class LongJSOps(val x: Long) extends AnyVal {
     def toJSLong: JSLong = {
       if (x >= 0) (x & ((1L << 53) - 1)).toDouble
       else -((-x) & ((1L << 53) - 1)).toDouble
     }.asInstanceOf[JSLong]
   }
 
-  private[this] def toNode(t: Any): js.Any = t match {
+  private def toNode(t: Any): js.Any = t match {
     case t: Tree => toNode(t)
     case tt: List[_] => tt.map(toNode).toJSArray
     case t: Option[_] => t.map(toNode).orUndefined
     case _ => ()
   }
 
-  private[this] def toPosition(p: Position): js.Dynamic =
+  private def toPosition(p: Position): js.Dynamic =
     js.Dynamic.literal(
       "start" -> p.start,
       "end" -> p.end
     )
 
-  private[this] def toNode(t: Tree): js.Dynamic = {
+  private def toNode(t: Tree): js.Dynamic = {
     val base = js.Dynamic.literal(
       "type" -> t.productPrefix,
       "pos" -> toPosition(t.pos)
@@ -73,10 +75,10 @@ object JSFacade {
     mergeJSObjects(base, fields, value, syntax)
   }
 
-  private[this] type Settings = js.UndefOr[js.Dictionary[String]]
-  private[this] val defaultSettings = js.undefined.asInstanceOf[Settings]
+  private type Settings = js.UndefOr[js.Dictionary[String]]
+  private val defaultSettings = js.undefined.asInstanceOf[Settings]
 
-  private[this] def extractDialect(s: Settings): Either[String, Dialect] = {
+  private def extractDialect(s: Settings): Either[String, Dialect] = {
     s.toOption.flatMap(_.get("dialect")) match {
       case Some(dialectStr) =>
         Dialect.standards.get(dialectStr) match {
@@ -87,7 +89,7 @@ object JSFacade {
     }
   }
 
-  private[this] def parse[A <: Tree: Parse](
+  private def parse[A <: Tree: Parse](
       code: String,
       settings: Settings
   ): js.Dictionary[Any] =
@@ -106,11 +108,14 @@ object JSFacade {
         }
     }
 
+  @JSExportTopLevel("default")
+  @JSExportTopLevel("parseSource")
   def parseSource(
       code: String,
       settings: Settings = defaultSettings
   ): js.Dictionary[Any] = parse[Source](code, settings)
 
+  @JSExportTopLevel("parseStat")
   def parseStat(
       code: String,
       settings: Settings = defaultSettings
