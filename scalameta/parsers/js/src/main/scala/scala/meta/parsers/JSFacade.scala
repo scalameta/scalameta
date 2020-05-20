@@ -76,7 +76,7 @@ object JSFacade {
   }
 
   private[this] type Settings = js.UndefOr[js.Dictionary[String]]
-  private[this] val defaultSettings = None.orUndefined
+  private[this] val defaultSettings = js.undefined.asInstanceOf[Settings]
 
   private[this] def extractDialect(s: Settings): Either[String, Dialect] = {
     s.toOption.flatMap(_.get("dialect")) match {
@@ -111,14 +111,25 @@ object JSFacade {
   @JSExportTopLevel("default")
   @JSExportTopLevel("parseSource")
   def parseSource(
+      code: String
+  ): js.Dictionary[Any] = parse[Source](code, defaultSettings)
+
+  @JSExportTopLevel("default")
+  @JSExportTopLevel("parseSource")
+  def parseSource(
       code: String,
-      settings: Settings = defaultSettings
+      settings: Settings
   ): js.Dictionary[Any] = parse[Source](code, settings)
 
   @JSExportTopLevel("parseStat")
   def parseStat(
+      code: String
+  ): js.Dictionary[Any] = parse[Stat](code, defaultSettings)
+
+  @JSExportTopLevel("parseStat")
+  def parseStat(
       code: String,
-      settings: Settings = defaultSettings
+      settings: Settings
   ): js.Dictionary[Any] = parse[Stat](code, settings)
 
 }
