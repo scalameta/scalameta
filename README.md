@@ -12,6 +12,7 @@ The current maintainers (people who can merge pull requests) are:
 
 * David Dudson - [`@DavidDudson`](https://github.com/DavidDudson)
 * Ólafur Páll Geirsson - [`@olafurpg`](https://github.com/olafurpg)
+* Krzysztof Bochenek - [`@kpbochenek`](https://github.com/kpbochenek)
 * Mikhail Mutcianko - [`@mutcianm`](https://github.com/mutcianm)
 * Max Ovsiankin - [`@maxov`](https://github.com/maxov)
 * Gabriele Petronella - [`@gabro`](https://github.com/gabro)
