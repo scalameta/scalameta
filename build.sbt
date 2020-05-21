@@ -662,6 +662,11 @@ lazy val publishableSettings = Def.settings(
         <url>https://geirsson.com/</url>
       </developer>
       <developer>
+        <id>kpbochenek</id>
+        <name>Krzysztof Bochenek</name>
+        <url>https://github.com/kpbochenek</url>
+      </developer>
+      <developer>
         <id>mutcianm</id>
         <name>Mikhail Mutcianko</name>
         <url>https://github.com/mutcianm</url>
