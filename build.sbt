@@ -69,6 +69,7 @@ unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalameta.jvm, Compile).value
 
 val commonJsSettings = Seq(
+  crossScalaVersions := List(LatestScala213, LatestScala212),
   scalacOptions ++= {
     if (isSnapshot.value) Seq.empty
     else {
