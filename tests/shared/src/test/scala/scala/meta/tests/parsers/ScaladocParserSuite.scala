@@ -384,9 +384,10 @@ class ScaladocParserSuite extends FunSuite {
     val expected = Option(
       Scaladoc(
         Paragraph(
-          Unknown(""" @inheritdoc Some text:
-                    | 1. List11
-                    | - List12""".stripMargin)
+          Tag(TagType.InheritDoc),
+          Text(Word("Some"), Word("text:")),
+          ListBlock("1.", ListItem(Text(Word(list11)))),
+          ListBlock("-", ListItem(Text(Word(list12))))
         )
       )
     )
