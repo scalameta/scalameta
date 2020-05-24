@@ -94,7 +94,7 @@ object ScaladocParser {
   }
 
   private val trailTextParser: Parser[Text] = P(nlHspaces1 ~ textParser)
-  private val leadTextParser: Parser[Text] = P(leadHspaces0 ~ textParser)
+  private val leadTextParser: Parser[Text] = P((Start | space) ~ hspaces0 ~ textParser)
 
   private val tagParser: Parser[Tag] = {
     val tagTypeMap = TagType.predefined.map(x => x.tag -> x).toMap
