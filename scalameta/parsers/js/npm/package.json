@@ -8,6 +8,11 @@
   "scripts": {
     "prepublish": "export current=$PWD && cd ../../../.. && sbt parsersJS/fullOptJS && cd $current && cp ../target/scala-2.12/parsers-opt.js index.js"
   },
+  "homepage": "https://scalameta.org/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/scalameta/scalameta"
+  },
   "author": "scalameta",
   "license": "BSD-3-Clause"
 }
