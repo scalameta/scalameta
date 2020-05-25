@@ -74,7 +74,12 @@ final class Dialect private (
     // Extension methods introduced in dotty
     val allowExtensionMethods: Boolean,
     // Open modifier for classes introduced in dotty
-    val allowOpenClass: Boolean
+    val allowOpenClass: Boolean,
+    // Whitebox macros introduced in dotty (splices/quotes)
+    val allowWhiteboxMacro: Boolean,
+    // Top level statements introduced in dotty.
+    // differs from ToplevelTerms because here you can define packages
+    val allowToplevelStatements: Boolean,
 ) extends Product
     with Serializable {
 
@@ -138,7 +143,9 @@ final class Dialect private (
       allowNumericLiteralUnderscoreSeparators = false,
       allowGivenUsing = false,
       allowExtensionMethods = false,
-      allowOpenClass = false
+      allowOpenClass = false,
+      allowWhiteboxMacro = false,
+      allowToplevelStatements = false,
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -234,6 +241,12 @@ final class Dialect private (
   def withAllowOpenClass(newValue: Boolean): Dialect = {
     privateCopy(allowOpenClass = newValue)
   }
+  def withAllowWhiteboxMacro(newValue: Boolean): Dialect = {
+    privateCopy(allowWhiteboxMacro = newValue)
+  }
+  def withAllowToplevelStatements(newValue: Boolean): Dialect = {
+    privateCopy(allowToplevelStatements = newValue)
+  }
 
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
@@ -268,7 +281,9 @@ final class Dialect private (
         this.allowNumericLiteralUnderscoreSeparators,
       allowGivenUsing: Boolean = this.allowGivenUsing,
       allowExtensionMethods: Boolean = this.allowExtensionMethods,
-      allowOpenClass: Boolean = this.allowOpenClass
+      allowOpenClass: Boolean = this.allowOpenClass,
+      allowWhiteboxMacro: Boolean = this.allowWhiteboxMacro,
+      allowToplevelStatements: Boolean = this.allowToplevelStatements,
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -299,7 +314,9 @@ final class Dialect private (
       allowNumericLiteralUnderscoreSeparators,
       allowGivenUsing,
       allowExtensionMethods,
-      allowOpenClass
+      allowOpenClass,
+      allowWhiteboxMacro,
+      allowToplevelStatements,
       // NOTE(olafur): add the next argument above this comment.
     )
   }

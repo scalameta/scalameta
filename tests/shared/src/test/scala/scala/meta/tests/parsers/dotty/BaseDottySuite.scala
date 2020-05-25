@@ -16,6 +16,8 @@ trait BaseDottySuite extends ParseSuite {
     Term.Param(List(Mod.ValParam()), Term.Name(name), Some(pname(tpe)), None)
   final def tparam(name: String, tpe: String) =
     Term.Param(Nil, Term.Name(name), Some(pname(tpe)), None)
+  final def tparamInline(name: String, tpe: String) =
+    Term.Param(List(Mod.Inline()), Term.Name(name), Some(pname(tpe)), None)
   final def tparamUsing(name: String, tpe: String) =
     if (name.nonEmpty) Term.Param(List(Mod.Using()), Term.Name(name), Some(pname(tpe)), None)
     else Term.Param(List(Mod.Using()), anon, Some(pname(tpe)), None)

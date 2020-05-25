@@ -334,9 +334,14 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         } else {
           putChar(ch)
           nextChar()
-          getIdentRest()
-          if (ch == '"' && token == IDENTIFIER)
-            token = INTERPOLATIONID
+          if (ch == '{' && dialect.allowWhiteboxMacro) {
+            token = MACROSPLICE
+            setStrVal()
+          } else {
+            getIdentRest()
+            if (ch == '"' && token == IDENTIFIER)
+              token = INTERPOLATIONID
+          }
         }
       case '<' => // is XMLSTART?
         def fetchLT() = {
@@ -438,13 +443,20 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           else if (isOperatorPart(ch) && (ch != '\\'))
             charLitOr(getOperatorRest _)
           else {
-            getLitChar()
-            if (ch == '\'') {
-              nextChar()
-              token = CHARLIT
+            val lookahead = lookaheadReader
+            lookahead.nextRawChar()
+            if ((ch == '{' || ch == '[') && lookahead.ch != '\'' && dialect.allowWhiteboxMacro) {
+              token = MACROQUOTE
               setStrVal()
             } else {
-              syntaxError("unclosed character literal", at = offset)
+              getLitChar()
+              if (ch == '\'') {
+                nextChar()
+                token = CHARLIT
+                setStrVal()
+              } else {
+                syntaxError("unclosed character literal", at = offset)
+              }
             }
           }
         }

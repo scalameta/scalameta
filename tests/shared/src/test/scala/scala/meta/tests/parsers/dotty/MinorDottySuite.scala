@@ -18,6 +18,7 @@ class MinorDottySuite extends BaseDottySuite {
    *  https://dotty.epfl.ch/docs/reference/other-new-features/open-classes.html
    *  https://dotty.epfl.ch/docs/reference/new-types/type-lambdas.html
    *  https://dotty.epfl.ch/docs/reference/other-new-features/trait-parameters.html
+   *  https://dotty.epfl.ch/docs/reference/metaprogramming/inline.html
    *
    */
   test("open-class") {
@@ -158,4 +159,29 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )
   }
+
+  // Inline is soft keyword and those cases are valid:
+
+  test("inline-argument") {
+    runTestAssert[Stat]("def f(inline: String): Unit")(
+Decl.Def(Nil, tname("f"), Nil, List(List(tparam("inline", "String"))), pname("Unit"))
+    )(parseTempl)
+    runTestAssert[Stat]("def f(inline p: String): Unit")(
+Decl.Def(Nil, tname("f"), Nil, List(List(tparamInline("p", "String"))), pname("Unit"))
+    )(parseTempl)
+    runTestAssert[Stat]("def f(inline inline: String): Unit")(
+Decl.Def(Nil, tname("f"), Nil, List(List(tparamInline("inline", "String"))), pname("Unit"))
+    )(parseTempl)
+  }
+
+  test("inline-method") {
+    runTestAssert[Stat]("inline def inline(inline: inline): inline")(
+Decl.Def(List(Mod.Inline()), tname("inline"), Nil, List(List(tparam("inline", "inline"))), pname("inline"))
+    )(parseTempl)
+
+  }
+
+  // add test: inline def map[F[_]](f: [t] => t => F[t]): Map[this.type, F] = ???
+
+  // add test: match on type 
 }

@@ -574,7 +574,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[KwNew] || token.is[KwReturn] || token.is[KwSuper] ||
       token.is[KwThis] || token.is[KwThrow] || token.is[KwTry] || token.is[KwWhile] ||
       token.is[LeftParen] || token.is[LeftBrace] || token.is[Underscore] ||
-      token.is[Unquote]
+      token.is[Unquote] || token.is[MacroSplice] || token.is[MacroQuote]
     }
   }
 
@@ -1142,6 +1142,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case Literal() =>
           if (dialect.allowLiteralTypes) literal()
           else syntaxError(s"$dialect doesn't support literal types", at = path())
+        case MacroSplice() =>
+          Type.Macro(macroSplice())
         case _ =>
           val ref = path() match {
             case q: Quasi => q.become[Term.Ref.Quasi]
@@ -2070,11 +2072,31 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                 Term.NewAnonymous(other)
             }
           }
+        case MacroQuote() =>
+          macroQuote()
+        case MacroSplice() =>
+          macroSplice()
         case _ =>
           syntaxError(s"illegal start of simple expression", at = token)
       }
     }
     simpleExprRest(t, canApply = canApply)
+  }
+
+  def macroSplice(): Term = autoPos {
+    accept[MacroSplice]
+    Term.SplicedMacroExpr(inBraces(templateStats()))
+  }
+
+  def macroQuote(): Term = autoPos {
+    accept[MacroQuote]
+    if (token.is[LeftBrace]) {
+      Term.QuotedMacroExpr(inBraces(templateStats()))
+    } else if (token.is[LeftBracket]) {
+      Term.QuotedMacroType(inBrackets(typ()))
+    } else {
+      syntaxError("Quotation only works for expressions and types", at = token)
+    }
   }
 
   def simpleExprRest(t: Term, canApply: Boolean): Term = atPos(t, auto) {
@@ -2517,6 +2539,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case LeftParen() =>
           val patterns = inParens(if (token.is[RightParen]) Nil else noSeq.patterns())
           makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
+        case MacroQuote() =>
+          Pat.Macro(macroQuote())
         case _ =>
           onError(token)
       })
@@ -2804,6 +2828,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       rejectMod[Mod.Sealed](mods, "`sealed' modifier can be used only for classes")
       if (!mods.has[Mod.Override])
         rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
+    }
+
+    if (token.text == "inline" && ahead { token.is[Ident] }) {
+      mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.Inline()); next()
     }
 
     val (isValParam, isVarParam) = (ownerIsType && token.is[KwVal], ownerIsType && token.is[KwVar])
@@ -3844,6 +3872,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       importStmt()
     case TemplateIntro() =>
       topLevelTmplDef
+    case DefIntro() if dialect.allowToplevelStatements =>
+      nonLocalDefOrDcl()
   }
 
   def templateStatSeq(): (Self, List[Stat]) = {

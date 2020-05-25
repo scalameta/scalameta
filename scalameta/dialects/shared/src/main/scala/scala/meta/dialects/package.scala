@@ -108,6 +108,8 @@ package object dialects {
     .withAllowGivenUsing(true)
     .withAllowExtensionMethods(true)
     .withAllowOpenClass(true)
+    .withAllowWhiteboxMacro(true)
+    .withAllowToplevelStatements(true)
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)

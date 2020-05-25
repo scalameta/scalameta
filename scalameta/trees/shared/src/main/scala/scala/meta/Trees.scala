@@ -104,6 +104,9 @@ object Term {
     checkFields(stats.forall(_.isBlockStat))
   }
   @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term
+  @ast class QuotedMacroExpr(stats: List[Stat]) extends Term
+  @ast class QuotedMacroType(tpe: Type) extends Term
+  @ast class SplicedMacroExpr(stats: List[Stat]) extends Term
   @ast class Match(expr: Term, cases: List[Case] @nonEmpty) extends Term
   @ast class Try(expr: Term, catchp: List[Case], finallyp: Option[Term]) extends Term
   @ast class TryWithHandler(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
@@ -171,6 +174,7 @@ object Type {
     // TODO: check why it fails
     // checkParent(ParentChecks.TypeLambda)
   }
+  @ast class Macro(body: Term) extends Type
   @ast class Method(paramss: List[List[Term.Param]], tpe: Type) extends Type {
     checkParent(ParentChecks.TypeMethod)
   }
@@ -231,6 +235,7 @@ object Pat {
     checkFields(lhs.is[Pat.Wildcard] || lhs.is[Pat.Var] || lhs.is[Pat.Quasi])
     checkFields(!rhs.is[Type.Var] && !rhs.is[Type.Placeholder])
   }
+  @ast class Macro(body: Term) extends Pat
   def fresh(): Pat.Var = Pat.Var(Term.fresh())
   def fresh(prefix: String): Pat.Var = Pat.Var(Term.fresh(prefix))
 }
