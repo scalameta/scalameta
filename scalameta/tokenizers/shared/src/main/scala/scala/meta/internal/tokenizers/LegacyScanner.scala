@@ -332,9 +332,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         if (ch == '$' && !getDollar()) {
           getUnquote()
         } else {
+          val prevChar = ch
           putChar(ch)
           nextChar()
-          if (ch == '{' && dialect.allowWhiteboxMacro) {
+          if (prevChar == '$' && ch == '{' && dialect.allowWhiteboxMacro) {
             token = MACROSPLICE
             setStrVal()
           } else {

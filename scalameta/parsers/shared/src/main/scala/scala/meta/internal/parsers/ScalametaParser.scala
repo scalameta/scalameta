@@ -629,7 +629,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[KwSealed] || token.is[KwImplicit] ||
       token.is[KwLazy] || token.is[KwPrivate] ||
       token.is[KwProtected] || token.is[KwOverride] ||
-      (isSoftKw(token, SoftKeyword.SkOpaque)) ||
+      (isSoftKw(token, SoftKeyword.SkOpaque) && dialect.allowOpaqueTypes) ||
       (isSoftKw(token, SoftKeyword.SkOpen) && dialect.allowOpenClass) ||
       (token.is[Ident] && token.syntax == "inline" && dialect.allowInlineMods)
     }
@@ -1103,13 +1103,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
     }
 
-    def compoundType(): Type = {
-      val optType =
-        if (token.is[LeftBrace])
-          None
-        else
-          Some(annotType())
-      compoundTypeRest(optType)
+    def compoundType(): Type = compoundTypeRest {
+      if (token.is[LeftBrace])
+        None
+      else
+        Some(annotType())
     }
 
     def compoundTypeRest(t0: Option[Type]): Type = atPos(t0, auto) {
@@ -2640,7 +2638,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwProtected() => accessModifier()
       case Ident("inline") if dialect.allowInlineMods => next(); Mod.Inline()
       case Ident(SoftKeyword.SkOpen.name) if dialect.allowOpenClass => next(); Mod.Open()
-      case Ident(SoftKeyword.SkOpaque.name) => next(); Mod.Opaque()
+      case Ident(SoftKeyword.SkOpaque.name) if dialect.allowOpaqueTypes => next(); Mod.Opaque()
       case _ => syntaxError(s"modifier expected but ${token.name} found", at = token)
     })
 
@@ -3131,9 +3129,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
+  // GivenSig ::= [id] [DefTypeParamClause] {UsingParamClause} ‘as’
   private def tryGivenSig(): GivenSig = {
-    // GivenSig ::= [id] [DefTypeParamClause] {UsingParamClause} ‘as’
-
     val anonymousName = scala.meta.Name.Anonymous()
 
     tryParse[GivenSig] {
@@ -3159,15 +3156,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       paramss: List[List[Term.Param]]
   )
 
+  // Given             ::= 'given' GivenDef
   private def givenDecl(mods: List[Mod]): Stat = {
-    // Given             ::= 'given' GivenDef
     accept[KwGiven]
     givenDef(mods)
   }
 
+  // GivenDef          ::=  [GivenSig] [‘_’ ‘<:’] Type ‘=’ Expr
+  //                     |  [GivenSig] ConstrApps [TemplateBody]
   private def givenDef(mods: List[Mod]): Stat = {
-    // GivenDef          ::=  [GivenSig] [‘_’ ‘<:’] Type ‘=’ Expr
-    //                     |  [GivenSig] ConstrApps [TemplateBody]
     val givenSig = tryGivenSig()
 
     val decltpe = startModType()
@@ -3195,12 +3192,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     else funDefRest(mods)
   }
 
+  // TmplDef           ::= ‘extension’ ExtensionDef
+  // ExtensionDef      ::=  [id] [‘on’ ExtParamClause {GivenParamClause}] TemplateBody
+  // ExtParamClause    ::=  [DefTypeParamClause] ‘(’ DefParam ‘)’
+  // TemplateBody      ::=  [nl | colonEol] '{' ... '}'
   def extensionGroupDecl(mods: List[Mod]): Defn.ExtensionGroup = {
-    // TmplDef           ::= ‘extension’ ExtensionDef
-    // ExtensionDef      ::=  [id] [‘on’ ExtParamClause {GivenParamClause}] TemplateBody
-    // ExtParamClause    ::=  [DefTypeParamClause] ‘(’ DefParam ‘)’
-    // TemplateBody      ::=  [nl | colonEol] '{' ... '}'
-
     next() // 'extension'
 
     val name =
@@ -3305,13 +3301,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     eg
   }
 
+  // DefDef             ::=  DefSig [(‘:’ | ‘<:’) Type] ‘=’ Expr
+  // DefSig             ::=  ExtParamClause [nl] [‘.’] id DefParamClauses
+  // ExtParamClause     ::=  [DefTypeParamClause] ‘(’ DefParam ‘)’
+  // DefTypeParamClause ::=  ‘[’ DefTypeParam {‘,’ DefTypeParam} ‘]’
+  // DefParamClauses    ::=  {DefParamClause} [[nl] ‘(’ [‘implicit’] DefParams ‘)’]
   def extMethod(mods: List[Mod]): Stat = {
-    // DefDef             ::=  DefSig [(‘:’ | ‘<:’) Type] ‘=’ Expr
-    // DefSig             ::=  ExtParamClause [nl] [‘.’] id DefParamClauses
-    // ExtParamClause     ::=  [DefTypeParamClause] ‘(’ DefParam ‘)’
-    // DefTypeParamClause ::=  ‘[’ DefTypeParam {‘,’ DefTypeParam} ‘]’
-    // DefParamClauses    ::=  {DefParamClause} [[nl] ‘(’ [‘implicit’] DefParams ‘)’]
-
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
 
     accept[LeftParen]
@@ -3498,8 +3493,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     Defn.Class(mods, className, typeParams, ctor, tmpl)
   }
 
+  // EnumDef           ::=  id ClassConstr InheritClauses EnumBody
   def enumDef(mods: List[Mod]): Defn.Enum = atPos(mods, auto) {
-    // EnumDef           ::=  id ClassConstr InheritClauses EnumBody
     accept[KwEnum]
 
     val enumName = typeName()
@@ -3514,11 +3509,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     Defn.Enum(mods, enumName, typeParams, ctor, tmpl)
   }
 
+  // EnumCase          ::=  ‘case’ (id ClassConstr [‘extends’ ConstrApps]] | ids)
+  // ids               ::=  id {‘,’ id}
+  // ClassConstr       ::=  [ClsTypeParamClause] [ConstrMods] ClsParamClauses
   def enumCaseDef(mods: List[Mod]): Stat = atPos(mods, auto) {
-    // EnumCase          ::=  ‘case’ (id ClassConstr [‘extends’ ConstrApps]] | ids)
-    // ids               ::=  id {‘,’ id}
-    // ClassConstr       ::=  [ClsTypeParamClause] [ConstrMods] ClsParamClauses
-
     accept[KwCase]
     if (token.is[Ident] && ahead(token.is[Comma])) {
       enumRepeatedCaseDef(mods)

@@ -31,12 +31,6 @@ class DottySuite extends ParseSuite {
     assert(mod"inline".structure == "Mod.Inline()")
   }
 
-  test("inline cannot be used as an identifier") {
-    intercept[ParseException] {
-      dialects.Dotty("{ val inline = 42 }").parse[Term].get
-    }
-  }
-
   test("implicit function type") {
     val Type.ImplicitFunction(List(Type.Name("String")), Type.Name("Int")) =
       tpe("implicit String => Int")

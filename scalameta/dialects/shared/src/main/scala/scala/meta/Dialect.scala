@@ -80,6 +80,8 @@ final class Dialect private (
     // Top level statements introduced in dotty.
     // differs from ToplevelTerms because here you can define packages
     val allowToplevelStatements: Boolean,
+    // Opaque types introduced in dotty
+    val allowOpaqueTypes: Boolean
 ) extends Product
     with Serializable {
 
@@ -146,6 +148,7 @@ final class Dialect private (
       allowOpenClass = false,
       allowWhiteboxMacro = false,
       allowToplevelStatements = false,
+      allowOpaqueTypes = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -247,6 +250,9 @@ final class Dialect private (
   def withAllowToplevelStatements(newValue: Boolean): Dialect = {
     privateCopy(allowToplevelStatements = newValue)
   }
+  def withAllowOpaqueTypes(newValue: Boolean): Dialect = {
+    privateCopy(allowOpaqueTypes = newValue)
+  }
 
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
@@ -284,6 +290,7 @@ final class Dialect private (
       allowOpenClass: Boolean = this.allowOpenClass,
       allowWhiteboxMacro: Boolean = this.allowWhiteboxMacro,
       allowToplevelStatements: Boolean = this.allowToplevelStatements,
+      allowOpaqueTypes: Boolean = this.allowOpaqueTypes
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -317,6 +324,7 @@ final class Dialect private (
       allowOpenClass,
       allowWhiteboxMacro,
       allowToplevelStatements,
+      allowOpaqueTypes
       // NOTE(olafur): add the next argument above this comment.
     )
   }
