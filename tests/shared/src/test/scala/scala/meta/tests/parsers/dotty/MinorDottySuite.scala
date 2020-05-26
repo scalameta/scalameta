@@ -9,6 +9,7 @@ class MinorDottySuite extends BaseDottySuite {
 
   implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Dotty)
   implicit val parseType: String => Type = code => tpe(code)(dialects.Dotty)
+  implicit val parseSource: String => Source = code => source(code)(dialects.Dotty)
 
   val parseTempl: String => Stat = code => templStat(code)(dialects.Dotty)
 
@@ -109,10 +110,16 @@ class MinorDottySuite extends BaseDottySuite {
         List(Mod.Opaque()),
         pname("F"),
         Nil,
-        Type.Bounds(None, Some(Type.And(Type.Name("A"), Type.Name("B")))),
+        Type.Bounds(None, Some(Type.And(pname("A"), pname("B")))),
         pname("AB")
       )
     )(parseTempl)
+  }
+
+  test("opaque-type-in-object") {
+    runTestAssert[Source]("object X { opaque type IArray[+T] = Array }")(
+      Source(List(Defn.Object(Nil, tname("X"), tpl(List(Defn.OpaqueTypeAlias(List(Mod.Opaque()), pname("IArray"), List(Type.Param(List(Mod.Covariant()), Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Bounds(None, None), pname("Array")))))))
+    )(parseSource)
   }
 
   test("trait-parameters") {
@@ -160,28 +167,58 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
-  // Inline is soft keyword and those cases are valid:
-
-  test("inline-argument") {
+  test("inline-soft-keyword-pos") {
+    // as ident
     runTestAssert[Stat]("def f(inline: String): Unit")(
 Decl.Def(Nil, tname("f"), Nil, List(List(tparam("inline", "String"))), pname("Unit"))
     )(parseTempl)
-    runTestAssert[Stat]("def f(inline p: String): Unit")(
-Decl.Def(Nil, tname("f"), Nil, List(List(tparamInline("p", "String"))), pname("Unit"))
-    )(parseTempl)
-    runTestAssert[Stat]("def f(inline inline: String): Unit")(
-Decl.Def(Nil, tname("f"), Nil, List(List(tparamInline("inline", "String"))), pname("Unit"))
-    )(parseTempl)
-  }
 
-  test("inline-method") {
+    // as ident
     runTestAssert[Stat]("inline def inline(inline: inline): inline")(
 Decl.Def(List(Mod.Inline()), tname("inline"), Nil, List(List(tparam("inline", "inline"))), pname("inline"))
     )(parseTempl)
 
+    // as modifier
+    runTestAssert[Stat]("inline def inline(inline param: inline): inline")(
+Decl.Def(List(Mod.Inline()), tname("inline"), Nil, List(List(tparamInline("param", "inline"))), pname("inline"))
+    )(parseTempl)
+
+    // as ident and modifier
+    runTestAssert[Stat]("inline def inline(inline inline: inline): inline")(
+Decl.Def(List(Mod.Inline()), tname("inline"), Nil, List(List(tparamInline("inline", "inline"))), pname("inline"))
+    )(parseTempl)
+
+    // as ident and modifier
+    runTestAssert[Stat]("inline val inline = false")(
+      Defn.Val(List(Mod.Inline()), List(Pat.Var(tname("inline"))), None, Lit.Boolean(false))
+    )(parseTempl)
+
+    // TODO: inline if
+    // TODO: inline match
   }
 
-  // add test: inline def map[F[_]](f: [t] => t => F[t]): Map[this.type, F] = ???
+  test("inline-def-object") {
+    runTestAssert[Source]("object X { inline def f(inline sc: Str)(inline args: Any*): String = ??? }")(
+Source(List(Defn.Object(Nil, tname("X"), tpl(List(Defn.Def(List(Mod.Inline()), tname("f"), Nil, List(List(
+  tparamInline("sc", "Str")), List(Term.Param(List(Mod.Inline()), tname("args"), Some(Type.Repeated(pname("Any"))), None))), Some(pname("String")), tname("???")))))))
+    )(parseSource)
+  }
 
-  // add test: match on type 
+  // currently parser allows for more than possible.
+  test("inline-soft-keyword-neg".ignore) {
+    runTestError[Stat](
+      "def f(inline p: String): Unit",
+      "inline modifier can only be used for parameters of inline methods"
+    )(parseTempl)
+
+    runTestError[Stat](
+      "class A(inline: String)",
+      "an identifier expected, but"
+    )(parseTempl)
+
+    runTestError[Stat](
+      "class C(inline p: String)",
+      "inline modifier can only be used for parameters of inline methods"
+    )(parseTempl)
+  }
 }

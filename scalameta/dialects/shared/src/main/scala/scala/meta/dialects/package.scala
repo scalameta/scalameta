@@ -43,12 +43,10 @@ package object dialects {
 
   @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
   implicit val Paradise211 = Scala211
-    .withAllowInlineIdents(true)
     .withAllowInlineMods(true)
 
   @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
   implicit val ParadiseTypelevel211 = Typelevel211
-    .withAllowInlineMods(true)
     .withAllowInlineMods(true)
 
   implicit val Scala212 = Scala211
@@ -79,12 +77,10 @@ package object dialects {
 
   @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
   implicit val Paradise212 = Scala212
-    .withAllowInlineIdents(true)
     .withAllowInlineMods(true)
 
   @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
   implicit val ParadiseTypelevel212 = Typelevel212
-    .withAllowInlineIdents(true)
     .withAllowInlineMods(true)
 
   implicit val Dotty = Scala213
@@ -94,7 +90,6 @@ package object dialects {
     .withAllowEnums(true) // New feature in Dotty
     .withAllowImplicitByNameParameters(true) // New feature in Dotty
     .withAllowImplicitFunctionTypes(true) // New feature in Dotty
-    .withAllowInlineIdents(false)
     .withAllowInlineMods(true) // New feature in Dotty
     .withAllowLiteralTypes(true) // New feature in Dotty
     .withAllowMethodTypes(false)

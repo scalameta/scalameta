@@ -568,7 +568,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   @classifier
   trait ExprIntro {
     def unapply(token: Token): Boolean = {
-      (token.is[Ident] && !(token.syntax == "inline" && !dialect.allowInlineIdents)) ||
+      (token.is[Ident] && !inlineDefOrOpaque(token)) ||
       token.is[Literal] || token.is[Interpolation.Id] || token.is[Xml.Start] ||
       token.is[KwDo] || token.is[KwFor] || token.is[KwIf] ||
       token.is[KwNew] || token.is[KwReturn] || token.is[KwSuper] ||
@@ -576,6 +576,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[LeftParen] || token.is[LeftBrace] || token.is[Underscore] ||
       token.is[Unquote] || token.is[MacroSplice] || token.is[MacroQuote]
     }
+  }
+
+  private def inlineDefOrOpaque(token: Token): Boolean = {
+    (token.text == "inline" && (token.next.is[KwDef] || token.next.is[KwVal])) ||
+    (token.text == "opaque" && token.next.is[KwType])
   }
 
   @classifier
@@ -1274,8 +1279,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
   private def name[T <: Tree: AllowedName: AstInfo](ctor: String => T, advance: Boolean): T =
     token match {
-      case Ident("inline") if !dialect.allowInlineIdents =>
-        syntaxError("`inline` identifiers are not supported by " + dialect, at = token)
       case Ident(value) =>
         val name = value.stripPrefix("`").stripSuffix("`")
         val res = atPos(in.tokenPos, in.tokenPos)(ctor(name))
@@ -2809,6 +2812,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         }
     })
 
+  def inlineToTermName(inline: Mod): Term.Name = {
+    atPos(inline.startTokenPos, inline.endTokenPos)(Term.Name("inline"))
+  }
+
   def param(
       ownerIsCase: Boolean,
       ownerIsType: Boolean,
@@ -2830,9 +2837,19 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     }
 
-    if (token.text == "inline" && ahead { token.is[Ident] }) {
-      mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.Inline()); next()
+    // we haven't parsed modifiers earlier but current token looks like inline modifier
+    if (token.is[Ident] && token.text == "inline" && dialect.allowInlineMods && ahead(token.is[Ident])) {
+      mods ++= List(modifier())
     }
+
+    val inlineMod = mods.find(_.is[Mod.Inline])
+
+    // if we parsed modifiers but we ended up with no token for termName
+    // then we parsed inline as modifier but should be used as termName
+    val tname: Option[Term.Name] = if (inlineMod.isDefined && !token.is[Ident]) {
+      mods = mods.filterNot(_.is[Mod.Inline])
+      Some(inlineToTermName(inlineMod.get))
+    } else { None }
 
     val (isValParam, isVarParam) = (ownerIsType && token.is[KwVal], ownerIsType && token.is[KwVar])
     if (isValParam) {
@@ -2851,7 +2868,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           anonymousUsing = true
           meta.Name.Anonymous()
         } else {
-          termName() match {
+          tname.getOrElse(termName()) match {
             case q: Quasi => q.become[Name.Quasi]
             case other => other
           }

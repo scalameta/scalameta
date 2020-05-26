@@ -168,6 +168,36 @@ class EnumSuite extends BaseDottySuite {
     )
   }
 
+  test("case-match-interop".ignore) {
+    val code = """
+                 |enum X {
+                 |  case R
+                 |  v match {
+                 |    case 'a' | 'b' 
+                 |         'c' | 'd'
+                 |         'e' => "OK"
+                 |  }
+                 |  case G
+                 |}""".stripMargin
+    def unap(i: Int): Case = Case(tname("Unap"), None, int(i))
+    runTestAssert[Stat](code)(
+      Defn.Enum(
+        Nil,
+        pname("X"),
+        Nil,
+        ctor,
+        tpl(
+          List(
+            Defn.Case(Nil, tname("R"), Nil, ctor, Nil),
+            Term.Match(tname("v"), List(unap(1), unap(2))),
+            Defn.Case(Nil, tname("G"), Nil, ctor, Nil)
+          )
+        )
+      )
+
+    )
+  }
+
   // ---------------------------------
   // CASE
   // ---------------------------------
