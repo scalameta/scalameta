@@ -64,8 +64,6 @@ class AndOrTypesSuite extends BaseDottySuite {
       Decl.Val(Nil, List(Pat.Var(tname("either"))), Type.Or(pname("Password"), pname("UserName")))
     )
   }
-  //TODO: pattern match `case _: A | B => ...` should be equal to `case (_: A) | B => ...`
-  // check if we create case with (_: A) | B or WRONGLY _: (A | B)
 
   test("andtype-example") {
     runTestAssert[Stat]("val x: Reset & Ord[Int]")(

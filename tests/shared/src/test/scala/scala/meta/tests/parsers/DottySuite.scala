@@ -12,24 +12,6 @@ class DottySuite extends ParseSuite {
     )
     assert(tree.syntax == "List(xs: _*)")
   }
-  test("inline def x = 42") {
-    val tree1 @ Defn.Def(List(Mod.Inline()), Term.Name("x"), Nil, Nil, None, Lit(42)) =
-      templStat("inline def x = 42")
-    val tree2 @ Defn.Def(List(Mod.Inline()), Term.Name("x"), Nil, Nil, None, Lit(42)) =
-      blockStat("inline def x = 42")
-
-    assert(tree1.syntax == "inline def x = 42")
-    assert(tree2.syntax == "inline def x = 42")
-  }
-
-  test("inline can be used as a modifier") {
-    val tree = dialects.Dotty("{ inline def x = 42 }").parse[Term].get
-    assert(tree.syntax == "{ inline def x = 42 }")
-  }
-
-  test("mod\"inline\"") {
-    assert(mod"inline".structure == "Mod.Inline()")
-  }
 
   test("implicit function type") {
     val Type.ImplicitFunction(List(Type.Name("String")), Type.Name("Int")) =

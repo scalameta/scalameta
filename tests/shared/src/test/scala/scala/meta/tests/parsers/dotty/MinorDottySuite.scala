@@ -118,7 +118,34 @@ class MinorDottySuite extends BaseDottySuite {
 
   test("opaque-type-in-object") {
     runTestAssert[Source]("object X { opaque type IArray[+T] = Array }")(
-      Source(List(Defn.Object(Nil, tname("X"), tpl(List(Defn.OpaqueTypeAlias(List(Mod.Opaque()), pname("IArray"), List(Type.Param(List(Mod.Covariant()), Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Bounds(None, None), pname("Array")))))))
+      Source(
+        List(
+          Defn.Object(
+            Nil,
+            tname("X"),
+            tpl(
+              List(
+                Defn.OpaqueTypeAlias(
+                  List(Mod.Opaque()),
+                  pname("IArray"),
+                  List(
+                    Type.Param(
+                      List(Mod.Covariant()),
+                      Type.Name("T"),
+                      Nil,
+                      Type.Bounds(None, None),
+                      Nil,
+                      Nil
+                    )
+                  ),
+                  Type.Bounds(None, None),
+                  pname("Array")
+                )
+              )
+            )
+          )
+        )
+      )
     )(parseSource)
   }
 
@@ -170,37 +197,82 @@ class MinorDottySuite extends BaseDottySuite {
   test("inline-soft-keyword-pos") {
     // as ident
     runTestAssert[Stat]("def f(inline: String): Unit")(
-Decl.Def(Nil, tname("f"), Nil, List(List(tparam("inline", "String"))), pname("Unit"))
+      Decl.Def(Nil, tname("f"), Nil, List(List(tparam("inline", "String"))), pname("Unit"))
     )(parseTempl)
 
     // as ident
     runTestAssert[Stat]("inline def inline(inline: inline): inline")(
-Decl.Def(List(Mod.Inline()), tname("inline"), Nil, List(List(tparam("inline", "inline"))), pname("inline"))
+      Decl.Def(
+        List(Mod.Inline()),
+        tname("inline"),
+        Nil,
+        List(List(tparam("inline", "inline"))),
+        pname("inline")
+      )
     )(parseTempl)
 
     // as modifier
     runTestAssert[Stat]("inline def inline(inline param: inline): inline")(
-Decl.Def(List(Mod.Inline()), tname("inline"), Nil, List(List(tparamInline("param", "inline"))), pname("inline"))
+      Decl.Def(
+        List(Mod.Inline()),
+        tname("inline"),
+        Nil,
+        List(List(tparamInline("param", "inline"))),
+        pname("inline")
+      )
     )(parseTempl)
 
     // as ident and modifier
     runTestAssert[Stat]("inline def inline(inline inline: inline): inline")(
-Decl.Def(List(Mod.Inline()), tname("inline"), Nil, List(List(tparamInline("inline", "inline"))), pname("inline"))
+      Decl.Def(
+        List(Mod.Inline()),
+        tname("inline"),
+        Nil,
+        List(List(tparamInline("inline", "inline"))),
+        pname("inline")
+      )
     )(parseTempl)
 
     // as ident and modifier
     runTestAssert[Stat]("inline val inline = false")(
       Defn.Val(List(Mod.Inline()), List(Pat.Var(tname("inline"))), None, Lit.Boolean(false))
     )(parseTempl)
-
-    // TODO: inline if
-    // TODO: inline match
   }
 
   test("inline-def-object") {
-    runTestAssert[Source]("object X { inline def f(inline sc: Str)(inline args: Any*): String = ??? }")(
-Source(List(Defn.Object(Nil, tname("X"), tpl(List(Defn.Def(List(Mod.Inline()), tname("f"), Nil, List(List(
-  tparamInline("sc", "Str")), List(Term.Param(List(Mod.Inline()), tname("args"), Some(Type.Repeated(pname("Any"))), None))), Some(pname("String")), tname("???")))))))
+    runTestAssert[Source](
+      "object X { inline def f(inline sc: Str)(inline args: Any*): String = ??? }"
+    )(
+      Source(
+        List(
+          Defn.Object(
+            Nil,
+            tname("X"),
+            tpl(
+              List(
+                Defn.Def(
+                  List(Mod.Inline()),
+                  tname("f"),
+                  Nil,
+                  List(
+                    List(tparamInline("sc", "Str")),
+                    List(
+                      Term.Param(
+                        List(Mod.Inline()),
+                        tname("args"),
+                        Some(Type.Repeated(pname("Any"))),
+                        None
+                      )
+                    )
+                  ),
+                  Some(pname("String")),
+                  tname("???")
+                )
+              )
+            )
+          )
+        )
+      )
     )(parseSource)
   }
 

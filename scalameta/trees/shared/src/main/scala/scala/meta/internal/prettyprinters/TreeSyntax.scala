@@ -524,11 +524,17 @@ object TreeSyntax {
             m(Expr, s("(", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
         }
       case t: Term.QuotedMacroExpr =>
-        s("'{ ", r(t.stats, "; "), " }")
+        t.stats match {
+          case head :: Nil => s("'{ ", head, " }")
+          case other => s("'{ ", r(t.stats.map(i(_)), ""), " }")
+        }
       case t: Term.QuotedMacroType =>
         s("'[ ", t.tpe, " ]")
       case t: Term.SplicedMacroExpr =>
-        s("${ ", r(t.stats, "; "), " }")
+        t.stats match {
+          case head :: Nil => s("${ ", head, " }")
+          case other => s("${ ", r(t.stats.map(i(_)), ""), " }")
+        }
       case t: Pat.Macro => s(t.body)
       case t: Type.Macro => s(t.body)
       case t: Term.PartialFunction => m(SimpleExpr, s("{", r(t.cases.map(i(_)), ""), n("}")))
@@ -837,6 +843,7 @@ object TreeSyntax {
 
       case t: Defn.Enum =>
         s(
+          w(t.mods, " "),
           kw("enum"),
           " ",
           t.name,
@@ -844,17 +851,17 @@ object TreeSyntax {
           t.ctor,
           templ(t.templ)
         )
-      case t: Defn.RepeatedCase =>
-        s(kw("case"), " ", r(t.cases, ", "))
-      case t: Defn.Case =>
+      case t: Defn.RepeatedEnumCase =>
+        s(w(t.mods, " "), kw("case"), " ", r(t.cases, ", "))
+      case t: Defn.EnumCase =>
         def init() = if (t.inits.nonEmpty) s(" extends ", r(t.inits, ", ")) else s("")
-        s("case", " ", t.name, t.tparams, t.ctor, init())
+        s(w(t.mods, " "), kw("case"), " ", t.name, t.tparams, t.ctor, init())
 
       case t: Defn.ExtensionGroup =>
         def name = if (t.name.is[Name.Anonymous]) s("") else s(" ", t.name)
         def base =
-          if (t.baseterm.name.is[Name.Anonymous]) s("")
-          else s(" on ", t.tparams, w("(", t.baseterm, ")"))
+          if (t.eparam.name.is[Name.Anonymous]) s("")
+          else s(" on ", t.tparams, w("(", t.eparam, ")"))
         s(
           w(t.mods, " "),
           kw("extension"),
@@ -869,7 +876,7 @@ object TreeSyntax {
           kw("def"),
           " ",
           t.tparams,
-          w("(", t.baseterm, ")"),
+          w("(", t.eparam, ")"),
           ".",
           t.name,
           t.paramss,
@@ -883,7 +890,7 @@ object TreeSyntax {
           kw("def"),
           " ",
           t.tparams,
-          w("(", t.baseterm, ")"),
+          w("(", t.eparam, ")"),
           " ",
           t.name,
           t.paramss,

@@ -217,12 +217,22 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         val sepRegions1 = {
           if (curr.is[LeftParen]) ')' :: sepRegions
           else if (curr.is[LeftBracket]) ']' :: sepRegions
-          else if (curr.is[LeftBrace]) '}' :: sepRegions
-          //TODO: this must be handled better
-          else if (curr.is[CaseIntro] && !dialect.allowEnums) '\u21d2' :: sepRegions
-          else if (curr.is[RightBrace]) {
+          else if (curr.is[LeftBrace]) {
+            // After encountering keyword Enum we add artificial '{' on top of stack.
+            // Then always after Enum next token is '{'. On token '{' we check if top of stack is '{'
+            // (which in case of enum is always true) and replace it with '$'.
+            // Now if we have token 'case' and top of stack is '$' we know it is Enum-case.
+            // In any other case it is 'match-case' or 'try-case'
+            if (!sepRegions.isEmpty && sepRegions.head == '{') '$' :: sepRegions.tail
+            else '}' :: sepRegions
+          } else if (curr.is[KwEnum]) '{' :: sepRegions
+          else if (curr.is[CaseIntro]) {
+            if (!sepRegions.isEmpty && sepRegions.head == '$') sepRegions
+            else '\u21d2' :: sepRegions
+          } else if (curr.is[RightBrace]) {
             var sepRegions1 = sepRegions
-            while (!sepRegions1.isEmpty && sepRegions1.head != '}') sepRegions1 = sepRegions1.tail
+            while (!sepRegions1.isEmpty && (sepRegions1.head != '}' || sepRegions1.head != '$'))
+              sepRegions1 = sepRegions1.tail
             if (!sepRegions1.isEmpty) sepRegions1 = sepRegions1.tail
             sepRegions1
           } else if (curr.is[RightBracket]) {
@@ -251,7 +261,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         if (lastNewlinePos != -1 &&
           prev != null && prev.is[CanEndStat] &&
           next != null && next.isNot[CantStartStat] &&
-          (sepRegions.isEmpty || sepRegions.head == '}')) {
+          (sepRegions.isEmpty || sepRegions.head == '}' || sepRegions.head == '$')) {
           var token = scannerTokens(lastNewlinePos)
           if (newlines) token = LFLF(token.input, token.dialect, token.start, token.end)
           parserTokens += token
@@ -545,7 +555,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def isCaseClassOrObject =
       token.is[KwCase] && (token.next.is[KwClass] || token.next.is[KwObject])
 
-    def isCaseClassOrObjectOrEnum = //TODO: conflicting with match case, must be addresed
+    def isCaseClassOrObjectOrEnum =
       (isCaseClassOrObject || (token.is[KwCase] && token.next.is[Ident] && dialect.allowEnums))
   }
 
@@ -938,8 +948,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             if (hasTypes)
               syntaxError("can't mix function type and method type syntaxes", at = token)
             hasParams = true
-            //TODO: check if `isUsing=false` is correct in this case
-            // what is this place handling? is using allowed here?
             param(
               ownerIsCase = false,
               ownerIsType = false,
@@ -2836,7 +2844,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
 
     // we haven't parsed modifiers earlier but current token looks like inline modifier
-    if (token.is[Ident] && token.text == "inline" && dialect.allowInlineMods && ahead(token.is[Ident])) {
+    if (token
+        .is[Ident] && token.text == "inline" && dialect.allowInlineMods && ahead(token.is[Ident])) {
       mods ++= List(modifier())
     }
 
@@ -3203,15 +3212,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (token.is[Ident] && !isSoftKw(token, SoftKeyword.SkOn)) typeName()
       else meta.Name.Anonymous()
 
-    val (tp, bt, sp) = if (isSoftKw(token, SoftKeyword.SkOn)) {
+    val (tparams, eparam, sparams) = if (isSoftKw(token, SoftKeyword.SkOn)) {
       next()
       val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
       accept[LeftParen]
-      val baseterm =
+      val eparam =
         param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false)
       accept[RightParen]
       val sparams = paramClauses(ownerIsType = false)
-      (tparams, baseterm, sparams)
+      (tparams, eparam, sparams)
     } else {
       (Nil, Term.Param(Nil, meta.Name.Anonymous(), None, None), Nil)
     }
@@ -3219,7 +3228,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     newLineOptWhenFollowedBy[LeftBrace]
     val (slf, statSeq) = inBraces(templateStatSeq())
     val body = Template(List.empty, List.empty, slf, statSeq)
-    assertExtensionGroup(ExtensionGroup(mods, name, tp, sp, bt, body))
+    assertExtensionGroup(ExtensionGroup(mods, name, tparams, sparams, eparam, body))
   }
 
   private def assertExtensionGroup(eg: ExtensionGroup): ExtensionGroup = {
@@ -3270,10 +3279,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
 
     def baseTermDefinedOnce: Unit = {
-      if (eg.baseterm.name.value != "") {
+      if (eg.eparam.name.value != "") {
         for (f <- eg.templ.stats) {
           if (f.is[Defn.ExtensionMethod]) {
-            val term = f.asInstanceOf[Defn.ExtensionMethod].baseterm
+            val term = f.asInstanceOf[Defn.ExtensionMethod].eparam
             if (term.name.value != "") {
               syntaxError(
                 "no extension method allowed here since leading parameter was already given",
@@ -3281,7 +3290,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
               )
             }
           } else if (f.is[Defn.ExtensionMethodInfix]) {
-            val term = f.asInstanceOf[Defn.ExtensionMethodInfix].baseterm
+            val term = f.asInstanceOf[Defn.ExtensionMethodInfix].eparam
             if (term.name.value != "") {
               syntaxError(
                 "no extension method allowed here since leading parameter was already given",
@@ -3504,8 +3513,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val typeParams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true)
     val ctor = primaryCtor(OwnedByEnum)
     val tmpl = templateOpt(OwnedByEnum)
-    val cases = tmpl.stats.collect { case _: Defn.Case | _: Defn.RepeatedCase => true }
-    if (cases.isEmpty) { syntaxError("Enumerations must contain at least one case", token) }
+    val containsCase =
+      tmpl.stats.find {
+        case _: Defn.EnumCase | _: Defn.RepeatedEnumCase => true
+        case _ => false
+      }.isDefined
+    if (!containsCase) { syntaxError("Enumerations must contain at least one case", token) }
     Defn.Enum(mods, enumName, typeParams, ctor, tmpl)
   }
 
@@ -3521,12 +3534,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  def enumRepeatedCaseDef(mods: List[Mod]): Defn.RepeatedCase = {
+  def enumRepeatedCaseDef(mods: List[Mod]): Defn.RepeatedEnumCase = {
     val values = commaSeparated(termName())
-    Defn.RepeatedCase(mods, values)
+    Defn.RepeatedEnumCase(mods, values)
   }
 
-  def enumSingleCaseDef(mods: List[Mod]): Defn.Case = {
+  def enumSingleCaseDef(mods: List[Mod]): Defn.EnumCase = {
     val name = termName()
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true)
     val ctor = primaryCtor(OwnedByEnum)
@@ -3534,7 +3547,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       accept[KwExtends]
       templateParents()
     } else { List() }
-    Defn.Case(mods, name, tparams, ctor, inits)
+    Defn.EnumCase(mods, name, tparams, ctor, inits)
   }
 
   def objectDef(mods: List[Mod]): Defn.Object = atPos(mods, auto) {

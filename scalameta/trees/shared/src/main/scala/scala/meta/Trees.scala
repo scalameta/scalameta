@@ -171,8 +171,7 @@ object Type {
   }
   @ast class Annotate(tpe: Type, annots: List[Mod.Annot] @nonEmpty) extends Type
   @ast class Lambda(tparams: List[Type.Param], tpe: Type) extends Type {
-    // TODO: check why it fails
-    // checkParent(ParentChecks.TypeLambda)
+    checkParent(ParentChecks.TypeLambda)
   }
   @ast class Macro(body: Term) extends Type
   @ast class Method(paramss: List[List[Term.Param]], tpe: Type) extends Type {
@@ -250,9 +249,6 @@ object Member {
   @branch trait Type extends Member {
     def name: scala.meta.Type.Name
   }
-  @branch trait Case extends Member {
-    def name: scala.meta.Name
-  }
 }
 
 @branch trait Decl extends Stat
@@ -312,17 +308,15 @@ object Defn {
       templ: Template
   ) extends Defn
       with Member.Type
-  @ast class Case(
+  @ast class EnumCase(
       mods: List[Mod],
       name: Term.Name,
       tparams: List[scala.meta.Type.Param],
       ctor: Ctor.Primary,
       inits: List[Init]
   ) extends Defn
-      with Member.Term {
-    // TODO: check parent(tpl) -> parent(enum) is actually enum
-  }
-  @ast class RepeatedCase(
+      with Member.Term
+  @ast class RepeatedEnumCase(
       mods: List[Mod],
       cases: List[Term.Name]
   ) extends Defn
@@ -339,12 +333,12 @@ object Defn {
       name: scala.meta.Name,
       tparams: List[scala.meta.Type.Param],
       sparams: List[List[Term.Param]],
-      baseterm: Term.Param,
+      eparam: Term.Param,
       templ: Template
   ) extends Defn
   @ast class ExtensionMethod(
       mods: List[Mod],
-      baseterm: Term.Param,
+      eparam: Term.Param,
       name: Term.Name,
       tparams: List[scala.meta.Type.Param],
       paramss: List[List[Term.Param]],
@@ -354,7 +348,7 @@ object Defn {
       with Member.Term
   @ast class ExtensionMethodInfix(
       mods: List[Mod],
-      baseterm: Term.Param,
+      eparam: Term.Param,
       name: Term.Name,
       tparams: List[scala.meta.Type.Param],
       paramss: List[List[Term.Param]],
@@ -389,7 +383,9 @@ object Defn {
       bounds: scala.meta.Type.Bounds,
       body: scala.meta.Type
   ) extends Defn
-      with Member.Type
+      with Member.Type {
+    checkFields(mods.exists(_.is[Mod.Opaque]))
+  }
   @ast class Type(
       mods: List[Mod],
       name: scala.meta.Type.Name,

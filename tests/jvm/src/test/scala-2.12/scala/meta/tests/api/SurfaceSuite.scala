@@ -58,7 +58,6 @@ class SurfaceSuite extends FunSuite {
       diagnostic,
       """
       |scala.meta.Dialect
-      |scala.meta.Member.Case
       |scala.meta.Tree
       |scala.meta.classifiers
       |scala.meta.classifiers.Classifiable *
@@ -210,10 +209,10 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Decl.Val
       |scala.meta.Decl.Var
       |scala.meta.Defn
-      |scala.meta.Defn.Case
       |scala.meta.Defn.Class
       |scala.meta.Defn.Def
       |scala.meta.Defn.Enum
+      |scala.meta.Defn.EnumCase
       |scala.meta.Defn.ExtensionGroup
       |scala.meta.Defn.ExtensionMethod
       |scala.meta.Defn.ExtensionMethodInfix
@@ -222,7 +221,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Defn.Macro
       |scala.meta.Defn.Object
       |scala.meta.Defn.OpaqueTypeAlias
-      |scala.meta.Defn.RepeatedCase
+      |scala.meta.Defn.RepeatedEnumCase
       |scala.meta.Defn.Trait
       |scala.meta.Defn.Type
       |scala.meta.Defn.Val
@@ -283,6 +282,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Pat.Extract
       |scala.meta.Pat.ExtractInfix
       |scala.meta.Pat.Interpolate
+      |scala.meta.Pat.Macro
       |scala.meta.Pat.SeqWildcard
       |scala.meta.Pat.Tuple
       |scala.meta.Pat.Typed
@@ -320,10 +320,13 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Term.Param
       |scala.meta.Term.PartialFunction
       |scala.meta.Term.Placeholder
+      |scala.meta.Term.QuotedMacroExpr
+      |scala.meta.Term.QuotedMacroType
       |scala.meta.Term.Ref
       |scala.meta.Term.Repeated
       |scala.meta.Term.Return
       |scala.meta.Term.Select
+      |scala.meta.Term.SplicedMacroExpr
       |scala.meta.Term.Super
       |scala.meta.Term.This
       |scala.meta.Term.Throw
@@ -343,6 +346,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.Function
       |scala.meta.Type.ImplicitFunction
       |scala.meta.Type.Lambda
+      |scala.meta.Type.Macro
       |scala.meta.Type.Method
       |scala.meta.Type.Name
       |scala.meta.Type.Or
@@ -438,6 +442,8 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.LeftBrace
       |scala.meta.tokens.Token.LeftBracket
       |scala.meta.tokens.Token.LeftParen
+      |scala.meta.tokens.Token.MacroQuote
+      |scala.meta.tokens.Token.MacroSplice
       |scala.meta.tokens.Token.RightArrow
       |scala.meta.tokens.Token.RightBrace
       |scala.meta.tokens.Token.RightBracket

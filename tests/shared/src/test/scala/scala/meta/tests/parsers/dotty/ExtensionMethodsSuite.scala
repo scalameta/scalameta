@@ -348,13 +348,6 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
   }
 
-  // extreme examples :)
-  //
-  // object X { def (c: Circle).circumference: Int = 2 }  // must be defined
-  // trait X { def (c: Circle).circumference: Int }       // rhs can be omitted
-  // inline def [T](c: Circle)f(x: T) <: T = x
-  // def [T](c: Circle)f(x: T): T{val x: String} = ???
-
   def circleExtMethod(on: String, name: String): Defn.ExtensionMethod =
     Defn.ExtensionMethod(
       Nil,
