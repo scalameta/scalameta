@@ -623,4 +623,313 @@ class ScaladocParserSuite extends FunSuite {
     )
   }
 
+  test("table escaped pipe") {
+    val result = parseString(
+      """
+          /**
+            * text1 text2
+            * |hdr1|hdr2|hdr3|h\|4|
+            * |----|:---|---:|:--:|
+            * |row1|row2|row3|row4|
+            * text3 text4
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("text1"), Word("text2"))),
+              Table(
+                Table.Row(Seq("hdr1", "hdr2", "hdr3", "h\\|4")),
+                Seq(Table.Left, Table.Left, Table.Right, Table.Center),
+                Seq(Table.Row(Seq("row1", "row2", "row3", "row4")))
+              ),
+              Text(Seq(Word("text3"), Word("text4")))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("table missing trailing pipe") {
+    val result = parseString(
+      """
+          /**
+            * text1 text2
+            * |hdr1|hdr2|hdr3|hdr4|
+            * |----|:---|---:|:--:|
+            * |row1|row2|row3|row4
+            * text3 text4
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Unknown(
+                """* text1 text2
+                   * |hdr1|hdr2|hdr3|hdr4|
+                   * |----|:---|---:|:--:|
+                   * |row1|row2|row3|row4
+                   * text3 text4""".stripMargin('*')
+              )
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("table different number of cols") {
+    val result = parseString(
+      """
+          /**
+            * text1 text2
+            * |hdr1|hdr2|hdr3|hdr4|
+            * |----|:---|---:|:--:|---:|:--:|
+            * |row1|row2|row3|row4|row5|
+            * text3 text4
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("text1"), Word("text2"))),
+              Table(
+                Table.Row(Seq("hdr1", "hdr2", "hdr3", "hdr4")),
+                Seq(Table.Left, Table.Left, Table.Right, Table.Center, Table.Right, Table.Center),
+                Seq(Table.Row(Seq("row1", "row2", "row3", "row4", "row5")))
+              ),
+              Text(Seq(Word("text3"), Word("text4")))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("table missing alignment row") {
+    val result = parseString(
+      """
+          /**
+            * text1 text2
+            * | hdr1 | hdr2  |  hdr3 |  hdr4   |
+            * |row1|row2|row3|row4|
+            * text3 text4
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("text1"), Word("text2"))),
+              Table(
+                Table.Row(Seq("hdr1", "hdr2", "hdr3", "hdr4")),
+                Seq(Table.Left, Table.Left, Table.Right, Table.Center),
+                Seq(Table.Row(Seq("row1", "row2", "row3", "row4")))
+              ),
+              Text(Seq(Word("text3"), Word("text4")))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("table missing alignment row with +- delim line") {
+    val result = parseString(
+      """
+          /**
+            * text1 text2
+            * +------+-------+-------+---------+
+            * | hdr1 | hdr2  |  hdr3 |  hdr4   |
+            * +------+-------+-------+---------+
+            * |row1  |row2   |row3   |row4     |
+            * +------+-------+-------+---------+
+            * text3 text4
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("text1"), Word("text2"))),
+              Table(
+                Table.Row(Seq("hdr1", "hdr2", "hdr3", "hdr4")),
+                Seq(Table.Left, Table.Left, Table.Right, Table.Center),
+                Seq(Table.Row(Seq("row1", "row2", "row3", "row4")))
+              ),
+              Text(Seq(Word("text3"), Word("text4")))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("table duplicate alignment row") {
+    val result = parseString(
+      """
+          /**
+            * text1 text2
+            * |hdr1|hdr2|hdr3|hdr4|
+            * |----|:---|---:|:--:|
+            * |----|:---|---:|:--:|
+            * |row1|row2|row3|row4|
+            * text3 text4
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("text1"), Word("text2"))),
+              Table(
+                Table.Row(Seq("hdr1", "hdr2", "hdr3", "hdr4")),
+                Seq(Table.Left, Table.Left, Table.Right, Table.Center),
+                Seq(
+                  Table.Row(Seq("----", ":---", "---:", ":--:")),
+                  Table.Row(Seq("row1", "row2", "row3", "row4"))
+                )
+              ),
+              Text(Seq(Word("text3"), Word("text4")))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("table empty single column") {
+    val result = parseString(
+      """
+          /**
+            * text1 text2
+            * ||
+            * |-|
+            * ||
+            * text3 text4
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("text1"), Word("text2"))),
+              Table(Table.Row(Seq("")), Seq(Table.Left), Seq(Table.Row(Seq("")))),
+              Text(Seq(Word("text3"), Word("text4")))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("table empty 'align' row") {
+    val result = parseString(
+      """
+          /**
+            * text1 text2
+            * |a|
+            * ||
+            * text3 text4
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("text1"), Word("text2"))),
+              Table(Table.Row(Seq("a")), Seq(Table.Left), Seq(Table.Row(Seq("")))),
+              Text(Seq(Word("text3"), Word("text4")))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("table only header row") {
+    val result = parseString(
+      """
+          /**
+            * text1 text2
+            * |hdr1  |hdr2   |hdr3|  hdr4||
+            * text3 text4
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("text1"), Word("text2"))),
+              Text(
+                Seq(
+                  Word("|hdr1"),
+                  Word("|hdr2"),
+                  Word("|hdr3|"),
+                  Word("hdr4||"),
+                  Word("text3"),
+                  Word("text4")
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("table alignment") {
+    assertEquals(Table.Left.syntax(0), ":-")
+    assertEquals(Table.Right.syntax(0), "-:")
+    assertEquals(Table.Center.syntax(0), "::")
+
+    assertEquals(Table.Left.syntax(1), ":--")
+    assertEquals(Table.Right.syntax(1), "--:")
+    assertEquals(Table.Center.syntax(1), ":-:")
+
+    assertEquals(Table.Left.leftPad(7), 0)
+    assertEquals(Table.Right.leftPad(7), 7)
+    assertEquals(Table.Center.leftPad(7), 3)
+  }
+
 }
