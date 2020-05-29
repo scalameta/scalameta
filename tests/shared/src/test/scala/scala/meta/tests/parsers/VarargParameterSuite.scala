@@ -117,7 +117,9 @@ class VarargParameterSuite extends ParseSuite {
   }
 
   private def check(definition: String, expected: scala.meta.Stat): Unit = {
-    assertEquals(templStat(definition), expected)
+    val obtained = templStat(definition)
+    assertNoDiff(obtained.structure, expected.structure)
+    assertNoDiff(obtained.syntax, expected.syntax)
   }
 
   private def checkError(definition: String, expected: String): Unit = {
