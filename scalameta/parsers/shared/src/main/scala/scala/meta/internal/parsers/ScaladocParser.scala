@@ -17,6 +17,7 @@ object ScaladocParser {
   private val hspaceChars = "\t\r "
   private def hspacesMin(min: Int) = CharsWhileIn(hspaceChars, min)
   private val hspaces0 = hspacesMin(0)
+  private val hspaces1 = hspacesMin(1)
   private def hspacesMinWithLen(min: Int): Parser[Int] =
     (Index ~ hspacesMin(min) ~ Index).map { case (b, e) => e - b }
 
@@ -119,9 +120,9 @@ object ScaladocParser {
   }
 
   private def listBlockParser(minIndent: Int = 1): Parser[ListBlock] = {
-    val listParser = (hspacesMinWithLen(minIndent) ~ listPrefix.! ~ hspaces0).flatMap {
+    val listParser = (hspacesMinWithLen(minIndent) ~ listPrefix.! ~ hspaces1).flatMap {
       case (indent, prefix) =>
-        val sep = (nl ~ hspacesMinWithLen(indent) ~ prefix).flatMap { x =>
+        val sep = (nl ~ hspacesMinWithLen(indent) ~ prefix ~ hspaces1).flatMap { x =>
           if (x != indent) Fail else Pass
         }
         (textParser ~ listBlockParser(indent + 1).?)
