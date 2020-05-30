@@ -394,6 +394,26 @@ class ScaladocParserSuite extends FunSuite {
     assertEquals(result, expected)
   }
 
+  test("lists 5") {
+    // looks like list but isn't
+    val result = parseString(
+      """
+        /**
+          * -5
+          *
+          * 1.0%
+          */
+         """
+    )
+    val expected = Option(
+      Scaladoc(
+        Paragraph(Text(Word("-5"))),
+        Paragraph(Text(Word("1.0%")))
+      )
+    )
+    assertEquals(result, expected)
+  }
+
   test("label parsing/merging") {
     val testStringToMerge = "Test DocText"
     val scaladoc: String = TagType.predefined
