@@ -25,18 +25,18 @@ class ScaladocParserSuite extends FunSuite {
   test("example usage") {
     assertEquals(
       parseString("/** Example scaladoc */"),
-      Some(Scaladoc(Paragraph(Text(Word("Example"), Word("scaladoc")))))
+      Some(Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("Example"), Word("scaladoc"))))))))
     )
   }
 
   test("indentation checks") {
 
     val expectedBody: String = "BODY"
-    val expectedBodyToken = Text(Word(expectedBody))
+    val expectedBodyToken = Text(Seq(Word(expectedBody)))
 
     assertEquals(
       parseString(s"/** $expectedBody*/"),
-      Some(Scaladoc(Paragraph(expectedBodyToken)))
+      Some(Scaladoc(Seq(Paragraph(Seq(expectedBodyToken)))))
     )
     assertEquals(
       parseString(
@@ -45,7 +45,7 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
       ),
-      Some(Scaladoc(Paragraph(expectedBodyToken)))
+      Some(Scaladoc(Seq(Paragraph(Seq(expectedBodyToken)))))
     )
     assertEquals(
       parseString(
@@ -54,7 +54,7 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
       ),
-      Some(Scaladoc(Paragraph(expectedBodyToken)))
+      Some(Scaladoc(Seq(Paragraph(Seq(expectedBodyToken)))))
     )
     assertEquals(
       parseString(
@@ -64,7 +64,7 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
       ),
-      Some(Scaladoc(Paragraph(expectedBodyToken)))
+      Some(Scaladoc(Seq(Paragraph(Seq(expectedBodyToken)))))
     )
   }
 
@@ -85,8 +85,10 @@ class ScaladocParserSuite extends FunSuite {
       ),
       Option(
         Scaladoc(
-          Paragraph(Text(words: _*)),
-          Paragraph(Text(words: _*))
+          Seq(
+            Paragraph(Seq(Text(words))),
+            Paragraph(Seq(Text(words)))
+          )
         )
       )
     )
@@ -109,8 +111,10 @@ class ScaladocParserSuite extends FunSuite {
       ),
       Option(
         Scaladoc(
-          Paragraph(Text(words: _*)),
-          Paragraph(Text(words: _*))
+          Seq(
+            Paragraph(Seq(Text(words))),
+            Paragraph(Seq(Text(words)))
+          )
         )
       )
     )
@@ -119,7 +123,7 @@ class ScaladocParserSuite extends FunSuite {
   test("paragraph parsing with references") {
     val descriptionBody = "Description Body"
     val words = descriptionBody.split("\\s+").toSeq.map(Word.apply)
-    val ref = Seq(Link("Description", "Body"))
+    val ref = Seq(Link("Description", Seq("Body")))
     assertEquals(
       parseString(
         s"""
@@ -140,10 +144,12 @@ class ScaladocParserSuite extends FunSuite {
       ),
       Option(
         Scaladoc(
-          Paragraph(Text(words ++ ref: _*)),
-          Paragraph(Text(words ++ ref ++ words: _*)),
-          Paragraph(Text(ref ++ words: _*)),
-          Paragraph(Text(words ++ ref ++ words: _*))
+          Seq(
+            Paragraph(Seq(Text(words ++ ref))),
+            Paragraph(Seq(Text(words ++ ref ++ words))),
+            Paragraph(Seq(Text(ref ++ words))),
+            Paragraph(Seq(Text(words ++ ref ++ words)))
+          )
         )
       )
     )
@@ -184,9 +190,11 @@ class ScaladocParserSuite extends FunSuite {
 
     val expectation = Option(
       Scaladoc(
-        Paragraph(Text((words :+ CodeExpr(codeBlock1)) ++ (words :+ CodeExpr(codeBlock2)): _*)),
-        Paragraph(Text(words: _*)),
-        Paragraph(CodeBlock(complexCodeBlock: _*), CodeBlock(complexCodeBlock: _*))
+        Seq(
+          Paragraph(Seq(Text((words :+ CodeExpr(codeBlock1)) ++ (words :+ CodeExpr(codeBlock2))))),
+          Paragraph(Seq(Text(words))),
+          Paragraph(Seq(CodeBlock(complexCodeBlock), CodeBlock(complexCodeBlock)))
+        )
       )
     )
     assertEquals(result, expectation)
@@ -223,16 +231,20 @@ class ScaladocParserSuite extends FunSuite {
       )
     val expectation = Option(
       Scaladoc(
-        Paragraph(
-          Heading(1, level1HeadingBody),
-          Heading(2, level2HeadingBody),
-          Heading(3, level3HeadingBody),
-          Heading(4, level4HeadingBody),
-          Heading(5, level5HeadingBody),
-          Heading(6, level6HeadingBody),
-          Text(Word(bad1)),
-          Text(Word(bad2)),
-          Text(Word(bad3), Word(bad4))
+        Seq(
+          Paragraph(
+            Seq(
+              Heading(1, level1HeadingBody),
+              Heading(2, level2HeadingBody),
+              Heading(3, level3HeadingBody),
+              Heading(4, level4HeadingBody),
+              Heading(5, level5HeadingBody),
+              Heading(6, level6HeadingBody),
+              Text(Seq(Word(bad1))),
+              Text(Seq(Word(bad2))),
+              Text(Seq(Word(bad3), Word(bad4)))
+            )
+          )
         )
       )
     )
@@ -260,14 +272,28 @@ class ScaladocParserSuite extends FunSuite {
       )
     val expected = Option(
       Scaladoc(
-        Paragraph(
-          Text(Word("Some"), Word("text:")),
-          ListBlock(
-            "-",
-            ListItem(Text(Word(list11)), Some(ListBlock("1.", ListItem(Text(Word(list21)))))),
-            ListItem(
-              Text(Word(list12)),
-              Some(ListBlock("a.", ListItem(Text(Word(list21))), ListItem(Text(Word(list22)))))
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                "-",
+                Seq(
+                  ListItem(
+                    Text(Seq(Word(list11))),
+                    Some(ListBlock("1.", Seq(ListItem(Text(Seq(Word(list21)))))))
+                  ),
+                  ListItem(
+                    Text(Seq(Word(list12))),
+                    Some(
+                      ListBlock(
+                        "a.",
+                        Seq(ListItem(Text(Seq(Word(list21)))), ListItem(Text(Seq(Word(list22)))))
+                      )
+                    )
+                  )
+                )
+              )
             )
           )
         )
@@ -300,28 +326,46 @@ class ScaladocParserSuite extends FunSuite {
       )
     val expected = Option(
       Scaladoc(
-        Paragraph(
-          Text(Word("Some"), Word("text:")),
-          ListBlock(
-            "1.",
-            ListItem(
-              Text(Word(list11)),
-              Some(
-                ListBlock(
-                  "i.",
-                  ListItem(Text(Word(list21)), Some(ListBlock("I.", ListItem(Text(Word(list31))))))
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                "1.",
+                Seq(
+                  ListItem(
+                    Text(Seq(Word(list11))),
+                    Some(
+                      ListBlock(
+                        "i.",
+                        Seq(
+                          ListItem(
+                            Text(Seq(Word(list21))),
+                            Some(ListBlock("I.", Seq(ListItem(Text(Seq(Word(list31)))))))
+                          )
+                        )
+                      )
+                    )
+                  )
                 )
-              )
-            )
-          ),
-          ListBlock(
-            "-",
-            ListItem(
-              Text(Word(list12)),
-              Some(
-                ListBlock(
-                  "I.",
-                  ListItem(Text(Word(list22)), Some(ListBlock("I.", ListItem(Text(Word(list32))))))
+              ),
+              ListBlock(
+                "-",
+                Seq(
+                  ListItem(
+                    Text(Seq(Word(list12))),
+                    Some(
+                      ListBlock(
+                        "I.",
+                        Seq(
+                          ListItem(
+                            Text(Seq(Word(list22))),
+                            Some(ListBlock("I.", Seq(ListItem(Text(Seq(Word(list32)))))))
+                          )
+                        )
+                      )
+                    )
+                  )
                 )
               )
             )
@@ -351,15 +395,21 @@ class ScaladocParserSuite extends FunSuite {
       )
     val expected = Option(
       Scaladoc(
-        Paragraph(
-          Text(Word("Some"), Word("text:")),
-          ListBlock(
-            "-",
-            ListItem(
-              Text(Word(list11), Word(list11)),
-              Some(ListBlock("-", ListItem(Text(Word(list21)))))
-            ),
-            ListItem(Text(Word(list12)))
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                "-",
+                Seq(
+                  ListItem(
+                    Text(Seq(Word(list11), Word(list11))),
+                    Some(ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))))
+                  ),
+                  ListItem(Text(Seq(Word(list12))))
+                )
+              )
+            )
           )
         )
       )
@@ -383,11 +433,15 @@ class ScaladocParserSuite extends FunSuite {
       )
     val expected = Option(
       Scaladoc(
-        Paragraph(
-          Tag(TagType.InheritDoc),
-          Text(Word("Some"), Word("text:")),
-          ListBlock("1.", ListItem(Text(Word(list11)))),
-          ListBlock("-", ListItem(Text(Word(list12))))
+        Seq(
+          Paragraph(
+            Seq(
+              Tag(TagType.InheritDoc),
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock("1.", Seq(ListItem(Text(Seq(Word(list11)))))),
+              ListBlock("-", Seq(ListItem(Text(Seq(Word(list12))))))
+            )
+          )
         )
       )
     )
@@ -406,10 +460,7 @@ class ScaladocParserSuite extends FunSuite {
          """
     )
     val expected = Option(
-      Scaladoc(
-        Paragraph(Text(Word("-5"))),
-        Paragraph(Text(Word("1.0%")))
-      )
+      Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("-5"))))), Paragraph(Seq(Text(Seq(Word("1.0%")))))))
     )
     assertEquals(result, expected)
   }
@@ -431,7 +482,7 @@ class ScaladocParserSuite extends FunSuite {
     parsedScaladoc.foreach {
       _.para.head.term.foreach {
         case t: Tag if t.tag.hasDesc =>
-          assertEquals(t.desc.parts.takeRight(words.length), words)
+          assertEquals(t.desc.part.takeRight(words.length), words)
         case _ =>
       }
     }
@@ -448,9 +499,13 @@ class ScaladocParserSuite extends FunSuite {
 
     val expectation = Option(
       Scaladoc(
-        Paragraph(
-          Tag(TagType.Param, Word("foo"), Text(Word("-"), Word("bar"), Word("baz"))),
-          Text(Word("@return"))
+        Seq(
+          Paragraph(
+            Seq(
+              Tag(TagType.Param, Word("foo"), Text(Seq(Word("-"), Word("bar"), Word("baz")))),
+              Text(Seq(Word("@return")))
+            )
+          )
         )
       )
     )
@@ -468,7 +523,11 @@ class ScaladocParserSuite extends FunSuite {
 
     val expectation = Option(
       Scaladoc(
-        Paragraph(Tag(TagType.Param, Word("foo"), Text(Word("-"), Word("bar"), Word("baz"))))
+        Seq(
+          Paragraph(
+            Seq(Tag(TagType.Param, Word("foo"), Text(Seq(Word("-"), Word("bar"), Word("baz")))))
+          )
+        )
       )
     )
     assertEquals(result, expectation)
@@ -485,8 +544,12 @@ class ScaladocParserSuite extends FunSuite {
 
     val expectation = Option(
       Scaladoc(
-        Paragraph(
-          Tag(TagType.UnknownTag("@foo"), null, Text(Word("-"), Word("bar"), Word("baz")))
+        Seq(
+          Paragraph(
+            Seq(
+              Tag(TagType.UnknownTag("@foo"), null, Text(Seq(Word("-"), Word("bar"), Word("baz"))))
+            )
+          )
         )
       )
     )
@@ -503,7 +566,9 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
       ),
-      Option(Scaladoc(Paragraph(Tag(TagType.Param, Word("foo"), Text(Word("bar-baz"))))))
+      Option(
+        Scaladoc(Seq(Paragraph(Seq(Tag(TagType.Param, Word("foo"), Text(Seq(Word("bar-baz"))))))))
+      )
     )
   }
 
@@ -516,7 +581,7 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
       ),
-      Option(Scaladoc(Paragraph(Text(Word("@param")))))
+      Option(Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("@param"))))))))
     )
   }
 
@@ -530,7 +595,7 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
       ),
-      Option(Scaladoc(Paragraph(Text(Word("@param")), Text(Word("@return")))))
+      Option(Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("@param"))), Text(Seq(Word("@return"))))))))
     )
   }
 
@@ -546,7 +611,13 @@ class ScaladocParserSuite extends FunSuite {
       ),
       Option(
         Scaladoc(
-          Paragraph(Tag(TagType.UnknownTag("@newtag"), desc = Text(Word("newtag"), Word("text"))))
+          Seq(
+            Paragraph(
+              Seq(
+                Tag(TagType.UnknownTag("@newtag"), desc = Text(Seq(Word("newtag"), Word("text"))))
+              )
+            )
+          )
         )
       )
     )
