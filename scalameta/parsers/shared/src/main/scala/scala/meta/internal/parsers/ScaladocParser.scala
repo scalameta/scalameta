@@ -56,10 +56,7 @@ object ScaladocParser {
   private val codeBlockParser: Parser[CodeBlock] = {
     val code = codeLineParser.rep(1, sep = nl)
     val pattern = leadHspaces0 ~ codePrefix ~ nl ~ code ~ codeSuffix
-    P(pattern.map { x =>
-      val lines = if (x.last.nonEmpty) x.toSeq else x.view.dropRight(1).toSeq
-      CodeBlock(lines: _*)
-    })
+    P(pattern.map { x => CodeBlock(if (x.last.nonEmpty) x.toSeq else x.view.dropRight(1).toSeq) })
   }
 
   private val headingParser: Parser[Heading] = {
@@ -82,7 +79,7 @@ object ScaladocParser {
     val end = space | linkSuffix
     val anchor = P((!end ~ AnyChar).rep(1).!.rep(1, sep = spaces1))
     val pattern = linkPrefix ~ anchor ~ linkSuffix
-    P(pattern.map(x => Link(x.head, x.tail.toSeq: _*)))
+    P(pattern.map(x => Link(x.head, x.tail.toSeq)))
   }
 
   private val textParser: Parser[Text] = {
@@ -91,7 +88,7 @@ object ScaladocParser {
     val part: Parser[TextPart] = P(codeExprParser | linkParser | wordParser)
     val sep = P(!end ~ nlHspaces1)
     val text = hspaces0 ~ part.rep(1, sep = sep)
-    P(text.map(x => Text(x.toSeq: _*)))
+    P(text.map(x => Text(x.toSeq)))
   }
 
   private val trailTextParser: Parser[Text] = P(nlHspaces1 ~ textParser)
@@ -128,7 +125,7 @@ object ScaladocParser {
         (textParser ~ listBlockParser(indent + 1).?)
           .map { case (desc, list) => ListItem(desc, list) }
           .rep(1, sep = sep)
-          .map(x => ListBlock(prefix, x.toSeq: _*))
+          .map(x => ListBlock(prefix, x.toSeq))
     }
     P(startOrNl ~ listParser)
   }
@@ -164,9 +161,9 @@ object ScaladocParser {
         parser.parse(paragraph) match {
           case p: Parsed.Success[collection.Seq[Scaladoc.Term]] =>
             if (p.value.nonEmpty)
-              res += Scaladoc.Paragraph(p.value.toSeq: _*)
+              res += Scaladoc.Paragraph(p.value.toSeq)
           case _ =>
-            res += Scaladoc.Paragraph(Unknown(paragraph))
+            res += Scaladoc.Paragraph(Seq(Unknown(paragraph)))
         }
       }
 
@@ -182,7 +179,7 @@ object ScaladocParser {
       }
     }
     flush
-    Scaladoc(res.result(): _*)
+    Scaladoc(res.result())
   }
 
 }

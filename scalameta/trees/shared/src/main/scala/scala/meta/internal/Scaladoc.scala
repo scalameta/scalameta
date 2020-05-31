@@ -1,7 +1,7 @@
 package scala.meta.internal
 
 /** The full document */
-final case class Scaladoc(para: Scaladoc.Paragraph*)
+final case class Scaladoc(para: Seq[Scaladoc.Paragraph])
 
 /**
  * The available tokens and their documentation are obtained from:
@@ -12,7 +12,7 @@ object Scaladoc {
   sealed abstract class Term
 
   /** A single paragraph of the document */
-  final case class Paragraph(term: Term*)
+  final case class Paragraph(term: Seq[Term])
 
   /** A paragraph which failed parsing */
   final case class Unknown(text: String) extends Term
@@ -25,7 +25,7 @@ object Scaladoc {
   }
 
   /** A description or other inline text block */
-  final case class Text(parts: TextPart*) extends Term
+  final case class Text(part: Seq[TextPart]) extends Term
 
   /** A single word, without whitespace */
   final case class Word(value: String) extends TextPart {
@@ -33,7 +33,7 @@ object Scaladoc {
   }
 
   /** A reference to a symbol */
-  final case class Link(ref: String, anchor: String*) extends TextPart {
+  final case class Link(ref: String, anchor: Seq[String]) extends TextPart {
     override def syntax: String = anchor.mkString(s"[[$ref", " ", "]]")
   }
 
@@ -43,7 +43,7 @@ object Scaladoc {
   }
 
   /** A block of one or more lines of code */
-  final case class CodeBlock(code: String*) extends Term
+  final case class CodeBlock(code: Seq[String]) extends Term
 
   /** A heading */
   final case class Heading(level: Int, title: String) extends Term
@@ -54,7 +54,7 @@ object Scaladoc {
   final case class ListItem(text: Text, nested: Option[ListBlock] = None)
 
   /** Represents a list block */
-  final case class ListBlock(prefix: String, items: ListItem*) extends Term
+  final case class ListBlock(prefix: String, item: Seq[ListItem]) extends Term
 
   /* Tags */
 
