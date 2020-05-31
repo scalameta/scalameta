@@ -437,6 +437,62 @@ class ScaladocParserSuite extends FunSuite {
     }
   }
 
+  test("tags valid then invalid") {
+    val result = parseString(
+      """
+          /** @param foo - bar baz
+            * @return
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Paragraph(
+          Tag(TagType.Param, Word("foo"), Text(Word("-"), Word("bar"), Word("baz"))),
+          Text(Word("@return"))
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("known tag looks like list") {
+    val result = parseString(
+      """
+          /** @param foo
+            *   - bar baz
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Paragraph(Tag(TagType.Param, Word("foo"), Text(Word("-"), Word("bar"), Word("baz"))))
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("unknown tag looks like list") {
+    val result = parseString(
+      """
+          /** @foo
+            *   - bar baz
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Paragraph(
+          Tag(TagType.UnknownTag("@foo"), null, Text(Word("-"), Word("bar"), Word("baz")))
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
   test("parse tag") {
     assertEquals(
       parseString(
@@ -460,7 +516,7 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
       ),
-      Option(Scaladoc(Paragraph(Unknown(" @param"))))
+      Option(Scaladoc(Paragraph(Text(Word("@param")))))
     )
   }
 
@@ -474,7 +530,7 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
       ),
-      Option(Scaladoc(Paragraph(Unknown(" @param\n @return"))))
+      Option(Scaladoc(Paragraph(Text(Word("@param")), Text(Word("@return")))))
     )
   }
 

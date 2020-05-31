@@ -72,7 +72,7 @@ object ScaladocParser {
         else {
           val title = (!delim ~ AnyChar).rep(1)
           // Heading description and delimiter
-          (title.! ~/ delim ~/ &(nl)).map(x => Heading(level, x.trim))
+          (title.! ~ delim ~ &(nl)).map(x => Heading(level, x.trim))
         }
       }
     )
@@ -115,7 +115,7 @@ object ScaladocParser {
         }
       }
     }
-    val tagLabelParser = P(("@" ~/ labelParser).!)
+    val tagLabelParser = P(("@" ~ labelParser).!)
     P(leadHspaces0 ~ tagLabelParser.flatMap(getParserByTag))
   }
 
