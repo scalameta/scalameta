@@ -29,19 +29,27 @@ trait BaseDottySuite extends ParseSuite {
   final def int(i: Int) = Lit.Int(i)
   final def init(name: String): Init = Init(pname(name), anon, Nil)
 
+  protected def verifyEqual[T <: Tree](obtained: T, expected: T, assertLayout: Boolean): Unit = {
+    implicit val dialect = dialects.Dotty
+    assertNoDiff(obtained.structure, expected.structure)
+    if (assertLayout) {
+      assertNoDiff(obtained.syntax, expected.syntax)
+    }
+  }
+
   protected def runTestAssert[T <: Tree](code: String, assertLayout: Boolean = true)(
       expected: T
   )(implicit parser: String => T) {
     import scala.meta.dialects.Dotty
     val obtained: T = parser(code)
     try {
-      assertEquals(obtained, expected)
+      verifyEqual(obtained, expected, assertLayout)
 
       // check bijection
       val r = scala.meta.internal.prettyprinters.TreeSyntax.reprint[T](obtained)(dialects.Dotty)
-      assertEquals(parser(r.toString), expected)
+      verifyEqual(parser(r.toString), expected, assertLayout)
       if (assertLayout) {
-        assertEquals(r.toString, code)
+        assertNoDiff(r.toString, code)
       }
     } catch {
       case e: Throwable =>
