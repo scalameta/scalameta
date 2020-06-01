@@ -494,12 +494,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def onlyAllowedMods[M1 <: Mod, M2 <: Mod](mods: List[Mod], culprit: String)(
       implicit classifier1: Classifier[Mod, M1],
       tag1: ClassTag[M1],
-      tag2: ClassTag[M2],
-      classifier2: Classifier[Mod, M2]
+      classifier2: Classifier[Mod, M2],
+      tag2: ClassTag[M2]
   ) = {
     mods
-      .diff(mods.getAll[M1] ++ mods.getAll[M2])
-      .foreach(m => syntaxError(s" Invalid modifier ${m}${formatCulprit(culprit)}", at = m))
+      .foreach {
+        case m if classifier1.apply(m) || classifier2.apply(m) =>
+        case m => syntaxError(s" Invalid modifier ${m}${formatCulprit(culprit)}", at = m)
+      }
   }
 
   def onlyAcceptMod[M <: Mod, T <: Token](
@@ -3570,18 +3572,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   // therefore, I'm going to use `Term.Name("this")` here for the time being
 
   def primaryCtor(owner: TemplateOwner): Ctor.Primary = autoPos {
-    if (owner.isClass || (owner.isTrait && dialect.allowTraitParameters)) {
+    if (owner.isClass || (owner.isTrait && dialect.allowTraitParameters) || owner.isEnum) {
       val mods = constructorAnnots() ++ ctorModifiers()
       val name = autoPos(Name.Anonymous())
       val paramss = paramClauses(ownerIsType = true, owner == OwnedByCaseClass)
       Ctor.Primary(mods, name, paramss)
     } else if (owner.isTrait) {
       Ctor.Primary(Nil, atPos(in.tokenPos, in.tokenPos)(Name.Anonymous()), Nil)
-    } else if (owner.isEnum) {
-      val mods = constructorAnnots() ++ ctorModifiers()
-      val name = autoPos(Name.Anonymous())
-      val paramss = paramClauses(ownerIsType = true, false)
-      Ctor.Primary(mods, name, paramss)
     } else {
       unreachable(debug(owner))
     }

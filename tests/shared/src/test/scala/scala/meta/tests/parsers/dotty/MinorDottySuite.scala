@@ -76,12 +76,6 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
-  test("literal-types") {
-    runTestAssert[Stat]("val a: 42 = 42")(
-      Defn.Val(Nil, List(Pat.Var(tname("a"))), Some(int(42)), int(42))
-    )
-  }
-
   test("case-classes-empty-plist") {
     templStat("case class A()")(dialects.Dotty)
     templStat("case class A @deprecated() ()")(dialects.Dotty)
