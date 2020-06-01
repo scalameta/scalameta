@@ -18,7 +18,6 @@ jobs:
           - "++2.13.1 testsJVM/test"
           - "++2.13.2 testsJVM/test"
           - "download-scala-library ++2.12.11 testsJVM/slow:test"
-          - "++2.11.12 testsJS/test"
           - "++2.12.10 testsJS/test"
           - "++2.13.1 testsJS/test"
           - "mima"

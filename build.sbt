@@ -6,7 +6,6 @@ import sbtcrossproject.CrossPlugin.autoImport.crossProject
 import org.scalameta.build._
 import org.scalameta.build.Versions._
 import complete.DefaultParsers._
-import scalapb.compiler.Version.scalapbVersion
 import munit.sbtmunit.BuildInfo.munitVersion
 
 lazy val LanguageVersions = Seq(LatestScala213, LatestScala212, LatestScala211)
@@ -70,6 +69,7 @@ unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
 console := console.in(scalameta.jvm, Compile).value
 
 val commonJsSettings = Seq(
+  crossScalaVersions := List(LatestScala213, LatestScala212),
   scalacOptions ++= {
     if (isSnapshot.value) Seq.empty
     else {
@@ -322,7 +322,7 @@ lazy val testkit = project
       "org.scalameta" %% "munit" % munitVersion,
       // These are used to download and extract a corpus tar.gz
       "org.rauschig" % "jarchivelib" % "0.8.0",
-      "commons-io" % "commons-io" % "2.6",
+      "commons-io" % "commons-io" % "2.7",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0"
     ),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
@@ -354,7 +354,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
   )
   .jsSettings(
     commonJsSettings,
-    scalaJSModuleKind := ModuleKind.CommonJSModule
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta)
@@ -383,7 +383,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
   ),
   buildInfoPackage := "scala.meta.tests",
   libraryDependencies ++= {
-    if (isScala212.value) List("com.lihaoyi" %%% "fansi" % "0.2.8" % "test")
+    if (isScala212.value) List("com.lihaoyi" %%% "fansi" % "0.2.9" % "test")
     else Nil
   },
   libraryDependencies ++= List(
@@ -547,12 +547,37 @@ lazy val mergeSettings = Def.settings(
 lazy val protobufSettings = Def.settings(
   sharedSettings,
   PB.targets.in(Compile) := Seq(
-    scalapb.gen(
-      flatPackage = true // Don't append filename to package
-    ) -> sourceManaged.in(Compile).value
+    protocbridge.Target(
+      generator = PB.gens.plugin("scala"),
+      outputPath = (sourceManaged in Compile).value,
+      options = scalapb
+        .gen(
+          flatPackage = true // Don't append filename to package
+        )
+        ._2
+    )
   ),
   PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb")),
-  libraryDependencies += "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion
+  PB.additionalDependencies := Nil,
+  libraryDependencies ++= {
+    val scalapbVersion =
+      if (scalaBinaryVersion.value == "2.11") {
+        "0.9.7"
+      } else {
+        scalapb.compiler.Version.scalapbVersion
+      }
+    Seq(
+      "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
+      "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion % "protobuf",
+      "com.thesamet.scalapb" % "protoc-gen-scala" % scalapbVersion % "protobuf" artifacts (
+        if (scala.util.Properties.isWin) {
+          Artifact("protoc-gen-scala", PB.ProtocPlugin, "bat", "windows")
+        } else {
+          Artifact("protoc-gen-scala", PB.ProtocPlugin, "sh", "unix")
+        }
+      )
+    )
+  }
 )
 
 lazy val adhocRepoUri = sys.props("scalameta.repository.uri")
@@ -636,6 +661,11 @@ lazy val publishableSettings = Def.settings(
         <id>olafurpg</id>
         <name>Ólafur Páll Geirsson</name>
         <url>https://geirsson.com/</url>
+      </developer>
+      <developer>
+        <id>kpbochenek</id>
+        <name>Krzysztof Bochenek</name>
+        <url>https://github.com/kpbochenek</url>
       </developer>
       <developer>
         <id>mutcianm</id>
