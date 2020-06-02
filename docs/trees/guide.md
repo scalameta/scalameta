@@ -17,7 +17,7 @@ this guide, you will learn how to
 ## Installation
 
 Add a dependency to Scalameta in your build to get started. Scalameta supports
-Scala 2.11, Scala 2.12, Scala.js and Scala Native.
+Scala 2.11, Scala 2.12, Scala 2.13, Scala.js and Scala Native.
 
 ### sbt
 
@@ -61,7 +61,7 @@ Scala programs.
 ![](assets/tree.svg)
 
 Scalameta trees are **lossless**, meaning that they represent Scala programs in
-sufficient to go from text to trees and vice-versa. Lossless syntax trees are
+sufficient detail to go from text to trees and vice-versa. Lossless syntax trees are
 great for fine-grained analysis of source code, which is useful for a range of
 applications including formatting, refactoring, linting and documentation tools
 
@@ -118,7 +118,7 @@ print(exampleTree.syntax)
 ```
 
 The difference between `text.parse[Source]` and `input.parse[Source]` is that
-the filename appear in error messages for `Input.VirtualFile`.
+the filename appears in error messages for `Input.VirtualFile`.
 
 ```scala mdoc
 println(
@@ -400,7 +400,7 @@ quasiquotes produce different references
 q"true" == q"true"
 ```
 
-Equality checks with `==` will only return true when the reference is the same.j
+Equality checks with `==` will only return true when the reference is the same.
 
 ```scala mdoc
 { val treeReference = q"true"
