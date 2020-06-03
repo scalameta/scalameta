@@ -2,6 +2,8 @@ package scala.meta
 package internal
 package parsers
 
+import scala.meta.Term.QuotedMacroExpr
+import scala.meta.Term.SplicedMacroExpr
 import scala.language.implicitConversions
 import scala.compat.Platform.EOL
 import scala.reflect.{ClassTag, classTag}
@@ -315,22 +317,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     finally in = forked
   }
 
-  case class ParseError(msg: String, token: Token)
-  type ParseResult[T] = Either[ParseError, T]
-
-  @inline final def tryParse[T](body: => ParseResult[T]): ParseResult[T] = {
-    val forked = in.fork
-    var reset = false
-    try {
-      val result = body
-      if (result.isLeft) reset = true
-      result
-    } finally {
-      if (reset) in = forked
-    }
-
-  }
-
   /** Methods inParensOrError and similar take a second argument which, should
    *  the next token not be the expected opener (e.g. token.LeftParen) will be returned
    *  instead of the contents of the groupers.  However in all cases accept[LeftParen]
@@ -573,7 +559,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def unapply(token: Token): Boolean = {
       token.is[Ident] || token.is[KwSuper] || token.is[KwThis] ||
       token.is[LeftParen] || token.is[At] || token.is[Underscore] ||
-      token.is[Unquote] || (token.is[Literal] && dialect.allowLiteralTypes)
+      token.is[Unquote] || (token.is[Literal] && dialect.allowLiteralTypes) ||
+      token.is[MacroSplicedIdent]
     }
   }
 
@@ -586,7 +573,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[KwNew] || token.is[KwReturn] || token.is[KwSuper] ||
       token.is[KwThis] || token.is[KwThrow] || token.is[KwTry] || token.is[KwWhile] ||
       token.is[LeftParen] || token.is[LeftBrace] || token.is[Underscore] ||
-      token.is[Unquote] || token.is[MacroSplice] || token.is[MacroQuote]
+      token.is[Unquote] || token.is[MacroSplice] || token.is[MacroQuote] ||
+      token.is[MacroQuotedIdent] || token.is[MacroSplicedIdent]
     }
   }
 
@@ -699,9 +687,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[Ident] || token.is[Literal] ||
       token.is[Interpolation.End] || token.is[Xml.End] ||
       token.is[KwReturn] || token.is[KwThis] || token.is[KwType] ||
-      token.is[RightParen] || token.is[RightBracket] || token.is[RightBrace] || token
-        .is[Underscore] ||
-      token.is[Ellipsis] || token.is[Unquote]
+      token.is[RightParen] || token.is[RightBracket] || token.is[RightBrace] ||
+      token.is[Underscore] || token.is[Ellipsis] || token.is[Unquote] ||
+      token.is[MacroQuotedIdent] || token.is[MacroSplicedIdent]
     }
   }
 
@@ -1157,6 +1145,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           else syntaxError(s"$dialect doesn't support literal types", at = path())
         case MacroSplice() =>
           Type.Macro(macroSplice())
+        case MacroSplicedIdent(_) =>
+          Type.Macro(macroSplicedIdent())
         case _ =>
           val ref = path() match {
             case q: Quasi => q.become[Term.Ref.Quasi]
@@ -2087,6 +2077,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           macroQuote()
         case MacroSplice() =>
           macroSplice()
+        case MacroQuotedIdent(_) =>
+          macroQuotedIdent()
+        case MacroSplicedIdent(_) =>
+          macroSplicedIdent()
         case _ =>
           syntaxError(s"illegal start of simple expression", at = token)
       }
@@ -2096,17 +2090,39 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def macroSplice(): Term = autoPos {
     accept[MacroSplice]
-    Term.SplicedMacroExpr(inBraces(templateStats()))
+    Term.SplicedMacroExpr(Term.Block(inBraces(templateStats())))
   }
 
   def macroQuote(): Term = autoPos {
     accept[MacroQuote]
     if (token.is[LeftBrace]) {
-      Term.QuotedMacroExpr(inBraces(templateStats()))
+      Term.QuotedMacroExpr(Term.Block(inBraces(templateStats())))
     } else if (token.is[LeftBracket]) {
       Term.QuotedMacroType(inBrackets(typ()))
     } else {
       syntaxError("Quotation only works for expressions and types", at = token)
+    }
+  }
+
+  def macroQuotedIdent(): Term = autoPos {
+    token match {
+      case MacroQuotedIdent(value) =>
+        val name = atPos(in.tokenPos, in.tokenPos)(Term.Name(value))
+        next()
+        Term.QuotedMacroExpr(name)
+      case _ =>
+        syntaxError("Expected quoted ident", at = token)
+    }
+  }
+
+  def macroSplicedIdent(): Term = autoPos {
+    token match {
+      case MacroSplicedIdent(value) =>
+        val name = atPos(in.tokenPos, in.tokenPos)(Term.Name(value))
+        next()
+        Term.SplicedMacroExpr(name)
+      case _ =>
+        syntaxError("Expected quoted ident", at = token)
     }
   }
 
@@ -2552,6 +2568,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
         case MacroQuote() =>
           Pat.Macro(macroQuote())
+        case MacroQuotedIdent(_) =>
+          Pat.Macro(macroQuotedIdent())
         case _ =>
           onError(token)
       })
@@ -3140,33 +3158,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  // GivenSig ::= [id] [DefTypeParamClause] {UsingParamClause} ‘as’
-  private def tryGivenSig(): GivenSig = {
-    val anonymousName = scala.meta.Name.Anonymous()
-
-    tryParse[GivenSig] {
-      val name: meta.Name = if (token.is[Ident]) typeName() else anonymousName
-      val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
-      val uparamss = paramClauses(ownerIsType = false)
-
-      if (isSoftKw(token, SkAs)) {
-        next()
-        Right(GivenSig(name, tparams, uparamss))
-      } else {
-        Left(ParseError("as keyword not found", token))
-      }
-    } match {
-      case Right(givenSig) => givenSig
-      case Left(_) => GivenSig(anonymousName, List.empty, List.empty)
-    }
-  }
-
-  case class GivenSig(
-      name: meta.Name,
-      tparams: List[scala.meta.Type.Param],
-      paramss: List[List[Term.Param]]
-  )
-
   // Given             ::= 'given' GivenDef
   private def givenDecl(mods: List[Mod]): Stat = {
     accept[KwGiven]
@@ -3175,19 +3166,32 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   // GivenDef          ::=  [GivenSig] [‘_’ ‘<:’] Type ‘=’ Expr
   //                     |  [GivenSig] ConstrApps [TemplateBody]
+  // GivenSig          ::=  [id] [DefTypeParamClause] {UsingParamClause} ‘as’
   private def givenDef(mods: List[Mod]): Stat = {
-    val givenSig = tryGivenSig()
+    val anonymousName = scala.meta.Name.Anonymous()
+
+    val forked = in.fork
+    val name: meta.Name = if (token.is[Ident]) typeName() else anonymousName
+    val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
+    val uparamss = paramClauses(ownerIsType = false)
+    val (sigName, sigTparams, sigUparamss) = if (isSoftKw(token, SkAs)) {
+      next()
+      (name, tparams, uparamss)
+    } else {
+      in = forked
+      (anonymousName, List.empty, List.empty)
+    }
 
     val decltpe = startModType()
 
     if (token.is[Equals]) {
       accept[Equals]
       val rhs = expr()
-      Defn.GivenAlias(mods, givenSig.name, givenSig.tparams, givenSig.paramss, decltpe, rhs)
+      Defn.GivenAlias(mods, sigName, sigTparams, sigUparamss, decltpe, rhs)
     } else {
       val (slf, stats) = templateBodyOpt(true)
       val rhs = Template(List.empty, List.empty, slf, stats)
-      Defn.Given(mods, givenSig.name, givenSig.tparams, givenSig.paramss, decltpe, rhs)
+      Defn.Given(mods, sigName, sigTparams, sigUparamss, decltpe, rhs)
     }
   }
 

@@ -104,9 +104,9 @@ object Term {
     checkFields(stats.forall(_.isBlockStat))
   }
   @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term
-  @ast class QuotedMacroExpr(stats: List[Stat]) extends Term
+  @ast class QuotedMacroExpr(body: Term) extends Term
   @ast class QuotedMacroType(tpe: Type) extends Term
-  @ast class SplicedMacroExpr(stats: List[Stat]) extends Term
+  @ast class SplicedMacroExpr(body: Term) extends Term
   @ast class Match(expr: Term, cases: List[Case] @nonEmpty) extends Term
   @ast class Try(expr: Term, catchp: List[Case], finallyp: Option[Term]) extends Term
   @ast class TryWithHandler(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term

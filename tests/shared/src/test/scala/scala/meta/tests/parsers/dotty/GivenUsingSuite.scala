@@ -35,7 +35,7 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-named-newline") {
-    runTestAssert[Stat]("given intOrd as Ord[Int] \n { def f(): Int = 1 }", false)(
+    runTestAssert[Stat]("given intOrd as Ord[Int] \n { def f(): Int = 1 }", None)(
       Defn.Given(
         Nil,
         pname("intOrd"),
@@ -247,7 +247,7 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-alias-block") {
-    runTestAssert[Stat]("given global as Option[Int] = { def f(): Int = 1; Some(3) }", false)(
+    runTestAssert[Stat]("given global as Option[Int] = { def f(): Int = 1; Some(3) }", None)(
       Defn.GivenAlias(
         Nil,
         pname("global"),

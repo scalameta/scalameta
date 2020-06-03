@@ -104,7 +104,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       )
     )
 
-    runTestAssert[Stat]("def (c: Circle) circumference: Int = { val p = 314; c.x }", false)(
+    runTestAssert[Stat]("def (c: Circle) circumference: Int = { val p = 314; c.x }", None)(
       Defn.ExtensionMethodInfix(
         Nil,
         cparam,

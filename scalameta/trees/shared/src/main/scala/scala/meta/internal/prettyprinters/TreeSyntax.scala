@@ -523,20 +523,24 @@ object TreeSyntax {
           case Term.Function(params, body) =>
             m(Expr, s("(", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
         }
-      case t: Term.QuotedMacroExpr =>
-        t.stats match {
+      case Term.QuotedMacroExpr(Term.Block(stats)) =>
+        stats match {
           case head :: Nil => s("'{ ", head, " }")
-          case other => s("'{ ", r(t.stats.map(i(_)), ""), " }")
+          case other => s("'{", r(other.map(i(_)), ""), n("}"))
         }
+      case t: Term.QuotedMacroExpr =>
+        m(SimpleExpr, s("'", p(Expr, t.body)))
       case t: Term.QuotedMacroType =>
         s("'[ ", t.tpe, " ]")
-      case t: Term.SplicedMacroExpr =>
-        t.stats match {
+      case Term.SplicedMacroExpr(Term.Block(stats)) =>
+        stats match {
           case head :: Nil => s("${ ", head, " }")
-          case other => s("${ ", r(t.stats.map(i(_)), ""), " }")
+          case other => s("${", r(other.map(i(_)), ""), n("}"))
         }
-      case t: Pat.Macro => s(t.body)
-      case t: Type.Macro => s(t.body)
+      case t: Term.SplicedMacroExpr =>
+        m(SimpleExpr, s("$", p(Expr, t.body)))
+      case t: Pat.Macro => m(SimplePattern, s(t.body))
+      case t: Type.Macro => m(SimpleTyp, s(t.body))
       case t: Term.PartialFunction => m(SimpleExpr, s("{", r(t.cases.map(i(_)), ""), n("}")))
       case t: Term.While => m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
       case t: Term.Do =>

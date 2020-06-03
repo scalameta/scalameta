@@ -71,7 +71,7 @@ class EnumSuite extends BaseDottySuite {
   }
 
   test("enum-other-stat") {
-    runTestAssert[Stat]("enum C { val PI=3; def r: Int = 4; case R }", false)(
+    runTestAssert[Stat]("enum C { val PI=3; def r: Int = 4; case R }", assertLayout = None)(
       Defn.Enum(
         Nil,
         pname("C"),
@@ -192,7 +192,7 @@ class EnumSuite extends BaseDottySuite {
         )
       )
     )
-    runTestAssert[Stat](code, assertLayout = false)(
+    runTestAssert[Stat](code, assertLayout = None)(
       Defn.Enum(Nil, pname("X"), Nil, ctor, tpl(List(rcase, cmatch, gcase)))
     )
   }
@@ -217,7 +217,7 @@ class EnumSuite extends BaseDottySuite {
         )
       )
     )
-    runTestAssert[Stat](code, assertLayout = false)(
+    runTestAssert[Stat](code, assertLayout = None)(
       Defn.Enum(Nil, pname("X"), Nil, ctor, tpl(List(rcase, cmatch, gcase)))
     )
   }
@@ -242,7 +242,7 @@ class EnumSuite extends BaseDottySuite {
       ),
       None
     )
-    runTestAssert[Stat](code, assertLayout = false)(
+    runTestAssert[Stat](code, assertLayout = None)(
       Defn.Enum(Nil, pname("X"), Nil, ctor, tpl(List(rcase, tryCatch, gcase)))
     )
   }

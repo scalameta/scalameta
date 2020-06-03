@@ -128,6 +128,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         if (token == ENUM && !dialect.allowEnums)
           token = IDENTIFIER
       }
+      if (token == IDENTIFIER && name.startsWith("$") && dialect.allowWhiteboxMacro) {
+        strVal = name.stripPrefix("$")
+        token = SPLICED_IDENT
+      }
     }
   }
 
@@ -997,7 +1001,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       setStrVal()
     } else {
       op()
-      token = SYMBOLLIT
+      if (dialect.allowWhiteboxMacro) {
+        token = QUOTED_IDENT
+      } else {
+        token = SYMBOLLIT
+      }
       strVal = name.toString
     }
   }

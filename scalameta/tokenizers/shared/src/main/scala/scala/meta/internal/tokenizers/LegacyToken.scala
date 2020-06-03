@@ -31,6 +31,8 @@ object LegacyToken {
   /** identifiers */
   final val IDENTIFIER = 10
   final val BACKQUOTED_IDENT = 11
+  final val QUOTED_IDENT = 12
+  final val SPLICED_IDENT = 13
 
   /** keywords */
   final val NEW = 20

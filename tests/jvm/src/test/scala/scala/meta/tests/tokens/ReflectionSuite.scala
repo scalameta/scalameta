@@ -15,9 +15,8 @@ class ReflectionSuite extends FunSuite {
   val tokens = symbolOf[scala.meta.tokens.Token].asRoot.allLeafs
 
   test("freeform tokens") {
-    // tokens.filter(_.isFreeform).map(_.prefix).foreach(println)
-    assert(
-      tokens.filter(_.isFreeform).map(_.prefix).mkString(EOL) == """
+    assertNoDiff(
+      tokens.filter(_.isFreeform).map(_.prefix).mkString(EOL), """
       |Token.BOF
       |Token.Comment
       |Token.Constant.Char
@@ -38,6 +37,8 @@ class ReflectionSuite extends FunSuite {
       |Token.Interpolation.Start
       |Token.LFLF
       |Token.LeftArrow
+      |Token.MacroQuotedIdent
+      |Token.MacroSplicedIdent
       |Token.RightArrow
       |Token.Unquote
       |Token.Xml.End

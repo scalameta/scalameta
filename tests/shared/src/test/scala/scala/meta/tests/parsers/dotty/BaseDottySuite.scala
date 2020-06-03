@@ -29,28 +29,45 @@ trait BaseDottySuite extends ParseSuite {
   final def int(i: Int) = Lit.Int(i)
   final def init(name: String): Init = Init(pname(name), anon, Nil)
 
-  protected def verifyEqual[T <: Tree](obtained: T, expected: T, assertLayout: Boolean): Unit = {
-    implicit val dialect = dialects.Dotty
-    assertNoDiff(obtained.structure, expected.structure)
-    if (assertLayout) {
-      assertNoDiff(obtained.syntax, expected.syntax)
-    }
-  }
+  /** Check if code can be parsed to expected syntax tree.
+   * @see runTestAssert(code, assertLayout)(expected)
+   */
+  protected def runTestAssert[T <: Tree](
+      code: String
+  )(expected: T)(implicit parser: String => T): Unit =
+    runTestAssert(code, Some(code))(expected)(parser)
 
-  protected def runTestAssert[T <: Tree](code: String, assertLayout: Boolean = true)(
+  /** General method used to assert a given 'code' parses to expected tree structure and back.
+   * We cannot assert trees by equality(==) that's why we check if they are identical
+   * by asserting their structure representation and optionally syntax.
+   * If expectedLayout is provided then we print back generated tree structure and assert
+   * generated text is equal to expectedLayout (in most cases it should be the same as 'code' param
+   * but sometimes formatting is a little different or for safety () are added).
+   * If you are not interested in asserting layout just provide None.
+   * After printing generated tree to text representation we parse it again.
+   * This ensures that invariant holds: parse(code) = parse(print(parse(code)))
+   * Reprint cannot be handled by `tree.syntax` because syntax is cached by default and would
+   * not be reprinted but only input code would be returned.
+   *
+   * @param code valid scala code
+   * @param assertLayout string representation of code to be printed
+   * @param expected provided 'code' should parse to this tree structure
+   * @param parser Function used to convert code into structured tree
+   */
+  protected def runTestAssert[T <: Tree](code: String, assertLayout: Option[String])(
       expected: T
-  )(implicit parser: String => T) {
+  )(implicit parser: String => T): Unit = {
     import scala.meta.dialects.Dotty
     val obtained: T = parser(code)
     try {
-      verifyEqual(obtained, expected, assertLayout)
+      assertNoDiff(obtained.structure, expected.structure)
 
       // check bijection
-      val r = scala.meta.internal.prettyprinters.TreeSyntax.reprint[T](obtained)(dialects.Dotty)
-      verifyEqual(parser(r.toString), expected, assertLayout)
-      if (assertLayout) {
-        assertNoDiff(r.toString, code)
-      }
+      val reprintedCode =
+        scala.meta.internal.prettyprinters.TreeSyntax.reprint[T](obtained)(dialects.Dotty).toString
+      val obtainedAgain: T = parser(reprintedCode)
+      assertNoDiff(obtainedAgain.structure, expected.structure)
+      assertLayout.foreach(expectedLayout => assertNoDiff(reprintedCode, expectedLayout))
     } catch {
       case e: Throwable =>
         println(s"Generated stat: \n ${obtained.structure}")
