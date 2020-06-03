@@ -37,6 +37,10 @@ object ScaladocParser {
 
   private val listPrefix = "-" | CharIn("1aiI") ~ "."
 
+  private val escape = P("\\")
+  private val tableSep = P("|")
+  private val tableSpaceSep = P(hspaces0 ~ tableSep)
+
   private val codePrefix = P("{{{")
   private val codeSuffix = P(hspaces0 ~ "}}}")
 
@@ -83,8 +87,8 @@ object ScaladocParser {
   }
 
   private val textParser: Parser[Text] = {
-    val anotherBeg = P(hspaces0 ~/ (CharIn("@=") | (codePrefix ~ nl) | listPrefix))
-    val end = P(End | nl ~/ anotherBeg)
+    val anotherBeg = P(CharIn("@=") | (codePrefix ~ nl) | listPrefix | tableSep | "+-")
+    val end = P(End | nl ~/ hspaces0 ~/ anotherBeg)
     val part: Parser[TextPart] = P(codeExprParser | linkParser | wordParser)
     val sep = P(!end ~ nlHspaces1)
     val text = hspaces0 ~ part.rep(1, sep = sep)
@@ -130,6 +134,69 @@ object ScaladocParser {
     P(startOrNl ~ listParser)
   }
 
+  private val tableParser: Parser[Table] = {
+    def toRow(x: Iterable[String]): Table.Row = Table.Row(x.toSeq)
+    def toAlign(x: String): Option[Table.Align] = {
+      def isEnd(y: Char) = y match {
+        case ':' => Some(true)
+        case '-' => Some(false)
+        case _ => None
+      }
+      for {
+        head <- x.headOption
+        isLeft <- isEnd(head)
+        isRight <- isEnd(x.last)
+        // covers "not found" (-1) and found at the end (x.length - 1)
+        if 0 == (1 + x.indexWhere(_ != '-', 1)) % x.length
+      } yield {
+        if (!isRight) Table.Left
+        else if (!isLeft) Table.Right
+        else Table.Center
+      }
+    }
+
+    val cellChar = escape ~ AnyChar | !(nl | escape | tableSep) ~ AnyChar
+    val row = (cellChar.rep.! ~ tableSpaceSep).rep(1)
+    // non-standard but frequently used delimiter line, e.g.: +-----+-------+
+    val delimLine = hspaces0 ~ CharsWhileIn("+-")
+    val sep = nl ~ (delimLine ~ nl).rep ~ tableSpaceSep
+    // according to spec, the table must contain at least two rows
+    val table = row.rep(2, sep = sep).map { x =>
+      // we'll trim the header later; we might need it if align is missing
+      val rest = x.tail.map(_.map(_.trim))
+      val alignRow = rest.head
+      val align = alignRow.flatMap(toAlign).toSeq
+      if (align.length != alignRow.length) {
+        // determine alignment from the header row
+        val head = x.head
+        val headBuilder = Seq.newBuilder[String]
+        val alignBuilder = Seq.newBuilder[Table.Align]
+        headBuilder.sizeHint(head.length)
+        alignBuilder.sizeHint(head.length)
+        head.foreach { cell =>
+          val padLeft = cell.indexWhere(_ > ' ')
+          if (padLeft < 0) {
+            headBuilder += ""
+            alignBuilder += Table.Left
+          } else {
+            val idxRight = cell.lastIndexWhere(_ > ' ') + 1
+            headBuilder += cell.substring(padLeft, idxRight)
+            alignBuilder += {
+              val padRight = cell.length - idxRight
+              if (padLeft < math.max(padRight - 1, 2)) Table.Left
+              else if (padRight < math.max(padLeft - 1, 2)) Table.Right
+              else Table.Center
+            }
+          }
+        }
+        Table(toRow(headBuilder.result()), alignBuilder.result(), rest.toSeq.map(toRow))
+      } else
+        Table(toRow(x.head.map(_.trim)), align, rest.tail.toSeq.map(toRow))
+    }
+
+    P(startOrNl ~ (delimLine ~ nl).? ~ tableSpaceSep ~ table ~ (nl ~ delimLine).?)
+  }
+
   /** Contains all scaladoc parsers */
   private val parser: Parser[collection.Seq[Term]] = {
     val allParsers = Seq(
@@ -137,6 +204,7 @@ object ScaladocParser {
       codeBlockParser,
       headingParser,
       tagParser,
+      tableParser,
       leadTextParser // keep at the end, this is the fallback
     )
     P(allParsers.reduce(_ | _).rep(1) ~/ End)

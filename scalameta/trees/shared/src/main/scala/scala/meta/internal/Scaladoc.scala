@@ -48,6 +48,45 @@ object Scaladoc {
   /** A heading */
   final case class Heading(level: Int, title: String) extends Term
 
+  /**
+   * A table
+   * [[https://www.scala-lang.org/blog/2018/10/04/scaladoc-tables.html]]
+   */
+  final case class Table(
+      header: Table.Row,
+      align: Seq[Table.Align],
+      row: Seq[Table.Row]
+  ) extends Term
+
+  object Table {
+
+    final case class Row(col: Seq[String])
+
+    sealed abstract class Align {
+      def leftPad(pad: Int): Int
+
+      /** formats a cell of len [[len + 2]] (for padding on either side) */
+      def syntax(len: Int): String
+    }
+
+    private def hyphens(len: Int): String = "-" * len
+
+    final case object Left extends Align {
+      override def leftPad(pad: Int): Int = 0
+      override def syntax(len: Int): String = ":" + hyphens(1 + len)
+    }
+
+    final case object Right extends Align {
+      override def leftPad(pad: Int): Int = pad
+      override def syntax(len: Int): String = hyphens(1 + len) + ":"
+    }
+
+    final case object Center extends Align {
+      override def leftPad(pad: Int): Int = pad / 2
+      override def syntax(len: Int): String = ":" + hyphens(len) + ":"
+    }
+  }
+
   /* List blocks */
 
   /** Represents a list item */
