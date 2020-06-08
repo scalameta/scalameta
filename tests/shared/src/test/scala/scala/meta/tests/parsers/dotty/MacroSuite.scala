@@ -27,7 +27,7 @@ class MacroSuite extends BaseDottySuite {
     runTestAssert[Stat]("'{ 'ax }")(
       Term.QuotedMacroExpr(Term.Block(List(Term.QuotedMacroExpr(tname("ax")))))
     )
-    runTestAssert[Stat]("'{ 'a + 'b }", assertLayout = Some("'{ 'a + ('b) }"))(
+    runTestAssert[Stat]("'{ 'a + 'b }")(
       Term.QuotedMacroExpr(
         Term.Block(
           List(
@@ -41,7 +41,7 @@ class MacroSuite extends BaseDottySuite {
         )
       )
     )
-    runTestAssert[Stat]("'{ 'a + 'b + 'c }", assertLayout = Some("'{ 'a + ('b) + ('c) }"))(
+    runTestAssert[Stat]("'{ 'a + 'b + 'c }")(
       Term.QuotedMacroExpr(
         Term.Block(
           List(
@@ -177,7 +177,7 @@ class MacroSuite extends BaseDottySuite {
         )
       )
     )
-    runTestAssert[Stat]("${ assertImpl('{ x != $y }) }", Some("${ assertImpl('{ x != ($y) }) }"))(
+    runTestAssert[Stat]("${ assertImpl('{ x != $y }) }", Some("${ assertImpl('{ x != $y }) }"))(
       Term.SplicedMacroExpr(
         Term.Block(
           List(
@@ -256,11 +256,8 @@ class MacroSuite extends BaseDottySuite {
       )
     )
 
-    val complexLayoutSpliced =
-      "'{ ${ summon[H].toExpr(tup.head) } *: (${ summon[T].toExpr(tup.tail) }) }"
     runTestAssert[Stat](
-      "'{ ${ summon[H].toExpr(tup.head) } *: ${ summon[T].toExpr(tup.tail) } }",
-      assertLayout = Some(complexLayoutSpliced)
+      "'{ ${ summon[H].toExpr(tup.head) } *: ${ summon[T].toExpr(tup.tail) } }"
     )(
       Term.QuotedMacroExpr(
         Term.Block(

@@ -16,7 +16,8 @@ class ReflectionSuite extends FunSuite {
 
   test("freeform tokens") {
     assertNoDiff(
-      tokens.filter(_.isFreeform).map(_.prefix).mkString(EOL), """
+      tokens.filter(_.isFreeform).map(_.prefix).mkString(EOL),
+      """
       |Token.BOF
       |Token.Comment
       |Token.Constant.Char

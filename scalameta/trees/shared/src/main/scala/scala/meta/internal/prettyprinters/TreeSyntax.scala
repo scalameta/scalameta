@@ -389,7 +389,7 @@ object TreeSyntax {
                   case _ => false
                 }
               case _: Lit | _: Term.Ref | _: Term.Function | _: Term.If | _: Term.Match |
-                  _: Term.ApplyInfix =>
+                  _: Term.ApplyInfix | _: Term.QuotedMacroExpr | _: Term.SplicedMacroExpr =>
                 false
               case _ =>
                 true

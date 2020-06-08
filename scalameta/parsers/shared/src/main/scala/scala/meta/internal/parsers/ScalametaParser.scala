@@ -560,7 +560,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[Ident] || token.is[KwSuper] || token.is[KwThis] ||
       token.is[LeftParen] || token.is[At] || token.is[Underscore] ||
       token.is[Unquote] || (token.is[Literal] && dialect.allowLiteralTypes) ||
-      token.is[MacroSplicedIdent]
+      token.is[MacroSplicedIdent] || token.is[MacroQuotedIdent]
     }
   }
 
