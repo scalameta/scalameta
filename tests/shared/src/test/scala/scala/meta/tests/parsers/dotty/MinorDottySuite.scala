@@ -231,6 +231,21 @@ class MinorDottySuite extends BaseDottySuite {
     runTestAssert[Stat]("inline val inline = false")(
       Defn.Val(List(Mod.Inline()), List(Pat.Var(tname("inline"))), None, Lit.Boolean(false))
     )(parseTempl)
+
+    // inline for class as ident
+    runTestAssert[Stat]("case class A(inline: Int)")(
+      Defn.Class(
+        List(Mod.Case()),
+        Type.Name("A"),
+        Nil,
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          List(List(Term.Param(Nil, Term.Name("inline"), Some(Type.Name("Int")), None)))
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil)
+      )
+    )(parseTempl)
   }
 
   test("inline-def-object") {
@@ -270,16 +285,56 @@ class MinorDottySuite extends BaseDottySuite {
     )(parseSource)
   }
 
+  test("inline-mods-combination") {
+    runTestAssert[Stat](
+      "object X { final override inline protected def f(): Unit = ??? }"
+    )(
+      Defn.Object(
+        Nil,
+        tname("X"),
+        tpl(
+          List(
+            Defn.Def(
+              List(Mod.Final(), Mod.Override(), Mod.Inline(), Mod.Protected(Name(""))),
+              tname("f"),
+              Nil,
+              List(List()),
+              Some(pname("Unit")),
+              tname("???")
+            )
+          )
+        )
+      )
+    )(parseTempl)
+
+    runTestAssert[Stat](
+      "case class Y(val inline: String, inline: Int)"
+    )(
+      Defn.Class(
+        List(Mod.Case()),
+        Type.Name("Y"),
+        Nil,
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          List(
+            List(
+              Term
+                .Param(List(Mod.ValParam()), Term.Name("inline"), Some(Type.Name("String")), None),
+              tparam("inline", "Int")
+            )
+          )
+        ),
+        tpl(Nil)
+      )
+    )(parseTempl)
+  }
+
   // currently parser allows for more than possible.
   test("inline-soft-keyword-neg".ignore) {
     runTestError[Stat](
       "def f(inline p: String): Unit",
       "inline modifier can only be used for parameters of inline methods"
-    )(parseTempl)
-
-    runTestError[Stat](
-      "class A(inline: String)",
-      "an identifier expected, but"
     )(parseTempl)
 
     runTestError[Stat](
