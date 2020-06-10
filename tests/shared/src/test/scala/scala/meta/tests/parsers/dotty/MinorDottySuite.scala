@@ -14,13 +14,10 @@ class MinorDottySuite extends BaseDottySuite {
   val parseTempl: String => Stat = code => templStat(code)(dialects.Dotty)
 
   /**
-   *
    *  All examples based on dotty documentation:
    *  https://dotty.epfl.ch/docs/reference/other-new-features/open-classes.html
    *  https://dotty.epfl.ch/docs/reference/new-types/type-lambdas.html
    *  https://dotty.epfl.ch/docs/reference/other-new-features/trait-parameters.html
-   *  https://dotty.epfl.ch/docs/reference/metaprogramming/inline.html
-   *
    */
   test("open-class") {
     val Defn.Class(List(Mod.Open()), Type.Name("A"), _, _, _) =
@@ -38,7 +35,7 @@ class MinorDottySuite extends BaseDottySuite {
     runTestError[Stat]("final open class A {}", "illegal combination of modifiers: open and final")
     runTestError[Stat](
       "open sealed trait C {}",
-      "illegal combination of modifiers: open and sealed for"
+      "illegal combination of modifiers: open and sealed"
     )
     runTestError[Stat]("open def f(): Int = 3", "error: expected start of definition")
     runTestError[Stat]("def f(open a: Int): Int = 3", "error")
@@ -143,6 +140,49 @@ class MinorDottySuite extends BaseDottySuite {
     )(parseSource)
   }
 
+  test("opaque-type-mix-mods") {
+    runTestAssert[Stat]("object X { private opaque type T = List[Int] }")(
+      Defn.Object(
+        Nil,
+        Term.Name("X"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.OpaqueTypeAlias(
+              List(Mod.Private(Name("")), Mod.Opaque()),
+              Type.Name("T"),
+              Nil,
+              Type.Bounds(None, None),
+              Type.Apply(Type.Name("List"), List(Type.Name("Int")))
+            )
+          )
+        )
+      )
+    )
+    runTestAssert[Stat]("object X { opaque private type T = List[Int] }")(
+      Defn.Object(
+        Nil,
+        Term.Name("X"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.OpaqueTypeAlias(
+              List(Mod.Opaque(), Mod.Private(Name(""))),
+              Type.Name("T"),
+              Nil,
+              Type.Bounds(None, None),
+              Type.Apply(Type.Name("List"), List(Type.Name("Int")))
+            )
+          )
+        )
+      )
+    )
+  }
+
   test("trait-parameters") {
     runTestAssert[Stat]("trait Foo(val foo: Int)(bar: Int)")(
       Defn.Trait(
@@ -186,160 +226,5 @@ class MinorDottySuite extends BaseDottySuite {
         tpl(Nil)
       )
     )
-  }
-
-  test("inline-soft-keyword-pos") {
-    // as ident
-    runTestAssert[Stat]("def f(inline: String): Unit")(
-      Decl.Def(Nil, tname("f"), Nil, List(List(tparam("inline", "String"))), pname("Unit"))
-    )(parseTempl)
-
-    // as ident
-    runTestAssert[Stat]("inline def inline(inline: inline): inline")(
-      Decl.Def(
-        List(Mod.Inline()),
-        tname("inline"),
-        Nil,
-        List(List(tparam("inline", "inline"))),
-        pname("inline")
-      )
-    )(parseTempl)
-
-    // as modifier
-    runTestAssert[Stat]("inline def inline(inline param: inline): inline")(
-      Decl.Def(
-        List(Mod.Inline()),
-        tname("inline"),
-        Nil,
-        List(List(tparamInline("param", "inline"))),
-        pname("inline")
-      )
-    )(parseTempl)
-
-    // as ident and modifier
-    runTestAssert[Stat]("inline def inline(inline inline: inline): inline")(
-      Decl.Def(
-        List(Mod.Inline()),
-        tname("inline"),
-        Nil,
-        List(List(tparamInline("inline", "inline"))),
-        pname("inline")
-      )
-    )(parseTempl)
-
-    // as ident and modifier
-    runTestAssert[Stat]("inline val inline = false")(
-      Defn.Val(List(Mod.Inline()), List(Pat.Var(tname("inline"))), None, Lit.Boolean(false))
-    )(parseTempl)
-
-    // inline for class as ident
-    runTestAssert[Stat]("case class A(inline: Int)")(
-      Defn.Class(
-        List(Mod.Case()),
-        Type.Name("A"),
-        Nil,
-        Ctor.Primary(
-          Nil,
-          Name(""),
-          List(List(Term.Param(Nil, Term.Name("inline"), Some(Type.Name("Int")), None)))
-        ),
-        Template(Nil, Nil, Self(Name(""), None), Nil)
-      )
-    )(parseTempl)
-  }
-
-  test("inline-def-object") {
-    runTestAssert[Source](
-      "object X { inline def f(inline sc: Str)(inline args: Any*): String = ??? }"
-    )(
-      Source(
-        List(
-          Defn.Object(
-            Nil,
-            tname("X"),
-            tpl(
-              List(
-                Defn.Def(
-                  List(Mod.Inline()),
-                  tname("f"),
-                  Nil,
-                  List(
-                    List(tparamInline("sc", "Str")),
-                    List(
-                      Term.Param(
-                        List(Mod.Inline()),
-                        tname("args"),
-                        Some(Type.Repeated(pname("Any"))),
-                        None
-                      )
-                    )
-                  ),
-                  Some(pname("String")),
-                  tname("???")
-                )
-              )
-            )
-          )
-        )
-      )
-    )(parseSource)
-  }
-
-  test("inline-mods-combination") {
-    runTestAssert[Stat](
-      "object X { final override inline protected def f(): Unit = ??? }"
-    )(
-      Defn.Object(
-        Nil,
-        tname("X"),
-        tpl(
-          List(
-            Defn.Def(
-              List(Mod.Final(), Mod.Override(), Mod.Inline(), Mod.Protected(Name(""))),
-              tname("f"),
-              Nil,
-              List(List()),
-              Some(pname("Unit")),
-              tname("???")
-            )
-          )
-        )
-      )
-    )(parseTempl)
-
-    runTestAssert[Stat](
-      "case class Y(val inline: String, inline: Int)"
-    )(
-      Defn.Class(
-        List(Mod.Case()),
-        Type.Name("Y"),
-        Nil,
-        Ctor.Primary(
-          Nil,
-          Name(""),
-          List(
-            List(
-              Term
-                .Param(List(Mod.ValParam()), Term.Name("inline"), Some(Type.Name("String")), None),
-              tparam("inline", "Int")
-            )
-          )
-        ),
-        tpl(Nil)
-      )
-    )(parseTempl)
-  }
-
-  // currently parser allows for more than possible.
-  test("inline-soft-keyword-neg".ignore) {
-    runTestError[Stat](
-      "def f(inline p: String): Unit",
-      "inline modifier can only be used for parameters of inline methods"
-    )(parseTempl)
-
-    runTestError[Stat](
-      "class C(inline p: String)",
-      "inline modifier can only be used for parameters of inline methods"
-    )(parseTempl)
   }
 }

@@ -582,8 +582,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   private def inlineDefOrOpaque(token: Token): Boolean = {
-    (token.text == "inline" && (DclIntro.unapply(token) || Modifier.unapply(token))) ||
-    (token.text == "opaque" && token.next.is[KwType])
+    (token.text == "inline" && (DclIntro.unapply(token.next) || Modifier.unapply(token.next))) ||
+    (token.text == "opaque" && (DclIntro.unapply(token.next) || Modifier.unapply(token.next)))
   }
 
   @classifier
@@ -3249,12 +3249,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         }
       }
     }
-    def atLeastOneMethod: Unit = {
-      if (eg.name.value == "" && eg.templ.stats.isEmpty) {
-        syntaxError("Anonymous instance must have at least one extension method", eg)
-      }
-    }
-
     def baseTypeDefinedOnce: Unit = {
       if (eg.tparams.nonEmpty) {
         for (f <- eg.templ.stats) {
@@ -3313,7 +3307,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
 
     onlyMethodsOrExtensionMethods
-    atLeastOneMethod
     baseTermDefinedOnce
     baseTypeDefinedOnce
 
@@ -3523,12 +3516,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val typeParams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true)
     val ctor = primaryCtor(OwnedByEnum)
     val tmpl = templateOpt(OwnedByEnum)
-    val containsCase =
-      tmpl.stats.find {
-        case _: Defn.EnumCase | _: Defn.RepeatedEnumCase => true
-        case _ => false
-      }.isDefined
-    if (!containsCase) { syntaxError("Enumerations must contain at least one case", token) }
     Defn.Enum(mods, enumName, typeParams, ctor, tmpl)
   }
 

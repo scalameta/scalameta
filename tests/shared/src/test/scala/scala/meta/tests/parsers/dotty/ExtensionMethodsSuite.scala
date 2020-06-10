@@ -254,12 +254,6 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("extension-negative") {
-    runTestError("extension { }", "Anonymous instance must have at least one extension method")
-    runTestError(
-      "extension on (s: String) { }",
-      "Anonymous instance must have at least one extension method"
-    )
-
     runTestError(
       "extension { def (s: String).cnt: Int = 2; val x = 3 }",
       "Extension clause can only define methods"
@@ -318,29 +312,46 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
   }
 
-  test("extension-mods".ignore) {
+  test("extension-mods") {
     runTestAssert[Stat](
-      "private extension ext { def (c: Circle).f(using s: String)(using Int): Int = 2 }"
+      "object X { private extension ext { def (c: Circle).f(using s: String)(using Int): Int = 2 } }"
     )(
-      Defn.ExtensionGroup(
-        List(Mod.Lazy()),
-        pname("ext"),
+      Defn.Object(
         Nil,
-        Nil,
-        Term.Param(Nil, anon, None, None),
-        tpl(
+        Term.Name("X"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
           List(
-            Defn.ExtensionMethod(
+            Defn.ExtensionGroup(
+              List(Mod.Private(Name(""))),
+              Type.Name("ext"),
               Nil,
-              tparam("c", "Circle"),
-              tname("f"),
               Nil,
-              List(
-                List(Term.Param(List(Mod.Using()), tname("s"), Some(pname("String")), None)),
-                List(Term.Param(List(Mod.Using()), anon, Some(pname("Int")), None))
-              ),
-              Some(pname("Int")),
-              int(2)
+              Term.Param(Nil, Name(""), None, None),
+              Template(
+                Nil,
+                Nil,
+                Self(Name(""), None),
+                List(
+                  Defn.ExtensionMethod(
+                    Nil,
+                    Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None),
+                    Term.Name("f"),
+                    Nil,
+                    List(
+                      List(
+                        Term
+                          .Param(List(Mod.Using()), Term.Name("s"), Some(Type.Name("String")), None)
+                      ),
+                      List(Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Int")), None))
+                    ),
+                    Some(Type.Name("Int")),
+                    Lit.Int(2)
+                  )
+                )
+              )
             )
           )
         )

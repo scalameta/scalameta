@@ -49,9 +49,30 @@ class EnumSuite extends BaseDottySuite {
     )
   }
 
-  test("enum-min-one-case") {
-    runTestError("enum Color { }", "Enumerations must contain at least one case")
-    runTestError("enum Color { val PI=3.14 }", "Enumerations must contain at least one case")
+  test("enum-no-case-allowed") {
+    runTestAssert[Stat]("enum Color { }", assertLayout = None)(
+      Defn.Enum(
+        Nil,
+        Type.Name("Color"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(Nil, Nil, Self(Name(""), None), Nil)
+      )
+    )
+    runTestAssert[Stat]("enum Color { val PI = 314 }")(
+      Defn.Enum(
+        Nil,
+        Type.Name("Color"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(Defn.Val(Nil, List(Pat.Var(Term.Name("PI"))), None, Lit.Int(314)))
+        )
+      )
+    )
   }
 
   test("enum-single-case") {

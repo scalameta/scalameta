@@ -35,7 +35,7 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-named-newline") {
-    runTestAssert[Stat]("given intOrd as Ord[Int] \n { def f(): Int = 1 }", None)(
+    runTestAssert[Stat]("given intOrd as Ord[Int] \n { def f(): Int = 1 }", assertLayout = None)(
       Defn.Given(
         Nil,
         pname("intOrd"),
@@ -247,7 +247,10 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-alias-block") {
-    runTestAssert[Stat]("given global as Option[Int] = { def f(): Int = 1; Some(3) }", None)(
+    runTestAssert[Stat](
+      "given global as Option[Int] = { def f(): Int = 1; Some(3) }",
+      assertLayout = None
+    )(
       Defn.GivenAlias(
         Nil,
         pname("global"),
@@ -471,12 +474,15 @@ class GivenUsingSuite extends BaseDottySuite {
   test("using-multiple-using-single-parent-error".ignore) {
     runTestError(
       "def f(using a: Int, using b: String): Unit = ???",
-      "using only for first parameter"
+      "using is applied for all parameters inside brackets"
     )
   }
 
   test("using-added-middle-paren-error".ignore) {
-    runTestError("def f(a: Int, using b: String): Unit = ???", "using only for first parameter")
+    runTestError(
+      "def f(a: Int, using b: String): Unit = ???",
+      "using is applied for all parameters inside brackets"
+    )
   }
 
   test("using-named-with-by-name-parameter") {
@@ -485,10 +491,6 @@ class GivenUsingSuite extends BaseDottySuite {
     runTestAssert[Stat]("def f(using a: => Int): Unit = ???")(
       Defn.Def(Nil, tname("f"), Nil, List(List(usingByName)), Some(pname("Unit")), tname("???"))
     )
-  }
-
-  test("using-anonymous-with-by-name-parameter-error".ignore) {
-    runTestError("def f(using => String): Unit = ???", "anonymous using by-name invalid")
   }
 
   test("using-call-site") {
@@ -504,10 +506,4 @@ class GivenUsingSuite extends BaseDottySuite {
       )
     )
   }
-
-  // ---------------------------------
-  // IMPORT GIVEN
-  // ---------------------------------
-
-  // TODO: Add tests here
 }
