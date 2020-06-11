@@ -214,9 +214,9 @@ object ScaladocParser {
 
   /** Parses a scaladoc comment */
   def parse(comment: String): Option[Scaladoc] = {
-    val isScaladoc = comment.startsWith("/**") && comment.endsWith("*/")
+    val isScaladoc = comment.length >= 5 && comment.startsWith("/**") && comment.endsWith("*/")
     if (!isScaladoc) None
-    else Some(parseImpl(comment.substring(3, comment.length - 2)))
+    else Some(parseImpl(comment.substring(2, comment.length - 2)))
   }
 
   private def parseImpl(comment: String): Scaladoc = {

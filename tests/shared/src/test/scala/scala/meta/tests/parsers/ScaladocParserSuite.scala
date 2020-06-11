@@ -465,6 +465,28 @@ class ScaladocParserSuite extends FunSuite {
     assertEquals(result, expected)
   }
 
+  test("lists 6") {
+    val result = parseString(
+      """
+        /** 1. a
+          * 1. b
+          */
+         """
+    )
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              ListBlock("1.", Seq(ListItem(Text(Seq(Word("a")))), ListItem(Text(Seq(Word("b"))))))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expected)
+  }
+
   test("label parsing/merging") {
     val testStringToMerge = "Test DocText"
     val scaladoc: String = TagType.predefined
