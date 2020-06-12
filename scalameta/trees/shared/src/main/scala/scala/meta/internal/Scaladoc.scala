@@ -14,9 +14,6 @@ object Scaladoc {
   /** A single paragraph of the document */
   final case class Paragraph(term: Seq[Term])
 
-  /** A paragraph which failed parsing */
-  final case class Unknown(text: String) extends Term
-
   /* Text */
 
   /** An inline part of a text block */
@@ -65,7 +62,7 @@ object Scaladoc {
     sealed abstract class Align {
       def leftPad(pad: Int): Int
 
-      /** formats a cell of len [[len + 2]] (for padding on either side) */
+      /** formats a cell of len `len + 2` (for padding on either side) */
       def syntax(len: Int): String
     }
 
@@ -106,8 +103,8 @@ object Scaladoc {
 
   /**
    * Represents a tagged documentation remark
-   * @param label set iff [[tag.hasLabel]]
-   * @param desc set iff [[tag.hasDesc]]
+   * @param label set iff `tag.hasLabel`
+   * @param desc set iff `tag.hasDesc`
    */
   final case class Tag(tag: TagType, label: Word = null, desc: Text = null) extends Term
 
