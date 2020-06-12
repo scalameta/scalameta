@@ -33,13 +33,13 @@ object Scaladoc {
   }
 
   /** A reference to a symbol */
-  final case class Link(ref: String, anchor: Seq[String]) extends TextPart {
-    override def syntax: String = anchor.mkString(s"[[$ref", " ", "]]")
+  final case class Link(ref: String, anchor: Seq[String], punct: String) extends TextPart {
+    override def syntax: String = anchor.mkString(s"[[$ref", " ", s"]]$punct")
   }
 
   /** A single embedded code expression */
-  final case class CodeExpr(code: String) extends TextPart {
-    override def syntax: String = s"{{{$code}}}"
+  final case class CodeExpr(code: String, punct: String) extends TextPart {
+    override def syntax: String = s"{{{$code}}}$punct"
   }
 
   /** A block of one or more lines of code */

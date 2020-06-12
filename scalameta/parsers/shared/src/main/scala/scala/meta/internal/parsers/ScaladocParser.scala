@@ -28,9 +28,11 @@ object ScaladocParser {
   private val space = CharIn(spaceChars)
   private def spacesMin(min: Int) = CharsWhileIn(spaceChars, min)
   private val spaces1 = spacesMin(1)
+  private val nlHspaces0 = nl.? ~ hspaces0
   private val nlHspaces1 = space ~ hspaces0
   private val leadHspaces0 = startOrNl ~ hspaces0
 
+  private val punctParser = CharsWhileIn(".,:!?;", 0)
   private val labelParser: Parser[Unit] = (!space ~ AnyChar).rep(1)
   private val wordParser: Parser[Word] = P(labelParser.!.map(Word.apply))
   private val trailWordParser = nlHspaces1 ~ wordParser
@@ -53,8 +55,10 @@ object ScaladocParser {
   }
 
   private val codeExprParser: Parser[CodeExpr] = {
-    val pattern = codePrefix ~ hspaces0 ~ codeLineParser ~ codeSuffix
-    P(pattern.map(x => CodeExpr(x.trim)))
+    val pattern = codePrefix ~ hspaces0 ~ codeLineParser ~ codeSuffix ~ punctParser.!
+    P(pattern.map {
+      case (x, y) => CodeExpr(x.trim, y)
+    })
   }
 
   private val codeBlockParser: Parser[CodeBlock] = {
@@ -82,15 +86,17 @@ object ScaladocParser {
   private val linkParser: Parser[Link] = {
     val end = space | linkSuffix
     val anchor = P((!end ~ AnyChar).rep(1).!.rep(1, sep = spaces1))
-    val pattern = linkPrefix ~ anchor ~ linkSuffix
-    P(pattern.map(x => Link(x.head, x.tail.toSeq)))
+    val pattern = linkPrefix ~ (anchor ~ linkSuffix ~ punctParser.!)
+    P(pattern.map {
+      case (x, y) => Link(x.head, x.tail.toSeq, y)
+    })
   }
 
   private val textParser: Parser[Text] = {
     val anotherBeg = P(CharIn("@=") | (codePrefix ~ nl) | listPrefix | tableSep | "+-")
     val end = P(End | nl ~/ hspaces0 ~/ anotherBeg)
     val part: Parser[TextPart] = P(codeExprParser | linkParser | wordParser)
-    val sep = P(!end ~ nlHspaces1)
+    val sep = P(!end ~ nlHspaces0)
     val text = hspaces0 ~ part.rep(1, sep = sep)
     P(text.map(x => Text(x.toSeq)))
   }

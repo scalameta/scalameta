@@ -123,18 +123,20 @@ class ScaladocParserSuite extends FunSuite {
   test("paragraph parsing with references") {
     val descriptionBody = "Description Body"
     val words = descriptionBody.split("\\s+").toSeq.map(Word.apply)
-    val ref = Seq(Link("Description", Seq("Body")))
+    val refNone = Seq(Link("Description", Seq("Body"), ""))
+    val refDots = Seq(Link("Description", Seq("Body"), "..."))
+    val refExcl = Seq(Link("Description", Seq("Body"), "!"))
     assertEquals(
       parseString(
         s"""
          /**
           *
-          * $descriptionBody [[ $descriptionBody ]]
+          * $descriptionBody [[ $descriptionBody ]]...
           *
           * $descriptionBody [[ $descriptionBody ]]
           * $descriptionBody
           *
-          * [[ $descriptionBody ]] $descriptionBody
+          * [[ $descriptionBody ]]!$descriptionBody
           *
           * $descriptionBody
           * [[ $descriptionBody ]] $descriptionBody
@@ -145,10 +147,10 @@ class ScaladocParserSuite extends FunSuite {
       Option(
         Scaladoc(
           Seq(
-            Paragraph(Seq(Text(words ++ ref))),
-            Paragraph(Seq(Text(words ++ ref ++ words))),
-            Paragraph(Seq(Text(ref ++ words))),
-            Paragraph(Seq(Text(words ++ ref ++ words)))
+            Paragraph(Seq(Text(words ++ refDots))),
+            Paragraph(Seq(Text(words ++ refNone ++ words))),
+            Paragraph(Seq(Text(refExcl ++ words))),
+            Paragraph(Seq(Text(words ++ refNone ++ words)))
           )
         )
       )
@@ -173,8 +175,7 @@ class ScaladocParserSuite extends FunSuite {
       parseString(
         s"""
           /**
-            * $testDescription {{{ $codeBlock1 }}}
-            * $testDescription
+            * $testDescription {{{ $codeBlock1 }}}?$testDescription
             * {{{ $codeBlock2 }}}
             *
             * $testDescription
@@ -191,7 +192,9 @@ class ScaladocParserSuite extends FunSuite {
     val expectation = Option(
       Scaladoc(
         Seq(
-          Paragraph(Seq(Text((words :+ CodeExpr(codeBlock1)) ++ (words :+ CodeExpr(codeBlock2))))),
+          Paragraph(
+            Seq(Text((words :+ CodeExpr(codeBlock1, "?")) ++ (words :+ CodeExpr(codeBlock2, ""))))
+          ),
           Paragraph(Seq(Text(words))),
           Paragraph(Seq(CodeBlock(complexCodeBlock), CodeBlock(complexCodeBlock)))
         )
