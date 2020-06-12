@@ -182,10 +182,11 @@ class ScaladocParserSuite extends FunSuite {
             *
             * {{{
             *$complexCodeBlockAsComment
+            *
+            * foo
             * }}}
             * {{{
-            *$complexCodeBlockAsComment }}}
-            */
+            *$complexCodeBlockAsComment }}}             */
        """.stripMargin
       )
 
@@ -196,7 +197,9 @@ class ScaladocParserSuite extends FunSuite {
             Seq(Text((words :+ CodeExpr(codeBlock1, "?")) ++ (words :+ CodeExpr(codeBlock2, ""))))
           ),
           Paragraph(Seq(Text(words))),
-          Paragraph(Seq(CodeBlock(complexCodeBlock), CodeBlock(complexCodeBlock)))
+          Paragraph(
+            Seq(CodeBlock(complexCodeBlock ++ Seq("", " foo")), CodeBlock(complexCodeBlock))
+          )
         )
       )
     )
@@ -694,24 +697,7 @@ class ScaladocParserSuite extends FunSuite {
        """.stripMargin
     )
 
-    val expectation = Option(
-      Scaladoc(
-        Seq(
-          Paragraph(
-            Seq(
-              Unknown(
-                """* text1 text2
-                   * |hdr1|hdr2|hdr3|hdr4|
-                   * |----|:---|---:|:--:|
-                   * |row1|row2|row3|row4
-                   * text3 text4""".stripMargin('*')
-              )
-            )
-          )
-        )
-      )
-    )
-    assertEquals(result, expectation)
+    assertEquals(result, None)
   }
 
   test("table different number of cols") {
