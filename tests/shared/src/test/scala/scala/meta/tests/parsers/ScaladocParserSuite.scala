@@ -123,18 +123,20 @@ class ScaladocParserSuite extends FunSuite {
   test("paragraph parsing with references") {
     val descriptionBody = "Description Body"
     val words = descriptionBody.split("\\s+").toSeq.map(Word.apply)
-    val ref = Seq(Link("Description", Seq("Body")))
+    val refNone = Seq(Link("Description", Seq("Body"), ""))
+    val refDots = Seq(Link("Description", Seq("Body"), "..."))
+    val refExcl = Seq(Link("Description", Seq("Body"), "!"))
     assertEquals(
       parseString(
         s"""
          /**
           *
-          * $descriptionBody [[ $descriptionBody ]]
+          * $descriptionBody [[ $descriptionBody ]]...
           *
           * $descriptionBody [[ $descriptionBody ]]
           * $descriptionBody
           *
-          * [[ $descriptionBody ]] $descriptionBody
+          * [[ $descriptionBody ]]!$descriptionBody
           *
           * $descriptionBody
           * [[ $descriptionBody ]] $descriptionBody
@@ -145,10 +147,10 @@ class ScaladocParserSuite extends FunSuite {
       Option(
         Scaladoc(
           Seq(
-            Paragraph(Seq(Text(words ++ ref))),
-            Paragraph(Seq(Text(words ++ ref ++ words))),
-            Paragraph(Seq(Text(ref ++ words))),
-            Paragraph(Seq(Text(words ++ ref ++ words)))
+            Paragraph(Seq(Text(words ++ refDots))),
+            Paragraph(Seq(Text(words ++ refNone ++ words))),
+            Paragraph(Seq(Text(refExcl ++ words))),
+            Paragraph(Seq(Text(words ++ refNone ++ words)))
           )
         )
       )
@@ -173,27 +175,31 @@ class ScaladocParserSuite extends FunSuite {
       parseString(
         s"""
           /**
-            * $testDescription {{{ $codeBlock1 }}}
-            * $testDescription
+            * $testDescription {{{ $codeBlock1 }}}?$testDescription
             * {{{ $codeBlock2 }}}
             *
             * $testDescription
             *
             * {{{
             *$complexCodeBlockAsComment
+            *
+            * foo
             * }}}
             * {{{
-            *$complexCodeBlockAsComment }}}
-            */
+            *$complexCodeBlockAsComment }}}             */
        """.stripMargin
       )
 
     val expectation = Option(
       Scaladoc(
         Seq(
-          Paragraph(Seq(Text((words :+ CodeExpr(codeBlock1)) ++ (words :+ CodeExpr(codeBlock2))))),
+          Paragraph(
+            Seq(Text((words :+ CodeExpr(codeBlock1, "?")) ++ (words :+ CodeExpr(codeBlock2, ""))))
+          ),
           Paragraph(Seq(Text(words))),
-          Paragraph(Seq(CodeBlock(complexCodeBlock), CodeBlock(complexCodeBlock)))
+          Paragraph(
+            Seq(CodeBlock(complexCodeBlock ++ Seq("", " foo")), CodeBlock(complexCodeBlock))
+          )
         )
       )
     )
@@ -465,6 +471,28 @@ class ScaladocParserSuite extends FunSuite {
     assertEquals(result, expected)
   }
 
+  test("lists 6") {
+    val result = parseString(
+      """
+        /** 1. a
+          * 1. b
+          */
+         """
+    )
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              ListBlock("1.", Seq(ListItem(Text(Seq(Word("a")))), ListItem(Text(Seq(Word("b"))))))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expected)
+  }
+
   test("label parsing/merging") {
     val testStringToMerge = "Test DocText"
     val scaladoc: String = TagType.predefined
@@ -669,24 +697,7 @@ class ScaladocParserSuite extends FunSuite {
        """.stripMargin
     )
 
-    val expectation = Option(
-      Scaladoc(
-        Seq(
-          Paragraph(
-            Seq(
-              Unknown(
-                """* text1 text2
-                   * |hdr1|hdr2|hdr3|hdr4|
-                   * |----|:---|---:|:--:|
-                   * |row1|row2|row3|row4
-                   * text3 text4""".stripMargin('*')
-              )
-            )
-          )
-        )
-      )
-    )
-    assertEquals(result, expectation)
+    assertEquals(result, None)
   }
 
   test("table different number of cols") {
