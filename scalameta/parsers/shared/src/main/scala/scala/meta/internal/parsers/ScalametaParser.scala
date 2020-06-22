@@ -3333,7 +3333,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val name = termName()
     val paramss = paramClauses(ownerIsType = false)
 
-    // val decltpe = startModType()
     val decltpe = fromWithinReturnType(typedOpt())
 
     accept[Equals]

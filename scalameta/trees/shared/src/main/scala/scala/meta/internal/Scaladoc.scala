@@ -14,9 +14,6 @@ object Scaladoc {
   /** A single paragraph of the document */
   final case class Paragraph(term: Seq[Term])
 
-  /** A paragraph which failed parsing */
-  final case class Unknown(text: String) extends Term
-
   /* Text */
 
   /** An inline part of a text block */
@@ -33,13 +30,13 @@ object Scaladoc {
   }
 
   /** A reference to a symbol */
-  final case class Link(ref: String, anchor: Seq[String]) extends TextPart {
-    override def syntax: String = anchor.mkString(s"[[$ref", " ", "]]")
+  final case class Link(ref: String, anchor: Seq[String], punct: String) extends TextPart {
+    override def syntax: String = anchor.mkString(s"[[$ref", " ", s"]]$punct")
   }
 
   /** A single embedded code expression */
-  final case class CodeExpr(code: String) extends TextPart {
-    override def syntax: String = s"{{{$code}}}"
+  final case class CodeExpr(code: String, punct: String) extends TextPart {
+    override def syntax: String = s"{{{$code}}}$punct"
   }
 
   /** A block of one or more lines of code */
@@ -47,6 +44,45 @@ object Scaladoc {
 
   /** A heading */
   final case class Heading(level: Int, title: String) extends Term
+
+  /**
+   * A table
+   * [[https://www.scala-lang.org/blog/2018/10/04/scaladoc-tables.html]]
+   */
+  final case class Table(
+      header: Table.Row,
+      align: Seq[Table.Align],
+      row: Seq[Table.Row]
+  ) extends Term
+
+  object Table {
+
+    final case class Row(col: Seq[String])
+
+    sealed abstract class Align {
+      def leftPad(pad: Int): Int
+
+      /** formats a cell of len `len + 2` (for padding on either side) */
+      def syntax(len: Int): String
+    }
+
+    private def hyphens(len: Int): String = "-" * len
+
+    final case object Left extends Align {
+      override def leftPad(pad: Int): Int = 0
+      override def syntax(len: Int): String = ":" + hyphens(1 + len)
+    }
+
+    final case object Right extends Align {
+      override def leftPad(pad: Int): Int = pad
+      override def syntax(len: Int): String = hyphens(1 + len) + ":"
+    }
+
+    final case object Center extends Align {
+      override def leftPad(pad: Int): Int = pad / 2
+      override def syntax(len: Int): String = ":" + hyphens(len) + ":"
+    }
+  }
 
   /* List blocks */
 
@@ -67,8 +103,8 @@ object Scaladoc {
 
   /**
    * Represents a tagged documentation remark
-   * @param label set iff [[tag.hasLabel]]
-   * @param desc set iff [[tag.hasDesc]]
+   * @param label set iff `tag.hasLabel`
+   * @param desc set iff `tag.hasDesc`
    */
   final case class Tag(tag: TagType, label: Word = null, desc: Text = null) extends Term
 

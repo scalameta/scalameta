@@ -1,6 +1,5 @@
 package scala.meta.internal.semanticdb.scalac
 
-import java.io.File
 import scala.meta.internal.io.PathIO
 import scala.meta.io.AbsolutePath
 import scala.tools.nsc.Global
@@ -13,7 +12,8 @@ class SemanticdbPlugin(val global: Global)
   val name = SemanticdbPlugin.name
   val description = SemanticdbPlugin.description
 
-  hijackReporter()
+  override val semanticdbReporter = hijackReporter()
+
   val components = {
     if (isSupportedCompiler) List(SemanticdbTyperComponent, SemanticdbJvmComponent)
     else Nil
