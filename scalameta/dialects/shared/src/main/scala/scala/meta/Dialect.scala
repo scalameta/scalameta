@@ -68,7 +68,20 @@ final class Dialect private (
     // Normally none is required, but scripts may have their own rules.
     val toplevelSeparator: String,
     // Are numeric literal underscore separators, i.e. `1_000_000` legal or not?
-    val allowNumericLiteralUnderscoreSeparators: Boolean
+    val allowNumericLiteralUnderscoreSeparators: Boolean,
+    // Given/using introduced in dotty
+    val allowGivenUsing: Boolean,
+    // Extension methods introduced in dotty
+    val allowExtensionMethods: Boolean,
+    // Open modifier for classes introduced in dotty
+    val allowOpenClass: Boolean,
+    // Whitebox macros introduced in dotty (splices/quotes)
+    val allowWhiteboxMacro: Boolean,
+    // Top level statements introduced in dotty.
+    // differs from ToplevelTerms because here you can define packages
+    val allowToplevelStatements: Boolean,
+    // Opaque types introduced in dotty
+    val allowOpaqueTypes: Boolean
 ) extends Product
     with Serializable {
 
@@ -129,7 +142,13 @@ final class Dialect private (
       allowWithTypes,
       allowXmlLiterals,
       toplevelSeparator,
-      allowNumericLiteralUnderscoreSeparators = false
+      allowNumericLiteralUnderscoreSeparators = false,
+      allowGivenUsing = false,
+      allowExtensionMethods = false,
+      allowOpenClass = false,
+      allowWhiteboxMacro = false,
+      allowToplevelStatements = false,
+      allowOpaqueTypes = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -216,6 +235,25 @@ final class Dialect private (
   ): Dialect = {
     privateCopy(allowNumericLiteralUnderscoreSeparators = newValue)
   }
+  def withAllowGivenUsing(newValue: Boolean): Dialect = {
+    privateCopy(allowGivenUsing = newValue)
+  }
+  def withAllowExtensionMethods(newValue: Boolean): Dialect = {
+    privateCopy(allowExtensionMethods = newValue)
+  }
+  def withAllowOpenClass(newValue: Boolean): Dialect = {
+    privateCopy(allowOpenClass = newValue)
+  }
+  def withAllowWhiteboxMacro(newValue: Boolean): Dialect = {
+    privateCopy(allowWhiteboxMacro = newValue)
+  }
+  def withAllowToplevelStatements(newValue: Boolean): Dialect = {
+    privateCopy(allowToplevelStatements = newValue)
+  }
+  def withAllowOpaqueTypes(newValue: Boolean): Dialect = {
+    privateCopy(allowOpaqueTypes = newValue)
+  }
+
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -246,7 +284,13 @@ final class Dialect private (
       allowXmlLiterals: Boolean = this.allowXmlLiterals,
       toplevelSeparator: String = this.toplevelSeparator,
       allowNumericLiteralUnderscoreSeparators: Boolean =
-        this.allowNumericLiteralUnderscoreSeparators
+        this.allowNumericLiteralUnderscoreSeparators,
+      allowGivenUsing: Boolean = this.allowGivenUsing,
+      allowExtensionMethods: Boolean = this.allowExtensionMethods,
+      allowOpenClass: Boolean = this.allowOpenClass,
+      allowWhiteboxMacro: Boolean = this.allowWhiteboxMacro,
+      allowToplevelStatements: Boolean = this.allowToplevelStatements,
+      allowOpaqueTypes: Boolean = this.allowOpaqueTypes
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -274,7 +318,13 @@ final class Dialect private (
       allowWithTypes,
       allowXmlLiterals,
       toplevelSeparator,
-      allowNumericLiteralUnderscoreSeparators
+      allowNumericLiteralUnderscoreSeparators,
+      allowGivenUsing,
+      allowExtensionMethods,
+      allowOpenClass,
+      allowWhiteboxMacro,
+      allowToplevelStatements,
+      allowOpaqueTypes
       // NOTE(olafur): add the next argument above this comment.
     )
   }

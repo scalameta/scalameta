@@ -160,6 +160,16 @@ package object trees {
       case _: Defn.Class => true
       case _: Defn.Trait => true
       case _: Defn.Object => true
+      case _: Defn.Def => true
+      case _: Defn.Given => true
+      case _: Defn.GivenAlias => true
+      case _: Defn.Enum => true
+      case _: Defn.ExtensionGroup => true
+      case _: Defn.ExtensionMethod => true
+      case _: Defn.ExtensionMethodInfix => true
+      case _: Defn.OpaqueTypeAlias => true
+      case _: Defn.Val => true
+      case _: Defn.Var => true
       case _: Pkg.Object => true
       case _ => false
     }

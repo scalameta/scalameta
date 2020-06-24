@@ -81,6 +81,7 @@ object Term {
     checkFields(parts.length == args.length + 1)
   }
   @ast class Apply(fun: Term, args: List[Term]) extends Term
+  @ast class ApplyUsing(fun: Term, args: List[Term]) extends Term
   @ast class ApplyType(fun: Term, targs: List[Type] @nonEmpty) extends Term
   @ast class ApplyInfix(lhs: Term, op: Name, targs: List[Type], args: List[Term]) extends Term
   @ast class ApplyUnary(op: Name, arg: Term) extends Term.Ref {
@@ -103,6 +104,9 @@ object Term {
     checkFields(stats.forall(_.isBlockStat))
   }
   @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term
+  @ast class QuotedMacroExpr(body: Term) extends Term
+  @ast class QuotedMacroType(tpe: Type) extends Term
+  @ast class SplicedMacroExpr(body: Term) extends Term
   @ast class Match(expr: Term, cases: List[Case] @nonEmpty) extends Term
   @ast class Try(expr: Term, catchp: List[Case], finallyp: Option[Term]) extends Term
   @ast class TryWithHandler(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
@@ -169,6 +173,7 @@ object Type {
   @ast class Lambda(tparams: List[Type.Param], tpe: Type) extends Type {
     checkParent(ParentChecks.TypeLambda)
   }
+  @ast class Macro(body: Term) extends Type
   @ast class Method(paramss: List[List[Term.Param]], tpe: Type) extends Type {
     checkParent(ParentChecks.TypeMethod)
   }
@@ -229,6 +234,7 @@ object Pat {
     checkFields(lhs.is[Pat.Wildcard] || lhs.is[Pat.Var] || lhs.is[Pat.Quasi])
     checkFields(!rhs.is[Type.Var] && !rhs.is[Type.Placeholder])
   }
+  @ast class Macro(body: Term) extends Pat
   def fresh(): Pat.Var = Pat.Var(Term.fresh())
   def fresh(prefix: String): Pat.Var = Pat.Var(Term.fresh(prefix))
 }
@@ -286,6 +292,70 @@ object Defn {
     checkFields(decltpe.nonEmpty || rhs.nonEmpty)
     checkFields(rhs.isEmpty ==> pats.forall(_.is[Pat.Var]))
   }
+  @ast class Given(
+      mods: List[Mod],
+      name: scala.meta.Name,
+      tparams: List[scala.meta.Type.Param],
+      sparams: List[List[Term.Param]],
+      decltpe: scala.meta.Type,
+      templ: Template
+  ) extends Defn
+  @ast class Enum(
+      mods: List[Mod],
+      name: scala.meta.Type.Name,
+      tparams: List[scala.meta.Type.Param],
+      ctor: Ctor.Primary,
+      templ: Template
+  ) extends Defn
+      with Member.Type
+  @ast class EnumCase(
+      mods: List[Mod],
+      name: Term.Name,
+      tparams: List[scala.meta.Type.Param],
+      ctor: Ctor.Primary,
+      inits: List[Init]
+  ) extends Defn
+      with Member.Term
+  @ast class RepeatedEnumCase(
+      mods: List[Mod],
+      cases: List[Term.Name]
+  ) extends Defn
+  @ast class GivenAlias(
+      mods: List[Mod],
+      name: scala.meta.Name,
+      tparams: List[scala.meta.Type.Param],
+      sparams: List[List[Term.Param]],
+      decltpe: scala.meta.Type,
+      body: Term
+  ) extends Defn
+  @ast class ExtensionGroup(
+      mods: List[Mod],
+      name: scala.meta.Name,
+      tparams: List[scala.meta.Type.Param],
+      sparams: List[List[Term.Param]],
+      eparam: Term.Param,
+      templ: Template
+  ) extends Defn
+  @ast class ExtensionMethod(
+      mods: List[Mod],
+      eparam: Term.Param,
+      name: Term.Name,
+      tparams: List[scala.meta.Type.Param],
+      paramss: List[List[Term.Param]],
+      decltpe: Option[scala.meta.Type],
+      body: Term
+  ) extends Defn
+      with Member.Term
+  @ast class ExtensionMethodInfix(
+      mods: List[Mod],
+      eparam: Term.Param,
+      name: Term.Name,
+      tparams: List[scala.meta.Type.Param],
+      paramss: List[List[Term.Param]],
+      decltpe: Option[scala.meta.Type],
+      body: Term
+  ) extends Defn
+      with Member.Term
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
@@ -306,6 +376,16 @@ object Defn {
       body: Term
   ) extends Defn
       with Member.Term
+  @ast class OpaqueTypeAlias(
+      mods: List[Mod],
+      name: scala.meta.Type.Name,
+      tparams: List[scala.meta.Type.Param],
+      bounds: scala.meta.Type.Bounds,
+      body: scala.meta.Type
+  ) extends Defn
+      with Member.Type {
+    checkFields(mods.exists(_.is[Mod.Opaque]))
+  }
   @ast class Type(
       mods: List[Mod],
       name: scala.meta.Type.Name,
@@ -402,6 +482,7 @@ object Mod {
   @ast class Implicit() extends Mod
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod
+  @ast class Open() extends Mod
   @ast class Override() extends Mod
   @ast class Case() extends Mod
   @ast class Abstract() extends Mod
@@ -411,6 +492,8 @@ object Mod {
   @ast class ValParam() extends Mod
   @ast class VarParam() extends Mod
   @ast class Inline() extends Mod
+  @ast class Using() extends Mod
+  @ast class Opaque() extends Mod
 }
 
 @branch trait Enumerator extends Tree

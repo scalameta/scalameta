@@ -43,12 +43,10 @@ package object dialects {
 
   @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
   implicit val Paradise211 = Scala211
-    .withAllowInlineIdents(true)
     .withAllowInlineMods(true)
 
   @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
   implicit val ParadiseTypelevel211 = Typelevel211
-    .withAllowInlineMods(true)
     .withAllowInlineMods(true)
 
   implicit val Scala212 = Scala211
@@ -79,34 +77,37 @@ package object dialects {
 
   @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
   implicit val Paradise212 = Scala212
-    .withAllowInlineIdents(true)
     .withAllowInlineMods(true)
 
   @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
   implicit val ParadiseTypelevel212 = Typelevel212
-    .withAllowInlineIdents(true)
     .withAllowInlineMods(true)
 
-  implicit val Dotty = Scala212
-    .copy(
-      allowAndTypes = true, // New feature in Dotty
-      allowAtForExtractorVarargs = false, // New feature in Dotty
-      allowColonForExtractorVarargs = true, // New feature in Dotty
-      allowEnums = true, // New feature in Dotty
-      allowImplicitByNameParameters = true, // New feature in Dotty
-      allowImplicitFunctionTypes = true, // New feature in Dotty
-      allowInlineIdents = false, // New feature in Dotty
-      allowInlineMods = true, // New feature in Dotty
-      allowLiteralTypes = true, // New feature in Dotty
-      allowMethodTypes = false,
-      allowOrTypes = true, // New feature in Dotty
-      allowTrailingCommas = true,
-      allowTraitParameters = true, // New feature in Dotty
-      allowTypeLambdas = true, // New feature in Dotty
-      allowViewBounds = false, // View bounds have been removed in Dotty
-      allowWithTypes = false, // New feature in Dotty
-      allowXmlLiterals = false // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
-    )
+  implicit val Dotty = Scala213
+    .withAllowAndTypes(true) // New feature in Dotty
+    .withAllowAtForExtractorVarargs(false)
+    .withAllowColonForExtractorVarargs(true) // New feature in Dotty
+    .withAllowEnums(true) // New feature in Dotty
+    .withAllowImplicitByNameParameters(true) // New feature in Dotty
+    .withAllowImplicitFunctionTypes(true) // New feature in Dotty
+    .withAllowInlineMods(true) // New feature in Dotty
+    .withAllowLiteralTypes(true) // New feature in Dotty
+    .withAllowMethodTypes(false)
+    .withAllowOrTypes(true) // New feature in Dotty
+    .withAllowTrailingCommas(true)
+    .withAllowTraitParameters(true) // New feature in Dotty
+    .withAllowTypeLambdas(true) // New feature in Dotty
+    .withAllowViewBounds(false) // View bounds have been removed in Dotty
+    .withAllowWithTypes(false)
+    .withAllowXmlLiterals(
+      false
+    ) // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
+    .withAllowGivenUsing(true)
+    .withAllowExtensionMethods(true)
+    .withAllowOpenClass(true)
+    .withAllowWhiteboxMacro(true)
+    .withAllowToplevelStatements(true)
+    .withAllowOpaqueTypes(true)
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)

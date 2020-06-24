@@ -24,6 +24,8 @@ private[meta] trait Aliases {
     val KwElse = scala.meta.tokens.Token.KwElse
     type KwEnum = scala.meta.tokens.Token.KwEnum
     val KwEnum = scala.meta.tokens.Token.KwEnum
+    type KwGiven = scala.meta.tokens.Token.KwGiven
+    val KwGiven = scala.meta.tokens.Token.KwGiven
     type KwExtends = scala.meta.tokens.Token.KwExtends
     val KwExtends = scala.meta.tokens.Token.KwExtends
     type KwFalse = scala.meta.tokens.Token.KwFalse
@@ -96,6 +98,8 @@ private[meta] trait Aliases {
     val Colon = scala.meta.tokens.Token.Colon
     type Viewbound = scala.meta.tokens.Token.Viewbound
     val Viewbound = scala.meta.tokens.Token.Viewbound
+    type TypeLambdaArrow = scala.meta.tokens.Token.TypeLambdaArrow
+    val TypeLambdaArrow = scala.meta.tokens.Token.TypeLambdaArrow
     type LeftArrow = scala.meta.tokens.Token.LeftArrow
     val LeftArrow = scala.meta.tokens.Token.LeftArrow
     type Subtype = scala.meta.tokens.Token.Subtype

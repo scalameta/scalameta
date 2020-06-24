@@ -31,6 +31,8 @@ object LegacyToken {
   /** identifiers */
   final val IDENTIFIER = 10
   final val BACKQUOTED_IDENT = 11
+  final val QUOTED_IDENT = 12
+  final val SPLICED_IDENT = 13
 
   /** keywords */
   final val NEW = 20
@@ -67,6 +69,7 @@ object LegacyToken {
   final val VAL = 73
   final val VAR = 74
   final val ENUM = 75
+  final val GIVEN = 76
 
   /** control structures */
   final val IF = 80
@@ -108,12 +111,15 @@ object LegacyToken {
   final val SUBTYPE = 134
   final val SUPERTYPE = 135
   final val VIEWBOUND = 136
+  final val TYPELAMBDAARROW = 137
 
   final val WHITESPACE = 201
   final val COMMENT = 300
 
   final val UNQUOTE = 400
   final val ELLIPSIS = 401
+  final val MACROQUOTE = 402
+  final val MACROSPLICE = 403
 
   val kw2legacytoken = Map[String, LegacyToken](
     "abstract"  -> ABSTRACT,
@@ -163,11 +169,13 @@ object LegacyToken {
     "<-"        -> LARROW,
     "<:"        -> SUBTYPE,
     "<%"        -> VIEWBOUND,
+    "=>>"       -> TYPELAMBDAARROW,
     ">:"        -> SUPERTYPE,
     "#"         -> HASH,
     "@"         -> AT,
     "macro"     -> MACRO,
     "then"      -> IDENTIFIER,
-    "enum"      -> ENUM
+    "enum"      -> ENUM,
+    "given"     -> GIVEN
   )
 }

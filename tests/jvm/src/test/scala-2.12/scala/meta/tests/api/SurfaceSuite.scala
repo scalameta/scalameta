@@ -211,8 +211,17 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Defn
       |scala.meta.Defn.Class
       |scala.meta.Defn.Def
+      |scala.meta.Defn.Enum
+      |scala.meta.Defn.EnumCase
+      |scala.meta.Defn.ExtensionGroup
+      |scala.meta.Defn.ExtensionMethod
+      |scala.meta.Defn.ExtensionMethodInfix
+      |scala.meta.Defn.Given
+      |scala.meta.Defn.GivenAlias
       |scala.meta.Defn.Macro
       |scala.meta.Defn.Object
+      |scala.meta.Defn.OpaqueTypeAlias
+      |scala.meta.Defn.RepeatedEnumCase
       |scala.meta.Defn.Trait
       |scala.meta.Defn.Type
       |scala.meta.Defn.Val
@@ -255,10 +264,13 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Mod.Implicit
       |scala.meta.Mod.Inline
       |scala.meta.Mod.Lazy
+      |scala.meta.Mod.Opaque
+      |scala.meta.Mod.Open
       |scala.meta.Mod.Override
       |scala.meta.Mod.Private
       |scala.meta.Mod.Protected
       |scala.meta.Mod.Sealed
+      |scala.meta.Mod.Using
       |scala.meta.Mod.ValParam
       |scala.meta.Mod.VarParam
       |scala.meta.Name
@@ -270,6 +282,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Pat.Extract
       |scala.meta.Pat.ExtractInfix
       |scala.meta.Pat.Interpolate
+      |scala.meta.Pat.Macro
       |scala.meta.Pat.SeqWildcard
       |scala.meta.Pat.Tuple
       |scala.meta.Pat.Typed
@@ -289,6 +302,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Term.ApplyInfix
       |scala.meta.Term.ApplyType
       |scala.meta.Term.ApplyUnary
+      |scala.meta.Term.ApplyUsing
       |scala.meta.Term.Ascribe
       |scala.meta.Term.Assign
       |scala.meta.Term.Block
@@ -306,10 +320,13 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Term.Param
       |scala.meta.Term.PartialFunction
       |scala.meta.Term.Placeholder
+      |scala.meta.Term.QuotedMacroExpr
+      |scala.meta.Term.QuotedMacroType
       |scala.meta.Term.Ref
       |scala.meta.Term.Repeated
       |scala.meta.Term.Return
       |scala.meta.Term.Select
+      |scala.meta.Term.SplicedMacroExpr
       |scala.meta.Term.Super
       |scala.meta.Term.This
       |scala.meta.Term.Throw
@@ -329,6 +346,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.Function
       |scala.meta.Type.ImplicitFunction
       |scala.meta.Type.Lambda
+      |scala.meta.Type.Macro
       |scala.meta.Type.Method
       |scala.meta.Type.Name
       |scala.meta.Type.Or
@@ -391,6 +409,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.KwFinally
       |scala.meta.tokens.Token.KwFor
       |scala.meta.tokens.Token.KwForsome
+      |scala.meta.tokens.Token.KwGiven
       |scala.meta.tokens.Token.KwIf
       |scala.meta.tokens.Token.KwImplicit
       |scala.meta.tokens.Token.KwImport
@@ -423,6 +442,10 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.LeftBrace
       |scala.meta.tokens.Token.LeftBracket
       |scala.meta.tokens.Token.LeftParen
+      |scala.meta.tokens.Token.MacroQuote
+      |scala.meta.tokens.Token.MacroQuotedIdent
+      |scala.meta.tokens.Token.MacroSplice
+      |scala.meta.tokens.Token.MacroSplicedIdent
       |scala.meta.tokens.Token.RightArrow
       |scala.meta.tokens.Token.RightBrace
       |scala.meta.tokens.Token.RightBracket
@@ -432,6 +455,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.Subtype
       |scala.meta.tokens.Token.Supertype
       |scala.meta.tokens.Token.Tab
+      |scala.meta.tokens.Token.TypeLambdaArrow
       |scala.meta.tokens.Token.Underscore
       |scala.meta.tokens.Token.Viewbound
       |scala.meta.tokens.Token.Xml.End

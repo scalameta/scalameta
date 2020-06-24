@@ -158,8 +158,9 @@ class SuccessSuite extends FunSuite {
     val name = t"List"
     val a = tparam"+A"
     val b = t"B"
-    assert(
-      q"type $name[$a] = $b".structure == "Defn.Type(Nil, Type.Name(\"List\"), List(Type.Param(List(Mod.Covariant()), Type.Name(\"A\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Name(\"B\"))"
+    assertNoDiff(
+      q"type $name[$a] = $b".structure,
+      "Defn.Type(Nil, Type.Name(\"List\"), List(Type.Param(List(Mod.Covariant()), Type.Name(\"A\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Name(\"B\"))"
     )
   }
 
@@ -1008,8 +1009,8 @@ class SuccessSuite extends FunSuite {
     )
   }
 
-  test("1 t\"[..tparams] => tpe\"") {
-    val t"[..$tparams] => $tpe" = t"[T] => (T, T)"
+  test("1 t\"[..tparams] =>> tpe\"") {
+    val t"[..$tparams] =>> $tpe" = t"[T] =>> (T, T)"
     assert(tparams.toString == "List(T)")
     assert(
       tparams(0).structure == "Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil)"
@@ -1017,11 +1018,11 @@ class SuccessSuite extends FunSuite {
     assert(tpe.toString == "(T, T)")
   }
 
-  test("2 t\"(..tparams) => tpe\"") {
+  test("2 t\"(..tparams) =>> tpe\"") {
     val tparams = List(tparam"T")
     val tpe = t"(T, T)"
     assert(
-      t"[..$tparams] => $tpe".structure == "Type.Lambda(List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Tuple(List(Type.Name(\"T\"), Type.Name(\"T\"))))"
+      t"[..$tparams] =>> $tpe".structure == "Type.Lambda(List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Tuple(List(Type.Name(\"T\"), Type.Name(\"T\"))))"
     )
   }
 
@@ -1407,8 +1408,9 @@ class SuccessSuite extends FunSuite {
     val tparams = List(tparam"T", tparam"W")
     val tpeopt1 = t"A"
     val tpeopt2 = t"A"
-    assert(
-      q"..$mods type $tname[..$tparams] >: $tpeopt1 <: $tpeopt2".structure == "Decl.Type(List(Mod.Private(Name(\"\")), Mod.Final()), Type.Name(\"T\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Bounds(Some(Type.Name(\"A\")), Some(Type.Name(\"A\"))))"
+    assertEquals(
+      q"..$mods type $tname[..$tparams] >: $tpeopt1 <: $tpeopt2".structure,
+      "Decl.Type(List(Mod.Private(Name(\"\")), Mod.Final()), Type.Name(\"T\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Bounds(Some(Type.Name(\"A\")), Some(Type.Name(\"A\"))))"
     )
   }
 
@@ -1551,8 +1553,9 @@ class SuccessSuite extends FunSuite {
     val tname = t"Q"
     val tparams = List(tparam"T", tparam"W")
     val tpe = t"R"
-    assert(
-      q"..$mods type $tname[..$tparams] = $tpe".structure == "Defn.Type(List(Mod.Private(Name(\"\")), Mod.Final()), Type.Name(\"Q\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Name(\"R\"))"
+    assertEquals(
+      q"..$mods type $tname[..$tparams] = $tpe".structure,
+      "Defn.Type(List(Mod.Private(Name(\"\")), Mod.Final()), Type.Name(\"Q\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Name(\"R\"))"
     )
   }
 
@@ -1729,13 +1732,15 @@ class SuccessSuite extends FunSuite {
 
   test("1 q\"package ref { ..stats }\"") {
     val q"package $ref { ..$stats }" = q"package p { class A; object B }"
-    assert(ref.structure == "Term.Name(\"p\")")
-    assert(stats.toString == "List(class A, object B)")
-    assert(
-      stats(0).structure == "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil))"
+    assertEquals(ref.structure, "Term.Name(\"p\")")
+    assertEquals(stats.toString, "List(class A, object B)")
+    assertEquals(
+      stats(0).structure,
+      "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil))"
     )
-    assert(
-      stats(1).structure == "Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Self(Name(\"\"), None), Nil))"
+    assertEquals(
+      stats(1).structure,
+      "Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Self(Name(\"\"), None), Nil))"
     )
   }
 
@@ -2261,13 +2266,16 @@ class SuccessSuite extends FunSuite {
         ..$defDefns
       }
     """
-    assert(objectDefn.syntax == """
+    assertEquals(
+      objectDefn.syntax,
+      """
       |object M {
       |  def foo = bar
       |  println("another stat")
       |  def baz: Unit = {}
       |}
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    """.trim.stripMargin.split('\n').mkString(EOL)
+    )
   }
 
   test("#458") {

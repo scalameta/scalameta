@@ -23,6 +23,8 @@ import scala.meta.internal.prettyprinters._
 object Token {
   // Identifiers
   @freeform("identifier") class Ident(value: String) extends Token
+  @freeform("quotedident") class MacroQuotedIdent(value: String) extends Token
+  @freeform("splicedident") class MacroSplicedIdent(value: String) extends Token
 
   // Alphanumeric keywords
   @fixed("abstract") class KwAbstract extends Token
@@ -33,6 +35,7 @@ object Token {
   @fixed("do") class KwDo extends Token
   @fixed("else") class KwElse extends Token
   @fixed("enum") class KwEnum extends Token
+  @fixed("given") class KwGiven extends Token
   @fixed("extends") class KwExtends extends Token
   @fixed("false") class KwFalse extends Token
   @fixed("final") class KwFinal extends Token
@@ -78,6 +81,9 @@ object Token {
   @fixed(">:") class Supertype extends Token
   @fixed("@") class At extends Token
   @fixed("_") class Underscore extends Token
+  @fixed("=>>") class TypeLambdaArrow extends Token
+  @fixed("'") class MacroQuote extends Token
+  @fixed("$") class MacroSplice extends Token
 
   // Delimiters
   @fixed("(") class LeftParen extends Token

@@ -128,6 +128,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         if (token == ENUM && !dialect.allowEnums)
           token = IDENTIFIER
       }
+      if (token == IDENTIFIER && name.startsWith("$") && dialect.allowWhiteboxMacro) {
+        strVal = name.stripPrefix("$")
+        token = SPLICED_IDENT
+      }
     }
   }
 
@@ -332,11 +336,17 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         if (ch == '$' && !getDollar()) {
           getUnquote()
         } else {
+          val prevChar = ch
           putChar(ch)
           nextChar()
-          getIdentRest()
-          if (ch == '"' && token == IDENTIFIER)
-            token = INTERPOLATIONID
+          if (prevChar == '$' && ch == '{' && dialect.allowWhiteboxMacro) {
+            token = MACROSPLICE
+            setStrVal()
+          } else {
+            getIdentRest()
+            if (ch == '"' && token == IDENTIFIER)
+              token = INTERPOLATIONID
+          }
         }
       case '<' => // is XMLSTART?
         def fetchLT() = {
@@ -438,13 +448,20 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           else if (isOperatorPart(ch) && (ch != '\\'))
             charLitOr(getOperatorRest _)
           else {
-            getLitChar()
-            if (ch == '\'') {
-              nextChar()
-              token = CHARLIT
+            val lookahead = lookaheadReader
+            lookahead.nextRawChar()
+            if ((ch == '{' || ch == '[') && lookahead.ch != '\'' && dialect.allowWhiteboxMacro) {
+              token = MACROQUOTE
               setStrVal()
             } else {
-              syntaxError("unclosed character literal", at = offset)
+              getLitChar()
+              if (ch == '\'') {
+                nextChar()
+                token = CHARLIT
+                setStrVal()
+              } else {
+                syntaxError("unclosed character literal", at = offset)
+              }
             }
           }
         }
@@ -984,7 +1001,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       setStrVal()
     } else {
       op()
-      token = SYMBOLLIT
+      if (dialect.allowWhiteboxMacro) {
+        token = QUOTED_IDENT
+      } else {
+        token = SYMBOLLIT
+      }
       strVal = name.toString
     }
   }

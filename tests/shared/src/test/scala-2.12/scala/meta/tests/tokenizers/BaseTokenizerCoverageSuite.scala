@@ -80,6 +80,7 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
   implicit val valImplicit: Projection[Defn.Val, Mod.Implicit] = mod[Defn.Val, Mod.Implicit]
   implicit val valFinal: Projection[Defn.Val, Mod.Final] = mod[Defn.Val, Mod.Final]
   implicit val traitSealed: Projection[Defn.Trait, Mod.Sealed] = mod[Defn.Trait, Mod.Sealed]
+  implicit val traitOpen: Projection[Defn.Trait, Mod.Open] = mod[Defn.Trait, Mod.Open]
   implicit val defOverride: Projection[Defn.Def, Mod.Override] = mod[Defn.Def, Mod.Override]
   implicit val objectCase: Projection[Defn.Object, Mod.Case] = mod[Defn.Object, Mod.Case]
   implicit val classAbstract: Projection[Defn.Class, Mod.Abstract] = mod[Defn.Class, Mod.Abstract]

@@ -22,6 +22,10 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
         case BACKQUOTED_IDENT =>
           Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
+        case QUOTED_IDENT =>
+          Token.MacroQuotedIdent(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
+        case SPLICED_IDENT =>
+          Token.MacroSplicedIdent(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
 
         case INTLIT =>
           Token.Constant.Int(input, dialect, curr.offset, curr.endOffset + 1, curr.intVal)
@@ -82,6 +86,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case VAL => Token.KwVal(input, dialect, curr.offset)
         case VAR => Token.KwVar(input, dialect, curr.offset)
         case ENUM => Token.KwEnum(input, dialect, curr.offset)
+        case GIVEN => Token.KwGiven(input, dialect, curr.offset)
 
         case IF => Token.KwIf(input, dialect, curr.offset)
         case THEN => unreachable
@@ -118,6 +123,10 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case SUBTYPE => Token.Subtype(input, dialect, curr.offset)
         case SUPERTYPE => Token.Supertype(input, dialect, curr.offset)
         case VIEWBOUND => Token.Viewbound(input, dialect, curr.offset)
+        case TYPELAMBDAARROW => Token.TypeLambdaArrow(input, dialect, curr.offset)
+
+        case MACROQUOTE => Token.MacroQuote(input, dialect, curr.offset)
+        case MACROSPLICE => Token.MacroSplice(input, dialect, curr.offset)
 
         case WHITESPACE =>
           if (curr.strVal == " ") Token.Space(input, dialect, curr.offset)
