@@ -142,5 +142,11 @@ class TypeSuite extends ParseSuite {
     val Lit("42") = tpe("\"42\"")(dialects.Dotty)
     val Lit(false) = tpe("false")(dialects.Dotty)
     val Lit(true) = tpe("true")(dialects.Dotty)
+
+    val Lit.Unit() = tpe("()")(dialects.Scala213)
+    val Type.Function(Nil, Lit.Unit()) = tpe("() => ()")(dialects.Scala213)
+    intercept[org.scalameta.UnreachableError] {
+      tpe("()")(dialects.Dotty)
+    }
   }
 }

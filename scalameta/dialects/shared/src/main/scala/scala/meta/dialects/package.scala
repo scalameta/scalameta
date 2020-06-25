@@ -56,6 +56,7 @@ package object dialects {
     .withAllowImplicitByNameParameters(true)
     .withAllowLiteralTypes(true)
     .withAllowNumericLiteralUnderscoreSeparators(true)
+    .withAllowLiteralUnitType(true)
 
   implicit val Scala = Scala213 // alias for latest Scala dialect.
 
@@ -108,6 +109,7 @@ package object dialects {
     .withAllowWhiteboxMacro(true)
     .withAllowToplevelStatements(true)
     .withAllowOpaqueTypes(true)
+    .withAllowLiteralUnitType(false)
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)

@@ -887,13 +887,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def makeTupleType(body: List[Type]): Type = {
+    def emptyTupleResult = if (dialect.allowLiteralUnitType) Lit.Unit() else unreachable
     // NOTE: we can't make this autoPos
     // because, by the time control reaches this method, we're already past the closing parenthesis
     // therefore, we'll rely on our callers to assign positions to the tuple we return
     // we can't do atPos(body.first, body.last) either, because that wouldn't account for parentheses
     body match {
       case List(q @ Type.Quasi(1, _)) => atPos(q, q)(Type.Tuple(body))
-      case _ => makeTuple[Type](body, () => unreachable, Type.Tuple(_))
+      case _ => makeTuple[Type](body, () => emptyTupleResult, Type.Tuple(_))
     }
   }
 
