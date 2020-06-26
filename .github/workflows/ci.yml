@@ -15,11 +15,12 @@ jobs:
           - "++2.11.12 testsJVM/test"
           - "++2.12.10 testsJVM/test"
           - "++2.12.11 testsJVM/test"
+          - "++2.12.11 testsJS/test"
           - "++2.13.1 testsJVM/test"
           - "++2.13.2 testsJVM/test"
+          - "++2.13.3 testsJVM/test"
+          - "++2.13.3 testsJS/test"
           - "download-scala-library ++2.12.11 testsJVM/slow:test"
-          - "++2.12.10 testsJS/test"
-          - "++2.13.1 testsJS/test"
           - "mima"
     steps:
       - uses: actions/checkout@v2
