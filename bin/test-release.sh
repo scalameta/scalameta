@@ -7,9 +7,8 @@ coursier resolve \
   org.scalameta:scalameta_2.13:$version \
   org.scalameta:scalameta_2.12:$version \
   org.scalameta:scalameta_2.11:$version \
-  org.scalameta:scalameta_sjs0.6_2.13:$version \
-  org.scalameta:scalameta_sjs0.6_2.12:$version \
-  org.scalameta:scalameta_sjs0.6_2.11:$version \
+  org.scalameta:scalameta_sjs1_2.13:$version \
+  org.scalameta:scalameta_sjs1_2.12:$version \
   org.scalameta:metac_2.13.2:$version \
   org.scalameta:metac_2.12.11:$version \
   org.scalameta:metac_2.11.12:$version \
