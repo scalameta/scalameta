@@ -233,7 +233,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             else '\u21d2' :: sepRegions
           } else if (curr.is[RightBrace]) {
             var sepRegions1 = sepRegions
-            while (!sepRegions1.isEmpty && (sepRegions1.head != '}' || sepRegions1.head != '$'))
+            while (!sepRegions1.isEmpty && (sepRegions1.head != '}' && sepRegions1.head != '$'))
               sepRegions1 = sepRegions1.tail
             if (!sepRegions1.isEmpty) sepRegions1 = sepRegions1.tail
             sepRegions1
