@@ -168,6 +168,39 @@ class TermSuite extends ParseSuite {
     val iff @ If(Lit(true), Lit(true), Lit(())) = term("if (true) true")
   }
 
+  test("if (true && '' match...") {
+    val file =
+      """|
+         |if (
+         |  true && ("" match {
+         |    case other ⇒ true
+         |  })
+         |  && true
+         |) ""
+         |""".stripMargin
+
+    val Term.If(
+      Term.ApplyInfix(
+        Term.ApplyInfix(
+          Lit.Boolean(true),
+          Term.Name("&&"),
+          Nil,
+          List(
+            Term.Match(
+              Lit.String(""),
+              List(Case(Pat.Var(Term.Name("other")), None, Lit.Boolean(true)))
+            )
+          )
+        ),
+        Term.Name("&&"),
+        Nil,
+        List(Lit.Boolean(true))
+      ),
+      Lit.String(""),
+      Lit.Unit()
+    ) = term(file)
+  }
+
   test("() => x") {
     val Term.Function(Nil, Term.Name("x")) = term("() => x")
     val Term.Function(Nil, Term.Name("x")) = blockStat("() => x")
