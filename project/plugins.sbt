@@ -9,7 +9,7 @@ addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.3.7")
 
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.9.0")
 
-addSbtPlugin("com.thesamet" % "sbt-protoc" % "0.99.31")
+addSbtPlugin("com.thesamet" % "sbt-protoc" % "0.99.34")
 libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin-shaded" % "0.10.3"
 
 libraryDependencies += "org.scala-sbt" %% "scripted-plugin" % sbtVersion.value
