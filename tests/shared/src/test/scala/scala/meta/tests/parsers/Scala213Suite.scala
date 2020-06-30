@@ -14,4 +14,21 @@ class Scala213Suite extends ParseSuite {
     )
   }
 
+  test("identifier-types") {
+    // "x" is a class with def =>>(x: Int): Int, in dotty ==> is keyword and it will be error here
+    assertNoDiff(
+      templStat("val c = x =>> 3").structure,
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("c"))), None, Term.ApplyInfix(Term.Name("x"), Term.Name("=>>"), Nil, List(Lit.Int(3))))"""
+    )
+
+    assertNoDiff(
+      templStat("val given = 3").structure,
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("given"))), None, Lit.Int(3))"""
+    )
+
+    assertNoDiff(
+      templStat("val enum = 3").structure,
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("enum"))), None, Lit.Int(3))"""
+    )
+  }
 }
