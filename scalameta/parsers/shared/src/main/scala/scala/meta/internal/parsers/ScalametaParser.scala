@@ -1160,6 +1160,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           Type.Macro(macroSplice())
         case MacroSplicedIdent(_) =>
           Type.Macro(macroSplicedIdent())
+        case Ident("-") if ahead { token.is[NumericLiteral] } && dialect.allowLiteralTypes =>
+          val term = termName()
+          atPos(term, auto)(literal(isNegated = true))
         case _ =>
           val ref = path() match {
             case q: Quasi => q.become[Term.Ref.Quasi]
