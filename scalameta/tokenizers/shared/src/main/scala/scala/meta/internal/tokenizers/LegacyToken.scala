@@ -52,6 +52,7 @@ object LegacyToken {
   final val SEALED = 45
   final val LAZY = 55
   final val MACRO = 57
+  final val EXPORT = 58
 
   /** templates */
   final val PACKAGE = 60
@@ -174,8 +175,9 @@ object LegacyToken {
     "#"         -> HASH,
     "@"         -> AT,
     "macro"     -> MACRO,
-    "then"      -> IDENTIFIER,
+    "then"      -> THEN,
     "enum"      -> ENUM,
-    "given"     -> GIVEN
+    "given"     -> GIVEN,
+    "export"    -> EXPORT
   )
 }

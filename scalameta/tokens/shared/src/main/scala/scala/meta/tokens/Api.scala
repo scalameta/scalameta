@@ -92,6 +92,8 @@ private[meta] trait Aliases {
     val KwWith = scala.meta.tokens.Token.KwWith
     type KwYield = scala.meta.tokens.Token.KwYield
     val KwYield = scala.meta.tokens.Token.KwYield
+    type KwThen = scala.meta.tokens.Token.KwThen
+    val KwThen = scala.meta.tokens.Token.KwThen
     type Hash = scala.meta.tokens.Token.Hash
     val Hash = scala.meta.tokens.Token.Hash
     type Colon = scala.meta.tokens.Token.Colon

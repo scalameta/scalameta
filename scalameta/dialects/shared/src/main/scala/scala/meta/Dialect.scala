@@ -83,7 +83,15 @@ final class Dialect private (
     // Opaque types introduced in dotty
     val allowOpaqueTypes: Boolean,
     // Literal Unit Type
-    val allowLiteralUnitType: Boolean
+    val allowLiteralUnitType: Boolean,
+    // Super traits introduced in dotty
+    val allowSuperTrait: Boolean,
+    // Export selected members of an object introduced in dotty
+    val allowExportClause: Boolean,
+    // Extended classes separated by ',' introduced in dotty
+    val allowCommaSeparatedExtend: Boolean,
+    // end marker introduced in dotty
+    val allowEndMarker: Boolean
 ) extends Product
     with Serializable {
 
@@ -151,7 +159,11 @@ final class Dialect private (
       allowWhiteboxMacro = false,
       allowToplevelStatements = false,
       allowOpaqueTypes = false,
-      allowLiteralUnitType = false
+      allowLiteralUnitType = false,
+      allowSuperTrait = false,
+      allowExportClause = false,
+      allowCommaSeparatedExtend = false,
+      allowEndMarker = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -256,9 +268,20 @@ final class Dialect private (
   def withAllowOpaqueTypes(newValue: Boolean): Dialect = {
     privateCopy(allowOpaqueTypes = newValue)
   }
-
   def withAllowLiteralUnitType(newValue: Boolean): Dialect = {
     privateCopy(allowLiteralUnitType = newValue)
+  }
+  def withAllowSuperTrait(newValue: Boolean): Dialect = {
+    privateCopy(allowSuperTrait = newValue)
+  }
+  def withAllowExportClause(newValue: Boolean): Dialect = {
+    privateCopy(allowExportClause = newValue)
+  }
+  def withAllowCommaSeparatedExtend(newValue: Boolean): Dialect = {
+    privateCopy(allowCommaSeparatedExtend = newValue)
+  }
+  def withAllowEndMarker(newValue: Boolean): Dialect = {
+    privateCopy(allowEndMarker = newValue)
   }
 
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
@@ -298,7 +321,11 @@ final class Dialect private (
       allowWhiteboxMacro: Boolean = this.allowWhiteboxMacro,
       allowToplevelStatements: Boolean = this.allowToplevelStatements,
       allowOpaqueTypes: Boolean = this.allowOpaqueTypes,
-      allowLiteralUnitType: Boolean = this.allowLiteralUnitType
+      allowLiteralUnitType: Boolean = this.allowLiteralUnitType,
+      allowSuperTrait: Boolean = this.allowSuperTrait,
+      allowExportClause: Boolean = this.allowExportClause,
+      allowCommaSeparatedExtend: Boolean = this.allowCommaSeparatedExtend,
+      allowEndMarker: Boolean = this.allowEndMarker
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -333,7 +360,11 @@ final class Dialect private (
       allowWhiteboxMacro,
       allowToplevelStatements,
       allowOpaqueTypes,
-      allowLiteralUnitType
+      allowLiteralUnitType,
+      allowSuperTrait,
+      allowExportClause,
+      allowCommaSeparatedExtend,
+      allowEndMarker
       // NOTE(olafur): add the next argument above this comment.
     )
   }
