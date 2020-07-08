@@ -7,6 +7,7 @@ import Type.{Name => TypeName, _}
 import Name.Anonymous
 import scala.meta.dialects.Scala211
 import scala.meta.parsers.ParseException
+import scala.meta.internal.tokenizers.ScalametaTokenizer
 
 class TypeSuite extends ParseSuite {
   test("T") {
@@ -135,10 +136,14 @@ class TypeSuite extends ParseSuite {
     intercept[ParseException] {
       tpe("42")(dialects.Scala211)
     }
+
     val Lit(42) = tpe("42")(dialects.Dotty)
+    val Lit(-42) = tpe("-42")(dialects.Dotty)
     val Lit(42L) = tpe("42L")(dialects.Dotty)
     val Lit(42f) = tpe("42f")(dialects.Dotty)
+    val Lit(-42f) = tpe("-42f")(dialects.Dotty)
     val Lit(42d) = tpe("42d")(dialects.Dotty)
+    val Lit(-42d) = tpe("-42d")(dialects.Dotty)
     val Lit("42") = tpe("\"42\"")(dialects.Dotty)
     val Lit(false) = tpe("false")(dialects.Dotty)
     val Lit(true) = tpe("true")(dialects.Dotty)
