@@ -1930,7 +1930,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: Pos): FinishedInfix = {
       val UnfinishedInfix(lhsStart, lhses, lhsEnd, op, targs) = unf
-      val lhs = atPos(lhsStart, lhsEnd)(makeTupleTerm(lhses)) // `a + (b, c) * d` leads to creation of a tuple!
+      // `a + (b, c) * d` leads to creation of a tuple!
+      val lhs = atPos(lhsStart, lhsEnd)(makeTupleTerm(lhses))
       if (lhs.is[Term.Repeated])
         syntaxError("repeated argument not allowed here", at = lhs.tokens.last.prev)
       atPos(lhsStart, rhsEnd)(Term.ApplyInfix(lhs, op, targs, checkNoTripleDots(rhs)))
@@ -3033,12 +3034,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
     def dotselectors = { accept[Dot]; Importer(sid, importees()) }
     sid match {
-      case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
+      case Term.Select(sid: Term.Ref, tn: Term.Name) if sid.isStableId =>
         if (token.is[Dot]) dotselectors
         else
           Importer(
             sid,
-            atPos(name, name)(Importee.Name(atPos(name, name)(Name.Indeterminate(name.value)))) :: Nil
+            atPos(tn, tn)(Importee.Name(atPos(tn, tn)(Name.Indeterminate(tn.value)))) :: Nil
           )
       case _ =>
         dotselectors

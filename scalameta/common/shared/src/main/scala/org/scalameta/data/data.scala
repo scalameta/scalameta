@@ -110,7 +110,8 @@ class DataMacros(val c: Context) extends MacroHelpers {
             case Annotated(_, arg) =>
               unapply(arg)
             case AppliedTypeTree(Select(Select(Ident(root), scala), repeated), List(arg))
-                if root == termNames.ROOTPKG && scala == TermName("scala") && repeated == definitions.RepeatedParamClass.name.decodedName =>
+                if root == termNames.ROOTPKG && scala == TermName("scala") &&
+                  repeated == definitions.RepeatedParamClass.name.decodedName =>
               Some(arg)
             case _ =>
               None

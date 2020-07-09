@@ -47,7 +47,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |  val hello = 42
       |  val `world` = 42
       |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.syntax).mkString == """
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.syntax).mkString ==
+        """
       |class C {
       |  val x1a = 2
       |  val x1b = 0x002

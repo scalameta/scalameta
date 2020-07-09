@@ -235,11 +235,9 @@ object TreeSyntax {
           validity == Valid
         }
 
-        t.value != "this" && t.value.nonEmpty && (keywords.contains(t.value) || t.value.contains(
-          "//"
-        ) || t.value.contains("/*") || t.value.contains("*/") || !validPlainid(t.value) || lexicalDigit(
-          t.value.codePointAt(0)
-        ))
+        t.value != "this" && t.value.nonEmpty && (keywords.contains(t.value) ||
+        t.value.contains("//") || t.value.contains("/*") || t.value.contains("*/") ||
+        !validPlainid(t.value) || lexicalDigit(t.value.codePointAt(0)))
       }
       def isAmbiguousWithPatVarTerm(t: Term.Name, p: Tree): Boolean = {
         val looksLikePatVar = t.value.head.isLower && t.value.head.isLetter
