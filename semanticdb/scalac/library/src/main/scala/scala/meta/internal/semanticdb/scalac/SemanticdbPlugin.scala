@@ -6,9 +6,7 @@ import scala.tools.nsc.Global
 import scala.tools.nsc.plugins.Plugin
 
 class SemanticdbPlugin(val global: Global)
-    extends Plugin
-    with HijackReporter
-    with SemanticdbPipeline {
+    extends Plugin with HijackReporter with SemanticdbPipeline {
   val name = SemanticdbPlugin.name
   val description = SemanticdbPlugin.description
 

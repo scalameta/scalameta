@@ -4,8 +4,7 @@ import scala.meta.internal.javacp._
 import scala.tools.asm.signature.SignatureVisitor
 
 class MethodSignatureVisitor
-    extends TypedSignatureVisitor[MethodSignature]
-    with TypeParametersVisitor {
+    extends TypedSignatureVisitor[MethodSignature] with TypeParametersVisitor {
   val params = List.newBuilder[JavaTypeSignatureVisitor]
   val returnType = new JavaTypeSignatureVisitor(false)
   val throws = List.newBuilder[ReferenceTypeSignatureVisitor]

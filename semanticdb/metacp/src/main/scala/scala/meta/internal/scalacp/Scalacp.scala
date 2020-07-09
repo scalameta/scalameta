@@ -11,10 +11,7 @@ final class Scalacp private (
     val symbolIndex: SymbolIndex,
     val settings: Settings,
     val reporter: Reporter
-) extends AnnotationOps
-    with SymbolInformationOps
-    with SymbolOps
-    with TypeOps {
+) extends AnnotationOps with SymbolInformationOps with SymbolOps with TypeOps {
   def parse(node: ScalaSigNode): ClassfileInfos = {
     val sinfos = node.scalaSig.symbols.toList.flatMap {
       case sym: SymbolInfoSymbol => this.sinfos(sym)

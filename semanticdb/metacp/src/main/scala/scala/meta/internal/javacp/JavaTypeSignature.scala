@@ -52,8 +52,7 @@ sealed trait ReferenceTypeSignature extends JavaTypeSignature
 case class ClassTypeSignature(
     simpleClassTypeSignature: SimpleClassTypeSignature,
     classTypeSignatureSuffix: List[ClassTypeSignatureSuffix]
-) extends ReferenceTypeSignature
-    with ThrowsSignature {
+) extends ReferenceTypeSignature with ThrowsSignature {
   override def print(sb: StringBuilder): Unit = {
     sb.append('L')
     simpleClassTypeSignature.print(sb)
@@ -70,8 +69,7 @@ object ClassTypeSignature {
 }
 
 case class TypeVariableSignature(identifier: String)
-    extends ReferenceTypeSignature
-    with ThrowsSignature {
+    extends ReferenceTypeSignature with ThrowsSignature {
   override def print(sb: StringBuilder): Unit = {
     sb.append('T')
     sb.append(identifier)
