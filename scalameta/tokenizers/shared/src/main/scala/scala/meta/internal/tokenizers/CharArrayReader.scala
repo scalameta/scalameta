@@ -54,7 +54,8 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter)
     }
   }
 
-  /** Advance one character, leaving CR;LF pairs intact.
+  /**
+   * Advance one character, leaving CR;LF pairs intact.
    *  This is for use in multi-line strings, so there are no
    *  "potential line ends" here.
    */

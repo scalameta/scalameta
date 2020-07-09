@@ -18,7 +18,8 @@ sealed abstract class ClasspathElement {
 /** A classpath entry that can be read as an InputStream. */
 sealed abstract class Classfile extends ClasspathElement {
 
-  /** Returns an input stream to read the bytes of this classpath entry.
+  /**
+   * Returns an input stream to read the bytes of this classpath entry.
    *
    * @note The caller is responsible for closing the InputStream.
    */
@@ -38,7 +39,8 @@ final case class Classdir(relativeUri: String) extends ClasspathElement {
   }
   val members = mutable.Map.empty[String, ClasspathElement]
 
-  /** Java 9+ modules for this package based on JEP-220
+  /**
+   * Java 9+ modules for this package based on JEP-220
    *
    * Details: https://bugs.openjdk.java.net/browse/JDK-8066492
    *

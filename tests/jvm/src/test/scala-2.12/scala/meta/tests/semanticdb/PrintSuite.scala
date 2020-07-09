@@ -86,7 +86,8 @@ $original
     checkDocument(
       "synthetic - " + original,
       original,
-      expected, { doc =>
+      expected,
+      { doc =>
         val obtained = doc.synthetics.map { synthetic =>
           Print.synthetic(Format.Compact, doc, synthetic, printerSymtab)
         }
@@ -99,7 +100,8 @@ $original
     checkDocument(
       "trees - " + original,
       original,
-      expected, { doc =>
+      expected,
+      { doc =>
         val obtained = doc.synthetics.map { synthetic =>
           Print.tree(Format.Compact, doc, synthetic.tree, printerSymtab)
         }

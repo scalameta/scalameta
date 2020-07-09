@@ -5,7 +5,8 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 import scala.scalajs.js.annotation.JSImport.Namespace
 
-/** Facade for the native nodejs process API
+/**
+ * Facade for the native nodejs process API
  *
  * The process object is a global that provides information about, and
  * control over, the current Node.js process. As a global, it is always
@@ -18,7 +19,8 @@ trait JSProcess extends js.Any {
   def cwd(): String = js.native
 }
 
-/** Facade for native nodejs module "fs".
+/**
+ * Facade for native nodejs module "fs".
  *
  * @see https://nodejs.org/api/fs.html
  */
@@ -26,11 +28,12 @@ trait JSProcess extends js.Any {
 @JSImport("fs", Namespace)
 object JSFs extends js.Any {
 
-  /** Returns the file contents as Buffer using blocking apis.
+  /**
+   * Returns the file contents as Buffer using blocking apis.
    *
    * NOTE: The actual return value is a Node.js buffer and not js.Array[Int].
    * However, both support .length and angle bracket access (foo[1]).
-    **/
+   */
   def readFileSync(path: String): js.Array[Int] = js.native
 
   /** Returns the file contents as String using blocking apis */
@@ -52,7 +55,8 @@ object JSFs extends js.Any {
   def mkdirSync(path: String): Unit = js.native
 }
 
-/** Facade for nodejs class fs.Stats.
+/**
+ * Facade for nodejs class fs.Stats.
  *
  * @see https://nodejs.org/api/fs.html#fs_class_fs_stats
  */
@@ -63,7 +67,8 @@ class JSStats extends js.Any {
   def isDirectory(): Boolean = js.native
 }
 
-/** Facade for native nodejs module "path".
+/**
+ * Facade for native nodejs module "path".
  *
  * @see https://nodejs.org/api/path.html
  */

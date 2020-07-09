@@ -307,7 +307,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   /* ------------- PARSER COMMON -------------------------------------------- */
 
-  /** Scoping operator used to temporarily look into the future.
+  /**
+   * Scoping operator used to temporarily look into the future.
    *  Backs up token iterator before evaluating a block and restores it after.
    */
   @inline final def ahead[T](body: => T): T = {
@@ -317,7 +318,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     finally in = forked
   }
 
-  /** Methods inParensOrError and similar take a second argument which, should
+  /**
+   * Methods inParensOrError and similar take a second argument which, should
    *  the next token not be the expected opener (e.g. token.LeftParen) will be returned
    *  instead of the contents of the groupers.  However in all cases accept[LeftParen]
    *  will be called, so a parse error will still result.  If the grouping is
@@ -921,7 +923,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   /* -------- IDENTIFIERS AND LITERALS ------------------------------------------- */
 
-  /** Methods which implicitly propagate the context in which they were
+  /**
+   * Methods which implicitly propagate the context in which they were
    *  called: either in a pattern context or not.  Formerly, this was
    *  threaded through numerous methods as boolean isPattern.
    */
@@ -1930,7 +1933,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: Pos): FinishedInfix = {
       val UnfinishedInfix(lhsStart, lhses, lhsEnd, op, targs) = unf
-      val lhs = atPos(lhsStart, lhsEnd)(makeTupleTerm(lhses)) // `a + (b, c) * d` leads to creation of a tuple!
+      // `a + (b, c) * d` leads to creation of a tuple!
+      val lhs = atPos(lhsStart, lhsEnd)(makeTupleTerm(lhses))
       if (lhs.is[Term.Repeated])
         syntaxError("repeated argument not allowed here", at = lhs.tokens.last.prev)
       atPos(lhsStart, rhsEnd)(Term.ApplyInfix(lhs, op, targs, checkNoTripleDots(rhs)))
@@ -2361,7 +2365,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   /* -------- PATTERNS ------------------------------------------- */
 
-  /** Methods which implicitly propagate whether the initial call took
+  /**
+   * Methods which implicitly propagate whether the initial call took
    *  place in a context where sequences are allowed.  Formerly, this
    *  was threaded through methods as boolean seqOK.
    */
@@ -2610,7 +2615,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     override val isXML = true
   }
 
-  /** These are default entry points into the pattern context sensitive methods:
+  /**
+   * These are default entry points into the pattern context sensitive methods:
    *  they are all initiated from non-pattern context.
    */
   def typ() = outPattern.typ()
@@ -3033,12 +3039,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
     def dotselectors = { accept[Dot]; Importer(sid, importees()) }
     sid match {
-      case Term.Select(sid: Term.Ref, name: Term.Name) if sid.isStableId =>
+      case Term.Select(sid: Term.Ref, tn: Term.Name) if sid.isStableId =>
         if (token.is[Dot]) dotselectors
         else
           Importer(
             sid,
-            atPos(name, name)(Importee.Name(atPos(name, name)(Name.Indeterminate(name.value)))) :: Nil
+            atPos(tn, tn)(Importee.Name(atPos(tn, tn)(Name.Indeterminate(tn.value)))) :: Nil
           )
       case _ =>
         dotselectors

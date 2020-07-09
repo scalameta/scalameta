@@ -25,10 +25,10 @@ class ForComprehension {
       d
     ) == (1, 2, 3, 4)
     e = (
-      a,
-      b,
-      c,
-      d
+        a,
+        b,
+        c,
+        d
     )
     if e == (1, 2, 3, 4)
     f <- List(e)

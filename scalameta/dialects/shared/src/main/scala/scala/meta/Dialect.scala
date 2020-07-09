@@ -84,8 +84,7 @@ final class Dialect private (
     val allowOpaqueTypes: Boolean,
     // Literal Unit Type
     val allowLiteralUnitType: Boolean
-) extends Product
-    with Serializable {
+) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
   // - add new field to primary constructor.

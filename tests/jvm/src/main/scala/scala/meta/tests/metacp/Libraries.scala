@@ -60,15 +60,19 @@ object Library {
       provided: List[ModuleID] = Nil
   ): Library =
     Library(
-      List(organization, artifact, version).mkString(":"), { () =>
+      List(organization, artifact, version).mkString(":"),
+      { () =>
         val jars = Jars.fetch(organization, artifact, version, provided = provided)
         Classpath(jars)
       }
     )
   lazy val scalaLibrary: Library = {
-    Library("scala-library", () => {
-      val version = BuildInfo.scalaVersion
-      Classpath(Jars.fetch("org.scala-lang", "scala-library", version))
-    })
+    Library(
+      "scala-library",
+      () => {
+        val version = BuildInfo.scalaVersion
+        Classpath(Jars.fetch("org.scala-lang", "scala-library", version))
+      }
+    )
   }
 }

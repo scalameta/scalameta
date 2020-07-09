@@ -1,6 +1,7 @@
 package scala.meta.contrib.equality
 
-/** Type class used to determine equality.
+/**
+ * Type class used to determine equality.
  *
  * For examples, see [[Structurally]] or [[Syntactically]].
  *

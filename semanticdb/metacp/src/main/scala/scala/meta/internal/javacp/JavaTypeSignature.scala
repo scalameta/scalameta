@@ -3,14 +3,16 @@ package scala.meta.internal.javacp
 import scala.meta.internal.javacp.asm._
 import scala.tools.asm.signature.SignatureReader
 
-/** Translation of "Signature" section from the JVM spec to Scala.
+/**
+ * Translation of "Signature" section from the JVM spec to Scala.
  *
  * @see https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.9.1
  */
 sealed trait JavaTypeSignature extends Printable
 object JavaTypeSignature {
 
-  /** Parse JVM signature using a custom traverser.
+  /**
+   * Parse JVM signature using a custom traverser.
    *
    * Example:
    *
@@ -50,8 +52,7 @@ sealed trait ReferenceTypeSignature extends JavaTypeSignature
 case class ClassTypeSignature(
     simpleClassTypeSignature: SimpleClassTypeSignature,
     classTypeSignatureSuffix: List[ClassTypeSignatureSuffix]
-) extends ReferenceTypeSignature
-    with ThrowsSignature {
+) extends ReferenceTypeSignature with ThrowsSignature {
   override def print(sb: StringBuilder): Unit = {
     sb.append('L')
     simpleClassTypeSignature.print(sb)
@@ -68,8 +69,7 @@ object ClassTypeSignature {
 }
 
 case class TypeVariableSignature(identifier: String)
-    extends ReferenceTypeSignature
-    with ThrowsSignature {
+    extends ReferenceTypeSignature with ThrowsSignature {
   override def print(sb: StringBuilder): Unit = {
     sb.append('T')
     sb.append(identifier)

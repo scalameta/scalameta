@@ -209,7 +209,8 @@ class TemplateSuite extends ParseSuite {
       Ctor.Primary(
         Nil,
         Name.Anonymous(),
-        (Term.Param(Mod.ValParam() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil
+        (Term.Param(Mod.ValParam() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil)
+          :: Nil
       ),
       EmptyTemplate()
     ) =
@@ -224,7 +225,8 @@ class TemplateSuite extends ParseSuite {
       Ctor.Primary(
         Nil,
         Name.Anonymous(),
-        (Term.Param(Mod.VarParam() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil
+        (Term.Param(Mod.VarParam() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil)
+          :: Nil
       ),
       EmptyTemplate()
     ) =
@@ -239,7 +241,8 @@ class TemplateSuite extends ParseSuite {
       Ctor.Primary(
         Nil,
         Name.Anonymous(),
-        (Term.Param(Mod.Implicit() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil
+        (Term.Param(Mod.Implicit() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil)
+          :: Nil
       ),
       EmptyTemplate()
     ) =
@@ -275,7 +278,8 @@ class TemplateSuite extends ParseSuite {
         Nil,
         Name.Anonymous(),
         (Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) ::
-          (Term.Param(Nil, Term.Name("y"), Some(Type.ByName(Type.Name("Int"))), None) :: Nil) :: Nil
+          (Term.Param(Nil, Term.Name("y"), Some(Type.ByName(Type.Name("Int"))), None) :: Nil)
+          :: Nil
       ),
       EmptyTemplate()
     ) =

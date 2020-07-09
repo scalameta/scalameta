@@ -19,7 +19,8 @@ object Chars {
   final val CR = '\u000D'
   final val SU = '\u001A'
 
-  /** Convert a character digit to an Int according to given base,
+  /**
+   * Convert a character digit to an Int according to given base,
    *  -1 if no success
    */
   def digit2int(ch: Char, base: Int): Int = {
@@ -71,7 +72,7 @@ object Chars {
   def isIdentifierPart(c: Char) =
     (c == '$') || Character.isUnicodeIdentifierPart(c)
 
-  /** Is character a math or other symbol in Unicode?  */
+  /** Is character a math or other symbol in Unicode? */
   def isSpecial(c: Char) = {
     val chtp = Character.getType(c)
     chtp == Character.MATH_SYMBOL.toInt || chtp == Character.OTHER_SYMBOL.toInt
@@ -92,15 +93,18 @@ object Chars {
     case c => isSpecial(c)
   }
 
-  /** {{{
+  /**
+   *  {{{
    *  (#x20 | #x9 | #xD | #xA)
-   *  }}} */
+   *  }}}
+   */
   final def isSpace(ch: Char): Boolean = ch match {
     case '\u0009' | '\u000A' | '\u000D' | '\u0020' => true
     case _ => false
   }
 
-  /** {{{
+  /**
+   *  {{{
    *  NameChar ::= Letter | Digit | '.' | '-' | '_' | ':'
    *             | CombiningChar | Extender
    *  }}}
@@ -118,7 +122,8 @@ object Chars {
     })
   }
 
-  /** {{{
+  /**
+   *  {{{
    *  NameStart ::= ( Letter | '_' )
    *  }}}
    *  where Letter means in one of the Unicode general

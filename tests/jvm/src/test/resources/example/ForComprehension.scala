@@ -25,10 +25,10 @@ class ForComprehension/*<=example.ForComprehension#*/ {
       d/*=>local12*/
     ) ==/*=>java.lang.Object#`==`().*/ (1, 2, 3, 4)
     e/*<=local14*/ = (
-      a/*=>local4*/,
-      b/*=>local5*/,
-      c/*=>local11*/,
-      d/*=>local12*/
+        a/*=>local4*/,
+        b/*=>local5*/,
+        c/*=>local11*/,
+        d/*=>local12*/
     )
     if e/*=>local14*/ ==/*=>java.lang.Object#`==`().*/ (1, 2, 3, 4)
     f/*<=local15*/ <- List/*=>scala.collection.immutable.List.*/(e/*=>local14*/)

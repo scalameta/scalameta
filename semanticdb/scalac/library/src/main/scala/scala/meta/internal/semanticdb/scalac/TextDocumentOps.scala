@@ -53,13 +53,17 @@ trait TextDocumentOps { self: SemanticdbOps =>
       val occurrences = mutable.Map[m.Position, String]()
       val symbols = mutable.Map[String, s.SymbolInformation]()
       val synthetics = mutable.ListBuffer[s.Synthetic]()
-      val isVisited = mutable.Set.empty[g.Tree] // macro expandees can have cycles, keep tracks of visited nodes.
-      val isVisitedParent = mutable.Set.empty[g.Tree] // synthetics we have already visited the parents of
+      // macro expandees can have cycles, keep tracks of visited nodes.
+      val isVisited = mutable.Set.empty[g.Tree]
+      // synthetics we have already visited the parents of
+      val isVisitedParent = mutable.Set.empty[g.Tree]
       val todo = mutable.Set[m.Name]() // names to map to global trees
       val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
       val mends = mutable.Map[Int, m.Name]() // end offset -> tree
-      val margnames = mutable.Map[Int, List[m.Name]]() // start offset of enclosing apply -> its arg names
-      val mwithins = mutable.Map[m.Tree, m.Name]() // name of enclosing member -> name of private/protected within
+      // start offset of enclosing apply -> its arg names
+      val margnames = mutable.Map[Int, List[m.Name]]()
+      // name of enclosing member -> name of private/protected within
+      val mwithins = mutable.Map[m.Tree, m.Name]()
       val mwithinctors = mutable.Map[m.Tree, m.Name]() // name of enclosing class -> name of private/protected within for primary ctor
       val mctordefs = mutable.Map[Int, m.Name]() // start offset of ctor -> ctor's anonymous name
       val mctorrefs = mutable.Map[Int, m.Name]() // start offset of new/init -> new's anonymous name
@@ -69,7 +73,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
       // multiple symbols that resolve to the same position.
       val mpatoccurrences = mutable.Map[m.Position, String]()
       val mvalpatstart = mutable.Set.empty[Int] // start pos for Pat.Var names inside val patterns
-      val msinglevalpats = mutable.Map.empty[Int, m.Position] // start pos for vals with patterns -> last Pat.Var name
+      // start pos for vals with patterns -> last Pat.Var name
+      val msinglevalpats = mutable.Map.empty[Int, m.Position]
 
       locally {
         object traverser extends m.Traverser {

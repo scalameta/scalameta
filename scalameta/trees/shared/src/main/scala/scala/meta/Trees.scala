@@ -261,15 +261,13 @@ object Decl {
       tparams: List[scala.meta.Type.Param],
       paramss: List[List[Term.Param]],
       decltpe: scala.meta.Type
-  ) extends Decl
-      with Member.Term
+  ) extends Decl with Member.Term
   @ast class Type(
       mods: List[Mod],
       name: scala.meta.Type.Name,
       tparams: List[scala.meta.Type.Param],
       bounds: scala.meta.Type.Bounds
-  ) extends Decl
-      with Member.Type
+  ) extends Decl with Member.Type
 }
 
 @branch trait Defn extends Stat
@@ -306,16 +304,14 @@ object Defn {
       tparams: List[scala.meta.Type.Param],
       ctor: Ctor.Primary,
       templ: Template
-  ) extends Defn
-      with Member.Type
+  ) extends Defn with Member.Type
   @ast class EnumCase(
       mods: List[Mod],
       name: Term.Name,
       tparams: List[scala.meta.Type.Param],
       ctor: Ctor.Primary,
       inits: List[Init]
-  ) extends Defn
-      with Member.Term
+  ) extends Defn with Member.Term
   @ast class RepeatedEnumCase(
       mods: List[Mod],
       cases: List[Term.Name]
@@ -344,8 +340,7 @@ object Defn {
       paramss: List[List[Term.Param]],
       decltpe: Option[scala.meta.Type],
       body: Term
-  ) extends Defn
-      with Member.Term
+  ) extends Defn with Member.Term
   @ast class ExtensionMethodInfix(
       mods: List[Mod],
       eparam: Term.Param,
@@ -354,8 +349,7 @@ object Defn {
       paramss: List[List[Term.Param]],
       decltpe: Option[scala.meta.Type],
       body: Term
-  ) extends Defn
-      with Member.Term
+  ) extends Defn with Member.Term
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
@@ -363,8 +357,7 @@ object Defn {
       paramss: List[List[Term.Param]],
       decltpe: Option[scala.meta.Type],
       body: Term
-  ) extends Defn
-      with Member.Term {
+  ) extends Defn with Member.Term {
     checkFields(paramss.forall(onlyLastParamCanBeRepeated))
   }
   @ast class Macro(
@@ -374,16 +367,14 @@ object Defn {
       paramss: List[List[Term.Param]],
       decltpe: Option[scala.meta.Type],
       body: Term
-  ) extends Defn
-      with Member.Term
+  ) extends Defn with Member.Term
   @ast class OpaqueTypeAlias(
       mods: List[Mod],
       name: scala.meta.Type.Name,
       tparams: List[scala.meta.Type.Param],
       bounds: scala.meta.Type.Bounds,
       body: scala.meta.Type
-  ) extends Defn
-      with Member.Type {
+  ) extends Defn with Member.Type {
     checkFields(mods.exists(_.is[Mod.Opaque]))
   }
   @ast class Type(
@@ -391,29 +382,25 @@ object Defn {
       name: scala.meta.Type.Name,
       tparams: List[scala.meta.Type.Param],
       body: scala.meta.Type
-  ) extends Defn
-      with Member.Type
+  ) extends Defn with Member.Type
   @ast class Class(
       mods: List[Mod],
       name: scala.meta.Type.Name,
       tparams: List[scala.meta.Type.Param],
       ctor: Ctor.Primary,
       templ: Template
-  ) extends Defn
-      with Member.Type
+  ) extends Defn with Member.Type
   @ast class Trait(
       mods: List[Mod],
       name: scala.meta.Type.Name,
       tparams: List[scala.meta.Type.Param],
       ctor: Ctor.Primary,
       templ: Template
-  ) extends Defn
-      with Member.Type {
+  ) extends Defn with Member.Type {
     checkFields(templ.is[Template.Quasi] || templ.stats.forall(!_.is[Ctor]))
   }
   @ast class Object(mods: List[Mod], name: Term.Name, templ: Template)
-      extends Defn
-      with Member.Term {
+      extends Defn with Member.Term {
     checkFields(templ.is[Template.Quasi] || templ.stats.forall(!_.is[Ctor]))
   }
 }
@@ -428,8 +415,7 @@ object Defn {
 }
 object Pkg {
   @ast class Object(mods: List[Mod], name: Term.Name, templ: Template)
-      extends Member.Term
-      with Stat {
+      extends Member.Term with Stat {
     checkFields(templ.is[Template.Quasi] || templ.stats.forall(!_.is[Ctor]))
   }
 }
@@ -446,8 +432,7 @@ object Ctor {
       paramss: List[List[Term.Param]] @nonEmpty,
       init: Init,
       stats: List[Stat]
-  ) extends Ctor
-      with Stat {
+  ) extends Ctor with Stat {
     checkFields(stats.forall(_.isBlockStat))
   }
 }

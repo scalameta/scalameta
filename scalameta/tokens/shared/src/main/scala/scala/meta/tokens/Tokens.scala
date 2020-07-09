@@ -30,8 +30,7 @@ import scala.meta.internal.prettyprinters._
     private val tokens: Array[Token],
     private val start: Int,
     private val end: Int
-) extends immutable.IndexedSeq[Token]
-    with IndexedSeqOptimized[Token] {
+) extends immutable.IndexedSeq[Token] with IndexedSeqOptimized[Token] {
   def apply(idx: Int): Token = tokens(start + idx)
   def length: Int = end - start
   override def slice(from: Int, until: Int): Tokens = {
