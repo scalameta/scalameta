@@ -33,7 +33,8 @@ class JavacpSuite extends FunSuite {
 
   checkOrder(
     "fields",
-    "com/javacp/Test#", { s =>
+    "com/javacp/Test#",
+    { s =>
       s.desc.value == "Int" ||
       s.desc.value == "Long" ||
       s.desc.value == "Float"

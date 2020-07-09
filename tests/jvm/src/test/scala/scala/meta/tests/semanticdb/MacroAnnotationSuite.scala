@@ -15,7 +15,8 @@ class MacroAnnotationSuite extends SemanticdbSuite {
        |
        |@org.scalameta.data.data
        |class A(a: Int)
-    """.stripMargin, { doc =>
+    """.stripMargin,
+    { doc =>
       val symbols = doc.symbols.map(_.symbol).sorted
       assert(symbols.contains("a/A#"))
       assert(symbols.contains("a/A#productElement()."))

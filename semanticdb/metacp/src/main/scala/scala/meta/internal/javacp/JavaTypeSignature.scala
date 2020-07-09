@@ -3,14 +3,16 @@ package scala.meta.internal.javacp
 import scala.meta.internal.javacp.asm._
 import scala.tools.asm.signature.SignatureReader
 
-/** Translation of "Signature" section from the JVM spec to Scala.
+/**
+ * Translation of "Signature" section from the JVM spec to Scala.
  *
  * @see https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.9.1
  */
 sealed trait JavaTypeSignature extends Printable
 object JavaTypeSignature {
 
-  /** Parse JVM signature using a custom traverser.
+  /**
+   * Parse JVM signature using a custom traverser.
    *
    * Example:
    *

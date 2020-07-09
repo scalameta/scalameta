@@ -18,7 +18,8 @@ class TargetedSuite extends SemanticdbSuite {
       |  def bar(children: Int)(x: Int) = children + x
       |  <<bar>>(children = 4)(3)
       |}
-    """.trim.stripMargin, { (_, second) => assert(second == "a/Curry.bar().") }
+    """.trim.stripMargin,
+    { (_, second) => assert(second == "a/Curry.bar().") }
   )
 
   targeted(
@@ -29,7 +30,8 @@ class TargetedSuite extends SemanticdbSuite {
       |  val u: User = ???
       |  u.<<copy>>(<<age>> = 43)
       |}
-    """.trim.stripMargin, { (_, copy, age) =>
+    """.trim.stripMargin,
+    { (_, copy, age) =>
       assert(copy == "b/User#copy().")
       assert(age == "b/User#copy().(age)")
     }
@@ -82,7 +84,8 @@ class TargetedSuite extends SemanticdbSuite {
       |    <<j>> <- List(3, 4)
       |  } yield j
       |}
-      """.stripMargin, { (db, j) =>
+      """.stripMargin,
+    { (db, j) =>
       val denot = db.symbols.find(_.symbol == j).get
       assert(denot.symbol.startsWith("local"))
     }

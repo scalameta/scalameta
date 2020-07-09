@@ -126,7 +126,8 @@ class XmlParser(Block: P0, Patterns: P0 = Fail) {
   }
 }
 
-/** Collects start and end positions of scala expressions inside xml literals.
+/**
+ * Collects start and end positions of scala expressions inside xml literals.
  *
  * Doesn't really parse scala expressions, only reads until the curly brace
  * balance hits 0.

@@ -2,7 +2,8 @@ package scala.meta.testkit
 
 import scala.collection.mutable
 
-/** An observation during a [[SyntaxAnalysis]].
+/**
+ * An observation during a [[SyntaxAnalysis]].
  *
  * @param msg The message corresponding this individual observation. The message
  *            will be dislayed next to this entry.
@@ -19,7 +20,8 @@ object Observation {
   private def wrapInCode(msg: String): String =
     s"<code>${msg.replaceAll("\n", "</br>")}</code>"
 
-  /** Returns a markdown table displaying all observations, publish-ready for Github.
+  /**
+   * Returns a markdown table displaying all observations, publish-ready for Github.
    *
    * Example: https://github.com/scalameta/scalameta/issues/567#issuecomment-267074738
    */

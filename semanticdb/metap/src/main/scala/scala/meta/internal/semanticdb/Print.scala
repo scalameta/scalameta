@@ -20,7 +20,9 @@ object Print {
 
   def constant(constant: Constant): String = {
     val symtab = PrinterSymtab.fromTextDocument(TextDocument())
-    withInfoPrinter(Format.Detailed, TextDocument(), symtab) { printer => printer.pprint(constant) }.trim
+    withInfoPrinter(Format.Detailed, TextDocument(), symtab) { printer =>
+      printer.pprint(constant)
+    }.trim
   }
 
   def signature(format: Format, signature: Signature, symtab: PrinterSymtab): String = {
@@ -28,7 +30,9 @@ object Print {
   }
 
   def info(format: Format, info: SymbolInformation, symtab: PrinterSymtab): String = {
-    withPrinter(format, TextDocument().addSymbols(info), symtab) { printer => printer.pprint(info) }.trim
+    withPrinter(format, TextDocument().addSymbols(info), symtab) { printer =>
+      printer.pprint(info)
+    }.trim
   }
 
   def synthetic(

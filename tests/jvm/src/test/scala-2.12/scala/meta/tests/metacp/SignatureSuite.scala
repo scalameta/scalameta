@@ -85,9 +85,12 @@ class SignatureSuite extends FunSuite {
     if (node.signature == null) Nil
     else {
       List(
-        (node.signature, { () =>
-          assertSignatureRoundtrip(node.signature, new ClassSignatureVisitor)
-        })
+        (
+          node.signature,
+          { () =>
+            assertSignatureRoundtrip(node.signature, new ClassSignatureVisitor)
+          }
+        )
       )
     }
 

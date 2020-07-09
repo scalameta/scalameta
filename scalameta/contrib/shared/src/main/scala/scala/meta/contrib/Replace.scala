@@ -1,7 +1,6 @@
 package scala.meta.contrib
 
 /**
- *
  * The purpose of this typeclass is to replace
  * one list of things with another of that type.
  *

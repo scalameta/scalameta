@@ -71,7 +71,8 @@ class ConfigSuite extends FunSuite {
       |    y + z
       |  }
       |}
-    """.stripMargin, { doc =>
+    """.stripMargin,
+    { doc =>
       val symbols = doc.symbols.map(_.symbol).sorted.mkString("\n")
       assertNoDiff(
         symbols,
@@ -89,7 +90,8 @@ class ConfigSuite extends FunSuite {
       |/A.scala
       |object A {
       |}
-    """.stripMargin, { doc => assert(doc.symbols.isEmpty) }
+    """.stripMargin,
+    { doc => assert(doc.symbols.isEmpty) }
   )
 
   check(
@@ -103,7 +105,8 @@ class ConfigSuite extends FunSuite {
       |    2
       |  }
       |}
-    """.stripMargin, { doc =>
+    """.stripMargin,
+    { doc =>
       val obtained = doc.symbols.map(i => i.symbol + " " + i.displayName).sorted.mkString("\n")
       assertNoDiff(
         obtained,
@@ -121,7 +124,8 @@ class ConfigSuite extends FunSuite {
     List(s"-P:semanticdb:targetroot:$customTargetroot"),
     """|/A.scala
        |object A
-       |""".stripMargin, { doc =>
+       |""".stripMargin,
+    { doc =>
       val Seq(occurrence) = doc.occurrences
       assert(occurrence.symbol == "_empty_/A.")
     },
@@ -133,7 +137,8 @@ class ConfigSuite extends FunSuite {
     List(s"-P:semanticdb:md5:off"),
     """|/A.scala
        |object A
-    """.stripMargin, { doc => assert(doc.md5.isEmpty) }
+    """.stripMargin,
+    { doc => assert(doc.md5.isEmpty) }
   )
 
   check(
@@ -143,7 +148,8 @@ class ConfigSuite extends FunSuite {
        |object A {
        |   List(1).map(_ + 1)
        |}
-       |""".stripMargin, { doc => assert(doc.synthetics.isEmpty) }
+       |""".stripMargin,
+    { doc => assert(doc.synthetics.isEmpty) }
   )
 
   check(
@@ -153,7 +159,8 @@ class ConfigSuite extends FunSuite {
        |object A {
        |   List(1).map(_ + 1)
        |}
-       |""".stripMargin, { doc => assert(doc.synthetics.nonEmpty) }
+       |""".stripMargin,
+    { doc => assert(doc.synthetics.nonEmpty) }
   )
 
 }

@@ -29,7 +29,8 @@ trait BaseDottySuite extends ParseSuite {
   final def int(i: Int) = Lit.Int(i)
   final def init(name: String): Init = Init(pname(name), anon, Nil)
 
-  /** Check if code can be parsed to expected syntax tree.
+  /**
+   * Check if code can be parsed to expected syntax tree.
    * @see runTestAssert(code, assertLayout)(expected)
    */
   protected def runTestAssert[T <: Tree](
@@ -37,7 +38,8 @@ trait BaseDottySuite extends ParseSuite {
   )(expected: T)(implicit parser: String => T): Unit =
     runTestAssert(code, Some(code))(expected)(parser)
 
-  /** General method used to assert a given 'code' parses to expected tree structure and back.
+  /**
+   * General method used to assert a given 'code' parses to expected tree structure and back.
    * We cannot assert trees by equality(==) that's why we check if they are identical
    * by asserting their structure representation and optionally syntax.
    * If expectedLayout is provided then we print back generated tree structure and assert

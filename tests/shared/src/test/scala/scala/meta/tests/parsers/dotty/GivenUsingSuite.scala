@@ -7,7 +7,8 @@ class GivenUsingSuite extends BaseDottySuite {
 
   implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Dotty)
 
-  /** For checking examples in repl declare:
+  /**
+   * For checking examples in repl declare:
    *  trait Ord[T] { def f(): Int }
    *
    *  All examples based on dotty documentation:

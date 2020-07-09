@@ -86,8 +86,8 @@ class DataMacros(val c: Context) extends MacroHelpers {
         object ByNeedParam {
           def unapply(tree: ValDef): Option[(Modifiers, TermName, Tree, Tree)] = tree.tpt match {
             case Annotated(
-                Apply(Select(New(Ident(TypeName("byNeed"))), termNames.CONSTRUCTOR), List()),
-                tpt
+                  Apply(Select(New(Ident(TypeName("byNeed"))), termNames.CONSTRUCTOR), List()),
+                  tpt
                 ) =>
               if (Vararg.unapply(tree.tpt).nonEmpty)
                 c.abort(cdef.pos, "vararg parameters cannot be by-need")

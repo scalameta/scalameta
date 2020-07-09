@@ -13,7 +13,6 @@ class AndOrTypesSuite extends BaseDottySuite {
    *  All examples based on dotty documentation:
    *  https://dotty.epfl.ch/docs/reference/new-types/intersection-types.html
    *  https://dotty.epfl.ch/docs/reference/new-types/union-types.html
-   *
    */
   test("view bounds not allowed") {
     intercept[ParseException] {

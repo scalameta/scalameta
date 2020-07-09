@@ -61,7 +61,8 @@ object StringFS {
     root
   }
 
-  /** Gives a string representation of a directory.
+  /**
+   * Gives a string representation of a directory.
    *
    * Performs the inverse as fromString.
    *

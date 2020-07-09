@@ -416,7 +416,7 @@ object TreeSyntax {
         def pstats(s: List[Stat]) = r(s.map(i(_)), "")
         t match {
           case Block(
-              Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, Block(stats)) :: Nil
+                Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, Block(stats)) :: Nil
               ) if mods.exists(_.is[Mod.Implicit]) =>
             m(
               SimpleExpr,
@@ -434,11 +434,11 @@ object TreeSyntax {
               )
             )
           case Block(
-              Function(Term.Param(mods, name: Term.Name, None, _) :: Nil, Block(stats)) :: Nil
+                Function(Term.Param(mods, name: Term.Name, None, _) :: Nil, Block(stats)) :: Nil
               ) =>
             m(SimpleExpr, s("{ ", name, " ", kw("=>"), " ", pstats(stats), n("}")))
           case Block(
-              Function(Term.Param(_, _: Name.Anonymous, _, _) :: Nil, Block(stats)) :: Nil
+                Function(Term.Param(_, _: Name.Anonymous, _, _) :: Nil, Block(stats)) :: Nil
               ) =>
             m(SimpleExpr, s("{ ", kw("_"), " ", kw("=>"), " ", pstats(stats), n("}")))
           case Block(Function(params, Block(stats)) :: Nil) =>
@@ -558,7 +558,7 @@ object TreeSyntax {
       case t: Term.Repeated => s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
       case t: Term.Param =>
         val mods = t.mods
-        // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
+          // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
           .filter(!_.is[Mod.Implicit])
           // NOTE: `using` is skipped as it applies to whole list
           .filter(!_.is[Mod.Using])
@@ -691,10 +691,16 @@ object TreeSyntax {
       case t: Pat.ExtractInfix =>
         m(
           Pattern3(t.op.value),
-          s(p(Pattern3(t.op.value), t.lhs, left = true), " ", t.op, " ", t.rhs match {
-            case pat :: Nil => s(p(Pattern3(t.op.value), pat, right = true))
-            case pats => s(pats)
-          })
+          s(
+            p(Pattern3(t.op.value), t.lhs, left = true),
+            " ",
+            t.op,
+            " ",
+            t.rhs match {
+              case pat :: Nil => s(p(Pattern3(t.op.value), pat, right = true))
+              case pats => s(pats)
+            }
+          )
         )
       case t: Pat.Interpolate =>
         val parts = t.parts.map { case Lit(part: String) => part }
@@ -1123,13 +1129,16 @@ object TreeSyntax {
         else
           w("implicit ", r(params, ", "), params.exists(_.mods.exists(_.is[Mod.Implicit])))
       }
-      r(paramss.map(params => {
-        s(
-          "(",
-          usingImplicit(params),
-          ")"
-        )
-      }), "")
+      r(
+        paramss.map(params => {
+          s(
+            "(",
+            usingImplicit(params),
+            ")"
+          )
+        }),
+        ""
+      )
     }
     implicit def syntaxTparams: Syntax[List[Type.Param]] = Syntax { tparams =>
       if (tparams.nonEmpty) s("[", r(tparams, ", "), "]") else s()
