@@ -1606,17 +1606,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         val body: Term = token match {
           case _ if dialect.allowTryWithAnyExpr => expr()
           case LeftBrace() => autoPos(inBracesOrUnit(block()))
-          case p @ LeftParen() =>
-            val term = inParensOrTupleOrUnit(location, allowRepeated)
-            term match {
-              case _: Lit.Unit | _: Term.Tuple =>
-                // NOTE: the position needs to be adapted to include parentheses
-                // when parsing a tuple or unit.
-                // See comments to makeTupleType for discussion
-                atPos(p, auto)(term)
-              case _ =>
-                term
-            }
+          case LeftParen() => inParensOrUnit(expr())
           case _ => expr()
         }
         val catchopt =

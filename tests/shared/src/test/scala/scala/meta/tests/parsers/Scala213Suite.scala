@@ -66,6 +66,11 @@ class Scala213Suite extends ParseSuite {
       "try (1 :: Nil) map fn",
       """Term.Try(Term.ApplyInfix(Term.ApplyInfix(Lit.Int(1), Term.Name("::"), Nil, List(Term.Name("Nil"))), Term.Name("map"), Nil, List(Term.Name("fn"))), Nil, None)"""
     )
+    runAssert(
+      "try (true, false)",
+      """Term.Try(Term.Tuple(List(Lit.Boolean(true), Lit.Boolean(false))), Nil, None)"""
+    )
+    runAssert("try ()", """Term.Try(Lit.Unit(()), Nil, None)""")
   }
 
   private def runAssert(code: String, expected: String): Unit = {
