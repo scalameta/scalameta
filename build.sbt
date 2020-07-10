@@ -673,7 +673,7 @@ lazy val publishableSettings = Def.settings(
         <url>https://github.com/mutcianm</url>
       </developer>
       <developer>
-        <id>gabro</id>
+        <id>maxov</id>
         <name>Max Ovsiankin</name>
         <url>https://github.com/maxov</url>
       </developer>
