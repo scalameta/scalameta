@@ -133,7 +133,7 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
 
   private var oddTest = true
 
-  private def check0[T <: Tree](annotedSource: String)(
+  protected def check0[T <: Tree](annotedSource: String)(
       project: T => Tree = identity[Tree] _,
       checkChilds: Boolean = true,
       parser: Parse[_ <: Tree] = Parse.parseStat,
