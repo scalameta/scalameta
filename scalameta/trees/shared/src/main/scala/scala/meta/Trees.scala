@@ -103,6 +103,7 @@ object Term {
   @ast class Block(stats: List[Stat]) extends Term {
     checkFields(stats.forall(_.isBlockStat))
   }
+  @ast class EndMarker(name: Term.Name) extends Term
   @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term
   @ast class QuotedMacroExpr(body: Term) extends Term
   @ast class QuotedMacroType(tpe: Type) extends Term
@@ -468,6 +469,7 @@ object Mod {
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod
   @ast class Open() extends Mod
+  @ast class Super() extends Mod
   @ast class Override() extends Mod
   @ast class Case() extends Mod
   @ast class Abstract() extends Mod
@@ -479,6 +481,7 @@ object Mod {
   @ast class Inline() extends Mod
   @ast class Using() extends Mod
   @ast class Opaque() extends Mod
+  @ast class Transparent() extends Mod
 }
 
 @branch trait Enumerator extends Tree
@@ -489,6 +492,7 @@ object Enumerator {
 }
 
 @ast class Import(importers: List[Importer] @nonEmpty) extends Stat
+@ast class Export(given: Boolean, importers: List[Importer] @nonEmpty) extends Stat
 
 @ast class Importer(ref: Term.Ref, importees: List[Importee] @nonEmpty) extends Tree {
   checkFields(ref.isStableId)
@@ -497,6 +501,7 @@ object Enumerator {
 @branch trait Importee extends Tree with Ref
 object Importee {
   @ast class Wildcard() extends Importee
+  @ast class Given(importee: Importee) extends Importee
   @ast class Name(name: scala.meta.Name) extends Importee {
     checkFields(name.is[scala.meta.Name.Quasi] || name.is[scala.meta.Name.Indeterminate])
   }

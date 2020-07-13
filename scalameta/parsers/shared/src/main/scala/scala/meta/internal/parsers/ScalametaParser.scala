@@ -2,6 +2,7 @@ package scala.meta
 package internal
 package parsers
 
+import scala.meta.Term.EndMarker
 import scala.meta.Term.QuotedMacroExpr
 import scala.meta.Term.SplicedMacroExpr
 import scala.language.implicitConversions
@@ -176,6 +177,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def next: Token = {
       val next = scannerTokens.apply(Math.min(token.index + 1, scannerTokens.length - 1))
       if (next.is[Whitespace] || next.is[Comment]) next.next
+      else next
+    }
+    def strictNext: Token = {
+      val next = scannerTokens.apply(Math.min(token.index + 1, scannerTokens.length - 1))
+      if (next.is[Space] || next.is[Tab] || next.is[Comment]) next.strictNext
       else next
     }
   }
@@ -570,9 +576,30 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   @classifier
+  trait EndMarkerWord {
+    def unapply(token: Token): Boolean = {
+      token.is[Ident] || token.is[KwIf] || token.is[KwWhile] || token.is[KwFor] ||
+      token.is[KwMatch] || token.is[KwTry] || token.is[KwNew] || token.is[KwThis] ||
+      token.is[KwGiven] || token.is[KwVal]
+      /* extension is ommited here as it is SoftKeyword <-> Ident */
+    }
+  }
+
+  @classifier
+  trait EndMarkerIntro {
+    def unapply(token: Token): Boolean = {
+      dialect.allowEndMarker &&
+      token.is[Ident] &&
+      token.text == "end" &&
+      token.strictNext.is[EndMarkerWord] &&
+      (token.next.strictNext.is[LineEnd] || token.next.strictNext.is[EOF])
+    }
+  }
+
+  @classifier
   trait ExprIntro {
     def unapply(token: Token): Boolean = {
-      (token.is[Ident] && !inlineDefOrOpaque(token)) ||
+      (token.is[Ident] && !inlineDefOrOpaque(token) && !token.is[EndMarkerIntro]) ||
       token.is[Literal] || token.is[Interpolation.Id] || token.is[Xml.Start] ||
       token.is[KwDo] || token.is[KwFor] || token.is[KwIf] ||
       token.is[KwNew] || token.is[KwReturn] || token.is[KwSuper] ||
@@ -636,12 +663,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[KwProtected] || token.is[KwOverride] ||
       (isSoftKw(token, SoftKeyword.SkOpaque) && dialect.allowOpaqueTypes) ||
       (isSoftKw(token, SoftKeyword.SkOpen) && dialect.allowOpenClass) ||
+      (isSoftKw(token, SoftKeyword.SkTransparent) && dialect.allowInlineMods) ||
+      (token.is[KwSuper] && dialect.allowSuperTrait && token.next.is[KwTrait]) ||
       isInlineSoftKw(token)
     }
   }
 
   @classifier
-  trait InlineSoftModifier {
+  trait InlineSoftIdent {
     private def noIdentAhead() =
       ahead(token.isNot[Ident] && !DclIntro.unapply(token) && !Modifier.unapply(token))
 
@@ -2675,11 +2704,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwImplicit() => next(); Mod.Implicit()
       case KwLazy() => next(); Mod.Lazy()
       case KwOverride() => next(); Mod.Override()
+      case KwSuper() if dialect.allowSuperTrait => next(); Mod.Super()
       case KwPrivate() => accessModifier()
       case KwProtected() => accessModifier()
       case Ident(SoftKeyword.SkInline.name) if dialect.allowInlineMods => next(); Mod.Inline()
       case Ident(SoftKeyword.SkOpen.name) if dialect.allowOpenClass => next(); Mod.Open()
       case Ident(SoftKeyword.SkOpaque.name) if dialect.allowOpaqueTypes => next(); Mod.Opaque()
+      case Ident(SoftKeyword.SkTransparent.name) if dialect.allowInlineMods =>
+        next(); Mod.Transparent()
       case _ => syntaxError(s"modifier expected but ${token.name} found", at = token)
     })
 
@@ -2710,6 +2742,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwVal() if !dialect.allowUnquotes => next(); Mod.ValParam()
       case KwVar() if !dialect.allowUnquotes => next(); Mod.VarParam()
       case Ident(SoftKeyword.SkOpen.name) if dialect.allowOpenClass => next(); Mod.Open()
+      case Ident(SoftKeyword.SkTransparent.name) if dialect.allowInlineMods =>
+        next(); Mod.Transparent()
       case Ident(SoftKeyword.SkInline.name) if dialect.allowInlineMods => next(); Mod.Inline()
       case Ident("valparam") if dialect.allowUnquotes => next(); Mod.ValParam()
       case Ident("varparam") if dialect.allowUnquotes => next(); Mod.VarParam()
@@ -2769,9 +2803,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           token.is[Subtype] || token.is[Supertype] || token.is[Viewbound]
       )
     def loop(mods: List[Mod]): List[Mod] = token match {
-      case InlineSoftModifier() => mods
+      case InlineSoftIdent() => mods
       case Unquote() => if (continueLoop) mods else loop(appendMod(mods, modifier()))
       case Ellipsis(_) => loop(appendMod(mods, modifier()))
+      case KwSuper() if !dialect.allowSuperTrait || !ahead(token.is[KwTrait]) => mods
       case Modifier() => loop(appendMod(mods, modifier()))
       case LF() if !isLocal => next(); loop(mods)
       case _ => mods
@@ -3016,6 +3051,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   /* -------- DEFS ------------------------------------------- */
 
+  def exportStmt(): Export = autoPos {
+    accept[KwExport]
+    val givenExport = if (token.is[KwGiven]) {
+      accept[KwGiven]
+      true
+    } else false
+    Export(givenExport, commaSeparated(importer()))
+  }
+
   def importStmt(): Import = autoPos {
     accept[KwImport]
     Import(commaSeparated(importer()))
@@ -3052,8 +3096,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     } else {
       val importees = inBraces(commaSeparated(importee()))
 
-      if (importees.nonEmpty) {
-        importees.init.foreach {
+      val imp =
+        if (importees.nonEmpty && importees.last.is[Importee.Given]) importees.init else importees
+      if (imp.nonEmpty) {
+        imp.init.foreach {
           case importee: Importee.Wildcard =>
             syntaxError("Wildcard import must be in the last position", importee.pos)
 
@@ -3067,6 +3113,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def importWildcardOrName(): Importee = autoPos {
     if (token.is[Underscore]) {
       next(); Importee.Wildcard()
+    } else if (token.is[KwGiven]) {
+      next(); Importee.Given(importWildcardOrName())
     } else if (token.is[Unquote]) Importee.Name(unquote[Name.Quasi])
     else {
       val name = termName(); Importee.Name(atPos(name, name)(Name.Indeterminate(name.value)))
@@ -3122,6 +3170,18 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         enumCaseDef(mods)
       case _ =>
         tmplDef(mods)
+    }
+  }
+
+  def endMarker(): Stat = autoPos {
+    assert(token.text == "end")
+    next()
+    if (token.is[Ident]) {
+      EndMarker(termName())
+    } else {
+      val r = EndMarker(Term.Name(token.text))
+      next()
+      r
     }
   }
 
@@ -3542,7 +3602,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val ctor = primaryCtor(OwnedByEnum)
     val inits = if (token.is[KwExtends]) {
       accept[KwExtends]
-      templateParents()
+      templateParents(afterExtend = true)
     } else { List() }
     Defn.EnumCase(mods, name, tparams, ctor, inits)
   }
@@ -3721,18 +3781,21 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   object OwnedByEnum extends TemplateOwner
   object OwnedByObject extends TemplateOwner
 
-  def templateParents(): List[Init] = {
+  def templateParents(afterExtend: Boolean = false): List[Init] = {
+    def isCommaSeparated(token: Token): Boolean =
+      afterExtend && token.is[Comma] && dialect.allowCommaSeparatedExtend
+
     val parents = ListBuffer[Init]()
     def readInit() = token match {
       case Ellipsis(_) => parents += ellipsis(1, astInfo[Init])
       case _ => parents += initInsideTemplate()
     }
     readInit()
-    while (token.is[KwWith]) { next(); readInit() }
+    while (token.is[KwWith] || isCommaSeparated(token)) { next(); readInit() }
     parents.toList
   }
 
-  def template(): Template = autoPos {
+  def template(afterExtend: Boolean = false): Template = autoPos {
     newLineOptWhenFollowedBy[LeftBrace]
     if (token.is[LeftBrace]) {
       // @S: pre template body cannot stub like post body can!
@@ -3740,14 +3803,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (token.is[KwWith] && self.name.is[Name.Anonymous] && self.decltpe.isEmpty) {
         val edefs = body.map(ensureEarlyDef)
         next()
-        val parents = templateParents()
+        val parents = templateParents(afterExtend)
         val (self1, body1) = templateBodyOpt(parenMeansSyntaxError = false)
         Template(edefs, parents, self1, body1)
       } else {
         Template(Nil, Nil, self, body)
       }
     } else {
-      val parents = templateParents()
+      val parents = templateParents(afterExtend)
       val (self, body) = templateBodyOpt(parenMeansSyntaxError = false)
       Template(Nil, parents, self, body)
     }
@@ -3775,7 +3838,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         )) {
         unquote[Template]
       } else {
-        template()
+        template(afterExtend = true)
       }
     } else {
       val startPos = in.tokenPos
@@ -3813,8 +3876,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   private val consumeStat: PartialFunction[Token, Stat] = {
     case KwImport() => importStmt()
+    case KwExport() => exportStmt()
     case KwPackage() if !dialect.allowToplevelTerms => packageOrPackageObjectDef()
     case DefIntro() => nonLocalDefOrDcl()
+    case EndMarkerIntro() => endMarker()
     case ExprIntro() => stat(expr(location = NoStat, allowRepeated = true))
     case Ellipsis(_) => ellipsis(1, astInfo[Stat])
   }
@@ -3886,8 +3951,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       packageOrPackageObjectDef()
     case KwImport() =>
       importStmt()
+    case KwExport() =>
+      exportStmt()
     case TemplateIntro() =>
       topLevelTmplDef
+    case EndMarkerIntro() =>
+      endMarker()
     case DefIntro() if dialect.allowToplevelStatements =>
       nonLocalDefOrDcl()
   }
@@ -3922,12 +3991,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def templateStat: PartialFunction[Token, Stat] = {
     case KwImport() =>
       importStmt()
+    case KwExport() =>
+      exportStmt()
     case DefIntro() =>
       nonLocalDefOrDcl()
     case Unquote() =>
       unquote[Stat]
     case Ellipsis(_) =>
       ellipsis(1, astInfo[Stat])
+    case EndMarkerIntro() =>
+      endMarker()
     case ExprIntro() =>
       expr(location = TemplateStat, allowRepeated = false)
   }
@@ -3977,7 +4050,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def blockStatSeq(): List[Stat] = {
     val stats = new ListBuffer[Stat]
     while (!token.is[StatSeqEnd] && !token.is[CaseDefEnd]) {
-      if (token.is[KwImport]) {
+      if (token.is[KwExport]) {
+        stats += exportStmt()
+        acceptStatSepOpt()
+      } else if (token.is[KwImport]) {
         stats += importStmt()
         acceptStatSepOpt()
       } else if (token.is[DefIntro] && !token.is[NonlocalModifier]) {
@@ -3997,6 +4073,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         next()
       } else if (token.is[Ellipsis]) {
         stats += ellipsis(1, astInfo[Stat])
+      } else if (token.is[EndMarkerIntro]) {
+        stats += endMarker()
       } else {
         syntaxError("illegal start of statement", at = token)
       }
@@ -4119,4 +4197,10 @@ object SoftKeyword {
   case object SkOpaque extends SoftKeyword { override val name = "opaque" }
 
   case object SkOpen extends SoftKeyword { override val name = "open" }
+
+  case object SkTransparent extends SoftKeyword { override val name = "transparent" }
+
+  case object SkEnd extends SoftKeyword { override val name = "end" }
+
+  case object SkDerives extends SoftKeyword { override val name = "derives" }
 }

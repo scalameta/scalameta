@@ -547,6 +547,7 @@ object TreeSyntax {
       case t: Term.ForYield =>
         m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
       case t: Term.New => m(SimpleExpr, s(kw("new"), " ", t.init))
+      case t: Term.EndMarker => s(kw("end"), " ", t.name)
       case t: Term.NewAnonymous =>
         val needsExplicitBraces = {
           val selfIsEmpty = t.templ.self.name.is[Name.Anonymous] && t.templ.self.decltpe.isEmpty
@@ -1027,8 +1028,10 @@ object TreeSyntax {
       case _: Mod.Final => kw("final")
       case _: Mod.Sealed => kw("sealed")
       case _: Mod.Open => kw("open")
+      case _: Mod.Super => kw("super")
       case _: Mod.Opaque => kw("opaque")
       case _: Mod.Using => kw("using")
+      case _: Mod.Transparent => kw("transparent")
       case _: Mod.Override => kw("override")
       case _: Mod.Case => kw("case")
       case _: Mod.Abstract => kw("abstract")
@@ -1049,11 +1052,15 @@ object TreeSyntax {
 
       // Import
       case t: Importee.Name => s(t.name)
+      case t: Importee.Given => s(kw("given"), " ", t.importee)
       case t: Importee.Rename => s(t.name, " ", kw("=>"), " ", t.rename)
       case t: Importee.Unimport => s(t.name, " ", kw("=>"), " ", kw("_"))
       case _: Importee.Wildcard => kw("_")
       case t: Importer => s(t.ref, ".", t.importees)
       case t: Import => s(kw("import"), " ", r(t.importers, ", "))
+      case t: Export =>
+        if (t.given) s(kw("export"), " ", kw("given"), " ", r(t.importers, ", "))
+        else s(kw("export"), " ", r(t.importers, ", "))
 
       // Case
       case t: Case =>
