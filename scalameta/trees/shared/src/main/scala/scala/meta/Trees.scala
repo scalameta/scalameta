@@ -103,6 +103,7 @@ object Term {
   @ast class Block(stats: List[Stat]) extends Term {
     checkFields(stats.forall(_.isBlockStat))
   }
+  @ast class EndMarker(name: Term.Name) extends Term
   @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term
   @ast class QuotedMacroExpr(body: Term) extends Term
   @ast class QuotedMacroType(tpe: Type) extends Term
@@ -325,31 +326,10 @@ object Defn {
       body: Term
   ) extends Defn
   @ast class ExtensionGroup(
-      mods: List[Mod],
-      name: scala.meta.Name,
-      tparams: List[scala.meta.Type.Param],
-      sparams: List[List[Term.Param]],
       eparam: Term.Param,
-      templ: Template
+      tparams: List[scala.meta.Type.Param],
+      methods: List[Defn.Def]
   ) extends Defn
-  @ast class ExtensionMethod(
-      mods: List[Mod],
-      eparam: Term.Param,
-      name: Term.Name,
-      tparams: List[scala.meta.Type.Param],
-      paramss: List[List[Term.Param]],
-      decltpe: Option[scala.meta.Type],
-      body: Term
-  ) extends Defn with Member.Term
-  @ast class ExtensionMethodInfix(
-      mods: List[Mod],
-      eparam: Term.Param,
-      name: Term.Name,
-      tparams: List[scala.meta.Type.Param],
-      paramss: List[List[Term.Param]],
-      decltpe: Option[scala.meta.Type],
-      body: Term
-  ) extends Defn with Member.Term
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
@@ -468,6 +448,7 @@ object Mod {
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod
   @ast class Open() extends Mod
+  @ast class Super() extends Mod
   @ast class Override() extends Mod
   @ast class Case() extends Mod
   @ast class Abstract() extends Mod
@@ -479,6 +460,7 @@ object Mod {
   @ast class Inline() extends Mod
   @ast class Using() extends Mod
   @ast class Opaque() extends Mod
+  @ast class Transparent() extends Mod
 }
 
 @branch trait Enumerator extends Tree
@@ -489,6 +471,7 @@ object Enumerator {
 }
 
 @ast class Import(importers: List[Importer] @nonEmpty) extends Stat
+@ast class Export(given: Boolean, importers: List[Importer] @nonEmpty) extends Stat
 
 @ast class Importer(ref: Term.Ref, importees: List[Importee] @nonEmpty) extends Tree {
   checkFields(ref.isStableId)
@@ -497,6 +480,7 @@ object Enumerator {
 @branch trait Importee extends Tree with Ref
 object Importee {
   @ast class Wildcard() extends Importee
+  @ast class Given(importee: Importee) extends Importee
   @ast class Name(name: scala.meta.Name) extends Importee {
     checkFields(name.is[scala.meta.Name.Quasi] || name.is[scala.meta.Name.Indeterminate])
   }

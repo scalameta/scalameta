@@ -67,8 +67,13 @@ trait BaseDottySuite extends ParseSuite {
       // check bijection
       val reprintedCode =
         scala.meta.internal.prettyprinters.TreeSyntax.reprint[T](obtained)(dialects.Dotty).toString
-      val obtainedAgain: T = parser(reprintedCode)
-      assertNoDiff(obtainedAgain.structure, expected.structure)
+      try {
+        val obtainedAgain: T = parser(reprintedCode)
+        assertNoDiff(obtainedAgain.structure, expected.structure)
+      } catch { case e: Throwable =>
+          println(s"Reprinted stat: \n${reprintedCode}")
+          throw e
+      }
       assertLayout.foreach(expectedLayout => assertNoDiff(reprintedCode, expectedLayout))
     } catch {
       case e: Throwable =>

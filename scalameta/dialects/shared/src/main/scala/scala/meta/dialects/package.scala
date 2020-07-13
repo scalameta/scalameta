@@ -101,9 +101,7 @@ package object dialects {
     .withAllowTypeLambdas(true) // New feature in Dotty
     .withAllowViewBounds(false) // View bounds have been removed in Dotty
     .withAllowWithTypes(false)
-    .withAllowXmlLiterals(
-      false
-    ) // Dotty parser doesn't have the corresponding code, so it can't really support xml literals
+    .withAllowXmlLiterals(false) // Dotty parser doesn't support xml
     .withAllowGivenUsing(true)
     .withAllowExtensionMethods(true)
     .withAllowOpenClass(true)
@@ -111,6 +109,11 @@ package object dialects {
     .withAllowToplevelStatements(true)
     .withAllowOpaqueTypes(true)
     .withAllowLiteralUnitType(false)
+    .withAllowSuperTrait(true)
+    .withAllowExportClause(true)
+    .withAllowCommaSeparatedExtend(true)
+    .withAllowEndMarker(true)
+    .withAllowSignificantIndentation(true)
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)

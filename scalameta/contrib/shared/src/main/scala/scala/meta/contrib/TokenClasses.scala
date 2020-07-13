@@ -32,7 +32,7 @@ object Keyword {
     token.is[KwThrow] || token.is[KwTrait] || token.is[KwTrue] ||
     token.is[KwTry] || token.is[KwType] || token.is[KwVal] ||
     token.is[KwVar] || token.is[KwWhile] || token.is[KwWith] ||
-    token.is[KwYield]
+    token.is[KwYield] || token.is[KwExport]
   }
 }
 
@@ -56,7 +56,7 @@ object Modifier {
   def unapply(token: Token): Boolean = {
     token.is[KwAbstract] || token.is[KwFinal] || token.is[KwSealed] ||
     token.is[KwImplicit] || token.is[KwLazy] || token.is[KwPrivate] ||
-    token.is[KwProtected] || token.is[KwOverride]
+    token.is[KwProtected] || token.is[KwOverride] || token.is[KwSuper]
   }
 }
 

@@ -165,10 +165,10 @@ package object trees {
       case _: Defn.GivenAlias => true
       case _: Defn.Enum => true
       case _: Defn.ExtensionGroup => true
-      case _: Defn.ExtensionMethod => true
-      case _: Defn.ExtensionMethodInfix => true
       case _: Defn.OpaqueTypeAlias => true
       case _: Defn.Val => true
+      case _: Defn.Type => true
+      case _: Term.EndMarker => true
       case _: Defn.Var => true
       case _: Pkg.Object => true
       case _ => false
@@ -176,6 +176,7 @@ package object trees {
     def isTemplateStat: Boolean = stat match {
       case _: Stat.Quasi => true
       case _: Import => true
+      case _: Export => true
       case _: Term => true
       case _: Decl => true
       case _: Defn => true

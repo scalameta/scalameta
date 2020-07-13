@@ -230,8 +230,10 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Enumerator.Generator
       |scala.meta.Enumerator.Guard
       |scala.meta.Enumerator.Val
+      |scala.meta.Export
       |scala.meta.Import
       |scala.meta.Importee
+      |scala.meta.Importee.Given
       |scala.meta.Importee.Name
       |scala.meta.Importee.Rename
       |scala.meta.Importee.Unimport
@@ -270,6 +272,8 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Mod.Private
       |scala.meta.Mod.Protected
       |scala.meta.Mod.Sealed
+      |scala.meta.Mod.Super
+      |scala.meta.Mod.Transparent
       |scala.meta.Mod.Using
       |scala.meta.Mod.ValParam
       |scala.meta.Mod.VarParam
@@ -307,6 +311,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Term.Assign
       |scala.meta.Term.Block
       |scala.meta.Term.Do
+      |scala.meta.Term.EndMarker
       |scala.meta.Term.Eta
       |scala.meta.Term.For
       |scala.meta.Term.ForYield
@@ -403,6 +408,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.KwDo
       |scala.meta.tokens.Token.KwElse
       |scala.meta.tokens.Token.KwEnum
+      |scala.meta.tokens.Token.KwExport
       |scala.meta.tokens.Token.KwExtends
       |scala.meta.tokens.Token.KwFalse
       |scala.meta.tokens.Token.KwFinal
@@ -426,6 +432,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.KwReturn
       |scala.meta.tokens.Token.KwSealed
       |scala.meta.tokens.Token.KwSuper
+      |scala.meta.tokens.Token.KwThen
       |scala.meta.tokens.Token.KwThis
       |scala.meta.tokens.Token.KwThrow
       |scala.meta.tokens.Token.KwTrait

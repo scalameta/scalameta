@@ -73,6 +73,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
 
         case PACKAGE => Token.KwPackage(input, dialect, curr.offset)
         case IMPORT => Token.KwImport(input, dialect, curr.offset)
+        case EXPORT => Token.KwExport(input, dialect, curr.offset)
         case CLASS => Token.KwClass(input, dialect, curr.offset)
         case CASECLASS => unreachable
         case OBJECT => Token.KwObject(input, dialect, curr.offset)
@@ -89,12 +90,12 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case GIVEN => Token.KwGiven(input, dialect, curr.offset)
 
         case IF => Token.KwIf(input, dialect, curr.offset)
-        case THEN => unreachable
         case ELSE => Token.KwElse(input, dialect, curr.offset)
         case WHILE => Token.KwWhile(input, dialect, curr.offset)
         case DO => Token.KwDo(input, dialect, curr.offset)
         case FOR => Token.KwFor(input, dialect, curr.offset)
         case YIELD => Token.KwYield(input, dialect, curr.offset)
+        case THEN => Token.KwThen(input, dialect, curr.offset)
         case THROW => Token.KwThrow(input, dialect, curr.offset)
         case TRY => Token.KwTry(input, dialect, curr.offset)
         case CATCH => Token.KwCatch(input, dialect, curr.offset)
@@ -116,6 +117,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case COLON => Token.Colon(input, dialect, curr.offset)
         case EQUALS => Token.Equals(input, dialect, curr.offset)
         case AT => Token.At(input, dialect, curr.offset)
+        case COLONEOL => Token.ColonEol(input, dialect, curr.offset)
         case HASH => Token.Hash(input, dialect, curr.offset)
         case USCORE => Token.Underscore(input, dialect, curr.offset)
         case ARROW => Token.RightArrow(input, dialect, curr.offset, curr.endOffset + 1)
@@ -164,6 +166,21 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     val tokens = new java.util.ArrayList[Token]()
     tokens.add(Token.BOF(input, dialect))
 
+    def aheadIsNewLine(index: Int): Boolean = {
+      var currentIdx = index + 1
+      while (currentIdx < legacyTokens.length) {
+        val token = legacyTokens(currentIdx)
+        if (token.token == WHITESPACE && token.strVal == "\n") {
+          return true
+        } else if (token.token == WHITESPACE) {
+          currentIdx += 1
+        } else {
+          return false
+        }
+      }
+      false
+    }
+
     def loop(
         startingFrom: Int,
         braceBalance: Int = 0,
@@ -176,8 +193,14 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       def nextToken() = legacyIndex += 1
       if (legacyIndex >= legacyTokens.length) return legacyIndex
 
-      emitToken()
-      nextToken()
+      if (dialect.allowSignificantIndentation && curr.token == COLON && aheadIsNewLine(legacyIndex)) {
+        curr.token = COLONEOL
+        emitToken()
+        legacyIndex += 2
+      } else {
+        emitToken()
+        nextToken()
+      }
 
       // NOTE: need to track this in order to correctly emit SpliceEnd tokens after splices end
       var braceBalance1 = braceBalance
