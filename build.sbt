@@ -39,9 +39,9 @@ commands += Command.command("mima") { s =>
 commands += Command.command("download-scala-library") { s =>
   val out = file("target/scala-library")
   IO.unzipURL(
-    new URL(s"https://github.com/scala/scala/archive/v$LatestScala212.zip"),
+    new URL(s"https://github.com/scala/scala/archive/v$LatestScala213.zip"),
     toDirectory = out,
-    filter = s"scala-$LatestScala212/src/library/*"
+    filter = s"scala-$LatestScala213/src/library/*"
   )
   s
 }
