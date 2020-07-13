@@ -181,7 +181,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
     def strictNext: Token = {
       val next = scannerTokens.apply(Math.min(token.index + 1, scannerTokens.length - 1))
-      if (next.is[Space] || next.is[Tab] || next.is[Comment]) next.next
+      if (next.is[Space] || next.is[Tab] || next.is[Comment]) next.strictNext
       else next
     }
   }
@@ -592,7 +592,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[Ident] &&
       token.text == "end" &&
       token.strictNext.is[EndMarkerWord] &&
-      (token.next.strictNext.is[LF] || token.next.strictNext.is[EOF])
+      (token.next.strictNext.is[LineEnd] || token.next.strictNext.is[EOF])
     }
   }
 
