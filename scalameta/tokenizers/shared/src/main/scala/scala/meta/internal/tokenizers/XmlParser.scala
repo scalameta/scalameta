@@ -67,7 +67,8 @@ class XmlParser(Block: P0, Patterns: P0 = Fail) {
     val CharA = P(!"'" ~ Char1)
     val CharB = P(!("{" | "}") ~ Char1)
 
-    val Name: P0 = P(NameStart ~ NameChar.rep).!.filter(_.last != ':').opaque("Name").map(_ => ()) // discard result
+    // discard result
+    val Name: P0 = P(NameStart ~ NameChar.rep).!.filter(_.last != ':').opaque("Name").map(_ => ())
     val NameStart = P(CharPred.raw(isNameStart))
     val NameChar = P(CharPred.raw(isNameChar))
 
@@ -76,7 +77,8 @@ class XmlParser(Block: P0, Patterns: P0 = Fail) {
 
     val ContentP: P0 = P((CharDataP | ScalaPatterns | ElemPattern).rep)
     val ScalaPatterns = P("{" ~ Patterns ~ "}")
-    val CharDataP = P("&" ~ CharData.? | CharData) // matches weirdness of scalac parser on xml reference.
+    // matches weirdness of scalac parser on xml reference.
+    val CharDataP = P("&" ~ CharData.? | CharData)
 
     //======================================================
     // From `scala.xml.parsing.TokenTests`
@@ -124,7 +126,8 @@ class XmlParser(Block: P0, Patterns: P0 = Fail) {
   }
 }
 
-/** Collects start and end positions of scala expressions inside xml literals.
+/**
+ * Collects start and end positions of scala expressions inside xml literals.
  *
  * Doesn't really parse scala expressions, only reads until the curly brace
  * balance hits 0.

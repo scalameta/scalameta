@@ -192,13 +192,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(tpe("Foo {}").syntax == "Foo {}")
     assert(tpe("Foo { type T = Int }").syntax == "Foo { type T = Int }")
     assert(
-      tpe("Foo { type T = Int; type U <: String }").syntax == "Foo { type T = Int; type U <: String }"
+      tpe("Foo { type T = Int; type U <: String }").syntax ==
+        "Foo { type T = Int; type U <: String }"
     )
     assert(tpe("Foo with Bar").syntax == "Foo with Bar")
     assert(tpe("Foo with Bar {}").syntax == "Foo with Bar {}")
     assert(tpe("Foo with Bar { type T = Int }").syntax == "Foo with Bar { type T = Int }")
     assert(
-      tpe("Foo with Bar { type T = Int; type U <: String }").syntax == "Foo with Bar { type T = Int; type U <: String }"
+      tpe("Foo with Bar { type T = Int; type U <: String }").syntax ==
+        "Foo with Bar { type T = Int; type U <: String }"
     )
   }
 
@@ -256,11 +258,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("packages") {
     assert(source("package foo.bar; class C").syntax == s"package foo.bar${EOL}class C")
     assert(
-      source("package foo.bar; class C; class D").syntax == s"package foo.bar${EOL}class C${EOL}class D"
+      source("package foo.bar; class C; class D").syntax ==
+        s"package foo.bar${EOL}class C${EOL}class D"
     )
     assert(source("package foo.bar { class C }").syntax == s"package foo.bar${EOL}class C")
     assert(
-      source("package foo.bar { class C; class D }").syntax == s"package foo.bar${EOL}class C${EOL}class D"
+      source("package foo.bar { class C; class D }").syntax ==
+        s"package foo.bar${EOL}class C${EOL}class D"
     )
   }
 
@@ -304,7 +308,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("secondary ctor - expr") {
     assert(
-      source("class C(x: Int) { def this() = this(2) }").syntax == "class C(x: Int) { def this() = this(2) }"
+      source("class C(x: Int) { def this() = this(2) }").syntax ==
+        "class C(x: Int) { def this() = this(2) }"
     )
   }
 
@@ -392,44 +397,56 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(templStat("if (1) 2 else 3 + 4").syntax == "if (1) 2 else 3 + 4")
     assert(templStat("(if (1) 2 else 3) + 4").syntax == "(if (1) 2 else 3) + 4")
     assert(
-      templStat("if (1) 2 else 3 match { case _ => }").syntax == s"if (1) 2 else 3 match {${EOL}  case _ =>${EOL}}"
+      templStat("if (1) 2 else 3 match { case _ => }").syntax ==
+        s"if (1) 2 else 3 match {${EOL}  case _ =>${EOL}}"
     )
     assert(
-      templStat("(if (1) 2 else 3) match { case _ => }").syntax == s"(if (1) 2 else 3) match {${EOL}  case _ =>${EOL}}"
+      templStat("(if (1) 2 else 3) match { case _ => }").syntax ==
+        s"(if (1) 2 else 3) match {${EOL}  case _ =>${EOL}}"
     )
     assert(templStat("unit.toCheck += (() => body)").syntax == "unit.toCheck += (() => body)")
     assert(
-      templStat("({ foo1; foo2 }).orElse(bar)").syntax == s"{${EOL}  foo1${EOL}  foo2${EOL}}.orElse(bar)"
+      templStat("({ foo1; foo2 }).orElse(bar)").syntax ==
+        s"{${EOL}  foo1${EOL}  foo2${EOL}}.orElse(bar)"
     )
     assert(
-      templStat("(foo match { case _ => }).orElse(bar)").syntax == s"(foo match {${EOL}  case _ =>${EOL}}).orElse(bar)"
+      templStat("(foo match { case _ => }).orElse(bar)").syntax ==
+        s"(foo match {${EOL}  case _ =>${EOL}}).orElse(bar)"
     )
     assert(
       templStat("foo || (if (cond) bar else baz)").syntax == "foo || (if (cond) bar else baz)"
     )
     assert(
-      templStat("foo && (bar match { case _ => })").syntax == s"foo && (bar match {${EOL}  case _ =>${EOL}})"
+      templStat("foo && (bar match { case _ => })").syntax ==
+        s"foo && (bar match {${EOL}  case _ =>${EOL}})"
     )
     assert(
-      templStat("\"foo \" + (if (cond) bar else baz)").syntax == "\"foo \" + (if (cond) bar else baz)"
+      templStat("\"foo \" + (if (cond) bar else baz)").syntax ==
+        "\"foo \" + (if (cond) bar else baz)"
     )
     assert(
-      templStat("foo match { case bar @ (_: T1 | _: T2) => }").syntax == s"foo match {${EOL}  case bar @ (_: T1 | _: T2) =>${EOL}}"
+      templStat("foo match { case bar @ (_: T1 | _: T2) => }").syntax ==
+        s"foo match {${EOL}  case bar @ (_: T1 | _: T2) =>${EOL}}"
     )
     assert(
-      templStat("foo match { case A + B / C => }").syntax == s"foo match {${EOL}  case A + B / C =>${EOL}}"
+      templStat("foo match { case A + B / C => }").syntax ==
+        s"foo match {${EOL}  case A + B / C =>${EOL}}"
     )
     assert(
-      templStat("foo match { case (A + B) / C => }").syntax == s"foo match {${EOL}  case (A + B) / C =>${EOL}}"
+      templStat("foo match { case (A + B) / C => }").syntax ==
+        s"foo match {${EOL}  case (A + B) / C =>${EOL}}"
     )
     assert(
-      templStat("foo match { case A + (B / C) => }").syntax == s"foo match {${EOL}  case A + B / C =>${EOL}}"
+      templStat("foo match { case A + (B / C) => }").syntax ==
+        s"foo match {${EOL}  case A + B / C =>${EOL}}"
     )
     assert(
-      templStat("foo match { case bar :: Nil :: Nil => }").syntax == s"foo match {${EOL}  case bar :: Nil :: Nil =>${EOL}}"
+      templStat("foo match { case bar :: Nil :: Nil => }").syntax ==
+        s"foo match {${EOL}  case bar :: Nil :: Nil =>${EOL}}"
     )
     assert(
-      templStat("foo match { case (bar :: Nil) :: Nil => }").syntax == s"foo match {${EOL}  case (bar :: Nil) :: Nil =>${EOL}}"
+      templStat("foo match { case (bar :: Nil) :: Nil => }").syntax ==
+        s"foo match {${EOL}  case (bar :: Nil) :: Nil =>${EOL}}"
     )
     assert(templStat("@(foo @foo) class Bar").syntax == "@(foo @foo) class Bar")
     assert(templStat("(foo: Foo): @foo").syntax == "(foo: Foo): @foo")
@@ -439,10 +456,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(templStat("type T = A :: B :: C").syntax == "type T = A :: B :: C")
     assert(templStat("type T = (A :: B) :: C").syntax == "type T = (A :: B) :: C")
     assert(
-      templStat("foo match { case _: A | _: B => }").syntax == s"foo match {${EOL}  case _: A | _: B =>${EOL}}"
+      templStat("foo match { case _: A | _: B => }").syntax ==
+        s"foo match {${EOL}  case _: A | _: B =>${EOL}}"
     )
     assert(
-      templStat("foo match { case _: A | _: B | _: C => }").syntax == s"foo match {${EOL}  case _: A | _: B | _: C =>${EOL}}"
+      templStat("foo match { case _: A | _: B | _: C => }").syntax ==
+        s"foo match {${EOL}  case _: A | _: B | _: C =>${EOL}}"
     )
   }
 
@@ -482,16 +501,19 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("class C(x: Int)(implicit y: String, z: Boolean)") {
     assert(
-      templStat("class C(x: Int)(implicit y: String, z: Boolean)").syntax == "class C(x: Int)(implicit y: String, z: Boolean)"
+      templStat("class C(x: Int)(implicit y: String, z: Boolean)").syntax ==
+        "class C(x: Int)(implicit y: String, z: Boolean)"
     )
   }
 
   test("#1837 class C(x: Int, implicit val|var y: String)") {
     assert(
-      templStat("class C(x: Int, implicit val y: String)").syntax == "class C(x: Int, implicit val y: String)"
+      templStat("class C(x: Int, implicit val y: String)").syntax ==
+        "class C(x: Int, implicit val y: String)"
     )
     assert(
-      templStat("class C(x: Int, implicit var y: String)").syntax == "class C(x: Int, implicit var y: String)"
+      templStat("class C(x: Int, implicit var y: String)").syntax ==
+        "class C(x: Int, implicit var y: String)"
     )
   }
 

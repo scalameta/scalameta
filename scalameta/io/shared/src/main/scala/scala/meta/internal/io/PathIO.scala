@@ -27,7 +27,8 @@ object PathIO {
     else filename.substring(idx + 1)
   }
 
-  /** Returns the parent directory of the absolute string path
+  /**
+   * Returns the parent directory of the absolute string path
    *
    * Examples:
    *
@@ -48,7 +49,8 @@ object PathIO {
     else abspath.substring(0, end + 1)
   }
 
-  /** Returns the name of top-level file or directory of the absolute string path
+  /**
+   * Returns the name of top-level file or directory of the absolute string path
    *
    * Examples:
    *

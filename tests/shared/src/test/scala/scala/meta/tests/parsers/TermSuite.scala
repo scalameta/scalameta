@@ -358,14 +358,6 @@ class TermSuite extends ParseSuite {
     val TryWithHandler(Lit(1), Lit(1), None) = term("try 1 catch 1")
   }
 
-  test("try (true, false)") {
-    val Try(Tuple(Lit(true) :: Lit(false) :: Nil), Nil, None) = term("try (true, false)")
-  }
-
-  test("try ()") {
-    val Try(Lit(()), Nil, None) = term("try ()")
-  }
-
   test("try (2)") {
     val Try(Lit(2), Nil, None) = term("try (2)")
   }

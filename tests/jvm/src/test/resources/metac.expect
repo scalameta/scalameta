@@ -1529,10 +1529,10 @@ Occurrences:
 [24:6..24:7): d => local12
 [25:6..25:8): == => java/lang/Object#`==`().
 [26:4..26:5): e <= local14
-[27:6..27:7): a => local4
-[28:6..28:7): b => local5
-[29:6..29:7): c => local11
-[30:6..30:7): d => local12
+[27:8..27:9): a => local4
+[28:8..28:9): b => local5
+[29:8..29:9): c => local11
+[30:8..30:9): d => local12
 [32:7..32:8): e => local14
 [32:9..32:11): == => java/lang/Object#`==`().
 [33:4..33:5): f <= local15
@@ -1589,10 +1589,10 @@ Synthetics:
       d
     ) == (1, 2, 3, 4)
     e = (
-      a,
-      b,
-      c,
-      d
+        a,
+        b,
+        c,
+        d
     )
     if e == (1, 2, 3, 4)
     f <- List(e)
@@ -1623,10 +1623,10 @@ Synthetics:
       d
     ) == (1, 2, 3, 4)
     e = (
-      a,
-      b,
-      c,
-      d
+        a,
+        b,
+        c,
+        d
     ))})(List.canBuildFrom[Tuple2[Tuple2[Int, Int], Tuple4[Int, Int, Int, Int]]]).withFilter({(local9) => orig(e == (1, 2, 3, 4))}).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]], List[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]]({(local10) => orig(f <- List(e)
   } yield {
     (

@@ -69,6 +69,8 @@ final class Dialect private (
     val toplevelSeparator: String,
     // Are numeric literal underscore separators, i.e. `1_000_000` legal or not?
     val allowNumericLiteralUnderscoreSeparators: Boolean,
+    // Can try body contain any expression? (2.13.1 https://github.com/scala/scala/pull/8071)
+    val allowTryWithAnyExpr: Boolean,
     // Given/using introduced in dotty
     val allowGivenUsing: Boolean,
     // Extension methods introduced in dotty
@@ -92,8 +94,7 @@ final class Dialect private (
     val allowCommaSeparatedExtend: Boolean,
     // end marker introduced in dotty
     val allowEndMarker: Boolean
-) extends Product
-    with Serializable {
+) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
   // - add new field to primary constructor.
@@ -153,6 +154,7 @@ final class Dialect private (
       allowXmlLiterals,
       toplevelSeparator,
       allowNumericLiteralUnderscoreSeparators = false,
+      allowTryWithAnyExpr = false,
       allowGivenUsing = false,
       allowExtensionMethods = false,
       allowOpenClass = false,
@@ -245,10 +247,11 @@ final class Dialect private (
   def withToplevelSeparator(newValue: String): Dialect = {
     privateCopy(toplevelSeparator = newValue)
   }
-  def withAllowNumericLiteralUnderscoreSeparators(
-      newValue: Boolean
-  ): Dialect = {
+  def withAllowNumericLiteralUnderscoreSeparators(newValue: Boolean): Dialect = {
     privateCopy(allowNumericLiteralUnderscoreSeparators = newValue)
+  }
+  def withAllowTryWithAnyExpr(newValue: Boolean): Dialect = {
+    privateCopy(allowTryWithAnyExpr = newValue)
   }
   def withAllowGivenUsing(newValue: Boolean): Dialect = {
     privateCopy(allowGivenUsing = newValue)
@@ -315,6 +318,7 @@ final class Dialect private (
       toplevelSeparator: String = this.toplevelSeparator,
       allowNumericLiteralUnderscoreSeparators: Boolean =
         this.allowNumericLiteralUnderscoreSeparators,
+      allowTryWithAnyExpr: Boolean = this.allowTryWithAnyExpr,
       allowGivenUsing: Boolean = this.allowGivenUsing,
       allowExtensionMethods: Boolean = this.allowExtensionMethods,
       allowOpenClass: Boolean = this.allowOpenClass,
@@ -354,6 +358,7 @@ final class Dialect private (
       allowXmlLiterals,
       toplevelSeparator,
       allowNumericLiteralUnderscoreSeparators,
+      allowTryWithAnyExpr,
       allowGivenUsing,
       allowExtensionMethods,
       allowOpenClass,

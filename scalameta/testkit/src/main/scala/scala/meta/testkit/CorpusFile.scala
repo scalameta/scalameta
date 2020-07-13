@@ -2,7 +2,8 @@ package scala.meta.testkit
 
 import java.io.File
 
-/** A Scala source file taken from some Github repo
+/**
+ * A Scala source file taken from some Github repo
  *
  * @param filename Path to the file relative to the "target/repos" root directory.
  * @param projectUrl The url of the Github project containing this source file.

@@ -10,7 +10,8 @@ import scala.util.control.NonFatal
 
 object SyntaxAnalysis {
 
-  /** Run syntactic analysis on a corpus of [[CorpusFile]].
+  /**
+   * Run syntactic analysis on a corpus of [[CorpusFile]].
    *
    * @param corpus The corpus to run analysis on. Has type GenTraversableOnce
    *               to support both parallel and synchronous collections.

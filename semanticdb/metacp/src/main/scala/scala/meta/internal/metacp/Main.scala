@@ -148,7 +148,8 @@ class Main(settings: Settings, reporter: Reporter) {
     }
   }
 
-  /** An output entry that is either a directory or a jar.
+  /**
+   * An output entry that is either a directory or a jar.
    *
    * @param output the output directory or jar file on disk that is returned to the user.
    * @param root the output directory or the NIO FileSystem jar root path if output is a jar file.

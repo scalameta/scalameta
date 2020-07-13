@@ -92,7 +92,8 @@ class DefnSuite extends ParseSuite {
     val Defn.Def(
       Nil,
       Term.Name("x"),
-      Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, Some(Type.Name("B"))), Nil, Nil) :: Nil,
+      Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, Some(Type.Name("B"))), Nil, Nil)
+        :: Nil,
       Nil,
       None,
       Lit(2)
@@ -103,7 +104,8 @@ class DefnSuite extends ParseSuite {
     val Defn.Def(
       Nil,
       Term.Name("x"),
-      Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Type.Name("B") :: Nil, Nil) :: Nil,
+      Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Type.Name("B") :: Nil, Nil)
+        :: Nil,
       Nil,
       None,
       Lit(2)
@@ -114,7 +116,8 @@ class DefnSuite extends ParseSuite {
     val Defn.Def(
       Nil,
       Term.Name("x"),
-      Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Type.Name("B") :: Nil) :: Nil,
+      Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Type.Name("B") :: Nil)
+        :: Nil,
       Nil,
       None,
       Lit(2)
@@ -127,7 +130,8 @@ class DefnSuite extends ParseSuite {
       Term.Name("f"),
       Nil,
       (Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None) :: Nil) ::
-        (Term.Param(Mod.Implicit() :: Nil, Term.Name("b"), Some(Type.Name("Int")), None) :: Nil) :: Nil,
+        (Term.Param(Mod.Implicit() :: Nil, Term.Name("b"), Some(Type.Name("Int")), None) :: Nil)
+        :: Nil,
       None,
       Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Term.Name("b") :: Nil)
     ) =

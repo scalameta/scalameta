@@ -80,7 +80,7 @@ val commonJsSettings = Seq(
   }
 )
 
-/** ======================== SEMANTICDB ======================== **/
+/* ======================== SEMANTICDB ======================== */
 lazy val semanticdbScalacCore = project
   .in(file("semanticdb/scalac/library"))
   .settings(
@@ -144,7 +144,7 @@ lazy val metac = project
   )
   .dependsOn(semanticdbScalacPlugin)
 
-/** ======================== SCALAMETA ======================== **/
+/* ======================== SCALAMETA ======================== */
 lazy val common = crossProject(JSPlatform, JVMPlatform)
   .in(file("scalameta/common"))
   .settings(
@@ -257,7 +257,7 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform)
   )
   .dependsOn(parsers)
 
-/** ======================== TESTS ======================== **/
+/* ======================== TESTS ======================== */
 lazy val semanticdbIntegration = project
   .in(file("semanticdb/integration"))
   .settings(
@@ -397,7 +397,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
   testOptions.in(Slow) += Tests.Argument("--include-tags=Slow")
 )
 
-/** ======================== BENCHES ======================== **/
+/* ======================== BENCHES ======================== */
 lazy val bench = project
   .in(file("bench/suite"))
   .enablePlugins(BuildInfoPlugin)
@@ -673,7 +673,7 @@ lazy val publishableSettings = Def.settings(
         <url>https://github.com/mutcianm</url>
       </developer>
       <developer>
-        <id>gabro</id>
+        <id>maxov</id>
         <name>Max Ovsiankin</name>
         <url>https://github.com/maxov</url>
       </developer>

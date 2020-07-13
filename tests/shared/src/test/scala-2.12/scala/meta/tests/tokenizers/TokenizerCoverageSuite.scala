@@ -96,10 +96,17 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
   check[Term.This]("→a←.this")
   check[Term.Throw]("throw →(e)←")
   check[Term.Try]("try (→f←) catch { →case x => x;← →case y => y← } finally →{ }←")
-  check[Term.Try]("try →()←")
-  check[Term.Try]("try →(true, false)←")
+  check0[Term.Try]("try →()←")(dialect = dialects.Scala213)
+  check0[Term.Try]("try →(true, false)←")(dialect = dialects.Scala213)
+  check0[Term.Try]("try →{1 + 2}.toString←")(dialect = dialects.Scala213)
+  check0[Term.Try]("try →(a.b).c←")(dialect = dialects.Scala213)
   check[Term.TryWithHandler]("try (→f←) catch →(h)← finally →{ }←")
-  check[Term.TryWithHandler]("try →(true, false)← catch →(h)← finally →(1, 2)←")
+  check0[Term.TryWithHandler]("try →(true, false)← catch →(h)← finally →(1, 2)←")(dialect =
+    dialects.Scala213
+  )
+  check0[Term.TryWithHandler]("try →(a.b).c← catch →(h)← finally →(1, 2)←")(dialect =
+    dialects.Scala213
+  )
   check[Term.Tuple]("(→(a)←, →(b)←)")
   check[Term.While]("while (→p←) →{d}←")
   check[Term.Xml]("→<a>b←{→c←}→d</a>←")

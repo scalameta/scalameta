@@ -133,7 +133,7 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
 
   private var oddTest = true
 
-  private def check0[T <: Tree](annotedSource: String)(
+  protected def check0[T <: Tree](annotedSource: String)(
       project: T => Tree = identity[Tree] _,
       checkChilds: Boolean = true,
       parser: Parse[_ <: Tree] = Parse.parseStat,
@@ -156,8 +156,8 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
       val (tokens, markers, correct) =
         positions.foldLeft((fSource, fSource, true)) {
           case (
-              (tokens0, markers0, correct0),
-              ((markerStart, markerEnd), (tokenStart, tokenEnd))
+                (tokens0, markers0, correct0),
+                ((markerStart, markerEnd), (tokenStart, tokenEnd))
               ) =>
             val color =
               if (odd) overlayColor1

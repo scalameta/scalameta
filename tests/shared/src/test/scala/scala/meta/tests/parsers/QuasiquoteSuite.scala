@@ -37,7 +37,8 @@ class QuasiquoteSuite extends ParseSuite {
 
     test("multi-line allow line breaks") {
       assert(
-        term("foo + \n bar").structure == """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))"""
+        term("foo + \n bar").structure ==
+          """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))"""
       )
     }
 

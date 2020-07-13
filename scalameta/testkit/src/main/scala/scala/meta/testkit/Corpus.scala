@@ -7,7 +7,8 @@ import geny.Generator
 import org.apache.commons.io.FileUtils
 import org.rauschig.jarchivelib.ArchiverFactory
 
-/** A collection of Scala source files to run [[SyntaxAnalysis]].
+/**
+ * A collection of Scala source files to run [[SyntaxAnalysis]].
  *
  * @param url A zip file that matches the following structure:
  *            repos/
@@ -29,7 +30,8 @@ case class Corpus(url: String, filter: String => Boolean)
 
 object Corpus {
 
-  /** Corpus of ~3 million lines of code, 22 mb compressed.
+  /**
+   * Corpus of ~3 million lines of code, 22 mb compressed.
    * The list of repos is originally taken from fastparse:
    * https://github.com/lihaoyi/fastparse/blob/6cf2cb23cd5f628c4e956d5846228ee4ca988f5c/scalaparse/jvm/src/test/scala/scalaparse/ProjectTests.scala#L63-L115
    */
@@ -96,7 +98,8 @@ object Corpus {
     }
   }
 
-  /** Downloads the zip file, extracts it and parses into a list of [[CorpusFile]].
+  /**
+   * Downloads the zip file, extracts it and parses into a list of [[CorpusFile]].
    *
    * @param corpus See [[Corpus]].
    * @return A generator of [[CorpusFile]]. Use Generator.take to limit the

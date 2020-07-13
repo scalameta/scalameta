@@ -17,7 +17,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("showcode without comments - hard") {
-    assert(tokenize("""
+    assert(
+      tokenize("""
       |class C {
       |  val x1a = 2
       |  val x1b = 0x002
@@ -47,7 +48,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |  val hello = 42
       |  val `world` = 42
       |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.syntax).mkString == """
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")).map(_.syntax).mkString ==
+        """
       |class C {
       |  val x1a = 2
       |  val x1b = 0x002
@@ -77,7 +79,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |  val hello = 42
       |  val `world` = 42
       |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")
+    )
   }
 
   test("showCode without comments - insane") {
@@ -123,7 +126,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("showRaw without comments - easy") {
-    assert(tokenize("class C  {\t val x = 2}\n\n").map(_.structure).mkString("\n") == """
+    assert(
+      tokenize("class C  {\t val x = 2}\n\n").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |class [0..5)
       |  [5..6)
@@ -144,7 +148,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |\n [22..23)
       |\n [23..24)
       |EOF [24..24)
-    """.trim.stripMargin)
+    """.trim.stripMargin
+    )
   }
 
   test("showRaw without comments - hard") {
@@ -808,7 +813,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |EOF [24..24)
     """.trim.stripMargin
     )
-    assert(tokenize("for (x ← xs) println(x)").map(_.structure).mkString("\n") == """
+    assert(
+      tokenize("for (x ← xs) println(x)").map(_.structure).mkString("\n") == """
       |BOF [0..0)
       |for [0..3)
       |  [3..4)
@@ -825,7 +831,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |x [21..22)
       |) [22..23)
       |EOF [23..23)
-    """.trim.stripMargin)
+    """.trim.stripMargin
+    )
   }
 
   test("-2147483648") {

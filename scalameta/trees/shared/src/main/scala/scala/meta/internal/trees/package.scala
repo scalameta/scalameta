@@ -65,7 +65,7 @@ package object trees {
     private def isScalaLetter(ch: Char) =
       letterGroups(JCharacter.getType(ch).toByte) || otherLetters(ch)
 
-    /** Is character a math or other symbol in Unicode?  */
+    /** Is character a math or other symbol in Unicode? */
     private def isSpecial(c: Char) = {
       val chtp = Character.getType(c)
       chtp == Character.MATH_SYMBOL.toInt || chtp == Character.OTHER_SYMBOL.toInt
