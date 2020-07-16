@@ -27,7 +27,7 @@ class TokensSuite extends FunSuite {
 
   test("Tree.tokens: empty") {
     val emptyTemplate = "class C".parse[Stat].get.children(2)
-    assert(emptyTemplate.structure == "Template(Nil, Nil, Self(Name(\"\"), None), Nil)")
+    assert(emptyTemplate.structure == "Template(Nil, Nil, Nil, Self(Name(\"\"), None), Nil)")
     assert(emptyTemplate.tokens.structure == "Tokens()")
   }
 

@@ -15,7 +15,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |  def f: Int
                   |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some("trait A { def f: Int }"))(
-      Defn.Trait(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), List(
+      Defn.Trait(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Nil, Self(Name(""), None), List(
         defx)))
     )
   }
@@ -26,7 +26,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |  def y: String = { fa(); fb() }
                   |""".stripMargin
     runTestAssert[Stat](code, assertLayout = None)(
-      Defn.Trait(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), List(
+      Defn.Trait(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Nil, Self(Name(""), None), List(
         defx, defy
         )))
     )
@@ -40,10 +40,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |    def f: Int = 4
                   |""".stripMargin
     runTestAssert[Stat](code, assertLayout = None)(
-Defn.Object(Nil, Term.Name("O"), Template(Nil, Nil, Self(Name(""), None), List(
-  Defn.Class(Nil, Type.Name("C"), Nil, ctor, Template(Nil, Nil, Self(Name(""), None), List(
+Defn.Object(Nil, Term.Name("O"), Template(Nil, Nil, Nil, Self(Name(""), None), List(
+  Defn.Class(Nil, Type.Name("C"), Nil, ctor, Template(Nil, Nil, Nil, Self(Name(""), None), List(
     Defn.Def(Nil, Term.Name("f"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(3))))),
-   Defn.Trait(Nil, Type.Name("T"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), List(
+   Defn.Trait(Nil, Type.Name("T"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Nil, Self(Name(""), None), List(
      Defn.Def(Nil, Term.Name("f"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(4)))))
    )))
     )

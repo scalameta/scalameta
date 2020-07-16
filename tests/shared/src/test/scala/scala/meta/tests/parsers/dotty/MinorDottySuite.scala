@@ -26,23 +26,32 @@ class MinorDottySuite extends BaseDottySuite {
     val Defn.Trait(List(Mod.Open()), Type.Name("C"), _, _, _) =
       templStat("open trait C {}")(dialects.Dotty)
 
+    val Defn.Trait(List(Mod.Open(), Mod.Private(Name.Anonymous())), Type.Name("C"), _, _, _) =
+      templStat("open private trait C {}")(dialects.Dotty)
+
     val Defn.Object(List(Mod.Open()), Term.Name("X"), _) =
       templStat("open object X {}")(dialects.Dotty)
 
   }
 
   test("open-class-negative-cases") {
-    runTestError[Stat]("final open class A {}", "illegal combination of modifiers: open and final")
-    runTestError[Stat](
+    runTestError("final open class A {}", "illegal combination of modifiers: open and final")(parseTempl)
+    runTestError(
       "open sealed trait C {}",
       "illegal combination of modifiers: open and sealed"
-    )
-    runTestError[Stat]("open def f(): Int = 3", "error: expected start of definition")
-    runTestError[Stat]("def f(open a: Int): Int = 3", "error")
+    )(parseTempl)
+    runTestError("open def f(): Int = 3", "`open' modifier can be used only for classes")(parseTempl)
+    runTestError("def f(open a: Int): Int = 3", "error")(parseTempl)
   }
 
   test("open-soft-modifier") {
     stat("def open(open: open): open = ???").structure
+  }
+
+  test("open-identifier") {
+    runTestAssert[Stat]("def run(): Unit = { start; open(p); end }", assertLayout = None)(
+      Defn.Def(Nil, Term.Name("run"), Nil, List(List()), Some(Type.Name("Unit")), Term.Block(List(Term.Name("start"), Term.Apply(Term.Name("open"), List(Term.Name("p"))), Term.Name("end"))))
+    )
   }
 
   test("type-lambda") {
@@ -148,6 +157,7 @@ class MinorDottySuite extends BaseDottySuite {
         Template(
           Nil,
           Nil,
+          Nil,
           Self(Name(""), None),
           List(
             Defn.OpaqueTypeAlias(
@@ -166,6 +176,7 @@ class MinorDottySuite extends BaseDottySuite {
         Nil,
         Term.Name("X"),
         Template(
+          Nil,
           Nil,
           Nil,
           Self(Name(""), None),
@@ -238,7 +249,7 @@ class MinorDottySuite extends BaseDottySuite {
         Type.Name("Foo"),
         Nil,
         Ctor.Primary(Nil, Name(""), Nil),
-        Template(Nil, List(init("A"), init("B"), init("C")), Self(Name(""), None), Nil)
+        Template(Nil, List(init("A"), init("B"), init("C")), Nil, Self(Name(""), None), Nil)
       )
     )(parseTempl)
 
@@ -262,9 +273,30 @@ class MinorDottySuite extends BaseDottySuite {
         Type.Name("Foo"),
         Nil,
         Ctor.Primary(Nil, Name(""), Nil),
-        Template(Nil, Nil, Self(Name(""), None), Nil)
+        Template(Nil, Nil, Nil, Self(Name(""), None), Nil)
       )
     )(parseTempl)
   }
+
+  test("enum-derives") {
+    runTestAssert[Stat]("enum Foo  derives Eql")(
+      Defn.Enum(Nil, Type.Name("Foo"), Nil, Ctor.Primary(Nil, Name(""), Nil),
+        Template(Nil, Nil, List(Term.Name("Eql")), Self(Name(""), None), Nil))
+    )(parseTempl)
+  }
+
+  test("trait-derives") {
+    runTestAssert[Stat]("trait Foo extends A with B derives X, Y")(
+      Defn.Trait(
+        Nil,
+        Type.Name("Foo"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(Nil, List(Init(Type.Name("A"), Name(""), Nil), Init(Type.Name("B"), Name(""), Nil)), List(Term.Name("X"), Term.Name("Y")), Self(Name(""), None), Nil)
+      )
+    )(parseTempl)
+  }
+
+
 
 }

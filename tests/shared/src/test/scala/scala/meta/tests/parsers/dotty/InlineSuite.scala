@@ -66,7 +66,7 @@ class InlineSuite extends BaseDottySuite {
           Name(""),
           List(List(Term.Param(Nil, Term.Name("inline"), Some(Type.Name("Int")), None)))
         ),
-        Template(Nil, Nil, Self(Name(""), None), Nil)
+        Template(Nil, Nil, Nil, Self(Name(""), None), Nil)
       )
     )(parseTempl)
   }
@@ -178,6 +178,7 @@ class InlineSuite extends BaseDottySuite {
         Nil,
         Term.Name("X"),
         Template(
+          Nil,
           Nil,
           Nil,
           Self(Name(""), None),

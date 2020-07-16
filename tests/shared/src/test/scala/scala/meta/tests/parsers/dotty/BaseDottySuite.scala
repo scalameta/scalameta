@@ -11,7 +11,7 @@ trait BaseDottySuite extends ParseSuite {
   final val slf = meta.Self(anon, None)
 
   final def tname(name: String): Term.Name = Term.Name(name)
-  final def tpl(stats: List[Stat]): Template = Template(Nil, Nil, slf, stats)
+  final def tpl(stats: List[Stat]): Template = Template(Nil, Nil, Nil, slf, stats)
   final def tparamval(name: String, tpe: String) =
     Term.Param(List(Mod.ValParam()), Term.Name(name), Some(pname(tpe)), None)
   final def tparam(name: String, tpe: String) =

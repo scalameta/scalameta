@@ -25,6 +25,7 @@ object Messages {
     s"illegal combination of modifiers: $mod1 and $mod2"
 
   val InvalidSealed = "`sealed' modifier can be used only for classes"
+  val InvalidOpen = "`open' modifier can be used only for classes"
   val InvalidImplicit =
     "`implicit' modifier can be used only for values, variables, methods and classes"
   val InvalidImplicitTrait = "traits cannot be implicit"

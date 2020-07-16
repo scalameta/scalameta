@@ -426,7 +426,7 @@ object Ctor {
 
 @ast class Self(name: Name, decltpe: Option[Type]) extends Member
 
-@ast class Template(early: List[Stat], inits: List[Init], self: Self, stats: List[Stat])
+@ast class Template(early: List[Stat], inits: List[Init], derives: List[Term.Name], self: Self, stats: List[Stat])
     extends Tree {
   checkFields(early.forall(_.isEarlyStat && inits.nonEmpty))
   checkFields(stats.forall(_.isTemplateStat))

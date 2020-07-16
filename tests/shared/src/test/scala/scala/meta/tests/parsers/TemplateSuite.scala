@@ -29,7 +29,7 @@ class TemplateSuite extends ParseSuite {
       Type.Name("A"),
       Nil,
       EmptyCtor(),
-      Template(Nil, Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)
+      Template(Nil, Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil, Nil, EmptySelf(), Nil)
     ) =
       templStat("trait A extends B")
   }
@@ -41,6 +41,7 @@ class TemplateSuite extends ParseSuite {
       Nil,
       EmptyCtor(),
       Template(
+        Nil,
         Nil,
         Nil,
         EmptySelf(),
@@ -59,6 +60,7 @@ class TemplateSuite extends ParseSuite {
       Template(
         Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit(2)) :: Nil,
         Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil,
+        Nil,
         EmptySelf(),
         Nil
       )
@@ -72,7 +74,7 @@ class TemplateSuite extends ParseSuite {
       Type.Name("A"),
       Nil,
       EmptyCtor(),
-      Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)
+      Template(Nil, Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)
     ) =
       templStat("trait A { self: B => }")
   }
@@ -84,6 +86,7 @@ class TemplateSuite extends ParseSuite {
       Nil,
       EmptyCtor(),
       Template(
+        Nil,
         Nil,
         Nil,
         EmptySelf(),
@@ -113,7 +116,7 @@ class TemplateSuite extends ParseSuite {
       Type.Name("A"),
       Nil,
       EmptyCtor(),
-      Template(Nil, Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)
+      Template(Nil, Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil, Nil, EmptySelf(), Nil)
     ) =
       templStat("class A extends B")
   }
@@ -127,6 +130,7 @@ class TemplateSuite extends ParseSuite {
       Template(
         Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit(2)) :: Nil,
         Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil,
+        Nil,
         EmptySelf(),
         Nil
       )
@@ -140,18 +144,18 @@ class TemplateSuite extends ParseSuite {
       Type.Name("A"),
       Nil,
       EmptyCtor(),
-      Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)
+      Template(Nil, Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)
     ) =
       templStat("class A { self: B => }")
   }
 
   test("class A { this => }") {
-    val Class(Nil, Type.Name("A"), Nil, EmptyCtor(), Template(Nil, Nil, self @ EmptySelf(), Nil)) =
+    val Class(Nil, Type.Name("A"), Nil, EmptyCtor(), Template(Nil, Nil, Nil, self @ EmptySelf(), Nil)) =
       templStat("class A { this => }")
   }
 
   test("class A { _ => }") {
-    val Class(Nil, Type.Name("A"), Nil, EmptyCtor(), Template(Nil, Nil, self @ EmptySelf(), Nil)) =
+    val Class(Nil, Type.Name("A"), Nil, EmptyCtor(), Template(Nil, Nil, Nil, self @ EmptySelf(), Nil)) =
       templStat("class A { this => }")
   }
 
@@ -162,6 +166,7 @@ class TemplateSuite extends ParseSuite {
       Nil,
       EmptyCtor(),
       Template(
+        Nil,
         Nil,
         Nil,
         EmptySelf(),
@@ -298,7 +303,7 @@ class TemplateSuite extends ParseSuite {
     val Object(
       Nil,
       Term.Name("A"),
-      Template(Nil, Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)
+      Template(Nil, Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil, Nil, EmptySelf(), Nil)
     ) =
       templStat("object A extends B")
   }
@@ -310,6 +315,7 @@ class TemplateSuite extends ParseSuite {
       Template(
         Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit(2)) :: Nil,
         Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil,
+        Nil,
         EmptySelf(),
         Nil
       )
@@ -321,7 +327,7 @@ class TemplateSuite extends ParseSuite {
     val Object(
       Nil,
       Term.Name("A"),
-      Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)
+      Template(Nil, Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)
     ) =
       templStat("object A { self: B => }")
   }

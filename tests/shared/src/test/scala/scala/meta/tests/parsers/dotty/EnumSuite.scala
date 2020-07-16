@@ -38,7 +38,7 @@ class EnumSuite extends BaseDottySuite {
         pname("C"),
         Nil,
         ctor,
-        Template(Nil, List(init("T"), init("R")), slf, List(RGCase))
+        Template(Nil, List(init("T"), init("R")), Nil, slf, List(RGCase))
       )
     )
   }
@@ -56,7 +56,7 @@ class EnumSuite extends BaseDottySuite {
         Type.Name("Color"),
         Nil,
         Ctor.Primary(Nil, Name(""), Nil),
-        Template(Nil, Nil, Self(Name(""), None), Nil)
+        Template(Nil, Nil, Nil, Self(Name(""), None), Nil)
       )
     )
     runTestAssert[Stat]("enum Color { val PI = 314 }")(
@@ -66,6 +66,7 @@ class EnumSuite extends BaseDottySuite {
         Nil,
         Ctor.Primary(Nil, Name(""), Nil),
         Template(
+          Nil,
           Nil,
           Nil,
           Self(Name(""), None),

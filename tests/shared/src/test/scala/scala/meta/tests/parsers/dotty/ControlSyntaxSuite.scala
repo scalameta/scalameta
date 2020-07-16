@@ -132,6 +132,43 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("new-catch-single1") {
+    val code = """|try fx
+                  |catch case x => ()
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = None)(
+      Term.Try(Term.Name("fx"), List(Case(Pat.Var(Term.Name("x")), None, Lit.Unit())), None)
+    )
+  }
+
+  test("new-catch-single2") {
+    val code = """|try fx
+                  |catch
+                  |  case x =>
+                  |    fa
+                  |    fb
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = None)(
+      Term.Try(Term.Name("fx"), List(Case(Pat.Var(Term.Name("x")), None, Term.Block(List(Term.Name("fa"), Term.Name("fb"))))), None)
+    )
+  }
+
+  test("new-catch-multi") {
+    val code = """|try fx
+                  |catch
+                  |  case x =>
+                  |    xa
+                  |    xb
+                  |  case y => yab
+                  |  case z =>
+                  |    za
+                  |    zb
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = None)(
+      Term.Try(Term.Name("fx"), List(Case(Pat.Var(Term.Name("x")), None, Term.Block(List(Term.Name("xa"), Term.Name("xb")))), Case(Pat.Var(Term.Name("y")), None, Term.Name("yab")), Case(Pat.Var(Term.Name("z")), None, Term.Block(List(Term.Name("za"), Term.Name("zb"))))), None)
+    )
+  }
+
   // --------------------------
   // FOR
   // --------------------------
@@ -162,6 +199,30 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |""".stripMargin
     runTestAssert[Stat](code, assertLayout = None)(
       Term.For(List(Enumerator.Generator(Pat.Var(Term.Name("a")), Term.Name("x")), Enumerator.Generator(Pat.Var(Term.Name("b")), Term.Name("y"))), Term.Name("fx"))
+    )
+  }
+
+  test("for-yield-single") {
+    val code = """|for
+                  |  a <- x
+                  |  b <- y
+                  |yield fx
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = None)(
+      Term.ForYield(List(Enumerator.Generator(Pat.Var(Term.Name("a")), Term.Name("x")), Enumerator.Generator(Pat.Var(Term.Name("b")), Term.Name("y"))), Term.Name("fx"))
+    )
+  }
+
+  test("for-yield-multi") {
+    val code = """|for
+                  |  a <- x
+                  |  b <- y
+                  |yield
+                  |  fx
+                  |  fy
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = None)(
+      Term.ForYield(List(Enumerator.Generator(Pat.Var(Term.Name("a")), Term.Name("x")), Enumerator.Generator(Pat.Var(Term.Name("b")), Term.Name("y"))), Term.Block(List(Term.Name("fx"), Term.Name("fy"))))
     )
   }
 

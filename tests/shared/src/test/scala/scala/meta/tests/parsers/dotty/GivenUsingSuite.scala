@@ -76,7 +76,7 @@ class GivenUsingSuite extends BaseDottySuite {
         Nil,
         Nil,
         Type.Apply(pname("Ord"), List(pname("Int"))),
-        Template(Nil, Nil, Self(Term.Name("current"), None), Nil)
+        Template(Nil, Nil, Nil, Self(Term.Name("current"), None), Nil)
       )
     )
   }
