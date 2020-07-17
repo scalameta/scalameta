@@ -213,6 +213,16 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("for-case") {
+    val code = """|for case a: TP <- iter do
+                  |  echo
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = None)(
+      Term.For(List(Enumerator.CaseGenerator(Pat.Typed(Pat.Var(Term.Name("a")), Type.Name("TP")),
+       Term.Name("iter"))), Term.Name("echo"))
+    )
+  }
+
   test("for-yield-multi") {
     val code = """|for
                   |  a <- x
@@ -276,4 +286,5 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Term.While(Term.Name("cond"), Term.Block(List(Term.Name("fx"), Term.Name("fy"))))
     )
   }
+
 }

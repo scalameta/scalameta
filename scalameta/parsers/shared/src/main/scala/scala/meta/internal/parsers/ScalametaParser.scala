@@ -226,11 +226,19 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         } else {
           var i = currPos - 1
           var ind = 0
-          while (i >= 0 && (scannerTokens(i).is[Space] || scannerTokens(i).is[Tab]) ) {
+          var commentLF = false
+          while (i >= 0 && (scannerTokens(i).is[Space] || scannerTokens(i).is[Tab] || scannerTokens(i).is[Comment]) ) {
+            scannerTokens(i) match {
+              case c: Comment =>
+                val lfpos = c.value.reverse.indexOf("\n")
+                if (lfpos != -1) commentLF = true
+                ind += (if (lfpos != -1) lfpos else c.value.size)
+              case _ =>
+                ind += 1
+            }
             i -= 1
-            ind += 1
           }
-          if (i < 0 || scannerTokens(i).is[LF] || scannerTokens(i).is[ColonEol]) {
+          if (i < 0 || commentLF || scannerTokens(i).is[LF] || scannerTokens(i).is[ColonEol]) {
             ind
           } else {
             -1
@@ -239,6 +247,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
 
       if (dialect.allowSignificantIndentation) {
+        // if (mustEmit) {
+        //     println(s"INDENT(${currentIndent}) : ${currentIndent} (${curr.text} :: ${curr.name})")
+        // }
 
         if (curr.is[ColonEol]) {
           mustEmit = true
@@ -294,7 +305,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             if (!sepRegions.isEmpty && sepRegions.head._1 == '{') ('$', 0) :: sepRegions.tail
             else ('}', 0) :: sepRegions
           } else if (curr.is[KwEnum]) ('{', 0) :: sepRegions
-          else if (curr.is[CaseIntro]) {
+          else if (curr.is[CaseIntro] && prev.isNot[KwFor]) {
             if (!sepRegions.isEmpty && (sepRegions.head._1 == '$' || sepRegions.head._1 == 'E')) sepRegions
             else ('\u21d2', 0) :: sepRegions
           } else if (curr.is[RightBrace]) {
@@ -329,7 +340,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           scannerTokens(i).is[LF]
         }
 
-        if (dialect.allowSignificantIndentation && (curr.is[KwYield] || curr.is[KwTry] || curr.is[KwCatch] || curr.is[KwFinally] || curr.is[KwMatch] || curr.is[KwDo] || curr.is[KwFor] || curr.is[KwThen] || curr.is[KwElse] || curr.is[Equals]) && isAheadNewLine()) {
+        if (dialect.allowSignificantIndentation && (prev == null || prev.text != "end") && (curr.is[KwYield] || curr.is[KwTry] || curr.is[KwCatch] || curr.is[KwFinally] || curr.is[KwMatch] || curr.is[KwDo] || curr.is[KwFor] || curr.is[KwThen] || curr.is[KwElse] || curr.is[Equals]) && isAheadNewLine()) {
           mustEmit = true
         }
 
@@ -1285,6 +1296,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       simpleTypeRest(autoPos(token match {
         case LeftParen() => autoPos(makeTupleType(inParens(types())))
         case Underscore() => next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
+        case Ident("?") if dialect.allowAndTypes => next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
         case Literal() =>
           if (dialect.allowLiteralTypes) literal()
           else syntaxError(s"$dialect doesn't support literal types", at = path())
@@ -2539,6 +2551,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (hasVal)
       next()
 
+    val isCase = 
+      if (token.is[KwCase]) { next(); true }
+      else false
+
     val pat = noSeq.pattern1()
     val point = token.start
     val hasEq = token.is[Equals]
@@ -2554,6 +2570,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     val head = {
       if (hasEq) atPos(startPos, auto)(Enumerator.Val(pat, rhs))
+      else if (isCase) atPos(startPos, auto)(Enumerator.CaseGenerator(pat, rhs))
       else atPos(startPos, auto)(Enumerator.Generator(pat, rhs))
     }
     val tail = {
@@ -4181,6 +4198,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       } else if (token.is[EndMarkerIntro]) {
         stats += endMarker()
       } else {
+        println(s"TOKEN ${token.name} :: ${token.text} :: ${token.is[KwVal]}")
         syntaxError("illegal start of statement", at = token)
       }
     }

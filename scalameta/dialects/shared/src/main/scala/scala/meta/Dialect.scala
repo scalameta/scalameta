@@ -95,7 +95,9 @@ final class Dialect private (
     // end marker introduced in dotty
     val allowEndMarker: Boolean,
     // Significant identation introduced in dotty
-    val allowSignificantIndentation: Boolean
+    val allowSignificantIndentation: Boolean,
+    // ???
+    val allowQuestionPlaceholder: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -168,7 +170,8 @@ final class Dialect private (
       allowExportClause = false,
       allowCommaSeparatedExtend = false,
       allowEndMarker = false,
-      allowSignificantIndentation = false
+      allowSignificantIndentation = false,
+      allowQuestionPlaceholder = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -292,6 +295,9 @@ final class Dialect private (
   def withAllowSignificantIndentation(newValue: Boolean): Dialect = {
     privateCopy(allowSignificantIndentation = newValue)
   }
+  def withAllowQuestionPlaceholder(newValue: Boolean): Dialect = {
+    privateCopy(allowQuestionPlaceholder = newValue)
+  }
 
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
@@ -336,7 +342,8 @@ final class Dialect private (
       allowExportClause: Boolean = this.allowExportClause,
       allowCommaSeparatedExtend: Boolean = this.allowCommaSeparatedExtend,
       allowEndMarker: Boolean = this.allowEndMarker,
-      allowSignificantIndentation: Boolean = this.allowSignificantIndentation
+      allowSignificantIndentation: Boolean = this.allowSignificantIndentation,
+      allowQuestionPlaceholder: Boolean = this.allowQuestionPlaceholder
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -377,7 +384,8 @@ final class Dialect private (
       allowExportClause,
       allowCommaSeparatedExtend,
       allowEndMarker,
-      allowSignificantIndentation
+      allowSignificantIndentation,
+      allowQuestionPlaceholder
       // NOTE(olafur): add the next argument above this comment.
     )
   }

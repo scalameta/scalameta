@@ -59,4 +59,51 @@ Defn.Object(Nil, Term.Name("O"), Template(Nil, Nil, Nil, Self(Name(""), None), L
       Term.Match(Term.Name("x"), List(Case(Lit.Int(1), None, Lit.String("OK")), Case(Lit.Int(2), None, Lit.String("ERROR"))))
     )
   }
+
+  test("case-for-in-match") {
+    val code = """|class A {
+                  |    def forward: Unit = parents match
+                  |      case a =>
+                  |        for case a: TP <- body do
+                  |          fordo
+                  |      case b => ok
+                  |
+                  |    private def transformAnnot: Tree
+                  |}
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = None)(
+      Defn.Class(Nil, Type.Name("A"), Nil, ctor, tpl(List(
+        Defn.Def(Nil, Term.Name("forward"), Nil, Nil, Some(Type.Name("Unit")), Term.Match(Term.Name("parents"), List(Case(Pat.Var(Term.Name("a")), None, Term.For(List(Enumerator.CaseGenerator(Pat.Typed(Pat.Var(Term.Name("a")), Type.Name("TP")), Term.Name("body"))), Term.Name("fordo"))), Case(Pat.Var(Term.Name("b")), None, Term.Name("ok"))))),
+        Decl.Def(List(Mod.Private(Name(""))), Term.Name("transformAnnot"), Nil, Nil, Type.Name("Tree"))
+      )))
+
+    )
+  }
+
+  test("comment-indent") {
+    val code = """|def fx: Unit =
+                  |  val a =
+                  |    /* msg
+                  |    else */ value
+                  |
+                  |  val b = // other
+                  |    t1
+                  |    t2
+                  |  a + b
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = None)(
+      Defn.Def(Nil, Term.Name("fx"), Nil, Nil, Some(Type.Name("Unit")), Term.Block(
+        List(
+          Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), None, Term.Name("value")),
+          Defn.Val(Nil, List(Pat.Var(Term.Name("b"))), None, Term.Block(List(Term.Name("t1"), Term.Name("t2")))),
+          Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b")))
+        )
+      ))
+    )
+      
+
+  }
+
+
+
 }

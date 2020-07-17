@@ -18,6 +18,7 @@ class MinorDottySuite extends BaseDottySuite {
    *  https://dotty.epfl.ch/docs/reference/other-new-features/open-classes.html
    *  https://dotty.epfl.ch/docs/reference/new-types/type-lambdas.html
    *  https://dotty.epfl.ch/docs/reference/other-new-features/trait-parameters.html
+   *  https://dotty.epfl.ch/docs/reference/changed-features/wildcards.html
    */
   test("open-class") {
     val Defn.Class(List(Mod.Open()), Type.Name("A"), _, _, _) =
@@ -297,6 +298,12 @@ class MinorDottySuite extends BaseDottySuite {
     )(parseTempl)
   }
 
+  test("question-type") {
+    runTestAssert[Stat]("val stat: Tree[? >: Untyped]")(
+      Decl.Val(Nil, List(Pat.Var(Term.Name("stat"))), Type.Apply(Type.Name("Tree"), List(Type.Placeholder(Type.Bounds(Some(Type.Name("Untyped")), None)))))
+    )(parseTempl)
+    
+  }
 
 
 }

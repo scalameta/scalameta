@@ -646,7 +646,9 @@ object TreeSyntax {
       case t: Type.Annotate => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
       case t: Type.Lambda => m(Typ, t.tparams, " ", kw("=>>"), " ", p(Typ, t.tpe))
       case t: Type.Method => m(Typ, t.paramss, kw(":"), " ", p(Typ, t.tpe))
-      case t: Type.Placeholder => m(SimpleTyp, s(kw("_"), t.bounds))
+      case t: Type.Placeholder =>
+        if (dialect.allowQuestionPlaceholder) m(SimpleTyp, s(kw("?"), t.bounds))
+        else m(SimpleTyp, s(kw("_"), t.bounds))
       case t: Type.Bounds =>
         s(
           t.lo.map(lo => s(" ", kw(">:"), " ", p(Typ, lo))).getOrElse(s()),
@@ -1024,6 +1026,7 @@ object TreeSyntax {
       // Enumerator
       case t: Enumerator.Val => s(p(Pattern1, t.pat), " = ", p(Expr, t.rhs))
       case t: Enumerator.Generator => s(p(Pattern1, t.pat), " <- ", p(Expr, t.rhs))
+      case t: Enumerator.CaseGenerator => s(" case ", p(Pattern1, t.pat), " <- ", p(Expr, t.rhs))
       case t: Enumerator.Guard => s(kw("if"), " ", p(PostfixExpr, t.cond))
 
       // Import

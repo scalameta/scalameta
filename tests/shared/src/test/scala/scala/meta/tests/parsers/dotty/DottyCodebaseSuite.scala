@@ -9,12 +9,27 @@ class DottyCodebaseSuite extends ParseSuite {
   var parsed = 0
   var skipped = 0
 
+  val singlePath = "compiler/src/dotty/tools/dotc/ast/Desugar.scala"
   val dottyPath = "/home/kpbochenek/vl/github/kris/dotty/"
 
   test("parse-dotty-codebase") {
     parseDir(new File(dottyPath))
 
     println(s"FILES: ${parsed + skipped} / parsed: ${parsed} / skipped: ${skipped}")
+  }
+
+  test("parse-single-file".ignore) {
+    val f = dottyPath + singlePath
+    for (fff <- needWorkFiles) {
+      try {
+        val fpath = dottyPath + fff
+        val content = scala.io.Source.fromFile(fpath)(scala.io.Codec.UTF8).mkString
+        source(content)(dialects.Dotty)
+        println(s"!!!!!!!!!!!! ${fff}")
+      } catch {
+        case e: Throwable => println(s"FAILED ${fff}")
+      }
+    }
   }
 
   private def parseDir(d: File): Unit = {
@@ -45,20 +60,13 @@ class DottyCodebaseSuite extends ParseSuite {
     "bench-run/src/main/scala/dotty/tools/benchmarks/tuples/Map.scala",
     "bench-run/src/main/scala/dotty/tools/benchmarks/tuples/TupleOps.scala",
     "community-build/test/scala/dotty/communitybuild/CommunityBuildTest.scala",
-    "compiler/src/dotty/tools/backend/jvm/BCodeHelpers.scala",
     "compiler/src/dotty/tools/backend/jvm/BTypesFromSymbols.scala",
-    "compiler/src/dotty/tools/backend/jvm/DottyBackendInterface.scala",
-    "compiler/src/dotty/tools/backend/sjs/JSCodeGen.scala",
     "compiler/src/dotty/tools/dotc/Compiler.scala",
     "compiler/src/dotty/tools/dotc/ast/Desugar.scala",
-    "compiler/src/dotty/tools/dotc/core/Comments.scala",
     "compiler/src/dotty/tools/dotc/core/ConstraintHandling.scala",
-    "compiler/src/dotty/tools/dotc/core/Contexts.scala",
     "compiler/src/dotty/tools/dotc/core/Decorators.scala",
     "compiler/src/dotty/tools/dotc/core/Flags.scala",
-    "compiler/src/dotty/tools/dotc/core/Names.scala",
     "compiler/src/dotty/tools/dotc/core/OrderingConstraint.scala",
-    "compiler/src/dotty/tools/dotc/core/Phases.scala",
     "compiler/src/dotty/tools/dotc/core/Signature.scala",
     "compiler/src/dotty/tools/dotc/core/SymDenotations.scala",
     "compiler/src/dotty/tools/dotc/core/SymbolLoaders.scala",
@@ -83,20 +91,15 @@ class DottyCodebaseSuite extends ParseSuite {
     "compiler/src/dotty/tools/dotc/transform/BetaReduce.scala",
     "compiler/src/dotty/tools/dotc/transform/CompleteJavaEnums.scala",
     "compiler/src/dotty/tools/dotc/transform/ContextFunctionResults.scala",
-    "compiler/src/dotty/tools/dotc/transform/DropOuterAccessors.scala",
-    "compiler/src/dotty/tools/dotc/transform/ElimRepeated.scala",
     "compiler/src/dotty/tools/dotc/transform/Erasure.scala",
-    "compiler/src/dotty/tools/dotc/transform/ExplicitOuter.scala",
     "compiler/src/dotty/tools/dotc/transform/Getters.scala",
     "compiler/src/dotty/tools/dotc/transform/Mixin.scala",
-    "compiler/src/dotty/tools/dotc/transform/PostTyper.scala",
     "compiler/src/dotty/tools/dotc/transform/Splicer.scala",
     "compiler/src/dotty/tools/dotc/transform/init/Env.scala",
     "compiler/src/dotty/tools/dotc/typer/Applications.scala",
     "compiler/src/dotty/tools/dotc/typer/Checking.scala",
     "compiler/src/dotty/tools/dotc/typer/Implicits.scala",
     "compiler/src/dotty/tools/dotc/typer/ImportInfo.scala",
-    "compiler/src/dotty/tools/dotc/typer/ImportSuggestions.scala",
     "compiler/src/dotty/tools/dotc/typer/Inliner.scala",
     "compiler/src/dotty/tools/dotc/typer/Namer.scala",
     "compiler/src/dotty/tools/dotc/typer/Nullables.scala",
@@ -106,6 +109,7 @@ class DottyCodebaseSuite extends ParseSuite {
     "compiler/src/dotty/tools/dotc/typer/Synthesizer.scala",
     "compiler/src/dotty/tools/dotc/typer/Typer.scala",
     "compiler/src/dotty/tools/dotc/util/SourceFile.scala",
+    "compiler/src/dotty/tools/dotc/transform/DropOuterAccessors.scala",
     "compiler/test/dotty/tools/compilerSupport.scala",
     "compiler/test/dotty/tools/dotc/semanticdb/SemanticdbTests.scala",
     "compiler/test/dotty/tools/repl/ReplTest.scala",
@@ -117,13 +121,10 @@ class DottyCodebaseSuite extends ParseSuite {
     "library/src-bootstrapped/scala/quoted/unsafe/UnsafeExpr.scala",
     "library/src-bootstrapped/scala/quoted/util/ExprMap.scala",
     "library/src-non-bootstrapped/scala/Enum.scala",
-    "library/src/dotty/DottyPredef.scala",
+    "compiler/src/dotty/tools/dotc/transform/ElimRepeated.scala",
     "library/src/scala/Tuple.scala",
     "library/src/scala/compiletime/package.scala",
-    "library/src/scala/internal/quoted/Expr.scala",
     "library/src/scala/runtime/Tuple.scala",
-    "staging/src/scala/quoted/staging/QuoteDriver.scala",
-    "staging/src/scala/quoted/staging/Toolbox.scala",
     "tastydoc/input/src/main/scala/example/level2/Documentation.scala",
     "tastydoc/src/dotty/tastydoc/comment/WikiParser.scala",
     "compiler/src/dotty/tools/dotc/typer/ErrorReporting.scala"

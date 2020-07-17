@@ -127,7 +127,7 @@ object Term {
   @ast class While(expr: Term, body: Term) extends Term
   @ast class Do(body: Term, expr: Term) extends Term
   @ast class For(enums: List[Enumerator] @nonEmpty, body: Term) extends Term {
-    checkFields(enums.head.is[Enumerator.Generator] || enums.head.is[Enumerator.Quasi])
+    checkFields(enums.head.is[Enumerator.Generator] || enums.head.is[Enumerator.CaseGenerator] || enums.head.is[Enumerator.Quasi])
   }
   @ast class ForYield(enums: List[Enumerator] @nonEmpty, body: Term) extends Term
   @ast class New(init: Init) extends Term
@@ -466,6 +466,7 @@ object Mod {
 @branch trait Enumerator extends Tree
 object Enumerator {
   @ast class Generator(pat: Pat, rhs: Term) extends Enumerator
+  @ast class CaseGenerator(pat: Pat, rhs: Term) extends Enumerator
   @ast class Val(pat: Pat, rhs: Term) extends Enumerator
   @ast class Guard(cond: Term) extends Enumerator
 }
