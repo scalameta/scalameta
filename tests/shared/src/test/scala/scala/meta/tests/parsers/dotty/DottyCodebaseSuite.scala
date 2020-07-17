@@ -18,7 +18,7 @@ class DottyCodebaseSuite extends ParseSuite {
     println(s"FILES: ${parsed + skipped} / parsed: ${parsed} / skipped: ${skipped}")
   }
 
-  test("parse-single-file".ignore) {
+  test("parse-single-file".only) {
     val f = dottyPath + singlePath
     for (fff <- needWorkFiles) {
       try {
@@ -28,6 +28,7 @@ class DottyCodebaseSuite extends ParseSuite {
         println(s"!!!!!!!!!!!! ${fff}")
       } catch {
         case e: Throwable => println(s"FAILED ${fff}")
+          println(e.getMessage())
       }
     }
   }
