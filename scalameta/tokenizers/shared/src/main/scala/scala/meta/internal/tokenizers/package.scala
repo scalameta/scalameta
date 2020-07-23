@@ -28,6 +28,7 @@ package object tokenizers {
     "false",
     "forSome",
     "if",
+    "macro",
     "match",
     "new",
     "package",
