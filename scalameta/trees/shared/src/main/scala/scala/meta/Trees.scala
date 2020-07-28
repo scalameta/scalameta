@@ -127,7 +127,10 @@ object Term {
   @ast class While(expr: Term, body: Term) extends Term
   @ast class Do(body: Term, expr: Term) extends Term
   @ast class For(enums: List[Enumerator] @nonEmpty, body: Term) extends Term {
-    checkFields(enums.head.is[Enumerator.Generator] || enums.head.is[Enumerator.CaseGenerator] || enums.head.is[Enumerator.Quasi])
+    checkFields(
+      enums.head.is[Enumerator.Generator] || enums.head.is[Enumerator.CaseGenerator] || enums.head
+        .is[Enumerator.Quasi]
+    )
   }
   @ast class ForYield(enums: List[Enumerator] @nonEmpty, body: Term) extends Term
   @ast class New(init: Init) extends Term
@@ -426,8 +429,13 @@ object Ctor {
 
 @ast class Self(name: Name, decltpe: Option[Type]) extends Member
 
-@ast class Template(early: List[Stat], inits: List[Init], derives: List[Term.Name], self: Self, stats: List[Stat])
-    extends Tree {
+@ast class Template(
+    early: List[Stat],
+    inits: List[Init],
+    derives: List[Term.Name],
+    self: Self,
+    stats: List[Stat]
+) extends Tree {
   checkFields(early.forall(_.isEarlyStat && inits.nonEmpty))
   checkFields(stats.forall(_.isTemplateStat))
 }

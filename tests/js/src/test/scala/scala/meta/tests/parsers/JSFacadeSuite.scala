@@ -44,6 +44,7 @@ class JSFacadeSuite extends FunSuite {
             "pos" -> pos(12, 83),
             "early" -> a(),
             "inits" -> a(),
+            "derives" -> a(),
             "self" -> d(
               "type" -> "Self",
               "pos" -> pos(16, 16),

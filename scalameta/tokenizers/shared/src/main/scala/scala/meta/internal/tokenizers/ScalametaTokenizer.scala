@@ -193,7 +193,9 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       def nextToken() = legacyIndex += 1
       if (legacyIndex >= legacyTokens.length) return legacyIndex
 
-      if (dialect.allowSignificantIndentation && curr.token == COLON && aheadIsNewLine(legacyIndex)) {
+      if (dialect.allowSignificantIndentation && curr.token == COLON && aheadIsNewLine(
+          legacyIndex
+        )) {
         curr.token = COLONEOL
         emitToken()
         legacyIndex += 2

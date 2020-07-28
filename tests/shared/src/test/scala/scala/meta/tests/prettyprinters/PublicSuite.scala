@@ -293,6 +293,10 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
+  test("scala.meta.tokens.Token.Indentation.toString") {
+    // n/a
+  }
+
   test("scala.meta.parsers.ParseException.toString") {
     intercept[ParseException] {
       try "foo + class".parse[Term].get

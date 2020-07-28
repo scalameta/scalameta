@@ -30,7 +30,16 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.ExtensionGroup(
         cparam,
         Nil,
-        List(Defn.Def(List(Mod.Private(Name.Anonymous())), tname("crc"), Nil, Nil, Some(pname("Int")), int(2)))
+        List(
+          Defn.Def(
+            List(Mod.Private(Name.Anonymous())),
+            tname("crc"),
+            Nil,
+            Nil,
+            Some(pname("Int")),
+            int(2)
+          )
+        )
       )
     )
   }
@@ -52,8 +61,24 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     val code = """|extension (c: Circle):
                   |  private def crc: Int = 2
                   |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some("extension (c: Circle) private def crc: Int = 2"))(
-      Defn.ExtensionGroup(Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None), Nil, List(Defn.Def(List(Mod.Private(Name(""))), Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))))
+    runTestAssert[Stat](
+      code,
+      assertLayout = Some("extension (c: Circle) private def crc: Int = 2")
+    )(
+      Defn.ExtensionGroup(
+        Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None),
+        Nil,
+        List(
+          Defn.Def(
+            List(Mod.Private(Name(""))),
+            Term.Name("crc"),
+            Nil,
+            Nil,
+            Some(Type.Name("Int")),
+            Lit.Int(2)
+          )
+        )
+      )
     )
   }
 
@@ -64,7 +89,15 @@ class ExtensionMethodsSuite extends BaseDottySuite {
                   |  def crc: Boolean = 4
                   |""".stripMargin
     runTestAssert[Stat](code, assertLayout = None)(
-      Defn.ExtensionGroup(Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None), Nil, List(Defn.Def(Nil, Term.Name("cra"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)), Defn.Def(Nil, Term.Name("crb"), Nil, Nil, Some(Type.Name("String")), Lit.String("3")), Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Boolean")), Lit.Int(4))))
+      Defn.ExtensionGroup(
+        Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None),
+        Nil,
+        List(
+          Defn.Def(Nil, Term.Name("cra"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)),
+          Defn.Def(Nil, Term.Name("crb"), Nil, Nil, Some(Type.Name("String")), Lit.String("3")),
+          Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Boolean")), Lit.Int(4))
+        )
+      )
     )
   }
 
@@ -84,7 +117,15 @@ class ExtensionMethodsSuite extends BaseDottySuite {
 
   test("extension-soft-keyword") {
     runTestAssert[Stat]("val c = f(a + extension)")(
-      Defn.Val(Nil, List(Pat.Var(Term.Name("c"))), None, Term.Apply(Term.Name("f"), List(Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("extension"))))))
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("c"))),
+        None,
+        Term.Apply(
+          Term.Name("f"),
+          List(Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("extension"))))
+        )
+      )
     )
   }
 

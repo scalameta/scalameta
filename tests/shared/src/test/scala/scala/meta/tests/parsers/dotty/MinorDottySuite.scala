@@ -36,12 +36,16 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("open-class-negative-cases") {
-    runTestError("final open class A {}", "illegal combination of modifiers: open and final")(parseTempl)
+    runTestError("final open class A {}", "illegal combination of modifiers: open and final")(
+      parseTempl
+    )
     runTestError(
       "open sealed trait C {}",
       "illegal combination of modifiers: open and sealed"
     )(parseTempl)
-    runTestError("open def f(): Int = 3", "`open' modifier can be used only for classes")(parseTempl)
+    runTestError("open def f(): Int = 3", "`open' modifier can be used only for classes")(
+      parseTempl
+    )
     runTestError("def f(open a: Int): Int = 3", "error")(parseTempl)
   }
 
@@ -51,7 +55,20 @@ class MinorDottySuite extends BaseDottySuite {
 
   test("open-identifier") {
     runTestAssert[Stat]("def run(): Unit = { start; open(p); end }", assertLayout = None)(
-      Defn.Def(Nil, Term.Name("run"), Nil, List(List()), Some(Type.Name("Unit")), Term.Block(List(Term.Name("start"), Term.Apply(Term.Name("open"), List(Term.Name("p"))), Term.Name("end"))))
+      Defn.Def(
+        Nil,
+        Term.Name("run"),
+        Nil,
+        List(List()),
+        Some(Type.Name("Unit")),
+        Term.Block(
+          List(
+            Term.Name("start"),
+            Term.Apply(Term.Name("open"), List(Term.Name("p"))),
+            Term.Name("end")
+          )
+        )
+      )
     )
   }
 
@@ -281,8 +298,13 @@ class MinorDottySuite extends BaseDottySuite {
 
   test("enum-derives") {
     runTestAssert[Stat]("enum Foo  derives Eql")(
-      Defn.Enum(Nil, Type.Name("Foo"), Nil, Ctor.Primary(Nil, Name(""), Nil),
-        Template(Nil, Nil, List(Term.Name("Eql")), Self(Name(""), None), Nil))
+      Defn.Enum(
+        Nil,
+        Type.Name("Foo"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(Nil, Nil, List(Term.Name("Eql")), Self(Name(""), None), Nil)
+      )
     )(parseTempl)
   }
 
@@ -293,17 +315,29 @@ class MinorDottySuite extends BaseDottySuite {
         Type.Name("Foo"),
         Nil,
         Ctor.Primary(Nil, Name(""), Nil),
-        Template(Nil, List(Init(Type.Name("A"), Name(""), Nil), Init(Type.Name("B"), Name(""), Nil)), List(Term.Name("X"), Term.Name("Y")), Self(Name(""), None), Nil)
+        Template(
+          Nil,
+          List(Init(Type.Name("A"), Name(""), Nil), Init(Type.Name("B"), Name(""), Nil)),
+          List(Term.Name("X"), Term.Name("Y")),
+          Self(Name(""), None),
+          Nil
+        )
       )
     )(parseTempl)
   }
 
   test("question-type") {
     runTestAssert[Stat]("val stat: Tree[? >: Untyped]")(
-      Decl.Val(Nil, List(Pat.Var(Term.Name("stat"))), Type.Apply(Type.Name("Tree"), List(Type.Placeholder(Type.Bounds(Some(Type.Name("Untyped")), None)))))
+      Decl.Val(
+        Nil,
+        List(Pat.Var(Term.Name("stat"))),
+        Type.Apply(
+          Type.Name("Tree"),
+          List(Type.Placeholder(Type.Bounds(Some(Type.Name("Untyped")), None)))
+        )
+      )
     )(parseTempl)
-    
-  }
 
+  }
 
 }

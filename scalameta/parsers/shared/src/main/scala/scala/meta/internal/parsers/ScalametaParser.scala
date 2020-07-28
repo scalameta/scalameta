@@ -161,7 +161,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         val scannerToken = scannerTokens(roughIndex)
         def exactMatch = scannerToken eq token
         def originMatch =
-          (token.is[LFLF] || token.is[Indentation.Outdent]) && scannerToken.start == token.start && scannerToken.end == token.end
+          (token.is[LFLF] || token.is[Indentation.Outdent]) &&
+            scannerToken.start == token.start && scannerToken.end == token.end
         if (exactMatch || originMatch) roughIndex
         else lurk(roughIndex - 1)
       }
@@ -219,7 +220,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
       val next = if (nextPos != -1) scannerTokens(nextPos) else null
 
-
       val currentIndent = {
         if (curr.is[Whitespace]) {
           -1
@@ -227,7 +227,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           var i = currPos - 1
           var ind = 0
           var commentLF = false
-          while (i >= 0 && (scannerTokens(i).is[Space] || scannerTokens(i).is[Tab] || scannerTokens(i).is[Comment]) ) {
+          def isWhitespace(token: Token): Boolean =
+            token.is[Space] || token.is[Tab] || token.is[Comment]
+          while (i >= 0 && isWhitespace(scannerTokens(i))) {
             scannerTokens(i) match {
               case c: Comment =>
                 val lfpos = c.value.reverse.indexOf("\n")
@@ -250,13 +252,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         if (curr.is[ColonEol]) {
           mustEmit = true
         } else if (mustEmit && currentIndent > 0) {
-            parserTokens += new Indentation.Indent(curr.input, curr.dialect, curr.start, curr.end)
-            parserTokenPositions += currPos
-            mustEmit = false
-            addRegion = currentIndent
+          parserTokens += new Indentation.Indent(curr.input, curr.dialect, curr.start, curr.end)
+          parserTokenPositions += currPos
+          mustEmit = false
+          addRegion = currentIndent
         }
       }
-
 
       // SIP-27 Trailing comma (multi-line only) support.
       // If a comma is followed by a new line & then a closing paren, bracket or brace
@@ -300,7 +301,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             else ('}', 0) :: sepRegions
           } else if (curr.is[KwEnum]) ('{', 0) :: sepRegions
           else if (curr.is[CaseIntro] && prev.isNot[KwFor]) {
-            if (!sepRegions.isEmpty && (sepRegions.head._1 == '$' || sepRegions.head._1 == 'E')) sepRegions
+            if (!sepRegions.isEmpty && (sepRegions.head._1 == '$' || sepRegions.head._1 == 'E'))
+              sepRegions
             else ('\u21d2', 0) :: sepRegions
           } else if (curr.is[RightBrace]) {
             var sepRegions1 = sepRegions
@@ -313,13 +315,20 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           } else if (curr.is[RightParen]) {
             var sepRegions1 = sepRegions
             while (indentedRegion(sepRegions1)) {
-              parserTokens += new Indentation.Outdent(curr.input, curr.dialect, curr.start, curr.end)
+              parserTokens += new Indentation.Outdent(
+                curr.input,
+                curr.dialect,
+                curr.start,
+                curr.end
+              )
               parserTokenPositions += currPos
-              sepRegions1  = sepRegions1.tail
+              sepRegions1 = sepRegions1.tail
             }
-            if (!sepRegions1.isEmpty && sepRegions1.head._1 == ')') sepRegions1.tail else sepRegions1
+            if (!sepRegions1.isEmpty && sepRegions1.head._1 == ')') sepRegions1.tail
+            else sepRegions1
           } else if (curr.is[RightArrow]) {
-            if (!sepRegions.isEmpty && sepRegions.head._1 == '\u21d2') sepRegions.tail else sepRegions
+            if (!sepRegions.isEmpty && sepRegions.head._1 == '\u21d2') sepRegions.tail
+            else sepRegions
           } else sepRegions // do nothing for other tokens
         }
 
@@ -328,13 +337,17 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
         def isAheadNewLine(): Boolean = {
           var i = currPos + 1
-          while (i < scannerTokens.length && scannerTokens(i).is[Trivia] && scannerTokens(i).isNot[LF]) {
+          while (i < scannerTokens.length && scannerTokens(i).is[Trivia] && scannerTokens(i)
+              .isNot[LF]) {
             i += 1
           }
           scannerTokens(i).is[LF]
         }
 
-        if (dialect.allowSignificantIndentation && (prev == null || prev.text != "end") && (curr.is[KwYield] || curr.is[KwTry] || curr.is[KwCatch] || curr.is[KwFinally] || curr.is[KwMatch] || curr.is[KwDo] || curr.is[KwFor] || curr.is[KwThen] || curr.is[KwElse] || curr.is[Equals]) && isAheadNewLine()) {
+        if (dialect.allowSignificantIndentation && (prev == null || prev.text != "end") && (curr
+            .is[KwYield] || curr.is[KwTry] || curr.is[KwCatch] || curr.is[KwFinally] || curr
+            .is[KwMatch] || curr.is[KwDo] || curr.is[KwFor] || curr.is[KwThen] || curr
+            .is[KwElse] || curr.is[Equals]) && isAheadNewLine()) {
           mustEmit = true
         }
 
@@ -662,7 +675,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   @classifier
   trait CloseDelim {
     def unapply(token: Token): Boolean = {
-      token.is[RightBrace] || token.is[RightBracket] || token.is[RightParen] || token.is[Indentation.Outdent]
+      token.is[RightBrace] || token.is[RightBracket] || token.is[RightParen] || token
+        .is[Indentation.Outdent]
     }
   }
 
@@ -1286,7 +1300,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       simpleTypeRest(autoPos(token match {
         case LeftParen() => autoPos(makeTupleType(inParens(types())))
         case Underscore() => next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
-        case Ident("?") if dialect.allowQuestionPlaceholder => next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
+        case Ident("?") if dialect.allowQuestionPlaceholder =>
+          next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
         case Literal() =>
           if (dialect.allowLiteralTypes) literal()
           else syntaxError(s"$dialect doesn't support literal types", at = path())
@@ -1716,10 +1731,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   private def extractWhenSingle(b: Term): Term = {
     b match {
-      case Term.Block(hd :: Nil) => hd match {
-        case term: Term => term
-        case _ => b
-      }
+      case Term.Block(hd :: Nil) =>
+        hd match {
+          case term: Term => term
+          case _ => b
+        }
       case other => other
     }
   }
@@ -1780,7 +1796,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           if (token.is[KwCatch] || (token.is[LF] && ahead(token.is[KwCatch]))) {
             acceptOpt[LF]
             accept[KwCatch]
-            if (token.is[CaseIntro]) {accept[KwCase]; Some(caseClause())}
+            if (token.is[CaseIntro]) { accept[KwCase]; Some(caseClause()) }
             else if (token.is[Indentation.Indent]) Some(indented(caseClauses()))
             else if (token.isNot[LeftBrace]) Some(expr())
             else
@@ -1802,7 +1818,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           } else {
             None
           }
-        
+
         catchopt match {
           case None => Term.Try(body, Nil, finallyopt)
           case Some(c: Case) => Term.Try(body, List(c), finallyopt)
@@ -2541,7 +2557,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (hasVal)
       next()
 
-    val isCase = 
+    val isCase =
       if (token.is[KwCase]) { next(); true }
       else false
 
@@ -3444,7 +3460,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     if (token.is[Equals]) {
       accept[Equals]
-       val rhs = if (token.is[Indentation.Indent]) {
+      val rhs = if (token.is[Indentation.Indent]) {
         indented(extractWhenSingle(block()))
       } else expr()
       Defn.GivenAlias(mods, sigName, sigTparams, sigUparamss, decltpe, rhs)
@@ -3467,7 +3483,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     next() // 'extension'
 
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
-    val eparam = inParens(param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false))
+    val eparam = inParens(
+      param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false)
+    )
 
     val methodsAll: List[Stat] = if (token.is[ColonEol]) {
       accept[ColonEol]
@@ -3871,7 +3889,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   object OwnedByEnum extends TemplateOwner
   object OwnedByObject extends TemplateOwner
 
-  def templateParents(afterExtend: Boolean = false, directDerive: Boolean = false): (List[Init], List[Term.Name]) = {
+  def templateParents(
+      afterExtend: Boolean = false,
+      directDerive: Boolean = false
+  ): (List[Init], List[Term.Name]) = {
     def isCommaSeparated(token: Token): Boolean =
       afterExtend && token.is[Comma] && dialect.allowCommaSeparatedExtend
 
@@ -3889,7 +3910,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (directDerive || isSoftKw(token, SoftKeyword.SkDerives)) {
       if (!directDerive) next()
       derive += termName()
-      while (token.is[Comma]) { next(); derive += termName()}
+      while (token.is[Comma]) { next(); derive += termName() }
     }
     (parents.toList, derive.toList)
   }
@@ -3928,7 +3949,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def templateOpt(owner: TemplateOwner): Template = {
-    if (token.is[KwExtends] || (token.is[Subtype] && owner.isTrait) || isSoftKw(token, SoftKeyword.SkDerives)) {
+    if (token.is[KwExtends] || (token
+        .is[Subtype] && owner.isTrait) || isSoftKw(token, SoftKeyword.SkDerives)) {
       val derive = isSoftKw(token, SoftKeyword.SkDerives)
       next()
       if (token.is[Unquote] && ahead(

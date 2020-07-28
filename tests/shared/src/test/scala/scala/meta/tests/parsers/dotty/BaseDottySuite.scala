@@ -70,7 +70,8 @@ trait BaseDottySuite extends ParseSuite {
       try {
         val obtainedAgain: T = parser(reprintedCode)
         assertNoDiff(obtainedAgain.structure, expected.structure)
-      } catch { case e: Throwable =>
+      } catch {
+        case e: Throwable =>
           println(s"Reprinted stat: \n${reprintedCode}")
           throw e
       }

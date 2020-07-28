@@ -85,8 +85,19 @@ class EndMarkerSuite extends BaseDottySuite {
                   |}
                   |""".stripMargin
     runTestAssert[Stat](code, assertLayout = None)(
-      Defn.Def(Nil, Term.Name("a"), Nil, List(List()), Some(Type.Name("Unit")), Term.Block(List(Term.EndMarker(Term.Name("for")),
-       Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Int(3)))))
+      Defn.Def(
+        Nil,
+        Term.Name("a"),
+        Nil,
+        List(List()),
+        Some(Type.Name("Unit")),
+        Term.Block(
+          List(
+            Term.EndMarker(Term.Name("for")),
+            Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Int(3))
+          )
+        )
+      )
     )
   }
 

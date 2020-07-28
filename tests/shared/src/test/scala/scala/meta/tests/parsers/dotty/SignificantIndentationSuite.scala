@@ -8,15 +8,27 @@ class SignificantIndentationSuite extends BaseDottySuite {
   implicit val parseSource: String => Source = code => source(code)(dialects.Dotty)
 
   val defx = Decl.Def(Nil, Term.Name("f"), Nil, Nil, Type.Name("Int"))
-  val defy = Defn.Def(Nil, Term.Name("y"), Nil, Nil, Some(Type.Name("String")), Term.Block(List(Term.Apply(Term.Name("fa"), Nil), Term.Apply(Term.Name("fb"), Nil))))
+  val defy = Defn.Def(
+    Nil,
+    Term.Name("y"),
+    Nil,
+    Nil,
+    Some(Type.Name("String")),
+    Term.Block(List(Term.Apply(Term.Name("fa"), Nil), Term.Apply(Term.Name("fb"), Nil)))
+  )
 
   test("basic-example") {
     val code = """|trait A:
                   |  def f: Int
                   |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some("trait A { def f: Int }"))(
-      Defn.Trait(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Nil, Self(Name(""), None), List(
-        defx)))
+      Defn.Trait(
+        Nil,
+        Type.Name("A"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(Nil, Nil, Nil, Self(Name(""), None), List(defx))
+      )
     )
   }
 
@@ -26,9 +38,22 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |  def y: String = { fa(); fb() }
                   |""".stripMargin
     runTestAssert[Stat](code, assertLayout = None)(
-      Defn.Trait(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Nil, Self(Name(""), None), List(
-        defx, defy
-        )))
+      Defn.Trait(
+        Nil,
+        Type.Name("A"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            defx,
+            defy
+          )
+        )
+      )
     )
   }
 
@@ -40,15 +65,47 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |    def f: Int = 4
                   |""".stripMargin
     runTestAssert[Stat](code, assertLayout = None)(
-Defn.Object(Nil, Term.Name("O"), Template(Nil, Nil, Nil, Self(Name(""), None), List(
-  Defn.Class(Nil, Type.Name("C"), Nil, ctor, Template(Nil, Nil, Nil, Self(Name(""), None), List(
-    Defn.Def(Nil, Term.Name("f"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(3))))),
-   Defn.Trait(Nil, Type.Name("T"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Nil, Self(Name(""), None), List(
-     Defn.Def(Nil, Term.Name("f"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(4)))))
-   )))
+      Defn.Object(
+        Nil,
+        Term.Name("O"),
+        Template(
+          Nil,
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.Class(
+              Nil,
+              Type.Name("C"),
+              Nil,
+              ctor,
+              Template(
+                Nil,
+                Nil,
+                Nil,
+                Self(Name(""), None),
+                List(Defn.Def(Nil, Term.Name("f"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(3)))
+              )
+            ),
+            Defn.Trait(
+              Nil,
+              Type.Name("T"),
+              Nil,
+              Ctor.Primary(Nil, Name(""), Nil),
+              Template(
+                Nil,
+                Nil,
+                Nil,
+                Self(Name(""), None),
+                List(Defn.Def(Nil, Term.Name("f"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(4)))
+              )
+            )
+          )
+        )
+      )
     )
   }
-  
+
   test("indent-match-two") {
     val code = """|
                   |x match
@@ -56,7 +113,10 @@ Defn.Object(Nil, Term.Name("O"), Template(Nil, Nil, Nil, Self(Name(""), None), L
                   |  case 2 => "ERROR"
                   |""".stripMargin
     runTestAssert[Stat](code, assertLayout = None)(
-      Term.Match(Term.Name("x"), List(Case(Lit.Int(1), None, Lit.String("OK")), Case(Lit.Int(2), None, Lit.String("ERROR"))))
+      Term.Match(
+        Term.Name("x"),
+        List(Case(Lit.Int(1), None, Lit.String("OK")), Case(Lit.Int(2), None, Lit.String("ERROR")))
+      )
     )
   }
 
@@ -72,11 +132,49 @@ Defn.Object(Nil, Term.Name("O"), Template(Nil, Nil, Nil, Self(Name(""), None), L
                   |}
                   |""".stripMargin
     runTestAssert[Stat](code, assertLayout = None)(
-      Defn.Class(Nil, Type.Name("A"), Nil, ctor, tpl(List(
-        Defn.Def(Nil, Term.Name("forward"), Nil, Nil, Some(Type.Name("Unit")), Term.Match(Term.Name("parents"), List(Case(Pat.Var(Term.Name("a")), None, Term.For(List(Enumerator.CaseGenerator(Pat.Typed(Pat.Var(Term.Name("a")), Type.Name("TP")), Term.Name("body"))), Term.Name("fordo"))), Case(Pat.Var(Term.Name("b")), None, Term.Name("ok"))))),
-        Decl.Def(List(Mod.Private(Name(""))), Term.Name("transformAnnot"), Nil, Nil, Type.Name("Tree"))
-      )))
-
+      Defn.Class(
+        Nil,
+        Type.Name("A"),
+        Nil,
+        ctor,
+        tpl(
+          List(
+            Defn.Def(
+              Nil,
+              Term.Name("forward"),
+              Nil,
+              Nil,
+              Some(Type.Name("Unit")),
+              Term.Match(
+                Term.Name("parents"),
+                List(
+                  Case(
+                    Pat.Var(Term.Name("a")),
+                    None,
+                    Term.For(
+                      List(
+                        Enumerator.CaseGenerator(
+                          Pat.Typed(Pat.Var(Term.Name("a")), Type.Name("TP")),
+                          Term.Name("body")
+                        )
+                      ),
+                      Term.Name("fordo")
+                    )
+                  ),
+                  Case(Pat.Var(Term.Name("b")), None, Term.Name("ok"))
+                )
+              )
+            ),
+            Decl.Def(
+              List(Mod.Private(Name(""))),
+              Term.Name("transformAnnot"),
+              Nil,
+              Nil,
+              Type.Name("Tree")
+            )
+          )
+        )
+      )
     )
   }
 
@@ -92,18 +190,27 @@ Defn.Object(Nil, Term.Name("O"), Template(Nil, Nil, Nil, Self(Name(""), None), L
                   |  a + b
                   |""".stripMargin
     runTestAssert[Stat](code, assertLayout = None)(
-      Defn.Def(Nil, Term.Name("fx"), Nil, Nil, Some(Type.Name("Unit")), Term.Block(
-        List(
-          Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), None, Term.Name("value")),
-          Defn.Val(Nil, List(Pat.Var(Term.Name("b"))), None, Term.Block(List(Term.Name("t1"), Term.Name("t2")))),
-          Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b")))
+      Defn.Def(
+        Nil,
+        Term.Name("fx"),
+        Nil,
+        Nil,
+        Some(Type.Name("Unit")),
+        Term.Block(
+          List(
+            Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), None, Term.Name("value")),
+            Defn.Val(
+              Nil,
+              List(Pat.Var(Term.Name("b"))),
+              None,
+              Term.Block(List(Term.Name("t1"), Term.Name("t2")))
+            ),
+            Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b")))
+          )
         )
-      ))
+      )
     )
-      
 
   }
-
-
 
 }
