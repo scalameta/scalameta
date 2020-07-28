@@ -316,7 +316,7 @@ lazy val testkit = project
     },
     libraryDependencies ++= {
       if (isScala211.value) List("com.lihaoyi" %% "geny" % "0.1.6")
-      else List("com.lihaoyi" %% "geny" % "0.6.0")
+      else List("com.lihaoyi" %% "geny" % "0.6.2")
     },
     libraryDependencies ++= Seq(
       "org.scalameta" %% "munit" % munitVersion,
