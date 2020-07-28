@@ -247,19 +247,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
 
       if (dialect.allowSignificantIndentation) {
-        // if (mustEmit) {
-        //     println(s"INDENT(${currentIndent}) : ${currentIndent} (${curr.text} :: ${curr.name})")
-        // }
-
         if (curr.is[ColonEol]) {
           mustEmit = true
-        }
-        else if (mustEmit && currentIndent > 0) {
+        } else if (mustEmit && currentIndent > 0) {
             parserTokens += new Indentation.Indent(curr.input, curr.dialect, curr.start, curr.end)
             parserTokenPositions += currPos
             mustEmit = false
             addRegion = currentIndent
-            // println(s"INDENT ${curr.text} => ${currentIndent}")
         }
       }
 
@@ -378,10 +372,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
     loop(-1, 0, Nil)
     val underlying = parserTokens.result
-
-    // println("-" * 30)
-    // underlying.foreach(t => println(s"TOKEN ${t.name} :: ${t.text}"))
-    // println("-" * 30)
 
     (Tokens(underlying, 0, underlying.length), parserTokenPositions.result)
   }
@@ -1296,7 +1286,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       simpleTypeRest(autoPos(token match {
         case LeftParen() => autoPos(makeTupleType(inParens(types())))
         case Underscore() => next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
-        case Ident("?") if dialect.allowAndTypes => next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
+        case Ident("?") if dialect.allowQuestionPlaceholder => next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
         case Literal() =>
           if (dialect.allowLiteralTypes) literal()
           else syntaxError(s"$dialect doesn't support literal types", at = path())
@@ -3481,7 +3471,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     val methodsAll: List[Stat] = if (token.is[ColonEol]) {
       accept[ColonEol]
-      indented(templateStats(signifIndent=true))
+      indented(templateStats())
     } else if (token.is[LeftBrace]) {
       inBraces(templateStats())
     } else {
@@ -3966,7 +3956,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       templateBody()
     } else if (token.is[ColonEol]) {
       accept[ColonEol]
-      indented(templateStatSeq(signifIndent=true))
+      indented(templateStatSeq())
     } else {
       if (token.is[LeftParen]) {
         if (parenMeansSyntaxError) {
@@ -4038,7 +4028,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def statSeq[T <: Tree: AstInfo](
       statpf: PartialFunction[Token, T],
-      signifIndent: Boolean = false,
       errorMsg: String = "illegal start of definition"
   ): List[T] = {
     val stats = new ListBuffer[T]
@@ -4050,15 +4039,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         stats += statpf(token)
       else if (!token.is[StatSep])
         syntaxError(errorMsg, at = token)
-      // if (signifIndent) {
-        // token match {
-          // case LF() | LFLF() => next()
-      //     case other if other.is[TemplateIntro] || other.is[KwDef] => ()
-      //     case other if other.is[Indentation.Outdent] => ()
-        // }
-      // } else {
       acceptStatSepOpt()
-      // }
     }
     stats.toList
   }
@@ -4083,7 +4064,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       nonLocalDefOrDcl()
   }
 
-  def templateStatSeq(signifIndent: Boolean = false): (Self, List[Stat]) = {
+  def templateStatSeq(): (Self, List[Stat]) = {
     val emptySelf = autoPos(Self(autoPos(Name.Anonymous()), None))
     var selfOpt: Option[Self] = None
     var firstOpt: Option[Stat] = None
@@ -4106,10 +4087,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         acceptStatSepOpt()
       }
     }
-    (selfOpt.getOrElse(emptySelf), firstOpt ++: templateStats(signifIndent))
+    (selfOpt.getOrElse(emptySelf), firstOpt ++: templateStats())
   }
 
-  def templateStats(signifIndent: Boolean = false): List[Stat] = statSeq(templateStat, signifIndent)
+  def templateStats(): List[Stat] = statSeq(templateStat)
   def templateStat: PartialFunction[Token, Stat] = {
     case KwImport() =>
       importStmt()
@@ -4198,7 +4179,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       } else if (token.is[EndMarkerIntro]) {
         stats += endMarker()
       } else {
-        println(s"TOKEN ${token.name} :: ${token.text} :: ${token.is[KwVal]}")
         syntaxError("illegal start of statement", at = token)
       }
     }

@@ -823,9 +823,9 @@ class SuccessSuite extends FunSuite {
     val a = init"A"
     val self = self"self: A"
     val statz = List(q"val b = 3")
-    assert(
-      q"new {..$stats; val b = 4} with $a {$self => ..$statz}".structure ==
-        "Term.NewAnonymous(Template(List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), None, Lit.Int(2)), Defn.Val(Nil, List(Pat.Var(Term.Name(\"b\"))), None, Lit.Int(4))), List(Init(Type.Name(\"A\"), Name(\"\"), Nil)), Self(Term.Name(\"self\"), Some(Type.Name(\"A\"))), List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"b\"))), None, Lit.Int(3)))))"
+    assertNoDiff(
+      q"new {..$stats; val b = 4} with $a {$self => ..$statz}".structure,
+        "Term.NewAnonymous(Template(List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), None, Lit.Int(2)), Defn.Val(Nil, List(Pat.Var(Term.Name(\"b\"))), None, Lit.Int(4))), List(Init(Type.Name(\"A\"), Name(\"\"), Nil)), Nil, Self(Term.Name(\"self\"), Some(Type.Name(\"A\"))), List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"b\"))), None, Lit.Int(3)))))"
     )
   }
 
@@ -1659,7 +1659,7 @@ class SuccessSuite extends FunSuite {
     )
     assert(
       template.structure ==
-        "Template(Nil, List(Init(Type.Name(\"Y\"), Name(\"\"), Nil)), Self(Name(\"\"), None), Nil)"
+        "Template(Nil, List(Init(Type.Name(\"Y\"), Name(\"\"), Nil)), Nil, Self(Name(\"\"), None), Nil)"
     )
   }
 
@@ -1687,9 +1687,9 @@ class SuccessSuite extends FunSuite {
     assert(
       paramss(0)(1).structure == "Term.Param(Nil, Term.Name(\"y\"), Some(Type.Name(\"Y\")), None)"
     )
-    assert(
-      template.structure ==
-        "Template(Nil, Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m1\"), Nil, Nil, None, Lit.Int(42)), Defn.Def(Nil, Term.Name(\"m2\"), Nil, Nil, None, Lit.Int(666))))"
+    assertNoDiff(
+      template.structure,
+        "Template(Nil, Nil, Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m1\"), Nil, Nil, None, Lit.Int(42)), Defn.Def(Nil, Term.Name(\"m2\"), Nil, Nil, None, Lit.Int(666))))"
     )
   }
 
@@ -1700,9 +1700,9 @@ class SuccessSuite extends FunSuite {
     val mod = mod"protected"
     val paramss = List(List(param"x: X", param"x: Y"))
     val template = template"F { def m = 42 }"
-    assert(
-      q"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template".structure ==
-        "Defn.Class(List(Mod.Private(Name(\"\")), Mod.Final()), Type.Name(\"Q\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Ctor.Primary(List(Mod.Protected(Name(\"\"))), Name(\"\"), List(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None)))), Template(Nil, List(Init(Type.Name(\"F\"), Name(\"\"), Nil)), Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(42)))))"
+    assertNoDiff(
+      q"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template".structure,
+        "Defn.Class(List(Mod.Private(Name(\"\")), Mod.Final()), Type.Name(\"Q\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Ctor.Primary(List(Mod.Protected(Name(\"\"))), Name(\"\"), List(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None), Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"Y\")), None)))), Template(Nil, List(Init(Type.Name(\"F\"), Name(\"\"), Nil)), Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(42)))))"
     )
   }
 
@@ -1722,9 +1722,9 @@ class SuccessSuite extends FunSuite {
       tparams(1).structure ==
         "Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)"
     )
-    assert(
-      template.structure ==
-        "Template(Nil, List(Init(Type.Name(\"Y\"), Name(\"\"), Nil)), Self(Name(\"\"), None), Nil)"
+    assertNoDiff(
+      template.structure,
+        "Template(Nil, List(Init(Type.Name(\"Y\"), Name(\"\"), Nil)), Nil, Self(Name(\"\"), None), Nil)"
     )
   }
 
@@ -1744,9 +1744,9 @@ class SuccessSuite extends FunSuite {
       tparams(1).structure ==
         "Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)"
     )
-    assert(
-      template.structure ==
-        "Template(Nil, Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m1\"), Nil, Nil, None, Lit.Int(42)), Defn.Def(Nil, Term.Name(\"m2\"), Nil, Nil, None, Lit.Int(666))))"
+    assertNoDiff(
+      template.structure,
+        "Template(Nil, Nil, Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m1\"), Nil, Nil, None, Lit.Int(42)), Defn.Def(Nil, Term.Name(\"m2\"), Nil, Nil, None, Lit.Int(666))))"
     )
   }
 
@@ -1755,9 +1755,9 @@ class SuccessSuite extends FunSuite {
     val tname = t"Q"
     val tparams = List(tparam"T", tparam"W")
     val template = template"F { def m = 42 }"
-    assert(
-      q"..$mods trait $tname[..$tparams] extends $template".structure ==
-        "Defn.Trait(List(Mod.Private(Name(\"\")), Mod.Sealed()), Type.Name(\"Q\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, List(Init(Type.Name(\"F\"), Name(\"\"), Nil)), Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(42)))))"
+    assertNoDiff(
+      q"..$mods trait $tname[..$tparams] extends $template".structure,
+        "Defn.Trait(List(Mod.Private(Name(\"\")), Mod.Sealed()), Type.Name(\"Q\"), List(Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name(\"W\"), Nil, Type.Bounds(None, None), Nil, Nil)), Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, List(Init(Type.Name(\"F\"), Name(\"\"), Nil)), Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(42)))))"
     )
   }
 
@@ -1767,9 +1767,9 @@ class SuccessSuite extends FunSuite {
     assert(mods(0).structure == "Mod.Private(Name(\"\"))")
     assert(mods(1).structure == "Mod.Final()")
     assert(name.structure == "Term.Name(\"Q\")")
-    assert(
-      template.structure ==
-        "Template(Nil, List(Init(Type.Name(\"Y\"), Name(\"\"), Nil)), Self(Name(\"\"), None), Nil)"
+    assertNoDiff(
+      template.structure,
+        "Template(Nil, List(Init(Type.Name(\"Y\"), Name(\"\"), Nil)), Nil, Self(Name(\"\"), None), Nil)"
     )
   }
 
@@ -1780,9 +1780,9 @@ class SuccessSuite extends FunSuite {
     assert(mods(0).structure == "Mod.Private(Name(\"\"))")
     assert(mods(1).structure == "Mod.Final()")
     assert(name.structure == "Term.Name(\"Q\")")
-    assert(
-      template.structure ==
-        "Template(Nil, Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m1\"), Nil, Nil, None, Lit.Int(42)), Defn.Def(Nil, Term.Name(\"m2\"), Nil, Nil, None, Lit.Int(666))))"
+    assertNoDiff(
+      template.structure,
+        "Template(Nil, Nil, Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m1\"), Nil, Nil, None, Lit.Int(42)), Defn.Def(Nil, Term.Name(\"m2\"), Nil, Nil, None, Lit.Int(666))))"
     )
   }
 
@@ -1790,18 +1790,18 @@ class SuccessSuite extends FunSuite {
     val mods = List(mod"private", mod"final")
     val name = q"Q"
     val template = template"F { def m = 42 }"
-    assert(
-      q"..$mods object $name extends $template".structure ==
-        "Defn.Object(List(Mod.Private(Name(\"\")), Mod.Final()), Term.Name(\"Q\"), Template(Nil, List(Init(Type.Name(\"F\"), Name(\"\"), Nil)), Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(42)))))"
+    assertNoDiff(
+      q"..$mods object $name extends $template".structure,
+        "Defn.Object(List(Mod.Private(Name(\"\")), Mod.Final()), Term.Name(\"Q\"), Template(Nil, List(Init(Type.Name(\"F\"), Name(\"\"), Nil)), Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(42)))))"
     )
   }
 
   test("1 q\"package object name extends template\"") {
     val q"package object $name extends $template" = q"package object Q extends Y"
     assert(name.structure == "Term.Name(\"Q\")")
-    assert(
-      template.structure ==
-        "Template(Nil, List(Init(Type.Name(\"Y\"), Name(\"\"), Nil)), Self(Name(\"\"), None), Nil)"
+    assertNoDiff(
+      template.structure,
+        "Template(Nil, List(Init(Type.Name(\"Y\"), Name(\"\"), Nil)), Nil, Self(Name(\"\"), None), Nil)"
     )
   }
 
@@ -1809,18 +1809,18 @@ class SuccessSuite extends FunSuite {
     val q"package object $name extends $template" =
       q"package object Q extends { def m1 = 42; def m2 = 666 }"
     assert(name.structure == "Term.Name(\"Q\")")
-    assert(
-      template.structure ==
-        "Template(Nil, Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m1\"), Nil, Nil, None, Lit.Int(42)), Defn.Def(Nil, Term.Name(\"m2\"), Nil, Nil, None, Lit.Int(666))))"
+    assertNoDiff(
+      template.structure,
+        "Template(Nil, Nil, Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m1\"), Nil, Nil, None, Lit.Int(42)), Defn.Def(Nil, Term.Name(\"m2\"), Nil, Nil, None, Lit.Int(666))))"
     )
   }
 
   test("3 q\"package object name extends template\"") {
     val name = q"Q"
     val template = template"F { def m = 42 }"
-    assert(
-      q"package object $name extends $template".structure ==
-        "Pkg.Object(Nil, Term.Name(\"Q\"), Template(Nil, List(Init(Type.Name(\"F\"), Name(\"\"), Nil)), Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(42)))))"
+    assertNoDiff(
+      q"package object $name extends $template".structure,
+        "Pkg.Object(Nil, Term.Name(\"Q\"), Template(Nil, List(Init(Type.Name(\"F\"), Name(\"\"), Nil)), Nil, Self(Name(\"\"), None), List(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(42)))))"
     )
   }
 
@@ -1830,20 +1830,20 @@ class SuccessSuite extends FunSuite {
     assertEquals(stats.toString, "List(class A, object B)")
     assertEquals(
       stats(0).structure,
-      "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil))"
+      "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Nil, Self(Name(\"\"), None), Nil))"
     )
     assertEquals(
       stats(1).structure,
-      "Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Self(Name(\"\"), None), Nil))"
+      "Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Nil, Self(Name(\"\"), None), Nil))"
     )
   }
 
   test("2 q\"package ref { ..stats }\"") {
     val ref = q"p"
     val stats = List(q"class A", q"object B")
-    assert(
-      q"package $ref { ..$stats }".structure ==
-        "Pkg(Term.Name(\"p\"), List(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil)), Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Self(Name(\"\"), None), Nil))))"
+    assertNoDiff(
+      q"package $ref { ..$stats }".structure,
+        "Pkg(Term.Name(\"p\"), List(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Nil, Self(Name(\"\"), None), Nil)), Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Nil, Self(Name(\"\"), None), Nil))))"
     )
   }
 
@@ -1855,7 +1855,7 @@ class SuccessSuite extends FunSuite {
     val stats = List(q"class A", q"object B")
     assert(
       q"package $ref { ..$stats }".structure ==
-        "Pkg(Term.Select(Term.Name(\"p\"), Term.Name(\"a\")), List(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil)), Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Self(Name(\"\"), None), Nil))))"
+        "Pkg(Term.Select(Term.Name(\"p\"), Term.Name(\"a\")), List(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Nil, Self(Name(\"\"), None), Nil)), Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Nil, Self(Name(\"\"), None), Nil))))"
     )
   }
 
@@ -2052,9 +2052,9 @@ class SuccessSuite extends FunSuite {
     val inits = List(init"T", init"U")
     val self = self"self: S"
     val stats2 = List(q"def m = 2", q"def n = 2")
-    assert(
-      template"{ ..$stats1 } with ..$inits { $self => ..$stats2 }".structure ==
-        "Template(List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), None, Lit.Int(2)), Defn.Val(Nil, List(Pat.Var(Term.Name(\"b\"))), None, Lit.Int(2))), List(Init(Type.Name(\"T\"), Name(\"\"), Nil), Init(Type.Name(\"U\"), Name(\"\"), Nil)), Self(Term.Name(\"self\"), Some(Type.Name(\"S\"))), List(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(2)), Defn.Def(Nil, Term.Name(\"n\"), Nil, Nil, None, Lit.Int(2))))"
+    assertNoDiff(
+      template"{ ..$stats1 } with ..$inits { $self => ..$stats2 }".structure,
+        "Template(List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), None, Lit.Int(2)), Defn.Val(Nil, List(Pat.Var(Term.Name(\"b\"))), None, Lit.Int(2))), List(Init(Type.Name(\"T\"), Name(\"\"), Nil), Init(Type.Name(\"U\"), Name(\"\"), Nil)), Nil, Self(Term.Name(\"self\"), Some(Type.Name(\"S\"))), List(Defn.Def(Nil, Term.Name(\"m\"), Nil, Nil, None, Lit.Int(2)), Defn.Def(Nil, Term.Name(\"n\"), Nil, Nil, None, Lit.Int(2))))"
     )
   }
 
@@ -2274,7 +2274,7 @@ class SuccessSuite extends FunSuite {
     assert(stats.toString == "List(class A { val a = 'a' })")
     assert(
       stats(0).structure ==
-        "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), None, Lit.Char('a')))))"
+        "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Nil, Self(Name(\"\"), None), List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), None, Lit.Char('a')))))"
     )
   }
 
@@ -2284,15 +2284,15 @@ class SuccessSuite extends FunSuite {
     assert(stats.toString == "List(class A { val a = 'a' })")
     assert(
       stats(0).structure ==
-        "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), None, Lit.Char('a')))))"
+        "Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Nil, Self(Name(\"\"), None), List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"a\"))), None, Lit.Char('a')))))"
     )
   }
 
   test("3 source\"..stats\"") {
     val stats = List(q"class A { val x = 1 }", q"object B")
-    assert(
-      source"..$stats".structure ==
-        "Source(List(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"x\"))), None, Lit.Int(1))))), Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Self(Name(\"\"), None), Nil))))"
+    assertNoDiff(
+      source"..$stats".structure,
+        "Source(List(Defn.Class(Nil, Type.Name(\"A\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Nil, Self(Name(\"\"), None), List(Defn.Val(Nil, List(Pat.Var(Term.Name(\"x\"))), None, Lit.Int(1))))), Defn.Object(Nil, Term.Name(\"B\"), Template(Nil, Nil, Nil, Self(Name(\"\"), None), Nil))))"
     )
   }
 
@@ -2339,7 +2339,7 @@ class SuccessSuite extends FunSuite {
     val tree = q"class C { ..$mods def x = 2 }"
     assert(
       tree.structure ==
-        "Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), List(Defn.Def(List(Mod.Private(Name(\"\"))), Term.Name(\"x\"), Nil, Nil, None, Lit.Int(2)))))"
+        "Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Nil, Self(Name(\"\"), None), List(Defn.Def(List(Mod.Private(Name(\"\"))), Term.Name(\"x\"), Nil, Nil, None, Lit.Int(2)))))"
     )
   }
 
