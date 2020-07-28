@@ -826,6 +826,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(q"val `a b` = 2".syntax == "val `a b` = 2")
   }
 
+  test("#2097 val `macro` = 42") {
+    assertEquals(q"val `macro` = 42".syntax, "val `macro` = 42")
+  }
+
   test("#1661 Names outside ") {
     // Must start with either a letter or an operator
     assert(q"val `foo` = 2".syntax == "val foo = 2")
