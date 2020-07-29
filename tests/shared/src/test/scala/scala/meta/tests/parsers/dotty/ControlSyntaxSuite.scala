@@ -15,7 +15,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val code = """|if (cond) fx
                   |else gx
                   |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = None)(
+    runTestAssert[Stat](code, assertLayout = Some("if (cond) fx else gx"))(
       Term.If(Term.Name("cond"), Term.Name("fx"), Term.Name("gx"))
     )
   }
@@ -26,22 +26,30 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |else
                   |  gx
                   |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = None)(
+    runTestAssert[Stat](code, assertLayout = Some("if (cond) fx else gx"))(
       Term.If(Term.Name("cond"), Term.Name("fx"), Term.Name("gx"))
     )
   }
 
   test("old-if-else-braces") {
-    val code = """|if (cond) { fa }
+    val code = """|if (cond) { fa1; fa2 }
                   |else {
-                  |  fb
+                  |  fb1; fb2
                   |}
                   |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = None)(
+    val output = """|if (cond) {
+                    |  fa1
+                    |  fa2
+                    |} else {
+                    |  fb1
+                    |  fb2
+                    |}""".stripMargin
+
+    runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.If(
         Term.Name("cond"),
-        Term.Block(List(Term.Name("fa"))),
-        Term.Block(List(Term.Name("fb")))
+        Term.Block(List(Term.Name("fa1"), Term.Name("fa2"))),
+        Term.Block(List(Term.Name("fb1"), Term.Name("fb2")))
       )
     )
   }

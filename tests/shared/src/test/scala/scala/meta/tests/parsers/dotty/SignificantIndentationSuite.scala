@@ -177,40 +177,4 @@ class SignificantIndentationSuite extends BaseDottySuite {
       )
     )
   }
-
-  test("comment-indent") {
-    val code = """|def fx: Unit =
-                  |  val a =
-                  |    /* msg
-                  |    else */ value
-                  |
-                  |  val b = // other
-                  |    t1
-                  |    t2
-                  |  a + b
-                  |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = None)(
-      Defn.Def(
-        Nil,
-        Term.Name("fx"),
-        Nil,
-        Nil,
-        Some(Type.Name("Unit")),
-        Term.Block(
-          List(
-            Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), None, Term.Name("value")),
-            Defn.Val(
-              Nil,
-              List(Pat.Var(Term.Name("b"))),
-              None,
-              Term.Block(List(Term.Name("t1"), Term.Name("t2")))
-            ),
-            Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b")))
-          )
-        )
-      )
-    )
-
-  }
-
 }

@@ -340,4 +340,9 @@ class MinorDottySuite extends BaseDottySuite {
 
   }
 
+  test("lazy-val-toplevel") {
+    runTestAssert[Source]("lazy val x = 3")(
+      Source(List(Defn.Val(List(Mod.Lazy()), List(Pat.Var(Term.Name("x"))), None, Lit.Int(3))))
+    )
+  }
 }
