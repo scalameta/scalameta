@@ -114,4 +114,34 @@ class LitSuite extends ParseSuite {
     val Term.Interpolate(Name("raw"), List(Lit("\"\"\"\"\"\"\"")), Nil) =
       term("raw\"\"\"\"\"\"\"\"\"\"\"\"\"")
   }
+
+  test("minus-sign") {
+    val code = """|object X {
+                  |  sealed trait Foo {
+                  |    def negate1 : - = -
+                  |    def negate2 : - = -.fn("d")
+                  |  }
+                  |  trait -
+                  |  case object - extends -
+                  |}
+                  |""".stripMargin
+    source(code)
+
+    val code2 = """|
+                   |trait Foo {
+                   |  def negate : - = -
+                   |}
+                   |""".stripMargin
+    val fdef =
+      """Defn.Def(Nil, Term.Name("negate"), Nil, Nil, Some(Type.Name("-")), Term.Name("-"))"""
+    val expected =
+      s"""Defn.Trait(Nil, Type.Name("Foo"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), List(${fdef})))"""
+    assertNoDiff(stat(code2).structure, expected)
+  }
+
+  test("simple-expression-parse-error") {
+    intercept[parsers.ParseException] {
+      templStat("def neg: Unit = 2 + throw")
+    }
+  }
 }
