@@ -423,11 +423,11 @@ class TermSuite extends ParseSuite {
   }
 
   test("new {}") {
-    val NewAnonymous(Template(Nil, Nil, Nil, EmptySelf(), Nil)) = term("new {}")
+    val NewAnonymous(Template(Nil, Nil, EmptySelf(), Nil)) = term("new {}")
   }
 
   test("new { x }") {
-    val NewAnonymous(Template(Nil, Nil, Nil, EmptySelf(), List(Term.Name("x")))) = term("new { x }")
+    val NewAnonymous(Template(Nil, Nil, EmptySelf(), List(Term.Name("x")))) = term("new { x }")
   }
 
   test("new A") {
@@ -441,7 +441,7 @@ class TermSuite extends ParseSuite {
 
   test("new A {}") {
     val NewAnonymous(
-      Template(Nil, Init(Type.Name("A"), Name.Anonymous(), Nil) :: Nil, Nil, EmptySelf(), Nil)
+      Template(Nil, Init(Type.Name("A"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)
     ) = term("new A {}")
   }
 
@@ -451,7 +451,6 @@ class TermSuite extends ParseSuite {
         Nil,
         Init(Type.Name("A"), Name.Anonymous(), Nil) ::
           Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil,
-        Nil,
         EmptySelf(),
         Nil
       )
@@ -464,7 +463,6 @@ class TermSuite extends ParseSuite {
       Template(
         Defn.Val(Nil, List(Pat.Var(TermName("x"))), Some(TypeName("Int")), Lit(1)) :: Nil,
         Init(Type.Name("A"), Name.Anonymous(), Nil) :: Nil,
-        Nil,
         EmptySelf(),
         Nil
       )
@@ -473,7 +471,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("new { self: T => }") {
-    val NewAnonymous(Template(Nil, Nil, Nil, Self(TermName("self"), Some(TypeName("T"))), Nil)) =
+    val NewAnonymous(Template(Nil, Nil, Self(TermName("self"), Some(TypeName("T"))), Nil)) =
       term("new { self: T => }")
   }
 

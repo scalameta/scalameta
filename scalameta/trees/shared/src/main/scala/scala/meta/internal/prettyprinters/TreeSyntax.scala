@@ -144,7 +144,6 @@ object TreeSyntax {
     def templ(templ: Template) =
       if (templ.early.isEmpty &&
         templ.inits.isEmpty &&
-        templ.derives.isEmpty &&
         templ.self.name.is[Name.Anonymous] &&
         templ.self.decltpe.isEmpty &&
         templ.stats.isEmpty) s()
@@ -974,12 +973,11 @@ object TreeSyntax {
         val isSelfEmpty = t.self.name.is[Name.Anonymous] && t.self.decltpe.isEmpty
         val isSelfNonEmpty = !isSelfEmpty
         val isBodyEmpty = isSelfEmpty && t.stats.isEmpty
-        val isTemplateEmpty = t.early.isEmpty && t.derives.isEmpty && t.inits.isEmpty && isBodyEmpty
+        val isTemplateEmpty = t.early.isEmpty && t.inits.isEmpty && isBodyEmpty
         if (isTemplateEmpty) s()
         else {
           val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
           val pparents = w(r(t.inits, " with "), " ", !t.inits.isEmpty && !isBodyEmpty)
-          val pderives = w(" derives ", r(t.derives, ", "), " ", !t.derives.isEmpty)
           val pbody = {
             val isOneLiner =
               t.stats.length == 0 ||
@@ -993,7 +991,7 @@ object TreeSyntax {
               case (true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
             }
           }
-          s(pearly, pparents, pderives, pbody)
+          s(pearly, pparents, pbody)
         }
 
       // Mod

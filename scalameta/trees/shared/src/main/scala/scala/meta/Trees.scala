@@ -432,7 +432,6 @@ object Ctor {
 @ast class Template(
     early: List[Stat],
     inits: List[Init],
-    derives: List[Term.Name],
     self: Self,
     stats: List[Stat]
 ) extends Tree {

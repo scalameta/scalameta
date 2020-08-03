@@ -175,7 +175,6 @@ class MinorDottySuite extends BaseDottySuite {
         Template(
           Nil,
           Nil,
-          Nil,
           Self(Name(""), None),
           List(
             Defn.OpaqueTypeAlias(
@@ -194,7 +193,6 @@ class MinorDottySuite extends BaseDottySuite {
         Nil,
         Term.Name("X"),
         Template(
-          Nil,
           Nil,
           Nil,
           Self(Name(""), None),
@@ -267,7 +265,7 @@ class MinorDottySuite extends BaseDottySuite {
         Type.Name("Foo"),
         Nil,
         Ctor.Primary(Nil, Name(""), Nil),
-        Template(Nil, List(init("A"), init("B"), init("C")), Nil, Self(Name(""), None), Nil)
+        Template(Nil, List(init("A"), init("B"), init("C")), Self(Name(""), None), Nil)
       )
     )(parseTempl)
 
@@ -291,37 +289,7 @@ class MinorDottySuite extends BaseDottySuite {
         Type.Name("Foo"),
         Nil,
         Ctor.Primary(Nil, Name(""), Nil),
-        Template(Nil, Nil, Nil, Self(Name(""), None), Nil)
-      )
-    )(parseTempl)
-  }
-
-  test("enum-derives") {
-    runTestAssert[Stat]("enum Foo  derives Eql")(
-      Defn.Enum(
-        Nil,
-        Type.Name("Foo"),
-        Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
-        Template(Nil, Nil, List(Term.Name("Eql")), Self(Name(""), None), Nil)
-      )
-    )(parseTempl)
-  }
-
-  test("trait-derives") {
-    runTestAssert[Stat]("trait Foo extends A with B derives X, Y")(
-      Defn.Trait(
-        Nil,
-        Type.Name("Foo"),
-        Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
-        Template(
-          Nil,
-          List(Init(Type.Name("A"), Name(""), Nil), Init(Type.Name("B"), Name(""), Nil)),
-          List(Term.Name("X"), Term.Name("Y")),
-          Self(Name(""), None),
-          Nil
-        )
+        Template(Nil, Nil, Self(Name(""), None), Nil)
       )
     )(parseTempl)
   }

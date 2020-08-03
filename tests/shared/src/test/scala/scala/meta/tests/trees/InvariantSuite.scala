@@ -17,7 +17,7 @@ class InvariantSuite extends FunSuite {
       Nil
     )
     val stats = List(secondaryCtor)
-    val template = Template(Nil, Nil, Nil, Self(Name.Anonymous(), None), stats)
+    val template = Template(Nil, Nil, Self(Name.Anonymous(), None), stats)
     Defn.Class(Nil, Type.Name("test"), Nil, primaryCtor, template)
     intercept[InvariantFailedException] {
       Defn.Trait(Nil, Type.Name("test"), Nil, primaryCtor, template)

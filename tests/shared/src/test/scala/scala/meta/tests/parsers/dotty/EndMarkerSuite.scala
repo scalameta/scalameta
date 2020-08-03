@@ -34,7 +34,7 @@ class EndMarkerSuite extends BaseDottySuite {
     runTestAssert[Source](code, assertLayout = None)(
       Source(
         List(
-          Defn.Object(Nil, Term.Name("a"), Template(Nil, Nil, Nil, Self(Name(""), None), Nil)),
+          Defn.Object(Nil, Term.Name("a"), Template(Nil, Nil, Self(Name(""), None), Nil)),
           Term.EndMarker(Term.Name("a")),
           Defn.Type(Nil, Type.Name("K"), Nil, Type.Name("Map"))
         )

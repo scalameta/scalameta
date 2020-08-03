@@ -27,7 +27,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Type.Name("A"),
         Nil,
         Ctor.Primary(Nil, Name(""), Nil),
-        Template(Nil, Nil, Nil, Self(Name(""), None), List(defx))
+        Template(Nil, Nil, Self(Name(""), None), List(defx))
       )
     )
   }
@@ -44,7 +44,6 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         Ctor.Primary(Nil, Name(""), Nil),
         Template(
-          Nil,
           Nil,
           Nil,
           Self(Name(""), None),
@@ -71,7 +70,6 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Template(
           Nil,
           Nil,
-          Nil,
           Self(Name(""), None),
           List(
             Defn.Class(
@@ -80,7 +78,6 @@ class SignificantIndentationSuite extends BaseDottySuite {
               Nil,
               ctor,
               Template(
-                Nil,
                 Nil,
                 Nil,
                 Self(Name(""), None),
@@ -93,7 +90,6 @@ class SignificantIndentationSuite extends BaseDottySuite {
               Nil,
               Ctor.Primary(Nil, Name(""), Nil),
               Template(
-                Nil,
                 Nil,
                 Nil,
                 Self(Name(""), None),

@@ -2294,7 +2294,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           next()
           atPos(in.prevTokenPos, auto) {
             template() match {
-              case trivial @ Template(Nil, List(init), Nil, Self(Name.Anonymous(), None), Nil) =>
+              case trivial @ Template(Nil, List(init), Self(Name.Anonymous(), None), Nil) =>
                 if (!token.prev.is[RightBrace]) Term.New(init)
                 else Term.NewAnonymous(trivial)
               case other =>
@@ -3454,7 +3454,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       Defn.GivenAlias(mods, sigName, sigTparams, sigUparamss, decltpe, rhs)
     } else {
       val (slf, stats) = templateBodyOpt(true)
-      val rhs = Template(List.empty, List.empty, List.empty, slf, stats)
+      val rhs = Template(List.empty, List.empty, slf, stats)
       Defn.Given(mods, sigName, sigTparams, sigUparamss, decltpe, rhs)
     }
   }
@@ -3486,10 +3486,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
     val methods = methodsAll.collect { case m: Defn.Def => m }
     ExtensionGroup(eparam, tparams, methods)
-  }
-
-  def extensionMethodsSeq(): List[Defn.Def] = {
-    List()
   }
 
   def funDefRest(mods: List[Mod]): Stat = atPos(mods, auto) {
@@ -3702,7 +3698,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val ctor = primaryCtor(OwnedByEnum)
     val inits = if (token.is[KwExtends]) {
       accept[KwExtends]
-      templateParents(afterExtend = true)._1
+      templateParents(afterExtend = true)
     } else { List() }
     Defn.EnumCase(mods, name, tparams, ctor, inits)
   }
@@ -3882,32 +3878,22 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   object OwnedByObject extends TemplateOwner
 
   def templateParents(
-      afterExtend: Boolean = false,
-      directDerive: Boolean = false
-  ): (List[Init], List[Term.Name]) = {
+      afterExtend: Boolean = false
+  ): List[Init] = {
     def isCommaSeparated(token: Token): Boolean =
       afterExtend && token.is[Comma] && dialect.allowCommaSeparatedExtend
 
     val parents = ListBuffer[Init]()
-    if (!directDerive) {
-      def readInit() = token match {
-        case Ellipsis(_) => parents += ellipsis(1, astInfo[Init])
-        case _ => parents += initInsideTemplate()
-      }
-      readInit()
-      while (token.is[KwWith] || isCommaSeparated(token)) { next(); readInit() }
+    def readInit() = token match {
+      case Ellipsis(_) => parents += ellipsis(1, astInfo[Init])
+      case _ => parents += initInsideTemplate()
     }
-
-    val derive = ListBuffer[Term.Name]()
-    if (directDerive || isSoftKw(token, SoftKeyword.SkDerives)) {
-      if (!directDerive) next()
-      derive += termName()
-      while (token.is[Comma]) { next(); derive += termName() }
-    }
-    (parents.toList, derive.toList)
+    readInit()
+    while (token.is[KwWith] || isCommaSeparated(token)) { next(); readInit() }
+    parents.toList
   }
 
-  def template(afterExtend: Boolean = false, directDerive: Boolean = false): Template = autoPos {
+  def template(afterExtend: Boolean = false): Template = autoPos {
     newLineOptWhenFollowedBy[LeftBrace]
     if (token.is[LeftBrace]) {
       // @S: pre template body cannot stub like post body can!
@@ -3915,16 +3901,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (token.is[KwWith] && self.name.is[Name.Anonymous] && self.decltpe.isEmpty) {
         val edefs = body.map(ensureEarlyDef)
         next()
-        val (parents, derives) = templateParents(afterExtend, directDerive)
+        val parents = templateParents(afterExtend)
         val (self1, body1) = templateBodyOpt(parenMeansSyntaxError = false)
-        Template(edefs, parents, derives, self1, body1)
+        Template(edefs, parents, self1, body1)
       } else {
-        Template(Nil, Nil, Nil, self, body)
+        Template(Nil, Nil, self, body)
       }
     } else {
-      val (parents, derives) = templateParents(afterExtend, directDerive)
+      val parents = templateParents(afterExtend)
       val (self, body) = templateBodyOpt(parenMeansSyntaxError = false)
-      Template(Nil, parents, derives, self, body)
+      Template(Nil, parents, self, body)
     }
   }
 
@@ -3941,9 +3927,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def templateOpt(owner: TemplateOwner): Template = {
-    if (token.is[KwExtends] || (token
-        .is[Subtype] && owner.isTrait) || isSoftKw(token, SoftKeyword.SkDerives)) {
-      val derive = isSoftKw(token, SoftKeyword.SkDerives)
+    if (token.is[KwExtends] || (token.is[Subtype] && owner.isTrait)) {
       next()
       if (token.is[Unquote] && ahead(
           !token.is[Dot] && !token.is[Hash] && !token.is[At] && !token.is[Ellipsis] &&
@@ -3952,12 +3936,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         )) {
         unquote[Template]
       } else {
-        template(afterExtend = true, directDerive = derive)
+        template(afterExtend = true)
       }
     } else {
       val startPos = in.tokenPos
       val (self, body) = templateBodyOpt(parenMeansSyntaxError = !owner.isClass)
-      atPos(startPos, auto)(Template(Nil, Nil, Nil, self, body))
+      atPos(startPos, auto)(Template(Nil, Nil, self, body))
     }
   }
 

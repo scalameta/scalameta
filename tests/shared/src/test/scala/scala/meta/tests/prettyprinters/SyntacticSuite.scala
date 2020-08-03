@@ -586,7 +586,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("package foo; class C; package baz { class D }") {
     val tree = source("package foo; class C; package baz { class D }")
     assert(
-      tree.structure == "Source(List(Pkg(Term.Name(\"foo\"), List(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Nil, Self(Name(\"\"), None), Nil)), Pkg(Term.Name(\"baz\"), List(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Nil, Self(Name(\"\"), None), Nil))))))))"
+      tree.structure == "Source(List(Pkg(Term.Name(\"foo\"), List(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil)), Pkg(Term.Name(\"baz\"), List(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil))))))))"
     )
     assert(tree.syntax == s"package foo${EOL}class C${EOL}package baz {$EOL  class D${EOL}}")
   }
@@ -622,7 +622,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("constructors") {
-    val tree @ Defn.Class(_, _, _, primary, Template(_, _, _, _, List(secondary))) =
+    val tree @ Defn.Class(_, _, _, primary, Template(_, _, _, List(secondary))) =
       templStat("class C(x: Int) { def this() = this(42) }")
     assert(tree.syntax == "class C(x: Int) { def this() = this(42) }")
     assert(primary.syntax == "(x: Int)")
