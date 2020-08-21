@@ -97,7 +97,7 @@ final class Dialect private (
     // Significant identation introduced in dotty
     val allowSignificantIndentation: Boolean,
     // ???
-    val allowQuestionPlaceholder: Boolean
+    val allowQuestionMarkPlaceholder: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -171,7 +171,7 @@ final class Dialect private (
       allowCommaSeparatedExtend = false,
       allowEndMarker = false,
       allowSignificantIndentation = false,
-      allowQuestionPlaceholder = false
+      allowQuestionMarkPlaceholder = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -295,8 +295,8 @@ final class Dialect private (
   def withAllowSignificantIndentation(newValue: Boolean): Dialect = {
     privateCopy(allowSignificantIndentation = newValue)
   }
-  def withAllowQuestionPlaceholder(newValue: Boolean): Dialect = {
-    privateCopy(allowQuestionPlaceholder = newValue)
+  def withAllowQuestionMarkPlaceholder(newValue: Boolean): Dialect = {
+    privateCopy(allowQuestionMarkPlaceholder = newValue)
   }
 
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
@@ -343,7 +343,7 @@ final class Dialect private (
       allowCommaSeparatedExtend: Boolean = this.allowCommaSeparatedExtend,
       allowEndMarker: Boolean = this.allowEndMarker,
       allowSignificantIndentation: Boolean = this.allowSignificantIndentation,
-      allowQuestionPlaceholder: Boolean = this.allowQuestionPlaceholder
+      allowQuestionMarkPlaceholder: Boolean = this.allowQuestionMarkPlaceholder
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -385,7 +385,7 @@ final class Dialect private (
       allowCommaSeparatedExtend,
       allowEndMarker,
       allowSignificantIndentation,
-      allowQuestionPlaceholder
+      allowQuestionMarkPlaceholder
       // NOTE(olafur): add the next argument above this comment.
     )
   }

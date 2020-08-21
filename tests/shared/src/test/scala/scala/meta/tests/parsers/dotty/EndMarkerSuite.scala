@@ -78,6 +78,8 @@ class EndMarkerSuite extends BaseDottySuite {
   }
 
   test("end-for-no-indent") {
+    // to make parser more permissive 'end' is treated as independent statement
+    // that doesn't need to be bound to any indentation
     val code = """|
                   |def a(): Unit = {
                   |  end for

@@ -29,6 +29,7 @@ import org.scalameta.invariants._
 import scala.meta.Defn.Given
 import SoftKeyword._
 import scala.meta.Defn.ExtensionGroup
+import scala.meta.internal.tokenizers.Chars
 
 class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   require(Set("", EOL).contains(dialect.toplevelSeparator))
@@ -188,7 +189,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   /* ------------- PARSER-SPECIFIC TOKENS -------------------------------------------- */
 
-  case class SepRegion(closing: Char, indent: Int)
+  sealed trait RegionType
+  case object RegionIndent extends RegionType
+  case object RegionParen extends RegionType
+  case object RegionBracket extends RegionType
+  case object RegionBrace extends RegionType
+  case object RegionEnum extends RegionType
+  case object RegionIndentEnum extends RegionType
+  case object RegionArrow extends RegionType
+  case object RegionEnumArtificialMark extends RegionType
+  case class SepRegion(closing: RegionType, indent: Int)
 
   // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
@@ -201,7 +211,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
   lazy val (parserTokens, parserTokenPositions) = {
     def indentedRegion(regions: List[SepRegion]): Boolean =
-      regions.headOption.exists { case SepRegion(c, _) => c == 'O' || c == 'E' }
+      regions.headOption.exists {
+        case SepRegion(c, _) => c == RegionIndent || c == RegionIndentEnum
+      }
 
     val parserTokens = mutable.ArrayBuilder.make[Token]
     val parserTokenPositions = mutable.ArrayBuilder.make[Int]
@@ -209,7 +221,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     var mustEmit = false
     var addRegion = -1
 
-    @tailrec def loop(prevPos: Int, currPos: Int, sepRegionsP: List[SepRegion]): Unit = {
+    @tailrec def loop(prevPos: Int, currPos: Int, sepRegionsParameter: List[SepRegion]): Unit = {
       if (currPos >= scannerTokens.length) return
       val prev = if (prevPos >= 0) scannerTokens(prevPos) else null
       val curr = scannerTokens(currPos)
@@ -221,7 +233,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
       val next = if (nextPos != -1) scannerTokens(nextPos) else null
 
-      val currentIndent = {
+      lazy val currentIndent = {
         def isWhitespace(token: Token): Boolean = token.is[Space] || token.is[Tab]
 
         @tailrec
@@ -256,55 +268,57 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           next.pos.startLine > curr.pos.endLine
       if (curr.isNot[Trivia] && !isTrailingComma) {
 
-        var sepRegions = if (indentedRegion(sepRegionsP) && currentIndent >= 0) {
-          var sepRegionsI = sepRegionsP
-          while (indentedRegion(sepRegionsI) && sepRegionsI.head.indent > currentIndent) {
+        var sepRegions = if (indentedRegion(sepRegionsParameter) && currentIndent >= 0) {
+          var sepRegionsProcess = sepRegionsParameter
+          while (indentedRegion(
+              sepRegionsProcess
+            ) && sepRegionsProcess.head.indent > currentIndent) {
             parserTokens += new Indentation.Outdent(curr.input, curr.dialect, curr.start, curr.end)
             parserTokenPositions += currPos
             parserTokens += new LF(curr.input, curr.dialect, curr.start)
             parserTokenPositions += currPos
-            sepRegionsI = sepRegionsI.tail
+            sepRegionsProcess = sepRegionsProcess.tail
           }
-          sepRegionsI
-        } else sepRegionsP
+          sepRegionsProcess
+        } else sepRegionsParameter
 
         sepRegions = if (addRegion > 0) {
-          if (!sepRegions.isEmpty && sepRegions.head.closing == '{')
-            SepRegion('E', addRegion) :: sepRegions.tail
-          else SepRegion('O', addRegion) :: sepRegions
+          if (!sepRegions.isEmpty && sepRegions.head.closing == RegionEnumArtificialMark)
+            SepRegion(RegionIndentEnum, addRegion) :: sepRegions.tail
+          else SepRegion(RegionIndent, addRegion) :: sepRegions
         } else {
           sepRegions
         }
 
-        var sepRegions1 = {
-          if (curr.is[LeftParen]) SepRegion(')', 0) :: sepRegions
-          else if (curr.is[LeftBracket]) SepRegion(']', 0) :: sepRegions
+        var sepRegionsNew = {
+          if (curr.is[LeftParen]) SepRegion(RegionParen, 0) :: sepRegions
+          else if (curr.is[LeftBracket]) SepRegion(RegionBracket, 0) :: sepRegions
           else if (curr.is[LeftBrace]) {
             // After encountering keyword Enum we add artificial '{' on top of stack.
             // Then always after Enum next token is '{'. On token '{' we check if top of stack is '{'
             // (which in case of enum is always true) and replace it with '$'.
             // Now if we have token 'case' and top of stack is '$' we know it is Enum-case.
             // In any other case it is 'match-case' or 'try-case'
-            if (!sepRegions.isEmpty && sepRegions.head.closing == '{')
-              SepRegion('$', 0) :: sepRegions.tail
-            else SepRegion('}', 0) :: sepRegions
-          } else if (curr.is[KwEnum]) SepRegion('{', 0) :: sepRegions
+            if (!sepRegions.isEmpty && sepRegions.head.closing == RegionEnumArtificialMark)
+              SepRegion(RegionEnum, 0) :: sepRegions.tail
+            else SepRegion(RegionBrace, 0) :: sepRegions
+          } else if (curr.is[KwEnum]) SepRegion(RegionEnumArtificialMark, 0) :: sepRegions
           else if (curr.is[CaseIntro] && prev.isNot[KwFor]) {
-            if (!sepRegions.isEmpty && (sepRegions.head.closing == '$' || sepRegions.head.closing == 'E'))
+            if (!sepRegions.isEmpty && (sepRegions.head.closing == RegionEnum || sepRegions.head.closing == RegionIndentEnum))
               sepRegions
-            else SepRegion('\u21d2', 0) :: sepRegions
+            else SepRegion(RegionArrow, 0) :: sepRegions
           } else if (curr.is[RightBrace]) {
-            var sepRegions1 = sepRegions
-            while (!sepRegions1.isEmpty && (sepRegions1.head.closing != '}' && sepRegions1.head.closing != '$'))
-              sepRegions1 = sepRegions1.tail
-            if (!sepRegions1.isEmpty) sepRegions1 = sepRegions1.tail
-            sepRegions1
+            var sepRegionsProcess = sepRegions
+            while (!sepRegionsProcess.isEmpty && (sepRegionsProcess.head.closing != RegionBrace && sepRegionsProcess.head.closing != RegionEnum))
+              sepRegionsProcess = sepRegionsProcess.tail
+            if (!sepRegionsProcess.isEmpty) sepRegionsProcess = sepRegionsProcess.tail
+            sepRegionsProcess
           } else if (curr.is[RightBracket]) {
-            if (!sepRegions.isEmpty && sepRegions.head.closing == ']') sepRegions.tail
+            if (!sepRegions.isEmpty && sepRegions.head.closing == RegionBracket) sepRegions.tail
             else sepRegions
           } else if (curr.is[RightParen]) {
-            var sepRegions1 = sepRegions
-            while (indentedRegion(sepRegions1)) {
+            var sepRegionsProcess = sepRegions
+            while (indentedRegion(sepRegionsProcess)) {
               parserTokens += new Indentation.Outdent(
                 curr.input,
                 curr.dialect,
@@ -312,12 +326,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                 curr.end
               )
               parserTokenPositions += currPos
-              sepRegions1 = sepRegions1.tail
+              sepRegionsProcess = sepRegionsProcess.tail
             }
-            if (!sepRegions1.isEmpty && sepRegions1.head.closing == ')') sepRegions1.tail
-            else sepRegions1
+            if (!sepRegionsProcess.isEmpty && sepRegionsProcess.head.closing == RegionParen)
+              sepRegionsProcess.tail
+            else sepRegionsProcess
           } else if (curr.is[RightArrow]) {
-            if (!sepRegions.isEmpty && sepRegions.head.closing == '\u21d2') sepRegions.tail
+            if (!sepRegions.isEmpty && sepRegions.head.closing == RegionArrow) sepRegions.tail
             else sepRegions
           } else sepRegions // do nothing for other tokens
         }
@@ -341,7 +356,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
         addRegion = -1
 
-        loop(currPos, currPos + 1, sepRegions1)
+        loop(currPos, currPos + 1, sepRegionsNew)
       } else {
         var i = prevPos + 1
         var lastNewlinePos = -1
@@ -356,18 +371,22 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           newlineStreak &= scannerTokens(i).is[Whitespace]
           i += 1
         }
+
+        def isOperator(text: String): Boolean =
+          text.headOption.map(Chars.isOperatorPart).getOrElse(false)
+
         if (lastNewlinePos != -1 &&
           prev != null && prev.is[CanEndStat] &&
-          next != null && next.isNot[CantStartStat] &&
-          (next.text != "||" && next.text != "&&" && next.text != ":::") &&
-          (sepRegionsP.isEmpty || sepRegionsP.head.closing == '}' || sepRegionsP.head.closing == '$' || sepRegionsP.head.closing == 'O' || sepRegionsP.head.closing == 'E')) {
+          next != null && next.isNot[CantStartStat] && !isOperator(next.text) &&
+          (sepRegionsParameter.isEmpty || sepRegionsParameter.head.closing == RegionBrace || sepRegionsParameter.head.closing == RegionEnum || sepRegionsParameter.head.closing == RegionIndent || sepRegionsParameter.head.closing == RegionIndentEnum)) {
+
           var token = scannerTokens(lastNewlinePos)
           if (newlines) token = LFLF(token.input, token.dialect, token.start, token.end)
           parserTokens += token
           parserTokenPositions += lastNewlinePos
-          loop(lastNewlinePos, currPos + 1, sepRegionsP)
+          loop(lastNewlinePos, currPos + 1, sepRegionsParameter)
         } else {
-          loop(prevPos, nextPos, sepRegionsP)
+          loop(prevPos, nextPos, sepRegionsParameter)
         }
       }
     }
@@ -1288,7 +1307,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       simpleTypeRest(autoPos(token match {
         case LeftParen() => autoPos(makeTupleType(inParens(types())))
         case Underscore() => next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
-        case Ident("?") if dialect.allowQuestionPlaceholder =>
+        case Ident("?") if dialect.allowQuestionMarkPlaceholder =>
           next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
         case Literal() =>
           if (dialect.allowLiteralTypes) literal()
@@ -1717,14 +1736,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     unquoteExpr()
   }
 
-  private def extractWhenSingle(b: Term): Term = {
-    b match {
-      case Term.Block(hd :: Nil) =>
-        hd match {
-          case term: Term => term
-          case _ => b
-        }
-      case other => other
+  private def exprMaybeIndented(): Term = {
+    if (token.is[Indentation.Indent]) {
+      indented(indentedBlock())
+    } else {
+      expr()
     }
   }
 
@@ -1740,32 +1756,18 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           val cond = expr()
           acceptOpt[LF]
           accept[KwThen]
-          val thenp = if (token.is[Indentation.Indent]) {
-            indented(extractWhenSingle(block()))
-          } else {
-            expr()
-          }
-          (cond, thenp)
+          (cond, exprMaybeIndented())
         } else {
           val cond = condExpr()
           newLinesOpt()
           acceptOpt[KwThen]
-          val thenp = if (token.is[Indentation.Indent]) {
-            indented(extractWhenSingle(block()))
-          } else {
-            expr()
-          }
-          (cond, thenp)
+          (cond, exprMaybeIndented())
         }
 
         if (token.is[KwElse] || (token.is[LF] && ahead(token.is[KwElse]))) {
           next()
           if (token.is[KwElse]) next()
-          if (token.is[Indentation.Indent]) {
-            Term.If(cond, thenp, indented(extractWhenSingle(block())))
-          } else {
-            Term.If(cond, thenp, expr())
-          }
+          Term.If(cond, thenp, exprMaybeIndented())
         } else if (token.is[Semicolon] && ahead { token.is[KwElse] }) {
           next(); next(); Term.If(cond, thenp, expr())
         } else {
@@ -1774,7 +1776,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwTry() =>
         next()
         val body: Term = token match {
-          case Indentation.Indent() => indented(extractWhenSingle(block()))
+          case Indentation.Indent() => indented(indentedBlock())
           case _ if dialect.allowTryWithAnyExpr => expr()
           case LeftBrace() => autoPos(inBracesOrUnit(block()))
           case LeftParen() => inParensOrUnit(expr())
@@ -1798,11 +1800,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           if (token.is[KwFinally] || (token.is[LF] && ahead(token.is[KwFinally]))) {
             acceptOpt[LF]
             accept[KwFinally]
-            if (token.is[Indentation.Indent]) {
-              Some(indented(extractWhenSingle(block())))
-            } else {
-              Some(expr())
-            }
+            Some(exprMaybeIndented())
           } else {
             None
           }
@@ -1825,12 +1823,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           val cond = expr()
           acceptOpt[LF]
           accept[KwDo]
-          val body = if (token.is[Indentation.Indent]) {
-            indented(extractWhenSingle(block()))
-          } else {
-            expr()
-          }
-          Term.While(cond, body)
+          Term.While(cond, exprMaybeIndented())
         }
       case KwDo() =>
         next()
@@ -1847,24 +1840,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           else if (token.is[Indentation.Indent]) {
             indented(enumerators())
           } else {
-            enumerator(true)
+            enumerator(isFirst = true)
           }
 
         newLinesOpt()
         if (token.is[KwDo]) {
           accept[KwDo]
-          if (token.is[Indentation.Indent]) {
-            Term.For(enums, indented(extractWhenSingle(block())))
-          } else {
-            Term.For(enums, expr())
-          }
+          Term.For(enums, exprMaybeIndented())
         } else if (token.is[KwYield]) {
           accept[KwYield]
-          if (token.is[Indentation.Indent]) {
-            Term.ForYield(enums, indented(extractWhenSingle(block())))
-          } else {
-            Term.ForYield(enums, expr())
-          }
+          Term.ForYield(enums, exprMaybeIndented())
         } else {
           Term.For(enums, expr())
         }
@@ -2455,6 +2440,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         Term.PartialFunction(caseClauses())
       else block()
     }
+  }
+
+  def indentedBlock(): Term = autoPos {
+    Term.IndentedBlock(blockStatSeq())
   }
 
   def block(): Term = autoPos {
@@ -3394,9 +3383,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     if (tp.isEmpty || token.is[Equals]) {
       accept[Equals]
-      val rhsExpr = if (token.is[Indentation.Indent]) {
-        indented(extractWhenSingle(block()))
-      } else expr()
+      val rhsExpr = exprMaybeIndented()
       val rhs =
         if (rhsExpr.is[Term.Placeholder]) {
           if (tp.nonEmpty && isMutable && lhs.forall(_.is[Pat.Var]))
@@ -3448,10 +3435,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     if (token.is[Equals]) {
       accept[Equals]
-      val rhs = if (token.is[Indentation.Indent]) {
-        indented(extractWhenSingle(block()))
-      } else expr()
-      Defn.GivenAlias(mods, sigName, sigTparams, sigUparamss, decltpe, rhs)
+      Defn.GivenAlias(mods, sigName, sigTparams, sigUparamss, decltpe, exprMaybeIndented())
     } else {
       val (slf, stats) = templateBodyOpt(true)
       val rhs = Template(List.empty, List.empty, slf, stats)
@@ -3546,11 +3530,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         } else {
           accept[Equals]
         }
-        if (token.is[Indentation.Indent]) {
-          indented(extractWhenSingle(block()))
-        } else {
-          expr()
-        }
+        exprMaybeIndented()
       }
       if (isMacro) Defn.Macro(mods, name, tparams, paramss, restype, rhs)
       else Defn.Def(mods, name, tparams, paramss, restype, rhs)
