@@ -317,6 +317,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Term.ForYield
       |scala.meta.Term.Function
       |scala.meta.Term.If
+      |scala.meta.Term.IndentedBlock
       |scala.meta.Term.Interpolate
       |scala.meta.Term.Match
       |scala.meta.Term.Name

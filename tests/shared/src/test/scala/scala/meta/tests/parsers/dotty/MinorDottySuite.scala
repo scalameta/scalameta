@@ -313,4 +313,35 @@ class MinorDottySuite extends BaseDottySuite {
       Source(List(Defn.Val(List(Mod.Lazy()), List(Pat.Var(Term.Name("x"))), None, Lit.Int(3))))
     )
   }
+
+  test("changed-operator-syntax") {
+    // https://dotty.epfl.ch/docs/reference/changed-features/operators.html#syntax-change
+    runTestAssert[Source]("""|object X {
+                             |  println("hello")
+                             |  ???
+                             |  ??? match {
+                             |    case 0 => 1
+                             |  }
+                             |}
+                             |""".stripMargin)(
+      Source(
+        List(
+          Defn.Object(
+            Nil,
+            Term.Name("X"),
+            Template(
+              Nil,
+              Nil,
+              Self(Name(""), None),
+              List(
+                Term.Apply(Term.Name("println"), List(Lit.String("hello"))),
+                Term.Name("???"),
+                Term.Match(Term.Name("???"), List(Case(Lit.Int(0), None, Lit.Int(1))))
+              )
+            )
+          )
+        )
+      )
+    )
+  }
 }

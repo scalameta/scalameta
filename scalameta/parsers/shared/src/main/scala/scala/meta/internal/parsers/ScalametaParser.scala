@@ -30,6 +30,9 @@ import scala.meta.Defn.Given
 import SoftKeyword._
 import scala.meta.Defn.ExtensionGroup
 import scala.meta.internal.tokenizers.Chars
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
 
 class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   require(Set("", EOL).contains(dialect.toplevelSeparator))
@@ -372,12 +375,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           i += 1
         }
 
-        def isOperator(text: String): Boolean =
-          text.headOption.map(Chars.isOperatorPart).getOrElse(false)
+        def isLeadingInfixOperator(tkn: Token): Boolean =
+          dialect.allowSignificantIndentation &&
+            tkn.text.forall(Chars.isOperatorPart) &&
+            !tkn.text.startsWith("@") &&
+            tkn.strictNext.is[Ident]
 
         if (lastNewlinePos != -1 &&
           prev != null && prev.is[CanEndStat] &&
-          next != null && next.isNot[CantStartStat] && !isOperator(next.text) &&
+          next != null && next.isNot[CantStartStat] && !isLeadingInfixOperator(next) &&
           (sepRegionsParameter.isEmpty || sepRegionsParameter.head.closing == RegionBrace || sepRegionsParameter.head.closing == RegionEnum || sepRegionsParameter.head.closing == RegionIndent || sepRegionsParameter.head.closing == RegionIndentEnum)) {
 
           var token = scannerTokens(lastNewlinePos)
@@ -543,7 +549,20 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val pos = TokenStreamPosition(startTokenPos, endTokenPos + 1)
     result.withOrigin(Origin.Parsed(input, dialect, pos)).asInstanceOf[T]
   }
+
+  def atPosTry[T <: Tree](start: Pos, end: Pos)(body: => Try[T]): Try[T] = {
+    val startTokenPos = start.startTokenPos
+    val result = body
+    var endTokenPos = end.endTokenPos
+    if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
+    val pos = TokenStreamPosition(startTokenPos, endTokenPos + 1)
+    result.map(_.withOrigin(Origin.Parsed(input, dialect, pos)).asInstanceOf[T])
+  }
+
   def autoPos[T <: Tree](body: => T): T = atPos(start = auto, end = auto)(body)
+
+  def autoPosTry[T <: Tree](body: => Try[T]): Try[T] =
+    atPosTry(start = auto, end = auto)(body)
 
   /* ------------- ERROR HANDLING ------------------------------------------- */
 
@@ -2247,37 +2266,46 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val op = termName()
       if (op.value == "-" && token.is[NumericLiteral])
         simpleExprRest(atPos(op, auto)(literal(isNegated = true)), canApply = true)
-      else
-        atPos(op, auto)(Term.ApplyUnary(op, simpleExpr(allowRepeated = true)))
+      else {
+        simpleExpr0(allowRepeated = true) match {
+          case Success(result) => atPos(op, auto)(Term.ApplyUnary(op, result))
+          case Failure(_) =>
+            // maybe it is not unary operator but simply an ident `trait - {...}`
+            // we would fail here anyway, let's try to treat it as ident
+            simpleExprRest(op, canApply = true)
+        }
+      }
     }
 
-  def simpleExpr(allowRepeated: Boolean): Term = autoPos {
+  def simpleExpr(allowRepeated: Boolean): Term = simpleExpr0(allowRepeated).get
+
+  private def simpleExpr0(allowRepeated: Boolean): Try[Term] = autoPosTry {
     var canApply = true
-    val t: Term = {
+    val t: Try[Term] = {
       token match {
         case Literal() =>
-          literal()
+          Success(literal())
         case Interpolation.Id(_) =>
-          interpolateTerm()
+          Success(interpolateTerm())
         case Xml.Start() =>
-          xmlTerm()
+          Success(xmlTerm())
         case Ident(_) | KwThis() | KwSuper() | Unquote() =>
-          path() match {
+          Success(path() match {
             case q: Quasi => q.become[Term.Quasi]
             case path => path
-          }
+          })
         case Underscore() =>
           next()
-          atPos(in.prevTokenPos, in.prevTokenPos)(Term.Placeholder())
+          Success(atPos(in.prevTokenPos, in.prevTokenPos)(Term.Placeholder()))
         case LeftParen() =>
-          autoPos(inParensOrTupleOrUnit(location = NoStat, allowRepeated = allowRepeated))
+          Success(autoPos(inParensOrTupleOrUnit(location = NoStat, allowRepeated = allowRepeated)))
         case LeftBrace() =>
           canApply = false
-          blockExpr()
+          Success(blockExpr())
         case KwNew() =>
           canApply = false
           next()
-          atPos(in.prevTokenPos, auto) {
+          Success(atPos(in.prevTokenPos, auto) {
             template() match {
               case trivial @ Template(Nil, List(init), Self(Name.Anonymous(), None), Nil) =>
                 if (!token.prev.is[RightBrace]) Term.New(init)
@@ -2285,22 +2313,22 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
               case other =>
                 Term.NewAnonymous(other)
             }
-          }
+          })
         case MacroQuote() =>
-          macroQuote()
+          Success(macroQuote())
         case MacroSplice() =>
-          macroSplice()
+          Success(macroSplice())
         case MacroQuotedIdent(_) =>
-          macroQuotedIdent()
+          Success(macroQuotedIdent())
         case MacroSplicedIdent(_) =>
-          macroSplicedIdent()
+          Success(macroSplicedIdent())
         case Indentation.Indent() =>
-          indented(expr())
+          Success(indented(expr()))
         case _ =>
-          syntaxError(s"illegal start of simple expression", at = token)
+          Failure(new ParseException(token.pos, "illegal start of simple expression"))
       }
     }
-    simpleExprRest(t, canApply = canApply)
+    t.map(term => simpleExprRest(term, canApply = canApply))
   }
 
   def macroSplice(): Term = autoPos {
