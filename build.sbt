@@ -321,7 +321,7 @@ lazy val testkit = project
     libraryDependencies ++= Seq(
       "org.scalameta" %% "munit" % munitVersion,
       // These are used to download and extract a corpus tar.gz
-      "org.rauschig" % "jarchivelib" % "0.8.0",
+      "org.rauschig" % "jarchivelib" % "1.1.0",
       "commons-io" % "commons-io" % "2.7",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0"
     ),
