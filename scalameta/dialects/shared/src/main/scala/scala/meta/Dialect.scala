@@ -96,7 +96,7 @@ final class Dialect private (
     val allowEndMarker: Boolean,
     // Significant identation introduced in dotty
     val allowSignificantIndentation: Boolean,
-    // ???
+    // Dotty changed placeholder for types from `_` to `?`
     val allowQuestionMarkPlaceholder: Boolean
 ) extends Product with Serializable {
 

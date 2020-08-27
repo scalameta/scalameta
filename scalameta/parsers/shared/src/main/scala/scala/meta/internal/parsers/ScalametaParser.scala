@@ -221,7 +221,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val parserTokens = mutable.ArrayBuilder.make[Token]
     val parserTokenPositions = mutable.ArrayBuilder.make[Int]
 
-    var mustEmit = false
+    var shouldStartIndent: Boolean = false
+
+    // check if can be replaced with val
     var addRegion = -1
 
     @tailrec def loop(prevPos: Int, currPos: Int, sepRegionsParameter: List[SepRegion]): Unit = {
@@ -252,11 +254,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
       if (dialect.allowSignificantIndentation) {
         if (curr.is[ColonEol]) {
-          mustEmit = true
-        } else if (mustEmit && currentIndent > 0) {
+          shouldStartIndent = true
+        } else if (shouldStartIndent && currentIndent > 0) {
           parserTokens += new Indentation.Indent(curr.input, curr.dialect, curr.start, curr.end)
           parserTokenPositions += currPos
-          mustEmit = false
+          shouldStartIndent = false
           addRegion = currentIndent
         }
       }
@@ -354,7 +356,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             .is[KwYield] || curr.is[KwTry] || curr.is[KwCatch] || curr.is[KwFinally] || curr
             .is[KwMatch] || curr.is[KwDo] || curr.is[KwFor] || curr.is[KwThen] || curr
             .is[KwElse] || curr.is[Equals]) && isAheadNewLine()) {
-          mustEmit = true
+          shouldStartIndent = true
         }
 
         addRegion = -1
@@ -1763,6 +1765,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
+  private def tryAcceptWithOptLF[T <: Token : TokenInfo](implicit classifier: Classifier[Token, T]): Boolean = {
+    if (token.is[T] || (token.is[LF] && ahead(token.is[T]))) {
+      acceptOpt[LF]
+      accept[T]
+      true
+    } else {
+      false
+    }
+  }
+
   // FIXME: when parsing `(2 + 3)`, do we want the ApplyInfix's position to include parentheses?
   // if yes, then nothing has to change here
   // if no, we need eschew autoPos here, because it forces those parentheses on the result of calling prefixExpr
@@ -1783,9 +1795,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           (cond, exprMaybeIndented())
         }
 
-        if (token.is[KwElse] || (token.is[LF] && ahead(token.is[KwElse]))) {
-          next()
-          if (token.is[KwElse]) next()
+        if (tryAcceptWithOptLF[KwElse]) {
           Term.If(cond, thenp, exprMaybeIndented())
         } else if (token.is[Semicolon] && ahead { token.is[KwElse] }) {
           next(); next(); Term.If(cond, thenp, expr())
@@ -1802,9 +1812,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           case _ => expr()
         }
         val catchopt =
-          if (token.is[KwCatch] || (token.is[LF] && ahead(token.is[KwCatch]))) {
-            acceptOpt[LF]
-            accept[KwCatch]
+          if (tryAcceptWithOptLF[KwCatch]) {
             if (token.is[CaseIntro]) { accept[KwCase]; Some(caseClause()) }
             else if (token.is[Indentation.Indent]) Some(indented(caseClauses()))
             else if (token.isNot[LeftBrace]) Some(expr())
@@ -1816,9 +1824,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           } else { None }
 
         val finallyopt =
-          if (token.is[KwFinally] || (token.is[LF] && ahead(token.is[KwFinally]))) {
-            acceptOpt[LF]
-            accept[KwFinally]
+          if (tryAcceptWithOptLF[KwFinally]) {
             Some(exprMaybeIndented())
           } else {
             None
