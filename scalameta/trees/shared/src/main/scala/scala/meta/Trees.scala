@@ -103,9 +103,6 @@ object Term {
   @ast class Block(stats: List[Stat]) extends Term {
     checkFields(stats.forall(_.isBlockStat))
   }
-  @ast class IndentedBlock(stats: List[Stat]) extends Term {
-    checkFields(stats.forall(_.isBlockStat))
-  }
   @ast class EndMarker(name: Term.Name) extends Term
   @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term
   @ast class QuotedMacroExpr(body: Term) extends Term

@@ -20,7 +20,6 @@ import org.scalameta.adt._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.compat.Platform.EOL
-import scala.meta.Term.IndentedBlock
 
 object TreeSyntax {
   private final object SyntaxInstances {
@@ -412,42 +411,6 @@ object TreeSyntax {
       case t: Term.Ascribe => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.tpe))
       case t: Term.Annotate => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.annots))
       case t: Term.Tuple => m(SimpleExpr1, s("(", r(t.args, ", "), ")"))
-      case t: Term.IndentedBlock =>
-        import Term.{Block, IndentedBlock, Function}
-        def pstats(s: List[Stat]) = r(s.map(i(_)), "")
-        t match {
-          case IndentedBlock(
-                Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, Block(stats)) :: Nil
-              ) if mods.exists(_.is[Mod.Implicit]) =>
-            m(
-              SimpleExpr,
-              s(
-                "{ ",
-                kw("implicit"),
-                " ",
-                name,
-                tptopt.map(s(kw(":"), " ", _)).getOrElse(s()),
-                " ",
-                kw("=>"),
-                " ",
-                pstats(stats),
-                n("}")
-              )
-            )
-          case IndentedBlock(
-                Function(Term.Param(mods, name: Term.Name, None, _) :: Nil, Block(stats)) :: Nil
-              ) =>
-            m(SimpleExpr, s("{ ", name, " ", kw("=>"), " ", pstats(stats), n("}")))
-          case IndentedBlock(
-                Function(Term.Param(_, _: Name.Anonymous, _, _) :: Nil, Block(stats)) :: Nil
-              ) =>
-            m(SimpleExpr, s("{ ", kw("_"), " ", kw("=>"), " ", pstats(stats), n("}")))
-          case IndentedBlock(Function(params, Block(stats)) :: Nil) =>
-            m(SimpleExpr, s("{ (", r(params, ", "), ") => ", pstats(stats), n("}")))
-          case _ =>
-            m(SimpleExpr, if (t.stats.isEmpty) i("") else pstats(t.stats), n(""))
-        }
-
       case t: Term.Block =>
         import Term.{Block, Function}
         def pstats(s: List[Stat]) = r(s.map(i(_)), "")
@@ -484,31 +447,17 @@ object TreeSyntax {
             m(SimpleExpr, if (t.stats.isEmpty) s("{}") else s("{", pstats(t.stats), n("}")))
         }
       case t: Term.If =>
-        if (t.thenp.is[IndentedBlock]) {
-          m(
-            Expr1,
-            s(
-              kw("if"),
-              " ",
-              t.cond,
-              n("then"),
-              p(Expr, t.thenp),
-              if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()
-            )
+        m(
+          Expr1,
+          s(
+            kw("if"),
+            " (",
+            t.cond,
+            ") ",
+            p(Expr, t.thenp),
+            if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()
           )
-        } else {
-          m(
-            Expr1,
-            s(
-              kw("if"),
-              " (",
-              t.cond,
-              ") ",
-              p(Expr, t.thenp),
-              if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()
-            )
-          )
-        }
+        )
       case t: Term.Match =>
         m(
           Expr1,
@@ -592,25 +541,13 @@ object TreeSyntax {
       case t: Type.Macro => m(SimpleTyp, s(t.body))
       case t: Term.PartialFunction => m(SimpleExpr, s("{", r(t.cases.map(i(_)), ""), n("}")))
       case t: Term.While =>
-        if (t.body.is[Term.IndentedBlock]) {
-          m(Expr1, s(kw("while"), " ", t.expr, n("do"), p(Expr, t.body)))
-        } else {
-          m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
-        }
+        m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
       case t: Term.Do =>
         m(Expr1, s(kw("do"), " ", p(Expr, t.body), " ", kw("while"), " (", t.expr, ")"))
       case t: Term.For =>
-        if (t.body.is[Term.IndentedBlock]) {
-          m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", n("do"), t.body))
-        } else {
-          m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
-        }
+        m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
       case t: Term.ForYield =>
-        if (t.body.is[Term.IndentedBlock]) {
-          m(Expr1, s(kw("for"), n(""), r(t.enums.map(i(_))), n(""), kw("yield"), n(""), t.body))
-        } else {
-          m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
-        }
+        m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
       case t: Term.New => m(SimpleExpr, s(kw("new"), " ", t.init))
       case t: Term.EndMarker => s(kw("end"), " ", t.name)
       case t: Term.NewAnonymous =>

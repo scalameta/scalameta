@@ -397,6 +397,14 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
   testOptions.in(Slow) += Tests.Argument("--include-tags=Slow")
 )
 
+lazy val dottytests = project
+  .in(file("dottytest"))
+  .settings(
+    sharedSettings,
+    libraryDependencies += "org.scalameta" %% "munit" % munitVersion,
+    testFrameworks := List(new TestFramework("munit.Framework")),
+  ).dependsOn(scalameta.jvm)
+
 /* ======================== BENCHES ======================== */
 lazy val bench = project
   .in(file("bench/suite"))

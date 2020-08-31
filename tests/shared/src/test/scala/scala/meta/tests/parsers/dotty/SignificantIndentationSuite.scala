@@ -154,7 +154,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                           Term.Name("body")
                         )
                       ),
-                      Term.IndentedBlock(List(Term.Name("fordo")))
+                      Term.Block(List(Term.Name("fordo")))
                     )
                   ),
                   Case(Pat.Var(Term.Name("b")), None, Term.Name("ok"))
