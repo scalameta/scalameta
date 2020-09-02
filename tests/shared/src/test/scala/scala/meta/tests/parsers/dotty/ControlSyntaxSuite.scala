@@ -12,6 +12,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
   // IF
   // --------------------------
 
+  test("old-if-single1") {
+    val code = "if (cond) -a else a"
+    runTestAssert[Stat](code)(
+      Term.If(Term.Name("cond"), Term.ApplyUnary(Term.Name("-"), Term.Name("a")), Term.Name("a"))
+    )
+  }
+
   test("old-if-else-single1") {
     val code = """|if (cond) fx
                   |else gx
@@ -93,18 +100,30 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  gx
                     |}""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.If(Term.ApplyInfix(Term.Name("cond1"), Term.Name("&&"), Nil, List(Term.Name("cond2"))), Term.Block(List(Term.Name("gx"))), Lit.Unit())
+      Term.If(
+        Term.ApplyInfix(Term.Name("cond1"), Term.Name("&&"), Nil, List(Term.Name("cond2"))),
+        Term.Block(List(Term.Name("gx"))),
+        Lit.Unit()
+      )
     )
   }
 
-  test("new-if-single2".only) {
+  test("new-if-single2") {
     val code = """|if (cond1) || cond2(a1) then ok
                   |""".stripMargin
-    val output = """|if (cond1 && cond2) {
-                    |  gx
-                    |}""".stripMargin
+    val output = """|if (cond1 || cond2(a1)) ok
+                    |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.If(Term.ApplyInfix(Term.Name("cond1"), Term.Name("&&"), Nil, List(Term.Name("cond2"))), Term.Block(List(Term.Name("gx"))), Lit.Unit())
+      Term.If(
+        Term.ApplyInfix(
+          Term.Name("cond1"),
+          Term.Name("||"),
+          Nil,
+          List(Term.Apply(Term.Name("cond2"), List(Term.Name("a1"))))
+        ),
+        Term.Name("ok"),
+        Lit.Unit()
+      )
     )
   }
 
@@ -145,9 +164,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |})
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Apply(Term.Name("fx"), List(
-        Term.If(Term.Name("cond"), Term.Name("A"), Term.Block(List(Term.Name("B"))))
-      ))
+      Term.Apply(
+        Term.Name("fx"),
+        List(
+          Term.If(Term.Name("cond"), Term.Name("A"), Term.Block(List(Term.Name("B"))))
+        )
+      )
     )
   }
 
@@ -169,9 +191,16 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |})
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Apply(Term.Name("fx"), List(
-        Term.If(Term.Name("cond"), Term.Block(List(Term.Name("A1"), Term.Name("A2"))), Term.Block(List(Term.Name("B1"), Term.Name("B2"))))
-      ))
+      Term.Apply(
+        Term.Name("fx"),
+        List(
+          Term.If(
+            Term.Name("cond"),
+            Term.Block(List(Term.Name("A1"), Term.Name("A2"))),
+            Term.Block(List(Term.Name("B1"), Term.Name("B2")))
+          )
+        )
+      )
     )
   }
 
@@ -195,10 +224,17 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |}, secondArg)
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Apply(Term.Name("fx"), List(
-        Term.If(Term.Name("cond"), Term.Block(List(Term.Name("A1"), Term.Name("A2"))), Term.Block(List(Term.Name("B1"), Term.Name("B2")))),
-        Term.Name("secondArg")
-      ))
+      Term.Apply(
+        Term.Name("fx"),
+        List(
+          Term.If(
+            Term.Name("cond"),
+            Term.Block(List(Term.Name("A1"), Term.Name("A2"))),
+            Term.Block(List(Term.Name("B1"), Term.Name("B2")))
+          ),
+          Term.Name("secondArg")
+        )
+      )
     )
   }
 

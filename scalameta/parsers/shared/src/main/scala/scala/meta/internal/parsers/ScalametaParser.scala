@@ -178,13 +178,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (prev.is[Whitespace] || prev.is[Comment]) prev.prev
       else prev
     }
+
+    def nextF: Token = scannerTokens.apply(Math.min(token.index + 1, scannerTokens.length - 1))
+
     def next: Token = {
-      val next = scannerTokens.apply(Math.min(token.index + 1, scannerTokens.length - 1))
+      val next = nextF
       if (next.is[Whitespace] || next.is[Comment]) next.next
       else next
     }
     def strictNext: Token = {
-      val next = scannerTokens.apply(Math.min(token.index + 1, scannerTokens.length - 1))
+      val next = nextF
       if (next.is[Space] || next.is[Tab] || next.is[Comment]) next.strictNext
       else next
     }
@@ -300,8 +303,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           if (curr.is[LeftParen]) SepRegion(RegionParen, 0) :: sepRegions
           else if (curr.is[LeftBracket]) SepRegion(RegionBracket, 0) :: sepRegions
           else if (curr.is[Comma] &&
-              sepRegions.headOption.exists(_.closing == RegionIndent) &&
-              sepRegions.tail.headOption.exists(_.closing == RegionParen)) {
+            sepRegions.headOption.exists(_.closing == RegionIndent) &&
+            sepRegions.tail.headOption.exists(_.closing == RegionParen)) {
             parserTokens += new Indentation.Outdent(curr.input, curr.dialect, curr.start, curr.end)
             parserTokenPositions += currPos
             sepRegions.tail
@@ -389,14 +392,18 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
         if (lastNewlinePos != -1 &&
           prev != null && prev.is[CanEndStat] &&
-          next != null && next.isNot[CantStartStat] && !isLeadingInfixOperator(next) &&
+          next != null && next.isNot[CantStartStat] &&
           (sepRegionsParameter.isEmpty || sepRegionsParameter.head.closing == RegionBrace || sepRegionsParameter.head.closing == RegionEnum || sepRegionsParameter.head.closing == RegionIndent || sepRegionsParameter.head.closing == RegionIndentEnum)) {
 
-          var token = scannerTokens(lastNewlinePos)
-          if (newlines) token = LFLF(token.input, token.dialect, token.start, token.end)
-          parserTokens += token
-          parserTokenPositions += lastNewlinePos
-          loop(lastNewlinePos, currPos + 1, sepRegionsParameter)
+          if (isLeadingInfixOperator(next)) {
+            loop(prevPos, nextPos, sepRegionsParameter)
+          } else {
+            var token = scannerTokens(lastNewlinePos)
+            if (newlines) token = LFLF(token.input, token.dialect, token.start, token.end)
+            parserTokens += token
+            parserTokenPositions += lastNewlinePos
+            loop(lastNewlinePos, currPos + 1, sepRegionsParameter)
+          }
         } else {
           loop(prevPos, nextPos, sepRegionsParameter)
         }
@@ -413,7 +420,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def isLeadingInfixOperator(tkn: Token): Boolean =
     dialect.allowSignificantIndentation &&
       tkn.text.forall(Chars.isOperatorPart) &&
-      !tkn.text.startsWith("@")// && tkn.strictNext.is[Ident]
+      !tkn.text.startsWith("@") &&
+      tkn.nextF.is[Whitespace] &&
+      (tkn.strictNext.is[Ident] || tkn.strictNext.is[LeftParen])
 
   // NOTE: public methods of TokenIterator return scannerTokens-based positions
   trait TokenIterator extends Iterator[Token] {
@@ -1802,7 +1811,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           accept[KwThen]
           (cond, exprMaybeIndented())
         } else {
-          val cond = condExpr()
+          val forked = in.fork
+          var cond = condExpr()
+          if (token.is[Ident] && isLeadingInfixOperator(token)) {
+            in = forked
+            cond = expr()
+          }
           newLinesOpt()
           acceptOpt[KwThen]
           (cond, exprMaybeIndented())

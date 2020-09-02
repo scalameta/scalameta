@@ -402,8 +402,9 @@ lazy val dottytests = project
   .settings(
     sharedSettings,
     libraryDependencies += "org.scalameta" %% "munit" % munitVersion,
-    testFrameworks := List(new TestFramework("munit.Framework")),
-  ).dependsOn(scalameta.jvm)
+    testFrameworks := List(new TestFramework("munit.Framework"))
+  )
+  .dependsOn(scalameta.jvm)
 
 /* ======================== BENCHES ======================== */
 lazy val bench = project
