@@ -703,7 +703,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         syntaxError("can't unquote into string interpolations", at = charOffset - 1)
       } else {
         nextRawChar()
-        if (ch == '$') {
+        if (ch == '$' || (ch == '"' && dialect.allowInterpolationDolarQuoteEscape)) {
           putChar(ch)
           nextRawChar()
           getStringPart(multiLine)

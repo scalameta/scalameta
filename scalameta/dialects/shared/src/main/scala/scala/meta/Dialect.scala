@@ -93,7 +93,9 @@ final class Dialect private (
     // Extended classes separated by ',' introduced in dotty
     val allowCommaSeparatedExtend: Boolean,
     // end marker introduced in dotty
-    val allowEndMarker: Boolean
+    val allowEndMarker: Boolean,
+    // Support for escaping `"` in interpolated strings using $ - "$""
+    val allowInterpolationDolarQuoteEscape: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -165,7 +167,8 @@ final class Dialect private (
       allowSuperTrait = false,
       allowExportClause = false,
       allowCommaSeparatedExtend = false,
-      allowEndMarker = false
+      allowEndMarker = false,
+      allowInterpolationDolarQuoteEscape = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -274,6 +277,10 @@ final class Dialect private (
   def withAllowLiteralUnitType(newValue: Boolean): Dialect = {
     privateCopy(allowLiteralUnitType = newValue)
   }
+
+  def withAllowInterpolationDolarQuoteEscape(newValue: Boolean): Dialect = {
+    privateCopy(allowInterpolationDolarQuoteEscape = newValue)
+  }
   def withAllowSuperTrait(newValue: Boolean): Dialect = {
     privateCopy(allowSuperTrait = newValue)
   }
@@ -329,7 +336,8 @@ final class Dialect private (
       allowSuperTrait: Boolean = this.allowSuperTrait,
       allowExportClause: Boolean = this.allowExportClause,
       allowCommaSeparatedExtend: Boolean = this.allowCommaSeparatedExtend,
-      allowEndMarker: Boolean = this.allowEndMarker
+      allowEndMarker: Boolean = this.allowEndMarker,
+      allowInterpolationDolarQuoteEscape: Boolean = this.allowInterpolationDolarQuoteEscape
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -369,7 +377,8 @@ final class Dialect private (
       allowSuperTrait,
       allowExportClause,
       allowCommaSeparatedExtend,
-      allowEndMarker
+      allowEndMarker,
+      allowInterpolationDolarQuoteEscape
       // NOTE(olafur): add the next argument above this comment.
     )
   }

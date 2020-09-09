@@ -113,6 +113,7 @@ package object dialects {
     .withAllowExportClause(true)
     .withAllowCommaSeparatedExtend(true)
     .withAllowEndMarker(true)
+    .withAllowInterpolationDolarQuoteEscape(true)
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)

@@ -918,6 +918,28 @@ class TokenizerSuite extends BaseTokenizerSuite {
     assert(lf.syntax == "\n")
   }
 
+  test("Interpolated with quote escape") {
+    val stringInterpolation = """s"$"$name$" in quotes""""
+
+    val Tokens(
+      BOF(),
+      _: Interpolation.Id,
+      Interpolation.Start(),
+      Interpolation.Part("\""),
+      Interpolation.SpliceStart(),
+      Ident("name"),
+      Interpolation.SpliceEnd(),
+      Interpolation.Part("\" in quotes"),
+      Interpolation.End(),
+      EOF()
+    ) = dialects.Dotty(stringInterpolation).tokenize.get
+
+    assert(
+      dialects.Scala212(stringInterpolation).tokenize.isInstanceOf[Tokenized.Error],
+      "$\" should not tokenize in Scala 2"
+    )
+  }
+
   test("Comment.value") {
     val Tokens(bof, comment: Comment, eof) = "//foo".tokenize.get
     assert(comment.value == "foo")
