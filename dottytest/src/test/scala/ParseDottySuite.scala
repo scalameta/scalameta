@@ -16,7 +16,7 @@ class ParseDottySuite extends FunSuite {
   // val directoryName = "/Users/krzysztofbochenek/github/kris/dotty/"
 
   //NOTE(kbochenek): when dotty merges this switch to dotty repo/tag
-  val dottyGithubTag = "fix-then-syntax-2"
+  val dottyGithubTag = "master"
   val dottyRepo = "https://github.com/kpbochenek/dotty.git"
 
   def fetchDottyCodebase(): Unit = {
@@ -154,6 +154,7 @@ class ParseDottySuite extends FunSuite {
   final val ignoreParts = List(
     "/tests/",
     "/sbt-test/",
+    "/out/",
     "/doc-tool/test/", // maybe later verify this?
     "/language-server/src/dotty/"
   )

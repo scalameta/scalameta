@@ -442,33 +442,29 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
-  //TODO: needs to be fixed!
   test("new-catch-finally-single".ignore) {
     val code = """|try fx
                   |catch case x =>
                   |  ax
+                  |  bx
                   |finally
                   |  fx
                   |""".stripMargin
     val output = """|try fx catch {
                     |  case x =>
                     |    ax
+                    |    bx
                     |} finally {
                     |  fx
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Try(
-        Term.Name("fx"),
-        List(
-          Case(Pat.Var(Term.Name("x")), None, Term.Block(List(Term.Name("xa"), Term.Name("xb")))),
-          Case(Pat.Var(Term.Name("y")), None, Term.Name("yab")),
-          Case(Pat.Var(Term.Name("z")), None, Term.Block(List(Term.Name("za"), Term.Name("zb"))))
-        ),
-        None
-      )
+      Term.Try(Term.Name("fx"), List(Case(Pat.Var(Term.Name("x")), None, Term.Block(List(Term.Name("ax"), Term.Name("bx"))))), Some(Term.Block(List(Term.Name("fx")))))
     )
   }
+
+
+
   // --------------------------
   // FOR
   // --------------------------
@@ -888,4 +884,21 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  // --------------------------
+  // OTHER
+  // --------------------------
+
+  test("right-arrow-indentation-block") {
+    val code = """|class A { slf =>
+                  |
+                  |  val x = 3
+                  |}
+                  |""".stripMargin
+    val output = "class A { slf => val x = 3 }"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Class(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Term.Name("slf"), None), List(
+        Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Int(3))
+      )))
+    )
+  }
 }

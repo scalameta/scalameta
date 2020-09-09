@@ -116,6 +116,42 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("indent-below-okay".ignore) {
+    val code = """|def fn: Unit =
+                  |    if cond then
+                  |  truep
+                  |    else
+                  |  falsep
+                  |""".stripMargin
+    val output = """|def fn: Unit = {
+                    |  if (cond) {
+                    |    truep
+                    |  } else {
+                    |    falsep
+                    |  }
+                    |}""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Def(Nil, Term.Name("fn"), Nil, Nil, Some(Type.Name("Unit")), Term.Block(List(
+        Term.If(Term.Name("cond"), Term.Block(List(Term.Name("truep"))), Term.Block(List(Term.Name("falsep"))))
+      )))
+    )
+
+  }
+
+  test("indent-case-empty") {
+    val code = """|x match {
+                  |  case 1 =>
+                  |  case 2 =>
+                  |}
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = None)(
+      Term.Match(
+        Term.Name("x"),
+        List(Case(Lit.Int(1), None, Term.Block(Nil)), Case(Lit.Int(2), None, Term.Block(Nil)))
+      )
+    )
+  }
+
   test("case-for-in-match") {
     val code = """|class A {
                   |    def forward: Unit = parents match
