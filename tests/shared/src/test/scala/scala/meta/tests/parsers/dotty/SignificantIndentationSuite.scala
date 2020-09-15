@@ -116,26 +116,14 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
-  test("indent-below-okay".ignore) {
+  test("indent-below-not-okay") {
     val code = """|def fn: Unit =
                   |    if cond then
                   |  truep
                   |    else
                   |  falsep
                   |""".stripMargin
-    val output = """|def fn: Unit = {
-                    |  if (cond) {
-                    |    truep
-                    |  } else {
-                    |    falsep
-                    |  }
-                    |}""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Def(Nil, Term.Name("fn"), Nil, Nil, Some(Type.Name("Unit")), Term.Block(List(
-        Term.If(Term.Name("cond"), Term.Block(List(Term.Name("truep"))), Term.Block(List(Term.Name("falsep"))))
-      )))
-    )
-
+    runTestError[Stat](code, "error:")
   }
 
   test("indent-case-empty") {
@@ -150,6 +138,24 @@ class SignificantIndentationSuite extends BaseDottySuite {
         List(Case(Lit.Int(1), None, Term.Block(Nil)), Case(Lit.Int(2), None, Term.Block(Nil)))
       )
     )
+  }
+
+  test("selftype-class") {
+    val code = """|class A extends B:
+                  |  thisPhase =>
+                  |  expr1
+                  |  expr2
+                  |
+                  |""".stripMargin
+    val output = """|class A extends B { thisPhase =>
+                    |  expr1
+                    |  expr2
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Class(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, List(Init(Type.Name("B"), Name(""), Nil)), Self(Term.Name("thisPhase"), None), List(Term.Name("expr1"), Term.Name("expr2"))))
+    )
+    
   }
 
   test("case-for-in-match") {

@@ -442,7 +442,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
-  test("new-catch-finally-single".ignore) {
+  test("new-catch-finally-single") {
     val code = """|try fx
                   |catch case x =>
                   |  ax
@@ -463,6 +463,33 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("new-catch-inside-catch".only) {
+    val code = """|{
+                  |  try fx
+                  |  catch case x =>
+                  |    try 
+                  |      fy
+                  |    catch case y =>
+                  |    throw ex
+                  |  finally fxclose
+                  |}
+                  |""".stripMargin
+    val output = """|{
+                    |try fx catch {
+                    |  case x =>
+                    |    try {
+                    |      fy
+                    |    } catch {
+                    |      case y =>
+                    |    }
+                    |    throw ex
+                    |} finally fxclose
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.Try(Term.Name("fx"), List(Case(Pat.Var(Term.Name("x")), None, Term.Block(List(Term.Try(Term.Block(List(Term.Name("fy"))), List(Case(Pat.Var(Term.Name("y")), None, Term.Block(Nil))), None), Term.Throw(Term.Name("ex")))))), Some(Term.Name("fxclose")))
+    )
+  }
 
 
   // --------------------------

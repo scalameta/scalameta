@@ -224,11 +224,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val parserTokenPositions = mutable.ArrayBuilder.make[Int]
 
     var shouldStartIndent: Boolean = false
+    var lastCaseIndent: Int = -1
+    var lastIndent: Int = -1
 
     // check if can be replaced with val
     var addRegion = -1
 
-    @tailrec def loop(prevPos: Int, currPos: Int, sepRegionsParameter: List[SepRegion], lastIndent: Int): Unit = {
+    @tailrec def loop(prevPos: Int, currPos: Int, sepRegionsParameter: List[SepRegion]): Unit = {
       if (currPos >= scannerTokens.length) return
       val prev = if (prevPos >= 0) scannerTokens(prevPos) else null
       val curr = scannerTokens(currPos)
@@ -258,18 +260,31 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         else countIndent(currPos - 1)
       }
 
-      val lastIndentNew = if (currentIndent >= 0) currentIndent else lastIndent
-
       if (dialect.allowSignificantIndentation) {
         if (curr.is[ColonEol]) {
           shouldStartIndent = true
         } else if (shouldStartIndent && currentIndent > 0 /*&& currentIndent > lastIndent*/) {
+          if (sepRegionsParameter.headOption.exists(_.indent >= currentIndent)) {
+          parserTokens += new Indentation.Indent(curr.input, curr.dialect, curr.start, curr.end)
+          parserTokenPositions += currPos
+          parserTokens += new Indentation.Outdent(curr.input, curr.dialect, curr.start, curr.end)
+          parserTokenPositions += currPos
+          parserTokens += new LF(curr.input, curr.dialect, curr.start)
+          parserTokenPositions += currPos
+
+          } else {
+          // if (currentIndent > lastIndent) {
           // println(s"Insert INDENT => ${curr.name} :: ${curr.text} SIZE: ${currentIndent}")
           parserTokens += new Indentation.Indent(curr.input, curr.dialect, curr.start, curr.end)
           parserTokenPositions += currPos
-          shouldStartIndent = false
           addRegion = currentIndent
+          }
+
+          shouldStartIndent = false
+          lastIndent = -1
         }
+
+        if (curr.is[KwCase]) lastCaseIndent = currentIndent
       }
 
       // SIP-27 Trailing comma (multi-line only) support.
@@ -381,13 +396,21 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         if (dialect.allowSignificantIndentation && (prev == null || prev.text != "end") && (curr
             .is[KwYield] || curr.is[KwTry] || curr.is[KwCatch] || curr.is[KwFinally] || curr
             .is[KwMatch] || curr.is[KwDo] || curr.is[KwFor] || curr.is[KwThen] || curr
-            .is[KwElse] || curr.is[Equals]/* || curr.is[RightArrow]*/) && isAheadNewLine()) {
+            .is[KwElse] || curr.is[Equals] ||
+            (curr.is[RightArrow] && !sepRegionsNew.headOption.exists(_.closing == RegionBrace))
+           ) && isAheadNewLine()) {
+          
+          if (curr.is[RightArrow] && sepRegions.headOption.exists(_.closing == RegionArrow)) {
+            // arrived at case <cond> '=>'
+            // if after that indentation is less/equal indentation of case then don't insert indent
+            lastIndent = lastCaseIndent
+          }
           shouldStartIndent = true
         }
 
         addRegion = -1
 
-        loop(currPos, currPos + 1, sepRegionsNew, lastIndentNew)
+        loop(currPos, currPos + 1, sepRegionsNew)
       } else {
         var i = prevPos + 1
         var lastNewlinePos = -1
@@ -409,20 +432,20 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           (sepRegionsParameter.isEmpty || sepRegionsParameter.head.closing == RegionBrace || sepRegionsParameter.head.closing == RegionEnum || sepRegionsParameter.head.closing == RegionIndent || sepRegionsParameter.head.closing == RegionIndentEnum)) {
 
           if (isLeadingInfixOperator(next)) {
-            loop(prevPos, nextPos, sepRegionsParameter, lastIndentNew)
+            loop(prevPos, nextPos, sepRegionsParameter)
           } else {
             var token = scannerTokens(lastNewlinePos)
             if (newlines) token = LFLF(token.input, token.dialect, token.start, token.end)
             parserTokens += token
             parserTokenPositions += lastNewlinePos
-            loop(lastNewlinePos, currPos + 1, sepRegionsParameter, lastIndentNew)
+            loop(lastNewlinePos, currPos + 1, sepRegionsParameter)
           }
         } else {
-          loop(prevPos, nextPos, sepRegionsParameter, lastIndentNew)
+          loop(prevPos, nextPos, sepRegionsParameter)
         }
       }
     }
-    loop(-1, 0, Nil, -1)
+    loop(-1, 0, Nil)
     val underlying = parserTokens.result
 
     // underlying.foreach(t => Try(println(s"TOKEN ${t.name} :: ${t.text}")))
@@ -4146,6 +4169,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           case ex: ParseException =>
             in = afterFirst
             unreachable
+        }
+        if (token.is[Indentation.Indent]) {
+          accept[Indentation.Indent]
+          accept[Indentation.Outdent]
         }
       } else {
         firstOpt = Some(stat(first))

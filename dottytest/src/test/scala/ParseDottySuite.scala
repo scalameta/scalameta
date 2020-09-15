@@ -11,9 +11,9 @@ import scala.language.postfixOps
 
 class ParseDottySuite extends FunSuite {
 
-  val directoryName = "dotty-codebase"
+  // val directoryName = "dotty-codebase"
   // for my local testing
-  // val directoryName = "/Users/krzysztofbochenek/github/kris/dotty/"
+  val directoryName = "/home/kpbochenek/vl/github/kris/dotty/"
 
   //NOTE(kbochenek): when dotty merges this switch to dotty repo/tag
   val dottyGithubTag = "master"
@@ -91,11 +91,13 @@ class ParseDottySuite extends FunSuite {
     "input/src/main/scala/example/level2/Documentation.scala", // val refinementTest:   (wtf??)
     "tastydoc/src/dotty/tastydoc/comment/WikiParser.scala", // list mkString ""
     "/tools/dotc/reporting/messages.scala", // class TypeMismatch(found: Type, expected: Type, addenda: => String^*^)(using Context)
-    "compiler/src/dotty/tools/dotc/reporting/trace.scala", // stackoverflow ;P
     "/tools/dotc/core/Annotations.scala", // (Context ?=> Tree) = (using ctx) => bodyFn(using ctx)
     "/tools/dotc/core/Flags.scala", // val (^Private^ @ _, PrivateTerm @ _, PrivateType @ _) = newFlags
     "/tools/dotc/core/classfile/ClassfileParser.scala", // (using ctx: Context) ^=>^ annotType.classSymbol
     "/tools/dotc/core/Symbols.scala", // extension [N <: Name](sym: Symbol { type ThisName = N })^(^using Context)
+    "compiler/src/dotty/tools/dotc/util/LinearSet.scala", // ???
+    "/compiler/src/dotty/tools/dotc/util/LinearMap.scala", // ???
+    "src/dotty/tools/dotc/semanticdb/Tools.scala", // ???
 
     // ident.match { ... }
     "tools/dotc/core/tasty/TreePickler.scala",
@@ -121,9 +123,7 @@ class ParseDottySuite extends FunSuite {
     "tools/dotc/ast/tpd.scala", // comment after extension before def
     "tools/dotc/typer/ProtoTypes.scala", // comment after colonEOL
 
-    // REPRO: test with finally
-    "tools/dotc/core/Denotations.scala",
-    "tools/backend/jvm/BytecodeWriters.scala",
+    // REPRO: catch inside catch
     "dotty/tools/backend/jvm/GenBCode.scala",
     // @unchecked
     "tools/dotc/transform/ContextFunctionResults.scala",
@@ -149,6 +149,8 @@ class ParseDottySuite extends FunSuite {
     "tools/dotc/quoted/PickledQuotes.scala", // ???
     "tools/dotc/typer/QuotesAndSplices.scala", // ???
     "tools/dotc/parsing/Parsers.scala", // ???
+    "compiler/src/dotty/tools/dotc/util/GenericHashMap.scala",
+    "compiler/src/dotty/tools/dotc/util/HashSet.scala",
   )
 
   final val ignoreParts = List(
