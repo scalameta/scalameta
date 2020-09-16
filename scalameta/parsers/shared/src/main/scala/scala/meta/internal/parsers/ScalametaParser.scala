@@ -327,8 +327,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         }
 
         var sepRegionsNew = {
-          if (curr.is[LeftParen]) SepRegion(RegionParen, 0) :: sepRegions
-          else if (curr.is[LeftBracket]) SepRegion(RegionBracket, 0) :: sepRegions
+          if (curr.is[LeftParen]) SepRegion(RegionParen, -1) :: sepRegions
+          else if (curr.is[LeftBracket]) SepRegion(RegionBracket, -1) :: sepRegions
           else if (curr.is[Comma] &&
             sepRegions.headOption.exists(_.closing == RegionIndent) &&
             sepRegions.tail.headOption.exists(_.closing == RegionParen)) {
@@ -342,9 +342,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             // Now if we have token 'case' and top of stack is '$' we know it is Enum-case.
             // In any other case it is 'match-case' or 'try-case'
             if (!sepRegions.isEmpty && sepRegions.head.closing == RegionEnumArtificialMark)
-              SepRegion(RegionEnum, 0) :: sepRegions.tail
-            else SepRegion(RegionBrace, 0) :: sepRegions
-          } else if (curr.is[KwEnum]) SepRegion(RegionEnumArtificialMark, 0) :: sepRegions
+              SepRegion(RegionEnum, -1) :: sepRegions.tail
+            else SepRegion(RegionBrace, -1) :: sepRegions
+          } else if (curr.is[KwEnum]) SepRegion(RegionEnumArtificialMark, -1) :: sepRegions
           else if (curr.is[CaseIntro]) {
             if (!sepRegions.isEmpty && (sepRegions.head.closing == RegionEnum || sepRegions.head.closing == RegionIndentEnum))
               sepRegions
@@ -406,7 +406,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         if (dialect.allowSignificantIndentation && (prev == null || prev.text != "end") && (curr
             .is[KwYield] || curr.is[KwTry] || curr.is[KwCatch] || curr.is[KwFinally] || curr
             .is[KwMatch] || curr.is[KwDo] || curr.is[KwFor] || curr.is[KwThen] || curr
-            .is[KwElse] || curr.is[Equals] ||
+            .is[KwElse] || curr.is[Equals] || curr.is[KwWhile] || 
             (curr.is[RightArrow])
            ) && isAheadNewLine()) {
           
@@ -1918,6 +1918,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           newLinesOpt()
           val body = expr()
           Term.While(cond, body)
+        } else if (token.is[Indentation.Indent]) {
+          val cond = block()
+          acceptOpt[LF]
+          accept[KwDo]
+          Term.While(cond, exprMaybeIndented())
         } else {
           val cond = expr()
           acceptOpt[LF]

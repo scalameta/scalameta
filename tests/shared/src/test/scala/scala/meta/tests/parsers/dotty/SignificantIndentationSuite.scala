@@ -102,6 +102,23 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("indent-match-zero".ignore) {
+    val code = """|def fx: String = {
+                  |  x match
+                  |  case 1 => "OK"
+                  |  case 2 => "ERROR"
+                  |  val c = "123"
+                  |  c
+                  |}
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = None)(
+      Term.Match(
+        Term.Name("x"),
+        List(Case(Lit.Int(1), None, Lit.String("OK")), Case(Lit.Int(2), None, Lit.String("ERROR")))
+      )
+    )
+  }
+
   test("indent-match-two") {
     val code = """|
                   |x match

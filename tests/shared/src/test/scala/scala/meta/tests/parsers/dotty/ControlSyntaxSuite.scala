@@ -898,16 +898,39 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |  fx
                   |  fy
                   |""".stripMargin
-    val output = """|while (fx + fy) {
+    val output = """|while ({
+                    |  fx + fy
+                    |}) {
                     |  fx
                     |  fy
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.While(
-        Term.ApplyInfix(Term.Name("fx"), Term.Name("+"), Nil, List(Term.Name("fy"))),
+        Term.Block(List(Term.ApplyInfix(Term.Name("fx"), Term.Name("+"), Nil, List(Term.Name("fy"))))),
         Term.Block(List(Term.Name("fx"), Term.Name("fy")))
       )
+    )
+  }
+
+  test("new-while-multistat") {
+    val code = """|while
+                  |  s1
+                  |  s2
+                  |do
+                  |  fx
+                  |  fy
+                  |""".stripMargin
+    val output = """|while ({
+                    |  s1
+                    |  s2
+                    |}) {
+                    |  fx
+                    |  fy
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.While(Term.Block(List(Term.Name("s1"), Term.Name("s2"))), Term.Block(List(Term.Name("fx"), Term.Name("fy"))))
     )
   }
 

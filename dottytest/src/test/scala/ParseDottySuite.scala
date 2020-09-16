@@ -96,6 +96,7 @@ class ParseDottySuite extends FunSuite {
     "/tools/dotc/core/Flags.scala", // val (^Private^ @ _, PrivateTerm @ _, PrivateType @ _) = newFlags
     "/tools/dotc/core/classfile/ClassfileParser.scala", // (using ctx: Context) ^=>^ annotType.classSymbol
     "/tools/dotc/core/Symbols.scala", // extension [N <: Name](sym: Symbol { type ThisName = N })^(^using Context)
+    "tools/dotc/quoted/PickledQuotes.scala", // if (arg.isTerm) (using qctx: QuoteContext) ^=>^ new .Expr(arg)
     "compiler/src/dotty/tools/dotc/util/LinearSet.scala", // ???
     "/compiler/src/dotty/tools/dotc/util/LinearMap.scala", // ???
     "src/dotty/tools/dotc/semanticdb/Tools.scala", // ???
@@ -127,31 +128,31 @@ class ParseDottySuite extends FunSuite {
     // @unchecked
     "tools/dotc/transform/ContextFunctionResults.scala",
     "tools/dotc/transform/Erasure.scala",
+
     // for (a, b) <- lst yield ...
     "tools/dotc/transform/BetaReduce.scala",
+    "compiler/src/dotty/tools/dotc/typer/RefChecks.scala",
     "tools/dotc/typer/Checking.scala",
+    "tools/dotc/typer/QuotesAndSplices.scala",
     "tools/dotc/typer/ErrorReporting.scala", // for if then yield
     "tools/dotc/ast/Desugar.scala", // for if yield
     "/tools/dotc/typer/Typer.scala", // case ref @ OrNull(tpnn) ^:^ TermRef
 
     // TEST: should-indent-yet-brace
     "tools/dotc/parsing/xml/SymbolicXMLBuilder.scala",
+    "dotty/tools/dotc/parsing/xml/MarkupParserCommon.scala",
 
     // match <indent> case => match <indent> case => (match in match indented)
     "tools/dotc/semanticdb/ExtractSemanticDB.scala",
 
-    // while multistat do
-    "/tools/dotc/parsing/Scanners.scala",
-    "tools/dotc/util/HashTable.scala",
+    // val hook = (a, b) => <newline> statements
+    "compiler/src/dotty/tools/dotc/typer/Synthesizer.scala",
+    "tools/dotc/parsing/Parsers.scala",
+
+    // sym.addAnnotation(LazyBodyAnnotation { (using ctx0: Context) =>
     "tools/dotc/core/tasty/TreeUnpickler.scala",
-    "tools/dotc/core/tasty/TreeBuffer.scala",
-    "tools/dotc/typer/Synthesizer.scala", // ???
-    "tools/dotc/typer/RefChecks.scala", // ???
-    "tools/dotc/quoted/PickledQuotes.scala", // ???
-    "tools/dotc/typer/QuotesAndSplices.scala", // ???
-    "tools/dotc/parsing/Parsers.scala", // ???
-    "compiler/src/dotty/tools/dotc/util/GenericHashMap.scala",
-    "compiler/src/dotty/tools/dotc/util/HashSet.scala",
+
+    // unknown stuff
   )
 
   final val ignoreParts = List(
