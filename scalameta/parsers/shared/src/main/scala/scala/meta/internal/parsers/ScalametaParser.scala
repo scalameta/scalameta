@@ -264,14 +264,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         if (curr.is[ColonEol]) {
           shouldStartIndent = true
         } else if (shouldStartIndent && currentIndent > 0 /*&& currentIndent > lastIndent*/) {
-          if (sepRegionsParameter.headOption.exists(_.indent >= currentIndent)) {
-          parserTokens += new Indentation.Indent(curr.input, curr.dialect, curr.start, curr.end)
-          parserTokenPositions += currPos
-          parserTokens += new Indentation.Outdent(curr.input, curr.dialect, curr.start, curr.end)
-          parserTokenPositions += currPos
-          parserTokens += new LF(curr.input, curr.dialect, curr.start)
-          parserTokenPositions += currPos
-
+          if (sepRegionsParameter.headOption.exists(_.indent >= currentIndent) || lastIndent >= currentIndent) {
+            parserTokens += new Indentation.Indent(curr.input, curr.dialect, curr.start, curr.end)
+            parserTokenPositions += currPos
+            parserTokens += new Indentation.Outdent(curr.input, curr.dialect, curr.start, curr.end)
+            parserTokenPositions += currPos
+            parserTokens += new LF(curr.input, curr.dialect, curr.start)
+            parserTokenPositions += currPos
           } else {
           // if (currentIndent > lastIndent) {
           // println(s"Insert INDENT => ${curr.name} :: ${curr.text} SIZE: ${currentIndent}")
@@ -351,11 +350,22 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
               sepRegions
             else SepRegion(RegionArrow, 0) :: sepRegions
           } else if (curr.is[RightBrace]) {
+
             var sepRegionsProcess = sepRegions
-            while (!sepRegionsProcess.isEmpty && (sepRegionsProcess.head.closing != RegionBrace && sepRegionsProcess.head.closing != RegionEnum))
+            while (!sepRegionsProcess.isEmpty && (sepRegionsProcess.head.closing != RegionBrace && sepRegionsProcess.head.closing != RegionEnum)) {
+              parserTokens += new Indentation.Outdent(
+                curr.input,
+                curr.dialect,
+                curr.start,
+                curr.end
+              )
+              parserTokenPositions += currPos
+
               sepRegionsProcess = sepRegionsProcess.tail
+            }
             if (!sepRegionsProcess.isEmpty) sepRegionsProcess = sepRegionsProcess.tail
             sepRegionsProcess
+
           } else if (curr.is[RightBracket]) {
             if (!sepRegions.isEmpty && sepRegions.head.closing == RegionBracket) sepRegions.tail
             else sepRegions
@@ -397,7 +407,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             .is[KwYield] || curr.is[KwTry] || curr.is[KwCatch] || curr.is[KwFinally] || curr
             .is[KwMatch] || curr.is[KwDo] || curr.is[KwFor] || curr.is[KwThen] || curr
             .is[KwElse] || curr.is[Equals] ||
-            (curr.is[RightArrow] && !sepRegionsNew.headOption.exists(_.closing == RegionBrace))
+            (curr.is[RightArrow])
            ) && isAheadNewLine()) {
           
           if (curr.is[RightArrow] && sepRegions.headOption.exists(_.closing == RegionArrow)) {
@@ -4170,7 +4180,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             in = afterFirst
             unreachable
         }
-        if (token.is[Indentation.Indent]) {
+        if (token.is[Indentation.Indent] && ahead(token.is[Indentation.Outdent])) {
           accept[Indentation.Indent]
           accept[Indentation.Outdent]
         }

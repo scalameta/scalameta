@@ -11,12 +11,13 @@ import scala.language.postfixOps
 
 class ParseDottySuite extends FunSuite {
 
-  // val directoryName = "dotty-codebase"
+  //increase this number if branch code changes :)
+  val directoryName = "dotty-codebase2"
   // for my local testing
-  val directoryName = "/home/kpbochenek/vl/github/kris/dotty/"
+  // val directoryName = "/home/kpbochenek/vl/github/kris/dotty/"
 
   //NOTE(kbochenek): when dotty merges this switch to dotty repo/tag
-  val dottyGithubTag = "master"
+  val dottyGithubTag = "minor-syntax-fixes"
   val dottyRepo = "https://github.com/kpbochenek/dotty.git"
 
   def fetchDottyCodebase(): Unit = {
@@ -123,8 +124,6 @@ class ParseDottySuite extends FunSuite {
     "tools/dotc/ast/tpd.scala", // comment after extension before def
     "tools/dotc/typer/ProtoTypes.scala", // comment after colonEOL
 
-    // REPRO: catch inside catch
-    "dotty/tools/backend/jvm/GenBCode.scala",
     // @unchecked
     "tools/dotc/transform/ContextFunctionResults.scala",
     "tools/dotc/transform/Erasure.scala",
@@ -135,10 +134,12 @@ class ParseDottySuite extends FunSuite {
     "tools/dotc/ast/Desugar.scala", // for if yield
     "/tools/dotc/typer/Typer.scala", // case ref @ OrNull(tpnn) ^:^ TermRef
 
-    // illegal start of statement (???)
-    "tools/dotc/parsing/xml/MarkupParserCommon.scala",
+    // TEST: should-indent-yet-brace
     "tools/dotc/parsing/xml/SymbolicXMLBuilder.scala",
+
+    // match <indent> case => match <indent> case => (match in match indented)
     "tools/dotc/semanticdb/ExtractSemanticDB.scala",
+
     // while multistat do
     "/tools/dotc/parsing/Scanners.scala",
     "tools/dotc/util/HashTable.scala",

@@ -140,12 +140,47 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("match-case-one-align".ignore) {
+    val code = """|cond match {
+                  |  case a =>
+                  |  fa
+                  |  case b =>
+                  |  fb
+                  |}
+                  |""".stripMargin
+    val output = """|cond match {
+                    |  case a => fa
+                    |  case b => fb
+                    |}
+                    |""".stripMargin
+
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.Match(Term.Name("cond"), List(Case(Pat.Var(Term.Name("a")), None, Term.Name("fa")), Case(Pat.Var(Term.Name("b")), None, Term.Name("fb"))))
+    )
+  }
+
+  test("should-indent-yet-brace".ignore) {
+    val code = """|class X {
+                  |  def fx(): Unit =
+                  |  {
+                  |
+                  |  }
+                  |  private def f2: Int = 1
+                  |}
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = None)(
+      Term.Match(
+        Term.Name("x"),
+        List(Case(Lit.Int(1), None, Term.Block(Nil)), Case(Lit.Int(2), None, Term.Block(Nil)))
+      )
+    )
+  }
+
   test("selftype-class") {
     val code = """|class A extends B:
                   |  thisPhase =>
                   |  expr1
                   |  expr2
-                  |
                   |""".stripMargin
     val output = """|class A extends B { thisPhase =>
                     |  expr1
