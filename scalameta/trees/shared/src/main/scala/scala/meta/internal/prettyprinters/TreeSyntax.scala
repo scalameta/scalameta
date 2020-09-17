@@ -871,11 +871,11 @@ object TreeSyntax {
         s(w(t.mods, " "), kw("case"), " ", t.name, t.tparams, t.ctor, init())
 
       case t: Defn.ExtensionGroup =>
-        val m = t.methods match {
-          case single :: Nil =>
-            s(" ", single)
-          case many =>
-            s(":", r(many.map(i(_))), n(""))
+        val m = t.body match {
+          case Term.Block(stats) =>
+            s(":", r(stats.map(i(_))), n(""))
+          case onestat =>
+            s(" ", onestat)
         }
         s(
           kw("extension"),

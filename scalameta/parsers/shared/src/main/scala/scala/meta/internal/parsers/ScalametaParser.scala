@@ -3588,8 +3588,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       newLineOpt()
       List(nonLocalDefOrDcl())
     }
-    val methods = methodsAll.collect { case m: Defn.Def => m }
-    ExtensionGroup(eparam, tparams, methods)
+    val body: Stat = if (methodsAll.size == 1) methodsAll.head else Term.Block(methodsAll)
+    ExtensionGroup(eparam, tparams, body)
   }
 
   def funDefRest(mods: List[Mod]): Stat = atPos(mods, auto) {

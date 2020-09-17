@@ -66,7 +66,6 @@ class ReflectionSuite extends FunSuite {
       |List[List[scala.meta.Term.Param]]
       |List[List[scala.meta.Term]]
       |List[scala.meta.Case]
-      |List[scala.meta.Defn.Def]
       |List[scala.meta.Enumerator]
       |List[scala.meta.Importee]
       |List[scala.meta.Importer]
@@ -94,6 +93,7 @@ class ReflectionSuite extends FunSuite {
       |scala.meta.Pat
       |scala.meta.Ref
       |scala.meta.Self
+      |scala.meta.Stat
       |scala.meta.Template
       |scala.meta.Term
       |scala.meta.Term.Name

@@ -20,7 +20,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.ExtensionGroup(
         cparam,
         Nil,
-        List(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2)))
+        Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
       )
     )
   }
@@ -30,15 +30,13 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.ExtensionGroup(
         cparam,
         Nil,
-        List(
-          Defn.Def(
-            List(Mod.Private(Name.Anonymous())),
-            tname("crc"),
-            Nil,
-            Nil,
-            Some(pname("Int")),
-            int(2)
-          )
+        Defn.Def(
+          List(Mod.Private(Name.Anonymous())),
+          tname("crc"),
+          Nil,
+          Nil,
+          Some(pname("Int")),
+          int(2)
         )
       )
     )
@@ -52,7 +50,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.ExtensionGroup(
         cparam,
         Nil,
-        List(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2)))
+        Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
       )
     )
   }
@@ -68,15 +66,13 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.ExtensionGroup(
         Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None),
         Nil,
-        List(
-          Defn.Def(
-            List(Mod.Private(Name(""))),
-            Term.Name("crc"),
-            Nil,
-            Nil,
-            Some(Type.Name("Int")),
-            Lit.Int(2)
-          )
+        Defn.Def(
+          List(Mod.Private(Name(""))),
+          Term.Name("crc"),
+          Nil,
+          Nil,
+          Some(Type.Name("Int")),
+          Lit.Int(2)
         )
       )
     )
@@ -92,10 +88,12 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.ExtensionGroup(
         Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None),
         Nil,
-        List(
-          Defn.Def(Nil, Term.Name("cra"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)),
-          Defn.Def(Nil, Term.Name("crb"), Nil, Nil, Some(Type.Name("String")), Lit.String("3")),
-          Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Boolean")), Lit.Int(4))
+        Term.Block(
+          List(
+            Defn.Def(Nil, Term.Name("cra"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)),
+            Defn.Def(Nil, Term.Name("crb"), Nil, Nil, Some(Type.Name("String")), Lit.String("3")),
+            Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Boolean")), Lit.Int(4))
+          )
         )
       )
     )
@@ -110,7 +108,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.ExtensionGroup(
         cparam,
         Nil,
-        List(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2)))
+        Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
       )
     )
   }
