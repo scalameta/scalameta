@@ -9,67 +9,67 @@ the end of the document.
 
 ## Expressions (meta.Term)
 
-|                   | Quasiquote                                                               |
-| ----------------- | ------------------------------------------------------------------------ |
-| Literal           | `q"<literal>"`                                                           |
-| This              | `q"this"`, `q"$name.this"`                                               |
-| Super             | `q"super"`, `q"$name.super"`, `q"super[$name]"`, `q"$name.super[$name]"` |
-| Name              | `q"<name>"`                                                              |
-| Selection         | `q"$expr.$ename"`                                                        |
-| Interpolation     | Not supported yet                                                        |
-| Application       | `q"$expr(...$exprss)"`                                                   |
-| Type Application  | `q"$expr[..$tpesnel]"`                                                   |
-| Infix Application | `q"$expr $ename[..$tpes] $expr"`, `q"$expr $ename[..$tpes] (..$exprs)"`  |
-| Unary Application | `q"!$expr", q"~$expr", q"-$expr", "+$expr"`                              |
-| Assign            | `q"$expr = $expr"`                                                       |
-| Return            | `q"return $expr"`                                                        |
-| Throw             | `q"throw $expr"`                                                         |
-| Ascribe           | `q"$expr: $tpe"`                                                         |
-| Annotate          | `q"$expr: ..@$annotsnel"`                                                |
-| Tuple             | `q"(..$exprsnel)"`                                                       |
-| Block             | `q"{ ..$stats }"`                                                        |
-| If                | `q"if ($expr) $expr else $expr"`                                         |
-| Match             | `q"$expr match { ..case $casesnel }"`                                    |
-| Try               | `q"try $expr catch { ..case $cases } finally $expropt"`                  |
-| Try With Handler  | `q"try $expr catch $expr finally $expropt"`                              |
-| Function          | `q"(..$params) => $expr"`                                                |
-| Partial Function  | `q"{ ..case $casesnel }"`                                                |
-| While             | `q"while ($expr) $expr"`                                                 |
-| Do While          | `q"do $expr while($expr)"`                                               |
-| For               | `q"for (..$enumeratorsnel) $expr"`                                       |
-| For Yield         | `q"for (..$enumeratorsnel) yield $expr"`                                 |
-| New               | `q"new $init"`                                                           |
-| New Anonymous     | `q"new { ..$stat } with ..$inits { $self => ..$stats }"`                 |
-| Placeholder       | `q"_"`                                                                   |
-| Eta Expansion     | `q"$expr _"`                                                             |
-| Repeated          | `q"$expr: _*"`                                                           |
+|                   | Quasiquote                                                                |
+| ----------------- | ------------------------------------------------------------------------- |
+| Literal           | `q"<literal>"`                                                            |
+| This              | `q"this"`, `q"$name.this"`                                                |
+| Super             | `q"super"`, `q"$name.super"`, `q"super[$name]"`, `q"$name.super[$name]"`  |
+| Name              | `q"<name>"` when interpolation is not needed, otherwise `Term.Name(name)` |
+| Selection         | `q"$expr.$ename"`                                                         |
+| Interpolation     | Not supported yet                                                         |
+| Application       | `q"$expr(...$exprss)"`                                                    |
+| Type Application  | `q"$expr[..$tpesnel]"`                                                    |
+| Infix Application | `q"$expr $ename[..$tpes] $expr"`, `q"$expr $ename[..$tpes] (..$exprs)"`   |
+| Unary Application | `q"!$expr", q"~$expr", q"-$expr", "+$expr"`                               |
+| Assign            | `q"$expr = $expr"`                                                        |
+| Return            | `q"return $expr"`                                                         |
+| Throw             | `q"throw $expr"`                                                          |
+| Ascribe           | `q"$expr: $tpe"`                                                          |
+| Annotate          | `q"$expr: ..@$annotsnel"`                                                 |
+| Tuple             | `q"(..$exprsnel)"`                                                        |
+| Block             | `q"{ ..$stats }"`                                                         |
+| If                | `q"if ($expr) $expr else $expr"`                                          |
+| Match             | `q"$expr match { ..case $casesnel }"`                                     |
+| Try               | `q"try $expr catch { ..case $cases } finally $expropt"`                   |
+| Try With Handler  | `q"try $expr catch $expr finally $expropt"`                               |
+| Function          | `q"(..$params) => $expr"`                                                 |
+| Partial Function  | `q"{ ..case $casesnel }"`                                                 |
+| While             | `q"while ($expr) $expr"`                                                  |
+| Do While          | `q"do $expr while($expr)"`                                                |
+| For               | `q"for (..$enumeratorsnel) $expr"`                                        |
+| For Yield         | `q"for (..$enumeratorsnel) yield $expr"`                                  |
+| New               | `q"new $init"`                                                            |
+| New Anonymous     | `q"new { ..$stat } with ..$inits { $self => ..$stats }"`                  |
+| Placeholder       | `q"_"`                                                                    |
+| Eta Expansion     | `q"$expr _"`                                                              |
+| Repeated          | `q"$expr: _*"`                                                            |
 
 ## Types (meta.Type)
 
-|                   | Quasiquote                                                            |
-| ----------------- | --------------------------------------------------------------------- |
-| Literal           | `t"<literal>"`                                                        |
-| Name              | `t"<name>"`                                                           |
-| Selection         | `t"$eref.$tname"`                                                     |
-| Projection        | `t"$tpe#$tname"`                                                      |
-| Singleton         | `t"$eref.type"`                                                       |
-| Application       | `t"$tpe[..$tpesnel]` (vote for #519 to support `q"$expr[...$tpess]"`) |
-| Infix Application | `t"$tpe $tname $tpe"`                                                 |
-| With              | `t"$tpe with $tpe"` (only for supported dialects)                     |
-| And               | `t"$tpe & $tpe"` (only for supported dialects)                        |
-| Or                | <code>t"$tpe &#124; $tpe"</code> (only for supported dialects)        |
-| Function          | `t"(..$tpes) => $tpe"`                                                |
-| Implicit Function | `t"implicit (..$tpes) => $tpe"`                                       |
-| Tuple             | `t"(..$tpesnel)"`                                                     |
-| Refine            | `t"$tpeopt { ..$stats }"`                                             |
-| Existential       | `t"$tpe forSome { ..$statsnel }"`                                     |
-| Annotate          | `t"$tpe ..@$annotsnel"`                                               |
-| Lambda            | `t[..$tparams] => $tpe`                                               |
-| Method            | `t(...$paramss): $tpe`                                                |
-| Placeholder       | `t"_ >: $tpeopt <: $tpeopt"`                                          |
-| By Name           | `t"=> $tpe"`                                                          |
-| Repeated          | `t"$tpe*"`                                                            |
-| Var               | Not supported                                                         |
+|                   | Quasiquote                                                                |
+| ----------------- | ------------------------------------------------------------------------- |
+| Literal           | `t"<literal>"`                                                            |
+| Name              | `t"<name>"` when interpolation is not needed, otherwise `Type.Name(name)` |
+| Selection         | `t"$eref.$tname"`                                                         |
+| Projection        | `t"$tpe#$tname"`                                                          |
+| Singleton         | `t"$eref.type"`                                                           |
+| Application       | `t"$tpe[..$tpesnel]` (vote for #519 to support `q"$expr[...$tpess]"`)     |
+| Infix Application | `t"$tpe $tname $tpe"`                                                     |
+| With              | `t"$tpe with $tpe"` (only for supported dialects)                         |
+| And               | `t"$tpe & $tpe"` (only for supported dialects)                            |
+| Or                | <code>t"$tpe &#124; $tpe"</code> (only for supported dialects)            |
+| Function          | `t"(..$tpes) => $tpe"`                                                    |
+| Implicit Function | `t"implicit (..$tpes) => $tpe"`                                           |
+| Tuple             | `t"(..$tpesnel)"`                                                         |
+| Refine            | `t"$tpeopt { ..$stats }"`                                                 |
+| Existential       | `t"$tpe forSome { ..$statsnel }"`                                         |
+| Annotate          | `t"$tpe ..@$annotsnel"`                                                   |
+| Lambda            | `t[..$tparams] => $tpe`                                                   |
+| Method            | `t(...$paramss): $tpe`                                                    |
+| Placeholder       | `t"_ >: $tpeopt <: $tpeopt"`                                              |
+| By Name           | `t"=> $tpe"`                                                              |
+| Repeated          | `t"$tpe*"`                                                                |
+| Var               | Not supported                                                             |
 
 ## Patterns (meta.Pat) and Cases (meta.Case)
 

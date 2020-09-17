@@ -94,6 +94,8 @@ final class Dialect private (
     val allowCommaSeparatedExtend: Boolean,
     // end marker introduced in dotty
     val allowEndMarker: Boolean,
+    // Support for escaping `"` in interpolated strings using $ - "$""
+    val allowInterpolationDolarQuoteEscape: Boolean,
     // Significant identation introduced in dotty
     val allowSignificantIndentation: Boolean,
     // Dotty changed placeholder for types from `_` to `?`
@@ -170,6 +172,7 @@ final class Dialect private (
       allowExportClause = false,
       allowCommaSeparatedExtend = false,
       allowEndMarker = false,
+      allowInterpolationDolarQuoteEscape = false,
       allowSignificantIndentation = false,
       allowQuestionMarkPlaceholder = false
       // NOTE(olafur): declare the default value for new fields above this comment.
@@ -280,6 +283,10 @@ final class Dialect private (
   def withAllowLiteralUnitType(newValue: Boolean): Dialect = {
     privateCopy(allowLiteralUnitType = newValue)
   }
+
+  def withAllowInterpolationDolarQuoteEscape(newValue: Boolean): Dialect = {
+    privateCopy(allowInterpolationDolarQuoteEscape = newValue)
+  }
   def withAllowSuperTrait(newValue: Boolean): Dialect = {
     privateCopy(allowSuperTrait = newValue)
   }
@@ -342,6 +349,7 @@ final class Dialect private (
       allowExportClause: Boolean = this.allowExportClause,
       allowCommaSeparatedExtend: Boolean = this.allowCommaSeparatedExtend,
       allowEndMarker: Boolean = this.allowEndMarker,
+      allowInterpolationDolarQuoteEscape: Boolean = this.allowInterpolationDolarQuoteEscape,
       allowSignificantIndentation: Boolean = this.allowSignificantIndentation,
       allowQuestionMarkPlaceholder: Boolean = this.allowQuestionMarkPlaceholder
       // NOTE(olafur): add the next parameter above this comment.
@@ -384,6 +392,7 @@ final class Dialect private (
       allowExportClause,
       allowCommaSeparatedExtend,
       allowEndMarker,
+      allowInterpolationDolarQuoteEscape,
       allowSignificantIndentation,
       allowQuestionMarkPlaceholder
       // NOTE(olafur): add the next argument above this comment.

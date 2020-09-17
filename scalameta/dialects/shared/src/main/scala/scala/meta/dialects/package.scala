@@ -113,6 +113,7 @@ package object dialects {
     .withAllowExportClause(true)
     .withAllowCommaSeparatedExtend(true)
     .withAllowEndMarker(true)
+    .withAllowInterpolationDolarQuoteEscape(true)
     .withAllowSignificantIndentation(true)
     .withAllowQuestionMarkPlaceholder(true)
 

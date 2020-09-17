@@ -23,7 +23,6 @@ jobs:
           - "++2.13.3 testsJS/test"
           - "download-scala-library ++2.13.3 testsJVM/slow:test"
           - "mima"
-          - "dottytests/test"
     steps:
       - uses: actions/checkout@v2
       - uses: olafurpg/setup-scala@v7

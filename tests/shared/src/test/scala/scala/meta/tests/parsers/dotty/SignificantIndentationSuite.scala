@@ -140,7 +140,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |    else
                   |  falsep
                   |""".stripMargin
-    runTestError[Stat](code, "error:")
+    runTestError[Stat](code, "error: ; expected but else found")
   }
 
   test("indent-case-empty") {
