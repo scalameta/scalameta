@@ -459,7 +459,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Try(Term.Name("fx"), List(Case(Pat.Var(Term.Name("x")), None, Term.Block(List(Term.Name("ax"), Term.Name("bx"))))), Some(Term.Block(List(Term.Name("fx")))))
+      Term.Try(
+        Term.Name("fx"),
+        List(
+          Case(Pat.Var(Term.Name("x")), None, Term.Block(List(Term.Name("ax"), Term.Name("bx"))))
+        ),
+        Some(Term.Block(List(Term.Name("fx"))))
+      )
     )
   }
 
@@ -487,10 +493,32 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Block(List(Term.Try(Term.Name("fx"), List(Case(Pat.Var(Term.Name("x")), None, Term.Block(List(Term.Try(Term.Block(List(Term.Name("fy"))), List(Case(Pat.Var(Term.Name("y")), None, Term.Block(Nil))), None), Term.Throw(Term.Name("ex")))))), Some(Term.Name("fxclose")))))
+      Term.Block(
+        List(
+          Term.Try(
+            Term.Name("fx"),
+            List(
+              Case(
+                Pat.Var(Term.Name("x")),
+                None,
+                Term.Block(
+                  List(
+                    Term.Try(
+                      Term.Block(List(Term.Name("fy"))),
+                      List(Case(Pat.Var(Term.Name("y")), None, Term.Block(Nil))),
+                      None
+                    ),
+                    Term.Throw(Term.Name("ex"))
+                  )
+                )
+              )
+            ),
+            Some(Term.Name("fxclose"))
+          )
+        )
+      )
     )
   }
-
 
   // --------------------------
   // FOR
@@ -907,7 +935,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.While(
-        Term.Block(List(Term.ApplyInfix(Term.Name("fx"), Term.Name("+"), Nil, List(Term.Name("fy"))))),
+        Term.Block(
+          List(Term.ApplyInfix(Term.Name("fx"), Term.Name("+"), Nil, List(Term.Name("fy"))))
+        ),
         Term.Block(List(Term.Name("fx"), Term.Name("fy")))
       )
     )
@@ -930,7 +960,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.While(Term.Block(List(Term.Name("s1"), Term.Name("s2"))), Term.Block(List(Term.Name("fx"), Term.Name("fy"))))
+      Term.While(
+        Term.Block(List(Term.Name("s1"), Term.Name("s2"))),
+        Term.Block(List(Term.Name("fx"), Term.Name("fy")))
+      )
     )
   }
 
@@ -946,9 +979,20 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |""".stripMargin
     val output = "class A { slf => val x = 3 }"
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Class(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Term.Name("slf"), None), List(
-        Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Int(3))
-      )))
+      Defn.Class(
+        Nil,
+        Type.Name("A"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Term.Name("slf"), None),
+          List(
+            Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Int(3))
+          )
+        )
+      )
     )
   }
 }

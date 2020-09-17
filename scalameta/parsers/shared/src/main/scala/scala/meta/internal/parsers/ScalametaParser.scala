@@ -263,8 +263,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (dialect.allowSignificantIndentation) {
         if (curr.is[ColonEol]) {
           shouldStartIndent = true
-        } else if (shouldStartIndent && currentIndent > 0 /*&& currentIndent > lastIndent*/) {
-          if (sepRegionsParameter.headOption.exists(_.indent >= currentIndent) || lastIndent >= currentIndent) {
+        } else if (shouldStartIndent && currentIndent > 0 /*&& currentIndent > lastIndent*/ ) {
+          if (sepRegionsParameter.headOption.exists(
+              _.indent >= currentIndent
+            ) || lastIndent >= currentIndent) {
             parserTokens += new Indentation.Indent(curr.input, curr.dialect, curr.start, curr.end)
             parserTokenPositions += currPos
             parserTokens += new Indentation.Outdent(curr.input, curr.dialect, curr.start, curr.end)
@@ -272,11 +274,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             parserTokens += new LF(curr.input, curr.dialect, curr.start)
             parserTokenPositions += currPos
           } else {
-          // if (currentIndent > lastIndent) {
-          // println(s"Insert INDENT => ${curr.name} :: ${curr.text} SIZE: ${currentIndent}")
-          parserTokens += new Indentation.Indent(curr.input, curr.dialect, curr.start, curr.end)
-          parserTokenPositions += currPos
-          addRegion = currentIndent
+            parserTokens += new Indentation.Indent(curr.input, curr.dialect, curr.start, curr.end)
+            parserTokenPositions += currPos
+            addRegion = currentIndent
           }
 
           shouldStartIndent = false
@@ -296,29 +296,28 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           next.pos.startLine > curr.pos.endLine
       if (curr.isNot[Trivia] && !isTrailingComma) {
 
-        var sepRegions = if (/*addRegion <= 0 &&*/ indentedRegion(sepRegionsParameter) && currentIndent >= 0) {
-          var sepRegionsProcess = sepRegionsParameter
-          // var outdentInserted = false
-          while (indentedRegion(
-              sepRegionsProcess
-            ) && sepRegionsProcess.head.indent > currentIndent) {
-            parserTokens += new Indentation.Outdent(curr.input, curr.dialect, curr.start, curr.end)
-            parserTokenPositions += currPos
-            parserTokens += new LF(curr.input, curr.dialect, curr.start)
-            parserTokenPositions += currPos
-            sepRegionsProcess = sepRegionsProcess.tail
-            // outdentInserted = true
-          }
-          // if (!outdentInserted && (curr.is[KwElse] || curr.is[KwCase]) && indentedRegion(sepRegionsProcess)) {
-          //   parserTokens += new Indentation.Outdent(curr.input, curr.dialect, curr.start, curr.end)
-          //   parserTokenPositions += currPos
-          //   sepRegionsProcess = sepRegionsProcess.tail
+        var sepRegions =
+          if (indentedRegion(sepRegionsParameter) && currentIndent >= 0) {
+            var sepRegionsProcess = sepRegionsParameter
+            // var outdentInserted = false
+            while (indentedRegion(
+                sepRegionsProcess
+              ) && sepRegionsProcess.head.indent > currentIndent) {
+              parserTokens += new Indentation.Outdent(
+                curr.input,
+                curr.dialect,
+                curr.start,
+                curr.end
+              )
+              parserTokenPositions += currPos
+              parserTokens += new LF(curr.input, curr.dialect, curr.start)
+              parserTokenPositions += currPos
+              sepRegionsProcess = sepRegionsProcess.tail
+            }
+            sepRegionsProcess
+          } else sepRegionsParameter
 
-          // }
-          sepRegionsProcess
-        } else sepRegionsParameter
-
-        sepRegions = if (addRegion > 0) {
+        sepRegions = if (addRegion > 0 && dialect.allowSignificantIndentation) {
           if (!sepRegions.isEmpty && sepRegions.head.closing == RegionEnumArtificialMark)
             SepRegion(RegionIndentEnum, addRegion) :: sepRegions.tail
           else SepRegion(RegionIndent, addRegion) :: sepRegions
@@ -353,14 +352,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
             var sepRegionsProcess = sepRegions
             while (!sepRegionsProcess.isEmpty && (sepRegionsProcess.head.closing != RegionBrace && sepRegionsProcess.head.closing != RegionEnum)) {
-              parserTokens += new Indentation.Outdent(
-                curr.input,
-                curr.dialect,
-                curr.start,
-                curr.end
-              )
-              parserTokenPositions += currPos
-
+              if (dialect.allowSignificantIndentation) {
+                parserTokens += new Indentation.Outdent(
+                  curr.input,
+                  curr.dialect,
+                  curr.start,
+                  curr.end
+                )
+                parserTokenPositions += currPos
+              }
               sepRegionsProcess = sepRegionsProcess.tail
             }
             if (!sepRegionsProcess.isEmpty) sepRegionsProcess = sepRegionsProcess.tail
@@ -406,10 +406,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         if (dialect.allowSignificantIndentation && (prev == null || prev.text != "end") && (curr
             .is[KwYield] || curr.is[KwTry] || curr.is[KwCatch] || curr.is[KwFinally] || curr
             .is[KwMatch] || curr.is[KwDo] || curr.is[KwFor] || curr.is[KwThen] || curr
-            .is[KwElse] || curr.is[Equals] || curr.is[KwWhile] || 
-            (curr.is[RightArrow])
-           ) && isAheadNewLine()) {
-          
+            .is[KwElse] || curr.is[Equals] || curr.is[KwWhile] ||
+          (curr.is[RightArrow])) && isAheadNewLine()) {
+
           if (curr.is[RightArrow] && sepRegions.headOption.exists(_.closing == RegionArrow)) {
             // arrived at case <cond> '=>'
             // if after that indentation is less/equal indentation of case then don't insert indent

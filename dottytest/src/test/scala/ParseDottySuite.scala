@@ -128,7 +128,6 @@ class ParseDottySuite extends FunSuite {
     // @unchecked
     "tools/dotc/transform/ContextFunctionResults.scala",
     "tools/dotc/transform/Erasure.scala",
-
     // for (a, b) <- lst yield ...
     "tools/dotc/transform/BetaReduce.scala",
     "compiler/src/dotty/tools/dotc/typer/RefChecks.scala",
@@ -141,16 +140,13 @@ class ParseDottySuite extends FunSuite {
     // TEST: should-indent-yet-brace
     "tools/dotc/parsing/xml/SymbolicXMLBuilder.scala",
     "dotty/tools/dotc/parsing/xml/MarkupParserCommon.scala",
-
     // match <indent> case => match <indent> case => (match in match indented)
     "tools/dotc/semanticdb/ExtractSemanticDB.scala",
-
     // val hook = (a, b) => <newline> statements
     "compiler/src/dotty/tools/dotc/typer/Synthesizer.scala",
     "tools/dotc/parsing/Parsers.scala",
-
     // sym.addAnnotation(LazyBodyAnnotation { (using ctx0: Context) =>
-    "tools/dotc/core/tasty/TreeUnpickler.scala",
+    "tools/dotc/core/tasty/TreeUnpickler.scala"
 
     // unknown stuff
   )

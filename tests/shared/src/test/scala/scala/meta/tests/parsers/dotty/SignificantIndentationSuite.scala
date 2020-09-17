@@ -157,6 +157,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  // ignored because support is not yet added in parser but unparseable syntax was already identified.
+  // it will be fixed in next batch of changes.
   test("match-case-one-align".ignore) {
     val code = """|cond match {
                   |  case a =>
@@ -172,7 +174,13 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     |""".stripMargin
 
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Match(Term.Name("cond"), List(Case(Pat.Var(Term.Name("a")), None, Term.Name("fa")), Case(Pat.Var(Term.Name("b")), None, Term.Name("fb"))))
+      Term.Match(
+        Term.Name("cond"),
+        List(
+          Case(Pat.Var(Term.Name("a")), None, Term.Name("fa")),
+          Case(Pat.Var(Term.Name("b")), None, Term.Name("fb"))
+        )
+      )
     )
   }
 
@@ -205,9 +213,20 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Class(Nil, Type.Name("A"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, List(Init(Type.Name("B"), Name(""), Nil)), Self(Term.Name("thisPhase"), None), List(Term.Name("expr1"), Term.Name("expr2"))))
+      Defn.Class(
+        Nil,
+        Type.Name("A"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          List(Init(Type.Name("B"), Name(""), Nil)),
+          Self(Term.Name("thisPhase"), None),
+          List(Term.Name("expr1"), Term.Name("expr2"))
+        )
+      )
     )
-    
+
   }
 
   test("case-for-in-match") {
