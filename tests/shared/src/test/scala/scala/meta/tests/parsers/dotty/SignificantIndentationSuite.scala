@@ -102,37 +102,6 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
-  test("indent-match-zero".ignore) {
-    val code = """|def fx: String = {
-                  |  x match
-                  |  case 1 => "OK"
-                  |  case 2 => "ERROR"
-                  |  val c = "123"
-                  |  c
-                  |}
-                  |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = None)(
-      Term.Match(
-        Term.Name("x"),
-        List(Case(Lit.Int(1), None, Lit.String("OK")), Case(Lit.Int(2), None, Lit.String("ERROR")))
-      )
-    )
-  }
-
-  test("indent-match-two") {
-    val code = """|
-                  |x match
-                  |  case 1 => "OK"
-                  |  case 2 => "ERROR"
-                  |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = None)(
-      Term.Match(
-        Term.Name("x"),
-        List(Case(Lit.Int(1), None, Lit.String("OK")), Case(Lit.Int(2), None, Lit.String("ERROR")))
-      )
-    )
-  }
-
   test("indent-below-not-okay") {
     val code = """|def fn: Unit =
                   |    if cond then
@@ -141,47 +110,6 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |  falsep
                   |""".stripMargin
     runTestError[Stat](code, "error: ; expected but else found")
-  }
-
-  test("indent-case-empty") {
-    val code = """|x match {
-                  |  case 1 =>
-                  |  case 2 =>
-                  |}
-                  |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = None)(
-      Term.Match(
-        Term.Name("x"),
-        List(Case(Lit.Int(1), None, Term.Block(Nil)), Case(Lit.Int(2), None, Term.Block(Nil)))
-      )
-    )
-  }
-
-  // ignored because support is not yet added in parser but unparseable syntax was already identified.
-  // it will be fixed in next batch of changes.
-  test("match-case-one-align".ignore) {
-    val code = """|cond match {
-                  |  case a =>
-                  |  fa
-                  |  case b =>
-                  |  fb
-                  |}
-                  |""".stripMargin
-    val output = """|cond match {
-                    |  case a => fa
-                    |  case b => fb
-                    |}
-                    |""".stripMargin
-
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Match(
-        Term.Name("cond"),
-        List(
-          Case(Pat.Var(Term.Name("a")), None, Term.Name("fa")),
-          Case(Pat.Var(Term.Name("b")), None, Term.Name("fb"))
-        )
-      )
-    )
   }
 
   test("should-indent-yet-brace".ignore) {

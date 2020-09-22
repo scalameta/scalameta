@@ -203,7 +203,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   case object RegionIndentEnum extends RegionType
   case object RegionArrow extends RegionType
   case object RegionEnumArtificialMark extends RegionType
-  case class SepRegion(closing: RegionType, indent: Int)
+  case class SepRegion(closing: RegionType, indent: Int, closeOnNonCase: Boolean = false)
 
   // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
@@ -217,7 +217,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   lazy val (parserTokens, parserTokenPositions) = {
     def indentedRegion(regions: List[SepRegion]): Boolean =
       regions.headOption.exists {
-        case SepRegion(c, _) => c == RegionIndent || c == RegionIndentEnum
+        case SepRegion(c, _, _) => c == RegionIndent || c == RegionIndentEnum
       }
 
     val parserTokens = mutable.ArrayBuilder.make[Token]
@@ -229,6 +229,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     // check if can be replaced with val
     var addRegion = -1
+    var catchCaseIndent = false
 
     @tailrec def loop(prevPos: Int, currPos: Int, sepRegionsParameter: List[SepRegion]): Unit = {
       if (currPos >= scannerTokens.length) return
@@ -260,6 +261,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         else countIndent(currPos - 1)
       }
 
+      var closeIndent = false
+
       if (dialect.allowSignificantIndentation) {
         if (curr.is[ColonEol]) {
           shouldStartIndent = true
@@ -284,6 +287,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         }
 
         if (curr.is[KwCase]) lastCaseIndent = currentIndent
+        if (curr.is[KwCase] && prev.is[KwCatch]) catchCaseIndent = true
+
+        if (sepRegionsParameter.headOption.exists(h => h.closeOnNonCase == true && h.indent == currentIndent) && !curr.is[KwCase])
+        {
+            parserTokens += new Indentation.Outdent(curr.input, curr.dialect, curr.start, curr.end)
+            parserTokenPositions += currPos
+            parserTokens += new LF(curr.input, curr.dialect, curr.start)
+            parserTokenPositions += currPos
+            closeIndent = true
+        }
       }
 
       // SIP-27 Trailing comma (multi-line only) support.
@@ -320,7 +333,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         sepRegions = if (addRegion > 0 && dialect.allowSignificantIndentation) {
           if (!sepRegions.isEmpty && sepRegions.head.closing == RegionEnumArtificialMark)
             SepRegion(RegionIndentEnum, addRegion) :: sepRegions.tail
-          else SepRegion(RegionIndent, addRegion) :: sepRegions
+          else SepRegion(RegionIndent, addRegion, prev.is[KwMatch]) :: sepRegions
+        } else if (closeIndent && sepRegions.headOption.exists(_.closing == RegionIndent)) {
+          sepRegions.tail
         } else {
           sepRegions
         }
@@ -407,15 +422,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             .is[KwYield] || curr.is[KwTry] || curr.is[KwCatch] || curr.is[KwFinally] || curr
             .is[KwMatch] || curr.is[KwDo] || curr.is[KwFor] || curr.is[KwThen] || curr
             .is[KwElse] || curr.is[Equals] || curr.is[KwWhile] ||
-          (curr.is[RightArrow])) && isAheadNewLine()) {
+          (curr.is[RightArrow] && (catchCaseIndent || !sepRegionsNew.headOption.exists(_.closing == RegionBrace)))) && isAheadNewLine()) {
 
           if (curr.is[RightArrow] && sepRegions.headOption.exists(_.closing == RegionArrow)) {
             // arrived at case <cond> '=>'
-            // if after that indentation is less/equal indentation of case then don't insert indent
             lastIndent = lastCaseIndent
           }
           shouldStartIndent = true
         }
+        if (curr.is[RightArrow]) catchCaseIndent = false
 
         addRegion = -1
 

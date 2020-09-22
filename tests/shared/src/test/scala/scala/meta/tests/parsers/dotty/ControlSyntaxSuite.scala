@@ -995,4 +995,174 @@ class ControlSyntaxSuite extends BaseDottySuite {
       )
     )
   }
+
+  // --------------------------
+  // MATCH CASE
+  // --------------------------
+
+  test("old-match-case-empty") {
+    val code = """|x match {
+                  |  case 1 =>
+                  |  case 2 =>
+                  |}
+                  |""".stripMargin
+    runTestAssert[Stat](code)(
+      Term.Match(
+        Term.Name("x"),
+        List(Case(Lit.Int(1), None, Term.Block(Nil)), Case(Lit.Int(2), None, Term.Block(Nil)))
+      )
+    )
+  }
+
+  test("old-match-case-oneline") {
+    val code = """|x match {
+                  |  case 1 => "1"
+                  |  case 2 => "2"
+                  |}
+                  |""".stripMargin
+    runTestAssert[Stat](code)(
+      Term.Match(
+        Term.Name("x"),
+        List(Case(Lit.Int(1), None, Lit.String("1")), Case(Lit.Int(2), None, Lit.String("2")))
+      )
+    )
+  }
+
+  test("old-match-case-multiline") {
+    val code = """|x match {
+                  |  case 1 =>
+                  |    a1
+                  |    b1
+                  |  case 2 =>
+                  |    a2
+                  |    b2
+                  |}
+                  |""".stripMargin
+    runTestAssert[Stat](code)(
+      Term.Match(Term.Name("x"), List(Case(Lit.Int(1), None, Term.Block(List(Term.Name("a1"), Term.Name("b1")))), Case(Lit.Int(2), None, Term.Block(List(Term.Name("a2"), Term.Name("b2"))))))
+    )
+  }
+
+  test("old-match-case-inside") {
+    val code = """|x match {
+                  |  case 1 =>
+                  |    y match {
+                  |      case 5 => "5"
+                  |      case 6 => "6"
+                  |    }
+                  |  case 2 =>
+                  |    "2"
+                  |}
+                  |""".stripMargin
+    runTestAssert[Stat](code)(
+      Term.Match(Term.Name("x"), List(Case(Lit.Int(1), None, Term.Match(Term.Name("y"), List(Case(Lit.Int(5), None, Lit.String("5")), Case(Lit.Int(6), None, Lit.String("6"))))), Case(Lit.Int(2), None, Lit.String("2"))))
+    )
+  }
+
+  test("new-match-case-empty") {
+    val code = """|x match
+                  |  case 1 =>
+                  |  case 2 =>
+                  |""".stripMargin
+    val output = """|x match {
+                    |  case 1 =>
+                    |  case 2 =>
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.Match(
+        Term.Name("x"),
+        List(Case(Lit.Int(1), None, Term.Block(Nil)), Case(Lit.Int(2), None, Term.Block(Nil)))
+      )
+    )
+  }
+
+  test("new-match-case-oneline") {
+    val code = """|x match
+                  |  case 1 => "1"
+                  |  case 2 => "2"
+                  |""".stripMargin
+    val output = """|x match {
+                    |  case 1 => "1"
+                    |  case 2 => "2"
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.Match(Term.Name("x"), List(Case(Lit.Int(1), None, Lit.String("1")), Case(Lit.Int(2), None, Lit.String("2"))))
+    )
+  }
+
+  test("new-match-case-multiline") {
+    val code = """|x match
+                  |  case 1 =>
+                  |    a1
+                  |    b1
+                  |  case 2 =>
+                  |    a2
+                  |    b2
+                  |""".stripMargin
+    val output = """|x match {
+                    |  case 1 =>
+                    |    a1
+                    |    b1
+                    |  case 2 =>
+                    |    a2
+                    |    b2
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.Match(Term.Name("x"), List(Case(Lit.Int(1), None, Term.Block(List(Term.Name("a1"), Term.Name("b1")))), Case(Lit.Int(2), None, Term.Block(List(Term.Name("a2"), Term.Name("b2"))))))
+    )
+  }
+
+  // ignored because support is not yet added in parser but unparseable syntax was already identified.
+  // it will be fixed in next batch of changes.
+  test("old-match-case-one-align") {
+    val code = """|cond match {
+                  |  case a =>
+                  |  fa
+                  |  case b =>
+                  |  fb
+                  |}
+                  |""".stripMargin
+    val output = """|cond match {
+                    |  case a => fa
+                    |  case b => fb
+                    |}
+                    |""".stripMargin
+
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.Match(
+        Term.Name("cond"),
+        List(
+          Case(Pat.Var(Term.Name("a")), None, Term.Name("fa")),
+          Case(Pat.Var(Term.Name("b")), None, Term.Name("fb"))
+        )
+      )
+    )
+  }
+
+  test("new-match-case-oneline-align") {
+    val code = """|def fx: String = {
+                  |  x match
+                  |  case 1 => "OK"
+                  |  case 2 => "ERROR"
+                  |  val c = "123"
+                  |  c
+                  |}
+                  |""".stripMargin
+    val output = """|def fx: String = {
+                    |  x match {
+                    |    case 1 => "OK"
+                    |    case 2 => "ERROR"
+                    |  }
+                    |  val c = "123"
+                    |  c
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Def(Nil, Term.Name("fx"), Nil, Nil, Some(Type.Name("String")), Term.Block(List(Term.Match(Term.Name("x"), List(Case(Lit.Int(1), None, Lit.String("OK")), Case(Lit.Int(2), None, Lit.String("ERROR")))), Defn.Val(Nil, List(Pat.Var(Term.Name("c"))), None, Lit.String("123")), Term.Name("c"))))
+    )
+  }
+
 }
