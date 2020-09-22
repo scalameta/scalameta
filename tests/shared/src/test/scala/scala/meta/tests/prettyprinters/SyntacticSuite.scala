@@ -924,8 +924,22 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkTree(q"""x _""", "x _")
   }
 
-  def checkTree(original: Tree, expected: String): Unit = {
-    assert(original.syntax == expected)
-    assert(original.structure == (expected.parse[Stat]).get.structure)
+  test("#2106 unicode characters are properly escaped in string literals") {
+    checkTree(Lit.String("xy\u001az"), "\"xy\\u001az\"")
+    checkTree(Lit.String("þæö"), "\"þæö\"")
+    checkTree(Lit.String(">"), "\">\"")
+    checkTree(Lit.String("~"), "\"~\"")
+    checkTree(Lit.String(" "), "\" \"")
+    checkTree(Lit.String("="), "\"=\"")
+    checkTree(Lit.String("\u007f"), "\"\\u007f\"")
+    checkTree(Lit.String("\u001f"), "\"\\u001f\"")
+    checkTree(Lit.String("\\"), "\"\\\\\"")
+    checkTree(Lit.String("\u00fe\u00e6\u00f6"), "\"þæö\"")
+    checkTree(Lit.String("ラーメン"), "\"ラーメン\"")
+  }
+
+  def checkTree(original: Tree, expected: String)(implicit loc: munit.Location): Unit = {
+    assertNoDiff(original.syntax, expected)
+    assertNoDiff(original.structure, expected.parse[Stat].get.structure)
   }
 }

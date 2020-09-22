@@ -25,7 +25,9 @@ object enquote {
         case '\'' if style eq SingleQuotes =>
           sb.append("\\\'")
         case c =>
-          sb.append(c)
+          val isNonReadableAscii = c < ' ' || c > '~'
+          if (isNonReadableAscii && !Character.isLetter(c)) sb.append("\\u%04x".format(c.toInt))
+          else sb.append(c)
       }
     }
     sb.append(style.toString)
