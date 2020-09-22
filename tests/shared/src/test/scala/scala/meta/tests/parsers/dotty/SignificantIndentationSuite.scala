@@ -154,7 +154,26 @@ class SignificantIndentationSuite extends BaseDottySuite {
         )
       )
     )
+  }
 
+  test("lambda-method") {
+    val code = """|object X:
+                  |  val fn = (pa, pb) =>
+                  |    def helper = 3
+                  |    3
+                  |  end fn
+                  |""".stripMargin
+    val output = """|object X {
+                    |  val fn = (pa, pb) => {
+                    |    def helper = 3
+                    |    3
+                    |  }
+                    |  end fn
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Object(Nil, Term.Name("X"), Template(Nil, Nil, Self(Name(""), None), List(Defn.Val(Nil, List(Pat.Var(Term.Name("fn"))), None, Term.Function(List(Term.Param(Nil, Term.Name("pa"), None, None), Term.Param(Nil, Term.Name("pb"), None, None)), Term.Block(List(Defn.Def(Nil, Term.Name("helper"), Nil, Nil, None, Lit.Int(3)), Lit.Int(3))))), Term.EndMarker(Term.Name("fn")))))
+    )
   }
 
   test("case-for-in-match") {

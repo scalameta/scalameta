@@ -143,12 +143,9 @@ class ParseDottySuite extends FunSuite {
     // match <indent> case => match <indent> case => (match in match indented)
     "tools/dotc/semanticdb/ExtractSemanticDB.scala",
     // val hook = (a, b) => <newline> statements
-    "compiler/src/dotty/tools/dotc/typer/Synthesizer.scala",
     "tools/dotc/parsing/Parsers.scala",
-    // sym.addAnnotation(LazyBodyAnnotation { (using ctx0: Context) =>
+    // test reproduces: using-lambda-method-parameter
     "tools/dotc/core/tasty/TreeUnpickler.scala"
-
-    // unknown stuff
   )
 
   final val ignoreParts = List(

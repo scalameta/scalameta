@@ -486,6 +486,21 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
+  test("using-lambda-method-parameter".ignore) {
+    runTestAssert[Stat]("LazyBody { (using ctx: Context) => 3 }")(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("a"))),
+        None,
+        Term.ApplyUsing(
+          Term.ApplyUsing(Term.Apply(tname("f"), Nil), List(tname("a"))),
+          List(int(3), Lit.Boolean(true))
+        )
+      )
+    )
+
+  }
+
   test("using-named-with-by-name-parameter") {
     val usingByName =
       Term.Param(List(Mod.Using()), tname("a"), Some(Type.ByName(pname("Int"))), None)

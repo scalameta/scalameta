@@ -2105,7 +2105,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                 case _ => List(convertToParam(tree)).flatten
               }
               val params = convertToParams(t)
-              val body = dropTrivialBlock(if (location != BlockStat) expr() else block())
+              val trm = if (token.is[Indentation.Indent]) block()
+                        else if (location != BlockStat) expr()
+                        else block()
+              val body = dropTrivialBlock(trm)
               Term.Function(params, body)
             })
           } else {
