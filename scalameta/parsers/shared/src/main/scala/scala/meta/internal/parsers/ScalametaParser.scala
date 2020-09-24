@@ -227,7 +227,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     // check if can be replaced with val
     var addRegion = -1
-    var catchCaseIndent = false
 
     @tailrec def loop(prevPos: Int, currPos: Int, sepRegionsParameter: List[SepRegion]): Unit = {
       if (currPos >= scannerTokens.length) return
@@ -264,8 +263,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
           shouldStartIndent = false
         }
-
-        if (curr.is[KwCase] && prev.is[KwCatch]) catchCaseIndent = true
 
         if (sepRegionsParameter.headOption.exists(h =>
             h.closeOnNonCase == true && h.indent == currentIndent
@@ -368,18 +365,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         parserTokens += curr
         parserTokenPositions += currPos
 
-        if (dialect.allowSignificantIndentation && (prev == null || prev.text != "end") && (curr
-            .is[KwYield] || curr.is[KwTry] || curr.is[KwCatch] || curr.is[KwFinally] || curr
-            .is[KwMatch] || curr.is[KwDo] || curr.is[KwFor] || curr.is[KwThen] || curr
-            .is[KwElse] || curr.is[Equals] || curr.is[KwWhile] || curr.is[ColonEol] ||
-          (curr.is[RightArrow] && (catchCaseIndent || !sepRegionsNew.headOption.exists(
-            _.closing == RegionBrace
-          )))) &&
-          isAheadNewLine(currPos)) {
+        val notEndTokenIdent = prev == null || prev.text != "end"
+        if (notEndTokenIdent && curr.is[CanStartIndent] && isAheadNewLine(currPos)) {
           shouldStartIndent = true
         }
-
-        if (curr.is[RightArrow]) catchCaseIndent = false
 
         addRegion = -1
 
@@ -906,6 +895,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[RightBrace] || token.is[EOF] || token.is[Indentation.Outdent] ||
       (token.is[KwCase] && !token.isCaseClassOrObject) ||
       (token.is[Ellipsis] && token.next.is[KwCase])
+    }
+  }
+
+  @classifier
+  trait CanStartIndent {
+    def unapply(token: Token): Boolean = {
+      token.is[KwYield] || token.is[KwTry] || token.is[KwCatch] || token.is[KwFinally] ||
+      token.is[KwMatch] || token.is[KwDo] || token.is[KwFor] || token.is[KwThen] ||
+      token.is[KwElse] || token.is[Equals] || token.is[KwWhile] || token.is[ColonEol] ||
+      token.is[RightArrow]
     }
   }
 
