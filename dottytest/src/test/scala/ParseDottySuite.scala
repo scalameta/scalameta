@@ -11,19 +11,11 @@ import scala.language.postfixOps
 
 class ParseDottySuite extends FunSuite {
 
-  //increase this number if branch code changes :)
-  val directoryName = "dotty-codebase2"
-  // for my local testing
-  // val directoryName = "/home/kpbochenek/vl/github/kris/dotty/"
-
-  //NOTE(kbochenek): when dotty merges this switch to dotty repo/tag
-  val dottyGithubTag = "minor-syntax-fixes"
-  val dottyRepo = "https://github.com/kpbochenek/dotty.git"
-
+  val directoryName = "dotty-codebase"
   def fetchDottyCodebase(): Unit = {
     if (!scala.reflect.io.File(directoryName).exists) {
       println("cloning dotty code to: " + ("pwd" !!))
-      s"git clone --depth 1 --branch ${dottyGithubTag} ${dottyRepo} ${directoryName}" !!
+      s"./prep-dotty.sh" !!
     }
   }
 
@@ -86,6 +78,7 @@ class ParseDottySuite extends FunSuite {
     "library/src-bootstrapped/scala/quoted/unsafe/UnsafeExpr.scala", //  [t] => Expr[t] => Expr[T1] => Expr[t]
     "library/src/scala/runtime/Tuple.scala", // [t] => t => F[t]
     "library/src/scala/compiletime/package.scala", // erased modifier
+    "library/src/scala/tasty/Reflection.scala", // given  as ^^TypeTest ???
     "library/src/scala/Tuple.scala", // [t] => t => F[t]
     "src/main/scala/dotty/tools/benchmarks/tuples/TupleOps.scala", // [A] => A => Tuple
     "src/main/scala/dotty/tools/benchmarks/tuples/Map.scala", // [T] => (x:T) => x
@@ -136,10 +129,11 @@ class ParseDottySuite extends FunSuite {
     "tools/dotc/typer/ErrorReporting.scala", // for if then yield
     "tools/dotc/ast/Desugar.scala", // for if yield
     "/tools/dotc/typer/Typer.scala", // case ref @ OrNull(tpnn) ^:^ TermRef
-
-    // TEST: should-indent-yet-brace
-    "tools/dotc/parsing/xml/SymbolicXMLBuilder.scala",
-    "dotty/tools/dotc/parsing/xml/MarkupParserCommon.scala",
+    "compiler/src/dotty/tools/dotc/transform/Splicer.scala",
+    // if () block
+    "compiler/src/dotty/tools/dotc/typer/Implicits.scala",
+    // PR waits to be merged
+    "compiler/src/dotty/tools/dotc/typer/Applications.scala",
     // match <indent> case => match <indent> case => (match in match indented)
     "tools/dotc/semanticdb/ExtractSemanticDB.scala",
     // val hook = (a, b) => <newline> statements

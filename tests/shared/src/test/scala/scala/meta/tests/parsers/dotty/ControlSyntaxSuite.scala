@@ -111,8 +111,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
   test("new-if-single2") {
     val code = """|if (cond1) || cond2(a1) then ok
                   |""".stripMargin
-    val output = """|if (cond1 || cond2(a1)) ok
-                    |""".stripMargin
+    val output = "if (cond1 || cond2(a1)) ok"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.If(
         Term.ApplyInfix(
@@ -473,8 +472,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val code = """|{
                   |  try fx
                   |  catch case x =>
-                  |    try 
-                  |      fy
+                  |    try fy
                   |    catch case y =>
                   |    throw ex
                   |  finally fxclose
@@ -483,12 +481,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val output = """|{
                     |  try fx catch {
                     |    case x =>
-                    |      try {
-                    |        fy
-                    |      } catch {
+                    |      try fy catch {
                     |        case y =>
+                    |          throw ex
                     |      }
-                    |      throw ex
                     |  } finally fxclose
                     |}
                     |""".stripMargin
@@ -501,15 +497,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
               Case(
                 Pat.Var(Term.Name("x")),
                 None,
-                Term.Block(
-                  List(
-                    Term.Try(
-                      Term.Block(List(Term.Name("fy"))),
-                      List(Case(Pat.Var(Term.Name("y")), None, Term.Block(Nil))),
-                      None
-                    ),
-                    Term.Throw(Term.Name("ex"))
-                  )
+                Term.Try(
+                  Term.Name("fy"),
+                  List(Case(Pat.Var(Term.Name("y")), None, Term.Throw(Term.Name("ex")))),
+                  None
                 )
               )
             ),
@@ -1039,7 +1030,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |}
                   |""".stripMargin
     runTestAssert[Stat](code)(
-      Term.Match(Term.Name("x"), List(Case(Lit.Int(1), None, Term.Block(List(Term.Name("a1"), Term.Name("b1")))), Case(Lit.Int(2), None, Term.Block(List(Term.Name("a2"), Term.Name("b2"))))))
+      Term.Match(
+        Term.Name("x"),
+        List(
+          Case(Lit.Int(1), None, Term.Block(List(Term.Name("a1"), Term.Name("b1")))),
+          Case(Lit.Int(2), None, Term.Block(List(Term.Name("a2"), Term.Name("b2"))))
+        )
+      )
     )
   }
 
@@ -1055,7 +1052,20 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |}
                   |""".stripMargin
     runTestAssert[Stat](code)(
-      Term.Match(Term.Name("x"), List(Case(Lit.Int(1), None, Term.Match(Term.Name("y"), List(Case(Lit.Int(5), None, Lit.String("5")), Case(Lit.Int(6), None, Lit.String("6"))))), Case(Lit.Int(2), None, Lit.String("2"))))
+      Term.Match(
+        Term.Name("x"),
+        List(
+          Case(
+            Lit.Int(1),
+            None,
+            Term.Match(
+              Term.Name("y"),
+              List(Case(Lit.Int(5), None, Lit.String("5")), Case(Lit.Int(6), None, Lit.String("6")))
+            )
+          ),
+          Case(Lit.Int(2), None, Lit.String("2"))
+        )
+      )
     )
   }
 
@@ -1088,7 +1098,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Match(Term.Name("x"), List(Case(Lit.Int(1), None, Lit.String("1")), Case(Lit.Int(2), None, Lit.String("2"))))
+      Term.Match(
+        Term.Name("x"),
+        List(Case(Lit.Int(1), None, Lit.String("1")), Case(Lit.Int(2), None, Lit.String("2")))
+      )
     )
   }
 
@@ -1111,12 +1124,16 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Match(Term.Name("x"), List(Case(Lit.Int(1), None, Term.Block(List(Term.Name("a1"), Term.Name("b1")))), Case(Lit.Int(2), None, Term.Block(List(Term.Name("a2"), Term.Name("b2"))))))
+      Term.Match(
+        Term.Name("x"),
+        List(
+          Case(Lit.Int(1), None, Term.Block(List(Term.Name("a1"), Term.Name("b1")))),
+          Case(Lit.Int(2), None, Term.Block(List(Term.Name("a2"), Term.Name("b2"))))
+        )
+      )
     )
   }
 
-  // ignored because support is not yet added in parser but unparseable syntax was already identified.
-  // it will be fixed in next batch of changes.
   test("old-match-case-one-align") {
     val code = """|cond match {
                   |  case a =>
@@ -1161,7 +1178,26 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Def(Nil, Term.Name("fx"), Nil, Nil, Some(Type.Name("String")), Term.Block(List(Term.Match(Term.Name("x"), List(Case(Lit.Int(1), None, Lit.String("OK")), Case(Lit.Int(2), None, Lit.String("ERROR")))), Defn.Val(Nil, List(Pat.Var(Term.Name("c"))), None, Lit.String("123")), Term.Name("c"))))
+      Defn.Def(
+        Nil,
+        Term.Name("fx"),
+        Nil,
+        Nil,
+        Some(Type.Name("String")),
+        Term.Block(
+          List(
+            Term.Match(
+              Term.Name("x"),
+              List(
+                Case(Lit.Int(1), None, Lit.String("OK")),
+                Case(Lit.Int(2), None, Lit.String("ERROR"))
+              )
+            ),
+            Defn.Val(Nil, List(Pat.Var(Term.Name("c"))), None, Lit.String("123")),
+            Term.Name("c")
+          )
+        )
+      )
     )
   }
 

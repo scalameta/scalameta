@@ -109,10 +109,87 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |    else
                   |  falsep
                   |""".stripMargin
-    runTestError[Stat](code, "error: ; expected but else found")
+    runTestError[Stat](code, "error: illegal start of simple expression")
   }
 
-  test("should-indent-yet-brace".ignore) {
+  test("indent-inside-brace-ok") {
+    val code = """|class X {
+                  |  def fx(): Unit =
+                  |    f1
+                  |    f2
+                  |}
+                  |""".stripMargin
+    val output = """|class X {
+                    |  def fx(): Unit = {
+                    |    f1
+                    |    f2
+                    |  }
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Class(
+        Nil,
+        Type.Name("X"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.Def(
+              Nil,
+              Term.Name("fx"),
+              Nil,
+              List(List()),
+              Some(Type.Name("Unit")),
+              Term.Block(List(Term.Name("f1"), Term.Name("f2")))
+            )
+          )
+        )
+      )
+    )
+  }
+
+  test("indent-inside-brace-not") {
+    val code = """|class X {
+                  |      def fx(): Unit =
+                  |    f1
+                  |    f2
+                  |}
+                  |""".stripMargin
+    val output = """|class X {
+                    |  def fx(): Unit = f1
+                    |  f2
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Class(
+        Nil,
+        Type.Name("X"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.Def(
+              Nil,
+              Term.Name("fx"),
+              Nil,
+              List(List()),
+              Some(Type.Name("Unit")),
+              Term.Name("f1")
+            ),
+            Term.Name("f2")
+          )
+        )
+      )
+    )
+  }
+
+  test("should-indent-yet-brace") {
     val code = """|class X {
                   |  def fx(): Unit =
                   |  {
@@ -122,9 +199,34 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |}
                   |""".stripMargin
     runTestAssert[Stat](code, assertLayout = None)(
-      Term.Match(
-        Term.Name("x"),
-        List(Case(Lit.Int(1), None, Term.Block(Nil)), Case(Lit.Int(2), None, Term.Block(Nil)))
+      Defn.Class(
+        Nil,
+        Type.Name("X"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.Def(
+              Nil,
+              Term.Name("fx"),
+              Nil,
+              List(List()),
+              Some(Type.Name("Unit")),
+              Term.Block(Nil)
+            ),
+            Defn.Def(
+              List(Mod.Private(Name(""))),
+              Term.Name("f2"),
+              Nil,
+              Nil,
+              Some(Type.Name("Int")),
+              Lit.Int(1)
+            )
+          )
+        )
       )
     )
   }
@@ -172,7 +274,32 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Object(Nil, Term.Name("X"), Template(Nil, Nil, Self(Name(""), None), List(Defn.Val(Nil, List(Pat.Var(Term.Name("fn"))), None, Term.Function(List(Term.Param(Nil, Term.Name("pa"), None, None), Term.Param(Nil, Term.Name("pb"), None, None)), Term.Block(List(Defn.Def(Nil, Term.Name("helper"), Nil, Nil, None, Lit.Int(3)), Lit.Int(3))))), Term.EndMarker(Term.Name("fn")))))
+      Defn.Object(
+        Nil,
+        Term.Name("X"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.Val(
+              Nil,
+              List(Pat.Var(Term.Name("fn"))),
+              None,
+              Term.Function(
+                List(
+                  Term.Param(Nil, Term.Name("pa"), None, None),
+                  Term.Param(Nil, Term.Name("pb"), None, None)
+                ),
+                Term.Block(
+                  List(Defn.Def(Nil, Term.Name("helper"), Nil, Nil, None, Lit.Int(3)), Lit.Int(3))
+                )
+              )
+            ),
+            Term.EndMarker(Term.Name("fn"))
+          )
+        )
+      )
     )
   }
 
