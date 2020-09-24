@@ -14,7 +14,7 @@ object M/*<=classes.M.*/ {
   implicit class C5/*<=classes.M.C5#*/(x/*<=classes.M.C5#x.*/: Int/*=>scala.Int#*/)
 }
 
-case class C6/*<=classes.C6#*/(private val x/*<=classes.C6#*/: Int/*=>scala.Int#*/)
+case class C6/*<=classes.C6#*/(private val x/*<=classes.C6#x.*/: Int/*=>scala.Int#*/)
 
 class C7/*<=classes.C7#*/(x/*<=classes.C7#x.*/: Int/*=>scala.Int#*/)
 

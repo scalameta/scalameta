@@ -283,6 +283,30 @@ example/InstrumentTyper#existential().
                          display_name: "T"
 
 
+====================================
+example/Issue2116#check$default$1().
+====================================
+--- metac
++++ metacp
+         annotations {
+           tpe {
+-            type_ref {
+-              prefix {
+-              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
+====================================
+example/Issue2116#check$default$2().
+====================================
+--- metac
++++ metacp
+         annotations {
+           tpe {
+-            type_ref {
+-              prefix {
+-              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
 =========================
 example/Methods#m13().(x)
 =========================

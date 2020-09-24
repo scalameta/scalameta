@@ -907,7 +907,7 @@ Occurrences:
 [13:23..13:26): Int => scala/Int#
 [16:11..16:13): C6 <= classes/C6#
 [16:13..16:13):  <= classes/C6#`<init>`().
-[16:26..16:27): x <= classes/C6#
+[16:26..16:27): x <= classes/C6#x.
 [16:29..16:32): Int => scala/Int#
 [18:6..18:8): C7 <= classes/C7#
 [18:8..18:8):  <= classes/C7#`<init>`().
@@ -2104,6 +2104,78 @@ Synthetics:
 [30:4..30:5): i => convertToAnyShouldWrapper(*)(default)
   convertToAnyShouldWrapper => example/Issue2040.BarSpec#convertToAnyShouldWrapper().
   default => example/Issue2040.Prettifier.default.
+
+semanticdb/integration/src/main/scala/example/Issue2116.scala
+-------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Issue2116.scala
+Text => non-empty
+Language => Scala
+Symbols => 13 entries
+Occurrences => 26 entries
+
+Symbols:
+example/Issue2116# => abstract class Issue2116 extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2116#`<init>`(). => primary ctor <init>()
+example/Issue2116#check$default$1(). => method check$default$1: Boolean @uncheckedVariance
+  Boolean => scala/Boolean#
+  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+example/Issue2116#check$default$2(). => method check$default$2: Boolean @uncheckedVariance
+  Boolean => scala/Boolean#
+  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+example/Issue2116#check(). => method check(includeDocs: Boolean, includeCommitCharacter: Boolean)(implicit loc: ExecutionContext): Unit
+  includeDocs => example/Issue2116#check().(includeDocs)
+  Boolean => scala/Boolean#
+  includeCommitCharacter => example/Issue2116#check().(includeCommitCharacter)
+  loc => example/Issue2116#check().(loc)
+  ExecutionContext => scala/concurrent/ExecutionContext#
+  Unit => scala/Unit#
+example/Issue2116#check().(includeCommitCharacter) => default param includeCommitCharacter: Boolean
+  Boolean => scala/Boolean#
+example/Issue2116#check().(includeDocs) => default param includeDocs: Boolean
+  Boolean => scala/Boolean#
+example/Issue2116#check().(loc) => implicit param loc: ExecutionContext
+  ExecutionContext => scala/concurrent/ExecutionContext#
+example/Issue2116_2# => class Issue2116_2 extends Issue2116 { +2 decls }
+  Issue2116 => example/Issue2116#
+example/Issue2116_2#`<init>`(). => primary ctor <init>()
+example/Issue2116_2#ec. => implicit val method ec: ExecutionContextExecutor
+  ExecutionContextExecutor => scala/concurrent/ExecutionContextExecutor#
+local0 => val local x$1: Boolean
+  Boolean => scala/Boolean#
+local1 => val local x$2: Boolean
+  Boolean => scala/Boolean#
+
+Occurrences:
+[1:8..1:15): example <= example/
+[3:7..3:12): scala => scala/
+[3:13..3:23): concurrent => scala/concurrent/
+[3:24..3:40): ExecutionContext => scala/concurrent/ExecutionContext#
+[3:24..3:40): ExecutionContext => scala/concurrent/ExecutionContext.
+[5:15..5:24): Issue2116 <= example/Issue2116#
+[5:25..5:25):  <= example/Issue2116#`<init>`().
+[7:6..7:11): check <= example/Issue2116#check().
+[8:6..8:17): includeDocs <= example/Issue2116#check().(includeDocs)
+[8:19..8:26): Boolean => scala/Boolean#
+[9:6..9:28): includeCommitCharacter <= example/Issue2116#check().(includeCommitCharacter)
+[9:30..9:37): Boolean => scala/Boolean#
+[10:13..10:16): loc <= example/Issue2116#check().(loc)
+[10:18..10:34): ExecutionContext => scala/concurrent/ExecutionContext#
+[10:37..10:41): Unit => scala/Unit#
+[13:6..13:17): Issue2116_2 <= example/Issue2116_2#
+[13:18..13:18):  <= example/Issue2116_2#`<init>`().
+[13:26..13:35): Issue2116 => example/Issue2116#
+[13:36..13:36):  => example/Issue2116#`<init>`().
+[15:15..15:17): ec <= example/Issue2116_2#ec.
+[15:20..15:25): scala => scala/
+[15:26..15:36): concurrent => scala/concurrent/
+[15:37..15:53): ExecutionContext => scala/concurrent/ExecutionContext.
+[15:54..15:60): global => scala/concurrent/ExecutionContext.global().
+[17:2..17:7): check => example/Issue2116#check().
+[18:4..18:26): includeCommitCharacter => example/Issue2116#check().(includeCommitCharacter)
 
 semanticdb/integration/src/main/scala/example/local-file.scala
 --------------------------------------------------------------

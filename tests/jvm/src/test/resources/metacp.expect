@@ -1933,6 +1933,55 @@ example/Issue2040.Prettifier. => final object Prettifier extends AnyRef { +1 dec
 example/Issue2040.Prettifier.default. => implicit val method default: Prettifier
   Prettifier => example/Issue2040.Prettifier#
 
+example/Issue2116.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue2116.class
+Text => empty
+Language => Scala
+Symbols => 8 entries
+
+Symbols:
+example/Issue2116# => abstract class Issue2116 extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2116#`<init>`(). => primary ctor <init>()
+example/Issue2116#check$default$1(). => method check$default$1: Boolean @<?>
+  Boolean => scala/Boolean#
+example/Issue2116#check$default$2(). => method check$default$2: Boolean @<?>
+  Boolean => scala/Boolean#
+example/Issue2116#check(). => method check(includeDocs: Boolean, includeCommitCharacter: Boolean)(implicit loc: ExecutionContext): Unit
+  includeDocs => example/Issue2116#check().(includeDocs)
+  Boolean => scala/Boolean#
+  includeCommitCharacter => example/Issue2116#check().(includeCommitCharacter)
+  loc => example/Issue2116#check().(loc)
+  ExecutionContext => scala/concurrent/ExecutionContext#
+  Unit => scala/Unit#
+example/Issue2116#check().(includeCommitCharacter) => default param includeCommitCharacter: Boolean
+  Boolean => scala/Boolean#
+example/Issue2116#check().(includeDocs) => default param includeDocs: Boolean
+  Boolean => scala/Boolean#
+example/Issue2116#check().(loc) => implicit param loc: ExecutionContext
+  ExecutionContext => scala/concurrent/ExecutionContext#
+
+example/Issue2116_2.class
+-------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue2116_2.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+example/Issue2116_2# => class Issue2116_2 extends Issue2116 { +2 decls }
+  Issue2116 => example/Issue2116#
+example/Issue2116_2#`<init>`(). => primary ctor <init>()
+example/Issue2116_2#ec. => implicit val method ec: ExecutionContextExecutor
+  ExecutionContextExecutor => scala/concurrent/ExecutionContextExecutor#
+
 example/local$minusfile.class
 -----------------------------
 
