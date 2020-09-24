@@ -114,7 +114,6 @@ class ParseDottySuite extends FunSuite {
     "tools/dotc/semanticdb/Schema.scala",
     "tools/dotc/semanticdb/SymbolInformation.scala",
     "tools/dotc/semanticdb/Language.scala",
-    "dotty/tools/backend/sjs/JSCodeGen.scala", // comment before indent
     "tools/dotc/ast/tpd.scala", // comment after extension before def
     "tools/dotc/typer/ProtoTypes.scala", // comment after colonEOL
 
@@ -136,8 +135,6 @@ class ParseDottySuite extends FunSuite {
     "compiler/src/dotty/tools/dotc/typer/Applications.scala",
     // match <indent> case => match <indent> case => (match in match indented)
     "tools/dotc/semanticdb/ExtractSemanticDB.scala",
-    // val hook = (a, b) => <newline> statements
-    "tools/dotc/parsing/Parsers.scala",
     // test reproduces: using-lambda-method-parameter
     "tools/dotc/core/tasty/TreeUnpickler.scala"
   )
