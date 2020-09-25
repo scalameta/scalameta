@@ -322,7 +322,7 @@ lazy val testkit = project
       "org.scalameta" %% "munit" % munitVersion,
       // These are used to download and extract a corpus tar.gz
       "org.rauschig" % "jarchivelib" % "1.1.0",
-      "commons-io" % "commons-io" % "2.7",
+      "commons-io" % "commons-io" % "2.8.0",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0"
     ),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
