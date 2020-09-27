@@ -397,8 +397,8 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
   testOptions.in(Slow) += Tests.Argument("--include-tags=Slow")
 )
 
-lazy val dottytests = project
-  .in(file("dottytest"))
+lazy val communitytest = project
+  .in(file("community-test"))
   .settings(
     sharedSettings,
     libraryDependencies += "org.scalameta" %% "munit" % munitVersion,
