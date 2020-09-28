@@ -312,8 +312,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             RegionIndentEnum(expectedIndent) :: sepRegions.tail
           else RegionIndent(expectedIndent, prev.is[KwMatch]) :: sepRegions
         } else if (shouldCloseIndent &&
-          sepRegions.headOption.exists(_.isInstanceOf[RegionIndent])
-        ) {
+          sepRegions.headOption.exists(_.isInstanceOf[RegionIndent])) {
           sepRegions.tail
         } else {
           sepRegions
@@ -347,7 +346,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             var sepRegionsProcess = sepRegions
             while (!sepRegionsProcess.isEmpty &&
               (!sepRegionsProcess.head.isInstanceOf[RegionBrace] &&
-                !sepRegionsProcess.head.isInstanceOf[RegionEnum])) {
+              !sepRegionsProcess.head.isInstanceOf[RegionEnum])) {
               if (dialect.allowSignificantIndentation) insertOutdent()
               sepRegionsProcess = sepRegionsProcess.tail
             }
