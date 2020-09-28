@@ -25,7 +25,7 @@ class CommunityDottySuite extends FunSuite {
       val gclone = s"git clone ${build.giturl} ${folder}"
       val gchangecommit = s"""sh -c "cd ${folder} && git checkout ${build.commit} " """
 
-      val result: Int = (gclone #&& gchangecommit)!
+      val result: Int = (gclone #&& gchangecommit) !
 
       assert(clue(result) == 0, s"Fetching community build ${build.name} failed")
     }
@@ -49,11 +49,11 @@ class CommunityDottySuite extends FunSuite {
       munitExclusionList
     )
   )
-  
+
   for (build <- communityBuilds) {
-        test(s"community-build-${build.name}") {
-            check(build)
-        }
+    test(s"community-build-${build.name}") {
+      check(build)
+    }
   }
 
   def check(implicit build: CommunityBuild): Unit = {
@@ -68,16 +68,23 @@ class CommunityDottySuite extends FunSuite {
     stats.lastError.foreach(e => throw e)
   }
 
-
   def checkFilesRecursive(parent: Path)(implicit build: CommunityBuild): TestStats = {
     def merger(s1: TestStats, s2: TestStats): TestStats =
-        TestStats(s1.checkedFiles + s2.checkedFiles, s1.errors + s2.errors, s1.lastError.orElse(s2.lastError))
+      TestStats(
+        s1.checkedFiles + s2.checkedFiles,
+        s1.errors + s2.errors,
+        s1.lastError.orElse(s2.lastError)
+      )
 
-    if (ignoreParts.exists(p => parent.toAbsolutePath.toString.contains(p))) return TestStats(0, 0, None)
+    if (ignoreParts.exists(p => parent.toAbsolutePath.toString.contains(p)))
+      return TestStats(0, 0, None)
     if (Files.isDirectory(parent)) {
       import scala.collection.JavaConverters._
-      Files.list(parent)
-        .map(checkFilesRecursive).iterator().asScala
+      Files
+        .list(parent)
+        .map(checkFilesRecursive)
+        .iterator()
+        .asScala
         .fold(TestStats(0, 0, None))(merger)
     } else {
       if (parent.toAbsolutePath.toString.endsWith(".scala")) {
@@ -177,7 +184,7 @@ class CommunityDottySuite extends FunSuite {
   )
 
   final def munitExclusionList = List(
-    "main/scala/docs/MUnitModifier.scala", //xml literals
+    "main/scala/docs/MUnitModifier.scala" //xml literals
   )
 
   final val ignoreParts = List(

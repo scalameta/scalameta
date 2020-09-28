@@ -392,7 +392,17 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |""".stripMargin
     val output = "def this(msg: String) = this(message, false)"
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Ctor.Secondary(Nil, Name(""), List(List(Term.Param(Nil, Term.Name("msg"), Some(Type.Name("String")), None))), Init(Type.Singleton(Term.This(Name(""))), Name(""), List(List(Term.Name("message"), Lit.Boolean(false)))), Nil)
+      Ctor.Secondary(
+        Nil,
+        Name(""),
+        List(List(Term.Param(Nil, Term.Name("msg"), Some(Type.Name("String")), None))),
+        Init(
+          Type.Singleton(Term.This(Name(""))),
+          Name(""),
+          List(List(Term.Name("message"), Lit.Boolean(false)))
+        ),
+        Nil
+      )
     )
   }
 
@@ -407,7 +417,17 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-Ctor.Secondary(Nil, Name(""), List(List(Term.Param(Nil, Term.Name("msg"), Some(Type.Name("String")), None))), Init(Type.Singleton(Term.This(Name(""))), Name(""), List(List(Term.Name("message"), Lit.Boolean(false)))), List(Term.Name("otherStat")))
+      Ctor.Secondary(
+        Nil,
+        Name(""),
+        List(List(Term.Param(Nil, Term.Name("msg"), Some(Type.Name("String")), None))),
+        Init(
+          Type.Singleton(Term.This(Name(""))),
+          Name(""),
+          List(List(Term.Name("message"), Lit.Boolean(false)))
+        ),
+        List(Term.Name("otherStat"))
+      )
     )
   }
 }
