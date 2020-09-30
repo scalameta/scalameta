@@ -103,6 +103,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
   }
 
   test("indent-below-not-okay".ignore) {
+    // this test is related to dotty issue: https://github.com/lampepfl/dotty/issues/9790
+    // It should either assert error during parsing: "illegal start of simple expression"
+    // Or accept mismatch with parsing rules and parse as 'if (cond) { truep } else {falsep }'
+    // Why error is thrown is described in mentioned issue.
     val code = """|def fn: Unit =
                   |    if cond then
                   |  truep

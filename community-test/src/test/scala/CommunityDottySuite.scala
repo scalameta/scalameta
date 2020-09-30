@@ -90,7 +90,7 @@ class CommunityDottySuite extends FunSuite {
     stats.lastError.foreach(e => throw e)
   }
 
-  def timeIt[R](block: => ()): Long = {
+  def timeIt(block: => ()): Long = {
     val t0 = System.currentTimeMillis()
     block
     val t1 = System.currentTimeMillis()
