@@ -50,8 +50,8 @@ object JSFacade {
     )
 
     val fields = js
-      .Dictionary(t.productFields.zip(t.productIterator.toList).collect {
-        case (name, value) => name -> toNode(value)
+      .Dictionary(t.productFields.zip(t.productIterator.toList).collect { case (name, value) =>
+        name -> toNode(value)
       }: _*)
       .asInstanceOf[js.Dynamic]
 

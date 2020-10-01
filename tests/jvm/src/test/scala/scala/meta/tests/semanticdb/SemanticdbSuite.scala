@@ -170,18 +170,17 @@ abstract class SemanticdbSuite extends FunSuite { self =>
     val database = computeDatabaseFromSnippet(code)
     val unit = g.currentRun.units.toList.last
     val source = unit.toSource
-    val symbols = ps.map {
-      case (s, e) =>
-        val symbols = source.collect {
-          case name: m.Name if name.pos.start == s && name.pos.end == e =>
-            database.occurrences.find(_.range.contains(name.pos.toRange)).map(_.symbol)
-        }
-        val chevron = "<<" + code.substring(s, e) + ">>"
-        symbols match {
-          case Nil => sys.error(chevron + " does not wrap a name")
-          case List(Some(symbol)) => symbol
-          case _ => sys.error("fatal error processing " + chevron)
-        }
+    val symbols = ps.map { case (s, e) =>
+      val symbols = source.collect {
+        case name: m.Name if name.pos.start == s && name.pos.end == e =>
+          database.occurrences.find(_.range.contains(name.pos.toRange)).map(_.symbol)
+      }
+      val chevron = "<<" + code.substring(s, e) + ">>"
+      symbols match {
+        case Nil => sys.error(chevron + " does not wrap a name")
+        case List(Some(symbol)) => symbol
+        case _ => sys.error("fatal error processing " + chevron)
+      }
     }
     (database, symbols)
   }

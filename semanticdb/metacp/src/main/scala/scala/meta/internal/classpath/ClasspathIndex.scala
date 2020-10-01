@@ -30,8 +30,8 @@ final class ClasspathIndex private (
   def getClassfile(directory: String, filename: String): Option[Classfile] = {
     dirs.get(directory) match {
       case Some(pkg) =>
-        pkg.resolve(filename).collect {
-          case e: Classfile => e
+        pkg.resolve(filename).collect { case e: Classfile =>
+          e
         }
       case _ =>
         None

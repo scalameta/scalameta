@@ -118,9 +118,8 @@ class DataMacros(val c: Context) extends MacroHelpers {
           }
         }
         val isVararg = paramss.flatten.lastOption.flatMap(p => Vararg.unapply(p.tpt)).nonEmpty
-        val itparams = tparams.map {
-          case q"$mods type $name[..$tparams] >: $low <: $high" =>
-            q"${mods.unVariant} type $name[..$tparams] >: $low <: $high"
+        val itparams = tparams.map { case q"$mods type $name[..$tparams] >: $low <: $high" =>
+          q"${mods.unVariant} type $name[..$tparams] >: $low <: $high"
         }
         val tparamrefs = tparams.map(tparam => Ident(tparam.name))
 

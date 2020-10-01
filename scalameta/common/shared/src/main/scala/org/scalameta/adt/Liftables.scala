@@ -58,43 +58,41 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val localName = c.freshName(TermName("x"))
     val defNames =
       adts.map(adt => c.freshName(TermName("lift" + adt.prefix.capitalize.replace(".", ""))))
-    val liftAdts = adts.zip(defNames).map {
-      case (adt, defName) =>
-        val matcher: DefDef = customMatcher(adt, defName, localName).getOrElse({
-          val init = q"""$u.Ident($u.TermName("_root_"))""": Tree
-          val namePath = adt.sym.fullName
-            .split('.')
-            .foldLeft(init)((acc, part) => q"$u.Select($acc, $u.TermName($part))")
-          val fields = adt match { case leaf: Leaf => leaf.fields; case _ => Nil }
-          val args = fields.map(f => {
-            val fieldName = q"$u.Ident($u.TermName(${f.name.toString}))"
-            val fieldValue =
-              q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})"
-            // NOTE: we can't really use AssignOrNamedArg here, sorry
-            // Test.scala:10: warning: type-checking the invocation of method apply checks if the named argument expression 'stats = ...' is a valid assignment
-            // in the current scope. The resulting type inference error (see above) can be fixed by providing an explicit type in the local definition for stats.
-            // q"$u.AssignOrNamedArg($fieldName, $fieldValue)"
-            q"$fieldValue"
-          })
-          val body = if (adt.sym.isClass) q"$u.Apply($namePath, $args)" else q"$namePath"
-          q"def $defName($localName: ${adt.tpe}): $u.Tree = $body"
+    val liftAdts = adts.zip(defNames).map { case (adt, defName) =>
+      val matcher: DefDef = customMatcher(adt, defName, localName).getOrElse({
+        val init = q"""$u.Ident($u.TermName("_root_"))""": Tree
+        val namePath = adt.sym.fullName
+          .split('.')
+          .foldLeft(init)((acc, part) => q"$u.Select($acc, $u.TermName($part))")
+        val fields = adt match { case leaf: Leaf => leaf.fields; case _ => Nil }
+        val args = fields.map(f => {
+          val fieldName = q"$u.Ident($u.TermName(${f.name.toString}))"
+          val fieldValue =
+            q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})"
+          // NOTE: we can't really use AssignOrNamedArg here, sorry
+          // Test.scala:10: warning: type-checking the invocation of method apply checks if the named argument expression 'stats = ...' is a valid assignment
+          // in the current scope. The resulting type inference error (see above) can be fixed by providing an explicit type in the local definition for stats.
+          // q"$u.AssignOrNamedArg($fieldName, $fieldValue)"
+          q"$fieldValue"
         })
-        val body: Tree = customWrapper(adt, defName, localName, matcher.rhs).getOrElse(matcher.rhs)
-        treeCopy.DefDef(
-          matcher,
-          matcher.mods,
-          matcher.name,
-          matcher.tparams,
-          matcher.vparamss,
-          matcher.tpt,
-          body
-        )
+        val body = if (adt.sym.isClass) q"$u.Apply($namePath, $args)" else q"$namePath"
+        q"def $defName($localName: ${adt.tpe}): $u.Tree = $body"
+      })
+      val body: Tree = customWrapper(adt, defName, localName, matcher.rhs).getOrElse(matcher.rhs)
+      treeCopy.DefDef(
+        matcher,
+        matcher.mods,
+        matcher.name,
+        matcher.tparams,
+        matcher.vparamss,
+        matcher.tpt,
+        body
+      )
     }
     val clauses = adts
       .zip(defNames)
-      .map({
-        case (adt, name) =>
-          cq"$localName: ${adt.tpe} => $name($localName.asInstanceOf[${adt.tpe}])"
+      .map({ case (adt, name) =>
+        cq"$localName: ${adt.tpe} => $name($localName.asInstanceOf[${adt.tpe}])"
       })
     q"""
       $u.Liftable(($mainParam: ${weakTypeOf[T]}) => {

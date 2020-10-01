@@ -185,18 +185,17 @@ object Scalalib {
         access = s.NoAccess
       )
     }
-    val params = paramDsls.map {
-      case (paramName, paramTpeSymbol) =>
-        val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramName))
-        val paramSig = s.ValueSignature(s.TypeRef(s.NoType, paramTpeSymbol, Nil))
-        s.SymbolInformation(
-          symbol = paramSymbol,
-          language = l.SCALA,
-          kind = k.PARAMETER,
-          properties = 0,
-          displayName = paramName,
-          signature = paramSig
-        )
+    val params = paramDsls.map { case (paramName, paramTpeSymbol) =>
+      val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramName))
+      val paramSig = s.ValueSignature(s.TypeRef(s.NoType, paramTpeSymbol, Nil))
+      s.SymbolInformation(
+        symbol = paramSymbol,
+        language = l.SCALA,
+        kind = k.PARAMETER,
+        properties = 0,
+        displayName = paramName,
+        signature = paramSig
+      )
     }
     val methodSig = {
       val tps = Some(s.Scope(tparams.map(_.symbol)))

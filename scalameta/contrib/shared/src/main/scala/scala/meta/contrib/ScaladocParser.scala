@@ -52,7 +52,7 @@ object ScaladocParser {
       headingSymbols
       // Heading description
         ~ ((AnyChar ~ !"=").rep ~ AnyChar).!.map(c => DocToken(headingType, c.trim))
-      // Code block end
+        // Code block end
         ~ headingSymbols
     )
   }
@@ -74,7 +74,7 @@ object ScaladocParser {
         "{{{"
         // Code within the code block.
           ~ ((AnyChar ~ !"}}}").rep ~ AnyChar).!.map(c => DocToken(CodeBlock, c.trim))
-        // Code block end
+          // Code block end
           ~ "}}}"
       )
 
@@ -97,8 +97,8 @@ object ScaladocParser {
           val nameParser = ((AnyChar ~ !" ").rep ~ AnyChar).!.map(_.trim)
 
           val nameAndBodyParsers = {
-            (nameParser ~ " ".rep.? ~ bodyParser.!).map {
-              case (name, body) => DocToken(kind, name, body)
+            (nameParser ~ " ".rep.? ~ bodyParser.!).map { case (name, body) =>
+              DocToken(kind, name, body)
             }
           }
           P(s"$label" ~ nameAndBodyParsers)

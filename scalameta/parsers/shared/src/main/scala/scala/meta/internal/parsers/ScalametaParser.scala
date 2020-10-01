@@ -339,14 +339,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           } else if (curr.is[KwEnum]) RegionEnumArtificialMark :: sepRegions
           else if (curr.is[CaseIntro]) {
             if (!sepRegions.isEmpty && (sepRegions.head.isInstanceOf[RegionEnum] ||
-              sepRegions.head.isInstanceOf[RegionIndentEnum]))
+                sepRegions.head.isInstanceOf[RegionIndentEnum]))
               sepRegions
             else RegionArrow :: sepRegions
           } else if (curr.is[RightBrace]) {
             var sepRegionsProcess = sepRegions
             while (!sepRegionsProcess.isEmpty &&
               (!sepRegionsProcess.head.isInstanceOf[RegionBrace] &&
-              !sepRegionsProcess.head.isInstanceOf[RegionEnum])) {
+                !sepRegionsProcess.head.isInstanceOf[RegionEnum])) {
               if (dialect.allowSignificantIndentation) insertOutdent()
               sepRegionsProcess = sepRegionsProcess.tail
             }
@@ -401,10 +401,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           prev != null && prev.is[CanEndStat] &&
           next != null && next.isNot[CantStartStat] &&
           (sepRegionsParameter.isEmpty ||
-          sepRegionsParameter.head.isInstanceOf[RegionBrace] ||
-          sepRegionsParameter.head.isInstanceOf[RegionEnum] ||
-          sepRegionsParameter.head.isInstanceOf[RegionIndent] ||
-          sepRegionsParameter.head.isInstanceOf[RegionIndentEnum])) {
+            sepRegionsParameter.head.isInstanceOf[RegionBrace] ||
+            sepRegionsParameter.head.isInstanceOf[RegionEnum] ||
+            sepRegionsParameter.head.isInstanceOf[RegionIndent] ||
+            sepRegionsParameter.head.isInstanceOf[RegionIndentEnum])) {
 
           if (isLeadingInfixOperator(next)) {
             loop(prevPos, nextPos, sepRegionsParameter, expectedIndent, shouldStartIndent)

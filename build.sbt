@@ -474,8 +474,8 @@ lazy val requiresMacrosSetting = Def.settings(
         )
       )
 
-    val flat = filesWithWhiteboxMacros.flatMap {
-      case (k, vs) => vs.map(v => (base / k / v).lastModified)
+    val flat = filesWithWhiteboxMacros.flatMap { case (k, vs) =>
+      vs.map(v => (base / k / v).lastModified)
     }
 
     "-J" + flat.hashCode

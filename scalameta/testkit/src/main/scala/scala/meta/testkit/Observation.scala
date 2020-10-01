@@ -28,19 +28,16 @@ object Observation {
   def markdownTable[T](observations: List[(CorpusFile, Observation[T])]): String = {
     val sb = new mutable.StringBuilder()
     val grouped = observations.groupBy(_._2.kind)
-    grouped.toSeq.sortBy(_._1.toString).foreach {
-      case (cat, rs) =>
-        sb.append(s"## $cat\n")
-        sb.append(s"URL | details |\n")
-        sb.append(s"--- | --- |\n")
-        rs.sortBy(_._2.msg).foreach {
-          case (f, x) =>
-            sb.append(s"${f.githubUrlAtLine(x.line)} | ${wrapInCode(x.msg)}\n")
-        }
+    grouped.toSeq.sortBy(_._1.toString).foreach { case (cat, rs) =>
+      sb.append(s"## $cat\n")
+      sb.append(s"URL | details |\n")
+      sb.append(s"--- | --- |\n")
+      rs.sortBy(_._2.msg).foreach { case (f, x) =>
+        sb.append(s"${f.githubUrlAtLine(x.line)} | ${wrapInCode(x.msg)}\n")
+      }
     }
-    grouped.foreach {
-      case (cat, rs) =>
-        sb.append(s"$cat: ${rs.length}\n")
+    grouped.foreach { case (cat, rs) =>
+      sb.append(s"$cat: ${rs.length}\n")
     }
     sb.toString()
   }

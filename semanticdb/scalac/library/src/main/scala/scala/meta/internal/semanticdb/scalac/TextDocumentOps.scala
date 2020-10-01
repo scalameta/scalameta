@@ -97,8 +97,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
           private def indexArgNames(mapp: m.Tree): Unit = {
             mapp match {
               case m.Term.Apply(fun, args) =>
-                margnames(fun.pos.end) = args.collect {
-                  case m.Term.Assign(lhs: m.Term.Name, _) => lhs
+                margnames(fun.pos.end) = args.collect { case m.Term.Assign(lhs: m.Term.Name, _) =>
+                  lhs
                 }
                 args.collect { case m.Term.Assign(_, rhs) => rhs }.foreach(indexArgNames)
               case m.Term.Select(qual, _) =>
@@ -139,14 +139,13 @@ trait TextDocumentOps { self: SemanticdbOps =>
             case m.Pat.Var(_) :: Nil =>
             case _ =>
               pats.foreach { pat =>
-                pat.traverse {
-                  case m.Pat.Var(name) =>
-                    mvalpatstart += name.pos.start
-                    // Map the start position of the entire Defn.Val `val Foo(name) = ..` to the `name` position.
-                    // This is needed to handle val patterns with a single binder since the position of `x` in the
-                    // desugared `val x = ... match { case Foo(_x) => _x }` matches the position of Defn.Val
-                    // and not `_x`.
-                    msinglevalpats(pos.start) = name.pos
+                pat.traverse { case m.Pat.Var(name) =>
+                  mvalpatstart += name.pos.start
+                  // Map the start position of the entire Defn.Val `val Foo(name) = ..` to the `name` position.
+                  // This is needed to handle val patterns with a single binder since the position of `x` in the
+                  // desugared `val x = ... match { case Foo(_x) => _x }` matches the position of Defn.Val
+                  // and not `_x`.
+                  msinglevalpats(pos.start) = name.pos
                 }
               }
           }
@@ -398,18 +397,17 @@ trait TextDocumentOps { self: SemanticdbOps =>
                     mstarts.get(sel.namePos).map(mname => (sel.name, mname))
                   }
                 }
-                sels.foreach {
-                  case (gname, mname) =>
-                    val import1 = gtree.expr.tpe.member(gname.toTermName)
-                    val import2 = gtree.expr.tpe.member(gname.toTypeName)
-                    success(
-                      mname,
-                      wrapAlternatives(
-                        "<import " + gtree.expr + "." + gname + ">",
-                        import1,
-                        import2
-                      )
+                sels.foreach { case (gname, mname) =>
+                  val import1 = gtree.expr.tpe.member(gname.toTermName)
+                  val import2 = gtree.expr.tpe.member(gname.toTypeName)
+                  success(
+                    mname,
+                    wrapAlternatives(
+                      "<import " + gtree.expr + "." + gname + ">",
+                      import1,
+                      import2
                     )
+                  )
                 }
               case gtree: g.AppliedTypeTree =>
                 if (gtree.symbol.name == g.typeNames.REPEATED_PARAM_CLASS_NAME &&
@@ -436,9 +434,9 @@ trait TextDocumentOps { self: SemanticdbOps =>
             def isForSynthetic(gtree: g.Tree): Boolean = {
               def isForComprehensionSyntheticName(select: g.Select): Boolean = {
                 select.pos == select.qualifier.pos && (select.name == g.nme.map ||
-                select.name == g.nme.withFilter ||
-                select.name == g.nme.flatMap ||
-                select.name == g.nme.foreach)
+                  select.name == g.nme.withFilter ||
+                  select.name == g.nme.flatMap ||
+                  select.name == g.nme.foreach)
               }
               gtree match {
                 case g.Apply(fun, List(arg: g.Function)) => isForSynthetic(fun)

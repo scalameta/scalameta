@@ -49,13 +49,12 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
     def signatureIn(owner: Symbol): String = {
       def paramss(m: Symbol, wrapFirst: Boolean): String = {
         val pss = m.asMethod.paramLists
-        val s_ps = pss.zipWithIndex.map {
-          case (ps, i) =>
-            val s_p = ps.map(_.info).mkString(", ")
-            val designator = if (ps.exists(_.isImplicit)) "implicit " else ""
-            val prefix = if (i != 0 || wrapFirst) "(" else ""
-            val suffix = if (i != 0 || wrapFirst) ")" else ""
-            prefix + designator + s_p + suffix
+        val s_ps = pss.zipWithIndex.map { case (ps, i) =>
+          val s_p = ps.map(_.info).mkString(", ")
+          val designator = if (ps.exists(_.isImplicit)) "implicit " else ""
+          val prefix = if (i != 0 || wrapFirst) "(" else ""
+          val suffix = if (i != 0 || wrapFirst) ")" else ""
+          prefix + designator + s_p + suffix
         }
         s_ps.mkString("")
       }
@@ -208,8 +207,8 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
       })
       result.map(sym => (NoSymbol, sym))
     }
-    val s_surface = (directSurface ++ extensionSurface).map {
-      case (owner, sym) => sym.signatureIn(owner)
+    val s_surface = (directSurface ++ extensionSurface).map { case (owner, sym) =>
+      sym.signatureIn(owner)
     }
     q"${s_surface.distinct.sorted}"
   }

@@ -221,13 +221,12 @@ abstract class BaseTokenizerCoverageSuite extends FunSuite {
     val tree =
       project(parser(Input.String(source), dialect).get.asInstanceOf[T])
 
-    val markedSource = markers.foldLeft(testName(source, tree)) {
-      case (acc, (start, end)) =>
-        val color =
-          if (odd) overlayColor1
-          else overlayColor2
-        odd = !odd
-        acc.overlay(color, start, end)
+    val markedSource = markers.foldLeft(testName(source, tree)) { case (acc, (start, end)) =>
+      val color =
+        if (odd) overlayColor1
+        else overlayColor2
+      odd = !odd
+      acc.overlay(color, start, end)
     }
 
     test(markedSource.toString) {
