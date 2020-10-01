@@ -84,12 +84,11 @@ class Main(settings: Settings, reporter: Reporter) {
     reporter.out.println("{")
     reporter.out.println("  \"status\": {")
     val ins = settings.classpath.entries
-    ins.zipWithIndex.foreach {
-      case (in, i) =>
-        val s_out = status.get(in).map(_.toString).getOrElse("")
-        reporter.out.print(s"""    "${in.toNIO}": "${s_out}"""")
-        if (i != ins.length - 1) reporter.out.print(",")
-        reporter.out.println()
+    ins.zipWithIndex.foreach { case (in, i) =>
+      val s_out = status.get(in).map(_.toString).getOrElse("")
+      reporter.out.print(s"""    "${in.toNIO}": "${s_out}"""")
+      if (i != ins.length - 1) reporter.out.print(",")
+      reporter.out.println()
     }
     reporter.out.println("  },")
     val s_out = scalaLibrarySynthetics.map(_.toString).getOrElse("")

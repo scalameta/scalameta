@@ -32,10 +32,9 @@ abstract class BasePrinter(
   }
 
   def rep[T](xs: Seq[T], sep: String)(f: T => Unit): Unit = {
-    xs.zipWithIndex.foreach {
-      case (x, i) =>
-        if (i != 0) out.print(sep)
-        f(x)
+    xs.zipWithIndex.foreach { case (x, i) =>
+      if (i != 0) out.print(sep)
+      f(x)
     }
   }
 

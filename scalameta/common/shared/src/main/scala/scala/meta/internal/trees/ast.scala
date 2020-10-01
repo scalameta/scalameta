@@ -80,8 +80,8 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         var (fieldChecks, rest4) = rest3.partition(_ match {
           case q"checkFields($what)" => true; case _ => false
         })
-        fieldChecks = fieldChecks.map {
-          case q"checkFields($arg)" => q"_root_.org.scalameta.invariants.require($arg)"
+        fieldChecks = fieldChecks.map { case q"checkFields($arg)" =>
+          q"_root_.org.scalameta.invariants.require($arg)"
         }
         val (parentChecks, illegal) = rest4.partition(_ match {
           case q"checkParent($what)" => true; case _ => false
@@ -100,24 +100,21 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         def internalize(name: TermName) = TermName("_" + name.toString)
         val fieldParamss = paramss
         val fieldParams = fieldParamss.flatten.map(p => (p, p.name.decodedName.toString))
-        istats1 ++= fieldParams.map({
-          case (p, _) =>
-            var getterAnns = List(q"new $AstMetadataModule.astField")
-            if (p.mods.annotations.exists(_.toString.contains("auxiliary")))
-              getterAnns :+= q"new $AstMetadataModule.auxiliary"
-            val getterMods = Modifiers(DEFERRED, typeNames.EMPTY, getterAnns)
-            q"$getterMods def ${p.name}: ${p.tpt}"
+        istats1 ++= fieldParams.map({ case (p, _) =>
+          var getterAnns = List(q"new $AstMetadataModule.astField")
+          if (p.mods.annotations.exists(_.toString.contains("auxiliary")))
+            getterAnns :+= q"new $AstMetadataModule.auxiliary"
+          val getterMods = Modifiers(DEFERRED, typeNames.EMPTY, getterAnns)
+          q"$getterMods def ${p.name}: ${p.tpt}"
         })
-        paramss1 ++= fieldParamss.map(_.map {
-          case p @ q"$mods val $name: $tpt = $default" =>
-            val mods1 = mods.mkMutable.unPrivate.unOverride.unDefault
-            q"$mods1 val ${internalize(p.name)}: $tpt"
+        paramss1 ++= fieldParamss.map(_.map { case p @ q"$mods val $name: $tpt = $default" =>
+          val mods1 = mods.mkMutable.unPrivate.unOverride.unDefault
+          q"$mods1 val ${internalize(p.name)}: $tpt"
         })
-        stats1 ++= fieldParams.map({
-          case (p, s) =>
-            val pinternal = internalize(p.name)
-            val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
-            q"""
+        stats1 ++= fieldParams.map({ case (p, s) =>
+          val pinternal = internalize(p.name)
+          val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
+          q"""
           $pmods def ${p.name}: ${p.tpt} = {
             $CommonTyperMacrosModule.loadField(this.$pinternal, $s)
             this.$pinternal
@@ -186,9 +183,8 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         if (!isQuasi) {
           if (copies.isEmpty) {
             val fieldDefaultss = fieldParamss.map(_.map(p => q"this.${p.name}"))
-            val copyParamss = fieldParamss.zip(fieldDefaultss).map {
-              case (f, d) =>
-                f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" }
+            val copyParamss = fieldParamss.zip(fieldDefaultss).map { case (f, d) =>
+              f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" }
             }
             val copyArgss = fieldParamss.map(_.map(p => q"${p.name}"))
             val copyBody = q"$mname.apply(...$copyArgss)"
@@ -227,8 +223,8 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         stats1 += q"override def productFields: $ListClass[$StringClass] = _root_.scala.List(..$productFields)"
 
         // step 12: generate serialization logic
-        val fieldInits = fieldParams.map({
-          case (p, s) => q"$CommonTyperMacrosModule.loadField(this.${internalize(p.name)}, $s)"
+        val fieldInits = fieldParams.map({ case (p, s) =>
+          q"$CommonTyperMacrosModule.loadField(this.${internalize(p.name)}, $s)"
         })
         stats1 += q"protected def writeReplace(): $AnyRefClass = { ..$fieldInits; this }"
 
@@ -240,11 +236,11 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         val internalLocalss = paramss.map(_.map(p => (p.name, internalize(p.name))))
         internalBody += q"$CommonTyperMacrosModule.hierarchyCheck[$iname]"
         // internalBody += q"$AdtTyperMacros.immutabilityCheck[$iname]"
-        internalBody ++= internalLocalss.flatten.map {
-          case (local, internal) => q"$DataTyperMacrosModule.nullCheck($local)"
+        internalBody ++= internalLocalss.flatten.map { case (local, internal) =>
+          q"$DataTyperMacrosModule.nullCheck($local)"
         }
-        internalBody ++= internalLocalss.flatten.map {
-          case (local, internal) => q"$DataTyperMacrosModule.emptyCheck($local)"
+        internalBody ++= internalLocalss.flatten.map { case (local, internal) =>
+          q"$DataTyperMacrosModule.emptyCheck($local)"
         }
         internalBody ++= imports
         internalBody ++= fieldChecks.map(fieldCheck => {
@@ -269,13 +265,12 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         })
         val internalInitCount = 3 // privatePrototype, privateParent, privateOrigin
         val internalInitss = 1.to(internalInitCount).map(_ => q"null")
-        val paramInitss = internalLocalss.map(_.map {
-          case (local, internal) => q"$CommonTyperMacrosModule.initParam($local)"
+        val paramInitss = internalLocalss.map(_.map { case (local, internal) =>
+          q"$CommonTyperMacrosModule.initParam($local)"
         })
         internalBody += q"val node = new $name(..$internalInitss)(...$paramInitss)"
-        internalBody ++= internalLocalss.flatten.map {
-          case (local, internal) =>
-            q"$CommonTyperMacrosModule.storeField(node.$internal, $local, ${local.toString})"
+        internalBody ++= internalLocalss.flatten.map { case (local, internal) =>
+          q"$CommonTyperMacrosModule.storeField(node.$internal, $local, ${local.toString})"
         }
         internalBody += q"node"
         val internalArgss = paramss.map(_.map(p => q"${p.name}"))

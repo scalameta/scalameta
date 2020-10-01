@@ -43,15 +43,14 @@ class SignatureSuite extends FunSuite {
             if (PathIO.extension(file) == "class") {
               val node = AbsolutePath(file).toClassNode
               val tests = checkAllSignatures(node)
-              tests.foreach {
-                case (signature, unsafe) =>
-                  try {
-                    unsafe()
-                  } catch {
-                    case NonFatal(e) =>
-                      println(signature)
-                      failingSignatures += signature
-                  }
+              tests.foreach { case (signature, unsafe) =>
+                try {
+                  unsafe()
+                } catch {
+                  case NonFatal(e) =>
+                    println(signature)
+                    failingSignatures += signature
+                }
               }
             }
             FileVisitResult.CONTINUE

@@ -58,8 +58,8 @@ object ScaladocParser {
 
   private val codeExprParser: Parser[CodeExpr] = {
     val pattern = codePrefix ~ hspaces0 ~ codeLineParser ~ codeSuffix ~ punctParser.!
-    P(pattern.map {
-      case (x, y) => CodeExpr(x.trim, y)
+    P(pattern.map { case (x, y) =>
+      CodeExpr(x.trim, y)
     })
   }
 
@@ -89,8 +89,8 @@ object ScaladocParser {
     val end = space | linkSuffix
     val anchor = P((!end ~ AnyChar).rep(1).!.rep(1, sep = spaces1))
     val pattern = linkPrefix ~ (anchor ~ linkSuffix ~ punctParser.!)
-    P(pattern.map {
-      case (x, y) => Link(x.head, x.tail.toSeq, y)
+    P(pattern.map { case (x, y) =>
+      Link(x.head, x.tail.toSeq, y)
     })
   }
 
@@ -118,8 +118,8 @@ object ScaladocParser {
           case (false, true) => trailTextParser.map(x => Tag(tagType, desc = x))
           case (true, false) => trailWordParser.map(x => Tag(tagType, label = x))
           case (true, true) =>
-            (trailWordParser ~ trailTextParser).map {
-              case (label, desc) => Tag(tagType, label, desc)
+            (trailWordParser ~ trailTextParser).map { case (label, desc) =>
+              Tag(tagType, label, desc)
             }
         }
       }

@@ -12,10 +12,9 @@ sealed abstract class AssociatedComments(
 ) {
   private def pretty(map: Map[Token, List[Comment]]): String =
     map
-      .map {
-        case (tok, comments) =>
-          val commentStructure = comments.map(comment => logger.revealWhitespace(comment.syntax))
-          s"    ${tok.structure} => $commentStructure"
+      .map { case (tok, comments) =>
+        val commentStructure = comments.map(comment => logger.revealWhitespace(comment.syntax))
+        s"    ${tok.structure} => $commentStructure"
       }
       .mkString("\n")
   def syntax: String =

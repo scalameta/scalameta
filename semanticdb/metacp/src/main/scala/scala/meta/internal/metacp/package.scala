@@ -25,8 +25,8 @@ package object metacp {
       if (node.attrs == null) None
       else {
         for {
-          scalaSigAttribute <- node.attrs.asScala.collectFirst {
-            case ScalaSigAttribute(scalaSig) => scalaSig
+          scalaSigAttribute <- node.attrs.asScala.collectFirst { case ScalaSigAttribute(scalaSig) =>
+            scalaSig
           }
           scalaSig <- {
             if (scalaSigAttribute.table.nonEmpty) Some(scalaSigAttribute)
@@ -49,9 +49,8 @@ package object metacp {
                   case bytesString: String =>
                     bytesString.getBytes(StandardCharsets.UTF_8)
                   case bytesArray: util.ArrayList[_] =>
-                    bytesArray.asScala.foreach {
-                      case bytesString: String =>
-                        baos.write(bytesString.getBytes(StandardCharsets.UTF_8))
+                    bytesArray.asScala.foreach { case bytesString: String =>
+                      baos.write(bytesString.getBytes(StandardCharsets.UTF_8))
                     }
                     baos.toByteArray
                   case els => throw new IllegalArgumentException(els.getClass.getName)

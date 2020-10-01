@@ -38,8 +38,8 @@ class BootstrapSuite extends ParseSuite {
               i += 1
             }
           })
-          bitmap.zipWithIndex.filter(!_._1).foreach {
-            case (_, i) => fail("TOKENS DON'T COVER " + i)
+          bitmap.zipWithIndex.filter(!_._1).foreach { case (_, i) =>
+            fail("TOKENS DON'T COVER " + i)
           }
           // check #2: syntax works
           if (!isFail && content != tokens.syntax.mkString) {

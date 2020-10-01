@@ -11,8 +11,8 @@ class PrettyPrinterSuite extends FunSuite {
   implicit class XtensionResetOrigin[T <: Tree](tree: T) {
     def resetAllOrigins: T = {
       tree
-        .transform {
-          case tree: Tree => tree.withOrigin(Origin.None)
+        .transform { case tree: Tree =>
+          tree.withOrigin(Origin.None)
         }
         .asInstanceOf[T]
     }

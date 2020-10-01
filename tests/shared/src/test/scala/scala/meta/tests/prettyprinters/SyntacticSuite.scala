@@ -62,13 +62,16 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       QQQ
     }""".replace("QQQ", "\"\"\""))
 
-    assertSameLines(tree.syntax, """
+    assertSameLines(
+      tree.syntax,
+      """
     |{
     |  val x = QQQ
     |        x
     |      QQQ
     |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")
+    )
   }
 
   test("string literals with newlines and double quotes") {
@@ -82,14 +85,17 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       tree.structure == """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("\""))))"""
         .replace("%n", "\\n")
     )
-    assertSameLines(tree.syntax, """
+    assertSameLines(
+      tree.syntax,
+      """
     |{
     |  val x = QQQ
     |        x
     |      QQQ
     |  val y = "\""
     |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\""))
+    """.trim.stripMargin.replace("QQQ", "\"\"\"")
+    )
   }
 
   test("interpolations") {
@@ -640,10 +646,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("smart case printing - oneliner in multiple lines") {
     val Term.Match(_, case1 :: case2 :: Nil) =
       templStat("??? match { case x => x; case List(x, y) => println(x); println(y) }")
-    assertSameLines(case1.toString, """
+    assertSameLines(
+      case1.toString,
+      """
       |case x =>
       |  x
-    """.trim.stripMargin)
+    """.trim.stripMargin
+    )
     assert(case2.toString == """
       |case List(x, y) =>
       |  println(x)

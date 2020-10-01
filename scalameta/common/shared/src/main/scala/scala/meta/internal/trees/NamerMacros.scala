@@ -64,8 +64,8 @@ trait CommonNamerMacros extends MacroHelpers {
     }
     val qstubs = (paramss.flatten.map(_.name.toString) ++ extraStubs).distinct.map(TermName.apply)
     qstubs.foreach(name => qstats += q"def $name: $NothingClass = ${stub()}")
-    val qcopyParamss = paramss.map(_.map {
-      case ValDef(mods, name, tpt, _) => q"val $name: $tpt = this.$name"
+    val qcopyParamss = paramss.map(_.map { case ValDef(mods, name, tpt, _) =>
+      q"val $name: $tpt = this.$name"
     })
     qstats += q"def copy(...$qcopyParamss): $name = ${stub()}"
 

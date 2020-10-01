@@ -25,9 +25,8 @@ trait ReporterOps { self: SemanticdbOps =>
           returnedMessagesByPath.put(unit, infos.size)
           infos.iterator
             .drop(toDrop) // drop messages that have been reported before.
-            .collect {
-              case RelevantMessage(pos, severity, msg) =>
-                (pos, severity, msg)
+            .collect { case RelevantMessage(pos, severity, msg) =>
+              (pos, severity, msg)
             }
             .toList
         case _ =>

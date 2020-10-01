@@ -400,6 +400,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
 lazy val communitytest = project
   .in(file("community-test"))
   .settings(
+    nonPublishableSettings,
     sharedSettings,
     libraryDependencies += "org.scalameta" %% "munit" % munitVersion,
     testFrameworks := List(new TestFramework("munit.Framework"))
@@ -474,8 +475,8 @@ lazy val requiresMacrosSetting = Def.settings(
         )
       )
 
-    val flat = filesWithWhiteboxMacros.flatMap {
-      case (k, vs) => vs.map(v => (base / k / v).lastModified)
+    val flat = filesWithWhiteboxMacros.flatMap { case (k, vs) =>
+      vs.map(v => (base / k / v).lastModified)
     }
 
     "-J" + flat.hashCode

@@ -340,8 +340,8 @@ object Javacp {
   private case class MethodInfo(node: MethodNode, signature: MethodSignature)
 
   private def asmNameToPath(asmName: String, base: AbsolutePath): AbsolutePath = {
-    (asmName + ".class").split("/").foldLeft(base) {
-      case (accum, filename) => accum.resolve(filename)
+    (asmName + ".class").split("/").foldLeft(base) { case (accum, filename) =>
+      accum.resolve(filename)
     }
   }
 
