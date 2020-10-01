@@ -3296,13 +3296,21 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def entrypointTermParam(): Term.Param =
     param(ownerIsCase = false, ownerIsType = true, isImplicit = false, isUsing = false)
 
-  def typeParamClauseOpt(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): List[Type.Param] = {
+  def typeParamClauseOpt(
+      ownerIsType: Boolean,
+      ctxBoundsAllowed: Boolean,
+      allowUnderscore: Boolean = true
+  ): List[Type.Param] = {
     newLineOptWhenFollowedBy[LeftBracket]
     if (token.isNot[LeftBracket]) Nil
-    else inBrackets(commaSeparated(typeParam(ownerIsType, ctxBoundsAllowed)))
+    else inBrackets(commaSeparated(typeParam(ownerIsType, ctxBoundsAllowed, allowUnderscore)))
   }
 
-  def typeParam(ownerIsType: Boolean, ctxBoundsAllowed: Boolean): Type.Param = autoPos {
+  def typeParam(
+      ownerIsType: Boolean,
+      ctxBoundsAllowed: Boolean,
+      allowUnderscore: Boolean = true
+  ): Type.Param = autoPos {
     var mods: List[Mod] = annots(skipNewLines = false)
     if (ownerIsType) mods ++= tparamModifiers()
     def endTparamQuasi = token.is[RightBracket] || token.is[Comma]
@@ -3313,9 +3321,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         val name =
           if (token.is[Ident]) typeName()
           else if (token.is[Unquote]) unquote[Name]
-          else if (token.is[Underscore]) {
+          else if (token.is[Underscore] && allowUnderscore) {
             next(); atPos(in.prevTokenPos, in.prevTokenPos)(Name.Anonymous())
-          } else syntaxError("identifier or `_' expected", at = token)
+          } else {
+            if (allowUnderscore) syntaxError("identifier or `_' expected", at = token)
+            else syntaxError("identifier expected", at = token)
+          }
         name match {
           case q: Quasi if endTparamQuasi =>
             q.become[Type.Param.Quasi]
@@ -3547,7 +3558,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     val forked = in.fork
     val name: meta.Name = if (token.is[Ident]) typeName() else anonymousName
-    val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
+    val tparams = typeParamClauseOpt(
+      ownerIsType = false,
+      ctxBoundsAllowed = true,
+      allowUnderscore = dialect.allowTypeParamUnderscore
+    )
     val uparamss = paramClauses(ownerIsType = false)
     val (sigName, sigTparams, sigUparamss) = if (isSoftKw(token, SkAs)) {
       next()
@@ -3580,7 +3595,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def extensionGroupDecl(mods: List[Mod]): Defn.ExtensionGroup = {
     next() // 'extension'
 
-    val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
+    val tparams = typeParamClauseOpt(
+      ownerIsType = false,
+      ctxBoundsAllowed = true,
+      allowUnderscore = dialect.allowTypeParamUnderscore
+    )
     val eparam = inParens(
       param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false)
     )
@@ -3737,7 +3756,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     Defn.Trait(
       mods,
       traitName,
-      typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false),
+      typeParamClauseOpt(
+        ownerIsType = true,
+        ctxBoundsAllowed = false,
+        allowUnderscore = dialect.allowTypeParamUnderscore
+      ),
       primaryCtor(OwnedByTrait),
       templateOpt(OwnedByTrait)
     )
@@ -3753,7 +3776,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     rejectModCombination[Mod.Open, Mod.Final](mods, Some(culprit))
     rejectModCombination[Mod.Open, Mod.Sealed](mods, Some(culprit))
     rejectModCombination[Mod.Case, Mod.Implicit](mods, Some(culprit))
-    val typeParams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true)
+    val typeParams = typeParamClauseOpt(
+      ownerIsType = true,
+      ctxBoundsAllowed = true,
+      allowUnderscore = dialect.allowTypeParamUnderscore
+    )
     val ctor = primaryCtor(if (mods.has[Mod.Case]) OwnedByCaseClass else OwnedByClass)
 
     if (!dialect.allowCaseClassWithoutParameterList && mods.has[Mod.Case] && ctor.paramss.isEmpty) {
@@ -3775,7 +3802,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val culprit = s"enum $enumName"
     onlyAllowedMods[Mod.Private, Mod.Protected](mods, culprit)
 
-    val typeParams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true)
+    val typeParams = typeParamClauseOpt(
+      ownerIsType = true,
+      ctxBoundsAllowed = true,
+      allowUnderscore = dialect.allowTypeParamUnderscore
+    )
     val ctor = primaryCtor(OwnedByEnum)
     val tmpl = templateOpt(OwnedByEnum)
     Defn.Enum(mods, enumName, typeParams, ctor, tmpl)
@@ -3800,7 +3831,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def enumSingleCaseDef(mods: List[Mod]): Defn.EnumCase = {
     val name = termName()
-    val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = true)
+    val tparams = typeParamClauseOpt(
+      ownerIsType = true,
+      ctxBoundsAllowed = true,
+      allowUnderscore = dialect.allowTypeParamUnderscore
+    )
     val ctor = primaryCtor(OwnedByEnum)
     val inits = if (token.is[KwExtends]) {
       accept[KwExtends]

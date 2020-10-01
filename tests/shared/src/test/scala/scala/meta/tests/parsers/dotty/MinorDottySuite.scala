@@ -344,4 +344,32 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )
   }
+
+  test("type.param-with-name.anon") {
+    runTestError[Stat]("trait F[_]", "identifier expected")
+    runTestError[Stat]("class F[_]", "identifier expected")
+    runTestError[Stat]("enum X[T]{ case A[_] extends X[Int] }", "identifier expected")
+    runTestError[Stat]("extension [_](x: Int) def inc: Int = x + 1", "identifier expected")
+    runTestError[Stat]("given [_](using Ord[T]) as Ord[List[T]]{}", "identifier expected")
+
+    runTestAssert[Stat]("given [T](using Ord[T]) as Ord[List[T]]")(
+      Defn.Given(
+        Nil,
+        Name(""),
+        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+        List(
+          List(
+            Term.Param(
+              List(Mod.Using()),
+              Name(""),
+              Some(Type.Apply(Type.Name("Ord"), List(Type.Name("T")))),
+              None
+            )
+          )
+        ),
+        Type.Apply(Type.Name("Ord"), List(Type.Apply(Type.Name("List"), List(Type.Name("T"))))),
+        Template(Nil, Nil, Self(Name(""), None), Nil)
+      )
+    )
+  }
 }
