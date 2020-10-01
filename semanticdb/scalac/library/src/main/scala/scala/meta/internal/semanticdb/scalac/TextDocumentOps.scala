@@ -315,10 +315,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
             val gstart = gtree.pos.start
             val gpoint = gtree.pos.point
             val gend = gtree.pos.end
-            gtree match {
-              case _: g.ValDef | _: g.DefDef =>
-              case _ =>
-            }
 
             tryNamedArg(gtree, gstart, gpoint)
 
@@ -378,7 +374,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 tryMstart(gpoint)
               case gtree: g.DefTree =>
                 tryMstart(gpoint)
-              case gtree: g.This =>
+              case gtree: g.This
+                  if mstarts.get(gpoint).exists(name => gsym.nameString == name.value) =>
                 tryMstart(gpoint)
               case gtree: g.Super =>
                 tryMend(gend - 1)
