@@ -103,6 +103,7 @@ object LegacyToken {
   final val COLON = 123
   final val EQUALS = 124
   final val AT = 125
+  final val COLONEOL = 126
 
   /** special symbols */
   final val HASH = 130

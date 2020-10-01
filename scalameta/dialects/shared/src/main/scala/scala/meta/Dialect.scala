@@ -95,7 +95,11 @@ final class Dialect private (
     // end marker introduced in dotty
     val allowEndMarker: Boolean,
     // Support for escaping `"` in interpolated strings using $ - "$""
-    val allowInterpolationDolarQuoteEscape: Boolean
+    val allowInterpolationDolarQuoteEscape: Boolean,
+    // Significant identation introduced in dotty
+    val allowSignificantIndentation: Boolean,
+    // Dotty changed placeholder for types from `_` to `?`
+    val allowQuestionMarkPlaceholder: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -168,7 +172,9 @@ final class Dialect private (
       allowExportClause = false,
       allowCommaSeparatedExtend = false,
       allowEndMarker = false,
-      allowInterpolationDolarQuoteEscape = false
+      allowInterpolationDolarQuoteEscape = false,
+      allowSignificantIndentation = false,
+      allowQuestionMarkPlaceholder = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -293,6 +299,12 @@ final class Dialect private (
   def withAllowEndMarker(newValue: Boolean): Dialect = {
     privateCopy(allowEndMarker = newValue)
   }
+  def withAllowSignificantIndentation(newValue: Boolean): Dialect = {
+    privateCopy(allowSignificantIndentation = newValue)
+  }
+  def withAllowQuestionMarkPlaceholder(newValue: Boolean): Dialect = {
+    privateCopy(allowQuestionMarkPlaceholder = newValue)
+  }
 
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
@@ -337,7 +349,9 @@ final class Dialect private (
       allowExportClause: Boolean = this.allowExportClause,
       allowCommaSeparatedExtend: Boolean = this.allowCommaSeparatedExtend,
       allowEndMarker: Boolean = this.allowEndMarker,
-      allowInterpolationDolarQuoteEscape: Boolean = this.allowInterpolationDolarQuoteEscape
+      allowInterpolationDolarQuoteEscape: Boolean = this.allowInterpolationDolarQuoteEscape,
+      allowSignificantIndentation: Boolean = this.allowSignificantIndentation,
+      allowQuestionMarkPlaceholder: Boolean = this.allowQuestionMarkPlaceholder
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -378,7 +392,9 @@ final class Dialect private (
       allowExportClause,
       allowCommaSeparatedExtend,
       allowEndMarker,
-      allowInterpolationDolarQuoteEscape
+      allowInterpolationDolarQuoteEscape,
+      allowSignificantIndentation,
+      allowQuestionMarkPlaceholder
       // NOTE(olafur): add the next argument above this comment.
     )
   }

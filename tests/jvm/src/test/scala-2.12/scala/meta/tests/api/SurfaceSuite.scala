@@ -136,6 +136,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens
       |scala.meta.tokens.Token
       |scala.meta.tokens.Token.Constant *
+      |scala.meta.tokens.Token.Indentation *
       |scala.meta.tokens.Token.Interpolation *
       |scala.meta.tokens.Token.Xml *
       |scala.meta.tokens.Tokens
@@ -214,8 +215,6 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Defn.Enum
       |scala.meta.Defn.EnumCase
       |scala.meta.Defn.ExtensionGroup
-      |scala.meta.Defn.ExtensionMethod
-      |scala.meta.Defn.ExtensionMethodInfix
       |scala.meta.Defn.Given
       |scala.meta.Defn.GivenAlias
       |scala.meta.Defn.Macro
@@ -227,6 +226,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Defn.Val
       |scala.meta.Defn.Var
       |scala.meta.Enumerator
+      |scala.meta.Enumerator.CaseGenerator
       |scala.meta.Enumerator.Generator
       |scala.meta.Enumerator.Guard
       |scala.meta.Enumerator.Val
@@ -379,6 +379,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.BOF
       |scala.meta.tokens.Token.CR
       |scala.meta.tokens.Token.Colon
+      |scala.meta.tokens.Token.ColonEol
       |scala.meta.tokens.Token.Comma
       |scala.meta.tokens.Token.Comment
       |scala.meta.tokens.Token.Constant.Char
@@ -394,6 +395,8 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.FF
       |scala.meta.tokens.Token.Hash
       |scala.meta.tokens.Token.Ident
+      |scala.meta.tokens.Token.Indentation.Indent
+      |scala.meta.tokens.Token.Indentation.Outdent
       |scala.meta.tokens.Token.Interpolation.End
       |scala.meta.tokens.Token.Interpolation.Id
       |scala.meta.tokens.Token.Interpolation.Part

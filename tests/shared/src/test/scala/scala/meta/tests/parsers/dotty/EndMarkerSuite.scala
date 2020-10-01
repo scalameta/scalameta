@@ -76,4 +76,31 @@ class EndMarkerSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("end-for-no-indent") {
+    // to make parser more permissive 'end' is treated as independent statement
+    // that doesn't need to be bound to any indentation
+    val code = """|
+                  |def a(): Unit = {
+                  |  end for
+                  |  val x = 3
+                  |}
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = None)(
+      Defn.Def(
+        Nil,
+        Term.Name("a"),
+        Nil,
+        List(List()),
+        Some(Type.Name("Unit")),
+        Term.Block(
+          List(
+            Term.EndMarker(Term.Name("for")),
+            Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Int(3))
+          )
+        )
+      )
+    )
+  }
+
 }

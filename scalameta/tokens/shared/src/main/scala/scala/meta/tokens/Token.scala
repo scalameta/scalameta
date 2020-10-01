@@ -75,6 +75,7 @@ object Token {
   // Symbolic keywords
   @fixed("#") class Hash extends Token
   @fixed(":") class Colon extends Token
+  @fixed("colonEol") class ColonEol extends Token
   @fixed("<%") class Viewbound extends Token
   @freeform("<-") class LeftArrow extends Token
   @fixed("<:") class Subtype extends Token
@@ -125,6 +126,11 @@ object Token {
     @freeform("xml splice start") class SpliceStart extends Token
     @freeform("xml splice end") class SpliceEnd extends Token
     @freeform("xml end") class End extends Token
+  }
+
+  object Indentation {
+    @freeform("indent") class Indent extends Token
+    @freeform("outdent") class Outdent extends Token
   }
 
   // Trivia

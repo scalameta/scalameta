@@ -127,7 +127,10 @@ object Term {
   @ast class While(expr: Term, body: Term) extends Term
   @ast class Do(body: Term, expr: Term) extends Term
   @ast class For(enums: List[Enumerator] @nonEmpty, body: Term) extends Term {
-    checkFields(enums.head.is[Enumerator.Generator] || enums.head.is[Enumerator.Quasi])
+    checkFields(
+      enums.head.is[Enumerator.Generator] || enums.head.is[Enumerator.CaseGenerator] || enums.head
+        .is[Enumerator.Quasi]
+    )
   }
   @ast class ForYield(enums: List[Enumerator] @nonEmpty, body: Term) extends Term
   @ast class New(init: Init) extends Term
@@ -326,31 +329,10 @@ object Defn {
       body: Term
   ) extends Defn
   @ast class ExtensionGroup(
-      mods: List[Mod],
-      name: scala.meta.Name,
-      tparams: List[scala.meta.Type.Param],
-      sparams: List[List[Term.Param]],
       eparam: Term.Param,
-      templ: Template
+      tparams: List[scala.meta.Type.Param],
+      body: Stat
   ) extends Defn
-  @ast class ExtensionMethod(
-      mods: List[Mod],
-      eparam: Term.Param,
-      name: Term.Name,
-      tparams: List[scala.meta.Type.Param],
-      paramss: List[List[Term.Param]],
-      decltpe: Option[scala.meta.Type],
-      body: Term
-  ) extends Defn with Member.Term
-  @ast class ExtensionMethodInfix(
-      mods: List[Mod],
-      eparam: Term.Param,
-      name: Term.Name,
-      tparams: List[scala.meta.Type.Param],
-      paramss: List[List[Term.Param]],
-      decltpe: Option[scala.meta.Type],
-      body: Term
-  ) extends Defn with Member.Term
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
@@ -447,8 +429,12 @@ object Ctor {
 
 @ast class Self(name: Name, decltpe: Option[Type]) extends Member
 
-@ast class Template(early: List[Stat], inits: List[Init], self: Self, stats: List[Stat])
-    extends Tree {
+@ast class Template(
+    early: List[Stat],
+    inits: List[Init],
+    self: Self,
+    stats: List[Stat]
+) extends Tree {
   checkFields(early.forall(_.isEarlyStat && inits.nonEmpty))
   checkFields(stats.forall(_.isTemplateStat))
 }
@@ -487,6 +473,7 @@ object Mod {
 @branch trait Enumerator extends Tree
 object Enumerator {
   @ast class Generator(pat: Pat, rhs: Term) extends Enumerator
+  @ast class CaseGenerator(pat: Pat, rhs: Term) extends Enumerator
   @ast class Val(pat: Pat, rhs: Term) extends Enumerator
   @ast class Guard(cond: Term) extends Enumerator
 }

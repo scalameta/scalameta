@@ -18,6 +18,7 @@ class MinorDottySuite extends BaseDottySuite {
    *  https://dotty.epfl.ch/docs/reference/other-new-features/open-classes.html
    *  https://dotty.epfl.ch/docs/reference/new-types/type-lambdas.html
    *  https://dotty.epfl.ch/docs/reference/other-new-features/trait-parameters.html
+   *  https://dotty.epfl.ch/docs/reference/changed-features/wildcards.html
    */
   test("open-class") {
     val Defn.Class(List(Mod.Open()), Type.Name("A"), _, _, _) =
@@ -26,23 +27,49 @@ class MinorDottySuite extends BaseDottySuite {
     val Defn.Trait(List(Mod.Open()), Type.Name("C"), _, _, _) =
       templStat("open trait C {}")(dialects.Dotty)
 
+    val Defn.Trait(List(Mod.Open(), Mod.Private(Name.Anonymous())), Type.Name("C"), _, _, _) =
+      templStat("open private trait C {}")(dialects.Dotty)
+
     val Defn.Object(List(Mod.Open()), Term.Name("X"), _) =
       templStat("open object X {}")(dialects.Dotty)
 
   }
 
   test("open-class-negative-cases") {
-    runTestError[Stat]("final open class A {}", "illegal combination of modifiers: open and final")
-    runTestError[Stat](
+    runTestError("final open class A {}", "illegal combination of modifiers: open and final")(
+      parseTempl
+    )
+    runTestError(
       "open sealed trait C {}",
       "illegal combination of modifiers: open and sealed"
+    )(parseTempl)
+    runTestError("open def f(): Int = 3", "`open' modifier can be used only for classes")(
+      parseTempl
     )
-    runTestError[Stat]("open def f(): Int = 3", "error: expected start of definition")
-    runTestError[Stat]("def f(open a: Int): Int = 3", "error")
+    runTestError("def f(open a: Int): Int = 3", "error")(parseTempl)
   }
 
   test("open-soft-modifier") {
     stat("def open(open: open): open = ???").structure
+  }
+
+  test("open-identifier") {
+    runTestAssert[Stat]("def run(): Unit = { start; open(p); end }", assertLayout = None)(
+      Defn.Def(
+        Nil,
+        Term.Name("run"),
+        Nil,
+        List(List()),
+        Some(Type.Name("Unit")),
+        Term.Block(
+          List(
+            Term.Name("start"),
+            Term.Apply(Term.Name("open"), List(Term.Name("p"))),
+            Term.Name("end")
+          )
+        )
+      )
+    )
   }
 
   test("type-lambda") {
@@ -265,5 +292,56 @@ class MinorDottySuite extends BaseDottySuite {
         Template(Nil, Nil, Self(Name(""), None), Nil)
       )
     )(parseTempl)
+  }
+
+  test("question-type") {
+    runTestAssert[Stat]("val stat: Tree[? >: Untyped]")(
+      Decl.Val(
+        Nil,
+        List(Pat.Var(Term.Name("stat"))),
+        Type.Apply(
+          Type.Name("Tree"),
+          List(Type.Placeholder(Type.Bounds(Some(Type.Name("Untyped")), None)))
+        )
+      )
+    )(parseTempl)
+
+  }
+
+  test("lazy-val-toplevel") {
+    runTestAssert[Source]("lazy val x = 3")(
+      Source(List(Defn.Val(List(Mod.Lazy()), List(Pat.Var(Term.Name("x"))), None, Lit.Int(3))))
+    )
+  }
+
+  test("changed-operator-syntax") {
+    // https://dotty.epfl.ch/docs/reference/changed-features/operators.html#syntax-change
+    runTestAssert[Source]("""|object X {
+                             |  println("hello")
+                             |  ???
+                             |  ??? match {
+                             |    case 0 => 1
+                             |  }
+                             |}
+                             |""".stripMargin)(
+      Source(
+        List(
+          Defn.Object(
+            Nil,
+            Term.Name("X"),
+            Template(
+              Nil,
+              Nil,
+              Self(Name(""), None),
+              List(
+                Term.Apply(Term.Name("println"), List(Lit.String("hello"))),
+                Term.Name("???"),
+                Term.Match(Term.Name("???"), List(Case(Lit.Int(0), None, Lit.Int(1))))
+              )
+            )
+          )
+        )
+      )
+    )
   }
 }

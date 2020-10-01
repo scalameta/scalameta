@@ -30,6 +30,8 @@ class ReflectionSuite extends FunSuite {
       |Token.EOF
       |Token.Ellipsis
       |Token.Ident
+      |Token.Indentation.Indent
+      |Token.Indentation.Outdent
       |Token.Interpolation.End
       |Token.Interpolation.Id
       |Token.Interpolation.Part

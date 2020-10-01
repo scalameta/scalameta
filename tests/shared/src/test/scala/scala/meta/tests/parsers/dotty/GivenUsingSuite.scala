@@ -214,7 +214,7 @@ class GivenUsingSuite extends BaseDottySuite {
 
   test("given-subtype-error".ignore) {
     // it is treaten as alias without '=' sign at the end and {...} is refinement part
-    runTestError("given intOrd as _ <: Ord[Int] { def f(): Int = 1 }", "missing = at the end")
+    runTestError("given intOrd as ? <: Ord[Int] { def f(): Int = 1 }", "missing = at the end")
   }
 
   // ---------------------------------
@@ -315,7 +315,7 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-alias-inline-subtype") {
-    runTestAssert[Stat]("inline given intOrd as _ <: Ord[Int] = ???")(
+    runTestAssert[Stat]("inline given intOrd as ? <: Ord[Int] = ???")(
       Defn.GivenAlias(
         List(Mod.Inline()),
         pname("intOrd"),
@@ -329,13 +329,13 @@ class GivenUsingSuite extends BaseDottySuite {
 
   test("given-alias-subtype-noinline-error".ignore) {
     runTestError(
-      "given intOrd as _ <: Ord[Int] = ???",
+      "given intOrd as ? <: Ord[Int] = ???",
       "is only allowed for given with inline modifier"
     )
   }
 
   test("given-alias-combo") {
-    runTestAssert[Stat]("inline given intOrd as _ <: Ord[Int] { val c: String } = ???")(
+    runTestAssert[Stat]("inline given intOrd as ? <: Ord[Int] { val c: String } = ???")(
       Defn.GivenAlias(
         List(Mod.Inline()),
         pname("intOrd"),
@@ -484,6 +484,21 @@ class GivenUsingSuite extends BaseDottySuite {
       "def f(a: Int, using b: String): Unit = ???",
       "using is applied for all parameters inside brackets"
     )
+  }
+
+  test("using-lambda-method-parameter".ignore) {
+    runTestAssert[Stat]("LazyBody { (using ctx: Context) => 3 }")(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("a"))),
+        None,
+        Term.ApplyUsing(
+          Term.ApplyUsing(Term.Apply(tname("f"), Nil), List(tname("a"))),
+          List(int(3), Lit.Boolean(true))
+        )
+      )
+    )
+
   }
 
   test("using-named-with-by-name-parameter") {

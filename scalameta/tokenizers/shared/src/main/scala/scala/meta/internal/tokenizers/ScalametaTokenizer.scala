@@ -117,6 +117,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case COLON => Token.Colon(input, dialect, curr.offset)
         case EQUALS => Token.Equals(input, dialect, curr.offset)
         case AT => Token.At(input, dialect, curr.offset)
+        case COLONEOL => Token.ColonEol(input, dialect, curr.offset)
         case HASH => Token.Hash(input, dialect, curr.offset)
         case USCORE => Token.Underscore(input, dialect, curr.offset)
         case ARROW => Token.RightArrow(input, dialect, curr.offset, curr.endOffset + 1)
@@ -165,6 +166,21 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     val tokens = new java.util.ArrayList[Token]()
     tokens.add(Token.BOF(input, dialect))
 
+    def aheadIsNewLine(index: Int): Boolean = {
+      var currentIdx = index + 1
+      while (currentIdx < legacyTokens.length) {
+        val token = legacyTokens(currentIdx)
+        if (token.token == WHITESPACE && token.strVal == "\n") {
+          return true
+        } else if (token.token == WHITESPACE) {
+          currentIdx += 1
+        } else {
+          return false
+        }
+      }
+      false
+    }
+
     def loop(
         startingFrom: Int,
         braceBalance: Int = 0,
@@ -177,8 +193,16 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       def nextToken() = legacyIndex += 1
       if (legacyIndex >= legacyTokens.length) return legacyIndex
 
-      emitToken()
-      nextToken()
+      if (dialect.allowSignificantIndentation && curr.token == COLON && aheadIsNewLine(
+          legacyIndex
+        )) {
+        curr.token = COLONEOL
+        emitToken()
+        legacyIndex += 2
+      } else {
+        emitToken()
+        nextToken()
+      }
 
       // NOTE: need to track this in order to correctly emit SpliceEnd tokens after splices end
       var braceBalance1 = braceBalance

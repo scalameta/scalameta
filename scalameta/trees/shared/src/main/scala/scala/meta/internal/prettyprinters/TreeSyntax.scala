@@ -540,10 +540,12 @@ object TreeSyntax {
       case t: Pat.Macro => m(SimplePattern, s(t.body))
       case t: Type.Macro => m(SimpleTyp, s(t.body))
       case t: Term.PartialFunction => m(SimpleExpr, s("{", r(t.cases.map(i(_)), ""), n("}")))
-      case t: Term.While => m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
+      case t: Term.While =>
+        m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
       case t: Term.Do =>
         m(Expr1, s(kw("do"), " ", p(Expr, t.body), " ", kw("while"), " (", t.expr, ")"))
-      case t: Term.For => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
+      case t: Term.For =>
+        m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
       case t: Term.ForYield =>
         m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
       case t: Term.New => m(SimpleExpr, s(kw("new"), " ", t.init))
@@ -645,7 +647,9 @@ object TreeSyntax {
       case t: Type.Annotate => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
       case t: Type.Lambda => m(Typ, t.tparams, " ", kw("=>>"), " ", p(Typ, t.tpe))
       case t: Type.Method => m(Typ, t.paramss, kw(":"), " ", p(Typ, t.tpe))
-      case t: Type.Placeholder => m(SimpleTyp, s(kw("_"), t.bounds))
+      case t: Type.Placeholder =>
+        if (dialect.allowQuestionMarkPlaceholder) m(SimpleTyp, s(kw("?"), t.bounds))
+        else m(SimpleTyp, s(kw("_"), t.bounds))
       case t: Type.Bounds =>
         s(
           t.lo.map(lo => s(" ", kw(">:"), " ", p(Typ, lo))).getOrElse(s()),
@@ -867,45 +871,19 @@ object TreeSyntax {
         s(w(t.mods, " "), kw("case"), " ", t.name, t.tparams, t.ctor, init())
 
       case t: Defn.ExtensionGroup =>
-        def name = if (t.name.is[Name.Anonymous]) s("") else s(" ", t.name)
-        def base =
-          if (t.eparam.name.is[Name.Anonymous]) s("")
-          else s(" on ", t.tparams, w("(", t.eparam, ")"))
+        val m = t.body match {
+          case Term.Block(stats) =>
+            s(":", r(stats.map(i(_))), n(""))
+          case onestat =>
+            s(" ", onestat)
+        }
         s(
-          w(t.mods, " "),
           kw("extension"),
-          name,
-          base,
-          t.sparams,
-          templ(t.templ)
-        )
-      case t: Defn.ExtensionMethod =>
-        s(
-          w(t.mods, " "),
-          kw("def"),
           " ",
-          t.tparams,
-          w("(", t.eparam, ")"),
-          ".",
-          t.name,
-          t.paramss,
-          t.decltpe,
-          " = ",
-          t.body
-        )
-      case t: Defn.ExtensionMethodInfix =>
-        s(
-          w(t.mods, " "),
-          kw("def"),
-          " ",
-          t.tparams,
-          w("(", t.eparam, ")"),
-          " ",
-          t.name,
-          t.paramss,
-          t.decltpe,
-          " = ",
-          t.body
+          "(",
+          t.eparam,
+          ")",
+          m
         )
 
       case t: Defn.Object => s(w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
@@ -1048,6 +1026,7 @@ object TreeSyntax {
       // Enumerator
       case t: Enumerator.Val => s(p(Pattern1, t.pat), " = ", p(Expr, t.rhs))
       case t: Enumerator.Generator => s(p(Pattern1, t.pat), " <- ", p(Expr, t.rhs))
+      case t: Enumerator.CaseGenerator => s(" case ", p(Pattern1, t.pat), " <- ", p(Expr, t.rhs))
       case t: Enumerator.Guard => s(kw("if"), " ", p(PostfixExpr, t.cond))
 
       // Import
