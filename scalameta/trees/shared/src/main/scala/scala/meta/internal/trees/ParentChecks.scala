@@ -44,19 +44,21 @@ object ParentChecks {
     enumeratorGeneratorPat || enumeratorValPat
   }
 
-  private def typeArgument(parent: Tree, destination: String): Boolean = {
+  private def typeArgument(tree: Type, parent: Tree, destination: String): Boolean = {
     def termParamDecltpe = parent.is[Term.Param] && destination == "decltpe"
     def typeFunctionArgument = parent.is[Type.Function] && destination == "params"
     def byNameType = parent.is[Type.ByName] && destination == "tpe"
-    termParamDecltpe || typeFunctionArgument || byNameType
+    def byNameRepeatedType =
+      tree.is[Type.ByName] && parent.is[Type.Repeated] && destination == "tpe"
+    termParamDecltpe || typeFunctionArgument || byNameType || byNameRepeatedType
   }
 
   def TypeByName(tree: Type.ByName, parent: Tree, destination: String): Boolean = {
-    typeArgument(parent, destination)
+    typeArgument(tree, parent, destination)
   }
 
   def TypeRepeated(tree: Type.Repeated, parent: Tree, destination: String): Boolean = {
-    typeArgument(parent, destination)
+    typeArgument(tree, parent, destination)
   }
 
   def PatSeqWildcard(tree: Pat.SeqWildcard, parent: Tree, destination: String): Boolean = {
