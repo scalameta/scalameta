@@ -9,8 +9,8 @@ addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.0")
 
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.10.0")
 
-addSbtPlugin("com.thesamet" % "sbt-protoc" % "0.99.31")
-libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin-shaded" % "0.10.3"
+addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.0-RC2")
+libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin" % "0.10.8"
 
 libraryDependencies += "org.scala-sbt" %% "scripted-plugin" % sbtVersion.value
 
@@ -20,7 +20,7 @@ addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.6.1")
 
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.0.0")
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.0.1")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.2.0")
 
 addSbtPlugin("org.scala-debugger" % "sbt-jdi-tools" % "1.1.1")
 
