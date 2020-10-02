@@ -116,6 +116,7 @@ package object dialects {
     .withAllowInterpolationDolarQuoteEscape(true)
     .withAllowSignificantIndentation(true)
     .withAllowQuestionMarkPlaceholder(true)
+    .withAllowTypeParamUnderscore(false)
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)

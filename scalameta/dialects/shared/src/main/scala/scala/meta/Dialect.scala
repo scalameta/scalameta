@@ -99,7 +99,9 @@ final class Dialect private (
     // Significant identation introduced in dotty
     val allowSignificantIndentation: Boolean,
     // Dotty changed placeholder for types from `_` to `?`
-    val allowQuestionMarkPlaceholder: Boolean
+    val allowQuestionMarkPlaceholder: Boolean,
+    // Dotty rejects placeholder as Type parameter
+    val allowTypeParamUnderscore: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -174,7 +176,8 @@ final class Dialect private (
       allowEndMarker = false,
       allowInterpolationDolarQuoteEscape = false,
       allowSignificantIndentation = false,
-      allowQuestionMarkPlaceholder = false
+      allowQuestionMarkPlaceholder = false,
+      allowTypeParamUnderscore = true
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -306,6 +309,9 @@ final class Dialect private (
     privateCopy(allowQuestionMarkPlaceholder = newValue)
   }
 
+  def withAllowTypeParamUnderscore(newValue: Boolean): Dialect = {
+    privateCopy(allowTypeParamUnderscore = newValue)
+  }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -351,7 +357,8 @@ final class Dialect private (
       allowEndMarker: Boolean = this.allowEndMarker,
       allowInterpolationDolarQuoteEscape: Boolean = this.allowInterpolationDolarQuoteEscape,
       allowSignificantIndentation: Boolean = this.allowSignificantIndentation,
-      allowQuestionMarkPlaceholder: Boolean = this.allowQuestionMarkPlaceholder
+      allowQuestionMarkPlaceholder: Boolean = this.allowQuestionMarkPlaceholder,
+      allowTypeParamUnderscore: Boolean = this.allowTypeParamUnderscore
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -394,7 +401,8 @@ final class Dialect private (
       allowEndMarker,
       allowInterpolationDolarQuoteEscape,
       allowSignificantIndentation,
-      allowQuestionMarkPlaceholder
+      allowQuestionMarkPlaceholder,
+      allowTypeParamUnderscore
       // NOTE(olafur): add the next argument above this comment.
     )
   }
