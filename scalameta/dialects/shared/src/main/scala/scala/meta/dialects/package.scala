@@ -118,6 +118,7 @@ package object dialects {
     .withAllowQuestionMarkPlaceholder(true)
     .withAllowTypeParamUnderscore(false)
     .withAllowByNameRepeatedParameters(true)
+    .withAllowLazyValAbstractValues(true)
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)

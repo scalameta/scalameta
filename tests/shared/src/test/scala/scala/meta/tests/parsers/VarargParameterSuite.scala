@@ -130,7 +130,7 @@ class VarargParameterSuite extends ParseSuite {
     val error = intercept[parsers.ParseException] {
       templStat(definition)
     }
-    assert(clue(error).getMessage.contains(clue(expected)))
+    assert(error.getMessage.contains(expected))
   }
 
 }
