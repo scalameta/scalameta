@@ -3195,7 +3195,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     autoPos(token match {
       case RightArrow() =>
         next()
-        Type.ByName(typ())
+        val t = Type.ByName(typ())
+        if (isStar && dialect.allowByNameRepeatedParameters) {
+          next()
+          Type.Repeated(t)
+        } else {
+          t
+        }
       case _ =>
         val t = typ()
         if (!isStar) t

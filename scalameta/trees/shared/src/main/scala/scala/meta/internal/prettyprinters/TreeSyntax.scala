@@ -655,7 +655,13 @@ object TreeSyntax {
           t.lo.map(lo => s(" ", kw(">:"), " ", p(Typ, lo))).getOrElse(s()),
           t.hi.map(hi => s(" ", kw("<:"), " ", p(Typ, hi))).getOrElse(s())
         )
-      case t: Type.Repeated => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
+      case t: Type.Repeated =>
+        t.tpe match {
+          case tByName: Type.ByName =>
+            m(ParamTyp, s(kw("=>"), " ", p(Typ, tByName.tpe), kw("*")))
+          case _ =>
+            m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
+        }
       case t: Type.ByName => m(ParamTyp, s(kw("=>"), " ", p(Typ, t.tpe)))
       case t: Type.Var => m(SimpleTyp, s(t.name.value))
       case t: Type.Param =>
