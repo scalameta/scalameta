@@ -163,9 +163,6 @@ class CommunityDottySuite extends FunSuite {
     "/compiler/src/dotty/tools/dotc/util/LinearMap.scala", // ???
     "src/dotty/tools/dotc/semanticdb/Tools.scala", // ???
 
-    // extension (c: Circle)(using Context)
-    "/tools/dotc/core/Symbols.scala",
-    "compiler/src/dotty/tools/dotc/typer/ConstFold.scala",
     // wrong alignment, PR for dotty issued.
     "tools/dotc/quoted/PickledQuotes.scala",
     // ident.match { ... }
@@ -188,28 +185,19 @@ class CommunityDottySuite extends FunSuite {
     "tools/dotc/semanticdb/Language.scala",
     "tools/dotc/ast/tpd.scala", // comment after extension before def
     "tools/dotc/typer/ProtoTypes.scala", // comment after colonEOL
+    "tools/dotc/ast/Desugar.scala", // if () indented block, missing then!
 
-    // @unchecked
-    "tools/dotc/transform/ContextFunctionResults.scala",
-    "tools/dotc/transform/Erasure.scala",
     // for (a, b) <- lst yield ...
     "tools/dotc/transform/BetaReduce.scala",
-    "compiler/src/dotty/tools/dotc/typer/RefChecks.scala",
     "tools/dotc/typer/Checking.scala",
-    "tools/dotc/typer/QuotesAndSplices.scala",
-    "tools/dotc/typer/ErrorReporting.scala", // for if then yield
-    "tools/dotc/ast/Desugar.scala", // for if yield
-    "tools/dotc/transform/localopt/StringContextChecker.scala", // for flag <- flags ^;^ if flag._1 == '#' do
+    "compiler/src/dotty/tools/dotc/core/Symbols.scala", // for (tparam ^,^ bound) <- tparams.lazyZip(bounds)
     "/tools/dotc/typer/Typer.scala", // case ref @ OrNull(tpnn) ^:^ TermRef
     "compiler/src/dotty/tools/dotc/transform/Splicer.scala",
     // if () block
     "compiler/src/dotty/tools/dotc/typer/Implicits.scala",
-    // PR waits to be merged
-    "compiler/src/dotty/tools/dotc/typer/Applications.scala",
     // match <indent> case => match <indent> case => (match in match indented)
     "tools/dotc/semanticdb/ExtractSemanticDB.scala",
-    // test reproduces: using-lambda-method-parameter
-    "test/dotty/tools/dottydoc/GenDocs.scala" // ???
+    "doc-tool/test/dotty/tools/dottydoc/GenDocs.scala" // +: ^"^-project" +: "Dotty"
   )
 
   final def munitExclusionList = List(

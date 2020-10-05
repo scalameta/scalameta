@@ -577,6 +577,7 @@ object TreeSyntax {
         s(w(mods, " "), nameType, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
 
       // Type
+      case t: Type.AnonymousName => m(Path, s(""))
       case t: Type.Name => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
       case t: Type.Select => m(SimpleTyp, s(t.qual, kw("."), t.name))
       case t: Type.Project => m(SimpleTyp, s(p(SimpleTyp, t.qual), kw("#"), t.name))
@@ -893,9 +894,9 @@ object TreeSyntax {
           "(",
           t.eparam,
           ")",
+          t.uparams,
           m
         )
-
       case t: Defn.Object => s(w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
       case t: Defn.Def =>
         s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)

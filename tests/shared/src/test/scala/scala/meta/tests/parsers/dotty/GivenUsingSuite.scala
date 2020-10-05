@@ -486,15 +486,25 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
-  test("using-lambda-method-parameter".ignore) {
-    runTestAssert[Stat]("LazyBody { (using ctx: Context) => 3 }")(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("a"))),
-        None,
-        Term.ApplyUsing(
-          Term.ApplyUsing(Term.Apply(tname("f"), Nil), List(tname("a"))),
-          List(int(3), Lit.Boolean(true))
+  test("using-lambda-method-parameter") {
+    val output = """|LazyBody {
+                    |  (using ctx: Context) => 3
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat]("LazyBody { (using ctx: Context) => 3 }", assertLayout = Some(output))(
+      Term.Apply(
+        Term.Name("LazyBody"),
+        List(
+          Term.Block(
+            List(
+              Term.Function(
+                List(
+                  Term.Param(List(Mod.Using()), Term.Name("ctx"), Some(Type.Name("Context")), None)
+                ),
+                Lit.Int(3)
+              )
+            )
+          )
         )
       )
     )

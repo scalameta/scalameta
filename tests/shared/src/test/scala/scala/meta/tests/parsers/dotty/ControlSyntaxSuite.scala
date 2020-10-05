@@ -567,8 +567,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("old-for-yield-single1") {
     val code = "for (i <- 1 to 3) yield i"
-    val output = "for (i <- 1 to 3) yield i"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
+    runTestAssert[Stat](code)(
       Term.ForYield(
         List(
           Enumerator.Generator(
@@ -864,6 +863,27 @@ class ControlSyntaxSuite extends BaseDottySuite {
             .CaseGenerator(Pat.Typed(Pat.Var(Term.Name("a2")), Type.Name("TP")), Term.Name("iter2"))
         ),
         Term.Name("fn")
+      )
+    )
+  }
+
+  test("for-new") {
+    val code = """|for i <- gen
+                  |    x = 3
+                  |    if (cnd1) && cnd2
+                  |yield work
+                  |""".stripMargin
+    val output = "for (i <- gen; x = 3; if cnd1 && cnd2) yield work"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.ForYield(
+        List(
+          Enumerator.Generator(Pat.Var(Term.Name("i")), Term.Name("gen")),
+          Enumerator.Val(Pat.Var(Term.Name("x")), Lit.Int(3)),
+          Enumerator.Guard(
+            Term.ApplyInfix(Term.Name("cnd1"), Term.Name("&&"), Nil, List(Term.Name("cnd2")))
+          )
+        ),
+        Term.Name("work")
       )
     )
   }
