@@ -1924,7 +1924,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         if (token.is[LeftParen]) {
           val cond = condExpr()
           newLinesOpt()
-          val body = expr()
+          val body = if (token.is[KwDo]) {
+            accept[KwDo]
+            exprMaybeIndented()
+          } else {
+            expr()
+          }
           Term.While(cond, body)
         } else if (token.is[Indentation.Indent]) {
           val cond = block()
@@ -2027,7 +2032,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           // 4a. `x: Int => ...` means self-type annotation in template position
           // 4b. `x: Int => ...` means lambda in block position
           // 4c. `x: Int => ...` means ascription, i.e. `x: (Int => ...)`, in expression position
-          // 5. `(x: Int) => ...` means lambda
+          // 5a.  `(x: Int) => ...` means lambda
+          // 5b. `(using x: Int) => ...` means lambda for dotty
           // 6. `(x, y) => ...` or `(x: Int, y: Int) => ...` or with more entries means lambda
           //
           // A funny thing is that scalac's parser tries to disambiguate between self-type annotations and lambdas
@@ -2041,6 +2047,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             object NameLike {
               def unapply(tree: Tree): Boolean = tree match {
                 case Term.Quasi(0, _) => true
+                case Term.Ascribe(Term.Select(Term.Name(SkUsing.name), _), _)
+                    if dialect.allowGivenUsing =>
+                  true
                 case _: Term.Name => true
                 case _: Term.Placeholder => true
                 case _ => false
@@ -2089,6 +2098,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                       Term.Param(Nil, atPos(name, name)(Name.Anonymous()), Some(tpt), None)
                     )
                   )
+                case Term.Ascribe(Term.Select(Term.Name(SkUsing.name), name), tpt) =>
+                  Some(atPos(tree, tree)(Term.Param(List(Mod.Using()), name, Some(tpt), None)))
                 case Lit.Unit() =>
                   None
                 case other =>

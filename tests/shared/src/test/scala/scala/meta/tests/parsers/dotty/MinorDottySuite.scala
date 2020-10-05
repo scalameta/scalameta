@@ -441,4 +441,36 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("type-wildcard-questionmark") {
+    runTestAssert[Stat]("val x: List[?] = List(1)")(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("x"))),
+        Some(Type.Apply(Type.Name("List"), List(Type.Placeholder(Type.Bounds(None, None))))),
+        Term.Apply(Term.Name("List"), List(Lit.Int(1)))
+      )
+    )
+
+    runTestAssert[Stat]("def x(a: List[?]): Unit = ()")(
+      Defn.Def(
+        Nil,
+        Term.Name("x"),
+        Nil,
+        List(
+          List(
+            Term.Param(
+              Nil,
+              Term.Name("a"),
+              Some(Type.Apply(Type.Name("List"), List(Type.Placeholder(Type.Bounds(None, None))))),
+              None
+            )
+          )
+        ),
+        Some(Type.Name("Unit")),
+        Lit.Unit()
+      )
+    )
+
+  }
+
 }
