@@ -103,7 +103,9 @@ final class Dialect private (
     // Dotty rejects placeholder as Type parameter
     val allowTypeParamUnderscore: Boolean,
     // Dotty allows by-name repeated parameters
-    val allowByNameRepeatedParameters: Boolean
+    val allowByNameRepeatedParameters: Boolean,
+    // Dotty allows lazy val abstract values
+    val allowLazyValAbstractValues: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -180,7 +182,8 @@ final class Dialect private (
       allowSignificantIndentation = false,
       allowQuestionMarkPlaceholder = false,
       allowTypeParamUnderscore = true,
-      allowByNameRepeatedParameters = false
+      allowByNameRepeatedParameters = false,
+      allowLazyValAbstractValues = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -318,6 +321,9 @@ final class Dialect private (
   def withAllowByNameRepeatedParameters(newValue: Boolean): Dialect = {
     privateCopy(allowByNameRepeatedParameters = newValue)
   }
+  def withAllowLazyValAbstractValues(newValue: Boolean): Dialect = {
+    privateCopy(allowLazyValAbstractValues = newValue)
+  }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -365,7 +371,8 @@ final class Dialect private (
       allowSignificantIndentation: Boolean = this.allowSignificantIndentation,
       allowQuestionMarkPlaceholder: Boolean = this.allowQuestionMarkPlaceholder,
       allowTypeParamUnderscore: Boolean = this.allowTypeParamUnderscore,
-      allowByNameRepeatedParameters: Boolean = this.allowByNameRepeatedParameters
+      allowByNameRepeatedParameters: Boolean = this.allowByNameRepeatedParameters,
+      allowLazyValAbstractValues: Boolean = this.allowLazyValAbstractValues
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -410,7 +417,8 @@ final class Dialect private (
       allowSignificantIndentation,
       allowQuestionMarkPlaceholder,
       allowTypeParamUnderscore,
-      allowByNameRepeatedParameters
+      allowByNameRepeatedParameters,
+      allowLazyValAbstractValues
       // NOTE(olafur): add the next argument above this comment.
     )
   }

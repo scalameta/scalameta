@@ -3538,7 +3538,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (isMutable) Defn.Var(mods, lhs, tp, rhs)
       else Defn.Val(mods, lhs, tp, rhs.get)
     } else {
-      if (!isMutable) rejectMod[Mod.Lazy](mods, "lazy values may not be abstract")
+      if (!isMutable && !dialect.allowLazyValAbstractValues)
+        rejectMod[Mod.Lazy](mods, "lazy values may not be abstract")
       val ids = lhs.map {
         case q: Quasi => q
         case name: Pat.Var => name

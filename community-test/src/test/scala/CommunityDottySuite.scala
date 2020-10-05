@@ -158,7 +158,6 @@ class CommunityDottySuite extends FunSuite {
     "src/main/scala/dotty/tools/benchmarks/tuples/Map.scala", // [T] => (x:T) => x
     "input/src/main/scala/example/level2/Documentation.scala", // val refinementTest:   (wtf??)
     "tastydoc/src/dotty/tastydoc/comment/WikiParser.scala", // list mkString ""
-    "/tools/dotc/reporting/messages.scala", // class TypeMismatch(found: Type, expected: Type, addenda: => String^*^)(using Context)
     "/tools/dotc/core/Annotations.scala", // (Context ?=> Tree) = (using ctx) => bodyFn(using ctx)
     "/tools/dotc/core/Flags.scala", // val (^Private^ @ _, PrivateTerm @ _, PrivateType @ _) = newFlags
     "/tools/dotc/core/classfile/ClassfileParser.scala", // (using ctx: Context) ^=>^ annotType.classSymbol

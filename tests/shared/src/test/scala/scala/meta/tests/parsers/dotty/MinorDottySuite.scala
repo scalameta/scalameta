@@ -414,4 +414,31 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("lazy-abstract-class-value") {
+    runTestAssert[Stat]("trait Foo { protected[this] lazy val from: Int }")(
+      Defn.Trait(
+        Nil,
+        Type.Name("Foo"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Decl.Val(
+              List(Mod.Protected(Term.This(Name(""))), Mod.Lazy()),
+              List(Pat.Var(Term.Name("from"))),
+              Type.Name("Int")
+            )
+          )
+        )
+      )
+    )
+    runTestError[Stat](
+      "trait Foo { protected[this] lazy var from: Int }",
+      "lazy not allowed here. Only vals can be lazy"
+    )
+  }
+
 }

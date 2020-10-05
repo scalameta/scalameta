@@ -24,9 +24,8 @@ class EndMarkerSuite extends BaseDottySuite {
   }
 
   test("end-marker-toplevel") {
-    //NOTE(kpbochenek): Needs to be changed to object a: ... end a
-    // after significant indentation is present
-    val code = """|object a { }
+    val code = """|object a:
+                  |  init()
                   |end a
                   |
                   |type K = Map
@@ -34,7 +33,11 @@ class EndMarkerSuite extends BaseDottySuite {
     runTestAssert[Source](code, assertLayout = None)(
       Source(
         List(
-          Defn.Object(Nil, Term.Name("a"), Template(Nil, Nil, Self(Name(""), None), Nil)),
+          Defn.Object(
+            Nil,
+            Term.Name("a"),
+            Template(Nil, Nil, Self(Name(""), None), List(Term.Apply(Term.Name("init"), Nil)))
+          ),
           Term.EndMarker(Term.Name("a")),
           Defn.Type(Nil, Type.Name("K"), Nil, Type.Name("Map"))
         )
