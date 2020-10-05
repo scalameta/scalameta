@@ -54,8 +54,8 @@ class CommunityDottySuite extends FunSuite {
   val communityBuilds = List(
     CommunityBuild(
       "https://github.com/lampepfl/dotty.git",
-      //commit hash from 24.09
-      "85d1322c4e8a7254b67dd7b88fa8fdf87b4dac72",
+      //commit hash from 5.10
+      "4b8a1de304f9ec5f0b39d0e69ed9ae8a2f9fb151",
       "dotty",
       dottyExclusionList
     ),
@@ -156,17 +156,18 @@ class CommunityDottySuite extends FunSuite {
     "library/src/scala/Tuple.scala", // [t] => t => F[t]
     "src/main/scala/dotty/tools/benchmarks/tuples/TupleOps.scala", // [A] => A => Tuple
     "src/main/scala/dotty/tools/benchmarks/tuples/Map.scala", // [T] => (x:T) => x
-    "input/src/main/scala/example/level2/Documentation.scala", // val refinementTest:   (wtf??)
-    "tastydoc/src/dotty/tastydoc/comment/WikiParser.scala", // list mkString ""
+    "input/src/main/scala/example/level2/Documentation.scala", // val refinementTest:  // Type def in newline :/
     "/tools/dotc/core/Annotations.scala", // (Context ?=> Tree) = (using ctx) => bodyFn(using ctx)
     "/tools/dotc/core/Flags.scala", // val (^Private^ @ _, PrivateTerm @ _, PrivateType @ _) = newFlags
-    "/tools/dotc/core/classfile/ClassfileParser.scala", // (using ctx: Context) ^=>^ annotType.classSymbol
-    "/tools/dotc/core/Symbols.scala", // extension [N <: Name](sym: Symbol { type ThisName = N })^(^using Context)
-    "tools/dotc/quoted/PickledQuotes.scala", // if (arg.isTerm) (using qctx: QuoteContext) ^=>^ new .Expr(arg)
     "compiler/src/dotty/tools/dotc/util/LinearSet.scala", // ???
     "/compiler/src/dotty/tools/dotc/util/LinearMap.scala", // ???
     "src/dotty/tools/dotc/semanticdb/Tools.scala", // ???
 
+    // extension (c: Circle)(using Context)
+    "/tools/dotc/core/Symbols.scala",
+    "compiler/src/dotty/tools/dotc/typer/ConstFold.scala",
+    // wrong alignment, PR for dotty issued.
+    "tools/dotc/quoted/PickledQuotes.scala",
     // ident.match { ... }
     "tools/dotc/core/tasty/TreePickler.scala",
     "dotty/tools/dotc/core/Types.scala",
@@ -198,6 +199,7 @@ class CommunityDottySuite extends FunSuite {
     "tools/dotc/typer/QuotesAndSplices.scala",
     "tools/dotc/typer/ErrorReporting.scala", // for if then yield
     "tools/dotc/ast/Desugar.scala", // for if yield
+    "tools/dotc/transform/localopt/StringContextChecker.scala", // for flag <- flags ^;^ if flag._1 == '#' do
     "/tools/dotc/typer/Typer.scala", // case ref @ OrNull(tpnn) ^:^ TermRef
     "compiler/src/dotty/tools/dotc/transform/Splicer.scala",
     // if () block
@@ -207,7 +209,6 @@ class CommunityDottySuite extends FunSuite {
     // match <indent> case => match <indent> case => (match in match indented)
     "tools/dotc/semanticdb/ExtractSemanticDB.scala",
     // test reproduces: using-lambda-method-parameter
-    "tools/dotc/core/tasty/TreeUnpickler.scala",
     "test/dotty/tools/dottydoc/GenDocs.scala" // ???
   )
 

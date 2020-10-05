@@ -519,7 +519,11 @@ object TreeSyntax {
             }
             m(Expr, param, " ", kw("=>"), " ", p(Expr, body))
           case Term.Function(params, body) =>
-            m(Expr, s("(", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
+            if (params.headOption.exists(_.mods.exists(_.is[Mod.Using]))) {
+              m(Expr, s("(", kw("using"), " ", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
+            } else {
+              m(Expr, s("(", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
+            }
         }
       case Term.QuotedMacroExpr(Term.Block(stats)) =>
         stats match {

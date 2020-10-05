@@ -958,6 +958,31 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("while-parens-yet-do") {
+    val code = """|def read(): String = {
+                  |  while (cond) do {}
+                  |  other()
+                  |}
+                  |""".stripMargin
+    val output = """|def read(): String = {
+                    |  while (cond) {}
+                    |  other()
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Def(
+        Nil,
+        Term.Name("read"),
+        Nil,
+        List(List()),
+        Some(Type.Name("String")),
+        Term.Block(
+          List(Term.While(Term.Name("cond"), Term.Block(Nil)), Term.Apply(Term.Name("other"), Nil))
+        )
+      )
+    )
+  }
+
   // --------------------------
   // OTHER
   // --------------------------

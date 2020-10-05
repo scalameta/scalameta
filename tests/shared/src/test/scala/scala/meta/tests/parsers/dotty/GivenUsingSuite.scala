@@ -523,6 +523,21 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
+  test("using-anonymous-method") {
+    runTestAssert[Stat]("val fun = (using ctx: Context) => ctx.open")(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("fun"))),
+        None,
+        Term.Function(
+          List(Term.Param(List(Mod.Using()), Term.Name("ctx"), Some(Type.Name("Context")), None)),
+          Term.Select(Term.Name("ctx"), Term.Name("open"))
+        )
+      )
+    )
+
+  }
+
   // ---------------------------------
   // GIVEN IMPORT
   // ---------------------------------

@@ -113,6 +113,20 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
   }
 
+  test("extension-using-combo".ignore) {
+    val code = """|extension (c: Circle)(using Context) {
+                  |  def crc: Int = 2
+                  |}
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some("extension (c: Circle) def crc: Int = 2"))(
+      Defn.ExtensionGroup(
+        Term.Param(Nil, Term.Name("c"), Some(pname("Circle")), None),
+        Nil,
+        Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
+      )
+    )
+  }
+
   test("extension-soft-keyword") {
     runTestAssert[Stat]("val c = f(a + extension)")(
       Defn.Val(
