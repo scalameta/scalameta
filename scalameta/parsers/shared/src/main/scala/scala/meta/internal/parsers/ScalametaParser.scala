@@ -2788,6 +2788,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           case p: Pat.Var =>
             nextOnce()
             Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
+          case p: Pat.Bind if dialect.allowAsPatternBinding =>
+            nextOnce()
+            Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
           case p: Pat.Wildcard
               if dialect.allowColonForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
             nextThrice()

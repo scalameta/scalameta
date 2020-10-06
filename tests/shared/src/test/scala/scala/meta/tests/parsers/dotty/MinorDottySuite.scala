@@ -545,4 +545,36 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )
   }
+
+  test("new-pattern-binding-with-typed") {
+    // yes parens are allowed here and don't change semantics
+    val out = """|x match {
+                 |  case (three as Some(3)): Option[Int] => "OK"
+                 |}
+                 |""".stripMargin
+    runTestAssert[Stat](
+      """|x match {
+         |  case three as Some(3) : Option[Int] => "OK"
+         |}
+         |""".stripMargin,
+      assertLayout = Some(out)
+    )(
+      Term.Match(
+        Term.Name("x"),
+        List(
+          Case(
+            Pat.Typed(
+              Pat.Bind(
+                Pat.Var(Term.Name("three")),
+                Pat.Extract(Term.Name("Some"), List(Lit.Int(3)))
+              ),
+              Type.Apply(Type.Name("Option"), List(Type.Name("Int")))
+            ),
+            None,
+            Lit.String("OK")
+          )
+        )
+      )
+    )
+  }
 }
