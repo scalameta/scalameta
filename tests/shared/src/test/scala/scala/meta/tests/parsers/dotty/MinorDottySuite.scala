@@ -505,4 +505,44 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )
   }
+
+  val patternBinding = Term.Match(
+    Lit.Int(1),
+    List(Case(Pat.Bind(Pat.Var(Term.Name("intValue")), Lit.Int(1)), None, Term.Block(Nil)))
+  )
+
+  test("old-pattern-binding") {
+    runTestAssert[Stat](
+      """|1 match {
+         |  case intValue @ 1 =>
+         |}
+         |""".stripMargin,
+      assertLayout = Some(
+        """|1 match {
+           |  case intValue as 1 =>
+           |}
+           |""".stripMargin
+      )
+    )(patternBinding)
+
+  }
+
+  test("new-pattern-binding") {
+    runTestAssert[Stat]("""|1 match {
+                           |  case intValue as 1 =>
+                           |}
+                           |""".stripMargin)(patternBinding)
+  }
+
+  test("new-pattern-binding-soft") {
+    runTestAssert[Stat]("""|1 match {
+                           |  case as as 1 =>
+                           |}
+                           |""".stripMargin)(
+      Term.Match(
+        Lit.Int(1),
+        List(Case(Pat.Bind(Pat.Var(Term.Name("as")), Lit.Int(1)), None, Term.Block(Nil)))
+      )
+    )
+  }
 }

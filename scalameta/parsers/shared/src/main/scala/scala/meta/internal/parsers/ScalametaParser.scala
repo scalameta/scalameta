@@ -752,6 +752,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def isInlineSoftKw(token: Token): Boolean =
     isSoftKw(token, SkInline) && dialect.allowInlineMods
 
+  def isAsSoftKw(token: Token): Boolean =
+    dialect.allowAsPatternBinding && isSoftKw(token, SoftKeyword.SkAs)
+
   def isColonWildcardStar: Boolean = token.is[Colon] && ahead(token.is[Underscore] && ahead(isStar))
   def isSpliceFollowedBy(check: => Boolean): Boolean =
     token.is[Ellipsis] && ahead(token.is[Unquote] && ahead(token.is[Ident] || check))
@@ -2800,7 +2803,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     def pattern2(): Pat = autoPos {
       val p = pattern3()
-      if (token.isNot[At]) p
+      if (token.isNot[At] && !isAsSoftKw(token))
+        p
       else
         p match {
           case q: Quasi =>
@@ -2835,7 +2839,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val lhs = simplePattern(badPattern3)
       val base = ctx.stack
       def loop(rhs: ctx.Rhs): ctx.Rhs = {
-        val op = if (isIdentExcept("|") || token.is[Unquote]) Some(termName()) else None
+        val op =
+          if (!isAsSoftKw(token) && (isIdentExcept("|") || token.is[Unquote])) Some(termName())
+          else None
         val lhs1 = ctx.reduceStack(base, rhs, rhs, op)
         op match {
           case Some(op) =>
