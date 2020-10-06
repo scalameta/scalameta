@@ -203,7 +203,7 @@ the document where the definition is located.
 
 Global symbol format accommodates scoping rules of the underlying language, and
 is therefore language-dependent. For example, the `Int` class in the Scala
-standard library is modelled as `scala.Int#`, where the pound sign (`#`) at the
+standard library is modelled as `scala/Int#`, where the pound sign (`#`) at the
 end of the symbol means that the symbol corresponds to a class as opposed to an
 object that would end with a dot (`.`). See [Languages](#languages) for more
 information.
@@ -212,7 +212,7 @@ Global symbols must be unique across the universe of documents that a
 SemanticDB-based is working with at any given time. For example, if in such a
 universe, there exist multiple definitions of `Int` - e.g. coming from multiple
 different versions of Scala - then all references to those definitions will have
-`SymbolOccurrence.symbol` equal to the same `scala.Int#` symbol, and SemanticDB
+`SymbolOccurrence.symbol` equal to the same `scala/Int#` symbol, and SemanticDB
 will not be able to provide information to distinguish these references from
 each other.
 
@@ -1309,7 +1309,7 @@ In the examples below:
       <ul>
         <li><code>t</code> ~ <code>TypeRef(None, &lt;t&gt;, List())</code>.</li>
         <li><code>Int</code> ~ <code>TypeRef(None, &lt;Int&gt;, List())</code>.</li>
-        <li><code>scala.Int</code> ~ <code>TypeRef(None, &lt;Int&gt;, List())</code>.</li>
+        <li><code>scala/Int</code> ~ <code>TypeRef(None, &lt;Int&gt;, List())</code>.</li>
         <li><code>p.C</code> ~ <code>TypeRef(&lt;p.type&gt;, &lt;C&gt;, List())</code>.</li>
       </ul>
     </td>
@@ -1321,7 +1321,7 @@ In the examples below:
         <li><code>T#C[T1, ..., Tn]</code> ~ <code>TypeRef(&lt;T&gt;, &lt;C&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
         <li><code>t[T1, ..., Tn]</code> ~ <code>TypeRef(None, &lt;t&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
         <li><code>List[Int]</code> ~ <code>TypeRef(None, &lt;List&gt;, List(&lt;Int&gt;))</code>.</li>
-        <li><code>scala.List[Int]</code> ~ <code>TypeRef(None, &lt;List&gt;, List(&lt;Int&gt;))</code>.</li>
+        <li><code>scala/List[Int]</code> ~ <code>TypeRef(None, &lt;List&gt;, List(&lt;Int&gt;))</code>.</li>
         <li><code>p.C[T1, ..., Tn]</code> ~ <code>TypeRef(&lt;p.type&gt;, &lt;C&gt;, List(&lt;T1&gt;, ..., &lt;Tn&gt;))</code>.</li>
       </ul>
     </td>
@@ -1392,7 +1392,7 @@ Notes:
     represented as `TypeRef(<scala.this.type>, <Int>, List())` [\[27\]][27].
   - In SemanticDB, all types that have a trivial prefix must not have it
     specified explicitly. For example in SemanticDB, `Int` must be represented
-    as `TypeRef(None, <Int>, List())`. Moreover, even `scala.Int` must be
+    as `TypeRef(None, <Int>, List())`. Moreover, even `scala/Int` must be
     represented as `TypeRef(None, <Int>, List())`.
   - By a trivial prefix, we mean either empty prefix (for definitions that
     aren't members of any other definition, e.g. parameters or type parameters)
@@ -2889,12 +2889,12 @@ In this section, we describe the Java symbol format.
 For example, this is how some of the definitions from the Java standard library
 must be modelled:
 
-- The `java` package: `java.`
-- The `Integer` class: `java.lang.Integer#`
-- The `int` primitive: `scala.Int#`
-- The `Arrays.asList` method: `java.util.Arrays#asList().`
-- The `a` parameter of that method: `java.util.Arrays#asList().(a)`
-- The `T` type parameter of that method: `java.util.Arrays#asList().[T]`
+- The `java` package: `java/`
+- The `Integer` class: `java/lang/Integer#`
+- The `int` primitive: `scala/Int#`
+- The `Arrays.asList` method: `java/util/Arrays#asList().`
+- The `a` parameter of that method: `java/util/Arrays#asList().(a)`
+- The `T` type parameter of that method: `java/util/Arrays#asList().[T]`
 
 <a name="java-type"></a>
 
@@ -2939,15 +2939,15 @@ In the examples below:
     <td valign="top">Primitive types [<a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.2">75</a>]</td>
     <td>
       <ul>
-        <li><code>byte</code> ~ <code>TypeRef(None, &lt;scala.Byte#&gt;, List())</code>.</li>
-        <li><code>short</code> ~ <code>TypeRef(None, &lt;scala.Short#&gt;, List())</code>.</li>
-        <li><code>int</code> ~ <code>TypeRef(None, &lt;scala.Int#&gt;, List())</code>.</li>
-        <li><code>long</code> ~ <code>TypeRef(None, &lt;scala.Long#&gt;, List())</code>.</li>
-        <li><code>char</code> ~ <code>TypeRef(None, &lt;scala.Char#&gt;, List())</code>.</li>
-        <li><code>float</code> ~ <code>TypeRef(None, &lt;scala.Float#&gt;, List())</code>.</li>
-        <li><code>double</code> ~ <code>TypeRef(None, &lt;scala.Double#&gt;, List())</code>.</li>
-        <li><code>boolean</code> ~ <code>TypeRef(None, &lt;scala.Boolean#&gt;, List())</code>.</li>
-        <li><code>void</code> ~ <code>TypeRef(None, &lt;scala.Unit#&gt;, List())</code>.</li>
+        <li><code>byte</code> ~ <code>TypeRef(None, &lt;scala/Byte#&gt;, List())</code>.</li>
+        <li><code>short</code> ~ <code>TypeRef(None, &lt;scala/Short#&gt;, List())</code>.</li>
+        <li><code>int</code> ~ <code>TypeRef(None, &lt;scala/Int#&gt;, List())</code>.</li>
+        <li><code>long</code> ~ <code>TypeRef(None, &lt;scala/Long#&gt;, List())</code>.</li>
+        <li><code>char</code> ~ <code>TypeRef(None, &lt;scala/Char#&gt;, List())</code>.</li>
+        <li><code>float</code> ~ <code>TypeRef(None, &lt;scala/Float#&gt;, List())</code>.</li>
+        <li><code>double</code> ~ <code>TypeRef(None, &lt;scala/Double#&gt;, List())</code>.</li>
+        <li><code>boolean</code> ~ <code>TypeRef(None, &lt;scala/Boolean#&gt;, List())</code>.</li>
+        <li><code>void</code> ~ <code>TypeRef(None, &lt;scala/Unit#&gt;, List())</code>.</li>
       </ul>
     </td> </tr>
   <tr>
@@ -2957,7 +2957,7 @@ In the examples below:
         <li><code>A</code> ~ <code>TypeRef(None, &lt;A&gt;, List())</code>.</li>
         <li><code>A.B</code> ~ <code>TypeRef(None, &lt;B&gt;, List())</code>.</li>
         <li><code>C&lt;T&gt;</code> ~ <code>TypeRef(None, &lt;C&gt;, List(&lt;T&gt;))</code>.</li>
-        <li><code>T[]</code> ~ <code>TypeRef(None, &lt;scala.Array#&gt;, List(&lt;T&gt;))</code>.</li>
+        <li><code>T[]</code> ~ <code>TypeRef(None, &lt;scala/Array#&gt;, List(&lt;T&gt;))</code>.</li>
       </ul>
     </td>
   </tr>
@@ -2992,8 +2992,8 @@ In the examples below:
     <td valign="top">Array types [<a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-10.html#jls-10.1">80</a>]</td>
     <td>
       <ul>
-        <li><code>T[]</code> ~ <code>TypeRef(None, &lt;scala.Array#&gt;, List(&lt;T&gt;))</code>.</li>
-        <li><code>int[]</code> ~ <code>TypeRef(None, &lt;scala.Array#&gt;, List(&lt;scala.Int#&gt;))</code>.</li>
+        <li><code>T[]</code> ~ <code>TypeRef(None, &lt;scala/Array#&gt;, List(&lt;T&gt;))</code>.</li>
+        <li><code>int[]</code> ~ <code>TypeRef(None, &lt;scala/Array#&gt;, List(&lt;scala/Int#&gt;))</code>.</li>
       </ul>
     </td>
   </tr>
@@ -3179,7 +3179,7 @@ class C extends S1 implements I {
     <td><code>D1</code></td>
     <td><code>a/C#D1#</code></td>
     <td><code>CLASS</code></td>
-    <td><code>ClassSignature(List(&lt;T6&gt;, &lt;T7&gt;), List(&lt;java.lang.Object#&gt;), None, List())</code></td>
+    <td><code>ClassSignature(List(&lt;T6&gt;, &lt;T7&gt;), List(&lt;java/lang/Object#&gt;), None, List())</code></td>
   </tr>
   <tr>
     <td><code>D2</code></td>
@@ -3548,7 +3548,7 @@ improve on this in the future.
     <td><b>Explanation</b></td>
   </tr>
   <tr>
-    <td><code>Annotation(TypeRef(None, &lt;scala.annotation.strictfp&gt;, List()))</code></td>
+    <td><code>Annotation(TypeRef(None, &lt;scala/annotation/strictfp&gt;, List()))</code></td>
     <td> Declared <code>strictfp</code>; floating-point mode is FP-strict e.g. <code>strictfp class MyClass</code>.</td>
   </tr>
   <tr>
