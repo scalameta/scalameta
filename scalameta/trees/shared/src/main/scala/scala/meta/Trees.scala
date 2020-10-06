@@ -150,6 +150,7 @@ object Term {
 object Type {
   @branch trait Ref extends Type with scala.meta.Ref
   @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Type.Ref
+  @ast class AnonymousName() extends Type
   @ast class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref {
     checkFields(qual.isPath || qual.is[Term.Super] || qual.is[Term.Ref.Quasi])
   }
@@ -331,6 +332,7 @@ object Defn {
   @ast class ExtensionGroup(
       eparam: Term.Param,
       tparams: List[scala.meta.Type.Param],
+      uparams: List[List[Term.Param]],
       body: Stat
   ) extends Defn
   @ast class Def(

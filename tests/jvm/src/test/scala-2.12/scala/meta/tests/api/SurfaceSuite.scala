@@ -343,6 +343,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type
       |scala.meta.Type.And
       |scala.meta.Type.Annotate
+      |scala.meta.Type.AnonymousName
       |scala.meta.Type.Apply
       |scala.meta.Type.ApplyInfix
       |scala.meta.Type.Bounds

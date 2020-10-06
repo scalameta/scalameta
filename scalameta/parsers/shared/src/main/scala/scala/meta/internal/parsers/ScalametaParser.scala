@@ -1792,7 +1792,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def typedOpt(): Option[Type] =
     if (token.is[Colon]) {
-      next(); Some(typ())
+      next()
+      if (token.is[At] && ahead(token.is[Ident])) {
+        Some(outPattern.annotTypeRest(autoPos(Type.AnonymousName())))
+      } else {
+        Some(typ())
+      }
     } else None
 
   def typeOrInfixType(location: Location): Type =
@@ -1952,12 +1957,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwFor() =>
         next()
         val enums: List[Enumerator] =
-          if (token.is[LeftBrace]) inBracesOrNil(enumerators())
-          else if (token.is[LeftParen]) inParensOrNil(enumerators())
+          if (token.is[LeftBrace]) inBraces(enumerators())
+          else if (token.is[LeftParen]) inParens(enumerators())
           else if (token.is[Indentation.Indent]) {
             indented(enumerators())
           } else {
-            enumerator(isFirst = true)
+            enumerators()
           }
 
         newLinesOpt()
@@ -2639,7 +2644,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def enumerators(): List[Enumerator] = {
     val enums = new ListBuffer[Enumerator]
     enums ++= enumerator(isFirst = true)
-    while (token.is[StatSep] && !ahead(token.is[Indentation.Outdent])) {
+    while (token.is[StatSep] && !ahead(token.is[Indentation.Outdent] || token.is[KwDo])) {
       next()
       enums ++= enumerator(isFirst = false)
     }
@@ -3622,6 +3627,22 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false)
     )
 
+    var uparams = ListBuffer[List[Term.Param]]()
+    while (token.is[LeftParen]) {
+      uparams += inParens {
+        if (!isSoftKw(token, SkUsing)) syntaxError("expected 'using' keyword", token)
+        next()
+        commaSeparated(
+          param(
+            ownerIsCase = false,
+            ownerIsType = true,
+            isImplicit = false,
+            isUsing = true
+          )
+        )
+      }
+    }
+
     val methodsAll: List[Stat] = if (token.is[ColonEol]) {
       accept[ColonEol]
       indented(templateStats())
@@ -3632,7 +3653,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       List(nonLocalDefOrDcl())
     }
     val body: Stat = if (methodsAll.size == 1) methodsAll.head else Term.Block(methodsAll)
-    ExtensionGroup(eparam, tparams, body)
+    ExtensionGroup(eparam, tparams, uparams.toList, body)
   }
 
   def funDefRest(mods: List[Mod]): Stat = atPos(mods, auto) {

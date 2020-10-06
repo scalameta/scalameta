@@ -20,6 +20,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.ExtensionGroup(
         cparam,
         Nil,
+        Nil,
         Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
       )
     )
@@ -29,6 +30,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     runTestAssert[Stat]("extension (c: Circle) private def crc: Int = 2")(
       Defn.ExtensionGroup(
         cparam,
+        Nil,
         Nil,
         Defn.Def(
           List(Mod.Private(Name.Anonymous())),
@@ -50,6 +52,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.ExtensionGroup(
         cparam,
         Nil,
+        Nil,
         Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
       )
     )
@@ -65,6 +68,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )(
       Defn.ExtensionGroup(
         Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None),
+        Nil,
         Nil,
         Defn.Def(
           List(Mod.Private(Name(""))),
@@ -88,6 +92,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.ExtensionGroup(
         Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None),
         Nil,
+        Nil,
         Term.Block(
           List(
             Defn.Def(Nil, Term.Name("cra"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)),
@@ -108,21 +113,55 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.ExtensionGroup(
         cparam,
         Nil,
+        Nil,
         Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
       )
     )
   }
 
-  test("extension-using-combo".ignore) {
-    val code = """|extension (c: Circle)(using Context) {
+  test("extension-using-single") {
+    val code = """|extension (c: Circle)(using Context, x: Int) {
                   |  def crc: Int = 2
                   |}
                   |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some("extension (c: Circle) def crc: Int = 2"))(
+    val output = "extension (c: Circle)(using Context, x: Int) def crc: Int = 2"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
       Defn.ExtensionGroup(
         Term.Param(Nil, Term.Name("c"), Some(pname("Circle")), None),
         Nil,
+        List(
+          List(
+            Term.Param(List(Mod.Using()), Name.Anonymous(), Some(pname("Context")), None),
+            Term.Param(List(Mod.Using()), Term.Name("x"), Some(pname("Int")), None)
+          )
+        ),
         Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
+      )
+    )
+  }
+
+  test("extension-using-multi") {
+    val code = """|extension (c: Circle)(using Context, x: Int)(using y: String, File) {
+                  |  def crc: Int = 2
+                  |}
+                  |""".stripMargin
+    val output =
+      "extension (c: Circle)(using Context, x: Int)(using y: String, File) def crc: Int = 2"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.ExtensionGroup(
+        Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None),
+        Nil,
+        List(
+          List(
+            Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Context")), None),
+            Term.Param(List(Mod.Using()), Term.Name("x"), Some(Type.Name("Int")), None)
+          ),
+          List(
+            Term.Param(List(Mod.Using()), Term.Name("y"), Some(Type.Name("String")), None),
+            Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("File")), None)
+          )
+        ),
+        Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
       )
     )
   }

@@ -470,7 +470,39 @@ class MinorDottySuite extends BaseDottySuite {
         Lit.Unit()
       )
     )
-
   }
 
+  test("unchecked-annotation") {
+    runTestAssert[Stat]("val a :: Nil:  @unchecked = args")(
+      Defn.Val(
+        Nil,
+        List(Pat.ExtractInfix(Pat.Var(Term.Name("a")), Term.Name("::"), List(Term.Name("Nil")))),
+        Some(
+          Type.Annotate(
+            Type.AnonymousName(),
+            List(Mod.Annot(Init(Type.Name("unchecked"), Name(""), Nil)))
+          )
+        ),
+        Term.Name("args")
+      )
+    )
+
+    runTestAssert[Stat]("val x:  @annotation.switch = 2")(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("x"))),
+        Some(
+          Type.Annotate(
+            Type.AnonymousName(),
+            List(
+              Mod.Annot(
+                Init(Type.Select(Term.Name("annotation"), Type.Name("switch")), Name(""), Nil)
+              )
+            )
+          )
+        ),
+        Lit.Int(2)
+      )
+    )
+  }
 }
