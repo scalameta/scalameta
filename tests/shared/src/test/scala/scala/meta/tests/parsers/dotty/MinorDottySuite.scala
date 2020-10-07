@@ -577,4 +577,28 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )
   }
+
+  test("comment-after-coloneol") {
+    val expected = "trait X { def x(): String }"
+    runTestAssert[Stat](
+      """trait X: // comment
+        |  def x(): String
+        |""".stripMargin,
+      assertLayout = Some(expected)
+    )(
+      Defn.Trait(
+        Nil,
+        Type.Name("X"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(Decl.Def(Nil, Term.Name("x"), Nil, List(List()), Type.Name("String")))
+        )
+      )
+    )
+  }
+
 }

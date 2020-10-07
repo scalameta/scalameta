@@ -54,8 +54,8 @@ class CommunityDottySuite extends FunSuite {
   val communityBuilds = List(
     CommunityBuild(
       "https://github.com/lampepfl/dotty.git",
-      //commit hash from 5.10
-      "4b8a1de304f9ec5f0b39d0e69ed9ae8a2f9fb151",
+      //commit hash from 7.10
+      "3be62c1cbc3b00fe4411112ffdb2c4ba7da33b03",
       "dotty",
       dottyExclusionList
     ),
@@ -148,31 +148,7 @@ class CommunityDottySuite extends FunSuite {
   }
 
   final def dottyExclusionList = List(
-    "library/src-bootstrapped/scala/quoted/util/ExprMap.scala", // type T
-    "library/src-bootstrapped/scala/quoted/unsafe/UnsafeExpr.scala", //  [t] => Expr[t] => Expr[T1] => Expr[t]
-    "library/src/scala/runtime/Tuple.scala", // [t] => t => F[t]
-    "library/src/scala/compiletime/package.scala", // erased modifier
-    "library/src/scala/Tuple.scala", // [t] => t => F[t]
-    "src/main/scala/dotty/tools/benchmarks/tuples/TupleOps.scala", // [A] => A => Tuple
-    "src/main/scala/dotty/tools/benchmarks/tuples/Map.scala", // [T] => (x:T) => x
-    "input/src/main/scala/example/level2/Documentation.scala", // val refinementTest:  // Type def in newline :/
-    "/tools/dotc/core/Annotations.scala", // (Context ?=> Tree) = (using ctx) => bodyFn(using ctx)
-    "/tools/dotc/core/Flags.scala", // val (^Private^ @ _, PrivateTerm @ _, PrivateType @ _) = newFlags
-    "compiler/src/dotty/tools/dotc/util/LinearSet.scala", // ???
-    "/compiler/src/dotty/tools/dotc/util/LinearMap.scala", // ???
-    "src/dotty/tools/dotc/semanticdb/Tools.scala", // ???
-
-    // wrong alignment, PR for dotty issued.
-    "tools/dotc/quoted/PickledQuotes.scala",
-    // ident.match { ... }
-    "tools/dotc/core/tasty/TreePickler.scala",
-    "dotty/tools/dotc/core/Types.scala",
-    "tools/dotc/core/TypeComparer.scala",
-    "/tools/dotc/core/SymDenotations.scala",
-    "tools/dotc/core/OrderingConstraint.scala",
-    "tools/dotc/util/SourceFile.scala", // catch case error => sth ^)^
-
-    // derives keyword
+    // 'trait X derives Y' - not supported currently
     "/tools/dotc/core/Names.scala",
     "tools/dotc/semanticdb/TextDocuments.scala",
     "tools/dotc/semanticdb/TextDocument.scala",
@@ -182,15 +158,38 @@ class CommunityDottySuite extends FunSuite {
     "tools/dotc/semanticdb/Schema.scala",
     "tools/dotc/semanticdb/SymbolInformation.scala",
     "tools/dotc/semanticdb/Language.scala",
+    // 'type T' - as statement in block, rejected by tree check
+    "library/src-bootstrapped/scala/quoted/util/ExprMap.scala",
+    // '[t] => t => F[t]'  - polymorphic functions - not supported currently
+    "library/src-bootstrapped/scala/quoted/unsafe/UnsafeExpr.scala",
+    "library/src/scala/runtime/Tuple.scala",
+    "library/src/scala/Tuple.scala",
+    "src/main/scala/dotty/tools/benchmarks/tuples/TupleOps.scala",
+    "src/main/scala/dotty/tools/benchmarks/tuples/Map.scala",
+    // erased modifier - for now used internally, will be available in 3.1
+    "library/src/scala/compiletime/package.scala",
+    "/tools/dotc/core/Annotations.scala", // (Context ?=> Tree) = (using ctx) => bodyFn(using ctx)
+    "/tools/dotc/core/Flags.scala", // val (^Private^ @ _, PrivateTerm @ _, PrivateType @ _) = newFlags
+    "compiler/src/dotty/tools/dotc/util/LinearSet.scala", // ???
+    "/compiler/src/dotty/tools/dotc/util/LinearMap.scala", // ???
+    "src/dotty/tools/dotc/semanticdb/Tools.scala", // ???
+
+    // 'val refinTest:  '
+    // '  SomeType = X  '  - Type provided in newline - parser needs to handle this
+    "input/src/main/scala/example/level2/Documentation.scala",
+    // ident.match { ... }
+    "tools/dotc/core/tasty/TreePickler.scala",
+    "dotty/tools/dotc/core/Types.scala",
+    "tools/dotc/core/TypeComparer.scala",
+    "/tools/dotc/core/SymDenotations.scala",
+    "tools/dotc/core/OrderingConstraint.scala",
+    "tools/dotc/util/SourceFile.scala", // catch case error => sth ^)^
     "tools/dotc/ast/tpd.scala", // comment after extension before def
-    "tools/dotc/typer/ProtoTypes.scala", // comment after colonEOL
-    "tools/dotc/ast/Desugar.scala", // if () indented block, missing then! fix in dotty
 
     // for (a, b) <- lst yield ...
     "tools/dotc/transform/BetaReduce.scala",
     "tools/dotc/typer/Checking.scala",
     "compiler/src/dotty/tools/dotc/core/Symbols.scala", // for (tparam ^,^ bound) <- tparams.lazyZip(bounds)
-    "/tools/dotc/typer/Typer.scala", // if () indented block, missing then! fix in dotty
     "compiler/src/dotty/tools/dotc/transform/Splicer.scala",
     // if () block
     "compiler/src/dotty/tools/dotc/typer/Implicits.scala",

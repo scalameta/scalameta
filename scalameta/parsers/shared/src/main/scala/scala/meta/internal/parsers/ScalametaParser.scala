@@ -197,12 +197,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   sealed trait SepRegion {
     def indent = -1
     def closeOnNonCase = false
+    def indentOnArrow = true
   }
   case class RegionIndent(override val indent: Int, override val closeOnNonCase: Boolean)
       extends SepRegion
   case object RegionParen extends SepRegion
   case object RegionBracket extends SepRegion
-  case class RegionBrace(override val indent: Int) extends SepRegion
+  case class RegionBrace(override val indent: Int, override val indentOnArrow: Boolean)
+      extends SepRegion
   case class RegionEnum(override val indent: Int) extends SepRegion
   case class RegionIndentEnum(override val indent: Int) extends SepRegion
   case object RegionArrow extends SepRegion
@@ -335,7 +337,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             // In any other case it is 'match-case' or 'try-case'
             if (!sepRegions.isEmpty && sepRegions.head == RegionEnumArtificialMark)
               RegionEnum(indentInBrace) :: sepRegions.tail
-            else RegionBrace(indentInBrace) :: sepRegions
+            else {
+              val indentOnArrow = !(prev.is[KwMatch] || prev.is[KwCatch])
+              RegionBrace(indentInBrace, indentOnArrow) :: sepRegions
+            }
           } else if (curr.is[KwEnum]) RegionEnumArtificialMark :: sepRegions
           else if (curr.is[CaseIntro]) {
             if (!sepRegions.isEmpty && (sepRegions.head.isInstanceOf[RegionEnum] ||
@@ -378,7 +383,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
         val notEndTokenIdent = prev == null || prev.text != "end"
         if (notEndTokenIdent && curr.is[CanStartIndent] && isAheadNewLine(currPos)) {
-          shouldStartIndent = true
+          if (curr.is[RightArrow] && sepRegionsNew.headOption.exists(!_.indentOnArrow)) {} else {
+            shouldStartIndent = true
+          }
         }
 
         loop(currPos, currPos + 1, sepRegionsNew, -1, shouldStartIndent)

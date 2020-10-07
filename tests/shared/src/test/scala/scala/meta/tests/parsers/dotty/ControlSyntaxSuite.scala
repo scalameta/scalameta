@@ -1246,4 +1246,33 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("case-match-ignore-indent") {
+    val expected = """|x match {
+                      |  case x =>
+                      |    a()
+                      |    b()
+                      |}
+                      |""".stripMargin
+    runTestAssert[Stat](
+      """|x match {
+         |  case x =>
+         |     a()
+         |   b()
+         |}
+         |""".stripMargin,
+      assertLayout = Some(expected)
+    )(
+      Term.Match(
+        Term.Name("x"),
+        List(
+          Case(
+            Pat.Var(Term.Name("x")),
+            None,
+            Term.Block(List(Term.Apply(Term.Name("a"), Nil), Term.Apply(Term.Name("b"), Nil)))
+          )
+        )
+      )
+    )
+  }
+
 }
