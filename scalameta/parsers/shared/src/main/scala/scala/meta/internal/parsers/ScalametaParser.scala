@@ -300,8 +300,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                 )) ||
               shouldCloseCaseOnNonCase(sepRegionsProcess)) {
               insertOutdent()
-              parserTokens += new LF(curr.input, curr.dialect, curr.start)
-              parserTokenPositions += currPos
+              // match can start an identation, block but if `match` follows it means it's chaining matches
+              if (curr.isNot[KwMatch]) {
+                parserTokens += new LF(curr.input, curr.dialect, curr.start)
+                parserTokenPositions += currPos
+              }
               sepRegionsProcess = sepRegionsProcess.tail
             }
             sepRegionsProcess
@@ -823,7 +826,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[KwThis] || token.is[KwThrow] || token.is[KwTry] || token.is[KwWhile] ||
       token.is[LeftParen] || token.is[LeftBrace] || token.is[Underscore] ||
       token.is[Unquote] || token.is[MacroSplice] || token.is[MacroQuote] ||
-      token.is[MacroQuotedIdent] || token.is[MacroSplicedIdent]
+      token.is[MacroQuotedIdent] || token.is[MacroSplicedIdent] ||
+      token.is[Indentation.Indent]
     }
   }
 
@@ -1885,6 +1889,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
+  def matchClause(t: Term) = {
+    if (token.is[Indentation.Indent]) {
+      atPos(t, auto)(Term.Match(t, indented(caseClauses())))
+    } else {
+      atPos(t, auto)(Term.Match(t, inBracesOrNil(caseClauses())))
+    }
+  }
   // FIXME: when parsing `(2 + 3)`, do we want the ApplyInfix's position to include parentheses?
   // if yes, then nothing has to change here
   // if no, we need eschew autoPos here, because it forces those parentheses on the result of calling prefixExpr
@@ -2046,11 +2057,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           }
         } else if (token.is[KwMatch]) {
           next()
-          if (token.is[Indentation.Indent]) {
-            t = atPos(t, auto)(Term.Match(t, indented(caseClauses())))
-          } else {
-            t = atPos(t, auto)(Term.Match(t, inBracesOrNil(caseClauses())))
-          }
+          t = matchClause(t)
         }
 
         // Note the absense of `else if` here!!
@@ -2307,7 +2314,26 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val lhs = atPos(lhsStart, lhsEnd)(makeTupleTerm(lhses))
       if (lhs.is[Term.Repeated])
         syntaxError("repeated argument not allowed here", at = lhs.tokens.last.prev)
-      atPos(lhsStart, rhsEnd)(Term.ApplyInfix(lhs, op, targs, checkNoTripleDots(rhs)))
+
+      def infixExpression() =
+        atPos(lhsStart, rhsEnd)(Term.ApplyInfix(lhs, op, targs, checkNoTripleDots(rhs)))
+      op match {
+        case _: Quasi =>
+          infixExpression()
+        case Term.Name("match") =>
+          if (targs.nonEmpty) {
+            syntaxError("no type parameters can be added for match", at = lhs.tokens.last.prev)
+          }
+
+          rhs.headOption match {
+            case Some(Term.PartialFunction(cases)) =>
+              atPos(lhsStart, rhsEnd)(Term.Match(lhs, cases))
+            case _ =>
+              syntaxError("match statement requires cases", at = lhs.tokens.last.prev)
+          }
+        case _ =>
+          infixExpression()
+      }
     }
   }
 
@@ -2345,7 +2371,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     // rhsStartK/rhsEndK may be bigger than then extent of rhsK,
     // so we really have to track them separately.
     def loop(rhsStartK: Pos, rhsK: ctx.Rhs, rhsEndK: Pos): ctx.Rhs = {
-      if (!token.is[Ident] && !token.is[Unquote]) {
+      if (!token.is[Ident] && !token
+          .is[Unquote] && !(token.is[KwMatch] && dialect.allowMatchAsOperator)) {
         // Infix chain has ended.
         // In the running example, we're at `a + b[]`
         // with base = List([a +]), rhsK = List([b]).
@@ -2353,7 +2380,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       } else {
         // Infix chain continues.
         // In the running example, we're at `a [+] b`.
-        val op = termName() // op = [+]
+        val op = if (token.is[KwMatch]) {
+          val matchName = atPos(token.pos.start, token.pos.end)(Term.Name("match"))
+          accept[KwMatch]
+          matchName
+        } else {
+          termName() // op = [+]
+        }
         val targs = if (token.is[LeftBracket]) exprTypeArgs() else Nil // targs = Nil
 
         // Check whether we're still infix or already postfix by testing the current token.
@@ -2371,7 +2404,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           val lhsK = ctx.reduceStack(base, rhsKWithFallback, rhsEndK, Some(op)) // lhsK = [a]
           val lhsStartK = Math.min(rhsStartK.startTokenPos, lhsK.head.startTokenPos)
           ctx.push(lhsStartK, lhsK, rhsEndK, op, targs) // afterwards, ctx.stack = List([a +])
-
           val preRhsKplus1 = in.token
           var rhsStartKplus1: Pos = IndexPos(in.tokenPos)
           val rhsKplus1 = argumentExprsOrPrefixExpr()
@@ -2380,7 +2412,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             rhsStartKplus1 = TreePos(rhsKplus1.head)
             rhsEndKplus1 = TreePos(rhsKplus1.head)
           }
-
           // Try to continue the infix chain.
           loop(rhsStartKplus1, rhsKplus1, rhsEndKplus1) // base = List([a +]), rhsKplus1 = List([b])
         } else {
@@ -2459,7 +2490,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           Success(autoPos(inParensOrTupleOrUnit(location = NoStat, allowRepeated = allowRepeated)))
         case LeftBrace() =>
           canApply = false
-          Success(blockExpr())
+          Success(inBraces(blockExpr()))
         case KwNew() =>
           canApply = false
           next()
@@ -2483,7 +2514,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case MacroSplicedIdent(_) =>
           Success(macroSplicedIdent())
         case Indentation.Indent() =>
-          Success(indented(expr()))
+          Success(indented(blockExpr()))
         case _ =>
           Failure(new ParseException(token.pos, "illegal start of simple expression"))
       }
@@ -2541,7 +2572,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     token match {
       case Dot() =>
         next()
-        simpleExprRest(selector(t), canApply = true)
+        if (dialect.allowMatchAsOperator && token.is[KwMatch]) {
+          next()
+          val clause = matchClause(t)
+          // needed if match uses significant identation
+          newLineOptWhenFollowedBy[Dot]
+          val expr = simpleExprRest(clause, canApply = false)
+          expr
+        } else {
+          simpleExprRest(selector(t), canApply = true)
+        }
       case LeftBracket() =>
         t match {
           case _: Quasi | _: Term.Name | _: Term.Select | _: Term.Apply | _: Term.ApplyInfix |
@@ -2604,7 +2644,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def argumentExprsWithUsing(): (List[Term], Boolean) = token match {
     case LeftBrace() =>
-      (List(blockExpr()), false)
+      (List(inBraces(blockExpr())), false)
     case LeftParen() =>
       inParens(token match {
         case RightParen() =>
@@ -2630,11 +2670,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def blockExpr(): Term = autoPos {
-    inBraces {
-      if (token.is[CaseIntro] || (token.is[Ellipsis] && ahead(token.is[KwCase])))
-        Term.PartialFunction(caseClauses())
-      else block()
-    }
+    if (token.is[CaseIntro] || (token.is[Ellipsis] && ahead(token.is[KwCase])))
+      Term.PartialFunction(caseClauses())
+    else block()
   }
 
   def block(): Term = autoPos {

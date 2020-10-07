@@ -1370,6 +1370,248 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("match-chained") {
+    val expected = Term.Match(
+      Term.Match(
+        Term.Name("xs"),
+        List(
+          Case(Term.Name("Nil"), None, Lit.String("empty")),
+          Case(
+            Pat.ExtractInfix(
+              Pat.Var(Term.Name("x")),
+              Term.Name("::"),
+              List(Pat.Var(Term.Name("xs1")))
+            ),
+            None,
+            Lit.String("nonempty")
+          )
+        )
+      ),
+      List(
+        Case(Lit.String("empty"), None, Lit.Int(0)),
+        Case(Lit.String("nonempty"), None, Lit.Int(1))
+      )
+    )
+
+    runTestAssert[Stat](
+      """|xs match {
+         |  case Nil => "empty"
+         |  case x :: xs1 => "nonempty"
+         |} match {
+         |  case "empty" => 0
+         |  case "nonempty" => 1
+         |}
+         |""".stripMargin,
+      assertLayout = None
+    )(expected)
+
+    runTestAssert[Stat](
+      """|xs match
+         |  case Nil => "empty"
+         |  case x :: xs1 => "nonempty"
+         |  match
+         |    case "empty" => 0
+         |    case "nonempty" => 1
+         |
+         |""".stripMargin,
+      assertLayout = Some(
+        """|(xs match {
+           |  case Nil => "empty"
+           |  case x :: xs1 => "nonempty"
+           |}) match {
+           |  case "empty" => 0
+           |  case "nonempty" => 1
+           |}
+           |""".stripMargin
+      )
+    )(expected)
+  }
+
+  test("match-chained-complex") {
+    runTestAssert[Stat](
+      """|val hello = xs match {
+         |  case Nil => "empty"
+         |  case x :: xs1 => "nonempty"
+         |} startsWith "empty" match {
+         |  case true => 0
+         |  case false => 1
+         |}
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("hello"))),
+        None,
+        Term.Match(
+          Term.ApplyInfix(
+            Term.Match(
+              Term.Name("xs"),
+              List(
+                Case(Term.Name("Nil"), None, Lit.String("empty")),
+                Case(
+                  Pat.ExtractInfix(
+                    Pat.Var(Term.Name("x")),
+                    Term.Name("::"),
+                    List(Pat.Var(Term.Name("xs1")))
+                  ),
+                  None,
+                  Lit.String("nonempty")
+                )
+              )
+            ),
+            Term.Name("startsWith"),
+            Nil,
+            List(Lit.String("empty"))
+          ),
+          List(
+            Case(Lit.Boolean(true), None, Lit.Int(0)),
+            Case(Lit.Boolean(false), None, Lit.Int(1))
+          )
+        )
+      )
+    )
+
+  }
+
+  test("match-chained-complex-operator") {
+    runTestAssert[Stat](
+      """|val hello = xs match
+         |  case Nil => 0
+         |  case x :: xs1 => 1
+         |+ 1 match
+         |  case 1 => true
+         |  case 2 => false
+         |
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("hello"))),
+        None,
+        Term.Match(
+          Term.Name("xs"),
+          List(
+            Case(Term.Name("Nil"), None, Lit.Int(0)),
+            Case(
+              Pat.ExtractInfix(
+                Pat.Var(Term.Name("x")),
+                Term.Name("::"),
+                List(Pat.Var(Term.Name("xs1")))
+              ),
+              None,
+              Term.Match(
+                Term.ApplyInfix(Lit.Int(1), Term.Name("+"), Nil, List(Lit.Int(1))),
+                List(
+                  Case(Lit.Int(1), None, Lit.Boolean(true)),
+                  Case(Lit.Int(2), None, Lit.Boolean(false))
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+
+  }
+
+  test("match-dot") {
+    val expected = Term.If(
+      Term.Match(
+        Term.Name("xs"),
+        List(
+          Case(Term.Name("Nil"), None, Lit.Boolean(false)),
+          Case(Pat.Wildcard(), None, Lit.Boolean(true))
+        )
+      ),
+      Lit.String("nonempty"),
+      Lit.String("empty")
+    )
+    runTestAssert[Stat](
+      """|if xs.match {
+         |  case Nil => false
+         |  case _ => true
+         |}
+         |then "nonempty"
+         |else "empty"
+         |""".stripMargin,
+      assertLayout = None
+    )(expected)
+
+    runTestAssert[Stat](
+      """|if xs.match
+         |  case Nil => false
+         |  case _ => true
+         |then "nonempty"
+         |else "empty"
+         |""".stripMargin,
+      assertLayout = Some(
+        """|if (xs match {
+           |  case Nil => false
+           |  case _ => true
+           |}) "nonempty" else "empty"
+           |""".stripMargin
+      )
+    )(expected)
+  }
+
+  test("match-dot-def") {
+    val expected = Defn.Def(
+      Nil,
+      Term.Name("mtch"),
+      Nil,
+      List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))),
+      Some(Type.Name("String")),
+      Term.Block(
+        List(
+          Term.Apply(
+            Term.Select(
+              Term.Match(
+                Term.Name("x"),
+                List(
+                  Case(Lit.Int(1), None, Lit.String("1")),
+                  Case(Pat.Wildcard(), None, Lit.String("ERR"))
+                )
+              ),
+              Term.Name("trim")
+            ),
+            Nil
+          )
+        )
+      )
+    )
+
+    runTestAssert[Stat](
+      """|def mtch(x: Int): String =
+         |   x.match {
+         |     case 1 => "1"
+         |     case _ => "ERR"
+         |   }.trim()
+         |""".stripMargin,
+      assertLayout = None
+    )(expected)
+
+    runTestAssert[Stat](
+      """|def mtch(x: Int): String =
+         |   x.match
+         |     case 1 => "1"
+         |     case _ => "ERR"
+         |   .trim()
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def mtch(x: Int): String = {
+           |  (x match {
+           |    case 1 => "1"
+           |    case _ => "ERR"
+           |  }).trim()
+           |}
+           |""".stripMargin
+      )
+    )(expected)
+
+  }
+
   test("catch-case-in-paren") {
     val code = """|fx(p1,
                   |   try func()
