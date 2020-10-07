@@ -101,7 +101,8 @@ object Term {
     checkFields(args.length > 1 || (args.length == 1 && args.head.is[Term.Quasi]))
   }
   @ast class Block(stats: List[Stat]) extends Term {
-    checkFields(stats.forall(_.isBlockStat))
+    // extension group block can have declarations without body too
+    checkFields(stats.forall(st => st.isBlockStat || st.is[Decl]))
   }
   @ast class EndMarker(name: Term.Name) extends Term
   @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term
