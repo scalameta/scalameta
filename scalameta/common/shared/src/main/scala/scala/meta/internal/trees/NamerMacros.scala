@@ -38,6 +38,7 @@ trait CommonNamerMacros extends MacroHelpers {
       name: TypeName,
       parents: List[Tree],
       paramss: List[List[ValDef]],
+      extraAbtractDefs: List[Tree],
       extraStubs: String*
   ): ClassDef = {
     val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new $AstAnnotation"))
@@ -68,6 +69,11 @@ trait CommonNamerMacros extends MacroHelpers {
       q"val $name: $tpt = this.$name"
     })
     qstats += q"def copy(...$qcopyParamss): $name = ${stub()}"
+
+    val extraAbtractStubs = extraAbtractDefs.collect { case vr: DefDef =>
+      q"def ${vr.name} (...${vr.vparamss}) =  ${stub()} "
+    }
+    qstats ++= extraAbtractStubs
 
     q"$qmods class $qname(rank: $IntClass, tree: $TreeClass) extends ..$qparents { ..$qstats }"
   }

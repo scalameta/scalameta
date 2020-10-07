@@ -4110,6 +4110,33 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     parents.toList
   }
 
+  def derivesClasses: List[Init] = {
+    if (isSoftKw(token, SoftKeyword.SkDerives) && dialect.allowDerives) {
+      next()
+      def isCommaSeparated(token: Token): Boolean =
+        token.is[Comma]
+      val deriving = ListBuffer[Init]()
+      def readInit() = token match {
+        case Ellipsis(_) => deriving += ellipsis(1, astInfo[Init])
+        case _ => deriving += initInsideTemplate()
+      }
+      readInit()
+      while (token.is[Comma]) { next(); readInit() }
+      deriving.toList
+    } else {
+      Nil
+    }
+  }
+
+  def template(edefs: List[Stat], parents: List[Init]): Template = {
+    val derived = derivesClasses
+    val (self, body) = templateBodyOpt(parenMeansSyntaxError = false)
+    val template = Template(edefs, parents, self, body)
+    template.setDerives(derived)
+    template
+
+  }
+
   def template(afterExtend: Boolean = false): Template = autoPos {
     newLineOptWhenFollowedBy[LeftBrace]
     if (token.is[LeftBrace]) {
@@ -4119,15 +4146,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         val edefs = body.map(ensureEarlyDef)
         next()
         val parents = templateParents(afterExtend)
-        val (self1, body1) = templateBodyOpt(parenMeansSyntaxError = false)
-        Template(edefs, parents, self1, body1)
+        template(edefs, parents)
       } else {
         Template(Nil, Nil, self, body)
       }
     } else {
       val parents = templateParents(afterExtend)
-      val (self, body) = templateBodyOpt(parenMeansSyntaxError = false)
-      Template(Nil, parents, self, body)
+      template(Nil, parents)
     }
   }
 
@@ -4157,8 +4182,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
     } else {
       val startPos = in.tokenPos
-      val (self, body) = templateBodyOpt(parenMeansSyntaxError = !owner.isClass)
-      atPos(startPos, auto)(Template(Nil, Nil, self, body))
+      if (isSoftKw(token, SoftKeyword.SkDerives)) {
+        val tmpl = atPos(startPos, auto)(template(Nil, Nil))
+        tmpl
+      } else {
+        val (self, body) = templateBodyOpt(parenMeansSyntaxError = !owner.isClass)
+        atPos(startPos, auto)(Template(Nil, Nil, self, body))
+      }
     }
   }
 
@@ -4509,6 +4539,7 @@ object InfixMode extends Enumeration {
 object SoftKeyword {
   sealed trait SoftKeyword { val name: String }
   case object SkAs extends SoftKeyword { override val name = "as" }
+
   case object SkUsing extends SoftKeyword { override val name = "using" }
   case object SkInline extends SoftKeyword { override val name = "inline" }
 

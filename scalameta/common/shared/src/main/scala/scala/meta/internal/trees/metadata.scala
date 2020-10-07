@@ -11,6 +11,7 @@ object Metadata {
   class root extends StaticAnnotation
   class branch extends StaticAnnotation
   class astClass extends StaticAnnotation
+  class binaryCompatField extends StaticAnnotation
   class astCompanion extends StaticAnnotation
   @getter class astField extends StaticAnnotation
   @getter class auxiliary extends StaticAnnotation

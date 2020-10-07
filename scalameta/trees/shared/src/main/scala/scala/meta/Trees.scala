@@ -6,6 +6,7 @@ import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.prettyprinters._
 import scala.meta.internal.trees._
+import scala.meta.internal.trees.Metadata.binaryCompatField
 
 @root trait Tree extends InternalTree {
   def parent: Option[Tree]
@@ -447,6 +448,8 @@ object Ctor {
     self: Self,
     stats: List[Stat]
 ) extends Tree {
+  @binaryCompatField
+  private var derives: List[Init] = Nil
   checkFields(early.forall(_.isEarlyStat && inits.nonEmpty))
   checkFields(stats.forall(_.isTemplateStat))
 }
