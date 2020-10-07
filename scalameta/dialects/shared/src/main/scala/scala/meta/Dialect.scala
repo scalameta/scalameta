@@ -107,7 +107,9 @@ final class Dialect private (
     // Dotty allows lazy val abstract values
     val allowLazyValAbstractValues: Boolean,
     // Dotty allows `as` instead of `@` for pattern bindings
-    val allowAsPatternBinding: Boolean
+    val allowAsPatternBinding: Boolean,    
+    // Dotty allows `.match` expressions and chainging matches
+    val allowMatchAsOperator: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -186,7 +188,8 @@ final class Dialect private (
       allowTypeParamUnderscore = true,
       allowByNameRepeatedParameters = false,
       allowLazyValAbstractValues = false,
-      allowAsPatternBinding = false
+      allowAsPatternBinding = false,
+      allowMatchAsOperator = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -329,6 +332,9 @@ final class Dialect private (
   }
   def withAllowAsPatternBinding(newValue: Boolean): Dialect = {
     privateCopy(allowAsPatternBinding = newValue)
+  }  
+  def withAllowMatchAsOperator(newValue: Boolean): Dialect = {
+    privateCopy(allowMatchAsOperator = newValue)
   }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
@@ -379,7 +385,8 @@ final class Dialect private (
       allowTypeParamUnderscore: Boolean = this.allowTypeParamUnderscore,
       allowByNameRepeatedParameters: Boolean = this.allowByNameRepeatedParameters,
       allowLazyValAbstractValues: Boolean = this.allowLazyValAbstractValues,
-      allowAsPatternBinding: Boolean = this.allowAsPatternBinding
+      allowAsPatternBinding: Boolean = this.allowAsPatternBinding,
+      allowMatchAsOperator: Boolean = this.allowMatchAsOperator
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -426,7 +433,8 @@ final class Dialect private (
       allowTypeParamUnderscore,
       allowByNameRepeatedParameters,
       allowLazyValAbstractValues,
-      allowAsPatternBinding
+      allowAsPatternBinding,
+      allowMatchAsOperator
       // NOTE(olafur): add the next argument above this comment.
     )
   }

@@ -120,6 +120,7 @@ package object dialects {
     .withAllowByNameRepeatedParameters(true)
     .withAllowLazyValAbstractValues(true)
     .withAllowAsPatternBinding(true)
+    .withAllowMatchAsOperator(true)
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)

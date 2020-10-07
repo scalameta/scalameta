@@ -577,4 +577,86 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )
   }
+  test("match-chained") {
+    runTestAssert[Stat](
+      """|xs match {
+         |  case Nil => "empty"
+         |  case x :: xs1 => "nonempty"
+         |} match {
+         |  case "empty" => 0
+         |  case "nonempty" => 1
+         |}
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Term.Match(
+        Term.Match(
+          Term.Name("xs"),
+          List(
+            Case(Term.Name("Nil"), None, Lit.String("empty")),
+            Case(
+              Pat.ExtractInfix(
+                Pat.Var(Term.Name("x")),
+                Term.Name("::"),
+                List(Pat.Var(Term.Name("xs1")))
+              ),
+              None,
+              Lit.String("nonempty")
+            )
+          )
+        ),
+        List(
+          Case(Lit.String("empty"), None, Lit.Int(0)),
+          Case(Lit.String("nonempty"), None, Lit.Int(1))
+        )
+      )
+    )
+  }
+
+  test("match-chained-complex") {
+    runTestAssert[Stat](
+      """|val hello = xs match {
+         |  case Nil => "empty"
+         |  case x :: xs1 => "nonempty"
+         |} startsWith "empty" match {
+         |  case true => 0
+         |  case false => 1
+         |}
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("hello"))),
+        None,
+        Term.Match(
+          Term.ApplyInfix(
+            Term.Match(
+              Term.Name("xs"),
+              List(
+                Case(Term.Name("Nil"), None, Lit.String("empty")),
+                Case(
+                  Pat.ExtractInfix(
+                    Pat.Var(Term.Name("x")),
+                    Term.Name("::"),
+                    List(Pat.Var(Term.Name("xs1")))
+                  ),
+                  None,
+                  Lit.String("nonempty")
+                )
+              )
+            ),
+            Term.Name("startsWith"),
+            Nil,
+            List(Lit.String("empty"))
+          ),
+          List(
+            Case(Lit.Boolean(true), None, Lit.Int(0)),
+            Case(Lit.Boolean(false), None, Lit.Int(1))
+          )
+        )
+      )
+    )
+  }
+
 }

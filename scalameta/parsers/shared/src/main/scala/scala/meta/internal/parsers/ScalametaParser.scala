@@ -817,7 +817,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[KwThis] || token.is[KwThrow] || token.is[KwTry] || token.is[KwWhile] ||
       token.is[LeftParen] || token.is[LeftBrace] || token.is[Underscore] ||
       token.is[Unquote] || token.is[MacroSplice] || token.is[MacroQuote] ||
-      token.is[MacroQuotedIdent] || token.is[MacroSplicedIdent]
+      token.is[MacroQuotedIdent] || token
+        .is[MacroSplicedIdent] || (token.is[KwMatch] && dialect.allowMatchAsOperator)
     }
   }
 
@@ -2264,7 +2265,19 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val lhs = atPos(lhsStart, lhsEnd)(makeTupleTerm(lhses))
       if (lhs.is[Term.Repeated])
         syntaxError("repeated argument not allowed here", at = lhs.tokens.last.prev)
-      atPos(lhsStart, rhsEnd)(Term.ApplyInfix(lhs, op, targs, checkNoTripleDots(rhs)))
+      if (op.value == "match") {
+        if (targs.nonEmpty) {
+          syntaxError("no type parameters can be added for match", at = lhs.tokens.last.prev)
+        }
+        rhs.headOption match {
+          case Some(Term.PartialFunction(cases)) =>
+            atPos(lhsStart, rhsEnd)(Term.Match(lhs, cases))
+          case _ =>
+            syntaxError("match statement requires cases", at = lhs.tokens.last.prev)
+        }
+      } else {
+        atPos(lhsStart, rhsEnd)(Term.ApplyInfix(lhs, op, targs, checkNoTripleDots(rhs)))
+      }
     }
   }
 
@@ -2302,7 +2315,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     // rhsStartK/rhsEndK may be bigger than then extent of rhsK,
     // so we really have to track them separately.
     def loop(rhsStartK: Pos, rhsK: ctx.Rhs, rhsEndK: Pos): ctx.Rhs = {
-      if (!token.is[Ident] && !token.is[Unquote]) {
+      if (!token.is[Ident] && !token
+          .is[Unquote] && !(token.is[KwMatch] && dialect.allowMatchAsOperator)) {
         // Infix chain has ended.
         // In the running example, we're at `a + b[]`
         // with base = List([a +]), rhsK = List([b]).
@@ -2310,7 +2324,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       } else {
         // Infix chain continues.
         // In the running example, we're at `a [+] b`.
-        val op = termName() // op = [+]
+        val op = if (token.is[KwMatch]) {
+          val matchName = atPos(token.pos.start, token.pos.end)(Term.Name("match"))
+          accept[KwMatch]
+          matchName
+        } else {
+          termName() // op = [+]
+        }
         val targs = if (token.is[LeftBracket]) exprTypeArgs() else Nil // targs = Nil
 
         // Check whether we're still infix or already postfix by testing the current token.
@@ -2328,7 +2348,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           val lhsK = ctx.reduceStack(base, rhsKWithFallback, rhsEndK, Some(op)) // lhsK = [a]
           val lhsStartK = Math.min(rhsStartK.startTokenPos, lhsK.head.startTokenPos)
           ctx.push(lhsStartK, lhsK, rhsEndK, op, targs) // afterwards, ctx.stack = List([a +])
-
           val preRhsKplus1 = in.token
           var rhsStartKplus1: Pos = IndexPos(in.tokenPos)
           val rhsKplus1 = argumentExprsOrPrefixExpr()
