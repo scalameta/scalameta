@@ -184,13 +184,13 @@ class CommunityDottySuite extends FunSuite {
     "tools/dotc/semanticdb/Language.scala",
     "tools/dotc/ast/tpd.scala", // comment after extension before def
     "tools/dotc/typer/ProtoTypes.scala", // comment after colonEOL
-    "tools/dotc/ast/Desugar.scala", // if () indented block, missing then!
+    "tools/dotc/ast/Desugar.scala", // if () indented block, missing then! fix in dotty
 
     // for (a, b) <- lst yield ...
     "tools/dotc/transform/BetaReduce.scala",
     "tools/dotc/typer/Checking.scala",
     "compiler/src/dotty/tools/dotc/core/Symbols.scala", // for (tparam ^,^ bound) <- tparams.lazyZip(bounds)
-    "/tools/dotc/typer/Typer.scala", // case ref @ OrNull(tpnn) ^:^ TermRef
+    "/tools/dotc/typer/Typer.scala", // if () indented block, missing then! fix in dotty
     "compiler/src/dotty/tools/dotc/transform/Splicer.scala",
     // if () block
     "compiler/src/dotty/tools/dotc/typer/Implicits.scala",
