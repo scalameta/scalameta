@@ -152,7 +152,6 @@ class CommunityDottySuite extends FunSuite {
     "library/src-bootstrapped/scala/quoted/unsafe/UnsafeExpr.scala", //  [t] => Expr[t] => Expr[T1] => Expr[t]
     "library/src/scala/runtime/Tuple.scala", // [t] => t => F[t]
     "library/src/scala/compiletime/package.scala", // erased modifier
-    "library/src/scala/tasty/Reflection.scala", // given  as ^^TypeTest ???
     "library/src/scala/Tuple.scala", // [t] => t => F[t]
     "src/main/scala/dotty/tools/benchmarks/tuples/TupleOps.scala", // [A] => A => Tuple
     "src/main/scala/dotty/tools/benchmarks/tuples/Map.scala", // [T] => (x:T) => x
