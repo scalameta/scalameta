@@ -172,7 +172,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         val token = legacyTokens(currentIdx)
         if (token.token == WHITESPACE && token.strVal == "\n") {
           return true
-        } else if (token.token == WHITESPACE) {
+        } else if (token.token == WHITESPACE || token.token == COMMENT) {
           currentIdx += 1
         } else {
           return false
