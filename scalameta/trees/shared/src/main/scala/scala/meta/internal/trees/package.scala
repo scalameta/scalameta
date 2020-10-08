@@ -113,6 +113,7 @@ package object trees {
       case _: Type.Select => true
       case _: Type.Project => true
       case _: Type.Function => true
+      case _: Type.ContextFunction => true
       case _: Type.Annotate => true
       case _: Type.Apply => true
       case _: Type.ApplyInfix => true

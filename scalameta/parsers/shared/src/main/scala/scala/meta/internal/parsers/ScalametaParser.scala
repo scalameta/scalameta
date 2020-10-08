@@ -252,6 +252,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         parserTokens += new Indentation.Outdent(curr.input, curr.dialect, curr.start, curr.end)
         parserTokenPositions += currPos
       }
+      def shouldCloseCaseOnNonCase(regions: List[SepRegion]): Boolean = {
+        val closeCaseOnNonCase = regions.headOption.exists {
+          case RegionIndent(indent, true) => indent == currentIndent
+          case _ => false
+        }
+        closeCaseOnNonCase && !curr.is[KwCase]
+      }
 
       lazy val currentIndent = countIndent(currPos)
       var shouldCloseIndent = false
@@ -272,18 +279,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           }
           shouldStartIndent = false
         }
-
-        val closeCaseOnNonCase =
-          sepRegionsParameter.headOption.exists {
-            case RegionIndent(indent, true) => indent == currentIndent
-            case _ => false
-          }
-        if (closeCaseOnNonCase && !curr.is[KwCase]) {
-          insertOutdent()
-          parserTokens += new LF(curr.input, curr.dialect, curr.start)
-          parserTokenPositions += currPos
-          shouldCloseIndent = true
-        }
       }
 
       // SIP-27 Trailing comma (multi-line only) support.
@@ -299,8 +294,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         var sepRegions =
           if (indentedRegion(sepRegionsParameter) && currentIndent >= 0) {
             var sepRegionsProcess = sepRegionsParameter
-            while (indentedRegion(sepRegionsProcess)
-              && sepRegionsProcess.head.indent > currentIndent) {
+            while ((indentedRegion(sepRegionsProcess)
+                && sepRegionsProcess.head.indent > currentIndent) ||
+              shouldCloseCaseOnNonCase(sepRegionsProcess)) {
               insertOutdent()
               parserTokens += new LF(curr.input, curr.dialect, curr.start)
               parserTokenPositions += currPos
@@ -435,6 +431,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
     loop(-1, 0, Nil, -1, false)
     val underlying = parserTokens.result
+
+    // underlying.foreach { t =>
+    //   try {
+    //   println(s"TOKEN ${t.name} :: ${t.text}")
+    //   } catch { case e => println(s"TOKEN ERR ${t.name}") }
+    // }
 
     (Tokens(underlying, 0, underlying.length), parserTokenPositions.result)
   }
@@ -922,7 +924,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   trait CaseDefEnd {
     def unapply(token: Token): Boolean = {
       token.is[RightBrace] || token.is[EOF] || token.is[Indentation.Outdent] ||
-      (token.is[KwCase] && !token.isCaseClassOrObject) ||
+      (token.is[KwCase] && !token.isCaseClassOrObject) || token.is[RightParen] ||
       (token.is[Ellipsis] && token.next.is[KwCase])
     }
   }
@@ -1276,6 +1278,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       } else if (token.is[RightArrow]) {
         next()
         Type.Function(ts, typ())
+      } else if (token.is[ContextArrow]) {
+        next()
+        Type.ContextFunction(ts, typ())
       } else {
         val tuple = atPos(openParenPos, closeParenPos)(makeTupleType(ts map {
           case t: Type.ByName => syntaxError("by name type not allowed here", at = t)
@@ -1322,6 +1327,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
         token match {
           case RightArrow() => next(); Type.Function(List(t), typ())
+          case ContextArrow() => next(); Type.ContextFunction(List(t), typ())
           case KwForsome() => next(); Type.Existential(t, existentialStats())
           case _ => t
         }
@@ -1490,6 +1496,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           val op1 = op
           val rhs1 = loop(rhs, convertTypevars = false)
           atPos(tpe, tpe)(Type.ApplyInfix(lhs1, op1, rhs1))
+        case Type.ContextFunction(params, res) =>
+          val params1 = params.map(p => loop(p, convertTypevars = true))
+          val res1 = loop(res, convertTypevars = false)
+          atPos(tpe, tpe)(Type.ContextFunction(params1, res1))
         case Type.Function(params, res) =>
           val params1 = params.map(p => loop(p, convertTypevars = true))
           val res1 = loop(res, convertTypevars = false)
@@ -2026,7 +2036,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         }
 
         // Note the absense of `else if` here!!
-        if (token.is[RightArrow]) {
+        if (token.is[RightArrow] || token.is[ContextArrow]) {
           // This is a tricky one. In order to parse lambdas, we need to recognize token sequences
           // like `(...) => ...`, `id | _ => ...` and `implicit id | _ => ...`.
           //
@@ -2062,6 +2072,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             object NameLike {
               def unapply(tree: Tree): Boolean = tree match {
                 case Term.Quasi(0, _) => true
+                case Term.Select(Term.Name(SkUsing.name), _) if dialect.allowGivenUsing =>
+                  true
                 case Term.Ascribe(Term.Select(Term.Name(SkUsing.name), _), _)
                     if dialect.allowGivenUsing =>
                   true
@@ -2089,6 +2101,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             }
           }
           if (looksLikeLambda) {
+            val contextFunction = token.is[ContextArrow]
             next()
             t = atPos(t, auto)({
               def convertToParam(tree: Term): Option[Term.Param] = tree match {
@@ -2113,6 +2126,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                       Term.Param(Nil, atPos(name, name)(Name.Anonymous()), Some(tpt), None)
                     )
                   )
+                case Term.Select(Term.Name(SkUsing.name), name) =>
+                  Some(atPos(tree, tree)(Term.Param(List(Mod.Using()), name, None, None)))
                 case Term.Ascribe(Term.Select(Term.Name(SkUsing.name), name), tpt) =>
                   Some(atPos(tree, tree)(Term.Param(List(Mod.Using()), name, Some(tpt), None)))
                 case Lit.Unit() =>
@@ -2129,7 +2144,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                 if (token.is[Indentation.Indent]) block()
                 else if (location != BlockStat) expr()
                 else block()
-              Term.Function(params, dropTrivialBlock(trm))
+              if (contextFunction)
+                Term.ContextFunction(params, dropTrivialBlock(trm))
+              else
+                Term.Function(params, dropTrivialBlock(trm))
             })
           } else {
             // do nothing, which will either allow self-type annotation parsing to kick in
@@ -3752,7 +3770,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (mods.exists(_.is[Mod.Opaque])) {
       val bounds = typeBounds()
       accept[Equals]
-      Defn.OpaqueTypeAlias(mods, name, tparams, bounds, typ())
+      if (token.is[Indentation.Indent])
+        Defn.OpaqueTypeAlias(mods, name, tparams, bounds, indented(typ()))
+      else
+        Defn.OpaqueTypeAlias(mods, name, tparams, bounds, typ())
     } else {
       token match {
         case Equals() => next(); aliasType()

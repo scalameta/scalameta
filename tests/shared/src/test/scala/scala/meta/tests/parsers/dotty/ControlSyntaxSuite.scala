@@ -1246,6 +1246,58 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("new-match-case-oneline-align-newline") {
+    val code = """|def fx: String = {
+                  |  x match
+                  |  case 2 =>
+                  |    "ERROR"
+                  |  end match
+                  |}
+                  |""".stripMargin
+    val output = """|def fx: String = {
+                    |  x match {
+                    |    case 2 => "ERROR"
+                    |  }
+                    |  end `match`
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Def(
+        Nil,
+        Term.Name("fx"),
+        Nil,
+        Nil,
+        Some(Type.Name("String")),
+        Term.Block(
+          List(
+            Term.Match(Term.Name("x"), List(Case(Lit.Int(2), None, Lit.String("ERROR")))),
+            Term.EndMarker(Term.Name("match"))
+          )
+        )
+      )
+    )
+  }
+
+  test("unsure-correct") {
+    val code = """|try func match
+                  |  case A => Accept
+                  |  catch case ex => Error
+                  |""".stripMargin
+    val output = """|try func match {
+                    |  case A => Accept
+                    |} catch {
+                    |  case ex => Error
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.Try(
+        Term.Match(Term.Name("func"), List(Case(Term.Name("A"), None, Term.Name("Accept")))),
+        List(Case(Pat.Var(Term.Name("ex")), None, Term.Name("Error"))),
+        None
+      )
+    )
+  }
+
   test("case-match-ignore-indent") {
     val expected = """|x match {
                       |  case x =>
@@ -1275,4 +1327,27 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("catch-case-in-paren") {
+    val code = """|fx(p1,
+                  |   try func()
+                  |   catch case x => ok())
+                  |""".stripMargin
+    val expected = """|fx(p1, try func() catch {
+                      |  case x =>
+                      |    ok()
+                      |})""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(expected))(
+      Term.Apply(
+        Term.Name("fx"),
+        List(
+          Term.Name("p1"),
+          Term.Try(
+            Term.Apply(Term.Name("func"), Nil),
+            List(Case(Pat.Var(Term.Name("x")), None, Term.Apply(Term.Name("ok"), Nil))),
+            None
+          )
+        )
+      )
+    )
+  }
 }
