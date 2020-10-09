@@ -728,4 +728,33 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )
   }
+
+  test("capital-var-pattern-val") {
+    runTestAssert[Stat](
+      """val Private as _ = flags()
+        |""".stripMargin
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Bind(Pat.Var(Term.Name("Private")), Pat.Wildcard())),
+        None,
+        Term.Apply(Term.Name("flags"), Nil)
+      )
+    )
+  }
+
+  test("capital-var-pattern-case") {
+    runTestAssert[Stat](
+      """|flags() match {
+         |  case Pattern as _ =>
+         |}
+         |""".stripMargin
+    )(
+      Term.Match(
+        Term.Apply(Term.Name("flags"), Nil),
+        List(Case(Pat.Bind(Pat.Var(Term.Name("Pattern")), Pat.Wildcard()), None, Term.Block(Nil)))
+      )
+    )
+  }
+
 }

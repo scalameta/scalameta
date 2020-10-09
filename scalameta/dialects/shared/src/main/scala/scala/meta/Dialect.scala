@@ -107,7 +107,9 @@ final class Dialect private (
     // Dotty allows lazy val abstract values
     val allowLazyValAbstractValues: Boolean,
     // Dotty allows `as` instead of `@` for pattern bindings
-    val allowAsPatternBinding: Boolean
+    val allowAsPatternBinding: Boolean,
+    // Dotty allows capital pattern vars in `case A @ _ =>`
+    val allowUpperCasePatternVarBinding: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -186,7 +188,8 @@ final class Dialect private (
       allowTypeParamUnderscore = true,
       allowByNameRepeatedParameters = false,
       allowLazyValAbstractValues = false,
-      allowAsPatternBinding = false
+      allowAsPatternBinding = false,
+      allowUpperCasePatternVarBinding = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -330,6 +333,9 @@ final class Dialect private (
   def withAllowAsPatternBinding(newValue: Boolean): Dialect = {
     privateCopy(allowAsPatternBinding = newValue)
   }
+  def withAllowUpperCasePatternVarBinding(newValue: Boolean): Dialect = {
+    privateCopy(allowUpperCasePatternVarBinding = newValue)
+  }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -379,7 +385,8 @@ final class Dialect private (
       allowTypeParamUnderscore: Boolean = this.allowTypeParamUnderscore,
       allowByNameRepeatedParameters: Boolean = this.allowByNameRepeatedParameters,
       allowLazyValAbstractValues: Boolean = this.allowLazyValAbstractValues,
-      allowAsPatternBinding: Boolean = this.allowAsPatternBinding
+      allowAsPatternBinding: Boolean = this.allowAsPatternBinding,
+      allowUpperCasePatternVarBinding: Boolean = this.allowUpperCasePatternVarBinding
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -426,7 +433,8 @@ final class Dialect private (
       allowTypeParamUnderscore,
       allowByNameRepeatedParameters,
       allowLazyValAbstractValues,
-      allowAsPatternBinding
+      allowAsPatternBinding,
+      allowUpperCasePatternVarBinding
       // NOTE(olafur): add the next argument above this comment.
     )
   }

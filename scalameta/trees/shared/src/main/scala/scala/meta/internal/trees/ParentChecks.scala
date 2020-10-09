@@ -34,13 +34,14 @@ object ParentChecks {
   def PatVar(tree: Pat.Var, parent: Tree, destination: String): Boolean = {
     val Pat.Var(Term.Name(value)) = tree
     def capitalized = value.nonEmpty && value(0).isUpper
+    def isInPatternBinding = parent.is[Pat.Bind]
     def declValPat = parent.is[Decl.Val] && destination == "pats"
     def declVarPat = parent.is[Decl.Var] && destination == "pats"
     def defnValPat = parent.is[Defn.Val] && destination == "pats"
     def defnVarPat = parent.is[Defn.Var] && destination == "pats"
     def enumeratorGeneratorPat = parent.is[Enumerator.Generator] && destination == "pat"
     def enumeratorValPat = parent.is[Enumerator.Val] && destination == "pat"
-    !capitalized || declValPat || declVarPat || defnValPat || defnVarPat ||
+    isInPatternBinding || !capitalized || declValPat || declVarPat || defnValPat || defnVarPat ||
     enumeratorGeneratorPat || enumeratorValPat
   }
 

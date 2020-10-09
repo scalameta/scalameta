@@ -2917,7 +2917,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           val isVarPattern = sid match {
             case _: Quasi => false
             case Term.Name(value) =>
-              !isBackquoted && ((value.head.isLower && value.head.isLetter) || value.head == '_')
+              val isNextTokenBinding =
+                (dialect.allowAsPatternBinding && isSoftKw(token, SoftKeyword.SkAs)) || token.is[At]
+              val isCapitalAllowed = dialect.allowUpperCasePatternVarBinding && isNextTokenBinding
+              !isBackquoted && ((value.head.isLower && value.head.isLetter) || value.head == '_' || isCapitalAllowed)
             case _ => false
           }
           if (token.is[NumericLiteral]) {
