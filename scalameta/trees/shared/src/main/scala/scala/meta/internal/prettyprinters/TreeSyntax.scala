@@ -592,7 +592,7 @@ object TreeSyntax {
       case t: Term.ForYield =>
         m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
       case t: Term.New => m(SimpleExpr, s(kw("new"), " ", t.init))
-      case t: Term.EndMarker => s(kw("end"), " ", t.name)
+      case t: Term.EndMarker => s(kw("end"), " ", t.name.value)
       case t: Term.NewAnonymous =>
         val needsExplicitBraces = {
           val selfIsEmpty = t.templ.self.name.is[Name.Anonymous] && t.templ.self.decltpe.isEmpty

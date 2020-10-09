@@ -13,6 +13,9 @@ class EndMarkerSuite extends BaseDottySuite {
     runTestAssert[Stat]("end token")(
       Term.EndMarker(Term.Name("token"))
     )
+    runTestAssert[Stat]("end match")(
+      Term.EndMarker(Term.Name("match"))
+    )
   }
 
   test("end-marker-keyword") {

@@ -1258,7 +1258,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  x match {
                     |    case 2 => "ERROR"
                     |  }
-                    |  end `match`
+                    |  end match
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(

@@ -432,12 +432,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     loop(-1, 0, Nil, -1, false)
     val underlying = parserTokens.result
 
-    // underlying.foreach { t =>
-    //   try {
-    //   println(s"TOKEN ${t.name} :: ${t.text}")
-    //   } catch { case e => println(s"TOKEN ERR ${t.name}") }
-    // }
-
     (Tokens(underlying, 0, underlying.length), parserTokenPositions.result)
   }
 

@@ -119,10 +119,6 @@ object Term {
           (param.name.is[scala.meta.Name.Anonymous] ==> param.default.isEmpty)
       )
     )
-    checkFields(
-      params.exists(_.is[Term.Param.Quasi]) ||
-        params.exists(_.mods.exists(_.is[Mod.Implicit])) ==> (params.length == 1)
-    )
   }
   @ast class Function(params: List[Term.Param], body: Term) extends Term {
     checkFields(
