@@ -168,11 +168,7 @@ class CommunityDottySuite extends FunSuite {
     "src/main/scala/dotty/tools/benchmarks/tuples/Map.scala",
     // erased modifier - for now used internally, will be available in 3.1
     "library/src/scala/compiletime/package.scala",
-    "/tools/dotc/core/Annotations.scala", // (Context ?=> Tree) = (using ctx) => bodyFn(using ctx)
     "/tools/dotc/core/Flags.scala", // val (^Private^ @ _, PrivateTerm @ _, PrivateType @ _) = newFlags
-    "compiler/src/dotty/tools/dotc/util/LinearSet.scala", // ???
-    "/compiler/src/dotty/tools/dotc/util/LinearMap.scala", // ???
-    "src/dotty/tools/dotc/semanticdb/Tools.scala", // ???
 
     // 'val refinTest:  '
     // '  SomeType = X  '  - Type provided in newline - parser needs to handle this
@@ -183,7 +179,6 @@ class CommunityDottySuite extends FunSuite {
     "tools/dotc/core/TypeComparer.scala",
     "/tools/dotc/core/SymDenotations.scala",
     "tools/dotc/core/OrderingConstraint.scala",
-    "tools/dotc/util/SourceFile.scala", // catch case error => sth ^)^
     "tools/dotc/ast/tpd.scala", // comment after extension before def
 
     // for (a, b) <- lst yield ...
@@ -191,8 +186,6 @@ class CommunityDottySuite extends FunSuite {
     "tools/dotc/typer/Checking.scala",
     "compiler/src/dotty/tools/dotc/core/Symbols.scala", // for (tparam ^,^ bound) <- tparams.lazyZip(bounds)
     "compiler/src/dotty/tools/dotc/transform/Splicer.scala",
-    // if () block
-    "compiler/src/dotty/tools/dotc/typer/Implicits.scala",
     // match <indent> case => match <indent> case => (match in match indented)
     "tools/dotc/semanticdb/ExtractSemanticDB.scala",
     "doc-tool/test/dotty/tools/dottydoc/GenDocs.scala" // +: ^"^-project" +: "Dotty"

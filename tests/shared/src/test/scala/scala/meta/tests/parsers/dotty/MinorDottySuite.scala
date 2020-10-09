@@ -601,4 +601,131 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("context-function-single") {
+    runTestAssert[Stat]("def table(init: Table ?=> Unit): Unit")(
+      Decl.Def(
+        Nil,
+        Term.Name("table"),
+        Nil,
+        List(
+          List(
+            Term.Param(
+              Nil,
+              Term.Name("init"),
+              Some(Type.ContextFunction(List(Type.Name("Table")), Type.Name("Unit"))),
+              None
+            )
+          )
+        ),
+        Type.Name("Unit")
+      )
+    )(parseTempl)
+  }
+
+  test("context-function-multi") {
+    runTestAssert[Stat]("def table(init: (T1, List[T2]) ?=> Unit): Unit")(
+      Decl.Def(
+        Nil,
+        Term.Name("table"),
+        Nil,
+        List(
+          List(
+            Term.Param(
+              Nil,
+              Term.Name("init"),
+              Some(
+                Type.ContextFunction(
+                  List(Type.Name("T1"), Type.Apply(Type.Name("List"), List(Type.Name("T2")))),
+                  Type.Name("Unit")
+                )
+              ),
+              None
+            )
+          )
+        ),
+        Type.Name("Unit")
+      )
+    )(parseTempl)
+  }
+
+  test("context-function-as-typedef") {
+    runTestAssert[Stat]("type Executable[T] = ExecutionContext ?=> T")(
+      Defn.Type(
+        Nil,
+        Type.Name("Executable"),
+        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+        Type.ContextFunction(List(Type.Name("ExecutionContext")), Type.Name("T"))
+      )
+    )(parseTempl)
+
+    val code = """|x match {
+                  |  case t: (Context ?=> Symbol) @unchecked =>
+                  |}""".stripMargin
+    runTestAssert[Stat](code)(
+      Term.Match(
+        Term.Name("x"),
+        List(
+          Case(
+            Pat.Typed(
+              Pat.Var(Term.Name("t")),
+              Type.Annotate(
+                Type.ContextFunction(List(Type.Name("Context")), Type.Name("Symbol")),
+                List(Mod.Annot(Init(Type.Name("unchecked"), Name(""), Nil)))
+              )
+            ),
+            None,
+            Term.Block(Nil)
+          )
+        )
+      )
+    )
+  }
+
+  test("context-function-as-term") {
+    runTestAssert[Stat]("def fx: String ?=> Int = s ?=> 3")(
+      Defn.Def(
+        Nil,
+        Term.Name("fx"),
+        Nil,
+        Nil,
+        Some(Type.ContextFunction(List(Type.Name("String")), Type.Name("Int"))),
+        Term.ContextFunction(List(Term.Param(Nil, Term.Name("s"), None, None)), Lit.Int(3))
+      )
+    )
+
+    runTestAssert[Stat]("def fy: (String, Int) ?=> Int = (s, i) ?=> 3")(
+      Defn.Def(
+        Nil,
+        Term.Name("fy"),
+        Nil,
+        Nil,
+        Some(Type.ContextFunction(List(Type.Name("String"), Type.Name("Int")), Type.Name("Int"))),
+        Term.ContextFunction(
+          List(
+            Term.Param(Nil, Term.Name("s"), None, None),
+            Term.Param(Nil, Term.Name("i"), None, None)
+          ),
+          Lit.Int(3)
+        )
+      )
+    )
+  }
+
+  test("opaque-type-indent-definition") {
+    val expected = "opaque type LinearSet[Elem] = Set[Elem]"
+    runTestAssert[Stat](
+      """|opaque type LinearSet[Elem] =
+         |  Set[Elem]
+         |""".stripMargin,
+      assertLayout = Some(expected)
+    )(
+      Defn.OpaqueTypeAlias(
+        List(Mod.Opaque()),
+        Type.Name("LinearSet"),
+        List(Type.Param(Nil, Type.Name("Elem"), Nil, Type.Bounds(None, None), Nil, Nil)),
+        Type.Bounds(None, None),
+        Type.Apply(Type.Name("Set"), List(Type.Name("Elem")))
+      )
+    )
+  }
 }

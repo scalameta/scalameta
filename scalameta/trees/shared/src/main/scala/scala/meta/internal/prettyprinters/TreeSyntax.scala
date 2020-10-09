@@ -493,6 +493,41 @@ object TreeSyntax {
               .getOrElse(s())
           )
         )
+      case t: Term.ContextFunction =>
+        t match {
+          case Term.ContextFunction(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, body)
+              if mods.exists(_.is[Mod.Implicit]) =>
+            m(
+              Expr,
+              s(
+                kw("implicit"),
+                " ",
+                name,
+                tptopt.map(s(kw(":"), " ", _)).getOrElse(s()),
+                " ",
+                kw("?=>"),
+                " ",
+                p(Expr, body)
+              )
+            )
+          case Term.ContextFunction(Term.Param(mods, name: Term.Name, None, _) :: Nil, body) =>
+            m(Expr, s(name, " ", kw("?=>"), " ", p(Expr, body)))
+          case Term.ContextFunction(Term.Param(_, _: Name.Anonymous, decltpeOpt, _) :: Nil, body) =>
+            val param = decltpeOpt match {
+              case Some(decltpe) => s(kw("("), kw("_"), kw(":"), decltpe, kw(")"))
+              case None => s(kw("_"))
+            }
+            m(Expr, param, " ", kw("?=>"), " ", p(Expr, body))
+          case Term.ContextFunction(params, body) =>
+            if (params.headOption.exists(_.mods.exists(_.is[Mod.Using]))) {
+              m(
+                Expr,
+                s("(", kw("using"), " ", r(params, ", "), ") ", kw("?=>"), " ", p(Expr, body))
+              )
+            } else {
+              m(Expr, s("(", r(params, ", "), ") ", kw("?=>"), " ", p(Expr, body)))
+            }
+        }
       case t: Term.Function =>
         t match {
           case Term.Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, body)
@@ -511,7 +546,11 @@ object TreeSyntax {
               )
             )
           case Term.Function(Term.Param(mods, name: Term.Name, None, _) :: Nil, body) =>
-            m(Expr, s(name, " ", kw("=>"), " ", p(Expr, body)))
+            if (mods.exists(_.is[Mod.Using])) {
+              m(Expr, s("(", kw("using"), " ", name, ") ", kw("=>"), " ", p(Expr, body)))
+            } else {
+              m(Expr, s(name, " ", kw("=>"), " ", p(Expr, body)))
+            }
           case Term.Function(Term.Param(_, _: Name.Anonymous, decltpeOpt, _) :: Nil, body) =>
             val param = decltpeOpt match {
               case Some(decltpe) => s(kw("("), kw("_"), kw(":"), decltpe, kw(")"))
@@ -553,7 +592,7 @@ object TreeSyntax {
       case t: Term.ForYield =>
         m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
       case t: Term.New => m(SimpleExpr, s(kw("new"), " ", t.init))
-      case t: Term.EndMarker => s(kw("end"), " ", t.name)
+      case t: Term.EndMarker => s(kw("end"), " ", t.name.value)
       case t: Term.NewAnonymous =>
         val needsExplicitBraces = {
           val selfIsEmpty = t.templ.self.name.is[Name.Anonymous] && t.templ.self.decltpe.isEmpty
@@ -598,16 +637,17 @@ object TreeSyntax {
             p(InfixTyp(t.op.value), t.rhs, right = true)
           )
         )
-      case t @ (_: Type.Function | _: Type.ImplicitFunction) =>
-        val (prefix, tParams, tRes) = t match {
-          case Type.Function(params, res) => (s(), params, res)
-          case Type.ImplicitFunction(params, res) => (s(kw("implicit"), " "), params, res)
+      case t @ (_: Type.Function | _: Type.ImplicitFunction | _: Type.ContextFunction) =>
+        val (prefix, tParams, arrow, tRes) = t match {
+          case Type.Function(params, res) => (s(), params, "=>", res)
+          case Type.ContextFunction(params, res) => (s(), params, "?=>", res)
+          case Type.ImplicitFunction(params, res) => (s(kw("implicit"), " "), params, "=>", res)
         }
         val params = tParams match {
           case param +: Nil if !param.is[Type.Tuple] => s(p(AnyInfixTyp, param))
           case params => s("(", r(params.map(param => p(ParamTyp, param)), ", "), ")")
         }
-        m(Typ, s(prefix, params, " ", kw("=>"), " ", p(Typ, tRes)))
+        m(Typ, s(prefix, params, " ", kw(arrow), " ", p(Typ, tRes)))
       case t: Type.Tuple => m(SimpleTyp, s("(", r(t.args, ", "), ")"))
       case t: Type.With =>
         if (!dialect.allowWithTypes)

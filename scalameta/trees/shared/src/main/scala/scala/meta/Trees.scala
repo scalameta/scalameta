@@ -112,6 +112,14 @@ object Term {
   @ast class Match(expr: Term, cases: List[Case] @nonEmpty) extends Term
   @ast class Try(expr: Term, catchp: List[Case], finallyp: Option[Term]) extends Term
   @ast class TryWithHandler(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
+  @ast class ContextFunction(params: List[Term.Param], body: Term) extends Term {
+    checkFields(
+      params.forall(param =>
+        param.is[Term.Param.Quasi] ||
+          (param.name.is[scala.meta.Name.Anonymous] ==> param.default.isEmpty)
+      )
+    )
+  }
   @ast class Function(params: List[Term.Param], body: Term) extends Term {
     checkFields(
       params.forall(param =>
@@ -162,6 +170,7 @@ object Type {
   @ast class Apply(tpe: Type, args: List[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
   @ast class Function(params: List[Type], res: Type) extends Type
+  @ast class ContextFunction(params: List[Type], res: Type) extends Type
   @ast class ImplicitFunction(params: List[Type], res: Type) extends Type
   @ast class Tuple(args: List[Type] @nonEmpty) extends Type {
     checkFields(args.length > 1 || (args.length == 1 && args.head.is[Type.Quasi]))

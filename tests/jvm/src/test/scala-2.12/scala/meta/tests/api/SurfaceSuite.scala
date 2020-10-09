@@ -310,6 +310,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Term.Ascribe
       |scala.meta.Term.Assign
       |scala.meta.Term.Block
+      |scala.meta.Term.ContextFunction
       |scala.meta.Term.Do
       |scala.meta.Term.EndMarker
       |scala.meta.Term.Eta
@@ -348,6 +349,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.ApplyInfix
       |scala.meta.Type.Bounds
       |scala.meta.Type.ByName
+      |scala.meta.Type.ContextFunction
       |scala.meta.Type.Existential
       |scala.meta.Type.Function
       |scala.meta.Type.ImplicitFunction
@@ -390,6 +392,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.Constant.Long
       |scala.meta.tokens.Token.Constant.String
       |scala.meta.tokens.Token.Constant.Symbol
+      |scala.meta.tokens.Token.ContextArrow
       |scala.meta.tokens.Token.Dot
       |scala.meta.tokens.Token.EOF
       |scala.meta.tokens.Token.Equals

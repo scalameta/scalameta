@@ -135,6 +135,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           token = IDENTIFIER
         if (token == TYPELAMBDAARROW && !dialect.allowTypeLambdas)
           token = IDENTIFIER
+        if (token == CTXARROW && !dialect.allowGivenUsing)
+          token = IDENTIFIER
 
       }
       if (token == IDENTIFIER && name.startsWith("$") && dialect.allowWhiteboxMacro) {
@@ -739,6 +741,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
             if (next.token == THEN && !dialect.allowSignificantIndentation)
               next.token = IDENTIFIER
             if (next.token == TYPELAMBDAARROW && !dialect.allowTypeLambdas)
+              next.token = IDENTIFIER
+            if (next.token == CTXARROW && !dialect.allowGivenUsing)
               next.token = IDENTIFIER
 
             if (next.token != IDENTIFIER && next.token != THIS)

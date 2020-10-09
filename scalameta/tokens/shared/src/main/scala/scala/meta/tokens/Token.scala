@@ -85,6 +85,7 @@ object Token {
   @fixed("@") class At extends Token
   @fixed("_") class Underscore extends Token
   @fixed("=>>") class TypeLambdaArrow extends Token
+  @fixed("?=>") class ContextArrow extends Token
   @fixed("'") class MacroQuote extends Token
   @fixed("$") class MacroSplice extends Token
 
