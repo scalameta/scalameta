@@ -70,10 +70,10 @@ trait CommonNamerMacros extends MacroHelpers {
     })
     qstats += q"def copy(...$qcopyParamss): $name = ${stub()}"
 
-    val extraAbtractStubs = extraAbtractDefs.collect { case vr: DefDef =>
+    val extraAbstractStubs = extraAbtractDefs.collect { case vr: DefDef =>
       q"def ${vr.name} (...${vr.vparamss}) =  ${stub()} "
     }
-    qstats ++= extraAbtractStubs
+    qstats ++= extraAbstractStubs
 
     q"$qmods class $qname(rank: $IntClass, tree: $TreeClass) extends ..$qparents { ..$qstats }"
   }

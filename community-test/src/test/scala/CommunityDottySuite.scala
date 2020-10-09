@@ -176,7 +176,9 @@ class CommunityDottySuite extends FunSuite {
     "compiler/src/dotty/tools/dotc/transform/Splicer.scala",
     // match <indent> case => match <indent> case => (match in match indented)
     "tools/dotc/semanticdb/ExtractSemanticDB.scala",
-    "doc-tool/test/dotty/tools/dottydoc/GenDocs.scala" // +: ^"^-project" +: "Dotty"
+    "doc-tool/test/dotty/tools/dottydoc/GenDocs.scala", // +: ^"^-project" +: "Dotty"
+    // Not fixable
+    "tools/dotc/typer/Implicits.scala" // if without then but using significant identation
   )
 
   final def munitExclusionList = List(

@@ -5,6 +5,7 @@ package transversers
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
+import scala.meta.internal.trees.{Metadata => AstMetadata}
 
 class transformer extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro TransformerMacros.impl
@@ -13,16 +14,11 @@ class transformer extends StaticAnnotation {
 class TransformerMacros(val c: Context) extends TransverserMacros {
   import c.universe._
 
-  def leafHandler(l: Leaf): Tree = {
-    val constructor = hygienicRef(l.sym.companion)
-    val relevantFields =
-      l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
-    if (relevantFields.isEmpty) return q"tree"
-    val transformedFields: List[ValDef] = relevantFields.map(f => {
-      def treeTransformer(input: Tree, tpe: Type): Tree = {
-        val from = c.freshName(TermName("from"))
-        val to = c.freshName(TermName("to"))
-        q"""
+  def transformField(f: Field): ValDef = {
+    def treeTransformer(input: Tree, tpe: Type): Tree = {
+      val from = c.freshName(TermName("from"))
+      val to = c.freshName(TermName("to"))
+      q"""
           val $from = $input
           val $to = apply($from)
           $to match {
@@ -33,12 +29,12 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
               this.fail(${f.owner.prefix + "." + f.name}, $from, $to)
           }
         """
-      }
-      def optionTransformer(input: Tree, tpe: Type, nested: (Tree, Type) => Tree): Tree = {
-        val fromopt = c.freshName(TermName("fromopt"))
-        val from = c.freshName(TermName("from"))
-        val to = c.freshName(TermName("to"))
-        q"""
+    }
+    def optionTransformer(input: Tree, tpe: Type, nested: (Tree, Type) => Tree): Tree = {
+      val fromopt = c.freshName(TermName("fromopt"))
+      val from = c.freshName(TermName("from"))
+      val to = c.freshName(TermName("to"))
+      q"""
           val $fromopt = $input
           $fromopt match {
             case $SomeModule($from) =>
@@ -49,12 +45,12 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
               $NoneModule
           }
         """
-      }
-      def listTransformer(input: Tree, tpe: Type, nested: (Tree, Type) => Tree): Tree = {
-        val fromlist = c.freshName(TermName("fromlist"))
-        val from = c.freshName(TermName("from"))
-        val to = c.freshName(TermName("to"))
-        q"""
+    }
+    def listTransformer(input: Tree, tpe: Type, nested: (Tree, Type) => Tree): Tree = {
+      val fromlist = c.freshName(TermName("fromlist"))
+      val from = c.freshName(TermName("from"))
+      val to = c.freshName(TermName("to"))
+      q"""
           val $fromlist = $input
           var samelist = true
           val tolist = $ListBufferModule[${tpe.typeArgs.head}]()
@@ -68,28 +64,53 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           if (samelist) $fromlist
           else tolist.toList
         """
-      }
-      val rhs = f.tpe match {
-        case tpe @ TreeTpe(_) =>
-          treeTransformer(q"${f.name}", tpe)
-        case tpe @ OptionTreeTpe(_) =>
-          optionTransformer(q"${f.name}", tpe, treeTransformer)
-        case tpe @ ListTreeTpe(_) =>
-          listTransformer(q"${f.name}", tpe, treeTransformer)
-        case tpe @ OptionListTreeTpe(_) =>
-          optionTransformer(q"${f.name}", tpe, listTransformer(_, _, treeTransformer))
-        case tpe @ ListListTreeTpe(_) =>
-          listTransformer(q"${f.name}", tpe, listTransformer(_, _, treeTransformer))
-        case _ =>
-          q"${f.name}"
-      }
-      q"val ${TermName(f.name + "1")} = $rhs"
-    })
+    }
+    val rhs = f.tpe match {
+      case tpe @ TreeTpe(_) =>
+        treeTransformer(q"${f.name}", tpe)
+      case tpe @ OptionTreeTpe(_) =>
+        optionTransformer(q"${f.name}", tpe, treeTransformer)
+      case tpe @ ListTreeTpe(_) =>
+        listTransformer(q"${f.name}", tpe, treeTransformer)
+      case tpe @ OptionListTreeTpe(_) =>
+        optionTransformer(q"${f.name}", tpe, listTransformer(_, _, treeTransformer))
+      case tpe @ ListListTreeTpe(_) =>
+        listTransformer(q"${f.name}", tpe, listTransformer(_, _, treeTransformer))
+      case _ =>
+        q"${f.name}"
+    }
+    q"val ${TermName(f.name + "1")} = $rhs"
+  }
+
+  def leafHandler(l: Leaf): Tree = {
+    val constructor = hygienicRef(l.sym.companion)
+    val relevantFields =
+      l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
+    if (relevantFields.isEmpty) return q"tree"
+    val transformedFields: List[ValDef] = relevantFields.map(transformField)
+
+    val binaryCompatFields =
+      l.sym.info.decls.filter(_.hasAnnotation[AstMetadata.binaryCompatField]).map(_.asField)
+
+    val binaryCompatGetters = binaryCompatFields.map { field =>
+      q"val ${field.name} = tree.${field.name}"
+    }
+
+    val binaryCompatSetters = binaryCompatFields.map { field =>
+      val setter = TermName("set" + field.sym.name.toString.capitalize)
+      q"newTree.$setter(${TermName(field.name + "1")})"
+    }
     q"""
       var same = true
+      ..$binaryCompatGetters
       ..$transformedFields
+      ..${binaryCompatFields.map(transformField)}
       if (same) tree
-      else $constructor(..${transformedFields.map(_.name)})
+      else {
+        val newTree = $constructor(..${transformedFields.map(_.name)})
+        ..$binaryCompatSetters
+        newTree
+      }
     """
   }
 

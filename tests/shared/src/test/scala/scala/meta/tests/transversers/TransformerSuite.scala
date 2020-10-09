@@ -53,4 +53,25 @@ class TransformerSuite extends FunSuite {
     val tree1 = tree0.transform { case Term.Name(s) => Term.Name(s + s) }
     assert(tree1.toString == "xx ++ yy")
   }
+
+  test("dotty-derives-transform") {
+
+    import scala.meta.dialects.Dotty
+
+    val before = "case class Node(name: String) extends Tree derives a.b.OldName { def a = 1 }"
+    val after = "case class Node(name: String) extends Tree derives a.b.NewName { def a = 1 }"
+
+    val beforeTree =
+      before
+        .parse[Source]
+        .get
+
+    val afterTree = beforeTree
+      .transform({ case Type.Name("OldName") =>
+        Type.Name("NewName")
+      })
+
+    assertEquals(afterTree.toString, after)
+
+  }
 }

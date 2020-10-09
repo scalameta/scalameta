@@ -1032,7 +1032,7 @@ object TreeSyntax {
         else {
           val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
           val pparents = w(r(t.inits, " with "), " ", !t.inits.isEmpty && !isBodyEmpty)
-          val derived = w("derives ", r(t.getDerives(), ", "), " ", t.getDerives().nonEmpty)
+          val derived = w("derives ", r(t.derives, ", "), " ", t.derives.nonEmpty)
           val pbody = {
             val isOneLiner =
               t.stats.length == 0 ||

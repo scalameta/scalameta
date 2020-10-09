@@ -4110,15 +4110,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     parents.toList
   }
 
-  def derivesClasses: List[Init] = {
+  def derivesClasses(): List[Type] = {
     if (isSoftKw(token, SoftKeyword.SkDerives) && dialect.allowDerives) {
       next()
-      def isCommaSeparated(token: Token): Boolean =
-        token.is[Comma]
-      val deriving = ListBuffer[Init]()
+      val deriving = ListBuffer[Type]()
       def readInit() = token match {
-        case Ellipsis(_) => deriving += ellipsis(1, astInfo[Init])
-        case _ => deriving += initInsideTemplate()
+        case Ellipsis(_) => deriving += ellipsis(1, astInfo[Type])
+        case _ => deriving += startModType()
       }
       readInit()
       while (token.is[Comma]) { next(); readInit() }
@@ -4134,7 +4132,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val template = Template(edefs, parents, self, body)
     template.setDerives(derived)
     template
-
   }
 
   def template(afterExtend: Boolean = false): Template = autoPos {
@@ -4538,9 +4535,11 @@ object InfixMode extends Enumeration {
 
 object SoftKeyword {
   sealed trait SoftKeyword { val name: String }
+
   case object SkAs extends SoftKeyword { override val name = "as" }
 
   case object SkUsing extends SoftKeyword { override val name = "using" }
+
   case object SkInline extends SoftKeyword { override val name = "inline" }
 
   case object SkExtension extends SoftKeyword { override val name = "extension" }

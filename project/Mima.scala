@@ -31,7 +31,7 @@ object Mima {
     ProblemFilters.exclude[MissingClassProblem]("scala.meta.testkit.DiffAssertions$DiffFailure"),
     ProblemFilters.exclude[MissingClassProblem]("scala.meta.testkit.DiffAssertions$DiffFailure$"),
     ProblemFilters.exclude[MissingTypesProblem]("scala.meta.testkit.DiffAssertions"),
-    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Template.getDerives"),
+    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Template.derives"),
     ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Template.setDerives")
   )
 }
