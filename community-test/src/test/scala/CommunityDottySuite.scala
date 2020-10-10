@@ -168,8 +168,6 @@ class CommunityDottySuite extends FunSuite {
     "src/main/scala/dotty/tools/benchmarks/tuples/Map.scala",
     // erased modifier - for now used internally, will be available in 3.1
     "library/src/scala/compiletime/package.scala",
-    "/tools/dotc/core/Flags.scala", // val (^Private^ @ _, PrivateTerm @ _, PrivateType @ _) = newFlags
-
     // 'val refinTest:  '
     // '  SomeType = X  '  - Type provided in newline - parser needs to handle this
     "input/src/main/scala/example/level2/Documentation.scala",
