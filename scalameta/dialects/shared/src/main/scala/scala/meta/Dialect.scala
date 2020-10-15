@@ -111,7 +111,9 @@ final class Dialect private (
     // Dotty allows capital pattern vars in `case A @ _ =>`
     val allowUpperCasePatternVarBinding: Boolean,
     // Dotty allows to use derives to automatically generate given instances for type classes
-    val allowDerives: Boolean
+    val allowDerives: Boolean,
+    // Dotty allows to specify `type T` inside blocks
+    val allowTypeInBlock: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -192,7 +194,8 @@ final class Dialect private (
       allowLazyValAbstractValues = false,
       allowAsPatternBinding = false,
       allowUpperCasePatternVarBinding = false,
-      allowDerives = false
+      allowDerives = false,
+      allowTypeInBlock = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -342,6 +345,9 @@ final class Dialect private (
   def withAllowDerives(newValue: Boolean): Dialect = {
     privateCopy(allowDerives = newValue)
   }
+  def withAllowTypeInBlock(newValue: Boolean): Dialect = {
+    privateCopy(allowTypeInBlock = newValue)
+  }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -393,7 +399,8 @@ final class Dialect private (
       allowLazyValAbstractValues: Boolean = this.allowLazyValAbstractValues,
       allowAsPatternBinding: Boolean = this.allowAsPatternBinding,
       allowUpperCasePatternVarBinding: Boolean = this.allowUpperCasePatternVarBinding,
-      allowDerives: Boolean = this.allowDerives
+      allowDerives: Boolean = this.allowDerives,
+      allowTypeInBlock: Boolean = this.allowTypeInBlock
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -442,7 +449,8 @@ final class Dialect private (
       allowLazyValAbstractValues,
       allowAsPatternBinding,
       allowUpperCasePatternVarBinding,
-      allowDerives
+      allowDerives,
+      allowTypeInBlock
       // NOTE(olafur): add the next argument above this comment.
     )
   }

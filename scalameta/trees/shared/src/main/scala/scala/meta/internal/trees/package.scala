@@ -189,6 +189,7 @@ package object trees {
       case _: Import => true
       case _: Term => true
       case _: Defn => true
+      case _: Decl.Type => true
       case _ => false
     }
     def isRefineStat: Boolean = stat match {

@@ -148,8 +148,6 @@ class CommunityDottySuite extends FunSuite {
   }
 
   final def dottyExclusionList = List(
-    // 'type T' - as statement in block, rejected by tree check
-    "library/src-bootstrapped/scala/quoted/util/ExprMap.scala",
     // '[t] => t => F[t]'  - polymorphic functions - not supported currently
     "library/src-bootstrapped/scala/quoted/unsafe/UnsafeExpr.scala",
     "library/src/scala/runtime/Tuple.scala",
