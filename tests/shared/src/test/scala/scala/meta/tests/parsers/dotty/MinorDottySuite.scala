@@ -871,4 +871,22 @@ class MinorDottySuite extends BaseDottySuite {
 
   }
 
+  test("type-in-block") {
+    runTestAssert[Stat](
+      """|def hello = {
+         |  type T
+         |}
+         |""".stripMargin
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("hello"),
+        Nil,
+        Nil,
+        None,
+        Term.Block(List(Decl.Type(Nil, Type.Name("T"), Nil, Type.Bounds(None, None))))
+      )
+    )
+  }
+
 }
