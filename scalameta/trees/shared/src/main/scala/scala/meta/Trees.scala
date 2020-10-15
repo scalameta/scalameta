@@ -133,6 +133,7 @@ object Term {
         params.exists(_.mods.exists(_.is[Mod.Implicit])) ==> (params.length == 1)
     )
   }
+  @ast class PolyFunction(tparams: List[Type.Param], body: Term) extends Term
   @ast class PartialFunction(cases: List[Case] @nonEmpty) extends Term
   @ast class While(expr: Term, body: Term) extends Term
   @ast class Do(body: Term, expr: Term) extends Term
@@ -171,6 +172,7 @@ object Type {
   @ast class Apply(tpe: Type, args: List[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
   @ast class Function(params: List[Type], res: Type) extends Type
+  @ast class PolyFunction(tparams: List[Type.Param], tpe: Type) extends Type
   @ast class ContextFunction(params: List[Type], res: Type) extends Type
   @ast class ImplicitFunction(params: List[Type], res: Type) extends Type
   @ast class Tuple(args: List[Type] @nonEmpty) extends Type {

@@ -326,6 +326,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Term.Param
       |scala.meta.Term.PartialFunction
       |scala.meta.Term.Placeholder
+      |scala.meta.Term.PolyFunction
       |scala.meta.Term.QuotedMacroExpr
       |scala.meta.Term.QuotedMacroType
       |scala.meta.Term.Ref
@@ -360,6 +361,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.Or
       |scala.meta.Type.Param
       |scala.meta.Type.Placeholder
+      |scala.meta.Type.PolyFunction
       |scala.meta.Type.Project
       |scala.meta.Type.Ref
       |scala.meta.Type.Refine

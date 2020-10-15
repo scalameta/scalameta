@@ -1288,11 +1288,22 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
     }
 
-    private def typeLambda(): Type = {
+    private def typeLambdaOrPoly(): Type = {
       val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
-      accept[TypeLambdaArrow]
-      val tpe = typ()
-      Type.Lambda(quants, tpe)
+      if (token.is[TypeLambdaArrow]) {
+        accept[TypeLambdaArrow]
+        val tpe = typ()
+        Type.Lambda(quants, tpe)
+      } else if (token.is[RightArrow]) {
+        accept[RightArrow]
+        val tpe = typ()
+        if (tpe.is[Type.Function])
+          Type.PolyFunction(quants, tpe)
+        else
+          syntaxError("polymorphic function types must have a value parameter", at = token)
+      } else {
+        syntaxError("expected =>> or =>", at = token)
+      }
     }
 
     def typ(): Type = autoPos {
@@ -1316,7 +1327,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       } else {
         val t: Type =
           if (token.is[LeftParen]) tupleInfixType()
-          else if (token.is[LeftBracket] && dialect.allowTypeLambdas) typeLambda()
+          else if (token.is[LeftBracket] && dialect.allowTypeLambdas) typeLambdaOrPoly()
           else infixType(InfixMode.FirstOp)
 
         token match {
@@ -2448,6 +2459,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                 Term.NewAnonymous(other)
             }
           })
+        case LeftBracket() if dialect.allowPolymorphicFunctions =>
+          Success(polyFunction())
         case MacroQuote() =>
           Success(macroQuote())
         case MacroSplice() =>
@@ -2463,6 +2476,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
     }
     t.map(term => simpleExprRest(term, canApply = canApply))
+  }
+
+  def polyFunction() = autoPos {
+    val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
+    accept[RightArrow]
+    val term = expr()
+    Term.PolyFunction(quants, term)
   }
 
   def macroSplice(): Term = autoPos {

@@ -528,6 +528,8 @@ object TreeSyntax {
               m(Expr, s("(", r(params, ", "), ") ", kw("?=>"), " ", p(Expr, body)))
             }
         }
+      case t: Term.PolyFunction =>
+        m(Expr, s("[", r(t.tparams, ", "), "] ", kw("=>"), " ", p(Expr, t.body)))
       case t: Term.Function =>
         t match {
           case Term.Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, body)
@@ -691,6 +693,7 @@ object TreeSyntax {
         m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.stats, "; "), " }"))
       case t: Type.Annotate => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
       case t: Type.Lambda => m(Typ, t.tparams, " ", kw("=>>"), " ", p(Typ, t.tpe))
+      case t: Type.PolyFunction => m(Typ, t.tparams, " ", kw("=>"), " ", p(Typ, t.tpe))
       case t: Type.Method => m(Typ, t.paramss, kw(":"), " ", p(Typ, t.tpe))
       case t: Type.Placeholder =>
         if (dialect.allowQuestionMarkPlaceholder) m(SimpleTyp, s(kw("?"), t.bounds))
