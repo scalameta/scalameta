@@ -121,7 +121,8 @@ trait Reflection {
     override def toString = s"leaf $prefix"
   }
   class Field(val sym: Symbol) {
-    if (!sym.isField) sys.error(s"$sym is not a field")
+    if (!sym.isField && !sym.hasAnnotation[AstMetadata.binaryCompatField])
+      sys.error(s"$sym is not a field")
     def owner: Leaf = sym.owner.asLeaf
     def name: TermName = TermName(sym.name.toString.stripPrefix("_"))
     def tpe: Type = sym.info.finalResultType

@@ -37,7 +37,7 @@ class RootNamerMacros(val c: Context) extends AstReflection with CommonNamerMacr
         val parents1 =
           parents :+ tq"$AstMetadataModule.Ast" :+ tq"$ProductClass" :+ tq"$SerializableClass"
         mstats1 ++= mkClassifier(name)
-        mstats1 += mkQuasi(name, Nil, Nil)
+        mstats1 += mkQuasi(name, Nil, Nil, Nil)
 
         val cdef1 =
           q"${Modifiers(flags1, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"

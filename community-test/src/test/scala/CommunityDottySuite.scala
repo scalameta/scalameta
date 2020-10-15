@@ -148,16 +148,6 @@ class CommunityDottySuite extends FunSuite {
   }
 
   final def dottyExclusionList = List(
-    // 'trait X derives Y' - not supported currently
-    "/tools/dotc/core/Names.scala",
-    "tools/dotc/semanticdb/TextDocuments.scala",
-    "tools/dotc/semanticdb/TextDocument.scala",
-    "tools/dotc/semanticdb/Range.scala",
-    "/tools/dotc/semanticdb/SymbolOccurrence.scala",
-    "tools/dotc/semanticdb/Scala3.scala",
-    "tools/dotc/semanticdb/Schema.scala",
-    "tools/dotc/semanticdb/SymbolInformation.scala",
-    "tools/dotc/semanticdb/Language.scala",
     // 'type T' - as statement in block, rejected by tree check
     "library/src-bootstrapped/scala/quoted/util/ExprMap.scala",
     // '[t] => t => F[t]'  - polymorphic functions - not supported currently
@@ -186,7 +176,9 @@ class CommunityDottySuite extends FunSuite {
     "compiler/src/dotty/tools/dotc/transform/Splicer.scala",
     // match <indent> case => match <indent> case => (match in match indented)
     "tools/dotc/semanticdb/ExtractSemanticDB.scala",
-    "doc-tool/test/dotty/tools/dottydoc/GenDocs.scala" // +: ^"^-project" +: "Dotty"
+    "doc-tool/test/dotty/tools/dottydoc/GenDocs.scala", // +: ^"^-project" +: "Dotty"
+    // Not fixable
+    "tools/dotc/typer/Implicits.scala" // if without then but using significant identation
   )
 
   final def munitExclusionList = List(

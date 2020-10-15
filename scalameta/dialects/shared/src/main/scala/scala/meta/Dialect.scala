@@ -109,7 +109,9 @@ final class Dialect private (
     // Dotty allows `as` instead of `@` for pattern bindings
     val allowAsPatternBinding: Boolean,
     // Dotty allows capital pattern vars in `case A @ _ =>`
-    val allowUpperCasePatternVarBinding: Boolean
+    val allowUpperCasePatternVarBinding: Boolean,
+    // Dotty allows to use derives to automatically generate given instances for type classes
+    val allowDerives: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -189,7 +191,8 @@ final class Dialect private (
       allowByNameRepeatedParameters = false,
       allowLazyValAbstractValues = false,
       allowAsPatternBinding = false,
-      allowUpperCasePatternVarBinding = false
+      allowUpperCasePatternVarBinding = false,
+      allowDerives = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -336,6 +339,9 @@ final class Dialect private (
   def withAllowUpperCasePatternVarBinding(newValue: Boolean): Dialect = {
     privateCopy(allowUpperCasePatternVarBinding = newValue)
   }
+  def withAllowDerives(newValue: Boolean): Dialect = {
+    privateCopy(allowDerives = newValue)
+  }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -386,7 +392,8 @@ final class Dialect private (
       allowByNameRepeatedParameters: Boolean = this.allowByNameRepeatedParameters,
       allowLazyValAbstractValues: Boolean = this.allowLazyValAbstractValues,
       allowAsPatternBinding: Boolean = this.allowAsPatternBinding,
-      allowUpperCasePatternVarBinding: Boolean = this.allowUpperCasePatternVarBinding
+      allowUpperCasePatternVarBinding: Boolean = this.allowUpperCasePatternVarBinding,
+      allowDerives: Boolean = this.allowDerives
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -434,7 +441,8 @@ final class Dialect private (
       allowByNameRepeatedParameters,
       allowLazyValAbstractValues,
       allowAsPatternBinding,
-      allowUpperCasePatternVarBinding
+      allowUpperCasePatternVarBinding,
+      allowDerives
       // NOTE(olafur): add the next argument above this comment.
     )
   }
