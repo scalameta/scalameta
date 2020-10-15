@@ -1823,13 +1823,18 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   /* ------------- TYPES ---------------------------------------------------- */
 
   def typedOpt(): Option[Type] =
-    if (token.is[Colon]) {
+    if (token.is[Colon] || token.is[ColonEol]) {
+      val isSplitWithIndent = token.is[ColonEol]
       next()
-      if (token.is[At] && ahead(token.is[Ident])) {
+      def typed = if (token.is[At] && ahead(token.is[Ident])) {
         Some(outPattern.annotTypeRest(autoPos(Type.AnonymousName())))
       } else {
         Some(typ())
       }
+      if(isSplitWithIndent) acceptOpt[Indentation.Indent]
+      val tp = typed
+      if(isSplitWithIndent) acceptOpt[Indentation.Outdent]
+      tp
     } else None
 
   def typeOrInfixType(location: Location): Type =
@@ -3648,10 +3653,17 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case name: Term.Name => atPos(name, name)(Pat.Var(name))
       case pat => pat
     }
+
+    /* ColonEol might be accidentally introduced with newline after `:`
+     * however we are unable to validate it until we hit the parser
+     */
+    val isSplitWithIndent = token.is[ColonEol]
     val tp: Option[Type] = typedOpt()
 
     if (tp.isEmpty || token.is[Equals]) {
       accept[Equals]
+      if(isSplitWithIndent) acceptOpt[Indentation.Outdent]
+      acceptOpt[LF]
       val rhsExpr = exprMaybeIndented()
       val rhs =
         if (rhsExpr.is[Term.Placeholder]) {
@@ -3661,6 +3673,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             syntaxError("unbound placeholder parameter", at = token)
         } else Some(rhsExpr)
 
+      if(isSplitWithIndent) acceptOpt[Indentation.Outdent]
       if (isMutable) Defn.Var(mods, lhs, tp, rhs)
       else Defn.Val(mods, lhs, tp, rhs.get)
     } else {

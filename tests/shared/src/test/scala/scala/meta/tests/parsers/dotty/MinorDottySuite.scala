@@ -887,4 +887,51 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )
   }
+
+  test("type-in-next-line") {
+    runTestAssert[Stat](
+      """|val refinementTest:
+         |    Graph {
+         |      def x: Int
+         |    }
+         |
+         |""".stripMargin,
+      assertLayout = Some("val refinementTest: Graph { def x: Int }")
+    )(
+      Decl.Val(
+        Nil,
+        List(Pat.Var(Term.Name("refinementTest"))),
+        Type.Refine(
+          Some(Type.Name("Graph")),
+          List(
+            Decl.Def(Nil, Term.Name("x"), Nil, Nil, Type.Name("Int"))
+          )
+        )
+      )
+    )
+  }
+
+  test("type-in-next-line-equals") {
+    runTestAssert[Stat](
+      """|val refinementTest:
+         |      Int = 3
+         |""".stripMargin,
+      assertLayout = Some("val refinementTest: Int = 3")
+    )(
+      Defn.Val(Nil, List(Pat.Var(Term.Name("refinementTest"))), Some(Type.Name("Int")), Lit.Int(3))
+    )
+  }
+  
+  test("type-in-next-line-equals-newline") {
+    runTestAssert[Stat](
+      """|val refinementTest:
+         |      Int = 
+         |3
+         |""".stripMargin,
+      assertLayout = Some("val refinementTest: Int = 3")
+    )(
+      Defn.Val(Nil, List(Pat.Var(Term.Name("refinementTest"))), Some(Type.Name("Int")), Lit.Int(3))
+    )
+  }
+
 }
