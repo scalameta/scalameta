@@ -888,6 +888,49 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("multiline-for") {
+    val code = """|for (a,b) <- gen
+                  |  if a < 5
+                  |  c <- otherGen
+                  |yield c
+                  |""".stripMargin
+    val output = "for ((a, b) <- gen; if a < 5; c <- otherGen) yield c"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.ForYield(
+        List(
+          Enumerator.Generator(
+            Pat.Tuple(List(Pat.Var(Term.Name("a")), Pat.Var(Term.Name("b")))),
+            Term.Name("gen")
+          ),
+          Enumerator.Guard(Term.ApplyInfix(Term.Name("a"), Term.Name("<"), Nil, List(Lit.Int(5)))),
+          Enumerator.Generator(Pat.Var(Term.Name("c")), Term.Name("otherGen"))
+        ),
+        Term.Name("c")
+      )
+    )
+  }
+
+  test("oneline-for") {
+    val code = """|for (arg, param) <- args.zip(vparams) yield
+                  |  arg
+                  |""".stripMargin
+    val output = """|for ((arg, param) <- args.zip(vparams)) yield {
+                    |  arg
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.ForYield(
+        List(
+          Enumerator.Generator(
+            Pat.Tuple(List(Pat.Var(Term.Name("arg")), Pat.Var(Term.Name("param")))),
+            Term.Apply(Term.Select(Term.Name("args"), Term.Name("zip")), List(Term.Name("vparams")))
+          )
+        ),
+        Term.Block(List(Term.Name("arg")))
+      )
+    )
+  }
+
   // --------------------------
   // WHILE
   // --------------------------

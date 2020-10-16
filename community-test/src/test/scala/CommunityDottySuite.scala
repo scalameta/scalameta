@@ -54,8 +54,8 @@ class CommunityDottySuite extends FunSuite {
   val communityBuilds = List(
     CommunityBuild(
       "https://github.com/lampepfl/dotty.git",
-      //commit hash from 7.10
-      "3be62c1cbc3b00fe4411112ffdb2c4ba7da33b03",
+      //commit hash from 16.10
+      "f6c169f4bc904cbee004a226222b367118bdc1ad",
       "dotty",
       dottyExclusionList
     ),
@@ -166,17 +166,11 @@ class CommunityDottySuite extends FunSuite {
     "/tools/dotc/core/SymDenotations.scala",
     "tools/dotc/core/OrderingConstraint.scala",
     "tools/dotc/ast/tpd.scala", // comment after extension before def
-
-    // for (a, b) <- lst yield ...
-    "tools/dotc/transform/BetaReduce.scala",
-    "tools/dotc/typer/Checking.scala",
-    "compiler/src/dotty/tools/dotc/core/Symbols.scala", // for (tparam ^,^ bound) <- tparams.lazyZip(bounds)
-    "compiler/src/dotty/tools/dotc/transform/Splicer.scala",
-    // match <indent> case => match <indent> case => (match in match indented)
-    "tools/dotc/semanticdb/ExtractSemanticDB.scala",
-    "doc-tool/test/dotty/tools/dottydoc/GenDocs.scala", // +: ^"^-project" +: "Dotty"
-    // Not fixable
-    "tools/dotc/typer/Implicits.scala" // if without then but using significant identation
+    // +: ^"^-project" +: "Dotty"
+    "doc-tool/test/dotty/tools/dottydoc/GenDocs.scala",
+    // most likely will become deprecated: if (cond) <ident>
+    "tools/dotc/typer/Implicits.scala",
+    "tools/dotc/typer/Checking.scala"
   )
 
   final def munitExclusionList = List(

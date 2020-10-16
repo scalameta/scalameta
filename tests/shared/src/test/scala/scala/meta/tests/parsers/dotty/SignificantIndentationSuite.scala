@@ -434,4 +434,5 @@ class SignificantIndentationSuite extends BaseDottySuite {
       )
     )
   }
+
 }
