@@ -697,6 +697,11 @@ object TreeSyntax {
       case t: Type.Annotate => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
       case t: Type.Lambda => m(Typ, t.tparams, " ", kw("=>>"), " ", p(Typ, t.tpe))
       case t: Type.PolyFunction => m(Typ, t.tparams, " ", kw("=>"), " ", p(Typ, t.tpe))
+      case t: Type.Match =>
+        m(
+          Type,
+          s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}"))
+        )
       case t: Type.Method => m(Typ, t.paramss, kw(":"), " ", p(Typ, t.tpe))
       case t: Type.Placeholder =>
         if (dialect.allowQuestionMarkPlaceholder) m(SimpleTyp, s(kw("?"), t.bounds))
@@ -1124,6 +1129,8 @@ object TreeSyntax {
         }
         s("case ", ppat, pcond, " ", kw("=>"), pbody)
 
+      case t: TypeCase =>
+        s("case ", t.pat, " ", kw("=>"), " ", t.body)
       // Source
       case t: Source => r(t.stats, EOL)
     }

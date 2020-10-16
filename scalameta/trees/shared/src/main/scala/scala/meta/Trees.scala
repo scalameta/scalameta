@@ -215,6 +215,8 @@ object Type {
       vbounds: List[Type],
       cbounds: List[Type]
   ) extends Member
+
+  @ast class Match(tpe: Type, cases: List[TypeCase] @nonEmpty) extends Type 
   def fresh(): Type.Name = fresh("fresh")
   def fresh(prefix: String): Type.Name = Type.Name(prefix + Fresh.nextId())
 }
@@ -373,7 +375,7 @@ object Defn {
       bounds: scala.meta.Type.Bounds,
       body: scala.meta.Type
   ) extends Defn with Member.Type {
-    checkFields(mods.exists(_.is[Mod.Opaque]))
+    // checkFields(mods.exists(_.is[Mod.Opaque]))
   }
   @ast class Type(
       mods: List[Mod],
@@ -520,6 +522,7 @@ object Importee {
 }
 
 @ast class Case(pat: Pat, cond: Option[Term], body: Term) extends Tree
+@ast class TypeCase(pat: Type, body: Type) extends Tree
 
 @ast class Source(stats: List[Stat]) extends Tree {
   // NOTE: This validation has been removed to allow dialects with top-level terms.

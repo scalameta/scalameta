@@ -1272,7 +1272,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    *  threaded through numerous methods as boolean isPattern.
    */
   trait PatternContextSensitive {
-    private def tupleInfixType(): Type = autoPos {
+    private def tupleInfixType(allowFunctionType: Boolean = true): Type = autoPos {
       require(token.is[LeftParen] && debug(token))
       val openParenPos = in.tokenPos
 
@@ -1359,10 +1359,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (token.is[Colon] && dialect.allowMethodTypes) {
         next()
         Type.Method(pss, typ())
-      } else if (token.is[RightArrow]) {
+      } else if (allowFunctionType && token.is[RightArrow]) {
         next()
         Type.Function(ts, typ())
-      } else if (token.is[ContextArrow]) {
+      } else if (allowFunctionType && token.is[ContextArrow]) {
         next()
         Type.ContextFunction(ts, typ())
       } else {
@@ -1416,17 +1416,52 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         Type.Method(Nil, typ())
       } else {
         val t: Type =
-          if (token.is[LeftParen]) tupleInfixType()
-          else if (token.is[LeftBracket] && dialect.allowTypeLambdas) typeLambdaOrPoly()
-          else infixType(InfixMode.FirstOp)
+          if (token.is[LeftBracket] && dialect.allowTypeLambdas) typeLambdaOrPoly()
+          else infixTypeOrTuple()
 
         token match {
           case RightArrow() => next(); Type.Function(List(t), typ())
           case ContextArrow() => next(); Type.ContextFunction(List(t), typ())
           case KwForsome() => next(); Type.Existential(t, existentialStats())
+          case KwMatch() if dialect.allowTypeMatch =>
+            next(); typeMatch(t)
           case _ => t
         }
       }
+    }
+
+    def typeMatch(t: Type): Type.Match = autoPos {
+      if (token.is[LeftBrace]) {
+        inBraces {
+          Type.Match(t, typeCaseClauses())
+        }
+      } else if (token.is[Indentation.Indent])
+        indented {
+          Type.Match(t, typeCaseClauses())
+        }
+      else {
+        syntaxError("Expected braces or indentation", at = token.pos)
+      }
+
+    }
+
+    def typeCaseClauses(): List[TypeCase] = {
+      val allCases = new ListBuffer[TypeCase]
+      while (token.is[KwCase])
+        allCases += typeCaseClause()
+      allCases.toList
+    }
+
+    def typeCaseClause(): TypeCase = atPos(in.prevTokenPos, auto) {
+      accept[KwCase]
+      val pat = infixTypeOrTuple(allowFunctionType = false)
+      accept[RightArrow]
+      val tpe = typ()
+      acceptOpt[LF]
+      TypeCase(
+        pat,
+        tpe
+      )
     }
 
     def quasiquoteType(): Type = entrypointType()
@@ -1434,6 +1469,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def entrypointType(): Type = paramType()
 
     def typeArgs(): List[Type] = inBrackets(types())
+
+    def infixTypeOrTuple(allowFunctionType: Boolean = true): Type = {
+      if (token.is[LeftParen]) tupleInfixType(allowFunctionType)
+      else infixType(InfixMode.FirstOp)
+    }
 
     def infixType(mode: InfixMode.Value): Type =
       infixTypeRest(compoundType, mode)
@@ -3937,7 +3977,20 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
 
     def aliasType() = Defn.Type(mods, name, tparams, typ())
-    def abstractType() = Decl.Type(mods, name, tparams, typeBounds())
+    def abstractType() = {
+      val bounds = typeBounds()
+      if (token.is[Equals]) {
+        accept[Equals]
+        val tpe = typ()
+        if (tpe.is[Type.Match]) {
+          Defn.OpaqueTypeAlias(mods, name, tparams, bounds, tpe)
+        } else {
+          syntaxError("cannot combine bound and alias", at = tpe.pos)
+        }
+      } else {
+        Decl.Type(mods, name, tparams, bounds)
+      }
+    }
     if (mods.exists(_.is[Mod.Opaque])) {
       val bounds = typeBounds()
       accept[Equals]

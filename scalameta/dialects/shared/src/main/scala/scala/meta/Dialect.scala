@@ -117,7 +117,9 @@ final class Dialect private (
     // Dotty allows to define function like `[T] => (ts: List[T]) => ts.headOption`
     val allowPolymorphicFunctions: Boolean,
     // Dotty allows `.match` expressions and chaining matches
-    val allowMatchAsOperator: Boolean
+    val allowMatchAsOperator: Boolean,
+    // Dotty allows `match on type
+    val allowTypeMatch: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -201,7 +203,8 @@ final class Dialect private (
       allowDerives = false,
       allowTypeInBlock = false,
       allowPolymorphicFunctions = false,
-      allowMatchAsOperator = false
+      allowMatchAsOperator = false,
+      allowTypeMatch = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -360,6 +363,9 @@ final class Dialect private (
   def withAllowPolymorphicFunctions(newValue: Boolean): Dialect = {
     privateCopy(allowPolymorphicFunctions = newValue)
   }
+  def withAllowTypeMatch(newValue: Boolean): Dialect = {
+    privateCopy(allowTypeMatch = newValue)
+  }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -414,7 +420,8 @@ final class Dialect private (
       allowDerives: Boolean = this.allowDerives,
       allowTypeInBlock: Boolean = this.allowTypeInBlock,
       allowPolymorphicFunctions: Boolean = this.allowPolymorphicFunctions,
-      allowMatchAsOperator: Boolean = this.allowMatchAsOperator
+      allowMatchAsOperator: Boolean = this.allowMatchAsOperator,
+      allowTypeMatch: Boolean = this.allowTypeMatch
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -466,7 +473,8 @@ final class Dialect private (
       allowDerives,
       allowTypeInBlock,
       allowPolymorphicFunctions,
-      allowMatchAsOperator
+      allowMatchAsOperator,
+      allowTypeMatch
       // NOTE(olafur): add the next argument above this comment.
     )
   }
