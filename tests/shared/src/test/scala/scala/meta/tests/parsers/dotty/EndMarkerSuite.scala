@@ -109,4 +109,20 @@ class EndMarkerSuite extends BaseDottySuite {
     )
   }
 
+  test("if-then-end-ident") {
+    val code = """|if limit < end then
+                  |   val aa = 1
+                  |""".stripMargin
+    val output = """|if (limit < end) {
+                    |  val aa = 1
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.If(
+        Term.ApplyInfix(Term.Name("limit"), Term.Name("<"), Nil, List(Term.Name("end"))),
+        Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("aa"))), None, Lit.Int(1)))),
+        Lit.Unit()
+      )
+    )
+  }
 }

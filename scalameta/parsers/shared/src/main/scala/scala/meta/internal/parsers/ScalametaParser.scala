@@ -377,7 +377,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         parserTokens += curr
         parserTokenPositions += currPos
 
-        val notEndTokenIdent = prev == null || prev.text != "end"
+        val notEndTokenIdent = prev == null || prev.text != "end" || !curr.is[EndMarkerWord]
         if (notEndTokenIdent && curr.is[CanStartIndent] && isAheadNewLine(currPos)) {
           if (curr.is[RightArrow] && sepRegionsNew.headOption.exists(!_.indentOnArrow)) {} else {
             shouldStartIndent = true
@@ -1983,8 +1983,18 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         next()
         val enums: List[Enumerator] =
           if (token.is[LeftBrace]) inBraces(enumerators())
-          else if (token.is[LeftParen]) inParens(enumerators())
-          else if (token.is[Indentation.Indent]) {
+          else if (token.is[LeftParen]) {
+            val forked = in.fork
+            Try(inParens(enumerators())) match {
+              // Dotty retry in case of `for (a,b) <- list1.zip(list2) yield (a, b)`
+              case Failure(_) if dialect.allowSignificantIndentation =>
+                in = forked
+                enumerators()
+              case Failure(exception) => throw exception
+              case Success(value) =>
+                value
+            }
+          } else if (token.is[Indentation.Indent]) {
             indented(enumerators())
           } else {
             enumerators()
