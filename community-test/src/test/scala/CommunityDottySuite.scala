@@ -148,12 +148,8 @@ class CommunityDottySuite extends FunSuite {
   }
 
   final def dottyExclusionList = List(
-    // '[t] => t => F[t]'  - polymorphic functions - not supported currently
-    "library/src-bootstrapped/scala/quoted/unsafe/UnsafeExpr.scala",
-    "library/src/scala/runtime/Tuple.scala",
+    // type match
     "library/src/scala/Tuple.scala",
-    "src/main/scala/dotty/tools/benchmarks/tuples/TupleOps.scala",
-    "src/main/scala/dotty/tools/benchmarks/tuples/Map.scala",
     // erased modifier - for now used internally, will be available in 3.1
     "library/src/scala/compiletime/package.scala",
     // 'val refinTest:  '

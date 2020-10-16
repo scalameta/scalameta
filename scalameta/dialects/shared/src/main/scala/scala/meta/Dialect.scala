@@ -113,7 +113,9 @@ final class Dialect private (
     // Dotty allows to use derives to automatically generate given instances for type classes
     val allowDerives: Boolean,
     // Dotty allows to specify `type T` inside blocks
-    val allowTypeInBlock: Boolean
+    val allowTypeInBlock: Boolean,
+    // Dotty allows to specify `type T` inside blocks
+    val allowPolymorphicFunctions: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -195,7 +197,8 @@ final class Dialect private (
       allowAsPatternBinding = false,
       allowUpperCasePatternVarBinding = false,
       allowDerives = false,
-      allowTypeInBlock = false
+      allowTypeInBlock = false,
+      allowPolymorphicFunctions = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -348,6 +351,9 @@ final class Dialect private (
   def withAllowTypeInBlock(newValue: Boolean): Dialect = {
     privateCopy(allowTypeInBlock = newValue)
   }
+  def withAllowPolymorphicFunctions(newValue: Boolean): Dialect = {
+    privateCopy(allowPolymorphicFunctions = newValue)
+  }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -400,7 +406,8 @@ final class Dialect private (
       allowAsPatternBinding: Boolean = this.allowAsPatternBinding,
       allowUpperCasePatternVarBinding: Boolean = this.allowUpperCasePatternVarBinding,
       allowDerives: Boolean = this.allowDerives,
-      allowTypeInBlock: Boolean = this.allowTypeInBlock
+      allowTypeInBlock: Boolean = this.allowTypeInBlock,
+      allowPolymorphicFunctions: Boolean = this.allowPolymorphicFunctions
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -450,7 +457,8 @@ final class Dialect private (
       allowAsPatternBinding,
       allowUpperCasePatternVarBinding,
       allowDerives,
-      allowTypeInBlock
+      allowTypeInBlock,
+      allowPolymorphicFunctions
       // NOTE(olafur): add the next argument above this comment.
     )
   }
