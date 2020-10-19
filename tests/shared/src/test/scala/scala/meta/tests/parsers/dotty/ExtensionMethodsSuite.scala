@@ -180,6 +180,36 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
   }
 
+  test("extension-additional-comment") {
+    runTestAssert[Stat](
+      """|extension (a: Int)
+         |
+         |
+         |    /** */
+         |
+         |
+         |    def double = a * 2
+         |    
+         |    /** */
+         |""".stripMargin,
+      assertLayout = Some("extension (a: Int) def double = a * 2")
+    )(
+      Defn.ExtensionGroup(
+        Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None),
+        Nil,
+        Nil,
+        Defn.Def(
+          Nil,
+          Term.Name("double"),
+          Nil,
+          Nil,
+          None,
+          Term.ApplyInfix(Term.Name("a"), Term.Name("*"), Nil, List(Lit.Int(2)))
+        )
+      )
+    )
+  }
+
   final val defcrc = Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
 
   final val cparam = tparam("c", "Circle")

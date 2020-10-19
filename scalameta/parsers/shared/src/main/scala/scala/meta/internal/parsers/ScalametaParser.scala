@@ -3713,7 +3713,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     } else if (token.is[LeftBrace]) {
       inBraces(templateStats())
     } else {
-      newLineOpt()
+      newLinesOpt()
       List(nonLocalDefOrDcl())
     }
     val body: Stat = if (methodsAll.size == 1) methodsAll.head else Term.Block(methodsAll)
