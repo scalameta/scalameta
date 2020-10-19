@@ -162,8 +162,6 @@ class CommunityDottySuite extends FunSuite {
     "/tools/dotc/core/SymDenotations.scala",
     "tools/dotc/core/OrderingConstraint.scala",
     "tools/dotc/ast/tpd.scala", // comment after extension before def
-    // +: ^"^-project" +: "Dotty"
-    "doc-tool/test/dotty/tools/dottydoc/GenDocs.scala",
     // most likely will become deprecated: if (cond) <ident>
     "tools/dotc/typer/Implicits.scala",
     "tools/dotc/typer/Checking.scala"

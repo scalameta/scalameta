@@ -751,4 +751,84 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("operator-next-line") {
+    runTestAssert[Stat](
+      """|val all = "-siteroot" +: "../docs"
+         |    +: "-project" +:  Nil""".stripMargin,
+      assertLayout = Some("""val all = "-siteroot" +: "../docs" +: "-project" +: Nil""")
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("all"))),
+        None,
+        Term.ApplyInfix(
+          Lit.String("-siteroot"),
+          Term.Name("+:"),
+          Nil,
+          List(
+            Term.ApplyInfix(
+              Lit.String("../docs"),
+              Term.Name("+:"),
+              Nil,
+              List(
+                Term.ApplyInfix(
+                  Lit.String("-project"),
+                  Term.Name("+:"),
+                  Nil,
+                  List(Term.Name("Nil"))
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+
+  test("operator-next-line-bad-indent") {
+    runTestAssert[Stat](
+      """|def withClasspath =
+         |       "-siteroot" +: "../docs"
+         |    +: "-project" +: Nil
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def withClasspath = {
+           |  "-siteroot" +: "../docs" +: "-project" +: Nil
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("withClasspath"),
+        Nil,
+        Nil,
+        None,
+        Term.Block(
+          List(
+            Term.ApplyInfix(
+              Lit.String("-siteroot"),
+              Term.Name("+:"),
+              Nil,
+              List(
+                Term.ApplyInfix(
+                  Lit.String("../docs"),
+                  Term.Name("+:"),
+                  Nil,
+                  List(
+                    Term.ApplyInfix(
+                      Lit.String("-project"),
+                      Term.Name("+:"),
+                      Nil,
+                      List(Term.Name("Nil"))
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  }
 }

@@ -295,7 +295,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           if (indentedRegion(sepRegionsParameter) && currentIndent >= 0) {
             var sepRegionsProcess = sepRegionsParameter
             while ((indentedRegion(sepRegionsProcess)
-                && sepRegionsProcess.head.indent > currentIndent) ||
+                && sepRegionsProcess.head.indent > currentIndent && !isLeadingInfixOperator(
+                  curr
+                )) ||
               shouldCloseCaseOnNonCase(sepRegionsProcess)) {
               insertOutdent()
               parserTokens += new LF(curr.input, curr.dialect, curr.start)
@@ -469,7 +471,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       tkn.text.forall(Chars.isOperatorPart) &&
       !tkn.text.startsWith("@") &&
       tkn.nextSafe.is[Whitespace] &&
-      (tkn.strictNext.is[Ident] || tkn.strictNext.is[LeftParen] || tkn.strictNext.is[LeftBrace])
+      (tkn.strictNext.is[Ident] || tkn.strictNext.is[Literal] || tkn.strictNext
+        .is[LeftParen] || tkn.strictNext.is[LeftBrace])
 
   // NOTE: public methods of TokenIterator return scannerTokens-based positions
   trait TokenIterator extends Iterator[Token] {
