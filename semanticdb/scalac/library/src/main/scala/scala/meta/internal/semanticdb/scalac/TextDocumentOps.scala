@@ -96,6 +96,19 @@ trait TextDocumentOps { self: SemanticdbOps =>
           }
           private def indexArgNames(mapp: m.Tree): Unit = {
             mapp match {
+              case m.Init(tp, _, args) =>
+                margnames(mapp.pos.start) = args.flatMap {
+                  _.collect { case m.Term.Assign(lhs: m.Term.Name, _) =>
+                    lhs
+                  }
+                }
+
+                args.flatMap {
+                  _.collect { case m.Term.Assign(_, rhs) =>
+                    indexArgNames(rhs)
+                  }
+                }
+
               case m.Term.Apply(fun, args) =>
                 margnames(fun.pos.end) = args.collect { case m.Term.Assign(lhs: m.Term.Name, _) =>
                   lhs
@@ -167,6 +180,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case mtree: m.Term.New =>
                 mctorrefs(mtree.pos.start) = mtree.init.name
               case mtree: m.Init =>
+                indexArgNames(mtree)
                 mctorrefs(mtree.pos.start) = mtree.name
               case mtree: m.Name =>
                 indexName(mtree)
@@ -278,7 +292,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               for {
                 margnames <- margnames.get(gstart) ++ margnames.get(gpoint)
                 margname <- margnames
-                if gtree.symbol != null && gtree.symbol.isMethod
+                if gtree.symbol != null && (gtree.symbol.isMethod || gtree.symbol.isConstructor)
                 gparams <- gtree.symbol.paramss
                 gparam <- gparams.find(_.name.decoded == margname.value)
               } {

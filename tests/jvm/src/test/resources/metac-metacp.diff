@@ -307,6 +307,30 @@ example/Issue2116#check$default$2().
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
+============================================
+example/Issue2144.Test.`<init>$default$2`().
+============================================
+--- metac
++++ metacp
+         annotations {
+           tpe {
+-            type_ref {
+-              prefix {
+-              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
+============================================
+example/Issue2144.Test.`<init>$default$3`().
+============================================
+--- metac
++++ metacp
+         annotations {
+           tpe {
+-            type_ref {
+-              prefix {
+-              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
 =========================
 example/Methods#m13().(x)
 =========================
