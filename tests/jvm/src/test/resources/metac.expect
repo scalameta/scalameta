@@ -2177,6 +2177,74 @@ Occurrences:
 [17:2..17:7): check => example/Issue2116#check().
 [18:4..18:26): includeCommitCharacter => example/Issue2116#check().(includeCommitCharacter)
 
+semanticdb/integration/src/main/scala/example/Issue2144.scala
+-------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Issue2144.scala
+Text => non-empty
+Language => Scala
+Symbols => 16 entries
+Occurrences => 15 entries
+
+Symbols:
+example/Issue2144. => final object Issue2144 extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2144.Test# => class Test extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2144.Test#`<init>`(). => primary ctor <init>(a: Boolean, b: Int, c: Int)
+  a => example/Issue2144.Test#`<init>`().(a)
+  Boolean => scala/Boolean#
+  b => example/Issue2144.Test#`<init>`().(b)
+  Int => scala/Int#
+  c => example/Issue2144.Test#`<init>`().(c)
+example/Issue2144.Test#`<init>`().(a) => param a: Boolean
+  Boolean => scala/Boolean#
+example/Issue2144.Test#`<init>`().(b) => default param b: Int
+  Int => scala/Int#
+example/Issue2144.Test#`<init>`().(c) => default param c: Int
+  Int => scala/Int#
+example/Issue2144.Test#a. => private[this] val method a: Boolean
+  Boolean => scala/Boolean#
+example/Issue2144.Test#b. => private[this] val method b: Int
+  Int => scala/Int#
+example/Issue2144.Test#c. => private[this] val method c: Int
+  Int => scala/Int#
+example/Issue2144.Test. => final object Test extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2144.Test.`<init>$default$2`(). => method <init>$default$2: Int @uncheckedVariance
+  Int => scala/Int#
+  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+example/Issue2144.Test.`<init>$default$3`(). => method <init>$default$3: Int @uncheckedVariance
+  Int => scala/Int#
+  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+example/Issue2144.x. => val method x: Test
+  Test => example/Issue2144.Test#
+local0 => val local x$1: Boolean
+  Boolean => scala/Boolean#
+local1 => val local x$2: Int
+  Int => scala/Int#
+local2 => val local x$3: Int
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[1:7..1:16): Issue2144 <= example/Issue2144.
+[2:8..2:12): Test <= example/Issue2144.Test#
+[2:12..2:12):  <= example/Issue2144.Test#`<init>`().
+[2:13..2:14): a <= example/Issue2144.Test#a.
+[2:16..2:23): Boolean => scala/Boolean#
+[2:25..2:26): b <= example/Issue2144.Test#b.
+[2:28..2:31): Int => scala/Int#
+[2:37..2:38): c <= example/Issue2144.Test#c.
+[2:40..2:43): Int => scala/Int#
+[3:6..3:7): x <= example/Issue2144.x.
+[3:14..3:18): Test => example/Issue2144.Test#
+[3:18..3:18):  => example/Issue2144.Test#`<init>`().
+[3:19..3:20): a => example/Issue2144.Test#`<init>`().(a)
+[3:29..3:30): c => example/Issue2144.Test#`<init>`().(c)
+
 semanticdb/integration/src/main/scala/example/local-file.scala
 --------------------------------------------------------------
 

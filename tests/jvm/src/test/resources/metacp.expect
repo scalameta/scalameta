@@ -1982,6 +1982,48 @@ example/Issue2116_2#`<init>`(). => primary ctor <init>()
 example/Issue2116_2#ec. => implicit val method ec: ExecutionContextExecutor
   ExecutionContextExecutor => scala/concurrent/ExecutionContextExecutor#
 
+example/Issue2144.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue2144.class
+Text => empty
+Language => Scala
+Symbols => 13 entries
+
+Symbols:
+example/Issue2144. => final object Issue2144 extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2144.Test# => class Test extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2144.Test#`<init>`(). => primary ctor <init>(a: Boolean, b: Int, c: Int)
+  a => example/Issue2144.Test#`<init>`().(a)
+  Boolean => scala/Boolean#
+  b => example/Issue2144.Test#`<init>`().(b)
+  Int => scala/Int#
+  c => example/Issue2144.Test#`<init>`().(c)
+example/Issue2144.Test#`<init>`().(a) => param a: Boolean
+  Boolean => scala/Boolean#
+example/Issue2144.Test#`<init>`().(b) => default param b: Int
+  Int => scala/Int#
+example/Issue2144.Test#`<init>`().(c) => default param c: Int
+  Int => scala/Int#
+example/Issue2144.Test#a. => private[this] val method a: Boolean
+  Boolean => scala/Boolean#
+example/Issue2144.Test#b. => private[this] val method b: Int
+  Int => scala/Int#
+example/Issue2144.Test#c. => private[this] val method c: Int
+  Int => scala/Int#
+example/Issue2144.Test. => final object Test extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2144.Test.`<init>$default$2`(). => method <init>$default$2: Int @<?>
+  Int => scala/Int#
+example/Issue2144.Test.`<init>$default$3`(). => method <init>$default$3: Int @<?>
+  Int => scala/Int#
+example/Issue2144.x. => val method x: Test
+  Test => example/Issue2144.Test#
+
 example/local$minusfile.class
 -----------------------------
 
