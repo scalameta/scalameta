@@ -557,6 +557,18 @@ class GivenUsingSuite extends BaseDottySuite {
         )
       )
     )
+
+    runTestAssert[Stat]("val fun = (using _: Context) => ctx.open")(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("fun"))),
+        None,
+        Term.Function(
+          List(Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Context")), None)),
+          Term.Select(Term.Name("ctx"), Term.Name("open"))
+        )
+      )
+    )
   }
 
   // ---------------------------------
