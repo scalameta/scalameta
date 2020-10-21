@@ -553,8 +553,11 @@ object TreeSyntax {
             } else {
               m(Expr, s(name, " ", kw("=>"), " ", p(Expr, body)))
             }
-          case Term.Function(Term.Param(_, _: Name.Anonymous, decltpeOpt, _) :: Nil, body) =>
+          case Term.Function(Term.Param(mods, _: Name.Anonymous, decltpeOpt, _) :: Nil, body) =>
+            val isUsing = mods.exists(_.is[Mod.Using])
             val param = decltpeOpt match {
+              case Some(decltpe) if isUsing =>
+                s(kw("("), kw("using"), " ", kw("_"), kw(":"), " ", decltpe, kw(")"))
               case Some(decltpe) => s(kw("("), kw("_"), kw(":"), decltpe, kw(")"))
               case None => s(kw("_"))
             }

@@ -126,6 +126,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("new-if-single3") {
+    val code = "if (cond1).cont then ok"
+    val output = "if (cond1.cont) ok"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.If(Term.Select(Term.Name("cond1"), Term.Name("cont")), Term.Name("ok"), Lit.Unit())
+    )
+  }
+
   test("new-if-else-multiple") {
     val code = """|if cond then
                   |  fx1

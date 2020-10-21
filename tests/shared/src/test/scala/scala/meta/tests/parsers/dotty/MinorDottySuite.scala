@@ -733,6 +733,62 @@ class MinorDottySuite extends BaseDottySuite {
 
   }
 
+  test("catch-end-def") {
+    val layout =
+      """|object X {
+         |  def fx = try {
+         |    action()
+         |  } catch {
+         |    case ex =>
+         |      err()
+         |  }
+         |  private abstract class X()
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](
+      """|object X {
+         |  def fx = try
+         |    action()
+         |  catch case ex => err()
+         |
+         |  private abstract class X()
+         |}
+         |""".stripMargin,
+      assertLayout = Some(layout)
+    )(
+      Defn.Object(
+        Nil,
+        Term.Name("X"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.Def(
+              Nil,
+              Term.Name("fx"),
+              Nil,
+              Nil,
+              None,
+              Term.Try(
+                Term.Block(List(Term.Apply(Term.Name("action"), Nil))),
+                List(Case(Pat.Var(Term.Name("ex")), None, Term.Apply(Term.Name("err"), Nil))),
+                None
+              )
+            ),
+            Defn.Class(
+              List(Mod.Private(Name("")), Mod.Abstract()),
+              Type.Name("X"),
+              Nil,
+              Ctor.Primary(Nil, Name(""), List(List())),
+              Template(Nil, Nil, Self(Name(""), None), Nil)
+            )
+          )
+        )
+      )
+    )
+  }
+
   test("type-in-block") {
     runTestAssert[Stat](
       """|def hello = {

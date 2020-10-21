@@ -1912,7 +1912,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         } else {
           val forked = in.fork
           var cond = condExpr()
-          if (token.is[Ident] && isLeadingInfixOperator(token)) {
+          if ((token.is[Ident] && isLeadingInfixOperator(token)) || token.is[Dot]) {
             in = forked
             cond = expr()
           }
@@ -1939,7 +1939,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         }
         val catchopt =
           if (tryAcceptWithOptLF[KwCatch]) {
-            if (token.is[CaseIntro]) { accept[KwCase]; Some(caseClause()) }
+            if (token.is[CaseIntro]) { accept[KwCase]; Some(caseClause(true)) }
             else if (token.is[Indentation.Indent]) Some(indented(caseClauses()))
             else if (token.isNot[LeftBrace]) Some(expr())
             else
@@ -2103,6 +2103,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                     if dialect.allowGivenUsing =>
                   true
                 case _: Term.Name => true
+                case Term.Eta(Term.Name(SkUsing.name)) if dialect.allowGivenUsing => true
                 case _: Term.Placeholder => true
                 case _ => false
               }
@@ -2155,6 +2156,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                   Some(atPos(tree, tree)(Term.Param(List(Mod.Using()), name, None, None)))
                 case Term.Ascribe(Term.Select(Term.Name(SkUsing.name), name), tpt) =>
                   Some(atPos(tree, tree)(Term.Param(List(Mod.Using()), name, Some(tpt), None)))
+                case Term.Ascribe(Term.Eta(Term.Name(SkUsing.name)), tpt) =>
+                  Some(
+                    atPos(tree, tree)(
+                      Term.Param(List(Mod.Using()), Name.Anonymous(), Some(tpt), None)
+                    )
+                  )
                 case Lit.Unit() =>
                   None
                 case other =>
@@ -2680,7 +2687,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     else Term.Block(blockStatSeq())
   }
 
-  def caseClause(): Case = atPos(in.prevTokenPos, auto) {
+  def caseClause(forceSingleExpr: Boolean = false): Case = atPos(in.prevTokenPos, auto) {
     require(token.isNot[KwCase] && debug(token))
     Case(
       pattern(),
@@ -2696,6 +2703,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           }
         }
         if (token.is[Indentation.Indent]) indented(parseStatSeq())
+        else if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false)
         else parseStatSeq()
       }
     )
