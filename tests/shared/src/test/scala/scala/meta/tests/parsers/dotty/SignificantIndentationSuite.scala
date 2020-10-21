@@ -435,4 +435,211 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("indent-equals") {
+    runTestAssert[Stat](
+      """|def genApply() = {
+         |      app match {
+         |        case Apply2() =>
+         |          generatedType =
+         |            genTypeApply(t)
+         |
+         |        case Apply() =>
+         |      }
+         |} 
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def genApply() = {
+           |  app match {
+           |    case Apply2() =>
+           |      generatedType = genTypeApply(t)
+           |    case Apply() =>
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("genApply"),
+        Nil,
+        List(List()),
+        None,
+        Term.Block(
+          List(
+            Term.Match(
+              Term.Name("app"),
+              List(
+                Case(
+                  Pat.Extract(Term.Name("Apply2"), Nil),
+                  None,
+                  Term.Assign(
+                    Term.Name("generatedType"),
+                    Term.Apply(Term.Name("genTypeApply"), List(Term.Name("t")))
+                  )
+                ),
+                Case(Pat.Extract(Term.Name("Apply"), Nil), None, Term.Block(Nil))
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+
+  test("outdent-with-prev-check") {
+    runTestAssert[Stat](
+      """|def wrapPlaceholders(t: Tree) = try
+         |    if (placeholderParams.isEmpty) t
+         |    else new WildcardFunction(placeholderParams.reverse, t)
+         |  finally placeholderParams = saved
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def wrapPlaceholders(t: Tree) = try {
+           |  if (placeholderParams.isEmpty) t else new WildcardFunction(placeholderParams.reverse, t)
+           |} finally placeholderParams = saved
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("wrapPlaceholders"),
+        Nil,
+        List(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("Tree")), None))),
+        None,
+        Term.Try(
+          Term.Block(
+            List(
+              Term.If(
+                Term.Select(Term.Name("placeholderParams"), Term.Name("isEmpty")),
+                Term.Name("t"),
+                Term.New(
+                  Init(
+                    Type.Name("WildcardFunction"),
+                    Name(""),
+                    List(
+                      List(
+                        Term.Select(Term.Name("placeholderParams"), Term.Name("reverse")),
+                        Term.Name("t")
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          ),
+          Nil,
+          Some(Term.Assign(Term.Name("placeholderParams"), Term.Name("saved")))
+        )
+      )
+    )
+  }
+
+  test("type-in-next-line") {
+    runTestAssert[Stat](
+      """|def f =
+         |  val refinementTest:
+         |    Graph {
+         |      def x: Int
+         |    }
+         |  val b = 1 
+         |
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def f = {
+           |  val refinementTest: Graph { def x: Int }
+           |  val b = 1
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("f"),
+        Nil,
+        Nil,
+        None,
+        Term.Block(
+          List(
+            Decl.Val(
+              Nil,
+              List(Pat.Var(Term.Name("refinementTest"))),
+              Type.Refine(
+                Some(Type.Name("Graph")),
+                List(Decl.Def(Nil, Term.Name("x"), Nil, Nil, Type.Name("Int")))
+              )
+            ),
+            Defn.Val(Nil, List(Pat.Var(Term.Name("b"))), None, Lit.Int(1))
+          )
+        )
+      )
+    )
+  }
+
+  test("type-in-next-line-equals") {
+    runTestAssert[Stat](
+      """|val refinementTest:
+         |      Int = 3
+         |""".stripMargin,
+      assertLayout = Some("val refinementTest: Int = 3")
+    )(
+      Defn.Val(Nil, List(Pat.Var(Term.Name("refinementTest"))), Some(Type.Name("Int")), Lit.Int(3))
+    )
+  }
+
+  test("type-in-next-line-equals-newline") {
+    runTestAssert[Stat](
+      """|val refinementTest:
+         |      Int = 
+         |3
+         |""".stripMargin,
+      assertLayout = Some("val refinementTest: Int = 3")
+    )(
+      Defn.Val(Nil, List(Pat.Var(Term.Name("refinementTest"))), Some(Type.Name("Int")), Lit.Int(3))
+    )
+  }
+
+  test("type-equals-separate") {
+    runTestAssert[Stat](
+      """|def refinementTest(a :
+         |      Int = 
+         |3) = a
+         |""".stripMargin,
+      assertLayout = Some("def refinementTest(a: Int = 3) = a")
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("refinementTest"),
+        Nil,
+        List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), Some(Lit.Int(3))))),
+        None,
+        Term.Name("a")
+      )
+    )
+  }
+
+  test("type-multi-seq") {
+    runTestAssert[Stat](
+      """|val refinementTest:
+         |    Int = 
+         |  fx
+         |  fy
+         |""".stripMargin,
+      assertLayout = Some("val refinementTest: Int = {\n  fx\n  fy\n}")
+    )(
+      Defn.Val(Nil, List(Pat.Var(Term.Name("refinementTest"))), Some(Type.Name("Int")), Term.Block(List(Term.Name("fx"), Term.Name("fy"))))
+    )
+  }
+
+  test("equals-block") {
+    runTestAssert[Stat](
+      """|val refinementTest:
+         |  Int = 
+         |    fx
+         |    fy
+         |""".stripMargin,
+      assertLayout = Some("val refinementTest: Int = {\n  fx\n  fy\n}")
+    )(
+      Defn.Val(Nil, List(Pat.Var(Term.Name("refinementTest"))), Some(Type.Name("Int")), Term.Block(List(Term.Name("fx"), Term.Name("fy"))))
+    )
+  }
 }
