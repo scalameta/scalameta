@@ -114,8 +114,10 @@ final class Dialect private (
     val allowDerives: Boolean,
     // Dotty allows to specify `type T` inside blocks
     val allowTypeInBlock: Boolean,
-    // Dotty allows to specify `type T` inside blocks
-    val allowPolymorphicFunctions: Boolean
+    // Dotty allows to define function like `[T] => (ts: List[T]) => ts.headOption`
+    val allowPolymorphicFunctions: Boolean,
+    // Dotty allows `.match` expressions and chaining matches
+    val allowMatchAsOperator: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -198,7 +200,8 @@ final class Dialect private (
       allowUpperCasePatternVarBinding = false,
       allowDerives = false,
       allowTypeInBlock = false,
-      allowPolymorphicFunctions = false
+      allowPolymorphicFunctions = false,
+      allowMatchAsOperator = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -342,6 +345,9 @@ final class Dialect private (
   def withAllowAsPatternBinding(newValue: Boolean): Dialect = {
     privateCopy(allowAsPatternBinding = newValue)
   }
+  def withAllowMatchAsOperator(newValue: Boolean): Dialect = {
+    privateCopy(allowMatchAsOperator = newValue)
+  }
   def withAllowUpperCasePatternVarBinding(newValue: Boolean): Dialect = {
     privateCopy(allowUpperCasePatternVarBinding = newValue)
   }
@@ -407,7 +413,8 @@ final class Dialect private (
       allowUpperCasePatternVarBinding: Boolean = this.allowUpperCasePatternVarBinding,
       allowDerives: Boolean = this.allowDerives,
       allowTypeInBlock: Boolean = this.allowTypeInBlock,
-      allowPolymorphicFunctions: Boolean = this.allowPolymorphicFunctions
+      allowPolymorphicFunctions: Boolean = this.allowPolymorphicFunctions,
+      allowMatchAsOperator: Boolean = this.allowMatchAsOperator
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -458,7 +465,8 @@ final class Dialect private (
       allowUpperCasePatternVarBinding,
       allowDerives,
       allowTypeInBlock,
-      allowPolymorphicFunctions
+      allowPolymorphicFunctions,
+      allowMatchAsOperator
       // NOTE(olafur): add the next argument above this comment.
     )
   }

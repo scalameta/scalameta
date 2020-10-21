@@ -54,8 +54,8 @@ class CommunityDottySuite extends FunSuite {
   val communityBuilds = List(
     CommunityBuild(
       "https://github.com/lampepfl/dotty.git",
-      //commit hash from 16.10
-      "f6c169f4bc904cbee004a226222b367118bdc1ad",
+      //commit hash from 20.10
+      "f081910780b52de1e81a85f1585142162ed359d3",
       "dotty",
       dottyExclusionList
     ),
@@ -155,12 +155,10 @@ class CommunityDottySuite extends FunSuite {
     // 'val refinTest:  '
     // '  SomeType = X  '  - Type provided in newline - parser needs to handle this
     "input/src/main/scala/example/level2/Documentation.scala",
-    // ident.match { ... }
-    "tools/dotc/core/tasty/TreePickler.scala",
-    "dotty/tools/dotc/core/Types.scala",
+    // if (hi1 & hi2).isEmpty then return orType(tp1, tp2)
     "tools/dotc/core/TypeComparer.scala",
-    "/tools/dotc/core/SymDenotations.scala",
-    "tools/dotc/core/OrderingConstraint.scala",
+    // private val NoSymbolFn = (using _: Context) => NoSymbol
+    "tools/dotc/core/SymDenotations.scala",
     // most likely will become deprecated: if (cond) <ident>
     "tools/dotc/typer/Implicits.scala",
     "tools/dotc/typer/Checking.scala"
