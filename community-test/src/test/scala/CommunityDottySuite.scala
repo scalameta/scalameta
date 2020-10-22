@@ -152,9 +152,6 @@ class CommunityDottySuite extends FunSuite {
     "library/src/scala/Tuple.scala",
     // erased modifier - for now used internally, will be available in 3.1
     "library/src/scala/compiletime/package.scala",
-    // 'val refinTest:  '
-    // '  SomeType = X  '  - Type provided in newline - parser needs to handle this
-    "input/src/main/scala/example/level2/Documentation.scala",
     // most likely will become deprecated: if (cond) <ident>
     "tools/dotc/typer/Implicits.scala",
     "tools/dotc/typer/Checking.scala"

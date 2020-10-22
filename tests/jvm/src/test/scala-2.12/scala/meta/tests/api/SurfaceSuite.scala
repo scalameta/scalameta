@@ -384,7 +384,6 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens.Token.BOF
       |scala.meta.tokens.Token.CR
       |scala.meta.tokens.Token.Colon
-      |scala.meta.tokens.Token.ColonEol
       |scala.meta.tokens.Token.Comma
       |scala.meta.tokens.Token.Comment
       |scala.meta.tokens.Token.Constant.Char
