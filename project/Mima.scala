@@ -32,6 +32,11 @@ object Mima {
     ProblemFilters.exclude[MissingClassProblem]("scala.meta.testkit.DiffAssertions$DiffFailure$"),
     ProblemFilters.exclude[MissingTypesProblem]("scala.meta.testkit.DiffAssertions"),
     ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Template.derives"),
-    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Template.setDerives")
+    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Template.setDerives"),
+    ProblemFilters.exclude[MissingClassProblem](
+      "scala.meta.tokens.Token$ColonEol$sharedClassifier$"
+    ),
+    ProblemFilters.exclude[MissingClassProblem]("scala.meta.tokens.Token$ColonEol"),
+    ProblemFilters.exclude[MissingClassProblem]("scala.meta.tokens.Token$ColonEol$")
   )
 }

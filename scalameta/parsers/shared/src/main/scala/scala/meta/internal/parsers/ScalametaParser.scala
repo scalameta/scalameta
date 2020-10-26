@@ -164,7 +164,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         val scannerToken = scannerTokens(roughIndex)
         def exactMatch = scannerToken eq token
         def originMatch =
-          (token.is[LFLF] || token.is[Indentation.Outdent]) &&
+          (token.is[LFLF] || token.is[Indentation.Outdent] || token.is[Indentation.Indent]) &&
             scannerToken.start == token.start && scannerToken.end == token.end
         if (exactMatch || originMatch) roughIndex
         else lurk(roughIndex - 1)
@@ -180,6 +180,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     def nextSafe: Token = scannerTokens.apply(Math.min(token.index + 1, scannerTokens.length - 1))
 
+    def nextEnd: Token = {
+      val next = nextSafe
+      if ((next.is[Whitespace] && !next.is[LineEnd]) || next.is[Comment]) next.nextEnd
+      else next
+    }
+
     def next: Token = {
       val next = nextSafe
       if (next.is[Whitespace] || next.is[Comment]) next.next
@@ -190,6 +196,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (next.is[Space] || next.is[Tab] || next.is[Comment]) next.strictNext
       else next
     }
+  }
+
+  def isColonEol(token: Token) = {
+    dialect.allowSignificantIndentation && token.is[Colon] && token.nextEnd.is[LineEnd]
   }
 
   /* ------------- PARSER-SPECIFIC TOKENS -------------------------------------------- */
@@ -210,6 +220,45 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   case object RegionArrow extends SepRegion
   // NOTE: Special case for Enum region is needed because parsing of 'case' statement is done differently
   case object RegionEnumArtificialMark extends SepRegion
+
+  class AllowColonEol {
+    private var unclosed = 0
+    def unclosedParensCount = unclosed
+    def openParen = unclosed += 1
+    def closeParen = unclosed -= 1
+  }
+
+  /* Heuristic to try to determine if colonEol can exist at a given point in code
+   * needed to deal with situations like:
+   * def a(b:
+   * Int)
+   */
+  def canBeFollowedByColonEol(
+      colonEolCanStartIndent: Option[AllowColonEol],
+      curr: Token
+  ) = {
+    if (dialect.allowSignificantIndentation)
+      colonEolCanStartIndent match {
+        case _ if curr.is[CanStartColonEol] =>
+          Some(new AllowColonEol)
+        // This means we closed more parents than opened, which means we are outside of a region where colonEol is allowed
+        case Some(allowColonEol) if allowColonEol.unclosedParensCount < 0 =>
+          None
+        // This means we found a token that should not exist before colonEol
+        case Some(allowColonEol)
+            if (curr.is[LeftBrace] || curr
+              .is[DclIntro]) && allowColonEol.unclosedParensCount == 0 =>
+          None
+        case Some(allowColonEol) if curr.is[LeftParen] =>
+          allowColonEol.openParen
+          Some(allowColonEol)
+        case Some(allowColonEol) if curr.is[RightParen] =>
+          allowColonEol.closeParen
+          Some(allowColonEol)
+        case allow => allow
+      }
+    else None
+  }
 
   // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
@@ -235,7 +284,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         currPos: Int,
         sepRegionsParameter: List[SepRegion],
         previousTokenIndent: Int,
-        previousTokenStartIndent: Boolean
+        previousTokenStartIndent: Boolean,
+        colonEolCanStartIndent: Option[AllowColonEol] = None
     ): Unit = {
       if (currPos >= scannerTokens.length) return
       val prev = if (prevPos >= 0) scannerTokens(prevPos) else null
@@ -264,6 +314,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       var shouldCloseIndent = false
       var expectedIndent = previousTokenIndent
       var shouldStartIndent = previousTokenStartIndent
+      var newColonEol = canBeFollowedByColonEol(colonEolCanStartIndent, curr)
 
       if (dialect.allowSignificantIndentation) {
         if (previousTokenStartIndent && currentIndent > 0) {
@@ -383,13 +434,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         parserTokenPositions += currPos
 
         val notEndTokenIdent = prev == null || prev.text != "end" || !curr.is[EndMarkerWord]
-        if (notEndTokenIdent && curr.is[CanStartIndent] && isAheadNewLine(currPos)) {
+        if (notEndTokenIdent && curr.is[CanStartIndent] && !(curr
+            .is[Colon] && newColonEol.isEmpty) && isAheadNewLine(currPos)) {
           if (curr.is[RightArrow] && sepRegionsNew.headOption.exists(!_.indentOnArrow)) {} else {
             shouldStartIndent = true
+            if (curr.is[Colon]) newColonEol = None
           }
         }
 
-        loop(currPos, currPos + 1, sepRegionsNew, -1, shouldStartIndent)
+        loop(currPos, currPos + 1, sepRegionsNew, -1, shouldStartIndent, newColonEol)
       } else {
         var i = prevPos + 1
         var lastNewlinePos = -1
@@ -426,11 +479,19 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
               currPos + 1,
               sepRegionsParameter,
               expectedIndent,
-              shouldStartIndent
+              shouldStartIndent,
+              newColonEol
             )
           }
         } else {
-          loop(prevPos, nextPos, sepRegionsParameter, expectedIndent, shouldStartIndent)
+          loop(
+            prevPos,
+            nextPos,
+            sepRegionsParameter,
+            expectedIndent,
+            shouldStartIndent,
+            newColonEol
+          )
         }
       }
     }
@@ -451,7 +512,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     @tailrec
     def countIndentInternal(pos: Int, acc: Int = 0): Int = {
-      if (pos < 0 || scannerTokens(pos).is[LF] || scannerTokens(pos).is[ColonEol]) acc
+      if (pos < 0 || scannerTokens(pos).is[LF] || isColonEol(scannerTokens(pos))) acc
       else if (isWhitespace(scannerTokens(pos))) countIndentInternal(pos - 1, acc + 1)
       else -1
     }
@@ -463,8 +524,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   @tailrec
   private def isAheadNewLine(currentPosition: Int): Boolean = {
     val nextPos = currentPosition + 1
-    if (scannerTokens(currentPosition).is[ColonEol]) true
-    else if (nextPos >= scannerTokens.length) false
+    if (nextPos >= scannerTokens.length) false
     else if (scannerTokens(nextPos).is[LF]) true
     else scannerTokens(nextPos).is[Trivia] && isAheadNewLine(nextPos)
   }
@@ -935,7 +995,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def unapply(token: Token): Boolean = {
       token.is[KwYield] || token.is[KwTry] || token.is[KwCatch] || token.is[KwFinally] ||
       token.is[KwMatch] || token.is[KwDo] || token.is[KwFor] || token.is[KwThen] ||
-      token.is[KwElse] || token.is[Equals] || token.is[KwWhile] || token.is[ColonEol] ||
+      token.is[KwElse] || token.is[Equals] || token.is[KwWhile] || isColonEol(token) ||
       token.is[RightArrow]
     }
   }
@@ -1021,6 +1081,17 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   trait Trivia {
     def unapply(token: Token): Boolean = {
       token.is[Whitespace] || token.is[Comment]
+    }
+  }
+
+  @classifier
+  trait CanStartColonEol {
+    def unapply(token: Token): Boolean = {
+      token.is[KwTrait] || token.is[KwClass] ||
+      token.is[KwObject] || token.is[KwEnum] ||
+      isSoftKw(token, SoftKeyword.SkExtension) ||
+      token.is[KwType] || token.is[KwPackage] ||
+      token.is[KwGiven] || token.is[KwNew]
     }
   }
 
@@ -3753,8 +3824,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
     }
 
-    val methodsAll: List[Stat] = if (token.is[ColonEol]) {
-      accept[ColonEol]
+    val methodsAll: List[Stat] = if (isColonEol(token)) {
+      accept[Colon]
       indented(templateStats())
     } else if (token.is[LeftBrace]) {
       inBraces(templateStats())
@@ -4275,8 +4346,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     newLineOptWhenFollowedBy[LeftBrace]
     if (token.is[LeftBrace]) {
       templateBody()
-    } else if (token.is[ColonEol]) {
-      accept[ColonEol]
+    } else if (isColonEol(token)) {
+      accept[Colon]
       indented(templateStatSeq())
     } else {
       if (token.is[LeftParen]) {
