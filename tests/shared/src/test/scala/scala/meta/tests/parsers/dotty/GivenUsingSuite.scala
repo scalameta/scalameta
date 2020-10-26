@@ -55,6 +55,12 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
+  test("given-anon-as") {
+    runTestAssert[Stat]("given as Context = ctx", assertLayout = Some("given Context = ctx"))(
+      Defn.GivenAlias(Nil, Name(""), Nil, Nil, Type.Name("Context"), Term.Name("ctx"))
+    )
+  }
+
   test("given-override-def") {
     runTestAssert[Stat]("given intOrd as Ord[Int] { override def f(): Int = 1 }")(
       Defn.Given(

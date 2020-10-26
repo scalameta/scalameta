@@ -54,17 +54,24 @@ class CommunityDottySuite extends FunSuite {
   val communityBuilds = List(
     CommunityBuild(
       "https://github.com/lampepfl/dotty.git",
-      //commit hash from 20.10
+      //commit hash from 20.10.2020
       "f081910780b52de1e81a85f1585142162ed359d3",
       "dotty",
       dottyExclusionList
     ),
     CommunityBuild(
       "https://github.com/scalameta/munit.git",
-      // latest commit from 27.09
+      // latest commit from 27.09.2020
       "9107c110cefd18c1889e11c15b3b308bec74f24c",
       "munit",
       munitExclusionList
+    ),
+    CommunityBuild(
+      "https://github.com/lampepfl/scala3doc",
+      // latest commit from 23.10.2020
+      "4bd0a2075c82bf66d2e09469553f8a2c16c9b043",
+      "scala3doc",
+      scala3DocExclusionList
     )
   )
 
@@ -148,9 +155,9 @@ class CommunityDottySuite extends FunSuite {
   }
 
   final def dottyExclusionList = List(
-    // type match
+    // [scalameta] type match
     "library/src/scala/Tuple.scala",
-    // erased modifier - for now used internally, will be available in 3.1
+    // [scalameta] erased modifier - for now used internally, will be available in 3.1
     "library/src/scala/compiletime/package.scala",
     // most likely will become deprecated: if (cond) <ident>
     "tools/dotc/typer/Implicits.scala",
@@ -158,7 +165,21 @@ class CommunityDottySuite extends FunSuite {
   )
 
   final def munitExclusionList = List(
-    "main/scala/docs/MUnitModifier.scala" //xml literals
+    // Syntax no longer valid in Scala 3
+    //xml literals
+    "main/scala/docs/MUnitModifier.scala"
+  )
+
+  final def scala3DocExclusionList = List(
+    // [scalameta] extension.getParameters.asScala(extension.get(MethodExtension).parametersListSizes(0))
+    "main/scala/dotty/dokka/translators/ScalaSignatureProvider.scala",
+    // [scalameta] issues already fix with colonEol
+    "main/scala/example/level2/Documentation.scala",
+    // Below syntax is no longer valid
+    // val result: List[Int] = fmap[F = List, A = Int, B = Int](List(1,2,3))(i => i + 1)
+    "main/scala/NamedTypeArguments.scala",
+    // def (s: String).doesntStartWithAnyOfThese(c: Char*) = c.forall(char => !s.startsWith(char.toString))
+    "test/scala/dotty/dokka/DottyTestRunner.scala"
   )
 
   final val ignoreParts = List(

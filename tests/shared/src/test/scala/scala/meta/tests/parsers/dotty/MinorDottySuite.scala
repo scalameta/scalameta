@@ -591,6 +591,42 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("opaque-soft-keyword") {
+    runTestAssert[Stat](
+      "enum Kind { case Type(opaque: Boolean, transparent: Boolean) }"
+    )(
+      Defn.Enum(
+        Nil,
+        Type.Name("Kind"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.EnumCase(
+              Nil,
+              Term.Name("Type"),
+              Nil,
+              Ctor.Primary(
+                Nil,
+                Name(""),
+                List(
+                  List(
+                    Term.Param(Nil, Term.Name("opaque"), Some(Type.Name("Boolean")), None),
+                    Term.Param(Nil, Term.Name("transparent"), Some(Type.Name("Boolean")), None)
+                  )
+                )
+              ),
+              Nil
+            )
+          )
+        )
+      )
+    )
+  }
+
   test("capital-var-pattern-val") {
     runTestAssert[Stat](
       """val Private as _ = flags()

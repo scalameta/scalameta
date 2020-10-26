@@ -37,6 +37,20 @@ class NewFunctionsSuite extends BaseDottySuite {
     )
   }
 
+  test("type-lambda-alias") {
+    runTestAssert[Stat]("type Tuple = [X] =>> (X, X)")(
+      Defn.Type(
+        Nil,
+        Type.Name("Tuple"),
+        Nil,
+        Type.Lambda(
+          List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
+          Type.Tuple(List(Type.Name("X"), Type.Name("X")))
+        )
+      )
+    )
+  }
+
   test("context-function-single") {
     runTestAssert[Stat]("def table(init: Table ?=> Unit): Unit")(
       Decl.Def(

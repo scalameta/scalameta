@@ -35,8 +35,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
   test("multistat-example") {
     val code = """|trait A:
                   |  def f: Int
-                  |  def y: String = { fa(); fb() }
-                  |""".stripMargin
+                  |  def y: String = { fa(); fb() }""".stripMargin
     runTestAssert[Stat](code, assertLayout = None)(
       Defn.Trait(
         Nil,

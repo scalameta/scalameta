@@ -412,6 +412,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           } else if (curr.is[RightBracket]) {
             if (!sepRegions.isEmpty && sepRegions.head == RegionBracket) sepRegions.tail
             else sepRegions
+          } else if (curr.is[EOF]) {
+            var sepRegionsProcess = sepRegions
+            while (indentedRegion(sepRegionsProcess)) {
+              insertOutdent()
+              sepRegionsProcess = sepRegionsProcess.tail
+            }
+            sepRegionsProcess
           } else if (curr.is[RightParen]) {
             var sepRegionsProcess = sepRegions
             while (indentedRegion(sepRegionsProcess)) {
@@ -957,6 +964,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     def unapply(token: Token): Boolean =
       isInlineSoftKw(token) && noIdentAhead()
+  }
+
+  @classifier
+  trait NonParamsModifier {
+    def unapply(token: Token): Boolean = {
+      isSoftKw(token, SoftKeyword.SkOpen) || isSoftKw(token, SoftKeyword.SkOpaque) ||
+      isSoftKw(token, SoftKeyword.SkTransparent)
+    }
   }
 
   @classifier
@@ -3278,7 +3293,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
   }
 
-  def modifiers(isLocal: Boolean = false, isTparam: Boolean = false): List[Mod] = {
+  def modifiers(
+      isLocal: Boolean = false,
+      isTparam: Boolean = false,
+      isParams: Boolean = false
+  ): List[Mod] = {
     def appendMod(mods: List[Mod], mod: Mod): List[Mod] = {
       def validate() = {
         if (isLocal && !mod.tokens.head.is[LocalModifier]) {
@@ -3311,6 +3330,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       )
     def loop(mods: List[Mod]): List[Mod] = token match {
       case InlineSoftIdent() => mods
+      case _ if isParams && token.is[NonParamsModifier] => mods
       case Unquote() => if (continueLoop) mods else loop(appendMod(mods, modifier()))
       case Ellipsis(_) => loop(appendMod(mods, modifier()))
       case KwSuper() if !dialect.allowSuperTrait || !ahead(token.is[KwTrait]) => mods
@@ -3419,7 +3439,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (isUsing) mods ++= List(atPos(in.tokenPos, in.prevTokenPos)(Mod.Using()))
     rejectMod[Mod.Open](mods, "Open modifier only applied to classes")
     if (ownerIsType) {
-      mods ++= modifiers()
+      mods ++= modifiers(isParams = true)
       rejectMod[Mod.Lazy](
         mods,
         "lazy modifier not allowed here. Use call-by-name parameters instead."
@@ -3761,7 +3781,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val anonymousName = scala.meta.Name.Anonymous()
 
     val forked = in.fork
-    val name: meta.Name = if (token.is[Ident]) typeName() else anonymousName
+    val name: meta.Name =
+      if (token.is[Ident] && !isSoftKw(token, SkAs)) typeName() else anonymousName
     val tparams = typeParamClauseOpt(
       ownerIsType = false,
       ctxBoundsAllowed = true,
