@@ -56,8 +56,9 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-anon-as") {
-    runTestAssert[Stat]("given as Context = ctx", assertLayout = Some("given Context = ctx"))(
-      Defn.GivenAlias(Nil, Name(""), Nil, Nil, Type.Name("Context"), Term.Name("ctx"))
+    runTestError(
+      "given as Context = ctx",
+      "; expected but identifier found"
     )
   }
 
