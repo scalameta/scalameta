@@ -3782,7 +3782,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     val forked = in.fork
     val name: meta.Name =
-      if (token.is[Ident] && !isSoftKw(token, SkAs)) typeName() else anonymousName
+      if (token.is[Ident]) typeName() else anonymousName
     val tparams = typeParamClauseOpt(
       ownerIsType = false,
       ctxBoundsAllowed = true,

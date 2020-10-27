@@ -171,15 +171,16 @@ class CommunityDottySuite extends FunSuite {
   )
 
   final def scala3DocExclusionList = List(
+    // extension will most likely become a keyword
     // [scalameta] extension.getParameters.asScala(extension.get(MethodExtension).parametersListSizes(0))
     "main/scala/dotty/dokka/translators/ScalaSignatureProvider.scala",
-    // [scalameta] issues already fix with colonEol
-    "main/scala/example/level2/Documentation.scala",
-    // Below syntax is no longer valid
-    // val result: List[Int] = fmap[F = List, A = Int, B = Int](List(1,2,3))(i => i + 1)
+    // Below syntax is no longer valid:
+    // - val result: List[Int] = fmap[F = List, A = Int, B = Int](List(1,2,3))(i => i + 1)
     "main/scala/NamedTypeArguments.scala",
-    // def (s: String).doesntStartWithAnyOfThese(c: Char*) = c.forall(char => !s.startsWith(char.toString))
-    "test/scala/dotty/dokka/DottyTestRunner.scala"
+    // - def (s: String).doesntStartWithAnyOfThese(c: Char*) = c.forall(char => !s.startsWith(char.toString))
+    "test/scala/dotty/dokka/DottyTestRunner.scala",
+    // - given as Context = ctx
+    "main/scala/dotty/tools/dottydoc/Main.scala"
   )
 
   final val ignoreParts = List(
