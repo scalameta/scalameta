@@ -1091,6 +1091,7 @@ object TreeSyntax {
       // Import
       case t: Importee.Name => s(t.name)
       case t: Importee.Given => s(kw("given"), " ", t.importee)
+      case t: Importee.GivenAll => s(kw("given"))
       case t: Importee.Rename => s(t.name, " ", kw("=>"), " ", t.rename)
       case t: Importee.Unimport => s(t.name, " ", kw("=>"), " ", kw("_"))
       case _: Importee.Wildcard => kw("_")
@@ -1194,6 +1195,7 @@ object TreeSyntax {
     implicit def syntaxImportee: Syntax[List[Importee]] = Syntax {
       case (t: Importee.Name) :: Nil => s(t)
       case (t: Importee.Wildcard) :: Nil => s(t)
+      case (t: Importee.GivenAll) :: Nil => s(t)
       case (t: Importee.Rename) :: Nil => s("{", t, "}")
       case importees => s("{ ", r(importees, ", "), " }")
     }

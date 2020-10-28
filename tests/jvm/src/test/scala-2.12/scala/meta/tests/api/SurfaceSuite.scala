@@ -234,6 +234,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Import
       |scala.meta.Importee
       |scala.meta.Importee.Given
+      |scala.meta.Importee.GivenAll
       |scala.meta.Importee.Name
       |scala.meta.Importee.Rename
       |scala.meta.Importee.Unimport

@@ -1033,7 +1033,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   @classifier
   trait CanEndStat {
     def unapply(token: Token): Boolean = {
-      token.is[Ident] || token.is[Literal] ||
+      token.is[Ident] || token.is[KwGiven] || token.is[Literal] ||
       token.is[Interpolation.End] || token.is[Xml.End] ||
       token.is[KwReturn] || token.is[KwThis] || token.is[KwType] ||
       token.is[RightParen] || token.is[RightBracket] || token.is[RightBrace] ||
@@ -3640,8 +3640,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     } else {
       val importees = inBraces(commaSeparated(importee()))
 
+      def lastIsGiven = importees.last.is[Importee.Given] || importees.last.is[Importee.GivenAll]
       val imp =
-        if (importees.nonEmpty && importees.last.is[Importee.Given]) importees.init else importees
+        if (importees.nonEmpty && lastIsGiven) importees.init else importees
       if (imp.nonEmpty) {
         imp.init.foreach {
           case importee: Importee.Wildcard =>
@@ -3658,7 +3659,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (token.is[Underscore]) {
       next(); Importee.Wildcard()
     } else if (token.is[KwGiven]) {
-      next(); Importee.Given(importWildcardOrName())
+      next();
+      if (token.is[Ident]) Importee.Given(importWildcardOrName())
+      else Importee.GivenAll()
     } else if (token.is[Unquote]) Importee.Name(unquote[Name.Quasi])
     else {
       val name = termName(); Importee.Name(atPos(name, name)(Name.Indeterminate(name.value)))
