@@ -506,6 +506,7 @@ object Enumerator {
 object Importee {
   @ast class Wildcard() extends Importee
   @ast class Given(importee: Importee) extends Importee
+  @ast class GivenAll() extends Importee
   @ast class Name(name: scala.meta.Name) extends Importee {
     checkFields(name.is[scala.meta.Name.Quasi] || name.is[scala.meta.Name.Indeterminate])
   }

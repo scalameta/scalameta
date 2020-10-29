@@ -20,14 +20,20 @@ class CommunityDottySuite extends FunSuite {
   def fetchCommunityBuild(build: CommunityBuild): Unit = {
     if (!Files.exists(communityDirectory)) Files.createDirectory(communityDirectory)
 
+    val folder = communityDirectory.resolve(build.name).toString
     if (!Files.exists(communityDirectory.resolve(build.name))) {
-      val folder = communityDirectory.resolve(build.name).toString
       val gclone = s"git clone ${build.giturl} ${folder}"
       val gchangecommit = s"""sh -c "cd ${folder} && git checkout ${build.commit} " """
 
       val result: Int = (gclone #&& gchangecommit) !
 
       assert(clue(result) == 0, s"Fetching community build ${build.name} failed")
+    } else {
+      val gchangecommit =
+        s"""sh -c "cd ${folder} && git fetch origin && git checkout ${build.commit} " """
+      val result: Int = gchangecommit !
+
+      assert(clue(result) == 0, s"Checking out community build ${build.name} failed")
     }
   }
 
@@ -54,8 +60,8 @@ class CommunityDottySuite extends FunSuite {
   val communityBuilds = List(
     CommunityBuild(
       "https://github.com/lampepfl/dotty.git",
-      //commit hash from 20.10.2020
-      "f081910780b52de1e81a85f1585142162ed359d3",
+      //commit hash from 28.10.2020
+      "19e47b765cd93f07082087e0af8a9296656f5150",
       "dotty",
       dottyExclusionList
     ),
@@ -167,7 +173,9 @@ class CommunityDottySuite extends FunSuite {
   final def munitExclusionList = List(
     // Syntax no longer valid in Scala 3
     //xml literals
-    "main/scala/docs/MUnitModifier.scala"
+    "main/scala/docs/MUnitModifier.scala",
+    // old given syntax
+    "main/scala-3/munit/internal/MacroCompat.scala"
   )
 
   final def scala3DocExclusionList = List(
@@ -180,7 +188,9 @@ class CommunityDottySuite extends FunSuite {
     // - def (s: String).doesntStartWithAnyOfThese(c: Char*) = c.forall(char => !s.startsWith(char.toString))
     "test/scala/dotty/dokka/DottyTestRunner.scala",
     // - given as Context = ctx
-    "main/scala/dotty/tools/dottydoc/Main.scala"
+    "main/scala/dotty/tools/dottydoc/Main.scala",
+    // import reflect.{given _, _}
+    "main/scala/dotty/dokka/tasty/ScalaDocSupport.scala"
   )
 
   final val ignoreParts = List(
