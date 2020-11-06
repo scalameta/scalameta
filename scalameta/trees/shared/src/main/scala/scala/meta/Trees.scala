@@ -505,7 +505,7 @@ object Enumerator {
 @branch trait Importee extends Tree with Ref
 object Importee {
   @ast class Wildcard() extends Importee
-  @ast class Given(importee: Importee) extends Importee
+  @ast class Given(importee: Type.Param) extends Importee
   @ast class GivenAll() extends Importee
   @ast class Name(name: scala.meta.Name) extends Importee {
     checkFields(name.is[scala.meta.Name.Quasi] || name.is[scala.meta.Name.Indeterminate])

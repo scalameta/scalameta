@@ -31,12 +31,46 @@ object Mima {
     ProblemFilters.exclude[MissingClassProblem]("scala.meta.testkit.DiffAssertions$DiffFailure"),
     ProblemFilters.exclude[MissingClassProblem]("scala.meta.testkit.DiffAssertions$DiffFailure$"),
     ProblemFilters.exclude[MissingTypesProblem]("scala.meta.testkit.DiffAssertions"),
+    // Dotty related exceptions - To be removed upon releasing 4.3.25 or 4.4
     ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Template.derives"),
     ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Template.setDerives"),
     ProblemFilters.exclude[MissingClassProblem](
       "scala.meta.tokens.Token$ColonEol$sharedClassifier$"
     ),
     ProblemFilters.exclude[MissingClassProblem]("scala.meta.tokens.Token$ColonEol"),
-    ProblemFilters.exclude[MissingClassProblem]("scala.meta.tokens.Token$ColonEol$")
+    ProblemFilters.exclude[MissingClassProblem]("scala.meta.tokens.Token$ColonEol$"),
+    ProblemFilters.exclude[IncompatibleResultTypeProblem](
+      "scala.meta.Importee#Given#ImporteeGivenImpl._importee"
+    ),
+    ProblemFilters.exclude[IncompatibleMethTypeProblem](
+      "scala.meta.Importee#Given#ImporteeGivenImpl._importee_="
+    ),
+    ProblemFilters.exclude[IncompatibleResultTypeProblem](
+      "scala.meta.Importee#Given#ImporteeGivenImpl.importee"
+    ),
+    ProblemFilters.exclude[IncompatibleMethTypeProblem](
+      "scala.meta.Importee#Given#ImporteeGivenImpl.copy"
+    ),
+    ProblemFilters.exclude[IncompatibleResultTypeProblem](
+      "scala.meta.Importee#Given#ImporteeGivenImpl.copy$default$1"
+    ),
+    ProblemFilters.exclude[IncompatibleMethTypeProblem](
+      "scala.meta.Importee#Given#ImporteeGivenImpl.this"
+    ),
+    ProblemFilters.exclude[IncompatibleMethTypeProblem](
+      "scala.meta.Importee#Given#Quasi#ImporteeGivenQuasiImpl.copy"
+    ),
+    ProblemFilters.exclude[IncompatibleResultTypeProblem](
+      "scala.meta.Importee#Given#Quasi#ImporteeGivenQuasiImpl.copy$default$1"
+    ),
+    ProblemFilters.exclude[IncompatibleMethTypeProblem]("scala.meta.Importee#Given.apply"),
+    ProblemFilters.exclude[IncompatibleSignatureProblem]("scala.meta.Importee#Given.unapply"),
+    ProblemFilters.exclude[IncompatibleResultTypeProblem]("scala.meta.Importee#Given.importee"),
+    ProblemFilters.exclude[IncompatibleMethTypeProblem]("scala.meta.Importee#Given.copy"),
+    ProblemFilters.exclude[IncompatibleResultTypeProblem](
+      "scala.meta.Importee#Given.copy$default$1"
+    ),
+    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Importee#Given.importee"),
+    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Importee#Given.copy")
   )
 }

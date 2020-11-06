@@ -87,7 +87,6 @@ class ReflectionSuite extends FunSuite {
       |String
       |Symbol
       |scala.meta.Ctor.Primary
-      |scala.meta.Importee
       |scala.meta.Init
       |scala.meta.Name
       |scala.meta.Pat
@@ -102,6 +101,7 @@ class ReflectionSuite extends FunSuite {
       |scala.meta.Type
       |scala.meta.Type.Bounds
       |scala.meta.Type.Name
+      |scala.meta.Type.Param
     """.trim.stripMargin.split('\n').mkString(EOL)
     )
   }

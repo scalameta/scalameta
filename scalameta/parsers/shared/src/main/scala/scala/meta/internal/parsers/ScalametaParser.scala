@@ -3660,7 +3660,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       next(); Importee.Wildcard()
     } else if (token.is[KwGiven]) {
       next();
-      if (token.is[Ident]) Importee.Given(importWildcardOrName())
+      if (token.is[Ident])
+        Importee.Given(
+          typeParam(ownerIsType = false, ctxBoundsAllowed = true, allowUnderscore = true)
+        )
       else Importee.GivenAll()
     } else if (token.is[Unquote]) Importee.Name(unquote[Name.Quasi])
     else {
