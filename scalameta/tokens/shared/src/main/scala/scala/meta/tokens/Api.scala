@@ -28,6 +28,8 @@ private[meta] trait Aliases {
     val KwGiven = scala.meta.tokens.Token.KwGiven
     type KwExtends = scala.meta.tokens.Token.KwExtends
     val KwExtends = scala.meta.tokens.Token.KwExtends
+    type KwExtension = scala.meta.tokens.Token.KwExtension
+    val KwExtension = scala.meta.tokens.Token.KwExtension
     type KwFalse = scala.meta.tokens.Token.KwFalse
     val KwFalse = scala.meta.tokens.Token.KwFalse
     type KwFinal = scala.meta.tokens.Token.KwFinal

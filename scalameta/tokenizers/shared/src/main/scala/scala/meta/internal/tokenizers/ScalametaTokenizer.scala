@@ -88,6 +88,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case VAR => Token.KwVar(input, dialect, curr.offset)
         case ENUM => Token.KwEnum(input, dialect, curr.offset)
         case GIVEN => Token.KwGiven(input, dialect, curr.offset)
+        case EXTENSION => Token.KwExtension(input, dialect, curr.offset)
 
         case IF => Token.KwIf(input, dialect, curr.offset)
         case ELSE => Token.KwElse(input, dialect, curr.offset)

@@ -867,8 +867,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def unapply(token: Token): Boolean = {
       token.is[Ident] || token.is[KwIf] || token.is[KwWhile] || token.is[KwFor] ||
       token.is[KwMatch] || token.is[KwTry] || token.is[KwNew] || token.is[KwThis] ||
-      token.is[KwGiven] || token.is[KwVal]
-      /* extension is ommited here as it is SoftKeyword <-> Ident */
+      token.is[KwGiven] || token.is[KwVal] || token.is[KwExtension]
     }
   }
 
@@ -935,10 +934,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   trait DclIntro {
     def unapply(token: Token): Boolean = {
       token.is[KwDef] || token.is[KwType] || token.is[KwEnum] ||
-      token.is[KwVal] || token.is[KwVar] ||
-      (token.is[KwGiven] && dialect.allowGivenUsing) ||
-      (isSoftKw(token, SoftKeyword.SkExtension) && dialect.allowExtensionMethods) ||
-      (token.is[Unquote] && token.next.is[DclIntro])
+      token.is[KwVal] || token.is[KwVar] || token.is[KwGiven] ||
+      token.is[KwExtension] || (token.is[Unquote] && token.next.is[DclIntro])
     }
   }
 
@@ -1104,9 +1101,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     def unapply(token: Token): Boolean = {
       token.is[KwTrait] || token.is[KwClass] ||
       token.is[KwObject] || token.is[KwEnum] ||
-      isSoftKw(token, SoftKeyword.SkExtension) ||
-      token.is[KwType] || token.is[KwPackage] ||
-      token.is[KwGiven] || token.is[KwNew]
+      token.is[KwExtension] || token.is[KwType] ||
+      token.is[KwPackage] || token.is[KwGiven] ||
+      token.is[KwNew]
     }
   }
 
@@ -3711,7 +3708,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         funDefOrDclOrExtensionOrSecondaryCtor(mods)
       case KwType() =>
         typeDefOrDcl(mods)
-      case _ if isSoftKw(token, SoftKeyword.SkExtension) && dialect.allowExtensionMethods =>
+      case KwExtension() =>
         extensionGroupDecl(mods)
       case KwCase() if ahead(token.is[Ident]) && dialect.allowEnums =>
         enumCaseDef(mods)
@@ -4488,7 +4485,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     val emptySelf = autoPos(Self(autoPos(Name.Anonymous()), None))
     var selfOpt: Option[Self] = None
     var firstOpt: Option[Stat] = None
-    if (token.is[ExprIntro] && !isSoftKw(token, SoftKeyword.SkExtension)) {
+    if (token.is[ExprIntro] && !token.is[KwExtension]) {
       val beforeFirst = in.fork
       val first = expr(location = TemplateStat, allowRepeated = false)
       val afterFirst = in.fork
@@ -4715,8 +4712,6 @@ object SoftKeyword {
   case object SkUsing extends SoftKeyword { override val name = "using" }
 
   case object SkInline extends SoftKeyword { override val name = "inline" }
-
-  case object SkExtension extends SoftKeyword { override val name = "extension" }
 
   case object SkOpaque extends SoftKeyword { override val name = "opaque" }
 

@@ -166,20 +166,6 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
   }
 
-  test("extension-soft-keyword") {
-    runTestAssert[Stat]("val c = f(a + extension)")(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(Term.Name("c"))),
-        None,
-        Term.Apply(
-          Term.Name("f"),
-          List(Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("extension"))))
-        )
-      )
-    )
-  }
-
   test("extension-additional-comment") {
     runTestAssert[Stat](
       """|extension (a: Int)

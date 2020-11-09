@@ -71,6 +71,7 @@ object LegacyToken {
   final val VAR = 74
   final val ENUM = 75
   final val GIVEN = 76
+  final val EXTENSION = 77
 
   /** control structures */
   final val IF = 80
@@ -181,6 +182,7 @@ object LegacyToken {
     "then"      -> THEN,
     "enum"      -> ENUM,
     "given"     -> GIVEN,
-    "export"    -> EXPORT
+    "export"    -> EXPORT,
+    "extension" -> EXTENSION
   )
 }

@@ -48,6 +48,11 @@ class Scala213Suite extends ParseSuite {
     )
 
     runAssert(
+      "val extension = 3",
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("extension"))), None, Lit.Int(3))"""
+    )
+
+    runAssert(
       "val enum = 3",
       """Defn.Val(Nil, List(Pat.Var(Term.Name("enum"))), None, Lit.Int(3))"""
     )
