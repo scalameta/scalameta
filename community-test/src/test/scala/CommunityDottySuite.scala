@@ -60,8 +60,8 @@ class CommunityDottySuite extends FunSuite {
   val communityBuilds = List(
     CommunityBuild(
       "https://github.com/lampepfl/dotty.git",
-      //commit hash from 28.10.2020
-      "19e47b765cd93f07082087e0af8a9296656f5150",
+      //commit hash from 8.11.2020
+      "f2d546cb7e3f96fee58d0befa7c168d048c6a995",
       "dotty",
       dottyExclusionList
     ),
@@ -71,13 +71,6 @@ class CommunityDottySuite extends FunSuite {
       "9107c110cefd18c1889e11c15b3b308bec74f24c",
       "munit",
       munitExclusionList
-    ),
-    CommunityBuild(
-      "https://github.com/lampepfl/scala3doc",
-      // latest commit from 23.10.2020
-      "4bd0a2075c82bf66d2e09469553f8a2c16c9b043",
-      "scala3doc",
-      scala3DocExclusionList
     )
   )
 
@@ -167,7 +160,12 @@ class CommunityDottySuite extends FunSuite {
     "library/src/scala/compiletime/package.scala",
     // most likely will become deprecated: if (cond) <ident>
     "tools/dotc/typer/Implicits.scala",
-    "tools/dotc/typer/Checking.scala"
+    "tools/dotc/typer/Checking.scala",
+    // extension will most likely become a keyword, needs fix in dotty
+    // extension.getParameters.asScala(extension.get(MethodExtension).parametersListSizes(0))
+    "dotty/dokka/translators/ScalaSignatureProvider.scala",
+    // [scalameta?] error: indent expected but override found
+    "scala3doc/src/dotty/dokka/site/PartiallyRenderedContent.scala"
   )
 
   final def munitExclusionList = List(
@@ -176,21 +174,6 @@ class CommunityDottySuite extends FunSuite {
     "main/scala/docs/MUnitModifier.scala",
     // old given syntax
     "main/scala-3/munit/internal/MacroCompat.scala"
-  )
-
-  final def scala3DocExclusionList = List(
-    // extension will most likely become a keyword
-    // [scalameta] extension.getParameters.asScala(extension.get(MethodExtension).parametersListSizes(0))
-    "main/scala/dotty/dokka/translators/ScalaSignatureProvider.scala",
-    // Below syntax is no longer valid:
-    // - val result: List[Int] = fmap[F = List, A = Int, B = Int](List(1,2,3))(i => i + 1)
-    "main/scala/NamedTypeArguments.scala",
-    // - def (s: String).doesntStartWithAnyOfThese(c: Char*) = c.forall(char => !s.startsWith(char.toString))
-    "test/scala/dotty/dokka/DottyTestRunner.scala",
-    // - given as Context = ctx
-    "main/scala/dotty/tools/dottydoc/Main.scala",
-    // import reflect.{given _, _}
-    "main/scala/dotty/dokka/tasty/ScalaDocSupport.scala"
   )
 
   final val ignoreParts = List(
