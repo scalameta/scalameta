@@ -597,7 +597,18 @@ class GivenUsingSuite extends BaseDottySuite {
     )
 
     runTestAssert[Stat]("import File.{ given TC }")(
-      Import(List(Importer(Term.Name("File"), List(Importee.Given(Importee.Name(Name("TC")))))))
+      Import(
+        List(
+          Importer(
+            Term.Name("File"),
+            List(
+              Importee.Given(
+                pparam("TC")
+              )
+            )
+          )
+        )
+      )
     )
 
     runTestAssert[Stat]("import File.{ given TC, given AC, _ }")(
@@ -606,9 +617,32 @@ class GivenUsingSuite extends BaseDottySuite {
           Importer(
             Term.Name("File"),
             List(
-              Importee.Given(Importee.Name(Name("TC"))),
-              Importee.Given(Importee.Name(Name("AC"))),
+              Importee.Given(pparam("TC")),
+              Importee.Given(pparam("AC")),
               Importee.Wildcard()
+            )
+          )
+        )
+      )
+    )
+
+    runTestAssert[Stat]("import Instances.{ im, given Ordering[?] }")(
+      Import(
+        List(
+          Importer(
+            Term.Name("Instances"),
+            List(
+              Importee.Name(Name("im")),
+              Importee.Given(
+                Type.Param(
+                  Nil,
+                  Type.Name("Ordering"),
+                  List(Type.Param(Nil, Type.Name("?"), Nil, Type.Bounds(None, None), Nil, Nil)),
+                  Type.Bounds(None, None),
+                  Nil,
+                  Nil
+                )
+              )
             )
           )
         )
