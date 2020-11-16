@@ -368,21 +368,15 @@ object Defn {
       decltpe: Option[scala.meta.Type],
       body: Term
   ) extends Defn with Member.Term
-  @ast class OpaqueTypeAlias(
-      mods: List[Mod],
-      name: scala.meta.Type.Name,
-      tparams: List[scala.meta.Type.Param],
-      bounds: scala.meta.Type.Bounds,
-      body: scala.meta.Type
-  ) extends Defn with Member.Type {
-    // checkFields(mods.exists(_.is[Mod.Opaque]))
-  }
   @ast class Type(
       mods: List[Mod],
       name: scala.meta.Type.Name,
       tparams: List[scala.meta.Type.Param],
       body: scala.meta.Type
-  ) extends Defn with Member.Type
+  ) extends Defn with Member.Type{
+    @binaryCompatField
+    private var _bounds: Option[scala.meta.Type.Bounds] = None
+  }
   @ast class Class(
       mods: List[Mod],
       name: scala.meta.Type.Name,

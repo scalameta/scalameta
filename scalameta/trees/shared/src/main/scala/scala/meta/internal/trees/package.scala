@@ -166,7 +166,6 @@ package object trees {
       case _: Defn.GivenAlias => true
       case _: Defn.Enum => true
       case _: Defn.ExtensionGroup => true
-      case _: Defn.OpaqueTypeAlias => true
       case _: Defn.Val => true
       case _: Defn.Type => true
       case _: Term.EndMarker => true

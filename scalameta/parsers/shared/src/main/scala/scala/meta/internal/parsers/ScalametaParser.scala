@@ -3966,6 +3966,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
+  def indentedTypeOpt() = {
+    if (token.is[Indentation.Indent]) {
+      indented(typ())
+    } else {
+      typ()
+    }
+  }
+
   def typeDefOrDcl(mods: List[Mod]): Member.Type with Stat = atPos(mods, auto) {
     accept[KwType]
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
@@ -3981,9 +3989,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val bounds = typeBounds()
       if (token.is[Equals]) {
         accept[Equals]
-        val tpe = typ()
+        val tpe = indentedTypeOpt()
         if (tpe.is[Type.Match]) {
-          Defn.OpaqueTypeAlias(mods, name, tparams, bounds, tpe)
+          val typeDef = Defn.Type(mods, name, tparams, tpe)
+          typeDef.setBounds(Some(bounds))
+          typeDef
         } else {
           syntaxError("cannot combine bound and alias", at = tpe.pos)
         }
@@ -3994,10 +4004,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (mods.exists(_.is[Mod.Opaque])) {
       val bounds = typeBounds()
       accept[Equals]
-      if (token.is[Indentation.Indent])
-        Defn.OpaqueTypeAlias(mods, name, tparams, bounds, indented(typ()))
-      else
-        Defn.OpaqueTypeAlias(mods, name, tparams, bounds, typ())
+      val typ = Defn.Type(mods, name, tparams, indentedTypeOpt())
+      typ.setBounds(Some(bounds))
+      typ
     } else {
       token match {
         case Equals() => next(); aliasType()

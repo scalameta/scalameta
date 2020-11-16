@@ -8,26 +8,27 @@ class MatchTypeSuite extends BaseDottySuite {
   implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Dotty)
 
   test("simple") {
-    runTestAssert[Stat](
-      """|type Elem[X] = X match {
-         |  case String => Char
-         |  case Array[t] => t
-         |}
-         |""".stripMargin
-    )(
-      Defn.Type(
-        Nil,
-        Type.Name("Elem"),
-        List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
-        Type.Match(
-          Type.Name("X"),
-          List(
-            TypeCase(Type.Name("String"), Type.Name("Char")),
-            TypeCase(Type.Apply(Type.Name("Array"), List(Type.Name("t"))), Type.Name("t"))
+    val intput =
+      runTestAssert[Stat](
+        """|type Elem[X] = X match {
+           |  case String => Char
+           |  case Array[t] => t
+           |}
+           |""".stripMargin
+      )(
+        Defn.Type(
+          Nil,
+          Type.Name("Elem"),
+          List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
+          Type.Match(
+            Type.Name("X"),
+            List(
+              TypeCase(Type.Name("String"), Type.Name("Char")),
+              TypeCase(Type.Apply(Type.Name("Array"), List(Type.Name("t"))), Type.Name("t"))
+            )
           )
         )
       )
-    )
   }
 
   test("tuple") {
@@ -60,18 +61,21 @@ class MatchTypeSuite extends BaseDottySuite {
   }
 
   test("recursive") {
+    val input = """|type Len[X] <: Int = X match {
+                   |  case Unit => 0
+                   |  case x *: xs => S[Len[xs]]
+                   |}
+                   |""".stripMargin
+
+    val typ = parseBlock(input).asInstanceOf[Defn.Type]
+    val Some(Type.Bounds(None, Some(Type.Name("Int")))) = typ.bounds
     runTestAssert[Stat](
-      """|type Len[X] <: Int = X match {
-         |  case Unit => 0
-         |  case x *: xs => S[Len[xs]]
-         |}
-         |""".stripMargin
+      input
     )(
-      Defn.OpaqueTypeAlias(
+      Defn.Type(
         Nil,
         Type.Name("Len"),
         List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
-        Type.Bounds(None, Some(Type.Name("Int"))),
         Type.Match(
           Type.Name("X"),
           List(
@@ -87,15 +91,18 @@ class MatchTypeSuite extends BaseDottySuite {
   }
 
   test("concat") {
+    val input = """|type Concat[X <: Tuple, Y <: Tuple] <: Tuple = X match {
+                   |  case Unit => Y
+                   |  case x1 *: xs1 => x1 *: Concat[xs1, Y]
+                   |}
+                   |
+                   |""".stripMargin
+    val typ = parseBlock(input).asInstanceOf[Defn.Type]
+    val Some(Type.Bounds(None, Some(Type.Name("Tuple")))) = typ.bounds
     runTestAssert[Stat](
-      """|type Concat[X <: Tuple, Y <: Tuple] <: Tuple = X match {
-         |  case Unit => Y
-         |  case x1 *: xs1 => x1 *: Concat[xs1, Y]
-         |}
-         |
-         |""".stripMargin
+      input
     )(
-      Defn.OpaqueTypeAlias(
+      Defn.Type(
         Nil,
         Type.Name("Concat"),
         List(
@@ -104,7 +111,6 @@ class MatchTypeSuite extends BaseDottySuite {
           Type
             .Param(Nil, Type.Name("Y"), Nil, Type.Bounds(None, Some(Type.Name("Tuple"))), Nil, Nil)
         ),
-        Type.Bounds(None, Some(Type.Name("Tuple"))),
         Type.Match(
           Type.Name("X"),
           List(
