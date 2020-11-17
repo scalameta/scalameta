@@ -83,24 +83,29 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("opaque-type-alias") {
-    runTestAssert[Stat]("opaque type F = X")(
-      Defn.OpaqueTypeAlias(
+    val input = "opaque type F = X"
+    val typ = parseBlock(input).asInstanceOf[Defn.Type]
+    val Type.Bounds(None, None) = typ.bounds
+    runTestAssert[Stat](input)(
+      Defn.Type(
         List(Mod.Opaque()),
         pname("F"),
         Nil,
-        Type.Bounds(None, None),
         pname("X")
       )
     )(parseTempl)
+
   }
 
   test("opaque-type-bounded-alias") {
-    runTestAssert[Stat]("opaque type F <: A & B = AB")(
-      Defn.OpaqueTypeAlias(
+    val input = "opaque type F <: A & B = AB"
+    val typ = parseBlock(input).asInstanceOf[Defn.Type]
+    val Type.Bounds(None, Some(Type.And(Type.Name("A"), Type.Name("B")))) = typ.bounds
+    runTestAssert[Stat](input)(
+      Defn.Type(
         List(Mod.Opaque()),
         pname("F"),
         Nil,
-        Type.Bounds(None, Some(Type.And(pname("A"), pname("B")))),
         pname("AB")
       )
     )(parseTempl)
@@ -115,7 +120,7 @@ class MinorDottySuite extends BaseDottySuite {
             tname("X"),
             tpl(
               List(
-                Defn.OpaqueTypeAlias(
+                Defn.Type(
                   List(Mod.Opaque()),
                   pname("IArray"),
                   List(
@@ -128,7 +133,6 @@ class MinorDottySuite extends BaseDottySuite {
                       Nil
                     )
                   ),
-                  Type.Bounds(None, None),
                   pname("Array")
                 )
               )
@@ -149,11 +153,10 @@ class MinorDottySuite extends BaseDottySuite {
           Nil,
           Self(Name(""), None),
           List(
-            Defn.OpaqueTypeAlias(
+            Defn.Type(
               List(Mod.Private(Name("")), Mod.Opaque()),
               Type.Name("T"),
               Nil,
-              Type.Bounds(None, None),
               Type.Apply(Type.Name("List"), List(Type.Name("Int")))
             )
           )
@@ -169,11 +172,10 @@ class MinorDottySuite extends BaseDottySuite {
           Nil,
           Self(Name(""), None),
           List(
-            Defn.OpaqueTypeAlias(
+            Defn.Type(
               List(Mod.Opaque(), Mod.Private(Name(""))),
               Type.Name("T"),
               Nil,
-              Type.Bounds(None, None),
               Type.Apply(Type.Name("List"), List(Type.Name("Int")))
             )
           )
@@ -581,11 +583,10 @@ class MinorDottySuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(expected)
     )(
-      Defn.OpaqueTypeAlias(
+      Defn.Type(
         List(Mod.Opaque()),
         Type.Name("LinearSet"),
         List(Type.Param(Nil, Type.Name("Elem"), Nil, Type.Bounds(None, None), Nil, Nil)),
-        Type.Bounds(None, None),
         Type.Apply(Type.Name("Set"), List(Type.Name("Elem")))
       )
     )

@@ -21,7 +21,7 @@ class ReflectionSuite extends FunSuite {
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
     assertEquals(symbolOf[scala.meta.Tree].asRoot.allBranches.length, 19)
-    assertEquals(symbolOf[scala.meta.Tree].asRoot.allLeafs.length, 327)
+    assertEquals(symbolOf[scala.meta.Tree].asRoot.allLeafs.length, 329)
   }
 
   test("If") {
@@ -79,6 +79,7 @@ class ReflectionSuite extends FunSuite {
       |List[scala.meta.Term.Param]
       |List[scala.meta.Term]
       |List[scala.meta.Type.Param]
+      |List[scala.meta.TypeCase]
       |List[scala.meta.Type]
       |Long
       |Option[scala.meta.Term]

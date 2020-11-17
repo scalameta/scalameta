@@ -215,6 +215,8 @@ object Type {
       vbounds: List[Type],
       cbounds: List[Type]
   ) extends Member
+
+  @ast class Match(tpe: Type, cases: List[TypeCase] @nonEmpty) extends Type
   def fresh(): Type.Name = fresh("fresh")
   def fresh(prefix: String): Type.Name = Type.Name(prefix + Fresh.nextId())
 }
@@ -366,21 +368,15 @@ object Defn {
       decltpe: Option[scala.meta.Type],
       body: Term
   ) extends Defn with Member.Term
-  @ast class OpaqueTypeAlias(
-      mods: List[Mod],
-      name: scala.meta.Type.Name,
-      tparams: List[scala.meta.Type.Param],
-      bounds: scala.meta.Type.Bounds,
-      body: scala.meta.Type
-  ) extends Defn with Member.Type {
-    checkFields(mods.exists(_.is[Mod.Opaque]))
-  }
   @ast class Type(
       mods: List[Mod],
       name: scala.meta.Type.Name,
       tparams: List[scala.meta.Type.Param],
       body: scala.meta.Type
-  ) extends Defn with Member.Type
+  ) extends Defn with Member.Type {
+    @binaryCompatField
+    private var _bounds: scala.meta.Type.Bounds = scala.meta.Type.Bounds(None, None)
+  }
   @ast class Class(
       mods: List[Mod],
       name: scala.meta.Type.Name,
@@ -520,6 +516,7 @@ object Importee {
 }
 
 @ast class Case(pat: Pat, cond: Option[Term], body: Term) extends Tree
+@ast class TypeCase(pat: Type, body: Type) extends Tree
 
 @ast class Source(stats: List[Stat]) extends Tree {
   // NOTE: This validation has been removed to allow dialects with top-level terms.

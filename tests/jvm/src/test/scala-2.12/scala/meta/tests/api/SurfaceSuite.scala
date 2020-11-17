@@ -219,7 +219,6 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Defn.GivenAlias
       |scala.meta.Defn.Macro
       |scala.meta.Defn.Object
-      |scala.meta.Defn.OpaqueTypeAlias
       |scala.meta.Defn.RepeatedEnumCase
       |scala.meta.Defn.Trait
       |scala.meta.Defn.Type
@@ -357,6 +356,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.ImplicitFunction
       |scala.meta.Type.Lambda
       |scala.meta.Type.Macro
+      |scala.meta.Type.Match
       |scala.meta.Type.Method
       |scala.meta.Type.Name
       |scala.meta.Type.Or
@@ -372,6 +372,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.Tuple
       |scala.meta.Type.Var
       |scala.meta.Type.With
+      |scala.meta.TypeCase
     """.trim.stripMargin.split('\n').mkString(EOL)
     )
   }
