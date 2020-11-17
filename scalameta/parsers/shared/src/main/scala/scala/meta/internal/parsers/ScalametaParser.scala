@@ -1423,33 +1423,31 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           case RightArrow() => next(); Type.Function(List(t), typ())
           case ContextArrow() => next(); Type.ContextFunction(List(t), typ())
           case KwForsome() => next(); Type.Existential(t, existentialStats())
-          case KwMatch() if dialect.allowTypeMatch =>
-            next(); typeMatch(t)
+          case KwMatch() if dialect.allowTypeMatch => next(); Type.Match(t, typeCaseClauses())
           case _ => t
         }
       }
     }
 
-    def typeMatch(t: Type): Type.Match = autoPos {
+    def typeCaseClauses(): List[TypeCase] = {
+      def cases() = {
+        val allCases = new ListBuffer[TypeCase]
+        while (token.is[KwCase])
+          allCases += typeCaseClause()
+        allCases.toList
+      }
       if (token.is[LeftBrace]) {
         inBraces {
-          Type.Match(t, typeCaseClauses())
+          cases()
         }
       } else if (token.is[Indentation.Indent])
         indented {
-          Type.Match(t, typeCaseClauses())
+          cases()
         }
       else {
         syntaxError("Expected braces or indentation", at = token.pos)
       }
 
-    }
-
-    def typeCaseClauses(): List[TypeCase] = {
-      val allCases = new ListBuffer[TypeCase]
-      while (token.is[KwCase])
-        allCases += typeCaseClause()
-      allCases.toList
     }
 
     def typeCaseClause(): TypeCase = atPos(in.prevTokenPos, auto) {
@@ -3966,7 +3964,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  def indentedTypeOpt() = {
+  def typeIndentedOpt() = {
     if (token.is[Indentation.Indent]) {
       indented(typ())
     } else {
@@ -3989,7 +3987,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val bounds = typeBounds()
       if (token.is[Equals]) {
         accept[Equals]
-        val tpe = indentedTypeOpt()
+        val tpe = typeIndentedOpt()
         if (tpe.is[Type.Match]) {
           val typeDef = Defn.Type(mods, name, tparams, tpe)
           typeDef.setBounds(Some(bounds))
@@ -4004,7 +4002,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (mods.exists(_.is[Mod.Opaque])) {
       val bounds = typeBounds()
       accept[Equals]
-      val typ = Defn.Type(mods, name, tparams, indentedTypeOpt())
+      val typ = Defn.Type(mods, name, tparams, typeIndentedOpt())
       typ.setBounds(Some(bounds))
       typ
     } else {

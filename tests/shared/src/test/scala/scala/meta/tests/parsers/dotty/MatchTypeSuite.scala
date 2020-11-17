@@ -51,7 +51,7 @@ class MatchTypeSuite extends BaseDottySuite {
             TypeCase(
               Type.Tuple(
                 List(Type.Name("x1"), Type.Placeholder(Type.Bounds(None, None)))
-              ), // TODO should be Pat.TypeVar and Wildcard()
+              ),
               Type.Name("x1")
             )
           )
