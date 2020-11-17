@@ -1104,7 +1104,7 @@ object TreeSyntax {
 
       // Import
       case t: Importee.Name => s(t.name)
-      case t: Importee.Given => s(kw("given"), " ", t.importee)
+      case t: Importee.Given => s(kw("given"), " ", t.tpe)
       case t: Importee.GivenAll => s(kw("given"))
       case t: Importee.Rename => s(t.name, " ", kw("=>"), " ", t.rename)
       case t: Importee.Unimport => s(t.name, " ", kw("=>"), " ", kw("_"))

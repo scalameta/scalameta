@@ -72,6 +72,20 @@ object Mima {
     ),
     ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Importee#Given.importee"),
     ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Importee#Given.copy"),
+    ProblemFilters.exclude[DirectMissingMethodProblem](
+      "scala.meta.Importee#Given#ImporteeGivenImpl._importee"
+    ),
+    ProblemFilters.exclude[DirectMissingMethodProblem](
+      "scala.meta.Importee#Given#ImporteeGivenImpl._importee_="
+    ),
+    ProblemFilters.exclude[DirectMissingMethodProblem](
+      "scala.meta.Importee#Given#ImporteeGivenImpl.importee"
+    ),
+    ProblemFilters.exclude[DirectMissingMethodProblem](
+      "scala.meta.Importee#Given#Quasi#ImporteeGivenQuasiImpl.importee"
+    ),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Importee#Given.importee"),
+    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Importee#Given.tpe"),
     ProblemFilters.exclude[MissingClassProblem]("scala.meta.Defn$OpaqueTypeAlias$Quasi"),
     ProblemFilters.exclude[MissingClassProblem](
       "scala.meta.Defn$OpaqueTypeAlias$Quasi$sharedClassifier$"
