@@ -372,6 +372,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.Tuple
       |scala.meta.Type.Var
       |scala.meta.Type.With
+      |scala.meta.TypeCase
     """.trim.stripMargin.split('\n').mkString(EOL)
     )
   }

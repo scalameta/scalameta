@@ -68,7 +68,7 @@ class MatchTypeSuite extends BaseDottySuite {
                    |""".stripMargin
 
     val typ = parseBlock(input).asInstanceOf[Defn.Type]
-    val Some(Type.Bounds(None, Some(Type.Name("Int")))) = typ.bounds
+    val Type.Bounds(None, Some(Type.Name("Int"))) = typ.bounds
     runTestAssert[Stat](
       input
     )(
@@ -98,7 +98,7 @@ class MatchTypeSuite extends BaseDottySuite {
                    |
                    |""".stripMargin
     val typ = parseBlock(input).asInstanceOf[Defn.Type]
-    val Some(Type.Bounds(None, Some(Type.Name("Tuple")))) = typ.bounds
+    val Type.Bounds(None, Some(Type.Name("Tuple"))) = typ.bounds
     runTestAssert[Stat](
       input
     )(

@@ -60,8 +60,8 @@ class CommunityDottySuite extends FunSuite {
   val communityBuilds = List(
     CommunityBuild(
       "https://github.com/lampepfl/dotty.git",
-      //commit hash from 8.11.2020
-      "f2d546cb7e3f96fee58d0befa7c168d048c6a995",
+      //commit hash from 17.11.2020
+      "cd15c992c1d9e18ebaad65b7bc1bff3eafa4605d",
       "dotty",
       dottyExclusionList
     ),
@@ -154,14 +154,12 @@ class CommunityDottySuite extends FunSuite {
   }
 
   final def dottyExclusionList = List(
-    // [scalameta] type match
-    "library/src/scala/Tuple.scala",
     // [scalameta] erased modifier - for now used internally, will be available in 3.1
     "library/src/scala/compiletime/package.scala",
     // most likely will become deprecated: if (cond) <ident>
     "tools/dotc/typer/Implicits.scala",
     "tools/dotc/typer/Checking.scala",
-    // extension will most likely become a keyword, needs fix in dotty
+    // extension will become a keyword, needs fix in dotty
     // extension.getParameters.asScala(extension.get(MethodExtension).parametersListSizes(0))
     "dotty/dokka/translators/ScalaSignatureProvider.scala",
     // [scalameta?] error: indent expected but override found

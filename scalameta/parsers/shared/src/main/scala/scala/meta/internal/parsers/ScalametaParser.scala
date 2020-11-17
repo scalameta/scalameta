@@ -3990,7 +3990,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         val tpe = typeIndentedOpt()
         if (tpe.is[Type.Match]) {
           val typeDef = Defn.Type(mods, name, tparams, tpe)
-          typeDef.setBounds(Some(bounds))
+          typeDef.setBounds(bounds)
           typeDef
         } else {
           syntaxError("cannot combine bound and alias", at = tpe.pos)
@@ -4003,7 +4003,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val bounds = typeBounds()
       accept[Equals]
       val typ = Defn.Type(mods, name, tparams, typeIndentedOpt())
-      typ.setBounds(Some(bounds))
+      typ.setBounds(bounds)
       typ
     } else {
       token match {

@@ -216,7 +216,7 @@ object Type {
       cbounds: List[Type]
   ) extends Member
 
-  @ast class Match(tpe: Type, cases: List[TypeCase] @nonEmpty) extends Type 
+  @ast class Match(tpe: Type, cases: List[TypeCase] @nonEmpty) extends Type
   def fresh(): Type.Name = fresh("fresh")
   def fresh(prefix: String): Type.Name = Type.Name(prefix + Fresh.nextId())
 }
@@ -373,9 +373,9 @@ object Defn {
       name: scala.meta.Type.Name,
       tparams: List[scala.meta.Type.Param],
       body: scala.meta.Type
-  ) extends Defn with Member.Type{
+  ) extends Defn with Member.Type {
     @binaryCompatField
-    private var _bounds: Option[scala.meta.Type.Bounds] = None
+    private var _bounds: scala.meta.Type.Bounds = scala.meta.Type.Bounds(None, None)
   }
   @ast class Class(
       mods: List[Mod],

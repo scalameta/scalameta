@@ -85,7 +85,7 @@ class MinorDottySuite extends BaseDottySuite {
   test("opaque-type-alias") {
     val input = "opaque type F = X"
     val typ = parseBlock(input).asInstanceOf[Defn.Type]
-    val Some(Type.Bounds(None, None)) = typ.bounds
+    val Type.Bounds(None, None) = typ.bounds
     runTestAssert[Stat](input)(
       Defn.Type(
         List(Mod.Opaque()),
@@ -95,13 +95,12 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )(parseTempl)
 
-
   }
 
   test("opaque-type-bounded-alias") {
     val input = "opaque type F <: A & B = AB"
     val typ = parseBlock(input).asInstanceOf[Defn.Type]
-    val Some(Type.Bounds(None, Some(Type.And(Type.Name("A"), Type.Name("B"))))) = typ.bounds
+    val Type.Bounds(None, Some(Type.And(Type.Name("A"), Type.Name("B")))) = typ.bounds
     runTestAssert[Stat](input)(
       Defn.Type(
         List(Mod.Opaque()),
