@@ -159,11 +159,32 @@ class CommunityDottySuite extends FunSuite {
     // most likely will become deprecated: if (cond) <ident>
     "tools/dotc/typer/Implicits.scala",
     "tools/dotc/typer/Checking.scala",
-    // extension will become a keyword, needs fix in dotty
-    // extension.getParameters.asScala(extension.get(MethodExtension).parametersListSizes(0))
-    "dotty/dokka/translators/ScalaSignatureProvider.scala",
     // [scalameta?] error: indent expected but override found
-    "scala3doc/src/dotty/dokka/site/PartiallyRenderedContent.scala"
+    "scala3doc/src/dotty/dokka/site/PartiallyRenderedContent.scala",
+    // extension will become a keyword, needs fix in dotty
+    "dotty/dokka/translators/ScalaSignatureProvider.scala",
+    "dotty/tools/io/AbstractFile.scala",
+    "dotty/tools/io/JarArchive.scala",
+    "dotty/tools/io/Path.scala",
+    "dotty/tools/dotc/core/StdNames.scala",
+    "dotty/tools/dotc/core/Symbols.scala",
+    "dotty/tools/dotc/core/Decorators.scala",
+    "dotty/tools/dotc/typer/Nullables.scala",
+    "dotty/tools/dotc/fromtasty/Debug.scala",
+    "dotty/tools/dotc/config/Settings.scala",
+    "dotty/tools/dotc/parsing/Parsers.scala",
+    "dotty/tools/dotc/ast/tpd.scala",
+    "dotty/tools/dotc/sbt/ExtractDependencies.scala",
+    "dotty/tools/package.scala",
+    "scala/quoted/internal/impl/Matcher.scala",
+    "scala/quoted/internal/impl/QuoteContextImpl.scala",
+    "dotty/tools/dotc/core/tasty/CommentPicklingTest.scala",
+    "dotty/tools/dotc/printing/PrintingTest.scala",
+    "dotty/tools/dotc/transform/PatmatExhaustivityTest.scala",
+    "scala/quoted/QuoteContext.scala",
+    "dotty/tools/sbtplugin/DottyPlugin.scala",
+    "dotty/dokka/tasty/ClassLikeSupport.scala",
+    "src/scala/tasty/inspector/TastyInspector.scala"
   )
 
   final def munitExclusionList = List(
