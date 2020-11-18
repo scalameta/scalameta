@@ -603,7 +603,7 @@ class GivenUsingSuite extends BaseDottySuite {
             Term.Name("File"),
             List(
               Importee.Given(
-                pparam("TC")
+                Type.Name("TC")
               )
             )
           )
@@ -617,8 +617,8 @@ class GivenUsingSuite extends BaseDottySuite {
           Importer(
             Term.Name("File"),
             List(
-              Importee.Given(pparam("TC")),
-              Importee.Given(pparam("AC")),
+              Importee.Given(Type.Name("TC")),
+              Importee.Given(Type.Name("AC")),
               Importee.Wildcard()
             )
           )
@@ -634,14 +634,7 @@ class GivenUsingSuite extends BaseDottySuite {
             List(
               Importee.Name(Name("im")),
               Importee.Given(
-                Type.Param(
-                  Nil,
-                  Type.Name("Ordering"),
-                  List(Type.Param(Nil, Type.Name("?"), Nil, Type.Bounds(None, None), Nil, Nil)),
-                  Type.Bounds(None, None),
-                  Nil,
-                  Nil
-                )
+                Type.Apply(Type.Name("Ordering"), List(Type.Placeholder(Type.Bounds(None, None))))
               )
             )
           )
