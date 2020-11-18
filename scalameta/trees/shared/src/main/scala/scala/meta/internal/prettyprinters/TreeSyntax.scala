@@ -450,6 +450,7 @@ object TreeSyntax {
         m(
           Expr1,
           s(
+            w(t.mods, " "),
             kw("if"),
             " (",
             t.cond,

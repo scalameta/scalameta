@@ -186,4 +186,16 @@ class InlineSuite extends BaseDottySuite {
       )
     )(parseTempl)
   }
+
+  test("inline-if") {
+    val input = "inline if true then a()"
+    val ifExpr = parseTempl(input).asInstanceOf[Term.If]
+    assert(ifExpr.mods.head.is[Mod.Inline], "if should have an inline modifier")
+    runTestAssert[Stat](
+      input,
+      assertLayout = Some("inline if (true) a()")
+    )(
+      Term.If(Lit.Boolean(true), Term.Apply(Term.Name("a"), Nil), Lit.Unit())
+    )(parseTempl)
+  }
 }
