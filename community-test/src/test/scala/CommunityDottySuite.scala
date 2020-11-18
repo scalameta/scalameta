@@ -159,9 +159,8 @@ class CommunityDottySuite extends FunSuite {
     // most likely will become deprecated: if (cond) <ident>
     "tools/dotc/typer/Implicits.scala",
     "tools/dotc/typer/Checking.scala",
-    // [scalameta?] error: indent expected but override found
-    // "scala3doc/src/dotty/dokka/site/PartiallyRenderedContent.scala",
     // if then - else without outdentation before else.
+    // it's unlcear what to do in this case
     // https://github.com/lampepfl/dotty/issues/10372
     "dotty/dokka/tasty/ClassLikeSupport.scala",
     // extension will become a keyword, needs fix in dotty

@@ -101,7 +101,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
-  test("indent-below-not-okay".ignore) {
+  test("then-no-indent") {
     // this test is related to dotty issue: https://github.com/lampepfl/dotty/issues/9790
     // It should either assert error during parsing: "illegal start of simple expression"
     // Or accept mismatch with parsing rules and parse as 'if (cond) { truep } else {falsep }'
@@ -112,15 +112,39 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |    else
                   |  falsep
                   |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some("trait A { def f: Int }"))(
-      Defn.Trait(
+    runTestAssert[Stat](
+      code,
+      assertLayout = Some(
+        """|def fn: Unit = {
+           |  if (cond) truep else falsep
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
         Nil,
-        Type.Name("A"),
+        Term.Name("fn"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
-        Template(Nil, Nil, Self(Name(""), None), List(defx))
+        Nil,
+        Some(Type.Name("Unit")),
+        Term.Block(List(Term.If(Term.Name("cond"), Term.Name("truep"), Term.Name("falsep"))))
       )
     )
+  }
+
+  test("then-no-indent-wrong") {
+    // this test is related to dotty issue: https://github.com/lampepfl/dotty/issues/9790
+    // It should either assert error during parsing: "illegal start of simple expression"
+    // Or accept mismatch with parsing rules and parse as 'if (cond) { truep } else {falsep }'
+    // Why error is thrown is described in mentioned issue.
+    val code = """|def fn: Unit =
+                  |    if cond then
+                  |  truep1
+                  |  truep2
+                  |    else
+                  |  falsep
+                  |""".stripMargin
+    runTestError[Stat](code, "expected but else found")
   }
 
   test("indent-inside-brace-ok") {

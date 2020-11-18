@@ -348,7 +348,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             while ((indentedRegion(sepRegionsProcess)
                 && sepRegionsProcess.head.indent > currentIndent && !isLeadingInfixOperator(
                   curr
-                )) ||
+                ) && !prev.is[CanContinueOnNextLine]) ||
               shouldCloseCaseOnNonCase(sepRegionsProcess)) {
               insertOutdent()
               // match can start an identation, block but if `match` follows it means it's chaining matches
@@ -878,6 +878,15 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.text == "end" &&
       token.strictNext.is[EndMarkerWord] &&
       (token.next.strictNext.is[LineEnd] || token.next.strictNext.is[EOF])
+    }
+  }
+  // then  else  do  catch  finally  yield  match
+  @classifier
+  trait CanContinueOnNextLine {
+    def unapply(token: Token): Boolean = {
+      token.is[KwThen] || token.is[KwElse] || token.is[KwDo] ||
+      token.is[KwCatch] || token.is[KwFinally] || token.is[KwYield] ||
+      token.is[KwMatch]
     }
   }
 
