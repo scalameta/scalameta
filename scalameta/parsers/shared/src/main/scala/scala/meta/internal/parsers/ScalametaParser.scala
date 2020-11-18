@@ -234,30 +234,30 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
    * Int)
    */
   def canBeFollowedByColonEol(
-      colonEolCanStartIndent: Option[AllowColonEol],
+      colonEolCanStartIndent: List[AllowColonEol],
       curr: Token
-  ) = {
+  ): List[AllowColonEol] = {
     if (dialect.allowSignificantIndentation)
       colonEolCanStartIndent match {
-        case _ if curr.is[CanStartColonEol] =>
-          Some(new AllowColonEol)
+        case list if curr.is[CanStartColonEol] =>
+          new AllowColonEol :: list
         // This means we closed more parents than opened, which means we are outside of a region where colonEol is allowed
-        case Some(allowColonEol) if allowColonEol.unclosedParensCount < 0 =>
-          None
+        case allowColonEol :: tail if allowColonEol.unclosedParensCount < 0 =>
+          tail
         // This means we found a token that should not exist before colonEol
-        case Some(allowColonEol)
+        case allowColonEol :: tail
             if (curr.is[LeftBrace] || curr
               .is[DclIntro]) && allowColonEol.unclosedParensCount == 0 =>
-          None
-        case Some(allowColonEol) if curr.is[LeftParen] =>
+          tail
+        case list @ allowColonEol :: tail if curr.is[LeftParen] =>
           allowColonEol.openParen
-          Some(allowColonEol)
-        case Some(allowColonEol) if curr.is[RightParen] =>
+          list
+        case list @ allowColonEol :: tail if curr.is[RightParen] =>
           allowColonEol.closeParen
-          Some(allowColonEol)
+          list
         case allow => allow
       }
-    else None
+    else Nil
   }
 
   // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
@@ -285,7 +285,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         sepRegionsParameter: List[SepRegion],
         previousTokenIndent: Int,
         previousTokenStartIndent: Boolean,
-        colonEolCanStartIndent: Option[AllowColonEol] = None
+        colonEolCanStartIndent: List[AllowColonEol] = Nil
     ): Unit = {
       if (currPos >= scannerTokens.length) return
       val prev = if (prevPos >= 0) scannerTokens(prevPos) else null
@@ -445,7 +445,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             .is[Colon] && newColonEol.isEmpty) && isAheadNewLine(currPos)) {
           if (curr.is[RightArrow] && sepRegionsNew.headOption.exists(!_.indentOnArrow)) {} else {
             shouldStartIndent = true
-            if (curr.is[Colon]) newColonEol = None
+            if (curr.is[Colon]) newColonEol = newColonEol.tail
           }
         }
 
@@ -504,7 +504,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
     loop(-1, 0, Nil, -1, false)
     val underlying = parserTokens.result
-
     (Tokens(underlying, 0, underlying.length), parserTokenPositions.result)
   }
 
@@ -1030,7 +1029,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   @classifier
   trait CanEndStat {
     def unapply(token: Token): Boolean = {
-      token.is[Ident] || token.is[KwGiven] || token.is[Literal] ||
+      token.is[Ident] || token.is[KwGiven] || token.is[KwExtension] || token.is[Literal] ||
       token.is[Interpolation.End] || token.is[Xml.End] ||
       token.is[KwReturn] || token.is[KwThis] || token.is[KwType] ||
       token.is[RightParen] || token.is[RightBracket] || token.is[RightBrace] ||

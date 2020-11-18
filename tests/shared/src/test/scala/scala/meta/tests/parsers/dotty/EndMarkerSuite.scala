@@ -48,6 +48,36 @@ class EndMarkerSuite extends BaseDottySuite {
     )(parseSource)
   }
 
+  test("end-marker-extension") {
+    val code = """|extension (a: Int):
+                  |  def b = a + 1
+                  |end extension
+                  |
+                  |type K = Map
+                  |""".stripMargin
+    runTestAssert[Source](code, assertLayout = None)(
+      Source(
+        List(
+          Defn.ExtensionGroup(
+            Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None),
+            Nil,
+            Nil,
+            Defn.Def(
+              Nil,
+              Term.Name("b"),
+              Nil,
+              Nil,
+              None,
+              Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Lit.Int(1)))
+            )
+          ),
+          Term.EndMarker(Term.Name("extension")),
+          Defn.Type(Nil, Type.Name("K"), Nil, Type.Name("Map"))
+        )
+      )
+    )(parseSource)
+  }
+
   test("end-nomarker") {
     runTestAssert[Stat]("lista append end")(
       Term.ApplyInfix(Term.Name("lista"), Term.Name("append"), Nil, List(Term.Name("end")))

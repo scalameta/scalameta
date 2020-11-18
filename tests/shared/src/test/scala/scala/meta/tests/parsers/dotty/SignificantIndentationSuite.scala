@@ -679,4 +679,41 @@ class SignificantIndentationSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("nested-coloneol") {
+    runTestAssert[Stat](
+      """|case class Test(
+         |  a: A = new A,
+         |):
+         |  def hello = 1
+         |""".stripMargin,
+      assertLayout = Some("case class Test(a: A = new A) { def hello = 1 }")
+    )(
+      Defn.Class(
+        List(Mod.Case()),
+        Type.Name("Test"),
+        Nil,
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          List(
+            List(
+              Term.Param(
+                Nil,
+                Term.Name("a"),
+                Some(Type.Name("A")),
+                Some(Term.New(Init(Type.Name("A"), Name(""), Nil)))
+              )
+            )
+          )
+        ),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(Defn.Def(Nil, Term.Name("hello"), Nil, Nil, None, Lit.Int(1)))
+        )
+      )
+    )
+  }
 }
