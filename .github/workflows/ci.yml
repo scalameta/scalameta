@@ -20,8 +20,9 @@ jobs:
           - "++2.13.1 testsJVM/test"
           - "++2.13.2 testsJVM/test"
           - "++2.13.3 testsJVM/test"
-          - "++2.13.3 testsJS/test"
-          - "download-scala-library ++2.13.3 testsJVM/slow:test"
+          - "++2.13.4 testsJVM/test"
+          - "++2.13.4 testsJS/test"
+          - "++2.13.4 download-scala-library testsJVM/slow:test"
           - "mima"
     steps:
       - uses: actions/checkout@v2
