@@ -103,6 +103,8 @@ object Mima {
     ),
     ProblemFilters.exclude[MissingClassProblem](
       "scala.meta.Defn$OpaqueTypeAlias$Quasi$DefnOpaqueTypeAliasQuasiImpl"
-    )
+    ),
+    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Term#If.mods"),
+    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Term#If.setMods")
   )
 }

@@ -106,7 +106,10 @@ object Term {
     checkFields(stats.forall(st => st.isBlockStat || st.is[Decl]))
   }
   @ast class EndMarker(name: Term.Name) extends Term
-  @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term
+  @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term {
+    @binaryCompatField
+    private var _mods: List[Mod] = Nil
+  }
   @ast class QuotedMacroExpr(body: Term) extends Term
   @ast class QuotedMacroType(tpe: Type) extends Term
   @ast class SplicedMacroExpr(body: Term) extends Term

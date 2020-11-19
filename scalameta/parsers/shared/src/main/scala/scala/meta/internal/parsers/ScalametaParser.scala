@@ -3384,8 +3384,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     loop(Nil)
   }
 
-  def methodParamModifiers(): List[Mod] = {
-    if (isInlineSoftKw(token) && ahead(token.is[Ident])) {
+  def softModifiers(): List[Mod] = {
+    if (isInlineSoftKw(token) && ahead(token.is[Ident] || token.is[KwIf])) {
       List(modifier())
     } else {
       Nil
@@ -3491,7 +3491,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (!mods.has[Mod.Override])
         rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     } else {
-      mods ++= methodParamModifiers()
+      mods ++= softModifiers()
     }
 
     val (isValParam, isVarParam) = (ownerIsType && token.is[KwVal], ownerIsType && token.is[KwVar])
@@ -3736,7 +3736,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def nonLocalDefOrDcl(): Stat = {
     val anns = annots(skipNewLines = true)
-    val mods = anns ++ modifiers()
+    val mods = anns ++ modifiers() ++ softModifiers()
     defOrDclOrSecondaryCtor(mods) match {
       case s if s.isTemplateStat => s
       case other => syntaxError("is not a valid template statement", at = other)
@@ -3759,7 +3759,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         extensionGroupDecl(mods)
       case KwCase() if ahead(token.is[Ident]) && dialect.allowEnums =>
         enumCaseDef(mods)
-      case _ =>
+      case KwIf() if mods.size == 1 && mods.head.is[Mod.Inline] =>
+        expr() match {
+          case ifExpr: Term.If =>
+            ifExpr.setMods(mods)
+            ifExpr
+          case expr => syntaxError("Unexpected expressions after inline modifier", at = expr.pos)
+        }
+      case KwIf() if mods.size > 0 =>
+        syntaxError("If can only contain inline modifier", at = token.pos)
+      case other =>
         tmplDef(mods)
     }
   }
