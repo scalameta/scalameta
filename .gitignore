@@ -38,6 +38,7 @@ repos.tar.gz*
 .settings
 .cache*
 .project
+.bsp/
 
 website/translated_docs
 website/build/
