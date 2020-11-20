@@ -10,13 +10,12 @@ import scala.annotation.tailrec
 import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.tokenizers._
+import scala.meta.internal.tokenizers.ScalametaTokenizer.UnexpectedInputEndException
 
 class ScalametaTokenizer(input: Input, dialect: Dialect) {
   def tokenize(): Tokens = {
     input.tokenCache.getOrElseUpdate(dialect, uncachedTokenize())
   }
-
-  private final var interpolationStart = 0
 
   private def uncachedTokenize(): Tokens = {
     def legacyTokenToToken(curr: LegacyTokenData): Token = {
@@ -191,7 +190,10 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     ): Int = {
       var legacyIndex = startingFrom
       def prev = legacyTokens(legacyIndex - 1)
-      def curr = legacyTokens(legacyIndex)
+      def curr = {
+        if (legacyIndex < legacyTokens.size) legacyTokens(legacyIndex)
+        else throw new UnexpectedInputEndException()
+      }
       def emitToken() = tokens.add(legacyTokenToToken(curr))
       def nextToken() = legacyIndex += 1
       if (legacyIndex >= legacyTokens.length) return legacyIndex
@@ -230,18 +232,13 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
               tokens.add(Token.Interpolation.SpliceStart(input, dialect, offset, offset + 1))
             def emitSpliceEnd(offset: Offset) =
               tokens.add(Token.Interpolation.SpliceEnd(input, dialect, offset, offset))
-            def requireExpectedToken(expected: LegacyToken) = { require(curr.token == expected) }
             def emitExpectedToken(expected: LegacyToken) = {
               require(curr.token == expected); emitToken()
             }
             if (input.chars(dollarOffset + 1) == '{') {
               emitSpliceStart(dollarOffset)
               nextToken()
-              interpolationStart = legacyIndex
-              legacyIndex =
-                loop(legacyIndex, braceBalance = 0, returnWhenBraceBalanceHitsZero = true)
-              if (legacyIndex >= legacyTokens.length)
-                syntaxError(interpolationStart, legacyIndex, "unclosed slice interpolation")
+              legacyIndex = loop(legacyIndex, returnWhenBraceBalanceHitsZero = true)
               emitSpliceEnd(curr.offset)
               emitContents()
             } else if (input.chars(dollarOffset + 1) == '_') {
@@ -324,17 +321,20 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       loop(legacyIndex, braceBalance1, returnWhenBraceBalanceHitsZero)
     }
 
-    loop(startingFrom = 0)
+    try loop(startingFrom = 0)
+    catch {
+      // ignore when token not correctly closed at the end
+      case _: UnexpectedInputEndException => ()
+    }
     val underlying = new Array[Token](tokens.size())
     tokens.toArray(underlying)
     Tokens(underlying, 0, underlying.length)
   }
-
-  private def syntaxError(startPos: Int, endPos: Int, message: String): Nothing =
-    throw new TokenizeException(Position.Range(input, startPos, endPos), message)
 }
 
 object ScalametaTokenizer {
+  class UnexpectedInputEndException() extends Exception
+
   def toTokenize: Tokenize = new Tokenize {
     def apply(input: Input, dialect: Dialect): Tokenized = {
       try {
