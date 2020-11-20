@@ -16,6 +16,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     input.tokenCache.getOrElseUpdate(dialect, uncachedTokenize())
   }
 
+  private final var interpolationStart = 0
+
   private def uncachedTokenize(): Tokens = {
     def legacyTokenToToken(curr: LegacyTokenData): Token = {
       (curr.token: @scala.annotation.switch) match {
@@ -235,8 +237,11 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
             if (input.chars(dollarOffset + 1) == '{') {
               emitSpliceStart(dollarOffset)
               nextToken()
+              interpolationStart = legacyIndex
               legacyIndex =
                 loop(legacyIndex, braceBalance = 0, returnWhenBraceBalanceHitsZero = true)
+              if (legacyIndex >= legacyTokens.length)
+                syntaxError(interpolationStart, legacyIndex, "unclosed slice interpolation")
               emitSpliceEnd(curr.offset)
               emitContents()
             } else if (input.chars(dollarOffset + 1) == '_') {
@@ -324,6 +329,9 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     tokens.toArray(underlying)
     Tokens(underlying, 0, underlying.length)
   }
+
+  private def syntaxError(startPos: Int, endPos: Int, message: String): Nothing =
+    throw new TokenizeException(Position.Range(input, startPos, endPos), message)
 }
 
 object ScalametaTokenizer {
