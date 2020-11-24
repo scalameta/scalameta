@@ -74,6 +74,30 @@ class GivenUsingSuite extends BaseDottySuite {
       )
     )
   }
+  test("given-override-def") {
+    runTestAssert[Stat](
+      """|given intOrd
+         |   as Ord[Int] {
+         |  def fn = ()
+         |}
+         |""".stripMargin,
+      assertLayout = Some("given intOrd as Ord[Int] { def fn = () }")
+    )(
+      Defn.Given(
+        Nil,
+        Type.Name("intOrd"),
+        Nil,
+        Nil,
+        Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(Defn.Def(Nil, Term.Name("fn"), Nil, Nil, None, Lit.Unit()))
+        )
+      )
+    )
+  }
 
   test("given-self") {
     runTestAssert[Stat]("given intOrd as Ord[Int] { current => }")(

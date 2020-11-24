@@ -3846,7 +3846,12 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     )
     val uparamss = paramClauses(ownerIsType = false)
     val (sigName, sigTparams, sigUparamss) = if (isSoftKw(token, SkAs)) {
-      next()
+      accept[Ident]
+      (name, tparams, uparamss)
+      // as can be on a next line and LF will not be removed before since `as` is an ident
+    } else if (token.is[LF] && ahead(isSoftKw(token, SkAs))) {
+      accept[LF]
+      accept[Ident]
       (name, tparams, uparamss)
     } else {
       in = forked
