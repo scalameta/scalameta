@@ -965,7 +965,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   @classifier
   trait InlineSoftIdent {
     private def noIdentAhead() =
-      ahead(token.isNot[Ident] && !DclIntro.unapply(token) && !Modifier.unapply(token))
+      ahead(
+        token.isNot[Ident] && token.isNot[DclIntro] && token.isNot[Modifier] && token.isNot[KwIf]
+      )
 
     def unapply(token: Token): Boolean =
       isInlineSoftKw(token) && noIdentAhead()
@@ -3384,14 +3386,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     loop(Nil)
   }
 
-  def softModifiers(): List[Mod] = {
-    if (isInlineSoftKw(token) && ahead(token.is[Ident] || token.is[KwIf])) {
-      List(modifier())
-    } else {
-      Nil
-    }
-  }
-
   def localModifiers(): List[Mod] = modifiers(isLocal = true)
 
   def annots(skipNewLines: Boolean, allowArgss: Boolean = true): List[Mod.Annot] = {
@@ -3491,7 +3485,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (!mods.has[Mod.Override])
         rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     } else {
-      mods ++= softModifiers()
+      if (isInlineSoftKw(token) && ahead(token.is[Ident])) {
+        mods ++= List(modifier())
+      }
     }
 
     val (isValParam, isVarParam) = (ownerIsType && token.is[KwVal], ownerIsType && token.is[KwVar])
@@ -3736,7 +3732,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def nonLocalDefOrDcl(): Stat = {
     val anns = annots(skipNewLines = true)
-    val mods = anns ++ modifiers() ++ softModifiers()
+    val mods = anns ++ modifiers()
     defOrDclOrSecondaryCtor(mods) match {
       case s if s.isTemplateStat => s
       case other => syntaxError("is not a valid template statement", at = other)
