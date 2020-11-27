@@ -2628,7 +2628,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           Success(autoPos(inParensOrTupleOrUnit(location = NoStat, allowRepeated = allowRepeated)))
         case LeftBrace() =>
           canApply = false
-          Success(inBraces(blockExpr()))
+          Success(blockExpr())
         case KwNew() =>
           canApply = false
           next()
@@ -2652,7 +2652,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case MacroSplicedIdent(_) =>
           Success(macroSplicedIdent())
         case Indentation.Indent() =>
-          Success(indented(blockExpr()))
+          Success(blockExpr())
         case _ =>
           Failure(new ParseException(token.pos, "illegal start of simple expression"))
       }
@@ -2782,7 +2782,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def argumentExprsWithUsing(): (List[Term], Boolean) = token match {
     case LeftBrace() =>
-      (List(inBraces(blockExpr())), false)
+      (List(blockExpr()), false)
     case LeftParen() =>
       inParens(token match {
         case RightParen() =>
@@ -2808,9 +2808,18 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def blockExpr(): Term = autoPos {
-    if (token.is[CaseIntro] || (token.is[Ellipsis] && ahead(token.is[KwCase])))
-      Term.PartialFunction(caseClauses())
-    else block()
+    def blockOrCase() = {
+      if (token.is[CaseIntro] || (token.is[Ellipsis] && ahead(token.is[KwCase])))
+        Term.PartialFunction(caseClauses())
+      else block()
+    }
+    if (token.is[LeftBrace]) {
+      inBraces(blockOrCase())
+    } else if (token.is[Indentation.Indent]) {
+      indented(blockOrCase())
+    } else {
+      syntaxError("Expected brace or indentation.", at = token.pos)
+    }
   }
 
   def block(): Term = autoPos {
