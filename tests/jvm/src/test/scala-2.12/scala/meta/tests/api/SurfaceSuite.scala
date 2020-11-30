@@ -264,6 +264,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Mod.Covariant
       |scala.meta.Mod.Final
       |scala.meta.Mod.Implicit
+      |scala.meta.Mod.Infix
       |scala.meta.Mod.Inline
       |scala.meta.Mod.Lazy
       |scala.meta.Mod.Opaque

@@ -126,6 +126,7 @@ package object dialects {
     .withAllowPolymorphicFunctions(true)
     .withAllowMatchAsOperator(true)
     .withAllowTypeMatch(true)
+    .withAllowInfixMods(true)
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)
