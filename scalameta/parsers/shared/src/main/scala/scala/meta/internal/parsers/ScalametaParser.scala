@@ -788,15 +788,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
-  def onlyAcceptMod[M <: Mod: ClassTag, T1 <: Token: TokenInfo, T2 <: Token: TokenInfo](
-      mods: List[Mod],
-      errorMsg: String
-  )(implicit classifier: Classifier[Mod, M]) = {
-    if (token.isNot[T1] && token.isNot[T2]) {
-      mods.getAll[M].foreach(m => syntaxError(errorMsg, at = m))
-    }
-  }
-
   class InvalidModCombination[M1 <: Mod, M2 <: Mod](m1: M1, m2: M2) {
     def errorMessage: String = Messages.IllegalCombinationModifiers(m1, m2)
   }
@@ -3819,10 +3810,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def defOrDclOrSecondaryCtor(mods: List[Mod]): Stat = {
     onlyAcceptMod[Mod.Lazy, KwVal](mods, "lazy not allowed here. Only vals can be lazy")
-    onlyAcceptMod[Mod.Infix, KwDef, KwType](
-      mods,
-      "infix not allowed here. Only defs or types can be infix"
-    )
     onlyAcceptMod[Mod.Opaque, KwType](mods, "opaque not allowed here. Only types can be opaque.")
     token match {
       case KwVal() | KwVar() =>
