@@ -200,7 +200,7 @@ class InlineSuite extends BaseDottySuite {
     assert(ifExpr.mods.head.is[Mod.Inline], "if should have an inline modifier")
   }
 
-  test("inline-if") {
+  test("inline-if-method") {
     val input = """|def fn: Unit =
                    |    inline if cond then
                    |  truep
@@ -209,10 +209,7 @@ class InlineSuite extends BaseDottySuite {
     runTestAssert[Stat](
       input,
       assertLayout = Some(
-        """|def fn: Unit = {
-           |  inline if (cond) truep
-           |}
-           |""".stripMargin
+        "def fn: Unit = inline if (cond) truep"
       )
     )(
       Defn.Def(
@@ -221,12 +218,37 @@ class InlineSuite extends BaseDottySuite {
         Nil,
         Nil,
         Some(Type.Name("Unit")),
-        Term.Block(List(Term.If(Term.Name("cond"), Term.Name("truep"), Lit.Unit())))
+        Term.If(Term.Name("cond"), Term.Name("truep"), Lit.Unit())
       )
     )(parseTempl)
 
     val defnDef = parseTempl(input).asInstanceOf[Defn.Def]
-    val ifExpr = defnDef.body.asInstanceOf[Term.Block].stats.head.asInstanceOf[Term.If]
+    val ifExpr = defnDef.body.asInstanceOf[Term.If]
+    assert(ifExpr.mods.head.is[Mod.Inline], "if should have an inline modifier")
+  }
+
+  test("inline-if-method-oneline") {
+    val input = """|def fn: Unit = inline if cond then truep
+                   |""".stripMargin
+
+    runTestAssert[Stat](
+      input,
+      assertLayout = Some(
+        "def fn: Unit = inline if (cond) truep"
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("fn"),
+        Nil,
+        Nil,
+        Some(Type.Name("Unit")),
+        Term.If(Term.Name("cond"), Term.Name("truep"), Lit.Unit())
+      )
+    )(parseTempl)
+
+    val defnDef = parseTempl(input).asInstanceOf[Defn.Def]
+    val ifExpr = defnDef.body.asInstanceOf[Term.If]
     assert(ifExpr.mods.head.is[Mod.Inline], "if should have an inline modifier")
   }
 }

@@ -111,12 +111,14 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |  truep
                   |    else
                   |  falsep
+                  |    otherStatement()
                   |""".stripMargin
     runTestAssert[Stat](
       code,
       assertLayout = Some(
         """|def fn: Unit = {
            |  if (cond) truep else falsep
+           |  otherStatement()
            |}
            |""".stripMargin
       )
@@ -127,7 +129,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         Nil,
         Some(Type.Name("Unit")),
-        Term.Block(List(Term.If(Term.Name("cond"), Term.Name("truep"), Term.Name("falsep"))))
+        Term.Block(
+          List(
+            Term.If(Term.Name("cond"), Term.Name("truep"), Term.Name("falsep")),
+            Term.Apply(Term.Name("otherStatement"), Nil)
+          )
+        )
       )
     )
   }
@@ -357,9 +364,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val output = """|class A {
                     |  def forward: Unit = parents match {
                     |    case a =>
-                    |      for ( case a: TP <- body) {
-                    |        fordo
-                    |      }
+                    |      for ( case a: TP <- body) fordo
                     |    case b =>
                     |      ok
                     |  }
@@ -393,7 +398,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                           Term.Name("body")
                         )
                       ),
-                      Term.Block(List(Term.Name("fordo")))
+                      Term.Name("fordo")
                     )
                   ),
                   Case(Pat.Var(Term.Name("b")), None, Term.Name("ok"))
@@ -519,10 +524,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  finally placeholderParams = saved
          |""".stripMargin,
       assertLayout = Some(
-        """|def wrapPlaceholders(t: Tree) = try {
-           |  if (placeholderParams.isEmpty) t else new WildcardFunction(placeholderParams.reverse, t)
-           |} finally placeholderParams = saved
-           |""".stripMargin
+        "def wrapPlaceholders(t: Tree) = try if (placeholderParams.isEmpty) t else new WildcardFunction(placeholderParams.reverse, t) finally placeholderParams = saved"
       )
     )(
       Defn.Def(
@@ -532,21 +534,17 @@ class SignificantIndentationSuite extends BaseDottySuite {
         List(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("Tree")), None))),
         None,
         Term.Try(
-          Term.Block(
-            List(
-              Term.If(
-                Term.Select(Term.Name("placeholderParams"), Term.Name("isEmpty")),
-                Term.Name("t"),
-                Term.New(
-                  Init(
-                    Type.Name("WildcardFunction"),
-                    Name(""),
-                    List(
-                      List(
-                        Term.Select(Term.Name("placeholderParams"), Term.Name("reverse")),
-                        Term.Name("t")
-                      )
-                    )
+          Term.If(
+            Term.Select(Term.Name("placeholderParams"), Term.Name("isEmpty")),
+            Term.Name("t"),
+            Term.New(
+              Init(
+                Type.Name("WildcardFunction"),
+                Name(""),
+                List(
+                  List(
+                    Term.Select(Term.Name("placeholderParams"), Term.Name("reverse")),
+                    Term.Name("t")
                   )
                 )
               )
