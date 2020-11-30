@@ -780,11 +780,20 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
   }
 
-  def onlyAcceptMod[M <: Mod, T <: Token](
+  def onlyAcceptMod[M <: Mod: ClassTag, T <: Token: TokenInfo](
       mods: List[Mod],
       errorMsg: String
-  )(implicit classifier: Classifier[Mod, M], tag: ClassTag[M], tokenInfo: TokenInfo[T]) = {
+  )(implicit classifier: Classifier[Mod, M]) = {
     if (token.isNot[T]) {
+      mods.getAll[M].foreach(m => syntaxError(errorMsg, at = m))
+    }
+  }
+
+  def onlyAcceptMod[M <: Mod: ClassTag, T1 <: Token: TokenInfo, T2 <: Token : TokenInfo](
+      mods: List[Mod],
+      errorMsg: String
+  )(implicit classifier: Classifier[Mod, M]) = {
+    if (token.isNot[T1] && token.isNot[T2] ) {
       mods.getAll[M].foreach(m => syntaxError(errorMsg, at = m))
     }
   }
@@ -823,6 +832,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def isSoftKw(token: Token, skw: SoftKeyword.SoftKeyword): Boolean =
     isIdentAnd(token, _ == skw.name)
+
+  def isInfixSoftKw(token: Token): Boolean =
+    isSoftKw(token, SkInfix) && dialect.allowInfixModifier
 
   def isInlineSoftKw(token: Token): Boolean =
     isSoftKw(token, SkInline) && dialect.allowInlineMods
@@ -905,9 +917,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
   }
 
+  // TODO should use isSoftKeyword
   private def inlineDefOrOpaque(token: Token): Boolean = {
-    (token.text == "inline" && (DclIntro.unapply(token.next) || Modifier.unapply(token.next))) ||
-    (token.text == "opaque" && (DclIntro.unapply(token.next) || Modifier.unapply(token.next)))
+    (token.text == "inline"  || token.text == "opaque" || token.text == "infix") && 
+    (DclIntro.unapply(token.next) || Modifier.unapply(token.next))
   }
 
   @classifier
@@ -958,7 +971,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       (isSoftKw(token, SoftKeyword.SkOpen) && dialect.allowOpenClass) ||
       (isSoftKw(token, SoftKeyword.SkTransparent) && dialect.allowInlineMods) ||
       (token.is[KwSuper] && dialect.allowSuperTrait && token.next.is[KwTrait]) ||
-      isInlineSoftKw(token)
+      isInlineSoftKw(token) || isInfixSoftKw(token) 
     }
   }
 
@@ -977,7 +990,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   trait NonParamsModifier {
     def unapply(token: Token): Boolean = {
       isSoftKw(token, SoftKeyword.SkOpen) || isSoftKw(token, SoftKeyword.SkOpaque) ||
-      isSoftKw(token, SoftKeyword.SkTransparent)
+      isSoftKw(token, SoftKeyword.SkTransparent) || isSoftKw(token, SoftKeyword.SkInfix) 
     }
   }
 
@@ -3284,6 +3297,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwPrivate() => accessModifier()
       case KwProtected() => accessModifier()
       case Ident(SoftKeyword.SkInline.name) if dialect.allowInlineMods => next(); Mod.Inline()
+      case token if isInfixSoftKw(token) => next(); Mod.Infix()
       case Ident(SoftKeyword.SkOpen.name) if dialect.allowOpenClass => next(); Mod.Open()
       case Ident(SoftKeyword.SkOpaque.name) if dialect.allowOpaqueTypes => next(); Mod.Opaque()
       case Ident(SoftKeyword.SkTransparent.name) if dialect.allowInlineMods =>
@@ -3321,6 +3335,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case Ident(SoftKeyword.SkTransparent.name) if dialect.allowInlineMods =>
         next(); Mod.Transparent()
       case Ident(SoftKeyword.SkInline.name) if dialect.allowInlineMods => next(); Mod.Inline()
+      case token if isInfixSoftKw(token) => next(); Mod.Infix()
       case Ident("valparam") if dialect.allowUnquotes => next(); Mod.ValParam()
       case Ident("varparam") if dialect.allowUnquotes => next(); Mod.VarParam()
       case _ => fail()
@@ -3750,6 +3765,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def defOrDclOrSecondaryCtor(mods: List[Mod]): Stat = {
     onlyAcceptMod[Mod.Lazy, KwVal](mods, "lazy not allowed here. Only vals can be lazy")
+    onlyAcceptMod[Mod.Infix, KwDef, KwType](mods, "infix not allowed here. Only defs or types can be infix")
     onlyAcceptMod[Mod.Opaque, KwType](mods, "opaque not allowed here. Only types can be opaque.")
     token match {
       case KwVal() | KwVar() =>
@@ -4642,7 +4658,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def localDef(implicitMod: Option[Mod.Implicit]): Stat = {
     val mods = (implicitMod ++: annots(skipNewLines = true)) ++ localModifiers()
     if (mods forall {
-        case _: Mod.Implicit | _: Mod.Lazy | _: Mod.Inline | _: Mod.Annot => true; case _ => false
+        case _: Mod.Implicit | _: Mod.Lazy | _: Mod.Inline | _: Mod.Infix | _: Mod.Annot => true; case _ => false
       }) {
       defOrDclOrSecondaryCtor(mods)
     } else {
@@ -4806,6 +4822,8 @@ object SoftKeyword {
   case object SkOpen extends SoftKeyword { override val name = "open" }
 
   case object SkTransparent extends SoftKeyword { override val name = "transparent" }
+
+  case object SkInfix extends SoftKeyword { override val name = "infix" }
 
   case object SkEnd extends SoftKeyword { override val name = "end" }
 

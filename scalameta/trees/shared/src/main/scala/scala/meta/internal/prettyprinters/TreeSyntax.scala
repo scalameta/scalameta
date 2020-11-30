@@ -1096,6 +1096,10 @@ object TreeSyntax {
         if (!dialect.allowInlineMods)
           throw new UnsupportedOperationException(s"$dialect doesn't support inline modifiers")
         kw("inline")
+      case _: Mod.Infix =>
+        if (!dialect.allowInfixModifier)
+          throw new UnsupportedOperationException(s"$dialect doesn't support infix modifiers")
+        kw("infix")
 
       // Enumerator
       case t: Enumerator.Val => s(p(Pattern1, t.pat), " = ", p(Expr, t.rhs))

@@ -119,7 +119,9 @@ final class Dialect private (
     // Dotty allows `.match` expressions and chaining matches
     val allowMatchAsOperator: Boolean,
     // Dotty allows `match on type
-    val allowTypeMatch: Boolean
+    val allowTypeMatch: Boolean,
+    // Dotty allows to define types and methods with an `infix` modifier
+    val allowInfixModifier: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -204,7 +206,8 @@ final class Dialect private (
       allowTypeInBlock = false,
       allowPolymorphicFunctions = false,
       allowMatchAsOperator = false,
-      allowTypeMatch = false
+      allowTypeMatch = false,
+      allowInfixModifier = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -366,6 +369,9 @@ final class Dialect private (
   def withAllowTypeMatch(newValue: Boolean): Dialect = {
     privateCopy(allowTypeMatch = newValue)
   }
+  def withAllowInfixModifier(newValue: Boolean): Dialect = {
+    privateCopy(allowInfixModifier = newValue)
+  }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -421,7 +427,8 @@ final class Dialect private (
       allowTypeInBlock: Boolean = this.allowTypeInBlock,
       allowPolymorphicFunctions: Boolean = this.allowPolymorphicFunctions,
       allowMatchAsOperator: Boolean = this.allowMatchAsOperator,
-      allowTypeMatch: Boolean = this.allowTypeMatch
+      allowTypeMatch: Boolean = this.allowTypeMatch,
+      allowInfixModifier: Boolean = this.allowInfixModifier
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -474,7 +481,8 @@ final class Dialect private (
       allowTypeInBlock,
       allowPolymorphicFunctions,
       allowMatchAsOperator,
-      allowTypeMatch
+      allowTypeMatch,
+      allowInfixModifier
       // NOTE(olafur): add the next argument above this comment.
     )
   }

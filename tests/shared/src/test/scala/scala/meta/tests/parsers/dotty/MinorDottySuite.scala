@@ -924,4 +924,81 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )
   }
+
+  // infix modifier - can be appplied only to type and methods
+  test("infix-modifier") {
+
+    runTestAssert[Stat](
+      """|infix def a(param: Int) = param
+         |""".stripMargin
+    )(
+      Defn.Def(
+        List(Mod.Infix()),
+        Term.Name("a"),
+        Nil,
+        List(List(Term.Param(Nil, Term.Name("param"), Some(Type.Name("Int")), None))),
+        None,
+        Term.Name("param")
+      )
+    )
+
+    runTestAssert[Stat](
+      """|class A:
+         |  infix type or[X, Y]
+         |  infix def x(a : Int): String or Int = 1
+         |""".stripMargin,
+      assertLayout = Some(
+        """|class A {
+           |  infix type or[X, Y]
+           |  infix def x(a: Int): String or Int = 1
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Class(
+        Nil,
+        Type.Name("A"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Decl.Type(
+              List(Mod.Infix()),
+              Type.Name("or"),
+              List(
+                Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil),
+                Type.Param(Nil, Type.Name("Y"), Nil, Type.Bounds(None, None), Nil, Nil)
+              ),
+              Type.Bounds(None, None)
+            ),
+            Defn.Def(
+              List(Mod.Infix()),
+              Term.Name("x"),
+              Nil,
+              List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))),
+              Some(Type.ApplyInfix(Type.Name("String"), Type.Name("or"), Type.Name("Int"))),
+              Lit.Int(1)
+            )
+          )
+        )
+      )
+    )
+
+    runTestError[Stat](
+      """|infix val a = b
+         |""".stripMargin,
+      "infix not allowed here. Only defs or types can be infix"
+    )
+    
+    runTestError[Stat](
+      """|infix class A
+         |""".stripMargin,
+      "infix not allowed here. Only defs or types can be infix"
+    )
+
+  }
+
 }
