@@ -992,7 +992,7 @@ class MinorDottySuite extends BaseDottySuite {
          |""".stripMargin,
       "infix not allowed here. Only defs or types can be infix"
     )
-    
+
     runTestError[Stat](
       """|infix class A
          |""".stripMargin,

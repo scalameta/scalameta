@@ -177,4 +177,10 @@ class DefnSuite extends ParseSuite {
       blockStat("inline def x = 42")
     }
   }
+
+  test("infix is not allowed") {
+    intercept[parsers.ParseException] {
+      blockStat("infix def x = 42")
+    }
+  }
 }

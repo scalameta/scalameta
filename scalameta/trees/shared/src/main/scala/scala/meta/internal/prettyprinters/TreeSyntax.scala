@@ -1097,7 +1097,7 @@ object TreeSyntax {
           throw new UnsupportedOperationException(s"$dialect doesn't support inline modifiers")
         kw("inline")
       case _: Mod.Infix =>
-        if (!dialect.allowInfixModifier)
+        if (!dialect.allowInfixMods)
           throw new UnsupportedOperationException(s"$dialect doesn't support infix modifiers")
         kw("infix")
 
