@@ -773,9 +773,7 @@ class MinorDottySuite extends BaseDottySuite {
   test("catch-end-def") {
     val layout =
       """|object X {
-         |  def fx = try {
-         |    action()
-         |  } catch {
+         |  def fx = try action() catch {
          |    case ex =>
          |      err()
          |  }
@@ -808,7 +806,7 @@ class MinorDottySuite extends BaseDottySuite {
               Nil,
               None,
               Term.Try(
-                Term.Block(List(Term.Apply(Term.Name("action"), Nil))),
+                Term.Apply(Term.Name("action"), Nil),
                 List(Case(Pat.Var(Term.Name("ex")), None, Term.Apply(Term.Name("err"), Nil))),
                 None
               )
@@ -884,12 +882,7 @@ class MinorDottySuite extends BaseDottySuite {
          |       "-siteroot" +: "../docs"
          |    +: "-project" +: Nil
          |""".stripMargin,
-      assertLayout = Some(
-        """|def withClasspath = {
-           |  "-siteroot" +: "../docs" +: "-project" +: Nil
-           |}
-           |""".stripMargin
-      )
+      assertLayout = Some("""def withClasspath = "-siteroot" +: "../docs" +: "-project" +: Nil""")
     )(
       Defn.Def(
         Nil,
@@ -897,25 +890,21 @@ class MinorDottySuite extends BaseDottySuite {
         Nil,
         Nil,
         None,
-        Term.Block(
+        Term.ApplyInfix(
+          Lit.String("-siteroot"),
+          Term.Name("+:"),
+          Nil,
           List(
             Term.ApplyInfix(
-              Lit.String("-siteroot"),
+              Lit.String("../docs"),
               Term.Name("+:"),
               Nil,
               List(
                 Term.ApplyInfix(
-                  Lit.String("../docs"),
+                  Lit.String("-project"),
                   Term.Name("+:"),
                   Nil,
-                  List(
-                    Term.ApplyInfix(
-                      Lit.String("-project"),
-                      Term.Name("+:"),
-                      Nil,
-                      List(Term.Name("Nil"))
-                    )
-                  )
+                  List(Term.Name("Nil"))
                 )
               )
             )

@@ -34,11 +34,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |else
                   |  gx
                   |""".stripMargin
-    val output = """|if (cond) fx else {
-                    |  gx
-                    |}""".stripMargin
+    val output = """|if (cond) fx else gx""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.If(Term.Name("cond"), Term.Name("fx"), Term.Block(List(Term.Name("gx"))))
+      Term.If(Term.Name("cond"), Term.Name("fx"), Term.Name("gx"))
     )
   }
 
@@ -76,16 +74,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |else 
                   |  gx
                   |""".stripMargin
-    val output = """|if (cond) {
-                    |  fx
-                    |} else {
-                    |  gx
-                    |}""".stripMargin
+    val output = "if (cond) fx else gx"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.If(
         Term.Name("cond"),
-        Term.Block(List(Term.Name("fx"))),
-        Term.Block(List(Term.Name("gx")))
+        Term.Name("fx"),
+        Term.Name("gx")
       )
     )
   }
@@ -96,13 +90,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |then
                   |  gx
                   |""".stripMargin
-    val output = """|if (cond1 && cond2) {
-                    |  gx
-                    |}""".stripMargin
+    val output = "if (cond1 && cond2) gx"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.If(
         Term.ApplyInfix(Term.Name("cond1"), Term.Name("&&"), Nil, List(Term.Name("cond2"))),
-        Term.Block(List(Term.Name("gx"))),
+        Term.Name("gx"),
         Lit.Unit()
       )
     )
@@ -166,15 +158,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |  else
                   |    B)
                   |""".stripMargin
-    val output = """|fx(if (cond) A else {
-                    |  B
-                    |})
-                    |""".stripMargin
+    val output = "fx(if (cond) A else B)"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.Apply(
         Term.Name("fx"),
         List(
-          Term.If(Term.Name("cond"), Term.Name("A"), Term.Block(List(Term.Name("B"))))
+          Term.If(Term.Name("cond"), Term.Name("A"), Term.Name("B"))
         )
       )
     )
@@ -280,17 +269,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |finally
                   |  ok
                   |""".stripMargin
-    val output = """|try {
-                    |  fx
-                    |} finally {
-                    |  ok
-                    |}
-                    |""".stripMargin
+    val output = "try fx finally ok"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.Try(
-        Term.Block(List(Term.Name("fx"))),
+        Term.Name("fx"),
         Nil,
-        Some(Term.Block(List(Term.Name("ok"))))
+        Some(Term.Name("ok"))
       )
     )
   }
@@ -461,9 +445,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  case x =>
                     |    ax
                     |    bx
-                    |} finally {
-                    |  fx
-                    |}
+                    |} finally fx
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.Try(
@@ -471,7 +453,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         List(
           Case(Pat.Var(Term.Name("x")), None, Term.Block(List(Term.Name("ax"), Term.Name("bx"))))
         ),
-        Some(Term.Block(List(Term.Name("fx"))))
+        Some(Term.Name("fx"))
       )
     )
   }
@@ -680,13 +662,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |do
                   |  fx
                   |""".stripMargin
-    val output = """|for (a <- gen) {
-                    |  fx
-                    |}""".stripMargin
+    val output = "for (a <- gen) fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.For(
         List(Enumerator.Generator(Pat.Var(Term.Name("a")), Term.Name("gen"))),
-        Term.Block(List(Term.Name("fx")))
+        Term.Name("fx")
       )
     )
   }
@@ -772,16 +752,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |yield
                   |  fx
                   |""".stripMargin
-    val output = """|for (a <- gen; if cnd) yield {
-                    |  fx
-                    |}""".stripMargin
+    val output = "for (a <- gen; if cnd) yield fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.ForYield(
         List(
           Enumerator.Generator(Pat.Var(Term.Name("a")), Term.Name("gen")),
           Enumerator.Guard(Term.Name("cnd"))
         ),
-        Term.Block(List(Term.Name("fx")))
+        Term.Name("fx")
       )
     )
   }
@@ -814,9 +792,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val code = """|for case a: TP <- iter do
                   |  echo
                   |""".stripMargin
-    val output = """|for ( case a: TP <- iter) {
-                    |  echo
-                    |}
+    val output = """|for ( case a: TP <- iter) echo
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.For(
@@ -824,7 +800,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Enumerator
             .CaseGenerator(Pat.Typed(Pat.Var(Term.Name("a")), Type.Name("TP")), Term.Name("iter"))
         ),
-        Term.Block(List(Term.Name("echo")))
+        Term.Name("echo")
       )
     )
   }
@@ -833,9 +809,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val code = """|for case a: TP <- iter if cnd do
                   |  echo
                   |""".stripMargin
-    val output = """|for ( case a: TP <- iter; if cnd) {
-                    |  echo
-                    |}
+    val output = """|for ( case a: TP <- iter; if cnd) echo
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.For(
@@ -844,7 +818,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
             .CaseGenerator(Pat.Typed(Pat.Var(Term.Name("a")), Type.Name("TP")), Term.Name("iter")),
           Enumerator.Guard(Term.Name("cnd"))
         ),
-        Term.Block(List(Term.Name("echo")))
+        Term.Name("echo")
       )
     )
   }
@@ -922,9 +896,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val code = """|for (arg, param) <- args.zip(vparams) yield
                   |  arg
                   |""".stripMargin
-    val output = """|for ((arg, param) <- args.zip(vparams)) yield {
-                    |  arg
-                    |}
+    val output = """|for ((arg, param) <- args.zip(vparams)) yield arg
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.ForYield(
@@ -934,7 +906,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
             Term.Apply(Term.Select(Term.Name("args"), Term.Name("zip")), List(Term.Name("vparams")))
           )
         ),
-        Term.Block(List(Term.Name("arg")))
+        Term.Name("arg")
       )
     )
   }
@@ -988,18 +960,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |  fx
                   |  fy
                   |""".stripMargin
-    val output = """|while ({
-                    |  fx + fy
-                    |}) {
+    val output = """|while (fx + fy) {
                     |  fx
                     |  fy
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.While(
-        Term.Block(
-          List(Term.ApplyInfix(Term.Name("fx"), Term.Name("+"), Nil, List(Term.Name("fy"))))
-        ),
+        Term.ApplyInfix(Term.Name("fx"), Term.Name("+"), Nil, List(Term.Name("fy"))),
         Term.Block(List(Term.Name("fx"), Term.Name("fy")))
       )
     )
@@ -1571,22 +1539,18 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Nil,
       List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))),
       Some(Type.Name("String")),
-      Term.Block(
-        List(
-          Term.Apply(
-            Term.Select(
-              Term.Match(
-                Term.Name("x"),
-                List(
-                  Case(Lit.Int(1), None, Lit.String("1")),
-                  Case(Pat.Wildcard(), None, Lit.String("ERR"))
-                )
-              ),
-              Term.Name("trim")
-            ),
-            Nil
-          )
-        )
+      Term.Apply(
+        Term.Select(
+          Term.Match(
+            Term.Name("x"),
+            List(
+              Case(Lit.Int(1), None, Lit.String("1")),
+              Case(Pat.Wildcard(), None, Lit.String("ERR"))
+            )
+          ),
+          Term.Name("trim")
+        ),
+        Nil
       )
     )
 
@@ -1608,12 +1572,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |   .trim()
          |""".stripMargin,
       assertLayout = Some(
-        """|def mtch(x: Int): String = {
-           |  (x match {
-           |    case 1 => "1"
-           |    case _ => "ERR"
-           |  }).trim()
-           |}
+        """|def mtch(x: Int): String = (x match {
+           |  case 1 => "1"
+           |  case _ => "ERR"
+           |}).trim()
            |""".stripMargin
       )
     )(expected)

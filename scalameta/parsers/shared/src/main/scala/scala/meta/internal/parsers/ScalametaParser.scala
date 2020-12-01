@@ -2062,7 +2062,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   private def exprMaybeIndented(): Term = {
     if (token.is[Indentation.Indent]) {
-      indented(block())
+      block()
     } else {
       expr()
     }
@@ -2087,42 +2087,55 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       atPos(t, auto)(Term.Match(t, inBracesOrNil(caseClauses())))
     }
   }
+
+  def ifClause(isInline: Boolean = false) = {
+    accept[KwIf]
+    val (cond, thenp) = if (token.isNot[LeftParen] && dialect.allowSignificantIndentation) {
+      val cond = expr()
+      acceptOpt[LF]
+      accept[KwThen]
+      (cond, exprMaybeIndented())
+    } else {
+      val forked = in.fork
+      var cond = condExpr()
+      if ((token.is[Ident] && isLeadingInfixOperator(token)) || token.is[Dot]) {
+        in = forked
+        cond = expr()
+      }
+      newLinesOpt()
+      acceptOpt[KwThen]
+      (cond, exprMaybeIndented())
+    }
+
+    val ifExpr = if (tryAcceptWithOptLF[KwElse]) {
+      Term.If(cond, thenp, exprMaybeIndented())
+    } else if (token.is[Semicolon] && ahead { token.is[KwElse] }) {
+      next(); next(); Term.If(cond, thenp, expr())
+    } else {
+      Term.If(cond, thenp, atPos(in.tokenPos, in.prevTokenPos)(Lit.Unit()))
+    }
+
+    if (isInline) {
+      ifExpr.setMods(List(Mod.Inline()))
+    }
+    ifExpr
+  }
+
   // FIXME: when parsing `(2 + 3)`, do we want the ApplyInfix's position to include parentheses?
   // if yes, then nothing has to change here
   // if no, we need eschew autoPos here, because it forces those parentheses on the result of calling prefixExpr
   // see https://github.com/scalameta/scalameta/issues/1083 and https://github.com/scalameta/scalameta/issues/1223
   def expr(location: Location, allowRepeated: Boolean): Term =
     autoPos(token match {
+      case SkInline() if ahead(token.is[KwIf]) =>
+        accept[Ident]
+        ifClause(isInline = true)
       case KwIf() =>
-        next()
-        val (cond, thenp) = if (token.isNot[LeftParen] && dialect.allowSignificantIndentation) {
-          val cond = expr()
-          acceptOpt[LF]
-          accept[KwThen]
-          (cond, exprMaybeIndented())
-        } else {
-          val forked = in.fork
-          var cond = condExpr()
-          if ((token.is[Ident] && isLeadingInfixOperator(token)) || token.is[Dot]) {
-            in = forked
-            cond = expr()
-          }
-          newLinesOpt()
-          acceptOpt[KwThen]
-          (cond, exprMaybeIndented())
-        }
-
-        if (tryAcceptWithOptLF[KwElse]) {
-          Term.If(cond, thenp, exprMaybeIndented())
-        } else if (token.is[Semicolon] && ahead { token.is[KwElse] }) {
-          next(); next(); Term.If(cond, thenp, expr())
-        } else {
-          Term.If(cond, thenp, atPos(in.tokenPos, in.prevTokenPos)(Lit.Unit()))
-        }
+        ifClause()
       case KwTry() =>
         next()
         val body: Term = token match {
-          case Indentation.Indent() => indented(block())
+          case Indentation.Indent() => block()
           case _ if dialect.allowTryWithAnyExpr => expr()
           case LeftBrace() => autoPos(inBracesOrUnit(block()))
           case LeftParen() => inParensOrUnit(expr())
@@ -2883,7 +2896,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def block(): Term = autoPos {
-    if (token.is[Indentation.Indent]) indented(Term.Block(blockStatSeq()))
+    if (token.is[Indentation.Indent]) indented {
+      val stats = blockStatSeq()
+      stats match {
+        case (head: Term) :: Nil => head
+        case others => Term.Block(others)
+      }
+    }
     else Term.Block(blockStatSeq())
   }
 
@@ -3825,14 +3844,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwCase() if ahead(token.is[Ident]) && dialect.allowEnums =>
         enumCaseDef(mods)
       case KwIf() if mods.size == 1 && mods.head.is[Mod.Inline] =>
-        expr() match {
-          case ifExpr: Term.If =>
-            ifExpr.setMods(mods)
-            ifExpr
-          case expr => syntaxError("Unexpected expressions after inline modifier", at = expr.pos)
-        }
-      case KwIf() if mods.size > 0 =>
-        syntaxError("If can only contain inline modifier", at = token.pos)
+        ifClause(isInline = true)
       case other =>
         tmplDef(mods)
     }
