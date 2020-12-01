@@ -538,9 +538,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     dialect.allowSignificantIndentation &&
       tkn.text.forall(Chars.isOperatorPart) &&
       !tkn.text.startsWith("@") &&
-      tkn.nextSafe.is[Whitespace] &&
-      (tkn.strictNext.is[Ident] || tkn.strictNext.is[Literal] || tkn.strictNext
-        .is[LeftParen] || tkn.strictNext.is[LeftBrace])
+      tkn.nextSafe.is[Whitespace] && (
+        tkn.strictNext.is[Ident] || tkn.strictNext.is[Interpolation.Id] ||
+          tkn.strictNext.is[Literal] || tkn.strictNext.is[LeftParen] ||
+          tkn.strictNext.is[LeftBrace]
+      )
 
   // NOTE: public methods of TokenIterator return scannerTokens-based positions
   trait TokenIterator extends Iterator[Token] {

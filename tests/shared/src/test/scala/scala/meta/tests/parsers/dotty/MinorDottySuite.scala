@@ -913,4 +913,114 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )
   }
+
+  test("colon-extractor") {
+    runTestAssert[Stat](
+      """|a match {case List(xs: _*) => }
+         |""".stripMargin,
+      assertLayout = Some(
+        """|a match {
+           |  case List(xs as _*) =>
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Match(
+        Term.Name("a"),
+        List(
+          Case(
+            Pat.Extract(
+              Term.Name("List"),
+              List(Pat.Bind(Pat.Var(Term.Name("xs")), Pat.SeqWildcard()))
+            ),
+            None,
+            Term.Block(Nil)
+          )
+        )
+      )
+    )
+  }
+
+  test("at-extractor") {
+    runTestAssert[Stat](
+      """|a match {case List(xs@ _*) => }
+         |""".stripMargin,
+      assertLayout = Some(
+        """|a match {
+           |  case List(xs as _*) =>
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Match(
+        Term.Name("a"),
+        List(
+          Case(
+            Pat.Extract(
+              Term.Name("List"),
+              List(Pat.Bind(Pat.Var(Term.Name("xs")), Pat.SeqWildcard()))
+            ),
+            None,
+            Term.Block(Nil)
+          )
+        )
+      )
+    )
+  }
+
+  test("empty-case-class") {
+    val error = "case classes must have a parameter list"
+    runTestError[Stat]("case class A", error)
+    runTestError[Stat]("case class A[T]", error)
+    runTestError[Stat]("case class A[T] private", error)
+  }
+
+  test("trailing-coma") {
+    runTestAssert[Stat](
+      """|case class A(
+         |  x: X,
+         |)""".stripMargin,
+      assertLayout = Some(
+        """|case class A(x: X)
+           |""".stripMargin
+      )
+    )(
+      Defn.Class(
+        List(Mod.Case()),
+        Type.Name("A"),
+        Nil,
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None)))
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil)
+      )
+    )
+  }
+
+  test("complex-interpolation") {
+    runTestAssert[Stat](
+      """|val base =
+         |  ""
+         |  ++ s""
+         |""".stripMargin,
+      assertLayout = Some(
+        """|val base = "" ++ (s"")
+           |""".stripMargin
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("base"))),
+        None,
+        Term.ApplyInfix(
+          Lit.String(""),
+          Term.Name("++"),
+          Nil,
+          List(Term.Interpolate(Term.Name("s"), List(Lit.String("")), Nil))
+        )
+      )
+    )
+  }
 }

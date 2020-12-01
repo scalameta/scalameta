@@ -12,7 +12,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
   // IF
   // --------------------------
 
-  test("old-if-single1".only) {
+  test("old-if-single1") {
     val code = "if (cond) -a else a"
     runTestAssert[Stat](code)(
       Term.If(Term.Name("cond"), Term.ApplyUnary(Term.Name("-"), Term.Name("a")), Term.Name("a"))

@@ -56,6 +56,7 @@ final class Dialect private (
     // Are type lambdas allowed, i.e. is `[T] => (T, T)` legal or not?
     val allowTypeLambdas: Boolean,
     // Are view bounds supported by this dialect?
+    // def f[A <% Int](a: A)
     // Removed in Dotty.
     val allowViewBounds: Boolean,
     // Are `with` intersection types supported by this dialect?
