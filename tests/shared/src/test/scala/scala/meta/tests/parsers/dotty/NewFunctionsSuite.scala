@@ -279,6 +279,34 @@ class NewFunctionsSuite extends BaseDottySuite {
       )
     )
   }
+  test("poly-function-type") {
+    runTestAssert[Stat](
+      """|def foo = {
+         |  f[[X] =>> String]
+         |}""".stripMargin
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("foo"),
+        Nil,
+        Nil,
+        None,
+        Term.Block(
+          List(
+            Term.ApplyType(
+              Term.Name("f"),
+              List(
+                Type.Lambda(
+                  List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
+                  Type.Name("String")
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  }
 
   test("poly-function-type-method") {
     runTestAssert[Stat](
