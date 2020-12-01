@@ -34,7 +34,6 @@ class TokenizerCoverageSuite() extends BaseTokenizerCoverageSuite {
   checkType[Type.Function]("() => →B←")
   checkType[Type.Function]("→A← => →B←")
   checkType[Type.Function]("(→A←, →B←) => →C←")
-  checkType[Type.ImplicitFunction]("implicit →A← => →B←", dotty)
   checkType[Type.Tuple]("(→A←, →B←)")
   checkType[Type.With]("→A← with →B←")
   checkType[Type.And]("→A← →&← →B←")

@@ -91,9 +91,6 @@ package object dialects {
     .withAllowColonForExtractorVarargs(true) // both @ and : work currently for Scala 3
     .withAllowEnums(true)
     .withAllowImplicitByNameParameters(true)
-    .withAllowImplicitFunctionTypes(
-      false
-    ) // this was added at some point in Dotty and later removed
     .withAllowInlineMods(true)
     .withAllowLiteralTypes(true)
     .withAllowMethodTypes(false)
@@ -102,7 +99,7 @@ package object dialects {
     .withAllowTraitParameters(true)
     .withAllowTypeLambdas(true)
     .withAllowViewBounds(false) // View bounds have been removed in Dotty
-    .withAllowWithTypes(true) // with types might be removed in Dotty in favour of `&`
+    .withAllowWithTypes(false) // removed in Dotty in favour of `&`, `with` will be treated as `&`
     .withAllowXmlLiterals(false) // Scala 3: parser doesn't support xml
     .withAllowGivenUsing(true)
     .withAllowExtensionMethods(true)

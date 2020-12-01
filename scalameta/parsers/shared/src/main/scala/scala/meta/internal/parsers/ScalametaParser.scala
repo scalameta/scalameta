@@ -1469,20 +1469,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     }
 
     def typ(): Type = autoPos {
-      if (token.is[KwImplicit] && dialect.allowImplicitFunctionTypes) {
-        next()
-        typRest() match {
-          case Type.Function(params, body) =>
-            Type.ImplicitFunction(params, body)
-          case t =>
-            syntaxError("function type expected", at = t)
-        }
-      } else {
-        typRest()
-      }
-    }
-
-    def typRest(): Type = autoPos {
       if (token.is[Colon] && dialect.allowMethodTypes) {
         next()
         Type.Method(Nil, typ())

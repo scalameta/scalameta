@@ -177,7 +177,11 @@ object Type {
   @ast class Function(params: List[Type], res: Type) extends Type
   @ast class PolyFunction(tparams: List[Type.Param], tpe: Type) extends Type
   @ast class ContextFunction(params: List[Type], res: Type) extends Type
-  @ast class ImplicitFunction(params: List[Type], res: Type) extends Type
+  @ast @deprecated("Implicit functions are not supported in any dialect")
+  class ImplicitFunction(
+      params: List[Type],
+      res: Type
+  ) extends Type
   @ast class Tuple(args: List[Type] @nonEmpty) extends Type {
     checkFields(args.length > 1 || (args.length == 1 && args.head.is[Type.Quasi]))
   }

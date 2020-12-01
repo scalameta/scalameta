@@ -22,7 +22,7 @@ final class Dialect private (
     // Are implicit by name parameters supported?
     // They are in Dotty, but not in Scala 2.12 or older.
     val allowImplicitByNameParameters: Boolean,
-    // Are implicit functions supported by this dialect?
+    // Implicit functions are no longer supported in any dialect
     val allowImplicitFunctionTypes: Boolean,
     // Are `inline` identifiers supported by this dialect?
     val allowInlineIdents: Boolean,
@@ -236,6 +236,7 @@ final class Dialect private (
   def withAllowImplicitByNameParameters(newValue: Boolean): Dialect = {
     privateCopy(allowImplicitByNameParameters = newValue)
   }
+  @deprecated("Implicit functions are not supported in any dialect")
   def withAllowImplicitFunctionTypes(newValue: Boolean): Dialect = {
     privateCopy(allowImplicitFunctionTypes = newValue)
   }
