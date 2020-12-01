@@ -1459,6 +1459,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         val tpe = typ()
         if (tpe.is[Type.Function])
           Type.PolyFunction(quants, tpe)
+        else if (tpe.is[Type.ContextFunction])
+          Type.PolyFunction(quants, tpe)
         else
           syntaxError("polymorphic function types must have a value parameter", at = token)
       } else {

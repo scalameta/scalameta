@@ -161,7 +161,7 @@ class NewFunctionsSuite extends BaseDottySuite {
     )
   }
 
-  test("polimorphic-func-term") {
+  test("polymorphic-func-term") {
     runTestAssert[Stat](
       "val t0 = [T] => (ts: List[T]) => ts.headOption"
     )(
@@ -187,7 +187,7 @@ class NewFunctionsSuite extends BaseDottySuite {
     )
   }
 
-  test("polimorphic-func-term-identity") {
+  test("polymorphic-func-term-identity") {
     runTestAssert[Stat](
       "val pid = [T] => (t: T) => t"
     )(
@@ -206,7 +206,7 @@ class NewFunctionsSuite extends BaseDottySuite {
     )
   }
 
-  test("polimorphic-func-term-complex") {
+  test("polymorphic-func-term-complex") {
     runTestAssert[Stat](
       "val t1 = [F[_], G[_], T] => (ft: F[T], f: F[T] => G[T]) => f(ft)"
     )(
@@ -376,6 +376,25 @@ class NewFunctionsSuite extends BaseDottySuite {
               )
             ),
             Type.Apply(Type.Name("G"), List(Type.Name("T")))
+          )
+        )
+      )
+    )
+  }
+
+  test("poly-context-function-type") {
+    runTestAssert[Stat](
+      "type F0 = [T] => List[T] ?=> Option[T]"
+    )(
+      Defn.Type(
+        Nil,
+        Type.Name("F0"),
+        Nil,
+        Type.PolyFunction(
+          List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+          Type.ContextFunction(
+            List(Type.Apply(Type.Name("List"), List(Type.Name("T")))),
+            Type.Apply(Type.Name("Option"), List(Type.Name("T")))
           )
         )
       )
