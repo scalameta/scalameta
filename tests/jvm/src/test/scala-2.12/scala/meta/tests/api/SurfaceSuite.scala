@@ -286,6 +286,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Pat.Bind
       |scala.meta.Pat.Extract
       |scala.meta.Pat.ExtractInfix
+      |scala.meta.Pat.Given
       |scala.meta.Pat.Interpolate
       |scala.meta.Pat.Macro
       |scala.meta.Pat.SeqWildcard

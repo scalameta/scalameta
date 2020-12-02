@@ -261,7 +261,10 @@ object Pat {
     checkFields(lhs.is[Pat.Wildcard] || lhs.is[Pat.Var] || lhs.is[Pat.Quasi] || lhs.is[Pat.Bind])
     checkFields(!rhs.is[Type.Var] && !rhs.is[Type.Placeholder])
   }
-  @ast class Macro(body: Term) extends Pat
+  @ast class Macro(body: Term) extends Pat {
+    checkFields(body.is[Term.QuotedMacroExpr])
+  }
+  @ast class Given(tpe: Type) extends Pat
   def fresh(): Pat.Var = Pat.Var(Term.fresh())
   def fresh(prefix: String): Pat.Var = Pat.Var(Term.fresh(prefix))
 }

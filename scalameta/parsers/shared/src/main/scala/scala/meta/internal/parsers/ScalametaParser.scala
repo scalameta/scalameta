@@ -3256,6 +3256,9 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
           Pat.Macro(macroQuote())
         case MacroQuotedIdent(_) =>
           Pat.Macro(macroQuotedIdent())
+        case KwGiven() =>
+          accept[KwGiven]
+          Pat.Given(typ())
         case _ =>
           onError(token)
       })

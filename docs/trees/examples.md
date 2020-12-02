@@ -1,6 +1,7 @@
 # Tree Examples
 
-This document lists examples of how Scala source code maps to Scalameta tree nodes.
+This document lists examples of how Scala source code maps to Scalameta tree
+nodes.
 
 ## Top level (`meta.Source`, `meta.Pkg`, `meta.Pkg.Object`)
 
@@ -42,16 +43,22 @@ Defn.Val(
 )
 ```
 
-| Defn          | Examples             |
-| ------------- | -------------------- |
-| `Defn.Val`    | `val a = 1`          |
-| `Defn.Var`    | `var a = 1`          |
-| `Defn.Def`    | `def f = 1`          |
-| `Defn.Macro`  | `def f = macro impl` |
-| `Defn.Type`   | `type T = Int`       |
-| `Defn.Class`  | `class A`            |
-| `Defn.Trait`  | `trait A`            |
-| `Defn.Object` | `object A`           |
+| Defn                    | Examples                               |
+| ----------------------- | -------------------------------------- |
+| `Defn.Val`              | `val a = 1`                            |
+| `Defn.Var`              | `var a = 1`                            |
+| `Defn.Def`              | `def f = 1`                            |
+| `Defn.Macro`            | `def f = macro impl`                   |
+| `Defn.Type`             | `type T = Int`                         |
+| `Defn.Class`            | `class A`                              |
+| `Defn.Trait`            | `trait A`                              |
+| `Defn.Object`           | `object A`                             |
+| `Defn.Enum`             | `enum A` (Scala 3)                     |
+| `Defn.EnumCase`         | `case A1 extends A` (Scala 3)          |
+| `Defn.RepeatedEnumCase` | `case A1, A2` (Scala 3)                |
+| `Defn.Given`            | `given A as C[T]` (Scala 3)            |
+| `Defn.GivenAlias`       | `given C[T] = A` (Scala 3)             |
+| `Defn.ExtensionGroup`   | `extension (b: B) def a = 1` (Scala 3) |
 
 ## Terms (`meta.Term`)
 
@@ -74,36 +81,43 @@ Term.ApplyInfix(
 | `Term.Select`     | `a.b`                                        |
 | `Term.ApplyUnary` | `!a`, `~a`, `-a`, `a`                        |
 
-| Term                   | Examples                    |
-| ---------------------- | --------------------------- |
-| `Term.Apply`           | `f(42)`                     |
-| `Term.ApplyType`       | `implicitly[Ordering[Int]]` |
-| `Term.ApplyInfix`      | `a + a`                     |
-| `Term.Assign`          | `a = 1`                     |
-| `Term.Return`          | `return a`                  |
-| `Term.Throw`           | `throw e`                   |
-| `Term.Ascribe`         | `a: Int`                    |
-| `Term.Annotate`        | `(x: @annot)`               |
-| `Term.Tuple`           | `(1, 1)`                    |
-| `Term.Block`           | `{ f1(); f2() }`            |
-| `Term.If`              | `if (p) t else f`           |
-| `Term.Match`           | `x match { case _ => }`     |
-| `Term.Try`             | `try f catch { case _ => }` |
-| `Term.TryWithHandler`  | `try f catch (h)`           |
-| `Term.Function`        | `(a, b) => a + b`           |
-| `Term.PartialFunction` | `{ case _ => }`             |
-| `Term.While`           | `while(p){ f() }`           |
-| `Term.Do`              | `do { f() } while(p)`       |
-| `Term.For`             | `for{x <- xs} f(x)`         |
-| `Term.ForYield`        | `for{x <- xs} yield f(x)`   |
-| `Term.New`             | `new A`                     |
-| `Term.NewAnonymous`    | `new A { }`                 |
-| `Term.Placeholder`     | `_`                         |
-| `Term.Eta`             | `f _`                       |
-| `Term.Repeated`        | `f(x: _*)`                  |
-| `Term.Param`           | `x: Int` in `def f(x: Int)` |
-| `Term.Interpolate`     | `s"Hello $name"`            |
-| `Term.Xml`             | `<h1>Hello {name}</h1>`     |
+| Term                    | Examples                           |
+| ----------------------- | ---------------------------------- |
+| `Term.Apply`            | `f(42)`                            |
+| `Term.ApplyType`        | `implicitly[Ordering[Int]]`        |
+| `Term.ApplyInfix`       | `a + a`                            |
+| `Term.Assign`           | `a = 1`                            |
+| `Term.Return`           | `return a`                         |
+| `Term.Throw`            | `throw e`                          |
+| `Term.Ascribe`          | `a: Int`                           |
+| `Term.Annotate`         | `(x: @annot)`                      |
+| `Term.Tuple`            | `(1, 1)`                           |
+| `Term.Block`            | `{ f1(); f2() }`                   |
+| `Term.If`               | `if (p) t else f`                  |
+| `Term.Match`            | `x match { case _ => }`            |
+| `Term.Try`              | `try f catch { case _ => }`        |
+| `Term.TryWithHandler`   | `try f catch (h)`                  |
+| `Term.Function`         | `(a, b) => a + b`                  |
+| `Term.PartialFunction`  | `{ case _ => }`                    |
+| `Term.While`            | `while(p){ f() }`                  |
+| `Term.Do`               | `do { f() } while(p)`              |
+| `Term.For`              | `for{x <- xs} f(x)`                |
+| `Term.ForYield`         | `for{x <- xs} yield f(x)`          |
+| `Term.New`              | `new A`                            |
+| `Term.NewAnonymous`     | `new A { }`                        |
+| `Term.Placeholder`      | `_`                                |
+| `Term.Eta`              | `f _`                              |
+| `Term.Repeated`         | `f(x: _*)`                         |
+| `Term.Param`            | `x: Int` in `def f(x: Int)`        |
+| `Term.Interpolate`      | `s"Hello $name"`                   |
+| `Term.Xml`              | `<h1>Hello {name}</h1>`            |
+| `Term.ApplyUsing`       | `method(using c)` (Scala 3)        |
+| `Term.EndMarker`        | `end if` (Scala 3)                 |
+| `Term.QuotedMacroExpr`  | `'{ 'ax }` (Scala 3)               |
+| `Term.QuotedMacroType`  | `'[ Map[Int, String] ]` (Scala 3)  |
+| `Term.SplicedMacroExpr` | `${ env }` (Scala 3)               |
+| `Term.ContextFunction`  | `ExecutionContext ?=> T` (Scala 3) |
+| `Term.PolyFunction`     | `[T] => (t: T) => t` (Scala 3)     |
 
 ## Types (`meta.Type`)
 
@@ -120,26 +134,29 @@ Type.With(lhs = Type.Name("A"), rhs = Type.Name("B"))
 | `Type.Project`   | `a#B`    |
 | `Type.Singleton` | `a.type` |
 
-| Type                    | Examples                                                  |
-| ----------------------- | --------------------------------------------------------- |
-| `Type.Apply`            | `F[T]`                                                    |
-| `Type.ApplyInfix`       | `K Map V`                                                 |
-| `Type.Function`         | `A => B`                                                  |
-| `Type.Tuple`            | `(A, B)`                                                  |
-| `Type.With`             | `A with B`                                                |
-| `Type.And`              | `A & B`                                                   |
-| `Type.Or`               | <code> A &#124; B </code>                                 |
-| `Type.Refine`           | `A { def f: Int }`                                        |
-| `Type.Existential`      | `A forSome { type T }`                                    |
-| `Type.Annotate`         | `T @annot`                                                |
-| `Type.Lambda`           | `[T] => (T, T)` (only for supported dialects)             |
-| `Type.Method`           | `(x: T): T` (only for supported dialects)                 |
-| `Type.Placeholder`      | `_` in `T[_]`                                             |
-| `Type.Bounds`           | `T >: Lower <: Upper` in `def F[T >: Lower <: Upper] = 1` |
-| `Type.ByName`           | `=>T` in `def f(x: => T) = x`                             |
-| `Type.Repeated`         | `T*` in `def f(x: T*): Unit`                              |
-| `Type.Var`              | `t` in `case _: List[t] =>`                               |
-| `Type.Param`            | `X` in `trait A[X]`                                       |
+| Type                   | Examples                                                  |
+| ---------------------- | --------------------------------------------------------- |
+| `Type.Apply`           | `F[T]`                                                    |
+| `Type.ApplyInfix`      | `K Map V`                                                 |
+| `Type.Function`        | `A => B`                                                  |
+| `Type.Tuple`           | `(A, B)`                                                  |
+| `Type.With`            | `A with B`                                                |
+| `Type.And`             | `A & B` (Scala 3)                                         |
+| `Type.Or`              | <code> A &#124; B </code> (Scala 3)                       |
+| `Type.Refine`          | `A { def f: Int }`                                        |
+| `Type.Existential`     | `A forSome { type T }`                                    |
+| `Type.Annotate`        | `T @annot`                                                |
+| `Type.Lambda`          | `[T] => (T, T)` (only for supported dialects)             |
+| `Type.Method`          | `(x: T): T` (only for supported dialects)                 |
+| `Type.Placeholder`     | `_` in `T[_]`                                             |
+| `Type.Bounds`          | `T >: Lower <: Upper` in `def F[T >: Lower <: Upper] = 1` |
+| `Type.ByName`          | `=>T` in `def f(x: => T) = x`                             |
+| `Type.Repeated`        | `T*` in `def f(x: T*): Unit`                              |
+| `Type.Var`             | `t` in `case _: List[t] =>`                               |
+| `Type.Param`           | `X` in `trait A[X]`                                       |
+| `Type.PolyFunction`    | `[T] => (t: T) => t` (Scala 3)                            |
+| `Type.ContextFunction` | `ExecutionContext ?=> T` (Scala 3)                        |
+| `Type.Match`           | `type T = match { case A => B}` (Scala 3)                 |
 
 ## Patterns (meta.Pat) and Cases (meta.Case)
 
@@ -152,21 +169,23 @@ Pat.Alternative(
 )
 ```
 
-| Pat                | Examples                        |
-| ------------------ | ------------------------------- |
-| `Lit`              | `"literal"`                     |
-| `Pat.Wildcard`     | `_`                             |
-| `Pat.SeqWildcard`  | `_*` in `case List(xs @ _*) =>` |
-| `Pat.Var`          | `a` in `case a =>`              |
-| `Pat.Bind`         | `a @ A()`                       |
-| `Pat.Alternative`  | <code>1 &#124; 2 </code>        |
-| `Pat.Tuple`        | `(a, b)`                        |
-| `Pat.Extract`      | `A(a, b)`                       |
-| `Pat.ExtractInfix` | `a E b`                         |
-| `Pat.Interpolate`  | `r"Hello (.+)$name"`            |
-| `Pat.Xml`          | `<h1>Hello, World!</h1>`        |
-| `Pat.Typed`        | `a: Int`                        |
-| `Term.Select`      | `a.b`                           |
+| Pat                | Examples                              |
+| ------------------ | ------------------------------------- |
+| `Lit`              | `"literal"`                           |
+| `Pat.Wildcard`     | `_`                                   |
+| `Pat.SeqWildcard`  | `_*` in `case List(xs @ _*) =>`       |
+| `Pat.Var`          | `a` in `case a =>`                    |
+| `Pat.Bind`         | `a @ A()`                             |
+| `Pat.Alternative`  | <code>1 &#124; 2 </code>              |
+| `Pat.Tuple`        | `(a, b)`                              |
+| `Pat.Extract`      | `A(a, b)`                             |
+| `Pat.ExtractInfix` | `a E b`                               |
+| `Pat.Interpolate`  | `r"Hello (.+)$name"`                  |
+| `Pat.Xml`          | `<h1>Hello, World!</h1>`              |
+| `Pat.Typed`        | `a: Int`                              |
+| `Term.Select`      | `a.b`                                 |
+| `Term.Macro`       | `case 'c => 1` (Scala 3)              |
+| `Term.Given`       | `case ctx as given Context` (Scala 3) |
 
 ```scala
 "case a => ()".parse[Case].get.structure
@@ -174,9 +193,10 @@ Pat.Alternative(
 Case(Pat.Var(Term.Name("a")), None, Lit.Unit(()))
 ```
 
-| Case   | Examples             |
-| ------ | -------------------- |
-| `Case` | `case a if p => f()` |
+| Case       | Examples                      |
+| ---------- | ----------------------------- |
+| `Case`     | `case a if p => f()`          |
+| `TypeCase` | `case A[t] => F[t]` (Scala 3) |
 
 ## Name (`meta.Name`)
 
