@@ -86,22 +86,21 @@ package object dialects {
     .withAllowInlineMods(true)
 
   implicit val Dotty = Scala213
-    .withAllowAndTypes(true) // New feature in Dotty
-    .withAllowAtForExtractorVarargs(false)
-    .withAllowColonForExtractorVarargs(true) // New feature in Dotty
-    .withAllowEnums(true) // New feature in Dotty
-    .withAllowImplicitByNameParameters(true) // New feature in Dotty
-    .withAllowImplicitFunctionTypes(true) // New feature in Dotty
-    .withAllowInlineMods(true) // New feature in Dotty
-    .withAllowLiteralTypes(true) // New feature in Dotty
+    .withAllowAndTypes(true)
+    .withAllowAtForExtractorVarargs(true) // both @ and : work currently for Scala 3
+    .withAllowColonForExtractorVarargs(true) // both @ and : work currently for Scala 3
+    .withAllowEnums(true)
+    .withAllowImplicitByNameParameters(true)
+    .withAllowInlineMods(true)
+    .withAllowLiteralTypes(true)
     .withAllowMethodTypes(false)
-    .withAllowOrTypes(true) // New feature in Dotty
+    .withAllowOrTypes(true) // Scala 3: `val a: A | B`
     .withAllowTrailingCommas(true)
-    .withAllowTraitParameters(true) // New feature in Dotty
-    .withAllowTypeLambdas(true) // New feature in Dotty
+    .withAllowTraitParameters(true)
+    .withAllowTypeLambdas(true)
     .withAllowViewBounds(false) // View bounds have been removed in Dotty
-    .withAllowWithTypes(false)
-    .withAllowXmlLiterals(false) // Dotty parser doesn't support xml
+    .withAllowWithTypes(false) // removed in Dotty in favour of `&`, `with` will be treated as `&`
+    .withAllowXmlLiterals(false) // Scala 3: parser doesn't support xml
     .withAllowGivenUsing(true)
     .withAllowExtensionMethods(true)
     .withAllowOpenClass(true)

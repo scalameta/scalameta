@@ -60,15 +60,15 @@ class CommunityDottySuite extends FunSuite {
   val communityBuilds = List(
     CommunityBuild(
       "https://github.com/lampepfl/dotty.git",
-      //commit hash from 17.11.2020
-      "cd15c992c1d9e18ebaad65b7bc1bff3eafa4605d",
+      //commit hash from 01.12.2020
+      "42a30b8fec95487147fa0d575bfae3cfb9417617",
       "dotty",
       dottyExclusionList
     ),
     CommunityBuild(
       "https://github.com/scalameta/munit.git",
-      // latest commit from 27.09.2020
-      "9107c110cefd18c1889e11c15b3b308bec74f24c",
+      // latest commit from 27.11.2020
+      "5f384b548960ee7731649f5f900eb1d854e7827a",
       "munit",
       munitExclusionList
     )
@@ -186,7 +186,7 @@ class CommunityDottySuite extends FunSuite {
     //xml literals
     "main/scala/docs/MUnitModifier.scala",
     // old given syntax
-    "main/scala-3/munit/internal/MacroCompat.scala"
+    "src/main/scala-0.27/munit/internal/MacroCompat.scala"
   )
 
   final val ignoreParts = List(

@@ -643,11 +643,10 @@ object TreeSyntax {
             p(InfixTyp(t.op.value), t.rhs, right = true)
           )
         )
-      case t @ (_: Type.Function | _: Type.ImplicitFunction | _: Type.ContextFunction) =>
+      case t @ (_: Type.Function | _: Type.ContextFunction) =>
         val (prefix, tParams, arrow, tRes) = t match {
           case Type.Function(params, res) => (s(), params, "=>", res)
           case Type.ContextFunction(params, res) => (s(), params, "?=>", res)
-          case Type.ImplicitFunction(params, res) => (s(kw("implicit"), " "), params, "=>", res)
         }
         val params = tParams match {
           case param +: Nil if !param.is[Type.Tuple] => s(p(AnyInfixTyp, param))

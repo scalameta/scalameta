@@ -125,7 +125,6 @@ Type.With(lhs = Type.Name("A"), rhs = Type.Name("B"))
 | `Type.Apply`            | `F[T]`                                                    |
 | `Type.ApplyInfix`       | `K Map V`                                                 |
 | `Type.Function`         | `A => B`                                                  |
-| `Type.ImplicitFunction` | `implicit A => B`                                         |
 | `Type.Tuple`            | `(A, B)`                                                  |
 | `Type.With`             | `A with B`                                                |
 | `Type.And`              | `A & B`                                                   |
