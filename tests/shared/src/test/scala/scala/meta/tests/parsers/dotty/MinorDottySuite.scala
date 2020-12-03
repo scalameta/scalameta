@@ -256,16 +256,9 @@ class MinorDottySuite extends BaseDottySuite {
 
   }
 
+  // Super traits were removed in Scala 3
   test("super-trait") {
-    runTestAssert[Stat]("super trait Foo")(
-      Defn.Trait(
-        List(Mod.Super()),
-        Type.Name("Foo"),
-        Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
-        Template(Nil, Nil, Self(Name(""), None), Nil)
-      )
-    )(parseTempl)
+    runTestError[Stat]("super trait Foo", ". expected but trait found")
   }
 
   test("question-type") {

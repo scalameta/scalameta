@@ -1020,7 +1020,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[KwLazy] || token.is[KwPrivate] ||
       token.is[KwProtected] || token.is[KwOverride] ||
       token.is[SkOpaque] || token.is[SkOpen] || token.is[SkTransparent] ||
-      (token.is[KwSuper] && dialect.allowSuperTrait && token.next.is[KwTrait]) ||
       token.is[SkInfix] || token.is[SkInline]
     }
   }
@@ -3352,7 +3351,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwImplicit() => next(); Mod.Implicit()
       case KwLazy() => next(); Mod.Lazy()
       case KwOverride() => next(); Mod.Override()
-      case KwSuper() if dialect.allowSuperTrait => next(); Mod.Super()
       case KwPrivate() => accessModifier()
       case KwProtected() => accessModifier()
       case SkInline() => next(); Mod.Inline()
@@ -3459,7 +3457,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case _ if isParams && token.is[NonParamsModifier] => mods
       case Unquote() => if (continueLoop) mods else loop(appendMod(mods, modifier()))
       case Ellipsis(_) => loop(appendMod(mods, modifier()))
-      case KwSuper() if !dialect.allowSuperTrait || !ahead(token.is[KwTrait]) => mods
       case Modifier() => loop(appendMod(mods, modifier()))
       case LF() if !isLocal => next(); loop(mods)
       case _ => mods

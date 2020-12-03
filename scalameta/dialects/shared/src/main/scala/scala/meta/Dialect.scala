@@ -87,7 +87,7 @@ final class Dialect private (
     val allowOpaqueTypes: Boolean,
     // Literal Unit Type
     val allowLiteralUnitType: Boolean,
-    // Super traits introduced in dotty
+    // Super traits introduced in dotty, but later removed.
     val allowSuperTrait: Boolean,
     // Export selected members of an object introduced in dotty
     val allowExportClause: Boolean,
@@ -322,6 +322,7 @@ final class Dialect private (
   def withAllowInterpolationDolarQuoteEscape(newValue: Boolean): Dialect = {
     privateCopy(allowInterpolationDolarQuoteEscape = newValue)
   }
+  @deprecated("Super traits are not supported in any dialect")
   def withAllowSuperTrait(newValue: Boolean): Dialect = {
     privateCopy(allowSuperTrait = newValue)
   }

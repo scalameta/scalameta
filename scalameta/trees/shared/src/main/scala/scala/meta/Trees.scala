@@ -478,6 +478,7 @@ object Mod {
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod
   @ast class Open() extends Mod
+  @deprecated("Super traits introduced in dotty, but later removed.")
   @ast class Super() extends Mod
   @ast class Override() extends Mod
   @ast class Case() extends Mod
