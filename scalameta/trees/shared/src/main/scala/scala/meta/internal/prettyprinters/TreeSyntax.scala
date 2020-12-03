@@ -1080,7 +1080,6 @@ object TreeSyntax {
       case _: Mod.Final => kw("final")
       case _: Mod.Sealed => kw("sealed")
       case _: Mod.Open => kw("open")
-      case _: Mod.Super => kw("super")
       case _: Mod.Opaque => kw("opaque")
       case _: Mod.Using => kw("using")
       case _: Mod.Transparent => kw("transparent")

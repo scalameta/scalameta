@@ -108,7 +108,6 @@ package object dialects {
     .withAllowToplevelStatements(true)
     .withAllowOpaqueTypes(true)
     .withAllowLiteralUnitType(false)
-    .withAllowSuperTrait(true)
     .withAllowExportClause(true)
     .withAllowCommaSeparatedExtend(true)
     .withAllowEndMarker(true)
