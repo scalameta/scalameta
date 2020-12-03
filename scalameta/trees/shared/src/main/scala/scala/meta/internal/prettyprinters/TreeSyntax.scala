@@ -740,6 +740,7 @@ object TreeSyntax {
         m(SimplePattern, s(if (guessIsBackquoted(t.name)) s"`${t.name.value}`" else t.name.value))
       case _: Pat.Wildcard => m(SimplePattern, kw("_"))
       case _: Pat.SeqWildcard => m(SimplePattern, kw("_*"))
+      case pat: Pat.Given => m(SimplePattern, s(kw("given"), " ", pat.tpe))
       case t: Pat.Bind =>
         val binder = if (dialect.allowAsPatternBinding) "as" else "@"
         val separator = t.rhs match {

@@ -602,6 +602,48 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
+  test("given-pat") {
+    runTestAssert[Stat](
+      """|pair match {
+         |  case (ctx as given Context, y) =>
+         |}
+         |""".stripMargin
+    )(
+      Term.Match(
+        Term.Name("pair"),
+        List(
+          Case(
+            Pat.Tuple(
+              List(
+                Pat.Bind(Pat.Var(Term.Name("ctx")), Pat.Given(Type.Name("Context"))),
+                Pat.Var(Term.Name("y"))
+              )
+            ),
+            None,
+            Term.Block(Nil)
+          )
+        )
+      )
+    )
+  }
+
+  test("given-pat-for") {
+    runTestAssert[Stat](
+      """|for given Context <- applicationContexts do a
+         |""".stripMargin,
+      assertLayout = Some(
+        "for (given Context <- applicationContexts) a"
+      )
+    )(
+      Term.For(
+        List(
+          Enumerator.Generator(Pat.Given(Type.Name("Context")), Term.Name("applicationContexts"))
+        ),
+        Term.Name("a")
+      )
+    )
+  }
+
   // ---------------------------------
   // GIVEN IMPORT
   // ---------------------------------
