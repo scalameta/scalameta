@@ -2079,6 +2079,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   def ifClause(isInline: Boolean = false) = {
     accept[KwIf]
+
     val (cond, thenp) = if (token.isNot[LeftParen] && dialect.allowSignificantIndentation) {
       val cond = expr()
       acceptOpt[LF]
@@ -2096,18 +2097,17 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       (cond, exprMaybeIndented())
     }
 
-    val ifExpr = if (tryAcceptWithOptLF[KwElse]) {
-      Term.If(cond, thenp, exprMaybeIndented())
-    } else if (token.is[Semicolon] && ahead { token.is[KwElse] }) {
-      next(); next(); Term.If(cond, thenp, expr())
-    } else {
-      Term.If(cond, thenp, atPos(in.tokenPos, in.prevTokenPos)(Lit.Unit()))
-    }
+    val mods = if (isInline) {
+      List(Mod.Inline())
+    } else Nil
 
-    if (isInline) {
-      ifExpr.setMods(List(Mod.Inline()))
+    if (tryAcceptWithOptLF[KwElse]) {
+      Term.If(cond, thenp, exprMaybeIndented(), mods)
+    } else if (token.is[Semicolon] && ahead { token.is[KwElse] }) {
+      next(); next(); Term.If(cond, thenp, expr(), mods)
+    } else {
+      Term.If(cond, thenp, atPos(in.tokenPos, in.prevTokenPos)(Lit.Unit()), mods)
     }
-    ifExpr
   }
 
   // FIXME: when parsing `(2 + 3)`, do we want the ApplyInfix's position to include parentheses?
@@ -4076,9 +4076,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         accept[Equals]
         val tpe = typeIndentedOpt()
         if (tpe.is[Type.Match]) {
-          val typeDef = Defn.Type(mods, name, tparams, tpe)
-          typeDef.setBounds(bounds)
-          typeDef
+          Defn.Type(mods, name, tparams, tpe, bounds)
         } else {
           syntaxError("cannot combine bound and alias", at = tpe.pos)
         }
@@ -4089,9 +4087,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     if (mods.exists(_.is[Mod.Opaque])) {
       val bounds = typeBounds()
       accept[Equals]
-      val typ = Defn.Type(mods, name, tparams, typeIndentedOpt())
-      typ.setBounds(bounds)
-      typ
+      Defn.Type(mods, name, tparams, typeIndentedOpt(), bounds)
     } else {
       token match {
         case Equals() => next(); aliasType()
@@ -4450,9 +4446,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def template(edefs: List[Stat], parents: List[Init]): Template = {
     val derived = derivesClasses
     val (self, body) = templateBodyOpt(parenMeansSyntaxError = false)
-    val template = Template(edefs, parents, self, body)
-    template.setDerives(derived)
-    template
+    Template(edefs, parents, self, body, derived)
   }
 
   def template(afterExtend: Boolean = false): Template = autoPos {

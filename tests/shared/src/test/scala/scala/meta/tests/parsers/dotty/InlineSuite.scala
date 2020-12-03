@@ -5,7 +5,7 @@ import scala.meta._
 
 class InlineSuite extends BaseDottySuite {
 
-  val parseTempl: String => Stat = code => templStat(code)(dialects.Dotty)
+  implicit val parseTempl: String => Stat = code => templStat(code)(dialects.Dotty)
 
   /**
    *  All examples based on dotty documentation:
@@ -15,7 +15,7 @@ class InlineSuite extends BaseDottySuite {
     // as ident
     runTestAssert[Stat]("def f(inline: String): Unit")(
       Decl.Def(Nil, tname("f"), Nil, List(List(tparam("inline", "String"))), pname("Unit"))
-    )(parseTempl)
+    )
 
     // as ident
     runTestAssert[Stat]("inline def inline(inline: inline): inline")(
@@ -26,7 +26,7 @@ class InlineSuite extends BaseDottySuite {
         List(List(tparam("inline", "inline"))),
         pname("inline")
       )
-    )(parseTempl)
+    )
 
     // as modifier
     runTestAssert[Stat]("inline def inline(inline param: inline): inline")(
@@ -37,7 +37,7 @@ class InlineSuite extends BaseDottySuite {
         List(List(tparamInline("param", "inline"))),
         pname("inline")
       )
-    )(parseTempl)
+    )
 
     // as ident and modifier
     runTestAssert[Stat]("inline def inline(inline inline: inline): inline")(
@@ -48,12 +48,12 @@ class InlineSuite extends BaseDottySuite {
         List(List(tparamInline("inline", "inline"))),
         pname("inline")
       )
-    )(parseTempl)
+    )
 
     // as ident and modifier
     runTestAssert[Stat]("inline val inline = false")(
       Defn.Val(List(Mod.Inline()), List(Pat.Var(tname("inline"))), None, Lit.Boolean(false))
-    )(parseTempl)
+    )
 
     // inline for class as ident
     runTestAssert[Stat]("case class A(inline: Int)")(
@@ -68,7 +68,7 @@ class InlineSuite extends BaseDottySuite {
         ),
         Template(Nil, Nil, Self(Name(""), None), Nil)
       )
-    )(parseTempl)
+    )
   }
 
   test("inline-def-object") {
@@ -101,7 +101,7 @@ class InlineSuite extends BaseDottySuite {
           )
         )
       )
-    )(parseTempl)
+    )
   }
   test("inline-mods-combination") {
     runTestAssert[Stat](
@@ -123,7 +123,7 @@ class InlineSuite extends BaseDottySuite {
           )
         )
       )
-    )(parseTempl)
+    )
 
     runTestAssert[Stat](
       "object X { final override inline protected def f(): Unit = ??? }"
@@ -144,7 +144,7 @@ class InlineSuite extends BaseDottySuite {
           )
         )
       )
-    )(parseTempl)
+    )
 
     runTestAssert[Stat](
       "case class Y(val inline: String, inline: Int)"
@@ -166,7 +166,7 @@ class InlineSuite extends BaseDottySuite {
         ),
         tpl(Nil)
       )
-    )(parseTempl)
+    )
   }
 
   test("inline-soft-ident") {
@@ -184,30 +184,24 @@ class InlineSuite extends BaseDottySuite {
           List(Term.ApplyInfix(Term.Name("inline"), Term.Name("+"), Nil, List(Lit.Int(3))))
         )
       )
-    )(parseTempl)
+    )
   }
 
   test("inline-if") {
-    val input = "inline if true then a()"
     runTestAssert[Stat](
-      input,
+      "inline if true then a()",
       assertLayout = Some("inline if (true) a()")
     )(
-      Term.If(Lit.Boolean(true), Term.Apply(Term.Name("a"), Nil), Lit.Unit())
-    )(parseTempl)
-
-    val ifExpr = parseTempl(input).asInstanceOf[Term.If]
-    assert(ifExpr.mods.head.is[Mod.Inline], "if should have an inline modifier")
+      Term.If(Lit.Boolean(true), Term.Apply(Term.Name("a"), Nil), Lit.Unit(), List(Mod.Inline()))
+    )
   }
 
   test("inline-if-method") {
-    val input = """|def fn: Unit =
-                   |    inline if cond then
-                   |  truep
-                   |""".stripMargin
-
     runTestAssert[Stat](
-      input,
+      """|def fn: Unit =
+         |    inline if cond then
+         |  truep
+         |""".stripMargin,
       assertLayout = Some(
         "def fn: Unit = inline if (cond) truep"
       )
@@ -218,21 +212,17 @@ class InlineSuite extends BaseDottySuite {
         Nil,
         Nil,
         Some(Type.Name("Unit")),
-        Term.If(Term.Name("cond"), Term.Name("truep"), Lit.Unit())
+        Term.If(Term.Name("cond"), Term.Name("truep"), Lit.Unit(), List(Mod.Inline()))
       )
-    )(parseTempl)
+    )
 
-    val defnDef = parseTempl(input).asInstanceOf[Defn.Def]
-    val ifExpr = defnDef.body.asInstanceOf[Term.If]
-    assert(ifExpr.mods.head.is[Mod.Inline], "if should have an inline modifier")
   }
 
   test("inline-if-method-oneline") {
-    val input = """|def fn: Unit = inline if cond then truep
-                   |""".stripMargin
 
     runTestAssert[Stat](
-      input,
+      """|def fn: Unit = inline if cond then truep
+         |""".stripMargin,
       assertLayout = Some(
         "def fn: Unit = inline if (cond) truep"
       )
@@ -243,12 +233,9 @@ class InlineSuite extends BaseDottySuite {
         Nil,
         Nil,
         Some(Type.Name("Unit")),
-        Term.If(Term.Name("cond"), Term.Name("truep"), Lit.Unit())
+        Term.If(Term.Name("cond"), Term.Name("truep"), Lit.Unit(), List(Mod.Inline()))
       )
-    )(parseTempl)
+    )
 
-    val defnDef = parseTempl(input).asInstanceOf[Defn.Def]
-    val ifExpr = defnDef.body.asInstanceOf[Term.If]
-    assert(ifExpr.mods.head.is[Mod.Inline], "if should have an inline modifier")
   }
 }

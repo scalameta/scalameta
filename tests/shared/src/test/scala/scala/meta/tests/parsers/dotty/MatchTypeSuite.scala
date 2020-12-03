@@ -61,16 +61,12 @@ class MatchTypeSuite extends BaseDottySuite {
   }
 
   test("recursive") {
-    val input = """|type Len[X] <: Int = X match {
-                   |  case Unit => 0
-                   |  case x *: xs => S[Len[xs]]
-                   |}
-                   |""".stripMargin
-
-    val typ = parseBlock(input).asInstanceOf[Defn.Type]
-    val Type.Bounds(None, Some(Type.Name("Int"))) = typ.bounds
     runTestAssert[Stat](
-      input
+      """|type Len[X] <: Int = X match {
+         |  case Unit => 0
+         |  case x *: xs => S[Len[xs]]
+         |}
+         |""".stripMargin
     )(
       Defn.Type(
         Nil,
@@ -85,22 +81,19 @@ class MatchTypeSuite extends BaseDottySuite {
               Type.Apply(Type.Name("S"), List(Type.Apply(Type.Name("Len"), List(Type.Name("xs")))))
             )
           )
-        )
+        ),
+        Type.Bounds(None, Some(Type.Name("Int")))
       )
     )
   }
 
   test("concat") {
-    val input = """|type Concat[X <: Tuple, Y <: Tuple] <: Tuple = X match {
-                   |  case Unit => Y
-                   |  case x1 *: xs1 => x1 *: Concat[xs1, Y]
-                   |}
-                   |
-                   |""".stripMargin
-    val typ = parseBlock(input).asInstanceOf[Defn.Type]
-    val Type.Bounds(None, Some(Type.Name("Tuple"))) = typ.bounds
     runTestAssert[Stat](
-      input
+      """|type Concat[X <: Tuple, Y <: Tuple] <: Tuple = X match {
+         |  case Unit => Y
+         |  case x1 *: xs1 => x1 *: Concat[xs1, Y]
+         |}
+         |""".stripMargin
     )(
       Defn.Type(
         Nil,
@@ -124,7 +117,8 @@ class MatchTypeSuite extends BaseDottySuite {
               )
             )
           )
-        )
+        ),
+        Type.Bounds(None, Some(Type.Name("Tuple")))
       )
     )
   }
