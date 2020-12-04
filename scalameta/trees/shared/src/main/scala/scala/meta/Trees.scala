@@ -107,7 +107,7 @@ object Term {
   }
   @ast class EndMarker(name: Term.Name) extends Term
   @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term {
-    @binaryCompatField
+    @binaryCompatField(since = "4.4.0")
     private var _mods: List[Mod] = Nil
   }
   @ast class QuotedMacroExpr(body: Term) extends Term
@@ -384,7 +384,7 @@ object Defn {
       tparams: List[scala.meta.Type.Param],
       body: scala.meta.Type
   ) extends Defn with Member.Type {
-    @binaryCompatField
+    @binaryCompatField("4.4.0")
     private var _bounds: scala.meta.Type.Bounds = scala.meta.Type.Bounds(None, None)
   }
   @ast class Class(
@@ -456,7 +456,7 @@ object Ctor {
     self: Self,
     stats: List[Stat]
 ) extends Tree {
-  @binaryCompatField
+  @binaryCompatField("4.4.0")
   private var _derives: List[Type] = Nil
   checkFields(early.forall(_.isEarlyStat && inits.nonEmpty))
   checkFields(stats.forall(_.isTemplateStat))
