@@ -117,7 +117,8 @@ class JSFacadeSuite extends FunSuite {
                   )
                 )
               )
-            )
+            ),
+            "derives" -> a()
           )
         )
       )

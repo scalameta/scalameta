@@ -591,8 +591,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("package foo; class C; package baz { class D }") {
     val tree = source("package foo; class C; package baz { class D }")
-    assert(
-      tree.structure == "Source(List(Pkg(Term.Name(\"foo\"), List(Defn.Class(Nil, Type.Name(\"C\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil)), Pkg(Term.Name(\"baz\"), List(Defn.Class(Nil, Type.Name(\"D\"), Nil, Ctor.Primary(Nil, Name(\"\"), Nil), Template(Nil, Nil, Self(Name(\"\"), None), Nil))))))))"
+    assertNoDiff(
+      tree.structure,
+      """Source(List(Pkg(Term.Name("foo"), List(Defn.Class(Nil, Type.Name("C"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), Nil, Nil)), Pkg(Term.Name("baz"), List(Defn.Class(Nil, Type.Name("D"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), Nil, Nil))))))))"""
     )
     assert(tree.syntax == s"package foo${EOL}class C${EOL}package baz {$EOL  class D${EOL}}")
   }

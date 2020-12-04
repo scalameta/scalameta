@@ -135,7 +135,7 @@ class LitSuite extends ParseSuite {
     val fdef =
       """Defn.Def(Nil, Term.Name("negate"), Nil, Nil, Some(Type.Name("-")), Term.Name("-"))"""
     val expected =
-      s"""Defn.Trait(Nil, Type.Name("Foo"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), List(${fdef})))"""
+      s"""Defn.Trait(Nil, Type.Name("Foo"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), List(${fdef}), Nil))"""
     assertNoDiff(stat(code2).structure, expected)
   }
 

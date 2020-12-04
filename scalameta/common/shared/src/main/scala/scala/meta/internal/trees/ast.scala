@@ -8,6 +8,7 @@ import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
 import scala.meta.internal.trees.{Reflection => AstReflection}
 import scala.meta.internal.trees.{Metadata => AstMetadata}
+import scala.util.Success
 
 // @ast is a specialized version of @org.scalameta.adt.leaf for scala.meta ASTs.
 class ast extends StaticAnnotation {
@@ -83,13 +84,11 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
 
         def binaryCompatMods(vr: ValDef) = {
           val getter = q"def ${getterName(vr)}: ${vr.tpt}"
-          val annots =
-            List(q"new $AstMetadataModule.binaryCompatField")
-          getter.mods.mapAnnotations(_ => annots)
+          getter.mods.mapAnnotations(_ => vr.mods.annotations)
         }
 
         def isBinaryCompatField(vr: ValDef) = vr.mods.annotations.exists {
-          case q"new binaryCompatField()" => true
+          case q"new binaryCompatField($since)" => true
           case _ => false
         }
 
@@ -118,9 +117,14 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         istats1 ++= binaryCompatAbstractFields
 
         val binaryCompatStats = binaryCompatVars.flatMap { case vr: ValDef =>
+          val name = vr.name
+          val nameString = name.toString()
           List(
-            q"def ${getterName(vr)} = this.${vr.name} ",
-            q"def ${setterName(vr)}(${vr.name} : ${vr.tpt}) = this.${vr.name} = ${vr.name} ",
+            q"def ${getterName(vr)} = this.$name ",
+            q"""def ${setterName(vr)}($name : ${vr.tpt}) = {
+                   val node = this
+                   $CommonTyperMacrosModule.storeField(this.$name, $name, $nameString) 
+                }""",
             vr
           )
         }
@@ -227,7 +231,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
           $privateCopyBody
         }
       """
-
         // step 7: create the copy method
         // The purpose of this method is to provide a facility to change small parts of the tree
         // without modifying the other parts, much like the standard case class copy works.
@@ -263,18 +266,30 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         mstats1 ++= mkClassifier(iname)
 
         // step 11: implement Product
+        val binaryCompatNum = binaryCompatVars.size
         val productParamss = rawparamss.map(_.map(_.duplicate))
         iparents1 += tq"$ProductClass"
         stats1 += q"override def productPrefix: $StringClass = $CommonTyperMacrosModule.productPrefix[$iname]"
-        stats1 += q"override def productArity: $IntClass = ${productParamss.head.length}"
+        stats1 += q"override def productArity: $IntClass = ${productParamss.head.length + binaryCompatNum}"
         val pelClauses = ListBuffer[Tree]()
+        val fieldsNum = productParamss.head.length
         pelClauses ++= 0
-          .to(productParamss.head.length - 1)
+          .to(fieldsNum - 1)
           .map(i => cq"$i => this.${productParamss.head(i).name}")
+
+        // generate product elements for @binaryCompat fields
+        pelClauses ++= fieldsNum
+          .to(fieldsNum + binaryCompatNum)
+          .zip(binaryCompatVars)
+          .map { case (i: Int, vr: ValDef) =>
+            cq"$i => this.${getterName(vr)}"
+          }
         pelClauses += cq"_ => throw new $IndexOutOfBoundsException(n.toString)"
         stats1 += q"override def productElement(n: $IntClass): Any = n match { case ..$pelClauses }"
         stats1 += q"override def productIterator: $IteratorClass[$AnyClass] = $ScalaRunTimeModule.typedProductIterator(this)"
-        val productFields = productParamss.head.map(_.name.toString)
+        val productFields = productParamss.head.map(_.name.toString) ++ binaryCompatVars.map {
+          case vr: ValDef => getterName(vr).toString()
+        }
         stats1 += q"override def productFields: $ListClass[$StringClass] = _root_.scala.List(..$productFields)"
 
         // step 12: generate serialization logic
@@ -290,7 +305,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         val internalBody = ListBuffer[Tree]()
         val internalLocalss = paramss.map(_.map(p => (p.name, internalize(p.name))))
         internalBody += q"$CommonTyperMacrosModule.hierarchyCheck[$iname]"
-        // internalBody += q"$AdtTyperMacros.immutabilityCheck[$iname]"
         internalBody ++= internalLocalss.flatten.map { case (local, internal) =>
           q"$DataTyperMacrosModule.nullCheck($local)"
         }
@@ -336,7 +350,54 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
           }
           internal(...$internalArgss)
         }
-      """
+        """
+
+        // step 13a: generate additional binary compat Companion.apply
+        // generate new applies for each new field added
+        // with field A, B and additional binary compat ones C, D and E, we generate:
+        // apply(A, B, C), apply(A, B, C, D), apply(A, B, C, D, E)
+        val sortedBinaryCompatName = binaryCompatVars
+          .collect { case vr: ValDef => vr }
+          .sortBy { vr =>
+            try {
+              vr.mods.annotations.collectFirst { case q"new binaryCompatField($version)" =>
+                val since = version.toString().stripPrefix("\"").stripSuffix("\"")
+                val versions = since.split("\\.").map(_.toInt)
+                (versions(0), versions(1), versions(2))
+              }.get
+            } catch {
+              case _: Throwable =>
+                c.abort(
+                  vr.pos,
+                  "binaryCompatField annotation must contain since=\"major.minor.patch\" field"
+                )
+            }
+          }
+
+        1.to(binaryCompatNum).foreach { size =>
+          val fields = sortedBinaryCompatName.take(size)
+          val paramFields = fields.map(f => q"val ${getterName(f)} : ${f.tpt}")
+          val params = List(applyParamss.head ++ paramFields) ++ applyParamss.tail
+          val setters = fields.map { vr =>
+            q"newAst.${setterName(vr)}(${getterName(vr)});"
+          }
+
+          val checks = fields.flatMap { field =>
+            List(
+              q"$DataTyperMacrosModule.nullCheck(${getterName(field)})",
+              q"$DataTyperMacrosModule.emptyCheck(${getterName(field)})"
+            )
+          }
+          mstats1 += q"""
+              def apply(...$params): $iname = {
+                ..$checks
+                val newAst = apply(...$internalArgss);
+                ..$setters
+                newAst
+              }
+              """
+
+        }
 
         // step 14: generate Companion.unapply
         val unapplyParamss = rawparamss.map(_.map(_.duplicate))

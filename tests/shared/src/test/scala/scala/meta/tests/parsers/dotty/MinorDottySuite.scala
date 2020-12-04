@@ -98,15 +98,13 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("opaque-type-bounded-alias") {
-    val input = "opaque type F <: A & B = AB"
-    val typ = parseBlock(input).asInstanceOf[Defn.Type]
-    val Type.Bounds(None, Some(Type.And(Type.Name("A"), Type.Name("B")))) = typ.bounds
-    runTestAssert[Stat](input)(
+    runTestAssert[Stat]("opaque type F <: A & B = AB")(
       Defn.Type(
         List(Mod.Opaque()),
         pname("F"),
         Nil,
-        pname("AB")
+        pname("AB"),
+        Type.Bounds(None, Some(Type.And(Type.Name("A"), Type.Name("B"))))
       )
     )(parseTempl)
   }
@@ -655,14 +653,6 @@ class MinorDottySuite extends BaseDottySuite {
                          |  case Leaf
                          |}
                          |""".stripMargin
-    val template = parseTempl(derivesEnum)
-
-    val derived = template.asInstanceOf[Defn.Enum].templ.derives
-    val List(
-      Type.Name("Eq"),
-      Type.Name("Ordering"),
-      Type.Name("Show")
-    ) = derived
 
     runTestAssert[Stat](derivesEnum)(
       Defn.Enum(
@@ -677,6 +667,11 @@ class MinorDottySuite extends BaseDottySuite {
           List(
             Defn.EnumCase(Nil, Term.Name("Branch"), Nil, Ctor.Primary(Nil, Name(""), Nil), Nil),
             Defn.EnumCase(Nil, Term.Name("Leaf"), Nil, Ctor.Primary(Nil, Name(""), Nil), Nil)
+          ),
+          List(
+            Type.Name("Eq"),
+            Type.Name("Ordering"),
+            Type.Name("Show")
           )
         )
       )
@@ -685,21 +680,13 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("extends-derives") {
-    val derivesEnum = """|enum Tree[T] extends Bee derives Eq, scala.derives.Ordering, Show {
-                         |  case Branch
-                         |  case Leaf
-                         |}
-                         |""".stripMargin
-    val template = parseTempl(derivesEnum)
-
-    val derived = template.asInstanceOf[Defn.Enum].templ.derives
-    val List(
-      Type.Name("Eq"),
-      Type.Select(Term.Select(Term.Name("scala"), Term.Name("derives")), Type.Name("Ordering")),
-      Type.Name("Show")
-    ) = derived
-
-    runTestAssert[Stat](derivesEnum)(
+    runTestAssert[Stat](
+      """|enum Tree[T] extends Bee derives Eq, scala.derives.Ordering, Show {
+         |  case Branch
+         |  case Leaf
+         |}
+         |""".stripMargin
+    )(
       Defn.Enum(
         Nil,
         Type.Name("Tree"),
@@ -712,6 +699,12 @@ class MinorDottySuite extends BaseDottySuite {
           List(
             Defn.EnumCase(Nil, Term.Name("Branch"), Nil, Ctor.Primary(Nil, Name(""), Nil), Nil),
             Defn.EnumCase(Nil, Term.Name("Leaf"), Nil, Ctor.Primary(Nil, Name(""), Nil), Nil)
+          ),
+          List(
+            Type.Name("Eq"),
+            Type
+              .Select(Term.Select(Term.Name("scala"), Term.Name("derives")), Type.Name("Ordering")),
+            Type.Name("Show")
           )
         )
       )
@@ -720,46 +713,44 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("case-class-derives") {
-    val derivesEnum = """|case class Node(name : String) extends Tree derives Eq:
-                         |  def hello() = ""
-                         |  def bye() = ""
-                         |
-                         |""".stripMargin
-    val template = parseTempl(derivesEnum)
-
-    val derived = template.asInstanceOf[Defn.Class].templ.derives
-    val List(
-      Type.Name("Eq")
-    ) = derived
-
-    runTestAssert[Stat](
-      derivesEnum,
-      assertLayout = Some("""|case class Node(name: String) extends Tree derives Eq {
-                             |  def hello() = ""
-                             |  def bye() = ""
-                             |}
-                             |""".stripMargin)
-    )(
-      Defn.Class(
-        List(Mod.Case()),
-        Type.Name("Node"),
-        Nil,
-        Ctor.Primary(
+    val derivesEnum =
+      runTestAssert[Stat](
+        """|case class Node(name : String) extends Tree derives Eq:
+           |  def hello() = ""
+           |  def bye() = ""
+           |
+           |""".stripMargin,
+        assertLayout = Some(
+          """|case class Node(name: String) extends Tree derives Eq {
+             |  def hello() = ""
+             |  def bye() = ""
+             |}
+             |""".stripMargin
+        )
+      )(
+        Defn.Class(
+          List(Mod.Case()),
+          Type.Name("Node"),
           Nil,
-          Name(""),
-          List(List(Term.Param(Nil, Term.Name("name"), Some(Type.Name("String")), None)))
-        ),
-        Template(
-          Nil,
-          List(Init(Type.Name("Tree"), Name(""), Nil)),
-          Self(Name(""), None),
-          List(
-            Defn.Def(Nil, Term.Name("hello"), Nil, List(List()), None, Lit.String("")),
-            Defn.Def(Nil, Term.Name("bye"), Nil, List(List()), None, Lit.String(""))
+          Ctor.Primary(
+            Nil,
+            Name(""),
+            List(List(Term.Param(Nil, Term.Name("name"), Some(Type.Name("String")), None)))
+          ),
+          Template(
+            Nil,
+            List(Init(Type.Name("Tree"), Name(""), Nil)),
+            Self(Name(""), None),
+            List(
+              Defn.Def(Nil, Term.Name("hello"), Nil, List(List()), None, Lit.String("")),
+              Defn.Def(Nil, Term.Name("bye"), Nil, List(List()), None, Lit.String(""))
+            ),
+            List(
+              Type.Name("Eq")
+            )
           )
         )
       )
-    )
 
   }
 
