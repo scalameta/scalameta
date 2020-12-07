@@ -26,5 +26,11 @@ object Mima {
       true
   }
 
-  val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq()
+  val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
+    // Exceptions for Scala 3. Changes to Scala 3-related AST nodes don't fall
+    // under the standard Scalameta binary-compatibility policy. This is done to
+    // buy time to refine the design of the Scalameta AST in preparation for the
+    // Scala 3 release.
+    ProblemFilters.exclude[Problem]("scala.meta.Export*")
+  )
 }

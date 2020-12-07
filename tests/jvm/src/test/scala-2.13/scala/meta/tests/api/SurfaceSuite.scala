@@ -136,8 +136,11 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens
       |scala.meta.tokens.Token
       |scala.meta.tokens.Token.Constant *
+      |scala.meta.tokens.Token.Ellipsis *
       |scala.meta.tokens.Token.Indentation *
       |scala.meta.tokens.Token.Interpolation *
+      |scala.meta.tokens.Token.LFLF *
+      |scala.meta.tokens.Token.Unquote *
       |scala.meta.tokens.Token.Xml *
       |scala.meta.tokens.Tokens
       |scala.meta.transversers
@@ -153,10 +156,17 @@ class SurfaceSuite extends FunSuite {
     val prettyprinterTests =
       new scala.meta.tests.prettyprinters.PublicSuite().munitTests().map(_.name)
     val nonPackageStatics = core.keys.filter(_.exists(_.isUpper))
-    nonPackageStatics.foreach(name => {
-      val isTested = prettyprinterTests.exists(testName => testName.startsWith(name))
-      assert(isTested, s"$name prettyprinting is not tested")
-    })
+    val untested = nonPackageStatics.collect {
+      case name if !prettyprinterTests.exists(testName => testName.startsWith(name)) =>
+        name
+    }
+    assertEquals(
+      untested,
+      Set.empty[String],
+      "These classes are not tested in PublicSuite. " +
+        "To fix this problem, open 'PublicSuite.scala' and " +
+        "add tests with these strings in the test name"
+    )
   }
 
   test("surface (core)") {
@@ -197,8 +207,9 @@ class SurfaceSuite extends FunSuite {
 
   test("statics (trees)") {
     // println(trees.toList.sorted.mkString(EOL))
+    val obtained = trees.toList.filterNot(_.toString.endsWith("Quasi")).sorted.mkString(EOL)
     assertNoDiff(
-      trees.toList.sorted.mkString(EOL),
+      obtained,
       """
       |scala.meta.Case
       |scala.meta.Ctor
@@ -230,6 +241,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Enumerator.Guard
       |scala.meta.Enumerator.Val
       |scala.meta.Export
+      |scala.meta.ExportGiven
       |scala.meta.Import
       |scala.meta.Importee
       |scala.meta.Importee.Given

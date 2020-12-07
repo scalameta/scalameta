@@ -504,7 +504,8 @@ object Enumerator {
 }
 
 @ast class Import(importers: List[Importer] @nonEmpty) extends Stat
-@ast class Export(given: Boolean, importers: List[Importer] @nonEmpty) extends Stat
+@ast class Export(importers: List[Importer] @nonEmpty) extends Stat
+@ast class ExportGiven(importers: List[Importer] @nonEmpty) extends Stat
 
 @ast class Importer(ref: Term.Ref, importees: List[Importee] @nonEmpty) extends Tree {
   checkFields(ref.isStableId)

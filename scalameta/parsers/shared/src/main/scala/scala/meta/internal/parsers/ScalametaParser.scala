@@ -3712,13 +3712,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   /* -------- DEFS ------------------------------------------- */
 
-  def exportStmt(): Export = autoPos {
+  def exportStmt(): Stat = autoPos {
     accept[KwExport]
-    val givenExport = if (token.is[KwGiven]) {
+    if (token.is[KwGiven]) {
       accept[KwGiven]
-      true
-    } else false
-    Export(givenExport, commaSeparated(importer()))
+      ExportGiven(commaSeparated(importer()))
+    } else {
+      Export(commaSeparated(importer()))
+    }
   }
 
   def importStmt(): Import = autoPos {
