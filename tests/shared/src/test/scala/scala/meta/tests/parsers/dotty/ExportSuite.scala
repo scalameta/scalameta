@@ -10,7 +10,6 @@ class ExportSuite extends BaseDottySuite {
   test("export-single") {
     runTestAssert[Stat]("export A.b.c")(
       Export(
-        false,
         List(Importer(Term.Select(Term.Name("A"), Term.Name("b")), List(Importee.Name(Name("c")))))
       )
     )
@@ -18,8 +17,7 @@ class ExportSuite extends BaseDottySuite {
 
   test("export-given") {
     runTestAssert[Stat]("export given A.b.c")(
-      Export(
-        true,
+      ExportGiven(
         List(Importer(Term.Select(Term.Name("A"), Term.Name("b")), List(Importee.Name(Name("c")))))
       )
     )
@@ -28,7 +26,6 @@ class ExportSuite extends BaseDottySuite {
   test("export-multiple") {
     runTestAssert[Stat]("export A.{ b, c, d, _ }")(
       Export(
-        false,
         List(
           Importer(
             Term.Name("A"),
@@ -47,7 +44,6 @@ class ExportSuite extends BaseDottySuite {
   test("export-multiple-rename") {
     runTestAssert[Stat]("export A.{ b => x, c => _ }")(
       Export(
-        false,
         List(
           Importer(
             Term.Name("A"),
