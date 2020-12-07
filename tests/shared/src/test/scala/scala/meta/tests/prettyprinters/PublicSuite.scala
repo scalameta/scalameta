@@ -245,56 +245,24 @@ class PublicSuite extends FunSuite {
     // NOTE: come up with a platform-independent test
   }
 
-  test("scala.meta.metac.Settings.toString") {
-    // n/a
-  }
-
-  test("scala.meta.metacp.Result.toString") {
-    // n/a
-  }
-
-  test("scala.meta.metacp.Settings.toString") {
-    // n/a
-  }
-
-  test("scala.meta.metai.Result.toString") {
-    // n/a
-  }
-
-  test("scala.meta.metai.Settings.toString") {
-    // n/a
-  }
-
-  test("scala.meta.metap.Format.toString") {
-    // n/a
-  }
-
-  test("scala.meta.metap.Format.Pretty.toString") {
-    // n/a
-  }
-
-  test("scala.meta.metap.Format.Compact.toString") {
-    // n/a
-  }
-
-  test("scala.meta.metap.Format.Detailed.toString") {
-    // n/a
-  }
-
-  test("scala.meta.metap.Format.Proto.toString") {
-    // n/a
-  }
-
-  test("scala.meta.metap.Settings.toString") {
-    // n/a
-  }
-
-  test("scala.meta.parsers.Parse.toString") {
-    // n/a
-  }
-
-  test("scala.meta.tokens.Token.Indentation.toString") {
-    // n/a
+  val untestedClasses = List(
+    "scala.meta.metap.Format.Proto",
+    "scala.meta.metac.Settings",
+    "scala.meta.metap.Settings",
+    "scala.meta.metacp.Result",
+    "scala.meta.metap.Format.Compact",
+    "scala.meta.tokens.Token.Indentation",
+    "scala.meta.metap.Format",
+    "scala.meta.metacp.Settings",
+    "scala.meta.metap.Format.Detailed",
+    "scala.meta.tokens.Token.Unquote",
+    "scala.meta.tokens.Token.LFLF",
+    "scala.meta.tokens.Token.Ellipsis"
+  )
+  untestedClasses.foreach { name =>
+    test(name + ".toString") {
+      // n/a
+    }
   }
 
   test("scala.meta.parsers.ParseException.toString") {
