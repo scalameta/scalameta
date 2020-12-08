@@ -39,6 +39,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
+  object QuoteSpliceContext {
+    private var nested = 0
+    def enter() = nested += 1
+    def exit() = nested -= 1
+    def isInside() = nested > 0
+  }
+
   def parseRule[T <: Tree](rule: this.type => T): T = {
     // NOTE: can't require in.tokenPos to be at -1, because TokIterator auto-rewinds when created
     // require(in.tokenPos == -1 && debug(in.tokenPos))
@@ -1535,15 +1542,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       simpleTypeRest(autoPos(token match {
         case LeftParen() => autoPos(makeTupleType(inParens(types())))
         case Underscore() => next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
+        case MacroSplicedIdent(_) if QuoteSpliceContext.isInside() =>
+          Type.Macro(macroSplicedIdent())
+        case MacroSplice() =>
+          Type.Macro(macroSplice())
         case Ident("?") if dialect.allowQuestionMarkPlaceholder =>
           next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
         case Literal() =>
           if (dialect.allowLiteralTypes) literal()
           else syntaxError(s"$dialect doesn't support literal types", at = path())
-        case MacroSplice() =>
-          Type.Macro(macroSplice())
-        case MacroSplicedIdent(_) =>
-          Type.Macro(macroSplicedIdent())
         case Ident("-") if ahead { token.is[NumericLiteral] } && dialect.allowLiteralTypes =>
           val term = termName()
           atPos(term, auto)(literal(isNegated = true))
@@ -1679,18 +1686,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     implicit object AllowedTermName extends AllowedName[Term.Name]
     implicit object AllowedTypeName extends AllowedName[Type.Name]
   }
-  private def name[T <: Tree: AllowedName: AstInfo](ctor: String => T, advance: Boolean): T =
+  private def name[T <: Tree: AllowedName: AstInfo](ctor: String => T, advance: Boolean): T = {
+    def nameOfIdent(value: String): T = {
+      val name = value.stripPrefix("`").stripSuffix("`")
+      val res = atPos(in.tokenPos, in.tokenPos)(ctor(name))
+      if (advance) next()
+      res
+    }
     token match {
       case Ident(value) =>
-        val name = value.stripPrefix("`").stripSuffix("`")
-        val res = atPos(in.tokenPos, in.tokenPos)(ctor(name))
-        if (advance) next()
-        res
+        nameOfIdent(value)
+      case MacroSplicedIdent(value) =>
+        nameOfIdent("$" + value)
       case Unquote() =>
         unquote[T](advance)
       case _ =>
         syntaxErrorExpected[Ident]
     }
+  }
   def termName(advance: Boolean = true): Term.Name = name(Term.Name(_), advance)
   def typeName(advance: Boolean = true): Type.Name = name(Type.Name(_), advance)
 
@@ -2596,13 +2609,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     var canApply = true
     val t: Try[Term] = {
       token match {
+        case MacroQuote() =>
+          Success(macroQuote())
+        case MacroSplice() =>
+          Success(macroSplice())
+        case MacroQuotedIdent(_) if QuoteSpliceContext.isInside() =>
+          Success(macroQuotedIdent())
+        case MacroSplicedIdent(_) if QuoteSpliceContext.isInside() =>
+          Success(macroSplicedIdent())
         case Literal() =>
           Success(literal())
         case Interpolation.Id(_) =>
           Success(interpolateTerm())
         case Xml.Start() =>
           Success(xmlTerm())
-        case Ident(_) | KwThis() | KwSuper() | Unquote() =>
+        case Ident(_) | KwThis() | KwSuper() | Unquote() | MacroSplicedIdent(_) =>
           Success(path() match {
             case q: Quasi => q.become[Term.Quasi]
             case path => path
@@ -2629,14 +2650,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           })
         case LeftBracket() if dialect.allowPolymorphicFunctions =>
           Success(polyFunction())
-        case MacroQuote() =>
-          Success(macroQuote())
-        case MacroSplice() =>
-          Success(macroSplice())
-        case MacroQuotedIdent(_) =>
-          Success(macroQuotedIdent())
-        case MacroSplicedIdent(_) =>
-          Success(macroSplicedIdent())
         case Indentation.Indent() =>
           Success(blockExpr())
         case _ =>
@@ -2655,18 +2668,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def macroSplice(): Term = autoPos {
     accept[MacroSplice]
-    Term.SplicedMacroExpr(Term.Block(inBraces(templateStats())))
+    QuoteSpliceContext.enter()
+    val splice = Term.SplicedMacroExpr(Term.Block(inBraces(templateStats())))
+    QuoteSpliceContext.exit()
+    splice
   }
 
   def macroQuote(): Term = autoPos {
     accept[MacroQuote]
-    if (token.is[LeftBrace]) {
+    QuoteSpliceContext.enter()
+    val quote = if (token.is[LeftBrace]) {
       Term.QuotedMacroExpr(Term.Block(inBraces(templateStats())))
     } else if (token.is[LeftBracket]) {
       Term.QuotedMacroType(inBrackets(typ()))
     } else {
       syntaxError("Quotation only works for expressions and types", at = token)
     }
+    QuoteSpliceContext.exit()
+    quote
   }
 
   def macroQuotedIdent(): Term = autoPos {
@@ -3583,7 +3602,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         q.become[Type.Param.Quasi]
       case _ =>
         val name =
-          if (token.is[Ident]) typeName()
+          if (token.is[Ident] || token.is[MacroSplicedIdent]) typeName()
           else if (token.is[Unquote]) unquote[Name]
           else if (token.is[Underscore] && allowUnderscore) {
             next(); atPos(in.prevTokenPos, in.prevTokenPos)(Name.Anonymous())

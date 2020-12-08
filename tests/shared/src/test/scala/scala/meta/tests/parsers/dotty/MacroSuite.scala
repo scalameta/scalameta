@@ -224,6 +224,38 @@ class MacroSuite extends BaseDottySuite {
     )
   }
 
+  test("non-macro-dolar-ident") {
+    val code = "a.map($d => $d.a)"
+    runTestAssert[Stat](code)(
+      Term.Apply(
+        Term.Select(Term.Name("a"), Term.Name("map")),
+        List(
+          Term.Function(
+            List(Term.Param(Nil, Term.Name("$d"), None, None)),
+            Term.Select(Term.Name("$d"), Term.Name("a"))
+          )
+        )
+      )
+    )
+  }
+
+  test("non-macro-dolar-type") {
+    val code = "type $F2 = [$T] => $T => Option[$T]"
+    runTestAssert[Stat](code)(
+      Defn.Type(
+        Nil,
+        Type.Name("$F2"),
+        Nil,
+        Type.PolyFunction(
+          List(Type.Param(Nil, Type.Name("$T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+          Type
+            .Function(List(Type.Name("$T")), Type.Apply(Type.Name("Option"), List(Type.Name("$T"))))
+        ),
+        Type.Bounds(None, None)
+      )
+    )
+  }
+
   test("macro-quote-complex") {
     runTestAssert[Stat]("'{ ClassTag[T](${ Expr(ct.runtimeClass.asInstanceOf[Class[T]]) }) }")(
       Term.QuotedMacroExpr(
