@@ -52,10 +52,10 @@ class ParseSuite extends FunSuite with CommonTrees {
 object MoreHelpers {
   implicit class XtensionCode(code: String) {
     def applyRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
-      rule(new ScalametaParser(Input.String(code), dialect))
+      rule(new ScalametaParser(Input.String(code)))
     }
     def parseRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
-      new ScalametaParser(Input.String(code), dialect).parseRule(rule)
+      new ScalametaParser(Input.String(code)).parseRule(rule)
     }
   }
 }

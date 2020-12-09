@@ -33,11 +33,9 @@ import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
 
-class ScalametaParser(input: Input, dialect: Dialect) { parser =>
+class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   require(Set("", EOL).contains(dialect.toplevelSeparator))
-  implicit val currentDialect: Dialect = dialect
-  val softKeywords = new SoftKeywords(currentDialect)
-  import softKeywords._
+  private val soft = new SoftKeywords(dialect)
 
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
@@ -811,12 +809,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
   /* -------------- TOKEN CLASSES ------------------------------------------- */
 
-  def isIdentAnd(pred: String => Boolean): Boolean = isIdentAnd(token, pred)
+  def isIdentAnd(pred: String => Boolean): Boolean = ScalametaParser.isIdentAnd(token, pred)
 
-  def isIdentAnd(token: Token, pred: String => Boolean): Boolean = token match {
-    case Ident(value) if pred(value.stripPrefix("`").stripSuffix("`")) => true
-    case _ => false
-  }
   def isUnaryOp: Boolean = isIdentAnd(name => Term.Name(name).isUnaryOp)
   def isIdentExcept(except: String) = isIdentAnd(_ != except)
   def isIdentOf(name: String) = isIdentAnd(_ == name)
@@ -824,9 +818,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   def isStar: Boolean = isIdentOf("*")
   def isBar: Boolean = isIdentOf("|")
   def isAmpersand: Boolean = isIdentOf("&")
-
-  def isSoftKw(token: Token, name: String): Boolean = isIdentAnd(token, _ == name)
-
   def isColonWildcardStar: Boolean = token.is[Colon] && ahead(token.is[Underscore] && ahead(isStar))
   def isSpliceFollowedBy(check: => Boolean): Boolean =
     token.is[Ellipsis] && ahead(token.is[Unquote] && ahead(token.is[Ident] || check))
@@ -903,7 +894,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   private def inlineDefOrOpaque(token: Token): Boolean = {
-    (token.is[SkInline] || token.is[SkOpaque] || token.is[SkInfix]) &&
+    (token.is[soft.KwInline] || token.is[soft.KwOpaque] || token.is[soft.KwInfix]) &&
     (DclIntro.unapply(token.next) || Modifier.unapply(token.next))
   }
 
@@ -951,8 +942,8 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       token.is[KwSealed] || token.is[KwImplicit] ||
       token.is[KwLazy] || token.is[KwPrivate] ||
       token.is[KwProtected] || token.is[KwOverride] ||
-      token.is[SkOpaque] || token.is[SkOpen] || token.is[SkTransparent] ||
-      token.is[SkInfix] || token.is[SkInline]
+      token.is[soft.KwOpaque] || token.is[soft.KwOpen] || token.is[soft.KwTransparent] ||
+      token.is[soft.KwInfix] || token.is[soft.KwInline]
     }
   }
 
@@ -964,13 +955,14 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       )
 
     def unapply(token: Token): Boolean =
-      token.is[SkInline] && noIdentAhead()
+      token.is[soft.KwInline] && noIdentAhead()
   }
 
   @classifier
   trait NonParamsModifier {
     def unapply(token: Token): Boolean = {
-      token.is[SkOpen] || token.is[SkOpaque] || token.is[SkTransparent] || token.is[SkInfix]
+      token.is[soft.KwOpen] || token.is[soft.KwOpaque] || token.is[soft.KwTransparent] || token
+        .is[soft.KwInfix]
     }
   }
 
@@ -978,7 +970,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   trait NonlocalModifier {
     def unapply(token: Token): Boolean = {
       token.is[KwPrivate] || token.is[KwProtected] ||
-      token.is[KwOverride] || token.is[SkOpen]
+      token.is[KwOverride] || token.is[soft.KwOpen]
     }
   }
 
@@ -1169,7 +1161,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                 allowPatUnquotes = false,
                 allowMultilinePrograms = true
               )
-              val unquoteParser = new ScalametaParser(unquoteInput, unquoteDialect)
+              val unquoteParser = new ScalametaParser(unquoteInput)(unquoteDialect)
               if (dialect.allowTermUnquotes) unquoteParser.parseUnquoteTerm()
               else if (dialect.allowPatUnquotes) unquoteParser.parseUnquotePat()
               else unreachable
@@ -2048,7 +2040,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   // see https://github.com/scalameta/scalameta/issues/1083 and https://github.com/scalameta/scalameta/issues/1223
   def expr(location: Location, allowRepeated: Boolean): Term =
     autoPos(token match {
-      case SkInline() if ahead(token.is[KwIf]) =>
+      case soft.KwInline() if ahead(token.is[KwIf]) =>
         accept[Ident]
         ifClause(isInline = true)
       case KwIf() =>
@@ -2222,13 +2214,13 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             object NameLike {
               def unapply(tree: Tree): Boolean = tree match {
                 case Term.Quasi(0, _) => true
-                case Term.Select(Term.Name(SkUsing.name), _) if dialect.allowGivenUsing =>
+                case Term.Select(Term.Name(soft.KwUsing.name), _) if dialect.allowGivenUsing =>
                   true
-                case Term.Ascribe(Term.Select(Term.Name(SkUsing.name), _), _)
+                case Term.Ascribe(Term.Select(Term.Name(soft.KwUsing.name), _), _)
                     if dialect.allowGivenUsing =>
                   true
                 case _: Term.Name => true
-                case Term.Eta(Term.Name(SkUsing.name)) if dialect.allowGivenUsing => true
+                case Term.Eta(Term.Name(soft.KwUsing.name)) if dialect.allowGivenUsing => true
                 case _: Term.Placeholder => true
                 case _ => false
               }
@@ -2277,11 +2269,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
                       Term.Param(Nil, atPos(name, name)(Name.Anonymous()), Some(tpt), None)
                     )
                   )
-                case Term.Select(Term.Name(SkUsing.name), name) =>
+                case Term.Select(Term.Name(soft.KwUsing.name), name) =>
                   Some(atPos(tree, tree)(Term.Param(List(Mod.Using()), name, None, None)))
-                case Term.Ascribe(Term.Select(Term.Name(SkUsing.name), name), tpt) =>
+                case Term.Ascribe(Term.Select(Term.Name(soft.KwUsing.name), name), tpt) =>
                   Some(atPos(tree, tree)(Term.Param(List(Mod.Using()), name, Some(tpt), None)))
-                case Term.Ascribe(Term.Eta(Term.Name(SkUsing.name)), tpt) =>
+                case Term.Ascribe(Term.Eta(Term.Name(soft.KwUsing.name)), tpt) =>
                   Some(
                     atPos(tree, tree)(
                       Term.Param(List(Mod.Using()), Name.Anonymous(), Some(tpt), None)
@@ -2784,7 +2776,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         case tok: Ellipsis if tok.rank == 2 =>
           (List(ellipsis(2, astInfo[Term])), false)
         case _ =>
-          val using = if (token.is[SkUsing]) {
+          val using = if (token.is[soft.KwUsing]) {
             next(); true
           } else false
           (commaSeparated(argumentExpr), using)
@@ -3044,7 +3036,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     def pattern2(): Pat = autoPos {
       val p = pattern3()
-      if (token.isNot[At] && token.isNot[SkAs])
+      if (token.isNot[At] && token.isNot[soft.KwAs])
         p
       else
         p match {
@@ -3081,7 +3073,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       val base = ctx.stack
       def loop(rhs: ctx.Rhs): ctx.Rhs = {
         val op =
-          if (token.isNot[SkAs] && (isIdentExcept("|") || token.is[Unquote])) Some(termName())
+          if (token.isNot[soft.KwAs] && (isIdentExcept("|") || token.is[Unquote])) Some(termName())
           else None
         val lhs1 = ctx.reduceStack(base, rhs, rhs, op)
         op match {
@@ -3137,7 +3129,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
             case _: Quasi => false
             case Term.Name(value) =>
               val isNextTokenBinding =
-                token.is[SkAs] || token.is[At]
+                token.is[soft.KwAs] || token.is[At]
               val isCapitalAllowed = dialect.allowUpperCasePatternVarBinding && isNextTokenBinding
               !isBackquoted && ((value.head.isLower && value.head.isLetter) || value.head == '_' || isCapitalAllowed)
             case _ => false
@@ -3285,11 +3277,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwOverride() => next(); Mod.Override()
       case KwPrivate() => accessModifier()
       case KwProtected() => accessModifier()
-      case SkInline() => next(); Mod.Inline()
-      case SkInfix() => next(); Mod.Infix()
-      case SkOpen() => next(); Mod.Open()
-      case SkOpaque() => next(); Mod.Opaque()
-      case SkTransparent() => next(); Mod.Transparent()
+      case soft.KwInline() => next(); Mod.Inline()
+      case soft.KwInfix() => next(); Mod.Infix()
+      case soft.KwOpen() => next(); Mod.Open()
+      case soft.KwOpaque() => next(); Mod.Opaque()
+      case soft.KwTransparent() => next(); Mod.Transparent()
       case _ => syntaxError(s"modifier expected but ${token.name} found", at = token)
     })
 
@@ -3319,10 +3311,10 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       case KwLazy() => next(); Mod.Lazy()
       case KwVal() if !dialect.allowUnquotes => next(); Mod.ValParam()
       case KwVar() if !dialect.allowUnquotes => next(); Mod.VarParam()
-      case SkOpen() => next(); Mod.Open()
-      case SkTransparent() => next(); Mod.Transparent()
-      case SkInline() => next(); Mod.Inline()
-      case SkInfix() => next(); Mod.Infix()
+      case soft.KwOpen() => next(); Mod.Open()
+      case soft.KwTransparent() => next(); Mod.Transparent()
+      case soft.KwInline() => next(); Mod.Inline()
+      case soft.KwInfix() => next(); Mod.Infix()
       case Ident("valparam") if dialect.allowUnquotes => next(); Mod.ValParam()
       case Ident("varparam") if dialect.allowUnquotes => next(); Mod.VarParam()
       case _ => fail()
@@ -3429,7 +3421,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
         if (token.is[KwImplicit]) {
           next()
           parsedImplicits = true
-        } else if (token.is[SkUsing]) {
+        } else if (token.is[soft.KwUsing]) {
           next()
           parsedUsing = true
         }
@@ -3495,7 +3487,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       if (!mods.has[Mod.Override])
         rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     } else {
-      if (token.is[SkInline] && ahead(token.is[Ident])) {
+      if (token.is[soft.KwInline] && ahead(token.is[Ident])) {
         mods ++= List(modifier())
       }
     }
@@ -3845,11 +3837,11 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       allowUnderscore = dialect.allowTypeParamUnderscore
     )
     val uparamss = paramClauses(ownerIsType = false)
-    val (sigName, sigTparams, sigUparamss) = if (token.is[SkAs]) {
+    val (sigName, sigTparams, sigUparamss) = if (token.is[soft.KwAs]) {
       accept[Ident]
       (name, tparams, uparamss)
       // as can be on a next line and LF will not be removed before since `as` is an ident
-    } else if (token.is[LF] && ahead(token.is[SkAs])) {
+    } else if (token.is[LF] && ahead(token.is[soft.KwAs])) {
       accept[LF]
       accept[Ident]
       (name, tparams, uparamss)
@@ -3893,7 +3885,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
     var uparams = ListBuffer[List[Term.Param]]()
     while (token.is[LeftParen]) {
       uparams += inParens {
-        if (token.isNot[SkUsing]) syntaxError("expected 'using' keyword", token)
+        if (token.isNot[soft.KwUsing]) syntaxError("expected 'using' keyword", token)
         next()
         commaSeparated(
           param(
@@ -4361,7 +4353,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   }
 
   def derivesClasses(): List[Type] = {
-    if (token.is[SkDerives]) {
+    if (token.is[soft.KwDerives]) {
       next()
       val deriving = ListBuffer[Type]()
       def readInit() = token match {
@@ -4427,7 +4419,7 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
       }
     } else {
       val startPos = in.tokenPos
-      if (token.is[SkDerives]) {
+      if (token.is[soft.KwDerives]) {
         val tmpl = atPos(startPos, auto)(template(Nil, Nil))
         tmpl
       } else {
@@ -4756,10 +4748,16 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 }
 
 object ScalametaParser {
+
+  private[parsers] def isIdentAnd(token: Token, pred: String => Boolean): Boolean = token match {
+    case Ident(value) => pred(value.stripPrefix("`").stripSuffix("`"))
+    case _ => false
+  }
+
   def toParse[T](fn: ScalametaParser => T): Parse[T] = new Parse[T] {
     def apply(input: Input, dialect: Dialect): Parsed[T] = {
       try {
-        val parser = new ScalametaParser(input, dialect)
+        val parser = new ScalametaParser(input)(dialect)
         Parsed.Success(fn(parser))
       } catch {
         case details @ TokenizeException(pos, message) =>

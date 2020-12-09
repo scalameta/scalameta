@@ -7,81 +7,79 @@ import scala.meta.internal.classifiers.classifier
 
 class SoftKeywords(dialect: Dialect) {
 
-  def isIdentAnd(token: Token, pred: String => Boolean): Boolean = token match {
-    case Ident(value) if pred(value.stripPrefix("`").stripSuffix("`")) => true
-    case _ => false
-  }
+  import ScalametaParser.isIdentAnd
 
-  def isSoftKw(token: Token, name: String): Boolean = isIdentAnd(token, _ == name)
+  private def matches(token: Token, name: String, isEnabled: => Boolean): Boolean =
+    isEnabled && isIdentAnd(token, _ == name)
 
   @classifier
-  trait SkAs {
+  trait KwAs {
     val name = "as"
     def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowAsPatternBinding
+      matches(token, name, dialect.allowAsPatternBinding)
     }
   }
   @classifier
-  trait SkUsing {
+  trait KwUsing {
     val name = "using"
     def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowGivenUsing
+      matches(token, name, dialect.allowGivenUsing)
     }
   }
 
   @classifier
-  trait SkInline {
+  trait KwInline {
     val name = "inline"
     def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowInlineMods
+      matches(token, name, dialect.allowInlineMods)
     }
   }
 
   @classifier
-  trait SkOpaque {
+  trait KwOpaque {
     val name = "opaque"
     def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowOpaqueTypes
+      matches(token, name, dialect.allowOpaqueTypes)
     }
   }
 
   @classifier
-  trait SkOpen {
+  trait KwOpen {
     val name = "open"
     def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowOpenClass
+      matches(token, name, dialect.allowOpenClass)
     }
   }
 
   @classifier
-  trait SkTransparent {
+  trait KwTransparent {
     val name = "transparent"
     def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowInlineMods
+      matches(token, name, dialect.allowInlineMods)
     }
   }
 
   @classifier
-  trait SkDerives {
+  trait KwDerives {
     val name = "derives"
     def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowDerives
+      matches(token, name, dialect.allowDerives)
     }
   }
 
   @classifier
-  trait SkEnd {
+  trait KwEnd {
     val name = "end"
     def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowSignificantIndentation
+      matches(token, name, dialect.allowSignificantIndentation)
     }
   }
 
   @classifier
-  trait SkInfix {
+  trait KwInfix {
     val name = "infix"
     def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowInfixMods
+      matches(token, name, dialect.allowInfixMods)
     }
   }
 }
