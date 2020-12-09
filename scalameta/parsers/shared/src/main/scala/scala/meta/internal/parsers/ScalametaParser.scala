@@ -36,6 +36,9 @@ import scala.util.Failure
 class ScalametaParser(input: Input, dialect: Dialect) { parser =>
   require(Set("", EOL).contains(dialect.toplevelSeparator))
   implicit val currentDialect: Dialect = dialect
+  val softKeywords = new SoftKeywords(currentDialect)
+  import softKeywords._
+
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
   def parseRule[T <: Tree](rule: this.type => T): T = {
@@ -835,77 +838,6 @@ class ScalametaParser(input: Input, dialect: Dialect) { parser =>
 
     def isCaseClassOrObjectOrEnum =
       (isCaseClassOrObject || (token.is[KwCase] && token.next.is[Ident] && dialect.allowEnums))
-  }
-
-  @classifier
-  trait SkAs {
-    val name = "as"
-    def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowAsPatternBinding
-    }
-  }
-  @classifier
-  trait SkUsing {
-    val name = "using"
-    def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowGivenUsing
-    }
-  }
-
-  @classifier
-  trait SkInline {
-    val name = "inline"
-    def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowInlineMods
-    }
-  }
-
-  @classifier
-  trait SkOpaque {
-    val name = "opaque"
-    def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowOpaqueTypes
-    }
-  }
-
-  @classifier
-  trait SkOpen {
-    val name = "open"
-    def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowOpenClass
-    }
-  }
-
-  @classifier
-  trait SkTransparent {
-    val name = "transparent"
-    def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowInlineMods
-    }
-  }
-
-  @classifier
-  trait SkDerives {
-    val name = "derives"
-    def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowDerives
-    }
-  }
-
-  @classifier
-  trait SkEnd {
-    val name = "end"
-    def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowSignificantIndentation
-    }
-  }
-
-  @classifier
-  trait SkInfix {
-    val name = "infix"
-    def unapply(token: Token): Boolean = {
-      isSoftKw(token, name) && dialect.allowInfixMods
-    }
   }
 
   @classifier
