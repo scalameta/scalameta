@@ -23,11 +23,6 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
         case BACKQUOTED_IDENT =>
           Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
-        case QUOTED_IDENT =>
-          Token.MacroQuotedIdent(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
-        case SPLICED_IDENT =>
-          Token.MacroSplicedIdent(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
-
         case INTLIT =>
           Token.Constant.Int(input, dialect, curr.offset, curr.endOffset + 1, curr.intVal)
         case LONGLIT =>

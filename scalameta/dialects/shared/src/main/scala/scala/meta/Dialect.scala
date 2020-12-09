@@ -78,7 +78,8 @@ final class Dialect private (
     val allowExtensionMethods: Boolean,
     // Open modifier for classes introduced in dotty
     val allowOpenClass: Boolean,
-    // Whitebox macros introduced in dotty (splices/quotes)
+    // Scala 3 splices/quotes
+    @deprecated("Replaced with allowSpliceAndQuote", "4.4.1")
     val allowWhiteboxMacro: Boolean,
     // Top level statements introduced in dotty.
     // differs from ToplevelTerms because here you can define packages
@@ -122,7 +123,11 @@ final class Dialect private (
     // Dotty allows `match` on type
     val allowTypeMatch: Boolean,
     // Dotty allows to define types and methods with an `infix` soft keyword modifier
-    val allowInfixMods: Boolean
+    val allowInfixMods: Boolean,
+    // Scala 3 splices/quotes
+    val allowSpliceAndQuote: Boolean,
+    // Scala 3 disallowed symbol literals
+    val allowSymbolLiterals: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -208,7 +213,9 @@ final class Dialect private (
       allowPolymorphicFunctions = false,
       allowMatchAsOperator = false,
       allowTypeMatch = false,
-      allowInfixMods = false
+      allowInfixMods = false,
+      allowSpliceAndQuote = false,
+      allowSymbolLiterals = true
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -236,7 +243,7 @@ final class Dialect private (
   def withAllowImplicitByNameParameters(newValue: Boolean): Dialect = {
     privateCopy(allowImplicitByNameParameters = newValue)
   }
-  @deprecated("Implicit functions are not supported in any dialect")
+  @deprecated("Implicit functions are not supported in any dialect", "4.4.1")
   def withAllowImplicitFunctionTypes(newValue: Boolean): Dialect = {
     privateCopy(allowImplicitFunctionTypes = newValue)
   }
@@ -306,6 +313,7 @@ final class Dialect private (
   def withAllowOpenClass(newValue: Boolean): Dialect = {
     privateCopy(allowOpenClass = newValue)
   }
+  @deprecated("Replaced by withAllowSplicesAndQuotes", "4.4.1")
   def withAllowWhiteboxMacro(newValue: Boolean): Dialect = {
     privateCopy(allowWhiteboxMacro = newValue)
   }
@@ -322,7 +330,7 @@ final class Dialect private (
   def withAllowInterpolationDolarQuoteEscape(newValue: Boolean): Dialect = {
     privateCopy(allowInterpolationDolarQuoteEscape = newValue)
   }
-  @deprecated("Super traits are not supported in any dialect")
+  @deprecated("Super traits are not supported in any dialect", "4.4.1")
   def withAllowSuperTrait(newValue: Boolean): Dialect = {
     privateCopy(allowSuperTrait = newValue)
   }
@@ -374,6 +382,12 @@ final class Dialect private (
   }
   def withAllowInfixMods(newValue: Boolean): Dialect = {
     privateCopy(allowInfixMods = newValue)
+  }
+  def withAllowSpliceAndQuote(newValue: Boolean): Dialect = {
+    privateCopy(allowSpliceAndQuote = newValue)
+  }
+  def withAllowSymbolLiterals(newValue: Boolean): Dialect = {
+    privateCopy(allowSymbolLiterals = newValue)
   }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
@@ -431,7 +445,9 @@ final class Dialect private (
       allowPolymorphicFunctions: Boolean = this.allowPolymorphicFunctions,
       allowMatchAsOperator: Boolean = this.allowMatchAsOperator,
       allowTypeMatch: Boolean = this.allowTypeMatch,
-      allowInfixMods: Boolean = this.allowInfixMods
+      allowInfixMods: Boolean = this.allowInfixMods,
+      allowSpliceAndQuote: Boolean = this.allowSpliceAndQuote,
+      allowSymbolLiterals: Boolean = this.allowSymbolLiterals
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -485,7 +501,9 @@ final class Dialect private (
       allowPolymorphicFunctions,
       allowMatchAsOperator,
       allowTypeMatch,
-      allowInfixMods
+      allowInfixMods,
+      allowSpliceAndQuote,
+      allowSymbolLiterals
       // NOTE(olafur): add the next argument above this comment.
     )
   }

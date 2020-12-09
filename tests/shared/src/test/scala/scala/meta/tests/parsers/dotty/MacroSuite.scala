@@ -90,12 +90,7 @@ class MacroSuite extends BaseDottySuite {
       )
     )
     val layoutMatchSimple = "x match {\n  case 'c => 1\n}"
-    runTestAssert[Stat]("x match { case 'c => 1 }", assertLayout = Some(layoutMatchSimple))(
-      Term.Match(
-        tname("x"),
-        List(Case(Pat.Macro(Term.QuotedMacroExpr(tname("c"))), None, Lit.Int(1)))
-      )
-    )
+    runTestError[Stat]("x match { case 'c => 1 }", "Symbol literals are no longer allowed")
     val layoutMatchComplex = "x match {\n  case '{ a } => 1\n}"
     runTestAssert[Stat]("x match { case '{ a } => 1 }", assertLayout = Some(layoutMatchComplex))(
       Term.Match(
@@ -224,7 +219,7 @@ class MacroSuite extends BaseDottySuite {
     )
   }
 
-  test("non-macro-dolar-ident") {
+  test("non-macro-dollar-ident") {
     val code = "a.map($d => $d.a)"
     runTestAssert[Stat](code)(
       Term.Apply(
@@ -239,7 +234,7 @@ class MacroSuite extends BaseDottySuite {
     )
   }
 
-  test("non-macro-dolar-type") {
+  test("non-macro-dollar-type") {
     val code = "type $F2 = [$T] => $T => Option[$T]"
     runTestAssert[Stat](code)(
       Defn.Type(

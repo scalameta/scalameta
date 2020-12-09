@@ -23,8 +23,6 @@ import scala.meta.internal.prettyprinters._
 object Token {
   // Identifiers
   @freeform("identifier") class Ident(value: String) extends Token
-  @freeform("quotedident") class MacroQuotedIdent(value: String) extends Token
-  @freeform("splicedident") class MacroSplicedIdent(value: String) extends Token
 
   // Alphanumeric keywords
   @fixed("abstract") class KwAbstract extends Token
