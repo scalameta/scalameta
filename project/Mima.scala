@@ -31,6 +31,16 @@ object Mima {
     // under the standard Scalameta binary-compatibility policy. This is done to
     // buy time to refine the design of the Scalameta AST in preparation for the
     // Scala 3 release.
-    ProblemFilters.exclude[Problem]("scala.meta.Export*")
+    ProblemFilters.exclude[Problem]("scala.meta.Export*"),
+    ProblemFilters.exclude[MissingClassProblem]("scala.meta.tokens.Token$MacroSplicedIdent$"),
+    ProblemFilters.exclude[MissingClassProblem](
+      "scala.meta.tokens.Token$MacroQuotedIdent$sharedClassifier$"
+    ),
+    ProblemFilters.exclude[MissingClassProblem]("scala.meta.tokens.Token$MacroQuotedIdent$"),
+    ProblemFilters.exclude[MissingClassProblem](
+      "scala.meta.tokens.Token$MacroSplicedIdent$sharedClassifier$"
+    ),
+    ProblemFilters.exclude[MissingClassProblem]("scala.meta.tokens.Token$MacroSplicedIdent"),
+    ProblemFilters.exclude[MissingClassProblem]("scala.meta.tokens.Token$MacroQuotedIdent")
   )
 }

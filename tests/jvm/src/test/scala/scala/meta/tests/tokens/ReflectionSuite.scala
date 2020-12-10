@@ -40,8 +40,6 @@ class ReflectionSuite extends FunSuite {
       |Token.Interpolation.Start
       |Token.LFLF
       |Token.LeftArrow
-      |Token.MacroQuotedIdent
-      |Token.MacroSplicedIdent
       |Token.RightArrow
       |Token.Unquote
       |Token.Xml.End

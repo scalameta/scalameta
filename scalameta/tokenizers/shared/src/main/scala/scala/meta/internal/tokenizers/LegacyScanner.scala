@@ -139,11 +139,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           token = IDENTIFIER
         if (token == CTXARROW && !dialect.allowGivenUsing)
           token = IDENTIFIER
-
-      }
-      if (token == IDENTIFIER && name.startsWith("$") && dialect.allowWhiteboxMacro) {
-        strVal = name.stripPrefix("$")
-        token = SPLICED_IDENT
       }
     }
   }
@@ -352,7 +347,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           val prevChar = ch
           putChar(ch)
           nextChar()
-          if (prevChar == '$' && ch == '{' && dialect.allowWhiteboxMacro) {
+          if (prevChar == '$' && ch == '{' && dialect.allowSpliceAndQuote) {
             token = MACROSPLICE
             setStrVal()
           } else {
@@ -463,7 +458,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           else {
             val lookahead = lookaheadReader
             lookahead.nextRawChar()
-            if ((ch == '{' || ch == '[') && lookahead.ch != '\'' && dialect.allowWhiteboxMacro) {
+            if ((ch == '{' || ch == '[') && lookahead.ch != '\'' && dialect.allowSpliceAndQuote) {
               token = MACROQUOTE
               setStrVal()
             } else {
@@ -1028,11 +1023,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       setStrVal()
     } else {
       op()
-      if (dialect.allowWhiteboxMacro) {
-        token = QUOTED_IDENT
-      } else {
-        token = SYMBOLLIT
-      }
+      token = SYMBOLLIT
       strVal = name.toString
     }
   }
