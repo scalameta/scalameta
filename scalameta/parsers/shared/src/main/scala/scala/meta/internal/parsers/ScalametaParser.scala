@@ -26,8 +26,6 @@ import scala.meta.classifiers._
 import scala.meta.internal.classifiers._
 import org.scalameta._
 import org.scalameta.invariants._
-import scala.meta.Defn.Given
-import scala.meta.Defn.ExtensionGroup
 import scala.meta.internal.tokenizers.Chars
 import scala.util.Try
 import scala.util.Success
@@ -692,6 +690,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   implicit def modsToPos(mods: List[Mod]): Pos = mods.headOption.map(TreePos).getOrElse(AutoPos)
   def auto = AutoPos
 
+  def atPos[T <: Tree](pos: Position)(body: => T): T = {
+    atPos(pos.start, pos.end)(body)
+  }
+  def atPos[T <: Tree](token: Token)(body: => T): T = {
+    atPos(token.startTokenPos, token.endTokenPos)(body)
+  }
   def atPos[T <: Tree](start: Pos, end: Pos)(body: => T): T = {
     val startTokenPos = start.startTokenPos
     val result = body
@@ -2280,14 +2284,27 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                       Term.Param(Nil, atPos(name, name)(Name.Anonymous()), Some(tpt), None)
                     )
                   )
-                case Term.Select(Term.Name(soft.KwUsing.name), name) =>
-                  Some(atPos(tree, tree)(Term.Param(List(Mod.Using()), name, None, None)))
-                case Term.Ascribe(Term.Select(Term.Name(soft.KwUsing.name), name), tpt) =>
-                  Some(atPos(tree, tree)(Term.Param(List(Mod.Using()), name, Some(tpt), None)))
-                case Term.Ascribe(Term.Eta(Term.Name(soft.KwUsing.name)), tpt) =>
+                case Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name) =>
                   Some(
                     atPos(tree, tree)(
-                      Term.Param(List(Mod.Using()), Name.Anonymous(), Some(tpt), None)
+                      Term.Param(List(atPos(kwUsing.pos)(Mod.Using())), name, None, None)
+                    )
+                  )
+                case Term.Ascribe(Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name), tpt) =>
+                  Some(
+                    atPos(tree, tree)(
+                      Term.Param(List(atPos(kwUsing.pos)(Mod.Using())), name, Some(tpt), None)
+                    )
+                  )
+                case Term.Ascribe(eta @ Term.Eta(kwUsing @ Term.Name(soft.KwUsing.name)), tpt) =>
+                  Some(
+                    atPos(tree, tree)(
+                      Term.Param(
+                        List(atPos(kwUsing.pos)(Mod.Using())),
+                        atPos(eta.endTokenPos, eta.endTokenPos)(Name.Anonymous()),
+                        Some(tpt),
+                        None
+                      )
                     )
                   )
                 case Lit.Unit() =>
@@ -2667,7 +2684,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def macroSplice(): Term = autoPos {
     accept[MacroSplice]
     QuoteSpliceContext.enter()
-    val splice = Term.SplicedMacroExpr(Term.Block(inBraces(templateStats())))
+    val splice = Term.SplicedMacroExpr(autoPos(Term.Block(inBraces(templateStats()))))
     QuoteSpliceContext.exit()
     splice
   }
@@ -2676,7 +2693,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     accept[MacroQuote]
     QuoteSpliceContext.enter()
     val quote = if (token.is[LeftBrace]) {
-      Term.QuotedMacroExpr(Term.Block(inBraces(templateStats())))
+      Term.QuotedMacroExpr(autoPos(Term.Block(inBraces(templateStats()))))
     } else if (token.is[LeftBracket]) {
       Term.QuotedMacroType(inBrackets(typ()))
     } else {
@@ -3467,11 +3484,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def paramType(): Type =
     autoPos(token match {
       case RightArrow() =>
-        next()
-        val t = Type.ByName(typ())
-        if (isStar && dialect.allowByNameRepeatedParameters) {
+        val t = autoPos {
           next()
-          Type.Repeated(t)
+          Type.ByName(typ())
+        }
+        if (isStar && dialect.allowByNameRepeatedParameters) {
+          autoPos {
+            next()
+            Type.Repeated(t)
+          }
         } else {
           t
         }
@@ -3479,8 +3500,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val t = typ()
         if (!isStar) t
         else {
-          next()
-          Type.Repeated(t)
+          autoPos {
+            next()
+            Type.Repeated(t)
+          }
         }
     })
 
@@ -3524,7 +3547,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         var anonymousUsing = false
         val name = if (isUsing && ahead(!token.is[Colon])) { //anonymous using
           anonymousUsing = true
-          meta.Name.Anonymous()
+          atPos(in.tokenPos, in.tokenPos)(meta.Name.Anonymous())
         } else {
           termName() match {
             case q: Quasi => q.become[Name.Quasi]
@@ -3786,9 +3809,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     assert(token.text == "end")
     next()
     if (token.is[Ident]) {
-      EndMarker(termName())
+      EndMarker(autoPos(termName()))
     } else {
-      val r = EndMarker(Term.Name(token.text))
+      val r = EndMarker(atPos(token)(Term.Name(token.text)))
       next()
       r
     }
@@ -3842,8 +3865,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   // GivenDef          ::=  [GivenSig] [‘_’ ‘<:’] Type ‘=’ Expr
   //                     |  [GivenSig] ConstrApps [TemplateBody]
   // GivenSig          ::=  [id] [DefTypeParamClause] {UsingParamClause} ‘as’
-  private def givenDef(mods: List[Mod]): Stat = {
-    val anonymousName = scala.meta.Name.Anonymous()
+  private def givenDef(mods: List[Mod]): Stat = autoPos {
+    val anonymousName = autoPos(scala.meta.Name.Anonymous())
 
     val forked = in.fork
     val name: meta.Name =
@@ -3873,8 +3896,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       accept[Equals]
       Defn.GivenAlias(mods, sigName, sigTparams, sigUparamss, decltpe, exprMaybeIndented())
     } else {
-      val (slf, stats) = templateBodyOpt(true)
-      val rhs = Template(List.empty, List.empty, slf, stats)
+      val rhs = autoPos {
+        val (slf, stats) = templateBodyOpt(true)
+        Template(List.empty, List.empty, slf, stats)
+      }
       Defn.Given(mods, sigName, sigTparams, sigUparamss, decltpe, rhs)
     }
   }
@@ -3887,7 +3912,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   // TmplDef           ::= ‘extension’ [DefTypeParamClause] ‘(’ DefParam ‘)’ {UsingParamClause} ExtMethods
   // ExtMethods        ::=  ExtMethod | [nl] ‘{’ ExtMethod {semi ExtMethod ‘}’
   // ExtMethod         ::=  {Annotation [nl]} {Modifier} ‘def’ DefDef
-  def extensionGroupDecl(mods: List[Mod]): Defn.ExtensionGroup = {
+  def extensionGroupDecl(mods: List[Mod]): Defn.ExtensionGroup = atPos(mods, auto) {
     next() // 'extension'
 
     val tparams = typeParamClauseOpt(
@@ -3924,8 +3949,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       newLinesOpt()
       List(nonLocalDefOrDcl())
     }
-    val body: Stat = if (methodsAll.size == 1) methodsAll.head else Term.Block(methodsAll)
-    ExtensionGroup(eparam, tparams, uparams.toList, body)
+    val body: Stat = methodsAll match {
+      case Nil => autoPos(Term.Block(Nil))
+      case head :: Nil => head
+      case head :: tail =>
+        atPos(head.startTokenPos, tail.last.endTokenPos)(Term.Block(head :: tail))
+    }
+    Defn.ExtensionGroup(eparam, tparams, uparams.toList, body)
   }
 
   def funDefRest(mods: List[Mod]): Stat = atPos(mods, auto) {

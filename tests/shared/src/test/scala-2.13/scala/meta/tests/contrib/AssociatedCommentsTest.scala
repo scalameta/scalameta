@@ -21,14 +21,14 @@ class AssociatedCommentsTest extends FunSuite {
     val lit = input.find(_.is[Lit]).get
     val Token.Comment(a) = comments.leading(defnVal).head
     val List(Token.Comment("* leading docstring ")) =
-      comments.leading(defnObject).to[List]
-    val List() = comments.trailing(defnObject).to[List]
+      comments.leading(defnObject).toList
+    val List() = comments.trailing(defnObject).toList
     val List(Token.Comment(" leading 2")) =
-      comments.leading(defnVal).to[List]
+      comments.leading(defnVal).toList
     val List(Token.Comment(" trailing")) =
-      comments.trailing(defnVal).to[List]
+      comments.trailing(defnVal).toList
     val List(Token.Comment(" trailing")) =
-      comments.trailing(lit).to[List]
+      comments.trailing(lit).toList
   }
 
   test("#897 first comment in file") {

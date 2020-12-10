@@ -99,68 +99,74 @@ class PublicSuite extends FunSuite {
     // n/a
   }
 
+  test("scala.meta.dialects.Scala3.toString") {
+    assertNoDiff(scala.meta.dialects.Scala3.toString, "Scala3")
+  }
+
   test("scala.meta.dialects.Dotty.toString") {
-    assert(scala.meta.dialects.Dotty.toString == "Dotty")
+    // NOTE(olafur): `Dotty` and `Scala3` are identical so it's expected that
+    // `toString` returns "Scala3" instead of "Dotty".
+    assertEquals(scala.meta.dialects.Dotty.toString, "Scala3")
   }
 
   test("scala.meta.dialects.Sbt0136.toString") {
-    assert(scala.meta.dialects.Sbt0136.toString == "Sbt0136")
+    assertNoDiff(scala.meta.dialects.Sbt0136.toString, "Sbt0136")
   }
 
   test("scala.meta.dialects.Sbt0137.toString") {
-    assert(scala.meta.dialects.Sbt0137.toString == "Sbt0137")
+    assertNoDiff(scala.meta.dialects.Sbt0137.toString, "Sbt0137")
   }
 
   test("scala.meta.dialects.Sbt.toString") {
-    assert(scala.meta.dialects.Sbt.toString == "Sbt1")
+    assertNoDiff(scala.meta.dialects.Sbt.toString, "Sbt1")
   }
 
   test("scala.meta.dialects.Sbt1.toString") {
-    assert(scala.meta.dialects.Sbt1.toString == "Sbt1")
+    assertNoDiff(scala.meta.dialects.Sbt1.toString, "Sbt1")
   }
 
   test("scala.meta.dialects.Scala210.toString") {
-    assert(scala.meta.dialects.Scala210.toString == "Scala210")
+    assertNoDiff(scala.meta.dialects.Scala210.toString, "Scala210")
   }
 
   test("scala.meta.dialects.Scala211.toString") {
-    assert(scala.meta.dialects.Scala211.toString == "Scala211")
+    assertNoDiff(scala.meta.dialects.Scala211.toString, "Scala211")
   }
 
   test("scala.meta.dialects.Scala212.toString") {
-    assert(scala.meta.dialects.Scala212.toString == "Scala212")
+    assertNoDiff(scala.meta.dialects.Scala212.toString, "Scala212")
   }
 
   test("scala.meta.dialects.Scala213.toString") {
-    assert(scala.meta.dialects.Scala213.toString == "Scala213")
+    assertNoDiff(scala.meta.dialects.Scala213.toString, "Scala213")
   }
 
   test("scala.meta.dialects.Scala.toString") {
-    assert(scala.meta.dialects.Scala.toString == "Scala213")
+    assertNoDiff(scala.meta.dialects.Scala.toString, "Scala213")
   }
 
   test("scala.meta.dialects.Typelevel211.toString") {
-    assert(scala.meta.dialects.Typelevel211.toString == "Typelevel211")
+    assertNoDiff(scala.meta.dialects.Typelevel211.toString, "Typelevel211")
   }
 
   test("scala.meta.dialects.Typelevel212.toString") {
-    assert(scala.meta.dialects.Typelevel212.toString == "Typelevel212")
+    assertNoDiff(scala.meta.dialects.Typelevel212.toString, "Typelevel212")
   }
 
   test("scala.meta.dialects.Paradise211.toString") {
-    assert(scala.meta.dialects.Paradise211.toString == "Paradise211")
+    assertNoDiff(scala.meta.dialects.Paradise211.toString, "Paradise211")
   }
 
   test("scala.meta.dialects.Paradise212.toString") {
-    assert(scala.meta.dialects.Paradise212.toString == "Paradise212")
+    assertNoDiff(scala.meta.dialects.Paradise212.toString, "Paradise212")
   }
 
   test("scala.meta.dialects.ParadiseTypelevel211.toString") {
-    assert(scala.meta.dialects.ParadiseTypelevel211.toString == "ParadiseTypelevel211")
+    assertNoDiff(scala.meta.dialects.ParadiseTypelevel211.toString, "ParadiseTypelevel211")
   }
 
   test("scala.meta.dialects.ParadiseTypelevel212.toString") {
-    assert(scala.meta.dialects.ParadiseTypelevel212.toString == "ParadiseTypelevel212")
+    assertNoDiff(scala.meta.dialects.ParadiseTypelevel212.toString, "ParadiseTypelevel212")
   }
 
   test("scala.meta.inputs.Input.toString") {
