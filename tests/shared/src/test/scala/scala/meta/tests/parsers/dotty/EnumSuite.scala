@@ -272,67 +272,120 @@ class EnumSuite extends BaseDottySuite {
   // ---------------------------------
 
   test("case-repeated") {
-    runTestAssert[Stat]("case A, B, C")(
-      Defn.RepeatedEnumCase(Nil, List(tname("A"), tname("B"), tname("C")))
+    runTestAssert[Stat]("enum E { case A, B, C }")(
+      enumWithCase("E", Defn.RepeatedEnumCase(Nil, List(tname("A"), tname("B"), tname("C"))))
     )
   }
 
   test("case-single") {
-    runTestAssert[Stat]("case A")(
-      Defn.EnumCase(Nil, tname("A"), Nil, ctor, Nil)
+    runTestAssert[Stat]("enum E { case A }")(
+      enumWithCase("E", Defn.EnumCase(Nil, tname("A"), Nil, ctor, Nil))
     )
-    runTestAssert[Stat]("case A()")(
-      Defn.EnumCase(Nil, tname("A"), Nil, ctorp(), Nil)
+    runTestAssert[Stat]("enum E { case A() }")(
+      enumWithCase("E", Defn.EnumCase(Nil, tname("A"), Nil, ctorp(), Nil))
     )
   }
 
   test("case-arguments") {
-    runTestAssert[Stat]("case Some(x: Int)")(
-      Defn.EnumCase(Nil, tname("Some"), Nil, ctorp(List(tparam("x", "Int"))), Nil)
+    runTestAssert[Stat]("enum Option { case Some(x: Int) }")(
+      enumWithCase(
+        "Option",
+        Defn.EnumCase(Nil, tname("Some"), Nil, ctorp(List(tparam("x", "Int"))), Nil)
+      )
     )
   }
 
   test("case-annotation") {
-    runTestAssert[Stat]("@deprecated case Some(x: Int)")(
-      Defn.EnumCase(
-        List(Mod.Annot(Init(Type.Name("deprecated"), Name(""), Nil))),
-        tname("Some"),
-        Nil,
-        ctorp(List(tparam("x", "Int"))),
-        Nil
+    runTestAssert[Stat]("enum Option { @deprecated case Some(x: Int) }")(
+      enumWithCase(
+        "Option",
+        Defn.EnumCase(
+          List(Mod.Annot(Init(Type.Name("deprecated"), Name(""), Nil))),
+          tname("Some"),
+          Nil,
+          ctorp(List(tparam("x", "Int"))),
+          Nil
+        )
       )
     )
   }
 
   test("case-generic") {
     val generic = Type.Param(Nil, pname("X"), Nil, Type.Bounds(None, None), Nil, List(pname("Ord")))
-    runTestAssert[Stat]("case A[X: Ord]()")(
-      Defn.EnumCase(Nil, tname("A"), List(generic), ctorp(), Nil)
+    runTestAssert[Stat]("enum E { case A[X: Ord]() }")(
+      enumWithCase("E", Defn.EnumCase(Nil, tname("A"), List(generic), ctorp(), Nil))
     )
-    runTestAssert[Stat]("case A[X: Ord]")(
-      Defn.EnumCase(Nil, tname("A"), List(generic), ctor, Nil)
+    runTestAssert[Stat]("enum E { case A[X: Ord] }")(
+      enumWithCase("E", Defn.EnumCase(Nil, tname("A"), List(generic), ctor, Nil))
     )
   }
 
   test("case-extends") {
     val init = Init(Type.Apply(pname("Option"), List(pname("Nothing"))), anon, Nil)
-    runTestAssert[Stat]("case None extends Option[Nothing]")(
-      Defn.EnumCase(Nil, tname("None"), Nil, ctor, List(init))
+    runTestAssert[Stat]("enum Option { case None extends Option[Nothing] }")(
+      enumWithCase("Option", Defn.EnumCase(Nil, tname("None"), Nil, ctor, List(init)))
     )
   }
 
   test("case-extends-argument") {
     val init = Init(pname("Color"), anon, List(List(Lit.Int(65280))))
-    runTestAssert[Stat]("case Red extends Color(65280)")(
-      Defn.EnumCase(Nil, tname("Red"), Nil, ctor, List(init))
+    runTestAssert[Stat]("enum Color { case Red extends Color(65280) }")(
+      enumWithCase(
+        "Color",
+        Defn.EnumCase(
+          Nil,
+          Term.Name("Red"),
+          Nil,
+          Ctor.Primary(Nil, Name(""), Nil),
+          List(Init(Type.Name("Color"), Name(""), List(List(Lit.Int(65280)))))
+        )
+      )
     )
   }
 
   test("case-extends-argument-generic") {
     val init = Init(pname("Color"), anon, List(List(Lit.Int(65280))))
-    runTestAssert[Stat]("case Red[T](a: Int) extends Color(65280)")(
-      Defn
-        .EnumCase(Nil, tname("Red"), List(pparam("T")), ctorp(List(tparam("a", "Int"))), List(init))
+    runTestAssert[Stat]("enum Color { case Red[T](a: Int) extends Color(65280) }")(
+      enumWithCase(
+        "Color",
+        Defn.EnumCase(
+          Nil,
+          Term.Name("Red"),
+          List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+          Ctor.Primary(
+            Nil,
+            Name(""),
+            List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)))
+          ),
+          List(Init(Type.Name("Color"), Name(""), List(List(Lit.Int(65280)))))
+        )
+      )
     )
   }
+
+  test("enum-case-toplevel") {
+    val init = Init(pname("Color"), anon, List(List(Lit.Int(65280))))
+    runTestError[Stat](
+      """|class A { 
+         |  case Red[T](a: Int) extends Color(65280) 
+         |}""".stripMargin,
+      "Enum cases are only allowed in enums"
+    )
+  }
+
+  private def enumWithCase(name: String, enumCase: Stat) = Defn.Enum(
+    Nil,
+    Type.Name(name),
+    Nil,
+    Ctor.Primary(Nil, Name(""), Nil),
+    Template(
+      Nil,
+      Nil,
+      Self(Name(""), None),
+      List(
+        enumCase
+      ),
+      Nil
+    )
+  )
 }

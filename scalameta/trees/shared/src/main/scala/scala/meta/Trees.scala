@@ -341,11 +341,15 @@ object Defn {
       tparams: List[scala.meta.Type.Param],
       ctor: Ctor.Primary,
       inits: List[Init]
-  ) extends Defn with Member.Term
+  ) extends Defn with Member.Term {
+    checkParent(ParentChecks.EnumCase)
+  }
   @ast class RepeatedEnumCase(
       mods: List[Mod],
       cases: List[Term.Name]
-  ) extends Defn
+  ) extends Defn {
+    checkParent(ParentChecks.EnumCase)
+  }
   @ast class GivenAlias(
       mods: List[Mod],
       name: scala.meta.Name,

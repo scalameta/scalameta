@@ -215,15 +215,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def indent = -1
     def closeOnNonCase = false
     def indentOnArrow = true
+    def isIndented = false
   }
   case class RegionIndent(override val indent: Int, override val closeOnNonCase: Boolean)
-      extends SepRegion
+      extends SepRegion {
+    override def isIndented: Boolean = true
+  }
   case object RegionParen extends SepRegion
   case object RegionBracket extends SepRegion
   case class RegionBrace(override val indent: Int, override val indentOnArrow: Boolean)
       extends SepRegion
   case class RegionEnum(override val indent: Int) extends SepRegion
-  case class RegionIndentEnum(override val indent: Int) extends SepRegion
+  case class RegionIndentEnum(override val indent: Int) extends SepRegion {
+    override def isIndented: Boolean = true
+  }
   case object RegionArrow extends SepRegion
   // NOTE: Special case for Enum region is needed because parsing of 'case' statement is done differently
   case object RegionEnumArtificialMark extends SepRegion
@@ -278,10 +283,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
   lazy val (parserTokens, parserTokenPositions) = {
     def indentedRegion(regions: List[SepRegion]): Boolean =
-      regions.headOption.exists {
-        case RegionIndent(_, _) | RegionIndentEnum(_) => true
-        case _ => false
-      }
+      regions.headOption.exists(_.isIndented)
 
     val parserTokens = mutable.ArrayBuilder.make[Token]
     val parserTokenPositions = mutable.ArrayBuilder.make[Int]
@@ -411,7 +413,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             while (!sepRegionsProcess.isEmpty &&
               (!sepRegionsProcess.head.isInstanceOf[RegionBrace] &&
                 !sepRegionsProcess.head.isInstanceOf[RegionEnum])) {
-              if (dialect.allowSignificantIndentation) insertOutdent()
+              if (dialect.allowSignificantIndentation && sepRegionsProcess.head.isIndented)
+                insertOutdent()
               sepRegionsProcess = sepRegionsProcess.tail
             }
             if (!sepRegionsProcess.isEmpty) sepRegionsProcess = sepRegionsProcess.tail
@@ -2649,7 +2652,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           canApply = false
           next()
           Success(atPos(in.prevTokenPos, auto) {
-            template() match {
+            template(enumCaseAllowed = false) match {
               case trivial @ Template(Nil, List(init), Self(Name.Anonymous(), None), Nil) =>
                 if (!token.prev.is[RightBrace]) Term.New(init)
                 else Term.NewAnonymous(trivial)
@@ -3761,16 +3764,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def entrypointImportee(): Importee = importee()
 
-  def nonLocalDefOrDcl(): Stat = {
+  def nonLocalDefOrDcl(enumCaseAllowed: Boolean = false): Stat = {
     val anns = annots(skipNewLines = true)
     val mods = anns ++ modifiers()
-    defOrDclOrSecondaryCtor(mods) match {
+    defOrDclOrSecondaryCtor(mods, enumCaseAllowed) match {
       case s if s.isTemplateStat => s
       case other => syntaxError("is not a valid template statement", at = other)
     }
   }
 
-  def defOrDclOrSecondaryCtor(mods: List[Mod]): Stat = {
+  def defOrDclOrSecondaryCtor(mods: List[Mod], enumCaseAllowed: Boolean = false): Stat = {
     onlyAcceptMod[Mod.Lazy, KwVal](mods, "lazy not allowed here. Only vals can be lazy")
     onlyAcceptMod[Mod.Opaque, KwType](mods, "opaque not allowed here. Only types can be opaque.")
     token match {
@@ -3784,8 +3787,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         typeDefOrDcl(mods)
       case KwExtension() =>
         extensionGroupDecl(mods)
-      case KwCase() if ahead(token.is[Ident]) && dialect.allowEnums =>
+      case KwCase() if dialect.allowEnums && enumCaseAllowed && ahead(token.is[Ident]) =>
         enumCaseDef(mods)
+      case KwCase() if dialect.allowEnums && ahead(token.is[Ident]) =>
+        syntaxError("Enum cases are only allowed in enums", at = token.pos)
       case KwIf() if mods.size == 1 && mods.head.is[Mod.Inline] =>
         ifClause(isInline = true)
       case other =>
@@ -4396,34 +4401,34 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def template(edefs: List[Stat], parents: List[Init]): Template = {
+  def template(edefs: List[Stat], parents: List[Init], enumCaseAllowed: Boolean): Template = {
     val derived = derivesClasses
-    val (self, body) = templateBodyOpt(parenMeansSyntaxError = false)
+    val (self, body) = templateBodyOpt(parenMeansSyntaxError = false, enumCaseAllowed)
     Template(edefs, parents, self, body, derived)
   }
 
-  def template(afterExtend: Boolean = false): Template = autoPos {
+  def template(afterExtend: Boolean = false, enumCaseAllowed: Boolean): Template = autoPos {
     newLineOptWhenFollowedBy[LeftBrace]
     if (token.is[LeftBrace]) {
       // @S: pre template body cannot stub like post body can!
-      val (self, body) = templateBody()
+      val (self, body) = templateBody(enumCaseAllowed)
       if (token.is[KwWith] && self.name.is[Name.Anonymous] && self.decltpe.isEmpty) {
         val edefs = body.map(ensureEarlyDef)
         next()
         val parents = templateParents(afterExtend)
-        template(edefs, parents)
+        template(edefs, parents, enumCaseAllowed)
       } else {
         Template(Nil, Nil, self, body)
       }
     } else {
       val parents = templateParents(afterExtend)
-      template(Nil, parents)
+      template(Nil, parents, enumCaseAllowed)
     }
   }
 
   def quasiquoteTemplate(): Template = entrypointTemplate()
 
-  def entrypointTemplate(): Template = template()
+  def entrypointTemplate(): Template = template(enumCaseAllowed = false)
 
   def ensureEarlyDef(tree: Stat): Stat = tree match {
     case q: Quasi => q
@@ -4443,30 +4448,34 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         )) {
         unquote[Template]
       } else {
-        template(afterExtend = true)
+        template(afterExtend = true, enumCaseAllowed = owner.isEnum)
       }
     } else {
       val startPos = in.tokenPos
       if (token.is[soft.KwDerives]) {
-        val tmpl = atPos(startPos, auto)(template(Nil, Nil))
+        val tmpl = atPos(startPos, auto)(template(Nil, Nil, enumCaseAllowed = owner.isEnum))
         tmpl
       } else {
-        val (self, body) = templateBodyOpt(parenMeansSyntaxError = !owner.isClass)
+        val (self, body) =
+          templateBodyOpt(parenMeansSyntaxError = !owner.isClass, enumCaseAllowed = owner.isEnum)
         atPos(startPos, auto)(Template(Nil, Nil, self, body))
       }
     }
   }
 
-  def templateBody(): (Self, List[Stat]) =
-    inBraces(templateStatSeq())
+  def templateBody(enumCaseAllowed: Boolean = false): (Self, List[Stat]) =
+    inBraces(templateStatSeq(enumCaseAllowed))
 
-  def templateBodyOpt(parenMeansSyntaxError: Boolean): (Self, List[Stat]) = {
+  def templateBodyOpt(
+      parenMeansSyntaxError: Boolean,
+      enumCaseAllowed: Boolean = false
+  ): (Self, List[Stat]) = {
     newLineOptWhenFollowedBy[LeftBrace]
     if (token.is[LeftBrace]) {
-      templateBody()
+      templateBody(enumCaseAllowed)
     } else if (isColonEol(token)) {
       accept[Colon]
-      indented(templateStatSeq())
+      indented(templateStatSeq(enumCaseAllowed))
     } else {
       if (token.is[LeftParen]) {
         if (parenMeansSyntaxError) {
@@ -4578,7 +4587,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       nonLocalDefOrDcl()
   }
 
-  def templateStatSeq(): (Self, List[Stat]) = {
+  def templateStatSeq(enumCaseAllowed: Boolean = false): (Self, List[Stat]) = {
     val emptySelf = autoPos(Self(autoPos(Name.Anonymous()), None))
     var selfOpt: Option[Self] = None
     var firstOpt: Option[Stat] = None
@@ -4601,25 +4610,27 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         acceptStatSepOpt()
       }
     }
-    (selfOpt.getOrElse(emptySelf), firstOpt ++: templateStats())
+    (selfOpt.getOrElse(emptySelf), firstOpt ++: templateStats(enumCaseAllowed))
   }
 
-  def templateStats(): List[Stat] = statSeq(templateStat)
-  def templateStat: PartialFunction[Token, Stat] = {
-    case KwImport() =>
-      importStmt()
-    case KwExport() =>
-      exportStmt()
-    case DefIntro() =>
-      nonLocalDefOrDcl()
-    case Unquote() =>
-      unquote[Stat]
-    case Ellipsis(_) =>
-      ellipsis(1, astInfo[Stat])
-    case EndMarkerIntro() =>
-      endMarker()
-    case ExprIntro() =>
-      expr(location = TemplateStat, allowRepeated = false)
+  def templateStats(enumCaseAllowed: Boolean = false): List[Stat] = {
+    def templateStat: PartialFunction[Token, Stat] = {
+      case KwImport() =>
+        importStmt()
+      case KwExport() =>
+        exportStmt()
+      case DefIntro() =>
+        nonLocalDefOrDcl(enumCaseAllowed)
+      case Unquote() =>
+        unquote[Stat]
+      case Ellipsis(_) =>
+        ellipsis(1, astInfo[Stat])
+      case EndMarkerIntro() =>
+        endMarker()
+      case ExprIntro() =>
+        expr(location = TemplateStat, allowRepeated = false)
+    }
+    statSeq(templateStat)
   }
 
   def refineStatSeq(): List[Stat] = {
