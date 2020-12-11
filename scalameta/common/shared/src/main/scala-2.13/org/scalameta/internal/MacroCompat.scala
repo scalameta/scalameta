@@ -9,6 +9,10 @@ trait MacroCompat {
   type AssignOrNamedArg = NamedArg
 }
 
+object MacroCompat {
+  val productFieldNamesAvailable = true
+}
+
 object ScalaCompat {
   // Removed in 2.13
   trait IndexedSeqOptimized[+A]
