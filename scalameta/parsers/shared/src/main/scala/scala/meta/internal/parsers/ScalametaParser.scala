@@ -1298,6 +1298,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       var secondOpenParenPos = -1
       var closeParenPos = -1
       val rawtss: List[List[Tree]] = {
+
+        def typedParam() = autoPos {
+          val name = typeName()
+          accept[Colon]
+          Type.TypedParam(name, typ())
+        }
         def paramOrType(): Tree = token match {
           case Ellipsis(rank) =>
             ellipsis(rank, astInfo[Tree])
@@ -1309,17 +1315,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             paramOrType()
           case Ident(_) if ahead(token.is[Colon]) =>
             if (hasTypes)
-              syntaxError("can't mix function type and method type syntaxes", at = token)
+              syntaxError(
+                "can't mix function type and dependent function type syntaxes",
+                at = token
+              )
             hasParams = true
-            param(
-              ownerIsCase = false,
-              ownerIsType = false,
-              isImplicit = hasImplicits,
-              isUsing = false
-            )
+            typedParam()
           case _ =>
             if (hasParams)
-              syntaxError("can't mix function type and method type syntaxes", at = token)
+              syntaxError(
+                "can't mix function type and dependent function type syntaxes",
+                at = token
+              )
             hasTypes = true
             paramType()
         }
@@ -1345,37 +1352,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         }
         rawtss.toList
       }
+
       def ts: List[Type] = {
-        if (hasParams && !dialect.allowDependentFunctionTypes) 
-          require(false && debug(hasParams, hasImplicits, hasTypes))
+        if (hasParams && !dialect.allowDependentFunctionTypes)
+          syntaxError("dependent function types are not supported", at = token)
         if (rawtss.length != 1) {
           val message = "can't have multiple parameter lists in function types"
           syntaxError(message, at = scannerTokens(secondOpenParenPos))
         }
         rawtss.head.map({
           case q: Quasi => q.become[Type.Quasi]
-          case t @ Term.Param(_, name, Some(tpe), _) => 
-            Type.TypedParam(Type.Name(name.value), tpe).withOrigin(t.origin)
           case t: Type => t
           case other => unreachable(debug(other.syntax, other.structure))
         })
       }
-      def pss: List[List[Term.Param]] = {
-        if (hasTypes) require(false && debug(hasParams, hasImplicits, hasTypes))
-        rawtss.map(_.map({
-          case q: Quasi => q.become[Term.Param.Quasi]
-          case t: Term.Param => t
-          case other => unreachable(debug(other.syntax, other.structure))
-        }))
-      }
 
-      if (hasParams && !token.is[Colon] && !dialect.allowDependentFunctionTypes)
-        syntaxError("can't mix function type and method type syntaxes", at = token)
-
-      if (token.is[Colon] && dialect.allowMethodTypes) {
-        next()
-        Type.Method(pss, typ())
-      } else if (allowFunctionType && token.is[RightArrow]) {
+      if (allowFunctionType && token.is[RightArrow]) {
         next()
         Type.Function(ts, typ())
       } else if (allowFunctionType && token.is[ContextArrow]) {
@@ -1415,21 +1407,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
     def typ(): Type = autoPos {
-      if (token.is[Colon] && dialect.allowMethodTypes) {
-        next()
-        Type.Method(Nil, typ())
-      } else {
-        val t: Type =
-          if (token.is[LeftBracket] && dialect.allowTypeLambdas) typeLambdaOrPoly()
-          else infixTypeOrTuple()
+      val t: Type =
+        if (token.is[LeftBracket] && dialect.allowTypeLambdas) typeLambdaOrPoly()
+        else infixTypeOrTuple()
 
-        token match {
-          case RightArrow() => next(); Type.Function(List(t), typ())
-          case ContextArrow() => next(); Type.ContextFunction(List(t), typ())
-          case KwForsome() => next(); Type.Existential(t, existentialStats())
-          case KwMatch() if dialect.allowTypeMatch => next(); Type.Match(t, typeCaseClauses())
-          case _ => t
-        }
+      token match {
+        case RightArrow() => next(); Type.Function(List(t), typ())
+        case ContextArrow() => next(); Type.ContextFunction(List(t), typ())
+        case KwForsome() => next(); Type.Existential(t, existentialStats())
+        case KwMatch() if dialect.allowTypeMatch => next(); Type.Match(t, typeCaseClauses())
+        case _ => t
       }
     }
 

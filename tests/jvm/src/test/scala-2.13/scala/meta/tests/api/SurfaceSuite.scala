@@ -384,6 +384,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.Select
       |scala.meta.Type.Singleton
       |scala.meta.Type.Tuple
+      |scala.meta.Type.TypedParam
       |scala.meta.Type.Var
       |scala.meta.Type.With
       |scala.meta.TypeCase

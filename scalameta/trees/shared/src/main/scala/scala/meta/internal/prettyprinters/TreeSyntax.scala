@@ -649,7 +649,8 @@ object TreeSyntax {
           case Type.ContextFunction(params, res) => (s(), params, "?=>", res)
         }
         val params = tParams match {
-          case param +: Nil if param.isNot[Type.Tuple] && param.isNot[Type.TypedParam] => s(p(AnyInfixTyp, param))
+          case param +: Nil if param.isNot[Type.Tuple] && param.isNot[Type.TypedParam] =>
+            s(p(AnyInfixTyp, param))
           case params => s("(", r(params.map(param => p(ParamTyp, param)), ", "), ")")
         }
         m(Typ, s(prefix, params, " ", kw(arrow), " ", p(Typ, tRes)))
@@ -702,7 +703,6 @@ object TreeSyntax {
           Type,
           s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}"))
         )
-      case t: Type.Method => m(Typ, t.paramss, kw(":"), " ", p(Typ, t.tpe))
       case t: Type.Placeholder =>
         if (dialect.allowQuestionMarkPlaceholder) m(SimpleTyp, s(kw("?"), t.bounds))
         else m(SimpleTyp, s(kw("_"), t.bounds))

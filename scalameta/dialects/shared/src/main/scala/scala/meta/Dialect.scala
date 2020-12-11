@@ -31,6 +31,7 @@ final class Dialect private (
     // Are literal types allowed, i.e. is `val a : 42 = 42` legal or not?
     val allowLiteralTypes: Boolean,
     // Are method types allowed, i.e. is `(x: X): x.T` legal or not?
+    @deprecated("Method type syntax is no longer supported in any dialect", "4.4.3")
     val allowMethodTypes: Boolean,
     // Are multiline programs allowed?
     // Some quasiquotes only support single-line snippets.
@@ -259,6 +260,7 @@ final class Dialect private (
   def withAllowLiteralTypes(newValue: Boolean): Dialect = {
     privateCopy(allowLiteralTypes = newValue)
   }
+  @deprecated("Method type syntax is no longer supported in any dialect", "4.4.3")
   def withAllowMethodTypes(newValue: Boolean): Dialect = {
     privateCopy(allowMethodTypes = newValue)
   }

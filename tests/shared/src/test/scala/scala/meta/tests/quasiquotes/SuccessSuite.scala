@@ -1051,21 +1051,6 @@ class SuccessSuite extends FunSuite {
     )
   }
 
-  test("1 t\"(...paramss): tpe\"") {
-    val t"(...$paramss): $tpe" = t"(x: X): x.T"
-    assert(paramss.toString == "List(List(x: X))")
-    assert(tpe.toString == "x.T")
-  }
-
-  test("2 t\"(...paramss): tpe\"") {
-    val paramss = List(List(param"x: X"))
-    val tpe = t"x.T"
-    assert(
-      t"(...$paramss): $tpe".structure ==
-        "Type.Method(List(List(Term.Param(Nil, Term.Name(\"x\"), Some(Type.Name(\"X\")), None))), Type.Select(Term.Name(\"x\"), Type.Name(\"T\")))"
-    )
-  }
-
   test("1 t\"_ >: tpeopt <: tpeopt\"") {
     val t"_ >: $tpe1 <: $tpe2" = t"_ >: X <: Y"
     assert(tpe1.structure == "Some(Type.Name(\"X\"))")

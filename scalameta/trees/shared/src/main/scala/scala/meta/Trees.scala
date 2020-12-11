@@ -199,6 +199,7 @@ object Type {
     checkParent(ParentChecks.TypeLambda)
   }
   @ast class Macro(body: Term) extends Type
+  @deprecated("Method type syntax is no longer supported in any dialect", "4.4.3")
   @ast class Method(paramss: List[List[Term.Param]], tpe: Type) extends Type {
     checkParent(ParentChecks.TypeMethod)
   }
