@@ -214,6 +214,8 @@ object Type {
     checkFields(name.value(0).isLower)
     checkParent(ParentChecks.TypeVar)
   }
+
+  @ast class TypedParam(name: Name, typ: Type) extends Type with Member.Type
   @ast class Param(
       mods: List[Mod],
       name: meta.Name,

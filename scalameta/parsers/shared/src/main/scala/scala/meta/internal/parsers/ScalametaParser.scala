@@ -1346,13 +1346,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         rawtss.toList
       }
       def ts: List[Type] = {
-        if (hasParams) require(false && debug(hasParams, hasImplicits, hasTypes))
+        if (hasParams && !dialect.allowDependentFunctionTypes) 
+          require(false && debug(hasParams, hasImplicits, hasTypes))
         if (rawtss.length != 1) {
           val message = "can't have multiple parameter lists in function types"
           syntaxError(message, at = scannerTokens(secondOpenParenPos))
         }
         rawtss.head.map({
           case q: Quasi => q.become[Type.Quasi]
+          case t @ Term.Param(_, name, Some(tpe), _) => 
+            Type.TypedParam(Type.Name(name.value), tpe).withOrigin(t.origin)
           case t: Type => t
           case other => unreachable(debug(other.syntax, other.structure))
         })
@@ -1366,9 +1369,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         }))
       }
 
-      if (hasParams && !token.is[Colon])
+      if (hasParams && !token.is[Colon] && !dialect.allowDependentFunctionTypes)
         syntaxError("can't mix function type and method type syntaxes", at = token)
-      if (hasTypes && token.is[Colon]) accept[RightArrow]
 
       if (token.is[Colon] && dialect.allowMethodTypes) {
         next()

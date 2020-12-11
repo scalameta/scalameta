@@ -649,7 +649,7 @@ object TreeSyntax {
           case Type.ContextFunction(params, res) => (s(), params, "?=>", res)
         }
         val params = tParams match {
-          case param +: Nil if !param.is[Type.Tuple] => s(p(AnyInfixTyp, param))
+          case param +: Nil if param.isNot[Type.Tuple] && param.isNot[Type.TypedParam] => s(p(AnyInfixTyp, param))
           case params => s("(", r(params.map(param => p(ParamTyp, param)), ", "), ")")
         }
         m(Typ, s(prefix, params, " ", kw(arrow), " ", p(Typ, tRes)))
@@ -720,6 +720,7 @@ object TreeSyntax {
         }
       case t: Type.ByName => m(ParamTyp, s(kw("=>"), " ", p(Typ, t.tpe)))
       case t: Type.Var => m(SimpleTyp, s(t.name.value))
+      case t: Type.TypedParam => m(SimpleTyp, s(t.name.value), ": ", p(Typ, t.typ))
       case t: Type.Param =>
         val mods = t.mods.filter(m => !m.is[Mod.Covariant] && !m.is[Mod.Contravariant])
         require(t.mods.length - mods.length <= 1)
