@@ -428,4 +428,121 @@ class NewFunctionsSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("dependent-type") {
+    runTestAssert[Stat](
+      "val extractor: (e: Entry) => e.Key = extractKey"
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("extractor"))),
+        Some(
+          Type.Function(
+            List(Type.TypedParam(Type.Name("e"), Type.Name("Entry"))),
+            Type.Select(Term.Name("e"), Type.Name("Key"))
+          )
+        ),
+        Term.Name("extractKey")
+      )
+    )
+  }
+
+  test("dependent-type-context") {
+    runTestAssert[Stat](
+      "val extractor: (e: Entry) ?=> e.Key = extractKey"
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("extractor"))),
+        Some(
+          Type.ContextFunction(
+            List(Type.TypedParam(Type.Name("e"), Type.Name("Entry"))),
+            Type.Select(Term.Name("e"), Type.Name("Key"))
+          )
+        ),
+        Term.Name("extractKey")
+      )
+    )
+  }
+
+  test("dependent-type-multi") {
+    runTestAssert[Stat](
+      "val extractor: (e: Entry, f: Other) => e.Key = extractKey"
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("extractor"))),
+        Some(
+          Type.Function(
+            List(
+              Type.TypedParam(Type.Name("e"), Type.Name("Entry")),
+              Type.TypedParam(Type.Name("f"), Type.Name("Other"))
+            ),
+            Type.Select(Term.Name("e"), Type.Name("Key"))
+          )
+        ),
+        Term.Name("extractKey")
+      )
+    )
+  }
+
+  test("dependent-type-term") {
+    runTestAssert[Stat](
+      "type T = (e: Entry) => e.Key"
+    )(
+      Defn.Type(
+        Nil,
+        Type.Name("T"),
+        Nil,
+        Type.Function(
+          List(Type.TypedParam(Type.Name("e"), Type.Name("Entry"))),
+          Type.Select(Term.Name("e"), Type.Name("Key"))
+        ),
+        Type.Bounds(None, None)
+      )
+    )
+  }
+
+  test("dependent-type-term-context") {
+    runTestAssert[Stat](
+      "type T = (e: Entry) ?=> e.Key"
+    )(
+      Defn.Type(
+        Nil,
+        Type.Name("T"),
+        Nil,
+        Type.ContextFunction(
+          List(Type.TypedParam(Type.Name("e"), Type.Name("Entry"))),
+          Type.Select(Term.Name("e"), Type.Name("Key"))
+        ),
+        Type.Bounds(None, None)
+      )
+    )
+  }
+
+  test("dependent-type-term-multi") {
+    runTestAssert[Stat](
+      "type T = (e: Entry, o: Other[? <: P]) => e.Key"
+    )(
+      Defn.Type(
+        Nil,
+        Type.Name("T"),
+        Nil,
+        Type.Function(
+          List(
+            Type.TypedParam(Type.Name("e"), Type.Name("Entry")),
+            Type.TypedParam(
+              Type.Name("o"),
+              Type.Apply(
+                Type.Name("Other"),
+                List(Type.Placeholder(Type.Bounds(None, Some(Type.Name("P")))))
+              )
+            )
+          ),
+          Type.Select(Term.Name("e"), Type.Name("Key"))
+        ),
+        Type.Bounds(None, None)
+      )
+    )
+  }
 }

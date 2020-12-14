@@ -199,6 +199,7 @@ object Type {
     checkParent(ParentChecks.TypeLambda)
   }
   @ast class Macro(body: Term) extends Type
+  @deprecated("Method type syntax is no longer supported in any dialect", "4.4.3")
   @ast class Method(paramss: List[List[Term.Param]], tpe: Type) extends Type {
     checkParent(ParentChecks.TypeMethod)
   }
@@ -214,6 +215,8 @@ object Type {
     checkFields(name.value(0).isLower)
     checkParent(ParentChecks.TypeVar)
   }
+
+  @ast class TypedParam(name: Name, typ: Type) extends Type with Member.Type
   @ast class Param(
       mods: List[Mod],
       name: meta.Name,

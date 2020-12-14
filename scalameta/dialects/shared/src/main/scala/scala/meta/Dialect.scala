@@ -31,6 +31,7 @@ final class Dialect private (
     // Are literal types allowed, i.e. is `val a : 42 = 42` legal or not?
     val allowLiteralTypes: Boolean,
     // Are method types allowed, i.e. is `(x: X): x.T` legal or not?
+    @deprecated("Method type syntax is no longer supported in any dialect", "4.4.3")
     val allowMethodTypes: Boolean,
     // Are multiline programs allowed?
     // Some quasiquotes only support single-line snippets.
@@ -127,7 +128,9 @@ final class Dialect private (
     // Scala 3 splices/quotes
     val allowSpliceAndQuote: Boolean,
     // Scala 3 disallowed symbol literals
-    val allowSymbolLiterals: Boolean
+    val allowSymbolLiterals: Boolean,
+    // Scala 3 disallowed symbol literals
+    val allowDependentFunctionTypes: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -215,7 +218,8 @@ final class Dialect private (
       allowTypeMatch = false,
       allowInfixMods = false,
       allowSpliceAndQuote = false,
-      allowSymbolLiterals = true
+      allowSymbolLiterals = true,
+      allowDependentFunctionTypes = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -256,6 +260,7 @@ final class Dialect private (
   def withAllowLiteralTypes(newValue: Boolean): Dialect = {
     privateCopy(allowLiteralTypes = newValue)
   }
+  @deprecated("Method type syntax is no longer supported in any dialect", "4.4.3")
   def withAllowMethodTypes(newValue: Boolean): Dialect = {
     privateCopy(allowMethodTypes = newValue)
   }
@@ -389,6 +394,9 @@ final class Dialect private (
   def withAllowSymbolLiterals(newValue: Boolean): Dialect = {
     privateCopy(allowSymbolLiterals = newValue)
   }
+  def withAllowDependentFunctionTypes(newValue: Boolean): Dialect = {
+    privateCopy(allowDependentFunctionTypes = newValue)
+  }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -447,7 +455,8 @@ final class Dialect private (
       allowTypeMatch: Boolean = this.allowTypeMatch,
       allowInfixMods: Boolean = this.allowInfixMods,
       allowSpliceAndQuote: Boolean = this.allowSpliceAndQuote,
-      allowSymbolLiterals: Boolean = this.allowSymbolLiterals
+      allowSymbolLiterals: Boolean = this.allowSymbolLiterals,
+      allowDependentFunctionTypes: Boolean = this.allowDependentFunctionTypes
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -503,7 +512,8 @@ final class Dialect private (
       allowTypeMatch,
       allowInfixMods,
       allowSpliceAndQuote,
-      allowSymbolLiterals
+      allowSymbolLiterals,
+      allowDependentFunctionTypes
       // NOTE(olafur): add the next argument above this comment.
     )
   }

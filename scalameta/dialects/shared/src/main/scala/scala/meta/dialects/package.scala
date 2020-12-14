@@ -126,12 +126,12 @@ package object dialects {
     .withAllowTypeMatch(true)
     .withAllowInfixMods(true)
     .withAllowSymbolLiterals(false)
+    .withAllowDependentFunctionTypes(true)
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)
     underlying.copy(
       allowTermUnquotes = true,
-      allowMethodTypes = true,
       allowMultilinePrograms = multiline,
       allowTypeLambdas = true
     )
@@ -141,7 +141,6 @@ package object dialects {
     require(!underlying.allowUnquotes)
     underlying.copy(
       allowPatUnquotes = true,
-      allowMethodTypes = true,
       allowMultilinePrograms = multiline,
       allowTypeLambdas = true
     )
