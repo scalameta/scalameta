@@ -9,6 +9,7 @@ import scala.collection.mutable.ListBuffer
 import scala.meta.internal.trees.{Reflection => AstReflection}
 import scala.meta.internal.trees.{Metadata => AstMetadata}
 import scala.util.Success
+import org.scalameta.internal.MacroCompat
 
 // @ast is a specialized version of @org.scalameta.adt.leaf for scala.meta ASTs.
 class ast extends StaticAnnotation {
@@ -269,22 +270,37 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         val binaryCompatNum = binaryCompatVars.size
         val productParamss = rawparamss.map(_.map(_.duplicate))
         iparents1 += tq"$ProductClass"
+
         stats1 += q"override def productPrefix: $StringClass = $CommonTyperMacrosModule.productPrefix[$iname]"
         stats1 += q"override def productArity: $IntClass = ${productParamss.head.length + binaryCompatNum}"
-        val pelClauses = ListBuffer[Tree]()
-        val fieldsNum = productParamss.head.length
-        pelClauses ++= 0
-          .to(fieldsNum - 1)
-          .map(i => cq"$i => this.${productParamss.head(i).name}")
 
-        // generate product elements for @binaryCompat fields
-        pelClauses ++= fieldsNum
-          .to(fieldsNum + binaryCompatNum)
-          .zip(binaryCompatVars)
-          .map { case (i: Int, vr: ValDef) =>
+        def patternMatchClauses(
+            fromField: Int => Tree,
+            fromBinaryCompatField: (Int, ValDef) => Tree
+        ) = {
+          val pelClauses = ListBuffer[Tree]()
+          val fieldsNum = productParamss.head.length
+          pelClauses ++= 0
+            .to(fieldsNum - 1)
+            .map(fromField)
+
+          // generate product elements for @binaryCompat fields
+          pelClauses ++= fieldsNum
+            .to(fieldsNum + binaryCompatNum)
+            .zip(binaryCompatVars)
+            .map { case (i: Int, vr: ValDef) =>
+              fromBinaryCompatField(i, vr)
+            }
+          pelClauses += cq"_ => throw new $IndexOutOfBoundsException(n.toString)"
+          pelClauses.toList
+        }
+
+        val pelClauses = patternMatchClauses(
+          i => cq"$i => this.${productParamss.head(i).name}",
+          { (i, vr) =>
             cq"$i => this.${getterName(vr)}"
           }
-        pelClauses += cq"_ => throw new $IndexOutOfBoundsException(n.toString)"
+        )
         stats1 += q"override def productElement(n: $IntClass): Any = n match { case ..$pelClauses }"
         stats1 += q"override def productIterator: $IteratorClass[$AnyClass] = $ScalaRunTimeModule.typedProductIterator(this)"
         val productFields = productParamss.head.map(_.name.toString) ++ binaryCompatVars.map {
@@ -292,6 +308,20 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         }
         stats1 += q"override def productFields: $ListClass[$StringClass] = _root_.scala.List(..$productFields)"
 
+        // step 13a add productElementName for 2.13
+        if (MacroCompat.productFieldNamesAvailable) {
+          val penClauses = patternMatchClauses(
+            i => {
+              val lit = Literal(Constant(productParamss.head(i).name.toString(): String))
+              cq"""$i => $lit """
+            },
+            { (i, vr) =>
+              val lit = Literal(Constant(getterName(vr).toString(): String))
+              cq"""$i => $lit """
+            }
+          )
+          stats1 += q"override def productElementName(n: $IntClass): java.lang.String = n match { case ..$penClauses }"
+        }
         // step 12: generate serialization logic
         val fieldInits = fieldParams.map({ case (p, s) =>
           q"$CommonTyperMacrosModule.loadField(this.${internalize(p.name)}, $s)"
