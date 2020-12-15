@@ -105,6 +105,10 @@ object ParentChecks {
     tree.tpe.is[Type.Singleton] ==> (parent.is[Ctor.Secondary] && destination == "init")
   }
 
+  def EnumCase(tree: Tree, parent: Tree, destination: String): Boolean = {
+    parent.is[Template] && parent.parent.map(_.is[Defn.Enum]).getOrElse(true)
+  }
+
   def TypeLambda(tree: Type.Lambda, parent: Tree, destination: String): Boolean = {
     parent.is[Type] || parent.is[Defn.Type] || parent.is[Term.ApplyType]
   }
