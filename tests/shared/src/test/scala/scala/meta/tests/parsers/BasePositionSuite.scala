@@ -28,6 +28,8 @@ abstract class BasePositionSuite extends ParseSuite {
         case t if t eq tree => Nil
         case t @ Lit(value) if t.syntax == value.toString =>
           Nil
+        case t @ Lit.Unit() if t.syntax == "()" => // This case is needed for Scala.js.
+          Nil
         case t @ Name(value) if t.syntax == value =>
           Nil
         case t @ Importee.Name(Name(value)) if t.syntax == value =>
