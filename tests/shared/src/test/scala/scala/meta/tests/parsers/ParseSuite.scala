@@ -7,6 +7,7 @@ import scala.meta.internal.parsers._
 import MoreHelpers._
 
 import org.scalameta.logger
+import scala.meta.internal.trees.Origin
 
 class ParseSuite extends FunSuite with CommonTrees {
   val EOL = scala.compat.Platform.EOL
@@ -50,12 +51,25 @@ class ParseSuite extends FunSuite with CommonTrees {
 }
 
 object MoreHelpers {
+  def requireNonEmptyOrigin(tree: Tree): tree.type = {
+    val missingOrigin = tree.collect {
+      case t if t.origin == Origin.None => t
+    }
+    Assertions.assertEquals(
+      missingOrigin,
+      Nil,
+      "Expected all trees to have non-empty `.origin`.\n" +
+        "To fix this failure, update ScalametaParser to use `autoPos()` where the trees below got constructed.\n" +
+        "Pro tip: you may also want to add a PositionSuite test for this tree node to verify that the position you set is correct."
+    )
+    tree
+  }
   implicit class XtensionCode(code: String) {
     def applyRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
-      rule(new ScalametaParser(Input.String(code)))
+      requireNonEmptyOrigin(rule(new ScalametaParser(Input.String(code))))
     }
     def parseRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
-      new ScalametaParser(Input.String(code)).parseRule(rule)
+      requireNonEmptyOrigin(new ScalametaParser(Input.String(code)).parseRule(rule))
     }
   }
 }

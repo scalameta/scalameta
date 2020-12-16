@@ -6,18 +6,23 @@ import scala.meta.internal.{semanticdb => s}
 
 package object inputs {
   implicit class XtensionPositionFormatMessage(pos: Position) {
+    def lineContent: String = {
+      val input = pos.input
+      val start = input.lineToOffset(pos.startLine)
+      val notEof = start < input.chars.length
+      val end = if (notEof) input.lineToOffset(pos.startLine + 1) else start
+      new String(input.chars, start, end - start).stripLineEnd
+    }
+    def lineCaret: String = {
+      " " * pos.startColumn + "^"
+    }
     def formatMessage(severity: String, message: String): String = {
       // WONTFIX: https://github.com/scalameta/scalameta/issues/383
       if (pos != Position.None) {
         val input = pos.input
         val header = s"${input.syntax}:${pos.startLine + 1}: $severity: $message"
-        val line = {
-          val start = input.lineToOffset(pos.startLine)
-          val notEof = start < input.chars.length
-          val end = if (notEof) input.lineToOffset(pos.startLine + 1) else start
-          new String(input.chars, start, end - start).stripLineEnd
-        }
-        var caret = " " * pos.startColumn + "^"
+        val line = lineContent
+        var caret = lineCaret
         header + EOL + line + EOL + caret
       } else {
         s"$severity: $message"

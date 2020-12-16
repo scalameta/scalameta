@@ -61,6 +61,7 @@ trait BaseDottySuite extends ParseSuite {
   )(implicit parser: String => T): Unit = {
     import scala.meta.dialects.Dotty
     val obtained: T = parser(code)
+    MoreHelpers.requireNonEmptyOrigin(obtained)
     try {
       assertNoDiff(obtained.structure, expected.structure)
 

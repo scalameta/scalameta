@@ -2,6 +2,7 @@ package scala.meta
 
 import scala.meta.dialects._
 import scala.meta.internal.dialects._
+import scala.collection.immutable.TreeMap
 
 /**
  * A dialect is used to configure what Scala syntax is allowed during tokenization and parsing.
@@ -535,8 +536,8 @@ final class Dialect private (
   override def hashCode: Int = System.identityHashCode(this)
   // Smart prettyprinting that knows about standard dialects.
   override def toString = {
-    Dialect.standards.find(_._2 == this) match {
-      case Some((name, _)) => name
+    Dialect.inverseStandards.get(this) match {
+      case Some(name) => name
       case None => s"Dialect()"
     }
   }
@@ -653,8 +654,9 @@ object Dialect extends InternalDialect {
   }
   // NOTE: Spinning up a macro just for this is too hard.
   // Using JVM reflection won't be portable to Scala.js.
-  private[meta] lazy val standards: Map[String, Dialect] = Map(
+  private[meta] lazy val standards: Map[String, Dialect] = TreeMap(
     "Dotty" -> Dotty,
+    "Scala3" -> Scala3,
     "Paradise211" -> Paradise211,
     "Paradise212" -> Paradise212,
     "ParadiseTypelevel211" -> ParadiseTypelevel211,
@@ -669,4 +671,6 @@ object Dialect extends InternalDialect {
     "Typelevel211" -> Typelevel211,
     "Typelevel212" -> Typelevel212
   )
+  private[meta] lazy val inverseStandards: Map[Dialect, String] =
+    standards.iterator.map(_.swap).toMap
 }
