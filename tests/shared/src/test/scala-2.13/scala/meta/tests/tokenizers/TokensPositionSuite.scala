@@ -14,7 +14,7 @@ class TokensPositionSuite extends BasePositionSuite {
   check[Case](
     "case `a` =>",
     """|Term.Name `a`
-       |Term.Block case `a` =>→←
+       |Term.Block case `a` =>@@
        |""".stripMargin
   )
   check[Case](
@@ -23,33 +23,33 @@ class TokensPositionSuite extends BasePositionSuite {
        |Term.Name `a`
        |Pat.ExtractInfix `b` :: _
        |Term.Name `b`
-       |Term.Block case `a` :: `b` :: _ =>→←
+       |Term.Block case `a` :: `b` :: _ =>@@
        |""".stripMargin
   )
   check[Case](
     "case a b `c` =>",
     """|Pat.ExtractInfix a b `c`
        |Term.Name `c`
-       |Term.Block case a b `c` =>→←
+       |Term.Block case a b `c` =>@@
        |""".stripMargin
   )
   check[Case](
     "case _ op (a | b) =>",
     """|Pat.ExtractInfix _ op (a | b)
        |Pat.Alternative (a | b)
-       |Term.Block case _ op (a | b) =>→←
+       |Term.Block case _ op (a | b) =>@@
        |""".stripMargin
   )
   check[Case](
     "case x `.y` () =>",
     """|Pat.ExtractInfix x `.y` ()
        |Term.Name `.y`
-       |Term.Block case x `.y` () =>→←
+       |Term.Block case x `.y` () =>@@
        |""".stripMargin
   )
   check[Case](
     "case a if p =>",
-    """|Term.Block case a if p =>→←
+    """|Term.Block case a if p =>@@
        |""".stripMargin
   )
   check[Case]("case _ => ()")
@@ -86,7 +86,7 @@ class TokensPositionSuite extends BasePositionSuite {
   check[Type](
     "A forSome { type T }",
     """|Decl.Type type T
-       |Type.Bounds A forSome { type T →←}
+       |Type.Bounds A forSome { type T @@}
        |""".stripMargin
   )
   check[Type](
@@ -96,7 +96,7 @@ class TokensPositionSuite extends BasePositionSuite {
   )
   check[Type](
     "_",
-    """|Type.Bounds _→←
+    """|Type.Bounds _@@
        |""".stripMargin
   )
   check[Type](
@@ -119,20 +119,20 @@ class TokensPositionSuite extends BasePositionSuite {
   check[Stat](
     "def f[A <% B[A]]: C",
     """|Type.Param A <% B[A]
-       |Type.Bounds def f[A →←<% B[A]]: C
+       |Type.Bounds def f[A @@<% B[A]]: C
        |Type.Apply B[A]
        |""".stripMargin
   )
   check[Stat](
     "def f[A: B]: C",
     """|Type.Param A: B
-       |Type.Bounds def f[A→←: B]: C
+       |Type.Bounds def f[A@@: B]: C
        |""".stripMargin
   )
   check[Stat](
     "def f[A : B : C]: D",
     """|Type.Param A : B : C
-       |Type.Bounds def f[A →←: B : C]: D
+       |Type.Bounds def f[A @@: B : C]: D
        |""".stripMargin
   )
 
@@ -264,20 +264,20 @@ class TokensPositionSuite extends BasePositionSuite {
   check[Stat](
     "if (p) (t)",
     """|Term.Name (t)
-       |Lit.Unit if (p) (t)→←
+       |Lit.Unit if (p) (t)@@
        |""".stripMargin
   )
   check[Stat](
     "if (p) if (p2) t",
     """|Term.If if (p2) t
-       |Lit.Unit if (p) if (p2) t→←
-       |Lit.Unit if (p) if (p2) t→←
+       |Lit.Unit if (p) if (p2) t@@
+       |Lit.Unit if (p) if (p2) t@@
        |""".stripMargin
   )
   check[Stat](
     "if (p) {}",
     """|Term.Block {}
-       |Lit.Unit if (p) {}→←
+       |Lit.Unit if (p) {}@@
        |""".stripMargin
   )
   check[Stat](
@@ -302,7 +302,7 @@ class TokensPositionSuite extends BasePositionSuite {
     """|Template (A){}
        |Init (A)
        |Type.Name (A)
-       |Self new (A){→←}
+       |Self new (A){@@}
        |""".stripMargin
   )
   check[Stat](
@@ -460,15 +460,15 @@ class TokensPositionSuite extends BasePositionSuite {
   check[Stat]("def f: String")
   check[Stat](
     "type T",
-    """|Type.Bounds type T→←
+    """|Type.Bounds type T@@
        |""".stripMargin
   )
 
   check[Stat](
     "class A { def this(a: A) = this() }",
-    """|Ctor.Primary class A →←{ def this(a: A) = this() }
+    """|Ctor.Primary class A @@{ def this(a: A) = this() }
        |Template { def this(a: A) = this() }
-       |Self class A { →←def this(a: A) = this() }
+       |Self class A { @@def this(a: A) = this() }
        |Ctor.Secondary def this(a: A) = this()
        |Name.Anonymous this
        |Init this()
@@ -481,8 +481,8 @@ class TokensPositionSuite extends BasePositionSuite {
   check[Stat](
     "class A private (b: B)",
     """|Ctor.Primary private (b: B)
-       |Template class A private (b: B)→←
-       |Self class A private (b: B)→←
+       |Template class A private (b: B)@@
+       |Self class A private (b: B)@@
        |""".stripMargin
   )
 
@@ -538,43 +538,43 @@ class TokensPositionSuite extends BasePositionSuite {
   check[Stat]("final val a = 1")
   check[Stat](
     "sealed trait a",
-    """|Ctor.Primary sealed trait a→←
-       |Template sealed trait a→←
-       |Self sealed trait a→←
+    """|Ctor.Primary sealed trait a@@
+       |Template sealed trait a@@
+       |Self sealed trait a@@
        |""".stripMargin
   )
   check[Stat]("override def f = 1")
   check[Stat](
     "case object B",
-    """|Template case object B→←
-       |Self case object B→←
+    """|Template case object B@@
+       |Self case object B@@
        |""".stripMargin
   )
   check[Stat](
     "abstract class A",
-    """|Ctor.Primary abstract class A→←
-       |Template abstract class A→←
-       |Self abstract class A→←
+    """|Ctor.Primary abstract class A@@
+       |Template abstract class A@@
+       |Self abstract class A@@
        |""".stripMargin
   )
   check[Stat](
     "class A[+ T]",
     """|Type.Param + T
        |Mod.Covariant +
-       |Type.Bounds class A[+ T→←]
-       |Ctor.Primary class A[+ T]→←
-       |Template class A[+ T]→←
-       |Self class A[+ T]→←
+       |Type.Bounds class A[+ T@@]
+       |Ctor.Primary class A[+ T]@@
+       |Template class A[+ T]@@
+       |Self class A[+ T]@@
        |""".stripMargin
   )
   check[Stat](
     "class A[- T]",
     """|Type.Param - T
        |Mod.Contravariant -
-       |Type.Bounds class A[- T→←]
-       |Ctor.Primary class A[- T]→←
-       |Template class A[- T]→←
-       |Self class A[- T]→←
+       |Type.Bounds class A[- T@@]
+       |Ctor.Primary class A[- T]@@
+       |Template class A[- T]@@
+       |Self class A[- T]@@
        |""".stripMargin
   )
   check[Stat]("lazy val a = 1")
@@ -583,8 +583,8 @@ class TokensPositionSuite extends BasePositionSuite {
     """|Ctor.Primary (val b: B)
        |Term.Param val b: B
        |Mod.ValParam val
-       |Template class A(val b: B)→←
-       |Self class A(val b: B)→←
+       |Template class A(val b: B)@@
+       |Self class A(val b: B)@@
        |""".stripMargin
   )
   check[Stat](
@@ -592,14 +592,14 @@ class TokensPositionSuite extends BasePositionSuite {
     """|Ctor.Primary (var b: B)
        |Term.Param var b: B
        |Mod.VarParam var
-       |Template class A(var b: B)→←
-       |Self class A(var b: B)→←
+       |Template class A(var b: B)@@
+       |Self class A(var b: B)@@
        |""".stripMargin
   )
 
   check[Stat](
     "trait A { self: B => }",
-    """|Ctor.Primary trait A →←{ self: B => }
+    """|Ctor.Primary trait A @@{ self: B => }
        |Name.Anonymous {
        |Template { self: B => }
        |Self self: B
@@ -607,7 +607,7 @@ class TokensPositionSuite extends BasePositionSuite {
   )
   check[Stat](
     "trait A { _: B => }",
-    """|Ctor.Primary trait A →←{ _: B => }
+    """|Ctor.Primary trait A @@{ _: B => }
        |Name.Anonymous {
        |Template { _: B => }
        |Self _: B
@@ -616,7 +616,7 @@ class TokensPositionSuite extends BasePositionSuite {
   )
   check[Stat](
     "trait A { self => }",
-    """|Ctor.Primary trait A →←{ self => }
+    """|Ctor.Primary trait A @@{ self => }
        |Name.Anonymous {
        |Template { self => }
        |Self self
@@ -624,7 +624,7 @@ class TokensPositionSuite extends BasePositionSuite {
   )
   check[Stat](
     "trait A { this: B => }",
-    """|Ctor.Primary trait A →←{ this: B => }
+    """|Ctor.Primary trait A @@{ this: B => }
        |Name.Anonymous {
        |Template { this: B => }
        |Self this: B
@@ -635,21 +635,21 @@ class TokensPositionSuite extends BasePositionSuite {
   check[Stat](
     "new A {}",
     """|Template A {}
-       |Self new A {→←}
+       |Self new A {@@}
        |""".stripMargin
   )
   check[Stat](
     "new { val a = 1 } with A {}",
     """|Template { val a = 1 } with A {}
        |Defn.Val val a = 1
-       |Self new { val a = 1 } with A {→←}
+       |Self new { val a = 1 } with A {@@}
        |""".stripMargin
   )
 
   check[Case](
     "case `1` =>",
     """|Term.Name `1`
-       |Term.Block case `1` =>→←
+       |Term.Block case `1` =>@@
        |""".stripMargin
   )
   check[Pat]("a @ A")

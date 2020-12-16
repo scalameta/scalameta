@@ -27,7 +27,7 @@ class BasicPositionSuite extends BasePositionSuite {
     // Issue #331
     "case foo if bar || baz =>",
     """|Term.ApplyInfix bar || baz
-       |Term.Block case foo if bar || baz =>→←
+       |Term.Block case foo if bar || baz =>@@
        |""".stripMargin
   )
   check[Stat](

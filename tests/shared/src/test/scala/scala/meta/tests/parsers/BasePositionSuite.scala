@@ -52,7 +52,7 @@ abstract class BasePositionSuite extends ParseSuite {
           val syntax = t.syntax
           val out = if (syntax.isEmpty) {
             val (leading, trailing) = t.pos.lineContent.splitAt(t.pos.startColumn)
-            s"${t.productPrefix} ${leading}→←${trailing}"
+            s"${t.productPrefix} ${leading}@@${trailing}"
           } else {
             s"${t.productPrefix} ${syntax}"
           }
