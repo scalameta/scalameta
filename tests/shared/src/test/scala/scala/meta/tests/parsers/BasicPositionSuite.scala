@@ -6,31 +6,31 @@ import scala.meta.dialects.Scala211
 import scala.meta.internal.prettyprinters._
 
 class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
-  check[Term](
+  checkPositions[Term](
     "1 + (2 / 3) * 4",
     """|Term.ApplyInfix (2 / 3) * 4
        |Term.ApplyInfix (2 / 3)
        |""".stripMargin
   )
-  check[Term](
+  checkPositions[Term](
     "(1 + 2).foo",
     """|Term.ApplyInfix (1 + 2)
        |""".stripMargin
   )
-  check[Stat](
+  checkPositions[Stat](
     // Issue #333
     """def shortInfo: String = s"created=$x"""",
     """|Term.Interpolate s"created=$x"
        |""".stripMargin
   )
-  check[Case](
+  checkPositions[Case](
     // Issue #331
     "case foo if bar || baz =>",
     """|Term.ApplyInfix bar || baz
        |Term.Block case foo if bar || baz =>@@
        |""".stripMargin
   )
-  check[Stat](
+  checkPositions[Stat](
     """a + b + c""",
     """|Term.ApplyInfix a + b
        |""".stripMargin

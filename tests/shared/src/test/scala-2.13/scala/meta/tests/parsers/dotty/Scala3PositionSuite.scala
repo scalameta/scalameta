@@ -5,16 +5,16 @@ import scala.meta.tests.parsers.BasePositionSuite
 
 class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
 
-  check[Type]("A & B")
-  check[Type]("A | B")
-  check[Type](
+  checkPositions[Type]("A & B")
+  checkPositions[Type]("A | B")
+  checkPositions[Type](
     "[X] =>> (X, X)",
     """|Type.Bounds [X@@] =>> (X, X)
        |Type.Tuple (X, X)
        |""".stripMargin
   )
-  check[Stat]("inline def f = 1")
-  check[Stat](
+  checkPositions[Stat]("inline def f = 1")
+  checkPositions[Stat](
     "open trait a",
     """|Ctor.Primary open trait a@@
        |Template open trait a@@
@@ -22,7 +22,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
 
-  check[Stat](
+  checkPositions[Stat](
     "extension [A, B](i: A)(using a: F[A], G[B]) def isZero = i == 0",
     """|Type.Bounds extension [A@@, B](i: A)(using a: F[A], G[B]) def isZero = i == 0
        |Type.Bounds extension [A, B@@](i: A)(using a: F[A], G[B]) def isZero = i == 0
@@ -40,7 +40,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
 
   // This tests exists to document the symmetry between positions for
   // `Mod.Implicit` (test below) and `Mod.Using` (test above).
-  check[Stat](
+  checkPositions[Stat](
     "def foo(implicit a: A, b: B): Unit",
     """|Term.Param a: A
        |Mod.Implicit def foo(implicit @@a: A, b: B): Unit
@@ -49,7 +49,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
 
-  check[Stat](
+  checkPositions[Stat](
     "enum Day[T](e: T) extends A with B { case Monday, Tuesday }",
     """|Type.Bounds enum Day[T@@](e: T) extends A with B { case Monday, Tuesday }
        |Ctor.Primary (e: T)
@@ -58,7 +58,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Defn.RepeatedEnumCase case Monday, Tuesday
        |""".stripMargin
   )
-  check[Stat](
+  checkPositions[Stat](
     "class Day[T](e: T) extends A with B { val Monday = 42 }",
     """|Type.Bounds class Day[T@@](e: T) extends A with B { val Monday = 42 }
        |Ctor.Primary (e: T)
@@ -67,7 +67,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Defn.Val val Monday = 42
        |""".stripMargin
   )
-  check[Stat](
+  checkPositions[Stat](
     "inline given intOrd as Ord[Int] { def f(): Int = 1 }",
     """|Type.Apply Ord[Int]
        |Template { def f(): Int = 1 }
@@ -75,22 +75,22 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Defn.Def def f(): Int = 1
        |""".stripMargin
   )
-  check[Stat](
+  checkPositions[Stat](
     "export a.b",
     """|Importer a.b
        |""".stripMargin
   )
-  check[Stat](
+  checkPositions[Stat](
     "export A.{ b, c, d, _ }",
     """|Importer A.{ b, c, d, _ }
        |""".stripMargin
   )
-  check[Stat](
+  checkPositions[Stat](
     "export given a.b",
     """|Importer a.b
        |""".stripMargin
   )
-  check[Stat](
+  checkPositions[Stat](
     "import Instances.{ im, given Ordering[?] }",
     """|Importer Instances.{ im, given Ordering[?] }
        |Importee.Given given Ordering[?]
@@ -99,18 +99,18 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.Bounds import Instances.{ im, given Ordering[?@@] }
        |""".stripMargin
   )
-  check[Stat](
+  checkPositions[Stat](
     "import File.given",
     """|Importer File.given
        |Importee.GivenAll given
        |""".stripMargin
   )
-  check[Stat](
+  checkPositions[Stat](
     "export given A.{ b, c, d, _ }",
     """|Importer A.{ b, c, d, _ }
        |""".stripMargin
   )
-  check[Type]("A & B")
-  check[Type]("A | B")
+  checkPositions[Type]("A & B")
+  checkPositions[Type]("A | B")
 
 }
