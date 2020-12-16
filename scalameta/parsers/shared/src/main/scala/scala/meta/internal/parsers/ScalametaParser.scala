@@ -3809,7 +3809,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     assert(token.text == "end")
     next()
     if (token.is[Ident]) {
-      EndMarker(autoPos(termName()))
+      EndMarker(termName())
     } else {
       val r = EndMarker(atPos(token)(Term.Name(token.text)))
       next()
