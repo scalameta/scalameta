@@ -3,8 +3,7 @@ package scala.meta.tests.parsers.dotty
 import scala.meta._
 import scala.meta.tests.parsers.BasePositionSuite
 
-class Scala3PositionSuite extends BasePositionSuite {
-  override def defaultDialect: Dialect = dialects.Scala3
+class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
 
   check[Type]("A & B")
   check[Type]("A | B")

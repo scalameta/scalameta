@@ -3,7 +3,7 @@ package scala.meta.tests.tokenizers
 import scala.meta._
 import scala.meta.tests.parsers.BasePositionSuite
 
-class TokensPositionSuite extends BasePositionSuite {
+class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   check[Enumerator](
     "`a` <- b",
     """|Term.Name `a`

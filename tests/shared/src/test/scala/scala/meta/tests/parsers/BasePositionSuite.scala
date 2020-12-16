@@ -1,16 +1,16 @@
 package scala.meta.tests.parsers
 
 import munit.FunSuite
-import scala.meta.parsers.Parse
-import scala.meta.internal.inputs._
 import munit.TestOptions
-import scala.meta.internal.trees.Origin
 import munit.Location
+import scala.meta.Dialect
+import scala.meta.internal.inputs._
+import scala.meta.internal.trees.Origin
+import scala.meta.parsers.Parse
 import scala.meta.tests.parsers.MoreHelpers
 
-abstract class BasePositionSuite extends ParseSuite {
+abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
   import scala.meta._
-  def defaultDialect: Dialect = dialects.Scala213
 
   def check[T <: Tree: Parse](code: TestOptions)(implicit loc: Location): Unit = {
     check[T](code, "")

@@ -5,7 +5,7 @@ import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.internal.prettyprinters._
 
-class BasicPositionSuite extends BasePositionSuite {
+class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   check[Term](
     "1 + (2 / 3) * 4",
     """|Term.ApplyInfix (2 / 3) * 4
