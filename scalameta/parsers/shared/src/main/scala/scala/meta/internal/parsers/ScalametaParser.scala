@@ -823,8 +823,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* -------------- TOKEN CLASSES ------------------------------------------- */
 
-  def isIdentAnd(pred: String => Boolean): Boolean = ScalametaParser.isIdentAnd(token, pred)
+  private def isIdentAnd(token: Token, pred: String => Boolean): Boolean = token match {
+    case Ident(value) => pred(value.stripPrefix("`").stripSuffix("`"))
+    case _ => false
+  }
 
+  def isIdentAnd(pred: String => Boolean): Boolean = isIdentAnd(token, pred)
   def isUnaryOp: Boolean = isIdentAnd(name => Term.Name(name).isUnaryOp)
   def isIdentExcept(except: String) = isIdentAnd(_ != except)
   def isIdentOf(name: String) = isIdentAnd(_ == name)
@@ -881,7 +885,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def unapply(token: Token): Boolean = {
       token.is[Ident] || token.is[KwIf] || token.is[KwWhile] || token.is[KwFor] ||
       token.is[KwMatch] || token.is[KwTry] || token.is[KwNew] || token.is[KwThis] ||
-      token.is[KwGiven] || token.is[KwVal] || token.is[KwExtension]
+      token.is[KwGiven] || token.is[KwVal]
     }
   }
 
@@ -958,6 +962,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       token.is[KwDef] || token.is[KwType] || token.is[KwEnum] ||
       token.is[KwVal] || token.is[KwVar] || token.is[KwGiven] ||
       token.is[KwExtension] || (token.is[Unquote] && token.next.is[DclIntro])
+    }
+  }
+
+  @classifier
+  trait KwExtension {
+    def unapply(token: Token) = {
+      // Logic taken from the Scala 3 parser
+      token.is[soft.KwExtension] && (token.next.is[LeftParen] || token.next.is[LeftBracket])
+
     }
   }
 
@@ -1051,7 +1064,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @classifier
   trait CanEndStat {
     def unapply(token: Token): Boolean = {
-      token.is[Ident] || token.is[KwGiven] || token.is[KwExtension] || token.is[Literal] ||
+      token.is[Ident] || token.is[KwGiven] || token.is[Literal] ||
       token.is[Interpolation.End] || token.is[Xml.End] ||
       token.is[KwReturn] || token.is[KwThis] || token.is[KwType] ||
       token.is[RightParen] || token.is[RightBracket] || token.is[RightBrace] ||
@@ -1122,9 +1135,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def unapply(token: Token): Boolean = {
       token.is[KwTrait] || token.is[KwClass] ||
       token.is[KwObject] || token.is[KwEnum] ||
-      token.is[KwExtension] || token.is[KwType] ||
-      token.is[KwPackage] || token.is[KwGiven] ||
-      token.is[KwNew]
+      token.is[KwType] || token.is[KwPackage] ||
+      token.is[KwGiven] || token.is[KwNew]
     }
   }
 
@@ -4806,11 +4818,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 }
 
 object ScalametaParser {
-
-  private[parsers] def isIdentAnd(token: Token, pred: String => Boolean): Boolean = token match {
-    case Ident(value) => pred(value.stripPrefix("`").stripSuffix("`"))
-    case _ => false
-  }
 
   def toParse[T](fn: ScalametaParser => T): Parse[T] = new Parse[T] {
     def apply(input: Input, dialect: Dialect): Parsed[T] = {

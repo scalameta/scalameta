@@ -3,14 +3,16 @@ package scala.meta.internal.parsers
 import scala.meta.Dialect
 import scala.meta.tokens.Token
 import scala.meta.tokens.Token.Ident
-import scala.meta.internal.classifiers.classifier
+import scala.meta.internal.classifiers._
+import scala.meta.classifiers._
+import scala.meta.tokens.Token.LeftParen
+import scala.meta.tokens.Token.LeftBracket
 
 class SoftKeywords(dialect: Dialect) {
 
-  import ScalametaParser.isIdentAnd
-
-  private def matches(token: Token, name: String, isEnabled: => Boolean): Boolean =
-    isEnabled && isIdentAnd(token, _ == name)
+  private def matches(token: Token, name: String, isEnabled: => Boolean): Boolean = {
+    isEnabled && token.toString() == name
+  }
 
   @classifier
   trait KwAs {
@@ -80,6 +82,14 @@ class SoftKeywords(dialect: Dialect) {
     val name = "infix"
     def unapply(token: Token): Boolean = {
       matches(token, name, dialect.allowInfixMods)
+    }
+  }
+
+  @classifier
+  trait KwExtension {
+    val name = "extension"
+    def unapply(token: Token): Boolean = {
+      matches(token, name, dialect.allowExtensionMethods)
     }
   }
 }
