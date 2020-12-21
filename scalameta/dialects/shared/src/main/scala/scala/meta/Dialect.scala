@@ -110,7 +110,8 @@ final class Dialect private (
     val allowByNameRepeatedParameters: Boolean,
     // Dotty allows lazy val abstract values
     val allowLazyValAbstractValues: Boolean,
-    // Dotty allows `as` instead of `@` for pattern bindings
+    // Dotty used to allow `as` instead of `@` for pattern bindings
+    @deprecated("`as` in patterns is no longer supported in any dialect", "4.4.4")
     val allowAsPatternBinding: Boolean,
     // Dotty allows capital pattern vars in `case A @ _ =>`
     val allowUpperCasePatternVarBinding: Boolean,
@@ -365,6 +366,7 @@ final class Dialect private (
   def withAllowLazyValAbstractValues(newValue: Boolean): Dialect = {
     privateCopy(allowLazyValAbstractValues = newValue)
   }
+  @deprecated("`as` in patterns is no longer supported in any dialect", "4.4.4")
   def withAllowAsPatternBinding(newValue: Boolean): Dialect = {
     privateCopy(allowAsPatternBinding = newValue)
   }

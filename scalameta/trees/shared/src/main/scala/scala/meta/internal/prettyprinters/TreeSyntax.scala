@@ -743,15 +743,14 @@ object TreeSyntax {
       case _: Pat.SeqWildcard => m(SimplePattern, kw("_*"))
       case pat: Pat.Given => m(SimplePattern, s(kw("given"), " ", pat.tpe))
       case t: Pat.Bind =>
-        val binder = if (dialect.allowAsPatternBinding) "as" else "@"
         val separator = t.rhs match {
           case Pat.SeqWildcard() =>
-            if (dialect.allowAtForExtractorVarargs) s(" ", kw(binder))
+            if (dialect.allowAtForExtractorVarargs) s(" ", kw("@"))
             else if (dialect.allowColonForExtractorVarargs) s(kw(":"))
             else
               throw new UnsupportedOperationException(s"$dialect doesn't support extractor varargs")
           case _ =>
-            s(" ", kw(binder))
+            s(" ", kw("@"))
         }
         m(Pattern2, s(p(SimplePattern, t.lhs), separator, " ", p(AnyPattern3, t.rhs)))
       case t: Pat.Alternative =>
@@ -1156,10 +1155,10 @@ object TreeSyntax {
         sparams: List[List[Term.Param]]
     ): Show.Result = {
       if (!name.is[meta.Name.Anonymous]) {
-        s(name, tparams, sparams, " as ")
+        s(name, tparams, sparams, ": ")
       } else {
         if (tparams.nonEmpty || sparams.nonEmpty) {
-          s(tparams, sparams, " as ")
+          s(tparams, sparams, ": ")
         } else {
           s()
         }

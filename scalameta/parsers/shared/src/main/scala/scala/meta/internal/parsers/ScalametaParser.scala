@@ -3055,9 +3055,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case p: Pat.Var =>
             nextOnce()
             Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
-          case p: Pat.Bind if dialect.allowAsPatternBinding =>
-            nextOnce()
-            Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
           case p: Pat.Wildcard
               if dialect.allowColonForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
             nextThrice()
@@ -3073,7 +3070,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     def pattern2(): Pat = autoPos {
       val p = pattern3()
-      if (token.isNot[At] && token.isNot[soft.KwAs])
+      if (token.isNot[At])
         p
       else
         p match {
@@ -3110,7 +3107,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val base = ctx.stack
       def loop(rhs: ctx.Rhs): ctx.Rhs = {
         val op =
-          if (token.isNot[soft.KwAs] && (isIdentExcept("|") || token.is[Unquote])) Some(termName())
+          if (isIdentExcept("|") || token.is[Unquote]) Some(termName())
           else None
         val lhs1 = ctx.reduceStack(base, rhs, rhs, op)
         op match {
@@ -3165,8 +3162,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val isVarPattern = sid match {
             case _: Quasi => false
             case Term.Name(value) =>
-              val isNextTokenBinding =
-                token.is[soft.KwAs] || token.is[At]
+              val isNextTokenBinding = token.is[At]
               val isCapitalAllowed = dialect.allowUpperCasePatternVarBinding && isNextTokenBinding
               !isBackquoted && ((value.head.isLower && value.head.isLetter) || value.head == '_' || isCapitalAllowed)
             case _ => false
@@ -3882,13 +3878,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       allowUnderscore = dialect.allowTypeParamUnderscore
     )
     val uparamss = paramClauses(ownerIsType = false)
-    val (sigName, sigTparams, sigUparamss) = if (token.is[soft.KwAs]) {
-      accept[Ident]
-      (name, tparams, uparamss)
-      // as can be on a next line and LF will not be removed before since `as` is an ident
-    } else if (token.is[LF] && ahead(token.is[soft.KwAs])) {
-      accept[LF]
-      accept[Ident]
+    val (sigName, sigTparams, sigUparamss) = if (token.is[Colon]) {
+      accept[Colon]
       (name, tparams, uparamss)
     } else {
       in = forked

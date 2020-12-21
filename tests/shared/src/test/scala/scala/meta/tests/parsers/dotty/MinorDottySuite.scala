@@ -315,9 +315,9 @@ class MinorDottySuite extends BaseDottySuite {
     runTestError[Stat]("class F[_]", "identifier expected")
     runTestError[Stat]("enum X[T]{ case A[_] extends X[Int] }", "identifier expected")
     runTestError[Stat]("extension [_](x: Int) def inc: Int = x + 1", "identifier expected")
-    runTestError[Stat]("given [_](using Ord[T]) as Ord[List[T]]{}", "identifier expected")
+    runTestError[Stat]("given [_](using Ord[T]): Ord[List[T]]{}", "identifier expected")
 
-    runTestAssert[Stat]("given [T](using Ord[T]) as Ord[List[T]]")(
+    runTestAssert[Stat]("given [T](using Ord[T]): Ord[List[T]]")(
       Defn.Given(
         Nil,
         Name(""),
@@ -476,73 +476,6 @@ class MinorDottySuite extends BaseDottySuite {
     List(Case(Pat.Bind(Pat.Var(Term.Name("intValue")), Lit.Int(1)), None, Term.Block(Nil)))
   )
 
-  test("old-pattern-binding") {
-    runTestAssert[Stat](
-      """|1 match {
-         |  case intValue @ 1 =>
-         |}
-         |""".stripMargin,
-      assertLayout = Some(
-        """|1 match {
-           |  case intValue as 1 =>
-           |}
-           |""".stripMargin
-      )
-    )(patternBinding)
-
-  }
-
-  test("new-pattern-binding") {
-    runTestAssert[Stat]("""|1 match {
-                           |  case intValue as 1 =>
-                           |}
-                           |""".stripMargin)(patternBinding)
-  }
-
-  test("new-pattern-binding-soft") {
-    runTestAssert[Stat]("""|1 match {
-                           |  case as as 1 =>
-                           |}
-                           |""".stripMargin)(
-      Term.Match(
-        Lit.Int(1),
-        List(Case(Pat.Bind(Pat.Var(Term.Name("as")), Lit.Int(1)), None, Term.Block(Nil)))
-      )
-    )
-  }
-
-  test("new-pattern-binding-with-typed") {
-    // yes parens are allowed here and don't change semantics
-    val out = """|x match {
-                 |  case (three as Some(3)): Option[Int] => "OK"
-                 |}
-                 |""".stripMargin
-    runTestAssert[Stat](
-      """|x match {
-         |  case three as Some(3) : Option[Int] => "OK"
-         |}
-         |""".stripMargin,
-      assertLayout = Some(out)
-    )(
-      Term.Match(
-        Term.Name("x"),
-        List(
-          Case(
-            Pat.Typed(
-              Pat.Bind(
-                Pat.Var(Term.Name("three")),
-                Pat.Extract(Term.Name("Some"), List(Lit.Int(3)))
-              ),
-              Type.Apply(Type.Name("Option"), List(Type.Name("Int")))
-            ),
-            None,
-            Lit.String("OK")
-          )
-        )
-      )
-    )
-  }
-
   test("comment-after-coloneol") {
     val expected = "trait X { def x(): String }"
     runTestAssert[Stat](
@@ -621,7 +554,7 @@ class MinorDottySuite extends BaseDottySuite {
 
   test("capital-var-pattern-val") {
     runTestAssert[Stat](
-      """val Private as _ = flags()
+      """val Private @ _ = flags()
         |""".stripMargin
     )(
       Defn.Val(
@@ -636,7 +569,7 @@ class MinorDottySuite extends BaseDottySuite {
   test("capital-var-pattern-case") {
     runTestAssert[Stat](
       """|flags() match {
-         |  case Pattern as _ =>
+         |  case Pattern @ _ =>
          |}
          |""".stripMargin
     )(
@@ -904,7 +837,7 @@ class MinorDottySuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(
         """|a match {
-           |  case List(xs as _*) =>
+           |  case List(xs @ _*) =>
            |}
            |""".stripMargin
       )
@@ -931,7 +864,7 @@ class MinorDottySuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(
         """|a match {
-           |  case List(xs as _*) =>
+           |  case List(xs @ _*) =>
            |}
            |""".stripMargin
       )
