@@ -265,10 +265,12 @@ object TreeSyntax {
         looksLikePatVar && thisLocationAlsoAcceptsPatVars
       }
       // soft keywords might need to be written with backquotes in some places
-      def isEscapableSoftKeyword(t: Term.Name, parent: Tree) = {
+      def isEscapableSoftKeyword(t: Term.Name, parent: Tree): Boolean = {
         t.value match {
           case "extension" if dialect.allowExtensionMethods =>
             parent.is[Term.Apply] || parent.is[Term.ApplyUsing]
+          case "inline" if dialect.allowInlineMods =>
+            parent.is[Term.Apply] || parent.is[Term.ApplyUsing] || parent.is[Term.ApplyInfix]
           case _ => false
         }
       }
@@ -471,7 +473,15 @@ object TreeSyntax {
       case t: Term.Match =>
         m(
           Expr1,
-          s(p(PostfixExpr, t.expr), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}"))
+          s(
+            w(t.mods, " "),
+            p(PostfixExpr, t.expr),
+            " ",
+            kw("match"),
+            " {",
+            r(t.cases.map(i(_)), ""),
+            n("}")
+          )
         )
       case t: Term.Try =>
         m(

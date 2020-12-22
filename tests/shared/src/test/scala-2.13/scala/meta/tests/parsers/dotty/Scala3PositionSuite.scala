@@ -177,4 +177,21 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.Apply Option[T]
        |""".stripMargin
   )
+  checkPositions[Stat](
+    """|inline def g: Any = inline x match {
+       |  case x: String => (x, x) 
+       |  case x: Double => x
+       |}""".stripMargin,
+    """|Term.Match inline x match {
+       |  case x: String => (x, x) 
+       |  case x: Double => x
+       |}
+       |Case case x: String => (x, x) 
+       |
+       |Pat.Typed x: String
+       |Term.Tuple (x, x)
+       |Case case x: Double => x
+       |Pat.Typed x: Double
+       |""".stripMargin
+  )
 }

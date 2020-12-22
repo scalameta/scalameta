@@ -599,9 +599,9 @@ class SuccessSuite extends FunSuite {
   test("4 q\"expr match { ..case cases }\"") {
     val expr = q"foo"
     val casez = List(p"case a => b", p"case q => w")
-    assert(
-      q"$expr match { ..case $casez }".structure ==
-        "Term.Match(Term.Name(\"foo\"), List(Case(Pat.Var(Term.Name(\"a\")), None, Term.Name(\"b\")), Case(Pat.Var(Term.Name(\"q\")), None, Term.Name(\"w\"))))"
+    assertEquals(
+      q"$expr match { ..case $casez }".structure,
+      "Term.Match(Term.Name(\"foo\"), List(Case(Pat.Var(Term.Name(\"a\")), None, Term.Name(\"b\")), Case(Pat.Var(Term.Name(\"q\")), None, Term.Name(\"w\"))), Nil)"
     )
   }
 
