@@ -13,13 +13,6 @@ class SoftKeywords(dialect: Dialect) {
     isEnabled && isIdentAnd(token, _ == name)
 
   @classifier
-  trait KwAs {
-    val name = "as"
-    def unapply(token: Token): Boolean = {
-      matches(token, name, dialect.allowAsPatternBinding)
-    }
-  }
-  @classifier
   trait KwUsing {
     val name = "using"
     def unapply(token: Token): Boolean = {

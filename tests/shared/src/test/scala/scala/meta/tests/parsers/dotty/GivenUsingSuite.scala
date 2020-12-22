@@ -23,7 +23,7 @@ class GivenUsingSuite extends BaseDottySuite {
   val defone = Defn.Def(Nil, tname("f"), Nil, List(Nil), Some(pname("Int")), int(1))
 
   test("given-named") {
-    runTestAssert[Stat]("given intOrd as Ord[Int] { def f(): Int = 1 }")(
+    runTestAssert[Stat]("given intOrd: Ord[Int] { def f(): Int = 1 }")(
       Defn.Given(
         Nil,
         pname("intOrd"),
@@ -36,7 +36,7 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-named-newline") {
-    runTestAssert[Stat]("given intOrd as Ord[Int] \n { def f(): Int = 1 }", assertLayout = None)(
+    runTestAssert[Stat]("given intOrd: Ord[Int] \n { def f(): Int = 1 }", assertLayout = None)(
       Defn.Given(
         Nil,
         pname("intOrd"),
@@ -55,15 +55,8 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
-  test("given-anon-as") {
-    runTestError(
-      "given as Context = ctx",
-      "; expected but identifier found"
-    )
-  }
-
   test("given-override-def") {
-    runTestAssert[Stat]("given intOrd as Ord[Int] { override def f(): Int = 1 }")(
+    runTestAssert[Stat]("given intOrd: Ord[Int] { override def f(): Int = 1 }")(
       Defn.Given(
         Nil,
         pname("intOrd"),
@@ -77,11 +70,11 @@ class GivenUsingSuite extends BaseDottySuite {
   test("given-override-def") {
     runTestAssert[Stat](
       """|given intOrd
-         |   as Ord[Int] {
+         |   : Ord[Int] {
          |  def fn = ()
          |}
          |""".stripMargin,
-      assertLayout = Some("given intOrd as Ord[Int] { def fn = () }")
+      assertLayout = Some("given intOrd: Ord[Int] { def fn = () }")
     )(
       Defn.Given(
         Nil,
@@ -100,7 +93,7 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-self") {
-    runTestAssert[Stat]("given intOrd as Ord[Int] { current => }")(
+    runTestAssert[Stat]("given intOrd: Ord[Int] { current => }")(
       Defn.Given(
         Nil,
         pname("intOrd"),
@@ -114,13 +107,13 @@ class GivenUsingSuite extends BaseDottySuite {
 
   test("given-selftype-error".ignore) {
     runTestError(
-      "given intOrd as Ord[Int] { current: Ord[Int] => }",
+      "given intOrd: Ord[Int] { current: Ord[Int] => }",
       "objects must not have a self type"
     )
   }
 
   test("given-no-block") {
-    runTestAssert[Stat]("given intOrd as Ord[Int]")(
+    runTestAssert[Stat]("given intOrd: Ord[Int]")(
       Defn.Given(
         Nil,
         pname("intOrd"),
@@ -139,7 +132,7 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-generic-named") {
-    runTestAssert[Stat]("given listOrd[T] as Ord[List[T]] { def f(): Int = 1 }")(
+    runTestAssert[Stat]("given listOrd[T]: Ord[List[T]] { def f(): Int = 1 }")(
       Defn.Given(
         Nil,
         pname("listOrd"),
@@ -165,7 +158,7 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-depend-given-named") {
-    runTestAssert[Stat]("given setOrd[T](using ord: Ord[T]) as Ord[Set[T]]")(
+    runTestAssert[Stat]("given setOrd[T](using ord: Ord[T]): Ord[Set[T]]")(
       Defn.Given(
         Nil,
         pname("setOrd"),
@@ -187,7 +180,7 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-depend-given-anonymous") {
-    runTestAssert[Stat]("given [T](using ord: Ord[T]) as Ord[Set[T]]")(
+    runTestAssert[Stat]("given [T](using ord: Ord[T]): Ord[Set[T]]")(
       Defn.Given(
         Nil,
         anon,
@@ -209,7 +202,7 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-depend-given-anonymous-using") {
-    runTestAssert[Stat]("given (using Ord[String]) as Ord[Int]")(
+    runTestAssert[Stat]("given (using Ord[String]): Ord[Int]")(
       Defn.Given(
         Nil,
         anon,
@@ -231,7 +224,7 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-inline") {
-    runTestAssert[Stat]("inline given intOrd as Ord[Int] { def f(): Int = 1 }")(
+    runTestAssert[Stat]("inline given intOrd: Ord[Int] { def f(): Int = 1 }")(
       Defn.Given(
         List(Mod.Inline()),
         pname("intOrd"),
@@ -245,7 +238,7 @@ class GivenUsingSuite extends BaseDottySuite {
 
   test("given-subtype-error".ignore) {
     // it is treaten as alias without '=' sign at the end and {...} is refinement part
-    runTestError("given intOrd as ? <: Ord[Int] { def f(): Int = 1 }", "missing = at the end")
+    runTestError("given intOrd: ? <: Ord[Int] { def f(): Int = 1 }", "missing = at the end")
   }
 
   // ---------------------------------
@@ -253,7 +246,7 @@ class GivenUsingSuite extends BaseDottySuite {
   // ---------------------------------
 
   test("given-alias-named") {
-    runTestAssert[Stat]("given global as Option[Int] = Some(3)")(
+    runTestAssert[Stat]("given global: Option[Int] = Some(3)")(
       Defn.GivenAlias(
         Nil,
         pname("global"),
@@ -280,7 +273,7 @@ class GivenUsingSuite extends BaseDottySuite {
 
   test("given-alias-block") {
     runTestAssert[Stat](
-      "given global as Option[Int] = { def f(): Int = 1; Some(3) }",
+      "given global: Option[Int] = { def f(): Int = 1; Some(3) }",
       assertLayout = None
     )(
       Defn.GivenAlias(
@@ -296,13 +289,13 @@ class GivenUsingSuite extends BaseDottySuite {
 
   test("given-alias-override-block-error".ignore) {
     runTestError(
-      "given global as Option[Int] = { override def f(): Int = 1; Some(3) }",
+      "given global: Option[Int] = { override def f(): Int = 1; Some(3) }",
       "no modifier allowed here"
     )
   }
 
   test("given-alias-using-named") {
-    runTestAssert[Stat]("given ordInt(using ord: Ord[Int]) as Ord[List[Int]] = ???")(
+    runTestAssert[Stat]("given ordInt(using ord: Ord[Int]): Ord[List[Int]] = ???")(
       Defn.GivenAlias(
         Nil,
         pname("ordInt"),
@@ -324,7 +317,7 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-alias-using-anonymous") {
-    runTestAssert[Stat]("given (using ord: Ord[Int]) as Ord[List[Int]] = ???")(
+    runTestAssert[Stat]("given (using ord: Ord[Int]): Ord[List[Int]] = ???")(
       Defn.GivenAlias(
         Nil,
         anon,
@@ -346,7 +339,7 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-alias-inline-subtype") {
-    runTestAssert[Stat]("inline given intOrd as ? <: Ord[Int] = ???")(
+    runTestAssert[Stat]("inline given intOrd: ? <: Ord[Int] = ???")(
       Defn.GivenAlias(
         List(Mod.Inline()),
         pname("intOrd"),
@@ -360,13 +353,13 @@ class GivenUsingSuite extends BaseDottySuite {
 
   test("given-alias-subtype-noinline-error".ignore) {
     runTestError(
-      "given intOrd as ? <: Ord[Int] = ???",
+      "given intOrd: ? <: Ord[Int] = ???",
       "is only allowed for given with inline modifier"
     )
   }
 
   test("given-alias-combo") {
-    runTestAssert[Stat]("inline given intOrd as ? <: Ord[Int] { val c: String } = ???")(
+    runTestAssert[Stat]("inline given intOrd: ? <: Ord[Int] { val c: String } = ???")(
       Defn.GivenAlias(
         List(Mod.Inline()),
         pname("intOrd"),
@@ -605,7 +598,7 @@ class GivenUsingSuite extends BaseDottySuite {
   test("given-pat") {
     runTestAssert[Stat](
       """|pair match {
-         |  case (ctx as given Context, y) =>
+         |  case (ctx @ given Context, y) =>
          |}
          |""".stripMargin
     )(
