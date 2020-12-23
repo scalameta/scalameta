@@ -129,8 +129,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           token = IDENTIFIER
         if (token == GIVEN && !dialect.allowGivenUsing)
           token = IDENTIFIER
-        if (token == EXTENSION && !dialect.allowExtensionMethods)
-          token = IDENTIFIER
         if (token == EXPORT && !dialect.allowExportClause)
           token = IDENTIFIER
         if (token == THEN && !dialect.allowSignificantIndentation)
@@ -732,8 +730,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
             if (next.token == ENUM && !dialect.allowEnums)
               next.token = IDENTIFIER
             if (next.token == GIVEN && !dialect.allowGivenUsing)
-              next.token = IDENTIFIER
-            if (next.token == EXTENSION && !dialect.allowExtensionMethods)
               next.token = IDENTIFIER
             if (next.token == EXPORT && !dialect.allowExportClause)
               next.token = IDENTIFIER

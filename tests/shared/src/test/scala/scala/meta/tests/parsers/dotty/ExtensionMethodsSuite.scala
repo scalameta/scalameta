@@ -45,7 +45,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("simple-method-indent") {
-    val code = """|extension (c: Circle):
+    val code = """|extension (c: Circle)
                   |  def crc: Int = 2
                   |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some("extension (c: Circle) def crc: Int = 2"))(
@@ -59,7 +59,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("modifier-method-indent") {
-    val code = """|extension (c: Circle):
+    val code = """|extension (c: Circle)
                   |  private def crc: Int = 2
                   |""".stripMargin
     runTestAssert[Stat](
@@ -82,8 +82,9 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
   }
 
-  test("multiple-methods-indent") {
-    val code = """|extension (c: Circle):
+  // extension methods no longer require `:` which causes Scalameta not to parse it correctly yet
+  test("multiple-methods-indent".ignore) {
+    val code = """|extension (c: Circle)
                   |  def cra: Int = 2
                   |  def crb: String = "3"
                   |  def crc: Boolean = 4
@@ -193,6 +194,74 @@ class ExtensionMethodsSuite extends BaseDottySuite {
           Term.ApplyInfix(Term.Name("a"), Term.Name("*"), Nil, List(Lit.Int(2)))
         )
       )
+    )
+  }
+
+  // Scala 3 doesn't allow for methods named `extension` to be invoked
+  // https://github.com/lampepfl/dotty/issues/10076
+  test("extension-named-method") {
+    runTestError[Stat](
+      """|object A{
+         |  def extension(a : Int) = a + 2
+         |  extension(2)
+         |}""".stripMargin,
+      "identifier expected but integer constant found"
+    )
+
+    runTestAssert[Stat](
+      """|object A {
+         |  def extension(a: Int) = a + 2
+         |  `extension`(2)
+         |}""".stripMargin
+    )(
+      Defn.Object(
+        Nil,
+        Term.Name("A"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.Def(
+              Nil,
+              Term.Name("extension"),
+              Nil,
+              List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))),
+              None,
+              Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Lit.Int(2)))
+            ),
+            Term.Apply(Term.Name("extension"), List(Lit.Int(2)))
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("extension-named-method") {
+    runTestAssert[Stat](
+      "extension + 3"
+    )(
+      Term.ApplyInfix(Term.Name("extension"), Term.Name("+"), Nil, List(Lit.Int(3)))
+    )
+
+    runTestAssert[Stat](
+      "def extension(x: extension): extension = x"
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("extension"),
+        Nil,
+        List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("extension")), None))),
+        Some(Type.Name("extension")),
+        Term.Name("x")
+      )
+    )
+
+    runTestAssert[Stat](
+      "extension.extension(3)"
+    )(
+      Term.Apply(Term.Select(Term.Name("extension"), Term.Name("extension")), List(Lit.Int(3)))
     )
   }
 

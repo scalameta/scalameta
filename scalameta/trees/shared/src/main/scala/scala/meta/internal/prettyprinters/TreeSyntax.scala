@@ -20,6 +20,7 @@ import org.scalameta.adt._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.compat.Platform.EOL
+import scala.meta.inputs.Position
 
 object TreeSyntax {
   private final object SyntaxInstances {
@@ -263,14 +264,21 @@ object TreeSyntax {
         }
         looksLikePatVar && thisLocationAlsoAcceptsPatVars
       }
-      def isAmbiguousWithPatVarType(t: Type.Name, p: Tree): Boolean = {
-        false
+      // soft keywords might need to be written with backquotes in some places
+      def isEscapableSoftKeyword(t: Term.Name, parent: Tree) = {
+        t.value match {
+          case "extension" if dialect.allowExtensionMethods =>
+            parent.is[Term.Apply] || parent.is[Term.ApplyUsing]
+          case _ => false
+        }
       }
       (t, t.parent) match {
         case (t: Term.Name, Some(p: Tree)) =>
-          isAmbiguousWithPatVarTerm(t, p) || cantBeWrittenWithoutBackquotes(t)
+          isAmbiguousWithPatVarTerm(t, p) ||
+            cantBeWrittenWithoutBackquotes(t) ||
+            isEscapableSoftKeyword(t, p)
         case (t: Type.Name, Some(p: Tree)) =>
-          isAmbiguousWithPatVarType(t, p) || cantBeWrittenWithoutBackquotes(t)
+          cantBeWrittenWithoutBackquotes(t)
         case _ => cantBeWrittenWithoutBackquotes(t)
       }
     }
@@ -326,7 +334,8 @@ object TreeSyntax {
         val thisqual = if (t.thisp.is[Name.Anonymous]) s() else s(t.thisp, ".")
         val superqual = if (t.superp.is[Name.Anonymous]) s() else s("[", t.superp, "]")
         m(Path, s(thisqual, kw("super"), superqual))
-      case t: Term.Name => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
+      case t: Term.Name =>
+        m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
       case t: Term.Select =>
         t.qual match {
           case Term.New(Init(_, _, Nil)) =>
