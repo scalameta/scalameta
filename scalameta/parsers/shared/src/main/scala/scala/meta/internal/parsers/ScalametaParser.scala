@@ -1442,8 +1442,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def typeCaseClauses(): List[TypeCase] = {
       def cases() = {
         val allCases = new ListBuffer[TypeCase]
-        while (token.is[KwCase])
+        while (token.is[KwCase]) {
           allCases += typeCaseClause()
+          acceptOpt[LF]
+        }
         allCases.toList
       }
       if (token.is[LeftBrace]) {
@@ -1460,12 +1462,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     }
 
-    def typeCaseClause(): TypeCase = atPos(in.prevTokenPos, auto) {
+    def typeCaseClause(): TypeCase = autoPos {
       accept[KwCase]
       val pat = infixTypeOrTuple(allowFunctionType = false)
       accept[RightArrow]
       val tpe = typ()
-      acceptOpt[LF]
       TypeCase(
         pat,
         tpe

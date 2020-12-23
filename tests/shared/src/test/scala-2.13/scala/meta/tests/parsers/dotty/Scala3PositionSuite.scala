@@ -112,5 +112,69 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   )
   checkPositions[Type]("A & B")
   checkPositions[Type]("A | B")
-
+  checkPositions[Stat](
+    """|type T = A match {
+       |  case Char => String
+       |  case Array[t] => t
+       |}""".stripMargin,
+    """|Type.Match A match {
+       |  case Char => String
+       |  case Array[t] => t
+       |}
+       |TypeCase case Char => String
+       |TypeCase case Array[t] => t
+       |Type.Apply Array[t]
+       |""".stripMargin
+  )
+  checkPositions[Stat](
+    """|for case a: TP <- iter if cnd do
+       |  echo""".stripMargin,
+    """|Enumerator.CaseGenerator case a: TP <- iter
+       |Pat.Typed a: TP
+       |Enumerator.Guard if cnd
+       |""".stripMargin
+  )
+  checkPositions[Stat](
+    "infix def a(param: Int) = param"
+  )
+  checkPositions[Stat](
+    "infix type or[X, Y]",
+    """|Type.Bounds infix type or[X@@, Y]
+       |Type.Bounds infix type or[X, Y@@]
+       |Type.Bounds infix type or[X, Y]@@
+       |""".stripMargin
+  )
+  checkPositions[Stat](
+    "def fn: Unit = inline if cond then truep",
+    """|Term.If inline if cond then truep
+       |Lit.Unit def fn: Unit = inline if cond then truep@@
+       |""".stripMargin
+  )
+  checkPositions[Stat](
+    """|x match {
+       |  case '{ a } => 1
+       |}""".stripMargin,
+    """|Case case '{ a } => 1
+       |Pat.Macro '{ a }
+       |Term.QuotedMacroExpr '{ a }
+       |Term.Block { a }
+       |""".stripMargin
+  )
+  checkPositions[Stat](
+    "val extractor: (e: Entry, f: Other) => e.Key = extractKey",
+    """|Type.Function (e: Entry, f: Other) => e.Key
+       |Type.TypedParam e: Entry
+       |Type.TypedParam f: Other
+       |Type.Select e.Key
+       |""".stripMargin
+  )
+  checkPositions[Stat](
+    "type F0 = [T] => List[T] ?=> Option[T]",
+    """|Type.PolyFunction [T] => List[T] ?=> Option[T]
+       |Type.Bounds type F0 = [T@@] => List[T] ?=> Option[T]
+       |Type.ContextFunction List[T] ?=> Option[T]
+       |Type.Apply List[T]
+       |Type.Apply Option[T]
+       |""".stripMargin
+  )
 }
