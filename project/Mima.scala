@@ -38,6 +38,8 @@ object Mima {
     ),
     ProblemFilters.exclude[MissingClassProblem](
       "scala.meta.tokens.Token$KwExtension$sharedClassifier$"
-    )
+    ),
+    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Term#Match.mods"),
+    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Term#Match.setMods")
   )
 }

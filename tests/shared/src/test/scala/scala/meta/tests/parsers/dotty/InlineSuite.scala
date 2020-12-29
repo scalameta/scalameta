@@ -170,9 +170,31 @@ class InlineSuite extends BaseDottySuite {
   }
 
   test("inline-soft-ident") {
-    // inline is ident declared as val inline = 4
+
     runTestAssert[Stat](
-      "object X { inline + 3 }"
+      "inline"
+    )(
+      Term.Name("inline")
+    )
+
+    runTestAssert[Stat](
+      "`inline`()"
+    )(
+      Term.Apply(Term.Name("inline"), Nil)
+    )
+
+    runTestError[Stat](
+      "inline()",
+      "`inline` must be followed by an `if` or a `match`"
+    )
+
+    runTestError[Stat](
+      "object X { inline + 3 }",
+      "`inline` must be followed by an `if` or a `match`"
+    )
+
+    runTestAssert[Stat](
+      "object X { `inline` + 3 }"
     )(
       Defn.Object(
         Nil,
@@ -187,12 +209,189 @@ class InlineSuite extends BaseDottySuite {
     )
   }
 
-  test("inline-if") {
+  test("inline-match") {
     runTestAssert[Stat](
-      "inline if true then a()",
-      assertLayout = Some("inline if (true) a()")
+      """|inline def g: Any = inline x match {
+         |  case x: String => (x, x) 
+         |  case x: Double => x
+         |}""".stripMargin,
+      assertLayout = None
     )(
-      Term.If(Lit.Boolean(true), Term.Apply(Term.Name("a"), Nil), Lit.Unit(), List(Mod.Inline()))
+      Defn.Def(
+        List(Mod.Inline()),
+        Term.Name("g"),
+        Nil,
+        Nil,
+        Some(Type.Name("Any")),
+        Term.Match(
+          Term.Name("x"),
+          List(
+            Case(
+              Pat.Typed(Pat.Var(Term.Name("x")), Type.Name("String")),
+              None,
+              Term.Tuple(List(Term.Name("x"), Term.Name("x")))
+            ),
+            Case(Pat.Typed(Pat.Var(Term.Name("x")), Type.Name("Double")), None, Term.Name("x"))
+          ),
+          List(Mod.Inline())
+        )
+      )
+    )
+  }
+
+  test("inline-match-paren") {
+    runTestAssert[Stat](
+      """|inline def g = inline (x) match {
+         |  case x => x
+         |}""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Def(
+        List(Mod.Inline()),
+        Term.Name("g"),
+        Nil,
+        Nil,
+        None,
+        Term.Match(
+          Term.Name("x"),
+          List(Case(Pat.Var(Term.Name("x")), None, Term.Name("x"))),
+          List(Mod.Inline())
+        )
+      )
+    )
+  }
+
+  test("inline-match-brace") {
+    runTestAssert[Stat](
+      """|inline def g = inline {x} match {
+         |  case x => x
+         |}""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Def(
+        List(Mod.Inline()),
+        Term.Name("g"),
+        Nil,
+        Nil,
+        None,
+        Term.Match(
+          Term.Block(List(Term.Name("x"))),
+          List(Case(Pat.Var(Term.Name("x")), None, Term.Name("x"))),
+          List(Mod.Inline())
+        )
+      )
+    )
+  }
+
+  test("inline-match-block") {
+    runTestAssert[Stat](
+      """|inline def g = {
+         |  inline x match {
+         |    case x => x
+         |  }
+         |}""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Def(
+        List(Mod.Inline()),
+        Term.Name("g"),
+        Nil,
+        Nil,
+        None,
+        Term.Block(
+          List(
+            Term.Match(
+              Term.Name("x"),
+              List(Case(Pat.Var(Term.Name("x")), None, Term.Name("x"))),
+              List(Mod.Inline())
+            )
+          )
+        )
+      )
+    )
+  }
+
+  test("inline-match-block-paren") {
+    runTestAssert[Stat](
+      """|inline def g = {
+         |  inline (x) match {
+         |    case x => x
+         |  }
+         |}""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Def(
+        List(Mod.Inline()),
+        Term.Name("g"),
+        Nil,
+        Nil,
+        None,
+        Term.Block(
+          List(
+            Term.Match(
+              Term.Name("x"),
+              List(Case(Pat.Var(Term.Name("x")), None, Term.Name("x"))),
+              List(Mod.Inline())
+            )
+          )
+        )
+      )
+    )
+  }
+
+  test("inline-match-block-brace") {
+    runTestAssert[Stat](
+      """|inline def g = {
+         |  inline {x} match {
+         |    case x => x
+         |  }
+         |}""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Def(
+        List(Mod.Inline()),
+        Term.Name("g"),
+        Nil,
+        Nil,
+        None,
+        Term.Block(
+          List(
+            Term.Match(
+              Term.Block(List(Term.Name("x"))),
+              List(Case(Pat.Var(Term.Name("x")), None, Term.Name("x"))),
+              List(Mod.Inline())
+            )
+          )
+        )
+      )
+    )
+  }
+
+  test("inline-match-new") {
+    runTestAssert[Stat](
+      """|inline def g = {
+         |  inline new X match {
+         |    case x => x
+         |  }
+         |}""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Def(
+        List(Mod.Inline()),
+        Term.Name("g"),
+        Nil,
+        Nil,
+        None,
+        Term.Block(
+          List(
+            Term.Match(
+              Term.New(Init(Type.Name("X"), Name(""), Nil)),
+              List(Case(Pat.Var(Term.Name("x")), None, Term.Name("x"))),
+              List(Mod.Inline())
+            )
+          )
+        )
+      )
     )
   }
 

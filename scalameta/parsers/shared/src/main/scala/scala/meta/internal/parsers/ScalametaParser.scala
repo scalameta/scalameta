@@ -912,7 +912,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @classifier
   trait ExprIntro {
     def unapply(token: Token): Boolean = {
-      (token.is[Ident] && !inlineDefOrOpaque(token) && !token.is[EndMarkerIntro]) ||
+      (token.is[Ident] && !token.is[SoftModifier] && !token.is[EndMarkerIntro]) ||
       token.is[Literal] || token.is[Interpolation.Id] || token.is[Xml.Start] ||
       token.is[KwDo] || token.is[KwFor] || token.is[KwIf] ||
       token.is[KwNew] || token.is[KwReturn] || token.is[KwSuper] ||
@@ -923,9 +923,26 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  private def inlineDefOrOpaque(token: Token): Boolean = {
-    (token.is[soft.KwInline] || token.is[soft.KwOpaque] || token.is[soft.KwInfix]) &&
-    (DclIntro.unapply(token.next) || Modifier.unapply(token.next))
+  @classifier
+  trait SoftModifier {
+    def unapply(token: Token): Boolean = {
+      (
+        (token.is[soft.KwInline] || token.is[soft.KwOpaque] || token.is[soft.KwTransparent]) &&
+          (token.next.is[DclIntro] || token.next.is[Modifier])
+      ) ||
+      ((token.is[soft.KwOpen] || token.is[soft.KwInfix]) && token.next.is[DefIntro]) ||
+      token.is[InlineMatchMod]
+
+    }
+  }
+
+  @classifier
+  trait InlineMatchMod {
+    def unapply(token: Token): Boolean = {
+      token.is[soft.KwInline] &&
+      (token.next.is[LeftParen] || token.next.is[LeftBrace] || token.next.is[KwNew] || token.next
+        .is[Ident])
+    }
   }
 
   @classifier
@@ -981,20 +998,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       token.is[KwSealed] || token.is[KwImplicit] ||
       token.is[KwLazy] || token.is[KwPrivate] ||
       token.is[KwProtected] || token.is[KwOverride] ||
-      token.is[soft.KwOpaque] || token.is[soft.KwOpen] || token.is[soft.KwTransparent] ||
-      token.is[soft.KwInfix] || token.is[soft.KwInline]
+      token.is[SoftModifier]
     }
-  }
-
-  @classifier
-  trait InlineSoftIdent {
-    private def noIdentAhead() =
-      ahead(
-        token.isNot[Ident] && token.isNot[DclIntro] && token.isNot[Modifier] && token.isNot[KwIf]
-      )
-
-    def unapply(token: Token): Boolean =
-      token.is[soft.KwInline] && noIdentAhead()
   }
 
   @classifier
@@ -2024,6 +2029,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
+  /**
+   * Deals with Scala 3 concept of `inline x match { ...`
+   * Since matches can also be chained in Scala 3 we need to create
+   * the Match first and only then add the the inline modifier.
+   */
+  def inlineMatchClause() = {
+    autoPos(postfixExpr(allowRepeated = false)) match {
+      case t: Term.Match =>
+        t.setMods(List(Mod.Inline()))
+        t
+      case other =>
+        syntaxError("`inline` must be followed by an `if` or a `match`", at = other.pos)
+    }
+  }
+
   def matchClause(t: Term) = {
     if (token.is[Indentation.Indent]) {
       atPos(t, auto)(Term.Match(t, indented(caseClauses())))
@@ -2074,6 +2094,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case soft.KwInline() if ahead(token.is[KwIf]) =>
         accept[Ident]
         ifClause(isInline = true)
+      case InlineMatchMod() =>
+        accept[Ident]
+        inlineMatchClause()
       case KwIf() =>
         ifClause()
       case KwTry() =>
@@ -3423,7 +3446,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           token.is[Subtype] || token.is[Supertype] || token.is[Viewbound]
       )
     def loop(mods: List[Mod]): List[Mod] = token match {
-      case InlineSoftIdent() => mods
       case _ if isParams && token.is[NonParamsModifier] => mods
       case Unquote() => if (continueLoop) mods else loop(appendMod(mods, modifier()))
       case Ellipsis(_) => loop(appendMod(mods, modifier()))
@@ -3814,6 +3836,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         syntaxError("Enum cases are only allowed in enums", at = token.pos)
       case KwIf() if mods.size == 1 && mods.head.is[Mod.Inline] =>
         ifClause(isInline = true)
+      case ExprIntro() if mods.size == 1 && mods.head.is[Mod.Inline] =>
+        inlineMatchClause()
       case other =>
         tmplDef(mods)
     }

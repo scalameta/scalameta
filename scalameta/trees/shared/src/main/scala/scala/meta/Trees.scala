@@ -113,7 +113,10 @@ object Term {
   @ast class QuotedMacroExpr(body: Term) extends Term
   @ast class QuotedMacroType(tpe: Type) extends Term
   @ast class SplicedMacroExpr(body: Term) extends Term
-  @ast class Match(expr: Term, cases: List[Case] @nonEmpty) extends Term
+  @ast class Match(expr: Term, cases: List[Case] @nonEmpty) extends Term {
+    @binaryCompatField(since = "4.4.5")
+    private var _mods: List[Mod] = Nil
+  }
   @ast class Try(expr: Term, catchp: List[Case], finallyp: Option[Term]) extends Term
   @ast class TryWithHandler(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
   @ast class ContextFunction(params: List[Term.Param], body: Term) extends Term {
