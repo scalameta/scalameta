@@ -119,7 +119,12 @@ object Term {
   }
   @ast class Try(expr: Term, catchp: List[Case], finallyp: Option[Term]) extends Term
   @ast class TryWithHandler(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
-  @ast class ContextFunction(params: List[Term.Param], body: Term) extends Term {
+
+  @branch trait FunctionTerm extends Term {
+    def params: List[Term.Param]
+    def body: Term
+  }
+  @ast class ContextFunction(params: List[Term.Param], body: Term) extends FunctionTerm {
     checkFields(
       params.forall(param =>
         param.is[Term.Param.Quasi] ||
@@ -127,7 +132,7 @@ object Term {
       )
     )
   }
-  @ast class Function(params: List[Term.Param], body: Term) extends Term {
+  @ast class Function(params: List[Term.Param], body: Term) extends FunctionTerm {
     checkFields(
       params.forall(param =>
         param.is[Term.Param.Quasi] ||
@@ -177,9 +182,13 @@ object Type {
   }
   @ast class Apply(tpe: Type, args: List[Type] @nonEmpty) extends Type
   @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
-  @ast class Function(params: List[Type], res: Type) extends Type
+  @branch trait FunctionType extends Type {
+    def params: List[Type]
+    def res: Type
+  }
+  @ast class Function(params: List[Type], res: Type) extends FunctionType
   @ast class PolyFunction(tparams: List[Type.Param], tpe: Type) extends Type
-  @ast class ContextFunction(params: List[Type], res: Type) extends Type
+  @ast class ContextFunction(params: List[Type], res: Type) extends FunctionType
   @ast @deprecated("Implicit functions are not supported in any dialect")
   class ImplicitFunction(
       params: List[Type],
@@ -538,8 +547,9 @@ object Importee {
   }
 }
 
-@ast class Case(pat: Pat, cond: Option[Term], body: Term) extends Tree
-@ast class TypeCase(pat: Type, body: Type) extends Tree
+@branch trait CaseTree extends Tree
+@ast class Case(pat: Pat, cond: Option[Term], body: Term) extends CaseTree
+@ast class TypeCase(pat: Type, body: Type) extends CaseTree
 
 @ast class Source(stats: List[Stat]) extends Tree {
   // NOTE: This validation has been removed to allow dialects with top-level terms.
