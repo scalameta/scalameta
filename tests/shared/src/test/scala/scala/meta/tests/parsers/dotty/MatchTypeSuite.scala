@@ -31,6 +31,38 @@ class MatchTypeSuite extends BaseDottySuite {
       )
   }
 
+  test("simple-indentation") {
+    val intput =
+      runTestAssert[Stat](
+        """|type Elem[X] = 
+           |  X match
+           |    case String => 
+           |      Char
+           |    case Array[t] => t
+           |""".stripMargin,
+        assertLayout = Some(
+          """|type Elem[X] = X match {
+             |  case String => Char
+             |  case Array[t] => t
+             |}
+             |""".stripMargin
+        )
+      )(
+        Defn.Type(
+          Nil,
+          Type.Name("Elem"),
+          List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
+          Type.Match(
+            Type.Name("X"),
+            List(
+              TypeCase(Type.Name("String"), Type.Name("Char")),
+              TypeCase(Type.Apply(Type.Name("Array"), List(Type.Name("t"))), Type.Name("t"))
+            )
+          )
+        )
+      )
+  }
+
   test("tuple") {
     runTestAssert[Stat](
       """|type Head[X <: Tuple] = X match {
