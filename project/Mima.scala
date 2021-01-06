@@ -40,6 +40,42 @@ object Mima {
       "scala.meta.tokens.Token$KwExtension$sharedClassifier$"
     ),
     ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Term#Match.mods"),
-    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Term#Match.setMods")
+    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Term#Match.setMods"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Defn#Given.apply"),
+    ProblemFilters.exclude[IncompatibleSignatureProblem]("scala.meta.Defn#Given.unapply"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Defn#Given.decltpe"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Defn#Given.copy"),
+    ProblemFilters.exclude[IncompatibleResultTypeProblem]("scala.meta.Defn#Given.copy$default$5"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Defn#Given.copy$default$6"),
+    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.Defn#Given.copy"),
+    ProblemFilters.exclude[DirectMissingMethodProblem](
+      "scala.meta.Defn#Given#Quasi#DefnGivenQuasiImpl.decltpe"
+    ),
+    ProblemFilters.exclude[DirectMissingMethodProblem](
+      "scala.meta.Defn#Given#Quasi#DefnGivenQuasiImpl.copy"
+    ),
+    ProblemFilters.exclude[IncompatibleResultTypeProblem](
+      "scala.meta.Defn#Given#Quasi#DefnGivenQuasiImpl.copy$default$5"
+    ),
+    ProblemFilters.exclude[DirectMissingMethodProblem](
+      "scala.meta.Defn#Given#Quasi#DefnGivenQuasiImpl.copy$default$6"
+    ),
+    ProblemFilters.exclude[DirectMissingMethodProblem](
+      "scala.meta.Defn#Given#DefnGivenImpl._decltpe"
+    ),
+    ProblemFilters.exclude[DirectMissingMethodProblem](
+      "scala.meta.Defn#Given#DefnGivenImpl._decltpe_="
+    ),
+    ProblemFilters.exclude[DirectMissingMethodProblem](
+      "scala.meta.Defn#Given#DefnGivenImpl.decltpe"
+    ),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Defn#Given#DefnGivenImpl.copy"),
+    ProblemFilters.exclude[IncompatibleResultTypeProblem](
+      "scala.meta.Defn#Given#DefnGivenImpl.copy$default$5"
+    ),
+    ProblemFilters.exclude[DirectMissingMethodProblem](
+      "scala.meta.Defn#Given#DefnGivenImpl.copy$default$6"
+    ),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Defn#Given#DefnGivenImpl.this")
   )
 }

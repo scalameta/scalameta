@@ -702,6 +702,77 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("given-block-indent") {
+    runTestAssert[Stat](
+      """|given intOrd: Ord[Int] with
+         |   def fa: Int = 1
+         |   def fb: Int = 2
+         |""".stripMargin,
+      assertLayout = Some(
+        """|given intOrd: Ord[Int] with {
+           |  def fa: Int = 1
+           |  def fb: Int = 2
+           |}""".stripMargin
+      )
+    )(
+      Defn.Given(
+        Nil,
+        Type.Name("intOrd"),
+        Nil,
+        Nil,
+        Template(
+          Nil,
+          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          Self(Name(""), None),
+          List(
+            Defn.Def(Nil, Term.Name("fa"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(1)),
+            Defn.Def(Nil, Term.Name("fb"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("given-block-indent-edge-cases") {
+    runTestError[Stat](
+      """|given intOrd: Ord[Int] with
+         |def fa: Int = 1
+         |def fb: Int = 2
+         |""".stripMargin,
+      "expected '{' or indentation"
+    )
+
+    runTestError[Stat](
+      """|given intOrd: Ord[Int]:
+         |  def fa: Int = 1
+         |  def fb: Int = 2
+         |""".stripMargin,
+      "; expected but : found"
+    )
+
+    runTestAssert[Stat](
+      """|class A extends A with 
+         |  B
+         |""".stripMargin,
+      assertLayout = Some("class A extends A with B")
+    )(
+      Defn.Class(
+        Nil,
+        Type.Name("A"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          List(Init(Type.Name("A"), Name(""), Nil), Init(Type.Name("B"), Name(""), Nil)),
+          Self(Name(""), None),
+          Nil,
+          Nil
+        )
+      )
+    )
+  }
+
   test("nested-coloneol") {
     runTestAssert[Stat](
       """|case class Test(

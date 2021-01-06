@@ -1047,7 +1047,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       token.is[KwYield] || token.is[KwTry] || token.is[KwCatch] || token.is[KwFinally] ||
       token.is[KwMatch] || token.is[KwDo] || token.is[KwFor] || token.is[KwThen] ||
       token.is[KwElse] || token.is[Equals] || token.is[KwWhile] || isColonEol(token) ||
-      token.is[RightArrow]
+      token.is[RightArrow] || (token.is[KwWith] && token.next.isNot[Ident])
     }
   }
 
@@ -3908,9 +3908,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     givenDef(mods)
   }
 
-  // GivenDef          ::=  [GivenSig] [‘_’ ‘<:’] Type ‘=’ Expr
-  //                     |  [GivenSig] ConstrApps [TemplateBody]
-  // GivenSig          ::=  [id] [DefTypeParamClause] {UsingParamClause} ‘as’
+  /**
+   * GivenDef          ::=  [GivenSig] (Type [‘=’ Expr] | StructuralInstance)
+   * GivenSig          ::=  [id] [DefTypeParamClause] {UsingParamClause} ‘:’
+   * StructuralInstance ::=  ConstrApp {‘with’ ConstrApp} ‘with’ TemplateBody
+   */
   private def givenDef(mods: List[Mod]): Stat = autoPos {
     val anonymousName = autoPos(scala.meta.Name.Anonymous())
 
@@ -3933,15 +3935,40 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     val decltpe = startModType()
 
+    def parents() = {
+      val parents = ListBuffer[Init](
+        atPos(decltpe.startTokenPos, decltpe.endTokenPos)(
+          Init(decltpe, autoPos(Name.Anonymous()), Nil)
+        )
+      )
+      while (token.is[KwWith] && token.next.is[Ident]) { next(); parents += init() }
+      parents.toList
+    }
+
     if (token.is[Equals]) {
       accept[Equals]
       Defn.GivenAlias(mods, sigName, sigTparams, sigUparamss, decltpe, exprMaybeIndented())
     } else {
-      val rhs = autoPos {
-        val (slf, stats) = templateBodyOpt(true)
-        Template(List.empty, List.empty, slf, stats)
+      val inits = parents()
+      val (slf, stats) = if (token.is[KwWith]) {
+        accept[KwWith]
+        newLineOptWhenFollowedBy[LeftBrace]
+        if (token.is[LeftBrace]) {
+          inBraces(templateStatSeq())
+        } else if (token.is[Indentation.Indent]) {
+          indented(templateStatSeq())
+        } else {
+          syntaxError("expected '{' or indentation", at = token.pos)
+        }
+      } else {
+        (autoPos(Self(autoPos(Name.Anonymous()), None)), Nil)
       }
-      Defn.Given(mods, sigName, sigTparams, sigUparamss, decltpe, rhs)
+      val rhs = if (slf.decltpe.nonEmpty) {
+        syntaxError("given cannot have a self type", at = slf.pos)
+      } else {
+        atPos(decltpe.startTokenPos, auto)(Template(List.empty, inits, slf, stats))
+      }
+      Defn.Given(mods, sigName, sigTparams, sigUparamss, rhs)
     }
   }
 
@@ -4425,19 +4452,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   object OwnedByEnum extends TemplateOwner
   object OwnedByObject extends TemplateOwner
 
+  def init() = {
+    token match {
+      case Ellipsis(_) => ellipsis(1, astInfo[Init])
+      case _ => initInsideTemplate()
+    }
+  }
+
   def templateParents(
       afterExtend: Boolean = false
   ): List[Init] = {
     def isCommaSeparated(token: Token): Boolean =
       afterExtend && token.is[Comma] && dialect.allowCommaSeparatedExtend
-
     val parents = ListBuffer[Init]()
-    def readInit() = token match {
-      case Ellipsis(_) => parents += ellipsis(1, astInfo[Init])
-      case _ => parents += initInsideTemplate()
-    }
-    readInit()
-    while (token.is[KwWith] || isCommaSeparated(token)) { next(); readInit() }
+    parents += init()
+    while (token.is[KwWith] || isCommaSeparated(token)) { next(); parents += init() }
     parents.toList
   }
 

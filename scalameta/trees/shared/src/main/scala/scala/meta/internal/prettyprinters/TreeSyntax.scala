@@ -942,8 +942,7 @@ object TreeSyntax {
           kw("given"),
           " ",
           givenName(t.name, t.tparams, t.sparams),
-          t.decltpe,
-          templ(t.templ)
+          s(t.templ)
         )
 
       case t: Defn.Enum =>
@@ -1073,6 +1072,7 @@ object TreeSyntax {
           val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
           val pparents = w(r(t.inits, " with "), " ", !t.inits.isEmpty && !isBodyEmpty)
           val derived = w("derives ", r(t.derives, ", "), " ", t.derives.nonEmpty)
+          val withGiven = if (t.parent.exists(_.is[Defn.Given]) && !isBodyEmpty) "with " else ""
           val pbody = {
             val isOneLiner =
               t.stats.length == 0 ||
@@ -1086,7 +1086,7 @@ object TreeSyntax {
               case (true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
             }
           }
-          s(pearly, pparents, derived, pbody)
+          s(pearly, pparents, derived, withGiven, pbody)
         }
 
       // Mod

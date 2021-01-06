@@ -331,7 +331,6 @@ object Defn {
       name: scala.meta.Name,
       tparams: List[scala.meta.Type.Param],
       sparams: List[List[Term.Param]],
-      decltpe: scala.meta.Type,
       templ: Template
   ) extends Defn
   @ast class Enum(
