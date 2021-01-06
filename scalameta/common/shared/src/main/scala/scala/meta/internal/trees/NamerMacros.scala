@@ -2,7 +2,7 @@ package scala.meta
 package internal
 package trees
 
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable
 import org.scalameta.internal.MacroHelpers
 
 object CommonNamerMacros {
@@ -47,7 +47,7 @@ trait CommonNamerMacros extends MacroHelpers {
       name: TypeName,
       parents: List[Tree],
       paramss: List[List[ValDef]],
-      extraAbtractDefs: List[Tree],
+      extraAbstractDefs: List[Tree],
       extraStubs: String*
   ): ClassDef = {
     val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new $AstAnnotation"))
@@ -58,31 +58,47 @@ trait CommonNamerMacros extends MacroHelpers {
       case unsupported => c.abort(unsupported.pos, "implementation restriction: unsupported parent")
     })
 
-    val qstats = ListBuffer[Tree]()
+    val qstats = mutable.ListBuffer[Tree]()
     qstats += q"""
       def pt: _root_.java.lang.Class[_] = {
         $ArrayClassMethod($ClassOfMethod[$name], this.rank)
       }
     """
 
-    def stub() = {
+    val stub = {
       val unsupportedUnquotingPosition = "unsupported unquoting position"
       val unsupportedSplicingPosition = "unsupported splicing position"
       val message =
         q"if (this.rank == 0) $unsupportedUnquotingPosition else $unsupportedSplicingPosition"
       q"throw new $UnsupportedOperationException($message)"
     }
-    val qstubs = (paramss.flatten.map(_.name.toString) ++ extraStubs).distinct.map(TermName.apply)
-    qstubs.foreach(name => qstats += q"def $name: $NothingClass = ${stub()}")
+    val stubbedMembers = new mutable.HashSet[String]
+    def markStubbedMemberName(name: TermName): Boolean = stubbedMembers.add(name.toString)
+    def addStubbedMemberWithName(name: TermName): Unit =
+      if (markStubbedMemberName(name)) qstats += q"def $name = $stub"
+    def addStubbedOverrideMember(tree: ValOrDefDefApi): Unit =
+      if (markStubbedMemberName(tree.name)) {
+        val stat = tree match {
+          case x: ValDefApi =>
+            q"override def ${x.name} = $stub"
+          case x: DefDefApi =>
+            q"override def ${x.name}[..${x.tparams}](...${x.vparamss}) = $stub"
+          case _ => c.abort(tree.pos, s"Can't stub, not a 'val' or 'def': $tree")
+        }
+        qstats += stat
+      }
+
+    paramss.foreach(_.foreach(x => addStubbedMemberWithName(x.name)))
+    extraStubs.foreach(x => addStubbedMemberWithName(TermName(x)))
     val qcopyParamss = paramss.map(_.map { case ValDef(mods, name, tpt, _) =>
       q"val $name: $tpt = this.$name"
     })
-    qstats += q"def copy(...$qcopyParamss): $name = ${stub()}"
+    qstats += q"def copy(...$qcopyParamss): $name = $stub"
 
-    val extraAbstractStubs = extraAbtractDefs.collect { case vr: DefDef =>
-      q"def ${vr.name} (...${vr.vparamss}) =  ${stub()} "
+    extraAbstractDefs.foreach {
+      case x: DefDefApi => addStubbedOverrideMember(x)
+      case _ =>
     }
-    qstats ++= extraAbstractStubs
 
     q"$qmods class $qname(rank: $IntClass, tree: $TreeClass) extends ..$qparents { ..$qstats }"
   }
