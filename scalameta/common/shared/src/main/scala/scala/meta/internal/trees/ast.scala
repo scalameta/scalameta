@@ -6,9 +6,6 @@ import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
-import scala.meta.internal.trees.{Reflection => AstReflection}
-import scala.meta.internal.trees.{Metadata => AstMetadata}
-import scala.util.Success
 import org.scalameta.internal.MacroCompat
 
 // @ast is a specialized version of @org.scalameta.adt.leaf for scala.meta ASTs.
@@ -16,7 +13,7 @@ class ast extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro AstNamerMacros.impl
 }
 
-class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacros {
+class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   lazy val u: c.universe.type = c.universe
   lazy val mirror = c.mirror
   import c.universe._
@@ -460,7 +457,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
             iname,
             iparents,
             fieldParamss,
-            binaryCompatAbstractFields,
+            binaryCompatAbstractFields ++ otherDefns,
             "name",
             "value",
             "tpe"

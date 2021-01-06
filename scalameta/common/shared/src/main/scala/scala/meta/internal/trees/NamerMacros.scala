@@ -96,7 +96,8 @@ trait CommonNamerMacros extends MacroHelpers {
     qstats += q"def copy(...$qcopyParamss): $name = $stub"
 
     extraAbstractDefs.foreach {
-      case x: DefDefApi => addStubbedOverrideMember(x)
+      case x: ValOrDefDefApi if x.mods.hasFlag(Flag.ABSTRACT) || x.rhs.isEmpty =>
+        addStubbedOverrideMember(x)
       case _ =>
     }
 
