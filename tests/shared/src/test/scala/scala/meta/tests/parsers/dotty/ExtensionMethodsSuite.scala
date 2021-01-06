@@ -141,6 +141,29 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
   }
 
+  test("extension-using-newline") {
+    val code = """|extension (c: Circle)
+                  |  (using Context, x: Int) 
+                  |{
+                  |  def crc: Int = 2
+                  |}
+                  |""".stripMargin
+    val output = "extension (c: Circle)(using Context, x: Int) def crc: Int = 2"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.ExtensionGroup(
+        Term.Param(Nil, Term.Name("c"), Some(pname("Circle")), None),
+        Nil,
+        List(
+          List(
+            Term.Param(List(Mod.Using()), Name.Anonymous(), Some(pname("Context")), None),
+            Term.Param(List(Mod.Using()), Term.Name("x"), Some(pname("Int")), None)
+          )
+        ),
+        Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
+      )
+    )
+  }
+
   test("extension-using-multi") {
     val code = """|extension (c: Circle)(using Context, x: Int)(using y: String, File) {
                   |  def crc: Int = 2
