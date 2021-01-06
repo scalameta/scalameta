@@ -5,6 +5,12 @@ package trees
 import scala.collection.mutable.ListBuffer
 import org.scalameta.internal.MacroHelpers
 
+object CommonNamerMacros {
+
+  private val quasiName = "Quasi"
+
+}
+
 trait CommonNamerMacros extends MacroHelpers {
   import c.universe._
 
@@ -34,6 +40,9 @@ trait CommonNamerMacros extends MacroHelpers {
     classifierBoilerplate
   }
 
+  private val quasiTypeName = TypeName(CommonNamerMacros.quasiName)
+  def isQuasiClass(cdef: ClassDef) = cdef.name.toString == CommonNamerMacros.quasiName
+
   def mkQuasi(
       name: TypeName,
       parents: List[Tree],
@@ -42,10 +51,10 @@ trait CommonNamerMacros extends MacroHelpers {
       extraStubs: String*
   ): ClassDef = {
     val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new $AstAnnotation"))
-    val qname = TypeName("Quasi")
+    val qname = quasiTypeName
     val qparents = tq"$name" +: tq"$QuasiClass" +: parents.map({
-      case Ident(name) => Select(Ident(name.toTermName), TypeName("Quasi"))
-      case Select(qual, name) => Select(Select(qual, name.toTermName), TypeName("Quasi"))
+      case Ident(name) => Select(Ident(name.toTermName), quasiTypeName)
+      case Select(qual, name) => Select(Select(qual, name.toTermName), quasiTypeName)
       case unsupported => c.abort(unsupported.pos, "implementation restriction: unsupported parent")
     })
 

@@ -22,7 +22,7 @@ class BranchNamerMacros(val c: Context) extends AstReflection with CommonNamerMa
   def impl(annottees: Tree*): Tree =
     annottees.transformAnnottees(new ImplTransformer {
       override def transformTrait(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
-        def isQuasi = cdef.name.toString == "Quasi"
+        def isQuasi = isQuasiClass(cdef)
         val q"${mods @ Modifiers(flags, privateWithin, anns)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents { $self => ..$stats }" =
           cdef
         val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" =

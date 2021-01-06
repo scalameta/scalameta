@@ -25,10 +25,8 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
   def impl(annottees: Tree*): Tree =
     annottees.transformAnnottees(new ImplTransformer {
       override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
-        def fullName = c.internal.enclosingOwner.fullName.toString + "." + cdef.name.toString
-        def abbrevName = fullName.stripPrefix("scala.meta.")
-        def is(abbrev: String) = abbrevName == abbrev
-        def isQuasi = cdef.name.toString == "Quasi"
+        val fullName = c.internal.enclosingOwner.fullName + "." + cdef.name.toString
+        def isQuasi = isQuasiClass(cdef)
         val q"$imods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $aself => ..$stats }" =
           cdef
         // NOTE: For stack traces, we'd like to have short class names, because stack traces print full names anyway.
@@ -41,10 +39,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         //  class NameAnonymousImpl needs to be abstract, since method withDenot in trait Name
         //  of type (denot: scala.meta.internal.semantic.Denotation)NameAnonymousImpl.this.ThisType is not defined
         val descriptivePrefix = fullName.stripPrefix("scala.meta.").replace(".", "")
-        val name = TypeName(descriptivePrefix.replace(".", "") + "Impl")
-        // val name = TypeName("Impl")
-        val qname = TypeName("Quasi")
-        val qmname = TermName("Quasi")
+        val name = TypeName(descriptivePrefix + "Impl")
         val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" =
           mdef
         val bparams1 = ListBuffer[ValDef]() // boilerplate params
