@@ -3965,6 +3965,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false)
     )
 
+    newLineOptWhenFollowedBy[LeftParen]
     var uparams = ListBuffer[List[Term.Param]]()
     while (token.is[LeftParen]) {
       uparams += inParens {
@@ -3979,8 +3980,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           )
         )
       }
+      newLineOptWhenFollowedBy[LeftParen]
     }
 
+    newLineOptWhenFollowedBy[LeftBrace]
     val methodsAll: List[Stat] = if (isColonEol(token)) {
       accept[Colon]
       indented(templateStats())
