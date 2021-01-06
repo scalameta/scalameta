@@ -73,11 +73,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
           c.abort(cdef.pos, "@leaf classes must define a non-empty parameter list")
 
         // step 2: validate the body of the class
-        val (rest1, rest2) = stats.partition(_.isDef)
-        val (copies, defns) = rest1.partition(_ match {
-          case ddef: DefDef => !isQuasi && ddef.name == TermName("copy"); case _ => false
-        })
-        val (imports, rest3) = rest2.partition(_ match { case _: Import => true; case _ => false })
 
         def setterName(vr: ValDef) =
           TermName(s"set${vr.name.toString().stripPrefix("_").capitalize}")
@@ -89,23 +84,42 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         }
 
         def isBinaryCompatField(vr: ValDef) = vr.mods.annotations.exists {
-          case q"new binaryCompatField($since)" => true
+          case q"new binaryCompatField($since)" =>
+            if (!vr.name.toString().startsWith("_"))
+              c.abort(vr.pos, "The binaryCompat AST field needs to start with _")
+            if (!vr.mods.hasFlag(PRIVATE))
+              c.abort(vr.pos, "The binaryCompat AST field needs to be private")
+            if (!vr.mods.hasFlag(MUTABLE))
+              c.abort(vr.pos, "The binaryCompat AST field needs to declared as var")
+            true
           case _ => false
         }
 
-        val (binaryCompatVars, otherDefns) = defns.partition(tree =>
-          tree match {
-            case vr: ValDef if isBinaryCompatField(vr) =>
-              if (!vr.name.toString().startsWith("_"))
-                c.abort(vr.pos, "The binaryCompat AST field needs to start with _")
-              if (!vr.mods.hasFlag(PRIVATE))
-                c.abort(vr.pos, "The binaryCompat AST field needs to be private")
-              if (!vr.mods.hasFlag(MUTABLE))
-                c.abort(vr.pos, "The binaryCompat AST field needs to declared as var")
-              true
-            case _ => false
-          }
-        )
+        val copiesBuilder = List.newBuilder[DefDef]
+        val importsBuilder = List.newBuilder[Import]
+        val binaryCompatVarsBuilder = List.newBuilder[ValDef]
+        val otherDefsBuilder = List.newBuilder[Tree]
+        val checkFieldsBuilder = List.newBuilder[Tree]
+        val checkParentsBuilder = List.newBuilder[Tree]
+
+        stats.foreach {
+          case x: Import => importsBuilder += x
+          case x: DefDef if !isQuasi && x.name == TermName("copy") => copiesBuilder += x
+          case x: ValDef if isBinaryCompatField(x) => binaryCompatVarsBuilder += x
+          case x if x.isDef => otherDefsBuilder += x
+          case q"checkFields($arg)" => checkFieldsBuilder += arg
+          case x @ q"checkParent($what)" => checkParentsBuilder += x
+          case x =>
+            val error =
+              "only checkFields(...), checkParent(...) and definitions are allowed in @ast classes"
+            c.abort(x.pos, error)
+        }
+        val copies = copiesBuilder.result()
+        val imports = importsBuilder.result()
+        val binaryCompatVars = binaryCompatVarsBuilder.result()
+        val otherDefns = otherDefsBuilder.result()
+        val fieldChecks = checkFieldsBuilder.result()
+        val parentChecks = checkParentsBuilder.result()
 
         stats1 ++= otherDefns
 
@@ -124,7 +138,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
             q"def ${getterName(vr)} = this.$name ",
             q"""def ${setterName(vr)}($name : ${vr.tpt}) = {
                    val node = this
-                   $CommonTyperMacrosModule.storeField(this.$name, $name, $nameString) 
+                   $CommonTyperMacrosModule.storeField(this.$name, $name, $nameString)
                 }""",
             vr
           )
@@ -132,22 +146,6 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
         stats1 ++= binaryCompatStats
 
         stats1 ++= imports
-
-        var (fieldChecks, rest4) = rest3.partition(_ match {
-          case q"checkFields($what)" => true; case _ => false
-        })
-        fieldChecks = fieldChecks.map { case q"checkFields($arg)" =>
-          q"_root_.org.scalameta.invariants.require($arg)"
-        }
-        val (parentChecks, illegal) = rest4.partition(_ match {
-          case q"checkParent($what)" => true; case _ => false
-        })
-        illegal.foreach(stmt =>
-          c.abort(
-            stmt.pos,
-            "only checkFields(...), checkParent(...) and definitions are allowed in @ast classes"
-          )
-        )
 
         // step 3: calculate the parameters of the class
         val paramss = rawparamss
@@ -342,7 +340,8 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
           q"$DataTyperMacrosModule.emptyCheck($local)"
         }
         internalBody ++= imports
-        internalBody ++= fieldChecks.map(fieldCheck => {
+        internalBody ++= fieldChecks.map { x =>
+          val fieldCheck = q"_root_.org.scalameta.invariants.require($x)"
           var hasErrors = false
           object errorChecker extends Traverser {
             private val nmeParent = TermName("parent")
@@ -361,7 +360,7 @@ class AstNamerMacros(val c: Context) extends AstReflection with CommonNamerMacro
           errorChecker.traverse(fieldCheck)
           if (hasErrors) q"()"
           else fieldCheck
-        })
+        }
         val internalInitCount = 3 // privatePrototype, privateParent, privateOrigin
         val internalInitss = 1.to(internalInitCount).map(_ => q"null")
         val paramInitss = internalLocalss.map(_.map { case (local, internal) =>
