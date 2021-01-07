@@ -213,6 +213,7 @@ class SurfaceSuite extends FunSuite {
       obtained,
       """
       |scala.meta.Case
+      |scala.meta.CaseTree
       |scala.meta.Ctor
       |scala.meta.Ctor.Primary
       |scala.meta.Ctor.Secondary
@@ -332,6 +333,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Term.For
       |scala.meta.Term.ForYield
       |scala.meta.Term.Function
+      |scala.meta.Term.FunctionTerm
       |scala.meta.Term.If
       |scala.meta.Term.Interpolate
       |scala.meta.Term.Match
@@ -368,6 +370,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.ContextFunction
       |scala.meta.Type.Existential
       |scala.meta.Type.Function
+      |scala.meta.Type.FunctionType
       |scala.meta.Type.ImplicitFunction
       |scala.meta.Type.Lambda
       |scala.meta.Type.Macro
