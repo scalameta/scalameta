@@ -245,6 +245,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Export
       |scala.meta.ExportGiven
       |scala.meta.Import
+      |scala.meta.ImportExportStat
       |scala.meta.Importee
       |scala.meta.Importee.Given
       |scala.meta.Importee.GivenAll
