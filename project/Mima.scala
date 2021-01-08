@@ -76,6 +76,8 @@ object Mima {
     ProblemFilters.exclude[DirectMissingMethodProblem](
       "scala.meta.Defn#Given#DefnGivenImpl.copy$default$6"
     ),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Defn#Given#DefnGivenImpl.this")
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Defn#Given#DefnGivenImpl.this"),
+    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.CaseTree.pat"),
+    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.meta.CaseTree.body")
   )
 }

@@ -521,9 +521,12 @@ object Enumerator {
   @ast class Guard(cond: Term) extends Enumerator
 }
 
-@ast class Import(importers: List[Importer] @nonEmpty) extends Stat
-@ast class Export(importers: List[Importer] @nonEmpty) extends Stat
-@ast class ExportGiven(importers: List[Importer] @nonEmpty) extends Stat
+@branch trait ImportExportStat extends Stat {
+  def importers: List[Importer]
+}
+@ast class Import(importers: List[Importer] @nonEmpty) extends ImportExportStat
+@ast class Export(importers: List[Importer] @nonEmpty) extends ImportExportStat
+@ast class ExportGiven(importers: List[Importer] @nonEmpty) extends ImportExportStat
 
 @ast class Importer(ref: Term.Ref, importees: List[Importee] @nonEmpty) extends Tree {
   checkFields(ref.isStableId)
@@ -546,7 +549,10 @@ object Importee {
   }
 }
 
-@branch trait CaseTree extends Tree
+@branch trait CaseTree extends Tree {
+  def pat: Tree
+  def body: Tree
+}
 @ast class Case(pat: Pat, cond: Option[Term], body: Term) extends CaseTree
 @ast class TypeCase(pat: Type, body: Type) extends CaseTree
 
