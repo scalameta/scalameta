@@ -68,10 +68,13 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
   checkPositions[Stat](
-    "inline given intOrd: Ord[Int] { def f(): Int = 1 }",
-    """|Type.Apply Ord[Int]
-       |Template { def f(): Int = 1 }
-       |Self inline given intOrd: Ord[Int] { @@def f(): Int = 1 }
+    "inline given intOrd: Ord[Int] with Eq[Int] with { def f(): Int = 1 }",
+    """|Template Ord[Int] with Eq[Int] with { def f(): Int = 1 }
+       |Init Ord[Int]
+       |Type.Apply Ord[Int]
+       |Init Eq[Int]
+       |Type.Apply Eq[Int]
+       |Self inline given intOrd: Ord[Int] with Eq[Int] with { @@def f(): Int = 1 }
        |Defn.Def def f(): Int = 1
        |""".stripMargin
   )

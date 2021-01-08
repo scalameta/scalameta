@@ -20,95 +20,159 @@ class GivenUsingSuite extends BaseDottySuite {
   // GIVEN
   // ---------------------------------
 
-  val defone = Defn.Def(Nil, tname("f"), Nil, List(Nil), Some(pname("Int")), int(1))
+  def defone(mods: List[Mod]): Defn.Def =
+    Defn.Def(mods, tname("f"), Nil, List(Nil), Some(pname("Int")), int(1))
+  val defone: Defn.Def = defone(Nil)
 
   test("given-named") {
-    runTestAssert[Stat]("given intOrd: Ord[Int] { def f(): Int = 1 }")(
+    runTestAssert[Stat]("given intOrd: Ord[Int] with { def f(): Int = 1 }")(
       Defn.Given(
         Nil,
-        pname("intOrd"),
+        Type.Name("intOrd"),
         Nil,
         Nil,
-        Type.Apply(pname("Ord"), List(pname("Int"))),
-        tpl(List(defone))
+        Template(
+          Nil,
+          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          Self(Name(""), None),
+          List(defone),
+          Nil
+        )
       )
     )
   }
 
   test("given-named-newline") {
-    runTestAssert[Stat]("given intOrd: Ord[Int] \n { def f(): Int = 1 }", assertLayout = None)(
+    runTestAssert[Stat]("given intOrd: Ord[Int] with \n{ def f(): Int = 1 }", assertLayout = None)(
       Defn.Given(
         Nil,
-        pname("intOrd"),
+        Type.Name("intOrd"),
         Nil,
         Nil,
-        Type.Apply(pname("Ord"), List(pname("Int"))),
-        tpl(List(defone))
+        Template(
+          Nil,
+          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          Self(Name(""), None),
+          List(defone),
+          Nil
+        )
       )
     )
   }
 
   test("given-anonymous") {
-    runTestAssert[Stat]("given Ord[Int] { def f(): Int = 1 }")(
-      Defn
-        .Given(Nil, anon, Nil, Nil, Type.Apply(pname("Ord"), List(pname("Int"))), tpl(List(defone)))
+    runTestAssert[Stat]("given Ord[Int] with { def f(): Int = 1 }")(
+      Defn.Given(
+        Nil,
+        Name(""),
+        Nil,
+        Nil,
+        Template(
+          Nil,
+          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          Self(Name(""), None),
+          List(defone),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("given-multiple-inheritance") {
+    val expectedGiven = Defn.Given(
+      Nil,
+      Type.Name("intM"),
+      Nil,
+      Nil,
+      Template(
+        Nil,
+        List(
+          Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil),
+          Init(Type.Apply(Type.Name("Eq"), List(Type.Name("Int"))), Name(""), Nil)
+        ),
+        Self(Name(""), None),
+        List(Defn.Def(Nil, Term.Name("fx"), Nil, Nil, None, Lit.Int(3))),
+        Nil
+      )
+    )
+
+    runTestAssert[Stat]("given intM: Ord[Int] with Eq[Int] with { def fx = 3 }")(expectedGiven)
+
+    runTestAssert[Stat](
+      "given intM: Ord[Int] with\n Eq[Int] with { def fx = 3 }",
+      assertLayout = Some("given intM: Ord[Int] with Eq[Int] with { def fx = 3 }")
+    )(
+      expectedGiven
     )
   }
 
   test("given-override-def") {
-    runTestAssert[Stat]("given intOrd: Ord[Int] { override def f(): Int = 1 }")(
-      Defn.Given(
-        Nil,
-        pname("intOrd"),
-        Nil,
-        Nil,
-        Type.Apply(pname("Ord"), List(pname("Int"))),
-        tpl(List(defone.copy(mods = List(Mod.Override()))))
-      )
-    )
-  }
-  test("given-override-def") {
     runTestAssert[Stat](
-      """|given intOrd
-         |   : Ord[Int] {
-         |  def fn = ()
-         |}
-         |""".stripMargin,
-      assertLayout = Some("given intOrd: Ord[Int] { def fn = () }")
+      "given intOrd: Ord[Int] \n with { override def f(): Int = 1 }",
+      assertLayout = Some("given intOrd: Ord[Int] with { override def f(): Int = 1 }")
     )(
       Defn.Given(
         Nil,
         Type.Name("intOrd"),
         Nil,
         Nil,
-        Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))),
         Template(
           Nil,
-          Nil,
+          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
           Self(Name(""), None),
-          List(Defn.Def(Nil, Term.Name("fn"), Nil, Nil, None, Lit.Unit()))
+          List(defone(List(Mod.Override()))),
+          Nil
+        )
+      )
+    )
+  }
+  test("given-override-def-colon-newline") {
+    runTestAssert[Stat](
+      """|given intOrd
+         |   : Ord[Int] with {
+         |  def fn = ()
+         |}
+         |""".stripMargin,
+      assertLayout = Some("given intOrd: Ord[Int] with { def fn = () }")
+    )(
+      Defn.Given(
+        Nil,
+        Type.Name("intOrd"),
+        Nil,
+        Nil,
+        Template(
+          Nil,
+          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          Self(Name(""), None),
+          List(Defn.Def(Nil, Term.Name("fn"), Nil, Nil, None, Lit.Unit())),
+          Nil
         )
       )
     )
   }
 
   test("given-self") {
-    runTestAssert[Stat]("given intOrd: Ord[Int] { current => }")(
+    runTestAssert[Stat]("given intOrd: Ord[Int] with { current => }")(
       Defn.Given(
         Nil,
-        pname("intOrd"),
+        Type.Name("intOrd"),
         Nil,
         Nil,
-        Type.Apply(pname("Ord"), List(pname("Int"))),
-        Template(Nil, Nil, Self(Term.Name("current"), None), Nil)
+        Template(
+          Nil,
+          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          Self(Term.Name("current"), None),
+          Nil,
+          Nil
+        )
       )
     )
   }
 
-  test("given-selftype-error".ignore) {
+  test("given-selftype-error") {
     runTestError(
-      "given intOrd: Ord[Int] { current: Ord[Int] => }",
-      "objects must not have a self type"
+      "given intOrd: Ord[Int] with { current: Ord[Int] => }",
+      "given cannot have a self type"
     )
   }
 
@@ -116,43 +180,84 @@ class GivenUsingSuite extends BaseDottySuite {
     runTestAssert[Stat]("given intOrd: Ord[Int]")(
       Defn.Given(
         Nil,
-        pname("intOrd"),
+        Type.Name("intOrd"),
         Nil,
         Nil,
-        Type.Apply(pname("Ord"), List(pname("Int"))),
-        tpl(Nil)
+        Template(
+          Nil,
+          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          Self(Name(""), None),
+          Nil,
+          Nil
+        )
       )
     )
   }
 
   test("given-anonymous-no-block") {
     runTestAssert[Stat]("given Ord[Int]")(
-      Defn.Given(Nil, anon, Nil, Nil, Type.Apply(pname("Ord"), List(pname("Int"))), tpl(Nil))
+      Defn.Given(
+        Nil,
+        Name(""),
+        Nil,
+        Nil,
+        Template(
+          Nil,
+          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          Self(Name(""), None),
+          Nil,
+          Nil
+        )
+      )
     )
   }
 
   test("given-generic-named") {
-    runTestAssert[Stat]("given listOrd[T]: Ord[List[T]] { def f(): Int = 1 }")(
+    runTestAssert[Stat]("given listOrd[T]: Ord[List[T]] with { def f(): Int = 1 }")(
       Defn.Given(
         Nil,
-        pname("listOrd"),
-        List(pparam("T")),
+        Type.Name("listOrd"),
+        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
         Nil,
-        Type.Apply(pname("Ord"), List(Type.Apply(pname("List"), List(pname("T"))))),
-        tpl(List(defone))
+        Template(
+          Nil,
+          List(
+            Init(
+              Type
+                .Apply(Type.Name("Ord"), List(Type.Apply(Type.Name("List"), List(Type.Name("T"))))),
+              Name(""),
+              Nil
+            )
+          ),
+          Self(Name(""), None),
+          List(defone),
+          Nil
+        )
       )
     )
   }
 
   test("given-generic-anonymous") {
-    runTestAssert[Stat]("given Ord[List[T]] { def f(): Int = 1 }")(
+    runTestAssert[Stat]("given Ord[List[T]] with { def f(): Int = 1 }")(
       Defn.Given(
         Nil,
-        anon,
+        Name(""),
         Nil,
         Nil,
-        Type.Apply(pname("Ord"), List(Type.Apply(pname("List"), List(pname("T"))))),
-        tpl(List(defone))
+        Template(
+          Nil,
+          List(
+            Init(
+              Type
+                .Apply(Type.Name("Ord"), List(Type.Apply(Type.Name("List"), List(Type.Name("T"))))),
+              Name(""),
+              Nil
+            )
+          ),
+          Self(Name(""), None),
+          List(defone),
+          Nil
+        )
       )
     )
   }
@@ -161,20 +266,32 @@ class GivenUsingSuite extends BaseDottySuite {
     runTestAssert[Stat]("given setOrd[T](using ord: Ord[T]): Ord[Set[T]]")(
       Defn.Given(
         Nil,
-        pname("setOrd"),
-        List(pparam("T")),
+        Type.Name("setOrd"),
+        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
         List(
           List(
             Term.Param(
               List(Mod.Using()),
-              tname("ord"),
-              Some(Type.Apply(pname("Ord"), List(pname("T")))),
+              Term.Name("ord"),
+              Some(Type.Apply(Type.Name("Ord"), List(Type.Name("T")))),
               None
             )
           )
         ),
-        Type.Apply(pname("Ord"), List(Type.Apply(pname("Set"), List(pname("T"))))),
-        tpl(Nil)
+        Template(
+          Nil,
+          List(
+            Init(
+              Type
+                .Apply(Type.Name("Ord"), List(Type.Apply(Type.Name("Set"), List(Type.Name("T"))))),
+              Name(""),
+              Nil
+            )
+          ),
+          Self(Name(""), None),
+          Nil,
+          Nil
+        )
       )
     )
   }
@@ -183,20 +300,32 @@ class GivenUsingSuite extends BaseDottySuite {
     runTestAssert[Stat]("given [T](using ord: Ord[T]): Ord[Set[T]]")(
       Defn.Given(
         Nil,
-        anon,
-        List(pparam("T")),
+        Name(""),
+        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
         List(
           List(
             Term.Param(
               List(Mod.Using()),
-              tname("ord"),
-              Some(Type.Apply(pname("Ord"), List(pname("T")))),
+              Term.Name("ord"),
+              Some(Type.Apply(Type.Name("Ord"), List(Type.Name("T")))),
               None
             )
           )
         ),
-        Type.Apply(pname("Ord"), List(Type.Apply(pname("Set"), List(pname("T"))))),
-        tpl(Nil)
+        Template(
+          Nil,
+          List(
+            Init(
+              Type
+                .Apply(Type.Name("Ord"), List(Type.Apply(Type.Name("Set"), List(Type.Name("T"))))),
+              Name(""),
+              Nil
+            )
+          ),
+          Self(Name(""), None),
+          Nil,
+          Nil
+        )
       )
     )
   }
@@ -205,40 +334,47 @@ class GivenUsingSuite extends BaseDottySuite {
     runTestAssert[Stat]("given (using Ord[String]): Ord[Int]")(
       Defn.Given(
         Nil,
-        anon,
+        Name(""),
         Nil,
         List(
           List(
             Term.Param(
               List(Mod.Using()),
-              anon,
-              Some(Type.Apply(pname("Ord"), List(pname("String")))),
+              Name(""),
+              Some(Type.Apply(Type.Name("Ord"), List(Type.Name("String")))),
               None
             )
           )
         ),
-        Type.Apply(pname("Ord"), List(pname("Int"))),
-        tpl(Nil)
+        Template(
+          Nil,
+          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          Self(Name(""), None),
+          Nil,
+          Nil
+        )
       )
     )
   }
 
   test("given-inline") {
-    runTestAssert[Stat]("inline given intOrd: Ord[Int] { def f(): Int = 1 }")(
+    runTestAssert[Stat]("inline given intOrd: Ord[Int] with { def f(): Int = 1 }")(
       Defn.Given(
         List(Mod.Inline()),
-        pname("intOrd"),
+        Type.Name("intOrd"),
         Nil,
         Nil,
-        Type.Apply(pname("Ord"), List(pname("Int"))),
-        tpl(List(defone))
+        Template(
+          Nil,
+          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          Self(Name(""), None),
+          List(
+            Defn.Def(Nil, Term.Name("f"), Nil, List(List()), Some(Type.Name("Int")), Lit.Int(1))
+          ),
+          Nil
+        )
       )
     )
-  }
-
-  test("given-subtype-error".ignore) {
-    // it is treaten as alias without '=' sign at the end and {...} is refinement part
-    runTestError("given intOrd: ? <: Ord[Int] { def f(): Int = 1 }", "missing = at the end")
   }
 
   // ---------------------------------
@@ -287,13 +423,6 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
-  test("given-alias-override-block-error".ignore) {
-    runTestError(
-      "given global: Option[Int] = { override def f(): Int = 1; Some(3) }",
-      "no modifier allowed here"
-    )
-  }
-
   test("given-alias-using-named") {
     runTestAssert[Stat]("given ordInt(using ord: Ord[Int]): Ord[List[Int]] = ???")(
       Defn.GivenAlias(
@@ -338,45 +467,15 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
-  test("given-alias-inline-subtype") {
-    runTestAssert[Stat]("inline given intOrd: ? <: Ord[Int] = ???")(
+  test("given-alias-inline") {
+    runTestAssert[Stat]("inline given intOrd: Ord[Int] = ???")(
       Defn.GivenAlias(
         List(Mod.Inline()),
-        pname("intOrd"),
+        Type.Name("intOrd"),
         Nil,
         Nil,
-        Type.Placeholder(Type.Bounds(None, Some(Type.Apply(pname("Ord"), List(pname("Int")))))),
-        tname("???")
-      )
-    )
-  }
-
-  test("given-alias-subtype-noinline-error".ignore) {
-    runTestError(
-      "given intOrd: ? <: Ord[Int] = ???",
-      "is only allowed for given with inline modifier"
-    )
-  }
-
-  test("given-alias-combo") {
-    runTestAssert[Stat]("inline given intOrd: ? <: Ord[Int] { val c: String } = ???")(
-      Defn.GivenAlias(
-        List(Mod.Inline()),
-        pname("intOrd"),
-        Nil,
-        Nil,
-        Type.Placeholder(
-          Type.Bounds(
-            None,
-            Some(
-              Type.Refine(
-                Some(Type.Apply(pname("Ord"), List(pname("Int")))),
-                List(Decl.Val(Nil, List(Pat.Var(tname("c"))), pname("String")))
-              )
-            )
-          )
-        ),
-        tname("???")
+        Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))),
+        Term.Name("???")
       )
     )
   }
@@ -482,31 +581,6 @@ class GivenUsingSuite extends BaseDottySuite {
         Some(pname("Unit")),
         tname("???")
       )
-    )
-  }
-
-  test("using-mix-named-anonymous-error".ignore) {
-    runTestError(
-      "def f(using a: Int, String): Unit = ???",
-      "unable to mix named and anonymous using"
-    )
-    runTestError(
-      "def f(using Int, b: String): Unit = ???",
-      "unable to mix named and anonymous using"
-    )
-  }
-
-  test("using-multiple-using-single-parent-error".ignore) {
-    runTestError(
-      "def f(using a: Int, using b: String): Unit = ???",
-      "using is applied for all parameters inside brackets"
-    )
-  }
-
-  test("using-added-middle-paren-error".ignore) {
-    runTestError(
-      "def f(a: Int, using b: String): Unit = ???",
-      "using is applied for all parameters inside brackets"
     )
   }
 
