@@ -872,6 +872,8 @@ object TreeSyntax {
       case t: Decl.Type => s(w(t.mods, " "), kw("type"), " ", t.name, t.tparams, t.bounds)
       case t: Decl.Def =>
         s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.decltpe)
+      case t: Decl.Given =>
+        s(w(t.mods, " "), kw("given"), " ", t.name, t.tparams, t.sparams, kw(":"), " ", t.decltpe)
       case t: Defn.Val =>
         s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
       case t: Defn.Var =>

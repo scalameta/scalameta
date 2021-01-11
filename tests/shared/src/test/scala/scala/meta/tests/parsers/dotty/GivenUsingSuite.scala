@@ -28,7 +28,7 @@ class GivenUsingSuite extends BaseDottySuite {
     runTestAssert[Stat]("given intOrd: Ord[Int] with { def f(): Int = 1 }")(
       Defn.Given(
         Nil,
-        Type.Name("intOrd"),
+        Term.Name("intOrd"),
         Nil,
         Nil,
         Template(
@@ -46,7 +46,7 @@ class GivenUsingSuite extends BaseDottySuite {
     runTestAssert[Stat]("given intOrd: Ord[Int] with \n{ def f(): Int = 1 }", assertLayout = None)(
       Defn.Given(
         Nil,
-        Type.Name("intOrd"),
+        Term.Name("intOrd"),
         Nil,
         Nil,
         Template(
@@ -81,7 +81,7 @@ class GivenUsingSuite extends BaseDottySuite {
   test("given-multiple-inheritance") {
     val expectedGiven = Defn.Given(
       Nil,
-      Type.Name("intM"),
+      Term.Name("intM"),
       Nil,
       Nil,
       Template(
@@ -113,7 +113,7 @@ class GivenUsingSuite extends BaseDottySuite {
     )(
       Defn.Given(
         Nil,
-        Type.Name("intOrd"),
+        Term.Name("intOrd"),
         Nil,
         Nil,
         Template(
@@ -137,7 +137,7 @@ class GivenUsingSuite extends BaseDottySuite {
     )(
       Defn.Given(
         Nil,
-        Type.Name("intOrd"),
+        Term.Name("intOrd"),
         Nil,
         Nil,
         Template(
@@ -155,7 +155,7 @@ class GivenUsingSuite extends BaseDottySuite {
     runTestAssert[Stat]("given intOrd: Ord[Int] with { current => }")(
       Defn.Given(
         Nil,
-        Type.Name("intOrd"),
+        Term.Name("intOrd"),
         Nil,
         Nil,
         Template(
@@ -176,47 +176,11 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
-  test("given-no-block") {
-    runTestAssert[Stat]("given intOrd: Ord[Int]")(
-      Defn.Given(
-        Nil,
-        Type.Name("intOrd"),
-        Nil,
-        Nil,
-        Template(
-          Nil,
-          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
-          Self(Name(""), None),
-          Nil,
-          Nil
-        )
-      )
-    )
-  }
-
-  test("given-anonymous-no-block") {
-    runTestAssert[Stat]("given Ord[Int]")(
-      Defn.Given(
-        Nil,
-        Name(""),
-        Nil,
-        Nil,
-        Template(
-          Nil,
-          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
-          Self(Name(""), None),
-          Nil,
-          Nil
-        )
-      )
-    )
-  }
-
   test("given-generic-named") {
     runTestAssert[Stat]("given listOrd[T]: Ord[List[T]] with { def f(): Int = 1 }")(
       Defn.Given(
         Nil,
-        Type.Name("listOrd"),
+        Term.Name("listOrd"),
         List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
         Nil,
         Template(
@@ -262,106 +226,11 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
-  test("given-depend-given-named") {
-    runTestAssert[Stat]("given setOrd[T](using ord: Ord[T]): Ord[Set[T]]")(
-      Defn.Given(
-        Nil,
-        Type.Name("setOrd"),
-        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
-        List(
-          List(
-            Term.Param(
-              List(Mod.Using()),
-              Term.Name("ord"),
-              Some(Type.Apply(Type.Name("Ord"), List(Type.Name("T")))),
-              None
-            )
-          )
-        ),
-        Template(
-          Nil,
-          List(
-            Init(
-              Type
-                .Apply(Type.Name("Ord"), List(Type.Apply(Type.Name("Set"), List(Type.Name("T"))))),
-              Name(""),
-              Nil
-            )
-          ),
-          Self(Name(""), None),
-          Nil,
-          Nil
-        )
-      )
-    )
-  }
-
-  test("given-depend-given-anonymous") {
-    runTestAssert[Stat]("given [T](using ord: Ord[T]): Ord[Set[T]]")(
-      Defn.Given(
-        Nil,
-        Name(""),
-        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
-        List(
-          List(
-            Term.Param(
-              List(Mod.Using()),
-              Term.Name("ord"),
-              Some(Type.Apply(Type.Name("Ord"), List(Type.Name("T")))),
-              None
-            )
-          )
-        ),
-        Template(
-          Nil,
-          List(
-            Init(
-              Type
-                .Apply(Type.Name("Ord"), List(Type.Apply(Type.Name("Set"), List(Type.Name("T"))))),
-              Name(""),
-              Nil
-            )
-          ),
-          Self(Name(""), None),
-          Nil,
-          Nil
-        )
-      )
-    )
-  }
-
-  test("given-depend-given-anonymous-using") {
-    runTestAssert[Stat]("given (using Ord[String]): Ord[Int]")(
-      Defn.Given(
-        Nil,
-        Name(""),
-        Nil,
-        List(
-          List(
-            Term.Param(
-              List(Mod.Using()),
-              Name(""),
-              Some(Type.Apply(Type.Name("Ord"), List(Type.Name("String")))),
-              None
-            )
-          )
-        ),
-        Template(
-          Nil,
-          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
-          Self(Name(""), None),
-          Nil,
-          Nil
-        )
-      )
-    )
-  }
-
   test("given-inline") {
     runTestAssert[Stat]("inline given intOrd: Ord[Int] with { def f(): Int = 1 }")(
       Defn.Given(
         List(Mod.Inline()),
-        Type.Name("intOrd"),
+        Term.Name("intOrd"),
         Nil,
         Nil,
         Template(
@@ -385,7 +254,7 @@ class GivenUsingSuite extends BaseDottySuite {
     runTestAssert[Stat]("given global: Option[Int] = Some(3)")(
       Defn.GivenAlias(
         Nil,
-        pname("global"),
+        tname("global"),
         Nil,
         Nil,
         Type.Apply(pname("Option"), List(pname("Int"))),
@@ -414,7 +283,7 @@ class GivenUsingSuite extends BaseDottySuite {
     )(
       Defn.GivenAlias(
         Nil,
-        pname("global"),
+        tname("global"),
         Nil,
         Nil,
         Type.Apply(pname("Option"), List(pname("Int"))),
@@ -427,7 +296,7 @@ class GivenUsingSuite extends BaseDottySuite {
     runTestAssert[Stat]("given ordInt(using ord: Ord[Int]): Ord[List[Int]] = ???")(
       Defn.GivenAlias(
         Nil,
-        pname("ordInt"),
+        tname("ordInt"),
         Nil,
         List(
           List(
@@ -471,12 +340,87 @@ class GivenUsingSuite extends BaseDottySuite {
     runTestAssert[Stat]("inline given intOrd: Ord[Int] = ???")(
       Defn.GivenAlias(
         List(Mod.Inline()),
-        Type.Name("intOrd"),
+        Term.Name("intOrd"),
         Nil,
         Nil,
         Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))),
         Term.Name("???")
       )
+    )
+  }
+
+  // ---------------------------------
+  // Abstract given
+  // ---------------------------------
+
+  test("abstract-given") {
+    runTestAssert[Stat]("given intOrd: Ord[Int]")(
+      Decl.Given(
+        Nil,
+        Term.Name("intOrd"),
+        Nil,
+        Nil,
+        Type.Apply(Type.Name("Ord"), List(Type.Name("Int")))
+      )
+    )
+  }
+
+  test("abstract-given-inline") {
+    runTestAssert[Stat]("inline given intOrd: Ord[Int]")(
+      Decl.Given(
+        List(Mod.Inline()),
+        Term.Name("intOrd"),
+        Nil,
+        Nil,
+        Type.Apply(Type.Name("Ord"), List(Type.Name("Int")))
+      )
+    )
+  }
+
+  test("abstract-given-depend") {
+    runTestAssert[Stat]("given setOrd[T](using ord: Ord[T]): Ord[Set[T]]")(
+      Decl.Given(
+        Nil,
+        Term.Name("setOrd"),
+        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+        List(
+          List(
+            Term.Param(
+              List(Mod.Using()),
+              Term.Name("ord"),
+              Some(Type.Apply(Type.Name("Ord"), List(Type.Name("T")))),
+              None
+            )
+          )
+        ),
+        Type.Apply(Type.Name("Ord"), List(Type.Apply(Type.Name("Set"), List(Type.Name("T")))))
+      )
+    )
+  }
+
+  test("abstract-given-anonymous") {
+    runTestError(
+      "given Ord[Int]",
+      "abstract givens cannot be annonymous"
+    )
+    runTestError(
+      "given [T](using ord: Ord[T]): Ord[Set[T]]",
+      "abstract givens cannot be annonymous"
+    )
+    runTestError(
+      "given (using Ord[String]): Ord[Int]",
+      "abstract givens cannot be annonymous"
+    )
+  }
+
+  test("abstract-given-with") {
+    runTestError(
+      "given (using Ord[String]): Ord[Int] with Eq[Int]",
+      "expected 'with' <body>"
+    )
+    runTestError(
+      "given ordered(using Ord[String]): Ord[Int] with Eq[Int]",
+      "expected 'with' <body>"
     )
   }
 

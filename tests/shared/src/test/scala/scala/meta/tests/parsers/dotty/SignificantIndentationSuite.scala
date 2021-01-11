@@ -717,7 +717,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )(
       Defn.Given(
         Nil,
-        Type.Name("intOrd"),
+        Term.Name("intOrd"),
         Nil,
         Nil,
         Template(
