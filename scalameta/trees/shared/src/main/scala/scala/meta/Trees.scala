@@ -313,6 +313,13 @@ object Decl {
       tparams: List[scala.meta.Type.Param],
       bounds: scala.meta.Type.Bounds
   ) extends Decl with Member.Type
+  @ast class Given(
+      mods: List[Mod],
+      name: Term.Name,
+      tparams: List[scala.meta.Type.Param],
+      sparams: List[List[Term.Param]],
+      decltpe: scala.meta.Type
+  ) extends Decl with Member.Term
 }
 
 @branch trait Defn extends Stat

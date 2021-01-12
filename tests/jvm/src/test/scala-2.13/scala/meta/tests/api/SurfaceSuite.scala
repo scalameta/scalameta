@@ -219,6 +219,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Ctor.Secondary
       |scala.meta.Decl
       |scala.meta.Decl.Def
+      |scala.meta.Decl.Given
       |scala.meta.Decl.Type
       |scala.meta.Decl.Val
       |scala.meta.Decl.Var

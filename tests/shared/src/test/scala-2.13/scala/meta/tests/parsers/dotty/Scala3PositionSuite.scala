@@ -79,6 +79,11 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
   checkPositions[Stat](
+    "inline given intOrd: Ord[Int]",
+    """|Type.Apply Ord[Int]
+       |""".stripMargin
+  )
+  checkPositions[Stat](
     "export a.b",
     """|Importer a.b
        |""".stripMargin

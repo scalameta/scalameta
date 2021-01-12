@@ -3918,7 +3918,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     val forked = in.fork
     val name: meta.Name =
-      if (token.is[Ident]) typeName() else anonymousName
+      if (token.is[Ident]) termName() else anonymousName
     val tparams = typeParamClauseOpt(
       ownerIsType = false,
       ctxBoundsAllowed = true,
@@ -3948,7 +3948,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (token.is[Equals]) {
       accept[Equals]
       Defn.GivenAlias(mods, sigName, sigTparams, sigUparamss, decltpe, exprMaybeIndented())
-    } else {
+    } else if (token.is[KwWith]) {
       val inits = parents()
       val (slf, stats) = if (token.is[KwWith]) {
         accept[KwWith]
@@ -3961,7 +3961,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           syntaxError("expected '{' or indentation", at = token.pos)
         }
       } else {
-        (autoPos(Self(autoPos(Name.Anonymous()), None)), Nil)
+        syntaxError("expected 'with' <body>", at = token.pos)
       }
       val rhs = if (slf.decltpe.nonEmpty) {
         syntaxError("given cannot have a self type", at = slf.pos)
@@ -3969,6 +3969,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         atPos(decltpe.startTokenPos, auto)(Template(List.empty, inits, slf, stats))
       }
       Defn.Given(mods, sigName, sigTparams, sigUparamss, rhs)
+    } else {
+      sigName match {
+        case name: Term.Name =>
+          Decl.Given(mods, name, sigTparams, sigUparamss, decltpe)
+        case _ =>
+          syntaxError("abstract givens cannot be annonymous", at = sigName.pos)
+      }
     }
   }
 
