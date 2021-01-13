@@ -674,10 +674,7 @@ object TreeSyntax {
         }
         m(Typ, s(prefix, params, " ", kw(arrow), " ", p(Typ, tRes)))
       case t: Type.Tuple => m(SimpleTyp, s("(", r(t.args, ", "), ")"))
-      case t: Type.With =>
-        if (!dialect.allowWithTypes)
-          throw new UnsupportedOperationException(s"$dialect doesn't support with types")
-        m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
+      case t: Type.With => m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
       case t: Type.And =>
         if (!dialect.allowAndTypes)
           throw new UnsupportedOperationException(s"$dialect doesn't support and types")

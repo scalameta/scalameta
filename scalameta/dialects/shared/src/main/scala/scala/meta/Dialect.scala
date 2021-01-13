@@ -62,6 +62,10 @@ final class Dialect private (
     // Removed in Dotty.
     val allowViewBounds: Boolean,
     // Are `with` intersection types supported by this dialect?
+    @deprecated(
+      "With types are supported in every dialect currently and this option is unused",
+      "4.4.6"
+    )
     val allowWithTypes: Boolean,
     // Are XML literals supported by this dialect?
     // We plan to deprecate XML literal syntax, and some dialects
@@ -296,6 +300,10 @@ final class Dialect private (
   def withAllowViewBounds(newValue: Boolean): Dialect = {
     privateCopy(allowViewBounds = newValue)
   }
+  @deprecated(
+    "With types are supported in every dialect currently and this option is unused",
+    "4.4.6"
+  )
   def withAllowWithTypes(newValue: Boolean): Dialect = {
     privateCopy(allowWithTypes = newValue)
   }

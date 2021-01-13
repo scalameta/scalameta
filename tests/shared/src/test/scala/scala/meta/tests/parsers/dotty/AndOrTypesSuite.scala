@@ -22,7 +22,7 @@ class AndOrTypesSuite extends BaseDottySuite {
 
   test("A with B") {
     runTestAssert[Type]("A with B", None)(
-      And(Type.Name("A"), Type.Name("B"))
+      With(Type.Name("A"), Type.Name("B"))
     )
   }
 
