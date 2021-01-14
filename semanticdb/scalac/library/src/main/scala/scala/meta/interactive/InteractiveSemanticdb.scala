@@ -12,7 +12,7 @@ import scala.tools.nsc.reporters.StoreReporter
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.AbsolutePath
 
-object InteractiveSemanticdb {
+object InteractiveSemanticdb extends VersionCompilerOps {
 
   def newCompiler(): Global =
     newCompiler(thisClasspath, Nil)
@@ -88,6 +88,8 @@ object InteractiveSemanticdb {
     } = new SemanticdbOps {
       val global: compiler.type = compiler
     }
+    // warnings reporting are delayed until the end
+    forceWarnings(compiler)
     semanticdbOps.config =
       SemanticdbConfig.parse(options, _ => (), compiler.reporter, SemanticdbConfig.default)
     import semanticdbOps._
