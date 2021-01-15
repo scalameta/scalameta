@@ -21,7 +21,7 @@ class ReflectionSuite extends FunSuite {
   test("root") {
     assert(symbolOf[scala.meta.Tree].isRoot)
     assertEquals(symbolOf[scala.meta.Tree].asRoot.allBranches.length, 23)
-    assertEquals(symbolOf[scala.meta.Tree].asRoot.allLeafs.length, 343)
+    assertEquals(symbolOf[scala.meta.Tree].asRoot.allLeafs.length, 341)
   }
 
   test("If") {
