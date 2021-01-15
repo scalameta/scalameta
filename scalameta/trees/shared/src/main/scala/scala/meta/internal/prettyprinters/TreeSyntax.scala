@@ -1135,8 +1135,6 @@ object TreeSyntax {
       case t: Import => s(kw("import"), " ", r(t.importers, ", "))
       case t: Export =>
         s(kw("export"), " ", r(t.importers, ", "))
-      case t: ExportGiven =>
-        s(kw("export"), " ", kw("given"), " ", r(t.importers, ", "))
 
       // Case
       case t: Case =>

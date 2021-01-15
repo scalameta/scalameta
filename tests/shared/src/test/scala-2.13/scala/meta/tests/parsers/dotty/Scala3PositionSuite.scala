@@ -94,8 +94,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
   checkPositions[Stat](
-    "export given a.b",
-    """|Importer a.b
+    "export a.{given Int}",
+    """|Importer a.{given Int}
+       |Importee.Given given Int
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -111,11 +112,6 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     "import File.given",
     """|Importer File.given
        |Importee.GivenAll given
-       |""".stripMargin
-  )
-  checkPositions[Stat](
-    "export given A.{ b, c, d, _ }",
-    """|Importer A.{ b, c, d, _ }
        |""".stripMargin
   )
   checkPositions[Type]("A & B")

@@ -533,7 +533,6 @@ object Enumerator {
 }
 @ast class Import(importers: List[Importer] @nonEmpty) extends ImportExportStat
 @ast class Export(importers: List[Importer] @nonEmpty) extends ImportExportStat
-@ast class ExportGiven(importers: List[Importer] @nonEmpty) extends ImportExportStat
 
 @ast class Importer(ref: Term.Ref, importees: List[Importee] @nonEmpty) extends Tree {
   checkFields(ref.isStableId)

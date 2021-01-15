@@ -16,10 +16,20 @@ class ExportSuite extends BaseDottySuite {
   }
 
   test("export-given") {
-    runTestAssert[Stat]("export given A.b.c")(
-      ExportGiven(
-        List(Importer(Term.Select(Term.Name("A"), Term.Name("b")), List(Importee.Name(Name("c")))))
-      )
+    runTestAssert[Stat]("export A.{ given Int }")(
+      Export(List(Importer(Term.Name("A"), List(Importee.Given(Type.Name("Int"))))))
+    )
+  }
+
+  test("export-given-all") {
+    runTestAssert[Stat]("export A.given")(
+      Export(List(Importer(Term.Name("A"), List(Importee.GivenAll()))))
+    )
+  }
+
+  test("export-given-all-mixed") {
+    runTestAssert[Stat]("export A.{ given, a }")(
+      Export(List(Importer(Term.Name("A"), List(Importee.GivenAll(), Importee.Name(Name("a"))))))
     )
   }
 

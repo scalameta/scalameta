@@ -244,7 +244,6 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Enumerator.Guard
       |scala.meta.Enumerator.Val
       |scala.meta.Export
-      |scala.meta.ExportGiven
       |scala.meta.Import
       |scala.meta.ImportExportStat
       |scala.meta.Importee
