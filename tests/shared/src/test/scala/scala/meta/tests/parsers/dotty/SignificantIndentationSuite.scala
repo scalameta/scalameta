@@ -4,8 +4,6 @@ import scala.meta.tests.parsers._
 import scala.meta._
 
 class SignificantIndentationSuite extends BaseDottySuite {
-  implicit val parseStat: String => Stat = code => templStat(code)(dialects.Dotty)
-  implicit val parseSource: String => Source = code => source(code)(dialects.Dotty)
 
   val defx = Decl.Def(Nil, Term.Name("f"), Nil, Nil, Type.Name("Int"))
   val defy = Defn.Def(

@@ -5,10 +5,6 @@ import scala.meta._
 
 class EndMarkerSuite extends BaseDottySuite {
 
-  implicit val parseTempl: String => Stat = code => templStat(code)(dialects.Dotty)
-
-  val parseSource: String => Source = code => source(code)(dialects.Dotty)
-
   test("end-marker") {
     runTestAssert[Stat]("end token")(
       Term.EndMarker(Term.Name("token"))
@@ -22,7 +18,7 @@ class EndMarkerSuite extends BaseDottySuite {
     val markers =
       List("if", "while", "for", "match", "try", "new", "this", "given", "extension", "val")
     for (m <- markers) {
-      parseTempl(s"end ${m}")
+      parseStat(s"end ${m}")
     }
   }
 
@@ -45,7 +41,7 @@ class EndMarkerSuite extends BaseDottySuite {
           Defn.Type(Nil, Type.Name("K"), Nil, Type.Name("Map"))
         )
       )
-    )(parseSource)
+    )
   }
 
   // extension syntax with indentation changed and needs more work
@@ -76,7 +72,7 @@ class EndMarkerSuite extends BaseDottySuite {
           Defn.Type(Nil, Type.Name("K"), Nil, Type.Name("Map"))
         )
       )
-    )(parseSource)
+    )
   }
 
   test("end-nomarker") {

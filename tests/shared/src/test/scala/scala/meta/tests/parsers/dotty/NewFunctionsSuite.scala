@@ -5,10 +5,6 @@ import scala.meta._
 
 class NewFunctionsSuite extends BaseDottySuite {
 
-  val parseTempl: String => Stat = code => templStat(code)(dialects.Dotty)
-  implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Dotty)
-  implicit val parseType: String => Type = code => tpe(code)(dialects.Dotty)
-
   test("type-lambda") {
     // cannot carry +/- but can carry bounds >: , <:
     runTestAssert[Type]("[X, Y] =>> Map[Y, X]")(
@@ -69,7 +65,7 @@ class NewFunctionsSuite extends BaseDottySuite {
         ),
         Type.Name("Unit")
       )
-    )(parseTempl)
+    )
   }
 
   test("context-function-multi") {
@@ -95,7 +91,7 @@ class NewFunctionsSuite extends BaseDottySuite {
         ),
         Type.Name("Unit")
       )
-    )(parseTempl)
+    )
   }
 
   test("context-function-as-typedef") {
@@ -106,7 +102,7 @@ class NewFunctionsSuite extends BaseDottySuite {
         List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
         Type.ContextFunction(List(Type.Name("ExecutionContext")), Type.Name("T"))
       )
-    )(parseTempl)
+    )
 
     val code = """|x match {
                   |  case t: (Context ?=> Symbol) @unchecked =>

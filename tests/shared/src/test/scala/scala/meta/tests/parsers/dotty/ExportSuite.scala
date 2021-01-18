@@ -5,8 +5,6 @@ import scala.meta._
 
 class ExportSuite extends BaseDottySuite {
 
-  implicit val parseStat: String => Stat = code => templStat(code)(dialects.Dotty)
-
   test("export-single") {
     runTestAssert[Stat]("export A.b.c")(
       Export(
