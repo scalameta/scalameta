@@ -7,14 +7,7 @@ import scala.meta.Type.Placeholder
 
 class InfixSuite extends BaseDottySuite {
 
-  implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Dotty)
-  implicit val parseType: String => Type = code => tpe(code)(dialects.Dotty)
-  implicit val parseSource: String => Source = code => source(code)(dialects.Dotty)
-
-  val parseTempl: String => Stat = code => templStat(code)(dialects.Dotty)
-
   test("simple-modifier") {
-
     runTestAssert[Stat](
       """|infix def a(param: Int) = param
          |""".stripMargin

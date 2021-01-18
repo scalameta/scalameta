@@ -6,9 +6,6 @@ import scala.meta._, Type._
 
 class AndOrTypesSuite extends BaseDottySuite {
 
-  implicit val parseBlock: String => Stat = code => templStat(code)(dialects.Dotty)
-  implicit val parseType: String => Type = code => tpe(code)(dialects.Dotty)
-
   /**
    *  All examples based on dotty documentation:
    *  https://dotty.epfl.ch/docs/reference/new-types/intersection-types.html

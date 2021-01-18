@@ -5,6 +5,12 @@ import scala.meta._
 
 trait BaseDottySuite extends ParseSuite {
 
+  protected val dialect = dialects.Scala3
+
+  implicit val parseStat: String => Stat = code => templStat(code)(dialect)
+  implicit val parseSource: String => Source = code => source(code)(dialect)
+  implicit val parseType: String => Type = code => tpe(code)(dialect)
+
   final val anon = meta.Name.Anonymous()
   final val ctor = Ctor.Primary(Nil, anon, Nil)
   final def ctorp(lp: List[Term.Param] = Nil) = Ctor.Primary(Nil, anon, List(lp))

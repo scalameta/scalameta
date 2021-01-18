@@ -6,8 +6,6 @@ import scala.meta.tests.tokenizers.TokenizerSuite
 
 class EnumSuite extends BaseDottySuite {
 
-  implicit val parseStat: String => Stat = code => templStat(code)(dialects.Dotty)
-
   /**
    *  All examples based on dotty documentation:
    *  https://dotty.epfl.ch/docs/reference/enums/enums.html

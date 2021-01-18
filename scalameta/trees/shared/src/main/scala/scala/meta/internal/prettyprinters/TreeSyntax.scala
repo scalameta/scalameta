@@ -145,6 +145,7 @@ object TreeSyntax {
     def templ(templ: Template) =
       if (templ.early.isEmpty &&
         templ.inits.isEmpty &&
+        templ.derives.isEmpty &&
         templ.self.name.is[Name.Anonymous] &&
         templ.self.decltpe.isEmpty &&
         templ.stats.isEmpty) s()
@@ -1065,7 +1066,7 @@ object TreeSyntax {
         val isSelfEmpty = t.self.name.is[Name.Anonymous] && t.self.decltpe.isEmpty
         val isSelfNonEmpty = !isSelfEmpty
         val isBodyEmpty = isSelfEmpty && t.stats.isEmpty
-        val isTemplateEmpty = t.early.isEmpty && t.inits.isEmpty && isBodyEmpty
+        val isTemplateEmpty = t.early.isEmpty && t.inits.isEmpty && t.derives.isEmpty && isBodyEmpty
         if (isTemplateEmpty) s()
         else {
           val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()

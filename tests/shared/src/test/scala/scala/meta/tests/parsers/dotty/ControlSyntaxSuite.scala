@@ -5,8 +5,6 @@ import scala.meta._
 import scala.meta.internal.tokenizers.ScalametaTokenizer
 
 class ControlSyntaxSuite extends BaseDottySuite {
-  implicit val parseStat: String => Stat = code => templStat(code)(dialects.Dotty)
-  implicit val parseSource: String => Source = code => source(code)(dialects.Dotty)
 
   // --------------------------
   // IF

@@ -7,12 +7,6 @@ import scala.meta.Type.Placeholder
 
 class MinorDottySuite extends BaseDottySuite {
 
-  implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Dotty)
-  implicit val parseType: String => Type = code => tpe(code)(dialects.Dotty)
-  implicit val parseSource: String => Source = code => source(code)(dialects.Dotty)
-
-  val parseTempl: String => Stat = code => templStat(code)(dialects.Dotty)
-
   /**
    *  All examples based on dotty documentation:
    *  https://dotty.epfl.ch/docs/reference/other-new-features/open-classes.html
@@ -36,17 +30,13 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("open-class-negative-cases") {
-    runTestError("final open class A {}", "illegal combination of modifiers: open and final")(
-      parseTempl
-    )
-    runTestError(
+    runTestError[Stat]("final open class A {}", "illegal combination of modifiers: open and final")
+    runTestError[Stat](
       "open sealed trait C {}",
       "illegal combination of modifiers: open and sealed"
-    )(parseTempl)
-    runTestError("open def f(): Int = 3", "`open' modifier can be used only for classes")(
-      parseTempl
     )
-    runTestError("def f(open a: Int): Int = 3", "error")(parseTempl)
+    runTestError[Stat]("open def f(): Int = 3", "`open' modifier can be used only for classes")
+    runTestError[Stat]("def f(open a: Int): Int = 3", "error")
   }
 
   test("open-soft-modifier") {
@@ -83,17 +73,15 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("opaque-type-alias") {
-    val input = "opaque type F = X"
-    val typ = parseBlock(input).asInstanceOf[Defn.Type]
-    val Type.Bounds(None, None) = typ.bounds
-    runTestAssert[Stat](input)(
+    runTestAssert[Stat]("opaque type F = X")(
       Defn.Type(
         List(Mod.Opaque()),
         pname("F"),
         Nil,
-        pname("X")
+        pname("X"),
+        Type.Bounds(None, None)
       )
-    )(parseTempl)
+    )
 
   }
 
@@ -106,7 +94,7 @@ class MinorDottySuite extends BaseDottySuite {
         pname("AB"),
         Type.Bounds(None, Some(Type.And(Type.Name("A"), Type.Name("B"))))
       )
-    )(parseTempl)
+    )
   }
 
   test("opaque-type-in-object") {
@@ -239,7 +227,7 @@ class MinorDottySuite extends BaseDottySuite {
         Ctor.Primary(Nil, Name(""), Nil),
         Template(Nil, List(init("A"), init("B"), init("C")), Self(Name(""), None), Nil)
       )
-    )(parseTempl)
+    )
 
     runTestAssert[Stat](
       "(new A(), new B())"
@@ -250,7 +238,7 @@ class MinorDottySuite extends BaseDottySuite {
           Term.New(Init(Type.Name("B"), Name(""), List(List())))
         )
       )
-    )(parseTempl)
+    )
 
   }
 
@@ -269,7 +257,7 @@ class MinorDottySuite extends BaseDottySuite {
           List(Type.Placeholder(Type.Bounds(Some(Type.Name("Untyped")), None)))
         )
       )
-    )(parseTempl)
+    )
 
   }
 
@@ -558,113 +546,6 @@ class MinorDottySuite extends BaseDottySuite {
         List(Case(Pat.Bind(Pat.Var(Term.Name("Pattern")), Pat.Wildcard()), None, Term.Block(Nil)))
       )
     )
-  }
-
-  test("simple-derives") {
-    val derivesEnum = """|enum Tree[T] derives Eq, Ordering, Show {
-                         |  case Branch
-                         |  case Leaf
-                         |}
-                         |""".stripMargin
-
-    runTestAssert[Stat](derivesEnum)(
-      Defn.Enum(
-        Nil,
-        Type.Name("Tree"),
-        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
-        Ctor.Primary(Nil, Name(""), Nil),
-        Template(
-          Nil,
-          Nil,
-          Self(Name(""), None),
-          List(
-            Defn.EnumCase(Nil, Term.Name("Branch"), Nil, Ctor.Primary(Nil, Name(""), Nil), Nil),
-            Defn.EnumCase(Nil, Term.Name("Leaf"), Nil, Ctor.Primary(Nil, Name(""), Nil), Nil)
-          ),
-          List(
-            Type.Name("Eq"),
-            Type.Name("Ordering"),
-            Type.Name("Show")
-          )
-        )
-      )
-    )
-
-  }
-
-  test("extends-derives") {
-    runTestAssert[Stat](
-      """|enum Tree[T] extends Bee derives Eq, scala.derives.Ordering, Show {
-         |  case Branch
-         |  case Leaf
-         |}
-         |""".stripMargin
-    )(
-      Defn.Enum(
-        Nil,
-        Type.Name("Tree"),
-        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
-        Ctor.Primary(Nil, Name(""), Nil),
-        Template(
-          Nil,
-          List(Init(Type.Name("Bee"), Name(""), Nil)),
-          Self(Name(""), None),
-          List(
-            Defn.EnumCase(Nil, Term.Name("Branch"), Nil, Ctor.Primary(Nil, Name(""), Nil), Nil),
-            Defn.EnumCase(Nil, Term.Name("Leaf"), Nil, Ctor.Primary(Nil, Name(""), Nil), Nil)
-          ),
-          List(
-            Type.Name("Eq"),
-            Type
-              .Select(Term.Select(Term.Name("scala"), Term.Name("derives")), Type.Name("Ordering")),
-            Type.Name("Show")
-          )
-        )
-      )
-    )
-
-  }
-
-  test("case-class-derives") {
-    val derivesEnum =
-      runTestAssert[Stat](
-        """|case class Node(name : String) extends Tree derives Eq:
-           |  def hello() = ""
-           |  def bye() = ""
-           |
-           |""".stripMargin,
-        assertLayout = Some(
-          """|case class Node(name: String) extends Tree derives Eq {
-             |  def hello() = ""
-             |  def bye() = ""
-             |}
-             |""".stripMargin
-        )
-      )(
-        Defn.Class(
-          List(Mod.Case()),
-          Type.Name("Node"),
-          Nil,
-          Ctor.Primary(
-            Nil,
-            Name(""),
-            List(List(Term.Param(Nil, Term.Name("name"), Some(Type.Name("String")), None)))
-          ),
-          Template(
-            Nil,
-            List(Init(Type.Name("Tree"), Name(""), Nil)),
-            Self(Name(""), None),
-            List(
-              Defn.Def(Nil, Term.Name("hello"), Nil, List(List()), None, Lit.String("")),
-              Defn.Def(Nil, Term.Name("bye"), Nil, List(List()), None, Lit.String(""))
-            ),
-            List(
-              Type.Name("Eq")
-            )
-          )
-        )
-      )
-
   }
 
   test("catch-end-def") {

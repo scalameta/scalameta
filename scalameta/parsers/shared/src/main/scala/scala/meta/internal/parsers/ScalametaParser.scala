@@ -4473,6 +4473,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def derivesClasses(): List[Type] = {
+    newLineOptWhenFollowing(t => t.is[soft.KwDerives])
     if (token.is[soft.KwDerives]) {
       next()
       val deriving = ListBuffer[Type]()
@@ -4539,6 +4540,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     } else {
       val startPos = in.tokenPos
+      newLineOptWhenFollowing(t => t.is[soft.KwDerives])
       if (token.is[soft.KwDerives]) {
         val tmpl = atPos(startPos, auto)(template(Nil, Nil, enumCaseAllowed = owner.isEnum))
         tmpl
