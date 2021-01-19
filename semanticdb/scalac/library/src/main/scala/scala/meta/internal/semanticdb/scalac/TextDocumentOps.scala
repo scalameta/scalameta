@@ -12,6 +12,7 @@ import scala.reflect.internal.{Flags => gf}
 import scala.reflect.io.{PlainFile => GPlainFile}
 import scala.{meta => m}
 import scala.meta.internal.semanticdb.Scala._
+import scala.meta.Dialect
 
 trait TextDocumentOps { self: SemanticdbOps =>
   def validateCompilerState(): Unit = {
@@ -47,7 +48,10 @@ trait TextDocumentOps { self: SemanticdbOps =>
   }
 
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
-    def toTextDocument: s.TextDocument = {
+    def toTextDocument: s.TextDocument =
+      toTextDocument(None)
+
+    def toTextDocument(explicitDialect: Option[m.Dialect]): s.TextDocument = {
       pointsCache.clear()
       val binders = mutable.Set[m.Position]()
       val occurrences = mutable.Map[m.Position, String]()
@@ -193,7 +197,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
             super.apply(mtree)
           }
         }
-        traverser(unit.toSource)
+
+        traverser(unit.toSource(explicitDialect))
       }
 
       locally {
