@@ -5,9 +5,15 @@ import scala.{meta => m}
 trait ParseOps { self: SemanticdbOps =>
 
   implicit class XtensionCompilationUnitSource(unit: g.CompilationUnit) {
-    def toSource: m.Source = {
+    def toSource: m.Source =
+      toSource(None)
+
+    def toSource(explicitDialect: Option[m.Dialect]): m.Source = {
       val dialect =
-        m.Dialect.standards.getOrElse(language, sys.error(s"unsupported dialect $language"))
+        explicitDialect
+          .orElse(m.Dialect.standards.get(language))
+          .getOrElse(sys.error(s"unsupported dialect $language"))
+
       dialect(unit.source.toInput).parse[m.Source].get
     }
   }
