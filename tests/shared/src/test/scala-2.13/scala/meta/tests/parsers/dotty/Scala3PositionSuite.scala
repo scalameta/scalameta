@@ -79,13 +79,39 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
   checkPositions[Stat](
-    "inline given intOrd: Ord[Int]",
-    """|Type.Apply Ord[Int]
+    """|object A{
+       |  inline given intOrd: Ord[Int]
+       |}""".stripMargin,
+    """|Template {
+       |  inline given intOrd: Ord[Int]
+       |}
+       |Self   @@inline given intOrd: Ord[Int]
+       |Decl.Given given intOrd: Ord[Int]
+       |Type.Apply Ord[Int]
        |""".stripMargin
   )
   checkPositions[Stat](
-    "export a.b",
-    """|Importer a.b
+    """|object A{
+       |  given intOrd: Ord[Int] = intOrd
+       |}""".stripMargin,
+    """|Template {
+       |  given intOrd: Ord[Int] = intOrd
+       |}
+       |Self   @@given intOrd: Ord[Int] = intOrd
+       |Defn.GivenAlias given intOrd: Ord[Int] = intOrd
+       |Type.Apply Ord[Int]
+       |""".stripMargin
+  )
+  checkPositions[Stat](
+    """|object A {
+       |  export a.b
+       |}""".stripMargin,
+    """|Template {
+       |  export a.b
+       |}
+       |Self   @@export a.b
+       |Export export a.b
+       |Importer a.b
        |""".stripMargin
   )
   checkPositions[Stat](

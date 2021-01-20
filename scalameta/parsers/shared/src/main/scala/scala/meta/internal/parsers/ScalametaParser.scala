@@ -3894,18 +3894,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  // Given             ::= 'given' GivenDef
-  private def givenDecl(mods: List[Mod]): Stat = {
-    accept[KwGiven]
-    givenDef(mods)
-  }
-
   /**
+   * Given             ::= 'given' GivenDef
    * GivenDef          ::=  [GivenSig] (Type [‘=’ Expr] | StructuralInstance)
    * GivenSig          ::=  [id] [DefTypeParamClause] {UsingParamClause} ‘:’
    * StructuralInstance ::=  ConstrApp {‘with’ ConstrApp} ‘with’ TemplateBody
    */
-  private def givenDef(mods: List[Mod]): Stat = autoPos {
+  private def givenDecl(mods: List[Mod]): Stat = autoPos {
+    accept[KwGiven]
     val anonymousName = autoPos(scala.meta.Name.Anonymous())
 
     val forked = in.fork
