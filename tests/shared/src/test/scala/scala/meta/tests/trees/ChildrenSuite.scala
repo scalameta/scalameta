@@ -18,4 +18,20 @@ class ChildrenSuite extends FunSuite {
     assert(tree.children(1).productPrefix == "Ctor.Primary")
     assert(tree.children(2).productPrefix == "Template")
   }
+
+  test("derives-in-children") {
+    val source = """|
+                    |class Foo derives A[T], B[T] {  }
+                    |""".stripMargin
+    val tree = dialects.Scala3(source).parse[Stat].get
+    val containsBinaryCompatFields = tree.children.exists {
+      case t: Template =>
+        t.children.exists { c => c.is[Type.Apply] && c.toString() == "A[T]" }
+      case _ => false
+    }
+    assert(
+      containsBinaryCompatFields,
+      "Binary compatible fields should be contained in the children method"
+    )
+  }
 }

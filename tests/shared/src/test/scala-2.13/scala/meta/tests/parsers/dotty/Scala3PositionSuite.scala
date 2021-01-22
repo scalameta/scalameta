@@ -154,6 +154,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |TypeCase case Char => String
        |TypeCase case Array[t] => t
        |Type.Apply Array[t]
+       |Type.Bounds type T = @@A match {
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -205,6 +206,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.ContextFunction List[T] ?=> Option[T]
        |Type.Apply List[T]
        |Type.Apply Option[T]
+       |Type.Bounds type F0 = @@[T] => List[T] ?=> Option[T]
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -222,6 +224,16 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Term.Tuple (x, x)
        |Case case x: Double => x
        |Pat.Typed x: Double
+       |""".stripMargin
+  )
+  checkPositions[Stat](
+    "class Alpha[T] derives Gamma[T], Beta[T]",
+    """|Type.Bounds class Alpha[T@@] derives Gamma[T], Beta[T]
+       |Ctor.Primary class Alpha[T] @@derives Gamma[T], Beta[T]
+       |Template derives Gamma[T], Beta[T]
+       |Self class Alpha[T] derives Gamma[T], Beta[T]@@
+       |Type.Apply Gamma[T]
+       |Type.Apply Beta[T]
        |""".stripMargin
   )
 }

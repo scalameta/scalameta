@@ -89,8 +89,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
     if (relevantFields.isEmpty) return q"tree"
     val transformedFields: List[ValDef] = relevantFields.map(transformField)
 
-    val binaryCompatFields =
-      l.sym.info.decls.filter(_.hasAnnotation[AstMetadata.binaryCompatField]).map(_.asField)
+    val binaryCompatFields = l.binaryCompatFields
 
     val binaryCompatGetters = binaryCompatFields.map { field =>
       q"val ${field.name} = tree.${field.name}"

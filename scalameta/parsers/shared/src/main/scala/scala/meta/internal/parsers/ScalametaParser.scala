@@ -2039,10 +2039,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
    * Since matches can also be chained in Scala 3 we need to create
    * the Match first and only then add the the inline modifier.
    */
-  def inlineMatchClause() = {
+  def inlineMatchClause(inlineMods: List[Mod]) = {
     autoPos(postfixExpr(allowRepeated = false)) match {
       case t: Term.Match =>
-        t.setMods(List(Mod.Inline()))
+        t.setMods(inlineMods)
         t
       case other =>
         syntaxError("`inline` must be followed by an `if` or a `match`", at = other.pos)
@@ -2057,9 +2057,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def ifClause(isInline: Boolean = false) = {
+  def ifClause(mods: List[Mod] = Nil) = {
     accept[KwIf]
-
     val (cond, thenp) = if (token.isNot[LeftParen] && dialect.allowSignificantIndentation) {
       val cond = expr()
       acceptOpt[LF]
@@ -2077,10 +2076,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       (cond, exprMaybeIndented())
     }
 
-    val mods = if (isInline) {
-      List(Mod.Inline())
-    } else Nil
-
     if (tryAcceptWithOptLF[KwElse]) {
       Term.If(cond, thenp, exprMaybeIndented(), mods)
     } else if (token.is[Semicolon] && ahead { token.is[KwElse] }) {
@@ -2094,14 +2089,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   // if yes, then nothing has to change here
   // if no, we need eschew autoPos here, because it forces those parentheses on the result of calling prefixExpr
   // see https://github.com/scalameta/scalameta/issues/1083 and https://github.com/scalameta/scalameta/issues/1223
-  def expr(location: Location, allowRepeated: Boolean): Term =
+  def expr(location: Location, allowRepeated: Boolean): Term = {
+    def inlineMod() = autoPos {
+      accept[Ident]
+      Mod.Inline()
+    }
     autoPos(token match {
       case soft.KwInline() if ahead(token.is[KwIf]) =>
-        accept[Ident]
-        ifClause(isInline = true)
+        ifClause(List(inlineMod()))
       case InlineMatchMod() =>
-        accept[Ident]
-        inlineMatchClause()
+        inlineMatchClause(List(inlineMod()))
       case KwIf() =>
         ifClause()
       case KwTry() =>
@@ -2377,6 +2374,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         }
         t
     })
+  }
 
   def implicitClosure(location: Location): Term.Function = {
     require(token.isNot[KwImplicit] && debug(token))
@@ -3835,9 +3833,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case KwCase() if dialect.allowEnums && ahead(token.is[Ident]) =>
         syntaxError("Enum cases are only allowed in enums", at = token.pos)
       case KwIf() if mods.size == 1 && mods.head.is[Mod.Inline] =>
-        ifClause(isInline = true)
+        ifClause(mods)
       case ExprIntro() if mods.size == 1 && mods.head.is[Mod.Inline] =>
-        inlineMatchClause()
+        inlineMatchClause(mods)
       case other =>
         tmplDef(mods)
     }
@@ -4107,7 +4105,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val name = typeName()
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
 
-    def aliasType() = Defn.Type(mods, name, tparams, typeIndentedOpt())
+    def aliasType() = {
+      // empty bounds also need to have origin
+      val emptyBounds = autoPos(Type.Bounds(None, None))
+      Defn.Type(mods, name, tparams, typeIndentedOpt(), emptyBounds)
+    }
 
     def abstractType() = {
       val bounds = typeBounds()
