@@ -51,12 +51,12 @@ class ParseSuite extends FunSuite with CommonTrees {
 }
 
 object MoreHelpers {
-  def requireNonEmptyOrigin(tree: Tree): tree.type = {
+  def requireNonEmptyOrigin(tree: Tree)(implicit dialect: Dialect): tree.type = {
     val missingOrigin = tree.collect {
       case t if t.origin == Origin.None => t
     }
     Assertions.assertEquals(
-      missingOrigin,
+      missingOrigin.map(_.structure),
       Nil,
       "Expected all trees to have non-empty `.origin`.\n" +
         "To fix this failure, update ScalametaParser to use `autoPos()` where the trees below got constructed.\n" +
