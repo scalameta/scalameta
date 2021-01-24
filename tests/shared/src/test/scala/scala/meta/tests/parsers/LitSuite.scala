@@ -115,6 +115,10 @@ class LitSuite extends ParseSuite {
       term("raw\"\"\"\"\"\"\"\"\"\"\"\"\"")
   }
 
+  test("unicode_escaped_backslash") {
+    val Lit("\u005c") = term("\"\\\"")
+  }
+
   test("minus-sign") {
     val code = """|object X {
                   |  sealed trait Foo {
