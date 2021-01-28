@@ -964,7 +964,7 @@ object TreeSyntax {
       case t: Defn.ExtensionGroup =>
         val m = t.body match {
           case Term.Block(stats) =>
-            s(":", r(stats.map(i(_))), n(""))
+            r(stats.map(i(_)))
           case onestat =>
             s(" ", onestat)
         }

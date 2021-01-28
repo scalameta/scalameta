@@ -238,6 +238,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def closeParen = unclosed -= 1
   }
 
+  case class ExtensionIndentState(
+      extensionKw: Boolean,
+      defKw: Boolean
+  ) {
+    def shouldStartIdent: Boolean = extensionKw && !defKw
+  }
+  object ExtensionIndentState {
+    val empty = ExtensionIndentState(false, false)
+    val startExtension = ExtensionIndentState(true, false)
+    val oneline = ExtensionIndentState(true, true)
+  }
+
   /* Heuristic to try to determine if colonEol can exist at a given point in code
    * needed to deal with situations like:
    * def a(b:
@@ -292,6 +304,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         sepRegionsParameter: List[SepRegion],
         previousTokenIndent: Int,
         previousTokenStartIndent: Boolean,
+        extensionIndentState: ExtensionIndentState,
         colonEolCanStartIndent: List[AllowColonEol] = Nil
     ): Unit = {
       if (currPos >= scannerTokens.length) return
@@ -322,6 +335,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       var expectedIndent = previousTokenIndent
       var shouldStartIndent = previousTokenStartIndent
       var newColonEol = canBeFollowedByColonEol(colonEolCanStartIndent, curr)
+
+      val newExtensionIdentState =
+        if (dialect.allowSignificantIndentation) {
+          if (curr.is[LF])
+            ExtensionIndentState.empty
+          else if (curr.ignoringErrorIs[KwExtension])
+            ExtensionIndentState.startExtension
+          else if (extensionIndentState.extensionKw && curr.is[DefIntro])
+            ExtensionIndentState.oneline
+          else
+            extensionIndentState
+        } else ExtensionIndentState.empty
 
       if (dialect.allowSignificantIndentation) {
         if (previousTokenStartIndent && currentIndent > 0) {
@@ -455,9 +480,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             shouldStartIndent = true
             if (curr.is[Colon]) newColonEol = newColonEol.tail
           }
+        } else if (newExtensionIdentState.shouldStartIdent &&
+          curr.is[RightParen] &&
+          isAheadNewLine(currPos) &&
+          isAheadDefInto(currPos + 1)) {
+          shouldStartIndent = true
         }
-
-        loop(currPos, currPos + 1, sepRegionsNew, -1, shouldStartIndent, newColonEol)
+        loop(
+          currPos,
+          currPos + 1,
+          sepRegionsNew,
+          -1,
+          shouldStartIndent,
+          newExtensionIdentState,
+          newColonEol
+        )
       } else {
         var i = prevPos + 1
         var lastNewlinePos = -1
@@ -483,7 +520,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             sepRegionsParameter.head.isInstanceOf[RegionIndentEnum])) {
 
           if (isLeadingInfixOperator(next)) {
-            loop(prevPos, nextPos, sepRegionsParameter, expectedIndent, shouldStartIndent)
+            loop(
+              prevPos,
+              nextPos,
+              sepRegionsParameter,
+              expectedIndent,
+              shouldStartIndent,
+              newExtensionIdentState
+            )
           } else {
             var token = scannerTokens(lastNewlinePos)
             if (newlines) token = LFLF(token.input, token.dialect, token.start, token.end)
@@ -495,6 +539,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               sepRegionsParameter,
               expectedIndent,
               shouldStartIndent,
+              newExtensionIdentState,
               newColonEol
             )
           }
@@ -505,12 +550,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             sepRegionsParameter,
             expectedIndent,
             shouldStartIndent,
+            newExtensionIdentState,
             newColonEol
           )
         }
       }
     }
-    loop(-1, 0, Nil, -1, false)
+    loop(-1, 0, Nil, -1, false, ExtensionIndentState.empty)
     val underlying = parserTokens.result
     (Tokens(underlying, 0, underlying.length), parserTokenPositions.result)
   }
@@ -541,6 +587,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (nextPos >= scannerTokens.length) false
     else if (scannerTokens(nextPos).is[LF]) true
     else scannerTokens(nextPos).is[Trivia] && isAheadNewLine(nextPos)
+  }
+
+  @tailrec
+  private def isAheadDefInto(currentPosition: Int): Boolean = {
+    val nextPos = currentPosition + 1
+    if (nextPos >= scannerTokens.length) false
+    else if (scannerTokens(nextPos).is[DefIntro]) true
+    else scannerTokens(nextPos).is[Trivia] && isAheadDefInto(nextPos)
   }
 
   private def isLeadingInfixOperator(tkn: Token): Boolean =
@@ -4004,14 +4058,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
     newLineOptWhenFollowedBy[LeftBrace]
-    val methodsAll: List[Stat] = if (isColonEol(token)) {
-      accept[Colon]
-      indented(templateStats())
-    } else if (token.is[LeftBrace]) {
+    val methodsAll: List[Stat] = if (token.is[LeftBrace]) {
       inBraces(templateStats())
+    } else if (token.is[DefIntro]) {
+      List(nonLocalDefOrDcl())
     } else {
       newLinesOpt()
-      List(nonLocalDefOrDcl())
+      indented(templateStats())
     }
     val body: Stat = methodsAll match {
       case Nil => autoPos(Term.Block(Nil))

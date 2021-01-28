@@ -82,8 +82,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
   }
 
-  // extension methods no longer require `:` which causes Scalameta not to parse it correctly yet
-  test("multiple-methods-indent".ignore) {
+  test("multiple-methods-indent") {
     val code = """|extension (c: Circle)
                   |  def cra: Int = 2
                   |  def crb: String = "3"
@@ -100,6 +99,76 @@ class ExtensionMethodsSuite extends BaseDottySuite {
             Defn.Def(Nil, Term.Name("crb"), Nil, Nil, Some(Type.Name("String")), Lit.String("3")),
             Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Boolean")), Lit.Int(4))
           )
+        )
+      )
+    )
+  }
+
+  test("multiple-methods-indent-inside-object") {
+    val code = """|object X:
+                  |  extension (c: Circle)
+                  |    def cra: Int = 2
+                  |    def crb: String = "3"
+                  |    def crc: Boolean = 4
+                  |  extension (a: Int)
+                  |    def str: String = "xxx" 
+                  |    def str2: String = "xxx" 
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = None)(
+      Defn.Object(
+        Nil,
+        Term.Name("X"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.ExtensionGroup(
+              Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None),
+              Nil,
+              Nil,
+              Term.Block(
+                List(
+                  Defn.Def(Nil, Term.Name("cra"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)),
+                  Defn.Def(
+                    Nil,
+                    Term.Name("crb"),
+                    Nil,
+                    Nil,
+                    Some(Type.Name("String")),
+                    Lit.String("3")
+                  ),
+                  Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Boolean")), Lit.Int(4))
+                )
+              )
+            ),
+            Defn.ExtensionGroup(
+              Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None),
+              Nil,
+              Nil,
+              Term.Block(
+                List(
+                  Defn.Def(
+                    Nil,
+                    Term.Name("str"),
+                    Nil,
+                    Nil,
+                    Some(Type.Name("String")),
+                    Lit.String("xxx")
+                  ),
+                  Defn.Def(
+                    Nil,
+                    Term.Name("str2"),
+                    Nil,
+                    Nil,
+                    Some(Type.Name("String")),
+                    Lit.String("xxx")
+                  )
+                )
+              )
+            )
+          ),
+          Nil
         )
       )
     )
