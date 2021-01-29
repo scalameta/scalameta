@@ -116,7 +116,7 @@ class LitSuite extends ParseSuite {
   }
 
   test("unicode_escaped_backslash") {
-    val Lit("\u005c") = term("\"\\\"")
+    val Lit("\u005c") = term("\"\\\\\"")
   }
 
   test("minus-sign") {
