@@ -929,7 +929,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       (
         (token.is[soft.KwInline] || token.is[soft.KwOpaque] || token.is[soft.KwTransparent]) &&
           (token.next.is[DclIntro] || token.next.is[Modifier])
-      ) ||
+      ) || (token.is[soft.KwTransparent] && token.next.is[KwTrait]) ||
       ((token.is[soft.KwOpen] || token.is[soft.KwInfix]) && token.next.is[DefIntro]) ||
       token.is[InlineMatchMod]
 

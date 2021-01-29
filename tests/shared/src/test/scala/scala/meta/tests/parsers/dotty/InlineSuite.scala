@@ -437,4 +437,43 @@ class InlineSuite extends BaseDottySuite {
     )
 
   }
+
+  test("transparent-inline") {
+    runTestAssert[Stat](
+      """|transparent inline def choose(b: Boolean): A =
+         |   if b then new A else new B
+         |""".stripMargin,
+      assertLayout = Some(
+        "transparent inline def choose(b: Boolean): A = if (b) new A else new B"
+      )
+    )(
+      Defn.Def(
+        List(Mod.Transparent(), Mod.Inline()),
+        Term.Name("choose"),
+        Nil,
+        List(List(Term.Param(Nil, Term.Name("b"), Some(Type.Name("Boolean")), None))),
+        Some(Type.Name("A")),
+        Term.If(
+          Term.Name("b"),
+          Term.New(Init(Type.Name("A"), Name(""), Nil)),
+          Term.New(Init(Type.Name("B"), Name(""), Nil)),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("transparent-trait") {
+    runTestAssert[Stat](
+      "transparent trait S"
+    )(
+      Defn.Trait(
+        List(Mod.Transparent()),
+        Type.Name("S"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    )
+  }
 }
