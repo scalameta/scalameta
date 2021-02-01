@@ -451,7 +451,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
             syntaxError("can't unquote into character literals", at = charOffset - 1)
           else if (isIdentifierStart(ch))
             charLitOr(getIdentRest _)
-          else if (isOperatorPart(ch) && (ch != '\\'))
+          else if (isOperatorPart(ch) && (ch != '\\' || isUnicodeEscape))
             charLitOr(getOperatorRest _)
           else {
             val lookahead = lookaheadReader
@@ -806,7 +806,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    *  and advance to next character.
    */
   protected def getLitChar(): Unit =
-    if (ch == '\\') {
+    if (ch == '\\' && !isUnicodeEscape) {
       nextChar()
       if ('0' <= ch && ch <= '7') {
         val start = charOffset - 2

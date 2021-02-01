@@ -24,6 +24,12 @@ class UnclosedTokenSuite extends ParseSuite {
     assert(e.getMessage().contains("unclosed string literal"))
   }
 
+  test("unclosed-escape") {
+    val e = intercept[TokenizeException] {
+      stat(""" "start \" """)
+    }
+  }
+
   test("unclosed-interpolation") {
     val e = intercept[ParseException] {
       stat(""" s"${1+ """)
