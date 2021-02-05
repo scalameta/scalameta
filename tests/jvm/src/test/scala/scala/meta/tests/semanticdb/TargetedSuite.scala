@@ -168,4 +168,40 @@ class TargetedSuite extends SemanticdbSuite {
       assert(c == "k/target#foo().(c)")
     }
   )
+
+  targeted(
+    """package l
+      |trait GrandParent{ def method: String }
+      |trait Parent extends GrandParent{ override def method: String = "" }
+      |trait Child extends Parent
+      |object Max extends Child{ 
+      |  override def method: String = "" 
+      |  override def toString = "a"
+      |}
+      |
+    """.stripMargin,
+    (doc) => {
+
+      def overriddenSymbols(sym: String) = doc.symbols.find(_.symbol == sym).map { info =>
+        info.overriddenSymbols
+      }
+      assertEquals(overriddenSymbols("l/GrandParent#method()."), Some(Nil))
+      assertEquals(overriddenSymbols("l/Parent#method()."), Some(List("l/GrandParent#method().")))
+      assertEquals(overriddenSymbols("l/Child#method()."), None)
+      assertEquals(
+        overriddenSymbols("l/Max.method()."),
+        Some(List("l/Parent#method().", "l/GrandParent#method()."))
+      )
+      assertEquals(
+        overriddenSymbols("l/Max.toString()."),
+        Some(
+          List(
+            "java/lang/Object#toString().",
+            "scala/Any#toString()."
+          )
+        )
+      )
+
+    }
+  )
 }

@@ -599,6 +599,7 @@ message SymbolInformation {
   Signature signature = 17;
   repeated Annotation annotations = 13;
   Access access = 18;
+  repeated string overridden_symbols = 19
 }
 ```
 
@@ -809,6 +810,8 @@ signatures in supported languages.
 `annotation`. [Annotations](#annotation) of the corresponding definition.
 
 `access`. [Access](#access) modifier of the corresponding definition.
+
+`overridden_symbols`. list of symbols that this symbol overrides.
 
 ### Annotation
 
@@ -1470,6 +1473,10 @@ message SymbolInformation {
   <tr>
     <td><code>access</code></td>
     <td>Explained below on per-definition basis.</td>
+  </tr>
+  <tr>
+    <td><code>overridden_symbols</code></td>
+    <td>List of symbols this symbol overrides. See <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#overriding">Overriding</td>
   </tr>
 </table>
 
@@ -3076,6 +3083,10 @@ message SymbolInformation {
   <tr>
     <td><code>access</code></td>
     <td>Explained below on per-definition basis.</td>
+  </tr>
+  <tr>
+    <td><code>overridden_symbols</code></td>
+    <td>List of symbols this symbol overrides. See <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.4.8">Overriding</td>
   </tr>
 </table>
 

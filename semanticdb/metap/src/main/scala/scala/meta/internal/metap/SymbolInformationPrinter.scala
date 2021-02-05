@@ -79,6 +79,10 @@ trait SymbolInformationPrinter extends BasePrinter {
         case NoSignature if info.isSelfParameter => ()
         case _ => opt(info.prefixBeforeTpe, info.signature)(pprint)
       }
+      info.overriddenSymbols match {
+        case Nil => ()
+        case all => out.print(" <: " + all.mkString(", "))
+      }
     }
 
     private def pprint(ann: Annotation): Unit = {
