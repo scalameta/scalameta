@@ -2,6 +2,7 @@ package scala.meta.tests.parsers.dotty
 
 import scala.meta.tests.parsers._
 import scala.meta._
+import scala.meta.Term.Block
 
 class SignificantIndentationSuite extends BaseDottySuite {
 
@@ -807,4 +808,33 @@ class SignificantIndentationSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("semicolon-closes-indent-region") {
+    runTestAssert[Stat](
+      """|val z =
+         |  val a = 
+         |    0;
+         |  f(a)
+         |""".stripMargin,
+      assertLayout = Some(
+        """|val z = {
+           |  val a = 0
+           |  f(a)
+           |}""".stripMargin
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("z"))),
+        None,
+        Term.Block(
+          List(
+            Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), None, Lit.Int(0)),
+            Term.Apply(Term.Name("f"), List(Term.Name("a")))
+          )
+        )
+      )
+    )
+  }
+
 }

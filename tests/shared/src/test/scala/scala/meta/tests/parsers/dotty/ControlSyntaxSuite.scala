@@ -1603,4 +1603,75 @@ class ControlSyntaxSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("match-braces-LFLF") {
+    val code =
+      """|a match {
+         |  case A() =>
+         |    succ
+         |
+         |  case _ => fail
+         |}
+         |""".stripMargin
+    val expected =
+      """|a match {
+         |  case A() => succ
+         |  case _ => fail
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(expected))(
+      Term.Match(
+        Term.Name("a"),
+        List(
+          Case(Pat.Extract(Term.Name("A"), Nil), None, Term.Name("succ")),
+          Case(Pat.Wildcard(), None, Term.Name("fail"))
+        ),
+        Nil
+      )
+    )
+  }
+
+  test("match-last-empty") {
+    val code =
+      """|object Z:
+         |  a match
+         |    case A() =>
+         |      succ
+         |    case _ =>
+         |  
+         |  val x = 0
+         |""".stripMargin
+    val expected =
+      """|object Z {
+         |  a match {
+         |    case A() => succ
+         |    case _ =>
+         |  }
+         |  val x = 0
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(expected))(
+      Defn.Object(
+        Nil,
+        Term.Name("Z"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Term.Match(
+              Term.Name("a"),
+              List(
+                Case(Pat.Extract(Term.Name("A"), Nil), None, Term.Name("succ")),
+                Case(Pat.Wildcard(), None, Term.Block(Nil))
+              ),
+              Nil
+            ),
+            Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Int(0))
+          ),
+          Nil
+        )
+      )
+    )
+  }
 }

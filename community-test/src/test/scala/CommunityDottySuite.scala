@@ -60,8 +60,8 @@ class CommunityDottySuite extends FunSuite {
   val communityBuilds = List(
     CommunityBuild(
       "https://github.com/lampepfl/dotty.git",
-      //commit hash from 01.12.2020
-      "42a30b8fec95487147fa0d575bfae3cfb9417617",
+      //commit hash from 16.12.2020
+      "73d942cca5936e3f760be327a5a4d6ee9f9c194f",
       "dotty",
       dottyExclusionList
     ),
@@ -87,6 +87,7 @@ class CommunityDottySuite extends FunSuite {
     val timePer1KLines = stats.timeTaken / (stats.linesParsed / 1000)
 
     println("--------------------------")
+    println(build.name)
     println(s"Files parsed correctly ${stats.checkedFiles}")
     println(s"Files errored: ${stats.errors}")
     println(s"Time taken: ${stats.timeTaken}ms")
@@ -165,20 +166,7 @@ class CommunityDottySuite extends FunSuite {
     "dotty/dokka/tasty/ClassLikeSupport.scala",
     // extension will become a keyword, needs fix in dotty
     "dotty/dokka/translators/ScalaSignatureProvider.scala",
-    "dotty/tools/io/AbstractFile.scala",
-    "dotty/tools/io/JarArchive.scala",
-    "dotty/tools/io/Path.scala",
-    "dotty/tools/dotc/core/StdNames.scala",
-    "dotty/tools/dotc/core/Symbols.scala",
-    "dotty/tools/dotc/fromtasty/Debug.scala",
-    "dotty/tools/dotc/config/Settings.scala",
-    "dotty/tools/dotc/parsing/Parsers.scala",
-    "dotty/tools/dotc/sbt/ExtractDependencies.scala",
-    "dotty/tools/dotc/core/tasty/CommentPicklingTest.scala",
-    "dotty/tools/dotc/printing/PrintingTest.scala",
-    "dotty/tools/dotc/transform/PatmatExhaustivityTest.scala",
-    "dotty/tools/sbtplugin/DottyPlugin.scala",
-    "src/scala/tasty/inspector/TastyInspector.scala"
+    "dotty/tools/dotc/config/Settings.scala"
   )
 
   final def munitExclusionList = List(
