@@ -1270,14 +1270,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def makeTupleType(body: List[Type]): Type = {
-    def emptyTupleResult = if (dialect.allowLiteralUnitType) Lit.Unit() else unreachable
+    def invalidLiteralUnitType =
+      syntaxError("illegal literal type (), use Unit instead", at = token.pos)
     // NOTE: we can't make this autoPos
     // because, by the time control reaches this method, we're already past the closing parenthesis
     // therefore, we'll rely on our callers to assign positions to the tuple we return
     // we can't do atPos(body.first, body.last) either, because that wouldn't account for parentheses
     body match {
       case List(q @ Type.Quasi(1, _)) => atPos(q, q)(Type.Tuple(body))
-      case _ => makeTuple[Type](body, () => emptyTupleResult, Type.Tuple(_))
+      case _ => makeTuple[Type](body, () => invalidLiteralUnitType, Type.Tuple(_))
     }
   }
 
@@ -2896,25 +2897,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def caseClause(forceSingleExpr: Boolean = false): Case = atPos(in.prevTokenPos, auto) {
-    require(token.isNot[KwCase] && debug(token))
-    Case(
-      pattern(),
-      guard(), {
-        accept[RightArrow]
-        val start = in.tokenPos
-        def end = in.prevTokenPos
-        def parseStatSeq() = {
-          blockStatSeq() match {
-            case List(q: Quasi) => q.become[Term.Quasi]
-            case List(term: Term) => term
-            case other => atPos(start, end)(Term.Block(other))
+    if (token.isNot[KwCase]) {
+      Case(
+        pattern(),
+        guard(), {
+          accept[RightArrow]
+          val start = in.tokenPos
+          def end = in.prevTokenPos
+          def parseStatSeq() = {
+            blockStatSeq() match {
+              case List(q: Quasi) => q.become[Term.Quasi]
+              case List(term: Term) => term
+              case other => atPos(start, end)(Term.Block(other))
+            }
           }
+          if (token.is[Indentation.Indent]) indented(parseStatSeq())
+          else if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false)
+          else parseStatSeq()
         }
-        if (token.is[Indentation.Indent]) indented(parseStatSeq())
-        else if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false)
-        else parseStatSeq()
-      }
-    )
+      )
+    } else {
+      syntaxError("Unexpected `case`", at = token.pos)
+    }
   }
 
   def quasiquoteCase(): Case = entrypointCase()

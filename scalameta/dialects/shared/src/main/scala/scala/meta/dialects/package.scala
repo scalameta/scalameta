@@ -56,7 +56,6 @@ package object dialects {
     .withAllowImplicitByNameParameters(true)
     .withAllowLiteralTypes(true)
     .withAllowNumericLiteralUnderscoreSeparators(true)
-    .withAllowLiteralUnitType(true)
     .withAllowTryWithAnyExpr(true)
 
   implicit val Scala = Scala213 // alias for latest Scala dialect.
@@ -106,7 +105,6 @@ package object dialects {
     .withAllowSpliceAndQuote(true)
     .withAllowToplevelStatements(true)
     .withAllowOpaqueTypes(true)
-    .withAllowLiteralUnitType(false)
     .withAllowExportClause(true)
     .withAllowCommaSeparatedExtend(true)
     .withAllowEndMarker(true)
