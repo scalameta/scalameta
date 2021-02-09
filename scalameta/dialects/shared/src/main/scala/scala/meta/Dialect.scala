@@ -93,6 +93,7 @@ final class Dialect private (
     // Opaque types introduced in dotty
     val allowOpaqueTypes: Boolean,
     // Literal Unit Type
+    @deprecated("Literal unit types are longer supported in any dialect", "4.4.9")
     val allowLiteralUnitType: Boolean,
     // Super traits introduced in dotty, but later removed.
     val allowSuperTrait: Boolean,
@@ -338,6 +339,7 @@ final class Dialect private (
   def withAllowOpaqueTypes(newValue: Boolean): Dialect = {
     privateCopy(allowOpaqueTypes = newValue)
   }
+  @deprecated("Literal unit types are longer supported in any dialect", "4.4.9")
   def withAllowLiteralUnitType(newValue: Boolean): Dialect = {
     privateCopy(allowLiteralUnitType = newValue)
   }

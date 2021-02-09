@@ -148,10 +148,15 @@ class TypeSuite extends ParseSuite {
     val Lit(false) = tpe("false")(dialects.Dotty)
     val Lit(true) = tpe("true")(dialects.Dotty)
 
-    val Lit.Unit() = tpe("()")(dialects.Scala213)
-    val Type.Function(Nil, Lit.Unit()) = tpe("() => ()")(dialects.Scala213)
-    intercept[org.scalameta.UnreachableError] {
-      tpe("()")(dialects.Dotty)
+    val exceptionScala3 = intercept[ParseException] {
+      tpe("() => ()")(dialects.Scala3)
     }
+    assertNoDiff(exceptionScala3.shortMessage, "illegal literal type (), use Unit instead")
+
+    val exceptionScala2 = intercept[ParseException] {
+      tpe("() => ()")(dialects.Scala213)
+    }
+    assertNoDiff(exceptionScala2.shortMessage, "illegal literal type (), use Unit instead")
+
   }
 }
