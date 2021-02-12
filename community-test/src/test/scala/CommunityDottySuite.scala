@@ -88,7 +88,7 @@ class CommunityDottySuite extends FunSuite {
 
     println("--------------------------")
     println(build.name)
-    println(s"Files parsed correctly ${stats.checkedFiles}")
+    println(s"Files parsed correctly ${stats.checkedFiles - stats.errors}")
     println(s"Files errored: ${stats.errors}")
     println(s"Time taken: ${stats.timeTaken}ms")
     println(s"Lines parsed: ~${stats.linesParsed / 1000}k")
@@ -157,16 +157,10 @@ class CommunityDottySuite extends FunSuite {
   final def dottyExclusionList = List(
     // [scalameta] erased modifier - for now used internally, will be available in 3.1
     "library/src/scala/compiletime/package.scala",
-    // most likely will become deprecated: if (cond) <ident>
-    "tools/dotc/typer/Implicits.scala",
-    "tools/dotc/typer/Checking.scala",
     // if then - else without outdentation before else.
     // it's unclear what to do in this case
     // https://github.com/lampepfl/dotty/issues/10372
-    "dotty/dokka/tasty/ClassLikeSupport.scala",
-    // extension will become a keyword, needs fix in dotty
-    "dotty/dokka/translators/ScalaSignatureProvider.scala",
-    "dotty/tools/dotc/config/Settings.scala"
+    "dotty/dokka/tasty/ClassLikeSupport.scala"
   )
 
   final def munitExclusionList = List(

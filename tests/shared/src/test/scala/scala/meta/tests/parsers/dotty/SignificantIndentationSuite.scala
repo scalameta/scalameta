@@ -837,4 +837,33 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("observe-indented-in-braces") {
+    val code = """|object X:
+                  |  if (cond)
+                  |    (f)
+                  |  foo
+                  |""".stripMargin
+    val output = """|object X {
+                    |  if (cond) f
+                    |  foo
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Object(
+        Nil,
+        Term.Name("X"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Term.If(Term.Name("cond"), Term.Name("f"), Lit.Unit(), Nil),
+            Term.Name("foo")
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
 }

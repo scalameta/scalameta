@@ -198,6 +198,46 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("new-if-indented") {
+    val code = """|if (cond)
+                  |  fx1
+                  |  fx2
+                  |""".stripMargin
+    val output = """|if (cond) {
+                    |  fx1
+                    |  fx2
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.If(
+        Term.Name("cond"),
+        Term.Block(List(Term.Name("fx1"), Term.Name("fx2"))),
+        Lit.Unit()
+      )
+    )
+  }
+
+  test("new-if-else-indented") {
+    val code = """|if cond
+                  |  fx1
+                  |  fx2
+                  |else
+                  |  gx
+                  |""".stripMargin
+    val output = """|if (cond) {
+                    |  fx1
+                    |  fx2
+                    |} else gx
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.If(
+        Term.Name("cond"),
+        Term.Block(List(Term.Name("fx1"), Term.Name("fx2"))),
+        Term.Name("gx")
+      )
+    )
+  }
+
   test("if-else-in-parens-3") {
     val code = """|fx(
                   |  if cond then

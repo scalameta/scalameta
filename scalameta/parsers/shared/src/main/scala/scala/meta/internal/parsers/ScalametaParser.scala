@@ -259,9 +259,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     )
   }
 
-  /**
-   * pos/nextPos - is used for  
-   */
   case class TokenRef(
       token: Token,
       pos: Int,
@@ -2126,7 +2123,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val (cond, thenp) = if (token.isNot[LeftParen] && dialect.allowSignificantIndentation) {
       val cond = expr()
       acceptOpt[LF]
-      accept[KwThen]
+      if (!tryAcceptWithOptLF[KwThen])
+        in.observeIndented()
       (cond, exprMaybeIndented())
     } else {
       val forked = in.fork
@@ -2136,7 +2134,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         cond = expr()
       }
       newLinesOpt()
-      acceptOpt[KwThen]
+      if (!tryAcceptWithOptLF[KwThen])
+        in.observeIndented()
       (cond, exprMaybeIndented())
     }
 
