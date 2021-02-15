@@ -1047,7 +1047,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       token.is[KwYield] || token.is[KwTry] || token.is[KwCatch] || token.is[KwFinally] ||
       token.is[KwMatch] || token.is[KwDo] || token.is[KwFor] || token.is[KwThen] ||
       token.is[KwElse] || token.is[Equals] || token.is[KwWhile] || isColonEol(token) ||
-      token.is[RightArrow] || (token.is[KwWith] && token.next.isNot[Ident])
+      token.is[RightArrow] || (token.is[KwWith] && token.next.is[DclIntro])
     }
   }
 
@@ -3945,7 +3945,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Init(decltpe, autoPos(Name.Anonymous()), Nil)
         )
       )
-      while (token.is[KwWith] && token.next.is[Ident]) { next(); parents += init() }
+
+      while (token.is[KwWith] && ahead(token.is[Ident])) { next(); parents += init() }
       parents.toList
     }
 
