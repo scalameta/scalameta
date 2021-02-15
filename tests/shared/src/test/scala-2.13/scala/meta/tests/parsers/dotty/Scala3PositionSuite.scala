@@ -192,6 +192,15 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
   checkPositions[Stat](
+    """|x match {
+       |  case List(xs*) => 1
+       |}""".stripMargin,
+    """|Case case List(xs*) => 1
+       |Pat.Extract List(xs*)
+       |Pat.Repeated xs*
+       |""".stripMargin
+  )
+  checkPositions[Stat](
     "val extractor: (e: Entry, f: Other) => e.Key = extractKey",
     """|Type.Function (e: Entry, f: Other) => e.Key
        |Type.TypedParam e: Entry

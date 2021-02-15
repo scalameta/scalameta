@@ -2210,6 +2210,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         implicitClosure(location)
       case _ =>
         var t: Term = autoPos(postfixExpr(allowRepeated))
+        def repeatedTerm(nextTokens: () => Unit) = {
+          if (allowRepeated) t = atPos(t, auto)({ nextTokens(); Term.Repeated(t) })
+          else syntaxError("repeated argument not allowed here", at = token)
+        }
         if (token.is[Equals]) {
           t match {
             case _: Term.Ref | _: Term.Apply | _: Quasi =>
@@ -2222,13 +2226,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           if (token.is[At] || (token.is[Ellipsis] && ahead(token.is[At]))) {
             t = atPos(t, auto)(Term.Annotate(t, annots(skipNewLines = false)))
           } else if (token.is[Underscore] && ahead(isStar)) {
-            if (allowRepeated) t = atPos(t, auto)({ next(); next(); Term.Repeated(t) })
-            else syntaxError("repeated argument not allowed here", at = token)
+            repeatedTerm(() => nextTwice())
           } else {
             // this does not necessarily correspond to syntax, but is necessary to accept lambdas
             // check out the `if (token.is[RightArrow]) { ... }` block below
             t = atPos(t, auto)(Term.Ascribe(t, typeOrInfixType(location)))
           }
+        } else if (dialect.allowPostfixStarVarargSplices && isStar) {
+          repeatedTerm(() => next())
         } else if (token.is[KwMatch]) {
           next()
           t = matchClause(t)
@@ -2566,11 +2571,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // rhsStartK/rhsEndK may be bigger than then extent of rhsK,
     // so we really have to track them separately.
     def loop(rhsStartK: Pos, rhsK: ctx.Rhs, rhsEndK: Pos): ctx.Rhs = {
-      if (!token.is[Ident] && !token
-          .is[Unquote] && !(token.is[KwMatch] && dialect.allowMatchAsOperator)) {
+      def isVarargParam = dialect.allowPostfixStarVarargSplices && isStar && allowRepeated
+      if (!token.is[Ident] && !token.is[Unquote] &&
+        !(token.is[KwMatch] && dialect.allowMatchAsOperator)) {
         // Infix chain has ended.
         // In the running example, we're at `a + b[]`
         // with base = List([a +]), rhsK = List([b]).
+        rhsK
+      } else if (isVarargParam) {
         rhsK
       } else {
         // Infix chain continues.
@@ -3202,6 +3210,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case Ident(_) | KwThis() | Unquote() =>
           val isBackquoted = parser.isBackquoted
           val sid = stableId()
+          val isRepeated = sid match {
+            case _: Quasi => false
+            case Term.Name(value) => dialect.allowPostfixStarVarargSplices && isStar
+            case _ => false
+          }
           val isVarPattern = sid match {
             case _: Quasi => false
             case Term.Name(value) =>
@@ -3231,6 +3244,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               Pat.Extract(fun, checkNoTripleDots(argumentPatterns()))
             case (_, _) if targs.nonEmpty => syntaxError("pattern must be a value", at = token)
             case (_, name: Term.Name.Quasi) => name.become[Pat.Quasi]
+            case (_, name: Term.Name) if isRepeated => accept[Ident]; Pat.Repeated(name)
             case (_, name: Term.Name) if isVarPattern => Pat.Var(name)
             case (_, name: Term.Name) => name
             case (_, select: Term.Select) => select

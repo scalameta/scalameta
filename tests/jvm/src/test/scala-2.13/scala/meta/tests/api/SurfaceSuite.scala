@@ -304,6 +304,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Pat.Given
       |scala.meta.Pat.Interpolate
       |scala.meta.Pat.Macro
+      |scala.meta.Pat.Repeated
       |scala.meta.Pat.SeqWildcard
       |scala.meta.Pat.Tuple
       |scala.meta.Pat.Typed

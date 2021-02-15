@@ -86,8 +86,10 @@ package object dialects {
 
   implicit val Scala3 = Scala213
     .withAllowAndTypes(true)
+    // there 3 different ways to specify vargs, some will be removed in future Scala 3 versions
     .withAllowAtForExtractorVarargs(true) // both @ and : work currently for Scala 3
     .withAllowColonForExtractorVarargs(true) // both @ and : work currently for Scala 3
+    .withAllowPostfixStarVarargSplices(true)
     .withAllowEnums(true)
     .withAllowImplicitByNameParameters(true)
     .withAllowInlineMods(true)

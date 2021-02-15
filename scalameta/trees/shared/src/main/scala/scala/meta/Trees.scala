@@ -261,6 +261,7 @@ object Pat {
   @ast class Tuple(args: List[Pat] @nonEmpty) extends Pat {
     checkFields(args.length > 1 || (args.length == 1 && args.head.is[Pat.Quasi]))
   }
+  @ast class Repeated(name: scala.meta.Term.Name) extends Pat
   @ast class Extract(fun: Term, args: List[Pat]) extends Pat {
     checkFields(fun.isExtractor)
   }

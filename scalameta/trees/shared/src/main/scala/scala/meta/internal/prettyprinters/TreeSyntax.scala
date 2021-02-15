@@ -248,6 +248,7 @@ object TreeSyntax {
           case p: Term.Select => false
           case p: Pat.Wildcard => unreachable
           case p: Pat.Var => false
+          case p: Pat.Repeated => false
           case p: Pat.Bind => unreachable
           case p: Pat.Alternative => true
           case p: Pat.Tuple => true
@@ -627,7 +628,11 @@ object TreeSyntax {
         m(SimpleExpr, s(kw("new"), " ", t.templ), w(" {", "", "}", needsExplicitBraces))
       case _: Term.Placeholder => m(SimpleExpr1, kw("_"))
       case t: Term.Eta => m(PostfixExpr, s(p(SimpleExpr1, t.expr), " ", kw("_")))
-      case t: Term.Repeated => s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
+      case t: Term.Repeated =>
+        if (dialect.allowPostfixStarVarargSplices)
+          s(p(PostfixExpr, t.expr), kw("*"))
+        else
+          s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
       case t: Term.Param =>
         val mods = t.mods
           // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
@@ -758,6 +763,7 @@ object TreeSyntax {
         m(SimplePattern, s(if (guessIsBackquoted(t.name)) s"`${t.name.value}`" else t.name.value))
       case _: Pat.Wildcard => m(SimplePattern, kw("_"))
       case _: Pat.SeqWildcard => m(SimplePattern, kw("_*"))
+      case t: Pat.Repeated => m(SimplePattern, t.name, kw("*"))
       case pat: Pat.Given => m(SimplePattern, s(kw("given"), " ", pat.tpe))
       case t: Pat.Bind =>
         val separator = t.rhs match {
