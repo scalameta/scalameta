@@ -746,6 +746,44 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("vararg-wildcard-postfix-star") {
+    runTestAssert[Stat](
+      "val lst = List(0, arr*)"
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("lst"))),
+        None,
+        Term.Apply(Term.Name("List"), List(Lit.Int(0), Term.Repeated(Term.Name("arr"))))
+      )
+    )
+  }
+
+  test("vararg-wildcard-postfix-start-pat") {
+    runTestAssert[Stat](
+      """|a match {case List(xs*) => }
+         |""".stripMargin,
+      assertLayout = Some(
+        """|a match {
+           |  case List(xs*) =>
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Match(
+        Term.Name("a"),
+        List(
+          Case(
+            Pat.Extract(Term.Name("List"), List(Pat.Repeated(Term.Name("xs")))),
+            None,
+            Term.Block(Nil)
+          )
+        ),
+        Nil
+      )
+    )
+  }
+
   test("empty-case-class") {
     val error = "case classes must have a parameter list"
     runTestError[Stat]("case class A", error)
