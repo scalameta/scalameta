@@ -71,6 +71,10 @@ object ParentChecks {
     bindRhs || extractArgs || extractInfixArgs || extractInterpolate || extractXml
   }
 
+  def AnonymousImport(tree: Term.Anonymous, parent: Tree, destination: String): Boolean = {
+    parent.is[Importer]
+  }
+
   def NameAnonymous(tree: Name.Anonymous, parent: Tree, destination: String): Boolean = {
     def primaryCtorName = parent.is[Ctor.Primary] && destination == "name"
     def secondaryCtorName = parent.is[Ctor.Secondary] && destination == "name"
