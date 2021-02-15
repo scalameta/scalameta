@@ -759,6 +759,25 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("non-vararg-infix-star") {
+    runTestAssert[Stat](
+      "val lst = List(0, a * b)"
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("lst"))),
+        None,
+        Term.Apply(
+          Term.Name("List"),
+          List(
+            Lit.Int(0),
+            Term.ApplyInfix(Term.Name("a"), Term.Name("*"), Nil, List(Term.Name("b")))
+          )
+        )
+      )
+    )
+  }
+
   test("vararg-wildcard-postfix-start-pat") {
     runTestAssert[Stat](
       """|a match {case List(xs*) => }
