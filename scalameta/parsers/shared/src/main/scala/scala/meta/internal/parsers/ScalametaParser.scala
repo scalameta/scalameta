@@ -840,7 +840,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def isSpliceFollowedBy(check: => Boolean): Boolean =
     token.is[Ellipsis] && ahead(token.is[Unquote] && ahead(token.is[Ident] || check))
   def isBackquoted: Boolean = token.syntax.startsWith("`") && token.syntax.endsWith("`")
-
+  def isVarargStarParam(allowRepeated: Boolean) =
+    dialect.allowPostfixStarVarargSplices && isStar && token.next.is[RightParen] && allowRepeated
   private implicit class XtensionTokenClass(token: Token) {
     def isCaseClassOrObject =
       token.is[KwCase] && (token.next.is[KwClass] || token.next.is[KwObject])
@@ -2232,7 +2233,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             // check out the `if (token.is[RightArrow]) { ... }` block below
             t = atPos(t, auto)(Term.Ascribe(t, typeOrInfixType(location)))
           }
-        } else if (dialect.allowPostfixStarVarargSplices && isStar) {
+        } else if (isVarargStarParam(allowRepeated)) {
           repeatedTerm(() => next())
         } else if (token.is[KwMatch]) {
           next()
@@ -2571,14 +2572,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // rhsStartK/rhsEndK may be bigger than then extent of rhsK,
     // so we really have to track them separately.
     def loop(rhsStartK: Pos, rhsK: ctx.Rhs, rhsEndK: Pos): ctx.Rhs = {
-      def isVarargParam = dialect.allowPostfixStarVarargSplices && isStar && allowRepeated
       if (!token.is[Ident] && !token.is[Unquote] &&
         !(token.is[KwMatch] && dialect.allowMatchAsOperator)) {
         // Infix chain has ended.
         // In the running example, we're at `a + b[]`
         // with base = List([a +]), rhsK = List([b]).
         rhsK
-      } else if (isVarargParam) {
+      } else if (isVarargStarParam(allowRepeated)) {
         rhsK
       } else {
         // Infix chain continues.
