@@ -248,9 +248,8 @@ class GivenUsingSuite extends BaseDottySuite {
           Self(Name(""), None),
           List(
             Defn.ExtensionGroup(
-              Term.Param(Nil, Term.Name("y"), Some(Type.Name("String")), None),
               Nil,
-              Nil,
+              List(List(Term.Param(Nil, Term.Name("y"), Some(Type.Name("String")), None))),
               Defn.Def(
                 Nil,
                 Term.Name("f"),

@@ -118,9 +118,8 @@ class InfixSuite extends BaseDottySuite {
   test("extension-method") {
     runTestAssert[Stat]("extension (i: Int) infix def zero(other: Int): Int = 0")(
       Defn.ExtensionGroup(
-        Term.Param(Nil, Term.Name("i"), Some(Type.Name("Int")), None),
         Nil,
-        Nil,
+        List(List(Term.Param(Nil, Term.Name("i"), Some(Type.Name("Int")), None))),
         Defn.Def(
           List(Mod.Infix()),
           Term.Name("zero"),
