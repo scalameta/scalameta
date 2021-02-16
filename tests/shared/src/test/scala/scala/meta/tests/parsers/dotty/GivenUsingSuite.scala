@@ -226,6 +226,47 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
+  test("given-extension") {
+    val code =
+      """|given x: AnyRef with
+         |      extension (y: String)
+         |         def f (y: Int): Boolean = false
+         |""".stripMargin
+    val expected =
+      "given x: AnyRef with { extension (y: String) def f(y: Int): Boolean = false }"
+    runTestAssert[Stat](code, assertLayout = Some(expected))(
+      Defn.Given(
+        Nil,
+        Term.Name("x"),
+        Nil,
+        Nil,
+        Template(
+          Nil,
+          List(
+            Init(Type.Name("AnyRef"), Name(""), Nil)
+          ),
+          Self(Name(""), None),
+          List(
+            Defn.ExtensionGroup(
+              Term.Param(Nil, Term.Name("y"), Some(Type.Name("String")), None),
+              Nil,
+              Nil,
+              Defn.Def(
+                Nil,
+                Term.Name("f"),
+                Nil,
+                List(List(Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None))),
+                Some(Type.Name("Boolean")),
+                Lit.Boolean(false)
+              )
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
   test("given-inline") {
     runTestAssert[Stat]("inline given intOrd: Ord[Int] with { def f(): Int = 1 }")(
       Defn.Given(
