@@ -4,6 +4,7 @@ package tokenizers
 
 import Chars._
 import scala.meta.inputs._
+import scala.util.control.NonFatal
 
 trait CharArrayReaderData {
 
@@ -101,10 +102,14 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter)
     val end = charOffset
     if (charOffset < buf.length && buf(charOffset) == 'u' && evenSlashPrefix) {
       do charOffset += 1 while (charOffset < buf.length && buf(charOffset) == 'u')
-      val code = udigit << 12 | udigit << 8 | udigit << 4 | udigit
-      lastUnicodeOffset = charOffset
-      isUnicodeEscape = true
-      ch = code.toChar
+      try {
+        val code = udigit << 12 | udigit << 8 | udigit << 4 | udigit
+        lastUnicodeOffset = charOffset
+        isUnicodeEscape = true
+        ch = code.toChar
+      } catch {
+        case NonFatal(_) =>
+      }
     }
 
     // restore the charOffset to the saved position

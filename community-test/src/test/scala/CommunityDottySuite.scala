@@ -60,8 +60,8 @@ class CommunityDottySuite extends FunSuite {
   val communityBuilds = List(
     CommunityBuild(
       "https://github.com/lampepfl/dotty.git",
-      //commit hash from 16.12.2020
-      "73d942cca5936e3f760be327a5a4d6ee9f9c194f",
+      //commit hash from 17.02.2021
+      "8bbb0ba745453a0d2ffdb94c5966752dfe57bb5f",
       "dotty",
       dottyExclusionList
     ),
@@ -156,16 +156,11 @@ class CommunityDottySuite extends FunSuite {
 
   final def dottyExclusionList = List(
     // [scalameta] erased modifier - for now used internally, will be available in 3.1
-    "library/src/scala/compiletime/package.scala",
-    // if then - else without outdentation before else.
-    // it's unclear what to do in this case
-    // https://github.com/lampepfl/dotty/issues/10372
-    "dotty/dokka/tasty/ClassLikeSupport.scala"
+    "library/src/scala/compiletime/package.scala"
   )
 
   final def munitExclusionList = List(
-    // Syntax no longer valid in Scala 3
-    //xml literals
+    // xml literals are longer valid in Scala 3
     "main/scala/docs/MUnitModifier.scala"
   )
 

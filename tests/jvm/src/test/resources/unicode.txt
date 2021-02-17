@@ -3,3 +3,4 @@ s"]2;SBT${titleName}${titleBranch}\u0007"
 case (r, \u03c6) =>
 case (r,\u03c6) =>
 scala.meta.\u03c6
+f"\u$oct%04x"
