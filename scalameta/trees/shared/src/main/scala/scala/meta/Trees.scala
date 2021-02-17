@@ -74,6 +74,10 @@ object Term {
   @ast class This(qual: scala.meta.Name) extends Term.Ref
   @ast class Super(thisp: scala.meta.Name, superp: scala.meta.Name) extends Term.Ref
   @ast class Name(value: Predef.String @nonEmpty) extends scala.meta.Name with Term.Ref with Pat
+  @ast class Anonymous() extends scala.meta.Name with Term.Ref {
+    def value = ""
+    checkParent(ParentChecks.AnonymousImport)
+  }
   @ast class Select(qual: Term, name: Term.Name) extends Term.Ref with Pat
   @ast class Interpolate(prefix: Name, parts: List[Lit] @nonEmpty, args: List[Term]) extends Term {
     checkFields(parts.length == args.length + 1)

@@ -150,7 +150,11 @@ final class Dialect private (
      * `case tp @ OrNull(tp1): OrType`
      * the last section after : was not allowed previously.
      */
-    val allowAllTypedPatterns: Boolean
+    val allowAllTypedPatterns: Boolean,
+    // Scala 3 import renames can use as soft keyword `import a.b.C as D`
+    val allowAsForImportRename: Boolean,
+    // Scala 3 wildcard imports can be specified as `import a.b.*`
+    val allowStarWildcardImport: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -241,7 +245,9 @@ final class Dialect private (
       allowSymbolLiterals = true,
       allowDependentFunctionTypes = false,
       allowPostfixStarVarargSplices = false,
-      allowAllTypedPatterns = false
+      allowAllTypedPatterns = false,
+      allowAsForImportRename = false,
+      allowStarWildcardImport = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -431,6 +437,12 @@ final class Dialect private (
   def withAllowAllTypedPatterns(newValue: Boolean): Dialect = {
     privateCopy(allowAllTypedPatterns = newValue)
   }
+  def withAllowAsForImportRename(newValue: Boolean): Dialect = {
+    privateCopy(allowAsRenames = newValue)
+  }
+  def withAllowStarWildcardImport(newValue: Boolean): Dialect = {
+    privateCopy(allowStarWildcardImport = newValue)
+  }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -492,7 +504,9 @@ final class Dialect private (
       allowSymbolLiterals: Boolean = this.allowSymbolLiterals,
       allowDependentFunctionTypes: Boolean = this.allowDependentFunctionTypes,
       allowPostfixStarVarargSplices: Boolean = this.allowPostfixStarVarargSplices,
-      allowAllTypedPatterns: Boolean = this.allowAllTypedPatterns
+      allowAllTypedPatterns: Boolean = this.allowAllTypedPatterns,
+      allowAsRenames: Boolean = this.allowAsForImportRename,
+      allowStarWildcardImport: Boolean = this.allowStarWildcardImport
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -551,7 +565,9 @@ final class Dialect private (
       allowSymbolLiterals,
       allowDependentFunctionTypes,
       allowPostfixStarVarargSplices,
-      allowAllTypedPatterns
+      allowAllTypedPatterns,
+      allowAsRenames,
+      allowStarWildcardImport
       // NOTE(olafur): add the next argument above this comment.
     )
   }

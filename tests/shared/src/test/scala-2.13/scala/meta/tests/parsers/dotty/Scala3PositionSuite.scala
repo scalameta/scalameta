@@ -245,4 +245,47 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.Apply Beta[T]
        |""".stripMargin
   )
+  checkPositions[Stat](
+    """|object O {
+       |  import scala as s
+       |  import a.b.C as D
+       |  import a.*
+       |  import a.{no as _, *}
+       |  import A.b.`*`
+       |  import a.b.C as _
+       |}""".stripMargin,
+    """|Template {
+       |  import scala as s
+       |  import a.b.C as D
+       |  import a.*
+       |  import a.{no as _, *}
+       |  import A.b.`*`
+       |  import a.b.C as _
+       |}
+       |Self   @@import scala as s
+       |Import import scala as s
+       |Importer scala as s
+       |Importee.Rename scala as s
+       |Import import a.b.C as D
+       |Importer a.b.C as D
+       |Term.Select a.b
+       |Importee.Rename C as D
+       |Import import a.*
+       |Importer a.*
+       |Importee.Wildcard *
+       |Import import a.{no as _, *}
+       |Importer a.{no as _, *}
+       |Importee.Unimport no as _
+       |Importee.Wildcard *
+       |Import import A.b.`*`
+       |Importer A.b.`*`
+       |Term.Select A.b
+       |Importee.Name `*`
+       |Name.Indeterminate `*`
+       |Import import a.b.C as _
+       |Importer a.b.C as _
+       |Term.Select a.b
+       |Importee.Unimport C as _
+       |""".stripMargin
+  )
 }

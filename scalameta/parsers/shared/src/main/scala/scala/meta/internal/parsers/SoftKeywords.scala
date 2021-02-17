@@ -15,6 +15,14 @@ class SoftKeywords(dialect: Dialect) {
   }
 
   @classifier
+  trait KwAs {
+    val name = "as"
+    def unapply(token: Token): Boolean = {
+      matches(token, name, dialect.allowAsForImportRename)
+    }
+  }
+
+  @classifier
   trait KwUsing {
     val name = "using"
     def unapply(token: Token): Boolean = {

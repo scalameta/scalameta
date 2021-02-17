@@ -3807,6 +3807,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     Import(commaSeparated(importer()))
   }
 
+  def isStarWildcard: Boolean = isStarWildcard(token)
+  def isStarWildcard(token: Token): Boolean = dialect.allowStarWildcardImport && token.syntax == "*"
+
   def importer(): Importer = autoPos {
     val sid = stableId() match {
       case q: Quasi => q.become[Term.Ref.Quasi]
@@ -3815,14 +3818,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case path => path
     }
     def dotselectors = { accept[Dot]; Importer(sid, importees()) }
+    def name(tn: Term.Name) = atPos(tn, tn)(Name.Indeterminate(tn.value))
     sid match {
       case Term.Select(sid: Term.Ref, tn: Term.Name) if sid.isStableId =>
         if (token.is[Dot]) dotselectors
-        else
-          Importer(
-            sid,
-            atPos(tn, tn)(Importee.Name(atPos(tn, tn)(Name.Indeterminate(tn.value)))) :: Nil
-          )
+        else if (token.is[soft.KwAs]) {
+          next()
+          Importer(sid, importeeRename(name(tn)) :: Nil)
+        } else if (isStarWildcard(tn.tokens.head)) {
+          Importer(sid, atPos(tn, tn)(Importee.Wildcard()) :: Nil)
+        } else {
+          Importer(sid, atPos(tn, tn)(Importee.Name(name(tn))) :: Nil)
+        }
+      case tn: Term.Name if token.is[soft.KwAs] =>
+        next()
+        Importer(autoPos(Term.Anonymous()), importeeRename(name(tn)) :: Nil)
       case _ =>
         dotselectors
     }
@@ -3854,7 +3864,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
   def importWildcardOrName(): Importee = autoPos {
-    if (token.is[Underscore]) {
+    if (token.is[Underscore] || isStarWildcard) {
       next(); Importee.Wildcard()
     } else if (token.is[KwGiven]) {
       next();
@@ -3867,17 +3877,23 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
+  def importeeRename(from: Name) = atPos(from, auto) {
+    importWildcardOrName() match {
+      case to: Importee.Name => Importee.Rename(from, to.name)
+      case to: Importee.Wildcard => Importee.Unimport(from)
+      case other => unreachable(debug(other, other.structure))
+    }
+  }
+
   def importee(): Importee = autoPos {
     importWildcardOrName() match {
-      case from: Importee.Name if token.is[RightArrow] =>
+      case from: Importee.Name if token.is[RightArrow] || token.is[soft.KwAs] =>
         next()
-        importWildcardOrName() match {
-          case to: Importee.Name => Importee.Rename(from.name, to.name)
-          case to: Importee.Wildcard => Importee.Unimport(from.name)
-          case other => unreachable(debug(other, other.structure))
-        }
+        importeeRename(from.name)
       // NOTE: this is completely nuts
-      case from: Importee.Wildcard if token.is[RightArrow] && ahead(token.is[Underscore]) =>
+      case from: Importee.Wildcard
+          if (token.is[RightArrow] || token.is[soft.KwAs]) &&
+            ahead(token.is[Underscore] || isStarWildcard) =>
         nextTwice()
         from
       case other =>

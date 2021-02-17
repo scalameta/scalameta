@@ -320,6 +320,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Template
       |scala.meta.Term
       |scala.meta.Term.Annotate
+      |scala.meta.Term.Anonymous
       |scala.meta.Term.Apply
       |scala.meta.Term.ApplyInfix
       |scala.meta.Term.ApplyType

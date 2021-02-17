@@ -267,13 +267,16 @@ object TreeSyntax {
         looksLikePatVar && thisLocationAlsoAcceptsPatVars
       }
       // soft keywords might need to be written with backquotes in some places
-      def isEscapableSoftKeyword(t: Term.Name, parent: Tree): Boolean = {
+      def isEscapableSoftKeyword(t: Name, parent: Tree): Boolean = {
         t.value match {
           case "extension" if dialect.allowExtensionMethods =>
             parent.is[Term.Apply] || parent.is[Term.ApplyUsing]
           case "inline" if dialect.allowInlineMods =>
             parent.is[Term.Apply] || parent.is[Term.ApplyUsing] || parent.is[Term.ApplyInfix]
-          case _ => false
+          case "*" if dialect.allowStarWildcardImport =>
+            parent.is[Importee]
+          case _ =>
+            false
         }
       }
       (t, t.parent) match {
@@ -283,6 +286,8 @@ object TreeSyntax {
             isEscapableSoftKeyword(t, p)
         case (t: Type.Name, Some(p: Tree)) =>
           cantBeWrittenWithoutBackquotes(t)
+        case (t: Name, Some(p: Tree)) =>
+          isEscapableSoftKeyword(t, p)
         case _ => cantBeWrittenWithoutBackquotes(t)
       }
     }
@@ -328,6 +333,7 @@ object TreeSyntax {
 
       // Name
       case t: Name.Anonymous => s("_")
+      case t: Term.Anonymous => s("")
       case t: Name.Indeterminate => if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value)
 
       // Term
@@ -1133,10 +1139,26 @@ object TreeSyntax {
       case t: Importee.Name => s(t.name)
       case t: Importee.Given => s(kw("given"), " ", t.tpe)
       case t: Importee.GivenAll => s(kw("given"))
-      case t: Importee.Rename => s(t.name, " ", kw("=>"), " ", t.rename)
-      case t: Importee.Unimport => s(t.name, " ", kw("=>"), " ", kw("_"))
-      case _: Importee.Wildcard => kw("_")
-      case t: Importer => s(t.ref, ".", t.importees)
+      case t: Importee.Rename =>
+        if (dialect.allowAsForImportRename)
+          s(t.name, " ", kw("as"), " ", t.rename)
+        else
+          s(t.name, " ", kw("=>"), " ", t.rename)
+      case t: Importee.Unimport =>
+        if (dialect.allowAsForImportRename)
+          s(t.name, " ", kw("as"), " ", kw("_"))
+        else
+          s(t.name, " ", kw("=>"), " ", kw("_"))
+      case _: Importee.Wildcard =>
+        if (dialect.allowStarWildcardImport)
+          kw("*")
+        else
+          kw("_")
+      case t: Importer =>
+        if (t.ref.isNot[Term.Anonymous])
+          s(t.ref, ".", t.importees)
+        else
+          s(t.importees)
       case t: Import => s(kw("import"), " ", r(t.importers, ", "))
       case t: Export =>
         s(kw("export"), " ", r(t.importers, ", "))
@@ -1238,6 +1260,8 @@ object TreeSyntax {
       case (t: Importee.Name) :: Nil => s(t)
       case (t: Importee.Wildcard) :: Nil => s(t)
       case (t: Importee.GivenAll) :: Nil => s(t)
+      case (t: Importee.Rename) :: Nil if dialect.allowAsForImportRename => s(t)
+      case (t: Importee.Unimport) :: Nil if dialect.allowAsForImportRename => s(t)
       case (t: Importee.Rename) :: Nil => s("{", t, "}")
       case importees => s("{ ", r(importees, ", "), " }")
     }
