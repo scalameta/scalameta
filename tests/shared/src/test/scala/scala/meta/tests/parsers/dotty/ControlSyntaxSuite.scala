@@ -198,6 +198,46 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("new-if-indented") {
+    val code = """|if (cond)
+                  |  fx1
+                  |  fx2
+                  |""".stripMargin
+    val output = """|if (cond) {
+                    |  fx1
+                    |  fx2
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.If(
+        Term.Name("cond"),
+        Term.Block(List(Term.Name("fx1"), Term.Name("fx2"))),
+        Lit.Unit()
+      )
+    )
+  }
+
+  test("new-if-else-indented") {
+    val code = """|if cond
+                  |  fx1
+                  |  fx2
+                  |else
+                  |  gx
+                  |""".stripMargin
+    val output = """|if (cond) {
+                    |  fx1
+                    |  fx2
+                    |} else gx
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.If(
+        Term.Name("cond"),
+        Term.Block(List(Term.Name("fx1"), Term.Name("fx2"))),
+        Term.Name("gx")
+      )
+    )
+  }
+
   test("if-else-in-parens-3") {
     val code = """|fx(
                   |  if cond then
@@ -1599,6 +1639,77 @@ class ControlSyntaxSuite extends BaseDottySuite {
             List(Case(Pat.Var(Term.Name("x")), None, Term.Apply(Term.Name("ok"), Nil))),
             None
           )
+        )
+      )
+    )
+  }
+
+  test("match-braces-LFLF") {
+    val code =
+      """|a match {
+         |  case A() =>
+         |    succ
+         |
+         |  case _ => fail
+         |}
+         |""".stripMargin
+    val expected =
+      """|a match {
+         |  case A() => succ
+         |  case _ => fail
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(expected))(
+      Term.Match(
+        Term.Name("a"),
+        List(
+          Case(Pat.Extract(Term.Name("A"), Nil), None, Term.Name("succ")),
+          Case(Pat.Wildcard(), None, Term.Name("fail"))
+        ),
+        Nil
+      )
+    )
+  }
+
+  test("match-last-empty") {
+    val code =
+      """|object Z:
+         |  a match
+         |    case A() =>
+         |      succ
+         |    case _ =>
+         |  
+         |  val x = 0
+         |""".stripMargin
+    val expected =
+      """|object Z {
+         |  a match {
+         |    case A() => succ
+         |    case _ =>
+         |  }
+         |  val x = 0
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(expected))(
+      Defn.Object(
+        Nil,
+        Term.Name("Z"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Term.Match(
+              Term.Name("a"),
+              List(
+                Case(Pat.Extract(Term.Name("A"), Nil), None, Term.Name("succ")),
+                Case(Pat.Wildcard(), None, Term.Block(Nil))
+              ),
+              Nil
+            ),
+            Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Int(0))
+          ),
+          Nil
         )
       )
     )

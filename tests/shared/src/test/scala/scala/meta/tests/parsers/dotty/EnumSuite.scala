@@ -371,6 +371,112 @@ class EnumSuite extends BaseDottySuite {
     )
   }
 
+  test("enum-colon") {
+    val code =
+      """|enum A:
+         |  case B, C
+      """.stripMargin
+    val expected = "enum A { case B, C }"
+    runTestAssert[Stat](code, assertLayout = Some(expected))(
+      enumWithCase(
+        "A",
+        Defn.RepeatedEnumCase(Nil, List(Term.Name("B"), Term.Name("C")))
+      )
+    )
+  }
+
+  test("enum-colon-sep-after") {
+    val code =
+      """|object Main :
+         |  enum A {
+         |    case B, C
+         |  }
+         |  object X:
+         |    val x = "x"
+      """.stripMargin
+    val expected =
+      """|object Main {
+         |  enum A { case B, C }
+         |  object X { val x = "x" }
+         |}
+      """.stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(expected))(
+      Defn.Object(
+        Nil,
+        Term.Name("Main"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            enumWithCase("A", Defn.RepeatedEnumCase(Nil, List(Term.Name("B"), Term.Name("C")))),
+            Defn.Object(
+              Nil,
+              Term.Name("X"),
+              Template(
+                Nil,
+                Nil,
+                Self(Name(""), None),
+                List(
+                  Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.String("x"))
+                ),
+                Nil
+              )
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("enum-inside-indented") {
+    val code = """|object Main:
+                  |  enum A:
+                  |    kind =>
+                  |
+                  |    case B, C
+                  |
+                  |  end A
+                  |""".stripMargin
+    val output =
+      """|object Main {
+         |  enum A { kind => case B, C }
+         |  end A
+         |}
+      """.stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Object(
+        Nil,
+        Term.Name("Main"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.Enum(
+              Nil,
+              Type.Name("A"),
+              Nil,
+              Ctor.Primary(Nil, Name(""), Nil),
+              Template(
+                Nil,
+                Nil,
+                Self(Term.Name("kind"), None),
+                List(
+                  Defn.RepeatedEnumCase(Nil, List(Term.Name("B"), Term.Name("C")))
+                ),
+                Nil
+              )
+            ),
+            Term.EndMarker(Term.Name("A"))
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
   private def enumWithCase(name: String, enumCase: Stat) = Defn.Enum(
     Nil,
     Type.Name(name),

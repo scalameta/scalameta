@@ -82,8 +82,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
   }
 
-  // extension methods no longer require `:` which causes Scalameta not to parse it correctly yet
-  test("multiple-methods-indent".ignore) {
+  test("multiple-methods-indent") {
     val code = """|extension (c: Circle)
                   |  def cra: Int = 2
                   |  def crb: String = "3"

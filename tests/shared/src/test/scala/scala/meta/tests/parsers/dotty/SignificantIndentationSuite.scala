@@ -2,6 +2,7 @@ package scala.meta.tests.parsers.dotty
 
 import scala.meta.tests.parsers._
 import scala.meta._
+import scala.meta.Term.Block
 
 class SignificantIndentationSuite extends BaseDottySuite {
 
@@ -807,4 +808,62 @@ class SignificantIndentationSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("semicolon-closes-indent-region") {
+    runTestAssert[Stat](
+      """|val z =
+         |  val a = 
+         |    0;
+         |  f(a)
+         |""".stripMargin,
+      assertLayout = Some(
+        """|val z = {
+           |  val a = 0
+           |  f(a)
+           |}""".stripMargin
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("z"))),
+        None,
+        Term.Block(
+          List(
+            Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), None, Lit.Int(0)),
+            Term.Apply(Term.Name("f"), List(Term.Name("a")))
+          )
+        )
+      )
+    )
+  }
+
+  test("observe-indented-in-braces") {
+    val code = """|object X:
+                  |  if (cond)
+                  |    (f)
+                  |  foo
+                  |""".stripMargin
+    val output = """|object X {
+                    |  if (cond) f
+                    |  foo
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Object(
+        Nil,
+        Term.Name("X"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Term.If(Term.Name("cond"), Term.Name("f"), Lit.Unit(), Nil),
+            Term.Name("foo")
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
 }

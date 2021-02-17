@@ -779,4 +779,27 @@ class TermSuite extends ParseSuite {
       )
     ) = term(""""foo" :: () :: true :: HNil""")
   }
+
+  test("nested-braces-in-paren") {
+    val code = """(if (bar) {
+        if (foo) { doFoo() }
+        val x = 2
+      })
+    """
+
+    val Term.If(
+      Term.Name("bar"),
+      Term.Block(
+        List(
+          Term.If(
+            Term.Name("foo"),
+            Term.Block(List(Term.Apply(Term.Name("doFoo"), Nil))),
+            Lit.Unit()
+          ),
+          Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Int(2))
+        )
+      ),
+      Lit.Unit()
+    ) = term(code)
+  }
 }
