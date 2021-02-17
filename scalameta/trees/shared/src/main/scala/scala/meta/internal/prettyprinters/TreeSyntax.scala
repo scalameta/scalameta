@@ -977,10 +977,8 @@ object TreeSyntax {
         s(
           kw("extension"),
           " ",
-          "(",
-          t.eparam,
-          ")",
-          t.uparams,
+          t.tparams,
+          t.paramss,
           m
         )
       case t: Defn.Object => s(w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))

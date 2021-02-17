@@ -381,9 +381,8 @@ object Defn {
       body: Term
   ) extends Defn
   @ast class ExtensionGroup(
-      eparam: Term.Param,
       tparams: List[scala.meta.Type.Param],
-      uparams: List[List[Term.Param]],
+      paramss: List[List[Term.Param]],
       body: Stat
   ) extends Defn
   @ast class Def(

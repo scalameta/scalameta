@@ -97,7 +97,6 @@ class ReflectionSuite extends FunSuite {
       |scala.meta.Template
       |scala.meta.Term
       |scala.meta.Term.Name
-      |scala.meta.Term.Param
       |scala.meta.Term.Ref
       |scala.meta.Type
       |scala.meta.Type.Bounds

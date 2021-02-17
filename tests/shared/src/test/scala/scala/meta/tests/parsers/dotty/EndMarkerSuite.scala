@@ -56,9 +56,8 @@ class EndMarkerSuite extends BaseDottySuite {
       Source(
         List(
           Defn.ExtensionGroup(
-            Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None),
             Nil,
-            Nil,
+            List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))),
             Defn.Def(
               Nil,
               Term.Name("b"),

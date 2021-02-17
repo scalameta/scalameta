@@ -4066,27 +4066,37 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       ctxBoundsAllowed = true,
       allowUnderscore = dialect.allowTypeParamUnderscore
     )
-    val eparam = inParens(
-      param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false)
-    )
 
     newLineOptWhenFollowedBy[LeftParen]
-    var uparams = ListBuffer[List[Term.Param]]()
-    while (token.is[LeftParen]) {
-      uparams += inParens {
-        if (token.isNot[soft.KwUsing]) syntaxError("expected 'using' keyword", token)
-        next()
-        commaSeparated(
-          param(
-            ownerIsCase = false,
-            ownerIsType = true,
-            isImplicit = false,
-            isUsing = true
-          )
-        )
-      }
+
+    var paramss = ListBuffer[List[Term.Param]]()
+
+    def collectUparams() {
       newLineOptWhenFollowedBy[LeftParen]
+      while (token.is[LeftParen] && ahead(token.is[soft.KwUsing])) {
+        paramss += inParens {
+          if (token.isNot[soft.KwUsing]) syntaxError("expected 'using' keyword", token)
+          next()
+          commaSeparated(
+            param(
+              ownerIsCase = false,
+              ownerIsType = true,
+              isImplicit = false,
+              isUsing = true
+            )
+          )
+        }
+        newLineOptWhenFollowedBy[LeftParen]
+      }
     }
+
+    collectUparams()
+
+    paramss += inParens(
+      List(param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false))
+    )
+
+    collectUparams()
 
     newLineOptWhenFollowedBy[LeftBrace]
 
@@ -4109,7 +4119,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case head :: tail =>
         atPos(head.startTokenPos, tail.last.endTokenPos)(Term.Block(head :: tail))
     }
-    Defn.ExtensionGroup(eparam, tparams, uparams.toList, body)
+    Defn.ExtensionGroup(tparams, paramss.toList, body)
   }
 
   def funDefRest(mods: List[Mod]): Stat = atPos(mods, auto) {
