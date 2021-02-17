@@ -224,18 +224,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |else
                   |  gx
                   |""".stripMargin
-    val output = """|if (cond) {
-                    |  fx1
-                    |  fx2
-                    |} else gx
-                    |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.If(
-        Term.Name("cond"),
-        Term.Block(List(Term.Name("fx1"), Term.Name("fx2"))),
-        Term.Name("gx")
-      )
-    )
+    runTestError[Stat](code, "then expected but identifier found")
   }
 
   test("if-else-in-parens-3") {

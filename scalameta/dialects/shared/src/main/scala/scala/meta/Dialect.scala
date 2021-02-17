@@ -145,7 +145,12 @@ final class Dialect private (
      *    case List(0, 1, xs*) => println(xs)   // binds xs to Seq(2, 3)
      *    case List(1, _*) =>                   // wildcard pattern
      */
-    val allowPostfixStarVarargSplices: Boolean
+    val allowPostfixStarVarargSplices: Boolean,
+    /* Scala 3 allows us to specify:
+     * `case tp @ OrNull(tp1): OrType`
+     * the last section after : was not allowed previously.
+     */
+    val allowAllTypedPatterns: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -235,7 +240,8 @@ final class Dialect private (
       allowSpliceAndQuote = false,
       allowSymbolLiterals = true,
       allowDependentFunctionTypes = false,
-      allowPostfixStarVarargSplices = false
+      allowPostfixStarVarargSplices = false,
+      allowAllTypedPatterns = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -422,6 +428,9 @@ final class Dialect private (
   def withAllowPostfixStarVarargSplices(newValue: Boolean): Dialect = {
     privateCopy(allowPostfixStarVarargSplices = newValue)
   }
+  def withAllowAllTypedPatterns(newValue: Boolean): Dialect = {
+    privateCopy(allowAllTypedPatterns = newValue)
+  }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -482,7 +491,8 @@ final class Dialect private (
       allowSpliceAndQuote: Boolean = this.allowSpliceAndQuote,
       allowSymbolLiterals: Boolean = this.allowSymbolLiterals,
       allowDependentFunctionTypes: Boolean = this.allowDependentFunctionTypes,
-      allowPostfixStarVarargSplices: Boolean = this.allowPostfixStarVarargSplices
+      allowPostfixStarVarargSplices: Boolean = this.allowPostfixStarVarargSplices,
+      allowAllTypedPatterns: Boolean = this.allowAllTypedPatterns
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -540,7 +550,8 @@ final class Dialect private (
       allowSpliceAndQuote,
       allowSymbolLiterals,
       allowDependentFunctionTypes,
-      allowPostfixStarVarargSplices
+      allowPostfixStarVarargSplices,
+      allowAllTypedPatterns
       // NOTE(olafur): add the next argument above this comment.
     )
   }

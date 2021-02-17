@@ -2124,8 +2124,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val (cond, thenp) = if (token.isNot[LeftParen] && dialect.allowSignificantIndentation) {
       val cond = expr()
       acceptOpt[LF]
-      if (!tryAcceptWithOptLF[KwThen])
-        in.observeIndented()
+      accept[KwThen]
       (cond, exprMaybeIndented())
     } else {
       val forked = in.fork
@@ -3175,8 +3174,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case p: Pat.Wildcard =>
             nextOnce()
             Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
-          case p =>
-            p
+          case p: Pat =>
+            if (dialect.allowAllTypedPatterns) {
+              nextOnce()
+              Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
+            } else {
+              p
+            }
         }
       }
     }
@@ -3333,7 +3337,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Pat.Macro(macroQuotedIdent())
         case KwGiven() =>
           accept[KwGiven]
-          Pat.Given(typ())
+          Pat.Given(patternTyp(allowInfix = false, allowImmediateTypevars = false))
         case _ =>
           onError(token)
       })
@@ -4219,7 +4223,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       token match {
         case Equals() => next(); aliasType()
         case Supertype() | Subtype() | Comma() | RightBrace() => abstractType()
-        case StatSep() => abstractType()
+        case StatSep() | Indentation.Outdent() => abstractType()
         case _ => syntaxError("`=', `>:', or `<:' expected", at = token)
       }
     }

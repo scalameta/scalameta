@@ -678,6 +678,44 @@ class GivenUsingSuite extends BaseDottySuite {
       )
     )
   }
+  test("given-pat-new") {
+    runTestAssert[Stat](
+      """|pair match {
+         | case ctx @ given Context => new Provider
+         | case ctx @ given (Context => String) => new Provider
+         |}
+         |""".stripMargin,
+      assertLayout = Some(
+        """|pair match {
+           |  case ctx @ given Context =>
+           |    new Provider
+           |  case ctx @ given (Context => String) =>
+           |    new Provider
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Match(
+        Term.Name("pair"),
+        List(
+          Case(
+            Pat.Bind(Pat.Var(Term.Name("ctx")), Pat.Given(Type.Name("Context"))),
+            None,
+            Term.New(Init(Type.Name("Provider"), Name(""), Nil))
+          ),
+          Case(
+            Pat.Bind(
+              Pat.Var(Term.Name("ctx")),
+              Pat.Given(Type.Function(List(Type.Name("Context")), Type.Name("String")))
+            ),
+            None,
+            Term.New(Init(Type.Name("Provider"), Name(""), Nil))
+          )
+        ),
+        Nil
+      )
+    )
+  }
 
   test("given-pat-for") {
     runTestAssert[Stat](

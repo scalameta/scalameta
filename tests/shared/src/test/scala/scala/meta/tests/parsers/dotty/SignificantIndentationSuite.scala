@@ -866,4 +866,62 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("match-case-same-line") {
+    runTestAssert[Stat](
+      """|widen match
+         |  case tp @ OrNull(tp1): OrType =>
+         |  case tp => tp
+         |""".stripMargin,
+      assertLayout = Some(
+        """|widen match {
+           |  case (tp @ OrNull(tp1)): OrType =>
+           |  case tp => tp
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Match(
+        Term.Name("widen"),
+        List(
+          Case(
+            Pat.Typed(
+              Pat.Bind(
+                Pat.Var(Term.Name("tp")),
+                Pat.Extract(Term.Name("OrNull"), List(Pat.Var(Term.Name("tp1"))))
+              ),
+              Type.Name("OrType")
+            ),
+            None,
+            Term.Block(Nil)
+          ),
+          Case(Pat.Var(Term.Name("tp")), None, Term.Name("tp"))
+        ),
+        Nil
+      )
+    )
+  }
+
+  test("object-type") {
+    runTestAssert[Stat](
+      """|object typeAndObjects:
+         |  type Ala
+         |""".stripMargin,
+      assertLayout = Some(
+        "object typeAndObjects { type Ala }"
+      )
+    )(
+      Defn.Object(
+        Nil,
+        Term.Name("typeAndObjects"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(Decl.Type(Nil, Type.Name("Ala"), Nil, Type.Bounds(None, None))),
+          Nil
+        )
+      )
+    )
+  }
+
 }
