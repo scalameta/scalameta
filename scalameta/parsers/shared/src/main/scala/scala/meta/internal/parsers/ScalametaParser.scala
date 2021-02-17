@@ -393,8 +393,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               RegionBrace(indentInBrace, indentOnArrow) :: sepRegions
             }
           (nextRegions, currRef)
-        } else if (curr.is[KwEnum]) (RegionEnumArtificialMark :: sepRegions, currRef)
-        else if (curr.is[CaseIntro]) {
+        } else if (curr.is[KwEnum]) {
+          (RegionEnumArtificialMark :: sepRegions, currRef)
+        } else if (curr.is[CaseIntro]) {
           val nextRegions =
             if (!sepRegions.isEmpty && (sepRegions.head.isInstanceOf[RegionEnum] ||
                 sepRegions.head.isInstanceOf[RegionIndentEnum]))
@@ -1106,7 +1107,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def unapply(token: Token): Boolean = {
       token.is[KwYield] || token.is[KwTry] || token.is[KwCatch] || token.is[KwFinally] ||
       token.is[KwMatch] || token.is[KwDo] || token.is[KwFor] || token.is[KwThen] ||
-      token.is[KwElse] || token.is[Equals] || token.is[KwWhile] || 
+      token.is[KwElse] || token.is[Equals] || token.is[KwWhile] ||
       token.is[RightArrow] || (token.is[KwWith] && token.next.is[DclIntro])
     }
   }
