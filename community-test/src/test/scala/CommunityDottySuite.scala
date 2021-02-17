@@ -67,8 +67,8 @@ class CommunityDottySuite extends FunSuite {
     ),
     CommunityBuild(
       "https://github.com/scalameta/munit.git",
-      // latest commit from 27.11.2020
-      "5f384b548960ee7731649f5f900eb1d854e7827a",
+      // latest commit from 16.02.2021
+      "bf6fd2294decdd89f887d47461f12af8f6083c5a",
       "munit",
       munitExclusionList
     )
@@ -166,9 +166,7 @@ class CommunityDottySuite extends FunSuite {
   final def munitExclusionList = List(
     // Syntax no longer valid in Scala 3
     //xml literals
-    "main/scala/docs/MUnitModifier.scala",
-    // old given syntax
-    "src/main/scala-0.27/munit/internal/MacroCompat.scala"
+    "main/scala/docs/MUnitModifier.scala"
   )
 
   final val ignoreParts = List(

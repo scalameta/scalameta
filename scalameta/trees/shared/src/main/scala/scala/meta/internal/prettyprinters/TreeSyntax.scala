@@ -764,7 +764,7 @@ object TreeSyntax {
       case _: Pat.Wildcard => m(SimplePattern, kw("_"))
       case _: Pat.SeqWildcard => m(SimplePattern, kw("_*"))
       case t: Pat.Repeated => m(SimplePattern, t.name, kw("*"))
-      case pat: Pat.Given => m(SimplePattern, s(kw("given"), " ", pat.tpe))
+      case pat: Pat.Given => m(AnyPattern3, s(kw("given"), " ", p(RefineTyp, pat.tpe)))
       case t: Pat.Bind =>
         val separator = t.rhs match {
           case Pat.SeqWildcard() =>

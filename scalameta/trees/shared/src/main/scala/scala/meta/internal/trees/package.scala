@@ -168,6 +168,7 @@ package object trees {
       case _: Defn.ExtensionGroup => true
       case _: Defn.Val => true
       case _: Defn.Type => true
+      case _: Decl.Type => true
       case _: Term.EndMarker => true
       case _: Defn.Var => true
       case _: Pkg.Object => true
