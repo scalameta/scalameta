@@ -23,6 +23,7 @@ jobs:
           - "++2.13.3 testsJVM/test"
           - "++2.13.4 testsJVM/test"
           - "++2.13.4 testsJS/test"
+          - "++2.13.4 testkit/test"
           - "++2.13.4 download-scala-library testsJVM/slow:test"
           - "communitytest/test"
           - "mima"
