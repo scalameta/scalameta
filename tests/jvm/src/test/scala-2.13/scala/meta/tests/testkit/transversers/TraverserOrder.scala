@@ -1,4 +1,4 @@
-package scala.meta.tests
+package scala.meta.tests.testkit
 package transversers
 
 import munit.FunSuite
@@ -6,7 +6,7 @@ import munit.FunSuite
 import scala.collection.mutable
 import scala.meta.Tree
 import scala.meta.testkit.SyntaxAnalysis
-import scala.meta.tests.contrib.ContribSuite
+import scala.meta.tests.testkit.contrib.ContribSuite
 import scala.meta.transversers.{SimpleTraverser, Traverser}
 
 class TraverserOrder extends FunSuite {

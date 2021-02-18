@@ -1,4 +1,4 @@
-package scala.meta.tests.contrib
+package scala.meta.tests.testkit.contrib
 
 import scala.meta._
 import scala.meta.internal.parsers.ScaladocParser
