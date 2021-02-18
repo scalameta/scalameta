@@ -1,4 +1,4 @@
-package scala.meta.tests
+package scala.meta.tests.testkit
 package contrib
 
 import scala.meta._
