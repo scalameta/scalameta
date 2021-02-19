@@ -924,4 +924,224 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("old-try-catch-same-indent") {
+    val code = """|try 
+                  |  fx
+                  |  gx 
+                  |  catch 
+                  |  case aa =>
+                  |  case bb =>
+                  |  finally
+                  |  cc
+                  |  dd
+                  |""".stripMargin
+    val output = """|try {
+                    |  fx
+                    |  gx
+                    |} catch {
+                    |  case aa =>
+                    |  case bb =>
+                    |} finally {
+                    |  cc
+                    |  dd
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.Try(
+        Term.Block(List(Term.Name("fx"), Term.Name("gx"))),
+        List(
+          Case(Pat.Var(Term.Name("aa")), None, Term.Block(Nil)),
+          Case(Pat.Var(Term.Name("bb")), None, Term.Block(Nil))
+        ),
+        Some(Term.Block(List(Term.Name("cc"), Term.Name("dd"))))
+      )
+    )
+  }
+
+  test("if-else-same-indent") {
+    val code = """|if 
+                  |  cond
+                  |  cond2
+                  |  then 
+                  |  fx
+                  |  gx
+                  |  else gx
+                  |""".stripMargin
+    val output = """|if ({
+                    |  cond
+                    |  cond2
+                    |}) {
+                    |  fx
+                    |  gx
+                    |} else gx
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.If(
+        Term.Block(List(Term.Name("cond"), Term.Name("cond2"))),
+        Term.Block(List(Term.Name("fx"), Term.Name("gx"))),
+        Term.Name("gx"),
+        Nil
+      )
+    )
+  }
+
+  test("new-fordo-same-indent") {
+    val code = """|for
+                  |  a <- gen
+                  |  do fx
+                  |""".stripMargin
+    val output = "for (a <- gen) fx"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.For(
+        List(Enumerator.Generator(Pat.Var(Term.Name("a")), Term.Name("gen"))),
+        Term.Name("fx")
+      )
+    )
+  }
+
+  test("new-for-yield-same-indent") {
+    val code = """|for
+                  |  a <- x
+                  |  b <- y
+                  |  yield fx
+                  |""".stripMargin
+    val output = "for (a <- x; b <- y) yield fx"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.ForYield(
+        List(
+          Enumerator.Generator(Pat.Var(Term.Name("a")), Term.Name("x")),
+          Enumerator.Generator(Pat.Var(Term.Name("b")), Term.Name("y"))
+        ),
+        Term.Name("fx")
+      )
+    )
+  }
+
+  test("match-chained-same-indent") {
+    runTestAssert[Stat](
+      """|val hello = xs match
+         |  case Nil => "empty"
+         |  case x :: xs1 => "nonempty"
+         |  match
+         |  case true => 0
+         |  case false => 1
+         |
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("hello"))),
+        None,
+        Term.Match(
+          Term.Match(
+            Term.Name("xs"),
+            List(
+              Case(Term.Name("Nil"), None, Lit.String("empty")),
+              Case(
+                Pat.ExtractInfix(
+                  Pat.Var(Term.Name("x")),
+                  Term.Name("::"),
+                  List(Pat.Var(Term.Name("xs1")))
+                ),
+                None,
+                Lit.String("nonempty")
+              )
+            ),
+            Nil
+          ),
+          List(
+            Case(Lit.Boolean(true), None, Lit.Int(0)),
+            Case(Lit.Boolean(false), None, Lit.Int(1))
+          ),
+          Nil
+        )
+      )
+    )
+
+  }
+
+  test("match-if-indent") {
+    runTestAssert[Stat](
+      """|def hackGetmembers = a match
+         |   case sym if
+         |     cond =>
+         |     sym
+         |
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def hackGetmembers = a match {
+           |  case sym if cond => sym
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("hackGetmembers"),
+        Nil,
+        Nil,
+        None,
+        Term.Match(
+          Term.Name("a"),
+          List(Case(Pat.Var(Term.Name("sym")), Some(Term.Name("cond")), Term.Name("sym"))),
+          Nil
+        )
+      )
+    )
+
+  }
+  test("match-empty") {
+    runTestAssert[Stat](
+      """|def mapSymbols =
+         |  originals.foreach { a =>
+         |    copy.denot match
+         |      case cd: ClassDenotation =>
+         |      case _ =>
+         |  }
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def mapSymbols = originals.foreach {
+           |  a => copy.denot match {
+           |    case cd: ClassDenotation =>
+           |    case _ =>
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("mapSymbols"),
+        Nil,
+        Nil,
+        None,
+        Term.Apply(
+          Term.Select(Term.Name("originals"), Term.Name("foreach")),
+          List(
+            Term.Block(
+              List(
+                Term.Function(
+                  List(Term.Param(Nil, Term.Name("a"), None, None)),
+                  Term.Match(
+                    Term.Select(Term.Name("copy"), Term.Name("denot")),
+                    List(
+                      Case(
+                        Pat.Typed(Pat.Var(Term.Name("cd")), Type.Name("ClassDenotation")),
+                        None,
+                        Term.Block(Nil)
+                      ),
+                      Case(Pat.Wildcard(), None, Term.Block(Nil))
+                    ),
+                    Nil
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+
+  }
 }
