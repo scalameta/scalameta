@@ -288,4 +288,26 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Importee.Unimport C as _
        |""".stripMargin
   )
+
+  checkPositions[Stat](
+    """|object X:
+       |  def a: Int =
+       |    42
+       |  def b: String =
+       |    "b"
+       |""".stripMargin,
+    """|Template :
+       |  def a: Int =
+       |    42
+       |  def b: String =
+       |    "b"
+       |Self def
+       |Name.Anonymous def
+       |Defn.Def def a: Int =
+       |    42
+       |Defn.Def def b: String =
+       |    "b"
+       |Lit.String "b"
+       |""".stripMargin
+  )
 }
