@@ -590,7 +590,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             }
 
             if (needOutdent)
-              (sepRegions.tail, mkOutdent(nextPos))
+              (sepRegions.tail, mkOutdent(prevPos))
             else if (needIndent)
               (RegionIndent(nextIndent, prev.is[KwMatch]) :: sepRegions, mkIndent(nextPos))
             else if (canProduceLF) {
