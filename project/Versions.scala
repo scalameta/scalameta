@@ -4,7 +4,7 @@ package build
 object Versions {
   val LatestScala211 = "2.11.12"
   val LatestScala212 = "2.12.13"
-  val LatestScala213 = "2.13.4"
+  val LatestScala213 = "2.13.5"
   val LegacyScalaVersions =
     List(
       "2.12.8",
@@ -15,6 +15,7 @@ object Versions {
       "2.13.0",
       "2.13.1",
       "2.13.2",
-      "2.13.3"
+      "2.13.3",
+      "2.13.4"
     )
 }
