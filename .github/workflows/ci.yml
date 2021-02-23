@@ -22,7 +22,6 @@ jobs:
           - "++2.13.2 testsJVM/test"
           - "++2.13.3 testsJVM/test"
           - "++2.13.4 testsJVM/test"
-          - "++2.13.4 testsJS/test"
           - "++2.13.5 testsJVM/test"
           - "++2.13.5 testsJS/test"
           - "++2.13.5 download-scala-library testsJVM/slow:test"
