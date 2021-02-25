@@ -157,9 +157,9 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform)
     enableHardcoreMacros,
     protobufSettings,
     libraryDependencies ++= List(
-      // NOTE(olafur): use shaded version of fastparse because the latest version v2.0.0
-      // has binary incompatibilites with the v1.0.0 version used by Scalameta.
-      "org.scalameta" %%% "fastparse" % "1.0.1"
+      // NOTE(olafur): use shaded version of fastparse 2.3.1 to avoid any
+      // binary incompatibilites with the v2.3.1 version used by Scalameta.
+      "org.scalameta" %%% "fastparse-v2" % "2.3.1"
     ),
     mergedModule({ base =>
       val scalameta = base / "scalameta"

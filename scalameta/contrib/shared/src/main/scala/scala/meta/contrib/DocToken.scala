@@ -1,7 +1,7 @@
 package scala.meta.contrib
 
-import scala.meta.internal.fastparse.all._
-import scala.meta.internal.fastparse.core.Parsed
+import scala.meta.internal.fastparse._
+import scala.meta.internal.fastparse.NoWhitespace._
 
 /**
  * Represents a scaladoc line.
@@ -23,7 +23,7 @@ case class DocToken(kind: DocToken.Kind, name: Option[String], body: Option[Stri
     body
       .map { b =>
         def parseBodyFrom(idx: Int): List[DocToken.Reference] = {
-          DocToken.referenceParser.parse(b, idx) match {
+          parse(b, DocToken.referenceParser(_), startIndex = idx) match {
             case Parsed.Success(value, index) =>
               List(DocToken.Reference(value)) ++ parseBodyFrom(index)
             case _ => List[DocToken.Reference]()
@@ -46,7 +46,7 @@ object DocToken {
   /**
    * Parser that for obtaining a class reference from an scaladoc body.
    */
-  private val referenceParser: Parser[String] = P(
+  private def referenceParser[_: P]: P[String] = P(
     // Removes the elements previous to the references.
     ((AnyChar ~ !"[[").rep ~ AnyChar).?
     // Retrieves the element within a

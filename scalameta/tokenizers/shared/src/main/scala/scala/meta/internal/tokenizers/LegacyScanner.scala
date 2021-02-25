@@ -1026,20 +1026,19 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   def getXml(): Unit = {
     // 1. Collect positions of scala expressions inside this xml literal.
-    import scala.meta.internal.fastparse.core.Parsed
-    val start = offset
-    val embeddedScalaExprPositions = new ScalaExprPositionParser(dialect)
-    val xmlParser = new XmlParser(embeddedScalaExprPositions)
-    val result: Int = xmlParser.XmlExpr.parse(input.text, index = start) match {
+    import scala.meta.internal.fastparse.Parsed
+    val start = offset    
+    val xmlParser = new XmlParser(dialect)
+    val result: Int = fastparse.parse(input.text, xmlParser.XmlExpr(_), startIndex = start) match {
       case Parsed.Success(_, endExclusive) =>
         endExclusive
       case Parsed.Failure(_, failIndex, extra) =>
-        syntaxError(s"malformed xml literal, expected: ${extra.traced.expected}", at = failIndex)
+        syntaxError(s"malformed xml literal, expected:\n${extra.traced.terminalsMsg}", at = failIndex)
     }
 
     // 2. Populate upcomingXmlLiteralParts with xml literal part positions.
     var lastFrom = start
-    embeddedScalaExprPositions.splicePositions.foreach { pos =>
+    xmlParser.splicePositions.foreach { pos =>
       // pos contains the start and end positions of a scala expression.
       // We want the range of the xml literal part which starts at lastFrom
       // and ends at pos.from.
