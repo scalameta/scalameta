@@ -807,6 +807,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(q"import a.{b=>c}".syntax == "import a.{b => c}")
   }
 
+  test("backquote importees when needed - scalafix #1337") {
+    assert(q"import a.`{ q }`".syntax == "import a.`{ q }`")
+    assert(q"import a.`macro`".syntax == "import a.`macro`")
+  }
+
   test("show[Structure] should uppercase long literals suffix: '2l' -> '2L'") {
     assert(
       templStat("foo(1l, 1L)").structure ==
