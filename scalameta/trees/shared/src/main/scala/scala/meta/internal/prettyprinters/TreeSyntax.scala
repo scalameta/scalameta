@@ -279,17 +279,17 @@ object TreeSyntax {
             false
         }
       }
-      (t, t.parent) match {
-        case (t: Term.Name, Some(p: Tree)) =>
-          isAmbiguousWithPatVarTerm(t, p) ||
-            cantBeWrittenWithoutBackquotes(t) ||
-            isEscapableSoftKeyword(t, p)
-        case (t: Type.Name, Some(p: Tree)) =>
-          cantBeWrittenWithoutBackquotes(t)
-        case (t: Name, Some(p: Tree)) =>
-          isEscapableSoftKeyword(t, p)
-        case _ => cantBeWrittenWithoutBackquotes(t)
+      def isAmbiguousInParent(t: Tree, parent: Tree): Boolean = {
+        t match {
+          case t: Term.Name =>
+            isAmbiguousWithPatVarTerm(t, parent) || isEscapableSoftKeyword(t, parent)
+          case t: Name =>
+            isEscapableSoftKeyword(t, parent)
+          case _ =>
+            false
+        }
       }
+      cantBeWrittenWithoutBackquotes(t) || t.parent.exists(isAmbiguousInParent(t, _))
     }
     def guessIsPostfix(t: Term.Select): Boolean = false
     def guessHasExpr(t: Term.Return): Boolean = t.expr match {
