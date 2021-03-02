@@ -281,6 +281,19 @@ message SymbolInformation {
   repeated Annotation annotations = 13;
   Access access = 18;
   repeated string overridden_symbols = 19;
+  Documentation documentation = 20;
+}
+
+message Documentation {
+  enum Format {
+    HTML = 0;
+    MARKDOWN = 1;
+    JAVADOC = 2;
+    SCALADOC = 3;
+    KDOC = 4;
+  }
+  string message = 1;
+  Format format = 2;
 }
 
 message Annotation {

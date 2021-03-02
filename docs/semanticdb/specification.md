@@ -599,7 +599,8 @@ message SymbolInformation {
   Signature signature = 17;
   repeated Annotation annotations = 13;
   Access access = 18;
-  repeated string overridden_symbols = 19
+  repeated string overridden_symbols = 19;
+  Documentation documentation = 20;
 }
 ```
 
@@ -812,6 +813,27 @@ signatures in supported languages.
 `access`. [Access](#access) modifier of the corresponding definition.
 
 `overridden_symbols`. list of symbols that this symbol overrides.
+
+`documentation`. [Documentation](#Documentation) and the format that are associated with a symbol.
+
+### Documentation
+
+```protobuf
+message Documentation {
+  enum Format {
+    HTML = 0;
+    MARKDOWN = 1;
+    JAVADOC = 2;
+    SCALADOC = 3;
+    KDOC = 4;
+  }
+  string message = 1;
+  Format format = 2;
+}
+```
+
+`Documentation` represents the documentation associated with a [Symbol](#symbol). The `format` fields
+specifies the format of the text stored in `message`.
 
 ### Annotation
 
@@ -1434,6 +1456,7 @@ message SymbolInformation {
   Signature signature = 17;
   repeated Annotation annotations = 13;
   Access access = 18;
+  Documentation documentation = 20;
 }
 ```
 
@@ -1477,6 +1500,10 @@ message SymbolInformation {
   <tr>
     <td><code>overridden_symbols</code></td>
     <td>List of symbols this symbol overrides. See <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#overriding">Overriding</td>
+  </tr>
+  <tr>
+    <td><code>documentation</code></td>
+    <td>Always empty. Not supported by semanticdb-scalac and metacp.</td>
   </tr>
 </table>
 
@@ -3045,6 +3072,7 @@ message SymbolInformation {
   Signature signature = 17;
   repeated Annotation annotations = 13;
   Access access = 18;
+  Documentation documentation = 20;
 }
 ```
 
@@ -3087,6 +3115,10 @@ message SymbolInformation {
   <tr>
     <td><code>overridden_symbols</code></td>
     <td>List of symbols this symbol overrides. See <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.4.8">Overriding</td>
+  </tr>
+  <tr>
+    <td><code>documentation</code></td>
+    <td>Non-empty string and format kind for classes/fields/methods/constructors where a Javadoc comment is available.</td>
   </tr>
 </table>
 
