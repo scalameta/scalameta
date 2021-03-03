@@ -2,7 +2,6 @@ package scala.meta.internal
 package inputs
 
 import scala.collection.mutable
-import scala.collection.concurrent.TrieMap
 import scala.meta.inputs._
 import scala.meta.Dialect
 import scala.meta.tokens.Tokens
