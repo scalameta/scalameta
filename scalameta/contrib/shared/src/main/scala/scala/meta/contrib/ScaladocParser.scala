@@ -1,7 +1,7 @@
 package scala.meta.contrib
 
-import scala.meta.internal.fastparse.all._
-import scala.meta.internal.fastparse.core.Parsed
+import scala.meta.internal.fastparse._
+import scala.meta.internal.fastparse.NoWhitespace._
 
 import scala.meta.contrib.DocToken._
 import scala.meta.tokens.Token.Comment
@@ -16,36 +16,39 @@ object ScaladocParser {
   def parseScaladoc(comment: Comment): Option[List[DocToken]] = {
 
     def parseRec(toParse: String): List[DocToken] = {
-      parsers
-        .find(_.parse(toParse).index != 0)
-        .map(_.parse(toParse)) match {
-        case Some(p: Parsed.Success[DocToken, _, _]) =>
-          // Parse was successful, check the remaining Scaladoc
-          val remainingScaladoc =
-            toParse
-              .substring(p.index, toParse.length)
-              .dropWhile(c => c == ' ')
+      parsers.iterator
+        .map { p =>
+          parse(toParse, p(_))
+        }
+        .collectFirst {
+          case Parsed.Success(value, index) if index != 0 =>
+            // Parse was successful, check the remaining Scaladoc
+            val remainingScaladoc =
+              toParse
+                .substring(index, toParse.length)
+                .dropWhile(c => c == ' ')
 
-          if (remainingScaladoc.trim.nonEmpty || remainingScaladoc.contains("\n\n")) {
-            // Adds the parsed token to the list of tokens and parse the rest of the string recursively.
-            if (remainingScaladoc.take(2) == "\n\n") {
-              List(p.value, DocToken(Paragraph)) ++ parseRec(remainingScaladoc.dropWhile(_ == '\n'))
+            if (remainingScaladoc.trim.nonEmpty || remainingScaladoc.contains("\n\n")) {
+              // Adds the parsed token to the list of tokens and parse the rest of the string recursively.
+              if (remainingScaladoc.take(2) == "\n\n") {
+                List(value, DocToken(Paragraph)) ++ parseRec(
+                  remainingScaladoc.dropWhile(_ == '\n')
+                )
+              } else {
+                List(value) ++ parseRec(remainingScaladoc.dropWhile(c => c == ' ' || c == '\n'))
+              }
             } else {
-              List(p.value) ++ parseRec(remainingScaladoc.dropWhile(c => c == ' ' || c == '\n'))
+              // No more elements to parse, end recursion.
+              List(value)
             }
-          } else {
-            // No more elements to parse, end recursion.
-            List(p.value)
-          }
-        // Can't parse anymore, end recursion.
-        case _ => List()
-      }
+        }
+        .getOrElse(Nil)
     }
 
     comment.content.map(parseRec)
   }
 
-  private[this] def generateHeadingParser(headingType: Heading): Parser[DocToken] = {
+  private[this] def generateHeadingParser[_: P](headingType: Heading): P[DocToken] = {
     val headingSymbols = "=" * headingType.level
     P(
       // Code block start
@@ -60,15 +63,15 @@ object ScaladocParser {
   /**
    * Set containing all the scaladoc parsers.
    */
-  private[this] val parsers: List[Parser[DocToken]] = {
+  private[this] def parsers: List[P[_] => P[DocToken]] = {
 
-    val bodyParser = ((AnyChar ~ !("\n@" | "{{{" | "\n\n" | End)).rep ~ AnyChar).!.map(_.trim)
+    def bodyParser[_: P] = ((AnyChar ~ !("\n@" | "{{{" | "\n\n" | End)).rep ~ AnyChar).!.map(_.trim)
 
     // Paragraph Parser
-    val paragraphParser = "\n\n".rep.!.map(_ => DocToken(Paragraph))
+    def paragraphParser[_: P] = "\n\n".rep.!.map(_ => DocToken(Paragraph))
 
     // Parser for CodeBlock instances
-    val codeBlockParser =
+    def codeBlockParser[_: P] =
       P(
         // Code block start
         "{{{"
@@ -79,41 +82,48 @@ object ScaladocParser {
       )
 
     // Parsers for headings/subheadings instances.
-    val headingsParsers = DocToken.allHeadings.reverse.map(generateHeadingParser(_))
+    val headingsParsers: List[P[_] => P[DocToken]] = DocToken.allHeadings.reverse.map { heading =>
+      generateHeadingParser(heading)(_: P[_])
+    }.toList
 
     // Parser for Inheritdoc instances
-    val inheritDocParser = P("@inheritdoc".!).map(_ => DocToken(InheritDoc))
+    def inheritDocParser[_: P] = P("@inheritdoc".!).map(_ => DocToken(InheritDoc))
 
     // Parsers for all labelled docs instances
-    val labelledParsers: List[Parser[DocToken]] = {
+    val labelledParsers: List[P[_] => P[DocToken]] = {
 
       DocToken.tagTokenKinds.map {
         // Single parameter doc tokens
         case kind @ DocToken.TagKind(label, 1) =>
-          P(s"$label " ~ bodyParser.map(c => DocToken(kind, c.trim)))
+          def tagKindParser[_: P] = P(s"$label " ~ bodyParser.map(c => DocToken(kind, c.trim)))
+          tagKindParser(_: P[_])
 
         // Multiple parameter doc tokens
         case kind @ DocToken.TagKind(label, 2) =>
-          val nameParser = ((AnyChar ~ !" ").rep ~ AnyChar).!.map(_.trim)
+          def parser[_: P] = {
+            val nameParser = ((AnyChar ~ !" ").rep ~ AnyChar).!.map(_.trim)
 
-          val nameAndBodyParsers = {
-            (nameParser ~ " ".rep.? ~ bodyParser.!).map { case (name, body) =>
-              DocToken(kind, name, body)
+            val nameAndBodyParsers = {
+              (nameParser ~ " ".rep.? ~ bodyParser.!).map { case (name, body) =>
+                DocToken(kind, name, body)
+              }
             }
+            P(s"$label" ~ nameAndBodyParsers)
           }
-          P(s"$label" ~ nameAndBodyParsers)
+          parser(_: P[_])
       }
     }
 
     // Fallback parser(Used when no label or description is provided)
-    val descriptionParser = bodyParser.map(DocToken(Description, _))
+    def descriptionParser[_: P] = bodyParser.map(DocToken(Description, _))
 
-    // Merges all the parsers in a single list, with the description parser as the fallback,
-    // in case no valid parser was found for an Scaladoc comment.
-    (List(
-      paragraphParser,
-      inheritDocParser,
-      codeBlockParser
-    ) ++ headingsParsers ++ labelledParsers) :+ descriptionParser
+    List(
+      paragraphParser(_: P[_]),
+      inheritDocParser(_: P[_]),
+      codeBlockParser(_: P[_])
+    ) ++
+      headingsParsers ++
+      labelledParsers :+
+      (descriptionParser(_: P[_]))
   }
 }
