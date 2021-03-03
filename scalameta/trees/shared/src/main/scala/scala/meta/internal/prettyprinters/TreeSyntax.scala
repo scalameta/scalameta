@@ -266,19 +266,22 @@ object TreeSyntax {
         }
         looksLikePatVar && thisLocationAlsoAcceptsPatVars
       }
-      // soft keywords might need to be written with backquotes in some places
+      /* Soft keywords might need to be written with backquotes in some places.
+       * Previously used match clause fails due to:
+       * https://github.com/scala-native/scala-native/issues/2187
+       * instead we went with if clause to work around the issue.
+       */
       def isEscapableSoftKeyword(t: Name, parent: Tree): Boolean = {
-        t.value match {
-          case "extension" if dialect.allowExtensionMethods =>
-            parent.is[Term.Apply] || parent.is[Term.ApplyUsing]
-          case "inline" if dialect.allowInlineMods =>
-            parent.is[Term.Apply] || parent.is[Term.ApplyUsing] || parent.is[Term.ApplyInfix]
-          case "*" if dialect.allowStarWildcardImport =>
-            parent.is[Importee]
-          case _ =>
-            false
-        }
+        if (t.value == "extension" && dialect.allowExtensionMethods)
+          parent.is[Term.Apply] || parent.is[Term.ApplyUsing]
+        else if (t.value == "inline" && dialect.allowInlineMods)
+          parent.is[Term.Apply] || parent.is[Term.ApplyUsing] || parent.is[Term.ApplyInfix]
+        else if (t.value == "*" && dialect.allowStarWildcardImport)
+          parent.is[Importee]
+        else
+          false
       }
+
       def isAmbiguousInParent(t: Tree, parent: Tree): Boolean = {
         t match {
           case t: Term.Name =>

@@ -80,6 +80,13 @@ val commonJsSettings = Seq(
   }
 )
 
+lazy val nativeSettings = Seq(
+  crossScalaVersions := List(LatestScala213, LatestScala212),
+  nativeConfig ~= {
+    _.withMode(scalanative.build.Mode.releaseFast)
+  }
+)
+
 /* ======================== SEMANTICDB ======================== */
 lazy val semanticdbScalacCore = project
   .in(file("semanticdb/scalac/library"))
@@ -135,7 +142,7 @@ lazy val metac = project
   .dependsOn(semanticdbScalacPlugin)
 
 /* ======================== SCALAMETA ======================== */
-lazy val common = crossProject(JSPlatform, JVMPlatform)
+lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/common"))
   .settings(
     publishableSettings,
@@ -146,8 +153,9 @@ lazy val common = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
     commonJsSettings
   )
+  .nativeSettings(nativeSettings)
 
-lazy val trees = crossProject(JSPlatform, JVMPlatform)
+lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/trees"))
   .settings(
     publishableSettings,
@@ -175,9 +183,10 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
     commonJsSettings
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(common) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
 
-lazy val parsers = crossProject(JSPlatform, JVMPlatform)
+lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/parsers"))
   .settings(
     publishableSettings,
@@ -194,14 +203,17 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform)
     commonJsSettings,
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(trees)
 
 def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
   unmanagedSourceDirectories.in(Compile) ++= {
     val base = baseDirectory.in(ThisBuild).value
+    val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
     val isJS = SettingKey[Boolean]("scalaJSUseMainModuleInitializer").?.value.isDefined
     val platform =
       if (isJS) "js"
+      else if (isNative) "native"
       else "jvm"
     val scalaBinary = "scala-" + scalaBinaryVersion.value
     projects(base).flatMap { project =>
@@ -214,7 +226,7 @@ def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
   }
 )
 
-lazy val scalameta = crossProject(JSPlatform, JVMPlatform)
+lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/scalameta"))
   .settings(
     publishableSettings,
@@ -245,6 +257,7 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
     commonJsSettings
   )
+  .nativeSettings(nativeSettings)
   .dependsOn(parsers)
 
 /* ======================== TESTS ======================== */
@@ -321,7 +334,7 @@ lazy val testkit = project
   )
   .dependsOn(scalameta.jvm)
 
-lazy val tests = crossProject(JSPlatform, JVMPlatform)
+lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("tests"))
   .configs(Slow, All)
   .settings(
@@ -345,6 +358,13 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
     commonJsSettings,
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+  )
+  .nativeSettings(
+    nativeSettings,
+    nativeConfig ~= {
+      _.withMode(scalanative.build.Mode.debug)
+        .withLinkStubs(true)
+    }
   )
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta)
@@ -559,6 +579,8 @@ lazy val protobufSettings = Def.settings(
     val scalapbVersion =
       if (scalaBinaryVersion.value == "2.11") {
         "0.9.7"
+      } else if (scalaVersion.value == "2.13.0" || scalaVersion.value == "2.13.1") {
+        "0.10.11"
       } else {
         scalapb.compiler.Version.scalapbVersion
       }
@@ -616,7 +638,8 @@ lazy val publishableSettings = Def.settings(
         //   val isJVM = platformDepsCrossVersion.value == CrossVersion.binary
         val isJVM = {
           val isJS = platformDepsCrossVersion.value == ScalaJSCrossVersion.binary
-          !isJS
+          val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
+          !isJS && !isNative
         }
         if (isJVM) {
           previousVersion.map { previousVersion =>
