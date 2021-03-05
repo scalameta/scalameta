@@ -160,6 +160,51 @@ annot/Alias.A#
 -              symbol: "scala/annotation/meta/param#"
 
 
+====================
+classes/C1#equals().
+====================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Any#equals()."
+
+
+======================
+classes/C1#hashCode().
+======================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Any#hashCode()."
+
+
+====================
+classes/C2#equals().
+====================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Any#equals()."
+
+
+======================
+classes/C2#hashCode().
+======================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Any#hashCode()."
+
+
+======================
+classes/C3#canEqual().
+======================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#canEqual()."
+
+
 ============================
 classes/C3#copy$default$1().
 ============================
@@ -170,6 +215,102 @@ classes/C3#copy$default$1().
 -            type_ref {
 -              prefix {
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
+====================
+classes/C3#equals().
+====================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#equals()."
+-overridden_symbols: "java/lang/Object#equals()."
+-overridden_symbols: "scala/Any#equals()."
+
+
+======================
+classes/C3#hashCode().
+======================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#hashCode()."
+-overridden_symbols: "scala/Any#hashCode()."
+
+
+==========================
+classes/C3#productArity().
+==========================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productArity()."
+
+
+============================
+classes/C3#productElement().
+============================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productElement()."
+
+
+=============================
+classes/C3#productIterator().
+=============================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productIterator()."
+
+
+===========================
+classes/C3#productPrefix().
+===========================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productPrefix()."
+
+
+======================
+classes/C3#toString().
+======================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
+
+
+===================
+classes/C3.apply().
+===================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function1#apply()."
+
+
+======================
+classes/C3.toString().
+======================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function1#toString()."
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
+
+
+======================
+classes/C4#canEqual().
+======================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#canEqual()."
 
 
 ============================
@@ -184,6 +325,82 @@ classes/C4#copy$default$1().
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
+====================
+classes/C4#equals().
+====================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#equals()."
+-overridden_symbols: "java/lang/Object#equals()."
+-overridden_symbols: "scala/Any#equals()."
+
+
+======================
+classes/C4#hashCode().
+======================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#hashCode()."
+-overridden_symbols: "scala/Any#hashCode()."
+
+
+==========================
+classes/C4#productArity().
+==========================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productArity()."
+
+
+============================
+classes/C4#productElement().
+============================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productElement()."
+
+
+=============================
+classes/C4#productIterator().
+=============================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productIterator()."
+
+
+===========================
+classes/C4#productPrefix().
+===========================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productPrefix()."
+
+
+======================
+classes/C4#toString().
+======================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
+
+
+======================
+classes/C6#canEqual().
+======================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#canEqual()."
+
+
 ============================
 classes/C6#copy$default$1().
 ============================
@@ -194,6 +411,93 @@ classes/C6#copy$default$1().
 -            type_ref {
 -              prefix {
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
+====================
+classes/C6#equals().
+====================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#equals()."
+-overridden_symbols: "java/lang/Object#equals()."
+-overridden_symbols: "scala/Any#equals()."
+
+
+======================
+classes/C6#hashCode().
+======================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#hashCode()."
+-overridden_symbols: "scala/Any#hashCode()."
+
+
+==========================
+classes/C6#productArity().
+==========================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productArity()."
+
+
+============================
+classes/C6#productElement().
+============================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productElement()."
+
+
+=============================
+classes/C6#productIterator().
+=============================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productIterator()."
+
+
+===========================
+classes/C6#productPrefix().
+===========================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productPrefix()."
+
+
+======================
+classes/C6#toString().
+======================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
+
+
+===================
+classes/C6.apply().
+===================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function1#apply()."
+
+
+======================
+classes/C6.toString().
+======================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function1#toString()."
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
 
 
 ==============================
@@ -236,6 +540,15 @@ example/Access#
        symlinks: "example/Access#m6()."
        symlinks: "example/Access#m7()."
 +      symlinks: "example/Access#m3()."
+
+
+================
+example/B#foo().
+================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "example/A#foo()."
 
 
 ======================================
@@ -378,6 +691,15 @@ example/Methods#m19$default$3().
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
+============================================================
+example/NamedApplyBlockCaseClassConstruction.Msg#canEqual().
+============================================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#canEqual()."
+
+
 ==================================================================
 example/NamedApplyBlockCaseClassConstruction.Msg#copy$default$1().
 ==================================================================
@@ -414,6 +736,73 @@ example/NamedApplyBlockCaseClassConstruction.Msg#copy$default$3().
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
+==========================================================
+example/NamedApplyBlockCaseClassConstruction.Msg#equals().
+==========================================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#equals()."
+-overridden_symbols: "java/lang/Object#equals()."
+-overridden_symbols: "scala/Any#equals()."
+
+
+============================================================
+example/NamedApplyBlockCaseClassConstruction.Msg#hashCode().
+============================================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#hashCode()."
+-overridden_symbols: "scala/Any#hashCode()."
+
+
+================================================================
+example/NamedApplyBlockCaseClassConstruction.Msg#productArity().
+================================================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productArity()."
+
+
+==================================================================
+example/NamedApplyBlockCaseClassConstruction.Msg#productElement().
+==================================================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productElement()."
+
+
+===================================================================
+example/NamedApplyBlockCaseClassConstruction.Msg#productIterator().
+===================================================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productIterator()."
+
+
+=================================================================
+example/NamedApplyBlockCaseClassConstruction.Msg#productPrefix().
+=================================================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productPrefix()."
+
+
+============================================================
+example/NamedApplyBlockCaseClassConstruction.Msg#toString().
+============================================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
+
+
 ======================================================================
 example/NamedApplyBlockCaseClassConstruction.Msg.`<init>$default$2`().
 ======================================================================
@@ -436,6 +825,26 @@ example/NamedApplyBlockCaseClassConstruction.Msg.apply$default$2().
 -            type_ref {
 -              prefix {
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
+=========================================================
+example/NamedApplyBlockCaseClassConstruction.Msg.apply().
+=========================================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function3#apply()."
+
+
+============================================================
+example/NamedApplyBlockCaseClassConstruction.Msg.toString().
+============================================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function3#toString()."
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
 
 
 ===============================================
@@ -474,6 +883,15 @@ example/NamedApplyBlockMethods.foo$default$3().
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
+=======================================
+example/NamedArguments#User#canEqual().
+=======================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#canEqual()."
+
+
 =============================================
 example/NamedArguments#User#copy$default$1().
 =============================================
@@ -484,6 +902,189 @@ example/NamedArguments#User#copy$default$1().
 -            type_ref {
 -              prefix {
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
+=====================================
+example/NamedArguments#User#equals().
+=====================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#equals()."
+-overridden_symbols: "java/lang/Object#equals()."
+-overridden_symbols: "scala/Any#equals()."
+
+
+=======================================
+example/NamedArguments#User#hashCode().
+=======================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#hashCode()."
+-overridden_symbols: "scala/Any#hashCode()."
+
+
+===========================================
+example/NamedArguments#User#productArity().
+===========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productArity()."
+
+
+=============================================
+example/NamedArguments#User#productElement().
+=============================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productElement()."
+
+
+==============================================
+example/NamedArguments#User#productIterator().
+==============================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productIterator()."
+
+
+============================================
+example/NamedArguments#User#productPrefix().
+============================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productPrefix()."
+
+
+=======================================
+example/NamedArguments#User#toString().
+=======================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
+
+
+====================================
+example/NamedArguments#User.apply().
+====================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function1#apply()."
+
+
+=======================================
+example/NamedArguments#User.toString().
+=======================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function1#toString()."
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
+
+
+===================================
+example/Synthetic#s.Bar#canEqual().
+===================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#canEqual()."
+
+
+=================================
+example/Synthetic#s.Bar#equals().
+=================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#equals()."
+-overridden_symbols: "java/lang/Object#equals()."
+-overridden_symbols: "scala/Any#equals()."
+
+
+===================================
+example/Synthetic#s.Bar#hashCode().
+===================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#hashCode()."
+-overridden_symbols: "scala/Any#hashCode()."
+
+
+=======================================
+example/Synthetic#s.Bar#productArity().
+=======================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productArity()."
+
+
+=========================================
+example/Synthetic#s.Bar#productElement().
+=========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productElement()."
+
+
+==========================================
+example/Synthetic#s.Bar#productIterator().
+==========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productIterator()."
+
+
+========================================
+example/Synthetic#s.Bar#productPrefix().
+========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productPrefix()."
+
+
+===================================
+example/Synthetic#s.Bar#toString().
+===================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
+
+
+================================
+example/Synthetic#s.Bar.apply().
+================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function0#apply()."
+
+
+===================================
+example/Synthetic#s.Bar.toString().
+===================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function0#toString()."
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
 
 
 ======================
@@ -514,6 +1115,167 @@ example/ValPattern#x$2.
  access {
 -  public_access {
 +  private_this_access {
+
+
+=============================
+flags/p/package.X.canEqual().
+=============================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#canEqual()."
+
+
+=============================
+flags/p/package.X.hashCode().
+=============================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#hashCode()."
+-overridden_symbols: "scala/Any#hashCode()."
+
+
+=================================
+flags/p/package.X.productArity().
+=================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productArity()."
+
+
+===================================
+flags/p/package.X.productElement().
+===================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productElement()."
+
+
+====================================
+flags/p/package.X.productIterator().
+====================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productIterator()."
+
+
+==================================
+flags/p/package.X.productPrefix().
+==================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productPrefix()."
+
+
+=============================
+flags/p/package.X.toString().
+=============================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
+
+
+=====================================
+types/Test.C#RepeatedType#canEqual().
+=====================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#canEqual()."
+
+
+===================================
+types/Test.C#RepeatedType#equals().
+===================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#equals()."
+-overridden_symbols: "java/lang/Object#equals()."
+-overridden_symbols: "scala/Any#equals()."
+
+
+=====================================
+types/Test.C#RepeatedType#hashCode().
+=====================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#hashCode()."
+-overridden_symbols: "scala/Any#hashCode()."
+
+
+=========================================
+types/Test.C#RepeatedType#productArity().
+=========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productArity()."
+
+
+===========================================
+types/Test.C#RepeatedType#productElement().
+===========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productElement()."
+
+
+============================================
+types/Test.C#RepeatedType#productIterator().
+============================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productIterator()."
+
+
+==========================================
+types/Test.C#RepeatedType#productPrefix().
+==========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productPrefix()."
+
+
+=====================================
+types/Test.C#RepeatedType#toString().
+=====================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
+
+
+==================================
+types/Test.C#RepeatedType.apply().
+==================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function1#apply()."
+
+
+=====================================
+types/Test.C#RepeatedType.toString().
+=====================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function1#toString()."
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
 
 
 ======================

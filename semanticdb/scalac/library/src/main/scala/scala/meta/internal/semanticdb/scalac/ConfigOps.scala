@@ -16,7 +16,8 @@ case class SemanticdbConfig(
     md5: BinaryMode,
     symbols: SymbolMode,
     diagnostics: BinaryMode,
-    synthetics: BinaryMode
+    synthetics: BinaryMode,
+    overrides: BinaryMode
 ) {
   def syntax: String = {
     val p = SemanticdbPlugin.name
@@ -30,7 +31,8 @@ case class SemanticdbConfig(
       "text" -> text.name,
       "symbols" -> symbols.name,
       "diagnostics" -> diagnostics.name,
-      "synthetics" -> synthetics.name
+      "synthetics" -> synthetics.name,
+      "overrides" -> overrides.name
     ).map { case (k, v) => s"-P:$p:$k:$v" }.mkString(" ")
   }
 
@@ -46,7 +48,8 @@ object SemanticdbConfig {
     md5 = BinaryMode.On,
     symbols = SymbolMode.All,
     diagnostics = BinaryMode.On,
-    synthetics = BinaryMode.Off
+    synthetics = BinaryMode.Off,
+    overrides = BinaryMode.On
   )
 
   private val SetFailures = "failures:(.*)".r

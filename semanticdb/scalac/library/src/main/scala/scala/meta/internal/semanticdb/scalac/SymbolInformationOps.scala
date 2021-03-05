@@ -226,6 +226,12 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       }
     }
 
+    def overriddenSymbols: List[String] = {
+      if (self.config.overrides.isOn)
+        gsym.allOverriddenSymbols.map(_.toSemantic)
+      else Nil
+    }
+
     def toSymbolInformation(linkMode: LinkMode): s.SymbolInformation = {
       s.SymbolInformation(
         symbol = gsym.ssym,
@@ -233,6 +239,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         kind = kind,
         properties = properties,
         displayName = displayName,
+        overriddenSymbols = overriddenSymbols,
         signature = sig(linkMode),
         annotations = annotations,
         access = access

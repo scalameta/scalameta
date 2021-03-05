@@ -280,6 +280,7 @@ message SymbolInformation {
   Signature signature = 17;
   repeated Annotation annotations = 13;
   Access access = 18;
+  repeated string overridden_symbols = 19;
 }
 
 message Annotation {
