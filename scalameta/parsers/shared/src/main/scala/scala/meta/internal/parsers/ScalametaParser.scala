@@ -4047,7 +4047,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       ctxBoundsAllowed = true,
       allowUnderscore = dialect.allowTypeParamUnderscore
     )
-    val uparamss = paramClauses(ownerIsType = false)
+    val uparamss =
+      if (token.is[LeftParen] && ahead(token.is[soft.KwUsing]))
+        paramClauses(ownerIsType = false)
+      else Nil
     val (sigName, sigTparams, sigUparamss) = if (token.is[Colon]) {
       accept[Colon]
       (name, tparams, uparamss)
