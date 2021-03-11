@@ -316,6 +316,19 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
+  test("given-alias-anon-or") {
+    runTestAssert[Stat]("given (Cancelable & Movable) = ???")(
+      Defn.GivenAlias(
+        Nil,
+        Name(""),
+        Nil,
+        Nil,
+        Type.And(Type.Name("Cancelable"), Type.Name("Movable")),
+        Term.Name("???")
+      )
+    )
+  }
+
   test("given-alias-block") {
     runTestAssert[Stat](
       "given global: Option[Int] = { def f(): Int = 1; Some(3) }",

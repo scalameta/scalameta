@@ -945,7 +945,7 @@ object TreeSyntax {
           kw("given"),
           " ",
           givenName(t.name, t.tparams, t.sparams),
-          t.decltpe,
+          p(SimpleTyp, t.decltpe),
           " ",
           kw("="),
           " ",
