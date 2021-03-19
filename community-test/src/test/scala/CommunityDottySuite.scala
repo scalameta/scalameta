@@ -60,15 +60,15 @@ class CommunityDottySuite extends FunSuite {
   val communityBuilds = List(
     CommunityBuild(
       "https://github.com/lampepfl/dotty.git",
-      //commit hash from 17.02.2021
-      "8bbb0ba745453a0d2ffdb94c5966752dfe57bb5f",
+      //commit hash from 31.03.2021
+      "13de192d04ae3e4beeaa8257c1f6dde0d2e81350",
       "dotty",
       dottyExclusionList
     ),
     CommunityBuild(
       "https://github.com/scalameta/munit.git",
-      // latest commit from 16.02.2021
-      "bf6fd2294decdd89f887d47461f12af8f6083c5a",
+      // latest commit from 30.03.2021
+      "06346adfe3519c384201eec531762dad2f4843dc",
       "munit",
       munitExclusionList
     )
@@ -154,10 +154,7 @@ class CommunityDottySuite extends FunSuite {
     build.excluded.exists(el => path.endsWith(el))
   }
 
-  final def dottyExclusionList = List(
-    // [scalameta] erased modifier - for now used internally, will be available in 3.1
-    "library/src/scala/compiletime/package.scala"
-  )
+  final def dottyExclusionList = List()
 
   final def munitExclusionList = List(
     // xml literals are longer valid in Scala 3
@@ -166,6 +163,7 @@ class CommunityDottySuite extends FunSuite {
 
   final val ignoreParts = List(
     "/tests/",
+    "/test-resources/scripting/",
     "/sbt-test/",
     "/out/",
     "/language-server/src/dotty/"

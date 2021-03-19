@@ -1143,4 +1143,240 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
 
   }
+
+  test("return-indent") {
+    runTestAssert[Stat](
+      """|def method =
+         |   return
+         |     val a = 2 + 3
+         |     a
+         |
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def method = return {
+           |  val a = 2 + 3
+           |  a
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("method"),
+        Nil,
+        Nil,
+        None,
+        Term.Return(
+          Term.Block(
+            List(
+              Defn.Val(
+                Nil,
+                List(Pat.Var(Term.Name("a"))),
+                None,
+                Term.ApplyInfix(Lit.Int(2), Term.Name("+"), Nil, List(Lit.Int(3)))
+              ),
+              Term.Name("a")
+            )
+          )
+        )
+      )
+    )
+  }
+
+  test("return-single-indent") {
+    runTestAssert[Stat](
+      """|def method =
+         |   return
+         |     2 
+         |     + 3
+         |""".stripMargin,
+      assertLayout = Some(
+        "def method = return 2 + 3"
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("method"),
+        Nil,
+        Nil,
+        None,
+        Term.Return(
+          Term.ApplyInfix(Lit.Int(2), Term.Name("+"), Nil, List(Lit.Int(3)))
+        )
+      )
+    )
+  }
+
+  test("empty-return") {
+    runTestAssert[Stat](
+      """|    def skip = {
+         |        token match {
+         |          case RBRACE =>
+         |            if (true)
+         |              return
+         |            change(-1)
+         |          case LBRACE =>
+         |             if (true)
+         |               return
+         |             change(-1)
+         |        }
+         |    }
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def skip = {
+           |  token match {
+           |    case RBRACE =>
+           |      if (true) return
+           |      change(-1)
+           |    case LBRACE =>
+           |      if (true) return
+           |      change(-1)
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("skip"),
+        Nil,
+        Nil,
+        None,
+        Term.Block(
+          List(
+            Term.Match(
+              Term.Name("token"),
+              List(
+                Case(
+                  Term.Name("RBRACE"),
+                  None,
+                  Term.Block(
+                    List(
+                      Term.If(Lit.Boolean(true), Term.Return(Lit.Unit()), Lit.Unit(), Nil),
+                      Term.Apply(Term.Name("change"), List(Lit.Int(-1)))
+                    )
+                  )
+                ),
+                Case(
+                  Term.Name("LBRACE"),
+                  None,
+                  Term.Block(
+                    List(
+                      Term.If(Lit.Boolean(true), Term.Return(Lit.Unit()), Lit.Unit(), Nil),
+                      Term.Apply(Term.Name("change"), List(Lit.Int(-1)))
+                    )
+                  )
+                )
+              ),
+              Nil
+            )
+          )
+        )
+      )
+    )
+  }
+
+  test("case-block") {
+    runTestAssert[Stat](
+      """|val success = suffixes.find { suffix =>
+         |  try {
+         |    true
+         |  } catch {
+         |    case e: StorageException =>
+         |      false
+         |  }
+         |}
+         |""".stripMargin,
+      assertLayout = Some(
+        """|val success = suffixes.find {
+           |  suffix => try {
+           |    true
+           |  } catch {
+           |    case e: StorageException => false
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("success"))),
+        None,
+        Term.Apply(
+          Term.Select(Term.Name("suffixes"), Term.Name("find")),
+          List(
+            Term.Block(
+              List(
+                Term.Function(
+                  List(Term.Param(Nil, Term.Name("suffix"), None, None)),
+                  Term.Try(
+                    Term.Block(List(Lit.Boolean(true))),
+                    List(
+                      Case(
+                        Pat.Typed(Pat.Var(Term.Name("e")), Type.Name("StorageException")),
+                        None,
+                        Lit.Boolean(false)
+                      )
+                    ),
+                    None
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+
+  test("complext-match-else") {
+    runTestAssert[Stat](
+      """|val calleeType = a match {
+         |  case _ =>
+         |    if cond then
+         |      expr match
+         |        case _ =>
+         |          f
+         |    else NoType
+         |  case _ =>
+         |     NoType
+         |}
+         |""".stripMargin,
+      assertLayout = Some(
+        """|val calleeType = a match {
+           |  case _ =>
+           |    if (cond) expr match {
+           |      case _ => f
+           |    } else NoType
+           |  case _ =>
+           |    NoType
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("calleeType"))),
+        None,
+        Term.Match(
+          Term.Name("a"),
+          List(
+            Case(
+              Pat.Wildcard(),
+              None,
+              Term.If(
+                Term.Name("cond"),
+                Term
+                  .Match(Term.Name("expr"), List(Case(Pat.Wildcard(), None, Term.Name("f"))), Nil),
+                Term.Name("NoType"),
+                Nil
+              )
+            ),
+            Case(Pat.Wildcard(), None, Term.Name("NoType"))
+          ),
+          Nil
+        )
+      )
+    )
+  }
 }
