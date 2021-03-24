@@ -478,9 +478,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         """|def genApply() = {
            |  app match {
            |    case Apply2() =>
-           |      generatedType = {
-           |        genTypeApply(t)
-           |      }
+           |      generatedType = genTypeApply(t)
            |    case Apply() =>
            |  }
            |}
@@ -503,11 +501,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   None,
                   Term.Assign(
                     Term.Name("generatedType"),
-                    Term.Block(List(Term.Apply(Term.Name("genTypeApply"), List(Term.Name("t")))))
+                    Term.Apply(Term.Name("genTypeApply"), List(Term.Name("t")))
                   )
                 ),
                 Case(Pat.Extract(Term.Name("Apply"), Nil), None, Term.Block(Nil))
-              )
+              ),
+              Nil
             )
           )
         )

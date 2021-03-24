@@ -425,6 +425,101 @@ class NewFunctionsSuite extends BaseDottySuite {
     )
   }
 
+  test("poly-context-function-complex") {
+    runTestAssert[Stat](
+      """|val t1 = [F[
+         |    _
+         |], T] =>
+         |  (
+         |      f: F[
+         |        T
+         |      ] => G[T]
+         |) => f(ft)""".stripMargin,
+      assertLayout = Some(
+        "val t1 = [F[_], T] => (f: F[T] => G[T]) => f(ft)"
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("t1"))),
+        None,
+        Term.PolyFunction(
+          List(
+            Type.Param(
+              Nil,
+              Type.Name("F"),
+              List(Type.Param(Nil, Name(""), Nil, Type.Bounds(None, None), Nil, Nil)),
+              Type.Bounds(None, None),
+              Nil,
+              Nil
+            ),
+            Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)
+          ),
+          Term.Function(
+            List(
+              Term.Param(
+                Nil,
+                Term.Name("f"),
+                Some(
+                  Type.Function(
+                    List(Type.Apply(Type.Name("F"), List(Type.Name("T")))),
+                    Type.Apply(Type.Name("G"), List(Type.Name("T")))
+                  )
+                ),
+                None
+              )
+            ),
+            Term.Apply(Term.Name("f"), List(Term.Name("ft")))
+          )
+        )
+      )
+    )
+  }
+
+  test("poly-function-indentation") {
+    runTestAssert[Stat](
+      """|val thisIsAPolymorphicFunction =
+         |  [
+         |      PolymorphicFunctionTypeParam
+         |  ] =>
+         |    (polymorphicFunctionParam: List[
+         |      T
+         |]) => ts.headOption""".stripMargin,
+      assertLayout = Some(
+        "val thisIsAPolymorphicFunction = [PolymorphicFunctionTypeParam] => (polymorphicFunctionParam: List[T]) => ts.headOption"
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("thisIsAPolymorphicFunction"))),
+        None,
+        Term.PolyFunction(
+          List(
+            Type.Param(
+              Nil,
+              Type.Name("PolymorphicFunctionTypeParam"),
+              Nil,
+              Type.Bounds(None, None),
+              Nil,
+              Nil
+            )
+          ),
+          Term.Function(
+            List(
+              Term.Param(
+                Nil,
+                Term.Name("polymorphicFunctionParam"),
+                Some(Type.Apply(Type.Name("List"), List(Type.Name("T")))),
+                None
+              )
+            ),
+            Term.Select(Term.Name("ts"), Term.Name("headOption"))
+          )
+        )
+      )
+    )
+  }
+
   test("dependent-type") {
     runTestAssert[Stat](
       "val extractor: (e: Entry) => e.Key = extractKey"
