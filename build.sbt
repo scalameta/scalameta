@@ -165,9 +165,7 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     enableHardcoreMacros,
     protobufSettings,
     libraryDependencies ++= List(
-      // NOTE(olafur): use shaded version of fastparse 2.3.1 to avoid any
-      // binary incompatibilites with the v2.3.1 version used by Scalameta.
-      "org.scalameta" %%% "fastparse-v2" % "2.3.1"
+      "com.lihaoyi" %%% "fastparse" % "2.3.2"
     ),
     mergedModule({ base =>
       val scalameta = base / "scalameta"
@@ -318,8 +316,7 @@ lazy val testkit = project
       else Nil
     },
     libraryDependencies ++= {
-      if (isScala211.value) List("com.lihaoyi" %% "geny" % "0.1.6")
-      else List("com.lihaoyi" %% "geny" % "0.6.5")
+      List("com.lihaoyi" %% "geny" % "0.6.7")
     },
     libraryDependencies ++= Seq(
       "org.scalameta" %% "munit" % munitVersion,
