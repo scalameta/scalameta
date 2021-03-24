@@ -318,7 +318,7 @@ lazy val testkit = project
       else Nil
     },
     libraryDependencies ++= {
-      if (isScala211.value) List("com.lihaoyi" %% "geny" % "0.1.6")
+      if (isScala211.value) List("com.lihaoyi" %% "geny" % "0.6.7")
       else List("com.lihaoyi" %% "geny" % "0.6.5")
     },
     libraryDependencies ++= Seq(
