@@ -1,7 +1,7 @@
 package scala.meta.contrib
 
-import scala.meta.internal.fastparse._
-import scala.meta.internal.fastparse.NoWhitespace._
+import fastparse._
+import fastparse.NoWhitespace._
 
 import scala.meta.contrib.DocToken._
 import scala.meta.tokens.Token.Comment
