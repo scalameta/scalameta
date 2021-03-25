@@ -146,7 +146,7 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/common"))
   .settings(
     publishableSettings,
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.3",
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.4",
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros
   )
@@ -314,7 +314,7 @@ lazy val testkit = project
     publishableSettings,
     hasLargeIntegrationTests,
     libraryDependencies ++= {
-      if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.0")
+      if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.1")
       else Nil
     },
     libraryDependencies ++= {
