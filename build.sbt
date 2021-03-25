@@ -317,16 +317,13 @@ lazy val testkit = project
       if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.1")
       else Nil
     },
-    libraryDependencies ++= {
-      if (isScala211.value) List("com.lihaoyi" %% "geny" % "0.1.6")
-      else List("com.lihaoyi" %% "geny" % "0.6.5")
-    },
     libraryDependencies ++= Seq(
       "org.scalameta" %% "munit" % munitVersion,
       // These are used to download and extract a corpus tar.gz
       "org.rauschig" % "jarchivelib" % "1.1.0",
       "commons-io" % "commons-io" % "2.8.0",
-      "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0"
+      "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0",
+      "com.lihaoyi" %% "geny" % "0.6.7"
     ),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
     testFrameworks := List(new TestFramework("munit.Framework")),
