@@ -1017,7 +1017,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       token.is[KwThis] || token.is[KwThrow] || token.is[KwTry] || token.is[KwWhile] ||
       token.is[LeftParen] || token.is[LeftBrace] || token.is[Underscore] ||
       token.is[Unquote] || token.is[MacroSplice] || token.is[MacroQuote] ||
-      token.is[Indentation.Indent]
+      token.is[Indentation.Indent] || (token.is[LeftBracket] && dialect.allowPolymorphicFunctions)
     }
   }
 
@@ -2985,7 +2985,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (token.is[LeftBrace]) {
       inBraces(blockOrCase())
     } else if (token.is[Indentation.Indent]) {
-      indented(blockOrCase())
+      indented(blockOrCase()) match {
+        case Term.Block((head: Term) :: Nil) => head
+        case other => other
+      }
     } else {
       syntaxError("Expected brace or indentation.", at = token.pos)
     }
