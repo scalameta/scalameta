@@ -223,6 +223,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   case object RegionBracket extends SepRegion
   case class RegionBrace(override val indent: Int, override val indentOnArrow: Boolean)
       extends SepRegion
+  case class RegionCase(override val indent: Int) extends SepRegion
   case class RegionEnum(override val indent: Int) extends SepRegion
   case class RegionIndentEnum(override val indent: Int) extends SepRegion {
     override def isIndented: Boolean = true
@@ -427,7 +428,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             if (!sepRegions.isEmpty && (sepRegions.head.isInstanceOf[RegionEnum] ||
                 sepRegions.head.isInstanceOf[RegionIndentEnum]))
               sepRegions
-            else RegionArrow :: sepRegions
+            else {
+              if (sepRegions.nonEmpty && sepRegions.head.isInstanceOf[RegionCase])
+                RegionArrow :: sepRegions.tail
+              else
+                RegionArrow :: sepRegions
+            }
           (nextRegions, currRef)
         } else if (curr.is[RightBrace]) {
           def isBraceOrEnum(r: SepRegion): Boolean = r match {
@@ -449,7 +455,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                   (Nil, currRef)
               }
             }
-
             nextRegions(sepRegions)
           } else {
             // adjust sep regions and return RightBrace
@@ -486,8 +491,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           (nextRegions, currRef)
         } else if (curr.is[RightArrow]) {
           val nextRegions =
-            if (!sepRegions.isEmpty && sepRegions.head == RegionArrow) sepRegions.tail
-            else sepRegions
+            if (sepRegions.nonEmpty && sepRegions.head == RegionArrow) {
+              // add case region for `match {` to calculate proper indentation
+              // for statements in indentation dialects
+              val newRegions = sepRegions.tail
+              val shouldNotProduceIndentation =
+                !dialect.allowSignificantIndentation ||
+                  newRegions.headOption.exists(!_.indentOnArrow)
+              lazy val indentInCase = if (isAheadNewLine(currPos)) countIndent(nextPos) else -1
+              if (newRegions.nonEmpty && shouldNotProduceIndentation && indentInCase > 0)
+                RegionCase(indentInCase) :: newRegions
+              else
+                newRegions
+            } else sepRegions
           (nextRegions, currRef)
         } else (sepRegions, currRef)
       } else {
@@ -518,6 +534,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           next != null && next.isNot[CantStartStat] &&
           (sepRegions.isEmpty ||
             sepRegions.head.isInstanceOf[RegionBrace] ||
+            sepRegions.head.isInstanceOf[RegionCase] ||
             sepRegions.head.isInstanceOf[RegionEnum] ||
             sepRegions.head.isInstanceOf[RegionIndent] ||
             sepRegions.head.isInstanceOf[RegionIndentEnum])
@@ -1145,7 +1162,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       token.is[KwYield] || token.is[KwTry] || token.is[KwCatch] || token.is[KwFinally] ||
       token.is[KwMatch] || token.is[KwDo] || token.is[KwFor] || token.is[KwThen] ||
       token.is[KwElse] || token.is[Equals] || token.is[KwWhile] || token.is[KwIf] ||
-      token.is[RightArrow] || (token.is[KwWith] && token.next.is[DclIntro])
+      token.is[RightArrow] || token.is[KwReturn] || (token.is[KwWith] && token.next.is[DclIntro])
     }
   }
 
