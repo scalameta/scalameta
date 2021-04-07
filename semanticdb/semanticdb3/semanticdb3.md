@@ -575,8 +575,8 @@ on how language types map onto this model.
 message ClassSignature {
   Scope type_parameters = 1;
   repeated Type parents = 2;
-  Scope declarations = 3;
-  Type self = 4;
+  Type self = 3;
+  Scope declarations = 4;
 }
 ```
 
