@@ -152,7 +152,7 @@ class EndMarkerSuite extends BaseDottySuite {
     )
   }
 
-  test("if-then-with-end") {
+  test("match-with-end") {
     val code = """|val a = this match
                   |      case a =>
                   |         that match
