@@ -151,4 +151,78 @@ class EndMarkerSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("if-then-with-end") {
+    val code = """|val a = this match
+                  |      case a =>
+                  |         that match
+                  |            case b => bb
+                  |            case c => cc
+                  |         end match
+                  |      case b =>
+                  |         that match
+                  |            case c => cc
+                  |            case _ => dd
+                  |""".stripMargin
+    val output = """|val a = this match {
+                    |  case a =>
+                    |    that match {
+                    |      case b => bb
+                    |      case c => cc
+                    |    }
+                    |    end match
+                    |  case b =>
+                    |    that match {
+                    |      case c => cc
+                    |      case _ => dd
+                    |    }
+                    |}
+                    |""".stripMargin
+    runTestAssert[Source](code, assertLayout = Some(output))(
+      Source(
+        List(
+          Defn.Val(
+            Nil,
+            List(Pat.Var(Term.Name("a"))),
+            None,
+            Term.Match(
+              Term.This(Name("")),
+              List(
+                Case(
+                  Pat.Var(Term.Name("a")),
+                  None,
+                  Term.Block(
+                    List(
+                      Term.Match(
+                        Term.Name("that"),
+                        List(
+                          Case(Pat.Var(Term.Name("b")), None, Term.Name("bb")),
+                          Case(Pat.Var(Term.Name("c")), None, Term.Name("cc"))
+                        ),
+                        Nil
+                      ),
+                      Term.EndMarker(Term.Name("match"))
+                    )
+                  )
+                ),
+                Case(
+                  Pat.Var(Term.Name("b")),
+                  None,
+                  Term.Match(
+                    Term.Name("that"),
+                    List(
+                      Case(Pat.Var(Term.Name("c")), None, Term.Name("cc")),
+                      Case(Pat.Wildcard(), None, Term.Name("dd"))
+                    ),
+                    Nil
+                  )
+                )
+              ),
+              Nil
+            )
+          )
+        )
+      )
+    )
+  }
 }
