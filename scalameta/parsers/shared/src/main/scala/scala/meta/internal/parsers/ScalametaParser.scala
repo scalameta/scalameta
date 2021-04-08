@@ -1192,7 +1192,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       token.is[Interpolation.End] || token.is[Xml.End] ||
       token.is[KwReturn] || token.is[KwThis] || token.is[KwType] ||
       token.is[RightParen] || token.is[RightBracket] || token.is[RightBrace] ||
-      token.is[Underscore] || token.is[Ellipsis] || token.is[Unquote]
+      token.is[Underscore] || token.is[Ellipsis] || token.is[Unquote] ||
+      token.prev.is[EndMarkerIntro]
     }
   }
 
