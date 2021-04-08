@@ -561,7 +561,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             def needOutdent: Boolean = {
               sepRegions.headOption.exists {
                 case r if r.isIndented =>
-                  if (nextIndent < r.indent) prev.isNot[CanContinueOnNextLine]
+                  // need to check prev.prev in case of `end match`
+                  if (nextIndent < r.indent)
+                    prev.isNot[CanContinueOnNextLine] || prev.prev.is[soft.KwEnd]
                   else r.closeOnNonCase && next.isNot[KwCase] && nextIndent == r.indent
                 case _ => false
               }
@@ -602,7 +604,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                 } else
                   // always add indent for indented `match` block
                   // check the previous token to avoid infinity loop
-                  prev.is[KwMatch] && next.is[KwCase] && token.isNot[Indentation.Indent]
+                  (!prev.prev.is[soft.KwEnd] && prev.is[KwMatch]) &&
+                  next.is[KwCase] && token.isNot[Indentation.Indent]
               } else false
             }
 
