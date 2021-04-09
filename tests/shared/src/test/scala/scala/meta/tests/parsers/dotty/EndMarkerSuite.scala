@@ -44,8 +44,7 @@ class EndMarkerSuite extends BaseDottySuite {
     )
   }
 
-  // extension syntax with indentation changed and needs more work
-  test("end-marker-extension".ignore) {
+  test("end-marker-extension") {
     val code = """|extension (a: Int)
                   |  def b = a + 1
                   |end extension
@@ -221,6 +220,60 @@ class EndMarkerSuite extends BaseDottySuite {
               Nil
             )
           )
+        )
+      )
+    )
+  }
+
+  test("val-with-end") {
+    val code = """|object a:
+                  |  val (foo, boo) =
+                  |    bar
+                  |    baz
+                  |  end val
+                  |  val (foo2, boo3) =
+                  |    bar
+                  |    baz
+                  |  end val
+                  |""".stripMargin
+    val output = """|object a {
+                    |  val (foo, boo) = {
+                    |    bar
+                    |    baz
+                    |  }
+                    |  end val
+                    |  val (foo2, boo3) = {
+                    |    bar
+                    |    baz
+                    |  }
+                    |  end val
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Object(
+        Nil,
+        Term.Name("a"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.Val(
+              Nil,
+              List(Pat.Tuple(List(Pat.Var(Term.Name("foo")), Pat.Var(Term.Name("boo"))))),
+              None,
+              Term.Block(List(Term.Name("bar"), Term.Name("baz")))
+            ),
+            Term.EndMarker(Term.Name("val")),
+            Defn.Val(
+              Nil,
+              List(Pat.Tuple(List(Pat.Var(Term.Name("foo2")), Pat.Var(Term.Name("boo3"))))),
+              None,
+              Term.Block(List(Term.Name("bar"), Term.Name("baz")))
+            ),
+            Term.EndMarker(Term.Name("val"))
+          ),
+          Nil
         )
       )
     )
