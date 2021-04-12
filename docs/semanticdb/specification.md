@@ -94,10 +94,10 @@ SemanticDB payloads must include the version of the SemanticDB model in the
   <tr>
     <td><b>Version</b></td>
     <td><b>Explanation</b></td>
-    <td><b>Data model<b></td>
+    <td><b>Data model</b></td>
   </tr>
   <tr>
-    <td><code>LEGACY<code></td>
+    <td><code>LEGACY</code></td>
     <td>Legacy SemanticDB payloads</td>
     <td><a href="https://github.com/scalameta/scalameta/blob/v3.0.0/semanticdb/semanticdb2/semanticdb2.proto">semanticdb2.proto</a></td>
   </tr>
@@ -471,13 +471,13 @@ and `declarations`. Declarations are modelled by a [Scope](#scope).
 ```protobuf
 message AnnotatedType {
   reserved 2;
-  repeated Annotation annotations = 3;
+  repeated AnnotationTree annotations = 3;
   Type tpe = 1;
 }
 ```
 
 `AnnotatedType` represents a type `tpe` annotated by one or more
-[Annotations](#annotation).
+[AnnotationTrees](#annotation-tree).
 
 ```protobuf
 message ExistentialType {
@@ -597,7 +597,7 @@ message SymbolInformation {
   int32 properties = 4;
   string display_name = 5;
   Signature signature = 17;
-  repeated Annotation annotations = 13;
+  repeated AnnotationTree annotations = 13;
   Access access = 18;
   repeated string overridden_symbols = 19;
   Documentation documentation = 20;
@@ -808,7 +808,7 @@ definitions have which display and symbol names in supported languages.
 See [Languages](#languages) for more information on which definitions have which
 signatures in supported languages.
 
-`annotation`. [Annotations](#annotation) of the corresponding definition.
+`annotation`. [AnnotationTree](#annotationtree) of the corresponding definition.
 
 `access`. [Access](#access) modifier of the corresponding definition.
 
@@ -832,19 +832,22 @@ message Documentation {
 }
 ```
 
-`Documentation` represents the documentation associated with a [Symbol](#symbol). The `format` fields
+`Documentation` represents the documentation associated with a [Symbol](#annotation-deprecated). The `format` fields
 specifies the format of the text stored in `message`.
 
-### Annotation
+### Annotation (deprecated)
 
 ```protobuf
 message Annotation {
+  option deprecated = true;
   Type tpe = 1;
 }
 ```
 
 `Annotation` represents annotations. See [Languages](#languages) for information
 on how annotations in supported languages map onto this data structure.
+
+Superseded by [AnnotationTree](#annotation-tree).
 
 ### Access
 
@@ -1091,6 +1094,29 @@ message TypeApplyTree {
 
 A `TypeApplyTree` represents the type application of a method, providing that
 method with type arguments.
+
+<a name="annotation-tree"></a>
+
+```protobuf
+message AnnotationTree {
+  Type tpe = 1;
+  repeated Tree parameters = 2;
+}
+```
+
+An `AnnotationTree` represents an annotation with parameters, if any. The
+`parameters` would normally be `AssignTree` in Java where the parameters
+generally are required to be assignment expressions, or else any other
+`Tree`.
+
+```protobuf
+message AssignTree {
+  Tree lhs = 1;
+  Tree rhs = 2;
+}
+```
+
+An `AssignTree` represents an assignment expression.
 
 ## Data Schemas
 
@@ -1454,7 +1480,7 @@ message SymbolInformation {
   int32 properties = 4;
   string display_name = 5;
   Signature signature = 17;
-  repeated Annotation annotations = 13;
+  repeated AnnotationTree annotations = 13;
   Access access = 18;
   Documentation documentation = 20;
 }
@@ -1499,7 +1525,7 @@ message SymbolInformation {
   </tr>
   <tr>
     <td><code>overridden_symbols</code></td>
-    <td>List of symbols this symbol overrides. See <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#overriding">Overriding</td>
+    <td>List of symbols this symbol overrides. See <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#overriding"/>Overriding</td>
   </tr>
   <tr>
     <td><code>documentation</code></td>
@@ -2361,15 +2387,16 @@ package object symbols and object symbols are:
 
 <a name="scala-annotation"></a>
 
-### Annotation
+### AnnotationTree
 
 ```protobuf
-message Annotation {
+message AnnotationTree {
   Type tpe = 1;
+  repeated Tree parameters = 2;
 }
 ```
 
-In Scala, [Annotation](#annotation) represents annotations [\[23\]][23].
+In Scala, [Annotation](#annotation-deprecated) represents annotations [\[23\]][23].
 
 <table>
   <tr>
@@ -2377,12 +2404,38 @@ In Scala, [Annotation](#annotation) represents annotations [\[23\]][23].
     <td><b>Explanation</b></td>
   </tr>
   <tr>
-    <td><code>Annotation(&lt;ann&gt;)</code></td>
-    <td>Definition annotation, e.g. <code>@ann def m: T</code>.</td>
+    <td><code>AnnotationTree(TypeRef(None, &lt;NoArgs#&gt;, List()), None)</code></td>
+    <td><code>@NoArgs</code></td>
   </tr>
   <tr>
-    <td><code>Annotation(&lt;ann&gt;)</code></td>
-    <td>Type annotation, e.g. <code>T @ann</code>.</td>
+    <td>
+      <code>
+        AnnotationTree(TypeRef(None, &lt;StringArg#&gt;, List()),
+        List(AssignTree(IdTree(&lt;StringArg#value().&gt;),
+          LiteralTree(StringConstant("arg")))))
+      </code>
+    </td>
+    <td><code>@StringArgs("arg")</code></td>
+  </tr>
+  <tr>
+    <td>
+      <code>
+        AnnotationTree(TypeRef(None, &lt;ArrayArg#&gt;, List()),
+        List(AssignTree(IdTree(&lt;ArrayArg#value().&gt;),
+          ApplyTree(IdTree(&lt;scala/Array#&gt;), List())))
+      </code>
+    </td>
+    <td><code>@ArrayArg(Array())</code></td>
+  </tr>
+  <tr>
+    <td>
+      <code>
+        AnnotationTree(TypeRef(None, &lt;EnumConstArg#&gt;, List()),
+        List(AssignTree(IdTree(&lt;EnumConstArg#value().&gt;),
+          SelectTree(IdTree(&lt;X#&gt;), IdTree(&lt;X#CONST.&gt;))))
+      </code>
+    </td>
+    <td><code>@EnumConstArg(X.CONST)</code></td>
   </tr>
   <tr>
     <td>Not supported</td>
@@ -2390,9 +2443,6 @@ In Scala, [Annotation](#annotation) represents annotations [\[23\]][23].
   </tr>
 </table>
 
-- At the moment, `Annotation` can't represent annotation arguments, which means
-  that the annotation in `@ann(x, y, z) def m: T` is represented as
-  `Annotation(<ann>)`. We may improve on this in the future.
 - At the moment, SemanticDB cannot represent expressions, which means that it
   cannot represent expression annotations as well. We do not plan to add support
   for expressions in SemanticDB, so it is highly unlikely that expression
@@ -3070,7 +3120,7 @@ message SymbolInformation {
   int32 properties = 4;
   string display_name = 5;
   Signature signature = 17;
-  repeated Annotation annotations = 13;
+  repeated AnnotationTree annotations = 13;
   Access access = 18;
   Documentation documentation = 20;
 }
@@ -3114,7 +3164,7 @@ message SymbolInformation {
   </tr>
   <tr>
     <td><code>overridden_symbols</code></td>
-    <td>List of symbols this symbol overrides. See <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.4.8">Overriding</td>
+    <td>List of symbols this symbol overrides. See <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.4.8"/>Overriding</td>
   </tr>
   <tr>
     <td><code>documentation</code></td>
@@ -3573,17 +3623,16 @@ modelled in [Scala symbols](#scala-symbol).
 
 <a name="java-annotation"></a>
 
-### Annotation
+### AnnotationTree
 
 ```protobuf
-message Annotation {
+message AnnotationTree {
   Type tpe = 1;
+  repeated Tree parameters = 2;
 }
 ```
 
-In Java, [Annotation](#annotation) represents `access_flags` in the JVMS `class`
-file format [\[92\]][92] but not the actual annotations [\[93\]][93]. We may
-improve on this in the future.
+In Java, [AnnotationTree](#annotation-tree) represents a typed syntax tree of the JLS annotation construct [\[93\]][93].
 
 <table>
   <tr>
@@ -3591,12 +3640,38 @@ improve on this in the future.
     <td><b>Explanation</b></td>
   </tr>
   <tr>
-    <td><code>Annotation(TypeRef(None, &lt;scala/annotation/strictfp&gt;, List()))</code></td>
-    <td> Declared <code>strictfp</code>; floating-point mode is FP-strict e.g. <code>strictfp class MyClass</code>.</td>
+    <td><code>AnnotationTree(TypeRef(None, &lt;NoArgs#&gt;, List()), None)</code></td>
+    <td><code>@NoArgs</code></td>
   </tr>
   <tr>
-    <td>Not supported</td>
-    <td>JLS annotations <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-9.html#jls-9.7">[93]</a></td>
+    <td>
+      <code>
+        AnnotationTree(TypeRef(None, &lt;StringArg#&gt;, List()),
+        List(AssignTree(IdTree(&lt;StringArg#value().&gt;),
+          LiteralTree(StringConstant("arg")))))
+      </code>
+    </td>
+    <td><code>@StringArgs("arg")</code></td>
+  </tr>
+  <tr>
+    <td>
+      <code>
+        AnnotationTree(TypeRef(None, &lt;ArrayArg#&gt;, List()),
+        List(AssignTree(IdTree(&lt;ArrayArg#value().&gt;),
+          ApplyTree(IdTree(&lt;scala/Array#&gt;), List())))
+      </code>
+    </td>
+    <td><code>@ArrayArg({})</code></code></td>
+  </tr>
+  <tr>
+    <td>
+      <code>
+        AnnotationTree(TypeRef(None, &lt;EnumConstArg#&gt;, List()),
+        List(AssignTree(IdTree(&lt;EnumConstArg#value().&gt;),
+          SelectTree(IdTree(&lt;X#&gt;), IdTree(&lt;X#CONST.&gt;))))
+      </code>
+    </td>
+    <td><code>@EnumConstArg(X.CONST)</code></td>
   </tr>
 </table>
 
