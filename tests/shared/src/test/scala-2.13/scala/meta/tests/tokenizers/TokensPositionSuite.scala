@@ -642,7 +642,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     "new { val a = 1 } with A {}",
     """|Template { val a = 1 } with A {}
        |Defn.Val val a = 1
-       |Self new { val a = 1 } with A {@@}
+       |Self new { @@val a = 1 } with A {}
        |""".stripMargin
   )
 

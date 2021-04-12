@@ -301,13 +301,64 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    42
        |  def b: String =
        |    "b"
-       |Self def
-       |Name.Anonymous def
+       |Self   @@def a: Int =
        |Defn.Def def a: Int =
        |    42
        |Defn.Def def b: String =
        |    "b"
        |Lit.String "b"
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|object a:
+       |   def foo =
+       |     try foo
+       |     catch
+       |       case a =>
+       |       case b =>
+       |         stmt1
+       |         stmt2
+       |       case c =>
+       |     finally bar
+       |""".stripMargin,
+    """|Template :
+       |   def foo =
+       |     try foo
+       |     catch
+       |       case a =>
+       |       case b =>
+       |         stmt1
+       |         stmt2
+       |       case c =>
+       |     finally bar
+       |Self    @@def foo =
+       |Defn.Def def foo =
+       |     try foo
+       |     catch
+       |       case a =>
+       |       case b =>
+       |         stmt1
+       |         stmt2
+       |       case c =>
+       |     finally bar
+       |Term.Try try foo
+       |     catch
+       |       case a =>
+       |       case b =>
+       |         stmt1
+       |         stmt2
+       |       case c =>
+       |     finally bar
+       |Case case a =>
+       |Term.Block    @@def foo =
+       |Case case b =>
+       |         stmt1
+       |         stmt2
+       |Term.Block stmt1
+       |         stmt2
+       |Case case c =>
+       |Term.Block    @@def foo =
        |""".stripMargin
   )
 }

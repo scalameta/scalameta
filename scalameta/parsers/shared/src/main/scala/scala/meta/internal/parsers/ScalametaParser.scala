@@ -802,6 +802,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def startTokenPos = in.tokenPos
     def endTokenPos = in.prevTokenPos
   }
+
+  case object EmptyPos extends Pos {
+    val startTokenPos = in.tokenPos
+    val endTokenPos = in.tokenPos - 1
+  }
+
   implicit def intToIndexPos(index: Int): IndexPos = IndexPos(index)
   implicit def tokenToTokenPos(token: Token): TokenPos = TokenPos(token)
   implicit def treeToTreePos(tree: Tree): TreePos = TreePos(tree)
@@ -815,6 +821,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def atPos[T <: Tree](token: Token)(body: => T): T = {
     atPos(token.startTokenPos, token.endTokenPos)(body)
   }
+
+  def emptyPos[T <: Tree](body: => T) = atPos(EmptyPos, EmptyPos)(body)
+
   def atPos[T <: Tree](start: Pos, end: Pos)(body: => T): T = {
     val startTokenPos = start.startTokenPos
     val result = body
@@ -3038,6 +3047,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             blockStatSeq() match {
               case List(q: Quasi) => q.become[Term.Quasi]
               case List(term: Term) => term
+              case Nil => emptyPos(Term.Block(Nil))
               case other => atPos(start, end)(Term.Block(other))
             }
           }
@@ -4860,7 +4870,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def templateStatSeq(enumCaseAllowed: Boolean = false): (Self, List[Stat]) = {
-    val emptySelf = autoPos(Self(autoPos(Name.Anonymous()), None))
+    val emptySelf = emptyPos(Self(emptyPos(Name.Anonymous()), None))
     var selfOpt: Option[Self] = None
     var firstOpt: Option[Stat] = None
     if (token.is[ExprIntro] && !token.is[KwExtension]) {
