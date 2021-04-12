@@ -4,9 +4,9 @@ import scala.meta.internal.{semanticdb => s}
 
 trait AnnotationOps { self: Scalacp =>
   implicit class XtensionAnnotation(ann: Int) {
-    def toSemantic: s.Annotation = {
+    def toSemantic: s.AnnotationTree = {
       // FIXME: https://github.com/scalameta/scalameta/issues/1292
-      s.Annotation()
+      s.AnnotationTree()
     }
   }
 }

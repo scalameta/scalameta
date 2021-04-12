@@ -85,7 +85,7 @@ trait SymbolInformationPrinter extends BasePrinter {
       }
     }
 
-    private def pprint(ann: Annotation): Unit = {
+    private def pprint(ann: AnnotationTree): Unit = {
       out.print("@")
       ann.tpe match {
         case NoType =>

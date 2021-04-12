@@ -407,11 +407,11 @@ object Javacp {
     }
   }
 
-  private def sannotations(access: Int): Seq[s.Annotation] = {
-    val buf = List.newBuilder[s.Annotation]
+  private def sannotations(access: Int): Seq[s.AnnotationTree] = {
+    val buf = List.newBuilder[s.AnnotationTree]
 
     def push(symbol: String): Unit =
-      buf += s.Annotation(styperef(symbol))
+      buf += s.AnnotationTree(styperef(symbol))
 
     if (access.hasFlag(o.ACC_STRICT)) push("scala/annotation/strictfp#")
 
