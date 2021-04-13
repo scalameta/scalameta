@@ -227,8 +227,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  case x: String => (x, x) 
        |  case x: Double => x
        |}
-       |Case case x: String => (x, x) 
-       |
+       |Case case x: String => (x, x)
        |Pat.Typed x: String
        |Term.Tuple (x, x)
        |Case case x: Double => x
@@ -301,13 +300,87 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    42
        |  def b: String =
        |    "b"
-       |Self def
-       |Name.Anonymous def
+       |Self   @@def a: Int =
        |Defn.Def def a: Int =
        |    42
        |Defn.Def def b: String =
        |    "b"
        |Lit.String "b"
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|object b:
+       |   def foo =
+       |     try foo
+       |     catch
+       |       case a =>
+       |     finally bar
+       |""".stripMargin,
+    """|Template :
+       |   def foo =
+       |     try foo
+       |     catch
+       |       case a =>
+       |     finally bar
+       |Self    @@def foo =
+       |Defn.Def def foo =
+       |     try foo
+       |     catch
+       |       case a =>
+       |     finally bar
+       |Term.Try try foo
+       |     catch
+       |       case a =>
+       |     finally bar
+       |Case case a =>
+       |Term.Block        case a =>@@
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|object a:
+       |   def foo =
+       |     try foo
+       |     catch
+       |       case a =>
+       |       case b =>
+       |         st1
+       |         st2
+       |     finally bar
+       |""".stripMargin,
+    """|Template :
+       |   def foo =
+       |     try foo
+       |     catch
+       |       case a =>
+       |       case b =>
+       |         st1
+       |         st2
+       |     finally bar
+       |Self    @@def foo =
+       |Defn.Def def foo =
+       |     try foo
+       |     catch
+       |       case a =>
+       |       case b =>
+       |         st1
+       |         st2
+       |     finally bar
+       |Term.Try try foo
+       |     catch
+       |       case a =>
+       |       case b =>
+       |         st1
+       |         st2
+       |     finally bar
+       |Case case a =>
+       |Term.Block        @@case b =>
+       |Case case b =>
+       |         st1
+       |         st2
+       |Term.Block st1
+       |         st2
        |""".stripMargin
   )
 }

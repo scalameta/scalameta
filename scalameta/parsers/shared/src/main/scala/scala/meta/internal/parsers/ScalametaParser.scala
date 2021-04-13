@@ -289,21 +289,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (!dialect.allowSignificantIndentation) false
       else {
         val existingIndent = sepRegions.find(_.isIndented).map(_.indent).getOrElse(0)
-        val hasLF = (prevPos to tokenPos).exists(i => scannerTokens(i).is[LF])
+        val lastLF = (prevPos to tokenPos).reverse.collectFirst({
+          case i if scannerTokens.tokens(i).is[LF] => i
+        })
         val expected = countIndent(tokenPos)
-        if (hasLF && expected > existingIndent) {
-          val prependIndentRegion = expected != existingIndent
-          if (prependIndentRegion) {
+        lastLF match {
+          case Some(pointPos) if expected > existingIndent =>
             sepRegions = f(expected, sepRegions)
             curr = TokenRef(
               new Indentation.Indent(token.input, token.dialect, token.start, token.end),
               curr.pos,
               curr.pos,
-              curr.pointPos
+              pointPos
             )
-          }
-          true
-        } else false
+            true
+          case _ => false
+        }
       }
     }
 
@@ -610,9 +611,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             }
 
             if (needOutdent)
-              (sepRegions.tail, mkOutdent(prevPos))
+              (sepRegions.tail, mkOutdent(lastNewlinePos))
             else if (needIndent)
-              (RegionIndent(nextIndent, prev.is[KwMatch]) :: sepRegions, mkIndent(nextPos))
+              (RegionIndent(nextIndent, prev.is[KwMatch]) :: sepRegions, mkIndent(lastNewlinePos))
             else if (canProduceLF) {
               (sepRegions, lastWhitespaceToken)
             } else
@@ -820,8 +821,23 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val result = body
     var endTokenPos = end.endTokenPos
     if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
-    val pos = TokenStreamPosition(startTokenPos, endTokenPos + 1)
+    val pos = trimmedPos(startTokenPos, endTokenPos)
     result.withOrigin(Origin.Parsed(input, dialect, pos)).asInstanceOf[T]
+  }
+
+  def trimmedPos(startTokenPos: Int, endTokenPos: Int): TokenStreamPosition = {
+    def skipTrivia(range: Range): Int = {
+      range
+        .dropWhile(i => scannerTokens(i).is[Trivia])
+        .headOption
+        .getOrElse(range.start)
+    }
+    val rangeFromStart = startTokenPos to endTokenPos
+    val (start, end) =
+      if (rangeFromStart.isEmpty) (startTokenPos, endTokenPos)
+      else (skipTrivia(rangeFromStart), skipTrivia(rangeFromStart.reverse))
+
+    TokenStreamPosition(start, end + 1)
   }
 
   def atPosTry[T <: Tree](start: Pos, end: Pos)(body: => Try[T]): Try[T] = {
@@ -829,7 +845,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val result = body
     var endTokenPos = end.endTokenPos
     if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
-    val pos = TokenStreamPosition(startTokenPos, endTokenPos + 1)
+    val pos = trimmedPos(startTokenPos, endTokenPos)
     result.map(_.withOrigin(Origin.Parsed(input, dialect, pos)).asInstanceOf[T])
   }
 
@@ -2703,7 +2719,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         // Infix chain continues.
         // In the running example, we're at `a [+] b`.
         val op = if (token.is[KwMatch]) {
-          val matchName = atPos(token.pos.start, token.pos.end)(Term.Name("match"))
+          val matchName = atPos(in.tokenPos, in.tokenPos)(Term.Name("match"))
           accept[KwMatch]
           matchName
         } else {
