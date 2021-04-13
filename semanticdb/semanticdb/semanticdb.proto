@@ -118,7 +118,7 @@ message StructuralType {
 
 message AnnotatedType {
   reserved 2;
-  repeated AnnotationTree annotations = 3;
+  repeated AnnotationTree annotations = 3; // NOTE: it's possible to manually change the type to `Annotation` for source compatibility with older SemanticDB versions.
   Type tpe = 1;
 }
 
@@ -278,7 +278,7 @@ message SymbolInformation {
   int32 properties = 4;
   string display_name = 5;
   Signature signature = 17;
-  repeated AnnotationTree annotations = 13;
+  repeated AnnotationTree annotations = 13; // NOTE: it's possible to manually change the type to `Annotation` for source compatibility with older SemanticDB versions.
   Access access = 18;
   repeated string overridden_symbols = 19;
   Documentation documentation = 20;

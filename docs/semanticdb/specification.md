@@ -3673,6 +3673,27 @@ In Java, [AnnotationTree](#annotation-tree) represents a typed syntax tree of th
     </td>
     <td><code>@EnumConstArg(X.CONST)</code></td>
   </tr>
+  <tr>
+    <td>
+      <code>
+        AnnotationTree(TypeRef(None, &lt;Get#&gt;, List()),
+        List(AssignTree(IdTree(&lt;Get#route().&gt;),
+          LiteralTree(StringConstant("/")))))
+      </code>
+    </td>
+    <td><code>@Get(route = "/")</code></td>
+  </tr>
+  <tr>
+    <td>
+      <code>
+        AnnotationTree(TypeRef(None, &lt;A#&gt;, List()),
+        List(AssignTree(IdTree(&lt;A#value().&gt;),
+          AnnotationTree(TypeRef(None, &lt;B#&gt;, List()),
+            None))))
+      </code>
+    </td>
+    <td><code>@A(@B)</code></td>
+  </tr>  
 </table>
 
 <a name="java-access"></a>
