@@ -383,4 +383,26 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |         st2
        |""".stripMargin
   )
+
+  checkPositions[Stat](
+    """|try 
+       |  fx
+       |  gx
+       |  catch
+       |  case aa =>
+       |  case bb =>
+       |  finally
+       |  cc
+       |  dd
+       |""".stripMargin,
+    """|Term.Block fx
+       |  gx
+       |Case case aa =>
+       |Term.Block   @@case bb =>
+       |Case case bb =>
+       |Term.Block   @@finally
+       |Term.Block cc
+       |  dd
+       |""".stripMargin
+  )
 }
