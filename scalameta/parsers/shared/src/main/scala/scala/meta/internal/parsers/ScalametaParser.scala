@@ -2282,7 +2282,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             accept[KwDo]
             exprMaybeIndented()
           } else {
-            expr()
+            in.observeIndented()
+            exprMaybeIndented()
           }
           Term.While(cond, body)
         } else if (token.is[Indentation.Indent]) {
@@ -2332,7 +2333,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           accept[KwYield]
           Term.ForYield(enums, exprMaybeIndented())
         } else {
-          Term.For(enums, expr())
+          in.observeIndented()
+          Term.For(enums, exprMaybeIndented())
         }
       case KwReturn() =>
         next()
