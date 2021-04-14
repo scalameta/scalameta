@@ -289,22 +289,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (!dialect.allowSignificantIndentation) false
       else {
         val existingIndent = sepRegions.find(_.isIndented).map(_.indent).getOrElse(0)
-        val lastLF = (prevPos to tokenPos).reverse.collectFirst({
-          case i if scannerTokens.tokens(i).is[LF] => i
-        })
-        val expected = countIndent(tokenPos)
-        lastLF match {
-          case Some(pointPos) if expected > existingIndent =>
-            sepRegions = f(expected, sepRegions)
-            curr = TokenRef(
-              new Indentation.Indent(token.input, token.dialect, token.start, token.end),
-              curr.pos,
-              curr.pos,
-              pointPos
-            )
-            true
-          case _ => false
-        }
+        val (expected, pointPos) = countIndentAndNewlineIndex(tokenPos)
+        if (expected > existingIndent) {
+          sepRegions = f(expected, sepRegions)
+          curr = TokenRef(
+            new Indentation.Indent(token.input, token.dialect, token.start, token.end),
+            curr.pos,
+            curr.pos,
+            pointPos
+          )
+          true
+        } else false
       }
     }
 
@@ -336,7 +331,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (!dialect.allowSignificantIndentation) false
       else {
         val existingIndent = sepRegions.find(_.isIndented).map(_.indent).getOrElse(0)
-        val expected = countIndent(tokenPos)
+        val (expected, pointPos) = countIndentAndNewlineIndex(tokenPos)
 
         def canEndIndentation(token: Token) = token.is[KwElse] || token.is[KwThen] ||
           token.is[KwDo] || token.is[KwCatch] || token.is[KwFinally] || token.is[KwYield] ||
@@ -348,7 +343,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             new Indentation.Outdent(token.input, token.dialect, token.start, token.end),
             curr.pos,
             curr.pos,
-            curr.pointPos
+            pointPos
           )
 
           true
@@ -651,21 +646,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
    * When token on `tokenPosition` is not a whitespace and is
    * a first non-whitespace character in a current line then a result is
    * a number of whitespace characters counted.
-   * Otherwise -1 is returned.
+   * Otherwise (-1, -1) is returned.
+   *
+   * Returns a tuple2 where:
+   * - first value is indentation level
+   * - second is `LF` token index
    */
-  private def countIndent(tokenPosition: Int): Int = {
+  private def countIndentAndNewlineIndex(tokenPosition: Int): (Int, Int) = {
     def isWhitespace(token: Token): Boolean = token.is[Space] || token.is[Tab]
 
     @tailrec
-    def countIndentInternal(pos: Int, acc: Int = 0): Int = {
-      if (pos < 0 || scannerTokens(pos).is[LF] || isColonEol(scannerTokens(pos))) acc
+    def countIndentInternal(pos: Int, acc: Int = 0): (Int, Int) = {
+      if (pos < 0 || scannerTokens(pos).is[LF]) (acc, pos)
       else if (isWhitespace(scannerTokens(pos))) countIndentInternal(pos - 1, acc + 1)
-      else -1
+      else (-1, -1)
     }
 
-    if (scannerTokens(tokenPosition).is[Whitespace]) -1
+    if (scannerTokens(tokenPosition).is[Whitespace]) (-1, -1)
     else countIndentInternal(tokenPosition - 1)
   }
+
+  private def countIndent(tokenPosition: Int): Int =
+    countIndentAndNewlineIndex(tokenPosition)._1
 
   @tailrec
   private def isAheadNewLine(currentPosition: Int): Boolean = {
