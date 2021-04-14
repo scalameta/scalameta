@@ -241,4 +241,26 @@ class ScaladocParserSuite extends FunSuite {
       )
     )
   }
+
+  test("param") {
+    val result = parseString(
+      """|/** @param a b */
+         |case class foo(a: String)
+         |""".stripMargin
+    )
+
+    val expectation =
+      Some(
+        List(
+          DocToken(
+            Param,
+            Some("a"),
+            Some("b")
+          )
+        )
+      )
+
+    assertEquals(result, expectation)
+  }
+
 }

@@ -101,9 +101,9 @@ object ScaladocParser {
         // Multiple parameter doc tokens
         case kind @ DocToken.TagKind(label, 2) =>
           def parser[_: P] = {
-            val nameParser = ((AnyChar ~ !" ").rep ~ AnyChar).!.map(_.trim)
+            def nameParser: P[String] = ((AnyChar ~ !" ").rep ~ AnyChar).!.map(_.trim)
 
-            val nameAndBodyParsers = {
+            def nameAndBodyParsers: P[DocToken] = {
               (nameParser ~ " ".rep.? ~ bodyParser.!).map { case (name, body) =>
                 DocToken(kind, name, body)
               }
