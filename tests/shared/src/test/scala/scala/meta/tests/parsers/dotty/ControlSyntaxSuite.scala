@@ -740,6 +740,46 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("new-for-indented-without-do") {
+    val code = """|for ( a <- x )
+                  |  fx
+                  |  fy
+                  |""".stripMargin
+    val output = """|for (a <- x) {
+                    |  fx
+                    |  fy
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.For(
+        List(
+          Enumerator.Generator(Pat.Var(Term.Name("a")), Term.Name("x"))
+        ),
+        Term.Block(List(Term.Name("fx"), Term.Name("fy")))
+      )
+    )
+  }
+
+  test("new-for-indented-without-do2") {
+    val code = """|for { a <- x }
+                  |  fx
+                  |  fy
+                  |""".stripMargin
+    val output = """|for (a <- x) {
+                    |  fx
+                    |  fy
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.For(
+        List(
+          Enumerator.Generator(Pat.Var(Term.Name("a")), Term.Name("x"))
+        ),
+        Term.Block(List(Term.Name("fx"), Term.Name("fy")))
+      )
+    )
+  }
+
   test("new-for-yield-single1") {
     val code = """|for
                   |  a <- x
@@ -976,6 +1016,20 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val output = "while (cond) fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.While(Term.Name("cond"), Term.Name("fx"))
+    )
+  }
+
+  test("new-while-indented-witout-do") {
+    val code = """|while (cond)
+                  |  fx
+                  |  gx
+                  |""".stripMargin
+    val output = """|while (cond) {
+                    |  fx
+                    |  gx
+                    |}""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.While(Term.Name("cond"), Term.Block(List(Term.Name("fx"), Term.Name("gx"))))
     )
   }
 
