@@ -2154,7 +2154,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   private def exprMaybeIndented(): Term = {
     if (token.is[Indentation.Indent]) {
-      block()
+      blockExpr()
     } else {
       expr()
     }
