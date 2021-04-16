@@ -1379,4 +1379,41 @@ class SignificantIndentationSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("partial-function") {
+    runTestAssert[Stat](
+      """|val withDefault: Option[Int] => Int =
+         |  case Some(x) => x
+         |  case None => 0
+         |""".stripMargin,
+      assertLayout = Some(
+        """|val withDefault: Option[Int] => Int = {
+           |  case Some(x) => x
+           |  case None => 0
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("withDefault"))),
+        Some(
+          Type.Function(
+            List(Type.Apply(Type.Name("Option"), List(Type.Name("Int")))),
+            Type.Name("Int")
+          )
+        ),
+        Term.PartialFunction(
+          List(
+            Case(
+              Pat.Extract(Term.Name("Some"), List(Pat.Var(Term.Name("x")))),
+              None,
+              Term.Name("x")
+            ),
+            Case(Term.Name("None"), None, Lit.Int(0))
+          )
+        )
+      )
+    )
+  }
 }
