@@ -858,4 +858,50 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )
   }
+
+  test("tuple-pattern") {
+    runTestAssert[Stat](
+      """|def f(t: (String, String)): String =
+         |  t match
+         |    case (m, _): (String, String) => m
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def f(t: (String, String)): String = t match {
+           |  case (m, _): (String, String) => m
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("f"),
+        Nil,
+        List(
+          List(
+            Term.Param(
+              Nil,
+              Term.Name("t"),
+              Some(Type.Tuple(List(Type.Name("String"), Type.Name("String")))),
+              None
+            )
+          )
+        ),
+        Some(Type.Name("String")),
+        Term.Match(
+          Term.Name("t"),
+          List(
+            Case(
+              Pat.Typed(
+                Pat.Tuple(List(Pat.Var(Term.Name("m")), Pat.Wildcard())),
+                Type.Tuple(List(Type.Name("String"), Type.Name("String")))
+              ),
+              None,
+              Term.Name("m")
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
 }
