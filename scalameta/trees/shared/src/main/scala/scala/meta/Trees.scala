@@ -278,10 +278,6 @@ object Pat {
     checkFields(parts.length == args.length + 1)
   }
   @ast class Typed(lhs: Pat, rhs: Type) extends Pat {
-    checkFields(
-      lhs.is[Pat.Wildcard] || lhs.is[Pat.Var] || lhs.is[Pat.Quasi] ||
-        lhs.is[Pat.Bind] || lhs.is[Pat.Tuple]
-    )
     checkFields(!rhs.is[Type.Var] && !rhs.is[Type.Placeholder])
   }
   @ast class Macro(body: Term) extends Pat {
