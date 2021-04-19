@@ -21,7 +21,7 @@ object Synthetics {
     val paramSym =
       if (getterSym.isGlobal) Symbols.Global(setterSym, d.Parameter("x$1")) else getterSym + "+2"
     val paramSig = getterInfo.signature match {
-      case s.MethodSignature(_, _, sret) => s.ValueSignature(sret)
+      case sig: s.MethodSignature => s.ValueSignature(sig.returnType)
       case _ => s.NoSignature
     }
     val paramInfo = s.SymbolInformation(
