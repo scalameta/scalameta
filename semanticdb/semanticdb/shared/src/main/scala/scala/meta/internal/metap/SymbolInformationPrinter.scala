@@ -124,10 +124,11 @@ trait SymbolInformationPrinter extends BasePrinter {
         }
         if (decls.infos.nonEmpty) out.print(s"+${decls.infos.length} decls")
         if (self.nonEmpty || decls.infos.nonEmpty) out.print(" }")
-      case MethodSignature(tparams, paramss, res) =>
-        rep("[", tparams.infos, ", ", "]")(pprintDefn)
-        rep("(", paramss, ")(", ")")(params => rep(params.infos, ", ")(pprintDefn))
-        opt(": ", res)(pprint)
+      case sig: MethodSignature =>
+        rep("[", sig.typeParameters.infos, ", ", "]")(pprintDefn)
+        rep("(", sig.parameterLists, ")(", ")")(params => rep(params.infos, ", ")(pprintDefn))
+        rep(" throws ", sig.throws, ", ", "")(pprint)
+        opt(": ", sig.returnType)(pprint)
       case TypeSignature(tparams, lo, hi) =>
         rep("[", tparams.infos, ", ", "]")(pprintDefn)
         if (lo != hi) {

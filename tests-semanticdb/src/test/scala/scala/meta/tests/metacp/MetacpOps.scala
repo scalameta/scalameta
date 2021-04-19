@@ -74,9 +74,9 @@ object MetacpOps {
           parents.foreach(visitType)
           visitType(self)
         })
-      case s.MethodSignature(typeParameters, parameterLists, returnType) =>
-        parameterLists.foreach(s => visitScope(Some(s))(()))
-        visitScope(typeParameters)(visitType(returnType))
+      case sig: s.MethodSignature =>
+        sig.parameterLists.foreach(s => visitScope(Some(s))(()))
+        visitScope(sig.typeParameters)(visitType(sig.returnType))
       case s.TypeSignature(typeParameters, lowerBound, upperBound) => visitScope(typeParameters) {
           visitType(lowerBound)
           visitType(upperBound)

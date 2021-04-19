@@ -556,12 +556,13 @@ message MethodSignature {
   Scope type_parameters = 1;
   repeated Scope parameter_lists = 2;
   Type return_type = 3;
+  repeated Type throws = 4;
 }
 ```
 
 `MethodSignature` represents signatures of methods (including getters and
 setters), constructors and macros. It features `type_parameters`,
-`parameter_lists` and a `return_type`. Both type parameters and parameters are
+`parameter_lists`, a `return_type` and zero or more `throws`. Both type parameters and parameters are
 modelled by [Scopes](#scope). Moreover, in order to support multiple parameter
 lists in Scala methods, `parameter_lists` is a list of lists.
 
@@ -1572,7 +1573,7 @@ abstract class C(val xp: Int) {
     <td><code>xp</code></td>
     <td><code>_empty_/C#xp().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>xp</code></td>
@@ -1584,19 +1585,19 @@ abstract class C(val xp: Int) {
     <td><code>xm</code></td>
     <td><code>_empty_/C#xm().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>xam</code></td>
     <td><code>_empty_/C#xam().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>xlm</code></td>
     <td><code>_empty_/C#xlm().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>xl</code></td>
@@ -1608,7 +1609,7 @@ abstract class C(val xp: Int) {
     <td><code>xs</code></td>
     <td><code>local1</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>xe</code></td>
@@ -1679,7 +1680,7 @@ Notes:
   - `kind`: `METHOD`.
   - `properties`: see below.
   - `display_name`: concatenation of the display name of the variable and `_=`.
-  - `signature`: `MethodSignature(List(), List(List(<x$1>)), <Unit>)`, where
+  - `signature`: `MethodSignature(List(), List(List(<x$1>)), <Unit>, List())`, where
     `x$1` is a `PARAMETER` symbol having `signature` equal to the type of the
     variable.
   - `annotations` and `access`: same as value symbols.
@@ -1727,19 +1728,19 @@ class C {
     <td><code>xval</code></td>
     <td><code>_empty_/C#xval().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>xvar</code></td>
     <td><code>_empty_/C#xvar().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Nothing&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>xvar</code></td>
     <td><code>_empty_/C#xvar_=().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(&lt;x$1&gt;), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(&lt;x$1&gt;), TypeRef(None, &lt;Unit&gt;, List()), List())</code></td>
   </tr>
 </table>
 
@@ -1994,7 +1995,7 @@ class C(p1: Int) {
     <td><code>m3$default$1</code></td>
     <td><code>_empty_/C#m3$default$1().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>p4</code></td>
@@ -2077,13 +2078,13 @@ abstract class C {
     <td><code>m1</code></td>
     <td><code>_empty_/C#m1().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>m2</code></td>
     <td><code>_empty_/C#m2().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(List()), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(List()), TypeRef(None, &lt;Int&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
@@ -2095,13 +2096,13 @@ abstract class C {
     <td><code>m3</code></td>
     <td><code>_empty_/C#m3().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;Int&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
     <td><code>_empty_/C#m3(+1).</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;org.Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(List(&lt;x&gt;)), TypeRef(None, &lt;org.Int&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>m4</code></td>
@@ -2113,7 +2114,7 @@ abstract class C {
     <td><code>m4</code></td>
     <td><code>_empty_/C#m4().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(List(&lt;x&gt;), List(&lt;y&gt;)), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(List(&lt;x&gt;), List(&lt;y&gt;)), TypeRef(None, &lt;Int&gt;, List()), List())</code></td>
   </tr>
 </table>
 
@@ -2175,7 +2176,7 @@ object M {
     <td><code>m1</code></td>
     <td><code>_empty_/M.m().</code></td>
     <td><code>MACRO</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()), List())</code></td>
   </tr>
 </table>
 
@@ -2210,13 +2211,13 @@ class C(x: Int) {
     <td>Primary constructor</td>
     <td><code>_empty_/C#`&lt;init&gt;`().</code></td>
     <td><code>CONSTRUCTOR</code></td>
-    <td><code>MethodSignature(List(), List(List(&lt;x&gt;)), None)</code></td>
+    <td><code>MethodSignature(List(), List(List(&lt;x&gt;)), None, List())</code></td>
   </tr>
   <tr>
     <td>Secondary constructor</td>
     <td><code>_empty_/C#`&lt;init&gt;`(+1).</code></td>
     <td><code>CONSTRUCTOR</code></td>
-    <td><code>MethodSignature(List(), List(), None)</code></td>
+    <td><code>MethodSignature(List(), List(), None, List())</code></td>
   </tr>
 </table>
 
@@ -2271,19 +2272,19 @@ class C[T](x: T, val y: T, var z: T) extends B with X { self: Y =>
     <td><code>y</code></td>
     <td><code>_empty_/C#x().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
     <td><code>_empty_/C#z().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
     <td><code>_empty_/C#z_=().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(List(&lt;x$1&gt;)), TypeRef(None, &lt;Unit&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(List(&lt;x$1&gt;)), TypeRef(None, &lt;Unit&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>z</code></td>
@@ -2295,7 +2296,7 @@ class C[T](x: T, val y: T, var z: T) extends B with X { self: Y =>
     <td>Primary constructor</td>
     <td><code>_empty_/C#`&lt;init&gt;`().</code></td>
     <td><code>CONSTRUCTOR</code></td>
-    <td><code>MethodSignature(List(), List(), None)</code></td>
+    <td><code>MethodSignature(List(), List(), None, List())</code></td>
   </tr>
   <tr>
     <td><code>x</code></td>
@@ -2319,7 +2320,7 @@ class C[T](x: T, val y: T, var z: T) extends B with X { self: Y =>
     <td><code>m</code></td>
     <td><code>_empty_/C#m().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()), List())</code></td>
   </tr>
 </table>
 
@@ -3193,7 +3194,7 @@ class C extends S1 implements I {
     <td><code>m2</code></td>
     <td><code>a/C#m2().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T2&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T2&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
@@ -3205,7 +3206,7 @@ class C extends S1 implements I {
     <td><code>m3</code></td>
     <td><code>a/C#m3().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(&lt;e1&gt;), TypeRef(None, &lt;T3&gt;))</code></td>
+    <td><code>MethodSignature(List(), List(&lt;e1&gt;), TypeRef(None, &lt;T3&gt;), List())</code></td>
   </tr>
   <tr>
     <td><code>e1</code></td>
@@ -3217,7 +3218,7 @@ class C extends S1 implements I {
     <td><code>m3</code></td>
     <td><code>a/C#m3(+2).</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(&lt;e2&gt;) TypeRef(None, &lt;T4&gt;))</code></td>
+    <td><code>MethodSignature(List(), List(&lt;e2&gt;) TypeRef(None, &lt;T4&gt;), List())</code></td>
   </tr>
   <tr>
     <td><code>e2</code></td>
@@ -3229,7 +3230,7 @@ class C extends S1 implements I {
     <td><code>m3</code></td>
     <td><code>a/C#m3(+1).</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(&lte3&gt;), TypeRef(None, &lt;T5&gt;))</code></td>
+    <td><code>MethodSignature(List(), List(&lte3&gt;), TypeRef(None, &lt;T5&gt;), List())</code></td>
   </tr>
   <tr>
     <td><code>e3</code></td>
@@ -3328,13 +3329,13 @@ public enum Coin {
     <td></td>
     <td><code>a/Coin#values().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Array&gt;, List(&lt;Coin&gt;)))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Array&gt;, List(&lt;Coin&gt;)), List())</code></td>
   </tr>
   <tr>
     <td></td>
     <td><code>a/Coin#valueOf().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Coin&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Coin&gt;, List()), List())</code></td>
   </tr>
 </table>
 
@@ -3387,7 +3388,7 @@ public interface List<T> extends I {
     <td><code>head</code></td>
     <td><code>a/List#head().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;T&gt;, List()), List())</code></td>
   </tr>
 </table>
 
@@ -3432,13 +3433,13 @@ class A {
     <td><code>m1</code></td>
     <td><code>a/A#m1().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;A&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;A&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>m2</code></td>
     <td><code>a/A#m2().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(), List(&lt;t1&gt;), TypeRef(None, &lt;A&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(), List(&lt;t1&gt;), TypeRef(None, &lt;A&gt;, List()), List(TypeRef(&lt;E&gt;)))</code></td>
   </tr>
   <tr>
     <td><code>t1</code></td>
@@ -3450,7 +3451,7 @@ class A {
     <td><code>m3</code></td>
     <td><code>a/A#m3().</code></td>
     <td><code>METHOD</code></td>
-    <td><code>MethodSignature(List(&lt;T2&gt;), List(&lt;t2&gt;), TypeRef(None, &lt;T2&gt;, List()))</code></td>
+    <td><code>MethodSignature(List(&lt;T2&gt;), List(&lt;t2&gt;), TypeRef(None, &lt;T2&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>m3</code></td>
@@ -3479,8 +3480,6 @@ Notes:
   of that given parameter starting at index 0.
 - Variable arity parameters have the type equals to `RepeatedType(<tpe>)`, where
   `<tpe>` is their type as declared in original source.
-- Method throws clauses are not modelled in SemanticDB. We may improve on this
-  in the future.
 - Supported properties for method symbols are:
   - `FINAL`: set for `final` methods.
   - `STATIC`: set for `static` methods.
@@ -3564,7 +3563,7 @@ class Outer {
     <td>Constructor of <code>Outer</code></td>
     <td><code>a/Outer#&lt;init&gt;().</code></td>
     <td><code>CONSTRUCTOR</code></td>
-    <td><code>MethodSignature(List(), List(), None)</code></td>
+    <td><code>MethodSignature(List(), List(), None, List())</code></td>
   </tr>
   <tr>
     <td><code>Inner</code></td>
@@ -3576,7 +3575,7 @@ class Outer {
     <td>Constructor of <code>Inner</code></td>
     <td><code>a/Outer#Inner#&lt;init&gt;().</code></td>
     <td><code>CONSTRUCTOR</code></td>
-    <td><code>MethodSignature(List(), List(), None)</code></td>
+    <td><code>MethodSignature(List(), List(), None, List())</code></td>
   </tr>
 </table>
 
