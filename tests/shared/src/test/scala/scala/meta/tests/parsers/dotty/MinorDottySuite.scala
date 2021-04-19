@@ -904,4 +904,69 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )
   }
+
+  test("regex-pattern") {
+    runTestAssert[Stat](
+      """|s match
+         |  case re(v): String => v.toDouble
+         |  case other => o
+         |""".stripMargin,
+      assertLayout = Some(
+        """|s match {
+           |  case re(v): String =>
+           |    v.toDouble
+           |  case other =>
+           |    o
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Match(
+        Term.Name("s"),
+        List(
+          Case(
+            Pat.Typed(
+              Pat.Extract(Term.Name("re"), List(Pat.Var(Term.Name("v")))),
+              Type.Name("String")
+            ),
+            None,
+            Term.Select(Term.Name("v"), Term.Name("toDouble"))
+          ),
+          Case(Pat.Var(Term.Name("other")), None, Term.Name("o"))
+        ),
+        Nil
+      )
+    )
+  }
+
+  test("typed-typed-pattern") {
+    runTestAssert[Stat](
+      """|s match
+         |  case (v: String): String => v.toDouble
+         |  case other => o
+         |""".stripMargin,
+      assertLayout = Some(
+        """|s match {
+           |  case (v: String): String =>
+           |    v.toDouble
+           |  case other =>
+           |    o
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Match(
+        Term.Name("s"),
+        List(
+          Case(
+            Pat.Typed(Pat.Typed(Pat.Var(Term.Name("v")), Type.Name("String")), Type.Name("String")),
+            None,
+            Term.Select(Term.Name("v"), Term.Name("toDouble"))
+          ),
+          Case(Pat.Var(Term.Name("other")), None, Term.Name("o"))
+        ),
+        Nil
+      )
+    )
+  }
 }
