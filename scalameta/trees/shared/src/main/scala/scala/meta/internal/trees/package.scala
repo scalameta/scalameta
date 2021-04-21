@@ -157,6 +157,7 @@ package object trees {
     def isTopLevelStat: Boolean = stat match {
       case _: Stat.Quasi => true
       case _: Import => true
+      case _: Export => true
       case _: Pkg => true
       case _: Defn.Class => true
       case _: Defn.Trait => true
