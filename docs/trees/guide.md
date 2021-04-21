@@ -40,11 +40,14 @@ import scala.meta._
 ### Ammonite REPL
 
 A great way to experiment with Scalameta is to use the
-[Ammonite REPL](http://ammonite.io/#Ammonite-REPL).
+[Ammonite REPL](http://ammonite.io/#Ammonite-REPL). To make it work with
+scalameta it needs to be run with `--thin` option.
 
-```scala
-// Ammonite REPL
-import $ivy.`org.scalameta::scalameta:@VERSION@`, scala.meta._
+```sh
+$ amm --thin
+Loading...
+Welcome to the Ammonite Repl 2.3.8 (Scala 2.13.5 Java 11.0.7)
+@ import $ivy.`org.scalameta::scalameta:@VERSION@`, scala.meta._
 ```
 
 ### ScalaFiddle
@@ -61,9 +64,10 @@ Scala programs.
 ![](assets/tree.svg)
 
 Scalameta trees are **lossless**, meaning that they represent Scala programs in
-sufficient detail to go from text to trees and vice-versa. Lossless syntax trees are
-great for fine-grained analysis of source code, which is useful for a range of
-applications including formatting, refactoring, linting and documentation tools
+sufficient detail to go from text to trees and vice-versa. Lossless syntax trees
+are great for fine-grained analysis of source code, which is useful for a range
+of applications including formatting, refactoring, linting and documentation
+tools
 
 ## Parse trees
 
