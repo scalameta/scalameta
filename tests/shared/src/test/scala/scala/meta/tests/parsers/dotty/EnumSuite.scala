@@ -385,6 +385,108 @@ class EnumSuite extends BaseDottySuite {
     )
   }
 
+  test("enum-self-braces") {
+    val code =
+      """|enum A { self =>
+         |  case B(v: Int)
+         |  case C(v: String)
+         |}
+      """.stripMargin
+    runTestAssert[Stat](code)(
+      Defn.Enum(
+        Nil,
+        Type.Name("A"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Term.Name("self"), None),
+          List(
+            Defn.EnumCase(
+              Nil,
+              Term.Name("B"),
+              Nil,
+              Ctor.Primary(
+                Nil,
+                Name(""),
+                List(List(Term.Param(Nil, Term.Name("v"), Some(Type.Name("Int")), None)))
+              ),
+              Nil
+            ),
+            Defn.EnumCase(
+              Nil,
+              Term.Name("C"),
+              Nil,
+              Ctor.Primary(
+                Nil,
+                Name(""),
+                List(List(Term.Param(Nil, Term.Name("v"), Some(Type.Name("String")), None)))
+              ),
+              Nil
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("enum-self-indented") {
+    val code =
+      """|enum A:
+         |  self =>
+         |    case B(v: Int)
+         |    case C(v: String)
+         |  def fx: Int = 4
+      """.stripMargin
+    val expected =
+      """|enum A { self =>
+         |  case B(v: Int)
+         |  case C(v: String)
+         |  def fx: Int = 4
+         |}""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(expected))(
+      Defn.Enum(
+        Nil,
+        Type.Name("A"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Term.Name("self"), None),
+          List(
+            Defn.EnumCase(
+              Nil,
+              Term.Name("B"),
+              Nil,
+              Ctor.Primary(
+                Nil,
+                Name(""),
+                List(List(Term.Param(Nil, Term.Name("v"), Some(Type.Name("Int")), None)))
+              ),
+              Nil
+            ),
+            Defn.EnumCase(
+              Nil,
+              Term.Name("C"),
+              Nil,
+              Ctor.Primary(
+                Nil,
+                Name(""),
+                List(List(Term.Param(Nil, Term.Name("v"), Some(Type.Name("String")), None)))
+              ),
+              Nil
+            ),
+            Defn.Def(Nil, Term.Name("fx"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(4))
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
   test("enum-colon-sep-after") {
     val code =
       """|object Main :

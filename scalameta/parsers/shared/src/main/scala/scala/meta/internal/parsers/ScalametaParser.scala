@@ -252,6 +252,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def observeIndented(): Boolean
     def observeOutdented(): Boolean
     def observeIndentedEnum(): Boolean
+    def undoIndent(): Unit
   }
   var in: TokenIterator = {
     new LazyTokenIterator(
@@ -301,6 +302,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           )
           true
         } else false
+      }
+    }
+
+    def undoIndent(): Unit = {
+      sepRegions = sepRegions match {
+        case region :: others if region.isIndented && curr.token.is[Indentation.Indent] =>
+          next()
+          others
+        case regions => regions
       }
     }
 
@@ -4908,6 +4918,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           in = beforeFirst
           selfOpt = Some(self())
           next()
+          in.undoIndent
         } catch {
           case ex: ParseException =>
             in = afterFirst
