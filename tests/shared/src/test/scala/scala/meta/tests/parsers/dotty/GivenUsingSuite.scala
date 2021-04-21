@@ -401,6 +401,46 @@ class GivenUsingSuite extends BaseDottySuite {
       )
     )
   }
+  test("given-alias-type-apply") {
+    runTestAssert[Stat](
+      """|object AppliedName:
+         |  given Conversion[AppliedName, Expr.Apply[Id]] = _.toExpr
+         |""".stripMargin,
+      assertLayout = Some(
+        "object AppliedName { given Conversion[AppliedName, Expr.Apply[Id]] = _.toExpr }"
+      )
+    )(
+      Defn.Object(
+        Nil,
+        Term.Name("AppliedName"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.GivenAlias(
+              Nil,
+              Name(""),
+              Nil,
+              Nil,
+              Type.Apply(
+                Type.Name("Conversion"),
+                List(
+                  Type.Name("AppliedName"),
+                  Type.Apply(
+                    Type.Select(Term.Name("Expr"), Type.Name("Apply")),
+                    List(Type.Name("Id"))
+                  )
+                )
+              ),
+              Term.Select(Term.Placeholder(), Term.Name("toExpr"))
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
 
   // ---------------------------------
   // Abstract given

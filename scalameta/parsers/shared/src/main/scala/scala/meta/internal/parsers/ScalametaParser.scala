@@ -30,6 +30,7 @@ import scala.meta.internal.tokenizers.Chars
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
+import scala.util.control.NonFatal
 
 class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   require(Set("", EOL).contains(dialect.toplevelSeparator))
@@ -4084,24 +4085,38 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val anonymousName = autoPos(scala.meta.Name.Anonymous())
 
     val forked = in.fork
-    val name: meta.Name =
-      if (token.is[Ident]) termName() else anonymousName
-    val tparams = typeParamClauseOpt(
-      ownerIsType = false,
-      ctxBoundsAllowed = true,
-      allowUnderscore = dialect.allowTypeParamUnderscore
-    )
-    val uparamss =
-      if (token.is[LeftParen] && ahead(token.is[soft.KwUsing]))
-        paramClauses(ownerIsType = false)
-      else Nil
-    val (sigName, sigTparams, sigUparamss) = if (token.is[Colon]) {
-      accept[Colon]
-      (name, tparams, uparamss)
-    } else {
-      in = forked
-      (anonymousName, List.empty, List.empty)
-    }
+    val (sigName, sigTparams, sigUparamss) =
+      try {
+        val name: meta.Name =
+          if (token.is[Ident]) termName() else anonymousName
+        val tparams = typeParamClauseOpt(
+          ownerIsType = false,
+          ctxBoundsAllowed = true,
+          allowUnderscore = dialect.allowTypeParamUnderscore
+        )
+        val uparamss =
+          if (token.is[LeftParen] && ahead(token.is[soft.KwUsing]))
+            paramClauses(ownerIsType = false)
+          else Nil
+        if (token.is[Colon]) {
+          accept[Colon]
+          (name, tparams, uparamss)
+        } else {
+          in = forked
+          (anonymousName, List.empty, List.empty)
+        }
+      } catch {
+        /**
+         * We are first trying to parse non-anonymous given, which
+         *  - requires `:` for type, if none is found it means it's anonymous
+         *  - might fail in cases that anonymous type looks like type param
+         *   `given Conversion[AppliedName, Expr.Apply[Id]] = ???`
+         *   This will fail because type params cannot have `.`
+         */
+        case NonFatal(_) =>
+          in = forked
+          (anonymousName, List.empty, List.empty)
+      }
 
     val decltpe = startModType()
 
