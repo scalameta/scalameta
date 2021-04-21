@@ -4079,7 +4079,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
    * GivenSig          ::=  [id] [DefTypeParamClause] {UsingParamClause} ‘:’
    * StructuralInstance ::=  ConstrApp {‘with’ ConstrApp} ‘with’ TemplateBody
    */
-  private def givenDecl(mods: List[Mod]): Stat = autoPos {
+  private def givenDecl(mods: List[Mod]): Stat = atPos(mods, auto) {
     accept[KwGiven]
     val anonymousName = autoPos(scala.meta.Name.Anonymous())
 

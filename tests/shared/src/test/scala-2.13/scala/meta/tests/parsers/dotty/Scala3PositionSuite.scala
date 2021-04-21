@@ -86,7 +86,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  inline given intOrd: Ord[Int]
        |}
        |Self   @@inline given intOrd: Ord[Int]
-       |Decl.Given given intOrd: Ord[Int]
+       |Decl.Given inline given intOrd: Ord[Int]
        |Type.Apply Ord[Int]
        |""".stripMargin
   )
@@ -403,6 +403,19 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Term.Block   @@finally
        |Term.Block cc
        |  dd
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|object A:
+       |  
+       |  private given x: X = ???
+       |""".stripMargin,
+    """|Template :
+       |  
+       |  private given x: X = ???
+       |Self   @@private given x: X = ???
+       |Defn.GivenAlias private given x: X = ???
        |""".stripMargin
   )
 }
