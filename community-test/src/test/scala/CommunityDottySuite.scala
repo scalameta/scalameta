@@ -84,14 +84,17 @@ class CommunityDottySuite extends FunSuite {
     fetchCommunityBuild(build)
 
     val stats = checkFilesRecursive(communityDirectory.resolve(build.name))
-    val timePer1KLines = stats.timeTaken / (stats.linesParsed / 1000)
+    val timePer1KLines = Math.round(stats.timeTaken / (stats.linesParsed / 1000.0))
 
     println("--------------------------")
     println(build.name)
     println(s"Files parsed correctly ${stats.checkedFiles - stats.errors}")
     println(s"Files errored: ${stats.errors}")
     println(s"Time taken: ${stats.timeTaken}ms")
-    println(s"Lines parsed: ~${stats.linesParsed / 1000}k")
+    if (stats.linesParsed < 1000)
+      println(s"Lines parsed: ${stats.linesParsed}")
+    else
+      println(s"Lines parsed: ~${stats.linesParsed / 1000}k")
     println(s"Parsing speed per 1k lines ===> ${timePer1KLines} ms/1klines")
     println("--------------------------")
     stats.lastError.foreach(e => throw e)
