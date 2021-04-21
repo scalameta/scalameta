@@ -13,6 +13,32 @@ class ExportImportSuite extends BaseDottySuite {
     )
   }
 
+  test("export-single-toplevel") {
+    runTestAssert[Source](
+      """|package a
+         |export A.b.c
+         |""".stripMargin
+    )(
+      Source(
+        List(
+          Pkg(
+            Term.Name("a"),
+            List(
+              Export(
+                List(
+                  Importer(
+                    Term.Select(Term.Name("A"), Term.Name("b")),
+                    List(Importee.Name(Name("c")))
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+
   test("export-given") {
     runTestAssert[Stat]("export A.{ given Int }")(
       Export(List(Importer(Term.Name("A"), List(Importee.Given(Type.Name("Int"))))))
