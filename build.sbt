@@ -148,7 +148,8 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     publishableSettings,
     libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.4",
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
-    enableMacros
+    enableMacros,
+    protobufSettings
   )
   .jsSettings(
     commonJsSettings
@@ -163,7 +164,6 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     // NOTE: uncomment this to update ast.md
     // scalacOptions += "-Xprint:typer",
     enableHardcoreMacros,
-    protobufSettings,
     libraryDependencies ++= List(
       // NOTE(olafur): use shaded version of fastparse 2.3.1 to avoid any
       // binary incompatibilites with the v2.3.1 version used by Scalameta.
