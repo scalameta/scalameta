@@ -1416,4 +1416,70 @@ class SignificantIndentationSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("for-left-arrow") {
+    runTestAssert[Stat](
+      """|for
+         |  a <-
+         |    val b = 123
+         |    Some(b)
+         |yield
+         |  a
+         |""".stripMargin,
+      assertLayout = Some(
+        """|for (a <- {
+           |  val b = 123
+           |  Some(b)
+           |}) yield a
+           |""".stripMargin
+      )
+    )(
+      Term.ForYield(
+        List(
+          Enumerator.Generator(
+            Pat.Var(Term.Name("a")),
+            Term.Block(
+              List(
+                Defn.Val(Nil, List(Pat.Var(Term.Name("b"))), None, Lit.Int(123)),
+                Term.Apply(Term.Name("Some"), List(Term.Name("b")))
+              )
+            )
+          )
+        ),
+        Term.Name("a")
+      )
+    )
+  }
+
+  test("context-arrow") {
+    runTestAssert[Stat](
+      """|val a = (s: Int) ?=> 
+         |  val a = 123
+         |  s + a
+         |
+         |""".stripMargin,
+      assertLayout = Some(
+        """|val a = (s: Int) ?=> {
+           |  val a = 123
+           |  s + a
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("a"))),
+        None,
+        Term.ContextFunction(
+          List(Term.Param(Nil, Term.Name("s"), Some(Type.Name("Int")), None)),
+          Term.Block(
+            List(
+              Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), None, Lit.Int(123)),
+              Term.ApplyInfix(Term.Name("s"), Term.Name("+"), Nil, List(Term.Name("a")))
+            )
+          )
+        )
+      )
+    )
+  }
 }
