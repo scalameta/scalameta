@@ -418,4 +418,67 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Defn.GivenAlias private given x: X = ???
        |""".stripMargin
   )
+
+  checkPositions[Stat](
+    """|val a = foo.fold(
+       |   err =>
+       |  {
+       |    42
+       |  })
+       |""".stripMargin,
+    """|Term.Apply foo.fold(
+       |   err =>
+       |  {
+       |    42
+       |  })
+       |Term.Select foo.fold
+       |Term.Function err =>
+       |  {
+       |    42
+       |  }
+       |Term.Param err
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|def a: Unit = 
+       |  {
+       |    val x = (z: String) =>
+       |      fx
+       |      gx}
+       |""".stripMargin,
+    """|Term.Block {
+       |    val x = (z: String) =>
+       |      fx
+       |      gx}
+       |Defn.Val val x = (z: String) =>
+       |      fx
+       |      gx
+       |Term.Function (z: String) =>
+       |      fx
+       |      gx
+       |Term.Param (z: String)
+       |Term.Block fx
+       |      gx
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|foo(
+       |  s => 
+       |    fx
+       |    gx(s),
+       |  "yo"
+       |)
+       |""".stripMargin,
+    """|Term.Function s => 
+       |    fx
+       |    gx(s)
+       |Term.Param s
+       |Term.Block fx
+       |    gx(s)
+       |Term.Apply gx(s)
+       |Lit.String "yo"
+       |""".stripMargin
+  )
 }
