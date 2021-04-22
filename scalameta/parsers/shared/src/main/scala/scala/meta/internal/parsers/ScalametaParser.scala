@@ -412,7 +412,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         else if (curr.is[Comma] &&
           sepRegions.headOption.exists(_.isInstanceOf[RegionIndent]) &&
           sepRegions.tail.headOption.contains(RegionParen)) {
-          (sepRegions.tail, mkOutdent(currPos))
+          (sepRegions.tail, mkOutdent(prevPos))
         } else if (curr.is[LeftBrace]) {
           val indentInBrace = if (isAheadNewLine(currPos)) countIndent(nextPos) else -1
           // After encountering keyword Enum we add artificial '{' on top of stack.
@@ -453,7 +453,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             def nextRegions(in: List[SepRegion]): (List[SepRegion], TokenRef) = {
               in match {
                 case x :: xs if x.isIndented && !isBraceOrEnum(x) =>
-                  (xs, mkOutdent(currPos))
+                  (xs, mkOutdent(prevPos))
                 case x :: xs if isBraceOrEnum(x) =>
                   (xs, currRef)
                 case x :: xs =>
@@ -487,7 +487,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           }
         } else if (curr.is[RightParen]) {
           sepRegions match {
-            case x :: xs if x.isIndented => (xs, mkOutdent(currPos))
+            case x :: xs if x.isIndented => (xs, mkOutdent(prevPos))
             case x :: xs if x == RegionParen => (xs, currRef)
             case _ => (sepRegions, currRef)
           }
