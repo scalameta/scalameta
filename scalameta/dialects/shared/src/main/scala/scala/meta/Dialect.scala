@@ -156,7 +156,9 @@ final class Dialect private (
     // Scala 3 wildcard imports can be specified as `import a.b.*`
     val allowStarWildcardImport: Boolean,
     // Scala 3 no longer allows def hello(){} - `=` is always needed
-    val allowProcedureSyntax: Boolean
+    val allowProcedureSyntax: Boolean,
+    // Scala 3 no longer allows `do {...} while(...)`
+    val allowDoWhile: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -250,7 +252,8 @@ final class Dialect private (
       allowAllTypedPatterns = false,
       allowAsForImportRename = false,
       allowStarWildcardImport = false,
-      allowProcedureSyntax = true
+      allowProcedureSyntax = true,
+      allowDoWhile = true
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -449,6 +452,9 @@ final class Dialect private (
   def withAllowProcedureSyntax(newValue: Boolean): Dialect = {
     privateCopy(allowProcedureSyntax = newValue)
   }
+  def withAllowDoWhile(newValue: Boolean): Dialect = {
+    privateCopy(allowDoWhile = newValue)
+  }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -513,7 +519,8 @@ final class Dialect private (
       allowAllTypedPatterns: Boolean = this.allowAllTypedPatterns,
       allowAsRenames: Boolean = this.allowAsForImportRename,
       allowStarWildcardImport: Boolean = this.allowStarWildcardImport,
-      allowProcedureSyntax: Boolean = this.allowProcedureSyntax
+      allowProcedureSyntax: Boolean = this.allowProcedureSyntax,
+      allowDoWhile: Boolean = this.allowDoWhile
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -575,7 +582,8 @@ final class Dialect private (
       allowAllTypedPatterns,
       allowAsRenames,
       allowStarWildcardImport,
-      allowProcedureSyntax
+      allowProcedureSyntax,
+      allowDoWhile
       // NOTE(olafur): add the next argument above this comment.
     )
   }

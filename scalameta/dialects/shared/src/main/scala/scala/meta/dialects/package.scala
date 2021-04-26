@@ -129,6 +129,7 @@ package object dialects {
     .withAllowAsForImportRename(true)
     .withAllowStarWildcardImport(true)
     .withAllowProcedureSyntax(false)
+    .withAllowDoWhile(false)
 
   @deprecated("Use Scala3 instead", "4.4.2")
   implicit val Dotty = Scala3

@@ -971,12 +971,22 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("procedure-syntax") {
-
     runTestError[Stat](
       """|def hello(){
          |  println("Hello!")
          |}""".stripMargin,
       "Procedure syntax is not supported. Convert procedure `hello` to method by adding `: Unit =`"
+    )
+  }
+
+  test("do-while") {
+    runTestError[Stat](
+      """|def hello() = {
+         |  do {
+         |    i+= 1
+         |  } while (i < 10)
+         |}""".stripMargin,
+      "error: do {...} while (...) syntax is no longer supported"
     )
   }
 }
