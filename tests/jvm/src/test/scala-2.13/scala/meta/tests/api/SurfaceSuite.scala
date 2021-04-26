@@ -42,9 +42,11 @@ class SurfaceSuite extends FunSuite {
     .diff(tokens)
     .map(fullName => (fullName, wildcardImportStatics.contains(fullName)))
     .toMap
-  lazy val allSurface = explore.allSurface("scala.meta").filterNot(lsp4s)
+  lazy val extensionSurface = explore.extensionSurface("scala.meta").filterNot(lsp4s)
   lazy val coreSurface =
-    allSurface.filter(entry => !(tokens ++ trees).exists(noncore => entry.startsWith(noncore)))
+    extensionSurface.filter(entry =>
+      !(tokens ++ trees).exists(noncore => entry.startsWith(noncore))
+    )
 
   test("statics (core)") {
     val diagnostic = core.keys.toList.sorted

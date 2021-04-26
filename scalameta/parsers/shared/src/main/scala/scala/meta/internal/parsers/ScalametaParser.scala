@@ -4255,11 +4255,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (!mods.has[Mod.Override])
       rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     val name = termName()
-    def warnProcedureDeprecation =
-      deprecationWarning(
-        s"Procedure syntax is deprecated. Convert procedure `$name` to method by adding `: Unit`.",
-        at = name
-      )
+    def warnProcedureDeprecation = {
+      val hint = s"Convert procedure `$name` to method by adding `: Unit =`."
+      if (dialect.allowProcedureSyntax)
+        deprecationWarning(
+          s"Procedure syntax is deprecated. $hint",
+          at = name
+        )
+      else
+        syntaxError(s"Procedure syntax is not supported. $hint", at = name)
+    }
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
     val paramss = paramClauses(ownerIsType = false).require[List[List[Term.Param]]]
 
