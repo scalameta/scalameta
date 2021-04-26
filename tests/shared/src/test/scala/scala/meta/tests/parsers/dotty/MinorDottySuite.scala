@@ -969,4 +969,14 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )
   }
+
+  test("procedure-syntax") {
+
+    runTestError[Stat](
+      """|def hello(){
+         |  println("Hello!")
+         |}""".stripMargin,
+      "Procedure syntax is not supported. Convert procedure `hello` to method by adding `: Unit =`"
+    )
+  }
 }

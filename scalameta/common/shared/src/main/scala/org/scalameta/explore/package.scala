@@ -8,5 +8,5 @@ package object explore {
 
   def allStatics(packageName: String): List[String] = macro ExploreMacros.allStaticsImpl
 
-  def allSurface(packageName: String): List[String] = macro ExploreMacros.allSurfaceImpl
+  def extensionSurface(packageName: String): List[String] = macro ExploreMacros.extensionSurfaceImpl
 }

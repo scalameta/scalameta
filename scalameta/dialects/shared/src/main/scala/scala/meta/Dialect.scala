@@ -154,7 +154,9 @@ final class Dialect private (
     // Scala 3 import renames can use as soft keyword `import a.b.C as D`
     val allowAsForImportRename: Boolean,
     // Scala 3 wildcard imports can be specified as `import a.b.*`
-    val allowStarWildcardImport: Boolean
+    val allowStarWildcardImport: Boolean,
+    // Scala 3 no longer allows def hello(){} - `=` is always needed
+    val allowProcedureSyntax: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -247,7 +249,8 @@ final class Dialect private (
       allowPostfixStarVarargSplices = false,
       allowAllTypedPatterns = false,
       allowAsForImportRename = false,
-      allowStarWildcardImport = false
+      allowStarWildcardImport = false,
+      allowProcedureSyntax = true
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -443,6 +446,9 @@ final class Dialect private (
   def withAllowStarWildcardImport(newValue: Boolean): Dialect = {
     privateCopy(allowStarWildcardImport = newValue)
   }
+  def withAllowProcedureSyntax(newValue: Boolean): Dialect = {
+    privateCopy(allowProcedureSyntax = newValue)
+  }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -506,7 +512,8 @@ final class Dialect private (
       allowPostfixStarVarargSplices: Boolean = this.allowPostfixStarVarargSplices,
       allowAllTypedPatterns: Boolean = this.allowAllTypedPatterns,
       allowAsRenames: Boolean = this.allowAsForImportRename,
-      allowStarWildcardImport: Boolean = this.allowStarWildcardImport
+      allowStarWildcardImport: Boolean = this.allowStarWildcardImport,
+      allowProcedureSyntax: Boolean = this.allowProcedureSyntax
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -567,7 +574,8 @@ final class Dialect private (
       allowPostfixStarVarargSplices,
       allowAllTypedPatterns,
       allowAsRenames,
-      allowStarWildcardImport
+      allowStarWildcardImport,
+      allowProcedureSyntax
       // NOTE(olafur): add the next argument above this comment.
     )
   }

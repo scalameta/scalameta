@@ -180,23 +180,11 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
     staticsImpl(packageName, onlyImmediatelyAccessible = false)
   }
 
-  def allSurfaceImpl(packageName: Tree): Tree = {
+  def extensionSurfaceImpl(packageName: Tree): Tree = {
     val Literal(Constant(s_packageName: String)) = packageName
     val statics =
       staticClassesObjectsAndVals(m.staticPackage(s_packageName), onlyImmediatelyAccessible = false)
 
-    val directSurface = statics.flatMap(static => {
-      var result = static.info.members.filter(mem => {
-        val relevant = mem.isRelevant
-        val extension = static.isImplicitClass || mem.isImplicitClass
-        val synthetic =
-          mem.isConstructor && ((static.isClass && static.asClass.isTrait) || static.isModule || static.isModuleClass)
-        val unnameable = mem.isMethod && mem.isImplicit // NOTE: this is a big assumption
-        relevant && !extension && !synthetic && !unnameable
-      })
-      result = result.filter(mem => !statics.contains(mem))
-      result.map(sym => (static, sym))
-    })
     val extensionSurface = {
       val implicitClasses = statics.filter(_.isImplicitClass)
       val result = implicitClasses.flatMap(cls => {
@@ -207,7 +195,7 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
       })
       result.map(sym => (NoSymbol, sym))
     }
-    val s_surface = (directSurface ++ extensionSurface).map { case (owner, sym) =>
+    val s_surface = extensionSurface.collect { case (owner, sym) =>
       sym.signatureIn(owner)
     }
     q"${s_surface.distinct.sorted}"
