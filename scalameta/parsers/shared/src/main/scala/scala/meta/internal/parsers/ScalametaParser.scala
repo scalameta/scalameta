@@ -2311,13 +2311,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           accept[KwDo]
           Term.While(cond, exprMaybeIndented())
         }
-      case KwDo() =>
+      case KwDo() if dialect.allowDoWhile =>
         next()
         val body = expr()
         while (token.is[StatSep]) next()
         accept[KwWhile]
         val cond = condExpr()
         Term.Do(body, cond)
+      case KwDo() =>
+        syntaxError("do {...} while (...) syntax is no longer supported", at = token)
       case KwFor() =>
         next()
         val enums: List[Enumerator] =
