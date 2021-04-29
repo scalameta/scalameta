@@ -2519,7 +2519,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               }
               val params = convertToParams(t)
               val trm =
-                if (token.is[Indentation.Indent]) block()
+                if (token.is[Indentation.Indent]) blockExpr()
                 else if (location != BlockStat) expr()
                 else block()
               if (contextFunction)
