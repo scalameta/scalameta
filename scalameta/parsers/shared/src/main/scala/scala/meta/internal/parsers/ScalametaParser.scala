@@ -1899,7 +1899,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         selectors(thisp)
       }
     } else if (token.is[KwSuper]) {
-      val anonqual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
+      val anonqual = autoPos(Name.Anonymous())
       next()
       val superp = atPos(in.prevTokenPos, auto)(Term.Super(anonqual, mixinQualifier()))
       if (startsAtBof && endsAtEof && dialect.allowUnquotes) return superp
@@ -1971,7 +1971,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
       }
     } else {
-      atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
+      autoPos(Name.Anonymous())
     }
   }
 
@@ -2151,7 +2151,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case Ident(_) => termName()
       case LeftBrace() => dropTrivialBlock(expr(location = NoStat, allowRepeated = true))
       case KwThis() =>
-        val qual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous()); next();
+        val qual = autoPos(Name.Anonymous()); next();
         atPos(in.prevTokenPos, auto)(Term.This(qual))
       case _ =>
         syntaxError(
@@ -2471,7 +2471,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                 case name: Term.Placeholder =>
                   Some(
                     atPos(tree, tree)(
-                      Term.Param(Nil, atPos(name, name)(Name.Anonymous()), None, None)
+                      Term.Param(Nil, autoPos(Name.Anonymous()), None, None)
                     )
                   )
                 case Term.Ascribe(quasiName: Term.Quasi, tpt) =>
@@ -2482,7 +2482,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                 case Term.Ascribe(name: Term.Placeholder, tpt) =>
                   Some(
                     atPos(tree, tree)(
-                      Term.Param(Nil, atPos(name, name)(Name.Anonymous()), Some(tpt), None)
+                      Term.Param(Nil, autoPos(Name.Anonymous()), Some(tpt), None)
                     )
                   )
                 case Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name) =>
@@ -2502,7 +2502,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                     atPos(tree, tree)(
                       Term.Param(
                         List(atPos(kwUsing.pos)(Mod.Using())),
-                        atPos(eta.endTokenPos, eta.endTokenPos)(Name.Anonymous()),
+                        autoPos(Name.Anonymous()),
                         Some(tpt),
                         None
                       )
@@ -3500,7 +3500,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       accept[LeftBracket]
       val result = {
         if (token.is[KwThis]) {
-          val qual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
+          val qual = autoPos(Name.Anonymous())
           next()
           mod(atPos(in.prevTokenPos, auto)(Term.This(qual)))
         } else {
@@ -3763,7 +3763,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         var anonymousUsing = false
         val name = if (isUsing && ahead(!token.is[Colon])) { //anonymous using
           anonymousUsing = true
-          atPos(in.tokenPos, in.tokenPos)(meta.Name.Anonymous())
+          autoPos(Name.Anonymous())
         } else {
           termName() match {
             case q: Quasi => q.become[Name.Quasi]
@@ -3842,7 +3842,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           if (token.is[Ident]) typeName()
           else if (token.is[Unquote]) unquote[Name]
           else if (token.is[Underscore] && allowUnderscore) {
-            next(); atPos(in.prevTokenPos, in.prevTokenPos)(Name.Anonymous())
+            next(); autoPos(Name.Anonymous())
           } else {
             if (allowUnderscore) syntaxError("identifier or `_' expected", at = token)
             else syntaxError("identifier expected", at = token)
@@ -4521,12 +4521,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* -------- CONSTRUCTORS ------------------------------------------- */
 
-  // NOTE: we need to store some string in Ctor.Name in order to represent constructor calls (which also use Ctor.Name)
-  // however, when representing constructor defns, we can't easily figure out that name
-  // a natural desire would be to have this name equal to the name of the enclosing class/trait/object
-  // but unfortunately we can't do that, because we can create ctors in isolation from their enclosures
-  // therefore, I'm going to use `Term.Name("this")` here for the time being
-
   def primaryCtor(owner: TemplateOwner): Ctor.Primary = autoPos {
     if (owner.isClass || (owner.isTrait && dialect.allowTraitParameters) || owner.isEnum) {
       val mods = constructorAnnots() ++ ctorModifiers()
@@ -4534,7 +4528,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val paramss = paramClauses(ownerIsType = true, owner == OwnedByCaseClass)
       Ctor.Primary(mods, name, paramss)
     } else if (owner.isTrait) {
-      Ctor.Primary(Nil, atPos(in.tokenPos, in.tokenPos - 1)(Name.Anonymous()), Nil)
+      Ctor.Primary(Nil, autoPos(Name.Anonymous()), Nil)
     } else {
       unreachable(debug(owner))
     }
@@ -4654,7 +4648,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case Ident(_) =>
         termName()
       case Underscore() | KwThis() =>
-        autoPos { next(); Name.Anonymous() }
+        val name = autoPos(Name.Anonymous())
+        next()
+        name
       case Unquote() =>
         if (ahead(token.is[Colon])) unquote[Name.Quasi]
         else return unquote[Self.Quasi]
