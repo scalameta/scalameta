@@ -4534,7 +4534,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val paramss = paramClauses(ownerIsType = true, owner == OwnedByCaseClass)
       Ctor.Primary(mods, name, paramss)
     } else if (owner.isTrait) {
-      Ctor.Primary(Nil, atPos(in.tokenPos, in.tokenPos)(Name.Anonymous()), Nil)
+      Ctor.Primary(Nil, atPos(in.tokenPos, in.tokenPos - 1)(Name.Anonymous()), Nil)
     } else {
       unreachable(debug(owner))
     }
