@@ -481,4 +481,27 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Lit.String "yo"
        |""".stripMargin
   )
+
+  checkPositions[Stat](
+    """|inline def encodeFlat =
+       |    putInt
+       |    inline erasedValue match
+       |      case _: Enum      => xs
+       |      case _: Singleton => xs
+       |    buf
+       |""".stripMargin,
+    """|Term.Block putInt
+       |    inline erasedValue match
+       |      case _: Enum      => xs
+       |      case _: Singleton => xs
+       |    buf
+       |Term.Match inline erasedValue match
+       |      case _: Enum      => xs
+       |      case _: Singleton => xs
+       |Case case _: Enum      => xs
+       |Pat.Typed _: Enum
+       |Case case _: Singleton => xs
+       |Pat.Typed _: Singleton
+       |""".stripMargin
+  )
 }

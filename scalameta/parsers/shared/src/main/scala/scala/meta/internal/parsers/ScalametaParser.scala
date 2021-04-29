@@ -2190,7 +2190,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
    * the Match first and only then add the the inline modifier.
    */
   def inlineMatchClause(inlineMods: List[Mod]) = {
-    autoPos(postfixExpr(allowRepeated = false)) match {
+    atPos(inlineMods, auto)(postfixExpr(allowRepeated = false)) match {
       case t: Term.Match =>
         t.setMods(inlineMods)
         t
