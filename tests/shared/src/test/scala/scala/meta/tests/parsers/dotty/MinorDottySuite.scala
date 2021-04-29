@@ -989,4 +989,42 @@ class MinorDottySuite extends BaseDottySuite {
       "error: do {...} while (...) syntax is no longer supported"
     )
   }
+
+  test("partial-function-function") {
+    runTestAssert[Stat](
+      """|val f : String => PartialFunction[String, Int] = s =>
+         |    case "Hello" =>
+         |        5
+         |    case "Goodbye" =>
+         |        0
+         |""".stripMargin,
+      assertLayout = Some(
+        """|val f: String => PartialFunction[String, Int] = s => {
+           |  case "Hello" => 5
+           |  case "Goodbye" => 0
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("f"))),
+        Some(
+          Type.Function(
+            List(Type.Name("String")),
+            Type.Apply(Type.Name("PartialFunction"), List(Type.Name("String"), Type.Name("Int")))
+          )
+        ),
+        Term.Function(
+          List(Term.Param(Nil, Term.Name("s"), None, None)),
+          Term.PartialFunction(
+            List(
+              Case(Lit.String("Hello"), None, Lit.Int(5)),
+              Case(Lit.String("Goodbye"), None, Lit.Int(0))
+            )
+          )
+        )
+      )
+    )
+  }
 }
