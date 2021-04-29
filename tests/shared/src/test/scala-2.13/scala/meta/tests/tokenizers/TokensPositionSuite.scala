@@ -600,7 +600,6 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     "trait A { self: B => }",
     """|Ctor.Primary trait A @@{ self: B => }
-       |Name.Anonymous {
        |Template { self: B => }
        |Self self: B
        |""".stripMargin
@@ -608,7 +607,6 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     "trait A { _: B => }",
     """|Ctor.Primary trait A @@{ _: B => }
-       |Name.Anonymous {
        |Template { _: B => }
        |Self _: B
        |Name.Anonymous _
@@ -617,7 +615,6 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     "trait A { self => }",
     """|Ctor.Primary trait A @@{ self => }
-       |Name.Anonymous {
        |Template { self => }
        |Self self
        |""".stripMargin
@@ -625,7 +622,6 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     "trait A { this: B => }",
     """|Ctor.Primary trait A @@{ this: B => }
-       |Name.Anonymous {
        |Template { this: B => }
        |Self this: B
        |Name.Anonymous this
@@ -663,4 +659,23 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Pat]("<h1>a{b}c{d}e{f}g</h1>")
   checkPositions[Pat]("x: T")
   checkPositions[Pat]("y: T")
+
+  checkPositions[Stat](
+    """|trait SampleTrait extends A {
+       |  self: X with B with C =>
+       |
+       |  def foo: Boolean = true
+       |}""".stripMargin,
+    """|Ctor.Primary trait SampleTrait @@extends A {
+       |Template A {
+       |  self: X with B with C =>
+       |
+       |  def foo: Boolean = true
+       |}
+       |Self self: X with B with C
+       |Type.With X with B with C
+       |Type.With X with B
+       |Defn.Def def foo: Boolean = true
+       |""".stripMargin
+  )
 }
