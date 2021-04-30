@@ -810,4 +810,10 @@ class TermSuite extends ParseSuite {
       List(Term.Name("oct"))
     ) = term("""f"\\u$oct%04x"""")
   }
+
+  test("block-arg") {
+    val res = term("new Foo({str => str.length})")
+    val termList = q"List($res)"
+    assertEquals(term(termList.syntax).structure, termList.structure)
+  }
 }
