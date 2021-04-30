@@ -59,7 +59,7 @@ const siteConfig = {
   onPageNav: "separate",
 
   // Disabled because some markdown files are from scalameta/tutorial and some are from scalameta/scalameta.
-  // editUrl: `${repoUrl}/edit/master/docs/`,
+  // editUrl: `${repoUrl}/edit/main/docs/`,
 
   repoUrl,
   gitterUrl

@@ -1,5 +1,5 @@
 ### scalameta
-[![Build Status](https://travis-ci.org/scalameta/scalameta.svg?branch=master)](https://travis-ci.org/scalameta/scalameta)
+[![Build Status](https://travis-ci.org/scalameta/scalameta.svg?branch=main)](https://travis-ci.org/scalameta/scalameta)
 
 ### User documentation
 Head over to [the user docs][docs] to learn more about the project and its roadmap.
