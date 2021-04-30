@@ -609,7 +609,6 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Ctor.Primary trait A @@{ _: B => }
        |Template { _: B => }
        |Self _: B
-       |Name.Anonymous _
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -624,7 +623,6 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Ctor.Primary trait A @@{ this: B => }
        |Template { this: B => }
        |Self this: B
-       |Name.Anonymous this
        |""".stripMargin
   )
 

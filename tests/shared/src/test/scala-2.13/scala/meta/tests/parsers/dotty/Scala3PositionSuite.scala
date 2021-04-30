@@ -31,7 +31,6 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.Apply F[A]
        |Term.Param G[B]
        |Mod.Using extension [A, B](i: A)(using a: F[A], @@G[B]) def isZero = i == 0
-       |Name.Anonymous G
        |Type.Apply G[B]
        |Defn.Def def isZero = i == 0
        |Term.ApplyInfix i == 0
