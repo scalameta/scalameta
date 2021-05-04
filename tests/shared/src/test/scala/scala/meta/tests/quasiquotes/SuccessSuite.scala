@@ -1597,8 +1597,8 @@ class SuccessSuite extends FunSuite {
     )
   }
 
-  test("1 q\"..mods class tname[..tparams] mod (...paramss) extends template\"") {
-    val q"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template" =
+  test("1 q\"..mods class tname[..tparams] mod (...paramss) template\"") {
+    val q"..$mods class $tname[..$tparams] $mod (...$paramss) $template" =
       q"private final class Q[T, W] private (x: X, y: Y) extends Y"
     assert(mods.toString == "List(private, final)")
     assert(mods(0).structure == "Mod.Private(Name(\"\"))")
@@ -1627,8 +1627,8 @@ class SuccessSuite extends FunSuite {
     )
   }
 
-  test("2 q\"..mods class tname[..tparams] mod (...paramss) extends template\"") {
-    val q"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template" =
+  test("2 q\"..mods class tname[..tparams] mod (...paramss) template\"") {
+    val q"..$mods class $tname[..$tparams] $mod (...$paramss) $template" =
       q"private final class Q[T, W] protected (x: X, y: Y) extends { def m1 = 42; def m2 = 666 }"
     assert(mods.toString == "List(private, final)")
     assert(mods(0).structure == "Mod.Private(Name(\"\"))")
@@ -1657,7 +1657,7 @@ class SuccessSuite extends FunSuite {
     )
   }
 
-  test("3 q\"..mods class tname[..tparams] mod (...paramss) extends template\"") {
+  test("3 q\"..mods class tname[..tparams] mod (...paramss) template\"") {
     val mods = List(mod"private", mod"final")
     val tname = t"Q"
     val tparams = List(tparam"T", tparam"W")
@@ -1665,13 +1665,13 @@ class SuccessSuite extends FunSuite {
     val paramss = List(List(param"x: X", param"x: Y"))
     val template = template"F { def m = 42 }"
     assertNoDiff(
-      q"..$mods class $tname[..$tparams] $mod (...$paramss) extends $template".structure,
+      q"..$mods class $tname[..$tparams] $mod (...$paramss) $template".structure,
       """Defn.Class(List(Mod.Private(Name("")), Mod.Final()), Type.Name("Q"), List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)), Ctor.Primary(List(Mod.Protected(Name(""))), Name(""), List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None), Term.Param(Nil, Term.Name("x"), Some(Type.Name("Y")), None)))), Template(Nil, List(Init(Type.Name("F"), Name(""), Nil)), Self(Name(""), None), List(Defn.Def(Nil, Term.Name("m"), Nil, Nil, None, Lit.Int(42))), Nil))"""
     )
   }
 
-  test("1 q\"..mods trait tname[..tparams] extends template\"") {
-    val q"..$mods trait $tname[..$tparams] extends $template" =
+  test("1 q\"..mods trait tname[..tparams] template\"") {
+    val q"..$mods trait $tname[..$tparams] $template" =
       q"private sealed trait Q[T, W] extends Y"
     assert(mods.toString == "List(private, sealed)")
     assert(mods(0).structure == "Mod.Private(Name(\"\"))")
@@ -1692,8 +1692,8 @@ class SuccessSuite extends FunSuite {
     )
   }
 
-  test("2 q\"..mods trait tname[..tparams] extends template\"") {
-    val q"..$mods trait $tname[..$tparams] extends $template" =
+  test("2 q\"..mods trait tname[..tparams] template\"") {
+    val q"..$mods trait $tname[..$tparams] $template" =
       q"private sealed trait Q[T, W] extends { def m1 = 42; def m2 = 666 }"
     assert(mods.toString == "List(private, sealed)")
     assert(mods(0).structure == "Mod.Private(Name(\"\"))")
@@ -1714,19 +1714,19 @@ class SuccessSuite extends FunSuite {
     )
   }
 
-  test("3 q\"..mods trait tname[..tparams] extends template\"") {
+  test("3 q\"..mods trait tname[..tparams] template\"") {
     val mods = List(mod"private", mod"sealed")
     val tname = t"Q"
     val tparams = List(tparam"T", tparam"W")
     val template = template"F { def m = 42 }"
     assertNoDiff(
-      q"..$mods trait $tname[..$tparams] extends $template".structure,
+      q"..$mods trait $tname[..$tparams] $template".structure,
       """Defn.Trait(List(Mod.Private(Name("")), Mod.Sealed()), Type.Name("Q"), List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil), Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)), Ctor.Primary(Nil, Name(""), Nil), Template(Nil, List(Init(Type.Name("F"), Name(""), Nil)), Self(Name(""), None), List(Defn.Def(Nil, Term.Name("m"), Nil, Nil, None, Lit.Int(42))), Nil))"""
     )
   }
 
-  test("1 q\"..mods object name extends template\"") {
-    val q"..$mods object $name extends $template" = q"private final object Q extends Y"
+  test("1 q\"..mods object name template\"") {
+    val q"..$mods object $name $template" = q"private final object Q extends Y"
     assert(mods.toString == "List(private, final)")
     assert(mods(0).structure == "Mod.Private(Name(\"\"))")
     assert(mods(1).structure == "Mod.Final()")
@@ -1737,8 +1737,8 @@ class SuccessSuite extends FunSuite {
     )
   }
 
-  test("2 q\"..mods object name extends template\"") {
-    val q"..$mods object $name extends $template" =
+  test("2 q\"..mods object name template\"") {
+    val q"..$mods object $name $template" =
       q"private final object Q extends { def m1 = 42; def m2 = 666 }"
     assert(mods.toString == "List(private, final)")
     assert(mods(0).structure == "Mod.Private(Name(\"\"))")
@@ -1750,18 +1750,18 @@ class SuccessSuite extends FunSuite {
     )
   }
 
-  test("3 q\"..mods object name extends template\"") {
+  test("3 q\"..mods object name template\"") {
     val mods = List(mod"private", mod"final")
     val name = q"Q"
     val template = template"F { def m = 42 }"
     assertNoDiff(
-      q"..$mods object $name extends $template".structure,
+      q"..$mods object $name $template".structure,
       """Defn.Object(List(Mod.Private(Name("")), Mod.Final()), Term.Name("Q"), Template(Nil, List(Init(Type.Name("F"), Name(""), Nil)), Self(Name(""), None), List(Defn.Def(Nil, Term.Name("m"), Nil, Nil, None, Lit.Int(42))), Nil))"""
     )
   }
 
-  test("1 q\"package object name extends template\"") {
-    val q"package object $name extends $template" = q"package object Q extends Y"
+  test("1 q\"package object name template\"") {
+    val q"package object $name $template" = q"package object Q extends Y"
     assert(name.structure == "Term.Name(\"Q\")")
     assertNoDiff(
       template.structure,
@@ -1769,8 +1769,8 @@ class SuccessSuite extends FunSuite {
     )
   }
 
-  test("2 q\"package object name extends template\"") {
-    val q"package object $name extends $template" =
+  test("2 q\"package object name template\"") {
+    val q"package object $name $template" =
       q"package object Q extends { def m1 = 42; def m2 = 666 }"
     assert(name.structure == "Term.Name(\"Q\")")
     assertNoDiff(
@@ -1779,11 +1779,11 @@ class SuccessSuite extends FunSuite {
     )
   }
 
-  test("3 q\"package object name extends template\"") {
+  test("3 q\"package object name template\"") {
     val name = q"Q"
     val template = template"F { def m = 42 }"
     assertNoDiff(
-      q"package object $name extends $template".structure,
+      q"package object $name $template".structure,
       """Pkg.Object(Nil, Term.Name("Q"), Template(Nil, List(Init(Type.Name("F"), Name(""), Nil)), Self(Name(""), None), List(Defn.Def(Nil, Term.Name("m"), Nil, Nil, None, Lit.Int(42))), Nil))"""
     )
   }
@@ -2317,8 +2317,9 @@ class SuccessSuite extends FunSuite {
   test("#448") {
     val parent = init"_root_.scala.AnyVal"
     val template = template"$parent"
-    assert(q"class C extends $template".syntax == "class C extends _root_.scala.AnyVal")
+    assert(q"class C $template".syntax == "class C extends _root_.scala.AnyVal")
     assert(q"class C extends $parent {}".syntax == "class C extends _root_.scala.AnyVal")
+    assert(q"class C extends $parent".syntax == "class C extends _root_.scala.AnyVal")
     assert(
       q"class C extends $parent with $parent".syntax ==
         "class C extends _root_.scala.AnyVal with _root_.scala.AnyVal"

@@ -3573,7 +3573,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def ctorModifiers(): Option[Mod] = token match {
-    case Unquote() => Some(unquote[Mod])
+    case Unquote() if ahead(token.is[LeftParen]) => Some(unquote[Mod])
     case Ellipsis(_) => Some(ellipsis(1, astInfo[Mod]))
     case KwPrivate() => Some(accessModifier())
     case KwProtected() => Some(accessModifier())
@@ -4743,7 +4743,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def quasiquoteTemplate(): Template = entrypointTemplate()
 
-  def entrypointTemplate(): Template = template(enumCaseAllowed = false)
+  def entrypointTemplate(): Template = autoPos(template(enumCaseAllowed = false))
 
   def ensureEarlyDef(tree: Stat): Stat = tree match {
     case q: Quasi => q
@@ -4753,28 +4753,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case other => syntaxError("not a valid early definition", at = other)
   }
 
-  def templateOpt(owner: TemplateOwner): Template = {
-    if (token.is[KwExtends] || (token.is[Subtype] && owner.isTrait)) {
+  def templateOpt(owner: TemplateOwner): Template = autoPos {
+    if (token.is[Unquote] && ahead(
+        !token.is[Dot] && !token.is[Hash] && !token.is[At] && !token.is[Ellipsis] &&
+          !token.is[LeftParen] && !token.is[LeftBracket] && !token.is[LeftBrace] &&
+          !token.is[KwWith]
+      )) {
+      unquote[Template]
+    } else if (token.is[KwExtends] || (token.is[Subtype] && owner.isTrait)) {
       next()
-      if (token.is[Unquote] && ahead(
-          !token.is[Dot] && !token.is[Hash] && !token.is[At] && !token.is[Ellipsis] &&
-            !token.is[LeftParen] && !token.is[LeftBracket] && !token.is[LeftBrace] &&
-            !token.is[KwWith]
-        )) {
-        unquote[Template]
-      } else {
-        template(afterExtend = true, enumCaseAllowed = owner.isEnum)
-      }
+      template(afterExtend = true, enumCaseAllowed = owner.isEnum)
     } else {
-      val startPos = in.tokenPos
       newLineOptWhenFollowing(t => t.is[soft.KwDerives])
       if (token.is[soft.KwDerives]) {
-        val tmpl = atPos(startPos, auto)(template(Nil, Nil, enumCaseAllowed = owner.isEnum))
-        tmpl
+        template(Nil, Nil, enumCaseAllowed = owner.isEnum)
       } else {
         val (self, body) =
           templateBodyOpt(parenMeansSyntaxError = !owner.isClass, enumCaseAllowed = owner.isEnum)
-        atPos(startPos, auto)(Template(Nil, Nil, self, body))
+        Template(Nil, Nil, self, body)
       }
     }
   }

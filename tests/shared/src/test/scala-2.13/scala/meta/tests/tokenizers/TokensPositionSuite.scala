@@ -665,7 +665,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |  def foo: Boolean = true
        |}""".stripMargin,
     """|Ctor.Primary trait SampleTrait @@extends A {
-       |Template A {
+       |Template extends A {
        |  self: X with B with C =>
        |
        |  def foo: Boolean = true
