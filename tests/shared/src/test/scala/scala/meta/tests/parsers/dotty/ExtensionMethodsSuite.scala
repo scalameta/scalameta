@@ -104,11 +104,21 @@ class ExtensionMethodsSuite extends BaseDottySuite {
                   |  def crc: Int = 2
                   |}
                   |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some("extension (c: Circle) def crc: Int = 2"))(
+    runTestAssert[Stat](
+      code,
+      assertLayout = Some(
+        """|extension (c: Circle){
+           |  def crc: Int = 2
+           |}
+           |""".stripMargin
+      )
+    )(
       Defn.ExtensionGroup(
         Nil,
-        cparam,
-        Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
+        List(List(Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None))),
+        Term.Block(
+          List(Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)))
+        )
       )
     )
   }
@@ -118,18 +128,23 @@ class ExtensionMethodsSuite extends BaseDottySuite {
                   |  def crc: Int = 2
                   |}
                   |""".stripMargin
-    val output = "extension (c: Circle)(using Context, x: Int) def crc: Int = 2"
+    val output = """|extension (c: Circle)(using Context, x: Int){
+                    |  def crc: Int = 2
+                    |}
+                    |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Defn.ExtensionGroup(
         Nil,
         List(
-          List(Term.Param(Nil, Term.Name("c"), Some(pname("Circle")), None)),
+          List(Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None)),
           List(
-            Term.Param(List(Mod.Using()), Name.Anonymous(), Some(pname("Context")), None),
-            Term.Param(List(Mod.Using()), Term.Name("x"), Some(pname("Int")), None)
+            Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Context")), None),
+            Term.Param(List(Mod.Using()), Term.Name("x"), Some(Type.Name("Int")), None)
           )
         ),
-        Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
+        Term.Block(
+          List(Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)))
+        )
       )
     )
   }
@@ -141,18 +156,23 @@ class ExtensionMethodsSuite extends BaseDottySuite {
                   |  def crc: Int = 2
                   |}
                   |""".stripMargin
-    val output = "extension (c: Circle)(using Context, x: Int) def crc: Int = 2"
+    val output = """|extension (c: Circle)(using Context, x: Int){
+                    |  def crc: Int = 2
+                    |}
+                    |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Defn.ExtensionGroup(
         Nil,
         List(
-          List(Term.Param(Nil, Term.Name("c"), Some(pname("Circle")), None)),
+          List(Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None)),
           List(
-            Term.Param(List(Mod.Using()), Name.Anonymous(), Some(pname("Context")), None),
-            Term.Param(List(Mod.Using()), Term.Name("x"), Some(pname("Int")), None)
+            Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Context")), None),
+            Term.Param(List(Mod.Using()), Term.Name("x"), Some(Type.Name("Int")), None)
           )
         ),
-        Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
+        Term.Block(
+          List(Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)))
+        )
       )
     )
   }
@@ -163,7 +183,10 @@ class ExtensionMethodsSuite extends BaseDottySuite {
                   |}
                   |""".stripMargin
     val output =
-      "extension (c: Circle)(using Context, x: Int)(using y: String, File) def crc: Int = 2"
+      """|extension (c: Circle)(using Context, x: Int)(using y: String, File){
+         |  def crc: Int = 2
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Defn.ExtensionGroup(
         Nil,
@@ -178,7 +201,9 @@ class ExtensionMethodsSuite extends BaseDottySuite {
             Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("File")), None)
           )
         ),
-        Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+        Term.Block(
+          List(Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)))
+        )
       )
     )
   }
