@@ -2255,10 +2255,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case KwTry() =>
         next()
         val body: Term = token match {
-          case Indentation.Indent() => block()
           case _ if dialect.allowTryWithAnyExpr => expr()
-          case LeftBrace() => autoPos(inBracesOrUnit(block()))
           case LeftParen() => inParensOrUnit(expr())
+          case LeftBrace() | Indentation.Indent() => block()
           case _ => expr()
         }
         val catchopt =
@@ -2519,13 +2518,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               }
               val params = convertToParams(t)
               val trm =
-                if (token.is[Indentation.Indent]) blockExpr()
-                else if (location != BlockStat) expr()
-                else block()
+                if (location != BlockStat) expr()
+                else blockExpr()
+
               if (contextFunction)
-                Term.ContextFunction(params, dropTrivialBlock(trm))
+                Term.ContextFunction(params, trm)
               else
-                Term.Function(params, dropTrivialBlock(trm))
+                Term.Function(params, trm)
             })
           } else {
             // do nothing, which will either allow self-type annotation parsing to kick in
@@ -3032,26 +3031,25 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def blockExpr(): Term = autoPos {
-    def blockOrCase() = {
-      if (token.is[CaseIntro] || (token.is[Ellipsis] && ahead(token.is[KwCase])))
-        Term.PartialFunction(caseClauses())
-      else block()
-    }
-    if (token.is[LeftBrace]) {
-      inBraces(blockOrCase())
-    } else if (token.is[Indentation.Indent]) {
-      dropTrivialBlock(indented(blockOrCase()))
-    } else {
-      syntaxError("Expected brace or indentation.", at = token.pos)
-    }
+    if (ahead(token.is[CaseIntro] || (token.is[Ellipsis] && ahead(token.is[KwCase])))) {
+      if (token.is[LeftBrace])
+        Term.PartialFunction(inBraces(caseClauses()))
+      else
+        Term.PartialFunction(indented(caseClauses()))
+    } else block()
   }
 
   def block(): Term = autoPos {
-    if (token.is[Indentation.Indent])
-      indented(
-        dropTrivialBlock(Term.Block(blockStatSeq()))
-      )
-    else Term.Block(blockStatSeq())
+    def blockWithStats = Term.Block(blockStatSeq())
+    if (token.is[LeftBrace]) {
+      inBraces(blockWithStats)
+    } else {
+      val possibleBlock =
+        if (token.is[Indentation.Indent])
+          indented(blockWithStats)
+        else blockWithStats
+      dropTrivialBlock(possibleBlock)
+    }
   }
 
   def caseClause(forceSingleExpr: Boolean = false): Case = atPos(in.prevTokenPos, auto) {
