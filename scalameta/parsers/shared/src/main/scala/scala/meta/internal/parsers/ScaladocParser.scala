@@ -49,12 +49,19 @@ object ScaladocParser {
   private def codePrefix[_: P] = P("{{{")
   private def codeSuffix[_: P] = P(hspaces0 ~ "}}}")
 
+  def markdownCodePrefix[_: P] = P(leadHspaces0 ~ "```scala" ~ (!nl ~ AnyChar).rep ~ nl)
+  def markdownCodeSuffix[_: P] = P(hspaces0 ~ "```")
+
   private def linkPrefix[_: P] = P("[[" ~ hspaces0)
   private def linkSuffix[_: P] = P(hspaces0 ~ "]]")
 
   private def codeLineParser[_: P]: P[String] = {
     def codeLineEnd = P(nl | codeSuffix)
     P((!codeLineEnd ~ AnyChar).rep.!)
+  }
+
+  private def markdownCodeLineParser[_: P]: P[String] = {
+    P(!markdownCodeSuffix ~ (!nl ~ AnyChar).rep.!)
   }
 
   private def codeExprParser[_: P]: P[CodeExpr] = {
@@ -68,6 +75,12 @@ object ScaladocParser {
     def code = codeLineParser.rep(1, sep = nl)
     def pattern = leadHspaces0 ~ codePrefix ~ nl ~ code ~ codeSuffix
     P(pattern.map { x => CodeBlock(if (x.last.nonEmpty) x.toSeq else x.view.dropRight(1).toSeq) })
+  }
+
+  private def markdownCodeBlockParser[_: P]: P[CodeBlock] = {
+    def code = markdownCodeLineParser.rep(0, sep = nl)
+    def pattern = markdownCodePrefix ~ (code ~ nl).? ~ markdownCodeSuffix
+    P(pattern.map(x => CodeBlock(x.getOrElse(Seq()))))
   }
 
   private def headingParser[_: P]: P[Heading] = {
@@ -209,6 +222,7 @@ object ScaladocParser {
   private def termParser[_: P] =
     listBlockParser() |
       codeBlockParser |
+      markdownCodeBlockParser |
       headingParser |
       tagParser |
       tableParser |
