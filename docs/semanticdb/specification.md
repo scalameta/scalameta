@@ -109,7 +109,7 @@ SemanticDB payloads must include the version of the SemanticDB model in the
   <tr>
     <td><code>SEMANTICDB4</code></td>
     <td>SemanticDB v4 payloads</td>
-    <td><a href="https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb/semanticdb.proto">semanticdb.proto</a></td> (described in this document)
+    <td><a href="https://github.com/scalameta/scalameta/blob/main/semanticdb/semanticdb/semanticdb.proto">semanticdb.proto</a></td> (described in this document)
   </tr>
 </table>
 
@@ -3720,7 +3720,7 @@ At this moment, there is no tool that supports Synthetic for the Java language.
 We may improve on this in the future.
 
 [semanticdb.proto]:
-  https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb/semanticdb.proto
+  https://github.com/scalameta/scalameta/blob/main/semanticdb/semanticdb/semanticdb.proto
 [1]: https://semver.org/
 [2]: https://microsoft.github.io/language-server-protocol/
 [3]: https://scalacenter.github.io/bsp/
@@ -3832,7 +3832,7 @@ We may improve on this in the future.
   https://www.scala-lang.org/files/archive/spec/2.11/08-pattern-matching.html#type-patterns
 [68]: https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
 [69]:
-  https://github.com/scalameta/scalameta/blob/master/semanticdb/metacp/src/main/scala/scala/meta/internal/javacp/Javacp.scala
+  https://github.com/scalameta/scalameta/blob/main/semanticdb/metacp/src/main/scala/scala/meta/internal/javacp/Javacp.scala
 [70]:
   https://www.scala-lang.org/files/archive/spec/2.12/02-identifiers-names-and-scopes.html
 [72]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-10.html#jls-10.1

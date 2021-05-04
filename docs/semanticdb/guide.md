@@ -33,7 +33,7 @@ cs install metac metap
 Let's generate SemanticDB for a simple Scala program. (At the moment, our
 SemanticDB producers provide full Scala support and partial Java support.
 Theoretically,
-[the SemanticDB protobuf schema](https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb/semanticdb.proto)
+[the SemanticDB protobuf schema](https://github.com/scalameta/scalameta/blob/main/semanticdb/semanticdb/semanticdb.proto)
 can accommodate other languages as well, but we haven't attempted to do that
 yet).
 
@@ -349,7 +349,7 @@ scalacOptions += "-Yrangepos"
 
 The `semanticdb` library contains [ScalaPB](https://scalapb.github.io/) bindings
 to
-[the SemanticDB protobuf schema](https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb/semanticdb.proto).
+[the SemanticDB protobuf schema](https://github.com/scalameta/scalameta/blob/main/semanticdb/semanticdb/semanticdb.proto).
 Using this library, one can model SemanticDB entities as Scala case classes and
 serialize/deserialize them into bytes and streams.
 
@@ -434,7 +434,7 @@ For an example of using Metap, check out [Example](#example).
 The Protocol Compiler tool (`protoc`) can inspect protobuf payloads in
 `--decode` (takes a schema) and `--decode_raw` (doesn't need a schema) modes.
 For the reference, here's
-[the SemanticDB protobuf schema](https://github.com/scalameta/scalameta/blob/master/semanticdb/semanticdb/semanticdb.proto).
+[the SemanticDB protobuf schema](https://github.com/scalameta/scalameta/blob/main/semanticdb/semanticdb/semanticdb.proto).
 
 ```
 $ tree

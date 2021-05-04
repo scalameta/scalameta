@@ -47,8 +47,8 @@ curl -Lo coursier https://git.io/coursier-cli && chmod +x coursier
 alias metac="coursier launch org.scalameta:metac_2.12.8:4.1.9 -- -cp $(coursier fetch -p org.scala-lang:scala-library:2.12.8)"
 alias metap="coursier launch  -M scala.meta.cli.Metap org.scalameta:scalameta_2.11:4.1.9 --"
 ```
-NOTE. These installation instructions are for the current unstable `master` branch,
-it's recommended to view this document at the latest git tag instead of `master`.
+NOTE. These installation instructions are for the current unstable `main` branch,
+it's recommended to view this document at the latest git tag instead of `main`.
 
 (Optional) Instead of running `metap` on the JVM, you can build a native binary
 on macOS or Linux. Thanks to [Scala Native](https://scala-native.readthedocs.io/en/latest/),
