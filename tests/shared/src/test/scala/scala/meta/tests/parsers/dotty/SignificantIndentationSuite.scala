@@ -54,6 +54,54 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("anonymous-class") {
+    val code = """|new A:
+                  |  def f: Int
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some("new A { def f: Int }"))(
+      Term.NewAnonymous(
+        Template(
+          Nil,
+          List(Init(Type.Name("A"), Name(""), Nil)),
+          Self(Name(""), None),
+          List(Decl.Def(Nil, Term.Name("f"), Nil, Nil, Type.Name("Int"))),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("empty-anonymous-class") {
+    val code = """|new:
+                  |  def f: Int
+                  |  
+                  |  def g: Int
+                  |""".stripMargin
+    runTestAssert[Stat](
+      code,
+      assertLayout = Some(
+        """|new {
+           |  def f: Int
+           |  def g: Int
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.NewAnonymous(
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Decl.Def(Nil, Term.Name("f"), Nil, Nil, Type.Name("Int")),
+            Decl.Def(Nil, Term.Name("g"), Nil, Nil, Type.Name("Int"))
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
   test("indent-and-back") {
     val code = """|object O:
                   |  class C:
