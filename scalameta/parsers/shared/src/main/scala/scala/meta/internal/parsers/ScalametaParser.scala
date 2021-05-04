@@ -4736,7 +4736,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         Template(Nil, Nil, self, body)
       }
     } else {
-      val parents = templateParents(afterExtend)
+      val parents = if (token.is[Colon]) Nil else templateParents(afterExtend)
       template(Nil, parents, enumCaseAllowed)
     }
   }
