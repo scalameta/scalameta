@@ -151,6 +151,48 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
+  test("given-override-def") {
+    runTestAssert[Stat](
+      """|  given Facade.SimpleFacade[Json] with
+         |    override def jnull = ???
+         |    override def jtrue = ???
+         |""".stripMargin,
+      assertLayout = Some(
+        """|given Facade.SimpleFacade[Json] with {
+           |  override def jnull = ???
+           |  override def jtrue = ???
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Given(
+        Nil,
+        Name(""),
+        Nil,
+        Nil,
+        Template(
+          Nil,
+          List(
+            Init(
+              Type.Apply(
+                Type.Select(Term.Name("Facade"), Type.Name("SimpleFacade")),
+                List(Type.Name("Json"))
+              ),
+              Name(""),
+              Nil
+            )
+          ),
+          Self(Name(""), None),
+          List(
+            Defn.Def(List(Mod.Override()), Term.Name("jnull"), Nil, Nil, None, Term.Name("???")),
+            Defn.Def(List(Mod.Override()), Term.Name("jtrue"), Nil, Nil, None, Term.Name("???"))
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
   test("given-self") {
     runTestAssert[Stat]("given intOrd: Ord[Int] with { current => }")(
       Defn.Given(
