@@ -452,6 +452,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    42
        |  }
        |Term.Param err
+       |Term.Block {
+       |    42
+       |  }
        |""".stripMargin
   )
 
@@ -517,6 +520,23 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Pat.Typed _: Enum
        |Case case _: Singleton => xs
        |Pat.Typed _: Singleton
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|val f: Int => Int = (x: Int) => {
+       |  x * x
+       |}
+       |""".stripMargin,
+    """|Type.Function Int => Int
+       |Term.Function (x: Int) => {
+       |  x * x
+       |}
+       |Term.Param (x: Int)
+       |Term.Block {
+       |  x * x
+       |}
+       |Term.ApplyInfix x * x
        |""".stripMargin
   )
 }

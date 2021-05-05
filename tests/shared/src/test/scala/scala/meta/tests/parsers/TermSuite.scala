@@ -330,7 +330,7 @@ class TermSuite extends ParseSuite {
     val Block(
       Function(
         Term.Param(Mod.Implicit() :: Nil, TermName("x"), None, None) :: Nil,
-        Block(Lit(()) :: Nil)
+        Lit(())
       ) :: Nil
     ) = term("{ implicit x => () }")
   }
@@ -558,7 +558,7 @@ class TermSuite extends ParseSuite {
                   None
                 )
               ),
-              Term.Block(List(Term.Name("Ok")))
+              Term.Name("Ok")
             )
           )
         )
