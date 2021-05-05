@@ -30,21 +30,12 @@ class ConversionMacros(val c: Context) extends AstReflection {
 
   val MetaLift = mirror.staticClass("scala.meta.quasiquotes.Lift")
   val MetaUnlift = mirror.staticClass("scala.meta.quasiquotes.Unlift")
-  val MetaTemplate = mirror.staticClass("scala.meta.Template")
 
   private def typeMismatchMessage(found: c.Type, req: c.Type): String = {
     val g = c.universe.asInstanceOf[scala.tools.nsc.Global]
     val msg = g.analyzer.foundReqMsg(found.asInstanceOf[g.Type], req.asInstanceOf[g.Type])
     val foundReqMessage = msg.replace("meta.", "scala.meta.").replace("scala.scala.", "scala.")
-    var wholeMessage = "type mismatch when unquoting" + foundReqMessage
-    if (req.typeSymbol == MetaTemplate) {
-      var hint =
-        "Note: This shape of a quasiquote tells scala.meta that you're unquoting a template."
-      hint += (EOL + "If you'd like to unquote a parent reference, add {} immediately after the unquote.")
-      hint += (EOL + "For more details, see https://github.com/scalameta/scalameta/issues/223.")
-      wholeMessage = wholeMessage + EOL + hint
-    }
-    wholeMessage
+    "type mismatch when unquoting" + foundReqMessage
   }
 
   def liftApply[I](outside: c.Tree)(implicit I: c.WeakTypeTag[I]): c.Tree = {

@@ -68,7 +68,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     "enum Day[T](e: T) extends A with B { case Monday, Tuesday }",
     """|Type.Bounds enum Day[T@@](e: T) extends A with B { case Monday, Tuesday }
        |Ctor.Primary (e: T)
-       |Template A with B { case Monday, Tuesday }
+       |Template extends A with B { case Monday, Tuesday }
        |Self enum Day[T](e: T) extends A with B { @@case Monday, Tuesday }
        |Defn.RepeatedEnumCase case Monday, Tuesday
        |""".stripMargin
@@ -77,7 +77,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     "class Day[T](e: T) extends A with B { val Monday = 42 }",
     """|Type.Bounds class Day[T@@](e: T) extends A with B { val Monday = 42 }
        |Ctor.Primary (e: T)
-       |Template A with B { val Monday = 42 }
+       |Template extends A with B { val Monday = 42 }
        |Self class Day[T](e: T) extends A with B { @@val Monday = 42 }
        |Defn.Val val Monday = 42
        |""".stripMargin
