@@ -37,6 +37,22 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
 
+  checkPositions[Stat](
+    """|extension (i: A) {
+       |  def isZero = i == 0
+       |  def isOne = i == 1
+       |}""".stripMargin,
+    """|Term.Block {
+       |  def isZero = i == 0
+       |  def isOne = i == 1
+       |}
+       |Defn.Def def isZero = i == 0
+       |Term.ApplyInfix i == 0
+       |Defn.Def def isOne = i == 1
+       |Term.ApplyInfix i == 1
+       |""".stripMargin
+  )
+
   // This tests exists to document the symmetry between positions for
   // `Mod.Implicit` (test below) and `Mod.Using` (test above).
   checkPositions[Stat](

@@ -3040,23 +3040,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (token.is[LeftBrace]) {
       inBraces(blockOrCase())
     } else if (token.is[Indentation.Indent]) {
-      indented(blockOrCase()) match {
-        case Term.Block((head: Term) :: Nil) => head
-        case other => other
-      }
+      dropTrivialBlock(indented(blockOrCase()))
     } else {
       syntaxError("Expected brace or indentation.", at = token.pos)
     }
   }
 
   def block(): Term = autoPos {
-    if (token.is[Indentation.Indent]) indented {
-      val stats = blockStatSeq()
-      stats match {
-        case (head: Term) :: Nil => head
-        case others => Term.Block(others)
-      }
-    }
+    if (token.is[Indentation.Indent])
+      indented(
+        dropTrivialBlock(Term.Block(blockStatSeq()))
+      )
     else Term.Block(blockStatSeq())
   }
 
@@ -4225,28 +4219,23 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     )
 
     collectUparams()
-
     newLineOptWhenFollowedBy[LeftBrace]
 
-    val methodsAll: List[Stat] =
+    val body: Stat =
       if (token.is[LeftBrace]) {
-        inBraces(templateStats())
+        autoPos(Term.Block(inBraces(templateStats())))
       } else {
         newLinesOpt()
         if (in.observeIndented()) {
-          indented(templateStats())
+          val block = autoPos(Term.Block(indented(templateStats())))
+          if (block.stats.size == 1) block.stats.head
+          else block
         } else if (token.is[DefIntro]) {
-          List(nonLocalDefOrDcl())
+          nonLocalDefOrDcl()
         } else {
           syntaxError("Extension without extension method", token)
         }
       }
-    val body: Stat = methodsAll match {
-      case Nil => autoPos(Term.Block(Nil))
-      case head :: Nil => head
-      case head :: tail =>
-        atPos(head.startTokenPos, tail.last.endTokenPos)(Term.Block(head :: tail))
-    }
     Defn.ExtensionGroup(tparams, paramss.toList, body)
   }
 

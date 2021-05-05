@@ -978,8 +978,8 @@ object TreeSyntax {
 
       case t: Defn.ExtensionGroup =>
         val m = t.body match {
-          case Term.Block(stats) =>
-            r(stats.map(i(_)))
+          case block: Term.Block =>
+            s(block)
           case onestat =>
             s(" ", onestat)
         }
