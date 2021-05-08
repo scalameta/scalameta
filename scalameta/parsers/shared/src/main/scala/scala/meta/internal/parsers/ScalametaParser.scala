@@ -2547,7 +2547,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     )
     accept[RightArrow]
     atPos(implicitPos, auto)(
-      Term.Function(List(param), if (location != BlockStat) expr() else block())
+      Term.Function(List(param), if (location != BlockStat) expr() else blockExpr())
     )
   }
 

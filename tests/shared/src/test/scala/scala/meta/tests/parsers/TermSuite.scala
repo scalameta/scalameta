@@ -816,4 +816,27 @@ class TermSuite extends ParseSuite {
     val termList = q"List($res)"
     assertEquals(term(termList.syntax).structure, termList.structure)
   }
+
+  test("implicit-closure") {
+    val res =
+      term("""|function { implicit c =>
+              |  {
+              |    case bar => foo
+              |  }
+              |}""".stripMargin)
+
+    val Term.Apply(
+      Term.Name("function"),
+      List(
+        Term.Block(
+          List(
+            Term.Function(
+              List(Term.Param(List(Mod.Implicit()), Term.Name("c"), None, None)),
+              Term.PartialFunction(List(Case(Pat.Var(Term.Name("bar")), None, Term.Name("foo"))))
+            )
+          )
+        )
+      )
+    ) = res
+  }
 }
