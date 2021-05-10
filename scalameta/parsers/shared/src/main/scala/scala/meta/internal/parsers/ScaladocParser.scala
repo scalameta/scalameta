@@ -52,62 +52,56 @@ object ScaladocParser {
   private def linkPrefix[_: P] = P("[[" ~ hspaces0)
   private def linkSuffix[_: P] = P(hspaces0 ~ "]]")
 
-  private def codeLineParser[_: P]: P[String] = {
+  private def codeLineParser[_: P]: P[String] = P {
     def codeLineEnd = P(nl | codeSuffix)
-    P((!codeLineEnd ~ AnyChar).rep.!)
+    (!codeLineEnd ~ AnyChar).rep.!
   }
 
-  private def codeExprParser[_: P]: P[CodeExpr] = {
+  private def codeExprParser[_: P]: P[CodeExpr] = P {
     def pattern = codePrefix ~ hspaces0 ~ codeLineParser ~ codeSuffix ~ punctParser.!
-    P(pattern.map { case (x, y) =>
-      CodeExpr(x.trim, y)
-    })
+    pattern.map { case (x, y) => CodeExpr(x.trim, y) }
   }
 
-  private def codeBlockParser[_: P]: P[CodeBlock] = {
+  private def codeBlockParser[_: P]: P[CodeBlock] = P {
     def code = codeLineParser.rep(1, sep = nl)
     def pattern = leadHspaces0 ~ codePrefix ~ nl ~ code ~ codeSuffix
-    P(pattern.map { x => CodeBlock(if (x.last.nonEmpty) x.toSeq else x.view.dropRight(1).toSeq) })
+    pattern.map { x => CodeBlock(if (x.last.nonEmpty) x.toSeq else x.view.dropRight(1).toSeq) }
   }
 
-  private def headingParser[_: P]: P[Heading] = {
+  private def headingParser[_: P]: P[Heading] = P {
     def delimParser = leadHspaces0 ~ CharsWhileIn("=", 1).!
-    P(
-      // heading delimiter
-      delimParser.flatMap { delim =>
-        val level = delim.length
-        if (level > numberOfSupportedHeadingLevels) Fail
-        else {
-          def title = (!delim ~ AnyChar).rep(1)
-          // Heading description and delimiter
-          (title.! ~ delim ~ &(nl)).map(x => Heading(level, x.trim))
-        }
+    // heading delimiter
+    delimParser.flatMap { delim =>
+      val level = delim.length
+      if (level > numberOfSupportedHeadingLevels) Fail
+      else {
+        def title = (!delim ~ AnyChar).rep(1)
+        // Heading description and delimiter
+        (title.! ~ delim ~ &(nl)).map(x => Heading(level, x.trim))
       }
-    )
+    }
   }
 
-  private def linkParser[_: P]: P[Link] = {
+  private def linkParser[_: P]: P[Link] = P {
     def end = space | linkSuffix
     def anchor = P((!end ~ AnyChar).rep(1).!.rep(1, sep = spaces1))
     def pattern = linkPrefix ~ (anchor ~ linkSuffix ~ punctParser.!)
-    P(pattern.map { case (x, y) =>
-      Link(x.head, x.tail.toSeq, y)
-    })
+    pattern.map { case (x, y) => Link(x.head, x.tail.toSeq, y) }
   }
 
-  private def textParser[_: P]: P[Text] = {
+  private def textParser[_: P]: P[Text] = P {
     def anotherBeg = P(CharIn("@=") | (codePrefix ~ nl) | listPrefix | tableSep | "+-" | nl)
     def end = P(End | nl ~/ hspaces0 ~/ anotherBeg)
     def part: P[TextPart] = P(!paraEnd ~ (codeExprParser | linkParser | wordParser))
     def sep = P(!end ~ nlHspaces0)
     def text = hspaces0 ~ part.rep(1, sep = sep)
-    P(text.map(x => Text(x.toSeq)))
+    text.map(x => Text(x.toSeq))
   }
 
   private def trailTextParser[_: P]: P[Text] = P(nlHspaces1 ~ textParser)
   private def leadTextParser[_: P]: P[Text] = P((space | Start) ~ hspaces0 ~ textParser)
 
-  private def tagParser[_: P]: P[Tag] = {
+  private def tagParser[_: P]: P[Tag] = P {
     def tagTypeMap = TagType.predefined.map(x => x.tag -> x).toMap
     def getParserByTag(tag: String): P[Tag] = {
       val tagTypeOpt = tagTypeMap.get(tag)
@@ -126,10 +120,10 @@ object ScaladocParser {
       }
     }
     def tagLabelParser = P(("@" ~ labelParser).!)
-    P(leadHspaces0 ~ tagLabelParser.flatMap(getParserByTag))
+    leadHspaces0 ~ tagLabelParser.flatMap(getParserByTag)
   }
 
-  private def listBlockParser[_: P](minIndent: Int = 1): P[ListBlock] = {
+  private def listBlockParser[_: P](minIndent: Int = 1): P[ListBlock] = P {
     def listParser = (hspacesMinWithLen(minIndent) ~ listPrefix.! ~ hspaces1).flatMap {
       case (indent, prefix) =>
         def sep = (nl ~ hspacesMinWithLen(indent) ~ prefix ~ hspaces1).flatMap { x =>
@@ -140,10 +134,10 @@ object ScaladocParser {
           .rep(1, sep = sep)
           .map(x => ListBlock(prefix, x.toSeq))
     }
-    P(startOrNl ~ listParser)
+    startOrNl ~ listParser
   }
 
-  private def tableParser[_: P]: P[Table] = {
+  private def tableParser[_: P]: P[Table] = P {
     def toRow(x: Iterable[String]): Table.Row = Table.Row(x.toSeq)
     def toAlign(x: String): Option[Table.Align] = {
       def isEnd(y: Char) = y match {
@@ -203,7 +197,7 @@ object ScaladocParser {
         Table(toRow(x.head.map(_.trim)), align, rest.tail.toSeq.map(toRow))
     }
 
-    P(startOrNl ~ (delimLine ~ nl).? ~ tableSpaceSep ~ table ~ (nl ~ delimLine).?)
+    startOrNl ~ (delimLine ~ nl).? ~ tableSpaceSep ~ table ~ (nl ~ delimLine).?
   }
 
   private def termParser[_: P] =
@@ -223,8 +217,8 @@ object ScaladocParser {
   private def docParser[_: P] = P(paraParser.rep(sep = paraSep).map(x => Scaladoc(x.toSeq)))
 
   /** Contains all scaladoc parsers */
-  private def parser[_: P]: P[Scaladoc] = {
-    P(paraSep.? ~ docParser ~ spacesMin(0) ~ End)
+  private def parser[_: P]: P[Scaladoc] = P {
+    paraSep.? ~ docParser ~ spacesMin(0) ~ End
   }
 
   private val scaladocDelim = Pattern.compile("[ \t]*(?:$|\n[ \t]*\\**)")
