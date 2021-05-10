@@ -13,6 +13,13 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.Tuple (X, X)
        |""".stripMargin
   )
+  checkPositions[Type](
+    "[_] =>> Unit",
+    """|Type.Param _
+       |Name.Anonymous _
+       |Type.Bounds [_@@] =>> Unit
+       |""".stripMargin
+  )
   checkPositions[Stat]("inline def f = 1")
   checkPositions[Stat](
     "open trait a",
@@ -537,6 +544,14 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  x * x
        |}
        |Term.ApplyInfix x * x
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|(using _: C) => ???
+       |""".stripMargin,
+    """|Term.Param (using _: C)
+       |Name.Anonymous _
        |""".stripMargin
   )
 }

@@ -676,4 +676,45 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Defn.Def def foo: Boolean = true
        |""".stripMargin
   )
+
+  checkPositions[Stat](
+    """|object A {
+       |  private [this] def foo: Int = ???
+       |}
+       |""".stripMargin,
+    """|Template {
+       |  private [this] def foo: Int = ???
+       |}
+       |Self   @@private [this] def foo: Int = ???
+       |Defn.Def private [this] def foo: Int = ???
+       |Mod.Private private [this]
+       |Term.This this
+       |Name.Anonymous this
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|(_: X) => 42
+       |""".stripMargin,
+    """|Term.Param (_: X)
+       |Name.Anonymous _
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|_ => 42
+       |""".stripMargin,
+    """|Term.Param _
+       |Name.Anonymous _
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|q"x $this x"
+       |""".stripMargin,
+    """|Term.This this
+       |Name.Anonymous this
+       |""".stripMargin
+  )
+
 }
