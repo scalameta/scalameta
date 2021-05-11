@@ -206,6 +206,48 @@ class ScaladocParserSuite extends FunSuite {
     assertEquals(result, expectation)
   }
 
+  test("code blocks multiline") {
+    val complexCodeBlock = // keep all newlines and leading spaces
+      """|  ggmqwogmwogmqwomgq
+         |    val x = 1 // sdfdfh
+         |   // zzz
+         |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n")
+    val complexCodeBlockAsComment = complexCodeBlock.mkString("\n *")
+
+    val result = parseString(
+      s"""
+          /**
+            * {{{
+            *$complexCodeBlockAsComment
+            *
+            * foo
+            * }}}
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(Seq(Paragraph(Seq(CodeBlock(complexCodeBlock ++ Seq("", " foo"))))))
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("code blocks inline") {
+    val codeBlock2 = "\"HELLO SORAYA\""
+    val result = parseString(
+      s"""
+          /**
+            * {{{ $codeBlock2 }}}
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(Seq(Paragraph(Seq(Text(Seq(CodeExpr(codeBlock2, "")))))))
+    )
+    assertEquals(result, expectation)
+  }
+
   test("headings") {
     val level1HeadingBody = "Level 1"
     val level2HeadingBody = "Level 2"
