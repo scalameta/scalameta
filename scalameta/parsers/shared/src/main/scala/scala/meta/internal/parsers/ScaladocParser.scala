@@ -17,6 +17,7 @@ object ScaladocParser {
 
   private val numberOfSupportedHeadingLevels = 6
 
+  private def hspace[_: P] = CharIn("\t\r ")
   private def hspacesMin[_: P](min: Int) = P(CharsWhileIn("\t\r ", min))
   private def hspaces0[_: P] = hspacesMin(0)
   private def hspaces1[_: P] = hspacesMin(1)
@@ -68,6 +69,28 @@ object ScaladocParser {
     pattern.map { x => CodeBlock(if (x.last.nonEmpty) x.toSeq else x.view.dropRight(1).toSeq) }
   }
 
+  /*
+   * Markdown fenced code blocks
+   * https://spec.commonmark.org/0.29/#fenced-code-blocks
+   */
+
+  private def mdCodeBlockIndent[_: P] = hspace.rep(max = 3)
+  private def mdCodeBlockFence[_: P] = "`".rep(3) | "~".rep(3)
+
+  private def mdCodeBlockParser[_: P]: P[MdCodeBlock] = P {
+    (startOrNl ~ mdCodeBlockIndent.! ~ mdCodeBlockFence.!).flatMap { case (indent, fence) =>
+      def lineEnd = hspaces0 ~ nl
+      def info = hspaces0 ~ labelParser.!.rep(0, sep = hspaces0) ~ lineEnd
+      info.flatMap { infoSeq =>
+        def codeEnd = mdCodeBlockIndent ~ fence.substring(0, 1).rep(fence.length)
+        def line = hspace.rep(max = indent.length) ~ (!lineEnd ~ AnyChar).rep.!
+        def lines = !codeEnd ~ line.rep(1, sep = lineEnd ~ !codeEnd)
+        def block = (lines ~ lineEnd).? ~ codeEnd ~ hspaces0 ~ &(nl | End)
+        block.map(x => MdCodeBlock(infoSeq, x.getOrElse(Nil), fence))
+      }
+    }
+  }
+
   private def headingParser[_: P]: P[Heading] = P {
     def delimParser = leadHspaces0 ~ CharsWhileIn("=", 1).!
     // heading delimiter
@@ -90,8 +113,9 @@ object ScaladocParser {
   }
 
   private def textParser[_: P]: P[Text] = P {
+    def mdCodeBlockPrefix = mdCodeBlockIndent ~ mdCodeBlockFence
     def anotherBeg = P(CharIn("@=") | (codePrefix ~ nl) | listPrefix | tableSep | "+-" | nl)
-    def end = P(End | nl ~/ hspaces0 ~/ anotherBeg)
+    def end = P(End | nl ~/ (mdCodeBlockPrefix | hspaces0 ~/ anotherBeg))
     def part: P[TextPart] = P(!paraEnd ~ (codeExprParser | linkParser | wordParser))
     def sep = P(!end ~ nlHspaces0)
     def text = hspaces0 ~ part.rep(1, sep = sep)
@@ -202,13 +226,12 @@ object ScaladocParser {
 
   private def termParser[_: P] =
     listBlockParser() |
+      mdCodeBlockParser |
       codeBlockParser |
       headingParser |
       tagParser |
       tableParser |
       leadTextParser // keep at the end, this is the fallback
-
-  // private def termParser[_: P] = P(allParsers.reduce(_ | _))
 
   private def notTermEnd[_: P] = P(!(End | paraEnd))
   private def termsParser[_: P] = P(notTermEnd ~ termParser)

@@ -42,6 +42,9 @@ object Scaladoc {
   /** A block of one or more lines of code */
   final case class CodeBlock(code: Seq[String]) extends Term
 
+  /** A markdown block of one or more lines of code */
+  final case class MdCodeBlock(info: Seq[String], code: Seq[String], fence: String) extends Term
+
   /** A heading */
   final case class Heading(level: Int, title: String) extends Term
 
