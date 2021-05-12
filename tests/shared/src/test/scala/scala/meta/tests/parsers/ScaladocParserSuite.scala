@@ -206,6 +206,150 @@ class ScaladocParserSuite extends FunSuite {
     assertEquals(result, expectation)
   }
 
+  test("code blocks multiline") {
+    val complexCodeBlock = // keep all newlines and leading spaces
+      """|  ggmqwogmwogmqwomgq
+         |    val x = 1 // sdfdfh
+         |   // zzz
+         |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n")
+    val complexCodeBlockAsComment = complexCodeBlock.mkString("\n *")
+
+    val result = parseString(
+      s"""
+          /**
+            * {{{
+            *$complexCodeBlockAsComment
+            *
+            * foo
+            * }}}
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(Seq(Paragraph(Seq(CodeBlock(complexCodeBlock ++ Seq("", " foo"))))))
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("code blocks inline") {
+    val codeBlock2 = "\"HELLO SORAYA\""
+    val result = parseString(
+      s"""
+          /**
+            * {{{ $codeBlock2 }}}
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(Seq(Paragraph(Seq(Text(Seq(CodeExpr(codeBlock2, "")))))))
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("markdown code blocks 1") {
+    val result = parseString(
+      s"""
+          /**   ```
+            *   ```
+            *      ```
+            *      ```
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              MdCodeBlock(Nil, Nil, "```"),
+              Text(Seq(Word("```"), Word("```")))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("markdown code blocks 2") {
+    val result = parseString(
+      s"""
+          /**  ```scala
+            *  ```
+            *  ```foo bar baz
+            *  ```
+            *   ~~~bar baz
+            *        foo
+            *   ~~~~~~~~~~
+            *   ``~
+            *   foo
+            *   ``~
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              MdCodeBlock(Seq("scala"), Nil, "```"),
+              MdCodeBlock(Seq("foo", "bar", "baz"), Nil, "```"),
+              MdCodeBlock(Seq("bar", "baz"), Seq("     foo"), "~~~"),
+              Text(Seq(Word("``~"), Word("foo"), Word("``~")))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("markdown code blocks 3") {
+    val codeBlock = // keep all newlines and leading spaces
+      """|  object Foo {
+         |    def bar(): String = "foobar"
+         |  }
+         |""".stripMargin.split("\n")
+    val codeBlockAsComment = codeBlock.mkString("\n *  ")
+
+    val result = parseString(
+      s"""
+          /**   foo
+            *  ```bar qux
+            *  $codeBlockAsComment
+            *  ```
+            *
+            *  `````scala
+            *  $codeBlockAsComment
+            *  ```
+            *  ````````
+            *
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("foo"))),
+              MdCodeBlock(Seq("bar", "qux"), codeBlock, fence = "```")
+            )
+          ),
+          Paragraph(
+            Seq(MdCodeBlock(Seq("scala"), codeBlock :+ "```", fence = "`````"))
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
   test("headings") {
     val level1HeadingBody = "Level 1"
     val level2HeadingBody = "Level 2"
