@@ -5023,7 +5023,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def packageDef(): Pkg = autoPos {
     accept[KwPackage]
-    Pkg(qualId(), inBracesOrNil(topStatSeq()))
+    def packageBody = {
+      if (isColonEol(token)) {
+        accept[Colon]
+        in.observeIndented()
+        indented(topStatSeq())
+      } else {
+        inBracesOrNil(topStatSeq())
+      }
+    }
+    Pkg(qualId(), packageBody)
   }
 
   def packageObjectDef(): Pkg.Object = autoPos {
@@ -5055,7 +5064,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def inBracelessPackage(): Boolean = token.is[KwPackage] && !ahead(token.is[KwObject]) && ahead {
       qualId()
       if (token.is[LF]) { next() }
-      token.isNot[LeftBrace]
+      token.isNot[LeftBrace] && !(dialect.allowSignificantIndentation && isColonEol(token))
     }
     def bracelessPackageStats(): List[Stat] = {
       if (token.is[EOF]) {

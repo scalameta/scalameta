@@ -31,6 +31,39 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("package-comment") {
+    val code = """|package mysadpackage:
+                  |  def f: Int
+                  |package anotherpackage:
+                  |  def f: Int
+                  |""".stripMargin
+    runTestAssert[Source](
+      code,
+      assertLayout = Some(
+        """|package mysadpackage {
+           |  def f: Int
+           |}
+           |package anotherpackage {
+           |  def f: Int
+           |}
+           |""".stripMargin
+      )
+    )(
+      Source(
+        List(
+          Pkg(
+            Term.Name("mysadpackage"),
+            List(Decl.Def(Nil, Term.Name("f"), Nil, Nil, Type.Name("Int")))
+          ),
+          Pkg(
+            Term.Name("anotherpackage"),
+            List(Decl.Def(Nil, Term.Name("f"), Nil, Nil, Type.Name("Int")))
+          )
+        )
+      )
+    )
+  }
+
   test("multistat-example") {
     val code = """|trait A:
                   |  def f: Int
