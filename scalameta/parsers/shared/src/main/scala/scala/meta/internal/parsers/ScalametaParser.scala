@@ -4634,9 +4634,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case Ident(_) =>
         termName()
       case Underscore() | KwThis() =>
-        val name = autoPos(Name.Anonymous())
-        next()
-        name
+        autoPos { next(); Name.Anonymous() }
       case Unquote() =>
         if (ahead(token.is[Colon])) unquote[Name.Quasi]
         else return unquote[Self.Quasi]
