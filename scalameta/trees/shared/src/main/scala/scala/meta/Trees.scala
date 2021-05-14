@@ -439,7 +439,6 @@ object Defn {
 
 @ast class Pkg(ref: Term.Ref, stats: List[Stat]) extends Member.Term with Stat {
   checkFields(ref.isQualId)
-  checkFields(stats.forall(_.isTopLevelStat))
   def name: Term.Name = ref match {
     case name: Term.Name => name
     case Term.Select(_, name: Term.Name) => name

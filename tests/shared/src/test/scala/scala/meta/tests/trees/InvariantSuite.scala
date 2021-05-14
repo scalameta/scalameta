@@ -23,7 +23,6 @@ class InvariantSuite extends FunSuite {
       Defn.Trait(Nil, Type.Name("test"), Nil, primaryCtor, template)
     }
     intercept[InvariantFailedException] { Defn.Object(Nil, Term.Name("test"), template) }
-    intercept[InvariantFailedException] { Pkg(Term.Name("test"), stats) }
     intercept[InvariantFailedException] { Pkg.Object(Nil, Term.Name("test"), template) }
   }
 
