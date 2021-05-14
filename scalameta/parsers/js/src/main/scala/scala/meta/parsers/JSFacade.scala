@@ -85,7 +85,7 @@ object JSFacade {
           case Some(dialect) => Right(dialect)
           case None => Left(s"'$dialectStr' is not a valid dialect.")
         }
-      case None => Right(dialects.Scala211)
+      case None => Right(dialects.Scala213)
     }
   }
 

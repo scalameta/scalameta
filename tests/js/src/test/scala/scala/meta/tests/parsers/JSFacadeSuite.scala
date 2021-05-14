@@ -195,18 +195,36 @@ class JSFacadeSuite extends FunSuite {
     check(parsed, expected)
   }
 
-  test("default dialect is Scala 2.11") {
-    val code =
-      """|List(
-         |  1,
-         |  2,
-         |)""".stripMargin
+  test("default dialect is Scala 2.13") {
+    val code = "val x: 1 = 1"
     val parsedDefaultDialect = JSFacade.parseStat(code)
     val expected = d(
-      "error" -> "illegal start of simple expression",
-      "pos" -> pos(16, 17),
-      "lineNumber" -> 3,
-      "columnNumber" -> 0
+      "type" -> "Defn.Val",
+      "pos" -> pos(0, 12),
+      "mods" -> a(),
+      "pats" -> a(
+        d(
+          "type" -> "Pat.Var",
+          "pos" -> pos(4, 5),
+          "name" -> d(
+            "type" -> "Term.Name",
+            "pos" -> pos(4, 5),
+            "value" -> "x"
+          )
+        )
+      ),
+      "decltpe" -> d(
+        "type" -> "Lit.Int",
+        "pos" -> pos(7, 8),
+        "value" -> 1,
+        "syntax" -> "1"
+      ),
+      "rhs" -> d(
+        "type" -> "Lit.Int",
+        "pos" -> pos(11, 12),
+        "value" -> 1,
+        "syntax" -> "1"
+      )
     ).asInstanceOf[js.Dictionary[Any]]
     check(parsedDefaultDialect, expected)
   }
