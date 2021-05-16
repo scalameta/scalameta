@@ -281,7 +281,7 @@ object Pat {
     checkFields(!rhs.is[Type.Var] && !rhs.is[Type.Placeholder])
   }
   @ast class Macro(body: Term) extends Pat {
-    checkFields(body.is[Term.QuotedMacroExpr])
+    checkFields(body.is[Term.QuotedMacroExpr] || body.is[Term.QuotedMacroType])
   }
   @ast class Given(tpe: Type) extends Pat
   def fresh(): Pat.Var = Pat.Var(Term.fresh())
