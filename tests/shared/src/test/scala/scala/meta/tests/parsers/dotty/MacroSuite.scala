@@ -100,6 +100,28 @@ class MacroSuite extends BaseDottySuite {
     )
   }
 
+  test("macro-brackets") {
+    runTestAssert[Stat](
+      """|tpr.asType match {
+         |  case '[ t ] =>
+         |    getTypeTree[t]
+         |}""".stripMargin
+    )(
+      Term.Match(
+        Term.Select(Term.Name("tpr"), Term.Name("asType")),
+        List(
+          Case(
+            Pat.Macro(Term.QuotedMacroType(Type.Name("t"))),
+            None,
+            Term.ApplyType(Term.Name("getTypeTree"), List(Type.Name("t")))
+          )
+        ),
+        Nil
+      )
+    )
+
+  }
+
   test("macro-quote-multiline") {
     val code = """|'{
                   |  1 + 3
