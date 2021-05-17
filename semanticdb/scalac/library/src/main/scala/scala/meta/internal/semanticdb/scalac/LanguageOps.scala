@@ -2,6 +2,8 @@ package scala.meta.internal.semanticdb.scalac
 
 import scala.util.Properties
 import scala.{meta => m}
+import scala.util.control.NonFatal
+import scala.tools.nsc.settings.ScalaVersion
 
 trait LanguageOps { self: SemanticdbOps =>
 
@@ -9,13 +11,32 @@ trait LanguageOps { self: SemanticdbOps =>
     val version = Properties.versionNumberString
     if (version.startsWith("2.10")) "Scala210"
     else if (version.startsWith("2.11")) {
-      if (!version.endsWith("-bin-typelevel-4")) "Scala211"
-      else "Typelevel211"
+      "Scala211"
     } else if (version.startsWith("2.12")) {
-      if (!version.endsWith("-bin-typelevel-4")) "Scala212"
-      else "Typelevel212"
+      if (scala3SyntaxSupported(version)) "Scala212Source3"
+      else "Scala212"
     } else if (version.startsWith("2.13")) {
-      "Scala213"
+      if (scala3SyntaxSupported(version)) "Scala213Source3"
+      else "Scala213"
     } else sys.error(s"unsupported Scala version $version")
   }
+
+  private def isScala3CompatSet = {
+    val version3 = ScalaVersion("3.0.0")
+    global.settings.source.value >= version3
+  }
+
+  private def scala3SyntaxSupported(version: String): Boolean = try {
+    val Array(major, minor, patch) =
+      version.replaceAll("(-|\\+).+$", "").split('.').map(_.toInt)
+    val correctVersion = (major, minor) match {
+      case (2, 13) => patch >= 6
+      case (2, 12) => patch >= 14
+      case _ => false
+    }
+    correctVersion && isScala3CompatSet
+  } catch {
+    case NonFatal(_) => false
+  }
+
 }

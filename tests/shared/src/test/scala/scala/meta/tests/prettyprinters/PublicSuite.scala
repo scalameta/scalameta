@@ -137,8 +137,16 @@ class PublicSuite extends FunSuite {
     assertNoDiff(scala.meta.dialects.Scala212.toString, "Scala212")
   }
 
+  test("scala.meta.dialects.Scala212Source3.toString") {
+    assertNoDiff(scala.meta.dialects.Scala212Source3.toString, "Scala212Source3")
+  }
+
   test("scala.meta.dialects.Scala213.toString") {
     assertNoDiff(scala.meta.dialects.Scala213.toString, "Scala213")
+  }
+
+  test("scala.meta.dialects.Scala213Source3.toString") {
+    assertNoDiff(scala.meta.dialects.Scala213Source3.toString, "Scala213Source3")
   }
 
   test("scala.meta.dialects.Scala.toString") {
