@@ -69,7 +69,7 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("xml-literals") {
-    intercept[TokenizeException] { term("<foo>{bar}</foo>")(dialects.Dotty) }
+    term("<foo>{bar}</foo>")(dialects.Dotty)
   }
 
   test("opaque-type-alias") {

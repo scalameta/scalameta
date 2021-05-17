@@ -16,7 +16,6 @@ class MacroSuite extends BaseDottySuite {
    *  '{ ... } OR 'ident - QuotedMacroExpr
    *  '[ ... ] - QuotedMacroType
    *  ${ ... } OR $ident - SplicedMacroExpr
-   *  symbols 'ident are not supported in dotty
    */
   test("parse-single-quote-character") {
     runTestAssert[Stat]("val a = 'c'")(
@@ -90,7 +89,13 @@ class MacroSuite extends BaseDottySuite {
       )
     )
     val layoutMatchSimple = "x match {\n  case 'c => 1\n}"
-    runTestError[Stat]("x match { case 'c => 1 }", "Symbol literals are no longer allowed")
+    runTestAssert[Stat]("x match { case 'c => 1 }", assertLayout = Some(layoutMatchSimple))(
+      Term.Match(
+        tname("x"),
+        List(Case(Lit.Symbol('c), None, Lit.Int(1))),
+        Nil
+      )
+    )
     val layoutMatchComplex = "x match {\n  case '{ a } => 1\n}"
     runTestAssert[Stat]("x match { case '{ a } => 1 }", assertLayout = Some(layoutMatchComplex))(
       Term.Match(
