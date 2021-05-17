@@ -86,7 +86,9 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.dialects.Scala210 *
       |scala.meta.dialects.Scala211 *
       |scala.meta.dialects.Scala212 *
+      |scala.meta.dialects.Scala212Source3 *
       |scala.meta.dialects.Scala213 *
+      |scala.meta.dialects.Scala213Source3 *
       |scala.meta.dialects.Scala3 *
       |scala.meta.dialects.Typelevel211 *
       |scala.meta.dialects.Typelevel212 *

@@ -19,4 +19,13 @@ object ScalaVersion {
     }
   }
 
+  def isSupported(version: String, minimal212: Int, minimal213: Int): Boolean = {
+    val Array(major, minor, patch) =
+      version.replaceAll("(-|\\+).+$", "").split('.').map(_.toInt)
+    (major, minor) match {
+      case (2, 13) => patch >= minimal213
+      case (2, 12) => patch >= minimal212
+      case _ => false
+    }
+  }
 }

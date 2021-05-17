@@ -737,6 +737,8 @@ object Dialect extends InternalDialect {
     "Scala211" -> Scala211,
     "Scala212" -> Scala212,
     "Scala213" -> Scala213,
+    "Scala213Source3" -> Scala213Source3,
+    "Scala212Source3" -> Scala212Source3,
     "Typelevel211" -> Typelevel211,
     "Typelevel212" -> Typelevel212
   )

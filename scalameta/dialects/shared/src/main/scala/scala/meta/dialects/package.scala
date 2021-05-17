@@ -58,6 +58,30 @@ package object dialects {
     .withAllowNumericLiteralUnderscoreSeparators(true)
     .withAllowTryWithAnyExpr(true)
 
+  /**
+   *  Dialect starting with Scala 2.13.6 for `-Xsource:3` option
+   */
+  implicit val Scala213Source3 = Scala213
+    .withAllowQuestionMarkPlaceholder(true)
+    .withAllowAsForImportRename(true)
+    .withAllowStarWildcardImport(true)
+    .withAllowOpenClass(true)
+    .withAllowInfixMods(true)
+    .withAllowPostfixStarVarargSplices(true)
+    .withAllowAndTypes(true)
+
+  /**
+   *  Dialect starting with  Scala 2.12.14 for `-Xsource:3` option
+   */
+  implicit val Scala212Source3 = Scala212
+    .withAllowQuestionMarkPlaceholder(true)
+    .withAllowAsForImportRename(true)
+    .withAllowStarWildcardImport(true)
+    .withAllowOpenClass(true)
+    .withAllowInfixMods(true)
+    .withAllowPostfixStarVarargSplices(true)
+    .withAllowAndTypes(true)
+
   implicit val Scala = Scala213 // alias for latest Scala dialect.
 
   implicit val Sbt0136 = Scala210
