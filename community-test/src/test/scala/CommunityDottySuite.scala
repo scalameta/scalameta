@@ -159,10 +159,7 @@ class CommunityDottySuite extends FunSuite {
 
   final def dottyExclusionList = List()
 
-  final def munitExclusionList = List(
-    // xml literals are longer valid in Scala 3
-    "main/scala/docs/MUnitModifier.scala"
-  )
+  final def munitExclusionList = List()
 
   final val ignoreParts = List(
     "/tests/",

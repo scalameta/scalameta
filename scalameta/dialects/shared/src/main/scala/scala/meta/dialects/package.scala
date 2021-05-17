@@ -124,7 +124,6 @@ package object dialects {
     .withAllowTraitParameters(true)
     .withAllowTypeLambdas(true)
     .withAllowViewBounds(false) // View bounds have been removed in Dotty
-    .withAllowXmlLiterals(false) // Scala 3: parser doesn't support xml
     .withAllowGivenUsing(true)
     .withAllowExtensionMethods(true)
     .withAllowOpenClass(true)
@@ -147,7 +146,6 @@ package object dialects {
     .withAllowMatchAsOperator(true)
     .withAllowTypeMatch(true)
     .withAllowInfixMods(true)
-    .withAllowSymbolLiterals(false)
     .withAllowDependentFunctionTypes(true)
     .withAllowAllTypedPatterns(true)
     .withAllowAsForImportRename(true)
