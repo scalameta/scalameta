@@ -159,4 +159,11 @@ class TypeSuite extends ParseSuite {
     assertNoDiff(exceptionScala2.shortMessage, "illegal literal type (), use Unit instead")
 
   }
+
+  test("plus-minus-then-underscore-source3") {
+    val Type.Function(List(Type.Name("+_")), Type.Name("Int")) =
+      tpe("+_ => Int")(dialects.Scala213Source3)
+    val Type.Apply(Type.Name("Option"), List(Type.Name("-_"))) =
+      tpe("Option[- _]")(dialects.Scala213Source3)
+  }
 }

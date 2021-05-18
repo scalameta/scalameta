@@ -158,7 +158,16 @@ final class Dialect private (
     // Scala 3 no longer allows def hello(){} - `=` is always needed
     val allowProcedureSyntax: Boolean,
     // Scala 3 no longer allows `do {...} while(...)`
-    val allowDoWhile: Boolean
+    val allowDoWhile: Boolean,
+    /* Kind-project support
+     * works under -Xsource3 flag
+     * https://github.com/scala/scala/pull/9605
+     */
+    val allowPlusMinusUnderscoreAsIdent: Boolean,
+    /* The same as previous but for Scala3
+     * works under -Ykind-projector:underscores
+     */
+    val allowPlusMinusUnderscoreAsPlaceholder: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -253,7 +262,9 @@ final class Dialect private (
       allowAsForImportRename = false,
       allowStarWildcardImport = false,
       allowProcedureSyntax = true,
-      allowDoWhile = true
+      allowDoWhile = true,
+      allowPlusMinusUnderscoreAsIdent = false,
+      allowPlusMinusUnderscoreAsPlaceholder = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -455,6 +466,14 @@ final class Dialect private (
   def withAllowDoWhile(newValue: Boolean): Dialect = {
     privateCopy(allowDoWhile = newValue)
   }
+
+  def withAllowPlusMinusUnderscoreAsIdent(newValue: Boolean): Dialect = {
+    privateCopy(allowPlusMinusUnderscoreAsIdent = newValue)
+  }
+
+  def withAllowPlusMinusUnderscoreAsPlaceholder(newValue: Boolean): Dialect = {
+    privateCopy(allowPlusMinusUnderscoreAsPlaceholder = newValue)
+  }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -520,7 +539,9 @@ final class Dialect private (
       allowAsRenames: Boolean = this.allowAsForImportRename,
       allowStarWildcardImport: Boolean = this.allowStarWildcardImport,
       allowProcedureSyntax: Boolean = this.allowProcedureSyntax,
-      allowDoWhile: Boolean = this.allowDoWhile
+      allowDoWhile: Boolean = this.allowDoWhile,
+      allowPlusMinusUnderscoreAsIdent: Boolean = this.allowPlusMinusUnderscoreAsIdent,
+      allowPlusMinusUnderscoreAsPlaceholder: Boolean = this.allowPlusMinusUnderscoreAsPlaceholder
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -583,7 +604,9 @@ final class Dialect private (
       allowAsRenames,
       allowStarWildcardImport,
       allowProcedureSyntax,
-      allowDoWhile
+      allowDoWhile,
+      allowPlusMinusUnderscoreAsIdent,
+      allowPlusMinusUnderscoreAsPlaceholder
       // NOTE(olafur): add the next argument above this comment.
     )
   }

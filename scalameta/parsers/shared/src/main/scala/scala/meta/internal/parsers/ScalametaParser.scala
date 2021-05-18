@@ -1719,6 +1719,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else Type.Annotate(t, annots)
     }
 
+    private def allowPlusMinusUnderscore: Boolean =
+      dialect.allowPlusMinusUnderscoreAsIdent || dialect.allowPlusMinusUnderscoreAsPlaceholder
+
     def simpleType(): Type = {
       simpleTypeRest(autoPos(token match {
         case LeftParen() => autoPos(makeTupleType(inParens(types())))
@@ -1729,6 +1732,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Type.Macro(macroSplice())
         case Ident("?") if dialect.allowQuestionMarkPlaceholder =>
           next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
+        case ident: Ident
+            if (ident.value == "+" || ident.value == "-") &&
+              ahead(token.is[Underscore]) &&
+              allowPlusMinusUnderscore =>
+          autoPos {
+            accept[Ident]
+            accept[Underscore]
+            if (dialect.allowPlusMinusUnderscoreAsPlaceholder)
+              Type.Placeholder(typeBounds())
+            else
+              Type.Name(s"${ident.value}_")
+          }
         case Literal() =>
           if (dialect.allowLiteralTypes) literal()
           else syntaxError(s"$dialect doesn't support literal types", at = path())
