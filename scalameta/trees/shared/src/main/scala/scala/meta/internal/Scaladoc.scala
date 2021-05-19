@@ -31,6 +31,7 @@ object Scaladoc {
 
   /** A reference to a symbol */
   final case class Link(ref: String, anchor: Seq[String], punct: String) extends TextPart {
+    def this(parts: Seq[String], punct: String) = this(parts.head, parts.tail, punct)
     override def syntax: String = anchor.mkString(s"[[$ref", " ", s"]]$punct")
   }
 

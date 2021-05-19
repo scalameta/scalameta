@@ -109,7 +109,7 @@ object ScaladocParser {
     def end = space | linkSuffix
     def anchor = P((!end ~ AnyChar).rep(1).!.rep(1, sep = spaces1))
     def pattern = linkPrefix ~ (anchor ~ linkSuffix ~ punctParser.!)
-    pattern.map { case (x, y) => Link(x.head, x.tail.toSeq, y) }
+    pattern.map { case (x, y) => new Link(x, y) }
   }
 
   private def textParser[_: P]: P[Text] = P {

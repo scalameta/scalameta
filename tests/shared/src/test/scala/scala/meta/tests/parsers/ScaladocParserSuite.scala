@@ -157,6 +157,30 @@ class ScaladocParserSuite extends FunSuite {
     )
   }
 
+  test("paragraph parsing with complex references and parens") {
+    val ref = "baz qux"
+    val link = new Link(ref.split("\\s+"), "")
+    assertEquals(link.syntax, "[[bazqux]]")
+
+    val text1 = Seq(Word("(foo"), Word("bar"), link, Word(")"))
+    val text2 = Seq(Word("foo"), Word("bar"), link, Word(")"))
+
+    assertEquals(
+      parseString(
+        s"""
+         /**
+          * (foo bar
+          * [[$ref]])
+          *
+          * foo bar
+          * [[$ref]])
+          */
+         """
+      ),
+      Option(Scaladoc(Seq(Paragraph(Seq(Text(text1))), Paragraph(Seq(Text(text2))))))
+    )
+  }
+
   test("code blocks") {
 
     val testDescription = "This is a codeblock:"
