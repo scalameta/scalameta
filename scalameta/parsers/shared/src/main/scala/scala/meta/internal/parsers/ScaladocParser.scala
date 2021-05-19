@@ -36,7 +36,7 @@ object ScaladocParser {
   private def nlHspaces1[_: P] = space ~ hspaces0
   private def leadHspaces0[_: P] = startOrNl ~ hspaces0
 
-  private def punctParser[_: P] = CharsWhileIn(".,:!?;", 0)
+  private def punctParser[_: P] = CharsWhileIn(".,:!?;)", 0)
   private def labelParser[_: P]: P[Unit] = (!space ~ AnyChar).rep(1)
   private def wordParser[_: P]: P[Word] = P(labelParser.!.map(Word.apply))
   private def trailWordParser[_: P] = nlHspaces1 ~ wordParser
@@ -109,7 +109,7 @@ object ScaladocParser {
     def end = space | linkSuffix
     def anchor = P((!end ~ AnyChar).rep(1).!.rep(1, sep = spaces1))
     def pattern = linkPrefix ~ (anchor ~ linkSuffix ~ punctParser.!)
-    pattern.map { case (x, y) => Link(x.head, x.tail.toSeq, y) }
+    pattern.map { case (x, y) => new Link(x, y) }
   }
 
   private def textParser[_: P]: P[Text] = P {
