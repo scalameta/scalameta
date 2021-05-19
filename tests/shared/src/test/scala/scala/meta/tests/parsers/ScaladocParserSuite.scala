@@ -159,11 +159,11 @@ class ScaladocParserSuite extends FunSuite {
 
   test("paragraph parsing with complex references and parens") {
     val ref = "baz qux"
-    val link = new Link(ref.split("\\s+"), "")
-    assertEquals(link.syntax, "[[bazqux]]")
+    val link = new Link(ref.split("\\s+"), ")")
+    assertEquals(link.syntax, "[[bazqux]])")
 
-    val text1 = Seq(Word("(foo"), Word("bar"), link, Word(")"))
-    val text2 = Seq(Word("foo"), Word("bar"), link, Word(")"))
+    val text1 = Seq(Word("(foo"), Word("bar"), link)
+    val text2 = Seq(Word("foo"), Word("bar"), link)
 
     assertEquals(
       parseString(

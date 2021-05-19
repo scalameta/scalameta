@@ -36,7 +36,7 @@ object ScaladocParser {
   private def nlHspaces1[_: P] = space ~ hspaces0
   private def leadHspaces0[_: P] = startOrNl ~ hspaces0
 
-  private def punctParser[_: P] = CharsWhileIn(".,:!?;", 0)
+  private def punctParser[_: P] = CharsWhileIn(".,:!?;)", 0)
   private def labelParser[_: P]: P[Unit] = (!space ~ AnyChar).rep(1)
   private def wordParser[_: P]: P[Word] = P(labelParser.!.map(Word.apply))
   private def trailWordParser[_: P] = nlHspaces1 ~ wordParser
