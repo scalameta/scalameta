@@ -839,4 +839,52 @@ class TermSuite extends ParseSuite {
       )
     ) = res
   }
+
+  test("type-partial-function") {
+    val res =
+      stat("""|val dynamicStrategy = resharding(
+              |  { fakePartitionId: Int =>
+              |    {
+              |      case sendBox: SendBox.Args => 
+              |    }: PartialFunction[ThriftStructIface, Unit]
+              |  }
+              |)
+              |""".stripMargin)
+
+    val Defn.Val(
+      Nil,
+      List(Pat.Var(Term.Name("dynamicStrategy"))),
+      None,
+      Term.Apply(
+        Term.Name("resharding"),
+        List(
+          Term.Block(
+            List(
+              Term.Function(
+                List(Term.Param(Nil, Term.Name("fakePartitionId"), Some(Type.Name("Int")), None)),
+                Term.Ascribe(
+                  Term.PartialFunction(
+                    List(
+                      Case(
+                        Pat.Typed(
+                          Pat.Var(Term.Name("sendBox")),
+                          Type.Select(Term.Name("SendBox"), Type.Name("Args"))
+                        ),
+                        None,
+                        Term.Block(Nil)
+                      )
+                    )
+                  ),
+                  Type.Apply(
+                    Type.Name("PartialFunction"),
+                    List(Type.Name("ThriftStructIface"), Type.Name("Unit"))
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    ) = res
+  }
 }
