@@ -2519,7 +2519,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               val params = convertToParams(t)
               val trm =
                 if (location != BlockStat) expr()
-                else blockExpr()
+                else {
+                  blockExpr() match {
+                    case partial: Term.PartialFunction if token.is[Colon] =>
+                      accept[Colon]
+                      atPos(partial, auto)(Term.Ascribe(partial, typeOrInfixType(location)))
+                    case t => t
+                  }
+                }
 
               if (contextFunction)
                 Term.ContextFunction(params, trm)
