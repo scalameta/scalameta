@@ -1719,9 +1719,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else Type.Annotate(t, annots)
     }
 
-    private def allowPlusMinusUnderscore: Boolean =
-      dialect.allowPlusMinusUnderscoreAsIdent || dialect.allowPlusMinusUnderscoreAsPlaceholder
-
     def simpleType(): Type = {
       simpleTypeRest(autoPos(token match {
         case LeftParen() => autoPos(makeTupleType(inParens(types())))
@@ -1735,11 +1732,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case ident: Ident
             if (ident.value == "+" || ident.value == "-") &&
               ahead(token.is[Underscore]) &&
-              allowPlusMinusUnderscore =>
+              dialect.allowPlusMinusUnderscoreAsPlaceholder =>
           autoPos {
             accept[Ident]
             accept[Underscore]
-            if (dialect.allowPlusMinusUnderscoreAsPlaceholder)
+            if (dialect.scalaMajor >= 3)
               Type.Placeholder(typeBounds())
             else
               Type.Name(s"${ident.value}_")

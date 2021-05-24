@@ -165,12 +165,9 @@ final class Dialect private (
     // Scala 3 no longer allows `do {...} while(...)`
     val allowDoWhile: Boolean,
     /* Kind-project support
-     * works under -Xsource3 flag
+     * scala2: works under -Xsource3 flag
      * https://github.com/scala/scala/pull/9605
-     */
-    val allowPlusMinusUnderscoreAsIdent: Boolean,
-    /* The same as previous but for Scala3
-     * works under -Ykind-projector:underscores
+     * scala3: works under -Ykind-projector:underscores
      */
     val allowPlusMinusUnderscoreAsPlaceholder: Boolean
 ) extends Product with Serializable {
@@ -271,7 +268,6 @@ final class Dialect private (
       allowStarWildcardImport = false,
       allowProcedureSyntax = true,
       allowDoWhile = true,
-      allowPlusMinusUnderscoreAsIdent = false,
       allowPlusMinusUnderscoreAsPlaceholder = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
@@ -479,10 +475,6 @@ final class Dialect private (
     privateCopy(allowDoWhile = newValue)
   }
 
-  def withAllowPlusMinusUnderscoreAsIdent(newValue: Boolean): Dialect = {
-    privateCopy(allowPlusMinusUnderscoreAsIdent = newValue)
-  }
-
   def withAllowPlusMinusUnderscoreAsPlaceholder(newValue: Boolean): Dialect = {
     privateCopy(allowPlusMinusUnderscoreAsPlaceholder = newValue)
   }
@@ -556,7 +548,6 @@ final class Dialect private (
       allowStarWildcardImport: Boolean = this.allowStarWildcardImport,
       allowProcedureSyntax: Boolean = this.allowProcedureSyntax,
       allowDoWhile: Boolean = this.allowDoWhile,
-      allowPlusMinusUnderscoreAsIdent: Boolean = this.allowPlusMinusUnderscoreAsIdent,
       allowPlusMinusUnderscoreAsPlaceholder: Boolean = this.allowPlusMinusUnderscoreAsPlaceholder
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
@@ -624,7 +615,6 @@ final class Dialect private (
       allowStarWildcardImport,
       allowProcedureSyntax,
       allowDoWhile,
-      allowPlusMinusUnderscoreAsIdent,
       allowPlusMinusUnderscoreAsPlaceholder
       // NOTE(olafur): add the next argument above this comment.
     )

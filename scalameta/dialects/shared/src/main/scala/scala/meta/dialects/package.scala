@@ -73,7 +73,7 @@ package object dialects {
     .withAllowInfixMods(true)
     .withAllowPostfixStarVarargSplices(true)
     .withAllowAndTypes(true)
-    .withAllowPlusMinusUnderscoreAsIdent(true)
+    .withAllowPlusMinusUnderscoreAsPlaceholder(true)
 
   /**
    *  Dialect starting with  Scala 2.12.14 for `-Xsource:3` option
@@ -86,7 +86,7 @@ package object dialects {
     .withAllowInfixMods(true)
     .withAllowPostfixStarVarargSplices(true)
     .withAllowAndTypes(true)
-    .withAllowPlusMinusUnderscoreAsIdent(true)
+    .withAllowPlusMinusUnderscoreAsPlaceholder(true)
 
   implicit val Scala = Scala213 // alias for latest Scala dialect.
 
