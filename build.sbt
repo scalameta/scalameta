@@ -323,7 +323,7 @@ lazy val testkit = project
       "org.rauschig" % "jarchivelib" % "1.1.0",
       "commons-io" % "commons-io" % "2.8.0",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0",
-      "com.lihaoyi" %% "geny" % "0.6.8"
+      "com.lihaoyi" %% "geny" % "0.6.10"
     ),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
     testFrameworks := List(new TestFramework("munit.Framework")),
