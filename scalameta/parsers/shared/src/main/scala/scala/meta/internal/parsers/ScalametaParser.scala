@@ -247,6 +247,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   trait TokenIterator extends Iterator[Token] {
     def prevTokenPos: Int
     def tokenPos: Int
+    def currentIndentation: Int
     def token: Token
     def fork: TokenIterator
     def observeIndented(): Boolean
@@ -336,6 +337,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         }
         RegionIndentEnum(i) :: nextPrev
       })
+    }
+
+    def currentIndentation: Int = {
+      val foundIndentation = countIndent(curr.pointPos)
+      if (foundIndentation < 0)
+        sepRegions.headOption.fold(-1)(_.indent)
+      else
+        foundIndentation
     }
 
     def observeOutdented(): Boolean = {
@@ -679,6 +688,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   private def countIndent(tokenPosition: Int): Int =
     countIndentAndNewlineIndex(tokenPosition)._1
+
+  private def currentIndentation: Int = {
+    in.currentIndentation
+  }
 
   @tailrec
   private def isAheadNewLine(currentPosition: Int): Boolean = {
@@ -2125,6 +2138,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (token.is[LF] && ahead { token.is[T] }) newLineOpt()
   }
 
+  def newLineOptWhenFollowedBySignificantIndentationAnd(cond: Token => Boolean): Unit = {
+    def nextLineHasGreaterIndentation = {
+      val prev = currentIndentation
+      prev > 0 && ahead { cond(token) && currentIndentation > prev }
+    }
+    if (token.is[LF] && nextLineHasGreaterIndentation)
+      newLineOpt()
+  }
+
   def newLineOptWhenFollowing(p: Token => Boolean): Unit = {
     // note: next is defined here because current is token.LF
     if (token.is[LF] && ahead { p(token) }) newLineOpt()
@@ -2951,7 +2973,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def simpleExprRest(t: Term, canApply: Boolean): Term = atPos(t, auto) {
-    if (canApply) newLineOptWhenFollowedBy[LeftBrace]
+    if (canApply) {
+      if (dialect.allowSignificantIndentation) {
+        newLineOptWhenFollowedBySignificantIndentationAnd(x => x.is[LeftBrace] || x.is[LeftParen])
+      } else {
+        newLineOptWhenFollowedBy[LeftBrace]
+      }
+    }
     token match {
       case Dot() =>
         next()
