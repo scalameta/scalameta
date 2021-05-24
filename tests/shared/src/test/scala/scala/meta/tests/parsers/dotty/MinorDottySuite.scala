@@ -1027,4 +1027,56 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )
   }
+
+  test("underscore-placeholder") {
+    runTestAssert[Stat](
+      """|object A:
+         |  type X = +_ => Int
+         |  type Y = -_ => Int
+         |  type Z = _ => Int
+         |""".stripMargin,
+      assertLayout = Some(
+        """|object A {
+           |  type X = ? => Int
+           |  type Y = ? => Int
+           |  type Z = ? => Int
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        Term.Name("A"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.Type(
+              Nil,
+              Type.Name("X"),
+              Nil,
+              Type.Function(List(Type.Placeholder(Type.Bounds(None, None))), Type.Name("Int")),
+              Type.Bounds(None, None)
+            ),
+            Defn.Type(
+              Nil,
+              Type.Name("Y"),
+              Nil,
+              Type.Function(List(Type.Placeholder(Type.Bounds(None, None))), Type.Name("Int")),
+              Type.Bounds(None, None)
+            ),
+            Defn.Type(
+              Nil,
+              Type.Name("Z"),
+              Nil,
+              Type.Function(List(Type.Placeholder(Type.Bounds(None, None))), Type.Name("Int")),
+              Type.Bounds(None, None)
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
 }
