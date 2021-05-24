@@ -314,7 +314,7 @@ lazy val testkit = project
     publishableSettings,
     hasLargeIntegrationTests,
     libraryDependencies ++= {
-      if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.2")
+      if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.3")
       else Nil
     },
     libraryDependencies ++= Seq(
