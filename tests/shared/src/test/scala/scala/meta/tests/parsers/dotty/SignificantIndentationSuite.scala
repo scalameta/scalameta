@@ -1563,4 +1563,170 @@ class SignificantIndentationSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("indented-apply") {
+    runTestAssert[Stat](
+      """|def method = 
+         |  fun(a,b,c)
+         |    (d, e)
+         |""".stripMargin,
+      assertLayout = Some(
+        "def method = fun(a, b, c)(d, e)"
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("method"),
+        Nil,
+        Nil,
+        None,
+        Term.Apply(
+          Term.Apply(Term.Name("fun"), List(Term.Name("a"), Term.Name("b"), Term.Name("c"))),
+          List(Term.Name("d"), Term.Name("e"))
+        )
+      )
+    )
+  }
+
+  test("indented-double-apply") {
+    runTestAssert[Stat](
+      """|def method = 
+         |  fun(a,b,c)
+         |    (d, e)
+         |    (f, g)
+         |""".stripMargin,
+      assertLayout = Some(
+        "def method = fun(a, b, c)(d, e)(f, g)"
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("method"),
+        Nil,
+        Nil,
+        None,
+        Term.Apply(
+          Term.Apply(
+            Term.Apply(Term.Name("fun"), List(Term.Name("a"), Term.Name("b"), Term.Name("c"))),
+            List(Term.Name("d"), Term.Name("e"))
+          ),
+          List(Term.Name("f"), Term.Name("g"))
+        )
+      )
+    )
+  }
+
+  test("indented-for") {
+    runTestAssert[Stat](
+      """|for { project <- projects
+         |      (source, id) <- project.sources.zipWithIndex } yield source 
+         |""".stripMargin,
+      assertLayout = Some(
+        "for (project <- projects; (source, id) <- project.sources.zipWithIndex) yield source"
+      )
+    )(
+      Term.ForYield(
+        List(
+          Enumerator.Generator(Pat.Var(Term.Name("project")), Term.Name("projects")),
+          Enumerator.Generator(
+            Pat.Tuple(List(Pat.Var(Term.Name("source")), Pat.Var(Term.Name("id")))),
+            Term.Select(
+              Term.Select(Term.Name("project"), Term.Name("sources")),
+              Term.Name("zipWithIndex")
+            )
+          )
+        ),
+        Term.Name("source")
+      )
+    )
+  }
+
+  test("non-indented-apply") {
+    runTestAssert[Stat](
+      """|def method = 
+         |  fun(a,b,c)
+         |  (d, e)
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def method = {
+           |  fun(a, b, c)
+           |  (d, e)
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("method"),
+        Nil,
+        Nil,
+        None,
+        Term.Block(
+          List(
+            Term.Apply(Term.Name("fun"), List(Term.Name("a"), Term.Name("b"), Term.Name("c"))),
+            Term.Tuple(List(Term.Name("d"), Term.Name("e")))
+          )
+        )
+      )
+    )
+  }
+
+  test("indented-apply-braces") {
+    runTestAssert[Stat](
+      """|def method: String = 
+         |  fun(1, 2, 3) 
+         |    {4} 
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def method: String = fun(1, 2, 3) {
+           |  4
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("method"),
+        Nil,
+        Nil,
+        Some(Type.Name("String")),
+        Term.Apply(
+          Term.Apply(Term.Name("fun"), List(Lit.Int(1), Lit.Int(2), Lit.Int(3))),
+          List(Term.Block(List(Lit.Int(4))))
+        )
+      )
+    )
+  }
+
+  test("non-indented-apply-braces") {
+    runTestAssert[Stat](
+      """|def method2: String = 
+         |  fun(1, 2, 3)
+         |  {4}
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def method2: String = {
+           |  fun(1, 2, 3)
+           |  {
+           |    4
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("method2"),
+        Nil,
+        Nil,
+        Some(Type.Name("String")),
+        Term.Block(
+          List(
+            Term.Apply(Term.Name("fun"), List(Lit.Int(1), Lit.Int(2), Lit.Int(3))),
+            Term.Block(List(Lit.Int(4)))
+          )
+        )
+      )
+    )
+  }
 }
