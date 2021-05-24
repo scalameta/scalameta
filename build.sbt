@@ -146,7 +146,7 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/common"))
   .settings(
     publishableSettings,
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.6",
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.7",
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros,
     protobufSettings
@@ -323,7 +323,7 @@ lazy val testkit = project
       "org.rauschig" % "jarchivelib" % "1.1.0",
       "commons-io" % "commons-io" % "2.8.0",
       "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0",
-      "com.lihaoyi" %% "geny" % "0.6.8"
+      "com.lihaoyi" %% "geny" % "0.6.10"
     ),
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
     testFrameworks := List(new TestFramework("munit.Framework")),
