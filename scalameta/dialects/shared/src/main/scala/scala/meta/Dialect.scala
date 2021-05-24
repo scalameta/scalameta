@@ -74,6 +74,11 @@ final class Dialect private (
     // What kind of separator is necessary to split top-level statements?
     // Normally none is required, but scripts may have their own rules.
     val toplevelSeparator: String,
+    // New fields should be added below this line, for backwards compat
+    // scala version parts
+    val scalaMajor: Int,
+    val scalaMinor: Int,
+    val scalaPatch: Int,
     // Are numeric literal underscore separators, i.e. `1_000_000` legal or not?
     val allowNumericLiteralUnderscoreSeparators: Boolean,
     // Can try body contain any expression? (2.13.1 https://github.com/scala/scala/pull/8071)
@@ -227,6 +232,9 @@ final class Dialect private (
       allowWithTypes,
       allowXmlLiterals,
       toplevelSeparator,
+      scalaMajor = 0,
+      scalaMinor = 0,
+      scalaPatch = 0,
       allowNumericLiteralUnderscoreSeparators = false,
       allowTryWithAnyExpr = false,
       allowGivenUsing = false,
@@ -271,6 +279,10 @@ final class Dialect private (
 
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
   def allowUnquotes: Boolean = allowTermUnquotes || allowPatUnquotes
+
+  def withScalaVersion(major: Int, minor: Int, patch: Int): Dialect = {
+    privateCopy(scalaMajor = major, scalaMinor = minor, scalaPatch = patch)
+  }
 
   def withAllowAndTypes(newValue: Boolean): Dialect = {
     privateCopy(allowAndTypes = newValue)
@@ -503,6 +515,10 @@ final class Dialect private (
       allowWithTypes: Boolean = this.allowWithTypes,
       allowXmlLiterals: Boolean = this.allowXmlLiterals,
       toplevelSeparator: String = this.toplevelSeparator,
+      // new parameters below this line
+      scalaMajor: Int = this.scalaMajor,
+      scalaMinor: Int = this.scalaMinor,
+      scalaPatch: Int = this.scalaPatch,
       allowNumericLiteralUnderscoreSeparators: Boolean =
         this.allowNumericLiteralUnderscoreSeparators,
       allowTryWithAnyExpr: Boolean = this.allowTryWithAnyExpr,
@@ -569,6 +585,9 @@ final class Dialect private (
       allowWithTypes,
       allowXmlLiterals,
       toplevelSeparator,
+      scalaMajor,
+      scalaMinor,
+      scalaPatch,
       allowNumericLiteralUnderscoreSeparators,
       allowTryWithAnyExpr,
       allowGivenUsing,

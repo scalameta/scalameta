@@ -33,8 +33,10 @@ package object dialects {
     allowXmlLiterals = true, // Not even deprecated yet, so we need to support xml literals
     toplevelSeparator = ""
   )
+    .withScalaVersion(2, 1, 0)
 
   implicit val Scala211 = Scala210
+    .withScalaVersion(2, 1, 1)
     .withAllowCaseClassWithoutParameterList(false)
     .withAllowSpliceUnderscores(true) // SI-7715, only fixed in 2.11.0-M5
 
@@ -50,9 +52,11 @@ package object dialects {
     .withAllowInlineMods(true)
 
   implicit val Scala212 = Scala211
+    .withScalaVersion(2, 1, 2)
     .withAllowTrailingCommas(true)
 
   implicit val Scala213 = Scala212
+    .withScalaVersion(2, 1, 3)
     .withAllowImplicitByNameParameters(true)
     .withAllowLiteralTypes(true)
     .withAllowNumericLiteralUnderscoreSeparators(true)
@@ -111,6 +115,7 @@ package object dialects {
     .withAllowInlineMods(true)
 
   implicit val Scala3 = Scala213
+    .withScalaVersion(3, 0, 0)
     .withAllowAndTypes(true)
     // there 3 different ways to specify vargs, some will be removed in future Scala 3 versions
     .withAllowAtForExtractorVarargs(true) // both @ and : work currently for Scala 3
