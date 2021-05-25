@@ -73,6 +73,13 @@ trait InternalTree extends Product {
     }
   }
 
+  def inputSyntax(implicit dialect: Dialect): String = {
+    pos match {
+      case Position.None => this.syntax
+      case p => p.text
+    }
+  }
+
   // ==============================================================
   // Setters for pieces of internal state defined above.
   // Everyone except for scala.meta's core should be using "private"-less versions of these methods,
