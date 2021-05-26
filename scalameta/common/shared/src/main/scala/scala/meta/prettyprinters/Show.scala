@@ -23,13 +23,21 @@ object Show {
         case None => // do nothing
         case Str(value) => sb.append(value)
         case Sequence(xs @ _*) => xs.foreach(loop)
-        case Repeat(Nil, sep) => ()
-        case Repeat(init :+ last, sep) =>
-          init.foreach { x =>
+        case Repeat(head +: tail, sep) =>
+          val sbLenInit = sb.length
+          var sbLen = sbLenInit
+          loop(head)
+          tail.foreach { x =>
+            if (sbLen != sb.length) {
+              sb.append(sep)
+              sbLen = sb.length
+            }
             loop(x)
-            sb.append(sep)
           }
-          loop(last)
+          val sbLenLast = sb.length
+          if (sbLenInit == sbLenLast) sb.setLength(sbLenInit)
+          else if (sbLen == sbLenLast) sb.setLength(sbLenLast - sep.length)
+        case _: Repeat => ()
         case Indent(res) =>
           indentation += 1
           nl(res)
@@ -54,7 +62,7 @@ object Show {
   private[meta] final case object None extends Result
   private[meta] final case class Str(value: String) extends Result
   private[meta] final case class Sequence(xs: Result*) extends Result
-  private[meta] final case class Repeat(xs: List[Result], sep: String) extends Result
+  private[meta] final case class Repeat(xs: Seq[Result], sep: String) extends Result
   private[meta] final case class Indent(res: Result) extends Result
   private[meta] final case class Newline(res: Result) extends Result
   private[meta] final case class Meta(data: Any, res: Result) extends Result
@@ -69,7 +77,18 @@ object Show {
   def indent[T](x: T)(implicit show: Show[T]): Result = Indent(show(x))
 
   def repeat[T](xs: List[T], sep: String = "")(implicit show: Show[T]): Result =
-    Repeat(xs.map(show(_)), sep)
+    repeat(sep)(xs.map(show(_)): _*)
+  def repeat[T](xs: List[T], prefix: String, sep: String, suffix: String)(
+      implicit show: Show[T]
+  ): Result = wrap(prefix, repeat(xs, sep), suffix)
+
+  def repeat(xs: Result*): Result = repeat("")(xs: _*)
+  def repeat(sep: String)(xs: Result*): Result = {
+    val results = xs.filter(_ ne None)
+    if (results.isEmpty) None else Repeat(results, sep)
+  }
+  def repeat(prefix: String, sep: String, suffix: String)(xs: Result*): Result =
+    wrap(prefix, repeat(sep)(xs: _*), suffix)
 
   def newline[T](x: T)(implicit show: Show[T]): Result = Newline(show(x))
 
