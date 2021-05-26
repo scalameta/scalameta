@@ -149,7 +149,6 @@ object TreeSyntax {
         templ.self.name.is[Name.Anonymous] &&
         templ.self.decltpe.isEmpty &&
         templ.stats.isEmpty) s()
-      else if (templ.inits.nonEmpty || templ.early.nonEmpty) s(" extends ", templ)
       else s(" ", templ)
 
     def guessIsBackquoted(t: Name): Boolean = {
@@ -1083,7 +1082,12 @@ object TreeSyntax {
         if (isTemplateEmpty) s()
         else {
           val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
-          val pparents = w(r(t.inits, " with "), " ", !t.inits.isEmpty && !isBodyEmpty)
+          val suffix = if (t.inits.nonEmpty && !isBodyEmpty) " " else ""
+          val canHaveExtend =
+            t.parent.exists(p => p.isNot[Defn.Given] && p.isNot[Term.NewAnonymous])
+          val extendsKeyword =
+            if ((t.inits.nonEmpty || t.early.nonEmpty) && canHaveExtend) "extends " else ""
+          val pparents = s(extendsKeyword, r(t.inits, " with "), suffix)
           val derived = w("derives ", r(t.derives, ", "), " ", t.derives.nonEmpty)
           val withGiven = if (t.parent.exists(_.is[Defn.Given]) && !isBodyEmpty) "with " else ""
           val pbody = {

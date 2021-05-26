@@ -505,6 +505,51 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assert(templStat("class C extends (() => Int)").syntax == "class C extends (() => Int)")
   }
 
+  test("package object e extends D") {
+    assertEquals(topStat("package object e extends D").syntax, "package object e extends D")
+    val q"package object $name $template" = q"package object e extends D"
+    assertEquals(template.syntax, "extends D")
+  }
+
+  test("trait C extends A with B with D") {
+    assertEquals(
+      templStat("trait C extends A with B with D").syntax,
+      "trait C extends A with B with D"
+    )
+    val q"trait $name $template" = q"trait C extends A with B with D"
+    assertEquals(template.syntax, "extends A with B with D")
+  }
+
+  test("object C extends A with B with D") {
+    assertEquals(
+      templStat("object C extends A with B with D").syntax,
+      "object C extends A with B with D"
+    )
+    val q"object $name $template" = q"object C extends A with B with D"
+    assertEquals(template.syntax, "extends A with B with D")
+  }
+
+  test("abstract class C extends A with B with D") {
+    assertEquals(
+      templStat(
+        "abstract class C extends A with B with D"
+      ).syntax,
+      "abstract class C extends A with B with D"
+    )
+    val q"abstract class $name $template" = q"abstract class C extends A with B with D"
+    assertEquals(template.syntax, "extends A with B with D")
+  }
+
+  test("new C with A with B with D") {
+    assert(
+      templStat(
+        "new C with A with B with D"
+      ).syntax == "new C with A with B with D"
+    )
+    val Term.NewAnonymous(template) = q"new C with A with B with D"
+    assertEquals(template.syntax, "C with A with B with D")
+  }
+
   test("class C(x: Int)(implicit y: String, z: Boolean)") {
     assert(
       templStat("class C(x: Int)(implicit y: String, z: Boolean)").syntax ==
