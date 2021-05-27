@@ -560,12 +560,32 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(template.syntax, "extends A with B with D")
   }
 
+  test("private sealed trait C extends A with B with D") {
+    assertEquals(
+      templStat("private sealed trait C extends A with B with D").syntax,
+      "private sealed trait C extends A with B with D"
+    )
+    val q"private sealed trait $name $template" =
+      q"private sealed trait C extends A with B with D"
+    assertEquals(template.syntax, "extends A with B with D")
+  }
+
   test("object C extends A with B with D") {
     assertEquals(
       templStat("object C extends A with B with D").syntax,
       "object C extends A with B with D"
     )
     val q"object $name $template" = q"object C extends A with B with D"
+    assertEquals(template.syntax, "extends A with B with D")
+  }
+
+  test("private implicit object C extends A with B with D") {
+    assertEquals(
+      templStat("private implicit object C extends A with B with D").syntax,
+      "private implicit object C extends A with B with D"
+    )
+    val q"private implicit object $name $template" =
+      q"private implicit object C extends A with B with D"
     assertEquals(template.syntax, "extends A with B with D")
   }
 
@@ -577,6 +597,18 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       "abstract class C extends A with B with D"
     )
     val q"abstract class $name $template" = q"abstract class C extends A with B with D"
+    assertEquals(template.syntax, "extends A with B with D")
+  }
+
+  test("protected abstract class C extends A with B with D") {
+    assertEquals(
+      templStat(
+        "protected abstract class C extends A with B with D"
+      ).syntax,
+      "protected abstract class C extends A with B with D"
+    )
+    val q"protected abstract class $name $template" =
+      q"protected abstract class C extends A with B with D"
     assertEquals(template.syntax, "extends A with B with D")
   }
 
