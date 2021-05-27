@@ -4,6 +4,7 @@ package prettyprinters
 import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.internal.trees._
+import scala.meta.prettyprinters.Show
 
 class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   override def term(code: String)(implicit dialect: Dialect) =
@@ -1090,4 +1091,20 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertNoDiff(original.syntax, expected)
     assertNoDiff(original.structure, expected.parse[Stat].get.structure)
   }
+
+  test("test repeat") {
+    import Show.repeat
+    assertEquals(repeat("<", ",", ">")("", "", "", "").toString, "")
+    assertEquals(repeat("<", ",", ">")("x", "", "", "").toString, "<x>")
+    assertEquals(repeat("<", ",", ">")("", "x", "", "").toString, "<x>")
+    assertEquals(repeat("<", ",", ">")("", "", "x", "").toString, "<x>")
+    assertEquals(repeat("<", ",", ">")("", "", "", "x").toString, "<x>")
+    assertEquals(repeat("<", ",", ">")("x", "y", "", "").toString, "<x,y>")
+    assertEquals(repeat("<", ",", ">")("x", "", "y", "").toString, "<x,y>")
+    assertEquals(repeat("<", ",", ">")("x", "", "", "y").toString, "<x,y>")
+    assertEquals(repeat("<", ",", ">")("", "x", "y", "").toString, "<x,y>")
+    assertEquals(repeat("<", ",", ">")("", "x", "", "y").toString, "<x,y>")
+    assertEquals(repeat("<", ",", ">")("", "", "x", "y").toString, "<x,y>")
+  }
+
 }

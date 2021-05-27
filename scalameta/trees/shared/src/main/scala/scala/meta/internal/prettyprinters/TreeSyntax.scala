@@ -336,7 +336,7 @@ object TreeSyntax {
       // Name
       case t: Name.Anonymous => s("_")
       case t: Term.Anonymous => s("")
-      case t: Name.Indeterminate => if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value)
+      case t: Name.Indeterminate => w("`", t.value, "`", guessIsBackquoted(t))
 
       // Term
       case t: Term.This =>
@@ -347,7 +347,7 @@ object TreeSyntax {
         val superqual = if (t.superp.is[Name.Anonymous]) s() else s("[", t.superp, "]")
         m(Path, s(thisqual, kw("super"), superqual))
       case t: Term.Name =>
-        m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
+        m(Path, w("`", t.value, "`", guessIsBackquoted(t)))
       case t: Term.Select =>
         t.qual match {
           case Term.New(Init(_, _, Nil)) =>
