@@ -12,7 +12,6 @@ import scala.collection.SortedMap
 class Source3Suite extends FunSuite {
 
   override def munitIgnore: Boolean = !ScalaVersion.isSupported(
-    scala.util.Properties.versionNumberString,
     minimal212 = 14,
     minimal213 = 6
   )
@@ -28,19 +27,12 @@ class Source3Suite extends FunSuite {
       val document = toTextDocument(compiler, original, options)
       val format = scala.meta.metap.Format.Detailed
       val syntax = Print.document(format, document)
-      assertNoDiff(syntax, expected)
+      val expectedCompat = ScalaVersion.getExpected(compat, expected)
+      assertNoDiff(syntax, expectedCompat)
     }
   }
 
-  check(
-    """package b
-      |import scala.concurrent.Future as F
-      |object a {
-      |  def func(args: String*) = ???
-      |  val args = List.empty[String]
-      |  func(args*) 
-      |}
-    """.stripMargin,
+  val expected =
     """|interactive.scala
        |-----------------
        |
@@ -82,6 +74,20 @@ class Source3Suite extends FunSuite {
        |[4:24..4:30): String => scala/Predef.String#
        |[5:2..5:6): func => b/a.func().
        |[5:7..5:11): args => b/a.args.""".stripMargin
+
+  check(
+    """package b
+      |import scala.concurrent.Future as F
+      |object a {
+      |  def func(args: String*) = ???
+      |  val args = List.empty[String]
+      |  func(args*) 
+      |}
+    """.stripMargin,
+    expected,
+    compat = List(
+      "2.12.14" -> expected.replace("scala/package.List.", "scala/collection/immutable/List.")
+    )
   )
 
 }

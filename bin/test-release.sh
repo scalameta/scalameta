@@ -10,7 +10,7 @@ coursier resolve \
   org.scalameta:scalameta_sjs1_2.13:$version \
   org.scalameta:scalameta_sjs1_2.12:$version \
   org.scalameta:metac_2.13.6:$version \
-  org.scalameta:metac_2.12.13:$version \
+  org.scalameta:metac_2.12.14:$version \
   org.scalameta:metac_2.11.12:$version \
   org.scalameta:semanticdb-scalac-core_2.13.6:$version \
   org.scalameta:semanticdb-scalac-core_2.13.5:$version \

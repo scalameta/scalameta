@@ -1843,7 +1843,7 @@ Uri => semanticdb/integration/src/main/scala/example/InstrumentTyper.scala
 Text => non-empty
 Language => Scala
 Symbols => 11 entries
-Occurrences => 56 entries
+Occurrences => 57 entries
 Synthetics => 1 entries
 
 Symbols:
@@ -1932,6 +1932,7 @@ Occurrences:
 [24:23..24:26): Int => scala/Int#
 [25:6..25:19): singletonType <= example/InstrumentTyper#singletonType().
 [25:20..25:21): x <= example/InstrumentTyper#singletonType().(x)
+[25:23..25:29): Predef => scala/Predef.
 [25:38..25:41): ??? => scala/Predef.`???`().
 [26:12..26:19): clazzOf <= example/InstrumentTyper#clazzOf.
 [26:22..26:29): classOf => scala/Predef.classOf().
@@ -2499,7 +2500,7 @@ Uri => semanticdb/integration/src/main/scala/example/Methods.scala
 Text => non-empty
 Language => Scala
 Symbols => 78 entries
-Occurrences => 146 entries
+Occurrences => 147 entries
 
 Symbols:
 example/Methods# => class Methods[T] extends AnyRef { +35 decls }
@@ -2824,6 +2825,7 @@ Occurrences:
 [22:25..22:28): ??? => scala/Predef.`???`().
 [23:6..23:9): m11 <= example/Methods#m11().
 [23:10..23:11): x <= example/Methods#m11().(x)
+[23:13..23:19): Predef => scala/Predef.
 [23:28..23:31): ??? => scala/Predef.`???`().
 [24:6..24:9): m11 <= example/Methods#m11(+1).
 [24:10..24:11): x <= example/Methods#m11(+1).(x)
@@ -4052,7 +4054,7 @@ Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
 Symbols => 140 entries
-Occurrences => 249 entries
+Occurrences => 252 entries
 
 Symbols:
 local0 => abstract method k: Int
@@ -4453,8 +4455,11 @@ Occurrences:
 [41:23..41:26): Int => scala/Int#
 [41:30..41:33): ??? => scala/Predef.`???`().
 [43:8..43:19): singleType1 <= types/Test.C#singleType1.
+[43:21..43:22): x => types/Test.C#x.
 [43:30..43:33): ??? => scala/Predef.`???`().
 [44:8..44:19): singleType2 <= types/Test.C#singleType2.
+[44:21..44:22): p => types/Test.C#p.
+[44:23..44:24): x => types/P#x.
 [44:32..44:35): ??? => scala/Predef.`???`().
 [45:8..45:14): Either <= types/Test.C#Either.
 [45:17..45:22): scala => scala/
