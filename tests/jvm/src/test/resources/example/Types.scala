@@ -41,8 +41,8 @@ object Test/*<=types.Test.*/ {
     val typeRef3/*<=types.Test.C#typeRef3.*/: T/*=>types.T#*/#C/*=>types.T#C#*/ = ???/*=>scala.Predef.`???`().*/
     val typeRef4/*<=types.Test.C#typeRef4.*/: List/*=>scala.package.List#*/[Int/*=>scala.Int#*/] = ???/*=>scala.Predef.`???`().*/
 
-    val singleType1/*<=types.Test.C#singleType1.*/: x.type = ???/*=>scala.Predef.`???`().*/
-    val singleType2/*<=types.Test.C#singleType2.*/: p.x.type = ???/*=>scala.Predef.`???`().*/
+    val singleType1/*<=types.Test.C#singleType1.*/: x/*=>types.Test.C#x.*/.type = ???/*=>scala.Predef.`???`().*/
+    val singleType2/*<=types.Test.C#singleType2.*/: p/*=>types.Test.C#p.*/.x/*=>types.P#x.*/.type = ???/*=>scala.Predef.`???`().*/
     val Either/*<=types.Test.C#Either.*/ = scala.util.Either/*=>scala.util.Either.*/
 
     val thisType1/*<=types.Test.C#thisType1.*/: this.type = ???/*=>scala.Predef.`???`().*/

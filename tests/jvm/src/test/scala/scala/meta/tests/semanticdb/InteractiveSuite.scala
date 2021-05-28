@@ -10,8 +10,8 @@ import scala.util.Properties
 import scala.collection.SortedMap
 
 class InteractiveSuite extends FunSuite {
-  val version = Properties.versionNumberString
-  val option = if (version.startsWith("2.11")) "-Ywarn-unused-import" else "-Ywarn-unused:imports"
+  val option =
+    if (ScalaVersion.version.startsWith("2.11")) "-Ywarn-unused-import" else "-Ywarn-unused:imports"
   val compiler: Global = newCompiler(scalacOptions = option :: Nil)
   def check(
       original: String,
@@ -23,11 +23,7 @@ class InteractiveSuite extends FunSuite {
       val document = toTextDocument(compiler, original, options)
       val format = scala.meta.metap.Format.Detailed
       val syntax = Print.document(format, document)
-      val expectedCompat = compat
-        .collectFirst {
-          case (ver, expected) if version.startsWith(ver) => expected
-        }
-        .getOrElse(expected)
+      val expectedCompat = ScalaVersion.getExpected(compat, expected)
       assertNoDiff(syntax, expectedCompat)
     }
   }

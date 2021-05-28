@@ -21,7 +21,16 @@ class OccurrenceSuite extends FunSuite {
     OccurrenceSuite.testCases().foreach { t =>
       test(t.name) {
         val body = t.body()
-        assertNoDiff(body.obtained, body.expected)
+        val expectedCompat = if (ScalaVersion.atLeast212_14) {
+          body.expected
+        } else {
+          // Predef.type etc. was fixed in 2.12.14
+          body.expected
+            .replace("Predef/*=>scala.Predef.*/.type", "Predef.type")
+            .replace("x/*=>types.Test.C#x.*/.type", "x.type")
+            .replace("p/*=>types.Test.C#p.*/.x/*=>types.P#x.*/.type", "p.x.type")
+        }
+        assertNoDiff(body.obtained, expectedCompat)
       }
     }
   }

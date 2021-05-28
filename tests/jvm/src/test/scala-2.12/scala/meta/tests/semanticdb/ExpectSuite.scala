@@ -32,8 +32,24 @@ class ExpectSuite extends FunSuite {
     }
     test("metac.expect") {
       import MetacExpect._
-      this.assertNoDiff(loadObtained, loadExpected)
+      val expected = loadExpected
+      val expectedCompat = if (ScalaVersion.atLeast212_14) {
+        expected
+      } else {
+        // Predef.type etc. was fixed in 2.12.14
+        expected
+          .replace("[43:21..43:22): x => types/Test.C#x.\n", "")
+          .replace("[44:21..44:22): p => types/Test.C#p.\n", "")
+          .replace("[25:23..25:29): Predef => scala/Predef.\n", "")
+          .replace("[23:13..23:19): Predef => scala/Predef.\n", "")
+          .replace("[44:23..44:24): x => types/P#x.\n", "")
+          .replace("Occurrences => 57 entries", "Occurrences => 56 entries")
+          .replace("Occurrences => 147 entries", "Occurrences => 146 entries")
+          .replace("Occurrences => 252 entries", "Occurrences => 249 entries")
+      }
+      this.assertNoDiff(loadObtained, expectedCompat)
     }
+
     test("metac-metacp.diff") {
       import MetacMetacpDiffExpect._
       this.assertNoDiff(loadObtained, loadExpected)
@@ -42,6 +58,7 @@ class ExpectSuite extends FunSuite {
       import ManifestMetap._
       this.assertNoDiff(loadObtained, loadExpected)
     }
+
     test("manifest.metacp") {
       import ManifestMetacp._
       this.assertNoDiff(loadObtained, loadExpected)
