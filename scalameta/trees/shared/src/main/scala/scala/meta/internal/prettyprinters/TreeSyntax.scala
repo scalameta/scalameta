@@ -142,15 +142,6 @@ object TreeSyntax {
         if (danger) s(" " + keyword) else s(keyword)
       })
 
-    def templ(templ: Template) =
-      if (templ.early.isEmpty &&
-        templ.inits.isEmpty &&
-        templ.derives.isEmpty &&
-        templ.self.name.is[Name.Anonymous] &&
-        templ.self.decltpe.isEmpty &&
-        templ.stats.isEmpty) s()
-      else s(" ", templ)
-
     def guessIsBackquoted(t: Name): Boolean = {
       def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
         // Fold over codepoints for a given string
@@ -914,60 +905,47 @@ object TreeSyntax {
           t.body
         )
       case t: Defn.Class =>
-        s(
-          w(t.mods, " "),
+        r(" ")(
+          t.mods,
           kw("class"),
-          " ",
-          t.name,
-          t.tparams,
-          w(" ", t.ctor, t.ctor.mods.nonEmpty),
-          templ(t.templ)
+          s(t.name, t.tparams, w(" ", t.ctor, t.ctor.mods.nonEmpty)),
+          t.templ
         )
       case t: Defn.Trait =>
         if (dialect.allowTraitParameters || t.ctor.mods.isEmpty) {
-          s(
-            w(t.mods, " "),
+          r(" ")(
+            t.mods,
             kw("trait"),
-            " ",
-            t.name,
-            t.tparams,
-            w(" ", t.ctor, t.ctor.mods.nonEmpty),
-            templ(t.templ)
+            s(t.name, t.tparams, w(" ", t.ctor, t.ctor.mods.nonEmpty)),
+            t.templ
           )
         } else {
           throw new UnsupportedOperationException(s"$dialect doesn't support trait parameters")
         }
 
       case t: Defn.GivenAlias =>
-        s(
-          w(t.mods, " "),
+        r(" ")(
+          t.mods,
           kw("given"),
-          " ",
           givenName(t.name, t.tparams, t.sparams),
           p(SimpleTyp, t.decltpe),
-          " ",
           kw("="),
-          " ",
           t.body
         )
       case t: Defn.Given =>
-        s(
-          w(t.mods, " "),
+        r(" ")(
+          t.mods,
           kw("given"),
-          " ",
           givenName(t.name, t.tparams, t.sparams),
-          s(t.templ)
+          t.templ
         )
 
       case t: Defn.Enum =>
-        s(
-          w(t.mods, " "),
+        r(" ")(
+          t.mods,
           kw("enum"),
-          " ",
-          t.name,
-          t.tparams,
-          t.ctor,
-          templ(t.templ)
+          s(t.name, t.tparams, t.ctor),
+          t.templ
         )
       case t: Defn.RepeatedEnumCase =>
         s(w(t.mods, " "), kw("case"), " ", r(t.cases, ", "))
@@ -989,7 +967,7 @@ object TreeSyntax {
           t.paramss,
           m
         )
-      case t: Defn.Object => s(w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
+      case t: Defn.Object => r(" ")(t.mods, kw("object"), t.name, t.templ)
       case t: Defn.Def =>
         s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
       case t: Defn.Macro =>
@@ -1012,7 +990,7 @@ object TreeSyntax {
         if (guessHasBraces(t)) s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
         else s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
       case t: Pkg.Object =>
-        s(kw("package"), " ", w(t.mods, " "), kw("object"), " ", t.name, templ(t.templ))
+        r(" ")(kw("package"), t.mods, kw("object"), t.name, t.templ)
       case t: Ctor.Primary =>
         def printParam(t: Term.Param) = {
           val name = if (t.mods.exists(_.is[Mod.Using]) && t.name.is[Name.Anonymous]) {
@@ -1076,35 +1054,28 @@ object TreeSyntax {
       // Template
       case t: Template =>
         val isSelfEmpty = t.self.name.is[Name.Anonymous] && t.self.decltpe.isEmpty
-        val isSelfNonEmpty = !isSelfEmpty
         val isBodyEmpty = isSelfEmpty && t.stats.isEmpty
-        val isTemplateEmpty = t.early.isEmpty && t.inits.isEmpty && t.derives.isEmpty && isBodyEmpty
-        if (isTemplateEmpty) s()
-        else {
-          val pearly = if (!t.early.isEmpty) s("{ ", r(t.early, "; "), " } with ") else s()
-          val suffix = if (t.inits.nonEmpty && !isBodyEmpty) " " else ""
-          val canHaveExtend =
-            t.parent.exists(p => p.isNot[Defn.Given] && p.isNot[Term.NewAnonymous])
-          val extendsKeyword =
-            if ((t.inits.nonEmpty || t.early.nonEmpty) && canHaveExtend) "extends " else ""
-          val pparents = s(extendsKeyword, r(t.inits, " with "), suffix)
-          val derived = w("derives ", r(t.derives, ", "), " ", t.derives.nonEmpty)
-          val withGiven = if (t.parent.exists(_.is[Defn.Given]) && !isBodyEmpty) "with " else ""
-          val pbody = {
-            val isOneLiner =
-              t.stats.length == 0 ||
-                (t.stats.length == 1 && !s(t.stats.head).toString.contains(EOL))
-            (isSelfNonEmpty, t.stats) match {
-              case (false, Nil) => s()
-              case (false, List(stat)) if isOneLiner => s("{ ", stat, " }")
-              case (false, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
-              case (true, Nil) => s("{ ", t.self, " => }")
-              case (true, List(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
-              case (true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
-            }
+        val useExtends = (t.inits.nonEmpty || t.early.nonEmpty) &&
+          t.parent.exists(p => p.isNot[Defn.Given] && p.isNot[Term.NewAnonymous])
+        val extendsKeyword = if (useExtends) "extends" else ""
+        val pearly = r(t.early, "{ ", "; ", " } with")
+        val pparents = r(t.inits, " with ")
+        val derived = r(t.derives, "derives ", ", ", "")
+        val withGiven = if (t.parent.exists(_.is[Defn.Given]) && !isBodyEmpty) "with" else ""
+        val pbody = {
+          val isOneLiner =
+            t.stats.length == 0 ||
+              (t.stats.length == 1 && !s(t.stats.head).toString.contains(EOL))
+          (!isSelfEmpty, t.stats) match {
+            case (false, Nil) => s()
+            case (false, List(stat)) if isOneLiner => s("{ ", stat, " }")
+            case (false, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
+            case (true, Nil) => s("{ ", t.self, " => }")
+            case (true, List(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
+            case (true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
           }
-          s(pearly, pparents, derived, withGiven, pbody)
         }
+        r(" ")(extendsKeyword, pearly, pparents, derived, withGiven, pbody)
 
       // Mod
       case Mod.Annot(init) => s(kw("@"), p(SimpleTyp, init.tpe), init.argss)
@@ -1205,13 +1176,11 @@ object TreeSyntax {
         sparams: List[List[Term.Param]]
     ): Show.Result = {
       if (!name.is[meta.Name.Anonymous]) {
-        s(name, tparams, sparams, ": ")
+        s(name, tparams, sparams, ":")
+      } else if (tparams.nonEmpty || sparams.nonEmpty) {
+        s(tparams, sparams, ":")
       } else {
-        if (tparams.nonEmpty || sparams.nonEmpty) {
-          s(tparams, sparams, ": ")
-        } else {
-          s()
-        }
+        s()
       }
     }
 
