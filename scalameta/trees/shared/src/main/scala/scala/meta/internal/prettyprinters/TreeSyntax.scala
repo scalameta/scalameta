@@ -15,7 +15,6 @@ import Show.{
 }
 import scala.meta.internal.trees.{root => _, branch => _, _}
 import scala.meta.internal.tokenizers.Chars._
-import scala.meta.internal.tokenizers.keywords
 import org.scalameta.adt._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
@@ -80,6 +79,7 @@ object TreeSyntax {
     }
   }
   private final class SyntaxInstances(dialect: Dialect) {
+    val keywords = tokenizers.keywords(dialect)
     import SyntaxInstances.SyntacticGroup
     import SyntacticGroup.Type._, SyntacticGroup.Term._, SyntacticGroup.Pat._,
     SyntacticGroup.Literal, SyntacticGroup.Path
