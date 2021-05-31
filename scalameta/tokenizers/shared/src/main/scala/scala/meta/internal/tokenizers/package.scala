@@ -5,7 +5,7 @@ package object tokenizers {
   type Offset = Int
   type LegacyToken = Int
 
-  val keywords = Set(
+  private val baseKeywords = Set(
     "abstract",
     "case",
     "do",
@@ -46,7 +46,6 @@ package object tokenizers {
     "protected",
     "throw",
     "val",
-    "given",
     "_",
     ":",
     "=",
@@ -61,4 +60,18 @@ package object tokenizers {
     "\u21D2",
     "\u2190"
   )
+
+  def keywords(dialect: Dialect) = {
+    val dialectKeywords = Set.newBuilder[String]
+
+    if (dialect.allowEnums) dialectKeywords += "enum"
+    if (dialect.allowExportClause) dialectKeywords += "export"
+    if (dialect.allowGivenUsing) {
+      dialectKeywords += "given"
+      dialectKeywords += "?=>"
+    }
+    if (dialect.allowSignificantIndentation) dialectKeywords += "then"
+
+    baseKeywords ++ dialectKeywords.result()
+  }
 }

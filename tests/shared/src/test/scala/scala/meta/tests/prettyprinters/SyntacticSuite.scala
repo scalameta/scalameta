@@ -1107,4 +1107,26 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(repeat("<", ",", ">")("", "", "x", "y").toString, "<x,y>")
   }
 
+  test("backticked-keywords-scala3") {
+    assertEquals(
+      Term.Name("enum").syntax,
+      "enum"
+    )
+    assertEquals(
+      Term.Name("given").syntax,
+      "given"
+    )
+    assertEquals(
+      Term.Name("export").syntax,
+      "export"
+    )
+    assertEquals(
+      Term.Name("then").syntax,
+      "then"
+    )
+    assertEquals(
+      Term.Name("?=>").syntax,
+      "?=>"
+    )
+  }
 }
