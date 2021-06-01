@@ -33,7 +33,7 @@ jobs:
           - "mima"
     steps:
       - uses: actions/checkout@v2
-      - uses: olafurpg/setup-scala@v10
+      - uses: olafurpg/setup-scala@v11
       - run: git fetch --unshallow
       - run: sbt ${{ matrix.command }}
   jdk11:
@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: olafurpg/setup-scala@v10
+      - uses: olafurpg/setup-scala@v11
         with:
           java-version: adopt@1.11
       - run: sbt ++2.13.6 testsJVM/test
@@ -50,7 +50,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: olafurpg/setup-scala@v10
+      - uses: olafurpg/setup-scala@v11
       - run: sbt ci-windows
         shell: bash
   checks:
@@ -58,5 +58,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: olafurpg/setup-scala@v10
+      - uses: olafurpg/setup-scala@v11
       - run: ./bin/scalafmt --test
