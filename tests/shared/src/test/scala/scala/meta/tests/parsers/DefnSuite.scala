@@ -2,7 +2,7 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
-import scala.meta.dialects.Scala211
+import scala.meta.dialects.Scala213
 
 class DefnSuite extends ParseSuite {
   test("val x = 2") {
@@ -170,6 +170,125 @@ class DefnSuite extends ParseSuite {
       Some(Type.Name("Int")),
       Term.Name("impl")
     ) = templStat("def f(x: Int): Int = macro impl")
+  }
+
+  test("braces-in-functions") {
+    val defn = templStat(
+      """|def f = { (n: Int) =>
+         |  {
+         |    for {
+         |      _ <- scala.util.Success(123)
+         |    } yield 42
+         |  }.recover(???)
+         |}""".stripMargin
+    )
+    assertNoDiff(
+      defn,
+      Defn
+        .Def(
+          Nil,
+          Term.Name("f"),
+          Nil,
+          Nil,
+          None,
+          Term.Block(
+            List(
+              Term.Function(
+                List(Term.Param(Nil, Term.Name("n"), Some(Type.Name("Int")), None)),
+                Term.Apply(
+                  Term.Select(
+                    Term.Block(
+                      List(
+                        Term.ForYield(
+                          List(
+                            Enumerator.Generator(
+                              Pat.Wildcard(),
+                              Term.Apply(
+                                Term.Select(
+                                  Term.Select(Term.Name("scala"), Term.Name("util")),
+                                  Term.Name("Success")
+                                ),
+                                List(Lit.Int(123))
+                              )
+                            )
+                          ),
+                          Lit.Int(42)
+                        )
+                      )
+                    ),
+                    Term.Name("recover")
+                  ),
+                  List(Term.Name("???"))
+                )
+              )
+            )
+          )
+        )
+    )
+  }
+
+  test("braces-in-if-cond") {
+    val defn = templStat(
+      """|if (cond) { expr }.select else { expr } + { expr }
+         |""".stripMargin
+    )
+    assertNoDiff(
+      defn,
+      Term.If(
+        Term.Name("cond"),
+        Term.Select(Term.Block(List(Term.Name("expr"))), Term.Name("select")),
+        Term.ApplyInfix(
+          Term.Block(List(Term.Name("expr"))),
+          Term.Name("+"),
+          Nil,
+          List(Term.Block(List(Term.Name("expr"))))
+        ),
+        Nil
+      )
+    )
+  }
+
+  test("braces-in-try-expr") {
+    val defn = templStat(
+      """|try {expr}.select finally {expr}.select 
+         |""".stripMargin
+    )
+    assertNoDiff(
+      defn,
+      Term.Try(
+        Term.Select(Term.Block(List(Term.Name("expr"))), Term.Name("select")),
+        Nil,
+        Some(Term.Select(Term.Block(List(Term.Name("expr"))), Term.Name("select")))
+      )
+    )
+  }
+
+  test("braces-in-while-expr") {
+    val defn = templStat(
+      """|while (cond) {expr}.select
+         |""".stripMargin
+    )
+    assertNoDiff(
+      defn,
+      Term.While(
+        Term.Name("cond"),
+        Term.Select(Term.Block(List(Term.Name("expr"))), Term.Name("select"))
+      )
+    )
+  }
+
+  test("braces-in-for-expr") {
+    val defn = templStat(
+      """|for (i <- list) {expr}.select
+         |""".stripMargin
+    )
+    assertNoDiff(
+      defn,
+      Term.For(
+        List(Enumerator.Generator(Pat.Var(Term.Name("i")), Term.Name("list"))),
+        Term.Select(Term.Block(List(Term.Name("expr"))), Term.Name("select"))
+      )
+    )
   }
 
   test("inline is not allowed") {

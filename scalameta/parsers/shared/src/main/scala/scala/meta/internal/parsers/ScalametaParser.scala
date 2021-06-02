@@ -2557,7 +2557,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               val trm =
                 if (location != BlockStat) expr()
                 else {
-                  blockExpr() match {
+                  blockExpr(isBlockOptional = true) match {
                     case partial: Term.PartialFunction if token.is[Colon] =>
                       accept[Colon]
                       atPos(partial, auto)(Term.Ascribe(partial, typeOrInfixType(location)))
@@ -2591,7 +2591,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     )
     accept[RightArrow]
     atPos(implicitPos, auto)(
-      Term.Function(List(param), if (location != BlockStat) expr() else blockExpr())
+      Term.Function(
+        List(param),
+        if (location != BlockStat) expr() else blockExpr(isBlockOptional = true)
+      )
     )
   }
 
@@ -3080,18 +3083,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     trees
   }
 
-  def blockExpr(): Term = autoPos {
+  def blockExpr(isBlockOptional: Boolean = false): Term = autoPos {
     if (ahead(token.is[CaseIntro] || (token.is[Ellipsis] && ahead(token.is[KwCase])))) {
       if (token.is[LeftBrace])
         Term.PartialFunction(inBraces(caseClauses()))
       else
         Term.PartialFunction(indented(caseClauses()))
-    } else block()
+    } else block(isBlockOptional)
   }
 
-  def block(): Term = autoPos {
+  def block(isBlockOptional: Boolean = false): Term = autoPos {
     def blockWithStats = Term.Block(blockStatSeq())
-    if (token.is[LeftBrace]) {
+    if (!isBlockOptional && token.is[LeftBrace]) {
       inBraces(blockWithStats)
     } else {
       val possibleBlock =
