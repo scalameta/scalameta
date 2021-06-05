@@ -19,6 +19,8 @@ class ParseSuite extends FunSuite with CommonTrees {
     val expectedLines = expected.linesIterator.toList
     assert(actualLines == expectedLines)
   }
+  def assertNoDiff(obtained: Tree, expected: Tree): Unit =
+    assertNoDiff(obtained.structure, expected.structure)
 
   def stat(code: String)(implicit dialect: Dialect) = code.applyRule(_.parseStat())
   def term(code: String)(implicit dialect: Dialect) = code.parseRule(_.expr())
