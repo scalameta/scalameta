@@ -1729,4 +1729,169 @@ class SignificantIndentationSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("indented-contructor-params") {
+    runTestAssert[Stat](
+      """|object ExampleThing
+         |    extends CompositeThing
+         |          (
+         |                "One",
+         |                "Two",
+         |                "Three",
+         |                "Four")
+         |""".stripMargin,
+      assertLayout = Some(
+        """|object ExampleThing extends CompositeThing("One", "Two", "Three", "Four")
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        Term.Name("ExampleThing"),
+        Template(
+          Nil,
+          List(
+            Init(
+              Type.Name("CompositeThing"),
+              Name(""),
+              List(
+                List(Lit.String("One"), Lit.String("Two"), Lit.String("Three"), Lit.String("Four"))
+              )
+            )
+          ),
+          Self(Name(""), None),
+          Nil,
+          Nil
+        )
+      )
+    )
+  }
+
+  test("non-indented-contructor-params") {
+    runTestAssert[Stat](
+      """|object O:
+         |  object ExampleThing
+         |    extends CompositeThing
+         |  (
+         |                "One",
+         |                "Two",
+         |                "Three",
+         |                "Four")
+         |""".stripMargin,
+      assertLayout = Some(
+        """|object O {
+           |  object ExampleThing extends CompositeThing
+           |  ("One", "Two", "Three", "Four")
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        Term.Name("O"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.Object(
+              Nil,
+              Term.Name("ExampleThing"),
+              Template(
+                Nil,
+                List(Init(Type.Name("CompositeThing"), Name(""), Nil)),
+                Self(Name(""), None),
+                Nil,
+                Nil
+              )
+            ),
+            Term.Tuple(
+              List(Lit.String("One"), Lit.String("Two"), Lit.String("Three"), Lit.String("Four"))
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("indented-enum-contructor-params") {
+    runTestAssert[Stat](
+      """|enum Namespace(val uri: String | Null):
+         |  case xhtml
+         |      extends Namespace // Defn.EnumCase ends here
+         |        ("http://www.w3.org/1999/xhtml") // Lit.String
+         |""".stripMargin,
+      assertLayout = Some(
+        """|enum Namespace(val uri: String | Null) { case xhtml extends Namespace("http://www.w3.org/1999/xhtml") }
+           |""".stripMargin
+      )
+    )(
+      Defn.Enum(
+        Nil,
+        Type.Name("Namespace"),
+        Nil,
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          List(
+            List(
+              Term.Param(
+                List(Mod.ValParam()),
+                Term.Name("uri"),
+                Some(Type.Or(Type.Name("String"), Type.Name("Null"))),
+                None
+              )
+            )
+          )
+        ),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.EnumCase(
+              Nil,
+              Term.Name("xhtml"),
+              Nil,
+              Ctor.Primary(Nil, Name(""), Nil),
+              List(
+                Init(
+                  Type.Name("Namespace"),
+                  Name(""),
+                  List(List(Lit.String("http://www.w3.org/1999/xhtml")))
+                )
+              )
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("indented-double-new") {
+    runTestAssert[Stat](
+      """|new fun
+         |    (a,b,c)
+         |    (d, e)
+         |    (f, g)
+         |""".stripMargin,
+      assertLayout = Some(
+        "new fun(a, b, c)(d, e)(f, g)"
+      )
+    )(
+      Term.New(
+        Init(
+          Type.Name("fun"),
+          Name(""),
+          List(
+            List(Term.Name("a"), Term.Name("b"), Term.Name("c")),
+            List(Term.Name("d"), Term.Name("e")),
+            List(Term.Name("f"), Term.Name("g"))
+          )
+        )
+      )
+    )
+  }
 }
