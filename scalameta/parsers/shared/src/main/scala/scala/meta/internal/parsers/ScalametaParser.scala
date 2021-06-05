@@ -342,7 +342,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def currentIndentation: Int = {
       val foundIndentation = countIndent(curr.pointPos)
       if (foundIndentation < 0)
-        sepRegions.headOption.fold(-1)(_.indent)
+        // empty sepregions means we are at toplevel
+        sepRegions.headOption.fold(0)(_.indent)
       else
         foundIndentation
     }
@@ -2141,7 +2142,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def newLineOptWhenFollowedBySignificantIndentationAnd(cond: Token => Boolean): Unit = {
     def nextLineHasGreaterIndentation = {
       val prev = currentIndentation
-      prev > 0 && ahead { cond(token) && currentIndentation > prev }
+      prev >= 0 && ahead { cond(token) && currentIndentation > prev }
     }
     if (token.is[LF] && nextLineHasGreaterIndentation)
       newLineOpt()
@@ -4658,6 +4659,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def initRest(typeParser: () => Type, allowArgss: Boolean, allowBraces: Boolean): Init = autoPos {
     def isPendingArglist = token.is[LeftParen] || (token.is[LeftBrace] && allowBraces)
+    def newlineOpt() = {
+      if (dialect.allowSignificantIndentation)
+        newLineOptWhenFollowedBySignificantIndentationAnd(x => x.is[LeftBrace] || x.is[LeftParen])
+      else if (allowBraces) newLineOptWhenFollowedBy[LeftBrace]
+    }
     token match {
       case Unquote() if !ahead(isPendingArglist) =>
         unquote[Init]
@@ -4666,11 +4672,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val name = autoPos(Name.Anonymous())
         val argss = mutable.ListBuffer[List[Term]]()
         var done = false
-        if (allowBraces) newLineOptWhenFollowedBy[LeftBrace]
+        newlineOpt()
         while (isPendingArglist && !done) {
           argss += argumentExprs()
           if (!allowArgss) done = true
-          if (allowBraces) newLineOptWhenFollowedBy[LeftBrace]
+          newlineOpt()
         }
         Init(tpe, name, argss.toList)
     }
