@@ -17,6 +17,7 @@ import scala.meta.io.Classpath
 import scala.meta.io.AbsolutePath
 import scala.meta.tests.cli._
 import munit.FunSuite
+import munit.internal.difflib.DiffUtils
 import scala.meta.tests.metacp.Library
 import scala.meta.tests.metacp.MetacpOps
 
@@ -96,12 +97,12 @@ trait ExpectHelpers extends munit.Assertions {
     val revisedLines = revised.split("\n").toSeq.asJava
     val OnlyCurlyBrace = "\\s+}".r
     val diff = {
-      val lines = difflib.DiffUtils
+      val lines = DiffUtils
         .generateUnifiedDiff(
           originalTitle,
           revisedTitle,
           originalLines,
-          difflib.DiffUtils.diff(originalLines, revisedLines),
+          DiffUtils.diff(originalLines, revisedLines),
           3
         )
         .asScala
