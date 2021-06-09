@@ -4,7 +4,10 @@ import java.io.File
 import java.net.URL
 
 import geny.Generator
-import org.apache.commons.io.FileUtils
+
+import sys.process._
+import java.net.URL
+import java.io.File
 import org.rauschig.jarchivelib.ArchiverFactory
 
 /**
@@ -94,7 +97,7 @@ object Corpus {
 
   private def downloadReposTar(corpus: Corpus, destination: File): Unit = {
     Phase.run(s"download ${corpus.url}") {
-      FileUtils.copyURLToFile(new URL(corpus.url), destination)
+      new URL(corpus.url).#>(destination).!!
     }
   }
 
