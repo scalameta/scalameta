@@ -4462,7 +4462,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       traitName,
       typeParamClauseOpt(
         ownerIsType = true,
-        ctxBoundsAllowed = false,
+        ctxBoundsAllowed = dialect.allowTraitParameters,
         allowUnderscore = dialect.allowTypeParamUnderscore
       ),
       primaryCtor(OwnedByTrait),
