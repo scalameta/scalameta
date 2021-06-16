@@ -184,4 +184,53 @@ class MatchTypeSuite extends BaseDottySuite {
       )
     )
   }
+  test("double-newline") {
+    runTestAssert[Stat](
+      """|object match_types:
+         |
+         |  type Combine[Left, Right] = Left match
+         |    case Unit => Right
+         |
+         |    case ? => Left
+         |""".stripMargin,
+      assertLayout = Some(
+        """|object match_types {
+           |  type Combine[Left, Right] = Left match {
+           |    case Unit => Right
+           |    case ? => Left
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        Term.Name("match_types"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.Type(
+              Nil,
+              Type.Name("Combine"),
+              List(
+                Type.Param(Nil, Type.Name("Left"), Nil, Type.Bounds(None, None), Nil, Nil),
+                Type.Param(Nil, Type.Name("Right"), Nil, Type.Bounds(None, None), Nil, Nil)
+              ),
+              Type.Match(
+                Type.Name("Left"),
+                List(
+                  TypeCase(Type.Name("Unit"), Type.Name("Right")),
+                  TypeCase(Type.Placeholder(Type.Bounds(None, None)), Type.Name("Left"))
+                )
+              ),
+              Type.Bounds(None, None)
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
 }

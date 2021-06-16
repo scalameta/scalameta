@@ -1621,7 +1621,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val allCases = new ListBuffer[TypeCase]
         while (token.is[KwCase]) {
           allCases += typeCaseClause()
-          acceptOpt[LF]
+          newLinesOpt()
         }
         allCases.toList
       }
