@@ -1894,4 +1894,42 @@ class SignificantIndentationSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("then-same-line") {
+    runTestAssert[Stat](
+      """|def f =
+         |   if
+         |      x.exists
+         |         (x => x == 10) then
+         |      println("Yes")
+         |   else
+         |      println("No")
+         |""".stripMargin,
+      assertLayout = Some(
+        "def f = if (x.exists(x => x == 10)) println(\"Yes\") else println(\"No\")"
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("f"),
+        Nil,
+        Nil,
+        None,
+        Term.If(
+          Term.Apply(
+            Term.Select(Term.Name("x"), Term.Name("exists")),
+            List(
+              Term.Function(
+                List(Term.Param(Nil, Term.Name("x"), None, None)),
+                Term.ApplyInfix(Term.Name("x"), Term.Name("=="), Nil, List(Lit.Int(10)))
+              )
+            )
+          ),
+          Term.Apply(Term.Name("println"), List(Lit.String("Yes"))),
+          Term.Apply(Term.Name("println"), List(Lit.String("No"))),
+          Nil
+        )
+      )
+    )
+  }
 }

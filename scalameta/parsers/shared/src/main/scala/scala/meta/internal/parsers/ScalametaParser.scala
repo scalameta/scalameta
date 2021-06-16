@@ -351,25 +351,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def observeOutdented(): Boolean = {
       if (!dialect.allowSignificantIndentation) false
       else {
-        val existingIndent = sepRegions.find(_.isIndented).map(_.indent).getOrElse(0)
-        val (expected, pointPos) = countIndentAndNewlineIndex(tokenPos)
 
         def canEndIndentation(token: Token) = token.is[KwElse] || token.is[KwThen] ||
           token.is[KwDo] || token.is[KwCatch] || token.is[KwFinally] || token.is[KwYield] ||
           token.is[KwMatch]
 
-        if (existingIndent == expected && canEndIndentation(curr.token)) {
-          sepRegions = sepRegions.tail
-          curr = TokenRef(
-            new Indentation.Outdent(token.input, token.dialect, token.start, token.end),
-            curr.pos,
-            curr.pos,
-            pointPos
-          )
-
-          true
-        } else {
-          false
+        sepRegions match {
+          case region :: tail if region.isIndented && canEndIndentation(curr.token) =>
+            sepRegions = sepRegions.tail
+            curr = TokenRef(
+              new Indentation.Outdent(token.input, token.dialect, token.start, token.end),
+              curr.pos,
+              curr.pos,
+              prevPos
+            )
+            true
+          case _ => false
         }
       }
     }
