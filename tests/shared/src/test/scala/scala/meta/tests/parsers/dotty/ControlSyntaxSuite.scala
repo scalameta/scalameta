@@ -124,6 +124,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("new-if-expr-without-then") {
+    val code =
+      """|  if (x > 0) && (y > 0)
+         |    x += 1
+         |""".stripMargin
+    runTestError[Stat](code, "then expected but \\n found")
+  }
+
   test("new-if-else-multiple") {
     val code = """|if cond then
                   |  fx1
@@ -1101,6 +1109,55 @@ class ControlSyntaxSuite extends BaseDottySuite {
         )
       )
     )
+  }
+
+  test("while-cond-expr-do") {
+    val code =
+      """|  while (x > 0) && (y > 0) do
+         |    x += 1
+         |""".stripMargin
+
+    val output = "while (x > 0 && y > 0) x += 1"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.While(
+        Term.ApplyInfix(
+          Term.ApplyInfix(Term.Name("x"), Term.Name(">"), Nil, List(Lit.Int(0))),
+          Term.Name("&&"),
+          Nil,
+          List(Term.ApplyInfix(Term.Name("y"), Term.Name(">"), Nil, List(Lit.Int(0))))
+        ),
+        Term.ApplyInfix(Term.Name("x"), Term.Name("+="), Nil, List(Lit.Int(1)))
+      )
+    )
+  }
+
+  test("while-cond-expr-lf-do") {
+    val code =
+      """|  while (x > 0) && (y > 0)
+         |  do
+         |    x += 1
+         |""".stripMargin
+
+    val output = "while (x > 0 && y > 0) x += 1"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.While(
+        Term.ApplyInfix(
+          Term.ApplyInfix(Term.Name("x"), Term.Name(">"), Nil, List(Lit.Int(0))),
+          Term.Name("&&"),
+          Nil,
+          List(Term.ApplyInfix(Term.Name("y"), Term.Name(">"), Nil, List(Lit.Int(0))))
+        ),
+        Term.ApplyInfix(Term.Name("x"), Term.Name("+="), Nil, List(Lit.Int(1)))
+      )
+    )
+  }
+
+  test("while-cond-expr-without-do") {
+    val code =
+      """|  while (x > 0) && (y > 0)
+         |    x += 1
+         |""".stripMargin
+    runTestError[Stat](code, "do expected but \\n found")
   }
 
   // --------------------------

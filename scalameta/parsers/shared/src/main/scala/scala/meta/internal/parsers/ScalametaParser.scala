@@ -2253,12 +2253,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       accept[KwThen]
       (cond, exprMaybeIndented())
     } else {
-      val forked = in.fork
-      var cond = condExpr()
-      if ((token.is[Ident] && isLeadingInfixOperator(token)) || token.is[Dot]) {
-        in = forked
-        cond = expr()
-      }
+      var cond = condExprInParens[KwThen]
       newLinesOpt()
       if (!tryAcceptWithOptLF[KwThen])
         in.observeIndented()
@@ -2272,6 +2267,25 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     } else {
       Term.If(cond, thenp, atPos(in.tokenPos, in.prevTokenPos)(Lit.Unit()), mods)
     }
+  }
+
+  def condExprInParens[T <: Token: TokenInfo]: Term = {
+    if (dialect.allowSignificantIndentation) {
+      val forked = in.fork
+      val simpleExpr = condExpr()
+      if ((token.is[Ident] && isLeadingInfixOperator(token)) || token.is[Dot]) {
+        in = forked
+        val exprCond = expr()
+        val nextIsDelimiterKw =
+          if (token.is[LF]) ahead { newLineOpt(); token.is[T] }
+          else token.is[T]
+
+        if (nextIsDelimiterKw)
+          exprCond
+        else
+          syntaxErrorExpected[T]
+      } else simpleExpr
+    } else condExpr()
   }
 
   // FIXME: when parsing `(2 + 3)`, do we want the ApplyInfix's position to include parentheses?
@@ -2327,7 +2341,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case KwWhile() =>
         next()
         if (token.is[LeftParen]) {
-          val cond = condExpr()
+          val cond = condExprInParens[KwDo]
           newLinesOpt()
           val body = if (token.is[KwDo]) {
             accept[KwDo]
