@@ -308,26 +308,30 @@ lazy val semanticdbIntegrationMacros = project
     enableMacros
   )
 
-lazy val testkit = project
+lazy val testkit = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/testkit"))
   .settings(
     publishableSettings,
     hasLargeIntegrationTests,
+    libraryDependencies ++= Seq(
+      "org.scalameta" %%% "munit" % munitVersion,
+      "com.lihaoyi" %%% "geny" % "0.6.10"
+    ),
+    testFrameworks := List(new TestFramework("munit.Framework")),
+    description := "Testing utilities for scalameta APIs"
+  )
+  .dependsOn(scalameta)
+  .jvmSettings(
     libraryDependencies ++= {
       if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.3")
       else Nil
     },
-    libraryDependencies ++= Seq(
-      "org.scalameta" %% "munit" % munitVersion,
+    libraryDependencies ++= List(
       // These are used to download and extract a corpus tar.gz
       "org.rauschig" % "jarchivelib" % "1.1.0",
-      "com.lihaoyi" %% "geny" % "0.6.10"
-    ),
-    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
-    testFrameworks := List(new TestFramework("munit.Framework")),
-    description := "Testing utilities for scalameta APIs"
+      "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test
+    )
   )
-  .dependsOn(scalameta.jvm)
 
 lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("tests"))
@@ -348,7 +352,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     classLoaderLayeringStrategy.in(Test) := ClassLoaderLayeringStrategy.Flat
   )
   .jvmConfigure(
-    _.dependsOn(testkit, metac, semanticdbIntegration)
+    _.dependsOn(metac, semanticdbIntegration)
   )
   .jsSettings(
     commonJsSettings,
@@ -362,7 +366,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     }
   )
   .enablePlugins(BuildInfoPlugin)
-  .dependsOn(scalameta)
+  .dependsOn(scalameta, testkit)
 
 lazy val testSettings: List[Def.SettingsDefinition] = List(
   fullClasspath.in(Test) := {
