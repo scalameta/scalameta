@@ -332,6 +332,8 @@ lazy val testkit = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test
     )
   )
+  .jsSettings(commonJsSettings)
+  .nativeSettings(nativeSettings)
 
 lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("tests"))
