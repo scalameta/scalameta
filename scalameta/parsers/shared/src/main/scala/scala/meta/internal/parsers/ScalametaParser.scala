@@ -1098,8 +1098,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   trait InlineMatchMod {
     def unapply(token: Token): Boolean = {
       token.is[soft.KwInline] &&
-      (token.next.is[LeftParen] || token.next.is[LeftBrace] || token.next.is[KwNew] || token.next
-        .is[Ident])
+      (token.next.is[LeftParen] || token.next.is[LeftBrace] || token.next.is[KwNew] ||
+        token.next.is[Ident] || token.next.is[Literal])
     }
   }
 

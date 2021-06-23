@@ -476,4 +476,53 @@ class InlineSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("transparent-inline-with-constant") {
+    runTestAssert[Stat](
+      """|transparent inline def f: String =
+         |  inline 10 match
+         |    case _ =>
+         |      inline "foo" match
+         |        case x : String => x
+         |""".stripMargin,
+      assertLayout = Some(
+        """|transparent inline def f: String = inline 10 match {
+           |  case _ =>
+           |    inline "foo" match {
+           |      case x: String => x
+           |    }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        List(Mod.Transparent(), Mod.Inline()),
+        Term.Name("f"),
+        Nil,
+        Nil,
+        Some(Type.Name("String")),
+        Term.Match(
+          Lit.Int(10),
+          List(
+            Case(
+              Pat.Wildcard(),
+              None,
+              Term.Match(
+                Lit.String("foo"),
+                List(
+                  Case(
+                    Pat.Typed(Pat.Var(Term.Name("x")), Type.Name("String")),
+                    None,
+                    Term.Name("x")
+                  )
+                ),
+                List(Mod.Inline())
+              )
+            )
+          ),
+          List(Mod.Inline())
+        )
+      )
+    )
+  }
 }
