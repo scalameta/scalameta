@@ -114,7 +114,7 @@ object ParentChecks {
   }
 
   def TypeLambda(tree: Type.Lambda, parent: Tree, destination: String): Boolean = {
-    parent.is[Type] || parent.is[Defn.Type] || parent.is[Term.ApplyType]
+    parent.is[Type] || parent.is[Defn.Type] || parent.is[Type.Bounds] || parent.is[Term.ApplyType]
   }
 
   def TypeMethod(tree: Type.Method, parent: Tree, destination: String): Boolean = {
