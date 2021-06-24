@@ -525,4 +525,38 @@ class InlineSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("transparent-inline-with-this") {
+    runTestAssert[Stat](
+      """|transparent inline def nat =
+         |  inline this match
+         |    case Zero    => ()
+         |    case Succ(p) => ()
+         |      
+         |""".stripMargin,
+      assertLayout = Some(
+        """|transparent inline def nat = inline this match {
+           |  case Zero => ()
+           |  case Succ(p) => ()
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        List(Mod.Transparent(), Mod.Inline()),
+        Term.Name("nat"),
+        Nil,
+        Nil,
+        None,
+        Term.Match(
+          Term.This(Name("")),
+          List(
+            Case(Term.Name("Zero"), None, Lit.Unit()),
+            Case(Pat.Extract(Term.Name("Succ"), List(Pat.Var(Term.Name("p")))), None, Lit.Unit())
+          ),
+          List(Mod.Inline())
+        )
+      )
+    )
+  }
 }
