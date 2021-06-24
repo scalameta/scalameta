@@ -636,4 +636,25 @@ class NewFunctionsSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("type-lambda-bounds") {
+    runTestAssert[Stat](
+      "type U <: [X] =>> Any"
+    )(
+      Decl.Type(
+        Nil,
+        Type.Name("U"),
+        Nil,
+        Type.Bounds(
+          None,
+          Some(
+            Type.Lambda(
+              List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
+              Type.Name("Any")
+            )
+          )
+        )
+      )
+    )
+  }
 }
