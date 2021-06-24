@@ -5144,10 +5144,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val startPos = in.tokenPos
         accept[KwPackage]
         val qid = qualId()
-        if (token.is[LeftBrace]) {
-          val pkg = atPos(startPos, auto)(Pkg(qid, inBraces(topStatSeq())))
+        def inPackage(topStats: => List[Stat]) = {
+          val pkg = atPos(startPos, auto)(Pkg(qid, topStats))
           acceptStatSepOpt()
           pkg +: bracelessPackageStats()
+        }
+        if (token.is[LeftBrace]) {
+          inPackage(inBraces(topStatSeq()))
+        } else if (isColonEol(token)) {
+          next()
+          in.observeIndented()
+          inPackage(indented(topStatSeq()))
         } else {
           List(atPos(startPos, auto)(Pkg(qid, bracelessPackageStats())))
         }
