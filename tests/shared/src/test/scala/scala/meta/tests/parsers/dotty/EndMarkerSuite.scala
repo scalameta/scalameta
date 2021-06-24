@@ -278,4 +278,64 @@ class EndMarkerSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("object-empty-body-end-marker") {
+    runTestAssert[Source](
+      """|object Foo:
+         |end Foo
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Source(
+        List(
+          Defn.Object(Nil, Term.Name("Foo"), Template(Nil, Nil, Self(Name(""), None), Nil, Nil)),
+          Term.EndMarker(Term.Name("Foo"))
+        )
+      )
+    )
+  }
+
+  test("class-empty-body-end-marker") {
+    runTestAssert[Source](
+      """|class Foo:
+         |end Foo
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Source(
+        List(
+          Defn.Class(
+            Nil,
+            Type.Name("Foo"),
+            Nil,
+            Ctor.Primary(Nil, Name(""), Nil),
+            Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+          ),
+          Term.EndMarker(Term.Name("Foo"))
+        )
+      )
+    )
+  }
+
+  test("trait-empty-body-end-marker") {
+    runTestAssert[Source](
+      """|trait Foo:
+         |end Foo
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Source(
+        List(
+          Defn.Trait(
+            Nil,
+            Type.Name("Foo"),
+            Nil,
+            Ctor.Primary(Nil, Name(""), Nil),
+            Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+          ),
+          Term.EndMarker(Term.Name("Foo"))
+        )
+      )
+    )
+  }
 }
