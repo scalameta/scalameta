@@ -907,6 +907,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def acceptStatSep(): Unit = token match {
     case LF() | LFLF() => next()
     case _ if in.observeOutdented() =>
+    case t if t.is[EndMarkerIntro] =>
     case _ => accept[Semicolon]
   }
   def acceptStatSepOpt() =
@@ -4841,12 +4842,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       templateBody(enumCaseAllowed)
     } else if (isColonEol(token)) {
       accept[Colon]
-      if (enumCaseAllowed)
-        in.observeIndentedEnum()
-      else
-        in.observeIndented()
 
-      indented(templateStatSeq(enumCaseAllowed))
+      val nextIndented =
+        if (enumCaseAllowed)
+          in.observeIndentedEnum()
+        else
+          in.observeIndented()
+
+      if (nextIndented)
+        indented(templateStatSeq(enumCaseAllowed))
+      else if (token.is[EndMarkerIntro] && !enumCaseAllowed)
+        (autoPos(Self(autoPos(Name.Anonymous()), None)), Nil)
+      else
+        syntaxError("expected template body", token)
     } else {
       if (token.is[LeftParen]) {
         if (parenMeansSyntaxError) {
