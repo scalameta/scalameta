@@ -1932,4 +1932,53 @@ class SignificantIndentationSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("package-mixed") {
+    runTestAssert[Source](
+      """|package tests.site
+         |
+         |package some.other:
+         |  class SomeOtherPackage
+         |
+         |class BrokenLink
+         |""".stripMargin,
+      assertLayout = Some(
+        """|package tests.site
+           |package some.other {
+           |  class SomeOtherPackage
+           |}
+           |class BrokenLink
+           |""".stripMargin
+      )
+    )(
+      Source(
+        List(
+          Pkg(
+            Term.Select(Term.Name("tests"), Term.Name("site")),
+            List(
+              Pkg(
+                Term.Select(Term.Name("some"), Term.Name("other")),
+                List(
+                  Defn.Class(
+                    Nil,
+                    Type.Name("SomeOtherPackage"),
+                    Nil,
+                    Ctor.Primary(Nil, Name(""), Nil),
+                    Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+                  )
+                )
+              ),
+              Defn.Class(
+                Nil,
+                Type.Name("BrokenLink"),
+                Nil,
+                Ctor.Primary(Nil, Name(""), Nil),
+                Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+              )
+            )
+          )
+        )
+      )
+    )
+  }
 }
