@@ -752,6 +752,102 @@ class ScaladocParserSuite extends FunSuite {
     assertEquals(result, expectation)
   }
 
+  test("parse throws tag") {
+    assertEquals(
+      parseString(
+        s"""
+         /**
+          * @throws e1 foo bar
+          * @throws e2 baz qux
+          * bar-baz
+          */
+         """
+      ),
+      Option(
+        Scaladoc(
+          Seq(
+            Paragraph(
+              Seq(
+                Tag(
+                  TagType.Throws,
+                  null,
+                  Text(Seq(Word("e1"), Word("foo"), Word("bar")))
+                ),
+                Tag(
+                  TagType.Throws,
+                  null,
+                  Text(Seq(Word("e2"), Word("baz"), Word("qux"), Word("bar-baz")))
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+
+  test("parse since, version tags") {
+    assertEquals(
+      parseString(
+        s"""
+         /**
+          * @version 1.0 foo bar
+          * @since 1.0 baz qux
+          * bar-baz
+          */
+         """
+      ),
+      Option(
+        Scaladoc(
+          Seq(
+            Paragraph(
+              Seq(
+                Tag(
+                  TagType.Version,
+                  null,
+                  Text(Seq(Word("1.0"), Word("foo"), Word("bar")))
+                ),
+                Tag(
+                  TagType.Since,
+                  null,
+                  Text(Seq(Word("1.0"), Word("baz"), Word("qux"), Word("bar-baz")))
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+
+  test("parse define macro tags") {
+    assertEquals(
+      parseString(
+        s"""
+         /**
+          * @define what for what reason
+          * bar-baz
+          */
+         """
+      ),
+      Option(
+        Scaladoc(
+          Seq(
+            Paragraph(
+              Seq(
+                Tag(
+                  TagType.UnknownTag("@define"),
+                  null,
+                  Text(Seq(Word("what"), Word("for"), Word("what"), Word("reason"), Word("bar-baz")))
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+
   test("parse tag") {
     assertEquals(
       parseString(
