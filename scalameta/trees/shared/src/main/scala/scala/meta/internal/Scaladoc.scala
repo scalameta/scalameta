@@ -138,7 +138,7 @@ object Scaladoc {
     /* Method, Constructor and/or Class tags */
 
     /** What exceptions (if any) the method or constructor may throw */
-    case object Throws extends Base("@throws", hasDesc = true)
+    case object Throws extends Base("@throws", hasLabel = true, hasDesc = true)
 
     /** Detail a value parameter for a method or constructor */
     case object Param extends Base("@param", hasLabel = true, hasDesc = true)
@@ -191,10 +191,10 @@ object Scaladoc {
     case object Author extends Base("@author", hasDesc = true)
 
     /** The version of the system or API that this entity is a part of */
-    case object Version extends Base("@version", hasDesc = true)
+    case object Version extends Base("@version", hasLabel = true)
 
     /** The version of the system or API that this entity was first defined in */
-    case object Since extends Base("@since", hasDesc = true)
+    case object Since extends Base("@since", hasLabel = true, hasDesc = true)
 
     /** Documents unimplemented features in an entity */
     case object Todo extends Base("@todo", hasDesc = true)
@@ -215,7 +215,12 @@ object Scaladoc {
     case object Documentable extends Base("@documentable", hasDesc = true)
 
     /* Macros tags */
-    // @define <name> <definition>
+
+    /**
+     * Allows use of {{{label}}} in other Scaladoc comments within the same
+     * source file which will be expanded to the contents of {{{definition}}}.
+     */
+    case object Define extends Base("@define", hasLabel = true, hasDesc = true)
 
     /* 2.12 tags */
     // @shortDescription
@@ -236,6 +241,7 @@ object Scaladoc {
       GroupName,
       GroupDesc,
       GroupPriority,
+      Define,
       Author,
       Version,
       Since,
