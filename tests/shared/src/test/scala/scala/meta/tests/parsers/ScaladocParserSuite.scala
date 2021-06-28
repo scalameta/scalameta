@@ -770,13 +770,13 @@ class ScaladocParserSuite extends FunSuite {
               Seq(
                 Tag(
                   TagType.Throws,
-                  null,
-                  Text(Seq(Word("e1"), Word("foo"), Word("bar")))
+                  Word("e1"),
+                  Text(Seq(Word("foo"), Word("bar")))
                 ),
                 Tag(
                   TagType.Throws,
-                  null,
-                  Text(Seq(Word("e2"), Word("baz"), Word("qux"), Word("bar-baz")))
+                  Word("e2"),
+                  Text(Seq(Word("baz"), Word("qux"), Word("bar-baz")))
                 )
               )
             )
@@ -802,15 +802,12 @@ class ScaladocParserSuite extends FunSuite {
           Seq(
             Paragraph(
               Seq(
-                Tag(
-                  TagType.Version,
-                  null,
-                  Text(Seq(Word("1.0"), Word("foo"), Word("bar")))
-                ),
+                Tag(TagType.Version, Word("1.0")),
+                Text(Seq(Word("foo"), Word("bar"))),
                 Tag(
                   TagType.Since,
-                  null,
-                  Text(Seq(Word("1.0"), Word("baz"), Word("qux"), Word("bar-baz")))
+                  Word("1.0"),
+                  Text(Seq(Word("baz"), Word("qux"), Word("bar-baz")))
                 )
               )
             )
@@ -836,9 +833,9 @@ class ScaladocParserSuite extends FunSuite {
             Paragraph(
               Seq(
                 Tag(
-                  TagType.UnknownTag("@define"),
-                  null,
-                  Text(Seq(Word("what"), Word("for"), Word("what"), Word("reason"), Word("bar-baz")))
+                  TagType.Define,
+                  Word("what"),
+                  Text(Seq(Word("for"), Word("what"), Word("reason"), Word("bar-baz")))
                 )
               )
             )
