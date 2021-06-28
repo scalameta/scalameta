@@ -554,4 +554,24 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Name.Anonymous _
        |""".stripMargin
   )
+
+  checkPositions[Stat](
+    """|object x:
+       |  if cond then
+       |    gx
+       |    fx
+       |""".stripMargin,
+    """|Template :
+       |  if cond then
+       |    gx
+       |    fx
+       |Self   @@if cond then
+       |Term.If if cond then
+       |    gx
+       |    fx
+       |Term.Block gx
+       |    fx
+       |Lit.Unit     fx@@
+       |""".stripMargin
+  )
 }

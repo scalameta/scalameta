@@ -861,7 +861,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (rangeFromStart.isEmpty) (startTokenPos, endTokenPos)
       else (skipTrivia(rangeFromStart), skipTrivia(rangeFromStart.reverse))
 
-    TokenStreamPosition(start, end + 1)
+    if (start == end && scannerTokens(start).is[Trivia])
+      TokenStreamPosition(start, end)
+    else
+      TokenStreamPosition(start, end + 1)
   }
 
   def atPosTry[T <: Tree](start: Pos, end: Pos)(body: => Try[T]): Try[T] = {
