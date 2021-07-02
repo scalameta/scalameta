@@ -328,6 +328,72 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
+  test("given-with-import") {
+    runTestAssert[Stat](
+      code = """|given intOrd: Ord[Int] with
+                |  import math.max as maxF
+                |  def f(): Int = 1
+                |""".stripMargin,
+      assertLayout = Some(
+        """|given intOrd: Ord[Int] with {
+           |  import math.max as maxF
+           |  def f(): Int = 1
+           |}""".stripMargin
+      )
+    )(
+      Defn.Given(
+        Nil,
+        Term.Name("intOrd"),
+        Nil,
+        Nil,
+        Template(
+          Nil,
+          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          Self(Name(""), None),
+          List(
+            Import(
+              List(Importer(Term.Name("math"), List(Importee.Rename(Name("max"), Name("maxF")))))
+            ),
+            Defn.Def(Nil, Term.Name("f"), Nil, List(List()), Some(Type.Name("Int")), Lit.Int(1))
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("given-with-export") {
+    runTestAssert[Stat](
+      code = """|given intOrd: Ord[Int] with
+                |  export math.max
+                |  def f(): Int = 1
+                |""".stripMargin,
+      assertLayout = Some(
+        """|given intOrd: Ord[Int] with {
+           |  export math.max
+           |  def f(): Int = 1
+           |}""".stripMargin
+      )
+    )(
+      Defn.Given(
+        Nil,
+        Term.Name("intOrd"),
+        Nil,
+        Nil,
+        Template(
+          Nil,
+          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          Self(Name(""), None),
+          List(
+            Export(List(Importer(Term.Name("math"), List(Importee.Name(Name("max")))))),
+            Defn.Def(Nil, Term.Name("f"), Nil, List(List()), Some(Type.Name("Int")), Lit.Int(1))
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
   // ---------------------------------
   // GIVEN ALIAS
   // ---------------------------------
