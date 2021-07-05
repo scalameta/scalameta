@@ -1,0 +1,112 @@
+package example
+
+object X/*<=example.X.*/ {
+  @deprecated/*=>scala.deprecated#*//*=>scala.deprecated#`<init>`().*/("to test -Xmaxwarn", since/*=>scala.deprecated#`<init>`().(since)*/ = "forever")
+  def x/*<=example.X.x().*/ = 42
+}
+
+trait T/*<=example.T#*/ {
+
+  import X/*=>example.X.*/._
+  def `1`/*<=example.T#`1`().*/ = x/*=>example.X.x().*/
+  def `2`/*<=example.T#`2`().*/ = x/*=>example.X.x().*/
+  def `3`/*<=example.T#`3`().*/ = x/*=>example.X.x().*/
+  def `4`/*<=example.T#`4`().*/ = x/*=>example.X.x().*/
+  def `5`/*<=example.T#`5`().*/ = x/*=>example.X.x().*/
+  def `6`/*<=example.T#`6`().*/ = x/*=>example.X.x().*/
+  def `7`/*<=example.T#`7`().*/ = x/*=>example.X.x().*/
+  def `8`/*<=example.T#`8`().*/ = x/*=>example.X.x().*/
+  def `9`/*<=example.T#`9`().*/ = x/*=>example.X.x().*/
+  def `10`/*<=example.T#`10`().*/ = x/*=>example.X.x().*/
+  def `11`/*<=example.T#`11`().*/ = x/*=>example.X.x().*/
+  def `12`/*<=example.T#`12`().*/ = x/*=>example.X.x().*/
+  def `13`/*<=example.T#`13`().*/ = x/*=>example.X.x().*/
+  def `14`/*<=example.T#`14`().*/ = x/*=>example.X.x().*/
+  def `15`/*<=example.T#`15`().*/ = x/*=>example.X.x().*/
+  def `16`/*<=example.T#`16`().*/ = x/*=>example.X.x().*/
+  def `17`/*<=example.T#`17`().*/ = x/*=>example.X.x().*/
+  def `18`/*<=example.T#`18`().*/ = x/*=>example.X.x().*/
+  def `19`/*<=example.T#`19`().*/ = x/*=>example.X.x().*/
+  def `20`/*<=example.T#`20`().*/ = x/*=>example.X.x().*/
+  def `21`/*<=example.T#`21`().*/ = x/*=>example.X.x().*/
+  def `22`/*<=example.T#`22`().*/ = x/*=>example.X.x().*/
+  def `23`/*<=example.T#`23`().*/ = x/*=>example.X.x().*/
+  def `24`/*<=example.T#`24`().*/ = x/*=>example.X.x().*/
+  def `25`/*<=example.T#`25`().*/ = x/*=>example.X.x().*/
+  def `26`/*<=example.T#`26`().*/ = x/*=>example.X.x().*/
+  def `27`/*<=example.T#`27`().*/ = x/*=>example.X.x().*/
+  def `28`/*<=example.T#`28`().*/ = x/*=>example.X.x().*/
+  def `29`/*<=example.T#`29`().*/ = x/*=>example.X.x().*/
+  def `30`/*<=example.T#`30`().*/ = x/*=>example.X.x().*/
+  def `31`/*<=example.T#`31`().*/ = x/*=>example.X.x().*/
+  def `32`/*<=example.T#`32`().*/ = x/*=>example.X.x().*/
+  def `33`/*<=example.T#`33`().*/ = x/*=>example.X.x().*/
+  def `34`/*<=example.T#`34`().*/ = x/*=>example.X.x().*/
+  def `35`/*<=example.T#`35`().*/ = x/*=>example.X.x().*/
+  def `36`/*<=example.T#`36`().*/ = x/*=>example.X.x().*/
+  def `37`/*<=example.T#`37`().*/ = x/*=>example.X.x().*/
+  def `38`/*<=example.T#`38`().*/ = x/*=>example.X.x().*/
+  def `39`/*<=example.T#`39`().*/ = x/*=>example.X.x().*/
+  def `40`/*<=example.T#`40`().*/ = x/*=>example.X.x().*/
+  def `41`/*<=example.T#`41`().*/ = x/*=>example.X.x().*/
+  def `42`/*<=example.T#`42`().*/ = x/*=>example.X.x().*/
+  def `43`/*<=example.T#`43`().*/ = x/*=>example.X.x().*/
+  def `44`/*<=example.T#`44`().*/ = x/*=>example.X.x().*/
+  def `45`/*<=example.T#`45`().*/ = x/*=>example.X.x().*/
+  def `46`/*<=example.T#`46`().*/ = x/*=>example.X.x().*/
+  def `47`/*<=example.T#`47`().*/ = x/*=>example.X.x().*/
+  def `48`/*<=example.T#`48`().*/ = x/*=>example.X.x().*/
+  def `49`/*<=example.T#`49`().*/ = x/*=>example.X.x().*/
+  def `50`/*<=example.T#`50`().*/ = x/*=>example.X.x().*/
+  def `51`/*<=example.T#`51`().*/ = x/*=>example.X.x().*/
+  def `52`/*<=example.T#`52`().*/ = x/*=>example.X.x().*/
+  def `53`/*<=example.T#`53`().*/ = x/*=>example.X.x().*/
+  def `54`/*<=example.T#`54`().*/ = x/*=>example.X.x().*/
+  def `55`/*<=example.T#`55`().*/ = x/*=>example.X.x().*/
+  def `56`/*<=example.T#`56`().*/ = x/*=>example.X.x().*/
+  def `57`/*<=example.T#`57`().*/ = x/*=>example.X.x().*/
+  def `58`/*<=example.T#`58`().*/ = x/*=>example.X.x().*/
+  def `59`/*<=example.T#`59`().*/ = x/*=>example.X.x().*/
+  def `60`/*<=example.T#`60`().*/ = x/*=>example.X.x().*/
+  def `61`/*<=example.T#`61`().*/ = x/*=>example.X.x().*/
+  def `62`/*<=example.T#`62`().*/ = x/*=>example.X.x().*/
+  def `63`/*<=example.T#`63`().*/ = x/*=>example.X.x().*/
+  def `64`/*<=example.T#`64`().*/ = x/*=>example.X.x().*/
+  def `65`/*<=example.T#`65`().*/ = x/*=>example.X.x().*/
+  def `66`/*<=example.T#`66`().*/ = x/*=>example.X.x().*/
+  def `67`/*<=example.T#`67`().*/ = x/*=>example.X.x().*/
+  def `68`/*<=example.T#`68`().*/ = x/*=>example.X.x().*/
+  def `69`/*<=example.T#`69`().*/ = x/*=>example.X.x().*/
+  def `70`/*<=example.T#`70`().*/ = x/*=>example.X.x().*/
+  def `71`/*<=example.T#`71`().*/ = x/*=>example.X.x().*/
+  def `72`/*<=example.T#`72`().*/ = x/*=>example.X.x().*/
+  def `73`/*<=example.T#`73`().*/ = x/*=>example.X.x().*/
+  def `74`/*<=example.T#`74`().*/ = x/*=>example.X.x().*/
+  def `75`/*<=example.T#`75`().*/ = x/*=>example.X.x().*/
+  def `76`/*<=example.T#`76`().*/ = x/*=>example.X.x().*/
+  def `77`/*<=example.T#`77`().*/ = x/*=>example.X.x().*/
+  def `78`/*<=example.T#`78`().*/ = x/*=>example.X.x().*/
+  def `79`/*<=example.T#`79`().*/ = x/*=>example.X.x().*/
+  def `80`/*<=example.T#`80`().*/ = x/*=>example.X.x().*/
+  def `81`/*<=example.T#`81`().*/ = x/*=>example.X.x().*/
+  def `82`/*<=example.T#`82`().*/ = x/*=>example.X.x().*/
+  def `83`/*<=example.T#`83`().*/ = x/*=>example.X.x().*/
+  def `84`/*<=example.T#`84`().*/ = x/*=>example.X.x().*/
+  def `85`/*<=example.T#`85`().*/ = x/*=>example.X.x().*/
+  def `86`/*<=example.T#`86`().*/ = x/*=>example.X.x().*/
+  def `87`/*<=example.T#`87`().*/ = x/*=>example.X.x().*/
+  def `88`/*<=example.T#`88`().*/ = x/*=>example.X.x().*/
+  def `89`/*<=example.T#`89`().*/ = x/*=>example.X.x().*/
+  def `90`/*<=example.T#`90`().*/ = x/*=>example.X.x().*/
+  def `91`/*<=example.T#`91`().*/ = x/*=>example.X.x().*/
+  def `92`/*<=example.T#`92`().*/ = x/*=>example.X.x().*/
+  def `93`/*<=example.T#`93`().*/ = x/*=>example.X.x().*/
+  def `94`/*<=example.T#`94`().*/ = x/*=>example.X.x().*/
+  def `95`/*<=example.T#`95`().*/ = x/*=>example.X.x().*/
+  def `96`/*<=example.T#`96`().*/ = x/*=>example.X.x().*/
+  def `97`/*<=example.T#`97`().*/ = x/*=>example.X.x().*/
+  def `98`/*<=example.T#`98`().*/ = x/*=>example.X.x().*/
+  def `99`/*<=example.T#`99`().*/ = x/*=>example.X.x().*/
+  def `100`/*<=example.T#`100`().*/ = x/*=>example.X.x().*/
+  def `101`/*<=example.T#`101`().*/ = x/*=>example.X.x().*/
+}

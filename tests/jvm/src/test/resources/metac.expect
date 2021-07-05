@@ -5055,3 +5055,549 @@ Occurrences:
 [4:14..4:17): Seq => scala/collection/Seq#
 [4:18..4:21): Int => scala/Int#
 [4:26..4:30): Unit => scala/Unit#
+
+semanticdb/integration/src/main/scala/example/XmaxWarn.scala
+------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/XmaxWarn.scala
+Text => non-empty
+Language => Scala
+Symbols => 104 entries
+Occurrences => 210 entries
+
+Symbols:
+example/T# => trait T extends AnyRef { +101 decls }
+  AnyRef => scala/AnyRef#
+example/T#`1`(). => method 1: Int
+  Int => scala/Int#
+example/T#`2`(). => method 2: Int
+  Int => scala/Int#
+example/T#`3`(). => method 3: Int
+  Int => scala/Int#
+example/T#`4`(). => method 4: Int
+  Int => scala/Int#
+example/T#`5`(). => method 5: Int
+  Int => scala/Int#
+example/T#`6`(). => method 6: Int
+  Int => scala/Int#
+example/T#`7`(). => method 7: Int
+  Int => scala/Int#
+example/T#`8`(). => method 8: Int
+  Int => scala/Int#
+example/T#`9`(). => method 9: Int
+  Int => scala/Int#
+example/T#`10`(). => method 10: Int
+  Int => scala/Int#
+example/T#`11`(). => method 11: Int
+  Int => scala/Int#
+example/T#`12`(). => method 12: Int
+  Int => scala/Int#
+example/T#`13`(). => method 13: Int
+  Int => scala/Int#
+example/T#`14`(). => method 14: Int
+  Int => scala/Int#
+example/T#`15`(). => method 15: Int
+  Int => scala/Int#
+example/T#`16`(). => method 16: Int
+  Int => scala/Int#
+example/T#`17`(). => method 17: Int
+  Int => scala/Int#
+example/T#`18`(). => method 18: Int
+  Int => scala/Int#
+example/T#`19`(). => method 19: Int
+  Int => scala/Int#
+example/T#`20`(). => method 20: Int
+  Int => scala/Int#
+example/T#`21`(). => method 21: Int
+  Int => scala/Int#
+example/T#`22`(). => method 22: Int
+  Int => scala/Int#
+example/T#`23`(). => method 23: Int
+  Int => scala/Int#
+example/T#`24`(). => method 24: Int
+  Int => scala/Int#
+example/T#`25`(). => method 25: Int
+  Int => scala/Int#
+example/T#`26`(). => method 26: Int
+  Int => scala/Int#
+example/T#`27`(). => method 27: Int
+  Int => scala/Int#
+example/T#`28`(). => method 28: Int
+  Int => scala/Int#
+example/T#`29`(). => method 29: Int
+  Int => scala/Int#
+example/T#`30`(). => method 30: Int
+  Int => scala/Int#
+example/T#`31`(). => method 31: Int
+  Int => scala/Int#
+example/T#`32`(). => method 32: Int
+  Int => scala/Int#
+example/T#`33`(). => method 33: Int
+  Int => scala/Int#
+example/T#`34`(). => method 34: Int
+  Int => scala/Int#
+example/T#`35`(). => method 35: Int
+  Int => scala/Int#
+example/T#`36`(). => method 36: Int
+  Int => scala/Int#
+example/T#`37`(). => method 37: Int
+  Int => scala/Int#
+example/T#`38`(). => method 38: Int
+  Int => scala/Int#
+example/T#`39`(). => method 39: Int
+  Int => scala/Int#
+example/T#`40`(). => method 40: Int
+  Int => scala/Int#
+example/T#`41`(). => method 41: Int
+  Int => scala/Int#
+example/T#`42`(). => method 42: Int
+  Int => scala/Int#
+example/T#`43`(). => method 43: Int
+  Int => scala/Int#
+example/T#`44`(). => method 44: Int
+  Int => scala/Int#
+example/T#`45`(). => method 45: Int
+  Int => scala/Int#
+example/T#`46`(). => method 46: Int
+  Int => scala/Int#
+example/T#`47`(). => method 47: Int
+  Int => scala/Int#
+example/T#`48`(). => method 48: Int
+  Int => scala/Int#
+example/T#`49`(). => method 49: Int
+  Int => scala/Int#
+example/T#`50`(). => method 50: Int
+  Int => scala/Int#
+example/T#`51`(). => method 51: Int
+  Int => scala/Int#
+example/T#`52`(). => method 52: Int
+  Int => scala/Int#
+example/T#`53`(). => method 53: Int
+  Int => scala/Int#
+example/T#`54`(). => method 54: Int
+  Int => scala/Int#
+example/T#`55`(). => method 55: Int
+  Int => scala/Int#
+example/T#`56`(). => method 56: Int
+  Int => scala/Int#
+example/T#`57`(). => method 57: Int
+  Int => scala/Int#
+example/T#`58`(). => method 58: Int
+  Int => scala/Int#
+example/T#`59`(). => method 59: Int
+  Int => scala/Int#
+example/T#`60`(). => method 60: Int
+  Int => scala/Int#
+example/T#`61`(). => method 61: Int
+  Int => scala/Int#
+example/T#`62`(). => method 62: Int
+  Int => scala/Int#
+example/T#`63`(). => method 63: Int
+  Int => scala/Int#
+example/T#`64`(). => method 64: Int
+  Int => scala/Int#
+example/T#`65`(). => method 65: Int
+  Int => scala/Int#
+example/T#`66`(). => method 66: Int
+  Int => scala/Int#
+example/T#`67`(). => method 67: Int
+  Int => scala/Int#
+example/T#`68`(). => method 68: Int
+  Int => scala/Int#
+example/T#`69`(). => method 69: Int
+  Int => scala/Int#
+example/T#`70`(). => method 70: Int
+  Int => scala/Int#
+example/T#`71`(). => method 71: Int
+  Int => scala/Int#
+example/T#`72`(). => method 72: Int
+  Int => scala/Int#
+example/T#`73`(). => method 73: Int
+  Int => scala/Int#
+example/T#`74`(). => method 74: Int
+  Int => scala/Int#
+example/T#`75`(). => method 75: Int
+  Int => scala/Int#
+example/T#`76`(). => method 76: Int
+  Int => scala/Int#
+example/T#`77`(). => method 77: Int
+  Int => scala/Int#
+example/T#`78`(). => method 78: Int
+  Int => scala/Int#
+example/T#`79`(). => method 79: Int
+  Int => scala/Int#
+example/T#`80`(). => method 80: Int
+  Int => scala/Int#
+example/T#`81`(). => method 81: Int
+  Int => scala/Int#
+example/T#`82`(). => method 82: Int
+  Int => scala/Int#
+example/T#`83`(). => method 83: Int
+  Int => scala/Int#
+example/T#`84`(). => method 84: Int
+  Int => scala/Int#
+example/T#`85`(). => method 85: Int
+  Int => scala/Int#
+example/T#`86`(). => method 86: Int
+  Int => scala/Int#
+example/T#`87`(). => method 87: Int
+  Int => scala/Int#
+example/T#`88`(). => method 88: Int
+  Int => scala/Int#
+example/T#`89`(). => method 89: Int
+  Int => scala/Int#
+example/T#`90`(). => method 90: Int
+  Int => scala/Int#
+example/T#`91`(). => method 91: Int
+  Int => scala/Int#
+example/T#`92`(). => method 92: Int
+  Int => scala/Int#
+example/T#`93`(). => method 93: Int
+  Int => scala/Int#
+example/T#`94`(). => method 94: Int
+  Int => scala/Int#
+example/T#`95`(). => method 95: Int
+  Int => scala/Int#
+example/T#`96`(). => method 96: Int
+  Int => scala/Int#
+example/T#`97`(). => method 97: Int
+  Int => scala/Int#
+example/T#`98`(). => method 98: Int
+  Int => scala/Int#
+example/T#`99`(). => method 99: Int
+  Int => scala/Int#
+example/T#`100`(). => method 100: Int
+  Int => scala/Int#
+example/T#`101`(). => method 101: Int
+  Int => scala/Int#
+example/X. => final object X extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/X.x(). => @deprecated method x: Int
+  deprecated => scala/deprecated#
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:7..2:8): X <= example/X.
+[3:3..3:13): deprecated => scala/deprecated#
+[3:13..3:13):  => scala/deprecated#`<init>`().
+[3:35..3:40): since => scala/deprecated#`<init>`().(since)
+[4:6..4:7): x <= example/X.x().
+[7:6..7:7): T <= example/T#
+[9:9..9:10): X => example/X.
+[10:6..10:9): `1` <= example/T#`1`().
+[10:12..10:13): x => example/X.x().
+[11:6..11:9): `2` <= example/T#`2`().
+[11:12..11:13): x => example/X.x().
+[12:6..12:9): `3` <= example/T#`3`().
+[12:12..12:13): x => example/X.x().
+[13:6..13:9): `4` <= example/T#`4`().
+[13:12..13:13): x => example/X.x().
+[14:6..14:9): `5` <= example/T#`5`().
+[14:12..14:13): x => example/X.x().
+[15:6..15:9): `6` <= example/T#`6`().
+[15:12..15:13): x => example/X.x().
+[16:6..16:9): `7` <= example/T#`7`().
+[16:12..16:13): x => example/X.x().
+[17:6..17:9): `8` <= example/T#`8`().
+[17:12..17:13): x => example/X.x().
+[18:6..18:9): `9` <= example/T#`9`().
+[18:12..18:13): x => example/X.x().
+[19:6..19:10): `10` <= example/T#`10`().
+[19:13..19:14): x => example/X.x().
+[20:6..20:10): `11` <= example/T#`11`().
+[20:13..20:14): x => example/X.x().
+[21:6..21:10): `12` <= example/T#`12`().
+[21:13..21:14): x => example/X.x().
+[22:6..22:10): `13` <= example/T#`13`().
+[22:13..22:14): x => example/X.x().
+[23:6..23:10): `14` <= example/T#`14`().
+[23:13..23:14): x => example/X.x().
+[24:6..24:10): `15` <= example/T#`15`().
+[24:13..24:14): x => example/X.x().
+[25:6..25:10): `16` <= example/T#`16`().
+[25:13..25:14): x => example/X.x().
+[26:6..26:10): `17` <= example/T#`17`().
+[26:13..26:14): x => example/X.x().
+[27:6..27:10): `18` <= example/T#`18`().
+[27:13..27:14): x => example/X.x().
+[28:6..28:10): `19` <= example/T#`19`().
+[28:13..28:14): x => example/X.x().
+[29:6..29:10): `20` <= example/T#`20`().
+[29:13..29:14): x => example/X.x().
+[30:6..30:10): `21` <= example/T#`21`().
+[30:13..30:14): x => example/X.x().
+[31:6..31:10): `22` <= example/T#`22`().
+[31:13..31:14): x => example/X.x().
+[32:6..32:10): `23` <= example/T#`23`().
+[32:13..32:14): x => example/X.x().
+[33:6..33:10): `24` <= example/T#`24`().
+[33:13..33:14): x => example/X.x().
+[34:6..34:10): `25` <= example/T#`25`().
+[34:13..34:14): x => example/X.x().
+[35:6..35:10): `26` <= example/T#`26`().
+[35:13..35:14): x => example/X.x().
+[36:6..36:10): `27` <= example/T#`27`().
+[36:13..36:14): x => example/X.x().
+[37:6..37:10): `28` <= example/T#`28`().
+[37:13..37:14): x => example/X.x().
+[38:6..38:10): `29` <= example/T#`29`().
+[38:13..38:14): x => example/X.x().
+[39:6..39:10): `30` <= example/T#`30`().
+[39:13..39:14): x => example/X.x().
+[40:6..40:10): `31` <= example/T#`31`().
+[40:13..40:14): x => example/X.x().
+[41:6..41:10): `32` <= example/T#`32`().
+[41:13..41:14): x => example/X.x().
+[42:6..42:10): `33` <= example/T#`33`().
+[42:13..42:14): x => example/X.x().
+[43:6..43:10): `34` <= example/T#`34`().
+[43:13..43:14): x => example/X.x().
+[44:6..44:10): `35` <= example/T#`35`().
+[44:13..44:14): x => example/X.x().
+[45:6..45:10): `36` <= example/T#`36`().
+[45:13..45:14): x => example/X.x().
+[46:6..46:10): `37` <= example/T#`37`().
+[46:13..46:14): x => example/X.x().
+[47:6..47:10): `38` <= example/T#`38`().
+[47:13..47:14): x => example/X.x().
+[48:6..48:10): `39` <= example/T#`39`().
+[48:13..48:14): x => example/X.x().
+[49:6..49:10): `40` <= example/T#`40`().
+[49:13..49:14): x => example/X.x().
+[50:6..50:10): `41` <= example/T#`41`().
+[50:13..50:14): x => example/X.x().
+[51:6..51:10): `42` <= example/T#`42`().
+[51:13..51:14): x => example/X.x().
+[52:6..52:10): `43` <= example/T#`43`().
+[52:13..52:14): x => example/X.x().
+[53:6..53:10): `44` <= example/T#`44`().
+[53:13..53:14): x => example/X.x().
+[54:6..54:10): `45` <= example/T#`45`().
+[54:13..54:14): x => example/X.x().
+[55:6..55:10): `46` <= example/T#`46`().
+[55:13..55:14): x => example/X.x().
+[56:6..56:10): `47` <= example/T#`47`().
+[56:13..56:14): x => example/X.x().
+[57:6..57:10): `48` <= example/T#`48`().
+[57:13..57:14): x => example/X.x().
+[58:6..58:10): `49` <= example/T#`49`().
+[58:13..58:14): x => example/X.x().
+[59:6..59:10): `50` <= example/T#`50`().
+[59:13..59:14): x => example/X.x().
+[60:6..60:10): `51` <= example/T#`51`().
+[60:13..60:14): x => example/X.x().
+[61:6..61:10): `52` <= example/T#`52`().
+[61:13..61:14): x => example/X.x().
+[62:6..62:10): `53` <= example/T#`53`().
+[62:13..62:14): x => example/X.x().
+[63:6..63:10): `54` <= example/T#`54`().
+[63:13..63:14): x => example/X.x().
+[64:6..64:10): `55` <= example/T#`55`().
+[64:13..64:14): x => example/X.x().
+[65:6..65:10): `56` <= example/T#`56`().
+[65:13..65:14): x => example/X.x().
+[66:6..66:10): `57` <= example/T#`57`().
+[66:13..66:14): x => example/X.x().
+[67:6..67:10): `58` <= example/T#`58`().
+[67:13..67:14): x => example/X.x().
+[68:6..68:10): `59` <= example/T#`59`().
+[68:13..68:14): x => example/X.x().
+[69:6..69:10): `60` <= example/T#`60`().
+[69:13..69:14): x => example/X.x().
+[70:6..70:10): `61` <= example/T#`61`().
+[70:13..70:14): x => example/X.x().
+[71:6..71:10): `62` <= example/T#`62`().
+[71:13..71:14): x => example/X.x().
+[72:6..72:10): `63` <= example/T#`63`().
+[72:13..72:14): x => example/X.x().
+[73:6..73:10): `64` <= example/T#`64`().
+[73:13..73:14): x => example/X.x().
+[74:6..74:10): `65` <= example/T#`65`().
+[74:13..74:14): x => example/X.x().
+[75:6..75:10): `66` <= example/T#`66`().
+[75:13..75:14): x => example/X.x().
+[76:6..76:10): `67` <= example/T#`67`().
+[76:13..76:14): x => example/X.x().
+[77:6..77:10): `68` <= example/T#`68`().
+[77:13..77:14): x => example/X.x().
+[78:6..78:10): `69` <= example/T#`69`().
+[78:13..78:14): x => example/X.x().
+[79:6..79:10): `70` <= example/T#`70`().
+[79:13..79:14): x => example/X.x().
+[80:6..80:10): `71` <= example/T#`71`().
+[80:13..80:14): x => example/X.x().
+[81:6..81:10): `72` <= example/T#`72`().
+[81:13..81:14): x => example/X.x().
+[82:6..82:10): `73` <= example/T#`73`().
+[82:13..82:14): x => example/X.x().
+[83:6..83:10): `74` <= example/T#`74`().
+[83:13..83:14): x => example/X.x().
+[84:6..84:10): `75` <= example/T#`75`().
+[84:13..84:14): x => example/X.x().
+[85:6..85:10): `76` <= example/T#`76`().
+[85:13..85:14): x => example/X.x().
+[86:6..86:10): `77` <= example/T#`77`().
+[86:13..86:14): x => example/X.x().
+[87:6..87:10): `78` <= example/T#`78`().
+[87:13..87:14): x => example/X.x().
+[88:6..88:10): `79` <= example/T#`79`().
+[88:13..88:14): x => example/X.x().
+[89:6..89:10): `80` <= example/T#`80`().
+[89:13..89:14): x => example/X.x().
+[90:6..90:10): `81` <= example/T#`81`().
+[90:13..90:14): x => example/X.x().
+[91:6..91:10): `82` <= example/T#`82`().
+[91:13..91:14): x => example/X.x().
+[92:6..92:10): `83` <= example/T#`83`().
+[92:13..92:14): x => example/X.x().
+[93:6..93:10): `84` <= example/T#`84`().
+[93:13..93:14): x => example/X.x().
+[94:6..94:10): `85` <= example/T#`85`().
+[94:13..94:14): x => example/X.x().
+[95:6..95:10): `86` <= example/T#`86`().
+[95:13..95:14): x => example/X.x().
+[96:6..96:10): `87` <= example/T#`87`().
+[96:13..96:14): x => example/X.x().
+[97:6..97:10): `88` <= example/T#`88`().
+[97:13..97:14): x => example/X.x().
+[98:6..98:10): `89` <= example/T#`89`().
+[98:13..98:14): x => example/X.x().
+[99:6..99:10): `90` <= example/T#`90`().
+[99:13..99:14): x => example/X.x().
+[100:6..100:10): `91` <= example/T#`91`().
+[100:13..100:14): x => example/X.x().
+[101:6..101:10): `92` <= example/T#`92`().
+[101:13..101:14): x => example/X.x().
+[102:6..102:10): `93` <= example/T#`93`().
+[102:13..102:14): x => example/X.x().
+[103:6..103:10): `94` <= example/T#`94`().
+[103:13..103:14): x => example/X.x().
+[104:6..104:10): `95` <= example/T#`95`().
+[104:13..104:14): x => example/X.x().
+[105:6..105:10): `96` <= example/T#`96`().
+[105:13..105:14): x => example/X.x().
+[106:6..106:10): `97` <= example/T#`97`().
+[106:13..106:14): x => example/X.x().
+[107:6..107:10): `98` <= example/T#`98`().
+[107:13..107:14): x => example/X.x().
+[108:6..108:10): `99` <= example/T#`99`().
+[108:13..108:14): x => example/X.x().
+[109:6..109:11): `100` <= example/T#`100`().
+[109:14..109:15): x => example/X.x().
+[110:6..110:11): `101` <= example/T#`101`().
+[110:14..110:15): x => example/X.x().
+semanticdb/integration/src/main/scala/example/XmaxWarn.scala
+------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/XmaxWarn.scala
+Text => empty
+Language => Scala
+Diagnostics => 101 entries
+
+Diagnostics:
+[10:12..10:13) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[11:12..11:13) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[12:12..12:13) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[13:12..13:13) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[14:12..14:13) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[15:12..15:13) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[16:12..16:13) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[17:12..17:13) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[18:12..18:13) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[19:13..19:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[20:13..20:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[21:13..21:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[22:13..22:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[23:13..23:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[24:13..24:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[25:13..25:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[26:13..26:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[27:13..27:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[28:13..28:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[29:13..29:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[30:13..30:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[31:13..31:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[32:13..32:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[33:13..33:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[34:13..34:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[35:13..35:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[36:13..36:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[37:13..37:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[38:13..38:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[39:13..39:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[40:13..40:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[41:13..41:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[42:13..42:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[43:13..43:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[44:13..44:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[45:13..45:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[46:13..46:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[47:13..47:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[48:13..48:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[49:13..49:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[50:13..50:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[51:13..51:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[52:13..52:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[53:13..53:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[54:13..54:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[55:13..55:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[56:13..56:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[57:13..57:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[58:13..58:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[59:13..59:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[60:13..60:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[61:13..61:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[62:13..62:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[63:13..63:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[64:13..64:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[65:13..65:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[66:13..66:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[67:13..67:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[68:13..68:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[69:13..69:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[70:13..70:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[71:13..71:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[72:13..72:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[73:13..73:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[74:13..74:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[75:13..75:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[76:13..76:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[77:13..77:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[78:13..78:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[79:13..79:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[80:13..80:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[81:13..81:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[82:13..82:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[83:13..83:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[84:13..84:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[85:13..85:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[86:13..86:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[87:13..87:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[88:13..88:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[89:13..89:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[90:13..90:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[91:13..91:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[92:13..92:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[93:13..93:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[94:13..94:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[95:13..95:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[96:13..96:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[97:13..97:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[98:13..98:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[99:13..99:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[100:13..100:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[101:13..101:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[102:13..102:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[103:13..103:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[104:13..104:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[105:13..105:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[106:13..106:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[107:13..107:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[108:13..108:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[109:14..109:15) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[110:14..110:15) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
