@@ -4200,23 +4200,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           (anonymousName, List.empty, List.empty)
       }
 
-    val decltpe = startModType()
+    val decltype = startModType()
 
     def parents() = {
       val parents = ListBuffer[Init](
-        atPos(decltpe.startTokenPos, decltpe.endTokenPos)(
-          Init(decltpe, autoPos(Name.Anonymous()), Nil)
+        atPos(decltype.startTokenPos, auto)(
+          initRest(() => decltype, allowArgss = true, allowBraces = false)
         )
       )
-
       while (token.is[KwWith] && ahead(token.is[Ident])) { next(); parents += init() }
       parents.toList
     }
 
     if (token.is[Equals]) {
       accept[Equals]
-      Defn.GivenAlias(mods, sigName, sigTparams, sigUparamss, decltpe, exprMaybeIndented())
-    } else if (token.is[KwWith]) {
+      Defn.GivenAlias(mods, sigName, sigTparams, sigUparamss, decltype, exprMaybeIndented())
+    } else if (token.is[KwWith] || token.is[LeftParen]) {
       val inits = parents()
       val (slf, stats) = if (token.is[KwWith]) {
         accept[KwWith]
@@ -4234,13 +4233,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val rhs = if (slf.decltpe.nonEmpty) {
         syntaxError("given cannot have a self type", at = slf.pos)
       } else {
-        atPos(decltpe.startTokenPos, auto)(Template(List.empty, inits, slf, stats))
+        atPos(decltype.startTokenPos, auto)(Template(List.empty, inits, slf, stats))
       }
       Defn.Given(mods, sigName, sigTparams, sigUparamss, rhs)
     } else {
       sigName match {
         case name: Term.Name =>
-          Decl.Given(mods, name, sigTparams, sigUparamss, decltpe)
+          Decl.Given(mods, name, sigTparams, sigUparamss, decltype)
         case _ =>
           syntaxError("abstract givens cannot be annonymous", at = sigName.pos)
       }

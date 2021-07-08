@@ -268,6 +268,95 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
+  test("given-generic-anonymous") {
+    runTestAssert[Stat](
+      """|given noCaller: Caller(???) with
+         |  override def computeValue() = ()
+         |""".stripMargin,
+      assertLayout = Some(
+        "given noCaller: Caller(???) with { override def computeValue() = () }"
+      )
+    )(
+      Defn.Given(
+        Nil,
+        Term.Name("noCaller"),
+        Nil,
+        Nil,
+        Template(
+          Nil,
+          List(Init(Type.Name("Caller"), Name(""), List(List(Term.Name("???"))))),
+          Self(Name(""), None),
+          List(
+            Defn.Def(
+              List(Mod.Override()),
+              Term.Name("computeValue"),
+              Nil,
+              List(List()),
+              None,
+              Lit.Unit()
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("given-empty-anon") {
+    runTestAssert[Stat](
+      """|given C(1) with {}
+         |""".stripMargin,
+      assertLayout = Some(
+        "given C(1) with {}"
+      )
+    )(
+      Defn.Given(
+        Nil,
+        Name(""),
+        Nil,
+        Nil,
+        Template(
+          Nil,
+          List(Init(Type.Name("C"), Name(""), List(List(Lit.Int(1))))),
+          Self(Name(""), None),
+          Nil,
+          Nil
+        )
+      )
+    )
+  }
+
+  test("given-empty") {
+    runTestAssert[Stat](
+      """|given t1[T]: E[T]("low") with {}
+         |""".stripMargin,
+      assertLayout = Some(
+        """|given t1[T]: E[T]("low") with {}
+           |""".stripMargin
+      )
+    )(
+      Defn.Given(
+        Nil,
+        Term.Name("t1"),
+        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+        Nil,
+        Template(
+          Nil,
+          List(
+            Init(
+              Type.Apply(Type.Name("E"), List(Type.Name("T"))),
+              Name(""),
+              List(List(Lit.String("low")))
+            )
+          ),
+          Self(Name(""), None),
+          Nil,
+          Nil
+        )
+      )
+    )
+  }
+
   test("given-extension") {
     val code =
       """|given x: AnyRef with
