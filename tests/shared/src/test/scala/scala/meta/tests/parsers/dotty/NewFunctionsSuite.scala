@@ -657,4 +657,21 @@ class NewFunctionsSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("type Macro[X] = (=> Quotes) ?=> Expr[X]") {
+    runTestAssert[Stat](
+      "type Macro[X] = (=> Quotes) ?=> Expr[X]"
+    )(
+      Defn.Type(
+        Nil,
+        Type.Name("Macro"),
+        List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
+        Type.ContextFunction(
+          List(Type.ByName(Type.Name("Quotes"))),
+          Type.Apply(Type.Name("Expr"), List(Type.Name("X")))
+        ),
+        Type.Bounds(None, None)
+      )
+    )
+  }
 }
