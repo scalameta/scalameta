@@ -887,4 +887,33 @@ class TermSuite extends ParseSuite {
       )
     ) = res
   }
+
+  test("partial-function-returning-implicit-closure") {
+    val res =
+      term("""|{
+              |  case true => implicit i => "xxx"
+              |  case false => implicit i => i.toString
+              |}""".stripMargin)
+
+    val Term.PartialFunction(
+      List(
+        Case(
+          Lit.Boolean(true),
+          None,
+          Term.Function(
+            List(Term.Param(List(Mod.Implicit()), Term.Name("i"), None, None)),
+            Lit.String("xxx")
+          )
+        ),
+        Case(
+          Lit.Boolean(false),
+          None,
+          Term.Function(
+            List(Term.Param(List(Mod.Implicit()), Term.Name("i"), None, None)),
+            Term.Select(Term.Name("i"), Term.Name("toString"))
+          )
+        )
+      )
+    ) = res
+  }
 }

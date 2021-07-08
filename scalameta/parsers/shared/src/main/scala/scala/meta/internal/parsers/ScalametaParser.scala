@@ -5086,7 +5086,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         } else {
           stats += localDef(None)
         }
-        acceptStatSepOpt()
+        if (!token.is[CaseDefEnd]) acceptStatSepOpt()
       } else if (token.is[ExprIntro]) {
         stats += stat(expr(location = BlockStat, allowRepeated = false))
         if (!token.is[CaseDefEnd]) acceptStatSep()
