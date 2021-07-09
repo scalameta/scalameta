@@ -126,10 +126,35 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("new-if-expr-without-then") {
     val code =
-      """|  if (x > 0) && (y > 0)
+      """|{
+         |  if (x > 0) && (y > 0)
          |    x += 1
-         |""".stripMargin
-    runTestError[Stat](code, "then expected but \\n found")
+         |}""".stripMargin
+    runTestAssert[Stat](
+      code,
+      assertLayout = Some(
+        """|{
+           |  if (x > 0) &&(y > 0)
+           |  x += 1
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Block(
+        List(
+          Term.If(
+            Term.ApplyInfix(Term.Name("x"), Term.Name(">"), Nil, List(Lit.Int(0))),
+            Term.Apply(
+              Term.Name("&&"),
+              List(Term.ApplyInfix(Term.Name("y"), Term.Name(">"), Nil, List(Lit.Int(0))))
+            ),
+            Lit.Unit(),
+            Nil
+          ),
+          Term.ApplyInfix(Term.Name("x"), Term.Name("+="), Nil, List(Lit.Int(1)))
+        )
+      )
+    )
   }
 
   test("new-if-else-multiple") {
@@ -1154,10 +1179,33 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("while-cond-expr-without-do") {
     val code =
-      """|  while (x > 0) && (y > 0)
+      """|{
+         |  while (x > 0) && (y > 0)
          |    x += 1
-         |""".stripMargin
-    runTestError[Stat](code, "do expected but \\n found")
+         |}""".stripMargin
+    runTestAssert[Stat](
+      code,
+      assertLayout = Some(
+        """|{
+           |  while (x > 0) &&(y > 0)
+           |  x += 1
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Block(
+        List(
+          Term.While(
+            Term.ApplyInfix(Term.Name("x"), Term.Name(">"), Nil, List(Lit.Int(0))),
+            Term.Apply(
+              Term.Name("&&"),
+              List(Term.ApplyInfix(Term.Name("y"), Term.Name(">"), Nil, List(Lit.Int(0))))
+            )
+          ),
+          Term.ApplyInfix(Term.Name("x"), Term.Name("+="), Nil, List(Lit.Int(1)))
+        )
+      )
+    )
   }
 
   // --------------------------
@@ -1811,6 +1859,33 @@ class ControlSyntaxSuite extends BaseDottySuite {
           ),
           Nil
         )
+      )
+    )
+  }
+
+  test("if-infix") {
+    runTestAssert[Stat](
+      """|if (1) max 10 gt 0
+         |
+         |then
+         |  1
+         |else
+         |  2
+         |""".stripMargin,
+      assertLayout = Some(
+        "if (1 max 10 gt 0) 1 else 2"
+      )
+    )(
+      Term.If(
+        Term.ApplyInfix(
+          Term.ApplyInfix(Lit.Int(1), Term.Name("max"), Nil, List(Lit.Int(10))),
+          Term.Name("gt"),
+          Nil,
+          List(Lit.Int(0))
+        ),
+        Lit.Int(1),
+        Lit.Int(2),
+        Nil
       )
     )
   }

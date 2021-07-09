@@ -2282,19 +2282,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def condExprInParens[T <: Token: TokenInfo]: Term = {
     if (dialect.allowSignificantIndentation) {
       val forked = in.fork
-      val simpleExpr = condExpr()
-      if ((token.is[Ident] && isLeadingInfixOperator(token)) || token.is[Dot]) {
-        in = forked
-        val exprCond = expr()
+      try {
+        val simpleExpr = expr()
         val nextIsDelimiterKw =
-          if (token.is[LF]) ahead { newLineOpt(); token.is[T] }
+          if (token.is[LF] || token.is[LFLF]) ahead { newLinesOpt(); token.is[T] }
           else token.is[T]
-
-        if (nextIsDelimiterKw)
-          exprCond
-        else
-          syntaxErrorExpected[T]
-      } else simpleExpr
+        if (nextIsDelimiterKw) simpleExpr
+        else {
+          in = forked
+          condExpr()
+        }
+      } catch {
+        case NonFatal(_) =>
+          in = forked
+          condExpr()
+      }
     } else condExpr()
   }
 
