@@ -1093,4 +1093,28 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )
   }
+
+  test("type-param-last") {
+    runTestAssert[Stat](
+      """|def b2 = "".foo2(using foo)[Any]
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def b2 = "".foo2(using foo)[Any]
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("b2"),
+        Nil,
+        Nil,
+        None,
+        Term.ApplyType(
+          Term.ApplyUsing(Term.Select(Lit.String(""), Term.Name("foo2")), List(Term.Name("foo"))),
+          List(Type.Name("Any"))
+        )
+      )
+    )
+  }
+
 }
