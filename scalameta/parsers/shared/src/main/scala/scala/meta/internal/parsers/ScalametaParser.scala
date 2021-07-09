@@ -2959,7 +2959,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def macroSplice(): Term = autoPos {
     accept[MacroSplice]
     QuoteSpliceContext.enter()
-    val splice = Term.SplicedMacroExpr(autoPos(Term.Block(inBraces(templateStats()))))
+    val splice = Term.SplicedMacroExpr(autoPos(Term.Block(inBraces(blockStatSeq()))))
     QuoteSpliceContext.exit()
     splice
   }
@@ -2968,7 +2968,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     accept[MacroQuote]
     QuoteSpliceContext.enter()
     val quote = if (token.is[LeftBrace]) {
-      Term.QuotedMacroExpr(autoPos(Term.Block(inBraces(templateStats()))))
+      Term.QuotedMacroExpr(autoPos(Term.Block(inBraces(blockStatSeq()))))
     } else if (token.is[LeftBracket]) {
       Term.QuotedMacroType(inBrackets(typ()))
     } else {
