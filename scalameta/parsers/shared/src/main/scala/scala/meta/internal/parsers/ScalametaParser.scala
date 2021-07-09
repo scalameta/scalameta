@@ -609,7 +609,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
                 // !next.is[RightBrace] - braces can sometimes have -1 and we can start indent on }
                 if (nextIndent > currIndent && prev.is[RightArrow]) {
-                  !next.is[RightBrace] && indentOnArrow
+                  indentOnArrow && next.isNot[RightBrace] && next.isNot[EndMarkerIntro]
                 } else if (nextIndent > currIndent) {
                   // if does not work with indentation in pattern matches
                   val shouldNotIndentIf =

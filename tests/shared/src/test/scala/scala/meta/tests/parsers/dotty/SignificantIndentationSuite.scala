@@ -1981,4 +1981,31 @@ class SignificantIndentationSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("empty-case-end-marker") {
+    runTestAssert[Source](
+      """|
+         |  def abc: Unit =
+         |    x match
+         |      case _ =>
+         |  end abc
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Source(
+        List(
+          Defn.Def(
+            Nil,
+            Term.Name("abc"),
+            Nil,
+            Nil,
+            Some(Type.Name("Unit")),
+            Term.Match(Term.Name("x"), List(Case(Pat.Wildcard(), None, Term.Block(Nil))), Nil)
+          ),
+          Term.EndMarker(Term.Name("abc"))
+        )
+      )
+    )
+
+  }
 }
