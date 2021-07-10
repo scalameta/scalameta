@@ -1061,7 +1061,8 @@ object TreeSyntax {
         val pearly = r(t.early, "{ ", "; ", " } with")
         val pparents = r(t.inits, " with ")
         val derived = r(t.derives, "derives ", ", ", "")
-        val withGiven = if (t.parent.exists(_.is[Defn.Given]) && !isBodyEmpty) "with" else ""
+        val isGiven = t.parent.exists(_.is[Defn.Given])
+        val withGiven = if (!isGiven) "" else if (isBodyEmpty) "with {}" else "with"
         val pbody = {
           val isOneLiner =
             t.stats.length == 0 ||
