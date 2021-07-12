@@ -1841,4 +1841,89 @@ class ControlSyntaxSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("no-real-indentation") {
+    runTestAssert[Stat](
+      """|object Test:
+         |  try List(1, 2, 3) match
+         |  case x :: xs => println(x)
+         |  case Nil => println("Nil")
+         |  catch
+         |  case ex: java.io.IOException => println(ex)
+         |  case ex: Throwable => throw ex
+         |  end try
+         |""".stripMargin,
+      assertLayout = Some(
+        """|object Test {
+           |  try List(1, 2, 3) match {
+           |    case x :: xs =>
+           |      println(x)
+           |    case Nil =>
+           |      println("Nil")
+           |  } catch {
+           |    case ex: java.io.IOException =>
+           |      println(ex)
+           |    case ex: Throwable =>
+           |      throw ex
+           |      end try
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        Term.Name("Test"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Term.Try(
+              Term.Match(
+                Term.Apply(Term.Name("List"), List(Lit.Int(1), Lit.Int(2), Lit.Int(3))),
+                List(
+                  Case(
+                    Pat.ExtractInfix(
+                      Pat.Var(Term.Name("x")),
+                      Term.Name("::"),
+                      List(Pat.Var(Term.Name("xs")))
+                    ),
+                    None,
+                    Term.Apply(Term.Name("println"), List(Term.Name("x")))
+                  ),
+                  Case(
+                    Term.Name("Nil"),
+                    None,
+                    Term.Apply(Term.Name("println"), List(Lit.String("Nil")))
+                  )
+                ),
+                Nil
+              ),
+              List(
+                Case(
+                  Pat.Typed(
+                    Pat.Var(Term.Name("ex")),
+                    Type.Select(
+                      Term.Select(Term.Name("java"), Term.Name("io")),
+                      Type.Name("IOException")
+                    )
+                  ),
+                  None,
+                  Term.Apply(Term.Name("println"), List(Term.Name("ex")))
+                ),
+                Case(
+                  Pat.Typed(Pat.Var(Term.Name("ex")), Type.Name("Throwable")),
+                  None,
+                  Term.Block(List(Term.Throw(Term.Name("ex")), Term.EndMarker(Term.Name("try"))))
+                )
+              ),
+              None
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
 }

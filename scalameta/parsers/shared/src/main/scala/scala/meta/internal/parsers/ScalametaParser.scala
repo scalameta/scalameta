@@ -618,7 +618,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                 } else
                   // always add indent for indented `match` block
                   // check the previous token to avoid infinity loop
-                  (!prev.prev.is[soft.KwEnd] && prev.is[KwMatch]) &&
+                  (!prev.prev.is[soft.KwEnd] && (prev.is[KwMatch] || prev.is[KwCatch])) &&
                   next.is[KwCase] && token.isNot[Indentation.Indent]
               } else false
             }
