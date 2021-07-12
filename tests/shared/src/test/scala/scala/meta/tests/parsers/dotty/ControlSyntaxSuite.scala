@@ -1926,4 +1926,48 @@ class ControlSyntaxSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("comma-indent") {
+    runTestAssert[Stat](
+      """|def f(x: Int) =
+         |  assert(
+         |    if x > 0 then
+         |      true
+         |    else
+         |      if x < 0 then
+         |        true
+         |      else
+         |        false, "fail")
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def f(x: Int) = assert(if (x > 0) true else if (x < 0) true else false, "fail")
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("f"),
+        Nil,
+        List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))),
+        None,
+        Term.Apply(
+          Term.Name("assert"),
+          List(
+            Term.If(
+              Term.ApplyInfix(Term.Name("x"), Term.Name(">"), Nil, List(Lit.Int(0))),
+              Lit.Boolean(true),
+              Term.If(
+                Term.ApplyInfix(Term.Name("x"), Term.Name("<"), Nil, List(Lit.Int(0))),
+                Lit.Boolean(true),
+                Lit.Boolean(false),
+                Nil
+              ),
+              Nil
+            ),
+            Lit.String("fail")
+          )
+        )
+      )
+    )
+  }
 }
