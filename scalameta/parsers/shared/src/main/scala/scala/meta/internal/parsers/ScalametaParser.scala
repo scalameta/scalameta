@@ -411,14 +411,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
       def currRef: TokenRef = TokenRef(curr, currPos, currPos + 1, currPos)
 
+      def indentationWithinParenRegion: Boolean = sepRegions.headOption.exists(_ != RegionParen) &&
+        sepRegions
+          .collectFirst {
+            case RegionParen => true
+            case other if !other.isIndented => false
+          }
+          .getOrElse(false)
+
       if (isTrailingComma) {
         nextToken(currPos, currPos + 1, sepRegions)
       } else if (curr.isNot[Trivia]) {
         if (curr.is[LeftParen]) (RegionParen :: sepRegions, currRef)
         else if (curr.is[LeftBracket]) (RegionBracket :: sepRegions, currRef)
-        else if (curr.is[Comma] &&
-          sepRegions.headOption.exists(_.isInstanceOf[RegionIndent]) &&
-          sepRegions.tail.headOption.contains(RegionParen)) {
+        else if (curr.is[Comma] && indentationWithinParenRegion) {
           (sepRegions.tail, mkOutdent(prevPos))
         } else if (curr.is[LeftBrace]) {
           val indentInBrace = if (isAheadNewLine(currPos)) countIndent(nextPos) else -1
