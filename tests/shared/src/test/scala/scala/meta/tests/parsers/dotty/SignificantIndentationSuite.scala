@@ -2006,6 +2006,36 @@ class SignificantIndentationSuite extends BaseDottySuite {
         )
       )
     )
-
   }
+
+  test("infix-operator-with-alpha") {
+    runTestAssert[Stat](
+      """|def send() =
+         |  c ! "hello"
+         |    ! "world"
+         |    send_! "!"
+         |""".stripMargin,
+      assertLayout = Some("""def send() = c ! "hello" ! "world" send_! "!"""")
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("send"),
+        Nil,
+        List(List()),
+        None,
+        Term.ApplyInfix(
+          Term.ApplyInfix(
+            Term.ApplyInfix(Term.Name("c"), Term.Name("!"), Nil, List(Lit.String("hello"))),
+            Term.Name("!"),
+            Nil,
+            List(Lit.String("world"))
+          ),
+          Term.Name("send_!"),
+          Nil,
+          List(Lit.String("!"))
+        )
+      )
+    )
+  }
+
 }
