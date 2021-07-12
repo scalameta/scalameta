@@ -1133,4 +1133,32 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("refinements") {
+    runTestAssert[Stat](
+      """|val x: (C { type U = T } { type T = String }) # U 
+         |""".stripMargin,
+      assertLayout = Some(
+        """|val x: ((C { type U = T }) { type T = String })#U
+           |""".stripMargin
+      )
+    )(
+      Decl.Val(
+        Nil,
+        List(Pat.Var(Term.Name("x"))),
+        Type.Project(
+          Type.Refine(
+            Some(
+              Type.Refine(
+                Some(Type.Name("C")),
+                List(Defn.Type(Nil, Type.Name("U"), Nil, Type.Name("T"), Type.Bounds(None, None)))
+              )
+            ),
+            List(Defn.Type(Nil, Type.Name("T"), Nil, Type.Name("String"), Type.Bounds(None, None)))
+          ),
+          Type.Name("U")
+        )
+      )
+    )
+  }
+
 }
