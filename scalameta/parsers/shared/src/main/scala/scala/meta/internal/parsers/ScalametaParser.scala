@@ -699,16 +699,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     else scannerTokens(nextPos).is[Trivia] && isAheadNewLine(nextPos)
   }
 
-  private def isLeadingInfixOperator(tkn: Token): Boolean =
+  private def isLeadingInfixOperator(tkn: Token): Boolean = {
+    lazy val parts = tkn.text.split("_")
     dialect.allowSignificantIndentation &&
-      tkn.text.forall(Chars.isOperatorPart) &&
-      !tkn.text.startsWith("@") &&
-      tkn.nextSafe.is[Whitespace] && (
-        tkn.strictNext.is[Ident] || tkn.strictNext.is[Interpolation.Id] ||
-          tkn.strictNext.is[Literal] || tkn.strictNext.is[LeftParen] ||
-          tkn.strictNext.is[LeftBrace]
-      )
-
+    parts.nonEmpty &&
+    parts.last.forall(Chars.isOperatorPart) &&
+    !tkn.text.startsWith("@") &&
+    tkn.nextSafe.is[Whitespace] && (
+      tkn.strictNext.is[Ident] || tkn.strictNext.is[Interpolation.Id] ||
+        tkn.strictNext.is[Literal] || tkn.strictNext.is[LeftParen] ||
+        tkn.strictNext.is[LeftBrace]
+    )
+  }
   def token = in.token
   def next() = in.next()
   def nextOnce() = next()
