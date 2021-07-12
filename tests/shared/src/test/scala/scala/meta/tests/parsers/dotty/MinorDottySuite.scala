@@ -953,6 +953,22 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("multi-pattern") {
+    runTestAssert[Stat](
+      """|val x * y = v
+         |""".stripMargin
+    )(
+      Defn.Val(
+        Nil,
+        List(
+          Pat.ExtractInfix(Pat.Var(Term.Name("x")), Term.Name("*"), List(Pat.Var(Term.Name("y"))))
+        ),
+        None,
+        Term.Name("v")
+      )
+    )
+  }
+
   test("typed-typed-pattern") {
     runTestAssert[Stat](
       """|s match

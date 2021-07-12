@@ -3481,7 +3481,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val sid = stableId()
           val isRepeated = sid match {
             case _: Quasi => false
-            case Term.Name(value) => dialect.allowPostfixStarVarargSplices && isStar
+            case Term.Name(value) =>
+              dialect.allowPostfixStarVarargSplices && isStar && token.next.isNot[Ident]
             case _ => false
           }
           val isVarPattern = sid match {
