@@ -352,4 +352,33 @@ class MacroSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("simpler") {
+    runTestAssert[Stat](
+      "'{ val x: Int = ${ (q2) ?=> a } }",
+      assertLayout = Some("'{ val x: Int = ${ q2 ?=> a } }")
+    )(
+      Term.QuotedMacroExpr(
+        Term.Block(
+          List(
+            Defn.Val(
+              Nil,
+              List(Pat.Var(Term.Name("x"))),
+              Some(Type.Name("Int")),
+              Term.SplicedMacroExpr(
+                Term.Block(
+                  List(
+                    Term.ContextFunction(
+                      List(Term.Param(Nil, Term.Name("q2"), None, None)),
+                      Term.Name("a")
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  }
 }
