@@ -904,7 +904,6 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
   test("Interpolated tree parsed succesfully with windows newline") {
     val foo = (""" q"foo"""" + "\r\n").tokenize.get
-    println(foo)
     val Tokens(bof, _, _, _, part: Interpolation.Part, _, cr: CR, lf: LF, eof) = foo
     assert(part.value == "foo")
     assert(cr.syntax == "\r")
@@ -1002,5 +1001,26 @@ class TokenizerSuite extends BaseTokenizerSuite {
       dialects.Scala213(" 1_000_000 ").tokenize.get(2).asInstanceOf[Token.Constant.Int]
     assert(intConstant.pos.text == "1_000_000") // assert token position includes underscores
     assert(intConstant.value == BigInt(1000000))
+  }
+
+  test("Interpolated string - escape") {
+    val Tokens(
+      BOF(),
+      Interpolation.Id("s"),
+      Interpolation.Start(),
+      Interpolation.Part("\"Hello\", "),
+      Interpolation.SpliceStart(),
+      Ident("person"),
+      Interpolation.SpliceEnd(),
+      Interpolation.Part(""),
+      Interpolation.End(),
+      EOF()
+    ) =
+      ("""s"\"Hello\", $person"""").tokenize.get
+
+    assert(
+      ("""s"\\"Hello"""").tokenize.isInstanceOf[Tokenized.Error]
+    )
+
   }
 }
