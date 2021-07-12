@@ -938,6 +938,21 @@ class TokenizerSuite extends BaseTokenizerSuite {
       dialects.Scala212(stringInterpolation).tokenize.isInstanceOf[Tokenized.Error],
       "$\" should not tokenize in Scala 2"
     )
+
+    val stringInterpolationWithUnicode = s"""check_success(s"${'\\' + "u0024"}")"""
+
+    val Tokens(
+      BOF(),
+      Ident("check_success"),
+      LeftParen(),
+      _: Interpolation.Id,
+      Interpolation.Start(),
+      Interpolation.Part("$"),
+      Interpolation.End(),
+      RightParen(),
+      EOF()
+    ) = dialects.Dotty(stringInterpolationWithUnicode).tokenize.get
+
   }
 
   test("Comment.value") {
