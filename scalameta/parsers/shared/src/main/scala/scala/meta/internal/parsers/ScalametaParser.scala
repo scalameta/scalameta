@@ -989,6 +989,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case _ => false
   }
 
+  def followedByToken[T <: Token: TokenInfo]: Boolean = {
+    def startBlock = token.is[LeftBrace] || token.is[Indentation.Indent]
+    def endBlock = token.is[RightBrace] || token.is[Indentation.Outdent]
+    @tailrec
+    def lookForToken(braces: Int = 0): Boolean = {
+      if (braces == 0 && token.is[T]) true
+      else if (braces == 0 && (token.is[StopScanToken] || endBlock)) false
+      else if (token.is[EOF]) false
+      else {
+        val newBraces =
+          if (startBlock) braces + 1
+          else if (endBlock) braces - 1
+          else braces
+        next()
+        lookForToken(newBraces)
+      }
+    }
+    val fork = in.fork
+    val isFollowedBy = lookForToken()
+    in = fork
+    isFollowedBy
+  }
   def isIdentAnd(pred: String => Boolean): Boolean = isIdentAnd(token, pred)
   def isUnaryOp: Boolean = isIdentAnd(name => Term.Name(name).isUnaryOp)
   def isIdentExcept(except: String) = isIdentAnd(_ != except)
@@ -1048,6 +1070,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       token.is[Ident] || token.is[KwIf] || token.is[KwWhile] || token.is[KwFor] ||
       token.is[KwMatch] || token.is[KwTry] || token.is[KwNew] || token.is[KwThis] ||
       token.is[KwGiven] || token.is[KwVal]
+    }
+  }
+
+  @classifier
+  trait StopScanToken {
+    def unapply(token: Token): Boolean = {
+      token.is[KwPackage] || token.is[KwExport] || token.is[KwImport] ||
+      token.is[KwIf] || token.is[KwElse] || token.is[KwWhile] || token.is[KwDo] ||
+      token.is[KwFor] || token.is[KwYield] || token.is[KwNew] || token.is[KwTry] ||
+      token.is[KwCatch] || token.is[KwFinally] || token.is[KwThrow] || token.is[KwReturn] ||
+      token.is[KwMatch] || token.is[EOF] || token.is[Semicolon] || token.is[Modifier] || token
+        .is[DefIntro]
     }
   }
 
@@ -2280,16 +2314,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def condExprInParens[T <: Token: TokenInfo]: Term = {
+    def isFollowedBy[T <: Token: TokenInfo] = {
+      if (token.is[LF] || token.is[LFLF] || token.is[EOF]) {
+        false
+      } else { followedByToken[T] }
+    }
     if (dialect.allowSignificantIndentation) {
       val forked = in.fork
       val simpleExpr = condExpr()
-      if ((token.is[Ident] && isLeadingInfixOperator(token)) || token.is[Dot]) {
+      if ((token.is[Ident] && isLeadingInfixOperator(token)) || token.is[Dot] || isFollowedBy[T]) {
         in = forked
         val exprCond = expr()
         val nextIsDelimiterKw =
-          if (token.is[LF]) ahead { newLineOpt(); token.is[T] }
+          if (token.is[LF] || token.is[LFLF]) ahead { newLineOpt(); token.is[T] }
           else token.is[T]
-
         if (nextIsDelimiterKw)
           exprCond
         else
