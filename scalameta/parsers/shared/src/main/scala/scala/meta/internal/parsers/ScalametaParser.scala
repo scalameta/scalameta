@@ -1764,10 +1764,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             t = atPos(t, rhs)(Type.With(t, rhs))
           }
           newLineOptWhenFollowedBy[LeftBrace]
-          if (token.is[LeftBrace]) Type.Refine(Some(t), refinement())
+          if (token.is[LeftBrace]) refinement(innerType = Some(t))
           else t
         case None =>
-          Type.Refine(None, refinement())
+          refinement(innerType = None)
       }
     }
 
@@ -4918,9 +4918,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def refinement(): List[Stat] = inBraces(refineStatSeq())
+  def refinement(innerType: Option[Type]): Type.Refine = {
+    val refinedStats = inBraces(refineStatSeq())
+    val refineType = atPos(innerType, auto)(Type.Refine(innerType, refinedStats))
+    newLineOptWhenFollowedBy[LeftBrace]
+    if (token.is[LeftBrace]) refinement(innerType = Some(refineType))
+    else refineType
+  }
 
-  def existentialStats(): List[Stat] = refinement() map {
+  def existentialStats(): List[Stat] = inBraces(refineStatSeq()) map {
     case stat if stat.isExistentialStat => stat
     case other => syntaxError("not a legal existential clause", at = other)
   }
