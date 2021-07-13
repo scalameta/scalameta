@@ -1062,7 +1062,14 @@ object TreeSyntax {
         val pparents = r(t.inits, " with ")
         val derived = r(t.derives, "derives ", ", ", "")
         val isGiven = t.parent.exists(_.is[Defn.Given])
-        val withGiven = if (!isGiven) "" else if (isBodyEmpty) "with {}" else "with"
+        def needsAdditionalBraces = t.inits.size == 1 && t.inits.head.argss == Nil
+        val withGiven =
+          if (!isGiven) ""
+          else if (isBodyEmpty) {
+            // this could be just `()`, but it changes the tree
+            if (needsAdditionalBraces) "with {}"
+            else ""
+          } else "with"
         val pbody = {
           val isOneLiner =
             t.stats.length == 0 ||

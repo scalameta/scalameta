@@ -4264,18 +4264,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       Defn.GivenAlias(mods, sigName, sigTparams, sigUparamss, decltype, exprMaybeIndented())
     } else if (token.is[KwWith] || token.is[LeftParen]) {
       val inits = parents()
-      val (slf, stats) = if (token.is[KwWith]) {
-        accept[KwWith]
+      val (slf, stats) = {
+        if (inits.size > 1 && token.isNot[KwWith])
+          syntaxError("expected 'with' <body>", at = token.pos)
+
+        val needsBody = token.is[KwWith]
+        acceptOpt[KwWith]
+
         newLineOptWhenFollowedBy[LeftBrace]
         if (token.is[LeftBrace]) {
           inBraces(templateStatSeq())
         } else if (token.is[Indentation.Indent]) {
           indented(templateStatSeq())
-        } else {
+        } else if (needsBody) {
           syntaxError("expected '{' or indentation", at = token.pos)
-        }
-      } else {
-        syntaxError("expected 'with' <body>", at = token.pos)
+        } else (autoPos(Self(autoPos(Name.Anonymous()), None)), Nil)
       }
       val rhs = if (slf.decltpe.nonEmpty) {
         syntaxError("given cannot have a self type", at = slf.pos)
