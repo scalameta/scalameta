@@ -695,6 +695,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         setStrVal()
         token = STRINGLIT
       }
+    } else if (ch == '\\') {
+      nextRawChar()
+      putChar(ch)
+      nextRawChar()
+      getStringPart(multiLine)
     } else if (ch == '$' && !isUnicodeEscape) {
       if (!getDollar()) {
         syntaxError("can't unquote into string interpolations", at = charOffset - 1)
