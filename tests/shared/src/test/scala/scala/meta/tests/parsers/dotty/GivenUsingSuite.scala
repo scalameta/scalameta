@@ -307,7 +307,7 @@ class GivenUsingSuite extends BaseDottySuite {
       """|given C(1) with {}
          |""".stripMargin,
       assertLayout = Some(
-        "given C(1) with {}"
+        "given C(1)"
       )
     )(
       Defn.Given(
@@ -326,12 +326,69 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
+  test("given-empty-anon-parens") {
+    runTestAssert[Stat](
+      """|given C(1)
+         |""".stripMargin
+    )(
+      Defn.Given(
+        Nil,
+        Name(""),
+        Nil,
+        Nil,
+        Template(
+          Nil,
+          List(Init(Type.Name("C"), Name(""), List(List(Lit.Int(1))))),
+          Self(Name(""), None),
+          Nil,
+          Nil
+        )
+      )
+    )
+  }
+
+  test("given-empty-anon-empty-parens") {
+    runTestAssert[Stat](
+      """|given C()
+         |""".stripMargin
+    )(
+      Defn.Given(
+        Nil,
+        Name(""),
+        Nil,
+        Nil,
+        Template(
+          Nil,
+          List(Init(Type.Name("C"), Name(""), List(List()))),
+          Self(Name(""), None),
+          Nil,
+          Nil
+        )
+      )
+    )
+  }
+
+  test("given-empty-anon-no-parens") {
+    runTestAssert[Stat](
+      """|given C with {}
+         |""".stripMargin
+    )(
+      Defn.Given(
+        Nil,
+        Name(""),
+        Nil,
+        Nil,
+        Template(Nil, List(Init(Type.Name("C"), Name(""), Nil)), Self(Name(""), None), Nil, Nil)
+      )
+    )
+  }
+
   test("given-empty") {
     runTestAssert[Stat](
       """|given t1[T]: E[T]("low") with {}
          |""".stripMargin,
       assertLayout = Some(
-        """|given t1[T]: E[T]("low") with {}
+        """|given t1[T]: E[T]("low")
            |""".stripMargin
       )
     )(
