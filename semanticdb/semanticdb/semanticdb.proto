@@ -220,6 +220,7 @@ message MethodSignature {
   Scope type_parameters = 1;
   repeated Scope parameter_lists = 2;
   Type return_type = 3;
+  repeated Type throws = 4;
 }
 
 message TypeSignature {
