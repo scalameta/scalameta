@@ -193,7 +193,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       }
     }
 
-    private def annotations: List[s.Annotation] = {
+    private def annotations: List[s.AnnotationTree] = {
       val ganns = gsym.annotations.filter { gann =>
         gann.atp.typeSymbol != definitions.MacroImplAnnotation
       }
