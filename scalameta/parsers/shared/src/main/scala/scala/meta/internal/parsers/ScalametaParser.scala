@@ -186,12 +186,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     def nextSafe: Token = scannerTokens.apply(Math.min(token.index + 1, scannerTokens.length - 1))
 
-    def nextEnd: Token = {
-      val next = nextSafe
-      if ((next.is[Whitespace] && !next.is[LineEnd]) || next.is[Comment]) next.nextEnd
-      else next
-    }
-
     def next: Token = {
       val next = nextSafe
       if (next.is[Whitespace] || next.is[Comment]) next.next
@@ -204,8 +198,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
+  def isMultilinePos(p: Position): Boolean = p.endLine > p.startLine
+
   def isColonEol(token: Token) = {
-    dialect.allowSignificantIndentation && token.is[Colon] && token.nextEnd.is[LineEnd]
+
+    def isNextEOL(t: Token): Boolean = {
+      val next = t.nextSafe
+      if (next.is[LineEnd] || next.is[MultilineComment]) true
+      else if ((next.is[Whitespace] && !next.is[LineEnd]) || next.is[Comment]) isNextEOL(next)
+      else false
+    }
+
+    dialect.allowSignificantIndentation && token.is[Colon] && isNextEOL(token)
   }
 
   /* ------------- PARSER-SPECIFIC TOKENS -------------------------------------------- */
@@ -532,7 +536,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         var newlineStreak = false
         var newlines = false
         while (i < nextPos) {
-          if (scannerTokens(i).is[LF] || scannerTokens(i).is[FF]) {
+          val token = scannerTokens(i)
+          if (token.is[LF] || token.is[FF] || token.is[MultilineComment]) {
             lastNewlinePos = i
             if (newlineStreak) newlines = true
             newlineStreak = true
@@ -666,6 +671,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   }
 
+  private def multineCommentIndent(t: Comment): Int = {
+    @tailrec
+    def loop(idx: Int, indent: Int, isAfterNewline: Boolean): Int = {
+      if (idx == t.value.length) indent
+      else {
+        t.value.charAt(idx) match {
+          case '\n' => loop(idx + 1, 0, isAfterNewline = true)
+          case ' ' | '\t' if isAfterNewline => loop(idx + 1, indent + 1, isAfterNewline)
+          case _ => loop(idx + 1, indent, isAfterNewline = false)
+        }
+      }
+    }
+    loop(0, 0, false)
+  }
+
   /**
    * When token on `tokenPosition` is not a whitespace and is
    * a first non-whitespace character in a current line then a result is
@@ -681,9 +701,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     @tailrec
     def countIndentInternal(pos: Int, acc: Int = 0): (Int, Int) = {
-      if (pos < 0 || scannerTokens(pos).is[LF]) (acc, pos)
-      else if (isWhitespace(scannerTokens(pos))) countIndentInternal(pos - 1, acc + 1)
-      else (-1, -1)
+      val token = scannerTokens(pos)
+      if (pos < 0) (acc, pos)
+      else
+        token match {
+          case _: LF => (acc, pos)
+          case c: Comment if isMultilinePos(c.pos) =>
+            (multineCommentIndent(c), pos)
+          case c: Comment => countIndentInternal(pos - 1, 0)
+          case other if isWhitespace(other) => countIndentInternal(pos - 1, acc + 1)
+          case _ => (-1, -1)
+        }
     }
 
     if (scannerTokens(tokenPosition).is[Whitespace]) (-1, -1)
@@ -1358,6 +1386,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       token.is[KwType] || token.is[KwPackage] ||
       token.is[KwGiven] || token.is[KwNew]
     }
+  }
+
+  @classifier
+  trait MultilineComment {
+    def unapply(token: Token): Boolean =
+      token.is[Comment] && isMultilinePos(token.pos)
   }
 
   /* ---------- TREE CONSTRUCTION ------------------------------------------- */
