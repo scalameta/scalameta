@@ -40,7 +40,7 @@ class ExportImportSuite extends BaseDottySuite {
   }
 
   test("export-given") {
-    runTestAssert[Stat]("export A.{ given Int }")(
+    runTestAssert[Stat]("export A.{ given Int }", assertLayout = Some("export A.given Int"))(
       Export(List(Importer(Term.Name("A"), List(Importee.Given(Type.Name("Int"))))))
     )
   }
@@ -48,7 +48,7 @@ class ExportImportSuite extends BaseDottySuite {
   test("export-given-no-brace") {
     runTestAssert[Stat](
       "export A.given Int",
-      assertLayout = Some("export A.{ given Int }")
+      assertLayout = Some("export A.given Int")
     )(
       Export(List(Importer(Term.Name("A"), List(Importee.Given(Type.Name("Int"))))))
     )
