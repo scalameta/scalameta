@@ -559,4 +559,39 @@ class InlineSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("transparent-inline-with-this") {
+    runTestAssert[Stat](
+      """|"static meta" - {
+         |   implicit inline def qm = ???
+         |}
+         |""".stripMargin,
+      assertLayout = Some(
+        """|"static meta" - ({
+           |  implicit inline def qm = ???
+           |})
+           |""".stripMargin
+      )
+    )(
+      Term.ApplyInfix(
+        Lit.String("static meta"),
+        Term.Name("-"),
+        Nil,
+        List(
+          Term.Block(
+            List(
+              Defn.Def(
+                List(Mod.Implicit(), Mod.Inline()),
+                Term.Name("qm"),
+                Nil,
+                Nil,
+                None,
+                Term.Name("???")
+              )
+            )
+          )
+        )
+      )
+    )
+  }
 }
