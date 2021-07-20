@@ -1244,6 +1244,7 @@ object TreeSyntax {
       case (t: Importee.Name) :: Nil => s(t)
       case (t: Importee.Wildcard) :: Nil => s(t)
       case (t: Importee.GivenAll) :: Nil => s(t)
+      case (t: Importee.Given) :: Nil => s(t)
       case (t: Importee.Rename) :: Nil if dialect.allowAsForImportRename => s(t)
       case (t: Importee.Unimport) :: Nil if dialect.allowAsForImportRename => s(t)
       case (t: Importee.Rename) :: Nil => s("{", t, "}")
