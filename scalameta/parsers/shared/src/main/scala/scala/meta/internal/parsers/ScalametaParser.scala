@@ -5136,7 +5136,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         if (token.is[KwImplicit]) {
           val implicitPos = in.tokenPos
           next()
-          if (token.is[Ident]) stats += implicitClosure(BlockStat)
+          if (token.is[Ident] && token.isNot[SoftModifier]) stats += implicitClosure(BlockStat)
           else stats += localDef(Some(atPos(implicitPos, implicitPos)(Mod.Implicit())))
         } else {
           stats += localDef(None)
