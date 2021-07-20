@@ -2038,4 +2038,130 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("colon-eol-comment1") {
+    runTestAssert[Stat](
+      """|object Foo:
+         |  /*inline*/ def foo: Int = ???
+         |  def bar: Int = ???
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Object(
+        Nil,
+        Term.Name("Foo"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.Def(Nil, Term.Name("foo"), Nil, Nil, Some(Type.Name("Int")), Term.Name("???")),
+            Defn.Def(Nil, Term.Name("bar"), Nil, Nil, Some(Type.Name("Int")), Term.Name("???"))
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("colon-eol-comment2") {
+    runTestAssert[Stat](
+      """|object Foo: /* comment*/
+         |  def foo: Int = ???
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Object(
+        Nil,
+        Term.Name("Foo"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(Defn.Def(Nil, Term.Name("foo"), Nil, Nil, Some(Type.Name("Int")), Term.Name("???"))),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("colon-eol-multiline-comment") {
+    runTestAssert[Stat](
+      """|object Foo:/* multi
+         |  line
+         |   comment */ def foo: Int = ???
+         |   def bar: Int = ???
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Object(
+        Nil,
+        Term.Name("Foo"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.Def(Nil, Term.Name("foo"), Nil, Nil, Some(Type.Name("Int")), Term.Name("???")),
+            Defn.Def(Nil, Term.Name("bar"), Nil, Nil, Some(Type.Name("Int")), Term.Name("???"))
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("given-with-comment") {
+    runTestAssert[Stat](
+      """|given Foo with
+         |   /* comment */  def foo: Int = ???
+         |   def bar: Int = ???
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Given(
+        Nil,
+        Name(""),
+        Nil,
+        Nil,
+        Template(
+          Nil,
+          List(Init(Type.Name("Foo"), Name(""), Nil)),
+          Self(Name(""), None),
+          List(
+            Defn.Def(Nil, Term.Name("foo"), Nil, Nil, Some(Type.Name("Int")), Term.Name("???")),
+            Defn.Def(Nil, Term.Name("bar"), Nil, Nil, Some(Type.Name("Int")), Term.Name("???"))
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("given-with-miltiline-comment") {
+    runTestAssert[Stat](
+      """|given Foo with /* multi
+         |   line
+         |   comment */  def foo: Int = ???
+         |   def bar: Int = ???
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Given(
+        Nil,
+        Name(""),
+        Nil,
+        Nil,
+        Template(
+          Nil,
+          List(Init(Type.Name("Foo"), Name(""), Nil)),
+          Self(Name(""), None),
+          List(
+            Defn.Def(Nil, Term.Name("foo"), Nil, Nil, Some(Type.Name("Int")), Term.Name("???")),
+            Defn.Def(Nil, Term.Name("bar"), Nil, Nil, Some(Type.Name("Int")), Term.Name("???"))
+          ),
+          Nil
+        )
+      )
+    )
+  }
 }
