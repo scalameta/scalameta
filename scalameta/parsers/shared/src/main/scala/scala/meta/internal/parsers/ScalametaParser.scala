@@ -701,9 +701,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     @tailrec
     def countIndentInternal(pos: Int, acc: Int = 0): (Int, Int) = {
-      val token = scannerTokens(pos)
       if (pos < 0) (acc, pos)
-      else
+      else {
+        val token = scannerTokens(pos)
         token match {
           case _: LF => (acc, pos)
           case c: Comment if isMultilinePos(c.pos) =>
@@ -712,6 +712,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case other if isWhitespace(other) => countIndentInternal(pos - 1, acc + 1)
           case _ => (-1, -1)
         }
+      }
     }
 
     if (scannerTokens(tokenPosition).is[Whitespace]) (-1, -1)
