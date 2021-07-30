@@ -535,14 +535,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         var lastNewlinePos = -1
         var newlineStreak = false
         var newlines = false
+        var hasMultilineComment = false
         while (i < nextPos) {
           val token = scannerTokens(i)
-          if (token.is[LF] || token.is[FF] || token.is[MultilineComment]) {
+          if (token.is[LF] || token.is[FF]) {
             lastNewlinePos = i
             if (newlineStreak) newlines = true
             newlineStreak = true
           }
-          newlineStreak &= scannerTokens(i).is[Whitespace]
+          hasMultilineComment |= token.is[MultilineComment]
+          newlineStreak &= token.is[Whitespace]
           i += 1
         }
 
@@ -566,7 +568,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         }
 
         if (dialect.allowSignificantIndentation) {
-          if (lastNewlinePos != -1 && next != null && !isLeadingInfixOperator(next)) {
+          val hasLF = lastNewlinePos != -1 || hasMultilineComment
+          if (hasLF && next != null && !isLeadingInfixOperator(next)) {
 
             val nextIndent = countIndent(nextPos)
 
