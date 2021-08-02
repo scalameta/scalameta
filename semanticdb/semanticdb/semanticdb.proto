@@ -270,6 +270,12 @@ message SymbolInformation {
     PRIMARY = 0x2000;
     ENUM = 0x4000;
     DEFAULT = 0x8000;
+    GIVEN = 0x10000;
+    INLINE = 0x20000;
+    OPEN = 0x40000;
+    TRANSPARENT = 0x80000;
+    INFIX = 0x100000;
+    OPAQUE = 0x200000;
   }
   reserved 2, 6, 7, 8, 9, 10, 11, 12, 14, 15;
   string symbol = 1;
