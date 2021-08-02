@@ -674,4 +674,41 @@ class NewFunctionsSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("type-lmabda-bounds") {
+    runTestAssert[Stat](
+      "abstract class Repository[F[_]: [G[_]] =>> MonadCancel[G, Throwable]]"
+    )(
+      Defn.Class(
+        List(Mod.Abstract()),
+        Type.Name("Repository"),
+        List(
+          Type.Param(
+            Nil,
+            Type.Name("F"),
+            List(Type.Param(Nil, Name(""), Nil, Type.Bounds(None, None), Nil, Nil)),
+            Type.Bounds(None, None),
+            Nil,
+            List(
+              Type.Lambda(
+                List(
+                  Type.Param(
+                    Nil,
+                    Type.Name("G"),
+                    List(Type.Param(Nil, Name(""), Nil, Type.Bounds(None, None), Nil, Nil)),
+                    Type.Bounds(None, None),
+                    Nil,
+                    Nil
+                  )
+                ),
+                Type.Apply(Type.Name("MonadCancel"), List(Type.Name("G"), Type.Name("Throwable")))
+              )
+            )
+          )
+        ),
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    )
+  }
 }
