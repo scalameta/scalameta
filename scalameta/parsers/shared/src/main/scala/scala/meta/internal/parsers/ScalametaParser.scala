@@ -499,7 +499,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           (nextRegions, currRef)
         } else if (curr.is[EOF]) {
           sepRegions match {
-            case x :: xs if x.isIndented => (xs, mkOutdent(currPos))
+            case x :: xs if x.isIndented =>
+              // do no include trailing comment/whitespace tokens
+              val pointPos = prevPos + 1
+              (xs, mkOutdent(pointPos))
             case other => (other, currRef)
           }
         } else if (curr.is[RightParen]) {
