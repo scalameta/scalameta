@@ -1,5 +1,5 @@
 ### scalameta
-[![Build Status](https://travis-ci.org/scalameta/scalameta.svg?branch=main)](https://travis-ci.org/scalameta/scalameta)
+[![Build Status](https://github.com/scalameta/scalameta/actions/workflows/ci.yml/badge.svg)](https://github.com/scalameta/scalameta/actions/workflows/ci.yml)
 
 ### User documentation
 Head over to [the user docs][docs] to learn more about the project and its roadmap.
