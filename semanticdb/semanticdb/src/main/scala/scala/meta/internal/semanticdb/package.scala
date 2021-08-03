@@ -44,6 +44,12 @@ package object semanticdb {
     def isPrimary: Boolean = (info.properties & p.PRIMARY.value) != 0
     def isEnum: Boolean = (info.properties & p.ENUM.value) != 0
     def isDefault: Boolean = (info.properties & p.DEFAULT.value) != 0
+    def isGiven: Boolean = (info.properties & p.GIVEN.value) != 0
+    def isInline: Boolean = (info.properties & p.INLINE.value) != 0
+    def isOpen: Boolean = (info.properties & p.OPEN.value) != 0
+    def isTransparent: Boolean = (info.properties & p.TRANSPARENT.value) != 0
+    def isInfix: Boolean = (info.properties & p.INFIX.value) != 0
+    def isOpaque: Boolean = (info.properties & p.OPAQUE.value) != 0
     def isPrivate: Boolean = info.access.isInstanceOf[PrivateAccess]
     def isPrivateThis: Boolean = info.access.isInstanceOf[PrivateThisAccess]
     def isPrivateWithin: Boolean = info.access.isInstanceOf[PrivateWithinAccess]
