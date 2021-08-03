@@ -574,4 +574,91 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Lit.Unit     fx@@
        |""".stripMargin
   )
+
+  checkPositions[Stat](
+    """|object x:
+       |  val a = 
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |      // c2
+       |""".stripMargin,
+    """|Template :
+       |  val a = 
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Self   @@val a = 
+       |Defn.Val val a = 
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |""".stripMargin
+  )
+
+  // do not add LF to end of input
+  // this test checks `..$comment$EOF` case
+  checkPositions[Stat](
+    """|object y:
+       |  val a = 
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |      // c2""".stripMargin,
+    """|Template :
+       |  val a = 
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Self   @@val a = 
+       |Defn.Val val a = 
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |""".stripMargin
+  )
+
+  // do not add LF to end of input
+  // this test checks `..$ident$EOF` case
+  checkPositions[Stat](
+    """|object ValueTypes:
+       |    case object Private
+       |        extends ClassificationValue
+       |        with ConstantText""".stripMargin,
+    """|Template :
+       |    case object Private
+       |        extends ClassificationValue
+       |        with ConstantText
+       |Self     @@case object Private
+       |Defn.Object case object Private
+       |        extends ClassificationValue
+       |        with ConstantText
+       |Template extends ClassificationValue
+       |        with ConstantText
+       |Self         with ConstantText@@
+       |""".stripMargin
+  )
+
 }

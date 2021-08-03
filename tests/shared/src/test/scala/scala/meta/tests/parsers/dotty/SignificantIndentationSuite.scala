@@ -2164,4 +2164,80 @@ class SignificantIndentationSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("comment-bettween-annotation-set") {
+    runTestAssert[Source](
+      s"""|
+          |class A1 extends scala.annotation.StaticAnnotation
+          |class A2 extends scala.annotation.StaticAnnotation
+          | @A1
+          | /*
+          | * hello
+          | */
+          | @A2
+          |class B
+          |""".stripMargin,
+      assertLayout = None
+    )(
+      Source(
+        List(
+          Defn.Class(
+            Nil,
+            Type.Name("A1"),
+            Nil,
+            Ctor.Primary(Nil, Name(""), Nil),
+            Template(
+              Nil,
+              List(
+                Init(
+                  Type.Select(
+                    Term.Select(Term.Name("scala"), Term.Name("annotation")),
+                    Type.Name("StaticAnnotation")
+                  ),
+                  Name(""),
+                  Nil
+                )
+              ),
+              Self(Name(""), None),
+              Nil,
+              Nil
+            )
+          ),
+          Defn.Class(
+            Nil,
+            Type.Name("A2"),
+            Nil,
+            Ctor.Primary(Nil, Name(""), Nil),
+            Template(
+              Nil,
+              List(
+                Init(
+                  Type.Select(
+                    Term.Select(Term.Name("scala"), Term.Name("annotation")),
+                    Type.Name("StaticAnnotation")
+                  ),
+                  Name(""),
+                  Nil
+                )
+              ),
+              Self(Name(""), None),
+              Nil,
+              Nil
+            )
+          ),
+          Defn.Class(
+            List(
+              Mod.Annot(Init(Type.Name("A1"), Name(""), Nil)),
+              Mod.Annot(Init(Type.Name("A2"), Name(""), Nil))
+            ),
+            Type.Name("B"),
+            Nil,
+            Ctor.Primary(Nil, Name(""), Nil),
+            Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+          )
+        )
+      )
+    )
+  }
+
 }
