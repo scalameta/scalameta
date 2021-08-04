@@ -56,6 +56,12 @@ trait SymbolInformationPrinter extends BasePrinter {
       if (info.isPrimary) out.print("primary ")
       if (info.isEnum) out.print("enum ")
       if (info.isDefault) out.print("default ")
+      if (info.isGiven) out.print("given ")
+      if (info.isInline) out.print("inline ")
+      if (info.isOpen) out.print("open ")
+      if (info.isTransparent) out.print("transparent ")
+      if (info.isInfix) out.print("infix ")
+      if (info.isOpaque) out.print("opaque ")
       info.kind match {
         case LOCAL => out.print("local ")
         case FIELD => out.print("field ")

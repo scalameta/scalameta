@@ -794,6 +794,37 @@ languages map onto these properties.
     <td><code>DEFAULT</code></td>
     <td>Is a default parameter or a default method?</td>
   </tr>
+  <tr>
+    <td><code>0x10000</code></td>
+    <td><code>GIVEN</code></td>
+    <td>Is a given instance?</td>
+    <td>Is a <code>given instance</code> (e.g. <code>given x: Int = ...</code> or <code>using x: Int</code>)?</td>
+  </tr>
+  <tr>
+    <td><code>0x20000</code></td>
+    <td><code>INLINE</code></td>
+    <td>Has an <code>inline</code> modifier?</td>
+  </tr>
+  <tr>
+    <td><code>0x40000</code></td>
+    <td><code>OPEN</code></td>
+    <td>Has an <code>open</code> modifier?</td>
+  </tr>
+  <tr>
+    <td><code>0x80000</code></td>
+    <td><code>TRANSPARENT</code></td>
+    <td>Has a <code>transparent</code> modifier?</td>
+  </tr>
+  <tr>
+    <td><code>0x100000</code></td>
+    <td><code>INFIX</code></td>
+    <td>Has a <code>infix</code> modifier?</td>
+  </tr>
+  <tr>
+    <td><code>0x200000</code></td>
+    <td><code>OPAQUE</code></td>
+    <td>Has an <code>opaque</code> modifier?</td>
+  </tr>
 </table>
 
 `display_name`. Display name of the definition, i.e. how this definition should
