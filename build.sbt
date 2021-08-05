@@ -61,19 +61,19 @@ def helloContributor(): Unit = println(
     |""".stripMargin
 )
 test := helloContributor()
-aggregate in test := false
+test / aggregate := false
 testOnly := helloContributor()
-aggregate in testOnly := false
+testOnly / aggregate := false
 packagedArtifacts := Map.empty
-unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject
-console := console.in(scalameta.jvm, Compile).value
+ScalaUnidoc / unidoc / unidocProjectFilter := inAnyProject
+console := (scalameta.jvm / Compile / console).value
 
 val commonJsSettings = Seq(
   crossScalaVersions := List(LatestScala213, LatestScala212),
   scalacOptions ++= {
     if (isSnapshot.value) Seq.empty
     else {
-      val localDir = (baseDirectory in ThisBuild).value.toURI.toString
+      val localDir = (ThisBuild / baseDirectory).value.toURI.toString
       val githubDir = "https://raw.githubusercontent.com/scalameta/scalameta"
       Seq(s"-P:scalajs:mapSourceURI:$localDir->$githubDir/v${version.value}/")
     }
@@ -207,8 +207,8 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(trees)
 
 def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
-  unmanagedSourceDirectories.in(Compile) ++= {
-    val base = baseDirectory.in(ThisBuild).value
+  Compile / unmanagedSourceDirectories ++= {
+    val base = (ThisBuild / baseDirectory).value
     val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
     val isJS = SettingKey[Boolean]("scalaJSUseMainModuleInitializer").?.value.isDefined
     val platform =
@@ -234,8 +234,8 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies ++= List(
       "org.scala-lang" % "scalap" % scalaVersion.value
     ),
-    unmanagedSourceDirectories.in(Compile) ++= {
-      val base = baseDirectory.in(ThisBuild).value
+    Compile / unmanagedSourceDirectories ++= {
+      val base = (ThisBuild / baseDirectory).value
       List(
         base / "semanticdb" / "metap",
         base / "semanticdb" / "cli",
@@ -249,9 +249,9 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     })
   )
   .jvmSettings(
-    unmanagedSourceDirectories.in(Compile) ++= List(
-      baseDirectory.in(ThisBuild).value / "semanticdb" / "metacp",
-      baseDirectory.in(ThisBuild).value / "semanticdb" / "symtab"
+    Compile / unmanagedSourceDirectories ++= List(
+      (ThisBuild / baseDirectory).value / "semanticdb" / "metacp",
+      (ThisBuild / baseDirectory).value / "semanticdb" / "symtab"
     )
   )
   .jsSettings(
@@ -272,7 +272,7 @@ lazy val semanticdbIntegration = project
     scalacOptions -= "-Xfatal-warnings",
     scalacOptions += "-deprecation",
     scalacOptions ++= {
-      val pluginJar = Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
+      val pluginJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value.getAbsolutePath
       val warnUnusedImports =
         if (isScala213.value) "-Wunused:imports"
         else "-Ywarn-unused-import"
@@ -284,11 +284,11 @@ lazy val semanticdbIntegration = project
         s"-P:semanticdb:text:on", // include text to print occurrences in expect suite
         s"-P:semanticdb:failures:error", // fail fast during development.
         s"-P:semanticdb:exclude:Exclude.scala",
-        s"-P:semanticdb:sourceroot:${baseDirectory.in(ThisBuild).value}",
+        s"-P:semanticdb:sourceroot:${(ThisBuild / baseDirectory).value}",
         s"-P:semanticdb:synthetics:on"
       )
     },
-    javaHome in Compile := {
+    Compile / javaHome := {
       // force javac to fork by setting javaHome to workaround https://github.com/sbt/zinc/issues/520
       val home = file(sys.props("java.home"))
       val actualHome =
@@ -351,7 +351,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "io.get-coursier" %% "coursier" % "2.0.0-RC5-6"
     ),
     // Needed because some tests rely on the --usejavacp option
-    classLoaderLayeringStrategy.in(Test) := ClassLoaderLayeringStrategy.Flat
+    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
   )
   .jvmConfigure(
     _.dependsOn(metac, semanticdbIntegration)
@@ -371,37 +371,31 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(scalameta, testkit)
 
 lazy val testSettings: List[Def.SettingsDefinition] = List(
-  fullClasspath.in(Test) := {
+  Test / fullClasspath := {
     val semanticdbScalacJar =
-      Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
+      (semanticdbScalacPlugin / Compile / Keys.`package`).value.getAbsolutePath
     sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") = semanticdbScalacJar
-    fullClasspath.in(Test).value
+    (Test / fullClasspath).value
   },
   buildInfoKeys := Seq[BuildInfoKey](
     scalaVersion,
     "databaseSourcepath" ->
-      baseDirectory.in(ThisBuild).value.getAbsolutePath,
-    "commonJVMClassDirectory" -> classDirectory
-      .in(common.jvm, Compile)
-      .value
-      .getAbsolutePath,
-    "databaseClasspath" -> classDirectory
-      .in(semanticdbIntegration, Compile)
-      .value
-      .getAbsolutePath,
+      (ThisBuild / baseDirectory).value.getAbsolutePath,
+    "commonJVMClassDirectory" -> (common.jvm / Compile / classDirectory).value.getAbsolutePath,
+    "databaseClasspath" -> (semanticdbIntegration / Compile / classDirectory).value.getAbsolutePath,
     "integrationSourceDirectories" ->
-      sourceDirectories.in(semanticdbIntegration, Compile).value
+      (semanticdbIntegration / Compile / sourceDirectories).value
   ),
   buildInfoPackage := "scala.meta.tests",
   libraryDependencies ++= List(
     "org.scalameta" %%% "munit" % munitVersion
   ),
-  testOptions.in(Test) += Tests.Argument("--exclude-tags=Slow"),
+  Test / testOptions += Tests.Argument("--exclude-tags=Slow"),
   inConfig(Slow)(Defaults.testTasks),
   inConfig(All)(Defaults.testTasks),
-  testOptions.in(All) := Nil,
-  testOptions.in(Slow) -= Tests.Argument("--exclude-tags=Slow"),
-  testOptions.in(Slow) += Tests.Argument("--include-tags=Slow")
+  All / testOptions := Nil,
+  Slow / testOptions -= Tests.Argument("--exclude-tags=Slow"),
+  Slow / testOptions += Tests.Argument("--include-tags=Slow")
 )
 
 lazy val communitytest = project
@@ -424,19 +418,19 @@ lazy val bench = project
     nonPublishableSettings,
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     buildInfoKeys := Seq[BuildInfoKey](
-      "sourceroot" -> (baseDirectory in ThisBuild).value
+      "sourceroot" -> (ThisBuild / baseDirectory).value
     ),
     buildInfoPackage := "scala.meta.internal.bench",
-    run.in(Jmh) := (Def.inputTaskDyn {
+    Jmh / run := (Def.inputTaskDyn {
       val args = spaceDelimited("<arg>").parsed
       val semanticdbScalacJar =
-        Keys.`package`.in(semanticdbScalacPlugin, Compile).value.getAbsolutePath
+        (semanticdbScalacPlugin / Compile / Keys.`package`).value.getAbsolutePath
       val buf = List.newBuilder[String]
       buf += "org.openjdk.jmh.Main"
       buf ++= args
       buf += "-p"
       buf += s"semanticdbScalacJar=$semanticdbScalacJar"
-      runMain.in(Jmh).toTask(s"  ${buf.result.mkString(" ")}")
+      (Jmh / runMain).toTask(s"  ${buf.result.mkString(" ")}")
     }).evaluated
   )
   .dependsOn(tests.jvm)
@@ -515,58 +509,58 @@ lazy val sharedSettings = Def.settings(
     else Nil
   },
   scalacOptions ++= Seq("-feature", "-unchecked"),
-  scalacOptions.in(Compile, doc) ++= Seq("-skip-packages", ""),
-  scalacOptions.in(Compile, doc) ++= Seq("-implicits", "-implicits-hide:."),
-  scalacOptions.in(Compile, doc) ++= Seq("-groups"),
-  parallelExecution.in(Test) := false, // hello, reflection sync!!
+  Compile / doc / scalacOptions ++= Seq("-skip-packages", ""),
+  Compile / doc / scalacOptions ++= Seq("-implicits", "-implicits-hide:."),
+  Compile / doc / scalacOptions ++= Seq("-groups"),
+  Test / parallelExecution := false, // hello, reflection sync!!
   logBuffered := false,
   updateOptions := updateOptions.value.withCachedResolution(true),
-  watchTriggeredMessage.in(ThisBuild) := Watch.clearScreenOnTrigger,
+  ThisBuild / watchTriggeredMessage := Watch.clearScreenOnTrigger,
   incOptions := incOptions.value.withLogRecompileOnMacro(false)
 )
 
 lazy val mergeSettings = Def.settings(
   sharedSettings,
-  test.in(assembly) := {},
-  logLevel.in(assembly) := Level.Error,
-  assemblyJarName.in(assembly) :=
+  assembly / test := {},
+  assembly / logLevel := Level.Error,
+  assembly / assemblyJarName :=
     name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
-  assemblyOption.in(assembly) ~= { _.copy(includeScala = false) },
-  Keys.`package`.in(Compile) := {
-    val slimJar = Keys.`package`.in(Compile).value
+  assembly / assemblyOption ~= { _.withIncludeScala(false) },
+  Compile / Keys.`package` := {
+    val slimJar = (Compile / Keys.`package`).value
     val fatJar =
-      new File(crossTarget.value + "/" + assemblyJarName.in(assembly).value)
+      new File(crossTarget.value + "/" + (assembly / assemblyJarName).value)
     val _ = assembly.value
     IO.copy(List(fatJar -> slimJar), CopyOptions().withOverwrite(true))
     slimJar
   },
-  packagedArtifact.in(Compile).in(packageBin) := {
-    val temp = packagedArtifact.in(Compile).in(packageBin).value
+  Compile / packageBin / packagedArtifact := {
+    val temp = (Compile / packageBin / packagedArtifact).value
     val (art, slimJar) = temp
     val fatJar =
-      new File(crossTarget.value + "/" + assemblyJarName.in(assembly).value)
+      new File(crossTarget.value + "/" + (assembly / assemblyJarName).value)
     val _ = assembly.value
     IO.copy(List(fatJar -> slimJar), CopyOptions().withOverwrite(true))
     (art, slimJar)
   },
-  assemblyMergeStrategy.in(assembly) := {
+  assembly / assemblyMergeStrategy := {
     case PathList("com", "sun", _*) => MergeStrategy.discard
     case PathList("sun", _*) => MergeStrategy.discard
     case x =>
-      val oldStrategy = (assemblyMergeStrategy in assembly).value
+      val oldStrategy = (assembly / assemblyMergeStrategy).value
       oldStrategy(x)
   },
   mimaCurrentClassfiles := {
-    Keys.`package`.in(Compile).value
+    (Compile / Keys.`package`).value
   }
 )
 
 lazy val protobufSettings = Def.settings(
   sharedSettings,
-  PB.targets.in(Compile) := Seq(
+  Compile / PB.targets := Seq(
     protocbridge.Target(
       generator = PB.gens.plugin("scala"),
-      outputPath = (sourceManaged in Compile).value,
+      outputPath = (Compile / sourceManaged).value,
       options = scalapb
         .gen(
           flatPackage = true // Don't append filename to package
@@ -574,7 +568,7 @@ lazy val protobufSettings = Def.settings(
         ._2
     )
   ),
-  PB.protoSources.in(Compile) := Seq(file("semanticdb/semanticdb")),
+  Compile / PB.protoSources := Seq(file("semanticdb/semanticdb")),
   PB.additionalDependencies := Nil,
   libraryDependencies ++= {
     val scalapbVersion =
@@ -610,8 +604,8 @@ lazy val publishableSettings = Def.settings(
     else Nil
   },
   sharedSettings,
-  publishArtifact.in(Compile) := true,
-  publishArtifact.in(Test) := false,
+  Compile / publishArtifact := true,
+  Test / publishArtifact := false,
   publishMavenStyle := true,
   pomIncludeRepository := { x => false },
   mimaPreviousArtifacts := {
@@ -712,11 +706,10 @@ lazy val publishableSettings = Def.settings(
 )
 
 lazy val nonPublishableSettings = Seq(
-  skip in publish := true,
+  publish / skip := true,
   mimaPreviousArtifacts := Set.empty,
-  publishArtifact in (Compile, packageDoc) := false,
-  publishArtifact in packageDoc := false,
-  sources in (Compile, doc) := Seq.empty,
+  Compile / packageDoc / publishArtifact := false,
+  Compile / doc / sources := Seq.empty,
   publishArtifact := false,
   PgpKeys.publishSigned := {},
   publish := {}
@@ -729,21 +722,21 @@ def compatibilityPolicyViolation(ticket: String) = Seq(
 lazy val fullCrossVersionSettings = Seq(
   crossVersion := CrossVersion.full,
   crossScalaVersions := LanguageVersions ++ LegacyScalaVersions,
-  unmanagedSourceDirectories.in(Compile) += {
+  Compile / unmanagedSourceDirectories += {
     // NOTE: sbt 0.13.8 provides cross-version support for Scala sources
     // (http://www.scala-sbt.org/0.13/docs/sbt-0.13-Tech-Previews.html#Cross-version+support+for+Scala+sources).
     // Unfortunately, it only includes directories like "scala_2.11" or "scala_2.12",
     // not "scala_2.11.8" or "scala_2.12.1" that we need.
     // That's why we have to work around here.
-    val base = sourceDirectory.in(Compile).value
+    val base = (Compile / sourceDirectory).value
     val versionDir = scalaVersion.value.replaceAll("-.*", "")
     base / ("scala-" + versionDir)
   }
 )
 
 lazy val hasLargeIntegrationTests = Seq(
-  fork in (Test, run) := true,
-  javaOptions in (Test, run) += "-Xss4m"
+  Test / run / fork := true,
+  Test / run / javaOptions += "-Xss4m"
 )
 
 def exposePaths(projectName: String, config: Configuration) = {
@@ -756,23 +749,23 @@ def exposePaths(projectName: String, config: Configuration) = {
     }
   val prefix = "sbt.paths." + projectName + "." + uncapitalize(config.name) + "."
   Seq(
-    scalacOptions.in(config) := {
-      val defaultValue = scalacOptions.in(config).value
+    config / scalacOptions := {
+      val defaultValue = (config / scalacOptions).value
       System.setProperty(prefix + "options", defaultValue.mkString(" "))
       defaultValue
     },
-    sourceDirectory.in(config) := {
-      val defaultValue = sourceDirectory.in(config).value
+    config / sourceDirectory := {
+      val defaultValue = (config / sourceDirectory).value
       System.setProperty(prefix + "sources", defaultValue.getAbsolutePath)
       defaultValue
     },
-    resourceDirectory.in(config) := {
-      val defaultValue = resourceDirectory.in(config).value
+    config / resourceDirectory := {
+      val defaultValue = (config / resourceDirectory).value
       System.setProperty(prefix + "resources", defaultValue.getAbsolutePath)
       defaultValue
     },
-    fullClasspath.in(config) := {
-      val defaultValue = fullClasspath.in(config).value
+    config / fullClasspath := {
+      val defaultValue = (config / fullClasspath).value
       val classpath = defaultValue.files.map(_.getAbsolutePath)
       System.setProperty(prefix + "classes", classpath.mkString(java.io.File.pathSeparator))
       defaultValue
@@ -812,7 +805,7 @@ lazy val docs = project
       "SCALA_BINARY_VERSION" -> scalaBinaryVersion.value,
       "SCALA_VERSION" -> scalaVersion.value
     ),
-    mdocOut := baseDirectory.in(ThisBuild).value / "website" / "target" / "docs",
+    mdocOut := (ThisBuild / baseDirectory).value / "website" / "target" / "docs",
     mimaPreviousArtifacts := Set.empty
   )
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin)
