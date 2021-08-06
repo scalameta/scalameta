@@ -111,10 +111,14 @@ object ScaladocParser {
     pattern.map { case (x, y) => new Link(x, y) }
   }
 
-  private def textParser[_: P]: P[Text] = P {
+  private def nextPartParser[_: P]: P[Unit] = P {
     def mdCodeBlockPrefix = mdCodeBlockIndent ~ mdCodeBlockFence
     def anotherBeg = P(CharIn("@=") | (codePrefix ~ nl) | listPrefix | tableSep | "+-" | nl)
-    def end = P(End | nl ~/ (mdCodeBlockPrefix | hspaces0 ~/ anotherBeg))
+    nl ~/ (nl | mdCodeBlockPrefix | hspaces0 ~/ anotherBeg)
+  }
+
+  private def textParser[_: P]: P[Text] = P {
+    def end = P(End | nextPartParser)
     def part: P[TextPart] = P(!paraEnd ~ (codeExprParser | linkParser | wordParser))
     def sep = P(!end ~ nlHspaces0)
     def text = hspaces0 ~ part.rep(1, sep = sep)
