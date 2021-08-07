@@ -134,25 +134,18 @@ object ScaladocParser {
   }
 
   private def tagParser[_: P]: P[Tag] = P {
-    def tagTypeMap = TagType.predefined.map(x => x.tag -> x).toMap
-    def getParserByTag(tag: String): P[Tag] = {
-      val tagTypeOpt = tagTypeMap.get(tag)
-      tagTypeOpt.fold[P[Tag]] {
-        tagDescParser.map { desc => Tag(TagType.UnknownTag(tag), desc = desc) }
-      } { tagType =>
-        (tagType.hasLabel, tagType.optDesc) match {
-          case (false, false) => Pass(Tag(tagType))
-          case (false, true) => tagDescParser.map(x => Tag(tagType, desc = x))
-          case (true, false) => tagLabelParser.map(x => Tag(tagType, label = x))
-          case (true, true) =>
-            (tagLabelParser ~ tagDescParser).map { case (label, desc) =>
-              Tag(tagType, label, desc)
-            }
-        }
+    leadHspaces0 ~ ("@" ~ labelParser).!.flatMap { tag =>
+      val tagType = TagType.getTag(tag)
+      (tagType.hasLabel, tagType.optDesc) match {
+        case (false, false) => Pass(Tag(tagType))
+        case (false, true) => tagDescParser.map(x => Tag(tagType, desc = x))
+        case (true, false) => tagLabelParser.map(x => Tag(tagType, label = x))
+        case (true, true) =>
+          (tagLabelParser ~ tagDescParser).map { case (label, desc) =>
+            Tag(tagType, label, desc)
+          }
       }
     }
-    def tagTypeParser = P(("@" ~ labelParser).!)
-    leadHspaces0 ~ tagTypeParser.flatMap(getParserByTag)
   }
 
   private def listBlockParser[_: P](minIndent: Int = 1): P[ListBlock] = P {
