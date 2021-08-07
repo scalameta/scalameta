@@ -14,12 +14,20 @@ class ScaladocParserSuite extends FunSuite {
   private def parseString(comment: String) =
     ScaladocParser.parse(comment.trim)
 
-  private def generateTestString(tagType: TagType): String = {
-    val sb = new StringBuilder
-    sb.append(tagType.tag)
+  private def generateTestString(tagType: TagType, testStringToMerge: String)(
+      implicit sb: StringBuilder
+  ): Unit = {
+    val nl = "\n *"
+    sb.append(' ').append(tagType.tag)
     if (tagType.hasLabel) sb.append(" TestLabel")
-    if (tagType.hasDesc) sb.append("\n *  Test Description")
-    sb.result()
+    if (tagType.optDesc) {
+      // another, with description
+      sb.append(nl).append(' ').append(tagType.tag)
+      if (tagType.hasLabel) sb.append(" TestLabel")
+      sb.append(nl).append("  Test Description")
+      sb.append(nl).append("  ").append(testStringToMerge)
+    }
+    sb.append(nl)
   }
 
   test("example usage") {
@@ -663,24 +671,52 @@ class ScaladocParserSuite extends FunSuite {
 
   test("label parsing/merging") {
     val testStringToMerge = "Test DocText"
-    val scaladoc: String = TagType.predefined
-      .flatMap(token => List(generateTestString(token), testStringToMerge))
-      .mkString("/** ", "\n * ", " */")
+    implicit val sb = new StringBuilder
+    sb.append("/** ")
+    TagType.predefined.foreach(generateTestString(_, testStringToMerge))
+    sb.append('/')
     val words = testStringToMerge.split("\\s+").map(Word.apply).toSeq
 
-    val parsedScaladoc = parseString(scaladoc)
+    val parsedScaladocOpt = parseString(sb.result())
+    assertNotEquals(parsedScaladocOpt, None: Option[Scaladoc])
+    val parsedScaladocParas = parsedScaladocOpt.get.para
+    assertEquals(parsedScaladocParas.length, 1)
+    val parsedScaladocTerms = parsedScaladocParas.head.term
 
-    val expectedCount = TagType.predefined.length + TagType.predefined.count(!_.hasDesc)
-    assertEquals(parsedScaladoc.map(_.para.length), Option(1))
-    assertEquals(parsedScaladoc.map(_.para.head.term.length), Option(expectedCount))
+    assertEquals(
+      parsedScaladocTerms.count {
+        case t: Tag => t.tag.optDesc && t.desc == null
+        case _ => false
+      },
+      TagType.predefined.count(_.optDesc)
+    )
+    assertEquals(
+      parsedScaladocTerms.count {
+        case t: Tag => t.tag.optDesc && t.desc != null
+        case _ => false
+      },
+      TagType.predefined.count(_.optDesc)
+    )
+    assertEquals(
+      parsedScaladocTerms.count {
+        case t: Tag => !t.tag.optDesc && t.desc == null
+        case _ => false
+      },
+      TagType.predefined.count(!_.optDesc)
+    )
+    assertEquals(
+      parsedScaladocTerms.count {
+        case t: Tag => !t.tag.optDesc && t.desc != null
+        case _ => false
+      },
+      0
+    )
 
     // Inherit doc does not merge
-    parsedScaladoc.foreach {
-      _.para.head.term.foreach {
-        case t: Tag if t.tag.hasDesc =>
-          assertEquals(t.desc.part.takeRight(words.length), words)
-        case _ =>
-      }
+    parsedScaladocTerms.foreach {
+      case t: Tag if t.tag.optDesc && t.desc != null =>
+        assertEquals(t.desc.part.takeRight(words.length), words)
+      case _ =>
     }
   }
 

@@ -140,7 +140,7 @@ object ScaladocParser {
       tagTypeOpt.fold[P[Tag]] {
         tagDescParser.map { desc => Tag(TagType.UnknownTag(tag), desc = desc) }
       } { tagType =>
-        (tagType.hasLabel, tagType.hasDesc) match {
+        (tagType.hasLabel, tagType.optDesc) match {
           case (false, false) => Pass(Tag(tagType))
           case (false, true) => tagDescParser.map(x => Tag(tagType, desc = x))
           case (true, false) => tagLabelParser.map(x => Tag(tagType, label = x))
