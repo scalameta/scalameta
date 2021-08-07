@@ -699,7 +699,7 @@ class ScaladocParserSuite extends FunSuite {
           Paragraph(
             Seq(
               Tag(TagType.Param, Word("foo"), Text(Seq(Word("-"), Word("bar"), Word("baz")))),
-              Text(Seq(Word("@return")))
+              Tag(TagType.Return)
             )
           )
         )
@@ -721,7 +721,10 @@ class ScaladocParserSuite extends FunSuite {
       Scaladoc(
         Seq(
           Paragraph(
-            Seq(Tag(TagType.Param, Word("foo"), Text(Seq(Word("-"), Word("bar"), Word("baz")))))
+            Seq(
+              Tag(TagType.Param, Word("foo")),
+              ListBlock("-", Seq(ListItem(Text(Seq(Word("bar"), Word("baz"))))))
+            )
           )
         )
       )
@@ -743,7 +746,8 @@ class ScaladocParserSuite extends FunSuite {
         Seq(
           Paragraph(
             Seq(
-              Tag(TagType.UnknownTag("@foo"), null, Text(Seq(Word("-"), Word("bar"), Word("baz"))))
+              Tag(TagType.UnknownTag("@foo")),
+              ListBlock("-", Seq(ListItem(Text(Seq(Word("bar"), Word("baz"))))))
             )
           )
         )
@@ -884,7 +888,7 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
       ),
-      Option(Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("@param"))), Text(Seq(Word("@return"))))))))
+      Option(Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("@param"))), Tag(TagType.Return))))))
     )
   }
 
@@ -944,14 +948,9 @@ class ScaladocParserSuite extends FunSuite {
           Paragraph(
             Seq(
               Text(Seq(Word("blah"))),
-              Tag(
-                TagType.Example,
-                desc = Text(
-                  Seq(Word("{{{")) ++
-                    complexCodeBlockWords ++
-                    Seq(Word("}}}"), Word("bar"), Word("baz"))
-                )
-              ),
+              Tag(TagType.Example),
+              CodeBlock(complexCodeBlock),
+              Text(Seq(Word("bar"), Word("baz"))),
               CodeBlock(complexCodeBlock),
               Text(Seq(Word("baz"), Word("qux")))
             )
@@ -994,14 +993,9 @@ class ScaladocParserSuite extends FunSuite {
           Paragraph(
             Seq(
               Text(Seq(Word("blah"))),
-              Tag(
-                TagType.Example,
-                desc = Text(
-                  Seq(Word("```info1"), Word("info2")) ++
-                    complexCodeBlockWords
-                )
-              ),
-              Text(Seq(Word("```"), Word("bar"), Word("baz"))),
+              Tag(TagType.Example),
+              MdCodeBlock(Seq("info1", "info2"), complexCodeBlock, "```"),
+              Text(Seq(Word("bar"), Word("baz"))),
               MdCodeBlock(Seq("info3", "info4"), complexCodeBlock, "```"),
               Text(Seq(Word("baz"), Word("qux")))
             )

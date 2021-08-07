@@ -127,9 +127,11 @@ object ScaladocParser {
 
   private def leadTextParser[_: P]: P[Text] = P((space | Start) ~ hspaces0 ~ textParser)
 
-  private def tagLabelParser[_: P]: P[Word] = nlHspaces1 ~ wordParser
+  private def tagLabelParser[_: P]: P[Word] = P(!nextPartParser ~ nlHspaces1 ~ wordParser)
 
-  private def tagDescParser[_: P]: P[Text] = P(nlHspaces1 ~ textParser)
+  private def tagDescParser[_: P]: P[Text] = P {
+    hspaces0 ~ (textParser | !nextPartParser ~ nl ~ textParser).?.map(_.orNull)
+  }
 
   private def tagParser[_: P]: P[Tag] = P {
     def tagTypeMap = TagType.predefined.map(x => x.tag -> x).toMap
