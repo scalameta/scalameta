@@ -129,8 +129,8 @@ object ScaladocParser {
 
   private def tagLabelParser[_: P]: P[Word] = P(!nextPartParser ~ nlHspaces1 ~ wordParser)
 
-  private def tagDescParser[_: P]: P[Text] = P {
-    hspaces0 ~ (textParser | !nextPartParser ~ nl ~ textParser).?.map(_.orNull)
+  private def tagDescParser[_: P]: P[Option[Text]] = P {
+    hspaces0 ~ (textParser | !nextPartParser ~ nl ~ textParser).?
   }
 
   private def tagParser[_: P]: P[Tag] = P {
@@ -139,10 +139,10 @@ object ScaladocParser {
       (tagType.hasLabel, tagType.optDesc) match {
         case (false, false) => Pass(Tag(tagType))
         case (false, true) => tagDescParser.map(x => Tag(tagType, desc = x))
-        case (true, false) => tagLabelParser.map(x => Tag(tagType, label = x))
+        case (true, false) => tagLabelParser.map(x => Tag(tagType, label = Some(x)))
         case (true, true) =>
           (tagLabelParser ~ tagDescParser).map { case (label, desc) =>
-            Tag(tagType, label, desc)
+            Tag(tagType, Some(label), desc)
           }
       }
     }
