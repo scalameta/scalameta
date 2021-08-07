@@ -912,6 +912,106 @@ class ScaladocParserSuite extends FunSuite {
     )
   }
 
+  test("tag description with multiline code blocks") {
+    val complexCodeBlock = // keep all newlines and leading spaces
+      """|  ggmqwogmwogmqwomgq
+         |    val x = 1 // sdfdfh
+         |   // zzz
+         |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n")
+    val complexCodeBlockAsComment = complexCodeBlock.mkString("\n *")
+
+    val result = parseString(
+      s"""
+          /** blah
+            * @example
+            * {{{
+            *$complexCodeBlockAsComment
+            * }}}
+            * bar baz
+            * {{{
+            *$complexCodeBlockAsComment
+            * }}}
+            * baz qux
+            */
+       """.stripMargin
+    )
+
+    val complexCodeBlockWords =
+      complexCodeBlock.flatMap(_.split("\\s+", 0).filter(_.nonEmpty)).map(Word.apply)
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("blah"))),
+              Tag(
+                TagType.Example,
+                desc = Text(
+                  Seq(Word("{{{")) ++
+                    complexCodeBlockWords ++
+                    Seq(Word("}}}"), Word("bar"), Word("baz"))
+                )
+              ),
+              CodeBlock(complexCodeBlock),
+              Text(Seq(Word("baz"), Word("qux")))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("tag description with markdown code blocks") {
+    val complexCodeBlock = // keep all newlines and leading spaces
+      """|  ggmqwogmwogmqwomgq
+         |    val x = 1 // sdfdfh
+         |   // zzz
+         |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n")
+    val complexCodeBlockAsComment = complexCodeBlock.mkString(" ", "\n * ", "")
+
+    val result = parseString(
+      s"""
+          /** blah
+            * @example
+            * ```info1 info2
+            *$complexCodeBlockAsComment
+            * ```
+            * bar baz
+            * ```info3 info4
+            *$complexCodeBlockAsComment
+            * ```
+            * baz qux
+            */
+       """.stripMargin
+    )
+
+    val complexCodeBlockWords =
+      complexCodeBlock.flatMap(_.split("\\s+", 0)).filter(_.nonEmpty).map(Word.apply)
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("blah"))),
+              Tag(
+                TagType.Example,
+                desc = Text(
+                  Seq(Word("```info1"), Word("info2")) ++
+                    complexCodeBlockWords
+                )
+              ),
+              Text(Seq(Word("```"), Word("bar"), Word("baz"))),
+              MdCodeBlock(Seq("info3", "info4"), complexCodeBlock, "```"),
+              Text(Seq(Word("baz"), Word("qux")))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
   test("table escaped pipe") {
     val result = parseString(
       """
