@@ -1087,6 +1087,14 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkTree(Lit.String("ラーメン"), "\"ラーメン\"")
   }
 
+  test("#2447 Pat.Bind on Term.Name") {
+    checkTree(q"{ case x @ Y => x }", "{\n  case x @ Y => x\n}")
+  }
+
+  test("#2447 Pat.Bind on Term.Name backticks") {
+    checkTree(q"{ case x @ `y` => x }", "{\n  case x @ `y` => x\n}")
+  }
+
   def checkTree(original: Tree, expected: String)(implicit loc: munit.Location): Unit = {
     assertNoDiff(original.syntax, expected)
     assertNoDiff(original.structure, expected.parse[Stat].get.structure)
