@@ -39,7 +39,6 @@ object ScaladocParser {
   private def punctParser[_: P] = CharsWhileIn(".,:!?;)", 0)
   private def labelParser[_: P]: P[Unit] = (!space ~ AnyChar).rep(1)
   private def wordParser[_: P]: P[Word] = P(labelParser.!.map(Word.apply))
-  private def trailWordParser[_: P] = nlHspaces1 ~ wordParser
 
   private def listPrefix[_: P] = "-" | CharIn("1aiI") ~ "."
 
@@ -112,39 +111,48 @@ object ScaladocParser {
     pattern.map { case (x, y) => new Link(x, y) }
   }
 
-  private def textParser[_: P]: P[Text] = P {
+  private def nextPartParser[_: P]: P[Unit] = P {
     def mdCodeBlockPrefix = mdCodeBlockIndent ~ mdCodeBlockFence
     def anotherBeg = P(CharIn("@=") | (codePrefix ~ nl) | listPrefix | tableSep | "+-" | nl)
-    def end = P(End | nl ~/ (mdCodeBlockPrefix | hspaces0 ~/ anotherBeg))
+    nl ~/ (nl | mdCodeBlockPrefix | hspaces0 ~/ anotherBeg)
+  }
+
+  private def textParser[_: P]: P[Text] = P {
+    def end = P(End | nextPartParser)
     def part: P[TextPart] = P(!paraEnd ~ (codeExprParser | linkParser | wordParser))
     def sep = P(!end ~ nlHspaces0)
     def text = hspaces0 ~ part.rep(1, sep = sep)
     text.map(x => Text(x.toSeq))
   }
 
-  private def trailTextParser[_: P]: P[Text] = P(nlHspaces1 ~ textParser)
   private def leadTextParser[_: P]: P[Text] = P((space | Start) ~ hspaces0 ~ textParser)
+
+  private def tagLabelParser[_: P]: P[Word] = P(!nextPartParser ~ nlHspaces1 ~ wordParser)
+
+  private def tagDescParser[_: P]: P[Text] = P {
+    hspaces0 ~ (textParser | !nextPartParser ~ nl ~ textParser).?.map(_.orNull)
+  }
 
   private def tagParser[_: P]: P[Tag] = P {
     def tagTypeMap = TagType.predefined.map(x => x.tag -> x).toMap
     def getParserByTag(tag: String): P[Tag] = {
       val tagTypeOpt = tagTypeMap.get(tag)
       tagTypeOpt.fold[P[Tag]] {
-        trailTextParser.map { desc => Tag(TagType.UnknownTag(tag), desc = desc) }
+        tagDescParser.map { desc => Tag(TagType.UnknownTag(tag), desc = desc) }
       } { tagType =>
         (tagType.hasLabel, tagType.hasDesc) match {
           case (false, false) => Pass(Tag(tagType))
-          case (false, true) => trailTextParser.map(x => Tag(tagType, desc = x))
-          case (true, false) => trailWordParser.map(x => Tag(tagType, label = x))
+          case (false, true) => tagDescParser.map(x => Tag(tagType, desc = x))
+          case (true, false) => tagLabelParser.map(x => Tag(tagType, label = x))
           case (true, true) =>
-            (trailWordParser ~ trailTextParser).map { case (label, desc) =>
+            (tagLabelParser ~ tagDescParser).map { case (label, desc) =>
               Tag(tagType, label, desc)
             }
         }
       }
     }
-    def tagLabelParser = P(("@" ~ labelParser).!)
-    leadHspaces0 ~ tagLabelParser.flatMap(getParserByTag)
+    def tagTypeParser = P(("@" ~ labelParser).!)
+    leadHspaces0 ~ tagTypeParser.flatMap(getParserByTag)
   }
 
   private def listBlockParser[_: P](minIndent: Int = 1): P[ListBlock] = P {

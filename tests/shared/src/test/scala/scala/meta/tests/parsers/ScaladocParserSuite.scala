@@ -699,7 +699,7 @@ class ScaladocParserSuite extends FunSuite {
           Paragraph(
             Seq(
               Tag(TagType.Param, Word("foo"), Text(Seq(Word("-"), Word("bar"), Word("baz")))),
-              Text(Seq(Word("@return")))
+              Tag(TagType.Return)
             )
           )
         )
@@ -721,7 +721,10 @@ class ScaladocParserSuite extends FunSuite {
       Scaladoc(
         Seq(
           Paragraph(
-            Seq(Tag(TagType.Param, Word("foo"), Text(Seq(Word("-"), Word("bar"), Word("baz")))))
+            Seq(
+              Tag(TagType.Param, Word("foo")),
+              ListBlock("-", Seq(ListItem(Text(Seq(Word("bar"), Word("baz"))))))
+            )
           )
         )
       )
@@ -743,7 +746,8 @@ class ScaladocParserSuite extends FunSuite {
         Seq(
           Paragraph(
             Seq(
-              Tag(TagType.UnknownTag("@foo"), null, Text(Seq(Word("-"), Word("bar"), Word("baz"))))
+              Tag(TagType.UnknownTag("@foo")),
+              ListBlock("-", Seq(ListItem(Text(Seq(Word("bar"), Word("baz"))))))
             )
           )
         )
@@ -884,7 +888,7 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
       ),
-      Option(Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("@param"))), Text(Seq(Word("@return"))))))))
+      Option(Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("@param"))), Tag(TagType.Return))))))
     )
   }
 
@@ -910,6 +914,96 @@ class ScaladocParserSuite extends FunSuite {
         )
       )
     )
+  }
+
+  test("tag description with multiline code blocks") {
+    val complexCodeBlock = // keep all newlines and leading spaces
+      """|  ggmqwogmwogmqwomgq
+         |    val x = 1 // sdfdfh
+         |   // zzz
+         |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n")
+    val complexCodeBlockAsComment = complexCodeBlock.mkString("\n *")
+
+    val result = parseString(
+      s"""
+          /** blah
+            * @example
+            * {{{
+            *$complexCodeBlockAsComment
+            * }}}
+            * bar baz
+            * {{{
+            *$complexCodeBlockAsComment
+            * }}}
+            * baz qux
+            */
+       """.stripMargin
+    )
+
+    val complexCodeBlockWords =
+      complexCodeBlock.flatMap(_.split("\\s+", 0).filter(_.nonEmpty)).map(Word.apply)
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("blah"))),
+              Tag(TagType.Example),
+              CodeBlock(complexCodeBlock),
+              Text(Seq(Word("bar"), Word("baz"))),
+              CodeBlock(complexCodeBlock),
+              Text(Seq(Word("baz"), Word("qux")))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("tag description with markdown code blocks") {
+    val complexCodeBlock = // keep all newlines and leading spaces
+      """|  ggmqwogmwogmqwomgq
+         |    val x = 1 // sdfdfh
+         |   // zzz
+         |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n")
+    val complexCodeBlockAsComment = complexCodeBlock.mkString(" ", "\n * ", "")
+
+    val result = parseString(
+      s"""
+          /** blah
+            * @example
+            * ```info1 info2
+            *$complexCodeBlockAsComment
+            * ```
+            * bar baz
+            * ```info3 info4
+            *$complexCodeBlockAsComment
+            * ```
+            * baz qux
+            */
+       """.stripMargin
+    )
+
+    val complexCodeBlockWords =
+      complexCodeBlock.flatMap(_.split("\\s+", 0)).filter(_.nonEmpty).map(Word.apply)
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("blah"))),
+              Tag(TagType.Example),
+              MdCodeBlock(Seq("info1", "info2"), complexCodeBlock, "```"),
+              Text(Seq(Word("bar"), Word("baz"))),
+              MdCodeBlock(Seq("info3", "info4"), complexCodeBlock, "```"),
+              Text(Seq(Word("baz"), Word("qux")))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
   }
 
   test("table escaped pipe") {
