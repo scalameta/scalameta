@@ -108,7 +108,7 @@ object Scaladoc {
   sealed abstract class TagType(
       val tag: String,
       val hasLabel: Boolean = false,
-      val hasDesc: Boolean = false
+      val optDesc: Boolean = true
   )
 
   /**
@@ -116,35 +116,36 @@ object Scaladoc {
    * @param label set iff `tag.hasLabel`
    * @param desc set iff `tag.hasDesc`
    */
-  final case class Tag(tag: TagType, label: Word = null, desc: Text = null) extends Term
+  final case class Tag(tag: TagType, label: Option[Word] = None, desc: Option[Text] = None)
+      extends Term
 
   object TagType {
 
     type Base = TagType
 
     /** Represents an unknown tag */
-    final case class UnknownTag(override val tag: String) extends Base(tag, hasDesc = true)
+    final case class UnknownTag(override val tag: String) extends Base(tag)
 
     /* Class specific tags */
 
     /** Placed in the class comment will describe the primary constructor */
-    case object Ctor extends Base("@constructor", hasDesc = true)
+    case object Ctor extends Base("@constructor")
 
     /* Method specific tags */
 
     /** Detail the return value from a method */
-    case object Return extends Base("@return", hasDesc = true)
+    case object Return extends Base("@return")
 
     /* Method, Constructor and/or Class tags */
 
     /** What exceptions (if any) the method or constructor may throw */
-    case object Throws extends Base("@throws", hasLabel = true, hasDesc = true)
+    case object Throws extends Base("@throws", hasLabel = true)
 
     /** Detail a value parameter for a method or constructor */
-    case object Param extends Base("@param", hasLabel = true, hasDesc = true)
+    case object Param extends Base("@param", hasLabel = true)
 
     /** Detail a type parameter for a method, constructor or class */
-    case object TypeParam extends Base("@tparam", hasLabel = true, hasDesc = true)
+    case object TypeParam extends Base("@tparam", hasLabel = true)
 
     /* Usage tags */
 
@@ -152,33 +153,33 @@ object Scaladoc {
      * Reference other sources of information like external document links or
      * related entities in the documentation
      */
-    case object See extends Base("@see", hasDesc = true)
+    case object See extends Base("@see")
 
     /** Add a note for pre or post conditions, or any other notable restrictions or expectations */
-    case object Note extends Base("@note", hasDesc = true)
+    case object Note extends Base("@note")
 
     /** Provide example code and related descriptions. */
-    case object Example extends Base("@example", hasDesc = true)
+    case object Example extends Base("@example")
 
     /**
      * Provide a simplified method definition for when the full method definition is too complex
      * or noisy
      */
-    case object UseCase extends Base("@usecase", hasDesc = true)
+    case object UseCase extends Base("@usecase")
 
     /* Member grouping tags */
 
     /** Mark the entity as member of a group */
-    case object Group extends Base("@group", hasLabel = true)
+    case object Group extends Base("@group", hasLabel = true, optDesc = false)
 
     /** Provide an optional name for the group */
-    case object GroupName extends Base("@groupname", hasLabel = true, hasDesc = true)
+    case object GroupName extends Base("@groupname", hasLabel = true)
 
     /** Add optional descriptive text to display under the group name */
-    case object GroupDesc extends Base("@groupdesc", hasLabel = true, hasDesc = true)
+    case object GroupDesc extends Base("@groupdesc", hasLabel = true)
 
     /** Control the order of the group on the page */
-    case object GroupPriority extends Base("@groupprio", hasLabel = true, hasDesc = true)
+    case object GroupPriority extends Base("@groupprio", hasLabel = true)
 
     /* Diagram tags */
 
@@ -188,31 +189,31 @@ object Scaladoc {
     /* Other tags */
 
     /** Provide author information for the following entity */
-    case object Author extends Base("@author", hasDesc = true)
+    case object Author extends Base("@author")
 
     /** The version of the system or API that this entity is a part of */
-    case object Version extends Base("@version", hasLabel = true)
+    case object Version extends Base("@version", hasLabel = true, optDesc = false)
 
     /** The version of the system or API that this entity was first defined in */
-    case object Since extends Base("@since", hasLabel = true, hasDesc = true)
+    case object Since extends Base("@since", hasLabel = true)
 
     /** Documents unimplemented features in an entity */
-    case object Todo extends Base("@todo", hasDesc = true)
+    case object Todo extends Base("@todo")
 
     /** Marks an entity as deprecated, describing replacement implementation */
-    case object Deprecated extends Base("@deprecated", hasDesc = true)
+    case object Deprecated extends Base("@deprecated")
 
     /**
      * Like [[Deprecated]] but provides advanced warning of
      * planned changes ahead of deprecation.
      */
-    case object Migration extends Base("@migration", hasDesc = true)
+    case object Migration extends Base("@migration")
 
     /** Take comments from a superclass as defaults if comments are not provided locally */
-    case object InheritDoc extends Base("@inheritdoc")
+    case object InheritDoc extends Base("@inheritdoc", optDesc = false)
 
     /** Expand a type alias and abstract type into a full template page */
-    case object Documentable extends Base("@documentable", hasDesc = true)
+    case object Documentable extends Base("@documentable")
 
     /* Macros tags */
 
@@ -220,13 +221,13 @@ object Scaladoc {
      * Allows use of {{{label}}} in other Scaladoc comments within the same
      * source file which will be expanded to the contents of {{{definition}}}.
      */
-    case object Define extends Base("@define", hasLabel = true, hasDesc = true)
+    case object Define extends Base("@define", hasLabel = true)
 
     /* 2.12 tags */
     // @shortDescription
     // @hideImplicitConversion
 
-    /** Contains all unknown tags */
+    /** Contains all known tags */
     val predefined: Seq[Base] = Seq(
       Ctor,
       Return,
@@ -252,6 +253,10 @@ object Scaladoc {
       Documentable
     )
 
+    val tagTypeMap = predefined.map(x => x.tag -> x).toMap
+
+    def getTag(tag: String): TagType =
+      tagTypeMap.getOrElse(tag, TagType.UnknownTag(tag))
   }
 
 }

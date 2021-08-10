@@ -14,12 +14,20 @@ class ScaladocParserSuite extends FunSuite {
   private def parseString(comment: String) =
     ScaladocParser.parse(comment.trim)
 
-  private def generateTestString(tagType: TagType): String = {
-    val sb = new StringBuilder
-    sb.append(tagType.tag)
+  private def generateTestString(tagType: TagType, testStringToMerge: String)(
+      implicit sb: StringBuilder
+  ): Unit = {
+    val nl = "\n *"
+    sb.append(' ').append(tagType.tag)
     if (tagType.hasLabel) sb.append(" TestLabel")
-    if (tagType.hasDesc) sb.append("\n *  Test Description")
-    sb.result()
+    if (tagType.optDesc) {
+      // another, with description
+      sb.append(nl).append(' ').append(tagType.tag)
+      if (tagType.hasLabel) sb.append(" TestLabel")
+      sb.append(nl).append("  Test Description")
+      sb.append(nl).append("  ").append(testStringToMerge)
+    }
+    sb.append(nl)
   }
 
   test("example usage") {
@@ -663,24 +671,52 @@ class ScaladocParserSuite extends FunSuite {
 
   test("label parsing/merging") {
     val testStringToMerge = "Test DocText"
-    val scaladoc: String = TagType.predefined
-      .flatMap(token => List(generateTestString(token), testStringToMerge))
-      .mkString("/** ", "\n * ", " */")
+    implicit val sb = new StringBuilder
+    sb.append("/** ")
+    TagType.predefined.foreach(generateTestString(_, testStringToMerge))
+    sb.append('/')
     val words = testStringToMerge.split("\\s+").map(Word.apply).toSeq
 
-    val parsedScaladoc = parseString(scaladoc)
+    val parsedScaladocOpt = parseString(sb.result())
+    assertNotEquals(parsedScaladocOpt, None: Option[Scaladoc])
+    val parsedScaladocParas = parsedScaladocOpt.get.para
+    assertEquals(parsedScaladocParas.length, 1)
+    val parsedScaladocTerms = parsedScaladocParas.head.term
 
-    val expectedCount = TagType.predefined.length + TagType.predefined.count(!_.hasDesc)
-    assertEquals(parsedScaladoc.map(_.para.length), Option(1))
-    assertEquals(parsedScaladoc.map(_.para.head.term.length), Option(expectedCount))
+    assertEquals(
+      parsedScaladocTerms.count {
+        case t: Tag => t.tag.optDesc && t.desc.isEmpty
+        case _ => false
+      },
+      TagType.predefined.count(_.optDesc)
+    )
+    assertEquals(
+      parsedScaladocTerms.count {
+        case t: Tag => t.tag.optDesc && t.desc.nonEmpty
+        case _ => false
+      },
+      TagType.predefined.count(_.optDesc)
+    )
+    assertEquals(
+      parsedScaladocTerms.count {
+        case t: Tag => !t.tag.optDesc && t.desc.isEmpty
+        case _ => false
+      },
+      TagType.predefined.count(!_.optDesc)
+    )
+    assertEquals(
+      parsedScaladocTerms.count {
+        case t: Tag => !t.tag.optDesc && t.desc.nonEmpty
+        case _ => false
+      },
+      0
+    )
 
     // Inherit doc does not merge
-    parsedScaladoc.foreach {
-      _.para.head.term.foreach {
-        case t: Tag if t.tag.hasDesc =>
-          assertEquals(t.desc.part.takeRight(words.length), words)
-        case _ =>
-      }
+    parsedScaladocTerms.foreach {
+      case t: Tag if t.tag.optDesc && t.desc.isDefined =>
+        assertEquals(t.desc.get.part.takeRight(words.length), words)
+      case _ =>
     }
   }
 
@@ -698,7 +734,11 @@ class ScaladocParserSuite extends FunSuite {
         Seq(
           Paragraph(
             Seq(
-              Tag(TagType.Param, Word("foo"), Text(Seq(Word("-"), Word("bar"), Word("baz")))),
+              Tag(
+                TagType.Param,
+                Some(Word("foo")),
+                Some(Text(Seq(Word("-"), Word("bar"), Word("baz"))))
+              ),
               Tag(TagType.Return)
             )
           )
@@ -722,7 +762,7 @@ class ScaladocParserSuite extends FunSuite {
         Seq(
           Paragraph(
             Seq(
-              Tag(TagType.Param, Word("foo")),
+              Tag(TagType.Param, Some(Word("foo"))),
               ListBlock("-", Seq(ListItem(Text(Seq(Word("bar"), Word("baz"))))))
             )
           )
@@ -774,13 +814,13 @@ class ScaladocParserSuite extends FunSuite {
               Seq(
                 Tag(
                   TagType.Throws,
-                  Word("e1"),
-                  Text(Seq(Word("foo"), Word("bar")))
+                  Some(Word("e1")),
+                  Some(Text(Seq(Word("foo"), Word("bar"))))
                 ),
                 Tag(
                   TagType.Throws,
-                  Word("e2"),
-                  Text(Seq(Word("baz"), Word("qux"), Word("bar-baz")))
+                  Some(Word("e2")),
+                  Some(Text(Seq(Word("baz"), Word("qux"), Word("bar-baz"))))
                 )
               )
             )
@@ -806,12 +846,12 @@ class ScaladocParserSuite extends FunSuite {
           Seq(
             Paragraph(
               Seq(
-                Tag(TagType.Version, Word("1.0")),
+                Tag(TagType.Version, Some(Word("1.0"))),
                 Text(Seq(Word("foo"), Word("bar"))),
                 Tag(
                   TagType.Since,
-                  Word("1.0"),
-                  Text(Seq(Word("baz"), Word("qux"), Word("bar-baz")))
+                  Some(Word("1.0")),
+                  Some(Text(Seq(Word("baz"), Word("qux"), Word("bar-baz"))))
                 )
               )
             )
@@ -838,8 +878,8 @@ class ScaladocParserSuite extends FunSuite {
               Seq(
                 Tag(
                   TagType.Define,
-                  Word("what"),
-                  Text(Seq(Word("for"), Word("what"), Word("reason"), Word("bar-baz")))
+                  Some(Word("what")),
+                  Some(Text(Seq(Word("for"), Word("what"), Word("reason"), Word("bar-baz"))))
                 )
               )
             )
@@ -860,7 +900,11 @@ class ScaladocParserSuite extends FunSuite {
          """
       ),
       Option(
-        Scaladoc(Seq(Paragraph(Seq(Tag(TagType.Param, Word("foo"), Text(Seq(Word("bar-baz"))))))))
+        Scaladoc(
+          Seq(
+            Paragraph(Seq(Tag(TagType.Param, Some(Word("foo")), Some(Text(Seq(Word("bar-baz")))))))
+          )
+        )
       )
     )
   }
@@ -907,7 +951,10 @@ class ScaladocParserSuite extends FunSuite {
           Seq(
             Paragraph(
               Seq(
-                Tag(TagType.UnknownTag("@newtag"), desc = Text(Seq(Word("newtag"), Word("text"))))
+                Tag(
+                  TagType.UnknownTag("@newtag"),
+                  desc = Some(Text(Seq(Word("newtag"), Word("text"))))
+                )
               )
             )
           )
