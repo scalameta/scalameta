@@ -239,7 +239,7 @@ object TreeSyntax {
           case p: Pat.Wildcard => unreachable
           case p: Pat.Var => false
           case p: Pat.Repeated => false
-          case p: Pat.Bind => unreachable
+          case p: Pat.Bind => true
           case p: Pat.Alternative => true
           case p: Pat.Tuple => true
           case p: Pat.Extract => p.args.exists(_ eq t)
