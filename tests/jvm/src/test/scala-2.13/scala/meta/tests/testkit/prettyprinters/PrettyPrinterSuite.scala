@@ -44,4 +44,6 @@ class PrettyPrinterSuite extends FunSuite {
   checkOk("""1 join (())""")
 
   checkOk("""foo match{ case _ => _ => false}""")
+
+  checkOk("class Foo(`this`: Int)")
 }
