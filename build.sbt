@@ -328,7 +328,7 @@ lazy val testkit = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     },
     libraryDependencies ++= List(
       // These are used to download and extract a corpus tar.gz
-      "org.rauschig" % "jarchivelib" % "1.1.0",
+      "org.rauschig" % "jarchivelib" % "1.2.0",
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test
     )
   )
