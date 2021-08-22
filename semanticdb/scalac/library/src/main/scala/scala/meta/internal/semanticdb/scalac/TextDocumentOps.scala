@@ -673,6 +673,17 @@ trait TextDocumentOps { self: SemanticdbOps =>
 
                 occurrences(mposFix) = "scala/Predef.classOf()."
 
+                gtree.value match {
+                  // Limitation: can't extract occurrence from types inside classOf
+                  // if it's not a TypeRef without any type applications.
+                  // because `classOf[...]` is encoded as `Literal(Constant(...))` while typing and
+                  // positinal information inside of `classOf` disappear after the typechecking.
+                  case g.Constant(tpe @ g.TypeRef(_, _, Nil)) =>
+                    val mposClazz = new m.Position.Range(mpos.input, mpos.start + coLen + 1, mpos.end - 1)
+                    occurrences(mposClazz) = tpe.typeSymbol.toSemantic
+                  case _ =>
+                }
+
               case gtree: g.MemberDef =>
                 gtree.symbol.annotations.foreach(ann => traverse(ann.original))
                 tryFindMtree(gtree)

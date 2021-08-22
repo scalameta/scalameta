@@ -56,7 +56,7 @@ object Test/*<=types.Test.*/ {
     val compoundType2/*<=types.Test.C#compoundType2.*/: M/*=>types.Test.M#*/ with N/*=>types.Test.N#*/ = ???/*=>scala.Predef.`???`().*/
     val compoundType3/*<=types.Test.C#compoundType3.*/: M/*=>types.Test.M#*/ with N/*=>types.Test.N#*/ { def k/*<=local1*/: Int/*=>scala.Int#*/ } = ???/*=>scala.Predef.`???`().*/
     val compoundType4/*<=types.Test.C#compoundType4.*/ = new /*<=local2*/{ def k/*<=local3*/: Int/*=>scala.Int#*/ = ???/*=>scala.Predef.`???`().*/ }
-    val compoundType5/*<=types.Test.C#compoundType5.*/ = new M/*=>types.Test.M#*/ with N/*=>types.Test.N#*/
+    val compoundType5/*<=types.Test.C#compoundType5.*/ = new /*<=local4*/M/*=>types.Test.M#*/ with N/*=>types.Test.N#*/
     val compoundType6/*<=types.Test.C#compoundType6.*/ = new /*<=local5*/M/*=>types.Test.M#*/ with N/*=>types.Test.N#*/ { def k/*<=local6*/: Int/*=>scala.Int#*/ = ???/*=>scala.Predef.`???`().*/ }
 
     val annType1/*<=types.Test.C#annType1.*/: T/*=>types.T#*/ @ann/*=>types.ann#*/(42) = ???/*=>scala.Predef.`???`().*/
@@ -111,8 +111,12 @@ object Test/*<=types.Test.*/ {
     final val bool/*<=types.Test.Literal.bool.*/ = true
     final val unit/*<=types.Test.Literal.unit.*/ = ()
     final val javaEnum/*<=types.Test.Literal.javaEnum.*/ = java.nio.file.LinkOption/*=>java.nio.file.LinkOption#*/.NOFOLLOW_LINKS/*=>java.nio.file.LinkOption#NOFOLLOW_LINKS.*/
-    final val clazzOfInt/*<=types.Test.Literal.clazzOfInt.*/ = classOf/*=>scala.Predef.classOf().*/[Int]
+    final val clazzOfInt/*<=types.Test.Literal.clazzOfInt.*/ = classOf/*=>scala.Predef.classOf().*/[Int/*=>scala.Int#*/]
+
     final val clazzOfOption/*<=types.Test.Literal.clazzOfOption.*/ = classOf/*=>scala.Predef.classOf().*/[Option[Int]]
 
+    final val clazzOfJStr/*<=types.Test.Literal.clazzOfJStr.*/ = classOf/*=>scala.Predef.classOf().*/[java.lang.String/*=>java.lang.String#*/]
+    final val clazzOfM/*<=types.Test.Literal.clazzOfM.*/ = classOf/*=>scala.Predef.classOf().*/[M/*=>types.Test.M#*/]
+    final val clazzOfTRef/*<=types.Test.Literal.clazzOfTRef.*/ = classOf/*=>scala.Predef.classOf().*/[T#C/*=>types.T#C#*/]
   }
 }

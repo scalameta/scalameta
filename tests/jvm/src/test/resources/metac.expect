@@ -4053,8 +4053,8 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
-Symbols => 140 entries
-Occurrences => 252 entries
+Symbols => 143 entries
+Occurrences => 262 entries
 
 Symbols:
 local0 => abstract method k: Int
@@ -4322,17 +4322,27 @@ types/Test.C#typeRef4. => val method typeRef4: List[Int]
 types/Test.C#x. => val method x: p.X
   p => types/Test.C#p.
   X => types/P#X#
-types/Test.Literal. => final object Literal extends AnyRef { +12 decls }
+types/Test.Literal. => final object Literal extends AnyRef { +15 decls }
   AnyRef => scala/AnyRef#
 types/Test.Literal.bool. => final val method bool: true
 types/Test.Literal.char. => final val method char: 'a'
 types/Test.Literal.clazzOfInt. => final val method clazzOfInt: Class[Int]
   Class => java/lang/Class#
   Int => scala/Int#
+types/Test.Literal.clazzOfJStr. => final val method clazzOfJStr: Class[String]
+  Class => java/lang/Class#
+  String => java/lang/String#
+types/Test.Literal.clazzOfM. => final val method clazzOfM: Class[M]
+  Class => java/lang/Class#
+  M => types/Test.M#
 types/Test.Literal.clazzOfOption. => final val method clazzOfOption: Class[Option[Int]]
   Class => java/lang/Class#
   Option => scala/Option#
   Int => scala/Int#
+types/Test.Literal.clazzOfTRef. => final val method clazzOfTRef: Class[T#C]
+  Class => java/lang/Class#
+  T => types/T#
+  C => types/T#C#
 types/Test.Literal.double. => final val method double: 2.0
 types/Test.Literal.float. => final val method float: 1.0f
 types/Test.Literal.int. => final val method int: 1
@@ -4624,8 +4634,18 @@ Occurrences:
 [112:50..112:64): NOFOLLOW_LINKS => java/nio/file/LinkOption#NOFOLLOW_LINKS.
 [113:14..113:24): clazzOfInt <= types/Test.Literal.clazzOfInt.
 [113:27..113:34): classOf => scala/Predef.classOf().
-[114:14..114:27): clazzOfOption <= types/Test.Literal.clazzOfOption.
-[114:30..114:37): classOf => scala/Predef.classOf().
+[113:35..113:38): Int => scala/Int#
+[115:14..115:27): clazzOfOption <= types/Test.Literal.clazzOfOption.
+[115:30..115:37): classOf => scala/Predef.classOf().
+[117:14..117:25): clazzOfJStr <= types/Test.Literal.clazzOfJStr.
+[117:28..117:35): classOf => scala/Predef.classOf().
+[117:36..117:52): java.lang.String => java/lang/String#
+[118:14..118:22): clazzOfM <= types/Test.Literal.clazzOfM.
+[118:25..118:32): classOf => scala/Predef.classOf().
+[118:33..118:34): M => types/Test.M#
+[119:14..119:25): clazzOfTRef <= types/Test.Literal.clazzOfTRef.
+[119:28..119:35): classOf => scala/Predef.classOf().
+[119:36..119:39): T#C => types/T#C#
 
 semanticdb/integration/src/main/scala/example/ValPattern.scala
 --------------------------------------------------------------
