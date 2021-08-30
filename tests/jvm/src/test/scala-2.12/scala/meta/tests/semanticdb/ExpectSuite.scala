@@ -46,7 +46,7 @@ class ExpectSuite extends FunSuite {
           .replace("[44:23..44:24): x => types/P#x.\n", "")
           .replace("Occurrences => 57 entries", "Occurrences => 56 entries")
           .replace("Occurrences => 147 entries", "Occurrences => 146 entries")
-          .replace("Occurrences => 252 entries", "Occurrences => 249 entries")
+          .replace("Occurrences => 262 entries", "Occurrences => 259 entries")
       }
       this.assertNoDiff(loadObtained, expectedCompat)
     }

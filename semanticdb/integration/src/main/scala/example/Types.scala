@@ -112,7 +112,11 @@ object Test {
     final val unit = ()
     final val javaEnum = java.nio.file.LinkOption.NOFOLLOW_LINKS
     final val clazzOfInt = classOf[Int]
+
     final val clazzOfOption = classOf[Option[Int]]
 
+    final val clazzOfJStr = classOf[java.lang.String]
+    final val clazzOfM = classOf[M]
+    final val clazzOfTRef = classOf[T#C]
   }
 }
