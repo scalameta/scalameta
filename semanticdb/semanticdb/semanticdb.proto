@@ -380,6 +380,7 @@ message Tree {
     OriginalTree original_tree = 6;
     SelectTree select_tree = 7;
     TypeApplyTree type_apply_tree = 8;
+    ApplyUsingTree apply_using_tree = 9;
   }
 }
 
@@ -418,4 +419,9 @@ message SelectTree {
 message TypeApplyTree {
   Tree function = 1;
   repeated Type type_arguments = 2;
+}
+
+message ApplyUsingTree {
+  Tree function = 1;
+  repeated Tree arguments = 2;
 }

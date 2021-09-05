@@ -1038,6 +1038,7 @@ message Tree {
     OriginalTree original_tree = 6;
     SelectTree select_tree = 7;
     TypeApplyTree type_apply_tree = 8;
+    ApllyUsingTree apply_using_tree = 9;
   }
 }
 ```
@@ -1122,6 +1123,15 @@ message TypeApplyTree {
 
 A `TypeApplyTree` represents the type application of a method, providing that
 method with type arguments.
+
+```protobuf
+message ApplyUsingTree {
+  Tree function = 1;
+  repeated Tree arguments = 2;
+}
+```
+
+An `ApplyUsingTree` represents a method application whose arguments are context parameters.
 
 ## Data Schemas
 
@@ -2831,6 +2841,39 @@ orig(scala.concurrent.Future.successful(1)).flatMap[Int]({ (a) =>
       orig(a)
     })(global)
 })(global)
+```
+
+</td>
+</tr>
+
+<tr>
+
+<td valign="top" rowspan="2">
+
+Context parameters application
+
+</td>
+<td>
+
+```scala
+def max[T](
+  x: T,
+  y: T
+)(using ord: Ord[T]) = ???
+max(1, 2)
+```
+
+</td>
+<td>
+
+```scala
+Synthetic(
+  <max(1, 2)>,
+  ApplyUsingTree(
+    OriginalTree(<max(1, 2)>),
+    List(
+      IdTree(<intOrd>),
+    )))
 ```
 
 </td>
