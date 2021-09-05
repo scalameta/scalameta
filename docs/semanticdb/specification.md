@@ -797,7 +797,6 @@ languages map onto these properties.
   <tr>
     <td><code>0x10000</code></td>
     <td><code>GIVEN</code></td>
-    <td>Is a given instance?</td>
     <td>Is a <code>given instance</code> (e.g. <code>given x: Int = ...</code> or <code>using x: Int</code>)?</td>
   </tr>
   <tr>
