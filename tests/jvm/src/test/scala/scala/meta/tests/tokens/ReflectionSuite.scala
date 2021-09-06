@@ -7,10 +7,12 @@ import scala.reflect.runtime.{universe => ru}
 import scala.reflect.runtime.universe._
 
 class ReflectionSuite extends FunSuite {
-  object TokenReflection extends {
-    val u: ru.type = ru
-    val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.tokens.Token].getClassLoader)
-  } with scala.meta.internal.tokens.Reflection
+  object TokenReflection
+      extends {
+        val u: ru.type = ru
+        val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.tokens.Token].getClassLoader)
+      }
+      with scala.meta.internal.tokens.Reflection
   import TokenReflection._
   val tokens = symbolOf[scala.meta.tokens.Token].asRoot.allLeafs
 

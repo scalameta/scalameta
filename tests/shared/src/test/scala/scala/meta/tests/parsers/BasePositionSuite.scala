@@ -24,13 +24,13 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
    *   checkPositions[Type](
    *     "[X] =>> (X, X)",
    *     """|Type.Bounds [X@@] =>> (X, X)
-   *        |Type.Tuple (X, X)
-   *        |""".stripMargin
+   *         |Type.Tuple (X, X)
+   *         |""".stripMargin
    *   )
    * }}}
    *
-   * Every line in the output format shows the AST tree node type and the
-   * tokens for that tree node. Offset positions are rendered as "@@".
+   * Every line in the output format shows the AST tree node type and the tokens for that tree node.
+   * Offset positions are rendered as "@@".
    *
    * Below is an example bug that is easy to catch with position tests.
    *
@@ -38,16 +38,15 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
    *   checkPositions[Stat](
    *     "trait A { self: B => }",
    *     """|Ctor.Primary trait A @@{ self: B => }
-   *        |Name.Anonymous {
-   *        |Template { self: B => }
-   *        |Self self: B
-   *        |""".stripMargin
+   *         |Name.Anonymous {
+   *         |Template { self: B => }
+   *         |Self self: B
+   *         |""".stripMargin
    *   )
    * }}}
    *
-   * Observe that the line "Name.Anonymous {" indicates that the position of the
-   * anonymous name encloses the "{" token. The correct output should be
-   * "Name.Anonymous trait A @@{ self: B => }".
+   * Observe that the line "Name.Anonymous {" indicates that the position of the anonymous name
+   * encloses the "{" token. The correct output should be "Name.Anonymous trait A @@{ self: B => }".
    */
   def checkPositions[T <: Tree: Parse](
       code: TestOptions,

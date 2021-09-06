@@ -8,10 +8,13 @@ import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}
 
 class SurfaceSuite extends FunSuite {
-  object CoreReflection extends {
-    val u: ru.type = ru
-    val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
-  } with scala.meta.internal.trees.Reflection with scala.meta.internal.tokens.Reflection
+  object CoreReflection
+      extends {
+        val u: ru.type = ru
+        val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
+      }
+      with scala.meta.internal.trees.Reflection
+      with scala.meta.internal.tokens.Reflection
   import CoreReflection._
 
   lazy val reflectedTrees = {

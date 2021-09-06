@@ -21,7 +21,7 @@ object Chars {
 
   /**
    * Convert a character digit to an Int according to given base,
-   *  -1 if no success
+   * -1 if no success
    */
   def digit2int(ch: Char, base: Int): Int = {
     val num =
@@ -94,9 +94,9 @@ object Chars {
   }
 
   /**
-   *  {{{
-   *  (#x20 | #x9 | #xD | #xA)
-   *  }}}
+   * {{{
+   *   (#x20 | #x9 | #xD | #xA)
+   * }}}
    */
   final def isSpace(ch: Char): Boolean = ch match {
     case '\u0009' | '\u000A' | '\u000D' | '\u0020' => true
@@ -104,11 +104,11 @@ object Chars {
   }
 
   /**
-   *  {{{
-   *  NameChar ::= Letter | Digit | '.' | '-' | '_' | ':'
+   * {{{
+   *   NameChar ::= Letter | Digit | '.' | '-' | '_' | ':'
    *             | CombiningChar | Extender
-   *  }}}
-   *  See [4] and Appendix B of XML 1.0 specification.
+   * }}}
+   * See [4] and Appendix B of XML 1.0 specification.
    */
   def isNameChar(ch: Char) = {
     import java.lang.Character._
@@ -123,14 +123,12 @@ object Chars {
   }
 
   /**
-   *  {{{
-   *  NameStart ::= ( Letter | '_' )
-   *  }}}
-   *  where Letter means in one of the Unicode general
-   *  categories `{ Ll, Lu, Lo, Lt, Nl }`.
+   * {{{
+   *   NameStart ::= ( Letter | '_' )
+   * }}}
+   * where Letter means in one of the Unicode general categories `{ Ll, Lu, Lo, Lt, Nl }`.
    *
-   *  We do not allow a name to start with ':'.
-   *  See [3] and Appendix B of XML 1.0 specification
+   * We do not allow a name to start with ':'. See [3] and Appendix B of XML 1.0 specification
    */
   def isNameStart(ch: Char) = {
     import java.lang.Character._

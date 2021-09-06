@@ -8,11 +8,10 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Dotty)
 
   /**
-   * For checking examples in repl declare:
-   *  case class Circle(x: Int)
+   * For checking examples in repl declare: case class Circle(x: Int)
    *
-   *  All examples based on dotty documentation:
-   *  https://dotty.epfl.ch/docs/reference/contextual/extension-methods.html
+   * All examples based on dotty documentation:
+   * https://dotty.epfl.ch/docs/reference/contextual/extension-methods.html
    */
 
   test("simple-method") {

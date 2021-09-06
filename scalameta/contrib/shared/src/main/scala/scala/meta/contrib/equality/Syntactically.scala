@@ -4,8 +4,8 @@ import scala.language.implicitConversions
 import scala.meta.Tree
 
 /**
- * Represents syntactic equality between trees
- * Two trees are syntactically equal if their .syntax is equal.
+ * Represents syntactic equality between trees Two trees are syntactically equal if their .syntax is
+ * equal.
  */
 class Syntactically[+A <: Tree](val tree: A) extends TreeEquality[A] {
   private lazy val syntax = tree.syntax

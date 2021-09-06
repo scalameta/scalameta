@@ -5,14 +5,18 @@ import munit._
 
 class NameclashSuite extends FunSuite {
   import scala.reflect.runtime.{universe => ru}
-  object TreeReflection extends {
-    val u: ru.type = ru
-    val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
-  } with scala.meta.internal.trees.Reflection
-  object TokenReflection extends {
-    val u: ru.type = ru
-    val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.tokens.Token].getClassLoader)
-  } with scala.meta.internal.tokens.Reflection
+  object TreeReflection
+      extends {
+        val u: ru.type = ru
+        val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
+      }
+      with scala.meta.internal.trees.Reflection
+  object TokenReflection
+      extends {
+        val u: ru.type = ru
+        val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.tokens.Token].getClassLoader)
+      }
+      with scala.meta.internal.tokens.Reflection
   val TreeRoot = { import TreeReflection._; ru.symbolOf[scala.meta.Tree].asRoot }
   val TokenRoot = { import TokenReflection._; ru.symbolOf[scala.meta.tokens.Token].asRoot }
 

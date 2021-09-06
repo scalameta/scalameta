@@ -8,13 +8,12 @@ class GivenUsingSuite extends BaseDottySuite {
   implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Dotty)
 
   /**
-   * For checking examples in repl declare:
-   *  trait Ord[T] { def f(): Int }
+   * For checking examples in repl declare: trait Ord[T] { def f(): Int }
    *
-   *  All examples based on dotty documentation:
-   *  https://dotty.epfl.ch/docs/reference/contextual/givens.html
-   *  https://dotty.epfl.ch/docs/reference/contextual/using-clauses.html
-   *  https://dotty.epfl.ch/docs/reference/contextual/given-imports.html
+   * All examples based on dotty documentation:
+   * https://dotty.epfl.ch/docs/reference/contextual/givens.html
+   * https://dotty.epfl.ch/docs/reference/contextual/using-clauses.html
+   * https://dotty.epfl.ch/docs/reference/contextual/given-imports.html
    */
   // ---------------------------------
   // GIVEN

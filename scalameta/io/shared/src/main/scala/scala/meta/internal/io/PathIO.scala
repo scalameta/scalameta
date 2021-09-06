@@ -38,7 +38,8 @@ object PathIO {
    *   dirname("/") == "/"
    * }}}
    *
-   * @param abspath a string path that matches the syntax of ZipFile entries.
+   * @param abspath
+   *   a string path that matches the syntax of ZipFile entries.
    */
   def dirname(abspath: String): String = {
     val isDir = abspath.endsWith("/")
@@ -60,7 +61,8 @@ object PathIO {
    *   basename("/") == ""
    * }}}
    *
-   * @param abspath a string path that matches the syntax of ZipFile entries.
+   * @param abspath
+   *   a string path that matches the syntax of ZipFile entries.
    */
   def basename(abspath: String): String = {
     val end = abspath.lastIndexOf('/')

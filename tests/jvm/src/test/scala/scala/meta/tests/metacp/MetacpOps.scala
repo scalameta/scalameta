@@ -101,7 +101,9 @@ object MetacpOps {
     references.result()
   }
 
-  /** Returns all symbols are referenced in the classpath but have no associated SymbolInformation */
+  /**
+   * Returns all symbols are referenced in the classpath but have no associated SymbolInformation
+   */
   def collectReferencedToUndefinedSymbols(classpath: Classpath): Iterable[String] = {
     val isPersistedGlobalSymbol = collectAllGlobalSymbols(classpath)
     val errors = mutable.Set.empty[String]

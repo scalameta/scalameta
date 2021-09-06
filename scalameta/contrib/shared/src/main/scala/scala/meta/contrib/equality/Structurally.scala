@@ -6,8 +6,8 @@ import scala.meta.Tree
 /**
  * Represents structural equality between trees
  *
- * Two trees are structurally equal if their .structure is equal.
- * This implementation is however more efficient that doing
+ * Two trees are structurally equal if their .structure is equal. This implementation is however
+ * more efficient that doing
  * a.structure == b.structure.
  */
 class Structurally[+A <: Tree](val tree: A) extends TreeEquality[A] {

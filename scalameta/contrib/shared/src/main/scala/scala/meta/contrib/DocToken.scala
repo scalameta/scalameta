@@ -39,7 +39,8 @@ case class DocToken(kind: DocToken.Kind, name: Option[String], body: Option[Stri
  * Companion object containing the classes required for describing an ScalaDoc token.
  *
  * The available tokens and their documentation are obtained from:
- * @see http://docs.scala-lang.org/overviews/scaladoc/for-library-authors.html
+ * @see
+ *   http://docs.scala-lang.org/overviews/scaladoc/for-library-authors.html
  */
 object DocToken {
 
@@ -117,8 +118,7 @@ object DocToken {
     new DocToken(kind, Option(name), Option(body))
 
   /**
-   * Companion object for [[TagKind]] containing
-   * its pattern match extractor.
+   * Companion object for [[TagKind]] containing its pattern match extractor.
    */
   object TagKind {
     def unapply(kind: TagKind): Option[(String, Int)] =
@@ -151,14 +151,13 @@ object DocToken {
   case object Throws extends TagKind("@throws", numberParameters = 2)
 
   /**
-   * Points to other sources of information such as external documentation
-   * or related entities in the documentation.
+   * Points to other sources of information such as external documentation or related entities in
+   * the documentation.
    */
   case object See extends TagKind("@see", numberParameters = 1)
 
   /**
-   * Documents pre- and post-conditions as well as other notable requirements
-   * or restrictions.
+   * Documents pre- and post-conditions as well as other notable requirements or restrictions.
    */
   case object Note extends TagKind("@note", numberParameters = 1)
 
@@ -178,8 +177,7 @@ object DocToken {
   case object Author extends TagKind("@author", numberParameters = 1)
 
   /**
-   * The version of the system or API that a class, trait, object or
-   * package is part of.
+   * The version of the system or API that a class, trait, object or package is part of.
    */
   case object Version extends TagKind("@version", numberParameters = 1)
 
@@ -194,14 +192,12 @@ object DocToken {
   case object Todo extends TagKind("@todo", numberParameters = 1)
 
   /**
-   * Marks an entity as deprecated. The message should
-   * describe replacement implementation.
+   * Marks an entity as deprecated. The message should describe replacement implementation.
    */
   case object Deprecated extends TagKind("@deprecated", numberParameters = 1)
 
   /**
-   * Like [[Deprecated]] but provides advanced warning of
-   * planned changes ahead of deprecation.
+   * Like [[Deprecated]] but provides advanced warning of planned changes ahead of deprecation.
    */
   case object Migration extends TagKind("@migration", numberParameters = 1)
 
@@ -221,10 +217,9 @@ object DocToken {
   case object GroupDescription extends TagKind("@groupdesc", numberParameters = 2)
 
   /**
-   * Control the order of the group on the page. Defaults to 0. Ungrouped
-   * elements have an implicit priority of 1000. Use a value between 0 and
-   * 999 to set a relative position to other groups. Low values will appear
-   * before high values.
+   * Control the order of the group on the page. Defaults to 0. Ungrouped elements have an implicit
+   * priority of 1000. Use a value between 0 and 999 to set a relative position to other groups. Low
+   * values will appear before high values.
    */
   case object GroupPriority extends TagKind("@groupprio", numberParameters = 1)
 
@@ -239,8 +234,7 @@ object DocToken {
   case object Paragraph extends Kind
 
   /**
-   * Take comments from a superclass as defaults if comments
-   * are not provided locally.
+   * Take comments from a superclass as defaults if comments are not provided locally.
    */
   case object InheritDoc extends Kind
 
@@ -307,7 +301,7 @@ object DocToken {
   case object Heading6 extends Heading(6)
 
   /**
-   * Contains all the implemented [[Heading]]'s.
+   * Contains all the implemented [[Heading]] 's.
    */
   def allHeadings: Seq[Heading] = List(Heading1, Heading2, Heading3, Heading4, Heading5, Heading6)
 

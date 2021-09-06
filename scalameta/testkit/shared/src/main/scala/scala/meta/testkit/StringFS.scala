@@ -27,11 +27,12 @@ object StringFS {
    *
    * Use `asString` for the inverse, go from a temporary directory to a string.
    *
-   * @param layout the string representing the directory layout.
-   *               NOTE. Lines starting with forward slash / are always interpreted
-   *               as the start of a new file entry.
-   * @param root the temporary directory to apply the layout markup.
-   *             If not provided, defaults to a fresh temporary directory.
+   * @param layout
+   *   the string representing the directory layout. NOTE. Lines starting with forward slash / are
+   *   always interpreted as the start of a new file entry.
+   * @param root
+   *   the temporary directory to apply the layout markup. If not provided, defaults to a fresh
+   *   temporary directory.
    */
   def fromString(
       layout: String,
@@ -75,8 +76,10 @@ object StringFS {
    * assert(asString(fromString(layout)) == layout)
    * }}}
    *
-   * @param root the directory to print as a string
-   * @param includePath an optional filter function to exclude files
+   * @param root
+   *   the directory to print as a string
+   * @param includePath
+   *   an optional filter function to exclude files
    */
   def asString(
       root: AbsolutePath,

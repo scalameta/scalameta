@@ -10,8 +10,8 @@ import scala.annotation.tailrec
 
 /**
  * Copy-pasta from this lihaoyi comment:
- * [[https://github.com/scalameta/fastparse/pull/1#issuecomment-244940542]]
- * and adapted to more closely match scala-xml and then adapted to fastparse 2.3.1
+ * [[https://github.com/scalameta/fastparse/pull/1#issuecomment-244940542]] and adapted to more
+ * closely match scala-xml and then adapted to fastparse 2.3.1
  */
 class XmlParser(dialect: Dialect) {
 
@@ -94,10 +94,10 @@ class XmlParser(dialect: Dialect) {
 
     /**
      * {{{
-     *  NameChar ::= Letter | Digit | '.' | '-' | '_' | ':'
+     *   NameChar ::= Letter | Digit | '.' | '-' | '_' | ':'
      *             | CombiningChar | Extender
-     *  }}}
-     *  See [4] and Appendix B of XML 1.0 specification.
+     * }}}
+     * See [4] and Appendix B of XML 1.0 specification.
      */
     def isNameChar(ch: Char) = {
       import java.lang.Character._
@@ -113,13 +113,11 @@ class XmlParser(dialect: Dialect) {
 
     /**
      * {{{
-     *  NameStart ::= ( Letter | '_' )
-     *  }}}
-     *  where Letter means in one of the Unicode general
-     *  categories `{ Ll, Lu, Lo, Lt, Nl }`.
+     *   NameStart ::= ( Letter | '_' )
+     * }}}
+     * where Letter means in one of the Unicode general categories `{ Ll, Lu, Lo, Lt, Nl }`.
      *
-     *  We do not allow a name to start with `:`.
-     *  See [3] and Appendix B of XML 1.0 specification
+     * We do not allow a name to start with `:`. See [3] and Appendix B of XML 1.0 specification
      */
     def isNameStart(ch: Char) = {
       import java.lang.Character._
@@ -137,8 +135,7 @@ class XmlParser(dialect: Dialect) {
 /**
  * Collects start and end positions of scala expressions inside xml literals.
  *
- * Doesn't really parse scala expressions, only reads until the curly brace
- * balance hits 0.
+ * Doesn't really parse scala expressions, only reads until the curly brace balance hits 0.
  */
 class ScalaExprPositionParser(dialect: Dialect) {
   case class XmlTokenRange(from: Int, to: Int) // from is inclusive, to is exclusive

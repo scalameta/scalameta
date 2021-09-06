@@ -5,14 +5,15 @@ import scala.collection.mutable
 /**
  * An observation during a [[SyntaxAnalysis]].
  *
- * @param msg The message corresponding this individual observation. The message
- *            will be dislayed next to this entry.
- * @param line The offending line number in the source file where the
- *             observation was made. Starts from line 0, which matches with
- *             scala.meta.Position.line.
- * @param kind The category of this observation. Observations of the same category
- *             are grouped together in the markdown table. Good values are
- *             enumerations or sealed ADTs.
+ * @param msg
+ *   The message corresponding this individual observation. The message will be dislayed next to
+ *   this entry.
+ * @param line
+ *   The offending line number in the source file where the observation was made. Starts from line
+ *   0, which matches with scala.meta.Position.line.
+ * @param kind
+ *   The category of this observation. Observations of the same category are grouped together in the
+ *   markdown table. Good values are enumerations or sealed ADTs.
  */
 case class Observation[T](msg: String, line: Int, kind: T)
 

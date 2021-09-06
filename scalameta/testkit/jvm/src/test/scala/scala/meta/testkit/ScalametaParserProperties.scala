@@ -13,14 +13,14 @@ object ScalametaParserProperties {
   sealed abstract class BugKind
 
   /**
-   * The following property did not hold:
-   * scalac can parse file implies that scala.meta can parse file
+   * The following property did not hold: scalac can parse file implies that scala.meta can parse
+   * file
    */
   case object ParserBroken extends BugKind
 
   /**
-   * The following property did not hold:
-   * syntheticTree.structure == synthethicTree.syntax.parse.structure
+   * The following property did not hold: syntheticTree.structure ==
+   * synthethicTree.syntax.parse.structure
    */
   case object PrettyPrinterBroken extends BugKind
 

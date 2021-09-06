@@ -8,8 +8,8 @@ class InlineSuite extends BaseDottySuite {
   implicit val parseTempl: String => Stat = code => templStat(code)(dialects.Dotty)
 
   /**
-   *  All examples based on dotty documentation:
-   *  https://dotty.epfl.ch/docs/reference/metaprogramming/inline.html
+   * All examples based on dotty documentation:
+   * https://dotty.epfl.ch/docs/reference/metaprogramming/inline.html
    */
   test("inline-soft-keyword-pos") {
     // as ident
