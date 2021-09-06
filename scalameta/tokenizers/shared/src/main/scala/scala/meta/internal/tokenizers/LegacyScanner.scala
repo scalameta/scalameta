@@ -695,10 +695,13 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         setStrVal()
         token = STRINGLIT
       }
-    } else if (ch == '\\') {
-      nextRawChar()
+    } else if (ch == '\\' && !multiLine) {
       putChar(ch)
       nextRawChar()
+      if (ch == '"' || ch == '\\') {
+        putChar(ch)
+        nextRawChar()
+      }
       getStringPart(multiLine)
     } else if (ch == '$' && !isUnicodeEscape) {
       if (!getDollar()) {

@@ -1008,7 +1008,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       BOF(),
       Interpolation.Id("s"),
       Interpolation.Start(),
-      Interpolation.Part("\"Hello\", "),
+      Interpolation.Part("\\\"Hello\\\", "),
       Interpolation.SpliceStart(),
       Ident("person"),
       Interpolation.SpliceEnd(),
@@ -1021,6 +1021,27 @@ class TokenizerSuite extends BaseTokenizerSuite {
     assert(
       ("""s"\\"Hello"""").tokenize.isInstanceOf[Tokenized.Error]
     )
+
+  }
+
+  test("Multiline interpolated string - ignore escape") {
+    val Tokens(
+      BOF(),
+      Interpolation.Id("raw"),
+      Interpolation.Start(),
+      Interpolation.Part("\\"),
+      Interpolation.SpliceStart(),
+      Ident("host"),
+      Interpolation.SpliceEnd(),
+      Interpolation.Part("\\"),
+      Interpolation.SpliceStart(),
+      Ident("share"),
+      Interpolation.SpliceEnd(),
+      Interpolation.Part("\\"),
+      Interpolation.End(),
+      EOF()
+    ) =
+      ("raw\"\"\"\\$host\\$share\\\"\"\"").tokenize.get
 
   }
 }
