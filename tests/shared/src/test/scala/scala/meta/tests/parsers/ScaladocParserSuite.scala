@@ -133,7 +133,7 @@ class ScaladocParserSuite extends FunSuite {
     val words = descriptionBody.split("\\s+").toSeq.map(Word.apply)
     val refNone = Seq(Link("Description", Seq("Body"), ""))
     val refDots = Seq(Link("Description", Seq("Body"), "..."))
-    val refExcl = Seq(Link("Description", Seq("Body"), "!"))
+    val refWithSuffix = Seq(Link("Description", Seq("Body"), "'s"))
     assertEquals(
       parseString(
         s"""
@@ -144,10 +144,10 @@ class ScaladocParserSuite extends FunSuite {
           * $descriptionBody [[ $descriptionBody ]]
           * $descriptionBody
           *
-          * [[ $descriptionBody ]]!$descriptionBody
-          *
           * $descriptionBody
           * [[ $descriptionBody ]] $descriptionBody
+          * 
+          * [[ $descriptionBody ]]'s
           *
           */
          """
@@ -157,8 +157,8 @@ class ScaladocParserSuite extends FunSuite {
           Seq(
             Paragraph(Seq(Text(words ++ refDots))),
             Paragraph(Seq(Text(words ++ refNone ++ words))),
-            Paragraph(Seq(Text(refExcl ++ words))),
-            Paragraph(Seq(Text(words ++ refNone ++ words)))
+            Paragraph(Seq(Text(words ++ refNone ++ words))),
+            Paragraph(Seq(Text(refWithSuffix)))
           )
         )
       )
