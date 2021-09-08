@@ -806,7 +806,7 @@ class TermSuite extends ParseSuite {
   test("fstring-interpolation") {
     val Term.Interpolate(
       Term.Name("f"),
-      List(Lit.String("\\u"), Lit.String("%04x")),
+      List(Lit.String("\\\\u"), Lit.String("%04x")),
       List(Term.Name("oct"))
     ) = term("""f"\\u$oct%04x"""")
   }
