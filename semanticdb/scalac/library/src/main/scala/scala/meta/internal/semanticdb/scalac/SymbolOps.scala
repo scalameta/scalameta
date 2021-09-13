@@ -162,7 +162,7 @@ trait SymbolOps { self: SemanticdbOps =>
             sbuf += ssym
             if (gsym.isUsefulField && gsym.isMutable) {
               if (ssym.isGlobal) {
-                val setterSymbolName = ssym.desc.name + "_="
+                val setterSymbolName = s"${ssym.desc.name}_="
                 val setterSym = Symbols.Global(ssym.owner, d.Method(setterSymbolName, "()"))
                 sbuf += setterSym
               } else {

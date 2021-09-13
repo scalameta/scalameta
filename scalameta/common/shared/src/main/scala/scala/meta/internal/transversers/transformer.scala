@@ -79,7 +79,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
       case _ =>
         q"${f.name}"
     }
-    q"val ${TermName(f.name + "1")} = $rhs"
+    q"val ${TermName(f.name.toString + "1")} = $rhs"
   }
 
   def leafHandler(l: Leaf): Tree = {
@@ -97,7 +97,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
 
     val binaryCompatSetters = binaryCompatFields.map { field =>
       val setter = TermName("set" + field.sym.name.toString.capitalize)
-      q"newTree.$setter(${TermName(field.name + "1")})"
+      q"newTree.$setter(${TermName(field.name.toString + "1")})"
     }
     q"""
       var same = true

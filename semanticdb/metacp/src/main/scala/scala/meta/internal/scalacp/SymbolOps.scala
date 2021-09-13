@@ -157,7 +157,7 @@ trait SymbolOps { _: Scalacp =>
             val ssym = sym.ssym
             sbuf += ssym
             if (sym.isUsefulField && sym.isMutable) {
-              val setterSymbolName = ssym.desc.name + "_="
+              val setterSymbolName = s"${ssym.desc.name}_="
               val setterSym = Symbols.Global(ssym.owner, d.Method(setterSymbolName, "()"))
               sbuf += setterSym
             }

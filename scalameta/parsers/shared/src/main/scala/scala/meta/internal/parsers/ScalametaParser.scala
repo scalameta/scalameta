@@ -4358,7 +4358,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     var paramss = ListBuffer[List[Term.Param]]()
 
-    def collectUparams() {
+    def collectUparams(): Unit = {
       newLineOptWhenFollowedBy[LeftParen]
       while (token.is[LeftParen] && ahead(token.is[soft.KwUsing])) {
         paramss += inParens {

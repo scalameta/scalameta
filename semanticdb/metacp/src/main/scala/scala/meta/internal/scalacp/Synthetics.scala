@@ -15,7 +15,7 @@ object Synthetics {
     val getterSym = getterInfo.symbol
     val setterSym = {
       if (getterSym.isGlobal) {
-        val setterSymbolName = getterSym.desc.name + "_="
+        val setterSymbolName = s"${getterSym.desc.name}_="
         Symbols.Global(getterSym.owner, d.Method(setterSymbolName, "()"))
       } else {
         getterSym + "+1"

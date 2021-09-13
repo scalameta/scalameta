@@ -142,12 +142,12 @@ class DataMacros(val c: Context) extends MacroHelpers {
             stats1 += q"$DataTyperMacrosModule.emptyCheck(this.$name)"
             q"${mods.unPrivate} val $name: $tpt = $default"
           case ByNeedParam(mods, name, tpt, default) =>
-            val flagName = TermName(name + "Flag")
-            val statusName = TermName("is" + name.toString.capitalize + "Loaded")
-            val valueName = TermName(name + "Value")
-            val storageName = TermName(name + "Storage")
+            val flagName = TermName(s"${name}Flag")
+            val statusName = TermName(s"is${name.toString.capitalize}Loaded")
+            val valueName = TermName(s"${name}Value")
+            val storageName = TermName(s"${name}Storage")
             val getterName = name
-            val paramName = TermName("_" + name)
+            val paramName = TermName(s"_$name")
             val paramTpt = tq"_root_.scala.Function0[$tpt]"
             stats1 += q"@$AdtMetadataModule.byNeedField private[this] var $flagName: _root_.scala.Boolean = false"
             stats1 += q"def $statusName: _root_.scala.Boolean = this.$flagName"
