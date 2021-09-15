@@ -10,7 +10,7 @@ coursier resolve \
   org.scalameta:scalameta_sjs1_2.13:$version \
   org.scalameta:scalameta_sjs1_2.12:$version \
   org.scalameta:metac_2.13.6:$version \
-  org.scalameta:metac_2.12.14:$version \
+  org.scalameta:metac_2.12.15:$version \
   org.scalameta:metac_2.11.12:$version \
   org.scalameta:semanticdb-scalac-core_2.13.6:$version \
   org.scalameta:semanticdb-scalac-core_2.13.5:$version \
@@ -18,7 +18,13 @@ coursier resolve \
   org.scalameta:semanticdb-scalac-core_2.13.3:$version \
   org.scalameta:semanticdb-scalac-core_2.13.2:$version \
   org.scalameta:semanticdb-scalac-core_2.13.1:$version \
+  org.scalameta:semanticdb-scalac-core_2.12.8:$version \
+  org.scalameta:semanticdb-scalac-core_2.12.9:$version \
+  org.scalameta:semanticdb-scalac-core_2.12.10:$version \
+  org.scalameta:semanticdb-scalac-core_2.12.11:$version \
   org.scalameta:semanticdb-scalac-core_2.12.13:$version \
+  org.scalameta:semanticdb-scalac-core_2.12.14:$version \
+  org.scalameta:semanticdb-scalac-core_2.12.15:$version \
   org.scalameta:semanticdb-scalac-core_2.11.12:$version \
   org.scalameta:semanticdb-scalac_2.13.6:$version \
   org.scalameta:semanticdb-scalac_2.13.5:$version \
@@ -26,6 +32,13 @@ coursier resolve \
   org.scalameta:semanticdb-scalac_2.13.3:$version \
   org.scalameta:semanticdb-scalac_2.13.2:$version \
   org.scalameta:semanticdb-scalac_2.13.1:$version \
+  org.scalameta:semanticdb-scalac_2.12.8:$version \
+  org.scalameta:semanticdb-scalac_2.12.9:$version \
+  org.scalameta:semanticdb-scalac_2.12.10:$version \
+  org.scalameta:semanticdb-scalac_2.12.11:$version \
+  org.scalameta:semanticdb-scalac_2.12.12:$version \
   org.scalameta:semanticdb-scalac_2.12.13:$version \
+  org.scalameta:semanticdb-scalac_2.12.14:$version \
+  org.scalameta:semanticdb-scalac_2.12.15:$version \
   org.scalameta:semanticdb-scalac_2.11.12:$version \
   -r sonatype:staging

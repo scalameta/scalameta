@@ -167,7 +167,9 @@ final class Dialect private (
     /* The same as previous but for Scala3
      * works under -Ykind-projector:underscores
      */
-    val allowPlusMinusUnderscoreAsPlaceholder: Boolean
+    val allowPlusMinusUnderscoreAsPlaceholder: Boolean,
+    // import a.b.c.{ given, _} used for -X:source3
+    val allowGivenImports: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -264,7 +266,8 @@ final class Dialect private (
       allowProcedureSyntax = true,
       allowDoWhile = true,
       allowPlusMinusUnderscoreAsIdent = false,
-      allowPlusMinusUnderscoreAsPlaceholder = false
+      allowPlusMinusUnderscoreAsPlaceholder = false,
+      allowGivenImports = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -474,6 +477,9 @@ final class Dialect private (
   def withAllowPlusMinusUnderscoreAsPlaceholder(newValue: Boolean): Dialect = {
     privateCopy(allowPlusMinusUnderscoreAsPlaceholder = newValue)
   }
+  def withAllowGivenImports(newValue: Boolean): Dialect = {
+    privateCopy(allowGivenImports = newValue)
+  }
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -541,7 +547,8 @@ final class Dialect private (
       allowProcedureSyntax: Boolean = this.allowProcedureSyntax,
       allowDoWhile: Boolean = this.allowDoWhile,
       allowPlusMinusUnderscoreAsIdent: Boolean = this.allowPlusMinusUnderscoreAsIdent,
-      allowPlusMinusUnderscoreAsPlaceholder: Boolean = this.allowPlusMinusUnderscoreAsPlaceholder
+      allowPlusMinusUnderscoreAsPlaceholder: Boolean = this.allowPlusMinusUnderscoreAsPlaceholder,
+      allowGivenImports: Boolean = this.allowGivenImports
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -606,7 +613,8 @@ final class Dialect private (
       allowProcedureSyntax,
       allowDoWhile,
       allowPlusMinusUnderscoreAsIdent,
-      allowPlusMinusUnderscoreAsPlaceholder
+      allowPlusMinusUnderscoreAsPlaceholder,
+      allowGivenImports
       // NOTE(olafur): add the next argument above this comment.
     )
   }

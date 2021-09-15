@@ -105,4 +105,44 @@ class ImportSuite extends ParseSuite {
       templStat("import a.b.{ _, c => _ }")
     }
   }
+
+  test("source3-given-import") {
+    val expected = Import(
+      List(
+        Importer(
+          Term.Select(Term.Select(Term.Name("a"), Term.Name("b")), Term.Name("c")),
+          List(Importee.GivenAll(), Importee.Wildcard())
+        )
+      )
+    )
+
+    val res212 =
+      templStat("import a.b.c.{ given, _ }")(dialects.Scala212Source3)
+
+    assertNoDiff(res212.structure, expected.structure)
+
+    val res213 =
+      templStat("import a.b.c.{ given, _ }")(dialects.Scala213Source3)
+
+    assertNoDiff(res213.structure, expected.structure)
+
+    val expectedWithoutWildcard = Import(
+      List(
+        Importer(
+          Term.Select(Term.Select(Term.Name("a"), Term.Name("b")), Term.Name("c")),
+          List(Importee.Name(Indeterminate("given")))
+        )
+      )
+    )
+
+    val res212NoWildcard =
+      templStat("import a.b.c.{ given }")(dialects.Scala212Source3)
+
+    assertNoDiff(res212NoWildcard.structure, expectedWithoutWildcard.structure)
+
+    val res213NoWildcard =
+      templStat("import a.b.c.{ given }")(dialects.Scala213Source3)
+
+    assertNoDiff(res213NoWildcard.structure, expectedWithoutWildcard.structure)
+  }
 }

@@ -4111,8 +4111,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case _ => ()
         }
       }
-
-      importees
+      def importeesHaveWildcard = importees.exists {
+        case Importee.Wildcard() => true
+        case _ => false
+      }
+      if (dialect.allowGivenImports)
+        importees.map {
+          case importee @ Importee.Name(nm) if nm.value == "given" && importeesHaveWildcard =>
+            atPos(importee.name, importee.name)(Importee.GivenAll())
+          case i => i
+        }
+      else importees
     }
 
   def importWildcardOrName(): Importee = autoPos {
