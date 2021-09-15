@@ -70,6 +70,7 @@ package object dialects {
     .withAllowPostfixStarVarargSplices(true)
     .withAllowAndTypes(true)
     .withAllowPlusMinusUnderscoreAsIdent(true)
+    .withAllowGivenImports(true)
 
   /**
    *  Dialect starting with  Scala 2.12.14 for `-Xsource:3` option
@@ -83,6 +84,7 @@ package object dialects {
     .withAllowPostfixStarVarargSplices(true)
     .withAllowAndTypes(true)
     .withAllowPlusMinusUnderscoreAsIdent(true)
+    .withAllowGivenImports(true)
 
   implicit val Scala = Scala213 // alias for latest Scala dialect.
 
