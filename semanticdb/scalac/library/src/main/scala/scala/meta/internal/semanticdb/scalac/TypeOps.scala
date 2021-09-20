@@ -66,6 +66,16 @@ trait TypeOps { self: SemanticdbOps =>
             s.NoType
           case g.ErrorType =>
             s.NoType
+          /**
+           * From the Scala compiler:
+           * ```
+           * An object representing an unknown type, used during type inference. If you see
+           * WildcardType outside of inference it is almost certainly a bug.
+           * ```
+           * This is essentially the same as ErrorType here.
+           */
+          case g.WildcardType =>
+            s.NoType
           case gother =>
             sys.error(s"unsupported type ${gother}: ${g.showRaw(gother)}")
         }
