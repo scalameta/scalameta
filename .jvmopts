@@ -3,5 +3,4 @@
 -Xmx8G
 -XX:ReservedCodeCacheSize=1024m
 -XX:+TieredCompilation
--XX:+CMSClassUnloadingEnabled
 -Dsbt.server.autostart=false
