@@ -4297,7 +4297,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           (anonymousName, List.empty, List.empty)
       }
 
-    val decltype = startModType()
+    val decltype = if (token.is[LeftBrace]) refinement(None) else startModType()
 
     def parents() = {
       val parents = ListBuffer[Init](
