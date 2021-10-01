@@ -679,7 +679,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   // because `classOf[...]` is encoded as `Literal(Constant(...))` while typing and
                   // positinal information inside of `classOf` disappear after the typechecking.
                   case g.Constant(tpe @ g.TypeRef(_, _, Nil)) =>
-                    val mposClazz = new m.Position.Range(mpos.input, mpos.start + coLen + 1, mpos.end - 1)
+                    val mposClazz =
+                      new m.Position.Range(mpos.input, mpos.start + coLen + 1, mpos.end - 1)
                     occurrences(mposClazz) = tpe.typeSymbol.toSemantic
                   case _ =>
                 }
