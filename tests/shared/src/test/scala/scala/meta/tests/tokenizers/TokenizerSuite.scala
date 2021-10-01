@@ -979,6 +979,34 @@ class TokenizerSuite extends BaseTokenizerSuite {
     assert(dialects.Dotty("s\"$enum\"").tokenize.isInstanceOf[Tokenized.Error])
   }
 
+  test("macro") {
+    val Tokens(
+      BOF(),
+      MacroQuote(),
+      Space(),
+      LeftBrace(),
+      Space(),
+      Ident("a"),
+      Space(),
+      RightBrace(),
+      EOF()
+    ) =
+      dialects.Scala3("' { a }").tokenize.get
+
+    val Tokens(
+      BOF(),
+      MacroSplice(),
+      Space(),
+      LeftBrace(),
+      Space(),
+      Ident("a"),
+      Space(),
+      RightBrace(),
+      EOF()
+    ) =
+      dialects.Scala3("$ { a }").tokenize.get
+  }
+
   test("numeric literal separator") {
     dialects.Scala213("1_024").tokenize.get
     dialects.Scala213("1_024L").tokenize.get

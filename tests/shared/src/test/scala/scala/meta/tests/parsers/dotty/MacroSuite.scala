@@ -7,19 +7,23 @@ class MacroSuite extends BaseDottySuite {
 
   implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Dotty)
 
-  /**
-   * All examples based on dotty documentation:
-   *  https://dotty.epfl.ch/docs/reference/metaprogramming/toc.html
-   *  https://dotty.epfl.ch/docs/reference/metaprogramming/macros.html
-   *  https://dotty.epfl.ch/docs/reference/metaprogramming/tasty-reflect.html
-   *
-   *  '{ ... } OR 'ident - QuotedMacroExpr
-   *  '[ ... ] - QuotedMacroType
-   *  ${ ... } OR $ident - SplicedMacroExpr
-   */
+  /** All examples based on dotty documentation:
+    * https://dotty.epfl.ch/docs/reference/metaprogramming/toc.html
+    * https://dotty.epfl.ch/docs/reference/metaprogramming/macros.html
+    * https://dotty.epfl.ch/docs/reference/metaprogramming/tasty-reflect.html
+    *
+    * '{ ... } OR 'ident - QuotedMacroExpr '[ ... ] - QuotedMacroType ${ ... } OR $ident -
+    * SplicedMacroExpr
+    */
   test("parse-single-quote-character") {
     runTestAssert[Stat]("val a = 'c'")(
       Defn.Val(Nil, List(Pat.Var(tname("a"))), None, Lit.Char('c'))
+    )
+  }
+
+  test("parse-single-quote-space") {
+    runTestAssert[Stat]("' { 'ax }", assertLayout = Some("'{ 'ax }"))(
+      Term.QuotedMacroExpr(Term.Block(List(Term.QuotedMacroExpr(tname("ax")))))
     )
   }
 
@@ -178,6 +182,9 @@ class MacroSuite extends BaseDottySuite {
 
   test("macro-splice") {
     runTestAssert[Stat]("${ $x }")(
+      Term.SplicedMacroExpr(Term.Block(List(Term.SplicedMacroExpr(tname("x")))))
+    )
+    runTestAssert[Stat]("$ { $x }", assertLayout = Some("${ $x }"))(
       Term.SplicedMacroExpr(Term.Block(List(Term.SplicedMacroExpr(tname("x")))))
     )
     runTestAssert[Stat]("${ powerCode('x) }")(

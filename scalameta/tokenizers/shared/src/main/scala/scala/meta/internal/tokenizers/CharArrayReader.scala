@@ -73,6 +73,11 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter)
     }
   }
 
+  def nextNonWhitespace = {
+    while (ch == ' ' || ch == '\t') nextRawChar()
+    ch
+  }
+
   /** Interpret \\uxxxx escapes */
   private def potentialUnicode() = {
     def evenSlashPrefix: Boolean = {
