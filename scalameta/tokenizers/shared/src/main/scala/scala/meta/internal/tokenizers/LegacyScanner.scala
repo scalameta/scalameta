@@ -345,7 +345,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           val prevChar = ch
           putChar(ch)
           nextChar()
-          if (prevChar == '$' && ch == '{' && dialect.allowSpliceAndQuote) {
+          def nextIsLeftBrace = {
+            val lookahead = lookaheadReader
+            lookahead.nextNonWhitespace == '{'
+          }
+          if (prevChar == '$' && dialect.allowSpliceAndQuote && nextIsLeftBrace) {
             token = MACROSPLICE
             setStrVal()
           } else {
@@ -454,9 +458,13 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           else if (isOperatorPart(ch) && (ch != '\\' || isUnicodeEscape))
             charLitOr(getOperatorRest _)
           else {
-            val lookahead = lookaheadReader
-            lookahead.nextRawChar()
-            if ((ch == '{' || ch == '[') && lookahead.ch != '\'' && dialect.allowSpliceAndQuote) {
+            def isNotBraceOrBracketLiteral = {
+              val lookahead = lookaheadReader
+              val nextNonWhitespace = lookahead.nextNonWhitespace
+              lookahead.nextRawChar()
+              (nextNonWhitespace == '{' || nextNonWhitespace == '[') && lookahead.ch != '\''
+            }
+            if (dialect.allowSpliceAndQuote && isNotBraceOrBracketLiteral) {
               token = MACROQUOTE
               setStrVal()
             } else {
