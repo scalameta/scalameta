@@ -540,6 +540,37 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
+  test("given-with-empty-refinement") {
+    runTestAssert[Stat](
+      code = """|given {} with
+                |  extension [T](t: T) def hello = ""
+                |""".stripMargin,
+      assertLayout = Some(
+        """given {} with { extension [T](t: T) def hello = "" }"""
+      )
+    )(
+      Defn.Given(
+        Nil,
+        Name(""),
+        Nil,
+        Nil,
+        Template(
+          Nil,
+          List(Init(Type.Refine(None, Nil), Name(""), Nil)),
+          Self(Name(""), None),
+          List(
+            Defn.ExtensionGroup(
+              List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+              List(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None))),
+              Defn.Def(Nil, Term.Name("hello"), Nil, Nil, None, Lit.String(""))
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
   // ---------------------------------
   // GIVEN ALIAS
   // ---------------------------------

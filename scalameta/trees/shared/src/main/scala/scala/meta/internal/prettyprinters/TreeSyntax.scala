@@ -1046,7 +1046,7 @@ object TreeSyntax {
           )
 
       // Init
-      case t: Init => s(if (t.tpe.is[Type.Singleton]) kw("this") else p(AnnotTyp, t.tpe), t.argss)
+      case t: Init => s(if (t.tpe.is[Type.Singleton]) kw("this") else p(RefineTyp, t.tpe), t.argss)
 
       // Self
       case t: Self => s(t.name, t.decltpe)
