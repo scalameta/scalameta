@@ -385,6 +385,30 @@ class EnumSuite extends BaseDottySuite {
     )
   }
 
+  test("enum-annotated") {
+    val code =
+      """|@annot
+         |enum A:
+         |  case B, C
+      """.stripMargin
+    val expected = "@annot enum A { case B, C }"
+    runTestAssert[Stat](code, assertLayout = Some(expected))(
+      Defn.Enum(
+        List(Mod.Annot(Init(Type.Name("annot"), Name(""), Nil))),
+        Type.Name("A"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(Defn.RepeatedEnumCase(Nil, List(Term.Name("B"), Term.Name("C")))),
+          Nil
+        )
+      )
+    )
+  }
+
   test("enum-self-braces") {
     val code =
       """|enum A { self =>
