@@ -989,16 +989,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def onlyAllowedMods[M1 <: Mod, M2 <: Mod](mods: List[Mod], culprit: String)(
       implicit classifier1: Classifier[Mod, M1],
-      tag1: ClassTag[M1],
-      classifier2: Classifier[Mod, M2],
-      tag2: ClassTag[M2]
-  ) = {
+      classifier2: Classifier[Mod, M2]
+  ): Unit = {
+    onlyAllowedMods(mods, List(classifier1.apply, classifier2.apply), culprit)
+  }
+
+  def onlyAllowedMods(mods: List[Mod], matchers: List[Mod => Boolean], culprit: String): Unit = {
     mods
       .foreach {
-        case m if classifier1.apply(m) || classifier2.apply(m) =>
+        case m if matchers.exists(f => f(m)) =>
         case m => syntaxError(s" Invalid modifier ${m}${formatCulprit(culprit)}", at = m)
       }
   }
+
+  def summonClassifierFunc[A, B](implicit v: Classifier[A, B]): A => Boolean = v.apply(_)
 
   def onlyAcceptMod[M <: Mod: ClassTag, T <: Token: TokenInfo](
       mods: List[Mod],
@@ -4627,7 +4631,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     val enumName = typeName()
     val culprit = s"enum $enumName"
-    onlyAllowedMods[Mod.Private, Mod.Protected](mods, culprit)
+
+    onlyAllowedMods(
+      mods,
+      List(
+        summonClassifierFunc[Mod, Mod.Private],
+        summonClassifierFunc[Mod, Mod.Protected],
+        summonClassifierFunc[Mod, Mod.Annot]
+      ),
+      culprit
+    )
 
     val typeParams = typeParamClauseOpt(
       ownerIsType = true,
