@@ -323,7 +323,7 @@ lazy val testkit = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(scalameta)
   .jvmSettings(
     libraryDependencies ++= {
-      if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.3")
+      if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4")
       else Nil
     },
     libraryDependencies ++= List(
