@@ -19,15 +19,23 @@ import compat.Platform.EOL
 
 class ErrorSuite extends FunSuite {
   test("val q\"type name[A] = B\"") {
-    assert(typecheckError("""
+    assertEquals(
+      typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
       val q"type $name[$X] = $Y" = q"type List[+A] = List[A]"
-    """).replace("\r", "") == """
+    """).replace("\r", "")
+        // Scala 2.13.7 adds additional message
+        .replaceAll(
+          "Identifiers that begin with uppercase are not pattern variables but match the value in scope.\r?\n",
+          ""
+        ),
+      """
       |<macro>:4: not found: value X
       |      val q"type $name[$X] = $Y" = q"type List[+A] = List[A]"
       |                        ^
-    """.trim.stripMargin)
+    """.trim.stripMargin
+    )
   }
 
   test("q\"foo + class\"") {
@@ -381,15 +389,22 @@ class ErrorSuite extends FunSuite {
   }
 
   test("p\"case X: T =>\"") {
-    assert(typecheckError("""
+    assertEquals(
+      typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
       val p"case $X: T => " = p"case x: T =>"
-    """).replace("\r", "") == """
+    """).replace("\r", "") // Scala 2.13.7 adds additional message
+        .replaceAll(
+          "Identifiers that begin with uppercase are not pattern variables but match the value in scope.\r?\n",
+          ""
+        ),
+      """
       |<macro>:4: not found: value X
       |      val p"case $X: T => " = p"case x: T =>"
       |                  ^
-    """.trim.stripMargin.replace("\r", ""))
+    """.trim.stripMargin.replace("\r", "")
+    )
   }
 
   test("""q"..mods def this(...paramss) = expr"""") {
