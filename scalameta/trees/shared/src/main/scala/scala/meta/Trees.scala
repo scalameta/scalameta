@@ -35,7 +35,7 @@ object Tree extends InternalTreeXtensions {
 @branch trait Name extends Ref { def value: String }
 object Name {
   def apply(value: String): Name = if (value == "") Name.Anonymous() else Name.Indeterminate(value)
-  def unapply(name: Name): Option[String] = Some(name.value)
+  def unapply(name: Name): Some[String] = Some(name.value)
   @ast class Anonymous() extends Name {
     def value = ""
     checkParent(ParentChecks.NameAnonymous)
@@ -47,7 +47,7 @@ object Name {
   def value: Any
 }
 object Lit {
-  def unapply(arg: Lit): Option[Any] = Some(arg.value)
+  def unapply(arg: Lit): Some[Any] = Some(arg.value)
   @ast class Null() extends Lit { def value: Any = null }
   @ast class Int(value: scala.Int) extends Lit
   // NOTE: Lit.Double/Float are strings to work the same across JS/JVM. Example:

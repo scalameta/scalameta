@@ -88,7 +88,7 @@ import scala.meta.internal.prettyprinters._
 object Tokens {
   private[meta] def apply(tokens: Array[Token], start: Int, end: Int): Tokens =
     new Tokens(tokens, start, end)
-  def unapplySeq(tokens: Tokens): Option[Seq[Token]] = Some(tokens)
+  def unapplySeq(tokens: Tokens): Some[Seq[Token]] = Some(tokens)
 
   implicit val tokensToInput: Convert[Tokens, Input] =
     Convert(tokens => Input.String(tokens.syntax))
