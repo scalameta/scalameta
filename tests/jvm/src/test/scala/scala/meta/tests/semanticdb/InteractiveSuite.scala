@@ -109,6 +109,7 @@ class InteractiveSuite extends FunSuite {
       "2.13.4" -> expectedLatest,
       "2.13.5" -> expectedLatest,
       "2.13.6" -> expectedLatest,
+      "2.13.7" -> expectedLatest,
       "2.13" -> expectedPrevious213
     )
   )

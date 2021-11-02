@@ -106,6 +106,13 @@ abstract class SemanticdbSuite extends FunSuite { self =>
       else basePhases :+ run.typerPhase // can't run typer for Java units in 2.11
     reporter.reset()
 
+    /* note(@tgodzik)
+     * Since 2.13.7 it seems we need to force loading the scala package objects
+     * probably due to https://github.com/scala/scala/pull/9661, but it doesn't
+     * break the normal compilation, just here where we force a compiler run until
+     * the type.
+     */
+    g.openPackageModule(g.definitions.ScalaPackage)
     phases.foreach(phase => {
       g.phase = phase
       g.globalPhase = phase

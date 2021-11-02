@@ -78,10 +78,11 @@ class TargetedSuite extends SemanticdbSuite {
 
   targeted(
     """package f
+      |import scala.List
       |object an {
       |  for {
-      |    i <- List(1, 2)
-      |    <<j>> <- List(3, 4)
+      |    i <- List.apply(1, 2)
+      |    <<j>> <- List.apply(3, 4)
       |  } yield j
       |}
       """.stripMargin,
