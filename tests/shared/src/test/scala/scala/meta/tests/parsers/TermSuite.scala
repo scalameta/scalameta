@@ -811,6 +811,13 @@ class TermSuite extends ParseSuite {
     ) = term("""f"\\u$oct%04x"""")
   }
 
+  test("typed-interpolation") {
+    val Term.ApplyType(
+      Term.Interpolate(Term.Name("c"), List(Lit.String("something")), Nil),
+      List(Type.Name("String"))
+    ) = term("""c"something"[String]""")
+  }
+
   test("block-arg") {
     val res = term("new Foo({str => str.length})")
     val termList = q"List($res)"
