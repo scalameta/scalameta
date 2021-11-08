@@ -3115,7 +3115,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case LeftBracket() =>
         t match {
           case _: Quasi | _: Term.Name | _: Term.Select | _: Term.Apply | _: Term.ApplyInfix |
-              _: Term.ApplyUnary | _: Term.New | _: Term.Placeholder | _: Term.ApplyUsing =>
+              _: Term.ApplyUnary | _: Term.New | _: Term.Placeholder | _: Term.ApplyUsing |
+              _: Term.Interpolate =>
             var app: Term = t
             while (token.is[LeftBracket]) app = atPos(t, auto)(Term.ApplyType(app, exprTypeArgs()))
 
