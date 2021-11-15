@@ -1934,6 +1934,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val params1 = params.map(p => loop(p, convertTypevars = true))
           val res1 = loop(res, convertTypevars = false)
           atPos(tpe, tpe)(Type.Function(params1, res1))
+        case Type.PolyFunction(tparams, res) =>
+          val res1 = loop(res, convertTypevars = false)
+          atPos(tpe, tpe)(Type.PolyFunction(tparams, res1))
         case Type.Tuple(elements) =>
           val elements1 = elements.map(el => loop(el, convertTypevars = true))
           atPos(tpe, tpe)(Type.Tuple(elements1))
