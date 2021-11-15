@@ -1161,4 +1161,31 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("issue-2506") {
+    runTestAssert[Stat](
+      """|??? match {
+         |  case x2: ([V] => () => Int) => ???
+         |}
+         |""".stripMargin
+    )(
+      Term.Match(
+        Term.Name("???"),
+        List(
+          Case(
+            Pat.Typed(
+              Pat.Var(Term.Name("x2")),
+              Type.PolyFunction(
+                List(Type.Param(Nil, Type.Name("V"), Nil, Type.Bounds(None, None), Nil, Nil)),
+                Type.Function(Nil, Type.Name("Int"))
+              )
+            ),
+            None,
+            Term.Name("???")
+          )
+        ),
+        Nil
+      )
+    )
+  }
+
 }
