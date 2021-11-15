@@ -603,6 +603,51 @@ class EnumSuite extends BaseDottySuite {
     )
   }
 
+  test("enum-arrow-toplevel") {
+    val code =
+      """|enum T2Enum:
+         |  case Hmm
+         |  val a = () =>  
+         |    fx()
+         |    gx()
+    """.stripMargin
+    val expected =
+      """|enum T2Enum {
+         |  case Hmm
+         |  val a = () => {
+         |    fx()
+         |    gx()
+         |  }
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(expected))(
+      Defn.Enum(
+        Nil,
+        Type.Name("T2Enum"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.EnumCase(Nil, Term.Name("Hmm"), Nil, Ctor.Primary(Nil, Name(""), Nil), Nil),
+            Defn.Val(
+              Nil,
+              List(Pat.Var(Term.Name("a"))),
+              None,
+              Term.Function(
+                Nil,
+                Term.Block(List(Term.Apply(Term.Name("fx"), Nil), Term.Apply(Term.Name("gx"), Nil)))
+              )
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
   private def enumWithCase(name: String, enumCase: Stat) = Defn.Enum(
     Nil,
     Type.Name(name),

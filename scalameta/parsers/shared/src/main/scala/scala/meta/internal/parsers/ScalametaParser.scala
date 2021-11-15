@@ -310,12 +310,23 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     }
 
+    /**
+     * Deals with different rules for indentation after self type arrow.
+     */
     def undoIndent(): Unit = {
-      sepRegions = sepRegions match {
+      sepRegions match {
         case region :: others if region.isIndented && curr.token.is[Indentation.Indent] =>
           next()
-          others
-        case regions => regions
+          sepRegions = sepRegions match {
+            // deal with  region added by `case` in enum after self type
+            case RegionArrow :: _ => others
+            // if no region was added
+            case `region` :: _ => others
+            // keep any added region in `next()`
+            case head :: _ => head :: others
+            case _ => sepRegions
+          }
+        case _ =>
       }
     }
 
