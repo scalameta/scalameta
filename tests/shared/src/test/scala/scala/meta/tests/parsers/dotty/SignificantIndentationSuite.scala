@@ -2240,4 +2240,74 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("i2505") {
+    runTestAssert[Source](
+      """|trait T2 { self: T =>
+         |  enum T2Enum:
+         |    case EnumCase
+         |  
+         |  extension (n: Int) def negate: Int = -n
+         |}""".stripMargin,
+      assertLayout = Some(
+        """|trait T2 { self: T =>
+           |  enum T2Enum { case EnumCase }
+           |  extension (n: Int) def negate: Int = -n
+           |}
+           |""".stripMargin
+      )
+    )(
+      Source(
+        List(
+          Defn.Trait(
+            Nil,
+            Type.Name("T2"),
+            Nil,
+            Ctor.Primary(Nil, Name(""), Nil),
+            Template(
+              Nil,
+              Nil,
+              Self(Term.Name("self"), Some(Type.Name("T"))),
+              List(
+                Defn.Enum(
+                  Nil,
+                  Type.Name("T2Enum"),
+                  Nil,
+                  Ctor.Primary(Nil, Name(""), Nil),
+                  Template(
+                    Nil,
+                    Nil,
+                    Self(Name(""), None),
+                    List(
+                      Defn.EnumCase(
+                        Nil,
+                        Term.Name("EnumCase"),
+                        Nil,
+                        Ctor.Primary(Nil, Name(""), Nil),
+                        Nil
+                      )
+                    ),
+                    Nil
+                  )
+                ),
+                Defn.ExtensionGroup(
+                  Nil,
+                  List(List(Term.Param(Nil, Term.Name("n"), Some(Type.Name("Int")), None))),
+                  Defn.Def(
+                    Nil,
+                    Term.Name("negate"),
+                    Nil,
+                    Nil,
+                    Some(Type.Name("Int")),
+                    Term.ApplyUnary(Term.Name("-"), Term.Name("n"))
+                  )
+                )
+              ),
+              Nil
+            )
+          )
+        )
+      )
+    )
+
+  }
 }
