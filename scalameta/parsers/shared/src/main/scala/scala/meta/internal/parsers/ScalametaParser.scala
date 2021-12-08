@@ -2427,16 +2427,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case LeftBrace() | Indentation.Indent() => block()
           case _ => expr()
         }
+        def caseClausesOrExpr = caseClausesIfAny().getOrElse(expr())
         val catchopt =
           if (tryAcceptWithOptLF[KwCatch]) {
             if (token.is[CaseIntro]) { accept[KwCase]; Some(caseClause(true)) }
             else if (token.is[Indentation.Indent]) Some(indented(caseClauses()))
             else if (token.isNot[LeftBrace]) Some(expr())
-            else
-              inBraces {
-                if (token.is[CaseIntro] || token.is[Ellipsis]) Some(caseClauses())
-                else Some(expr())
-              }
+            else Some(inBraces(caseClausesOrExpr))
           } else { None }
 
         val finallyopt =
@@ -3268,7 +3265,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     caseClause()
   }
 
-  def caseClauses(): List[Case] = {
+  def caseClauses(): List[Case] =
+    caseClausesIfAny().getOrElse(syntaxErrorExpected[KwCase])
+
+  def caseClausesIfAny(): Option[List[Case]] = {
     val cases = new ListBuffer[Case]
     while (token.is[CaseIntro] || token.is[Ellipsis]) {
       if (token.is[Ellipsis]) {
@@ -3284,9 +3284,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
       if (token.is[StatSep] && ahead(token.is[CaseIntro])) acceptStatSep()
     }
-    if (cases.isEmpty) // trigger error if there are no cases
-      accept[KwCase]
-    cases.toList
+    if (cases.isEmpty) None else Some(cases.toList)
   }
 
   def guard(): Option[Term] =
