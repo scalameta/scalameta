@@ -2429,12 +2429,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         }
         def caseClausesOrExpr = caseClausesIfAny().getOrElse(expr())
         val catchopt =
-          if (tryAcceptWithOptLF[KwCatch]) {
-            if (token.is[CaseIntro]) { accept[KwCase]; Some(caseClause(true)) }
-            else if (token.is[Indentation.Indent]) Some(indented(caseClauses()))
-            else if (token.isNot[LeftBrace]) Some(expr())
-            else Some(inBraces(caseClausesOrExpr))
-          } else { None }
+          if (tryAcceptWithOptLF[KwCatch]) Some {
+            if (token.is[CaseIntro]) { accept[KwCase]; caseClause(true) }
+            else if (token.is[Indentation.Indent]) indented(caseClauses())
+            else if (token.is[LeftBrace]) inBraces(caseClausesOrExpr)
+            else expr()
+          }
+          else { None }
 
         val finallyopt =
           if (tryAcceptWithOptLF[KwFinally]) {
