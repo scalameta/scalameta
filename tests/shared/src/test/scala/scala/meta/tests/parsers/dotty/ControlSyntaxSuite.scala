@@ -468,6 +468,32 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("new-catch-handler-nl") {
+    val code = """|try
+                  |  foo
+                  |catch
+                  |  bar
+                  |""".stripMargin
+    val output = "try foo catch bar"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.TryWithHandler(Term.Name("foo"), Term.Name("bar"), None)
+    )
+  }
+
+  test("new-catch-handler-finally-nl") {
+    val code = """|try
+                  |  foo
+                  |catch
+                  |  bar
+                  |finally
+                  |  baz
+                  |""".stripMargin
+    val output = "try foo catch bar finally baz"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.TryWithHandler(Term.Name("foo"), Term.Name("bar"), Some(Term.Name("baz")))
+    )
+  }
+
   test("new-catch-finally-single") {
     val code = """|try fx
                   |catch case x =>
