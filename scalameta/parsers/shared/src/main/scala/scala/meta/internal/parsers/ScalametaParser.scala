@@ -2431,7 +2431,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val catchopt =
           if (tryAcceptWithOptLF[KwCatch]) Some {
             if (token.is[CaseIntro]) { accept[KwCase]; caseClause(true) }
-            else if (token.is[Indentation.Indent]) indented(caseClauses())
+            else if (token.is[Indentation.Indent]) indented(caseClausesOrExpr)
             else if (token.is[LeftBrace]) inBraces(caseClausesOrExpr)
             else expr()
           }

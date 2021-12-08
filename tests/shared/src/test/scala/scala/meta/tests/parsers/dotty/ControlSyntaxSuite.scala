@@ -474,12 +474,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |catch
                   |  bar
                   |""".stripMargin
-    val error =
-      """<input>:4: error: case expected but identifier found
-        |  bar
-        |  ^""".stripMargin
-
-    runTestError[Stat](code, error)
+    val output = "try foo catch bar"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.TryWithHandler(Term.Name("foo"), Term.Name("bar"), None)
+    )
   }
 
   test("new-catch-handler-finally-nl") {
@@ -490,12 +488,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |finally
                   |  baz
                   |""".stripMargin
-    val error =
-      """<input>:4: error: case expected but identifier found
-        |  bar
-        |  ^""".stripMargin
-
-    runTestError[Stat](code, error)
+    val output = "try foo catch bar finally baz"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.TryWithHandler(Term.Name("foo"), Term.Name("bar"), Some(Term.Name("baz")))
+    )
   }
 
   test("new-catch-finally-single") {
