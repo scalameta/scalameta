@@ -468,6 +468,36 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("new-catch-handler-nl") {
+    val code = """|try
+                  |  foo
+                  |catch
+                  |  bar
+                  |""".stripMargin
+    val error =
+      """<input>:4: error: case expected but identifier found
+        |  bar
+        |  ^""".stripMargin
+
+    runTestError[Stat](code, error)
+  }
+
+  test("new-catch-handler-finally-nl") {
+    val code = """|try
+                  |  foo
+                  |catch
+                  |  bar
+                  |finally
+                  |  baz
+                  |""".stripMargin
+    val error =
+      """<input>:4: error: case expected but identifier found
+        |  bar
+        |  ^""".stripMargin
+
+    runTestError[Stat](code, error)
+  }
+
   test("new-catch-finally-single") {
     val code = """|try fx
                   |catch case x =>
