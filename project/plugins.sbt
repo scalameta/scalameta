@@ -6,8 +6,8 @@ addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.3")
 
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.10.0")
 
-addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.4")
-libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin" % "0.11.7"
+addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.5")
+libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin" % "0.11.4"
 
 libraryDependencies += "org.scala-sbt" %% "scripted-plugin" % sbtVersion.value
 
@@ -27,4 +27,4 @@ addSbtPlugin("org.scalameta" % "sbt-munit" % "0.7.29")
 
 addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.2.24")
 
-addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.4.1")
+addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.4.2")
