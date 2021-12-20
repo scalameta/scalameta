@@ -49,6 +49,9 @@ object Jars {
     Fetch()
       .addDependencies(modules.map(_.toCoursier).toList: _*)
       .addClassifiers((if (fetchSourceJars) Classifier.sources :: Nil else Nil): _*)
+      .addRepositories(
+        MavenRepository("https://scala-ci.typesafe.com/artifactory/scala-integration/")
+      )
       .run()
       .map(AbsolutePath(_))
       .toList

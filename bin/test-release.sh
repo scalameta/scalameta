@@ -12,6 +12,7 @@ coursier resolve \
   org.scalameta:metac_2.13.6:$version \
   org.scalameta:metac_2.12.15:$version \
   org.scalameta:metac_2.11.12:$version \
+  org.scalameta:semanticdb-scalac-core_2.13.8:$version \
   org.scalameta:semanticdb-scalac-core_2.13.7:$version \
   org.scalameta:semanticdb-scalac-core_2.13.6:$version \
   org.scalameta:semanticdb-scalac-core_2.13.5:$version \
@@ -27,6 +28,7 @@ coursier resolve \
   org.scalameta:semanticdb-scalac-core_2.12.14:$version \
   org.scalameta:semanticdb-scalac-core_2.12.15:$version \
   org.scalameta:semanticdb-scalac-core_2.11.12:$version \
+  org.scalameta:semanticdb-scalac_2.13.8:$version \
   org.scalameta:semanticdb-scalac_2.13.7:$version \
   org.scalameta:semanticdb-scalac_2.13.6:$version \
   org.scalameta:semanticdb-scalac_2.13.5:$version \

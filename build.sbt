@@ -67,6 +67,8 @@ testOnly / aggregate := false
 packagedArtifacts := Map.empty
 ScalaUnidoc / unidoc / unidocProjectFilter := inAnyProject
 console := (scalameta.jvm / Compile / console).value
+Global / resolvers += "scala-integration" at
+  "https://scala-ci.typesafe.com/artifactory/scala-integration/"
 
 val commonJsSettings = Seq(
   crossScalaVersions := List(LatestScala213, LatestScala212),

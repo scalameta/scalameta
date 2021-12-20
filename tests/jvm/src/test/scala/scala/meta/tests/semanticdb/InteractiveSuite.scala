@@ -106,11 +106,11 @@ class InteractiveSuite extends FunSuite {
     // typer hijacking is not working as expected with interactive.Global.
     expectedPrevious,
     compat = List(
-      "2.13.4" -> expectedLatest,
-      "2.13.5" -> expectedLatest,
-      "2.13.6" -> expectedLatest,
-      "2.13.7" -> expectedLatest,
-      "2.13" -> expectedPrevious213
+      "2.13.3" -> expectedPrevious213,
+      "2.13.2" -> expectedPrevious213,
+      "2.13.1" -> expectedPrevious213,
+      "2.13.0" -> expectedPrevious213,
+      "2.13" -> expectedLatest
     )
   )
 
