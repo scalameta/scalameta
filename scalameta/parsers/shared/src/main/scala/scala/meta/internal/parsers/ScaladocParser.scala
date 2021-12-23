@@ -73,15 +73,20 @@ object ScaladocParser {
    * https://spec.commonmark.org/0.29/#fenced-code-blocks
    */
 
-  private def mdCodeBlockIndent[_: P] = hspace.rep(max = 3)
+  private def mdCodeBlockIndent[_: P](indent: Int) = hspace.rep(min = indent, max = indent + 3)
   private def mdCodeBlockFence[_: P] = "`".rep(3) | "~".rep(3)
 
-  private def mdCodeBlockParser[_: P]: P[MdCodeBlock] = P {
-    (startOrNl ~ mdCodeBlockIndent.! ~ mdCodeBlockFence.!).flatMap { case (indent, fence) =>
+  private def mdCodeBlockParser[_: P]: P[MdCodeBlock] = mdCodeBlockParser(0)
+
+  private def mdCodeBlockParser[_: P](indent: Int): P[MdCodeBlock] = P {
+    def indentParser =
+      mdCodeBlockIndent(indent)
+
+    (startOrNl ~ indentParser.! ~ mdCodeBlockFence.!).flatMap { case (indent, fence) =>
       def lineEnd = hspaces0 ~ nl
       def info = hspaces0 ~ labelParser.!.rep(0, sep = hspaces0) ~ lineEnd
       info.flatMap { infoSeq =>
-        def codeEnd = mdCodeBlockIndent ~ fence.substring(0, 1).rep(fence.length)
+        def codeEnd = indentParser ~ fence.substring(0, 1).rep(fence.length)
         def line = hspace.rep(max = indent.length) ~ (!lineEnd ~ AnyChar).rep.!
         def lines = !codeEnd ~ line.rep(1, sep = lineEnd ~ !codeEnd)
         def block = (lines ~ lineEnd).? ~ codeEnd ~ hspaces0 ~ &(nl | End)
@@ -111,14 +116,18 @@ object ScaladocParser {
     pattern.map { case (x, y) => new Link(x, y) }
   }
 
-  private def nextPartParser[_: P]: P[Unit] = P {
-    def mdCodeBlockPrefix = mdCodeBlockIndent ~ mdCodeBlockFence
+  private def nextPartParser[_: P]: P[Unit] = nextPartParser(0)
+
+  private def nextPartParser[_: P](indent: Int): P[Unit] = P {
+    def mdCodeBlockPrefix = mdCodeBlockIndent(indent) ~ mdCodeBlockFence
     def anotherBeg = P(CharIn("@=") | (codePrefix ~ nl) | listPrefix | tableSep | "+-" | nl)
     nl ~/ (nl | mdCodeBlockPrefix | hspaces0 ~/ anotherBeg)
   }
 
-  private def textParser[_: P]: P[Text] = P {
-    def end = P(End | nextPartParser)
+  private def textParser[_: P]: P[Text] = textParser(0)
+
+  private def textParser[_: P](indent: Int): P[Text] = P {
+    def end = P(End | nextPartParser(indent))
     def part: P[TextPart] = P(!paraEnd ~ (codeExprParser | linkParser | wordParser))
     def sep = P(!end ~ nlHspaces0)
     def text = hspaces0 ~ part.rep(1, sep = sep)
@@ -148,21 +157,36 @@ object ScaladocParser {
     }
   }
 
-  private def listBlockParser[_: P](minIndent: Int = 1): P[ListBlock] = P {
+  private def listItemParser[_: P](indent: Int): P[ListItem] = {
+    def innerBody =
+      (listBlockParser(indent) |
+        mdCodeBlockParser(indent) |
+        tableParser(indent) |
+        textParser(indent)).rep(0)
+
+    (textParser(indent) ~ innerBody)
+      .map { case (beginning, other) => ListItem(beginning +: other) }
+  }
+
+  private def listBlockParser[_: P]: P[ListBlock] = listBlockParser(0)
+
+  private def listBlockParser[_: P](minIndent: Int): P[ListBlock] = P {
+
     def listParser = (hspacesMinWithLen(minIndent) ~ listPrefix.! ~ hspaces1).flatMap {
       case (indent, prefix) =>
         def sep = (nl ~ hspacesMinWithLen(indent) ~ prefix ~ hspaces1).flatMap { x =>
           if (x != indent) Fail else Pass
         }
-        (textParser ~ listBlockParser(indent + 1).?)
-          .map { case (desc, list) => ListItem(desc, list) }
+        listItemParser(indent + 1)
           .rep(1, sep = sep)
           .map(x => ListBlock(prefix, x.toSeq))
     }
     startOrNl ~ listParser
   }
 
-  private def tableParser[_: P]: P[Table] = P {
+  private def tableParser[_: P]: P[Table] = tableParser(0)
+
+  private def tableParser[_: P](indent: Int): P[Table] = P {
     def toRow(x: Iterable[String]): Table.Row = Table.Row(x.toSeq)
     def toAlign(x: String): Option[Table.Align] = {
       def isEnd(y: Char) = y match {
@@ -186,7 +210,7 @@ object ScaladocParser {
     def cellChar = escape ~ AnyChar | !(nl | escape | tableSep) ~ AnyChar
     def row = (cellChar.rep.! ~ tableSpaceSep).rep(1)
     // non-standard but frequently used delimiter line, e.g.: +-----+-------+
-    def delimLine = hspaces0 ~ plusMinus
+    def delimLine = hspacesMin(indent) ~ plusMinus
     def sep = nl ~ (delimLine ~ nl).rep ~ tableSpaceSep
     // according to spec, the table must contain at least two rows
     def table = row.rep(2, sep = sep).map { x =>
@@ -226,7 +250,7 @@ object ScaladocParser {
   }
 
   private def termParser[_: P] =
-    listBlockParser() |
+    listBlockParser |
       mdCodeBlockParser |
       codeBlockParser |
       headingParser |
