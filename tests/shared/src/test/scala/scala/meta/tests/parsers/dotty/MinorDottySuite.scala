@@ -189,6 +189,20 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("secondary-trait-constructors") {
+    runTestError[Stat](
+      "trait Foo{ def this(i: Int) = this() }",
+      "Illegal secondary constructor"
+    )
+  }
+
+  test("secondary-object-constructors") {
+    runTestError[Stat](
+      "object Foo{ def this(i: Int) = this() }",
+      "Illegal secondary constructor"
+    )
+  }
+
   test("trait-parameters-generic") {
     runTestAssert[Stat]("trait Foo[T](bar: T)")(
       Defn.Trait(Nil, pname("Foo"), List(pparam("T")), ctorp(List(tparam("bar", "T"))), tpl(Nil))

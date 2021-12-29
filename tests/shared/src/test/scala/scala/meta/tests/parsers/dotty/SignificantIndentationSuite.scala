@@ -499,46 +499,78 @@ class SignificantIndentationSuite extends BaseDottySuite {
   }
 
   test("this-constructor") {
-    val code = """|def this(msg: String) =
-                  |  this(message, false)
+    val code = """|class A:
+                  |  def this(msg: String) =
+                  |    this(message, false)
                   |""".stripMargin
-    val output = "def this(msg: String) = this(message, false)"
+    val output = "class A { def this(msg: String) = this(message, false) }"
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Ctor.Secondary(
+      Defn.Class(
         Nil,
-        Name(""),
-        List(List(Term.Param(Nil, Term.Name("msg"), Some(Type.Name("String")), None))),
-        Init(
-          Type.Singleton(Term.This(Name(""))),
-          Name(""),
-          List(List(Term.Name("message"), Lit.Boolean(false)))
-        ),
-        Nil
+        Type.Name("A"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Ctor.Secondary(
+              Nil,
+              Name(""),
+              List(List(Term.Param(Nil, Term.Name("msg"), Some(Type.Name("String")), None))),
+              Init(
+                Type.Singleton(Term.This(Name(""))),
+                Name(""),
+                List(List(Term.Name("message"), Lit.Boolean(false)))
+              ),
+              Nil
+            )
+          ),
+          Nil
+        )
       )
     )
   }
 
   test("this-constructor-indented-block") {
-    val code = """|def this(msg: String) =
-                  |  this(message, false)
-                  |  otherStat
+    val code = """|class A:
+                  |  def this(msg: String) =
+                  |    this(message, false)
+                  |    otherStat
                   |""".stripMargin
-    val output = """|def this(msg: String) {
-                    |  this(message, false)
-                    |  otherStat
+    val output = """|class A {
+                    |  def this(msg: String) {
+                    |    this(message, false)
+                    |    otherStat
+                    |  }
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Ctor.Secondary(
+      Defn.Class(
         Nil,
-        Name(""),
-        List(List(Term.Param(Nil, Term.Name("msg"), Some(Type.Name("String")), None))),
-        Init(
-          Type.Singleton(Term.This(Name(""))),
-          Name(""),
-          List(List(Term.Name("message"), Lit.Boolean(false)))
-        ),
-        List(Term.Name("otherStat"))
+        Type.Name("A"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Ctor.Secondary(
+              Nil,
+              Name(""),
+              List(List(Term.Param(Nil, Term.Name("msg"), Some(Type.Name("String")), None))),
+              Init(
+                Type.Singleton(Term.This(Name(""))),
+                Name(""),
+                List(List(Term.Name("message"), Lit.Boolean(false)))
+              ),
+              List(Term.Name("otherStat"))
+            )
+          ),
+          Nil
+        )
       )
     )
   }
