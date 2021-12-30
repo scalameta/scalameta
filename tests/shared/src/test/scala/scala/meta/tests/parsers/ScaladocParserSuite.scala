@@ -384,6 +384,22 @@ class ScaladocParserSuite extends FunSuite {
     assertEquals(result, expectation)
   }
 
+  test("markdown code blocks - no leading spaces") {
+    val result = parseString(
+      s"""
+          /**```scala
+            *println(42)
+            *```
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(Seq(Paragraph(Seq(MdCodeBlock(Seq("scala"), Seq("println(42)"), "```")))))
+    )
+    assertEquals(result, expectation)
+  }
+
   test("headings") {
     val level1HeadingBody = "Level 1"
     val level2HeadingBody = "Level 2"
@@ -693,6 +709,439 @@ class ScaladocParserSuite extends FunSuite {
           Paragraph(
             Seq(
               ListBlock("1.", Seq(ListItem(Text(Seq(Word("a")))), ListItem(Text(Seq(Word("b"))))))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expected)
+  }
+
+  test("list 7, indented markdown code") {
+    val list11 = "List11"
+    val list12 = "List12"
+    val list13 = "List13"
+    val list21 = "List21"
+
+    val result =
+      parseString(
+        s"""
+        /**
+          * Some text:
+          * - $list11
+          * - $list12
+          * continue text
+          *    ```scala
+          *    println(42)
+          *    ```
+          * and some text
+          *   - $list21
+          * - $list13
+          */
+         """
+      )
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                "-",
+                Seq(
+                  ListItem(Text(Seq(Word(list11)))),
+                  ListItem(
+                    Text(
+                      Seq(Word(list12), Word("continue"), Word("text")) ++
+                        Seq(Word("```scala"), Word("println(42)"), Word("```")) ++
+                        Seq(Word("and"), Word("some"), Word("text"))
+                    ),
+                    Some(ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))))
+                  ),
+                  ListItem(Text(Seq(Word(list13))))
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expected)
+  }
+
+  test("list 7, over-indented markdown-like code") {
+    val list11 = "List11"
+    val list12 = "List12"
+    val list13 = "List13"
+    val list21 = "List21"
+
+    val result =
+      parseString(
+        s"""
+        /**
+          * Some text:
+          * - $list11
+          * - $list12
+          * continue text
+          *       ```scala
+          *    println(42)
+          *       ```
+          * and some text
+          *   - $list21
+          * - $list13
+          */
+         """
+      )
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                "-",
+                Seq(
+                  ListItem(Text(Seq(Word(list11)))),
+                  ListItem(
+                    Text(
+                      Seq(Word(list12), Word("continue"), Word("text")) ++
+                        Seq(Word("```scala"), Word("println(42)"), Word("```")) ++
+                        Seq(Word("and"), Word("some"), Word("text"))
+                    ),
+                    Some(ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))))
+                  ),
+                  ListItem(Text(Seq(Word(list13))))
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expected)
+  }
+
+  test("list 7, non-indented markdown code") {
+    val list11 = "List11"
+    val list12 = "List12"
+    val list13 = "List13"
+    val list21 = "List21"
+
+    val result =
+      parseString(
+        s"""
+        /**
+          * Some text:
+          * - $list11
+          * - $list12
+          * continue text
+          *```scala
+          *println(42)
+          *```
+          * and some text
+          *   - $list21
+          * - $list13
+          */
+         """
+      )
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                "-",
+                Seq(
+                  ListItem(Text(Seq(Word(list11)))),
+                  ListItem(Text(Seq(Word(list12), Word("continue"), Word("text"))))
+                )
+              ),
+              MdCodeBlock(Seq("scala"), Seq("println(42)"), "```"),
+              Text(Seq(Word("and"), Word("some"), Word("text"))),
+              ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))),
+              ListBlock("-", Seq(ListItem(Text(Seq(Word(list13))))))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expected)
+  }
+
+  test("list 7, indented code") {
+    val list11 = "List11"
+    val list12 = "List12"
+    val list13 = "List13"
+    val list21 = "List21"
+
+    val result =
+      parseString(
+        s"""
+        /**
+          * Some text:
+          * - $list11
+          * - $list12
+          * continue text
+          *    {{{
+          *     println(42)
+          *    }}}
+          * and some text
+          *   - $list21
+          * - $list13
+          */
+         """
+      )
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                "-",
+                Seq(
+                  ListItem(Text(Seq(Word(list11)))),
+                  ListItem(Text(Seq(Word(list12), Word("continue"), Word("text"))))
+                )
+              ),
+              CodeBlock(Seq("     println(42)")),
+              Text(Seq(Word("and"), Word("some"), Word("text"))),
+              ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))),
+              ListBlock("-", Seq(ListItem(Text(Seq(Word(list13))))))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expected)
+  }
+
+  test("list 7, over-indented code") {
+    val list11 = "List11"
+    val list12 = "List12"
+    val list13 = "List13"
+    val list21 = "List21"
+
+    val result =
+      parseString(
+        s"""
+        /**
+          * Some text:
+          * - $list11
+          * - $list12
+          * continue text
+          *      {{{
+          *     println(42) }}}
+          * and some text
+          *   - $list21
+          * - $list13
+          *
+          * next para
+          */
+         """
+      )
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                "-",
+                Seq(
+                  ListItem(Text(Seq(Word(list11)))),
+                  ListItem(Text(Seq(Word(list12), Word("continue"), Word("text"))))
+                )
+              ),
+              CodeBlock(Seq("     println(42)")),
+              Text(Seq(Word("and"), Word("some"), Word("text"))),
+              ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))),
+              ListBlock("-", Seq(ListItem(Text(Seq(Word(list13))))))
+            )
+          ),
+          Paragraph(Seq(Text(Seq(Word("next"), Word("para")))))
+        )
+      )
+    )
+    assertEquals(result, expected)
+  }
+
+  test("list 7, non-indented code") {
+    val list11 = "List11"
+    val list12 = "List12"
+    val list13 = "List13"
+    val list21 = "List21"
+
+    val result =
+      parseString(
+        s"""
+        /**
+          * Some text:
+          * - $list11
+          * - $list12
+          * continue text
+          *{{{
+          * println(42)
+          *}}}
+          * and some text
+          *   - $list21
+          * - $list13
+          */
+         """
+      )
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                "-",
+                Seq(
+                  ListItem(Text(Seq(Word(list11)))),
+                  ListItem(Text(Seq(Word(list12), Word("continue"), Word("text"))))
+                )
+              ),
+              CodeBlock(Seq(" println(42)")),
+              Text(Seq(Word("and"), Word("some"), Word("text"))),
+              ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))),
+              ListBlock("-", Seq(ListItem(Text(Seq(Word(list13))))))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expected)
+  }
+
+  test("list 8, indented table") {
+    val list11 = "List11"
+    val list12 = "List12"
+
+    val result =
+      parseString(
+        s"""
+        /**
+          * Some text:
+          * - $list11
+          * - $list12
+          *   |one|two|
+          *   |---|---|
+          *   |1  | 2 |
+          * and some text
+          */
+         """
+      )
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                "-",
+                Seq(
+                  ListItem(Text(Seq(Word(list11)))),
+                  ListItem(Text(Seq(Word(list12))))
+                )
+              ),
+              Table(
+                Table.Row(Seq("one", "two")),
+                Seq(Table.Left, Table.Left),
+                Seq(Table.Row(Seq("1", "2")))
+              ),
+              Text(Seq(Word("and"), Word("some"), Word("text")))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expected)
+  }
+
+  test("list 8, over-indented table") {
+    val list11 = "List11"
+    val list12 = "List12"
+
+    val result =
+      parseString(
+        s"""
+        /**
+          * Some text:
+          * - $list11
+          * - $list12
+          *       |one|two|
+          *       |---|---|
+          *       |1  | 2 |
+          * and some text
+          */
+         """
+      )
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                "-",
+                Seq(
+                  ListItem(Text(Seq(Word(list11)))),
+                  ListItem(Text(Seq(Word(list12))))
+                )
+              ),
+              Table(
+                Table.Row(Seq("one", "two")),
+                Seq(Table.Left, Table.Left),
+                Seq(Table.Row(Seq("1", "2")))
+              ),
+              Text(Seq(Word("and"), Word("some"), Word("text")))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expected)
+  }
+
+  test("list 8, non-indented table") {
+    val list11 = "List11"
+    val list12 = "List12"
+
+    val result =
+      parseString(
+        s"""
+        /**
+          * Some text:
+          * - $list11
+          * - $list12
+          * |one|two|
+          * |---|---|
+          * |1  | 2 |
+          * and some text
+          */
+         """
+      )
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                "-",
+                Seq(
+                  ListItem(Text(Seq(Word(list11)))),
+                  ListItem(Text(Seq(Word(list12))))
+                )
+              ),
+              Table(
+                Table.Row(Seq("one", "two")),
+                Seq(Table.Left, Table.Left),
+                Seq(Table.Row(Seq("1", "2")))
+              ),
+              Text(Seq(Word("and"), Word("some"), Word("text")))
             )
           )
         )
@@ -1353,6 +1802,35 @@ class ScaladocParserSuite extends FunSuite {
                   Word("text3"),
                   Word("text4")
                 )
+              )
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expectation)
+  }
+
+  test("table - no leading spaces") {
+    val result = parseString(
+      """
+          /**
+            *|one|two|
+            *|---|---|
+            *|1  |  2|
+            */
+       """.stripMargin
+    )
+
+    val expectation = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Table(
+                Table.Row(Seq("one", "two")),
+                Seq(Table.Left, Table.Left),
+                Seq(Table.Row(Seq("1", "2")))
               )
             )
           )
