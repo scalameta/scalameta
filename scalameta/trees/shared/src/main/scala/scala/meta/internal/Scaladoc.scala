@@ -12,7 +12,7 @@ object Scaladoc {
   sealed abstract class Term
 
   /** A single paragraph of the document */
-  final case class Paragraph(term: Seq[Term])
+  final case class Paragraph(terms: Seq[Term])
 
   /* Text */
 
@@ -22,7 +22,7 @@ object Scaladoc {
   }
 
   /** A description or other inline text block */
-  final case class Text(part: Seq[TextPart]) extends Term
+  final case class Text(parts: Seq[TextPart]) extends Term
 
   /** A single word, without whitespace */
   final case class Word(value: String) extends TextPart {
@@ -62,12 +62,12 @@ object Scaladoc {
   final case class Table(
       header: Table.Row,
       align: Seq[Table.Align],
-      row: Seq[Table.Row]
+      rows: Seq[Table.Row]
   ) extends Term
 
   object Table {
 
-    final case class Row(col: Seq[String])
+    final case class Row(cols: Seq[String])
 
     sealed abstract class Align {
       def leftPad(pad: Int): Int
@@ -100,7 +100,7 @@ object Scaladoc {
   final case class ListItem(text: Text, nested: Option[ListBlock] = None)
 
   /** Represents a list block */
-  final case class ListBlock(prefix: String, item: Seq[ListItem]) extends Term
+  final case class ListBlock(prefix: String, items: Seq[ListItem]) extends Term
 
   /* Tags */
 

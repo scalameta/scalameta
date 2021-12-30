@@ -681,7 +681,7 @@ class ScaladocParserSuite extends FunSuite {
     assertNotEquals(parsedScaladocOpt, None: Option[Scaladoc])
     val parsedScaladocParas = parsedScaladocOpt.get.para
     assertEquals(parsedScaladocParas.length, 1)
-    val parsedScaladocTerms = parsedScaladocParas.head.term
+    val parsedScaladocTerms = parsedScaladocParas.head.terms
 
     assertEquals(
       parsedScaladocTerms.count {
@@ -715,7 +715,7 @@ class ScaladocParserSuite extends FunSuite {
     // Inherit doc does not merge
     parsedScaladocTerms.foreach {
       case t: Tag if t.tag.optDesc && t.desc.isDefined =>
-        assertEquals(t.desc.get.part.takeRight(words.length), words)
+        assertEquals(t.desc.get.parts.takeRight(words.length), words)
       case _ =>
     }
   }
