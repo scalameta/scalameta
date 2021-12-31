@@ -194,7 +194,7 @@ class ScaladocParserSuite extends FunSuite {
     val testDescription = "This is a codeblock:"
     val words: Seq[Word] = testDescription.split("\\s+").map(Word.apply)
 
-    val codeBlock1 = "\"HELLO MARIANO\""
+    val codeBlock1 = "{\"HELLO MARIANO\"}"
     val codeBlock2 = "\"HELLO SORAYA\""
     val complexCodeBlock = // keep all newlines and leading spaces
       """|  ggmqwogmwogmqwomgq
@@ -226,7 +226,12 @@ class ScaladocParserSuite extends FunSuite {
       Scaladoc(
         Seq(
           Paragraph(
-            Seq(Text((words :+ CodeExpr(codeBlock1, "?")) ++ (words :+ CodeExpr(codeBlock2, ""))))
+            Seq(
+              Text(
+                (words :+ CodeExpr(codeBlock1.init, "")) ++
+                  (Word("}?This") +: words.tail :+ CodeExpr(codeBlock2, ""))
+              )
+            )
           ),
           Paragraph(Seq(Text(words))),
           Paragraph(
@@ -265,7 +270,7 @@ class ScaladocParserSuite extends FunSuite {
   }
 
   test("code blocks inline") {
-    val codeBlock1 = "\"HELLO MARIANO\""
+    val codeBlock1 = "{\"HELLO MARIANO\"}"
     val codeBlock2 = "\"HELLO SORAYA\""
     val result = parseString(
       s"""
@@ -277,7 +282,13 @@ class ScaladocParserSuite extends FunSuite {
     )
 
     val expectation = Option(
-      Scaladoc(Seq(Paragraph(Seq(Text(Seq(CodeExpr(codeBlock1, ""), CodeExpr(codeBlock2, "")))))))
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(Text(Seq(CodeExpr(codeBlock1.init, ""), Word("}"), CodeExpr(codeBlock2, ""))))
+          )
+        )
+      )
     )
     assertEquals(result, expectation)
   }
