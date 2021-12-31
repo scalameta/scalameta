@@ -65,7 +65,7 @@ object ScaladocParser {
   private def codeBlockParser[_: P]: P[CodeBlock] = P {
     def code = codeLineParser.rep(1, sep = nl)
     def pattern = leadHspaces0 ~ codePrefix ~ nl ~ code ~ codeSuffix
-    pattern.map { x => CodeBlock(if (x.last.nonEmpty) x.toSeq else x.view.dropRight(1).toSeq) }
+    pattern.map { x => CodeBlock(if (x.last.nonEmpty) x else x.dropRight(1)) }
   }
 
   /*
@@ -122,7 +122,7 @@ object ScaladocParser {
     def part: P[TextPart] = P(!paraEnd ~ (codeExprParser | linkParser | wordParser))
     def sep = P(!end ~ nlHspaces0)
     def text = hspaces0 ~ part.rep(1, sep = sep)
-    text.map(x => Text(x.toSeq))
+    text.map(x => Text(x))
   }
 
   private def leadTextParser[_: P]: P[Text] = P((space | Start) ~ hspaces0 ~ textParser)
@@ -157,13 +157,13 @@ object ScaladocParser {
         (textParser ~ listBlockParser(indent + 1).?)
           .map { case (desc, list) => ListItem(desc, list) }
           .rep(1, sep = sep)
-          .map(x => ListBlock(prefix, x.toSeq))
+          .map(x => ListBlock(prefix, x))
     }
     startOrNl ~ listParser
   }
 
   private def tableParser[_: P]: P[Table] = P {
-    def toRow(x: Iterable[String]): Table.Row = Table.Row(x.toSeq)
+    def toRow(x: Seq[String]): Table.Row = Table.Row(x)
     def toAlign(x: String): Option[Table.Align] = {
       def isEnd(y: Char) = y match {
         case ':' => Some(true)
@@ -193,7 +193,7 @@ object ScaladocParser {
       // we'll trim the header later; we might need it if align is missing
       val rest = x.tail.map(_.map(_.trim))
       val alignRow = rest.head
-      val align = alignRow.flatMap(toAlign).toSeq
+      val align = alignRow.flatMap(toAlign)
       if (align.length != alignRow.length) {
         // determine alignment from the header row
         val head = x.head
@@ -217,9 +217,9 @@ object ScaladocParser {
             }
           }
         }
-        Table(toRow(headBuilder.result()), alignBuilder.result(), rest.toSeq.map(toRow))
+        Table(toRow(headBuilder.result()), alignBuilder.result(), rest.map(toRow))
       } else
-        Table(toRow(x.head.map(_.trim)), align, rest.tail.toSeq.map(toRow))
+        Table(toRow(x.head.map(_.trim)), align, rest.tail.map(toRow))
     }
 
     startOrNl ~ (delimLine ~ nl).? ~ tableSpaceSep ~ table ~ (nl ~ delimLine).?
@@ -236,9 +236,9 @@ object ScaladocParser {
 
   private def notTermEnd[_: P] = P(!(End | paraEnd))
   private def termsParser[_: P] = P(notTermEnd ~ termParser)
-  private def paraParser[_: P] = P((termsParser.rep(1)).map(x => Scaladoc.Paragraph(x.toSeq)))
+  private def paraParser[_: P] = P(termsParser.rep(1).map(x => Scaladoc.Paragraph(x)))
   private def paraSep[_: P] = P((nl ~ &(nl)).rep(1))
-  private def docParser[_: P] = P(paraParser.rep(sep = paraSep).map(x => Scaladoc(x.toSeq)))
+  private def docParser[_: P] = P(paraParser.rep(sep = paraSep).map(x => Scaladoc(x)))
 
   /** Contains all scaladoc parsers */
   private def parser[_: P]: P[Scaladoc] = P {

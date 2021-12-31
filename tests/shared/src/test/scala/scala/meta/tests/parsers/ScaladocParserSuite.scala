@@ -987,8 +987,6 @@ class ScaladocParserSuite extends FunSuite {
        """.stripMargin
     )
 
-    val complexCodeBlockWords =
-      complexCodeBlock.flatMap(_.split("\\s+", 0).filter(_.nonEmpty)).map(Word.apply)
     val expectation = Option(
       Scaladoc(
         Seq(
@@ -1032,8 +1030,6 @@ class ScaladocParserSuite extends FunSuite {
        """.stripMargin
     )
 
-    val complexCodeBlockWords =
-      complexCodeBlock.flatMap(_.split("\\s+", 0)).filter(_.nonEmpty).map(Word.apply)
     val expectation = Option(
       Scaladoc(
         Seq(
