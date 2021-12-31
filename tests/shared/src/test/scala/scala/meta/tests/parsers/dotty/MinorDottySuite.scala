@@ -9,10 +9,10 @@ class MinorDottySuite extends BaseDottySuite {
 
   /**
    *  All examples based on dotty documentation:
-   *  https://dotty.epfl.ch/docs/reference/other-new-features/open-classes.html
-   *  https://dotty.epfl.ch/docs/reference/new-types/type-lambdas.html
-   *  https://dotty.epfl.ch/docs/reference/other-new-features/trait-parameters.html
-   *  https://dotty.epfl.ch/docs/reference/changed-features/wildcards.html
+   * - [[https://dotty.epfl.ch/docs/reference/other-new-features/open-classes.html]]
+   * - [[https://dotty.epfl.ch/docs/reference/new-types/type-lambdas.html]]
+   * - [[https://dotty.epfl.ch/docs/reference/other-new-features/trait-parameters.html]]
+   * - [[https://dotty.epfl.ch/docs/reference/changed-features/wildcards.html]]
    */
   test("open-class") {
     val Defn.Class(List(Mod.Open()), Type.Name("A"), _, _, _) =

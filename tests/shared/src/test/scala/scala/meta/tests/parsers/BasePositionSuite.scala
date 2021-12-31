@@ -45,9 +45,9 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
    *   )
    * }}}
    *
-   * Observe that the line "Name.Anonymous {" indicates that the position of the
-   * anonymous name encloses the "{" token. The correct output should be
-   * "Name.Anonymous trait A @@{ self: B => }".
+   * Observe that the line {{{Name.Anonymous {}}} indicates that the position of the
+   * anonymous name encloses the `{` token. The correct output should be
+   * {{{Name.Anonymous trait A @@{ self: B =>}}}.
    */
   def checkPositions[T <: Tree: Parse](
       code: TestOptions,

@@ -20,7 +20,7 @@ object ScalametaParserProperties {
 
   /**
    * The following property did not hold:
-   * syntheticTree.structure == synthethicTree.syntax.parse.structure
+   * {{{syntheticTree.structure == synthethicTree.syntax.parse.structure}}}
    */
   case object PrettyPrinterBroken extends BugKind
 

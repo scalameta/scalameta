@@ -13,7 +13,12 @@ import org.rauschig.jarchivelib.ArchiverFactory
 /**
  * A collection of Scala source files to run [[SyntaxAnalysis]].
  *
- * @param url A zip file that matches the following structure:
+ * @param url A zip file that matches the structure described below.
+ * @param filter Files that don't match the filter are excluded from the
+ *               analysis.
+ *
+ * Here's the structure for `url` files:
+ * {{{
  *            repos/
  *              project1/
  *                COMMIT // <- git commit hash of project1 snapshot
@@ -23,11 +28,10 @@ import org.rauschig.jarchivelib.ArchiverFactory
  *              project2/
  *              ...
  *              projectN/
+ * }}}
  *            In particular, each project directory must contain a
  *            `COMMIT` and `URL` file. These files are used to construct
  *            links to the source files on Github.
- * @param filter Files that don't match the filter are excluded from the
- *               analysis.
  */
 case class Corpus(url: String, filter: String => Boolean)
 
@@ -36,7 +40,7 @@ object Corpus {
   /**
    * Corpus of ~3 million lines of code, 22 mb compressed.
    * The list of repos is originally taken from fastparse:
-   * https://github.com/lihaoyi/fastparse/blob/6cf2cb23cd5f628c4e956d5846228ee4ca988f5c/scalaparse/jvm/src/test/scala/scalaparse/ProjectTests.scala#L63-L115
+   * [[https://github.com/lihaoyi/fastparse/blob/6cf2cb23cd5f628c4e956d5846228ee4ca988f5c/scalaparse/jvm/src/test/scala/scalaparse/ProjectTests.scala#L63-L115]]
    */
   val fastparse = Corpus(
     url = "https://github.com/scalameta/scalafmt/releases/download/v0.1.4/repos.tar.gz",

@@ -9,10 +9,12 @@ class ExtensionMethodsSuite extends BaseDottySuite {
 
   /**
    * For checking examples in repl declare:
+   * {{{
    *  case class Circle(x: Int)
+   * }}}
    *
    *  All examples based on dotty documentation:
-   *  https://dotty.epfl.ch/docs/reference/contextual/extension-methods.html
+   * - [[https://dotty.epfl.ch/docs/reference/contextual/extension-methods.html]]
    */
 
   test("simple-method") {
