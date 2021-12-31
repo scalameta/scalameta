@@ -116,8 +116,7 @@ object Scaladoc {
    * @param label set iff `tag.hasLabel`
    * @param desc set iff `tag.hasDesc`
    */
-  final case class Tag(tag: TagType, label: Option[Word] = None, desc: Option[Text] = None)
-      extends Term
+  final case class Tag(tag: TagType, label: Option[Word] = None, desc: Seq[Term] = Nil) extends Term
 
   object TagType {
 
