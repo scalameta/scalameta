@@ -433,6 +433,36 @@ class ScaladocParserSuite extends FunSuite {
     assertEquals(result, expectation)
   }
 
+  test("list - no leading spaces") {
+    val list11 = "List11"
+    val list12 = "List12"
+
+    val result =
+      parseString(
+        s"""
+        /**
+          * Some text:
+          *- $list11
+          *- $list12
+          */
+         """
+      )
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              Text(Seq(Word("-"), Word(list11))),
+              Text(Seq(Word("-"), Word(list12)))
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expected)
+  }
+
   test("lists 1") {
     val list11 = "List11"
     val list12 = "List12"

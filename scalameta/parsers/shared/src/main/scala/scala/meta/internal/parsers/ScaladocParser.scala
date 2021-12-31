@@ -148,18 +148,19 @@ object ScaladocParser {
     }
   }
 
-  private def listBlockParser[_: P](minIndent: Int = 1): P[ListBlock] = P {
-    def listParser = (hspacesMinWithLen(minIndent) ~ listPrefix.! ~ hspaces1).flatMap {
-      case (indent, prefix) =>
-        def sep = (nl ~ hspacesMinWithLen(indent) ~ prefix ~ hspaces1).flatMap { x =>
-          if (x != indent) Fail else Pass
-        }
-        (textParser ~ listBlockParser(indent + 1).?)
-          .map { case (desc, list) => ListItem(desc, list) }
-          .rep(1, sep = sep)
-          .map(x => ListBlock(prefix, x))
+  private def listBlockParser[_: P](indent: Int = 0): P[ListBlock] = P {
+    /* https://docs.scala-lang.org/overviews/scaladoc/for-library-authors.html#other-formatting-notes
+     * For list blocks, "you must have extra space in front", hence min `indent + 1`. */
+    def listMarker = hspacesMinWithLen(indent + 1) ~ listPrefix.! ~ hspaces1
+    def listParser = listMarker.flatMap { case (listIndent, prefix) =>
+      def sep = nl ~ hspace.rep(exactly = listIndent) ~ prefix ~ hspaces1
+      listItemParser(listIndent).rep(1, sep = sep).map(x => ListBlock(prefix, x))
     }
     startOrNl ~ listParser
+  }
+
+  private def listItemParser[_: P](indent: Int) = P {
+    (textParser ~ listBlockParser(indent).?).map { case (desc, list) => ListItem(desc, list) }
   }
 
   private def tableParser[_: P]: P[Table] = P {
