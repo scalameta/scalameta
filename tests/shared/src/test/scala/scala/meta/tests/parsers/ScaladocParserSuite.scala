@@ -207,7 +207,7 @@ class ScaladocParserSuite extends FunSuite {
       parseString(
         s"""
           /**
-            * $testDescription {{{ $codeBlock1 }}}?$testDescription
+            * $testDescription {{{$codeBlock1}}}?$testDescription
             * {{{ $codeBlock2 }}}
             *
             * $testDescription
@@ -265,17 +265,19 @@ class ScaladocParserSuite extends FunSuite {
   }
 
   test("code blocks inline") {
+    val codeBlock1 = "\"HELLO MARIANO\""
     val codeBlock2 = "\"HELLO SORAYA\""
     val result = parseString(
       s"""
           /**
+            * {{{$codeBlock1}}}
             * {{{ $codeBlock2 }}}
             */
        """.stripMargin
     )
 
     val expectation = Option(
-      Scaladoc(Seq(Paragraph(Seq(Text(Seq(CodeExpr(codeBlock2, "")))))))
+      Scaladoc(Seq(Paragraph(Seq(Text(Seq(CodeExpr(codeBlock1, ""), CodeExpr(codeBlock2, "")))))))
     )
     assertEquals(result, expectation)
   }
