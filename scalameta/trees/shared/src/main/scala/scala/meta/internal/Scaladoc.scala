@@ -97,7 +97,7 @@ object Scaladoc {
   /* List blocks */
 
   /** Represents a list item */
-  final case class ListItem(text: Text, nested: Option[ListBlock] = None)
+  final case class ListItem(text: Text, terms: Seq[Term] = Nil)
 
   /** Represents a list block */
   final case class ListBlock(prefix: String, items: Seq[ListItem]) extends Term

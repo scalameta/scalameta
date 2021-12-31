@@ -145,8 +145,8 @@ object ScaladocParser {
   }
 
   private def listItemParser[_: P](indent: Int) = P {
-    (textParser ~ (nl ~ listBlockParser(indent)).?)
-      .map { case (desc, list) => ListItem(desc, list) }
+    (textParser ~ embeddedTermsParser(indent))
+      .map { case (x, terms) => ListItem(x, terms) }
   }
 
   private def tableParser[_: P]: P[Table] = P {
@@ -224,6 +224,15 @@ object ScaladocParser {
         textParser // keep at the end, this is the fallback
     (nl | Start) ~ (leadingParser | (completeParser ~ nlOrEndPeek)) |
       textParser // could be following an element leaving trailing text, e.g. tagParser
+  }
+
+  private def embeddedTermsParser[_: P](indent: Int): P[Seq[Term]] = P {
+    def completeParser = // will consume full line
+      listBlockParser(indent) |
+        codeBlockParser |
+        tableParser |
+        leadTextParser // keep at the end, this is the fallback
+    (nl ~ completeParser ~ nlOrEndPeek).rep
   }
 
   /** Contains all scaladoc parsers */

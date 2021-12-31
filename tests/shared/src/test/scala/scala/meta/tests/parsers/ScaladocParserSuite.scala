@@ -511,11 +511,11 @@ class ScaladocParserSuite extends FunSuite {
                 Seq(
                   ListItem(
                     Text(Seq(Word(list11))),
-                    Some(ListBlock("1.", Seq(ListItem(Text(Seq(Word(list21)))))))
+                    Seq(ListBlock("1.", Seq(ListItem(Text(Seq(Word(list21)))))))
                   ),
                   ListItem(
                     Text(Seq(Word(list12))),
-                    Some(
+                    Seq(
                       ListBlock(
                         "a.",
                         Seq(ListItem(Text(Seq(Word(list21)))), ListItem(Text(Seq(Word(list22)))))
@@ -565,13 +565,13 @@ class ScaladocParserSuite extends FunSuite {
                 Seq(
                   ListItem(
                     Text(Seq(Word(list11))),
-                    Some(
+                    Seq(
                       ListBlock(
                         "i.",
                         Seq(
                           ListItem(
                             Text(Seq(Word(list21))),
-                            Some(ListBlock("I.", Seq(ListItem(Text(Seq(Word(list31)))))))
+                            Seq(ListBlock("I.", Seq(ListItem(Text(Seq(Word(list31)))))))
                           )
                         )
                       )
@@ -584,13 +584,13 @@ class ScaladocParserSuite extends FunSuite {
                 Seq(
                   ListItem(
                     Text(Seq(Word(list12))),
-                    Some(
+                    Seq(
                       ListBlock(
                         "I.",
                         Seq(
                           ListItem(
                             Text(Seq(Word(list22))),
-                            Some(ListBlock("I.", Seq(ListItem(Text(Seq(Word(list32)))))))
+                            Seq(ListBlock("I.", Seq(ListItem(Text(Seq(Word(list32)))))))
                           )
                         )
                       )
@@ -634,7 +634,7 @@ class ScaladocParserSuite extends FunSuite {
                 Seq(
                   ListItem(
                     Text(Seq(Word(list11), Word(list11))),
-                    Some(ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))))
+                    Seq(ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))))
                   ),
                   ListItem(Text(Seq(Word(list12))))
                 )
@@ -756,7 +756,7 @@ class ScaladocParserSuite extends FunSuite {
                         Seq(Word("```scala"), Word("println(42)"), Word("```")) ++
                         Seq(Word("and"), Word("some"), Word("text"))
                     ),
-                    Some(ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))))
+                    Seq(ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))))
                   ),
                   ListItem(Text(Seq(Word(list13))))
                 )
@@ -808,7 +808,7 @@ class ScaladocParserSuite extends FunSuite {
                         Seq(Word("```scala"), Word("println(42)"), Word("```")) ++
                         Seq(Word("and"), Word("some"), Word("text"))
                     ),
-                    Some(ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))))
+                    Seq(ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))))
                   ),
                   ListItem(Text(Seq(Word(list13))))
                 )
@@ -902,13 +902,17 @@ class ScaladocParserSuite extends FunSuite {
                 "-",
                 Seq(
                   ListItem(Text(Seq(Word(list11)))),
-                  ListItem(Text(Seq(Word(list12), Word("continue"), Word("text"))))
+                  ListItem(
+                    Text(Seq(Word(list12), Word("continue"), Word("text"))),
+                    Seq(
+                      CodeBlock(Seq("     println(42)")),
+                      Text(Seq(Word("and"), Word("some"), Word("text"))),
+                      ListBlock("-", Seq(ListItem(Text(Seq(Word(list21))))))
+                    )
+                  ),
+                  ListItem(Text(Seq(Word(list13))))
                 )
-              ),
-              CodeBlock(Seq("     println(42)")),
-              Text(Seq(Word("and"), Word("some"), Word("text"))),
-              ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))),
-              ListBlock("-", Seq(ListItem(Text(Seq(Word(list13))))))
+              )
             )
           )
         )
@@ -951,13 +955,17 @@ class ScaladocParserSuite extends FunSuite {
                 "-",
                 Seq(
                   ListItem(Text(Seq(Word(list11)))),
-                  ListItem(Text(Seq(Word(list12), Word("continue"), Word("text"))))
+                  ListItem(
+                    Text(Seq(Word(list12), Word("continue"), Word("text"))),
+                    Seq(
+                      CodeBlock(Seq("     println(42)")),
+                      Text(Seq(Word("and"), Word("some"), Word("text"))),
+                      ListBlock("-", Seq(ListItem(Text(Seq(Word(list21))))))
+                    )
+                  ),
+                  ListItem(Text(Seq(Word(list13))))
                 )
-              ),
-              CodeBlock(Seq("     println(42)")),
-              Text(Seq(Word("and"), Word("some"), Word("text"))),
-              ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))),
-              ListBlock("-", Seq(ListItem(Text(Seq(Word(list13))))))
+              )
             )
           ),
           Paragraph(Seq(Text(Seq(Word("next"), Word("para")))))
@@ -1000,13 +1008,17 @@ class ScaladocParserSuite extends FunSuite {
                 "-",
                 Seq(
                   ListItem(Text(Seq(Word(list11)))),
-                  ListItem(Text(Seq(Word(list12), Word("continue"), Word("text"))))
+                  ListItem(
+                    Text(Seq(Word(list12), Word("continue"), Word("text"))),
+                    Seq(
+                      CodeBlock(Seq(" println(42)")),
+                      Text(Seq(Word("and"), Word("some"), Word("text"))),
+                      ListBlock("-", Seq(ListItem(Text(Seq(Word(list21))))))
+                    )
+                  ),
+                  ListItem(Text(Seq(Word(list13))))
                 )
-              ),
-              CodeBlock(Seq(" println(42)")),
-              Text(Seq(Word("and"), Word("some"), Word("text"))),
-              ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))),
-              ListBlock("-", Seq(ListItem(Text(Seq(Word(list13))))))
+              )
             )
           )
         )
@@ -1043,15 +1055,19 @@ class ScaladocParserSuite extends FunSuite {
                 "-",
                 Seq(
                   ListItem(Text(Seq(Word(list11)))),
-                  ListItem(Text(Seq(Word(list12))))
+                  ListItem(
+                    Text(Seq(Word(list12))),
+                    Seq(
+                      Table(
+                        Table.Row(Seq("one", "two")),
+                        Seq(Table.Left, Table.Left),
+                        Seq(Table.Row(Seq("1", "2")))
+                      ),
+                      Text(Seq(Word("and"), Word("some"), Word("text")))
+                    )
+                  )
                 )
-              ),
-              Table(
-                Table.Row(Seq("one", "two")),
-                Seq(Table.Left, Table.Left),
-                Seq(Table.Row(Seq("1", "2")))
-              ),
-              Text(Seq(Word("and"), Word("some"), Word("text")))
+              )
             )
           )
         )
@@ -1088,15 +1104,19 @@ class ScaladocParserSuite extends FunSuite {
                 "-",
                 Seq(
                   ListItem(Text(Seq(Word(list11)))),
-                  ListItem(Text(Seq(Word(list12))))
+                  ListItem(
+                    Text(Seq(Word(list12))),
+                    Seq(
+                      Table(
+                        Table.Row(Seq("one", "two")),
+                        Seq(Table.Left, Table.Left),
+                        Seq(Table.Row(Seq("1", "2")))
+                      ),
+                      Text(Seq(Word("and"), Word("some"), Word("text")))
+                    )
+                  )
                 )
-              ),
-              Table(
-                Table.Row(Seq("one", "two")),
-                Seq(Table.Left, Table.Left),
-                Seq(Table.Row(Seq("1", "2")))
-              ),
-              Text(Seq(Word("and"), Word("some"), Word("text")))
+              )
             )
           )
         )
@@ -1133,15 +1153,19 @@ class ScaladocParserSuite extends FunSuite {
                 "-",
                 Seq(
                   ListItem(Text(Seq(Word(list11)))),
-                  ListItem(Text(Seq(Word(list12))))
+                  ListItem(
+                    Text(Seq(Word(list12))),
+                    Seq(
+                      Table(
+                        Table.Row(Seq("one", "two")),
+                        Seq(Table.Left, Table.Left),
+                        Seq(Table.Row(Seq("1", "2")))
+                      ),
+                      Text(Seq(Word("and"), Word("some"), Word("text")))
+                    )
+                  )
                 )
-              ),
-              Table(
-                Table.Row(Seq("one", "two")),
-                Seq(Table.Left, Table.Left),
-                Seq(Table.Row(Seq("1", "2")))
-              ),
-              Text(Seq(Word("and"), Word("some"), Word("text")))
+              )
             )
           )
         )
