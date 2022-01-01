@@ -127,7 +127,7 @@ object Chars {
    *  NameStart ::= ( Letter | '_' )
    *  }}}
    *  where Letter means in one of the Unicode general
-   *  categories `{ Ll, Lu, Lo, Lt, Nl }`.
+   *  categories {{{ Ll, Lu, Lo, Lt, Nl }}}.
    *
    *  We do not allow a name to start with ':'.
    *  See [3] and Appendix B of XML 1.0 specification

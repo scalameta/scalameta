@@ -707,7 +707,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
    * When token on `tokenPosition` is not a whitespace and is
    * a first non-whitespace character in a current line then a result is
    * a number of whitespace characters counted.
-   * Otherwise (-1, -1) is returned.
+   * Otherwise {{{(-1, -1)}}} is returned.
    *
    * Returns a tuple2 where:
    * - first value is indentation level
@@ -2334,7 +2334,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   /**
-   * Deals with Scala 3 concept of `inline x match { ...`
+   * Deals with Scala 3 concept of {{{inline x match { ...}}}.
    * Since matches can also be chained in Scala 3 we need to create
    * the Match first and only then add the the inline modifier.
    */
@@ -4281,10 +4281,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   /**
+   * ```scala
    * Given             ::= 'given' GivenDef
    * GivenDef          ::=  [GivenSig] (Type [‘=’ Expr] | StructuralInstance)
    * GivenSig          ::=  [id] [DefTypeParamClause] {UsingParamClause} ‘:’
    * StructuralInstance ::=  ConstrApp {‘with’ ConstrApp} ‘with’ TemplateBody
+   * ```
    */
   private def givenDecl(mods: List[Mod]): Stat = atPos(mods, auto) {
     accept[KwGiven]
@@ -4316,7 +4318,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
          * We are first trying to parse non-anonymous given, which
          *  - requires `:` for type, if none is found it means it's anonymous
          *  - might fail in cases that anonymous type looks like type param
-         *   `given Conversion[AppliedName, Expr.Apply[Id]] = ???`
+         *   {{{given Conversion[AppliedName, Expr.Apply[Id]] = ???}}}
          *   This will fail because type params cannot have `.`
          */
         case NonFatal(_) =>

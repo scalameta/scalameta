@@ -9,7 +9,7 @@ class InlineSuite extends BaseDottySuite {
 
   /**
    *  All examples based on dotty documentation:
-   *  https://dotty.epfl.ch/docs/reference/metaprogramming/inline.html
+   * - [[https://dotty.epfl.ch/docs/reference/metaprogramming/inline.html]]
    */
   test("inline-soft-keyword-pos") {
     // as ident
