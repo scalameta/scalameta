@@ -26,7 +26,7 @@ object ScaladocParser {
     (Index ~ hspacesMin(min) ~ Index).map { case (b, e) => e - b }
 
   private def nl[_: P]: P0 = P("\n")
-  private def startOrNl[_: P] = nl | Start
+  private def nlOrEndPeek[_: P] = &(End | nl)
   private def paraEnd[_: P] = nl.rep(exactly = 2)
 
   private def space[_: P] = CharIn("\t\r \n")
@@ -34,7 +34,6 @@ object ScaladocParser {
   private def spaces1[_: P] = spacesMin(1)
   private def nlHspaces0[_: P] = nl.? ~ hspaces0
   private def nlHspaces1[_: P] = space ~ hspaces0
-  private def leadHspaces0[_: P] = startOrNl ~ hspaces0
 
   private def punctParser[_: P] = CharsWhileIn(".,:!?;)", 0)
   private def labelParser[_: P]: P[Unit] = (!space ~ AnyChar).rep(1)
@@ -64,7 +63,7 @@ object ScaladocParser {
 
   private def codeBlockParser[_: P]: P[CodeBlock] = P {
     def code = codeLineParser.rep(1, sep = nl)
-    def pattern = leadHspaces0 ~ codePrefix ~ nl ~ code ~ codeSuffix
+    def pattern = hspaces0 ~ codePrefix ~ nl ~ code ~ codeSuffix
     pattern.map { x => CodeBlock(if (x.last.nonEmpty) x else x.dropRight(1)) }
   }
 
@@ -77,22 +76,21 @@ object ScaladocParser {
   private def mdCodeBlockFence[_: P] = "`".rep(3) | "~".rep(3)
 
   private def mdCodeBlockParser[_: P]: P[MdCodeBlock] = P {
-    (startOrNl ~ mdCodeBlockIndent.! ~ mdCodeBlockFence.!).flatMap { case (indent, fence) =>
+    (mdCodeBlockIndent.! ~ mdCodeBlockFence.!).flatMap { case (indent, fence) =>
       def info = hspaces0 ~ labelParser.!.rep(0, sep = hspaces0) ~ nl
       info.flatMap { infoSeq =>
         def codeEnd = mdCodeBlockIndent ~ fence.substring(0, 1).rep(fence.length)
         def line = hspace.rep(max = indent.length) ~ (!nl ~ AnyChar).rep.!
         def lines = !codeEnd ~ line.rep(1, sep = nl ~ !codeEnd)
-        def block = (lines ~ nl).? ~ codeEnd ~ &(nl | End)
+        def block = (lines ~ nl).? ~ codeEnd ~ nlOrEndPeek
         block.map(x => MdCodeBlock(infoSeq, x.getOrElse(Nil), fence))
       }
     }
   }
 
   private def headingParser[_: P]: P[Heading] = P {
-    def delimParser = leadHspaces0 ~ CharsWhileIn("=", 1).!
     // heading delimiter
-    delimParser.flatMap { delim =>
+    hspaces0 ~ CharsWhileIn("=", 1).!.flatMap { delim =>
       val level = delim.length
       if (level > numberOfSupportedHeadingLevels) Fail
       else {
@@ -113,26 +111,27 @@ object ScaladocParser {
   private def nextPartParser[_: P]: P[Unit] = P {
     def mdCodeBlockPrefix = mdCodeBlockIndent ~ mdCodeBlockFence
     def anotherBeg = P(CharIn("@=") | (codePrefix ~ nl) | listPrefix | tableSep | "+-" | nl)
-    nl ~/ (nl | mdCodeBlockPrefix | hspaces0 ~/ anotherBeg)
+    nl | mdCodeBlockPrefix | hspaces0 ~/ anotherBeg
   }
 
   private def textParser[_: P]: P[Text] = P {
-    def end = P(End | nextPartParser)
+    def end = P(nl ~/ nextPartParser)
     def part: P[TextPart] = P(!paraEnd ~ (codeExprParser | linkParser | wordParser))
     def sep = P(!end ~ nlHspaces0)
     hspaces0 ~ part.rep(1, sep = sep).map(x => Text(x))
   }
 
-  private def leadTextParser[_: P]: P[Text] = P((space | Start) ~ textParser)
+  // this is to be used at the start of a line
+  private def leadTextParser[_: P] = !nextPartParser ~ textParser
 
-  private def tagLabelParser[_: P]: P[Word] = P(!nextPartParser ~ nlHspaces1 ~ wordParser)
+  private def tagLabelParser[_: P]: P[Word] = P((nl ~ !nextPartParser).? ~ hspaces0 ~ wordParser)
 
   private def tagDescParser[_: P]: P[Option[Text]] = P {
-    (textParser | !nextPartParser ~ nl ~ textParser).?
+    (textParser | nl ~ leadTextParser).?
   }
 
   private def tagParser[_: P]: P[Tag] = P {
-    leadHspaces0 ~ ("@" ~ labelParser).!.flatMap { tag =>
+    hspaces0 ~ ("@" ~ labelParser).!.flatMap { tag =>
       val tagType = TagType.getTag(tag)
       (tagType.hasLabel, tagType.optDesc) match {
         case (false, false) => Pass(Tag(tagType))
@@ -150,15 +149,15 @@ object ScaladocParser {
     /* https://docs.scala-lang.org/overviews/scaladoc/for-library-authors.html#other-formatting-notes
      * For list blocks, "you must have extra space in front", hence min `indent + 1`. */
     def listMarker = hspacesMinWithLen(indent + 1) ~ listPrefix.! ~ hspaces1
-    def listParser = listMarker.flatMap { case (listIndent, prefix) =>
+    listMarker.flatMap { case (listIndent, prefix) =>
       def sep = nl ~ hspace.rep(exactly = listIndent) ~ prefix ~ hspaces1
       listItemParser(listIndent).rep(1, sep = sep).map(x => ListBlock(prefix, x))
     }
-    startOrNl ~ listParser
   }
 
   private def listItemParser[_: P](indent: Int) = P {
-    (textParser ~ listBlockParser(indent).?).map { case (desc, list) => ListItem(desc, list) }
+    (textParser ~ (nl ~ listBlockParser(indent)).?)
+      .map { case (desc, list) => ListItem(desc, list) }
   }
 
   private def tableParser[_: P]: P[Table] = P {
@@ -221,17 +220,22 @@ object ScaladocParser {
         Table(toRow(x.head.map(_.trim)), align, rest.tail.map(toRow))
     }
 
-    startOrNl ~ (delimLine ~ nl).? ~ tableSpaceSep ~ table ~ (nl ~ delimLine).?
+    (delimLine ~ nl).? ~ tableSpaceSep ~ table ~ (nl ~ delimLine).?
   }
 
-  private def termParser[_: P] =
-    listBlockParser() |
-      mdCodeBlockParser |
-      codeBlockParser |
-      headingParser |
-      tagParser |
-      tableParser |
-      leadTextParser // keep at the end, this is the fallback
+  private def termParser[_: P] = P {
+    def leadingParser = // might not consume full line
+      tagParser
+    def completeParser = // will consume full line
+      listBlockParser() |
+        mdCodeBlockParser |
+        codeBlockParser |
+        headingParser |
+        tableParser |
+        textParser // keep at the end, this is the fallback
+    (nl | Start) ~ (leadingParser | (completeParser ~ nlOrEndPeek)) |
+      textParser // could be following an element leaving trailing text, e.g. tagParser
+  }
 
   private def notTermEnd[_: P] = P(!(End | paraEnd))
   private def termsParser[_: P] = P(notTermEnd ~ termParser)
