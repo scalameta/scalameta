@@ -78,13 +78,12 @@ object ScaladocParser {
 
   private def mdCodeBlockParser[_: P]: P[MdCodeBlock] = P {
     (startOrNl ~ mdCodeBlockIndent.! ~ mdCodeBlockFence.!).flatMap { case (indent, fence) =>
-      def lineEnd = hspaces0 ~ nl
-      def info = hspaces0 ~ labelParser.!.rep(0, sep = hspaces0) ~ lineEnd
+      def info = hspaces0 ~ labelParser.!.rep(0, sep = hspaces0) ~ nl
       info.flatMap { infoSeq =>
         def codeEnd = mdCodeBlockIndent ~ fence.substring(0, 1).rep(fence.length)
-        def line = hspace.rep(max = indent.length) ~ (!lineEnd ~ AnyChar).rep.!
-        def lines = !codeEnd ~ line.rep(1, sep = lineEnd ~ !codeEnd)
-        def block = (lines ~ lineEnd).? ~ codeEnd ~ hspaces0 ~ &(nl | End)
+        def line = hspace.rep(max = indent.length) ~ (!nl ~ AnyChar).rep.!
+        def lines = !codeEnd ~ line.rep(1, sep = nl ~ !codeEnd)
+        def block = (lines ~ nl).? ~ codeEnd ~ &(nl | End)
         block.map(x => MdCodeBlock(infoSeq, x.getOrElse(Nil), fence))
       }
     }
@@ -121,16 +120,15 @@ object ScaladocParser {
     def end = P(End | nextPartParser)
     def part: P[TextPart] = P(!paraEnd ~ (codeExprParser | linkParser | wordParser))
     def sep = P(!end ~ nlHspaces0)
-    def text = hspaces0 ~ part.rep(1, sep = sep)
-    text.map(x => Text(x))
+    hspaces0 ~ part.rep(1, sep = sep).map(x => Text(x))
   }
 
-  private def leadTextParser[_: P]: P[Text] = P((space | Start) ~ hspaces0 ~ textParser)
+  private def leadTextParser[_: P]: P[Text] = P((space | Start) ~ textParser)
 
   private def tagLabelParser[_: P]: P[Word] = P(!nextPartParser ~ nlHspaces1 ~ wordParser)
 
   private def tagDescParser[_: P]: P[Option[Text]] = P {
-    hspaces0 ~ (textParser | !nextPartParser ~ nl ~ textParser).?
+    (textParser | !nextPartParser ~ nl ~ textParser).?
   }
 
   private def tagParser[_: P]: P[Tag] = P {
@@ -255,6 +253,7 @@ object ScaladocParser {
     if (!isScaladoc) None
     else {
       val content = CharBuffer.wrap(comment, 3, comment.length - 2)
+      // removes all trailing space, ensures newline at EOF
       val text = scaladocDelim.matcher(content).replaceAll("\n")
       fastparse.parse(text, parser(_)) match {
         case p: Parsed.Success[Scaladoc] => Some(p.value)
