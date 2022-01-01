@@ -246,7 +246,8 @@ object ScaladocParser {
     paraSep.? ~ docParser ~ spacesMin(0) ~ End
   }
 
-  private val scaladocDelim = Pattern.compile("[ \t]*(?:$|\n[ \t]*\\**)")
+  private val ws = "[ \r\t]"
+  private val scaladocDelim = Pattern.compile(s"$ws*(?:$$|\n$ws*\\**)")
 
   /** Parses a scaladoc comment */
   def parse(comment: String): Option[Scaladoc] = {
