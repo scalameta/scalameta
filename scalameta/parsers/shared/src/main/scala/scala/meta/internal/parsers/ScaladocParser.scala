@@ -27,7 +27,6 @@ object ScaladocParser {
 
   private def nl[_: P]: P0 = P("\n")
   private def nlOrEndPeek[_: P] = &(End | nl)
-  private def paraEnd[_: P] = nl.rep(exactly = 2)
 
   private def space[_: P] = CharIn("\t\r \n")
   private def spacesMin[_: P](min: Int) = CharsWhileIn("\t\r \n", min)
@@ -116,7 +115,7 @@ object ScaladocParser {
 
   private def textParser[_: P]: P[Text] = P {
     def end = P(nl ~/ nextPartParser)
-    def part: P[TextPart] = P(!paraEnd ~ (codeExprParser | linkParser | wordParser))
+    def part: P[TextPart] = P(codeExprParser | linkParser | wordParser)
     def sep = P(!end ~ nlHspaces0)
     hspaces0 ~ part.rep(1, sep = sep).map(x => Text(x))
   }
@@ -227,14 +226,11 @@ object ScaladocParser {
       textParser // could be following an element leaving trailing text, e.g. tagParser
   }
 
-  private def notTermEnd[_: P] = P(!(End | paraEnd))
-  private def termsParser[_: P] = P(notTermEnd ~ termParser)
-  private def paraParser[_: P] = P(termsParser.rep(1).map(x => Scaladoc.Paragraph(x)))
-  private def paraSep[_: P] = P((nl ~ &(nl)).rep(1))
-  private def docParser[_: P] = P(paraParser.rep(sep = paraSep).map(x => Scaladoc(x)))
-
   /** Contains all scaladoc parsers */
   private def parser[_: P]: P[Scaladoc] = P {
+    def paraSep = P((nl ~ &(nl)).rep(1))
+    def paraParser = P(termParser.rep(1).map(x => Scaladoc.Paragraph(x)))
+    def docParser = P(paraParser.rep(sep = paraSep).map(x => Scaladoc(x)))
     paraSep.? ~ docParser ~ spacesMin(0) ~ End
   }
 
