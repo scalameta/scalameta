@@ -1012,8 +1012,7 @@ class ScaladocParserSuite extends FunSuite {
             * }}}
             * bar baz
             * {{{
-            *$complexCodeBlockAsComment
-            * }}}
+            *$complexCodeBlockAsComment }}}
             * baz qux
             */
        """.stripMargin
@@ -1328,9 +1327,13 @@ class ScaladocParserSuite extends FunSuite {
     val result = parseString(
       """
           /**
+
+            *
+
             * text1 text2
             * |hdr1  |hdr2   |hdr3|  hdr4||
             * text3 text4
+            *
             */
        """.stripMargin
     )
