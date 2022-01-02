@@ -47,7 +47,7 @@ object ScaladocParser {
   private def tableSpaceSep[_: P] = P(hspaces0 ~ tableSep)
 
   private def codePrefix[_: P] = P("{{{")
-  private def codeSuffix[_: P] = P(hspaces0 ~ "}}}")
+  private def codeSuffix[_: P] = P(hspaces0 ~ "}}}" ~~ !"}")
 
   private def linkPrefix[_: P] = P("[[" ~ hspaces0)
   private def linkSuffix[_: P] = P(hspaces0 ~ "]]")
