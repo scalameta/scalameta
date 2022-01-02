@@ -751,12 +751,12 @@ class ScaladocParserSuite extends FunSuite {
                 Seq(
                   ListItem(Text(Seq(Word(list11)))),
                   ListItem(
-                    Text(
-                      Seq(Word(list12), Word("continue"), Word("text")) ++
-                        Seq(Word("```scala"), Word("println(42)"), Word("```")) ++
-                        Seq(Word("and"), Word("some"), Word("text"))
-                    ),
-                    Seq(ListBlock("-", Seq(ListItem(Text(Seq(Word(list21)))))))
+                    Text(Seq(Word(list12), Word("continue"), Word("text"))),
+                    Seq(
+                      MdCodeBlock(Seq("scala"), Seq("println(42)"), "```"),
+                      Text(Seq(Word("and"), Word("some"), Word("text"))),
+                      ListBlock("-", Seq(ListItem(Text(Seq(Word(list21))))))
+                    )
                   ),
                   ListItem(Text(Seq(Word(list13))))
                 )
