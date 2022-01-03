@@ -19,13 +19,16 @@ class ScaladocParserSuite extends FunSuite {
   ): Unit = {
     val nl = "\n *"
     sb.append(' ').append(tagType.tag)
-    if (tagType.hasLabel) sb.append(" TestLabel")
     if (tagType.optDesc) {
+      if (tagType.hasLabel) sb.append(" TestLabel")
       // another, with description
       sb.append(nl).append(' ').append(tagType.tag)
       if (tagType.hasLabel) sb.append(" TestLabel")
-      sb.append(nl).append("  Test Description")
+      sb.append("  Test Description")
       sb.append(nl).append("  ").append(testStringToMerge)
+    } else {
+      // label with spaces
+      if (tagType.hasLabel) sb.append(" Test Label")
     }
     sb.append(nl)
   }
@@ -1187,40 +1190,37 @@ class ScaladocParserSuite extends FunSuite {
     val parsedScaladocParas = parsedScaladocOpt.get.para
     assertEquals(parsedScaladocParas.length, 1)
     val parsedScaladocTerms = parsedScaladocParas.head.terms
+    val parsedTags = parsedScaladocTerms.collect { case t: Tag => t }
 
+    val tagsWithDesc = TagType.predefined.count(_.optDesc)
     assertEquals(
-      parsedScaladocTerms.count {
-        case t: Tag => t.tag.optDesc && t.desc.isEmpty
-        case _ => false
-      },
-      TagType.predefined.count(_.optDesc)
+      parsedTags.count(t => t.tag.optDesc && t.desc.isEmpty),
+      tagsWithDesc
     )
     assertEquals(
-      parsedScaladocTerms.count {
-        case t: Tag => t.tag.optDesc && t.desc.nonEmpty
-        case _ => false
-      },
-      TagType.predefined.count(_.optDesc)
+      parsedTags.count(t => t.tag.optDesc && t.desc.nonEmpty),
+      tagsWithDesc
     )
     assertEquals(
-      parsedScaladocTerms.count {
-        case t: Tag => !t.tag.optDesc && t.desc.isEmpty
-        case _ => false
-      },
-      TagType.predefined.count(!_.optDesc)
+      parsedTags.count(t => !t.tag.optDesc && t.desc.isEmpty),
+      TagType.predefined.length - tagsWithDesc
     )
     assertEquals(
-      parsedScaladocTerms.count {
-        case t: Tag => !t.tag.optDesc && t.desc.nonEmpty
-        case _ => false
-      },
+      parsedTags.count(t => !t.tag.optDesc && t.desc.nonEmpty),
       0
     )
 
     // Inherit doc does not merge
-    parsedScaladocTerms.foreach {
-      case t: Tag if t.tag.optDesc && t.desc.nonEmpty =>
-        val actual = t.desc.map {
+    parsedTags.foreach { // check label
+      case Tag(t, label, _) if t.hasLabel =>
+        val expected = if (t.optDesc) "TestLabel" else "Test"
+        assertEquals(label, Some(Word(expected)))
+      case _ =>
+    }
+    parsedTags.foreach { // check desc
+      case Tag(t, _, desc) if !t.optDesc => assertEquals(desc, Nil)
+      case Tag(_, _, desc) if desc.nonEmpty =>
+        val actual = desc.map {
           case x: Text => x.parts.takeRight(words.length)
           case x => x
         }
