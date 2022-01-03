@@ -1403,6 +1403,24 @@ class ScaladocParserSuite extends FunSuite {
     )
   }
 
+  test("parse usecase tags") {
+    assertEquals(
+      parseString(
+        s"""
+         /**
+          * @usecase foo bar
+          * baz qux
+          */
+         """
+      ),
+      Option {
+        val desc = Seq(Text(Seq(Word("foo"), Word("bar"), Word("baz"), Word("qux"))))
+        val rest = Nil
+        Scaladoc(Seq(Paragraph(Tag(TagType.UseCase, desc = desc) +: rest)))
+      }
+    )
+  }
+
   test("parse tag") {
     assertEquals(
       parseString(
