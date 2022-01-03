@@ -97,7 +97,7 @@ object Scaladoc {
   /* List blocks */
 
   /** Represents a list item */
-  final case class ListItem(text: Text, nested: Option[ListBlock] = None)
+  final case class ListItem(text: Text, terms: Seq[Term] = Nil)
 
   /** Represents a list block */
   final case class ListBlock(prefix: String, items: Seq[ListItem]) extends Term
@@ -116,8 +116,7 @@ object Scaladoc {
    * @param label set iff `tag.hasLabel`
    * @param desc set iff `tag.hasDesc`
    */
-  final case class Tag(tag: TagType, label: Option[Word] = None, desc: Option[Text] = None)
-      extends Term
+  final case class Tag(tag: TagType, label: Option[Word] = None, desc: Seq[Term] = Nil) extends Term
 
   object TagType {
 
