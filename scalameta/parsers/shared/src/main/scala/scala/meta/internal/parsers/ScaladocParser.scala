@@ -188,11 +188,17 @@ object ScaladocParser {
       }
     }
 
-    def cellChar = escape ~ AnyChar | !(nl | escape | tableSep) ~ AnyChar
-    def row = (cellChar.rep.! ~ tableSpaceSep).rep(1)
+    def cell = P((escape ~ AnyChar | !(nl | escape | tableSep) ~ AnyChar).rep)
+    def row = P((cell.! ~ tableSep).rep(1))
+
     // non-standard but frequently used delimiter line, e.g.: +-----+-------+
     def delimLine = hspaces0 ~ plusMinus
+    def nlDelimLine = P(nl ~ delimLine)
+
     def sep = nl ~ (delimLine ~ nl).rep ~ tableSpaceSep
+    def tableBeg = P((delimLine ~ nl).? ~ tableSpaceSep)
+    def tableEnd = P(nlDelimLine.?)
+
     // according to spec, the table must contain at least two rows
     def table = row.rep(2, sep = sep).map { x =>
       // we'll trim the header later; we might need it if align is missing
@@ -227,7 +233,7 @@ object ScaladocParser {
         Table(toRow(x.head.map(_.trim)), align, rest.tail.map(toRow))
     }
 
-    (delimLine ~ nl).? ~ tableSpaceSep ~ table ~ (nl ~ delimLine).?
+    tableBeg ~ table ~ tableEnd
   }
 
   private def termParser[_: P] = P {
