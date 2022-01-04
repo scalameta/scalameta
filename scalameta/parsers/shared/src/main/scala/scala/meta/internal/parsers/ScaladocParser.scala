@@ -40,7 +40,6 @@ object ScaladocParser {
 
   private def escape[_: P] = P("\\")
   private def tableSep[_: P] = P("|")
-  private def tableSpaceSep[_: P] = P(hspaces0 ~ tableSep)
 
   private def codePrefix[_: P] = P("{{{")
   private def codeSuffix[_: P] = P(hspaces0 ~ "}}}" ~~ !"}")
@@ -191,12 +190,13 @@ object ScaladocParser {
     def cell = P((escape ~ AnyChar | !(nl | escape | tableSep) ~ AnyChar).rep)
     def row = P((cell.! ~ tableSep).rep(1))
 
+    def lineEnd = nl ~ hspaces0
     // non-standard but frequently used delimiter line, e.g.: +-----+-------+
-    def delimLine = hspaces0 ~ plusMinus
-    def nlDelimLine = P(nl ~ delimLine)
+    def delimLineNL = P(plusMinus ~ lineEnd)
+    def nlDelimLine = P(lineEnd ~ plusMinus)
 
-    def sep = nl ~ (delimLine ~ nl).rep ~ tableSpaceSep
-    def tableBeg = P((delimLine ~ nl).? ~ tableSpaceSep)
+    def sep = P(lineEnd ~ delimLineNL.rep ~ tableSep)
+    def tableBeg = P(hspaces0 ~ delimLineNL.? ~ tableSep)
     def tableEnd = P(nlDelimLine.?)
 
     // according to spec, the table must contain at least two rows
