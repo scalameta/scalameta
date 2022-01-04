@@ -135,13 +135,17 @@ object ScaladocParser {
 
   private def tagParser[_: P]: P[Tag] = P {
     def label = P((nl ~ !nextPartParser()).? ~ hspaces0 ~ wordParser)
+    // special case: @usecase takes a single code line, on the same line
+    def labelInline = P(hspaces0 ~ (!nl ~ AnyChar).rep(1).!.map(Word))
     def desc = P {
       (textParser().? ~ embeddedTermsParser())
         .map { case (x, terms) => x.fold(terms)(_ +: terms) }
     }
     hspaces0 ~ ("@" ~ labelParser).!.flatMap { tag =>
       val tagType = TagType.getTag(tag)
-      def labelOpt = if (tagType.hasLabel) label.map(x => Some(x)) else Pass(None)
+      def labelOpt =
+        if (!tagType.hasLabel) Pass(None)
+        else (if (tagType.optDesc) label else labelInline).map(x => Some(x))
       def descOpt = if (tagType.optDesc) desc else Pass(Nil)
       (labelOpt ~ descOpt).map { case (label, desc) => Tag(tagType, label, desc) }
     }

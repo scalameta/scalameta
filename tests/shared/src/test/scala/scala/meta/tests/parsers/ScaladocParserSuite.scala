@@ -1213,7 +1213,7 @@ class ScaladocParserSuite extends FunSuite {
     // Inherit doc does not merge
     parsedTags.foreach { // check label
       case Tag(t, label, _) if t.hasLabel =>
-        val expected = if (t.optDesc) "TestLabel" else "Test"
+        val expected = if (t.optDesc) "TestLabel" else "Test Label"
         assertEquals(label, Some(Word(expected)))
       case _ =>
     }
@@ -1360,8 +1360,7 @@ class ScaladocParserSuite extends FunSuite {
           Seq(
             Paragraph(
               Seq(
-                Tag(TagType.Version, Some(Word("1.0"))),
-                Text(Seq(Word("foo"), Word("bar"))),
+                Tag(TagType.Version, Some(Word("1.0 foo bar"))),
                 Tag(
                   TagType.Since,
                   Some(Word("1.0")),
@@ -1400,6 +1399,24 @@ class ScaladocParserSuite extends FunSuite {
           )
         )
       )
+    )
+  }
+
+  test("parse usecase tags") {
+    assertEquals(
+      parseString(
+        s"""
+         /**
+          * @usecase foo bar
+          * baz qux
+          */
+         """
+      ),
+      Option {
+        val label = Some(Word("foo bar"))
+        val rest = Seq(Text(Seq(Word("baz"), Word("qux"))))
+        Scaladoc(Seq(Paragraph(Tag(TagType.UseCase, label = label) +: rest)))
+      }
     )
   }
 

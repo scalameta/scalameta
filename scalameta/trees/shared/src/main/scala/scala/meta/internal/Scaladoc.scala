@@ -164,7 +164,7 @@ object Scaladoc {
      * Provide a simplified method definition for when the full method definition is too complex
      * or noisy
      */
-    case object UseCase extends Base("@usecase")
+    case object UseCase extends Base("@usecase", hasLabel = true, optDesc = false)
 
     /* Member grouping tags */
 
