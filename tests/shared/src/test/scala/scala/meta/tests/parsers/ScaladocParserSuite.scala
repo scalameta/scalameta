@@ -1294,7 +1294,59 @@ class ScaladocParserSuite extends FunSuite {
            |   */
            |""".stripMargin
       )
-    val expected = None
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              ListBlock(
+                "1.",
+                Seq(
+                  ListItem(
+                    Text(Seq(Word("foo"))),
+                    Seq(
+                      CodeBlock(Seq("         embedded code")),
+                      ListBlock(
+                        "-",
+                        Seq(
+                          ListItem(
+                            Text(Seq(Word("foo1"))),
+                            Seq(
+                              Table(
+                                Table.Row(Seq("hdr1", "hdr22")),
+                                Seq(Table.Left, Table.Right),
+                                Seq(Table.Row(Seq("r1 1", "r1 2")))
+                              ),
+                              ListBlock(
+                                "-",
+                                Seq(
+                                  ListItem(
+                                    Text(Seq(Word("foo2"))),
+                                    Seq(
+                                      CodeBlock(Seq("         embedded code")),
+                                      MdCodeBlock(Nil, Seq("code foo2"), "```")
+                                    )
+                                  )
+                                )
+                              ),
+                              MdCodeBlock(Nil, Seq(" code foo1"), "```")
+                            )
+                          )
+                        )
+                      ),
+                      MdCodeBlock(Nil, Seq("   code foo"), "```")
+                    )
+                  ),
+                  ListItem(
+                    Text(Seq(Word("bar")))
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
     assertEquals(result, expected)
   }
 

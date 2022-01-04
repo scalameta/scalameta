@@ -21,7 +21,6 @@ object ScaladocParser {
   private def hspacesMin[_: P](min: Int) = P(CharsWhileIn("\t\r ", min))
   private def hspaces0[_: P] = hspacesMin(0)
   private def hspaces1[_: P] = hspacesMin(1)
-  private def plusMinus[_: P] = CharsWhileIn("+\\-")
   private def hspacesMinWithLen[_: P](min: Int): P[Int] =
     (Index ~ hspacesMin(min) ~ Index).map { case (b, e) => e - b }
 
@@ -39,6 +38,7 @@ object ScaladocParser {
   private def listPrefix[_: P] = "-" | CharIn("1aiI") ~ "."
 
   private def escape[_: P] = P("\\")
+  private def tableDelim[_: P] = P("+" ~ ("-".rep ~ "+").rep(1))
   private def tableSep[_: P] = P("|")
 
   private def codePrefix[_: P] = P("{{{")
@@ -115,7 +115,7 @@ object ScaladocParser {
   private def nextPartParser[_: P](mdOffset: Int = 0): P[Unit] = P {
     // used to terminate previous part, hence indent can be less
     def mdCodeBlockPrefix = hspace.rep(max = getMdOffsetMax(mdOffset)) ~ mdCodeBlockFence
-    def anotherBeg = P(CharIn("@=") | (codePrefix ~ nl) | listPrefix | tableSep | "+-")
+    def anotherBeg = P(CharIn("@=") | (codePrefix ~ nl) | listPrefix | tableSep | tableDelim)
     nl | mdCodeBlockPrefix | hspaces0 ~/ anotherBeg
   }
 
@@ -187,13 +187,13 @@ object ScaladocParser {
       }
     }
 
-    def cell = P((escape ~ AnyChar | !(nl | escape | tableSep) ~ AnyChar).rep)
+    def cell = P((escape ~/ AnyChar | !(nl | tableSep) ~ AnyChar).rep)
     def row = P((cell.! ~ tableSep).rep(1))
 
     def lineEnd = nl ~ hspaces0
     // non-standard but frequently used delimiter line, e.g.: +-----+-------+
-    def delimLineNL = P(plusMinus ~ lineEnd)
-    def nlDelimLine = P(lineEnd ~ plusMinus)
+    def delimLineNL = P(tableDelim ~ lineEnd)
+    def nlDelimLine = P(lineEnd ~ tableDelim ~ nlOrEndPeek)
 
     def sep = P(lineEnd ~ delimLineNL.rep ~ tableSep)
     def tableBeg = P(hspaces0 ~ delimLineNL.? ~ tableSep)
