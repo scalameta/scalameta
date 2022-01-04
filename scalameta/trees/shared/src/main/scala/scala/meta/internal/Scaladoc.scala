@@ -115,6 +115,7 @@ object Scaladoc {
    * Represents a tagged documentation remark
    * @param label set iff `tag.hasLabel`
    * @param desc set iff `tag.hasDesc`
+   * @note if label is expected but desc is not, label will contain the entire tag line
    */
   final case class Tag(tag: TagType, label: Option[Word] = None, desc: Seq[Term] = Nil) extends Term
 
@@ -172,13 +173,13 @@ object Scaladoc {
     case object Group extends Base("@group", hasLabel = true, optDesc = false)
 
     /** Provide an optional name for the group */
-    case object GroupName extends Base("@groupname", hasLabel = true)
+    case object GroupName extends Base("@groupname", hasLabel = true, optDesc = false)
 
     /** Add optional descriptive text to display under the group name */
     case object GroupDesc extends Base("@groupdesc", hasLabel = true)
 
     /** Control the order of the group on the page */
-    case object GroupPriority extends Base("@groupprio", hasLabel = true)
+    case object GroupPriority extends Base("@groupprio", hasLabel = true, optDesc = false)
 
     /* Diagram tags */
 
