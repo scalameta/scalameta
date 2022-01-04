@@ -134,7 +134,7 @@ class ScaladocParserSuite extends FunSuite {
   test("paragraph parsing with references") {
     val descriptionBody = "Description Body"
     val words = descriptionBody.split("\\s+").toSeq.map(Word.apply)
-    val refNone = Seq(Link("Description", Seq("Body"), ""))
+    val refNone = Seq(Link("Description", Seq("Body")))
     val refDots = Seq(Link("Description", Seq("Body"), "..."))
     val refWithSuffix = Seq(Link("Description", Seq("Body"), "'s"))
     assertEquals(
@@ -229,7 +229,7 @@ class ScaladocParserSuite extends FunSuite {
       Scaladoc(
         Seq(
           Paragraph(
-            Seq(Text((words :+ CodeExpr(codeBlock1, "?")) ++ (words :+ CodeExpr(codeBlock2, ""))))
+            Seq(Text((words :+ CodeExpr(codeBlock1, "?")) ++ (words :+ CodeExpr(codeBlock2))))
           ),
           Paragraph(Seq(Text(words))),
           Paragraph(
@@ -280,7 +280,7 @@ class ScaladocParserSuite extends FunSuite {
     )
 
     val expectation = Option(
-      Scaladoc(Seq(Paragraph(Seq(Text(Seq(CodeExpr(codeBlock1, ""), CodeExpr(codeBlock2, "")))))))
+      Scaladoc(Seq(Paragraph(Seq(Text(Seq(CodeExpr(codeBlock1), CodeExpr(codeBlock2)))))))
     )
     assertEquals(result, expectation)
   }

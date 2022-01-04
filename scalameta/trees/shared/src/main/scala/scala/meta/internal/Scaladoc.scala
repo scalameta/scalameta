@@ -30,7 +30,7 @@ object Scaladoc {
   }
 
   /** A reference to a symbol */
-  final case class Link(ref: String, anchor: Seq[String], punct: String) extends TextPart {
+  final case class Link(ref: String, anchor: Seq[String], punct: String = "") extends TextPart {
     def this(parts: Seq[String], punct: String) = this(parts.head, parts.tail, punct)
     override def syntax: String = {
       val sb = new StringBuilder
@@ -42,7 +42,7 @@ object Scaladoc {
   }
 
   /** A single embedded code expression */
-  final case class CodeExpr(code: String, punct: String) extends TextPart {
+  final case class CodeExpr(code: String, punct: String = "") extends TextPart {
     override def syntax: String = s"{{{$code}}}$punct"
   }
 
