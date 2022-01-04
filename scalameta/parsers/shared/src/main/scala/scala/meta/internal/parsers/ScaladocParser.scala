@@ -31,8 +31,6 @@ object ScaladocParser {
   private def space[_: P] = CharIn("\t\r \n")
   private def spacesMin[_: P](min: Int) = CharsWhileIn("\t\r \n", min)
   private def spaces1[_: P] = spacesMin(1)
-  private def nlHspaces0[_: P] = nl.? ~ hspaces0
-  private def nlHspaces1[_: P] = space ~ hspaces0
 
   private def punctParser[_: P] = CharsWhileIn(".,:!?;)", 0)
   private def labelParser[_: P]: P[Unit] = (!space ~ AnyChar).rep(1)
@@ -118,14 +116,14 @@ object ScaladocParser {
   private def nextPartParser[_: P](mdOffset: Int = 0): P[Unit] = P {
     // used to terminate previous part, hence indent can be less
     def mdCodeBlockPrefix = hspace.rep(max = getMdOffsetMax(mdOffset)) ~ mdCodeBlockFence
-    def anotherBeg = P(CharIn("@=") | (codePrefix ~ nl) | listPrefix | tableSep | "+-" | nl)
+    def anotherBeg = P(CharIn("@=") | (codePrefix ~ nl) | listPrefix | tableSep | "+-")
     nl | mdCodeBlockPrefix | hspaces0 ~/ anotherBeg
   }
 
   private def textParser[_: P](mdOffset: Int = 0): P[Text] = P {
     def end = P(nl ~/ nextPartParser(mdOffset))
     def part: P[TextPart] = P(codeExprParser | linkParser | wordParser)
-    def sep = P(!end ~ nlHspaces0)
+    def sep = P(!end ~ nl.? ~ hspaces0)
     hspaces0 ~ part.rep(1, sep = sep).map(x => Text(x))
   }
 
