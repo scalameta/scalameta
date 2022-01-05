@@ -1177,6 +1177,179 @@ class ScaladocParserSuite extends FunSuite {
     assertEquals(result, expected)
   }
 
+  test("list 9, complex embedded elements 1") {
+    // table ends in a delim line
+    val result =
+      parseString(
+        s"""
+           |  /** 1. foo
+           |   *      {{{
+           |   *         embedded code
+           |   *      }}}
+           |   *      - foo1
+           |   *  | hdr1   |  hdr22 |
+           |   *   |:-------|-------:|
+           |   *    | r1 1   |   r1 2 |
+           |   *    +--------+--------+
+           |   *        - foo2
+           |   *   {{{
+           |   *         embedded code
+           |   *   }}}
+           |   *           ```
+           |   *         code foo2
+           |   *           ```
+           |   *        ```
+           |   *         code foo1
+           |   *        ```
+           |   *      ```
+           |   *         code foo
+           |   *      ```
+           |   * 1. bar
+           |   */
+           |""".stripMargin
+      )
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              ListBlock(
+                "1.",
+                Seq(
+                  ListItem(
+                    Text(Seq(Word("foo"))),
+                    Seq(
+                      CodeBlock(Seq("         embedded code")),
+                      ListBlock(
+                        "-",
+                        Seq(
+                          ListItem(
+                            Text(Seq(Word("foo1"))),
+                            Seq(
+                              Table(
+                                Table.Row(Seq("hdr1", "hdr22")),
+                                Seq(Table.Left, Table.Right),
+                                Seq(Table.Row(Seq("r1 1", "r1 2")))
+                              ),
+                              ListBlock(
+                                "-",
+                                Seq(
+                                  ListItem(
+                                    Text(Seq(Word("foo2"))),
+                                    Seq(
+                                      CodeBlock(Seq("         embedded code")),
+                                      MdCodeBlock(Nil, Seq("code foo2"), "```")
+                                    )
+                                  )
+                                )
+                              ),
+                              MdCodeBlock(Nil, Seq(" code foo1"), "```")
+                            )
+                          )
+                        )
+                      ),
+                      MdCodeBlock(Nil, Seq("   code foo"), "```")
+                    )
+                  ),
+                  ListItem(
+                    Text(Seq(Word("bar")))
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expected)
+  }
+
+  test("list 9, complex embedded elements 2") {
+    // table doesn't end in a delim line, followed by "-" list
+    val result =
+      parseString(
+        s"""
+           |  /** 1. foo
+           |   *      {{{
+           |   *         embedded code
+           |   *      }}}
+           |   *      - foo1
+           |   *  | hdr1   |  hdr22 |
+           |   *   |:-------|-------:|
+           |   *    | r1 1   |   r1 2 |
+           |   *        - foo2
+           |   *   {{{
+           |   *         embedded code
+           |   *   }}}
+           |   *           ```
+           |   *         code foo2
+           |   *           ```
+           |   *        ```
+           |   *         code foo1
+           |   *        ```
+           |   *      ```
+           |   *         code foo
+           |   *      ```
+           |   * 1. bar
+           |   */
+           |""".stripMargin
+      )
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              ListBlock(
+                "1.",
+                Seq(
+                  ListItem(
+                    Text(Seq(Word("foo"))),
+                    Seq(
+                      CodeBlock(Seq("         embedded code")),
+                      ListBlock(
+                        "-",
+                        Seq(
+                          ListItem(
+                            Text(Seq(Word("foo1"))),
+                            Seq(
+                              Table(
+                                Table.Row(Seq("hdr1", "hdr22")),
+                                Seq(Table.Left, Table.Right),
+                                Seq(Table.Row(Seq("r1 1", "r1 2")))
+                              ),
+                              ListBlock(
+                                "-",
+                                Seq(
+                                  ListItem(
+                                    Text(Seq(Word("foo2"))),
+                                    Seq(
+                                      CodeBlock(Seq("         embedded code")),
+                                      MdCodeBlock(Nil, Seq("code foo2"), "```")
+                                    )
+                                  )
+                                )
+                              ),
+                              MdCodeBlock(Nil, Seq(" code foo1"), "```")
+                            )
+                          )
+                        )
+                      ),
+                      MdCodeBlock(Nil, Seq("   code foo"), "```")
+                    )
+                  ),
+                  ListItem(
+                    Text(Seq(Word("bar")))
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expected)
+  }
+
   test("label parsing/merging") {
     val testStringToMerge = "Test DocText"
     implicit val sb = new StringBuilder
