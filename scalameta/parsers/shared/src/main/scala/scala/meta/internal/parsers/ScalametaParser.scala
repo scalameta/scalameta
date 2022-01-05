@@ -4740,8 +4740,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     val name = atPos(in.tokenPos, in.tokenPos)(Name.Anonymous())
     accept[KwThis]
-    val paramss = paramClauses(ownerIsType = true)
-    secondaryCtorRest(mods, name, paramss)
+    if (token.isNot[LeftParen]) {
+      syntaxError("auxiliary constructor needs non-implicit parameter list", at = token.pos)
+    } else {
+      val paramss = paramClauses(ownerIsType = true)
+      secondaryCtorRest(mods, name, paramss)
+    }
   }
 
   def quasiquoteCtor(): Ctor = autoPos {
