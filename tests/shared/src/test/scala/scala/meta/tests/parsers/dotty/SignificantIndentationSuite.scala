@@ -1129,6 +1129,43 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("for-in-parens") {
+    val code = """|def foo =
+                  |  (for a <- List(1)
+                  |       b <- List(2)
+                  |   yield a + b).toSet.size
+                  |""".stripMargin
+    val output = "def foo = (for (a <- List(1); b <- List(2)) yield a + b).toSet.size"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Def(
+        Nil,
+        Term.Name("foo"),
+        Nil,
+        Nil,
+        None,
+        Term.Select(
+          Term.Select(
+            Term.ForYield(
+              List(
+                Enumerator.Generator(
+                  Pat.Var(Term.Name("a")),
+                  Term.Apply(Term.Name("List"), List(Lit.Int(1)))
+                ),
+                Enumerator.Generator(
+                  Pat.Var(Term.Name("b")),
+                  Term.Apply(Term.Name("List"), List(Lit.Int(2)))
+                )
+              ),
+              Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b")))
+            ),
+            Term.Name("toSet")
+          ),
+          Term.Name("size")
+        )
+      )
+    )
+  }
+
   test("match-chained-same-indent") {
     runTestAssert[Stat](
       """|val hello = xs match
