@@ -224,7 +224,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       extends SepRegion {
     override def isIndented: Boolean = true
   }
-  case object RegionParen extends SepRegion
+  case class RegionParen(canProduceLF: Boolean = false) extends SepRegion
   case object RegionBracket extends SepRegion
   case class RegionBrace(override val indent: Int, override val indentOnArrow: Boolean)
       extends SepRegion
@@ -334,7 +334,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       observeIndented0 { (i, prev) =>
         val undoRegionChange =
           prev.headOption match {
-            case Some(RegionParen) if token.is[LeftParen] => prev.tail
+            case Some(RegionParen(_)) if token.is[LeftParen] => prev.tail
             case Some(RegionEnumArtificialMark) if token.is[KwEnum] => prev.tail
             case Some(_: RegionBrace) if token.is[LeftBrace] => prev.tail
             case _ => prev
@@ -426,18 +426,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
       def currRef: TokenRef = TokenRef(curr, currPos, currPos + 1, currPos)
 
-      def indentationWithinParenRegion: Boolean = sepRegions.headOption.exists(_ != RegionParen) &&
-        sepRegions
-          .collectFirst {
-            case RegionParen => true
-            case other if !other.isIndented => false
-          }
-          .getOrElse(false)
+      def indentationWithinParenRegion: Boolean =
+        sepRegions.headOption.exists(!_.isInstanceOf[RegionParen]) &&
+          sepRegions
+            .collectFirst {
+              case RegionParen(_) => true
+              case other if !other.isIndented => false
+            }
+            .getOrElse(false)
 
       if (isTrailingComma) {
         nextToken(currPos, currPos + 1, sepRegions)
       } else if (curr.isNot[Trivia]) {
-        if (curr.is[LeftParen]) (RegionParen :: sepRegions, currRef)
+        if (curr.is[LeftParen]) (RegionParen(false) :: sepRegions, currRef)
         else if (curr.is[LeftBracket]) (RegionBracket :: sepRegions, currRef)
         else if (curr.is[Comma] && indentationWithinParenRegion) {
           (sepRegions.tail, mkOutdent(prevPos))
@@ -519,7 +520,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         } else if (curr.is[RightParen]) {
           sepRegions match {
             case x :: xs if x.isIndented => (xs, mkOutdent(prevPos))
-            case x :: xs if x == RegionParen => (xs, currRef)
+            case RegionParen(_) :: xs => (xs, currRef)
             case _ => (sepRegions, currRef)
           }
         } else if (curr.is[LeftArrow]) {
@@ -543,7 +544,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                 newRegions
             } else sepRegions
           (nextRegions, currRef)
-        } else (sepRegions, currRef)
+        } else if (dialect.allowSignificantIndentation && curr.is[KwFor]) {
+          val updatedSepRegions = sepRegions match {
+            case RegionParen(_) :: tail => RegionParen(true) :: tail
+            case _ => sepRegions
+          }
+          (updatedSepRegions, currRef)
+        } else {
+          (sepRegions, currRef)
+        }
       } else {
         var i = prevPos + 1
         var lastNewlinePos = -1
@@ -572,13 +581,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         def canProduceLF: Boolean = {
           lastNewlinePos != -1 &&
           prev != null && (prev.is[CanEndStat] || token.is[Indentation.Outdent]) &&
-          next != null && next.isNot[CantStartStat] &&
-          (sepRegions.isEmpty ||
-            sepRegions.head.isInstanceOf[RegionBrace] ||
-            sepRegions.head.isInstanceOf[RegionCase] ||
-            sepRegions.head.isInstanceOf[RegionEnum] ||
-            sepRegions.head.isInstanceOf[RegionIndent] ||
-            sepRegions.head.isInstanceOf[RegionIndentEnum])
+          next != null && next.isNot[CantStartStat] && sepRegions.headOption.forall {
+            case _: RegionBrace | _: RegionCase | _: RegionEnum => true
+            case _: RegionIndent | _: RegionIndentEnum => true
+            case x: RegionParen => x.canProduceLF
+            case _ => false
+          }
         }
 
         if (dialect.allowSignificantIndentation) {
