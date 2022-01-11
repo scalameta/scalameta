@@ -545,10 +545,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             } else sepRegions
           (nextRegions, currRef)
         } else if (dialect.allowSignificantIndentation && curr.is[KwFor]) {
-          val updatedSepRegions =
-            if (sepRegions.nonEmpty && sepRegions.head.isInstanceOf[RegionParen])
-              RegionParen(true) :: sepRegions.tail
-            else sepRegions
+          val updatedSepRegions = sepRegions match {
+            case RegionParen(_) :: tail => RegionParen(true) :: tail
+            case _ => sepRegions
+          }
           (updatedSepRegions, currRef)
         } else {
           (sepRegions, currRef)
@@ -581,17 +581,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         def canProduceLF: Boolean = {
           lastNewlinePos != -1 &&
           prev != null && (prev.is[CanEndStat] || token.is[Indentation.Outdent]) &&
-          next != null && next.isNot[CantStartStat] &&
-          (sepRegions.isEmpty ||
-            sepRegions.head.isInstanceOf[RegionBrace] ||
-            sepRegions.head.isInstanceOf[RegionCase] ||
-            sepRegions.head.isInstanceOf[RegionEnum] ||
-            sepRegions.head.isInstanceOf[RegionIndent] ||
-            sepRegions.head.isInstanceOf[RegionIndentEnum] ||
-            (
-              sepRegions.head.isInstanceOf[RegionParen] &&
-                sepRegions.head.asInstanceOf[RegionParen].canProduceLF
-            ))
+          next != null && next.isNot[CantStartStat] && sepRegions.headOption.forall {
+            case _: RegionBrace | _: RegionCase | _: RegionEnum => true
+            case _: RegionIndent | _: RegionIndentEnum => true
+            case x: RegionParen => x.canProduceLF
+            case _ => false
+          }
         }
 
         if (dialect.allowSignificantIndentation) {
