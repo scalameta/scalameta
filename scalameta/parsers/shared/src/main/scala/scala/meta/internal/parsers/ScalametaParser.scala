@@ -891,11 +891,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def skipBy(range: Range, f: Token => Boolean): Int =
       range.dropWhile(i => f(scannerTokens(i))).headOption.getOrElse(range.start)
     @inline def skipTrivia(range: Range): Int = skipBy(range, _.is[Trivia])
+    @inline def skipWhitespace(range: Range): Int = skipBy(range, _.is[Whitespace])
 
     val rangeFromStart = startTokenPos to endTokenPos
     val (start, end) =
       if (rangeFromStart.isEmpty) (startTokenPos, endTokenPos)
-      else (skipTrivia(rangeFromStart), skipTrivia(rangeFromStart.reverse))
+      else (skipTrivia(rangeFromStart), skipWhitespace(rangeFromStart.reverse))
 
     val endExcl = if (start == end && scannerTokens(start).is[Trivia]) end else end + 1
     val pos = TokenStreamPosition(start, endExcl)
