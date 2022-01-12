@@ -875,38 +875,30 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
   def atPos[T <: Tree](start: Pos, end: Pos)(body: => T): T = {
     val startTokenPos = start.startTokenPos
-    val result = body
-    var endTokenPos = end.endTokenPos
-    if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
-    val pos = trimmedPos(startTokenPos, endTokenPos)
-    result.withOrigin(Origin.Parsed(input, dialect, pos)).asInstanceOf[T]
+    atPosWithBody(startTokenPos, body, end)
   }
 
-  def trimmedPos(startTokenPos: Int, endTokenPos: Int): TokenStreamPosition = {
-    def skipTrivia(range: Range): Int = {
-      range
-        .dropWhile(i => scannerTokens(i).is[Trivia])
-        .headOption
-        .getOrElse(range.start)
-    }
+  def atPosWithBody[T <: Tree](startTokenPos: Int, body: T, endPos: Pos): T = {
+    var endTokenPos = endPos.endTokenPos
+    if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
+
+    def skipBy(range: Range, f: Token => Boolean): Int =
+      range.dropWhile(i => f(scannerTokens(i))).headOption.getOrElse(range.start)
+    @inline def skipTrivia(range: Range): Int = skipBy(range, _.is[Trivia])
+
     val rangeFromStart = startTokenPos to endTokenPos
     val (start, end) =
       if (rangeFromStart.isEmpty) (startTokenPos, endTokenPos)
       else (skipTrivia(rangeFromStart), skipTrivia(rangeFromStart.reverse))
 
-    if (start == end && scannerTokens(start).is[Trivia])
-      TokenStreamPosition(start, end)
-    else
-      TokenStreamPosition(start, end + 1)
+    val endExcl = if (start == end && scannerTokens(start).is[Trivia]) end else end + 1
+    val pos = TokenStreamPosition(start, endExcl)
+    body.withOrigin(Origin.Parsed(input, dialect, pos))
   }
 
   def atPosTry[T <: Tree](start: Pos, end: Pos)(body: => Try[T]): Try[T] = {
     val startTokenPos = start.startTokenPos
-    val result = body
-    var endTokenPos = end.endTokenPos
-    if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
-    val pos = trimmedPos(startTokenPos, endTokenPos)
-    result.map(_.withOrigin(Origin.Parsed(input, dialect, pos)).asInstanceOf[T])
+    body.map(atPosWithBody(startTokenPos, _, end))
   }
 
   def autoPos[T <: Tree](body: => T): T = atPos(start = auto, end = auto)(body)
