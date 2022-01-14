@@ -816,7 +816,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def dropTrivialBlock(term: Term): Term =
     term match {
-      case Term.Block((stat: Term) :: Nil) => stat
+      case b: Term.Block => dropOuterBlock(b)
+      case _ => term
+    }
+
+  private def dropOuterBlock(term: Term.Block): Term =
+    term.stats match {
+      case (stat: Term) :: Nil => stat
       case _ => term
     }
 
@@ -3206,7 +3212,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         if (token.is[Indentation.Indent])
           indented(blockWithStats)
         else blockWithStats
-      dropTrivialBlock(possibleBlock)
+      dropOuterBlock(possibleBlock)
     }
   }
 
