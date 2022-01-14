@@ -508,6 +508,26 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   )
 
   checkPositions[Stat](
+    """|foo(
+       |  s =>
+       |    fx
+       |    gx(s)
+       |    /* c1 */,
+       |  "yo"
+       |)
+       |""".stripMargin,
+    """|Term.Function s =>
+       |    fx
+       |    gx(s)
+       |Term.Param s
+       |Term.Block fx
+       |    gx(s)
+       |Term.Apply gx(s)
+       |Lit.String "yo"
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
     """|inline def encodeFlat =
        |    putInt
        |    inline erasedValue match
@@ -607,6 +627,38 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
 
+  checkPositions[Stat](
+    """|object x:
+       |  val a =
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |    // c2
+       |""".stripMargin,
+    """|Template :
+       |  val a =
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Self   @@val a =
+       |Defn.Val val a =
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |""".stripMargin
+  )
+
   // do not add LF to end of input
   // this test checks `..$comment$EOF` case
   checkPositions[Stat](
@@ -627,6 +679,105 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |      gx
        |Self   @@val a = 
        |Defn.Val val a = 
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |""".stripMargin
+  )
+
+  // do not add LF to end of input
+  // this test checks `..$comment$EOF` case
+  checkPositions[Stat](
+    """|object y:
+       |  val a =
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |    // c2""".stripMargin,
+    """|Template :
+       |  val a =
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Self   @@val a =
+       |Defn.Val val a =
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|object y {
+       |  val a =
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |    // c2
+       |}""".stripMargin,
+    """|Template {
+       |  val a =
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |    // c2
+       |}
+       |Self   @@val a =
+       |Defn.Val val a =
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|object y {
+       |  val a =
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |    /* c2 */}""".stripMargin,
+    """|Template {
+       |  val a =
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |    /* c2 */}
+       |Self   @@val a =
+       |Defn.Val val a =
        |    if cond then
        |      fx
        |      // c1
