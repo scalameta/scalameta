@@ -276,6 +276,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       pointPos: Int
   )
 
+  private def mkIndentToken(token: Token): Token =
+    new Indentation.Indent(token.input, token.dialect, token.start, token.end)
+
+  private def mkOutdentToken(token: Token): Token =
+    new Indentation.Outdent(token.input, token.dialect, token.start, token.end)
+
   class LazyTokenIterator(
       scannerTokens: Tokens,
       var sepRegions: List[SepRegion],
@@ -300,12 +306,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val (expected, pointPos) = countIndentAndNewlineIndex(tokenPos)
         if (expected > existingIndent) {
           sepRegions = f(expected, sepRegions)
-          curr = TokenRef(
-            new Indentation.Indent(token.input, token.dialect, token.start, token.end),
-            curr.pos,
-            curr.pos,
-            pointPos
-          )
+          val indent = mkIndentToken(token)
+          curr = TokenRef(indent, curr.pos, curr.pos, pointPos)
           true
         } else false
       }
@@ -375,12 +377,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         sepRegions match {
           case region :: tail if region.isIndented && canEndIndentation(curr.token) =>
             sepRegions = tail
-            curr = TokenRef(
-              new Indentation.Outdent(token.input, token.dialect, token.start, token.end),
-              curr.pos,
-              curr.pos,
-              prevPos
-            )
+            val outdent = mkOutdentToken(curr.token)
+            curr = TokenRef(outdent, curr.pos, curr.pos, prevPos)
             true
           case _ => false
         }
@@ -410,20 +408,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           next.pos.startLine > curr.pos.endLine
 
       def mkIndent(pointPos: Int): TokenRef =
-        TokenRef(
-          new Indentation.Indent(curr.input, curr.dialect, curr.start, curr.end),
-          prevPos,
-          currPos,
-          pointPos
-        )
+        TokenRef(mkIndentToken(curr), prevPos, currPos, pointPos)
 
       def mkOutdent(pointPos: Int): TokenRef =
-        TokenRef(
-          new Indentation.Outdent(curr.input, curr.dialect, curr.start, curr.end),
-          prevPos,
-          currPos,
-          pointPos
-        )
+        TokenRef(mkOutdentToken(curr), prevPos, currPos, pointPos)
 
       def currRef: TokenRef = TokenRef(curr, currPos, currPos + 1, currPos)
 
