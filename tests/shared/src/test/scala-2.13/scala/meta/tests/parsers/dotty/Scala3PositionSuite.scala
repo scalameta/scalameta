@@ -629,9 +629,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |      // c2
-       |Term.Name fx
+       |Term.Block fx
        |      // c1
-       |Term.Name gx
+       |Term.Block gx
        |      // c2
        |""".stripMargin
   )
@@ -662,13 +662,18 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    // c2
-       |Term.If if cond then
+       |Term.Block if cond then
        |      fx
        |      // c1
        |    else
        |      gx
        |    // c2
-       |Term.Name fx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.Block fx
        |      // c1
        |""".stripMargin
   )
@@ -706,9 +711,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |      // c2
-       |Term.Name fx
+       |Term.Block fx
        |      // c1
-       |Term.Name gx
+       |Term.Block gx
        |      // c2
        |""".stripMargin
   )
@@ -740,13 +745,18 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    // c2
-       |Term.If if cond then
+       |Term.Block if cond then
        |      fx
        |      // c1
        |    else
        |      gx
        |    // c2
-       |Term.Name fx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.Block fx
        |      // c1
        |""".stripMargin
   )
@@ -778,13 +788,18 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    // c2
-       |Term.If if cond then
+       |Term.Block if cond then
        |      fx
        |      // c1
        |    else
        |      gx
        |    // c2
-       |Term.Name fx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.Block fx
        |      // c1
        |""".stripMargin
   )
@@ -814,13 +829,18 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    /* c2 */
-       |Term.If if cond then
+       |Term.Block if cond then
        |      fx
        |      // c1
        |    else
        |      gx
        |    /* c2 */
-       |Term.Name fx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.Block fx
        |      // c1
        |""".stripMargin
   )

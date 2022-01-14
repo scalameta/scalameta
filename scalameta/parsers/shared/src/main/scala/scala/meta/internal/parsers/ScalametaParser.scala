@@ -862,9 +862,30 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _ => term
     }
 
-  private def dropOuterBlock(term: Term.Block): Term =
+  private def dropOuterBlock(term: Term.Block): Term = {
+    def commentPosOpt(pos: Int) = scannerTokens(pos) match {
+      case _: Comment => Some(pos)
+      case _: LF | _: FF if scannerTokens(pos - 1).is[Comment] => Some(pos - 1)
+      case _ => None
+    }
     term.stats match {
-      case (stat: Term) :: Nil => stat
+      case (b: Term.Block) :: Nil => keepInnerBlock(b)
+      // if block ends in a comment and single term doesn't contain it, keep block
+      case (s: Term) :: Nil if commentPosOpt(in.prevTokenPos).forall { commentPos =>
+            s.origin match {
+              case Origin.Parsed(_, _, pos) => pos.end > commentPos
+              case _ => false
+            }
+          } =>
+        s
+      case _ => term
+    }
+  }
+
+  @tailrec
+  private def keepInnerBlock(term: Term.Block): Term =
+    term.stats match {
+      case (b: Term.Block) :: Nil => keepInnerBlock(b)
       case _ => term
     }
 
