@@ -636,13 +636,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
         } else {
           if (canProduceLF) {
-            if (isLeadingInfixOperator(next)) {
-              nextToken(prevPos, nextPos, sepRegions)
-            } else {
-              var token = scannerTokens(lastNewlinePos)
-              if (newlines) token = LFLF(token.input, token.dialect, token.start, token.end)
-              (sepRegions, TokenRef(token, lastNewlinePos, lastNewlinePos + 1, lastNewlinePos))
-            }
+            (sepRegions, lastWhitespaceToken)
           } else {
             nextToken(prevPos, nextPos, sepRegions)
           }
