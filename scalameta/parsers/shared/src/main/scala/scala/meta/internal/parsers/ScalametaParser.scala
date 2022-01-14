@@ -791,10 +791,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @inline final def indented[T](body: => T): T = {
     accept[Indentation.Indent]
     val ret = body
-    acceptOpt[LF]
-    acceptOpt[LFLF]
+    newLinesOpt()
     if (token.is[Indentation.Outdent])
-      accept[Indentation.Outdent]
+      next()
     else {
       in.observeOutdented()
       accept[Indentation.Outdent]
