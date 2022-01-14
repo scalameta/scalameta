@@ -519,9 +519,11 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Term.Function s =>
        |    fx
        |    gx(s)
+       |    /* c1 */
        |Term.Param s
        |Term.Block fx
        |    gx(s)
+       |    /* c1 */
        |Term.Apply gx(s)
        |Lit.String "yo"
        |""".stripMargin
@@ -668,8 +670,6 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    // c2
        |Term.Name fx
        |      // c1
-       |Term.Name gx
-       |    // c2
        |""".stripMargin
   )
 
@@ -691,6 +691,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |      // c1
        |    else
        |      gx
+       |      // c2
        |Self   @@val a = 
        |Defn.Val val a = 
        |    if cond then
@@ -698,13 +699,17 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |      // c1
        |    else
        |      gx
+       |      // c2
        |Term.If if cond then
        |      fx
        |      // c1
        |    else
        |      gx
+       |      // c2
        |Term.Name fx
        |      // c1
+       |Term.Name gx
+       |      // c2
        |""".stripMargin
   )
 
@@ -726,6 +731,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |      // c1
        |    else
        |      gx
+       |    // c2
        |Self   @@val a =
        |Defn.Val val a =
        |    if cond then
@@ -733,11 +739,13 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |      // c1
        |    else
        |      gx
+       |    // c2
        |Term.If if cond then
        |      fx
        |      // c1
        |    else
        |      gx
+       |    // c2
        |Term.Name fx
        |      // c1
        |""".stripMargin
@@ -778,8 +786,6 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    // c2
        |Term.Name fx
        |      // c1
-       |Term.Name gx
-       |    // c2
        |""".stripMargin
   )
 
@@ -807,11 +813,13 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |      // c1
        |    else
        |      gx
+       |    /* c2 */
        |Term.If if cond then
        |      fx
        |      // c1
        |    else
        |      gx
+       |    /* c2 */
        |Term.Name fx
        |      // c1
        |""".stripMargin
@@ -843,7 +851,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  case (false, false) => (baz, qux) // c1""".stripMargin,
     """|Pat.Tuple (x, y)
        |Term.Match (foo, bar) match
-       |  case (false, false) => (baz, qux)
+       |  case (false, false) => (baz, qux) // c1
        |Term.Tuple (foo, bar)
        |Case case (false, false) => (baz, qux)
        |Pat.Tuple (false, false)
@@ -891,7 +899,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Pat.Tuple (x, y)
        |Term.Match (foo, bar) match
        |  case (true, false) => (baz, qux) // c1
-       |  case (false, true) => (baz, qux)
+       |  case (false, true) => (baz, qux) // c2
        |Term.Tuple (foo, bar)
        |Case case (true, false) => (baz, qux) // c1
        |Pat.Tuple (true, false)
