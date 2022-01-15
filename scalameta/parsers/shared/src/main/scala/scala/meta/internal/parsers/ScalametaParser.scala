@@ -461,50 +461,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         } else if (curr.is[KwEnum]) {
           (RegionEnumArtificialMark :: sepRegions, currRef)
         } else if (curr.is[CaseIntro]) {
-          val nextRegions =
-            if (!sepRegions.isEmpty && (sepRegions.head.isInstanceOf[RegionEnum] ||
-                sepRegions.head.isInstanceOf[RegionIndentEnum]))
-              sepRegions
-            else {
-              if (sepRegions.nonEmpty && sepRegions.head.isInstanceOf[RegionCase])
-                RegionArrow :: sepRegions.tail
-              else
-                RegionArrow :: sepRegions
-            }
+          val nextRegions = sepRegions.headOption match {
+            case Some(_: RegionEnum | _: RegionIndentEnum) => sepRegions
+            case Some(_: RegionCase) => RegionArrow :: sepRegions.tail
+            case _ => RegionArrow :: sepRegions
+          }
           (nextRegions, currRef)
         } else if (curr.is[RightBrace]) {
-          def isBraceOrEnum(r: SepRegion): Boolean = r match {
-            case _: RegionBrace | _: RegionEnum => true
-            case _ => false
-          }
-          if (dialect.allowSignificantIndentation) {
-            // produce outdent for every indented region before RegionBrace|RegionEnum
-            @tailrec
-            def nextRegions(in: List[SepRegion]): (List[SepRegion], TokenRef) = {
-              in match {
-                case x :: xs if x.isIndented && !isBraceOrEnum(x) =>
-                  (xs, mkOutdent(prevPos))
-                case x :: xs if isBraceOrEnum(x) =>
-                  (xs, currRef)
-                case _ :: xs =>
-                  nextRegions(xs)
-                case Nil =>
-                  (Nil, currRef)
-              }
+          // produce outdent for every indented region before RegionBrace|RegionEnum
+          @tailrec
+          def nextRegions(in: List[SepRegion]): (List[SepRegion], TokenRef) = {
+            in match {
+              case (_: RegionBrace | _: RegionEnum) :: xs =>
+                (xs, currRef)
+              case x :: xs if x.isIndented =>
+                (xs, mkOutdent(prevPos))
+              case _ :: xs =>
+                nextRegions(xs)
+              case Nil =>
+                (Nil, currRef)
             }
-            nextRegions(sepRegions)
-          } else {
-            // adjust sep regions and return RightBrace
-            @tailrec
-            def nextRegions(in: List[SepRegion]): List[SepRegion] = {
-              in match {
-                case x :: xs if isBraceOrEnum(x) => xs
-                case _ :: xs => nextRegions(xs)
-                case Nil => Nil
-              }
-            }
-            (nextRegions(sepRegions), currRef)
           }
+          nextRegions(sepRegions)
         } else if (curr.is[RightBracket]) {
           val nextRegions =
             if (sepRegions.headOption.contains(RegionBracket)) sepRegions.tail
