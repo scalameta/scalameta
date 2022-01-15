@@ -853,7 +853,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Term.Match (foo, bar) match
        |  case (false, false) => (baz, qux) // c1
        |Term.Tuple (foo, bar)
-       |Case case (false, false) => (baz, qux)
+       |Case case (false, false) => (baz, qux) // c1
        |Pat.Tuple (false, false)
        |Term.Tuple (baz, qux)
        |""".stripMargin
@@ -867,7 +867,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Term.Match (foo, bar) match
        |  case (false, false) => (baz, qux) // c1
        |Term.Tuple (foo, bar)
-       |Case case (false, false) => (baz, qux)
+       |Case case (false, false) => (baz, qux) // c1
        |Pat.Tuple (false, false)
        |Term.Tuple (baz, qux)
        |""".stripMargin
@@ -886,7 +886,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Case case (true, false) => (baz, qux) // c1
        |Pat.Tuple (true, false)
        |Term.Tuple (baz, qux)
-       |Case case (false, true) => (baz, qux)
+       |Case case (false, true) => (baz, qux) // c2
        |Pat.Tuple (false, true)
        |Term.Tuple (baz, qux)
        |""".stripMargin
@@ -904,7 +904,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Case case (true, false) => (baz, qux) // c1
        |Pat.Tuple (true, false)
        |Term.Tuple (baz, qux)
-       |Case case (false, true) => (baz, qux)
+       |Case case (false, true) => (baz, qux) // c2
        |Pat.Tuple (false, true)
        |Term.Tuple (baz, qux)
        |""".stripMargin
@@ -918,7 +918,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Case case (true, false) => (baz, qux) // c1
        |Pat.Tuple (true, false)
        |Term.Tuple (baz, qux)
-       |Case case (false, true) => (baz, qux)
+       |Case case (false, true) => (baz, qux) // c2
        |Pat.Tuple (false, true)
        |Term.Tuple (baz, qux)
        |""".stripMargin
@@ -932,7 +932,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Case case (true, false) => (baz, qux) // c1
        |Pat.Tuple (true, false)
        |Term.Tuple (baz, qux)
-       |Case case (false, true) => (baz, qux)
+       |Case case (false, true) => (baz, qux) // c2
        |Pat.Tuple (false, true)
        |Term.Tuple (baz, qux)
        |""".stripMargin
@@ -947,7 +947,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Case case (true, false) => (baz, qux) // c1
        |Pat.Tuple (true, false)
        |Term.Tuple (baz, qux)
-       |Case case (false, true) => (baz, qux)
+       |Case case (false, true) => (baz, qux) // c2
        |Pat.Tuple (false, true)
        |Term.Tuple (baz, qux)
        |""".stripMargin
