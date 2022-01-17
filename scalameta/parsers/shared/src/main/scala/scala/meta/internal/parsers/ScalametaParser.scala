@@ -45,6 +45,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def isInside() = nested > 0
   }
 
+  private object QuotedPatternContext {
+    var inPattern: Boolean = false
+  }
+
   def parseRule[T <: Tree](rule: this.type => T): T = {
     // NOTE: can't require in.tokenPos to be at -1, because TokIterator auto-rewinds when created
     // require(in.tokenPos == -1 && debug(in.tokenPos))
@@ -3029,7 +3033,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def macroSplice(): Term = autoPos {
     accept[MacroSplice]
     QuoteSpliceContext.enter()
-    val splice = Term.SplicedMacroExpr(autoPos(Term.Block(inBraces(blockStatSeq()))))
+    val splice =
+      if (QuotedPatternContext.inPattern)
+        Term.SplicedMacroPat(autoPos(inBraces(pattern())))
+      else
+        Term.SplicedMacroExpr(autoPos(Term.Block(inBraces(blockStatSeq()))))
+
     QuoteSpliceContext.exit()
     splice
   }
@@ -3567,7 +3576,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val patterns = inParens(if (token.is[RightParen]) Nil else noSeq.patterns())
           makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
         case MacroQuote() =>
-          Pat.Macro(macroQuote())
+          val oldInPattern = QuotedPatternContext.inPattern
+          QuotedPatternContext.inPattern = true
+          val res = Pat.Macro(macroQuote())
+          QuotedPatternContext.inPattern = oldInPattern
+          res
         case MacroQuotedIdent() =>
           Pat.Macro(macroQuotedIdent())
         case KwGiven() =>

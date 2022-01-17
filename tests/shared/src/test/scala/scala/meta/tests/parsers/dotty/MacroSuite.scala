@@ -110,6 +110,36 @@ class MacroSuite extends BaseDottySuite {
         List(Case(Pat.Macro(Term.QuotedMacroExpr(Term.Block(List(tname("a"))))), None, Lit.Int(1)))
       )
     )
+
+    val layoutMatchWithSplice = s"x match {\n  case '{ $${ bind @ '{ a } } } => 1\n}"
+    runTestAssert[Stat](
+      s"x match { case '{ $${bind@'{a}} } => 1 }",
+      assertLayout = Some(layoutMatchWithSplice)
+    )(
+      Term.Match(
+        tname("x"),
+        List(
+          Case(
+            Pat.Macro(
+              Term.QuotedMacroExpr(
+                Term.Block(
+                  List(
+                    Term.SplicedMacroPat(
+                      Pat.Bind(
+                        Pat.Var(tname("bind")),
+                        Pat.Macro(Term.QuotedMacroExpr(Term.Block(List(tname("a")))))
+                      )
+                    )
+                  )
+                )
+              )
+            ),
+            None,
+            Lit.Int(1)
+          )
+        )
+      )
+    )
   }
 
   test("macro-brackets") {
