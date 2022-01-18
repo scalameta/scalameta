@@ -399,7 +399,8 @@ object TreeSyntax {
                   case _ => false
                 }
               case _: Lit | _: Term.Ref | _: Term.Function | _: Term.If | _: Term.Match |
-                  _: Term.ApplyInfix | _: Term.QuotedMacroExpr | _: Term.SplicedMacroExpr =>
+                  _: Term.ApplyInfix | _: Term.QuotedMacroExpr | _: Term.SplicedMacroExpr |
+                  _: Term.SplicedMacroPat =>
                 false
               case _ =>
                 true
@@ -604,6 +605,8 @@ object TreeSyntax {
           case head :: Nil => s("${ ", head, " }")
           case other => s("${", r(other.map(i(_)), ""), n("}"))
         }
+      case Term.SplicedMacroPat(pat) =>
+        s("${ ", pat, " }")
       case t: Term.SplicedMacroExpr =>
         m(SimpleExpr, s("$", p(Expr, t.body)))
       case t: Pat.Macro => m(SimplePattern, s(t.body))

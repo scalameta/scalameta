@@ -117,6 +117,7 @@ object Term {
   @ast class QuotedMacroExpr(body: Term) extends Term
   @ast class QuotedMacroType(tpe: Type) extends Term
   @ast class SplicedMacroExpr(body: Term) extends Term
+  @ast class SplicedMacroPat(pat: Pat) extends Term
   @ast class Match(expr: Term, cases: List[Case] @nonEmpty) extends Term {
     @binaryCompatField(since = "4.4.5")
     private var _mods: List[Mod] = Nil

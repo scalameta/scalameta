@@ -38,12 +38,23 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
-  private object QuoteSpliceContext {
+  /** Utility for tracking a context, like whether we are inside a pattern or a quote. */
+  private trait NestedContextBase {
     private var nested = 0
-    def enter() = nested += 1
-    def exit() = nested -= 1
+    def within[T](body: => T): T = {
+      nested += 1
+      try {
+        body
+      } finally {
+        nested -= 1
+      }
+    }
     def isInside() = nested > 0
   }
+
+  private object QuoteSpliceContext extends NestedContextBase
+
+  private object QuotedPatternContext extends NestedContextBase
 
   def parseRule[T <: Tree](rule: this.type => T): T = {
     // NOTE: can't require in.tokenPos to be at -1, because TokIterator auto-rewinds when created
@@ -3028,24 +3039,26 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def macroSplice(): Term = autoPos {
     accept[MacroSplice]
-    QuoteSpliceContext.enter()
-    val splice = Term.SplicedMacroExpr(autoPos(Term.Block(inBraces(blockStatSeq()))))
-    QuoteSpliceContext.exit()
-    splice
+    QuoteSpliceContext.within {
+      if (QuotedPatternContext.isInside())
+        Term.SplicedMacroPat(autoPos(inBraces(pattern())))
+      else
+        Term.SplicedMacroExpr(autoPos(Term.Block(inBraces(blockStatSeq()))))
+
+    }
   }
 
   def macroQuote(): Term = autoPos {
     accept[MacroQuote]
-    QuoteSpliceContext.enter()
-    val quote = if (token.is[LeftBrace]) {
-      Term.QuotedMacroExpr(autoPos(Term.Block(inBraces(blockStatSeq()))))
-    } else if (token.is[LeftBracket]) {
-      Term.QuotedMacroType(inBrackets(typ()))
-    } else {
-      syntaxError("Quotation only works for expressions and types", at = token)
+    QuoteSpliceContext.within {
+      if (token.is[LeftBrace]) {
+        Term.QuotedMacroExpr(autoPos(Term.Block(inBraces(blockStatSeq()))))
+      } else if (token.is[LeftBracket]) {
+        Term.QuotedMacroType(inBrackets(typ()))
+      } else {
+        syntaxError("Quotation only works for expressions and types", at = token)
+      }
     }
-    QuoteSpliceContext.exit()
-    quote
   }
 
   def macroQuotedIdent(): Term = autoPos {
@@ -3567,7 +3580,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val patterns = inParens(if (token.is[RightParen]) Nil else noSeq.patterns())
           makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
         case MacroQuote() =>
-          Pat.Macro(macroQuote())
+          QuotedPatternContext.within {
+            Pat.Macro(macroQuote())
+          }
         case MacroQuotedIdent() =>
           Pat.Macro(macroQuotedIdent())
         case KwGiven() =>
