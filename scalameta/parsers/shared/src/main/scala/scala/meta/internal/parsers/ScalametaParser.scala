@@ -603,7 +603,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           }
         }
 
-        if (dialect.allowSignificantIndentation) {
+        def getIfCanProduceLF =
+          if (canProduceLF) Some((sepRegions, lastWhitespaceToken))
+          else None
+
+        val resOpt = if (dialect.allowSignificantIndentation) {
           val hasLF = lastNewlinePos != -1 || hasMultilineComment
           if (hasLF && next != null && !isLeadingInfixOperator(next)) {
 
@@ -622,16 +626,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
              *    foo()
              *    ```
              */
-            def getOutdentIfNeeded(): SepRegion = sepRegions.headOption match {
-              case Some(r) if r.isIndented && {
-                    // need to check prev.prev in case of `end match`
-                    if (nextIndent < r.indent)
-                      prev.isNot[CanContinueOnNextLine] || prev.prev.is[soft.KwEnd]
-                    else r.closeOnNonCase && next.isNot[KwCase] && nextIndent == r.indent
-                  } =>
-                r
-              case _ => null
-            }
+            def getOutdentIfNeeded() = sepRegions.headOption
+              .filter { r =>
+                r.isIndented && {
+                  // need to check prev.prev in case of `end match`
+                  if (nextIndent < r.indent)
+                    prev.isNot[CanContinueOnNextLine] || prev.prev.is[soft.KwEnd]
+                  else r.closeOnNonCase && next.isNot[KwCase] && nextIndent == r.indent
+                }
+              }
+              .map { region => (sepRegions.tail, mkOutdentTo(region, nextPos)) }
 
             /**
              * Indent is needed in the following cases:
@@ -648,8 +652,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
              *  Indentation after `:` isn't hadled here.
              *  It's produced manually on the parser level.
              */
-            def needIndent: Boolean = {
-              if (nextIndent >= 0) {
+            def getIndentIfNeeded = {
+              val ok = nextIndent >= 0 && {
 
                 val (currIndent, indentOnArrow) =
                   sepRegions.headOption.fold((0, true))(r => (r.indent, r.indentOnArrow))
@@ -667,26 +671,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                   // check the previous token to avoid infinity loop
                   (!prev.prev.is[soft.KwEnd] && (prev.is[KwMatch] || prev.is[KwCatch])) &&
                   next.is[KwCase] && token.isNot[Indentation.Indent]
-              } else false
+              }
+              if (ok) Some {
+                val region = RegionIndent(nextIndent, prev.is[KwMatch])
+                (region :: sepRegions, mkIndent(lastNewlinePos))
+              }
+              else None
             }
 
-            val needOutdent = getOutdentIfNeeded()
-            if (needOutdent ne null)
-              (sepRegions.tail, mkOutdentTo(needOutdent, nextPos))
-            else if (needIndent)
-              (RegionIndent(nextIndent, prev.is[KwMatch]) :: sepRegions, mkIndent(lastNewlinePos))
-            else if (canProduceLF) {
-              (sepRegions, lastWhitespaceToken)
-            } else
-              nextToken(prevPos, nextPos, sepRegions)
-          } else nextToken(prevPos, nextPos, sepRegions)
-
+            getOutdentIfNeeded()
+              .orElse { getIndentIfNeeded }
+              .orElse { getIfCanProduceLF }
+          } else None
         } else {
-          if (canProduceLF) {
-            (sepRegions, lastWhitespaceToken)
-          } else {
-            nextToken(prevPos, nextPos, sepRegions)
-          }
+          getIfCanProduceLF
+        }
+        resOpt match {
+          case Some(res) => res
+          case _ => nextToken(prevPos, nextPos, sepRegions)
         }
       }
     }
