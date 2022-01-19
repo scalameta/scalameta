@@ -841,10 +841,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   // NOTE: `startTokenPos` and `endTokenPos` are BOTH INCLUSIVE.
   // This is at odds with the rest of scala.meta, where ends are non-inclusive.
-  sealed trait Pos {
+  sealed trait StartPos {
     def startTokenPos: Int
+  }
+  sealed trait EndPos {
     def endTokenPos: Int
   }
+  sealed trait Pos extends StartPos with EndPos
   case class IndexPos(index: Int) extends Pos {
     def startTokenPos = index
     def endTokenPos = startTokenPos
@@ -877,12 +880,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def atPos[T <: Tree](token: Token)(body: => T): T = {
     atPos(token.startTokenPos, token.endTokenPos)(body)
   }
-  def atPos[T <: Tree](start: Pos, end: Pos)(body: => T): T = {
+  def atPos[T <: Tree](start: StartPos, end: EndPos)(body: => T): T = {
     val startTokenPos = start.startTokenPos
     atPosWithBody(startTokenPos, body, end)
   }
 
-  def atPosWithBody[T <: Tree](startTokenPos: Int, body: T, endPos: Pos): T = {
+  def atPosWithBody[T <: Tree](startTokenPos: Int, body: T, endPos: EndPos): T = {
     var endTokenPos = endPos.endTokenPos
     if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
 
@@ -900,7 +903,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     body.withOrigin(Origin.Parsed(input, dialect, pos))
   }
 
-  def atPosTry[T <: Tree](start: Pos, end: Pos)(body: => Try[T]): Try[T] = {
+  def atPosTry[T <: Tree](start: StartPos, end: EndPos)(body: => Try[T]): Try[T] = {
     val startTokenPos = start.startTokenPos
     body.map(atPosWithBody(startTokenPos, _, end))
   }
@@ -2721,9 +2724,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // 2) We need to carry lhsStart/lhsEnd separately from lhs.pos
     //    because their extent may be bigger than lhs because of parentheses or whatnot.
     case class UnfinishedInfix(
-        lhsStart: Pos,
+        lhsStart: StartPos,
         lhs: Lhs,
-        lhsEnd: Pos,
+        lhsEnd: EndPos,
         op: Term.Name,
         targs: List[Type]
     ) {
@@ -2744,7 +2747,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // Other methods working on the stack are self-explanatory.
     var stack: List[UnfinishedInfix] = Nil
     def head = stack.head
-    def push(lhsStart: Pos, lhs: Lhs, lhsEnd: Pos, op: Term.Name, targs: List[Type]): Unit =
+    def push(lhsStart: StartPos, lhs: Lhs, lhsEnd: EndPos, op: Term.Name, targs: List[Type]): Unit =
       stack ::= UnfinishedInfix(lhsStart, lhs, lhsEnd, op, targs)
     def pop(): UnfinishedInfix =
       try head
@@ -2753,7 +2756,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def reduceStack(
         stack: List[UnfinishedInfix],
         curr: Rhs,
-        currEnd: Pos,
+        currEnd: EndPos,
         op: Option[Term.Name]
     ): Lhs = {
       val opPrecedence = op.fold(0)(_.precedence)
@@ -2790,7 +2793,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // then takes the right-hand side (which can have multiple args), e.g. ` (y, z)`,
     // and creates `x + (y, z)`.
     // We need to carry endPos explicitly because its extent may be bigger than rhs because of parent of whatnot.
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: Pos): FinishedInfix
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: EndPos): FinishedInfix
   }
 
   // Infix syntax in terms is borderline crazy.
@@ -2811,7 +2814,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def toRhs(fin: FinishedInfix): Rhs = List(fin)
     def toLhs(rhs: Rhs): Lhs = rhs
 
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: Pos): FinishedInfix = {
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: EndPos): FinishedInfix = {
       val UnfinishedInfix(lhsStart, lhses, lhsEnd, op, targs) = unf
       // `a + (b, c) * d` leads to creation of a tuple!
       val lhs = atPos(lhsStart, lhsEnd)(makeTupleTerm(lhses))
@@ -2849,7 +2852,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def toRhs(fin: FinishedInfix): Rhs = fin
     def toLhs(rhs: Rhs): Lhs = rhs
 
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: Pos): FinishedInfix = {
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: EndPos): FinishedInfix = {
       val UnfinishedInfix(lhsStart, lhs, _, op, _) = unf
       val args = rhs match {
         case Pat.Tuple(args) => args.toList; case Lit.Unit() => Nil; case _ => List(rhs)
@@ -2873,7 +2876,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // rhsStartK/rhsEndK may be bigger than then extent of rhsK,
     // so we really have to track them separately.
     @tailrec
-    def loop(rhsStartK: Pos, rhsK: ctx.Rhs, rhsEndK: Pos): ctx.Rhs = {
+    def loop(rhsStartK: StartPos, rhsK: ctx.Rhs, rhsEndK: EndPos): ctx.Rhs = {
       if (!token.is[Ident] && !token.is[Unquote] &&
         !(token.is[KwMatch] && dialect.allowMatchAsOperator)) {
         // Infix chain has ended.
@@ -2910,9 +2913,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val lhsStartK = Math.min(rhsStartK.startTokenPos, lhsK.head.startTokenPos)
           ctx.push(lhsStartK, lhsK, rhsEndK, op, targs) // afterwards, ctx.stack = List([a +])
           val preRhsKplus1 = in.token
-          var rhsStartKplus1: Pos = IndexPos(in.tokenPos)
+          var rhsStartKplus1: StartPos = IndexPos(in.tokenPos)
           val rhsKplus1 = argumentExprsOrPrefixExpr()
-          var rhsEndKplus1: Pos = IndexPos(in.prevTokenPos)
+          var rhsEndKplus1: EndPos = IndexPos(in.prevTokenPos)
           if (preRhsKplus1.isNot[LeftBrace] && preRhsKplus1.isNot[LeftParen]) {
             rhsStartKplus1 = TreePos(rhsKplus1.head)
             rhsEndKplus1 = TreePos(rhsKplus1.head)
