@@ -613,8 +613,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
              *  It's produced manually on the parser level.
              */
             def needIndent: Boolean = {
-              val nextIndent = countIndent(nextPos)
-              if (nextIndent > 0) {
+              if (nextIndent >= 0) {
 
                 val (currIndent, indentOnArrow) =
                   sepRegions.headOption.fold((0, true))(r => (r.indent, r.indentOnArrow))

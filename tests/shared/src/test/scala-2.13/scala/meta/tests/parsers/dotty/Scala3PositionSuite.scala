@@ -661,4 +661,111 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
 
+  checkPositions[Stat](
+    """|val (x, y) = (foo, bar) match
+       |  case (false, false) => (baz, qux) // c1""".stripMargin,
+    """|Pat.Tuple (x, y)
+       |Term.Match (foo, bar) match
+       |  case (false, false) => (baz, qux)
+       |Term.Tuple (foo, bar)
+       |Case case (false, false) => (baz, qux)
+       |Pat.Tuple (false, false)
+       |Term.Tuple (baz, qux)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|val (x, y) = (foo, bar) match
+       |  case (false, false) => (baz, qux) // c1
+       |""".stripMargin,
+    """|Pat.Tuple (x, y)
+       |Term.Match (foo, bar) match
+       |  case (false, false) => (baz, qux)
+       |Term.Tuple (foo, bar)
+       |Case case (false, false) => (baz, qux)
+       |Pat.Tuple (false, false)
+       |Term.Tuple (baz, qux)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|val (x, y) = (foo, bar) match
+       |  case (true, false) => (baz, qux) // c1
+       |  case (false, true) => (baz, qux) // c2
+       |""".stripMargin,
+    """|Pat.Tuple (x, y)
+       |Term.Match (foo, bar) match
+       |  case (true, false) => (baz, qux) // c1
+       |  case (false, true) => (baz, qux)
+       |Term.Tuple (foo, bar)
+       |Case case (true, false) => (baz, qux)
+       |Pat.Tuple (true, false)
+       |Term.Tuple (baz, qux)
+       |Case case (false, true) => (baz, qux)
+       |Pat.Tuple (false, true)
+       |Term.Tuple (baz, qux)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|val (x, y) = (foo, bar) match
+       |  case (true, false) => (baz, qux) // c1
+       |  case (false, true) => (baz, qux) // c2""".stripMargin,
+    """|Pat.Tuple (x, y)
+       |Term.Match (foo, bar) match
+       |  case (true, false) => (baz, qux) // c1
+       |  case (false, true) => (baz, qux)
+       |Term.Tuple (foo, bar)
+       |Case case (true, false) => (baz, qux)
+       |Pat.Tuple (true, false)
+       |Term.Tuple (baz, qux)
+       |Case case (false, true) => (baz, qux)
+       |Pat.Tuple (false, true)
+       |Term.Tuple (baz, qux)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|(foo, bar) match
+       |  case (true, false) => (baz, qux) // c1
+       |  case (false, true) => (baz, qux) // c2""".stripMargin,
+    """|Term.Tuple (foo, bar)
+       |Case case (true, false) => (baz, qux)
+       |Pat.Tuple (true, false)
+       |Term.Tuple (baz, qux)
+       |Case case (false, true) => (baz, qux)
+       |Pat.Tuple (false, true)
+       |Term.Tuple (baz, qux)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|(foo, bar) match
+       |case (true, false) => (baz, qux) // c1
+       |case (false, true) => (baz, qux) // c2""".stripMargin,
+    """|Term.Tuple (foo, bar)
+       |Case case (true, false) => (baz, qux)
+       |Pat.Tuple (true, false)
+       |Term.Tuple (baz, qux)
+       |Case case (false, true) => (baz, qux)
+       |Pat.Tuple (false, true)
+       |Term.Tuple (baz, qux)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|(foo, bar) match
+       |case (true, false) => (baz, qux) // c1
+       |case (false, true) => (baz, qux) // c2
+       |""".stripMargin,
+    """|Term.Tuple (foo, bar)
+       |Case case (true, false) => (baz, qux)
+       |Pat.Tuple (true, false)
+       |Term.Tuple (baz, qux)
+       |Case case (false, true) => (baz, qux)
+       |Pat.Tuple (false, true)
+       |Term.Tuple (baz, qux)
+       |""".stripMargin
+  )
+
 }
