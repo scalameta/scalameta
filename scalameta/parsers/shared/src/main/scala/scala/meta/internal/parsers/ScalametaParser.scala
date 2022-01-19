@@ -1059,11 +1059,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def isVarargStarParam(allowRepeated: Boolean) =
     dialect.allowPostfixStarVarargSplices && isStar && token.next.is[RightParen] && allowRepeated
   private implicit class XtensionTokenClass(token: Token) {
-    def isCaseClassOrObject =
-      token.is[KwCase] && (token.next.is[KwClass] || token.next.is[KwObject])
-
-    def isCaseClassOrObjectOrEnum =
-      isCaseClassOrObject || (token.is[KwCase] && token.next.is[Ident] && dialect.allowEnums)
+    def isClassOrObject = token.is[KwClass] || token.is[KwObject]
+    def isClassOrObjectOrEnum = isClassOrObject || (token.is[Ident] && dialect.allowEnums)
   }
 
   @classifier
@@ -1181,7 +1178,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @classifier
   trait CaseIntro {
     def unapply(token: Token): Boolean = {
-      token.is[KwCase] && !token.isCaseClassOrObject
+      token.is[KwCase] && !token.next.isClassOrObject
     }
   }
 
@@ -1192,7 +1189,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       token.is[TemplateIntro] || token.is[DclIntro] ||
       (token.is[Unquote] && token.next.is[DefIntro]) ||
       (token.is[Ellipsis] && token.next.is[DefIntro]) ||
-      (token.is[KwCase] && token.isCaseClassOrObjectOrEnum)
+      (token.is[KwCase] && token.next.isClassOrObjectOrEnum)
     }
   }
 
@@ -1202,7 +1199,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       token.is[Modifier] || token.is[At] ||
       token.is[KwClass] || token.is[KwObject] || token.is[KwTrait] ||
       (token.is[Unquote] && token.next.is[TemplateIntro]) ||
-      (token.is[KwCase] && token.isCaseClassOrObjectOrEnum)
+      (token.is[KwCase] && token.next.isClassOrObjectOrEnum)
     }
   }
 
@@ -1269,7 +1266,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   trait CaseDefEnd {
     def unapply(token: Token): Boolean = {
       token.is[RightBrace] || token.is[EOF] || token.is[Indentation.Outdent] ||
-      (token.is[KwCase] && !token.isCaseClassOrObject) || token.is[RightParen] ||
+      (token.is[KwCase] && !token.next.isClassOrObject) || token.is[RightParen] ||
       (token.is[Ellipsis] && token.next.is[KwCase])
     }
   }
@@ -3216,24 +3213,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def caseClause(forceSingleExpr: Boolean = false): Case = atPos(in.prevTokenPos, auto) {
     if (token.isNot[KwCase]) {
-      Case(
-        pattern(),
-        guard(), {
-          accept[RightArrow]
-          val start = in.tokenPos
-          def end = in.prevTokenPos
-          def parseStatSeq() = {
-            blockStatSeq() match {
-              case List(q: Quasi) => q.become[Term.Quasi]
-              case List(term: Term) => term
-              case other => atPos(start, end)(Term.Block(other))
-            }
-          }
-          if (token.is[Indentation.Indent]) indented(parseStatSeq())
-          else if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false)
-          else parseStatSeq()
+      def caseBody() = {
+        accept[RightArrow]
+        val start = auto.startTokenPos
+        def parseStatSeq() = blockStatSeq() match {
+          case List(q: Quasi) => q.become[Term.Quasi]
+          case List(term: Term) => term
+          case other => atPos(start, auto)(Term.Block(other))
         }
-      )
+        if (token.is[Indentation.Indent]) indented(parseStatSeq())
+        else if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false)
+        else parseStatSeq()
+      }
+      Case(pattern(), guard(), caseBody())
     } else {
       syntaxError("Unexpected `case`", at = token.pos)
     }
