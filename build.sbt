@@ -317,7 +317,7 @@ lazy val testkit = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     hasLargeIntegrationTests,
     libraryDependencies ++= Seq(
       "org.scalameta" %%% "munit" % munitVersion,
-      "com.lihaoyi" %%% "geny" % "0.6.11"
+      "com.lihaoyi" %%% "geny" % "0.7.0"
     ),
     testFrameworks := List(new TestFramework("munit.Framework")),
     description := "Testing utilities for scalameta APIs"
