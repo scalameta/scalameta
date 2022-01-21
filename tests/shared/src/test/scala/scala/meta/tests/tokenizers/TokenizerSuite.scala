@@ -759,6 +759,23 @@ class TokenizerSuite extends BaseTokenizerSuite {
     """.trim.stripMargin)
   }
 
+  test("interpolation-underscore") {
+    assertNoDiff(
+      tokenize("""s"checking redundancy in $_match"""").map(_.structure).mkString("\n"),
+      """|BOF [0..0)
+         |s [0..1)
+         |" [1..2)
+         |checking redundancy in  [2..25)
+         |$ [25..26)
+         |_match [26..32)
+         | [32..32)
+         | [32..32)
+         |" [32..33)
+         |EOF [33..33)
+         |""".stripMargin
+    )
+  }
+
   test("$this") {
     assert(tokenize("q\"$this\"").map(_.structure).mkString("\n") == """
       |BOF [0..0)

@@ -61,7 +61,7 @@ class CommunityDottySuite extends FunSuite {
     CommunityBuild(
       "https://github.com/lampepfl/dotty.git",
       //commit hash from 12.07.2021
-      "54b89b1cc07b712abb280d64d24b4c363c8bb488",
+      "c99f6caa74e74a67dd42e8df6ede53c29cd7fce9",
       "dotty",
       dottyExclusionList
     ),
@@ -164,8 +164,10 @@ class CommunityDottySuite extends FunSuite {
   final val ignoreParts = List(
     "/tests/",
     "/test-resources/scripting/",
+    "/test-resources/repl/",
     "/sbt-test/",
     "/out/",
-    "/language-server/src/dotty/"
+    "/language-server/src/dotty/",
+    "/library/src/scala/CanThrow.scala"
   )
 }

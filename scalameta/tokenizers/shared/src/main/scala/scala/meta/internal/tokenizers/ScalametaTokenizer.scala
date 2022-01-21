@@ -235,21 +235,21 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
               legacyIndex = loop(legacyIndex, returnWhenBraceBalanceHitsZero = true)
               emitSpliceEnd(curr.offset)
               emitContents()
-            } else if (input.chars(dollarOffset + 1) == '_') {
-              emitSpliceStart(dollarOffset)
-              nextToken()
-              emitExpectedToken(USCORE)
-              nextToken()
-              emitSpliceEnd(curr.offset)
-              emitContents()
             } else {
               emitSpliceStart(dollarOffset)
               nextToken()
-              require(curr.token == IDENTIFIER || curr.token == THIS)
-              emitToken()
-              nextToken()
-              emitSpliceEnd(curr.offset)
-              emitContents()
+              if (input.chars(dollarOffset + 1) == '_' && curr.token == USCORE) {
+                emitExpectedToken(USCORE)
+                nextToken()
+                emitSpliceEnd(curr.offset)
+                emitContents()
+              } else {
+                require(curr.token == IDENTIFIER || curr.token == THIS)
+                emitToken()
+                nextToken()
+                emitSpliceEnd(curr.offset)
+                emitContents()
+              }
             }
           } else {
             curr.endOffset -= numQuotes

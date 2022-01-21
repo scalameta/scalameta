@@ -690,6 +690,34 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       next.lastOffset = charOffset - 1
       next.offset = charOffset - 1
     }
+    def identifier() = {
+      do {
+        putChar(ch)
+        nextRawChar()
+      } while (ch != SU && Character.isUnicodeIdentifierPart(ch))
+      next.token = IDENTIFIER
+      next.name = cbuf.toString
+      cbuf.clear()
+      if (kw2legacytoken contains next.name) {
+        next.token = kw2legacytoken(next.name)
+
+        if (next.token == ENUM && !dialect.allowEnums)
+          next.token = IDENTIFIER
+        if (next.token == GIVEN && !dialect.allowGivenUsing)
+          next.token = IDENTIFIER
+        if (next.token == EXPORT && !dialect.allowExportClause)
+          next.token = IDENTIFIER
+        if (next.token == THEN && !dialect.allowSignificantIndentation)
+          next.token = IDENTIFIER
+        if (next.token == TYPELAMBDAARROW && !dialect.allowTypeLambdas)
+          next.token = IDENTIFIER
+        if (next.token == CTXARROW && !dialect.allowGivenUsing)
+          next.token = IDENTIFIER
+
+        if (next.token != IDENTIFIER && next.token != THIS)
+          syntaxError("invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected", at = offset)
+      }
+    }
     if (ch == '"') {
       if (multiLine) {
         nextRawChar()
@@ -729,36 +757,14 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           finishStringPart()
           endOffset = charOffset - 3
           nextRawChar()
-          next.token = USCORE
+          if (Character.isUnicodeIdentifierStart(ch)){
+            putChar('_')
+            identifier()
+          } else next.token = USCORE
         } else if (Character.isUnicodeIdentifierStart(ch)) {
           finishStringPart()
           endOffset = charOffset - 3
-          do {
-            putChar(ch)
-            nextRawChar()
-          } while (ch != SU && Character.isUnicodeIdentifierPart(ch))
-          next.token = IDENTIFIER
-          next.name = cbuf.toString
-          cbuf.clear()
-          if (kw2legacytoken contains next.name) {
-            next.token = kw2legacytoken(next.name)
-
-            if (next.token == ENUM && !dialect.allowEnums)
-              next.token = IDENTIFIER
-            if (next.token == GIVEN && !dialect.allowGivenUsing)
-              next.token = IDENTIFIER
-            if (next.token == EXPORT && !dialect.allowExportClause)
-              next.token = IDENTIFIER
-            if (next.token == THEN && !dialect.allowSignificantIndentation)
-              next.token = IDENTIFIER
-            if (next.token == TYPELAMBDAARROW && !dialect.allowTypeLambdas)
-              next.token = IDENTIFIER
-            if (next.token == CTXARROW && !dialect.allowGivenUsing)
-              next.token = IDENTIFIER
-
-            if (next.token != IDENTIFIER && next.token != THIS)
-              syntaxError("invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected", at = offset)
-          }
+          identifier()
         } else {
           var supportedCombos = List("`$$'", "`$'ident", "`$'this", "`$'BlockExpr")
           if (dialect.allowSpliceUnderscores) supportedCombos = supportedCombos :+ "`$'_"
