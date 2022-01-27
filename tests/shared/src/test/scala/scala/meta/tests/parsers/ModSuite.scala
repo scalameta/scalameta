@@ -479,4 +479,8 @@ class ModSuite extends ParseSuite {
     ) =
       templStat("protected[foo] private def foo = ???")
   }
+
+  test("Annotation after modifier") {
+    interceptParseErrors("implicit @foo def foo(a: Int): Int")
+  }
 }
