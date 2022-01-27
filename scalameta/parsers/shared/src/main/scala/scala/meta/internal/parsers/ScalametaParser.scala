@@ -5085,7 +5085,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private val consumeStat: PartialFunction[Token, Stat] = {
     case KwImport() => importStmt()
     case KwExport() => exportStmt()
-    case KwPackage() if !dialect.allowToplevelTerms => packageOrPackageObjectDef()
+    case KwPackage() =>
+      packageOrPackageObjectDef(if (dialect.allowToplevelTerms) consumeStat else topStat)
     case DefIntro() => nonLocalDefOrDcl(secondaryConstructorAllowed = true)
     case EndMarkerIntro() => endMarker()
     case ExprIntro() => stat(expr(location = NoStat, allowRepeated = true))
@@ -5154,14 +5155,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     stats.toList
   }
 
-  def topStatSeq(): List[Stat] = statSeq(topStat, errorMsg = "expected class or object definition")
   def topStat: PartialFunction[Token, Stat] = {
     case Ellipsis(_) =>
       ellipsis(1, astInfo[Stat])
     case Unquote() =>
       unquote[Stat]
     case KwPackage() =>
-      packageOrPackageObjectDef()
+      packageOrPackageObjectDef(topStat)
     case KwImport() =>
       importStmt()
     case KwExport() =>
@@ -5308,21 +5308,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     stats.toList
   }
 
-  def packageOrPackageObjectDef(): Stat = autoPos {
+  def packageOrPackageObjectDef(statpf: PartialFunction[Token, Stat]): Stat = autoPos {
     require(token.is[KwPackage] && debug(token))
     if (ahead(token.is[KwObject])) packageObjectDef()
-    else packageDef()
+    else packageDef(statpf)
   }
 
-  def packageDef(): Pkg = autoPos {
+  def packageDef(statpf: PartialFunction[Token, Stat]): Pkg = autoPos {
     accept[KwPackage]
     def packageBody = {
       if (isColonEol(token)) {
         accept[Colon]
         in.observeIndented()
-        indented(topStatSeq())
+        indented(statSeq(statpf))
       } else {
-        inBracesOrNil(topStatSeq())
+        inBracesOrNil(statSeq(statpf))
       }
     }
     Pkg(qualId(), packageBody)
@@ -5335,25 +5335,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def source(): Source = autoPos {
-    if (dialect.allowToplevelTerms) scriptSource()
-    else batchSource()
+    batchSource(if (dialect.allowToplevelTerms) consumeStat else topStat)
   }
 
   def quasiquoteSource(): Source = entrypointSource()
 
   def entrypointSource(): Source = source()
 
-  def scriptSource(): Source = autoPos {
-    // WONTFIX: https://github.com/scalameta/scalameta/issues/368
-    if (dialect.toplevelSeparator == "") {
-      Source(parser.statSeq(consumeStat))
-    } else {
-      require(dialect.toplevelSeparator == EOL)
-      Source(parser.statSeq(consumeStat))
-    }
-  }
-
-  def batchSource(): Source = autoPos {
+  def batchSource(statpf: PartialFunction[Token, Stat] = topStat): Source = autoPos {
     def inBracelessPackage(): Boolean = token.is[KwPackage] && !ahead(token.is[KwObject]) && ahead {
       qualId()
       if (token.is[LF]) { next() }
@@ -5369,24 +5358,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val startPos = in.tokenPos
         accept[KwPackage]
         val qid = qualId()
-        def inPackage(topStats: => List[Stat]) = {
-          val pkg = atPos(startPos, auto)(Pkg(qid, topStats))
+        def inPackage(stats: => List[Stat]) = {
+          val pkg = atPos(startPos, auto)(Pkg(qid, stats))
           acceptStatSepOpt()
           pkg +: bracelessPackageStats()
         }
         if (token.is[LeftBrace]) {
-          inPackage(inBraces(topStatSeq()))
+          inPackage(inBraces(statSeq(statpf)))
         } else if (isColonEol(token)) {
           next()
           in.observeIndented()
-          inPackage(indented(topStatSeq()))
+          inPackage(indented(statSeq(statpf)))
         } else {
           List(atPos(startPos, auto)(Pkg(qid, bracelessPackageStats())))
         }
       } else if (token.is[LeftBrace]) {
-        inBraces(topStatSeq())
+        inBraces(statSeq(statpf))
       } else {
-        topStatSeq()
+        statSeq(statpf)
       }
     }
     if (inBracelessPackage()) {
@@ -5394,7 +5383,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       accept[KwPackage]
       Source(List(atPos(startPos, auto)(Pkg(qualId(), bracelessPackageStats()))))
     } else {
-      Source(topStatSeq())
+      Source(statSeq(statpf))
     }
   }
 }
