@@ -4608,6 +4608,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val casePos = in.tokenPos
         next()
         objectDef(mods :+ atPos(casePos, casePos)(Mod.Case()))
+      case Token.At() =>
+        syntaxError("Annotations must precede keyword modifiers", at = token)
       case DefIntro() if dialect.allowToplevelStatements =>
         defOrDclOrSecondaryCtor(mods)
       case _ =>
