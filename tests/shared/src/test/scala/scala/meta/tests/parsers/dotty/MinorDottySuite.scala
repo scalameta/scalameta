@@ -1223,4 +1223,34 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("issue-2567") {
+    runTestAssert[Stat](
+      """|List(1,2,3).map { using i: Int => i }
+         |""".stripMargin,
+      assertLayout = Some(
+        """|List(1, 2, 3).map {
+           |  (using i: Int) => i
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Apply(
+        Term.Select(
+          Term.Apply(Term.Name("List"), List(Lit.Int(1), Lit.Int(2), Lit.Int(3))),
+          Term.Name("map")
+        ),
+        List(
+          Term.Block(
+            List(
+              Term.Function(
+                List(Term.Param(List(Mod.Using()), Term.Name("i"), Some(Type.Name("Int")), None)),
+                Term.Name("i")
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+
 }
