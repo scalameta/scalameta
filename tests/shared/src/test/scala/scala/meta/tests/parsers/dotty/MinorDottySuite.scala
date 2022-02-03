@@ -1224,28 +1224,75 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("issue-2567") {
-    runTestAssert[Stat](
-      """|List(1,2,3).map { using i: Int => i }
+    runTestAssert[Source](
+      """|import _root_com.olegych.scastie.api.runtime._
+         |
+         |object Playground extends ScastieApp {
+         |  List(1,2,3).map { (using i: Int) => i }
+         |}
          |""".stripMargin,
       assertLayout = Some(
-        """|List(1, 2, 3).map {
-           |  (using i: Int) => i
+        """|import _root_com.olegych.scastie.api.runtime.*
+           |object Playground extends ScastieApp {
+           |  List(1, 2, 3).map {
+           |    (using i: Int) => i
+           |  }
            |}
            |""".stripMargin
       )
     )(
-      Term.Apply(
-        Term.Select(
-          Term.Apply(Term.Name("List"), List(Lit.Int(1), Lit.Int(2), Lit.Int(3))),
-          Term.Name("map")
-        ),
+      Source(
         List(
-          Term.Block(
+          Import(
             List(
-              Term.Function(
-                List(Term.Param(List(Mod.Using()), Term.Name("i"), Some(Type.Name("Int")), None)),
-                Term.Name("i")
+              Importer(
+                Term.Select(
+                  Term.Select(
+                    Term.Select(
+                      Term.Select(Term.Name("_root_com"), Term.Name("olegych")),
+                      Term.Name("scastie")
+                    ),
+                    Term.Name("api")
+                  ),
+                  Term.Name("runtime")
+                ),
+                List(Importee.Wildcard())
               )
+            )
+          ),
+          Defn.Object(
+            Nil,
+            Term.Name("Playground"),
+            Template(
+              Nil,
+              List(Init(Type.Name("ScastieApp"), Name(""), Nil)),
+              Self(Name(""), None),
+              List(
+                Term.Apply(
+                  Term.Select(
+                    Term.Apply(Term.Name("List"), List(Lit.Int(1), Lit.Int(2), Lit.Int(3))),
+                    Term.Name("map")
+                  ),
+                  List(
+                    Term.Block(
+                      List(
+                        Term.Function(
+                          List(
+                            Term.Param(
+                              List(Mod.Using()),
+                              Term.Name("i"),
+                              Some(Type.Name("Int")),
+                              None
+                            )
+                          ),
+                          Term.Name("i")
+                        )
+                      )
+                    )
+                  )
+                )
+              ),
+              Nil
             )
           )
         )
