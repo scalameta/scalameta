@@ -4,6 +4,7 @@ import scala.annotation.tailrec
 import scala.meta.Dialect
 import scala.meta.classifiers._
 import scala.meta.inputs.Input
+import scala.meta.internal.classifiers.classifier
 import scala.meta.internal.tokenizers._
 import scala.meta.tokenizers._
 import scala.meta.tokens.Token
@@ -119,6 +120,259 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
       }
 
     }
+  }
+
+  object Classifiers {
+
+    val soft = new SoftKeywords(dialect)
+
+    @classifier
+    trait TypeIntro {
+      def unapply(token: Token): Boolean = {
+        token.is[Ident] || token.is[KwSuper] || token.is[KwThis] ||
+        token.is[LeftParen] || token.is[At] || token.is[Underscore] ||
+        token.is[Unquote] || (token.is[Literal] && dialect.allowLiteralTypes)
+      }
+    }
+
+    @classifier
+    trait EndMarkerWord {
+      def unapply(token: Token): Boolean = {
+        token.is[Ident] || token.is[KwIf] || token.is[KwWhile] || token.is[KwFor] ||
+        token.is[KwMatch] || token.is[KwTry] || token.is[KwNew] || token.is[KwThis] ||
+        token.is[KwGiven] || token.is[KwVal]
+      }
+    }
+
+    @classifier
+    trait StopScanToken {
+      def unapply(token: Token): Boolean = {
+        token.is[KwPackage] || token.is[KwExport] || token.is[KwImport] ||
+        token.is[KwIf] || token.is[KwElse] || token.is[KwWhile] || token.is[KwDo] ||
+        token.is[KwFor] || token.is[KwYield] || token.is[KwNew] || token.is[KwTry] ||
+        token.is[KwCatch] || token.is[KwFinally] || token.is[KwThrow] || token.is[KwReturn] ||
+        token.is[KwMatch] || token.is[EOF] || token.is[Semicolon] || token.is[Modifier] || token
+          .is[DefIntro]
+      }
+    }
+
+    @classifier
+    trait EndMarkerIntro {
+      def unapply(token: Token): Boolean = {
+        dialect.allowEndMarker &&
+        token.is[Ident] &&
+        token.text == "end" &&
+        token.strictNext.is[EndMarkerWord] &&
+        (token.next.strictNext.is[LineEnd] || token.next.strictNext.is[EOF])
+      }
+    }
+    // then  else  do  catch  finally  yield  match
+    @classifier
+    trait CanContinueOnNextLine {
+      def unapply(token: Token): Boolean = {
+        token.is[KwThen] || token.is[KwElse] || token.is[KwDo] ||
+        token.is[KwCatch] || token.is[KwFinally] || token.is[KwYield] ||
+        token.is[KwMatch]
+      }
+    }
+
+    @classifier
+    trait ExprIntro {
+      def unapply(token: Token): Boolean = {
+        (token.is[Ident] && !token.is[SoftModifier] && !token.is[EndMarkerIntro]) ||
+        token.is[Literal] || token.is[Interpolation.Id] || token.is[Xml.Start] ||
+        token.is[KwDo] || token.is[KwFor] || token.is[KwIf] ||
+        token.is[KwNew] || token.is[KwReturn] || token.is[KwSuper] ||
+        token.is[KwThis] || token.is[KwThrow] || token.is[KwTry] || token.is[KwWhile] ||
+        token.is[LeftParen] || token.is[LeftBrace] || token.is[Underscore] ||
+        token.is[Unquote] || token.is[MacroSplice] || token.is[MacroQuote] ||
+        token.is[Indentation.Indent] || (token.is[LeftBracket] && dialect.allowPolymorphicFunctions)
+      }
+    }
+
+    @classifier
+    trait SoftModifier {
+      def unapply(token: Token): Boolean = {
+        (
+          (token.is[soft.KwInline] || token.is[soft.KwOpaque] || token.is[soft.KwTransparent]) &&
+            (token.next.is[DclIntro] || token.next.is[Modifier])
+        ) || (token.is[soft.KwTransparent] && token.next.is[KwTrait]) ||
+        ((token.is[soft.KwOpen] || token.is[soft.KwInfix]) && token.next.is[DefIntro]) ||
+        token.is[InlineMatchMod]
+
+      }
+    }
+
+    @classifier
+    trait InlineMatchMod {
+      def unapply(token: Token): Boolean = {
+        token.is[soft.KwInline] && {
+          val nextToken = token.next
+          nextToken.is[LeftParen] || nextToken.is[LeftBrace] || nextToken.is[KwNew] ||
+          nextToken.is[Ident] || nextToken.is[Literal] || nextToken.is[Interpolation.Id] ||
+          nextToken.is[Xml.Start] || nextToken.is[KwSuper] || nextToken.is[KwThis] ||
+          nextToken.is[MacroSplice] || nextToken.is[MacroQuote]
+        }
+      }
+    }
+
+    @classifier
+    trait CaseIntro {
+      def unapply(token: Token): Boolean = {
+        token.is[KwCase] && !token.next.isClassOrObject
+      }
+    }
+
+    @classifier
+    trait DefIntro {
+      def unapply(token: Token): Boolean = {
+        token.is[Modifier] || token.is[At] ||
+        token.is[TemplateIntro] || token.is[DclIntro] ||
+        (token.is[Unquote] && token.next.is[DefIntro]) ||
+        (token.is[Ellipsis] && token.next.is[DefIntro]) ||
+        (token.is[KwCase] && token.next.isClassOrObjectOrEnum)
+      }
+    }
+
+    @classifier
+    trait TemplateIntro {
+      def unapply(token: Token): Boolean = {
+        token.is[Modifier] || token.is[At] ||
+        token.is[KwClass] || token.is[KwObject] || token.is[KwTrait] ||
+        (token.is[Unquote] && token.next.is[TemplateIntro]) ||
+        (token.is[KwCase] && token.next.isClassOrObjectOrEnum)
+      }
+    }
+
+    @classifier
+    trait DclIntro {
+      def unapply(token: Token): Boolean = {
+        token.is[KwDef] || token.is[KwType] || token.is[KwEnum] ||
+        token.is[KwVal] || token.is[KwVar] || token.is[KwGiven] ||
+        token.is[KwExtension] || (token.is[Unquote] && token.next.is[DclIntro])
+      }
+    }
+
+    @classifier
+    trait KwExtension {
+      def unapply(token: Token) = {
+        // Logic taken from the Scala 3 parser
+        token.is[soft.KwExtension] && (token.next.is[LeftParen] || token.next.is[LeftBracket])
+
+      }
+    }
+
+    @classifier
+    trait Modifier {
+      def unapply(token: Token): Boolean = {
+        token.is[KwAbstract] || token.is[KwFinal] ||
+        token.is[KwSealed] || token.is[KwImplicit] ||
+        token.is[KwLazy] || token.is[KwPrivate] ||
+        token.is[KwProtected] || token.is[KwOverride] ||
+        token.is[SoftModifier]
+      }
+    }
+
+    @classifier
+    trait NonParamsModifier {
+      def unapply(token: Token): Boolean = {
+        token.is[soft.KwOpen] || token.is[soft.KwOpaque] || token.is[soft.KwTransparent] || token
+          .is[soft.KwInfix]
+      }
+    }
+
+    @classifier
+    trait NonlocalModifier {
+      def unapply(token: Token): Boolean = {
+        token.is[KwPrivate] || token.is[KwProtected] ||
+        token.is[KwOverride] || token.is[soft.KwOpen]
+      }
+    }
+
+    @classifier
+    trait LocalModifier {
+      def unapply(token: Token): Boolean = {
+        token.is[Modifier] && !token.is[NonlocalModifier]
+      }
+    }
+
+    @classifier
+    trait StatSeqEnd {
+      def unapply(token: Token): Boolean = {
+        token.is[RightBrace] || token.is[EOF] || token.is[Indentation.Outdent]
+      }
+    }
+
+    @classifier
+    trait CaseDefEnd {
+      def unapply(token: Token): Boolean = {
+        token.is[RightBrace] || token.is[EOF] || token.is[Indentation.Outdent] ||
+        (token.is[KwCase] && !token.next.isClassOrObject) || token.is[RightParen] ||
+        (token.is[Ellipsis] && token.next.is[KwCase])
+      }
+    }
+
+    @classifier
+    trait CanStartIndent {
+      def unapply(token: Token): Boolean = {
+        token.is[KwYield] || token.is[KwTry] || token.is[KwCatch] || token.is[KwFinally] ||
+        token.is[KwMatch] || token.is[KwDo] || token.is[KwFor] || token.is[KwThen] ||
+        token.is[KwElse] || token.is[Equals] || token.is[KwWhile] || token.is[KwIf] ||
+        token.is[RightArrow] || token.is[KwReturn] || token.is[LeftArrow] ||
+        token.is[ContextArrow] || (
+          token.is[KwWith] && {
+            val next = token.next
+            next.is[DefIntro] || next.is[KwImport] || next.is[KwExport]
+          }
+        )
+      }
+    }
+
+    @classifier
+    trait CantStartStat {
+      def unapply(token: Token): Boolean = {
+        token.is[KwCatch] || token.is[KwElse] || token.is[KwExtends] ||
+        token.is[KwFinally] || token.is[KwForsome] || token.is[KwMatch] ||
+        token.is[KwWith] || token.is[KwYield] ||
+        token.is[RightParen] || token.is[LeftBracket] || token.is[RightBracket] ||
+        token.is[RightBrace] || token.is[Comma] || token.is[Colon] ||
+        token.is[Dot] || token.is[Equals] || token.is[Semicolon] ||
+        token.is[Hash] || token.is[RightArrow] || token.is[LeftArrow] ||
+        token.is[Subtype] || token.is[Supertype] || token.is[Viewbound] ||
+        token.is[LF] || token.is[LFLF] || token.is[EOF]
+
+      }
+    }
+
+    @classifier
+    trait CanEndStat {
+      def unapply(token: Token): Boolean = {
+        token.is[Ident] || token.is[KwGiven] || token.is[Literal] ||
+        token.is[Interpolation.End] || token.is[Xml.End] ||
+        token.is[KwReturn] || token.is[KwThis] || token.is[KwType] ||
+        token.is[RightParen] || token.is[RightBracket] || token.is[RightBrace] ||
+        token.is[Underscore] || token.is[Ellipsis] || token.is[Unquote] ||
+        token.prev.is[EndMarkerIntro]
+      }
+    }
+
+    @classifier
+    trait StatSep {
+      def unapply(token: Token): Boolean = {
+        token.is[Semicolon] || token.is[LF] || token.is[LFLF] || token.is[EOF]
+      }
+    }
+
+    @classifier
+    trait CanStartColonEol {
+      def unapply(token: Token): Boolean = {
+        token.is[KwTrait] || token.is[KwClass] ||
+        token.is[KwObject] || token.is[KwEnum] ||
+        token.is[KwType] || token.is[KwPackage] ||
+        token.is[KwGiven] || token.is[KwNew]
+      }
+    }
+
   }
 
 }
