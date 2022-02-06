@@ -41,24 +41,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
-  /** Utility for tracking a context, like whether we are inside a pattern or a quote. */
-  private trait NestedContextBase {
-    private var nested = 0
-    def within[T](body: => T): T = {
-      nested += 1
-      try {
-        body
-      } finally {
-        nested -= 1
-      }
-    }
-    def isInside() = nested > 0
-  }
-
-  private object QuoteSpliceContext extends NestedContextBase
-
-  private object QuotedPatternContext extends NestedContextBase
-
   def parseRule[T <: Tree](rule: this.type => T): T = {
     parseRule(rule(this))
   }
@@ -1090,14 +1072,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @classifier
   trait MacroSplicedIdent {
     def unapply(token: Token): Boolean = {
-      dialect.allowSpliceAndQuote && QuoteSpliceContext.isInside() && isIdentAnd(_.head == '$')
+      dialect.allowSpliceAndQuote && QuotedSpliceContext.isInside() && isIdentAnd(_.head == '$')
     }
   }
 
   @classifier
   trait MacroQuotedIdent {
     def unapply(token: Token): Boolean = {
-      dialect.allowSpliceAndQuote && QuoteSpliceContext.isInside() && token.is[Constant.Symbol]
+      dialect.allowSpliceAndQuote && QuotedSpliceContext.isInside() && token.is[Constant.Symbol]
     }
   }
 
@@ -3058,7 +3040,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def macroSplice(): Term = autoPos {
     accept[MacroSplice]
-    QuoteSpliceContext.within {
+    QuotedSpliceContext.within {
       if (QuotedPatternContext.isInside())
         Term.SplicedMacroPat(autoPos(inBraces(pattern())))
       else
@@ -3069,7 +3051,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def macroQuote(): Term = autoPos {
     accept[MacroQuote]
-    QuoteSpliceContext.within {
+    QuotedSpliceContext.within {
       if (token.is[LeftBrace]) {
         Term.QuotedMacroExpr(autoPos(Term.Block(inBraces(blockStatSeq()))))
       } else if (token.is[LeftBracket]) {
