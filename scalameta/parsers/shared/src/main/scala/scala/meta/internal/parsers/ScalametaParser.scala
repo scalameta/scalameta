@@ -33,6 +33,9 @@ import scala.util.Failure
 import scala.util.control.NonFatal
 
 class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
+
+  import ScalametaParser._
+
   require(Set("", EOL).contains(dialect.toplevelSeparator))
   private val soft = new SoftKeywords(dialect)
 
@@ -839,18 +842,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @inline final def dropAnyBraces[T](body: => T): T =
     if (token.is[LeftBrace]) inBraces(body)
     else body
-
-  def dropTrivialBlock(term: Term): Term =
-    term match {
-      case b: Term.Block => dropOuterBlock(b)
-      case _ => term
-    }
-
-  private def dropOuterBlock(term: Term.Block): Term =
-    term.stats match {
-      case (stat: Term) :: Nil => stat
-      case _ => term
-    }
 
   @inline final def inBrackets[T](body: => T): T = {
     accept[LeftBracket]
@@ -5387,6 +5378,19 @@ object ScalametaParser {
       }
     }
   }
+
+  private def dropTrivialBlock(term: Term): Term =
+    term match {
+      case b: Term.Block => dropOuterBlock(b)
+      case _ => term
+    }
+
+  private def dropOuterBlock(term: Term.Block): Term =
+    term.stats match {
+      case (stat: Term) :: Nil => stat
+      case _ => term
+    }
+
 }
 
 class Location private (val value: Int) extends AnyVal
