@@ -811,30 +811,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ------------- POSITION HANDLING ------------------------------------------- */
 
-  // NOTE: `startTokenPos` and `endTokenPos` are BOTH INCLUSIVE.
-  // This is at odds with the rest of scala.meta, where ends are non-inclusive.
-  sealed trait StartPos {
-    def startTokenPos: Int
-  }
-  sealed trait EndPos {
-    def endTokenPos: Int
-  }
-  sealed trait Pos extends StartPos with EndPos
-  case class IndexPos(index: Int) extends Pos {
-    def startTokenPos = index
-    def endTokenPos = startTokenPos
-  }
-  case class TokenPos(token: Token) extends Pos {
-    def startTokenPos = token.index
-    def endTokenPos = startTokenPos
-  }
-  case class TreePos(tree: Tree) extends Pos {
-    val (startTokenPos, endTokenPos) = tree.origin match {
-      case Origin.Parsed(_, _, pos) => (pos.start, pos.end - 1)
-      case _ =>
-        sys.error(s"internal error: unpositioned prototype ${tree.syntax}: ${tree.structure}")
-    }
-  }
   case object AutoPos extends Pos {
     def startTokenPos = in.tokenPos
     def endTokenPos = in.prevTokenPos
@@ -845,10 +821,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   case object EndPosPreOutdent extends EndPos {
     def endTokenPos = if (in.token.is[Indentation.Outdent]) in.tokenPos else in.prevTokenPos
   }
-  implicit def intToIndexPos(index: Int): IndexPos = IndexPos(index)
-  implicit def tokenToTokenPos(token: Token): TokenPos = TokenPos(token)
-  implicit def treeToTreePos(tree: Tree): TreePos = TreePos(tree)
-  implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.fold[Pos](AutoPos)(TreePos)
+  implicit def intToIndexPos(index: Int): Pos = new IndexPos(index)
+  implicit def tokenToTokenPos(token: Token): Pos = new IndexPos(token.index)
+  implicit def treeToTreePos(tree: Tree): Pos = new TreePos(tree)
+  implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.fold[Pos](AutoPos)(treeToTreePos)
   implicit def modsToPos(mods: List[Mod]): Pos = mods.headOption
   def auto = AutoPos
 
@@ -2891,12 +2867,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val lhsStartK = Math.min(rhsStartK.startTokenPos, lhsK.head.startTokenPos)
           ctx.push(lhsStartK, lhsK, rhsEndK, op, targs) // afterwards, ctx.stack = List([a +])
           val preRhsKplus1 = in.token
-          var rhsStartKplus1: StartPos = IndexPos(in.tokenPos)
+          var rhsStartKplus1: StartPos = in.tokenPos
           val rhsKplus1 = argumentExprsOrPrefixExpr()
-          var rhsEndKplus1: EndPos = IndexPos(in.prevTokenPos)
+          var rhsEndKplus1: EndPos = in.prevTokenPos
           if (preRhsKplus1.isNot[LeftBrace] && preRhsKplus1.isNot[LeftParen]) {
-            rhsStartKplus1 = TreePos(rhsKplus1.head)
-            rhsEndKplus1 = TreePos(rhsKplus1.head)
+            rhsStartKplus1 = rhsKplus1.head
+            rhsEndKplus1 = rhsKplus1.head
           }
           // Try to continue the infix chain.
           loop(rhsStartKplus1, rhsKplus1, rhsEndKplus1) // base = List([a +]), rhsKplus1 = List([b])
