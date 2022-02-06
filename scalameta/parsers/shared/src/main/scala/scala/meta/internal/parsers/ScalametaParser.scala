@@ -26,7 +26,6 @@ import scala.meta.classifiers._
 import scala.meta.internal.classifiers._
 import org.scalameta._
 import org.scalameta.invariants._
-import scala.meta.internal.tokenizers.Chars
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
@@ -40,6 +39,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private val soft = new SoftKeywords(dialect)
 
   private val scannerTokens: ScannerTokens = ScannerTokens(input)
+  import scannerTokens.Implicits._
 
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
@@ -130,62 +130,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   /* ------------- TOKEN STREAM HELPERS -------------------------------------------- */
-
-  // NOTE: This is a cache that's necessary for reasonable performance of prev/next for tokens.
-  // It maps character positions in input's content into indices in the scannerTokens vector.
-  // One complication here is that there can be multiple tokens that sort of occupy a given position,
-  // so the clients of this cache need to be wary of that!
-  private val scannerTokenCache: Array[Int] = {
-    val result = new Array[Int](input.chars.length)
-    var i = 0
-    while (i < scannerTokens.length) {
-      val token = scannerTokens(i)
-      var j = token.start
-      while (j < token.end) {
-        result(j) = i
-        j += 1
-      }
-      i += 1
-    }
-    result
-  }
-  implicit class XtensionTokenIndex(token: Token) {
-    def index: Int = {
-      @tailrec
-      def lurk(roughIndex: Int): Int = {
-        require(roughIndex >= 0 && debug(token))
-        val scannerToken = scannerTokens(roughIndex)
-        def exactMatch = scannerToken eq token
-        def originMatch =
-          (token.is[LFLF] || token.is[Indentation.Outdent] || token.is[Indentation.Indent]) &&
-            scannerToken.start == token.start && scannerToken.end == token.end
-        if (exactMatch || originMatch) roughIndex
-        else lurk(roughIndex - 1)
-      }
-      if (token.start == input.chars.length) scannerTokens.length - 1
-      else lurk(scannerTokenCache(token.start))
-    }
-    def prev: Token = {
-      val prev = scannerTokens.apply(Math.max(token.index - 1, 0))
-      if (prev.is[Whitespace] || prev.is[Comment]) prev.prev
-      else prev
-    }
-
-    def nextSafe: Token = scannerTokens.apply(Math.min(token.index + 1, scannerTokens.length - 1))
-
-    def next: Token = {
-      val next = nextSafe
-      if (next.is[Whitespace] || next.is[Comment]) next.next
-      else next
-    }
-    def strictNext: Token = {
-      val next = nextSafe
-      if (next.is[Space] || next.is[Tab] || next.is[Comment]) next.strictNext
-      else next
-    }
-  }
-
-  def isMultilinePos(p: Position): Boolean = p.endLine > p.startLine
 
   def isColonEol(token: Token): Boolean = {
 
@@ -537,7 +481,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
         val resOpt = if (dialect.allowSignificantIndentation) {
           val hasLF = lastNewlinePos != -1 || hasMultilineComment
-          if (hasLF && next != null && !isLeadingInfixOperator(next)) {
+          if (hasLF && next != null && !next.isLeadingInfixOperator) {
 
             val nextIndent = countIndent(nextPos)
 
@@ -691,18 +635,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     else scannerTokens(nextPos).is[Trivia] && isAheadNewLine(nextPos)
   }
 
-  private def isLeadingInfixOperator(tkn: Token): Boolean = {
-    lazy val parts = tkn.text.split("_")
-    dialect.allowSignificantIndentation &&
-    parts.nonEmpty &&
-    parts.last.forall(Chars.isOperatorPart) &&
-    !tkn.text.startsWith("@") &&
-    tkn.nextSafe.is[Whitespace] && (
-      tkn.strictNext.is[Ident] || tkn.strictNext.is[Interpolation.Id] ||
-        tkn.strictNext.is[Literal] || tkn.strictNext.is[LeftParen] ||
-        tkn.strictNext.is[LeftBrace]
-    )
-  }
   def token = in.token
   def next() = in.next()
   def nextOnce() = next()
@@ -994,10 +926,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def isBackquoted: Boolean = token.syntax.startsWith("`") && token.syntax.endsWith("`")
   def isVarargStarParam(allowRepeated: Boolean) =
     dialect.allowPostfixStarVarargSplices && isStar && token.next.is[RightParen] && allowRepeated
-  private implicit class XtensionTokenClass(token: Token) {
-    def isClassOrObject = token.is[KwClass] || token.is[KwObject]
-    def isClassOrObjectOrEnum = isClassOrObject || (token.is[Ident] && dialect.allowEnums)
-  }
 
   @classifier
   trait MacroSplicedIdent {
@@ -2233,7 +2161,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (dialect.allowSignificantIndentation) {
       val forked = in.fork
       val simpleExpr = condExpr()
-      if ((token.is[Ident] && isLeadingInfixOperator(token)) || token.is[Dot] || isFollowedBy[T]) {
+      if ((token.is[Ident] && token.isLeadingInfixOperator) || token.is[Dot] || isFollowedBy[T]) {
         in = forked
         val exprCond = expr()
         val nextIsDelimiterKw =
