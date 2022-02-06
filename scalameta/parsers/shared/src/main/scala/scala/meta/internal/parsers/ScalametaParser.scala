@@ -39,6 +39,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   require(Set("", EOL).contains(dialect.toplevelSeparator))
   private val soft = new SoftKeywords(dialect)
 
+  private val scannerTokens: ScannerTokens = ScannerTokens(input)
+
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
   def parseRule[T <: Tree](rule: this.type => T): T = {
@@ -200,15 +202,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ------------- PARSER-SPECIFIC TOKENS -------------------------------------------- */
 
-  // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
-  // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
-  // However, in certain tricky cases some whitespace tokens (namely, newlines) do have to be emitted.
-  // This leads to extremely dirty and seriously crazy code.
-  lazy val scannerTokens = input.tokenize match {
-    case Tokenized.Success(tokens) => tokens
-    case Tokenized.Error(_, _, details) => throw details
-  }
-
   var in: TokenIterator = {
     new LazyTokenIterator(
       scannerTokens,
@@ -232,7 +225,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     new Indentation.Outdent(token.input, token.dialect, token.start, token.end)
 
   class LazyTokenIterator(
-      scannerTokens: Tokens,
+      scannerTokens: ScannerTokens,
       var sepRegions: List[SepRegion],
       var curr: TokenRef,
       var prevPos: Int
