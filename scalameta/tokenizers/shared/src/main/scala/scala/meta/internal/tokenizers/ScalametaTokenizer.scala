@@ -18,8 +18,21 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
   }
 
   private def uncachedTokenize(): Tokens = {
-    def legacyTokenToToken(curr: LegacyTokenData): Token = {
-      (curr.token: @scala.annotation.switch) match {
+    val legacyTokens: Array[LegacyTokenData] = {
+      val scanner = new LegacyScanner(input, dialect)
+      val legacyTokenBuf = new java.util.ArrayList[LegacyTokenData]()
+      scanner.foreach(curr => legacyTokenBuf.add(new LegacyTokenData {}.copyFrom(curr)))
+      val underlying = new Array[LegacyTokenData](legacyTokenBuf.size())
+      legacyTokenBuf.toArray(underlying)
+      underlying
+    }
+
+    val tokens = new java.util.ArrayList[Token](legacyTokens.length)
+    @inline def pushToken(token: Token): Unit = tokens.add(token)
+    pushToken(Token.BOF(input, dialect))
+
+    def pushLegacyToken(curr: LegacyTokenData): Unit = {
+      val token = (curr.token: @scala.annotation.switch) match {
         case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
         case BACKQUOTED_IDENT =>
           Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
@@ -149,32 +162,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case UNDEF => unreachable
         case ERROR => unreachable
       }
-    }
-
-    val legacyTokens: Array[LegacyTokenData] = {
-      val scanner = new LegacyScanner(input, dialect)
-      val legacyTokenBuf = new java.util.ArrayList[LegacyTokenData]()
-      scanner.foreach(curr => legacyTokenBuf.add(new LegacyTokenData {}.copyFrom(curr)))
-      val underlying = new Array[LegacyTokenData](legacyTokenBuf.size())
-      legacyTokenBuf.toArray(underlying)
-      underlying
-    }
-    val tokens = new java.util.ArrayList[Token]()
-    tokens.add(Token.BOF(input, dialect))
-
-    def aheadIsNewLine(index: Int): Boolean = {
-      var currentIdx = index + 1
-      while (currentIdx < legacyTokens.length) {
-        val token = legacyTokens(currentIdx)
-        if (token.token == WHITESPACE && token.strVal == "\n") {
-          return true
-        } else if (token.token == WHITESPACE || token.token == COMMENT) {
-          currentIdx += 1
-        } else {
-          return false
-        }
-      }
-      false
+      pushToken(token)
     }
 
     def loop(
@@ -188,12 +176,18 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         if (legacyIndex < legacyTokens.size) legacyTokens(legacyIndex)
         else throw new UnexpectedInputEndException()
       }
-      def emitToken() = tokens.add(legacyTokenToToken(curr))
-      def nextToken() = legacyIndex += 1
+      @inline def nextToken() = legacyIndex += 1
+      def pushTokenAndNext(token: Token): Unit = {
+        pushToken(token)
+        nextToken()
+      }
+      def emitToken() = {
+        pushLegacyToken(curr)
+        nextToken()
+      }
       if (legacyIndex >= legacyTokens.length) return legacyIndex
 
       emitToken()
-      nextToken()
 
       // NOTE: need to track this in order to correctly emit SpliceEnd tokens after splices end
       var braceBalance1 = braceBalance
@@ -211,53 +205,40 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         val numStartQuotes = startEnd - prev.endOffset - 1
         val numQuotes = if (numStartQuotes <= 2) 1 else 3
         def emitStart(offset: Offset) =
-          tokens.add(Token.Interpolation.Start(input, dialect, offset, offset + numQuotes))
+          pushToken(Token.Interpolation.Start(input, dialect, offset, offset + numQuotes))
         def emitEnd(offset: Offset) =
-          tokens.add(Token.Interpolation.End(input, dialect, offset, offset + numQuotes))
+          pushToken(Token.Interpolation.End(input, dialect, offset, offset + numQuotes))
         def emitContents(): Unit = {
-          require(curr.token == STRINGPART || curr.token == STRINGLIT)
           if (curr.token == STRINGPART) {
-            tokens.add(
-              Token.Interpolation.Part(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
-            )
-            require(input.chars(curr.endOffset + 1) == '$')
             val dollarOffset = curr.endOffset + 1
-            def emitSpliceStart(offset: Offset) =
-              tokens.add(Token.Interpolation.SpliceStart(input, dialect, offset, offset + 1))
-            def emitSpliceEnd(offset: Offset) =
-              tokens.add(Token.Interpolation.SpliceEnd(input, dialect, offset, offset))
-            def emitExpectedToken(expected: LegacyToken) = {
-              require(curr.token == expected); emitToken()
-            }
-            if (input.chars(dollarOffset + 1) == '{') {
-              emitSpliceStart(dollarOffset)
-              nextToken()
-              legacyIndex = loop(legacyIndex, returnWhenBraceBalanceHitsZero = true)
-              emitSpliceEnd(curr.offset)
-              emitContents()
-            } else {
-              emitSpliceStart(dollarOffset)
-              nextToken()
-              if (input.chars(dollarOffset + 1) == '_' && curr.token == USCORE) {
-                emitExpectedToken(USCORE)
-                nextToken()
-                emitSpliceEnd(curr.offset)
-                emitContents()
-              } else {
-                require(curr.token == IDENTIFIER || curr.token == THIS)
-                emitToken()
-                nextToken()
-                emitSpliceEnd(curr.offset)
-                emitContents()
-              }
-            }
-          } else {
-            curr.endOffset -= numQuotes
-            tokens.add(
-              Token.Interpolation.Part(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
+            require(input.chars(dollarOffset) == '$')
+            pushToken(
+              Token.Interpolation.Part(input, dialect, curr.offset, dollarOffset, curr.strVal)
             )
-            require(input.chars(curr.endOffset + 1) == '\"')
-            nextToken()
+            val postDollarOffset = dollarOffset + 1
+            val nextChar = input.chars(postDollarOffset)
+            pushTokenAndNext(
+              Token.Interpolation.SpliceStart(input, dialect, dollarOffset, postDollarOffset)
+            )
+            if (nextChar == '{') {
+              legacyIndex = loop(legacyIndex, returnWhenBraceBalanceHitsZero = true)
+            } else {
+              require(
+                curr.token == IDENTIFIER || curr.token == THIS ||
+                  curr.token == USCORE && nextChar == '_'
+              )
+              emitToken()
+            }
+            pushToken(Token.Interpolation.SpliceEnd(input, dialect, curr.offset, curr.offset))
+            emitContents()
+          } else {
+            require(curr.token == STRINGLIT)
+            curr.endOffset -= numQuotes
+            val nextOffset = curr.endOffset + 1
+            require(input.chars(nextOffset) == '\"')
+            pushTokenAndNext(
+              Token.Interpolation.Part(input, dialect, curr.offset, nextOffset, curr.strVal)
+            )
           }
         }
         // NOTE: before emitStart, curr is the first token that follows INTERPOLATIONID
@@ -274,11 +255,11 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
 
       if (prev.token == XMLLIT) {
         def emitSpliceStart(offset: Offset) =
-          tokens.add(Token.Xml.SpliceStart(input, dialect, offset, offset))
+          pushToken(Token.Xml.SpliceStart(input, dialect, offset, offset))
         def emitSpliceEnd(offset: Offset) =
-          tokens.add(Token.Xml.SpliceEnd(input, dialect, offset, offset))
+          pushToken(Token.Xml.SpliceEnd(input, dialect, offset, offset))
         def emitPart(from: Int, to: Int) = {
-          tokens.add(
+          pushTokenAndNext(
             Token.Xml.Part(input, dialect, from, to, new String(input.chars, from, to - from))
           )
         }
@@ -287,7 +268,6 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
           curr.token match {
             case XMLLIT =>
               emitPart(curr.offset, curr.endOffset + 1)
-              nextToken()
               emitContents()
 
             case LBRACE =>
@@ -309,7 +289,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         emitContents()
         assert(prev.token == XMLLITEND)
         val xmlEndIndex = prev.endOffset + 1
-        tokens.add(Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex))
+        pushToken(Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex))
       }
 
       loop(legacyIndex, braceBalance1, returnWhenBraceBalanceHitsZero)
