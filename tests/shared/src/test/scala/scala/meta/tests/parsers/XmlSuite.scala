@@ -318,10 +318,10 @@ class XmlSuite extends ParseSuite {
   checkOK("<a>&#x;</a>")
   checkOK("<a>]]></a>")
   checkOK("<a/>{0}")
-  //checkOK("""<a b="&:;"/>""") // FIXME
-  //checkOK("""<a b="&:a;"/>""") //FIXME
-  //checkOK("""<a b="&a:;"/>""") // FIXME
-  //checkOK("e match { case <a>&</a> => () }") // FIXME
+  // checkOK("""<a b="&:;"/>""") // FIXME
+  // checkOK("""<a b="&:a;"/>""") //FIXME
+  // checkOK("""<a b="&a:;"/>""") // FIXME
+  // checkOK("e match { case <a>&</a> => () }") // FIXME
 
   checkError("<a:/>")
   checkError("""<a b:="Hello"/>""")
@@ -339,13 +339,13 @@ class XmlSuite extends ParseSuite {
   checkError("<a>}</a>")
   checkError("<a>{</a>")
   checkError("<a>}{</a>")
-  //checkError("<a></b>") // FIXME: Should not parse
+  // checkError("<a></b>") // FIXME: Should not parse
 
   // FIXME These should not parse: we need to differentiate between expression and pattern position
-  //checkError("""e match { case <a b="foo"/> => () }""" )
-  //checkError("e match { case <xml:unparsed><</xml:unparsed> => () }")
-  //checkError("e match { case <!-- comment --> => () }" )
-  //checkError("e match { case <![CDATA[foo]]> => () }" )
-  //checkError("e match { case <?foo bar?> => () }" )
+  // checkError("""e match { case <a b="foo"/> => () }""" )
+  // checkError("e match { case <xml:unparsed><</xml:unparsed> => () }")
+  // checkError("e match { case <!-- comment --> => () }" )
+  // checkError("e match { case <![CDATA[foo]]> => () }" )
+  // checkError("e match { case <?foo bar?> => () }" )
 
 }

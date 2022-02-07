@@ -59,7 +59,7 @@ package object dialects {
     .withAllowTryWithAnyExpr(true)
 
   /**
-   *  Dialect starting with Scala 2.13.6 for `-Xsource:3` option
+   * Dialect starting with Scala 2.13.6 for `-Xsource:3` option
    */
   implicit val Scala213Source3 = Scala213
     .withAllowQuestionMarkPlaceholder(true)
@@ -73,7 +73,7 @@ package object dialects {
     .withAllowGivenImports(true)
 
   /**
-   *  Dialect starting with  Scala 2.12.14 for `-Xsource:3` option
+   * Dialect starting with Scala 2.12.14 for `-Xsource:3` option
    */
   implicit val Scala212Source3 = Scala212
     .withAllowQuestionMarkPlaceholder(true)

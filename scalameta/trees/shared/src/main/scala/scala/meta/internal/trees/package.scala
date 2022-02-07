@@ -37,7 +37,7 @@ package object trees {
       case "!=" | "<=" | ">=" | "" => false
       case _ =>
         (value.last == '=' && value.head != '='
-          && isOperatorPart(value.head))
+        && isOperatorPart(value.head))
     }
     // opPrecedence?
     def precedence: Int =

@@ -37,7 +37,8 @@ trait BaseDottySuite extends ParseSuite {
 
   /**
    * Check if code can be parsed to expected syntax tree.
-   * @see runTestAssert(code, assertLayout)(expected)
+   * @see
+   *   runTestAssert(code, assertLayout)(expected)
    */
   protected def runTestAssert[T <: Tree](
       code: String
@@ -45,22 +46,25 @@ trait BaseDottySuite extends ParseSuite {
     runTestAssert(code, Some(code))(expected)(parser)
 
   /**
-   * General method used to assert a given 'code' parses to expected tree structure and back.
-   * We cannot assert trees by equality(==) that's why we check if they are identical
-   * by asserting their structure representation and optionally syntax.
-   * If expectedLayout is provided then we print back generated tree structure and assert
-   * generated text is equal to expectedLayout (in most cases it should be the same as 'code' param
-   * but sometimes formatting is a little different or for safety () are added).
-   * If you are not interested in asserting layout just provide None.
-   * After printing generated tree to text representation we parse it again.
-   * This ensures that invariant holds: parse(code) = parse(print(parse(code)))
-   * Reprint cannot be handled by `tree.syntax` because syntax is cached by default and would
-   * not be reprinted but only input code would be returned.
+   * General method used to assert a given 'code' parses to expected tree structure and back. We
+   * cannot assert trees by equality(==) that's why we check if they are identical by asserting
+   * their structure representation and optionally syntax. If expectedLayout is provided then we
+   * print back generated tree structure and assert generated text is equal to expectedLayout (in
+   * most cases it should be the same as 'code' param but sometimes formatting is a little different
+   * or for safety () are added). If you are not interested in asserting layout just provide None.
+   * After printing generated tree to text representation we parse it again. This ensures that
+   * invariant holds: parse(code) = parse(print(parse(code))) Reprint cannot be handled by
+   * `tree.syntax` because syntax is cached by default and would not be reprinted but only input
+   * code would be returned.
    *
-   * @param code valid scala code
-   * @param assertLayout string representation of code to be printed
-   * @param expected provided 'code' should parse to this tree structure
-   * @param parser Function used to convert code into structured tree
+   * @param code
+   *   valid scala code
+   * @param assertLayout
+   *   string representation of code to be printed
+   * @param expected
+   *   provided 'code' should parse to this tree structure
+   * @param parser
+   *   Function used to convert code into structured tree
    */
   protected def runTestAssert[T <: Tree](code: String, assertLayout: Option[String])(
       expected: T

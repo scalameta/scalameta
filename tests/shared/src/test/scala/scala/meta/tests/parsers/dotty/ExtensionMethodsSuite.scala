@@ -13,8 +13,8 @@ class ExtensionMethodsSuite extends BaseDottySuite {
    *  case class Circle(x: Int)
    * }}}
    *
-   *  All examples based on dotty documentation:
-   * - [[https://dotty.epfl.ch/docs/reference/contextual/extension-methods.html]]
+   * All examples based on dotty documentation:
+   *   - [[https://dotty.epfl.ch/docs/reference/contextual/extension-methods.html]]
    */
 
   test("simple-method") {

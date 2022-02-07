@@ -6,7 +6,8 @@ import scala.tools.asm.signature.SignatureReader
 /**
  * Translation of "Signature" section from the JVM spec to Scala.
  *
- * @see https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.9.1
+ * @see
+ *   https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.9.1
  */
 sealed trait JavaTypeSignature extends Printable
 object JavaTypeSignature {

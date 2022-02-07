@@ -9,14 +9,14 @@ class MacroSuite extends BaseDottySuite {
 
   /**
    * All examples based on dotty documentation:
-   * - [[https://dotty.epfl.ch/docs/reference/metaprogramming/toc.html]]
-   * - [[https://dotty.epfl.ch/docs/reference/metaprogramming/macros.html]]
-   * - [[https://dotty.epfl.ch/docs/reference/metaprogramming/tasty-reflect.html]]
+   *   - [[https://dotty.epfl.ch/docs/reference/metaprogramming/toc.html]]
+   *   - [[https://dotty.epfl.ch/docs/reference/metaprogramming/macros.html]]
+   *   - [[https://dotty.epfl.ch/docs/reference/metaprogramming/tasty-reflect.html]]
    *
    * Variants:
-   * - `QuotedMacroType`: `'[ ... ]`
-   * - `QuotedMacroExpr`: `'{ ... }` OR `'ident`
-   * - `SplicedMacroExpr`: `${ ... }` OR $ident`
+   *   - `QuotedMacroType`: `'[ ... ]`
+   *   - `QuotedMacroExpr`: `'{ ... }` OR `'ident`
+   *   - `SplicedMacroExpr`: `${ ... }` OR $ident`
    */
   test("parse-single-quote-character") {
     runTestAssert[Stat]("val a = 'c'")(

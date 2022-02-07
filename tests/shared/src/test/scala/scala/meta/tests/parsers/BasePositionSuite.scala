@@ -29,8 +29,8 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
    *   )
    * }}}
    *
-   * Every line in the output format shows the AST tree node type and the
-   * tokens for that tree node. Offset positions are rendered as "@@".
+   * Every line in the output format shows the AST tree node type and the tokens for that tree node.
+   * Offset positions are rendered as "@@".
    *
    * Below is an example bug that is easy to catch with position tests.
    *
@@ -45,8 +45,8 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
    *   )
    * }}}
    *
-   * Observe that the line {{{Name.Anonymous {}}} indicates that the position of the
-   * anonymous name encloses the `{` token. The correct output should be
+   * Observe that the line {{{Name.Anonymous {}}} indicates that the position of the anonymous name
+   * encloses the `{` token. The correct output should be
    * {{{Name.Anonymous trait A @@{ self: B =>}}}.
    */
   def checkPositions[T <: Tree: Parse](

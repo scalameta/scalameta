@@ -8,10 +8,12 @@ import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}
 
 class ReflectionSuite extends FunSuite {
-  object TreeReflection extends {
-    val u: ru.type = ru
-    val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
-  } with scala.meta.internal.trees.Reflection
+  object TreeReflection
+      extends {
+        val u: ru.type = ru
+        val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.Tree].getClassLoader)
+      }
+      with scala.meta.internal.trees.Reflection
   import TreeReflection._
 
   // NOTE: These counts are important because our TreeReflection infrastructure is quite fragile.

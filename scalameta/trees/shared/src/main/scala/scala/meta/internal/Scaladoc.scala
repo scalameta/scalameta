@@ -5,7 +5,8 @@ final case class Scaladoc(para: Seq[Scaladoc.Paragraph])
 
 /**
  * The available tokens and their documentation are obtained from:
- * @see http://docs.scala-lang.org/overviews/scaladoc/for-library-authors.html
+ * @see
+ *   http://docs.scala-lang.org/overviews/scaladoc/for-library-authors.html
  */
 object Scaladoc {
 
@@ -56,8 +57,7 @@ object Scaladoc {
   final case class Heading(level: Int, title: String) extends Term
 
   /**
-   * A table
-   * [[https://www.scala-lang.org/blog/2018/10/04/scaladoc-tables.html]]
+   * A table [[https://www.scala-lang.org/blog/2018/10/04/scaladoc-tables.html]]
    */
   final case class Table(
       header: Table.Row,
@@ -113,9 +113,12 @@ object Scaladoc {
 
   /**
    * Represents a tagged documentation remark
-   * @param label set iff `tag.hasLabel`
-   * @param desc set iff `tag.hasDesc`
-   * @note if label is expected but desc is not, label will contain the entire tag line
+   * @param label
+   *   set iff `tag.hasLabel`
+   * @param desc
+   *   set iff `tag.hasDesc`
+   * @note
+   *   if label is expected but desc is not, label will contain the entire tag line
    */
   final case class Tag(tag: TagType, label: Option[Word] = None, desc: Seq[Term] = Nil) extends Term
 
@@ -150,8 +153,8 @@ object Scaladoc {
     /* Usage tags */
 
     /**
-     * Reference other sources of information like external document links or
-     * related entities in the documentation
+     * Reference other sources of information like external document links or related entities in
+     * the documentation
      */
     case object See extends Base("@see")
 
@@ -162,8 +165,8 @@ object Scaladoc {
     case object Example extends Base("@example")
 
     /**
-     * Provide a simplified method definition for when the full method definition is too complex
-     * or noisy
+     * Provide a simplified method definition for when the full method definition is too complex or
+     * noisy
      */
     case object UseCase extends Base("@usecase", hasLabel = true, optDesc = false)
 
@@ -204,8 +207,7 @@ object Scaladoc {
     case object Deprecated extends Base("@deprecated")
 
     /**
-     * Like [[Deprecated]] but provides advanced warning of
-     * planned changes ahead of deprecation.
+     * Like [[Deprecated]] but provides advanced warning of planned changes ahead of deprecation.
      */
     case object Migration extends Base("@migration")
 
@@ -218,8 +220,8 @@ object Scaladoc {
     /* Macros tags */
 
     /**
-     * Allows use of {{{label}}} in other Scaladoc comments within the same
-     * source file which will be expanded to the contents of {{{definition}}}.
+     * Allows use of {{{label}}} in other Scaladoc comments within the same source file which will
+     * be expanded to the contents of {{{definition}}}.
      */
     case object Define extends Base("@define", hasLabel = true)
 

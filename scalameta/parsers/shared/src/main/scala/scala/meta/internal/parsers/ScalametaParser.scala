@@ -615,16 +615,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
             /**
              * Outdent is needed in following cases:
-             *  - If indentation on next line is less than current
-             *    and previous token can't continue expr on the next line
-             *  - At the end of `match` block even if indentation level is not changed
-             *    Example:
-             *    ```
-             *    x match
-             *    case 1 =>
-             *    case 2 => // <- produce outdent
-             *    foo()
-             *    ```
+             *   - If indentation on next line is less than current and previous token can't
+             *     continue expr on the next line
+             *   - At the end of `match` block even if indentation level is not changed Example:
+             *     ```
+             *     x match
+             *     case 1 =>
+             *     case 2 => // <- produce outdent
+             *     foo()
+             *     ```
              */
             def getOutdentIfNeeded() = sepRegions.headOption
               .filter { r =>
@@ -639,18 +638,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
             /**
              * Indent is needed in the following cases:
-             * - Indetation on new line is greater and previous token can start indentation
-             *   and token can start indentation
-             * - Indentation on the new line is the same and the next token is the first `case` clause in match
-             *   Example:
-             *   ```
-             *   x match // <- mk indent
-             *   case 1 =>
-             *   ```
+             *   - Indetation on new line is greater and previous token can start indentation and
+             *     token can start indentation
+             *   - Indentation on the new line is the same and the next token is the first `case`
+             *     clause in match Example:
+             *     ```
+             *     x match // <- mk indent
+             *     case 1 =>
+             *     ```
              *
-             * Notice:
-             *  Indentation after `:` isn't hadled here.
-             *  It's produced manually on the parser level.
+             * Notice: Indentation after `:` isn't hadled here. It's produced manually on the parser
+             * level.
              */
             def getIndentIfNeeded = {
               val ok = nextIndent >= 0 && {
@@ -720,14 +718,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   /**
-   * When token on `tokenPosition` is not a whitespace and is
-   * a first non-whitespace character in a current line then a result is
-   * a number of whitespace characters counted.
-   * Otherwise {{{(-1, -1)}}} is returned.
+   * When token on `tokenPosition` is not a whitespace and is a first non-whitespace character in a
+   * current line then a result is a number of whitespace characters counted. Otherwise
+   * {{{(-1, -1)}}} is returned.
    *
    * Returns a tuple2 where:
-   * - first value is indentation level
-   * - second is `LF` token index
+   *   - first value is indentation level
+   *   - second is `LF` token index
    */
   private def countIndentAndNewlineIndex(tokenPosition: Int): (Int, Int) = {
     def isWhitespace(token: Token): Boolean = token.is[Space] || token.is[Tab]
@@ -788,8 +785,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   /* ------------- PARSER COMMON -------------------------------------------- */
 
   /**
-   * Scoping operator used to temporarily look into the future.
-   *  Backs up token iterator before evaluating a block and restores it after.
+   * Scoping operator used to temporarily look into the future. Backs up token iterator before
+   * evaluating a block and restores it after.
    */
   @inline final def ahead[T](body: => T): T = {
     val forked = in.fork
@@ -799,11 +796,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   /**
-   * Methods inParensOrError and similar take a second argument which, should
-   *  the next token not be the expected opener (e.g. token.LeftParen) will be returned
-   *  instead of the contents of the groupers.  However in all cases accept[LeftParen]
-   *  will be called, so a parse error will still result.  If the grouping is
-   *  optional, token should be tested before calling these methods.
+   * Methods inParensOrError and similar take a second argument which, should the next token not be
+   * the expected opener (e.g. token.LeftParen) will be returned instead of the contents of the
+   * groupers. However in all cases accept[LeftParen] will be called, so a parse error will still
+   * result. If the grouping is optional, token should be tested before calling these methods.
    */
   @inline final def inParens[T](body: => T): T = {
     accept[LeftParen]
@@ -1598,9 +1594,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   /* -------- IDENTIFIERS AND LITERALS ------------------------------------------- */
 
   /**
-   * Methods which implicitly propagate the context in which they were
-   *  called: either in a pattern context or not.  Formerly, this was
-   *  threaded through numerous methods as boolean isPattern.
+   * Methods which implicitly propagate the context in which they were called: either in a pattern
+   * context or not. Formerly, this was threaded through numerous methods as boolean isPattern.
    */
   trait PatternContextSensitive {
     private def tupleInfixType(allowFunctionType: Boolean = true): Type = autoPos {
@@ -2357,9 +2352,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   /**
-   * Deals with Scala 3 concept of {{{inline x match { ...}}}.
-   * Since matches can also be chained in Scala 3 we need to create
-   * the Match first and only then add the the inline modifier.
+   * Deals with Scala 3 concept of {{{inline x match { ...}}}. Since matches can also be chained in
+   * Scala 3 we need to create the Match first and only then add the the inline modifier.
    */
   def inlineMatchClause(inlineMods: List[Mod]) = {
     atPos(inlineMods, auto)(postfixExpr(allowRepeated = false)) match {
@@ -3384,9 +3378,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   /* -------- PATTERNS ------------------------------------------- */
 
   /**
-   * Methods which implicitly propagate whether the initial call took
-   *  place in a context where sequences are allowed.  Formerly, this
-   *  was threaded through methods as boolean seqOK.
+   * Methods which implicitly propagate whether the initial call took place in a context where
+   * sequences are allowed. Formerly, this was threaded through methods as boolean seqOK.
    */
   trait SeqContextSensitive extends PatternContextSensitive {
     // is a sequence pattern _* allowed?
@@ -3654,8 +3647,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   /**
-   * These are default entry points into the pattern context sensitive methods:
-   *  they are all initiated from non-pattern context.
+   * These are default entry points into the pattern context sensitive methods: they are all
+   * initiated from non-pattern context.
    */
   def typ() = outPattern.typ()
   def quasiquoteType() = outPattern.quasiquoteType()
@@ -3956,7 +3949,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         q.become[Term.Param.Quasi]
       case _ =>
         var anonymousUsing = false
-        val name = if (isUsing && ahead(!token.is[Colon])) { //anonymous using
+        val name = if (isUsing && ahead(!token.is[Colon])) { // anonymous using
           anonymousUsing = true
           autoPos(Name.Anonymous())
         } else {
@@ -4336,10 +4329,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       } catch {
         /**
          * We are first trying to parse non-anonymous given, which
-         *  - requires `:` for type, if none is found it means it's anonymous
-         *  - might fail in cases that anonymous type looks like type param
-         *   {{{given Conversion[AppliedName, Expr.Apply[Id]] = ???}}}
-         *   This will fail because type params cannot have `.`
+         *   - requires `:` for type, if none is found it means it's anonymous
+         *   - might fail in cases that anonymous type looks like type param
+         *     {{{given Conversion[AppliedName, Expr.Apply[Id]] = ???}}} This will fail because type
+         *     params cannot have `.`
          */
         case NonFatal(_) =>
           in = forked
