@@ -60,7 +60,7 @@ class CommunityDottySuite extends FunSuite {
   val communityBuilds = List(
     CommunityBuild(
       "https://github.com/lampepfl/dotty.git",
-      //commit hash from 12.07.2021
+      // commit hash from 12.07.2021
       "c99f6caa74e74a67dd42e8df6ede53c29cd7fce9",
       "dotty",
       dottyExclusionList

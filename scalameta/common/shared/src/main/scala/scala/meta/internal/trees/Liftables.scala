@@ -92,10 +92,9 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
               ${liftPath("scala.meta.internal.trees.Syntactic.Term.Apply")},
               _root_.scala.collection.immutable.List(
                 ${liftField(q"fn", tq"_root_.scala.meta.Term")},
-                ${liftField(
-        q"List(List(tripleQuasi))",
-        tq"List[List[_root_.scala.meta.Term.Quasi]]"
-      )}))
+                ${liftField(q"List(List(tripleQuasi))", tq"List[List[_root_.scala.meta.Term.Quasi]]")}
+              )
+            )
           case _ =>
             $body
         }

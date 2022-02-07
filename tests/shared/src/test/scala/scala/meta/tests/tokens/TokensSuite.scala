@@ -24,7 +24,7 @@ class TokensSuite {
   val d6c: Seq[Token] = d.zip(List(3, 4, 5)).zipWithIndex.flatMap { case ((x, y), _) => d }
   val d7a: Seq[(Token, Int)] = d.zipWithIndex
 
-  //Return Tokens where possible when using collections API
+  // Return Tokens where possible when using collections API
   val slice: Tokens = d.slice(0, 1)
   val segmentLengthRight = d.segmentLengthRight(_.isNot[LeftParen], 0)
   val take: Tokens = d.take(2)
@@ -49,7 +49,7 @@ class TokensApiSuite extends FunSuite {
   }
 
   test("Maintains Tokens type when implementing collections API methods") {
-    //Drop BOF and EOF to make tests more readable
+    // Drop BOF and EOF to make tests more readable
     val tokens = tokenize("((1 + 1) == 2)").drop(1).dropRight(1)
 
     assert(tokens.length == 13)

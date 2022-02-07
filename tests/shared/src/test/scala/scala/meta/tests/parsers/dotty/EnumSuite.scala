@@ -8,8 +8,8 @@ class EnumSuite extends BaseDottySuite {
 
   /**
    * All examples based on dotty documentation:
-   * - [[https://dotty.epfl.ch/docs/reference/enums/enums.html]]
-   * - [[https://dotty.epfl.ch/docs/reference/enums/adts.html]]
+   *   - [[https://dotty.epfl.ch/docs/reference/enums/enums.html]]
+   *   - [[https://dotty.epfl.ch/docs/reference/enums/adts.html]]
    */
   // ---------------------------------
   // ENUM

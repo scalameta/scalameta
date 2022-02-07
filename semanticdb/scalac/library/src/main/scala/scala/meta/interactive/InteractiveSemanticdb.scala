@@ -54,16 +54,20 @@ object InteractiveSemanticdb extends VersionCompilerOps {
   /**
    * Build semanticdb document from this snippet of code.
    *
-   * @param compiler an instance of scalac interactive global.
-   * @param code the code to be compiled.
-   * @param filename the name of the source file.
-   * @param timeout max number of milliseconds to allow the presentation compiler
-   *                to typecheck this file.
-   * @param options configuration options to influence how the document is built.
-   *                Must start with -P:semanticdb: prefix, for example "-P:semanticdb:symbols:all".
-   *  @throws Exception note that this method can fail in many different ways
-   *                    with exceptions, including but not limited to tokenize/parse/type
-   *                    errors.
+   * @param compiler
+   *   an instance of scalac interactive global.
+   * @param code
+   *   the code to be compiled.
+   * @param filename
+   *   the name of the source file.
+   * @param timeout
+   *   max number of milliseconds to allow the presentation compiler to typecheck this file.
+   * @param options
+   *   configuration options to influence how the document is built. Must start with -P:semanticdb:
+   *   prefix, for example "-P:semanticdb:symbols:all".
+   * @throws Exception
+   *   note that this method can fail in many different ways with exceptions, including but not
+   *   limited to tokenize/parse/type errors.
    */
   def toTextDocument(
       compiler: Global,
@@ -101,9 +105,8 @@ object InteractiveSemanticdb extends VersionCompilerOps {
   /**
    * Inserts "_CURSOR_" at given offset.
    *
-   * _CURSOR_ hints to the presentation compiler that this file is being edited
-   * with the cursor at that offset. This hint helps completions amongst
-   * other things.
+   * _CURSOR_ hints to the presentation compiler that this file is being edited with the cursor at
+   * that offset. This hint helps completions amongst other things.
    */
   def addCursor(code: String, offset: Int): String = {
     new StringBuilder(code.length + "_CURSOR_".length)

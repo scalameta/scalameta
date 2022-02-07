@@ -3,7 +3,8 @@ package scala.meta.internal.javacp
 /**
  * Minimal utility to resolve generic signature type variables to fully qualified symbols.
  *
- * @param bindings Map from type variable names to their resolved symbols.
+ * @param bindings
+ *   Map from type variable names to their resolved symbols.
  */
 class Scope(bindings: Map[String, String]) {
 

@@ -1,9 +1,9 @@
 package scala.meta.contrib
 
 /**
- * The motivation for this typeclass is to extract values out of trees
- * that could have been fields on the classes. However, these values are
- * not included as fields on the tree nodes because of various reasons.
+ * The motivation for this typeclass is to extract values out of trees that could have been fields
+ * on the classes. However, these values are not included as fields on the tree nodes because of
+ * various reasons.
  */
 trait Extract[A, B] {
   def extract(a: A): List[B]

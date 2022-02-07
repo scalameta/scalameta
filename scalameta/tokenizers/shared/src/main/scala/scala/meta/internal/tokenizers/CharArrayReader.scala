@@ -56,9 +56,8 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter)
   }
 
   /**
-   * Advance one character, leaving CR;LF pairs intact.
-   *  This is for use in multi-line strings, so there are no
-   *  "potential line ends" here.
+   * Advance one character, leaving CR;LF pairs intact. This is for use in multi-line strings, so
+   * there are no "potential line ends" here.
    */
   final def nextRawChar(): Unit = {
     if (isUnicodeEscape) charOffset = lastUnicodeOffset

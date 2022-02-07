@@ -8,11 +8,12 @@ import scala.scalajs.js.annotation.JSImport.Namespace
 /**
  * Facade for the native nodejs process API
  *
- * The process object is a global that provides information about, and
- * control over, the current Node.js process. As a global, it is always
- * available to Node.js applications without using require().
+ * The process object is a global that provides information about, and control over, the current
+ * Node.js process. As a global, it is always available to Node.js applications without using
+ * require().
  *
- * @see https://nodejs.org/api/process.html
+ * @see
+ *   https://nodejs.org/api/process.html
  */
 @js.native
 trait JSProcess extends js.Any {
@@ -22,7 +23,8 @@ trait JSProcess extends js.Any {
 /**
  * Facade for native nodejs module "fs".
  *
- * @see https://nodejs.org/api/fs.html
+ * @see
+ *   https://nodejs.org/api/fs.html
  */
 @js.native
 @JSImport("fs", Namespace)
@@ -31,8 +33,8 @@ object JSFs extends js.Any {
   /**
    * Returns the file contents as Buffer using blocking apis.
    *
-   * NOTE: The actual return value is a Node.js buffer and not js.Array[Int].
-   * However, both support .length and angle bracket access (foo[1]).
+   * NOTE: The actual return value is a Node.js buffer and not js.Array[Int]. However, both support
+   * .length and angle bracket access (foo[1]).
    */
   def readFileSync(path: String): js.Array[Int] = js.native
 
@@ -58,7 +60,8 @@ object JSFs extends js.Any {
 /**
  * Facade for nodejs class fs.Stats.
  *
- * @see https://nodejs.org/api/fs.html#fs_class_fs_stats
+ * @see
+ *   https://nodejs.org/api/fs.html#fs_class_fs_stats
  */
 @js.native
 @JSImport("fs", Namespace)
@@ -70,7 +73,8 @@ class JSStats extends js.Any {
 /**
  * Facade for native nodejs module "path".
  *
- * @see https://nodejs.org/api/path.html
+ * @see
+ *   https://nodejs.org/api/path.html
  */
 @js.native
 @JSImport("path", Namespace)
