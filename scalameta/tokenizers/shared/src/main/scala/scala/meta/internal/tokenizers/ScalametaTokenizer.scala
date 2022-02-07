@@ -31,7 +31,13 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     @inline def pushToken(token: Token): Unit = tokens.add(token)
     pushToken(new Token.BOF(input, dialect))
 
-    def pushLegacyToken(curr: LegacyTokenData): Unit = {
+    val isAmmoniteInput: Boolean = input.isInstanceOf[Input.Ammonite]
+    def isAtLineStart: Boolean = {
+      val last = tokens.get(tokens.size() - 1) // tokens is non-empty, contains BOF
+      last.isInstanceOf[Token.LF] || last.isInstanceOf[Token.FF] || last.isInstanceOf[Token.BOF]
+    }
+
+    def pushLegacyToken(curr: LegacyTokenData, next: => Option[LegacyTokenData]): Unit = {
       val token = (curr.token: @scala.annotation.switch) match {
         case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
         case BACKQUOTED_IDENT =>
@@ -125,7 +131,14 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case DOT => Token.Dot(input, dialect, curr.offset)
         case COLON => Token.Colon(input, dialect, curr.offset)
         case EQUALS => Token.Equals(input, dialect, curr.offset)
-        case AT => Token.At(input, dialect, curr.offset)
+        case AT =>
+          val isAmmonite = isAmmoniteInput && isAtLineStart && next.exists(_.token == WHITESPACE)
+          val atToken = Token.At(input, dialect, curr.offset)
+          if (isAmmonite) {
+            pushToken(new Token.EOF(input, dialect, curr.offset))
+            pushToken(atToken)
+            new Token.BOF(input, dialect, curr.endOffset)
+          } else atToken
         case HASH => Token.Hash(input, dialect, curr.offset)
         case USCORE => Token.Underscore(input, dialect, curr.offset)
         case ARROW => Token.RightArrow(input, dialect, curr.offset, curr.endOffset + 1)
@@ -176,13 +189,18 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         if (legacyIndex < legacyTokens.size) legacyTokens(legacyIndex)
         else throw new UnexpectedInputEndException()
       }
+      def next = {
+        val nextIndex = legacyIndex + 1
+        if (nextIndex < legacyTokens.length) Some(legacyTokens(nextIndex)) else None
+      }
+
       @inline def nextToken() = legacyIndex += 1
       def pushTokenAndNext(token: Token): Unit = {
         pushToken(token)
         nextToken()
       }
       def emitToken() = {
-        pushLegacyToken(curr)
+        pushLegacyToken(curr, next)
         nextToken()
       }
       if (legacyIndex >= legacyTokens.length) return legacyIndex

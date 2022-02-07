@@ -69,6 +69,7 @@ object MoreHelpers {
   }
   implicit class XtensionCode(code: String) {
     def asInput: Input = Input.String(code)
+    def asAmmoniteInput: Input = Input.Ammonite(asInput)
     def applyRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
       asInput.applyRule(rule)
     }
