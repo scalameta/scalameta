@@ -188,13 +188,17 @@ private[parsers] class LazyTokenIterator private (
   ): (List[SepRegion], TokenRef) = {
     val prev = if (prevPos >= 0) scannerTokens(prevPos) else null
     val curr = scannerTokens(currPos)
-    val nextPos = {
-      var i = currPos + 1
-      while (i < scannerTokens.length && scannerTokens(i).is[Trivia]) i += 1
-      if (i == scannerTokens.length) i = -1
-      i
+    val (nextPos, next) = {
+      @tailrec
+      def iter(i: Int): (Int, Token) =
+        if (i == scannerTokens.length) (-1, null)
+        else
+          scannerTokens(i) match {
+            case Trivia() => iter(i + 1)
+            case t => (i, t)
+          }
+      iter(currPos + 1)
     }
-    val next = if (nextPos != -1) scannerTokens(nextPos) else null
 
     def isTrailingComma: Boolean =
       dialect.allowTrailingCommas &&
@@ -418,7 +422,7 @@ private[parsers] class LazyTokenIterator private (
               } else
                 // always add indent for indented `match` block
                 // check the previous token to avoid infinity loop
-                (!prev.prev.is[soft.KwEnd] && (prev.is[KwMatch] || prev.is[KwCatch])) &&
+                ((prev.is[KwMatch] || prev.is[KwCatch]) && !prev.prev.is[soft.KwEnd]) &&
                 next.is[KwCase] && token.isNot[Indentation.Indent]
             }
             if (ok) Some {
@@ -467,7 +471,7 @@ private[parsers] class LazyTokenIterator private (
       else {
         val token = scannerTokens(pos)
         token match {
-          case _: LF => (acc, pos)
+          case _: LF | _: BOF => (acc, pos)
           case AsMultilineComment(c) => (multilineCommentIndent(c), pos)
           case _: Comment => countIndentInternal(pos - 1)
           case _: Space | _: Tab => countIndentInternal(pos - 1, acc + 1)
