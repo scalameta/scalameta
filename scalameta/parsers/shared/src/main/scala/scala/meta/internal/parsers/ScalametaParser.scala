@@ -209,19 +209,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case Tokenized.Error(_, _, details) => throw details
   }
 
-  // NOTE: public methods of TokenIterator return scannerTokens-based positions
-  trait TokenIterator {
-    def next(): Unit
-    def prevTokenPos: Int
-    def tokenPos: Int
-    def currentIndentation: Int
-    def token: Token
-    def fork: TokenIterator
-    def observeIndented(): Boolean
-    def observeOutdented(): Boolean
-    def observeIndentedEnum(): Boolean
-    def undoIndent(): Unit
-  }
   var in: TokenIterator = {
     new LazyTokenIterator(
       scannerTokens,
