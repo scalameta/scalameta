@@ -26,5 +26,8 @@ object Mima {
       true
   }
 
-  val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq()
+  val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.tokens.Token#BOF.copy"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.tokens.Token#EOF.copy")
+  )
 }
