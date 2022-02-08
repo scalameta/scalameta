@@ -59,8 +59,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def parseRule[T <: Tree](rule: this.type => T): T = {
     // NOTE: can't require in.tokenPos to be at -1, because TokIterator auto-rewinds when created
     // require(in.tokenPos == -1 && debug(in.tokenPos))
-    val start = 0
     accept[BOF]
+    val start = in.prevTokenPos
     val t = rule(this)
     // NOTE: can't have in.prevTokenPos here
     // because we need to subsume all the trailing trivia
