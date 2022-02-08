@@ -26,35 +26,22 @@ import scala.meta.classifiers._
 import scala.meta.internal.classifiers._
 import org.scalameta._
 import org.scalameta.invariants._
-import scala.meta.internal.tokenizers.Chars
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
 import scala.util.control.NonFatal
 
 class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
+
+  import ScalametaParser._
+
   require(Set("", EOL).contains(dialect.toplevelSeparator))
-  private val soft = new SoftKeywords(dialect)
+
+  private val scannerTokens: ScannerTokens = ScannerTokens(input)
+  import scannerTokens.Implicits._
+  import scannerTokens.Classifiers._
 
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
-
-  /** Utility for tracking a context, like whether we are inside a pattern or a quote. */
-  private trait NestedContextBase {
-    private var nested = 0
-    def within[T](body: => T): T = {
-      nested += 1
-      try {
-        body
-      } finally {
-        nested -= 1
-      }
-    }
-    def isInside() = nested > 0
-  }
-
-  private object QuoteSpliceContext extends NestedContextBase
-
-  private object QuotedPatternContext extends NestedContextBase
 
   def parseRule[T <: Tree](rule: this.type => T): T = {
     parseRule(rule(this))
@@ -144,62 +131,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ------------- TOKEN STREAM HELPERS -------------------------------------------- */
 
-  // NOTE: This is a cache that's necessary for reasonable performance of prev/next for tokens.
-  // It maps character positions in input's content into indices in the scannerTokens vector.
-  // One complication here is that there can be multiple tokens that sort of occupy a given position,
-  // so the clients of this cache need to be wary of that!
-  private val scannerTokenCache: Array[Int] = {
-    val result = new Array[Int](input.chars.length)
-    var i = 0
-    while (i < scannerTokens.length) {
-      val token = scannerTokens(i)
-      var j = token.start
-      while (j < token.end) {
-        result(j) = i
-        j += 1
-      }
-      i += 1
-    }
-    result
-  }
-  implicit class XtensionTokenIndex(token: Token) {
-    def index: Int = {
-      @tailrec
-      def lurk(roughIndex: Int): Int = {
-        require(roughIndex >= 0 && debug(token))
-        val scannerToken = scannerTokens(roughIndex)
-        def exactMatch = scannerToken eq token
-        def originMatch =
-          (token.is[LFLF] || token.is[Indentation.Outdent] || token.is[Indentation.Indent]) &&
-            scannerToken.start == token.start && scannerToken.end == token.end
-        if (exactMatch || originMatch) roughIndex
-        else lurk(roughIndex - 1)
-      }
-      if (token.start == input.chars.length) scannerTokens.length - 1
-      else lurk(scannerTokenCache(token.start))
-    }
-    def prev: Token = {
-      val prev = scannerTokens.apply(Math.max(token.index - 1, 0))
-      if (prev.is[Whitespace] || prev.is[Comment]) prev.prev
-      else prev
-    }
-
-    def nextSafe: Token = scannerTokens.apply(Math.min(token.index + 1, scannerTokens.length - 1))
-
-    def next: Token = {
-      val next = nextSafe
-      if (next.is[Whitespace] || next.is[Comment]) next.next
-      else next
-    }
-    def strictNext: Token = {
-      val next = nextSafe
-      if (next.is[Space] || next.is[Tab] || next.is[Comment]) next.strictNext
-      else next
-    }
-  }
-
-  def isMultilinePos(p: Position): Boolean = p.endLine > p.startLine
-
   def isColonEol(token: Token): Boolean = {
 
     @tailrec
@@ -215,555 +146,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ------------- PARSER-SPECIFIC TOKENS -------------------------------------------- */
 
-  sealed trait SepRegion {
-    def indent = -1
-    def closeOnNonCase = false
-    def indentOnArrow = true
-    def isIndented = false
-  }
-  case class RegionIndent(override val indent: Int, override val closeOnNonCase: Boolean)
-      extends SepRegion {
-    override def isIndented: Boolean = true
-  }
-  case class RegionParen(canProduceLF: Boolean) extends SepRegion
-  case object RegionBracket extends SepRegion
-  case class RegionBrace(override val indent: Int, override val indentOnArrow: Boolean)
-      extends SepRegion
-  case class RegionCase(override val indent: Int) extends SepRegion
-  case class RegionEnum(override val indent: Int) extends SepRegion
-  case class RegionIndentEnum(override val indent: Int) extends SepRegion {
-    override def isIndented: Boolean = true
-  }
-  case object RegionArrow extends SepRegion
-  // NOTE: Special case for Enum region is needed because parsing of 'case' statement is done differently
-  case object RegionEnumArtificialMark extends SepRegion
-
-  // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
-  // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
-  // However, in certain tricky cases some whitespace tokens (namely, newlines) do have to be emitted.
-  // This leads to extremely dirty and seriously crazy code.
-  lazy val scannerTokens = input.tokenize match {
-    case Tokenized.Success(tokens) => tokens
-    case Tokenized.Error(_, _, details) => throw details
-  }
-
-  // NOTE: public methods of TokenIterator return scannerTokens-based positions
-  trait TokenIterator extends Iterator[Token] {
-    def prevTokenPos: Int
-    def tokenPos: Int
-    def currentIndentation: Int
-    def token: Token
-    def fork: TokenIterator
-    def observeIndented(): Boolean
-    def observeOutdented(): Boolean
-    def observeIndentedEnum(): Boolean
-    def undoIndent(): Unit
-  }
   var in: TokenIterator = {
-    new LazyTokenIterator(
-      scannerTokens,
-      List.empty,
-      TokenRef(scannerTokens(0), 0, 1, 0),
-      -1
-    )
+    LazyTokenIterator(scannerTokens)
   }
-
-  case class TokenRef(
-      token: Token,
-      pos: Int,
-      nextPos: Int,
-      pointPos: Int
-  )
-
-  private def mkIndentToken(token: Token): Token =
-    new Indentation.Indent(token.input, token.dialect, token.start, token.end)
-
-  private def mkOutdentToken(token: Token): Token =
-    new Indentation.Outdent(token.input, token.dialect, token.start, token.end)
-
-  class LazyTokenIterator(
-      scannerTokens: Tokens,
-      var sepRegions: List[SepRegion],
-      var curr: TokenRef,
-      var prevPos: Int
-  ) extends TokenIterator {
-
-    override def hasNext: Boolean = curr.token.isNot[EOF]
-
-    override def next(): Token = {
-      val (newSepRegions, newTokenRef) = nextToken(curr.pos, curr.nextPos, sepRegions)
-      prevPos = curr.pointPos
-      curr = newTokenRef
-      sepRegions = newSepRegions
-      curr.token
-    }
-
-    private def observeIndented0(f: (Int, List[SepRegion]) => List[SepRegion]): Boolean = {
-      if (!dialect.allowSignificantIndentation) false
-      else {
-        val existingIndent = sepRegions.find(_.isIndented).fold(0)(_.indent)
-        val (expected, pointPos) = countIndentAndNewlineIndex(tokenPos)
-        if (expected > existingIndent) {
-          sepRegions = f(expected, sepRegions)
-          val indent = mkIndentToken(token)
-          curr = TokenRef(indent, curr.pos, curr.pos, pointPos)
-          true
-        } else false
-      }
-    }
-
-    /**
-     * Deals with different rules for indentation after self type arrow.
-     */
-    def undoIndent(): Unit = {
-      sepRegions match {
-        case region :: others if region.isIndented && curr.token.is[Indentation.Indent] =>
-          next()
-          sepRegions = sepRegions match {
-            // deal with  region added by `case` in enum after self type
-            case RegionArrow :: _ => others
-            // if no region was added
-            case `region` :: _ => others
-            // keep any added region in `next()`
-            case head :: _ => head :: others
-            case _ => sepRegions
-          }
-        case _ =>
-      }
-    }
-
-    def observeIndented(): Boolean = {
-      observeIndented0 { (i, prev) =>
-        val undoRegionChange =
-          prev.headOption match {
-            case Some(RegionParen(_)) if token.is[LeftParen] => prev.tail
-            case Some(RegionEnumArtificialMark) if token.is[KwEnum] => prev.tail
-            case Some(_: RegionBrace) if token.is[LeftBrace] => prev.tail
-            case _ => prev
-          }
-        RegionIndent(i, false) :: undoRegionChange
-      }
-    }
-
-    def observeIndentedEnum(): Boolean = {
-      observeIndented0((i, prev) => {
-        val nextPrev = prev match {
-          case RegionArrow :: RegionEnumArtificialMark :: other => other
-          case RegionEnumArtificialMark :: other => other
-          case x => x
-        }
-        RegionIndentEnum(i) :: nextPrev
-      })
-    }
-
-    def currentIndentation: Int = {
-      val foundIndentation = countIndent(curr.pointPos)
-      if (foundIndentation < 0)
-        // empty sepregions means we are at toplevel
-        sepRegions.headOption.fold(0)(_.indent)
-      else
-        foundIndentation
-    }
-
-    def observeOutdented(): Boolean = {
-      if (!dialect.allowSignificantIndentation) false
-      else {
-
-        def canEndIndentation(token: Token) = token.is[KwElse] || token.is[KwThen] ||
-          token.is[KwDo] || token.is[KwCatch] || token.is[KwFinally] || token.is[KwYield] ||
-          token.is[KwMatch]
-
-        sepRegions match {
-          case region :: tail if region.isIndented && canEndIndentation(curr.token) =>
-            sepRegions = tail
-            val outdent = mkOutdentToken(curr.token)
-            val outdentPos = findOutdentPos(prevPos, curr.pos, region)
-            curr = TokenRef(outdent, curr.pos, curr.pos, outdentPos)
-            true
-          case _ => false
-        }
-      }
-    }
-
-    private def findOutdentPos(prevPos: Int, currPos: Int, region: SepRegion): Int = {
-      val outdent = region.indent
-      @tailrec
-      def iter(i: Int, pos: Int, indent: Int): Int = {
-        if (i >= currPos) {
-          if (pos < currPos) pos else currPos - 1
-        } else {
-          scannerTokens(i) match {
-            case _: LF | _: FF =>
-              iter(i + 1, if (pos == prevPos) i else pos, 0)
-            case _: Space | _: Tab if indent >= 0 =>
-              iter(i + 1, pos, indent + 1)
-            case Whitespace() =>
-              iter(i + 1, pos, indent)
-            case _: Comment if indent < 0 || outdent <= indent =>
-              iter(i + 1, i + 1, -1)
-            case _ => pos
-          }
-        }
-      }
-
-      val iterPos = 1 + prevPos
-      if (iterPos < currPos) iter(iterPos, prevPos, -1)
-      else if (scannerTokens(currPos).is[EOF]) currPos
-      else prevPos
-    }
-
-    @tailrec
-    private def nextToken(
-        prevPos: Int,
-        currPos: Int,
-        sepRegions: List[SepRegion]
-    ): (List[SepRegion], TokenRef) = {
-      val prev = if (prevPos >= 0) scannerTokens(prevPos) else null
-      val curr = scannerTokens(currPos)
-      val nextPos = {
-        var i = currPos + 1
-        while (i < scannerTokens.length && scannerTokens(i).is[Trivia]) i += 1
-        if (i == scannerTokens.length) i = -1
-        i
-      }
-      val next = if (nextPos != -1) scannerTokens(nextPos) else null
-
-      def isTrailingComma: Boolean =
-        dialect.allowTrailingCommas &&
-          curr.is[Comma] &&
-          next.is[CloseDelim] &&
-          next.pos.startLine > curr.pos.endLine
-
-      def mkIndent(pointPos: Int): TokenRef =
-        TokenRef(mkIndentToken(curr), prevPos, currPos, pointPos)
-
-      def mkOutdent(region: SepRegion): TokenRef =
-        mkOutdentTo(region, currPos)
-
-      def mkOutdentTo(region: SepRegion, maxPointPos: Int): TokenRef = {
-        val pointPos = findOutdentPos(prevPos, maxPointPos, region)
-        TokenRef(mkOutdentToken(curr), prevPos, currPos, pointPos)
-      }
-
-      def currRef: TokenRef = TokenRef(curr, currPos, currPos + 1, currPos)
-
-      def indentationWithinParenRegion: Option[SepRegion] = {
-        def isWithinParenRegion =
-          sepRegions.tail
-            .collectFirst {
-              case RegionParen(_) => true
-              case other if !other.isIndented => false
-            }
-            .contains(true)
-        sepRegions.headOption.filter(_.isIndented && isWithinParenRegion)
-      }
-
-      if (isTrailingComma) {
-        nextToken(currPos, currPos + 1, sepRegions)
-      } else if (curr.isNot[Trivia]) {
-        if (curr.is[LeftParen]) (RegionParen(false) :: sepRegions, currRef)
-        else if (curr.is[LeftBracket]) (RegionBracket :: sepRegions, currRef)
-        else if (curr.is[Comma]) {
-          indentationWithinParenRegion.fold {
-            (sepRegions, currRef)
-          } { region =>
-            (sepRegions.tail, mkOutdent(region))
-          }
-        } else if (curr.is[LeftBrace]) {
-          val indentInBrace = if (isAheadNewLine(currPos)) countIndent(nextPos) else -1
-          // After encountering keyword Enum we add artificial '{' on top of stack.
-          // Then always after Enum next token is '{'. On token '{' we check if top of stack is '{'
-          // (which in case of enum is always true) and replace it with '$'.
-          // Now if we have token 'case' and top of stack is '$' we know it is Enum-case.
-          // In any other case it is 'match-case' or 'try-case'
-          val nextRegions =
-            if (sepRegions.headOption.contains(RegionEnumArtificialMark))
-              RegionEnum(indentInBrace) :: sepRegions.tail
-            else {
-              val indentOnArrow = !(prev.is[KwMatch] || prev.is[KwCatch])
-              RegionBrace(indentInBrace, indentOnArrow) :: sepRegions
-            }
-          (nextRegions, currRef)
-        } else if (curr.is[KwEnum]) {
-          (RegionEnumArtificialMark :: sepRegions, currRef)
-        } else if (curr.is[CaseIntro]) {
-          val nextRegions = sepRegions.headOption match {
-            case Some(_: RegionEnum | _: RegionIndentEnum) => sepRegions
-            case Some(_: RegionCase) => RegionArrow :: sepRegions.tail
-            case _ => RegionArrow :: sepRegions
-          }
-          (nextRegions, currRef)
-        } else if (curr.is[RightBrace]) {
-          // produce outdent for every indented region before RegionBrace|RegionEnum
-          @tailrec
-          def nextRegions(in: List[SepRegion]): (List[SepRegion], TokenRef) = {
-            in match {
-              case (_: RegionBrace | _: RegionEnum) :: xs =>
-                (xs, currRef)
-              case x :: xs if x.isIndented =>
-                (xs, mkOutdent(x))
-              case _ :: xs =>
-                nextRegions(xs)
-              case Nil =>
-                (Nil, currRef)
-            }
-          }
-          nextRegions(sepRegions)
-        } else if (curr.is[RightBracket]) {
-          val nextRegions =
-            if (sepRegions.headOption.contains(RegionBracket)) sepRegions.tail
-            else sepRegions
-          (nextRegions, currRef)
-        } else if (curr.is[EOF]) {
-          sepRegions match {
-            case x :: xs if x.isIndented => (xs, mkOutdent(x))
-            case other => (other, currRef)
-          }
-        } else if (curr.is[RightParen]) {
-          sepRegions match {
-            case x :: xs if x.isIndented => (xs, mkOutdent(x))
-            case RegionParen(_) :: xs => (xs, currRef)
-            case _ => (sepRegions, currRef)
-          }
-        } else if (curr.is[LeftArrow]) {
-          val nextRegions =
-            if (sepRegions.headOption.contains(RegionArrow)) sepRegions.tail
-            else sepRegions
-          (nextRegions, currRef)
-        } else if (curr.is[RightArrow]) {
-          val nextRegions =
-            if (sepRegions.headOption.contains(RegionArrow)) {
-              // add case region for `match {` to calculate proper indentation
-              // for statements in indentation dialects
-              val newRegions = sepRegions.tail
-              val shouldNotProduceIndentation =
-                !dialect.allowSignificantIndentation ||
-                  newRegions.headOption.exists(!_.indentOnArrow)
-              lazy val indentInCase = if (isAheadNewLine(currPos)) countIndent(nextPos) else -1
-              if (newRegions.nonEmpty && shouldNotProduceIndentation && indentInCase > 0)
-                RegionCase(indentInCase) :: newRegions
-              else
-                newRegions
-            } else sepRegions
-          (nextRegions, currRef)
-        } else if (dialect.allowSignificantIndentation && curr.is[KwFor]) {
-          val updatedSepRegions = sepRegions match {
-            case RegionParen(_) :: tail => RegionParen(true) :: tail
-            case _ => sepRegions
-          }
-          (updatedSepRegions, currRef)
-        } else {
-          (sepRegions, currRef)
-        }
-      } else {
-        var i = prevPos + 1
-        var lastNewlinePos = -1
-        var newlineStreak = false
-        var newlines = false
-        var hasMultilineComment = false
-        while (i < nextPos) {
-          val token = scannerTokens(i)
-          if (token.is[LF] || token.is[FF]) {
-            lastNewlinePos = i
-            if (newlineStreak) newlines = true
-            newlineStreak = true
-          }
-          hasMultilineComment |= token.is[MultilineComment]
-          newlineStreak &= token.is[Whitespace]
-          i += 1
-        }
-
-        def lastWhitespaceToken = {
-          val token = scannerTokens(lastNewlinePos)
-          val out =
-            if (newlines) LFLF(token.input, token.dialect, token.start, token.end) else token
-          TokenRef(out, lastNewlinePos, lastNewlinePos + 1, lastNewlinePos)
-        }
-
-        def canProduceLF: Boolean = {
-          lastNewlinePos != -1 &&
-          prev != null && (prev.is[CanEndStat] || token.is[Indentation.Outdent]) &&
-          next != null && next.isNot[CantStartStat] && sepRegions.headOption.forall {
-            case _: RegionBrace | _: RegionCase | _: RegionEnum => true
-            case _: RegionIndent | _: RegionIndentEnum => true
-            case x: RegionParen => x.canProduceLF
-            case _ => false
-          }
-        }
-
-        def getIfCanProduceLF =
-          if (canProduceLF) Some((sepRegions, lastWhitespaceToken))
-          else None
-
-        val resOpt = if (dialect.allowSignificantIndentation) {
-          val hasLF = lastNewlinePos != -1 || hasMultilineComment
-          if (hasLF && next != null && !isLeadingInfixOperator(next)) {
-
-            val nextIndent = countIndent(nextPos)
-
-            /**
-             * Outdent is needed in following cases:
-             *   - If indentation on next line is less than current and previous token can't
-             *     continue expr on the next line
-             *   - At the end of `match` block even if indentation level is not changed Example:
-             *     ```
-             *     x match
-             *     case 1 =>
-             *     case 2 => // <- produce outdent
-             *     foo()
-             *     ```
-             */
-            def getOutdentIfNeeded() = sepRegions.headOption
-              .filter { r =>
-                r.isIndented && {
-                  // need to check prev.prev in case of `end match`
-                  if (nextIndent < r.indent)
-                    prev.isNot[CanContinueOnNextLine] || prev.prev.is[soft.KwEnd]
-                  else r.closeOnNonCase && next.isNot[KwCase] && nextIndent == r.indent
-                }
-              }
-              .map { region => (sepRegions.tail, mkOutdentTo(region, nextPos)) }
-
-            /**
-             * Indent is needed in the following cases:
-             *   - Indetation on new line is greater and previous token can start indentation and
-             *     token can start indentation
-             *   - Indentation on the new line is the same and the next token is the first `case`
-             *     clause in match Example:
-             *     ```
-             *     x match // <- mk indent
-             *     case 1 =>
-             *     ```
-             *
-             * Notice: Indentation after `:` isn't hadled here. It's produced manually on the parser
-             * level.
-             */
-            def getIndentIfNeeded = {
-              val ok = nextIndent >= 0 && {
-
-                val (currIndent, indentOnArrow) =
-                  sepRegions.headOption.fold((0, true))(r => (r.indent, r.indentOnArrow))
-
-                // !next.is[RightBrace] - braces can sometimes have -1 and we can start indent on }
-                if (nextIndent > currIndent && prev.is[RightArrow]) {
-                  indentOnArrow && next.isNot[RightBrace] && next.isNot[EndMarkerIntro]
-                } else if (nextIndent > currIndent) {
-                  // if does not work with indentation in pattern matches
-                  val shouldNotIndentIf =
-                    prev.is[KwIf] && sepRegions.headOption.contains(RegionArrow)
-                  !shouldNotIndentIf && prev.is[CanStartIndent] && !next.is[RightBrace]
-                } else
-                  // always add indent for indented `match` block
-                  // check the previous token to avoid infinity loop
-                  (!prev.prev.is[soft.KwEnd] && (prev.is[KwMatch] || prev.is[KwCatch])) &&
-                  next.is[KwCase] && token.isNot[Indentation.Indent]
-              }
-              if (ok) Some {
-                val region = RegionIndent(nextIndent, prev.is[KwMatch])
-                (region :: sepRegions, mkIndent(lastNewlinePos))
-              }
-              else None
-            }
-
-            getOutdentIfNeeded()
-              .orElse { getIndentIfNeeded }
-              .orElse { getIfCanProduceLF }
-          } else None
-        } else {
-          getIfCanProduceLF
-        }
-        resOpt match {
-          case Some(res) => res
-          case _ => nextToken(prevPos, nextPos, sepRegions)
-        }
-      }
-    }
-
-    override def prevTokenPos: Int = prevPos
-
-    override def tokenPos: Int = curr.pointPos
-
-    override def token: Token = curr.token
-
-    override def fork: TokenIterator =
-      new LazyTokenIterator(scannerTokens, sepRegions, curr, prevPos)
-
-  }
-
-  private def multineCommentIndent(t: Comment): Int = {
-    @tailrec
-    def loop(idx: Int, indent: Int, isAfterNewline: Boolean): Int = {
-      if (idx == t.value.length) indent
-      else {
-        t.value.charAt(idx) match {
-          case '\n' => loop(idx + 1, 0, isAfterNewline = true)
-          case ' ' | '\t' if isAfterNewline => loop(idx + 1, indent + 1, isAfterNewline)
-          case _ => loop(idx + 1, indent, isAfterNewline = false)
-        }
-      }
-    }
-    loop(0, 0, false)
-  }
-
-  /**
-   * When token on `tokenPosition` is not a whitespace and is a first non-whitespace character in a
-   * current line then a result is a number of whitespace characters counted. Otherwise
-   * {{{(-1, -1)}}} is returned.
-   *
-   * Returns a tuple2 where:
-   *   - first value is indentation level
-   *   - second is `LF` token index
-   */
-  private def countIndentAndNewlineIndex(tokenPosition: Int): (Int, Int) = {
-    def isWhitespace(token: Token): Boolean = token.is[Space] || token.is[Tab]
-
-    @tailrec
-    def countIndentInternal(pos: Int, acc: Int = 0): (Int, Int) = {
-      if (pos < 0) (acc, pos)
-      else {
-        val token = scannerTokens(pos)
-        token match {
-          case _: LF => (acc, pos)
-          case c: Comment if isMultilinePos(c.pos) =>
-            (multineCommentIndent(c), pos)
-          case _: Comment => countIndentInternal(pos - 1)
-          case other if isWhitespace(other) => countIndentInternal(pos - 1, acc + 1)
-          case _ => (-1, -1)
-        }
-      }
-    }
-
-    if (scannerTokens(tokenPosition).is[Whitespace]) (-1, -1)
-    else countIndentInternal(tokenPosition - 1)
-  }
-
-  private def countIndent(tokenPosition: Int): Int =
-    countIndentAndNewlineIndex(tokenPosition)._1
 
   private def currentIndentation: Int = {
     in.currentIndentation
   }
 
-  @tailrec
-  private def isAheadNewLine(currentPosition: Int): Boolean = {
-    val nextPos = currentPosition + 1
-    if (nextPos >= scannerTokens.length) false
-    else if (scannerTokens(nextPos).is[LF]) true
-    else scannerTokens(nextPos).is[Trivia] && isAheadNewLine(nextPos)
-  }
-
-  private def isLeadingInfixOperator(tkn: Token): Boolean = {
-    lazy val parts = tkn.text.split("_")
-    dialect.allowSignificantIndentation &&
-    parts.nonEmpty &&
-    parts.last.forall(Chars.isOperatorPart) &&
-    !tkn.text.startsWith("@") &&
-    tkn.nextSafe.is[Whitespace] && (
-      tkn.strictNext.is[Ident] || tkn.strictNext.is[Interpolation.Id] ||
-        tkn.strictNext.is[Literal] || tkn.strictNext.is[LeftParen] ||
-        tkn.strictNext.is[LeftBrace]
-    )
-  }
   def token = in.token
   def next() = in.next()
   def nextOnce() = next()
@@ -840,18 +230,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (token.is[LeftBrace]) inBraces(body)
     else body
 
-  def dropTrivialBlock(term: Term): Term =
-    term match {
-      case b: Term.Block => dropOuterBlock(b)
-      case _ => term
-    }
-
-  private def dropOuterBlock(term: Term.Block): Term =
-    term.stats match {
-      case (stat: Term) :: Nil => stat
-      case _ => term
-    }
-
   @inline final def inBrackets[T](body: => T): T = {
     accept[LeftBracket]
     val ret = body
@@ -861,30 +239,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ------------- POSITION HANDLING ------------------------------------------- */
 
-  // NOTE: `startTokenPos` and `endTokenPos` are BOTH INCLUSIVE.
-  // This is at odds with the rest of scala.meta, where ends are non-inclusive.
-  sealed trait StartPos {
-    def startTokenPos: Int
-  }
-  sealed trait EndPos {
-    def endTokenPos: Int
-  }
-  sealed trait Pos extends StartPos with EndPos
-  case class IndexPos(index: Int) extends Pos {
-    def startTokenPos = index
-    def endTokenPos = startTokenPos
-  }
-  case class TokenPos(token: Token) extends Pos {
-    def startTokenPos = token.index
-    def endTokenPos = startTokenPos
-  }
-  case class TreePos(tree: Tree) extends Pos {
-    val (startTokenPos, endTokenPos) = tree.origin match {
-      case Origin.Parsed(_, _, pos) => (pos.start, pos.end - 1)
-      case _ =>
-        sys.error(s"internal error: unpositioned prototype ${tree.syntax}: ${tree.structure}")
-    }
-  }
   case object AutoPos extends Pos {
     def startTokenPos = in.tokenPos
     def endTokenPos = in.prevTokenPos
@@ -895,10 +249,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   case object EndPosPreOutdent extends EndPos {
     def endTokenPos = if (in.token.is[Indentation.Outdent]) in.tokenPos else in.prevTokenPos
   }
-  implicit def intToIndexPos(index: Int): IndexPos = IndexPos(index)
-  implicit def tokenToTokenPos(token: Token): TokenPos = TokenPos(token)
-  implicit def treeToTreePos(tree: Tree): TreePos = TreePos(tree)
-  implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.fold[Pos](AutoPos)(TreePos)
+  implicit def intToIndexPos(index: Int): Pos = new IndexPos(index)
+  implicit def tokenToTokenPos(token: Token): Pos = new IndexPos(token.index)
+  implicit def treeToTreePos(tree: Tree): Pos = new TreePos(tree)
+  implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.fold[Pos](AutoPos)(treeToTreePos)
   implicit def modsToPos(mods: List[Mod]): Pos = mods.headOption
   def auto = AutoPos
 
@@ -1091,334 +445,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def isBackquoted: Boolean = token.syntax.startsWith("`") && token.syntax.endsWith("`")
   def isVarargStarParam(allowRepeated: Boolean) =
     dialect.allowPostfixStarVarargSplices && isStar && token.next.is[RightParen] && allowRepeated
-  private implicit class XtensionTokenClass(token: Token) {
-    def isClassOrObject = token.is[KwClass] || token.is[KwObject]
-    def isClassOrObjectOrEnum = isClassOrObject || (token.is[Ident] && dialect.allowEnums)
-  }
 
   @classifier
   trait MacroSplicedIdent {
     def unapply(token: Token): Boolean = {
-      dialect.allowSpliceAndQuote && QuoteSpliceContext.isInside() && isIdentAnd(_.head == '$')
+      dialect.allowSpliceAndQuote && QuotedSpliceContext.isInside() && isIdentAnd(_.head == '$')
     }
   }
 
   @classifier
   trait MacroQuotedIdent {
     def unapply(token: Token): Boolean = {
-      dialect.allowSpliceAndQuote && QuoteSpliceContext.isInside() && token.is[Constant.Symbol]
+      dialect.allowSpliceAndQuote && QuotedSpliceContext.isInside() && token.is[Constant.Symbol]
     }
-  }
-
-  @classifier
-  trait CloseDelim {
-    def unapply(token: Token): Boolean = {
-      token.is[RightBrace] || token.is[RightBracket] || token.is[RightParen] || token
-        .is[Indentation.Outdent]
-    }
-  }
-
-  @classifier
-  trait TypeIntro {
-    def unapply(token: Token): Boolean = {
-      token.is[Ident] || token.is[KwSuper] || token.is[KwThis] ||
-      token.is[LeftParen] || token.is[At] || token.is[Underscore] ||
-      token.is[Unquote] || (token.is[Literal] && dialect.allowLiteralTypes)
-    }
-  }
-
-  @classifier
-  trait EndMarkerWord {
-    def unapply(token: Token): Boolean = {
-      token.is[Ident] || token.is[KwIf] || token.is[KwWhile] || token.is[KwFor] ||
-      token.is[KwMatch] || token.is[KwTry] || token.is[KwNew] || token.is[KwThis] ||
-      token.is[KwGiven] || token.is[KwVal]
-    }
-  }
-
-  @classifier
-  trait StopScanToken {
-    def unapply(token: Token): Boolean = {
-      token.is[KwPackage] || token.is[KwExport] || token.is[KwImport] ||
-      token.is[KwIf] || token.is[KwElse] || token.is[KwWhile] || token.is[KwDo] ||
-      token.is[KwFor] || token.is[KwYield] || token.is[KwNew] || token.is[KwTry] ||
-      token.is[KwCatch] || token.is[KwFinally] || token.is[KwThrow] || token.is[KwReturn] ||
-      token.is[KwMatch] || token.is[EOF] || token.is[Semicolon] || token.is[Modifier] || token
-        .is[DefIntro]
-    }
-  }
-
-  @classifier
-  trait EndMarkerIntro {
-    def unapply(token: Token): Boolean = {
-      dialect.allowEndMarker &&
-      token.is[Ident] &&
-      token.text == "end" &&
-      token.strictNext.is[EndMarkerWord] &&
-      (token.next.strictNext.is[LineEnd] || token.next.strictNext.is[EOF])
-    }
-  }
-  // then  else  do  catch  finally  yield  match
-  @classifier
-  trait CanContinueOnNextLine {
-    def unapply(token: Token): Boolean = {
-      token.is[KwThen] || token.is[KwElse] || token.is[KwDo] ||
-      token.is[KwCatch] || token.is[KwFinally] || token.is[KwYield] ||
-      token.is[KwMatch]
-    }
-  }
-
-  @classifier
-  trait ExprIntro {
-    def unapply(token: Token): Boolean = {
-      (token.is[Ident] && !token.is[SoftModifier] && !token.is[EndMarkerIntro]) ||
-      token.is[Literal] || token.is[Interpolation.Id] || token.is[Xml.Start] ||
-      token.is[KwDo] || token.is[KwFor] || token.is[KwIf] ||
-      token.is[KwNew] || token.is[KwReturn] || token.is[KwSuper] ||
-      token.is[KwThis] || token.is[KwThrow] || token.is[KwTry] || token.is[KwWhile] ||
-      token.is[LeftParen] || token.is[LeftBrace] || token.is[Underscore] ||
-      token.is[Unquote] || token.is[MacroSplice] || token.is[MacroQuote] ||
-      token.is[Indentation.Indent] || (token.is[LeftBracket] && dialect.allowPolymorphicFunctions)
-    }
-  }
-
-  @classifier
-  trait SoftModifier {
-    def unapply(token: Token): Boolean = {
-      (
-        (token.is[soft.KwInline] || token.is[soft.KwOpaque] || token.is[soft.KwTransparent]) &&
-          (token.next.is[DclIntro] || token.next.is[Modifier])
-      ) || (token.is[soft.KwTransparent] && token.next.is[KwTrait]) ||
-      ((token.is[soft.KwOpen] || token.is[soft.KwInfix]) && token.next.is[DefIntro]) ||
-      token.is[InlineMatchMod]
-
-    }
-  }
-
-  @classifier
-  trait InlineMatchMod {
-    def unapply(token: Token): Boolean = {
-      token.is[soft.KwInline] && {
-        val nextToken = token.next
-        nextToken.is[LeftParen] || nextToken.is[LeftBrace] || nextToken.is[KwNew] ||
-        nextToken.is[Ident] || nextToken.is[Literal] || nextToken.is[Interpolation.Id] ||
-        nextToken.is[Xml.Start] || nextToken.is[KwSuper] || nextToken.is[KwThis] ||
-        nextToken.is[MacroSplice] || nextToken.is[MacroQuote]
-      }
-    }
-  }
-
-  @classifier
-  trait CaseIntro {
-    def unapply(token: Token): Boolean = {
-      token.is[KwCase] && !token.next.isClassOrObject
-    }
-  }
-
-  @classifier
-  trait DefIntro {
-    def unapply(token: Token): Boolean = {
-      token.is[Modifier] || token.is[At] ||
-      token.is[TemplateIntro] || token.is[DclIntro] ||
-      (token.is[Unquote] && token.next.is[DefIntro]) ||
-      (token.is[Ellipsis] && token.next.is[DefIntro]) ||
-      (token.is[KwCase] && token.next.isClassOrObjectOrEnum)
-    }
-  }
-
-  @classifier
-  trait TemplateIntro {
-    def unapply(token: Token): Boolean = {
-      token.is[Modifier] || token.is[At] ||
-      token.is[KwClass] || token.is[KwObject] || token.is[KwTrait] ||
-      (token.is[Unquote] && token.next.is[TemplateIntro]) ||
-      (token.is[KwCase] && token.next.isClassOrObjectOrEnum)
-    }
-  }
-
-  @classifier
-  trait DclIntro {
-    def unapply(token: Token): Boolean = {
-      token.is[KwDef] || token.is[KwType] || token.is[KwEnum] ||
-      token.is[KwVal] || token.is[KwVar] || token.is[KwGiven] ||
-      token.is[KwExtension] || (token.is[Unquote] && token.next.is[DclIntro])
-    }
-  }
-
-  @classifier
-  trait KwExtension {
-    def unapply(token: Token) = {
-      // Logic taken from the Scala 3 parser
-      token.is[soft.KwExtension] && (token.next.is[LeftParen] || token.next.is[LeftBracket])
-
-    }
-  }
-
-  @classifier
-  trait Modifier {
-    def unapply(token: Token): Boolean = {
-      token.is[KwAbstract] || token.is[KwFinal] ||
-      token.is[KwSealed] || token.is[KwImplicit] ||
-      token.is[KwLazy] || token.is[KwPrivate] ||
-      token.is[KwProtected] || token.is[KwOverride] ||
-      token.is[SoftModifier]
-    }
-  }
-
-  @classifier
-  trait NonParamsModifier {
-    def unapply(token: Token): Boolean = {
-      token.is[soft.KwOpen] || token.is[soft.KwOpaque] || token.is[soft.KwTransparent] || token
-        .is[soft.KwInfix]
-    }
-  }
-
-  @classifier
-  trait NonlocalModifier {
-    def unapply(token: Token): Boolean = {
-      token.is[KwPrivate] || token.is[KwProtected] ||
-      token.is[KwOverride] || token.is[soft.KwOpen]
-    }
-  }
-
-  @classifier
-  trait LocalModifier {
-    def unapply(token: Token): Boolean = {
-      token.is[Modifier] && !token.is[NonlocalModifier]
-    }
-  }
-
-  @classifier
-  trait StatSeqEnd {
-    def unapply(token: Token): Boolean = {
-      token.is[RightBrace] || token.is[EOF] || token.is[Indentation.Outdent]
-    }
-  }
-
-  @classifier
-  trait CaseDefEnd {
-    def unapply(token: Token): Boolean = {
-      token.is[RightBrace] || token.is[EOF] || token.is[Indentation.Outdent] ||
-      (token.is[KwCase] && !token.next.isClassOrObject) || token.is[RightParen] ||
-      (token.is[Ellipsis] && token.next.is[KwCase])
-    }
-  }
-
-  @classifier
-  trait CanStartIndent {
-    def unapply(token: Token): Boolean = {
-      token.is[KwYield] || token.is[KwTry] || token.is[KwCatch] || token.is[KwFinally] ||
-      token.is[KwMatch] || token.is[KwDo] || token.is[KwFor] || token.is[KwThen] ||
-      token.is[KwElse] || token.is[Equals] || token.is[KwWhile] || token.is[KwIf] ||
-      token.is[RightArrow] || token.is[KwReturn] || token.is[LeftArrow] ||
-      token.is[ContextArrow] || (
-        token.is[KwWith] && {
-          val next = token.next
-          next.is[DefIntro] || next.is[KwImport] || next.is[KwExport]
-        }
-      )
-    }
-  }
-
-  @classifier
-  trait CantStartStat {
-    def unapply(token: Token): Boolean = {
-      token.is[KwCatch] || token.is[KwElse] || token.is[KwExtends] ||
-      token.is[KwFinally] || token.is[KwForsome] || token.is[KwMatch] ||
-      token.is[KwWith] || token.is[KwYield] ||
-      token.is[RightParen] || token.is[LeftBracket] || token.is[RightBracket] ||
-      token.is[RightBrace] || token.is[Comma] || token.is[Colon] ||
-      token.is[Dot] || token.is[Equals] || token.is[Semicolon] ||
-      token.is[Hash] || token.is[RightArrow] || token.is[LeftArrow] ||
-      token.is[Subtype] || token.is[Supertype] || token.is[Viewbound] ||
-      token.is[LF] || token.is[LFLF] || token.is[EOF]
-
-    }
-  }
-
-  @classifier
-  trait CanEndStat {
-    def unapply(token: Token): Boolean = {
-      token.is[Ident] || token.is[KwGiven] || token.is[Literal] ||
-      token.is[Interpolation.End] || token.is[Xml.End] ||
-      token.is[KwReturn] || token.is[KwThis] || token.is[KwType] ||
-      token.is[RightParen] || token.is[RightBracket] || token.is[RightBrace] ||
-      token.is[Underscore] || token.is[Ellipsis] || token.is[Unquote] ||
-      token.prev.is[EndMarkerIntro]
-    }
-  }
-
-  @classifier
-  trait StatSep {
-    def unapply(token: Token): Boolean = {
-      token.is[Semicolon] || token.is[LF] || token.is[LFLF] || token.is[EOF]
-    }
-  }
-
-  @classifier
-  trait Literal {
-    def unapply(token: Token): Boolean = token match {
-      case Constant.Int(_) => true
-      case Constant.Long(_) => true
-      case Constant.Float(_) => true
-      case Constant.Double(_) => true
-      case Constant.Char(_) => true
-      case Constant.Symbol(_) => true
-      case Constant.String(_) => true
-      case KwTrue() => true
-      case KwFalse() => true
-      case KwNull() => true
-      case _ => false
-    }
-  }
-
-  @classifier
-  trait NumericLiteral {
-    def unapply(token: Token): Boolean = token match {
-      case Constant.Int(_) => true
-      case Constant.Long(_) => true
-      case Constant.Float(_) => true
-      case Constant.Double(_) => true
-      case _ => false
-    }
-  }
-
-  @classifier
-  trait Whitespace {
-    def unapply(token: Token): Boolean = {
-      token.is[Space] || token.is[Tab] ||
-      token.is[LineEnd] || token.is[FF]
-    }
-  }
-
-  @classifier
-  trait LineEnd {
-    def unapply(token: Token): Boolean = {
-      token.is[LF] || token.is[LFLF] || token.is[CR]
-    }
-  }
-
-  @classifier
-  trait Trivia {
-    def unapply(token: Token): Boolean = {
-      token.is[Whitespace] || token.is[Comment]
-    }
-  }
-
-  @classifier
-  trait CanStartColonEol {
-    def unapply(token: Token): Boolean = {
-      token.is[KwTrait] || token.is[KwClass] ||
-      token.is[KwObject] || token.is[KwEnum] ||
-      token.is[KwType] || token.is[KwPackage] ||
-      token.is[KwGiven] || token.is[KwNew]
-    }
-  }
-
-  @classifier
-  trait MultilineComment {
-    def unapply(token: Token): Boolean =
-      token.is[Comment] && isMultilinePos(token.pos)
   }
 
   /* ---------- TREE CONSTRUCTION ------------------------------------------- */
@@ -2394,7 +1433,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (dialect.allowSignificantIndentation) {
       val forked = in.fork
       val simpleExpr = condExpr()
-      if ((token.is[Ident] && isLeadingInfixOperator(token)) || token.is[Dot] || isFollowedBy[T]) {
+      if ((token.is[Ident] && token.isLeadingInfixOperator) || token.is[Dot] || isFollowedBy[T]) {
         in = forked
         val exprCond = expr()
         val nextIsDelimiterKw =
@@ -2941,12 +1980,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val lhsStartK = Math.min(rhsStartK.startTokenPos, lhsK.head.startTokenPos)
           ctx.push(lhsStartK, lhsK, rhsEndK, op, targs) // afterwards, ctx.stack = List([a +])
           val preRhsKplus1 = in.token
-          var rhsStartKplus1: StartPos = IndexPos(in.tokenPos)
+          var rhsStartKplus1: StartPos = in.tokenPos
           val rhsKplus1 = argumentExprsOrPrefixExpr()
-          var rhsEndKplus1: EndPos = IndexPos(in.prevTokenPos)
+          var rhsEndKplus1: EndPos = in.prevTokenPos
           if (preRhsKplus1.isNot[LeftBrace] && preRhsKplus1.isNot[LeftParen]) {
-            rhsStartKplus1 = TreePos(rhsKplus1.head)
-            rhsEndKplus1 = TreePos(rhsKplus1.head)
+            rhsStartKplus1 = rhsKplus1.head
+            rhsEndKplus1 = rhsKplus1.head
           }
           // Try to continue the infix chain.
           loop(rhsStartKplus1, rhsKplus1, rhsEndKplus1) // base = List([a +]), rhsKplus1 = List([b])
@@ -3067,7 +2106,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def macroSplice(): Term = autoPos {
     accept[MacroSplice]
-    QuoteSpliceContext.within {
+    QuotedSpliceContext.within {
       if (QuotedPatternContext.isInside())
         Term.SplicedMacroPat(autoPos(inBraces(pattern())))
       else
@@ -3078,7 +2117,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def macroQuote(): Term = autoPos {
     accept[MacroQuote]
-    QuoteSpliceContext.within {
+    QuotedSpliceContext.within {
       if (token.is[LeftBrace]) {
         Term.QuotedMacroExpr(autoPos(Term.Block(inBraces(blockStatSeq()))))
       } else if (token.is[LeftBracket]) {
@@ -5374,19 +4413,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
 object ScalametaParser {
 
-  def toParse[T](fn: ScalametaParser => T): Parse[T] = new Parse[T] {
-    def apply(input: Input, dialect: Dialect): Parsed[T] = {
-      try {
-        val parser = new ScalametaParser(input)(dialect)
-        Parsed.Success(fn(parser))
-      } catch {
-        case details @ TokenizeException(pos, message) =>
-          Parsed.Error(pos, message, details)
-        case details @ ParseException(pos, message) =>
-          Parsed.Error(pos, message, details)
-      }
+  private def dropTrivialBlock(term: Term): Term =
+    term match {
+      case b: Term.Block => dropOuterBlock(b)
+      case _ => term
     }
-  }
+
+  private def dropOuterBlock(term: Term.Block): Term =
+    term.stats match {
+      case (stat: Term) :: Nil => stat
+      case _ => term
+    }
+
 }
 
 class Location private (val value: Int) extends AnyVal
