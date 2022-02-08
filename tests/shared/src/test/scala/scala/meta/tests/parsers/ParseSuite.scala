@@ -68,11 +68,20 @@ object MoreHelpers {
     tree
   }
   implicit class XtensionCode(code: String) {
+    def asInput: Input = Input.String(code)
     def applyRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
-      requireNonEmptyOrigin(rule(new ScalametaParser(Input.String(code))))
+      asInput.applyRule(rule)
     }
     def parseRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
-      requireNonEmptyOrigin(new ScalametaParser(Input.String(code)).parseRule(rule))
+      asInput.parseRule(rule)
+    }
+  }
+  implicit class XtensionInput(input: Input) {
+    def applyRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
+      requireNonEmptyOrigin(rule(new ScalametaParser(input)))
+    }
+    def parseRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
+      applyRule(_.parseRule(rule))
     }
   }
 }
