@@ -210,7 +210,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   // NOTE: public methods of TokenIterator return scannerTokens-based positions
-  trait TokenIterator extends Iterator[Token] {
+  trait TokenIterator {
+    def next(): Unit
     def prevTokenPos: Int
     def tokenPos: Int
     def currentIndentation: Int
@@ -250,14 +251,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       var prevPos: Int
   ) extends TokenIterator {
 
-    override def hasNext: Boolean = curr.token.isNot[EOF]
-
-    override def next(): Token = {
+    override def next(): Unit = {
       val (newSepRegions, newTokenRef) = nextToken(curr.pos, curr.nextPos, sepRegions)
       prevPos = curr.pointPos
       curr = newTokenRef
       sepRegions = newSepRegions
-      curr.token
     }
 
     private def observeIndented0(f: (Int, List[SepRegion]) => List[SepRegion]): Boolean = {
