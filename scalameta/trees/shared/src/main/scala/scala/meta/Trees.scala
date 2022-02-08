@@ -571,6 +571,8 @@ object Importee {
   // checkFields(stats.forall(_.isTopLevelStat))
 }
 
+@ast class MultiSource(sources: List[Source]) extends Tree
+
 package internal.trees {
   // NOTE: Quasi is a base trait for a whole bunch of classes.
   // Every root, branch and ast trait/class among scala.meta trees (except for quasis themselves)

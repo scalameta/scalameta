@@ -723,6 +723,39 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(tree.syntax, s"package foo${EOL}class C${EOL}package baz {$EOL  class D${EOL}}")
   }
 
+  test("ammonite: package foo; class C; package baz { class D }") {
+    val code = """
+                 |package foo1; class C1; package baz1 { class D1 }
+                 |@
+                 |package foo2; class C2; package baz2 { class D2 }
+                 |""".stripMargin
+    val tree = ammonite(code)
+    assertNoDiff(
+      tree.structure,
+      """MultiSource(List(
+        |Source(List(Pkg(Term.Name("foo1"), List(Defn.Class(Nil, Type.Name("C1"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), Nil, Nil)), Pkg(Term.Name("baz1"), List(Defn.Class(Nil, Type.Name("D1"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), Nil, Nil)))))))),
+        | Source(List(Pkg(Term.Name("foo2"), List(Defn.Class(Nil, Type.Name("C2"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), Nil, Nil)), Pkg(Term.Name("baz2"), List(Defn.Class(Nil, Type.Name("D2"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), Nil, Nil))))))))
+        |))""".stripMargin.replace("\n", "")
+    )
+    assertEquals(tree.syntax, code)
+    assertEquals(
+      tree.resetAllOrigins.syntax,
+      s"""package foo1
+         |class C1
+         |package baz1 {
+         |  class D1
+         |}
+         |
+         |@
+         |
+         |package foo2
+         |class C2
+         |package baz2 {
+         |  class D2
+         |}""".stripMargin.replace("\n", EOL)
+    )
+  }
+
   test("case `x`") {
     val tree1 = pat("`x`")
     assertEquals(tree1.structure, "Term.Name(\"x\")")

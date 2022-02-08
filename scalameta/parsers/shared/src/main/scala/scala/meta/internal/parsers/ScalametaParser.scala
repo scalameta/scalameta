@@ -135,6 +135,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (dialect.allowUnquotes) quasiquoteSource() else entrypointSource()
   }
 
+  def parseAmmonite(): MultiSource = parseRule(entryPointAmmonite())
+
+  def entryPointAmmonite(): MultiSource = {
+    require(input.isInstanceOf[Input.Ammonite])
+    val builder = List.newBuilder[Source]
+    do {
+      builder += parseRuleAfterBOF(parseSourceImpl())
+    } while (in.token match {
+      case t: Token.EOF if t.end < input.chars.length =>
+        in.next()
+        accept[Token.At]
+        accept[Token.BOF]
+        true
+      case _ => false
+    })
+    MultiSource(builder.result())
+  }
+
   /* ------------- TOKEN STREAM HELPERS -------------------------------------------- */
 
   def isColonEol(token: Token): Boolean = {

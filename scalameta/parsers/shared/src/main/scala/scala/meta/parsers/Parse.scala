@@ -27,6 +27,7 @@ object Parse {
   implicit lazy val parseImporter: Parse[Importer] = toParse(_.parseImporter())
   implicit lazy val parseImportee: Parse[Importee] = toParse(_.parseImportee())
   implicit lazy val parseSource: Parse[Source] = toParse(_.parseSource())
+  implicit lazy val parseAmmonite: Parse[MultiSource] = toParse(_.parseAmmonite())
 
   private def toParse[T](fn: ScalametaParser => T): Parse[T] = new Parse[T] {
     def apply(input: Input, dialect: Dialect): Parsed[T] = {

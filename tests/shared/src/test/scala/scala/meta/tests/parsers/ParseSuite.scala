@@ -32,6 +32,8 @@ class ParseSuite extends FunSuite with CommonTrees {
   def blockStat(code: String)(implicit dialect: Dialect) = code.parseRule(_.blockStatSeq().head)
   def caseClause(code: String)(implicit dialect: Dialect) = code.parseRule(_.caseClause())
   def source(code: String)(implicit dialect: Dialect) = code.parseRule(_.source())
+  def ammonite(code: String)(implicit dialect: Dialect) =
+    code.asAmmoniteInput.parseRule(_.entryPointAmmonite())
   def interceptParseErrors(stats: String*)(implicit loc: munit.Location) = {
     stats.foreach { stat =>
       try {

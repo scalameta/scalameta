@@ -1179,6 +1179,7 @@ object TreeSyntax {
         s("case ", t.pat, " ", kw("=>"), " ", t.body)
       // Source
       case t: Source => r(t.stats, EOL)
+      case t: MultiSource => r(t.sources, s"$EOL$EOL@$EOL$EOL")
     }
 
     private def givenName(

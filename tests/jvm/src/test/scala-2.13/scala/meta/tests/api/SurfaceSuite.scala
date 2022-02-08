@@ -301,6 +301,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Mod.Using
       |scala.meta.Mod.ValParam
       |scala.meta.Mod.VarParam
+      |scala.meta.MultiSource
       |scala.meta.Name
       |scala.meta.Name.Anonymous
       |scala.meta.Name.Indeterminate
