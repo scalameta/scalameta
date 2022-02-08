@@ -57,11 +57,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private object QuotedPatternContext extends NestedContextBase
 
   def parseRule[T <: Tree](rule: this.type => T): T = {
+    parseRule(rule(this))
+  }
+
+  def parseRule[T <: Tree](rule: => T): T = {
     // NOTE: can't require in.tokenPos to be at -1, because TokIterator auto-rewinds when created
     // require(in.tokenPos == -1 && debug(in.tokenPos))
     accept[BOF]
     val start = in.prevTokenPos
-    val t = rule(this)
+    val t = rule
     // NOTE: can't have in.prevTokenPos here
     // because we need to subsume all the trailing trivia
     val end = in.tokenPos
@@ -70,88 +74,72 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   // Entry points for Parse[T]
-  def parseStat(): Stat = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquoteStat())
-    else parseRule(_.entrypointStat())
+  def parseStat(): Stat = parseRule {
+    if (dialect.allowUnquotes) quasiquoteStat() else entrypointStat()
   }
 
-  def parseTerm(): Term = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquoteExpr())
-    else parseRule(_.entrypointExpr())
+  def parseTerm(): Term = parseRule {
+    if (dialect.allowUnquotes) quasiquoteExpr() else entrypointExpr()
   }
 
-  def parseUnquoteTerm(): Term = parseRule(_.unquoteExpr())
+  def parseUnquoteTerm(): Term = parseRule(unquoteExpr())
 
-  def parseTermParam(): Term.Param = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquoteTermParam())
-    else parseRule(_.entrypointTermParam())
+  def parseTermParam(): Term.Param = parseRule {
+    if (dialect.allowUnquotes) quasiquoteTermParam() else entrypointTermParam()
   }
 
-  def parseType(): Type = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquoteType())
-    else parseRule(_.entrypointType())
+  def parseType(): Type = parseRule {
+    if (dialect.allowUnquotes) quasiquoteType() else entrypointType()
   }
 
-  def parseTypeParam(): Type.Param = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquoteTypeParam())
-    else parseRule(_.entrypointTypeParam())
+  def parseTypeParam(): Type.Param = parseRule {
+    if (dialect.allowUnquotes) quasiquoteTypeParam() else entrypointTypeParam()
   }
 
-  def parsePat(): Pat = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquotePattern())
-    else parseRule(_.entrypointPattern())
+  def parsePat(): Pat = parseRule {
+    if (dialect.allowUnquotes) quasiquotePattern() else entrypointPattern()
   }
 
-  def parseUnquotePat(): Pat = parseRule(_.unquotePattern())
+  def parseUnquotePat(): Pat = parseRule(unquotePattern())
 
-  def parseCase(): Case = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquoteCase())
-    else parseRule(_.entrypointCase())
+  def parseCase(): Case = parseRule {
+    if (dialect.allowUnquotes) quasiquoteCase() else entrypointCase()
   }
 
-  def parseCtor(): Ctor = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquoteCtor())
-    else parseRule(_.entrypointCtor())
+  def parseCtor(): Ctor = parseRule {
+    if (dialect.allowUnquotes) quasiquoteCtor() else entrypointCtor()
   }
 
-  def parseInit(): Init = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquoteInit())
-    else parseRule(_.entrypointInit())
+  def parseInit(): Init = parseRule {
+    if (dialect.allowUnquotes) quasiquoteInit() else entrypointInit()
   }
 
-  def parseSelf(): Self = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquoteSelf())
-    else parseRule(_.entrypointSelf())
+  def parseSelf(): Self = parseRule {
+    if (dialect.allowUnquotes) quasiquoteSelf() else entrypointSelf()
   }
 
-  def parseTemplate(): Template = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquoteTemplate())
-    else parseRule(_.entrypointTemplate())
+  def parseTemplate(): Template = parseRule {
+    if (dialect.allowUnquotes) quasiquoteTemplate() else entrypointTemplate()
   }
 
-  def parseMod(): Mod = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquoteModifier())
-    else parseRule(_.entrypointModifier())
+  def parseMod(): Mod = parseRule {
+    if (dialect.allowUnquotes) quasiquoteModifier() else entrypointModifier()
   }
 
-  def parseEnumerator(): Enumerator = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquoteEnumerator())
-    else parseRule(_.entrypointEnumerator())
+  def parseEnumerator(): Enumerator = parseRule {
+    if (dialect.allowUnquotes) quasiquoteEnumerator() else entrypointEnumerator()
   }
 
-  def parseImporter(): Importer = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquoteImporter())
-    else parseRule(_.entrypointImporter())
+  def parseImporter(): Importer = parseRule {
+    if (dialect.allowUnquotes) quasiquoteImporter() else entrypointImporter()
   }
 
-  def parseImportee(): Importee = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquoteImportee())
-    else parseRule(_.entrypointImportee())
+  def parseImportee(): Importee = parseRule {
+    if (dialect.allowUnquotes) quasiquoteImportee() else entrypointImportee()
   }
 
-  def parseSource(): Source = {
-    if (dialect.allowUnquotes) parseRule(_.quasiquoteSource())
-    else parseRule(_.entrypointSource())
+  def parseSource(): Source = parseRule {
+    if (dialect.allowUnquotes) quasiquoteSource() else entrypointSource()
   }
 
   /* ------------- TOKEN STREAM HELPERS -------------------------------------------- */
