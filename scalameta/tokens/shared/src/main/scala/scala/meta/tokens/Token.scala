@@ -138,9 +138,13 @@ object Token {
   @fixed("\n") class LF extends Token
   @fixed("\f") class FF extends Token
   @freeform("comment") class Comment(value: String) extends Token
-  @freeform("beginning of file") class BOF extends Token { def start = 0; def end = 0 }
+  @freeform("beginning of file") class BOF extends Token {
+    def this(input: Input, dialect: Dialect) = this(input, dialect, 0)
+    def end = start
+  }
   @freeform("end of file") class EOF extends Token {
-    def start = input.chars.length; def end = input.chars.length
+    def this(input: Input, dialect: Dialect) = this(input, dialect, input.chars.length)
+    def end = start
   }
 
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,

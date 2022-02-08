@@ -29,7 +29,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
 
     val tokens = new java.util.ArrayList[Token](legacyTokens.length)
     @inline def pushToken(token: Token): Unit = tokens.add(token)
-    pushToken(Token.BOF(input, dialect))
+    pushToken(new Token.BOF(input, dialect))
 
     def pushLegacyToken(curr: LegacyTokenData): Unit = {
       val token = (curr.token: @scala.annotation.switch) match {
@@ -156,7 +156,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case ELLIPSIS => Token.Ellipsis(input, dialect, curr.offset, curr.endOffset + 1, curr.base)
         case UNQUOTE => Token.Unquote(input, dialect, curr.offset, curr.endOffset + 1)
 
-        case EOF => Token.EOF(input, dialect)
+        case EOF => new Token.EOF(input, dialect)
 
         case EMPTY => unreachable
         case UNDEF => unreachable
