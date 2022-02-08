@@ -51,6 +51,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // NOTE: can't require in.tokenPos to be at -1, because TokIterator auto-rewinds when created
     // require(in.tokenPos == -1 && debug(in.tokenPos))
     accept[BOF]
+    parseRuleAfterBOF(rule)
+  }
+
+  private def parseRuleAfterBOF[T <: Tree](rule: => T): T = {
     val start = in.prevTokenPos
     val t = rule
     // NOTE: can't have in.prevTokenPos here
@@ -125,7 +129,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (dialect.allowUnquotes) quasiquoteImportee() else entrypointImportee()
   }
 
-  def parseSource(): Source = parseRule {
+  def parseSource(): Source = parseRule(parseSourceImpl())
+
+  private def parseSourceImpl(): Source = {
     if (dialect.allowUnquotes) quasiquoteSource() else entrypointSource()
   }
 
