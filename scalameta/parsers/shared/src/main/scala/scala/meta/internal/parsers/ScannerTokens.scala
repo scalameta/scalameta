@@ -6,6 +6,7 @@ import scala.meta.classifiers._
 import scala.meta.inputs.Input
 import scala.meta.internal.classifiers.classifier
 import scala.meta.internal.tokenizers._
+import scala.meta.prettyprinters._
 import scala.meta.tokenizers._
 import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
@@ -20,15 +21,15 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
   // One complication here is that there can be multiple tokens that sort of occupy a given position,
   // so the clients of this cache need to be wary of that!
   private val cache: Array[Int] = {
-    val result = new Array[Int](input.chars.length)
+    val result = new Array[Int](input.chars.length + 1)
     var i = 0
     while (i < tokens.length) {
       val token = tokens(i)
       var j = token.start
-      while (j < token.end) {
+      do {
         result(j) = i
         j += 1
-      }
+      } while (j < token.end)
       i += 1
     }
     result
@@ -69,10 +70,13 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
       def isClassOrObject = token.is[KwClass] || token.is[KwObject]
       def isClassOrObjectOrEnum = isClassOrObject || (token.is[Ident] && dialect.allowEnums)
 
+      def asString: String =
+        s"[${token.getClass.getSimpleName}@${token.end}]${token.syntax.replace("\n", "")}"
+
       def index: Int = {
         @tailrec
         def lurk(roughIndex: Int): Int = {
-          require(roughIndex >= 0 && debug(token))
+          require(roughIndex >= 0 && debug(token), s"tok=$asString")
           val scannerToken = tokens(roughIndex)
 
           def exactMatch = scannerToken eq token
@@ -85,8 +89,7 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
           else lurk(roughIndex - 1)
         }
 
-        if (token.start == input.chars.length) tokens.length - 1
-        else lurk(cache(token.start))
+        lurk(cache(token.start))
       }
 
       @inline
