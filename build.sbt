@@ -11,6 +11,13 @@ import munit.sbtmunit.BuildInfo.munitVersion
 lazy val LanguageVersions = Seq(LatestScala213, LatestScala212, LatestScala211)
 lazy val LanguageVersion = LanguageVersions.head
 def customVersion = sys.props.get("scalameta.version")
+def parseTagVersion: String = {
+  import scala.sys.process._
+  // drop `v` prefix
+  "git describe --abbrev=0 --tags".!!.drop(1).trim
+}
+def localSnapshotVersion: String = s"$parseTagVersion-SNAPSHOT"
+def isCI = System.getenv("CI") != null
 
 // ==========================================
 // Projects
@@ -499,6 +506,12 @@ lazy val isScala213 = Def.setting {
 }
 
 lazy val sharedSettings = Def.settings(
+  version ~= { dynVer =>
+    customVersion.getOrElse {
+      if (isCI) dynVer
+      else localSnapshotVersion // only for local publishing
+    }
+  },
   scalaVersion := LanguageVersion,
   crossScalaVersions := LanguageVersions,
   organization := "org.scalameta",
