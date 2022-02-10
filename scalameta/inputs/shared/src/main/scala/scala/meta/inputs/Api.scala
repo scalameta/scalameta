@@ -21,6 +21,9 @@ private[meta] trait Aliases {
 
     type Slice = scala.meta.inputs.Input.Slice
     val Slice = scala.meta.inputs.Input.Slice
+
+    type Ammonite = scala.meta.inputs.Input.Ammonite
+    val Ammonite = scala.meta.inputs.Input.Ammonite
   }
 
   type Position = scala.meta.inputs.Position

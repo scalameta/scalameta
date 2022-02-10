@@ -97,6 +97,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.dialects.Typelevel212 *
       |scala.meta.inputs
       |scala.meta.inputs.Input
+      |scala.meta.inputs.Input.Ammonite *
       |scala.meta.inputs.Input.File *
       |scala.meta.inputs.Input.None *
       |scala.meta.inputs.Input.Slice *
@@ -300,6 +301,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Mod.Using
       |scala.meta.Mod.ValParam
       |scala.meta.Mod.VarParam
+      |scala.meta.MultiSource
       |scala.meta.Name
       |scala.meta.Name.Anonymous
       |scala.meta.Name.Indeterminate

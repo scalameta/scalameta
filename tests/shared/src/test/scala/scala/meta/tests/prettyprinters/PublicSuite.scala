@@ -233,6 +233,12 @@ class PublicSuite extends FunSuite {
     assert(input.toString == s"""Input.VirtualFile("foo.scala", "foo")""")
   }
 
+  test("scala.meta.inputs.Input.Ammonite.toString") {
+    val input = Input.Ammonite(Input.None)
+    input match { case _: Input.Ammonite => }
+    assert(input.toString == s"""Input.Ammonite(Input.None)""")
+  }
+
   test("scala.meta.inputs.Position.toString") {
     // covered below
   }

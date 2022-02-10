@@ -92,6 +92,12 @@ object Input {
     override def toString = s"Input.Slice($input, $start, $end)"
   }
 
+  final case class Ammonite(input: Input) extends Input {
+    override def chars = input.chars
+    override def text = input.text
+    override def toString = s"Input.Ammonite($input)"
+  }
+
   implicit val charsToInput: Convert[Array[Char], Input] =
     Convert(chars => Input.String(new scala.Predef.String(chars)))
   implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert(Input.String(_))
