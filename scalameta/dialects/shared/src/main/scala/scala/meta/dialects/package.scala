@@ -92,7 +92,8 @@ package object dialects {
     .withAllowToplevelTerms(true)
     .withToplevelSeparator(EOL)
 
-  implicit val Sbt0137 = Sbt0136
+  implicit val Sbt0137 = Scala211
+    .withAllowToplevelTerms(true)
     .withToplevelSeparator("")
 
   implicit val Sbt1 = Scala212
