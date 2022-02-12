@@ -197,12 +197,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     finally in = forked
   }
 
-  /**
-   * Methods inParensOrError and similar take a second argument which, should the next token not be
-   * the expected opener (e.g. token.LeftParen) will be returned instead of the contents of the
-   * groupers. However in all cases accept[LeftParen] will be called, so a parse error will still
-   * result. If the grouping is optional, token should be tested before calling these methods.
-   */
   @inline final def inParens[T](body: => T): T = {
     accept[LeftParen]
     val ret = body
@@ -210,29 +204,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     accept[RightParen]
     ret
   }
-  @inline final def inParensOrError[T](body: => T, alt: T): T =
-    if (token.is[LeftParen]) inParens(body)
-    else {
-      accept[LeftParen]; alt
-    }
-
-  @inline final def inParensOrUnit[T, Ret >: Lit](body: => Ret): Ret =
-    inParensOrError(body, Lit.Unit())
-  @inline final def inParensOrNil[T](body: => List[T]): List[T] = inParensOrError(body, Nil)
 
   @inline final def inBraces[T](body: => T): T = {
-    accept[LeftBrace]
-    val ret = body
-    acceptOpt[LF]
-    accept[RightBrace]
-    ret
+    inBracesOr(body, syntaxErrorExpected[LeftBrace])
   }
-  @inline final def inBracesOrError[T](body: => T, alt: T): T = {
-    if (token.is[LF]) { accept[LF] }
-    if (token.is[LeftBrace]) inBraces(body)
-    else {
-      accept[LeftBrace]; alt
-    }
+  @inline final def inBracesOr[T](body: => T, alt: => T): T = {
+    acceptOpt[LF]
+    if (acceptOpt[LeftBrace]) {
+      val ret = body
+      acceptOpt[LF]
+      accept[RightBrace]
+      ret
+    } else alt
   }
 
   @inline final def indented[T](body: => T): T = {
@@ -248,11 +231,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     ret
   }
 
-  @inline final def inBracesOrNil[T](body: => List[T]): List[T] = inBracesOrError(body, Nil)
-  @inline final def inBracesOrUnit[T](body: => Term): Term = inBracesOrError(body, Lit.Unit())
+  @inline final def inBracesOrNil[T](body: => List[T]): List[T] = inBracesOr(body, Nil)
   @inline final def dropAnyBraces[T](body: => T): T =
-    if (token.is[LeftBrace]) inBraces(body)
-    else body
+    inBracesOr(body, body)
 
   @inline final def inBrackets[T](body: => T): T = {
     accept[LeftBracket]
@@ -1490,7 +1471,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         next()
         val body: Term = token match {
           case _ if dialect.allowTryWithAnyExpr => expr()
-          case LeftParen() => inParensOrUnit(expr())
+          case LeftParen() => inParens(expr())
           case LeftBrace() | Indentation.Indent() => block()
           case _ => expr()
         }
