@@ -344,8 +344,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     } else syntaxErrorExpected[T]
 
   /** If current token is T consume it. */
-  def acceptOpt[T <: Token: TokenInfo]: Unit =
-    if (token.is[T]) next()
+  def acceptOpt[T <: Token: TokenInfo]: Boolean = {
+    val ok = token.is[T]
+    if (ok) next()
+    ok
+  }
 
   def acceptStatSep(): Unit = token match {
     case LF() | LFLF() => next()
@@ -752,12 +755,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     private def typeLambdaOrPoly(): Type = {
       val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
-      if (token.is[TypeLambdaArrow]) {
-        accept[TypeLambdaArrow]
+      if (acceptOpt[TypeLambdaArrow]) {
         val tpe = typeIndentedOpt()
         Type.Lambda(quants, tpe)
-      } else if (token.is[RightArrow]) {
-        accept[RightArrow]
+      } else if (acceptOpt[RightArrow]) {
         val tpe = typeIndentedOpt()
         if (tpe.is[Type.Function])
           Type.PolyFunction(quants, tpe)
@@ -1393,12 +1394,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private def tryAcceptWithOptLF[T <: Token: TokenInfo](
       implicit classifier: Classifier[Token, T]
   ): Boolean = {
-    if (token.is[T] || (token.is[LF] && ahead(token.is[T]))) {
-      acceptOpt[LF]
-      accept[T]
-      true
-    } else {
-      false
+    acceptOpt[T] || {
+      val ok = token.is[LF] && ahead(token.is[T])
+      if (ok) nextTwice()
+      ok
     }
   }
 
@@ -1524,14 +1523,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         if (token.is[LeftParen]) {
           val cond = condExprInParens[KwDo]
           newLinesOpt()
-          val body = if (token.is[KwDo]) {
-            accept[KwDo]
-            exprMaybeIndented()
-          } else {
+          if (!acceptOpt[KwDo]) {
             in.observeIndented()
-            exprMaybeIndented()
           }
-          Term.While(cond, body)
+          Term.While(cond, exprMaybeIndented())
         } else if (token.is[Indentation.Indent]) {
           val cond = block()
           acceptOpt[LF]
@@ -1574,11 +1569,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           }
 
         newLinesOpt()
-        if (token.is[KwDo]) {
-          accept[KwDo]
+        if (acceptOpt[KwDo]) {
           Term.For(enums, exprMaybeIndented())
-        } else if (token.is[KwYield]) {
-          accept[KwYield]
+        } else if (acceptOpt[KwYield]) {
           Term.ForYield(enums, exprMaybeIndented())
         } else {
           in.observeIndented()
@@ -1754,8 +1747,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                 if (location != BlockStat) expr()
                 else {
                   blockExpr(isBlockOptional = true) match {
-                    case partial: Term.PartialFunction if token.is[Colon] =>
-                      accept[Colon]
+                    case partial: Term.PartialFunction if acceptOpt[Colon] =>
                       atPos(partial, auto)(Term.Ascribe(partial, typeOrInfixType(location)))
                     case t => t
                   }
@@ -3370,8 +3362,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           if (token.is[LeftParen] && ahead(token.is[soft.KwUsing]))
             paramClauses(ownerIsType = false)
           else Nil
-        if (token.is[Colon]) {
-          accept[Colon]
+        if (acceptOpt[Colon]) {
           (name, tparams, uparamss)
         } else {
           in = forked
@@ -3402,8 +3393,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       parents.toList
     }
 
-    if (token.is[Equals]) {
-      accept[Equals]
+    if (acceptOpt[Equals]) {
       Defn.GivenAlias(mods, sigName, sigTparams, sigUparamss, decltype, exprMaybeIndented())
     } else if (token.is[KwWith] || token.is[LeftParen]) {
       val inits = parents()
@@ -3602,8 +3592,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     def abstractType() = {
       val bounds = typeBounds()
-      if (token.is[Equals]) {
-        accept[Equals]
+      if (acceptOpt[Equals]) {
         val tpe = typeIndentedOpt()
         if (tpe.is[Type.Match]) {
           Defn.Type(mods, name, tparams, tpe, bounds)
@@ -3768,8 +3757,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       allowUnderscore = dialect.allowTypeParamUnderscore
     )
     val ctor = primaryCtor(OwnedByEnum)
-    val inits = if (token.is[KwExtends]) {
-      accept[KwExtends]
+    val inits = if (acceptOpt[KwExtends]) {
       templateParents(afterExtend = true)
     } else { List() }
     Defn.EnumCase(mods, name, tparams, ctor, inits)
@@ -4163,7 +4151,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     @tailrec
     def skipStatementSeparators(): Unit = {
       if (token.is[EOF]) return
-      if (!token.is[StatSep]) accept[EOF]
+      if (!token.is[StatSep]) syntaxErrorExpected[EOF]
       next()
       skipStatementSeparators()
     }
@@ -4185,9 +4173,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       errorMsg: String = "illegal start of definition"
   ): List[T] = {
     val stats = new ListBuffer[T]
-    val isIndented = token.is[Indentation.Indent]
+    val isIndented = acceptOpt[Indentation.Indent]
 
-    if (isIndented) accept[Indentation.Indent]
     while (!token.is[StatSeqEnd]) {
       def isDefinedInEllipsis = {
         if (token.is[LeftParen] || token.is[LeftBrace]) next(); statpf.isDefinedAt(token)
@@ -4403,7 +4390,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         bracelessPackageStats()
       } else if (token.is[KwPackage] && !ahead(token.is[KwObject])) {
         val startPos = in.tokenPos
-        accept[KwPackage]
+        next()
         val qid = qualId()
         def inPackage(stats: => List[Stat]) = {
           val pkg = atPos(startPos, auto)(Pkg(qid, stats))
