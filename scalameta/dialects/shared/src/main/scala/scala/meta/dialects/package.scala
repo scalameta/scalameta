@@ -4,7 +4,6 @@ import org.scalameta.data._
 import org.scalameta.invariants._
 import scala.meta.dialects._
 import scala.meta.internal.dialects._
-import scala.compat.Platform.EOL
 
 package object dialects {
   implicit val Scala210 = Dialect(
@@ -90,15 +89,12 @@ package object dialects {
 
   implicit val Sbt0136 = Scala210
     .withAllowToplevelTerms(true)
-    .withToplevelSeparator(EOL)
 
   implicit val Sbt0137 = Scala211
     .withAllowToplevelTerms(true)
-    .withToplevelSeparator("")
 
   implicit val Sbt1 = Scala212
     .withAllowToplevelTerms(true)
-    .withToplevelSeparator("")
 
   implicit val Sbt = Sbt1 // alias for latest Sbt dialect.
 

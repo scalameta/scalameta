@@ -71,8 +71,7 @@ final class Dialect private (
     // We plan to deprecate XML literal syntax, and some dialects
     // might go ahead and drop support completely.
     val allowXmlLiterals: Boolean,
-    // What kind of separator is necessary to split top-level statements?
-    // Normally none is required, but scripts may have their own rules.
+    @deprecated("toplevelSeparator has never been used", ">4.4.35")
     val toplevelSeparator: String,
     // Are numeric literal underscore separators, i.e. `1_000_000` legal or not?
     val allowNumericLiteralUnderscoreSeparators: Boolean,
@@ -352,6 +351,7 @@ final class Dialect private (
   def withAllowXmlLiterals(newValue: Boolean): Dialect = {
     privateCopy(allowXmlLiterals = newValue)
   }
+  @deprecated("toplevelSeparator has never been used", ">4.4.35")
   def withToplevelSeparator(newValue: String): Dialect = {
     privateCopy(toplevelSeparator = newValue)
   }
@@ -720,6 +720,7 @@ object Dialect extends InternalDialect {
       allowViewBounds: Boolean,
       allowWithTypes: Boolean,
       allowXmlLiterals: Boolean,
+      @deprecated("toplevelSeparator has never been used", ">4.4.35")
       toplevelSeparator: String
   ): Dialect = {
     new Dialect(
