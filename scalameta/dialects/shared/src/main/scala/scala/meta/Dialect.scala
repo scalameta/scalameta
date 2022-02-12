@@ -636,10 +636,7 @@ final class Dialect private (
   override def hashCode: Int = System.identityHashCode(this)
   // Smart prettyprinting that knows about standard dialects.
   override def toString = {
-    Dialect.inverseStandards.get(this) match {
-      case Some(name) => name
-      case None => s"Dialect()"
-    }
+    Dialect.inverseStandards.getOrElse(this, "Dialect()")
   }
 
   @deprecated("Use withX method instead", "4.3.11")
@@ -752,27 +749,25 @@ object Dialect extends InternalDialect {
       toplevelSeparator
     )
   }
-  // NOTE: Spinning up a macro just for this is too hard.
-  // Using JVM reflection won't be portable to Scala.js.
-  private[meta] lazy val standards: Map[String, Dialect] = TreeMap(
-    "Dotty" -> Dotty,
-    "Scala3" -> Scala3,
-    "Paradise211" -> Paradise211,
-    "Paradise212" -> Paradise212,
-    "ParadiseTypelevel211" -> ParadiseTypelevel211,
-    "ParadiseTypelevel212" -> ParadiseTypelevel212,
-    "Sbt0136" -> Sbt0136,
-    "Sbt0137" -> Sbt0137,
-    "Sbt1" -> Sbt1,
-    "Scala210" -> Scala210,
-    "Scala211" -> Scala211,
-    "Scala212" -> Scala212,
-    "Scala213" -> Scala213,
-    "Scala213Source3" -> Scala213Source3,
-    "Scala212Source3" -> Scala212Source3,
-    "Typelevel211" -> Typelevel211,
-    "Typelevel212" -> Typelevel212
-  )
+  private[meta] lazy val standards: Map[String, Dialect] = Seq[sourcecode.Text[Dialect]](
+    Dotty,
+    Scala3,
+    Paradise211,
+    Paradise212,
+    ParadiseTypelevel211,
+    ParadiseTypelevel212,
+    Sbt0136,
+    Sbt0137,
+    Sbt1,
+    Scala210,
+    Scala211,
+    Scala212,
+    Scala213,
+    Scala213Source3,
+    Scala212Source3,
+    Typelevel211,
+    Typelevel212
+  ).map(x => x.source -> x.value).toMap
   private[meta] lazy val inverseStandards: Map[Dialect, String] =
     standards.iterator.map(_.swap).toMap
 }
