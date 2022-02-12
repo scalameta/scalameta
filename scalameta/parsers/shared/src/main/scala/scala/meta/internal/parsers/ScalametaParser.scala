@@ -915,32 +915,29 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     def simpleType(): Type = {
       simpleTypeRest(autoPos(token match {
-        case LeftParen() => autoPos(makeTupleType(inParens(types())))
-        case Underscore() => next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
+        case LeftParen() => makeTupleType(inParens(types()))
+        case Underscore() => next(); Type.Placeholder(typeBounds())
         case MacroSplicedIdent() =>
           Type.Macro(macroSplicedIdent())
         case MacroSplice() =>
           Type.Macro(macroSplice())
         case Ident("?") if dialect.allowQuestionMarkPlaceholder =>
-          next(); atPos(in.prevTokenPos, auto)(Type.Placeholder(typeBounds()))
+          next(); Type.Placeholder(typeBounds())
         case ident: Ident
             if (ident.value == "+" || ident.value == "-") &&
               ahead(token.is[Underscore]) &&
               allowPlusMinusUnderscore =>
-          autoPos {
-            accept[Ident]
-            accept[Underscore]
-            if (dialect.allowPlusMinusUnderscoreAsPlaceholder)
-              Type.Placeholder(typeBounds())
-            else
-              Type.Name(s"${ident.value}_")
-          }
+          nextTwice() // Ident and Underscore
+          if (dialect.allowPlusMinusUnderscoreAsPlaceholder)
+            Type.Placeholder(typeBounds())
+          else
+            Type.Name(s"${ident.value}_")
         case Literal() =>
           if (dialect.allowLiteralTypes) literal()
           else syntaxError(s"$dialect doesn't support literal types", at = path())
         case Ident("-") if ahead { token.is[NumericLiteral] } && dialect.allowLiteralTypes =>
-          val term = termName()
-          atPos(term, auto)(literal(isNegated = true))
+          next()
+          literal(isNegated = true)
         case _ =>
           val ref = path() match {
             case q: Quasi => q.become[Term.Ref.Quasi]
@@ -953,15 +950,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               case Term.Select(qual: Term.Quasi, name: Term.Name.Quasi) =>
                 val newQual = qual.become[Term.Ref.Quasi]
                 val newName = name.become[Type.Name.Quasi]
-                atPos(ref, ref)(Type.Select(newQual, newName))
+                Type.Select(newQual, newName)
               case Term.Select(qual: Term.Ref, name) =>
                 val newName = name match {
                   case q: Quasi => q.become[Type.Name.Quasi]
                   case _ => atPos(name, name)(Type.Name(name.value))
                 }
-                atPos(ref, ref)(Type.Select(qual, newName))
+                Type.Select(qual, newName)
               case name: Term.Name =>
-                atPos(name, name)(Type.Name(name.value))
+                Type.Name(name.value)
               case _ =>
                 syntaxError("identifier expected", at = ref)
             }
