@@ -27,7 +27,33 @@ object Mima {
   }
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.tokens.Token#BOF.copy"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.tokens.Token#EOF.copy")
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.apply"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.copy"),
+    ProblemFilters.exclude[IncompatibleResultTypeProblem]("scala.meta.Dialect.copy$default$21"),
+    ProblemFilters.exclude[IncompatibleResultTypeProblem]("scala.meta.Dialect.copy$default$22"),
+    ProblemFilters.exclude[IncompatibleResultTypeProblem]("scala.meta.Dialect.copy$default$23"),
+    ProblemFilters.exclude[IncompatibleResultTypeProblem]("scala.meta.Dialect.copy$default$24"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.copy$default$22"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.copy$default$23"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.copy$default$24"),
+    ProblemFilters
+      .exclude[DirectMissingMethodProblem]("scala.meta.Dialect.allowImplicitFunctionTypes"),
+    ProblemFilters
+      .exclude[DirectMissingMethodProblem]("scala.meta.Dialect.withAllowImplicitFunctionTypes"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.allowMethodTypes"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.withAllowMethodTypes"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.allowWithTypes"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.withAllowWithTypes"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.allowWhiteboxMacro"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.withAllowWhiteboxMacro"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.allowLiteralUnitType"),
+    ProblemFilters
+      .exclude[DirectMissingMethodProblem]("scala.meta.Dialect.withAllowLiteralUnitType"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.allowSuperTrait"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.withAllowSuperTrait"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.allowAsPatternBinding"),
+    ProblemFilters
+      .exclude[DirectMissingMethodProblem]("scala.meta.Dialect.withAllowAsPatternBinding"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.this")
   )
 }
