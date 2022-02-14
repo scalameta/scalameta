@@ -504,7 +504,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                       classTag[T].runtimeClass.isAssignableFrom(quasi.pt) &&
                         debug(ellipsis, result, result.structure)
                     )
-                    atPos(quasi, quasi)(astInfo.quasi(quasi.rank, quasi.tree))
+                    copyPos(quasi)(astInfo.quasi(quasi.rank, quasi.tree))
                   case other =>
                     other
                 }
@@ -594,7 +594,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // NOTE: we can't make this autoPos
     // see comments to makeTupleType for discussion
     body match {
-      case List(q @ Term.Quasi(1, _)) => atPos(q, q)(Term.Tuple(body))
+      case List(q @ Term.Quasi(1, _)) => copyPos(q)(Term.Tuple(body))
       case _ => makeTuple[Term](body, () => Lit.Unit(), Term.Tuple(_))
     }
   }
@@ -607,7 +607,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // therefore, we'll rely on our callers to assign positions to the tuple we return
     // we can't do atPos(body.first, body.last) either, because that wouldn't account for parentheses
     body match {
-      case List(q @ Type.Quasi(1, _)) => atPos(q, q)(Type.Tuple(body))
+      case List(q @ Type.Quasi(1, _)) => copyPos(q)(Type.Tuple(body))
       case _ => makeTuple[Type](body, () => invalidLiteralUnitType, Type.Tuple(_))
     }
   }
@@ -942,7 +942,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               case Term.Select(qual: Term.Ref, name) =>
                 val newName = name match {
                   case q: Quasi => q.become[Type.Name.Quasi]
-                  case _ => atPos(name, name)(Type.Name(name.value))
+                  case _ => copyPos(name)(Type.Name(name.value))
                 }
                 Type.Select(qual, newName)
               case name: Term.Name =>
@@ -1040,7 +1040,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val t = if (token.is[LeftParen]) tupleInfixType() else compoundType()
           def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, typeName(), t1))
           token match {
-            case KwForsome() => next(); atPos(t, t)(Type.Existential(t, existentialStats()))
+            case KwForsome() => next(); copyPos(t)(Type.Existential(t, existentialStats()))
             case Unquote() | Ident(_) if !isBar =>
               infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
             case _ => t
@@ -1114,7 +1114,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           next()
           val qual = name match {
             case q: Quasi => q.become[Name.Quasi]
-            case name => atPos(name, name)(Name.Indeterminate(name.value))
+            case name => copyPos(name)(Name.Indeterminate(name.value))
           }
           val thisp = atPos(name, auto)(Term.This(qual))
           if (stop && thisOK) thisp
@@ -1126,7 +1126,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           next()
           val qual = name match {
             case q: Quasi => q.become[Name.Quasi]
-            case name => atPos(name, name)(Name.Indeterminate(name.value))
+            case name => copyPos(name)(Name.Indeterminate(name.value))
           }
           val superp = atPos(name, auto)(Term.Super(qual, mixinQualifier()))
           if (startsAtBof && endsAtEof && dialect.allowUnquotes) return superp
@@ -1161,7 +1161,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       inBrackets {
         typeName() match {
           case q: Quasi => q.become[Name.Quasi]
-          case name => atPos(name, name)(Name.Indeterminate(name.value))
+          case name => copyPos(name)(Name.Indeterminate(name.value))
         }
 
       }
@@ -1678,39 +1678,39 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                 case q: Quasi =>
                   Some(q.become[Term.Param.Quasi])
                 case name: Term.Name =>
-                  Some(atPos(tree, tree)(Term.Param(Nil, name, None, None)))
+                  Some(copyPos(tree)(Term.Param(Nil, name, None, None)))
                 case name: Term.Placeholder =>
                   Some(
-                    atPos(tree, tree)(
-                      Term.Param(Nil, atPos(name, name)(Name.Anonymous()), None, None)
+                    copyPos(tree)(
+                      Term.Param(Nil, copyPos(name)(Name.Anonymous()), None, None)
                     )
                   )
                 case Term.Ascribe(quasiName: Term.Quasi, tpt) =>
                   val name = quasiName.become[Term.Name.Quasi]
-                  Some(atPos(tree, tree)(Term.Param(Nil, name, Some(tpt), None)))
+                  Some(copyPos(tree)(Term.Param(Nil, name, Some(tpt), None)))
                 case Term.Ascribe(name: Term.Name, tpt) =>
-                  Some(atPos(tree, tree)(Term.Param(Nil, name, Some(tpt), None)))
+                  Some(copyPos(tree)(Term.Param(Nil, name, Some(tpt), None)))
                 case Term.Ascribe(name: Term.Placeholder, tpt) =>
                   Some(
-                    atPos(tree, tree)(
-                      Term.Param(Nil, atPos(name, name)(Name.Anonymous()), Some(tpt), None)
+                    copyPos(tree)(
+                      Term.Param(Nil, copyPos(name)(Name.Anonymous()), Some(tpt), None)
                     )
                   )
                 case Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name) =>
                   Some(
-                    atPos(tree, tree)(
+                    copyPos(tree)(
                       Term.Param(List(copyPos(kwUsing)(Mod.Using())), name, None, None)
                     )
                   )
                 case Term.Ascribe(Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name), tpt) =>
                   Some(
-                    atPos(tree, tree)(
+                    copyPos(tree)(
                       Term.Param(List(copyPos(kwUsing)(Mod.Using())), name, Some(tpt), None)
                     )
                   )
                 case Term.Ascribe(eta @ Term.Eta(kwUsing @ Term.Name(soft.KwUsing.name)), tpt) =>
                   Some(
-                    atPos(tree, tree)(
+                    copyPos(tree)(
                       Term.Param(
                         List(atPos(kwUsing.endTokenPos, kwUsing.endTokenPos)(Mod.Using())),
                         atPos(eta.endTokenPos, eta.endTokenPos)(Name.Anonymous()),
@@ -2432,7 +2432,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val nonbqIdent = isIdent && !isBackquoted
       val pat = argumentPattern()
       pat match {
-        case pat: Term.Name if nonbqIdent => atPos(pat, pat)(Pat.Var(pat))
+        case pat: Term.Name if nonbqIdent => copyPos(pat)(Pat.Var(pat))
         case _ => pat
       }
     }
@@ -2718,7 +2718,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         else {
           termName() match {
             case q: Quasi => q.become[Ref.Quasi]
-            case name => atPos(name, name)(Name.Indeterminate(name.value))
+            case name => copyPos(name)(Name.Indeterminate(name.value))
           }
         }
       }
@@ -3120,11 +3120,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val sid = stableId() match {
       case q: Quasi => q.become[Term.Ref.Quasi]
       case sid @ Term.Select(q: Quasi, name) =>
-        atPos(sid, sid)(Term.Select(q.become[Term.Ref.Quasi], name))
+        copyPos(sid)(Term.Select(q.become[Term.Ref.Quasi], name))
       case path => path
     }
     def dotselectors = { accept[Dot]; Importer(sid, importees()) }
-    def name(tn: Term.Name) = atPos(tn, tn)(Name.Indeterminate(tn.value))
+    def name(tn: Term.Name) = copyPos(tn)(Name.Indeterminate(tn.value))
     sid match {
       case Term.Select(sid: Term.Ref, tn: Term.Name) if sid.isStableId =>
         if (token.is[Dot]) dotselectors
@@ -3132,9 +3132,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           next()
           Importer(sid, importeeRename(name(tn)) :: Nil)
         } else if (isStarWildcard(tn.tokens.head)) {
-          Importer(sid, atPos(tn, tn)(Importee.Wildcard()) :: Nil)
+          Importer(sid, copyPos(tn)(Importee.Wildcard()) :: Nil)
         } else {
-          Importer(sid, atPos(tn, tn)(Importee.Name(name(tn))) :: Nil)
+          Importer(sid, copyPos(tn)(Importee.Name(name(tn))) :: Nil)
         }
       case tn: Term.Name if token.is[soft.KwAs] =>
         next()
@@ -3172,7 +3172,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (dialect.allowGivenImports)
         importees.map {
           case importee @ Importee.Name(nm) if nm.value == "given" && importeesHaveWildcard =>
-            atPos(importee.name, importee.name)(Importee.GivenAll())
+            copyPos(importee.name)(Importee.GivenAll())
           case i => i
         }
       else importees
@@ -3188,7 +3188,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else Importee.GivenAll()
     } else if (token.is[Unquote]) Importee.Name(unquote[Name.Quasi])
     else {
-      val name = termName(); Importee.Name(atPos(name, name)(Name.Indeterminate(name.value)))
+      val name = termName(); Importee.Name(copyPos(name)(Name.Indeterminate(name.value)))
     }
   }
 
@@ -3284,7 +3284,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     next()
     val lhs: List[Pat] = commaSeparated(noSeq.pattern2()).map {
-      case name: Term.Name => atPos(name, name)(Pat.Var(name))
+      case name: Term.Name => copyPos(name)(Pat.Var(name))
       case pat => pat
     }
     val tp: Option[Type] = typedOpt()
