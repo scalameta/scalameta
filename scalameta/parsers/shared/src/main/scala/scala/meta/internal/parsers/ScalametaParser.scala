@@ -266,16 +266,30 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def atPos[T <: Tree](token: Token)(body: => T): T = {
-    atPos(token.startTokenPos, token.endTokenPos)(body)
+    atPos(token.index)(body)
   }
   def atPos[T <: Tree](start: StartPos, end: EndPos)(body: => T): T = {
     val startTokenPos = start.startTokenPos
     atPosWithBody(startTokenPos, body, end)
   }
 
+  def atPos[T <: Tree](pos: Int)(body: => T): T = {
+    atPosWithBody(pos, body, pos)
+  }
+  def atCurPos[T <: Tree](body: => T): T = {
+    atPos(in.tokenPos)(body)
+  }
+  def atCurPosNext[T <: Tree](body: => T): T = {
+    try atCurPos(body)
+    finally next()
+  }
+
   def atPosWithBody[T <: Tree](startTokenPos: Int, body: T, endPos: EndPos): T = {
-    var endTokenPos = endPos.endTokenPos
-    if (endTokenPos < startTokenPos) endTokenPos = startTokenPos - 1
+    atPosWithBody(startTokenPos, body, endPos.endTokenPos)
+  }
+
+  def atPosWithBody[T <: Tree](startTokenPos: Int, body: T, endPos: Int): T = {
+    val endTokenPos = if (endPos < startTokenPos) startTokenPos - 1 else endPos
 
     def skipBy(range: Range, f: Token => Boolean): Int =
       range.dropWhile(i => f(scannerTokens(i))).headOption.getOrElse(range.start)
@@ -1058,7 +1072,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     token match {
       case Ident(value) =>
         val name = value.stripPrefix("`").stripSuffix("`")
-        val res = atPos(in.tokenPos, in.tokenPos)(ctor(name))
+        val res = atCurPos(ctor(name))
         if (advance) next()
         res
       case Unquote() =>
@@ -1078,8 +1092,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
     if (token.is[KwThis]) {
       val anonqual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
-      next()
-      val thisp = atPos(in.prevTokenPos, auto)(Term.This(anonqual))
+      val thisp = atCurPosNext(Term.This(anonqual))
       if (stop && thisOK) thisp
       else {
         accept[Dot]
@@ -1235,7 +1248,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case Interpolation.Id(value) => Term.Name(value)
         case _ => unreachable(debug(token))
       }
-      atPos(in.tokenPos, in.tokenPos)(name)
+      atCurPos(name)
     }
     if (token.is[Interpolation.Id]) next()
     val partsBuf = new ListBuffer[Lit]
@@ -1246,11 +1259,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         next()
         loop()
       case Interpolation.Part(value) =>
-        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit.String(value))
+        partsBuf += atCurPos(Lit.String(value))
         next()
         loop()
       case Xml.Part(value) =>
-        partsBuf += atPos(in.tokenPos, in.tokenPos)(Lit.String(value))
+        partsBuf += atCurPos(Lit.String(value))
         next()
         loop()
       case Interpolation.SpliceStart() | Xml.SpliceStart() =>
@@ -1950,9 +1963,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         // Infix chain continues.
         // In the running example, we're at `a [+] b`.
         val op = if (token.is[KwMatch]) {
-          val matchName = atPos(in.tokenPos, in.tokenPos)(Term.Name("match"))
-          accept[KwMatch]
-          matchName
+          atCurPosNext(Term.Name("match"))
         } else {
           termName() // op = [+]
         }
@@ -2061,8 +2072,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             case path => path
           })
         case Underscore() =>
-          next()
-          Success(atPos(in.prevTokenPos, in.prevTokenPos)(Term.Placeholder()))
+          Success(atCurPosNext(Term.Placeholder()))
         case LeftParen() =>
           Success(autoPos(inParensOrTupleOrUnit(location = NoStat, allowRepeated = allowRepeated)))
         case LeftBrace() =>
@@ -2125,8 +2135,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def macroQuotedIdent(): Term = autoPos {
     token match {
       case Constant.Symbol(value) =>
-        val name = atPos(in.tokenPos, in.tokenPos)(Term.Name(value.name))
-        next()
+        val name = atCurPosNext(Term.Name(value.name))
         Term.QuotedMacroExpr(name)
       case _ =>
         syntaxError("Expected quoted ident", at = token)
@@ -2136,8 +2145,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def macroSplicedIdent(): Term = autoPos {
     token match {
       case Ident(value) =>
-        val name = atPos(in.tokenPos, in.tokenPos)(Term.Name(value.stripPrefix("$")))
-        next()
+        val name = atCurPosNext(Term.Name(value.stripPrefix("$")))
         Term.SplicedMacroExpr(name)
       case _ =>
         syntaxError("Expected quoted ident", at = token)
@@ -2959,10 +2967,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     val (isValParam, isVarParam) = (ownerIsType && token.is[KwVal], ownerIsType && token.is[KwVar])
     if (isValParam) {
-      mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.ValParam()); next()
+      mods :+= atCurPosNext(Mod.ValParam())
     }
     if (isVarParam) {
-      mods :+= atPos(in.tokenPos, in.tokenPos)(Mod.VarParam()); next()
+      mods :+= atCurPosNext(Mod.VarParam())
     }
     def endParamQuasi = token.is[RightParen] || token.is[Comma]
     mods.headOption match {
@@ -3611,15 +3619,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case KwClass() =>
         classDef(mods)
       case KwCase() if ahead(token.is[KwClass]) =>
-        val casePos = in.tokenPos
-        next()
-        classDef(mods :+ atPos(casePos, casePos)(Mod.Case()))
+        classDef(mods :+ atCurPosNext(Mod.Case()))
       case KwObject() =>
         objectDef(mods)
       case KwCase() if ahead(token.is[KwObject]) =>
-        val casePos = in.tokenPos
-        next()
-        objectDef(mods :+ atPos(casePos, casePos)(Mod.Case()))
+        objectDef(mods :+ atCurPosNext(Mod.Case()))
       case Token.At() =>
         syntaxError("Annotations must precede keyword modifiers", at = token)
       case DefIntro() if dialect.allowToplevelStatements =>
@@ -3630,8 +3634,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def traitDef(mods: List[Mod]): Defn.Trait = atPos(mods, auto) {
-    val traitPos = in.tokenPos
-    val assumedAbstract = atPos(traitPos, traitPos)(Mod.Abstract())
+    val assumedAbstract = atCurPos(Mod.Abstract())
     // Add `abstract` to traits for error reporting
     val fullMods = mods :+ assumedAbstract
     accept[KwTrait]
@@ -3770,7 +3773,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def secondaryCtor(mods: List[Mod]): Ctor.Secondary = atPos(mods, auto) {
     accept[KwDef]
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
-    val name = atPos(in.tokenPos, in.tokenPos)(Name.Anonymous())
+    val name = atCurPos(Name.Anonymous())
     accept[KwThis]
     if (token.isNot[LeftParen]) {
       syntaxError("auxiliary constructor needs non-implicit parameter list", at = token.pos)
@@ -3785,7 +3788,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val mods = anns ++ modifiers()
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     accept[KwDef]
-    val name = atPos(in.tokenPos, in.tokenPos)(Name.Anonymous())
+    val name = atCurPos(Name.Anonymous())
     accept[KwThis]
     val paramss = paramClauses(ownerIsType = true)
     newLineOptWhenFollowedBy[LeftBrace]
