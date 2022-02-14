@@ -182,9 +182,10 @@ class TypeSuite extends ParseSuite {
   }
 
   test("[scala3] (x: Int, y: Int)(z: String)") {
-    val err = intercept[ArrayIndexOutOfBoundsException] {
+    val err = intercept[ParseException] {
       tpe("(x: Int, y: Int)(z: String)")(dialects.Scala3)
     }
+    assertNoDiff(err.shortMessage, "can't have multiple parameter lists in function types")
   }
 
 }
