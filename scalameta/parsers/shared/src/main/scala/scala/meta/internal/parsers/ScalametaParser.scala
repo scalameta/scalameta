@@ -1088,7 +1088,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       token.isNot[KwThis] && token.isNot[KwSuper] && token.isNot[Ident] && token.isNot[Unquote]
     }
     if (token.is[KwThis]) {
-      val anonqual = atPos(in.tokenPos, in.prevTokenPos)(Name.Anonymous())
+      val anonqual = autoPos(Name.Anonymous())
       val thisp = atCurPosNext(Term.This(anonqual))
       if (stop && thisOK) thisp
       else {
@@ -1097,8 +1097,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     } else if (token.is[KwSuper]) {
       val anonqual = autoPos(Name.Anonymous())
-      next()
-      val superp = atPos(in.prevTokenPos, auto)(Term.Super(anonqual, mixinQualifier()))
+      val superp = autoPos {
+        next()
+        Term.Super(anonqual, mixinQualifier())
+      }
       if (startsAtBof && endsAtEof && dialect.allowUnquotes) return superp
       accept[Dot]
       val supersel = atPos(superp, auto)(Term.Select(superp, termName()))
@@ -1359,7 +1361,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case LeftBrace() => dropTrivialBlock(expr(location = NoStat, allowRepeated = true))
       case KwThis() =>
         val qual = autoPos { next(); Name.Anonymous() }
-        atPos(in.prevTokenPos, auto)(Term.This(qual))
+        atPos(qual)(Term.This(qual))
       case _ =>
         syntaxError(
           "error in interpolated string: identifier, `this' or block expected",
@@ -1431,7 +1433,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     } else if (token.is[Semicolon] && ahead { token.is[KwElse] }) {
       next(); next(); Term.If(cond, thenp, expr(), mods)
     } else {
-      Term.If(cond, thenp, atPos(in.tokenPos, in.prevTokenPos)(Lit.Unit()), mods)
+      Term.If(cond, thenp, autoPos(Lit.Unit()), mods)
     }
   }
 
@@ -1568,7 +1570,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case KwReturn() =>
         next()
         if (token.is[ExprIntro]) Term.Return(expr())
-        else Term.Return(atPos(in.tokenPos, auto)(Lit.Unit()))
+        else Term.Return(autoPos(Lit.Unit()))
       case KwThrow() =>
         next()
         Term.Throw(expr())
@@ -2077,8 +2079,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Success(blockExpr())
         case KwNew() =>
           canApply = false
-          next()
-          Success(atPos(in.prevTokenPos, auto) {
+          Success(autoPos {
+            next()
             template(enumCaseAllowed = false, secondaryConstructorAllowed = false) match {
               case trivial @ Template(Nil, List(init), Self(Name.Anonymous(), None), Nil) =>
                 if (!token.prev.is[RightBrace]) Term.New(init)
@@ -2713,16 +2715,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (in.token.isNot[LeftBracket]) mod(autoPos(Name.Anonymous()))
     else {
       accept[LeftBracket]
-      val result = {
-        if (token.is[KwThis]) {
-          val qual = autoPos { next(); Name.Anonymous() }
-          mod(atPos(in.prevTokenPos, auto)(Term.This(qual)))
-        } else {
-          val within = termName() match {
+      val result = mod {
+        if (token.is[KwThis]) autoPos {
+          Term.This(autoPos { next(); Name.Anonymous() })
+        }
+        else {
+          termName() match {
             case q: Quasi => q.become[Ref.Quasi]
             case name => atPos(name, name)(Name.Indeterminate(name.value))
           }
-          mod(within)
         }
       }
       accept[RightBracket]
@@ -2862,7 +2863,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       } else {
         next()
         if (token.is[Unquote]) annots += unquote[Mod.Annot]
-        else annots += atPos(in.prevTokenPos, auto)(Mod.Annot(initInsideAnnotation(allowArgss)))
+        else annots += atPos(StartPosPrev, auto)(Mod.Annot(initInsideAnnotation(allowArgss)))
       }
       if (skipNewLines) newLineOpt()
     }
@@ -2944,8 +2945,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       isUsing: Boolean
   ): Term.Param = autoPos {
     var mods: List[Mod] = annots(skipNewLines = false)
-    if (isImplicit) mods ++= List(atPos(in.tokenPos, in.prevTokenPos)(Mod.Implicit()))
-    if (isUsing) mods ++= List(atPos(in.tokenPos, in.prevTokenPos)(Mod.Using()))
+    if (isImplicit) mods ++= List(autoPos(Mod.Implicit()))
+    if (isUsing) mods ++= List(autoPos(Mod.Using()))
     rejectMod[Mod.Open](mods, "Open modifier only applied to classes")
     if (ownerIsType) {
       mods ++= modifiers(isParams = true)
@@ -3518,7 +3519,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           name,
           tparams,
           paramss,
-          atPos(in.tokenPos, in.prevTokenPos)(Type.Name("Unit"))
+          autoPos(Type.Name("Unit"))
         )
       } else
         Decl.Def(mods, name, tparams, paramss, restype.get)
@@ -3529,7 +3530,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         name,
         tparams,
         paramss,
-        Some(atPos(in.tokenPos, in.prevTokenPos)(Type.Name("Unit"))),
+        Some(autoPos(Type.Name("Unit"))),
         expr()
       )
     } else {
