@@ -166,4 +166,25 @@ class TypeSuite extends ParseSuite {
     val Type.Apply(Type.Name("Option"), List(Type.Name("-_"))) =
       tpe("Option[- _]")(dialects.Scala213Source3)
   }
+
+  test("[scala213] (x: Int, y)") {
+    val err = intercept[ParseException] {
+      tpe("(x: Int, y)")(dialects.Scala213)
+    }
+    assertNoDiff(err.shortMessage, "can't mix function type and dependent function type syntaxes")
+  }
+
+  test("[scala213] (x: Int, y: Int)(z: String)") {
+    val err = intercept[ParseException] {
+      tpe("(x: Int, y: Int)(z: String)")(dialects.Scala213)
+    }
+    assertNoDiff(err.shortMessage, "dependent function types are not supported")
+  }
+
+  test("[scala3] (x: Int, y: Int)(z: String)") {
+    val err = intercept[ArrayIndexOutOfBoundsException] {
+      tpe("(x: Int, y: Int)(z: String)")(dialects.Scala3)
+    }
+  }
+
 }
