@@ -1,171 +1,249 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta._, Term.{Name => TermName, _}, Type.{Name => TypeName},
-Name.{Anonymous, Indeterminate}
+import scala.meta._, Term.{Name => _, _}, Name.{Anonymous, Indeterminate}
 import scala.meta.dialects.Scala211
 
 class TermSuite extends ParseSuite {
+
+  private def assertTerm(expr: String)(tree: Tree): Unit = {
+    assertEquals(term(expr).structure, tree.structure)
+  }
+
   test("x") {
-    val TermName("x") = term("x")
+    assertTerm("x") {
+      Term.Name("x")
+    }
   }
 
   test("`x`") {
-    val name @ TermName("x") = term("`x`")
+    assertTerm("`x`") {
+      Term.Name("x")
+    }
   }
 
   test("a.b.c") {
-    val outer @ Select(inner @ Select(TermName("a"), TermName("b")), TermName("c")) = term("a.b.c")
+    assertTerm("a.b.c") {
+      Select(Select(Term.Name("a"), Term.Name("b")), Term.Name("c"))
+    }
   }
 
   test("a.b c") {
-    val outer @ Select(inner @ Select(TermName("a"), TermName("b")), TermName("c")) = term("a.b c")
+    assertTerm("a.b c") {
+      Select(Select(Term.Name("a"), Term.Name("b")), Term.Name("c"))
+    }
   }
 
   test("foo.this") {
-    val This(Indeterminate("foo")) = term("foo.this")
+    assertTerm("foo.this") {
+      This(Indeterminate("foo"))
+    }
   }
 
   test("this") {
-    val This(Anonymous()) = term("this")
+    assertTerm("this") {
+      This(Anonymous())
+    }
   }
 
   test("a.super[b].c") {
-    val Select(Super(Indeterminate("a"), Indeterminate("b")), TermName("c")) = term("a.super[b].c")
+    assertTerm("a.super[b].c") {
+      Select(Super(Indeterminate("a"), Indeterminate("b")), Term.Name("c"))
+    }
   }
 
   test("super[b].c") {
-    val Select(Super(Anonymous(), Indeterminate("b")), TermName("c")) = term("super[b].c")
+    assertTerm("super[b].c") {
+      Select(Super(Anonymous(), Indeterminate("b")), Term.Name("c"))
+    }
   }
 
   test("a.super.c") {
-    val Select(Super(Indeterminate("a"), Anonymous()), TermName("c")) = term("a.super.c")
+    assertTerm("a.super.c") {
+      Select(Super(Indeterminate("a"), Anonymous()), Term.Name("c"))
+    }
   }
 
   test("super.c") {
-    val Select(Super(Anonymous(), Anonymous()), TermName("c")) = term("super.c")
+    assertTerm("super.c") {
+      Select(Super(Anonymous(), Anonymous()), Term.Name("c"))
+    }
   }
 
   test("s\"a $b c\"") {
-    val Interpolate(TermName("s"), Lit("a ") :: Lit(" c") :: Nil, TermName("b") :: Nil) =
-      term("s\"a $b c\"")
+    assertTerm("s\"a $b c\"") {
+      Interpolate(
+        Term.Name("s"),
+        Lit.String("a ") :: Lit.String(" c") :: Nil,
+        Term.Name("b") :: Nil
+      )
+    }
   }
 
   test("f(0)") {
-    val Apply(TermName("f"), Lit(0) :: Nil) = term("f(0)")
+    assertTerm("f(0)") {
+      Apply(Term.Name("f"), Lit.Int(0) :: Nil)
+    }
   }
 
   test("f(x = 0)") {
-    val Apply(TermName("f"), Assign(TermName("x"), Lit(0)) :: Nil) = term("f(x = 0)")
+    assertTerm("f(x = 0)") {
+      Apply(Term.Name("f"), Assign(Term.Name("x"), Lit.Int(0)) :: Nil)
+    }
   }
 
   test("f(x: _*)") {
-    val Apply(TermName("f"), Repeated(TermName("x")) :: Nil) = term("f(x: _*)")
+    assertTerm("f(x: _*)") {
+      Apply(Term.Name("f"), Repeated(Term.Name("x")) :: Nil)
+    }
   }
 
   test("f((x: _*))") {
-    val Apply(TermName("f"), Repeated(TermName("x")) :: Nil) = term("f((x: _*))")
+    assertTerm("f((x: _*))") {
+      Apply(Term.Name("f"), Repeated(Term.Name("x")) :: Nil)
+    }
   }
 
   test("f(x = xs: _*)") {
-    val Term.Apply(Term.Name("f"), List(Assign(Term.Name("x"), Repeated(Term.Name("xs"))))) =
-      term("f(x = xs: _*)")
+    assertTerm("f(x = xs: _*)") {
+      Term.Apply(Term.Name("f"), List(Assign(Term.Name("x"), Repeated(Term.Name("xs")))))
+    }
   }
 
   test("f(x = (xs: _*))") {
-    val Term.Apply(Term.Name("f"), List(Assign(Term.Name("x"), Repeated(Term.Name("xs"))))) =
-      term("f(x = (xs: _*))")
+    assertTerm("f(x = (xs: _*))") {
+      Term.Apply(Term.Name("f"), List(Assign(Term.Name("x"), Repeated(Term.Name("xs")))))
+    }
   }
 
   test("a + ()") {
-    val ApplyInfix(TermName("a"), TermName("+"), Nil, Nil) = term("a + ()")
+    assertTerm("a + ()") {
+      ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Nil)
+    }
   }
 
   test("a + b") {
-    val ApplyInfix(TermName("a"), TermName("+"), Nil, TermName("b") :: Nil) = term("a + b")
+    assertTerm("a + b") {
+      ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Term.Name("b") :: Nil)
+    }
   }
 
   test("a + b + c") {
-    val ApplyInfix(
-      ApplyInfix(TermName("a"), TermName("+"), Nil, TermName("b") :: Nil),
-      TermName("+"),
-      Nil,
-      TermName("c") :: Nil
-    ) = term("a + b + c")
+    assertTerm("a + b + c") {
+      ApplyInfix(
+        ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Term.Name("b") :: Nil),
+        Term.Name("+"),
+        Nil,
+        Term.Name("c") :: Nil
+      )
+    }
   }
 
   test("a :: b") {
-    val ApplyInfix(TermName("a"), TermName("::"), Nil, TermName("b") :: Nil) = term("a :: b")
+    assertTerm("a :: b") {
+      ApplyInfix(Term.Name("a"), Term.Name("::"), Nil, Term.Name("b") :: Nil)
+    }
   }
 
   test("a :: b :: c") {
-    val ApplyInfix(
-      TermName("a"),
-      TermName("::"),
-      Nil,
-      ApplyInfix(TermName("b"), TermName("::"), Nil, TermName("c") :: Nil) :: Nil
-    ) = term("a :: b :: c")
+    assertTerm("a :: b :: c") {
+      ApplyInfix(
+        Term.Name("a"),
+        Term.Name("::"),
+        Nil,
+        ApplyInfix(Term.Name("b"), Term.Name("::"), Nil, Term.Name("c") :: Nil) :: Nil
+      )
+    }
   }
 
   test("!a") {
-    val ApplyUnary(TermName("!"), TermName("a")) = term("!a")
+    assertTerm("!a") {
+      ApplyUnary(Term.Name("!"), Term.Name("a"))
+    }
   }
 
   test("!(a: _*)") {
-    val ApplyUnary(TermName("!"), Repeated(TermName("a"))) = term("!(a: _*)")
+    assertTerm("!(a: _*)") {
+      ApplyUnary(Term.Name("!"), Repeated(Term.Name("a")))
+    }
   }
 
   test("a = true") {
-    val Assign(TermName("a"), Lit(true)) = term("a = true")
+    assertTerm("a = true") {
+      Assign(Term.Name("a"), Lit.Boolean(true))
+    }
   }
 
   test("a(0) = true") {
-    val Assign(Apply(TermName("a"), (Lit(0) :: Nil)), Lit(true)) = term("a(0) = true")
+    assertTerm("a(0) = true") {
+      Assign(Apply(Term.Name("a"), (Lit.Int(0) :: Nil)), Lit.Boolean(true))
+    }
   }
 
   test("return") {
-    val ret @ Return(Lit(())) = term("return")
+    assertTerm("return") {
+      Return(Lit.Unit())
+    }
   }
 
   test("return 1") {
-    val ret @ Return(Lit(1)) = term("return 1")
+    assertTerm("return 1") {
+      Return(Lit.Int(1))
+    }
   }
 
   test("throw 1") {
-    val Throw(Lit(1)) = term("throw 1")
+    assertTerm("throw 1") {
+      Throw(Lit.Int(1))
+    }
   }
 
   test("1: Int") {
-    val Ascribe(Lit(1), TypeName("Int")) = term("1: Int")
+    assertTerm("1: Int") {
+      Ascribe(Lit.Int(1), Type.Name("Int"))
+    }
   }
 
   test("1: @foo") {
-    val Annotate(Lit(1), Mod.Annot(Init(Type.Name("foo"), Name.Anonymous(), Nil)) :: Nil) =
-      term("1: @foo")
+    assertTerm("1: @foo") {
+      Annotate(Lit.Int(1), Mod.Annot(Init(Type.Name("foo"), Name.Anonymous(), Nil)) :: Nil)
+    }
   }
 
   test("(true, false)") {
-    val Tuple(Lit(true) :: Lit(false) :: Nil) = term("(true, false)")
+    assertTerm("(true, false)") {
+      Tuple(Lit.Boolean(true) :: Lit.Boolean(false) :: Nil)
+    }
   }
 
   test("{ true; false }") {
-    val Block(Lit(true) :: Lit(false) :: Nil) = term("{ true; false }")
+    assertTerm("{ true; false }") {
+      Block(Lit.Boolean(true) :: Lit.Boolean(false) :: Nil)
+    }
   }
 
   test("{ true }") {
-    val Block(Lit(true) :: Nil) = term("{ true }")
+    assertTerm("{ true }") {
+      Block(Lit.Boolean(true) :: Nil)
+    }
   }
 
   test("if (true) true else false") {
-    val iff @ If(Lit(true), Lit(true), Lit(false)) = term("if (true) true else false")
+    assertTerm("if (true) true else false") {
+      If(Lit.Boolean(true), Lit.Boolean(true), Lit.Boolean(false))
+    }
   }
 
   test("if (true) true; else false") {
-    val iff @ If(Lit(true), Lit(true), Lit(false)) = term("if (true) true; else false")
+    assertTerm("if (true) true; else false") {
+      If(Lit.Boolean(true), Lit.Boolean(true), Lit.Boolean(false))
+    }
   }
 
   test("if (true) true") {
-    val iff @ If(Lit(true), Lit(true), Lit(())) = term("if (true) true")
+    assertTerm("if (true) true") {
+      If(Lit.Boolean(true), Lit.Boolean(true), Lit.Unit())
+    }
   }
 
   test("if (true && '' match...") {
@@ -179,67 +257,77 @@ class TermSuite extends ParseSuite {
          |) ""
          |""".stripMargin
 
-    val Term.If(
-      Term.ApplyInfix(
+    assertTerm(file) {
+      Term.If(
         Term.ApplyInfix(
-          Lit.Boolean(true),
+          Term.ApplyInfix(
+            Lit.Boolean(true),
+            Term.Name("&&"),
+            Nil,
+            List(
+              Term.Match(
+                Lit.String(""),
+                List(Case(Pat.Var(Term.Name("other")), None, Lit.Boolean(true)))
+              )
+            )
+          ),
           Term.Name("&&"),
           Nil,
-          List(
-            Term.Match(
-              Lit.String(""),
-              List(Case(Pat.Var(Term.Name("other")), None, Lit.Boolean(true)))
-            )
-          )
+          List(Lit.Boolean(true))
         ),
-        Term.Name("&&"),
-        Nil,
-        List(Lit.Boolean(true))
-      ),
-      Lit.String(""),
-      Lit.Unit()
-    ) = term(file)
+        Lit.String(""),
+        Lit.Unit()
+      )
+    }
   }
 
   test("() => x") {
-    val Term.Function(Nil, Term.Name("x")) = term("() => x")
+    assertTerm("() => x") {
+      Term.Function(Nil, Term.Name("x"))
+    }
     val Term.Function(Nil, Term.Name("x")) = blockStat("() => x")
     val Term.Function(Nil, Term.Name("x")) = templStat("() => x")
   }
 
   test("(()) => x") {
-    val Term.Function(Nil, Term.Name("x")) = term("(()) => x")
+    assertTerm("(()) => x") {
+      Term.Function(Nil, Term.Name("x"))
+    }
     val Term.Function(Nil, Term.Name("x")) = blockStat("(()) => x")
     val Term.Function(Nil, Term.Name("x")) = templStat("(()) => x")
   }
 
   test("x => x") {
-    val Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x")) =
-      term("x => x")
+    assertTerm("x => x") {
+      Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x"))
+    }
     val Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x")) =
       blockStat("x => x")
     intercept[ParseException] { templStat("x => x") }
   }
 
   test("(x) => x") {
-    val Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x")) =
-      term("(x) => x")
+    assertTerm("(x) => x") {
+      Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x"))
+    }
     val Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x")) =
       blockStat("(x) => x")
     intercept[ParseException] { templStat("(x) => x") }
   }
 
   test("_ => x") {
-    val Term.Function(List(Term.Param(Nil, Name.Anonymous(), None, None)), Term.Name("x")) =
-      term("_ => x")
+    assertTerm("_ => x") {
+      Term.Function(List(Term.Param(Nil, Name.Anonymous(), None, None)), Term.Name("x"))
+    }
     val Term.Function(List(Term.Param(Nil, Name.Anonymous(), None, None)), Term.Name("x")) =
       blockStat("_ => x")
     intercept[ParseException] { templStat("_ => x") }
   }
 
   test("(_) => x") {
-    val Term.Function(List(Term.Param(Nil, Name.Anonymous(), None, None)), Term.Name("x")) =
-      term("(_) => x")
+    assertTerm("(_) => x") {
+      Term.Function(List(Term.Param(Nil, Name.Anonymous(), None, None)), Term.Name("x"))
+    }
     val Term.Function(List(Term.Param(Nil, Name.Anonymous(), None, None)), Term.Name("x")) =
       blockStat("(_) => x")
     intercept[ParseException] { templStat("(_) => x") }
@@ -247,8 +335,9 @@ class TermSuite extends ParseSuite {
 
   test("x: Int => x") {
     // LAWL: this is how scalac's parser works
-    val Term.Ascribe(Term.Name("x"), Type.Function(List(Type.Name("Int")), Type.Name("x"))) =
-      term("x: Int => x")
+    assertTerm("x: Int => x") {
+      Term.Ascribe(Term.Name("x"), Type.Function(List(Type.Name("Int")), Type.Name("x")))
+    }
     val Term.Function(
       List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)),
       Term.Name("x")
@@ -257,10 +346,12 @@ class TermSuite extends ParseSuite {
   }
 
   test("(x: Int) => x") {
-    val Term.Function(
-      List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)),
-      Term.Name("x")
-    ) = term("(x: Int) => x")
+    assertTerm("(x: Int) => x") {
+      Term.Function(
+        List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)),
+        Term.Name("x")
+      )
+    }
     val Term.Function(
       List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)),
       Term.Name("x")
@@ -272,8 +363,9 @@ class TermSuite extends ParseSuite {
   }
 
   test("_: Int => x") {
-    val Term.Ascribe(Term.Placeholder(), Type.Function(List(Type.Name("Int")), Type.Name("x"))) =
-      term("_: Int => x")
+    assertTerm("_: Int => x") {
+      Term.Ascribe(Term.Placeholder(), Type.Function(List(Type.Name("Int")), Type.Name("x")))
+    }
     val Term.Function(
       List(Term.Param(Nil, Name.Anonymous(), Some(Type.Name("Int")), None)),
       Term.Name("x")
@@ -282,10 +374,12 @@ class TermSuite extends ParseSuite {
   }
 
   test("(_: Int) => x") {
-    val Term.Function(
-      List(Term.Param(Nil, Name.Anonymous(), Some(Type.Name("Int")), None)),
-      Term.Name("x")
-    ) = term("(_: Int) => x")
+    assertTerm("(_: Int) => x") {
+      Term.Function(
+        List(Term.Param(Nil, Name.Anonymous(), Some(Type.Name("Int")), None)),
+        Term.Name("x")
+      )
+    }
     val Term.Function(
       List(Term.Param(Nil, Name.Anonymous(), Some(Type.Name("Int")), None)),
       Term.Name("x")
@@ -303,13 +397,15 @@ class TermSuite extends ParseSuite {
   }
 
   test("(x: Int, y: Int) => x") {
-    val Term.Function(
-      List(
-        Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None),
-        Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None)
-      ),
-      Term.Name("x")
-    ) = term("(x: Int, y: Int) => x")
+    assertTerm("(x: Int, y: Int) => x") {
+      Term.Function(
+        List(
+          Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None),
+          Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None)
+        ),
+        Term.Name("x")
+      )
+    }
     val Term.Function(
       List(
         Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None),
@@ -327,27 +423,32 @@ class TermSuite extends ParseSuite {
   }
 
   test("{ implicit x => () }") {
-    val Block(
-      Function(
-        Term.Param(Mod.Implicit() :: Nil, TermName("x"), None, None) :: Nil,
-        Lit(())
-      ) :: Nil
-    ) = term("{ implicit x => () }")
+    assertTerm("{ implicit x => () }") {
+      Block(
+        Function(
+          Term.Param(Mod.Implicit() :: Nil, Term.Name("x"), None, None) :: Nil,
+          Lit.Unit()
+        ) :: Nil
+      )
+    }
   }
 
   test("1 match { case 1 => true }") {
-    val Match(Lit(1), Case(Lit(1), None, Lit(true)) :: Nil) =
-      term("1 match { case 1 => true }")
+    assertTerm("1 match { case 1 => true }") {
+      Match(Lit.Int(1), Case(Lit.Int(1), None, Lit.Boolean(true)) :: Nil)
+    }
   }
 
   test("1 match { case 1 => }") {
-    val Match(Lit(1), Case(Lit(1), None, Term.Block(Nil)) :: Nil) =
-      term("1 match { case 1 => }")
+    assertTerm("1 match { case 1 => }") {
+      Match(Lit.Int(1), Case(Lit.Int(1), None, Term.Block(Nil)) :: Nil)
+    }
   }
 
   test("1 match { case 1 if true => }") {
-    val Match(Lit(1), Case(Lit(1), Some(Lit(true)), Term.Block(Nil)) :: Nil) =
-      term("1 match { case 1 if true => }")
+    assertTerm("1 match { case 1 if true => }") {
+      Match(Lit.Int(1), Case(Lit.Int(1), Some(Lit.Boolean(true)), Term.Block(Nil)) :: Nil)
+    }
   }
 
   test("1 match { case case 1 if true => }") {
@@ -358,255 +459,313 @@ class TermSuite extends ParseSuite {
   }
 
   test("try 1") {
-    val Try(Lit(1), Nil, None) = term("try 1")
+    assertTerm("try 1") {
+      Try(Lit.Int(1), Nil, None)
+    }
   }
 
   test("try 1 catch 1") {
-    val TryWithHandler(Lit(1), Lit(1), None) = term("try 1 catch 1")
+    assertTerm("try 1 catch 1") {
+      TryWithHandler(Lit.Int(1), Lit.Int(1), None)
+    }
   }
 
   test("try (2)") {
-    val Try(Lit(2), Nil, None) = term("try (2)")
+    assertTerm("try (2)") {
+      Try(Lit.Int(2), Nil, None)
+    }
   }
 
   test("try 1 catch { case _ => }") {
-    val Try(Lit(1), Case(Pat.Wildcard(), None, Term.Block(Nil)) :: Nil, None) =
-      term("try 1 catch { case _ => }")
+    assertTerm("try 1 catch { case _ => }") {
+      Try(Lit.Int(1), Case(Pat.Wildcard(), None, Term.Block(Nil)) :: Nil, None)
+    }
   }
 
   test("try 1 finally 1") {
-    val Try(Lit(1), Nil, Some(Lit(1))) = term("try 1 finally 1")
+    assertTerm("try 1 finally 1") {
+      Try(Lit.Int(1), Nil, Some(Lit.Int(1)))
+    }
   }
 
   test("{ case 1 => () }") {
-    val PartialFunction(Case(Lit(1), None, Lit(())) :: Nil) =
-      term("{ case 1 => () }")
+    assertTerm("{ case 1 => () }") {
+      PartialFunction(Case(Lit.Int(1), None, Lit.Unit()) :: Nil)
+    }
   }
 
   test("while (true) false") {
-    val While(Lit(true), Lit(false)) = term("while (true) false")
+    assertTerm("while (true) false") {
+      While(Lit.Boolean(true), Lit.Boolean(false))
+    }
   }
 
   test("do false while(true)") {
-    val Do(Lit(false), Lit(true)) = term("do false while(true)")
+    assertTerm("do false while(true)") {
+      Do(Lit.Boolean(false), Lit.Boolean(true))
+    }
   }
 
   test("for (a <- b; if c; x = a) x") {
-    val For(
-      List(
-        Enumerator.Generator(Pat.Var(TermName("a")), TermName("b")),
-        Enumerator.Guard(TermName("c")),
-        Enumerator.Val(Pat.Var(TermName("x")), TermName("a"))
-      ),
-      TermName("x")
-    ) = term("for (a <- b; if c; x = a) x")
-
+    assertTerm("for (a <- b; if c; x = a) x") {
+      For(
+        List(
+          Enumerator.Generator(Pat.Var(Term.Name("a")), Term.Name("b")),
+          Enumerator.Guard(Term.Name("c")),
+          Enumerator.Val(Pat.Var(Term.Name("x")), Term.Name("a"))
+        ),
+        Term.Name("x")
+      )
+    }
   }
+
   test("for (a <- b; if c; x = a) yield x") {
-    val ForYield(
-      List(
-        Enumerator.Generator(Pat.Var(TermName("a")), TermName("b")),
-        Enumerator.Guard(TermName("c")),
-        Enumerator.Val(Pat.Var(TermName("x")), TermName("a"))
-      ),
-      TermName("x")
-    ) = term("for (a <- b; if c; x = a) yield x")
+    assertTerm("for (a <- b; if c; x = a) yield x") {
+      ForYield(
+        List(
+          Enumerator.Generator(Pat.Var(Term.Name("a")), Term.Name("b")),
+          Enumerator.Guard(Term.Name("c")),
+          Enumerator.Val(Pat.Var(Term.Name("x")), Term.Name("a"))
+        ),
+        Term.Name("x")
+      )
+    }
   }
 
   test("f(_)") {
-    val Apply(TermName("f"), List(Placeholder())) = term("f(_)")
+    assertTerm("f(_)")(
+      Apply(Term.Name("f"), List(Placeholder()))
+    )
   }
 
   test("_ + 1") {
-    val ApplyInfix(Placeholder(), TermName("+"), Nil, Lit(1) :: Nil) = term("_ + 1")
+    assertTerm("_ + 1")(
+      ApplyInfix(Placeholder(), Term.Name("+"), Nil, Lit.Int(1) :: Nil)
+    )
   }
 
   test("1 + _") {
-    val ApplyInfix(Lit(1), TermName("+"), Nil, Placeholder() :: Nil) = term("1 + _")
+    assertTerm("1 + _")(
+      ApplyInfix(Lit.Int(1), Term.Name("+"), Nil, Placeholder() :: Nil)
+    )
   }
 
   test("f _") {
-    val Eta(TermName("f")) = term("f _")
+    assertTerm("f _") {
+      Eta(Term.Name("f"))
+    }
   }
 
   test("new {}") {
-    val NewAnonymous(Template(Nil, Nil, EmptySelf(), Nil)) = term("new {}")
+    assertTerm("new {}") {
+      NewAnonymous(Template(Nil, Nil, EmptySelf(), Nil))
+    }
   }
 
   test("new { x }") {
-    val NewAnonymous(Template(Nil, Nil, EmptySelf(), List(Term.Name("x")))) = term("new { x }")
+    assertTerm("new { x }") {
+      NewAnonymous(Template(Nil, Nil, EmptySelf(), List(Term.Name("x"))))
+    }
   }
 
   test("new A") {
-    val New(Init(Type.Name("A"), Name.Anonymous(), Nil)) = term("new A")
+    assertTerm("new A") {
+      New(Init(Type.Name("A"), Name.Anonymous(), Nil))
+    }
   }
 
   test("new A(xs: _*)") {
-    val New(Init(Type.Name("A"), Name.Anonymous(), List(List(Term.Repeated(Term.Name("xs")))))) =
-      term("new A(xs: _*)")
+    assertTerm("new A(xs: _*)") {
+      New(Init(Type.Name("A"), Name.Anonymous(), List(List(Term.Repeated(Term.Name("xs"))))))
+    }
   }
 
   test("new A {}") {
-    val NewAnonymous(
-      Template(Nil, Init(Type.Name("A"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)
-    ) = term("new A {}")
+    assertTerm("new A {}") {
+      NewAnonymous(
+        Template(Nil, Init(Type.Name("A"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)
+      )
+    }
   }
 
   test("new A with B") {
-    val NewAnonymous(
-      Template(
-        Nil,
-        Init(Type.Name("A"), Name.Anonymous(), Nil) ::
-          Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil,
-        EmptySelf(),
-        Nil
+    assertTerm("new A with B") {
+      NewAnonymous(
+        Template(
+          Nil,
+          Init(Type.Name("A"), Name.Anonymous(), Nil) ::
+            Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil,
+          EmptySelf(),
+          Nil
+        )
       )
-    ) =
-      term("new A with B")
+    }
   }
 
   test("new { val x: Int = 1 } with A") {
-    val NewAnonymous(
-      Template(
-        Defn.Val(Nil, List(Pat.Var(TermName("x"))), Some(TypeName("Int")), Lit(1)) :: Nil,
-        Init(Type.Name("A"), Name.Anonymous(), Nil) :: Nil,
-        EmptySelf(),
-        Nil
+    assertTerm("new { val x: Int = 1 } with A") {
+      NewAnonymous(
+        Template(
+          Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(1)) :: Nil,
+          Init(Type.Name("A"), Name.Anonymous(), Nil) :: Nil,
+          EmptySelf(),
+          Nil
+        )
       )
-    ) =
-      term("new { val x: Int = 1 } with A")
+    }
   }
 
   test("new { self: T => }") {
-    val NewAnonymous(Template(Nil, Nil, Self(TermName("self"), Some(TypeName("T"))), Nil)) =
-      term("new { self: T => }")
+    assertTerm("new { self: T => }") {
+      NewAnonymous(Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("T"))), Nil))
+    }
   }
 
   test("a + (b = c)") {
-    val ApplyInfix(TermName("a"), TermName("+"), Nil, Assign(TermName("b"), TermName("c")) :: Nil) =
-      term("a + (b = c)")
+    assertTerm("a + (b = c)") {
+      ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Assign(Term.Name("b"), Term.Name("c")) :: Nil)
+    }
   }
 
   test("(a = b) + c") {
-    val ApplyInfix(Assign(TermName("a"), TermName("b")), TermName("+"), Nil, TermName("c") :: Nil) =
-      term("(a = b) + c")
+    assertTerm("(a = b) + c") {
+      ApplyInfix(Assign(Term.Name("a"), Term.Name("b")), Term.Name("+"), Nil, Term.Name("c") :: Nil)
+    }
   }
 
   test("a + (b = c).d") {
-    val ApplyInfix(
-      TermName("a"),
-      TermName("+"),
-      Nil,
-      Select(Assign(TermName("b"), TermName("c")), TermName("d")) :: Nil
-    ) =
-      term("a + (b = c).d")
+    assertTerm("a + (b = c).d") {
+      ApplyInfix(
+        Term.Name("a"),
+        Term.Name("+"),
+        Nil,
+        Select(Assign(Term.Name("b"), Term.Name("c")), Term.Name("d")) :: Nil
+      )
+    }
   }
 
   test("a + (b: _*)") {
-    val ApplyInfix(TermName("a"), TermName("+"), Nil, Repeated(TermName("b")) :: Nil) =
-      term("a + (b: _*)")
+    assertTerm("a + (b: _*)") {
+      ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Repeated(Term.Name("b")) :: Nil)
+    }
   }
 
   test("a + ((b: _*))") {
-    val ApplyInfix(TermName("a"), TermName("+"), Nil, Repeated(TermName("b")) :: Nil) =
-      term("a + ((b: _*))")
+    assertTerm("a + ((b: _*))") {
+      ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Repeated(Term.Name("b")) :: Nil)
+    }
   }
 
   test("local class") {
-    val Term.Block(
-      List(
-        Defn.Class(
-          List(Mod.Case()),
-          Type.Name("C"),
-          Nil,
-          Ctor.Primary(
+    assertTerm("{ case class C(x: Int); }") {
+      Term.Block(
+        List(
+          Defn.Class(
+            List(Mod.Case()),
+            Type.Name("C"),
             Nil,
-            Name.Anonymous(),
-            List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)))
-          ),
-          EmptyTemplate()
+            Ctor.Primary(
+              Nil,
+              Name.Anonymous(),
+              List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)))
+            ),
+            EmptyTemplate()
+          )
         )
       )
-    ) = term("{ case class C(x: Int); }")
+    }
   }
 
   test("xml literal - 1") {
-    val Term.Block(
-      List(
-        Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.Xml(List(Lit("<p/>")), Nil)),
-        Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Term.Name("x"))
-      )
-    ) =
-      term("""{
+    assertTerm("""{
       val x = <p/>
       val y = x
-    }""")
+    }""") {
+      Term.Block(
+        List(
+          Defn
+            .Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.Xml(List(Lit.String("<p/>")), Nil)),
+          Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Term.Name("x"))
+        )
+      )
+    }
   }
 
   test("implicit closure") {
-    val Term.Apply(
-      Term.Name("Action"),
-      List(
-        Term.Block(
-          List(
-            Term.Function(
-              List(
-                Term.Param(
-                  List(Mod.Implicit()),
-                  Term.Name("request"),
-                  Some(Type.Apply(Type.Name("Request"), List(Type.Name("AnyContent")))),
-                  None
-                )
-              ),
-              Term.Name("Ok")
+    assertTerm("Action { implicit request: Request[AnyContent] => Ok }") {
+      Term.Apply(
+        Term.Name("Action"),
+        List(
+          Term.Block(
+            List(
+              Term.Function(
+                List(
+                  Term.Param(
+                    List(Mod.Implicit()),
+                    Term.Name("request"),
+                    Some(Type.Apply(Type.Name("Request"), List(Type.Name("AnyContent")))),
+                    None
+                  )
+                ),
+                Term.Name("Ok")
+              )
             )
           )
         )
       )
-    ) =
-      term("Action { implicit request: Request[AnyContent] => Ok }")
+    }
   }
 
   test("#312") {
-    val Term.Block(
-      List(
-        Defn.Val(
-          Nil,
-          List(Pat.Var(Term.Name("x"))),
-          None,
-          Term.Ascribe(Term.Name("yz"), Type.Tuple(List(Type.Name("Y"), Type.Name("Z"))))
-        ),
-        Term.Tuple(List(Term.Name("x"), Term.Name("x")))
-      )
-    ) =
-      term("""{
+    assertTerm("""{
       val x = yz: (Y, Z)
       (x, x)
-    }""")
+    }""") {
+      Term.Block(
+        List(
+          Defn.Val(
+            Nil,
+            List(Pat.Var(Term.Name("x"))),
+            None,
+            Term.Ascribe(Term.Name("yz"), Type.Tuple(List(Type.Name("Y"), Type.Name("Z"))))
+          ),
+          Term.Tuple(List(Term.Name("x"), Term.Name("x")))
+        )
+      )
+    }
   }
 
   test("spawn { var v: Int = _; ??? }") {
-    val Term.Apply(
-      Term.Name("spawn"),
-      List(
-        Term.Block(
-          List(
-            Defn.Var(Nil, List(Pat.Var(Term.Name("v"))), Some(Type.Name("Int")), None),
-            Term.Name("???")
+    assertTerm("spawn { var v: Int = _; ??? }") {
+      Term.Apply(
+        Term.Name("spawn"),
+        List(
+          Term.Block(
+            List(
+              Defn.Var(Nil, List(Pat.Var(Term.Name("v"))), Some(Type.Name("Int")), None),
+              Term.Name("???")
+            )
           )
         )
       )
-    ) =
-      term("spawn { var v: Int = _; ??? }")
+    }
   }
 
   test("#345") {
-    val Term.Match(_, List(Case(_, _, rhs), _)) = term("""x match {
+    assertTerm("""x match {
       case x => true
       // sobaka
       case y => y
-    }""")
-    assert(rhs.tokens.structure == "Tokens(true [26..30))")
+    }""") {
+      Term.Match(
+        Term.Name("x"),
+        List(
+          Case(Pat.Var(Term.Name("x")), None, Lit.Boolean(true)),
+          Case(Pat.Var(Term.Name("y")), None, Term.Name("y"))
+        ),
+        Nil
+      )
+    }
   }
 
   test("a + (bs: _*) * c") {
@@ -618,56 +777,61 @@ class TermSuite extends ParseSuite {
   }
 
   test("foo(a + b: _*)") {
-    val Term.Apply(
-      Term.Name("foo"),
-      List(
-        Term.Repeated(Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b"))))
+    assertTerm("foo(a + b: _*)") {
+      Term.Apply(
+        Term.Name("foo"),
+        List(
+          Term.Repeated(Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b"))))
+        )
       )
-    ) =
-      term("foo(a + b: _*)")
+    }
   }
 
   test("a + (c, d) * e") {
-    val Term.ApplyInfix(
-      Term.Name("a"),
-      Term.Name("+"),
-      Nil,
-      List(
-        Term.ApplyInfix(
-          Term.Tuple(List(Term.Name("c"), Term.Name("d"))),
-          Term.Name("*"),
-          Nil,
-          List(Term.Name("e"))
+    assertTerm("a + (c, d) * e") {
+      Term.ApplyInfix(
+        Term.Name("a"),
+        Term.Name("+"),
+        Nil,
+        List(
+          Term.ApplyInfix(
+            Term.Tuple(List(Term.Name("c"), Term.Name("d"))),
+            Term.Name("*"),
+            Nil,
+            List(Term.Name("e"))
+          )
         )
       )
-    ) =
-      term("a + (c, d) * e")
+    }
   }
 
   test("a * (c, d) + e") {
-    val Term.ApplyInfix(
-      Term.ApplyInfix(Term.Name("a"), Term.Name("*"), Nil, List(Term.Name("c"), Term.Name("d"))),
-      Term.Name("+"),
-      Nil,
-      List(Term.Name("e"))
-    ) =
-      term("a * (c, d) + e")
+    assertTerm("a * (c, d) + e") {
+      Term.ApplyInfix(
+        Term.ApplyInfix(Term.Name("a"), Term.Name("*"), Nil, List(Term.Name("c"), Term.Name("d"))),
+        Term.Name("+"),
+        Nil,
+        List(Term.Name("e"))
+      )
+    }
   }
 
   test("(a + b) c") {
-    val Term.Select(
-      Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b"))),
-      Term.Name("c")
-    ) =
-      term("(a + b) c")
+    assertTerm("(a + b) c") {
+      Term.Select(
+        Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b"))),
+        Term.Name("c")
+      )
+    }
   }
 
   test("a + b c") {
-    val Term.Select(
-      Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b"))),
-      Term.Name("c")
-    ) =
-      term("a + b c")
+    assertTerm("a + b c") {
+      Term.Select(
+        Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b"))),
+        Term.Name("c")
+      )
+    }
   }
 
   test("disallow parse[Stat] on statseqs") {
@@ -687,97 +851,113 @@ class TermSuite extends ParseSuite {
   }
 
   test("!x = y") {
-    val Term.Assign(Term.ApplyUnary(Term.Name("!"), Term.Name("x")), Term.Name("y")) =
-      term("!x = y")
+    assertTerm("!x = y") {
+      Term.Assign(Term.ApplyUnary(Term.Name("!"), Term.Name("x")), Term.Name("y"))
+    }
   }
 
   test("x = (ys: _*)") {
-    val Term.Assign(Term.Name("x"), Term.Repeated(Term.Name("ys"))) = term("x = (ys: _*)")
+    assertTerm("x = (ys: _*)") {
+      Term.Assign(Term.Name("x"), Term.Repeated(Term.Name("ys")))
+    }
   }
 
   test("!(arr.cast[Ptr[Byte]] + sizeof[Ptr[_]]).cast[Ptr[Int]] = length") {
-    val Term.Assign(
-      Term.ApplyUnary(
-        Term.Name("!"),
-        Term.ApplyType(
-          Term.Select(
-            Term.ApplyInfix(
-              Term.ApplyType(
-                Term.Select(Term.Name("arr"), Term.Name("cast")),
-                List(Type.Apply(Type.Name("Ptr"), List(Type.Name("Byte"))))
-              ),
-              Term.Name("+"),
-              Nil,
-              List(
+    assertTerm("!(arr.cast[Ptr[Byte]] + sizeof[Ptr[_]]).cast[Ptr[Int]] = length") {
+      Term.Assign(
+        Term.ApplyUnary(
+          Term.Name("!"),
+          Term.ApplyType(
+            Term.Select(
+              Term.ApplyInfix(
                 Term.ApplyType(
-                  Term.Name("sizeof"),
-                  List(
-                    Type.Apply(Type.Name("Ptr"), List(Type.Placeholder(Type.Bounds(None, None))))
+                  Term.Select(Term.Name("arr"), Term.Name("cast")),
+                  List(Type.Apply(Type.Name("Ptr"), List(Type.Name("Byte"))))
+                ),
+                Term.Name("+"),
+                Nil,
+                List(
+                  Term.ApplyType(
+                    Term.Name("sizeof"),
+                    List(
+                      Type.Apply(Type.Name("Ptr"), List(Type.Placeholder(Type.Bounds(None, None))))
+                    )
                   )
                 )
-              )
+              ),
+              Term.Name("cast")
             ),
-            Term.Name("cast")
-          ),
-          List(Type.Apply(Type.Name("Ptr"), List(Type.Name("Int"))))
-        )
-      ),
-      Term.Name("length")
-    ) =
-      term("!(arr.cast[Ptr[Byte]] + sizeof[Ptr[_]]).cast[Ptr[Int]] = length")
+            List(Type.Apply(Type.Name("Ptr"), List(Type.Name("Int"))))
+          )
+        ),
+        Term.Name("length")
+      )
+    }
   }
 
   test("(x ++ y)[T]") {
-    val Term.ApplyType(
-      Term.ApplyInfix(Term.Name("x"), Term.Name("++"), Nil, List(Term.Name("y"))),
-      List(Type.Name("T"))
-    ) = term("(x ++ y)[T]")
+    assertTerm("(x ++ y)[T]") {
+      Term.ApplyType(
+        Term.ApplyInfix(Term.Name("x"), Term.Name("++"), Nil, List(Term.Name("y"))),
+        List(Type.Name("T"))
+      )
+    }
   }
 
   test(" structHydrators map { _[K]() } ") {
-    val Term.ApplyInfix(
-      Term.Name("structHydrators"),
-      Term.Name("map"),
-      Nil,
-      List(
-        Term.Block(List(Term.Apply(Term.ApplyType(Term.Placeholder(), List(Type.Name("K"))), Nil)))
+    assertTerm(" structHydrators map { _[K]() } ") {
+      Term.ApplyInfix(
+        Term.Name("structHydrators"),
+        Term.Name("map"),
+        Nil,
+        List(
+          Term.Block(
+            List(Term.Apply(Term.ApplyType(Term.Placeholder(), List(Type.Name("K"))), Nil))
+          )
+        )
       )
-    ) = term(" structHydrators map { _[K]() } ")
+    }
   }
 
   test(" new C()[String]() ") {
-    val Term.Apply(
-      Term.ApplyType(
-        New(Init(Type.Name("C"), Name.Anonymous(), List(List()))),
-        List(Type.Name("String"))
-      ),
-      Nil
-    ) = term(" new C()[String]() ")
+    assertTerm(" new C()[String]() ") {
+      Term.Apply(
+        Term.ApplyType(
+          New(Init(Type.Name("C"), Name.Anonymous(), List(List()))),
+          List(Type.Name("String"))
+        ),
+        Nil
+      )
+    }
   }
 
   test("#492 parse Unit in infix operations") {
-    val Term.ApplyInfix(
-      Term.Name("x"),
-      Term.Name("=="),
-      Nil,
-      List(Term.ApplyInfix(Lit.Unit(), Term.Name("::"), Nil, List(Term.Name("Nil"))))
-    ) = term("x == () :: Nil")
+    assertTerm("x == () :: Nil") {
+      Term.ApplyInfix(
+        Term.Name("x"),
+        Term.Name("=="),
+        Nil,
+        List(Term.ApplyInfix(Lit.Unit(), Term.Name("::"), Nil, List(Term.Name("Nil"))))
+      )
+    }
   }
 
   test("#492 parse hlist with Unit") {
-    val Term.ApplyInfix(
-      Lit.String("foo"),
-      Term.Name("::"),
-      Nil,
-      List(
-        Term.ApplyInfix(
-          Lit.Unit(),
-          Term.Name("::"),
-          Nil,
-          List(Term.ApplyInfix(Lit.Boolean(true), Term.Name("::"), Nil, List(Term.Name("HNil"))))
+    assertTerm(""""foo" :: () :: true :: HNil""") {
+      Term.ApplyInfix(
+        Lit.String("foo"),
+        Term.Name("::"),
+        Nil,
+        List(
+          Term.ApplyInfix(
+            Lit.Unit(),
+            Term.Name("::"),
+            Nil,
+            List(Term.ApplyInfix(Lit.Boolean(true), Term.Name("::"), Nil, List(Term.Name("HNil"))))
+          )
         )
       )
-    ) = term(""""foo" :: () :: true :: HNil""")
+    }
   }
 
   test("nested-braces-in-paren") {
@@ -787,35 +967,41 @@ class TermSuite extends ParseSuite {
       })
     """
 
-    val Term.If(
-      Term.Name("bar"),
-      Term.Block(
-        List(
-          Term.If(
-            Term.Name("foo"),
-            Term.Block(List(Term.Apply(Term.Name("doFoo"), Nil))),
-            Lit.Unit()
-          ),
-          Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Int(2))
-        )
-      ),
-      Lit.Unit()
-    ) = term(code)
+    assertTerm(code) {
+      Term.If(
+        Term.Name("bar"),
+        Term.Block(
+          List(
+            Term.If(
+              Term.Name("foo"),
+              Term.Block(List(Term.Apply(Term.Name("doFoo"), Nil))),
+              Lit.Unit()
+            ),
+            Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Int(2))
+          )
+        ),
+        Lit.Unit()
+      )
+    }
   }
 
   test("fstring-interpolation") {
-    val Term.Interpolate(
-      Term.Name("f"),
-      List(Lit.String("\\\\u"), Lit.String("%04x")),
-      List(Term.Name("oct"))
-    ) = term("""f"\\u$oct%04x"""")
+    assertTerm("""f"\\u$oct%04x"""") {
+      Term.Interpolate(
+        Term.Name("f"),
+        List(Lit.String("\\\\u"), Lit.String("%04x")),
+        List(Term.Name("oct"))
+      )
+    }
   }
 
   test("typed-interpolation") {
-    val Term.ApplyType(
-      Term.Interpolate(Term.Name("c"), List(Lit.String("something")), Nil),
-      List(Type.Name("String"))
-    ) = term("""c"something"[String]""")
+    assertTerm("""c"something"[String]""") {
+      Term.ApplyType(
+        Term.Interpolate(Term.Name("c"), List(Lit.String("something")), Nil),
+        List(Type.Name("String"))
+      )
+    }
   }
 
   test("block-arg") {
@@ -825,26 +1011,25 @@ class TermSuite extends ParseSuite {
   }
 
   test("implicit-closure") {
-    val res =
-      term("""|function { implicit c =>
-              |  {
-              |    case bar => foo
-              |  }
-              |}""".stripMargin)
-
-    val Term.Apply(
-      Term.Name("function"),
-      List(
-        Term.Block(
-          List(
-            Term.Function(
-              List(Term.Param(List(Mod.Implicit()), Term.Name("c"), None, None)),
-              Term.PartialFunction(List(Case(Pat.Var(Term.Name("bar")), None, Term.Name("foo"))))
+    assertTerm("""|function { implicit c =>
+                  |  {
+                  |    case bar => foo
+                  |  }
+                  |}""".stripMargin) {
+      Term.Apply(
+        Term.Name("function"),
+        List(
+          Term.Block(
+            List(
+              Term.Function(
+                List(Term.Param(List(Mod.Implicit()), Term.Name("c"), None, None)),
+                Term.PartialFunction(List(Case(Pat.Var(Term.Name("bar")), None, Term.Name("foo"))))
+              )
             )
           )
         )
       )
-    ) = res
+    }
   }
 
   test("type-partial-function") {
@@ -896,31 +1081,30 @@ class TermSuite extends ParseSuite {
   }
 
   test("partial-function-returning-implicit-closure") {
-    val res =
-      term("""|{
-              |  case true => implicit i => "xxx"
-              |  case false => implicit i => i.toString
-              |}""".stripMargin)
-
-    val Term.PartialFunction(
-      List(
-        Case(
-          Lit.Boolean(true),
-          None,
-          Term.Function(
-            List(Term.Param(List(Mod.Implicit()), Term.Name("i"), None, None)),
-            Lit.String("xxx")
-          )
-        ),
-        Case(
-          Lit.Boolean(false),
-          None,
-          Term.Function(
-            List(Term.Param(List(Mod.Implicit()), Term.Name("i"), None, None)),
-            Term.Select(Term.Name("i"), Term.Name("toString"))
+    assertTerm("""|{
+                  |  case true => implicit i => "xxx"
+                  |  case false => implicit i => i.toString
+                  |}""".stripMargin) {
+      Term.PartialFunction(
+        List(
+          Case(
+            Lit.Boolean(true),
+            None,
+            Term.Function(
+              List(Term.Param(List(Mod.Implicit()), Term.Name("i"), None, None)),
+              Lit.String("xxx")
+            )
+          ),
+          Case(
+            Lit.Boolean(false),
+            None,
+            Term.Function(
+              List(Term.Param(List(Mod.Implicit()), Term.Name("i"), None, None)),
+              Term.Select(Term.Name("i"), Term.Name("toString"))
+            )
           )
         )
       )
-    ) = res
+    }
   }
 }
