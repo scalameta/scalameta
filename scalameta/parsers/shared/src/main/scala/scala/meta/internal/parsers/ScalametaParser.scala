@@ -967,11 +967,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def types(): List[Type] = commaSeparated(typ())
 
     def patternTyp(allowInfix: Boolean, allowImmediateTypevars: Boolean): Type = {
-      def loop(tpe: Type, convertTypevars: Boolean): Type = tpe match {
+      def setPos(outerTpe: Type)(innerTpe: Type): Type =
+        if (innerTpe eq outerTpe) outerTpe else copyPos(outerTpe)(innerTpe)
+
+      def loop(outerTpe: Type, convertTypevars: Boolean): Type = setPos(outerTpe)(outerTpe match {
         case q: Quasi =>
           q
         case tpe @ Type.Name(value) if convertTypevars && value(0).isLower =>
-          atPos(tpe, tpe)(Type.Var(tpe))
+          Type.Var(tpe)
         case tpe: Type.Name =>
           tpe
         case tpe: Type.Select =>
@@ -979,62 +982,62 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case Type.Project(qual, name) =>
           val qual1 = loop(qual, convertTypevars = false)
           val name1 = name
-          atPos(tpe, tpe)(Type.Project(qual1, name1))
+          Type.Project(qual1, name1)
         case tpe: Type.Singleton =>
           tpe
         case Type.Apply(underlying, args) =>
           val underlying1 = loop(underlying, convertTypevars = false)
-          val args1 = args.map(arg => loop(arg, convertTypevars = true))
-          atPos(tpe, tpe)(Type.Apply(underlying1, args1))
+          val args1 = args.map(loop(_, convertTypevars = true))
+          Type.Apply(underlying1, args1)
         case Type.ApplyInfix(lhs, op, rhs) =>
           val lhs1 = loop(lhs, convertTypevars = false)
           val op1 = op
           val rhs1 = loop(rhs, convertTypevars = false)
-          atPos(tpe, tpe)(Type.ApplyInfix(lhs1, op1, rhs1))
+          Type.ApplyInfix(lhs1, op1, rhs1)
         case Type.ContextFunction(params, res) =>
-          val params1 = params.map(p => loop(p, convertTypevars = true))
+          val params1 = params.map(loop(_, convertTypevars = true))
           val res1 = loop(res, convertTypevars = false)
-          atPos(tpe, tpe)(Type.ContextFunction(params1, res1))
+          Type.ContextFunction(params1, res1)
         case Type.Function(params, res) =>
-          val params1 = params.map(p => loop(p, convertTypevars = true))
+          val params1 = params.map(loop(_, convertTypevars = true))
           val res1 = loop(res, convertTypevars = false)
-          atPos(tpe, tpe)(Type.Function(params1, res1))
+          Type.Function(params1, res1)
         case Type.PolyFunction(tparams, res) =>
           val res1 = loop(res, convertTypevars = false)
-          atPos(tpe, tpe)(Type.PolyFunction(tparams, res1))
+          Type.PolyFunction(tparams, res1)
         case Type.Tuple(elements) =>
-          val elements1 = elements.map(el => loop(el, convertTypevars = true))
-          atPos(tpe, tpe)(Type.Tuple(elements1))
+          val elements1 = elements.map(loop(_, convertTypevars = true))
+          Type.Tuple(elements1)
         case Type.With(lhs, rhs) =>
           val lhs1 = loop(lhs, convertTypevars = false)
           val rhs1 = loop(rhs, convertTypevars = false)
-          atPos(tpe, tpe)(Type.With(lhs1, rhs1))
+          Type.With(lhs1, rhs1)
         case Type.And(lhs, rhs) =>
           val lhs1 = loop(lhs, convertTypevars = false)
           val rhs1 = loop(rhs, convertTypevars = false)
-          atPos(tpe, tpe)(Type.And(lhs1, rhs1))
+          Type.And(lhs1, rhs1)
         case Type.Or(lhs, rhs) =>
           val lhs1 = loop(lhs, convertTypevars = false)
           val rhs1 = loop(rhs, convertTypevars = false)
-          atPos(tpe, tpe)(Type.Or(lhs1, rhs1))
+          Type.Or(lhs1, rhs1)
         case Type.Refine(tpe, stats) =>
-          val tpe1 = tpe.map(tpe => loop(tpe, convertTypevars = false))
+          val tpe1 = tpe.map(loop(_, convertTypevars = false))
           val stats1 = stats
-          atPos(tpe, tpe)(Type.Refine(tpe1, stats1))
+          Type.Refine(tpe1, stats1)
         case Type.Existential(underlying, stats) =>
           val underlying1 = loop(underlying, convertTypevars = false)
           val stats1 = stats
-          atPos(tpe, tpe)(Type.Existential(underlying1, stats1))
+          Type.Existential(underlying1, stats1)
         case Type.Annotate(underlying, annots) =>
           val underlying1 = loop(underlying, convertTypevars = false)
           val annots1 = annots
-          atPos(tpe, tpe)(Type.Annotate(underlying1, annots1))
+          Type.Annotate(underlying1, annots1)
         case Type.Placeholder(bounds) =>
           val bounds1 = bounds
-          atPos(tpe, tpe)(Type.Placeholder(bounds1))
+          Type.Placeholder(bounds1)
         case tpe: Lit =>
           tpe
-      }
+      })
       val t: Type = {
         if (allowInfix) {
           val t = if (token.is[LeftParen]) tupleInfixType() else compoundType()
@@ -4077,9 +4080,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def refinement(innerType: Option[Type]): Type.Refine = {
-    val refinedStats = inBraces(refineStatSeq())
-    val refineType = atPos(innerType, auto)(Type.Refine(innerType, refinedStats))
+  @tailrec
+  private def refinement(innerType: Option[Type]): Type.Refine = {
+    val refineType = atPos(innerType, auto)(Type.Refine(innerType, inBraces(refineStatSeq())))
     newLineOptWhenFollowedBy[LeftBrace]
     if (token.is[LeftBrace]) refinement(innerType = Some(refineType))
     else refineType
