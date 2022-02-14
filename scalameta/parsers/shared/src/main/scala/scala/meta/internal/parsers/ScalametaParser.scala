@@ -6,7 +6,6 @@ import scala.meta.Term.EndMarker
 import scala.meta.Term.QuotedMacroExpr
 import scala.meta.Term.SplicedMacroExpr
 import scala.language.implicitConversions
-import scala.compat.Platform.EOL
 import scala.reflect.{ClassTag, classTag}
 import scala.collection.mutable
 import mutable.ListBuffer
@@ -34,8 +33,6 @@ import scala.util.control.NonFatal
 class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   import ScalametaParser._
-
-  require(Set("", EOL).contains(dialect.toplevelSeparator))
 
   private val scannerTokens: ScannerTokens = ScannerTokens(input)
   import scannerTokens.Implicits._
