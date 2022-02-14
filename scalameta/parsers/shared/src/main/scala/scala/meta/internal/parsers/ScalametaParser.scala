@@ -692,11 +692,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         accept[LeftParen]
         val rawts = new ListBuffer[Tree]
         if (!token.is[RightParen]) {
-          rawts += paramOrType()
-          while (token.is[Comma] || token.is[Ellipsis]) {
-            if (token.is[Comma]) next()
+          do {
             rawts += paramOrType()
-          }
+          } while (acceptOpt[Comma] || token.is[Ellipsis])
         }
         closeParenPos = in.tokenPos
         accept[RightParen]
