@@ -13,7 +13,6 @@ package object dialects {
     allowColonForExtractorVarargs = false,
     allowEnums = false,
     allowImplicitByNameParameters = false,
-    allowImplicitFunctionTypes = false,
     allowInlineIdents = true,
     allowInlineMods = false,
     allowLiteralTypes = false,
@@ -28,7 +27,6 @@ package object dialects {
     allowTraitParameters = false,
     allowTypeLambdas = false,
     allowViewBounds = true,
-    allowWithTypes = true,
     allowXmlLiterals = true, // Not even deprecated yet, so we need to support xml literals
     toplevelSeparator = ""
   )
@@ -119,7 +117,6 @@ package object dialects {
     .withAllowImplicitByNameParameters(true)
     .withAllowInlineMods(true)
     .withAllowLiteralTypes(true)
-    .withAllowMethodTypes(false)
     .withAllowOrTypes(true) // Scala 3: `val a: A | B`
     .withAllowTrailingCommas(true)
     .withAllowTraitParameters(true)

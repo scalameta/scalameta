@@ -23,17 +23,12 @@ final class Dialect private (
     // Are implicit by name parameters supported?
     // They are in Dotty, but not in Scala 2.12 or older.
     val allowImplicitByNameParameters: Boolean,
-    // Implicit functions are no longer supported in any dialect
-    val allowImplicitFunctionTypes: Boolean,
     // Are `inline` identifiers supported by this dialect?
     val allowInlineIdents: Boolean,
     // Are inline vals and defs supported by this dialect?
     val allowInlineMods: Boolean,
     // Are literal types allowed, i.e. is `val a : 42 = 42` legal or not?
     val allowLiteralTypes: Boolean,
-    // Are method types allowed, i.e. is `(x: X): x.T` legal or not?
-    @deprecated("Method type syntax is no longer supported in any dialect", "4.4.3")
-    val allowMethodTypes: Boolean,
     // Are multiline programs allowed?
     // Some quasiquotes only support single-line snippets.
     val allowMultilinePrograms: Boolean,
@@ -61,12 +56,6 @@ final class Dialect private (
     // def f[A <% Int](a: A)
     // Removed in Dotty.
     val allowViewBounds: Boolean,
-    // Are `with` intersection types supported by this dialect?
-    @deprecated(
-      "With types are supported in every dialect currently and this option is unused",
-      "4.4.6"
-    )
-    val allowWithTypes: Boolean,
     // Are XML literals supported by this dialect?
     // We plan to deprecate XML literal syntax, and some dialects
     // might go ahead and drop support completely.
@@ -83,19 +72,11 @@ final class Dialect private (
     val allowExtensionMethods: Boolean,
     // Open modifier for classes introduced in dotty
     val allowOpenClass: Boolean,
-    // Scala 3 splices/quotes
-    @deprecated("Replaced with allowSpliceAndQuote", "4.4.1")
-    val allowWhiteboxMacro: Boolean,
     // Top level statements introduced in dotty.
     // differs from ToplevelTerms because here you can define packages
     val allowToplevelStatements: Boolean,
     // Opaque types introduced in dotty
     val allowOpaqueTypes: Boolean,
-    // Literal Unit Type
-    @deprecated("Literal unit types are longer supported in any dialect", "4.4.9")
-    val allowLiteralUnitType: Boolean,
-    // Super traits introduced in dotty, but later removed.
-    val allowSuperTrait: Boolean,
     // Export selected members of an object introduced in dotty
     val allowExportClause: Boolean,
     // Extended classes separated by ',' introduced in dotty
@@ -114,9 +95,6 @@ final class Dialect private (
     val allowByNameRepeatedParameters: Boolean,
     // Dotty allows lazy val abstract values
     val allowLazyValAbstractValues: Boolean,
-    // Dotty used to allow `as` instead of `@` for pattern bindings
-    @deprecated("`as` in patterns is no longer supported in any dialect", "4.4.4")
-    val allowAsPatternBinding: Boolean,
     // Dotty allows capital pattern vars in `case A @ _ =>`
     val allowUpperCasePatternVarBinding: Boolean,
     // Dotty allows to use derives to automatically generate given instances for type classes
@@ -184,11 +162,9 @@ final class Dialect private (
       allowColonForExtractorVarargs: Boolean,
       allowEnums: Boolean,
       allowImplicitByNameParameters: Boolean,
-      allowImplicitFunctionTypes: Boolean,
       allowInlineIdents: Boolean,
       allowInlineMods: Boolean,
       allowLiteralTypes: Boolean,
-      allowMethodTypes: Boolean,
       allowMultilinePrograms: Boolean,
       allowOrTypes: Boolean,
       allowPatUnquotes: Boolean,
@@ -199,7 +175,6 @@ final class Dialect private (
       allowTraitParameters: Boolean,
       allowTypeLambdas: Boolean,
       allowViewBounds: Boolean,
-      allowWithTypes: Boolean,
       allowXmlLiterals: Boolean,
       toplevelSeparator: String
   ) = {
@@ -210,11 +185,9 @@ final class Dialect private (
       allowColonForExtractorVarargs = allowColonForExtractorVarargs,
       allowEnums = allowEnums,
       allowImplicitByNameParameters = allowImplicitByNameParameters,
-      allowImplicitFunctionTypes = allowImplicitFunctionTypes,
       allowInlineIdents = allowInlineIdents,
       allowInlineMods = allowInlineMods,
       allowLiteralTypes = allowLiteralTypes,
-      allowMethodTypes = allowMethodTypes,
       allowMultilinePrograms = allowMultilinePrograms,
       allowOrTypes = allowOrTypes,
       allowPatUnquotes = allowPatUnquotes,
@@ -225,7 +198,6 @@ final class Dialect private (
       allowTraitParameters = allowTraitParameters,
       allowTypeLambdas = allowTypeLambdas,
       allowViewBounds = allowViewBounds,
-      allowWithTypes = allowWithTypes,
       allowXmlLiterals = allowXmlLiterals,
       toplevelSeparator = toplevelSeparator,
       allowNumericLiteralUnderscoreSeparators = false,
@@ -233,11 +205,8 @@ final class Dialect private (
       allowGivenUsing = false,
       allowExtensionMethods = false,
       allowOpenClass = false,
-      allowWhiteboxMacro = false,
       allowToplevelStatements = false,
       allowOpaqueTypes = false,
-      allowLiteralUnitType = false,
-      allowSuperTrait = false,
       allowExportClause = false,
       allowCommaSeparatedExtend = false,
       allowEndMarker = false,
@@ -247,7 +216,6 @@ final class Dialect private (
       allowTypeParamUnderscore = true,
       allowByNameRepeatedParameters = false,
       allowLazyValAbstractValues = false,
-      allowAsPatternBinding = false,
       allowUpperCasePatternVarBinding = false,
       allowDerives = false,
       allowTypeInBlock = false,
@@ -294,10 +262,6 @@ final class Dialect private (
   def withAllowImplicitByNameParameters(newValue: Boolean): Dialect = {
     privateCopy(allowImplicitByNameParameters = newValue)
   }
-  @deprecated("Implicit functions are not supported in any dialect", "4.4.1")
-  def withAllowImplicitFunctionTypes(newValue: Boolean): Dialect = {
-    privateCopy(allowImplicitFunctionTypes = newValue)
-  }
   def withAllowInlineIdents(newValue: Boolean): Dialect = {
     privateCopy(allowInlineIdents = newValue)
   }
@@ -306,10 +270,6 @@ final class Dialect private (
   }
   def withAllowLiteralTypes(newValue: Boolean): Dialect = {
     privateCopy(allowLiteralTypes = newValue)
-  }
-  @deprecated("Method type syntax is no longer supported in any dialect", "4.4.3")
-  def withAllowMethodTypes(newValue: Boolean): Dialect = {
-    privateCopy(allowMethodTypes = newValue)
   }
   def withAllowMultilinePrograms(newValue: Boolean): Dialect = {
     privateCopy(allowMultilinePrograms = newValue)
@@ -341,13 +301,6 @@ final class Dialect private (
   def withAllowViewBounds(newValue: Boolean): Dialect = {
     privateCopy(allowViewBounds = newValue)
   }
-  @deprecated(
-    "With types are supported in every dialect currently and this option is unused",
-    "4.4.6"
-  )
-  def withAllowWithTypes(newValue: Boolean): Dialect = {
-    privateCopy(allowWithTypes = newValue)
-  }
   def withAllowXmlLiterals(newValue: Boolean): Dialect = {
     privateCopy(allowXmlLiterals = newValue)
   }
@@ -370,27 +323,15 @@ final class Dialect private (
   def withAllowOpenClass(newValue: Boolean): Dialect = {
     privateCopy(allowOpenClass = newValue)
   }
-  @deprecated("Replaced by withAllowSplicesAndQuotes", "4.4.1")
-  def withAllowWhiteboxMacro(newValue: Boolean): Dialect = {
-    privateCopy(allowWhiteboxMacro = newValue)
-  }
   def withAllowToplevelStatements(newValue: Boolean): Dialect = {
     privateCopy(allowToplevelStatements = newValue)
   }
   def withAllowOpaqueTypes(newValue: Boolean): Dialect = {
     privateCopy(allowOpaqueTypes = newValue)
   }
-  @deprecated("Literal unit types are longer supported in any dialect", "4.4.9")
-  def withAllowLiteralUnitType(newValue: Boolean): Dialect = {
-    privateCopy(allowLiteralUnitType = newValue)
-  }
 
   def withAllowInterpolationDolarQuoteEscape(newValue: Boolean): Dialect = {
     privateCopy(allowInterpolationDolarQuoteEscape = newValue)
-  }
-  @deprecated("Super traits are not supported in any dialect", "4.4.1")
-  def withAllowSuperTrait(newValue: Boolean): Dialect = {
-    privateCopy(allowSuperTrait = newValue)
   }
   def withAllowExportClause(newValue: Boolean): Dialect = {
     privateCopy(allowExportClause = newValue)
@@ -416,10 +357,6 @@ final class Dialect private (
   }
   def withAllowLazyValAbstractValues(newValue: Boolean): Dialect = {
     privateCopy(allowLazyValAbstractValues = newValue)
-  }
-  @deprecated("`as` in patterns is no longer supported in any dialect", "4.4.4")
-  def withAllowAsPatternBinding(newValue: Boolean): Dialect = {
-    privateCopy(allowAsPatternBinding = newValue)
   }
   def withAllowMatchAsOperator(newValue: Boolean): Dialect = {
     privateCopy(allowMatchAsOperator = newValue)
@@ -491,11 +428,9 @@ final class Dialect private (
       allowColonForExtractorVarargs: Boolean = this.allowColonForExtractorVarargs,
       allowEnums: Boolean = this.allowEnums,
       allowImplicitByNameParameters: Boolean = this.allowImplicitByNameParameters,
-      allowImplicitFunctionTypes: Boolean = this.allowImplicitFunctionTypes,
       allowInlineIdents: Boolean = this.allowInlineIdents,
       allowInlineMods: Boolean = this.allowInlineMods,
       allowLiteralTypes: Boolean = this.allowLiteralTypes,
-      allowMethodTypes: Boolean = this.allowMethodTypes,
       allowMultilinePrograms: Boolean = this.allowMultilinePrograms,
       allowOrTypes: Boolean = this.allowOrTypes,
       allowPatUnquotes: Boolean = this.allowPatUnquotes,
@@ -506,7 +441,6 @@ final class Dialect private (
       allowTraitParameters: Boolean = this.allowTraitParameters,
       allowTypeLambdas: Boolean = this.allowTypeLambdas,
       allowViewBounds: Boolean = this.allowViewBounds,
-      allowWithTypes: Boolean = this.allowWithTypes,
       allowXmlLiterals: Boolean = this.allowXmlLiterals,
       toplevelSeparator: String = this.toplevelSeparator,
       allowNumericLiteralUnderscoreSeparators: Boolean =
@@ -515,11 +449,8 @@ final class Dialect private (
       allowGivenUsing: Boolean = this.allowGivenUsing,
       allowExtensionMethods: Boolean = this.allowExtensionMethods,
       allowOpenClass: Boolean = this.allowOpenClass,
-      allowWhiteboxMacro: Boolean = this.allowWhiteboxMacro,
       allowToplevelStatements: Boolean = this.allowToplevelStatements,
       allowOpaqueTypes: Boolean = this.allowOpaqueTypes,
-      allowLiteralUnitType: Boolean = this.allowLiteralUnitType,
-      allowSuperTrait: Boolean = this.allowSuperTrait,
       allowExportClause: Boolean = this.allowExportClause,
       allowCommaSeparatedExtend: Boolean = this.allowCommaSeparatedExtend,
       allowEndMarker: Boolean = this.allowEndMarker,
@@ -529,7 +460,6 @@ final class Dialect private (
       allowTypeParamUnderscore: Boolean = this.allowTypeParamUnderscore,
       allowByNameRepeatedParameters: Boolean = this.allowByNameRepeatedParameters,
       allowLazyValAbstractValues: Boolean = this.allowLazyValAbstractValues,
-      allowAsPatternBinding: Boolean = this.allowAsPatternBinding,
       allowUpperCasePatternVarBinding: Boolean = this.allowUpperCasePatternVarBinding,
       allowDerives: Boolean = this.allowDerives,
       allowTypeInBlock: Boolean = this.allowTypeInBlock,
@@ -558,11 +488,9 @@ final class Dialect private (
       allowColonForExtractorVarargs,
       allowEnums,
       allowImplicitByNameParameters,
-      allowImplicitFunctionTypes,
       allowInlineIdents,
       allowInlineMods,
       allowLiteralTypes,
-      allowMethodTypes,
       allowMultilinePrograms,
       allowOrTypes,
       allowPatUnquotes,
@@ -573,7 +501,6 @@ final class Dialect private (
       allowTraitParameters,
       allowTypeLambdas,
       allowViewBounds,
-      allowWithTypes,
       allowXmlLiterals,
       toplevelSeparator,
       allowNumericLiteralUnderscoreSeparators,
@@ -581,11 +508,8 @@ final class Dialect private (
       allowGivenUsing,
       allowExtensionMethods,
       allowOpenClass,
-      allowWhiteboxMacro,
       allowToplevelStatements,
       allowOpaqueTypes,
-      allowLiteralUnitType,
-      allowSuperTrait,
       allowExportClause,
       allowCommaSeparatedExtend,
       allowEndMarker,
@@ -595,7 +519,6 @@ final class Dialect private (
       allowTypeParamUnderscore,
       allowByNameRepeatedParameters,
       allowLazyValAbstractValues,
-      allowAsPatternBinding,
       allowUpperCasePatternVarBinding,
       allowDerives,
       allowTypeInBlock,
@@ -647,11 +570,9 @@ final class Dialect private (
       allowColonForExtractorVarargs: Boolean = this.allowColonForExtractorVarargs,
       allowEnums: Boolean = this.allowEnums,
       allowImplicitByNameParameters: Boolean = this.allowImplicitByNameParameters,
-      allowImplicitFunctionTypes: Boolean = this.allowImplicitFunctionTypes,
       allowInlineIdents: Boolean = this.allowInlineIdents,
       allowInlineMods: Boolean = this.allowInlineMods,
       allowLiteralTypes: Boolean = this.allowLiteralTypes,
-      allowMethodTypes: Boolean = this.allowMethodTypes,
       allowMultilinePrograms: Boolean = this.allowMultilinePrograms,
       allowOrTypes: Boolean = this.allowOrTypes,
       allowPatUnquotes: Boolean = this.allowPatUnquotes,
@@ -662,7 +583,6 @@ final class Dialect private (
       allowTraitParameters: Boolean = this.allowTraitParameters,
       allowTypeLambdas: Boolean = this.allowTypeLambdas,
       allowViewBounds: Boolean = this.allowViewBounds,
-      allowWithTypes: Boolean = this.allowWithTypes,
       allowXmlLiterals: Boolean = this.allowXmlLiterals,
       toplevelSeparator: String = this.toplevelSeparator
   ): Dialect = {
@@ -673,11 +593,9 @@ final class Dialect private (
       allowColonForExtractorVarargs,
       allowEnums,
       allowImplicitByNameParameters,
-      allowImplicitFunctionTypes,
       allowInlineIdents,
       allowInlineMods,
       allowLiteralTypes,
-      allowMethodTypes,
       allowMultilinePrograms,
       allowOrTypes,
       allowPatUnquotes,
@@ -688,7 +606,6 @@ final class Dialect private (
       allowTraitParameters,
       allowTypeLambdas,
       allowViewBounds,
-      allowWithTypes,
       allowXmlLiterals,
       toplevelSeparator
     )
@@ -703,7 +620,6 @@ object Dialect extends InternalDialect {
       allowColonForExtractorVarargs: Boolean,
       allowEnums: Boolean,
       allowImplicitByNameParameters: Boolean,
-      allowImplicitFunctionTypes: Boolean,
       allowInlineIdents: Boolean,
       allowInlineMods: Boolean,
       allowLiteralTypes: Boolean,
@@ -718,7 +634,6 @@ object Dialect extends InternalDialect {
       allowTraitParameters: Boolean,
       allowTypeLambdas: Boolean,
       allowViewBounds: Boolean,
-      allowWithTypes: Boolean,
       allowXmlLiterals: Boolean,
       @deprecated("toplevelSeparator has never been used", ">4.4.35")
       toplevelSeparator: String
@@ -730,11 +645,9 @@ object Dialect extends InternalDialect {
       allowColonForExtractorVarargs = allowColonForExtractorVarargs,
       allowEnums = allowEnums,
       allowImplicitByNameParameters = allowImplicitByNameParameters,
-      allowImplicitFunctionTypes = allowImplicitFunctionTypes,
       allowInlineIdents = allowInlineIdents,
       allowInlineMods = allowInlineMods,
       allowLiteralTypes = allowLiteralTypes,
-      allowMethodTypes = allowMethodTypes,
       allowMultilinePrograms = allowMultilinePrograms,
       allowOrTypes = allowOrTypes,
       allowPatUnquotes = allowPatUnquotes,
@@ -745,7 +658,6 @@ object Dialect extends InternalDialect {
       allowTraitParameters = allowTraitParameters,
       allowTypeLambdas = allowTypeLambdas,
       allowViewBounds = allowViewBounds,
-      allowWithTypes = allowWithTypes,
       allowXmlLiterals = allowXmlLiterals,
       toplevelSeparator = toplevelSeparator
     )
