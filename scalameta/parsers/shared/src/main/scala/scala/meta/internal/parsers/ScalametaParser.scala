@@ -258,10 +258,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   implicit def modsToPos(mods: List[Mod]): Pos = mods.headOption
   def auto = AutoPos
 
-  def atPos[T <: Tree](tree: Tree)(body: => T): T = {
-    body.withOrigin(tree.origin)
-  }
-
   def atPos[T <: Tree](token: Token)(body: => T): T = {
     atPos(token.index)(body)
   }
@@ -1361,7 +1357,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case LeftBrace() => dropTrivialBlock(expr(location = NoStat, allowRepeated = true))
       case KwThis() =>
         val qual = autoPos { next(); Name.Anonymous() }
-        atPos(qual)(Term.This(qual))
+        copyPos(qual)(Term.This(qual))
       case _ =>
         syntaxError(
           "error in interpolated string: identifier, `this' or block expected",
@@ -1703,13 +1699,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                 case Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name) =>
                   Some(
                     atPos(tree, tree)(
-                      Term.Param(List(atPos(kwUsing)(Mod.Using())), name, None, None)
+                      Term.Param(List(copyPos(kwUsing)(Mod.Using())), name, None, None)
                     )
                   )
                 case Term.Ascribe(Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name), tpt) =>
                   Some(
                     atPos(tree, tree)(
-                      Term.Param(List(atPos(kwUsing)(Mod.Using())), name, Some(tpt), None)
+                      Term.Param(List(copyPos(kwUsing)(Mod.Using())), name, Some(tpt), None)
                     )
                   )
                 case Term.Ascribe(eta @ Term.Eta(kwUsing @ Term.Name(soft.KwUsing.name)), tpt) =>
@@ -4414,6 +4410,10 @@ object ScalametaParser {
       case (stat: Term) :: Nil => stat
       case _ => term
     }
+
+  private def copyPos[T <: Tree](tree: Tree)(body: => T): T = {
+    body.withOrigin(tree.origin)
+  }
 
 }
 
