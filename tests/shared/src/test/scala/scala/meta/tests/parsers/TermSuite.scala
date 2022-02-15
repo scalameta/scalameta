@@ -1004,6 +1004,16 @@ class TermSuite extends ParseSuite {
     }
   }
 
+  test("interpolation-with-escaped-quotes") {
+    assertTerm("""s"\"$t\""""") {
+      Interpolate(
+        Term.Name("s"),
+        List(Lit.String("\\\""), Lit.String("\\\"")),
+        List(Term.Name("t"))
+      )
+    }
+  }
+
   test("block-arg") {
     val res = term("new Foo({str => str.length})")
     val termList = q"List($res)"
