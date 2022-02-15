@@ -641,87 +641,70 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
    */
   trait PatternContextSensitive {
     private def tupleInfixType(allowFunctionType: Boolean = true): Type = autoPos {
-      require(token.is[LeftParen] && debug(token))
-      val openParenPos = in.tokenPos
-
       // NOTE: This is a really hardcore disambiguation caused by introduction of Type.Method.
       // We need to accept `(T, U) => W`, `(x: T): x.U` and also support unquoting.
       var hasParams = false
       var hasImplicits = false
       var hasTypes = false
-      var secondOpenParenPos = -1
-      var closeParenPos = -1
-      val rawtss: List[List[Tree]] = {
 
-        def typedParam() = autoPos {
-          val name = typeName()
-          accept[Colon]
-          Type.TypedParam(name, typ())
-        }
-        @tailrec
-        def paramOrType(): Tree = token match {
-          case Ellipsis(rank) =>
-            ellipsis(rank, astInfo[Tree])
-          case Unquote() =>
-            unquote[Tree]
-          case KwImplicit() if !hasImplicits =>
-            next()
-            hasImplicits = true
-            paramOrType()
-          case Ident(_) if ahead(token.is[Colon]) =>
-            if (hasTypes)
-              syntaxError(
-                "can't mix function type and dependent function type syntaxes",
-                at = token
-              )
-            hasParams = true
-            typedParam()
-          case _ =>
-            if (hasParams)
-              syntaxError(
-                "can't mix function type and dependent function type syntaxes",
-                at = token
-              )
-            hasTypes = true
-            paramType()
-        }
-
-        val rawtss = new ListBuffer[List[Tree]]
-        while (!hasTypes && !hasImplicits && token.is[LeftParen]) {
-          if (openParenPos != in.tokenPos && secondOpenParenPos == 0)
-            secondOpenParenPos = in.tokenPos
-          accept[LeftParen]
-          val rawts = new ListBuffer[Tree]
-          if (!token.is[RightParen]) {
-            rawts += paramOrType()
-            while (token.is[Comma] || token.is[Ellipsis]) {
-              if (token.is[Comma]) next()
-              rawts += paramOrType()
-            }
-          }
-          closeParenPos = in.tokenPos
-          accept[RightParen]
-          // NOTE: can't have this, because otherwise we run into #312
-          // newLineOptWhenFollowedBy[LeftParen]
-          rawtss += rawts.toList
-        }
-        rawtss.toList
+      def typedParam() = autoPos {
+        val name = typeName()
+        accept[Colon]
+        Type.TypedParam(name, typ())
+      }
+      @tailrec
+      def paramOrType(): Tree = token match {
+        case Ellipsis(rank) =>
+          ellipsis(rank, astInfo[Tree])
+        case Unquote() =>
+          unquote[Tree]
+        case KwImplicit() if !hasImplicits =>
+          next()
+          hasImplicits = true
+          paramOrType()
+        case Ident(_) if ahead(token.is[Colon]) =>
+          if (hasTypes)
+            syntaxError(
+              "can't mix function type and dependent function type syntaxes",
+              at = token
+            )
+          hasParams = true
+          typedParam()
+        case _ =>
+          if (hasParams)
+            syntaxError(
+              "can't mix function type and dependent function type syntaxes",
+              at = token
+            )
+          hasTypes = true
+          paramType()
       }
 
-      def ts: List[Type] = {
-        if (hasParams && !dialect.allowDependentFunctionTypes)
-          syntaxError("dependent function types are not supported", at = token)
-        if (rawtss.length != 1) {
-          val message = "can't have multiple parameter lists in function types"
-          syntaxError(message, at = scannerTokens(secondOpenParenPos))
-        }
-        rawtss.head.map({
-          case q: Quasi => q.become[Type.Quasi]
-          case t: Type => t
-          case other => unreachable(debug(other.syntax, other.structure))
-        })
+      val tsBuf = new ListBuffer[Type]
+      val openParenPos = in.tokenPos
+      accept[LeftParen]
+      if (!token.is[RightParen]) {
+        do {
+          tsBuf += (paramOrType() match {
+            case q: Quasi => q.become[Type.Quasi]
+            case t: Type => t
+            case other => unreachable(debug(other.syntax, other.structure))
+          })
+        } while (acceptOpt[Comma] || token.is[Ellipsis])
+      }
+      val closeParenPos = in.tokenPos
+      accept[RightParen]
+      // NOTE: can't have this, because otherwise we run into #312
+      // newLineOptWhenFollowedBy[LeftParen]
+
+      if (hasParams && !dialect.allowDependentFunctionTypes)
+        syntaxError("dependent function types are not supported", at = token)
+      if (!hasTypes && !hasImplicits && token.is[LeftParen]) {
+        val message = "can't have multiple parameter lists in function types"
+        syntaxError(message, at = token)
       }
 
+      val ts: List[Type] = tsBuf.toList
       if (allowFunctionType && token.is[RightArrow]) {
         next()
         Type.Function(ts, typeIndentedOpt())
