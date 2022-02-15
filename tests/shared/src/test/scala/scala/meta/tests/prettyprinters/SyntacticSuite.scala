@@ -1129,8 +1129,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   def checkTree(original: Tree, expected: String)(implicit loc: munit.Location): Unit = {
-    assertNoDiff(original.syntax, expected)
     assertNoDiff(original.structure, expected.parse[Stat].get.structure)
+    assertNoDiff(original.syntax, expected)
+  }
+  def checkTree(obtained: Tree, expected: Tree)(implicit loc: munit.Location): Unit = {
+    assertNoDiff(obtained.structure, expected.structure)
+    assertNoDiff(obtained.syntax, expected.syntax)
   }
 
   test("test repeat") {
@@ -1170,4 +1174,40 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       "?=>"
     )
   }
+
+  test("#1843 anonymous functions") {
+    checkTree(
+      q"list foo (_ fun (_.bar))",
+      Term.ApplyInfix(
+        Term.Name("list"),
+        Term.Name("foo"),
+        Nil,
+        List(
+          Term.ApplyInfix(
+            Term.Placeholder(),
+            Term.Name("fun"),
+            Nil,
+            List(Term.Select(Term.Placeholder(), Term.Name("bar")))
+          )
+        )
+      )
+    )
+    checkTree(
+      q"list foo (_ fun _.bar)",
+      Term.ApplyInfix(
+        Term.Name("list"),
+        Term.Name("foo"),
+        Nil,
+        List(
+          Term.ApplyInfix(
+            Term.Placeholder(),
+            Term.Name("fun"),
+            Nil,
+            List(Term.Select(Term.Placeholder(), Term.Name("bar")))
+          )
+        )
+      )
+    )
+  }
+
 }
