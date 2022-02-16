@@ -66,7 +66,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
         """
     }
     val rhs = f.tpe match {
-      case tpe @ TreeTpe(_) =>
+      case tpe @ TreeTpe() =>
         treeTransformer(q"${f.name}", tpe)
       case tpe @ OptionTreeTpe(_) =>
         optionTransformer(q"${f.name}", tpe, treeTransformer)
