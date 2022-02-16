@@ -113,12 +113,10 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
     """
   }
 
-  def generatedMethods(cases: List[CaseDef]): Tree = {
-    q"""
-      def apply(tree: $TreeClass): $TreeClass = {
-        tree match { case ..$cases }
-      }
+  def leafHandlerType(): Tree = TreeClass
 
+  def generatedMethods(): Tree = {
+    q"""
       def apply(treeopt: $OptionClass[$TreeClass]): $OptionClass[$TreeClass] = treeopt match {
         case $SomeModule(tree) =>
           val tree1 = apply(tree)
