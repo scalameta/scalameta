@@ -48,8 +48,6 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
         val cases = orderedRelevantLeafs.map(l => {
           val extractor = hygienicRef(l.sym.companion)
           val binders = l.fields.map(f => pq"${f.name}")
-          val relevantFields =
-            l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
           cq"tree @ $extractor(..$binders) => ${leafHandler(l)}"
         })
         val generatedMethods = TransverserMacros.this.generatedMethods(cases)
