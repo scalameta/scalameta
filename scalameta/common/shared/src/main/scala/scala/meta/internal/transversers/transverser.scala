@@ -30,27 +30,7 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
         val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" =
           cdef
 
-        val relevantLeafs = TreeAdt.allLeafs.filter(l => !(l <:< QuasiAdt))
-        val highPriority = List(
-          "Term.Name",
-          "Term.Apply",
-          "Lit",
-          "Type.Name",
-          "Term.Param",
-          "Type.Apply",
-          "Term.ApplyInfix"
-        )
-        val orderedRelevantLeafs = relevantLeafs.sortBy(l => {
-          val idx = highPriority.indexOf(l.prefix)
-          if (idx != -1) idx else highPriority.length
-        })
-
-        val cases = orderedRelevantLeafs.map(l => {
-          val extractor = hygienicRef(l.sym.companion)
-          val binders = l.fields.map(f => pq"${f.name}")
-          cq"tree @ $extractor(..$binders) => ${leafHandler(l)}"
-        })
-        val generatedMethods = TransverserMacros.this.generatedMethods(cases)
+        val generatedMethods = getGeneratedMethods()
 
         val cdef1 = q"""
         $mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self =>
@@ -61,4 +41,28 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
         List(cdef1, mdef)
       }
     })
+
+  private def getGeneratedMethods(): Tree = {
+    val relevantLeafs = TreeAdt.allLeafs.filter(l => !(l <:< QuasiAdt))
+    val highPriority = List(
+      "Term.Name",
+      "Term.Apply",
+      "Lit",
+      "Type.Name",
+      "Term.Param",
+      "Type.Apply",
+      "Term.ApplyInfix"
+    )
+    val orderedRelevantLeafs = relevantLeafs.sortBy(l => {
+      val idx = highPriority.indexOf(l.prefix)
+      if (idx != -1) idx else highPriority.length
+    })
+
+    val cases = orderedRelevantLeafs.map(l => {
+      val extractor = hygienicRef(l.sym.companion)
+      val binders = l.fields.map(f => pq"${f.name}")
+      cq"tree @ $extractor(..$binders) => ${leafHandler(l)}"
+    })
+    TransverserMacros.this.generatedMethods(cases)
+  }
 }
