@@ -826,17 +826,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           if (mode != InfixMode.FirstOp) checkAssoc(name, leftAssoc = mode == InfixMode.LeftOp)
           if (isAmpersand && dialect.allowAndTypes) {
             next()
-            newLineOptWhenFollowing(_.is[TypeIntro])
+            newLineOptWhenFollowedBy[TypeIntro]
             val t1 = compoundType()
             infixTypeRest(atPos(t, t1)(Type.And(t, t1)), InfixMode.LeftOp)
           } else if (isBar && dialect.allowOrTypes) {
             next()
-            newLineOptWhenFollowing(_.is[TypeIntro])
+            newLineOptWhenFollowedBy[TypeIntro]
             val t1 = compoundType()
             infixTypeRest(atPos(t, t1)(Type.Or(t, t1)), InfixMode.LeftOp)
           } else {
             val op = typeName()
-            newLineOptWhenFollowing(_.is[TypeIntro])
+            newLineOptWhenFollowedBy[TypeIntro]
             def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, op, t1))
             if (leftAssoc)
               infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
@@ -865,8 +865,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             val rhs = annotType()
             t = atPos(t, rhs)(Type.With(t, rhs))
           }
-          newLineOptWhenFollowedBy[LeftBrace]
-          if (token.is[LeftBrace]) refinement(innerType = Some(t))
+          if (isAfterOptNewLine[LeftBrace]) refinement(innerType = Some(t))
           else t
         case None =>
           refinement(innerType = None)
@@ -1287,9 +1286,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       next()
   }
 
-  def newLineOptWhenFollowedBy[T <: Token: TokenInfo]: Unit = {
-    // note: next is defined here because current is token.LF
-    if (token.is[LF] && ahead { token.is[T] }) newLineOpt()
+  def newLineOptWhenFollowedBy[T](implicit classifier: Classifier[Token, T]): Unit = {
+    if (token.is[LF] && ahead { token.is[T] }) next()
   }
 
   def newLineOptWhenFollowedBySignificantIndentationAnd(cond: Token => Boolean): Unit = {
@@ -1297,13 +1295,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val prev = currentIndentation
       prev >= 0 && ahead { cond(token) && currentIndentation > prev }
     }
-    if (token.is[LF] && nextLineHasGreaterIndentation)
-      newLineOpt()
+    if (token.is[LF] && nextLineHasGreaterIndentation) next()
   }
 
-  def newLineOptWhenFollowing(p: Token => Boolean): Unit = {
-    // note: next is defined here because current is token.LF
-    if (token.is[LF] && ahead { p(token) }) newLineOpt()
+  def isAfterOptNewLine[T](implicit classifier: Classifier[Token, T]): Boolean = {
+    if (token.is[LF]) {
+      val ok = ahead { token.is[T] }
+      if (ok) next()
+      ok
+    } else token.is[T]
   }
 
   /* ------------- TYPES ---------------------------------------------------- */
@@ -1953,8 +1953,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         // Check whether we're still infix or already postfix by testing the current token.
         // In the running example, we're at `a + [b]` (infix).
         // If we were parsing `val c = a b`, then we'd be at `val c = a b[]` (postfix).
-        newLineOptWhenFollowing(_.is[ExprIntro])
-        if (token.is[ExprIntro]) {
+        if (isAfterOptNewLine[ExprIntro]) {
           // There is only one case when we here with empty rhsK: Unit inside infix chain.
           // For example `xs == () :: Nil`. In this case `()` treated as empty argument list but infix chain continues
           // and now we can argue that it was Unit.
@@ -2887,12 +2886,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
     var first = true
     val paramss = new ListBuffer[List[Term.Param]]
-    newLineOptWhenFollowedBy[LeftParen]
-    while (!parsedImplicits && token.is[LeftParen]) {
+    while (isAfterOptNewLine[LeftParen] && !parsedImplicits) {
       next()
       paramss += paramClause(first)
       accept[RightParen]
-      newLineOptWhenFollowedBy[LeftParen]
       first = false
     }
     paramss.toList
@@ -3022,8 +3019,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       ctxBoundsAllowed: Boolean,
       allowUnderscore: Boolean = true
   ): List[Type.Param] = {
-    newLineOptWhenFollowedBy[LeftBracket]
-    if (token.isNot[LeftBracket]) Nil
+    if (!isAfterOptNewLine[LeftBracket]) Nil
     else inBrackets(commaSeparated(typeParam(ownerIsType, ctxBoundsAllowed, allowUnderscore)))
   }
 
@@ -3374,8 +3370,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val needsBody = token.is[KwWith]
         acceptOpt[KwWith]
 
-        newLineOptWhenFollowedBy[LeftBrace]
-        if (token.is[LeftBrace]) {
+        if (isAfterOptNewLine[LeftBrace]) {
           inBraces(templateStatSeq())
         } else if (token.is[Indentation.Indent]) {
           indented(templateStatSeq())
@@ -3421,8 +3416,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val paramss = ListBuffer[List[Term.Param]]()
 
     def collectUparams(): Unit = {
-      newLineOptWhenFollowedBy[LeftParen]
-      while (token.is[LeftParen] && ahead(token.is[soft.KwUsing])) {
+      while (isAfterOptNewLine[LeftParen] && ahead(token.is[soft.KwUsing])) {
         paramss += inParens {
           if (token.isNot[soft.KwUsing]) syntaxError("expected 'using' keyword", token)
           next()
@@ -3435,7 +3429,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             )
           )
         }
-        newLineOptWhenFollowedBy[LeftParen]
       }
     }
 
@@ -3446,13 +3439,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     )
 
     collectUparams()
-    newLineOptWhenFollowedBy[LeftBrace]
+    newLinesOpt()
 
     val body: Stat =
       if (token.is[LeftBrace]) {
         autoPos(Term.Block(inBraces(templateStats())))
       } else {
-        newLinesOpt()
         if (in.observeIndented()) {
           val block = autoPos(Term.Block(indented(templateStats())))
           if (block.stats.size == 1) block.stats.head
@@ -3495,7 +3487,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     paramss.foreach(onlyLastParameterCanBeRepeated)
 
-    newLineOptWhenFollowedBy[LeftBrace]
+    val hasLeftBrace = isAfterOptNewLine[LeftBrace]
     val restype = fromWithinReturnType(typedOpt())
     if (token.is[StatSep] || token.is[RightBrace] || token.is[Indentation.Outdent]) {
       if (restype.isEmpty) {
@@ -3509,7 +3501,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         )
       } else
         Decl.Def(mods, name, tparams, paramss, restype.get)
-    } else if (restype.isEmpty && token.is[LeftBrace]) {
+    } else if (restype.isEmpty && hasLeftBrace) {
       warnProcedureDeprecation
       Defn.Def(
         mods,
@@ -3789,11 +3781,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       name: Name,
       paramss: List[List[Term.Param]]
   ): Ctor.Secondary = {
-    newLineOptWhenFollowedBy[LeftBrace]
-    val (init, stats) = token match {
-      case LeftBrace() => constrBlock()
-      case _ => accept[Equals]; constrExpr()
-    }
+    val hasLeftBrace = isAfterOptNewLine[LeftBrace] || { accept[Equals]; token.is[LeftBrace] }
+    val (init, stats) =
+      if (hasLeftBrace) inBraces(constrInternal())
+      else if (token.is[Indentation.Indent]) indented(constrInternal())
+      else (initInsideConstructor(), Nil)
     Ctor.Secondary(mods, name, paramss, init, stats)
   }
 
@@ -3806,15 +3798,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     (init, stats)
   }
-
-  def constrBlock(): (Init, List[Stat]) = inBraces(constrInternal())
-
-  def constrIndent(): (Init, List[Stat]) = indented(constrInternal())
-
-  def constrExpr(): (Init, List[Stat]) =
-    if (token.is[LeftBrace]) constrBlock()
-    else if (token.is[Indentation.Indent]) constrIndent()
-    else (initInsideConstructor(), Nil)
 
   def initInsideConstructor(): Init = {
     def name = autoPos { accept[KwThis]; Name.Anonymous() }
@@ -3927,8 +3910,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def derivesClasses(): List[Type] = {
-    newLineOptWhenFollowing(t => t.is[soft.KwDerives])
-    if (token.is[soft.KwDerives]) {
+    if (isAfterOptNewLine[soft.KwDerives]) {
       next()
       val deriving = ListBuffer[Type]()
       def readInit() = token match {
@@ -3960,8 +3942,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       enumCaseAllowed: Boolean,
       secondaryConstructorAllowed: Boolean
   ): Template = autoPos {
-    newLineOptWhenFollowedBy[LeftBrace]
-    if (token.is[LeftBrace]) {
+    if (isAfterOptNewLine[LeftBrace]) {
       // @S: pre template body cannot stub like post body can!
       val (self, body) = templateBody(enumCaseAllowed)
       if (token.is[KwWith] && self.name.is[Name.Anonymous] && self.decltpe.isEmpty) {
@@ -4007,8 +3988,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         secondaryConstructorAllowed = owner.isClass || owner.isEnum
       )
     } else {
-      newLineOptWhenFollowing(t => t.is[soft.KwDerives])
-      if (token.is[soft.KwDerives]) {
+      if (isAfterOptNewLine[soft.KwDerives]) {
         template(
           Nil,
           Nil,
@@ -4038,8 +4018,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       enumCaseAllowed: Boolean = false,
       secondaryConstructorAllowed: Boolean = false
   ): (Self, List[Stat]) = {
-    newLineOptWhenFollowedBy[LeftBrace]
-    if (token.is[LeftBrace]) {
+    if (isAfterOptNewLine[LeftBrace]) {
       templateBody(enumCaseAllowed, secondaryConstructorAllowed)
     } else if (isColonEol(token)) {
       accept[Colon]
@@ -4070,8 +4049,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @tailrec
   private def refinement(innerType: Option[Type]): Type.Refine = {
     val refineType = atPos(innerType, auto)(Type.Refine(innerType, inBraces(refineStatSeq())))
-    newLineOptWhenFollowedBy[LeftBrace]
-    if (token.is[LeftBrace]) refinement(innerType = Some(refineType))
+    if (isAfterOptNewLine[LeftBrace]) refinement(innerType = Some(refineType))
     else refineType
   }
 
