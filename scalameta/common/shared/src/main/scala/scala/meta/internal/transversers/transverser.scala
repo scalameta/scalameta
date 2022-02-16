@@ -44,8 +44,8 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
 
   private def getGeneratedMethods(): Tree = {
     val treeName = TermName("_tree")
-    val relevantLeafs = TreeAdt.allLeafs.filter(l => !(l <:< QuasiAdt))
-    val highPriority = List(
+    val leaves = TreeAdt.allLeafs.filter(l => !(l <:< QuasiAdt))
+    val priority = List(
       "Term.Name",
       "Term.Apply",
       "Lit",
@@ -54,17 +54,17 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
       "Type.Apply",
       "Term.ApplyInfix"
     )
-    val orderedRelevantLeafs = relevantLeafs.sortBy(l => {
-      val idx = highPriority.indexOf(l.prefix)
-      if (idx != -1) idx else highPriority.length
-    })
-
-    val cases = orderedRelevantLeafs.map(l => {
-      val extractor = hygienicRef(l.sym.companion)
-      val binders = l.fields.map(f => pq"${f.name}")
-      val handler = leafHandler(l, treeName)
-      cq"$treeName @ $extractor(..$binders) => $handler"
-    })
+    val cases = leaves
+      .sortBy { l =>
+        val idx = priority.indexOf(l.prefix)
+        if (idx != -1) idx else priority.length
+      }
+      .map { l =>
+        val extractor = hygienicRef(l.sym.companion)
+        val binders = l.fields.map(f => pq"${f.name}")
+        val handler = leafHandler(l, treeName)
+        cq"$treeName @ $extractor(..$binders) => $handler"
+      }
     TransverserMacros.this.generatedMethods(cases)
   }
 }
