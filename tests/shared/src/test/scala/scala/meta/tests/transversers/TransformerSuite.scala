@@ -9,12 +9,11 @@ class TransformerSuite extends FunSuite {
 
   test("Transformer Ok") {
     val tree0 = q"""
-      def foo(x: x)(x: Int) = x + x
+      def foo(x: x)(x: Int) = x + x + 1
       class C(x: x) {
         def bar(x: x) = ???
       }
     """
-    val log = scala.collection.mutable.ListBuffer[String]()
     object transformer extends Transformer {
       override def apply(tree: Tree): Tree = tree match {
         case Term.Name("x") => Term.Name("y")
@@ -25,7 +24,7 @@ class TransformerSuite extends FunSuite {
     val tree1 = transformer(tree0)
     assert(tree1.toString == """
       |{
-      |  def foo(y: y)(y: Int) = y + y
+      |  def foo(y: y)(y: Int) = y + y + 1
       |  class C(y: y) { def bar(y: y) = ??? }
       |}
     """.trim.stripMargin.split('\n').mkString(EOL))
@@ -38,7 +37,6 @@ class TransformerSuite extends FunSuite {
         def bar(x: x) = ???
       }
     """
-    val log = scala.collection.mutable.ListBuffer[String]()
     object transformer extends Transformer {
       override def apply(tree: Tree): Tree = {
         if (tree.toString == "x") q"y"
