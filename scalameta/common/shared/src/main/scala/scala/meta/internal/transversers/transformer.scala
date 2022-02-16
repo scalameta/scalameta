@@ -82,17 +82,17 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
     q"val ${TermName(f.name.toString + "1")} = $rhs"
   }
 
-  def leafHandler(l: Leaf): Tree = {
+  def leafHandler(l: Leaf, treeName: TermName): Tree = {
     val constructor = hygienicRef(l.sym.companion)
     val relevantFields =
       l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
-    if (relevantFields.isEmpty) return q"tree"
+    if (relevantFields.isEmpty) return q"$treeName"
     val transformedFields: List[ValDef] = relevantFields.map(transformField)
 
     val binaryCompatFields = l.binaryCompatFields
 
     val binaryCompatGetters = binaryCompatFields.map { field =>
-      q"val ${field.name} = tree.${field.name}"
+      q"val ${field.name} = $treeName.${field.name}"
     }
 
     val binaryCompatSetters = binaryCompatFields.map { field =>
@@ -104,7 +104,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
       ..$binaryCompatGetters
       ..$transformedFields
       ..${binaryCompatFields.map(transformField)}
-      if (same) tree
+      if (same) $treeName
       else {
         val newTree = $constructor(..${transformedFields.map(_.name)})
         ..$binaryCompatSetters
