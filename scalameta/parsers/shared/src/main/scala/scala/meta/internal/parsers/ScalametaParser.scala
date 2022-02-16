@@ -2188,26 +2188,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def argumentExprsOrPrefixExpr(): List[Term] = {
     if (token.isNot[LeftBrace] && token.isNot[LeftParen]) prefixExpr(allowRepeated = false) :: Nil
     else {
-      def argsToTerm(args: List[Term], openParenPos: Int, closeParenPos: Int): Term = {
-        def badRep(rep: Term.Repeated) = syntaxError("repeated argument not allowed here", at = rep)
-        def loop(args: List[Term]): List[Term] = args match {
-          case Nil => Nil
-          case Term.Assign(_, rep: Term.Repeated) :: _ => badRep(rep)
-          case (rep: Term.Repeated) :: _ => badRep(rep)
-          case (t: Term) :: rest => t :: loop(rest)
-          case _ => unreachable(debug(args))
-        }
-        atPos(openParenPos, closeParenPos)(makeTupleTerm(loop(args)))
+      def findRep(args: List[Term]): Option[Term.Repeated] = args.collectFirst {
+        case Term.Assign(_, rep: Term.Repeated) => rep
+        case rep: Term.Repeated => rep
       }
       val openParenPos = in.tokenPos
       val args = argumentExprs()
       val closeParenPos = in.prevTokenPos
+      @inline def addPos(body: Term): Term = atPosWithBody(openParenPos, body, closeParenPos)
       token match {
         case Dot() | LeftBracket() | LeftParen() | LeftBrace() | Underscore() =>
-          simpleExprRest(argsToTerm(args, openParenPos, closeParenPos), canApply = true) :: Nil
+          findRep(args).foreach(x => syntaxError("repeated argument not allowed here", at = x))
+          simpleExprRest(addPos(makeTupleTerm(args)), canApply = true) :: Nil
         case _ =>
           args match {
-            case arg :: Nil => atPos(openParenPos, closeParenPos)(arg) :: Nil
+            case arg :: Nil => addPos(arg) :: Nil
             case other => other
           }
       }
