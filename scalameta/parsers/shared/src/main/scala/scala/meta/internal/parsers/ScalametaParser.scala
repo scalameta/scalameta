@@ -2133,7 +2133,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def simpleExprRest(t: Term, canApply: Boolean): Term = atPos(t, auto) {
+  private def simpleExprRest(t: Term, canApply: Boolean): Term =
+    simpleExprRest(t, canApply, t.startTokenPos)
+
+  @tailrec
+  private def simpleExprRest(t: Term, canApply: Boolean, startPos: Int): Term = {
+    @inline def addPos(body: Term): Term = atPosWithBody(startPos, body, auto)
     if (canApply) {
       if (dialect.allowSignificantIndentation) {
         newLineOptWhenFollowedBySignificantIndentationAnd(x => x.is[LeftBrace] || x.is[LeftParen])
@@ -2149,10 +2154,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val clause = matchClause(t)
           // needed if match uses significant identation
           newLineOptWhenFollowedBy[Dot]
-          val expr = simpleExprRest(clause, canApply = false)
-          expr
+          simpleExprRest(clause, canApply = false, startPos = startPos)
         } else {
-          simpleExprRest(selector(t), canApply = true)
+          simpleExprRest(selector(t), canApply = true, startPos = startPos)
         }
       case LeftBracket() =>
         t match {
@@ -2162,9 +2166,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             var app: Term = t
             while (token.is[LeftBracket]) app = atPos(t, auto)(Term.ApplyType(app, exprTypeArgs()))
 
-            simpleExprRest(app, canApply = true)
+            simpleExprRest(app, canApply = true, startPos = startPos)
           case _ =>
-            t
+            addPos(t)
         }
       case LeftParen() | LeftBrace() if canApply =>
         val arguments = atPos(t, auto) {
@@ -2173,12 +2177,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             case (args, false) => Term.Apply(t, args)
           }
         }
-        simpleExprRest(arguments, canApply = true)
+        simpleExprRest(arguments, canApply = true, startPos = startPos)
       case Underscore() =>
         next()
-        Term.Eta(t)
+        addPos(Term.Eta(t))
       case _ =>
-        t
+        addPos(t)
     }
   }
 
