@@ -13,19 +13,17 @@ class traverser extends StaticAnnotation {
 class TraverserMacros(val c: Context) extends TransverserMacros {
   import c.universe._
 
-  def leafHandler(l: Leaf): Tree = {
+  def leafHandler(l: Leaf, treeName: TermName): Tree = {
     val relevantFields =
       l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && PrimitiveTpe.unapply(f.tpe).isEmpty)
     val recursiveTraversals = relevantFields.map(f => q"this.apply(${f.name})")
     q"..$recursiveTraversals"
   }
 
-  def generatedMethods(cases: List[CaseDef]): Tree = {
-    q"""
-      def apply(tree: $TreeClass): $UnitClass = {
-        tree match { case ..$cases }
-      }
+  def leafHandlerType(): Tree = UnitClass
 
+  def generatedMethods(): Tree = {
+    q"""
       def apply(treeopt: $OptionClass[$TreeClass]): $UnitClass = treeopt match {
         case $SomeModule(tree) => apply(tree)
         case $NoneModule => // do nothing

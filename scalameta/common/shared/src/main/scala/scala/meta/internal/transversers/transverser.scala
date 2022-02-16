@@ -21,8 +21,13 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
   lazy val Hack3Class = hygienicRef[org.scalameta.overload.Hack3]
   lazy val Hack4Class = hygienicRef[org.scalameta.overload.Hack4]
 
-  def leafHandler(l: Leaf): Tree
-  def generatedMethods(cases: List[CaseDef]): Tree
+  private lazy val TermAdt = mirror.staticClass("scala.meta.Term").asAdt
+  private lazy val TypeAdt = mirror.staticClass("scala.meta.Type").asAdt
+  private lazy val DefnAdt = mirror.staticClass("scala.meta.Defn").asAdt
+
+  def leafHandler(l: Leaf, treeName: TermName): Tree
+  def leafHandlerType(): Tree
+  def generatedMethods(): Tree
 
   def impl(annottees: Tree*): Tree =
     annottees.transformAnnottees(new ImplTransformer {
@@ -30,37 +35,76 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
         val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" =
           cdef
 
-        val relevantLeafs = TreeAdt.allLeafs.filter(l => !(l <:< QuasiAdt))
-        val highPriority = List(
-          "Term.Name",
-          "Term.Apply",
-          "Lit",
-          "Type.Name",
-          "Term.Param",
-          "Type.Apply",
-          "Term.ApplyInfix"
-        )
-        val orderedRelevantLeafs = relevantLeafs.sortBy(l => {
-          val idx = highPriority.indexOf(l.prefix)
-          if (idx != -1) idx else highPriority.length
-        })
-
-        val cases = orderedRelevantLeafs.map(l => {
-          val extractor = hygienicRef(l.sym.companion)
-          val binders = l.fields.map(f => pq"${f.name}")
-          val relevantFields =
-            l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
-          cq"tree @ $extractor(..$binders) => ${leafHandler(l)}"
-        })
-        val generatedMethods = TransverserMacros.this.generatedMethods(cases)
+        val primaryApply = getPrimaryApply()
+        val generatedMethods = TransverserMacros.this.generatedMethods()
 
         val cdef1 = q"""
         $mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self =>
           ..$stats
+          ..$primaryApply
           ..$generatedMethods
         }
       """
         List(cdef1, mdef)
       }
     })
+
+  private def getSecondaryApply(prefix: String, leaves: List[Leaf])(
+      priority: String*
+  ): Tree = {
+    val treeName = TermName("_tree")
+    val cases = leaves
+      .sortBy { l =>
+        val idx = priority.indexOf(l.prefix)
+        if (idx != -1) idx else priority.length
+      }
+      .map { l =>
+        val extractor = hygienicRef(l.sym.companion)
+        val binders = l.fields.map(f => pq"${f.name}")
+        val handler = leafHandler(l, treeName)
+        cq"$treeName @ $extractor(..$binders) => $handler"
+      }
+    val methodName = TermName(s"apply$prefix")
+
+    q"""
+      private def $methodName(tree: $TreeClass): ${leafHandlerType()} = {
+        tree match { case ..$cases }
+      }
+    """
+  }
+
+  private def getPrimaryApply(): Tree = {
+    val termBuilder = List.newBuilder[Leaf]
+    val typeBuilder = List.newBuilder[Leaf]
+    val defnBuilder = List.newBuilder[Leaf]
+    val restBuilder = List.newBuilder[Leaf]
+    TreeAdt.allLeafs.foreach { l =>
+      if (l <:< TermAdt) termBuilder += l
+      else if (l <:< TypeAdt) typeBuilder += l
+      else if (l <:< DefnAdt) defnBuilder += l
+      else if (!(l <:< QuasiAdt)) restBuilder += l
+    }
+
+    val termPriority = Seq("Term.Name", "Term.Apply", "Lit", "Term.Param", "Term.ApplyInfix")
+    val termTree = getSecondaryApply("Term", termBuilder.result())(termPriority: _*)
+    val typeTree = getSecondaryApply("Type", typeBuilder.result())("Type.Name", "Type.Apply")
+    val defnTree = getSecondaryApply("Defn", defnBuilder.result())()
+    val restTree = getSecondaryApply("Rest", restBuilder.result())()
+
+    q"""
+      def apply(tree: $TreeClass): ${leafHandlerType()} = {
+        tree match {
+          case t: ${hygienicRef(TermAdt.sym)} => applyTerm(t)
+          case t: ${hygienicRef(TypeAdt.sym)} => applyType(t)
+          case t: ${hygienicRef(DefnAdt.sym)} => applyDefn(t)
+          case t => applyRest(t)
+        }
+      }
+      ..$termTree
+      ..$typeTree
+      ..$defnTree
+      ..$restTree
+    """
+  }
+
 }
