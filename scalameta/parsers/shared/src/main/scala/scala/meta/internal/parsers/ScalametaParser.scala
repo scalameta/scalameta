@@ -2245,12 +2245,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     trees
   }
 
-  def blockExpr(isBlockOptional: Boolean = false): Term = autoPos {
+  def blockExpr(isBlockOptional: Boolean = false): Term = {
     if (ahead(token.is[CaseIntro] || (token.is[Ellipsis] && ahead(token.is[KwCase])))) {
       if (token.is[LeftBrace])
-        Term.PartialFunction(inBraces(caseClauses()))
+        autoPos(Term.PartialFunction(inBraces(caseClauses())))
       else
-        Term.PartialFunction(indented(caseClauses()))
+        autoPos(Term.PartialFunction(indented(caseClauses())))
     } else block(isBlockOptional)
   }
 
@@ -2697,14 +2697,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case other => unreachable(debug(other, other.structure))
     }
     next()
-    if (in.token.isNot[LeftBracket]) mod(autoPos(Name.Anonymous()))
+    if (!acceptOpt[LeftBracket]) mod(autoPos(Name.Anonymous()))
     else {
-      accept[LeftBracket]
       val result = mod {
-        if (token.is[KwThis]) autoPos {
-          Term.This(autoPos { next(); Name.Anonymous() })
-        }
-        else {
+        if (token.is[KwThis]) {
+          val name = autoPos { next(); Name.Anonymous() }
+          copyPos(name)(Term.This(name))
+        } else {
           termName() match {
             case q: Quasi => q.become[Ref.Quasi]
             case name => copyPos(name)(Name.Indeterminate(name.value))
@@ -3800,8 +3799,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def initInsideConstructor(): Init = {
-    def name = autoPos { accept[KwThis]; Name.Anonymous() }
-    def tpe = autoPos(Type.Singleton(autoPos(Term.This(name))))
+    def tpe = {
+      val t = autoPos(Term.This(autoPos { accept[KwThis]; Name.Anonymous() }))
+      copyPos(t)(Type.Singleton(t))
+    }
     initRest(tpe, allowArgss = true, allowBraces = true)
   }
 
