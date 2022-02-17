@@ -92,9 +92,9 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       q"$subtree.privateCopy(prototype = $subtree, parent = this, destination = null).asInstanceOf[$subtp]"
     }
     f.tpe.finalResultType match {
-      case AnyTpe(tpe) => q"()"
-      case PrimitiveTpe(tpe) => q"()"
-      case TreeTpe(tpe) => lazyLoad(pf => q"${copySubtree(pf, tpe)}")
+      case AnyTpe() => q"()"
+      case PrimitiveTpe() => q"()"
+      case tpe @ TreeTpe() => lazyLoad(pf => q"${copySubtree(pf, tpe)}")
       case OptionTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el", tpe)})")
       case ListTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el", tpe)})")
       case OptionListTreeTpe(tpe) =>
@@ -110,9 +110,9 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       q"$subtree.privateCopy(prototype = $subtree, parent = node, destination = $s).asInstanceOf[$subtp]"
     }
     f.tpe.finalResultType match {
-      case AnyTpe(tpe) => q"()"
-      case PrimitiveTpe(tpe) => q"()"
-      case TreeTpe(tpe) => q"$f = ${copySubtree(v, tpe)}"
+      case AnyTpe() => q"()"
+      case PrimitiveTpe() => q"()"
+      case tpe @ TreeTpe() => q"$f = ${copySubtree(v, tpe)}"
       case OptionTreeTpe(tpe) => q"$f = $v.map(el => ${copySubtree(q"el", tpe)})"
       case ListTreeTpe(tpe) => q"$f = $v.map(el => ${copySubtree(q"el", tpe)})"
       case OptionListTreeTpe(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el", tpe)}))"
@@ -122,9 +122,9 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
   }
   def initField(f: c.Tree): c.Tree = {
     f.tpe.finalResultType match {
-      case AnyTpe(tpe) => q"$f"
-      case PrimitiveTpe(tpe) => q"$f"
-      case TreeTpe(tpe) => q"null"
+      case AnyTpe() => q"$f"
+      case PrimitiveTpe() => q"$f"
+      case TreeTpe() => q"null"
       case OptionTreeTpe(tpe) => q"null"
       case ListTreeTpe(tpe) => q"null"
       case OptionListTreeTpe(tpe) => q"null"
@@ -144,7 +144,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
     val allAnalyzedFields = leaf.fields ++ leaf.binaryCompatFields
     val acc = allAnalyzedFields.foldLeft(q"": Tree)((acc, f) =>
       f.tpe match {
-        case TreeTpe(_) =>
+        case TreeTpe() =>
           streak :+= q"this.${f.sym}"
           acc
         case OptionTreeTpe(_) =>

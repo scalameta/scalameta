@@ -1,6 +1,8 @@
 package org.scalameta
 package internal
 
+import scala.annotation.tailrec
+
 trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder with ImplTransformers {
   import c.universe._
   import definitions._
@@ -105,29 +107,24 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
   }
 
   object AnyTpe {
-    def unapply(tpe: Type): Option[Type] = {
-      if (tpe =:= definitions.AnyTpe) Some(tpe)
-      else None
+    def unapply(tpe: Type): Boolean = {
+      tpe =:= definitions.AnyTpe
     }
   }
 
   object PrimitiveTpe {
-    def unapply(tpe: Type): Option[Type] = {
-      if (tpe =:= typeOf[String] ||
-        tpe =:= typeOf[scala.Symbol] ||
-        ScalaPrimitiveValueClasses.contains(tpe.typeSymbol)) Some(tpe)
-      else if (tpe.typeSymbol == definitions.OptionClass && PrimitiveTpe
-          .unapply(tpe.typeArgs.head)
-          .nonEmpty) Some(tpe)
-      else if (tpe.typeSymbol == definitions.ClassClass) Some(tpe)
-      else None
+    @tailrec
+    def unapply(tpe: Type): Boolean = {
+      tpe =:= typeOf[String] || tpe =:= typeOf[scala.Symbol] ||
+      ScalaPrimitiveValueClasses.contains(tpe.typeSymbol) ||
+      tpe.typeSymbol == definitions.ClassClass ||
+      tpe.typeSymbol == definitions.OptionClass && PrimitiveTpe.unapply(tpe.typeArgs.head)
     }
   }
 
   object TreeTpe {
-    def unapply(tpe: Type): Option[Type] = {
-      if (tpe <:< c.mirror.staticClass("scala.meta.Tree").asType.toType) Some(tpe)
-      else None
+    def unapply(tpe: Type): Boolean = {
+      tpe <:< c.mirror.staticClass("scala.meta.Tree").asType.toType
     }
   }
 
@@ -135,7 +132,7 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
     def unapply(tpe: Type): Option[Type] = {
       if (tpe.typeSymbol == c.mirror.staticClass("scala.Option")) {
         tpe.typeArgs match {
-          case TreeTpe(tpe) :: Nil => Some(tpe)
+          case (tpe @ TreeTpe()) :: Nil => Some(tpe)
           case _ => None
         }
       } else None
@@ -146,7 +143,7 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
     def unapply(tpe: Type): Option[Type] = {
       if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.List")) {
         tpe.typeArgs match {
-          case TreeTpe(tpe) :: Nil => Some(tpe)
+          case (tpe @ TreeTpe()) :: Nil => Some(tpe)
           case _ => None
         }
       } else None
