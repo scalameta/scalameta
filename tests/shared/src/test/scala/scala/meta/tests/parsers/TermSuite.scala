@@ -364,7 +364,9 @@ class TermSuite extends ParseSuite {
 
   test("_: Int => x") {
     assertTerm("_: Int => x") {
-      Term.Ascribe(Term.Placeholder(), Type.Function(List(Type.Name("Int")), Type.Name("x")))
+      AnonymousFunction(
+        Ascribe(Placeholder(), Type.Function(List(Type.Name("Int")), Type.Name("x")))
+      )
     }
     val Term.Function(
       List(Term.Param(Nil, Name.Anonymous(), Some(Type.Name("Int")), None)),
@@ -534,19 +536,19 @@ class TermSuite extends ParseSuite {
 
   test("f(_)") {
     assertTerm("f(_)")(
-      Apply(Term.Name("f"), List(Placeholder()))
+      AnonymousFunction(Apply(Term.Name("f"), List(Placeholder())))
     )
   }
 
   test("_ + 1") {
     assertTerm("_ + 1")(
-      ApplyInfix(Placeholder(), Term.Name("+"), Nil, Lit.Int(1) :: Nil)
+      AnonymousFunction(ApplyInfix(Placeholder(), Term.Name("+"), Nil, Lit.Int(1) :: Nil))
     )
   }
 
   test("1 + _") {
     assertTerm("1 + _")(
-      ApplyInfix(Lit.Int(1), Term.Name("+"), Nil, Placeholder() :: Nil)
+      AnonymousFunction(ApplyInfix(Lit.Int(1), Term.Name("+"), Nil, Placeholder() :: Nil))
     )
   }
 
@@ -911,9 +913,7 @@ class TermSuite extends ParseSuite {
         Term.Name("map"),
         Nil,
         List(
-          Term.Block(
-            List(Term.Apply(Term.ApplyType(Term.Placeholder(), List(Type.Name("K"))), Nil))
-          )
+          Block(List(AnonymousFunction(Apply(ApplyType(Placeholder(), List(Type.Name("K"))), Nil))))
         )
       )
     }
@@ -1117,4 +1117,180 @@ class TermSuite extends ParseSuite {
       )
     }
   }
+
+  // https://github.com/scalameta/scalameta/issues/1843
+  test("anonymous-function-#1843-1") {
+    assertTerm("_ fun (_.bar)")(
+      AnonymousFunction(
+        ApplyInfix(
+          Placeholder(),
+          Term.Name("fun"),
+          Nil,
+          List(AnonymousFunction(Select(Placeholder(), Term.Name("bar"))))
+        )
+      )
+    )
+  }
+  test("anonymous-function-#1843-2") {
+    assertTerm("_ fun _.bar")(
+      AnonymousFunction(
+        ApplyInfix(
+          Placeholder(),
+          Term.Name("fun"),
+          Nil,
+          List(Select(Placeholder(), Term.Name("bar")))
+        )
+      )
+    )
+  }
+
+  // https://scala-lang.org/files/archive/spec/2.13/06-expressions.html#placeholder-syntax-for-anonymous-functions
+  test("anonymous-function-spec-1") {
+    assertTerm("_ + 1")(
+      AnonymousFunction(
+        ApplyInfix(Placeholder(), Term.Name("+"), Nil, List(Lit.Int(1)))
+      )
+    )
+  }
+  test("anonymous-function-spec-2") {
+    assertTerm("_ * _")(
+      AnonymousFunction(
+        ApplyInfix(Placeholder(), Term.Name("*"), Nil, List(Placeholder()))
+      )
+    )
+  }
+  test("anonymous-function-spec-3") {
+    assertTerm("(_: Int) * 2")(
+      AnonymousFunction(
+        ApplyInfix(Ascribe(Placeholder(), Type.Name("Int")), Term.Name("*"), Nil, List(Lit.Int(2)))
+      )
+    )
+  }
+  test("anonymous-function-spec-3.1") {
+    assertTerm("1 + (_: Int) * 2 + 1")(
+      AnonymousFunction(
+        ApplyInfix(
+          ApplyInfix(
+            Lit.Int(1),
+            Term.Name("+"),
+            Nil,
+            List(
+              ApplyInfix(
+                Ascribe(Placeholder(), Type.Name("Int")),
+                Term.Name("*"),
+                Nil,
+                List(Lit.Int(2))
+              )
+            )
+          ),
+          Term.Name("+"),
+          Nil,
+          List(Lit.Int(1))
+        )
+      )
+    )
+  }
+  test("anonymous-function-spec-3.2") {
+    assertTerm("(_: Int)")(
+      AnonymousFunction(
+        Ascribe(Placeholder(), Type.Name("Int"))
+      )
+    )
+  }
+  test("anonymous-function-spec-4") {
+    assertTerm("if (_) x else y")(
+      AnonymousFunction(If(Placeholder(), Term.Name("x"), Term.Name("y")))
+    )
+  }
+  test("anonymous-function-spec-5") {
+    assertTerm("_.map(f)")(
+      AnonymousFunction(Apply(Select(Placeholder(), Term.Name("map")), List(Term.Name("f"))))
+    )
+  }
+  test("anonymous-function-spec-6") {
+    assertTerm("_.map(_ + 1)")(
+      AnonymousFunction(
+        Apply(
+          Select(Placeholder(), Term.Name("map")),
+          List(AnonymousFunction(ApplyInfix(Placeholder(), Term.Name("+"), Nil, List(Lit.Int(1)))))
+        )
+      )
+    )
+  }
+
+  test("anonymous-function-scalafmt-1") {
+    assertTerm("foo >>= (_.http(registry, port).map(Option.apply(_)).catchSome { bar })")(
+      ApplyInfix(
+        Term.Name("foo"),
+        Term.Name(">>="),
+        Nil,
+        List(
+          AnonymousFunction(
+            Apply(
+              Select(
+                Apply(
+                  Select(
+                    Apply(
+                      Select(Placeholder(), Term.Name("http")),
+                      List(Term.Name("registry"), Term.Name("port"))
+                    ),
+                    Term.Name("map")
+                  ),
+                  List(
+                    AnonymousFunction(
+                      Apply(
+                        Select(Term.Name("Option"), Term.Name("apply")),
+                        List(Placeholder())
+                      )
+                    )
+                  )
+                ),
+                Term.Name("catchSome")
+              ),
+              List(Block(List(Term.Name("bar"))))
+            )
+          )
+        )
+      )
+    )
+  }
+  test("anonymous-function-scalafmt-2") {
+    assertTerm("""scalacOptions ~= (_ filterNot (_ startsWith "-Xlint"))""")(
+      ApplyInfix(
+        Term.Name("scalacOptions"),
+        Term.Name("~="),
+        Nil,
+        List(
+          AnonymousFunction(
+            ApplyInfix(
+              Placeholder(),
+              Term.Name("filterNot"),
+              Nil,
+              List(
+                AnonymousFunction(
+                  ApplyInfix(
+                    Placeholder(),
+                    Term.Name("startsWith"),
+                    Nil,
+                    List(Lit.String("-Xlint"))
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+  test("anonymous-function-scalafmt-3") {
+    assertTerm("`field-names` ~> (`private`(_: _*))")(
+      ApplyInfix(
+        Term.Name("field-names"),
+        Term.Name("~>"),
+        Nil,
+        List(AnonymousFunction(Apply(Term.Name("private"), List(Repeated(Placeholder())))))
+      )
+    )
+  }
+
 }

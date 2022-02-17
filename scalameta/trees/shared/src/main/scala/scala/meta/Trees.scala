@@ -149,6 +149,7 @@ object Term {
         params.exists(_.mods.exists(_.is[Mod.Implicit])) ==> (params.length == 1)
     )
   }
+  @ast class AnonymousFunction(body: Term) extends Term
   @ast class PolyFunction(tparams: List[Type.Param], body: Term) extends Term
   @ast class PartialFunction(cases: List[Case] @nonEmpty) extends Term
   @ast class While(expr: Term, body: Term) extends Term
