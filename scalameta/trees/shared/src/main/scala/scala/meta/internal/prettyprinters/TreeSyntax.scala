@@ -382,32 +382,17 @@ object TreeSyntax {
           case (Lit.Unit()) :: Nil =>
             s("(())")
           case (arg: Term) :: Nil =>
-            def lhsIsPlaceHolder(left: Term): Boolean = left match {
-              case _: Term.Placeholder => true
-              case Term.Select(lhs, _) => lhsIsPlaceHolder(lhs)
-              case Term.Apply(lhs, _) => lhsIsPlaceHolder(lhs)
-              case Term.ApplyInfix(lhs, _, _, _) => lhsIsPlaceHolder(lhs)
-              case _ => false
-            }
-
             def needsParens: Boolean = arg match {
-              case placeholder if lhsIsPlaceHolder(placeholder) => // `a op (_.b)`
-                true
-              case apply: Term.Apply =>
-                apply.args.exists { // `a op (apply(b, _))`
-                  case _: Term.Placeholder => true
-                  case _ => false
-                }
+              case _: Term.AnonymousFunction => true
               case _: Lit | _: Term.Ref | _: Term.Function | _: Term.If | _: Term.Match |
                   _: Term.ApplyInfix | _: Term.QuotedMacroExpr | _: Term.SplicedMacroExpr |
-                  _: Term.SplicedMacroPat =>
+                  _: Term.SplicedMacroPat | _: Term.Apply | _: Term.Placeholder =>
                 false
               case _ =>
                 true
             }
 
-            if (lhsIsPlaceHolder(t.lhs)) s(arg)
-            else if (needsParens) s("(", arg, ")")
+            if (needsParens) s("(", arg, ")")
             else s(p(InfixExpr(t.op.value), arg, right = true))
           case args => s(args)
         }
@@ -1180,6 +1165,7 @@ object TreeSyntax {
       // Source
       case t: Source => r(t.stats, EOL)
       case t: MultiSource => r(t.sources, s"$EOL$EOL@$EOL$EOL")
+      case t: Term.AnonymousFunction => s(t.body)
     }
 
     private def givenName(

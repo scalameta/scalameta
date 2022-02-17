@@ -1089,6 +1089,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("#1839 ApplyInfix parentheses on Term.Placeholder") {
     checkTree(q"list reduce (_ + _)", "list reduce (_ + _)")
     checkTree(q"list reduce (_ + (_))", "list reduce (_ + _)")
+    checkTree(q"list reduce (_ + (_: Int))", "list reduce (_ + (_: Int))")
     checkTree(q"list reduce (_.foo + _.bar)", "list reduce (_.foo + _.bar)")
     checkTree(q"list reduce (_.a.b.c + _.d.e.f)", "list reduce (_.a.b.c + _.d.e.f)")
     checkTree(q"list reduce (_.a(foo) + _.b(bar))", "list reduce (_.a(foo) + _.b(bar))")
@@ -1130,7 +1131,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   def checkTree(original: Tree, expected: String)(implicit loc: munit.Location): Unit = {
     assertNoDiff(original.structure, expected.parse[Stat].get.structure)
-    assertNoDiff(original.syntax, expected)
+    assertNoDiff(original.syntax, expected, original.structure)
   }
   def checkTree(obtained: Tree, expected: Tree)(implicit loc: munit.Location): Unit = {
     assertNoDiff(obtained.structure, expected.structure)
@@ -1183,11 +1184,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         Term.Name("foo"),
         Nil,
         List(
-          Term.ApplyInfix(
-            Term.Placeholder(),
-            Term.Name("fun"),
-            Nil,
-            List(Term.Select(Term.Placeholder(), Term.Name("bar")))
+          Term.AnonymousFunction(
+            Term.ApplyInfix(
+              Term.Placeholder(),
+              Term.Name("fun"),
+              Nil,
+              List(Term.AnonymousFunction(Term.Select(Term.Placeholder(), Term.Name("bar"))))
+            )
           )
         )
       )
@@ -1199,11 +1202,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         Term.Name("foo"),
         Nil,
         List(
-          Term.ApplyInfix(
-            Term.Placeholder(),
-            Term.Name("fun"),
-            Nil,
-            List(Term.Select(Term.Placeholder(), Term.Name("bar")))
+          Term.AnonymousFunction(
+            Term.ApplyInfix(
+              Term.Placeholder(),
+              Term.Name("fun"),
+              Nil,
+              List(Term.Select(Term.Placeholder(), Term.Name("bar")))
+            )
           )
         )
       )

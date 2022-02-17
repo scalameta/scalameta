@@ -720,7 +720,7 @@ class GivenUsingSuite extends BaseDottySuite {
                   )
                 )
               ),
-              Term.Select(Term.Placeholder(), Term.Name("toExpr"))
+              Term.AnonymousFunction(Term.Select(Term.Placeholder(), Term.Name("toExpr")))
             )
           ),
           Nil

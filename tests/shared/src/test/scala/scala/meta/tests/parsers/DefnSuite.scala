@@ -33,7 +33,7 @@ class DefnSuite extends ParseSuite {
       Nil,
       Pat.Var(Term.Name("f")) :: Nil,
       Some(Type.Function(Type.Name("Int") :: Nil, Type.Name("String"))),
-      Term.Select(Term.Placeholder(), Term.Name("toString"))
+      Term.AnonymousFunction(Term.Select(Term.Placeholder(), Term.Name("toString")))
     ) =
       templStat("val f: Int => String = _.toString")
   }
@@ -43,7 +43,7 @@ class DefnSuite extends ParseSuite {
       Nil,
       Pat.Var(Term.Name("f")) :: Nil,
       Some(Type.Function(Type.Name("Int") :: Nil, Type.Name("String"))),
-      Some(Term.Select(Term.Placeholder(), Term.Name("toString")))
+      Some(Term.AnonymousFunction(Term.Select(Term.Placeholder(), Term.Name("toString"))))
     ) =
       templStat("var f: Int => String = _.toString")
   }

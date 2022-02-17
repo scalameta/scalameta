@@ -623,7 +623,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case List(Term.Quasi(1, _)) =>
         makeTupleTerm(maybeTupleArgs)
       case List(singleArg) =>
-        singleArg
+        maybeAnonymousFunctionInParens(singleArg)
       case multipleArgs =>
         val repeatedArgs = multipleArgs.collect { case repeated: Term.Repeated => repeated }
         repeatedArgs.foreach(arg =>
@@ -1451,7 +1451,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       accept[Ident]
       Mod.Inline()
     }
-    autoPos(token match {
+    maybeAnonymousFunctionUnlessPostfix(autoPos(token match {
       case soft.KwInline() if ahead(token.is[KwIf]) =>
         ifClause(List(inlineMod()))
       case InlineMatchMod() =>
@@ -1737,7 +1737,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           }
         }
         t
-    })
+    }))(location)
   }
 
   def implicitClosure(location: Location): Term.Function = {
@@ -2007,7 +2007,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     // This is something not captured by the type system.
     // When applied to a result of `loop`, `reduceStack` will produce a singleton list.
-    lhsResult match { case List(finResult) => finResult; case _ => unreachable(debug(lhsResult)) }
+    lhsResult match {
+      case List(finResult: Term) => maybeAnonymousFunctionUnlessPostfix(finResult)(location)
+      case List(finResult) => finResult
+      case _ => unreachable(debug(lhsResult))
+    }
   }
 
   def prefixExpr(allowRepeated: Boolean): Term =
@@ -2203,7 +2207,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           simpleExprRest(addPos(makeTupleTerm(args)), canApply = true) :: Nil
         case _ =>
           args match {
-            case arg :: Nil => addPos(arg) :: Nil
+            case arg :: Nil => addPos(maybeAnonymousFunctionInParens(arg)) :: Nil
             case other => other
           }
       }
@@ -4377,6 +4381,21 @@ object ScalametaParser {
 
   private def copyPos[T <: Tree](tree: Tree)(body: => T): T = {
     body.withOrigin(tree.origin)
+  }
+
+  @inline
+  private def maybeAnonymousFunctionUnlessPostfix(expr: Term)(location: Location): Term =
+    if (location == Location.PostfixStat) expr else maybeAnonymousFunction(expr)
+
+  @inline
+  private def maybeAnonymousFunctionInParens(expr: Term): Term = expr match {
+    case _: Term.Ascribe | _: Term.Repeated => expr
+    case _ => maybeAnonymousFunction(expr)
+  }
+
+  private def maybeAnonymousFunction(expr: Term): Term = expr match {
+    case _: Term.Placeholder | _: Term.AnonymousFunction | _: Term.Repeated => expr
+    case t => if (PlaceholderChecks.hasPlaceholder(t)) copyPos(t)(Term.AnonymousFunction(t)) else t
   }
 
 }

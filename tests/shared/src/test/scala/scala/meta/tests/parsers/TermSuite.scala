@@ -364,7 +364,9 @@ class TermSuite extends ParseSuite {
 
   test("_: Int => x") {
     assertTerm("_: Int => x") {
-      Term.Ascribe(Term.Placeholder(), Type.Function(List(Type.Name("Int")), Type.Name("x")))
+      AnonymousFunction(
+        Ascribe(Placeholder(), Type.Function(List(Type.Name("Int")), Type.Name("x")))
+      )
     }
     val Term.Function(
       List(Term.Param(Nil, Name.Anonymous(), Some(Type.Name("Int")), None)),
@@ -534,19 +536,19 @@ class TermSuite extends ParseSuite {
 
   test("f(_)") {
     assertTerm("f(_)")(
-      Apply(Term.Name("f"), List(Placeholder()))
+      AnonymousFunction(Apply(Term.Name("f"), List(Placeholder())))
     )
   }
 
   test("_ + 1") {
     assertTerm("_ + 1")(
-      ApplyInfix(Placeholder(), Term.Name("+"), Nil, Lit.Int(1) :: Nil)
+      AnonymousFunction(ApplyInfix(Placeholder(), Term.Name("+"), Nil, Lit.Int(1) :: Nil))
     )
   }
 
   test("1 + _") {
     assertTerm("1 + _")(
-      ApplyInfix(Lit.Int(1), Term.Name("+"), Nil, Placeholder() :: Nil)
+      AnonymousFunction(ApplyInfix(Lit.Int(1), Term.Name("+"), Nil, Placeholder() :: Nil))
     )
   }
 
@@ -911,7 +913,7 @@ class TermSuite extends ParseSuite {
         Term.Name("map"),
         Nil,
         List(
-          Block(List(Apply(ApplyType(Placeholder(), List(Type.Name("K"))), Nil)))
+          Block(List(AnonymousFunction(Apply(ApplyType(Placeholder(), List(Type.Name("K"))), Nil))))
         )
       )
     }
@@ -1119,21 +1121,25 @@ class TermSuite extends ParseSuite {
   // https://github.com/scalameta/scalameta/issues/1843
   test("anonymous-function-#1843-1") {
     assertTerm("_ fun (_.bar)")(
-      ApplyInfix(
-        Placeholder(),
-        Term.Name("fun"),
-        Nil,
-        List(Select(Placeholder(), Term.Name("bar")))
+      AnonymousFunction(
+        ApplyInfix(
+          Placeholder(),
+          Term.Name("fun"),
+          Nil,
+          List(AnonymousFunction(Select(Placeholder(), Term.Name("bar"))))
+        )
       )
     )
   }
   test("anonymous-function-#1843-2") {
     assertTerm("_ fun _.bar")(
-      ApplyInfix(
-        Placeholder(),
-        Term.Name("fun"),
-        Nil,
-        List(Select(Placeholder(), Term.Name("bar")))
+      AnonymousFunction(
+        ApplyInfix(
+          Placeholder(),
+          Term.Name("fun"),
+          Nil,
+          List(Select(Placeholder(), Term.Name("bar")))
+        )
       )
     )
   }
@@ -1141,61 +1147,73 @@ class TermSuite extends ParseSuite {
   // https://scala-lang.org/files/archive/spec/2.13/06-expressions.html#placeholder-syntax-for-anonymous-functions
   test("anonymous-function-spec-1") {
     assertTerm("_ + 1")(
-      ApplyInfix(Placeholder(), Term.Name("+"), Nil, List(Lit.Int(1)))
+      AnonymousFunction(
+        ApplyInfix(Placeholder(), Term.Name("+"), Nil, List(Lit.Int(1)))
+      )
     )
   }
   test("anonymous-function-spec-2") {
     assertTerm("_ * _")(
-      ApplyInfix(Placeholder(), Term.Name("*"), Nil, List(Placeholder()))
+      AnonymousFunction(
+        ApplyInfix(Placeholder(), Term.Name("*"), Nil, List(Placeholder()))
+      )
     )
   }
   test("anonymous-function-spec-3") {
     assertTerm("(_: Int) * 2")(
-      ApplyInfix(Ascribe(Placeholder(), Type.Name("Int")), Term.Name("*"), Nil, List(Lit.Int(2)))
+      AnonymousFunction(
+        ApplyInfix(Ascribe(Placeholder(), Type.Name("Int")), Term.Name("*"), Nil, List(Lit.Int(2)))
+      )
     )
   }
   test("anonymous-function-spec-3.1") {
     assertTerm("1 + (_: Int) * 2 + 1")(
-      ApplyInfix(
+      AnonymousFunction(
         ApplyInfix(
-          Lit.Int(1),
+          ApplyInfix(
+            Lit.Int(1),
+            Term.Name("+"),
+            Nil,
+            List(
+              ApplyInfix(
+                Ascribe(Placeholder(), Type.Name("Int")),
+                Term.Name("*"),
+                Nil,
+                List(Lit.Int(2))
+              )
+            )
+          ),
           Term.Name("+"),
           Nil,
-          List(
-            ApplyInfix(
-              Ascribe(Placeholder(), Type.Name("Int")),
-              Term.Name("*"),
-              Nil,
-              List(Lit.Int(2))
-            )
-          )
-        ),
-        Term.Name("+"),
-        Nil,
-        List(Lit.Int(1))
+          List(Lit.Int(1))
+        )
       )
     )
   }
   test("anonymous-function-spec-3.2") {
     assertTerm("(_: Int)")(
-      Ascribe(Placeholder(), Type.Name("Int"))
+      AnonymousFunction(
+        Ascribe(Placeholder(), Type.Name("Int"))
+      )
     )
   }
   test("anonymous-function-spec-4") {
     assertTerm("if (_) x else y")(
-      If(Placeholder(), Term.Name("x"), Term.Name("y"))
+      AnonymousFunction(If(Placeholder(), Term.Name("x"), Term.Name("y")))
     )
   }
   test("anonymous-function-spec-5") {
     assertTerm("_.map(f)")(
-      Apply(Select(Placeholder(), Term.Name("map")), List(Term.Name("f")))
+      AnonymousFunction(Apply(Select(Placeholder(), Term.Name("map")), List(Term.Name("f"))))
     )
   }
   test("anonymous-function-spec-6") {
     assertTerm("_.map(_ + 1)")(
-      Apply(
-        Select(Placeholder(), Term.Name("map")),
-        List(ApplyInfix(Placeholder(), Term.Name("+"), Nil, List(Lit.Int(1))))
+      AnonymousFunction(
+        Apply(
+          Select(Placeholder(), Term.Name("map")),
+          List(AnonymousFunction(ApplyInfix(Placeholder(), Term.Name("+"), Nil, List(Lit.Int(1)))))
+        )
       )
     )
   }
@@ -1207,26 +1225,30 @@ class TermSuite extends ParseSuite {
         Term.Name(">>="),
         Nil,
         List(
-          Apply(
-            Select(
-              Apply(
-                Select(
-                  Apply(
-                    Select(Placeholder(), Term.Name("http")),
-                    List(Term.Name("registry"), Term.Name("port"))
+          AnonymousFunction(
+            Apply(
+              Select(
+                Apply(
+                  Select(
+                    Apply(
+                      Select(Placeholder(), Term.Name("http")),
+                      List(Term.Name("registry"), Term.Name("port"))
+                    ),
+                    Term.Name("map")
                   ),
-                  Term.Name("map")
-                ),
-                List(
-                  Apply(
-                    Select(Term.Name("Option"), Term.Name("apply")),
-                    List(Placeholder())
+                  List(
+                    AnonymousFunction(
+                      Apply(
+                        Select(Term.Name("Option"), Term.Name("apply")),
+                        List(Placeholder())
+                      )
+                    )
                   )
-                )
+                ),
+                Term.Name("catchSome")
               ),
-              Term.Name("catchSome")
-            ),
-            List(Block(List(Term.Name("bar"))))
+              List(Block(List(Term.Name("bar"))))
+            )
           )
         )
       )
@@ -1239,16 +1261,20 @@ class TermSuite extends ParseSuite {
         Term.Name("~="),
         Nil,
         List(
-          ApplyInfix(
-            Placeholder(),
-            Term.Name("filterNot"),
-            Nil,
-            List(
-              ApplyInfix(
-                Placeholder(),
-                Term.Name("startsWith"),
-                Nil,
-                List(Lit.String("-Xlint"))
+          AnonymousFunction(
+            ApplyInfix(
+              Placeholder(),
+              Term.Name("filterNot"),
+              Nil,
+              List(
+                AnonymousFunction(
+                  ApplyInfix(
+                    Placeholder(),
+                    Term.Name("startsWith"),
+                    Nil,
+                    List(Lit.String("-Xlint"))
+                  )
+                )
               )
             )
           )
@@ -1262,7 +1288,7 @@ class TermSuite extends ParseSuite {
         Term.Name("field-names"),
         Term.Name("~>"),
         Nil,
-        List(Apply(Term.Name("private"), List(Repeated(Placeholder()))))
+        List(AnonymousFunction(Apply(Term.Name("private"), List(Repeated(Placeholder())))))
       )
     )
   }
