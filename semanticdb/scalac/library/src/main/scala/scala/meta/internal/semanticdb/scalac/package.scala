@@ -16,12 +16,8 @@ package object scalac {
       if (!Files.exists(out.toNIO.getParent)) {
         Files.createDirectories(out.toNIO.getParent)
       }
-      val fos = Files.newOutputStream(out.toNIO, StandardOpenOption.CREATE, openOption)
-      try {
-        s.TextDocuments(sdocument :: Nil).writeTo(fos)
-      } finally {
-        fos.close()
-      }
+      val bytes = s.TextDocuments(sdocument :: Nil).toByteArray
+      Files.write(out.toNIO, bytes, StandardOpenOption.CREATE, openOption)
     }
     def save(targetroot: AbsolutePath): Unit =
       write(targetroot, append = false)
