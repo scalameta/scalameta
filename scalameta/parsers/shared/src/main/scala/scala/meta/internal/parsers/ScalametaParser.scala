@@ -3376,7 +3376,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           indented(templateStatSeq())
         } else if (needsBody) {
           syntaxError("expected '{' or indentation", at = token.pos)
-        } else (autoPos(Self(autoPos(Name.Anonymous()), None)), Nil)
+        } else (selfEmpty(), Nil)
       }
       val rhs = if (slf.decltpe.nonEmpty) {
         syntaxError("given cannot have a self type", at = slf.pos)
@@ -3853,6 +3853,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def entrypointSelf(): Self = self()
 
+  private def selfEmpty(): Self = {
+    val name = autoPos(Name.Anonymous())
+    copyPos(name)(Self(name, None))
+  }
+
   def self(): Self = autoPos {
     val name = token match {
       case Ident(_) =>
@@ -4030,7 +4035,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (nextIndented)
         indented(templateStatSeq(enumCaseAllowed, secondaryConstructorAllowed))
       else if (token.is[EndMarkerIntro] && !enumCaseAllowed)
-        (autoPos(Self(autoPos(Name.Anonymous()), None)), Nil)
+        (selfEmpty(), Nil)
       else
         syntaxError("expected template body", token)
     } else {
@@ -4040,7 +4045,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           syntaxError(s"$what may not have parameters", at = token)
         } else syntaxError("unexpected opening parenthesis", at = token)
       }
-      (autoPos(Self(autoPos(Name.Anonymous()), None)), Nil)
+      (selfEmpty(), Nil)
     }
   }
 
@@ -4153,7 +4158,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       enumCaseAllowed: Boolean = false,
       secondaryConstructorAllowed: Boolean = false
   ): (Self, List[Stat]) = {
-    val emptySelf = autoPos(Self(autoPos(Name.Anonymous()), None))
+    val emptySelf = selfEmpty()
     var selfOpt: Option[Self] = None
     var firstOpt: Option[Stat] = None
     if (token.is[ExprIntro] && !token.is[KwExtension]) {
