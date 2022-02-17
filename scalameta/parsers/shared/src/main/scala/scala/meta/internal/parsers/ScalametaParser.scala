@@ -1577,14 +1577,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           if (token.is[At] || (token.is[Ellipsis] && ahead(token.is[At]))) {
             t = atPos(t, auto)(Term.Annotate(t, annots(skipNewLines = false)))
           } else if (token.is[Underscore] && ahead(isStar)) {
-            repeatedTerm(() => nextTwice())
+            repeatedTerm(nextTwice)
           } else {
             // this does not necessarily correspond to syntax, but is necessary to accept lambdas
             // check out the `if (token.is[RightArrow]) { ... }` block below
             t = atPos(t, auto)(Term.Ascribe(t, typeOrInfixType(location)))
           }
         } else if (isVarargStarParam(allowRepeated)) {
-          repeatedTerm(() => next())
+          repeatedTerm(next)
         } else if (token.is[KwMatch]) {
           next()
           t = matchClause(t)
@@ -3352,7 +3352,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def parents() = {
       val parents = ListBuffer[Init](
         atPos(decltype.startTokenPos, auto)(
-          initRest(() => decltype, allowArgss = true, allowBraces = false)
+          initRest(decltype, allowArgss = true, allowBraces = false)
         )
       )
       while (token.is[KwWith] && ahead(token.is[Ident])) { next(); parents += init() }
@@ -3802,17 +3802,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def initInsideConstructor(): Init = {
     def name = autoPos { accept[KwThis]; Name.Anonymous() }
     def tpe = autoPos(Type.Singleton(autoPos(Term.This(name))))
-    initRest(() => tpe, allowArgss = true, allowBraces = true)
+    initRest(tpe, allowArgss = true, allowBraces = true)
   }
 
   def initInsideAnnotation(allowArgss: Boolean): Init = {
-    def tpe = exprSimpleType()
-    initRest(() => tpe, allowArgss = allowArgss, allowBraces = false)
+    initRest(exprSimpleType(), allowArgss = allowArgss, allowBraces = false)
   }
 
   def initInsideTemplate(): Init = {
-    def tpe = startModType()
-    initRest(() => tpe, allowArgss = true, allowBraces = false)
+    initRest(startModType(), allowArgss = true, allowBraces = false)
   }
 
   def quasiquoteInit(): Init = entrypointInit()
@@ -3824,7 +3822,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def initRest(typeParser: () => Type, allowArgss: Boolean, allowBraces: Boolean): Init = autoPos {
+  def initRest(typeParser: => Type, allowArgss: Boolean, allowBraces: Boolean): Init = autoPos {
     def isPendingArglist = token.is[LeftParen] || (token.is[LeftBrace] && allowBraces)
     def newlineOpt() = {
       if (dialect.allowSignificantIndentation)
@@ -3835,7 +3833,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case Unquote() if !ahead(isPendingArglist) =>
         unquote[Init]
       case _ =>
-        val tpe = typeParser()
+        val tpe = typeParser
         val name = autoPos(Name.Anonymous())
         val argss = mutable.ListBuffer[List[Term]]()
         var done = false
