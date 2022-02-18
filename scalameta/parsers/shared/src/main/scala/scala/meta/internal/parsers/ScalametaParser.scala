@@ -197,7 +197,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @inline final def inParens[T](body: => T): T = {
     accept[LeftParen]
     val ret = body
-    acceptOpt[LF]
+    newLineOpt()
     accept[RightParen]
     ret
   }
@@ -206,10 +206,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     inBracesOr(body, syntaxErrorExpected[LeftBrace])
   }
   @inline final def inBracesOr[T](body: => T, alt: => T): T = {
-    acceptOpt[LF]
+    newLineOpt()
     if (acceptOpt[LeftBrace]) {
       val ret = body
-      acceptOpt[LF]
+      newLineOpt()
       accept[RightBrace]
       ret
     } else alt
@@ -1281,13 +1281,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ------------- NEW LINES ------------------------------------------------- */
 
+  @inline
   def newLineOpt(): Unit = {
     if (token.is[LF]) next()
   }
 
+  @inline
   def newLinesOpt(): Unit = {
-    if (token.is[LF] || token.is[LFLF])
-      next()
+    if (token.is[LF] || token.is[LFLF]) next()
   }
 
   def newLineOptWhenFollowedBy[T](implicit classifier: Classifier[Token, T]): Unit = {
@@ -1403,7 +1404,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     accept[KwIf]
     val (cond, thenp) = if (token.isNot[LeftParen] && dialect.allowSignificantIndentation) {
       val cond = exprMaybeIndented()
-      acceptOpt[LF]
+      newLineOpt()
       accept[KwThen]
       (cond, exprMaybeIndented())
     } else {
@@ -1505,12 +1506,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Term.While(cond, exprMaybeIndented())
         } else if (token.is[Indentation.Indent]) {
           val cond = block()
-          acceptOpt[LF]
+          newLineOpt()
           accept[KwDo]
           Term.While(cond, exprMaybeIndented())
         } else {
           val cond = expr()
-          acceptOpt[LF]
+          newLineOpt()
           accept[KwDo]
           Term.While(cond, exprMaybeIndented())
         }
@@ -4330,7 +4331,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def batchSource(statpf: PartialFunction[Token, Stat] = topStat): Source = autoPos {
     def inBracelessPackage(): Boolean = token.is[KwPackage] && !ahead(token.is[KwObject]) && ahead {
       qualId()
-      if (token.is[LF]) { next() }
+      newLineOpt()
       token.isNot[LeftBrace] && !(dialect.allowSignificantIndentation && isColonEol(token))
     }
     def bracelessPackageStats(): List[Stat] = {
