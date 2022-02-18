@@ -465,7 +465,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def isColonWildcardStar: Boolean = token.is[Colon] && ahead(token.is[Underscore] && next(isStar))
   def isSpliceFollowedBy(check: => Boolean): Boolean =
     token.is[Ellipsis] && ahead(token.is[Unquote] && next(token.is[Ident] || check))
-  def isBackquoted: Boolean = token.syntax.startsWith("`") && token.syntax.endsWith("`")
+  def isBackquoted: Boolean = {
+    val syntax = token.syntax
+    syntax.startsWith("`") && syntax.endsWith("`")
+  }
   def isVarargStarParam(allowRepeated: Boolean) =
     dialect.allowPostfixStarVarargSplices && isStar && token.next.is[RightParen] && allowRepeated
 
@@ -1186,7 +1189,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def literal(isNegated: Boolean = false): Lit = autoPos {
-    def isHex = token.syntax.startsWith("0x") || token.syntax.startsWith("0X")
+    def isHex = {
+      val syntax = token.syntax
+      syntax.startsWith("0x") || syntax.startsWith("0X")
+    }
     val res = token match {
       case Constant.Int(rawValue) =>
         val value = if (isNegated) -rawValue else rawValue
