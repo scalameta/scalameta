@@ -721,7 +721,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case t: Type => t
         }))
         infixTypeRest(
-          compoundTypeRest(Some(annotTypeRest(simpleTypeRest(tuple)))),
+          compoundTypeRest(annotTypeRest(simpleTypeRest(tuple))),
           InfixMode.FirstOp
         )
       }
@@ -812,10 +812,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else infixType(InfixMode.FirstOp)
     }
 
+    @inline
     def infixType(mode: InfixMode.Value): Type =
       infixTypeRest(compoundType(), mode)
 
-    def infixTypeRest(t: Type, mode: InfixMode.Value): Type = autoEndPos(t) {
+    @inline
+    private def infixTypeRest(t: Type, mode: InfixMode.Value): Type =
+      infixTypeRest(t, mode, t.startTokenPos)
+
+    @tailrec
+    private final def infixTypeRest(t: Type, mode: InfixMode.Value, startPos: Int): Type = {
       if (isIdent || token.is[Unquote]) {
         if (isStar && ahead(
             token.is[RightParen] || token.is[Comma] || token.is[Equals] ||
@@ -831,18 +837,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             next()
             newLineOptWhenFollowedBy[TypeIntro]
             val t1 = compoundType()
-            infixTypeRest(atPos(t, t1)(Type.And(t, t1)), InfixMode.LeftOp)
+            infixTypeRest(atPos(startPos, t1)(Type.And(t, t1)), InfixMode.LeftOp, startPos)
           } else if (isBar && dialect.allowOrTypes) {
             next()
             newLineOptWhenFollowedBy[TypeIntro]
             val t1 = compoundType()
-            infixTypeRest(atPos(t, t1)(Type.Or(t, t1)), InfixMode.LeftOp)
+            infixTypeRest(atPos(startPos, t1)(Type.Or(t, t1)), InfixMode.LeftOp, startPos)
           } else {
             val op = typeName()
             newLineOptWhenFollowedBy[TypeIntro]
-            def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, op, t1))
+            def mkOp(t1: Type) = atPos(startPos, t1)(Type.ApplyInfix(t, op, t1))
             if (leftAssoc)
-              infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
+              infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp, startPos)
             else
               mkOp(infixType(InfixMode.RightOp))
           }
@@ -852,27 +858,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     }
 
-    def compoundType(): Type = compoundTypeRest {
+    def compoundType(): Type = {
       if (token.is[LeftBrace])
-        None
+        refinement(innerType = None)
       else
-        Some(annotType())
+        compoundTypeRest(annotType())
     }
 
-    def compoundTypeRest(t0: Option[Type]): Type = autoEndPos(t0) {
-      t0 match {
-        case Some(t0) =>
-          var t = t0
-          while (token.is[KwWith]) {
-            next()
-            val rhs = annotType()
-            t = atPos(t, rhs)(Type.With(t, rhs))
-          }
-          if (isAfterOptNewLine[LeftBrace]) refinement(innerType = Some(t))
-          else t
-        case None =>
-          refinement(innerType = None)
+    def compoundTypeRest(typ: Type): Type = {
+      val startPos = typ.startTokenPos
+      var t = typ
+      while (acceptOpt[KwWith]) {
+        val rhs = annotType()
+        t = atPos(startPos, rhs)(Type.With(t, rhs))
       }
+      if (isAfterOptNewLine[LeftBrace]) refinement(innerType = Some(t))
+      else t
     }
 
     def annotType(): Type = annotTypeRest(simpleType())
@@ -943,9 +944,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }))
     }
 
-    def simpleTypeRest(t: Type): Type = token match {
-      case Hash() => next(); simpleTypeRest(autoEndPos(t)(Type.Project(t, typeName())))
-      case LeftBracket() => simpleTypeRest(autoEndPos(t)(Type.Apply(t, typeArgs())))
+    @inline
+    def simpleTypeRest(t: Type): Type = simpleTypeRest(t, t.startTokenPos)
+
+    @tailrec
+    private final def simpleTypeRest(t: Type, startPos: Int): Type = token match {
+      case Hash() =>
+        next()
+        simpleTypeRest(autoEndPos(startPos)(Type.Project(t, typeName())), startPos)
+      case LeftBracket() =>
+        simpleTypeRest(autoEndPos(startPos)(Type.Apply(t, typeArgs())), startPos)
       case _ => t
     }
 
@@ -2384,14 +2392,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else if (isCase) Enumerator.CaseGenerator(pat, rhs)
       else Enumerator.Generator(pat, rhs)
     }
-    val tail = {
-      def loop(): List[Enumerator] = {
-        if (token.isNot[KwIf]) Nil
-        else autoPos(Enumerator.Guard(guard().get)) :: loop()
-      }
-      if (allowNestedIf) loop()
-      else Nil
-    }
+    val tail = if (allowNestedIf) {
+      val builder = List.newBuilder[Enumerator]
+      @tailrec def loop(): Unit =
+        if (token.is[KwIf]) {
+          builder += autoPos(Enumerator.Guard(guard().get))
+          loop()
+        }
+      loop()
+      builder.result()
+    } else Nil
     head :: tail
   }
 
