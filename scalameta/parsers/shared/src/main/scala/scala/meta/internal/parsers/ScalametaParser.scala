@@ -189,9 +189,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
    */
   @inline final def ahead[T](body: => T): T = {
     val forked = in.fork
-    next()
-    try body
+    try next(body)
     finally in = forked
+  }
+
+  /** evaluate block after shifting next */
+  @inline private def next[T](body: => T): T = {
+    next()
+    body
   }
 
   @inline final def inParens[T](body: => T): T = {
@@ -457,9 +462,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def isStar: Boolean = isIdentOf("*")
   def isBar: Boolean = isIdentOf("|")
   def isAmpersand: Boolean = isIdentOf("&")
-  def isColonWildcardStar: Boolean = token.is[Colon] && ahead(token.is[Underscore] && ahead(isStar))
+  def isColonWildcardStar: Boolean = token.is[Colon] && ahead(token.is[Underscore] && next(isStar))
   def isSpliceFollowedBy(check: => Boolean): Boolean =
-    token.is[Ellipsis] && ahead(token.is[Unquote] && ahead(token.is[Ident] || check))
+    token.is[Ellipsis] && ahead(token.is[Unquote] && next(token.is[Ident] || check))
   def isBackquoted: Boolean = token.syntax.startsWith("`") && token.syntax.endsWith("`")
   def isVarargStarParam(allowRepeated: Boolean) =
     dialect.allowPostfixStarVarargSplices && isStar && token.next.is[RightParen] && allowRepeated
@@ -897,19 +902,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Type.Macro(macroSplice())
         case Ident("?") if dialect.allowQuestionMarkPlaceholder =>
           next(); Type.Placeholder(typeBounds())
-        case ident: Ident
-            if (ident.value == "+" || ident.value == "-") &&
-              ahead(token.is[Underscore]) &&
-              allowPlusMinusUnderscore =>
+        case Ident(value @ ("+" | "-"))
+            if allowPlusMinusUnderscore && ahead(token.is[Underscore]) =>
           nextTwice() // Ident and Underscore
           if (dialect.allowPlusMinusUnderscoreAsPlaceholder)
             Type.Placeholder(typeBounds())
           else
-            Type.Name(s"${ident.value}_")
+            Type.Name(s"${value}_")
         case Literal() =>
           if (dialect.allowLiteralTypes) literal()
           else syntaxError(s"$dialect doesn't support literal types", at = path())
-        case Ident("-") if ahead { token.is[NumericLiteral] } && dialect.allowLiteralTypes =>
+        case Ident("-") if dialect.allowLiteralTypes && ahead(token.is[NumericLiteral]) =>
           next()
           literal(isNegated = true)
         case _ =>
@@ -1426,7 +1429,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (tryAcceptWithOptLF[KwElse]) {
       Term.If(cond, thenp, exprMaybeIndented(), mods)
     } else if (token.is[Semicolon] && ahead { token.is[KwElse] }) {
-      next(); next(); Term.If(cond, thenp, expr(), mods)
+      nextTwice(); Term.If(cond, thenp, expr(), mods)
     } else {
       Term.If(cond, thenp, autoPos(Lit.Unit()), mods)
     }
@@ -2261,7 +2264,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def blockExpr(isBlockOptional: Boolean = false): Term = {
-    if (ahead(token.is[CaseIntro] || (token.is[Ellipsis] && ahead(token.is[KwCase])))) {
+    if (ahead(token.is[CaseIntro] || (token.is[Ellipsis] && next(token.is[KwCase])))) {
       if (token.is[LeftBrace])
         autoPos(Term.PartialFunction(inBraces(caseClauses())))
       else
@@ -2458,7 +2461,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     private def isLegitimateSeqWildcard = {
       def isUnderscore = token.is[Underscore]
       def isArglistEnd = token.is[RightParen] || token.is[RightBrace] || token.is[EOF]
-      def tokensMatched = isUnderscore && ahead(isStar && ahead(isArglistEnd))
+      def tokensMatched = isUnderscore && ahead(isStar && next(isArglistEnd))
       isSequenceOK && tokensMatched
     }
 
