@@ -222,8 +222,6 @@ package object trees {
     }
   }
 
-  def astInfo[T <: Ast: AstInfo]: AstInfo[T] = implicitly[AstInfo[T]]
-
   def arrayClass(clazz: Class[_], rank: Int): Class[_] = {
     import scala.runtime.ScalaRunTime
     Predef.require(rank >= 0)
