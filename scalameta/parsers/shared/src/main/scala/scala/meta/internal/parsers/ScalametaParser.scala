@@ -340,7 +340,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     } else syntaxErrorExpected[T]
 
   /** If current token is T consume it. */
-  def acceptOpt[T <: Token: TokenInfo]: Boolean = {
+  @inline def acceptOpt[T <: Token: TokenInfo]: Boolean = {
     val ok = token.is[T]
     if (ok) next()
     ok
@@ -575,16 +575,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       sepFirst: Boolean,
       part: => T
   ): List[T] = {
-    def partOrEllipsis =
-      if (token.is[Ellipsis]) ellipsis[T](1)
-      else part
     val ts = new ListBuffer[T]
-    if (!sepFirst)
-      ts += partOrEllipsis
-    while (token.is[Sep] || token.is[Ellipsis]) {
-      if (token.is[Sep]) next()
-      ts += partOrEllipsis
+    @tailrec
+    def iter(sep: Boolean): Unit = {
+      if (token.is[Ellipsis]) {
+        ts += ellipsis[T](1)
+        iter(false)
+      } else if (sep) {
+        ts += part
+        iter(false)
+      } else if (acceptOpt[Sep]) {
+        iter(true)
+      }
     }
+    iter(!sepFirst)
     ts.toList
   }
 
