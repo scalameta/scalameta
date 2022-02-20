@@ -4156,6 +4156,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       errorMsg: String = "illegal start of definition"
   ): List[T] = {
     val stats = new ListBuffer[T]
+    statSeqBuf(stats, statpf, errorMsg)
+    stats.toList
+  }
+
+  def statSeqBuf[T <: Tree: AstInfo](
+      stats: ListBuffer[T],
+      statpf: PartialFunction[Token, T],
+      errorMsg: String = "illegal start of definition"
+  ): Unit = {
     val isIndented = acceptOpt[Indentation.Indent]
     val statpfAdd = statpf.runWith(stats += _)
 
@@ -4165,7 +4174,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else syntaxError(errorMsg + s" ${token.name}", at = token)
     }
     if (isIndented) accept[Indentation.Outdent]
-    stats.toList
   }
 
   def topStat: PartialFunction[Token, Stat] = {
@@ -4361,37 +4369,46 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         token.isNot[LeftBrace] && !isColonEol(token)
       }
     }
-    def bracelessPackageStats(): List[Stat] = token match {
-      case _: EOF => Nil
+    val buf = new ListBuffer[Stat]
+    @tailrec
+    def bracelessPackageStats(f: List[Stat] => List[Stat]): List[Stat] = token match {
+      case _: EOF => f(buf.toList)
       case StatSep() =>
         next()
-        bracelessPackageStats()
+        bracelessPackageStats(f)
       case _: KwPackage if !ahead(token.is[KwObject]) =>
         val startPos = in.tokenPos
         next()
         val qid = qualId()
         def inPackage(stats: => List[Stat]) = {
-          val pkg = autoEndPos(startPos)(Pkg(qid, stats))
+          buf += autoEndPos(startPos)(Pkg(qid, stats))
           acceptStatSepOpt()
-          pkg +: bracelessPackageStats()
         }
         token match {
-          case _: LeftBrace => inPackage(inBraces(statSeq(statpf)))
+          case _: LeftBrace =>
+            inPackage(inBraces(statSeq(statpf)))
+            bracelessPackageStats(f)
           case t if isColonEol(t) =>
             next()
             in.observeIndented()
             inPackage(indented(statSeq(statpf)))
-          case _ => List(autoEndPos(startPos)(Pkg(qid, bracelessPackageStats())))
+            bracelessPackageStats(f)
+          case _ => bracelessPackageStats(x => f(List(autoEndPos(startPos)(Pkg(qid, x)))))
         }
-      case _: LeftBrace => inBraces(statSeq(statpf))
-      case _ => statSeq(statpf)
+      case _: LeftBrace =>
+        inBraces(statSeqBuf(buf, statpf))
+        f(buf.toList)
+      case _ =>
+        statSeqBuf(buf, statpf)
+        f(buf.toList)
     }
     if (inBracelessPackage()) {
       val startPos = in.tokenPos
       next()
-      Source(List(autoEndPos(startPos)(Pkg(qualId(), bracelessPackageStats()))))
+      Source(List(autoEndPos(startPos)(Pkg(qualId(), bracelessPackageStats(identity)))))
     } else {
-      Source(statSeq(statpf))
+      statSeqBuf(buf, statpf)
+      Source(buf.toList)
     }
   }
 }
