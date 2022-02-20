@@ -407,10 +407,6 @@ class PublicSuite extends FunSuite {
     assert(tokens.syntax == "foo + bar")
   }
 
-  test("scala.meta.tokens.Token.Constant.toString") {
-    // n/a
-  }
-
   test("scala.meta.tokens.Token.Interpolation.toString") {
     // n/a
   }

@@ -161,11 +161,11 @@ private[parsers] class LazyTokenIterator private (
         if (pos < currPos) pos else currPos - 1
       } else {
         scannerTokens(i) match {
-          case _: LF | _: FF =>
+          case _: EOL =>
             iter(i + 1, if (pos == prevPos) i else pos, 0)
-          case _: Space | _: Tab if indent >= 0 =>
+          case _: HSpace if indent >= 0 =>
             iter(i + 1, pos, indent + 1)
-          case Whitespace() =>
+          case _: Whitespace =>
             iter(i + 1, pos, indent)
           case _: Comment if indent < 0 || outdent <= indent =>
             iter(i + 1, i + 1, -1)
@@ -194,7 +194,7 @@ private[parsers] class LazyTokenIterator private (
         if (i == scannerTokens.length) (-1, null)
         else
           scannerTokens(i) match {
-            case Trivia() => iter(i + 1)
+            case _: Trivia => iter(i + 1)
             case t => (i, t)
           }
       iter(currPos + 1)
@@ -471,10 +471,10 @@ private[parsers] class LazyTokenIterator private (
       else {
         val token = scannerTokens(pos)
         token match {
-          case _: LF | _: BOF => (acc, pos)
+          case _: EOL | _: BOF => (acc, pos)
           case AsMultilineComment(c) => (multilineCommentIndent(c), pos)
           case _: Comment => countIndentInternal(pos - 1)
-          case _: Space | _: Tab => countIndentInternal(pos - 1, acc + 1)
+          case _: HSpace => countIndentInternal(pos - 1, acc + 1)
           case _ => (-1, -1)
         }
       }

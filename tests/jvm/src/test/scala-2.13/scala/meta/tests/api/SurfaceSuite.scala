@@ -149,7 +149,6 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokenizers.Tokenized.Success *
       |scala.meta.tokens
       |scala.meta.tokens.Token
-      |scala.meta.tokens.Token.Constant *
       |scala.meta.tokens.Token.Indentation *
       |scala.meta.tokens.Token.Interpolation *
       |scala.meta.tokens.Token.Xml *
