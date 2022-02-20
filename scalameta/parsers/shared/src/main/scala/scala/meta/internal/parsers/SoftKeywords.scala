@@ -10,87 +10,83 @@ import scala.meta.tokens.Token.LeftBracket
 
 class SoftKeywords(dialect: Dialect) {
 
-  private def matches(token: Token, name: String, isEnabled: => Boolean): Boolean = {
-    isEnabled && token.toString() == name
-  }
-
   @classifier
   trait KwAs {
     val name = "as"
-    def unapply(token: Token): Boolean = {
-      matches(token, name, dialect.allowAsForImportRename)
-    }
+    @inline def isEnabled = dialect.allowAsForImportRename
+    @inline final def unapply(token: Token): Boolean = isEnabled && name == token.toString
+    @inline final def unapply(token: String): Boolean = isEnabled && name == token
   }
 
   @classifier
   trait KwUsing {
     val name = "using"
-    def unapply(token: Token): Boolean = {
-      matches(token, name, dialect.allowGivenUsing)
-    }
+    @inline def isEnabled = dialect.allowGivenUsing
+    @inline final def unapply(token: Token): Boolean = isEnabled && name == token.toString
+    @inline final def unapply(token: String): Boolean = isEnabled && name == token
   }
 
   @classifier
   trait KwInline {
     val name = "inline"
-    def unapply(token: Token): Boolean = {
-      matches(token, name, dialect.allowInlineMods)
-    }
+    @inline def isEnabled = dialect.allowInlineMods
+    @inline final def unapply(token: Token): Boolean = isEnabled && name == token.toString
+    @inline final def unapply(token: String): Boolean = isEnabled && name == token
   }
 
   @classifier
   trait KwOpaque {
     val name = "opaque"
-    def unapply(token: Token): Boolean = {
-      matches(token, name, dialect.allowOpaqueTypes)
-    }
+    @inline def isEnabled = dialect.allowOpaqueTypes
+    @inline final def unapply(token: Token): Boolean = isEnabled && name == token.toString
+    @inline final def unapply(token: String): Boolean = isEnabled && name == token
   }
 
   @classifier
   trait KwOpen {
     val name = "open"
-    def unapply(token: Token): Boolean = {
-      matches(token, name, dialect.allowOpenClass)
-    }
+    @inline def isEnabled = dialect.allowOpenClass
+    @inline final def unapply(token: Token): Boolean = isEnabled && name == token.toString
+    @inline final def unapply(token: String): Boolean = isEnabled && name == token
   }
 
   @classifier
   trait KwTransparent {
     val name = "transparent"
-    def unapply(token: Token): Boolean = {
-      matches(token, name, dialect.allowInlineMods)
-    }
+    @inline def isEnabled = dialect.allowInlineMods
+    @inline final def unapply(token: Token): Boolean = isEnabled && name == token.toString
+    @inline final def unapply(token: String): Boolean = isEnabled && name == token
   }
 
   @classifier
   trait KwDerives {
     val name = "derives"
-    def unapply(token: Token): Boolean = {
-      matches(token, name, dialect.allowDerives)
-    }
+    @inline def isEnabled = dialect.allowDerives
+    @inline final def unapply(token: Token): Boolean = isEnabled && name == token.toString
+    @inline final def unapply(token: String): Boolean = isEnabled && name == token
   }
 
   @classifier
   trait KwEnd {
     val name = "end"
-    def unapply(token: Token): Boolean = {
-      matches(token, name, dialect.allowSignificantIndentation)
-    }
+    @inline def isEnabled = dialect.allowSignificantIndentation
+    @inline final def unapply(token: Token): Boolean = isEnabled && name == token.toString
+    @inline final def unapply(token: String): Boolean = isEnabled && name == token
   }
 
   @classifier
   trait KwInfix {
     val name = "infix"
-    def unapply(token: Token): Boolean = {
-      matches(token, name, dialect.allowInfixMods)
-    }
+    @inline def isEnabled = dialect.allowInfixMods
+    @inline final def unapply(token: Token): Boolean = isEnabled && name == token.toString
+    @inline final def unapply(token: String): Boolean = isEnabled && name == token
   }
 
   @classifier
   trait KwExtension {
     val name = "extension"
-    def unapply(token: Token): Boolean = {
-      matches(token, name, dialect.allowExtensionMethods)
-    }
+    @inline def isEnabled = dialect.allowExtensionMethods
+    @inline final def unapply(token: Token): Boolean = isEnabled && name == token.toString
+    @inline final def unapply(token: String): Boolean = isEnabled && name == token
   }
 }

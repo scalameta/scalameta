@@ -196,26 +196,30 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
     @classifier
     trait SoftModifier {
       def unapply(token: Token): Boolean = {
-        (
-          (token.is[soft.KwInline] || token.is[soft.KwOpaque] || token.is[soft.KwTransparent]) &&
-            (token.next.is[DclIntro] || token.next.is[Modifier])
-        ) || (token.is[soft.KwTransparent] && token.next.is[KwTrait]) ||
-        ((token.is[soft.KwOpen] || token.is[soft.KwInfix]) && token.next.is[DefIntro]) ||
-        token.is[InlineMatchMod]
-
+        @inline def nextIsDclIntroOrModifierOr(f: Token => Boolean): Boolean =
+          token.next match {
+            case DclIntro() | Modifier() => true
+            case t => f(t)
+          }
+        token.toString match {
+          case soft.KwTransparent() => nextIsDclIntroOrModifierOr(_.is[KwTrait])
+          case soft.KwOpaque() => nextIsDclIntroOrModifierOr(_ => false)
+          case soft.KwInline() => nextIsDclIntroOrModifierOr(InlineMatchMod.matchesNext)
+          case soft.KwOpen() | soft.KwInfix() => token.next.is[DefIntro]
+          case _ => false
+        }
       }
     }
 
     @classifier
     trait InlineMatchMod {
-      def unapply(token: Token): Boolean = {
-        token.is[soft.KwInline] && {
-          val nextToken = token.next
-          nextToken.is[LeftParen] || nextToken.is[LeftBrace] || nextToken.is[KwNew] ||
-          nextToken.is[Ident] || nextToken.is[Literal] || nextToken.is[Interpolation.Id] ||
-          nextToken.is[Xml.Start] || nextToken.is[KwSuper] || nextToken.is[KwThis] ||
-          nextToken.is[MacroSplice] || nextToken.is[MacroQuote]
-        }
+      @inline def unapply(token: Token): Boolean =
+        token.is[soft.KwInline] && matchesNext(token.next)
+      private[Classifiers] def matchesNext(nextToken: Token): Boolean = {
+        nextToken.is[LeftParen] || nextToken.is[LeftBrace] || nextToken.is[KwNew] ||
+        nextToken.is[Ident] || nextToken.is[Literal] || nextToken.is[Interpolation.Id] ||
+        nextToken.is[Xml.Start] || nextToken.is[KwSuper] || nextToken.is[KwThis] ||
+        nextToken.is[MacroSplice] || nextToken.is[MacroQuote]
       }
     }
 
@@ -279,8 +283,10 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
     @classifier
     trait NonParamsModifier {
       def unapply(token: Token): Boolean = {
-        token.is[soft.KwOpen] || token.is[soft.KwOpaque] || token.is[soft.KwTransparent] || token
-          .is[soft.KwInfix]
+        token.toString match {
+          case soft.KwOpen() | soft.KwOpaque() | soft.KwTransparent() | soft.KwInfix() => true
+          case _ => false
+        }
       }
     }
 
