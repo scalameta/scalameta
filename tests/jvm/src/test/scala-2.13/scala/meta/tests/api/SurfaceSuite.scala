@@ -22,9 +22,11 @@ class SurfaceSuite extends FunSuite {
     val all = List(root) ++ root.allBranches ++ root.allLeafs
     all.map(_.sym.fullName).toSet
   }
-  lazy val reflectedTokens = {
-    val all = symbolOf[scala.meta.tokens.Token].asRoot.allLeafs
-    all.filter(_.sym.isPublic).map(_.sym.fullName).sorted
+  private def isPublic(x: Symbol) = x.isPublic
+  private def isPrivateWithin(x: Symbol) = x.privateWithin != NoSymbol
+  @inline private def filterFullNames(a: List[Adt], f: Symbol => Boolean) = a.flatMap { x =>
+    val sym = x.sym
+    if (f(sym)) Some(sym.fullName) else None
   }
   lazy val wildcardImportStatics = explore.wildcardImportStatics("scala.meta")
   def lsp4s(symbol: String): Boolean = {
@@ -39,17 +41,20 @@ class SurfaceSuite extends FunSuite {
   lazy val trees = wildcardImportStatics.filter(s =>
     s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api"))
   )
-  lazy val tokens = reflectedTokens
+  private lazy val tokenRoot = symbolOf[scala.meta.tokens.Token].asRoot
+  lazy val tokens = filterFullNames(tokenRoot.allLeafs, isPublic).sorted
   lazy val core = allStatics
     .diff(trees)
     .diff(tokens)
+    .diff(filterFullNames(tokenRoot.allLeafs, isPrivateWithin))
+    .diff(filterFullNames(tokenRoot.allBranches, x => isPrivateWithin(x) || isPublic(x)))
     .map(fullName => (fullName, wildcardImportStatics.contains(fullName)))
     .toMap
   lazy val extensionSurface = explore.extensionSurface("scala.meta").filterNot(lsp4s)
-  lazy val coreSurface =
-    extensionSurface.filter(entry =>
-      !(tokens ++ trees).exists(noncore => entry.startsWith(noncore))
-    )
+  lazy val coreSurface = {
+    val surfaceTypes = tokens ++ trees
+    extensionSurface.filter(entry => !surfaceTypes.exists(entry.startsWith))
+  }
 
   test("statics (core)") {
     val diagnostic = core.keys.toList.sorted
@@ -145,11 +150,8 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokens
       |scala.meta.tokens.Token
       |scala.meta.tokens.Token.Constant *
-      |scala.meta.tokens.Token.Ellipsis *
       |scala.meta.tokens.Token.Indentation *
       |scala.meta.tokens.Token.Interpolation *
-      |scala.meta.tokens.Token.LFLF *
-      |scala.meta.tokens.Token.Unquote *
       |scala.meta.tokens.Token.Xml *
       |scala.meta.tokens.Tokens
       |scala.meta.transversers
@@ -411,9 +413,8 @@ class SurfaceSuite extends FunSuite {
   }
 
   test("statics (tokens)") {
-    // println(tokens.toList.sorted.mkString(EOL))
     assertNoDiff(
-      tokens.toList.sorted.mkString(EOL),
+      tokens.sorted.mkString(EOL),
       """
       |scala.meta.tokens.Token.At
       |scala.meta.tokens.Token.BOF
