@@ -47,7 +47,6 @@ object AssociatedComments {
 
   def apply(tree: Tree): AssociatedComments = apply(tree.tokens)
   def apply(tokens: Tokens): AssociatedComments = {
-    import scala.meta.tokens.Token._
     val leadingBuilder = Map.newBuilder[Token, List[Comment]]
     val trailingBuilder = Map.newBuilder[Token, List[Comment]]
     val leading = List.newBuilder[Comment]
@@ -77,7 +76,7 @@ object AssociatedComments {
           leadingBuilder += currentToken -> l
           leading.clear()
         }
-        if (!currentToken.is[Comma]) {
+        if (!currentToken.is[Token.Comma]) {
           lastToken = currentToken
         }
         isLeading = false
