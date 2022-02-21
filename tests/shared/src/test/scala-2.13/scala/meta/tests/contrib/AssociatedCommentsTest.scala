@@ -250,31 +250,35 @@ class AssociatedCommentsTest extends FunSuite {
     val associatedComments = AssociatedComments(input.tokens)
     // check expected leading comments
     for ((t, comments) <- leading) {
-      assert(
-        associatedComments.leading(t).map(_.text) == comments,
+      assertEquals(
+        associatedComments.leading(t).map(_.text),
+        comments,
         s"actual leading comments didn't match expectation for ${t.syntax}"
       )
     }
     // check unexpected leading comments
     input.foreach { t =>
       if (!leading.contains(t))
-        assert(
-          associatedComments.leading(t).isEmpty,
+        assertEquals(
+          associatedComments.leading(t),
+          Set.empty[Token.Comment],
           s"unexpected leading comments for ${t.syntax}"
         )
     }
     // check expected trailing comments
     for ((t, comments) <- trailing) {
-      assert(
-        associatedComments.trailing(t).map(_.text) == comments,
+      assertEquals(
+        associatedComments.trailing(t).map(_.text),
+        comments,
         s"actual trailing comments didn't match expectation for ${t.syntax}"
       )
     }
     // check unexpected trailing comments
     input.foreach { t =>
       if (!trailing.contains(t))
-        assert(
-          associatedComments.trailing(t).isEmpty,
+        assertEquals(
+          associatedComments.trailing(t),
+          Set.empty[Token.Comment],
           s"unexpected trailing comments for ${t.getClass}"
         )
     }
