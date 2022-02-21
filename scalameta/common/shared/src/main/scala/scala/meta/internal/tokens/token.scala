@@ -6,7 +6,6 @@ import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
-import org.scalameta.internal.MacroHelpers
 
 // @freeform and @fixed are specialized versions of @org.scalameta.adt.leaf for scala.meta tokens.
 
@@ -18,16 +17,14 @@ class fixed(name: String) extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro TokenNamerMacros.fixed
 }
 
-class TokenNamerMacros(val c: Context) extends MacroHelpers {
+class TokenNamerMacros(val c: Context) extends TokenNamerMacroHelpers {
   import c.universe._
 
   val Unsupported = tq"_root_.scala.`package`.UnsupportedOperationException"
   val Dialect = tq"_root_.scala.meta.Dialect"
   val Input = tq"_root_.scala.meta.inputs.Input"
-  val Token = tq"_root_.scala.meta.tokens.Token"
   val OptionsClass = tq"_root_.scala.meta.prettyprinters.Syntax.Options"
   val OptionsModule = q"_root_.scala.meta.prettyprinters.Syntax.Options"
-  val Classifier = tq"_root_.scala.meta.classifiers.Classifier"
   val Int = tq"_root_.scala.Int"
   val PositionClass = tq"_root_.scala.meta.inputs.Position"
   val PositionModule = q"_root_.scala.meta.inputs.Position"
@@ -52,10 +49,10 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
           cdef
         val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" =
           mdef
+        val unapplyParams = paramss.head
         val stats1 = ListBuffer[Tree]() ++ stats
         val anns1 = ListBuffer[Tree]() ++ mods.annotations
         def mods1 = mods.mapAnnotations(_ => anns1.toList)
-        val parents1 = ListBuffer[Tree]() ++ parents
         val mstats1 = ListBuffer[Tree]() ++ mstats
         val manns1 = ListBuffer[Tree]() ++ mmods.annotations
         def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
@@ -70,15 +67,7 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
         manns1 += q"new $TokenMetadataModule.tokenCompanion"
 
         // step 2: generate boilerplate required by the classifier infrastructure
-        val q"..$classifierBoilerplate" = q"""
-        private object sharedClassifier extends $Classifier[$Token, $name] {
-          def apply(x: $Token): _root_.scala.Boolean = x.isInstanceOf[$name]
-        }
-        implicit def classifier[T <: $Token]: $Classifier[T, $name] = {
-          sharedClassifier.asInstanceOf[$Classifier[T, $name]]
-        }
-      """
-        mstats1 ++= classifierBoilerplate
+        mstats1 ++= getClassifierBoilerplate(cdef, unapplyParams.isEmpty)
 
         // step 3: perform manual mixin composition in order to avoid the creation of Token$class.class.
         // We kinda have to do that, because we want to have a `Token.Class` class.
@@ -108,8 +97,7 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
         }
 
         // step 6: generate implementation of `Companion.unapply`
-        val unapplyParams = paramss.head
-        if (unapplyParams.length != 0) {
+        if (unapplyParams.nonEmpty) {
           val successTargs = unapplyParams.map(_.tpt)
           val successTpe = tq"(..$successTargs)"
           val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
@@ -119,15 +107,13 @@ class TokenNamerMacros(val c: Context) extends MacroHelpers {
             else _root_.scala.Some($successArgs)
           }
         """
-        } else {
-          mstats1 += q"def unapply(x: $name): Boolean = true"
         }
 
         // step 7: generate boilerplate parameters
         var boilerplateParams = List(q"val input: $Input", q"val dialect: $Dialect")
         if (!hasMethod("start")) boilerplateParams :+= q"val start: $Int"
         if (!hasMethod("end")) boilerplateParams :+= q"val end: $Int"
-        var paramss1 = (boilerplateParams ++ paramss.head) +: paramss.tail
+        val paramss1 = (boilerplateParams ++ unapplyParams) +: paramss.tail
 
         // step 8: generate implementation of `Companion.apply`
         val applyParamss = paramss1.map(_.map(_.duplicate))

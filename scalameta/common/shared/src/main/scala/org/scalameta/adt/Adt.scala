@@ -73,7 +73,13 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
 
   def branch(annottees: Tree*): Tree =
     annottees.transformAnnottees(new ImplTransformer {
-      override def transformTrait(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+      override def transformTrait(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] =
+        transformImpl(cdef, mdef)
+
+      override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] =
+        transformImpl(cdef, mdef)
+
+      private def transformImpl(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
         val ClassDef(
           mods @ Modifiers(flags, privateWithin, anns),
           name,
