@@ -4151,10 +4151,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val isIndented = acceptOpt[Indentation.Indent]
 
     while (!token.is[StatSeqEnd]) {
-      def isDefinedInEllipsis = {
-        if (token.is[LeftParen] || token.is[LeftBrace]) next(); statpf.isDefinedAt(token)
-      }
-      if (statpf.isDefinedAt(token) || (token.is[Ellipsis] && ahead(isDefinedInEllipsis)))
+      if (statpf.isDefinedAt(token))
         stats += statpf(token)
       else if (!token.is[StatSep])
         syntaxError(errorMsg + s" ${token.name}", at = token)
