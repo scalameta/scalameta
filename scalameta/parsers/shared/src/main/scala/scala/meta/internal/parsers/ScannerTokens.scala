@@ -107,19 +107,22 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
       def strictNext: Token = getStrictAfterSafe(nextSafe)
 
       def isLeadingInfixOperator: Boolean = dialect.allowSignificantIndentation && {
-        val parts = token.text.split("_")
-        parts.nonEmpty &&
-        parts.last.forall(Chars.isOperatorPart) &&
-        !token.text.startsWith("@") && {
-          val nextSafeToken = nextSafe
-          nextSafeToken.is[Whitespace] && {
-            val nextToken = getStrictAfterSafe(nextSafeToken)
-            nextToken.is[Ident] || nextToken.is[Interpolation.Id] ||
-            nextToken.is[Literal] || nextToken.is[LeftParen] ||
-            nextToken.is[LeftBrace]
-          }
+        val text = token.text
+        @tailrec
+        def iter(idx: Int, nonEmpty: Boolean): Boolean = {
+          val ch = text(idx)
+          if (ch == '_') nonEmpty || idx > 0 && iter(idx - 1, false)
+          else Chars.isOperatorPart(ch) && (idx == 0 || iter(idx - 1, true))
         }
-      }
+        text.isEmpty || (text(0) != '@' && iter(text.length - 1, false))
+      } && (nextSafe match {
+        case nt: Whitespace =>
+          getStrictAfterSafe(nt) match {
+            case _: Ident | _: Interpolation.Id | _: LeftParen | _: LeftBrace | _: Literal => true
+            case _ => false
+          }
+        case _ => false
+      })
 
     }
   }
@@ -130,65 +133,70 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
 
     @classifier
     trait TypeIntro {
-      def unapply(token: Token): Boolean = {
-        token.is[Ident] || token.is[KwSuper] || token.is[KwThis] ||
-        token.is[LeftParen] || token.is[At] || token.is[Underscore] ||
-        token.is[Unquote] || (token.is[Literal] && dialect.allowLiteralTypes)
+      def unapply(token: Token): Boolean = token match {
+        case _: Ident | _: KwSuper | _: KwThis | _: LeftParen | _: At | _: Underscore |
+            _: Unquote =>
+          true
+        case _: Literal => dialect.allowLiteralTypes
+        case _ => false
       }
     }
 
     @classifier
     trait EndMarkerWord {
-      def unapply(token: Token): Boolean = {
-        token.is[Ident] || token.is[KwIf] || token.is[KwWhile] || token.is[KwFor] ||
-        token.is[KwMatch] || token.is[KwTry] || token.is[KwNew] || token.is[KwThis] ||
-        token.is[KwGiven] || token.is[KwVal]
+      def unapply(token: Token): Boolean = token match {
+        case _: Ident | _: KwIf | _: KwWhile | _: KwFor | _: KwMatch | _: KwTry | _: KwNew |
+            _: KwThis | _: KwGiven | _: KwVal =>
+          true
+        case _ => false
       }
     }
 
     @classifier
     trait StopScanToken {
-      def unapply(token: Token): Boolean = {
-        token.is[KwPackage] || token.is[KwExport] || token.is[KwImport] ||
-        token.is[KwIf] || token.is[KwElse] || token.is[KwWhile] || token.is[KwDo] ||
-        token.is[KwFor] || token.is[KwYield] || token.is[KwNew] || token.is[KwTry] ||
-        token.is[KwCatch] || token.is[KwFinally] || token.is[KwThrow] || token.is[KwReturn] ||
-        token.is[KwMatch] || token.is[EOF] || token.is[Semicolon] || token.is[Modifier] || token
-          .is[DefIntro]
+      def unapply(token: Token): Boolean = token match {
+        case _: KwPackage | _: KwExport | _: KwImport | _: KwIf | _: KwElse | _: KwWhile | _: KwDo |
+            _: KwFor | _: KwYield | _: KwNew | _: KwTry | _: KwCatch | _: KwFinally | _: KwThrow |
+            _: KwReturn | _: KwMatch | _: EOF | _: Semicolon | Modifier() | DefIntro() =>
+          true
+        case _ => false
       }
     }
 
     @classifier
     trait EndMarkerIntro {
-      def unapply(token: Token): Boolean = {
-        dialect.allowEndMarker &&
-        token.is[Ident] &&
-        token.text == "end" &&
-        token.strictNext.is[EndMarkerWord] &&
-        (token.next.strictNext.is[AtEOL] || token.next.strictNext.is[EOF])
+      def unapply(token: Token): Boolean = token match {
+        case Ident("end") if dialect.allowEndMarker =>
+          val nt = token.strictNext
+          nt.is[EndMarkerWord] && {
+            val nt2 = nt.strictNext
+            nt2.is[EOF] || nt2.is[AtEOL]
+          }
+        case _ => false
       }
     }
     // then  else  do  catch  finally  yield  match
     @classifier
     trait CanContinueOnNextLine {
-      def unapply(token: Token): Boolean = {
-        token.is[KwThen] || token.is[KwElse] || token.is[KwDo] ||
-        token.is[KwCatch] || token.is[KwFinally] || token.is[KwYield] ||
-        token.is[KwMatch]
+      def unapply(token: Token): Boolean = token match {
+        case _: KwThen | _: KwElse | _: KwDo | _: KwCatch | _: KwFinally | _: KwYield |
+            _: KwMatch =>
+          true
+        case _ => false
       }
     }
 
     @classifier
     trait ExprIntro {
-      def unapply(token: Token): Boolean = {
-        (token.is[Ident] && !token.is[SoftModifier] && !token.is[EndMarkerIntro]) ||
-        token.is[Literal] || token.is[Interpolation.Id] || token.is[Xml.Start] ||
-        token.is[KwDo] || token.is[KwFor] || token.is[KwIf] ||
-        token.is[KwNew] || token.is[KwReturn] || token.is[KwSuper] ||
-        token.is[KwThis] || token.is[KwThrow] || token.is[KwTry] || token.is[KwWhile] ||
-        token.is[LeftParen] || token.is[LeftBrace] || token.is[Underscore] ||
-        token.is[Unquote] || token.is[MacroSplice] || token.is[MacroQuote] ||
-        token.is[Indentation.Indent] || (token.is[LeftBracket] && dialect.allowPolymorphicFunctions)
+      def unapply(token: Token): Boolean = token match {
+        case _: Ident => !token.is[SoftModifier] && !token.is[EndMarkerIntro]
+        case _: Literal | _: Interpolation.Id | _: Xml.Start | _: KwDo | _: KwFor | _: KwIf |
+            _: KwNew | _: KwReturn | _: KwSuper | _: KwThis | _: KwThrow | _: KwTry | _: KwWhile |
+            _: LeftParen | _: LeftBrace | _: Underscore | _: Unquote | _: MacroSplice |
+            _: MacroQuote | _: Indentation.Indent =>
+          true
+        case _: LeftBracket => dialect.allowPolymorphicFunctions
+        case _ => false
       }
     }
 
@@ -214,11 +222,11 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
     trait InlineMatchMod {
       @inline def unapply(token: Token): Boolean =
         token.is[soft.KwInline] && matchesNext(token.next)
-      private[Classifiers] def matchesNext(nextToken: Token): Boolean = {
-        nextToken.is[LeftParen] || nextToken.is[LeftBrace] || nextToken.is[KwNew] ||
-        nextToken.is[Ident] || nextToken.is[Literal] || nextToken.is[Interpolation.Id] ||
-        nextToken.is[Xml.Start] || nextToken.is[KwSuper] || nextToken.is[KwThis] ||
-        nextToken.is[MacroSplice] || nextToken.is[MacroQuote]
+      private[Classifiers] def matchesNext(token: Token): Boolean = token match {
+        case _: LeftParen | _: LeftBrace | _: KwNew | _: Ident | _: Literal | _: Interpolation.Id |
+            _: Xml.Start | _: KwSuper | _: KwThis | _: MacroSplice | _: MacroQuote =>
+          true
+        case _ => false
       }
     }
 
@@ -231,31 +239,34 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
 
     @classifier
     trait DefIntro {
-      def unapply(token: Token): Boolean = {
-        token.is[Modifier] || token.is[At] ||
-        token.is[TemplateIntro] || token.is[DclIntro] ||
-        (token.is[Unquote] && token.next.is[DefIntro]) ||
-        (token.is[Ellipsis] && token.next.is[DefIntro]) ||
-        (token.is[KwCase] && token.next.isClassOrObjectOrEnum)
+      @tailrec
+      final def unapply(token: Token): Boolean = token match {
+        case _: At | Modifier() | TemplateIntro() | DclIntro() => true
+        case _: Unquote | _: Ellipsis => unapply(token.next)
+        case _: KwCase => token.next.isClassOrObjectOrEnum
+        case _ => false
       }
     }
 
     @classifier
     trait TemplateIntro {
-      def unapply(token: Token): Boolean = {
-        token.is[Modifier] || token.is[At] ||
-        token.is[KwClass] || token.is[KwObject] || token.is[KwTrait] ||
-        (token.is[Unquote] && token.next.is[TemplateIntro]) ||
-        (token.is[KwCase] && token.next.isClassOrObjectOrEnum)
+      @tailrec
+      final def unapply(token: Token): Boolean = token match {
+        case _: At | _: KwClass | _: KwObject | _: KwTrait | Modifier() => true
+        case _: Unquote => unapply(token.next)
+        case _: KwCase => token.next.isClassOrObjectOrEnum
+        case _ => false
       }
     }
 
     @classifier
     trait DclIntro {
-      def unapply(token: Token): Boolean = {
-        token.is[KwDef] || token.is[KwType] || token.is[KwEnum] ||
-        token.is[KwVal] || token.is[KwVar] || token.is[KwGiven] ||
-        token.is[KwExtension] || (token.is[Unquote] && token.next.is[DclIntro])
+      @tailrec
+      final def unapply(token: Token): Boolean = token match {
+        case _: KwDef | _: KwType | _: KwEnum | _: KwVal | _: KwVar | _: KwGiven | KwExtension() =>
+          true
+        case _: Unquote => unapply(token.next)
+        case _ => false
       }
     }
 
@@ -263,15 +274,18 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
     trait KwExtension {
       def unapply(token: Token) = {
         // Logic taken from the Scala 3 parser
-        token.is[soft.KwExtension] && (token.next.is[LeftParen] || token.next.is[LeftBracket])
-
+        token.is[soft.KwExtension] && (token.next match {
+          case _: LeftParen | _: LeftBracket => true
+          case _ => false
+        })
       }
     }
 
     @classifier
     trait Modifier {
-      def unapply(token: Token): Boolean = {
-        token.is[ModifierKeyword] || token.is[SoftModifier]
+      def unapply(token: Token): Boolean = token match {
+        case _: ModifierKeyword | SoftModifier() => true
+        case _ => false
       }
     }
 
@@ -287,86 +301,85 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
 
     @classifier
     trait NonlocalModifier {
-      def unapply(token: Token): Boolean = {
-        token.is[KwPrivate] || token.is[KwProtected] ||
-        token.is[KwOverride] || token.is[soft.KwOpen]
+      def unapply(token: Token): Boolean = token match {
+        case _: KwPrivate | _: KwProtected | _: KwOverride | soft.KwOpen() => true
+        case _ => false
       }
     }
 
     @classifier
     trait StatSeqEnd {
-      def unapply(token: Token): Boolean = {
-        token.is[RightBrace] || token.is[EOF] || token.is[Indentation.Outdent]
+      def unapply(token: Token): Boolean = token match {
+        case _: RightBrace | _: EOF | _: Indentation.Outdent => true
+        case _ => false
       }
     }
 
     @classifier
     trait CaseDefEnd {
-      def unapply(token: Token): Boolean = {
-        token.is[RightBrace] || token.is[EOF] || token.is[Indentation.Outdent] ||
-        (token.is[KwCase] && !token.next.isClassOrObject) || token.is[RightParen] ||
-        (token.is[Ellipsis] && token.next.is[KwCase])
+      def unapply(token: Token): Boolean = token match {
+        case _: RightBrace | _: RightParen | _: EOF | _: Indentation.Outdent => true
+        case _: KwCase => !token.next.isClassOrObject
+        case _: Ellipsis => token.next.is[KwCase]
+        case _ => false
       }
     }
 
     @classifier
     trait CanStartIndent {
-      def unapply(token: Token): Boolean = {
-        token.is[KwYield] || token.is[KwTry] || token.is[KwCatch] || token.is[KwFinally] ||
-        token.is[KwMatch] || token.is[KwDo] || token.is[KwFor] || token.is[KwThen] ||
-        token.is[KwElse] || token.is[Equals] || token.is[KwWhile] || token.is[KwIf] ||
-        token.is[RightArrow] || token.is[KwReturn] || token.is[LeftArrow] ||
-        token.is[ContextArrow] || (
-          token.is[KwWith] && {
-            val next = token.next
-            next.is[DefIntro] || next.is[KwImport] || next.is[KwExport]
+      def unapply(token: Token): Boolean = token match {
+        case _: KwYield | _: KwTry | _: KwCatch | _: KwFinally | _: KwMatch | _: KwDo | _: KwFor |
+            _: KwThen | _: KwElse | _: Equals | _: KwWhile | _: KwIf | _: RightArrow | _: KwReturn |
+            _: LeftArrow | _: ContextArrow =>
+          true
+        case _: KwWith =>
+          token.next match {
+            case _: KwImport | _: KwExport | DefIntro() => true
+            case _ => false
           }
-        )
+        case _ => false
       }
     }
 
     @classifier
     trait CantStartStat {
-      def unapply(token: Token): Boolean = {
-        token.is[KwCatch] || token.is[KwElse] || token.is[KwExtends] ||
-        token.is[KwFinally] || token.is[KwForsome] || token.is[KwMatch] ||
-        token.is[KwWith] || token.is[KwYield] ||
-        token.is[RightParen] || token.is[LeftBracket] || token.is[RightBracket] ||
-        token.is[RightBrace] || token.is[Comma] || token.is[Colon] ||
-        token.is[Dot] || token.is[Equals] || token.is[Semicolon] ||
-        token.is[Hash] || token.is[RightArrow] || token.is[LeftArrow] ||
-        token.is[Subtype] || token.is[Supertype] || token.is[Viewbound] ||
-        token.is[LF] || token.is[LFLF] || token.is[EOF]
-
+      def unapply(token: Token): Boolean = token match {
+        case _: KwCatch | _: KwElse | _: KwExtends | _: KwFinally | _: KwForsome | _: KwMatch |
+            _: KwWith | _: KwYield | _: RightParen | _: LeftBracket | _: RightBracket |
+            _: RightBrace | _: Comma | _: Colon | _: Dot | _: Equals | _: Semicolon | _: Hash |
+            _: RightArrow | _: LeftArrow | _: Subtype | _: Supertype | _: Viewbound | _: LF |
+            _: LFLF | _: EOF =>
+          true
+        case _ => false
       }
     }
 
     @classifier
     trait CanEndStat {
-      def unapply(token: Token): Boolean = {
-        token.is[Ident] || token.is[KwGiven] || token.is[Literal] ||
-        token.is[Interpolation.End] || token.is[Xml.End] ||
-        token.is[KwReturn] || token.is[KwThis] || token.is[KwType] ||
-        token.is[RightParen] || token.is[RightBracket] || token.is[RightBrace] ||
-        token.is[Underscore] || token.is[Ellipsis] || token.is[Unquote] ||
-        token.prev.is[EndMarkerIntro]
+      def unapply(token: Token): Boolean = token match {
+        case _: Ident | _: KwGiven | _: Literal | _: Interpolation.End | _: Xml.End | _: KwReturn |
+            _: KwThis | _: KwType | _: RightParen | _: RightBracket | _: RightBrace |
+            _: Underscore | _: Ellipsis | _: Unquote =>
+          true
+        case _ => token.prev.is[EndMarkerIntro]
       }
     }
 
     @classifier
     trait StatSep {
-      def unapply(token: Token): Boolean = {
-        token.is[Semicolon] || token.is[LF] || token.is[LFLF] || token.is[EOF]
+      def unapply(token: Token): Boolean = token match {
+        case _: Semicolon | _: LF | _: LFLF | _: EOF => true
+        case _ => false
       }
     }
 
     @classifier
     trait CanStartColonEol {
-      def unapply(token: Token): Boolean = {
-        token.is[KwTrait] || token.is[KwClass] ||
-        token.is[KwObject] || token.is[KwEnum] ||
-        token.is[KwType] || token.is[KwPackage] ||
-        token.is[KwGiven] || token.is[KwNew]
+      def unapply(token: Token): Boolean = token match {
+        case _: KwTrait | _: KwClass | _: KwObject | _: KwEnum | _: KwType | _: KwPackage |
+            _: KwGiven | _: KwNew =>
+          true
+        case _ => false
       }
     }
 
