@@ -3082,22 +3082,23 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             val vbounds = new ListBuffer[Type]
             val cbounds = new ListBuffer[Type]
             if (ctxBoundsAllowed) {
-              while (token.is[Viewbound]) {
+              @inline def getBound(): Type = {
+                next()
+                token match {
+                  case t: Ellipsis => ellipsis[Type](1)
+                  case _ => typ()
+                }
+              }
+              if (token.is[Viewbound]) {
                 if (!dialect.allowViewBounds) {
                   val msg = "Use an implicit parameter instead.\n" +
                     "Example: Instead of `def f[A <% Int](a: A)` " +
                     "use `def f[A](a: A)(implicit ev: A => Int)`."
                   syntaxError(s"View bounds are not supported. $msg", at = token)
                 }
-                next()
-                if (token.is[Ellipsis]) vbounds += ellipsis[Type](1)
-                else vbounds += typ()
+                do vbounds += getBound() while (token.is[Viewbound])
               }
-              while (token.is[Colon]) {
-                next()
-                if (token.is[Ellipsis]) cbounds += ellipsis[Type](1)
-                else cbounds += typ()
-              }
+              while (token.is[Colon]) cbounds += getBound()
             }
             Type.Param(mods, name, tparams, tbounds, vbounds.toList, cbounds.toList)
         }
@@ -3865,13 +3866,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val tpe = typeParser
         val name = autoPos(Name.Anonymous())
         val argss = mutable.ListBuffer[List[Term]]()
-        var done = false
-        newlineOpt()
-        while (isPendingArglist && !done) {
+        @inline def body() = {
           argss += argumentExprs()
-          if (!allowArgss) done = true
           newlineOpt()
         }
+        newlineOpt()
+        if (allowArgss)
+          while (isPendingArglist) body()
+        else if (isPendingArglist) body()
         Init(tpe, name, argss.toList)
     }
   }
@@ -4149,13 +4151,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   ): List[T] = {
     val stats = new ListBuffer[T]
     val isIndented = acceptOpt[Indentation.Indent]
+    val statpfAdd = statpf.runWith(stats += _)
 
     while (!token.is[StatSeqEnd]) {
-      if (statpf.isDefinedAt(token))
-        stats += statpf(token)
-      else if (!token.is[StatSep])
-        syntaxError(errorMsg + s" ${token.name}", at = token)
-      acceptStatSepOpt()
+      if (statpfAdd(token)) acceptStatSepOpt()
+      else if (token.is[StatSep]) acceptStatSep()
+      else syntaxError(errorMsg + s" ${token.name}", at = token)
     }
     if (isIndented) accept[Indentation.Outdent]
     stats.toList
