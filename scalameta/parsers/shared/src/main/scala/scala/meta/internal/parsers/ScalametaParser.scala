@@ -509,7 +509,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val result = token match {
           case LeftParen() => inParens(unquote[T])
           case LeftBrace() => inBraces(unquote[T])
-          case Unquote() => unquote[T]
+          case t: Unquote => unquote[T](t)
           case t => syntaxError(s"$$, ( or { expected but ${t.name} found", at = t)
         }
         result match {
@@ -531,46 +531,43 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def unquote[T <: Tree: AstInfo](advance: Boolean = true): T = autoPos {
-    token match {
-      case unquote: Unquote =>
-        require(unquote.input.chars(unquote.start + 1) != '$')
-        if (dialect.allowUnquotes) {
-          // NOTE: I considered having Input.Slice produce absolute positions from the get-go,
-          // but then such positions wouldn't be usable with Input.Slice.chars.
-          val unquotedTree = {
-            try {
-              val unquoteInput = Input.Slice(input, unquote.start + 1, unquote.end)
-              val unquoteDialect = dialect.copy(
-                allowTermUnquotes = false,
-                allowPatUnquotes = false,
-                allowMultilinePrograms = true
-              )
-              val unquoteParser = new ScalametaParser(unquoteInput)(unquoteDialect)
-              if (dialect.allowTermUnquotes) unquoteParser.parseUnquoteTerm()
-              else if (dialect.allowPatUnquotes) unquoteParser.parseUnquotePat()
-              else unreachable
-            } catch {
-              case ex: Exception => throw ex.absolutize
-            }
-          }
-          if (advance) {
-            next()
-            implicitly[AstInfo[T]].quasi(0, unquotedTree)
-          } else
-            ahead {
-              implicitly[AstInfo[T]].quasi(0, unquotedTree)
-            }
-        } else {
-          syntaxError(s"$dialect doesn't support unquotes", at = unquote)
-        }
-      case _ =>
-        unreachable(debug(token))
+  def unquote[T <: Tree: AstInfo](unquote: Unquote, advance: Boolean = true): T = autoPos {
+    require(unquote.input.chars(unquote.start + 1) != '$')
+    if (!dialect.allowUnquotes) {
+      syntaxError(s"$dialect doesn't support unquotes", at = unquote)
     }
+    // NOTE: I considered having Input.Slice produce absolute positions from the get-go,
+    // but then such positions wouldn't be usable with Input.Slice.chars.
+    val unquotedTree = {
+      try {
+        val unquoteInput = Input.Slice(input, unquote.start + 1, unquote.end)
+        val unquoteDialect = dialect.copy(
+          allowTermUnquotes = false,
+          allowPatUnquotes = false,
+          allowMultilinePrograms = true
+        )
+        val unquoteParser = new ScalametaParser(unquoteInput)(unquoteDialect)
+        if (dialect.allowTermUnquotes) unquoteParser.parseUnquoteTerm()
+        else if (dialect.allowPatUnquotes) unquoteParser.parseUnquotePat()
+        else unreachable
+      } catch {
+        case ex: Exception => throw ex.absolutize
+      }
+    }
+    if (advance) {
+      next()
+      implicitly[AstInfo[T]].quasi(0, unquotedTree)
+    } else
+      ahead {
+        implicitly[AstInfo[T]].quasi(0, unquotedTree)
+      }
   }
 
   def unquote[T <: Tree: AstInfo]: T =
-    unquote[T](advance = true) // to write `unquote[T]` without round braces
+    token match {
+      case t: Unquote => unquote[T](t)
+      case _ => unreachable(debug(token))
+    }
 
   final def tokenSeparated[Sep <: Token: TokenInfo, T <: Tree: AstInfo](
       sepFirst: Boolean,
@@ -672,8 +669,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       def paramOrType(): Tree = token match {
         case t: Ellipsis =>
           ellipsis[Tree](t)
-        case Unquote() =>
-          unquote[Tree]
+        case t: Unquote =>
+          unquote[Tree](t)
         case KwImplicit() if !hasImplicits =>
           next()
           hasImplicits = true
@@ -1075,8 +1072,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val res = atCurPos(ctor(name))
         if (advance) next()
         res
-      case Unquote() =>
-        unquote[T](advance)
+      case t: Unquote =>
+        unquote[T](t, advance)
       case _ =>
         syntaxErrorExpected[Ident]
     }
@@ -2336,12 +2333,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         iter
       case CaseIntro() =>
         next()
-        if (token.is[Unquote]) {
-          cases += unquote[Case]
-          while (token.is[StatSep]) next()
-        } else {
-          cases += caseClause()
-          if (token.is[StatSep] && ahead(token.is[CaseIntro])) acceptStatSep()
+        token match {
+          case t: Unquote =>
+            cases += unquote[Case](t)
+            while (token.is[StatSep]) next()
+          case _ =>
+            cases += caseClause()
+            if (token.is[StatSep] && ahead(token.is[CaseIntro])) acceptStatSep()
         }
         iter
       case _ =>
@@ -2368,8 +2366,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enumerator] = token match {
     case _: KwIf if !isFirst => autoPos(Enumerator.Guard(guard().get)) :: Nil
     case t: Ellipsis => ellipsis[Enumerator](t, 1) :: Nil
-    case _: Unquote if ahead(!token.is[Equals] && !token.is[LeftArrow]) =>
-      unquote[Enumerator] :: Nil // support for q"for ($enum1; ..$enums; $enum2)"
+    case t: Unquote if ahead(!token.is[Equals] && !token.is[LeftArrow]) =>
+      unquote[Enumerator](t) :: Nil // support for q"for ($enum1; ..$enums; $enum2)"
     case _ => generator(!isFirst, allowNestedIf)
   }
 
@@ -2754,7 +2752,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def modifier(): Mod =
     autoPos(token match {
-      case Unquote() => unquote[Mod]
+      case t: Unquote => unquote[Mod](t)
       case t: Ellipsis => ellipsis[Mod](t, 1)
       case KwAbstract() => next(); Mod.Abstract()
       case KwFinal() => next(); Mod.Final()
@@ -2783,7 +2781,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
     def fail() = syntaxError(s"modifier expected but ${parser.token.name} found", at = parser.token)
     token match {
-      case Unquote() => unquote[Mod]
+      case t: Unquote => unquote[Mod](t)
       case At() => annot()
       case KwPrivate() => privateModifier()
       case KwProtected() => protectedModifier()
@@ -2809,7 +2807,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def ctorModifiers(): Option[Mod] = token match {
-    case Unquote() if ahead(token.is[LeftParen]) => Some(unquote[Mod])
+    case t: Unquote if ahead(token.is[LeftParen]) => Some(unquote[Mod](t))
     case t: Ellipsis => Some(ellipsis[Mod](t, 1))
     case KwPrivate() => Some(privateModifier())
     case KwProtected() => Some(protectedModifier())
@@ -2817,15 +2815,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def tparamModifiers(): Option[Mod] = {
-    if (token.is[Unquote] && !ahead(token.is[Ident] || token.is[Unquote])) None
-    else
-      token match {
-        case Unquote() => Some(unquote[Mod])
-        case t: Ellipsis => Some(ellipsis[Mod](t, 1))
-        case Ident("+") => Some(autoPos({ next(); Mod.Covariant() }))
-        case Ident("-") => Some(autoPos({ next(); Mod.Contravariant() }))
-        case _ => None
-      }
+    token match {
+      case t: Unquote =>
+        if (ahead(token.is[Ident] || token.is[Unquote])) Some(unquote[Mod](t)) else None
+      case t: Ellipsis => Some(ellipsis[Mod](t, 1))
+      case Ident("+") => Some(autoPos({ next(); Mod.Covariant() }))
+      case Ident("-") => Some(autoPos({ next(); Mod.Contravariant() }))
+      case _ => None
+    }
   }
 
   def modifiers(
@@ -3074,15 +3071,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case Some(q: Mod.Quasi) if endTparamQuasi =>
         q.become[Type.Param.Quasi]
       case _ =>
-        val name =
-          if (token.is[Ident]) typeName()
-          else if (token.is[Unquote]) unquote[Name]
-          else if (token.is[Underscore] && allowUnderscore) {
+        val name = token match {
+          case _: Ident => typeName()
+          case t: Unquote => unquote[Name](t)
+          case _: Underscore if allowUnderscore =>
             autoPos { next(); Name.Anonymous() }
-          } else {
+          case _ =>
             if (allowUnderscore) syntaxError("identifier or `_' expected", at = token)
             else syntaxError("identifier expected", at = token)
-          }
+        }
         name match {
           case q: Quasi if endTparamQuasi =>
             q.become[Type.Param.Quasi]
@@ -3205,7 +3202,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     token match {
       case Wildcard() => next(); Importee.Wildcard()
       case _: KwGiven => next(); if (token.is[Ident]) Importee.Given(typ()) else Importee.GivenAll()
-      case t: Unquote => Importee.Name(unquote[Name.Quasi])
+      case t: Unquote => Importee.Name(unquote[Name.Quasi](t))
       case _ => val name = termName(); Importee.Name(copyPos(name)(Name.Indeterminate(name.value)))
     }
   }
@@ -3862,8 +3859,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else if (allowBraces) newLineOptWhenFollowedBy[LeftBrace]
     }
     token match {
-      case Unquote() if !ahead(isPendingArglist) =>
-        unquote[Init]
+      case t: Unquote if !ahead(isPendingArglist) =>
+        unquote[Init](t)
       case _ =>
         val tpe = typeParser
         val name = autoPos(Name.Anonymous())
@@ -3897,9 +3894,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         termName()
       case Underscore() | KwThis() =>
         autoPos { next(); Name.Anonymous() }
-      case Unquote() =>
-        if (ahead(token.is[Colon])) unquote[Name.Quasi]
-        else return unquote[Self.Quasi]
+      case t: Unquote =>
+        if (ahead(token.is[Colon])) unquote[Name.Quasi](t)
+        else return unquote[Self.Quasi](t)
       case _ =>
         syntaxError("expected identifier, `this' or unquote", at = token)
     }
@@ -4010,12 +4007,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def templateOpt(owner: TemplateOwner): Template = autoPos {
-    if (token.is[Unquote] && ahead(
-        !token.is[Dot] && !token.is[Hash] && !token.is[At] && !token.is[Ellipsis] &&
-          !token.is[LeftParen] && !token.is[LeftBracket] && !token.is[LeftBrace] &&
-          !token.is[KwWith]
-      )) {
-      unquote[Template]
+    if (token.is[Unquote] && ahead(token match {
+        case _: Dot | _: Hash | _: At | _: Ellipsis | _: LeftParen | _: LeftBracket | _: LeftBrace |
+            _: KwWith =>
+          false
+        case _ => true
+      })) {
+      unquote[Template](token.asInstanceOf[Unquote])
     } else if (token.is[KwExtends] || (token.is[Subtype] && owner.isTrait)) {
       next()
       template(
@@ -4175,8 +4173,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   val topStat: PartialFunction[Token, Stat] = {
     case t: Ellipsis =>
       ellipsis[Stat](t, 1)
-    case Unquote() =>
-      unquote[Stat]
+    case t: Unquote =>
+      unquote[Stat](t)
     case KwPackage() =>
       packageOrPackageObjectDef(topStat)
     case KwImport() =>
@@ -4235,8 +4233,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         exportStmt()
       case DefIntro() =>
         nonLocalDefOrDcl(enumCaseAllowed, secondaryConstructorAllowed)
-      case Unquote() =>
-        unquote[Stat]
+      case t: Unquote =>
+        unquote[Stat](t)
       case t: Ellipsis =>
         ellipsis[Stat](t, 1)
       case EndMarkerIntro() =>
