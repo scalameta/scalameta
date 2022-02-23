@@ -230,18 +230,16 @@ private[parsers] class LazyTokenIterator private (
       sepRegions.headOption.filter(_.isIndented && isWithinParenRegion)
     }
 
-    if (isTrailingComma) {
-      nextToken(currPos, currPos + 1, sepRegions)
-    } else if (curr.isNot[Trivia]) {
-      if (curr.is[LeftParen]) (RegionParen(false) :: sepRegions, currRef)
-      else if (curr.is[LeftBracket]) (RegionBracket :: sepRegions, currRef)
-      else if (curr.is[Comma]) {
+    def nonTrivial = curr match {
+      case _: LeftParen => (RegionParen(false) :: sepRegions, currRef)
+      case _: LeftBracket => (RegionBracket :: sepRegions, currRef)
+      case _: Comma =>
         indentationWithinParenRegion.fold {
           (sepRegions, currRef)
         } { region =>
           (sepRegions.tail, mkOutdent(region))
         }
-      } else if (curr.is[LeftBrace]) {
+      case _: LeftBrace =>
         val indentInBrace = if (isAheadNewLine(currPos)) countIndent(nextPos) else -1
         // After encountering keyword Enum we add artificial '{' on top of stack.
         // Then always after Enum next token is '{'. On token '{' we check if top of stack is '{'
@@ -256,16 +254,16 @@ private[parsers] class LazyTokenIterator private (
             RegionBrace(indentInBrace, indentOnArrow) :: sepRegions
           }
         (nextRegions, currRef)
-      } else if (curr.is[KwEnum]) {
+      case _: KwEnum =>
         (RegionEnumArtificialMark :: sepRegions, currRef)
-      } else if (curr.is[CaseIntro]) {
+      case CaseIntro() =>
         val nextRegions = sepRegions.headOption match {
           case Some(_: RegionEnum | _: RegionIndentEnum) => sepRegions
           case Some(_: RegionCase) => RegionArrow :: sepRegions.tail
           case _ => RegionArrow :: sepRegions
         }
         (nextRegions, currRef)
-      } else if (curr.is[RightBrace]) {
+      case _: RightBrace =>
         // produce outdent for every indented region before RegionBrace|RegionEnum
         @tailrec
         def nextRegions(in: List[SepRegion]): (List[SepRegion], TokenRef) = {
@@ -281,28 +279,28 @@ private[parsers] class LazyTokenIterator private (
           }
         }
         nextRegions(sepRegions)
-      } else if (curr.is[RightBracket]) {
+      case _: RightBracket =>
         val nextRegions =
           if (sepRegions.headOption.contains(RegionBracket)) sepRegions.tail
           else sepRegions
         (nextRegions, currRef)
-      } else if (curr.is[EOF]) {
+      case _: EOF =>
         sepRegions match {
           case x :: xs if x.isIndented => (xs, mkOutdent(x))
           case other => (other, currRef)
         }
-      } else if (curr.is[RightParen]) {
+      case _: RightParen =>
         sepRegions match {
           case x :: xs if x.isIndented => (xs, mkOutdent(x))
           case RegionParen(_) :: xs => (xs, currRef)
           case _ => (sepRegions, currRef)
         }
-      } else if (curr.is[LeftArrow]) {
+      case _: LeftArrow =>
         val nextRegions =
           if (sepRegions.headOption.contains(RegionArrow)) sepRegions.tail
           else sepRegions
         (nextRegions, currRef)
-      } else if (curr.is[RightArrow]) {
+      case _: RightArrow =>
         val nextRegions =
           if (sepRegions.headOption.contains(RegionArrow)) {
             // add case region for `match {` to calculate proper indentation
@@ -318,16 +316,18 @@ private[parsers] class LazyTokenIterator private (
               newRegions
           } else sepRegions
         (nextRegions, currRef)
-      } else if (dialect.allowSignificantIndentation && curr.is[KwFor]) {
+      case _: KwFor if dialect.allowSignificantIndentation =>
         val updatedSepRegions = sepRegions match {
           case RegionParen(_) :: tail => RegionParen(true) :: tail
           case _ => sepRegions
         }
         (updatedSepRegions, currRef)
-      } else {
+      case _ =>
         (sepRegions, currRef)
-      }
-    } else {
+    }
+    if (isTrailingComma) nextToken(currPos, currPos + 1, sepRegions)
+    else if (curr.isNot[Trivia]) nonTrivial
+    else {
       var i = prevPos + 1
       var lastNewlinePos = -1
       var newlineStreak = false
