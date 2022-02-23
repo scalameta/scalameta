@@ -377,6 +377,14 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
       }
     }
 
+    object Wildcard {
+      def unapply(token: Token): Boolean =
+        token.is[Underscore] || isStar(token)
+
+      def isStar(token: Token): Boolean =
+        dialect.allowStarWildcardImport && token.syntax == "*"
+    }
+
   }
 
 }

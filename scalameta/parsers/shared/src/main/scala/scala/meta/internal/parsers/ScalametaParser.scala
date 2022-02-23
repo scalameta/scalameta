@@ -3136,9 +3136,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     Import(commaSeparated(importer()))
   }
 
-  def isStarWildcard: Boolean = isStarWildcard(token)
-  def isStarWildcard(token: Token): Boolean = dialect.allowStarWildcardImport && token.syntax == "*"
-
   def importer(): Importer = autoPos {
     val sid = stableId() match {
       case q: Quasi => q.become[Term.Ref.Quasi]
@@ -3154,7 +3151,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         else if (token.is[soft.KwAs]) {
           next()
           Importer(sid, importeeRename(name(tn)) :: Nil)
-        } else if (isStarWildcard(tn.tokens.head)) {
+        } else if (Wildcard.isStar(tn.tokens.head)) {
           Importer(sid, copyPos(tn)(Importee.Wildcard()) :: Nil)
         } else {
           Importer(sid, copyPos(tn)(Importee.Name(name(tn))) :: Nil)
@@ -3202,16 +3199,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
   def importWildcardOrName(): Importee = autoPos {
-    if (token.is[Underscore] || isStarWildcard) {
-      next(); Importee.Wildcard()
-    } else if (token.is[KwGiven]) {
-      next()
-      if (token.is[Ident])
-        Importee.Given(typ())
-      else Importee.GivenAll()
-    } else if (token.is[Unquote]) Importee.Name(unquote[Name.Quasi])
-    else {
-      val name = termName(); Importee.Name(copyPos(name)(Name.Indeterminate(name.value)))
+    token match {
+      case Wildcard() => next(); Importee.Wildcard()
+      case _: KwGiven => next(); if (token.is[Ident]) Importee.Given(typ()) else Importee.GivenAll()
+      case t: Unquote => Importee.Name(unquote[Name.Quasi])
+      case _ => val name = termName(); Importee.Name(copyPos(name)(Name.Indeterminate(name.value)))
     }
   }
 
@@ -3231,7 +3223,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       // NOTE: this is completely nuts
       case from: Importee.Wildcard
           if (token.is[RightArrow] || token.is[soft.KwAs]) &&
-            ahead(token.is[Underscore] || isStarWildcard) =>
+            ahead(Wildcard.unapply(token)) =>
         nextTwice()
         from
       case other =>
