@@ -2724,12 +2724,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* -------- MODIFIERS and ANNOTATIONS ------------------------------------------- */
 
-  def accessModifier(): Mod = autoPos {
-    val mod = token match {
-      case KwPrivate() => (ref: Ref) => Mod.Private(ref)
-      case KwProtected() => (ref: Ref) => Mod.Protected(ref)
-      case other => unreachable(debug(other, other.structure))
-    }
+  private def privateModifier(): Mod = {
+    accessModifier(Mod.Private(_))
+  }
+
+  private def protectedModifier(): Mod = {
+    accessModifier(Mod.Protected(_))
+  }
+
+  private def accessModifier(mod: Ref => Mod): Mod = autoPos {
     next()
     if (!acceptOpt[LeftBracket]) mod(autoPos(Name.Anonymous()))
     else {
@@ -2759,8 +2762,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case KwImplicit() => next(); Mod.Implicit()
       case KwLazy() => next(); Mod.Lazy()
       case KwOverride() => next(); Mod.Override()
-      case KwPrivate() => accessModifier()
-      case KwProtected() => accessModifier()
+      case KwPrivate() => privateModifier()
+      case KwProtected() => protectedModifier()
       case soft.KwInline() => next(); Mod.Inline()
       case soft.KwInfix() => next(); Mod.Infix()
       case soft.KwOpen() => next(); Mod.Open()
@@ -2782,8 +2785,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     token match {
       case Unquote() => unquote[Mod]
       case At() => annot()
-      case KwPrivate() => accessModifier()
-      case KwProtected() => accessModifier()
+      case KwPrivate() => privateModifier()
+      case KwProtected() => protectedModifier()
       case KwImplicit() => next(); Mod.Implicit()
       case KwFinal() => next(); Mod.Final()
       case KwSealed() => next(); Mod.Sealed()
@@ -2808,8 +2811,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def ctorModifiers(): Option[Mod] = token match {
     case Unquote() if ahead(token.is[LeftParen]) => Some(unquote[Mod])
     case t: Ellipsis => Some(ellipsis[Mod](t, 1))
-    case KwPrivate() => Some(accessModifier())
-    case KwProtected() => Some(accessModifier())
+    case KwPrivate() => Some(privateModifier())
+    case KwProtected() => Some(protectedModifier())
     case _ => None
   }
 
