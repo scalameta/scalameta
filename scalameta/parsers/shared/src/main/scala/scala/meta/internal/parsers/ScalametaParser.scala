@@ -2327,20 +2327,25 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def caseClausesIfAny(): Option[List[Case]] = {
     val cases = new ListBuffer[Case]
-    while (token.is[CaseIntro] || token.is[Ellipsis]) {
-      if (token.is[Ellipsis]) {
+    @tailrec
+    def iter(): Unit = token match {
+      case _: Ellipsis =>
         cases += ellipsis[Case](1, accept[KwCase])
         while (token.is[StatSep]) next()
-      } else if (token.is[KwCase] && ahead(token.is[Unquote])) {
+        iter
+      case CaseIntro() =>
         next()
-        cases += unquote[Case]
-        while (token.is[StatSep]) next()
-      } else {
-        next()
-        cases += caseClause()
-      }
-      if (token.is[StatSep] && ahead(token.is[CaseIntro])) acceptStatSep()
+        if (token.is[Unquote]) {
+          cases += unquote[Case]
+          while (token.is[StatSep]) next()
+        } else {
+          cases += caseClause()
+          if (token.is[StatSep] && ahead(token.is[CaseIntro])) acceptStatSep()
+        }
+        iter
+      case _ =>
     }
+    iter()
     if (cases.isEmpty) None else Some(cases.toList)
   }
 
@@ -2359,14 +2364,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     enums.toList
   }
 
-  def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enumerator] = {
-    if (token.is[KwIf] && !isFirst) autoPos(Enumerator.Guard(guard().get)) :: Nil
-    else if (token.is[Ellipsis]) {
-      ellipsis[Enumerator](1) :: Nil
-    } else if (token.is[Unquote] &&
-      ahead(!token.is[Equals] && !token.is[LeftArrow])) { // support for q"for ($enum1; ..$enums; $enum2)"
-      unquote[Enumerator] :: Nil
-    } else generator(!isFirst, allowNestedIf)
+  def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enumerator] = token match {
+    case _: KwIf if !isFirst => autoPos(Enumerator.Guard(guard().get)) :: Nil
+    case _: Ellipsis => ellipsis[Enumerator](1) :: Nil
+    case _: Unquote if ahead(!token.is[Equals] && !token.is[LeftArrow]) =>
+      unquote[Enumerator] :: Nil // support for q"for ($enum1; ..$enums; $enum2)"
+    case _ => generator(!isFirst, allowNestedIf)
   }
 
   def quasiquoteEnumerator(): Enumerator = entrypointEnumerator()
@@ -2871,14 +2874,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def annots(skipNewLines: Boolean, allowArgss: Boolean = true): List[Mod.Annot] = {
     val annots = new ListBuffer[Mod.Annot]
-    while (token.is[At] || (token.is[Ellipsis] && ahead(token.is[At]))) {
-      if (token.is[Ellipsis]) {
-        annots += ellipsis[Mod.Annot](1, accept[At])
-      } else {
-        next()
-        if (token.is[Unquote]) annots += unquote[Mod.Annot]
-        else annots += autoEndPos(StartPosPrev)(Mod.Annot(initInsideAnnotation(allowArgss)))
-      }
+    while (token match {
+        case _: At =>
+          next()
+          if (token.is[Unquote]) annots += unquote[Mod.Annot]
+          else annots += autoEndPos(StartPosPrev)(Mod.Annot(initInsideAnnotation(allowArgss)))
+          true
+        case _: Ellipsis if ahead(token.is[At]) =>
+          annots += ellipsis[Mod.Annot](1, next())
+          true
+        case _ => false
+      }) {
       if (skipNewLines) newLineOpt()
     }
     annots.toList
@@ -4246,22 +4252,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     stats.toList
   }
 
-  def refineStat(): Option[Stat] =
-    if (token.is[Ellipsis]) {
-      Some(ellipsis[Stat](1))
-    } else if (token.is[DclIntro]) {
+  def refineStat(): Option[Stat] = token match {
+    case _: Ellipsis => Some(ellipsis[Stat](1))
+    case DclIntro() =>
       defOrDclOrSecondaryCtor(Nil) match {
         case stat if stat.isRefineStat => Some(stat)
         case other => syntaxError("is not a valid refinement declaration", at = other)
       }
-    } else if (!token.is[StatSep]) {
+    case StatSep() => None
+    case _ =>
       syntaxError(
         "illegal start of declaration" +
           (if (inFunReturnType) " (possible cause: missing `=' in front of current method body)"
            else ""),
         at = token
       )
-    } else None
+  }
 
   def localDef(implicitMod: Option[Mod.Implicit]): Stat = {
     val mods = (implicitMod ++: annots(skipNewLines = true)) ++ localModifiers()
@@ -4282,35 +4288,33 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def blockStatSeq(): List[Stat] = {
     val stats = new ListBuffer[Stat]
-    while (!token.is[StatSeqEnd] && !token.is[CaseDefEnd] && !in.observeOutdented()) {
-      if (token.is[KwExport]) {
+    while (!token.is[CaseDefEnd] && !in.observeOutdented()) token match {
+      case _: KwExport =>
         stats += exportStmt()
         acceptStatSepOpt()
-      } else if (token.is[KwImport]) {
+      case _: KwImport =>
         stats += importStmt()
         acceptStatSepOpt()
-      } else if (token.is[DefIntro] && !token.is[NonlocalModifier]) {
-        if (token.is[KwImplicit]) {
-          val implicitPos = in.tokenPos
-          next()
-          if (token.is[Ident] && token.isNot[SoftModifier]) stats += implicitClosure(BlockStat)
-          else stats += localDef(Some(atPos(implicitPos, implicitPos)(Mod.Implicit())))
-        } else {
-          stats += localDef(None)
-        }
+      case _: KwImplicit =>
+        val implicitPos = in.tokenPos
+        next()
+        if (token.is[Ident] && token.isNot[SoftModifier]) stats += implicitClosure(BlockStat)
+        else stats += localDef(Some(atPos(implicitPos, implicitPos)(Mod.Implicit())))
         if (!token.is[CaseDefEnd]) acceptStatSepOpt()
-      } else if (token.is[ExprIntro]) {
+      case t @ DefIntro() if !t.is[NonlocalModifier] =>
+        stats += localDef(None)
+        if (!token.is[CaseDefEnd]) acceptStatSepOpt()
+      case ExprIntro() =>
         stats += stat(expr(location = BlockStat, allowRepeated = false))
         if (!token.is[CaseDefEnd]) acceptStatSep()
-      } else if (token.is[StatSep]) {
+      case StatSep() =>
         next()
-      } else if (token.is[Ellipsis]) {
+      case _: Ellipsis =>
         stats += ellipsis[Stat](1)
-      } else if (token.is[EndMarkerIntro]) {
+      case EndMarkerIntro() =>
         stats += endMarker()
-      } else {
+      case _ =>
         syntaxError("illegal start of statement", at = token)
-      }
     }
     stats.toList
   }
@@ -4350,18 +4354,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def entrypointSource(): Source = source()
 
   def batchSource(statpf: PartialFunction[Token, Stat] = topStat): Source = autoPos {
-    def inBracelessPackage(): Boolean = token.is[KwPackage] && !ahead(token.is[KwObject]) && ahead {
-      qualId()
-      newLineOpt()
-      token.isNot[LeftBrace] && !(dialect.allowSignificantIndentation && isColonEol(token))
+    def inBracelessPackage(): Boolean = token.is[KwPackage] && ahead {
+      !token.is[KwObject] && {
+        qualId()
+        newLineOpt()
+        token.isNot[LeftBrace] && !isColonEol(token)
+      }
     }
-    def bracelessPackageStats(): List[Stat] = {
-      if (token.is[EOF]) {
-        Nil
-      } else if (token.is[StatSep]) {
+    def bracelessPackageStats(): List[Stat] = token match {
+      case _: EOF => Nil
+      case StatSep() =>
         next()
         bracelessPackageStats()
-      } else if (token.is[KwPackage] && !ahead(token.is[KwObject])) {
+      case _: KwPackage if !ahead(token.is[KwObject]) =>
         val startPos = in.tokenPos
         next()
         val qid = qualId()
@@ -4370,24 +4375,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           acceptStatSepOpt()
           pkg +: bracelessPackageStats()
         }
-        if (token.is[LeftBrace]) {
-          inPackage(inBraces(statSeq(statpf)))
-        } else if (isColonEol(token)) {
-          next()
-          in.observeIndented()
-          inPackage(indented(statSeq(statpf)))
-        } else {
-          List(autoEndPos(startPos)(Pkg(qid, bracelessPackageStats())))
+        token match {
+          case _: LeftBrace => inPackage(inBraces(statSeq(statpf)))
+          case t if isColonEol(t) =>
+            next()
+            in.observeIndented()
+            inPackage(indented(statSeq(statpf)))
+          case _ => List(autoEndPos(startPos)(Pkg(qid, bracelessPackageStats())))
         }
-      } else if (token.is[LeftBrace]) {
-        inBraces(statSeq(statpf))
-      } else {
-        statSeq(statpf)
-      }
+      case _: LeftBrace => inBraces(statSeq(statpf))
+      case _ => statSeq(statpf)
     }
     if (inBracelessPackage()) {
       val startPos = in.tokenPos
-      accept[KwPackage]
+      next()
       Source(List(autoEndPos(startPos)(Pkg(qualId(), bracelessPackageStats()))))
     } else {
       Source(statSeq(statpf))
