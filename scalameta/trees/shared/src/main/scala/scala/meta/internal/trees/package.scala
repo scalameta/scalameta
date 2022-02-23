@@ -140,18 +140,11 @@ package object trees {
     def isQualifiedAccessMod: Boolean = isAccessMod && accessBoundary.nonEmpty
   }
 
-  implicit class XtensionTreesMods(mods: List[Mod]) {
+  implicit class XtensionTreesMods(mods: Iterable[Mod]) {
     def has[T <: Mod](implicit classifier: Classifier[Mod, T]): Boolean =
       mods.exists(classifier.apply)
-    def getAll[T <: Mod](implicit tag: ClassTag[T], classifier: Classifier[Mod, T]): List[T] =
-      mods.collect { case m if classifier.apply(m) => m.require[T] }
-    def getIncompatible[T <: Mod, U <: Mod](
-        implicit classifier1: Classifier[Mod, T],
-        tag1: ClassTag[T],
-        classifier2: Classifier[Mod, U],
-        tag2: ClassTag[U]
-    ): List[(Mod, Mod)] =
-      getAll[T].zip(getAll[U])
+    def first[T <: Mod](implicit tag: ClassTag[T], classifier: Classifier[Mod, T]): Option[T] =
+      mods.collectFirst { case m if classifier.apply(m) => m.require[T] }
   }
 
   implicit class XtensionTreesStat(stat: Stat) {

@@ -363,7 +363,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       mods: List[Mod],
       errorMsg: String
   )(implicit classifier: Classifier[Mod, M], tag: ClassTag[M]) = {
-    mods.getAll[M].foreach(m => syntaxError(errorMsg, at = m))
+    mods.first[M].foreach(m => syntaxError(errorMsg, at = m))
   }
 
   def rejectModCombination[M1 <: Mod, M2 <: Mod](
@@ -375,11 +375,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       tag1: ClassTag[M1],
       classifier2: Classifier[Mod, M2],
       tag2: ClassTag[M2]
-  ) = {
+  ) = if (mods.has[M2]) mods.first[M1].foreach { m =>
     val errorMsg = invalidMod.errorMessage
     val forCulprit = culpritOpt.fold("")(formatCulprit)
     val enrichedErrorMsg = errorMsg + forCulprit
-    mods.getIncompatible[M1, M2].foreach { m => syntaxError(enrichedErrorMsg, at = m._1) }
+    syntaxError(enrichedErrorMsg, at = m)
   }
 
   private def formatCulprit(culprit: String): String = s" for: $culprit"
@@ -406,7 +406,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       errorMsg: String
   )(implicit classifier: Classifier[Mod, M]) = {
     if (token.isNot[T]) {
-      mods.getAll[M].foreach(m => syntaxError(errorMsg, at = m))
+      mods.first[M].foreach(m => syntaxError(errorMsg, at = m))
     }
   }
 
