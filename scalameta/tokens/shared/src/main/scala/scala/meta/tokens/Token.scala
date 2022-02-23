@@ -1,6 +1,7 @@
 package scala.meta
 package tokens
 
+import scala.math.ScalaNumber
 import scala.meta.internal.tokens._
 import scala.meta.inputs._
 import scala.meta.classifiers._
@@ -21,91 +22,112 @@ import scala.meta.internal.prettyprinters._
 }
 
 object Token {
+  // Literals (include some keywords from above, constants, interpolations and xml)
+  @branch trait Literal extends Token
+  @branch abstract class Constant[A] extends Literal {
+    val value: A
+  }
+  @branch abstract class NumericConstant[A <: ScalaNumber] extends Constant[A]
+
+  @branch trait Keyword extends Token
+  @branch trait ModifierKeyword extends Keyword
+
+  @branch trait Trivia extends Token
+  @branch trait Whitespace extends Trivia
+  @branch trait HSpace extends Whitespace
+  @branch trait AtEOL extends Whitespace
+  @branch trait EOL extends AtEOL
+
+  @branch trait Symbolic extends Token
+  @branch trait SymbolicKeyword extends Symbolic
+  @branch trait Punct extends Symbolic
+  @branch trait OpenDelim extends Punct
+  @branch trait CloseDelim extends Punct
+
   // Identifiers
   @freeform("identifier") class Ident(value: String) extends Token
 
   // Alphanumeric keywords
-  @fixed("abstract") class KwAbstract extends Token
-  @fixed("case") class KwCase extends Token
-  @fixed("catch") class KwCatch extends Token
-  @fixed("class") class KwClass extends Token
-  @fixed("def") class KwDef extends Token
-  @fixed("do") class KwDo extends Token
-  @fixed("else") class KwElse extends Token
-  @fixed("enum") class KwEnum extends Token
-  @fixed("given") class KwGiven extends Token
-  @fixed("extends") class KwExtends extends Token
-  @fixed("false") class KwFalse extends Token
-  @fixed("final") class KwFinal extends Token
-  @fixed("finally") class KwFinally extends Token
-  @fixed("for") class KwFor extends Token
-  @fixed("forSome") class KwForsome extends Token
-  @fixed("if") class KwIf extends Token
-  @fixed("implicit") class KwImplicit extends Token
-  @fixed("import") class KwImport extends Token
-  @fixed("export") class KwExport extends Token
-  @fixed("lazy") class KwLazy extends Token
-  @fixed("match") class KwMatch extends Token
-  @fixed("macro") class KwMacro extends Token
-  @fixed("new") class KwNew extends Token
-  @fixed("null") class KwNull extends Token
-  @fixed("object") class KwObject extends Token
-  @fixed("override") class KwOverride extends Token
-  @fixed("package") class KwPackage extends Token
-  @fixed("private") class KwPrivate extends Token
-  @fixed("protected") class KwProtected extends Token
-  @fixed("return") class KwReturn extends Token
-  @fixed("sealed") class KwSealed extends Token
-  @fixed("super") class KwSuper extends Token
-  @fixed("this") class KwThis extends Token
-  @fixed("throw") class KwThrow extends Token
-  @fixed("trait") class KwTrait extends Token
-  @fixed("true") class KwTrue extends Token
-  @fixed("try") class KwTry extends Token
-  @fixed("type") class KwType extends Token
-  @fixed("val") class KwVal extends Token
-  @fixed("var") class KwVar extends Token
-  @fixed("while") class KwWhile extends Token
-  @fixed("with") class KwWith extends Token
-  @fixed("yield") class KwYield extends Token
-  @fixed("then") class KwThen extends Token
+  @fixed("abstract") class KwAbstract extends ModifierKeyword
+  @fixed("case") class KwCase extends Keyword
+  @fixed("catch") class KwCatch extends Keyword
+  @fixed("class") class KwClass extends Keyword
+  @fixed("def") class KwDef extends Keyword
+  @fixed("do") class KwDo extends Keyword
+  @fixed("else") class KwElse extends Keyword
+  @fixed("enum") class KwEnum extends Keyword
+  @fixed("export") class KwExport extends Keyword
+  @fixed("extends") class KwExtends extends Keyword
+  @fixed("false") class KwFalse extends Literal
+  @fixed("final") class KwFinal extends ModifierKeyword
+  @fixed("finally") class KwFinally extends Keyword
+  @fixed("for") class KwFor extends Keyword
+  @fixed("forSome") class KwForsome extends Keyword
+  @fixed("given") class KwGiven extends Keyword
+  @fixed("if") class KwIf extends Keyword
+  @fixed("implicit") class KwImplicit extends ModifierKeyword
+  @fixed("import") class KwImport extends Keyword
+  @fixed("lazy") class KwLazy extends ModifierKeyword
+  @fixed("match") class KwMatch extends Keyword
+  @fixed("macro") class KwMacro extends Keyword
+  @fixed("new") class KwNew extends Keyword
+  @fixed("null") class KwNull extends Literal
+  @fixed("object") class KwObject extends Keyword
+  @fixed("override") class KwOverride extends ModifierKeyword
+  @fixed("package") class KwPackage extends Keyword
+  @fixed("private") class KwPrivate extends ModifierKeyword
+  @fixed("protected") class KwProtected extends ModifierKeyword
+  @fixed("return") class KwReturn extends Keyword
+  @fixed("sealed") class KwSealed extends ModifierKeyword
+  @fixed("super") class KwSuper extends Keyword
+  @fixed("then") class KwThen extends Keyword
+  @fixed("this") class KwThis extends Keyword
+  @fixed("throw") class KwThrow extends Keyword
+  @fixed("trait") class KwTrait extends Keyword
+  @fixed("true") class KwTrue extends Literal
+  @fixed("try") class KwTry extends Keyword
+  @fixed("type") class KwType extends Keyword
+  @fixed("val") class KwVal extends Keyword
+  @fixed("var") class KwVar extends Keyword
+  @fixed("while") class KwWhile extends Keyword
+  @fixed("with") class KwWith extends Keyword
+  @fixed("yield") class KwYield extends Keyword
 
   // Symbolic keywords
-  @fixed("#") class Hash extends Token
-  @fixed(":") class Colon extends Token
-  @fixed("<%") class Viewbound extends Token
-  @freeform("<-") class LeftArrow extends Token
-  @fixed("<:") class Subtype extends Token
-  @fixed("=") class Equals extends Token
-  @freeform("=>") class RightArrow extends Token
-  @fixed(">:") class Supertype extends Token
-  @fixed("@") class At extends Token
-  @fixed("_") class Underscore extends Token
-  @fixed("=>>") class TypeLambdaArrow extends Token
-  @fixed("?=>") class ContextArrow extends Token
-  @fixed("'") class MacroQuote extends Token
-  @fixed("$") class MacroSplice extends Token
+  @fixed("#") class Hash extends SymbolicKeyword
+  @fixed(":") class Colon extends SymbolicKeyword
+  @fixed("<%") class Viewbound extends SymbolicKeyword
+  @freeform("<-") class LeftArrow extends SymbolicKeyword
+  @fixed("<:") class Subtype extends SymbolicKeyword
+  @fixed("=") class Equals extends SymbolicKeyword
+  @freeform("=>") class RightArrow extends SymbolicKeyword
+  @fixed(">:") class Supertype extends SymbolicKeyword
+  @fixed("@") class At extends SymbolicKeyword
+  @fixed("_") class Underscore extends SymbolicKeyword
+  @fixed("=>>") class TypeLambdaArrow extends SymbolicKeyword
+  @fixed("?=>") class ContextArrow extends SymbolicKeyword
+  @fixed("'") class MacroQuote extends SymbolicKeyword
+  @fixed("$") class MacroSplice extends SymbolicKeyword
 
   // Delimiters
-  @fixed("(") class LeftParen extends Token
-  @fixed(")") class RightParen extends Token
-  @fixed(",") class Comma extends Token
-  @fixed(".") class Dot extends Token
-  @fixed(";") class Semicolon extends Token
-  @fixed("[") class LeftBracket extends Token
-  @fixed("]") class RightBracket extends Token
-  @fixed("{") class LeftBrace extends Token
-  @fixed("}") class RightBrace extends Token
+  @fixed("(") class LeftParen extends OpenDelim
+  @fixed(")") class RightParen extends CloseDelim
+  @fixed(",") class Comma extends Punct
+  @fixed(".") class Dot extends Punct
+  @fixed(";") class Semicolon extends Punct
+  @fixed("[") class LeftBracket extends OpenDelim
+  @fixed("]") class RightBracket extends CloseDelim
+  @fixed("{") class LeftBrace extends OpenDelim
+  @fixed("}") class RightBrace extends CloseDelim
 
-  // Literals (include some keywords from above, constants, interpolations and xml)
   object Constant {
-    @freeform("integer constant") class Int(value: scala.BigInt) extends Token
-    @freeform("long constant") class Long(value: scala.BigInt) extends Token
-    @freeform("float constant") class Float(value: scala.BigDecimal) extends Token
-    @freeform("double constant") class Double(value: scala.BigDecimal) extends Token
-    @freeform("character constant") class Char(value: scala.Char) extends Token
-    @freeform("symbol constant") class Symbol(value: scala.Symbol) extends Token
-    @freeform("string constant") class String(value: Predef.String) extends Token
+    @freeform("integer constant") class Int(value: BigInt) extends NumericConstant[BigInt]
+    @freeform("long constant") class Long(value: BigInt) extends NumericConstant[BigInt]
+    @freeform("float constant") class Float(value: BigDecimal) extends NumericConstant[BigDecimal]
+    @freeform("double constant") class Double(value: BigDecimal) extends NumericConstant[BigDecimal]
+    @freeform("character constant") class Char(value: scala.Char) extends Constant[scala.Char]
+    @freeform("symbol constant") class Symbol(value: scala.Symbol) extends Constant[scala.Symbol]
+    @freeform("string constant") class String(value: Predef.String) extends Constant[Predef.String]
   }
   // NOTE: Here's example tokenization of q"${foo}bar".
   // BOF, Id(q)<"q">, Start<"\"">, Part("")<"">, SpliceStart<"$">, {, foo, }, SpliceEnd<"">, Part("bar")<"bar">, End("\""), EOF.
@@ -132,12 +154,12 @@ object Token {
   }
 
   // Trivia
-  @fixed(" ") class Space extends Token
-  @fixed("\t") class Tab extends Token
-  @fixed("\r") class CR extends Token
-  @fixed("\n") class LF extends Token
-  @fixed("\f") class FF extends Token
-  @freeform("comment") class Comment(value: String) extends Token
+  @fixed(" ") class Space extends HSpace
+  @fixed("\t") class Tab extends HSpace
+  @fixed("\r") class CR extends AtEOL
+  @fixed("\n") class LF extends EOL
+  @fixed("\f") class FF extends EOL
+  @freeform("comment") class Comment(value: String) extends Trivia
   @freeform("beginning of file") class BOF extends Token {
     def this(input: Input, dialect: Dialect) = this(input, dialect, 0)
     def end = start
@@ -149,7 +171,7 @@ object Token {
 
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
-  @freeform("\n\n") private[meta] class LFLF extends Token
+  @freeform("\n\n") private[meta] class LFLF extends AtEOL
   @freeform("ellipsis") private[meta] class Ellipsis(rank: Int) extends Token
   @freeform("unquote") private[meta] class Unquote extends Token
 

@@ -156,10 +156,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     @tailrec
     def isNextEOL(t: Token): Boolean = {
-      val next = t.nextSafe
-      if (next.is[LineEnd] || next.is[MultilineComment]) true
-      else if ((next.is[Whitespace] && !next.is[LineEnd]) || next.is[Comment]) isNextEOL(next)
-      else false
+      t.nextSafe match {
+        case _: AtEOL | MultilineComment() => true
+        case x: Trivia => isNextEOL(x)
+        case _ => false
+      }
     }
 
     dialect.allowSignificantIndentation && token.is[Colon] && isNextEOL(token)
@@ -916,10 +917,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             Type.Placeholder(typeBounds())
           else
             Type.Name(s"${value}_")
-        case Literal() =>
+        case _: Literal =>
           if (dialect.allowLiteralTypes) literal()
           else syntaxError(s"$dialect doesn't support literal types", at = path())
-        case Ident("-") if dialect.allowLiteralTypes && ahead(token.is[NumericLiteral]) =>
+        case Ident("-") if dialect.allowLiteralTypes && ahead(token.is[NumericConstant[_]]) =>
           next()
           literal(isNegated = true)
         case _ =>
@@ -2046,7 +2047,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (!isUnaryOp) simpleExpr(allowRepeated)
     else {
       val op = termName()
-      if (op.value == "-" && token.is[NumericLiteral])
+      if (op.value == "-" && token.is[NumericConstant[_]])
         simpleExprRest(autoEndPos(op)(literal(isNegated = true)), canApply = true)
       else {
         simpleExpr0(allowRepeated = true) match {
@@ -2073,7 +2074,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Success(macroQuotedIdent())
         case MacroSplicedIdent() =>
           Success(macroSplicedIdent())
-        case Literal() =>
+        case _: Literal =>
           Success(literal())
         case Interpolation.Id(_) =>
           Success(interpolateTerm())
@@ -2617,7 +2618,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               !isBackquoted && ((value.head.isLower && value.head.isLetter) || value.head == '_' || isCapitalAllowed)
             case _ => false
           }
-          if (token.is[NumericLiteral]) {
+          if (token.is[NumericConstant[_]]) {
             sid match {
               case Term.Name("-") =>
                 return autoEndPos(sid)(literal(isNegated = true))
@@ -2650,7 +2651,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case Underscore() =>
           next()
           Pat.Wildcard()
-        case Literal() =>
+        case _: Literal =>
           literal()
         case Interpolation.Id(_) =>
           interpolatePat()
