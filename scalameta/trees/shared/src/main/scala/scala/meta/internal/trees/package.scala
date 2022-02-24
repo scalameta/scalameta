@@ -140,7 +140,7 @@ package object trees {
     def isQualifiedAccessMod: Boolean = isAccessMod && accessBoundary.nonEmpty
   }
 
-  implicit class XtensionTreesMods(mods: Iterable[Mod]) {
+  implicit class XtensionTreesMods(mods: collection.Iterable[Mod]) {
     def has[T <: Mod](implicit classifier: Classifier[Mod, T]): Boolean =
       mods.exists(classifier.apply)
     def first[T <: Mod](implicit tag: ClassTag[T], classifier: Classifier[Mod, T]): Option[T] =
