@@ -294,13 +294,6 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
     }
 
     @classifier
-    trait LocalModifier {
-      def unapply(token: Token): Boolean = {
-        token.is[Modifier] && !token.is[NonlocalModifier]
-      }
-    }
-
-    @classifier
     trait StatSeqEnd {
       def unapply(token: Token): Boolean = {
         token.is[RightBrace] || token.is[EOF] || token.is[Indentation.Outdent]

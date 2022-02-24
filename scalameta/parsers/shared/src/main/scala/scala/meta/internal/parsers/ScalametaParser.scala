@@ -2750,24 +2750,29 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def modifier(): Mod =
+  private def modifier(isLocal: Boolean): Mod =
     autoPos(token match {
       case t: Unquote => unquote[Mod](t)
       case t: Ellipsis => ellipsis[Mod](t, 1)
-      case KwAbstract() => next(); Mod.Abstract()
-      case KwFinal() => next(); Mod.Final()
-      case KwSealed() => next(); Mod.Sealed()
-      case KwImplicit() => next(); Mod.Implicit()
-      case KwLazy() => next(); Mod.Lazy()
-      case KwOverride() => next(); Mod.Override()
-      case KwPrivate() => privateModifier()
-      case KwProtected() => protectedModifier()
-      case soft.KwInline() => next(); Mod.Inline()
-      case soft.KwInfix() => next(); Mod.Infix()
-      case soft.KwOpen() => next(); Mod.Open()
-      case soft.KwOpaque() => next(); Mod.Opaque()
-      case soft.KwTransparent() => next(); Mod.Transparent()
-      case _ => syntaxError(s"modifier expected but ${token.name} found", at = token)
+      case _: KwAbstract => next(); Mod.Abstract()
+      case _: KwFinal => next(); Mod.Final()
+      case _: KwSealed => next(); Mod.Sealed()
+      case _: KwImplicit => next(); Mod.Implicit()
+      case _: KwLazy => next(); Mod.Lazy()
+      case _: KwOverride if !isLocal => next(); Mod.Override()
+      case _: KwPrivate if !isLocal => privateModifier()
+      case _: KwProtected if !isLocal => protectedModifier()
+      case _ =>
+        token.toString match {
+          case soft.KwInline() => next(); Mod.Inline()
+          case soft.KwInfix() => next(); Mod.Infix()
+          case soft.KwOpen() if !isLocal => next(); Mod.Open()
+          case soft.KwOpaque() => next(); Mod.Opaque()
+          case soft.KwTransparent() => next(); Mod.Transparent()
+          case n =>
+            val local = if (isLocal) "local " else ""
+            syntaxError(s"${local}modifier expected but $n found", at = token)
+        }
     })
 
   def quasiquoteModifier(): Mod = entrypointModifier()
@@ -2825,14 +2830,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def modifiers(
+  def modifiersBuf(
+      buf: ListBuffer[Mod],
       isLocal: Boolean = false,
       isParams: Boolean = false
-  ): List[Mod] = {
-    def appendMod(mods: List[Mod], mod: Mod): List[Mod] = {
-      if (isLocal && !mod.tokens.head.is[LocalModifier]) {
-        syntaxError("illegal modifier for a local definition", at = mod)
-      }
+  ): Unit = {
+    val mods = buf.view.drop(buf.length)
+    def appendMod(mod: Mod): Unit = {
       if (!mod.is[Mod.Quasi]) {
         if (mods.exists(_.productPrefix == mod.productPrefix)) {
           syntaxError("repeated modifier", at = mod)
@@ -2847,36 +2851,42 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           syntaxError("duplicate private/protected qualifier", at = mod)
         }
       }
-      mods :+ mod
+      buf += mod
     }
     // the only things that can come after $mod or $mods are either keywords or names; the former is easy,
     // but in the case of the latter, we need to take care to not hastily parse those names as modifiers
-    def continueLoop =
-      ahead(
-        token.is[Colon] || token.is[Equals] || token.is[EOF] || token.is[LeftBracket] ||
-          token.is[Subtype] || token.is[Supertype] || token.is[Viewbound]
-      )
+    def continueLoop = ahead(token match {
+      case _: Colon | _: Equals | _: EOF | _: LeftBracket | _: Subtype | _: Supertype |
+          _: Viewbound =>
+        true
+      case _ => false
+    })
     @tailrec
-    def loop(mods: List[Mod]): List[Mod] = token match {
-      case _ if isParams && token.is[NonParamsModifier] => mods
-      case Unquote() => if (continueLoop) mods else loop(appendMod(mods, modifier()))
-      case Ellipsis(_) => loop(appendMod(mods, modifier()))
-      case Modifier() => loop(appendMod(mods, modifier()))
-      case LF() if !isLocal => next(); loop(mods)
-      case _ => mods
+    def loop: Unit = token match {
+      case NonParamsModifier() if isParams =>
+      case _: Unquote if continueLoop =>
+      case _: Unquote | _: Ellipsis | Modifier() => appendMod(modifier(isLocal)); loop
+      case _: LF if !isLocal => next(); loop
+      case _ =>
     }
-    loop(Nil)
+    loop
   }
 
-  def localModifiers(): List[Mod] = modifiers(isLocal = true)
+  def annots(skipNewLines: Boolean, allowArgss: Boolean = true): List[Mod.Annot] =
+    listBy[Mod.Annot](annotsBuf(_, skipNewLines, allowArgss))
 
-  def annots(skipNewLines: Boolean, allowArgss: Boolean = true): List[Mod.Annot] = {
-    val annots = new ListBuffer[Mod.Annot]
+  def annotsBuf[T >: Mod.Annot](
+      annots: ListBuffer[T],
+      skipNewLines: Boolean,
+      allowArgss: Boolean = true
+  ): Unit = {
     while (token match {
         case _: At =>
           next()
-          if (token.is[Unquote]) annots += unquote[Mod.Annot]
-          else annots += autoEndPos(StartPosPrev)(Mod.Annot(initInsideAnnotation(allowArgss)))
+          annots += (token match {
+            case t: Unquote => unquote[Mod.Annot](t)
+            case _ => autoEndPos(StartPosPrev)(Mod.Annot(initInsideAnnotation(allowArgss)))
+          })
           true
         case t: Ellipsis if ahead(token.is[At]) =>
           annots += ellipsis[Mod.Annot](t, 1, next())
@@ -2885,7 +2895,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }) {
       if (skipNewLines) newLineOpt()
     }
-    annots.toList
   }
 
   def constructorAnnots(): List[Mod.Annot] = annots(skipNewLines = false, allowArgss = false)
@@ -2960,12 +2969,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       isImplicit: Boolean,
       isUsing: Boolean
   ): Term.Param = autoPos {
-    var mods: List[Mod] = annots(skipNewLines = false)
-    if (isImplicit) mods ++= List(autoPos(Mod.Implicit()))
-    if (isUsing) mods ++= List(autoPos(Mod.Using()))
+    val mods = new ListBuffer[Mod]
+    annotsBuf(mods, skipNewLines = false)
+    if (isImplicit) mods += autoPos(Mod.Implicit())
+    if (isUsing) mods += autoPos(Mod.Using())
     rejectMod[Mod.Open](mods, "Open modifier only applied to classes")
     if (ownerIsType) {
-      mods ++= modifiers(isParams = true)
+      modifiersBuf(mods, isParams = true)
       rejectMod[Mod.Lazy](
         mods,
         "lazy modifier not allowed here. Use call-by-name parameters instead."
@@ -2975,16 +2985,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     } else {
       if (token.is[soft.KwInline] && ahead(token.is[Ident])) {
-        mods ++= List(modifier())
+        mods += autoPos { next(); Mod.Inline() }
       }
     }
 
     val (isValParam, isVarParam) = (ownerIsType && token.is[KwVal], ownerIsType && token.is[KwVar])
     if (isValParam) {
-      mods :+= atCurPosNext(Mod.ValParam())
+      mods += atCurPosNext(Mod.ValParam())
     }
     if (isVarParam) {
-      mods :+= atCurPosNext(Mod.VarParam())
+      mods += atCurPosNext(Mod.VarParam())
     }
     def endParamQuasi = token.is[RightParen] || token.is[Comma]
     mods.headOption match {
@@ -3037,7 +3047,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                 next()
                 Some(expr())
               }
-            Term.Param(mods, name, tpt, default)
+            Term.Param(mods.toList, name, tpt, default)
         }
     }
   }
@@ -3061,8 +3071,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       ctxBoundsAllowed: Boolean,
       allowUnderscore: Boolean = true
   ): Type.Param = autoPos {
-    var mods: List[Mod] = annots(skipNewLines = false)
-    if (ownerIsType) mods ++= tparamModifiers()
+    val mods: List[Mod] = listBy[Mod] { buf =>
+      annotsBuf(buf, skipNewLines = false)
+      if (ownerIsType) tparamModifiers().foreach(buf += _)
+    }
     def endTparamQuasi = token.is[RightBracket] || token.is[Comma]
     mods.headOption match {
       case Some(q: Mod.Quasi) if endTparamQuasi =>
@@ -3236,8 +3248,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       enumCaseAllowed: Boolean = false,
       secondaryConstructorAllowed: Boolean = false
   ): Stat = {
-    val anns = annots(skipNewLines = true)
-    val mods = anns ++ modifiers()
+    val mods = listBy[Mod] { buf =>
+      annotsBuf(buf, skipNewLines = true)
+      modifiersBuf(buf)
+    }
     defOrDclOrSecondaryCtor(mods, enumCaseAllowed, secondaryConstructorAllowed) match {
       case s if s.isTemplateStat => s
       case other => syntaxError("is not a valid template statement", at = other)
@@ -3604,8 +3618,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   /** Hook for IDE, for top-level classes/objects. */
-  def topLevelTmplDef: Stat =
-    tmplDef(annots(skipNewLines = true) ++ modifiers())
+  def topLevelTmplDef: Stat = tmplDef(listBy[Mod] { buf =>
+    annotsBuf(buf, skipNewLines = true)
+    modifiersBuf(buf)
+  })
 
   def tmplDef(mods: List[Mod]): Stat = {
     if (!dialect.allowToplevelStatements) {
@@ -3784,8 +3800,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def quasiquoteCtor(): Ctor = autoPos {
-    val anns = annots(skipNewLines = true)
-    val mods = anns ++ modifiers()
+    val mods = listBy[Mod] { buf =>
+      annotsBuf(buf, skipNewLines = true)
+      modifiersBuf(buf)
+    }
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     accept[KwDef]
     val name = atCurPos(Name.Anonymous())
@@ -4265,7 +4283,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def localDef(implicitMod: Option[Mod.Implicit]): Stat = {
-    val mods = (implicitMod ++: annots(skipNewLines = true)) ++ localModifiers()
+    val mods = listBy[Mod] { buf =>
+      annotsBuf(buf, skipNewLines = true)
+      implicitMod.foreach(buf += _)
+      modifiersBuf(buf, isLocal = true)
+    }
     if (mods forall {
         case _: Mod.Implicit | _: Mod.Lazy | _: Mod.Inline | _: Mod.Infix | _: Mod.Annot => true;
         case _ => false
