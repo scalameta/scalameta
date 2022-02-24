@@ -490,6 +490,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
+  private def listBy[T](f: ListBuffer[T] => Unit): List[T] = {
+    val buf = new ListBuffer[T]
+    f(buf)
+    buf.toList
+  }
+
   def ellipsis[T <: Tree: AstInfo](ell: Ellipsis, rank: Int, extraSkip: => Unit = {}): T = {
     if (ell.rank != rank) {
       syntaxError(Messages.QuasiquoteRankMismatch(ell.rank, rank), at = ell)
@@ -573,8 +579,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   final def tokenSeparated[Sep <: Token: TokenInfo, T <: Tree: AstInfo](
       sepFirst: Boolean,
       part: => T
-  ): List[T] = {
-    val ts = new ListBuffer[T]
+  ): List[T] = listBy[T] { ts =>
     @tailrec
     def iter(sep: Boolean): Unit = token match {
       case t: Ellipsis =>
@@ -588,7 +593,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _ =>
     }
     iter(!sepFirst)
-    ts.toList
   }
 
   @inline final def commaSeparated[T <: Tree: AstInfo](part: => T): List[T] =
@@ -694,10 +698,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           paramType()
       }
 
-      val tsBuf = new ListBuffer[Type]
       val openParenPos = in.tokenPos
       accept[LeftParen]
-      if (!token.is[RightParen]) {
+      val ts = if (!token.is[RightParen]) listBy[Type] { tsBuf =>
         do {
           tsBuf += (paramOrType() match {
             case q: Quasi => q.become[Type.Quasi]
@@ -706,6 +709,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           })
         } while (acceptOpt[Comma] || token.is[Ellipsis])
       }
+      else Nil
       val closeParenPos = in.tokenPos
       accept[RightParen]
       // NOTE: can't have this, because otherwise we run into #312
@@ -718,7 +722,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         syntaxError(message, at = token)
       }
 
-      val ts: List[Type] = tsBuf.toList
       if (allowFunctionType && token.is[RightArrow]) {
         next()
         Type.Function(ts, typeIndentedOpt())
@@ -779,13 +782,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
     def typeCaseClauses(): List[TypeCase] = {
-      def cases() = {
-        val allCases = new ListBuffer[TypeCase]
+      def cases() = listBy[TypeCase] { allCases =>
         while (token.is[KwCase]) {
           allCases += typeCaseClause()
           newLinesOpt()
         }
-        allCases.toList
       }
       if (token.is[LeftBrace]) {
         inBraces {
@@ -2354,14 +2355,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       next(); Some(autoPos(postfixExpr(allowRepeated = false)))
     } else None
 
-  def enumerators(): List[Enumerator] = {
-    val enums = new ListBuffer[Enumerator]
+  def enumerators(): List[Enumerator] = listBy[Enumerator] { enums =>
     enums ++= enumerator(isFirst = true)
     while (token.is[StatSep] && !ahead(token.is[Indentation.Outdent] || token.is[KwDo])) {
       next()
       enums ++= enumerator(isFirst = false)
     }
-    enums.toList
   }
 
   def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enumerator] = token match {
@@ -2918,15 +2917,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           )
         )
     }
-    var first = true
-    val paramss = new ListBuffer[List[Term.Param]]
-    while (isAfterOptNewLine[LeftParen] && !parsedImplicits) {
-      next()
-      paramss += paramClause(first)
-      accept[RightParen]
-      first = false
+    listBy[List[Term.Param]] { paramss =>
+      var first = true
+      while (isAfterOptNewLine[LeftParen] && !parsedImplicits) {
+        next()
+        paramss += paramClause(first)
+        accept[RightParen]
+        first = false
+      }
     }
-    paramss.toList
   }
 
   def paramType(): Type =
@@ -3664,11 +3663,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     rejectMod[Mod.Override](mods, Messages.InvalidOverrideClass)
 
     val className = typeName()
-    val culprit = s"class $className"
-    rejectModCombination[Mod.Final, Mod.Sealed](mods, Some(culprit))
-    rejectModCombination[Mod.Open, Mod.Final](mods, Some(culprit))
-    rejectModCombination[Mod.Open, Mod.Sealed](mods, Some(culprit))
-    rejectModCombination[Mod.Case, Mod.Implicit](mods, Some(culprit))
+    def culprit = Some(s"class $className")
+    rejectModCombination[Mod.Final, Mod.Sealed](mods, culprit)
+    rejectModCombination[Mod.Open, Mod.Final](mods, culprit)
+    rejectModCombination[Mod.Open, Mod.Sealed](mods, culprit)
+    rejectModCombination[Mod.Case, Mod.Implicit](mods, culprit)
     val typeParams = typeParamClauseOpt(
       ownerIsType = true,
       ctxBoundsAllowed = true,
@@ -4147,9 +4146,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       statpf: PartialFunction[Token, T],
       errorMsg: String = "illegal start of definition"
   ): List[T] = {
-    val stats = new ListBuffer[T]
-    statSeqBuf(stats, statpf, errorMsg)
-    stats.toList
+    listBy[T](statSeqBuf(_, statpf, errorMsg))
   }
 
   def statSeqBuf[T <: Tree: AstInfo](
@@ -4243,13 +4240,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     statSeq(templateStat)
   }
 
-  def refineStatSeq(): List[Stat] = {
-    val stats = new ListBuffer[Stat]
+  def refineStatSeq(): List[Stat] = listBy[Stat] { stats =>
     while (!token.is[StatSeqEnd]) {
       stats ++= refineStat()
       if (token.isNot[RightBrace]) acceptStatSep()
     }
-    stats.toList
   }
 
   def refineStat(): Option[Stat] = token match {
@@ -4286,8 +4281,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def blockStatSeq(): List[Stat] = {
-    val stats = new ListBuffer[Stat]
+  def blockStatSeq(): List[Stat] = listBy[Stat] { stats =>
     while (!token.is[CaseDefEnd] && !in.observeOutdented()) token match {
       case _: KwExport =>
         stats += exportStmt()
@@ -4316,7 +4310,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _ =>
         syntaxError("illegal start of statement", at = token)
     }
-    stats.toList
   }
 
   def packageOrPackageObjectDef(statpf: PartialFunction[Token, Stat]): Stat = autoPos {
