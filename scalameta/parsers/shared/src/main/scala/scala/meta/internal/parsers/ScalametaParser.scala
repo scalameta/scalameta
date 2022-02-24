@@ -2309,6 +2309,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         else if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false)
         else parseStatSeq()
       }
+      @inline def guard(): Option[Term] = if (token.is[KwIf]) Some(guardOnIf()) else None
       Case(pattern(), guard(), caseBody())
     } else {
       syntaxError("Unexpected `case`", at = token.pos)
@@ -2350,37 +2351,47 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (cases.isEmpty) None else Some(cases.toList)
   }
 
-  def guard(): Option[Term] =
-    if (token.is[KwIf]) {
-      next(); Some(autoPos(postfixExpr(allowRepeated = false)))
-    } else None
+  private def guardOnIf(): Term = {
+    next()
+    autoPos(postfixExpr(allowRepeated = false))
+  }
+
+  private def enumeratorGuardOnIf() = autoPos(Enumerator.Guard(guardOnIf()))
 
   def enumerators(): List[Enumerator] = listBy[Enumerator] { enums =>
-    enums ++= enumerator(isFirst = true)
+    enumeratorBuf(enums, isFirst = true)
     while (token.is[StatSep] && !ahead(token.is[Indentation.Outdent] || token.is[KwDo])) {
       next()
-      enums ++= enumerator(isFirst = false)
+      enumeratorBuf(enums, isFirst = false)
     }
   }
 
-  def enumerator(isFirst: Boolean, allowNestedIf: Boolean = true): List[Enumerator] = token match {
-    case _: KwIf if !isFirst => autoPos(Enumerator.Guard(guard().get)) :: Nil
-    case t: Ellipsis => ellipsis[Enumerator](t, 1) :: Nil
+  private def enumeratorBuf(
+      buf: ListBuffer[Enumerator],
+      isFirst: Boolean,
+      allowNestedIf: Boolean = true
+  ): Unit = token match {
+    case _: KwIf if !isFirst => buf += enumeratorGuardOnIf()
+    case t: Ellipsis => buf += ellipsis[Enumerator](t, 1)
     case t: Unquote if ahead(!token.is[Equals] && !token.is[LeftArrow]) =>
-      unquote[Enumerator](t) :: Nil // support for q"for ($enum1; ..$enums; $enum2)"
-    case _ => generator(!isFirst, allowNestedIf)
+      buf += unquote[Enumerator](t) // support for q"for ($enum1; ..$enums; $enum2)"
+    case _ => generatorBuf(buf, !isFirst, allowNestedIf)
   }
 
   def quasiquoteEnumerator(): Enumerator = entrypointEnumerator()
 
   def entrypointEnumerator(): Enumerator = {
-    enumerator(isFirst = false, allowNestedIf = false) match {
+    listBy[Enumerator](enumeratorBuf(_, isFirst = false, allowNestedIf = false)) match {
       case enumerator :: Nil => enumerator
       case other => unreachable(debug(other))
     }
   }
 
-  def generator(eqOK: Boolean, allowNestedIf: Boolean = true): List[Enumerator] = {
+  private def generatorBuf(
+      buf: ListBuffer[Enumerator],
+      eqOK: Boolean,
+      allowNestedIf: Boolean = true
+  ): Unit = {
     val startPos = in.tokenPos
     val hasVal = token.is[KwVal]
     if (hasVal)
@@ -2402,22 +2413,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     else accept[LeftArrow]
     val rhs = expr()
 
-    val head = autoEndPos(startPos) {
+    buf += autoEndPos(startPos) {
       if (hasEq) Enumerator.Val(pat, rhs)
       else if (isCase) Enumerator.CaseGenerator(pat, rhs)
       else Enumerator.Generator(pat, rhs)
     }
-    val tail = if (allowNestedIf) {
-      val builder = List.newBuilder[Enumerator]
-      @tailrec def loop(): Unit =
-        if (token.is[KwIf]) {
-          builder += autoPos(Enumerator.Guard(guard().get))
-          loop()
-        }
-      loop()
-      builder.result()
-    } else Nil
-    head :: tail
+    if (allowNestedIf) {
+      while (token.is[KwIf]) {
+        buf += enumeratorGuardOnIf()
+      }
+    }
   }
 
   /* -------- PATTERNS ------------------------------------------- */
@@ -2896,8 +2901,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (skipNewLines) newLineOpt()
     }
   }
-
-  def constructorAnnots(): List[Mod.Annot] = annots(skipNewLines = false, allowArgss = false)
 
   /* -------- PARAMETERS ------------------------------------------- */
 
@@ -3481,10 +3484,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     val body: Stat =
       if (token.is[LeftBrace]) {
-        autoPos(Term.Block(inBraces(templateStats())))
+        autoPos(Term.Block(inBraces(statSeq(templateStat()))))
       } else {
         if (in.observeIndented()) {
-          val block = autoPos(Term.Block(indented(templateStats())))
+          val block = autoPos(Term.Block(indented(statSeq(templateStat()))))
           if (block.stats.size == 1) block.stats.head
           else block
         } else if (token.is[DefIntro]) {
@@ -3775,7 +3778,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def primaryCtor(owner: TemplateOwner): Ctor.Primary = autoPos {
     if (owner.isClass || (owner.isTrait && dialect.allowTraitParameters) || owner.isEnum) {
-      val mods = constructorAnnots() ++ ctorModifiers()
+      val mods = listBy[Mod] { buf =>
+        annotsBuf(buf, skipNewLines = false, allowArgss = false)
+        ctorModifiers().foreach(buf += _)
+      }
       val name = autoPos(Name.Anonymous())
       val paramss = paramClauses(ownerIsType = true, owner == OwnedByCaseClass)
       Ctor.Primary(mods, name, paramss)
@@ -4206,8 +4212,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       enumCaseAllowed: Boolean = false,
       secondaryConstructorAllowed: Boolean = false
   ): (Self, List[Stat]) = {
-    val emptySelf = selfEmpty()
-    var selfOpt: Option[Self] = None
+    var selfTree: Self = selfEmpty()
     var firstOpt: Option[Stat] = None
     if (token.is[ExprIntro] && !token.is[KwExtension]) {
       val beforeFirst = in.fork
@@ -4216,7 +4221,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (token.is[RightArrow]) {
         try {
           in = beforeFirst
-          selfOpt = Some(self())
+          selfTree = self()
           next()
           in.undoIndent()
         } catch {
@@ -4229,38 +4234,36 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         acceptStatSepOpt()
       }
     }
-    (
-      selfOpt.getOrElse(emptySelf),
-      firstOpt ++: templateStats(enumCaseAllowed, secondaryConstructorAllowed)
-    )
+    val stats = listBy[Stat] { buf =>
+      firstOpt.foreach(buf += _)
+      statSeqBuf(buf, templateStat(enumCaseAllowed, secondaryConstructorAllowed))
+    }
+    (selfTree, stats)
   }
 
-  def templateStats(
+  def templateStat(
       enumCaseAllowed: Boolean = false,
       secondaryConstructorAllowed: Boolean = false
-  ): List[Stat] = {
-    def templateStat: PartialFunction[Token, Stat] = {
-      case KwImport() =>
-        importStmt()
-      case KwExport() =>
-        exportStmt()
-      case DefIntro() =>
-        nonLocalDefOrDcl(enumCaseAllowed, secondaryConstructorAllowed)
-      case t: Unquote =>
-        unquote[Stat](t)
-      case t: Ellipsis =>
-        ellipsis[Stat](t, 1)
-      case EndMarkerIntro() =>
-        endMarker()
-      case ExprIntro() =>
-        expr(location = TemplateStat, allowRepeated = false)
-    }
-    statSeq(templateStat)
+  ): PartialFunction[Token, Stat] = {
+    case KwImport() =>
+      importStmt()
+    case KwExport() =>
+      exportStmt()
+    case DefIntro() =>
+      nonLocalDefOrDcl(enumCaseAllowed, secondaryConstructorAllowed)
+    case t: Unquote =>
+      unquote[Stat](t)
+    case t: Ellipsis =>
+      ellipsis[Stat](t, 1)
+    case EndMarkerIntro() =>
+      endMarker()
+    case ExprIntro() =>
+      expr(location = TemplateStat, allowRepeated = false)
   }
 
   def refineStatSeq(): List[Stat] = listBy[Stat] { stats =>
     while (!token.is[StatSeqEnd]) {
-      stats ++= refineStat()
+      refineStat().foreach(stats += _)
       if (token.isNot[RightBrace]) acceptStatSep()
     }
   }
