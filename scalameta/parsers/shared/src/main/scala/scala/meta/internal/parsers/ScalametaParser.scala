@@ -360,23 +360,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   /* ------------- MODIFIER VALIDATOR --------------------------------------- */
 
   def rejectMod[M <: Mod](
-      mods: List[Mod],
+      mods: collection.Iterable[Mod],
       errorMsg: String
   )(implicit classifier: Classifier[Mod, M], tag: ClassTag[M]) = {
     mods.first[M].foreach(m => syntaxError(errorMsg, at = m))
   }
 
-  def rejectModCombination[M1 <: Mod, M2 <: Mod](
-      mods: List[Mod],
-      culpritOpt: Option[String] = None
-  )(
-      implicit invalidMod: InvalidModCombination[M1, M2],
-      classifier1: Classifier[Mod, M1],
-      tag1: ClassTag[M1],
-      classifier2: Classifier[Mod, M2],
-      tag2: ClassTag[M2]
-  ) = if (mods.has[M2]) mods.first[M1].foreach { m =>
-    val errorMsg = invalidMod.errorMessage
+  def rejectModCombination[M1 <: Mod: ClassTag, M2 <: Mod: ClassTag](
+      mods: collection.Iterable[Mod],
+      culpritOpt: => Option[String] = None
+  )(implicit classifier1: Classifier[Mod, M1], classifier2: Classifier[Mod, M2]) =
+    mods.first[M2].foreach(rejectModWith[M1](_, mods, culpritOpt))
+
+  def rejectModWith[M <: Mod: ClassTag](
+      m2: Mod,
+      mods: collection.Iterable[Mod],
+      culpritOpt: => Option[String] = None
+  )(implicit classifier: Classifier[Mod, M]) = mods.first[M].foreach { m =>
+    val errorMsg = Messages.IllegalCombinationModifiers(m, m2)
     val forCulprit = culpritOpt.fold("")(formatCulprit)
     val enrichedErrorMsg = errorMsg + forCulprit
     syntaxError(enrichedErrorMsg, at = m)
@@ -2830,26 +2831,23 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       isParams: Boolean = false
   ): List[Mod] = {
     def appendMod(mods: List[Mod], mod: Mod): List[Mod] = {
-      def validate() = {
-        if (isLocal && !mod.tokens.head.is[LocalModifier]) {
-          syntaxError("illegal modifier for a local definition", at = mod)
+      if (isLocal && !mod.tokens.head.is[LocalModifier]) {
+        syntaxError("illegal modifier for a local definition", at = mod)
+      }
+      if (!mod.is[Mod.Quasi]) {
+        if (mods.exists(_.productPrefix == mod.productPrefix)) {
+          syntaxError("repeated modifier", at = mod)
         }
-        if (!mod.is[Mod.Quasi]) {
-          if (mods.exists(_.productPrefix == mod.productPrefix)) {
-            syntaxError("repeated modifier", at = mod)
-          }
-          if (mods.exists(_.isNakedAccessMod) && mod.isNakedAccessMod) {
-            if (mod.is[Mod.Protected])
-              rejectModCombination[Mod.Private, Mod.Protected](mods :+ mod)
-            if (mod.is[Mod.Private])
-              rejectModCombination[Mod.Protected, Mod.Private](mods :+ mod)
-          }
-          if (mods.exists(_.isQualifiedAccessMod) && mod.isQualifiedAccessMod) {
-            syntaxError("duplicate private/protected qualifier", at = mod)
-          }
+        if (mods.exists(_.isNakedAccessMod) && mod.isNakedAccessMod) {
+          if (mod.is[Mod.Protected])
+            rejectModWith[Mod.Private](mod, mods)
+          else if (mod.is[Mod.Private])
+            rejectModWith[Mod.Protected](mod, mods)
+        }
+        if (mods.exists(_.isQualifiedAccessMod) && mod.isQualifiedAccessMod) {
+          syntaxError("duplicate private/protected qualifier", at = mod)
         }
       }
-      validate()
       mods :+ mod
     }
     // the only things that can come after $mod or $mods are either keywords or names; the former is easy,
