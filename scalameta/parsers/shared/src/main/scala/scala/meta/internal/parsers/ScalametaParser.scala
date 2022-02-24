@@ -178,9 +178,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def token = in.token
   def next() = in.next()
-  def nextOnce() = next()
   def nextTwice() = { next(); next() }
-  def nextThrice() = { next(); next(); next() }
 
   /* ------------- PARSER COMMON -------------------------------------------- */
 
@@ -464,9 +462,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def isStar: Boolean = isIdentOf("*")
   def isBar: Boolean = isIdentOf("|")
   def isAmpersand: Boolean = isIdentOf("&")
-  def isColonWildcardStar: Boolean = token.is[Colon] && ahead(token.is[Underscore] && next(isStar))
-  def isSpliceFollowedBy(check: => Boolean): Boolean =
-    token.is[Ellipsis] && ahead(token.is[Unquote] && next(token.is[Ident] || check))
   def isBackquoted: Boolean = {
     val syntax = token.syntax
     syntax.startsWith("`") && syntax.endsWith("`")
@@ -2393,13 +2388,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       allowNestedIf: Boolean = true
   ): Unit = {
     val startPos = in.tokenPos
-    val hasVal = token.is[KwVal]
-    if (hasVal)
-      next()
-
-    val isCase =
-      if (token.is[KwCase]) { next(); true }
-      else false
+    val hasVal = acceptOpt[KwVal]
+    val isCase = acceptOpt[KwCase]
 
     val pat = noSeq.pattern1()
     val hasEq = token.is[Equals]
@@ -2456,10 +2446,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       // * p"`x`" => Term.Name (ok)
       // * p"`X`" => Term.Name (ok)
       val nonbqIdent = isIdent && !isBackquoted
-      val pat = argumentPattern()
-      pat match {
+      argumentPattern() match {
         case pat: Term.Name if nonbqIdent => copyPos(pat)(Pat.Var(pat))
-        case _ => pat
+        case pat => pat
       }
     }
 
@@ -2475,80 +2464,60 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       dropAnyBraces(pattern())
     }
 
-    private def isLegitimateSeqWildcard = {
-      def isUnderscore = token.is[Underscore]
-      def isArglistEnd = token.is[RightParen] || token.is[RightBrace] || token.is[EOF]
-      def tokensMatched = isUnderscore && ahead(isStar && next(isArglistEnd))
-      isSequenceOK && tokensMatched
-    }
+    private def isArglistEnd = token.is[RightParen] || token.is[RightBrace] || token.is[EOF]
 
-    def pattern1(): Pat = autoPos {
+    private def getSeqWildcard(isEnabled: Boolean, elseF: => Pat, mapF: Pat => Pat = identity) =
+      if (isEnabled && isSequenceOK && token.is[Underscore] && ahead(isStar && next(isArglistEnd)))
+        mapF(autoPos { nextTwice(); Pat.SeqWildcard() })
+      else elseF
+
+    def pattern1(): Pat = {
       val p = pattern2()
-      if (token.isNot[Colon]) p
-      else {
-        p match {
-          case _: Quasi =>
-            nextOnce()
-            Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
-          case p: Pat.Var
-              if dialect.allowColonForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
-            nextOnce()
-            val seqWildcard = autoPos({ nextTwice(); Pat.SeqWildcard() })
-            Pat.Bind(p, seqWildcard)
-          case p: Pat.Var if !dialect.allowColonForExtractorVarargs && isColonWildcardStar =>
+      @inline def typed() =
+        Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
+      val pat = p match {
+        case _ if token.isNot[Colon] => p
+        case _: Quasi =>
+          next()
+          typed()
+        case _: Pat.Var =>
+          next()
+          if (!dialect.allowColonForExtractorVarargs && token.is[Underscore] && ahead(isStar))
             syntaxError(s"$dialect does not support var: _*", at = p)
-          case p: Pat.Var =>
-            nextOnce()
-            Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
-          case _: Pat.Wildcard
-              if dialect.allowColonForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
-            nextThrice()
-            Pat.SeqWildcard()
-          case p: Pat.Wildcard =>
-            nextOnce()
-            Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
-          case p: Pat =>
-            if (dialect.allowAllTypedPatterns) {
-              nextOnce()
-              Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
-            } else {
-              p
-            }
-        }
+          getSeqWildcard(dialect.allowColonForExtractorVarargs, typed(), Pat.Bind(p, _))
+        case _: Pat.Wildcard =>
+          next()
+          getSeqWildcard(dialect.allowColonForExtractorVarargs, typed())
+        case _: Pat if dialect.allowAllTypedPatterns =>
+          next()
+          typed()
+        case _: Pat => p
       }
+      if (pat eq p) p else autoEndPos(p)(pat)
     }
 
-    def pattern2(): Pat = autoPos {
+    def pattern2(): Pat = {
       val p = pattern3()
-      if (token.isNot[At])
-        p
-      else
-        p match {
-          case _: Quasi =>
-            next()
-            Pat.Bind(p, pattern3())
-          case p: Term.Name =>
-            syntaxError(
-              "Pattern variables must start with a lower-case letter. (SLS 8.1.1.)",
-              at = p
-            )
-          case p: Pat.Var if dialect.allowAtForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
-            nextOnce()
-            val seqWildcard = autoPos({ nextTwice(); Pat.SeqWildcard() })
-            Pat.Bind(p, seqWildcard)
-          case p: Pat.Var =>
-            next()
-            Pat.Bind(p, pattern3())
-          case _: Pat.Wildcard
-              if dialect.allowAtForExtractorVarargs && ahead(isLegitimateSeqWildcard) =>
-            nextThrice()
-            Pat.SeqWildcard()
-          case _: Pat.Wildcard =>
-            next()
-            pattern3()
-          case p =>
-            p
-        }
+      val pat = p match {
+        case _ if token.isNot[At] => p
+        case _: Quasi =>
+          next()
+          Pat.Bind(p, pattern3())
+        case _: Term.Name =>
+          syntaxError(
+            "Pattern variables must start with a lower-case letter. (SLS 8.1.1.)",
+            at = p
+          )
+        case p: Pat.Var =>
+          next()
+          Pat.Bind(p, getSeqWildcard(dialect.allowAtForExtractorVarargs, pattern3()))
+        case _: Pat.Wildcard =>
+          next()
+          getSeqWildcard(dialect.allowAtForExtractorVarargs, pattern3())
+        case p =>
+          p
+      }
+      if (pat eq p) p else autoEndPos(p)(pat)
     }
 
     def pattern3(): Pat = {
@@ -2604,23 +2573,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       simplePattern(token => syntaxError("illegal start of simple pattern", at = token))
     def simplePattern(onError: Token => Nothing): Pat =
       autoPos(token match {
-        case Ident(_) | KwThis() | Unquote() =>
+        case _: Ident | _: KwThis | _: Unquote =>
           val isBackquoted = parser.isBackquoted
           val sid = stableId()
-          val isRepeated = sid match {
-            case _: Quasi => false
-            case _: Term.Name =>
-              dialect.allowPostfixStarVarargSplices && isStar && token.next.isNot[Ident]
-            case _ => false
-          }
-          val isVarPattern = sid match {
-            case _: Quasi => false
-            case Term.Name(value) =>
-              val isNextTokenBinding = token.is[At]
-              val isCapitalAllowed = dialect.allowUpperCasePatternVarBinding && isNextTokenBinding
-              !isBackquoted && ((value.head.isLower && value.head.isLetter) || value.head == '_' || isCapitalAllowed)
-            case _ => false
-          }
           if (token.is[NumericConstant[_]]) {
             sid match {
               case Term.Name("-") =>
@@ -2629,51 +2584,61 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             }
           }
           val targs = token match {
-            case LeftBracket() => patternTypeArgs()
+            case _: LeftBracket => patternTypeArgs()
             case _ => Nil
           }
-          (token, sid) match {
-            case (LeftParen(), _) =>
-              val ref = sid match {
-                case q: Quasi => q.become[Term.Quasi]
-                case other => other
-              }
-              val fun = if (targs.nonEmpty) autoEndPos(sid)(Term.ApplyType(ref, targs)) else ref
-              Pat.Extract(fun, checkNoTripleDots(argumentPatterns()))
-            case (_, _) if targs.nonEmpty => syntaxError("pattern must be a value", at = token)
-            case (_, name: Term.Name.Quasi) => name.become[Pat.Quasi]
-            case (_, name: Term.Name) if isRepeated => accept[Ident]; Pat.Repeated(name)
-            case (_, name: Term.Name) if isVarPattern => Pat.Var(name)
-            case (_, name: Term.Name) => name
-            case (_, select: Term.Select) => select
-            case _ => unreachable(debug(token, token.structure, sid, sid.structure))
-          }
-        case Underscore() if isLegitimateSeqWildcard =>
-          nextTwice()
-          Pat.SeqWildcard()
-        case Underscore() =>
+          if (token.is[LeftParen]) {
+            val ref = sid match {
+              case q: Quasi => q.become[Term.Quasi]
+              case other => other
+            }
+            val fun = if (targs.nonEmpty) autoEndPos(sid)(Term.ApplyType(ref, targs)) else ref
+            Pat.Extract(fun, checkNoTripleDots(argumentPatterns()))
+          } else if (targs.nonEmpty)
+            syntaxError("pattern must be a value", at = token)
+          else
+            sid match {
+              case name: Term.Name.Quasi => name.become[Pat.Quasi]
+              case name: Term.Name =>
+                if (dialect.allowPostfixStarVarargSplices && isStar && token.next.isNot[Ident])
+                  next(Pat.Repeated(name))
+                else if (!isBackquoted && {
+                    val first = name.value.head
+                    first == '_' || Character.getType(first) == Character.LOWERCASE_LETTER ||
+                    dialect.allowUpperCasePatternVarBinding && token.is[At]
+                  })
+                  Pat.Var(name)
+                else name
+              case select: Term.Select => select
+              case _ => unreachable(debug(token, token.structure, sid, sid.structure))
+            }
+        case _: Underscore =>
           next()
-          Pat.Wildcard()
+          if (isSequenceOK && isStar && ahead(isArglistEnd)) {
+            next()
+            Pat.SeqWildcard()
+          } else
+            Pat.Wildcard()
         case _: Literal =>
           literal()
-        case Interpolation.Id(_) =>
+        case _: Interpolation.Id =>
           interpolatePat()
-        case Xml.Start() =>
+        case _: Xml.Start =>
           xmlPat()
-        case LeftParen() =>
+        case _: LeftParen =>
           val patterns = inParens(if (token.is[RightParen]) Nil else noSeq.patterns())
           makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
-        case MacroQuote() =>
+        case _: MacroQuote =>
           QuotedPatternContext.within {
             Pat.Macro(macroQuote())
           }
-        case MacroQuotedIdent() =>
+        case _: MacroQuotedIdent =>
           Pat.Macro(macroQuotedIdent())
-        case KwGiven() =>
-          accept[KwGiven]
+        case _: KwGiven =>
+          next()
           Pat.Given(patternTyp(allowInfix = false, allowImmediateTypevars = false))
-        case _ =>
-          onError(token)
+        case t =>
+          onError(t)
       })
   }
 
