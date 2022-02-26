@@ -7,13 +7,13 @@ import scala.reflect.macros.blackbox.Context
 import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
 import java.lang.Class
-import scala.meta.tokens.Token
+import scala.meta.tokens._
 import scala.meta.classifiers._
 import org.scalameta.internal.MacroHelpers
 import scala.meta.internal.tokens.{Reflection => TokenReflection}
 
 @implicitNotFound(msg = "${T} is not a token class and can't be used here.")
-trait TokenInfo[T <: Token] extends ClassTag[T] with Classifier[Token, T] {
+trait TokenInfo[T <: Token] extends ClassTag[T] with TokenClassifier[T] {
   def name: String
   def runtimeClass: Class[T]
   def apply(token: Token): Boolean = token != null && runtimeClass.isAssignableFrom(token.getClass)

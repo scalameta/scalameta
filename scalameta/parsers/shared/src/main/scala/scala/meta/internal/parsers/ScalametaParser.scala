@@ -345,17 +345,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     finally inFunReturnType = saved
   }
 
-  def syntaxErrorExpected[T <: Token: TokenInfo]: Nothing =
-    syntaxError(s"${implicitly[TokenInfo[T]].name} expected but ${token.name} found", at = token)
+  def syntaxErrorExpected[T <: Token](implicit tokenInfo: TokenInfo[T]): Nothing =
+    syntaxError(s"${tokenInfo.name} expected but ${token.name} found", at = token)
 
   /** Consume one token of the specified type, or signal an error if it is not there. */
   def accept[T <: Token: TokenInfo]: Unit =
-    if (token.is[T](implicitly[TokenInfo[T]])) {
-      if (token.isNot[EOF]) next()
-    } else syntaxErrorExpected[T]
+    if (!token.is[T]) syntaxErrorExpected[T]
+    else if (token.isNot[EOF]) next()
 
   /** If current token is T consume it. */
-  @inline private def acceptOpt[T](implicit classifier: Classifier[Token, T]): Boolean = {
+  @inline private def acceptOpt[T: TokenClassifier]: Boolean = {
     val ok = token.is[T]
     if (ok) next()
     ok
@@ -416,7 +415,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def summonClassifierFunc[A, B](implicit v: Classifier[A, B]): A => Boolean = v.apply
 
-  def onlyAcceptMod[M <: Mod: ClassTag, T <: Token: TokenInfo](
+  def onlyAcceptMod[M <: Mod: ClassTag, T: TokenClassifier](
       mods: List[Mod],
       errorMsg: String
   )(implicit classifier: Classifier[Mod, M]) = {
@@ -448,7 +447,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case _ => false
   }
 
-  def followedByToken[T <: Token: TokenInfo]: Boolean = {
+  def followedByToken[T: TokenClassifier]: Boolean = {
     def startBlock = token.is[LeftBrace] || token.is[Indentation.Indent]
     def endBlock = token.is[RightBrace] || token.is[Indentation.Outdent]
     @tailrec
@@ -587,7 +586,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _ => unreachable(debug(token))
     }
 
-  final def tokenSeparated[Sep <: Token: TokenInfo, T <: Tree: AstInfo](
+  final def tokenSeparated[Sep: TokenClassifier, T <: Tree: AstInfo](
       sepFirst: Boolean,
       part: => T
   ): List[T] = listBy[T] { ts =>
@@ -1308,7 +1307,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (token.is[LF] || token.is[LFLF]) next()
   }
 
-  def newLineOptWhenFollowedBy[T](implicit classifier: Classifier[Token, T]): Unit = {
+  def newLineOptWhenFollowedBy[T: TokenClassifier]: Unit = {
     if (token.is[LF] && ahead { token.is[T] }) next()
   }
 
@@ -1320,7 +1319,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (token.is[LF] && nextLineHasGreaterIndentation) next()
   }
 
-  def isAfterOptNewLine[T](implicit classifier: Classifier[Token, T]): Boolean = {
+  def isAfterOptNewLine[T: TokenClassifier]: Boolean = {
     if (token.is[LF]) {
       val ok = ahead { token.is[T] }
       if (ok) next()
@@ -1384,9 +1383,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  private def tryAcceptWithOptLF[T <: Token: TokenInfo](
-      implicit classifier: Classifier[Token, T]
-  ): Boolean = {
+  private def tryAcceptWithOptLF[T: TokenClassifier]: Boolean = {
     acceptOpt[T] || {
       val ok = token.is[LF] && ahead(token.is[T])
       if (ok) nextTwice()
@@ -1441,7 +1438,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def condExprInParens[T <: Token: TokenInfo]: Term = {
-    def isFollowedBy[U <: Token: TokenInfo] = {
+    def isFollowedBy[U: TokenClassifier] = {
       if (token.is[LF] || token.is[LFLF] || token.is[EOF]) {
         false
       } else { followedByToken[U] }
@@ -3079,7 +3076,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def typeBounds() =
     autoPos(Type.Bounds(bound[Supertype], bound[Subtype]))
 
-  def bound[T <: Token: TokenInfo]: Option[Type] =
+  def bound[T: TokenClassifier]: Option[Type] =
     if (acceptOpt[T]) Some(typ()) else None
 
   /* -------- DEFS ------------------------------------------- */
