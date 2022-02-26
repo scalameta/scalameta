@@ -48,7 +48,7 @@ object LazyTokenIterator {
 }
 
 private[parsers] class LazyTokenIterator private (
-    scannerTokens: ScannerTokens,
+    private val scannerTokens: ScannerTokens,
     private var sepRegions: List[SepRegion],
     private var curr: LazyTokenIterator.TokenRef,
     private var prevPos: Int
