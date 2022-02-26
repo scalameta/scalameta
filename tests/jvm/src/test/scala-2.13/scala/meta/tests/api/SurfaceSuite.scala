@@ -71,7 +71,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Tree
       |scala.meta.classifiers
       |scala.meta.classifiers.Classifiable *
-      |scala.meta.classifiers.Classifier *
+      |scala.meta.classifiers.Classifier
       |scala.meta.cli
       |scala.meta.cli.Metac *
       |scala.meta.cli.Metacp *
