@@ -454,7 +454,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   /* -------------- TOKEN CLASSES ------------------------------------------- */
 
   private def isIdentAnd(token: Token, pred: String => Boolean): Boolean = token match {
-    case Ident(value) => pred(value.stripPrefix("`").stripSuffix("`"))
+    case x: Ident => pred(getIdentStripped(x))
     case _ => false
   }
 
@@ -559,7 +559,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def unquote[T <: Tree: AstInfo](unquote: Unquote, advance: Boolean = true): T = autoPos {
+  private def unquote[T <: Tree](unquote: Unquote)(implicit astInfo: AstInfo[T]): T = autoPos {
     require(unquote.input.chars(unquote.start + 1) != '$')
     if (!dialect.allowUnquotes) {
       syntaxError(s"$dialect doesn't support unquotes", at = unquote)
@@ -582,13 +582,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case ex: Exception => throw ex.absolutize
       }
     }
-    if (advance) {
-      next()
-      implicitly[AstInfo[T]].quasi(0, unquotedTree)
-    } else
-      ahead {
-        implicitly[AstInfo[T]].quasi(0, unquotedTree)
-      }
+    next()
+    astInfo.quasi(0, unquotedTree)
   }
 
   def unquote[T <: Tree: AstInfo]: T =
@@ -846,39 +841,38 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     @tailrec
     private final def infixTypeRest(t: Type, mode: InfixMode.Value, startPos: Int): Type = {
-      if (isIdent || token.is[Unquote]) {
-        if (isStar && ahead(
-            token.is[RightParen] || token.is[Comma] || token.is[Equals] ||
-              token.is[RightBrace] || token.is[EOF]
-          )) {
-          // we assume that this is a type specification for a vararg parameter
+      @inline def verifyLeftAssoc(at: Tree, leftAssoc: Boolean = true) =
+        if (mode != InfixMode.FirstOp) checkAssoc(at, leftAssoc, mode == InfixMode.LeftOp)
+      token match {
+        case Ident("*") if ahead(token match {
+              case _: RightParen | _: Comma | _: Equals | _: RightBrace | _: EOF => true
+              case _ => false
+            }) => // we assume that this is a type specification for a vararg parameter
           t
-        } else {
-          val name = termName(advance = false)
-          val leftAssoc = name.isLeftAssoc
-          if (mode != InfixMode.FirstOp) checkAssoc(name, leftAssoc = mode == InfixMode.LeftOp)
-          if (isAmpersand && dialect.allowAndTypes) {
-            next()
-            newLineOptWhenFollowedBy[TypeIntro]
-            val t1 = compoundType()
-            infixTypeRest(atPos(startPos, t1)(Type.And(t, t1)), InfixMode.LeftOp, startPos)
-          } else if (isBar && dialect.allowOrTypes) {
-            next()
-            newLineOptWhenFollowedBy[TypeIntro]
-            val t1 = compoundType()
-            infixTypeRest(atPos(startPos, t1)(Type.Or(t, t1)), InfixMode.LeftOp, startPos)
-          } else {
-            val op = typeName()
-            newLineOptWhenFollowedBy[TypeIntro]
-            def mkOp(t1: Type) = atPos(startPos, t1)(Type.ApplyInfix(t, op, t1))
-            if (leftAssoc)
-              infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp, startPos)
-            else
-              mkOp(infixType(InfixMode.RightOp))
-          }
-        }
-      } else {
-        t
+        case Ident("&") if dialect.allowAndTypes =>
+          next()
+          newLineOptWhenFollowedBy[TypeIntro]
+          val t1 = compoundType()
+          verifyLeftAssoc(t1)
+          infixTypeRest(atPos(startPos, t1)(Type.And(t, t1)), InfixMode.LeftOp, startPos)
+        case Ident("|") if dialect.allowOrTypes =>
+          next()
+          newLineOptWhenFollowedBy[TypeIntro]
+          val t1 = compoundType()
+          verifyLeftAssoc(t1)
+          infixTypeRest(atPos(startPos, t1)(Type.Or(t, t1)), InfixMode.LeftOp, startPos)
+        case _: Ident | _: Unquote =>
+          val op = typeName()
+          val leftAssoc = op.isLeftAssoc
+          verifyLeftAssoc(op, leftAssoc)
+          newLineOptWhenFollowedBy[TypeIntro]
+          def mkOp(t1: Type) = atPos(startPos, t1)(Type.ApplyInfix(t, op, t1))
+          if (leftAssoc)
+            infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp, startPos)
+          else
+            mkOp(infixType(InfixMode.RightOp))
+        case _ =>
+          t
       }
     }
 
@@ -1077,22 +1071,25 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     implicit object AllowedTermName extends AllowedName[Term.Name]
     implicit object AllowedTypeName extends AllowedName[Type.Name]
   }
+
+  private def getIdentStripped(ident: Ident): String =
+    ident.value.stripPrefix("`").stripSuffix("`")
   private def identName[T <: Tree](ident: Ident, pos: Int, ctor: String => T): T =
-    atPos(pos)(ctor(ident.value.stripPrefix("`").stripSuffix("`")))
-  private def name[T <: Tree: AllowedName: AstInfo](ctor: String => T, advance: Boolean): T =
+    atPos(pos)(ctor(getIdentStripped(ident)))
+  private def name[T <: Tree: AllowedName: AstInfo](ctor: String => T): T =
     token match {
       case t: Ident =>
         val res = identName(t, in.tokenPos, ctor)
-        if (advance) next()
+        next()
         res
       case t: Unquote =>
-        unquote[T](t, advance)
+        unquote[T](t)
       case _ =>
         syntaxErrorExpected[Ident]
     }
 
-  def termName(advance: Boolean = true): Term.Name = name(Term.Name(_), advance)
-  def typeName(advance: Boolean = true): Type.Name = name(Type.Name(_), advance)
+  def termName(): Term.Name = name(Term.Name(_))
+  def typeName(): Type.Name = name(Type.Name(_))
 
   def path(thisOK: Boolean = true): Term.Ref = {
     val startsAtBof = token.prev.is[BOF]
@@ -1935,11 +1932,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def checkAssoc(op: Term.Name, leftAssoc: Boolean): Unit =
-    if (op.isLeftAssoc != leftAssoc)
+  @inline def checkAssoc(op: Term.Name, leftAssoc: Boolean): Unit =
+    checkAssoc(op, op.isLeftAssoc, leftAssoc)
+
+  @inline private def checkAssoc(at: Tree, opLeftAssoc: Boolean, leftAssoc: Boolean): Unit =
+    if (opLeftAssoc != leftAssoc)
       syntaxError(
         "left- and right-associative operators with same precedence may not be mixed",
-        at = op
+        at = at
       )
 
   def postfixExpr(allowRepeated: Boolean, location: Location = NoStat): Term = {

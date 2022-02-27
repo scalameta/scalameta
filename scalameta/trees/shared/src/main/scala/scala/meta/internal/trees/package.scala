@@ -26,6 +26,14 @@ package object trees {
     }
   }
 
+  implicit class XtensionTreesTypeName(name: Type.Name) {
+    import name._
+    // some heuristic is needed to govern associativity and precedence of unquoted operators
+    def isLeftAssoc: Boolean =
+      if (name.is[Type.Name.Quasi]) true
+      else value.last != ':'
+  }
+
   implicit class XtensionTreesTermName(name: Term.Name) {
     import name._
     // some heuristic is needed to govern associativity and precedence of unquoted operators
