@@ -72,26 +72,14 @@ trait BaseDottySuite extends ParseSuite {
     import dialects.Scala3
     val obtained: T = parser(code)
     MoreHelpers.requireNonEmptyOrigin(obtained)
-    try {
-      assertNoDiff(obtained.structure, expected.structure)
+    assertNoDiff(obtained.structure, expected.structure, "Generated stat")
 
-      // check bijection
-      val reprintedCode =
-        scala.meta.internal.prettyprinters.TreeSyntax.reprint[T](obtained)(dialects.Scala3).toString
-      try {
-        val obtainedAgain: T = parser(reprintedCode)
-        assertNoDiff(obtainedAgain.structure, expected.structure)
-      } catch {
-        case e: Throwable =>
-          println(s"Reprinted stat: \n${reprintedCode}")
-          throw e
-      }
-      assertLayout.foreach(expectedLayout => assertNoDiff(reprintedCode, expectedLayout))
-    } catch {
-      case e: Throwable =>
-        println(s"Generated stat: \n ${obtained.structure}")
-        throw e
-    }
+    // check bijection
+    val reprintedCode =
+      scala.meta.internal.prettyprinters.TreeSyntax.reprint[T](obtained)(dialects.Scala3).toString
+    val obtainedAgain: T = parser(reprintedCode)
+    assertNoDiff(obtainedAgain.structure, expected.structure, s"Reprinted stat: \n${reprintedCode}")
+    assertLayout.foreach(assertNoDiff(reprintedCode, _, "Reprinted stat"))
   }
 
   protected def runTestError[T <: Tree](code: String, expected: String)(
@@ -99,11 +87,14 @@ trait BaseDottySuite extends ParseSuite {
   ): Unit = {
     val error = intercept[ParseException] {
       val result = parser(code)
-      println(s"Statement ${code} should not parse! Got result ${result.structure}")
+      throw new ParseException(
+        Position.None,
+        s"Statement ${code} should not parse! Got result ${result.structure}"
+      )
     }
-    if (!error.getMessage().contains(expected)) {
-      println(s"Expected [${error.getMessage}] to contain [${expected}].")
-    }
-    assert(error.getMessage.contains(expected))
+    assert(
+      error.getMessage.contains(expected),
+      s"Expected [${error.getMessage}] to contain [${expected}]."
+    )
   }
 }
