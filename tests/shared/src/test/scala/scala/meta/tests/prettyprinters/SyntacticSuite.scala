@@ -239,20 +239,20 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("and types") {
     val Scala211 = null
-    import scala.meta.dialects.Dotty
+    import dialects.Scala3
     assertEquals(tpe("Foo & Bar").syntax, "Foo & Bar")
   }
 
   test("or types") {
     val Scala211 = null
-    import scala.meta.dialects.Dotty
+    import dialects.Scala3
     assertEquals(tpe("Foo | Bar").syntax, "Foo | Bar")
   }
 
   test("trait parameters") {
     val Scala211 = null
-    import scala.meta.dialects.Dotty
-    assertEquals(Dotty(q"trait T(a: Int)").syntax, "trait T(a: Int)")
+    import dialects.Scala3
+    assertEquals(Scala3(q"trait T(a: Int)").syntax, "trait T(a: Int)")
   }
 
   test("literalTypes") {
@@ -260,7 +260,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       dialects.Scala211("val a : 42 = 42").parse[Stat].get.syntax
     }
     val Scala211 = null
-    import scala.meta.dialects.Dotty
+    import dialects.Scala3
     assertEquals(q"val a: 42 = 42".syntax, "val a: 42 = 42")
     assertEquals(q"val a: 42L = 42L".syntax, "val a: 42L = 42L")
     assertEquals(q"val a: 42d = 42d".syntax, "val a: 42d = 42d")
@@ -270,7 +270,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(q"val a: true = true".syntax, "val a: true = true")
     assertEquals(q"val a: false = false".syntax, "val a: false = false")
     assertEquals(
-      dialects.Dotty("val a: \"42\" = \"42\"").parse[Stat].get.syntax,
+      dialects.Scala3("val a: \"42\" = \"42\"").parse[Stat].get.syntax,
       "val a: \"42\" = \"42\""
     )
     assertEquals(pat("_: 42").syntax, "_: 42")

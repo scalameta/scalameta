@@ -1,7 +1,7 @@
 package scala.meta.parser.dotty
 
 import scala.meta._
-import scala.meta.dialects.Dotty
+import scala.meta.dialects.Scala3
 import munit.FunSuite
 
 import java.io.File

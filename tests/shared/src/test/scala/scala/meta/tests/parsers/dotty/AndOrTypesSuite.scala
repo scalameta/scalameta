@@ -13,7 +13,7 @@ class AndOrTypesSuite extends BaseDottySuite {
    */
   test("view bounds not allowed") {
     intercept[ParseException] {
-      dialects.Dotty("{ def foo[T <% Int](t: T) = ??? }").parse[Term].get
+      dialects.Scala3("{ def foo[T <% Int](t: T) = ??? }").parse[Term].get
     }
   }
 

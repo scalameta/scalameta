@@ -54,7 +54,7 @@ class TransformerSuite extends FunSuite {
 
   test("dotty-derives-transform") {
 
-    import scala.meta.dialects.Dotty
+    import dialects.Scala3
 
     val before = "case class Node(name: String) extends Tree derives a.b.OldName { def a = 1 }"
     val after = "case class Node(name: String) extends Tree derives a.b.NewName { def a = 1 }"

@@ -16,16 +16,16 @@ class MinorDottySuite extends BaseDottySuite {
    */
   test("open-class") {
     val Defn.Class(List(Mod.Open()), Type.Name("A"), _, _, _) =
-      templStat("open class A {}")(dialects.Dotty)
+      templStat("open class A {}")(dialects.Scala3)
 
     val Defn.Trait(List(Mod.Open()), Type.Name("C"), _, _, _) =
-      templStat("open trait C {}")(dialects.Dotty)
+      templStat("open trait C {}")(dialects.Scala3)
 
     val Defn.Trait(List(Mod.Open(), Mod.Private(Name.Anonymous())), Type.Name("C"), _, _, _) =
-      templStat("open private trait C {}")(dialects.Dotty)
+      templStat("open private trait C {}")(dialects.Scala3)
 
     val Defn.Object(List(Mod.Open()), Term.Name("X"), _) =
-      templStat("open object X {}")(dialects.Dotty)
+      templStat("open object X {}")(dialects.Scala3)
 
   }
 
@@ -63,13 +63,13 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("case-classes-empty-plist") {
-    templStat("case class A()")(dialects.Dotty)
-    templStat("case class A @deprecated() ()")(dialects.Dotty)
-    templStat("case class A private ()")(dialects.Dotty)
+    templStat("case class A()")(dialects.Scala3)
+    templStat("case class A @deprecated() ()")(dialects.Scala3)
+    templStat("case class A private ()")(dialects.Scala3)
   }
 
   test("xml-literals") {
-    term("<foo>{bar}</foo>")(dialects.Dotty)
+    term("<foo>{bar}</foo>")(dialects.Scala3)
   }
 
   test("opaque-type-alias") {
