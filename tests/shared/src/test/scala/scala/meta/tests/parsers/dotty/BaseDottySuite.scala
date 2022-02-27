@@ -69,7 +69,7 @@ trait BaseDottySuite extends ParseSuite {
   protected def runTestAssert[T <: Tree](code: String, assertLayout: Option[String])(
       expected: T
   )(implicit parser: String => T): Unit = {
-    import scala.meta.dialects.Dotty
+    import dialects.Scala3
     val obtained: T = parser(code)
     MoreHelpers.requireNonEmptyOrigin(obtained)
     try {
@@ -77,7 +77,7 @@ trait BaseDottySuite extends ParseSuite {
 
       // check bijection
       val reprintedCode =
-        scala.meta.internal.prettyprinters.TreeSyntax.reprint[T](obtained)(dialects.Dotty).toString
+        scala.meta.internal.prettyprinters.TreeSyntax.reprint[T](obtained)(dialects.Scala3).toString
       try {
         val obtainedAgain: T = parser(reprintedCode)
         assertNoDiff(obtainedAgain.structure, expected.structure)

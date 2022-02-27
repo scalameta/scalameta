@@ -5,7 +5,7 @@ import scala.meta._
 
 class InlineSuite extends BaseDottySuite {
 
-  implicit val parseTempl: String => Stat = code => templStat(code)(dialects.Dotty)
+  implicit val parseTempl: String => Stat = code => templStat(code)(dialects.Scala3)
 
   /**
    * All examples based on dotty documentation:

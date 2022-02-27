@@ -137,16 +137,16 @@ class TypeSuite extends ParseSuite {
       tpe("42")(dialects.Scala211)
     }
 
-    val Lit(42) = tpe("42")(dialects.Dotty)
-    val Lit(-42) = tpe("-42")(dialects.Dotty)
-    val Lit(42L) = tpe("42L")(dialects.Dotty)
-    val Lit(42f) = tpe("42f")(dialects.Dotty)
-    val Lit(-42f) = tpe("-42f")(dialects.Dotty)
-    val Lit(42d) = tpe("42d")(dialects.Dotty)
-    val Lit(-42d) = tpe("-42d")(dialects.Dotty)
-    val Lit("42") = tpe("\"42\"")(dialects.Dotty)
-    val Lit(false) = tpe("false")(dialects.Dotty)
-    val Lit(true) = tpe("true")(dialects.Dotty)
+    val Lit(42) = tpe("42")(dialects.Scala3)
+    val Lit(-42) = tpe("-42")(dialects.Scala3)
+    val Lit(42L) = tpe("42L")(dialects.Scala3)
+    val Lit(42f) = tpe("42f")(dialects.Scala3)
+    val Lit(-42f) = tpe("-42f")(dialects.Scala3)
+    val Lit(42d) = tpe("42d")(dialects.Scala3)
+    val Lit(-42d) = tpe("-42d")(dialects.Scala3)
+    val Lit("42") = tpe("\"42\"")(dialects.Scala3)
+    val Lit(false) = tpe("false")(dialects.Scala3)
+    val Lit(true) = tpe("true")(dialects.Scala3)
 
     val exceptionScala3 = intercept[ParseException] {
       tpe("() => ()")(dialects.Scala3)

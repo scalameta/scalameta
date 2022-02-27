@@ -948,7 +948,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       Interpolation.Part("\" in quotes"),
       Interpolation.End(),
       EOF()
-    ) = dialects.Dotty(stringInterpolation).tokenize.get
+    ) = dialects.Scala3(stringInterpolation).tokenize.get
 
     assert(
       dialects.Scala212(stringInterpolation).tokenize.isInstanceOf[Tokenized.Error],
@@ -967,7 +967,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       Interpolation.End(),
       RightParen(),
       EOF()
-    ) = dialects.Dotty(stringInterpolationWithUnicode).tokenize.get
+    ) = dialects.Scala3(stringInterpolationWithUnicode).tokenize.get
 
   }
 
@@ -977,7 +977,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("enum") {
-    val Tokens(BOF(), _: KwEnum, EOF()) = dialects.Dotty("enum").tokenize.get
+    val Tokens(BOF(), _: KwEnum, EOF()) = dialects.Scala3("enum").tokenize.get
     val Tokens(BOF(), Ident("enum"), EOF()) = dialects.Scala212("enum").tokenize.get
 
     val Tokens(
@@ -993,7 +993,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       EOF()
     ) = dialects.Scala212("s\"$enum\"").tokenize.get
 
-    assert(dialects.Dotty("s\"$enum\"").tokenize.isInstanceOf[Tokenized.Error])
+    assert(dialects.Scala3("s\"$enum\"").tokenize.isInstanceOf[Tokenized.Error])
   }
 
   test("macro") {

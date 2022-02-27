@@ -5,7 +5,7 @@ import scala.meta._
 
 class MatchTypeSuite extends BaseDottySuite {
 
-  implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Dotty)
+  implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Scala3)
 
   test("simple") {
     val intput =
