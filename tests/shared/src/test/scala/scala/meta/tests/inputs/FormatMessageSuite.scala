@@ -13,8 +13,7 @@ class FormatMessageSuite extends FunSuite {
       val content = Input.String(s)
       val points = 0.to(content.chars.length).map(i => Position.Range(content, i, i))
       val actual = points.map(p => s"${p.formatMessage("error", "foo")}").mkString(EOL)
-      if (actual != expected) Console.err.println(actual)
-      assert(actual == expected)
+      assertNoDiff(actual, expected)
     }
   }
 
