@@ -2,6 +2,7 @@ package scala.meta.metap
 
 import java.io._
 import java.nio.file._
+import scala.annotation.tailrec
 import scala.meta.cli._
 
 final class Settings private (
@@ -27,6 +28,7 @@ final class Settings private (
 
 object Settings {
   def parse(args: List[String], reporter: Reporter): Option[Settings] = {
+    @tailrec
     def loop(settings: Settings, allowOptions: Boolean, args: List[String]): Option[Settings] = {
       args match {
         case "--" +: rest =>

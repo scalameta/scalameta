@@ -87,7 +87,7 @@ object ParentChecks {
   }
 
   def EnumCase(tree: Tree, parent: Tree, destination: String): Boolean = {
-    parent.is[Template] && parent.parent.map(_.is[Defn.Enum]).getOrElse(true)
+    parent.is[Template] && parent.parent.forall(_.is[Defn.Enum])
   }
 
   def TypeLambda(tree: Type.Lambda, parent: Tree, destination: String): Boolean = {

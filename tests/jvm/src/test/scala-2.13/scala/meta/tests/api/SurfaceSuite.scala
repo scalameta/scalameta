@@ -217,7 +217,7 @@ class SurfaceSuite extends FunSuite {
 
   test("statics (trees)") {
     // println(trees.toList.sorted.mkString(EOL))
-    val obtained = trees.toList.filterNot(_.toString.endsWith("Quasi")).sorted.mkString(EOL)
+    val obtained = trees.filterNot(_.endsWith("Quasi")).sorted.mkString(EOL)
     assertNoDiff(
       obtained,
       """

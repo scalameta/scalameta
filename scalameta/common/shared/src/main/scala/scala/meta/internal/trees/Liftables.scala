@@ -31,7 +31,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
   lazy val TokensSymbol = c.mirror.staticClass("scala.meta.tokens.Tokens")
 
   override def customAdts(root: Root): Option[List[Adt]] = {
-    var nonQuasis = root.allLeafs.filter(leaf => !(leaf.tpe <:< QuasiSymbol.toType))
+    val nonQuasis = root.allLeafs.filter(leaf => !(leaf.tpe <:< QuasiSymbol.toType))
     Some(QuasiSymbol.asBranch +: nonQuasis)
   }
   override def customWrapper(

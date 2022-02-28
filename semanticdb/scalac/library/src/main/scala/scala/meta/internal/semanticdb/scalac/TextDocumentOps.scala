@@ -1,6 +1,8 @@
 package scala.meta.internal.semanticdb.scalac
 
 import org.scalameta.internal.ScalaCompat._
+
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.meta.internal.inputs._
 import scala.meta.internal.io.PathIO
@@ -309,19 +311,19 @@ trait TextDocumentOps { self: SemanticdbOps =>
             def tryMstart(start: Int): Boolean = {
               if (!mstarts.contains(start)) return false
               success(mstarts(start), gtree.symbol)
-              return true
+              true
             }
             def tryMend(end: Int): Boolean = {
               if (!mends.contains(end)) return false
               success(mends(end), gtree.symbol)
-              return true
+              true
             }
             def tryMpos(start: Int, end: Int): Boolean = {
               if (!mstarts.contains(start)) return false
               val mtree = mstarts(start)
               if (mtree.pos.end != end) return false
               success(mtree, gtree.symbol)
-              return true
+              true
             }
 
             gtree match {
@@ -450,6 +452,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               }
             }
 
+            @tailrec
             def isForSynthetic(gtree: g.Tree): Boolean = {
               def isForComprehensionSyntheticName(select: g.Select): Boolean = {
                 select.pos == select.qualifier.pos && (select.name == g.nme.map ||

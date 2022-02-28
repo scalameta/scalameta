@@ -32,9 +32,9 @@ class ReferenceTypeSignatureVisitor extends TypedSignatureVisitor[Option[Referen
     }
   }
 
-  override def visitSuperclass(): SignatureVisitor = this
+  override def visitSuperclass: SignatureVisitor = this
 
-  override def visitArrayType(): SignatureVisitor = {
+  override def visitArrayType: SignatureVisitor = {
     val visitor = new JavaTypeSignatureVisitor(isArray = true)
     arrayTypeSignatureVisitor = visitor
     visitor

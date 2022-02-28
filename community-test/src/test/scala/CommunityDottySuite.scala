@@ -147,7 +147,7 @@ class CommunityDottySuite extends FunSuite {
       } catch {
         case e: Throwable =>
           println(s"Failed for file ${file.toAbsolutePath}")
-          println(s"Error: " + e.getMessage())
+          println(s"Error: " + e.getMessage)
           TestStats(1, 1, Some(e), 0, 0)
       }
     }

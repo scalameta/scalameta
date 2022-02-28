@@ -9,6 +9,8 @@ import scala.collection.mutable
 import org.scalameta._
 import org.scalameta.adt.{Liftables => AdtLiftables}
 import org.scalameta.invariants._
+
+import scala.annotation.tailrec
 import scala.meta.dialects
 import scala.meta.parsers._
 import scala.meta.tokenizers._
@@ -163,7 +165,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     val parserModuleGetter = parsersModule.getClass.getDeclaredMethod(parserModule.name.toString)
     val parserModuleInstance = parserModuleGetter.invoke(parsersModule)
     val parserMethod =
-      parserModuleInstance.getClass.getDeclaredMethods().find(_.getName == "parse").head
+      parserModuleInstance.getClass.getDeclaredMethods.find(_.getName == "parse").head
     (input: Input, dialect: Dialect) => {
       try parserMethod.invoke(parserModuleInstance, input, dialect).asInstanceOf[MetaTree]
       catch { case ex: java.lang.reflect.InvocationTargetException => throw ex.getTargetException }
@@ -194,6 +196,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         if (clazz.isArray) {
           appliedType(ListClass, clazz.getComponentType.toTpe)
         } else {
+          @tailrec
           def loop(owner: u.Symbol, parts: List[String]): u.Symbol = parts match {
             case part :: Nil =>
               if (clazz.getName.endsWith("$")) owner.info.decl(TermName(part))
@@ -237,6 +240,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         }
       }
       def liftTrees(trees: List[MetaTree]): ReflectTree = {
+        @tailrec
         def loop(trees: List[MetaTree], acc: ReflectTree, prefix: List[MetaTree]): ReflectTree =
           trees match {
             case (quasi: Quasi) +: rest if quasi.rank == 1 =>
@@ -276,14 +280,14 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
               if (acc.isEmpty) q"$ListModule(..${prefix.map(liftTree)})"
               else acc
           }
-        loop(trees.toList, EmptyTree, Nil)
+        loop(trees, EmptyTree, Nil)
       }
       def liftTreess(treess: List[List[MetaTree]]): ReflectTree = {
         val tripleDotQuasis = treess.flatten.collect {
           case quasi: Quasi if quasi.rank == 2 => quasi
         }
-        if (tripleDotQuasis.length == 0) {
-          Liftable.liftList[List[MetaTree]](Liftables.liftableSubTrees).apply(treess.toList)
+        if (tripleDotQuasis.isEmpty) {
+          Liftable.liftList[List[MetaTree]](Liftables.liftableSubTrees).apply(treess)
         } else if (tripleDotQuasis.length == 1) {
           if (treess.flatten.length == 1) liftQuasi(tripleDotQuasis(0))
           else

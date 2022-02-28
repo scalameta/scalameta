@@ -128,7 +128,7 @@ abstract class SemanticdbSuite extends FunSuite { self =>
   private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
     val document = computeDatabaseFromSnippet(code)
     val format = scala.meta.metap.Format.Detailed
-    val payload = s.Print.document(format, document).toString.split(EOL)
+    val payload = s.Print.document(format, document).split(EOL)
     val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
     section.mkString(EOL)
   }

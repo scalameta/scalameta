@@ -22,7 +22,7 @@ package object inputs {
         val input = pos.input
         val header = s"${input.syntax}:${pos.startLine + 1}: $severity: $message"
         val line = lineContent
-        var caret = lineCaret
+        val caret = lineCaret
         header + EOL + line + EOL + caret
       } else {
         s"$severity: $message"

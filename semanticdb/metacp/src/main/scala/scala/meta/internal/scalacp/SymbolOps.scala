@@ -1,6 +1,7 @@
 package scala.meta.internal.scalacp
 
 import java.util.{HashMap, HashSet}
+import scala.annotation.tailrec
 import scala.meta.internal.classpath.MissingSymbolException
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
@@ -65,6 +66,7 @@ trait SymbolOps { _: Scalacp =>
       else if (sym.isEmptyPackage) n.EmptyPackage.value
       else if (sym.isConstructor) n.Constructor.value
       else {
+        @tailrec
         def loop(value: String): String = {
           val i = value.lastIndexOf("$$")
           if (i > 0) loop(value.substring(i + 2))

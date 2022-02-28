@@ -26,7 +26,7 @@ class InvariantSuite extends FunSuite {
     val y = 2
     try {
       case class C(x: Int) { require(x != 3 && debug(x, y)) }
-      new C(3)
+      C(3)
     } catch {
       case ex: InvariantFailedException =>
         assert(
@@ -57,7 +57,7 @@ class InvariantSuite extends FunSuite {
     val y = 2
     try {
       case class C(x: Int) { unreachable(debug(x, y)) }
-      new C(3)
+      C(3)
     } catch {
       case ex: UnreachableError =>
         assert(ex.getMessage == """

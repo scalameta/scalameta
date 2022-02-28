@@ -16,11 +16,11 @@ class ClassSignatureVisitor
     ClassSignature(tparams, superclass, interfaces)
   }
 
-  override def visitSuperclass(): SignatureVisitor = {
+  override def visitSuperclass: SignatureVisitor = {
     superclassSignature.visitSuperclass()
   }
 
-  override def visitInterface(): SignatureVisitor = {
+  override def visitInterface: SignatureVisitor = {
     val visitor = new ReferenceTypeSignatureVisitor
     superinterfaceSignatures += visitor
     visitor

@@ -85,7 +85,7 @@ package invariants {
       }
       case class And(props: Prop*) extends Prop {
         override def emit = {
-          def loop(props: List[Prop]): Tree = props.toList match {
+          def loop(props: List[Prop]): Tree = props match {
             case Nil =>
               ???
             case prop :: Nil =>
@@ -102,7 +102,7 @@ package invariants {
       }
       case class Or(props: Prop*) extends Prop {
         override def emit = {
-          def loop(props: List[Prop]): Tree = props.toList match {
+          def loop(props: List[Prop]): Tree = props match {
             case Nil =>
               ???
             case prop :: Nil =>

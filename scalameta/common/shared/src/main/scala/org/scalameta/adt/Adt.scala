@@ -209,7 +209,7 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
     val designation =
       if (sym.isRoot) "root" else if (sym.isBranch) "branch" else if (sym.isLeaf) "leaf" else ???
     val roots = sym.baseClasses.filter(_.isRoot)
-    if (roots.length == 0 && sym.isLeaf)
+    if (roots.isEmpty && sym.isLeaf)
       c.abort(c.enclosingPosition, s"rootless leaf is disallowed")
     else if (roots.length > 1)
       c.abort(
@@ -273,7 +273,7 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
 
     if (sym.asType.toType <:< typeOf[Optional]) {
       val nones = root.allLeafs.map(_.sym).filter(_.isNone)
-      if (nones.length == 0)
+      if (nones.isEmpty)
         failOnce("an ADT family that inherits from Optional must define a @none object")
       else if (nones.length > 1)
         failOnce("an ADT family that inherits from Optional can't have multiple @none objects")

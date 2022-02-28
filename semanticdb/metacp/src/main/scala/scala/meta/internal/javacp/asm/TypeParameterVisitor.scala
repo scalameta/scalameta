@@ -13,11 +13,11 @@ class TypeParameterVisitor(identifier: String) extends TypedSignatureVisitor[Typ
       interfaceBounds.result().map { ib => InterfaceBound(ib.result().get) }
     )
 
-  override def visitClassBound(): SignatureVisitor = {
+  override def visitClassBound: SignatureVisitor = {
     classBound
   }
 
-  override def visitInterfaceBound(): SignatureVisitor = {
+  override def visitInterfaceBound: SignatureVisitor = {
     val visitor = new ReferenceTypeSignatureVisitor
     interfaceBounds += visitor
     visitor

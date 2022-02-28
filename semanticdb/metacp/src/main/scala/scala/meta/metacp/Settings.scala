@@ -1,5 +1,6 @@
 package scala.meta.metacp
 
+import scala.annotation.tailrec
 import scala.meta.cli._
 import scala.meta.internal.io.PathIO
 import scala.meta.io.AbsolutePath
@@ -106,6 +107,7 @@ final class Settings private (
 
 object Settings {
   def parse(args: List[String], reporter: Reporter): Option[Settings] = {
+    @tailrec
     def loop(settings: Settings, allowOptions: Boolean, args: List[String]): Option[Settings] = {
       args match {
         case "--" +: rest =>

@@ -24,10 +24,10 @@ trait LegacyTokenData {
   var endOffset: Offset = 0
 
   /** the name of an identifier */
-  var name: String = null
+  var name: String = _
 
   /** the string value of a literal */
-  var strVal: String = null
+  var strVal: String = _
 
   /** the base of a number */
   var base: Int = 0
@@ -53,7 +53,7 @@ trait LegacyTokenData {
   /**
    * Convert current strVal to char value
    */
-  def charVal: Char = if (strVal.length > 0) strVal.charAt(0) else 0
+  def charVal: Char = if (strVal.isEmpty) 0 else strVal.charAt(0)
 
   /**
    * Convert current strVal, base to an integer value This is tricky because of max negative value.
@@ -63,7 +63,6 @@ trait LegacyTokenData {
     if (input.startsWith("0x") || input.startsWith("0X")) input = input.substring(2)
     if (input.endsWith("l") || input.endsWith("L")) input = input.substring(0, input.length - 1)
     var value: BigInt = 0
-    val divider = if (base == 10) 1 else 2
     var i = 0
     val len = input.length
     while (i < len) {
@@ -100,7 +99,7 @@ trait LegacyTokenData {
       val parsee =
         if (text.nonEmpty && designatorSuffixes.contains(text.last)) text.dropRight(1) else text
       try BigDecimal(parsee)
-      catch { case ex: Exception => syntaxError("malformed floating point number", at = offset) }
+      catch { case _: Exception => syntaxError("malformed floating point number", at = offset) }
     }
   }
 

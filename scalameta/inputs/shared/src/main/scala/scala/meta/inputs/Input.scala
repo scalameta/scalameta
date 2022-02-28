@@ -100,7 +100,7 @@ object Input {
 
   implicit val charsToInput: Convert[Array[Char], Input] =
     Convert(chars => Input.String(new scala.Predef.String(chars)))
-  implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert(Input.String(_))
+  implicit val stringToInput: Convert[scala.Predef.String, Input] = Convert(Input.String)
   implicit def streamToInput[T <: java.io.InputStream]: Convert[T, Input] =
     Convert(is => Input.Stream(is, Charset.forName("UTF-8")))
   // NOTE: fileToInput is lazy to avoid linking errors in Scala.js

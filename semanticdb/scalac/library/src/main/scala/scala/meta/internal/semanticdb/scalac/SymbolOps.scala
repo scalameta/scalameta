@@ -1,6 +1,7 @@
 package scala.meta.internal.semanticdb.scalac
 
 import java.util.HashMap
+import scala.annotation.tailrec
 import scala.{meta => m}
 import scala.meta.internal.inputs._
 import scala.meta.internal.scalacp._
@@ -114,6 +115,7 @@ trait SymbolOps { self: SemanticdbOps =>
         if (sym.isModuleClass && sym.isJavaDefined) {
           sym.companionClass.semanticdbDecls
         } else {
+          @tailrec
           def loop(info: g.Type): SemanticdbDecls = {
             info match {
               case g.PolyType(_, info) =>
@@ -309,6 +311,7 @@ trait SymbolOps { self: SemanticdbOps =>
   lazy val idCache = new HashMap[String, Int]
   lazy val pointsCache = new HashMap[Int, g.Symbol]
   private def freshSymbol(sym: g.Symbol): String = {
+    @tailrec
     def loop(sym: g.Symbol): GSourceFile = {
       if (sym.pos.source != GNoSourceFile) {
         sym.pos.source

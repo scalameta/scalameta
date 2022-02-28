@@ -61,6 +61,6 @@ trait InternalInput {
       else if (a(mid) == offset) return mid
       else /* if (a(mid) < offset */ lo = mid
     }
-    return lo
+    lo
   }
 }

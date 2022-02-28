@@ -186,7 +186,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       var legacyIndex = startingFrom
       def prev = legacyTokens(legacyIndex - 1)
       def curr = {
-        if (legacyIndex < legacyTokens.size) legacyTokens(legacyIndex)
+        if (legacyIndex < legacyTokens.length) legacyTokens(legacyIndex)
         else throw new UnexpectedInputEndException()
       }
       def next = {
@@ -226,6 +226,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
           pushToken(Token.Interpolation.Start(input, dialect, offset, offset + numQuotes))
         def emitEnd(offset: Offset) =
           pushToken(Token.Interpolation.End(input, dialect, offset, offset + numQuotes))
+        @tailrec
         def emitContents(): Unit = {
           if (curr.token == STRINGPART) {
             val dollarOffset = curr.endOffset + 1
