@@ -7,6 +7,7 @@ import Chars._
 import scala.meta.inputs._
 
 trait LegacyTokenData {
+
   /** the input that is currently being tokenized */
   var input: Input = null
 
@@ -43,17 +44,19 @@ trait LegacyTokenData {
     this
   }
 
-  override def toString = s"{token = $token, position = $offset..$endOffset, lastOffset = $lastOffset, name = $name, strVal = $strVal, base = $base}"
+  override def toString =
+    s"{token = $token, position = $offset..$endOffset, lastOffset = $lastOffset, name = $name, strVal = $strVal, base = $base}"
 
   lazy val reporter: Reporter = Reporter(input)
   import reporter._
 
-  /** Convert current strVal to char value
+  /**
+   * Convert current strVal to char value
    */
   def charVal: Char = if (strVal.length > 0) strVal.charAt(0) else 0
 
-  /** Convert current strVal, base to an integer value
-   *  This is tricky because of max negative value.
+  /**
+   * Convert current strVal, base to an integer value This is tricky because of max negative value.
    */
   private def integerVal: BigInt = {
     var input = removeNumberSeparators(strVal)
@@ -77,23 +80,25 @@ trait LegacyTokenData {
   @inline private def removeNumberSeparators(s: String): String =
     if (s.indexOf('_') > 0) s.replaceAllLiterally("_", "") else s
 
-  /** Convert current strVal, base to double value
-  */
+  /**
+   * Convert current strVal, base to double value
+   */
   private def floatingVal: BigDecimal = {
     val text = removeNumberSeparators(strVal)
     def isDeprecatedForm = {
       val idx = text indexOf '.'
       (idx == text.length - 1) || (
-           (idx >= 0)
-        && (idx + 1 < text.length)
-        && (!Character.isDigit(text charAt (idx + 1)))
+        (idx >= 0)
+          && (idx + 1 < text.length)
+          && (!Character.isDigit(text charAt (idx + 1)))
       )
     }
     if (isDeprecatedForm) {
       syntaxError("floating point number is missing digit after dot", at = offset)
     } else {
       val designatorSuffixes = List('d', 'D', 'f', 'F')
-      val parsee = if (text.nonEmpty && designatorSuffixes.contains(text.last)) text.dropRight(1) else text
+      val parsee =
+        if (text.nonEmpty && designatorSuffixes.contains(text.last)) text.dropRight(1) else text
       try BigDecimal(parsee)
       catch { case ex: Exception => syntaxError("malformed floating point number", at = offset) }
     }
