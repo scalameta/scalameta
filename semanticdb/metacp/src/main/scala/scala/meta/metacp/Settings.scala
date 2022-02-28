@@ -108,35 +108,35 @@ object Settings {
   def parse(args: List[String], reporter: Reporter): Option[Settings] = {
     def loop(settings: Settings, allowOptions: Boolean, args: List[String]): Option[Settings] = {
       args match {
-        case "--" +: rest =>
+        case "--" :: rest =>
           loop(settings, false, rest)
-        case "--out" +: out +: rest if allowOptions =>
+        case "--out" :: out :: rest if allowOptions =>
           loop(settings.copy(out = AbsolutePath(out)), true, rest)
-        case "--cache-dir" +: _ +: _ if allowOptions =>
+        case "--cache-dir" :: _ :: _ if allowOptions =>
           reporter.err.println("--cache-dir is deprecated, use --out instead")
           None
-        case "--dependency-classpath" +: dependencyClasspath +: rest if allowOptions =>
+        case "--dependency-classpath" :: dependencyClasspath :: rest if allowOptions =>
           loop(settings.copy(dependencyClasspath = Classpath(dependencyClasspath)), true, rest)
-        case "--exclude-scala-library-synthetics" +: rest if allowOptions =>
+        case "--exclude-scala-library-synthetics" :: rest if allowOptions =>
           loop(settings.copy(scalaLibrarySynthetics = false), true, rest)
-        case "--include-scala-library-synthetics" +: rest if allowOptions =>
+        case "--include-scala-library-synthetics" :: rest if allowOptions =>
           loop(settings.copy(scalaLibrarySynthetics = true), true, rest)
-        case "--par" +: rest if allowOptions =>
+        case "--par" :: rest if allowOptions =>
           loop(settings.copy(par = true), true, rest)
-        case "--verbose" +: rest if allowOptions =>
+        case "--verbose" :: rest if allowOptions =>
           loop(settings.copy(verbose = true), true, rest)
-        case "--usejavacp" +: rest if allowOptions =>
+        case "--usejavacp" :: rest if allowOptions =>
           loop(settings.copy(usejavacp = true), true, rest)
-        case "--stub-broken-signatures" +: rest if allowOptions =>
+        case "--stub-broken-signatures" :: rest if allowOptions =>
           loop(settings.copy(stubBrokenSignatures = true), true, rest)
-        case "--log-broken-signatures" +: rest if allowOptions =>
+        case "--log-broken-signatures" :: rest if allowOptions =>
           loop(settings.copy(logBrokenSignatures = true), true, rest)
-        case flag +: _ if allowOptions && flag.startsWith("-") =>
+        case flag :: _ if allowOptions && flag.startsWith("-") =>
           reporter.err.println(s"unsupported flag $flag")
           None
-        case classpath +: Nil =>
+        case classpath :: Nil =>
           Some(settings.copy(classpath = Classpath(classpath)))
-        case classpath +: arg +: _ =>
+        case classpath :: arg :: _ =>
           reporter.err.println(s"unsupported argument $arg")
           None
         case Nil =>

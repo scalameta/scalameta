@@ -661,7 +661,7 @@ object TreeSyntax {
           case Type.ContextFunction(params, res) => (s(), params, "?=>", res)
         }
         val params = tParams match {
-          case param +: Nil if param.isNot[Type.Tuple] && param.isNot[Type.TypedParam] =>
+          case param :: Nil if param.isNot[Type.Tuple] && param.isNot[Type.TypedParam] =>
             s(p(AnyInfixTyp, param))
           case params => s("(", r(params.map(param => p(ParamTyp, param)), ", "), ")")
         }
