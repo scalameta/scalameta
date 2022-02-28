@@ -454,7 +454,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   /* -------------- TOKEN CLASSES ------------------------------------------- */
 
   private def isIdentAnd(token: Token, pred: String => Boolean): Boolean = token match {
-    case x: Ident => pred(getIdentStripped(x))
+    case Ident(x) => pred(x)
     case _ => false
   }
 
@@ -1072,10 +1072,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     implicit object AllowedTypeName extends AllowedName[Type.Name]
   }
 
-  private def getIdentStripped(ident: Ident): String =
-    ident.value.stripPrefix("`").stripSuffix("`")
   private def identName[T <: Tree](ident: Ident, pos: Int, ctor: String => T): T =
-    atPos(pos)(ctor(getIdentStripped(ident)))
+    atPos(pos)(ctor(ident.value))
   private def name[T <: Tree: AllowedName: AstInfo](ctor: String => T): T =
     token match {
       case t: Ident =>
