@@ -107,4 +107,24 @@ trait LegacyTokenData {
   def longVal: BigInt = integerVal
   def floatVal: BigDecimal = floatingVal
   def doubleVal: BigDecimal = floatingVal
+
+  def setIdentifier(ident: StringBuilder, tokVal: Int, dialect: Dialect)(
+      fCheck: LegacyTokenData => Unit
+  ): Unit = {
+    name = ident.toString
+    ident.clear()
+    token = tokVal
+    if (tokVal == IDENTIFIER)
+      kw2legacytoken.get(name).foreach {
+        case ENUM if !dialect.allowEnums =>
+        case GIVEN if !dialect.allowGivenUsing =>
+        case EXPORT if !dialect.allowExportClause =>
+        case THEN if !dialect.allowSignificantIndentation =>
+        case TYPELAMBDAARROW if !dialect.allowTypeLambdas =>
+        case CTXARROW if !dialect.allowGivenUsing =>
+        case x =>
+          token = x
+          fCheck(this)
+      }
+  }
 }
