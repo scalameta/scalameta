@@ -516,30 +516,23 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   }
 
   @tailrec
-  private def getIdentRest(): Unit = (ch: @switch) match {
-    case 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N' | 'O' |
-        'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' | '$' | 'a' | 'b' | 'c' |
-        'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' |
-        's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' | '0' | '1' | '2' | '3' | '4' | '5' | '6' |
-        '7' | '8' | '9' =>
-      if (ch == '$' && !getDollar()) { finishNamed(); return }
+  private def getIdentRest(): Unit = {
+    if (ch == '_') {
+      putChar(ch)
+      nextChar()
+      if (isIdentifierPart(ch))
+        getIdentRest()
+      else
+        getOperatorRest()
+    } else if (ch match {
+        case SU => false // strangely enough, Character.isUnicodeIdentifierPart(SU) returns true!
+        case '$' => getDollar()
+        case _ => Character.isUnicodeIdentifierPart(ch)
+      }) {
       putChar(ch)
       nextChar()
       getIdentRest()
-    case '_' =>
-      putChar(ch)
-      nextChar()
-      getIdentOrOperatorRest()
-    case SU => // strangely enough, Character.isUnicodeIdentifierPart(SU) returns true!
-      finishNamed()
-    case _ =>
-      if (Character.isUnicodeIdentifierPart(ch)) {
-        putChar(ch)
-        nextChar()
-        getIdentRest()
-      } else {
-        finishNamed()
-      }
+    } else finishNamed()
   }
 
   @tailrec
@@ -560,20 +553,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     case _ =>
       if (isSpecial(ch)) { putChar(ch); nextChar(); getOperatorRest() }
       else finishNamed()
-  }
-
-  private def getIdentOrOperatorRest(): Unit = {
-    if (isIdentifierPart(ch))
-      getIdentRest()
-    else
-      ch match {
-        case '~' | '!' | '@' | '#' | '%' | '^' | '*' | '+' | '-' | '<' | '>' | '?' | ':' | '=' |
-            '&' | '|' | '\\' | '/' =>
-          getOperatorRest()
-        case _ =>
-          if (isSpecial(ch)) getOperatorRest()
-          else finishNamed()
-      }
   }
 
   // True means that we have successfully read '$'
