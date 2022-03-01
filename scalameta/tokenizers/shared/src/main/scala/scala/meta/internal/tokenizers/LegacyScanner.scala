@@ -524,8 +524,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   private def getBackquotedIdent(): Unit = {
     nextChar()
-    getLitChars('`')
-    if (ch == '`') {
+    if (getLitChars('`')) {
       nextChar()
       finishNamed(BACKQUOTED_IDENT)
       if (name.isEmpty) syntaxError("empty quoted identifier", at = offset)
@@ -619,8 +618,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 // Literals -----------------------------------------------------------------
 
   private def getStringLit() = {
-    getLitChars('"')
-    if (ch == '"') {
+    if (getLitChars('"')) {
       setStrVal()
       nextChar()
       token = STRINGLIT
@@ -846,14 +844,14 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     putChar(ch)
   }
 
-  private def getLitChars(delimiter: Char) = {
-    def stop = {
-      def success = ch == delimiter
-      def naturalBreak = (ch == SU || ch == CR || ch == LF) && !isUnicodeEscape
-      def unquote = ch == '$' && !getDollar()
-      success || naturalBreak || unquote
+  @tailrec
+  private def getLitChars(delimiter: Char): Boolean = {
+    @inline def naturalBreak = (ch == SU || ch == CR || ch == LF) && !isUnicodeEscape
+    ch == delimiter || !isAtEnd && !naturalBreak && {
+      val offset = charOffset
+      getLitChar()
+      offset != charOffset && getLitChars(delimiter)
     }
-    while (!isAtEnd && !stop) getLitChar()
   }
 
   @inline private def isNumberSeparator(c: Char): Boolean = {
