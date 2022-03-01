@@ -377,8 +377,14 @@ private[parsers] class LazyTokenIterator private (
            * Outdent is needed in following cases:
            *   - If indentation on next line is less than current and previous token can't continue
            *     expr on the next line
-           *   - At the end of `match` block even if indentation level is not changed Example: ``` x
-           *     match case 1 => case 2 => // <- produce outdent foo() ```
+           *   - At the end of `match` block even if indentation level is not changed. Example:
+           *     ```
+           *     x match
+           *     case 1 =>
+           *     case 2 =>
+           *     // <- produce outdent
+           *     foo()
+           *     ```
            */
           def getOutdentIfNeeded() = sepRegions.headOption
             .filter { r =>
@@ -396,11 +402,11 @@ private[parsers] class LazyTokenIterator private (
            *   - Indetation on new line is greater and previous token can start indentation and
            *     token can start indentation
            *   - Indentation on the new line is the same and the next token is the first `case`
-           *     clause in match Example:
-           * ```
-           * x match // <- mk indent
-           * case 1 =>
-           * ```
+           *     clause in match. Example:
+           *     ```
+           *     x match // <- mk indent
+           *     case 1 =>
+           *     ```
            *
            * Notice: Indentation after `:` isn't hadled here. It's produced manually on the parser
            * level.

@@ -16,7 +16,7 @@ class MacroSuite extends BaseDottySuite {
    * Variants:
    *   - `QuotedMacroType`: `'[ ... ]`
    *   - `QuotedMacroExpr`: `'{ ... }` OR `'ident`
-   *   - `SplicedMacroExpr`: `${ ... }` OR $ident`
+   *   - `SplicedMacroExpr`: `${ ... }` OR `$ident`
    */
   test("parse-single-quote-character") {
     runTestAssert[Stat]("val a = 'c'")(

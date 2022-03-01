@@ -25,8 +25,8 @@ class InfrastructureSuite extends FunSuite {
   test("copy parent") {
     val Term.Select(x1: Term.Name, _) = "foo.bar".parse[Term].get
     val x2 = x1.copy()
-    assert(x1.parent.nonEmpty == true)
-    assert(x2.parent.nonEmpty == false)
+    assert(x1.parent.nonEmpty)
+    assert(x2.parent.isEmpty)
   }
 
   test("copy pos") {

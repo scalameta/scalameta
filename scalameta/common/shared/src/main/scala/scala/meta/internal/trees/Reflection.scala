@@ -6,6 +6,8 @@ import scala.language.implicitConversions
 import scala.collection.mutable
 import org.scalameta.adt.{Reflection => AdtReflection}
 
+import scala.annotation.tailrec
+
 trait Reflection extends AdtReflection {
   import u._
   import internal._
@@ -38,6 +40,7 @@ trait Reflection extends AdtReflection {
       case List(ann) if ann.tree.tpe =:= RegistryAnnotation.toType =>
         val q"new $_($_.$_[..$_](..${astPaths: List[String]}))" = ann.tree
         val astClasses = astPaths.map(astPath => {
+          @tailrec
           def locateModule(root: ModuleSymbol, parts: List[String]): ModuleSymbol = parts match {
             case Nil => root
             case head :: rest => locateModule(root.info.member(TermName(head)).asModule, rest)

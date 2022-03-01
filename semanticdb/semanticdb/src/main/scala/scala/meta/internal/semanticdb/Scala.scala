@@ -1,5 +1,6 @@
 package scala.meta.internal.semanticdb
 
+import scala.annotation.tailrec
 import scala.compat.Platform.EOL
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb.Scala.{Names => n}
@@ -53,6 +54,7 @@ object Scala {
       if (!isMulti) symbol :: Nil
       else {
         val buf = List.newBuilder[String]
+        @tailrec
         def loop(begin: Int, i: Int): Unit =
           if (i >= symbol.length) {
             buf += symbol.substring(begin, symbol.length)

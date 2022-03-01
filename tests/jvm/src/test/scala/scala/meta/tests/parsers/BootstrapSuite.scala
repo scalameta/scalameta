@@ -2,6 +2,8 @@ package scala.meta.tests
 package parsers
 
 import java.io._
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 import scala.meta._
 import scala.meta.tokens.Token._
 import scala.meta.dialects.Scala211
@@ -15,13 +17,12 @@ class BootstrapSuite extends ParseSuite {
 
   if (isProjectRoot(dir)) {
     def loop(dir: File): Unit = {
-      val name = dir.getName()
+      val name = dir.getName
       if (dir.isDirectory && name == "target" || name == "community-projects") return
       def bootstrapTest(src: File): Unit = {
         test("tokenize " + src.getAbsolutePath) {
           val tokens = src.tokenize.get
-          val codec = scala.io.Codec(java.nio.charset.Charset.forName("UTF-8"))
-          val content = scala.io.Source.fromFile(src)(codec).mkString
+          val content = new String(Files.readAllBytes(src.toPath), StandardCharsets.UTF_8)
           // check #1: everything's covered
           var isFail = false
           def fail(msg: String) = { isFail = true; println(msg) }
@@ -52,8 +53,8 @@ class BootstrapSuite extends ParseSuite {
           assert(!isFail)
         }
       }
-      dir.listFiles.filter(_.isFile).filter(_.getName.endsWith(".scala")).map(bootstrapTest)
-      dir.listFiles.filter(_.isDirectory).map(loop)
+      dir.listFiles.filter(_.isFile).filter(_.getName.endsWith(".scala")).foreach(bootstrapTest)
+      dir.listFiles.filter(_.isDirectory).foreach(loop)
     }
     loop(dir)
   }

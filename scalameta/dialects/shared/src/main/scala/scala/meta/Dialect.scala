@@ -549,7 +549,7 @@ final class Dialect private (
   @deprecated("Dialect should not be a Product", "4.3.11")
   def productArity: Int = 0
   @deprecated("Dialect should not be a Product", "4.3.11")
-  def productElement(n: Int): Any = throw new IndexOutOfBoundsException(n.toString())
+  def productElement(n: Int): Any = throw new IndexOutOfBoundsException(n.toString)
 
   // Dialects have reference equality semantics,
   // because sometimes dialects representing distinct Scala versions

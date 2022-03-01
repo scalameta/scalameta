@@ -4,7 +4,7 @@ import scala.meta.internal.javacp._
 import scala.tools.asm.signature.SignatureVisitor
 
 trait TypeParametersVisitor { this: SignatureVisitor =>
-  private var typeParameters = List.newBuilder[TypeParameterVisitor]
+  private val typeParameters = List.newBuilder[TypeParameterVisitor]
   private var lastTypeParameterVisitor: TypeParameterVisitor = _
 
   def typeParametersResult(): Option[TypeParameters] = typeParameters.result() match {

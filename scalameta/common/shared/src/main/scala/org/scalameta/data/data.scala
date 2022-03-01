@@ -1,7 +1,7 @@
 package org.scalameta.data
 
 import scala.language.experimental.macros
-import scala.annotation.StaticAnnotation
+import scala.annotation.{StaticAnnotation, tailrec}
 import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
 import org.scalameta.internal.MacroHelpers
@@ -56,17 +56,15 @@ class DataMacros(val c: Context) extends MacroHelpers {
         }
         def needs(name: Name, companion: Boolean, duplicate: Boolean) = {
           val q"new $_(...$argss).macroTransform(..$_)" = c.macroApplication
-          val banIndicator = argss.flatten.find {
+          val ban = argss.flatten.exists {
             case AssignOrNamedArg(Ident(TermName(param)), Literal(Constant(false))) =>
               param == name.toString
             case _ => false
           }
-          val ban = banIndicator.map(_ => true).getOrElse(false)
-          val presenceIndicator = {
+          def present = {
             val where = if (companion) mstats else stats
-            where.collectFirst { case mdef: MemberDef if mdef.name == name => mdef }
+            where.exists { case mdef: MemberDef => mdef.name == name; case _ => false }
           }
-          val present = presenceIndicator.map(_ => true).getOrElse(false)
           !ban && (duplicate || !present)
         }
 
@@ -106,6 +104,7 @@ class DataMacros(val c: Context) extends MacroHelpers {
           byNameTpt
         }
         object Vararg {
+          @tailrec
           def unapply(tpt: Tree): Option[Tree] = tpt match {
             case Annotated(_, arg) =>
               unapply(arg)
@@ -128,7 +127,7 @@ class DataMacros(val c: Context) extends MacroHelpers {
         if (mods.hasFlag(FINAL)) c.abort(cdef.pos, "final is redundant for @data classes")
         if (mods.hasFlag(CASE)) c.abort(cdef.pos, "case is redundant for @data classes")
         if (mods.hasFlag(ABSTRACT)) c.abort(cdef.pos, "@data classes cannot be abstract")
-        if (paramss.length == 0)
+        if (paramss.isEmpty)
           c.abort(cdef.pos, "@data classes must define a non-empty parameter list")
 
         // step 2: create parameters, generate getters and validation checks
@@ -192,13 +191,11 @@ class DataMacros(val c: Context) extends MacroHelpers {
         // step 4: implement Product
         parents1 += tq"_root_.scala.Product"
         if (needs(TermName("product"), companion = false, duplicate = false)) {
-          val productParamss = paramss.map(_.map(_.duplicate))
+          val params: List[ValDef] = paramss.head
           stats1 += q"override def productPrefix: _root_.scala.Predef.String = ${name.toString}"
-          stats1 += q"override def productArity: _root_.scala.Int = ${paramss.head.length}"
+          stats1 += q"override def productArity: _root_.scala.Int = ${params.length}"
           val pelClauses = ListBuffer[Tree]()
-          pelClauses ++= 0
-            .to(productParamss.head.length - 1)
-            .map(i => cq"$i => this.${productParamss.head(i).name}")
+          pelClauses ++= params.zipWithIndex.map { case (v, i) => cq"$i => this.${v.name}" }
           pelClauses += cq"_ => throw new _root_.scala.IndexOutOfBoundsException(n.toString)"
           stats1 += q"override def productElement(n: _root_.scala.Int): Any = n match { case ..$pelClauses }"
           stats1 += q"override def productIterator: _root_.scala.Iterator[_root_.scala.Any] = _root_.scala.runtime.ScalaRunTime.typedProductIterator(this)"

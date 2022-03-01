@@ -4,7 +4,8 @@ package internal
 import java.lang.{Character => JCharacter}
 import scala.reflect.ClassTag
 import org.scalameta.invariants._
-import scala.annotation.switch
+
+import scala.annotation.{switch, tailrec}
 import scala.meta.classifiers._
 import scala.meta.internal.trees.Metadata.Ast
 
@@ -223,6 +224,7 @@ package object trees {
     }
   }
 
+  @tailrec
   def arrayClass(clazz: Class[_], rank: Int): Class[_] = {
     import scala.runtime.ScalaRunTime
     Predef.require(rank >= 0)

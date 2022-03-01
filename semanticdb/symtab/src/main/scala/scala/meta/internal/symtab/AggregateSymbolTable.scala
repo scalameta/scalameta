@@ -1,5 +1,6 @@
 package scala.meta.internal.symtab
 
+import scala.annotation.tailrec
 import scala.meta.internal.semanticdb.SymbolInformation
 
 /** An aggregate of a list of symbol tables. */
@@ -7,6 +8,7 @@ final class AggregateSymbolTable private (private val symtabs: List[SymbolTable]
     extends SymbolTable {
   override def toString: String = s"AggregateSymbolTable($symtabs)"
   def info(symbol: String): Option[SymbolInformation] = {
+    @tailrec
     def loop(ss: List[SymbolTable]): Option[SymbolInformation] = ss match {
       case Nil =>
         None

@@ -61,14 +61,14 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         if (imods.hasFlag(ABSTRACT)) c.abort(cdef.pos, "@ast classes cannot be abstract")
         if (ctorMods.flags != NoFlags)
           c.abort(cdef.pos, "@ast classes must define a public primary constructor")
-        if (rawparamss.length == 0)
+        if (rawparamss.isEmpty)
           c.abort(cdef.pos, "@leaf classes must define a non-empty parameter list")
 
         // step 2: validate the body of the class
 
         def setterName(vr: ValDef) =
-          TermName(s"set${vr.name.toString().stripPrefix("_").capitalize}")
-        def getterName(vr: ValDef) = TermName(s"${vr.name.toString().stripPrefix("_")}")
+          TermName(s"set${vr.name.toString.stripPrefix("_").capitalize}")
+        def getterName(vr: ValDef) = TermName(s"${vr.name.toString.stripPrefix("_")}")
 
         def binaryCompatMods(vr: ValDef) = {
           val getter = q"def ${getterName(vr)}: ${vr.tpt}"
@@ -77,7 +77,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         def isBinaryCompatField(vr: ValDef) = vr.mods.annotations.exists {
           case q"new binaryCompatField($since)" =>
-            if (!vr.name.toString().startsWith("_"))
+            if (!vr.name.toString.startsWith("_"))
               c.abort(vr.pos, "The binaryCompat AST field needs to start with _")
             if (!vr.mods.hasFlag(PRIVATE))
               c.abort(vr.pos, "The binaryCompat AST field needs to be private")
@@ -115,7 +115,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         stats1 ++= otherDefns
 
-        val binaryCompatAbstractFields = binaryCompatVars.flatMap { case vr: ValDef =>
+        val binaryCompatAbstractFields = binaryCompatVars.flatMap { vr: ValDef =>
           List(
             q"${binaryCompatMods(vr)} def ${getterName(vr)}: ${vr.tpt}",
             q"def ${setterName(vr)}(${vr.name} : ${vr.tpt}) : Unit"
@@ -123,9 +123,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         }
         istats1 ++= binaryCompatAbstractFields
 
-        val binaryCompatStats = binaryCompatVars.flatMap { case vr: ValDef =>
+        val binaryCompatStats = binaryCompatVars.flatMap { vr: ValDef =>
           val name = vr.name
-          val nameString = name.toString()
+          val nameString = name.toString
           List(
             q"def ${getterName(vr)} = this.$name ",
             q"""def ${setterName(vr)}($name : ${vr.tpt}) = {
@@ -294,7 +294,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         stats1 += q"override def productElement(n: $IntClass): Any = n match { case ..$pelClauses }"
         stats1 += q"override def productIterator: $IteratorClass[$AnyClass] = $ScalaRunTimeModule.typedProductIterator(this)"
         val productFields = productParamss.head.map(_.name.toString) ++ binaryCompatVars.map {
-          case vr: ValDef => getterName(vr).toString()
+          vr: ValDef => getterName(vr).toString
         }
         stats1 += q"override def productFields: $ListClass[$StringClass] = _root_.scala.List(..$productFields)"
 
@@ -306,7 +306,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               cq"""$i => $lit """
             },
             { (i, vr) =>
-              val lit = Literal(Constant(getterName(vr).toString(): String))
+              val lit = Literal(Constant(getterName(vr).toString: String))
               cq"""$i => $lit """
             }
           )
@@ -341,7 +341,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               case _: This =>
                 hasErrors = true; c.error(tree.pos, "cannot refer to this in @ast field checks")
               case Ident(`nmeParent`) =>
-                hasErrors = true;
+                hasErrors = true
                 c.error(
                   tree.pos,
                   "cannot refer to parent in @ast field checks; use checkParent instead"

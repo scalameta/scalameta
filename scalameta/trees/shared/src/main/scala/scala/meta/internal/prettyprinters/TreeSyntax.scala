@@ -132,8 +132,8 @@ object TreeSyntax {
     def kw(keyword: String) =
       fn(sb => {
         val prelast = if (sb.length > 1) sb.charAt(sb.length - 2) else ' '
-        val last = if (sb.length > 0) sb.charAt(sb.length - 1) else ' '
-        val next = if (keyword.length > 0) keyword(0) else ' '
+        val last = if (sb.nonEmpty) sb.charAt(sb.length - 1) else ' '
+        val next = if (keyword.nonEmpty) keyword(0) else ' '
         val danger = {
           val opThenOp = isOperatorPart(last) && isOperatorPart(next)
           val underscoreThenOp = isIdentifierPart(prelast) && last == '_' && isOperatorPart(next)

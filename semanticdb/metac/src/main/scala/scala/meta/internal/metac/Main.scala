@@ -15,7 +15,7 @@ class Main(settings: Settings, reporter: Reporter) {
     val resourceUrl = classOf[SemanticdbPlugin].getResource("/scalac-plugin.xml")
     val resourceChannel = Channels.newChannel(resourceUrl.openStream())
     val manifestStream = new FileOutputStream(manifestDir.resolve("scalac-plugin.xml").toFile)
-    manifestStream.getChannel().transferFrom(resourceChannel, 0, Long.MaxValue)
+    manifestStream.getChannel.transferFrom(resourceChannel, 0, Long.MaxValue)
     manifestStream.close()
     val pluginClasspath = classOf[SemanticdbPlugin].getClassLoader match {
       case null => manifestDir.toString

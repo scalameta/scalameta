@@ -167,10 +167,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   /**
    * a stack of tokens which indicates whether line-ends can be statement separators also used for
    * keeping track of nesting levels. We keep track of the closing symbol of a region. This can be
-   * RPAREN if region starts with '(' RBRACKET if region starts with '[' RBRACE if region starts
-   * with '{' ARROW if region starts with `case' STRINGLIT if region is a string interpolation
-   * expression starting with '${' (the STRINGLIT appears twice in succession on the stack iff the
-   * expression is a multiline string literal).
+   *   - RPAREN if region starts with '('
+   *   - RBRACKET if region starts with '['
+   *   - RBRACE if region starts with '{'
+   *   - ARROW if region starts with `case`
+   *   - STRINGLIT if region is a string interpolation expression starting with '${' (the STRINGLIT
+   *     appears twice in succession on the stack iff the expression is a multiline string literal).
    */
   var sepRegions: List[LegacyToken] = List()
 
@@ -227,19 +229,19 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       case CASE =>
         sepRegions = ARROW :: sepRegions
       case RBRACE =>
-        while (!sepRegions.isEmpty && sepRegions.head != RBRACE)
+        while (sepRegions.nonEmpty && sepRegions.head != RBRACE)
           sepRegions = sepRegions.tail
-        if (!sepRegions.isEmpty)
+        if (sepRegions.nonEmpty)
           sepRegions = sepRegions.tail
 
         discardDocBuffer()
       case RBRACKET | RPAREN =>
-        if (!sepRegions.isEmpty && sepRegions.head == lastToken)
+        if (sepRegions.nonEmpty && sepRegions.head == lastToken)
           sepRegions = sepRegions.tail
 
         discardDocBuffer()
       case ARROW =>
-        if (!sepRegions.isEmpty && sepRegions.head == lastToken)
+        if (sepRegions.nonEmpty && sepRegions.head == lastToken)
           sepRegions = sepRegions.tail
       case STRINGLIT =>
         if (inMultiLineInterpolation)
@@ -291,36 +293,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       curr.endOffset = charOffset - 2
       if (charOffset >= buf.length && ch == SU) curr.endOffset = buf.length - 1
     }
-  }
-
-  /** Is current token first one after a newline? */
-  private def afterLineEnd(): Boolean =
-    lastOffset < lineStartOffset &&
-      (lineStartOffset <= offset ||
-        lastOffset < lastLineStartOffset && lastLineStartOffset <= offset)
-
-  /**
-   * Is there a blank line between the current token and the last one?
-   * @pre
-   *   afterLineEnd().
-   */
-  private def pastBlankLine(): Boolean = {
-    var idx = lastOffset
-    var ch = buf(idx)
-    val end = offset
-    while (idx < end) {
-      if (ch == LF || ch == FF) {
-        do {
-          idx += 1; ch = buf(idx)
-          if (ch == LF || ch == FF) {
-            return true
-          }
-          if (idx == end) return false
-        } while (ch <= ' ')
-      }
-      idx += 1; ch = buf(idx)
-    }
-    false
   }
 
   /**
@@ -457,9 +429,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           if (ch == '$' && !getDollar())
             syntaxError("can't unquote into character literals", at = charOffset - 1)
           else if (isIdentifierStart(ch))
-            charLitOr(getIdentRest _)
+            charLitOr(getIdentRest)
           else if (isOperatorPart(ch) && (ch != '\\' || isUnicodeEscape))
-            charLitOr(getOperatorRest _)
+            charLitOr(getOperatorRest)
           else {
             def isNotBraceOrBracketLiteral = {
               val lookahead = lookaheadReader
@@ -556,7 +528,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     if (ch == '`') {
       nextChar()
       finishNamed(BACKQUOTED_IDENT)
-      if (name.length == 0) syntaxError("empty quoted identifier", at = offset)
+      if (name.isEmpty) syntaxError("empty quoted identifier", at = offset)
     } else if (ch == '$') {
       syntaxError("can't unquote into quoted identifiers", at = charOffset - 1)
     } else {
@@ -564,6 +536,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
   }
 
+  @tailrec
   private def getIdentRest(): Unit = (ch: @switch) match {
     case 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N' | 'O' |
         'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' | '$' | 'a' | 'b' | 'c' |
@@ -590,6 +563,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       }
   }
 
+  @tailrec
   private def getOperatorRest(): Unit = (ch: @switch) match {
     case '~' | '!' | '@' | '#' | '%' | '^' | '*' | '+' | '-' | '<' | '>' | '?' | ':' | '=' | '&' |
         '|' | '\\' =>
@@ -639,7 +613,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         return false
       }
     }
-    return true
+    true
   }
 
 // Literals -----------------------------------------------------------------
@@ -657,6 +631,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
   }
 
+  @tailrec
   private def getRawStringLit(): Unit = {
     if (ch == '\"') {
       nextRawChar()
@@ -1044,7 +1019,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     } else {
       op()
       token = SYMBOLLIT
-      strVal = name.toString
+      strVal = name
     }
   }
 
@@ -1096,6 +1071,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       exploratoryScanner.nextToken()
       exploratoryScanner.curr.token match {
         case LBRACE =>
+          @tailrec
           def loop(balance: Int): Unit = {
             exploratoryScanner.nextToken()
             exploratoryScanner.curr.token match {
@@ -1129,7 +1105,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
 // Errors -----------------------------------------------------------------
 
-  override def toString() = token.toString
+  override def toString = token.toString
 
   /**
    * Initialize scanner; call f on each scanned token data

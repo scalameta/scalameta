@@ -18,7 +18,7 @@ object RunSbtCommand {
         case Right(cmd) => cmd()
         case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
       }
-      nextState.remainingCommands.toList match {
+      nextState.remainingCommands match {
         case Nil => nextState.copy(remainingCommands = initState.remainingCommands)
         case FailureCommand :: tail =>
           nextState.copy(remainingCommands = FailureCommand +: initState.remainingCommands)

@@ -14,14 +14,14 @@ class UnclosedTokenSuite extends ParseSuite {
     val e = intercept[TokenizeException] {
       stat(""" s"start   """)
     }
-    assert(e.getMessage().contains("unclosed string interpolation"))
+    assert(e.getMessage.contains("unclosed string interpolation"))
   }
 
   test("unclosed-string-2") {
     val e = intercept[TokenizeException] {
       stat(""" x"${1 + " """)
     }
-    assert(e.getMessage().contains("unclosed string literal"))
+    assert(e.getMessage.contains("unclosed string literal"))
   }
 
   test("unclosed-escape") {
@@ -34,7 +34,7 @@ class UnclosedTokenSuite extends ParseSuite {
     val e = intercept[ParseException] {
       stat(""" s"${1+ """)
     }
-    assert(e.getMessage().contains("expected but end of file found"))
+    assert(e.getMessage.contains("expected but end of file found"))
   }
 
 }
