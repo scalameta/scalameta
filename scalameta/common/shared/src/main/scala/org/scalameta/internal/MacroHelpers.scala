@@ -77,16 +77,17 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
   lazy val ClassTagClass = tq"_root_.scala.reflect.ClassTag"
   lazy val ImplicitlyMethod = q"${hygienicRef(scala.Predef)}.implicitly"
 
-  private def fqRef(fqName: String, isTerm: Boolean): Tree = {
-    def loop(parts: List[String]): Tree = parts match {
-      case Nil :+ part => q"${TermName(part)}"
-      case rest :+ part => q"${loop(rest)}.${TermName(part)}"
+  def hygienicRef(sym: Symbol): Tree = {
+    @tailrec
+    def loop(parts: List[String], res: Tree): Tree = {
+      val part :: rest = parts
+      if (rest.nonEmpty) loop(rest, q"$res.${TermName(part)}")
+      else if (sym.isTerm || sym.isModuleClass) q"$res.${TermName(part)}"
+      else tq"$res.${TypeName(part)}"
     }
-    val prefix :+ last = fqName.split("\\.").toList
-    if (isTerm) q"${loop(prefix)}.${TermName(last)}" else tq"${loop(prefix)}.${TypeName(last)}"
+    loop(sym.fullName.split("\\.").toList, q"${TermName("_root_")}")
   }
-  def hygienicRef(sym: Symbol): Tree =
-    fqRef("_root_." + sym.fullName, isTerm = sym.isTerm || sym.isModuleClass)
+
   def hygienicRef[T: TypeTag]: Tree = hygienicRef(symbolOf[T])
   def hygienicRef[T <: Singleton: TypeTag](x: T): Tree = hygienicRef(symbolOf[T])
 
