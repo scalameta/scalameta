@@ -97,13 +97,13 @@ object JSFacade {
       case Left(error) => js.Dictionary("error" -> error)
       case Right(dialect) =>
         dialect(code).parse[A] match {
-          case Parsed.Success(t) => toNode(t).asInstanceOf[js.Dictionary[Any]]
-          case Parsed.Error(pos, message, _) =>
+          case x: Parsed.Success[_] => toNode(x.tree).asInstanceOf[js.Dictionary[Any]]
+          case x: Parsed.Error =>
             js.Dictionary(
-              "error" -> message,
-              "pos" -> toPosition(pos),
-              "lineNumber" -> pos.startLine,
-              "columnNumber" -> pos.startColumn
+              "error" -> x.message,
+              "pos" -> toPosition(x.pos),
+              "lineNumber" -> x.pos.startLine,
+              "columnNumber" -> x.pos.startColumn
             )
         }
     }

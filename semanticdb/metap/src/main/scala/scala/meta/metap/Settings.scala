@@ -29,18 +29,18 @@ object Settings {
   def parse(args: List[String], reporter: Reporter): Option[Settings] = {
     def loop(settings: Settings, allowOptions: Boolean, args: List[String]): Option[Settings] = {
       args match {
-        case "--" +: rest =>
+        case "--" :: rest =>
           loop(settings, false, args)
-        case "-compact" +: rest if allowOptions =>
+        case "-compact" :: rest if allowOptions =>
           loop(settings.copy(format = Format.Compact), allowOptions = true, rest)
-        case ("-detailed" | "-pretty") +: rest if allowOptions =>
+        case ("-detailed" | "-pretty") :: rest if allowOptions =>
           loop(settings.copy(format = Format.Detailed), allowOptions = true, rest)
-        case "-proto" +: rest if allowOptions =>
+        case "-proto" :: rest if allowOptions =>
           loop(settings.copy(format = Format.Proto), allowOptions = true, rest)
-        case flag +: rest if allowOptions && flag.startsWith("-") =>
+        case flag :: rest if allowOptions && flag.startsWith("-") =>
           reporter.err.println(s"unknown flag $flag")
           None
-        case path +: rest =>
+        case path :: rest =>
           val paths1 = settings.paths ++ path.split(File.pathSeparator).map(Paths.get(_))
           loop(settings.copy(paths = paths1), allowOptions = true, rest)
         case Nil =>

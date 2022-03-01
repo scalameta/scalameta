@@ -1054,12 +1054,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     val start = offset
     val xmlParser = new XmlParser(dialect)
     val result: Int = fastparse.parse(input.text, xmlParser.XmlExpr(_), startIndex = start) match {
-      case Parsed.Success(_, endExclusive) =>
-        endExclusive
-      case Parsed.Failure(_, failIndex, extra) =>
+      case x: Parsed.Success[_] => x.index
+      case x: Parsed.Failure =>
         syntaxError(
-          s"malformed xml literal, expected:\n${extra.traced.terminalsMsg}",
-          at = failIndex
+          s"malformed xml literal, expected:\n${x.extra.traced.terminalsMsg}",
+          at = x.index
         )
     }
 

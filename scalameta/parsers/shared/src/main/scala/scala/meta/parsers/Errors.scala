@@ -9,7 +9,7 @@ import scala.meta.internal.inputs._
 @root trait Parsed[+T] {
 
   def fold[A](fe: Parsed.Error => A, ft: T => A): A = this match {
-    case Parsed.Success(t) => ft(t)
+    case x: Parsed.Success[_] => ft(x.tree)
     case e: Parsed.Error => fe(e)
   }
 

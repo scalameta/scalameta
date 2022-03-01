@@ -10,7 +10,7 @@ import scala.meta.internal.inputs._
 @root trait Tokenized {
 
   def fold[A](fe: Tokenized.Error => A, ft: Tokens => A): A = this match {
-    case Tokenized.Success(t) => ft(t)
+    case x: Tokenized.Success => ft(x.tokens)
     case e: Tokenized.Error => fe(e)
   }
 

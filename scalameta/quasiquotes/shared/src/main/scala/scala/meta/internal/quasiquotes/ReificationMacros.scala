@@ -239,7 +239,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       def liftTrees(trees: List[MetaTree]): ReflectTree = {
         def loop(trees: List[MetaTree], acc: ReflectTree, prefix: List[MetaTree]): ReflectTree =
           trees match {
-            case (quasi: Quasi) +: rest if quasi.rank == 1 =>
+            case (quasi: Quasi) :: rest if quasi.rank == 1 =>
               if (acc.isEmpty) {
                 if (prefix.isEmpty) loop(rest, liftQuasi(quasi), Nil)
                 else
@@ -264,7 +264,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
                 if (mode.isTerm) loop(rest, q"$acc ++ ${liftQuasi(quasi)}", Nil)
                 else c.abort(quasi.pos, Messages.QuasiquoteAdjacentEllipsesInPattern(quasi.rank))
               }
-            case other +: rest =>
+            case other :: rest =>
               if (acc.isEmpty) loop(rest, acc, prefix :+ other)
               else {
                 require(prefix.isEmpty && debug(trees, acc, prefix))
