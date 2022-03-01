@@ -6,8 +6,7 @@ package tokenizers
 // type LegacyToken = Int
 
 object LegacyToken {
-  def isIdentifier(code: LegacyToken) =
-    code == IDENTIFIER || code == BACKQUOTED_IDENT // used by ide
+  def isIdentifier(code: LegacyToken) = code == IDENTIFIER // used by ide
   def isLiteral(code: LegacyToken) = code >= CHARLIT && code <= INTERPOLATIONID
 
   /** special tokens */
@@ -31,7 +30,6 @@ object LegacyToken {
 
   /** identifiers */
   final val IDENTIFIER = 10
-  final val BACKQUOTED_IDENT = 11
 
   /** keywords */
   final val NEW = 20
