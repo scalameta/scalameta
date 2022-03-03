@@ -40,8 +40,6 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     def pushLegacyToken(curr: LegacyTokenData, next: => Option[LegacyTokenData]): Unit = {
       val token = (curr.token: @scala.annotation.switch) match {
         case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
-        case BACKQUOTED_IDENT =>
-          Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
         case INTLIT =>
           Token.Constant.Int(input, dialect, curr.offset, curr.endOffset + 1, curr.intVal)
         case LONGLIT =>

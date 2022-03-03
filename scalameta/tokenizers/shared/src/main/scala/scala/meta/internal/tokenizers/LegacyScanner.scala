@@ -118,8 +118,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   protected def emitIdentifierDeprecationWarnings = true
 
   /** Clear buffer and set name and token */
-  private def finishNamed(idtoken: LegacyToken = IDENTIFIER): Unit = {
-    curr.setIdentifier(cbuf, idtoken, dialect) { x =>
+  private def finishNamed(isBackquoted: Boolean = false): Unit = {
+    curr.setIdentifier(cbuf, dialect, check = !isBackquoted) { x =>
       if (x.token == IDENTIFIER && emitIdentifierDeprecationWarnings)
         deprecationWarning(
           s"${x.name} is now a reserved word; usage as an identifier is deprecated",
@@ -506,7 +506,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     nextChar()
     if (getLitChars('`')) {
       nextChar()
-      finishNamed(BACKQUOTED_IDENT)
+      finishNamed(isBackquoted = true)
       if (name.isEmpty) syntaxError("empty quoted identifier", at = offset)
     } else if (ch == '$') {
       syntaxError("can't unquote into quoted identifiers", at = charOffset - 1)
@@ -642,7 +642,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         putChar(ch)
         nextRawChar()
       } while (ch != SU && Character.isUnicodeIdentifierPart(ch))
-      next.setIdentifier(cbuf, IDENTIFIER, dialect) { x =>
+      next.setIdentifier(cbuf, dialect) { x =>
         if (x.token != IDENTIFIER && x.token != THIS)
           syntaxError(
             "invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected",

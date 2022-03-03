@@ -108,13 +108,13 @@ trait LegacyTokenData {
   def floatVal: BigDecimal = floatingVal
   def doubleVal: BigDecimal = floatingVal
 
-  def setIdentifier(ident: StringBuilder, tokVal: Int, dialect: Dialect)(
+  def setIdentifier(ident: StringBuilder, dialect: Dialect, check: Boolean = true)(
       fCheck: LegacyTokenData => Unit
   ): Unit = {
     name = ident.toString
     ident.clear()
-    token = tokVal
-    if (tokVal == IDENTIFIER)
+    token = IDENTIFIER
+    if (check)
       kw2legacytoken.get(name).foreach {
         case ENUM if !dialect.allowEnums =>
         case GIVEN if !dialect.allowGivenUsing =>
