@@ -119,32 +119,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   /** Clear buffer and set name and token */
   private def finishNamed(idtoken: LegacyToken = IDENTIFIER): Unit = {
-    name = cbuf.toString
-    cbuf.clear()
-    token = idtoken
-    if (idtoken == IDENTIFIER) {
-      if (kw2legacytoken contains name) {
-        token = kw2legacytoken(name)
-
-        if (token == IDENTIFIER && emitIdentifierDeprecationWarnings)
-          deprecationWarning(
-            s"$name is now a reserved word; usage as an identifier is deprecated",
-            at = token
-          )
-
-        if (token == ENUM && !dialect.allowEnums)
-          token = IDENTIFIER
-        if (token == GIVEN && !dialect.allowGivenUsing)
-          token = IDENTIFIER
-        if (token == EXPORT && !dialect.allowExportClause)
-          token = IDENTIFIER
-        if (token == THEN && !dialect.allowSignificantIndentation)
-          token = IDENTIFIER
-        if (token == TYPELAMBDAARROW && !dialect.allowTypeLambdas)
-          token = IDENTIFIER
-        if (token == CTXARROW && !dialect.allowGivenUsing)
-          token = IDENTIFIER
-      }
+    curr.setIdentifier(cbuf, idtoken, dialect) { x =>
+      if (x.token == IDENTIFIER && emitIdentifierDeprecationWarnings)
+        deprecationWarning(
+          s"${x.name} is now a reserved word; usage as an identifier is deprecated",
+          at = x.token
+        )
     }
   }
 
@@ -662,29 +642,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         putChar(ch)
         nextRawChar()
       } while (ch != SU && Character.isUnicodeIdentifierPart(ch))
-      next.token = IDENTIFIER
-      next.name = cbuf.toString
-      cbuf.clear()
-      if (kw2legacytoken contains next.name) {
-        next.token = kw2legacytoken(next.name)
-
-        if (next.token == ENUM && !dialect.allowEnums)
-          next.token = IDENTIFIER
-        if (next.token == GIVEN && !dialect.allowGivenUsing)
-          next.token = IDENTIFIER
-        if (next.token == EXPORT && !dialect.allowExportClause)
-          next.token = IDENTIFIER
-        if (next.token == THEN && !dialect.allowSignificantIndentation)
-          next.token = IDENTIFIER
-        if (next.token == TYPELAMBDAARROW && !dialect.allowTypeLambdas)
-          next.token = IDENTIFIER
-        if (next.token == CTXARROW && !dialect.allowGivenUsing)
-          next.token = IDENTIFIER
-
-        if (next.token != IDENTIFIER && next.token != THIS)
+      next.setIdentifier(cbuf, IDENTIFIER, dialect) { x =>
+        if (x.token != IDENTIFIER && x.token != THIS)
           syntaxError(
             "invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected",
-            at = offset
+            at = x.offset
           )
       }
     }
