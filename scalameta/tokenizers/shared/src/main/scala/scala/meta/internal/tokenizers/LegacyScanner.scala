@@ -520,6 +520,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   @tailrec
   private def getIdentRest(): Unit = {
+    @inline def isNonUnquoteIdentifierPart(c: Char) = {
+      if (c == '$') getDollar()
+      else isUnicodeIdentifierPart(c)
+    }
     if (ch == '_') {
       putChar(ch)
       nextChar()
@@ -527,11 +531,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         getIdentRest()
       else
         getOperatorRest()
-    } else if (ch match {
-        case SU => false // strangely enough, Character.isUnicodeIdentifierPart(SU) returns true!
-        case '$' => getDollar()
-        case _ => Character.isUnicodeIdentifierPart(ch)
-      }) {
+    } else if (isNonUnquoteIdentifierPart(ch)) {
       putChar(ch)
       nextChar()
       getIdentRest()
@@ -623,7 +623,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       do {
         putChar(ch)
         nextRawChar()
-      } while (ch != SU && Character.isUnicodeIdentifierPart(ch))
+      } while (isUnicodeIdentifierPart(ch))
       next.setIdentifier(cbuf, dialect) { x =>
         if (x.token != IDENTIFIER && x.token != THIS)
           syntaxError(
