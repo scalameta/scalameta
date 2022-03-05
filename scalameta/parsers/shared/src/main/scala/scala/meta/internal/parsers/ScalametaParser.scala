@@ -569,12 +569,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val unquotedTree = {
       try {
         val unquoteInput = Input.Slice(input, unquote.start + 1, unquote.end)
-        val unquoteDialect = dialect.copy(
-          allowTermUnquotes = false,
-          allowPatUnquotes = false,
-          allowMultilinePrograms = true
-        )
-        val unquoteParser = new ScalametaParser(unquoteInput)(unquoteDialect)
+        val unquoteParser = new ScalametaParser(unquoteInput)(dialect.unquoteVariant())
         if (dialect.allowTermUnquotes) unquoteParser.parseUnquoteTerm()
         else if (dialect.allowPatUnquotes) unquoteParser.parseUnquotePat()
         else unreachable
