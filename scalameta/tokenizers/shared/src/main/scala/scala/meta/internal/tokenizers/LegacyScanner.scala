@@ -996,12 +996,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     val start = charOffset
     val endInclusive = {
       val exploratoryInput = Input.Slice(input, start, input.chars.length)
-      val exploratoryDialect = this.dialect.copy(
-        allowTermUnquotes = false,
-        allowPatUnquotes = false,
-        allowMultilinePrograms = true
-      )
-      val exploratoryScanner = new LegacyScanner(exploratoryInput, exploratoryDialect)
+      val exploratoryScanner = new LegacyScanner(exploratoryInput, dialect.unquoteVariant())
       exploratoryScanner.reader.nextChar()
       exploratoryScanner.nextToken()
       exploratoryScanner.curr.token match {

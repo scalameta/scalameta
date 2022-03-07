@@ -610,6 +610,12 @@ final class Dialect private (
       toplevelSeparator
     )
   }
+
+  private[meta] def unquoteVariant(): Dialect = privateCopy(
+    allowTermUnquotes = false,
+    allowPatUnquotes = false,
+    allowMultilinePrograms = true
+  )
 }
 
 object Dialect extends InternalDialect {
