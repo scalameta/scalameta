@@ -27,7 +27,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   @tailrec private def skipLineComment(): Unit = ch match {
     case SU | CR | LF =>
-    case '$' if !getDollar() =>
+    case '$' if isUnquoteNextNoDollar() =>
       syntaxError("can't unquote into single-line comments", at = charOffset - 1)
     case _ => nextChar(); skipLineComment()
   }
@@ -50,7 +50,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     case '/' => maybeOpen(); skipNestedComments()
     case '*' => if (!maybeClose()) skipNestedComments()
     case SU => incompleteInputError("unclosed comment", at = offset)
-    case '$' if !getDollar() =>
+    case '$' if isUnquoteNextNoDollar() =>
       syntaxError("can't unquote into multi-line comments", at = charOffset - 1)
     case _ => putCommentChar(); skipNestedComments()
   }
@@ -299,7 +299,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' |
           'y' | // scala-mode: need to understand multi-line case patterns
           'z' =>
-        if (ch == '$' && !getDollar()) {
+        if (isUnquoteDollar()) {
           getUnquote()
         } else {
           val prevChar = ch
@@ -409,7 +409,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       case '\'' =>
         def fetchSingleQuote() = {
           nextChar()
-          if (ch == '$' && !getDollar())
+          if (isUnquoteDollar())
             syntaxError("can't unquote into character literals", at = charOffset - 1)
           else if (isIdentifierStart(ch))
             charLitOr(getIdentRest)
@@ -521,7 +521,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   @tailrec
   private def getIdentRest(): Unit = {
     @inline def isNonUnquoteIdentifierPart(c: Char) = {
-      if (c == '$') getDollar()
+      if (c == '$') !isUnquoteNextNoDollar()
       else isUnicodeIdentifierPart(c)
     }
     if (ch == '_') {
@@ -558,24 +558,20 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       else finishNamed()
   }
 
-  // True means that we have successfully read '$'
-  // False means that we need to switch into unquote reading mode.
-  private def getDollar(): Boolean = {
-    if (dialect.allowUnquotes) {
-      val lookahead = lookaheadReader
-      lookahead.nextChar()
-      if (lookahead.ch == '$') {
+  // True means that we need to switch into unquote reading mode.
+  private def isUnquoteNextNoDollar(): Boolean = {
+    dialect.allowUnquotes && {
+      val isDollar = lookaheadReader.getc() == '$'
+      if (isDollar) {
         // Skip the first dollar and move on to whatever we've been doing:
         // starting or continuing tokenization of an identifier,
         // or continuing reading a string literal, or whatever.
         nextChar()
-      } else {
-        // Don't do anything - our caller should know what to do.
-        return false
       }
+      !isDollar
     }
-    true
   }
+  @inline private def isUnquoteDollar(): Boolean = ch == '$' && isUnquoteNextNoDollar()
 
 // Literals -----------------------------------------------------------------
 
@@ -602,7 +598,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         getRawStringLit()
     } else if (ch == SU) {
       incompleteInputError("unclosed multi-line string literal", at = offset)
-    } else if (ch == '$' && !getDollar()) {
+    } else if (isUnquoteDollar()) {
       syntaxError("can't unquote into string literals", at = charOffset - 1)
     } else {
       putChar(ch)
@@ -654,7 +650,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       }
       getStringPart(multiLine)
     } else if (ch == '$' && !isUnicodeEscape) {
-      if (!getDollar()) {
+      if (isUnquoteNextNoDollar()) {
         syntaxError("can't unquote into string interpolations", at = charOffset - 1)
       } else {
         nextRawChar()
@@ -773,7 +769,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         }
         nextChar()
       }
-    } else if (ch == '$' && !getDollar()) {
+    } else if (isUnquoteDollar()) {
       // bail and let the caller handle this
     } else {
       putChar(ch)
