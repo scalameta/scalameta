@@ -204,7 +204,9 @@ object Type {
     checkFields(args.length > 1 || (args.length == 1 && args.head.is[Type.Quasi]))
   }
   @ast class With(lhs: Type, rhs: Type) extends Type
+  @deprecated("And unused, replaced by ApplyInfix", "4.5.1")
   @ast class And(lhs: Type, rhs: Type) extends Type
+  @deprecated("Or unused, replaced by ApplyInfix", "4.5.1")
   @ast class Or(lhs: Type, rhs: Type) extends Type
   @ast class Refine(tpe: Option[Type], stats: List[Stat]) extends Type {
     checkFields(stats.forall(_.isRefineStat))

@@ -1,9 +1,6 @@
 package scala.meta
 
-import org.scalameta.data._
 import org.scalameta.invariants._
-import scala.meta.dialects._
-import scala.meta.internal.dialects._
 
 package object dialects {
   implicit val Scala210 = Dialect(
@@ -65,7 +62,6 @@ package object dialects {
     .withAllowOpenClass(true)
     .withAllowInfixMods(true)
     .withAllowPostfixStarVarargSplices(true)
-    .withAllowAndTypes(true)
     .withAllowPlusMinusUnderscoreAsIdent(true)
     .withAllowGivenImports(true)
 
@@ -79,7 +75,6 @@ package object dialects {
     .withAllowOpenClass(true)
     .withAllowInfixMods(true)
     .withAllowPostfixStarVarargSplices(true)
-    .withAllowAndTypes(true)
     .withAllowPlusMinusUnderscoreAsIdent(true)
     .withAllowGivenImports(true)
 
@@ -108,7 +103,6 @@ package object dialects {
     .withAllowInlineMods(true)
 
   implicit val Scala3 = Scala213
-    .withAllowAndTypes(true)
     // there 3 different ways to specify vargs, some will be removed in future Scala 3 versions
     .withAllowAtForExtractorVarargs(true) // both @ and : work currently for Scala 3
     .withAllowColonForExtractorVarargs(true) // both @ and : work currently for Scala 3
@@ -117,7 +111,6 @@ package object dialects {
     .withAllowImplicitByNameParameters(true)
     .withAllowInlineMods(true)
     .withAllowLiteralTypes(true)
-    .withAllowOrTypes(true) // Scala 3: `val a: A | B`
     .withAllowTrailingCommas(true)
     .withAllowTraitParameters(true)
     .withAllowTypeLambdas(true)

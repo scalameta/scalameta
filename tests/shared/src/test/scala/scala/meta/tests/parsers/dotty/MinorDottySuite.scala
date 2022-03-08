@@ -92,7 +92,7 @@ class MinorDottySuite extends BaseDottySuite {
         pname("F"),
         Nil,
         pname("AB"),
-        Type.Bounds(None, Some(Type.And(Type.Name("A"), Type.Name("B"))))
+        Type.Bounds(None, Some(Type.ApplyInfix(pname("A"), pname("&"), pname("B"))))
       )
     )
   }

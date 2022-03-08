@@ -844,18 +844,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               case _ => false
             }) => // we assume that this is a type specification for a vararg parameter
           t
-        case Ident("&") if dialect.allowAndTypes =>
-          next()
-          newLineOptWhenFollowedBy[TypeIntro]
-          val t1 = compoundType()
-          verifyLeftAssoc(t1)
-          infixTypeRest(atPos(startPos, t1)(Type.And(t, t1)), InfixMode.LeftOp, startPos)
-        case Ident("|") if dialect.allowOrTypes =>
-          next()
-          newLineOptWhenFollowedBy[TypeIntro]
-          val t1 = compoundType()
-          verifyLeftAssoc(t1)
-          infixTypeRest(atPos(startPos, t1)(Type.Or(t, t1)), InfixMode.LeftOp, startPos)
         case _: Ident | _: Unquote =>
           val op = typeName()
           val leftAssoc = op.isLeftAssoc
@@ -1014,14 +1002,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val lhs1 = loop(lhs, convertTypevars = false)
           val rhs1 = loop(rhs, convertTypevars = false)
           Type.With(lhs1, rhs1)
-        case Type.And(lhs, rhs) =>
-          val lhs1 = loop(lhs, convertTypevars = false)
-          val rhs1 = loop(rhs, convertTypevars = false)
-          Type.And(lhs1, rhs1)
-        case Type.Or(lhs, rhs) =>
-          val lhs1 = loop(lhs, convertTypevars = false)
-          val rhs1 = loop(rhs, convertTypevars = false)
-          Type.Or(lhs1, rhs1)
         case Type.Refine(tpe, stats) =>
           val tpe1 = tpe.map(loop(_, convertTypevars = false))
           val stats1 = stats
