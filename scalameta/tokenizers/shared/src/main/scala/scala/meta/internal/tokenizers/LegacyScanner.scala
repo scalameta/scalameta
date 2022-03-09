@@ -287,35 +287,41 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     if (inStringInterpolation) return getStringPart(multiLine = startsStringPart(sepRegions.tail))
     else if (inXmlLiteral) return fetchXmlPart()
 
+    @inline def getIdentRestCheckInterpolation() = {
+      getIdentRest()
+      if (ch == '"' && token == IDENTIFIER)
+        token = INTERPOLATIONID
+    }
+
     (ch: @switch) match {
       case ' ' | '\t' | CR | LF | FF =>
         token = WHITESPACE
         strVal = ch.toString
         nextChar()
       // nextToken()
-      case 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N' | 'O' |
-          'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' | '$' | '_' | 'a' | 'b' |
-          'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' |
-          'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' |
-          'y' | // scala-mode: need to understand multi-line case patterns
-          'z' =>
-        if (isUnquoteDollar()) {
+      case
+          // uppercase alpha
+          'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N' | 'O' |
+          'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' |
+          // lowercase alpha
+          'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' |
+          'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' |
+          // other ident chars
+          '_' =>
+        putChar(ch)
+        nextChar()
+        getIdentRestCheckInterpolation()
+      case '$' =>
+        if (isUnquoteNextNoDollar()) {
           getUnquote()
         } else {
-          val prevChar = ch
           putChar(ch)
           nextChar()
-          def nextIsLeftBrace = {
-            val lookahead = lookaheadReader
-            lookahead.nextNonWhitespace == '{'
-          }
-          if (prevChar == '$' && dialect.allowSpliceAndQuote && nextIsLeftBrace) {
+          if (dialect.allowSpliceAndQuote && lookaheadReader.nextNonWhitespace == '{') {
             token = MACROSPLICE
             setStrVal()
           } else {
-            getIdentRest()
-            if (ch == '"' && token == IDENTIFIER)
-              token = INTERPOLATIONID
+            getIdentRestCheckInterpolation()
           }
         }
       case '<' => // is XMLSTART?
@@ -519,7 +525,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   }
 
   @tailrec
-  private def getIdentRest(): Unit = {
+  private final def getIdentRest(): Unit = {
     @inline def isNonUnquoteIdentifierPart(c: Char) = {
       if (c == '$') !isUnquoteNextNoDollar()
       else isUnicodeIdentifierPart(c)
