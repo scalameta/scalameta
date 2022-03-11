@@ -1,7 +1,5 @@
 package scala.meta.tests.parsers.dotty
 
-import scala.meta.tests.parsers.ParseSuite
-
 import scala.meta._, Type._
 
 class AndOrTypesSuite extends BaseDottySuite {
@@ -25,19 +23,19 @@ class AndOrTypesSuite extends BaseDottySuite {
 
   test("A & B & C") {
     runTestAssert[Type]("A & B & C")(
-      And(And(Type.Name("A"), Type.Name("B")), Type.Name("C"))
+      ApplyInfix(ApplyInfix(pname("A"), pname("&"), pname("B")), pname("&"), pname("C"))
     )
   }
 
   test("A & B") {
     runTestAssert[Type]("A & B")(
-      And(Type.Name("A"), Type.Name("B"))
+      ApplyInfix(pname("A"), pname("&"), pname("B"))
     )
   }
 
   test("A | B") {
     runTestAssert[Type]("A | B")(
-      Or(Type.Name("A"), Type.Name("B"))
+      ApplyInfix(pname("A"), pname("|"), pname("B"))
     )
   }
 
@@ -49,7 +47,12 @@ class AndOrTypesSuite extends BaseDottySuite {
         Nil,
         List(
           List(
-            Term.Param(Nil, tname("id"), Some(Type.Or(pname("UserName"), pname("Password"))), None)
+            Term.Param(
+              Nil,
+              tname("id"),
+              Some(ApplyInfix(pname("UserName"), pname("|"), pname("Password"))),
+              None
+            )
           )
         ),
         pname("Unit")
@@ -57,7 +60,11 @@ class AndOrTypesSuite extends BaseDottySuite {
     )
 
     runTestAssert[Stat]("val either: Password | UserName")(
-      Decl.Val(Nil, List(Pat.Var(tname("either"))), Type.Or(pname("Password"), pname("UserName")))
+      Decl.Val(
+        Nil,
+        List(Pat.Var(tname("either"))),
+        ApplyInfix(pname("Password"), pname("|"), pname("UserName"))
+      )
     )
   }
 
@@ -66,7 +73,7 @@ class AndOrTypesSuite extends BaseDottySuite {
       Decl.Val(
         Nil,
         List(Pat.Var(tname("x"))),
-        Type.And(pname("Reset"), Type.Apply(Type.Name("Ord"), List(pname("Int"))))
+        ApplyInfix(pname("Reset"), pname("&"), Type.Apply(pname("Ord"), List(pname("Int"))))
       )
     )
     runTestAssert[Stat]("def fx(a: List[A & B]): Unit")(
@@ -79,7 +86,7 @@ class AndOrTypesSuite extends BaseDottySuite {
             Term.Param(
               Nil,
               tname("a"),
-              Some(Type.Apply(pname("List"), List(Type.And(Type.Name("A"), pname("B"))))),
+              Some(Type.Apply(pname("List"), List(ApplyInfix(pname("A"), pname("&"), pname("B"))))),
               None
             )
           )

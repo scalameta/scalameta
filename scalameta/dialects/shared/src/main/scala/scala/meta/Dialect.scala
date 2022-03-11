@@ -9,6 +9,7 @@ import scala.collection.immutable.TreeMap
  */
 final class Dialect private (
     // Are `&` intersection types supported by this dialect?
+    @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
     val allowAndTypes: Boolean,
     // Are extractor varargs specified using ats, i.e. is `case Extractor(xs @ _*)` legal or not?
     val allowAtForExtractorVarargs: Boolean,
@@ -33,6 +34,7 @@ final class Dialect private (
     // Some quasiquotes only support single-line snippets.
     val allowMultilinePrograms: Boolean,
     // Are `|` (union types) supported by this dialect?
+    @deprecated("allowOrTypes unneeded, infix types are supported", "4.5.1")
     val allowOrTypes: Boolean,
     // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
     // If yes, they will be parsed as patterns.
@@ -242,6 +244,7 @@ final class Dialect private (
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
   def allowUnquotes: Boolean = allowTermUnquotes || allowPatUnquotes
 
+  @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
   def withAllowAndTypes(newValue: Boolean): Dialect = {
     privateCopy(allowAndTypes = newValue)
   }
@@ -274,6 +277,7 @@ final class Dialect private (
   def withAllowMultilinePrograms(newValue: Boolean): Dialect = {
     privateCopy(allowMultilinePrograms = newValue)
   }
+  @deprecated("allowOrTypes unneeded, infix types are supported", "4.5.1")
   def withAllowOrTypes(newValue: Boolean): Dialect = {
     privateCopy(allowOrTypes = newValue)
   }
@@ -620,6 +624,7 @@ final class Dialect private (
 
 object Dialect extends InternalDialect {
   def apply(
+      @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
       allowAndTypes: Boolean,
       allowAtForExtractorVarargs: Boolean,
       allowCaseClassWithoutParameterList: Boolean,
@@ -631,6 +636,7 @@ object Dialect extends InternalDialect {
       allowLiteralTypes: Boolean,
       allowMethodTypes: Boolean,
       allowMultilinePrograms: Boolean,
+      @deprecated("allowOrTypes unneeded, infix types are supported", "4.5.1")
       allowOrTypes: Boolean,
       allowPatUnquotes: Boolean,
       allowSpliceUnderscores: Boolean,

@@ -21,9 +21,10 @@ class ReflectionSuite extends FunSuite {
   // I understand that it's inconvenient to update these numbers every time something changes,
   // but please deal with that (or come up with a more effective way of testing TreeReflection)
   test("root") {
-    assert(symbolOf[scala.meta.Tree].isRoot)
-    assertEquals(symbolOf[scala.meta.Tree].asRoot.allBranches.length, 23)
-    assertEquals(symbolOf[scala.meta.Tree].asRoot.allLeafs.length, 351)
+    val sym = symbolOf[scala.meta.Tree]
+    assert(sym.isRoot)
+    val root = sym.asRoot
+    assertEquals((root.allBranches.length, root.allLeafs.length), (23, 351))
   }
 
   test("If") {

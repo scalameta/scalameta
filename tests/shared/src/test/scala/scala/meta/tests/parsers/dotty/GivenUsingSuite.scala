@@ -610,7 +610,7 @@ class GivenUsingSuite extends BaseDottySuite {
         Name(""),
         Nil,
         Nil,
-        Type.And(Type.Name("Cancelable"), Type.Name("Movable")),
+        Type.ApplyInfix(pname("Cancelable"), pname("&"), pname("Movable")),
         Term.Name("???")
       )
     )

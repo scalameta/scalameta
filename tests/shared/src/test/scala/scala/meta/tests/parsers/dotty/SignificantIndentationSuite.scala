@@ -1908,7 +1908,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
               Term.Param(
                 List(Mod.ValParam()),
                 Term.Name("uri"),
-                Some(Type.Or(Type.Name("String"), Type.Name("Null"))),
+                Some(Type.ApplyInfix(pname("String"), pname("|"), pname("Null"))),
                 None
               )
             )
