@@ -56,14 +56,14 @@ class PatSuite extends ParseSuite {
 
   test("t Map u") {
     assertPatTyp("t Map u") {
-      Type.ApplyInfix(Type.Name("t"), Type.Name("u"), Type.Name("Map"))
+      Type.ApplyInfix(Type.Name("t"), Type.Name("Map"), Type.Name("u"))
     }
   }
 
   test("patTyp: t & u | v") {
     assertPatTyp("t & u | v") {
       Type.ApplyInfix(
-        Type.ApplyInfix(Type.Name("t"), Type.Name("u"), Type.Name("&")),
+        Type.ApplyInfix(Type.Name("t"), Type.Name("&"), Type.Name("u")),
         Type.Name("|"),
         Type.Name("v")
       )
@@ -77,7 +77,7 @@ class PatSuite extends ParseSuite {
           Term.Name("F"),
           List(
             Type.ApplyInfix(
-              Type.ApplyInfix(Type.Name("t"), Type.Name("u"), Type.Name("&")),
+              Type.ApplyInfix(Type.Name("t"), Type.Name("&"), Type.Name("u")),
               Type.Name("|"),
               Type.Name("v")
             )
