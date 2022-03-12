@@ -93,8 +93,7 @@ object TreeSyntax {
       ): Boolean = {
         implicit class XtensionMySyntacticInfo(name: String) {
           def isleftassoc: Boolean = if (customAssoc) name.last != ':' else true
-          def isrightassoc: Boolean = !isleftassoc
-          def precedence: Int = if (customPrecedence) Term.Name(name).precedence else 0
+          def precedence: Int = if (customPrecedence) Name(name).precedence else 0
         }
         require(left != right)
         val (ol, il) = (oo.isleftassoc, io.isleftassoc)

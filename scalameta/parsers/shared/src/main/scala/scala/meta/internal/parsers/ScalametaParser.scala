@@ -1891,7 +1891,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  @inline def checkAssoc(op: Term.Name, leftAssoc: Boolean): Unit =
+  @inline def checkAssoc(op: Name, leftAssoc: Boolean): Unit =
     checkAssoc(op, op.isLeftAssoc, leftAssoc)
 
   @inline private def checkAssoc(at: Tree, opLeftAssoc: Boolean, leftAssoc: Boolean): Unit =
