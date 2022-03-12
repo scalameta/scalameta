@@ -740,10 +740,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case t: Type.Repeated => syntaxError("repeated type not allowed here", at = t)
           case t: Type => t
         }))
-        infixTypeRest(
-          compoundTypeRest(annotTypeRest(simpleTypeRest(tuple))),
-          InfixMode.FirstOp
-        )
+        infixTypeRest(compoundTypeRest(annotTypeRest(simpleTypeRest(tuple))))
       }
     }
 
@@ -823,19 +820,26 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     def infixTypeOrTuple(allowFunctionType: Boolean = true): Type = {
       if (token.is[LeftParen]) tupleInfixType(allowFunctionType)
-      else infixType(InfixMode.FirstOp)
+      else infixType()
     }
 
-    @inline
-    def infixType(mode: InfixMode.Value): Type =
-      infixTypeRest(compoundType(), mode)
+    @inline def infixType(): Type = infixTypeRest(compoundType())
 
     @inline
-    private def infixTypeRest(t: Type, mode: InfixMode.Value): Type =
-      infixTypeRest(t, mode, t.startTokenPos)
+    private def infixTypeRest(t: Type): Type =
+      infixTypeRestWithMode(t, InfixMode.FirstOp)
+
+    @inline
+    private def infixTypeRestWithMode(t: Type, mode: InfixMode.Value): Type =
+      infixTypeRestWithMode(t, mode, t.startTokenPos, identity)
 
     @tailrec
-    private final def infixTypeRest(t: Type, mode: InfixMode.Value, startPos: Int): Type = {
+    private final def infixTypeRestWithMode(
+        t: Type,
+        mode: InfixMode.Value,
+        startPos: Int,
+        f: Type => Type
+    ): Type = {
       @inline def verifyLeftAssoc(at: Tree, leftAssoc: Boolean = true) =
         if (mode != InfixMode.FirstOp) checkAssoc(at, leftAssoc, mode == InfixMode.LeftOp)
       token match {
@@ -843,19 +847,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               case _: RightParen | _: Comma | _: Equals | _: RightBrace | _: EOF => true
               case _ => false
             }) => // we assume that this is a type specification for a vararg parameter
-          t
+          f(t)
         case _: Ident | _: Unquote =>
           val op = typeName()
           val leftAssoc = op.isLeftAssoc
           verifyLeftAssoc(op, leftAssoc)
           newLineOptWhenFollowedBy[TypeIntro]
+          val typ = compoundType()
           def mkOp(t1: Type) = atPos(startPos, t1)(Type.ApplyInfix(t, op, t1))
           if (leftAssoc)
-            infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp, startPos)
+            infixTypeRestWithMode(mkOp(typ), InfixMode.LeftOp, startPos, f)
           else
-            mkOp(infixType(InfixMode.RightOp))
+            infixTypeRestWithMode(typ, InfixMode.RightOp, typ.startTokenPos, f.compose(mkOp))
         case _ =>
-          t
+          f(t)
       }
     }
 
@@ -1027,7 +1032,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           token match {
             case KwForsome() => next(); copyPos(t)(Type.Existential(t, existentialStats()))
             case Unquote() | Ident(_) if !isBar =>
-              infixTypeRest(mkOp(compoundType()), InfixMode.LeftOp)
+              infixTypeRestWithMode(mkOp(compoundType()), InfixMode.LeftOp)
             case _ => t
           }
         } else {
@@ -2618,7 +2623,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def typ() = outPattern.typ()
   def quasiquoteType() = outPattern.quasiquoteType()
   def entrypointType() = outPattern.entrypointType()
-  def startInfixType() = outPattern.infixType(InfixMode.FirstOp)
+  def startInfixType() = outPattern.infixType()
   def startModType() = outPattern.annotType()
   def exprTypeArgs() = outPattern.typeArgs()
   def exprSimpleType() = outPattern.simpleType()
