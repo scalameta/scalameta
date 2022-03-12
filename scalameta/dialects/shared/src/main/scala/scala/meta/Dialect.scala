@@ -148,7 +148,9 @@ final class Dialect private (
      */
     val allowPlusMinusUnderscoreAsPlaceholder: Boolean,
     // import a.b.c.{ given, _} used for -X:source3
-    val allowGivenImports: Boolean
+    val allowGivenImports: Boolean,
+    // Scala 3 uses proper precedence rules for infix types, unlike Scala 2
+    val useInfixTypePrecedence: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -236,7 +238,8 @@ final class Dialect private (
       allowDoWhile = true,
       allowPlusMinusUnderscoreAsIdent = false,
       allowPlusMinusUnderscoreAsPlaceholder = false,
-      allowGivenImports = false
+      allowGivenImports = false,
+      useInfixTypePrecedence = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -421,6 +424,11 @@ final class Dialect private (
   def withAllowGivenImports(newValue: Boolean): Dialect = {
     privateCopy(allowGivenImports = newValue)
   }
+
+  def withUseInfixTypePrecedence(newValue: Boolean): Dialect = {
+    privateCopy(useInfixTypePrecedence = newValue)
+  }
+
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -482,7 +490,9 @@ final class Dialect private (
       allowDoWhile: Boolean = this.allowDoWhile,
       allowPlusMinusUnderscoreAsIdent: Boolean = this.allowPlusMinusUnderscoreAsIdent,
       allowPlusMinusUnderscoreAsPlaceholder: Boolean = this.allowPlusMinusUnderscoreAsPlaceholder,
-      allowGivenImports: Boolean = this.allowGivenImports
+      allowGivenImports: Boolean = this.allowGivenImports,
+      useInfixTypePrecedence: Boolean = this.useInfixTypePrecedence
+
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -541,7 +551,8 @@ final class Dialect private (
       allowDoWhile,
       allowPlusMinusUnderscoreAsIdent,
       allowPlusMinusUnderscoreAsPlaceholder,
-      allowGivenImports
+      allowGivenImports,
+      useInfixTypePrecedence
       // NOTE(olafur): add the next argument above this comment.
     )
   }

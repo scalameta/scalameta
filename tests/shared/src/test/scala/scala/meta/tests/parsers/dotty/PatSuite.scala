@@ -83,13 +83,9 @@ class PatSuite extends ParseSuite {
   test("patTyp: t * u + v / w") {
     assertPatTyp("t * u + v / w") {
       Type.ApplyInfix(
-        Type.ApplyInfix(
-          Type.ApplyInfix(Type.Name("t"), Type.Name("*"), Type.Name("u")),
-          Type.Name("+"),
-          Type.Name("v")
-        ),
-        Type.Name("/"),
-        Type.Name("w")
+        Type.ApplyInfix(Type.Name("t"), Type.Name("*"), Type.Name("u")),
+        Type.Name("+"),
+        Type.ApplyInfix(Type.Name("v"), Type.Name("/"), Type.Name("w"))
       )
     }
   }
@@ -97,9 +93,9 @@ class PatSuite extends ParseSuite {
   test("patTyp: t + u * v") {
     assertPatTyp("t + u * v") {
       Type.ApplyInfix(
-        Type.ApplyInfix(Type.Name("t"), Type.Name("+"), Type.Name("u")),
-        Type.Name("*"),
-        Type.Name("v")
+        Type.Name("t"),
+        Type.Name("+"),
+        Type.ApplyInfix(Type.Name("u"), Type.Name("*"), Type.Name("v"))
       )
     }
   }
