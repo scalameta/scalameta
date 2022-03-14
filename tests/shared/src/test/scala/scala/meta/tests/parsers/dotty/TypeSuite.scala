@@ -1,12 +1,12 @@
-package scala.meta.tests
-package parsers
+package scala.meta.tests.parsers.dotty
 
 import scala.meta._
 import Term.{Super, Name => TermName}
 import Type.{Name => TypeName, _}
 import Name.Anonymous
-import scala.meta.dialects.Scala211
+import scala.meta.dialects.Scala3
 import scala.meta.parsers.ParseException
+import scala.meta.tests.parsers.ParseSuite
 
 class TypeSuite extends ParseSuite {
 

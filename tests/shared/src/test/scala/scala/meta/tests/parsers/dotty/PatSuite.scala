@@ -1,8 +1,8 @@
-package scala.meta.tests
-package parsers
+package scala.meta.tests.parsers.dotty
 
 import scala.meta._, Pat._
-import scala.meta.dialects.Scala211
+import scala.meta.dialects.Scala3
+import scala.meta.tests.parsers.ParseSuite
 
 class PatSuite extends ParseSuite {
 
