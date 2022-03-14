@@ -827,11 +827,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     @inline
     private def infixTypeRest(t: Type): Type =
-      infixTypeRestWithMode(t, InfixMode.FirstOp)
-
-    @inline
-    private def infixTypeRestWithMode(t: Type, mode: InfixMode.Value): Type =
-      infixTypeRestWithMode(t, mode, t.startTokenPos, identity)
+      infixTypeRestWithMode(t, InfixMode.FirstOp, t.startTokenPos, identity)
 
     @tailrec
     private final def infixTypeRestWithMode(
@@ -1028,11 +1024,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val t: Type = {
         if (allowInfix) {
           val t = if (token.is[LeftParen]) tupleInfixType() else compoundType()
-          def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, typeName(), t1))
           token match {
             case KwForsome() => next(); copyPos(t)(Type.Existential(t, existentialStats()))
-            case Unquote() | Ident(_) if !isBar =>
-              infixTypeRestWithMode(mkOp(compoundType()), InfixMode.LeftOp)
+            case Ident("|") => t
+            case _: Unquote | _: Ident => infixTypeRest(t)
             case _ => t
           }
         } else {

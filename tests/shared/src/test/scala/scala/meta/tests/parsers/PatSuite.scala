@@ -5,6 +5,15 @@ import scala.meta._, Pat._
 import scala.meta.dialects.Scala211
 
 class PatSuite extends ParseSuite {
+
+  private def assertPat(expr: String)(tree: Tree): Unit = {
+    assertEquals(pat(expr).structure, tree.structure)
+  }
+
+  private def assertPatTyp(expr: String)(tree: Tree): Unit = {
+    assertEquals(patternTyp(expr).structure, tree.structure)
+  }
+
   test("_") {
     val Wildcard() = pat("_")
   }
@@ -43,6 +52,40 @@ class PatSuite extends ParseSuite {
       Wildcard(),
       Type.Apply(Type.Name("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
     ) = pat("_: F[_]")
+  }
+
+  test("t Map u") {
+    assertPatTyp("t Map u") {
+      Type.ApplyInfix(Type.Name("t"), Type.Name("Map"), Type.Name("u"))
+    }
+  }
+
+  test("patTyp: t & u | v") {
+    assertPatTyp("t & u | v") {
+      Type.ApplyInfix(
+        Type.ApplyInfix(Type.Name("t"), Type.Name("&"), Type.Name("u")),
+        Type.Name("|"),
+        Type.Name("v")
+      )
+    }
+  }
+
+  test("pat: F[t & u | v]()") {
+    assertPat("F[t & u | v]()") {
+      Pat.Extract(
+        Term.ApplyType(
+          Term.Name("F"),
+          List(
+            Type.ApplyInfix(
+              Type.ApplyInfix(Type.Name("t"), Type.Name("&"), Type.Name("u")),
+              Type.Name("|"),
+              Type.Name("v")
+            )
+          )
+        ),
+        Nil
+      )
+    }
   }
 
   test("_: (t Map u)") {
