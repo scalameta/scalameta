@@ -101,9 +101,13 @@ object Term {
   @ast class Ascribe(expr: Term, tpe: Type) extends Term
   @ast class Annotate(expr: Term, annots: List[Mod.Annot] @nonEmpty) extends Term
   @ast class Tuple(args: List[Term] @nonEmpty) extends Term {
-    // tuple must have more than one element
-    // however, this element may be Quasi with "hidden" list of elements inside
-    checkFields(args.length > 1 || (args.length == 1 && args.head.is[Term.Quasi]))
+    // tuple may have one element (see scala.Tuple1)
+    // however, this element may not be another single-element Tuple
+    checkFields(args match {
+      case Nil => false
+      case (t: Tuple) :: Nil => t.args.lengthCompare(1) > 0
+      case _ => true
+    })
   }
   @ast class Block(stats: List[Stat]) extends Term {
     // extension group block can have declarations without body too
@@ -201,7 +205,13 @@ object Type {
       res: Type
   ) extends Type
   @ast class Tuple(args: List[Type] @nonEmpty) extends Type {
-    checkFields(args.length > 1 || (args.length == 1 && args.head.is[Type.Quasi]))
+    // tuple may have one element (see scala.Tuple1)
+    // however, this element may not be another single-element Tuple
+    checkFields(args match {
+      case Nil => false
+      case (t: Tuple) :: Nil => t.args.lengthCompare(1) > 0
+      case _ => true
+    })
   }
   @ast class With(lhs: Type, rhs: Type) extends Type
   @deprecated("And unused, replaced by ApplyInfix", "4.5.1")
@@ -267,7 +277,13 @@ object Pat {
   }
   @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat
   @ast class Tuple(args: List[Pat] @nonEmpty) extends Pat {
-    checkFields(args.length > 1 || (args.length == 1 && args.head.is[Pat.Quasi]))
+    // tuple may have one element (see scala.Tuple1)
+    // however, this element may not be another single-element Tuple
+    checkFields(args match {
+      case Nil => false
+      case (t: Tuple) :: Nil => t.args.lengthCompare(1) > 0
+      case _ => true
+    })
   }
   @ast class Repeated(name: scala.meta.Term.Name) extends Pat
   @ast class Extract(fun: Term, args: List[Pat]) extends Pat {
