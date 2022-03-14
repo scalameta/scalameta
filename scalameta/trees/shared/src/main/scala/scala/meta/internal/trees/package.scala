@@ -10,13 +10,6 @@ import scala.meta.classifiers._
 import scala.meta.internal.trees.Metadata.Ast
 
 package object trees {
-  implicit class XtensionTreesName(name: Name) {
-    def isDefinition: Boolean = name.parent match {
-      case Some(parent: Member) => parent.name == name
-      case _ => false
-    }
-    def isReference: Boolean = !isDefinition
-  }
 
   implicit class XtensionTreesRef(ref: Ref) {
     def isWithin: Boolean = ref match {
@@ -27,19 +20,18 @@ package object trees {
     }
   }
 
-  implicit class XtensionTreesTypeName(name: Type.Name) {
+  implicit class XtensionTreesName(name: Name) {
     import name._
-    // some heuristic is needed to govern associativity and precedence of unquoted operators
-    def isLeftAssoc: Boolean =
-      if (name.is[Type.Name.Quasi]) true
-      else value.last != ':'
-  }
 
-  implicit class XtensionTreesTermName(name: Term.Name) {
-    import name._
+    def isDefinition: Boolean = name.parent match {
+      case Some(parent: Member) => parent.name == name
+      case _ => false
+    }
+    def isReference: Boolean = !isDefinition
+
     // some heuristic is needed to govern associativity and precedence of unquoted operators
     def isLeftAssoc: Boolean =
-      if (name.is[Term.Name.Quasi]) true
+      if (name.is[Name.Quasi]) true
       else value.last != ':'
     def isUnaryOp: Boolean = Set("-", "+", "~", "!").contains(value)
     def isAssignmentOp = value match {
@@ -50,7 +42,7 @@ package object trees {
     }
     // opPrecedence?
     def precedence: Int =
-      if (name.is[Term.Name.Quasi]) 1
+      if (name.is[Name.Quasi]) 1
       else if (isAssignmentOp) 0
       else if (isScalaLetter(value.head)) 1
       else
