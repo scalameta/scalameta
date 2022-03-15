@@ -181,7 +181,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     "(a, b) op ((c, d))",
     """|Term.Tuple (a, b)
-       |Term.Tuple ((c, d))
+       |Term.Tuple (c, d)
        |""".stripMargin
   )
   checkPositions[Stat]("1 + 1")
