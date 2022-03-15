@@ -210,4 +210,36 @@ class PatSuite extends ParseSuite {
       pat("<a>{ns @ _*}</a>")
   }
 
+  test("(A, B, C)") {
+    assertPat("(A, B, C)") {
+      Pat.Tuple(List(Term.Name("A"), Term.Name("B"), Term.Name("C")))
+    }
+  }
+
+  test("((A, B, C))") {
+    assertPat("((A, B, C))") {
+      Pat.Tuple(List(Term.Name("A"), Term.Name("B"), Term.Name("C")))
+    }
+  }
+
+  test("(A, B, C) :: ((A, B, C))") {
+    assertPat("(A, B, C) :: ((A, B, C))") {
+      Pat.ExtractInfix(
+        Pat.Tuple(List(Term.Name("A"), Term.Name("B"), Term.Name("C"))),
+        Term.Name("::"),
+        List(Term.Name("A"), Term.Name("B"), Term.Name("C"))
+      )
+    }
+  }
+
+  test("((A, B, C)) :: ((A, B, C))") {
+    assertPat("((A, B, C)) :: ((A, B, C))") {
+      Pat.ExtractInfix(
+        Pat.Tuple(List(Term.Name("A"), Term.Name("B"), Term.Name("C"))),
+        Term.Name("::"),
+        List(Term.Name("A"), Term.Name("B"), Term.Name("C"))
+      )
+    }
+  }
+
 }

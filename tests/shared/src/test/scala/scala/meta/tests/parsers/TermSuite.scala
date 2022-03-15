@@ -1293,4 +1293,38 @@ class TermSuite extends ParseSuite {
     )
   }
 
+  test("(a, b, c)") {
+    assertTerm("(a, b, c)") {
+      Term.Tuple(List(Term.Name("a"), Term.Name("b"), Term.Name("c")))
+    }
+  }
+
+  test("((a, b, c))") {
+    assertTerm("((a, b, c))") {
+      Term.Tuple(List(Term.Name("a"), Term.Name("b"), Term.Name("c")))
+    }
+  }
+
+  test("(a, b, c) :: ((a, b, c))") {
+    assertTerm("(a, b, c) :: ((a, b, c))") {
+      Term.ApplyInfix(
+        Term.Tuple(List(Term.Name("a"), Term.Name("b"), Term.Name("c"))),
+        Term.Name("::"),
+        Nil,
+        List(Term.Tuple(List(Term.Name("a"), Term.Name("b"), Term.Name("c"))))
+      )
+    }
+  }
+
+  test("((a, b, c)) :: ((a, b, c))") {
+    assertTerm("((a, b, c)) :: ((a, b, c))") {
+      Term.ApplyInfix(
+        Term.Tuple(List(Term.Name("a"), Term.Name("b"), Term.Name("c"))),
+        Term.Name("::"),
+        Nil,
+        List(Term.Tuple(List(Term.Name("a"), Term.Name("b"), Term.Name("c"))))
+      )
+    }
+  }
+
 }
