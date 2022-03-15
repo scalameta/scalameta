@@ -609,11 +609,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @inline final def commaSeparated[T <: Tree: AstInfo](part: => T): List[T] =
     tokenSeparated[Comma, T](sepFirst = false, part)
 
-  def makeTuple[T <: Tree](body: List[T], zero: () => T, tuple: List[T] => T): T = body match {
-    case Nil => zero()
+  private def makeTuple[T <: Tree](body: List[T], zero: => T, tuple: List[T] => T): T = body match {
+    case Nil => zero
     case only :: Nil =>
       only match {
-        case q: Quasi if q.rank == 1 => tuple(body)
+        case q: Quasi if q.rank == 1 => copyPos(q)(tuple(body))
         case _ => only
       }
     case _ => tuple(body)
@@ -622,10 +622,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def makeTupleTerm(body: List[Term]): Term = {
     // NOTE: we can't make this autoPos
     // see comments to makeTupleType for discussion
-    body match {
-      case List(q @ Term.Quasi(1, _)) => copyPos(q)(Term.Tuple(body))
-      case _ => makeTuple[Term](body, () => Lit.Unit(), Term.Tuple(_))
-    }
+    makeTuple(body, Lit.Unit(), Term.Tuple.apply)
   }
 
   def makeTupleType(body: List[Type]): Type = {
@@ -635,10 +632,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // because, by the time control reaches this method, we're already past the closing parenthesis
     // therefore, we'll rely on our callers to assign positions to the tuple we return
     // we can't do atPos(body.first, body.last) either, because that wouldn't account for parentheses
-    body match {
-      case List(q @ Type.Quasi(1, _)) => copyPos(q)(Type.Tuple(body))
-      case _ => makeTuple[Type](body, () => invalidLiteralUnitType, Type.Tuple(_))
-    }
+    makeTuple(body, invalidLiteralUnitType, Type.Tuple.apply)
   }
 
   def inParensOrTupleOrUnitExpr(allowRepeated: Boolean): Term = {
@@ -2578,7 +2572,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           xmlPat()
         case _: LeftParen =>
           val patterns = inParensOnOpen(if (token.is[RightParen]) Nil else noSeq.patterns())
-          makeTuple[Pat](patterns, () => Lit.Unit(), Pat.Tuple(_))
+          makeTuple(patterns, Lit.Unit(), Pat.Tuple.apply)
         case _: MacroQuote =>
           QuotedPatternContext.within {
             Pat.Macro(macroQuote())
