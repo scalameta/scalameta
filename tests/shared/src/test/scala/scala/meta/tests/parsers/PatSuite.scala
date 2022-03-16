@@ -227,7 +227,7 @@ class PatSuite extends ParseSuite {
       Pat.ExtractInfix(
         Pat.Tuple(List(Term.Name("A"), Term.Name("B"), Term.Name("C"))),
         Term.Name("::"),
-        List(Term.Name("A"), Term.Name("B"), Term.Name("C"))
+        List(Pat.Tuple(List(Term.Name("A"), Term.Name("B"), Term.Name("C"))))
       )
     }
   }
@@ -237,7 +237,7 @@ class PatSuite extends ParseSuite {
       Pat.ExtractInfix(
         Pat.Tuple(List(Term.Name("A"), Term.Name("B"), Term.Name("C"))),
         Term.Name("::"),
-        List(Term.Name("A"), Term.Name("B"), Term.Name("C"))
+        List(Pat.Tuple(List(Term.Name("A"), Term.Name("B"), Term.Name("C"))))
       )
     }
   }
