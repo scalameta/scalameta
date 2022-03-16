@@ -643,10 +643,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else commaSeparated(expr(location = PostfixStat, allowRepeated = allowRepeated))
     })
     maybeTupleArgs match {
-      case List(Term.Quasi(1, _)) =>
-        makeTupleTerm(maybeTupleArgs)
-      case List(singleArg) =>
-        maybeAnonymousFunctionInParens(singleArg)
+      case singleArg :: Nil =>
+        makeTupleTerm(maybeAnonymousFunctionInParens(singleArg) :: Nil)
       case multipleArgs =>
         val repeatedArgs = multipleArgs.collect { case repeated: Term.Repeated => repeated }
         repeatedArgs.foreach(arg =>
