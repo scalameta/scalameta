@@ -1872,7 +1872,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         syntaxError("repeated argument not allowed here", at = lhs.tokens.last.prev)
 
       def infixExpression() =
-        atPos(lhsStart, rhsEnd)(Term.ApplyInfix(lhs, op, targs, checkNoTripleDots(rhs)))
+        atPos(lhsStart, rhsEnd)(Term.ApplyInfix(lhs, op, targs, rhs))
       List(op match {
         case _: Quasi =>
           infixExpression()
@@ -1908,7 +1908,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val args = rhs match {
         case Pat.Tuple(args) => args.toList; case Lit.Unit() => Nil; case _ => List(rhs)
       }
-      atPos(lhs, rhsEnd)(Pat.ExtractInfix(lhs, op, checkNoTripleDots(args)))
+      atPos(lhs, rhsEnd)(Pat.ExtractInfix(lhs, op, args))
     }
   }
 
@@ -2210,10 +2210,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case Term.Assign(_, rep: Term.Repeated) => rep
         case rep: Term.Repeated => rep
       }
-      val openParenPos = auto.startTokenPos
-      val args = argumentExprs(location)
-      val closeParenPos = auto.endTokenPos
-      @inline def addPos(body: Term): Term = atPosWithBody(openParenPos, body, closeParenPos)
+      val lpPos = auto.startTokenPos
+      val args = checkNoTripleDots(argumentExprs(location))
+      val rpPos = auto.endTokenPos
+      @inline def addPos(body: Term): Term = atPosWithBody(lpPos, body, rpPos)
       token match {
         case Dot() | LeftBracket() | LeftParen() | LeftBrace() | Underscore() =>
           findRep(args).foreach(x => syntaxError("repeated argument not allowed here", at = x))
@@ -2613,7 +2613,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           xmlPat()
         case _: LeftParen =>
           val patterns = inParensOnOpen(if (token.is[RightParen]) Nil else noSeq.patterns())
-          makeTuple(patterns, Lit.Unit(), Pat.Tuple.apply)
+          makeTuple(checkNoTripleDots(patterns), Lit.Unit(), Pat.Tuple.apply)
         case _: MacroQuote =>
           QuotedPatternContext.within {
             Pat.Macro(macroQuote())
