@@ -690,48 +690,57 @@ class ErrorSuite extends FunSuite {
   }
 
   test("triple-dot in Term.ApplyInfix") {
-    assert(typecheckError("""
+    assertEquals(
+      typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
       val argss = List(List("y"))
       q"x + (...$argss)"
-    """).replace("\r", "") == """
+    """).replace("\r", ""),
+      """
       |<macro>:5: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
       |      q"x + (...$argss)"
-      |            ^
-    """.trim.stripMargin)
+      |             ^
+    """.trim.stripMargin
+    )
   }
 
   test("triple-dot in Pat.Extract") {
-    assert(typecheckError("""
+    assertEquals(
+      typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
       val patss = List(List("x"))
       p"Foo(...$patss)"
-    """).replace("\r", "") == """
+    """).replace("\r", ""),
+      """
       |<macro>:5: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
       |      p"Foo(...$patss)"
       |            ^
-    """.trim.stripMargin)
+    """.trim.stripMargin
+    )
   }
 
   test("triple-dot in Pat.ExtractInfix") {
-    assert(typecheckError("""
+    assertEquals(
+      typecheckError("""
       import scala.meta._
       import scala.meta.dialects.Scala211
       val patss = List(List("x"))
       p"x Foo (...$patss)"
-    """).replace("\r", "") == """
+    """).replace("\r", ""),
+      """
       |<macro>:5: rank mismatch when unquoting;
       | found   : ...$
       | required: $ or ..$
       |      p"x Foo (...$patss)"
       |               ^
-    """.trim.stripMargin)
+    """.trim.stripMargin
+    )
   }
 
   test("expected-template") {
