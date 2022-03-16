@@ -85,14 +85,9 @@ object TreeSyntax {
     SyntacticGroup.Literal, SyntacticGroup.Path
 
     def p(og: SyntacticGroup, t: Tree, left: Boolean = false, right: Boolean = false) = {
-      def opNeedsParens(
-          oo: String,
-          io: String,
-          customAssoc: Boolean,
-          customPrecedence: Boolean
-      ): Boolean = {
+      def opNeedsParens(oo: String, io: String, customPrecedence: Boolean = true): Boolean = {
         implicit class XtensionMySyntacticInfo(name: String) {
-          def isleftassoc: Boolean = if (customAssoc) name.last != ':' else true
+          def isleftassoc: Boolean = name.last != ':'
           def precedence: Int = if (customPrecedence) Name(name).precedence else 0
         }
         require(left != right)
@@ -107,20 +102,14 @@ object TreeSyntax {
         }
       }
       def groupNeedsParens(og: SyntacticGroup, ig: SyntacticGroup): Boolean = {
-        val result = {
-          require(og.categories.intersect(ig.categories).nonEmpty)
-          (og, ig) match {
-            case (InfixExpr(oo), InfixExpr(io)) =>
-              opNeedsParens(oo, io, customAssoc = true, customPrecedence = true)
-            case (InfixTyp(oo), InfixTyp(io)) =>
-              opNeedsParens(oo, io, customAssoc = true, customPrecedence = false)
-            case (Pattern3(oo), Pattern3(io)) =>
-              opNeedsParens(oo, io, customAssoc = true, customPrecedence = true)
-            case _ => og.precedence > ig.precedence
-          }
+        require(og.categories.intersect(ig.categories).nonEmpty)
+        (og, ig) match {
+          case (InfixExpr(oo), InfixExpr(io)) => opNeedsParens(oo, io)
+          case (InfixTyp(oo), InfixTyp(io)) =>
+            opNeedsParens(oo, io, customPrecedence = dialect.useInfixTypePrecedence)
+          case (Pattern3(oo), Pattern3(io)) => opNeedsParens(oo, io)
+          case _ => og.precedence > ig.precedence
         }
-        // println((og, ig, left, right) + " => " + result)
-        result
       }
       s(t) match {
         case Show.Meta(ig: SyntacticGroup, res) if groupNeedsParens(og, ig) => s("(", res, ")")

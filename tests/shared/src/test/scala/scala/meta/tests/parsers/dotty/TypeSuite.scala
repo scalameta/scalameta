@@ -1,12 +1,12 @@
-package scala.meta.tests
-package parsers
+package scala.meta.tests.parsers.dotty
 
 import scala.meta._
 import Term.{Super, Name => TermName}
 import Type.{Name => TypeName, _}
 import Name.Anonymous
-import scala.meta.dialects.Scala211
+import scala.meta.dialects.Scala3
 import scala.meta.parsers.ParseException
+import scala.meta.tests.parsers.ParseSuite
 
 class TypeSuite extends ParseSuite {
 
@@ -47,9 +47,9 @@ class TypeSuite extends ParseSuite {
   test("A + B * C") {
     assertTpe("A + B * C") {
       Type.ApplyInfix(
-        Type.ApplyInfix(Type.Name("A"), Type.Name("+"), Type.Name("B")),
-        Type.Name("*"),
-        Type.Name("C")
+        Type.Name("A"),
+        Type.Name("+"),
+        Type.ApplyInfix(Type.Name("B"), Type.Name("*"), Type.Name("C"))
       )
     }
   }
@@ -57,13 +57,9 @@ class TypeSuite extends ParseSuite {
   test("A * B + C / D") {
     assertTpe("A * B + C / D") {
       Type.ApplyInfix(
-        Type.ApplyInfix(
-          Type.ApplyInfix(Type.Name("A"), Type.Name("*"), Type.Name("B")),
-          Type.Name("+"),
-          Type.Name("C")
-        ),
-        Type.Name("/"),
-        Type.Name("D")
+        Type.ApplyInfix(Type.Name("A"), Type.Name("*"), Type.Name("B")),
+        Type.Name("+"),
+        Type.ApplyInfix(Type.Name("C"), Type.Name("/"), Type.Name("D"))
       )
     }
   }

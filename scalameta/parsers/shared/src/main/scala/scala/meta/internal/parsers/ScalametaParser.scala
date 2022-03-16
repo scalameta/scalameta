@@ -821,7 +821,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     @inline
     private def infixTypeRest(t: Type): Type =
-      infixTypeRestWithMode(t, InfixMode.FirstOp, t.startTokenPos, identity)
+      if (dialect.useInfixTypePrecedence)
+        infixTypeRestWithPrecedence(t)
+      else
+        infixTypeRestWithMode(t, InfixMode.FirstOp, t.startTokenPos, identity)
 
     @tailrec
     private final def infixTypeRestWithMode(
@@ -852,6 +855,29 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _ =>
           f(t)
       }
+    }
+
+    private final def infixTypeRestWithPrecedence(t: Type): Type = {
+      val ctx = TypeInfixContext
+      val base = ctx.stack
+      @inline def reduce(rhs: ctx.Rhs, op: Option[ctx.Op]): ctx.Lhs =
+        ctx.reduceStack(base, rhs, rhs, op)
+      @tailrec
+      def loop(rhs: ctx.Rhs): ctx.Lhs = token match {
+        case Ident("*") if ahead(token match {
+              case _: RightParen | _: Comma | _: Equals | _: RightBrace | _: EOF => true
+              case _ => false
+            }) => // we assume that this is a type specification for a vararg parameter
+          reduce(rhs, None)
+        case _: Ident | _: Unquote =>
+          val op = typeName()
+          newLineOptWhenFollowedBy[TypeIntro]
+          ctx.push(ctx.UnfinishedInfix(reduce(rhs, Some(op)), op))
+          loop(compoundType())
+        case _ =>
+          reduce(rhs, None)
+      }
+      loop(t)
     }
 
     def compoundType(): Type = {
@@ -1738,7 +1764,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // The conversions are necessary to push the output of finishInfixExpr on stack.
     type Lhs
     type Rhs
-    type Op <: Term.Name
+    type Op <: Name
     type UnfinishedInfix <: Unfinished
     def toLhs(rhs: Rhs): Lhs
 
@@ -1883,6 +1909,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case Pat.Tuple(args) => args.toList; case Lit.Unit() => Nil; case _ => List(rhs)
       }
       atPos(lhs, rhsEnd)(Pat.ExtractInfix(lhs, op, checkNoTripleDots(args)))
+    }
+  }
+
+  private object TypeInfixContext extends InfixContext {
+    type Lhs = Type
+    type Rhs = Type
+    type Op = Type.Name
+
+    def toLhs(rhs: Rhs): Lhs = rhs
+
+    case class UnfinishedInfix(lhs: Lhs, op: Op) extends Unfinished
+
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: EndPos): Rhs = {
+      val UnfinishedInfix(lhs, op) = unf
+      atPos(lhs, rhsEnd)(Type.ApplyInfix(lhs, op, rhs))
     }
   }
 
