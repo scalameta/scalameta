@@ -71,6 +71,7 @@ message Type {
     UniversalType universal_type = 10;
     ByNameType by_name_type = 13;
     RepeatedType repeated_type = 14;
+    MatchType match_type = 25;
   }
 }
 
@@ -140,6 +141,15 @@ message ByNameType {
 
 message RepeatedType {
   Type tpe = 1;
+}
+
+message MatchType {
+  message CaseType {
+    Type key = 1;
+    Type body = 2;
+  }
+  Type scrutinee = 1;
+  repeated CaseType cases = 2;
 }
 
 message Constant {
