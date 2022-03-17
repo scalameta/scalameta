@@ -2521,7 +2521,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             if (token.is[LeftBracket])
               syntaxError("infix patterns cannot have type arguments", at = token)
             ctx.push(ctx.UnfinishedInfix(lhs1, op))
-            val rhs1 = simplePattern(badPattern3)
+            val rhs1 = simplePattern(badPattern3, isRhs = true)
             loop(rhs1)
           case None =>
             lhs1
@@ -2556,7 +2556,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def simplePattern(): Pat =
       // simple diagnostics for this entry point
       simplePattern(token => syntaxError("illegal start of simple pattern", at = token))
-    def simplePattern(onError: Token => Nothing): Pat =
+    def simplePattern(onError: Token => Nothing, isRhs: Boolean = false): Pat =
       autoPos(token match {
         case _: Ident | _: KwThis | _: Unquote =>
           val isBackquoted = parser.isBackquoted
@@ -2611,7 +2611,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           xmlPat()
         case _: LeftParen =>
           val patterns = inParensOnOpen(if (token.is[RightParen]) Nil else noSeq.patterns())
-          makeTuple(checkNoTripleDots(patterns), Lit.Unit(), Pat.Tuple.apply)
+          patterns match {
+            case (t: Pat.Tuple) :: Nil
+                if isRhs && t.endTokenPos != in.prevTokenPos && t.args.lengthCompare(1) != 0 =>
+              Pat.Tuple(t :: Nil)
+            case _ =>
+              makeTuple(checkNoTripleDots(patterns), Lit.Unit(), Pat.Tuple.apply)
+          }
         case _: MacroQuote =>
           QuotedPatternContext.within {
             Pat.Macro(macroQuote())
