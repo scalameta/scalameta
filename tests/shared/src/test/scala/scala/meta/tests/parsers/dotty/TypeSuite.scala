@@ -11,7 +11,7 @@ import scala.meta.tests.parsers.ParseSuite
 class TypeSuite extends ParseSuite {
 
   private def assertTpe(expr: String)(tree: Tree): Unit = {
-    assertEquals(tpe(expr).structure, tree.structure)
+    assertTree(tpe(expr))(tree)
   }
 
   test("T") {

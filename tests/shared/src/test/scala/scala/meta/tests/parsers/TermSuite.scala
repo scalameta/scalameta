@@ -7,7 +7,7 @@ import scala.meta.dialects.Scala211
 class TermSuite extends ParseSuite {
 
   private def assertTerm(expr: String)(tree: Tree): Unit = {
-    assertEquals(term(expr).structure, tree.structure)
+    assertTree(term(expr))(tree)
   }
 
   test("x") {
