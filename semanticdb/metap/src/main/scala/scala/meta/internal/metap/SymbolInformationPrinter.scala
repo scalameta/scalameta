@@ -227,6 +227,13 @@ trait SymbolInformationPrinter extends BasePrinter {
           case RepeatedType(utpe) =>
             opt(utpe)(normal)
             out.print("*")
+          case MatchType(scrutinee, cases) =>
+            opt(scrutinee)(normal)
+            rep(" match { ", cases, ", ", " }") { kase =>
+              opt(kase.key)(normal)
+              out.print(" => ")
+              opt(kase.body)(normal)
+            }
           case NoType =>
             out.print("<?>")
         }
