@@ -609,6 +609,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @inline final def commaSeparated[T <: Tree: AstInfo](part: => T): List[T] =
     tokenSeparated[Comma, T](sepFirst = false, part)
 
+  private def unTuple[A <: Tree, B <: A](body: A, tupleToArgs: B => List[A])(
+      implicit classifier: Classifier[A, B]
+  ): List[A] = {
+    if (body.is[Lit.Unit]) Nil
+    else if (body.is[B]) tupleToArgs(body.asInstanceOf[B])
+    else body :: Nil
+  }
+
   private def makeTuple[T <: Tree](body: List[T], zero: => T, tuple: List[T] => T): T = body match {
     case Nil => zero
     case only :: Nil =>
@@ -1837,8 +1845,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   // Apparently you can parse and typecheck `a + (bs: _*) * c`,
   // however I'm going to error out on this.
   object termInfixContext extends InfixContext {
-    type Lhs = List[Term]
-    type Rhs = List[Term]
+    type Lhs = Term
+    type Rhs = Term
     type Op = Term.Name
 
     def toLhs(rhs: Rhs): Lhs = rhs
@@ -1846,32 +1854,27 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // We need to carry lhsStart/lhsEnd separately from lhs.pos
     // because their extent may be bigger than lhs because of parentheses or whatnot.
     case class UnfinishedInfix(
-        lhsStart: StartPos,
         lhs: Lhs,
-        lhsEnd: EndPos,
         op: Op,
         targs: List[Type]
     ) extends Unfinished {
       override def toString = {
-        val s_lhs = lhs match {
-          case List(tree) => tree.toString
-          case _ => "(" + lhs.mkString(", ") + ")"
-        }
         val s_targs = if (targs.nonEmpty) targs.mkString("[", ", ", "]") else ""
-        s"[$s_lhs $op$s_targs]"
+        s"[$lhs $op$s_targs]"
       }
     }
 
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: EndPos): Rhs = {
-      val UnfinishedInfix(lhsStart, lhses, lhsEnd, op, targs) = unf
-      // `a + (b, c) * d` leads to creation of a tuple!
-      val lhs = atPos(lhsStart, lhsEnd)(makeTupleTerm(lhses))
+      val UnfinishedInfix(lhs, op, targs) = unf
       if (lhs.is[Term.Repeated])
         syntaxError("repeated argument not allowed here", at = lhs.tokens.last.prev)
 
-      def infixExpression() =
-        atPos(lhsStart, rhsEnd)(Term.ApplyInfix(lhs, op, targs, rhs))
-      List(op match {
+      def infixExpression() = {
+        val args = unTuple(rhs, (x: Term.Tuple) => x.args)
+        atPos(lhs, rhsEnd)(Term.ApplyInfix(lhs, op, targs, args))
+      }
+
+      op match {
         case _: Quasi =>
           infixExpression()
         case Term.Name("match") =>
@@ -1879,15 +1882,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             syntaxError("no type parameters can be added for match", at = lhs.tokens.last.prev)
           }
 
-          rhs.headOption match {
-            case Some(Term.PartialFunction(cases)) =>
-              atPos(lhsStart, rhsEnd)(Term.Match(lhs, cases))
+          rhs match {
+            case Term.PartialFunction(cases) =>
+              atPos(lhs, rhsEnd)(Term.Match(lhs, cases))
             case _ =>
               syntaxError("match statement requires cases", at = lhs.tokens.last.prev)
           }
         case _ =>
           infixExpression()
-      })
+      }
     }
   }
 
@@ -1903,9 +1906,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: EndPos): Rhs = {
       val UnfinishedInfix(lhs, op) = unf
-      val args = rhs match {
-        case Pat.Tuple(args) => args.toList; case Lit.Unit() => Nil; case _ => List(rhs)
-      }
+      val args = unTuple(rhs, (x: Pat.Tuple) => x.args)
       atPos(lhs, rhsEnd)(Pat.ExtractInfix(lhs, op, args))
     }
   }
@@ -1943,7 +1944,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // rhsStartK/rhsEndK may be bigger than then extent of rhsK,
     // so we really have to track them separately.
     @tailrec
-    def loop(rhsStartK: StartPos, rhsK: ctx.Rhs, rhsEndK: EndPos): ctx.Rhs = {
+    def loop(rhsK: ctx.Rhs): ctx.Rhs = {
       if (!token.is[Ident] && !token.is[Unquote] &&
         !(token.is[KwMatch] && dialect.allowMatchAsOperator)) {
         // Infix chain has ended.
@@ -1953,6 +1954,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       } else if (allowRepeated && isVarargStarParam()) {
         rhsK
       } else {
+        val rhsEndK: EndPos = in.prevTokenPos
         // Infix chain continues.
         // In the running example, we're at `a [+] b`.
         val op = if (token.is[KwMatch]) {
@@ -1966,37 +1968,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         // In the running example, we're at `a + [b]` (infix).
         // If we were parsing `val c = a b`, then we'd be at `val c = a b[]` (postfix).
         if (isAfterOptNewLine[ExprIntro]) {
-          // There is only one case when we here with empty rhsK: Unit inside infix chain.
-          // For example `xs == () :: Nil`. In this case `()` treated as empty argument list but infix chain continues
-          // and now we can argue that it was Unit.
-          val rhsKWithFallback =
-            if (rhsK.isEmpty) atPos(rhsStartK, rhsEndK)(Lit.Unit()) :: Nil else rhsK
           // Infix chain continues, so we need to reduce the stack.
           // In the running example, base = List(), rhsK = [a].
-          val lhsK = ctx.reduceStack(base, rhsKWithFallback, rhsEndK, Some(op)) // lhsK = [a]
-          val lhsStartK = Math.min(rhsStartK.startTokenPos, lhsK.head.startTokenPos)
+          val lhsK = ctx.reduceStack(base, rhsK, rhsEndK, Some(op)) // lhsK = [a]
           // afterwards, ctx.stack = List([a +])
-          ctx.push(ctx.UnfinishedInfix(lhsStartK, lhsK, rhsEndK, op, targs))
-          val preRhsKplus1 = in.token
-          var rhsStartKplus1: StartPos = in.tokenPos
+          ctx.push(ctx.UnfinishedInfix(lhsK, op, targs))
           val rhsKplus1 = argumentExprsOrPrefixExpr(PostfixStat)
-          var rhsEndKplus1: EndPos = in.prevTokenPos
-          if (preRhsKplus1.isNot[LeftBrace] && preRhsKplus1.isNot[LeftParen]) {
-            rhsStartKplus1 = rhsKplus1.head
-            rhsEndKplus1 = rhsKplus1.head
-          }
           // Try to continue the infix chain.
-          loop(rhsStartKplus1, rhsKplus1, rhsEndKplus1) // base = List([a +]), rhsKplus1 = List([b])
+          loop(rhsKplus1) // base = List([a +]), rhsKplus1 = List([b])
         } else {
           // Infix chain has ended with a postfix expression.
           // This never happens in the running example.
-          val lhsQual = ctx.reduceStack(base, rhsK, rhsEndK, Some(op))
-          val finQual = lhsQual match {
-            case List(finQual) => finQual; case _ => unreachable(debug(lhsQual))
-          }
+          val finQual = ctx.reduceStack(base, rhsK, rhsEndK, Some(op))
           if (targs.nonEmpty)
             syntaxError("type application is not allowed for postfix operators", at = token)
-          List(atPos(finQual, op)(Term.Select(finQual, op)))
+          atPos(finQual, op)(Term.Select(finQual, op))
         }
       }
     }
@@ -2009,7 +1995,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // rhs0 is now [a]
     // If the next token is not an ident or an unquote, the infix chain ends immediately,
     // and `postfixExpr` becomes a fallthrough.
-    val rhsN = loop(rhs0, List(rhs0), rhs0)
+    val rhsN = loop(rhs0)
 
     // Infix chain has ended.
     // base contains pending UnfinishedInfix parts and rhsN is the final rhs.
@@ -2017,13 +2003,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // Afterwards, `lhsResult` will be List([a + b]).
     val lhsResult = ctx.reduceStack(base, rhsN, in.prevTokenPos, None)
 
-    // This is something not captured by the type system.
-    // When applied to a result of `loop`, `reduceStack` will produce a singleton list.
-    lhsResult match {
-      case List(finResult: Term) => maybeAnonymousFunctionUnlessPostfix(finResult)(location)
-      case List(finResult) => finResult
-      case _ => unreachable(debug(lhsResult))
-    }
+    maybeAnonymousFunctionUnlessPostfix(lhsResult)(location)
   }
 
   def prefixExpr(allowRepeated: Boolean): Term =
@@ -2201,8 +2181,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def argumentExprsOrPrefixExpr(location: Location): List[Term] = {
-    if (token.isNot[LeftBrace] && token.isNot[LeftParen]) prefixExpr(allowRepeated = false) :: Nil
+  private def argumentExprsOrPrefixExpr(location: Location): termInfixContext.Rhs = {
+    if (token.isNot[LeftBrace] && token.isNot[LeftParen]) prefixExpr(allowRepeated = false)
     else {
       def findRep(args: List[Term]): Option[Term.Repeated] = args.collectFirst {
         case Term.Assign(_, rep: Term.Repeated) => rep
@@ -2215,12 +2195,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       token match {
         case Dot() | LeftBracket() | LeftParen() | LeftBrace() | Underscore() =>
           findRep(args).foreach(x => syntaxError("repeated argument not allowed here", at = x))
-          simpleExprRest(addPos(makeTupleTerm(args)), canApply = true) :: Nil
+          simpleExprRest(addPos(makeTupleTerm(args)), canApply = true)
         case _ =>
-          args match {
-            case arg :: Nil => addPos(maybeAnonymousFunctionInParens(arg)) :: Nil
-            case other => other
-          }
+          addPos(args match {
+            case arg :: Nil =>
+              maybeAnonymousFunctionInParens(arg) match {
+                case t: Term.Tuple if t.startTokenPos != lpPos && t.args.lengthCompare(1) != 0 =>
+                  Term.Tuple(t :: Nil)
+                case t => t
+              }
+            case _ => makeTupleTerm(args)
+          })
       }
     }
   }
