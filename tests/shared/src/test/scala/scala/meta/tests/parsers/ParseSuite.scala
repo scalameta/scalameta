@@ -59,6 +59,10 @@ class ParseSuite extends FunSuite with CommonTrees {
   def checkOK(stat: String)(implicit dialect: Dialect) =
     test(logger.revealWhitespace(stat).take(50)) { templStat(stat) }
 
+  protected def assertTree(obtained: Tree)(expected: Tree): Unit =
+    assertEquals(obtained.structure, expected.structure)
+  protected def assertTree[T <: Tree](code: String, f: ScalametaParser => T)(tree: Tree): Unit =
+    assertTree(parseRule(code, f))(tree)
 }
 
 object MoreHelpers {

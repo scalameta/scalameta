@@ -7,11 +7,11 @@ import scala.meta.dialects.Scala211
 class PatSuite extends ParseSuite {
 
   private def assertPat(expr: String)(tree: Tree): Unit = {
-    assertEquals(pat(expr).structure, tree.structure)
+    assertTree(pat(expr))(tree)
   }
 
   private def assertPatTyp(expr: String)(tree: Tree): Unit = {
-    assertEquals(patternTyp(expr).structure, tree.structure)
+    assertTree(patternTyp(expr))(tree)
   }
 
   test("_") {
