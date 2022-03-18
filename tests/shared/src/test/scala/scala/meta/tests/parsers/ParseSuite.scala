@@ -23,17 +23,21 @@ class ParseSuite extends FunSuite with CommonTrees {
     assertNoDiff(obtained.structure, expected.structure)
 
   def stat(code: String)(implicit dialect: Dialect) = code.applyRule(_.parseStat())
-  def term(code: String)(implicit dialect: Dialect) = code.parseRule(_.expr())
-  def pat(code: String)(implicit dialect: Dialect) = code.parseRule(_.pattern())
-  def patternTyp(code: String)(implicit dialect: Dialect) = code.parseRule(_.patternTyp())
-  def tpe(code: String)(implicit dialect: Dialect) = code.parseRule(_.typ())
+
+  def parseRule[T <: Tree](code: String, f: ScalametaParser => T)(implicit dialect: Dialect) =
+    code.parseRule(f)
+  def term(code: String)(implicit dialect: Dialect) = parseRule(code, _.expr())
+  def pat(code: String)(implicit dialect: Dialect) = parseRule(code, _.pattern())
+  def patternTyp(code: String)(implicit dialect: Dialect) = parseRule(code, _.patternTyp())
+  def tpe(code: String)(implicit dialect: Dialect) = parseRule(code, _.typ())
   def topStat(code: String)(implicit dialect: Dialect) =
-    code.parseRule(p => p.statSeq(p.topStat).head)
+    parseRule(code, p => p.statSeq(p.topStat).head)
   def templStat(code: String)(implicit dialect: Dialect) =
-    code.parseRule(p => p.statSeq(p.templateStat()).head)
-  def blockStat(code: String)(implicit dialect: Dialect) = code.parseRule(_.blockStatSeq().head)
-  def caseClause(code: String)(implicit dialect: Dialect) = code.parseRule(_.caseClause())
-  def source(code: String)(implicit dialect: Dialect) = code.parseRule(_.source())
+    parseRule(code, p => p.statSeq(p.templateStat()).head)
+  def blockStat(code: String)(implicit dialect: Dialect) = parseRule(code, _.blockStatSeq().head)
+  def caseClause(code: String)(implicit dialect: Dialect) = parseRule(code, _.caseClause())
+  def source(code: String)(implicit dialect: Dialect) = parseRule(code, _.source())
+
   def ammonite(code: String)(implicit dialect: Dialect) =
     code.asAmmoniteInput.parseRule(_.entryPointAmmonite())
   def interceptParseErrors(stats: String*)(implicit loc: munit.Location) = {
