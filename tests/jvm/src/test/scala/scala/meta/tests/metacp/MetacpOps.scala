@@ -74,6 +74,12 @@ object MetacpOps {
         visitType(tpe)
       case s.RepeatedType(tpe) =>
         visitType(tpe)
+      case s.MatchType(scrutinee, cases) =>
+        visitType(scrutinee)
+        cases.foreach { kase =>
+          visitType(kase.key)
+          visitType(kase.body)
+        }
       case s.NoType =>
     }
     def visitSignature(signature: s.Signature): Unit = signature match {
