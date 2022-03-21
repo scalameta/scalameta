@@ -29,7 +29,7 @@ class IOSuite extends FunSuite {
     val bin = PathIO.workingDirectory.resolve("bin")
     val obtained = FileIO.listAllFilesRecursively(bin)
     val scalafmt = bin.resolve("scalafmt")
-    assert(obtained.contains(scalafmt))
+    assert(obtained.contains(scalafmt), s"$scalafmt not contained in:\n${obtained.mkString("\n")}")
   }
 
   test("FileIO.readAllBytes") {
