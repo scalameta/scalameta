@@ -623,6 +623,7 @@ lazy val publishableSettings = Def.settings(
   Test / publishArtifact := false,
   publishMavenStyle := true,
   pomIncludeRepository := { x => false },
+  versionScheme := Some("semver-spec"),
   mimaPreviousArtifacts := {
     if (organization.value == "org.scalameta") {
       val rxVersion = """^(\d+)\.(\d+)\.(\d+)(.+)?$""".r
