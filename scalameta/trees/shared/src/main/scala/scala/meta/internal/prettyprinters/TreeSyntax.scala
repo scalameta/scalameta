@@ -1018,7 +1018,11 @@ object TreeSyntax {
           )
 
       // Init
-      case t: Init => s(if (t.tpe.is[Type.Singleton]) kw("this") else p(RefineTyp, t.tpe), t.argss)
+      case t: Init =>
+        s(
+          if (t.tpe.is[Type.Singleton]) kw("this") else p(RefineTyp, t.tpe),
+          r(t.argss.map(x => s("(", r(x, ", "), ")")))
+        )
 
       // Self
       case t: Self => s(t.name, t.decltpe)
@@ -1168,7 +1172,7 @@ object TreeSyntax {
 
     // Multiples and optionals
     implicit def syntaxArgs: Syntax[List[Term]] = Syntax {
-      case (b: Term.Block) :: Nil if !b.parent.exists(_.is[Init]) => s(" ", b)
+      case (b: Term.Block) :: Nil => s(" ", b)
       case (f @ Term.Function(params, _)) :: Nil if !params.exists(_.decltpe.isEmpty) =>
         s(" { ", f, " }")
       case args => s("(", r(args, ", "), ")")
