@@ -1215,4 +1215,17 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )
   }
 
+  test("#2317 init block") {
+    checkTree(
+      q"new Foo({str => str.length})",
+      """new Foo({
+        |  str => str.length
+        |})""".stripMargin
+    )
+  }
+
+  test("#1917 init lambda") {
+    checkTree(q"new Foo((a: Int) => a + 1)", "new Foo((a: Int) => a + 1)")
+  }
+
 }
