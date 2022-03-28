@@ -1043,99 +1043,89 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#1817 ApplyInfix parentheses") {
-    checkTree(q"list map (println)", "list map println")
-    checkTree(q"list map (add(1))", "list map add(1)")
-    checkTree(q"list map (add(_, 1))", "list map (add(_, 1))")
-    checkTree(q"list map (bar:_*)", "list map (bar: _*)")
+    checkStat("list map println")(q"list map (println)")
+    checkStat("list map add(1)")(q"list map (add(1))")
+    checkStat("list map (add(_, 1))")(q"list map (add(_, 1))")
+    checkStat("list map (bar: _*)")(q"list map (bar:_*)")
   }
   test("#1826 ApplyInfix parentheses on Select") {
-    checkTree(q"list map (_.bar)", "list map (_.bar)")
-    checkTree(q"list map (Foo.bar)", "list map Foo.bar")
+    checkStat("list map (_.bar)")(q"list map (_.bar)")
+    checkStat("list map Foo.bar")(q"list map (Foo.bar)")
   }
   test("1826 ApplyInfix parentheses on multiple Select") {
-    checkTree(q"list map (_.foo.bar)", "list map (_.foo.bar)")
+    checkStat("list map (_.foo.bar)")(q"list map (_.foo.bar)")
   }
   test("#1826 ApplyInfix parentheses on tuple") {
-    checkTree(q"list map ((_, foo))", "list map ((_, foo))")
+    checkStat("list map ((_, foo))")(q"list map ((_, foo))")
   }
   test("#1826 ApplyInfix parentheses on Apply") {
-    checkTree(q"list map (_.->(foo))", "list map (_.->(foo))")
-    checkTree(q"list map a.->(foo)", "list map a.->(foo)")
-    checkTree(q"list map (_.diff(foo))", "list map (_.diff(foo))")
-    checkTree(q"list map (_.diff.bar(foo))", "list map (_.diff.bar(foo))")
-    checkTree(q"list map a.diff(foo)", "list map a.diff(foo)")
-    checkTree(q"list map a.diff.bar(foo)", "list map a.diff.bar(foo)")
+    checkStat("list map (_.->(foo))")(q"list map (_.->(foo))")
+    checkStat("list map a.->(foo)")(q"list map a.->(foo)")
+    checkStat("list map (_.diff(foo))")(q"list map (_.diff(foo))")
+    checkStat("list map (_.diff.bar(foo))")(q"list map (_.diff.bar(foo))")
+    checkStat("list map a.diff(foo)")(q"list map a.diff(foo)")
+    checkStat("list map a.diff.bar(foo)")(q"list map a.diff.bar(foo)")
   }
   test("#1826 ApplyInfix parentheses on Function") {
-    checkTree(q"list map (_ => foo)", "list map (_ => foo)")
+    checkStat("list map (_ => foo)")(q"list map (_ => foo)")
   }
   test("#1826 ApplyInfix parentheses on ApplyInfix function") {
-    checkTree(q"list map (_ diff foo)", "list map (_ diff foo)")
+    checkStat("list map (_ diff foo)")(q"list map (_ diff foo)")
     // 'diff' has same precedence as 'map', so parentheses should be added
-    checkTree(q"list map (a diff foo)", "list map (a diff foo)")
+    checkStat("list map (a diff foo)")(q"list map (a diff foo)")
   }
   test("#1826 ApplyInfix parentheses on ApplyInfix operator") {
-    checkTree(q"list map (_ -> foo)", "list map (_ -> foo)")
+    checkStat("list map (_ -> foo)")(q"list map (_ -> foo)")
     // '->' has greater precendence than 'map', so parentheses are not needed
-    checkTree(q"list map (a -> foo)", "list map a -> foo")
+    checkStat("list map a -> foo")(q"list map (a -> foo)")
   }
   test("1826 ApplyInfix parentheses on Term.Match") {
-    checkTree(
-      q"list map (_ match { case 1 => 2})",
+    checkStat(
       s"list map (_ match {${EOL}  case 1 => 2${EOL}})"
-    )
+    )(q"list map (_ match { case 1 => 2})")
   }
 
   test("#1839 ApplyInfix parentheses on Term.Placeholder") {
-    checkTree(q"list reduce (_ + _)", "list reduce (_ + _)")
-    checkTree(q"list reduce (_ + (_))", "list reduce (_ + _)")
-    checkTree(q"list reduce (_ + (_: Int))", "list reduce (_ + (_: Int))")
-    checkTree(q"list reduce (_.foo + _.bar)", "list reduce (_.foo + _.bar)")
-    checkTree(q"list reduce (_.a.b.c + _.d.e.f)", "list reduce (_.a.b.c + _.d.e.f)")
-    checkTree(q"list reduce (_.a(foo) + _.b(bar))", "list reduce (_.a(foo) + _.b(bar))")
+    checkStat("list reduce (_ + _)")(q"list reduce (_ + _)")
+    checkStat("list reduce (_ + _)")(q"list reduce (_ + (_))")
+    checkStat("list reduce (_ + (_: Int))")(q"list reduce (_ + (_: Int))")
+    checkStat("list reduce (_.foo + _.bar)")(q"list reduce (_.foo + _.bar)")
+    checkStat("list reduce (_.a.b.c + _.d.e.f)")(q"list reduce (_.a.b.c + _.d.e.f)")
+    checkStat("list reduce (_.a(foo) + _.b(bar))")(q"list reduce (_.a(foo) + _.b(bar))")
   }
 
   test("#1864 Terms with leading numerics are backquoted") {
-    checkTree(Term.Name("123foo"), "`123foo`")
-    checkTree(q""" val `123foo` = "hello" """, """val `123foo` = "hello"""")
+    checkStat("`123foo`")(Term.Name("123foo"))
+    checkStat("""val `123foo` = "hello"""")(q""" val `123foo` = "hello" """)
   }
 
   test("#1868 Term.Eta preserves structure") {
-    checkTree(Term.Select(Term.Eta(Term.Name("x")), Term.Name("y")), "(x _).y")
-    checkTree(q"""(x _).y""", "(x _).y")
-    checkTree(Term.Eta(Term.Name("x")), "x _")
-    checkTree(q"""x _""", "x _")
+    checkStat("(x _).y")(Term.Select(Term.Eta(Term.Name("x")), Term.Name("y")))
+    checkStat("(x _).y")(q"""(x _).y""")
+    checkStat("x _")(Term.Eta(Term.Name("x")))
+    checkStat("x _")(q"""x _""")
   }
 
   test("#2106 unicode characters are properly escaped in string literals") {
-    checkTree(Lit.String("xy\u001az"), "\"xy\\u001az\"")
-    checkTree(Lit.String("þæö"), "\"þæö\"")
-    checkTree(Lit.String(">"), "\">\"")
-    checkTree(Lit.String("~"), "\"~\"")
-    checkTree(Lit.String(" "), "\" \"")
-    checkTree(Lit.String("="), "\"=\"")
-    checkTree(Lit.String("\u007f"), "\"\\u007f\"")
-    checkTree(Lit.String("\u001f"), "\"\\u001f\"")
-    checkTree(Lit.String("\\"), "\"\\\\\"")
-    checkTree(Lit.String("\u00fe\u00e6\u00f6"), "\"þæö\"")
-    checkTree(Lit.String("ラーメン"), "\"ラーメン\"")
+    checkStat("\"xy\\u001az\"")(Lit.String("xy\u001az"))
+    checkStat("\"þæö\"")(Lit.String("þæö"))
+    checkStat("\">\"")(Lit.String(">"))
+    checkStat("\"~\"")(Lit.String("~"))
+    checkStat("\" \"")(Lit.String(" "))
+    checkStat("\"=\"")(Lit.String("="))
+    checkStat("\"\\u007f\"")(Lit.String("\u007f"))
+    checkStat("\"\\u001f\"")(Lit.String("\u001f"))
+    checkStat("\"\\\\\"")(Lit.String("\\"))
+    checkStat("\"þæö\"")(Lit.String("\u00fe\u00e6\u00f6"))
+    checkStat("\"ラーメン\"")(Lit.String("ラーメン"))
   }
 
   test("#2447 Pat.Bind on Term.Name") {
-    checkTree(q"{ case x @ Y => x }", "{\n  case x @ Y => x\n}")
+    checkStat("{\n  case x @ Y => x\n}")(q"{ case x @ Y => x }")
   }
 
   test("#2447 Pat.Bind on Term.Name backticks") {
-    checkTree(q"{ case x @ `y` => x }", "{\n  case x @ `y` => x\n}")
-  }
-
-  def checkTree(original: Tree, expected: String)(implicit loc: munit.Location): Unit = {
-    assertNoDiff(original.structure, expected.parse[Stat].get.structure)
-    assertNoDiff(original.syntax, expected, original.structure)
-  }
-  def checkTree(obtained: Tree, expected: Tree)(implicit loc: munit.Location): Unit = {
-    assertNoDiff(obtained.structure, expected.structure)
-    assertNoDiff(obtained.syntax, expected.syntax)
+    checkStat("{\n  case x @ `y` => x\n}")(q"{ case x @ `y` => x }")
   }
 
   test("test repeat") {
@@ -1177,8 +1167,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#1843 anonymous functions") {
-    checkTree(
-      q"list foo (_ fun (_.bar))",
+    checkTree(q"list foo (_ fun (_.bar))")(
       Term.ApplyInfix(
         Term.Name("list"),
         Term.Name("foo"),
@@ -1195,8 +1184,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         )
       )
     )
-    checkTree(
-      q"list foo (_ fun _.bar)",
+    checkTree(q"list foo (_ fun _.bar)")(
       Term.ApplyInfix(
         Term.Name("list"),
         Term.Name("foo"),
@@ -1216,16 +1204,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#2317 init block") {
-    checkTree(
-      q"new Foo({str => str.length})",
+    checkStat(
       """new Foo({
         |  str => str.length
         |})""".stripMargin
-    )
+    )(q"new Foo({str => str.length})")
   }
 
   test("#1917 init lambda") {
-    checkTree(q"new Foo((a: Int) => a + 1)", "new Foo((a: Int) => a + 1)")
+    checkStat("new Foo((a: Int) => a + 1)")(q"new Foo((a: Int) => a + 1)")
   }
 
   test("#2699 method declaration with multiple named 'using' params") {
@@ -1290,8 +1277,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("#1596") {
     val tree: Term.Xml = q"<h1>a{b}</h1>"
-    checkTree(
-      tree,
+    checkTree(tree)(
       Term.Xml(List(Lit.String("<h1>a"), Lit.String("</h1>")), List(Term.Name("b")))
     )
     val dialect = implicitly[Dialect]
@@ -1325,17 +1311,17 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#1063 original") {
-    checkTree(
-      q"def withJsoup(html: Html)(cleaners: HtmlCleaner*): Html = withJsoup(html.body) { cleaners: _* }",
+    checkStat(
       """def withJsoup(html: Html)(cleaners: HtmlCleaner*): Html = withJsoup(html.body) {
         |  cleaners: _*
         |}""".stripMargin
+    )(
+      q"def withJsoup(html: Html)(cleaners: HtmlCleaner*): Html = withJsoup(html.body) { cleaners: _* }"
     )
   }
 
   test("#1063 good") {
-    checkTree(
-      term("foo(bar) { baz: _* }"),
+    checkTree(term("foo(bar) { baz: _* }"))(
       Term.Apply(
         Term.Apply(Term.Name("foo"), List(Term.Name("bar"))),
         List(Term.Block(List(Term.Repeated(Term.Name("baz")))))
