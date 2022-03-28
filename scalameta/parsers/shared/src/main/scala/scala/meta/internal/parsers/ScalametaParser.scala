@@ -3820,7 +3820,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     copyPos(name)(Self(name, None))
   }
 
-  def self(): Self = autoPos {
+  private def self(): Self =
+    selfOpt().getOrElse(syntaxError("expected identifier, `this' or unquote", at = token))
+
+  private def selfOpt(): Option[Self] = {
     val name = token match {
       case Ident(_) =>
         termName()
@@ -3828,9 +3831,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         autoPos { next(); Name.Anonymous() }
       case t: Unquote =>
         if (ahead(token.is[Colon])) unquote[Name.Quasi](t)
-        else return unquote[Self.Quasi](t)
+        else return Some(unquote[Self.Quasi](t))
       case _ =>
-        syntaxError("expected identifier, `this' or unquote", at = token)
+        return None
     }
     val decltpe = token match {
       case Colon() =>
@@ -3839,7 +3842,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _ =>
         None
     }
-    Self(name, decltpe)
+    Some(autoEndPos(name)(Self(name, decltpe)))
   }
 
   /* -------- TEMPLATES ------------------------------------------- */
@@ -4119,30 +4122,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       enumCaseAllowed: Boolean = false,
       secondaryConstructorAllowed: Boolean = false
   ): (Self, List[Stat]) = {
-    var selfTree: Self = selfEmpty()
-    var firstOpt: Option[Stat] = None
-    if (token.is[ExprIntro] && !token.is[KwExtension]) {
-      val beforeFirst = in.fork
-      val first = expr(location = TemplateStat, allowRepeated = false)
-      val afterFirst = in.fork
-      if (token.is[RightArrow]) {
-        try {
-          in = beforeFirst
-          selfTree = self()
-          next()
-          in.undoIndent()
-        } catch {
-          case _: ParseException =>
-            in = afterFirst
-            unreachable
-        }
-      } else {
-        firstOpt = Some(stat(first))
-        acceptStatSepOpt()
-      }
+    val forked = in.fork
+    val selfTree: Self = selfOpt() match {
+      case Some(selfTree) if acceptOpt[RightArrow] =>
+        in.undoIndent()
+        selfTree
+      case _ =>
+        in = forked
+        selfEmpty()
     }
     val stats = listBy[Stat] { buf =>
-      firstOpt.foreach(buf += _)
       statSeqBuf(buf, templateStat(enumCaseAllowed, secondaryConstructorAllowed))
     }
     (selfTree, stats)
