@@ -1288,4 +1288,33 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )
   }
 
+  test("#1063 original") {
+    checkTree(
+      q"def withJsoup(html: Html)(cleaners: HtmlCleaner*): Html = withJsoup(html.body) { cleaners: _* }",
+      """def withJsoup(html: Html)(cleaners: HtmlCleaner*): Html = withJsoup(html.body) {
+        |  cleaners: _*
+        |}""".stripMargin
+    )
+  }
+
+  test("#1063 good") {
+    checkTree(
+      term("foo(bar) { baz: _* }"),
+      Term.Apply(
+        Term.Apply(Term.Name("foo"), List(Term.Name("bar"))),
+        List(Term.Block(List(Term.Repeated(Term.Name("baz")))))
+      )
+    )
+  }
+
+  test("#1063 bad") {
+    val thrown = intercept[ParseException] {
+      term("foo(bar) { val baz = qux; baz: _* }")
+    }
+    assertEquals(
+      thrown.getMessage.substring(0, 52),
+      "<input>:1: error: repeated argument not allowed here"
+    )
+  }
+
 }
