@@ -984,10 +984,16 @@ object TreeSyntax {
                 params.headOption.exists(_.mods.headOption.exists(_.is[Mod.Implicit]))
               val firstParamContainsImplicit =
                 params.headOption.exists(_.mods.exists(_.is[Mod.Implicit]))
+              val firstParamModIsUsing =
+                params.headOption.exists(_.mods.headOption.exists(_.is[Mod.Using]))
+              val firstParamContainsUsing =
+                params.headOption.exists(_.mods.exists(_.is[Mod.Using]))
 
               if (firstParamModIsImplicit)
                 s("(implicit ", r(params, ", "), ")")
-              else if (firstParamContainsImplicit)
+              else if (firstParamModIsUsing)
+                s("(using ", r(params, ", "), ")")
+              else if (firstParamContainsImplicit || firstParamContainsUsing)
                 s(
                   "(",
                   printParam(params.head),
