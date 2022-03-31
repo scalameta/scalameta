@@ -605,17 +605,8 @@ object TreeSyntax {
         else
           s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
       case t: Term.Param =>
-        val mods = t.mods
-          // NOTE: `implicit` in parameters is skipped in favor of `implicit` in the enclosing parameter list
-          .filter(!_.is[Mod.Implicit])
-          // NOTE: `using` is skipped as it applies to whole list
-          .filter(!_.is[Mod.Using])
-        val nameType = if (t.mods.exists(_.is[Mod.Using]) && t.name.is[Name.Anonymous]) {
-          s(t.decltpe.get)
-        } else {
-          s(t.name, t.decltpe)
-        }
-        s(w(mods, " "), nameType, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
+        // NOTE: `implicit/using` in parameters is skipped as it applies to whole list
+        printParam(t, t.mods.filterNot(x => x.is[Mod.Implicit] || x.is[Mod.Using]))
 
       // Type
       case t: Type.AnonymousName => m(Path, s(""))
@@ -964,47 +955,20 @@ object TreeSyntax {
       case t: Pkg.Object =>
         r(" ")(kw("package"), t.mods, kw("object"), t.name, t.templ)
       case t: Ctor.Primary =>
-        def printParam(t: Term.Param) = {
-          val name = if (t.mods.exists(_.is[Mod.Using]) && t.name.is[Name.Anonymous]) {
-            s(t.decltpe.get)
-          } else {
-            s(t.name, t.decltpe)
+        def printAllMods(t: Term.Param) = printParam(t, t.mods)
+        val paramss = r(
+          t.paramss.map {
+            case params @ head :: tail =>
+              head.mods.collectFirst {
+                case _: Mod.Implicit if tail.forall(_.mods.exists(_.is[Mod.Implicit])) => "implicit"
+                case _: Mod.Using if tail.forall(_.mods.exists(_.is[Mod.Using])) => "using"
+              } match {
+                case Some(kw) => s("(", kw, " ", r(params, ", "), ")")
+                case _ => s("(", r(params.map(printAllMods), ", "), ")")
+              }
+            case _ => s("()")
           }
-          s(
-            w(t.mods, " "),
-            name,
-            t.default.map(s(" ", kw("="), " ", _)).getOrElse(s())
-          )
-        }
-
-        val paramss =
-          r(
-            t.paramss.map(params => {
-              val firstParamModIsImplicit =
-                params.headOption.exists(_.mods.headOption.exists(_.is[Mod.Implicit]))
-              val firstParamContainsImplicit =
-                params.headOption.exists(_.mods.exists(_.is[Mod.Implicit]))
-              val firstParamModIsUsing =
-                params.headOption.exists(_.mods.headOption.exists(_.is[Mod.Using]))
-              val firstParamContainsUsing =
-                params.headOption.exists(_.mods.exists(_.is[Mod.Using]))
-
-              if (firstParamModIsImplicit)
-                s("(implicit ", r(params, ", "), ")")
-              else if (firstParamModIsUsing)
-                s("(using ", r(params, ", "), ")")
-              else if (firstParamContainsImplicit || firstParamContainsUsing)
-                s(
-                  "(",
-                  printParam(params.head),
-                  w(", ", r(params.tail, ", "), params.tail.nonEmpty),
-                  ")"
-                )
-              else
-                s("(", r(params.map(printParam), ", "), ")")
-            }),
-            ""
-          )
+        )
 
         s(w(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), paramss)
       case t: Ctor.Secondary =>
@@ -1193,6 +1157,14 @@ object TreeSyntax {
     implicit def syntaxPats: Syntax[List[Pat]] = Syntax { pats => s("(", r(pats, ", "), ")") }
     implicit def syntaxMods: Syntax[List[Mod]] = Syntax { mods =>
       if (mods.nonEmpty) r(mods, " ") else s()
+    }
+    private def printParam(t: Term.Param, mods: List[Mod]): Show.Result = {
+      val nameType = if (t.mods.exists(_.is[Mod.Using]) && t.name.is[Name.Anonymous]) {
+        s(t.decltpe.get)
+      } else {
+        s(t.name, t.decltpe)
+      }
+      s(w(mods, " "), nameType, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
     }
     implicit def syntaxAnnots: Syntax[List[Mod.Annot]] = Syntax { annots =>
       if (annots.nonEmpty) r(annots, " ") else s()
