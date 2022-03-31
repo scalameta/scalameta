@@ -2216,7 +2216,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def argumentExprsWithUsing(location: Location = NoStat): (List[Term], Boolean) = token match {
     case LeftBrace() =>
-      (List(blockExpr()), false)
+      (List(blockExpr(allowRepeated = true)), false)
     case LeftParen() =>
       inParensOnOpen(token match {
         case RightParen() =>
@@ -2239,16 +2239,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     trees
   }
 
-  def blockExpr(isBlockOptional: Boolean = false): Term = {
+  def blockExpr(isBlockOptional: Boolean = false, allowRepeated: Boolean = false): Term = {
     if (ahead(token.is[CaseIntro] || (token.is[Ellipsis] && next(token.is[KwCase]))))
       autoPos(Term.PartialFunction {
         if (acceptOpt[LeftBrace]) inBracesAfterOpen(caseClauses()) else indented(caseClauses())
       })
-    else block(isBlockOptional)
+    else block(isBlockOptional, allowRepeated)
   }
 
-  def block(isBlockOptional: Boolean = false): Term = autoPos {
-    def blockWithStats = Term.Block(blockStatSeq())
+  def block(isBlockOptional: Boolean = false, allowRepeated: Boolean = false): Term = autoPos {
+    def blockWithStats = Term.Block(blockStatSeq(allowRepeated = allowRepeated))
     if (!isBlockOptional && acceptOpt[LeftBrace]) {
       inBracesAfterOpen(blockWithStats)
     } else {
@@ -4202,7 +4202,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def blockStatSeq(): List[Stat] = listBy[Stat] { stats =>
+  def blockStatSeq(allowRepeated: Boolean = false): List[Stat] = listBy[Stat] { stats =>
     while (!token.is[CaseDefEnd] && !in.observeOutdented()) token match {
       case _: KwExport =>
         stats += exportStmt()
@@ -4220,7 +4220,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         stats += localDef(None)
         if (!token.is[CaseDefEnd]) acceptStatSepOpt()
       case ExprIntro() =>
-        stats += stat(expr(location = BlockStat, allowRepeated = false))
+        stats += stat(expr(location = BlockStat, allowRepeated = allowRepeated))
         if (!token.is[CaseDefEnd]) acceptStatSep()
       case StatSep() =>
         next()
@@ -4231,6 +4231,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _ =>
         syntaxError("illegal start of statement", at = token)
     }
+    if (allowRepeated && stats.length > 1)
+      stats.foreach {
+        case t: Term.Repeated => syntaxError("repeated argument not allowed here", at = t)
+        case _ =>
+      }
   }
 
   def packageOrPackageObjectDef(statpf: PartialFunction[Token, Stat]): Stat = autoPos {
