@@ -1228,4 +1228,64 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkTree(q"new Foo((a: Int) => a + 1)", "new Foo((a: Int) => a + 1)")
   }
 
+  test("#2699 method declaration with multiple named 'using' params") {
+    assertEquals(
+      templStat("def foo(x: Int)(using y: String, z: Boolean): String")(dialects.Scala3).syntax,
+      "def foo(x: Int)(using y: String, z: Boolean): String"
+    )
+  }
+
+  test("#2699 method definition with multiple named 'using' params") {
+    assertEquals(
+      templStat("def foo(x: Int)(using y: String, z: Boolean) = x")(dialects.Scala3).syntax,
+      "def foo(x: Int)(using y: String, z: Boolean) = x"
+    )
+  }
+
+  test("#2699 primary constructor with multiple named 'using' params") {
+    assertEquals(
+      templStat("class C(x: Int)(using y: String, z: Boolean)")(dialects.Scala3).syntax,
+      "class C(x: Int)(using y: String, z: Boolean)"
+    )
+  }
+
+  test("#2699 secondary constructor with multiple named 'using' params") {
+    assertEquals(
+      templStat(
+        "class C(x: Int) { def this(x: String)(using y: String, z: Boolean) = this(x.toInt) }"
+      )(dialects.Scala3).syntax,
+      "class C(x: Int) { def this(x: String)(using y: String, z: Boolean) = this(x.toInt) }"
+    )
+  }
+
+  test("#2699 method declaration with multiple anonymous 'using' params") {
+    assertEquals(
+      templStat("def foo(x: Int)(using String, Boolean): String")(dialects.Scala3).syntax,
+      "def foo(x: Int)(using String, Boolean): String"
+    )
+  }
+
+  test("#2699 method definition with multiple anonymous 'using' params") {
+    assertEquals(
+      templStat("def foo(x: Int)(using String, Boolean) = x")(dialects.Scala3).syntax,
+      "def foo(x: Int)(using String, Boolean) = x"
+    )
+  }
+
+  test("#2699 primary constructor with multiple anonymous 'using' params") {
+    assertEquals(
+      templStat("class C(x: Int)(using String, Boolean)")(dialects.Scala3).syntax,
+      "class C(x: Int)(using String, Boolean)"
+    )
+  }
+
+  test("#2699 secondary constructor with multiple anonymous 'using' params") {
+    assertEquals(
+      templStat(
+        "class C(x: Int) { def this(x: String)(using String, Boolean) = this(x.toInt) }"
+      )(dialects.Scala3).syntax,
+      "class C(x: Int) { def this(x: String)(using String, Boolean) = this(x.toInt) }"
+    )
+  }
+
 }
