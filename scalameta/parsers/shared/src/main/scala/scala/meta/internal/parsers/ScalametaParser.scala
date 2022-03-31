@@ -1227,62 +1227,71 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     res
   }
 
-  def interpolate[Ctx <: Tree, Ret <: Tree](
-      arg: () => Ctx,
+  private def interpolateWith[Ctx, Ret <: Tree](
+      arg: => Ctx,
       result: (Term.Name, List[Lit], List[Ctx]) => Ret
   ): Ret = autoPos {
-    val interpolator = {
-      val name = token match {
-        case Xml.Start() => Term.Name("xml")
-        case Interpolation.Id(value) => Term.Name(value)
-        case _ => unreachable(debug(token))
-      }
-      atCurPos(name)
-    }
-    acceptOpt[Interpolation.Id]
     val partsBuf = new ListBuffer[Lit]
     val argsBuf = new ListBuffer[Ctx]
     @tailrec
     def loop(): Unit = token match {
-      case Interpolation.Start() | Xml.Start() =>
-        next()
-        loop()
       case Interpolation.Part(value) =>
         partsBuf += atCurPos(Lit.String(value))
         next()
         loop()
+      case Interpolation.SpliceStart() =>
+        next()
+        argsBuf += arg
+        accept[Interpolation.SpliceEnd]
+        loop()
+      case _ =>
+    }
+    val interpolator = atCurPos(token match {
+      case Interpolation.Id(value) => next(); Term.Name(value)
+      case _ => syntaxErrorExpected[Interpolation.Id]
+    })
+    accept[Interpolation.Start]
+    loop()
+    accept[Interpolation.End]
+    result(interpolator, partsBuf.toList, argsBuf.toList)
+  }
+
+  private def xmlWith[Ctx, Ret <: Tree](
+      arg: => Ctx,
+      result: (List[Lit], List[Ctx]) => Ret
+  ): Ret = autoPos {
+    val partsBuf = new ListBuffer[Lit]
+    val argsBuf = new ListBuffer[Ctx]
+    @tailrec
+    def loop(): Unit = token match {
       case Xml.Part(value) =>
         partsBuf += atCurPos(Lit.String(value))
         next()
         loop()
-      case Interpolation.SpliceStart() | Xml.SpliceStart() =>
+      case Xml.SpliceStart() =>
         next()
-        argsBuf += arg()
+        argsBuf += arg
+        accept[Xml.SpliceEnd]
         loop()
-      case Interpolation.SpliceEnd() | Xml.SpliceEnd() =>
-        next()
-        loop()
-      case Interpolation.End() | Xml.End() =>
-        next(); // simply return
       case _ =>
-        unreachable(debug(token, token.structure))
     }
+    accept[Xml.Start]
     loop()
-    result(interpolator, partsBuf.toList, argsBuf.toList)
+    accept[Xml.End]
+    result(partsBuf.toList, argsBuf.toList)
   }
 
-  def interpolateTerm(): Term.Interpolate = {
-    interpolate[Term, Term.Interpolate](unquoteExpr _, Term.Interpolate.apply _)
-  }
+  def interpolateTerm(): Term.Interpolate =
+    interpolateWith(unquoteExpr(), Term.Interpolate.apply)
 
   def xmlTerm(): Term.Xml =
-    interpolate[Term, Term.Xml](unquoteXmlExpr _, (_, parts, args) => Term.Xml.apply(parts, args))
+    xmlWith(unquoteXmlExpr(), Term.Xml.apply)
 
   def interpolatePat(): Pat.Interpolate =
-    interpolate[Pat, Pat.Interpolate](unquotePattern _, Pat.Interpolate.apply _)
+    interpolateWith(unquotePattern(), Pat.Interpolate.apply)
 
   def xmlPat(): Pat.Xml =
-    interpolate[Pat, Pat.Xml](unquoteXmlPattern _, (_, parts, args) => Pat.Xml.apply(parts, args))
+    xmlWith(unquoteXmlPattern(), Pat.Xml.apply)
 
   /* ------------- NEW LINES ------------------------------------------------- */
 
@@ -2039,9 +2048,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Success(macroSplicedIdent())
         case _: Literal =>
           Success(literal())
-        case Interpolation.Id(_) =>
+        case _: Interpolation.Id =>
           Success(interpolateTerm())
-        case Xml.Start() =>
+        case _: Xml.Start =>
           Success(xmlTerm())
         case Ident(_) | KwThis() | KwSuper() | Unquote() =>
           Success(path() match {
