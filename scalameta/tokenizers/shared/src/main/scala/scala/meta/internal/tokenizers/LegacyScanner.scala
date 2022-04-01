@@ -129,12 +129,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   }
 
   /* much like endOffset, end is inclusive */
-  private def finishComposite(token: LegacyToken, end: Offset): Unit = {
+  private def finishComposite(token: LegacyToken, endExclusive: Offset): Unit = {
     val start = offset
     curr.token = token
-    curr.strVal = new String(input.chars, start, end - start + 1)
-    curr.endOffset = end
-    reader.charOffset = end + 1
+    curr.strVal = new String(input.chars, start, endExclusive - start)
+    curr.endOffset = endExclusive - 1
+    reader.charOffset = endExclusive
     reader.nextChar()
   }
 
@@ -707,7 +707,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   private def fetchXmlPart(): Unit = {
     require(inXmlLiteral, "must be at the start of an xml literal part")
     val (end, isLastPart) = upcomingXmlLiteralParts(offset)
-    finishComposite(XMLLIT, end - 1)
+    finishComposite(XMLLIT, end)
 
     if (isLastPart) {
       next.token = XMLLITEND
@@ -1036,7 +1036,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       }
       start + exploratoryScanner.curr.endOffset
     }
-    finishComposite(UNQUOTE, endInclusive)
+    finishComposite(UNQUOTE, endInclusive + 1)
   }
 
 // Errors -----------------------------------------------------------------
