@@ -290,8 +290,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
             case LBRACE =>
               // We are at the start of an embedded scala expression
               emitSpliceStart(curr.offset)
-              legacyIndex =
-                loop(legacyIndex, braceBalance = 0, returnWhenBraceBalanceHitsZero = true)
+              legacyIndex = loop(legacyIndex, returnWhenBraceBalanceHitsZero = true)
               emitSpliceEnd(curr.offset)
               emitContents()
 
