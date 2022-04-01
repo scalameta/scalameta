@@ -193,10 +193,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         popSepRegions()
     }
 
-  private def inXmlLiteral: Boolean = {
-    upcomingXmlLiteralParts.contains(offset)
-  }
-
   /**
    * read next token and return last offset
    */
@@ -285,7 +281,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     offset = charOffset - 1
 
     if (inStringInterpolation) return getStringPart(multiLine = startsStringPart(sepRegions.tail))
-    else if (inXmlLiteral) return fetchXmlPart()
+    else if (fetchXmlPart()) return
 
     @inline def getIdentRestCheckInterpolation() = {
       getIdentRest()
@@ -704,18 +700,15 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
   }
 
-  private def fetchXmlPart(): Unit = {
-    require(inXmlLiteral, "must be at the start of an xml literal part")
-    val (end, isLastPart) = upcomingXmlLiteralParts(offset)
-    finishComposite(XMLLIT, end)
-
-    if (isLastPart) {
-      next.token = XMLLITEND
-    }
-
+  private def fetchXmlPart(): Boolean =
     // Clean up map, should be empty at EOF.
-    upcomingXmlLiteralParts.remove(offset)
-  }
+    upcomingXmlLiteralParts.remove(offset) match {
+      case Some((end, isLastPart)) =>
+        finishComposite(XMLLIT, end)
+        if (isLastPart) next.token = XMLLITEND
+        true
+      case _ => false
+    }
 
   private def isTripleQuote(): Boolean =
     if (ch == '"') {
@@ -979,14 +972,13 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
 
     // 2. Populate upcomingXmlLiteralParts with xml literal part positions.
-    var lastFrom = start
-    xmlParser.splicePositions.foreach { pos =>
+    val lastFrom = xmlParser.splicePositions.foldLeft(start) { (lastFrom, pos) =>
       // pos contains the start and end positions of a scala expression.
       // We want the range of the xml literal part which starts at lastFrom
       // and ends at pos.from.
       val to = pos.from - 1
       upcomingXmlLiteralParts.update(lastFrom, (to, false))
-      lastFrom = pos.to + 1
+      pos.to + 1
     }
     // The final xml literal part is not followed by any embedded scala expr.
     upcomingXmlLiteralParts.update(lastFrom, (result, true))
