@@ -3,7 +3,8 @@ set -eux
 
 AUTHOR=$GITHUB_ACTOR
 echo "Pull request submitted by $AUTHOR";
-signed=$(curl -s https://www.lightbend.com/contribute/cla/scala/check/$AUTHOR | jq -r ".signed");
+url_author=$(echo $AUTHOR | jq -Rr "@uri")
+signed=$(curl -s https://www.lightbend.com/contribute/cla/scala/check/$url_author | jq -r ".signed")
 if [ "$signed" = "true" ] ; then
   echo "CLA check for $AUTHOR successful";
 else
