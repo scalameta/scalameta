@@ -1320,16 +1320,14 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("#2695 1") {
     checkTree(
       q"""s.split("\n")""",
-      s"""s.split(${"\"" * 3}
-         |${"\"" * 3})""".stripMargin
+      """s.split("\n")""".stripMargin
     )
   }
 
   test("#2695 2") {
     checkTree(
       q"""s.split("foo\n")""",
-      s"""s.split(${"\"" * 3}foo
-         |${"\"" * 3})""".stripMargin
+      """s.split("foo\n")""".stripMargin
     )
   }
 
