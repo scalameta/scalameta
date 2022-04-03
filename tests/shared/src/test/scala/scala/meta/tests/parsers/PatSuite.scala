@@ -242,4 +242,14 @@ class PatSuite extends ParseSuite {
     }
   }
 
+  test("((A, B, C)) :: (A, B, C)") {
+    assertPat("((A, B, C)) :: (A, B, C)") {
+      Pat.ExtractInfix(
+        Pat.Tuple(List(Term.Name("A"), Term.Name("B"), Term.Name("C"))),
+        Term.Name("::"),
+        List(Term.Name("A"), Term.Name("B"), Term.Name("C"))
+      )
+    }
+  }
+
 }
