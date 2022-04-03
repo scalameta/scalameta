@@ -1297,13 +1297,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val dialect = implicitly[Dialect]
     val Term.Xml(part1 :: part2 :: Nil, arg1 :: Nil) = tree
 
-    val inputPart1 = Input.VirtualFile(path = "<InternalTrees.tokens>", value = "\"<h1>a\"")
+    val inputPart1 = Input.VirtualFile(path = "<InternalTrees.tokens>", value = "<h1>a")
     assertEquals(
       part1.tokens.toList,
       List(
-        Token.BOF(inputPart1, dialect, 0),
-        Token.Constant.String(inputPart1, dialect, 0, 7, "<h1>a"),
-        Token.EOF(inputPart1, dialect, 7)
+        Token.Constant.String(inputPart1, dialect, 0, 5, "<h1>a")
       )
     )
 
@@ -1317,13 +1315,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       )
     )
 
-    val inputPart2 = Input.VirtualFile(path = "<InternalTrees.tokens>", value = "\"</h1>\"")
+    val inputPart2 = Input.VirtualFile(path = "<InternalTrees.tokens>", value = "</h1>")
     assertEquals(
       part2.tokens.toList,
       List(
-        Token.BOF(inputPart2, dialect, 0),
-        Token.Constant.String(inputPart2, dialect, 0, 7, "</h1>"),
-        Token.EOF(inputPart2, dialect, 7)
+        Token.Constant.String(inputPart2, dialect, 0, 5, "</h1>")
       )
     )
   }
