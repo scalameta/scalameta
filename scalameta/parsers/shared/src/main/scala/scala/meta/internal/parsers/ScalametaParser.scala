@@ -2209,8 +2209,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           addPos(args match {
             case arg :: Nil =>
               maybeAnonymousFunctionInParens(arg) match {
-                case t: Term.Tuple if t.startTokenPos != lpPos && t.args.lengthCompare(1) != 0 =>
-                  Term.Tuple(t :: Nil)
+                case t: Term.Tuple if t.args.lengthCompare(1) != 0 => Term.Tuple(t :: Nil)
                 case t => t
               }
             case _ => makeTupleTerm(args)
@@ -2606,11 +2605,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _: LeftParen =>
           val patterns = inParensOnOpen(if (token.is[RightParen]) Nil else noSeq.patterns())
           patterns match {
-            case (t: Pat.Tuple) :: Nil
-                if isRhs && t.endTokenPos != in.prevTokenPos && t.args.lengthCompare(1) != 0 =>
-              Pat.Tuple(t :: Nil)
-            case _ =>
-              makeTuple(checkNoTripleDots(patterns), Lit.Unit(), Pat.Tuple.apply)
+            case Pat.Tuple(x) :: Nil if isRhs && x.lengthCompare(1) != 0 => Pat.Tuple(patterns)
+            case _ => makeTuple(checkNoTripleDots(patterns), Lit.Unit(), Pat.Tuple.apply)
           }
         case _: MacroQuote =>
           QuotedPatternContext.within {
