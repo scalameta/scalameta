@@ -1317,4 +1317,28 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )
   }
 
+  test("#2695 1") {
+    checkTree(
+      q"""s.split("\n")""",
+      s"""s.split(${"\"" * 3}
+         |${"\"" * 3})""".stripMargin
+    )
+  }
+
+  test("#2695 2") {
+    checkTree(
+      q"""s.split("foo\n")""",
+      s"""s.split(${"\"" * 3}foo
+         |${"\"" * 3})""".stripMargin
+    )
+  }
+
+  test("#2695 3") {
+    checkTree(
+      q"""s.split("\nfoo")""",
+      s"""s.split(${"\"" * 3}
+         |foo${"\"" * 3})""".stripMargin
+    )
+  }
+
 }
