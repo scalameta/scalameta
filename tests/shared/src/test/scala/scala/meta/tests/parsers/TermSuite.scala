@@ -10,6 +10,10 @@ class TermSuite extends ParseSuite {
     assertTree(term(expr))(tree)
   }
 
+  private def checkTerm(expr: String, syntax: String = null)(tree: Tree): Unit = {
+    checkTree(term(expr), syntax)(tree)
+  }
+
   test("x") {
     assertTerm("x") {
       Term.Name("x")
@@ -1368,6 +1372,18 @@ class TermSuite extends ParseSuite {
       """|<input>:1: error: repeated argument not allowed here
          |a op (b: _*, c)
          |      ^""".stripMargin
+    )
+  }
+
+  test("#1384 string") {
+    val tq = "\"" * 3
+    val exprDq = raw"""("\n", "bar\n", "\nbaz")"""
+    val exprTq = s"""($tq\n$tq, ${tq}bar\n$tq, $tq\nbaz$tq)"""
+    checkTerm(exprDq, exprTq)(
+      Term.Tuple(List(Lit.String("\n"), Lit.String("bar\n"), Lit.String("\nbaz")))
+    )
+    checkTerm(exprTq, exprTq)(
+      Term.Tuple(List(Lit.String("\n"), Lit.String("bar\n"), Lit.String("\nbaz")))
     )
   }
 
