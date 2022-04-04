@@ -86,14 +86,15 @@ import scala.meta.internal.prettyprinters._
 }
 
 object Tokens {
+  private[meta] def apply(tokens: Array[Token]): Tokens = apply(tokens, 0, tokens.length)
   private[meta] def apply(tokens: Array[Token], start: Int, end: Int): Tokens =
     new Tokens(tokens, start, end)
   def unapplySeq(tokens: Tokens): Option[Seq[Token]] = Some(tokens)
 
-  implicit val tokensToInput: Convert[Tokens, Input] =
-    Convert(tokens => Input.String(tokens.syntax))
+  private def convertTokensToInput(tokens: Tokens): Input = Input.String(tokens.syntax)
+  implicit val tokensToInput: Convert[Tokens, Input] = Convert(convertTokensToInput)
   implicit val listTokenToInput: Convert[List[Token], Input] =
-    Convert(tokens => Input.String(Tokens(tokens.toArray, 0, tokens.length).syntax))
+    Convert(tokens => convertTokensToInput(Tokens(tokens.toArray)))
   implicit def showStructure[T <: Tokens]: Structure[T] = TokensStructure.apply[T]
   implicit def showSyntax[T <: Tokens](implicit dialect: Dialect): Syntax[T] =
     TokensSyntax.apply[T](dialect)
