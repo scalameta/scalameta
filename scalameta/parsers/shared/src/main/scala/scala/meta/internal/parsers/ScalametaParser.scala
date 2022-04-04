@@ -609,14 +609,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @inline final def commaSeparated[T <: Tree: AstInfo](part: => T): List[T] =
     tokenSeparated[Comma, T](sepFirst = false, part)
 
-  private def unTuple[A <: Tree, B <: A](body: A, tupleToArgs: B => List[A])(
-      implicit classifier: Classifier[A, B]
-  ): List[A] = {
-    if (body.is[Lit.Unit]) Nil
-    else if (body.is[B]) tupleToArgs(body.asInstanceOf[B])
-    else body :: Nil
-  }
-
   private def makeTuple[T <: Tree](body: List[T], zero: => T, tuple: List[T] => T): T = body match {
     case Nil => zero
     case only :: Nil =>
@@ -1879,7 +1871,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         syntaxError("repeated argument not allowed here", at = lhs.tokens.last.prev)
 
       def infixExpression() = {
-        val args = unTuple(rhs, (x: Term.Tuple) => x.args)
+        val args = rhs match {
+          case _: Lit.Unit => Nil
+          case Term.Tuple(args) => args
+          case _ => rhs :: Nil
+        }
         atPos(lhs, rhsEnd)(Term.ApplyInfix(lhs, op, targs, args))
       }
 
@@ -1915,7 +1911,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: EndPos): Rhs = {
       val UnfinishedInfix(lhs, op) = unf
-      val args = unTuple(rhs, (x: Pat.Tuple) => x.args)
+      val args = rhs match {
+        case _: Lit.Unit => Nil
+        case Pat.Tuple(args) => args
+        case _ => rhs :: Nil
+      }
       atPos(lhs, rhsEnd)(Pat.ExtractInfix(lhs, op, args))
     }
   }
