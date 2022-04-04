@@ -69,7 +69,13 @@ trait InternalTree extends Product {
         val tokens = dialect(input).tokenize.get
         tokens.slice(pos.start, pos.end)
       case _ =>
-        dialect(Input.VirtualFile("<InternalTrees.tokens>", this.syntax)).tokenize.get
+        this match {
+          case Lit.String(value) =>
+            val input = Input.VirtualFile("<InternalTrees.tokens>", value)
+            Tokens(Array(Constant.String(input, dialect, 0, value.length, value)))
+          case _ =>
+            dialect(Input.VirtualFile("<InternalTrees.tokens>", this.syntax)).tokenize.get
+        }
     }
   }
 

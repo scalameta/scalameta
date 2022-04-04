@@ -1288,6 +1288,42 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )
   }
 
+  test("#1596") {
+    val tree: Term.Xml = q"<h1>a{b}</h1>"
+    checkTree(
+      tree,
+      Term.Xml(List(Lit.String("<h1>a"), Lit.String("</h1>")), List(Term.Name("b")))
+    )
+    val dialect = implicitly[Dialect]
+    val Term.Xml(part1 :: part2 :: Nil, arg1 :: Nil) = tree
+
+    val inputPart1 = Input.VirtualFile(path = "<InternalTrees.tokens>", value = "<h1>a")
+    assertEquals(
+      part1.tokens.toList,
+      List(
+        Token.Constant.String(inputPart1, dialect, 0, 5, "<h1>a")
+      )
+    )
+
+    val inputArg1 = Input.VirtualFile(path = "<InternalTrees.tokens>", value = "b")
+    assertEquals(
+      arg1.tokens.toList,
+      List(
+        Token.BOF(inputArg1, dialect, 0),
+        Token.Ident(inputArg1, dialect, 0, 1, "b"),
+        Token.EOF(inputArg1, dialect, 1)
+      )
+    )
+
+    val inputPart2 = Input.VirtualFile(path = "<InternalTrees.tokens>", value = "</h1>")
+    assertEquals(
+      part2.tokens.toList,
+      List(
+        Token.Constant.String(inputPart2, dialect, 0, 5, "</h1>")
+      )
+    )
+  }
+
   test("#1063 original") {
     checkTree(
       q"def withJsoup(html: Html)(cleaners: HtmlCleaner*): Html = withJsoup(html.body) { cleaners: _* }",
