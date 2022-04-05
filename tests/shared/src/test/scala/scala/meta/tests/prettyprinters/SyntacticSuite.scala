@@ -1445,7 +1445,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             Lit.Unit(),
             Term.Name("=="),
             Nil,
-            Nil
+            List(Lit.Unit())
           ),
           Term.ApplyInfix(
             Term.ApplyInfix(Lit.Unit(), Term.Name("=="), Nil, Nil),
@@ -1458,11 +1458,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
               Lit.Unit(),
               Term.Name("=="),
               Nil,
-              Nil
+              List(Lit.Unit())
             ),
             Term.Name("=="),
             Nil,
-            Nil
+            List(Lit.Unit())
           )
         )
       )
@@ -1483,7 +1483,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             Lit.Unit(),
             Term.Name("::"),
             Nil,
-            Nil
+            List(Lit.Unit())
           ),
           Term.ApplyInfix(
             Lit.Unit(),
@@ -1500,7 +1500,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
                 Lit.Unit(),
                 Term.Name("::"),
                 Nil,
-                Nil
+                List(Lit.Unit())
               )
             )
           )
@@ -1524,7 +1524,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             Pat.ExtractInfix(
               Lit.Unit(),
               Term.Name("=="),
-              Nil
+              List(Lit.Unit())
             ),
             None,
             Term.Block(Nil)
@@ -1543,10 +1543,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
               Pat.ExtractInfix(
                 Lit.Unit(),
                 Term.Name("=="),
-                Nil
+                List(Lit.Unit())
               ),
               Term.Name("=="),
-              Nil
+              List(Lit.Unit())
             ),
             None,
             Term.Block(Nil)
@@ -1572,7 +1572,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             Pat.ExtractInfix(
               Lit.Unit(),
               Term.Name("::"),
-              Nil
+              List(Lit.Unit())
             ),
             None,
             Term.Block(Nil)
@@ -1594,7 +1594,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
                 Pat.ExtractInfix(
                   Lit.Unit(),
                   Term.Name("::"),
-                  Nil
+                  List(Lit.Unit())
                 )
               )
             ),

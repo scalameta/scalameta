@@ -1850,7 +1850,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     type Rhs = Term
     type Op = Term.Name
 
-    def toLhs(rhs: Rhs): Lhs = rhs
+    def toLhs(rhs: Rhs): Lhs = rhs match {
+      case Term.Tuple((arg @ (_: Lit.Unit | _: Term.Tuple)) :: Nil) => arg
+      case _ => rhs
+    }
 
     // We need to carry lhsStart/lhsEnd separately from lhs.pos
     // because their extent may be bigger than lhs because of parentheses or whatnot.
@@ -1905,7 +1908,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     type Rhs = Pat
     type Op = Term.Name
 
-    def toLhs(rhs: Rhs): Lhs = rhs
+    def toLhs(rhs: Rhs): Lhs = rhs match {
+      case Pat.Tuple((arg @ (_: Lit.Unit | _: Pat.Tuple)) :: Nil) => arg
+      case _ => rhs
+    }
 
     case class UnfinishedInfix(lhs: Lhs, op: Op) extends Unfinished
 
@@ -2209,6 +2215,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           addPos(args match {
             case arg :: Nil =>
               maybeAnonymousFunctionInParens(arg) match {
+                case t: Lit.Unit => Term.Tuple(t :: Nil)
                 case t: Term.Tuple if t.args.lengthCompare(1) != 0 => Term.Tuple(t :: Nil)
                 case t => t
               }
@@ -2605,6 +2612,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _: LeftParen =>
           val patterns = inParensOnOpen(if (token.is[RightParen]) Nil else noSeq.patterns())
           patterns match {
+            case (_: Lit.Unit) :: Nil if isRhs => Pat.Tuple(patterns)
             case Pat.Tuple(x) :: Nil if isRhs && x.lengthCompare(1) != 0 => Pat.Tuple(patterns)
             case _ => makeTuple(checkNoTripleDots(patterns), Lit.Unit(), Pat.Tuple.apply)
           }
