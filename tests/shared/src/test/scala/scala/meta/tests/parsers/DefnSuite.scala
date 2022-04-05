@@ -182,8 +182,7 @@ class DefnSuite extends ParseSuite {
          |  }.recover(???)
          |}""".stripMargin
     )
-    assertNoDiff(
-      defn,
+    assertTree(defn)(
       Defn
         .Def(
           Nil,
@@ -232,8 +231,7 @@ class DefnSuite extends ParseSuite {
       """|if (cond) { expr }.select else { expr } + { expr }
          |""".stripMargin
     )
-    assertNoDiff(
-      defn,
+    assertTree(defn)(
       Term.If(
         Term.Name("cond"),
         Term.Select(Term.Block(List(Term.Name("expr"))), Term.Name("select")),
@@ -253,8 +251,7 @@ class DefnSuite extends ParseSuite {
       """|try {expr}.select finally {expr}.select 
          |""".stripMargin
     )
-    assertNoDiff(
-      defn,
+    assertTree(defn)(
       Term.Try(
         Term.Select(Term.Block(List(Term.Name("expr"))), Term.Name("select")),
         Nil,
@@ -268,8 +265,7 @@ class DefnSuite extends ParseSuite {
       """|while (cond) {expr}.select
          |""".stripMargin
     )
-    assertNoDiff(
-      defn,
+    assertTree(defn)(
       Term.While(
         Term.Name("cond"),
         Term.Select(Term.Block(List(Term.Name("expr"))), Term.Name("select"))
@@ -282,8 +278,7 @@ class DefnSuite extends ParseSuite {
       """|for (i <- list) {expr}.select
          |""".stripMargin
     )
-    assertNoDiff(
-      defn,
+    assertTree(defn)(
       Term.For(
         List(Enumerator.Generator(Pat.Var(Term.Name("i")), Term.Name("list"))),
         Term.Select(Term.Block(List(Term.Name("expr"))), Term.Name("select"))

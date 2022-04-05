@@ -5,7 +5,9 @@ import scala.meta._
 
 import munit._
 
-class ToplevelTermSuite extends FunSuite {
+import scala.meta.tests.TreeSuiteBase
+
+class ToplevelTermSuite extends TreeSuiteBase {
   implicit val dialect: Dialect = dialects.Scala3.withAllowToplevelTerms(true)
   test("allowToplevelTerms simple") {
 
@@ -30,7 +32,7 @@ class ToplevelTermSuite extends FunSuite {
           Term.Apply(Term.Name("foo"), List(Term.Name("x")))
         )
       )
-    assertEquals(tree.structure, expected.structure)
+    assertTree(tree)(expected)
   }
 
   test("allowToplevelTerms and allowPackageStatementsWithToplevelTerms with package") {
@@ -62,7 +64,7 @@ class ToplevelTermSuite extends FunSuite {
           )
         )
       )
-    assertEquals(tree.structure, expected.structure)
+    assertTree(tree)(expected)
   }
 
   test("allowToplevelTerms and allowPackageStatementsWithToplevelTerms no package") {
@@ -86,7 +88,7 @@ class ToplevelTermSuite extends FunSuite {
         Term.Apply(Term.Name("foo"), List(Term.Name("x")))
       )
     )
-    assertEquals(tree.structure, expected.structure)
+    assertTree(tree)(expected)
   }
 
 }

@@ -33,10 +33,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("val x: Int (raw)") {
     val tree = templStat("val x: Int")
-    assertEquals(
-      tree.structure,
-      "Decl.Val(Nil, List(Pat.Var(Term.Name(\"x\"))), Type.Name(\"Int\"))"
-    )
+    assertTree(tree)(Decl.Val(Nil, List(Pat.Var(Term.Name("x"))), Type.Name("Int")))
   }
 
   test("val x: Int (code)") {
@@ -85,10 +82,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       QQQ
       val y = "\""
     }""".replace("QQQ", "\"\"\""))
-    assertEquals(
-      tree.structure,
-      """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.String("%n        x%n      ")), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("\""))))"""
-        .replace("%n", "\\n")
+    assertTree(tree)(
+      Term.Block(
+        List(
+          Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.String("\n        x\n      ")),
+          Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("\""))
+        )
+      )
     )
     assertSameLines(
       tree.syntax,
@@ -112,10 +112,27 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         ..$z
       QQQ
     }""".replace("QQQ", "\"\"\""))
-    assertEquals(
-      tree.structure,
-      """Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.Interpolate(Term.Name("q"), List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")), List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123)))))), Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("%n        $x%n        $y%n        ..$z%n      "))))"""
-        .replace("%n", "\\n")
+    assertTree(tree)(
+      Term.Block(
+        List(
+          Defn.Val(
+            Nil,
+            List(Pat.Var(Term.Name("x"))),
+            None,
+            Term.Interpolate(
+              Term.Name("q"),
+              List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")),
+              List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123))))
+            )
+          ),
+          Defn.Val(
+            Nil,
+            List(Pat.Var(Term.Name("y"))),
+            None,
+            Lit.String("\n        $x\n        $y\n        ..$z\n      ")
+          )
+        )
+      )
     )
     assertSameLines(
       tree.syntax,
@@ -398,8 +415,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("Lit.Double") {
-    assertEquals(templStat("1.4d").structure, """Lit.Double(1.4d)""")
-    assertEquals(templStat("1.40d").structure, """Lit.Double(1.40d)""")
+    assertTree(templStat("1.4d"))(Lit.Double("1.4"))
+    assertTree(templStat("1.40d"))(Lit.Double("1.40"))
     // NOTE: This fails under Scala Native:
     // [info] - Lit.Double *** FAILED ***
     // [info]   "Lit.Double(1.4[00000]d)" did not equal "Lit.Double(1.4[]d)" (SyntacticSuite.scala:321)
@@ -409,26 +426,20 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(Lit.Double(Double.NaN).syntax, "Double.NaN")
     assertEquals(Lit.Double(Double.PositiveInfinity).syntax, "Double.PositiveInfinity")
     assertEquals(Lit.Double(Double.NegativeInfinity).syntax, "Double.NegativeInfinity")
-    assertEquals(Lit.Double(Double.NaN).structure, "Lit.Double(Double.NaN)")
-    assertEquals(
-      Lit.Double(Double.PositiveInfinity).structure,
-      "Lit.Double(Double.PositiveInfinity)"
-    )
-    assertEquals(
-      Lit.Double(Double.NegativeInfinity).structure,
-      "Lit.Double(Double.NegativeInfinity)"
-    )
+    assertTree(Lit.Double(Double.NaN))(Lit.Double(Double.NaN))
+    assertTree(Lit.Double(Double.PositiveInfinity))(Lit.Double(Double.PositiveInfinity))
+    assertTree(Lit.Double(Double.NegativeInfinity))(Lit.Double(Double.NegativeInfinity))
   }
 
   test("Lit.Float") {
-    assertEquals(templStat("1.4f").structure, """Lit.Float(1.4f)""")
-    assertEquals(templStat("1.40f").structure, """Lit.Float(1.40f)""")
+    assertTree(templStat("1.4f"))(Lit.Float("1.4"))
+    assertTree(templStat("1.40f"))(Lit.Float("1.40"))
     assertEquals(Lit.Float(Float.NaN).syntax, "Float.NaN")
     assertEquals(Lit.Float(Float.PositiveInfinity).syntax, "Float.PositiveInfinity")
     assertEquals(Lit.Float(Float.NegativeInfinity).syntax, "Float.NegativeInfinity")
-    assertEquals(Lit.Float(Float.NaN).structure, "Lit.Float(Float.NaN)")
-    assertEquals(Lit.Float(Float.PositiveInfinity).structure, "Lit.Float(Float.PositiveInfinity)")
-    assertEquals(Lit.Float(Float.NegativeInfinity).structure, "Lit.Float(Float.NegativeInfinity)")
+    assertTree(Lit.Float(Float.NaN))(Lit.Float(Float.NaN))
+    assertTree(Lit.Float(Float.PositiveInfinity))(Lit.Float(Float.PositiveInfinity))
+    assertTree(Lit.Float(Float.NegativeInfinity))(Lit.Float(Float.NegativeInfinity))
   }
 
   test("context and view bounds") {
@@ -689,36 +700,65 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("case List(xs @ _*)") {
     val tree = pat("List(xs @ _*)")
-    assertEquals(
-      tree.structure,
-      "Pat.Extract(Term.Name(\"List\"), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))"
+    assertTree(tree)(
+      Pat.Extract(Term.Name("List"), List(Pat.Bind(Pat.Var(Term.Name("xs")), Pat.SeqWildcard())))
     )
     assertEquals(tree.syntax, "List(xs @ _*)")
   }
 
   test("case List[t](xs @ _*)") {
     val tree = pat("List[t](xs @ _*)")
-    assertEquals(
-      tree.structure,
-      "Pat.Extract(Term.ApplyType(Term.Name(\"List\"), List(Type.Var(Type.Name(\"t\")))), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))"
+    assertTree(tree)(
+      Pat.Extract(
+        Term.ApplyType(Term.Name("List"), List(Type.Var(Type.Name("t")))),
+        List(Pat.Bind(Pat.Var(Term.Name("xs")), Pat.SeqWildcard()))
+      )
     )
     assertEquals(tree.syntax, "List[t](xs @ _*)")
   }
 
   test("case List[_](xs @ _*)") {
     val tree = pat("List[_](xs @ _*)")
-    assertEquals(
-      tree.structure,
-      "Pat.Extract(Term.ApplyType(Term.Name(\"List\"), List(Type.Placeholder(Type.Bounds(None, None)))), List(Pat.Bind(Pat.Var(Term.Name(\"xs\")), Pat.SeqWildcard())))"
+    assertTree(tree)(
+      Pat.Extract(
+        Term.ApplyType(Term.Name("List"), List(Type.Placeholder(Type.Bounds(None, None)))),
+        List(Pat.Bind(Pat.Var(Term.Name("xs")), Pat.SeqWildcard()))
+      )
     )
     assertEquals(tree.syntax, "List[_](xs @ _*)")
   }
 
   test("package foo; class C; package baz { class D }") {
     val tree = source("package foo; class C; package baz { class D }")
-    assertNoDiff(
-      tree.structure,
-      """Source(List(Pkg(Term.Name("foo"), List(Defn.Class(Nil, Type.Name("C"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), Nil, Nil)), Pkg(Term.Name("baz"), List(Defn.Class(Nil, Type.Name("D"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), Nil, Nil))))))))"""
+    assertTree(tree)(
+      Source(
+        List(
+          Pkg(
+            Term.Name("foo"),
+            List(
+              Defn.Class(
+                Nil,
+                Type.Name("C"),
+                Nil,
+                Ctor.Primary(Nil, Name(""), Nil),
+                Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+              ),
+              Pkg(
+                Term.Name("baz"),
+                List(
+                  Defn.Class(
+                    Nil,
+                    Type.Name("D"),
+                    Nil,
+                    Ctor.Primary(Nil, Name(""), Nil),
+                    Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
     )
     assertEquals(tree.syntax, s"package foo${EOL}class C${EOL}package baz {$EOL  class D${EOL}}")
   }
@@ -730,12 +770,67 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
                  |package foo2; class C2; package baz2 { class D2 }
                  |""".stripMargin
     val tree = ammonite(code)
-    assertNoDiff(
-      tree.structure,
-      """MultiSource(List(
-        |Source(List(Pkg(Term.Name("foo1"), List(Defn.Class(Nil, Type.Name("C1"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), Nil, Nil)), Pkg(Term.Name("baz1"), List(Defn.Class(Nil, Type.Name("D1"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), Nil, Nil)))))))),
-        | Source(List(Pkg(Term.Name("foo2"), List(Defn.Class(Nil, Type.Name("C2"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), Nil, Nil)), Pkg(Term.Name("baz2"), List(Defn.Class(Nil, Type.Name("D2"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), Nil, Nil))))))))
-        |))""".stripMargin.replace("\n", "")
+    assertTree(tree)(
+      MultiSource(
+        List(
+          Source(
+            List(
+              Pkg(
+                Term.Name("foo1"),
+                List(
+                  Defn.Class(
+                    Nil,
+                    Type.Name("C1"),
+                    Nil,
+                    Ctor.Primary(Nil, Name(""), Nil),
+                    Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+                  ),
+                  Pkg(
+                    Term.Name("baz1"),
+                    List(
+                      Defn.Class(
+                        Nil,
+                        Type.Name("D1"),
+                        Nil,
+                        Ctor.Primary(Nil, Name(""), Nil),
+                        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          ),
+          Source(
+            List(
+              Pkg(
+                Term.Name("foo2"),
+                List(
+                  Defn.Class(
+                    Nil,
+                    Type.Name("C2"),
+                    Nil,
+                    Ctor.Primary(Nil, Name(""), Nil),
+                    Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+                  ),
+                  Pkg(
+                    Term.Name("baz2"),
+                    List(
+                      Defn.Class(
+                        Nil,
+                        Type.Name("D2"),
+                        Nil,
+                        Ctor.Primary(Nil, Name(""), Nil),
+                        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
     )
     assertEquals(tree.syntax, code)
     assertEquals(
@@ -758,15 +853,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("case `x`") {
     val tree1 = pat("`x`")
-    assertEquals(tree1.structure, "Term.Name(\"x\")")
+    assertTree(tree1)(Term.Name("x"))
     val tree2 = pat("f(`x`)")
-    assertEquals(tree2.structure, "Pat.Extract(Term.Name(\"f\"), List(Term.Name(\"x\")))")
+    assertTree(tree2)(Pat.Extract(Term.Name("f"), List(Term.Name("x"))))
     assertEquals(tree2.syntax, "f(`x`)")
     val tree3 = pat("X")
-    assertEquals(tree3.structure, "Term.Name(\"X\")")
+    assertTree(tree3)(Term.Name("X"))
     assertEquals(tree3.syntax, "X")
     val tree4 = pat("f(X)")
-    assertEquals(tree4.structure, "Pat.Extract(Term.Name(\"f\"), List(Term.Name(\"X\")))")
+    assertTree(tree4)(Pat.Extract(Term.Name("f"), List(Term.Name("X"))))
     assertEquals(tree4.syntax, "f(X)")
   }
 
@@ -824,18 +919,16 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("xml literals") {
     val tree = term("<foo>{bar}</foo>")
-    assertEquals(
-      tree.structure,
-      """Term.Xml(List(Lit.String("<foo>"), Lit.String("</foo>")), List(Term.Name("bar")))"""
+    assertTree(tree)(
+      Term.Xml(List(Lit.String("<foo>"), Lit.String("</foo>")), List(Term.Name("bar")))
     )
     assertEquals(tree.syntax, "<foo>{bar}</foo>")
   }
 
   test("xml literals unit") {
     val tree = term("<foo>{}</foo>")
-    assertEquals(
-      tree.structure,
-      """Term.Xml(List(Lit.String("<foo>"), Lit.String("</foo>")), List(Term.Block(Nil)))"""
+    assertTree(tree)(
+      Term.Xml(List(Lit.String("<foo>"), Lit.String("</foo>")), List(Term.Block(Nil)))
     )
     assertEquals(tree.syntax, "<foo>{{}}</foo>")
   }
@@ -848,18 +941,24 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("interpolator unit") {
     val tree = term("""s"Hello${}World"""")
-    assertEquals(
-      tree.structure,
-      """Term.Interpolate(Term.Name("s"), List(Lit.String("Hello"), Lit.String("World")), List(Term.Block(Nil)))"""
+    assertTree(tree)(
+      Term.Interpolate(
+        Term.Name("s"),
+        List(Lit.String("Hello"), Lit.String("World")),
+        List(Term.Block(Nil))
+      )
     )
     assertEquals(tree.syntax, """s"Hello${{}}World"""")
   }
 
   test("interpolator with $ character") {
     val tree = term("""s"$$$foo$$"""")
-    assertEquals(
-      tree.structure,
-      """Term.Interpolate(Term.Name("s"), List(Lit.String("$"), Lit.String("$")), List(Term.Name("foo")))"""
+    assertTree(tree)(
+      Term.Interpolate(
+        Term.Name("s"),
+        List(Lit.String("$"), Lit.String("$")),
+        List(Term.Name("foo"))
+      )
     )
     assertEquals(tree.syntax, """s"$$$foo$$"""")
   }
@@ -894,31 +993,27 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("empty-arglist application") {
     val tree = term("foo.toString()")
-    assertEquals(
-      tree.structure,
-      "Term.Apply(Term.Select(Term.Name(\"foo\"), Term.Name(\"toString\")), Nil)"
-    )
+    assertTree(tree)(Term.Apply(Term.Select(Term.Name("foo"), Term.Name("toString")), Nil))
     assertEquals(tree.syntax, "foo.toString()")
   }
 
   test("type parameters with type bounds") {
     val Defn.Def(_, _, List(tree), _, _, _) = templStat("def foo[T <: Int] = ???")
-    assertEquals(
-      tree.structure,
-      "Type.Param(Nil, Type.Name(\"T\"), Nil, Type.Bounds(None, Some(Type.Name(\"Int\"))), Nil, Nil)"
+    assertTree(tree)(
+      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, Some(Type.Name("Int"))), Nil, Nil)
     )
     assertEquals(tree.syntax, "T <: Int")
   }
 
   test("Lit(()) - 1") {
     val lit @ Lit(()) = term("()")
-    assertEquals(lit.structure, "Lit.Unit(())")
+    assertTree(lit)(Lit.Unit())
     assertEquals(lit.syntax, "()")
   }
 
   test("Lit(()) - 2") {
     val Term.If(Term.Name("cond"), Lit(42), lit @ Lit.Unit()) = super.term("if (cond) 42")
-    assertEquals(lit.structure, "Lit.Unit(())")
+    assertTree(lit)(Lit.Unit())
     assertEquals(lit.syntax, "")
   }
 
@@ -980,28 +1075,25 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("show[Structure] should uppercase long literals suffix: '2l' -> '2L'") {
-    assertEquals(
-      templStat("foo(1l, 1L)").structure,
-      """Term.Apply(Term.Name("foo"), List(Lit.Long(1L), Lit.Long(1L)))"""
+    assertTree(templStat("foo(1l, 1L)"))(
+      Term.Apply(Term.Name("foo"), List(Lit.Long(1L), Lit.Long(1L)))
     )
-    assertEquals(q"val x = 1l".structure, q"val x = 1L".structure)
+    assertTree(q"val x = 1l")(q"val x = 1L")
   }
 
   test("show[Structure] should lowercase float literals suffix: '0.01F' -> '0.01f'") {
-    assertEquals(
-      templStat("foo(0.01f, 0.01F)").structure,
-      """Term.Apply(Term.Name("foo"), List(Lit.Float(0.01f), Lit.Float(0.01f)))"""
+    assertTree(templStat("foo(0.01f, 0.01F)"))(
+      Term.Apply(Term.Name("foo"), List(Lit.Float("0.01"), Lit.Float("0.01")))
     )
-    assertEquals(q"val x = 1f".structure, q"val x = 1F".structure)
+    assertTree(q"val x = 1f")(q"val x = 1F")
   }
 
   test("show[Structure] should lowercase double literals suffix: '0.01D' -> '0.01d'") {
-    assertEquals(
-      templStat("foo(0.02d, 0.02D, 0.02)").structure,
-      """Term.Apply(Term.Name("foo"), List(Lit.Double(0.02d), Lit.Double(0.02d), Lit.Double(0.02d)))"""
+    assertTree(templStat("foo(0.02d, 0.02D, 0.02)"))(
+      Term.Apply(Term.Name("foo"), List(Lit.Double("0.02"), Lit.Double("0.02"), Lit.Double("0.02")))
     )
-    assertEquals(q"val x = 1d".structure, q"val x = 1D".structure)
-    assertEquals(q"val x = 1.0d".structure, q"val x = 1.0".structure)
+    assertTree(q"val x = 1d")(q"val x = 1D")
+    assertTree(q"val x = 1.0d")(q"val x = 1.0")
   }
 
   test("#931 val `a b` = 2") {

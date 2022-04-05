@@ -5,7 +5,7 @@ import munit._
 import scala.meta._
 import scala.meta.dialects.Scala211
 
-class TokensSuite extends FunSuite {
+class TokensSuite extends TreeSuiteBase {
   test("Tree.tokens: parsed, same dialect") {
     val tree = dialects.Scala211("foo + bar // baz").parse[Term].get
     assert(tree.syntax == "foo + bar // baz")
@@ -27,7 +27,7 @@ class TokensSuite extends FunSuite {
 
   test("Tree.tokens: empty") {
     val emptyTemplate = "class C".parse[Stat].get.children(2)
-    assert(emptyTemplate.structure == "Template(Nil, Nil, Self(Name(\"\"), None), Nil, Nil)")
+    assertTree(emptyTemplate)(Template(Nil, Nil, Self(Name(""), None), Nil, Nil))
     assert(emptyTemplate.tokens.structure == "Tokens()")
   }
 
