@@ -19,8 +19,6 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
     val expectedLines = expected.linesIterator.toList
     assert(actualLines == expectedLines)
   }
-  def assertNoDiff(obtained: Tree, expected: Tree): Unit =
-    assertNoDiff(obtained.structure, expected.structure)
 
   def stat(code: String)(implicit dialect: Dialect) = code.applyRule(_.parseStat())
 

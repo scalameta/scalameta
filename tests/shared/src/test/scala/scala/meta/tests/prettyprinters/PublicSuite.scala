@@ -7,7 +7,7 @@ import munit._
 import scala.meta._
 import compat.Platform.EOL
 
-class PublicSuite extends FunSuite {
+class PublicSuite extends TreeSuiteBase {
   test("scala.meta.Dialect.toString") {
     // covered below
   }
@@ -19,9 +19,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.Tree.structure (manual)") {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
-    assert(
-      tree.structure == """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))"""
-    )
+    assertTree(tree)(Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar"))))
   }
 
   test("scala.meta.Tree.syntax") {
@@ -36,9 +34,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.Tree.structure (parsed)") {
     val tree = "foo + bar // baz".parse[Term].get
-    assert(
-      tree.structure == """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))"""
-    )
+    assertTree(tree)(Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar"))))
   }
 
   test("scala.meta.Tree.syntax (parsed)") {
@@ -53,9 +49,7 @@ class PublicSuite extends FunSuite {
 
   test("scala.meta.Tree.structure (quasiquoted)") {
     val tree = q"foo + bar // baz"
-    assert(
-      tree.structure == """Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))"""
-    )
+    assertTree(tree)(Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar"))))
   }
 
   test("scala.meta.Tree.syntax (quasiquoted)") {

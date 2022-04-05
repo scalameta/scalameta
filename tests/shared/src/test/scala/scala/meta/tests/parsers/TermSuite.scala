@@ -1017,7 +1017,7 @@ class TermSuite extends ParseSuite {
   test("block-arg") {
     val res = term("new Foo({str => str.length})")
     val termList = q"List($res)"
-    assertEquals(term(termList.syntax).structure, termList.structure)
+    assertTree(term(termList.syntax))(termList)
   }
 
   test("implicit-closure") {

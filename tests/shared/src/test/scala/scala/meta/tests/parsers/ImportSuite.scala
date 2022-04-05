@@ -119,12 +119,12 @@ class ImportSuite extends ParseSuite {
     val res212 =
       templStat("import a.b.c.{ given, _ }")(dialects.Scala212Source3)
 
-    assertNoDiff(res212.structure, expected.structure)
+    assertTree(res212)(expected)
 
     val res213 =
       templStat("import a.b.c.{ given, _ }")(dialects.Scala213Source3)
 
-    assertNoDiff(res213.structure, expected.structure)
+    assertTree(res213)(expected)
 
     val expectedWithoutWildcard = Import(
       List(
@@ -138,11 +138,11 @@ class ImportSuite extends ParseSuite {
     val res212NoWildcard =
       templStat("import a.b.c.{ given }")(dialects.Scala212Source3)
 
-    assertNoDiff(res212NoWildcard.structure, expectedWithoutWildcard.structure)
+    assertTree(res212NoWildcard)(expectedWithoutWildcard)
 
     val res213NoWildcard =
       templStat("import a.b.c.{ given }")(dialects.Scala213Source3)
 
-    assertNoDiff(res213NoWildcard.structure, expectedWithoutWildcard.structure)
+    assertTree(res213NoWildcard)(expectedWithoutWildcard)
   }
 }

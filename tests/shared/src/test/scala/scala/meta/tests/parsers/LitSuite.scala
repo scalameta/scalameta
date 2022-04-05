@@ -96,9 +96,7 @@ class LitSuite extends ParseSuite {
   }
 
   test("#342") {
-    assert(
-      term("""( 50).toString""").structure == "Term.Select(Lit.Int(50), Term.Name(\"toString\"))"
-    )
+    assertTree(term("""( 50).toString"""))(Term.Select(Lit.Int(50), Term.Name("toString")))
   }
 
   test("#360") {
@@ -127,16 +125,22 @@ class LitSuite extends ParseSuite {
                   |""".stripMargin
     source(code)
 
-    val code2 = """|
-                   |trait Foo {
-                   |  def negate : - = -
-                   |}
-                   |""".stripMargin
-    val fdef =
-      """Defn.Def(Nil, Term.Name("negate"), Nil, Nil, Some(Type.Name("-")), Term.Name("-"))"""
-    val expected =
-      s"""Defn.Trait(Nil, Type.Name("Foo"), Nil, Ctor.Primary(Nil, Name(""), Nil), Template(Nil, Nil, Self(Name(""), None), List(${fdef}), Nil))"""
-    assertNoDiff(stat(code2).structure, expected)
+    val code2 = "trait Foo { def negate: - = - }"
+    checkStat(code2)(
+      Defn.Trait(
+        Nil,
+        Type.Name("Foo"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(Defn.Def(Nil, Term.Name("negate"), Nil, Nil, Some(Type.Name("-")), Term.Name("-"))),
+          Nil
+        )
+      )
+    )
   }
 
   test("simple-expression-parse-error") {
