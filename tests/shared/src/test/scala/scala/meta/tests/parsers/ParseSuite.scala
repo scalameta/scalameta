@@ -9,7 +9,7 @@ import MoreHelpers._
 import org.scalameta.logger
 import scala.meta.internal.trees.Origin
 
-class ParseSuite extends FunSuite with CommonTrees {
+class ParseSuite extends TreeSuiteBase with CommonTrees {
   val EOL = scala.compat.Platform.EOL
   val escapedEOL = if (EOL == "\n") """\n""" else """\r\n"""
 
@@ -59,10 +59,18 @@ class ParseSuite extends FunSuite with CommonTrees {
   def checkOK(stat: String)(implicit dialect: Dialect) =
     test(logger.revealWhitespace(stat).take(50)) { templStat(stat) }
 
-  protected def assertTree(obtained: Tree)(expected: Tree): Unit =
-    assertEquals(obtained.structure, expected.structure)
-  protected def assertTree[T <: Tree](code: String, f: ScalametaParser => T)(tree: Tree): Unit =
-    assertTree(parseRule(code, f))(tree)
+  protected def checkParsedTree[T <: Tree](
+      code: String,
+      f: ScalametaParser => T,
+      syntax: String = null
+  )(tree: Tree)(implicit loc: munit.Location): Unit =
+    checkTree(parseRule(code, f), syntax)(tree)
+
+  protected def checkStat(code: String, syntax: String = null)(tree: Tree)(
+      implicit loc: munit.Location
+  ): Unit =
+    checkParsedTree(code, _.entrypointStat(), syntax)(tree)
+
 }
 
 object MoreHelpers {
