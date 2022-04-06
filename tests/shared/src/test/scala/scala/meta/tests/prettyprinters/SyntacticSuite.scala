@@ -1431,4 +1431,180 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )
   }
 
+  test("#2708 term lassoc") {
+    checkTree(q"""{
+            () == ()
+            (()) == (())
+            () == () == ()
+            (()) == (()) == (())
+          }""")(
+      Term.Block(
+        List(
+          Term.ApplyInfix(Lit.Unit(), Term.Name("=="), Nil, Nil),
+          Term.ApplyInfix(
+            Lit.Unit(),
+            Term.Name("=="),
+            Nil,
+            List(Lit.Unit())
+          ),
+          Term.ApplyInfix(
+            Term.ApplyInfix(Lit.Unit(), Term.Name("=="), Nil, Nil),
+            Term.Name("=="),
+            Nil,
+            Nil
+          ),
+          Term.ApplyInfix(
+            Term.ApplyInfix(
+              Lit.Unit(),
+              Term.Name("=="),
+              Nil,
+              List(Lit.Unit())
+            ),
+            Term.Name("=="),
+            Nil,
+            List(Lit.Unit())
+          )
+        )
+      )
+    )
+  }
+
+  test("#2708 term rassoc") {
+    checkTree(q"""{
+            () :: ()
+            (()) :: (())
+            () :: () :: ()
+            (()) :: (()) :: (())
+          }""")(
+      Term.Block(
+        List(
+          Term.ApplyInfix(Lit.Unit(), Term.Name("::"), Nil, Nil),
+          Term.ApplyInfix(
+            Lit.Unit(),
+            Term.Name("::"),
+            Nil,
+            List(Lit.Unit())
+          ),
+          Term.ApplyInfix(
+            Lit.Unit(),
+            Term.Name("::"),
+            Nil,
+            List(Term.ApplyInfix(Lit.Unit(), Term.Name("::"), Nil, Nil))
+          ),
+          Term.ApplyInfix(
+            Lit.Unit(),
+            Term.Name("::"),
+            Nil,
+            List(
+              Term.ApplyInfix(
+                Lit.Unit(),
+                Term.Name("::"),
+                Nil,
+                List(Lit.Unit())
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+
+  test("#2708 pat lassoc") {
+    checkTree(q"""foo match {
+            case () == () =>
+            case (()) == (()) =>
+            case () == () == () =>
+            case (()) == (()) == (()) =>
+          }""")(
+      Term.Match(
+        Term.Name("foo"),
+        List(
+          Case(Pat.ExtractInfix(Lit.Unit(), Term.Name("=="), Nil), None, Term.Block(Nil)),
+          Case(
+            Pat.ExtractInfix(
+              Lit.Unit(),
+              Term.Name("=="),
+              List(Lit.Unit())
+            ),
+            None,
+            Term.Block(Nil)
+          ),
+          Case(
+            Pat.ExtractInfix(
+              Pat.ExtractInfix(Lit.Unit(), Term.Name("=="), Nil),
+              Term.Name("=="),
+              Nil
+            ),
+            None,
+            Term.Block(Nil)
+          ),
+          Case(
+            Pat.ExtractInfix(
+              Pat.ExtractInfix(
+                Lit.Unit(),
+                Term.Name("=="),
+                List(Lit.Unit())
+              ),
+              Term.Name("=="),
+              List(Lit.Unit())
+            ),
+            None,
+            Term.Block(Nil)
+          )
+        ),
+        Nil
+      )
+    )
+  }
+
+  test("#2708 pat rassoc") {
+    checkTree(q"""foo match {
+            case () :: () =>
+            case (()) :: (()) =>
+            case () :: () :: () =>
+            case (()) :: (()) :: (()) =>
+          }""")(
+      Term.Match(
+        Term.Name("foo"),
+        List(
+          Case(Pat.ExtractInfix(Lit.Unit(), Term.Name("::"), Nil), None, Term.Block(Nil)),
+          Case(
+            Pat.ExtractInfix(
+              Lit.Unit(),
+              Term.Name("::"),
+              List(Lit.Unit())
+            ),
+            None,
+            Term.Block(Nil)
+          ),
+          Case(
+            Pat.ExtractInfix(
+              Lit.Unit(),
+              Term.Name("::"),
+              List(Pat.ExtractInfix(Lit.Unit(), Term.Name("::"), Nil))
+            ),
+            None,
+            Term.Block(Nil)
+          ),
+          Case(
+            Pat.ExtractInfix(
+              Lit.Unit(),
+              Term.Name("::"),
+              List(
+                Pat.ExtractInfix(
+                  Lit.Unit(),
+                  Term.Name("::"),
+                  List(Lit.Unit())
+                )
+              )
+            ),
+            None,
+            Term.Block(Nil)
+          )
+        ),
+        Nil
+      )
+    )
+  }
+
 }
