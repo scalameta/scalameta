@@ -1295,6 +1295,25 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )
   }
 
+  test("#2717 anonymous function with unary") {
+    checkTree(q"xs span { !separates(_) }") {
+      Term.ApplyInfix(
+        Term.Name("xs"),
+        Term.Name("span"),
+        Nil,
+        List(
+          Term.Block(
+            List(
+              Term.ApplyUnary(
+                Term.Name("!"),
+                Term.Apply(Term.Name("separates"), List(Term.Placeholder()))
+              )
+            )
+          )
+        )
+      )
+    }
+  }
   test("#2317 init block") {
     checkStat(
       """new Foo({
