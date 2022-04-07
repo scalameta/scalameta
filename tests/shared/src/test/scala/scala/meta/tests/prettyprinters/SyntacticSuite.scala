@@ -1258,7 +1258,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )
   }
 
-  test("#1843 anonymous functions") {
+  test("#1843 anonymous functions 1") {
     checkTree(q"list foo (_ fun (_.bar))")(
       Term.ApplyInfix(
         Term.Name("list"),
@@ -1276,6 +1276,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         )
       )
     )
+  }
+
+  test("#1843 anonymous functions 2") {
     checkTree(q"list foo (_ fun _.bar)")(
       Term.ApplyInfix(
         Term.Name("list"),
