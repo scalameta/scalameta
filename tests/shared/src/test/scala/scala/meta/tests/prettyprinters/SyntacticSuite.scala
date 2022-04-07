@@ -1304,9 +1304,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         List(
           Term.Block(
             List(
-              Term.ApplyUnary(
-                Term.Name("!"),
-                Term.Apply(Term.Name("separates"), List(Term.Placeholder()))
+              Term.AnonymousFunction(
+                Term.ApplyUnary(
+                  Term.Name("!"),
+                  Term.Apply(Term.Name("separates"), List(Term.Placeholder()))
+                )
               )
             )
           )
