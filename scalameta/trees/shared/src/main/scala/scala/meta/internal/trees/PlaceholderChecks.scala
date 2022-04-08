@@ -30,6 +30,7 @@ object PlaceholderChecks {
           isBlockPlaceholder(t.args) || t.args.exists(isPlaceholder) || { queue += t.fun; iter }
         case t: Term.ApplyInfix =>
           isBlockPlaceholder(t.args) || { queue += t.lhs; queue ++= t.args; iter }
+        case t: Term.ApplyUnary => queue += t.arg; iter
         case t: Term.Repeated => queue += t.expr; iter
         case _: Term.AnonymousFunction => queue.nonEmpty && iter
         case t => t.children.exists(isPlaceholder) || queue.nonEmpty && iter
