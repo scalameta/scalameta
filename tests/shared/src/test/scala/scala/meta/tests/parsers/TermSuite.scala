@@ -1338,4 +1338,14 @@ class TermSuite extends ParseSuite {
     }
   }
 
+  test("#2720 infix with repeated arg last") {
+    import org.scalameta.invariants.InvariantFailedException
+    intercept[InvariantFailedException](term("a op (b, c: _*)"))
+  }
+
+  test("#2720 infix with repeated arg not last") {
+    import org.scalameta.invariants.InvariantFailedException
+    intercept[InvariantFailedException](term("a op (b: _*, c)"))
+  }
+
 }
