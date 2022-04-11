@@ -300,6 +300,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(pat("_: false").syntax, "_: false")
   }
 
+  test("type with a literal type param (#2725)") {
+    val Scala211 = null
+    import dialects.Scala3
+    assertEquals(t"Foo[42]".syntax, "Foo[42]")
+    assertEquals(t"Foo @@ 42".syntax, "Foo @@ 42")
+    assertEquals(t"Foo[true]".syntax, "Foo[true]")
+    assertEquals(q"val x = new Foo[42]".syntax, "val x = new Foo[42]")
+  }
+
   test("packages") {
     assertEquals(source("package foo.bar; class C").syntax, s"package foo.bar${EOL}class C")
     assertEquals(
