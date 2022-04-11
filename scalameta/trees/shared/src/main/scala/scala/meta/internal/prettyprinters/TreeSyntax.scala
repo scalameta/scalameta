@@ -64,8 +64,8 @@ object TreeSyntax {
         @leaf class Pattern3(op: String) extends Pat { def precedence = 3 }
         @leaf object SimplePattern extends Pat { def precedence = 6 }
       }
-      @leaf object Literal extends Term with Pat {
-        override def categories = List("Term", "Pat"); def precedence = 6
+      @leaf object Literal extends Term with Pat with Type {
+        override def categories = List("Term", "Pat", "Type"); def precedence = 6
       }
       require(
         Literal.precedence == Term.SimpleExpr1.precedence && Literal.precedence == Pat.SimplePattern.precedence
