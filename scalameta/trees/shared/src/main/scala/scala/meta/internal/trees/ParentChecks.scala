@@ -27,7 +27,10 @@ object ParentChecks {
   }
 
   def TermRepeated(tree: Term.Repeated, parent: Tree, destination: String): Boolean = {
-    termArgument(parent, destination)
+    parent match {
+      case _: Term.Tuple => destination == "args"
+      case _ => termArgument(parent, destination)
+    }
   }
 
   def PatVar(tree: Pat.Var, parent: Tree, destination: String): Boolean = parent match {

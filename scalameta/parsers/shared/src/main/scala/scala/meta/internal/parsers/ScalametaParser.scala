@@ -2239,8 +2239,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case t @ Ellipsis(2) =>
           (List(ellipsis[Term](t)), false)
         case _ =>
+          @tailrec
+          def checkRep(exprsLeft: List[Term]): Unit = exprsLeft match {
+            case head :: tail =>
+              if (!head.is[Term.Repeated]) checkRep(tail)
+              else if (tail.nonEmpty) syntaxError("repeated argument not allowed here", at = head)
+            case _ =>
+          }
           val using = acceptOpt[soft.KwUsing]
-          (commaSeparated(argumentExpr(location)), using)
+          val exprs = commaSeparated(argumentExpr(location))
+          checkRep(exprs)
+          (exprs, using)
       })
     case _ =>
       (Nil, false)
