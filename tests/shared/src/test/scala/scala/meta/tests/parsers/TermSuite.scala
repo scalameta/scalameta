@@ -1338,4 +1338,24 @@ class TermSuite extends ParseSuite {
     }
   }
 
+  test("#2720 infix with repeated arg last") {
+    assertTerm("a foo (b, c: _*)") {
+      Term.ApplyInfix(
+        Term.Name("a"),
+        Term.Name("foo"),
+        Nil,
+        List(Term.Name("b"), Term.Repeated(Term.Name("c")))
+      )
+    }
+  }
+
+  test("#2720 infix with repeated arg not last") {
+    assertNoDiff(
+      intercept[ParseException](term("a op (b: _*, c)")).getMessage,
+      """|<input>:1: error: repeated argument not allowed here
+         |a op (b: _*, c)
+         |      ^""".stripMargin
+    )
+  }
+
 }
