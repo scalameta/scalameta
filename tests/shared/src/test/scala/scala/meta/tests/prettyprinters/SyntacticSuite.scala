@@ -1642,7 +1642,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("#1384 char no unescaped LF") {
     val expr = "('\n')"
-    assertNoDiff(super.term(expr).syntax, expr)
+    assertNoDiff(
+      intercept[TokenizeException](super.term(expr)).getMessage,
+      """|<input>:1: error: can't use unescaped LF in character literals
+         |('
+         |  ^""".stripMargin
+    )
   }
 
   test("#1384 char ok escaped LF") {
