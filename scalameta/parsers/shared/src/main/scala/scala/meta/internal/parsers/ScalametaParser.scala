@@ -2382,7 +2382,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val hasVal = acceptOpt[KwVal]
     val isCase = acceptOpt[KwCase]
 
-    val pat = noSeq.pattern1()
+    val pat = noSeq.pattern1(isForComprehension = true)
     val hasEq = token.is[Equals]
 
     if (hasVal) {
@@ -2466,8 +2466,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       } else elseF
     }
 
-    def pattern1(): Pat = {
-      val p = pattern2()
+    def pattern1(isForComprehension: Boolean = false): Pat = {
+      val p = pattern2(isForComprehension)
       @inline def typed() =
         Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
       val pat = p match {
@@ -2491,8 +2491,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (pat eq p) p else autoEndPos(p)(pat)
     }
 
-    def pattern2(): Pat = {
-      val p = pattern3()
+    def pattern2(isForComprehension: Boolean = false): Pat = {
+      val p = pattern3(isForComprehension)
       val pat = p match {
         case _ if token.isNot[At] => p
         case _: Quasi =>
@@ -2515,9 +2515,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (pat eq p) p else autoEndPos(p)(pat)
     }
 
-    def pattern3(): Pat = {
+    def pattern3(isForComprehension: Boolean = false): Pat = {
       val ctx = patInfixContext
-      val lhs = simplePattern(badPattern3)
+      val lhs = simplePattern(badPattern3, isForComprehension = isForComprehension)
       val base = ctx.stack
       @tailrec
       def loop(rhs: ctx.Rhs): ctx.Rhs = {
@@ -2565,7 +2565,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def simplePattern(): Pat =
       // simple diagnostics for this entry point
       simplePattern(token => syntaxError("illegal start of simple pattern", at = token))
-    def simplePattern(onError: Token => Nothing, isRhs: Boolean = false): Pat =
+    def simplePattern(
+        onError: Token => Nothing,
+        isRhs: Boolean = false,
+        isForComprehension: Boolean = false
+    ): Pat =
       autoPos(token match {
         case _: Ident | _: KwThis | _: Unquote =>
           val isBackquoted = parser.isBackquoted
@@ -2596,7 +2600,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               case name: Term.Name =>
                 if (dialect.allowPostfixStarVarargSplices && isStar && tryAhead(!token.is[Ident]))
                   Pat.Repeated(name)
-                else if (!isBackquoted && {
+                else if ((!isBackquoted || isForComprehension) && {
                     val first = name.value.head
                     first == '_' || Character.getType(first) == Character.LOWERCASE_LETTER ||
                     dialect.allowUpperCasePatternVarBinding && token.is[At]
