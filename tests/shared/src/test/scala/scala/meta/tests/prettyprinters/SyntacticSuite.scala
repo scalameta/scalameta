@@ -1640,4 +1640,16 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )
   }
 
+  test("#1384 char no unescaped LF") {
+    val expr = "('\n')"
+    assertNoDiff(super.term(expr).syntax, expr)
+  }
+
+  test("#1384 char ok escaped LF") {
+    val expr = "('\\n', '\\u000a')"
+    val tree = super.term(expr)
+    assertNoDiff(tree.syntax, expr)
+    assertNoDiff(tree.resetAllOrigins.syntax, "('\\n', '\\n')")
+  }
+
 }
