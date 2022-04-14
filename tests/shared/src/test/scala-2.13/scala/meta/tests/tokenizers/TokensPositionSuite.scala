@@ -6,7 +6,8 @@ import scala.meta.tests.parsers.BasePositionSuite
 class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Enumerator](
     "`a` <- b",
-    """|Term.Name `a`
+    """|Pat.Var `a`
+       |Term.Name `a`
        |""".stripMargin
   )
   checkPositions[Enumerator]("a = 1")

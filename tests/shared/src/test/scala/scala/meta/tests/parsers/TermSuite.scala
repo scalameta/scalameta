@@ -1348,6 +1348,19 @@ class TermSuite extends ParseSuite {
       )
     }
   }
+  test("#2720-for-comp") {
+    assertTerm("for { `j`: Int <- Seq(4, 5, 6, 7)} yield `j`") {
+      Term.ForYield(
+        List(
+          Enumerator.Generator(
+            Pat.Typed(Pat.Var(Term.Name("j")), Type.Name("Int")),
+            Term.Apply(Term.Name("Seq"), List(Lit.Int(4), Lit.Int(5), Lit.Int(6), Lit.Int(7)))
+          )
+        ),
+        Term.Name("j")
+      )
+    }
+  }
 
   test("#2720 infix with repeated arg not last") {
     assertNoDiff(
