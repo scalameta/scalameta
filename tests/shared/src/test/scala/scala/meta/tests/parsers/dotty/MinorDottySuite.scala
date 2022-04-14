@@ -1300,4 +1300,23 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("#2727-newline-macro") {
+
+    runTestAssert[Stat](
+      """|implicit def generate[T](value: T): Clue[T] =
+         |  macro MacroCompatScala2.clueImpl""".stripMargin,
+      assertLayout =
+        Some("implicit def generate[T](value: T): Clue[T] = macro MacroCompatScala2.clueImpl")
+    )(
+      Defn.Macro(
+        List(Mod.Implicit()),
+        Term.Name("generate"),
+        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+        List(List(Term.Param(Nil, Term.Name("value"), Some(Type.Name("T")), None))),
+        Some(Type.Apply(Type.Name("Clue"), List(Type.Name("T")))),
+        Term.Select(Term.Name("MacroCompatScala2"), Term.Name("clueImpl"))
+      )
+    )
+  }
+
 }
