@@ -329,9 +329,14 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
     trait CanStartIndent {
       def unapply(token: Token): Boolean = token match {
         case _: KwYield | _: KwTry | _: KwCatch | _: KwFinally | _: KwMatch | _: KwDo | _: KwFor |
-            _: KwThen | _: KwElse | _: Equals | _: KwWhile | _: KwIf | _: RightArrow | _: KwReturn |
+            _: KwThen | _: KwElse | _: KwWhile | _: KwIf | _: RightArrow | _: KwReturn |
             _: LeftArrow | _: ContextArrow =>
           true
+        case _: Equals =>
+          token.next match {
+            case _: KwMacro => false
+            case _ => true
+          }
         case _: KwWith =>
           token.next match {
             case _: KwImport | _: KwExport | DefIntro() => true
