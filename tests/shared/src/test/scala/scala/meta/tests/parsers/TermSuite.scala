@@ -1379,7 +1379,7 @@ class TermSuite extends ParseSuite {
     val tq = "\"" * 3
     val exprDq = raw"""("\n", "bar\n", "\nbaz")"""
     val exprTq = s"""($tq\n$tq, ${tq}bar\n$tq, $tq\nbaz$tq)"""
-    checkTerm(exprDq, exprTq)(
+    checkTerm(exprDq, exprDq)(
       Term.Tuple(List(Lit.String("\n"), Lit.String("bar\n"), Lit.String("\nbaz")))
     )
     checkTerm(exprTq, exprTq)(

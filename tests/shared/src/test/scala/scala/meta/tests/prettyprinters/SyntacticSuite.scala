@@ -1659,7 +1659,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val charN = Lit.Char('\n')
     val origin = Origin.Parsed(Input.String(exprU), implicitly[Dialect], TokenStreamPosition(1, 2))
     val charU = charN.withOrigin(origin)
-    checkTree(tree, syntax) {
+    checkTree(tree, expr) {
       Term.Tuple(List(charN, charU))
     }
     checkTree(tree.resetAllOrigins, syntax) {

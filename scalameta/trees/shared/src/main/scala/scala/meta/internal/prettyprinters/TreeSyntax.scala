@@ -819,13 +819,19 @@ object TreeSyntax {
               s(value, "d")
           }
         }
-      case Lit.Char(value) => m(Literal, s(enquote(value.toString, SingleQuotes)))
-      // Strings should be triple-quoted regardless of what newline style is used.
-      case Lit.String(value) =>
-        m(
-          Literal,
-          s(enquote(value.toString, if (value.contains("\n")) TripleQuotes else DoubleQuotes))
-        )
+      case t @ Lit.Char(value) =>
+        val syntax = t.pos match {
+          case Position.None => enquote(value.toString, SingleQuotes)
+          case pos => pos.text
+        }
+        m(Literal, s(syntax))
+      case t @ Lit.String(value) =>
+        val syntax = t.pos match {
+          case Position.None =>
+            enquote(value, if (value.contains('\n')) TripleQuotes else DoubleQuotes)
+          case pos => pos.text
+        }
+        m(Literal, s(syntax))
       case Lit.Symbol(value) => m(Literal, s("'", value.name))
       case Lit.Null() => m(Literal, s(kw("null")))
       case Lit.Unit() => m(Literal, s("()"))
