@@ -410,9 +410,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         fetchDoubleQuote()
       case '\'' =>
         def fetchSingleQuote() = {
-          nextChar()
+          nextRawChar()
           if (isUnquoteDollar())
             syntaxError("can't unquote into character literals", at = charOffset - 1)
+          else if (ch == LF && !isUnicodeEscape)
+            syntaxError("can't use unescaped LF in character literals", at = charOffset - 1)
           else if (isIdentifierStart(ch))
             charLitOr(getIdentRest)
           else if (isOperatorPart(ch) && (ch != '\\' || isUnicodeEscape))
