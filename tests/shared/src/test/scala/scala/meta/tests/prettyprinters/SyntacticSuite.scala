@@ -3,6 +3,7 @@ package prettyprinters
 
 import scala.meta._
 import scala.meta.dialects.Scala211
+import scala.meta.internal.tokens._
 import scala.meta.internal.trees._
 import scala.meta.prettyprinters.Show
 
@@ -1651,10 +1652,19 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#1384 char ok escaped LF") {
-    val expr = "('\\n', '\\u000a')"
+    val exprU = "'\\u000a'"
+    val expr = s"('\\n', $exprU)"
+    val syntax = "('\\n', '\\n')"
     val tree = super.term(expr)
-    assertNoDiff(tree.syntax, expr)
-    assertNoDiff(tree.resetAllOrigins.syntax, "('\\n', '\\n')")
+    val charN = Lit.Char('\n')
+    val origin = Origin.Parsed(Input.String(exprU), implicitly[Dialect], TokenStreamPosition(1, 2))
+    val charU = charN.withOrigin(origin)
+    checkTree(tree, expr) {
+      Term.Tuple(List(charN, charU))
+    }
+    checkTree(tree.resetAllOrigins, syntax) {
+      Term.Tuple(List(charN, charN))
+    }
   }
 
 }
