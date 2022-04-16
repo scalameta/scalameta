@@ -2862,6 +2862,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* -------- PARAMETERS ------------------------------------------- */
 
+  @tailrec
+  private def onlyLastParameterCanBeRepeated(params: List[Term.Param]): Unit = params match {
+    case p :: tail if tail.nonEmpty =>
+      if (!p.is[Term.Param.Quasi] && p.decltpe.exists(_.is[Type.Repeated]))
+        syntaxError("*-parameter must come last", p)
+      onlyLastParameterCanBeRepeated(tail)
+    case _ =>
+  }
+
   def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Term.Param]] = {
     var parsedImplicits = false
     def paramClause(first: Boolean): List[Term.Param] = token match {
@@ -3455,15 +3464,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         syntaxError(s"Procedure syntax is not supported. $hint", at = name)
     }
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
-    val paramss = paramClauses(ownerIsType = false).require[List[List[Term.Param]]]
-
-    def onlyLastParameterCanBeRepeated(params: List[Term.Param]): Unit = {
-      params.iterator
-        .take(params.length - 1)
-        .filter(p => !p.is[Term.Param.Quasi] && p.decltpe.exists(_.is[Type.Repeated]))
-        .foreach(p => syntaxError("*-parameter must come last", p))
-    }
-
+    val paramss = paramClauses(ownerIsType = false)
     paramss.foreach(onlyLastParameterCanBeRepeated)
 
     val hasLeftBrace = isAfterOptNewLine[LeftBrace]
