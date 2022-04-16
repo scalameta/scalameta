@@ -348,14 +348,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   lazy val reporter = Reporter()
   import reporter._
 
-  private var inFunReturnType = false
-  @inline private def fromWithinReturnType[T](body: => T): T = {
-    val saved = inFunReturnType
-    inFunReturnType = true
-    try body
-    finally inFunReturnType = saved
-  }
-
   def syntaxErrorExpected[T <: Token](implicit tokenInfo: TokenInfo[T]): Nothing =
     syntaxError(s"${tokenInfo.name} expected but ${token.name} found", at = token)
 
@@ -3475,7 +3467,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     paramss.foreach(onlyLastParameterCanBeRepeated)
 
     val hasLeftBrace = isAfterOptNewLine[LeftBrace]
-    val restype = fromWithinReturnType(typedOpt())
+    val restype = ReturnTypeContext.within(typedOpt())
     if (token.is[StatSep] || token.is[RightBrace] || token.is[Indentation.Outdent]) {
       if (restype.isEmpty) {
         warnProcedureDeprecation
@@ -4198,13 +4190,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case other => syntaxError("is not a valid refinement declaration", at = other)
       }
     case StatSep() => None
-    case _ =>
+    case _ if ReturnTypeContext.isInside() =>
       syntaxError(
-        "illegal start of declaration" +
-          (if (inFunReturnType) " (possible cause: missing `=' in front of current method body)"
-           else ""),
+        "illegal start of declaration (possible cause: missing `=' in front of current method body)",
         at = token
       )
+    case _ => syntaxError("illegal start of declaration", at = token)
   }
 
   def localDef(implicitMod: Option[Mod.Implicit]): Stat = {
