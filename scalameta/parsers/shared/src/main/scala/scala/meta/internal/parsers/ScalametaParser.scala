@@ -3465,17 +3465,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val hasLeftBrace = isAfterOptNewLine[LeftBrace]
     val restype = ReturnTypeContext.within(typedOpt())
     if (token.is[StatSep] || token.is[RightBrace] || token.is[Indentation.Outdent]) {
-      if (restype.isEmpty) {
+      val decltype = restype.getOrElse {
         warnProcedureDeprecation
-        Decl.Def(
-          mods,
-          name,
-          tparams,
-          paramss,
-          autoPos(Type.Name("Unit"))
-        )
-      } else
-        Decl.Def(mods, name, tparams, paramss, restype.get)
+        autoPos(Type.Name("Unit"))
+      }
+      Decl.Def(mods, name, tparams, paramss, decltype)
     } else if (restype.isEmpty && hasLeftBrace) {
       warnProcedureDeprecation
       Defn.Def(
