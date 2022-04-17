@@ -3480,12 +3480,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
       Decl.Def(mods, name, tparams, paramss, decltype)
     } else {
-      var isMacro = false
-      val rhs = {
-        accept[Equals]
-        isMacro = acceptOpt[KwMacro]
-        exprMaybeIndented()
-      }
+      accept[Equals]
+      val isMacro = acceptOpt[KwMacro]
+      val rhs = exprMaybeIndented()
       if (isMacro) Defn.Macro(mods, name, tparams, paramss, restype, rhs)
       else Defn.Def(mods, name, tparams, paramss, restype, rhs)
     }
