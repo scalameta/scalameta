@@ -2895,12 +2895,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         )
     }
     listBy[List[Term.Param]] { paramss =>
-      var first = true
       while (isAfterOptNewLine[LeftParen] && !parsedImplicits) {
         next()
-        paramss += paramClause(first)
+        paramss += paramClause(paramss.isEmpty)
         accept[RightParen]
-        first = false
       }
     }
   }
@@ -3456,10 +3454,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def warnProcedureDeprecation = {
       val hint = s"Convert procedure `$name` to method by adding `: Unit =`."
       if (dialect.allowProcedureSyntax)
-        deprecationWarning(
-          s"Procedure syntax is deprecated. $hint",
-          at = name
-        )
+        deprecationWarning(s"Procedure syntax is deprecated. $hint", at = name)
       else
         syntaxError(s"Procedure syntax is not supported. $hint", at = name)
     }
@@ -4186,10 +4181,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def refineStat(): Option[Stat] = token match {
     case t: Ellipsis => Some(ellipsis[Stat](t, 1))
     case DclIntro() =>
-      defOrDclOrSecondaryCtor(Nil) match {
-        case stat if stat.isRefineStat => Some(stat)
-        case other => syntaxError("is not a valid refinement declaration", at = other)
-      }
+      val stat = defOrDclOrSecondaryCtor(Nil)
+      if (stat.isRefineStat) Some(stat)
+      else syntaxError("is not a valid refinement declaration", at = stat)
     case StatSep() => None
     case _ if ReturnTypeContext.isInside() =>
       syntaxError(
