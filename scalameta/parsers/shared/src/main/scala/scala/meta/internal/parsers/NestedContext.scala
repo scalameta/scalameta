@@ -17,3 +17,5 @@ private[parsers] trait NestedContext {
 private[parsers] object QuotedSpliceContext extends NestedContext
 
 private[parsers] object QuotedPatternContext extends NestedContext
+
+private[parsers] object ReturnTypeContext extends NestedContext

@@ -348,14 +348,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   lazy val reporter = Reporter()
   import reporter._
 
-  private var inFunReturnType = false
-  @inline private def fromWithinReturnType[T](body: => T): T = {
-    val saved = inFunReturnType
-    inFunReturnType = true
-    try body
-    finally inFunReturnType = saved
-  }
-
   def syntaxErrorExpected[T <: Token](implicit tokenInfo: TokenInfo[T]): Nothing =
     syntaxError(s"${tokenInfo.name} expected but ${token.name} found", at = token)
 
@@ -2870,6 +2862,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* -------- PARAMETERS ------------------------------------------- */
 
+  @tailrec
+  private def onlyLastParameterCanBeRepeated(params: List[Term.Param]): Unit = params match {
+    case p :: tail if tail.nonEmpty =>
+      if (!p.is[Term.Param.Quasi] && p.decltpe.exists(_.is[Type.Repeated]))
+        syntaxError("*-parameter must come last", p)
+      onlyLastParameterCanBeRepeated(tail)
+    case _ =>
+  }
+
   def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Term.Param]] = {
     var parsedImplicits = false
     def paramClause(first: Boolean): List[Term.Param] = token match {
@@ -2894,12 +2895,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         )
     }
     listBy[List[Term.Param]] { paramss =>
-      var first = true
       while (isAfterOptNewLine[LeftParen] && !parsedImplicits) {
         next()
-        paramss += paramClause(first)
+        paramss += paramClause(paramss.isEmpty)
         accept[RightParen]
-        first = false
       }
     }
   }
@@ -3455,40 +3454,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def warnProcedureDeprecation = {
       val hint = s"Convert procedure `$name` to method by adding `: Unit =`."
       if (dialect.allowProcedureSyntax)
-        deprecationWarning(
-          s"Procedure syntax is deprecated. $hint",
-          at = name
-        )
+        deprecationWarning(s"Procedure syntax is deprecated. $hint", at = name)
       else
         syntaxError(s"Procedure syntax is not supported. $hint", at = name)
     }
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
-    val paramss = paramClauses(ownerIsType = false).require[List[List[Term.Param]]]
-
-    def onlyLastParameterCanBeRepeated(params: List[Term.Param]): Unit = {
-      params.iterator
-        .take(params.length - 1)
-        .filter(p => !p.is[Term.Param.Quasi] && p.decltpe.exists(_.is[Type.Repeated]))
-        .foreach(p => syntaxError("*-parameter must come last", p))
-    }
-
+    val paramss = paramClauses(ownerIsType = false)
     paramss.foreach(onlyLastParameterCanBeRepeated)
 
-    val hasLeftBrace = isAfterOptNewLine[LeftBrace]
-    val restype = fromWithinReturnType(typedOpt())
-    if (token.is[StatSep] || token.is[RightBrace] || token.is[Indentation.Outdent]) {
-      if (restype.isEmpty) {
-        warnProcedureDeprecation
-        Decl.Def(
-          mods,
-          name,
-          tparams,
-          paramss,
-          autoPos(Type.Name("Unit"))
-        )
-      } else
-        Decl.Def(mods, name, tparams, paramss, restype.get)
-    } else if (restype.isEmpty && hasLeftBrace) {
+    val restype = ReturnTypeContext.within(typedOpt())
+    if (restype.isEmpty && isAfterOptNewLine[LeftBrace]) {
       warnProcedureDeprecation
       Defn.Def(
         mods,
@@ -3498,13 +3473,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         Some(autoPos(Type.Name("Unit"))),
         expr()
       )
-    } else {
-      var isMacro = false
-      val rhs = {
-        accept[Equals]
-        isMacro = acceptOpt[KwMacro]
-        exprMaybeIndented()
+    } else if (token.is[StatSep] || token.is[RightBrace] || token.is[Indentation.Outdent]) {
+      val decltype = restype.getOrElse {
+        warnProcedureDeprecation
+        autoPos(Type.Name("Unit"))
       }
+      Decl.Def(mods, name, tparams, paramss, decltype)
+    } else {
+      accept[Equals]
+      val isMacro = acceptOpt[KwMacro]
+      val rhs = exprMaybeIndented()
       if (isMacro) Defn.Macro(mods, name, tparams, paramss, restype, rhs)
       else Defn.Def(mods, name, tparams, paramss, restype, rhs)
     }
@@ -4193,18 +4171,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def refineStat(): Option[Stat] = token match {
     case t: Ellipsis => Some(ellipsis[Stat](t, 1))
     case DclIntro() =>
-      defOrDclOrSecondaryCtor(Nil) match {
-        case stat if stat.isRefineStat => Some(stat)
-        case other => syntaxError("is not a valid refinement declaration", at = other)
-      }
+      val stat = defOrDclOrSecondaryCtor(Nil)
+      if (stat.isRefineStat) Some(stat)
+      else syntaxError("is not a valid refinement declaration", at = stat)
     case StatSep() => None
-    case _ =>
+    case _ if ReturnTypeContext.isInside() =>
       syntaxError(
-        "illegal start of declaration" +
-          (if (inFunReturnType) " (possible cause: missing `=' in front of current method body)"
-           else ""),
+        "illegal start of declaration (possible cause: missing `=' in front of current method body)",
         at = token
       )
+    case _ => syntaxError("illegal start of declaration", at = token)
   }
 
   def localDef(implicitMod: Option[Mod.Implicit]): Stat = {
