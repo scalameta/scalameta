@@ -3462,15 +3462,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val paramss = paramClauses(ownerIsType = false)
     paramss.foreach(onlyLastParameterCanBeRepeated)
 
-    val hasLeftBrace = isAfterOptNewLine[LeftBrace]
     val restype = ReturnTypeContext.within(typedOpt())
-    if (token.is[StatSep] || token.is[RightBrace] || token.is[Indentation.Outdent]) {
-      val decltype = restype.getOrElse {
-        warnProcedureDeprecation
-        autoPos(Type.Name("Unit"))
-      }
-      Decl.Def(mods, name, tparams, paramss, decltype)
-    } else if (restype.isEmpty && hasLeftBrace) {
+    if (restype.isEmpty && isAfterOptNewLine[LeftBrace]) {
       warnProcedureDeprecation
       Defn.Def(
         mods,
@@ -3480,6 +3473,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         Some(autoPos(Type.Name("Unit"))),
         expr()
       )
+    } else if (token.is[StatSep] || token.is[RightBrace] || token.is[Indentation.Outdent]) {
+      val decltype = restype.getOrElse {
+        warnProcedureDeprecation
+        autoPos(Type.Name("Unit"))
+      }
+      Decl.Def(mods, name, tparams, paramss, decltype)
     } else {
       var isMacro = false
       val rhs = {
