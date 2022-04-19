@@ -477,6 +477,23 @@ class InlineSuite extends BaseDottySuite {
     )
   }
 
+  test("transparent-trait-newlines") {
+    runTestAssert[Stat](
+      """|transparent 
+         |
+         |trait S""".stripMargin,
+      assertLayout = Some("transparent trait S")
+    )(
+      Defn.Trait(
+        List(Mod.Transparent()),
+        Type.Name("S"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    )
+  }
+
   test("transparent-inline-with-constant") {
     runTestAssert[Stat](
       """|transparent inline def f: String =
