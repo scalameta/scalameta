@@ -362,6 +362,7 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
     @classifier
     trait CanEndStat {
       def unapply(token: Token): Boolean = token match {
+        case SoftModifier() => false
         case _: Ident | _: KwGiven | _: Literal | _: Interpolation.End | _: Xml.End | _: KwReturn |
             _: KwThis | _: KwType | _: RightParen | _: RightBracket | _: RightBrace |
             _: Underscore | _: Ellipsis | _: Unquote =>
