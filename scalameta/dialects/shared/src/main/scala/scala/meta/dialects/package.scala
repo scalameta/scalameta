@@ -45,18 +45,19 @@ package object dialects {
 
   implicit val Scala212 = Scala211
     .withAllowTrailingCommas(true)
+    .withAllowQuestionMarkPlaceholder(true)
 
   implicit val Scala213 = Scala212
     .withAllowImplicitByNameParameters(true)
     .withAllowLiteralTypes(true)
     .withAllowNumericLiteralUnderscoreSeparators(true)
     .withAllowTryWithAnyExpr(true)
+    .withAllowQuestionMarkPlaceholder(true)
 
   /**
    * Dialect starting with Scala 2.13.6 for `-Xsource:3` option
    */
   implicit val Scala213Source3 = Scala213
-    .withAllowQuestionMarkPlaceholder(true)
     .withAllowAsForImportRename(true)
     .withAllowStarWildcardImport(true)
     .withAllowOpenClass(true)
@@ -69,7 +70,6 @@ package object dialects {
    * Dialect starting with Scala 2.12.14 for `-Xsource:3` option
    */
   implicit val Scala212Source3 = Scala212
-    .withAllowQuestionMarkPlaceholder(true)
     .withAllowAsForImportRename(true)
     .withAllowStarWildcardImport(true)
     .withAllowOpenClass(true)
