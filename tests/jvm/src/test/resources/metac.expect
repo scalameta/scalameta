@@ -1942,6 +1942,58 @@ Synthetics:
   apply => scala/collection/immutable/List.apply().
   Any => scala/Any#
 
+semanticdb/integration/src/main/scala/example/Issue1223.scala
+-------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Issue1223.scala
+Text => non-empty
+Language => Scala
+Symbols => 3 entries
+Occurrences => 9 entries
+Synthetics => 4 entries
+
+Symbols:
+example/inAppl. => final object inAppl extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/inAppl.a. => val method a: Seq[Int]
+  Seq => scala/collection/Seq#
+  Int => scala/Int#
+example/inAppl.b. => val method b: Seq[String]
+  Seq => scala/collection/Seq#
+  String => java/lang/String#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:7..2:13): inAppl <= example/inAppl.
+[3:6..3:7): a <= example/inAppl.a.
+[3:10..3:13): Seq => scala/collection/Seq.
+[4:6..4:7): b <= example/inAppl.b.
+[4:10..4:13): Seq => scala/collection/Seq.
+[5:3..5:4): a => example/inAppl.a.
+[5:5..5:8): zip => scala/collection/IterableLike#zip().
+[5:9..5:10): b => example/inAppl.b.
+
+Synthetics:
+[3:10..3:13): Seq => *.apply[Int]
+  apply => scala/collection/generic/GenericCompanion#apply().
+  Int => scala/Int#
+[4:10..4:13): Seq => *.apply[String]
+  apply => scala/collection/generic/GenericCompanion#apply().
+  String => java/lang/String#
+[5:3..5:8): a zip => *[Int, String, Seq[Tuple2[Int, String]]]
+  Int => scala/Int#
+  String => java/lang/String#
+  Seq => scala/collection/Seq#
+  Tuple2 => scala/Tuple2#
+[5:3..5:10): a zip b => *(Seq.canBuildFrom[Tuple2[Int, String]])
+  Seq => scala/collection/Seq.
+  canBuildFrom => scala/collection/Seq.canBuildFrom().
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+  String => java/lang/String#
+
 semanticdb/integration/src/main/scala/example/Issue1749.scala
 -------------------------------------------------------------
 

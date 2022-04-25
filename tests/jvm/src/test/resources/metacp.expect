@@ -1807,6 +1807,26 @@ example/ImplicitConversion#tuple. => val method tuple: Tuple2[Int, Int]
 example/ImplicitConversion#x. => val method x: Int
   Int => scala/Int#
 
+example/inAppl.class
+--------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/inAppl.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+example/inAppl. => final object inAppl extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/inAppl.a. => val method a: Seq[Int]
+  Seq => scala/collection/Seq#
+  Int => scala/Int#
+example/inAppl.b. => val method b: Seq[String]
+  Seq => scala/collection/Seq#
+  String => java/lang/String#
+
 example/InstrumentTyper.class
 -----------------------------
 
