@@ -2204,11 +2204,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           // For `a f (b)`, autoPos include `(b)` for ApplyInfix.args position.
           // https://github.com/scalacenter/scalafix/issues/1594
           case _: Term.Ref =>
-            val (start, end) = body.origin match {
-              case Origin.None => (lpPos, rpPos)
-              case origin: Origin.Parsed => (origin.pos.start, origin.pos.end - 1)
-            }
-            atPosWithBody(start, body, end)
+            body
           case _ =>
             atPosWithBody(lpPos, body, rpPos)
         }
