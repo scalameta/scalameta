@@ -1089,4 +1089,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
       ("raw\"\"\"\\$host\\$share\\\"\"\"").tokenize.get
 
   }
+
+  test("wrapped-identifiers-ApplyInfix") {
+    val Term.ApplyInfix(_, _, _, List(arg)) = "a f (b)".parse[Term].get
+    assert(arg.tokens.toString == "b")
+  }
 }

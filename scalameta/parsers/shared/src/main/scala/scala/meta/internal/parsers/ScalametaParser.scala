@@ -2198,7 +2198,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val lpPos = auto.startTokenPos
       val args = checkNoTripleDots(argumentExprs(location))
       val rpPos = auto.endTokenPos
-      @inline def addPos(body: Term): Term = atPosWithBody(lpPos, body, rpPos)
+      @inline def addPos(body: Term): Term = {
+        body match {
+          // For `Term.Ref`, avoid using autoPos to exclude parens tokens in Term.ApplyInfix.args.
+          // For `a f (b)`, autoPos include `(b)` for ApplyInfix.args position.
+          // https://github.com/scalacenter/scalafix/issues/1594
+          case _: Term.Ref =>
+            val (start, end) = body.origin match {
+              case Origin.None => (lpPos, rpPos)
+              case origin: Origin.Parsed => (origin.pos.start, origin.pos.end - 1)
+            }
+            atPosWithBody(start, body, end)
+          case _ =>
+            atPosWithBody(lpPos, body, rpPos)
+        }
+      }
       token match {
         case Dot() | LeftBracket() | LeftParen() | LeftBrace() | Underscore() =>
           findRep(args).foreach(x => syntaxError("repeated argument not allowed here", at = x))

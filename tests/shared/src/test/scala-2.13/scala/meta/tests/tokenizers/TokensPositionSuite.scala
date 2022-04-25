@@ -171,7 +171,6 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     "(a) op (b)",
     """|Term.Name (a)
-       |Term.Name (b)
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -188,9 +187,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat]("1 + 1")
   checkPositions[Stat]("a f ()")
   checkPositions[Stat](
-    "a f (b)",
-    """|Term.Name (b)
-       |""".stripMargin
+    "a f (b)"
   )
   checkPositions[Stat](
     "(f) [A,B]",
