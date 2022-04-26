@@ -150,7 +150,9 @@ final class Dialect private (
     // import a.b.c.{ given, _} used for -X:source3
     val allowGivenImports: Boolean,
     // Scala 3 uses proper precedence rules for infix types, unlike Scala 2
-    val useInfixTypePrecedence: Boolean
+    val useInfixTypePrecedence: Boolean,
+    // Scala213Source3 and Scala3 allow infix operator being placed after nl
+    val allowInfixOperatorAfterNL: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -239,7 +241,8 @@ final class Dialect private (
       allowPlusMinusUnderscoreAsIdent = false,
       allowPlusMinusUnderscoreAsPlaceholder = false,
       allowGivenImports = false,
-      useInfixTypePrecedence = false
+      useInfixTypePrecedence = false,
+      allowInfixOperatorAfterNL = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -429,6 +432,10 @@ final class Dialect private (
     privateCopy(useInfixTypePrecedence = newValue)
   }
 
+  def withAllowInfixOperatorAfterNL(newValue: Boolean): Dialect = {
+    privateCopy(allowInfixOperatorAfterNL = newValue)
+  }
+
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -491,8 +498,8 @@ final class Dialect private (
       allowPlusMinusUnderscoreAsIdent: Boolean = this.allowPlusMinusUnderscoreAsIdent,
       allowPlusMinusUnderscoreAsPlaceholder: Boolean = this.allowPlusMinusUnderscoreAsPlaceholder,
       allowGivenImports: Boolean = this.allowGivenImports,
-      useInfixTypePrecedence: Boolean = this.useInfixTypePrecedence
-
+      useInfixTypePrecedence: Boolean = this.useInfixTypePrecedence,
+      allowInfixOperatorAfterNL: Boolean = this.allowInfixOperatorAfterNL
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -552,7 +559,8 @@ final class Dialect private (
       allowPlusMinusUnderscoreAsIdent,
       allowPlusMinusUnderscoreAsPlaceholder,
       allowGivenImports,
-      useInfixTypePrecedence
+      useInfixTypePrecedence,
+      allowInfixOperatorAfterNL
       // NOTE(olafur): add the next argument above this comment.
     )
   }
