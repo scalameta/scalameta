@@ -106,7 +106,7 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
       @inline
       def strictNext: Token = getStrictAfterSafe(nextSafe)
 
-      def isLeadingInfixOperator: Boolean = dialect.allowSignificantIndentation && {
+      def isLeadingInfixOperator: Boolean = dialect.allowInfixOperatorAfterNL && {
         val text = token.text
         @tailrec
         def iter(idx: Int, nonEmpty: Boolean): Boolean = {

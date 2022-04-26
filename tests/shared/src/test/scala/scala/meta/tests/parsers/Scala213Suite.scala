@@ -1,6 +1,8 @@
 package scala.meta.tests
 package parsers
 
+import scala.meta.Dialect
+import scala.meta.dialects
 import scala.meta.dialects.Scala213
 
 class Scala213Suite extends ParseSuite {
@@ -78,9 +80,18 @@ class Scala213Suite extends ParseSuite {
     runAssert("try ()", """Term.Try(Lit.Unit(()), Nil, None)""")
   }
 
-  private def runAssert(code: String, expected: String): Unit = {
+  test("infix-at-line-start") {
+    runAssert(
+      """|val x = "hello"
+         |  ++ "world"
+         |""".stripMargin,
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Term.ApplyInfix(Lit.String("hello"), Term.Name("++"), Nil, List(Lit.String("world"))))"""
+    )(dialects.Scala213Source3)
+  }
+
+  private def runAssert(code: String, expected: String)(implicit d: Dialect): Unit = {
     assertNoDiff(
-      templStat(code).structure,
+      templStat(code)(d).structure,
       expected
     )
   }

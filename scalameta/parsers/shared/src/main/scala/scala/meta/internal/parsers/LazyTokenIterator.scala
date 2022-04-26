@@ -360,7 +360,7 @@ private[parsers] class LazyTokenIterator private (
           case _: RegionIndent | _: RegionIndentEnum => true
           case x: RegionParen => x.canProduceLF
           case _ => false
-        }
+        } && !next.isLeadingInfixOperator
       }
 
       def getIfCanProduceLF =

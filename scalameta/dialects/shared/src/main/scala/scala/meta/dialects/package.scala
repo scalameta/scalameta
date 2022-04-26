@@ -65,6 +65,7 @@ package object dialects {
     .withAllowPostfixStarVarargSplices(true)
     .withAllowPlusMinusUnderscoreAsIdent(true)
     .withAllowGivenImports(true)
+    .withAllowInfixOperatorAfterNL(true)
 
   /**
    * Dialect starting with Scala 2.12.14 for `-Xsource:3` option
@@ -145,6 +146,7 @@ package object dialects {
     .withAllowDoWhile(false)
     .withAllowPlusMinusUnderscoreAsPlaceholder(true)
     .withUseInfixTypePrecedence(true)
+    .withAllowInfixOperatorAfterNL(true)
 
   @deprecated("Use Scala3 instead", "4.4.2")
   implicit val Dotty = Scala3
