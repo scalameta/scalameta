@@ -12,6 +12,11 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Term.ApplyInfix (2 / 3)
        |""".stripMargin
   )
+
+  checkPositions[Term](
+    "a f (b)"
+  )
+
   checkPositions[Term](
     "(1 + 2).foo",
     """|Term.ApplyInfix (1 + 2)

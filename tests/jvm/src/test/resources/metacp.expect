@@ -2607,6 +2607,28 @@ example/NamedArguments#User.unapply().(x$0) => param x$0: User
   User => example/NamedArguments#User#
 example/NamedArguments#`<init>`(). => primary ctor <init>()
 
+example/SymbolTest.class
+------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/SymbolTest.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+example/SymbolTest# => trait SymbolTest extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/SymbolTest#arg(). => method arg: Int
+  Int => scala/Int#
+example/SymbolTest#shouldBe(). => abstract method shouldBe(right: Any): Unit
+  right => example/SymbolTest#shouldBe().(right)
+  Any => scala/Any#
+  Unit => scala/Unit#
+example/SymbolTest#shouldBe().(right) => param right: Any
+  Any => scala/Any#
+
 example/Synthetic.class
 -----------------------
 

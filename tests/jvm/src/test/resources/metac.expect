@@ -1834,6 +1834,40 @@ Occurrences:
 Diagnostics:
 [0:26..0:34) [warning] Unused import
 
+semanticdb/integration/src/main/scala/example/Infix.scala
+---------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Infix.scala
+Text => non-empty
+Language => Scala
+Symbols => 4 entries
+Occurrences => 9 entries
+
+Symbols:
+example/SymbolTest# => trait SymbolTest extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/SymbolTest#arg(). => method arg: Int
+  Int => scala/Int#
+example/SymbolTest#shouldBe(). => abstract method shouldBe(right: Any): Unit
+  right => example/SymbolTest#shouldBe().(right)
+  Any => scala/Any#
+  Unit => scala/Unit#
+example/SymbolTest#shouldBe().(right) => param right: Any
+  Any => scala/Any#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:6..2:16): SymbolTest <= example/SymbolTest#
+[3:6..3:14): shouldBe <= example/SymbolTest#shouldBe().
+[3:15..3:20): right <= example/SymbolTest#shouldBe().(right)
+[3:22..3:25): Any => scala/Any#
+[3:28..3:32): Unit => scala/Unit#
+[4:6..4:9): arg <= example/SymbolTest#arg().
+[5:7..5:15): shouldBe => example/SymbolTest#shouldBe().
+[5:17..5:20): arg => example/SymbolTest#arg().
+
 semanticdb/integration/src/main/scala/example/InstrumentTyper.scala
 -------------------------------------------------------------------
 
