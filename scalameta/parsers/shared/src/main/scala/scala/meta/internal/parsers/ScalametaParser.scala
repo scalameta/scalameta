@@ -3358,7 +3358,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     def parents() = {
       val parents = ListBuffer[Init](
-        autoEndPos(decltype)(initRest(decltype, allowArgss = true, allowBraces = false))
+        autoEndPos(decltype)(
+          initRest(decltype, allowArgss = true, allowBraces = false, allowTypeSingleton = false)
+        )
       )
       while (token.is[KwWith] && tryAhead[Ident]) parents += init()
       parents.toList
@@ -3777,15 +3779,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val t = autoPos(Term.This(autoPos { accept[KwThis]; Name.Anonymous() }))
       copyPos(t)(Type.Singleton(t))
     }
-    initRest(tpe, allowArgss = true, allowBraces = true)
+    initRest(tpe, allowArgss = true, allowBraces = true, allowTypeSingleton = true)
   }
 
   def initInsideAnnotation(allowArgss: Boolean): Init = {
-    initRest(exprSimpleType(), allowArgss = allowArgss, allowBraces = false)
+    initRest(
+      exprSimpleType(),
+      allowArgss = allowArgss,
+      allowBraces = false,
+      allowTypeSingleton = true
+    )
   }
 
   def initInsideTemplate(): Init = {
-    initRest(startModType(), allowArgss = true, allowBraces = false)
+    initRest(startModType(), allowArgss = true, allowBraces = false, allowTypeSingleton = false)
   }
 
   def quasiquoteInit(): Init = entrypointInit()
@@ -3797,7 +3804,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def initRest(typeParser: => Type, allowArgss: Boolean, allowBraces: Boolean): Init = autoPos {
+  def initRest(
+      typeParser: => Type,
+      allowArgss: Boolean,
+      allowBraces: Boolean,
+      allowTypeSingleton: Boolean
+  ): Init = autoPos {
     def isPendingArglist = token.is[LeftParen] || (token.is[LeftBrace] && allowBraces)
     def newlineOpt() = {
       if (dialect.allowSignificantIndentation)
@@ -3809,6 +3821,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         unquote[Init](t)
       case _ =>
         val tpe = typeParser
+        if (!allowTypeSingleton && tpe.is[Type.Singleton])
+          syntaxError(s"class type required but ${tpe.toString()} found", at = tpe.pos)
         val name = autoPos(Name.Anonymous())
         val argss = mutable.ListBuffer[List[Term]]()
         @inline def body() = {

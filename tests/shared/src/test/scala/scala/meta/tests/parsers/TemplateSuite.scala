@@ -337,4 +337,12 @@ class TemplateSuite extends ParseSuite {
     ) =
       templStat("object A { self: B => }")
   }
+
+  test("trait B extends A.type") {
+    val err = intercept[ParseException] {
+      templStat("trait B extends A.type")
+    }
+    assertNoDiff(err.shortMessage, "class type required but A.type found")
+  }
+
 }
