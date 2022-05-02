@@ -18,6 +18,14 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
 
   checkPositions[Term](
+    "a f (123)"
+  )
+
+  checkPositions[Term](
+    "a f ()"
+  )
+
+  checkPositions[Term](
     "(1 + 2).foo",
     """|Term.ApplyInfix (1 + 2)
        |""".stripMargin

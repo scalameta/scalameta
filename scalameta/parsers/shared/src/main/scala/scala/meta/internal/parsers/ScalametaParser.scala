@@ -2200,10 +2200,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val rpPos = auto.endTokenPos
       @inline def addPos(body: Term): Term = {
         body match {
-          // For `Term.Ref`, avoid using autoPos to exclude parens tokens in Term.ApplyInfix.args.
+          // For `Term.Ref` & `Lit` other than Unit, avoid using autoPos
+          // to exclude parens tokens in Term.ApplyInfix.args.
           // For `a f (b)`, autoPos include `(b)` for ApplyInfix.args position.
           // https://github.com/scalacenter/scalafix/issues/1594
           case _: Term.Ref =>
+            body
+          case l: Lit if l.value != () =>
             body
           case _ =>
             atPosWithBody(lpPos, body, rpPos)
