@@ -2185,7 +2185,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   private def argumentExprsOrPrefixExpr(location: Location): termInfixContext.Rhs = {
-    if (token.isNot[LeftBrace] && token.isNot[LeftParen]) prefixExpr(allowRepeated = false)
+    val isBrace = token.is[LeftBrace]
+    if (!isBrace && token.isNot[LeftParen]) prefixExpr(allowRepeated = false)
     else {
       def findRep(args: List[Term]): Option[Term.Repeated] = args.collectFirst {
         case Term.Assign(_, rep: Term.Repeated) => rep
@@ -2213,6 +2214,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           addPos(args match {
             case arg :: Nil =>
               maybeAnonymousFunctionInParens(arg) match {
+                case t if isBrace => t
                 case t: Lit.Unit => Term.Tuple(t :: Nil)
                 case t: Term.Tuple if t.args.lengthCompare(1) != 0 => Term.Tuple(t :: Nil)
                 case t => t
