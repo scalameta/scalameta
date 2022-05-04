@@ -1667,4 +1667,96 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     }
   }
 
+  test("pat infix: _ op (a | b)") {
+    checkTree(p"_ op (a | b)", "_ op (a | b)") {
+      Pat.ExtractInfix(
+        Pat.Wildcard(),
+        Term.Name("op"),
+        List(Pat.Alternative(Pat.Var(Term.Name("a")), Pat.Var(Term.Name("b"))))
+      )
+    }
+  }
+
+  test("pat infix: _ * (a + b)") {
+    checkTree(p"_ * (a + b)", "_ * (a + b)") {
+      Pat.ExtractInfix(
+        Pat.Wildcard(),
+        Term.Name("*"),
+        List(
+          Pat.ExtractInfix(Pat.Var(Term.Name("a")), Term.Name("+"), List(Pat.Var(Term.Name("b"))))
+        )
+      )
+    }
+  }
+
+  test("term infix: _ * (a + b)") {
+    checkTree(q"_ * (a + b)", "_ * (a + b)") {
+      Term.AnonymousFunction(
+        Term.ApplyInfix(
+          Term.Placeholder(),
+          Term.Name("*"),
+          Nil,
+          List(Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b"))))
+        )
+      )
+    }
+  }
+
+  test("term infix: 1 + (2 / 3) * 4") {
+    checkTree(q"1 + (2 / 3) * 4", "1 + 2 / 3 * 4") {
+      Term.ApplyInfix(
+        Lit.Int(1),
+        Term.Name("+"),
+        Nil,
+        List(
+          Term.ApplyInfix(
+            Term.ApplyInfix(Lit.Int(2), Term.Name("/"), Nil, List(Lit.Int(3))),
+            Term.Name("*"),
+            Nil,
+            List(Lit.Int(4))
+          )
+        )
+      )
+    }
+  }
+
+  test("term infix: 1 + { 2 / 3 } * 4") {
+    checkTree(
+      q"1 + { 2 / 3 } * 4",
+      """|1 + {
+         |  2 / 3
+         |} * 4""".stripMargin
+    ) {
+      Term.ApplyInfix(
+        Lit.Int(1),
+        Term.Name("+"),
+        Nil,
+        List(
+          Term.ApplyInfix(
+            Term.Block(List(Term.ApplyInfix(Lit.Int(2), Term.Name("/"), Nil, List(Lit.Int(3))))),
+            Term.Name("*"),
+            Nil,
+            List(Lit.Int(4))
+          )
+        )
+      )
+    }
+  }
+
+  test("term infix: { 2 / 3 } + 4") {
+    checkTree(
+      q"{ 2 / 3 } + 4",
+      """|{
+         |  2 / 3
+         |} + 4""".stripMargin
+    ) {
+      Term.ApplyInfix(
+        Term.Block(List(Term.ApplyInfix(Lit.Int(2), Term.Name("/"), Nil, List(Lit.Int(3))))),
+        Term.Name("+"),
+        Nil,
+        List(Lit.Int(4))
+      )
+    }
+  }
+
 }

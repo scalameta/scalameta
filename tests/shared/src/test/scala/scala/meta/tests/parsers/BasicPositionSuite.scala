@@ -14,7 +14,69 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
 
   checkPositions[Term](
+    "1 + (()) * 4",
+    """|Term.ApplyInfix ()) * 4
+       |""".stripMargin
+  )
+
+  checkPositions[Term](
+    "1 + ((1, 2, 3)) * 4",
+    """|Term.ApplyInfix (1, 2, 3)) * 4
+       |Term.Tuple (1, 2, 3)
+       |""".stripMargin
+  )
+
+  checkPositions[Term](
     "a f (b)"
+  )
+
+  checkPositions[Term](
+    "a f (123)",
+    """|Lit.Int (123)
+       |""".stripMargin
+  )
+
+  checkPositions[Term](
+    "a f ()"
+  )
+
+  checkPositions[Term](
+    "a f (())"
+  )
+
+  checkPositions[Term](
+    "a f ((1, 2, 3))",
+    """|Term.Tuple (1, 2, 3)
+       |""".stripMargin
+  )
+
+  checkPositions[Term](
+    "a f (()).foo",
+    """|Term.Select (()).foo
+       |Lit.Unit (())
+       |""".stripMargin
+  )
+
+  checkPositions[Term](
+    "a f (())(b)",
+    """|Term.Apply (())(b)
+       |Lit.Unit (())
+       |""".stripMargin
+  )
+
+  checkPositions[Term](
+    "1 + { 2 / 3 } * 4",
+    """|Term.ApplyInfix { 2 / 3 } * 4
+       |Term.Block { 2 / 3 }
+       |Term.ApplyInfix 2 / 3
+       |""".stripMargin
+  )
+
+  checkPositions[Term](
+    "{ 2 / 3 } + 4",
+    """|Term.Block { 2 / 3 }
+       |Term.ApplyInfix 2 / 3
+       |""".stripMargin
   )
 
   checkPositions[Term](
