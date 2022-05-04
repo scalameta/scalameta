@@ -37,7 +37,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Case](
     "case _ op (a | b) =>",
     """|Pat.ExtractInfix _ op (a | b)
-       |Pat.Alternative (a | b)
+       |Pat.Alternative a | b
        |Term.Block case _ op (a | b) =>@@
        |""".stripMargin
   )
