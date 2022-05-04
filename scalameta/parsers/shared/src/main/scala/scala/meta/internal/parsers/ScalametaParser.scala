@@ -844,10 +844,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     private final def infixTypeRestWithPrecedence(t: Type): Type = {
       val ctx = TypeInfixContext
       val base = ctx.stack
-      @inline def reduce(rhs: ctx.Rhs, op: Option[ctx.Op]): ctx.Lhs =
+      @inline def reduce(rhs: ctx.Typ, op: Option[ctx.Op]): ctx.Typ =
         ctx.reduceStack(base, rhs, rhs, op)
       @tailrec
-      def loop(rhs: ctx.Rhs): ctx.Lhs = token match {
+      def loop(rhs: ctx.Typ): ctx.Typ = token match {
         case Ident("*") if ahead(token match {
               case _: RightParen | _: Comma | _: Equals | _: RightBrace | _: EOF => true
               case _ => false
@@ -1752,20 +1752,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   // See `postfixExpr` for an involved usage example.
   // Another, much less involved usage, lives in `pattern3`.
   sealed abstract class InfixContext {
-    // Lhs is the type of the left-hand side of an infix expression.
     // (Lhs, op and targs form UnfinishedInfix).
-    // Rhs if the type of the right-hand side.
     // FinishedInfix is the type of an infix expression.
     // The conversions are necessary to push the output of finishInfixExpr on stack.
-    type Lhs
-    type Rhs
+    type Typ
     type Op <: Name
     type UnfinishedInfix <: Unfinished
-    def toLhs(rhs: Rhs): Lhs
+    def toLhs(rhs: Typ): Typ
 
     // Represents an unfinished infix expression, e.g. [a * b +] in `a * b + c`.
     protected trait Unfinished {
-      def lhs: Lhs
+      def lhs: Typ
       def op: Op
       final def precedence = op.precedence
       override def toString = s"[$lhs $op]"
@@ -1783,10 +1780,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     def reduceStack(
         stack: List[UnfinishedInfix],
-        curr: Rhs,
+        curr: Typ,
         currEnd: EndPos,
         op: Option[Op]
-    ): Lhs = {
+    ): Typ = {
       val opPrecedence = op.fold(0)(_.precedence)
       val leftAssoc = op.forall(_.isLeftAssoc)
 
@@ -1803,7 +1800,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       // Then convert the result, so that it can become someone else's rhs.
       // Repeat while precedence and associativity allow.
       @tailrec
-      def loop(rhs: Rhs): Lhs = {
+      def loop(rhs: Typ): Typ = {
         if (!canReduce) {
           toLhs(rhs)
         } else {
@@ -1820,7 +1817,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // then takes the right-hand side (which can have multiple args), e.g. ` (y, z)`,
     // and creates `x + (y, z)`.
     // We need to carry endPos explicitly because its extent may be bigger than rhs because of parent of whatnot.
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: EndPos): Rhs
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ
   }
 
   // Infix syntax in terms is borderline crazy.
@@ -1828,17 +1825,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   // For example, did you know that `a * b + (c, d) * (f, g: _*)` means:
   // a.$times(b).$plus(scala.Tuple2(c, d).$times(f, g: _*))?!
   //
-  // Therefore, Lhs = List[Term], Rhs = List[Term], FinishedInfix = Term.
-  //
   // Actually there's even crazier stuff in scala-compiler.jar.
   // Apparently you can parse and typecheck `a + (bs: _*) * c`,
   // however I'm going to error out on this.
   object termInfixContext extends InfixContext {
-    type Lhs = Term
-    type Rhs = Term
+    type Typ = Term
     type Op = Term.Name
 
-    def toLhs(rhs: Rhs): Lhs = rhs match {
+    def toLhs(rhs: Typ): Typ = rhs match {
       case Term.Tuple((arg @ (_: Lit.Unit | _: Term.Tuple)) :: Nil) => arg
       case _ => rhs
     }
@@ -1846,7 +1840,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // We need to carry lhsStart/lhsEnd separately from lhs.pos
     // because their extent may be bigger than lhs because of parentheses or whatnot.
     case class UnfinishedInfix(
-        lhs: Lhs,
+        lhs: Typ,
         op: Op,
         targs: List[Type]
     ) extends Unfinished {
@@ -1856,7 +1850,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     }
 
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: EndPos): Rhs = {
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ = {
       val UnfinishedInfix(lhs, op, targs) = unf
       if (lhs.is[Term.Repeated])
         syntaxError("repeated argument not allowed here", at = lhs.tokens.last.prev)
@@ -1892,18 +1886,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   // In comparison with terms, patterns are trivial.
   implicit object patInfixContext extends InfixContext {
-    type Lhs = Pat
-    type Rhs = Pat
+    type Typ = Pat
     type Op = Term.Name
 
-    def toLhs(rhs: Rhs): Lhs = rhs match {
+    def toLhs(rhs: Typ): Typ = rhs match {
       case Pat.Tuple((arg @ (_: Lit.Unit | _: Pat.Tuple)) :: Nil) => arg
       case _ => rhs
     }
 
-    case class UnfinishedInfix(lhs: Lhs, op: Op) extends Unfinished
+    case class UnfinishedInfix(lhs: Typ, op: Op) extends Unfinished
 
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: EndPos): Rhs = {
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ = {
       val UnfinishedInfix(lhs, op) = unf
       val args = rhs match {
         case _: Lit.Unit => Nil
@@ -1915,15 +1908,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   private object TypeInfixContext extends InfixContext {
-    type Lhs = Type
-    type Rhs = Type
+    type Typ = Type
     type Op = Type.Name
 
-    def toLhs(rhs: Rhs): Lhs = rhs
+    def toLhs(rhs: Typ): Typ = rhs
 
-    case class UnfinishedInfix(lhs: Lhs, op: Op) extends Unfinished
+    case class UnfinishedInfix(lhs: Typ, op: Op) extends Unfinished
 
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Rhs, rhsEnd: EndPos): Rhs = {
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ = {
       val UnfinishedInfix(lhs, op) = unf
       atPos(lhs, rhsEnd)(Type.ApplyInfix(lhs, op, rhs))
     }
@@ -1947,7 +1939,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // rhsStartK/rhsEndK may be bigger than then extent of rhsK,
     // so we really have to track them separately.
     @tailrec
-    def loop(rhsK: ctx.Rhs): ctx.Rhs = {
+    def loop(rhsK: ctx.Typ): ctx.Typ = {
       if (!token.is[Ident] && !token.is[Unquote] &&
         !(token.is[KwMatch] && dialect.allowMatchAsOperator)) {
         // Infix chain has ended.
@@ -2184,7 +2176,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  private def argumentExprsOrPrefixExpr(location: Location): termInfixContext.Rhs = {
+  private def argumentExprsOrPrefixExpr(location: Location): termInfixContext.Typ = {
     val isBrace = token.is[LeftBrace]
     if (!isBrace && token.isNot[LeftParen]) prefixExpr(allowRepeated = false)
     else {
@@ -2520,7 +2512,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val lhs = simplePattern(badPattern3, isForComprehension = isForComprehension)
       val base = ctx.stack
       @tailrec
-      def loop(rhs: ctx.Rhs): ctx.Rhs = {
+      def loop(rhs: ctx.Typ): ctx.Typ = {
         val op =
           if (isIdentExcept("|") || token.is[Unquote]) Some(termName())
           else None
