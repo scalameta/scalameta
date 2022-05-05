@@ -1758,7 +1758,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     type Typ
     type Op <: Name
     type UnfinishedInfix <: Unfinished
-    def toLhs(rhs: Typ): Typ
 
     // Represents an unfinished infix expression, e.g. [a * b +] in `a * b + c`.
     protected trait Unfinished {
@@ -1802,7 +1801,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       @tailrec
       def loop(rhs: Typ): Typ = {
         if (!canReduce) {
-          toLhs(rhs)
+          rhs
         } else {
           val lhs = pop()
           val fin = finishInfixExpr(lhs, rhs, currEnd)
@@ -1832,11 +1831,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     type Typ = Term
     type Op = Term.Name
 
-    def toLhs(rhs: Typ): Typ = rhs match {
-      case Term.Tuple((arg @ (_: Lit.Unit | _: Term.Tuple)) :: Nil) => arg
-      case _ => rhs
-    }
-
     // We need to carry lhsStart/lhsEnd separately from lhs.pos
     // because their extent may be bigger than lhs because of parentheses or whatnot.
     case class UnfinishedInfix(
@@ -1851,7 +1845,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ = {
-      val UnfinishedInfix(lhs, op, targs) = unf
+      val UnfinishedInfix(lhsExt, op, targs) = unf
+      val lhs = lhsExt match {
+        case Term.Tuple(arg :: Nil) => arg
+        case x => x
+      }
+
       if (lhs.is[Term.Repeated])
         syntaxError("repeated argument not allowed here", at = lhs.tokens.last.prev)
 
@@ -1861,7 +1860,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case Term.Tuple(args) => args
           case _ => rhs :: Nil
         }
-        atPos(lhs, rhsEnd)(Term.ApplyInfix(lhs, op, targs, args))
+        atPos(lhsExt, rhsEnd)(Term.ApplyInfix(lhs, op, targs, args))
       }
 
       op match {
@@ -1874,7 +1873,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
           rhs match {
             case Term.PartialFunction(cases) =>
-              atPos(lhs, rhsEnd)(Term.Match(lhs, cases))
+              atPos(lhsExt, rhsEnd)(Term.Match(lhs, cases))
             case _ =>
               syntaxError("match statement requires cases", at = lhs.tokens.last.prev)
           }
@@ -1889,29 +1888,26 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     type Typ = Pat
     type Op = Term.Name
 
-    def toLhs(rhs: Typ): Typ = rhs match {
-      case Pat.Tuple((arg @ (_: Lit.Unit | _: Pat.Tuple)) :: Nil) => arg
-      case _ => rhs
-    }
-
     case class UnfinishedInfix(lhs: Typ, op: Op) extends Unfinished
 
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ = {
-      val UnfinishedInfix(lhs, op) = unf
+      val UnfinishedInfix(lhsExt, op) = unf
+      val lhs = lhsExt match {
+        case Pat.Tuple(arg :: Nil) => arg
+        case x => x
+      }
       val args = rhs match {
         case _: Lit.Unit => Nil
         case Pat.Tuple(args) => args
         case _ => rhs :: Nil
       }
-      atPos(lhs, rhsEnd)(Pat.ExtractInfix(lhs, op, args))
+      atPos(lhsExt, rhsEnd)(Pat.ExtractInfix(lhs, op, args))
     }
   }
 
   private object TypeInfixContext extends InfixContext {
     type Typ = Type
     type Op = Type.Name
-
-    def toLhs(rhs: Typ): Typ = rhs
 
     case class UnfinishedInfix(lhs: Typ, op: Op) extends Unfinished
 
@@ -2186,33 +2182,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
       val lpPos = auto.startTokenPos
       val args = checkNoTripleDots(argumentExprs(location))
-      val rpPos = auto.endTokenPos
-      @inline def addPos(body: Term): Term = {
-        body match {
-          // For `Term.Ref`, avoid using autoPos to exclude parens tokens in Term.ApplyInfix.args.
-          // For `a f (b)`, autoPos include `(b)` for ApplyInfix.args position.
-          // https://github.com/scalacenter/scalafix/issues/1594
-          case _: Term.Ref =>
-            body
-          case _ =>
-            atPosWithBody(lpPos, body, rpPos)
-        }
-      }
       token match {
         case Dot() | LeftBracket() | LeftParen() | LeftBrace() | Underscore() =>
           findRep(args).foreach(x => syntaxError("repeated argument not allowed here", at = x))
-          simpleExprRest(addPos(makeTupleTerm(lpPos, args)), canApply = true)
+          simpleExprRest(makeTupleTerm(lpPos, args), canApply = true, startPos = lpPos)
         case _ =>
-          addPos(args match {
+          args match {
             case arg :: Nil =>
-              maybeAnonymousFunctionInParens(arg) match {
-                case t if isBrace => t
-                case t: Lit.Unit => Term.Tuple(t :: Nil)
-                case t: Term.Tuple if t.args.lengthCompare(1) != 0 => Term.Tuple(t :: Nil)
-                case t => t
-              }
+              val res = maybeAnonymousFunctionInParens(arg)
+              if (isBrace) res else autoEndPos(lpPos)(Term.Tuple(res :: Nil))
             case _ => makeTupleTerm(lpPos, args)
-          })
+          }
       }
     }
   }
@@ -2617,10 +2597,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _: LeftParen =>
           val lpPos = auto.startTokenPos
           val patterns = inParensOnOpen(if (token.is[RightParen]) Nil else noSeq.patterns())
+          val tuple = makeTuple(lpPos, checkNoTripleDots(patterns), Lit.Unit(), Pat.Tuple.apply)
           patterns match {
-            case (_: Lit.Unit) :: Nil if isRhs => Pat.Tuple(patterns)
-            case Pat.Tuple(x) :: Nil if isRhs && x.lengthCompare(1) != 0 => Pat.Tuple(patterns)
-            case _ => makeTuple(lpPos, checkNoTripleDots(patterns), Lit.Unit(), Pat.Tuple.apply)
+            case x :: Nil if isRhs && !x.is[Quasi] => Pat.Tuple(tuple :: Nil)
+            case _ => tuple
           }
         case _: MacroQuote =>
           QuotedPatternContext.within {
