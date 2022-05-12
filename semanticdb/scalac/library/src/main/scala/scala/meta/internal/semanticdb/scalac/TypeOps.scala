@@ -76,6 +76,8 @@ trait TypeOps { self: SemanticdbOps =>
            */
           case g.WildcardType =>
             s.NoType
+          case _: g.BoundedWildcardType =>
+            s.NoType
           case gother =>
             sys.error(s"unsupported type ${gother}: ${g.showRaw(gother)}")
         }
