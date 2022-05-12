@@ -63,3 +63,21 @@
   * https://github.com/scalameta/metadoc
   * https://github.com/scalameta/metals
   * https://github.com/sbt/sbt (see `SemanticdbPlugin`)
+
+## Releasing for a specific version
+
+Realeasing for a specific existing version, which is needed for example in case of new Scala version, is more complicated. The flow is as follows:
+
+- set the needed secrets (https://github.com/sbt/sbt-ci-release#secrets)
+
+- run sbt console, check if the credentials are available using `show credentials`, you might need to run sbt from bash when having issues with other shells
+
+- run `set every version := "4.5.9"` - replace `4.5.9` with the specific version you are releasing for
+
+- run `++2.12.16` or anothe Scala version you need
+
+- run `semanticdbScalacCore/publishSigned`, `semanticdbScalacPlugin/publishSigned` and `metac/publishSigned`
+
+- make sure that everything is properly generated to `target/sonatype-staging` directory
+
+- run `sonatypeBundleRelease`
