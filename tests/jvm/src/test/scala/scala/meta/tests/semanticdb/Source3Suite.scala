@@ -87,7 +87,8 @@ class Source3Suite extends FunSuite {
     expected,
     compat = List(
       "2.12.14" -> expected.replace("scala/package.List.", "scala/collection/immutable/List."),
-      "2.12.15" -> expected.replace("scala/package.List.", "scala/collection/immutable/List.")
+      "2.12.15" -> expected.replace("scala/package.List.", "scala/collection/immutable/List."),
+      "2.12.16" -> expected.replace("scala/package.List.", "scala/collection/immutable/List.")
     )
   )
 
