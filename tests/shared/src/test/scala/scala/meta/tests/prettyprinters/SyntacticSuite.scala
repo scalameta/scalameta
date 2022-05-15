@@ -1336,7 +1336,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         Term.Name("foo"),
         Term.Name("map"),
         Nil,
-        List(Term.New(Init(Type.Name("foo"), Name(""), List(List(Term.Placeholder())))))
+        List(
+          Term.AnonymousFunction(
+            Term.New(Init(Type.Name("foo"), Name(""), List(List(Term.Placeholder()))))
+          )
+        )
       )
     }
   }
@@ -1363,7 +1367,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         Term.Name("map"),
         Nil,
         List(
-          Term.ApplyType(Term.Select(Term.Placeholder(), Term.Name("foo")), List(Type.Name("A")))
+          Term.AnonymousFunction(
+            Term.ApplyType(Term.Select(Term.Placeholder(), Term.Name("foo")), List(Type.Name("A")))
+          )
         )
       )
     }
