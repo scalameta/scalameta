@@ -1329,6 +1329,52 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       )
     }
   }
+
+  test("anonymous function with new") {
+    checkTree(q"foo map (new foo(_))") {
+      Term.ApplyInfix(
+        Term.Name("foo"),
+        Term.Name("map"),
+        Nil,
+        List(
+          Term.AnonymousFunction(
+            Term.New(Init(Type.Name("foo"), Name(""), List(List(Term.Placeholder()))))
+          )
+        )
+      )
+    }
+  }
+
+  test("anonymous function with select") {
+    checkTree(q"foo map (foo(_).bar)") {
+      Term.ApplyInfix(
+        Term.Name("foo"),
+        Term.Name("map"),
+        Nil,
+        List(
+          Term.AnonymousFunction(
+            Term.Select(Term.Apply(Term.Name("foo"), List(Term.Placeholder())), Term.Name("bar"))
+          )
+        )
+      )
+    }
+  }
+
+  test("anonymous function with apply type") {
+    checkTree(q"foo map (_.foo[A])") {
+      Term.ApplyInfix(
+        Term.Name("foo"),
+        Term.Name("map"),
+        Nil,
+        List(
+          Term.AnonymousFunction(
+            Term.ApplyType(Term.Select(Term.Placeholder(), Term.Name("foo")), List(Type.Name("A")))
+          )
+        )
+      )
+    }
+  }
+
   test("#2317 init block") {
     checkStat(
       """new Foo({
