@@ -55,6 +55,12 @@ package object dialects {
     .withAllowQuestionMarkPlaceholder(true)
 
   /**
+   * Dialect ending with Scala 2.13.9 for legacy F[_] syntax instead of F[?]
+   */
+  implicit val Scala213Pre9 = Scala213
+    .withAllowQuestionMarkPlaceholder(false)
+
+  /**
    * Dialect starting with Scala 2.13.6 for `-Xsource:3` option
    */
   implicit val Scala213Source3 = Scala213
