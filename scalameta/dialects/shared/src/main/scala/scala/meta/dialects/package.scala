@@ -79,6 +79,12 @@ package object dialects {
     .withAllowPlusMinusUnderscoreAsIdent(true)
     .withAllowGivenImports(true)
 
+  /**
+   * Dialect ending with Scala 2.12.15 for legacy F[_] syntax instead of F[?]
+   */
+  implicit val Scala212Pre16 = Scala212
+    .withAllowQuestionMarkPlaceholder(false)
+
   implicit val Scala = Scala213 // alias for latest Scala dialect.
 
   implicit val Sbt0136 = Scala210
