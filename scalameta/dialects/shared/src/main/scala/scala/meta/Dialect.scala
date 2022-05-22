@@ -707,7 +707,9 @@ object Dialect extends InternalDialect {
     Scala211,
     Scala212,
     Scala213,
+    Scala213Pre9,
     Scala213Source3,
+    Scala212Pre16,
     Scala212Source3,
     Typelevel211,
     Typelevel212
