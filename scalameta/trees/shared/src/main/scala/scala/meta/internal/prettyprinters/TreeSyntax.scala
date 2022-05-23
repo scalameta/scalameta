@@ -15,11 +15,13 @@ import Show.{
 }
 import scala.meta.internal.trees.{root => _, branch => _, _}
 import scala.meta.internal.tokenizers.Chars._
+import scala.meta.internal.trees.Origin.Parsed
 import org.scalameta.adt._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
 import scala.compat.Platform.EOL
 import scala.meta.inputs.Position
+import scala.meta.tokens.Token
 
 object TreeSyntax {
   private final object SyntaxInstances {
@@ -688,7 +690,20 @@ object TreeSyntax {
           s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}"))
         )
       case t: Type.Placeholder =>
-        if (dialect.allowQuestionMarkPlaceholder) m(SimpleTyp, s(kw("?"), t.bounds))
+        /* In order not to break existing tools `.syntax` should still return
+         * `_` instead `?` unless specifically used.
+         */
+        def isScala3Dialect = dialect.allowSignificantIndentation
+        def questionMarkUsed = t.origin match {
+          case _: Origin.Parsed =>
+            !t.tokens.exists {
+              case _: Token.Underscore => true
+              case _ => false
+            }
+          case _ => false
+        }
+        if (dialect.allowQuestionMarkPlaceholder && (isScala3Dialect || questionMarkUsed))
+          m(SimpleTyp, s(kw("?"), t.bounds))
         else m(SimpleTyp, s(kw("_"), t.bounds))
       case t: Type.Bounds =>
         s(
