@@ -1123,7 +1123,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def selector(t: Term): Term.Select = autoEndPos(t)(Term.Select(t, termName()))
+  def selector(t: Term, startPos: Int): Term.Select =
+    autoEndPos(startPos)(Term.Select(t, termName()))
+  @inline
+  def selector(t: Term): Term.Select = selector(t, t.startTokenPos)
   @tailrec
   private final def selectors(t: Term): Term.Ref = {
     val t1 = selector(t)
@@ -2142,7 +2145,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           newLineOptWhenFollowedBy[Dot]
           simpleExprRest(clause, canApply = false, startPos = startPos)
         } else {
-          simpleExprRest(selector(t), canApply = true, startPos = startPos)
+          simpleExprRest(selector(t, startPos), canApply = true, startPos = startPos)
         }
       case LeftBracket() =>
         t match {
