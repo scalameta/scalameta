@@ -83,7 +83,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Term](
     "foo == (a + b).c(d)",
     """|Term.Apply (a + b).c(d)
-       |Term.Select a + b).c
+       |Term.Select (a + b).c
        |Term.ApplyInfix a + b
        |""".stripMargin
   )
