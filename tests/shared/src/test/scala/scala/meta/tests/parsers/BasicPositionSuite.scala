@@ -80,6 +80,13 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Term.ApplyInfix (1 + 2)
        |""".stripMargin
   )
+  checkPositions[Term](
+    "foo == (a + b).c(d)",
+    """|Term.Apply (a + b).c(d)
+       |Term.Select a + b).c
+       |Term.ApplyInfix a + b
+       |""".stripMargin
+  )
   checkPositions[Stat](
     // Issue #333
     """def shortInfo: String = s"created=$x"""",
