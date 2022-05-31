@@ -368,9 +368,7 @@ class TermSuite extends ParseSuite {
 
   test("_: Int => x") {
     assertTerm("_: Int => x") {
-      AnonymousFunction(
-        Ascribe(Placeholder(), Type.Function(List(Type.Name("Int")), Type.Name("x")))
-      )
+      Ascribe(Placeholder(), Type.Function(List(Type.Name("Int")), Type.Name("x")))
     }
     val Term.Function(
       List(Term.Param(Nil, Name.Anonymous(), Some(Type.Name("Int")), None)),
@@ -1196,9 +1194,7 @@ class TermSuite extends ParseSuite {
   }
   test("anonymous-function-spec-3.2") {
     assertTerm("(_: Int)")(
-      AnonymousFunction(
-        Ascribe(Placeholder(), Type.Name("Int"))
-      )
+      Ascribe(Placeholder(), Type.Name("Int"))
     )
   }
   test("anonymous-function-spec-4") {

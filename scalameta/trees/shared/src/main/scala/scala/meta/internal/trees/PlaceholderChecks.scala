@@ -18,12 +18,12 @@ object PlaceholderChecks {
     case _ => false
   }
 
-  def hasPlaceholder(tree: Tree): Boolean = {
+  def hasPlaceholder(tree: Tree, includeArg: => Boolean): Boolean = {
     val queue = new mutable.Queue[Tree]
     @tailrec
-    def iter: Boolean = {
-      val term = queue.dequeue()
-      isPlaceholder(term) || (term match {
+    def iter: Boolean =
+      queue.dequeue() match {
+        case t if isPlaceholder(t) => t.ne(tree) || includeArg
         case t: Term.Select => queue += t.qual; iter
         case t: Term.Tuple => t.args.exists(isPlaceholder)
         case t: Term.Apply =>
@@ -34,10 +34,9 @@ object PlaceholderChecks {
         case t: Term.ApplyType => queue += t.fun; iter
         case t: Term.New => queue += t.init; iter
         case t: Term.Repeated => queue += t.expr; iter
-        case _: Term.AnonymousFunction => queue.nonEmpty && iter
+        case t: Term.AnonymousFunction => t.ne(tree) && queue.nonEmpty && iter
         case t => t.children.exists(isPlaceholder) || queue.nonEmpty && iter
-      })
-    }
+      }
     queue += tree
     iter
   }

@@ -630,7 +630,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     })
     maybeTupleArgs match {
       case singleArg :: Nil =>
-        makeTupleTerm(lpPos, maybeAnonymousFunctionInParens(singleArg) :: Nil)
+        makeTupleTerm(lpPos, maybeAnonymousFunction(singleArg) :: Nil)
       case multipleArgs =>
         val repeatedArgs = multipleArgs.collect { case repeated: Term.Repeated => repeated }
         repeatedArgs.foreach(arg =>
@@ -2192,7 +2192,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _ =>
           args match {
             case arg :: Nil =>
-              val res = maybeAnonymousFunctionInParens(arg)
+              val res = maybeAnonymousFunction(arg)
               if (isBrace) res else autoEndPos(lpPos)(Term.Tuple(res :: Nil))
             case _ => makeTupleTerm(lpPos, args)
           }
@@ -4334,15 +4334,9 @@ object ScalametaParser {
   private def maybeAnonymousFunctionUnlessPostfix(expr: Term)(location: Location): Term =
     if (location == Location.PostfixStat) expr else maybeAnonymousFunction(expr)
 
-  @inline
-  private def maybeAnonymousFunctionInParens(expr: Term): Term = expr match {
-    case _: Term.Ascribe | _: Term.Repeated => expr
-    case _ => maybeAnonymousFunction(expr)
-  }
-
-  private def maybeAnonymousFunction(expr: Term): Term = expr match {
-    case _: Term.Placeholder | _: Term.AnonymousFunction | _: Term.Repeated => expr
-    case t => if (PlaceholderChecks.hasPlaceholder(t)) copyPos(t)(Term.AnonymousFunction(t)) else t
+  private def maybeAnonymousFunction(t: Term): Term = {
+    val ok = PlaceholderChecks.hasPlaceholder(t, includeArg = false)
+    if (ok) copyPos(t)(Term.AnonymousFunction(t)) else t
   }
 
 }

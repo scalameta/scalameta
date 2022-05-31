@@ -1805,4 +1805,18 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     }
   }
 
+  test("term anon func: foo.bar(_: Int, _: String)") {
+    checkTree(q"foo.bar(_: Int, _: String)", "foo.bar(_: Int, _: String)") {
+      Term.AnonymousFunction(
+        Term.Apply(
+          Term.Select(Term.Name("foo"), Term.Name("bar")),
+          List(
+            Term.Ascribe(Term.Placeholder(), Type.Name("Int")),
+            Term.Ascribe(Term.Placeholder(), Type.Name("String"))
+          )
+        )
+      )
+    }
+  }
+
 }
