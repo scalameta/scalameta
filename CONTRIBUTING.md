@@ -66,8 +66,7 @@ Tips to make your edit/test/debug worflow as productive as possible:
   least three lines were tried, committed, and reverted/refactored, and more
   than 10 were tried without committing.
 - **Feel free to send Proof-Of-Concept PRs** that you don't intend to get merged.
-- **Sign the Scala CLA**. Signed [CLA](https://www.lightbend.com/contribute/cla/scala)
-  is necessary to merge your PR.
+
 
 ## Documentation Guidelines
 
