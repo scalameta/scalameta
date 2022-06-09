@@ -66,7 +66,10 @@
 
 ## Releasing for a specific version
 
-Realeasing for a specific existing version, which is needed for example in case of new Scala version, is more complicated. The flow is as follows:
+Releasing for a specific existing version might be needed for example in case of new Scala version.
+
+To peform it on CI, create and push a tag with a special name: `semanticdb_v${existing-scalameta-version}_${scala_version}`.
+You can also do it manually. The local flow is:
 
 - set the needed secrets (https://github.com/sbt/sbt-ci-release#secrets)
 
