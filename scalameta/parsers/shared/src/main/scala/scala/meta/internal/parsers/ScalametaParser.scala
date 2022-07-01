@@ -487,18 +487,23 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def isVarargStarParam() =
     dialect.allowPostfixStarVarargSplices && isStar && token.next.is[RightParen]
 
-  @classifier
-  trait MacroSplicedIdent {
-    def unapply(token: Token): Boolean = {
-      dialect.allowSpliceAndQuote && QuotedSpliceContext.isInside() &&
-      isIdentAnd(name => name.size > 1 && name.head == '$')
+  private trait MacroIdent {
+    protected def ident(token: Token): Option[String]
+    final def unapply(token: Token): Option[String] =
+      if (dialect.allowSpliceAndQuote && QuotedSpliceContext.isInside()) ident(token) else None
+  }
+
+  private object MacroSplicedIdent extends MacroIdent {
+    protected def ident(token: Token): Option[String] = token match {
+      case Ident(value) if value.length > 1 && value.charAt(0) == '$' => Some(value.substring(1))
+      case _ => None
     }
   }
 
-  @classifier
-  trait MacroQuotedIdent {
-    def unapply(token: Token): Boolean = {
-      dialect.allowSpliceAndQuote && QuotedSpliceContext.isInside() && token.is[Constant.Symbol]
+  private object MacroQuotedIdent extends MacroIdent {
+    protected def ident(token: Token): Option[String] = token match {
+      case Constant.Symbol(value) => Some(value.name)
+      case _ => None
     }
   }
 
@@ -899,8 +904,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val res = token match {
         case LeftParen() => makeTupleType(startPos, inParensOnOpen(types()))
         case Underscore() => next(); Type.Placeholder(typeBounds())
-        case MacroSplicedIdent() =>
-          Type.Macro(macroSplicedIdent())
+        case MacroSplicedIdent(ident) =>
+          Type.Macro(macroSplicedIdent(ident))
         case MacroSplice() =>
           Type.Macro(macroSplice())
         case Ident("?") if dialect.allowQuestionMarkPlaceholder =>
@@ -2028,10 +2033,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Success(macroQuote())
         case MacroSplice() =>
           Success(macroSplice())
-        case MacroQuotedIdent() =>
-          Success(macroQuotedIdent())
-        case MacroSplicedIdent() =>
-          Success(macroSplicedIdent())
+        case MacroQuotedIdent(ident) =>
+          Success(macroQuotedIdent(ident))
+        case MacroSplicedIdent(ident) =>
+          Success(macroSplicedIdent(ident))
         case _: Literal =>
           Success(literal())
         case _: Interpolation.Id =>
@@ -2104,24 +2109,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def macroQuotedIdent(): Term = autoPos {
-    token match {
-      case Constant.Symbol(value) =>
-        val name = atCurPosNext(Term.Name(value.name))
-        Term.QuotedMacroExpr(name)
-      case _ =>
-        syntaxError("Expected quoted ident", at = token)
-    }
-  }
+  @inline private def macroQuotedIdent(ident: String): Term =
+    macroIdent(ident, Term.QuotedMacroExpr.apply)
 
-  private def macroSplicedIdent(): Term = autoPos {
-    token match {
-      case Ident(value) if value.length() > 1 && value.head == '$' =>
-        val name = atCurPosNext(Term.Name(value.stripPrefix("$")))
-        Term.SplicedMacroExpr(name)
-      case _ =>
-        syntaxError("Expected quoted ident", at = token)
-    }
+  @inline private def macroSplicedIdent(ident: String): Term =
+    macroIdent(ident, Term.SplicedMacroExpr.apply)
+
+  private def macroIdent(ident: String, f: Term.Name => Term): Term = {
+    val curpos = auto.startTokenPos
+    next()
+    autoEndPos(curpos)(f(atPos(curpos)(Term.Name(ident))))
   }
 
   private def simpleExprRest(t: Term, canApply: Boolean): Term =
@@ -2610,8 +2607,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           QuotedPatternContext.within {
             Pat.Macro(macroQuote())
           }
-        case MacroQuotedIdent() =>
-          Pat.Macro(macroQuotedIdent())
+        case MacroQuotedIdent(ident) =>
+          Pat.Macro(macroQuotedIdent(ident))
         case _: KwGiven =>
           next()
           Pat.Given(patternTyp(allowInfix = false, allowImmediateTypevars = false))
