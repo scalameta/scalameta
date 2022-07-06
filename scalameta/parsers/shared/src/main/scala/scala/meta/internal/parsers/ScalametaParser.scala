@@ -490,7 +490,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @classifier
   trait MacroSplicedIdent {
     def unapply(token: Token): Boolean = {
-      dialect.allowSpliceAndQuote && QuotedSpliceContext.isInside() && isIdentAnd(_.head == '$')
+      dialect.allowSpliceAndQuote && QuotedSpliceContext.isInside() &&
+      isIdentAnd(name => name.size > 1 && name.head == '$')
     }
   }
 
@@ -2113,9 +2114,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def macroSplicedIdent(): Term = autoPos {
+  private def macroSplicedIdent(): Term = autoPos {
     token match {
-      case Ident(value) =>
+      case Ident(value) if value.length() > 1 && value.head == '$' =>
         val name = atCurPosNext(Term.Name(value.stripPrefix("$")))
         Term.SplicedMacroExpr(name)
       case _ =>
