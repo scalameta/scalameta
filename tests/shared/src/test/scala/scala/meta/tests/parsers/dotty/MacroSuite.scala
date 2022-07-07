@@ -421,4 +421,15 @@ class MacroSuite extends BaseDottySuite {
       )
     )
   }
+  test("no-name") {
+    runTestAssert[Stat](
+      "'{ val x: Int = $ }"
+    )(
+      Term.QuotedMacroExpr(
+        Term.Block(
+          List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Term.Name("$")))
+        )
+      )
+    )
+  }
 }
