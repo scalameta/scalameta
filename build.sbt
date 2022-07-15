@@ -38,6 +38,10 @@ commands += Command.command("ci-windows") { s =>
   s"testsJVM/all:testOnly -- --exclude-tags=SkipWindows" ::
     s
 }
+commands += Command.command("test-semanticdb") { s =>
+  s"semanticdbTests/all:testOnly -- --exclude-tags=SkipWindows" ::
+    s
+}
 commands += Command.command("mima") { s =>
   "mimaReportBinaryIssues" ::
     "doc" ::
@@ -142,7 +146,7 @@ lazy val metac = project
   .settings(
     publishableSettings,
     fullCrossVersionSettings,
-    crossScalaVersions := LanguageVersions,
+    // crossScalaVersions := LanguageVersions,
     mimaPreviousArtifacts := Set.empty,
     description := "Scalac 2.x launcher that generates SemanticDB on compile",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
@@ -275,6 +279,7 @@ lazy val semanticdbIntegration = project
   .settings(
     description := "Sources to compile to build SemanticDB for tests.",
     sharedSettings,
+    fullCrossVersionSettings,
     nonPublishableSettings,
     // the sources in this project intentionally produce warnings to test the
     // diagnostics pipeline in semanticdb-scalac.
@@ -314,6 +319,7 @@ lazy val semanticdbIntegrationMacros = project
   .settings(
     sharedSettings,
     nonPublishableSettings,
+    fullCrossVersionSettings,
     enableMacros
   )
 
@@ -344,6 +350,24 @@ lazy val testkit = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .jsSettings(commonJsSettings)
   .nativeSettings(nativeSettings)
 
+lazy val semanticdbTests = project
+  .in(file("semanticdbTests"))
+  .configs(Slow, All)
+  .settings(
+    sharedSettings,
+    fullCrossVersionSettings,
+    nonPublishableSettings,
+    libraryDependencies ++= List(
+      "io.get-coursier" %% "coursier" % "2.0.0-RC5-6"
+    ),
+    testFrameworks := List(new TestFramework("munit.Framework")),
+    exposePaths("tests", Test),
+    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
+  )
+  .dependsOn(metac, semanticdbIntegration, scalameta.jvm, testkit.jvm)
+  .settings(testSettings: _*)
+  .enablePlugins(BuildInfoPlugin)
+
 lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("tests"))
   .configs(Slow, All)
@@ -351,17 +375,9 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     sharedSettings,
     testFrameworks := List(new TestFramework("munit.Framework")),
     nonPublishableSettings,
-    description := "Tests for scalameta APIs",
-    exposePaths("tests", Test)
+    description := "Tests for scalameta APIs"
   )
   .settings(testSettings: _*)
-  .jvmSettings(
-    libraryDependencies ++= List(
-      "io.get-coursier" %% "coursier" % "2.0.0-RC5-6"
-    ),
-    // Needed because some tests rely on the --usejavacp option
-    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
-  )
   .jvmConfigure(
     _.dependsOn(metac, semanticdbIntegration)
   )
@@ -442,7 +458,7 @@ lazy val bench = project
       (Jmh / runMain).toTask(s"  ${buf.result.mkString(" ")}")
     }).evaluated
   )
-  .dependsOn(tests.jvm)
+  .dependsOn(semanticdbTests)
 
 // ==========================================
 // Settings

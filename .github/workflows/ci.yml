@@ -12,22 +12,26 @@ jobs:
       fail-fast: false
       matrix:
         command:
-          - "++2.11.12 testsJVM/test"
-          - "++2.12.10 testsJVM/test"
-          - "++2.12.11 testsJVM/test"
-          - "++2.12.12 testsJVM/test"
-          - "++2.12.13 testsJVM/test"
-          - "++2.12.14 testsJVM/test"
+          - "++2.12.16 ++2.11.12 semanticdbTests/test"
+          - "++2.12.16 ++2.11.12 testsJVM/test"
+          - "++2.12.16 ++2.12.10 semanticdbTests/test"
+          - "++2.12.16 ++2.12.11 semanticdbTests/test"
+          - "++2.12.16 ++2.12.12 semanticdbTests/test"
+          - "++2.12.16 ++2.12.13 semanticdbTests/test"
+          - "++2.12.16 ++2.12.14 semanticdbTests/test"
+          - "++2.12.16 ++2.12.15 semanticdbTests/test"
+          - "++2.12.16 semanticdbTests/test"
           - "++2.12.16 testsJVM/test"
           - "++2.12.16 testsJS/test"
           - "++2.12.16 testsNative/test"
-          - "++2.13.1 testsJVM/test"
-          - "++2.13.2 testsJVM/test"
-          - "++2.13.3 testsJVM/test"
-          - "++2.13.4 testsJVM/test"
-          - "++2.13.5 testsJVM/test"
-          - "++2.13.6 testsJVM/test"
-          - "++2.13.7 testsJVM/test"
+          - "++2.13.1 semanticdbTests/test"
+          - "++2.13.2 semanticdbTests/test"
+          - "++2.13.3 semanticdbTests/test"
+          - "++2.13.4 semanticdbTests/test"
+          - "++2.13.5 semanticdbTests/test"
+          - "++2.13.6 semanticdbTests/test"
+          - "++2.13.7 semanticdbTests/test"
+          - "++2.13.8 semanticdbTests/test"
           - "++2.13.8 testsJVM/test"
           - "++2.13.8 testsJS/test"
           - "++2.13.8 testsNative/test"
@@ -48,6 +52,7 @@ jobs:
         with:
           java-version: adopt@1.11
       - run: sbt ++2.13.8 testsJVM/test
+      - run: sbt ++2.13.8 semanticdbTests/test
   windows:
     name: Windows tests
     runs-on: windows-latest
@@ -55,6 +60,8 @@ jobs:
       - uses: actions/checkout@v3
       - uses: olafurpg/setup-scala@v13
       - run: sbtx ci-windows
+        shell: bash
+      - run: sbtx test-semanticdb
         shell: bash
   checks:
     name: Scalafmt
