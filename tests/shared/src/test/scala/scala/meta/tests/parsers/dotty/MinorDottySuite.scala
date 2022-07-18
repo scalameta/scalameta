@@ -43,6 +43,66 @@ class MinorDottySuite extends BaseDottySuite {
     stat("def open(open: open): open = ???").structure
   }
 
+  test("open-soft-modifier-case") {
+    runTestAssert[Source](
+      """|case class OHLCPrice(
+         |    val open: Int
+         |) {
+         |  val price = OHLCPrice(1)
+         |  val price1 = price.open
+         |  val price2 = 1
+         |}""".stripMargin,
+      assertLayout = Some(
+        """|case class OHLCPrice(val open: Int) {
+           |  val price = OHLCPrice(1)
+           |  val price1 = price.open
+           |  val price2 = 1
+           |}
+           |""".stripMargin
+      )
+    )(
+      Source(
+        List(
+          Defn.Class(
+            List(Mod.Case()),
+            Type.Name("OHLCPrice"),
+            Nil,
+            Ctor.Primary(
+              Nil,
+              Name(""),
+              List(
+                List(
+                  Term.Param(List(Mod.ValParam()), Term.Name("open"), Some(Type.Name("Int")), None)
+                )
+              )
+            ),
+            Template(
+              Nil,
+              Nil,
+              Self(Name(""), None),
+              List(
+                Defn.Val(
+                  Nil,
+                  List(Pat.Var(Term.Name("price"))),
+                  None,
+                  Term.Apply(Term.Name("OHLCPrice"), List(Lit.Int(1)))
+                ),
+                Defn.Val(
+                  Nil,
+                  List(Pat.Var(Term.Name("price1"))),
+                  None,
+                  Term.Select(Term.Name("price"), Term.Name("open"))
+                ),
+                Defn.Val(Nil, List(Pat.Var(Term.Name("price2"))), None, Lit.Int(1))
+              ),
+              Nil
+            )
+          )
+        )
+      )
+    )
+  }
+
   test("open-identifier") {
     runTestAssert[Stat]("def run(): Unit = { start; open(p); end }", assertLayout = None)(
       Defn.Def(
