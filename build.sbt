@@ -121,7 +121,7 @@ lazy val fullCrossProjects = project
   .aggregate(semanticdbScalacCore, semanticdbScalacPlugin)
   .settings(
     nonPublishableSettings,
-    crossScalaVersions := Nil,
+    crossScalaVersions := Nil
   )
 
 def binaryCrossProjs = List(common, trees, parsers, scalameta)
@@ -129,21 +129,24 @@ def binaryCrossProjs = List(common, trees, parsers, scalameta)
 // Dummy project used only for aggregation
 lazy val binaryJVMProjects = project
   .in(file(".cross/jvm"))
-  .aggregate(binaryCrossProjs.map(c => (c.jvm: ProjectReference)) :::
-    List(metac: ProjectReference) : _*)
+  .aggregate(
+    binaryCrossProjs.map(c => (c.jvm: ProjectReference)) :::
+      List(metac: ProjectReference): _*
+  )
   .settings(
     nonPublishableSettings,
-    crossScalaVersions := Nil,
+    crossScalaVersions := Nil
   )
 
 // Dummy project used only for aggregation
 lazy val binaryJSNativeProjects = project
   .in(file(".cross/js_native"))
-  .aggregate(binaryCrossProjs.flatMap(c =>
-    List(c.js: ProjectReference, c.native: ProjectReference)): _*)
+  .aggregate(
+    binaryCrossProjs.flatMap(c => List(c.js: ProjectReference, c.native: ProjectReference)): _*
+  )
   .settings(
     nonPublishableSettings,
-    crossScalaVersions := Nil,
+    crossScalaVersions := Nil
   )
 
 /* ======================== SEMANTICDB ======================== */

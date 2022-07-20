@@ -19,13 +19,15 @@ jobs:
             VERSION=$(echo $GITHUB_REF_NAME | cut -d "_" -f2 | cut -c2-)
             SCALA_VERSION=$(echo $GITHUB_REF_NAME | cut -d "_" -f3)
             if [ ! -z $VERSION ] && [ ! -z $SCALA_VERSION ]; then
-              export CI_RELEASE="++$SCALA_VERSION semanticdbScalacCore/publishSigned; ++$SCALA_VERSION semanticdbScalacPlugin/publishSigned; ++$SCALA_VERSION metac/publishSigned"
+              export CI_RELEASE="++$SCALA_VERSION! semanticdbScalacCore/publishSigned; ++$SCALA_VERSION! semanticdbScalacPlugin/publishSigned; ++$SCALA_VERSION! metac/publishSigned"
               UPDATE_DOCS=false
               COMMAND="; set ThisBuild/version :=\"$VERSION\"; $COMMAND"
             else
               echo 'Invalid tag name. Expected: semanticdb_v${existing-release}_${scala-version}'
               exit 1
             fi
+          else
+            export CI_RELEASE="release"
           fi
           sbt "$COMMAND"
           if [ "$UPDATE_DOCS" = true ]; then
