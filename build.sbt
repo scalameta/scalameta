@@ -52,6 +52,11 @@ commands += Command.command("releaseSnapshot") { s0 =>
   val s1 = onAllReleaseProject(s0)("compile")
   onAllReleaseProject(s1)("publish")
 }
+commands += Command.command("releaseLocal") { s0 =>
+  // run compile first as dry-run
+  val s1 = onAllReleaseProject(s0)("compile")
+  onAllReleaseProject(s1)("publishLocal")
+}
 addCommandAlias("benchAll", benchAll.command)
 addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
@@ -106,13 +111,15 @@ val commonJsSettings = Seq(
       val githubDir = "https://raw.githubusercontent.com/scalameta/scalameta"
       Seq(s"-P:scalajs:mapSourceURI:$localDir->$githubDir/v${version.value}/")
     }
-  }
+  },
+  crossScalaVersions := Seq(LatestScala213, LatestScala212)
 )
 
 lazy val nativeSettings = Seq(
   nativeConfig ~= {
     _.withMode(scalanative.build.Mode.releaseFast)
-  }
+  },
+  crossScalaVersions := Seq(LatestScala213, LatestScala212)
 )
 
 // Dummy project used only for aggregation
