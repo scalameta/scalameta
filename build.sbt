@@ -53,10 +53,11 @@ commands += Command.command("download-scala-library") { s =>
   s
 }
 commands += Command.command("save-expect") { s =>
-  "semanticdbScalacPlugin/compile" ::
+  s"++$LatestScala212" ::
+    "semanticdbScalacPlugin/compile" ::
     "semanticdbIntegration/clean" ::
     "semanticdbIntegration/compile" ::
-    "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
+    "testsJVM/Test/runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
 }
 commands += Command.command("save-manifest") { s =>
   "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s

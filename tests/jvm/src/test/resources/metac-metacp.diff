@@ -991,6 +991,20 @@ example/NamedArguments#User.toString().
 -overridden_symbols: "scala/Any#toString()."
 
 
+==========================
+example/StructuralTypes.a.
+==========================
+--- metac
++++ metacp
+         declarations {
+           hardlinks {
+-            symbol: "local1"
++            symbol: "local0"
+             kind: METHOD
+             properties: 1024
+             display_name: "b"
+
+
 ===================================
 example/Synthetic#s.Bar#canEqual().
 ===================================
