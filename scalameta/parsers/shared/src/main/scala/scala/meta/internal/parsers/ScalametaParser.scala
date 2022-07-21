@@ -2696,29 +2696,29 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   private def modifier(isLocal: Boolean): Mod = {
-    val mod = autoPos(token match {
+    val mod = token match {
       case t: Unquote => unquote[Mod](t)
       case t: Ellipsis => ellipsis[Mod](t, 1)
-      case _: KwAbstract => next(); Mod.Abstract()
-      case _: KwFinal => next(); Mod.Final()
-      case _: KwSealed => next(); Mod.Sealed()
-      case _: KwImplicit => next(); Mod.Implicit()
-      case _: KwLazy => next(); Mod.Lazy()
-      case _: KwOverride if !isLocal => next(); Mod.Override()
+      case _: KwAbstract => atCurPosNext(Mod.Abstract())
+      case _: KwFinal => atCurPosNext(Mod.Final())
+      case _: KwSealed => atCurPosNext(Mod.Sealed())
+      case _: KwImplicit => atCurPosNext(Mod.Implicit())
+      case _: KwLazy => atCurPosNext(Mod.Lazy())
+      case _: KwOverride if !isLocal => atCurPosNext(Mod.Override())
       case _: KwPrivate if !isLocal => privateModifier()
       case _: KwProtected if !isLocal => protectedModifier()
       case _ =>
         token.toString match {
-          case soft.KwInline() => next(); Mod.Inline()
-          case soft.KwInfix() => next(); Mod.Infix()
-          case soft.KwOpen() if !isLocal => next(); Mod.Open()
-          case soft.KwOpaque() => next(); Mod.Opaque()
-          case soft.KwTransparent() => next(); Mod.Transparent()
+          case soft.KwInline() => atCurPosNext(Mod.Inline())
+          case soft.KwInfix() => atCurPosNext(Mod.Infix())
+          case soft.KwOpen() if !isLocal => atCurPosNext(Mod.Open())
+          case soft.KwOpaque() => atCurPosNext(Mod.Opaque())
+          case soft.KwTransparent() => atCurPosNext(Mod.Transparent())
           case n =>
             val local = if (isLocal) "local " else ""
             syntaxError(s"${local}modifier expected but $n found", at = token)
         }
-    })
+    }
     newLinesOpt()
     mod
   }
@@ -2726,39 +2726,39 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def quasiquoteModifier(): Mod = entrypointModifier()
 
   def entrypointModifier(): Mod = {
-    val mod = autoPos {
-      def annot() = annots(skipNewLines = false) match {
-        case annot :: Nil => annot
-        case _ :: other :: _ =>
-          syntaxError(s"end of file expected but ${token.name} found", at = other)
-        case Nil => unreachable
-      }
-      def fail() =
-        syntaxError(s"modifier expected but ${parser.token.name} found", at = parser.token)
-      token match {
-        case t: Unquote => unquote[Mod](t)
-        case At() => annot()
-        case KwPrivate() => privateModifier()
-        case KwProtected() => protectedModifier()
-        case KwImplicit() => next(); Mod.Implicit()
-        case KwFinal() => next(); Mod.Final()
-        case KwSealed() => next(); Mod.Sealed()
-        case KwOverride() => next(); Mod.Override()
-        case KwCase() => next(); Mod.Case()
-        case KwAbstract() => next(); Mod.Abstract()
-        case Ident("+") => next(); Mod.Covariant()
-        case Ident("-") => next(); Mod.Contravariant()
-        case KwLazy() => next(); Mod.Lazy()
-        case KwVal() if !dialect.allowUnquotes => next(); Mod.ValParam()
-        case KwVar() if !dialect.allowUnquotes => next(); Mod.VarParam()
-        case soft.KwOpen() => next(); Mod.Open();
-        case soft.KwTransparent() => next(); Mod.Transparent()
-        case soft.KwInline() => next(); Mod.Inline()
-        case soft.KwInfix() => next(); Mod.Infix()
-        case Ident("valparam") if dialect.allowUnquotes => next(); Mod.ValParam()
-        case Ident("varparam") if dialect.allowUnquotes => next(); Mod.VarParam()
-        case _ => fail()
-      }
+    val mod = token match {
+      case t: Unquote => unquote[Mod](t)
+      case At() =>
+        annots(skipNewLines = true) match {
+          case annot :: Nil => annot
+          case _ :: other :: _ =>
+            syntaxError(s"end of file expected but ${token.name} found", at = other)
+          case Nil => unreachable
+        }
+      case KwPrivate() => privateModifier()
+      case KwProtected() => protectedModifier()
+      case KwImplicit() => atCurPosNext(Mod.Implicit())
+      case KwFinal() => atCurPosNext(Mod.Final())
+      case KwSealed() => atCurPosNext(Mod.Sealed())
+      case KwOverride() => atCurPosNext(Mod.Override())
+      case KwCase() => atCurPosNext(Mod.Case())
+      case KwAbstract() => atCurPosNext(Mod.Abstract())
+      case Ident("+") => atCurPosNext(Mod.Covariant())
+      case Ident("-") => atCurPosNext(Mod.Contravariant())
+      case KwLazy() => atCurPosNext(Mod.Lazy())
+      case KwVal() if !dialect.allowUnquotes => atCurPosNext(Mod.ValParam())
+      case KwVar() if !dialect.allowUnquotes => atCurPosNext(Mod.VarParam())
+      case Ident("valparam") if dialect.allowUnquotes => atCurPosNext(Mod.ValParam())
+      case Ident("varparam") if dialect.allowUnquotes => atCurPosNext(Mod.VarParam())
+      case _ =>
+        token.toString match {
+          case soft.KwOpen() => atCurPosNext(Mod.Open())
+          case soft.KwTransparent() => atCurPosNext(Mod.Transparent())
+          case soft.KwInline() => atCurPosNext(Mod.Inline())
+          case soft.KwInfix() => atCurPosNext(Mod.Infix())
+          case _ =>
+            syntaxError(s"modifier expected but ${parser.token.name} found", at = parser.token)
+        }
     }
     newLinesOpt()
     mod
