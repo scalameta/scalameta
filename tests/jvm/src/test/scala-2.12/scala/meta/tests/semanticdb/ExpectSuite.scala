@@ -22,7 +22,7 @@ import scala.meta.tests.metacp.Library
 import scala.meta.tests.metacp.MetacpOps
 
 class ExpectSuite extends FunSuite {
-  ScalaVersion.doIf212("ExpectSuite") {
+  ScalaVersion.doIfLatest212("ExpectSuite") {
     test("scalalib.expect") {
       import ScalalibExpect._
       this.assertNoDiff(loadObtained, loadExpected)

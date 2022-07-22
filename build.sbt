@@ -389,6 +389,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
   },
   buildInfoKeys := Seq[BuildInfoKey](
     scalaVersion,
+    "latestScala212Version" -> LatestScala212,
     "databaseSourcepath" ->
       (ThisBuild / baseDirectory).value.getAbsolutePath,
     "commonJVMClassDirectory" -> (common.jvm / Compile / classDirectory).value.getAbsolutePath,
