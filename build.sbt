@@ -18,17 +18,6 @@ def parseTagVersion: String = {
 }
 def localSnapshotVersion: String = s"$parseTagVersion-SNAPSHOT"
 def isCI = System.getenv("CI") != null
-def onAllReleaseProject(s0: State)(cmd: String): State = {
-  s"+ -v fullCrossProjects/$cmd" ::
-    s"++ -v $LatestScala213" ::
-    s"all binaryJVMProjects/$cmd binaryJSNativeProjects/$cmd" ::
-    s"++ -v $LatestScala212" ::
-    s"all binaryJVMProjects/$cmd binaryJSNativeProjects/$cmd" ::
-    s"++ -v $LatestScala211" ::
-    s"binaryJVMProjects/$cmd" ::
-    s"++ -v $LatestScala213" ::
-    s0
-}
 
 // ==========================================
 // Projects
@@ -42,16 +31,6 @@ name := {
 nonPublishableSettings
 crossScalaVersions := Nil
 enablePlugins(ScalaUnidocPlugin)
-commands += Command.command("release") { s0 =>
-  // run compile first as dry-run
-  val s1 = onAllReleaseProject(s0)("compile")
-  onAllReleaseProject(s1)("publishSigned")
-}
-commands += Command.command("releaseSnapshot") { s0 =>
-  // run compile first as dry-run
-  val s1 = onAllReleaseProject(s0)("compile")
-  onAllReleaseProject(s1)("publish")
-}
 addCommandAlias("benchAll", benchAll.command)
 addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
@@ -100,6 +79,7 @@ Global / resolvers += "scala-integration" at
   "https://scala-ci.typesafe.com/artifactory/scala-integration/"
 
 val commonJsSettings = Seq(
+  crossScalaVersions := List(LatestScala213, LatestScala212),
   scalacOptions ++= {
     if (isSnapshot.value) Seq.empty
     else {
@@ -111,44 +91,11 @@ val commonJsSettings = Seq(
 )
 
 lazy val nativeSettings = Seq(
+  crossScalaVersions := List(LatestScala213, LatestScala212),
   nativeConfig ~= {
     _.withMode(scalanative.build.Mode.releaseFast)
   }
 )
-
-// Dummy project used only for aggregation
-lazy val fullCrossProjects = project
-  .in(file(".cross/full"))
-  .aggregate(semanticdbScalacCore, semanticdbScalacPlugin)
-  .settings(
-    nonPublishableSettings,
-    crossScalaVersions := Nil
-  )
-
-def binaryCrossProjs = List(common, trees, parsers, scalameta)
-
-// Dummy project used only for aggregation
-lazy val binaryJVMProjects = project
-  .in(file(".cross/jvm"))
-  .aggregate(
-    binaryCrossProjs.map(c => (c.jvm: ProjectReference)) :::
-      List(metac: ProjectReference): _*
-  )
-  .settings(
-    nonPublishableSettings,
-    crossScalaVersions := Nil
-  )
-
-// Dummy project used only for aggregation
-lazy val binaryJSNativeProjects = project
-  .in(file(".cross/js_native"))
-  .aggregate(
-    binaryCrossProjs.flatMap(c => List(c.js: ProjectReference, c.native: ProjectReference)): _*
-  )
-  .settings(
-    nonPublishableSettings,
-    crossScalaVersions := Nil
-  )
 
 /* ======================== SEMANTICDB ======================== */
 lazy val semanticdbScalacCore = project
@@ -196,6 +143,7 @@ lazy val metac = project
   .settings(
     publishableSettings,
     fullCrossVersionSettings,
+    crossScalaVersions := LanguageVersions,
     mimaPreviousArtifacts := Set.empty,
     description := "Scalac 2.x launcher that generates SemanticDB on compile",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
@@ -567,7 +515,7 @@ lazy val sharedSettings = Def.settings(
     }
   },
   scalaVersion := LanguageVersion,
-  crossScalaVersions := LanguageVersions ++ LegacyScalaVersions,
+  crossScalaVersions := LanguageVersions,
   organization := "org.scalameta",
   libraryDependencies ++= {
     if (isScala213.value) Nil
@@ -791,6 +739,7 @@ def compatibilityPolicyViolation(ticket: String) = Seq(
 
 lazy val fullCrossVersionSettings = Seq(
   crossVersion := CrossVersion.full,
+  crossScalaVersions := LanguageVersions ++ LegacyScalaVersions,
   Compile / unmanagedSourceDirectories += {
     // NOTE: sbt 0.13.8 provides cross-version support for Scala sources
     // (http://www.scala-sbt.org/0.13/docs/sbt-0.13-Tech-Previews.html#Cross-version+support+for+Scala+sources).
