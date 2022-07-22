@@ -2607,6 +2607,38 @@ example/NamedArguments#User.unapply().(x$0) => param x$0: User
   User => example/NamedArguments#User#
 example/NamedArguments#`<init>`(). => primary ctor <init>()
 
+example/StructuralTypes.class
+-----------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/StructuralTypes.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+example/StructuralTypes. => final object StructuralTypes extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/StructuralTypes.a. => val method a: AnyRef { val def b: Int }
+  AnyRef => scala/AnyRef#
+  b => local0
+  Int => scala/Int#
+
+example/StructuralTypes2.class
+------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/StructuralTypes2.class
+Text => empty
+Language => Scala
+Symbols => 1 entries
+
+Symbols:
+example/StructuralTypes2. => final object StructuralTypes2 extends AnyRef
+  AnyRef => scala/AnyRef#
+
 example/SymbolTest.class
 ------------------------
 

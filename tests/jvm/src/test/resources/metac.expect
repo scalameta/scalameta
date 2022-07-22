@@ -60,7 +60,7 @@ Uri => semanticdb/integration/src/main/scala/example/Advanced.scala
 Text => non-empty
 Language => Scala
 Symbols => 44 entries
-Occurrences => 110 entries
+Occurrences => 113 entries
 Synthetics => 1 entries
 
 Symbols:
@@ -243,18 +243,21 @@ Occurrences:
 [27:6..27:9): s1x <= advanced/Test.s1x.
 [27:12..27:13): s => advanced/Test.s.
 [27:14..27:16): s1 => advanced/Structural#s1().
+[27:17..27:18): x => local0
 [28:6..28:8): s2 <= advanced/Test.s2.
 [28:11..28:12): s => advanced/Test.s.
 [28:13..28:15): s2 => advanced/Structural#s2().
 [29:6..29:9): s2x <= advanced/Test.s2x.
 [29:12..29:13): s => advanced/Test.s.
 [29:14..29:16): s2 => advanced/Structural#s2().
+[29:17..29:18): x => local1
 [30:6..30:8): s3 <= advanced/Test.s3.
 [30:11..30:12): s => advanced/Test.s.
 [30:13..30:15): s3 => advanced/Structural#s3().
 [31:6..31:9): s3x <= advanced/Test.s3x.
 [31:12..31:13): s => advanced/Test.s.
 [31:14..31:16): s3 => advanced/Structural#s3().
+[31:17..31:18): m => local3
 [31:19..31:22): ??? => scala/Predef.`???`().
 [33:6..33:7): e <= advanced/Test.e.
 [33:14..33:25): Existential => advanced/Existential#
@@ -3606,6 +3609,108 @@ Occurrences:
 [16:18..16:18):  <= selfs/C7#`<init>`().
 [16:23..16:24): B => selfs/B#
 
+semanticdb/integration/src/main/scala/example/StructuralTypes.scala
+-------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/StructuralTypes.scala
+Text => non-empty
+Language => Scala
+Symbols => 4 entries
+Occurrences => 11 entries
+Diagnostics => 2 entries
+
+Symbols:
+example/StructuralTypes. => final object StructuralTypes extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/StructuralTypes.a. => val method a: AnyRef { val def b: Int }
+  AnyRef => scala/AnyRef#
+  b => local1
+  Int => scala/Int#
+local0 => final class $anon extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+local1 => val method b: Int
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:7..2:12): scala => scala/
+[2:13..2:28): languageFeature => scala/languageFeature.
+[2:29..2:44): reflectiveCalls => scala/languageFeature.reflectiveCalls#
+[2:29..2:44): reflectiveCalls => scala/languageFeature.reflectiveCalls.
+[4:7..4:22): StructuralTypes <= example/StructuralTypes.
+[5:6..5:7): a <= example/StructuralTypes.a.
+[5:14..5:14):  <= local0
+[6:8..6:9): b <= local1
+[8:2..8:3): a => example/StructuralTypes.a.
+[8:4..8:5): b => local1
+
+Diagnostics:
+[2:29..2:44) [warning] Unused import
+[8:2..8:5) [warning] reflective access of structural type member value b should be enabled
+by making the implicit value scala.language.reflectiveCalls visible.
+----
+This can be achieved by adding the import clause 'import scala.language.reflectiveCalls'
+or by setting the compiler option -language:reflectiveCalls.
+See the Scaladoc for value scala.language.reflectiveCalls for a discussion
+why the feature should be explicitly enabled.
+semanticdb/integration/src/main/scala/example/StructuralTypes.scala
+-------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/StructuralTypes.scala
+Text => empty
+Language => Scala
+Diagnostics => 1 entries
+
+Diagnostics:
+[8:2..8:5) [warning] a pure expression does nothing in statement position; multiline expressions may require enclosing parentheses
+
+semanticdb/integration/src/main/scala/example/StructuralTypes2.scala
+--------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/StructuralTypes2.scala
+Text => non-empty
+Language => Scala
+Symbols => 1 entries
+Occurrences => 8 entries
+Diagnostics => 2 entries
+
+Symbols:
+example/StructuralTypes2. => final object StructuralTypes2 extends AnyRef
+  AnyRef => scala/AnyRef#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:7..2:12): scala => scala/
+[2:13..2:28): languageFeature => scala/languageFeature.
+[2:29..2:44): reflectiveCalls => scala/languageFeature.reflectiveCalls#
+[2:29..2:44): reflectiveCalls => scala/languageFeature.reflectiveCalls.
+[4:7..4:23): StructuralTypes2 <= example/StructuralTypes2.
+[5:2..5:17): StructuralTypes => example/StructuralTypes.
+[5:18..5:19): a => example/StructuralTypes.a.
+
+Diagnostics:
+[2:29..2:44) [warning] Unused import
+[5:2..5:21) [warning] reflective access of structural type member value b should be enabled
+by making the implicit value scala.language.reflectiveCalls visible.
+semanticdb/integration/src/main/scala/example/StructuralTypes2.scala
+--------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/StructuralTypes2.scala
+Text => empty
+Language => Scala
+Diagnostics => 1 entries
+
+Diagnostics:
+[5:2..5:21) [warning] a pure expression does nothing in statement position; multiline expressions may require enclosing parentheses
+
 semanticdb/integration/src/main/scala/example/Synthetic.scala
 -------------------------------------------------------------
 
@@ -4078,7 +4183,7 @@ Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
 Symbols => 143 entries
-Occurrences => 262 entries
+Occurrences => 263 entries
 
 Symbols:
 local0 => abstract method k: Int
@@ -4577,6 +4682,7 @@ Occurrences:
 [70:26..70:27): T <= local12
 [70:31..70:35): List => scala/package.List#
 [70:36..70:37): T => local12
+[70:42..70:43): L => local11
 [72:11..72:25): ClassInfoType1 <= types/Test.C#ClassInfoType1.
 [73:10..73:24): ClassInfoType2 <= types/Test.C#ClassInfoType2#
 [73:25..73:25):  <= types/Test.C#ClassInfoType2#`<init>`().

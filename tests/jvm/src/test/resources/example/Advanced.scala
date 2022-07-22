@@ -25,11 +25,11 @@ class D/*<=advanced.D#*/[CC/*<=advanced.D#[CC]*/[_]] extends C/*=>advanced.C#*/[
 object Test/*<=advanced.Test.*/ {
   val s/*<=advanced.Test.s.*/ = new Structural/*=>advanced.Structural#*/
   val s1/*<=advanced.Test.s1.*/ = s/*=>advanced.Test.s.*/.s1/*=>advanced.Structural#s1().*/
-  val s1x/*<=advanced.Test.s1x.*/ = s/*=>advanced.Test.s.*/.s1/*=>advanced.Structural#s1().*/.x
+  val s1x/*<=advanced.Test.s1x.*/ = s/*=>advanced.Test.s.*/.s1/*=>advanced.Structural#s1().*/.x/*=>local0*/
   val s2/*<=advanced.Test.s2.*/ = s/*=>advanced.Test.s.*/.s2/*=>advanced.Structural#s2().*/
-  val s2x/*<=advanced.Test.s2x.*/ = s/*=>advanced.Test.s.*/.s2/*=>advanced.Structural#s2().*/.x
+  val s2x/*<=advanced.Test.s2x.*/ = s/*=>advanced.Test.s.*/.s2/*=>advanced.Structural#s2().*/.x/*=>local1*/
   val s3/*<=advanced.Test.s3.*/ = s/*=>advanced.Test.s.*/.s3/*=>advanced.Structural#s3().*/
-  val s3x/*<=advanced.Test.s3x.*/ = s/*=>advanced.Test.s.*/.s3/*=>advanced.Structural#s3().*/.m(???/*=>scala.Predef.`???`().*/)
+  val s3x/*<=advanced.Test.s3x.*/ = s/*=>advanced.Test.s.*/.s3/*=>advanced.Structural#s3().*/.m/*=>local3*/(???/*=>scala.Predef.`???`().*/)
 
   val e/*<=advanced.Test.e.*/ = new Existential/*=>advanced.Existential#*/
   val e1/*<=advanced.Test.e1.*/ = e/*=>advanced.Test.e.*/.e1/*=>advanced.Existential#e1().*/

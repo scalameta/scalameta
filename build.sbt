@@ -79,10 +79,11 @@ commands += Command.command("download-scala-library") { s =>
   s
 }
 commands += Command.command("save-expect") { s =>
-  "semanticdbScalacPlugin/compile" ::
+  s"++$LatestScala212" ::
+    "semanticdbScalacPlugin/compile" ::
     "semanticdbIntegration/clean" ::
     "semanticdbIntegration/compile" ::
-    "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
+    "testsJVM/Test/runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
 }
 commands += Command.command("save-manifest") { s =>
   "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s
@@ -447,6 +448,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
   },
   buildInfoKeys := Seq[BuildInfoKey](
     scalaVersion,
+    "latestScala212Version" -> LatestScala212,
     "databaseSourcepath" ->
       (ThisBuild / baseDirectory).value.getAbsolutePath,
     "commonJVMClassDirectory" -> (common.jvm / Compile / classDirectory).value.getAbsolutePath,
