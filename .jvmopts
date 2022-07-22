@@ -1,5 +1,6 @@
 -Xss4m
 -Xms1G
--Xmx4G
--XX:ReservedCodeCacheSize=2024m
+-Xmx8G
+-XX:ReservedCodeCacheSize=1024m
 -XX:+TieredCompilation
+-Dsbt.server.autostart=false
