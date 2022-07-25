@@ -1,3 +1,4 @@
+import org.scalajs.linker.interface.StandardConfig
 import java.io._
 import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
@@ -80,6 +81,7 @@ Global / resolvers += "scala-integration" at
 
 val commonJsSettings = Seq(
   crossScalaVersions := List(LatestScala213, LatestScala212),
+  scalaJSLinkerConfig := StandardConfig().withBatchMode(true),
   scalacOptions ++= {
     if (isSnapshot.value) Seq.empty
     else {
