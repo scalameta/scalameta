@@ -518,7 +518,7 @@ lazy val sharedSettings = Def.settings(
   },
   scalaVersion := LanguageVersion,
   crossScalaVersions := LanguageVersions,
-  organization := "org.scalameta",
+  organization := "io.github.dos65",
   libraryDependencies ++= {
     if (isScala213.value) Nil
     else List(compilerPlugin("org.scalamacros" % s"paradise" % "2.1.1" cross CrossVersion.full))
