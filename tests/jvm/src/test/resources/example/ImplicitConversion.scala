@@ -25,6 +25,13 @@ class ImplicitConversion/*<=example.ImplicitConversion#*/ {
      |$message/*=>example.ImplicitConversion#message.*/
      |$number/*=>example.ImplicitConversion#number.*/""".stripMargin/*=>scala.collection.immutable.StringLike#stripMargin(+1).*/
 
-  val a/*<=example.ImplicitConversion#a.*/: Int/*=>scala.Int#*/ = char/*=>scala.Char#toInt().*/
-  val b/*<=example.ImplicitConversion#b.*/: Long/*=>scala.Long#*/ = char/*=>scala.Char#toLong().*/
+  val a/*<=example.ImplicitConversion#a.*/: Int/*=>scala.Int#*/ = char/*=>example.ImplicitConversion#char.*/
+  val b/*<=example.ImplicitConversion#b.*/: Long/*=>scala.Long#*/ = char/*=>example.ImplicitConversion#char.*/
+  val toLong/*<=example.ImplicitConversion#toLong.*/: Int/*=>scala.Int#*/ = 42
+  // The line below reproduces a known bug, where the symbol occurrence is
+  // "scala/Int#toLong()." instead of "example/ImplicitConversions.toLong.".
+  // This bug happens because our current heuristic to detect implicit
+  // conversions is based on the name of the symbol, and the "toLong" variable
+  // has the same name as the implicit conversion that's being applied.
+  val c/*<=example.ImplicitConversion#c.*/: Long/*=>scala.Long#*/ = toLong/*=>scala.Int#toLong().*/
 }

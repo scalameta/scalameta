@@ -27,4 +27,11 @@ class ImplicitConversion {
 
   val a: Int = char
   val b: Long = char
+  val toLong: Int = 42
+  // The line below reproduces a known bug, where the symbol occurrence is
+  // "scala/Int#toLong()." instead of "example/ImplicitConversions.toLong.".
+  // This bug happens because our current heuristic to detect implicit
+  // conversions is based on the name of the symbol, and the "toLong" variable
+  // has the same name as the implicit conversion that's being applied.
+  val c: Long = toLong
 }
