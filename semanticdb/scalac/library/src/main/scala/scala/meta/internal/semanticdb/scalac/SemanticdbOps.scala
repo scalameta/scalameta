@@ -14,6 +14,7 @@ trait SemanticdbOps
     with ReporterOps
     with ReflectionToolkit
     with SymbolOps
+    with SymbolOpsCompat
     with SyntheticOps
     with TypeOps {
   val global: Global
