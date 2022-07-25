@@ -13,7 +13,7 @@ jobs:
       - run: git fetch --unshallow
       - name: Publish
         run: |
-          COMMAND="ci-release"
+          COMMAND="+publishLocal"
           UPDATE_DOCS=true
           if [[ $GITHUB_REF == "refs/tags"* ]] && [[ $GITHUB_REF_NAME == "semanticdb_v"* ]]; then
             VERSION=$(echo $GITHUB_REF_NAME | cut -d "_" -f2 | cut -c2-)
