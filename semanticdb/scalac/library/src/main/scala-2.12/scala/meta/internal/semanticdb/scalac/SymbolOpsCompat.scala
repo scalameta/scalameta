@@ -14,11 +14,7 @@ trait SymbolOpsCompat { self: SemanticdbOps =>
       g.termNames.toDouble
     )
 
-    // Returns true if the `this.sym` resolves to a primitive conversion method like toInt/toLong
-    // and the provided mtree name does not match the name of that symbol. This implementation
-    // has a minor bug where it doesn't detect implicit convesions when mtree.value has the name
-    // of a conversion method like toInt/toLong, but it's a corner case that can be fixed separately
-    // if it's a big problem.
+    // See comment in scala-2.13/.../SymbolOpsCompat.scala
     def isImplicitPrimitiveConversion(mtree: m.Name): Boolean = {
       sym.name.startsWith("to") &&
       g.definitions.ScalaValueClassesSet.contains(sym.owner) &&

@@ -16,7 +16,7 @@ trait SymbolOpsCompat { self: SemanticdbOps =>
 
     // Returns true if the `this.sym` resolves to a primitive conversion method like toInt/toLong
     // and the provided mtree name does not match the name of that symbol. This implementation
-    // has a minor bug where it doesn't detect implicit convesions when mtree.value has the name
+    // has a minor bug where it doesn't detect implicit conversions when mtree.value has the name
     // of a conversion method like toInt/toLong, but it's a corner case that can be fixed separately
     // if it's a big problem.
     def isImplicitPrimitiveConversion(mtree: m.Name): Boolean = {
