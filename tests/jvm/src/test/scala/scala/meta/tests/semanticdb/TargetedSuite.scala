@@ -205,4 +205,24 @@ class TargetedSuite extends SemanticdbSuite {
 
     }
   )
+
+  targeted(
+    """package m
+      |  import scala.languageFeature.implicitConversions
+      |  object ImplicitConversion {
+      |    val a: Int = 5
+      |    val b: Long = <<a>>
+      |    val c: Double = <<a>>
+      |    val d: Float = <<a>>
+      |    val toLong: Int = 42
+      |    val e: Long = <<toLong>>
+      |}
+    """.stripMargin,
+    (_, long, double, float, toInt) => {
+      assertEquals(long, "m/ImplicitConversion.a.")
+      assertEquals(double, "m/ImplicitConversion.a.")
+      assertEquals(float, "m/ImplicitConversion.a.")
+      assertEquals(toInt, "scala/Int#toLong().")
+    }
+  )
 }

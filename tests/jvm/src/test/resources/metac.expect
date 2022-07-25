@@ -1724,17 +1724,19 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/ImplicitConversion.scala
 Text => non-empty
 Language => Scala
-Symbols => 11 entries
-Occurrences => 35 entries
+Symbols => 13 entries
+Occurrences => 40 entries
 Synthetics => 6 entries
 
 Symbols:
-example/ImplicitConversion# => class ImplicitConversion extends AnyRef { +9 decls }
+example/ImplicitConversion# => class ImplicitConversion extends AnyRef { +11 decls }
   AnyRef => scala/AnyRef#
 example/ImplicitConversion#`<init>`(). => primary ctor <init>()
 example/ImplicitConversion#a. => val method a: Int
   Int => scala/Int#
 example/ImplicitConversion#b. => val method b: Long
+  Long => scala/Long#
+example/ImplicitConversion#c. => val method c: Long
   Long => scala/Long#
 example/ImplicitConversion#char. => val method char: Char
   Char => scala/Char#
@@ -1748,6 +1750,8 @@ example/ImplicitConversion#string2Number(). => implicit method string2Number(str
   Int => scala/Int#
 example/ImplicitConversion#string2Number().(string) => param string: String
   String => scala/Predef.String#
+example/ImplicitConversion#toLong. => val method toLong: Int
+  Int => scala/Int#
 example/ImplicitConversion#tuple. => val method tuple: Tuple2[Int, Int]
   Tuple2 => scala/Tuple2#
   Int => scala/Int#
@@ -1786,10 +1790,15 @@ Occurrences:
 [25:17..25:28): stripMargin => scala/collection/immutable/StringLike#stripMargin(+1).
 [27:6..27:7): a <= example/ImplicitConversion#a.
 [27:9..27:12): Int => scala/Int#
-[27:15..27:19): char => scala/Char#toInt().
+[27:15..27:19): char => example/ImplicitConversion#char.
 [28:6..28:7): b <= example/ImplicitConversion#b.
 [28:9..28:13): Long => scala/Long#
-[28:16..28:20): char => scala/Char#toLong().
+[28:16..28:20): char => example/ImplicitConversion#char.
+[29:6..29:12): toLong <= example/ImplicitConversion#toLong.
+[29:14..29:17): Int => scala/Int#
+[35:6..35:7): c <= example/ImplicitConversion#c.
+[35:9..35:13): Long => scala/Long#
+[35:16..35:22): toLong => scala/Int#toLong().
 
 Synthetics:
 [14:2..14:9): message => augmentString(*)

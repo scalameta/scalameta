@@ -251,6 +251,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
             // Instead of crashing with "unsupported file", we ignore these cases.
             if (gsym0 == null) return
             if (gsym0.isUselessOccurrence) return
+            if (gsym0.isImplicitPrimitiveConversion(mtree)) return
             val pos = mtree.pos
             if (pos == m.Position.None) return
             if (occurrences.contains(pos)) return
