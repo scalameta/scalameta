@@ -21,10 +21,9 @@ trait SymbolOpsCompat { self: SemanticdbOps =>
     // if it's a big problem.
     def isImplicitPrimitiveConversion(mtree: m.Name): Boolean = {
       sym.name.startsWith("to") &&
-        g.definitions.ScalaValueClassesSet.contains(sym.owner) &&
-        implicitPrimitiveConversionNames.contains(sym.name.toTermName) &&
-        !sym.name.startsWith(mtree.value) &&
-        sym.name.length() != mtree.value.length
+      g.definitions.ScalaValueClassesSet.contains(sym.owner) &&
+      implicitPrimitiveConversionNames.contains(sym.name.toTermName) &&
+      sym.name.toString() != mtree.value
     }
   }
 }
