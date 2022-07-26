@@ -180,6 +180,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def next() = in.next()
   def nextTwice() = { next(); next() }
 
+  @inline private def nextIf(cond: Boolean): Boolean = {
+    if (cond) next()
+    cond
+  }
+
   /* ------------- PARSER COMMON -------------------------------------------- */
 
   /**
@@ -357,11 +362,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     else if (token.isNot[EOF]) next()
 
   /** If current token is T consume it. */
-  @inline private def acceptOpt[T: TokenClassifier]: Boolean = {
-    val ok = token.is[T]
-    if (ok) next()
-    ok
-  }
+  @inline private def acceptOpt[T: TokenClassifier]: Boolean =
+    nextIf(token.is[T])
 
   def acceptStatSep(): Unit = token match {
     case LF() | LFLF() => next()
@@ -2211,7 +2213,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           (Nil, false)
         case t @ Ellipsis(2) =>
           (List(ellipsis[Term](t)), false)
-        case _ =>
+        case x =>
           @tailrec
           def checkRep(exprsLeft: List[Term]): Unit = exprsLeft match {
             case head :: tail =>
@@ -2219,7 +2221,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               else if (tail.nonEmpty) syntaxError("repeated argument not allowed here", at = head)
             case _ =>
           }
-          val using = acceptOpt[soft.KwUsing]
+          val using = nextIf(x.toString == soft.KwUsing.name)
           val exprs = commaSeparated(argumentExpr(location))
           checkRep(exprs)
           (exprs, using)

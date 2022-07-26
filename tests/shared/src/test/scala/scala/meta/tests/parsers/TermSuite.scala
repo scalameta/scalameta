@@ -1383,4 +1383,18 @@ class TermSuite extends ParseSuite {
     )
   }
 
+  test("using-call-site in scala2") {
+    checkStat("val a = f()(using a)(using 3, true)")(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("a"))),
+        None,
+        Term.ApplyUsing(
+          Term.ApplyUsing(Term.Apply(Term.Name("f"), Nil), List(Term.Name("a"))),
+          List(Lit.Int(3), Lit.Boolean(true))
+        )
+      )
+    )
+  }
+
 }
