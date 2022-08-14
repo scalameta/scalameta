@@ -585,6 +585,65 @@ final class Dialect private (
     Dialect.inverseStandards.getOrElse(this, "Dialect()")
   }
 
+  def isEquivalentTo(that: Dialect): Boolean = (
+    // do not include deprecated values in this comparison
+    this.allowAtForExtractorVarargs == that.allowAtForExtractorVarargs
+      && this.allowCaseClassWithoutParameterList == that.allowCaseClassWithoutParameterList
+      && this.allowColonForExtractorVarargs == that.allowColonForExtractorVarargs
+      && this.allowEnums == that.allowEnums
+      && this.allowImplicitByNameParameters == that.allowImplicitByNameParameters
+      && this.allowInlineIdents == that.allowInlineIdents
+      && this.allowInlineMods == that.allowInlineMods
+      && this.allowLiteralTypes == that.allowLiteralTypes
+      && this.allowMultilinePrograms == that.allowMultilinePrograms
+      && this.allowPatUnquotes == that.allowPatUnquotes
+      && this.allowSpliceUnderscores == that.allowSpliceUnderscores
+      && this.allowTermUnquotes == that.allowTermUnquotes
+      && this.allowToplevelTerms == that.allowToplevelTerms
+      && this.allowTrailingCommas == that.allowTrailingCommas
+      && this.allowTraitParameters == that.allowTraitParameters
+      && this.allowTypeLambdas == that.allowTypeLambdas
+      && this.allowViewBounds == that.allowViewBounds
+      && this.allowXmlLiterals == that.allowXmlLiterals
+      && this.allowNumericLiteralUnderscoreSeparators == that.allowNumericLiteralUnderscoreSeparators
+      && this.allowTryWithAnyExpr == that.allowTryWithAnyExpr
+      && this.allowGivenUsing == that.allowGivenUsing
+      && this.allowExtensionMethods == that.allowExtensionMethods
+      && this.allowOpenClass == that.allowOpenClass
+      && this.allowToplevelStatements == that.allowToplevelStatements
+      && this.allowOpaqueTypes == that.allowOpaqueTypes
+      && this.allowExportClause == that.allowExportClause
+      && this.allowCommaSeparatedExtend == that.allowCommaSeparatedExtend
+      && this.allowEndMarker == that.allowEndMarker
+      && this.allowInterpolationDolarQuoteEscape == that.allowInterpolationDolarQuoteEscape
+      && this.allowSignificantIndentation == that.allowSignificantIndentation
+      && this.allowQuestionMarkPlaceholder == that.allowQuestionMarkPlaceholder
+      && this.allowTypeParamUnderscore == that.allowTypeParamUnderscore
+      && this.allowByNameRepeatedParameters == that.allowByNameRepeatedParameters
+      && this.allowLazyValAbstractValues == that.allowLazyValAbstractValues
+      && this.allowUpperCasePatternVarBinding == that.allowUpperCasePatternVarBinding
+      && this.allowDerives == that.allowDerives
+      && this.allowTypeInBlock == that.allowTypeInBlock
+      && this.allowPolymorphicFunctions == that.allowPolymorphicFunctions
+      && this.allowMatchAsOperator == that.allowMatchAsOperator
+      && this.allowTypeMatch == that.allowTypeMatch
+      && this.allowInfixMods == that.allowInfixMods
+      && this.allowSpliceAndQuote == that.allowSpliceAndQuote
+      && this.allowSymbolLiterals == that.allowSymbolLiterals
+      && this.allowDependentFunctionTypes == that.allowDependentFunctionTypes
+      && this.allowPostfixStarVarargSplices == that.allowPostfixStarVarargSplices
+      && this.allowAllTypedPatterns == that.allowAllTypedPatterns
+      && this.allowAsForImportRename == that.allowAsForImportRename
+      && this.allowStarWildcardImport == that.allowStarWildcardImport
+      && this.allowProcedureSyntax == that.allowProcedureSyntax
+      && this.allowDoWhile == that.allowDoWhile
+      && this.allowPlusMinusUnderscoreAsIdent == that.allowPlusMinusUnderscoreAsIdent
+      && this.allowPlusMinusUnderscoreAsPlaceholder == that.allowPlusMinusUnderscoreAsPlaceholder
+      && this.allowGivenImports == that.allowGivenImports
+      && this.useInfixTypePrecedence == that.useInfixTypePrecedence
+      && this.allowInfixOperatorAfterNL == that.allowInfixOperatorAfterNL
+  )
+
   @deprecated("Use withX method instead", "4.3.11")
   def copy(
       allowAndTypes: Boolean = this.allowAndTypes,
