@@ -4200,14 +4200,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _ => false
       }) {
       defOrDclOrSecondaryCtor(mods)
-    } else {
-      tmplDef(mods)
-    } match {
-      case stat: Decl.Type if dialect.allowTypeInBlock => stat
-      case stat: Decl.Type => syntaxError("is not a valid block statement", at = stat)
-      case stat if stat.isBlockStat => stat
-      case other => syntaxError("is not a valid block statement", at = other)
-    }
+    } else
+      {
+        tmplDef(mods)
+      } match {
+        case stat: Decl.Type if dialect.allowTypeInBlock => stat
+        case stat: Decl.Type => syntaxError("is not a valid block statement", at = stat)
+        case stat if stat.isBlockStat => stat
+        case other => syntaxError("is not a valid block statement", at = other)
+      }
   }
 
   def blockStatSeq(allowRepeated: Boolean = false): List[Stat] = listBy[Stat] { stats =>
