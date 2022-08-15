@@ -2221,7 +2221,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               else if (tail.nonEmpty) syntaxError("repeated argument not allowed here", at = head)
             case _ =>
           }
-          val using = nextIf(x.toString == soft.KwUsing.name)
+          val using = nextIf(x.toString == soft.KwUsing.name && ahead(token.isNot[CantStartStat]))
           val exprs = commaSeparated(argumentExpr(location))
           checkRep(exprs)
           (exprs, using)
