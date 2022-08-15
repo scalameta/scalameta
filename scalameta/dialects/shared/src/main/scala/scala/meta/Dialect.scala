@@ -405,7 +405,7 @@ final class Dialect private (
     privateCopy(allowAllTypedPatterns = newValue)
   }
   def withAllowAsForImportRename(newValue: Boolean): Dialect = {
-    privateCopy(allowAsRenames = newValue)
+    privateCopy(allowAsForImportRename = newValue)
   }
   def withAllowStarWildcardImport(newValue: Boolean): Dialect = {
     privateCopy(allowStarWildcardImport = newValue)
@@ -491,7 +491,7 @@ final class Dialect private (
       allowDependentFunctionTypes: Boolean = this.allowDependentFunctionTypes,
       allowPostfixStarVarargSplices: Boolean = this.allowPostfixStarVarargSplices,
       allowAllTypedPatterns: Boolean = this.allowAllTypedPatterns,
-      allowAsRenames: Boolean = this.allowAsForImportRename,
+      allowAsForImportRename: Boolean = this.allowAsForImportRename,
       allowStarWildcardImport: Boolean = this.allowStarWildcardImport,
       allowProcedureSyntax: Boolean = this.allowProcedureSyntax,
       allowDoWhile: Boolean = this.allowDoWhile,
@@ -552,7 +552,7 @@ final class Dialect private (
       allowDependentFunctionTypes,
       allowPostfixStarVarargSplices,
       allowAllTypedPatterns,
-      allowAsRenames,
+      allowAsForImportRename,
       allowStarWildcardImport,
       allowProcedureSyntax,
       allowDoWhile,
