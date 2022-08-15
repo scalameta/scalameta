@@ -577,9 +577,9 @@ final class Dialect private (
   // Dialects have reference equality semantics,
   // because sometimes dialects representing distinct Scala versions
   // can be structurally equal to each other.
-  override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
-  override def equals(other: Any): Boolean = this eq other.asInstanceOf[AnyRef]
-  override def hashCode: Int = System.identityHashCode(this)
+  // As Dialect is no longer a case class, no need to override equals/hashCode
+  override def canEqual(that: Any): Boolean = that.isInstanceOf[Dialect]
+
   // Smart prettyprinting that knows about standard dialects.
   override def toString = {
     Dialect.inverseStandards.getOrElse(this, "Dialect()")
