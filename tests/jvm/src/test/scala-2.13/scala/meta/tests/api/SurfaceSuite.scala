@@ -327,6 +327,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Self
       |scala.meta.Source
       |scala.meta.Stat
+      |scala.meta.Stat.WithMods
       |scala.meta.Template
       |scala.meta.Term
       |scala.meta.Term.Annotate
