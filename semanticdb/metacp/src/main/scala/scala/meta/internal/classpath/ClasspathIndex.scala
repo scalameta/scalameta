@@ -165,7 +165,7 @@ object ClasspathIndex {
           jar.close()
         }
       } catch {
-        case zex: ZipException if zex.getMessage == "zip END header not found" => ()
+        case zex: ZipException => ()
       }
     }
 
