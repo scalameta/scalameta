@@ -14,6 +14,7 @@ import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
 import scala.meta.internal.io.PathIO
 import scala.util.Properties
+import java.util.zip.ZipException
 
 /** An index to lookup class directories and classfiles by their JVM names. */
 final class ClasspathIndex private (
@@ -133,34 +134,38 @@ object ClasspathIndex {
 
     private def expandJarEntry(jarpath: AbsolutePath): Unit = {
       val file = jarpath.toFile
-      val jar = new JarFile(file)
       try {
-        val entries = jar.entries()
-        while (entries.hasMoreElements) {
-          val element = entries.nextElement()
-          if (!element.getName.startsWith("META-INF")) {
-            val parent = getClassdir(
-              if (element.isDirectory) element.getName
-              else PathIO.dirname(element.getName)
-            )
-            val inJar = CompressedClassfile(element, file)
-            addMember(parent, PathIO.basename(element.getName), inJar)
+        val jar = new JarFile(file)
+        try {
+          val entries = jar.entries()
+          while (entries.hasMoreElements) {
+            val element = entries.nextElement()
+            if (!element.getName.startsWith("META-INF")) {
+              val parent = getClassdir(
+                if (element.isDirectory) element.getName
+                else PathIO.dirname(element.getName)
+              )
+              val inJar = CompressedClassfile(element, file)
+              addMember(parent, PathIO.basename(element.getName), inJar)
+            }
           }
-        }
-        val manifest = jar.getManifest
-        if (manifest != null) {
-          val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
-          if (classpathAttr != null) {
-            classpathAttr.split(" ").foreach { relpath =>
-              val abspath = AbsolutePath(jarpath.toNIO.getParent).resolve(relpath)
-              if (abspath.isFile || abspath.isDirectory) {
-                expandEntry(abspath)
+          val manifest = jar.getManifest
+          if (manifest != null) {
+            val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
+            if (classpathAttr != null) {
+              classpathAttr.split(" ").foreach { relpath =>
+                val abspath = AbsolutePath(jarpath.toNIO.getParent).resolve(relpath)
+                if (abspath.isFile || abspath.isDirectory) {
+                  expandEntry(abspath)
+                }
               }
             }
           }
+        } finally {
+          jar.close()
         }
-      } finally {
-        jar.close()
+      } catch {
+        case zex: ZipException if zex.getMessage == "zip END header not found" => ()
       }
     }
 
