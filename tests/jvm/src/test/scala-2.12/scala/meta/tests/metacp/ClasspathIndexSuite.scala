@@ -7,6 +7,7 @@ import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
 import scala.meta.tests.BuildInfo
 import scala.meta.tests.semanticdb.ManifestMetacp
+import java.nio.file.Paths
 
 class ClasspathIndexSuite extends FunSuite {
   def classpath(path: AbsolutePath) =
@@ -51,4 +52,8 @@ class ClasspathIndexSuite extends FunSuite {
     val index = ClasspathIndex(classpath)
   }
 
+  test("ignore classpath entry for files that are not jar/zip") {
+    val classpath = Classpath(Paths.get(getClass().getResource("/unicode.txt").toURI()))
+    val index = ClasspathIndex(classpath)
+  }
 }
