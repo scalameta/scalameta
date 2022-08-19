@@ -134,38 +134,40 @@ object ClasspathIndex {
 
     private def expandJarEntry(jarpath: AbsolutePath): Unit = {
       val file = jarpath.toFile
-      try {
-        val jar = new JarFile(file)
+      val jar =
         try {
-          val entries = jar.entries()
-          while (entries.hasMoreElements) {
-            val element = entries.nextElement()
-            if (!element.getName.startsWith("META-INF")) {
-              val parent = getClassdir(
-                if (element.isDirectory) element.getName
-                else PathIO.dirname(element.getName)
-              )
-              val inJar = CompressedClassfile(element, file)
-              addMember(parent, PathIO.basename(element.getName), inJar)
-            }
+          new JarFile(file)
+        } catch {
+          case zex: ZipException =>
+            return ()
+        }
+      try {
+        val entries = jar.entries()
+        while (entries.hasMoreElements) {
+          val element = entries.nextElement()
+          if (!element.getName.startsWith("META-INF")) {
+            val parent = getClassdir(
+              if (element.isDirectory) element.getName
+              else PathIO.dirname(element.getName)
+            )
+            val inJar = CompressedClassfile(element, file)
+            addMember(parent, PathIO.basename(element.getName), inJar)
           }
-          val manifest = jar.getManifest
-          if (manifest != null) {
-            val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
-            if (classpathAttr != null) {
-              classpathAttr.split(" ").foreach { relpath =>
-                val abspath = AbsolutePath(jarpath.toNIO.getParent).resolve(relpath)
-                if (abspath.isFile || abspath.isDirectory) {
-                  expandEntry(abspath)
-                }
+        }
+        val manifest = jar.getManifest
+        if (manifest != null) {
+          val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
+          if (classpathAttr != null) {
+            classpathAttr.split(" ").foreach { relpath =>
+              val abspath = AbsolutePath(jarpath.toNIO.getParent).resolve(relpath)
+              if (abspath.isFile || abspath.isDirectory) {
+                expandEntry(abspath)
               }
             }
           }
-        } finally {
-          jar.close()
         }
-      } catch {
-        case zex: ZipException => ()
+      } finally {
+        jar.close()
       }
     }
 
