@@ -693,7 +693,6 @@ object TreeSyntax {
         /* In order not to break existing tools `.syntax` should still return
          * `_` instead `?` unless specifically used.
          */
-        def isScala3Dialect = dialect.allowSignificantIndentation
         def questionMarkUsed = t.origin match {
           case _: Origin.Parsed =>
             !t.tokens.exists {
@@ -702,9 +701,9 @@ object TreeSyntax {
             }
           case _ => false
         }
-        if (dialect.allowQuestionMarkPlaceholder && (isScala3Dialect || questionMarkUsed))
-          m(SimpleTyp, s(kw("?"), t.bounds))
-        else m(SimpleTyp, s(kw("_"), t.bounds))
+        val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
+          (dialect.allowSignificantIndentation || questionMarkUsed)
+        m(SimpleTyp, s(kw(if (useQM) "?" else "_"), t.bounds))
       case t: Type.Bounds =>
         s(
           t.lo.map(lo => s(" ", kw(">:"), " ", p(Typ, lo))).getOrElse(s()),

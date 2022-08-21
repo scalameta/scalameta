@@ -910,7 +910,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Type.Macro(macroSplicedIdent(ident))
         case MacroSplice() =>
           Type.Macro(macroSplice())
-        case Ident("?") if dialect.allowQuestionMarkPlaceholder =>
+        case Ident("?") if dialect.allowQuestionMarkAsTypeWildcard =>
           next(); Type.Placeholder(typeBounds())
         case Ident(value @ ("+" | "-")) if allowPlusMinusUnderscore && tryAhead[Underscore] =>
           next() // Ident and Underscore
