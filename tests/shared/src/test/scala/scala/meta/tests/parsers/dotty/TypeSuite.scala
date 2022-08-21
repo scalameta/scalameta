@@ -120,26 +120,36 @@ class TypeSuite extends ParseSuite {
   }
 
   test("F[_ >: lo <: hi]") {
-    val Apply(
-      TypeName("F"),
-      Placeholder(Type.Bounds(Some(TypeName("lo")), Some(TypeName("hi")))) :: Nil
-    ) =
-      tpe("F[_ >: lo <: hi]")
+    assertTpe("F[_ >: lo <: hi]") {
+      Apply(
+        TypeName("F"),
+        Type.Placeholder(Type.Bounds(Some(TypeName("lo")), Some(TypeName("hi")))) :: Nil
+      )
+    }
   }
 
   test("F[_ >: lo") {
-    val Apply(TypeName("F"), Placeholder(Type.Bounds(Some(TypeName("lo")), None)) :: Nil) =
-      tpe("F[_ >: lo]")
+    assertTpe("F[_ >: lo]") {
+      Apply(TypeName("F"), Type.Placeholder(Type.Bounds(Some(TypeName("lo")), None)) :: Nil)
+    }
   }
 
   test("F[_ <: hi]") {
-    val Apply(TypeName("F"), Placeholder(Type.Bounds(None, Some(TypeName("hi")))) :: Nil) =
-      tpe("F[_ <: hi]")
+    assertTpe("F[_ <: hi]") {
+      Apply(TypeName("F"), Type.Placeholder(Type.Bounds(None, Some(TypeName("hi")))) :: Nil)
+    }
+  }
+
+  test("F[?]") {
+    assertTpe("F[?]") {
+      Apply(TypeName("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
+    }
   }
 
   test("F[_]") {
-    val Apply(TypeName("F"), Placeholder(Type.Bounds(None, None)) :: Nil) =
-      tpe("F[_]")
+    assertTpe("F[_]") {
+      Apply(TypeName("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
+    }
   }
 
   test("F[T] forSome { type T }") {
