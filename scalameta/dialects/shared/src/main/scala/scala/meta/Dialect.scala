@@ -89,8 +89,8 @@ final class Dialect private (
     val allowInterpolationDolarQuoteEscape: Boolean,
     // Significant identation introduced in dotty
     val allowSignificantIndentation: Boolean,
-    // Dotty changed placeholder for types from `_` to `?`
-    val allowQuestionMarkPlaceholder: Boolean,
+    // Dotty changed wildcard for types from `_` to `?`
+    val allowQuestionMarkAsTypeWildcard: Boolean,
     // Dotty rejects placeholder as Type parameter
     val allowTypeParamUnderscore: Boolean,
     // Dotty allows by-name repeated parameters
@@ -218,7 +218,7 @@ final class Dialect private (
       allowEndMarker = false,
       allowInterpolationDolarQuoteEscape = false,
       allowSignificantIndentation = false,
-      allowQuestionMarkPlaceholder = false,
+      allowQuestionMarkAsTypeWildcard = false,
       allowTypeParamUnderscore = true,
       allowByNameRepeatedParameters = false,
       allowLazyValAbstractValues = false,
@@ -355,8 +355,16 @@ final class Dialect private (
   def withAllowSignificantIndentation(newValue: Boolean): Dialect = {
     privateCopy(allowSignificantIndentation = newValue)
   }
+  def withAllowQuestionMarkAsTypeWildcard(newValue: Boolean): Dialect = {
+    privateCopy(allowQuestionMarkAsTypeWildcard = newValue)
+  }
+  @deprecated("use allowQuestionMarkAsTypeWildcard", ">4.5.13")
+  def allowQuestionMarkPlaceholder: Boolean = {
+    allowQuestionMarkAsTypeWildcard
+  }
+  @deprecated("use withAllowQuestionMarkAsTypeWildcard", ">4.5.13")
   def withAllowQuestionMarkPlaceholder(newValue: Boolean): Dialect = {
-    privateCopy(allowQuestionMarkPlaceholder = newValue)
+    withAllowQuestionMarkAsTypeWildcard(newValue)
   }
 
   def withAllowTypeParamUnderscore(newValue: Boolean): Dialect = {
@@ -475,7 +483,7 @@ final class Dialect private (
       allowEndMarker: Boolean = this.allowEndMarker,
       allowInterpolationDolarQuoteEscape: Boolean = this.allowInterpolationDolarQuoteEscape,
       allowSignificantIndentation: Boolean = this.allowSignificantIndentation,
-      allowQuestionMarkPlaceholder: Boolean = this.allowQuestionMarkPlaceholder,
+      allowQuestionMarkAsTypeWildcard: Boolean = this.allowQuestionMarkAsTypeWildcard,
       allowTypeParamUnderscore: Boolean = this.allowTypeParamUnderscore,
       allowByNameRepeatedParameters: Boolean = this.allowByNameRepeatedParameters,
       allowLazyValAbstractValues: Boolean = this.allowLazyValAbstractValues,
@@ -536,7 +544,7 @@ final class Dialect private (
       allowEndMarker,
       allowInterpolationDolarQuoteEscape,
       allowSignificantIndentation,
-      allowQuestionMarkPlaceholder,
+      allowQuestionMarkAsTypeWildcard,
       allowTypeParamUnderscore,
       allowByNameRepeatedParameters,
       allowLazyValAbstractValues,
@@ -617,7 +625,7 @@ final class Dialect private (
       && this.allowEndMarker == that.allowEndMarker
       && this.allowInterpolationDolarQuoteEscape == that.allowInterpolationDolarQuoteEscape
       && this.allowSignificantIndentation == that.allowSignificantIndentation
-      && this.allowQuestionMarkPlaceholder == that.allowQuestionMarkPlaceholder
+      && this.allowQuestionMarkAsTypeWildcard == that.allowQuestionMarkAsTypeWildcard
       && this.allowTypeParamUnderscore == that.allowTypeParamUnderscore
       && this.allowByNameRepeatedParameters == that.allowByNameRepeatedParameters
       && this.allowLazyValAbstractValues == that.allowLazyValAbstractValues
