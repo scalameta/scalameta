@@ -420,4 +420,10 @@ class PublicSuite extends TreeSuiteBase {
   test("scala.meta.transversers.Traverser.toString") {
     // n/a
   }
+
+  test("scala.meta.XtensionDialectTokenSyntax") {}
+  test("scala.meta.XtensionDialectApply") {}
+  test("scala.meta.XtensionDialectTreeSyntax") {}
+  test("scala.meta.XtensionDialectTokensSyntax") {}
+
 }

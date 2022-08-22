@@ -5,7 +5,7 @@ import scala.meta.inputs._
 import scala.meta.internal.{semanticdb => s}
 
 package object inputs {
-  implicit class XtensionPositionFormatMessage(pos: Position) {
+  implicit class XtensionPositionFormatMessage(private val pos: Position) extends AnyVal {
     def lineContent: String = {
       val input = pos.input
       val start = input.lineToOffset(pos.startLine)
@@ -30,7 +30,7 @@ package object inputs {
     }
   }
 
-  implicit class XtensionInputSyntaxStructure(input: Input) {
+  implicit class XtensionInputSyntaxStructure(private val input: Input) extends AnyVal {
     def syntax: String = input match {
       case Input.None => "<none>"
       case Input.File(path, _) => path.toString
@@ -40,7 +40,7 @@ package object inputs {
     def structure: String = input.toString
   }
 
-  implicit class XtensionPositionToRange(pos: Position) {
+  implicit class XtensionPositionToRange(private val pos: Position) extends AnyVal {
     def toRange: s.Range = s.Range(
       startLine = pos.startLine,
       startCharacter = pos.startColumn,
@@ -49,7 +49,7 @@ package object inputs {
     )
   }
 
-  implicit class XtensionRangeToPosition(range: s.Range) {
+  implicit class XtensionRangeToPosition(private val range: s.Range) extends AnyVal {
     def toPosition(input: Input): Position = Position.Range(
       input = input,
       startLine = range.startLine,
@@ -59,7 +59,7 @@ package object inputs {
     )
   }
 
-  implicit class XtensionPositionSyntaxStructure(pos: Position) {
+  implicit class XtensionPositionSyntaxStructure(private val pos: Position) extends AnyVal {
     def syntax: String = pos match {
       case Position.None => s"<none>"
       case Position.Range(input, start, end) => s"${input.syntax}@$start..$end"

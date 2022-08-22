@@ -32,6 +32,15 @@ object Mima {
     ProblemFilters.exclude[A]("scala.meta." + metaType)
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
+    // implicit classes
+    exclude[IncompatibleResultTypeProblem]("package.XtensionDialectApply"),
+    exclude[IncompatibleResultTypeProblem]("package.XtensionDialectTokenSyntax"),
+    exclude[IncompatibleResultTypeProblem]("package.XtensionDialectTokensSyntax"),
+    exclude[IncompatibleResultTypeProblem]("package.XtensionDialectTreeSyntax"),
+    exclude[FinalClassProblem]("package$XtensionDialectApply"),
+    exclude[FinalClassProblem]("package$XtensionDialectTokenSyntax"),
+    exclude[FinalClassProblem]("package$XtensionDialectTokensSyntax"),
+    exclude[FinalClassProblem]("package$XtensionDialectTreeSyntax"),
     // dialect
     exclude[DirectMissingMethodProblem]("Dialect.apply"),
     exclude[DirectMissingMethodProblem]("Dialect.copy"),

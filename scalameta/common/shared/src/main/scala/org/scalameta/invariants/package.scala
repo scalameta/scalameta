@@ -15,7 +15,7 @@ package object invariants {
   // 2) Calls to `org.scalameta.debug` as explained in documentation to that method.
   def require(requirement: Boolean): Unit = macro Macros.require
 
-  implicit class XtensionRequireCast[T](x: T) {
+  implicit class XtensionRequireCast[T](private val x: T) extends AnyVal {
     // Equivalent to requiring that `x.getClass` is assignable from `U`.
     // Implemented as a macro, because there's no other way to delegate to another macro.
     def require[U: ClassTag]: U = macro Macros.requireCast[U]
@@ -23,7 +23,7 @@ package object invariants {
 
   // Provides pretty notation for implications of different kinds.
   // This is surprisingly helpful when writing certain complex `require` calls.
-  implicit class XtensionImplication(left: Boolean) {
+  implicit class XtensionImplication(private val left: Boolean) extends AnyVal {
     def ==>(right: Boolean) = !left || right
     def <==(right: Boolean) = (right ==> left)
     def <==>(right: Boolean) = (left ==> right) && (right ==> left)

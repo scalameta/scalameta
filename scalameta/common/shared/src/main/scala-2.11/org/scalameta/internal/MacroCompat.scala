@@ -10,7 +10,7 @@ object MacroCompat {
 
 object ScalaCompat {
   type IndexedSeqOptimized[+A] = scala.collection.IndexedSeqOptimized[A, immutable.IndexedSeq[A]]
-  implicit class XtensionScala213ToSeq[T](seq: collection.Seq[T]) {
+  implicit class XtensionScala213ToSeq[T](private val seq: collection.Seq[T]) extends AnyVal {
     def toScalaSeq: Seq[T] = seq
   }
 }

@@ -26,7 +26,7 @@ package object meta
 
   type XtensionParsersDialectApply // shadow conflicting implicit class
   type XtensionTokenizersDialectApply // shadow conflicting implicit class
-  implicit class XtensionDialectApply(dialect: scala.meta.Dialect) {
+  implicit class XtensionDialectApply(private val dialect: scala.meta.Dialect) extends AnyVal {
     def apply[T](inputLike: T)(
         implicit convert: scala.meta.common.Convert[T, scala.meta.inputs.Input]
     ): (scala.meta.Dialect, scala.meta.inputs.Input) = {
@@ -43,16 +43,16 @@ package object meta
     }
   }
   implicit class XtensionDialectTokenSyntax(
-      dialectToken: (scala.meta.Dialect, scala.meta.tokens.Token)
-  ) {
+      private val dialectToken: (scala.meta.Dialect, scala.meta.tokens.Token)
+  ) extends AnyVal {
     def syntax: String = {
       implicit val (dialect, token) = dialectToken
       token.syntax
     }
   }
   implicit class XtensionDialectTokensSyntax(
-      dialectTokens: (scala.meta.Dialect, scala.meta.tokens.Tokens)
-  ) {
+      private val dialectTokens: (scala.meta.Dialect, scala.meta.tokens.Tokens)
+  ) extends AnyVal {
     def syntax: String = {
       implicit val (dialect, tokens) = dialectTokens
       tokens.syntax
@@ -70,7 +70,9 @@ package object meta
       parse.apply(input, dialect)
     }
   }
-  implicit class XtensionDialectTreeSyntax(dialectTree: (scala.meta.Dialect, scala.meta.Tree)) {
+  implicit class XtensionDialectTreeSyntax(
+      private val dialectTree: (scala.meta.Dialect, scala.meta.Tree)
+  ) extends AnyVal {
     def syntax: String = {
       implicit val (dialect, tree) = dialectTree
       tree.syntax

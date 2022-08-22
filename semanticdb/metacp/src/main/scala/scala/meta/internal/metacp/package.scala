@@ -20,7 +20,7 @@ import scala.tools.scalap.scalax.rules.scalasig.ScalaSig
 import scala.tools.scalap.scalax.rules.scalasig.ScalaSigAttributeParsers
 
 package object metacp {
-  implicit class XtensionClassNode(node: ClassNode) {
+  implicit class XtensionClassNode(private val node: ClassNode) extends AnyVal {
     def scalaSig: Option[ScalaSigNode] = {
       if (node.attrs == null) None
       else {
@@ -64,13 +64,13 @@ package object metacp {
     }
 
   }
-  implicit class XtensionAsmPathOps(path: AbsolutePath) {
+  implicit class XtensionAsmPathOps(private val path: AbsolutePath) extends AnyVal {
     def toClassNode: ClassNode = {
       readInputStreamToClassNode(Files.newInputStream(path.toNIO))
     }
   }
 
-  implicit class XtensionAsmClassfileOps(classfile: Classfile) {
+  implicit class XtensionAsmClassfileOps(private val classfile: Classfile) extends AnyVal {
     def toClassNode: ClassNode = {
       readInputStreamToClassNode(classfile.openInputStream())
     }

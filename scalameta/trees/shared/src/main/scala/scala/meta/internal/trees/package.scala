@@ -11,7 +11,7 @@ import scala.meta.internal.trees.Metadata.Ast
 
 package object trees {
 
-  implicit class XtensionTreesRef(ref: Ref) {
+  implicit class XtensionTreesRef(private val ref: Ref) extends AnyVal {
     def isWithin: Boolean = ref match {
       case _: Ref.Quasi => true
       case _: Name => true
@@ -81,7 +81,7 @@ package object trees {
     }
   }
 
-  implicit class XtensionTreesTerm(tree: Term) {
+  implicit class XtensionTreesTerm(private val tree: Term) extends AnyVal {
     def isExtractor: Boolean = tree match {
       case quasi: Term.Quasi => true
       case ref: Term.Ref => ref.isStableId
@@ -90,7 +90,7 @@ package object trees {
     }
   }
 
-  implicit class XtensionTreesTermRef(tree: Term.Ref) {
+  implicit class XtensionTreesTermRef(private val tree: Term.Ref) extends AnyVal {
     def isPath: Boolean = tree.isStableId || tree.is[Term.This]
     def isQualId: Boolean = tree match {
       case _: Term.Ref.Quasi => true
@@ -107,7 +107,7 @@ package object trees {
     }
   }
 
-  implicit class XtensionTreesType(tree: Type) {
+  implicit class XtensionTreesType(private val tree: Type) extends AnyVal {
     def isConstructable: Boolean = tree match {
       case _: Type.Quasi => true
       case _: Type.Name => true
@@ -124,7 +124,7 @@ package object trees {
     }
   }
 
-  implicit class XtensionHelpersMod(mod: Mod) {
+  implicit class XtensionHelpersMod(private val mod: Mod) extends AnyVal {
     def isAccessMod: Boolean = mod match {
       case _: Mod.Private => true
       case _: Mod.Protected => true
@@ -141,14 +141,14 @@ package object trees {
     def isQualifiedAccessMod: Boolean = isAccessMod && accessBoundary.nonEmpty
   }
 
-  implicit class XtensionTreesMods(mods: collection.Iterable[Mod]) {
+  implicit class XtensionTreesMods(private val mods: collection.Iterable[Mod]) extends AnyVal {
     def has[T <: Mod](implicit classifier: Classifier[Mod, T]): Boolean =
       mods.exists(classifier.apply)
     def first[T <: Mod](implicit tag: ClassTag[T], classifier: Classifier[Mod, T]): Option[T] =
       mods.collectFirst { case m if classifier.apply(m) => m.require[T] }
   }
 
-  implicit class XtensionTreesStat(stat: Stat) {
+  implicit class XtensionTreesStat(private val stat: Stat) extends AnyVal {
     def isTopLevelStat: Boolean = stat match {
       case _: Stat.Quasi => true
       case _: Import => true
@@ -209,7 +209,7 @@ package object trees {
     }
   }
 
-  implicit class XtensionTreesCase(tree: Case) {
+  implicit class XtensionTreesCase(private val tree: Case) extends AnyVal {
     def stats: List[Stat] = tree.body match {
       case Term.Block(stats) => stats
       case body => List(body)

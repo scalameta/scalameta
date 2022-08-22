@@ -9,7 +9,7 @@ import scala.meta.io.Classpath
 
 package object io {
 
-  implicit class XtensionClasspath(cp: Classpath) {
+  implicit class XtensionClasspath(private val cp: Classpath) extends AnyVal {
     def visit(getVisitor: AbsolutePath => FileVisitor[Path]): Unit = {
       cp.foreach { root =>
         val visitor = getVisitor(root.path)
@@ -52,7 +52,7 @@ package object io {
     }
   }
 
-  implicit class XtensionAbsolutePathManifest(root: AbsolutePath) {
+  implicit class XtensionAbsolutePathManifest(private val root: AbsolutePath) extends AnyVal {
     def toManifest: Option[Manifest] = {
       val manifestPath = root.resolve("META-INF/MANIFEST.MF")
       if (manifestPath.isFile) {
