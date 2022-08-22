@@ -898,9 +898,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else autoEndPos(t)(Type.Annotate(t, annots))
     }
 
-    private def allowPlusMinusUnderscore: Boolean =
-      dialect.allowPlusMinusUnderscoreAsIdent || dialect.allowPlusMinusUnderscoreAsPlaceholder
-
     def simpleType(): Type = {
       val startPos = auto.startTokenPos
       val res = token match {
@@ -912,9 +909,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Type.Macro(macroSplice())
         case Ident("?") if dialect.allowQuestionMarkAsTypeWildcard =>
           next(); Type.Placeholder(typeBounds())
-        case Ident(value @ ("+" | "-")) if allowPlusMinusUnderscore && tryAhead[Underscore] =>
+        case Ident(value @ ("+" | "-"))
+            if (dialect.allowPlusMinusUnderscoreAsIdent || dialect.allowUnderscoreAsTypePlaceholder) &&
+              tryAhead[Underscore] =>
           next() // Ident and Underscore
-          if (dialect.allowPlusMinusUnderscoreAsPlaceholder)
+          if (dialect.allowUnderscoreAsTypePlaceholder)
             Type.Placeholder(typeBounds())
           else
             Type.Name(s"${value}_")

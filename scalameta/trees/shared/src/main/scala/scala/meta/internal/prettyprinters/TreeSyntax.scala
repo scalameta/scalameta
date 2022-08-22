@@ -702,7 +702,7 @@ object TreeSyntax {
           case _ => false
         }
         val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
-          (dialect.allowSignificantIndentation || questionMarkUsed)
+          (dialect.allowUnderscoreAsTypePlaceholder || questionMarkUsed)
         m(SimpleTyp, s(kw(if (useQM) "?" else "_"), t.bounds))
       case t: Type.Bounds =>
         s(
