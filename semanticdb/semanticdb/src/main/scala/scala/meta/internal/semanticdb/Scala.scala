@@ -34,7 +34,7 @@ object Scala {
     }
   }
 
-  implicit class ScalaSymbolOps(symbol: String) {
+  implicit class ScalaSymbolOps(private val symbol: String) extends AnyVal {
     def isNone: Boolean =
       symbol == Symbols.None
     def isRootPackage: Boolean =
