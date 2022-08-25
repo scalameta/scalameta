@@ -2855,9 +2855,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case _ =>
   }
 
-  def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Term.Param]] = {
+  def termParamClauses(
+      ownerIsType: Boolean,
+      ownerIsCase: Boolean = false
+  ): List[List[Term.Param]] = {
     var parsedImplicits = false
-    def paramClause(first: Boolean): List[Term.Param] = token match {
+    def termParamClause(first: Boolean): List[Term.Param] = token match {
       case RightParen() =>
         Nil
       case t @ Ellipsis(2) =>
@@ -2870,7 +2873,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           parsedUsing = true
         }
         commaSeparated(
-          param(
+          termParam(
             ownerIsCase && first,
             ownerIsType,
             isImplicit = parsedImplicits,
@@ -2881,7 +2884,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     listBy[List[Term.Param]] { paramss =>
       while (isAfterOptNewLine[LeftParen] && !parsedImplicits) {
         next()
-        paramss += paramClause(paramss.isEmpty)
+        paramss += termParamClause(paramss.isEmpty)
         accept[RightParen]
       }
     }
@@ -2913,7 +2916,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         }
     })
 
-  def param(
+  def termParam(
       ownerIsCase: Boolean,
       ownerIsType: Boolean,
       isImplicit: Boolean,
@@ -3000,7 +3003,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def quasiquoteTermParam(): Term.Param = entrypointTermParam()
 
   def entrypointTermParam(): Term.Param =
-    param(ownerIsCase = false, ownerIsType = true, isImplicit = false, isUsing = false)
+    termParam(ownerIsCase = false, ownerIsType = true, isImplicit = false, isUsing = false)
 
   def typeParamClauseOpt(
       ownerIsType: Boolean,
@@ -3307,7 +3310,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         )
         val uparamss =
           if (token.is[LeftParen] && ahead(token.is[soft.KwUsing]))
-            paramClauses(ownerIsType = false)
+            termParamClauses(ownerIsType = false)
           else Nil
         if (acceptOpt[Colon]) {
           (name, tparams, uparamss)
@@ -3445,7 +3448,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         syntaxError(s"Procedure syntax is not supported. $hint", at = name)
     }
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
-    val paramss = paramClauses(ownerIsType = false)
+    val paramss = termParamClauses(ownerIsType = false)
     paramss.foreach(onlyLastParameterCanBeRepeated)
 
     val restype = ReturnTypeContext.within(typedOpt())
@@ -3688,7 +3691,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         ctorModifiers().foreach(buf += _)
       }
       val name = autoPos(Name.Anonymous())
-      val paramss = paramClauses(ownerIsType = true, owner == OwnedByCaseClass)
+      val paramss = termParamClauses(ownerIsType = true, owner == OwnedByCaseClass)
       Ctor.Primary(mods, name, paramss)
     } else if (owner.isTrait) {
       Ctor.Primary(Nil, autoPos(Name.Anonymous()), Nil)
@@ -3705,7 +3708,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (token.isNot[LeftParen]) {
       syntaxError("auxiliary constructor needs non-implicit parameter list", at = token.pos)
     } else {
-      val paramss = paramClauses(ownerIsType = true)
+      val paramss = termParamClauses(ownerIsType = true)
       secondaryCtorRest(mods, name, paramss)
     }
   }
@@ -3719,7 +3722,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     accept[KwDef]
     val name = atCurPos(Name.Anonymous())
     accept[KwThis]
-    val paramss = paramClauses(ownerIsType = true)
+    val paramss = termParamClauses(ownerIsType = true)
     newLineOptWhenFollowedBy[LeftBrace]
     if (token.is[EOF]) Ctor.Primary(mods, name, paramss)
     else secondaryCtorRest(mods, name, paramss)
