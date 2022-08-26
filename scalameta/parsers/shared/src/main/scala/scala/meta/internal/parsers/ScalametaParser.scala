@@ -2855,6 +2855,82 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case _ =>
   }
 
+  def paramClauses(
+      ownerIsType: Boolean,
+      ctxBoundsAllowed: Boolean,
+      ownerIsCase: Boolean = false,
+      allowUnderscore: Boolean = true
+  ): List[Either[List[Type.Param], List[Term.Param]]] = {
+    listBy[Either[List[Type.Param], List[Term.Param]]] { paramss =>
+      while ((isAfterOptNewLine[LeftParen] && !ahead(token.is[KwImplicit])) || isAfterOptNewLine[LeftBracket]) {
+        paramss += paramClause(paramss.isEmpty, ownerIsType, ctxBoundsAllowed, ownerIsCase, allowUnderscore)
+      }
+    }
+  }
+
+  def paramClause(
+      first: Boolean,
+      ownerIsType: Boolean,
+      ctxBoundsAllowed: Boolean,
+      ownerIsCase: Boolean = false,
+      allowUnderscore: Boolean = true
+  ): Either[List[Type.Param], List[Term.Param]] = token match {
+    case LeftBracket() =>
+      val res = typeParamClauseOpt(ownerIsType, ctxBoundsAllowed, allowUnderscore)
+      Left(res)
+    case LeftParen() if !ahead(token.is[KwImplicit]) =>
+      Right(inParens(nonImplicitTermParamClause(first, ownerIsType, ownerIsCase)))
+    case _ => 
+      syntaxError("Not a valid paramClause", at = token)
+  }
+
+  def implicitParamClauseOpt(
+      ownerIsType: Boolean
+  ): List[Term.Param] = token match {
+    case LeftParen() if ahead(token.is[KwImplicit]) =>
+      implicitParamClause(ownerIsType)
+    case _ => Nil
+  }
+
+  def implicitParamClause(
+      ownerIsType: Boolean
+  ): List[Term.Param] = inParens{
+    accept[KwImplicit]
+
+    commaSeparated(
+      termParam(
+        ownerIsCase = false, // implicit clauses are never the first clause of a case class
+        ownerIsType,
+        isImplicit = true,
+        isUsing = false
+      )
+    )
+  }
+
+  def nonImplicitTermParamClause(
+      first: Boolean,
+      ownerIsType: Boolean,
+      ownerIsCase: Boolean = false
+  ): List[Term.Param] = token match {
+    case _ if token.is[KwImplicit] =>
+      syntaxError("Implicit clause found where it was not expected.", at = token)
+    case RightParen() =>
+      Nil
+    case t @ Ellipsis(2) =>
+      List(ellipsis[Term.Param](t))
+    case _ =>
+      val parsedUsing = acceptOpt[soft.KwUsing]
+
+      commaSeparated(
+        termParam(
+          ownerIsCase && first,
+          ownerIsType,
+          isImplicit = false,
+          isUsing = parsedUsing
+        )
+      )
+  }
+
   def termParamClauses(
       ownerIsType: Boolean,
       ownerIsCase: Boolean = false
@@ -3402,7 +3478,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       while (isAfterOptNewLine[LeftParen] && tryAhead[soft.KwUsing]) {
         next()
         paramss += inParensAfterOpen(commaSeparated {
-          param(ownerIsCase = false, ownerIsType = true, isImplicit = false, isUsing = true)
+          termParam(ownerIsCase = false, ownerIsType = true, isImplicit = false, isUsing = true)
         })
       }
     }
@@ -3410,7 +3486,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     collectUparams()
 
     paramss += inParens(
-      List(param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false))
+      List(termParam(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false))
     )
 
     collectUparams()
@@ -3447,9 +3523,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else
         syntaxError(s"Procedure syntax is not supported. $hint", at = name)
     }
-    val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
-    val paramss = termParamClauses(ownerIsType = false)
-    paramss.foreach(onlyLastParameterCanBeRepeated)
+
+    val _paramss: List[Either[List[Type.Param],List[Term.Param]]] = paramClauses(ownerIsType = false, ctxBoundsAllowed = true)
+
+    val implicitParams = implicitParamClauseOpt(ownerIsType = false)
+
+    val paramss = if(implicitParams.nonEmpty){ _paramss :+ Right(implicitParams) } else { _paramss }
+    
+    val tparams = paramss.headOption.collect{ case Left(tyParams) => tyParams }.getOrElse(List())
+
+    val termParamss = paramss.collect{ case Right(termParams) => termParams}
+
+    termParamss.foreach(onlyLastParameterCanBeRepeated)
 
     val restype = ReturnTypeContext.within(typedOpt())
     if (restype.isEmpty && isAfterOptNewLine[LeftBrace]) {
@@ -3458,7 +3543,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         mods,
         name,
         tparams,
-        paramss,
+        termParamss,
         Some(autoPos(Type.Name("Unit"))),
         expr()
       )
@@ -3467,13 +3552,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         warnProcedureDeprecation
         autoPos(Type.Name("Unit"))
       }
-      Decl.Def(mods, name, tparams, paramss, decltype)
+      Decl.Def(mods, name, tparams, termParamss, decltype)
     } else {
       accept[Equals]
       val isMacro = acceptOpt[KwMacro]
       val rhs = exprMaybeIndented()
-      if (isMacro) Defn.Macro(mods, name, tparams, paramss, restype, rhs)
-      else Defn.Def(mods, name, tparams, paramss, restype, rhs)
+      if (isMacro) Defn.Macro(mods, name, tparams, termParamss, restype, rhs)
+      else Defn.Def(mods, name, tparams, termParamss, restype, rhs)
     }
   }
 
