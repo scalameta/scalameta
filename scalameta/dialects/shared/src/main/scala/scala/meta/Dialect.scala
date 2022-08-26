@@ -143,10 +143,8 @@ final class Dialect private (
      * https://github.com/scala/scala/pull/9605
      */
     val allowPlusMinusUnderscoreAsIdent: Boolean,
-    /* The same as previous but for Scala3
-     * works under -Ykind-projector:underscores
-     */
-    val allowPlusMinusUnderscoreAsPlaceholder: Boolean,
+    // Dotty uses `_` for placeholder for types since 3.2
+    val allowUnderscoreAsTypePlaceholder: Boolean,
     // import a.b.c.{ given, _} used for -X:source3
     val allowGivenImports: Boolean,
     // Scala 3 uses proper precedence rules for infix types, unlike Scala 2
@@ -239,7 +237,7 @@ final class Dialect private (
       allowProcedureSyntax = true,
       allowDoWhile = true,
       allowPlusMinusUnderscoreAsIdent = false,
-      allowPlusMinusUnderscoreAsPlaceholder = false,
+      allowUnderscoreAsTypePlaceholder = false,
       allowGivenImports = false,
       useInfixTypePrecedence = false,
       allowInfixOperatorAfterNL = false
@@ -429,9 +427,18 @@ final class Dialect private (
     privateCopy(allowPlusMinusUnderscoreAsIdent = newValue)
   }
 
-  def withAllowPlusMinusUnderscoreAsPlaceholder(newValue: Boolean): Dialect = {
-    privateCopy(allowPlusMinusUnderscoreAsPlaceholder = newValue)
+  def withAllowUnderscoreAsTypePlaceholder(newValue: Boolean): Dialect = {
+    privateCopy(allowUnderscoreAsTypePlaceholder = newValue)
   }
+  @deprecated("use withAllowUnderscoreAsTypePlaceholder", ">4.5.13")
+  def withAllowPlusMinusUnderscoreAsPlaceholder(newValue: Boolean): Dialect = {
+    withAllowUnderscoreAsTypePlaceholder(newValue)
+  }
+  @deprecated("use allowUnderscoreAsTypePlaceholder", ">4.5.13")
+  def allowPlusMinusUnderscoreAsPlaceholder: Boolean = {
+    allowUnderscoreAsTypePlaceholder
+  }
+
   def withAllowGivenImports(newValue: Boolean): Dialect = {
     privateCopy(allowGivenImports = newValue)
   }
@@ -504,7 +511,7 @@ final class Dialect private (
       allowProcedureSyntax: Boolean = this.allowProcedureSyntax,
       allowDoWhile: Boolean = this.allowDoWhile,
       allowPlusMinusUnderscoreAsIdent: Boolean = this.allowPlusMinusUnderscoreAsIdent,
-      allowPlusMinusUnderscoreAsPlaceholder: Boolean = this.allowPlusMinusUnderscoreAsPlaceholder,
+      allowUnderscoreAsTypePlaceholder: Boolean = this.allowUnderscoreAsTypePlaceholder,
       allowGivenImports: Boolean = this.allowGivenImports,
       useInfixTypePrecedence: Boolean = this.useInfixTypePrecedence,
       allowInfixOperatorAfterNL: Boolean = this.allowInfixOperatorAfterNL
@@ -565,7 +572,7 @@ final class Dialect private (
       allowProcedureSyntax,
       allowDoWhile,
       allowPlusMinusUnderscoreAsIdent,
-      allowPlusMinusUnderscoreAsPlaceholder,
+      allowUnderscoreAsTypePlaceholder,
       allowGivenImports,
       useInfixTypePrecedence,
       allowInfixOperatorAfterNL
@@ -646,7 +653,7 @@ final class Dialect private (
       && this.allowProcedureSyntax == that.allowProcedureSyntax
       && this.allowDoWhile == that.allowDoWhile
       && this.allowPlusMinusUnderscoreAsIdent == that.allowPlusMinusUnderscoreAsIdent
-      && this.allowPlusMinusUnderscoreAsPlaceholder == that.allowPlusMinusUnderscoreAsPlaceholder
+      && this.allowUnderscoreAsTypePlaceholder == that.allowUnderscoreAsTypePlaceholder
       && this.allowGivenImports == that.allowGivenImports
       && this.useInfixTypePrecedence == that.useInfixTypePrecedence
       && this.allowInfixOperatorAfterNL == that.allowInfixOperatorAfterNL

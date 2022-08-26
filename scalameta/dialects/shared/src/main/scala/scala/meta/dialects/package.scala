@@ -142,7 +142,7 @@ package object dialects {
     .withAllowStarWildcardImport(true)
     .withAllowProcedureSyntax(false)
     .withAllowDoWhile(false)
-    .withAllowPlusMinusUnderscoreAsPlaceholder(true)
+    .withAllowUnderscoreAsTypePlaceholder(true)
     .withUseInfixTypePrecedence(true)
     .withAllowInfixOperatorAfterNL(true)
 
