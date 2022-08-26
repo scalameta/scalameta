@@ -767,7 +767,7 @@ object Dialect extends InternalDialect {
       toplevelSeparator = toplevelSeparator
     )
   }
-  private[meta] lazy val standards: Map[String, Dialect] = Seq[sourcecode.Text[Dialect]](
+  private lazy val standardPairs = Seq[sourcecode.Text[Dialect]](
     Dotty,
     Scala3,
     Paradise211,
@@ -785,7 +785,9 @@ object Dialect extends InternalDialect {
     Scala212Source3,
     Typelevel211,
     Typelevel212
-  ).map(x => x.source -> x.value).toMap
+  )
+  private[meta] lazy val standards: Map[String, Dialect] =
+    standardPairs.map(x => x.source -> x.value).toMap
   private[meta] lazy val inverseStandards: Map[Dialect, String] =
-    standards.iterator.map(_.swap).toMap
+    standardPairs.map(x => x.value -> x.source).toMap
 }
