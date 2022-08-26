@@ -40,31 +40,6 @@ object Mima {
     exclude[FinalClassProblem]("package$XtensionDialectApply"),
     exclude[FinalClassProblem]("package$XtensionDialectTokenSyntax"),
     exclude[FinalClassProblem]("package$XtensionDialectTokensSyntax"),
-    exclude[FinalClassProblem]("package$XtensionDialectTreeSyntax"),
-    // dialect
-    exclude[DirectMissingMethodProblem]("Dialect.apply"),
-    exclude[DirectMissingMethodProblem]("Dialect.copy"),
-    exclude[IncompatibleResultTypeProblem]("Dialect.copy$default$21"),
-    exclude[IncompatibleResultTypeProblem]("Dialect.copy$default$22"),
-    exclude[IncompatibleResultTypeProblem]("Dialect.copy$default$23"),
-    exclude[IncompatibleResultTypeProblem]("Dialect.copy$default$24"),
-    exclude[DirectMissingMethodProblem]("Dialect.copy$default$22"),
-    exclude[DirectMissingMethodProblem]("Dialect.copy$default$23"),
-    exclude[DirectMissingMethodProblem]("Dialect.copy$default$24"),
-    exclude[DirectMissingMethodProblem]("Dialect.allowImplicitFunctionTypes"),
-    exclude[DirectMissingMethodProblem]("Dialect.withAllowImplicitFunctionTypes"),
-    exclude[DirectMissingMethodProblem]("Dialect.allowMethodTypes"),
-    exclude[DirectMissingMethodProblem]("Dialect.withAllowMethodTypes"),
-    exclude[DirectMissingMethodProblem]("Dialect.allowWithTypes"),
-    exclude[DirectMissingMethodProblem]("Dialect.withAllowWithTypes"),
-    exclude[DirectMissingMethodProblem]("Dialect.allowWhiteboxMacro"),
-    exclude[DirectMissingMethodProblem]("Dialect.withAllowWhiteboxMacro"),
-    exclude[DirectMissingMethodProblem]("Dialect.allowLiteralUnitType"),
-    exclude[DirectMissingMethodProblem]("Dialect.withAllowLiteralUnitType"),
-    exclude[DirectMissingMethodProblem]("Dialect.allowSuperTrait"),
-    exclude[DirectMissingMethodProblem]("Dialect.withAllowSuperTrait"),
-    exclude[DirectMissingMethodProblem]("Dialect.allowAsPatternBinding"),
-    exclude[DirectMissingMethodProblem]("Dialect.withAllowAsPatternBinding"),
-    exclude[DirectMissingMethodProblem]("Dialect.this")
+    exclude[FinalClassProblem]("package$XtensionDialectTreeSyntax")
   )
 }
