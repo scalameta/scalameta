@@ -108,7 +108,9 @@ class CommunityDottySuite extends FunSuite {
   }
 
   def checkFilesRecursive(parent: Path)(implicit build: CommunityBuild): TestStats = {
-    if (ignoreParts.exists(p => parent.toAbsolutePath.toString.contains(p)))
+    val absPath = parent.toAbsolutePath
+    val absPathString = absPath.toString
+    if (ignoreParts.exists(absPathString.contains))
       return InitTestStats
     if (Files.isDirectory(parent)) {
       import scala.collection.JavaConverters._
@@ -119,21 +121,23 @@ class CommunityDottySuite extends FunSuite {
         .asScala
         .fold(InitTestStats)(merger)
     } else {
-      if (parent.toAbsolutePath.toString.endsWith(".scala")) {
-        checkFile(parent)
+      if (absPathString.endsWith(".scala")) {
+        checkAbsPath(absPath, absPathString)
       } else InitTestStats
     }
   }
 
-  def checkFile(file: Path)(implicit build: CommunityBuild): TestStats = {
-    val fileContent = Input.File(file.toAbsolutePath)
+  def checkAbsPath(absPath: Path, absPathString: String)(
+      implicit build: CommunityBuild
+  ): TestStats = {
+    val fileContent = Input.File(absPath)
     val lines = fileContent.chars.count(_ == '\n')
-    if (excluded(file.toAbsolutePath.toString, build)) {
+    if (excluded(absPathString, build)) {
       try {
         val taken = timeIt {
           fileContent.parse[Source].get
         }
-        println("File marked as error but parsed correctly " + file.toAbsolutePath)
+        println("File marked as error but parsed correctly " + absPathString)
         TestStats(1, 1, None, taken, lines)
       } catch {
         case e: Throwable => TestStats(1, 1, None, 0, 0)
@@ -146,7 +150,7 @@ class CommunityDottySuite extends FunSuite {
         TestStats(1, 0, None, taken, lines)
       } catch {
         case e: Throwable =>
-          println(s"Failed for file ${file.toAbsolutePath}")
+          println(s"Failed for file $absPathString")
           println(s"Error: " + e.getMessage)
           TestStats(1, 1, Some(e), 0, 0)
       }
