@@ -97,6 +97,18 @@ class PublicSuite extends TreeSuiteBase {
     assertNoDiff(scala.meta.dialects.Scala3.toString, "Scala3")
   }
 
+  test("scala.meta.dialects.Scala30.toString") {
+    assertNoDiff(scala.meta.dialects.Scala30.toString, "Scala31")
+  }
+
+  test("scala.meta.dialects.Scala31.toString") {
+    assertNoDiff(scala.meta.dialects.Scala31.toString, "Scala31")
+  }
+
+  test("scala.meta.dialects.Scala32.toString") {
+    assertNoDiff(scala.meta.dialects.Scala32.toString, "Scala3")
+  }
+
   test("scala.meta.dialects.Dotty.toString") {
     // NOTE(olafur): `Dotty` and `Scala3` are identical so it's expected that
     // `toString` returns "Scala3" instead of "Dotty".
