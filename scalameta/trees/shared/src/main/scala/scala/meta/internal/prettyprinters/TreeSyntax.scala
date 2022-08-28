@@ -686,7 +686,12 @@ object TreeSyntax {
           s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}"))
         )
       case t: Type.AnonymousParam =>
-        m(SimpleTyp, o(t.variant), "_")
+        val useStar = dialect.allowStarAsTypePlaceholder && (t.origin match {
+          case o: Origin.Parsed => !o.tokens.lastOption.exists(_.is[Token.Underscore])
+          case _ => false
+        })
+        val ph = if (useStar) "*" else "_"
+        m(SimpleTyp, o(t.variant), ph)
       case t: Type.Wildcard =>
         /* In order not to break existing tools `.syntax` should still return
          * `_` instead `?` unless specifically used.

@@ -145,6 +145,8 @@ final class Dialect private (
     val allowPlusMinusUnderscoreAsIdent: Boolean,
     // Dotty uses `_` for placeholder for types since 3.2
     val allowUnderscoreAsTypePlaceholder: Boolean,
+    // Dotty uses `*` for placeholder for types in 3.0-3.2
+    val allowStarAsTypePlaceholder: Boolean,
     // import a.b.c.{ given, _} used for -X:source3
     val allowGivenImports: Boolean,
     // Scala 3 uses proper precedence rules for infix types, unlike Scala 2
@@ -242,6 +244,7 @@ final class Dialect private (
       allowDoWhile = true,
       allowPlusMinusUnderscoreAsIdent = false,
       allowUnderscoreAsTypePlaceholder = false,
+      allowStarAsTypePlaceholder = false,
       allowGivenImports = false,
       useInfixTypePrecedence = false,
       allowInfixOperatorAfterNL = false,
@@ -435,6 +438,9 @@ final class Dialect private (
   def withAllowUnderscoreAsTypePlaceholder(newValue: Boolean): Dialect = {
     privateCopy(allowUnderscoreAsTypePlaceholder = newValue)
   }
+  def withAllowStarAsTypePlaceholder(newValue: Boolean): Dialect = {
+    privateCopy(allowStarAsTypePlaceholder = newValue)
+  }
   @deprecated("use withAllowUnderscoreAsTypePlaceholder", ">4.5.13")
   def withAllowPlusMinusUnderscoreAsPlaceholder(newValue: Boolean): Dialect = {
     withAllowUnderscoreAsTypePlaceholder(newValue)
@@ -521,6 +527,7 @@ final class Dialect private (
       allowDoWhile: Boolean = this.allowDoWhile,
       allowPlusMinusUnderscoreAsIdent: Boolean = this.allowPlusMinusUnderscoreAsIdent,
       allowUnderscoreAsTypePlaceholder: Boolean = this.allowUnderscoreAsTypePlaceholder,
+      allowStarAsTypePlaceholder: Boolean = this.allowStarAsTypePlaceholder,
       allowGivenImports: Boolean = this.allowGivenImports,
       useInfixTypePrecedence: Boolean = this.useInfixTypePrecedence,
       allowInfixOperatorAfterNL: Boolean = this.allowInfixOperatorAfterNL,
@@ -583,6 +590,7 @@ final class Dialect private (
       allowDoWhile,
       allowPlusMinusUnderscoreAsIdent,
       allowUnderscoreAsTypePlaceholder,
+      allowStarAsTypePlaceholder,
       allowGivenImports,
       useInfixTypePrecedence,
       allowInfixOperatorAfterNL,
@@ -665,6 +673,7 @@ final class Dialect private (
       && this.allowDoWhile == that.allowDoWhile
       && this.allowPlusMinusUnderscoreAsIdent == that.allowPlusMinusUnderscoreAsIdent
       && this.allowUnderscoreAsTypePlaceholder == that.allowUnderscoreAsTypePlaceholder
+      && this.allowStarAsTypePlaceholder == that.allowStarAsTypePlaceholder
       && this.allowGivenImports == that.allowGivenImports
       && this.useInfixTypePrecedence == that.useInfixTypePrecedence
       && this.allowInfixOperatorAfterNL == that.allowInfixOperatorAfterNL

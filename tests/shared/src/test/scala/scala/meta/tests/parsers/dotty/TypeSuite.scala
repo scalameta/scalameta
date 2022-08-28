@@ -327,6 +327,20 @@ class TypeSuite extends BaseDottySuite {
     }
   }
 
+  test("F[*]") {
+    // will be deprecated in later versions
+    implicit val Scala3: Dialect = scala.meta.dialects.Scala31
+    assertTpe("F[*]") {
+      Apply(TypeName("F"), List(AnonymousParam(None)))
+    }
+    assertTpe("F[+*]") {
+      Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant()))))
+    }
+    assertTpe("F[-*]") {
+      Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Contravariant()))))
+    }
+  }
+
   test("F[T] forSome { type T }") {
     val Existential(
       Apply(TypeName("F"), TypeName("T") :: Nil),
