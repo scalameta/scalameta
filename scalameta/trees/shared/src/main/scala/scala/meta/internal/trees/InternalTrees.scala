@@ -53,21 +53,14 @@ trait InternalTree extends Product {
 
   def pos: Position = {
     origin match {
-      case Origin.Parsed(input, dialect, pos) =>
-        val tokens = dialect(input).tokenize.get
-        val startToken = tokens(pos.start)
-        val endToken = tokens(pos.end - 1)
-        Position.Range(input, startToken.start, endToken.end)
-      case _ =>
-        Position.None
+      case x: Origin.Parsed => x.position
+      case _ => Position.None
     }
   }
 
   def tokens(implicit dialect: Dialect): Tokens = {
     origin match {
-      case Origin.Parsed(input, dialect, pos) =>
-        val tokens = dialect(input).tokenize.get
-        tokens.slice(pos.start, pos.end)
+      case x: Origin.Parsed => x.tokens
       case _ =>
         this match {
           case Lit.String(value) =>

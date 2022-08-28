@@ -15,7 +15,6 @@ import Show.{
 }
 import scala.meta.internal.trees.{root => _, branch => _, _}
 import scala.meta.internal.tokenizers.Chars._
-import scala.meta.internal.trees.Origin.Parsed
 import org.scalameta.adt._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
@@ -694,11 +693,7 @@ object TreeSyntax {
          * `_` instead `?` unless specifically used.
          */
         def questionMarkUsed = t.origin match {
-          case _: Origin.Parsed =>
-            !t.tokens.exists {
-              case _: Token.Underscore => true
-              case _ => false
-            }
+          case o: Origin.Parsed => !o.tokens.exists(_.is[Token.Underscore])
           case _ => false
         }
         val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
@@ -1238,7 +1233,7 @@ object TreeSyntax {
         // NOTE: Options don't really matter,
         // because if we've parsed a tree, it's not gonna contain lazy seqs anyway.
         // case Origin.Parsed(_, originalDialect, _) if dialect == originalDialect && options == Options.Eager =>
-        case Origin.Parsed(_, `dialect`, _) => s(x.pos.text)
+        case o @ Origin.Parsed(_, `dialect`, _) => s(o.position.text)
         case _ => reprint(x)(dialect)
       }
     }
