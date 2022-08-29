@@ -417,12 +417,12 @@ object Defn {
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[scala.meta.Type.Param],
-      paramss: List[List[Term.Param]],
+      paramss: List[Either[List[scala.meta.Type.Param],List[Term.Param]]],
       decltpe: Option[scala.meta.Type],
       body: Term
   ) extends Defn with Member.Term with Stat.WithMods {
-    checkFields(paramss.forall(onlyLastParamCanBeRepeated))
+    val termParamss = paramss.collect{ case Right(termParams) => termParams }
+    checkFields(paramss.collect{ case Right(termParams) => termParams }.forall(onlyLastParamCanBeRepeated))
   }
   @ast class Macro(
       mods: List[Mod],

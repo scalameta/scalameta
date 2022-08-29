@@ -3542,8 +3542,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       Defn.Def(
         mods,
         name,
-        tparams,
-        termParamss,
+        paramss,
         Some(autoPos(Type.Name("Unit"))),
         expr()
       )
@@ -3558,7 +3557,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val isMacro = acceptOpt[KwMacro]
       val rhs = exprMaybeIndented()
       if (isMacro) Defn.Macro(mods, name, tparams, termParamss, restype, rhs)
-      else Defn.Def(mods, name, tparams, termParamss, restype, rhs)
+      else Defn.Def(mods, name, paramss, restype, rhs)
     }
   }
 

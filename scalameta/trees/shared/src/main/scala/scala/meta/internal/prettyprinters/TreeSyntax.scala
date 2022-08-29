@@ -943,7 +943,7 @@ object TreeSyntax {
         )
       case t: Defn.Object => r(" ")(t.mods, kw("object"), t.name, t.templ)
       case t: Defn.Def =>
-        s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
+        s(w(t.mods, " "), kw("def"), " ", t.name, t.paramss, t.decltpe, " = ", t.body)
       case t: Defn.Macro =>
         s(
           w(t.mods, " "),
