@@ -101,6 +101,9 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
         lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
       case ListListTreeTpe(tpe) =>
         lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
+      case ListEitherListTreeTpe((tpe1, tpe2)) => 
+        lazyLoad(pf => q"$pf.map(_.left.map(_.map(el => ${copySubtree(q"el", tpe1)})).map(_.map(el => ${copySubtree(q"el", tpe2)})))")
+      
       case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
     }
   }
@@ -117,6 +120,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       case ListTreeTpe(tpe) => q"$f = $v.map(el => ${copySubtree(q"el", tpe)})"
       case OptionListTreeTpe(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el", tpe)}))"
       case ListListTreeTpe(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el", tpe)}))"
+      case ListEitherListTreeTpe((tpe1, tpe2)) => q"$f = $v.map(_.left.map(_.map(el => ${copySubtree(q"el", tpe1)})).map(_.map(el => ${copySubtree(q"el", tpe2)})))"
       case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
     }
   }
@@ -129,6 +133,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       case ListTreeTpe(tpe) => q"null"
       case OptionListTreeTpe(tpe) => q"null"
       case ListListTreeTpe(tpe) => q"null"
+      case ListEitherListTreeTpe(tpe) => q"null"
       case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
     }
   }
@@ -159,6 +164,9 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
         case ListListTreeTpe(_) =>
           val acc1 = flushStreak(acc)
           q"$acc1 ++ this.${f.sym}.flatten"
+      case ListEitherListTreeTpe(tpe) => 
+          val acc1 = flushStreak(acc)
+          q"$acc1 ++ this.${f.sym}.map(_.merge).flatten"
         case _ =>
           acc
       }

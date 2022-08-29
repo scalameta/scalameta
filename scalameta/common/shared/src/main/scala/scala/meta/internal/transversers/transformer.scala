@@ -65,6 +65,24 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           else tolist.toList
         """
     }
+    def eitherTransformer(input: Tree, tpe: Type, nested: (Tree, Type) => Tree): Tree = {
+      val fromeither = c.freshName(TermName("fromeither"))
+      val from = c.freshName(TermName("from"))
+      val to = c.freshName(TermName("to"))
+      q"""
+          val $fromeither = $input
+          $fromeither match {
+            case $LeftModule($from) =>
+              val $to = ${nested(q"$from", tpe.typeArgs(0))}
+              if ($from eq $to) $fromeither
+              else $LeftModule($to)
+            case $RightModule($from) =>
+              val $to = ${nested(q"$from", tpe.typeArgs(1))}
+              if ($from eq $to) $fromeither
+              else $RightModule($to)
+          }
+        """
+    }
     val rhs = f.tpe match {
       case tpe @ TreeTpe() =>
         treeTransformer(q"${f.name}", tpe)
@@ -76,6 +94,8 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
         optionTransformer(q"${f.name}", tpe, listTransformer(_, _, treeTransformer))
       case tpe @ ListListTreeTpe(_) =>
         listTransformer(q"${f.name}", tpe, listTransformer(_, _, treeTransformer))
+      case tpe @ ListEitherListTreeTpe(_) =>
+        listTransformer(q"${f.name}", tpe, eitherTransformer(_, _, listTransformer(_, _, treeTransformer)))
       case _ =>
         q"${f.name}"
     }
@@ -152,6 +172,31 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
       def apply(treess: $ListClass[$ListClass[$TreeClass]])(implicit hack: $Hack2Class): $ListClass[$ListClass[$TreeClass]] = {
         var same = true
         val buf = $ListBufferModule[$ListClass[$TreeClass]]()
+        val it = treess.iterator
+        while (it.hasNext) {
+          val trees = it.next
+          val trees1 = apply(trees)
+          if (trees ne trees1) same = false
+          buf += trees1
+        }
+        if (same) treess
+        else buf.toList
+      }
+
+      def apply(eithertrees: $EitherClass[$ListClass[$TreeClass],$ListClass[$TreeClass]]): $EitherClass[$ListClass[$TreeClass],$ListClass[$TreeClass]] = eithertrees match {
+        case $LeftModule(tree) =>
+          val tree1 = apply(tree)
+          if (tree eq tree1) eithertrees
+          else $LeftModule(tree1)
+        case $RightModule(tree) =>
+          val tree1 = apply(tree)
+          if (tree eq tree1) eithertrees
+          else $RightModule(tree1)
+      }
+
+      def apply(treess: $ListClass[$EitherClass[$ListClass[$TreeClass],$ListClass[$TreeClass]]])(implicit hack: $Hack3Class): $ListClass[$EitherClass[$ListClass[$TreeClass],$ListClass[$TreeClass]]] = {
+        var same = true
+        val buf = $ListBufferModule[$EitherClass[$ListClass[$TreeClass],$ListClass[$TreeClass]]]()
         val it = treess.iterator
         while (it.hasNext) {
           val trees = it.next

@@ -59,6 +59,8 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
   lazy val SomeClass = tq"_root_.scala.Some"
   lazy val SomeModule = hygienicRef(Some)
   lazy val NoneModule = hygienicRef(scala.None)
+  lazy val LeftModule = hygienicRef(Left)
+  lazy val RightModule = hygienicRef(Right)
   def SerialVersionUIDAnnotation(uid: Long) = q"new ${hygienicRef[SerialVersionUID]}($uid)"
   def TransientAnnotation = q"new ${hygienicRef[transient]}"
   def InlineAnnotation = q"new ${hygienicRef[inline]}"
@@ -70,6 +72,7 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
   lazy val IndexOutOfBoundsException = hygienicRef[IndexOutOfBoundsException]
   lazy val IteratorClass = tq"_root_.scala.collection.Iterator"
   lazy val ListClass = tq"_root_.scala.collection.immutable.List"
+  lazy val EitherClass = tq"_root_.scala.util.Either"
   lazy val ListModule = q"_root_.scala.collection.immutable.List"
   lazy val ListBufferModule = hygienicRef(scala.collection.mutable.ListBuffer)
   lazy val UnitClass = hygienicRef[scala.Unit]
@@ -162,11 +165,33 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
     }
   }
 
+  object EitherListTreeTpe {
+    def unapply(tpe: Type): Option[(Type,Type)] = {
+      if (tpe.typeSymbol == c.mirror.staticClass("scala.util.Either")) {
+        tpe.typeArgs match {
+          case ListTreeTpe(tpe1) :: ListTreeTpe(tpe2) :: Nil => Some((tpe1,tpe2))
+          case _ => None
+        }
+      } else None
+    }
+  }
+
   object ListListTreeTpe {
     def unapply(tpe: Type): Option[Type] = {
       if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.List")) {
         tpe.typeArgs match {
           case ListTreeTpe(tpe) :: Nil => Some(tpe)
+          case _ => None
+        }
+      } else None
+    }
+  }
+
+  object ListEitherListTreeTpe {
+    def unapply(tpe: Type): Option[(Type,Type)] = {
+      if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.List")) {
+        tpe.typeArgs match {
+          case EitherListTreeTpe(tpe) :: Nil => Some(tpe)
           case _ => None
         }
       } else None
