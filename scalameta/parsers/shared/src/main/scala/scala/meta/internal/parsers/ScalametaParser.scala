@@ -2395,13 +2395,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     def patterns(): List[Pat] = commaSeparated(pattern())
 
-    def pattern(): Pat = {
-      def loop(pat: Pat): Pat =
-        if (!isBar) pat
-        else {
-          next(); autoEndPos(pat)(Pat.Alternative(pat, pattern()))
+    def pattern(): Pat = patternAlternatives(Nil)
+
+    @tailrec
+    private def patternAlternatives(pats: List[Pat]): Pat = {
+      val pat = pattern1()
+      if (isBar) {
+        next()
+        patternAlternatives(pat :: pats)
+      } else if (pats.isEmpty) {
+        pat
+      } else {
+        val endPos = pat.endTokenPos
+        pats.foldLeft(pat) { case (rtAll, ltOne) =>
+          atPos(ltOne.startTokenPos, endPos)(Pat.Alternative(ltOne, rtAll))
         }
-      loop(pattern1())
+      }
     }
 
     def quasiquotePattern(): Pat = {
