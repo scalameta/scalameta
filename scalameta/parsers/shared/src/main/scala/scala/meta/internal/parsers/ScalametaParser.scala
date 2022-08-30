@@ -1275,13 +1275,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     interpolateWith(unquoteExpr(), Term.Interpolate.apply)
 
   def xmlTerm(): Term.Xml =
-    xmlWith(unquoteXmlExpr(), Term.Xml.apply)
+    xmlWith(unquoteExpr(), Term.Xml.apply)
 
   def interpolatePat(): Pat.Interpolate =
     interpolateWith(unquotePattern(), Pat.Interpolate.apply)
 
   def xmlPat(): Pat.Xml =
-    xmlWith(unquoteXmlPattern(), Pat.Xml.apply)
+    xmlWith(unquoteSeqPattern(), Pat.Xml.apply)
 
   /* ------------- NEW LINES ------------------------------------------------- */
 
@@ -1353,10 +1353,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           at = token
         )
     }
-
-  def unquoteXmlExpr(): Term = {
-    unquoteExpr()
-  }
 
   private def exprMaybeIndented(): Term = {
     if (token.is[Indentation.Indent]) {
@@ -2390,9 +2386,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // is a sequence pattern _* allowed?
     def isSequenceOK: Boolean
 
-    // are we in an XML pattern?
-    def isXML: Boolean = false
-
     def patterns(): List[Pat] = commaSeparated(pattern())
 
     def pattern(): Pat = patternAlternatives(Nil)
@@ -2431,10 +2424,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
     def unquotePattern(): Pat = {
-      dropAnyBraces(pattern())
-    }
-
-    def unquoteXmlPattern(): Pat = {
       dropAnyBraces(pattern())
     }
 
@@ -2640,12 +2629,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val isSequenceOK = false
   }
 
-  /** For use from xml pattern, where sequence is allowed and encouraged. */
-  object xmlSeqOK extends SeqContextSensitive {
-    val isSequenceOK = true
-    override val isXML = true
-  }
-
   /**
    * These are default entry points into the pattern context sensitive methods: they are all
    * initiated from non-pattern context.
@@ -2663,9 +2646,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def quasiquotePattern(): Pat = seqOK.quasiquotePattern()
   def entrypointPattern(): Pat = seqOK.entrypointPattern()
   def unquotePattern(): Pat = noSeq.unquotePattern()
-  def unquoteXmlPattern(): Pat = xmlSeqOK.unquoteXmlPattern()
+  def unquoteSeqPattern(): Pat = seqOK.unquotePattern()
   def seqPatterns(): List[Pat] = seqOK.patterns()
-  def xmlSeqPatterns(): List[Pat] = xmlSeqOK.patterns() // Called from xml parser
   def argumentPattern(): Pat = seqOK.pattern()
   def argumentPatterns(): List[Pat] = inParens {
     if (token.is[RightParen]) Nil
