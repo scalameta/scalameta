@@ -324,6 +324,13 @@ object Member {
   }
 }
 
+
+@branch trait Clause extends Tree
+object Clause {
+  @ast class TermClause(params: List[Term.Param]) extends Clause
+  @ast class TypeClause(params: List[Type.Param]) extends Clause
+}
+
 @branch trait Decl extends Stat
 object Decl {
   @ast class Val(mods: List[Mod], pats: List[Pat] @nonEmpty, decltpe: scala.meta.Type)
@@ -417,12 +424,12 @@ object Defn {
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
-      paramss: List[Either[List[scala.meta.Type.Param],List[Term.Param]]],
+      paramss: List[Clause],
       decltpe: Option[scala.meta.Type],
       body: Term
   ) extends Defn with Member.Term with Stat.WithMods {
-    val termParamss = paramss.collect{ case Right(termParams) => termParams }
-    checkFields(paramss.collect{ case Right(termParams) => termParams }.forall(onlyLastParamCanBeRepeated))
+    val termParamss = paramss.collect{ case Clause.TermClause(termParams) => termParams }
+    checkFields(paramss.collect{ case Clause.TermClause(termParams) => termParams }.forall(onlyLastParamCanBeRepeated))
   }
   @ast class Macro(
       mods: List[Mod],

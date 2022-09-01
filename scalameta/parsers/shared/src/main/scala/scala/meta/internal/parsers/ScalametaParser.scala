@@ -2860,8 +2860,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       ctxBoundsAllowed: Boolean,
       ownerIsCase: Boolean = false,
       allowUnderscore: Boolean = true
-  ): List[Either[List[Type.Param], List[Term.Param]]] = {
-    listBy[Either[List[Type.Param], List[Term.Param]]] { paramss =>
+  ): List[Clause] = {
+    listBy[Clause] { paramss =>
       while ((isAfterOptNewLine[LeftParen] && !ahead(token.is[KwImplicit])) || isAfterOptNewLine[LeftBracket]) {
         paramss += paramClause(paramss.isEmpty, ownerIsType, ctxBoundsAllowed, ownerIsCase, allowUnderscore)
       }
@@ -2874,12 +2874,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       ctxBoundsAllowed: Boolean,
       ownerIsCase: Boolean = false,
       allowUnderscore: Boolean = true
-  ): Either[List[Type.Param], List[Term.Param]] = token match {
+  ): Clause = token match {
     case LeftBracket() =>
       val res = typeParamClauseOpt(ownerIsType, ctxBoundsAllowed, allowUnderscore)
-      Left(res)
+      Clause.TypeClause(res)
     case LeftParen() if !ahead(token.is[KwImplicit]) =>
-      Right(inParens(nonImplicitTermParamClause(first, ownerIsType, ownerIsCase)))
+      Clause.TermClause(inParens(nonImplicitTermParamClause(first, ownerIsType, ownerIsCase)))
     case _ => 
       syntaxError("Not a valid paramClause", at = token)
   }
@@ -3524,15 +3524,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         syntaxError(s"Procedure syntax is not supported. $hint", at = name)
     }
 
-    val _paramss: List[Either[List[Type.Param],List[Term.Param]]] = paramClauses(ownerIsType = false, ctxBoundsAllowed = true)
+    val _paramss: List[Clause] = paramClauses(ownerIsType = false, ctxBoundsAllowed = true)
 
     val implicitParams = implicitParamClauseOpt(ownerIsType = false)
 
-    val paramss = if(implicitParams.nonEmpty){ _paramss :+ Right(implicitParams) } else { _paramss }
+    val paramss = if(implicitParams.nonEmpty){ _paramss :+ Clause.TermClause(implicitParams) } else { _paramss }
     
-    val tparams = paramss.headOption.collect{ case Left(tyParams) => tyParams }.getOrElse(List())
+    val tparams = paramss.headOption.collect{ case Clause.TypeClause(tyParams) => tyParams }.getOrElse(List())
 
-    val termParamss = paramss.collect{ case Right(termParams) => termParams}
+    val termParamss = paramss.collect{ case Clause.TermClause(termParams) => termParams}
 
     termParamss.foreach(onlyLastParameterCanBeRepeated)
 
