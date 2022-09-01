@@ -19,7 +19,7 @@ class ShowMacros(val c: Context) {
         if (printer.nonEmpty)
           q"$printer($x)"
         else
-          c.abort(x.pos, s"don't know how to print value of type ${x.tpe}")
+          c.abort(x.pos, s"don't know how to print value of type ${x.tpe}, is the logic missing from TreeSyntax.scala ?")
       }
     }
   }

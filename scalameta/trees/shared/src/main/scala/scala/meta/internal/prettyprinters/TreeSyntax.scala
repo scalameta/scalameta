@@ -942,6 +942,8 @@ object TreeSyntax {
           m
         )
       case t: Defn.Object => r(" ")(t.mods, kw("object"), t.name, t.templ)
+      case t: Clause.TermClause => t.params
+      case t: Clause.TypeClause => t.params
       case t: Defn.Def =>
         s(w(t.mods, " "), kw("def"), " ", t.name, t.paramss, t.decltpe, " = ", t.body)
       case t: Defn.Macro =>
@@ -1167,6 +1169,10 @@ object TreeSyntax {
     }
     implicit def syntaxAnnots: Syntax[List[Mod.Annot]] = Syntax { annots =>
       if (annots.nonEmpty) r(annots, " ") else s()
+    }
+    implicit def syntaxClauses: Syntax[List[Clause]] = Syntax { clauses =>
+      r(clauses)
+
     }
     private def printParams(t: List[Term.Param], needParens: Boolean = true): Show.Result = {
       val prefix = {
