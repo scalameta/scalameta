@@ -47,19 +47,6 @@ class TraverserMacros(val c: Context) extends TransverserMacros {
           apply(it.next)
         }
       }
-
-      def apply(eithertrees: $EitherClass[$ListClass[$TreeClass],$ListClass[$TreeClass]]): $UnitClass = eithertrees match {
-        case $LeftModule(tree) => apply(tree)
-        case $RightModule(tree) => apply(tree)
-      }
-
-      def apply(treess: $ListClass[$EitherClass[$ListClass[$TreeClass],$ListClass[$TreeClass]]])(implicit hack: $Hack3Class): $UnitClass = {
-        val it = treess.iterator
-        while (it.hasNext) {
-          apply(it.next)
-        }
-      }
-
     """
   }
 }
