@@ -1696,8 +1696,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                   Some(
                     copyPos(tree)(
                       Term.Param(
-                        List(atPos(kwUsing.endTokenPos, kwUsing.endTokenPos)(Mod.Using())),
-                        atPos(eta.endTokenPos, eta.endTokenPos)(Name.Anonymous()),
+                        List(atPos(kwUsing.endTokenPos)(Mod.Using())),
+                        atPos(eta.endTokenPos)(Name.Anonymous()),
                         Some(tpt),
                         None
                       )
@@ -4213,7 +4213,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val implicitPos = in.tokenPos
         next()
         if (token.is[Ident] && token.isNot[SoftModifier]) stats += implicitClosure(BlockStat)
-        else stats += localDef(Some(atPos(implicitPos, implicitPos)(Mod.Implicit())))
+        else stats += localDef(Some(atPos(implicitPos)(Mod.Implicit())))
         if (!token.is[CaseDefEnd]) acceptStatSepOpt()
       case t @ DefIntro() if !t.is[NonlocalModifier] =>
         stats += localDef(None)
