@@ -30,9 +30,10 @@ jobs:
           - "++2.13.6 testsJVM/test"
           - "++2.13.7 testsJVM/test"
           - "++2.13.8 testsJVM/test"
-          - "++2.13.8 testsJS/test"
-          - "++2.13.8 testsNative/test"
-          - "++2.13.8 download-scala-library testsJVM/slow:test"
+          - "++2.13.9 testsJVM/test"
+          - "++2.13.9 testsJS/test"
+          - "++2.13.9 testsNative/test"
+          - "++2.13.9 download-scala-library testsJVM/slow:test"
           - "communitytest/test"
           - "mima"
     steps:
