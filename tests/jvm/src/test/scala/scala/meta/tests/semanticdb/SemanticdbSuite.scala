@@ -4,7 +4,7 @@ package semanticdb
 import munit._
 import java.io.{File, PrintWriter}
 import scala.reflect.io._
-import scala.tools.cmd.CommandLineParser
+import scala.meta.internal.semanticdb.scalac.CommandLineParser
 import scala.tools.nsc.{CompilerCommand, Global, Settings}
 import scala.tools.nsc.reporters.StoreReporter
 import scala.compat.Platform.EOL
