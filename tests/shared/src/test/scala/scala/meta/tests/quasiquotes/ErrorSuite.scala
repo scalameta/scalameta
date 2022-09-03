@@ -804,7 +804,7 @@ class ErrorSuite extends FunSuite {
     )
   }
 
-  test("triple-dot mixes with something else in parameter lists") {
+  test("ellipsis mixes with something else in parameter lists") {
     assertEquals(
       typecheckError("""
       import scala.meta._
@@ -813,10 +813,9 @@ class ErrorSuite extends FunSuite {
       q"def foo(...$paramss)(y: Int) = ???"
     """).replace("\r", ""),
       """
-      |<macro>:5: implementation restriction: can't mix ...$ with anything else in parameter lists.
-      |See https://github.com/scalameta/scalameta/issues/406 for details.
+      |<macro>:5: = expected but ( found
       |      q"def foo(...$paramss)(y: Int) = ???"
-      |                ^
+      |                            ^
     """.trim.stripMargin
     )
   }

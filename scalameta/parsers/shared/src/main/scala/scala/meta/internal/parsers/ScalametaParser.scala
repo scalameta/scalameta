@@ -227,6 +227,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     accept[RightParen]
     body
   }
+  @inline private def inParensAfterOpenOr[T](body: => T)(alt: => T): T =
+    if (acceptOpt[RightParen]) alt
+    else inParensAfterOpen(body)
 
   @inline final def inBraces[T](body: => T): T = {
     inBracesOr(body, syntaxErrorExpected[LeftBrace])
@@ -2855,32 +2858,36 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Term.Param]] = {
     var parsedImplicits = false
-    def paramClause(first: Boolean): List[Term.Param] = token match {
-      case RightParen() =>
-        Nil
-      case t @ Ellipsis(2) =>
-        List(ellipsis[Term.Param](t))
-      case _ =>
-        var parsedUsing = false
-        if (acceptOpt[KwImplicit]) {
-          parsedImplicits = true
-        } else if (acceptOpt[soft.KwUsing]) {
-          parsedUsing = true
-        }
-        commaSeparated(
-          param(
-            ownerIsCase && first,
-            ownerIsType,
-            isImplicit = parsedImplicits,
-            isUsing = parsedUsing
-          )
+    def paramClause(first: Boolean): List[Term.Param] = inParensAfterOpenOr {
+      var parsedUsing = false
+      if (acceptOpt[KwImplicit]) {
+        parsedImplicits = true
+      } else if (acceptOpt[soft.KwUsing]) {
+        parsedUsing = true
+      }
+      commaSeparated(
+        param(
+          ownerIsCase && first,
+          ownerIsType,
+          isImplicit = parsedImplicits,
+          isUsing = parsedUsing
         )
-    }
-    listBy[List[Term.Param]] { paramss =>
-      while (isAfterOptNewLine[LeftParen] && !parsedImplicits) {
-        next()
-        paramss += paramClause(paramss.isEmpty)
-        accept[RightParen]
+      )
+    }(Nil)
+    if (!isAfterOptNewLine[LeftParen]) Nil
+    else {
+      next()
+      token match {
+        case t: Ellipsis =>
+          List(List(inParensAfterOpen(ellipsis[Term.Param](t, 2))))
+        case _ =>
+          listBy[List[Term.Param]] { paramss =>
+            paramss += paramClause(true)
+            while (isAfterOptNewLine[LeftParen] && !parsedImplicits) {
+              next()
+              paramss += paramClause(false)
+            }
+          }
       }
     }
   }
