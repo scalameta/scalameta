@@ -521,7 +521,7 @@ object TreeSyntax {
             }
         }
       case t: Term.PolyFunction =>
-        m(Expr, s("[", r(t.tparams, ", "), "] ", kw("=>"), " ", p(Expr, t.body)))
+        m(Expr, t.tparams, " ", kw("=>"), " ", p(Expr, t.body))
       case t: Term.Function =>
         t match {
           case Term.Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, body)
@@ -555,11 +555,7 @@ object TreeSyntax {
             }
             m(Expr, param, " ", kw("=>"), " ", p(Expr, body))
           case Term.Function(params, body) =>
-            if (params.headOption.exists(_.mods.exists(_.is[Mod.Using]))) {
-              m(Expr, s("(", kw("using"), " ", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
-            } else {
-              m(Expr, s("(", r(params, ", "), ") ", kw("=>"), " ", p(Expr, body)))
-            }
+            m(Expr, s(printParams(params), " ", kw("=>"), " ", p(Expr, body)))
         }
       case Term.QuotedMacroExpr(Term.Block(stats)) =>
         stats match {
@@ -607,7 +603,7 @@ object TreeSyntax {
           s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
       case t: Term.Param =>
         // NOTE: `implicit/using` in parameters is skipped as it applies to whole list
-        printParam(t, t.mods.filterNot(x => x.is[Mod.Implicit] || x.is[Mod.Using]))
+        printParam(t)
 
       // Type
       case t: Type.AnonymousName => m(Path, s(""))
@@ -970,21 +966,7 @@ object TreeSyntax {
       case t: Pkg.Object =>
         r(" ")(kw("package"), t.mods, kw("object"), t.name, t.templ)
       case t: Ctor.Primary =>
-        def printAllMods(t: Term.Param) = printParam(t, t.mods)
-        val paramss = r(
-          t.paramss.map {
-            case params @ head :: tail =>
-              head.mods.collectFirst {
-                case _: Mod.Implicit if tail.forall(_.mods.exists(_.is[Mod.Implicit])) => "implicit"
-                case _: Mod.Using if tail.forall(_.mods.exists(_.is[Mod.Using])) => "using"
-              } match {
-                case Some(kw) => s("(", kw, " ", r(params, ", "), ")")
-                case _ => s("(", r(params.map(printAllMods), ", "), ")")
-              }
-            case _ => s("()")
-          }
-        )
-
+        val paramss = r(t.paramss.map(x => printParams(x)))
         s(w(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), paramss)
       case t: Ctor.Secondary =>
         if (t.stats.isEmpty) s(w(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, " = ", t.init)
@@ -1173,7 +1155,9 @@ object TreeSyntax {
     implicit def syntaxMods: Syntax[List[Mod]] = Syntax { mods =>
       if (mods.nonEmpty) r(mods, " ") else s()
     }
-    private def printParam(t: Term.Param, mods: List[Mod]): Show.Result = {
+    private def isUsingOrImplicit(m: Mod): Boolean = m.is[Mod.Implicit] || m.is[Mod.Using]
+    private def printParam(t: Term.Param, keepImplicit: Boolean = false): Show.Result = {
+      val mods = if (keepImplicit) t.mods else t.mods.filterNot(isUsingOrImplicit)
       val nameType = if (t.mods.exists(_.is[Mod.Using]) && t.name.is[Name.Anonymous]) {
         s(t.decltpe.get)
       } else {
@@ -1184,26 +1168,23 @@ object TreeSyntax {
     implicit def syntaxAnnots: Syntax[List[Mod.Annot]] = Syntax { annots =>
       if (annots.nonEmpty) r(annots, " ") else s()
     }
+    private def printParams(t: List[Term.Param], needParens: Boolean = true): Show.Result = {
+      val prefix = {
+        val prefixOpt = t.headOption.fold[List[Mod]](Nil)(_.mods).collectFirst {
+          case _: Mod.Using => "using "
+          case _: Mod.Implicit => "implicit "
+        }
+        val ok = prefixOpt.nonEmpty && t.tail.forall(_.mods.exists(isUsingOrImplicit))
+        if (ok) prefixOpt else None
+      }.getOrElse("")
+      val useParens = needParens || prefix.nonEmpty || t.lengthCompare(1) != 0
+      w("(", s(prefix, r(t.map(printParam(_, prefix.isEmpty)), ", ")), ")", useParens)
+    }
     implicit def syntaxParams: Syntax[List[Term.Param]] = Syntax { params =>
-      s("(", r(params, ", "), ")")
+      printParams(params)
     }
     implicit def syntaxParamss: Syntax[List[List[Term.Param]]] = Syntax { paramss =>
-      def usingImplicit(params: List[Term.Param]): Show.Result = {
-        if (params.exists(_.mods.exists(_.is[Mod.Using])))
-          s("using ", r(params, ", "))
-        else
-          w("implicit ", r(params, ", "), params.exists(_.mods.exists(_.is[Mod.Implicit])))
-      }
-      r(
-        paramss.map(params => {
-          s(
-            "(",
-            usingImplicit(params),
-            ")"
-          )
-        }),
-        ""
-      )
+      r(paramss)
     }
     implicit def syntaxTparams: Syntax[List[Type.Param]] = Syntax { tparams =>
       if (tparams.nonEmpty) s("[", r(tparams, ", "), "]") else s()
