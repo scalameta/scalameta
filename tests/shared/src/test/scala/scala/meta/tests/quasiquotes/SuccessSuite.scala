@@ -2508,6 +2508,7 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("initial support for ...") {
     val q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs" = q"def f(x: Int) = ???"
+    assert(tparams.isEmpty)
     assertEquals(paramss.lengthCompare(1), 0)
     val params = paramss.head
     assertEquals(params.lengthCompare(1), 0)
@@ -2517,6 +2518,25 @@ class SuccessSuite extends TreeSuiteBase {
         Nil,
         Term.Name("f"),
         Nil,
+        List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))),
+        None,
+        Term.Name("???")
+      )
+    )
+  }
+
+  test("initial support for ..., with tparams") {
+    val q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs" = q"def f[A](x: Int) = ???"
+    assert(tparams.nonEmpty)
+    assertEquals(paramss.lengthCompare(1), 0)
+    val params = paramss.head
+    assertEquals(params.lengthCompare(1), 0)
+    assertTree(params.head)(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))
+    assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs")(
+      Defn.Def(
+        Nil,
+        Term.Name("f"),
+        List(Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Nil)),
         List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))),
         None,
         Term.Name("???")
