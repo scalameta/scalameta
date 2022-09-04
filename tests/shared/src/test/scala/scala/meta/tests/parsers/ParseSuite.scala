@@ -69,6 +69,21 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   ): Unit =
     checkParsedTree(code, _.entrypointStat(), syntax)(tree)
 
+  protected def runTestError[T <: Tree](code: String, expected: String)(
+      implicit parser: String => T
+  ): Unit = {
+    val error = intercept[ParseException] {
+      val result = parser(code)
+      throw new ParseException(
+        Position.None,
+        s"Statement ${code} should not parse! Got result ${result.structure}"
+      )
+    }
+    assert(
+      error.getMessage.contains(expected),
+      s"Expected [${error.getMessage}] to contain [${expected}]."
+    )
+  }
 }
 
 object MoreHelpers {

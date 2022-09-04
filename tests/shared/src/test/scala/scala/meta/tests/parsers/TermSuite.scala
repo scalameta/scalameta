@@ -1397,4 +1397,13 @@ class TermSuite extends ParseSuite {
     )
   }
 
+  test("scala3-syntax") {
+
+    runTestError[Term](
+      """|() match
+         |  case _: Unit => ()""".stripMargin,
+      "error: { expected but case found"
+    )(term(_))
+
+  }
 }

@@ -1393,7 +1393,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (acceptOpt[Indentation.Indent]) {
       autoEndPos(t)(Term.Match(t, indentedAfterOpen(caseClauses())))
     } else {
-      autoEndPos(t)(Term.Match(t, inBracesOrNil(caseClauses())))
+      autoEndPos(t)(
+        Term.Match(t, inBracesOr(caseClauses(), syntaxErrorExpected[LeftBrace]))
+      )
     }
   }
 
