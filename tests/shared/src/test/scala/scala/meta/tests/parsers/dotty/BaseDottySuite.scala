@@ -82,19 +82,4 @@ trait BaseDottySuite extends ParseSuite {
     assertLayout.foreach(assertNoDiff(reprintedCode, _, "Reprinted stat"))
   }
 
-  protected def runTestError[T <: Tree](code: String, expected: String)(
-      implicit parser: String => T
-  ): Unit = {
-    val error = intercept[ParseException] {
-      val result = parser(code)
-      throw new ParseException(
-        Position.None,
-        s"Statement ${code} should not parse! Got result ${result.structure}"
-      )
-    }
-    assert(
-      error.getMessage.contains(expected),
-      s"Expected [${error.getMessage}] to contain [${expected}]."
-    )
-  }
 }
