@@ -7,7 +7,7 @@ import scala.meta.io.AbsolutePath
 
 package object scalac {
 
-  implicit class XtensionSchemaTextDocument(sdocument: s.TextDocument) {
+  implicit class XtensionSchemaTextDocument(private val sdocument: s.TextDocument) extends AnyVal {
     private def write(targetroot: AbsolutePath, append: Boolean): Unit = {
       val openOption =
         if (append) StandardOpenOption.APPEND

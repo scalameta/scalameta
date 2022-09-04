@@ -45,14 +45,13 @@ package object dialects {
 
   implicit val Scala212 = Scala211
     .withAllowTrailingCommas(true)
-    .withAllowQuestionMarkPlaceholder(true)
+    .withAllowQuestionMarkAsTypeWildcard(true)
 
   implicit val Scala213 = Scala212
     .withAllowImplicitByNameParameters(true)
     .withAllowLiteralTypes(true)
     .withAllowNumericLiteralUnderscoreSeparators(true)
     .withAllowTryWithAnyExpr(true)
-    .withAllowQuestionMarkPlaceholder(true)
 
   /**
    * Dialect starting with Scala 2.13.6 for `-Xsource:3` option
@@ -103,7 +102,7 @@ package object dialects {
   implicit val ParadiseTypelevel212 = Typelevel212
     .withAllowInlineMods(true)
 
-  implicit val Scala3 = Scala213
+  implicit val Scala30 = Scala213
     // there 3 different ways to specify vargs, some will be removed in future Scala 3 versions
     .withAllowAtForExtractorVarargs(true) // both @ and : work currently for Scala 3
     .withAllowColonForExtractorVarargs(true) // both @ and : work currently for Scala 3
@@ -127,7 +126,6 @@ package object dialects {
     .withAllowEndMarker(true)
     .withAllowInterpolationDolarQuoteEscape(true)
     .withAllowSignificantIndentation(true)
-    .withAllowQuestionMarkPlaceholder(true)
     .withAllowTypeParamUnderscore(false)
     .withAllowByNameRepeatedParameters(true)
     .withAllowLazyValAbstractValues(true)
@@ -144,9 +142,15 @@ package object dialects {
     .withAllowStarWildcardImport(true)
     .withAllowProcedureSyntax(false)
     .withAllowDoWhile(false)
-    .withAllowPlusMinusUnderscoreAsPlaceholder(true)
     .withUseInfixTypePrecedence(true)
     .withAllowInfixOperatorAfterNL(true)
+
+  implicit val Scala31 = Scala30
+
+  implicit val Scala32 = Scala31
+    .withAllowUnderscoreAsTypePlaceholder(true)
+
+  implicit val Scala3 = Scala32
 
   @deprecated("Use Scala3 instead", "4.4.2")
   implicit val Dotty = Scala3

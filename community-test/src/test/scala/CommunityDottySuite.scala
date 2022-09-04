@@ -1,7 +1,6 @@
 package scala.meta.parser.dotty
 
 import scala.meta._
-import scala.meta.dialects.Scala3
 import munit.FunSuite
 
 import java.io.File
@@ -37,7 +36,13 @@ class CommunityDottySuite extends FunSuite {
     }
   }
 
-  case class CommunityBuild(giturl: String, commit: String, name: String, excluded: List[String])
+  case class CommunityBuild(
+      giturl: String,
+      commit: String,
+      name: String,
+      excluded: List[String],
+      isScala3: Boolean
+  )
   case class TestStats(
       checkedFiles: Int,
       errors: Int,
@@ -63,14 +68,16 @@ class CommunityDottySuite extends FunSuite {
       // commit hash from 12.07.2021
       "c99f6caa74e74a67dd42e8df6ede53c29cd7fce9",
       "dotty",
-      dottyExclusionList
+      dottyExclusionList,
+      isScala3 = true
     ),
     CommunityBuild(
       "https://github.com/scalameta/munit.git",
       // latest commit from 30.03.2021
       "06346adfe3519c384201eec531762dad2f4843dc",
       "munit",
-      munitExclusionList
+      munitExclusionList,
+      isScala3 = false
     )
   )
 
@@ -108,7 +115,9 @@ class CommunityDottySuite extends FunSuite {
   }
 
   def checkFilesRecursive(parent: Path)(implicit build: CommunityBuild): TestStats = {
-    if (ignoreParts.exists(p => parent.toAbsolutePath.toString.contains(p)))
+    val absPath = parent.toAbsolutePath
+    val absPathString = absPath.toString
+    if (ignoreParts.exists(absPathString.contains))
       return InitTestStats
     if (Files.isDirectory(parent)) {
       import scala.collection.JavaConverters._
@@ -119,21 +128,27 @@ class CommunityDottySuite extends FunSuite {
         .asScala
         .fold(InitTestStats)(merger)
     } else {
-      if (parent.toAbsolutePath.toString.endsWith(".scala")) {
-        checkFile(parent)
+      if (absPathString.endsWith(".scala")) {
+        checkAbsPath(absPath, absPathString)
       } else InitTestStats
     }
   }
 
-  def checkFile(file: Path)(implicit build: CommunityBuild): TestStats = {
-    val fileContent = Input.File(file.toAbsolutePath)
+  def checkAbsPath(absPath: Path, absPathString: String)(
+      implicit build: CommunityBuild
+  ): TestStats = {
+    val fileContent = Input.File(absPath)
+    val isScala3 =
+      if (build.isScala3) !absPathString.contains("/scala-2")
+      else absPathString.contains("/scala-3")
+    implicit val dialect: Dialect = if (isScala3) dialects.Scala3 else dialects.Scala213
     val lines = fileContent.chars.count(_ == '\n')
-    if (excluded(file.toAbsolutePath.toString, build)) {
+    if (excluded(absPathString, build)) {
       try {
         val taken = timeIt {
           fileContent.parse[Source].get
         }
-        println("File marked as error but parsed correctly " + file.toAbsolutePath)
+        println("File marked as error but parsed correctly " + absPathString)
         TestStats(1, 1, None, taken, lines)
       } catch {
         case e: Throwable => TestStats(1, 1, None, 0, 0)
@@ -146,7 +161,7 @@ class CommunityDottySuite extends FunSuite {
         TestStats(1, 0, None, taken, lines)
       } catch {
         case e: Throwable =>
-          println(s"Failed for file ${file.toAbsolutePath}")
+          println(s"Failed for file $absPathString")
           println(s"Error: " + e.getMessage)
           TestStats(1, 1, Some(e), 0, 0)
       }

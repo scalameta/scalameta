@@ -443,7 +443,7 @@ object Javacp {
     s.TypeRef(prefix, symbol, args)
   }
 
-  private implicit class XtensionTypeArgument(self: TypeArgument) {
+  private implicit class XtensionTypeArgument(private val self: TypeArgument) extends AnyVal {
     // FIXME: https://github.com/scalameta/scalameta/issues/1563
     def toSemanticTpe(scope: Scope): s.Type = self match {
       case ReferenceTypeArgument(None, referenceTypeSignature) =>
@@ -454,19 +454,21 @@ object Javacp {
     }
   }
 
-  private implicit class XtensionJavaTypeSignature(self: JavaTypeSignature) {
+  private implicit class XtensionJavaTypeSignature(private val self: JavaTypeSignature)
+      extends AnyVal {
     def toSemanticTpe(scope: Scope): s.Type =
       fromJavaTypeSignature(self, scope)
   }
 
-  private implicit class XtensionTypeArgumentsOption(self: Option[TypeArguments]) {
+  private implicit class XtensionTypeArgumentsOption(private val self: Option[TypeArguments])
+      extends AnyVal {
     def toSemanticTpe(scope: Scope): List[s.Type] = self match {
       case Some(targs: TypeArguments) => targs.all.map(_.toSemanticTpe(scope))
       case _ => Nil
     }
   }
 
-  private implicit class XtensionAccess(asmAccess: Int) {
+  private implicit class XtensionAccess(private val asmAccess: Int) extends AnyVal {
     def hasFlag(flag: Int): Boolean =
       (flag & asmAccess) != 0
   }

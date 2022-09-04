@@ -14,6 +14,7 @@ import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
 import scala.meta.internal.io.PathIO
 import scala.util.Properties
+import java.util.zip.ZipException
 
 /** An index to lookup class directories and classfiles by their JVM names. */
 final class ClasspathIndex private (
@@ -133,7 +134,13 @@ object ClasspathIndex {
 
     private def expandJarEntry(jarpath: AbsolutePath): Unit = {
       val file = jarpath.toFile
-      val jar = new JarFile(file)
+      val jar =
+        try {
+          new JarFile(file)
+        } catch {
+          case zex: ZipException =>
+            return ()
+        }
       try {
         val entries = jar.entries()
         while (entries.hasMoreElements) {

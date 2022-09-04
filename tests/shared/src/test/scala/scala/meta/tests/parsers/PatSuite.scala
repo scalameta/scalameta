@@ -48,10 +48,12 @@ class PatSuite extends ParseSuite {
   }
 
   test("_: F[_]") {
-    val Typed(
-      Wildcard(),
-      Type.Apply(Type.Name("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
-    ) = pat("_: F[_]")
+    assertPat("_: F[_]") {
+      Typed(
+        Wildcard(),
+        Type.Apply(Type.Name("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
+      )
+    }
   }
 
   test("patTyp: t Map u") {

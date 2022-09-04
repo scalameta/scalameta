@@ -89,8 +89,8 @@ final class Dialect private (
     val allowInterpolationDolarQuoteEscape: Boolean,
     // Significant identation introduced in dotty
     val allowSignificantIndentation: Boolean,
-    // Dotty changed placeholder for types from `_` to `?`
-    val allowQuestionMarkPlaceholder: Boolean,
+    // Dotty changed wildcard for types from `_` to `?`
+    val allowQuestionMarkAsTypeWildcard: Boolean,
     // Dotty rejects placeholder as Type parameter
     val allowTypeParamUnderscore: Boolean,
     // Dotty allows by-name repeated parameters
@@ -143,10 +143,8 @@ final class Dialect private (
      * https://github.com/scala/scala/pull/9605
      */
     val allowPlusMinusUnderscoreAsIdent: Boolean,
-    /* The same as previous but for Scala3
-     * works under -Ykind-projector:underscores
-     */
-    val allowPlusMinusUnderscoreAsPlaceholder: Boolean,
+    // Dotty uses `_` for placeholder for types since 3.2
+    val allowUnderscoreAsTypePlaceholder: Boolean,
     // import a.b.c.{ given, _} used for -X:source3
     val allowGivenImports: Boolean,
     // Scala 3 uses proper precedence rules for infix types, unlike Scala 2
@@ -218,7 +216,7 @@ final class Dialect private (
       allowEndMarker = false,
       allowInterpolationDolarQuoteEscape = false,
       allowSignificantIndentation = false,
-      allowQuestionMarkPlaceholder = false,
+      allowQuestionMarkAsTypeWildcard = false,
       allowTypeParamUnderscore = true,
       allowByNameRepeatedParameters = false,
       allowLazyValAbstractValues = false,
@@ -239,7 +237,7 @@ final class Dialect private (
       allowProcedureSyntax = true,
       allowDoWhile = true,
       allowPlusMinusUnderscoreAsIdent = false,
-      allowPlusMinusUnderscoreAsPlaceholder = false,
+      allowUnderscoreAsTypePlaceholder = false,
       allowGivenImports = false,
       useInfixTypePrecedence = false,
       allowInfixOperatorAfterNL = false
@@ -355,8 +353,16 @@ final class Dialect private (
   def withAllowSignificantIndentation(newValue: Boolean): Dialect = {
     privateCopy(allowSignificantIndentation = newValue)
   }
+  def withAllowQuestionMarkAsTypeWildcard(newValue: Boolean): Dialect = {
+    privateCopy(allowQuestionMarkAsTypeWildcard = newValue)
+  }
+  @deprecated("use allowQuestionMarkAsTypeWildcard", ">4.5.13")
+  def allowQuestionMarkPlaceholder: Boolean = {
+    allowQuestionMarkAsTypeWildcard
+  }
+  @deprecated("use withAllowQuestionMarkAsTypeWildcard", ">4.5.13")
   def withAllowQuestionMarkPlaceholder(newValue: Boolean): Dialect = {
-    privateCopy(allowQuestionMarkPlaceholder = newValue)
+    withAllowQuestionMarkAsTypeWildcard(newValue)
   }
 
   def withAllowTypeParamUnderscore(newValue: Boolean): Dialect = {
@@ -405,7 +411,7 @@ final class Dialect private (
     privateCopy(allowAllTypedPatterns = newValue)
   }
   def withAllowAsForImportRename(newValue: Boolean): Dialect = {
-    privateCopy(allowAsRenames = newValue)
+    privateCopy(allowAsForImportRename = newValue)
   }
   def withAllowStarWildcardImport(newValue: Boolean): Dialect = {
     privateCopy(allowStarWildcardImport = newValue)
@@ -421,9 +427,18 @@ final class Dialect private (
     privateCopy(allowPlusMinusUnderscoreAsIdent = newValue)
   }
 
-  def withAllowPlusMinusUnderscoreAsPlaceholder(newValue: Boolean): Dialect = {
-    privateCopy(allowPlusMinusUnderscoreAsPlaceholder = newValue)
+  def withAllowUnderscoreAsTypePlaceholder(newValue: Boolean): Dialect = {
+    privateCopy(allowUnderscoreAsTypePlaceholder = newValue)
   }
+  @deprecated("use withAllowUnderscoreAsTypePlaceholder", ">4.5.13")
+  def withAllowPlusMinusUnderscoreAsPlaceholder(newValue: Boolean): Dialect = {
+    withAllowUnderscoreAsTypePlaceholder(newValue)
+  }
+  @deprecated("use allowUnderscoreAsTypePlaceholder", ">4.5.13")
+  def allowPlusMinusUnderscoreAsPlaceholder: Boolean = {
+    allowUnderscoreAsTypePlaceholder
+  }
+
   def withAllowGivenImports(newValue: Boolean): Dialect = {
     privateCopy(allowGivenImports = newValue)
   }
@@ -475,7 +490,7 @@ final class Dialect private (
       allowEndMarker: Boolean = this.allowEndMarker,
       allowInterpolationDolarQuoteEscape: Boolean = this.allowInterpolationDolarQuoteEscape,
       allowSignificantIndentation: Boolean = this.allowSignificantIndentation,
-      allowQuestionMarkPlaceholder: Boolean = this.allowQuestionMarkPlaceholder,
+      allowQuestionMarkAsTypeWildcard: Boolean = this.allowQuestionMarkAsTypeWildcard,
       allowTypeParamUnderscore: Boolean = this.allowTypeParamUnderscore,
       allowByNameRepeatedParameters: Boolean = this.allowByNameRepeatedParameters,
       allowLazyValAbstractValues: Boolean = this.allowLazyValAbstractValues,
@@ -491,12 +506,12 @@ final class Dialect private (
       allowDependentFunctionTypes: Boolean = this.allowDependentFunctionTypes,
       allowPostfixStarVarargSplices: Boolean = this.allowPostfixStarVarargSplices,
       allowAllTypedPatterns: Boolean = this.allowAllTypedPatterns,
-      allowAsRenames: Boolean = this.allowAsForImportRename,
+      allowAsForImportRename: Boolean = this.allowAsForImportRename,
       allowStarWildcardImport: Boolean = this.allowStarWildcardImport,
       allowProcedureSyntax: Boolean = this.allowProcedureSyntax,
       allowDoWhile: Boolean = this.allowDoWhile,
       allowPlusMinusUnderscoreAsIdent: Boolean = this.allowPlusMinusUnderscoreAsIdent,
-      allowPlusMinusUnderscoreAsPlaceholder: Boolean = this.allowPlusMinusUnderscoreAsPlaceholder,
+      allowUnderscoreAsTypePlaceholder: Boolean = this.allowUnderscoreAsTypePlaceholder,
       allowGivenImports: Boolean = this.allowGivenImports,
       useInfixTypePrecedence: Boolean = this.useInfixTypePrecedence,
       allowInfixOperatorAfterNL: Boolean = this.allowInfixOperatorAfterNL
@@ -536,7 +551,7 @@ final class Dialect private (
       allowEndMarker,
       allowInterpolationDolarQuoteEscape,
       allowSignificantIndentation,
-      allowQuestionMarkPlaceholder,
+      allowQuestionMarkAsTypeWildcard,
       allowTypeParamUnderscore,
       allowByNameRepeatedParameters,
       allowLazyValAbstractValues,
@@ -552,12 +567,12 @@ final class Dialect private (
       allowDependentFunctionTypes,
       allowPostfixStarVarargSplices,
       allowAllTypedPatterns,
-      allowAsRenames,
+      allowAsForImportRename,
       allowStarWildcardImport,
       allowProcedureSyntax,
       allowDoWhile,
       allowPlusMinusUnderscoreAsIdent,
-      allowPlusMinusUnderscoreAsPlaceholder,
+      allowUnderscoreAsTypePlaceholder,
       allowGivenImports,
       useInfixTypePrecedence,
       allowInfixOperatorAfterNL
@@ -577,13 +592,72 @@ final class Dialect private (
   // Dialects have reference equality semantics,
   // because sometimes dialects representing distinct Scala versions
   // can be structurally equal to each other.
-  override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
-  override def equals(other: Any): Boolean = this eq other.asInstanceOf[AnyRef]
-  override def hashCode: Int = System.identityHashCode(this)
+  // As Dialect is no longer a case class, no need to override equals/hashCode
+  override def canEqual(that: Any): Boolean = that.isInstanceOf[Dialect]
+
   // Smart prettyprinting that knows about standard dialects.
   override def toString = {
     Dialect.inverseStandards.getOrElse(this, "Dialect()")
   }
+
+  def isEquivalentTo(that: Dialect): Boolean = (
+    // do not include deprecated values in this comparison
+    this.allowAtForExtractorVarargs == that.allowAtForExtractorVarargs
+      && this.allowCaseClassWithoutParameterList == that.allowCaseClassWithoutParameterList
+      && this.allowColonForExtractorVarargs == that.allowColonForExtractorVarargs
+      && this.allowEnums == that.allowEnums
+      && this.allowImplicitByNameParameters == that.allowImplicitByNameParameters
+      && this.allowInlineIdents == that.allowInlineIdents
+      && this.allowInlineMods == that.allowInlineMods
+      && this.allowLiteralTypes == that.allowLiteralTypes
+      && this.allowMultilinePrograms == that.allowMultilinePrograms
+      && this.allowPatUnquotes == that.allowPatUnquotes
+      && this.allowSpliceUnderscores == that.allowSpliceUnderscores
+      && this.allowTermUnquotes == that.allowTermUnquotes
+      && this.allowToplevelTerms == that.allowToplevelTerms
+      && this.allowTrailingCommas == that.allowTrailingCommas
+      && this.allowTraitParameters == that.allowTraitParameters
+      && this.allowTypeLambdas == that.allowTypeLambdas
+      && this.allowViewBounds == that.allowViewBounds
+      && this.allowXmlLiterals == that.allowXmlLiterals
+      && this.allowNumericLiteralUnderscoreSeparators == that.allowNumericLiteralUnderscoreSeparators
+      && this.allowTryWithAnyExpr == that.allowTryWithAnyExpr
+      && this.allowGivenUsing == that.allowGivenUsing
+      && this.allowExtensionMethods == that.allowExtensionMethods
+      && this.allowOpenClass == that.allowOpenClass
+      && this.allowToplevelStatements == that.allowToplevelStatements
+      && this.allowOpaqueTypes == that.allowOpaqueTypes
+      && this.allowExportClause == that.allowExportClause
+      && this.allowCommaSeparatedExtend == that.allowCommaSeparatedExtend
+      && this.allowEndMarker == that.allowEndMarker
+      && this.allowInterpolationDolarQuoteEscape == that.allowInterpolationDolarQuoteEscape
+      && this.allowSignificantIndentation == that.allowSignificantIndentation
+      && this.allowQuestionMarkAsTypeWildcard == that.allowQuestionMarkAsTypeWildcard
+      && this.allowTypeParamUnderscore == that.allowTypeParamUnderscore
+      && this.allowByNameRepeatedParameters == that.allowByNameRepeatedParameters
+      && this.allowLazyValAbstractValues == that.allowLazyValAbstractValues
+      && this.allowUpperCasePatternVarBinding == that.allowUpperCasePatternVarBinding
+      && this.allowDerives == that.allowDerives
+      && this.allowTypeInBlock == that.allowTypeInBlock
+      && this.allowPolymorphicFunctions == that.allowPolymorphicFunctions
+      && this.allowMatchAsOperator == that.allowMatchAsOperator
+      && this.allowTypeMatch == that.allowTypeMatch
+      && this.allowInfixMods == that.allowInfixMods
+      && this.allowSpliceAndQuote == that.allowSpliceAndQuote
+      && this.allowSymbolLiterals == that.allowSymbolLiterals
+      && this.allowDependentFunctionTypes == that.allowDependentFunctionTypes
+      && this.allowPostfixStarVarargSplices == that.allowPostfixStarVarargSplices
+      && this.allowAllTypedPatterns == that.allowAllTypedPatterns
+      && this.allowAsForImportRename == that.allowAsForImportRename
+      && this.allowStarWildcardImport == that.allowStarWildcardImport
+      && this.allowProcedureSyntax == that.allowProcedureSyntax
+      && this.allowDoWhile == that.allowDoWhile
+      && this.allowPlusMinusUnderscoreAsIdent == that.allowPlusMinusUnderscoreAsIdent
+      && this.allowUnderscoreAsTypePlaceholder == that.allowUnderscoreAsTypePlaceholder
+      && this.allowGivenImports == that.allowGivenImports
+      && this.useInfixTypePrecedence == that.useInfixTypePrecedence
+      && this.allowInfixOperatorAfterNL == that.allowInfixOperatorAfterNL
+  )
 
   @deprecated("Use withX method instead", "4.3.11")
   def copy(
@@ -693,8 +767,11 @@ object Dialect extends InternalDialect {
       toplevelSeparator = toplevelSeparator
     )
   }
-  private[meta] lazy val standards: Map[String, Dialect] = Seq[sourcecode.Text[Dialect]](
+  private lazy val standardPairs = Seq[sourcecode.Text[Dialect]](
     Dotty,
+    Scala30,
+    Scala31,
+    Scala32,
     Scala3,
     Paradise211,
     Paradise212,
@@ -711,7 +788,9 @@ object Dialect extends InternalDialect {
     Scala212Source3,
     Typelevel211,
     Typelevel212
-  ).map(x => x.source -> x.value).toMap
+  )
+  private[meta] lazy val standards: Map[String, Dialect] =
+    standardPairs.map(x => x.source -> x.value).toMap
   private[meta] lazy val inverseStandards: Map[Dialect, String] =
-    standards.iterator.map(_.swap).toMap
+    standardPairs.map(x => x.value -> x.source).toMap
 }

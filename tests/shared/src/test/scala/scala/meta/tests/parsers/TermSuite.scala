@@ -1406,4 +1406,29 @@ class TermSuite extends ParseSuite {
     )(term(_))
 
   }
+
+  test("using") {
+    assertTerm("Set(using)") {
+      Term.Apply(Term.Name("Set"), List(Term.Name("using")))
+    }
+
+    assertTerm("foo(using, bar)") {
+      Term.Apply(Term.Name("foo"), List(Term.Name("using"), Term.Name("bar")))
+    }
+
+    assertTerm(
+      """|{
+         |  val using ="asdsa"; 
+         |  foo(using: String) 
+         |}""".stripMargin
+    ) {
+      Term.Block(
+        List(
+          Defn.Val(Nil, List(Pat.Var(Term.Name("using"))), None, Lit.String("asdsa")),
+          Term.Apply(Term.Name("foo"), List(Term.Ascribe(Term.Name("using"), Type.Name("String"))))
+        )
+      )
+    }
+  }
+
 }

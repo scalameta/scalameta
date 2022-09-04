@@ -69,6 +69,10 @@ class SurfaceSuite extends FunSuite {
       """
       |scala.meta.Dialect
       |scala.meta.Tree
+      |scala.meta.XtensionDialectApply
+      |scala.meta.XtensionDialectTokenSyntax
+      |scala.meta.XtensionDialectTokensSyntax
+      |scala.meta.XtensionDialectTreeSyntax
       |scala.meta.classifiers
       |scala.meta.classifiers.Classifiable *
       |scala.meta.classifiers.Classifier
@@ -98,6 +102,9 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.dialects.Scala213 *
       |scala.meta.dialects.Scala213Source3 *
       |scala.meta.dialects.Scala3 *
+      |scala.meta.dialects.Scala30 *
+      |scala.meta.dialects.Scala31 *
+      |scala.meta.dialects.Scala32 *
       |scala.meta.dialects.Typelevel211 *
       |scala.meta.dialects.Typelevel212 *
       |scala.meta.inputs
@@ -188,10 +195,16 @@ class SurfaceSuite extends FunSuite {
     assertNoDiff(
       coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL),
       """
+      |* (scala.meta.Dialect, scala.meta.Tree).equals(Any): Boolean
+      |* (scala.meta.Dialect, scala.meta.Tree).hashCode(): Int
       |* (scala.meta.Dialect, scala.meta.Tree).syntax: String
       |* (scala.meta.Dialect, scala.meta.inputs.Input).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
       |* (scala.meta.Dialect, scala.meta.inputs.Input).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
+      |* (scala.meta.Dialect, scala.meta.tokens.Token).equals(Any): Boolean
+      |* (scala.meta.Dialect, scala.meta.tokens.Token).hashCode(): Int
       |* (scala.meta.Dialect, scala.meta.tokens.Token).syntax: String
+      |* (scala.meta.Dialect, scala.meta.tokens.Tokens).equals(Any): Boolean
+      |* (scala.meta.Dialect, scala.meta.tokens.Tokens).hashCode(): Int
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).syntax: String
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
@@ -208,6 +221,8 @@ class SurfaceSuite extends FunSuite {
       |* scala.meta.Dialect.apply(scala.meta.Tree): (scala.meta.Dialect, scala.meta.Tree)
       |* scala.meta.Dialect.apply(scala.meta.tokens.Token): (scala.meta.Dialect, scala.meta.tokens.Token)
       |* scala.meta.Dialect.apply(scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens)
+      |* scala.meta.Dialect.equals(Any): Boolean
+      |* scala.meta.Dialect.hashCode(): Int
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
@@ -327,6 +342,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Self
       |scala.meta.Source
       |scala.meta.Stat
+      |scala.meta.Stat.WithMods
       |scala.meta.Template
       |scala.meta.Term
       |scala.meta.Term.Annotate

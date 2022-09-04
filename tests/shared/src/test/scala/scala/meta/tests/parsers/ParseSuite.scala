@@ -100,7 +100,7 @@ object MoreHelpers {
     )
     tree
   }
-  implicit class XtensionCode(code: String) {
+  implicit class XtensionCode(private val code: String) extends AnyVal {
     def asInput: Input = Input.String(code)
     def asAmmoniteInput: Input = Input.Ammonite(asInput)
     def applyRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
@@ -110,7 +110,7 @@ object MoreHelpers {
       asInput.parseRule(rule)
     }
   }
-  implicit class XtensionInput(input: Input) {
+  implicit class XtensionInput(private val input: Input) extends AnyVal {
     def applyRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
       requireNonEmptyOrigin(rule(new ScalametaParser(input)))
     }

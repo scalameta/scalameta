@@ -12,7 +12,8 @@ package object semanticdb {
   val NoTree = Tree.Empty
   val NoAccess = Access.Empty
 
-  implicit class XtensionSemanticdbSymbolInformation(info: SymbolInformation) {
+  implicit class XtensionSemanticdbSymbolInformation(private val info: SymbolInformation)
+      extends AnyVal {
     def isScala: Boolean = info.language == l.SCALA
     def isJava: Boolean = info.language == l.JAVA
     def isLocal: Boolean = info.kind == k.LOCAL
@@ -64,7 +65,7 @@ package object semanticdb {
     }
   }
 
-  implicit class XtensionSemanticdbScope(scope: Scope) {
+  implicit class XtensionSemanticdbScope(private val scope: Scope) extends AnyVal {
     def symbols: List[String] = {
       if (scope.symlinks.nonEmpty) scope.symlinks.toList
       else scope.hardlinks.map(_.symbol).toList
@@ -78,25 +79,25 @@ package object semanticdb {
     }
   }
 
-  implicit class XtensionSemanticdbScopeOpt(scopeOpt: Option[Scope]) {
+  implicit class XtensionSemanticdbScopeOpt(private val scopeOpt: Option[Scope]) extends AnyVal {
     def symbols: List[String] = scopeOpt.map(_.symbols).getOrElse(Nil)
     def infos: List[SymbolInformation] = scopeOpt.map(_.infos).getOrElse(Nil)
   }
 
-  implicit class XtensionSemanticdbScopes(scopes: Seq[Scope]) {
+  implicit class XtensionSemanticdbScopes(private val scopes: Seq[Scope]) extends AnyVal {
     def symbols: List[List[String]] = scopes.map(_.symbols).toList
     def infos: List[List[SymbolInformation]] = scopes.map(_.infos).toList
   }
 
-  implicit class XtensionSemanticdbType(tpe: Type) {
+  implicit class XtensionSemanticdbType(private val tpe: Type) extends AnyVal {
     def nonEmpty: Boolean = tpe.isDefined
   }
 
-  implicit class XtensionSemanticdbSignature(sig: Signature) {
+  implicit class XtensionSemanticdbSignature(private val sig: Signature) extends AnyVal {
     def nonEmpty: Boolean = sig.isDefined
   }
 
-  implicit class XtensionSemanticdbConstant(const: Constant) {
+  implicit class XtensionSemanticdbConstant(private val const: Constant) extends AnyVal {
     def nonEmpty: Boolean = const.isDefined
 
     def value: Option[Any] = {
@@ -117,7 +118,8 @@ package object semanticdb {
     }
   }
 
-  implicit class XtensionSemanticdbConstantCompanion(const: Constant.type) {
+  implicit class XtensionSemanticdbConstantCompanion(private val const: Constant.type)
+      extends AnyVal {
     def apply(value: Any): Constant = {
       value match {
         case () => UnitConstant()
@@ -136,11 +138,11 @@ package object semanticdb {
     }
   }
 
-  implicit class XtensionSemanticdbTree(tree: Tree) {
+  implicit class XtensionSemanticdbTree(private val tree: Tree) extends AnyVal {
     def nonEmpty: Boolean = tree.isDefined
   }
 
-  implicit class XtensionSemanticdbAccess(access: Access) {
+  implicit class XtensionSemanticdbAccess(private val access: Access) extends AnyVal {
     def nonEmpty: Boolean = access.isDefined
   }
 }

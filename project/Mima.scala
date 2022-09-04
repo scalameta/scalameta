@@ -3,6 +3,8 @@ package build
 
 import com.typesafe.tools.mima.core._
 
+import scala.reflect.ClassTag
+
 // More details about Mima:
 // https://github.com/typesafehub/migration-manager/wiki/sbt-plugin#basic-usage
 object Mima {
@@ -26,34 +28,18 @@ object Mima {
       true
   }
 
+  @inline private def exclude[A <: ProblemRef: ClassTag](metaType: String): ProblemFilter =
+    ProblemFilters.exclude[A]("scala.meta." + metaType)
+
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.apply"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.copy"),
-    ProblemFilters.exclude[IncompatibleResultTypeProblem]("scala.meta.Dialect.copy$default$21"),
-    ProblemFilters.exclude[IncompatibleResultTypeProblem]("scala.meta.Dialect.copy$default$22"),
-    ProblemFilters.exclude[IncompatibleResultTypeProblem]("scala.meta.Dialect.copy$default$23"),
-    ProblemFilters.exclude[IncompatibleResultTypeProblem]("scala.meta.Dialect.copy$default$24"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.copy$default$22"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.copy$default$23"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.copy$default$24"),
-    ProblemFilters
-      .exclude[DirectMissingMethodProblem]("scala.meta.Dialect.allowImplicitFunctionTypes"),
-    ProblemFilters
-      .exclude[DirectMissingMethodProblem]("scala.meta.Dialect.withAllowImplicitFunctionTypes"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.allowMethodTypes"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.withAllowMethodTypes"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.allowWithTypes"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.withAllowWithTypes"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.allowWhiteboxMacro"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.withAllowWhiteboxMacro"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.allowLiteralUnitType"),
-    ProblemFilters
-      .exclude[DirectMissingMethodProblem]("scala.meta.Dialect.withAllowLiteralUnitType"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.allowSuperTrait"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.withAllowSuperTrait"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.allowAsPatternBinding"),
-    ProblemFilters
-      .exclude[DirectMissingMethodProblem]("scala.meta.Dialect.withAllowAsPatternBinding"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.meta.Dialect.this")
+    // implicit classes
+    exclude[IncompatibleResultTypeProblem]("package.XtensionDialectApply"),
+    exclude[IncompatibleResultTypeProblem]("package.XtensionDialectTokenSyntax"),
+    exclude[IncompatibleResultTypeProblem]("package.XtensionDialectTokensSyntax"),
+    exclude[IncompatibleResultTypeProblem]("package.XtensionDialectTreeSyntax"),
+    exclude[FinalClassProblem]("package$XtensionDialectApply"),
+    exclude[FinalClassProblem]("package$XtensionDialectTokenSyntax"),
+    exclude[FinalClassProblem]("package$XtensionDialectTokensSyntax"),
+    exclude[FinalClassProblem]("package$XtensionDialectTreeSyntax")
   )
 }

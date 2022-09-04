@@ -898,9 +898,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else autoEndPos(t)(Type.Annotate(t, annots))
     }
 
-    private def allowPlusMinusUnderscore: Boolean =
-      dialect.allowPlusMinusUnderscoreAsIdent || dialect.allowPlusMinusUnderscoreAsPlaceholder
-
     def simpleType(): Type = {
       val startPos = auto.startTokenPos
       val res = token match {
@@ -910,11 +907,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Type.Macro(macroSplicedIdent(ident))
         case MacroSplice() =>
           Type.Macro(macroSplice())
-        case Ident("?") if dialect.allowQuestionMarkPlaceholder =>
+        case Ident("?") if dialect.allowQuestionMarkAsTypeWildcard =>
           next(); Type.Placeholder(typeBounds())
-        case Ident(value @ ("+" | "-")) if allowPlusMinusUnderscore && tryAhead[Underscore] =>
+        case Ident(value @ ("+" | "-"))
+            if (dialect.allowPlusMinusUnderscoreAsIdent || dialect.allowUnderscoreAsTypePlaceholder) &&
+              tryAhead[Underscore] =>
           next() // Ident and Underscore
-          if (dialect.allowPlusMinusUnderscoreAsPlaceholder)
+          if (dialect.allowUnderscoreAsTypePlaceholder)
             Type.Placeholder(typeBounds())
           else
             Type.Name(s"${value}_")
@@ -1276,13 +1275,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     interpolateWith(unquoteExpr(), Term.Interpolate.apply)
 
   def xmlTerm(): Term.Xml =
-    xmlWith(unquoteXmlExpr(), Term.Xml.apply)
+    xmlWith(unquoteExpr(), Term.Xml.apply)
 
   def interpolatePat(): Pat.Interpolate =
     interpolateWith(unquotePattern(), Pat.Interpolate.apply)
 
   def xmlPat(): Pat.Xml =
-    xmlWith(unquoteXmlPattern(), Pat.Xml.apply)
+    xmlWith(unquoteSeqPattern(), Pat.Xml.apply)
 
   /* ------------- NEW LINES ------------------------------------------------- */
 
@@ -1354,10 +1353,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           at = token
         )
     }
-
-  def unquoteXmlExpr(): Term = {
-    unquoteExpr()
-  }
 
   private def exprMaybeIndented(): Term = {
     if (token.is[Indentation.Indent]) {
@@ -1703,8 +1698,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                   Some(
                     copyPos(tree)(
                       Term.Param(
-                        List(atPos(kwUsing.endTokenPos, kwUsing.endTokenPos)(Mod.Using())),
-                        atPos(eta.endTokenPos, eta.endTokenPos)(Name.Anonymous()),
+                        List(atPos(kwUsing.endTokenPos)(Mod.Using())),
+                        atPos(eta.endTokenPos)(Name.Anonymous()),
                         Some(tpt),
                         None
                       )
@@ -2223,7 +2218,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               else if (tail.nonEmpty) syntaxError("repeated argument not allowed here", at = head)
             case _ =>
           }
-          val using = nextIf(x.toString == soft.KwUsing.name)
+          val using = nextIf(x.toString == soft.KwUsing.name && ahead(token.isNot[CantStartStat]))
           val exprs = commaSeparated(argumentExpr(location))
           checkRep(exprs)
           (exprs, using)
@@ -2393,18 +2388,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // is a sequence pattern _* allowed?
     def isSequenceOK: Boolean
 
-    // are we in an XML pattern?
-    def isXML: Boolean = false
-
     def patterns(): List[Pat] = commaSeparated(pattern())
 
-    def pattern(): Pat = {
-      def loop(pat: Pat): Pat =
-        if (!isBar) pat
-        else {
-          next(); autoEndPos(pat)(Pat.Alternative(pat, pattern()))
+    def pattern(): Pat = patternAlternatives(Nil)
+
+    @tailrec
+    private def patternAlternatives(pats: List[Pat]): Pat = {
+      val pat = pattern1()
+      if (isBar) {
+        next()
+        patternAlternatives(pat :: pats)
+      } else if (pats.isEmpty) {
+        pat
+      } else {
+        val endPos = pat.endTokenPos
+        pats.foldLeft(pat) { case (rtAll, ltOne) =>
+          atPos(ltOne.startTokenPos, endPos)(Pat.Alternative(ltOne, rtAll))
         }
-      loop(pattern1())
+      }
     }
 
     def quasiquotePattern(): Pat = {
@@ -2425,10 +2426,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
     def unquotePattern(): Pat = {
-      dropAnyBraces(pattern())
-    }
-
-    def unquoteXmlPattern(): Pat = {
       dropAnyBraces(pattern())
     }
 
@@ -2634,12 +2631,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val isSequenceOK = false
   }
 
-  /** For use from xml pattern, where sequence is allowed and encouraged. */
-  object xmlSeqOK extends SeqContextSensitive {
-    val isSequenceOK = true
-    override val isXML = true
-  }
-
   /**
    * These are default entry points into the pattern context sensitive methods: they are all
    * initiated from non-pattern context.
@@ -2657,9 +2648,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def quasiquotePattern(): Pat = seqOK.quasiquotePattern()
   def entrypointPattern(): Pat = seqOK.entrypointPattern()
   def unquotePattern(): Pat = noSeq.unquotePattern()
-  def unquoteXmlPattern(): Pat = xmlSeqOK.unquoteXmlPattern()
+  def unquoteSeqPattern(): Pat = seqOK.unquotePattern()
   def seqPatterns(): List[Pat] = seqOK.patterns()
-  def xmlSeqPatterns(): List[Pat] = xmlSeqOK.patterns() // Called from xml parser
   def argumentPattern(): Pat = seqOK.pattern()
   def argumentPatterns(): List[Pat] = inParens {
     if (token.is[RightParen]) Nil
@@ -4225,7 +4215,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val implicitPos = in.tokenPos
         next()
         if (token.is[Ident] && token.isNot[SoftModifier]) stats += implicitClosure(BlockStat)
-        else stats += localDef(Some(atPos(implicitPos, implicitPos)(Mod.Implicit())))
+        else stats += localDef(Some(atPos(implicitPos)(Mod.Implicit())))
         if (!token.is[CaseDefEnd]) acceptStatSepOpt()
       case t @ DefIntro() if !t.is[NonlocalModifier] =>
         stats += localDef(None)

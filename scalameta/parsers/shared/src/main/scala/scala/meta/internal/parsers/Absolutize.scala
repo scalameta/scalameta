@@ -7,7 +7,7 @@ import scala.meta.parsers._
 import scala.meta.tokenizers._
 
 object Absolutize {
-  implicit class XtensionPositionAbsolutize(pos: Position) {
+  implicit class XtensionPositionAbsolutize(private val pos: Position) extends AnyVal {
     def absolutize: Position = {
       pos match {
         case Position.Range(Input.Slice(input, absoluteStart, _), start, end) =>
@@ -20,7 +20,7 @@ object Absolutize {
     }
   }
 
-  implicit class XtensionExceptionAbsolutize(ex: Throwable) {
+  implicit class XtensionExceptionAbsolutize(private val ex: Throwable) extends AnyVal {
     def absolutize: Throwable = {
       val ex1 = ex match {
         case TokenizeException(pos, message) =>
