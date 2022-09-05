@@ -3524,15 +3524,23 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         syntaxError(s"Procedure syntax is not supported. $hint", at = name)
     }
 
-    val _paramss: List[Clause] = paramClauses(ownerIsType = false, ctxBoundsAllowed = true)
+    val (paramss, tparams, termParamss) = if (dialect.allowClauseInterleaving) {
+      val _paramss: List[Clause] = paramClauses(ownerIsType = false, ctxBoundsAllowed = true)
 
-    val implicitParams = implicitParamClauseOpt(ownerIsType = false)
+      val implicitParams = implicitParamClauseOpt(ownerIsType = false)
 
-    val paramss = if(implicitParams.nonEmpty){ _paramss :+ Clause.TermClause(implicitParams) } else { _paramss }
-    
-    val tparams = paramss.headOption.collect{ case Clause.TypeClause(tyParams) => tyParams }.getOrElse(List())
+      val paramss = if(implicitParams.nonEmpty){ _paramss :+ Clause.TermClause(implicitParams) } else { _paramss }
+      val tparams = paramss.headOption.collect{ case Clause.TypeClause(tyParams) => tyParams }.getOrElse(List())
+      val termParamss = paramss.collect{ case Clause.TermClause(termParams) => termParams}
 
-    val termParamss = paramss.collect{ case Clause.TermClause(termParams) => termParams}
+      (paramss, tparams, termParamss)
+    } else {
+      val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
+      val termParamss = termParamClauses(ownerIsType = false)
+      val paramss: List[Clause] = Clause.TypeClause(tparams) +: termParamss.map(Clause.TermClause(_))
+      
+      (paramss, tparams, termParamss)
+    }
 
     termParamss.foreach(onlyLastParameterCanBeRepeated)
 
