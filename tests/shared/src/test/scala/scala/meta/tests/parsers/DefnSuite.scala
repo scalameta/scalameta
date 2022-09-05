@@ -327,16 +327,31 @@ class DefnSuite extends ParseSuite {
   }
 
   test("val with infix and break") {
-    def defn = templStat(
+    val defn = templStat(
       """|val foo :: bar ::
          |  baz :: Nil = qux
          |""".stripMargin
     )
-    val msg =
-      """|<input>:1: error: illegal start of simple pattern
-         |val foo :: bar ::
-         |                 ^""".stripMargin
-    interceptMessage[ParseException](msg)(defn)
+    assertTree(defn) {
+      Defn.Val(
+        Nil,
+        Pat.ExtractInfix(
+          Pat.Var(Term.Name("foo")),
+          Term.Name("::"),
+          Pat.ExtractInfix(
+            Pat.Var(Term.Name("bar")),
+            Term.Name("::"),
+            Pat.ExtractInfix(
+              Pat.Var(Term.Name("baz")),
+              Term.Name("::"),
+              List(Term.Name("Nil"))
+            ) :: Nil
+          ) :: Nil
+        ) :: Nil,
+        None,
+        Term.Name("qux")
+      )
+    }
   }
 
 }

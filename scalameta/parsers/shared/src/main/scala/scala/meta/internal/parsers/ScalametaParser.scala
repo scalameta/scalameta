@@ -2504,6 +2504,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             if (token.is[LeftBracket])
               syntaxError("infix patterns cannot have type arguments", at = token)
             ctx.push(ctx.UnfinishedInfix(lhs1, op))
+            newLineOpt()
             val rhs1 = simplePattern(badPattern3, isRhs = true)
             loop(rhs1)
           case None =>
