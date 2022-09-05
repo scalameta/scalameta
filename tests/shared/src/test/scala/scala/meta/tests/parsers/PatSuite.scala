@@ -1,6 +1,8 @@
 package scala.meta.tests
 package parsers
 
+import org.scalameta.invariants.InvariantFailedException
+
 import scala.meta._, Pat._
 import scala.meta.dialects.Scala211
 
@@ -28,6 +30,20 @@ class PatSuite extends ParseSuite {
 
   test("`a`") {
     val Term.Name("a") = pat("`a`")
+  }
+
+  test("a: _") {
+    val err = intercept[InvariantFailedException](pat("a: _")).getMessage
+    assert(
+      err.contains(
+        """found that scala.meta.classifiers.`package`.XtensionClassifiable[scala.meta.Type](rhs)(
+          |  scala.meta.Tree.classifiable[scala.meta.Type]
+          |).is[Type.Placeholder](
+          |  Type.this.Placeholder.ClassifierClass[scala.meta.Type]
+          |).`unary_!` is true""".stripMargin.replaceAll("\n *", "")
+      ),
+      err
+    )
   }
 
   test("a: Int") {
