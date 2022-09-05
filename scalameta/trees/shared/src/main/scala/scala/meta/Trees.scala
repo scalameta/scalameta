@@ -428,8 +428,11 @@ object Defn {
       decltpe: Option[scala.meta.Type],
       body: Term
   ) extends Defn with Member.Term with Stat.WithMods {
-    val termParamss = paramss.collect{ case Clause.TermClause(termParams) => termParams }
-    checkFields(paramss.collect{ case Clause.TermClause(termParams) => termParams }.forall(onlyLastParamCanBeRepeated))
+    checkFields(paramss.forall {
+      case term: Clause.TermClause =>
+        onlyLastParamCanBeRepeated(term.params)
+      case _ => true
+    })
   }
   @ast class Macro(
       mods: List[Mod],
