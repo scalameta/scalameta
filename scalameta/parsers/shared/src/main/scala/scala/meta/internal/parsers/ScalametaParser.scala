@@ -3559,7 +3559,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         warnProcedureDeprecation
         autoPos(Type.Name("Unit"))
       }
-      Decl.Def(mods, name, tparams, termParamss, decltype)
+      Decl.Def(mods, name, paramss, decltype)
     } else {
       accept[Equals]
       val isMacro = acceptOpt[KwMacro]

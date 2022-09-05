@@ -340,8 +340,7 @@ object Decl {
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[scala.meta.Type.Param],
-      paramss: List[List[Term.Param]],
+      paramss: List[Clause],
       decltpe: scala.meta.Type
   ) extends Decl with Member.Term with Stat.WithMods
   @ast class Type(
