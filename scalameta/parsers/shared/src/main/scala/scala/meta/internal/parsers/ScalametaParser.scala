@@ -517,6 +517,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     buf.toList
   }
 
+  @inline
+  def quasi[T <: Tree](rank: Int, tree: Tree)(implicit astInfo: AstInfo[T]): T =
+    astInfo.quasi(rank, tree)
+
+  def requasi[T <: Tree: AstInfo](q: Quasi): T =
+    copyPos(q)(quasi[T](q.rank, q.tree))
+
   def ellipsis[T <: Tree: AstInfo](ell: Ellipsis, rank: Int, extraSkip: => Unit = {}): T = {
     if (ell.rank != rank) {
       syntaxError(Messages.QuasiquoteRankMismatch(ell.rank, rank), at = ell)
@@ -526,40 +533,32 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def ellipsis[T <: Tree: AstInfo](ell: Ellipsis): T = ellipsis(ell, {})
 
-  def ellipsis[T <: Tree](ell: Ellipsis, extraSkip: => Unit)(implicit astInfo: AstInfo[T]): T = {
+  def ellipsis[T <: Tree: AstInfo](ell: Ellipsis, extraSkip: => Unit): T = autoPos {
     if (!dialect.allowUnquotes) {
       syntaxError(s"$dialect doesn't support ellipses", at = ell)
     }
-    autoPos {
-      next()
-      extraSkip
-      val tree = {
-        val result = token match {
-          case LeftParen() => inParensOnOpen(unquote[T])
-          case LeftBrace() => inBracesOnOpen(unquote[T])
-          case t: Unquote => unquote[T](t)
-          case t => syntaxError(s"$$, ( or { expected but ${t.name} found", at = t)
-        }
-        result match {
-          case quasi: Quasi =>
-            // NOTE: In the case of an unquote nested directly under ellipsis, we get a bit of a mixup.
-            // Unquote's pt may not be directly equal unwrapped ellipsis's pt, but be its refinement instead.
-            // For example, in `new { ..$stats }`, ellipsis's pt is List[Stat], but quasi's pt is Term.
-            // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
-            require(
-              classTag[T].runtimeClass.isAssignableFrom(quasi.pt) &&
-                debug(ell, result, result.structure)
-            )
-            copyPos(quasi)(astInfo.quasi(quasi.rank, quasi.tree))
-          case other =>
-            other
-        }
-      }
-      astInfo.quasi(ell.rank, tree)
+    next()
+    extraSkip
+    val unquoted = token match {
+      case LeftParen() => inParensOnOpen(unquote[T])
+      case LeftBrace() => inBracesOnOpen(unquote[T])
+      case t: Unquote => unquote[T](t)
+      case t => syntaxError(s"$$, ( or { expected but ${t.name} found", at = t)
     }
+    val tree = unquoted match {
+      case q: Quasi =>
+        // NOTE: In the case of an unquote nested directly under ellipsis, we get a bit of a mixup.
+        // Unquote's pt may not be directly equal unwrapped ellipsis's pt, but be its refinement instead.
+        // For example, in `new { ..$stats }`, ellipsis's pt is List[Stat], but quasi's pt is Term.
+        // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
+        require(classTag[T].runtimeClass.isAssignableFrom(q.pt) && debug(ell, q, q.structure))
+        requasi[T](q)
+      case _ => syntaxError(s"expected a quasi tree: $unquoted", at = unquoted)
+    }
+    quasi[T](ell.rank, tree)
   }
 
-  private def unquote[T <: Tree](unquote: Unquote)(implicit astInfo: AstInfo[T]): T = autoPos {
+  private def unquote[T <: Tree: AstInfo](unquote: Unquote): T = autoPos {
     require(unquote.input.chars(unquote.start + 1) != '$')
     if (!dialect.allowUnquotes) {
       syntaxError(s"$dialect doesn't support unquotes", at = unquote)
@@ -578,7 +577,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     }
     next()
-    astInfo.quasi(0, unquotedTree)
+    quasi[T](0, unquotedTree)
   }
 
   def unquote[T <: Tree: AstInfo]: T =
