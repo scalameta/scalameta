@@ -768,7 +768,6 @@ class ErrorSuite extends FunSuite {
       import scala.meta.dialects.Scala211
       ??? match {
         case q"$_(...$argss)(...$_)" =>
-        case q"$_(...$argss)(foo)(...$_)" =>
       }
     """).replace("\r", ""),
       """

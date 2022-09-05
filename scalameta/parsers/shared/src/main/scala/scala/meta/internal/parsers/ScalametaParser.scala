@@ -222,11 +222,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     next()
     inParensAfterOpen(body)
   }
+  @inline private def inParensOnOpenOr[T](body: => T)(alt: => T): T = {
+    next()
+    inParensAfterOpenOr(body)(alt)
+  }
   @inline private def inParensAfterOpen[T](body: T): T = {
     newLineOpt()
     accept[RightParen]
     body
   }
+  @inline private def inParensAfterOpenOr[T](body: => T)(alt: => T): T =
+    if (acceptOpt[RightParen]) alt
+    else inParensAfterOpen(body)
 
   @inline final def inBraces[T](body: => T): T = {
     inBracesOr(body, syntaxErrorExpected[LeftBrace])
@@ -2857,9 +2864,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Term.Param]] = {
     var parsedImplicits = false
-    def paramClause(first: Boolean): List[Term.Param] = token match {
-      case RightParen() =>
-        Nil
+    def paramClause(first: Boolean): List[Term.Param] = inParensOnOpenOr(token match {
       case t @ Ellipsis(2) =>
         List(ellipsis[Term.Param](t))
       case _ =>
@@ -2869,22 +2874,25 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         } else if (acceptOpt[soft.KwUsing]) {
           parsedUsing = true
         }
-        commaSeparated(
-          param(
-            ownerIsCase && first,
-            ownerIsType,
-            isImplicit = parsedImplicits,
-            isUsing = parsedUsing
-          )
-        )
-    }
-    listBy[List[Term.Param]] { paramss =>
-      while (isAfterOptNewLine[LeftParen] && !parsedImplicits) {
-        next()
-        paramss += paramClause(paramss.isEmpty)
-        accept[RightParen]
+        commaSeparated(token match {
+          case t: Ellipsis => ellipsis[Term.Param](t)
+          case _ =>
+            param(
+              ownerIsCase && first,
+              ownerIsType,
+              isImplicit = parsedImplicits,
+              isUsing = parsedUsing
+            )
+        })
+    })(Nil)
+    if (!isAfterOptNewLine[LeftParen]) Nil
+    else
+      listBy[List[Term.Param]] { paramss =>
+        paramss += paramClause(true)
+        while (isAfterOptNewLine[LeftParen] && !parsedImplicits) {
+          paramss += paramClause(false)
+        }
       }
-    }
   }
 
   def paramType(): Type =
