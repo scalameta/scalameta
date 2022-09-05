@@ -222,7 +222,7 @@ class MatchTypeSuite extends BaseDottySuite {
                 Type.Name("Left"),
                 List(
                   TypeCase(Type.Name("Unit"), Type.Name("Right")),
-                  TypeCase(Type.Wildcard(Type.Bounds(None, None)), Type.Name("Left"))
+                  TypeCase(Type.Name("?"), Type.Name("Left"))
                 )
               ),
               Type.Bounds(None, None)
@@ -288,11 +288,11 @@ class MatchTypeSuite extends BaseDottySuite {
                     Type.Name("L")
                   ),
                   TypeCase(
-                    Type.AnonymousParam(None),
+                    Type.PatWildcard(),
                     Type.Name("R")
                   ),
                   TypeCase(
-                    Type.Wildcard(Type.Bounds(None, None)),
+                    Type.Name("?"),
                     Type.Name("L")
                   )
                 )

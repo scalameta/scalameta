@@ -792,7 +792,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     def typeCaseClause(): TypeCase = autoPos {
       accept[KwCase]
-      val pat = infixTypeOrTuple(allowFunctionType = false)
+      val pat = infixTypeOrTuple(inMatchType = true)
       accept[RightArrow]
       val tpe = typeIndentedOpt()
       TypeCase(
@@ -807,26 +807,34 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     def typeArgs(): List[Type] = inBrackets(types())
 
-    def infixTypeOrTuple(allowFunctionType: Boolean = true): Type = {
-      if (token.is[LeftParen]) tupleInfixType(allowFunctionType)
-      else infixType()
+    def infixTypeOrTuple(inMatchType: Boolean = false): Type = {
+      if (token.is[LeftParen]) tupleInfixType(allowFunctionType = !inMatchType)
+      else infixType(inMatchType = inMatchType)
     }
 
-    @inline def infixType(): Type = infixTypeRest(compoundType())
+    @inline def infixType(inMatchType: Boolean = false): Type =
+      infixTypeRest(compoundType(inMatchType = inMatchType), inMatchType = inMatchType)
 
     @inline
-    private def infixTypeRest(t: Type): Type =
+    private def infixTypeRest(t: Type, inMatchType: Boolean = false): Type =
       if (dialect.useInfixTypePrecedence)
-        infixTypeRestWithPrecedence(t)
+        infixTypeRestWithPrecedence(t, inMatchType = inMatchType)
       else
-        infixTypeRestWithMode(t, InfixMode.FirstOp, t.startTokenPos, identity)
+        infixTypeRestWithMode(
+          t,
+          InfixMode.FirstOp,
+          t.startTokenPos,
+          identity,
+          inMatchType = inMatchType
+        )
 
     @tailrec
     private final def infixTypeRestWithMode(
         t: Type,
         mode: InfixMode.Value,
         startPos: Int,
-        f: Type => Type
+        f: Type => Type,
+        inMatchType: Boolean = false
     ): Type = {
       @inline def verifyLeftAssoc(at: Tree, leftAssoc: Boolean = true) =
         if (mode != InfixMode.FirstOp) checkAssoc(at, leftAssoc, mode == InfixMode.LeftOp)
@@ -841,18 +849,30 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val leftAssoc = op.isLeftAssoc
           verifyLeftAssoc(op, leftAssoc)
           newLineOptWhenFollowedBy[TypeIntro]
-          val typ = compoundType()
+          val typ = compoundType(inMatchType = inMatchType)
           def mkOp(t1: Type) = atPos(startPos, t1)(Type.ApplyInfix(t, op, t1))
           if (leftAssoc)
-            infixTypeRestWithMode(mkOp(typ), InfixMode.LeftOp, startPos, f)
+            infixTypeRestWithMode(
+              mkOp(typ),
+              InfixMode.LeftOp,
+              startPos,
+              f,
+              inMatchType = inMatchType
+            )
           else
-            infixTypeRestWithMode(typ, InfixMode.RightOp, typ.startTokenPos, f.compose(mkOp))
+            infixTypeRestWithMode(
+              typ,
+              InfixMode.RightOp,
+              typ.startTokenPos,
+              f.compose(mkOp),
+              inMatchType = inMatchType
+            )
         case _ =>
           f(t)
       }
     }
 
-    private final def infixTypeRestWithPrecedence(t: Type): Type = {
+    private final def infixTypeRestWithPrecedence(t: Type, inMatchType: Boolean = false): Type = {
       val ctx = TypeInfixContext
       val base = ctx.stack
       @inline def reduce(rhs: ctx.Typ, op: Option[ctx.Op]): ctx.Typ =
@@ -868,18 +888,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val op = typeName()
           newLineOptWhenFollowedBy[TypeIntro]
           ctx.push(ctx.UnfinishedInfix(reduce(rhs, Some(op)), op))
-          loop(compoundType())
+          loop(compoundType(inMatchType = inMatchType))
         case _ =>
           reduce(rhs, None)
       }
       loop(t)
     }
 
-    def compoundType(): Type = {
+    def compoundType(inMatchType: Boolean = false): Type = {
       if (token.is[LeftBrace])
         refinement(innerType = None)
       else
-        compoundTypeRest(annotType())
+        compoundTypeRest(annotType(inMatchType = inMatchType))
     }
 
     def compoundTypeRest(typ: Type): Type = {
@@ -915,7 +935,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       } else t
     }
 
-    def annotType(): Type = annotTypeRest(simpleType())
+    def annotType(inMatchType: Boolean = false): Type =
+      annotTypeRest(simpleType(inMatchType = inMatchType))
 
     def annotTypeRest(t: Type): Type = {
       val annots = ScalametaParser.this.annots(skipNewLines = false)
@@ -923,7 +944,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else autoEndPos(t)(Type.Annotate(t, annots))
     }
 
-    def simpleType(): Type = {
+    def simpleType(inMatchType: Boolean = false): Type = {
       val startPos = auto.startTokenPos
       def wildcardType(): Type = {
         next()
@@ -939,19 +960,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Type.Macro(macroSplicedIdent(ident))
         case MacroSplice() =>
           Type.Macro(macroSplice())
+        case _: Underscore if inMatchType =>
+          next(); Type.PatWildcard()
         case _: Underscore if dialect.allowUnderscoreAsTypePlaceholder =>
           next(); Type.AnonymousParam(None)
         case _: Underscore =>
           wildcardType()
-        case Ident("?") if dialect.allowQuestionMarkAsTypeWildcard =>
+        case Ident("?") if !inMatchType && dialect.allowQuestionMarkAsTypeWildcard =>
           wildcardType()
-        case Ident("*") if dialect.allowStarAsTypePlaceholder =>
+        case Ident("*") if !inMatchType && dialect.allowStarAsTypePlaceholder =>
           next(); Type.AnonymousParam(None)
-        case Ident(value @ ("-*" | "+*")) if dialect.allowStarAsTypePlaceholder =>
+        case Ident(value @ ("-*" | "+*")) if !inMatchType && dialect.allowStarAsTypePlaceholder =>
           next(); anonymousParamWithVariant(value)
         case Ident(value @ ("+" | "-"))
             if (dialect.allowPlusMinusUnderscoreAsIdent || dialect.allowUnderscoreAsTypePlaceholder) &&
-              tryAhead[Underscore] =>
+              !inMatchType && tryAhead[Underscore] =>
           next() // Ident and Underscore
           if (dialect.allowUnderscoreAsTypePlaceholder)
             anonymousParamWithVariant(value)

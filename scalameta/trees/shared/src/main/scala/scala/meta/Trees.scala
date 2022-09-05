@@ -249,6 +249,7 @@ object Type {
     @inline def apply(bounds: Bounds): Placeholder = Impl(bounds)
     @inline final def unapply(tree: Placeholder): Option[Bounds] = Some(tree.bounds)
   }
+  @ast class PatWildcard extends Type
   @ast class Wildcard(bounds: Bounds) extends Placeholder
   @ast class AnonymousParam(variant: Option[Mod.Variant]) extends Placeholder {
     @deprecated("Placeholder replaced with AnonymousParam and Wildcard", ">4.5.13")
