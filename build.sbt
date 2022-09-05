@@ -829,3 +829,5 @@ lazy val docs = project
     mimaPreviousArtifacts := Set.empty
   )
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin)
+
+lazy val examples = project.dependsOn(scalameta.jvm).settings(scalacOptions ++= Seq("-Ymacro-debug-lite"), scalaVersion := "2.13.8")
