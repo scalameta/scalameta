@@ -942,8 +942,8 @@ object TreeSyntax {
           m
         )
       case t: Defn.Object => r(" ")(t.mods, kw("object"), t.name, t.templ)
-      case t: Clause.TermClause => s("(", " ", r(t.params, ", "), ")")
-      case t: Clause.TypeClause => s("[", " ", r(t.params, ", "), "]")
+      case t: Clause.TermClause => s("(", r(t.params, ", "), ")")
+      case t: Clause.TypeClause => s("[", r(t.params, ", "), "]")
       case t: Defn.Def =>
         s(w(t.mods, " "), kw("def"), " ", t.name, t.paramss, t.decltpe, " = ", t.body)
       case t: Defn.Macro =>
