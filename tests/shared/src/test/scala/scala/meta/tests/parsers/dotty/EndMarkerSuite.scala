@@ -61,7 +61,6 @@ class EndMarkerSuite extends BaseDottySuite {
               Nil,
               Term.Name("b"),
               Nil,
-              Nil,
               None,
               Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Lit.Int(1)))
             )
@@ -96,7 +95,6 @@ class EndMarkerSuite extends BaseDottySuite {
         Nil,
         Term.Name("a"),
         Nil,
-        Nil,
         Some(Type.Name("B")),
         Term.Block(
           List(
@@ -121,8 +119,7 @@ class EndMarkerSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         Term.Name("a"),
-        Nil,
-        List(List()),
+        List(Clause.TermClause(List())),
         Some(Type.Name("Unit")),
         Term.Block(
           List(

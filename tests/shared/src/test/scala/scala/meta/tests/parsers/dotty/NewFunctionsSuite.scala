@@ -52,16 +52,15 @@ class NewFunctionsSuite extends BaseDottySuite {
       Decl.Def(
         Nil,
         Term.Name("table"),
-        Nil,
         List(
-          List(
+          Clause.TermClause(List(
             Term.Param(
               Nil,
               Term.Name("init"),
               Some(Type.ContextFunction(List(Type.Name("Table")), Type.Name("Unit"))),
               None
             )
-          )
+          ))
         ),
         Type.Name("Unit")
       )
@@ -73,9 +72,8 @@ class NewFunctionsSuite extends BaseDottySuite {
       Decl.Def(
         Nil,
         Term.Name("table"),
-        Nil,
         List(
-          List(
+          Clause.TermClause(List(
             Term.Param(
               Nil,
               Term.Name("init"),
@@ -87,7 +85,7 @@ class NewFunctionsSuite extends BaseDottySuite {
               ),
               None
             )
-          )
+          ))
         ),
         Type.Name("Unit")
       )
@@ -133,7 +131,6 @@ class NewFunctionsSuite extends BaseDottySuite {
         Nil,
         Term.Name("fx"),
         Nil,
-        Nil,
         Some(Type.ContextFunction(List(Type.Name("String")), Type.Name("Int"))),
         Term.ContextFunction(List(Term.Param(Nil, Term.Name("s"), None, None)), Lit.Int(3))
       )
@@ -143,7 +140,6 @@ class NewFunctionsSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         Term.Name("fy"),
-        Nil,
         Nil,
         Some(Type.ContextFunction(List(Type.Name("String"), Type.Name("Int")), Type.Name("Int"))),
         Term.ContextFunction(
@@ -285,7 +281,6 @@ class NewFunctionsSuite extends BaseDottySuite {
         Nil,
         Term.Name("foo"),
         Nil,
-        Nil,
         None,
         Term.Block(
           List(
@@ -311,9 +306,9 @@ class NewFunctionsSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         Term.Name("m"),
-        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
         List(
-          List(
+          Clause.TypeClause(List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil))),
+          Clause.TermClause(List(
             Term.Param(
               Nil,
               Term.Name("f"),
@@ -326,7 +321,7 @@ class NewFunctionsSuite extends BaseDottySuite {
               None
             ),
             Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None)
-          )
+          ))
         ),
         None,
         Term.Apply(Term.Name("f"), List(Term.Name("t")))

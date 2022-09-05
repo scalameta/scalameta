@@ -1008,7 +1008,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("type parameters with type bounds") {
-    val Defn.Def(_, _, List(tree), _, _, _) = templStat("def foo[T <: Int] = ???")
+    val Defn.Def(_, _, List(Clause.TypeClause(List(tree))), _, _) = templStat("def foo[T <: Int] = ???")
     assertTree(tree)(
       Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, Some(Type.Name("Int"))), Nil, Nil)
     )

@@ -15,8 +15,7 @@ class InfixSuite extends BaseDottySuite {
       Defn.Def(
         List(Mod.Infix()),
         Term.Name("a"),
-        Nil,
-        List(List(Term.Param(Nil, Term.Name("param"), Some(Type.Name("Int")), None))),
+        List(Clause.TermClause(List(Term.Param(Nil, Term.Name("param"), Some(Type.Name("Int")), None)))),
         None,
         Term.Name("param")
       )
@@ -58,8 +57,7 @@ class InfixSuite extends BaseDottySuite {
             Defn.Def(
               List(Mod.Infix()),
               Term.Name("x"),
-              Nil,
-              List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))),
+              List(Clause.TermClause(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)))),
               Some(Type.ApplyInfix(Type.Name("String"), Type.Name("or"), Type.Name("Int"))),
               Lit.Int(1)
             )
@@ -105,8 +103,7 @@ class InfixSuite extends BaseDottySuite {
       Defn.Def(
         List(Mod.Infix()),
         Term.Name("infix"),
-        Nil,
-        List(List(Term.Param(Nil, Term.Name("infix"), Some(Type.Name("infix")), None))),
+        List(Clause.TermClause(List(Term.Param(Nil, Term.Name("infix"), Some(Type.Name("infix")), None)))),
         Some(Type.Name("infix")),
         Term.NewAnonymous(
           Template(Nil, List(Init(Type.Name("infix"), Name(""), Nil)), Self(Name(""), None), Nil)
@@ -123,8 +120,7 @@ class InfixSuite extends BaseDottySuite {
         Defn.Def(
           List(Mod.Infix()),
           Term.Name("zero"),
-          Nil,
-          List(List(Term.Param(Nil, Term.Name("other"), Some(Type.Name("Int")), None))),
+          List(Clause.TermClause(List(Term.Param(Nil, Term.Name("other"), Some(Type.Name("Int")), None)))),
           Some(Type.Name("Int")),
           Lit.Int(0)
         )

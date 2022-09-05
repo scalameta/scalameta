@@ -99,8 +99,8 @@ class DerivesSuite extends BaseDottySuite {
             List(Init(Type.Name("Tree"), Name(""), Nil)),
             Self(Name(""), None),
             List(
-              Defn.Def(Nil, Term.Name("hello"), Nil, List(List()), None, Lit.String("")),
-              Defn.Def(Nil, Term.Name("bye"), Nil, List(List()), None, Lit.String(""))
+              Defn.Def(Nil, Term.Name("hello"), List(Clause.TermClause(List())), None, Lit.String("")),
+              Defn.Def(Nil, Term.Name("bye"), List(Clause.TermClause(List())), None, Lit.String(""))
             ),
             List(
               Type.Name("Eq")
@@ -174,7 +174,7 @@ class DerivesSuite extends BaseDottySuite {
             Nil,
             Nil,
             Self(Name(""), None),
-            List(Defn.Def(Nil, Term.Name("a"), Nil, Nil, None, Term.Name("???"))),
+            List(Defn.Def(Nil, Term.Name("a"), Nil, None, Term.Name("???"))),
             List(
               Type.Apply(Type.Name("Alpha"), List(Type.Name("T"))),
               Type.Apply(Type.Name("Epsilon"), List(Type.Name("T")))

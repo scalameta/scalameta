@@ -112,7 +112,7 @@ class TypeSuite extends ParseSuite {
   test("A { def x: A; val y: B; type C }") {
     val Refine(
       Some(TypeName("A")),
-      Decl.Def(Nil, TermName("x"), Nil, Nil, TypeName("Int")) ::
+      Decl.Def(Nil, TermName("x"), Nil, TypeName("Int")) ::
         Decl.Val(Nil, List(Pat.Var(TermName("y"))), TypeName("B")) ::
         Decl.Type(Nil, TypeName("C"), Nil, Type.Bounds(None, None)) :: Nil
     ) =

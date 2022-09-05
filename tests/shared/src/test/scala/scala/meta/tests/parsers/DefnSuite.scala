@@ -85,16 +85,15 @@ class DefnSuite extends ParseSuite {
   }
 
   test("def x = 2") {
-    val Defn.Def(Nil, Term.Name("x"), Nil, Nil, None, Lit(2)) = templStat("def x = 2")
+    val Defn.Def(Nil, Term.Name("x"), Nil, None, Lit(2)) = templStat("def x = 2")
   }
 
   test("def x[A <: B] = 2") {
     val Defn.Def(
       Nil,
       Term.Name("x"),
-      Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, Some(Type.Name("B"))), Nil, Nil)
-        :: Nil,
-      Nil,
+      Clause.TypeClause(Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, Some(Type.Name("B"))), Nil, Nil)
+        :: Nil) :: Nil,
       None,
       Lit(2)
     ) = templStat("def x[A <: B] = 2")
@@ -104,9 +103,8 @@ class DefnSuite extends ParseSuite {
     val Defn.Def(
       Nil,
       Term.Name("x"),
-      Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Type.Name("B") :: Nil, Nil)
-        :: Nil,
-      Nil,
+      Clause.TypeClause(Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Type.Name("B") :: Nil, Nil)
+        :: Nil) :: Nil,
       None,
       Lit(2)
     ) = templStat("def x[A <% B] = 2")
@@ -116,9 +114,8 @@ class DefnSuite extends ParseSuite {
     val Defn.Def(
       Nil,
       Term.Name("x"),
-      Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Type.Name("B") :: Nil)
-        :: Nil,
-      Nil,
+      Clause.TypeClause(Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Type.Name("B") :: Nil)
+        :: Nil) :: Nil,
       None,
       Lit(2)
     ) = templStat("def x[A: B] = 2")
@@ -128,9 +125,8 @@ class DefnSuite extends ParseSuite {
     val Defn.Def(
       Nil,
       Term.Name("f"),
-      Nil,
-      (Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None) :: Nil) ::
-        (Term.Param(Mod.Implicit() :: Nil, Term.Name("b"), Some(Type.Name("Int")), None) :: Nil)
+      Clause.TermClause(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None) :: Nil) ::
+        Clause.TermClause(Term.Param(Mod.Implicit() :: Nil, Term.Name("b"), Some(Type.Name("Int")), None) :: Nil)
         :: Nil,
       None,
       Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Term.Name("b") :: Nil)
@@ -142,7 +138,6 @@ class DefnSuite extends ParseSuite {
     val Defn.Def(
       Nil,
       Term.Name("proc"),
-      Nil,
       Nil,
       Some(Type.Name("Unit")),
       Term.Block((ret @ Term.Return(Lit(42))) :: Nil)
@@ -187,7 +182,6 @@ class DefnSuite extends ParseSuite {
         .Def(
           Nil,
           Term.Name("f"),
-          Nil,
           Nil,
           None,
           Term.Block(

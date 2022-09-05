@@ -24,8 +24,7 @@ class ToplevelTermSuite extends TreeSuiteBase {
           Defn.Def(
             Nil,
             Term.Name("foo"),
-            Nil,
-            List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))),
+            List(Clause.TermClause(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)))),
             Some(Type.Name("Int")),
             Term.Name("x")
           ),
@@ -54,8 +53,7 @@ class ToplevelTermSuite extends TreeSuiteBase {
               Defn.Def(
                 Nil,
                 Term.Name("foo"),
-                Nil,
-                List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))),
+                List(Clause.TermClause(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)))),
                 Some(Type.Name("Int")),
                 Term.Name("x")
               ),
@@ -80,8 +78,7 @@ class ToplevelTermSuite extends TreeSuiteBase {
         Defn.Def(
           Nil,
           Term.Name("foo"),
-          Nil,
-          List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))),
+          List(Clause.TermClause(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)))),
           Some(Type.Name("Int")),
           Term.Name("x")
         ),

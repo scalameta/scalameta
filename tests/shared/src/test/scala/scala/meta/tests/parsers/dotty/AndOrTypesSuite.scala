@@ -44,16 +44,15 @@ class AndOrTypesSuite extends BaseDottySuite {
       Decl.Def(
         Nil,
         tname("help"),
-        Nil,
         List(
-          List(
+          Clause.TermClause(List(
             Term.Param(
               Nil,
               tname("id"),
               Some(ApplyInfix(pname("UserName"), pname("|"), pname("Password"))),
               None
             )
-          )
+          ))
         ),
         pname("Unit")
       )
@@ -80,16 +79,15 @@ class AndOrTypesSuite extends BaseDottySuite {
       Decl.Def(
         Nil,
         tname("fx"),
-        Nil,
         List(
-          List(
+          Clause.TermClause(List(
             Term.Param(
               Nil,
               tname("a"),
               Some(Type.Apply(pname("List"), List(ApplyInfix(pname("A"), pname("&"), pname("B"))))),
               None
             )
-          )
+          ))
         ),
         pname("Unit")
       )

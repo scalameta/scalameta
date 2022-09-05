@@ -11,16 +11,15 @@ class VarargParameterSuite extends ParseSuite {
     val obj = Defn.Def(
       Nil,
       Term.Name("obj"),
-      Nil,
       List(
-        List(
+        Clause.TermClause(List(
           Term.Param(
             Nil,
             Term.Name("f"),
             Some(Type.Repeated(Type.Name("Int"))),
             None
           )
-        )
+        ))
       ),
       Some(Type.Name("Boolean")),
       Lit.Boolean(true)
@@ -32,9 +31,8 @@ class VarargParameterSuite extends ParseSuite {
     val obj = Defn.Def(
       Nil,
       Term.Name("obj"),
-      Nil,
       List(
-        List(
+        Clause.TermClause(List(
           Term.Param(Nil, Term.Name("a"), Some(Type.Name("String")), None),
           Term.Param(Nil, Term.Name("b"), Some(Type.Name("Boolean")), None),
           Term.Param(
@@ -43,7 +41,7 @@ class VarargParameterSuite extends ParseSuite {
             Some(Type.Repeated(Type.Name("Int"))),
             None
           )
-        )
+        ))
       ),
       Some(Type.Name("Boolean")),
       Lit.Boolean(true)
@@ -55,10 +53,9 @@ class VarargParameterSuite extends ParseSuite {
     val obj = Defn.Def(
       Nil,
       Term.Name("obj"),
-      Nil,
       List(
-        List(Term.Param(Nil, Term.Name("fa"), Some(Type.Repeated(Type.Name("Int"))), None)),
-        List(Term.Param(Nil, Term.Name("fb"), Some(Type.Repeated(Type.Name("Int"))), None))
+        Clause.TermClause(List(Term.Param(Nil, Term.Name("fa"), Some(Type.Repeated(Type.Name("Int"))), None))),
+        Clause.TermClause(List(Term.Param(Nil, Term.Name("fb"), Some(Type.Repeated(Type.Name("Int"))), None)))
       ),
       Some(Type.Name("Boolean")),
       Lit.Boolean(true)
@@ -70,17 +67,16 @@ class VarargParameterSuite extends ParseSuite {
     val obj = Defn.Def(
       Nil,
       Term.Name("obj"),
-      Nil,
       List(
-        List(Term.Param(Nil, Term.Name("fa"), Some(Type.Repeated(Type.Name("Int"))), None)),
-        List(
+        Clause.TermClause(List(Term.Param(Nil, Term.Name("fa"), Some(Type.Repeated(Type.Name("Int"))), None))),
+        Clause.TermClause(List(
           Term.Param(
             List(Mod.Implicit()),
             Term.Name("fb"),
             Some(Type.Repeated(Type.Name("Int"))),
             None
           )
-        )
+        ))
       ),
       Some(Type.Name("Boolean")),
       Lit.Boolean(true)

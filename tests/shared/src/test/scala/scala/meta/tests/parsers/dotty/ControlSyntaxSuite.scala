@@ -1127,8 +1127,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         Term.Name("read"),
-        Nil,
-        List(List()),
+        List(Clause.TermClause(List())),
         Some(Type.Name("String")),
         Term.Block(
           List(Term.While(Term.Name("cond"), Term.Block(Nil)), Term.Apply(Term.Name("other"), Nil))
@@ -1410,7 +1409,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
         Nil,
         Term.Name("fx"),
         Nil,
-        Nil,
         Some(Type.Name("String")),
         Term.Block(
           List(
@@ -1448,7 +1446,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         Term.Name("fx"),
-        Nil,
         Nil,
         Some(Type.Name("String")),
         Term.Block(
@@ -1700,8 +1697,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val expected = Defn.Def(
       Nil,
       Term.Name("mtch"),
-      Nil,
-      List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))),
+      List(Clause.TermClause(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)))),
       Some(Type.Name("String")),
       Term.Apply(
         Term.Select(
@@ -1973,8 +1969,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         Term.Name("f"),
-        Nil,
-        List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))),
+        List(Clause.TermClause(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)))),
         None,
         Term.Apply(
           Term.Name("assert"),

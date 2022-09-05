@@ -23,7 +23,7 @@ class GivenUsingSuite extends BaseDottySuite {
   // ---------------------------------
 
   def defone(mods: List[Mod]): Defn.Def =
-    Defn.Def(mods, tname("f"), Nil, List(Nil), Some(pname("Int")), int(1))
+    Defn.Def(mods, tname("f"), List(Clause.TermClause(Nil)), Some(pname("Int")), int(1))
   val defone: Defn.Def = defone(Nil)
 
   test("given-named") {
@@ -93,7 +93,7 @@ class GivenUsingSuite extends BaseDottySuite {
           Init(Type.Apply(Type.Name("Eq"), List(Type.Name("Int"))), Name(""), Nil)
         ),
         Self(Name(""), None),
-        List(Defn.Def(Nil, Term.Name("fx"), Nil, Nil, None, Lit.Int(3))),
+        List(Defn.Def(Nil, Term.Name("fx"), Nil, None, Lit.Int(3))),
         Nil
       )
     )
@@ -146,7 +146,7 @@ class GivenUsingSuite extends BaseDottySuite {
           Nil,
           List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
           Self(Name(""), None),
-          List(Defn.Def(Nil, Term.Name("fn"), Nil, Nil, None, Lit.Unit())),
+          List(Defn.Def(Nil, Term.Name("fn"), Nil, None, Lit.Unit())),
           Nil
         )
       )
@@ -186,8 +186,8 @@ class GivenUsingSuite extends BaseDottySuite {
           ),
           Self(Name(""), None),
           List(
-            Defn.Def(List(Mod.Override()), Term.Name("jnull"), Nil, Nil, None, Term.Name("???")),
-            Defn.Def(List(Mod.Override()), Term.Name("jtrue"), Nil, Nil, None, Term.Name("???"))
+            Defn.Def(List(Mod.Override()), Term.Name("jnull"), Nil, None, Term.Name("???")),
+            Defn.Def(List(Mod.Override()), Term.Name("jtrue"), Nil, None, Term.Name("???"))
           ),
           Nil
         )
@@ -292,8 +292,7 @@ class GivenUsingSuite extends BaseDottySuite {
             Defn.Def(
               List(Mod.Override()),
               Term.Name("computeValue"),
-              Nil,
-              List(List()),
+              List(Clause.TermClause(List())),
               None,
               Lit.Unit()
             )
@@ -443,8 +442,7 @@ class GivenUsingSuite extends BaseDottySuite {
               Defn.Def(
                 Nil,
                 Term.Name("f"),
-                Nil,
-                List(List(Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None))),
+                List(Clause.TermClause(List(Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None)))),
                 Some(Type.Name("Boolean")),
                 Lit.Boolean(false)
               )
@@ -468,7 +466,7 @@ class GivenUsingSuite extends BaseDottySuite {
           List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
           Self(Name(""), None),
           List(
-            Defn.Def(Nil, Term.Name("f"), Nil, List(List()), Some(Type.Name("Int")), Lit.Int(1))
+            Defn.Def(Nil, Term.Name("f"), List(Clause.TermClause(List())), Some(Type.Name("Int")), Lit.Int(1))
           ),
           Nil
         )
@@ -502,7 +500,7 @@ class GivenUsingSuite extends BaseDottySuite {
             Import(
               List(Importer(Term.Name("math"), List(Importee.Rename(Name("max"), Name("maxF")))))
             ),
-            Defn.Def(Nil, Term.Name("f"), Nil, List(List()), Some(Type.Name("Int")), Lit.Int(1))
+            Defn.Def(Nil, Term.Name("f"), List(Clause.TermClause(List())), Some(Type.Name("Int")), Lit.Int(1))
           ),
           Nil
         )
@@ -534,7 +532,7 @@ class GivenUsingSuite extends BaseDottySuite {
           Self(Name(""), None),
           List(
             Export(List(Importer(Term.Name("math"), List(Importee.Name(Name("max")))))),
-            Defn.Def(Nil, Term.Name("f"), Nil, List(List()), Some(Type.Name("Int")), Lit.Int(1))
+            Defn.Def(Nil, Term.Name("f"), List(Clause.TermClause(List())), Some(Type.Name("Int")), Lit.Int(1))
           ),
           Nil
         )
@@ -564,7 +562,7 @@ class GivenUsingSuite extends BaseDottySuite {
             Defn.ExtensionGroup(
               List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
               List(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None))),
-              Defn.Def(Nil, Term.Name("hello"), Nil, Nil, None, Lit.String(""))
+              Defn.Def(Nil, Term.Name("hello"), Nil, None, Lit.String(""))
             )
           ),
           Nil
@@ -813,8 +811,7 @@ class GivenUsingSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         tname("f"),
-        Nil,
-        List(List(tparam("a", "Int")), List(tparamUsing("ord", "UInt"))),
+        List(Clause.TermClause(List(tparam("a", "Int"))), Clause.TermClause(List(tparamUsing("ord", "UInt")))),
         Some(pname("Int")),
         tname("???")
       )
@@ -826,8 +823,7 @@ class GivenUsingSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         tname("f"),
-        Nil,
-        List(List(tparam("a", "Int")), List(tparamUsing("", "UInt"))),
+        List(Clause.TermClause(List(tparam("a", "Int"))), Clause.TermClause(List(tparamUsing("", "UInt")))),
         Some(pname("Int")),
         tname("???")
       )
@@ -839,11 +835,10 @@ class GivenUsingSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         tname("f"),
-        Nil,
         List(
-          List(tparam("a", "Int")),
-          List(tparamUsing("ui", "UInt")),
-          List(tparamUsing("us", "UString"))
+          Clause.TermClause(List(tparam("a", "Int"))),
+          Clause.TermClause(List(tparamUsing("ui", "UInt"))),
+          Clause.TermClause(List(tparamUsing("us", "UString")))
         ),
         Some(pname("Boolean")),
         tname("???")
@@ -853,11 +848,10 @@ class GivenUsingSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         tname("f"),
-        Nil,
         List(
-          List(tparam("a", "Int")),
-          List(tparamUsing("", "UInt")),
-          List(tparamUsing("", "UString"))
+          Clause.TermClause(List(tparam("a", "Int"))),
+          Clause.TermClause(List(tparamUsing("", "UInt"))),
+          Clause.TermClause(List(tparamUsing("", "UString")))
         ),
         Some(pname("Boolean")),
         tname("???")
@@ -872,8 +866,7 @@ class GivenUsingSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         tname("f"),
-        Nil,
-        List(List(tparam("a", "Int")), List(tparamUsing("ui", "UInt"), paramByName)),
+        List(Clause.TermClause(List(tparam("a", "Int"))), Clause.TermClause(List(tparamUsing("ui", "UInt"), paramByName))),
         Some(pname("Boolean")),
         tname("???")
       )
@@ -882,8 +875,7 @@ class GivenUsingSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         tname("f"),
-        Nil,
-        List(List(tparam("a", "Int")), List(tparamUsing("", "UInt"), tparamUsing("", "UString"))),
+        List(Clause.TermClause(List(tparam("a", "Int"))), Clause.TermClause(List(tparamUsing("", "UInt"), tparamUsing("", "UString")))),
         Some(pname("Boolean")),
         tname("???")
       )
@@ -895,12 +887,11 @@ class GivenUsingSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         tname("f"),
-        Nil,
         List(
-          List(tparam("x", "String")),
-          List(tparamUsing("", "Int")),
-          List(tparam("y", "String")),
-          List(tparamUsing("b", "Int"))
+          Clause.TermClause(List(tparam("x", "String"))),
+          Clause.TermClause(List(tparamUsing("", "Int"))),
+          Clause.TermClause(List(tparam("y", "String"))),
+          Clause.TermClause(List(tparamUsing("b", "Int")))
         ),
         Some(pname("Unit")),
         tname("???")
@@ -937,7 +928,7 @@ class GivenUsingSuite extends BaseDottySuite {
     val usingByName =
       Term.Param(List(Mod.Using()), tname("a"), Some(Type.ByName(pname("Int"))), None)
     runTestAssert[Stat]("def f(using a: => Int): Unit = ???")(
-      Defn.Def(Nil, tname("f"), Nil, List(List(usingByName)), Some(pname("Unit")), tname("???"))
+      Defn.Def(Nil, tname("f"), List(Clause.TermClause(List(usingByName))), Some(pname("Unit")), tname("???"))
     )
   }
 

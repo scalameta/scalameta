@@ -94,15 +94,14 @@ class DeclSuite extends ParseSuite {
   }
 
   test("def f") {
-    val Decl.Def(Nil, Term.Name("f"), Nil, Nil, Type.Name("Unit")) = templStat("def f")
+    val Decl.Def(Nil, Term.Name("f"), Nil, Type.Name("Unit")) = templStat("def f")
   }
 
   test("def f(x: Int)") {
     val Decl.Def(
       Nil,
       Term.Name("f"),
-      Nil,
-      (Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil,
+      Clause.TermClause(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil,
       Type.Name("Unit")
     ) =
       templStat("def f(x: Int)")
@@ -112,8 +111,7 @@ class DeclSuite extends ParseSuite {
     val Decl.Def(
       Nil,
       Term.Name("f"),
-      Nil,
-      (Term.Param(Nil, Term.Name("x"), Some(Type.Repeated(Type.Name("Int"))), None) :: Nil) :: Nil,
+      Clause.TermClause(Term.Param(Nil, Term.Name("x"), Some(Type.Repeated(Type.Name("Int"))), None) :: Nil) :: Nil,
       Type.Name("Unit")
     ) =
       templStat("def f(x: Int*)")
@@ -123,8 +121,7 @@ class DeclSuite extends ParseSuite {
     val Decl.Def(
       Nil,
       Term.Name("f"),
-      Nil,
-      (Term.Param(Nil, Term.Name("x"), Some(Type.ByName(Type.Name("Int"))), None) :: Nil) :: Nil,
+      Clause.TermClause(Term.Param(Nil, Term.Name("x"), Some(Type.ByName(Type.Name("Int"))), None) :: Nil) :: Nil,
       Type.Name("Unit")
     ) =
       templStat("def f(x: => Int)")
@@ -134,8 +131,7 @@ class DeclSuite extends ParseSuite {
     val Decl.Def(
       Nil,
       Term.Name("f"),
-      Nil,
-      (Term.Param(Mod.Implicit() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil)
+      Clause.TermClause(Term.Param(Mod.Implicit() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil)
         :: Nil,
       Type.Name("Unit")
     ) =
@@ -143,7 +139,7 @@ class DeclSuite extends ParseSuite {
   }
 
   test("def f: X") {
-    val Decl.Def(Nil, Term.Name("f"), Nil, Nil, Type.Name("X")) =
+    val Decl.Def(Nil, Term.Name("f"), Nil, Type.Name("X")) =
       templStat("def f: X")
   }
 
@@ -151,8 +147,7 @@ class DeclSuite extends ParseSuite {
     val Decl.Def(
       Nil,
       Term.Name("f"),
-      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil,
-      Nil,
+      Clause.TypeClause(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil) :: Nil,
       Type.Name("T")
     ) =
       templStat("def f[T]: T")

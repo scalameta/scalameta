@@ -99,7 +99,7 @@ class EnumSuite extends BaseDottySuite {
         tpl(
           List(
             Defn.Val(Nil, List(Pat.Var(tname("PI"))), None, int(3)),
-            Defn.Def(Nil, tname("r"), Nil, Nil, Some(pname("Int")), int(4)),
+            Defn.Def(Nil, tname("r"), Nil, Some(pname("Int")), int(4)),
             Defn.EnumCase(Nil, tname("R"), Nil, ctor, Nil)
           )
         )
@@ -503,7 +503,7 @@ class EnumSuite extends BaseDottySuite {
               ),
               Nil
             ),
-            Defn.Def(Nil, Term.Name("fx"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(4))
+            Defn.Def(Nil, Term.Name("fx"), Nil, Some(Type.Name("Int")), Lit.Int(4))
           ),
           Nil
         )

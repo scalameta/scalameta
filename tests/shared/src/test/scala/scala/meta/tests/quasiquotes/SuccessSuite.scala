@@ -186,7 +186,7 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("2 val q\"def x = {body: Int}\"") {
     val body = 42
-    assertTree(q"def x = ${body: Int}")(Defn.Def(Nil, Term.Name("x"), Nil, Nil, None, Lit.Int(42)))
+    assertTree(q"def x = ${body: Int}")(Defn.Def(Nil, Term.Name("x"), Nil, None, Lit.Int(42)))
   }
 
   test("1 q\"name.this.id\"") {
@@ -1436,7 +1436,7 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("1 q\"..mods def name[..tparams](...paramss): tpe\"") {
-    val q"..$mods def $name[..$tparams](...$paramss): $tpe" =
+    val q"..$mods def $name[..$tparams](...$paramss): $tpe" =  // FixMe
       q"private final def m[T, W](x: X, y: Y): R"
     assertEquals(mods.toString, "List(private, final)")
     assertTree(mods(0))(Mod.Private(Name("")))
@@ -1457,19 +1457,19 @@ class SuccessSuite extends TreeSuiteBase {
     val tparams = List(tparam"T", tparam"W")
     val paramss = List(List(param"x: X", param"x: Y"))
     val tpe = t"R"
-    assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe")(
+    assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe")( // FixMe
       Decl.Def(
         List(Mod.Private(Name("")), Mod.Final()),
         Term.Name("m"),
         List(
-          Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil),
-          Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)
-        ),
-        List(
-          List(
+          Clause.TypeClause(List(
+            Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil),
+            Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)
+          )),
+          Clause.TermClause(List(
             Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
             Term.Param(Nil, Term.Name("x"), Some(Type.Name("Y")), None)
-          )
+          ))
         ),
         Type.Name("R")
       )
@@ -1564,7 +1564,7 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("1 q\"..mods def name[..tparams](...paramss): tpeopt = expr\"") {
-    val q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr" =
+    val q"..$mods def $name[..$tparams](...$paramss): $tpeopt = $expr" =  // FixMe
       q"private final def m[T, W](x: X, y: Y): R = r"
     assertEquals(mods.toString, "List(private, final)")
     assertTree(mods(0))(Mod.Private(Name("")))
@@ -1592,14 +1592,14 @@ class SuccessSuite extends TreeSuiteBase {
         List(Mod.Private(Name("")), Mod.Final()),
         Term.Name("m"),
         List(
-          Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil),
-          Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)
-        ),
-        List(
-          List(
+          Clause.TypeClause(List(
+            Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil),
+            Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)
+          )),
+          Clause.TermClause(List(
             Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
             Term.Param(Nil, Term.Name("x"), Some(Type.Name("Y")), None)
-          )
+          ))
         ),
         Some(Type.Name("R")),
         Term.Name("r")
@@ -1721,8 +1721,8 @@ class SuccessSuite extends TreeSuiteBase {
         Nil,
         Self(Name(""), None),
         List(
-          Defn.Def(Nil, Term.Name("m1"), Nil, Nil, None, Lit.Int(42)),
-          Defn.Def(Nil, Term.Name("m2"), Nil, Nil, None, Lit.Int(666))
+          Defn.Def(Nil, Term.Name("m1"), Nil, None, Lit.Int(42)),
+          Defn.Def(Nil, Term.Name("m2"), Nil, None, Lit.Int(666))
         ),
         Nil
       )
@@ -1758,7 +1758,7 @@ class SuccessSuite extends TreeSuiteBase {
           Nil,
           List(Init(Type.Name("F"), Name(""), Nil)),
           Self(Name(""), None),
-          List(Defn.Def(Nil, Term.Name("m"), Nil, Nil, None, Lit.Int(42))),
+          List(Defn.Def(Nil, Term.Name("m"), Nil, None, Lit.Int(42))),
           Nil
         )
       )
@@ -1796,8 +1796,8 @@ class SuccessSuite extends TreeSuiteBase {
         Nil,
         Self(Name(""), None),
         List(
-          Defn.Def(Nil, Term.Name("m1"), Nil, Nil, None, Lit.Int(42)),
-          Defn.Def(Nil, Term.Name("m2"), Nil, Nil, None, Lit.Int(666))
+          Defn.Def(Nil, Term.Name("m1"), Nil, None, Lit.Int(42)),
+          Defn.Def(Nil, Term.Name("m2"), Nil, None, Lit.Int(666))
         ),
         Nil
       )
@@ -1822,7 +1822,7 @@ class SuccessSuite extends TreeSuiteBase {
           Nil,
           List(Init(Type.Name("F"), Name(""), Nil)),
           Self(Name(""), None),
-          List(Defn.Def(Nil, Term.Name("m"), Nil, Nil, None, Lit.Int(42))),
+          List(Defn.Def(Nil, Term.Name("m"), Nil, None, Lit.Int(42))),
           Nil
         )
       )
@@ -1853,8 +1853,8 @@ class SuccessSuite extends TreeSuiteBase {
         Nil,
         Self(Name(""), None),
         List(
-          Defn.Def(Nil, Term.Name("m1"), Nil, Nil, None, Lit.Int(42)),
-          Defn.Def(Nil, Term.Name("m2"), Nil, Nil, None, Lit.Int(666))
+          Defn.Def(Nil, Term.Name("m1"), Nil, None, Lit.Int(42)),
+          Defn.Def(Nil, Term.Name("m2"), Nil, None, Lit.Int(666))
         ),
         Nil
       )
@@ -1873,7 +1873,7 @@ class SuccessSuite extends TreeSuiteBase {
           Nil,
           List(Init(Type.Name("F"), Name(""), Nil)),
           Self(Name(""), None),
-          List(Defn.Def(Nil, Term.Name("m"), Nil, Nil, None, Lit.Int(42))),
+          List(Defn.Def(Nil, Term.Name("m"), Nil, None, Lit.Int(42))),
           Nil
         )
       )
@@ -1898,8 +1898,8 @@ class SuccessSuite extends TreeSuiteBase {
         Nil,
         Self(Name(""), None),
         List(
-          Defn.Def(Nil, Term.Name("m1"), Nil, Nil, None, Lit.Int(42)),
-          Defn.Def(Nil, Term.Name("m2"), Nil, Nil, None, Lit.Int(666))
+          Defn.Def(Nil, Term.Name("m1"), Nil, None, Lit.Int(42)),
+          Defn.Def(Nil, Term.Name("m2"), Nil, None, Lit.Int(666))
         ),
         Nil
       )
@@ -1917,7 +1917,7 @@ class SuccessSuite extends TreeSuiteBase {
           Nil,
           List(Init(Type.Name("F"), Name(""), Nil)),
           Self(Name(""), None),
-          List(Defn.Def(Nil, Term.Name("m"), Nil, Nil, None, Lit.Int(42))),
+          List(Defn.Def(Nil, Term.Name("m"), Nil, None, Lit.Int(42))),
           Nil
         )
       )
@@ -2185,8 +2185,8 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(inits(1))(Init(Type.Name("U"), Name(""), Nil))
     assertTree(self)(Self(Term.Name("self"), Some(Type.Name("Z"))))
     assertEquals(stats2.toString, "List(def m = 2, def n = 2)")
-    assertTree(stats2(0))(Defn.Def(Nil, Term.Name("m"), Nil, Nil, None, Lit.Int(2)))
-    assertTree(stats2(1))(Defn.Def(Nil, Term.Name("n"), Nil, Nil, None, Lit.Int(2)))
+    assertTree(stats2(0))(Defn.Def(Nil, Term.Name("m"), Nil, None, Lit.Int(2)))
+    assertTree(stats2(1))(Defn.Def(Nil, Term.Name("n"), Nil, None, Lit.Int(2)))
   }
 
   test("2 template\"{ ..stats } with ..inits { self => ..stats }\"") {
@@ -2203,8 +2203,8 @@ class SuccessSuite extends TreeSuiteBase {
         List(Init(Type.Name("T"), Name(""), Nil), Init(Type.Name("U"), Name(""), Nil)),
         Self(Term.Name("self"), Some(Type.Name("S"))),
         List(
-          Defn.Def(Nil, Term.Name("m"), Nil, Nil, None, Lit.Int(2)),
-          Defn.Def(Nil, Term.Name("n"), Nil, Nil, None, Lit.Int(2))
+          Defn.Def(Nil, Term.Name("m"), Nil, None, Lit.Int(2)),
+          Defn.Def(Nil, Term.Name("n"), Nil, None, Lit.Int(2))
         ),
         Nil
       )
@@ -2504,7 +2504,7 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("initial support for ...") {
-    val q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs" = q"def f(x: Int) = ???"
+    val q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs" = q"def f(x: Int) = ???"  // FixMe
     assert(tparams.isEmpty)
     assertEquals(paramss.lengthCompare(1), 0)
     val params = paramss.head
@@ -2523,7 +2523,7 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("initial support for ..., with tparams") {
-    val q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs" = q"def f[A](x: Int) = ???"
+    val q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs" = q"def f[A](x: Int) = ???"  // FixMe
     assert(tparams.nonEmpty)
     assertEquals(paramss.lengthCompare(1), 0)
     val params = paramss.head
@@ -2554,7 +2554,7 @@ class SuccessSuite extends TreeSuiteBase {
           Nil,
           Nil,
           Self(Name(""), None),
-          List(Defn.Def(List(Mod.Private(Name(""))), Term.Name("x"), Nil, Nil, None, Lit.Int(2))),
+          List(Defn.Def(List(Mod.Private(Name(""))), Term.Name("x"), Nil, None, Lit.Int(2))),
           Nil
         )
       )

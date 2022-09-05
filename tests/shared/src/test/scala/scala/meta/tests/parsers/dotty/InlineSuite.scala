@@ -14,7 +14,7 @@ class InlineSuite extends BaseDottySuite {
   test("inline-soft-keyword-pos") {
     // as ident
     runTestAssert[Stat]("def f(inline: String): Unit")(
-      Decl.Def(Nil, tname("f"), Nil, List(List(tparam("inline", "String"))), pname("Unit"))
+      Decl.Def(Nil, tname("f"), List(Clause.TermClause(List(tparam("inline", "String")))), pname("Unit"))
     )
 
     // as ident
@@ -22,8 +22,7 @@ class InlineSuite extends BaseDottySuite {
       Decl.Def(
         List(Mod.Inline()),
         tname("inline"),
-        Nil,
-        List(List(tparam("inline", "inline"))),
+        List(Clause.TermClause(List(tparam("inline", "inline")))),
         pname("inline")
       )
     )
@@ -33,8 +32,7 @@ class InlineSuite extends BaseDottySuite {
       Decl.Def(
         List(Mod.Inline()),
         tname("inline"),
-        Nil,
-        List(List(tparamInline("param", "inline"))),
+        List(Clause.TermClause(List(tparamInline("param", "inline")))),
         pname("inline")
       )
     )
@@ -44,8 +42,7 @@ class InlineSuite extends BaseDottySuite {
       Decl.Def(
         List(Mod.Inline()),
         tname("inline"),
-        Nil,
-        List(List(tparamInline("inline", "inline"))),
+        List(Clause.TermClause(List(tparamInline("inline", "inline")))),
         pname("inline")
       )
     )
@@ -83,17 +80,16 @@ class InlineSuite extends BaseDottySuite {
             Defn.Def(
               List(Mod.Inline()),
               tname("f"),
-              Nil,
               List(
-                List(tparamInline("sc", "Str")),
-                List(
+                Clause.TermClause(List(tparamInline("sc", "Str"))),
+                Clause.TermClause(List(
                   Term.Param(
                     List(Mod.Inline()),
                     tname("args"),
                     Some(Type.Repeated(pname("Any"))),
                     None
                   )
-                )
+                ))
               ),
               Some(pname("String")),
               tname("???")
@@ -115,8 +111,7 @@ class InlineSuite extends BaseDottySuite {
             Defn.Def(
               List(Mod.Inline(), Mod.Override(), Mod.Protected(Name(""))),
               tname("f"),
-              Nil,
-              List(List()),
+              List(Clause.TermClause(List())),
               Some(pname("Unit")),
               tname("???")
             )
@@ -136,8 +131,7 @@ class InlineSuite extends BaseDottySuite {
             Defn.Def(
               List(Mod.Final(), Mod.Override(), Mod.Inline(), Mod.Protected(Name(""))),
               tname("f"),
-              Nil,
-              List(List()),
+              List(Clause.TermClause(List())),
               Some(pname("Unit")),
               tname("???")
             )
@@ -221,7 +215,6 @@ class InlineSuite extends BaseDottySuite {
         List(Mod.Inline()),
         Term.Name("g"),
         Nil,
-        Nil,
         Some(Type.Name("Any")),
         Term.Match(
           Term.Name("x"),
@@ -250,7 +243,6 @@ class InlineSuite extends BaseDottySuite {
         List(Mod.Inline()),
         Term.Name("g"),
         Nil,
-        Nil,
         None,
         Term.Match(
           Term.Name("x"),
@@ -271,7 +263,6 @@ class InlineSuite extends BaseDottySuite {
       Defn.Def(
         List(Mod.Inline()),
         Term.Name("g"),
-        Nil,
         Nil,
         None,
         Term.Match(
@@ -295,7 +286,6 @@ class InlineSuite extends BaseDottySuite {
       Defn.Def(
         List(Mod.Inline()),
         Term.Name("g"),
-        Nil,
         Nil,
         None,
         Term.Block(
@@ -324,7 +314,6 @@ class InlineSuite extends BaseDottySuite {
         List(Mod.Inline()),
         Term.Name("g"),
         Nil,
-        Nil,
         None,
         Term.Block(
           List(
@@ -352,7 +341,6 @@ class InlineSuite extends BaseDottySuite {
         List(Mod.Inline()),
         Term.Name("g"),
         Nil,
-        Nil,
         None,
         Term.Block(
           List(
@@ -379,7 +367,6 @@ class InlineSuite extends BaseDottySuite {
       Defn.Def(
         List(Mod.Inline()),
         Term.Name("g"),
-        Nil,
         Nil,
         None,
         Term.Block(
@@ -409,7 +396,6 @@ class InlineSuite extends BaseDottySuite {
         Nil,
         Term.Name("fn"),
         Nil,
-        Nil,
         Some(Type.Name("Unit")),
         Term.If(Term.Name("cond"), Term.Name("truep"), Lit.Unit(), List(Mod.Inline()))
       )
@@ -430,7 +416,6 @@ class InlineSuite extends BaseDottySuite {
         Nil,
         Term.Name("fn"),
         Nil,
-        Nil,
         Some(Type.Name("Unit")),
         Term.If(Term.Name("cond"), Term.Name("truep"), Lit.Unit(), List(Mod.Inline()))
       )
@@ -450,8 +435,7 @@ class InlineSuite extends BaseDottySuite {
       Defn.Def(
         List(Mod.Transparent(), Mod.Inline()),
         Term.Name("choose"),
-        Nil,
-        List(List(Term.Param(Nil, Term.Name("b"), Some(Type.Name("Boolean")), None))),
+        List(Clause.TermClause(List(Term.Param(Nil, Term.Name("b"), Some(Type.Name("Boolean")), None)))),
         Some(Type.Name("A")),
         Term.If(
           Term.Name("b"),
@@ -516,7 +500,6 @@ class InlineSuite extends BaseDottySuite {
         List(Mod.Transparent(), Mod.Inline()),
         Term.Name("f"),
         Nil,
-        Nil,
         Some(Type.Name("String")),
         Term.Match(
           Lit.Int(10),
@@ -563,7 +546,6 @@ class InlineSuite extends BaseDottySuite {
         List(Mod.Transparent(), Mod.Inline()),
         Term.Name("nat"),
         Nil,
-        Nil,
         None,
         Term.Match(
           Term.This(Name("")),
@@ -600,7 +582,6 @@ class InlineSuite extends BaseDottySuite {
               Defn.Def(
                 List(Mod.Implicit(), Mod.Inline()),
                 Term.Name("qm"),
-                Nil,
                 Nil,
                 None,
                 Term.Name("???")

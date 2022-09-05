@@ -108,8 +108,7 @@ class MinorDottySuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         Term.Name("run"),
-        Nil,
-        List(List()),
+        List(Clause.TermClause(List())),
         Some(Type.Name("Unit")),
         Term.Block(
           List(
@@ -431,12 +430,11 @@ class MinorDottySuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         Term.Name("fx"),
-        Nil,
         List(
-          List(
+          Clause.TermClause(List(
             Term
               .Param(Nil, Term.Name("x"), Some(Type.Repeated(Type.ByName(Type.Name("Int")))), None)
-          )
+          ))
         ),
         Some(Type.Name("Int")),
         Lit.Int(3)
@@ -485,16 +483,15 @@ class MinorDottySuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         Term.Name("x"),
-        Nil,
         List(
-          List(
+          Clause.TermClause(List(
             Term.Param(
               Nil,
               Term.Name("a"),
               Some(Type.Apply(Type.Name("List"), List(Type.Placeholder(Type.Bounds(None, None))))),
               None
             )
-          )
+          ))
         ),
         Some(Type.Name("Unit")),
         Lit.Unit()
@@ -570,7 +567,7 @@ class MinorDottySuite extends BaseDottySuite {
           Nil,
           Nil,
           Self(Name(""), None),
-          List(Decl.Def(Nil, Term.Name("x"), Nil, List(List()), Type.Name("String")))
+          List(Decl.Def(Nil, Term.Name("x"), List(Clause.TermClause(List())), Type.Name("String")))
         )
       )
     )
@@ -690,7 +687,6 @@ class MinorDottySuite extends BaseDottySuite {
               Nil,
               Term.Name("fx"),
               Nil,
-              Nil,
               None,
               Term.Try(
                 Term.Apply(Term.Name("action"), Nil),
@@ -721,7 +717,6 @@ class MinorDottySuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         Term.Name("hello"),
-        Nil,
         Nil,
         None,
         Term.Block(List(Decl.Type(Nil, Type.Name("T"), Nil, Type.Bounds(None, None))))
@@ -774,7 +769,6 @@ class MinorDottySuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         Term.Name("withClasspath"),
-        Nil,
         Nil,
         None,
         Term.ApplyInfix(
@@ -984,16 +978,15 @@ class MinorDottySuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         Term.Name("f"),
-        Nil,
         List(
-          List(
+          Clause.TermClause(List(
             Term.Param(
               Nil,
               Term.Name("t"),
               Some(Type.Tuple(List(Type.Name("String"), Type.Name("String")))),
               None
             )
-          )
+          ))
         ),
         Some(Type.Name("String")),
         Term.Match(
@@ -1217,7 +1210,6 @@ class MinorDottySuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         Term.Name("b2"),
-        Nil,
         Nil,
         None,
         Term.ApplyType(

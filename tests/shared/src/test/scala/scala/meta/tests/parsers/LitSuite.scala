@@ -136,7 +136,7 @@ class LitSuite extends ParseSuite {
           Nil,
           Nil,
           Self(Name(""), None),
-          List(Defn.Def(Nil, Term.Name("negate"), Nil, Nil, Some(Type.Name("-")), Term.Name("-"))),
+          List(Defn.Def(Nil, Term.Name("negate"), Nil, Some(Type.Name("-")), Term.Name("-"))),
           Nil
         )
       )

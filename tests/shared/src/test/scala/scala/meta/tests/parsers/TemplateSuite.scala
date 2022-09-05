@@ -87,7 +87,7 @@ class TemplateSuite extends ParseSuite {
         Nil,
         Nil,
         EmptySelf(),
-        List(Decl.Def(Nil, Term.Name("x"), Nil, Nil, Type.Name("Int")))
+        List(Decl.Def(Nil, Term.Name("x"), Nil, Type.Name("Int")))
       )
     ) =
       templStat("trait T { def x: Int }")
@@ -177,7 +177,7 @@ class TemplateSuite extends ParseSuite {
         Nil,
         Nil,
         EmptySelf(),
-        List(Decl.Def(Nil, Term.Name("x"), Nil, Nil, Type.Name("Int")))
+        List(Decl.Def(Nil, Term.Name("x"), Nil, Type.Name("Int")))
       )
     ) =
       templStat("class C { def x: Int }")

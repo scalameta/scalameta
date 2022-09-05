@@ -23,10 +23,10 @@ class ModSuite extends ParseSuite {
       _
     ) = templStat("case class A(implicit var a: Int)")
 
-    val Defn.Def(_, _, _, List(List(Term.Param(List(Mod.Implicit()), _, _, _))), _, _) =
+    val Defn.Def(_, _, List(Clause.TermClause(List(Term.Param(List(Mod.Implicit()), _, _, _)))), _, _) =
       templStat("def foo(implicit a: Int): Int = a")
 
-    val Defn.Def(List(Mod.Implicit()), _, _, _, _, _) =
+    val Defn.Def(List(Mod.Implicit()), _, _, _, _) =
       templStat("implicit def foo(a: Int): Int = a")
 
     val Defn.Val(List(Mod.Implicit()), _, _, _) = templStat("implicit val a: Int = 1")
@@ -67,7 +67,7 @@ class ModSuite extends ParseSuite {
       _
     ) = templStat("case class A(final val a: Int)")
 
-    val Defn.Def(List(Mod.Final()), _, _, _, _, _) = templStat("final def foo(a: Int): Int = a")
+    val Defn.Def(List(Mod.Final()), _, _, _, _) = templStat("final def foo(a: Int): Int = a")
     val Defn.Val(List(Mod.Final()), _, _, _) = templStat("final val a: Int = 1")
     val Decl.Val(List(Mod.Final()), _, _) = templStat("final val a: Int")
 
@@ -126,13 +126,13 @@ class ModSuite extends ParseSuite {
     val Defn.Object(List(Mod.Override()), _, _) = templStat("override object A")
     val Defn.Object(List(Mod.Override(), Mod.Case()), _, _) = templStat("override case object A")
 
-    val Defn.Def(List(Mod.Override()), _, _, _, _, _) =
+    val Defn.Def(List(Mod.Override()), _, _, _, _) =
       templStat("override def foo(a: Int): Int = a")
     val Defn.Val(List(Mod.Override()), _, _, _) = templStat("override val a: Int = 1")
     val Defn.Var(List(Mod.Override()), _, _, _) = templStat("override var a: Int = 1")
     val Defn.Type(List(Mod.Override()), _, _, _) = templStat("override type A = Int")
 
-    val Decl.Def(List(Mod.Override()), _, _, _, _) = templStat("override def foo(a: Int): Int")
+    val Decl.Def(List(Mod.Override()), _, _, _) = templStat("override def foo(a: Int): Int")
     val Decl.Val(List(Mod.Override()), _, _) = templStat("override val a: Int")
     val Decl.Var(List(Mod.Override()), _, _) = templStat("override var a: Int")
     val Decl.Type(List(Mod.Override()), _, _, _) = templStat("override type A")
@@ -248,7 +248,7 @@ class ModSuite extends ParseSuite {
     val Defn.Object(List(Mod.Abstract(), Mod.Override(), Mod.Case()), _, _) =
       templStat("abstract override case object A")
 
-    val Defn.Def(List(Mod.Abstract(), Mod.Override()), _, _, _, _, _) =
+    val Defn.Def(List(Mod.Abstract(), Mod.Override()), _, _, _, _) =
       templStat("abstract override def foo(a: Int): Int = a")
     val Defn.Val(List(Mod.Abstract(), Mod.Override()), _, _, _) =
       templStat("abstract override val a: Int = 1")
@@ -257,7 +257,7 @@ class ModSuite extends ParseSuite {
     val Defn.Type(List(Mod.Abstract(), Mod.Override()), _, _, _) =
       templStat("abstract override type A = Int")
 
-    val Decl.Def(List(Mod.Abstract(), Mod.Override()), _, _, _, _) =
+    val Decl.Def(List(Mod.Abstract(), Mod.Override()), _, _, _) =
       templStat("abstract override def foo(a: Int): Int")
     val Decl.Val(List(Mod.Abstract(), Mod.Override()), _, _) =
       templStat("abstract override val a: Int")
@@ -346,7 +346,7 @@ class ModSuite extends ParseSuite {
     ) = templStat("class A(implicit val a: Int)")
 
     // No ValParam detected inside parameter list
-    val Defn.Def(_, _, _, List(List(Term.Param(List(), _, _, _))), _, _) =
+    val Defn.Def(_, _, List(Clause.TermClause(List(Term.Param(List(), _, _, _)))), _, _) =
       templStat("def foo(a: Int): Int = a")
 
     interceptParseErrors(
@@ -447,13 +447,11 @@ class ModSuite extends ParseSuite {
       _,
       _,
       _,
-      _,
       _
     ) =
       templStat("private protected[foo] def foo = ???")
     val Defn.Def(
       List(Mod.Private(Name.Indeterminate("foo")), Mod.Protected(Name.Anonymous())),
-      _,
       _,
       _,
       _,
@@ -465,13 +463,11 @@ class ModSuite extends ParseSuite {
       _,
       _,
       _,
-      _,
       _
     ) =
       templStat("protected private[foo] def foo = ???")
     val Defn.Def(
       List(Mod.Protected(Name.Indeterminate("foo")), Mod.Private(Name.Anonymous())),
-      _,
       _,
       _,
       _,
