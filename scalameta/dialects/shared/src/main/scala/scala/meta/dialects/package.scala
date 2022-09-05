@@ -152,6 +152,8 @@ package object dialects {
 
   implicit val Scala3 = Scala32
 
+  implicit val Scala3Experimental = Scala3.withAllowClauseInterleaving(true)
+
   @deprecated("Use Scala3 instead", "4.4.2")
   implicit val Dotty = Scala3
 
