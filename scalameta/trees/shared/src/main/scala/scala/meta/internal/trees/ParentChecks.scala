@@ -107,4 +107,13 @@ object ParentChecks {
   def TypeMethod(tree: Type.Method, parent: Tree, destination: String): Boolean = {
     parent.is[Type] || parent.is[Defn.Type]
   }
+
+  def TermBlock(tree: Term.Block, parent: Tree, dest: String): Boolean = {
+    tree.stats.forall {
+      case _: Decl => true
+      case _: Export => parent.is[Defn.ExtensionGroup]
+      case x => x.isBlockStat
+    }
+  }
+
 }

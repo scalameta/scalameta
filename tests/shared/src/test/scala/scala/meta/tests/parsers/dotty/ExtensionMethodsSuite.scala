@@ -399,6 +399,40 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
   }
 
+  test("private-export") {
+    runTestAssert[Stat](
+      """|extension (i: Int)
+         |  private def richInt = RichInt(i)
+         |  export richInt.*
+         |""".stripMargin,
+      assertLayout = Some(
+        """|extension (i: Int){
+           |  private def richInt = RichInt(i)
+           |  export richInt.*
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.ExtensionGroup(
+        Nil,
+        List(List(Term.Param(Nil, Term.Name("i"), Some(Type.Name("Int")), None))),
+        Term.Block(
+          List(
+            Defn.Def(
+              List(Mod.Private(Name(""))),
+              Term.Name("richInt"),
+              Nil,
+              Nil,
+              None,
+              Term.Apply(Term.Name("RichInt"), List(Term.Name("i")))
+            ),
+            Export(List(Importer(Term.Name("richInt"), List(Importee.Wildcard()))))
+          )
+        )
+      )
+    )
+  }
+
   final val defcrc = Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
 
   final val cparam = List(List(tparam("c", "Circle")))

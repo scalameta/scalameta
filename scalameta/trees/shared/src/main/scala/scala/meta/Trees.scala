@@ -114,8 +114,7 @@ object Term {
     })
   }
   @ast class Block(stats: List[Stat]) extends Term {
-    // extension group block can have declarations without body too
-    checkFields(stats.forall(st => st.isBlockStat || st.is[Decl]))
+    checkParent(ParentChecks.TermBlock)
   }
   @ast class EndMarker(name: Term.Name) extends Term
   @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term {
