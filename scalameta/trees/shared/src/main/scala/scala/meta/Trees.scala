@@ -612,7 +612,7 @@ package internal.trees {
     def rank: Int
     def tree: Tree
     def pt: Class[_]
-    def become[T <: Quasi: AstInfo]: T
+    def become[T <: Tree: AstInfo]: T
   }
 
   @registry object All
