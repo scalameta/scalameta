@@ -2835,11 +2835,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case soft.KwUsing() => modUsing = Some(atCurPosNext(Mod.Using()))
           case _ =>
         }
-        commaSeparated(token match {
-          case t: Ellipsis => ellipsis[Term.Param](t)
-          case _ =>
-            param(ownerIsCase && first, ownerIsType, modImplicit = modImplicit, modUsing = modUsing)
-        })
+        commaSeparated(
+          param(ownerIsCase && first, ownerIsType, modImplicit = modImplicit, modUsing = modUsing)
+        )
     })(Nil)
     if (!isAfterOptNewLine[LeftParen]) Nil
     else
@@ -2911,10 +2909,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       mods += atCurPosNext(Mod.VarParam())
     }
     def endParamQuasi = token.is[RightParen] || token.is[Comma]
-    mods.headOption match {
-      case Some(q: Mod.Quasi) if endParamQuasi =>
-        q.become[Term.Param]
-      case _ =>
+    mods.headOption
+      .collect {
+        case q: Mod.Quasi if endParamQuasi => q.become[Term.Param]
+      }
+      .orElse(token match {
+        case t: Ellipsis => Some(ellipsis[Term.Param](t, 1))
+        case _ => None
+      })
+      .getOrElse {
         var anonymousUsing = false
         val name = if (modUsing.isDefined && ahead(!token.is[Colon])) { // anonymous using
           anonymousUsing = true
@@ -2955,7 +2958,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             val default = if (acceptOpt[Equals]) Some(expr()) else None
             Term.Param(mods.toList, name, tpt, default)
         }
-    }
+      }
   }
 
   def quasiquoteTermParam(): Term.Param = entrypointTermParam()
@@ -3368,7 +3371,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     collectUparams()
 
     paramss += inParens(
-      List(param(ownerIsCase = false, ownerIsType = false))
+      List(token match {
+        case t @ Ellipsis(2) => ellipsis[Term.Param](t)
+        case _ => param(ownerIsCase = false, ownerIsType = false)
+      })
     )
 
     collectUparams()

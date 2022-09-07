@@ -7,6 +7,9 @@ class ExtensionMethodsSuite extends BaseDottySuite {
 
   implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Scala3)
 
+  private final val cparam = tparam("c", "Circle")
+  private final val cparamss = List(List(cparam))
+
   /**
    * For checking examples in repl declare:
    * {{{
@@ -21,7 +24,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     runTestAssert[Stat]("extension (c: Circle) def crc: Int = 2")(
       Defn.ExtensionGroup(
         Nil,
-        cparam,
+        cparamss,
         Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
       )
     )
@@ -31,7 +34,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     runTestAssert[Stat]("extension (c: Circle) private def crc: Int = 2")(
       Defn.ExtensionGroup(
         Nil,
-        cparam,
+        cparamss,
         Defn.Def(
           List(Mod.Private(Name.Anonymous())),
           tname("crc"),
@@ -51,7 +54,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     runTestAssert[Stat](code, assertLayout = Some("extension (c: Circle) def crc: Int = 2"))(
       Defn.ExtensionGroup(
         Nil,
-        cparam,
+        cparamss,
         Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
       )
     )
@@ -433,7 +436,128 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
   }
 
-  final val defcrc = Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
+  test("extension quasiquotes: triple, no tparams") {
+    import dialects.Scala3
 
-  final val cparam = List(List(tparam("c", "Circle")))
+    val q"extension [..$tparams](...$paramss) { ..$stats }" =
+      q"""extension (c: Circle)(using Context, x: Int)(using y: String, File) {
+                def crc: Int = 2
+              }"""
+
+    assertEquals(tparams.length, 0)
+
+    assertEquals(paramss.length, 3)
+    assertTrees(paramss(0): _*)(cparam)
+    assertTrees(paramss(1): _*)(
+      Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Context")), None),
+      Term.Param(List(Mod.Using()), Term.Name("x"), Some(Type.Name("Int")), None)
+    )
+    assertTrees(paramss(2): _*)(
+      Term.Param(List(Mod.Using()), Term.Name("y"), Some(Type.Name("String")), None),
+      Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("File")), None)
+    )
+
+    assertTrees(stats: _*)(
+      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+    )
+  }
+
+  test("extension quasiquotes: triple, with tparams") {
+    import dialects.Scala3
+
+    val q"extension [..$tparams](...$paramss) { ..$stats }" =
+      q"""extension [A, B](c: Circle)(using Context, x: Int)(using y: String, File) {
+                def crc: Int = 2
+              }"""
+
+    assertTrees(tparams: _*)(pparam("A"), pparam("B"))
+
+    assertEquals(paramss.length, 3)
+    assertTrees(paramss(0): _*)(cparam)
+    assertTrees(paramss(1): _*)(
+      Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Context")), None),
+      Term.Param(List(Mod.Using()), Term.Name("x"), Some(Type.Name("Int")), None)
+    )
+    assertTrees(paramss(2): _*)(
+      Term.Param(List(Mod.Using()), Term.Name("y"), Some(Type.Name("String")), None),
+      Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("File")), None)
+    )
+
+    assertTrees(stats: _*)(
+      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+    )
+  }
+
+  test("extension quasiquotes: double, no tparams") {
+    import dialects.Scala3
+
+    val q"extension [..$tparams](..$params) { ..$stats }" =
+      q"""extension (c: Circle) {
+              def crc: Int = 2
+            }"""
+
+    assertEquals(tparams.length, 0)
+
+    assertTrees(params: _*)(cparam)
+
+    assertTrees(stats: _*)(
+      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+    )
+  }
+
+  test("extension quasiquotes: double, with tparams") {
+    import dialects.Scala3
+
+    val q"extension [..$tparams](..$params) { ..$stats }" =
+      q"""extension [A](c: Circle) {
+              def crc: Int = 2
+            }"""
+
+    assertTrees(tparams: _*)(pparam("A"))
+
+    assertTrees(params: _*)(cparam)
+
+    assertTrees(stats: _*)(
+      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+    )
+  }
+
+  test("extension quasiquotes: single, no tparams") {
+    import dialects.Scala3
+
+    val q"extension [..$tparams]($param) { ..$stats }" =
+      q"""extension (c: Circle) {
+              def crb: Int = 1
+              def crc: Int = 2
+            }"""
+
+    assertEquals(tparams.length, 0)
+
+    assertTree(param)(cparam)
+
+    assertTrees(stats: _*)(
+      Defn.Def(Nil, Term.Name("crb"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(1)),
+      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+    )
+  }
+
+  test("extension quasiquotes: single, with tparams") {
+    import dialects.Scala3
+
+    val q"extension [..$tparams]($param) { ..$stats }" =
+      q"""extension [A, B, C](c: Circle) {
+              def crb: Int = 1
+              def crc: Int = 2
+            }"""
+
+    assertTrees(tparams: _*)(pparam("A"), pparam("B"), pparam("C"))
+
+    assertTree(param)(cparam)
+
+    assertTrees(stats: _*)(
+      Defn.Def(Nil, Term.Name("crb"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(1)),
+      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+    )
+  }
+
 }
