@@ -12,7 +12,7 @@ import scala.meta.internal.trees.Metadata.Ast
 @implicitNotFound(msg = "${T} is not an ast class and can't be used here.")
 trait AstInfo[T <: Ast] extends ClassTag[T] {
   def runtimeClass: Class[T]
-  def quasi(rank: Int, tree: Tree): T
+  def quasi(rank: Int, tree: Tree): T with Quasi
 }
 object AstInfo {
   implicit def materialize[T <: Ast]: AstInfo[T] = macro AstInfoMacros.materialize[T]
@@ -32,7 +32,7 @@ class AstInfoMacros(val c: Context) extends MacroHelpers {
     q"""
       new $AstInfoClass[$T] {
         def runtimeClass: $ClassClass[$T] = implicitly[$ClassTagClass[$T]].runtimeClass.asInstanceOf[$ClassClass[$T]]
-        def quasi(rank: $IntClass, tree: $TreeSymbol): $T = $QuasiFactory.apply(rank, tree)
+        def quasi(rank: $IntClass, tree: $TreeSymbol): $T with $QuasiClass = $QuasiFactory.apply(rank, tree)
       }
     """
   }
