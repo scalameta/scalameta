@@ -34,10 +34,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Type.Bounds extension [A@@, B](i: A)(using a: F[A], G[B]) def isZero = i == 0
        |Type.Bounds extension [A, B@@](i: A)(using a: F[A], G[B]) def isZero = i == 0
        |Term.Param a: F[A]
-       |Mod.Using extension [A, B](i: A)(using @@a: F[A], G[B]) def isZero = i == 0
        |Type.Apply F[A]
        |Term.Param G[B]
-       |Mod.Using extension [A, B](i: A)(using a: F[A], @@G[B]) def isZero = i == 0
        |Type.Apply G[B]
        |Defn.Def def isZero = i == 0
        |Term.ApplyInfix i == 0
@@ -65,9 +63,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     "def foo(implicit a: A, b: B): Unit",
     """|Term.Param a: A
-       |Mod.Implicit def foo(implicit @@a: A, b: B): Unit
        |Term.Param b: B
-       |Mod.Implicit def foo(implicit a: A, @@b: B): Unit
        |""".stripMargin
   )
 
