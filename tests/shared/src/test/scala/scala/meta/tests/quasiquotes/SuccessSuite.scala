@@ -2720,4 +2720,95 @@ class SuccessSuite extends TreeSuiteBase {
     """.trim.stripMargin.split('\n').mkString(EOL)
     )
   }
+
+  test("#2841 empty, with extends") {
+    val q"..$mods object $ename extends $template" = q"object X extends Y"
+    assertTree(template) {
+      Init(Type.Name("Y"), Name(""), Nil)
+    }
+    assertEquals(mods, Nil)
+  }
+
+  test("#2841 empty") {
+    val q"..$mods object $ename $template" = q"object X extends Y"
+    assertTree(template) {
+      Template(Nil, List(Init(Type.Name("Y"), Name(""), Nil)), Self(Name(""), None), Nil, Nil)
+    }
+    assertEquals(mods, Nil)
+  }
+
+  test("#2841 non-empty, with extends") {
+    intercept[MatchError] {
+      val q"..$mods object $ename extends $template" = q"object X extends Y { def foo }"
+    }
+  }
+
+  test("#2841 non-empty, no extends") {
+    val q"..$mods object $ename $template" = q"object X extends Y { def foo }"
+    assertTree(template) {
+      Template(
+        Nil,
+        List(Init(Type.Name("Y"), Name(""), Nil)),
+        Self(Name(""), None),
+        List(Decl.Def(Nil, Term.Name("foo"), Nil, Nil, Type.Name("Unit"))),
+        Nil
+      )
+    }
+    assertEquals(mods, Nil)
+  }
+
+  test("#2841 empty, full sig") {
+    val q"..$mods object $ename extends { ..$earlydefns } with ..$parents { $self => ..$stats }" =
+      q"object X extends Y"
+    assertEquals(mods, Nil)
+    assertEquals(earlydefns, Nil)
+    assertEquals(parents.length, 1)
+    assertTree(parents(0)) {
+      Init(Type.Name("Y"), Name.Anonymous(), Nil)
+    }
+    assertTree(self)(Self(Name(""), None))
+    assertEquals(stats, Nil)
+  }
+
+  test("#2841 non-empty, full sig") {
+    val q"..$mods object $ename extends { ..$earlydefns } with ..$parents { $self => ..$stats }" =
+      q"object X extends Y { def foo }"
+    assertEquals(mods, Nil)
+    assertEquals(earlydefns, Nil)
+    assertEquals(parents.length, 1)
+    assertTree(parents(0)) {
+      Init(Type.Name("Y"), Name.Anonymous(), Nil)
+    }
+    assertTree(self)(Self(Name(""), None))
+    assertEquals(stats.length, 1)
+    assertTree(stats(0)) {
+      Decl.Def(Nil, Term.Name("foo"), Nil, Nil, Type.Name("Unit"))
+    }
+  }
+
+  test("#2841 empty, partial sig") {
+    val q"..$mods object $ename extends ..$parents { ..$stats }" =
+      q"object X extends Y"
+    assertEquals(mods, Nil)
+    assertEquals(parents.length, 1)
+    assertTree(parents(0)) {
+      Init(Type.Name("Y"), Name.Anonymous(), Nil)
+    }
+    assertEquals(stats, Nil)
+  }
+
+  test("#2841 non-empty, partial sig") {
+    val q"..$mods object $ename extends ..$parents { ..$stats }" =
+      q"object X extends Y { def foo }"
+    assertEquals(mods, Nil)
+    assertEquals(parents.length, 1)
+    assertTree(parents(0)) {
+      Init(Type.Name("Y"), Name.Anonymous(), Nil)
+    }
+    assertEquals(stats.length, 1)
+    assertTree(stats(0)) {
+      Decl.Def(Nil, Term.Name("foo"), Nil, Nil, Type.Name("Unit"))
+    }
+  }
+
 }
