@@ -43,6 +43,12 @@ trait CommonNamerMacros extends MacroHelpers {
   private val quasiTypeName = TypeName(CommonNamerMacros.quasiName)
   def isQuasiClass(cdef: ClassDef) = cdef.name.toString == CommonNamerMacros.quasiName
 
+  private def mkQuasiParent(parent: Tree): Tree = parent match {
+    case Ident(name) => Select(Ident(name.toTermName), quasiTypeName)
+    case Select(qual, name) => Select(Select(qual, name.toTermName), quasiTypeName)
+    case unsupported => c.abort(unsupported.pos, s"implementation restriction: unsupported parent")
+  }
+
   def mkQuasi(
       name: TypeName,
       parents: List[Tree],
@@ -52,11 +58,7 @@ trait CommonNamerMacros extends MacroHelpers {
   ): ClassDef = {
     val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new $AstAnnotation"))
     val qname = quasiTypeName
-    val qparents = tq"$name" +: tq"$QuasiClass" +: parents.map({
-      case Ident(name) => Select(Ident(name.toTermName), quasiTypeName)
-      case Select(qual, name) => Select(Select(qual, name.toTermName), quasiTypeName)
-      case unsupported => c.abort(unsupported.pos, "implementation restriction: unsupported parent")
-    })
+    val qparents = tq"$name" +: tq"$QuasiClass" +: parents.map(mkQuasiParent)
 
     val qstats = mutable.ListBuffer[Tree]()
     qstats += q"""

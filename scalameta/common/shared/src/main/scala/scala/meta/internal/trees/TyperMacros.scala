@@ -24,40 +24,9 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
   import c.universe._
 
   def hierarchyCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
-    val sym = T.tpe.typeSymbol.asClass
-    val designation =
-      if (sym.isRoot) "root"
-      else if (sym.isBranch) "branch"
-      else if (sym.isLeaf) "leaf"
-      else "unknown"
-    val roots = sym.baseClasses.filter(_.isRoot)
-    if (roots.length == 0 && sym.isLeaf)
-      c.abort(c.enclosingPosition, s"rootless leaf is disallowed")
-    else if (roots.length > 1)
-      c.abort(
-        c.enclosingPosition,
-        s"multiple roots for a $designation: " + (roots
-          .map(_.fullName)
-          .init
-          .mkString(", ")) + " and " + roots.last.fullName
-      )
-    val root = roots.headOption.getOrElse(NoSymbol)
-    sym.baseClasses.map(_.asClass).foreach { bsym =>
-      val exempt =
-        bsym.isModuleClass ||
-          bsym == symbolOf[Object] ||
-          bsym == symbolOf[Any] ||
-          bsym == symbolOf[scala.Serializable] ||
-          bsym == symbolOf[java.io.Serializable] ||
-          bsym == symbolOf[scala.Product] ||
-          bsym == symbolOf[scala.Equals] ||
-          root.info.baseClasses.contains(bsym)
-      if (!exempt && !bsym.isRoot && !bsym.isBranch && !bsym.isLeaf)
-        c.abort(c.enclosingPosition, s"outsider parent of a $designation: ${bsym.fullName}")
     // NOTE: sealedness is turned off because we can't have @ast hierarchy sealed anymore
     // hopefully, in the future we'll find a way to restore sealedness
-    // if (!exempt && !bsym.isSealed && !bsym.isFinal) c.abort(c.enclosingPosition, s"unsealed parent of a $designation: ${bsym.fullName}")
-    }
+    checkHierarchy(T.tpe, c.abort(c.enclosingPosition, _), checkSealed = false)
     q"()"
   }
 
