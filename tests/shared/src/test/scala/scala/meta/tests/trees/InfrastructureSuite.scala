@@ -9,15 +9,15 @@ class InfrastructureSuite extends TreeSuiteBase {
   test("become for Quasi-0") {
     val dialect = QuasiquoteTerm(Scala211, multiline = false)
     val q = dialect("$hello").parse[Term].get.asInstanceOf[Term.Quasi]
-    assertTree(q.become[Type.Quasi])(Type.Quasi(0, Term.Name("hello")))
-    assert(q.become[Type.Quasi].pos.toString == """[0..6) in Input.String("$hello")""")
+    assertTree(q.become[Type])(Type.Quasi(0, Term.Name("hello")))
+    assertEquals(q.become[Type].pos.toString, """[0..6) in Input.String("$hello")""")
   }
 
   test("become for Quasi-1") {
     val dialect = QuasiquoteTerm(Scala211, multiline = false)
     val Term.Block(List(q: Stat.Quasi)) = dialect("..$hello").parse[Stat].get
-    assertTree(q.become[Type.Quasi])(Type.Quasi(1, Type.Quasi(0, Term.Name("hello"))))
-    assert(q.become[Type.Quasi].pos.toString == """[0..8) in Input.String("..$hello")""")
+    assertTree(q.become[Type])(Type.Quasi(1, Type.Quasi(0, Term.Name("hello"))))
+    assertEquals(q.become[Type].pos.toString, """[0..8) in Input.String("..$hello")""")
   }
 
   test("copy parent") {
