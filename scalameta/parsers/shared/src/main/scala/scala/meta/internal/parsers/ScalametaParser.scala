@@ -669,11 +669,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       var hasTypes = false
 
       @tailrec
-      def paramOrType(): Tree = token match {
+      def paramOrType(): Type = token match {
         case t: Ellipsis =>
-          ellipsis[Tree](t)
+          ellipsis[Type](t)
         case t: Unquote =>
-          unquote[Tree](t)
+          unquote[Type](t)
         case KwImplicit() if !hasImplicits =>
           next()
           hasImplicits = true
@@ -702,11 +702,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       accept[LeftParen]
       val ts = if (!token.is[RightParen]) listBy[Type] { tsBuf =>
         do {
-          tsBuf += (paramOrType() match {
-            case q: Quasi => q.become[Type]
-            case t: Type => t
-            case other => unreachable(debug(other.syntax, other.structure))
-          })
+          tsBuf += paramOrType()
         } while (acceptOpt[Comma] || token.is[Ellipsis])
       }
       else Nil
