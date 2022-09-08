@@ -233,4 +233,77 @@ class MatchTypeSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("wildcard") {
+    runTestAssert[Stat](
+      """|object match_types:
+         |  type Combine[L, R] = L match
+         |    case Foo[_] => L
+         |    case Bar[?] => L
+         |    case _ => R
+         |    case ? => L
+         |""".stripMargin,
+      // "case ? => R" is a bug
+      assertLayout = Some(
+        """|object match_types {
+           |  type Combine[L, R] = L match {
+           |    case Foo[?] => L
+           |    case Bar[?] => L
+           |    case ? => R
+           |    case ? => L
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        Term.Name("match_types"),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.Type(
+              Nil,
+              Type.Name("Combine"),
+              List(
+                Type.Param(Nil, Type.Name("L"), Nil, Type.Bounds(None, None), Nil, Nil),
+                Type.Param(Nil, Type.Name("R"), Nil, Type.Bounds(None, None), Nil, Nil)
+              ),
+              Type.Match(
+                Type.Name("L"),
+                List(
+                  TypeCase(
+                    Type.Apply(
+                      Type.Name("Foo"),
+                      List(Type.Placeholder(Type.Bounds(None, None)))
+                    ),
+                    Type.Name("L")
+                  ),
+                  TypeCase(
+                    Type.Apply(
+                      Type.Name("Bar"),
+                      List(Type.Placeholder(Type.Bounds(None, None)))
+                    ),
+                    Type.Name("L")
+                  ),
+                  TypeCase(
+                    Type.Placeholder(Type.Bounds(None, None)),
+                    Type.Name("R")
+                  ),
+                  TypeCase(
+                    Type.Placeholder(Type.Bounds(None, None)),
+                    Type.Name("L")
+                  )
+                )
+              ),
+              Type.Bounds(None, None)
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
 }
