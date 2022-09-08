@@ -394,6 +394,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type
       |scala.meta.Type.And
       |scala.meta.Type.Annotate
+      |scala.meta.Type.AnonymousLambda
       |scala.meta.Type.AnonymousName
       |scala.meta.Type.AnonymousParam
       |scala.meta.Type.Apply

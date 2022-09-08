@@ -2,7 +2,7 @@ package scala.meta.internal.trees
 
 import scala.annotation.tailrec
 import scala.collection.mutable
-import scala.meta.{Init, Term, Tree}
+import scala.meta.{Init, Term, Tree, Type}
 
 object PlaceholderChecks {
 
@@ -10,6 +10,11 @@ object PlaceholderChecks {
     case _: Term.Placeholder => true
     case Term.Ascribe(_: Term.Placeholder, _) => true
     case Term.Repeated(_: Term.Placeholder) => true
+    case _ => false
+  }
+
+  def isAnonymousParam(tree: Tree): Boolean = tree match {
+    case _: Type.AnonymousParam => true
     case _ => false
   }
 
@@ -38,6 +43,24 @@ object PlaceholderChecks {
         case t: Term.Repeated => queue += t.expr; iter
         case t: Term.AnonymousFunction => t.ne(tree) && queue.nonEmpty && iter
         case t => t.children.exists(isPlaceholder) || queue.nonEmpty && iter
+      }
+    queue += tree
+    iter
+  }
+
+  def hasAnonymousParam(tree: Type, includeArg: => Boolean): Boolean = {
+    val queue = new mutable.Queue[Tree]
+    @tailrec
+    def iter: Boolean =
+      queue.dequeue() match {
+        case _: Quasi => queue.nonEmpty && iter
+        case t: Type.AnonymousParam => t.ne(tree) || includeArg
+        case t: Type.Tuple => t.args.exists(isAnonymousParam) || queue.nonEmpty && iter
+        case t: Type.Apply => t.args.exists(isAnonymousParam) || { queue += t.tpe; iter }
+        case t: Type.ApplyInfix => queue += t.lhs; queue += t.rhs; iter
+        case t: Type.With => queue += t.lhs; queue += t.rhs; iter
+        case t: Type.Repeated => queue += t.tpe; iter
+        case t => t.children.exists(isAnonymousParam) || queue.nonEmpty && iter
       }
     queue += tree
     iter

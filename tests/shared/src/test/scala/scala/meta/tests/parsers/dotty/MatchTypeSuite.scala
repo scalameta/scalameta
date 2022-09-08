@@ -274,9 +274,11 @@ class MatchTypeSuite extends BaseDottySuite {
                 Type.Name("L"),
                 List(
                   TypeCase(
-                    Type.Apply(
-                      Type.Name("Foo"),
-                      List(Type.AnonymousParam(None))
+                    Type.AnonymousLambda(
+                      Type.Apply(
+                        Type.Name("Foo"),
+                        List(Type.AnonymousParam(None))
+                      )
                     ),
                     Type.Name("L")
                   ),
