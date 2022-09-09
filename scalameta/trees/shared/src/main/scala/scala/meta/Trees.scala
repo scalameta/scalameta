@@ -8,6 +8,8 @@ import scala.meta.prettyprinters._
 import scala.meta.internal.trees._
 import scala.meta.internal.trees.Metadata.binaryCompatField
 
+import scala.meta.{Type => smType}
+
 @root trait Tree extends InternalTree {
   def parent: Option[Tree]
   def children: List[Tree]
@@ -319,7 +321,7 @@ object Member {
     def name: scala.meta.Term.Name
   }
   @branch trait Type extends Member {
-    def name: scala.meta.Type.Name
+    def name: smType.Name
   }
 }
 
@@ -332,20 +334,20 @@ object Decl {
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[scala.meta.Type.Param],
+      tparams: List[smType.Param],
       paramss: List[List[Term.Param]],
       decltpe: scala.meta.Type
   ) extends Decl with Member.Term with Stat.WithMods
   @ast class Type(
       mods: List[Mod],
-      name: scala.meta.Type.Name,
-      tparams: List[scala.meta.Type.Param],
-      bounds: scala.meta.Type.Bounds
+      name: smType.Name,
+      tparams: List[smType.Param],
+      bounds: smType.Bounds
   ) extends Decl with Member.Type with Stat.WithMods
   @ast class Given(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[scala.meta.Type.Param],
+      tparams: List[smType.Param],
       sparams: List[List[Term.Param]],
       decltpe: scala.meta.Type
   ) extends Decl with Member.Term with Stat.WithMods
@@ -374,21 +376,21 @@ object Defn {
   @ast class Given(
       mods: List[Mod],
       name: scala.meta.Name,
-      tparams: List[scala.meta.Type.Param],
+      tparams: List[smType.Param],
       sparams: List[List[Term.Param]],
       templ: Template
   ) extends Defn with Stat.WithMods
   @ast class Enum(
       mods: List[Mod],
-      name: scala.meta.Type.Name,
-      tparams: List[scala.meta.Type.Param],
+      name: smType.Name,
+      tparams: List[smType.Param],
       ctor: Ctor.Primary,
       templ: Template
   ) extends Defn with Member.Type with Stat.WithMods
   @ast class EnumCase(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[scala.meta.Type.Param],
+      tparams: List[smType.Param],
       ctor: Ctor.Primary,
       inits: List[Init]
   ) extends Defn with Member.Term with Stat.WithMods {
@@ -403,20 +405,20 @@ object Defn {
   @ast class GivenAlias(
       mods: List[Mod],
       name: scala.meta.Name,
-      tparams: List[scala.meta.Type.Param],
+      tparams: List[smType.Param],
       sparams: List[List[Term.Param]],
       decltpe: scala.meta.Type,
       body: Term
   ) extends Defn with Stat.WithMods
   @ast class ExtensionGroup(
-      tparams: List[scala.meta.Type.Param],
+      tparams: List[smType.Param],
       paramss: List[List[Term.Param]],
       body: Stat
   ) extends Defn
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[scala.meta.Type.Param],
+      tparams: List[smType.Param],
       paramss: List[List[Term.Param]],
       decltpe: Option[scala.meta.Type],
       body: Term
@@ -426,31 +428,31 @@ object Defn {
   @ast class Macro(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[scala.meta.Type.Param],
+      tparams: List[smType.Param],
       paramss: List[List[Term.Param]],
       decltpe: Option[scala.meta.Type],
       body: Term
   ) extends Defn with Member.Term with Stat.WithMods
   @ast class Type(
       mods: List[Mod],
-      name: scala.meta.Type.Name,
-      tparams: List[scala.meta.Type.Param],
+      name: smType.Name,
+      tparams: List[smType.Param],
       body: scala.meta.Type
   ) extends Defn with Member.Type with Stat.WithMods {
     @binaryCompatField("4.4.0")
-    private var _bounds: scala.meta.Type.Bounds = scala.meta.Type.Bounds(None, None)
+    private var _bounds: smType.Bounds = smType.Bounds(None, None)
   }
   @ast class Class(
       mods: List[Mod],
-      name: scala.meta.Type.Name,
-      tparams: List[scala.meta.Type.Param],
+      name: smType.Name,
+      tparams: List[smType.Param],
       ctor: Ctor.Primary,
       templ: Template
   ) extends Defn with Member.Type with Stat.WithMods
   @ast class Trait(
       mods: List[Mod],
-      name: scala.meta.Type.Name,
-      tparams: List[scala.meta.Type.Param],
+      name: smType.Name,
+      tparams: List[smType.Param],
       ctor: Ctor.Primary,
       templ: Template
   ) extends Defn with Member.Type with Stat.WithMods {
