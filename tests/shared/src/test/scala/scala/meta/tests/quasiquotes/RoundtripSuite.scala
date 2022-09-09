@@ -85,12 +85,12 @@ object RoundtripSuite {
     case q"..$mods def $name[..$tparams](...$paramss): $tpeopt = macro $expr" =>
       q"..$mods def $name[..$tparams](...$paramss): $tpeopt = macro $expr"
     case q"..$mods type $tname[..$tparams] = $tpe" => q"..$mods type $tname[..$tparams] = $tpe"
-    case q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends $template" =>
-      q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends $template"
-    case q"..$mods trait $tname[..$tparams] extends $template" =>
-      q"..$mods trait $tname[..$tparams] extends $template"
-    case q"..$mods object $name extends $template" => q"..$mods object $name extends $template"
-    case q"package object $name extends $template" => q"package object $name extends $template"
+    case q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) $template" =>
+      q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) $template"
+    case q"..$mods trait $tname[..$tparams] $template" =>
+      q"..$mods trait $tname[..$tparams] $template"
+    case q"..$mods object $name $template" => q"..$mods object $name $template"
+    case q"package object $name $template" => q"package object $name $template"
     case q"package $ref { ..$stats }" => q"package $ref { ..$stats }"
     case q"..$mods def this(...$paramss)" => q"..$mods def this(...$paramss)"
     case q"..$mods def this(...$paramss) = $expr" => q"..$mods def this(...$paramss) = $expr"
