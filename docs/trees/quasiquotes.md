@@ -103,20 +103,23 @@ the end of the document.
 
 ### Definitions
 
-|                | Quasiquote                                                                        |
-| -------------- | --------------------------------------------------------------------------------- |
-| Val            | `q"..$mods val ..$patsnel: $tpeopt = $expr"`                                      |
-| Var            | `q"..$mods var ..$patsnel: $tpeopt = $expropt"`                                   |
-| Def            | `q"..$mods def $ename[..$tparams](...$paramss): $tpeopt = $expr"`                 |
-| Macro          | `q"..$mods def $ename[..$tparams](...$paramss): $tpeopt = macro $expr"`           |
-| Type           | `q"..$mods type $tname[..$tparams] = $tpe"`                                       |
-| Class          | `q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) extends $template"` |
-| Trait          | `q"..$mods trait $tname[..$tparams] extends $template"`                           |
-| Object         | `q"..$mods object $ename extends $template"`                                      |
-| Package Object | `q"package object $ename extends $template"`                                      |
-| Package        | `q"package $eref { ..$stats }"`                                                   |
-| Primary Ctor   | `q"..$mods def this(...$paramss)"`                                                |
-| Secondary Ctor | `q"..$mods def this(...$paramss) = $expr"`                                        |
+|                | Quasiquote                                                                |
+| -------------- |---------------------------------------------------------------------------|
+| Val            | `q"..$mods val ..$patsnel: $tpeopt = $expr"`                              |
+| Var            | `q"..$mods var ..$patsnel: $tpeopt = $expropt"`                           |
+| Def            | `q"..$mods def $ename[..$tparams](...$paramss): $tpeopt = $expr"`         |
+| Macro          | `q"..$mods def $ename[..$tparams](...$paramss): $tpeopt = macro $expr"`   |
+| Type           | `q"..$mods type $tname[..$tparams] = $tpe"`                               |
+| Class          | `q"..$mods class $tname[..$tparams] ..$ctorMods (...$paramss) $template"` |
+| Trait          | `q"..$mods trait $tname[..$tparams] $template"`                           |
+| Object         | `q"..$mods object $ename $template"`                                      |
+| Package Object | `q"package object $ename $template"`                                      |
+| Package        | `q"package $eref { ..$stats }"`                                           |
+| Primary Ctor   | `q"..$mods def this(...$paramss)"`                                        |
+| Secondary Ctor | `q"..$mods def this(...$paramss) = $expr"`                                |
+
+> `$template` above can be replaced with either `extends` followed by the full signature from
+> [`Template`](#template-metatemplate), or just `{ $self => ..$stats }` if no parents are expected.
 
 ### Value Parameters (meta.Term.Param)
 
