@@ -2138,11 +2138,48 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           }
         }
         simpleExprRest(arguments, canApply = true, startPos = startPos)
+      case _: Colon if dialect.allowFewerBraces && (isColonEol(token) || followingIsLambdaAfterColon()) =>
+        accept[Colon]
+        in.observeIndented()
+        val args = blockExpr(allowRepeated = false)
+        val arguments = addPos { Term.Apply(t, List(args)) }
+        simpleExprRest(arguments, canApply = true, startPos = startPos)
+
       case Underscore() =>
         next()
         addPos(Term.Eta(t))
       case _ =>
         addPos(t)
+    }
+  }
+
+  private def followingIsLambdaAfterColon(): Boolean = {
+    /** Skip matching pairs of `(...)` or `[...]` parentheses.
+     *  @pre  The current token is `(` or `[`
+     */
+    def skipParens[T1: TokenClassifier, T2: TokenClassifier]: Unit = {
+      next()
+      while (token.isNot[EOF] && token.isNot[T2])
+        if (token.is[T1]) skipParens[T1, T2] else next()
+      next()
+    }
+    ahead {
+      def isArrowIndent() =
+        (token.is[RightArrow] || token.is[ContextArrow]) && {
+          next()
+          token.is[Indentation.Indent]
+        }
+      if (token.is[Ident] || token.is[Underscore]) {
+        next()
+        isArrowIndent()
+      } else if (token.is[LeftParen]) {
+        skipParens[LeftParen, RightParen]
+        isArrowIndent()
+
+      } else if (token.is[LeftBracket]) {
+        skipParens[LeftBracket, RightBracket]
+        isArrowIndent()
+      } else false
     }
   }
 

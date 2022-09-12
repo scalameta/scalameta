@@ -150,7 +150,9 @@ final class Dialect private (
     // Scala 3 uses proper precedence rules for infix types, unlike Scala 2
     val useInfixTypePrecedence: Boolean,
     // Scala213Source3 and Scala3 allow infix operator being placed after nl
-    val allowInfixOperatorAfterNL: Boolean
+    val allowInfixOperatorAfterNL: Boolean,
+    // Scala 3 will allow dropping braces for block arguments such as `list.map: a =>`
+    val allowFewerBraces: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -240,7 +242,8 @@ final class Dialect private (
       allowUnderscoreAsTypePlaceholder = false,
       allowGivenImports = false,
       useInfixTypePrecedence = false,
-      allowInfixOperatorAfterNL = false
+      allowInfixOperatorAfterNL = false,
+      allowFewerBraces = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -451,6 +454,10 @@ final class Dialect private (
     privateCopy(allowInfixOperatorAfterNL = newValue)
   }
 
+  def withAllowFewerBraces(newValue: Boolean): Dialect = {
+    privateCopy(allowFewerBraces = newValue)
+  }
+
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -514,7 +521,8 @@ final class Dialect private (
       allowUnderscoreAsTypePlaceholder: Boolean = this.allowUnderscoreAsTypePlaceholder,
       allowGivenImports: Boolean = this.allowGivenImports,
       useInfixTypePrecedence: Boolean = this.useInfixTypePrecedence,
-      allowInfixOperatorAfterNL: Boolean = this.allowInfixOperatorAfterNL
+      allowInfixOperatorAfterNL: Boolean = this.allowInfixOperatorAfterNL,
+      allowFewerBraces: Boolean = this.allowFewerBraces
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -575,7 +583,8 @@ final class Dialect private (
       allowUnderscoreAsTypePlaceholder,
       allowGivenImports,
       useInfixTypePrecedence,
-      allowInfixOperatorAfterNL
+      allowInfixOperatorAfterNL,
+      allowFewerBraces
       // NOTE(olafur): add the next argument above this comment.
     )
   }
