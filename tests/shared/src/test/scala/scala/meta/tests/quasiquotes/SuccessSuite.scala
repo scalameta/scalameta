@@ -2,6 +2,8 @@ package scala.meta.tests
 package quasiquotes
 
 import munit._
+import org.scalameta.tests.typecheckError
+
 import scala.meta._
 import scala.meta.dialects.Scala211
 
@@ -2653,7 +2655,7 @@ class SuccessSuite extends TreeSuiteBase {
     )
   }
 
-  test("#468 - primary constructor") {
+  test("#468 - primary constructor I") {
     val q"case class A($param)" = q"case class A(a: Int)"
     assertEquals(param.syntax, "a: Int")
   }
@@ -2664,7 +2666,29 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(params.map(_.syntax), List("b: Int", "c: Int"))
   }
 
-  test("#468 - function parameter list") {
+  test("#468 - primary constructor III") {
+    val q"case class A(..$params)" = q"case class A(a: Int, b: String)"
+    assertEquals(params.length, 2)
+    checkTree(params(0), "a: Int") {
+      Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)
+    }
+    checkTree(params(1), "b: String") {
+      Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
+    }
+  }
+
+  test("#468 - primary constructor IV") {
+    val q"case class A(...$paramss)" = q"case class A(a: Int)(b: String)"
+    assertEquals(paramss.length, 2)
+    checkTree(paramss(0)(0), "a: Int") {
+      Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)
+    }
+    checkTree(paramss(1)(0), "b: String") {
+      Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
+    }
+  }
+
+  test("#468 - function parameter list I") {
     val q"def foo($param): Int = a" = q"def foo(a: Int): Int = a"
     assertEquals(param.syntax, "a: Int")
   }
@@ -2673,6 +2697,56 @@ class SuccessSuite extends TreeSuiteBase {
     val q"def foo($param, ..$params): Int = a" = q"def foo(a: Int, b: Int, c: Int): Int = a"
     assertEquals(param.syntax, "a: Int")
     assertEquals(params.map(_.syntax), List("b: Int", "c: Int"))
+  }
+
+  test("#468 - function parameter list III") {
+    val q"def foo(..$params): Int = a" = q"def foo(a: Int, b: String): Int = a"
+    assertEquals(params.length, 2)
+    checkTree(params(0), "a: Int") {
+      Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)
+    }
+    checkTree(params(1), "b: String") {
+      Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
+    }
+  }
+
+  test("#468 - function parameter list IV") {
+    val q"def foo(...$paramss): Int = a" = q"def foo(a: Int)(b: String): Int = a"
+    assertEquals(paramss.length, 2)
+    checkTree(paramss(0)(0), "a: Int") {
+      Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)
+    }
+    checkTree(paramss(1)(0), "b: String") {
+      Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
+    }
+    paramss(0) match {
+      case (head: Tree) +: rest =>
+        checkTree(head, "a: Int") {
+          Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)
+        }
+        assert(rest.isEmpty)
+      case x => fail(s"cannot match on `+:` pattern: $x")
+    }
+    paramss(1) match {
+      case (head: Tree) +: rest =>
+        checkTree(head, "b: String") {
+          Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
+        }
+        assert(rest.isEmpty)
+      case x => fail(s"cannot match on `+:` pattern: $x")
+    }
+  }
+
+  test("#468 - function parameter list V") {
+    assertEquals(
+      typecheckError(
+        """
+    val q"def foo(...$paramss)(..$params)($param): Int = a" = q"def foo(a: Int)(b: String)(c: Long): Int = a"
+        """
+      ).replace("\r", ""),
+      """|implementation restriction: can't mix ...$ with anything else in parameter lists.
+         |See https://github.com/scalameta/scalameta/issues/406 for details.""".stripMargin
+    )
   }
 
   test("#230 - tparam extensions I") {
