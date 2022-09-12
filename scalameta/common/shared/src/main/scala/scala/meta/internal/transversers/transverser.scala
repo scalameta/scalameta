@@ -14,7 +14,6 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
 
   lazy val TreeClass = tq"_root_.scala.meta.Tree"
   lazy val TreeAdt = TreeSymbol.asRoot
-  lazy val QuasiClass = tq"_root_.scala.meta.internal.trees.Quasi"
   lazy val QuasiAdt = QuasiSymbol.asAdt
   lazy val Hack1Class = hygienicRef[org.scalameta.overload.Hack1]
   lazy val Hack2Class = hygienicRef[org.scalameta.overload.Hack2]

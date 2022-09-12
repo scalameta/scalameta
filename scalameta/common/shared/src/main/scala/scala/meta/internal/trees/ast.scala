@@ -439,17 +439,17 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // step 15: finish codegen for Quasi
         if (isQuasi) {
           stats1 += q"""
-          def become[T <: $TreeClass](implicit ev: $AstInfoClass[T]): T = {
-            this match {
+          def become[T <: $TreeClass](implicit ev: $AstInfoClass[T]): T with $QuasiClass = {
+            (this match {
               case $mname(0, tree) =>
-                ev.quasi(0, tree).withOrigin(this.origin).asInstanceOf[T]
+                ev.quasi(0, tree)
               case $mname(1, nested @ $mname(0, tree)) =>
-                ev.quasi(1, nested.become[T]).withOrigin(this.origin).asInstanceOf[T]
+                ev.quasi(1, nested.become[T])
               case $mname(2, nested @ $mname(0, tree)) =>
-                ev.quasi(2, nested.become[T]).withOrigin(this.origin).asInstanceOf[T]
+                ev.quasi(2, nested.become[T])
               case _ =>
                 throw new Exception("complex ellipses are not supported yet")
-            }
+            }).withOrigin(this.origin): T with $QuasiClass
           }
         """
         } else {
