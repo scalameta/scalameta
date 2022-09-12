@@ -2824,33 +2824,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def paramClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[List[Term.Param]] = {
-    var parsedImplicits = false
+    var modImplicit: Option[Mod.Implicit] = None
     def paramClause(first: Boolean): List[Term.Param] = inParensOnOpenOr(token match {
       case t @ Ellipsis(2) =>
         List(ellipsis[Term.Param](t))
-      case _ =>
-        var parsedUsing = false
-        if (acceptOpt[KwImplicit]) {
-          parsedImplicits = true
-        } else if (acceptOpt[soft.KwUsing]) {
-          parsedUsing = true
+      case t =>
+        var modUsing: Option[Mod.Using] = None
+        t match {
+          case _: KwImplicit => modImplicit = Some(atCurPosNext(Mod.Implicit()))
+          case soft.KwUsing() => modUsing = Some(atCurPosNext(Mod.Using()))
+          case _ =>
         }
         commaSeparated(token match {
           case t: Ellipsis => ellipsis[Term.Param](t)
           case _ =>
-            param(
-              ownerIsCase && first,
-              ownerIsType,
-              isImplicit = parsedImplicits,
-              isUsing = parsedUsing
-            )
+            param(ownerIsCase && first, ownerIsType, modImplicit = modImplicit, modUsing = modUsing)
         })
     })(Nil)
     if (!isAfterOptNewLine[LeftParen]) Nil
     else
       listBy[List[Term.Param]] { paramss =>
         paramss += paramClause(true)
-        while (isAfterOptNewLine[LeftParen] && !parsedImplicits) {
+        while (isAfterOptNewLine[LeftParen] && modImplicit.isEmpty) {
           paramss += paramClause(false)
         }
       }
@@ -2885,13 +2880,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def param(
       ownerIsCase: Boolean,
       ownerIsType: Boolean,
-      isImplicit: Boolean,
-      isUsing: Boolean
+      modImplicit: Option[Mod.Implicit] = None,
+      modUsing: Option[Mod.Using] = None
   ): Term.Param = autoPos {
     val mods = new ListBuffer[Mod]
     annotsBuf(mods, skipNewLines = false)
-    if (isImplicit) mods += autoPos(Mod.Implicit())
-    if (isUsing) mods += autoPos(Mod.Using())
+    modImplicit.foreach(mods += _)
+    modUsing.foreach(mods += _)
     rejectMod[Mod.Open](mods, "Open modifier only applied to classes")
     if (ownerIsType) {
       modifiersBuf(mods, isParams = true)
@@ -2921,7 +2916,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         q.become[Term.Param]
       case _ =>
         var anonymousUsing = false
-        val name = if (isUsing && ahead(!token.is[Colon])) { // anonymous using
+        val name = if (modUsing.isDefined && ahead(!token.is[Colon])) { // anonymous using
           anonymousUsing = true
           autoPos(Name.Anonymous())
         } else {
@@ -2952,7 +2947,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                       mayNotBeByName("`var'")
                     else
                       mayNotBeByName("`val'")
-                  } else if (isImplicit && !dialect.allowImplicitByNameParameters)
+                  } else if (modImplicit.isDefined && !dialect.allowImplicitByNameParameters)
                     mayNotBeByName("implicit")
                 }
                 Some(tpt)
@@ -2966,7 +2961,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def quasiquoteTermParam(): Term.Param = entrypointTermParam()
 
   def entrypointTermParam(): Term.Param =
-    param(ownerIsCase = false, ownerIsType = true, isImplicit = false, isUsing = false)
+    param(ownerIsCase = false, ownerIsType = true)
 
   def typeParamClauseOpt(
       ownerIsType: Boolean,
@@ -3362,10 +3357,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val paramss = ListBuffer[List[Term.Param]]()
 
     def collectUparams(): Unit = {
-      while (isAfterOptNewLine[LeftParen] && tryAhead[soft.KwUsing]) {
-        next()
-        paramss += inParensAfterOpen(commaSeparated {
-          param(ownerIsCase = false, ownerIsType = true, isImplicit = false, isUsing = true)
+      while (isAfterOptNewLine[LeftParen] && tryAhead[soft.KwUsing]) paramss += {
+        val mod = atCurPos(Mod.Using())
+        inParensOnOpen(commaSeparated {
+          param(ownerIsCase = false, ownerIsType = true, modUsing = Some(mod))
         })
       }
     }
@@ -3373,7 +3368,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     collectUparams()
 
     paramss += inParens(
-      List(param(ownerIsCase = false, ownerIsType = false, isImplicit = false, isUsing = false))
+      List(param(ownerIsCase = false, ownerIsType = false))
     )
 
     collectUparams()
