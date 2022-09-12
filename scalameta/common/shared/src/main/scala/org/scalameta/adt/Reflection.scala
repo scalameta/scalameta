@@ -137,4 +137,39 @@ trait Reflection {
     override def toString =
       s"field ${owner.prefix}.$name: $tpe" + (if (isAuxiliary) " (auxiliary)" else "")
   }
+
+  private def isExemptParentSymbol(bsym: ClassSymbol): Boolean = {
+    bsym.isModuleClass ||
+    bsym == symbolOf[Object] ||
+    bsym == symbolOf[Any] ||
+    bsym == symbolOf[scala.Serializable] ||
+    bsym == symbolOf[java.io.Serializable] ||
+    bsym == symbolOf[scala.Product] ||
+    bsym == symbolOf[scala.Equals]
+  }
+
+  protected def checkHierarchy(tpe: Type, fail: String => Unit, checkSealed: Boolean): Unit = {
+    val sym = tpe.typeSymbol.asClass
+    def designation =
+      if (sym.isRoot) "root" else if (sym.isBranch) "branch" else if (sym.isLeaf) "leaf" else ???
+    val roots = sym.baseClasses.filter(_.isRoot)
+    if (roots.isEmpty && sym.isLeaf)
+      fail(s"rootless leaf is disallowed")
+    else if (roots.length > 1)
+      fail(
+        s"multiple roots for a $designation: " + (roots
+          .map(_.fullName)
+          .init
+          .mkString(", ")) + " and " + roots.last.fullName
+      )
+    val root = roots.headOption.getOrElse(NoSymbol)
+    sym.baseClasses.map(_.asClass).foreach { bsym =>
+      val exempt = isExemptParentSymbol(bsym) || root.info.baseClasses.contains(bsym)
+      if (!exempt && !bsym.isRoot && !bsym.isBranch && !bsym.isLeaf)
+        fail(s"outsider parent of a $designation: ${bsym.fullName}")
+      if (checkSealed && !exempt && !bsym.isSealed && !bsym.isFinal)
+        fail(s"unsealed parent of a $designation: ${bsym.fullName}")
+    }
+  }
+
 }
