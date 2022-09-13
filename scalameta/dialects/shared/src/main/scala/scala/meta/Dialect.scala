@@ -151,7 +151,9 @@ final class Dialect private (
     val useInfixTypePrecedence: Boolean,
     // Scala213Source3 and Scala3 allow infix operator being placed after nl
     val allowInfixOperatorAfterNL: Boolean,
-    // Scala 3 will allow dropping braces for block arguments such as `list.map: a =>`
+    /* Scala 3 allows dropping braces for block arguments such as `list.map: a =>`
+     * It wasn't available in Scala 3.0 and got introduced later.
+     */
     val allowFewerBraces: Boolean
 ) extends Product with Serializable {
 

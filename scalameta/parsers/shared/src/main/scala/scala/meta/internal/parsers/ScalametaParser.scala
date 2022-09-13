@@ -153,6 +153,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   /* ------------- TOKEN STREAM HELPERS -------------------------------------------- */
 
   def isColonEol(token: Token): Boolean = {
+    token.is[Colon] && isEolAfterColon(token)
+  }
+
+  def isEolAfterColon(token: Token): Boolean = {
 
     @tailrec
     def isNextEOL(t: Token): Boolean = {
@@ -163,7 +167,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     }
 
-    dialect.allowSignificantIndentation && token.is[Colon] && isNextEOL(token)
+    dialect.allowSignificantIndentation && isNextEOL(token)
   }
 
   /* ------------- PARSER-SPECIFIC TOKENS -------------------------------------------- */
@@ -2159,37 +2163,44 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  private def allowFewerBraces =
-    dialect.allowFewerBraces && (isColonEol(token) || followingIsLambdaAfterColon())
+  private def allowFewerBraces: Boolean =
+    dialect.allowFewerBraces && (isEolAfterColon(token) || followingIsLambdaAfterColon())
 
   private def followingIsLambdaAfterColon(): Boolean = {
+
     /**
      * Skip matching pairs of `(...)` or `[...]` parentheses.
      * @pre
      *   The current token is `(` or `[`
      */
-    def skipParens[T1: TokenClassifier, T2: TokenClassifier]: Unit = {
-      next()
-      while (token.isNot[EOF] && token.isNot[T2])
-        if (token.is[T1]) skipParens[T1, T2] else next()
-      next()
-    }
-    ahead {
-      def isArrowIndent() =
-        (token.is[RightArrow] || token.is[ContextArrow]) && {
-          next()
-          token.is[Indentation.Indent]
-        }
-      if (token.is[Ident] || token.is[Underscore]) {
+    def skipParens[T1: TokenClassifier, T2: TokenClassifier]: Boolean = {
+      // starts on left delimiter
+      @tailrec
+      def iter(nest: Int): Boolean = {
         next()
-        isArrowIndent()
-      } else if (token.is[LeftParen]) {
-        skipParens[LeftParen, RightParen]
-        isArrowIndent()
-      } else if (token.is[LeftBracket]) {
-        skipParens[LeftBracket, RightBracket]
-        isArrowIndent()
-      } else false
+        if (token.is[EOF]) false
+        else if (token.is[T2]) nest == 0 || iter(nest - 1)
+        else if (token.is[T1]) iter(nest + 1)
+        else iter(nest)
+      }
+      // stops on right delimiter (true), or end (false)
+      iter(0)
+    }
+
+    ahead {
+      val okParams = token match {
+        case _: Ident | _: Underscore => true
+        case _: LeftParen => skipParens[LeftParen, RightParen]
+        case _: LeftBracket => skipParens[LeftBracket, RightBracket]
+        case _ => false
+      }
+      okParams && {
+        next()
+        token.is[RightArrow] || token.is[ContextArrow]
+      } && {
+        next()
+        token.is[Indentation.Indent]
+      }
     }
   }
 

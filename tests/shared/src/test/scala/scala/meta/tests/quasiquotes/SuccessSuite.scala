@@ -2692,7 +2692,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("#829 - lambda extensions I") {
     val param = param"x:Int"
     val lambda = q"map($param => 3)"
-    assertEquals(lambda.syntax, "map { (x: Int) => 3 }")
+    assertEquals(lambda.syntax, "map((x: Int) => 3)")
   }
 
   test("#843") {

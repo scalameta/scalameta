@@ -1056,7 +1056,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       Term.Name("foo"),
       List(Term.Function(List(Term.Param(List(), Term.Name("i"), None, None)), Lit.Unit()))
     )
-    assertEquals(tree1.syntax, "foo { (i: Int) => () }")
+    assertEquals(tree1.syntax, "foo((i: Int) => ())")
     assertEquals(tree2.syntax, "foo { implicit i: Int => () }")
     assertEquals(tree3.syntax, "foo(i => ())")
   }

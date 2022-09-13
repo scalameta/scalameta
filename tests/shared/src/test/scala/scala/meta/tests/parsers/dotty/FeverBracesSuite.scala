@@ -280,4 +280,73 @@ class FeverBracesSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("nested") {
+    runTestAssert[Stat](
+      """|def O =
+         |  List((1, (List(""), 3))).map: (a: (Int, (List[String], Int))) =>
+         |    a._1 + 1
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def O = List((1, (List(""), 3))).map((a: (Int, (List[String], Int))) => a._1 + 1)
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("O"),
+        Nil,
+        Nil,
+        None,
+        Term.Apply(
+          Term.Select(
+            Term.Apply(
+              Term.Name("List"),
+              List(
+                Term.Tuple(
+                  List(
+                    Lit.Int(1),
+                    Term.Tuple(
+                      List(Term.Apply(Term.Name("List"), List(Lit.String(""))), Lit.Int(3))
+                    )
+                  )
+                )
+              )
+            ),
+            Term.Name("map")
+          ),
+          List(
+            Term.Function(
+              List(
+                Term.Param(
+                  Nil,
+                  Term.Name("a"),
+                  Some(
+                    Type.Tuple(
+                      List(
+                        Type.Name("Int"),
+                        Type.Tuple(
+                          List(
+                            Type.Apply(Type.Name("List"), List(Type.Name("String"))),
+                            Type.Name("Int")
+                          )
+                        )
+                      )
+                    )
+                  ),
+                  None
+                )
+              ),
+              Term.ApplyInfix(
+                Term.Select(Term.Name("a"), Term.Name("_1")),
+                Term.Name("+"),
+                Nil,
+                List(Lit.Int(1))
+              )
+            )
+          )
+        )
+      )
+    )
+  }
 }
