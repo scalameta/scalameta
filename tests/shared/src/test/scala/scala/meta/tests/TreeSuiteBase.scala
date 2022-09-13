@@ -9,6 +9,13 @@ abstract class TreeSuiteBase extends FunSuite {
   protected def assertTree(obtained: Tree)(expected: Tree)(implicit loc: munit.Location): Unit =
     assertNoDiff(obtained.structure, expected.structure)
 
+  protected def assertTrees(
+      obtained: Tree*
+  )(expected: Tree*)(implicit loc: munit.Location): Unit = {
+    assertEquals(obtained.length, expected.length)
+    obtained.zip(expected).foreach { case (o, e) => assertTree(o)(e) }
+  }
+
   protected def assertTree(obtained: Option[Tree])(expected: Option[Tree])(
       implicit loc: munit.Location
   ): Unit =
