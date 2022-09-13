@@ -1550,7 +1550,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               t = addPos(Term.Assign(t, expr(location = NoStat, allowRepeated = true)))
             case _ =>
           }
+        } else if (token.is[Colon] && allowFewerBraces) {
+          next()
+          in.observeIndented()
+          val args = blockExpr(allowRepeated = false)
+          val arguments = addPos { Term.Apply(t, List(args)) }
+          t = simpleExprRest(arguments, canApply = true, startPos = startPos)
         } else if (acceptOpt[Colon]) {
+
           if (token.is[At] || (token.is[Ellipsis] && ahead(token.is[At]))) {
             t = addPos(Term.Annotate(t, annots(skipNewLines = false)))
           } else if (token.is[Underscore] && ahead(isStar)) {
@@ -2138,13 +2145,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           }
         }
         simpleExprRest(arguments, canApply = true, startPos = startPos)
-      case _: Colon if dialect.allowFewerBraces && (isColonEol(token) || followingIsLambdaAfterColon()) =>
-        accept[Colon]
+      case _: Colon if allowFewerBraces =>
+        next()
         in.observeIndented()
         val args = blockExpr(allowRepeated = false)
         val arguments = addPos { Term.Apply(t, List(args)) }
         simpleExprRest(arguments, canApply = true, startPos = startPos)
-
       case Underscore() =>
         next()
         addPos(Term.Eta(t))
@@ -2153,9 +2159,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
+  private def allowFewerBraces =
+    dialect.allowFewerBraces && (isColonEol(token) || followingIsLambdaAfterColon())
+
   private def followingIsLambdaAfterColon(): Boolean = {
-    /** Skip matching pairs of `(...)` or `[...]` parentheses.
-     *  @pre  The current token is `(` or `[`
+    /**
+     * Skip matching pairs of `(...)` or `[...]` parentheses.
+     * @pre
+     *   The current token is `(` or `[`
      */
     def skipParens[T1: TokenClassifier, T2: TokenClassifier]: Unit = {
       next()
@@ -2175,7 +2186,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       } else if (token.is[LeftParen]) {
         skipParens[LeftParen, RightParen]
         isArrowIndent()
-
       } else if (token.is[LeftBracket]) {
         skipParens[LeftBracket, RightBracket]
         isArrowIndent()

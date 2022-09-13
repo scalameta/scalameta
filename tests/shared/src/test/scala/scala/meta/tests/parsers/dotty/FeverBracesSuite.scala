@@ -7,7 +7,7 @@ import scala.meta.tests.tokenizers.TokenizerSuite
 class FeverBracesSuite extends BaseDottySuite {
 
   override implicit val dialect = dialects.Scala3.withAllowFewerBraces(true)
-  
+
   test("simple") {
     runTestAssert[Stat](
       """|val firstLine = files.get(fileName).fold:
@@ -182,6 +182,53 @@ class FeverBracesSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("infix") {
+    runTestAssert[Stat](
+      """|def O =
+         |  credentials `++`:
+         |    val file = Path.userHome / ".credentials"
+         |    file
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def O = credentials.++ {
+           |  val file = Path.userHome / ".credentials"
+           |  file
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("O"),
+        Nil,
+        Nil,
+        None,
+        Term.Apply(
+          Term.Select(Term.Name("credentials"), Term.Name("++")),
+          List(
+            Term.Block(
+              List(
+                Defn.Val(
+                  Nil,
+                  List(Pat.Var(Term.Name("file"))),
+                  None,
+                  Term.ApplyInfix(
+                    Term.Select(Term.Name("Path"), Term.Name("userHome")),
+                    Term.Name("/"),
+                    Nil,
+                    List(Lit.String(".credentials"))
+                  )
+                ),
+                Term.Name("file")
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+
   test("multiple-apply") {
     runTestAssert[Stat](
       """|def O =
