@@ -1648,60 +1648,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             val contextFunction = token.is[ContextArrow]
             next()
             t = addPos {
-              def convertToParam(tree: Term): Option[Term.Param] = tree match {
-                case q: Quasi =>
-                  Some(q.become[Term.Param])
-                case name: Term.Name =>
-                  Some(copyPos(tree)(Term.Param(Nil, name, None, None)))
-                case name: Term.Placeholder =>
-                  Some(
-                    copyPos(tree)(
-                      Term.Param(Nil, copyPos(name)(Name.Anonymous()), None, None)
-                    )
-                  )
-                case Term.Ascribe(quasiName: Term.Quasi, tpt) =>
-                  val name = quasiName.become[Term.Name]
-                  Some(copyPos(tree)(Term.Param(Nil, name, Some(tpt), None)))
-                case Term.Ascribe(name: Term.Name, tpt) =>
-                  Some(copyPos(tree)(Term.Param(Nil, name, Some(tpt), None)))
-                case Term.Ascribe(name: Term.Placeholder, tpt) =>
-                  Some(
-                    copyPos(tree)(
-                      Term.Param(Nil, copyPos(name)(Name.Anonymous()), Some(tpt), None)
-                    )
-                  )
-                case Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name) =>
-                  Some(
-                    copyPos(tree)(
-                      Term.Param(List(copyPos(kwUsing)(Mod.Using())), name, None, None)
-                    )
-                  )
-                case Term.Ascribe(Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name), tpt) =>
-                  Some(
-                    copyPos(tree)(
-                      Term.Param(List(copyPos(kwUsing)(Mod.Using())), name, Some(tpt), None)
-                    )
-                  )
-                case Term.Ascribe(eta @ Term.Eta(kwUsing @ Term.Name(soft.KwUsing.name)), tpt) =>
-                  Some(
-                    copyPos(tree)(
-                      Term.Param(
-                        List(atPos(kwUsing.endTokenPos)(Mod.Using())),
-                        atPos(eta.endTokenPos)(Name.Anonymous()),
-                        Some(tpt),
-                        None
-                      )
-                    )
-                  )
-                case Lit.Unit() =>
-                  None
-                case other =>
-                  syntaxError(s"not a legal formal parameter", at = other)
-              }
-              def convertToParams(tree: Term): List[Term.Param] = tree match {
-                case Term.Tuple(ts) => ts.toList flatMap convertToParam
-                case _ => List(convertToParam(tree)).flatten
-              }
               val params = convertToParams(t)
               val trm =
                 if (location != BlockStat) expr()
@@ -1712,7 +1658,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                     case t => t
                   }
                 }
-
               if (contextFunction)
                 Term.ContextFunction(params, trm)
               else
@@ -1725,6 +1670,61 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         }
         t
     }))(location)
+  }
+
+  private def convertToParam(tree: Term): Option[Term.Param] = tree match {
+    case q: Quasi =>
+      Some(q.become[Term.Param])
+    case name: Term.Name =>
+      Some(copyPos(tree)(Term.Param(Nil, name, None, None)))
+    case name: Term.Placeholder =>
+      Some(
+        copyPos(tree)(
+          Term.Param(Nil, copyPos(name)(Name.Anonymous()), None, None)
+        )
+      )
+    case Term.Ascribe(quasiName: Term.Quasi, tpt) =>
+      val name = quasiName.become[Term.Name]
+      Some(copyPos(tree)(Term.Param(Nil, name, Some(tpt), None)))
+    case Term.Ascribe(name: Term.Name, tpt) =>
+      Some(copyPos(tree)(Term.Param(Nil, name, Some(tpt), None)))
+    case Term.Ascribe(name: Term.Placeholder, tpt) =>
+      Some(
+        copyPos(tree)(
+          Term.Param(Nil, copyPos(name)(Name.Anonymous()), Some(tpt), None)
+        )
+      )
+    case Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name) =>
+      Some(
+        copyPos(tree)(
+          Term.Param(List(copyPos(kwUsing)(Mod.Using())), name, None, None)
+        )
+      )
+    case Term.Ascribe(Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name), tpt) =>
+      Some(
+        copyPos(tree)(
+          Term.Param(List(copyPos(kwUsing)(Mod.Using())), name, Some(tpt), None)
+        )
+      )
+    case Term.Ascribe(eta @ Term.Eta(kwUsing @ Term.Name(soft.KwUsing.name)), tpt) =>
+      Some(
+        copyPos(tree)(
+          Term.Param(
+            List(atPos(kwUsing.endTokenPos)(Mod.Using())),
+            atPos(eta.endTokenPos)(Name.Anonymous()),
+            Some(tpt),
+            None
+          )
+        )
+      )
+    case Lit.Unit() =>
+      None
+    case other =>
+      syntaxError(s"not a legal formal parameter", at = other)
+  }
+  private def convertToParams(tree: Term): List[Term.Param] = tree match {
+    case Term.Tuple(ts) => ts.toList flatMap convertToParam
+    case _ => List(convertToParam(tree)).flatten
   }
 
   def implicitClosure(location: Location): Term.Function = {
@@ -2149,10 +2149,37 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           }
         }
         simpleExprRest(arguments, canApply = true, startPos = startPos)
-      case _: Colon if allowFewerBraces =>
+      case _: Colon if canApply && allowFewerBraces =>
+        val isEol = isEolAfterColon(token)
         next()
-        in.observeIndented()
-        val args = blockExpr(allowRepeated = false)
+        // map:
+        val args = if (isEol) {
+          in.observeIndented()
+          blockExpr(allowRepeated = false)
+        } else {
+          /**
+           * We need to handle param and then open indented region, otherwise only the block will be
+           * handles and any `.` will be accepted into the block:
+           * ```
+           * .map: a =>
+           *   a+1
+           * .filter: x =>
+           *   x > 2
+           * ```
+           * Witout manual handling here, filter would be included for `(a+1).filter`
+           */
+          val param = simpleExpr(allowRepeated = false)
+          val contextFunction = token.is[ContextArrow]
+          next()
+          val trm = blockExpr(allowRepeated = false)
+          addPos {
+            val params = convertToParams(param)
+            if (contextFunction)
+              Term.ContextFunction(params, trm)
+            else
+              Term.Function(params, trm)
+          }
+        }
         val arguments = addPos { Term.Apply(t, List(args)) }
         simpleExprRest(arguments, canApply = true, startPos = startPos)
       case Underscore() =>

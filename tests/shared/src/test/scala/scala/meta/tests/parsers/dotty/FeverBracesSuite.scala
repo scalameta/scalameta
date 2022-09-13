@@ -349,4 +349,49 @@ class FeverBracesSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("chain") {
+    runTestAssert[Stat](
+      """|val a: Int = xs
+         |    .map: x =>
+         |      x * x
+         |    .filter: (y: Int) =>
+         |      y > 0
+         |    (0)
+         |""".stripMargin,
+      assertLayout = Some(
+        """|val a: Int = xs.map(x => x * x).filter((y: Int) => y > 0)(0)
+           |""".stripMargin
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("a"))),
+        Some(Type.Name("Int")),
+        Term.Apply(
+          Term.Apply(
+            Term.Select(
+              Term.Apply(
+                Term.Select(Term.Name("xs"), Term.Name("map")),
+                List(
+                  Term.Function(
+                    List(Term.Param(Nil, Term.Name("x"), None, None)),
+                    Term.ApplyInfix(Term.Name("x"), Term.Name("*"), Nil, List(Term.Name("x")))
+                  )
+                )
+              ),
+              Term.Name("filter")
+            ),
+            List(
+              Term.Function(
+                List(Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None)),
+                Term.ApplyInfix(Term.Name("y"), Term.Name(">"), Nil, List(Lit.Int(0)))
+              )
+            )
+          ),
+          List(Lit.Int(0))
+        )
+      )
+    )
+  }
 }
