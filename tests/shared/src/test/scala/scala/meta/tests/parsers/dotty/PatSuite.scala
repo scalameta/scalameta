@@ -1,18 +1,21 @@
 package scala.meta.tests.parsers.dotty
 
+import org.scalameta.invariants.InvariantFailedException
+
 import scala.meta._, Pat._
-import scala.meta.dialects.Scala3
 import scala.meta.tests.parsers.ParseSuite
 
 class PatSuite extends ParseSuite {
 
-  private def assertPat(expr: String)(tree: Tree): Unit = {
+  private def assertPat(expr: String)(tree: Tree)(implicit dialect: Dialect): Unit = {
     assertTree(pat(expr))(tree)
   }
 
-  private def assertPatTyp(expr: String)(tree: Tree): Unit = {
+  private def assertPatTyp(expr: String)(tree: Tree)(implicit dialect: Dialect): Unit = {
     assertTree(patternTyp(expr))(tree)
   }
+
+  import scala.meta.dialects.Scala3
 
   test("_") {
     val Wildcard() = pat("_")
@@ -51,6 +54,16 @@ class PatSuite extends ParseSuite {
     assertPat("_: F[_]") {
       Typed(
         Wildcard(),
+        Type.Apply(Type.Name("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
+      )
+    }
+  }
+
+  test("_: F[_]") {
+    implicit val Scala3 = dialects.Scala31
+    assertPat("_: F[_]") {
+      Pat.Typed(
+        Pat.Wildcard(),
         Type.Apply(Type.Name("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
       )
     }
@@ -206,6 +219,19 @@ class PatSuite extends ParseSuite {
   test("<a>{ns @ _*}</a>") {
     val Pat.Xml(List(Lit("<a>"), Lit("</a>")), List(Bind(Var(Term.Name("ns")), SeqWildcard()))) =
       pat("<a>{ns @ _*}</a>")
+  }
+
+  test("a: _") {
+    val err = intercept[InvariantFailedException](pat("a: _")).getMessage
+    assert(err.contains("found that rhs match {"), err)
+    assert(err.contains("} is false"), err)
+  }
+
+  test("a: _ scala31") {
+    implicit val Scala3 = dialects.Scala31
+    val err = intercept[InvariantFailedException](pat("a: _")).getMessage
+    assert(err.contains("found that rhs match {"), err)
+    assert(err.contains("} is false"), err)
   }
 
 }

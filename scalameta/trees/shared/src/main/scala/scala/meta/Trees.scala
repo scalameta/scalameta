@@ -303,7 +303,10 @@ object Pat {
     checkFields(parts.length == args.length + 1)
   }
   @ast class Typed(lhs: Pat, rhs: Type) extends Pat {
-    checkFields(!rhs.is[Type.Var] && !rhs.is[Type.Placeholder])
+    checkFields(rhs match {
+      case _: Type.Var | _: Type.Placeholder => false
+      case _ => true
+    })
   }
   @ast class Macro(body: Term) extends Pat {
     checkFields(body.is[Term.QuotedMacroExpr] || body.is[Term.QuotedMacroType])

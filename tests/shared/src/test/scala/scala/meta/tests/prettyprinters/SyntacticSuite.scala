@@ -2,7 +2,6 @@ package scala.meta.tests
 package prettyprinters
 
 import scala.meta._
-import scala.meta.dialects.Scala211
 import scala.meta.internal.tokens._
 import scala.meta.internal.trees._
 import scala.meta.prettyprinters.Show
@@ -31,6 +30,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       tree.transform { case tree: Tree => tree.withOrigin(Origin.None) }.asInstanceOf[T]
     }
   }
+
+  import scala.meta.dialects.Scala211
 
   test("val x: Int (raw)") {
     val tree = templStat("val x: Int")
@@ -736,6 +737,30 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       )
     )
     assertEquals(tree.syntax, "List[_](xs @ _*)")
+  }
+
+  test("case List[_](xs @ _*): scala31") {
+    implicit val Scala211 = dialects.Scala31
+    val tree = pat("List[_](xs @ _*)")
+    assertTree(tree)(
+      Pat.Extract(
+        Term.ApplyType(Term.Name("List"), List(Type.Placeholder(Type.Bounds(None, None)))),
+        List(Pat.Bind(Pat.Var(Term.Name("xs")), Pat.SeqWildcard()))
+      )
+    )
+    assertEquals(tree.syntax, "List[_](xs @ _*)")
+  }
+
+  test("case List[_](xs @ _*): scala32") {
+    implicit val Scala211 = dialects.Scala32
+    val tree = pat("List[_](xs @ _*)")
+    assertTree(tree)(
+      Pat.Extract(
+        Term.ApplyType(Term.Name("List"), List(Type.Placeholder(Type.Bounds(None, None)))),
+        List(Pat.Bind(Pat.Var(Term.Name("xs")), Pat.SeqWildcard()))
+      )
+    )
+    assertEquals(tree.syntax, "List[?](xs @ _*)")
   }
 
   test("package foo; class C; package baz { class D }") {

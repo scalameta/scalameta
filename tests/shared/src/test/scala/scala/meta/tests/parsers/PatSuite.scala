@@ -34,16 +34,8 @@ class PatSuite extends ParseSuite {
 
   test("a: _") {
     val err = intercept[InvariantFailedException](pat("a: _")).getMessage
-    assert(
-      err.contains(
-        """found that scala.meta.classifiers.`package`.XtensionClassifiable[scala.meta.Type](rhs)(
-          |  scala.meta.Tree.classifiable[scala.meta.Type]
-          |).is[Type.Placeholder](
-          |  Type.this.Placeholder.ClassifierClass[scala.meta.Type]
-          |).`unary_!` is true""".stripMargin.replaceAll("\n *", "")
-      ),
-      err
-    )
+    assert(err.contains("found that rhs match {"), err)
+    assert(err.contains("} is false"), err)
   }
 
   test("a: Int") {

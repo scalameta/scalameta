@@ -2,8 +2,6 @@ package scala.meta.tests.parsers.dotty
 
 import scala.meta.tests.parsers._
 import scala.meta._
-import scala.meta.Type.Apply
-import scala.meta.Type.Placeholder
 
 class InfixSuite extends BaseDottySuite {
 
