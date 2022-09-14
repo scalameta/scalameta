@@ -881,9 +881,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def compoundTypeRest(typ: Type): Type = {
       val startPos = typ.startTokenPos
       var t = typ
-      while (acceptOpt[KwWith]) {
+      // Indentation means a refinement and we cannot join refinements this way
+      while (acceptOpt[KwWith] && !token.is[Indentation.Indent]) {
         val rhs = annotType()
         t = atPos(startPos, rhs)(Type.With(t, rhs))
+      }
+      token match {
+        case Indentation.Indent() =>
+          t = autoPos(Type.Refine(Some(t), indented(refineStatSeq())))
+        case _ =>
       }
       if (isAfterOptNewLine[LeftBrace]) refinement(innerType = Some(t))
       else t
@@ -4211,7 +4217,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def refineStatSeq(): List[Stat] = listBy[Stat] { stats =>
     while (!token.is[StatSeqEnd]) {
       refineStat().foreach(stats += _)
-      if (token.isNot[RightBrace]) acceptStatSep()
+      if (token.isNot[RightBrace] && token.isNot[Indentation.Outdent]) acceptStatSep()
     }
   }
 
