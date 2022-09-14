@@ -141,7 +141,7 @@ class CommunityDottySuite extends FunSuite {
     val isScala3 =
       if (build.isScala3) !absPathString.contains("/scala-2")
       else absPathString.contains("/scala-3")
-    implicit val dialect: Dialect = if (isScala3) dialects.Scala3 else dialects.Scala213
+    implicit val dialect: Dialect = if (isScala3) dialects.Scala31 else dialects.Scala213
     val lines = fileContent.chars.count(_ == '\n')
     if (excluded(absPathString, build)) {
       try {

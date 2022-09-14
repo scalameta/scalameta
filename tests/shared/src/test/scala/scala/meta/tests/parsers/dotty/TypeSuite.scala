@@ -4,15 +4,16 @@ import scala.meta._
 import Term.{Super, Name => TermName}
 import Type.{Name => TypeName, _}
 import Name.Anonymous
-import scala.meta.dialects.Scala3
 import scala.meta.parsers.ParseException
 import scala.meta.tests.parsers.ParseSuite
 
 class TypeSuite extends ParseSuite {
 
-  private def assertTpe(expr: String)(tree: Tree): Unit = {
+  private def assertTpe(expr: String)(tree: Tree)(implicit dialect: Dialect): Unit = {
     assertTree(tpe(expr))(tree)
   }
+
+  import scala.meta.dialects.Scala3
 
   test("T") {
     val TypeName("T") = tpe("T")
@@ -141,13 +142,21 @@ class TypeSuite extends ParseSuite {
   }
 
   test("F[?]") {
-    assertTpe("F[?]") {
+    implicit val Scala3: Dialect = scala.meta.dialects.Scala31
+    val expected =
       Apply(TypeName("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
-    }
+    assertTpe("F[?]") { expected }
+    assertTpe("F[_]") { expected }
   }
 
   test("F[_]") {
     assertTpe("F[_]") {
+      Apply(TypeName("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
+    }
+    assertTpe("F[+_]") {
+      Apply(TypeName("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
+    }
+    assertTpe("F[-_]") {
       Apply(TypeName("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
     }
   }
