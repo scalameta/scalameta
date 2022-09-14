@@ -518,6 +518,7 @@ object Ctor {
 
 @branch trait Mod extends Tree
 object Mod {
+  @branch trait Variant extends Mod
   @ast class Annot(init: Init) extends Mod {
     @deprecated("Use init instead", "1.9.0")
     def body = init
@@ -537,8 +538,8 @@ object Mod {
   @ast class Override() extends Mod
   @ast class Case() extends Mod
   @ast class Abstract() extends Mod
-  @ast class Covariant() extends Mod
-  @ast class Contravariant() extends Mod
+  @ast class Covariant() extends Variant
+  @ast class Contravariant() extends Variant
   @ast class Lazy() extends Mod
   @ast class ValParam() extends Mod
   @ast class VarParam() extends Mod

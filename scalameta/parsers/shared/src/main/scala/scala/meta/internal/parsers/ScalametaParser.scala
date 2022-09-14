@@ -2824,8 +2824,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case t: Unquote =>
         if (ahead(token.is[Ident] || token.is[Unquote])) Some(unquote[Mod](t)) else None
       case t: Ellipsis => Some(ellipsis[Mod](t, 1))
-      case Ident("+") => Some(autoPos({ next(); Mod.Covariant() }))
-      case Ident("-") => Some(autoPos({ next(); Mod.Contravariant() }))
+      case Ident("+") => Some(atCurPosNext(Mod.Covariant()))
+      case Ident("-") => Some(atCurPosNext(Mod.Contravariant()))
       case _ => None
     }
   }

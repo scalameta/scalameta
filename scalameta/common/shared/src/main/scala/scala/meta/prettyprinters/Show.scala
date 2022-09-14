@@ -116,6 +116,10 @@ object Show {
     if (!cond || (result eq None)) result else Sequence(prefix, result, suffix)
   }
 
+  def opt[T](x: Option[T])(implicit show: Show[T]): Result = x.fold[Result](None)(show(_))
+  def opt[T](x: Option[T], suffix: String)(implicit show: Show[T]): Result =
+    x.fold[Result](None)(x => Sequence(show(x), suffix))
+
   def function(fn: StringBuilder => Result): Result = Function(fn)
 
   implicit def printResult[R <: Result]: Show[R] = apply(identity)

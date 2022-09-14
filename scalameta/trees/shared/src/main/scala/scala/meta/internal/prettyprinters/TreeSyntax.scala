@@ -11,6 +11,7 @@ import Show.{
   newline => n,
   meta => m,
   wrap => w,
+  opt => o,
   function => fn
 }
 import scala.meta.internal.trees.{root => _, branch => _, _}
@@ -711,11 +712,10 @@ object TreeSyntax {
       case t: Type.Var => m(SimpleTyp, s(t.name.value))
       case t: Type.TypedParam => m(SimpleTyp, s(t.name.value), ": ", p(Typ, t.typ))
       case t: Type.Param =>
-        val mods = t.mods.filter(m => !m.is[Mod.Covariant] && !m.is[Mod.Contravariant])
+        def isVariant(m: Mod) = m.is[Mod.Variant]
+        val mods = t.mods.filterNot(isVariant)
         require(t.mods.length - mods.length <= 1)
-        val variance = t.mods.foldLeft("")((curr, m) =>
-          if (m.is[Mod.Covariant]) "+" else if (m.is[Mod.Contravariant]) "-" else curr
-        )
+        val variance = o(t.mods.find(isVariant))
         val tbounds = s(t.tbounds)
         val vbounds = {
           if (t.vbounds.nonEmpty && !dialect.allowViewBounds)
