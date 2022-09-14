@@ -1561,7 +1561,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val arguments = addPos { Term.Apply(t, List(args)) }
           t = simpleExprRest(arguments, canApply = true, startPos = startPos)
         } else if (acceptOpt[Colon]) {
-
           if (token.is[At] || (token.is[Ellipsis] && ahead(token.is[At]))) {
             t = addPos(Term.Annotate(t, annots(skipNewLines = false)))
           } else if (token.is[Underscore] && ahead(isStar)) {
@@ -1723,8 +1722,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       syntaxError(s"not a legal formal parameter", at = other)
   }
   private def convertToParams(tree: Term): List[Term.Param] = tree match {
-    case Term.Tuple(ts) => ts.toList flatMap convertToParam
-    case _ => List(convertToParam(tree)).flatten
+    case Term.Tuple(ts) => ts.flatMap(convertToParam)
+    case _ => convertToParam(tree).toList
   }
 
   def implicitClosure(location: Location): Term.Function = {
@@ -2157,6 +2156,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           in.observeIndented()
           blockExpr(allowRepeated = false)
         } else {
+
           /**
            * We need to handle param and then open indented region, otherwise only the block will be
            * handles and any `.` will be accepted into the block:

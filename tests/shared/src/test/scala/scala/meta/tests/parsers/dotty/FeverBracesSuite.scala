@@ -52,6 +52,27 @@ class FeverBracesSuite extends BaseDottySuite {
       )
     )
   }
+  test("simple-comment") {
+    runTestAssert[Stat](
+      """|val firstLine = map: /*
+         |    line
+         |    line */
+         |   indentedCode
+         |
+         |""".stripMargin,
+      assertLayout = Some(
+        """|val firstLine = map(indentedCode)
+           |""".stripMargin
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("firstLine"))),
+        None,
+        Term.Apply(Term.Name("map"), List(Term.Name("indentedCode")))
+      )
+    )
+  }
 
   test("simple-same-line") {
     runTestAssert[Stat](
@@ -392,6 +413,161 @@ class FeverBracesSuite extends BaseDottySuite {
           List(Lit.Int(0))
         )
       )
+    )
+  }
+
+  test("no-self-type") {
+    runTestAssert[Stat](
+      """|class C:
+         |  f:
+         |    22
+         |""".stripMargin,
+      assertLayout = Some(
+        """|class C { f(22) }
+           |""".stripMargin
+      )
+    )(
+      Defn.Class(
+        Nil,
+        Type.Name("C"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(Term.Apply(Term.Name("f"), List(Lit.Int(22)))),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("no-indent") {
+    runTestAssert[Stat](
+      """| xs.map:
+         |  x =>
+         |  x
+         | .filter:
+         |  x =>
+         |  x
+         |""".stripMargin,
+      assertLayout = Some(
+        """|xs.map(x => x).filter(x => x)
+           |""".stripMargin
+      )
+    )(
+      Term.Apply(
+        Term.Select(
+          Term.Apply(
+            Term.Select(Term.Name("xs"), Term.Name("map")),
+            List(Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x")))
+          ),
+          Term.Name("filter")
+        ),
+        List(Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x")))
+      )
+    )
+  }
+
+  test("if-braceless") {
+    runTestAssert[Stat](
+      """|if
+         |    arr.isEmpty
+         |    || locally:
+         |      val first = arr(0)
+         |      first != 1
+         |  then println("invalid arr")
+         |""".stripMargin,
+      assertLayout = Some(
+        """|if (arr.isEmpty || locally {
+           |  val first = arr(0)
+           |  first != 1
+           |}) println("invalid arr")
+           |""".stripMargin
+      )
+    )(
+      Term.If(
+        Term.ApplyInfix(
+          Term.Select(Term.Name("arr"), Term.Name("isEmpty")),
+          Term.Name("||"),
+          Nil,
+          List(
+            Term.Apply(
+              Term.Name("locally"),
+              List(
+                Term.Block(
+                  List(
+                    Defn.Val(
+                      Nil,
+                      List(Pat.Var(Term.Name("first"))),
+                      None,
+                      Term.Apply(Term.Name("arr"), List(Lit.Int(0)))
+                    ),
+                    Term.ApplyInfix(Term.Name("first"), Term.Name("!="), Nil, List(Lit.Int(1)))
+                  )
+                )
+              )
+            )
+          )
+        ),
+        Term.Apply(Term.Name("println"), List(Lit.String("invalid arr"))),
+        Lit.Unit(),
+        Nil
+      )
+    )
+  }
+  // Cannot chain any braceless lambdas without `.`
+  test("chain-infix") {
+    runTestAssert[Stat](
+      """|def test24 =
+         |  x < y or
+         |    x > y
+         |  `or`:
+         |    x == y
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def test24 = {
+           |  x < y or x > y
+           |  or(x == y)
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("test24"),
+        Nil,
+        Nil,
+        None,
+        Term.Block(
+          List(
+            Term.ApplyInfix(
+              Term.ApplyInfix(Term.Name("x"), Term.Name("<"), Nil, List(Term.Name("y"))),
+              Term.Name("or"),
+              Nil,
+              List(Term.ApplyInfix(Term.Name("x"), Term.Name(">"), Nil, List(Term.Name("y"))))
+            ),
+            Term.Apply(
+              Term.Name("or"),
+              List(Term.ApplyInfix(Term.Name("x"), Term.Name("=="), Nil, List(Term.Name("y"))))
+            )
+          )
+        )
+      )
+    )
+  }
+
+  // Infix chains don't allow to continue with a .
+  test("chain-infix-error") {
+    runTestError[Stat](
+      """|val a: Int = xs map: x =>
+         |      x * x
+         |    .filter: (y: Int) =>
+         |      y > 0
+         |    (0)
+         |""".stripMargin,
+      "error: ; expected but . found"
     )
   }
 }
