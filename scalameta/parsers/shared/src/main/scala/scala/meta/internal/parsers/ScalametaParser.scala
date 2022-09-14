@@ -153,6 +153,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   /* ------------- TOKEN STREAM HELPERS -------------------------------------------- */
 
   def isColonEol(token: Token): Boolean = {
+    token.is[Colon] && isEolAfterColon(token)
+  }
+
+  def isEolAfterColon(token: Token): Boolean = {
 
     @tailrec
     def isNextEOL(t: Token): Boolean = {
@@ -163,7 +167,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     }
 
-    dialect.allowSignificantIndentation && token.is[Colon] && isNextEOL(token)
+    dialect.allowSignificantIndentation && isNextEOL(token)
   }
 
   /* ------------- PARSER-SPECIFIC TOKENS -------------------------------------------- */
@@ -1550,6 +1554,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               t = addPos(Term.Assign(t, expr(location = NoStat, allowRepeated = true)))
             case _ =>
           }
+        } else if (token.is[Colon] && allowFewerBraces) {
+          next()
+          in.observeIndented()
+          val args = blockExpr(allowRepeated = false)
+          val arguments = addPos { Term.Apply(t, List(args)) }
+          t = simpleExprRest(arguments, canApply = true, startPos = startPos)
         } else if (acceptOpt[Colon]) {
           if (token.is[At] || (token.is[Ellipsis] && ahead(token.is[At]))) {
             t = addPos(Term.Annotate(t, annots(skipNewLines = false)))
@@ -1637,60 +1647,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             val contextFunction = token.is[ContextArrow]
             next()
             t = addPos {
-              def convertToParam(tree: Term): Option[Term.Param] = tree match {
-                case q: Quasi =>
-                  Some(q.become[Term.Param])
-                case name: Term.Name =>
-                  Some(copyPos(tree)(Term.Param(Nil, name, None, None)))
-                case name: Term.Placeholder =>
-                  Some(
-                    copyPos(tree)(
-                      Term.Param(Nil, copyPos(name)(Name.Anonymous()), None, None)
-                    )
-                  )
-                case Term.Ascribe(quasiName: Term.Quasi, tpt) =>
-                  val name = quasiName.become[Term.Name]
-                  Some(copyPos(tree)(Term.Param(Nil, name, Some(tpt), None)))
-                case Term.Ascribe(name: Term.Name, tpt) =>
-                  Some(copyPos(tree)(Term.Param(Nil, name, Some(tpt), None)))
-                case Term.Ascribe(name: Term.Placeholder, tpt) =>
-                  Some(
-                    copyPos(tree)(
-                      Term.Param(Nil, copyPos(name)(Name.Anonymous()), Some(tpt), None)
-                    )
-                  )
-                case Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name) =>
-                  Some(
-                    copyPos(tree)(
-                      Term.Param(List(copyPos(kwUsing)(Mod.Using())), name, None, None)
-                    )
-                  )
-                case Term.Ascribe(Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name), tpt) =>
-                  Some(
-                    copyPos(tree)(
-                      Term.Param(List(copyPos(kwUsing)(Mod.Using())), name, Some(tpt), None)
-                    )
-                  )
-                case Term.Ascribe(eta @ Term.Eta(kwUsing @ Term.Name(soft.KwUsing.name)), tpt) =>
-                  Some(
-                    copyPos(tree)(
-                      Term.Param(
-                        List(atPos(kwUsing.endTokenPos)(Mod.Using())),
-                        atPos(eta.endTokenPos)(Name.Anonymous()),
-                        Some(tpt),
-                        None
-                      )
-                    )
-                  )
-                case Lit.Unit() =>
-                  None
-                case other =>
-                  syntaxError(s"not a legal formal parameter", at = other)
-              }
-              def convertToParams(tree: Term): List[Term.Param] = tree match {
-                case Term.Tuple(ts) => ts.toList flatMap convertToParam
-                case _ => List(convertToParam(tree)).flatten
-              }
               val params = convertToParams(t)
               val trm =
                 if (location != BlockStat) expr()
@@ -1701,7 +1657,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                     case t => t
                   }
                 }
-
               if (contextFunction)
                 Term.ContextFunction(params, trm)
               else
@@ -1714,6 +1669,61 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         }
         t
     }))(location)
+  }
+
+  private def convertToParam(tree: Term): Option[Term.Param] = tree match {
+    case q: Quasi =>
+      Some(q.become[Term.Param])
+    case name: Term.Name =>
+      Some(copyPos(tree)(Term.Param(Nil, name, None, None)))
+    case name: Term.Placeholder =>
+      Some(
+        copyPos(tree)(
+          Term.Param(Nil, copyPos(name)(Name.Anonymous()), None, None)
+        )
+      )
+    case Term.Ascribe(quasiName: Term.Quasi, tpt) =>
+      val name = quasiName.become[Term.Name]
+      Some(copyPos(tree)(Term.Param(Nil, name, Some(tpt), None)))
+    case Term.Ascribe(name: Term.Name, tpt) =>
+      Some(copyPos(tree)(Term.Param(Nil, name, Some(tpt), None)))
+    case Term.Ascribe(name: Term.Placeholder, tpt) =>
+      Some(
+        copyPos(tree)(
+          Term.Param(Nil, copyPos(name)(Name.Anonymous()), Some(tpt), None)
+        )
+      )
+    case Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name) =>
+      Some(
+        copyPos(tree)(
+          Term.Param(List(copyPos(kwUsing)(Mod.Using())), name, None, None)
+        )
+      )
+    case Term.Ascribe(Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name), tpt) =>
+      Some(
+        copyPos(tree)(
+          Term.Param(List(copyPos(kwUsing)(Mod.Using())), name, Some(tpt), None)
+        )
+      )
+    case Term.Ascribe(eta @ Term.Eta(kwUsing @ Term.Name(soft.KwUsing.name)), tpt) =>
+      Some(
+        copyPos(tree)(
+          Term.Param(
+            List(atPos(kwUsing.endTokenPos)(Mod.Using())),
+            atPos(eta.endTokenPos)(Name.Anonymous()),
+            Some(tpt),
+            None
+          )
+        )
+      )
+    case Lit.Unit() =>
+      None
+    case other =>
+      syntaxError(s"not a legal formal parameter", at = other)
+  }
+  private def convertToParams(tree: Term): List[Term.Param] = tree match {
+    case Term.Tuple(ts) => ts.flatMap(convertToParam)
+    case _ => convertToParam(tree).toList
   }
 
   def implicitClosure(location: Location): Term.Function = {
@@ -2138,11 +2148,86 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           }
         }
         simpleExprRest(arguments, canApply = true, startPos = startPos)
+      case _: Colon if canApply && allowFewerBraces =>
+        val isEol = isEolAfterColon(token)
+        next()
+        // map:
+        val args = if (isEol) {
+          in.observeIndented()
+          blockExpr(allowRepeated = false)
+        } else {
+
+          /**
+           * We need to handle param and then open indented region, otherwise only the block will be
+           * handles and any `.` will be accepted into the block:
+           * ```
+           * .map: a =>
+           *   a+1
+           * .filter: x =>
+           *   x > 2
+           * ```
+           * Without manual handling here, filter would be included for `(a+1).filter`
+           */
+          val param = simpleExpr(allowRepeated = false)
+          val contextFunction = token.is[ContextArrow]
+          next()
+          val trm = blockExpr(allowRepeated = false)
+          addPos {
+            val params = convertToParams(param)
+            if (contextFunction)
+              Term.ContextFunction(params, trm)
+            else
+              Term.Function(params, trm)
+          }
+        }
+        val arguments = addPos { Term.Apply(t, List(args)) }
+        simpleExprRest(arguments, canApply = true, startPos = startPos)
       case Underscore() =>
         next()
         addPos(Term.Eta(t))
       case _ =>
         addPos(t)
+    }
+  }
+
+  private def allowFewerBraces: Boolean =
+    dialect.allowFewerBraces && (isEolAfterColon(token) || followingIsLambdaAfterColon())
+
+  private def followingIsLambdaAfterColon(): Boolean = {
+
+    /**
+     * Skip matching pairs of `(...)` or `[...]` parentheses.
+     * @pre
+     *   The current token is `(` or `[`
+     */
+    def skipParens[T1: TokenClassifier, T2: TokenClassifier]: Boolean = {
+      // starts on left delimiter
+      @tailrec
+      def iter(nest: Int): Boolean = {
+        next()
+        if (token.is[EOF]) false
+        else if (token.is[T2]) nest == 0 || iter(nest - 1)
+        else if (token.is[T1]) iter(nest + 1)
+        else iter(nest)
+      }
+      // stops on right delimiter (true), or end (false)
+      iter(0)
+    }
+
+    ahead {
+      val okParams = token match {
+        case _: Ident | _: Underscore => true
+        case _: LeftParen => skipParens[LeftParen, RightParen]
+        case _: LeftBracket => skipParens[LeftBracket, RightBracket]
+        case _ => false
+      }
+      okParams && {
+        next()
+        token.is[RightArrow] || token.is[ContextArrow]
+      } && {
+        next()
+        token.is[Indentation.Indent]
+      }
     }
   }
 

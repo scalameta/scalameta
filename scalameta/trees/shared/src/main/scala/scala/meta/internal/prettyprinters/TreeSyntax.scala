@@ -1140,7 +1140,8 @@ object TreeSyntax {
     // Multiples and optionals
     implicit def syntaxArgs: Syntax[List[Term]] = Syntax {
       case (b: Term.Block) :: Nil => s(" ", b)
-      case (f @ Term.Function(params, _)) :: Nil if !params.exists(_.decltpe.isEmpty) =>
+      case (f @ Term.Function(params, _)) :: Nil
+          if params.exists(_.mods.exists(m => m.is[Mod.Implicit] || m.is[Mod.Using])) =>
         s(" { ", f, " }")
       case args => s("(", r(args, ", "), ")")
     }
