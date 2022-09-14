@@ -2166,7 +2166,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
            * .filter: x =>
            *   x > 2
            * ```
-           * Witout manual handling here, filter would be included for `(a+1).filter`
+           * Without manual handling here, filter would be included for `(a+1).filter`
            */
           val param = simpleExpr(allowRepeated = false)
           val contextFunction = token.is[ContextArrow]
