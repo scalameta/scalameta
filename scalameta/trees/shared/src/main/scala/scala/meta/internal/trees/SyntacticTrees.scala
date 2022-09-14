@@ -2,24 +2,29 @@ package scala.meta
 package internal
 package trees
 
+import scala.annotation.tailrec
+
 // NOTE: Brings up great memories of thousands of lines of SyntacticXXX in scala.reflect.
 // It looks like we can't completely get away from this unsatisfying pattern even in scala.meta.
 // See #277 and #405 for details.
 object Syntactic {
-  object Term {
-    object Apply {
-      def apply(fun: scala.meta.Term, argss: List[List[scala.meta.Term]]): scala.meta.Term = {
-        argss.foldLeft(fun)((curr, args) => scala.meta.Term.Apply(curr, args))
-      }
+  object TermApply {
+    object ArgListList {
+      def apply(fun: Term, argss: List[List[Term]]): Term =
+        argss.foldLeft(fun)((curr, args) => Term.Apply(curr, args))
 
-      def unapply(tree: scala.meta.Tree): Option[(scala.meta.Term, List[List[scala.meta.Term]])] = {
+      def unapply(tree: Tree): Option[(Term, List[List[Term]])] =
         tree match {
-          case scala.meta.Term.Apply(Syntactic.Term.Apply(core, argss), args) =>
-            Some((core, argss :+ args))
-          case tree: scala.meta.Term => Some((tree, Nil))
+          case term: Term => Some(unapplyImpl(term, Nil))
           case _ => None
         }
-      }
+
+      @tailrec
+      private final def unapplyImpl(tree: Term, prev: List[List[Term]]): (Term, List[List[Term]]) =
+        tree match {
+          case Term.Apply(fun, args) => unapplyImpl(fun, args :: prev)
+          case _ => (tree, prev)
+        }
     }
   }
 }
