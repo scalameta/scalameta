@@ -430,6 +430,32 @@ class SuccessSuite extends TreeSuiteBase {
     )
   }
 
+  test("1 q\"expr(..exprs)(..exprs) = expr\"") {
+    val q"$expr1(..$exprs1)(..$exprs2) = $expr2" = q"foo(a, b)(c) = bar"
+    assertTree(expr1)(Term.Name("foo"))
+    assertEquals(exprs1.toString, "List(a, b)")
+    assertEquals(exprs2.toString, "List(c)")
+    assertTrees(exprs1: _*)(Term.Name("a"), Term.Name("b"))
+    assertTrees(exprs2: _*)(Term.Name("c"))
+    assertTree(expr2)(Term.Name("bar"))
+  }
+
+  test("2 q\"expr(..exprs)(..exprs) = expr\"") {
+    val expr1 = q"foo"
+    val exprs1 = List(q"a", q"b")
+    val exprs2 = List(q"c")
+    val expr2 = q"bar"
+    assertTree(q"$expr1(..$exprs1)(..$exprs2) = $expr2")(
+      Term.Assign(
+        Term.Apply(
+          Term.Apply(Term.Name("foo"), List(Term.Name("a"), Term.Name("b"))),
+          List(Term.Name("c"))
+        ),
+        Term.Name("bar")
+      )
+    )
+  }
+
   test("1 q\"(x, y: Int)\"") {
     val q"($x, y: Int)" = q"(x: X, y: Int)"
     assertTree(x)(Term.Ascribe(Term.Name("x"), Type.Name("X")))
