@@ -2,7 +2,7 @@ package scala.meta.internal.trees
 
 import scala.annotation.tailrec
 import scala.collection.mutable
-import scala.meta.{Term, Tree}
+import scala.meta.{Init, Term, Tree}
 
 object PlaceholderChecks {
 
@@ -23,9 +23,11 @@ object PlaceholderChecks {
     @tailrec
     def iter: Boolean =
       queue.dequeue() match {
+        case _: Quasi => queue.nonEmpty && iter
         case t if isPlaceholder(t) => t.ne(tree) || includeArg
         case t: Term.Select => queue += t.qual; iter
-        case t: Term.Tuple => t.args.exists(isPlaceholder)
+        case t: Term.Tuple => t.args.exists(isPlaceholder) || queue.nonEmpty && iter
+        case t: Init => t.argss.exists(_.exists(isPlaceholder)) || queue.nonEmpty && iter
         case t: Term.Apply =>
           isBlockPlaceholder(t.args) || t.args.exists(isPlaceholder) || { queue += t.fun; iter }
         case t: Term.ApplyInfix =>
