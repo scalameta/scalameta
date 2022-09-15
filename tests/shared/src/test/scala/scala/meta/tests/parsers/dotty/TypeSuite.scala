@@ -7,13 +7,173 @@ import Name.Anonymous
 import scala.meta.parsers.ParseException
 import scala.meta.tests.parsers.ParseSuite
 
-class TypeSuite extends ParseSuite {
+class TypeSuite extends BaseDottySuite {
 
   private def assertTpe(expr: String)(tree: Tree)(implicit dialect: Dialect): Unit = {
     assertTree(tpe(expr))(tree)
   }
 
   import scala.meta.dialects.Scala3
+
+  test("with-type") {
+    runTestAssert[Stat](
+      """|type A = AnyRef with
+         |  type T>: Null
+         |""".stripMargin,
+      assertLayout = Some("type A = AnyRef { type T >: Null }")
+    )(
+      Defn.Type(
+        Nil,
+        Type.Name("A"),
+        Nil,
+        Type.Refine(
+          Some(Type.Name("AnyRef")),
+          List(Decl.Type(Nil, Type.Name("T"), Nil, Type.Bounds(Some(Type.Name("Null")), None)))
+        ),
+        Type.Bounds(None, None)
+      )
+    )
+  }
+
+  test("with-type2") {
+    runTestAssert[Stat](
+      """|type A = AnyRef with Product with
+         |  type T>: Null
+         |""".stripMargin,
+      assertLayout = Some("type A = AnyRef with Product { type T >: Null }")
+    )(
+      Defn.Type(
+        Nil,
+        Type.Name("A"),
+        Nil,
+        Type.Refine(
+          Some(Type.With(Type.Name("AnyRef"), Type.Name("Product"))),
+          List(Decl.Type(Nil, Type.Name("T"), Nil, Type.Bounds(Some(Type.Name("Null")), None)))
+        ),
+        Type.Bounds(None, None)
+      )
+    )
+  }
+
+  test("with-type3") {
+    runTestAssert[Stat](
+      """|type A = Product with
+         |  type T>: Null
+         |  with
+         |    type D <: Product
+         |""".stripMargin,
+      assertLayout = Some("type A = Product { type T >: Null { type D <: Product } }")
+    )(
+      Defn.Type(
+        Nil,
+        Type.Name("A"),
+        Nil,
+        Type.Refine(
+          Some(Type.Name("Product")),
+          List(
+            Decl.Type(
+              Nil,
+              Type.Name("T"),
+              Nil,
+              Type.Bounds(
+                Some(
+                  Type.Refine(
+                    Some(Type.Name("Null")),
+                    List(
+                      Decl.Type(
+                        Nil,
+                        Type.Name("D"),
+                        Nil,
+                        Type.Bounds(None, Some(Type.Name("Product")))
+                      )
+                    )
+                  )
+                ),
+                None
+              )
+            )
+          )
+        ),
+        Type.Bounds(None, None)
+      )
+    )
+  }
+
+  test("with-type-error") {
+    runTestError[Stat](
+      """|type A = Product with
+         |  type T>: Null
+         | with
+         |    type D <: Product
+         |""".stripMargin,
+      "error: ; expected but with found"
+    )
+  }
+
+  test("with-indent-error") {
+
+    // latter type should be ignored despite indentation
+    runTestAssert[Stat](
+      """|type A = Product
+         |  type T>: Null
+         |""".stripMargin,
+      assertLayout = Some("type A = Product")
+    )(
+      Defn.Type(Nil, Type.Name("A"), Nil, Type.Name("Product"), Type.Bounds(None, None))
+    )
+  }
+
+  test("with-followed-by-brace-indent") {
+    runTestAssert[Stat](
+      """|type AA = String with Int with
+         |    type T>: Null
+         |      {
+         |        type T>: Int
+         |      }
+         |""".stripMargin,
+      assertLayout = Some("type AA = String with Int { type T >: Null { type T >: Int } }")
+    )(
+      Defn.Type(
+        Nil,
+        Type.Name("AA"),
+        Nil,
+        Type.Refine(
+          Some(Type.With(Type.Name("String"), Type.Name("Int"))),
+          List(
+            Decl.Type(
+              Nil,
+              Type.Name("T"),
+              Nil,
+              Type.Bounds(
+                Some(
+                  Type.Refine(
+                    Some(Type.Name("Null")),
+                    List(
+                      Decl.Type(Nil, Type.Name("T"), Nil, Type.Bounds(Some(Type.Name("Int")), None))
+                    )
+                  )
+                ),
+                None
+              )
+            )
+          )
+        ),
+        Type.Bounds(None, None)
+      )
+    )
+  }
+
+  test("with-followed-by-brace") {
+    runTestError[Stat](
+      """|type AA = String with Int with
+         |    type T>: Null
+         |{
+         |  type T>: Int
+         |}
+         |""".stripMargin,
+      "; expected but { found"
+    )
+  }
 
   test("T") {
     val TypeName("T") = tpe("T")

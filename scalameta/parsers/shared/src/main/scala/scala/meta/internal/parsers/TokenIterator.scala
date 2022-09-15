@@ -8,6 +8,7 @@ trait TokenIterator {
   def prevTokenPos: Int
   def tokenPos: Int
   def currentIndentation: Int
+  def previousIndentation: Int
   def token: Token
   def fork: TokenIterator
   def observeIndented(): Boolean

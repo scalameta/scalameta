@@ -180,6 +180,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     in.currentIndentation
   }
 
+  private def previousIndentation: Int = {
+    in.previousIndentation
+  }
+
   def token = in.token
   def next() = in.next()
   def nextTwice() = { next(); next() }
@@ -880,13 +884,35 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     def compoundTypeRest(typ: Type): Type = {
       val startPos = typ.startTokenPos
-      var t = typ
-      while (acceptOpt[KwWith]) {
-        val rhs = annotType()
-        t = atPos(startPos, rhs)(Type.With(t, rhs))
+
+      @tailrec
+      def gatherWithTypes(previousType: Type): Type = {
+        if (acceptOpt[KwWith]) {
+          /* Indentation means a refinement and we cannot join
+           * refinements this way so stop looping.
+           */
+          if (token.is[Indentation.Indent]) {
+            autoPos(Type.Refine(Some(previousType), indented(refineStatSeq())))
+          } else {
+            val rhs = annotType()
+            val t = autoEndPos(startPos)(Type.With(previousType, rhs))
+            gatherWithTypes(t)
+          }
+        } else {
+          previousType
+        }
       }
-      if (isAfterOptNewLine[LeftBrace]) refinement(innerType = Some(t))
-      else t
+
+      val t = gatherWithTypes(typ)
+      val wasLF = token.is[LF]
+
+      // the indentation needs to be higher than the containing one
+      def canAddBracesRefinement =
+        !dialect.allowSignificantIndentation || !wasLF || currentIndentation > previousIndentation
+
+      if (isAfterOptNewLine[LeftBrace] && canAddBracesRefinement) {
+        refinement(innerType = Some(t))
+      } else t
     }
 
     def annotType(): Type = annotTypeRest(simpleType())
@@ -4211,7 +4237,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def refineStatSeq(): List[Stat] = listBy[Stat] { stats =>
     while (!token.is[StatSeqEnd]) {
       refineStat().foreach(stats += _)
-      if (token.isNot[RightBrace]) acceptStatSep()
+      if (token.isNot[RightBrace] && token.isNot[Indentation.Outdent]) acceptStatSep()
     }
   }
 
