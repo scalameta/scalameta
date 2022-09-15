@@ -9,21 +9,29 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Type]("A | B")
   checkPositions[Type](
     "[X] =>> (X, X)",
-    """|Type.Bounds [X@@] =>> (X, X)
+    """|Type.ParamClause [X]
+       |Type.ParamClause [X@@] =>> (X, X)
+       |Type.Bounds [X@@] =>> (X, X)
        |Type.Tuple (X, X)
        |""".stripMargin
   )
   checkPositions[Type](
     "[_] =>> Unit",
-    """|Type.Param _
+    """|Type.ParamClause [_]
+       |Type.Param _
        |Name.Anonymous _
+       |Type.ParamClause [_@@] =>> Unit
        |Type.Bounds [_@@] =>> Unit
        |""".stripMargin
   )
-  checkPositions[Stat]("inline def f = 1")
+  checkPositions[Stat](
+    "inline def f = 1",
+    "Type.ParamClause inline def f @@= 1"
+  )
   checkPositions[Stat](
     "open trait a",
-    """|Ctor.Primary open trait a@@
+    """|Type.ParamClause open trait a@@
+       |Ctor.Primary open trait a@@
        |Template open trait a@@
        |Self open trait a@@
        |""".stripMargin
@@ -31,13 +39,17 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
 
   checkPositions[Stat](
     "extension [A, B](i: A)(using a: F[A], G[B]) def isZero = i == 0",
-    """|Type.Bounds extension [A@@, B](i: A)(using a: F[A], G[B]) def isZero = i == 0
+    """|Type.ParamClause [A, B]
+       |Type.ParamClause extension [A@@, B](i: A)(using a: F[A], G[B]) def isZero = i == 0
+       |Type.Bounds extension [A@@, B](i: A)(using a: F[A], G[B]) def isZero = i == 0
+       |Type.ParamClause extension [A, B@@](i: A)(using a: F[A], G[B]) def isZero = i == 0
        |Type.Bounds extension [A, B@@](i: A)(using a: F[A], G[B]) def isZero = i == 0
        |Term.Param a: F[A]
        |Type.Apply F[A]
        |Term.Param G[B]
        |Type.Apply G[B]
        |Defn.Def def isZero = i == 0
+       |Type.ParamClause extension [A, B](i: A)(using a: F[A], G[B]) def isZero @@= i == 0
        |Term.ApplyInfix i == 0
        |""".stripMargin
   )
@@ -47,13 +59,16 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  def isZero = i == 0
        |  def isOne = i == 1
        |}""".stripMargin,
-    """|Term.Block {
+    """|Type.ParamClause extension @@(i: A) {
+       |Term.Block {
        |  def isZero = i == 0
        |  def isOne = i == 1
        |}
        |Defn.Def def isZero = i == 0
+       |Type.ParamClause   def isZero @@= i == 0
        |Term.ApplyInfix i == 0
        |Defn.Def def isOne = i == 1
+       |Type.ParamClause   def isOne @@= i == 1
        |Term.ApplyInfix i == 1
        |""".stripMargin
   )
@@ -62,14 +77,17 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   // `Mod.Implicit` (test below) and `Mod.Using` (test above).
   checkPositions[Stat](
     "def foo(implicit a: A, b: B): Unit",
-    """|Term.Param a: A
+    """|Type.ParamClause def foo@@(implicit a: A, b: B): Unit
+       |Term.Param a: A
        |Term.Param b: B
        |""".stripMargin
   )
 
   checkPositions[Stat](
     "enum Day[T](e: T) extends A with B { case Monday, Tuesday }",
-    """|Type.Bounds enum Day[T@@](e: T) extends A with B { case Monday, Tuesday }
+    """|Type.ParamClause [T]
+       |Type.ParamClause enum Day[T@@](e: T) extends A with B { case Monday, Tuesday }
+       |Type.Bounds enum Day[T@@](e: T) extends A with B { case Monday, Tuesday }
        |Ctor.Primary (e: T)
        |Template extends A with B { case Monday, Tuesday }
        |Self enum Day[T](e: T) extends A with B { @@case Monday, Tuesday }
@@ -78,7 +96,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   )
   checkPositions[Stat](
     "class Day[T](e: T) extends A with B { val Monday = 42 }",
-    """|Type.Bounds class Day[T@@](e: T) extends A with B { val Monday = 42 }
+    """|Type.ParamClause [T]
+       |Type.ParamClause class Day[T@@](e: T) extends A with B { val Monday = 42 }
+       |Type.Bounds class Day[T@@](e: T) extends A with B { val Monday = 42 }
        |Ctor.Primary (e: T)
        |Template extends A with B { val Monday = 42 }
        |Self class Day[T](e: T) extends A with B { @@val Monday = 42 }
@@ -87,13 +107,15 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   )
   checkPositions[Stat](
     "inline given intOrd: Ord[Int] with Eq[Int] with { def f(): Int = 1 }",
-    """|Template Ord[Int] with Eq[Int] with { def f(): Int = 1 }
+    """|Type.ParamClause inline given intOrd@@: Ord[Int] with Eq[Int] with { def f(): Int = 1 }
+       |Template Ord[Int] with Eq[Int] with { def f(): Int = 1 }
        |Init Ord[Int]
        |Type.Apply Ord[Int]
        |Init Eq[Int]
        |Type.Apply Eq[Int]
        |Self inline given intOrd: Ord[Int] with Eq[Int] with { @@def f(): Int = 1 }
        |Defn.Def def f(): Int = 1
+       |Type.ParamClause inline given intOrd: Ord[Int] with Eq[Int] with { def f@@(): Int = 1 }
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -105,6 +127,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |}
        |Self   @@inline given intOrd: Ord[Int]
        |Decl.Given inline given intOrd: Ord[Int]
+       |Type.ParamClause   inline given intOrd@@: Ord[Int]
        |Type.Apply Ord[Int]
        |""".stripMargin
   )
@@ -117,6 +140,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |}
        |Self   @@given intOrd: Ord[Int] = intOrd
        |Defn.GivenAlias given intOrd: Ord[Int] = intOrd
+       |Type.ParamClause   given intOrd@@: Ord[Int] = intOrd
        |Type.Apply Ord[Int]
        |""".stripMargin
   )
@@ -165,7 +189,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  case Char => String
        |  case Array[t] => t
        |}""".stripMargin,
-    """|Type.Match A match {
+    """|Type.ParamClause type T @@= A match {
+       |Type.Match A match {
        |  case Char => String
        |  case Array[t] => t
        |}
@@ -184,18 +209,24 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
   checkPositions[Stat](
-    "infix def a(param: Int) = param"
+    "infix def a(param: Int) = param",
+    """|Type.ParamClause infix def a@@(param: Int) = param
+       |""".stripMargin
   )
   checkPositions[Stat](
     "infix type or[X, Y]",
-    """|Type.Bounds infix type or[X@@, Y]
+    """|Type.ParamClause [X, Y]
+       |Type.ParamClause infix type or[X@@, Y]
+       |Type.Bounds infix type or[X@@, Y]
+       |Type.ParamClause infix type or[X, Y@@]
        |Type.Bounds infix type or[X, Y@@]
        |Type.Bounds infix type or[X, Y]@@
        |""".stripMargin
   )
   checkPositions[Stat](
     "def fn: Unit = inline if cond then truep",
-    """|Term.If inline if cond then truep
+    """|Type.ParamClause def fn@@: Unit = inline if cond then truep
+       |Term.If inline if cond then truep
        |Lit.Unit def fn: Unit = inline if cond then truep@@
        |""".stripMargin
   )
@@ -228,7 +259,10 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   )
   checkPositions[Stat](
     "type F0 = [T] => List[T] ?=> Option[T]",
-    """|Type.PolyFunction [T] => List[T] ?=> Option[T]
+    """|Type.ParamClause type F0 @@= [T] => List[T] ?=> Option[T]
+       |Type.PolyFunction [T] => List[T] ?=> Option[T]
+       |Type.ParamClause [T]
+       |Type.ParamClause type F0 = [T@@] => List[T] ?=> Option[T]
        |Type.Bounds type F0 = [T@@] => List[T] ?=> Option[T]
        |Type.ContextFunction List[T] ?=> Option[T]
        |Type.Apply List[T]
@@ -241,7 +275,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  case x: String => (x, x) 
        |  case x: Double => x
        |}""".stripMargin,
-    """|Term.Match inline x match {
+    """|Type.ParamClause inline def g@@: Any = inline x match {
+       |Term.Match inline x match {
        |  case x: String => (x, x) 
        |  case x: Double => x
        |}
@@ -254,7 +289,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   )
   checkPositions[Stat](
     "class Alpha[T] derives Gamma[T], Beta[T]",
-    """|Type.Bounds class Alpha[T@@] derives Gamma[T], Beta[T]
+    """|Type.ParamClause [T]
+       |Type.ParamClause class Alpha[T@@] derives Gamma[T], Beta[T]
+       |Type.Bounds class Alpha[T@@] derives Gamma[T], Beta[T]
        |Ctor.Primary class Alpha[T] @@derives Gamma[T], Beta[T]
        |Template derives Gamma[T], Beta[T]
        |Self class Alpha[T] derives Gamma[T], Beta[T]@@
@@ -321,8 +358,10 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Self   @@def a: Int =
        |Defn.Def def a: Int =
        |    42
+       |Type.ParamClause   def a@@: Int =
        |Defn.Def def b: String =
        |    "b"
+       |Type.ParamClause   def b@@: String =
        |Lit.String "b"
        |""".stripMargin
   )
@@ -347,6 +386,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |     catch
        |       case a =>
        |     finally bar
+       |Type.ParamClause    def foo @@=
        |Term.Try try foo
        |     catch
        |       case a =>
@@ -385,6 +425,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |         st1
        |         st2
        |     finally bar
+       |Type.ParamClause    def foo @@=
        |Term.Try try foo
        |     catch
        |       case a =>
@@ -434,6 +475,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  private given x: X = ???
        |Self   @@private given x: X = ???
        |Defn.GivenAlias private given x: X = ???
+       |Type.ParamClause   private given x@@: X = ???
        |""".stripMargin
   )
 
@@ -468,7 +510,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |      fx
        |      gx}
        |""".stripMargin,
-    """|Term.Block {
+    """|Type.ParamClause def a@@: Unit = 
+       |Term.Block {
        |    val x = (z: String) =>
        |      fx
        |      gx}
@@ -533,7 +576,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |      case _: Singleton => xs
        |    buf
        |""".stripMargin,
-    """|Term.Block putInt
+    """|Type.ParamClause inline def encodeFlat @@=
+       |Term.Block putInt
        |    inline erasedValue match
        |      case _: Enum      => xs
        |      case _: Singleton => xs

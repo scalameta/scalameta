@@ -74,8 +74,7 @@ class MatchTypeSuite extends BaseDottySuite {
         Nil,
         Type.Name("Head"),
         List(
-          Type
-            .Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, Some(Type.Name("Tuple"))), Nil, Nil)
+          Type.Param(Nil, pname("X"), Nil, Type.Bounds(None, Some(pname("Tuple"))), Nil, Nil)
         ),
         Type.Match(
           Type.Name("X"),
@@ -131,10 +130,8 @@ class MatchTypeSuite extends BaseDottySuite {
         Nil,
         Type.Name("Concat"),
         List(
-          Type
-            .Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, Some(Type.Name("Tuple"))), Nil, Nil),
-          Type
-            .Param(Nil, Type.Name("Y"), Nil, Type.Bounds(None, Some(Type.Name("Tuple"))), Nil, Nil)
+          Type.Param(Nil, pname("X"), Nil, Type.Bounds(None, Some(pname("Tuple"))), Nil, Nil),
+          Type.Param(Nil, pname("Y"), Nil, Type.Bounds(None, Some(pname("Tuple"))), Nil, Nil)
         ),
         Type.Match(
           Type.Name("X"),

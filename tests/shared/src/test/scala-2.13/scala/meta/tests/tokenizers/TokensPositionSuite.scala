@@ -76,17 +76,20 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Type](
     "A { def f: B }",
     """|Decl.Def def f: B
+       |Type.ParamClause A { def f@@: B }
        |""".stripMargin
   )
   checkPositions[Type]("A{}")
   checkPositions[Type](
     "{ def f: B }",
     """|Decl.Def def f: B
+       |Type.ParamClause { def f@@: B }
        |""".stripMargin
   )
   checkPositions[Type](
     "A forSome { type T }",
     """|Decl.Type type T
+       |Type.ParamClause A forSome { type T @@}
        |Type.Bounds A forSome { type T @@}
        |""".stripMargin
   )
@@ -119,20 +122,26 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Type]("Any*")
   checkPositions[Stat](
     "def f[A <% B[A]]: C",
-    """|Type.Param A <% B[A]
+    """|Type.ParamClause [A <% B[A]]
+       |Type.Param A <% B[A]
+       |Type.ParamClause def f[A @@<% B[A]]: C
        |Type.Bounds def f[A @@<% B[A]]: C
        |Type.Apply B[A]
        |""".stripMargin
   )
   checkPositions[Stat](
     "def f[A: B]: C",
-    """|Type.Param A: B
+    """|Type.ParamClause [A: B]
+       |Type.Param A: B
+       |Type.ParamClause def f[A@@: B]: C
        |Type.Bounds def f[A@@: B]: C
        |""".stripMargin
   )
   checkPositions[Stat](
     "def f[A : B : C]: D",
-    """|Type.Param A : B : C
+    """|Type.ParamClause [A : B : C]
+       |Type.Param A : B : C
+       |Type.ParamClause def f[A @@: B : C]: D
        |Type.Bounds def f[A @@: B : C]: D
        |""".stripMargin
   )
@@ -305,7 +314,8 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
   checkPositions[Stat](
     "def f(a: A = (da)): A",
-    """|Term.Param a: A = (da)
+    """|Type.ParamClause def f@@(a: A = (da)): A
+       |Term.Param a: A = (da)
        |Term.Name (da)
        |""".stripMargin
   )
@@ -455,16 +465,21 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   // Decl
   checkPositions[Stat]("val a: Int")
   checkPositions[Stat]("var b: Long")
-  checkPositions[Stat]("def f: String")
+  checkPositions[Stat](
+    "def f: String",
+    "Type.ParamClause def f@@: String"
+  )
   checkPositions[Stat](
     "type T",
-    """|Type.Bounds type T@@
+    """|Type.ParamClause type T@@
+       |Type.Bounds type T@@
        |""".stripMargin
   )
 
   checkPositions[Stat](
     "class A { def this(a: A) = this() }",
-    """|Ctor.Primary class A @@{ def this(a: A) = this() }
+    """|Type.ParamClause class A @@{ def this(a: A) = this() }
+       |Ctor.Primary class A @@{ def this(a: A) = this() }
        |Template { def this(a: A) = this() }
        |Self class A { @@def this(a: A) = this() }
        |Ctor.Secondary def this(a: A) = this()
@@ -475,10 +490,14 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Name.Anonymous this
        |""".stripMargin
   )
-  checkPositions[Stat]("def f = macro m")
+  checkPositions[Stat](
+    "def f = macro m",
+    "Type.ParamClause def f @@= macro m"
+  )
   checkPositions[Stat](
     "class A private (b: B)",
-    """|Ctor.Primary private (b: B)
+    """|Type.ParamClause class A @@private (b: B)
+       |Ctor.Primary private (b: B)
        |Template class A private (b: B)@@
        |Self class A private (b: B)@@
        |""".stripMargin
@@ -487,22 +506,26 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     "@tailrec def f = 1",
     """|Mod.Annot @tailrec
+       |Type.ParamClause @tailrec def f @@= 1
        |""".stripMargin
   )
   checkPositions[Stat](
     "@tailrec def f = 1",
     """|Mod.Annot @tailrec
+       |Type.ParamClause @tailrec def f @@= 1
        |""".stripMargin
   )
   checkPositions[Stat](
     "@a def b = 1",
     """|Mod.Annot @a
+       |Type.ParamClause @a def b @@= 1
        |""".stripMargin
   )
   checkPositions[Stat](
     "@a(1) def b = 1",
     """|Mod.Annot @a(1)
        |Init a(1)
+       |Type.ParamClause @a(1) def b @@= 1
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -511,6 +534,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Init (a @b)
        |Type.Annotate (a @b)
        |Mod.Annot @b
+       |Type.ParamClause @(a @b) def x @@= 1
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -520,6 +544,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Type.Annotate (a @b(1, 2)(3))
        |Mod.Annot @b(1, 2)(3)
        |Init b(1, 2)(3)
+       |Type.ParamClause @(a @b(1, 2)(3)) def x @@= 1
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -536,12 +561,16 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat]("final val a = 1")
   checkPositions[Stat](
     "sealed trait a",
-    """|Ctor.Primary sealed trait a@@
+    """|Type.ParamClause sealed trait a@@
+       |Ctor.Primary sealed trait a@@
        |Template sealed trait a@@
        |Self sealed trait a@@
        |""".stripMargin
   )
-  checkPositions[Stat]("override def f = 1")
+  checkPositions[Stat](
+    "override def f = 1",
+    "Type.ParamClause override def f @@= 1"
+  )
   checkPositions[Stat](
     "case object B",
     """|Template case object B@@
@@ -550,15 +579,18 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
   checkPositions[Stat](
     "abstract class A",
-    """|Ctor.Primary abstract class A@@
+    """|Type.ParamClause abstract class A@@
+       |Ctor.Primary abstract class A@@
        |Template abstract class A@@
        |Self abstract class A@@
        |""".stripMargin
   )
   checkPositions[Stat](
     "class A[+ T]",
-    """|Type.Param + T
+    """|Type.ParamClause [+ T]
+       |Type.Param + T
        |Mod.Covariant +
+       |Type.ParamClause class A[+ T@@]
        |Type.Bounds class A[+ T@@]
        |Ctor.Primary class A[+ T]@@
        |Template class A[+ T]@@
@@ -567,8 +599,10 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
   checkPositions[Stat](
     "class A[- T]",
-    """|Type.Param - T
+    """|Type.ParamClause [- T]
+       |Type.Param - T
        |Mod.Contravariant -
+       |Type.ParamClause class A[- T@@]
        |Type.Bounds class A[- T@@]
        |Ctor.Primary class A[- T]@@
        |Template class A[- T]@@
@@ -578,7 +612,8 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat]("lazy val a = 1")
   checkPositions[Stat](
     "class A(val b: B)",
-    """|Ctor.Primary (val b: B)
+    """|Type.ParamClause class A@@(val b: B)
+       |Ctor.Primary (val b: B)
        |Term.Param val b: B
        |Mod.ValParam val
        |Template class A(val b: B)@@
@@ -587,7 +622,8 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
   checkPositions[Stat](
     "class A(var b: B)",
-    """|Ctor.Primary (var b: B)
+    """|Type.ParamClause class A@@(var b: B)
+       |Ctor.Primary (var b: B)
        |Term.Param var b: B
        |Mod.VarParam var
        |Template class A(var b: B)@@
@@ -597,14 +633,16 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
 
   checkPositions[Stat](
     "trait A { self: B => }",
-    """|Ctor.Primary trait A @@{ self: B => }
+    """|Type.ParamClause trait A @@{ self: B => }
+       |Ctor.Primary trait A @@{ self: B => }
        |Template { self: B => }
        |Self self: B
        |""".stripMargin
   )
   checkPositions[Stat](
     "trait A { _: B => }",
-    """|Ctor.Primary trait A @@{ _: B => }
+    """|Type.ParamClause trait A @@{ _: B => }
+       |Ctor.Primary trait A @@{ _: B => }
        |Template { _: B => }
        |Self _: B
        |Name.Anonymous _
@@ -612,14 +650,16 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
   checkPositions[Stat](
     "trait A { self => }",
-    """|Ctor.Primary trait A @@{ self => }
+    """|Type.ParamClause trait A @@{ self => }
+       |Ctor.Primary trait A @@{ self => }
        |Template { self => }
        |Self self
        |""".stripMargin
   )
   checkPositions[Stat](
     "trait A { this: B => }",
-    """|Ctor.Primary trait A @@{ this: B => }
+    """|Type.ParamClause trait A @@{ this: B => }
+       |Ctor.Primary trait A @@{ this: B => }
        |Template { this: B => }
        |Self this: B
        |Name.Anonymous this
@@ -664,7 +704,8 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |
        |  def foo: Boolean = true
        |}""".stripMargin,
-    """|Ctor.Primary trait SampleTrait @@extends A {
+    """|Type.ParamClause trait SampleTrait @@extends A {
+       |Ctor.Primary trait SampleTrait @@extends A {
        |Template extends A {
        |  self: X with B with C =>
        |
@@ -674,6 +715,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Type.With X with B with C
        |Type.With X with B
        |Defn.Def def foo: Boolean = true
+       |Type.ParamClause   def foo@@: Boolean = true
        |""".stripMargin
   )
 
@@ -684,7 +726,8 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |  def foo: Boolean = true // c2
        |  // c3
        |} // c4""".stripMargin,
-    """|Ctor.Primary trait SampleTrait @@extends A {
+    """|Type.ParamClause trait SampleTrait @@extends A {
+       |Ctor.Primary trait SampleTrait @@extends A {
        |Template extends A {
        |  self: X with B with C => // c1
        |
@@ -695,6 +738,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Type.With X with B with C
        |Type.With X with B
        |Defn.Def def foo: Boolean = true
+       |Type.ParamClause   def foo@@: Boolean = true // c2
        |""".stripMargin
   )
 
@@ -711,6 +755,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Mod.Private private [this]
        |Term.This this
        |Name.Anonymous this
+       |Type.ParamClause   private [this] def foo@@: Int = ???
        |""".stripMargin
   )
 

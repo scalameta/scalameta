@@ -63,7 +63,11 @@ class JSFacadeSuite extends FunSuite {
                   "pos" -> pos(20, 24),
                   "value" -> "main"
                 ),
-                "tparams" -> a(),
+                "tparamClause" -> d(
+                  "type" -> "Type.ParamClause",
+                  "pos" -> pos(24, 24),
+                  "values" -> a()
+                ),
                 "paramss" -> a(
                   a(
                     d(

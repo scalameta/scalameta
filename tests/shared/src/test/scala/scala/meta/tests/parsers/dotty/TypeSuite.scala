@@ -271,13 +271,14 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("A { def x: A; val y: B; type C }") {
-    val Refine(
-      Some(TypeName("A")),
-      Decl.Def(Nil, TermName("x"), Nil, Nil, TypeName("Int")) ::
-        Decl.Val(Nil, List(Pat.Var(TermName("y"))), TypeName("B")) ::
-        Decl.Type(Nil, TypeName("C"), Nil, Type.Bounds(None, None)) :: Nil
-    ) =
-      tpe("A { def x: Int; val y: B; type C }")
+    assertTpe("A { def x: Int; val y: B; type C }") {
+      Refine(
+        Some(TypeName("A")),
+        Decl.Def(Nil, TermName("x"), Type.ParamClause(Nil), Nil, TypeName("Int")) ::
+          Decl.Val(Nil, List(Pat.Var(TermName("y"))), TypeName("B")) ::
+          Decl.Type(Nil, TypeName("C"), Type.ParamClause(Nil), Type.Bounds(None, None)) :: Nil
+      )
+    }
   }
 
   test("F[_ >: lo <: hi]") {
@@ -343,11 +344,12 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("F[T] forSome { type T }") {
-    val Existential(
-      Apply(TypeName("F"), TypeName("T") :: Nil),
-      Decl.Type(Nil, TypeName("T"), Nil, Type.Bounds(None, None)) :: Nil
-    ) =
-      tpe("F[T] forSome { type T }")
+    assertTpe("F[T] forSome { type T }") {
+      Existential(
+        Apply(TypeName("F"), TypeName("T") :: Nil),
+        Decl.Type(Nil, TypeName("T"), Type.ParamClause(Nil), Type.Bounds(None, None)) :: Nil
+      )
+    }
   }
 
   test("a.T forSome { val a: A }") {

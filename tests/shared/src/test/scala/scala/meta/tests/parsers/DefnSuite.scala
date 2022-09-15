@@ -71,105 +71,155 @@ class DefnSuite extends ParseSuite {
   }
 
   test("type A = B") {
-    val Defn.Type(Nil, Type.Name("A"), Nil, Type.Name("B")) =
-      templStat("type A = B")
+    assertTree(templStat("type A = B")) {
+      Defn.Type(Nil, Type.Name("A"), Type.ParamClause(Nil), Type.Name("B"))
+    }
   }
 
   test("type F[T] = List[T]") {
-    val Defn.Type(
-      Nil,
-      Type.Name("F"),
-      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil,
-      Type.Apply(Type.Name("List"), Type.Name("T") :: Nil)
-    ) = templStat("type F[T] = List[T]")
+    assertTree(templStat("type F[T] = List[T]")) {
+      Defn.Type(
+        Nil,
+        Type.Name("F"),
+        Type.ParamClause(
+          Type.Param(
+            Nil,
+            Type.Name("T"),
+            Type.ParamClause(Nil),
+            Type.Bounds(None, None),
+            Nil,
+            Nil
+          ) :: Nil
+        ),
+        Type.Apply(Type.Name("List"), Type.Name("T") :: Nil)
+      )
+    }
   }
 
   test("def x = 2") {
-    val Defn.Def(Nil, Term.Name("x"), Nil, Nil, None, Lit(2)) = templStat("def x = 2")
+    assertTree(templStat("def x = 2")) {
+      Defn.Def(Nil, Term.Name("x"), Nil, Nil, None, Lit.Int(2))
+    }
   }
 
   test("def x[A <: B] = 2") {
-    val Defn.Def(
-      Nil,
-      Term.Name("x"),
-      Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, Some(Type.Name("B"))), Nil, Nil)
-        :: Nil,
-      Nil,
-      None,
-      Lit(2)
-    ) = templStat("def x[A <: B] = 2")
+    assertTree(templStat("def x[A <: B] = 2")) {
+      Defn.Def(
+        Nil,
+        Term.Name("x"),
+        Type.ParamClause(
+          Type.Param(
+            Nil,
+            Type.Name("A"),
+            Type.ParamClause(Nil),
+            Type.Bounds(None, Some(Type.Name("B"))),
+            Nil,
+            Nil
+          ) :: Nil
+        ),
+        Nil,
+        None,
+        Lit.Int(2)
+      )
+    }
   }
 
   test("def x[A <% B] = 2") {
-    val Defn.Def(
-      Nil,
-      Term.Name("x"),
-      Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Type.Name("B") :: Nil, Nil)
-        :: Nil,
-      Nil,
-      None,
-      Lit(2)
-    ) = templStat("def x[A <% B] = 2")
+    assertTree(templStat("def x[A <% B] = 2")) {
+      Defn.Def(
+        Nil,
+        Term.Name("x"),
+        Type.ParamClause(
+          Type.Param(
+            Nil,
+            Type.Name("A"),
+            Type.ParamClause(Nil),
+            Type.Bounds(None, None),
+            Type.Name("B") :: Nil,
+            Nil
+          ) :: Nil
+        ),
+        Nil,
+        None,
+        Lit.Int(2)
+      )
+    }
   }
 
   test("def x[A: B] = 2") {
-    val Defn.Def(
-      Nil,
-      Term.Name("x"),
-      Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Type.Name("B") :: Nil)
-        :: Nil,
-      Nil,
-      None,
-      Lit(2)
-    ) = templStat("def x[A: B] = 2")
+    assertTree(templStat("def x[A: B] = 2")) {
+      Defn.Def(
+        Nil,
+        Term.Name("x"),
+        Type.ParamClause(
+          Type.Param(
+            Nil,
+            Type.Name("A"),
+            Type.ParamClause(Nil),
+            Type.Bounds(None, None),
+            Nil,
+            Type.Name("B") :: Nil
+          ) :: Nil
+        ),
+        Nil,
+        None,
+        Lit.Int(2)
+      )
+    }
   }
 
   test("def f(a: Int)(implicit b: Int) = a + b") {
-    val Defn.Def(
-      Nil,
-      Term.Name("f"),
-      Nil,
-      (Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None) :: Nil) ::
-        (Term.Param(Mod.Implicit() :: Nil, Term.Name("b"), Some(Type.Name("Int")), None) :: Nil)
-        :: Nil,
-      None,
-      Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Term.Name("b") :: Nil)
-    ) =
-      templStat("def f(a: Int)(implicit b: Int) = a + b")
+    assertTree(templStat("def f(a: Int)(implicit b: Int) = a + b")) {
+      Defn.Def(
+        Nil,
+        Term.Name("f"),
+        Type.ParamClause(Nil),
+        (Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None) :: Nil) ::
+          (Term.Param(Mod.Implicit() :: Nil, Term.Name("b"), Some(Type.Name("Int")), None) :: Nil)
+          :: Nil,
+        None,
+        Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Term.Name("b") :: Nil)
+      )
+    }
   }
 
   test("def proc { return 42 }") {
-    val Defn.Def(
-      Nil,
-      Term.Name("proc"),
-      Nil,
-      Nil,
-      Some(Type.Name("Unit")),
-      Term.Block((ret @ Term.Return(Lit(42))) :: Nil)
-    ) =
-      templStat("def proc { return 42 }")
+    assertTree(templStat("def proc { return 42 }")) {
+      Defn.Def(
+        Nil,
+        Term.Name("proc"),
+        Type.ParamClause(Nil),
+        Nil,
+        Some(Type.Name("Unit")),
+        Term.Block(Term.Return(Lit.Int(42)) :: Nil)
+      )
+    }
   }
 
   test("def f(x: Int) = macro impl") {
-    val Defn.Macro(
-      Nil,
-      Term.Name("f"),
-      Nil,
-      (Term.Param(List(), Term.Name(x), Some(Type.Name("Int")), None) :: Nil) :: Nil,
-      None,
-      Term.Name("impl")
-    ) = templStat("def f(x: Int) = macro impl")
+    assertTree(templStat("def f(x: Int) = macro impl")) {
+      Defn.Macro(
+        Nil,
+        Term.Name("f"),
+        Type.ParamClause(Nil),
+        (Term.Param(List(), Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil,
+        None,
+        Term.Name("impl")
+      )
+    }
   }
 
   test("def f(x: Int): Int = macro impl") {
-    val Defn.Macro(
-      Nil,
-      Term.Name("f"),
-      Nil,
-      (Term.Param(List(), Term.Name(x), Some(Type.Name("Int")), None) :: Nil) :: Nil,
-      Some(Type.Name("Int")),
-      Term.Name("impl")
-    ) = templStat("def f(x: Int): Int = macro impl")
+    assertTree(templStat("def f(x: Int): Int = macro impl")) {
+      Defn.Macro(
+        Nil,
+        Term.Name("f"),
+        Nil,
+        (Term.Param(List(), Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil,
+        Some(Type.Name("Int")),
+        Term.Name("impl")
+      )
+    }
   }
 
   test("braces-in-functions") {

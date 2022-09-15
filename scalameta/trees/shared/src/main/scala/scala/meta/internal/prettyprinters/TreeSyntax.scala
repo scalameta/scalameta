@@ -522,7 +522,7 @@ object TreeSyntax {
             }
         }
       case t: Term.PolyFunction =>
-        m(Expr, t.tparams, " ", kw("=>"), " ", p(Expr, t.body))
+        m(Expr, t.tparamClause, " ", kw("=>"), " ", p(Expr, t.body))
       case t: Term.Function =>
         t match {
           case Term.Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, body)
@@ -678,8 +678,8 @@ object TreeSyntax {
       case t: Type.Existential =>
         m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.stats, "; "), " }"))
       case t: Type.Annotate => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
-      case t: Type.Lambda => m(Typ, t.tparams, " ", kw("=>>"), " ", p(Typ, t.tpe))
-      case t: Type.PolyFunction => m(Typ, t.tparams, " ", kw("=>"), " ", p(Typ, t.tpe))
+      case t: Type.Lambda => m(Typ, t.tparamClause, " ", kw("=>>"), " ", p(Typ, t.tpe))
+      case t: Type.PolyFunction => m(Typ, t.tparamClause, " ", kw("=>"), " ", p(Typ, t.tpe))
       case t: Type.Match =>
         m(
           Type,
@@ -732,6 +732,7 @@ object TreeSyntax {
       case t: Type.ByName => m(ParamTyp, s(kw("=>"), " ", p(Typ, t.tpe)))
       case t: Type.Var => m(SimpleTyp, s(t.name.value))
       case t: Type.TypedParam => m(SimpleTyp, s(t.name.value), ": ", p(Typ, t.typ))
+      case t: Type.ParamClause => r(t.values, "[", ", ", "]")
       case t: Type.Param =>
         def isVariant(m: Mod) = m.is[Mod.Variant]
         val mods = t.mods.filterNot(isVariant)
@@ -744,7 +745,7 @@ object TreeSyntax {
           r(t.vbounds.map { s(" ", kw("<%"), " ", _) })
         }
         val cbounds = r(t.cbounds.map { s(kw(":"), " ", _) })
-        s(w(mods, " "), variance, t.name, t.tparams, tbounds, vbounds, cbounds)
+        s(w(mods, " "), variance, t.name, t.tparamClause, tbounds, vbounds, cbounds)
 
       // Pat
       case t: Pat.Var =>
@@ -869,11 +870,11 @@ object TreeSyntax {
         s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
       case t: Decl.Var =>
         s(w(t.mods, " "), kw("var"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
-      case t: Decl.Type => s(w(t.mods, " "), kw("type"), " ", t.name, t.tparams, t.bounds)
+      case t: Decl.Type => s(w(t.mods, " "), kw("type"), " ", t.name, t.tparamClause, t.bounds)
       case t: Decl.Def =>
-        s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, kw(":"), " ", t.decltpe)
+        s(w(t.mods, " "), kw("def "), t.name, t.tparamClause, t.paramss, kw(": "), t.decltpe)
       case t: Decl.Given =>
-        s(w(t.mods, " "), kw("given"), " ", t.name, t.tparams, t.sparams, kw(":"), " ", t.decltpe)
+        s(w(t.mods, " "), kw("given "), t.name, t.tparamClause, t.sparams, kw(": "), t.decltpe)
       case t: Defn.Val =>
         s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
       case t: Defn.Var =>
@@ -894,7 +895,7 @@ object TreeSyntax {
           kw("type"),
           " ",
           t.name,
-          t.tparams,
+          t.tparamClause,
           t.bounds,
           " ",
           kw("="),
@@ -905,7 +906,7 @@ object TreeSyntax {
         r(" ")(
           t.mods,
           kw("class"),
-          s(t.name, t.tparams, w(" ", t.ctor, t.ctor.mods.nonEmpty)),
+          s(t.name, t.tparamClause, w(" ", t.ctor, t.ctor.mods.nonEmpty)),
           t.templ
         )
       case t: Defn.Trait =>
@@ -913,7 +914,7 @@ object TreeSyntax {
           r(" ")(
             t.mods,
             kw("trait"),
-            s(t.name, t.tparams, w(" ", t.ctor, t.ctor.mods.nonEmpty)),
+            s(t.name, t.tparamClause, w(" ", t.ctor, t.ctor.mods.nonEmpty)),
             t.templ
           )
         } else {
@@ -924,7 +925,7 @@ object TreeSyntax {
         r(" ")(
           t.mods,
           kw("given"),
-          givenName(t.name, t.tparams, t.sparams),
+          givenName(t.name, t.tparamClause, t.sparams),
           p(SimpleTyp, t.decltpe),
           kw("="),
           t.body
@@ -933,7 +934,7 @@ object TreeSyntax {
         r(" ")(
           t.mods,
           kw("given"),
-          givenName(t.name, t.tparams, t.sparams),
+          givenName(t.name, t.tparamClause, t.sparams),
           t.templ
         )
 
@@ -941,14 +942,14 @@ object TreeSyntax {
         r(" ")(
           t.mods,
           kw("enum"),
-          s(t.name, t.tparams, t.ctor),
+          s(t.name, t.tparamClause, t.ctor),
           t.templ
         )
       case t: Defn.RepeatedEnumCase =>
         s(w(t.mods, " "), kw("case"), " ", r(t.cases, ", "))
       case t: Defn.EnumCase =>
         def init() = if (t.inits.nonEmpty) s(" extends ", r(t.inits, ", ")) else s("")
-        s(w(t.mods, " "), kw("case"), " ", t.name, t.tparams, t.ctor, init())
+        s(w(t.mods, " "), kw("case"), " ", t.name, t.tparamClause, t.ctor, init())
 
       case t: Defn.ExtensionGroup =>
         val m = t.body match {
@@ -960,20 +961,20 @@ object TreeSyntax {
         s(
           kw("extension"),
           " ",
-          t.tparams,
+          t.tparamClause,
           t.paramss,
           m
         )
       case t: Defn.Object => r(" ")(t.mods, kw("object"), t.name, t.templ)
       case t: Defn.Def =>
-        s(w(t.mods, " "), kw("def"), " ", t.name, t.tparams, t.paramss, t.decltpe, " = ", t.body)
+        s(w(t.mods, " "), kw("def "), t.name, t.tparamClause, t.paramss, t.decltpe, " = ", t.body)
       case t: Defn.Macro =>
         s(
           w(t.mods, " "),
           kw("def"),
           " ",
           t.name,
-          t.tparams,
+          t.tparamClause,
           t.paramss,
           t.decltpe,
           " ",
@@ -1148,12 +1149,12 @@ object TreeSyntax {
 
     private def givenName(
         name: meta.Name,
-        tparams: Seq[Type.Param],
+        tparams: Type.ParamClause,
         sparams: Seq[Seq[Term.Param]]
     ): Show.Result = {
       if (!name.is[meta.Name.Anonymous]) {
         s(name, tparams, sparams, ":")
-      } else if (tparams.nonEmpty || sparams.nonEmpty) {
+      } else if (tparams.values.nonEmpty || sparams.nonEmpty) {
         s(tparams, sparams, ":")
       } else {
         s()
@@ -1208,9 +1209,6 @@ object TreeSyntax {
     }
     implicit def syntaxParamss: Syntax[Seq[Seq[Term.Param]]] = Syntax { paramss =>
       r(paramss)
-    }
-    implicit def syntaxTparams: Syntax[Seq[Type.Param]] = Syntax { tparams =>
-      r(tparams, "[", ", ", "]")
     }
     implicit def syntaxTypeOpt: Syntax[Option[Type]] = Syntax {
       _.map { t => s(kw(":"), " ", t) }.getOrElse(s())

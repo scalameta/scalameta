@@ -1042,6 +1042,17 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, Some(Type.Name("Int"))), Nil, Nil)
     )
     assertEquals(tree.syntax, "T <: Int")
+
+    assertTree(templStat("def foo[T <: Int] = ???")) {
+      Defn.Def(
+        Nil,
+        Term.Name("foo"),
+        Type.ParamClause(tree :: Nil),
+        Nil,
+        None,
+        Term.Name("???")
+      )
+    }
   }
 
   test("Lit(()) - 1") {

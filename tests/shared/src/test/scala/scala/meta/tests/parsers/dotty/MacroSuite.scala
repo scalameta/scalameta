@@ -310,8 +310,7 @@ class MacroSuite extends BaseDottySuite {
         Nil,
         Type.PolyFunction(
           List(Type.Param(Nil, Type.Name("$T"), Nil, Type.Bounds(None, None), Nil, Nil)),
-          Type
-            .Function(List(Type.Name("$T")), Type.Apply(Type.Name("Option"), List(Type.Name("$T"))))
+          Type.Function(List(pname("$T")), Type.Apply(pname("Option"), List(pname("$T"))))
         ),
         Type.Bounds(None, None)
       )

@@ -6,296 +6,333 @@ import scala.meta.dialects.Scala211
 
 class TemplateSuite extends ParseSuite {
   test("trait T") {
-    val Trait(Nil, Type.Name("T"), Nil, EmptyCtor(), EmptyTemplate()) = templStat("trait T")
+    assertTree(templStat("trait T")) {
+      Trait(Nil, Type.Name("T"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate())
+    }
   }
 
   test("trait T {}") {
-    val Trait(Nil, Type.Name("T"), Nil, EmptyCtor(), EmptyTemplate()) = templStat("trait T {}")
+    assertTree(templStat("trait T {}")) {
+      Trait(Nil, Type.Name("T"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate())
+    }
   }
 
   test("trait F[T]") {
-    val Trait(
-      Nil,
-      Type.Name("F"),
-      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil,
-      EmptyCtor(),
-      EmptyTemplate()
-    ) = templStat("trait F[T]")
+    assertTree(templStat("trait F[T]")) {
+      Trait(
+        Nil,
+        Type.Name("F"),
+        Type.ParamClause(
+          Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+        ),
+        EmptyCtor(),
+        EmptyTemplate()
+      )
+    }
   }
 
   test("trait A extends B") {
-    val Trait(
-      Nil,
-      Type.Name("A"),
-      Nil,
-      EmptyCtor(),
-      Template(Nil, Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)
-    ) =
-      templStat("trait A extends B")
+    assertTree(templStat("trait A extends B")) {
+      Trait(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        EmptyCtor(),
+        Template(Nil, Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)
+      )
+    }
   }
 
   test("trait Inner <: { val x : Int = 3 }") {
-    val Trait(
-      Nil,
-      Type.Name("Inner"),
-      Nil,
-      EmptyCtor(),
-      Template(
+    assertTree(templStat("trait Inner <: { val x : Int = 3 }")) {
+      Trait(
         Nil,
-        Nil,
-        EmptySelf(),
-        List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit(3)))
+        Type.Name("Inner"),
+        Type.ParamClause(Nil),
+        EmptyCtor(),
+        Template(
+          Nil,
+          Nil,
+          EmptySelf(),
+          List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(3)))
+        )
       )
-    ) =
-      templStat("trait Inner <: { val x : Int = 3 }")
+    }
   }
 
   test("trait A extends { val x: Int } with B") {
-    val Trait(
-      Nil,
-      Type.Name("A"),
-      Nil,
-      EmptyCtor(),
-      Template(
-        Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit(2)) :: Nil,
-        Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil,
-        EmptySelf(),
-        Nil
+    assertTree(templStat("trait A extends { val x: Int = 2 } with B")) {
+      Trait(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        EmptyCtor(),
+        Template(
+          Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
+          Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil,
+          EmptySelf(),
+          Nil
+        )
       )
-    ) =
-      templStat("trait A extends { val x: Int = 2 } with B")
+    }
   }
 
   test("trait A extends { self: B => }") {
-    val Trait(
-      Nil,
-      Type.Name("A"),
-      Nil,
-      EmptyCtor(),
-      Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)
-    ) =
-      templStat("trait A { self: B => }")
+    assertTree(templStat("trait A { self: B => }")) {
+      Trait(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        EmptyCtor(),
+        Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)
+      )
+    }
   }
 
   test("trait T { def x: Int }") {
-    val Trait(
-      Nil,
-      Type.Name("T"),
-      Nil,
-      EmptyCtor(),
-      Template(
+    assertTree(templStat("trait T { def x: Int }")) {
+      Trait(
         Nil,
-        Nil,
-        EmptySelf(),
-        List(Decl.Def(Nil, Term.Name("x"), Nil, Nil, Type.Name("Int")))
+        Type.Name("T"),
+        Type.ParamClause(Nil),
+        EmptyCtor(),
+        Template(
+          Nil,
+          Nil,
+          EmptySelf(),
+          List(Decl.Def(Nil, Term.Name("x"), Nil, Nil, Type.Name("Int")))
+        )
       )
-    ) =
-      templStat("trait T { def x: Int }")
+    }
   }
 
   test("class C") {
-    val Class(Nil, Type.Name("C"), Nil, EmptyCtor(), EmptyTemplate()) = templStat("class C")
+    assertTree(templStat("class C")) {
+      Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate())
+    }
   }
 
   test("class C[T]") {
-    val Class(
-      Nil,
-      Type.Name("C"),
-      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil,
-      EmptyCtor(),
-      EmptyTemplate()
-    ) = templStat("class C[T]")
+    assertTree(templStat("class C[T]")) {
+      Class(
+        Nil,
+        Type.Name("C"),
+        Type.ParamClause(
+          Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+        ),
+        EmptyCtor(),
+        EmptyTemplate()
+      )
+    }
   }
 
   test("class A extends B") {
-    val Class(
-      Nil,
-      Type.Name("A"),
-      Nil,
-      EmptyCtor(),
-      Template(Nil, Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)
-    ) =
-      templStat("class A extends B")
+    assertTree(templStat("class A extends B")) {
+      Class(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        EmptyCtor(),
+        Template(Nil, Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)
+      )
+    }
   }
 
   test("class A extends { val x: Int } with B") {
-    val Class(
-      Nil,
-      Type.Name("A"),
-      Nil,
-      EmptyCtor(),
-      Template(
-        Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit(2)) :: Nil,
-        Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil,
-        EmptySelf(),
-        Nil
+    assertTree(templStat("class A extends { val x: Int = 2 } with B")) {
+      Class(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        EmptyCtor(),
+        Template(
+          Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
+          Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil,
+          EmptySelf(),
+          Nil
+        )
       )
-    ) =
-      templStat("class A extends { val x: Int = 2 } with B")
+    }
   }
 
   test("class A extends { self: B => }") {
-    val Class(
-      Nil,
-      Type.Name("A"),
-      Nil,
-      EmptyCtor(),
-      Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)
-    ) =
-      templStat("class A { self: B => }")
+    assertTree(templStat("class A { self: B => }")) {
+      Class(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        EmptyCtor(),
+        Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)
+      )
+    }
   }
 
   test("class A { this => }") {
-    val Class(
-      Nil,
-      Type.Name("A"),
-      Nil,
-      EmptyCtor(),
-      Template(Nil, Nil, self @ EmptySelf(), Nil)
-    ) =
-      templStat("class A { this => }")
+    assertTree(templStat("class A { this => }")) {
+      Class(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        EmptyCtor(),
+        Template(Nil, Nil, EmptySelf(), Nil)
+      )
+    }
   }
 
   test("class A { _ => }") {
-    val Class(
-      Nil,
-      Type.Name("A"),
-      Nil,
-      EmptyCtor(),
-      Template(Nil, Nil, self @ EmptySelf(), Nil)
-    ) =
-      templStat("class A { this => }")
+    assertTree(templStat("class A { this => }")) {
+      Class(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        EmptyCtor(),
+        Template(Nil, Nil, EmptySelf(), Nil)
+      )
+    }
   }
 
   test("class C { def x: Int }") {
-    val Class(
-      Nil,
-      Type.Name("C"),
-      Nil,
-      EmptyCtor(),
-      Template(
+    assertTree(templStat("class C { def x: Int }")) {
+      Class(
         Nil,
-        Nil,
-        EmptySelf(),
-        List(Decl.Def(Nil, Term.Name("x"), Nil, Nil, Type.Name("Int")))
+        Type.Name("C"),
+        Type.ParamClause(Nil),
+        EmptyCtor(),
+        Template(
+          Nil,
+          Nil,
+          EmptySelf(),
+          List(Decl.Def(Nil, Term.Name("x"), Nil, Nil, Type.Name("Int")))
+        )
       )
-    ) =
-      templStat("class C { def x: Int }")
+    }
   }
 
   test("class C(x: Int)") {
-    val Class(
-      Nil,
-      Type.Name("C"),
-      Nil,
-      Ctor.Primary(
+    assertTree(templStat("class C(x: Int)")) {
+      Class(
         Nil,
-        Name.Anonymous(),
-        (Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil
-      ),
-      EmptyTemplate()
-    ) =
-      templStat("class C(x: Int)")
+        Type.Name("C"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name.Anonymous(),
+          (Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil
+        ),
+        EmptyTemplate()
+      )
+    }
+
   }
 
   test("class C private(x: Int)") {
-    val Class(
-      Nil,
-      Type.Name("C"),
-      Nil,
-      Ctor.Primary(
-        Mod.Private(Name.Anonymous()) :: Nil,
-        Name.Anonymous(),
-        (Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil
-      ),
-      EmptyTemplate()
-    ) =
-      templStat("class C private(x: Int)")
+    assertTree(templStat("class C private(x: Int)")) {
+      Class(
+        Nil,
+        Type.Name("C"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Mod.Private(Name.Anonymous()) :: Nil,
+          Name.Anonymous(),
+          (Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil
+        ),
+        EmptyTemplate()
+      )
+    }
+
   }
 
   test("class C(val x: Int)") {
-    val Class(
-      Nil,
-      Type.Name("C"),
-      Nil,
-      Ctor.Primary(
+    assertTree(templStat("class C(val x: Int)")) {
+      Class(
         Nil,
-        Name.Anonymous(),
-        (Term.Param(Mod.ValParam() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil)
-          :: Nil
-      ),
-      EmptyTemplate()
-    ) =
-      templStat("class C(val x: Int)")
+        Type.Name("C"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name.Anonymous(),
+          (Term.Param(Mod.ValParam() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil)
+            :: Nil
+        ),
+        EmptyTemplate()
+      )
+    }
+
   }
 
   test("class C(var x: Int)") {
-    val Class(
-      Nil,
-      Type.Name("C"),
-      Nil,
-      Ctor.Primary(
+    assertTree(templStat("class C(var x: Int)")) {
+      Class(
         Nil,
-        Name.Anonymous(),
-        (Term.Param(Mod.VarParam() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil)
-          :: Nil
-      ),
-      EmptyTemplate()
-    ) =
-      templStat("class C(var x: Int)")
+        Type.Name("C"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name.Anonymous(),
+          (Term.Param(Mod.VarParam() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil)
+            :: Nil
+        ),
+        EmptyTemplate()
+      )
+    }
+
   }
 
   test("class C(implicit x: Int)") {
-    val Class(
-      Nil,
-      Type.Name("C"),
-      Nil,
-      Ctor.Primary(
+    assertTree(templStat("class C(implicit x: Int)")) {
+      Class(
         Nil,
-        Name.Anonymous(),
-        (Term.Param(Mod.Implicit() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil)
-          :: Nil
-      ),
-      EmptyTemplate()
-    ) =
-      templStat("class C(implicit x: Int)")
+        Type.Name("C"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name.Anonymous(),
+          (Term.Param(Mod.Implicit() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil)
+            :: Nil
+        ),
+        EmptyTemplate()
+      )
+    }
+
   }
 
   test("class C(override val x: Int)") {
-    val Class(
-      Nil,
-      Type.Name("C"),
-      Nil,
-      Ctor.Primary(
+    assertTree(templStat("class C(override val x: Int)")) {
+      Class(
         Nil,
-        Name.Anonymous(),
-        (Term.Param(
-          List(Mod.Override(), Mod.ValParam()),
-          Term.Name("x"),
-          Some(Type.Name("Int")),
-          None
-        ) :: Nil) :: Nil
-      ),
-      EmptyTemplate()
-    ) =
-      templStat("class C(override val x: Int)")
+        Type.Name("C"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name.Anonymous(),
+          (Term.Param(
+            List(Mod.Override(), Mod.ValParam()),
+            Term.Name("x"),
+            Some(Type.Name("Int")),
+            None
+          ) :: Nil) :: Nil
+        ),
+        EmptyTemplate()
+      )
+    }
   }
 
   test("case class C(x: Int)(y: => Int)") {
-    val Class(
-      Mod.Case() :: Nil,
-      Type.Name("C"),
-      Nil,
-      Ctor.Primary(
-        Nil,
-        Name.Anonymous(),
-        (Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) ::
-          (Term.Param(Nil, Term.Name("y"), Some(Type.ByName(Type.Name("Int"))), None) :: Nil)
-          :: Nil
-      ),
-      EmptyTemplate()
-    ) =
-      templStat("case class C(x: Int)(y: => Int)")
+    assertTree(templStat("case class C(x: Int)(y: => Int)")) {
+      Class(
+        Mod.Case() :: Nil,
+        Type.Name("C"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name.Anonymous(),
+          (Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) ::
+            (Term.Param(Nil, Term.Name("y"), Some(Type.ByName(Type.Name("Int"))), None) :: Nil)
+            :: Nil
+        ),
+        EmptyTemplate()
+      )
+    }
   }
 
   test("object O") {

@@ -566,6 +566,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     quasi[T](ell.rank, tree)
   }
 
+  def reellipsis[T <: Tree: AstInfo](q: Quasi, rank: Int): T = {
+    val became = q.become[T]
+    if (became.rank != rank) copyPos(became)(quasi[T](rank, became.tree)) else became
+  }
+
+  private def reduce[A <: Tree: AstInfo, B](f: List[B] => A, reduceRank: Int = 1)(
+      list: List[B]
+  ): A =
+    list match {
+      case (t: Quasi) :: Nil if t.rank >= reduceRank => reellipsis[A](t, t.rank - reduceRank)
+      case v => f(v)
+    }
+
   private def unquote[T <: Tree: AstInfo](unquote: Unquote): T with Quasi = {
     require(unquote.input.chars(unquote.start + 1) != '$')
     if (!dialect.allowUnquotes) {
@@ -1066,9 +1079,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val params1 = params.map(loop(_, convertTypevars = true))
           val res1 = loop(res, convertTypevars = false)
           Type.Function(params1, res1)
-        case Type.PolyFunction(tparams, res) =>
-          val res1 = loop(res, convertTypevars = false)
-          Type.PolyFunction(tparams, res1)
+        case t: Type.PolyFunction =>
+          val res1 = loop(t.tpe, convertTypevars = false)
+          Type.PolyFunction(t.tparamClause, res1)
         case Type.Tuple(elements) =>
           val elements1 = elements.map(loop(_, convertTypevars = true))
           Type.Tuple(elements1)
@@ -3121,13 +3134,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def entrypointTermParam(): Term.Param =
     param(ownerIsCase = false, ownerIsType = true)
 
+  private def emptyTypeParams: Type.ParamClause = autoPos(Type.ParamClause(Nil))
+
   def typeParamClauseOpt(
       ownerIsType: Boolean,
       ctxBoundsAllowed: Boolean,
       allowUnderscore: Boolean = true
-  ): List[Type.Param] = {
-    if (!isAfterOptNewLine[LeftBracket]) Nil
-    else inBrackets(commaSeparated(typeParam(ownerIsType, ctxBoundsAllowed, allowUnderscore)))
+  ): Type.ParamClause = {
+    if (!isAfterOptNewLine[LeftBracket]) emptyTypeParams
+    else
+      autoPos(inBrackets(reduce(Type.ParamClause.apply)(commaSeparated {
+        typeParam(ownerIsType, ctxBoundsAllowed, allowUnderscore)
+      })))
   }
 
   def typeParam(
@@ -3437,7 +3455,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           (name, tparams, uparamss)
         } else {
           in = forked
-          (anonymousName, List.empty, List.empty)
+          (anonymousName, emptyTypeParams, Nil)
         }
       } catch {
         /**
@@ -3449,7 +3467,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
          */
         case NonFatal(_) =>
           in = forked
-          (anonymousName, List.empty, List.empty)
+          (anonymousName, emptyTypeParams, Nil)
       }
 
     val decltype = if (token.is[LeftBrace]) refinement(None) else startModType()
