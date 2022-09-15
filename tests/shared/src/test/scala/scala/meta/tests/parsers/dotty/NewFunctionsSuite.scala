@@ -626,7 +626,7 @@ class NewFunctionsSuite extends BaseDottySuite {
               Type.Name("o"),
               Type.Apply(
                 Type.Name("Other"),
-                List(Type.Placeholder(Type.Bounds(None, Some(Type.Name("P")))))
+                List(Type.Wildcard(Type.Bounds(None, Some(Type.Name("P")))))
               )
             )
           ),

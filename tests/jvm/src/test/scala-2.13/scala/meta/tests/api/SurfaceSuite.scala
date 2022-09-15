@@ -395,6 +395,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.And
       |scala.meta.Type.Annotate
       |scala.meta.Type.AnonymousName
+      |scala.meta.Type.AnonymousParam
       |scala.meta.Type.Apply
       |scala.meta.Type.ApplyInfix
       |scala.meta.Type.Bounds
@@ -412,6 +413,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.Or
       |scala.meta.Type.Param
       |scala.meta.Type.Placeholder
+      |scala.meta.Type.Placeholder.Impl
       |scala.meta.Type.PolyFunction
       |scala.meta.Type.Project
       |scala.meta.Type.Ref
@@ -422,6 +424,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.Tuple
       |scala.meta.Type.TypedParam
       |scala.meta.Type.Var
+      |scala.meta.Type.Wildcard
       |scala.meta.Type.With
       |scala.meta.TypeCase
     """.trim.stripMargin.split('\n').mkString(EOL)

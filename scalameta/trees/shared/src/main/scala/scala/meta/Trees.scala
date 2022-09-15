@@ -238,7 +238,23 @@ object Type {
   @ast class Method(paramss: List[List[Term.Param]], tpe: Type) extends Type {
     checkParent(ParentChecks.TypeMethod)
   }
-  @ast class Placeholder(bounds: Bounds) extends Type
+  @deprecated("Placeholder replaced with AnonymousParam and Wildcard", ">4.5.13")
+  @branch trait Placeholder extends Type {
+    def bounds: Bounds
+    def copy(bounds: Bounds = this.bounds): Placeholder
+  }
+  @deprecated("Placeholder replaced with AnonymousParam and Wildcard", ">4.5.13")
+  object Placeholder {
+    @ast private[meta] class Impl(bounds: Bounds) extends Placeholder
+    @inline def apply(bounds: Bounds): Placeholder = Impl(bounds)
+    @inline final def unapply(tree: Placeholder): Option[Bounds] = Some(tree.bounds)
+  }
+  @ast class Wildcard(bounds: Bounds) extends Placeholder
+  @ast class AnonymousParam(variant: Option[Mod.Variant]) extends Placeholder {
+    @deprecated("Placeholder replaced with AnonymousParam and Wildcard", ">4.5.13")
+    override final def bounds: Bounds = Bounds(None, None)
+    override def copy(bounds: Bounds): Placeholder = Placeholder(bounds)
+  }
   @ast class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
   @ast class ByName(tpe: Type) extends Type {
     checkParent(ParentChecks.TypeByName)
@@ -304,7 +320,7 @@ object Pat {
   }
   @ast class Typed(lhs: Pat, rhs: Type) extends Pat {
     checkFields(rhs match {
-      case _: Type.Var | _: Type.Placeholder => false
+      case _: Type.Var | _: Type.Placeholder | _: Type.Wildcard | _: Type.AnonymousParam => false
       case _ => true
     })
   }

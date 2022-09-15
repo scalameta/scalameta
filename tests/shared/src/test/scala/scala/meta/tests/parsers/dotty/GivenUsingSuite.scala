@@ -1129,7 +1129,7 @@ class GivenUsingSuite extends BaseDottySuite {
             List(
               Importee.Name(Name("im")),
               Importee.Given(
-                Type.Apply(Type.Name("Ordering"), List(Type.Placeholder(Type.Bounds(None, None))))
+                Type.Apply(Type.Name("Ordering"), List(Type.Wildcard(Type.Bounds(None, None))))
               )
             )
           )

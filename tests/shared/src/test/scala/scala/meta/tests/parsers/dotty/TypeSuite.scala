@@ -281,43 +281,49 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("F[_ >: lo <: hi]") {
-    assertTpe("F[_ >: lo <: hi]") {
+    implicit val Scala3: Dialect = scala.meta.dialects.Scala31
+    val expected =
       Apply(
         TypeName("F"),
-        Type.Placeholder(Type.Bounds(Some(TypeName("lo")), Some(TypeName("hi")))) :: Nil
+        Wildcard(Bounds(Some(TypeName("lo")), Some(TypeName("hi")))) :: Nil
       )
-    }
+    assertTpe("F[_ >: lo <: hi]") { expected }
+    assertTpe("F[? >: lo <: hi]") { expected }
   }
 
   test("F[_ >: lo") {
-    assertTpe("F[_ >: lo]") {
-      Apply(TypeName("F"), Type.Placeholder(Type.Bounds(Some(TypeName("lo")), None)) :: Nil)
-    }
+    implicit val Scala3: Dialect = scala.meta.dialects.Scala31
+    val expected =
+      Apply(TypeName("F"), Wildcard(Bounds(Some(TypeName("lo")), None)) :: Nil)
+    assertTpe("F[_ >: lo]") { expected }
+    assertTpe("F[? >: lo]") { expected }
   }
 
   test("F[_ <: hi]") {
-    assertTpe("F[_ <: hi]") {
-      Apply(TypeName("F"), Type.Placeholder(Type.Bounds(None, Some(TypeName("hi")))) :: Nil)
-    }
+    implicit val Scala3: Dialect = scala.meta.dialects.Scala31
+    val expected =
+      Apply(TypeName("F"), Wildcard(Bounds(None, Some(TypeName("hi")))) :: Nil)
+    assertTpe("F[_ <: hi]") { expected }
+    assertTpe("F[? <: hi]") { expected }
   }
 
   test("F[?]") {
     implicit val Scala3: Dialect = scala.meta.dialects.Scala31
     val expected =
-      Apply(TypeName("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
+      Apply(TypeName("F"), List(Wildcard(Bounds(None, None))))
     assertTpe("F[?]") { expected }
     assertTpe("F[_]") { expected }
   }
 
   test("F[_]") {
     assertTpe("F[_]") {
-      Apply(TypeName("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
+      Apply(TypeName("F"), AnonymousParam(None) :: Nil)
     }
     assertTpe("F[+_]") {
-      Apply(TypeName("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
+      Apply(TypeName("F"), AnonymousParam(Some(Mod.Covariant())) :: Nil)
     }
     assertTpe("F[-_]") {
-      Apply(TypeName("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
+      Apply(TypeName("F"), AnonymousParam(Some(Mod.Contravariant())) :: Nil)
     }
   }
 

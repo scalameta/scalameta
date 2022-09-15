@@ -148,7 +148,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Importer Instances.{ im, given Ordering[?] }
        |Importee.Given given Ordering[?]
        |Type.Apply Ordering[?]
-       |Type.Placeholder ?
+       |Type.Wildcard ?
        |Type.Bounds import Instances.{ im, given Ordering[?@@] }
        |""".stripMargin
   )

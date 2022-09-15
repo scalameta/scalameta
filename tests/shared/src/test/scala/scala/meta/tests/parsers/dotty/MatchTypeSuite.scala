@@ -82,7 +82,7 @@ class MatchTypeSuite extends BaseDottySuite {
           List(
             TypeCase(
               Type.Tuple(
-                List(Type.Name("x1"), Type.Placeholder(Type.Bounds(None, None)))
+                List(Type.Name("x1"), Type.Wildcard(Type.Bounds(None, None)))
               ),
               Type.Name("x1")
             )
@@ -222,7 +222,7 @@ class MatchTypeSuite extends BaseDottySuite {
                 Type.Name("Left"),
                 List(
                   TypeCase(Type.Name("Unit"), Type.Name("Right")),
-                  TypeCase(Type.Placeholder(Type.Bounds(None, None)), Type.Name("Left"))
+                  TypeCase(Type.Wildcard(Type.Bounds(None, None)), Type.Name("Left"))
                 )
               ),
               Type.Bounds(None, None)
@@ -243,13 +243,12 @@ class MatchTypeSuite extends BaseDottySuite {
          |    case _ => R
          |    case ? => L
          |""".stripMargin,
-      // "case ? => R" is a bug
       assertLayout = Some(
         """|object match_types {
            |  type Combine[L, R] = L match {
-           |    case Foo[?] => L
+           |    case Foo[_] => L
            |    case Bar[?] => L
-           |    case ? => R
+           |    case _ => R
            |    case ? => L
            |  }
            |}
@@ -277,23 +276,23 @@ class MatchTypeSuite extends BaseDottySuite {
                   TypeCase(
                     Type.Apply(
                       Type.Name("Foo"),
-                      List(Type.Placeholder(Type.Bounds(None, None)))
+                      List(Type.AnonymousParam(None))
                     ),
                     Type.Name("L")
                   ),
                   TypeCase(
                     Type.Apply(
                       Type.Name("Bar"),
-                      List(Type.Placeholder(Type.Bounds(None, None)))
+                      List(Type.Wildcard(Type.Bounds(None, None)))
                     ),
                     Type.Name("L")
                   ),
                   TypeCase(
-                    Type.Placeholder(Type.Bounds(None, None)),
+                    Type.AnonymousParam(None),
                     Type.Name("R")
                   ),
                   TypeCase(
-                    Type.Placeholder(Type.Bounds(None, None)),
+                    Type.Wildcard(Type.Bounds(None, None)),
                     Type.Name("L")
                   )
                 )

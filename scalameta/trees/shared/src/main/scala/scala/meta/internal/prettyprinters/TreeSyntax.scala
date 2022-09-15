@@ -685,6 +685,19 @@ object TreeSyntax {
           Type,
           s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}"))
         )
+      case t: Type.AnonymousParam =>
+        m(SimpleTyp, o(t.variant), "_")
+      case t: Type.Wildcard =>
+        /* In order not to break existing tools `.syntax` should still return
+         * `_` instead `?` unless specifically used.
+         */
+        def questionMarkUsed = t.origin match {
+          case o: Origin.Parsed => !o.tokens.headOption.exists(_.is[Token.Underscore])
+          case _ => false
+        }
+        val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
+          (dialect.allowUnderscoreAsTypePlaceholder || questionMarkUsed)
+        m(SimpleTyp, s(kw(if (useQM) "?" else "_")), t.bounds)
       case t: Type.Placeholder =>
         /* In order not to break existing tools `.syntax` should still return
          * `_` instead `?` unless specifically used.

@@ -91,13 +91,12 @@ trait CommonNamerMacros extends MacroHelpers {
 
     paramss.foreach(_.foreach(x => addStubbedMemberWithName(x.name)))
     extraStubs.foreach(x => addStubbedMemberWithName(TermName(x)))
-    val qcopyParamss = paramss.map(_.map { case ValDef(mods, name, tpt, _) =>
-      q"val $name: $tpt = this.$name"
-    })
+    val qcopyParamss = paramss.map(_.map(t => q"val ${t.name}: ${t.tpt}"))
     qstats += q"def copy(...$qcopyParamss): $name = $stub"
 
     extraAbstractDefs.foreach {
-      case x: ValOrDefDefApi if x.mods.hasFlag(Flag.ABSTRACT) || x.rhs.isEmpty =>
+      case x: ValOrDefDefApi
+          if x.mods.hasFlag(Flag.ABSTRACT) || x.mods.hasFlag(Flag.OVERRIDE) || x.rhs.isEmpty =>
         addStubbedOverrideMember(x)
       case _ =>
     }
