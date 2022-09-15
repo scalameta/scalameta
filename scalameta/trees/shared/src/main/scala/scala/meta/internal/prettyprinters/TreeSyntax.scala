@@ -802,24 +802,26 @@ object TreeSyntax {
         )
       case Lit.Int(value) => m(Literal, s(value.toString))
       case Lit.Long(value) => m(Literal, s(value.toString + "L"))
-      case t @ Lit.Float(value) =>
+      case Lit.Float(value) =>
         val n = value.toFloat
         if (java.lang.Float.isNaN(n)) s("Float.NaN")
         else {
           n match {
             case Float.PositiveInfinity => s("Float.PositiveInfinity")
             case Float.NegativeInfinity => s("Float.NegativeInfinity")
+            case _ if Character.toLowerCase(value.last) == 'f' => s(value)
             case _ =>
               s(value, "f")
           }
         }
-      case t @ Lit.Double(value) =>
+      case Lit.Double(value) =>
         val n = value.toDouble
         if (java.lang.Double.isNaN(n)) s("Double.NaN")
         else {
           n match {
             case Double.PositiveInfinity => s("Double.PositiveInfinity")
             case Double.NegativeInfinity => s("Double.NegativeInfinity")
+            case _ if Character.toLowerCase(value.last) == 'd' => s(value)
             case _ =>
               s(value, "d")
           }
