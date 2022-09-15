@@ -180,6 +180,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     in.currentIndentation
   }
 
+  private def previousIndentation: Int = {
+    in.previousIndentation
+  }
+
   def token = in.token
   def next() = in.next()
   def nextTwice() = { next(); next() }
@@ -891,16 +895,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             autoPos(Type.Refine(Some(previousType), indented(refineStatSeq())))
           } else {
             val rhs = annotType()
-            val t = atPos(startPos, rhs)(Type.With(previousType, rhs))
+            val t = autoEndPos(startPos)(Type.With(previousType, rhs))
             gatherWithTypes(t)
           }
         } else {
           previousType
         }
       }
+
       val t = gatherWithTypes(typ)
-      if (isAfterOptNewLine[LeftBrace]) refinement(innerType = Some(t))
-      else t
+      val wasLF = token.is[LF]
+
+      // the indentation needs to be higher than the containing one
+      def canAddBracesRefinement =
+        !dialect.allowSignificantIndentation || !wasLF || currentIndentation > previousIndentation
+
+      if (isAfterOptNewLine[LeftBrace] && canAddBracesRefinement) {
+        refinement(innerType = Some(t))
+      } else t
     }
 
     def annotType(): Type = annotTypeRest(simpleType())

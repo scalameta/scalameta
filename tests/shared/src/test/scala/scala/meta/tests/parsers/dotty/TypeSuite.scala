@@ -123,6 +123,58 @@ class TypeSuite extends BaseDottySuite {
     )
   }
 
+  test("with-followed-by-brace-indent") {
+    runTestAssert[Stat](
+      """|type AA = String with Int with
+         |    type T>: Null
+         |      {
+         |        type T>: Int
+         |      }
+         |""".stripMargin,
+      assertLayout = Some("type AA = String with Int { type T >: Null { type T >: Int } }")
+    )(
+      Defn.Type(
+        Nil,
+        Type.Name("AA"),
+        Nil,
+        Type.Refine(
+          Some(Type.With(Type.Name("String"), Type.Name("Int"))),
+          List(
+            Decl.Type(
+              Nil,
+              Type.Name("T"),
+              Nil,
+              Type.Bounds(
+                Some(
+                  Type.Refine(
+                    Some(Type.Name("Null")),
+                    List(
+                      Decl.Type(Nil, Type.Name("T"), Nil, Type.Bounds(Some(Type.Name("Int")), None))
+                    )
+                  )
+                ),
+                None
+              )
+            )
+          )
+        ),
+        Type.Bounds(None, None)
+      )
+    )
+  }
+
+  test("with-followed-by-brace") {
+    runTestError[Stat](
+      """|type AA = String with Int with
+         |    type T>: Null
+         |{
+         |  type T>: Int
+         |}
+         |""".stripMargin,
+      "; expected but { found"
+    )
+  }
+
   test("T") {
     val TypeName("T") = tpe("T")
   }

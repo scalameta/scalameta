@@ -133,6 +133,10 @@ private[parsers] class LazyTokenIterator private (
       foundIndentation
   }
 
+  def previousIndentation: Int = {
+    sepRegions.lift(1).fold(0)(_.indent)
+  }
+
   def observeOutdented(): Boolean = {
     if (!dialect.allowSignificantIndentation) false
     else {
