@@ -362,6 +362,12 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies ++= List(
       "io.get-coursier" %% "coursier" % "2.0.0-RC5-6"
     ),
+    dependencyOverrides += {
+      if (isScala211.value)
+        "org.scala-lang.modules" %%% "scala-xml" % "1.2.0"
+      else
+        "org.scala-lang.modules" %%% "scala-xml" % "2.1.0"
+    },
     // Needed because some tests rely on the --usejavacp option
     Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
   )
