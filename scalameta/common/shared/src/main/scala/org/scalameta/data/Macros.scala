@@ -27,7 +27,8 @@ class DataTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelp
     val emptyCheckRequested =
       try x.symbol.asTerm.accessed.nonEmpty
       catch { case _: AssertionError => x.symbol.nonEmpty }
-    if (emptyCheckRequested) q"$InvariantsRequireMethod($x != null && $x.nonEmpty)"
+    if (emptyCheckRequested)
+      q"$InvariantsRequireMethod($x != null && ($x.isInstanceOf[$QuasiClass] || $x.nonEmpty))"
     else q"()"
   }
 }
