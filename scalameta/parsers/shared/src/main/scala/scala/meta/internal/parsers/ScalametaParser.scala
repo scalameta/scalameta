@@ -880,17 +880,25 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     def compoundTypeRest(typ: Type): Type = {
       val startPos = typ.startTokenPos
-      var t = typ
-      // Indentation means a refinement and we cannot join refinements this way
-      while (acceptOpt[KwWith] && !token.is[Indentation.Indent]) {
-        val rhs = annotType()
-        t = atPos(startPos, rhs)(Type.With(t, rhs))
+
+      @tailrec
+      def gatherWithTypes(previousType: Type): Type = {
+        if (acceptOpt[KwWith]) {
+          /* Indentation means a refinement and we cannot join
+           * refinements this way so stop looping.
+           */
+          if (token.is[Indentation.Indent]) {
+            autoPos(Type.Refine(Some(previousType), indented(refineStatSeq())))
+          } else {
+            val rhs = annotType()
+            val t = atPos(startPos, rhs)(Type.With(previousType, rhs))
+            gatherWithTypes(t)
+          }
+        } else {
+          previousType
+        }
       }
-      token match {
-        case Indentation.Indent() =>
-          t = autoPos(Type.Refine(Some(t), indented(refineStatSeq())))
-        case _ =>
-      }
+      val t = gatherWithTypes(typ)
       if (isAfterOptNewLine[LeftBrace]) refinement(innerType = Some(t))
       else t
     }
