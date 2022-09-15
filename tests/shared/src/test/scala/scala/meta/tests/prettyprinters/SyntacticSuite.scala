@@ -916,6 +916,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(pat("_: F[_]").syntax, "_: F[_]")
   }
 
+  test("case _: F[?]") {
+    assertEquals(pat("_: F[?]").syntax, "_: F[?]")
+  }
+
   test("constructors") {
     val tree @ Defn.Class(_, _, _, primary, Template(_, _, _, List(secondary))) =
       templStat("class C(x: Int) { def this() = this(42) }")
