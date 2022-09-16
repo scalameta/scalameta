@@ -234,6 +234,10 @@ trait SymbolInformationPrinter extends BasePrinter {
               out.print(" => ")
               opt(kase.body)(normal)
             }
+          case LambdaType(parameters, returnType) =>
+            parameters.infos.foreach(notes.discover)
+            rep("[", parameters.infos, ", ", "] =>> ")(pprintDefn)
+            opt(returnType)(normal)
           case NoType =>
             out.print("<?>")
         }

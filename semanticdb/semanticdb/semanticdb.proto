@@ -72,7 +72,13 @@ message Type {
     ByNameType by_name_type = 13;
     RepeatedType repeated_type = 14;
     MatchType match_type = 25;
+    LambdaType lambda_type = 26;
   }
+}
+
+message LambdaType {
+  Scope parameters = 1;
+  Type return_type = 2;
 }
 
 message TypeRef {
