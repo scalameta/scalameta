@@ -80,7 +80,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       )
     }
     assert(
-      error.getMessage.contains(expected),
+      error.getMessage().contains(expected),
       s"Expected [${error.getMessage}] to contain [${expected}]."
     )
   }

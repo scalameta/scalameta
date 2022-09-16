@@ -23,6 +23,56 @@ class EnumSuite extends BaseDottySuite {
     )
   }
 
+  test("enum-private-case") {
+    runTestAssert[Stat](
+      "enum Color { private case R; protected case G }",
+      assertLayout = Some(
+        """|enum Color {
+           |  private case R
+           |  protected case G
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Enum(
+        Nil,
+        Type.Name("Color"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name(""), None),
+          List(
+            Defn.EnumCase(
+              List(Mod.Private(Name(""))),
+              Term.Name("R"),
+              Nil,
+              Ctor.Primary(Nil, Name(""), Nil),
+              Nil
+            ),
+            Defn.EnumCase(
+              List(Mod.Protected(Name(""))),
+              Term.Name("G"),
+              Nil,
+              Ctor.Primary(Nil, Name(""), Nil),
+              Nil
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("enum-wrong-soft") {
+    runTestError[Stat](
+      """|enum Color:
+         | open case R, G """.stripMargin,
+      "error: Only access modifiers allowed on enum case"
+    )
+  }
+
   test("enum-parametrized") {
     runTestAssert[Stat]("enum C(i: Int) { case R, G }")(
       Defn.Enum(Nil, pname("C"), Nil, ctorp(List(tparam("i", "Int"))), tpl(List(RGCase)))
