@@ -244,6 +244,14 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           }
         }
 
+        // step 7a: override the Object and Equals methods
+        if (!isQuasi) {
+          istats1 += q"final override def canEqual(that: Any): $BooleanClass = that.isInstanceOf[$iname]"
+          istats1 += q"final override def equals(that: Any): $BooleanClass = this eq that.asInstanceOf[AnyRef]"
+          istats1 += q"final override def hashCode: $IntClass = System.identityHashCode(this)"
+          istats1 += q"final override def toString: $StringClass = scala.meta.internal.prettyprinters.TreeToString(this)"
+        }
+
         // step 8: create the children method
         stats1 += q"def children: $ListClass[$TreeClass] = $CommonTyperMacrosModule.children[$iname, $TreeClass]"
 

@@ -17,10 +17,10 @@ import scala.meta.{Type => smType}
   def pos: Position
   def tokens(implicit dialect: Dialect): Tokens
 
-  final override def canEqual(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
-  final override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
-  final override def hashCode: Int = System.identityHashCode(this)
-  final override def toString = scala.meta.internal.prettyprinters.TreeToString(this)
+  override def canEqual(that: Any): Boolean = that.isInstanceOf[Tree]
+  override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
+  override def hashCode: Int = System.identityHashCode(this)
+  override def toString = scala.meta.internal.prettyprinters.TreeToString(this)
 }
 
 object Tree extends InternalTreeXtensions {
