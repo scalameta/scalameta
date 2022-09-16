@@ -3295,7 +3295,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case KwExtension() =>
         extensionGroupDecl(mods)
       case KwCase() if dialect.allowEnums && enumCaseAllowed && ahead(token.is[Ident]) =>
-        enumCaseDef(mods)
+        mods.find(mod => !mod.isAccessMod && !mod.is[Mod.Annot]) match {
+          case Some(mod) =>
+            syntaxError("Only access modifiers allowed on enum case", at = mod.pos)
+          case None =>
+            enumCaseDef(mods)
+        }
       case KwCase() if dialect.allowEnums && ahead(token.is[Ident]) =>
         syntaxError("Enum cases are only allowed in enums", at = token.pos)
       case KwIf() if mods.size == 1 && mods.head.is[Mod.Inline] =>
