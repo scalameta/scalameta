@@ -430,7 +430,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           if (unapplyParams.length != 0) {
             val successTargs = tq"(..${unapplyParams.map(p => p.tpt)})"
             val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
-            mstats1 += q"@$InlineAnnotation final def unapply(x: $iname): $OptionClass[$successTargs] = if (x == null) $NoneModule else $SomeModule($successArgs)"
+            mstats1 += q"""
+              @$InlineAnnotation final def unapply(x: $iname): $OptionClass[$successTargs] =
+                if (x != null && x.isInstanceOf[$name]) $SomeModule($successArgs) else $NoneModule
+            """
           } else {
             mstats1 += q"@$InlineAnnotation final def unapply(x: $iname): $BooleanClass = true"
           }
