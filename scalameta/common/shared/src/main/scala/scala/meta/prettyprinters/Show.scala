@@ -9,8 +9,8 @@ trait Show[T] {
   def apply(t: T): Show.Result
 }
 
-object Show {
-  private[meta] sealed abstract class Result {
+private[meta] object Show {
+  sealed abstract class Result {
     override def toString = {
       val sb = new StringBuilder
       var indentation = 0
@@ -59,15 +59,15 @@ object Show {
       sb.toString
     }
   }
-  private[meta] final case object None extends Result
-  private[meta] final case class Str(value: String) extends Result
-  private[meta] final case class Sequence(xs: Result*) extends Result
-  private[meta] final case class Repeat(xs: Seq[Result], sep: String) extends Result
-  private[meta] final case class Indent(res: Result) extends Result
-  private[meta] final case class Newline(res: Result) extends Result
-  private[meta] final case class Meta(data: Any, res: Result) extends Result
-  private[meta] final case class Wrap(prefix: String, res: Result, suffix: String) extends Result
-  private[meta] final case class Function(fn: StringBuilder => Result) extends Result
+  final case object None extends Result
+  final case class Str(value: String) extends Result
+  final case class Sequence(xs: Result*) extends Result
+  final case class Repeat(xs: Seq[Result], sep: String) extends Result
+  final case class Indent(res: Result) extends Result
+  final case class Newline(res: Result) extends Result
+  final case class Meta(data: Any, res: Result) extends Result
+  final case class Wrap(prefix: String, res: Result, suffix: String) extends Result
+  final case class Function(fn: StringBuilder => Result) extends Result
 
   def apply[T](f: T => Result): Show[T] =
     new Show[T] { def apply(input: T): Result = f(input) }
