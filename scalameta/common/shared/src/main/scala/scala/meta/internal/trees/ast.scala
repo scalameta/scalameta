@@ -48,7 +48,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val istats1 = ListBuffer[Tree]()
         val stats1 = ListBuffer[Tree]()
         val ianns1 = ListBuffer[Tree]() ++ imods.annotations
-        def imods1 = imods.mapAnnotations(_ => ianns1.toList)
+        def imods1 = Modifiers(SEALED | imods.flags, imods.privateWithin, ianns1.toList)
         def mods1 = Modifiers(FINAL, mname.toTypeName, List(SerialVersionUIDAnnotation(1L)))
         val iparents1 = ListBuffer[Tree]() ++ iparents
         def parents1 = List(tq"$iname")
