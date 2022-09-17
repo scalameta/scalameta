@@ -9,21 +9,24 @@ import scala.reflect.ClassTag
 // https://github.com/typesafehub/migration-manager/wiki/sbt-plugin#basic-usage
 object Mima {
   val languageAgnosticCompatibilityPolicy: ProblemFilter = (problem: Problem) => {
-    val (ref, fullName) = problem match {
-      case problem: TemplateProblem => (problem.ref, problem.ref.fullName)
-      case problem: MemberProblem => (problem.ref, problem.ref.fullName)
+    val (ref, fullName, notScopedPrivate) = problem match {
+      case problem: TemplateProblem =>
+        val ref = problem.ref
+        (ref, ref.fullName, ref.scopedPrivateSuff.isEmpty)
+      case problem: MemberProblem =>
+        val ref = problem.ref
+        (ref, ref.fullName, ref.scopedPrivatePrefix.isEmpty)
     }
-    val public = ref.isPublic
-    val include = fullName.startsWith("scala.meta.")
-    val exclude = fullName.contains(".internal.") || fullName.contains(".contrib.")
+    val public = ref.isPublic && notScopedPrivate
+    def include = fullName.startsWith("scala.meta.")
+    def exclude = fullName.contains(".internal.") || fullName.contains(".contrib.")
     public && include && !exclude
   }
 
   val scalaSpecificCompatibilityPolicy: ProblemFilter = {
-    case ReversedMissingMethodProblem(member) =>
-      // NOTE: `scala.meta.io.Multipath` is sealed, so by the same logic as above
-      // we are free to ignore these warnings.
-      member.owner.fullName != "scala.meta.io.Multipath"
+    case ReversedMissingMethodProblem(member) => // ignore sealed types
+      // trees are sealed
+      !member.owner.annotations.exists(_.name == "scala.meta.internal.trees.Metadata.astClass")
     case _ =>
       true
   }
