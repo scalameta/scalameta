@@ -36,4 +36,25 @@ abstract class TreeSuiteBase extends FunSuite {
     assertSyntax(obtained, syntax)(expected)
   }
 
+  protected def checkTrees(obtained: Tree*)(expected: Tree*)(
+      implicit loc: munit.Location
+  ): Unit = {
+    assertEquals(obtained.length, expected.length)
+    obtained.zip(expected).foreach { case (o, e) => checkTree(o)(e) }
+  }
+
+  protected def checkTreesWithSyntax(obtained: Tree*)(syntax: String*)(expected: Tree*)(
+      implicit loc: munit.Location
+  ): Unit = {
+    assertEquals(obtained.length, syntax.length)
+    checkTreesWithSyntax(obtained.zip(syntax): _*)(expected: _*)
+  }
+
+  protected def checkTreesWithSyntax(obtained: (Tree, String)*)(expected: Tree*)(
+      implicit loc: munit.Location
+  ): Unit = {
+    assertEquals(obtained.length, expected.length)
+    obtained.zip(expected).foreach { case ((o, s), e) => checkTree(o, s)(e) }
+  }
+
 }
