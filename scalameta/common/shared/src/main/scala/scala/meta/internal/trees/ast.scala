@@ -14,6 +14,8 @@ class ast extends StaticAnnotation {
 }
 
 class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
+  import AstNamerMacros._
+
   lazy val u: c.universe.type = c.universe
   lazy val mirror = c.mirror
   import c.universe._
@@ -390,9 +392,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           .sortBy { vr =>
             try {
               vr.mods.annotations.collectFirst { case q"new binaryCompatField($version)" =>
-                val since = version.toString().stripPrefix("\"").stripSuffix("\"")
-                val versions = since.split("\\.").map(_.toInt)
-                (versions(0), versions(1), versions(2))
+                parseVersion(version.toString())
               }.get
             } catch {
               case _: Throwable =>
@@ -485,4 +485,16 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         List(cdef1, mdef1)
       }
     })
+}
+
+object AstNamerMacros {
+
+  private type Version = (Int, Int, Int)
+
+  private def parseVersion(v: String): Version = {
+    val since = v.stripPrefix("\"").stripSuffix("\"")
+    val versions = since.split('.').map(_.toInt)
+    (versions(0), versions(1), versions(2))
+  }
+
 }
