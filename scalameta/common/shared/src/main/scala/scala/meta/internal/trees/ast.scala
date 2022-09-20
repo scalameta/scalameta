@@ -429,13 +429,13 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         }
 
         // step 14: generate Companion.unapply
-        val unapplyParamss = rawparamss.map(_.map(_.duplicate))
-        val unapplyParams = unapplyParamss.head
-        val needsUnapply = !mstats.exists(stat =>
-          stat match { case DefDef(_, TermName("unapply"), _, _, _, _) => true; case _ => false }
-        )
+        val needsUnapply = !mstats.exists {
+          case DefDef(_, TermName("unapply"), _, _, _, _) => true
+          case _ => false
+        }
         if (needsUnapply) {
-          if (unapplyParams.length != 0) {
+          if (rawparamss.head.nonEmpty) {
+            val unapplyParams = rawparamss.head.map(_.duplicate)
             val successTargs = tq"(..${unapplyParams.map(p => p.tpt)})"
             val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
             mstats1 += q"""
