@@ -68,15 +68,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         // step 2: validate the body of the class
 
-        def setterName(vr: ValDef) =
-          TermName(s"set${vr.name.toString.stripPrefix("_").capitalize}")
-        def getterName(vr: ValDef) = TermName(s"${vr.name.toString.stripPrefix("_")}")
-
-        def binaryCompatMods(vr: ValDef) = {
-          val getter = q"def ${getterName(vr)}: ${vr.tpt}"
-          getter.mods.mapAnnotations(_ => vr.mods.annotations)
-        }
-
         def isBinaryCompatField(vr: ValDef) = vr.mods.annotations.exists {
           case q"new binaryCompatField($since)" =>
             if (!vr.name.toString.startsWith("_"))
@@ -117,27 +108,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         stats1 ++= otherDefns
 
-        val binaryCompatAbstractFields = binaryCompatVars.flatMap { vr: ValDef =>
-          List(
-            q"${binaryCompatMods(vr)} def ${getterName(vr)}: ${vr.tpt}",
-            q"def ${setterName(vr)}(${vr.name} : ${vr.tpt}) : Unit"
-          )
-        }
+        val binaryCompatAbstractFields = binaryCompatVars.flatMap(declareGetterSetter)
         istats1 ++= binaryCompatAbstractFields
-
-        val binaryCompatStats = binaryCompatVars.flatMap { vr: ValDef =>
-          val name = vr.name
-          val nameString = name.toString
-          List(
-            q"def ${getterName(vr)} = this.$name ",
-            q"""def ${setterName(vr)}($name : ${vr.tpt}) = {
-                   val node = this
-                   $CommonTyperMacrosModule.storeField(this.$name, $name, $nameString)
-                }""",
-            vr
-          )
-        }
-        stats1 ++= binaryCompatStats
+        stats1 ++= binaryCompatVars.flatMap(defineGetterSetter)
 
         stats1 ++= imports
 
@@ -485,6 +458,41 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         List(cdef1, mdef1)
       }
     })
+
+  private def setterName(name: String): TermName =
+    TermName(s"set${name.stripPrefix("_").capitalize}")
+  private def setterName(name: TermName): TermName = setterName(name.toString)
+  private def setterName(vr: ValOrDefDef): TermName = setterName(vr.name)
+  private def getterName(name: String): TermName = TermName(s"${name.stripPrefix("_")}")
+  private def getterName(name: TermName): TermName = getterName(name.toString)
+  private def getterName(vr: ValOrDefDef): TermName = getterName(vr.name)
+
+  private def declareGetterSetter(vr: ValOrDefDef) =
+    declareProxyGetterSetter(vr.name, vr.tpt, vr.mods.annotations)
+
+  private def declareProxyGetterSetter(proxyName: TermName, proxyTpe: Tree, annots: List[Tree]) = {
+    val setter = q"def ${setterName(proxyName)}($proxyName : $proxyTpe) : Unit"
+    val mods = setter.mods.mapAnnotations(_ => annots)
+    val getter = q"$mods def ${getterName(proxyName)}: $proxyTpe"
+    List(getter, setter)
+  }
+
+  private def defineGetterSetter(vr: ValOrDefDef) =
+    vr :: defineProxyGetterSetter(vr.name, vr.tpt, vr.name)
+
+  private def defineProxyGetterSetter(proxyName: TermName, proxyTpe: Tree, realName: TermName) =
+    List(
+      q"""
+        def ${getterName(proxyName)}: $proxyTpe = this.$realName
+      """,
+      q"""
+        def ${setterName(proxyName)}($proxyName : $proxyTpe) = {
+          val node = this
+          $CommonTyperMacrosModule.storeField(this.$realName, $proxyName, ${realName.toString})
+        }
+      """
+    )
+
 }
 
 object AstNamerMacros {
