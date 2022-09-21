@@ -8,7 +8,7 @@ import scala.meta.prettyprinters._
 import scala.meta.internal.trees._
 import scala.meta.internal.trees.Metadata.binaryCompatField
 
-import scala.meta.{Type => smType}
+import scala.{meta => sm}
 
 @root trait Tree extends InternalTree {
   def parent: Option[Tree]
@@ -20,15 +20,15 @@ import scala.meta.{Type => smType}
   override def canEqual(that: Any): Boolean = that.isInstanceOf[Tree]
   override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   override def hashCode: Int = System.identityHashCode(this)
-  override def toString = scala.meta.internal.prettyprinters.TreeToString(this)
+  override def toString = internal.prettyprinters.TreeToString(this)
 }
 
 object Tree extends InternalTreeXtensions {
   implicit def classifiable[T <: Tree]: Classifiable[T] = null
   implicit def showStructure[T <: Tree]: Structure[T] =
-    scala.meta.internal.prettyprinters.TreeStructure.apply[T]
+    internal.prettyprinters.TreeStructure.apply[T]
   implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] =
-    scala.meta.internal.prettyprinters.TreeSyntax.apply[T](dialect)
+    internal.prettyprinters.TreeSyntax.apply[T](dialect)
 }
 
 @branch trait Ref extends Tree
@@ -76,11 +76,11 @@ object Lit {
 
 @branch trait Term extends Stat
 object Term {
-  @branch trait Ref extends Term with scala.meta.Ref
-  @ast class This(qual: scala.meta.Name) extends Term.Ref
-  @ast class Super(thisp: scala.meta.Name, superp: scala.meta.Name) extends Term.Ref
-  @ast class Name(value: Predef.String @nonEmpty) extends scala.meta.Name with Term.Ref with Pat
-  @ast class Anonymous() extends scala.meta.Name with Term.Ref {
+  @branch trait Ref extends Term with sm.Ref
+  @ast class This(qual: sm.Name) extends Term.Ref
+  @ast class Super(thisp: sm.Name, superp: sm.Name) extends Term.Ref
+  @ast class Name(value: Predef.String @nonEmpty) extends sm.Name with Term.Ref with Pat
+  @ast class Anonymous() extends sm.Name with Term.Ref {
     def value = ""
     checkParent(ParentChecks.AnonymousImport)
   }
@@ -142,7 +142,7 @@ object Term {
     checkFields(
       params.forall(param =>
         param.is[Term.Param.Quasi] ||
-          (param.name.is[scala.meta.Name.Anonymous] ==> param.default.isEmpty)
+          (param.name.is[sm.Name.Anonymous] ==> param.default.isEmpty)
       )
     )
   }
@@ -150,7 +150,7 @@ object Term {
     checkFields(
       params.forall(param =>
         param.is[Term.Param.Quasi] ||
-          (param.name.is[scala.meta.Name.Anonymous] ==> param.default.isEmpty)
+          (param.name.is[sm.Name.Anonymous] ==> param.default.isEmpty)
       )
     )
     checkFields(
@@ -185,8 +185,8 @@ object Term {
 
 @branch trait Type extends Tree
 object Type {
-  @branch trait Ref extends Type with scala.meta.Ref
-  @ast class Name(value: String @nonEmpty) extends scala.meta.Name with Type.Ref
+  @branch trait Ref extends Type with sm.Ref
+  @ast class Name(value: String @nonEmpty) extends sm.Name with Type.Ref
   @ast class AnonymousName() extends Type
   @ast class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref {
     checkFields(qual.isPath || qual.is[Term.Super] || qual.is[Term.Ref.Quasi])
@@ -268,7 +268,7 @@ object Type {
 
 @branch trait Pat extends Tree
 object Pat {
-  @ast class Var(name: scala.meta.Term.Name) extends Pat with Member.Term {
+  @ast class Var(name: Term.Name) extends Pat with Member.Term {
     // NOTE: can't do this check here because of things like `val X = 2`
     // checkFields(name.value(0).isLower)
     checkParent(ParentChecks.PatVar)
@@ -290,7 +290,7 @@ object Pat {
       case _ => true
     })
   }
-  @ast class Repeated(name: scala.meta.Term.Name) extends Pat
+  @ast class Repeated(name: Term.Name) extends Pat
   @ast class Extract(fun: Term, args: List[Pat]) extends Pat {
     checkFields(fun.isExtractor)
   }
@@ -321,38 +321,38 @@ object Pat {
 }
 object Member {
   @branch trait Term extends Member {
-    def name: scala.meta.Term.Name
+    def name: sm.Term.Name
   }
   @branch trait Type extends Member {
-    def name: smType.Name
+    def name: sm.Type.Name
   }
 }
 
 @branch trait Decl extends Stat
 object Decl {
-  @ast class Val(mods: List[Mod], pats: List[Pat] @nonEmpty, decltpe: scala.meta.Type)
+  @ast class Val(mods: List[Mod], pats: List[Pat] @nonEmpty, decltpe: sm.Type)
       extends Decl with Stat.WithMods
-  @ast class Var(mods: List[Mod], pats: List[Pat] @nonEmpty, decltpe: scala.meta.Type)
+  @ast class Var(mods: List[Mod], pats: List[Pat] @nonEmpty, decltpe: sm.Type)
       extends Decl with Stat.WithMods
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[smType.Param],
+      tparams: List[sm.Type.Param],
       paramss: List[List[Term.Param]],
-      decltpe: scala.meta.Type
+      decltpe: sm.Type
   ) extends Decl with Member.Term with Stat.WithMods
   @ast class Type(
       mods: List[Mod],
-      name: smType.Name,
-      tparams: List[smType.Param],
-      bounds: smType.Bounds
+      name: sm.Type.Name,
+      tparams: List[sm.Type.Param],
+      bounds: sm.Type.Bounds
   ) extends Decl with Member.Type with Stat.WithMods
   @ast class Given(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[smType.Param],
+      tparams: List[sm.Type.Param],
       sparams: List[List[Term.Param]],
-      decltpe: scala.meta.Type
+      decltpe: sm.Type
   ) extends Decl with Member.Term with Stat.WithMods
 }
 
@@ -361,7 +361,7 @@ object Defn {
   @ast class Val(
       mods: List[Mod],
       pats: List[Pat] @nonEmpty,
-      decltpe: Option[scala.meta.Type],
+      decltpe: Option[sm.Type],
       rhs: Term
   ) extends Defn with Stat.WithMods {
     checkFields(pats.forall(!_.is[Term.Name]))
@@ -369,7 +369,7 @@ object Defn {
   @ast class Var(
       mods: List[Mod],
       pats: List[Pat] @nonEmpty,
-      decltpe: Option[scala.meta.Type],
+      decltpe: Option[sm.Type],
       rhs: Option[Term]
   ) extends Defn with Stat.WithMods {
     checkFields(pats.forall(!_.is[Term.Name]))
@@ -378,22 +378,22 @@ object Defn {
   }
   @ast class Given(
       mods: List[Mod],
-      name: scala.meta.Name,
-      tparams: List[smType.Param],
+      name: sm.Name,
+      tparams: List[sm.Type.Param],
       sparams: List[List[Term.Param]],
       templ: Template
   ) extends Defn with Stat.WithMods
   @ast class Enum(
       mods: List[Mod],
-      name: smType.Name,
-      tparams: List[smType.Param],
+      name: sm.Type.Name,
+      tparams: List[sm.Type.Param],
       ctor: Ctor.Primary,
       templ: Template
   ) extends Defn with Member.Type with Stat.WithMods
   @ast class EnumCase(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[smType.Param],
+      tparams: List[sm.Type.Param],
       ctor: Ctor.Primary,
       inits: List[Init]
   ) extends Defn with Member.Term with Stat.WithMods {
@@ -407,23 +407,23 @@ object Defn {
   }
   @ast class GivenAlias(
       mods: List[Mod],
-      name: scala.meta.Name,
-      tparams: List[smType.Param],
+      name: sm.Name,
+      tparams: List[sm.Type.Param],
       sparams: List[List[Term.Param]],
-      decltpe: scala.meta.Type,
+      decltpe: sm.Type,
       body: Term
   ) extends Defn with Stat.WithMods
   @ast class ExtensionGroup(
-      tparams: List[smType.Param],
+      tparams: List[sm.Type.Param],
       paramss: List[List[Term.Param]],
       body: Stat
   ) extends Defn
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[smType.Param],
+      tparams: List[sm.Type.Param],
       paramss: List[List[Term.Param]],
-      decltpe: Option[scala.meta.Type],
+      decltpe: Option[sm.Type],
       body: Term
   ) extends Defn with Member.Term with Stat.WithMods {
     checkFields(paramss.forall(onlyLastParamCanBeRepeated))
@@ -431,31 +431,31 @@ object Defn {
   @ast class Macro(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[smType.Param],
+      tparams: List[sm.Type.Param],
       paramss: List[List[Term.Param]],
-      decltpe: Option[scala.meta.Type],
+      decltpe: Option[sm.Type],
       body: Term
   ) extends Defn with Member.Term with Stat.WithMods
   @ast class Type(
       mods: List[Mod],
-      name: smType.Name,
-      tparams: List[smType.Param],
-      body: scala.meta.Type
+      name: sm.Type.Name,
+      tparams: List[sm.Type.Param],
+      body: sm.Type
   ) extends Defn with Member.Type with Stat.WithMods {
     @binaryCompatField("4.4.0")
-    private var _bounds: smType.Bounds = smType.Bounds(None, None)
+    private var _bounds: sm.Type.Bounds = sm.Type.Bounds(None, None)
   }
   @ast class Class(
       mods: List[Mod],
-      name: smType.Name,
-      tparams: List[smType.Param],
+      name: sm.Type.Name,
+      tparams: List[sm.Type.Param],
       ctor: Ctor.Primary,
       templ: Template
   ) extends Defn with Member.Type with Stat.WithMods
   @ast class Trait(
       mods: List[Mod],
-      name: smType.Name,
-      tparams: List[smType.Param],
+      name: sm.Type.Name,
+      tparams: List[sm.Type.Param],
       ctor: Ctor.Primary,
       templ: Template
   ) extends Defn with Member.Type with Stat.WithMods {
@@ -576,15 +576,15 @@ object Importee {
   @ast class Wildcard() extends Importee
   @ast class Given(tpe: Type) extends Importee
   @ast class GivenAll() extends Importee
-  @ast class Name(name: scala.meta.Name) extends Importee {
-    checkFields(name.is[scala.meta.Name.Quasi] || name.is[scala.meta.Name.Indeterminate])
+  @ast class Name(name: sm.Name) extends Importee {
+    checkFields(name.is[sm.Name.Quasi] || name.is[sm.Name.Indeterminate])
   }
-  @ast class Rename(name: scala.meta.Name, rename: scala.meta.Name) extends Importee {
-    checkFields(name.is[scala.meta.Name.Quasi] || name.is[scala.meta.Name.Indeterminate])
-    checkFields(rename.is[scala.meta.Name.Quasi] || rename.is[scala.meta.Name.Indeterminate])
+  @ast class Rename(name: sm.Name, rename: sm.Name) extends Importee {
+    checkFields(name.is[sm.Name.Quasi] || name.is[sm.Name.Indeterminate])
+    checkFields(rename.is[sm.Name.Quasi] || rename.is[sm.Name.Indeterminate])
   }
-  @ast class Unimport(name: scala.meta.Name) extends Importee {
-    checkFields(name.is[scala.meta.Name.Quasi] || name.is[scala.meta.Name.Indeterminate])
+  @ast class Unimport(name: sm.Name) extends Importee {
+    checkFields(name.is[sm.Name.Quasi] || name.is[sm.Name.Indeterminate])
   }
 }
 
