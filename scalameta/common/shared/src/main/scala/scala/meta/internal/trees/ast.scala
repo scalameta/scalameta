@@ -441,6 +441,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             iname,
             iparents,
             fieldParamss,
+            Nil,
             binaryCompatAbstractFields ++ otherDefns,
             "name",
             "value",
