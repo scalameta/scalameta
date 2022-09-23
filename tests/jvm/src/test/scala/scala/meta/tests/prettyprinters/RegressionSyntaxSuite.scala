@@ -32,7 +32,7 @@ class RegressionSyntaxSuite extends ParseSuite {
 
   test("no-origin") {
     assertEquals(
-      Type.Placeholder(Type.Bounds(None, None)).toString(),
+      Type.AnonymousParam(None).toString(),
       "_"
     )
   }

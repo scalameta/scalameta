@@ -1161,7 +1161,7 @@ class SuccessSuite extends TreeSuiteBase {
     val tpe1 = t"X"
     val tpe2 = t"Y"
     assertTree(t"_ >: $tpe1 <: $tpe2")(
-      Type.Placeholder(Type.Bounds(Some(Type.Name("X")), Some(Type.Name("Y"))))
+      Type.Wildcard(Type.Bounds(Some(Type.Name("X")), Some(Type.Name("Y"))))
     )
   }
 

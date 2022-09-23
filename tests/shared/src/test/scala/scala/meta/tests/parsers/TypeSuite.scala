@@ -127,26 +127,26 @@ class TypeSuite extends ParseSuite {
     assertTpe("F[_ >: lo <: hi]") {
       Apply(
         TypeName("F"),
-        Type.Placeholder(Type.Bounds(Some(TypeName("lo")), Some(TypeName("hi")))) :: Nil
+        List(Wildcard(Bounds(Some(TypeName("lo")), Some(TypeName("hi")))))
       )
     }
   }
 
   test("F[_ >: lo") {
     assertTpe("F[_ >: lo]") {
-      Apply(TypeName("F"), Type.Placeholder(Type.Bounds(Some(TypeName("lo")), None)) :: Nil)
+      Apply(TypeName("F"), List(Wildcard(Bounds(Some(TypeName("lo")), None))))
     }
   }
 
   test("F[_ <: hi]") {
     assertTpe("F[_ <: hi]") {
-      Apply(TypeName("F"), Type.Placeholder(Type.Bounds(None, Some(TypeName("hi")))) :: Nil)
+      Apply(TypeName("F"), List(Wildcard(Bounds(None, Some(TypeName("hi"))))))
     }
   }
 
   test("F[_]") {
     assertTpe("F[_]") {
-      Apply(TypeName("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
+      Apply(TypeName("F"), List(Wildcard(Bounds(None, None))))
     }
   }
 

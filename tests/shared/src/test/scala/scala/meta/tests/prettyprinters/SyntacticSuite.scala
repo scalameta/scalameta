@@ -732,7 +732,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val tree = pat("List[_](xs @ _*)")
     assertTree(tree)(
       Pat.Extract(
-        Term.ApplyType(Term.Name("List"), List(Type.Placeholder(Type.Bounds(None, None)))),
+        Term.ApplyType(Term.Name("List"), List(Type.Wildcard(Type.Bounds(None, None)))),
         List(Pat.Bind(Pat.Var(Term.Name("xs")), Pat.SeqWildcard()))
       )
     )
@@ -744,7 +744,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val tree = pat("List[_](xs @ _*)")
     assertTree(tree)(
       Pat.Extract(
-        Term.ApplyType(Term.Name("List"), List(Type.Placeholder(Type.Bounds(None, None)))),
+        Term.ApplyType(Term.Name("List"), List(Type.Wildcard(Type.Bounds(None, None)))),
         List(Pat.Bind(Pat.Var(Term.Name("xs")), Pat.SeqWildcard()))
       )
     )
@@ -756,11 +756,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val tree = pat("List[_](xs @ _*)")
     assertTree(tree)(
       Pat.Extract(
-        Term.ApplyType(Term.Name("List"), List(Type.Placeholder(Type.Bounds(None, None)))),
+        Term.ApplyType(Term.Name("List"), List(Type.AnonymousParam(None))),
         List(Pat.Bind(Pat.Var(Term.Name("xs")), Pat.SeqWildcard()))
       )
     )
-    assertEquals(tree.syntax, "List[?](xs @ _*)")
+    assertEquals(tree.syntax, "List[_](xs @ _*)")
   }
 
   test("package foo; class C; package baz { class D }") {

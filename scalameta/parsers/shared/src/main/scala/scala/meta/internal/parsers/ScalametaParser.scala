@@ -925,21 +925,32 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     def simpleType(): Type = {
       val startPos = auto.startTokenPos
+      def wildcardType(): Type = {
+        next()
+        Type.Wildcard(typeBounds())
+      }
+      def anonymousParamWithVariant(value: String): Type = {
+        val variant = if (value(0) == '+') Mod.Covariant() else Mod.Contravariant()
+        Type.AnonymousParam(Some(atPos(startPos)(variant)))
+      }
       val res = token match {
         case LeftParen() => makeTupleType(startPos, inParensOnOpen(types()))
-        case Underscore() => next(); Type.Placeholder(typeBounds())
         case MacroSplicedIdent(ident) =>
           Type.Macro(macroSplicedIdent(ident))
         case MacroSplice() =>
           Type.Macro(macroSplice())
+        case _: Underscore if dialect.allowUnderscoreAsTypePlaceholder =>
+          next(); Type.AnonymousParam(None)
+        case _: Underscore =>
+          wildcardType()
         case Ident("?") if dialect.allowQuestionMarkAsTypeWildcard =>
-          next(); Type.Placeholder(typeBounds())
+          wildcardType()
         case Ident(value @ ("+" | "-"))
             if (dialect.allowPlusMinusUnderscoreAsIdent || dialect.allowUnderscoreAsTypePlaceholder) &&
               tryAhead[Underscore] =>
           next() // Ident and Underscore
           if (dialect.allowUnderscoreAsTypePlaceholder)
-            Type.Placeholder(typeBounds())
+            anonymousParamWithVariant(value)
           else
             Type.Name(s"${value}_")
         case _: Literal =>
@@ -1047,8 +1058,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val underlying1 = loop(underlying, convertTypevars = false)
           val annots1 = annots
           Type.Annotate(underlying1, annots1)
-        case Type.Placeholder(bounds) =>
-          val bounds1 = bounds
+        case t: Type.Wildcard =>
+          Type.Wildcard(t.bounds)
+        case t: Type.AnonymousParam =>
+          Type.AnonymousParam(t.variant)
+        case t: Type.Placeholder =>
+          val bounds1 = t.bounds
           Type.Placeholder(bounds1)
         case tpe: Lit =>
           tpe
@@ -3373,7 +3388,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
    */
   private def givenDecl(mods: List[Mod]): Stat = autoEndPos(mods) {
     accept[KwGiven]
-    val anonymousName = autoPos(scala.meta.Name.Anonymous())
+    val anonymousName = autoPos(Name.Anonymous())
 
     val forked = in.fork
     val (sigName, sigTparams, sigUparamss) =

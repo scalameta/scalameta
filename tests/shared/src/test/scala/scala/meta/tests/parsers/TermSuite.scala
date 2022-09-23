@@ -884,7 +884,7 @@ class TermSuite extends ParseSuite {
                   Term.ApplyType(
                     Term.Name("sizeof"),
                     List(
-                      Type.Apply(Type.Name("Ptr"), List(Type.Placeholder(Type.Bounds(None, None))))
+                      Type.Apply(Type.Name("Ptr"), List(Type.Wildcard(Type.Bounds(None, None))))
                     )
                   )
                 )

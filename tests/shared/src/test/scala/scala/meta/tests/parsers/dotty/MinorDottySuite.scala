@@ -2,8 +2,6 @@ package scala.meta.tests.parsers.dotty
 
 import scala.meta.tests.parsers._
 import scala.meta._
-import scala.meta.Type.Apply
-import scala.meta.Type.Placeholder
 
 class MinorDottySuite extends BaseDottySuite {
 
@@ -351,7 +349,7 @@ class MinorDottySuite extends BaseDottySuite {
         List(Pat.Var(Term.Name("stat"))),
         Type.Apply(
           Type.Name("Tree"),
-          List(Type.Placeholder(Type.Bounds(Some(Type.Name("Untyped")), None)))
+          List(Type.Wildcard(Type.Bounds(Some(Type.Name("Untyped")), None)))
         )
       )
     )
@@ -476,7 +474,7 @@ class MinorDottySuite extends BaseDottySuite {
       Defn.Val(
         Nil,
         List(Pat.Var(Term.Name("x"))),
-        Some(Type.Apply(Type.Name("List"), List(Type.Placeholder(Type.Bounds(None, None))))),
+        Some(Type.Apply(Type.Name("List"), List(Type.Wildcard(Type.Bounds(None, None))))),
         Term.Apply(Term.Name("List"), List(Lit.Int(1)))
       )
     )
@@ -491,7 +489,7 @@ class MinorDottySuite extends BaseDottySuite {
             Term.Param(
               Nil,
               Term.Name("a"),
-              Some(Type.Apply(Type.Name("List"), List(Type.Placeholder(Type.Bounds(None, None))))),
+              Some(Type.Apply(Type.Name("List"), List(Type.Wildcard(Type.Bounds(None, None))))),
               None
             )
           )
@@ -1162,9 +1160,9 @@ class MinorDottySuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(
         """|object A {
-           |  type X = ? => Int
-           |  type Y = ? => Int
-           |  type Z = ? => Int
+           |  type X = +_ => Int
+           |  type Y = -_ => Int
+           |  type Z = _ => Int
            |}
            |""".stripMargin
       )
@@ -1181,21 +1179,21 @@ class MinorDottySuite extends BaseDottySuite {
               Nil,
               Type.Name("X"),
               Nil,
-              Type.Function(List(Type.Placeholder(Type.Bounds(None, None))), Type.Name("Int")),
+              Type.Function(List(Type.AnonymousParam(Some(Mod.Covariant()))), Type.Name("Int")),
               Type.Bounds(None, None)
             ),
             Defn.Type(
               Nil,
               Type.Name("Y"),
               Nil,
-              Type.Function(List(Type.Placeholder(Type.Bounds(None, None))), Type.Name("Int")),
+              Type.Function(List(Type.AnonymousParam(Some(Mod.Contravariant()))), Type.Name("Int")),
               Type.Bounds(None, None)
             ),
             Defn.Type(
               Nil,
               Type.Name("Z"),
               Nil,
-              Type.Function(List(Type.Placeholder(Type.Bounds(None, None))), Type.Name("Int")),
+              Type.Function(List(Type.AnonymousParam(None)), Type.Name("Int")),
               Type.Bounds(None, None)
             )
           ),

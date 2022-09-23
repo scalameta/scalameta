@@ -54,7 +54,7 @@ class PatSuite extends ParseSuite {
     assertPat("_: F[_]") {
       Typed(
         Wildcard(),
-        Type.Apply(Type.Name("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
+        Type.Apply(Type.Name("F"), List(Type.AnonymousParam(None)))
       )
     }
   }
@@ -64,7 +64,7 @@ class PatSuite extends ParseSuite {
     assertPat("_: F[_]") {
       Pat.Typed(
         Pat.Wildcard(),
-        Type.Apply(Type.Name("F"), Type.Placeholder(Type.Bounds(None, None)) :: Nil)
+        Type.Apply(Type.Name("F"), List(Type.Wildcard(Type.Bounds(None, None))))
       )
     }
   }
