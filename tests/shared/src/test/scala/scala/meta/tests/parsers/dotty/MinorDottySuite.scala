@@ -155,6 +155,19 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("opaque-type-bounded-alias-with-quasiquotes") {
+    import dialects.Scala3
+    checkTree(q"opaque type Foo <: String = String", "opaque type Foo = String")(
+      Defn.Type(
+        List(Mod.Opaque()),
+        pname("Foo"),
+        Nil,
+        pname("String"),
+        Type.Bounds(None, None)
+      )
+    )
+  }
+
   test("opaque-type-in-object") {
     runTestAssert[Source]("object X { opaque type IArray[+T] = Array }")(
       Source(
