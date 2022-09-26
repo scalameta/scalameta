@@ -412,6 +412,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.Name
       |scala.meta.Type.Or
       |scala.meta.Type.Param
+      |scala.meta.Type.PatWildcard
       |scala.meta.Type.Placeholder
       |scala.meta.Type.Placeholder.Impl
       |scala.meta.Type.PolyFunction

@@ -703,6 +703,8 @@ object TreeSyntax {
         val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
           (dialect.allowUnderscoreAsTypePlaceholder || questionMarkUsed)
         m(SimpleTyp, s(kw(if (useQM) "?" else "_")), t.bounds)
+      case t: Type.PatWildcard =>
+        m(SimpleTyp, kw("_"))
       case t: Type.Placeholder =>
         /* In order not to break existing tools `.syntax` should still return
          * `_` instead `?` unless specifically used.
