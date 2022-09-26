@@ -142,6 +142,7 @@ package object dialects {
     .withAllowStarWildcardImport(true)
     .withAllowProcedureSyntax(false)
     .withAllowDoWhile(false)
+    .withAllowStarAsTypePlaceholder(true)
     .withUseInfixTypePrecedence(true)
     .withAllowInfixOperatorAfterNL(true)
 

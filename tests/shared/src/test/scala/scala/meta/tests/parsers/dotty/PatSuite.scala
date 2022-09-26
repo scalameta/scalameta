@@ -69,6 +69,17 @@ class PatSuite extends ParseSuite {
     }
   }
 
+  test("_: F[*]") {
+    // might be deprecated later
+    implicit val Scala3: Dialect = scala.meta.dialects.Scala31
+    assertPat("_: F[*]") {
+      Typed(
+        Wildcard(),
+        Type.Apply(Type.Name("F"), Type.AnonymousParam(None) :: Nil)
+      )
+    }
+  }
+
   test("patTyp: t Map u") {
     assertPatTyp("t Map u") {
       Type.ApplyInfix(Type.Name("t"), Type.Name("Map"), Type.Name("u"))
