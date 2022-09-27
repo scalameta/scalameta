@@ -41,7 +41,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val name = TypeName(descriptivePrefix + "Impl")
         val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" =
           mdef
-        val bparams1 = ListBuffer[ValDef]() // boilerplate params
         val paramss1 = ListBuffer[List[ValDef]]() // payload params
         val iself = noSelfType
         val self = aself
@@ -80,7 +79,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           case _ => false
         }
 
-        val copiesBuilder = List.newBuilder[DefDef]
+        var needCopies = !isQuasi
         val importsBuilder = List.newBuilder[Import]
         val binaryCompatVarsBuilder = List.newBuilder[ValDef]
         val otherDefsBuilder = List.newBuilder[Tree]
@@ -89,7 +88,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         stats.foreach {
           case x: Import => importsBuilder += x
-          case x: DefDef if !isQuasi && x.name == TermName("copy") => copiesBuilder += x
+          case x: DefDef if !isQuasi && x.name == TermName("copy") =>
+            istats1 += x; needCopies = false
           case x: ValDef if isBinaryCompatField(x) => binaryCompatVarsBuilder += x
           case x if x.isDef => otherDefsBuilder += x
           case q"checkFields($arg)" => checkFieldsBuilder += arg
@@ -99,7 +99,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               "only checkFields(...), checkParent(...) and definitions are allowed in @ast classes"
             c.abort(x.pos, error)
         }
-        val copies = copiesBuilder.result()
         val imports = importsBuilder.result()
         val binaryCompatVars = binaryCompatVarsBuilder.result()
         val otherDefns = otherDefsBuilder.result()
@@ -144,9 +143,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         })
 
         // step 5: implement the unimplemented methods in InternalTree (part 1)
-        bparams1 += q"@$TransientAnnotation private[meta] val privatePrototype: $iname"
-        bparams1 += q"private[meta] val privateParent: $TreeClass"
-        bparams1 += q"private[meta] val privateOrigin: $OriginClass"
+        val bparams1 = List(
+          q"@$TransientAnnotation private[meta] val privatePrototype: $iname",
+          q"private[meta] val privateParent: $TreeClass",
+          q"private[meta] val privateOrigin: $OriginClass"
+        )
 
         // step 6: implement the unimplemented methods in InternalTree (part 1)
         // The purpose of privateCopy is to provide extremely cheap cloning
@@ -158,10 +159,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // Compare this with the `copy` method (described below), which additionally flushes the private state.
         // This method is private[meta] because the state that it's managing is not supposed to be touched
         // by the users of the framework.
-        val privateCopyBargs = ListBuffer[Tree]()
-        privateCopyBargs += q"prototype.asInstanceOf[$iname]"
-        privateCopyBargs += q"parent"
-        privateCopyBargs += q"origin"
         val binaryCompatCopies = binaryCompatVars.collect { case vr: ValDef =>
           List(q"newAst.${setterName(vr)}(this.${vr.name});")
         }
@@ -185,8 +182,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           """
           }
         }
-        val privateCopyBody =
-          q"val newAst = new $name(..$privateCopyBargs)(...$privateCopyArgs); ..$binaryCompatCopies; newAst"
         stats1 += q"""
         private[meta] def privateCopy(
             prototype: $TreeClass = this,
@@ -194,7 +189,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             destination: $StringClass = null,
             origin: $OriginClass = privateOrigin): Tree = {
           $privateCopyParentChecks
-          $privateCopyBody
+          val newAst =
+            new $name(prototype.asInstanceOf[$iname], parent, origin)(...$privateCopyArgs)
+          ..$binaryCompatCopies
+          newAst
         }
       """
         // step 7: create the copy method
@@ -204,19 +202,26 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // NOTE: Can't generate XXX.Quasi.copy, because XXX.Quasi already inherits XXX.copy,
         // and there can't be multiple overloaded methods with default parameters.
         // Not a big deal though, since XXX.Quasi is an internal class.
-        if (!isQuasi) {
-          if (copies.isEmpty) {
-            val fieldDefaultss = fieldParamss.map(_.map(p => q"this.${p.name}"))
-            val copyParamss = fieldParamss.zip(fieldDefaultss).map { case (f, d) =>
-              f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" }
+        def addCopy(paramss: List[List[ValDef]], argss: List[List[Tree]], annots: Tree*) = {
+          val mods = Modifiers(DEFERRED, typeNames.EMPTY, annots.toList)
+          istats1 += q"""
+            $mods def copy(...$paramss): $iname
+          """
+          stats1 += q"""
+            final override def copy(...$paramss): $iname = {
+              val newAst = $mname.apply(...$argss)
+              ..$binaryCompatCopies
+              newAst
             }
-            val copyArgss = fieldParamss.map(_.map(p => q"${p.name}"))
-            val copyBody = q"$mname.apply(...$copyArgss)"
-            istats1 += q"def copy(...$copyParamss): $iname"
-            stats1 += q"""def copy(...$copyParamss): $iname = {val newAst = $copyBody; ..$binaryCompatCopies; newAst}"""
-          } else {
-            istats1 ++= copies
+          """
+        }
+        if (needCopies) {
+          val fieldDefaultss = fieldParamss.map(_.map(p => q"this.${p.name}"))
+          val copyParamss = fieldParamss.zip(fieldDefaultss).map { case (f, d) =>
+            f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" }
           }
+          val copyArgss = fieldParamss.map(_.map(p => q"${p.name}"))
+          addCopy(copyParamss, copyArgss)
         }
 
         // step 7a: override the Object and Equals methods
@@ -407,14 +412,17 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           case _ => false
         }
         if (needsUnapply) {
-          if (rawparamss.head.nonEmpty) {
-            val unapplyParams = rawparamss.head.map(_.duplicate)
+          def getUnapply(unapplyParams: List[ValDef]): Tree = {
             val successTargs = tq"(..${unapplyParams.map(p => p.tpt)})"
             val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
-            mstats1 += q"""
+            q"""
               @$InlineAnnotation final def unapply(x: $iname): $OptionClass[$successTargs] =
                 if (x != null && x.isInstanceOf[$name]) $SomeModule($successArgs) else $NoneModule
             """
+          }
+          val unapplyParamsAll = rawparamss.head
+          if (unapplyParamsAll.nonEmpty) {
+            mstats1 += getUnapply(unapplyParamsAll)
           } else {
             mstats1 += q"@$InlineAnnotation final def unapply(x: $iname): $BooleanClass = true"
           }
