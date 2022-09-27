@@ -128,6 +128,38 @@ class Scala213Suite extends ParseSuite {
     )(dialects.Scala213Source3)
   }
 
+  test("issue-2880") {
+    runAssert(
+      """|Flow {
+         |    b.add()
+         |    input_< ~> filtering ~> removeItems.in0
+         |}
+         |""".stripMargin
+    )(
+      Term.Apply(
+        Term.Name("Flow"),
+        List(
+          Term.Block(
+            List(
+              Term.Apply(Term.Select(Term.Name("b"), Term.Name("add")), Nil),
+              Term.ApplyInfix(
+                Term.ApplyInfix(
+                  Term.Name("input_<"),
+                  Term.Name("~>"),
+                  Nil,
+                  List(Term.Name("filtering"))
+                ),
+                Term.Name("~>"),
+                Nil,
+                List(Term.Select(Term.Name("removeItems"), Term.Name("in0")))
+              )
+            )
+          )
+        )
+      )
+    )(dialects.Scala213Source3)
+  }
+
   private def runAssert(code: String)(expected: Tree)(implicit d: Dialect): Unit = {
     assertTree(templStat(code)(d))(expected)
   }

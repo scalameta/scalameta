@@ -106,24 +106,30 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
       @inline
       def strictNext: Token = getStrictAfterSafe(nextSafe)
 
-      def isLeadingInfixOperator: Boolean = dialect.allowInfixOperatorAfterNL && {
-        val text = token.text
-        @tailrec
-        def iter(idx: Int, nonEmpty: Boolean): Boolean = {
-          val ch = text(idx)
-          if (ch == '_') nonEmpty || idx > 0 && iter(idx - 1, false)
-          else Chars.isOperatorPart(ch) && (idx == 0 || iter(idx - 1, true))
-        }
-        text.isEmpty || (text(0) != '@' && iter(text.length - 1, false))
-      } && (nextSafe match {
-        case nt: Whitespace =>
-          getStrictAfterSafe(nt) match {
-            case _: Ident | _: Interpolation.Id | _: LeftParen | _: LeftBrace | _: Literal => true
-            case _ => false
-          }
-        case _ => false
-      })
+      def isLeadingInfixOperator: Boolean = {
 
+        def isInfixOperator(token: Token) = {
+          val text = token.text
+          text.isEmpty || (text(0) != '@' && iter(text, text.length - 1, false))
+        }
+        @tailrec
+        def iter(text: String, idx: Int, nonEmpty: Boolean): Boolean = {
+          val ch = text(idx)
+          if (ch == '_') nonEmpty || idx > 0 && iter(text, idx - 1, false)
+          else Chars.isOperatorPart(ch) && (idx == 0 || iter(text, idx - 1, true))
+        }
+        dialect.allowInfixOperatorAfterNL && isInfixOperator(token) && (nextSafe match {
+          case nt: Whitespace =>
+            getStrictAfterSafe(nt) match {
+              // can't have to infix operators one after another
+              case i: Ident => !isInfixOperator(i)
+              case _: Interpolation.Id | _: LeftParen | _: LeftBrace | _: Literal => true
+              case _ => false
+            }
+          case _ => false
+        })
+
+      }
     }
   }
 
