@@ -90,25 +90,12 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
     if (relevantFields.isEmpty) return q"$treeName"
     val transformedFields: List[ValDef] = relevantFields.map(transformField(treeName))
 
-    val binaryCompatFields = l.binaryCompatFields
-
-    val binaryCompatGetters = binaryCompatFields.map { field =>
-      q"val ${field.name} = $treeName.${field.name}"
-    }
-
-    val binaryCompatSetters = binaryCompatFields.map { field =>
-      val setter = TermName("set" + field.sym.name.toString.capitalize)
-      q"newTree.$setter(${TermName(field.name.toString + "1")})"
-    }
     q"""
       var same = true
-      ..$binaryCompatGetters
       ..$transformedFields
-      ..${binaryCompatFields.map(transformField(treeName))}
       if (same) $treeName
       else {
         val newTree = $constructor(..${transformedFields.map(_.name)})
-        ..$binaryCompatSetters
         newTree
       }
     """

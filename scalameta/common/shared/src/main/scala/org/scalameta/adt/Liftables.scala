@@ -5,6 +5,8 @@ import scala.reflect.macros.blackbox.Context
 import org.scalameta.adt.Metadata.Adt
 import org.scalameta.adt.{Reflection => AdtReflection}
 
+import scala.meta.internal.trees.Metadata.newField
+
 // Implementation of the scala.reflect.api.Universe#Liftable interface for adts.
 trait Liftables {
   val u: scala.reflect.macros.Universe
@@ -66,7 +68,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
         val nameParts = adt.sym.fullName.split('.')
         val body = if (adt.sym.isClass) {
           val fields = adt match { case leaf: Leaf => leaf.fields; case _ => Nil }
-          val args = fields.map { f =>
+          val args = fields.filter(!_.sym.hasAnnotation[newField]).map { f =>
             q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})"
           // NOTE: we can't really use AssignOrNamedArg here, sorry
           // Test.scala:10: warning: type-checking the invocation of method apply checks if the named argument expression 'stats = ...' is a valid assignment

@@ -117,16 +117,11 @@ trait Reflection {
   class Leaf(sym: Symbol) extends Adt(sym) {
     if (!sym.isLeaf) sys.error(s"$sym is not a leaf")
     def fields: List[Field] = sym.fields.map(_.asField)
-    def binaryCompatFields: List[Field] = {
-      sym.info.decls.collect {
-        case s if s.hasAnnotation[AstMetadata.binaryCompatField] => s.asField
-      }.toList
-    }
     def allFields: List[Field] = sym.allFields.map(_.asField)
     override def toString = s"leaf $prefix"
   }
   class Field(val sym: Symbol) {
-    if (!sym.isField && !sym.hasAnnotation[AstMetadata.binaryCompatField])
+    if (!sym.isField)
       sys.error(s"$sym is not a field")
     def owner: Leaf = sym.owner.asLeaf
     def name: TermName = TermName(sym.name.toString.stripPrefix("_"))
