@@ -58,10 +58,7 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
         if (idx != -1) idx else priority.length
       }
       .map { l =>
-        val extractor = hygienicRef(l.sym.companion)
-        val binders = l.fields.map(f => pq"${f.name}")
-        val handler = leafHandler(l, treeName)
-        cq"$treeName @ $extractor(..$binders) => $handler"
+        cq"$treeName: ${hygienicRef(l.sym)} => ${leafHandler(l, treeName)}"
       }
     val methodName = TermName(s"apply$prefix")
 

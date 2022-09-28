@@ -14,7 +14,7 @@ class transformer extends StaticAnnotation {
 class TransformerMacros(val c: Context) extends TransverserMacros {
   import c.universe._
 
-  def transformField(f: Field): ValDef = {
+  def transformField(treeName: TermName)(f: Field): ValDef = {
     def treeTransformer(input: Tree, tpe: Type): Tree = {
       val from = c.freshName(TermName("from"))
       val to = c.freshName(TermName("to"))
@@ -65,19 +65,20 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           else tolist.toList
         """
     }
+    val fname = q"$treeName.${f.name}"
     val rhs = f.tpe match {
       case tpe @ TreeTpe() =>
-        treeTransformer(q"${f.name}", tpe)
+        treeTransformer(fname, tpe)
       case tpe @ OptionTreeTpe(_) =>
-        optionTransformer(q"${f.name}", tpe, treeTransformer)
+        optionTransformer(fname, tpe, treeTransformer)
       case tpe @ ListTreeTpe(_) =>
-        listTransformer(q"${f.name}", tpe, treeTransformer)
+        listTransformer(fname, tpe, treeTransformer)
       case tpe @ OptionListTreeTpe(_) =>
-        optionTransformer(q"${f.name}", tpe, listTransformer(_, _, treeTransformer))
+        optionTransformer(fname, tpe, listTransformer(_, _, treeTransformer))
       case tpe @ ListListTreeTpe(_) =>
-        listTransformer(q"${f.name}", tpe, listTransformer(_, _, treeTransformer))
+        listTransformer(fname, tpe, listTransformer(_, _, treeTransformer))
       case _ =>
-        q"${f.name}"
+        fname
     }
     q"val ${TermName(f.name.toString + "1")} = $rhs"
   }
@@ -87,7 +88,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
     val relevantFields =
       l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
     if (relevantFields.isEmpty) return q"$treeName"
-    val transformedFields: List[ValDef] = relevantFields.map(transformField)
+    val transformedFields: List[ValDef] = relevantFields.map(transformField(treeName))
 
     val binaryCompatFields = l.binaryCompatFields
 
@@ -103,7 +104,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
       var same = true
       ..$binaryCompatGetters
       ..$transformedFields
-      ..${binaryCompatFields.map(transformField)}
+      ..${binaryCompatFields.map(transformField(treeName))}
       if (same) $treeName
       else {
         val newTree = $constructor(..${transformedFields.map(_.name)})
