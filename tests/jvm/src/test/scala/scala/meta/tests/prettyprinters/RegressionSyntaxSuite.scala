@@ -24,7 +24,7 @@ class RegressionSyntaxSuite extends ParseSuite {
   check("question-mark", "type T = List[?]", "type T = List[?]")
   check("underscore", "type T = List[_]", "type T = List[_]")
 
-  check("211->3", "type T = List[_]", "type T = List[?]", dialects.Scala3)(dialects.Scala211)
+  check("211->3x", "type T = List[_]", "type T = List[?]", dialects.Scala3x)(dialects.Scala211)
   check("211->30", "type T = List[_]", "type T = List[_]", dialects.Scala30)(dialects.Scala211)
   check("211->213", "type T = List[_]", "type T = List[_]", dialects.Scala213)(dialects.Scala211)
   check("3->213", "type T = List[?]", "type T = List[?]", dialects.Scala213)(dialects.Scala3)

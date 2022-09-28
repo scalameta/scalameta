@@ -303,6 +303,6 @@ class MatchTypeSuite extends BaseDottySuite {
           Nil
         )
       )
-    )
+    )(templStat(_)(dialects.Scala3x))
   }
 }

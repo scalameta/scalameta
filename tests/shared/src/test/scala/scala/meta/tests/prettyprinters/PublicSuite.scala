@@ -94,25 +94,29 @@ class PublicSuite extends TreeSuiteBase {
   }
 
   test("scala.meta.dialects.Scala3.toString") {
-    assertNoDiff(scala.meta.dialects.Scala3.toString, "Scala3")
+    assertNoDiff(scala.meta.dialects.Scala3.toString, "Scala32")
   }
 
   test("scala.meta.dialects.Scala30.toString") {
-    assertNoDiff(scala.meta.dialects.Scala30.toString, "Scala31")
+    assertNoDiff(scala.meta.dialects.Scala30.toString, "Scala32")
   }
 
   test("scala.meta.dialects.Scala31.toString") {
-    assertNoDiff(scala.meta.dialects.Scala31.toString, "Scala31")
+    assertNoDiff(scala.meta.dialects.Scala31.toString, "Scala32")
   }
 
   test("scala.meta.dialects.Scala32.toString") {
-    assertNoDiff(scala.meta.dialects.Scala32.toString, "Scala3")
+    assertNoDiff(scala.meta.dialects.Scala32.toString, "Scala32")
   }
 
-  test("scala.meta.dialects.Dotty.toString") {
+  test("scala.meta.dialects.Scala3x.toString") {
+    assertNoDiff(scala.meta.dialects.Scala3x.toString.substring(0, 6), "Scala3")
+  }
+
+  test("scala.meta.dialects.Dotty") {
     // NOTE(olafur): `Dotty` and `Scala3` are identical so it's expected that
     // `toString` returns "Scala3" instead of "Dotty".
-    assertEquals(scala.meta.dialects.Dotty.toString, "Scala3")
+    assertEquals(scala.meta.dialects.Dotty, scala.meta.dialects.Scala3)
   }
 
   test("scala.meta.dialects.Sbt0136.toString") {
