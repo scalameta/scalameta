@@ -4,8 +4,9 @@ package trees
 
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
-import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
+import scala.reflect.macros.whitebox.Context
+
 import org.scalameta.internal.MacroCompat
 
 // @ast is a specialized version of @org.scalameta.adt.leaf for scala.meta ASTs.
@@ -69,7 +70,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         def isBinaryCompatField(vr: ValDef) = vr.mods.annotations.exists {
           case q"new binaryCompatField($since)" =>
-            if (!vr.name.toString.startsWith("_"))
+            val name = vr.name.toString
+            if (name != internalize(name).toString)
               c.abort(vr.pos, "The binaryCompat AST field needs to start with _")
             if (!vr.mods.hasFlag(PRIVATE))
               c.abort(vr.pos, "The binaryCompat AST field needs to be private")
@@ -105,41 +107,34 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val fieldChecks = checkFieldsBuilder.result()
         val parentChecks = checkParentsBuilder.result()
 
-        stats1 ++= otherDefns
-
-        val binaryCompatAbstractFields = binaryCompatVars.flatMap(declareGetterSetter)
+        val binaryCompatAbstractFields = binaryCompatVars.flatMap { vr =>
+          val name = vr.name
+          val tpt = vr.tpt
+          stats1 += vr
+          stats1 += q"override def ${getterName(name)}: $tpt = this.$name"
+          stats1 += defineSetter(name, tpt, Modifiers(OVERRIDE))
+          List(declareGetter(name, tpt, vr.mods.annotations), declareSetter(name, tpt, Nil))
+        }
         istats1 ++= binaryCompatAbstractFields
-        stats1 ++= binaryCompatVars.flatMap(defineGetterSetter)
 
+        stats1 ++= otherDefns
         stats1 ++= imports
 
         // step 3: calculate the parameters of the class
         val paramss = rawparamss
 
         // step 4: turn all parameters into vars, create getters and setters
-        def internalize(name: TermName) = TermName("_" + name.toString)
         val fieldParamss = paramss
-        val fieldParams = fieldParamss.flatten.map(p => (p, p.name.decodedName.toString))
-        istats1 ++= fieldParams.map({ case (p, _) =>
-          var getterAnns = List(q"new $AstMetadataModule.astField")
-          if (p.mods.annotations.exists(_.toString.contains("auxiliary")))
-            getterAnns :+= q"new $AstMetadataModule.auxiliary"
-          val getterMods = Modifiers(DEFERRED, typeNames.EMPTY, getterAnns)
-          q"$getterMods def ${p.name}: ${p.tpt}"
-        })
-        paramss1 ++= fieldParamss.map(_.map { case p @ q"$mods val $name: $tpt = $default" =>
-          val mods1 = mods.mkMutable.unPrivate.unOverride.unDefault
-          q"$mods1 val ${internalize(p.name)}: $tpt"
-        })
-        stats1 ++= fieldParams.map({ case (p, s) =>
-          val pinternal = internalize(p.name)
+        val fieldParams = fieldParamss.flatten
+        fieldParams.foreach { p =>
+          val getterAnns = q"new $AstMetadataModule.astField" :: p.mods.annotations
+          istats1 += declareGetter(p.name, p.tpt, getterAnns)
           val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
-          q"""
-          $pmods def ${p.name}: ${p.tpt} = {
-            $CommonTyperMacrosModule.loadField(this.$pinternal, $s)
-            this.$pinternal
-          }
-        """
+          stats1 += defineGetter(p.name, p.tpt, pmods)
+        }
+        fieldParamss.foreach(paramss1 += _.map { p =>
+          val mods1 = p.mods.mkMutable.unPrivate.unOverride.unDefault
+          q"$mods1 val ${internalize(p.name)}: ${p.tpt}"
         })
 
         // step 5: implement the unimplemented methods in InternalTree (part 1)
@@ -301,26 +296,23 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           stats1 += q"override def productElementName(n: $IntClass): java.lang.String = n match { case ..$penClauses }"
         }
         // step 12: generate serialization logic
-        val fieldInits = fieldParams.map({ case (p, s) =>
-          q"$CommonTyperMacrosModule.loadField(this.${internalize(p.name)}, $s)"
-        })
-        stats1 += q"protected def writeReplace(): $AnyRefClass = { ..$fieldInits; this }"
+        stats1 += q"""
+          protected def writeReplace(): $AnyRefClass = {
+            ..${fieldParams.map(loadField)}
+            this
+          }
+        """
 
         // step 13: generate Companion.apply
-        val applyParamss = paramss.map(_.map(_.duplicate))
-        val internalParamss =
-          paramss.map(_.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt}"))
         val internalBody = ListBuffer[Tree]()
-        val internalLocalss = paramss.map(_.map(p => (p.name, internalize(p.name))))
         internalBody += q"$CommonTyperMacrosModule.hierarchyCheck[$iname]"
-        internalBody ++= internalLocalss.flatten.map { case (local, internal) =>
-          q"$DataTyperMacrosModule.nullCheck($local)"
-        }
-        internalBody ++= internalLocalss.flatten.map { case (local, internal) =>
-          q"$DataTyperMacrosModule.emptyCheck($local)"
+        fieldParams.foreach { p =>
+          val local = p.name
+          internalBody += q"$DataTyperMacrosModule.nullCheck(${local})"
+          internalBody += q"$DataTyperMacrosModule.emptyCheck(${local})"
         }
         internalBody ++= imports
-        internalBody ++= fieldChecks.map { x =>
+        fieldChecks.foreach { x =>
           val fieldCheck = q"_root_.org.scalameta.invariants.require($x)"
           var hasErrors = false
           object errorChecker extends Traverser {
@@ -338,27 +330,23 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             }
           }
           errorChecker.traverse(fieldCheck)
-          if (hasErrors) q"()"
-          else fieldCheck
+          if (!hasErrors) internalBody += fieldCheck
         }
         val internalInitCount = 3 // privatePrototype, privateParent, privateOrigin
         val internalInitss = 1.to(internalInitCount).map(_ => q"null")
-        val paramInitss = internalLocalss.map(_.map { case (local, internal) =>
-          q"$CommonTyperMacrosModule.initParam($local)"
+        val paramInitss = paramss.map(_.map { p =>
+          q"$CommonTyperMacrosModule.initParam(${p.name})"
         })
         internalBody += q"val node = new $name(..$internalInitss)(...$paramInitss)"
-        internalBody ++= internalLocalss.flatten.map { case (local, internal) =>
-          q"$CommonTyperMacrosModule.storeField(node.$internal, $local, ${local.toString})"
-        }
+        fieldParams.foreach(p => internalBody += storeField(p))
         internalBody += q"node"
+        val applyParamss =
+          paramss.map(_.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt}"))
         val internalArgss = paramss.map(_.map(p => q"${p.name}"))
         mstats1 += q"""
-        def apply(...$applyParamss): $iname = {
-          def internal(...$internalParamss): $iname = {
+          def apply(...$applyParamss): $iname = {
             ..$internalBody
           }
-          internal(...$internalArgss)
-        }
         """
 
         // step 13a: generate additional binary compat Companion.apply
@@ -468,6 +456,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       }
     })
 
+  private def internalize(name: String): TermName = TermName(s"_${name.stripPrefix("_")}")
+  private def internalize(name: TermName): TermName = internalize(name.toString)
   private def setterName(name: String): TermName =
     TermName(s"set${name.stripPrefix("_").capitalize}")
   private def setterName(name: TermName): TermName = setterName(name.toString)
@@ -476,31 +466,50 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   private def getterName(name: TermName): TermName = getterName(name.toString)
   private def getterName(vr: ValOrDefDef): TermName = getterName(vr.name)
 
-  private def declareGetterSetter(vr: ValOrDefDef) =
-    declareProxyGetterSetter(vr.name, vr.tpt, vr.mods.annotations)
+  private def loadField(vr: ValOrDefDef): Tree = loadField(vr.name)
+  private def loadField(name: TermName): Tree = loadField(internalize(name), name)
+  private def loadField(internalName: TermName, name: TermName): Tree =
+    q"""
+      $CommonTyperMacrosModule.loadField(this.$internalName, ${name.decodedName.toString})
+    """
 
-  private def declareProxyGetterSetter(proxyName: TermName, proxyTpe: Tree, annots: List[Tree]) = {
-    val setter = q"def ${setterName(proxyName)}($proxyName : $proxyTpe) : Unit"
-    val mods = setter.mods.mapAnnotations(_ => annots)
-    val getter = q"$mods def ${getterName(proxyName)}: $proxyTpe"
-    List(getter, setter)
+  private def storeField(vr: ValOrDefDef): Tree = storeField(vr.name)
+  private def storeField(name: TermName): Tree = storeField(internalize(name), name)
+  private def storeField(internalName: TermName, name: TermName): Tree =
+    q"""
+      $CommonTyperMacrosModule.storeField(node.$internalName, $name, ${name.decodedName.toString})
+    """
+
+  private def declareGetter(name: TermName, tpe: Tree, annots: List[Tree]): Tree =
+    declareGetter(name, tpe, Modifiers(DEFERRED, typeNames.EMPTY, annots))
+
+  private def declareGetter(name: TermName, tpe: Tree, mods: Modifiers): Tree =
+    q"$mods def ${getterName(name)}: $tpe"
+
+  private def defineGetter(name: TermName, tpe: Tree, mods: Modifiers): Tree = {
+    val internalName = internalize(name)
+    q"""
+      $mods def ${getterName(name)}: $tpe = {
+        ${loadField(internalName, name)}
+        this.$internalName
+      }
+    """
   }
 
-  private def defineGetterSetter(vr: ValOrDefDef) =
-    vr :: defineProxyGetterSetter(vr.name, vr.tpt, vr.name)
+  private def declareSetter(name: TermName, tpe: Tree, annots: List[Tree]): Tree =
+    declareSetter(name, tpe, Modifiers(DEFERRED, typeNames.EMPTY, annots))
 
-  private def defineProxyGetterSetter(proxyName: TermName, proxyTpe: Tree, realName: TermName) =
-    List(
-      q"""
-        def ${getterName(proxyName)}: $proxyTpe = this.$realName
-      """,
-      q"""
-        def ${setterName(proxyName)}($proxyName : $proxyTpe) = {
-          val node = this
-          $CommonTyperMacrosModule.storeField(this.$realName, $proxyName, ${realName.toString})
-        }
-      """
-    )
+  private def declareSetter(name: TermName, tpe: Tree, mods: Modifiers): Tree =
+    q"$mods def ${setterName(name)}($name : $tpe): Unit"
+
+  private def defineSetter(name: TermName, tpe: Tree, mods: Modifiers): Tree = {
+    q"""
+      $mods def ${setterName(name)}($name : $tpe): Unit = {
+        val node = this
+        ${storeField(name)}
+      }
+    """
+  }
 
 }
 
