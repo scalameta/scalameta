@@ -318,13 +318,13 @@ class TypeSuite extends BaseDottySuite {
   test("F[_]") {
     implicit val Scala3: Dialect = scala.meta.dialects.Scala3x
     assertTpe("F[_]") {
-      Apply(TypeName("F"), AnonymousParam(None) :: Nil)
+      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None))))
     }
     assertTpe("F[+_]") {
-      Apply(TypeName("F"), AnonymousParam(Some(Mod.Covariant())) :: Nil)
+      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant())))))
     }
     assertTpe("F[-_]") {
-      Apply(TypeName("F"), AnonymousParam(Some(Mod.Contravariant())) :: Nil)
+      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Contravariant())))))
     }
   }
 
@@ -332,13 +332,13 @@ class TypeSuite extends BaseDottySuite {
     // will be deprecated in later versions
     implicit val Scala3: Dialect = scala.meta.dialects.Scala31
     assertTpe("F[*]") {
-      Apply(TypeName("F"), List(AnonymousParam(None)))
+      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None))))
     }
     assertTpe("F[+*]") {
-      Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant()))))
+      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant())))))
     }
     assertTpe("F[-*]") {
-      Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Contravariant()))))
+      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Contravariant())))))
     }
   }
 

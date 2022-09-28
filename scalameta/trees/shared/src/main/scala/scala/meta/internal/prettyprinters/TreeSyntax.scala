@@ -685,6 +685,7 @@ object TreeSyntax {
           Type,
           s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}"))
         )
+      case t: Type.AnonymousLambda => s(t.tpe)
       case t: Type.AnonymousParam =>
         val useStar = dialect.allowStarAsTypePlaceholder && (t.origin match {
           case o: Origin.Parsed => !o.tokens.lastOption.exists(_.is[Token.Underscore])

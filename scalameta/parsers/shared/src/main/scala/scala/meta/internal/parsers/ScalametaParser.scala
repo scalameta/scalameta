@@ -632,9 +632,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def makeTupleType(lpPos: Int, body: List[Type]): Type = {
+    val args = body match {
+      case singleArg :: Nil => maybeAnonymousLambda(singleArg) :: Nil
+      case _ => body
+    }
     def invalidLiteralUnitType =
       syntaxError("illegal literal type (), use Unit instead", at = token.pos)
-    makeTuple(lpPos, body, invalidLiteralUnitType, Type.Tuple.apply)
+    makeTuple(lpPos, args, invalidLiteralUnitType, Type.Tuple.apply)
   }
 
   def inParensOrTupleOrUnitExpr(allowRepeated: Boolean): Term = {
@@ -740,9 +744,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         Type.Lambda(quants, tpe)
       } else if (acceptOpt[RightArrow]) {
         val tpe = typeIndentedOpt()
-        if (tpe.is[Type.Function])
-          Type.PolyFunction(quants, tpe)
-        else if (tpe.is[Type.ContextFunction])
+        if (tpe.is[Type.FunctionType])
           Type.PolyFunction(quants, tpe)
         else
           syntaxError("polymorphic function types must have a value parameter", at = token)
@@ -812,8 +814,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else infixType(inMatchType = inMatchType)
     }
 
-    @inline def infixType(inMatchType: Boolean = false): Type =
+    @inline def infixType(inMatchType: Boolean = false): Type = maybeAnonymousLambda(
       infixTypeRest(compoundType(inMatchType = inMatchType), inMatchType = inMatchType)
+    )
 
     @inline
     private def infixTypeRest(t: Type, inMatchType: Boolean = false): Type =
@@ -4460,6 +4463,11 @@ object ScalametaParser {
   private def maybeAnonymousFunction(t: Term): Term = {
     val ok = PlaceholderChecks.hasPlaceholder(t, includeArg = false)
     if (ok) copyPos(t)(Term.AnonymousFunction(t)) else t
+  }
+
+  private def maybeAnonymousLambda(t: Type)(implicit dialect: Dialect): Type = {
+    val ok = dialect.allowTypeLambdas && PlaceholderChecks.hasAnonymousParam(t, includeArg = false)
+    if (ok) copyPos(t)(Type.AnonymousLambda(t)) else t
   }
 
   private implicit class ImplicitTree[T <: Tree](private val tree: T) extends AnyVal {
