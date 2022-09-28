@@ -149,9 +149,11 @@ package object dialects {
   implicit val Scala31 = Scala30
 
   implicit val Scala32 = Scala31
-    .withAllowUnderscoreAsTypePlaceholder(true)
 
   implicit val Scala3 = Scala32
+
+  implicit val Scala3x = Scala3
+    .withAllowUnderscoreAsTypePlaceholder(true)
 
   @deprecated("Use Scala3 instead", "4.4.2")
   implicit val Dotty = Scala3
