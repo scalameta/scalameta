@@ -52,6 +52,7 @@ trait CommonNamerMacros extends MacroHelpers {
       name: TypeName,
       parents: List[Tree],
       paramss: List[List[ValDef]],
+      extraParamsss: Iterable[List[List[ValDef]]],
       extraAbstractDefs: List[Tree],
       extraStubs: String*
   ): ClassDef = {
@@ -93,6 +94,9 @@ trait CommonNamerMacros extends MacroHelpers {
     extraStubs.foreach(x => addStubbedMemberWithName(TermName(x)))
     val qcopyParamss = paramss.map(_.map(t => q"val ${t.name}: ${t.tpt}"))
     qstats += q"def copy(...$qcopyParamss): $name = $stub"
+    extraParamsss.foreach { x =>
+      qstats += q"final override def copy(...$x): $name = $stub"
+    }
 
     extraAbstractDefs.foreach {
       case x: ValOrDefDefApi
