@@ -54,6 +54,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val iparents1 = ListBuffer[Tree]() ++ iparents
         def parents1 = List(tq"$iname")
         val mstats1 = ListBuffer[Tree]() ++ mstats
+        val mstats2 = ListBuffer[Tree]()
         val manns1 = ListBuffer[Tree]() ++ mmods.annotations
         def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
         val quasiCopyExtraParamss = ListBuffer[List[List[ValDef]]]()
@@ -326,6 +327,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             ..$internalBody
           }
         """
+        mstats2 += q"""
+          @$InlineAnnotation def apply(...$applyParamss): $iname = $mname.apply(...$internalArgss)
+        """
 
         // step 13a: generate additional binary compat Companion.apply
         // generate new applies for each new field added
@@ -364,8 +368,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               unapplyParamsAll.take(idx)
             }
             mstats1 += getUnapply(unapplyParams)
+            mstats2 += getUnapply(unapplyParamsAll)
           } else {
             mstats1 += q"@$InlineAnnotation final def unapply(x: $iname): $BooleanClass = true"
+            mstats2 += q"@$InlineAnnotation final def unapply(x: $iname): $BooleanClass = true"
           }
         }
 
@@ -397,6 +403,14 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             "tpe"
           )
         }
+
+        mstats1 += q"""
+          object internal { // to be ignored by Mima
+            object Impl {
+              ..$mstats2
+            }
+          }
+        """
 
         mstats1 += q"$mods1 class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
         val cdef1 = q"$imods1 trait $iname extends ..$iparents1 { $iself => ..$istats1 }"
