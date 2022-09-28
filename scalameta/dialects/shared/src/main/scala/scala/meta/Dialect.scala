@@ -789,7 +789,7 @@ object Dialect extends InternalDialect {
   }
   private lazy val standardPairs = Seq[sourcecode.Text[Dialect]](
     Dotty,
-    Scala3x,
+    Scala3Future,
     Scala3,
     Scala30,
     Scala31,

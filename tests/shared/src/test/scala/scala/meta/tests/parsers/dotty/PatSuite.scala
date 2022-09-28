@@ -51,7 +51,7 @@ class PatSuite extends ParseSuite {
   }
 
   test("_: F[_]") {
-    implicit val Scala3 = dialects.Scala3x
+    implicit val Scala3 = dialects.Scala3Future
     assertPat("_: F[_]") {
       Typed(
         Wildcard(),

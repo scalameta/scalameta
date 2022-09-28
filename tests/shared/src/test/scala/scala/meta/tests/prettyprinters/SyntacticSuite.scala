@@ -752,7 +752,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("case List[_](xs @ _*): scala32") {
-    implicit val Scala211 = dialects.Scala3x
+    implicit val Scala211 = dialects.Scala3Future
     val tree = pat("List[_](xs @ _*)")
     assertTree(tree)(
       Pat.Extract(

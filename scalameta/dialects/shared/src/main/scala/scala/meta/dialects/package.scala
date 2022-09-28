@@ -152,7 +152,7 @@ package object dialects {
 
   implicit val Scala3 = Scala32
 
-  implicit val Scala3x = Scala3
+  implicit val Scala3Future = Scala3
     .withAllowUnderscoreAsTypePlaceholder(true)
 
   @deprecated("Use Scala3 instead", "4.4.2")
