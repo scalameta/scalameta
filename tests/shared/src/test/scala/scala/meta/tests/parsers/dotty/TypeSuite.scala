@@ -316,7 +316,7 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("F[_]") {
-    implicit val Scala3: Dialect = scala.meta.dialects.Scala3x
+    implicit val Scala3: Dialect = scala.meta.dialects.Scala3Future
     assertTpe("F[_]") {
       AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None))))
     }

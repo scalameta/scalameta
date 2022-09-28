@@ -1200,7 +1200,7 @@ class MinorDottySuite extends BaseDottySuite {
           Nil
         )
       )
-    )(templStat(_)(dialects.Scala3x))
+    )(templStat(_)(dialects.Scala3Future))
   }
 
   test("type-param-last") {
