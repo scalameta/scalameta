@@ -35,6 +35,11 @@ object Mima {
     ProblemFilters.exclude[A]("scala.meta." + metaType)
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
+    // newField; these methods should have been package-private
+    exclude[DirectMissingMethodProblem]("Defn#Type.setBounds"),
+    exclude[DirectMissingMethodProblem]("Template.setDerives"),
+    exclude[DirectMissingMethodProblem]("Term#If.setMods"),
+    exclude[DirectMissingMethodProblem]("Term#Match.setMods"),
     // implicit classes
     exclude[IncompatibleResultTypeProblem]("package.XtensionDialectApply"),
     exclude[IncompatibleResultTypeProblem]("package.XtensionDialectTokenSyntax"),

@@ -1429,8 +1429,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def inlineMatchClause(inlineMods: List[Mod]) = {
     autoEndPos(inlineMods)(postfixExpr(allowRepeated = false)) match {
       case t: Term.Match =>
-        t.setMods(inlineMods)
-        t
+        copyPos(t)(t.copy(mods = inlineMods))
       case other =>
         syntaxError("`inline` must be followed by an `if` or a `match`", at = other.pos)
     }

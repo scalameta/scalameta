@@ -29,14 +29,24 @@ class ReflectionSuite extends FunSuite {
 
   test("If") {
     val iff = symbolOf[scala.meta.Term.If].asLeaf
-    val List(f1, f2, f3) = iff.fields
-    assert(f1.toString == "field Term.If.cond: scala.meta.Term")
-    assert(f2.toString == "field Term.If.thenp: scala.meta.Term")
-    assert(f3.toString == "field Term.If.elsep: scala.meta.Term")
-    val List(a1, a2, a3) = iff.allFields
-    assert(a1.toString == "field Term.If.cond: scala.meta.Term")
-    assert(a2.toString == "field Term.If.thenp: scala.meta.Term")
-    assert(a3.toString == "field Term.If.elsep: scala.meta.Term")
+    assertEquals(
+      iff.fields.map(_.toString),
+      List(
+        "field Term.If.cond: scala.meta.Term",
+        "field Term.If.thenp: scala.meta.Term",
+        "field Term.If.elsep: scala.meta.Term",
+        "field Term.If.mods: List[scala.meta.Mod]"
+      )
+    )
+    assertEquals(
+      iff.allFields.map(_.toString),
+      List(
+        "field Term.If.cond: scala.meta.Term",
+        "field Term.If.thenp: scala.meta.Term",
+        "field Term.If.elsep: scala.meta.Term",
+        "field Term.If.mods: List[scala.meta.Mod]"
+      )
+    )
   }
 
   test("Term.Name") {

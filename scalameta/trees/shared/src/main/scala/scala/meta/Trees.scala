@@ -6,7 +6,7 @@ import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.prettyprinters._
 import scala.meta.internal.trees._
-import scala.meta.internal.trees.Metadata.binaryCompatField
+import scala.meta.internal.trees.Metadata.newField
 
 import scala.{meta => sm}
 
@@ -119,18 +119,21 @@ object Term {
     checkParent(ParentChecks.TermBlock)
   }
   @ast class EndMarker(name: Term.Name) extends Term
-  @ast class If(cond: Term, thenp: Term, elsep: Term) extends Term {
-    @binaryCompatField(since = "4.4.0")
-    private var _mods: List[Mod] = Nil
-  }
+  @ast class If(
+      cond: Term,
+      thenp: Term,
+      elsep: Term,
+      @newField(since = "4.4.0") mods: List[Mod] = Nil
+  ) extends Term
   @ast class QuotedMacroExpr(body: Term) extends Term
   @ast class QuotedMacroType(tpe: Type) extends Term
   @ast class SplicedMacroExpr(body: Term) extends Term
   @ast class SplicedMacroPat(pat: Pat) extends Term
-  @ast class Match(expr: Term, cases: List[Case] @nonEmpty) extends Term {
-    @binaryCompatField(since = "4.4.5")
-    private var _mods: List[Mod] = Nil
-  }
+  @ast class Match(
+      expr: Term,
+      cases: List[Case] @nonEmpty,
+      @newField(since = "4.4.5") mods: List[Mod] = Nil
+  ) extends Term
   @ast class Try(expr: Term, catchp: List[Case], finallyp: Option[Term]) extends Term
   @ast class TryWithHandler(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
 
@@ -458,11 +461,9 @@ object Defn {
       mods: List[Mod],
       name: sm.Type.Name,
       tparams: List[sm.Type.Param],
-      body: sm.Type
-  ) extends Defn with Member.Type with Stat.WithMods {
-    @binaryCompatField("4.4.0")
-    private var _bounds: sm.Type.Bounds = sm.Type.Bounds(None, None)
-  }
+      body: sm.Type,
+      @newField("4.4.0") bounds: sm.Type.Bounds = sm.Type.Bounds(None, None)
+  ) extends Defn with Member.Type with Stat.WithMods
   @ast class Class(
       mods: List[Mod],
       name: sm.Type.Name,
@@ -529,10 +530,9 @@ object Ctor {
     early: List[Stat],
     inits: List[Init],
     self: Self,
-    stats: List[Stat]
+    stats: List[Stat],
+    @newField("4.4.0") derives: List[Type] = Nil
 ) extends Tree {
-  @binaryCompatField("4.4.0")
-  private var _derives: List[Type] = Nil
   checkFields(early.forall(_.isEarlyStat && inits.nonEmpty))
   checkFields(stats.forall(_.isTemplateStat))
 }

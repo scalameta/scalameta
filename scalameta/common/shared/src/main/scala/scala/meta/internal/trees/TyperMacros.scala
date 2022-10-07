@@ -110,7 +110,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       result
     }
     val leaf = T.tpe.typeSymbol.asLeaf
-    val allAnalyzedFields = leaf.fields ++ leaf.binaryCompatFields
+    val allAnalyzedFields = leaf.fields
     val acc = allAnalyzedFields.foldLeft(q"": Tree)((acc, f) =>
       f.tpe match {
         case TreeTpe() =>
