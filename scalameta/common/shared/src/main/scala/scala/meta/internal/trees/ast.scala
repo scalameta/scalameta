@@ -184,8 +184,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             }
           """
         }
-        def addExtraCopy(paramss: List[List[ValDef]], argss: List[List[Tree]], annots: Tree*) = {
-          addCopy(paramss, argss, annots: _*)
+        def deprecatedCopy(paramss: List[List[ValDef]], argss: List[List[Tree]], v: Version) = {
+          addCopy(paramss, argss, getDeprecatedAnno(v))
           quasiCopyExtraParamss += paramss
         }
         if (needCopies) {
@@ -220,9 +220,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
           newFields.foreach { case (version, idx) =>
             val (ps, as) = add(firstFieldParams.take(idx))
-            val versionString = Literal(Constant(versionToString(version)))
-            val anno = q"new scala.deprecated(since = $versionString)"
-            addExtraCopy(ps :: copyParamssTail, as :: copyArgssTail, anno)
+            deprecatedCopy(ps :: copyParamssTail, as :: copyArgssTail, version)
           }
         }
 
@@ -331,21 +329,26 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           @$InlineAnnotation def apply(...$applyParamss): $iname = $mname.apply(...$internalArgss)
         """
 
+        def deprecatedApply(paramss: List[List[ValDef]], castFields: List[ValDef], v: Version) = {
+          val mods = Modifiers(FINAL, typeNames.EMPTY, getDeprecatedAnno(v) :: Nil)
+          mstats1 += q"""
+            $mods def apply(...$paramss): $iname = {
+              ..$castFields
+              $mname.apply(...$internalArgss)
+            }
+          """
+        }
+
         // step 13a: generate additional binary compat Companion.apply
         // generate new applies for each new field added
         // with field A, B and additional binary compat ones C, D and E, we generate:
         // apply(A, B, C), apply(A, B, C, D), apply(A, B, C, D, E)
         val applyParamsTail = if (newFields.isEmpty) Nil else applyParamss.tail
-        newFields.foreach { case (_, idx) =>
+        newFields.foreach { case (newVer, idx) =>
           val (older, newer) = firstFieldParams.splitAt(idx)
           val olderParams = older.map { p => q"val ${p.name}: ${p.tpt}" }
           val newerLocals = newer.map { p => q"val ${p.name}: ${p.tpt} = ${p.rhs}" }
-          mstats1 += q"""
-            def apply(...${olderParams :: applyParamsTail}): $iname = {
-              ..$newerLocals
-              $mname.apply(...$internalArgss)
-            }
-          """
+          deprecatedApply(olderParams :: applyParamsTail, newerLocals, newVer)
         }
 
         // step 14: generate Companion.unapply
@@ -532,6 +535,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       case _ => Nil
     }
   }
+
+  private def getDeprecatedAnno(v: Version) =
+    q"new scala.deprecated(since = ${Literal(Constant(versionToString(v)))})"
 
 }
 
