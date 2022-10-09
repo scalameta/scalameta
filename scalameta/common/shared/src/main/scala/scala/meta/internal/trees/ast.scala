@@ -191,7 +191,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         if (needCopies) {
           val fieldDefaultss = fieldParamss.map(_.map(p => q"this.${p.name}"))
           val copyParamss = fieldParamss.zip(fieldDefaultss).map { case (f, d) =>
-            f.zip(d).map { case (p, default) => q"val ${p.name}: ${p.tpt} = $default" }
+            f.zip(d).map { case (p, default) => asValDefn(p, default) }
           }
           val copyArgss = fieldParamss.map(_.map(p => q"${p.name}"))
           addCopy(copyParamss, copyArgss)
@@ -202,7 +202,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             val ps = ListBuffer[ValDef]()
             val as = ListBuffer[Tree]()
             fps.foreach { p =>
-              ps += q"val ${p.name}: ${p.tpt}"
+              ps += asValDecl(p)
               as += q"${p.name}"
             }
             (ps.toList, as.toList)
@@ -346,8 +346,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val applyParamsTail = if (newFields.isEmpty) Nil else applyParamss.tail
         newFields.foreach { case (newVer, idx) =>
           val (older, newer) = firstFieldParams.splitAt(idx)
-          val olderParams = older.map { p => q"val ${p.name}: ${p.tpt}" }
-          val newerLocals = newer.map { p => q"val ${p.name}: ${p.tpt} = ${p.rhs}" }
+          val olderParams = older.map(asValDecl)
+          val newerLocals = newer.map(asValDefn)
           deprecatedApply(olderParams :: applyParamsTail, newerLocals, newVer)
         }
 
@@ -538,6 +538,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
   private def getDeprecatedAnno(v: Version) =
     q"new scala.deprecated(since = ${Literal(Constant(versionToString(v)))})"
+
+  private def asValDecl(p: ValOrDefDef): ValDef = q"val ${p.name}: ${p.tpt}"
+  private def asValDefn(p: ValOrDefDef): ValDef = asValDefn(p, p.rhs)
+  private def asValDefn(p: ValOrDefDef, rhs: Tree): ValDef = q"val ${p.name}: ${p.tpt} = $rhs"
 
 }
 
