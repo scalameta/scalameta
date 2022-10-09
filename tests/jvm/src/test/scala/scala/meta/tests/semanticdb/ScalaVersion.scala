@@ -6,6 +6,12 @@ import scala.util.Properties
 object ScalaVersion {
   val version = Properties.versionNumberString
 
+  sealed trait Version
+  case object Scala211 extends Version
+  case object Scala212 extends Version
+  case object Scala213 extends Version
+  case class Full(ver: String) extends Version
+
   // both the compiler and stdlib are different between Scala versions.
   // For the sake of simplicity, we only run the expect test against the
   // output of 2.12. It's possible to add another expect file for 2.11
@@ -46,10 +52,13 @@ object ScalaVersion {
 
   def atLeast212_14 = isSupported(minimal212 = 14, minimal213 = 0)
 
-  def getExpected(compat: Seq[(String, String)], expected: String) = {
+  def getExpected(compat: Seq[(Version, String)], expected: String) = {
     compat
       .collectFirst {
-        case (ver, expected) if version.startsWith(ver) => expected
+        case (Full(ver), expected) if version == ver => expected
+        case (Scala213, expected) if version.startsWith("2.13") => expected
+        case (Scala212, expected) if version.startsWith("2.12") => expected
+        case (Scala211, expected) if version.startsWith("2.11") => expected
       }
       .getOrElse(expected)
   }

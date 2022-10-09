@@ -20,7 +20,7 @@ class Source3Suite extends FunSuite {
   def check(
       original: String,
       expected: String,
-      compat: List[(String, String)] = List.empty
+      compat: List[(ScalaVersion.Version, String)] = List.empty
   ): Unit = {
     test(logger.revealWhitespace(original)) {
       val options = List("-P:semanticdb:synthetics:on", "-P:semanticdb:text:on")
@@ -86,10 +86,16 @@ class Source3Suite extends FunSuite {
     """.stripMargin,
     expected,
     compat = List(
-      "2.12.14" -> expected.replace("scala/package.List.", "scala/collection/immutable/List."),
-      "2.12.15" -> expected.replace("scala/package.List.", "scala/collection/immutable/List."),
-      "2.12.16" -> expected.replace("scala/package.List.", "scala/collection/immutable/List."),
-      "2.12.17" -> expected.replace("scala/package.List.", "scala/collection/immutable/List.")
+      ScalaVersion.Full("2.12.14") -> expected
+        .replace("scala/package.List.", "scala/collection/immutable/List."),
+      ScalaVersion.Full("2.12.15") -> expected
+        .replace("scala/package.List.", "scala/collection/immutable/List."),
+      ScalaVersion.Full("2.12.16") -> expected
+        .replace("scala/package.List.", "scala/collection/immutable/List."),
+      ScalaVersion.Full("2.12.17") -> expected.replace(
+        "scala/package.List.",
+        "scala/collection/immutable/List."
+      )
     )
   )
 
