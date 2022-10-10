@@ -16,7 +16,7 @@ class InteractiveSuite extends FunSuite {
   def check(
       original: String,
       expected: String,
-      compat: List[(String, String)] = List.empty
+      compat: List[(ScalaVersion.Version, String)] = List.empty
   ): Unit = {
     test(logger.revealWhitespace(original)) {
       val options = List("-P:semanticdb:synthetics:on", "-P:semanticdb:text:on")
@@ -106,11 +106,10 @@ class InteractiveSuite extends FunSuite {
     // typer hijacking is not working as expected with interactive.Global.
     expectedPrevious,
     compat = List(
-      "2.13.3" -> expectedPrevious213,
-      "2.13.2" -> expectedPrevious213,
-      "2.13.1" -> expectedPrevious213,
-      "2.13.0" -> expectedPrevious213,
-      "2.13" -> expectedLatest
+      ScalaVersion.Full("2.13.3") -> expectedPrevious213,
+      ScalaVersion.Full("2.13.2") -> expectedPrevious213,
+      ScalaVersion.Full("2.13.1") -> expectedPrevious213,
+      ScalaVersion.Scala213 -> expectedLatest
     )
   )
 
