@@ -102,11 +102,19 @@ private[parsers] class LazyTokenIterator private (
 
   def observeIndented(): Boolean = {
     observeIndented0 { (i, prev) =>
+      /* When adding RegionIndent (we wrap the current code block in indentation)
+       * we might no longer need the region added on the current token.
+       *
+       * In case the region was needed, we will add it again as we haven't yet progressed
+       * to the next token.
+       */
       val undoRegionChange =
         prev.headOption match {
           case Some(RegionParen(_)) if token.is[LeftParen] => prev.tail
           case Some(RegionEnumArtificialMark) if token.is[KwEnum] => prev.tail
           case Some(_: RegionBrace) if token.is[LeftBrace] => prev.tail
+          //  Handle fewer braces and partial function.
+          case Some(RegionArrow) if dialect.allowFewerBraces && token.is[KwCase] => prev.tail
           case _ => prev
         }
       RegionIndent(i, false) :: undoRegionChange

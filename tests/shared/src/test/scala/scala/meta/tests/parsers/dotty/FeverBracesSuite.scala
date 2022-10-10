@@ -161,6 +161,66 @@ class FeverBracesSuite extends BaseDottySuite {
     )
   }
 
+  test("multi-case") {
+    runTestAssert[Stat](
+      """|def main =
+         |  val firstLine = files.map: 
+         |    case A(a) =>
+         |      a         
+         |    case B(b) =>
+         |      b
+         |  def hello = ???
+         |""".stripMargin,
+      assertLayout = Some(
+        """|def main = {
+           |  val firstLine = files.map({
+           |    case A(a) => a
+           |    case B(b) => b
+           |  })
+           |  def hello = ???
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        Term.Name("main"),
+        Nil,
+        Nil,
+        None,
+        Term.Block(
+          List(
+            Defn.Val(
+              Nil,
+              List(Pat.Var(Term.Name("firstLine"))),
+              None,
+              Term.Apply(
+                Term.Select(Term.Name("files"), Term.Name("map")),
+                List(
+                  Term.PartialFunction(
+                    List(
+                      Case(
+                        Pat.Extract(Term.Name("A"), List(Pat.Var(Term.Name("a")))),
+                        None,
+                        Term.Name("a")
+                      ),
+                      Case(
+                        Pat.Extract(Term.Name("B"), List(Pat.Var(Term.Name("b")))),
+                        None,
+                        Term.Name("b")
+                      )
+                    )
+                  )
+                )
+              )
+            ),
+            Defn.Def(Nil, Term.Name("hello"), Nil, Nil, None, Term.Name("???"))
+          )
+        )
+      )
+    )
+  }
+
   test("multiple") {
     runTestAssert[Stat](
       """|def O =
