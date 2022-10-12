@@ -58,6 +58,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val manns1 = ListBuffer[Tree]() ++ mmods.annotations
         def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
         val quasiCopyExtraParamss = ListBuffer[List[ValDef]]()
+        val quasiExtraAbstractDefs = ListBuffer[ValOrDefDef]()
 
         // step 1: validate the shape of the class
         if (imods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @ast classes")
@@ -76,7 +77,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         var needCopies = !isQuasi
         val importsBuilder = List.newBuilder[Import]
-        val otherDefsBuilder = List.newBuilder[Tree]
         val checkFieldsBuilder = List.newBuilder[Tree]
         val checkParentsBuilder = List.newBuilder[Tree]
 
@@ -84,7 +84,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           case x: Import => importsBuilder += x
           case x: DefDef if !isQuasi && x.name == TermName("copy") =>
             istats1 += x; needCopies = false
-          case x if x.isDef => otherDefsBuilder += x
+          case x: ValOrDefDef =>
+            if (x.mods.hasFlag(Flag.ABSTRACT) || x.rhs.isEmpty)
+              c.abort(x.pos, "definition without a value")
+            if (x.mods.hasFlag(Flag.FINAL)) istats1 += x
+            else quasiExtraAbstractDefs += x
           case q"checkFields($arg)" => checkFieldsBuilder += arg
           case x @ q"checkParent($what)" => checkParentsBuilder += x
           case x =>
@@ -93,12 +97,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             c.abort(x.pos, error)
         }
         val imports = importsBuilder.result()
-        val otherDefns = otherDefsBuilder.result()
         val fieldChecks = checkFieldsBuilder.result()
         val parentChecks = checkParentsBuilder.result()
 
-        stats1 ++= otherDefns
         stats1 ++= imports
+        stats1 ++= quasiExtraAbstractDefs
 
         // step 3: identify modified fields of the class
         val newFields = if (isQuasi) Nil else getNewFields(params)
@@ -185,13 +188,24 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           """
           quasiCopyExtraParamss += params
         }
-        if (needCopies) {
+        if (!isQuasi) {
           def getCopyParamWithDefault(p: ValOrDefDef): ValDef = asValDefn(p, q"this.${p.name}")
           val fullCopyParams = params.map(getCopyParamWithDefault)
-          addCopy(fullCopyParams)
-          newFields.foreach { case (version, idx) =>
-            val fps = params.take(idx)
-            addCopy(fps.map(asValDecl), getDeprecatedAnno(version))
+          val iFullCopy = q"private[meta] def fullCopy(..$fullCopyParams): $iname"
+          istats1 += iFullCopy
+          quasiExtraAbstractDefs += iFullCopy
+          stats1 += q"""
+            private[meta] final override def fullCopy(..$fullCopyParams): $iname = {
+              val newAst = $mname.apply(..${params.map(_.name)})
+              newAst
+            }
+          """
+          if (needCopies) {
+            addCopy(fullCopyParams)
+            newFields.foreach { case (version, idx) =>
+              val fps = params.take(idx)
+              addCopy(fps.map(asValDecl), getDeprecatedAnno(version))
+            }
           }
         }
 
@@ -369,7 +383,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             iparents,
             params,
             quasiCopyExtraParamss,
-            otherDefns,
+            quasiExtraAbstractDefs.result(),
             "name",
             "value",
             "tpe"
