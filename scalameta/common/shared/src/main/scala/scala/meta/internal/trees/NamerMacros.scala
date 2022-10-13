@@ -51,9 +51,9 @@ trait CommonNamerMacros extends MacroHelpers {
   def mkQuasi(
       name: TypeName,
       parents: List[Tree],
-      paramss: List[List[ValDef]],
-      extraParamsss: Iterable[List[List[ValDef]]],
-      extraAbstractDefs: List[Tree],
+      paramss: Iterable[List[ValDef]],
+      copyParamsss: Iterable[List[List[ValDef]]],
+      extraAbstractDefs: Iterable[Tree],
       extraStubs: String*
   ): ClassDef = {
     val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new $AstAnnotation"))
@@ -92,9 +92,7 @@ trait CommonNamerMacros extends MacroHelpers {
 
     paramss.foreach(_.foreach(x => addStubbedMemberWithName(x.name)))
     extraStubs.foreach(x => addStubbedMemberWithName(TermName(x)))
-    val qcopyParamss = paramss.map(_.map(t => q"val ${t.name}: ${t.tpt}"))
-    qstats += q"def copy(...$qcopyParamss): $name = $stub"
-    extraParamsss.foreach { x =>
+    copyParamsss.foreach { x =>
       qstats += q"final override def copy(...$x): $name = $stub"
     }
 

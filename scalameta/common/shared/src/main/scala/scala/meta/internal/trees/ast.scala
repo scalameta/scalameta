@@ -183,9 +183,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               newAst
             }
           """
-        }
-        def deprecatedCopy(paramss: List[List[ValDef]], argss: List[List[Tree]], v: Version) = {
-          addCopy(paramss, argss, getDeprecatedAnno(v))
           quasiCopyExtraParamss += paramss
         }
         if (needCopies) {
@@ -220,7 +217,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
           newFields.foreach { case (version, idx) =>
             val (ps, as) = add(firstFieldParams.take(idx))
-            deprecatedCopy(ps :: copyParamssTail, as :: copyArgssTail, version)
+            addCopy(ps :: copyParamssTail, as :: copyArgssTail, getDeprecatedAnno(version))
           }
         }
 
