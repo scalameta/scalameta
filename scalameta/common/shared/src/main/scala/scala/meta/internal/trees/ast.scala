@@ -172,11 +172,13 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // NOTE: Can't generate XXX.Quasi.copy, because XXX.Quasi already inherits XXX.copy,
         // and there can't be multiple overloaded methods with default parameters.
         // Not a big deal though, since XXX.Quasi is an internal class.
-        def addCopy(paramss: List[List[ValDef]], argss: List[List[Tree]], annots: Tree*) = {
+        def getParamArg(p: ValDef): TermName = p.name
+        def addCopy(paramss: List[List[ValDef]], annots: Tree*) = {
           val mods = Modifiers(DEFERRED, typeNames.EMPTY, annots.toList)
           istats1 += q"""
             $mods def copy(...$paramss): $iname
           """
+          val argss = paramss.map(_.map(getParamArg))
           stats1 += q"""
             final override def copy(...$paramss): $iname = {
               val newAst = $mname.apply(...$argss)
@@ -186,38 +188,17 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           quasiCopyExtraParamss += paramss
         }
         if (needCopies) {
-          val fieldDefaultss = fieldParamss.map(_.map(p => q"this.${p.name}"))
-          val copyParamss = fieldParamss.zip(fieldDefaultss).map { case (f, d) =>
-            f.zip(d).map { case (p, default) => asValDefn(p, default) }
-          }
-          val copyArgss = fieldParamss.map(_.map(p => q"${p.name}"))
-          addCopy(copyParamss, copyArgss)
+          def getCopyParamWithDefault(p: ValOrDefDef): ValDef = asValDefn(p, q"this.${p.name}")
+          val copyParamss = fieldParamss.map(_.map(getCopyParamWithDefault))
+          addCopy(copyParamss)
         }
         val firstFieldParams = fieldParamss.head
         if (needCopies && newFields.nonEmpty) {
-          def add(fps: List[ValDef]): (List[ValDef], List[Tree]) = {
-            val ps = ListBuffer[ValDef]()
-            val as = ListBuffer[Tree]()
-            fps.foreach { p =>
-              ps += asValDecl(p)
-              as += q"${p.name}"
-            }
-            (ps.toList, as.toList)
-          }
-
-          val copyParamssTailBuilder = List.newBuilder[List[ValDef]]
-          val copyArgssTailBuilder = List.newBuilder[List[Tree]]
-          fieldParamss.tail.foreach { p =>
-            val (ps, as) = add(p)
-            copyParamssTailBuilder += ps
-            copyArgssTailBuilder += as
-          }
-          val copyParamssTail = copyParamssTailBuilder.result()
-          val copyArgssTail = copyArgssTailBuilder.result()
-
+          def asParams(fps: List[ValDef]): List[ValDef] = fps.map(asValDecl)
+          val copyParamssTail = fieldParamss.tail.map(asParams)
           newFields.foreach { case (version, idx) =>
-            val (ps, as) = add(firstFieldParams.take(idx))
-            addCopy(ps :: copyParamssTail, as :: copyArgssTail, getDeprecatedAnno(version))
+            val ps = asParams(firstFieldParams.take(idx))
+            addCopy(ps :: copyParamssTail, getDeprecatedAnno(version))
           }
         }
 
@@ -316,7 +297,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         internalBody += q"node"
         val applyParamss =
           paramss.map(_.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt}"))
-        val internalArgss = paramss.map(_.map(p => q"${p.name}"))
+        val internalArgss = paramss.map(_.map(getParamArg))
         mstats1 += q"""
           def apply(...$applyParamss): $iname = {
             ..$internalBody
