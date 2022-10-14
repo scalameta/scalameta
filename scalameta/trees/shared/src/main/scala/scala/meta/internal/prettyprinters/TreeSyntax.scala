@@ -397,7 +397,7 @@ object TreeSyntax {
       case t: Term.Tuple => m(SimpleExpr1, s("(", r(t.args, ", "), ")"))
       case t: Term.Block =>
         import Term.{Block, Function}
-        def pstats(s: List[Stat]) = r(s.map(i(_)), "")
+        def pstats(s: Seq[Stat]) = r(s.map(i(_)), "")
         t match {
           case Block(
                 Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, Block(stats)) :: Nil
@@ -1148,8 +1148,8 @@ object TreeSyntax {
 
     private def givenName(
         name: meta.Name,
-        tparams: List[Type.Param],
-        sparams: List[List[Term.Param]]
+        tparams: Seq[Type.Param],
+        sparams: Seq[Seq[Term.Param]]
     ): Show.Result = {
       if (!name.is[meta.Name.Anonymous]) {
         s(name, tparams, sparams, ":")
@@ -1161,23 +1161,22 @@ object TreeSyntax {
     }
 
     // Multiples and optionals
-    implicit def syntaxArgs: Syntax[List[Term]] = Syntax {
-      case (b: Term.Block) :: Nil => s(" ", b)
-      case (f @ Term.Function(params, _)) :: Nil
+    implicit def syntaxArgs: Syntax[Seq[Term]] = Syntax {
+      case Seq(b: Term.Block) => s(" ", b)
+      case Seq(f @ Term.Function(params, _))
           if params.exists(_.mods.exists(m => m.is[Mod.Implicit] || m.is[Mod.Using])) =>
         s(" { ", f, " }")
       case args => s("(", r(args, ", "), ")")
     }
-    implicit def syntaxArgss: Syntax[List[List[Term]]] = Syntax {
+    implicit def syntaxArgss: Syntax[Seq[Seq[Term]]] = Syntax {
       r(_)
     }
-    implicit def syntaxTargs: Syntax[List[Type]] = Syntax { targs =>
-      if (targs.isEmpty) s()
-      else s("[", r(targs, ", "), "]")
+    implicit def syntaxTargs: Syntax[Seq[Type]] = Syntax {
+      r(_, "[", ", ", "]")
     }
-    implicit def syntaxPats: Syntax[List[Pat]] = Syntax { pats => s("(", r(pats, ", "), ")") }
-    implicit def syntaxMods: Syntax[List[Mod]] = Syntax { mods =>
-      if (mods.nonEmpty) r(mods, " ") else s()
+    implicit def syntaxPats: Syntax[Seq[Pat]] = Syntax { pats => s("(", r(pats, ", "), ")") }
+    implicit def syntaxMods: Syntax[Seq[Mod]] = Syntax { mods =>
+      r(mods, " ")
     }
     private def isUsingOrImplicit(m: Mod): Boolean = m.is[Mod.Implicit] || m.is[Mod.Using]
     private def printParam(t: Term.Param, keepImplicit: Boolean = false): Show.Result = {
@@ -1189,12 +1188,12 @@ object TreeSyntax {
       }
       s(w(mods, " "), nameType, t.default.map(s(" ", kw("="), " ", _)).getOrElse(s()))
     }
-    implicit def syntaxAnnots: Syntax[List[Mod.Annot]] = Syntax { annots =>
-      if (annots.nonEmpty) r(annots, " ") else s()
+    implicit def syntaxAnnots: Syntax[Seq[Mod.Annot]] = Syntax { annots =>
+      r(annots, " ")
     }
-    private def printParams(t: List[Term.Param], needParens: Boolean = true): Show.Result = {
+    private def printParams(t: Seq[Term.Param], needParens: Boolean = true): Show.Result = {
       val prefix = {
-        val prefixOpt = t.headOption.fold[List[Mod]](Nil)(_.mods).collectFirst {
+        val prefixOpt = t.headOption.fold[Seq[Mod]](Nil)(_.mods).collectFirst {
           case _: Mod.Using => "using "
           case _: Mod.Implicit => "implicit "
         }
@@ -1204,26 +1203,26 @@ object TreeSyntax {
       val useParens = needParens || prefix.nonEmpty || t.lengthCompare(1) != 0
       w("(", s(prefix, r(t.map(printParam(_, prefix.isEmpty)), ", ")), ")", useParens)
     }
-    implicit def syntaxParams: Syntax[List[Term.Param]] = Syntax { params =>
+    implicit def syntaxParams: Syntax[Seq[Term.Param]] = Syntax { params =>
       printParams(params)
     }
-    implicit def syntaxParamss: Syntax[List[List[Term.Param]]] = Syntax { paramss =>
+    implicit def syntaxParamss: Syntax[Seq[Seq[Term.Param]]] = Syntax { paramss =>
       r(paramss)
     }
-    implicit def syntaxTparams: Syntax[List[Type.Param]] = Syntax { tparams =>
-      if (tparams.nonEmpty) s("[", r(tparams, ", "), "]") else s()
+    implicit def syntaxTparams: Syntax[Seq[Type.Param]] = Syntax { tparams =>
+      r(tparams, "[", ", ", "]")
     }
     implicit def syntaxTypeOpt: Syntax[Option[Type]] = Syntax {
       _.map { t => s(kw(":"), " ", t) }.getOrElse(s())
     }
-    implicit def syntaxImportee: Syntax[List[Importee]] = Syntax {
-      case (t: Importee.Name) :: Nil => s(t)
-      case (t: Importee.Wildcard) :: Nil => s(t)
-      case (t: Importee.GivenAll) :: Nil => s(t)
-      case (t: Importee.Given) :: Nil => s(t)
-      case (t: Importee.Rename) :: Nil if dialect.allowAsForImportRename => s(t)
-      case (t: Importee.Unimport) :: Nil if dialect.allowAsForImportRename => s(t)
-      case (t: Importee.Rename) :: Nil => s("{", t, "}")
+    implicit def syntaxImportee: Syntax[Seq[Importee]] = Syntax {
+      case Seq(t: Importee.Name) => s(t)
+      case Seq(t: Importee.Wildcard) => s(t)
+      case Seq(t: Importee.GivenAll) => s(t)
+      case Seq(t: Importee.Given) => s(t)
+      case Seq(t: Importee.Rename) if dialect.allowAsForImportRename => s(t)
+      case Seq(t: Importee.Unimport) if dialect.allowAsForImportRename => s(t)
+      case Seq(t: Importee.Rename) => s("{", t, "}")
       case importees => s("{ ", r(importees, ", "), " }")
     }
 

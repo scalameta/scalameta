@@ -10,7 +10,7 @@ class ShowMacros(val c: Context) {
   val ShowClass = c.mirror.staticClass("scala.meta.prettyprinters.Show")
   val ShowObj = q"_root_.scala.meta.prettyprinters.Show"
 
-  private def mkResults(xs: List[c.Tree]): List[c.Tree] = {
+  private def mkResults(xs: Seq[c.Tree]): Seq[c.Tree] = {
     xs.map { x =>
       if (x.tpe <:< typeOf[Show.Result])
         x
@@ -25,14 +25,14 @@ class ShowMacros(val c: Context) {
   }
 
   def sequence(xs: c.Tree*) = {
-    val results = mkResults(xs.toList)
+    val results = mkResults(xs)
     if (xs.isEmpty) q"$ShowObj.None"
     else if (xs.length == 1) results.head
     else q"$ShowObj.Sequence(..$results)"
   }
 
   def meta(data: c.Tree, xs: c.Tree*) = {
-    val results = mkResults(xs.toList)
+    val results = mkResults(xs)
     if (xs.isEmpty) q"$ShowObj.None"
     else if (xs.length == 1) q"$ShowObj.Meta($data, ${results.head})"
     else q"$ShowObj.Meta($data, $ShowObj.Sequence(..$results))"
