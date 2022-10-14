@@ -28,9 +28,11 @@ class TraverserSuite extends FunSuite {
       |def foo(x: x)(x: Int) = x + x
       |foo
       |
+      |(x: x)
       |x: x
       |x
       |x
+      |(x: Int)
       |x: Int
       |x
       |Int
@@ -43,6 +45,7 @@ class TraverserSuite extends FunSuite {
       |
       |def this(x: x)
       |_
+      |(x: x)
       |x: x
       |x
       |x
@@ -52,6 +55,7 @@ class TraverserSuite extends FunSuite {
       |def bar(x: x) = ???
       |bar
       |
+      |(x: x)
       |x: x
       |x
       |x

@@ -803,23 +803,6 @@ class ErrorSuite extends FunSuite {
     )
   }
 
-  test("triple-dot mixes with something else in parameter lists") {
-    assertEquals(
-      typecheckError("""
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      val paramss = List(List(param"x: Int"))
-      q"def foo(...$paramss)(y: Int) = ???"
-    """).replace("\r", ""),
-      """
-      |<macro>:5: implementation restriction: can't mix ...$ with anything else in parameter lists.
-      |See https://github.com/scalameta/scalameta/issues/406 for details.
-      |      q"def foo(...$paramss)(y: Int) = ???"
-      |                ^
-    """.trim.stripMargin
-    )
-  }
-
   test("triple-dot in Term.ApplyInfix") {
     assertEquals(
       typecheckError("""

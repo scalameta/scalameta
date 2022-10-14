@@ -2,8 +2,6 @@ package scala.meta.tests
 package quasiquotes
 
 import munit._
-import org.scalameta.tests.typecheckError
-
 import scala.meta._
 import scala.meta.dialects.Scala211
 
@@ -1490,11 +1488,13 @@ class SuccessSuite extends TreeSuiteBase {
         Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
       )
     })
-    assertEquals(paramss.map(_.toString), List("List(x: X, y: Y)"))
-    assertTrees(paramss(0): _*)(
-      Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
-      Term.Param(Nil, Term.Name("y"), Some(Type.Name("Y")), None)
-    )
+    assertEquals(paramss.lengthCompare(1), 0)
+    checkTreesWithSyntax(paramss: _*)("(x: X, y: Y)")(Term.ParamClause {
+      List(
+        Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
+        Term.Param(Nil, Term.Name("y"), Some(Type.Name("Y")), None)
+      )
+    })
     assertTree(tpe)(Type.Name("R"))
   }
 
@@ -1622,11 +1622,12 @@ class SuccessSuite extends TreeSuiteBase {
         Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
       )
     })
-    assertEquals(paramss.map(_.toString), List("List(x: X, y: Y)"))
-    assertTrees(paramss(0): _*)(
-      Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
-      Term.Param(Nil, Term.Name("y"), Some(Type.Name("Y")), None)
-    )
+    checkTreesWithSyntax(paramss: _*)("(x: X, y: Y)")(Term.ParamClause {
+      List(
+        Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
+        Term.Param(Nil, Term.Name("y"), Some(Type.Name("Y")), None)
+      )
+    })
     assertTree(tpeopt)(Some(Type.Name("R")))
     assertTree(expr)(Term.Name("r"))
   }
@@ -1671,11 +1672,12 @@ class SuccessSuite extends TreeSuiteBase {
         Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
       )
     })
-    assertEquals(paramss.map(_.toString), List("List(x: X, y: Y)"))
-    assertTrees(paramss(0): _*)(
-      Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
-      Term.Param(Nil, Term.Name("y"), Some(Type.Name("Y")), None)
-    )
+    checkTreesWithSyntax(paramss: _*)("(x: X, y: Y)")(Term.ParamClause {
+      List(
+        Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
+        Term.Param(Nil, Term.Name("y"), Some(Type.Name("Y")), None)
+      )
+    })
     assertTree(tpeopt)(Some(Type.Name("R")))
     assertTree(expr)(Term.Name("r"))
   }
@@ -1755,11 +1757,12 @@ class SuccessSuite extends TreeSuiteBase {
       )
     })
     assertTree(mod)(Mod.Private(Name("")))
-    assertEquals(paramss.map(_.toString), List("List(x: X, y: Y)"))
-    assertTrees(paramss(0): _*)(
-      Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
-      Term.Param(Nil, Term.Name("y"), Some(Type.Name("Y")), None)
-    )
+    checkTreesWithSyntax(paramss: _*)("(x: X, y: Y)")(Term.ParamClause {
+      List(
+        Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
+        Term.Param(Nil, Term.Name("y"), Some(Type.Name("Y")), None)
+      )
+    })
     assertTree(template)(
       Template(Nil, List(Init(Type.Name("Y"), Name(""), Nil)), Self(Name(""), None), Nil, Nil)
     )
@@ -1779,11 +1782,12 @@ class SuccessSuite extends TreeSuiteBase {
       )
     })
     assertTree(mod)(Mod.Protected(Name("")))
-    assertEquals(paramss.map(_.toString), List("List(x: X, y: Y)"))
-    assertTrees(paramss(0): _*)(
-      Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
-      Term.Param(Nil, Term.Name("y"), Some(Type.Name("Y")), None)
-    )
+    checkTreesWithSyntax(paramss: _*)("(x: X, y: Y)")(Term.ParamClause {
+      List(
+        Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
+        Term.Param(Nil, Term.Name("y"), Some(Type.Name("Y")), None)
+      )
+    })
     assertTree(template)(
       Template(
         Nil,
@@ -2060,11 +2064,12 @@ class SuccessSuite extends TreeSuiteBase {
     val q"..$mods def this(...$paramss)" = q"private def this(x: X, y: Y)"
     assertEquals(mods.toString, "List(private)")
     assertTrees(mods: _*)(Mod.Private(Name("")))
-    assertEquals(paramss.map(_.toString), List("List(x: X, y: Y)"))
-    assertTrees(paramss(0): _*)(
-      Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
-      Term.Param(Nil, Term.Name("y"), Some(Type.Name("Y")), None)
-    )
+    checkTreesWithSyntax(paramss: _*)("(x: X, y: Y)")(Term.ParamClause {
+      List(
+        Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
+        Term.Param(Nil, Term.Name("y"), Some(Type.Name("Y")), None)
+      )
+    })
   }
 
   test("2 q\"..mods def this(...paramss)\"") {
@@ -2089,11 +2094,12 @@ class SuccessSuite extends TreeSuiteBase {
       q"private final def this(x: X, y: Y) = this(foo, bar)"
     assertEquals(mods.toString, "List(private, final)")
     assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Final())
-    assertEquals(paramss.map(_.toString), List("List(x: X, y: Y)"))
-    assertTrees(paramss(0): _*)(
-      Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
-      Term.Param(Nil, Term.Name("y"), Some(Type.Name("Y")), None)
-    )
+    checkTreesWithSyntax(paramss: _*)("(x: X, y: Y)")(Term.ParamClause {
+      List(
+        Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
+        Term.Param(Nil, Term.Name("y"), Some(Type.Name("Y")), None)
+      )
+    })
     assertTree(init)(
       Init(
         Type.Singleton(Term.This(Name(""))),
@@ -2587,7 +2593,9 @@ class SuccessSuite extends TreeSuiteBase {
     val q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs" = q"def f(x: Int) = ???"
     assert(tparams.isEmpty)
     assertEquals(paramss.lengthCompare(1), 0)
-    assertTrees(paramss.head: _*)(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))
+    checkTreesWithSyntax(paramss: _*)("(x: Int)")(Term.ParamClause {
+      List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))
+    })
     assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs")(
       Defn.Def(
         Nil,
@@ -2607,8 +2615,9 @@ class SuccessSuite extends TreeSuiteBase {
         Type.Param(Nil, Type.Name("A"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
       )
     })
-    assertEquals(paramss.lengthCompare(1), 0)
-    assertTrees(paramss.head: _*)(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))
+    checkTreesWithSyntax(paramss: _*)("(x: Int)")(Term.ParamClause {
+      List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))
+    })
     assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs")(
       Defn.Def(
         Nil,
@@ -2746,22 +2755,21 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("#468 - primary constructor III") {
     val q"case class A(..$params)" = q"case class A(a: Int, b: String)"
-    assertEquals(params.length, 2)
-    checkTreesWithSyntax(params: _*)("a: Int", "b: String")(
-      Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None),
-      Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
-    )
+    checkTreesWithSyntax(params)("(a: Int, b: String)")(Term.ParamClause {
+      List(
+        Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None),
+        Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
+      )
+    })
   }
 
   test("#468 - primary constructor IV") {
     val q"case class A(...$paramss)" = q"case class A(a: Int)(b: String)"
     assertEquals(paramss.length, 2)
-    checkTreesWithSyntax(paramss(0): _*)("a: Int") {
-      Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)
-    }
-    checkTreesWithSyntax(paramss(1): _*)("b: String") {
-      Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
-    }
+    checkTreesWithSyntax(paramss: _*)("(a: Int)", "(b: String)")(
+      Term.ParamClause(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))),
+      Term.ParamClause(List(Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)))
+    )
   }
 
   test("#468 - function parameter list I") {
@@ -2777,50 +2785,37 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("#468 - function parameter list III") {
     val q"def foo(..$params): Int = a" = q"def foo(a: Int, b: String): Int = a"
-    assertEquals(params.length, 2)
-    checkTreesWithSyntax(params: _*)("a: Int", "b: String")(
-      Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None),
-      Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
-    )
+    checkTreesWithSyntax(params)("(a: Int, b: String)")(Term.ParamClause {
+      List(
+        Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None),
+        Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
+      )
+    })
   }
 
   test("#468 - function parameter list IV") {
     val q"def foo(...$paramss): Int = a" = q"def foo(a: Int)(b: String): Int = a"
     assertEquals(paramss.length, 2)
-    checkTreesWithSyntax(paramss(0): _*)("a: Int") {
-      Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)
-    }
-    checkTreesWithSyntax(paramss(1): _*)("b: String") {
-      Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
-    }
-    paramss(0) match {
-      case (head: Tree) +: rest => // tests "+:"
-        checkTree(head, "a: Int") {
-          Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)
-        }
-        assert(rest.isEmpty)
-      case x => fail(s"cannot match on `+:` pattern: $x")
-    }
-    paramss(1) match {
-      case (head: Tree) +: rest =>
-        checkTree(head, "b: String") {
-          Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
-        }
-        assert(rest.isEmpty)
-      case x => fail(s"cannot match on `+:` pattern: $x")
-    }
+    checkTreesWithSyntax(paramss: _*)("(a: Int)", "(b: String)")(
+      Term.ParamClause(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))),
+      Term.ParamClause(List(Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)))
+    )
   }
 
   test("#468 - function parameter list V") {
-    assertEquals(
-      typecheckError(
-        """
-    val q"def foo(...$paramss)(..$params)($param): Int = a" = q"def foo(a: Int)(b: String)(c: Long): Int = a"
-        """
-      ).replace("\r", ""),
-      """|implementation restriction: can't mix ...$ with anything else in parameter lists.
-         |See https://github.com/scalameta/scalameta/issues/406 for details.""".stripMargin
-    )
+    val q"def foo(...$paramss)(..$params)($param): Int = a" =
+      q"def foo(a: Int)(b: String)(c: Long): Int = a"
+    assertEquals(paramss.length, 1)
+    assertEquals(params.length, 1)
+    checkTree(paramss(0), "(a: Int)")(Term.ParamClause {
+      List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))
+    })
+    checkTree(params(0), "b: String") {
+      Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
+    }
+    checkTree(param, "c: Long") {
+      Term.Param(Nil, Term.Name("c"), Some(Type.Name("Long")), None)
+    }
   }
 
   test("#230 - tparam extensions I") {
