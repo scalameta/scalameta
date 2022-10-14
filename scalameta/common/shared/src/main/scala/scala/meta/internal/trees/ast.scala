@@ -3,7 +3,7 @@ package internal
 package trees
 
 import scala.language.experimental.macros
-import scala.annotation.StaticAnnotation
+import scala.annotation.{StaticAnnotation, tailrec}
 import scala.collection.mutable.ListBuffer
 import scala.reflect.macros.whitebox.Context
 import scala.util.control.NonFatal
@@ -104,7 +104,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         stats1 ++= quasiExtraAbstractDefs
 
         // step 3: identify modified fields of the class
-        val versionedParams = if (isQuasi) Nil else getVersionedParams(params)
+        val versionedParams = if (isQuasi) Nil else getVersionedParams(params, stats)
         val paramsVersions = versionedParams.flatMap(_.getVersions).distinct.sorted(versionOrdering)
 
         // step 4: turn all parameters into vars, create getters and setters
@@ -490,29 +490,45 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
   private class VersionedParam(
       val param: ValDef,
-      val appended: Option[Version]
+      val appended: Option[Version],
+      val replaced: Option[(Version, ReplacedField)]
   ) {
-    def getVersions: Iterable[Version] = appended
+    for {
+      aver <- appended; (rver, rfield) <- replaced; if versionOrdering.lteq(rver, aver)
+    } yield c.abort(
+      param.pos,
+      s"${versionToString(aver)} [@newField for ${param.name}] must must precede " +
+        s"${versionToString(rver)} [@replacedField for ${rfield.oldDef.name}]"
+    )
+
+    def getVersions: Iterable[Version] = appended ++ replaced.map(_._1)
     def getApplyDeclDefnBefore(version: Version): (Option[ValDef], Option[ValDef]) = {
-      appended match {
-        case Some(aver) if versionOrdering.lteq(version, aver) =>
+      (appended, replaced) match {
+        case (Some(aver), _) if versionOrdering.lteq(version, aver) =>
           (None, Some(asValDefn(param)))
+        case (_, Some((rver, rfield))) if versionOrdering.lteq(version, rver) =>
+          (Some(asValDecl(rfield.oldDef)), Some(rfield.newValDefn))
         case _ =>
           (Some(asValDecl(param)), None)
       }
     }
     def getDefaultCopyDef(): ValOrDefDef = {
-      param
+      replaced match {
+        case Some((_, rfield)) => rfield.oldDef
+        case _ => param
+      }
     }
   }
 
   private def getVersionedParams(
-      params: List[ValDef]
+      params: List[ValDef],
+      stats: List[Tree]
   ): List[VersionedParam] = {
     val appendedFields: Map[String, Version] = getNewFieldVersions(params)
+    val replacedFields: Map[String, (Version, ReplacedField)] = ReplacedField.getMap(params, stats)
     params.map { p =>
       val pname = p.name.toString
-      new VersionedParam(p, appendedFields.get(pname))
+      new VersionedParam(p, appendedFields.get(pname), replacedFields.get(pname))
     }
   }
 
@@ -557,6 +573,54 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       }
     }
     builder.result()
+  }
+
+  private class ReplacedField(val oldDef: ValOrDefDef, val newVal: ValDef) {
+    def newValDefn: ValDef = {
+      q"""
+        val ${newVal.name}: ${deannotateType(newVal)} = {
+          import scala.meta.trees._
+          ${oldDef.name}
+        }
+      """
+    }
+  }
+
+  private object ReplacedField {
+    def getMap(params: List[ValDef], stats: List[Tree]): Map[String, (Version, ReplacedField)] = {
+      val fields: Map[String, ValDef] = params.map(p => p.name.toString -> p).toMap
+      stats.flatMap {
+        case p: ValOrDefDef =>
+          p.mods.annotations.collectFirst { case q"new replacedField($until)" =>
+            if (!p.mods.hasFlag(Flag.FINAL))
+              c.abort(p.pos, "replacedField-annotated fields must be final")
+            if (p.mods.hasFlag(Flag.OVERRIDE))
+              c.abort(p.pos, "replacedField-annotated fields may not be marked `override`")
+            val version = parseVersionAnnot(until, "replacedField", "until")
+            val newField = getNewField(p)
+            val newVal = fields.getOrElse(
+              newField,
+              c.abort(p.pos, s"@replacedField: field `$newField` is undefined)")
+            )
+            newVal.name.toString -> (version, new ReplacedField(p, newVal))
+          }
+        case _ => None
+      }.toMap
+    }
+
+    private def getNewField(oldDef: ValOrDefDef): String = {
+      @tailrec
+      def iter(tree: Tree): Option[String] = tree match {
+        case Select(Ident(TermName(newField)), _: TermName) => Some(newField)
+        case Apply(_, Ident(TermName(newField)) :: Nil) => Some(newField)
+        case Select(x, _) => iter(x)
+        case Apply(x, (_: Function) :: Nil) => iter(x)
+        case _ => None
+      }
+      iter(oldDef.rhs).getOrElse(
+        c.abort(oldDef.pos, s"@replacedField: can't find new field name (${showRaw(oldDef.rhs)})")
+      )
+    }
   }
 
   private def getDeprecatedAnno(v: Version) =
