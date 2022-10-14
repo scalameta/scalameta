@@ -327,9 +327,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         """
 
         def deprecatedApply(paramss: List[List[ValDef]], castFields: List[ValDef], v: Version) = {
-          val mods = Modifiers(FINAL, typeNames.EMPTY, getDeprecatedAnno(v) :: Nil)
+          val anno = getDeprecatedAnno(v)
           mstats1 += q"""
-            $mods def apply(...$paramss): $iname = {
+            @$anno def apply(...$paramss): $iname = {
               ..$castFields
               $mname.apply(...$internalArgss)
             }
