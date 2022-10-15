@@ -29,4 +29,15 @@ object Unlift {
   implicit def unliftUnit[I >: Lit]: Unlift[I, Unit] = Unlift { case Lit(()) => () }
 
   implicit def unliftIdentity[I, O <: I: ClassTag]: Unlift[I, O] = Unlift { case x: O => x }
+
+  implicit def unliftListToList[I, O: ClassTag](
+      implicit unlift: Unlift[I, O]
+  ): Unlift[List[I], List[O]] =
+    Unlift { case x: List[I] => x.flatMap(unlift.apply) }
+
+  implicit def unliftListViaImplicit[I <: Tree: ClassTag, O <: Tree](
+      implicit conv: I => List[O]
+  ): Unlift[I, List[O]] =
+    Unlift { case x: I => conv(x) }
+
 }

@@ -42,9 +42,7 @@ class ConversionMacros(val c: Context) extends AstReflection {
     val outsideTpe = outside.tpe
     val insideTpe = I.tpe
     if (outsideTpe <:< insideTpe) {
-      val needsCast = !(outsideTpe <:< insideTpe)
-      if (needsCast) q"$outside.asInstanceOf[$insideTpe]"
-      else outside
+      outside
     } else {
       val liftable =
         c.inferImplicitValue(appliedType(MetaLift, outsideTpe, insideTpe), silent = true)
