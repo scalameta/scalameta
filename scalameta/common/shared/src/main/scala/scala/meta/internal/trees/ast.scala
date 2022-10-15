@@ -517,9 +517,15 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   private def getDeprecatedAnno(v: Version) =
     q"new scala.deprecated(since = ${Literal(Constant(versionToString(v)))})"
 
-  private def asValDecl(p: ValOrDefDef): ValDef = q"val ${p.name}: ${p.tpt}"
+  private def asValDecl(p: ValOrDefDef): ValDef =
+    q"val ${p.name}: ${deannotateType(p)}"
   private def asValDefn(p: ValOrDefDef): ValDef = asValDefn(p, p.rhs)
-  private def asValDefn(p: ValOrDefDef, rhs: Tree): ValDef = q"val ${p.name}: ${p.tpt} = $rhs"
+  private def asValDefn(p: ValOrDefDef, rhs: Tree): ValDef =
+    q"val ${p.name}: ${deannotateType(p)} = $rhs"
+  private def deannotateType(p: ValOrDefDef): Tree = p.tpt match {
+    case Annotated(_, tpt) => tpt
+    case tpt => tpt
+  }
 
 }
 
