@@ -161,11 +161,16 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.3.0",
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros,
+    buildInfoPackage := "scala.meta.internal",
+    buildInfoKeys := Seq[BuildInfoKey](
+      version
+    ),
     protobufSettings
   )
   .jsSettings(
     commonJsSettings
   )
+  .enablePlugins(BuildInfoPlugin)
   .nativeSettings(nativeSettings)
 
 lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
@@ -585,7 +590,7 @@ lazy val protobufSettings = Def.settings(
   Compile / PB.targets := Seq(
     protocbridge.Target(
       generator = PB.gens.plugin("scala"),
-      outputPath = (Compile / sourceManaged).value,
+      outputPath = (Compile / sourceManaged).value / "protobuf",
       options = scalapb
         .gen(
           flatPackage = true // Don't append filename to package
