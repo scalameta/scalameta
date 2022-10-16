@@ -459,15 +459,23 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     """
   }
 
-  private def parseVersionAnnot(version: Tree, annot: String, field: String): Version = {
-    val versionStr = version match {
+  private def getAnnotAttribute(value: Tree): String =
+    value match {
       case x: AssignOrNamedArg => x.rhs.toString
       case x => x.toString
     }
-    try { parseVersion(versionStr) }
-    catch {
-      case NonFatal(_) => c.abort(version.pos, s"@$annot must contain $field=major.minor.patch")
+
+  private def parseVersionAnnot(version: Tree, annot: String, field: String): Version = {
+    val parsed =
+      try { parseVersion(getAnnotAttribute(version)) }
+      catch {
+        case NonFatal(_) => c.abort(version.pos, s"@$annot must contain $field=major.minor.patch")
+      }
+    majorVersion.foreach { major =>
+      if (parsed._1 < major)
+        c.abort(version.pos, s"@$annot: obsolete, old major version (must be $major)")
     }
+    parsed
   }
 
   private def getNewFields(rawparamss: List[List[ValDef]]): List[(Version, Int)] = {
@@ -541,6 +549,12 @@ object AstNamerMacros {
     val since = v.stripPrefix("\"").stripSuffix("\"")
     val versions = since.split('.').map(_.toInt)
     (versions(0), versions(1), versions(2))
+  }
+
+  private val majorVersion = {
+    val buildVersion: String = BuildInfo.version
+    val majorIdx = buildVersion.indexOf('.')
+    if (majorIdx > 0) Some(buildVersion.substring(0, majorIdx).toInt) else None
   }
 
 }
