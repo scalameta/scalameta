@@ -36,4 +36,15 @@ object Lift {
   implicit def liftOptionToList[O, I](implicit lift: Lift[O, I]): Lift[Option[O], List[I]] = Lift {
     _.toList.map(x => lift(x))
   }
+
+  implicit def liftListToList[O, I](
+      implicit lift: Lift[O, I]
+  ): Lift[List[O], List[I]] =
+    Lift { _.map(lift.apply) }
+
+  implicit def liftListViaImplicit[O <: Tree, I <: Tree](
+      implicit conv: List[O] => I
+  ): Lift[List[O], I] =
+    Lift(conv)
+
 }
