@@ -104,7 +104,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         stats1 ++= quasiExtraAbstractDefs
 
         // step 3: identify modified fields of the class
-        val newFields = if (isQuasi) Nil else getNewFields(params)
+        val versionedParams = if (isQuasi) Nil else getVersionedParams(params)
+        val paramsVersions = versionedParams.flatMap(_.getVersions).distinct.sorted(versionOrdering)
 
         // step 4: turn all parameters into vars, create getters and setters
         params.foreach { p =>
@@ -201,10 +202,29 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             }
           """
           if (needCopies) {
-            addCopy(fullCopyParams)
-            newFields.foreach { case (version, idx) =>
-              val fps = params.take(idx)
-              addCopy(fps.map(asValDecl), getDeprecatedAnno(version))
+            if (versionedParams.isEmpty) {
+              addCopy(fullCopyParams)
+            } else {
+              // add primary copy with default values
+              val defaultCopyParams = versionedParams.map { vp =>
+                getCopyParamWithDefault(vp.getDefaultCopyDef())
+              }
+              addCopy(defaultCopyParams)
+
+              val defaultCopyParamNames = defaultCopyParams.map(_.name.toString).toSet
+              def allInDefaults(cp: Iterable[ValDef]): Boolean =
+                cp.forall(x => defaultCopyParamNames.contains(x.name.toString))
+
+              // add full copy without defaults
+              val fullCopyParamsNoDefaults = params.map(asValDecl)
+              if (!allInDefaults(fullCopyParamsNoDefaults))
+                addCopy(fullCopyParamsNoDefaults)
+              // add secondary copy
+              paramsVersions.foreach { version =>
+                val copyParams = versionedParams.flatMap(_.getApplyDeclDefnBefore(version)._1)
+                if (copyParams.length != defaultCopyParams.length || !allInDefaults(copyParams))
+                  addCopy(copyParams, getDeprecatedAnno(version))
+              }
             }
           }
         }
@@ -314,7 +334,20 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           @$InlineAnnotation def apply(..$applyParams): $iname = $mname.apply(..$internalArgs)
         """
 
-        def deprecatedApply(params: List[ValDef], castFields: List[ValDef], v: Version) = {
+        // step 13a: generate additional companion apply for added and replaced fields
+        // generate new applies for each new field added
+        // with field A, B and additional binary compat ones C, D and E, we generate:
+        // apply(A, B, C), apply(A, B, C, D), apply(A, B, C, D, E)
+        paramsVersions.foreach { v =>
+          val applyParamsBuilder = List.newBuilder[ValDef]
+          val applyCastBuilder = List.newBuilder[ValDef]
+          versionedParams.foreach { vp =>
+            val (decl, defn) = vp.getApplyDeclDefnBefore(v)
+            decl.foreach(applyParamsBuilder += _)
+            defn.foreach(applyCastBuilder += _)
+          }
+          val params = applyParamsBuilder.result()
+          val castFields = applyCastBuilder.result()
           val anno = getDeprecatedAnno(v)
           mstats1 += q"""
             @$anno def apply(..$params): $iname = {
@@ -322,17 +355,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               $mname.apply(..$internalArgs)
             }
           """
-        }
-
-        // step 13a: generate additional binary compat Companion.apply
-        // generate new applies for each new field added
-        // with field A, B and additional binary compat ones C, D and E, we generate:
-        // apply(A, B, C), apply(A, B, C, D), apply(A, B, C, D, E)
-        newFields.foreach { case (newVer, idx) =>
-          val (older, newer) = params.splitAt(idx)
-          val olderParams = older.map(asValDecl)
-          val newerLocals = newer.map(asValDefn)
-          deprecatedApply(olderParams, newerLocals, newVer)
         }
 
         // step 14: generate Companion.unapply
@@ -350,10 +372,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             """
           }
           if (params.nonEmpty) {
-            mstats1 += newFields.headOption.fold {
+            mstats1 += paramsVersions.headOption.fold {
               getUnapply(params)
-            } { case (ver, idx) =>
-              val unapplyParams = params.take(idx)
+            } { ver =>
+              val unapplyParams = versionedParams.flatMap(_.getApplyDeclDefnBefore(ver)._1)
               getUnapply(unapplyParams, getDeprecatedAnno(ver))
             }
             mstats2 += getUnapply(params)
@@ -466,6 +488,34 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     """
   }
 
+  private class VersionedParam(
+      val param: ValDef,
+      val appended: Option[Version]
+  ) {
+    def getVersions: Iterable[Version] = appended
+    def getApplyDeclDefnBefore(version: Version): (Option[ValDef], Option[ValDef]) = {
+      appended match {
+        case Some(aver) if versionOrdering.lteq(version, aver) =>
+          (None, Some(asValDefn(param)))
+        case _ =>
+          (Some(asValDecl(param)), None)
+      }
+    }
+    def getDefaultCopyDef(): ValOrDefDef = {
+      param
+    }
+  }
+
+  private def getVersionedParams(
+      params: List[ValDef]
+  ): List[VersionedParam] = {
+    val appendedFields: Map[String, Version] = getNewFieldVersions(params)
+    params.map { p =>
+      val pname = p.name.toString
+      new VersionedParam(p, appendedFields.get(pname))
+    }
+  }
+
   private def getAnnotAttribute(value: Tree): String =
     value match {
       case x: AssignOrNamedArg => x.rhs.toString
@@ -485,39 +535,28 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     parsed
   }
 
-  private def getNewFields(params: List[ValDef]): List[(Version, Int)] = {
-    def getSinceOpt(x: ValDef) = x.mods.annotations.collectFirst { case q"new newField($since)" =>
-      since
-    }
-    val tail = params match {
-      case x :: tail =>
-        if (getSinceOpt(x).isDefined) c.abort(x.pos, "first field may not be marked @newField")
-        tail
-      case _ => Nil
-    }
-    val newFieldsBuilder = ListBuffer[(Version, Int)]()
-    tail.zipWithIndex.foreach { case (x, idx) =>
-      getSinceOpt(x).fold {
-        if (newFieldsBuilder.nonEmpty)
-          c.abort(x.pos, "must be marked @newField since previous field is")
-      } { since =>
+  private def getNewFieldVersions(params: List[ValDef]): Map[String, Version] = {
+    val builder = Map.newBuilder[String, Version]
+    var prevVersion: Version = null
+    params.foreach { x =>
+      val sinceOpt = x.mods.annotations.collectFirst { case q"new newField($since)" => since }
+      if (sinceOpt.isEmpty && prevVersion != null)
+        c.abort(x.pos, "must be marked @newField since previous field is")
+      sinceOpt.foreach { since =>
         if (x.mods.hasFlag(Flag.OVERRIDE))
           c.abort(x.pos, "override fields may not be marked @newField")
         if (x.rhs == EmptyTree)
           c.abort(x.pos, "@newField fields must provide a default value")
         val version = parseVersionAnnot(since, "newField", "since")
-        newFieldsBuilder.lastOption match {
-          case Some((`version`, _)) =>
-          case Some((prevVersion, _)) if versionOrdering.lt(version, prevVersion) =>
-            c.abort(
-              x.pos,
-              s"previous field marked with newer version: ${versionToString(prevVersion)}"
-            )
-          case _ => newFieldsBuilder += version -> (idx + 1)
+        if (null != prevVersion && versionOrdering.lt(version, prevVersion)) {
+          val prevVersionStr = versionToString(prevVersion)
+          c.abort(x.pos, s"previous field marked with newer version: $prevVersionStr")
         }
+        prevVersion = version
+        builder += x.name.toString -> version
       }
     }
-    newFieldsBuilder.toList
+    builder.result()
   }
 
   private def getDeprecatedAnno(v: Version) =
