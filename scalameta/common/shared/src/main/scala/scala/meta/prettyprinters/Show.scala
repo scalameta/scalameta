@@ -5,7 +5,7 @@ import scala.language.experimental.macros
 import scala.language.implicitConversions
 import scala.compat.Platform.EOL
 
-trait Show[T] {
+trait Show[-T] {
   def apply(t: T): Show.Result
 }
 
@@ -76,9 +76,9 @@ private[meta] object Show {
 
   def indent[T](x: T)(implicit show: Show[T]): Result = Indent(show(x))
 
-  def repeat[T](xs: List[T], sep: String = "")(implicit show: Show[T]): Result =
+  def repeat[T](xs: Seq[T], sep: String = "")(implicit show: Show[T]): Result =
     repeat(sep)(xs.map(show(_)): _*)
-  def repeat[T](xs: List[T], prefix: String, sep: String, suffix: String)(
+  def repeat[T](xs: Seq[T], prefix: String, sep: String, suffix: String)(
       implicit show: Show[T]
   ): Result = wrap(prefix, repeat(xs, sep), suffix)
 

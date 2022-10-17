@@ -70,8 +70,10 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
   lazy val UnsupportedOperationException = hygienicRef[UnsupportedOperationException]
   lazy val IndexOutOfBoundsException = hygienicRef[IndexOutOfBoundsException]
   lazy val IteratorClass = tq"_root_.scala.collection.Iterator"
-  lazy val ListClass = tq"_root_.scala.collection.immutable.List"
-  lazy val ListModule = q"_root_.scala.collection.immutable.List"
+  lazy val ListClass = tq"_root_.scala.List"
+  lazy val ListModule = q"_root_.scala.List"
+  lazy val SeqClass = tq"_root_.scala.Seq"
+  lazy val SeqModule = q"_root_.scala.Seq"
   lazy val ListBufferModule = hygienicRef(scala.collection.mutable.ListBuffer)
   lazy val UnitClass = hygienicRef[scala.Unit]
   lazy val ClassClass = tq"_root_.java.lang.Class"
@@ -143,7 +145,7 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
 
   object ListTreeTpe {
     def unapply(tpe: Type): Option[Type] = {
-      if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.List")) {
+      if (isListSymbol(tpe.typeSymbol)) {
         tpe.typeArgs match {
           case (tpe @ TreeTpe()) :: Nil => Some(tpe)
           case _ => None
@@ -165,7 +167,7 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
 
   object ListListTreeTpe {
     def unapply(tpe: Type): Option[Type] = {
-      if (tpe.typeSymbol == c.mirror.staticClass("scala.collection.immutable.List")) {
+      if (isListSymbol(tpe.typeSymbol)) {
         tpe.typeArgs match {
           case ListTreeTpe(tpe) :: Nil => Some(tpe)
           case _ => None
@@ -173,4 +175,12 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
       } else None
     }
   }
+
+  private def isListSymbol(sym: Symbol): Boolean = {
+    sym == c.mirror.staticClass("scala.collection.immutable.List") || {
+      val typeSeq = typeOf[Seq[_]]
+      sym == typeSeq.typeSymbol || typeSeq.baseClasses.contains(sym)
+    }
+  }
+
 }

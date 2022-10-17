@@ -50,19 +50,20 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
       val fromlist = c.freshName(TermName("fromlist"))
       val from = c.freshName(TermName("from"))
       val to = c.freshName(TermName("to"))
+      val elemTpe = tpe.typeArgs.head
       q"""
           val $fromlist = $input
           var samelist = true
-          val tolist = $ListBufferModule[${tpe.typeArgs.head}]()
+          val tolist = $ListModule.newBuilder[$elemTpe]
           val it = $fromlist.iterator
           while (it.hasNext) {
             val $from = it.next
-            val $to = ${nested(q"$from", tpe.typeArgs.head)}
+            val $to = ${nested(q"$from", elemTpe)}
             if ($from ne $to) samelist = false
             tolist += $to
           }
           if (samelist) $fromlist
-          else tolist.toList
+          else tolist.result()
         """
     }
     val fname = q"$treeName.${f.name}"
@@ -116,7 +117,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
 
       def apply(trees: $ListClass[$TreeClass]): $ListClass[$TreeClass] = {
         var same = true
-        val buf = $ListBufferModule[$TreeClass]()
+        val buf = $ListModule.newBuilder[$TreeClass]
         val it = trees.iterator
         while (it.hasNext) {
           val tree = it.next
@@ -125,7 +126,21 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           buf += tree1
         }
         if (same) trees
-        else buf.toList
+        else buf.result()
+      }
+
+      def apply(trees: $SeqClass[$TreeClass]): $SeqClass[$TreeClass] = {
+        var same = true
+        val buf = $SeqModule.newBuilder[$TreeClass]
+        val it = trees.iterator
+        while (it.hasNext) {
+          val tree = it.next
+          val tree1 = apply(tree)
+          if (tree ne tree1) same = false
+          buf += tree1
+        }
+        if (same) trees
+        else buf.result()
       }
 
       def apply(treesopt: $OptionClass[$ListClass[$TreeClass]])(implicit hack: $Hack1Class): $OptionClass[$ListClass[$TreeClass]] = treesopt match {
@@ -137,9 +152,19 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           $NoneModule
       }
 
+      def apply(treesopt: $OptionClass[$SeqClass[$TreeClass]])(implicit hack: $Hack3Class): $OptionClass[$SeqClass[$TreeClass]] =
+        treesopt match {
+          case $SomeModule(trees) =>
+            val trees1 = apply(trees)
+            if (trees eq trees1) treesopt
+            else $SomeModule(trees1)
+          case $NoneModule =>
+            $NoneModule
+        }
+
       def apply(treess: $ListClass[$ListClass[$TreeClass]])(implicit hack: $Hack2Class): $ListClass[$ListClass[$TreeClass]] = {
         var same = true
-        val buf = $ListBufferModule[$ListClass[$TreeClass]]()
+        val buf = $ListModule.newBuilder[$ListClass[$TreeClass]]
         val it = treess.iterator
         while (it.hasNext) {
           val trees = it.next
@@ -148,7 +173,21 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           buf += trees1
         }
         if (same) treess
-        else buf.toList
+        else buf.result()
+      }
+
+      def apply(treess: $SeqClass[$SeqClass[$TreeClass]])(implicit hack: $Hack4Class): $SeqClass[$SeqClass[$TreeClass]] = {
+        var same = true
+        val buf = $SeqModule.newBuilder[$SeqClass[$TreeClass]]
+        val it = treess.iterator
+        while (it.hasNext) {
+          val trees = it.next
+          val trees1 = apply(trees)
+          if (trees ne trees1) same = false
+          buf += trees1
+        }
+        if (same) treess
+        else buf.result()
       }
 
       private def fail(field: String, from: $TreeClass, to: $TreeClass): $NothingClass = {

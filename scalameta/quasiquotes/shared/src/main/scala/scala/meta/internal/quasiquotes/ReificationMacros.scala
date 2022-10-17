@@ -239,11 +239,11 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
           case None => q"_root_.scala.None"
         }
       }
-      def liftTrees(trees: List[MetaTree]): ReflectTree = {
+      def liftTrees(trees: Seq[MetaTree]): ReflectTree = {
         @tailrec
-        def loop(trees: List[MetaTree], acc: ReflectTree, prefix: List[MetaTree]): ReflectTree =
+        def loop(trees: Seq[MetaTree], acc: ReflectTree, prefix: List[MetaTree]): ReflectTree =
           trees match {
-            case (quasi: Quasi) :: rest if quasi.rank == 1 =>
+            case (quasi: Quasi) +: rest if quasi.rank == 1 =>
               if (acc.isEmpty) {
                 if (prefix.isEmpty) loop(rest, liftQuasi(quasi), Nil)
                 else
@@ -268,14 +268,14 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
                 if (mode.isTerm) loop(rest, q"$acc ++ ${liftQuasi(quasi)}", Nil)
                 else c.abort(quasi.pos, Messages.QuasiquoteAdjacentEllipsesInPattern(quasi.rank))
               }
-            case other :: rest =>
+            case other +: rest =>
               if (acc.isEmpty) loop(rest, acc, prefix :+ other)
               else {
                 require(prefix.isEmpty && debug(trees, acc, prefix))
                 if (mode.isTerm) loop(rest, q"$acc :+ ${liftTree(other)}", Nil)
                 else loop(rest, pq"$acc :+ ${liftTree(other)}", Nil)
               }
-            case Nil =>
+            case _ =>
               // NOTE: Luckily, at least this quasiquote works fine both in term and pattern modes
               if (acc.isEmpty) q"$ListModule(..${prefix.map(liftTree)})"
               else acc
@@ -346,8 +346,12 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       // but that would bloat the code significantly with duplicated instances for denotations and sigmas
       implicit def liftableSubTree[T <: MetaTree]: Liftable[T] =
         Liftable((tree: T) => materializeAst[MetaTree].apply(tree))
+      implicit def liftableSubSeqTree[T <: MetaTree]: Liftable[Seq[T]] =
+        Liftable((trees: Seq[T]) => Lifts.liftTrees(trees))
       implicit def liftableSubTrees[T <: MetaTree]: Liftable[List[T]] =
         Liftable((trees: List[T]) => Lifts.liftTrees(trees))
+      implicit def liftableSubSeqTrees[T <: MetaTree]: Liftable[Seq[List[T]]] =
+        Liftable((treess: Seq[List[T]]) => Lifts.liftTreess(treess.toList))
       implicit def liftableSubTreess[T <: MetaTree]: Liftable[List[List[T]]] =
         Liftable((treess: List[List[T]]) => Lifts.liftTreess(treess))
       implicit def liftableOptionSubTree[T <: MetaTree]: Liftable[Option[T]] =
