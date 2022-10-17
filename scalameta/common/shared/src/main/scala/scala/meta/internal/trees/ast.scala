@@ -57,7 +57,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val mstats2 = ListBuffer[Tree]()
         val manns1 = ListBuffer[Tree]() ++ mmods.annotations
         def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
-        val quasiCopyExtraParamss = ListBuffer[List[List[ValDef]]]()
+        val quasiCopyExtraParamss = ListBuffer[List[ValDef]]()
 
         // step 1: validate the shape of the class
         if (imods.hasFlag(SEALED)) c.abort(cdef.pos, "sealed is redundant for @ast classes")
@@ -68,6 +68,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           c.abort(cdef.pos, "@ast classes must define a public primary constructor")
         if (rawparamss.isEmpty)
           c.abort(cdef.pos, "@leaf classes must define a non-empty parameter list")
+        if (rawparamss.lengthCompare(1) > 0)
+          c.abort(cdef.pos, "@leaf classes must define a single parameter list")
+        val params = rawparamss.head
 
         // step 2: validate the body of the class
 
@@ -97,24 +100,20 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         stats1 ++= otherDefns
         stats1 ++= imports
 
-        val newFields = if (isQuasi) Nil else getNewFields(rawparamss)
-
-        // step 3: calculate the parameters of the class
-        val paramss = rawparamss
+        // step 3: identify modified fields of the class
+        val newFields = if (isQuasi) Nil else getNewFields(params)
 
         // step 4: turn all parameters into vars, create getters and setters
-        val fieldParamss = paramss
-        val fieldParams = fieldParamss.flatten
-        fieldParams.foreach { p =>
+        params.foreach { p =>
           val getterAnns = q"new $AstMetadataModule.astField" :: p.mods.annotations
           istats1 += declareGetter(p.name, p.tpt, getterAnns)
           val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
           stats1 += defineGetter(p.name, p.tpt, pmods)
         }
-        fieldParamss.foreach(paramss1 += _.map { p =>
+        paramss1 += params.map { p =>
           val mods1 = p.mods.mkMutable.unPrivate.unOverride.unDefault
           q"$mods1 val ${internalize(p.name)}: ${p.tpt}"
-        })
+        }
 
         // step 5: implement the unimplemented methods in InternalTree (part 1)
         val bparams1 = List(
@@ -133,9 +132,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // Compare this with the `copy` method (described below), which additionally flushes the private state.
         // This method is private[meta] because the state that it's managing is not supposed to be touched
         // by the users of the framework.
-        val privateCopyArgs = paramss.map(
-          _.map(p => q"$CommonTyperMacrosModule.initField(this.${internalize(p.name)})")
-        )
+        val privateCopyArgs =
+          params.map(p => q"$CommonTyperMacrosModule.initField(this.${internalize(p.name)})")
         val privateCopyParentChecks = {
           if (parentChecks.isEmpty) q""
           else {
@@ -161,7 +159,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             origin: $OriginClass = privateOrigin): Tree = {
           $privateCopyParentChecks
           val newAst =
-            new $name(prototype.asInstanceOf[$iname], parent, origin)(...$privateCopyArgs)
+            new $name(prototype.asInstanceOf[$iname], parent, origin)(..$privateCopyArgs)
           newAst
         }
       """
@@ -173,32 +171,27 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // and there can't be multiple overloaded methods with default parameters.
         // Not a big deal though, since XXX.Quasi is an internal class.
         def getParamArg(p: ValDef): TermName = p.name
-        def addCopy(paramss: List[List[ValDef]], annots: Tree*) = {
+        def addCopy(params: List[ValDef], annots: Tree*) = {
           val mods = Modifiers(DEFERRED, typeNames.EMPTY, annots.toList)
           istats1 += q"""
-            $mods def copy(...$paramss): $iname
+            $mods def copy(..$params): $iname
           """
-          val argss = paramss.map(_.map(getParamArg))
+          val args = params.map(getParamArg)
           stats1 += q"""
-            final override def copy(...$paramss): $iname = {
-              val newAst = $mname.apply(...$argss)
+            final override def copy(..$params): $iname = {
+              val newAst = $mname.apply(..$args)
               newAst
             }
           """
-          quasiCopyExtraParamss += paramss
+          quasiCopyExtraParamss += params
         }
         if (needCopies) {
           def getCopyParamWithDefault(p: ValOrDefDef): ValDef = asValDefn(p, q"this.${p.name}")
-          val copyParamss = fieldParamss.map(_.map(getCopyParamWithDefault))
-          addCopy(copyParamss)
-        }
-        val firstFieldParams = fieldParamss.head
-        if (needCopies && newFields.nonEmpty) {
-          def asParams(fps: List[ValDef]): List[ValDef] = fps.map(asValDecl)
-          val copyParamssTail = fieldParamss.tail.map(asParams)
+          val fullCopyParams = params.map(getCopyParamWithDefault)
+          addCopy(fullCopyParams)
           newFields.foreach { case (version, idx) =>
-            val ps = asParams(firstFieldParams.take(idx))
-            addCopy(ps :: copyParamssTail, getDeprecatedAnno(version))
+            val fps = params.take(idx)
+            addCopy(fps.map(asValDecl), getDeprecatedAnno(version))
           }
         }
 
@@ -226,11 +219,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         iparents1 += tq"$ProductClass"
 
         stats1 += q"override def productPrefix: $StringClass = $CommonTyperMacrosModule.productPrefix[$iname]"
-        stats1 += q"override def productArity: $IntClass = ${fieldParams.length}"
+        stats1 += q"override def productArity: $IntClass = ${params.length}"
 
         def patternMatchClauses(fromField: (ValDef, Int) => Tree) = {
           val pelClauses = ListBuffer[Tree]()
-          pelClauses ++= fieldParams.zipWithIndex.map(fromField.tupled)
+          pelClauses ++= params.zipWithIndex.map(fromField.tupled)
           pelClauses += cq"_ => throw new $IndexOutOfBoundsException(n.toString)"
           pelClauses.toList
         }
@@ -238,7 +231,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val pelClauses = patternMatchClauses((vr, i) => cq"$i => this.${vr.name}")
         stats1 += q"override def productElement(n: $IntClass): Any = n match { case ..$pelClauses }"
         stats1 += q"override def productIterator: $IteratorClass[$AnyClass] = $ScalaRunTimeModule.typedProductIterator(this)"
-        val productFields = fieldParams.map(_.name.toString)
+        val productFields = params.map(_.name.toString)
         stats1 += q"override def productFields: $ListClass[$StringClass] = _root_.scala.List(..$productFields)"
 
         // step 13a add productElementName for 2.13
@@ -253,7 +246,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // step 12: generate serialization logic
         stats1 += q"""
           protected def writeReplace(): $AnyRefClass = {
-            ..${fieldParams.map(loadField)}
+            ..${params.map(loadField)}
             this
           }
         """
@@ -261,7 +254,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // step 13: generate Companion.apply
         val internalBody = ListBuffer[Tree]()
         internalBody += q"$CommonTyperMacrosModule.hierarchyCheck[$iname]"
-        fieldParams.foreach { p =>
+        params.foreach { p =>
           val local = p.name
           internalBody += q"$DataTyperMacrosModule.nullCheck(${local})"
           internalBody += q"$DataTyperMacrosModule.emptyCheck(${local})"
@@ -289,30 +282,30 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         }
         val internalInitCount = 3 // privatePrototype, privateParent, privateOrigin
         val internalInitss = 1.to(internalInitCount).map(_ => q"null")
-        val paramInitss = paramss.map(_.map { p =>
+        val paramInits = params.map { p =>
           q"$CommonTyperMacrosModule.initParam(${p.name})"
-        })
-        internalBody += q"val node = new $name(..$internalInitss)(...$paramInitss)"
-        fieldParams.foreach(p => internalBody += storeField(p))
+        }
+        internalBody += q"val node = new $name(..$internalInitss)(..$paramInits)"
+        params.foreach(p => internalBody += storeField(p))
         internalBody += q"node"
-        val applyParamss =
-          paramss.map(_.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt}"))
-        val internalArgss = paramss.map(_.map(getParamArg))
+        val applyParams =
+          params.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt} = ${p.rhs}")
+        val internalArgs = params.map(getParamArg)
         mstats1 += q"""
-          def apply(...$applyParamss): $iname = {
+          def apply(..$applyParams): $iname = {
             ..$internalBody
           }
         """
         mstats2 += q"""
-          @$InlineAnnotation def apply(...$applyParamss): $iname = $mname.apply(...$internalArgss)
+          @$InlineAnnotation def apply(..$applyParams): $iname = $mname.apply(..$internalArgs)
         """
 
-        def deprecatedApply(paramss: List[List[ValDef]], castFields: List[ValDef], v: Version) = {
+        def deprecatedApply(params: List[ValDef], castFields: List[ValDef], v: Version) = {
           val anno = getDeprecatedAnno(v)
           mstats1 += q"""
-            @$anno def apply(...$paramss): $iname = {
+            @$anno def apply(..$params): $iname = {
               ..$castFields
-              $mname.apply(...$internalArgss)
+              $mname.apply(..$internalArgs)
             }
           """
         }
@@ -321,12 +314,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // generate new applies for each new field added
         // with field A, B and additional binary compat ones C, D and E, we generate:
         // apply(A, B, C), apply(A, B, C, D), apply(A, B, C, D, E)
-        val applyParamsTail = if (newFields.isEmpty) Nil else applyParamss.tail
         newFields.foreach { case (newVer, idx) =>
-          val (older, newer) = firstFieldParams.splitAt(idx)
+          val (older, newer) = params.splitAt(idx)
           val olderParams = older.map(asValDecl)
           val newerLocals = newer.map(asValDefn)
-          deprecatedApply(olderParams :: applyParamsTail, newerLocals, newVer)
+          deprecatedApply(olderParams, newerLocals, newVer)
         }
 
         // step 14: generate Companion.unapply
@@ -343,13 +335,12 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                 if (x != null && x.isInstanceOf[$name]) $SomeModule($successArgs) else $NoneModule
             """
           }
-          val unapplyParamsAll = firstFieldParams
-          if (unapplyParamsAll.nonEmpty) {
-            val unapplyParams = newFields.headOption.fold(unapplyParamsAll) { case (_, idx) =>
-              unapplyParamsAll.take(idx)
+          if (params.nonEmpty) {
+            val unapplyParams = newFields.headOption.fold(params) { case (_, idx) =>
+              params.take(idx)
             }
             mstats1 += getUnapply(unapplyParams)
-            mstats2 += getUnapply(unapplyParamsAll)
+            mstats2 += getUnapply(params)
           } else {
             mstats1 += q"@$InlineAnnotation final def unapply(x: $iname): $BooleanClass = true"
             mstats2 += q"@$InlineAnnotation final def unapply(x: $iname): $BooleanClass = true"
@@ -376,7 +367,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           mstats1 += mkQuasi(
             iname,
             iparents,
-            fieldParamss,
+            params,
             quasiCopyExtraParamss,
             otherDefns,
             "name",
@@ -470,48 +461,39 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     }
   }
 
-  private def getNewFields(rawparamss: List[List[ValDef]]): List[(Version, Int)] = {
-    rawparamss match {
-      case first :: rest =>
-        def getSinceOpt(x: ValDef) = x.mods.annotations.collectFirst {
-          case q"new newField($since)" => since
-        }
-        val tail = first match {
-          case x :: tail =>
-            if (getSinceOpt(x).isDefined)
-              c.abort(x.pos, "first field may not be marked @newField")
-            tail
-          case _ => Nil
-        }
-        rest.foreach(_.foreach { x =>
-          if (getSinceOpt(x).isDefined)
-            c.abort(x.pos, "only fields in the first parameter list may be marked @newField")
-        })
-        val newFieldsBuilder = ListBuffer[(Version, Int)]()
-        tail.zipWithIndex.foreach { case (x, idx) =>
-          getSinceOpt(x).fold {
-            if (newFieldsBuilder.nonEmpty)
-              c.abort(x.pos, "must be marked @newField since previous field is")
-          } { since =>
-            if (x.mods.hasFlag(Flag.OVERRIDE))
-              c.abort(x.pos, "override fields may not be marked @newField")
-            if (x.rhs == EmptyTree)
-              c.abort(x.pos, "@newField fields must provide a default value")
-            val version = parseVersionAnnot(since, "newField", "since")
-            newFieldsBuilder.lastOption match {
-              case Some((`version`, _)) =>
-              case Some((prevVersion, _)) if versionOrdering.lt(version, prevVersion) =>
-                c.abort(
-                  x.pos,
-                  s"previous field marked with newer version: ${versionToString(prevVersion)}"
-                )
-              case _ => newFieldsBuilder += version -> (idx + 1)
-            }
-          }
-        }
-        newFieldsBuilder.toList
+  private def getNewFields(params: List[ValDef]): List[(Version, Int)] = {
+    def getSinceOpt(x: ValDef) = x.mods.annotations.collectFirst { case q"new newField($since)" =>
+      since
+    }
+    val tail = params match {
+      case x :: tail =>
+        if (getSinceOpt(x).isDefined) c.abort(x.pos, "first field may not be marked @newField")
+        tail
       case _ => Nil
     }
+    val newFieldsBuilder = ListBuffer[(Version, Int)]()
+    tail.zipWithIndex.foreach { case (x, idx) =>
+      getSinceOpt(x).fold {
+        if (newFieldsBuilder.nonEmpty)
+          c.abort(x.pos, "must be marked @newField since previous field is")
+      } { since =>
+        if (x.mods.hasFlag(Flag.OVERRIDE))
+          c.abort(x.pos, "override fields may not be marked @newField")
+        if (x.rhs == EmptyTree)
+          c.abort(x.pos, "@newField fields must provide a default value")
+        val version = parseVersionAnnot(since, "newField", "since")
+        newFieldsBuilder.lastOption match {
+          case Some((`version`, _)) =>
+          case Some((prevVersion, _)) if versionOrdering.lt(version, prevVersion) =>
+            c.abort(
+              x.pos,
+              s"previous field marked with newer version: ${versionToString(prevVersion)}"
+            )
+          case _ => newFieldsBuilder += version -> (idx + 1)
+        }
+      }
+    }
+    newFieldsBuilder.toList
   }
 
   private def getDeprecatedAnno(v: Version) =
