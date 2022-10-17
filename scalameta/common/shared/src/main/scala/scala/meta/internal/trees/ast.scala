@@ -341,19 +341,21 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           case _ => false
         }
         if (needsUnapply) {
-          def getUnapply(unapplyParams: List[ValDef]): Tree = {
+          def getUnapply(unapplyParams: List[ValDef], annots: Tree*): Tree = {
             val successTargs = tq"(..${unapplyParams.map(p => p.tpt)})"
             val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
             q"""
-              @$InlineAnnotation final def unapply(x: $iname): $OptionClass[$successTargs] =
+              @$InlineAnnotation @..$annots final def unapply(x: $iname): $OptionClass[$successTargs] =
                 if (x != null && x.isInstanceOf[$name]) $SomeModule($successArgs) else $NoneModule
             """
           }
           if (params.nonEmpty) {
-            val unapplyParams = newFields.headOption.fold(params) { case (_, idx) =>
-              params.take(idx)
+            mstats1 += newFields.headOption.fold {
+              getUnapply(params)
+            } { case (ver, idx) =>
+              val unapplyParams = params.take(idx)
+              getUnapply(unapplyParams, getDeprecatedAnno(ver))
             }
-            mstats1 += getUnapply(unapplyParams)
             mstats2 += getUnapply(params)
           } else {
             mstats1 += q"@$InlineAnnotation final def unapply(x: $iname): $BooleanClass = true"
