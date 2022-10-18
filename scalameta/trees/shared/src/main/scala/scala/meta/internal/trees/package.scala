@@ -119,6 +119,7 @@ package object trees {
       case _: Type.Apply => true
       case _: Type.ApplyInfix => true
       case _: Type.Refine => true
+      case _: Type.AnonymousLambda => true
       case Type.Singleton(Term.This(Name.Anonymous())) => true
       case _ => false
     }
