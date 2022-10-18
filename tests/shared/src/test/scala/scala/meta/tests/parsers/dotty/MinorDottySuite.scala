@@ -1390,4 +1390,39 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("kleisli") {
+    runTestAssert[Stat](
+      "new (Kleisli[F, Span[F], *] ~> F) {}"
+    )(
+      Term.NewAnonymous(
+        Template(
+          Nil,
+          List(
+            Init(
+              Type.AnonymousLambda(
+                Type.ApplyInfix(
+                  Type.Apply(
+                    Type.Name("Kleisli"),
+                    List(
+                      Type.Name("F"),
+                      Type.Apply(Type.Name("Span"), List(Type.Name("F"))),
+                      Type.AnonymousParam(None)
+                    )
+                  ),
+                  Type.Name("~>"),
+                  Type.Name("F")
+                )
+              ),
+              Name(""),
+              Nil
+            )
+          ),
+          Self(Name(""), None),
+          Nil,
+          Nil
+        )
+      )
+    )
+  }
+
 }
