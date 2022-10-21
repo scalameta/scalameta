@@ -13,10 +13,11 @@ class ChildrenSuite extends FunSuite {
         import bar.baz.two
       }
     """
-    assert(tree.children.length == 3)
-    assert(tree.children(0).productPrefix == "Type.Name")
-    assert(tree.children(1).productPrefix == "Ctor.Primary")
-    assert(tree.children(2).productPrefix == "Template")
+    assertEquals(tree.children.length, 4)
+    assertEquals(tree.children(0).productPrefix, "Type.Name")
+    assertEquals(tree.children(1).productPrefix, "Type.ParamClause")
+    assertEquals(tree.children(2).productPrefix, "Ctor.Primary")
+    assertEquals(tree.children(3).productPrefix, "Template")
   }
 
   test("derives-in-children") {

@@ -294,6 +294,8 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Lit.Symbol
       |scala.meta.Lit.Unit
       |scala.meta.Member
+      |scala.meta.Member.Param
+      |scala.meta.Member.ParamClause
       |scala.meta.Member.Term
       |scala.meta.Member.Type
       |scala.meta.Mod
@@ -414,6 +416,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.Name
       |scala.meta.Type.Or
       |scala.meta.Type.Param
+      |scala.meta.Type.ParamClause
       |scala.meta.Type.PatWildcard
       |scala.meta.Type.Placeholder
       |scala.meta.Type.Placeholder.Impl

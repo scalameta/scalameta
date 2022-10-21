@@ -6,8 +6,7 @@ import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.prettyprinters._
 import scala.meta.internal.trees._
-import scala.meta.internal.trees.Metadata.newField
-
+import scala.meta.internal.trees.Metadata.{newField, replacedField}
 import scala.{meta => sm}
 
 @root trait Tree extends InternalTree {
@@ -162,7 +161,9 @@ object Term {
     )
   }
   @ast class AnonymousFunction(body: Term) extends Term
-  @ast class PolyFunction(tparams: List[Type.Param], body: Term) extends Term
+  @ast class PolyFunction(tparamClause: Type.ParamClause, body: Term) extends Term {
+    @replacedField("4.5.13") final def tparams: List[Type.Param] = tparamClause.values
+  }
   @ast class PartialFunction(cases: List[Case] @nonEmpty) extends Term
   @ast class While(expr: Term, body: Term) extends Term
   @ast class Do(body: Term, expr: Term) extends Term
@@ -205,7 +206,9 @@ object Type {
     def res: Type
   }
   @ast class Function(params: List[Type], res: Type) extends FunctionType
-  @ast class PolyFunction(tparams: List[Type.Param], tpe: Type) extends Type
+  @ast class PolyFunction(tparamClause: ParamClause, tpe: Type) extends Type {
+    @replacedField("4.5.13") final def tparams: List[Param] = tparamClause.values
+  }
   @ast class ContextFunction(params: List[Type], res: Type) extends FunctionType
   @ast @deprecated("Implicit functions are not supported in any dialect")
   class ImplicitFunction(
@@ -233,8 +236,9 @@ object Type {
     checkFields(stats.forall(_.isExistentialStat))
   }
   @ast class Annotate(tpe: Type, annots: List[Mod.Annot] @nonEmpty) extends Type
-  @ast class Lambda(tparams: List[Type.Param], tpe: Type) extends Type {
+  @ast class Lambda(tparamClause: ParamClause, tpe: Type) extends Type {
     checkParent(ParentChecks.TypeLambda)
+    @replacedField("4.5.13") final def tparams: List[Param] = tparamClause.values
   }
   @ast class AnonymousLambda(tpe: Type) extends Type
   @ast class Macro(body: Term) extends Type
@@ -276,11 +280,15 @@ object Type {
   @ast class Param(
       mods: List[Mod],
       name: meta.Name,
-      tparams: List[Type.Param],
+      tparamClause: ParamClause,
       tbounds: Type.Bounds,
       vbounds: List[Type],
       cbounds: List[Type]
-  ) extends Member
+  ) extends Member.Param {
+    @replacedField("4.5.13") final def tparams: List[Param] = tparamClause.values
+  }
+
+  @ast class ParamClause(values: List[Param]) extends Member.ParamClause
 
   @ast class Match(tpe: Type, cases: List[TypeCase] @nonEmpty) extends Type
   def fresh(): Type.Name = fresh("fresh")
@@ -347,6 +355,13 @@ object Member {
   @branch trait Type extends Member {
     def name: sm.Type.Name
   }
+
+  @branch trait Param extends Member {
+    def mods: List[Mod]
+  }
+  @branch trait ParamClause extends Tree {
+    def values: List[Param]
+  }
 }
 
 @branch trait Decl extends Stat
@@ -358,23 +373,29 @@ object Decl {
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[sm.Type.Param],
+      tparamClause: sm.Type.ParamClause,
       paramss: List[List[Term.Param]],
       decltpe: sm.Type
-  ) extends Decl with Member.Term with Stat.WithMods
+  ) extends Decl with Member.Term with Stat.WithMods {
+    @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+  }
   @ast class Type(
       mods: List[Mod],
       name: sm.Type.Name,
-      tparams: List[sm.Type.Param],
+      tparamClause: sm.Type.ParamClause,
       bounds: sm.Type.Bounds
-  ) extends Decl with Member.Type with Stat.WithMods
+  ) extends Decl with Member.Type with Stat.WithMods {
+    @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+  }
   @ast class Given(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[sm.Type.Param],
+      tparamClause: sm.Type.ParamClause,
       sparams: List[List[Term.Param]],
       decltpe: sm.Type
-  ) extends Decl with Member.Term with Stat.WithMods
+  ) extends Decl with Member.Term with Stat.WithMods {
+    @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+  }
 }
 
 @branch trait Defn extends Stat
@@ -399,26 +420,31 @@ object Defn {
   }
   @ast class Given(
       mods: List[Mod],
-      name: sm.Name,
-      tparams: List[sm.Type.Param],
+      name: scala.meta.Name,
+      tparamClause: sm.Type.ParamClause,
       sparams: List[List[Term.Param]],
       templ: Template
-  ) extends Defn with Stat.WithMods
+  ) extends Defn with Stat.WithMods {
+    @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+  }
   @ast class Enum(
       mods: List[Mod],
       name: sm.Type.Name,
-      tparams: List[sm.Type.Param],
+      tparamClause: sm.Type.ParamClause,
       ctor: Ctor.Primary,
       templ: Template
-  ) extends Defn with Member.Type with Stat.WithMods
+  ) extends Defn with Member.Type with Stat.WithMods {
+    @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+  }
   @ast class EnumCase(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[sm.Type.Param],
+      tparamClause: sm.Type.ParamClause,
       ctor: Ctor.Primary,
       inits: List[Init]
   ) extends Defn with Member.Term with Stat.WithMods {
     checkParent(ParentChecks.EnumCase)
+    @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
   }
   @ast class RepeatedEnumCase(
       mods: List[Mod],
@@ -428,57 +454,69 @@ object Defn {
   }
   @ast class GivenAlias(
       mods: List[Mod],
-      name: sm.Name,
-      tparams: List[sm.Type.Param],
+      name: scala.meta.Name,
+      tparamClause: sm.Type.ParamClause,
       sparams: List[List[Term.Param]],
       decltpe: sm.Type,
       body: Term
-  ) extends Defn with Stat.WithMods
+  ) extends Defn with Stat.WithMods {
+    @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+  }
   @ast class ExtensionGroup(
-      tparams: List[sm.Type.Param],
+      tparamClause: sm.Type.ParamClause,
       paramss: List[List[Term.Param]],
       body: Stat
-  ) extends Defn
+  ) extends Defn {
+    @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+  }
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[sm.Type.Param],
+      tparamClause: sm.Type.ParamClause,
       paramss: List[List[Term.Param]],
       decltpe: Option[sm.Type],
       body: Term
   ) extends Defn with Member.Term with Stat.WithMods {
     checkFields(paramss.forall(onlyLastParamCanBeRepeated))
+    @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
   }
   @ast class Macro(
       mods: List[Mod],
       name: Term.Name,
-      tparams: List[sm.Type.Param],
+      tparamClause: sm.Type.ParamClause,
       paramss: List[List[Term.Param]],
       decltpe: Option[sm.Type],
       body: Term
-  ) extends Defn with Member.Term with Stat.WithMods
+  ) extends Defn with Member.Term with Stat.WithMods {
+    @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+  }
   @ast class Type(
       mods: List[Mod],
       name: sm.Type.Name,
-      tparams: List[sm.Type.Param],
+      tparamClause: sm.Type.ParamClause,
       body: sm.Type,
       @newField("4.4.0") bounds: sm.Type.Bounds = sm.Type.Bounds(None, None)
-  ) extends Defn with Member.Type with Stat.WithMods
+  ) extends Defn with Member.Type with Stat.WithMods {
+    @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+  }
   @ast class Class(
       mods: List[Mod],
       name: sm.Type.Name,
-      tparams: List[sm.Type.Param],
+      tparamClause: sm.Type.ParamClause,
       ctor: Ctor.Primary,
       templ: Template
-  ) extends Defn with Member.Type with Stat.WithMods
+  ) extends Defn with Member.Type with Stat.WithMods {
+    @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+  }
   @ast class Trait(
       mods: List[Mod],
       name: sm.Type.Name,
-      tparams: List[sm.Type.Param],
+      tparamClause: sm.Type.ParamClause,
       ctor: Ctor.Primary,
       templ: Template
   ) extends Defn with Member.Type with Stat.WithMods {
     checkFields(templ.is[Template.Quasi] || templ.stats.forall(!_.is[Ctor]))
+    @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
   }
   @ast class Object(mods: List[Mod], name: Term.Name, templ: Template)
       extends Defn with Member.Term with Stat.WithMods {

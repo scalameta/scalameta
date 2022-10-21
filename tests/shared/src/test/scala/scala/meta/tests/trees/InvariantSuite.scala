@@ -6,7 +6,7 @@ import org.scalameta.invariants._
 import scala.meta._
 import scala.meta.dialects.Scala211
 
-class InvariantSuite extends FunSuite {
+class InvariantSuite extends TreeSuiteBase {
   test("secondary constructors in templates") {
     val primaryCtor = Ctor.Primary(Nil, Name.Anonymous(), Nil)
     val secondaryCtor = Ctor.Secondary(

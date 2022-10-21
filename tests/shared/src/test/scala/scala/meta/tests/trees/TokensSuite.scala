@@ -26,7 +26,7 @@ class TokensSuite extends TreeSuiteBase {
   }
 
   test("Tree.tokens: empty") {
-    val emptyTemplate = "class C".parse[Stat].get.children(2)
+    val emptyTemplate = "class C".parse[Stat].get.children(3)
     assertTree(emptyTemplate)(Template(Nil, Nil, Self(Name(""), None), Nil, Nil))
     assert(emptyTemplate.tokens.structure == "Tokens()")
   }

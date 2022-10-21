@@ -1133,10 +1133,17 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("1 t\"[..tparams] =>> tpe\"") {
     val t"[..$tparams] =>> $tpe" = t"[T] =>> (T, T)"
-    assertEquals(tparams.toString, "List(T)")
-    assertTrees(tparams: _*)(
-      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)
-    )
+    assertEquals(tparams.toString, "[T]")
+    assertTree(tparams)(Type.ParamClause {
+      Type.Param(
+        Nil,
+        Type.Name("T"),
+        Type.ParamClause(Nil),
+        Type.Bounds(None, None),
+        Nil,
+        Nil
+      ) :: Nil
+    })
     assertEquals(tpe.toString, "(T, T)")
   }
 
@@ -1476,11 +1483,13 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(private, final)")
     assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Final())
     assertTree(name)(Term.Name("m"))
-    assertEquals(tparams.toString, "List(T, W)")
-    assertTrees(tparams: _*)(
-      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil),
-      Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)
-    )
+    assertEquals(tparams.toString, "[T, W]")
+    assertTree(tparams)(Type.ParamClause {
+      List(
+        Type.Param(Nil, Type.Name("T"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
+        Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
+      )
+    })
     assertEquals(paramss.map(_.toString), List("List(x: X, y: Y)"))
     assertTrees(paramss(0): _*)(
       Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
@@ -1520,11 +1529,13 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(private, final)")
     assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Final())
     assertTree(tname)(Type.Name("T"))
-    assertEquals(tparams.toString, "List(T, W)")
-    assertTrees(tparams: _*)(
-      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil),
-      Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)
-    )
+    assertEquals(tparams.toString, "[T, W]")
+    assertTree(tparams)(Type.ParamClause {
+      List(
+        Type.Param(Nil, Type.Name("T"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
+        Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
+      )
+    })
     assertTree(tpeopt1)(Some(Type.Name("A")))
     assertTree(tpeopt2)(Some(Type.Name("B")))
   }
@@ -1604,11 +1615,13 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(private, final)")
     assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Final())
     assertTree(name)(Term.Name("m"))
-    assertEquals(tparams.toString, "List(T, W)")
-    assertTrees(tparams: _*)(
-      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil),
-      Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)
-    )
+    assertEquals(tparams.toString, "[T, W]")
+    assertTree(tparams)(Type.ParamClause {
+      List(
+        Type.Param(Nil, Type.Name("T"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
+        Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
+      )
+    })
     assertEquals(paramss.map(_.toString), List("List(x: X, y: Y)"))
     assertTrees(paramss(0): _*)(
       Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
@@ -1651,11 +1664,13 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(private, final)")
     assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Final())
     assertTree(name)(Term.Name("m"))
-    assertEquals(tparams.toString, "List(T, W)")
-    assertTrees(tparams: _*)(
-      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil),
-      Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)
-    )
+    assertEquals(tparams.toString, "[T, W]")
+    assertTree(tparams)(Type.ParamClause {
+      List(
+        Type.Param(Nil, Type.Name("T"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
+        Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
+      )
+    })
     assertEquals(paramss.map(_.toString), List("List(x: X, y: Y)"))
     assertTrees(paramss(0): _*)(
       Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
@@ -1697,11 +1712,13 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(private, final)")
     assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Final())
     assertTree(tname)(Type.Name("Q"))
-    assertEquals(tparams.toString, "List(T, W)")
-    assertTrees(tparams: _*)(
-      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil),
-      Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)
-    )
+    assertEquals(tparams.toString, "[T, W]")
+    assertTree(tparams)(Type.ParamClause {
+      List(
+        Type.Param(Nil, Type.Name("T"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
+        Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
+      )
+    })
     assertTree(tpe)(Type.Name("R"))
   }
 
@@ -1730,11 +1747,13 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(private, final)")
     assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Final())
     assertTree(tname)(Type.Name("Q"))
-    assertEquals(tparams.toString, "List(T, W)")
-    assertTrees(tparams: _*)(
-      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil),
-      Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)
-    )
+    assertEquals(tparams.toString, "[T, W]")
+    assertTree(tparams)(Type.ParamClause {
+      List(
+        Type.Param(Nil, Type.Name("T"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
+        Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
+      )
+    })
     assertTree(mod)(Mod.Private(Name("")))
     assertEquals(paramss.map(_.toString), List("List(x: X, y: Y)"))
     assertTrees(paramss(0): _*)(
@@ -1752,11 +1771,13 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(private, final)")
     assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Final())
     assertTree(tname)(Type.Name("Q"))
-    assertEquals(tparams.toString, "List(T, W)")
-    assertTrees(tparams: _*)(
-      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil),
-      Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)
-    )
+    assertEquals(tparams.toString, "[T, W]")
+    assertTree(tparams)(Type.ParamClause {
+      List(
+        Type.Param(Nil, Type.Name("T"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
+        Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
+      )
+    })
     assertTree(mod)(Mod.Protected(Name("")))
     assertEquals(paramss.map(_.toString), List("List(x: X, y: Y)"))
     assertTrees(paramss(0): _*)(
@@ -1819,11 +1840,13 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(private, sealed)")
     assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Sealed())
     assertTree(tname)(Type.Name("Q"))
-    assertEquals(tparams.toString, "List(T, W)")
-    assertTrees(tparams: _*)(
-      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil),
-      Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)
-    )
+    assertEquals(tparams.toString, "[T, W]")
+    assertTree(tparams)(Type.ParamClause {
+      List(
+        Type.Param(Nil, Type.Name("T"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
+        Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
+      )
+    })
     assertTree(template)(
       Template(Nil, List(Init(Type.Name("Y"), Name(""), Nil)), Self(Name(""), None), Nil, Nil)
     )
@@ -1835,11 +1858,13 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(private, sealed)")
     assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Sealed())
     assertTree(tname)(Type.Name("Q"))
-    assertEquals(tparams.toString, "List(T, W)")
-    assertTrees(tparams: _*)(
-      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil),
-      Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)
-    )
+    assertEquals(tparams.toString, "[T, W]")
+    assertTree(tparams)(Type.ParamClause {
+      List(
+        Type.Param(Nil, Type.Name("T"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
+        Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
+      )
+    })
     assertTree(template)(
       Template(
         Nil,
@@ -2128,11 +2153,13 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(+)")
     assertTrees(mods: _*)(Mod.Covariant())
     assertTree(tparamname)(Type.Name("Z"))
-    assertEquals(tparams.toString, "List(Q, W)")
-    assertTrees(tparams: _*)(
-      Type.Param(Nil, Type.Name("Q"), Nil, Type.Bounds(None, None), Nil, Nil),
-      Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)
-    )
+    assertEquals(tparams.toString, "[Q, W]")
+    assertTree(tparams)(Type.ParamClause {
+      List(
+        Type.Param(Nil, Type.Name("Q"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
+        Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
+      )
+    })
     assertTree(tpeopt1)(Some(Type.Name("E")))
     assertTree(tpeopt2)(Some(Type.Name("R")))
     assertEquals(tpes1.toString, "List(T with Y)")
@@ -2575,7 +2602,11 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("initial support for ..., with tparams") {
     val q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs" = q"def f[A](x: Int) = ???"
-    assert(tparams.nonEmpty)
+    assertTree(tparams)(Type.ParamClause {
+      List(
+        Type.Param(Nil, Type.Name("A"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
+      )
+    })
     assertEquals(paramss.lengthCompare(1), 0)
     assertTrees(paramss.head: _*)(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))
     assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs")(

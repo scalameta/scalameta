@@ -6,74 +6,87 @@ import scala.meta.dialects.Scala211
 
 class PackageSuite extends ParseSuite {
   test("class C") {
-    val Source(Class(Nil, Type.Name("C"), Nil, EmptyCtor(), EmptyTemplate()) :: Nil) =
-      source("class C")
+    assertTree(source("class C")) {
+      Source(Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil)
+    }
   }
 
   test("package foo; class C") {
-    val Source(
-      (pkgfoo @ Pkg(
-        Term.Name("foo"),
-        Class(Nil, Type.Name("C"), Nil, EmptyCtor(), EmptyTemplate()) :: Nil
-      )) :: Nil
-    ) =
-      source("package foo; class C")
+    assertTree(source("package foo; class C")) {
+      Source(
+        Pkg(
+          Term.Name("foo"),
+          Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
+        ) :: Nil
+      )
+    }
+
   }
 
   test("package foo { class C }") {
-    val Source(
-      (pkgfoo @ Pkg(
-        Term.Name("foo"),
-        Class(Nil, Type.Name("C"), Nil, EmptyCtor(), EmptyTemplate()) :: Nil
-      )) :: Nil
-    ) =
-      source("package foo { class C }")
+    assertTree(source("package foo { class C }")) {
+      Source(
+        Pkg(
+          Term.Name("foo"),
+          Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
+        ) :: Nil
+      )
+    }
+
   }
 
   test("package foo.bar; class C") {
-    val Source(
-      (pkgfoobar @ Pkg(
-        Term.Select(Term.Name("foo"), Term.Name("bar")),
-        Class(Nil, Type.Name("C"), Nil, EmptyCtor(), EmptyTemplate()) :: Nil
-      )) :: Nil
-    ) =
-      source("package foo.bar; class C")
+    assertTree(source("package foo.bar; class C")) {
+      Source(
+        Pkg(
+          Term.Select(Term.Name("foo"), Term.Name("bar")),
+          Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
+        ) :: Nil
+      )
+    }
+
   }
 
   test("package foo.bar { class C }") {
-    val Source(
-      (pkgfoobar @ Pkg(
-        Term.Select(Term.Name("foo"), Term.Name("bar")),
-        Class(Nil, Type.Name("C"), Nil, EmptyCtor(), EmptyTemplate()) :: Nil
-      )) :: Nil
-    ) =
-      source("package foo.bar { class C }")
+    assertTree(source("package foo.bar { class C }")) {
+      Source(
+        Pkg(
+          Term.Select(Term.Name("foo"), Term.Name("bar")),
+          Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
+        ) :: Nil
+      )
+    }
+
   }
 
   test("package foo; package bar; class C") {
-    val Source(
-      (pkgfoo @ Pkg(
-        Term.Name("foo"),
-        (pkgbar @ Pkg(
-          Term.Name("bar"),
-          Class(Nil, Type.Name("C"), Nil, EmptyCtor(), EmptyTemplate()) :: Nil
-        )) :: Nil
-      )) :: Nil
-    ) =
-      source("package foo; package bar; class C")
+    assertTree(source("package foo; package bar; class C")) {
+      Source(
+        Pkg(
+          Term.Name("foo"),
+          Pkg(
+            Term.Name("bar"),
+            Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
+          ) :: Nil
+        ) :: Nil
+      )
+    }
+
   }
 
   test("package foo { package bar { class C } }") {
-    val Source(
-      (pkgfoo @ Pkg(
-        Term.Name("foo"),
-        (pkgbar @ Pkg(
-          Term.Name("bar"),
-          Class(Nil, Type.Name("C"), Nil, EmptyCtor(), EmptyTemplate()) :: Nil
-        )) :: Nil
-      )) :: Nil
-    ) =
-      source("package foo { package bar { class C } }")
+    assertTree(source("package foo { package bar { class C } }")) {
+      Source(
+        Pkg(
+          Term.Name("foo"),
+          Pkg(
+            Term.Name("bar"),
+            Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
+          ) :: Nil
+        ) :: Nil
+      )
+    }
+
   }
 
   test("package foo {}; package bar {}") {

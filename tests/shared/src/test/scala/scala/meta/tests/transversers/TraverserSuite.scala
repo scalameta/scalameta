@@ -21,13 +21,13 @@ class TraverserSuite extends FunSuite {
       }
     }
     traverser(tree0)
-    assert(
-      log
-        .mkString("\n")
-        .replace("\r", "") == """
+    assertEquals(
+      log.mkString("\n").replace("\r", ""),
+      """
       |{   def foo(x: x)(x: Int) = x + x   class C(x: x) { def bar(x: x) = ??? } }
       |def foo(x: x)(x: Int) = x + x
       |foo
+      |
       |x: x
       |x
       |x
@@ -40,6 +40,7 @@ class TraverserSuite extends FunSuite {
       |x
       |class C(x: x) { def bar(x: x) = ??? }
       |C
+      |
       |def this(x: x)
       |_
       |x: x
@@ -50,6 +51,7 @@ class TraverserSuite extends FunSuite {
       |_
       |def bar(x: x) = ???
       |bar
+      |
       |x: x
       |x
       |x

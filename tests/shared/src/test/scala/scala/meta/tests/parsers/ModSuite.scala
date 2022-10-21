@@ -282,31 +282,155 @@ class ModSuite extends ParseSuite {
     )
   }
 
-  test("covariant") {
-    val Defn.Class(_, _, List(Type.Param(List(Mod.Covariant()), _, _, _, _, _)), _, _) =
-      templStat("case class A[+T](t: T)")
+  test("covariant in case class") {
+    assertTree(templStat("case class A[+T](t: T)")) {
+      Defn.Class(
+        List(Mod.Case()),
+        Type.Name("A"),
+        Type.ParamClause(
+          Type.Param(
+            List(Mod.Covariant()),
+            Type.Name("T"),
+            Type.ParamClause(Nil),
+            Type.Bounds(None, None),
+            Nil,
+            Nil
+          ) :: Nil
+        ),
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          List(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None)))
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
+  }
 
-    val Defn.Class(_, _, List(Type.Param(List(Mod.Covariant()), _, _, _, _, _)), _, _) =
-      templStat("class A[+T](t: T)")
+  test("covariant in class") {
+    assertTree(templStat("class A[+T](t: T)")) {
+      Defn.Class(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(
+          Type.Param(
+            List(Mod.Covariant()),
+            Type.Name("T"),
+            Type.ParamClause(Nil),
+            Type.Bounds(None, None),
+            Nil,
+            Nil
+          ) :: Nil
+        ),
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          List(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None)))
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
+  }
 
-    val Defn.Type(_, _, List(Type.Param(List(Mod.Covariant()), _, _, _, _, _)), _) =
-      templStat("type A[+T] = B[T]")
+  test("covariant in type") {
+    assertTree(templStat("type A[+T] = B[T]")) {
+      Defn.Type(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(
+          Type.Param(
+            List(Mod.Covariant()),
+            Type.Name("T"),
+            Type.ParamClause(Nil),
+            Type.Bounds(None, None),
+            Nil,
+            Nil
+          ) :: Nil
+        ),
+        Type.Apply(Type.Name("B"), List(Type.Name("T"))),
+        Type.Bounds(None, None)
+      )
+    }
+  }
 
+  test("covariant in def") {
     interceptParseErrors(
       "def foo[+T](t: T): Int"
     )
   }
 
-  test("contravariant") {
-    val Defn.Class(_, _, List(Type.Param(List(Mod.Contravariant()), _, _, _, _, _)), _, _) =
-      templStat("case class A[-T](t: T)")
+  test("contravariant in case class") {
+    assertTree(templStat("case class A[-T](t: T)")) {
+      Defn.Class(
+        List(Mod.Case()),
+        Type.Name("A"),
+        Type.ParamClause(
+          Type.Param(
+            List(Mod.Contravariant()),
+            Type.Name("T"),
+            Type.ParamClause(Nil),
+            Type.Bounds(None, None),
+            Nil,
+            Nil
+          ) :: Nil
+        ),
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          List(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None)))
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
+  }
 
-    val Defn.Class(_, _, List(Type.Param(List(Mod.Contravariant()), _, _, _, _, _)), _, _) =
-      templStat("class A[-T](t: T)")
+  test("contravariant in class") {
+    assertTree(templStat("class A[-T](t: T)")) {
+      Defn.Class(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(
+          Type.Param(
+            List(Mod.Contravariant()),
+            Type.Name("T"),
+            Type.ParamClause(Nil),
+            Type.Bounds(None, None),
+            Nil,
+            Nil
+          ) :: Nil
+        ),
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          List(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None)))
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
+  }
 
-    val Defn.Type(_, _, List(Type.Param(List(Mod.Contravariant()), _, _, _, _, _)), _) =
-      templStat("type A[-T] = B[T]")
+  test("contravariant in type") {
+    assertTree(templStat("type A[-T] = B[T]")) {
+      Defn.Type(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(
+          Type.Param(
+            List(Mod.Contravariant()),
+            Type.Name("T"),
+            Type.ParamClause(Nil),
+            Type.Bounds(None, None),
+            Nil,
+            Nil
+          ) :: Nil
+        ),
+        Type.Apply(Type.Name("B"), List(Type.Name("T"))),
+        Type.Bounds(None, None)
+      )
+    }
+  }
 
+  test("contravariant in def") {
     interceptParseErrors(
       "def foo[-T](t: T): Int"
     )
