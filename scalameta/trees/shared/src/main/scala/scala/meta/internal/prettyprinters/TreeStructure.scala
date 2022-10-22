@@ -11,7 +11,7 @@ import scala.meta.internal.trees.Quasi
 object TreeStructure {
   def apply[T <: Tree]: Structure[T] = {
     Structure {
-      case Name.Anonymous() =>
+      case _: Name.Anonymous =>
         s("Name(\"\")")
       case Name.Indeterminate(value) =>
         s("Name(", enquote(value, DoubleQuotes), ")")
@@ -63,10 +63,6 @@ object TreeStructure {
                   case _ => tok.syntax
                 }
                 s(x.tokens.filter(isRelevantToken _).map(showToken _).mkString)
-              case Name.Indeterminate(value) =>
-                s(enquote(value, DoubleQuotes))
-              case Name.Anonymous() =>
-                s(enquote("", DoubleQuotes))
               case x =>
                 default
             }
