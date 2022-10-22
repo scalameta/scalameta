@@ -83,6 +83,7 @@ object ParentChecks {
     @tailrec
     def loop(tree: Option[Tree]): Boolean = tree match {
       case Some(tree: Type) => loop(tree.parent)
+      case Some(tree: Type.ArgClause) => loop(tree.parent)
       case Some(_: Pat.Typed) => true
       case Some(tree: Term.ApplyType) => tree.parent.forall(_.is[Pat.Extract])
       case Some(_) => false
@@ -101,7 +102,7 @@ object ParentChecks {
 
   def TypeLambda(tree: Type.Lambda, parent: Tree, destination: String): Boolean = {
     parent.is[Type] || parent.is[Defn.Type] || parent.is[Type.Bounds] ||
-    parent.is[Term.ApplyType] || parent.is[Type.Param]
+    parent.is[Term.ApplyType] || parent.is[Type.Param] || parent.is[Type.ArgClause]
   }
 
   def TypeMethod(tree: Type.Method, parent: Tree, destination: String): Boolean = {

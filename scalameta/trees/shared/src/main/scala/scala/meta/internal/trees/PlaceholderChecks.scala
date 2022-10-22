@@ -56,7 +56,8 @@ object PlaceholderChecks {
         case _: Quasi => queue.nonEmpty && iter
         case t: Type.AnonymousParam => t.ne(tree) || includeArg
         case t: Type.Tuple => t.args.exists(isAnonymousParam) || queue.nonEmpty && iter
-        case t: Type.Apply => t.args.exists(isAnonymousParam) || { queue += t.tpe; iter }
+        case t: Type.ArgClause => t.values.exists(isAnonymousParam) || queue.nonEmpty && iter
+        case t: Type.Apply => queue += t.tpe; queue += t.argClause; iter
         case t: Type.ApplyInfix => queue += t.lhs; queue += t.rhs; iter
         case t: Type.With => queue += t.lhs; queue += t.rhs; iter
         case t: Type.Repeated => queue += t.tpe; iter

@@ -198,18 +198,46 @@ class XmlSuite extends ParseSuite {
   )
 
   test("deconstruct") {
-    val parsedTricky = term(trickyXml)
-    // format: off
-    val Term.Block(
-    List(
-    Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None,
-    Term.Xml(List(Lit("<div href="), Lit(">Hello "), Lit("</div>")),
-    List(Term.ApplyInfix(Lit("/"), Term.Name("+"), Nil, List(Term.Name("url"))), Term.Name("name")))),
-    Defn.Val(Nil, List(Pat.Var(Term.Name("noSemicolon"))), None,
-    Term.Xml(List(Lit("<h1>"), Lit("</h1>")),
-    List(Term.ApplyInfix(Term.Name("msg"), Term.Name("infix"), Nil, List(Term.Name("upper")))))),
-    Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit(2)))) = parsedTricky
-    // format: on
+    assertTree(term(trickyXml)) {
+      Term.Block(
+        List(
+          Defn.Val(
+            Nil,
+            List(Pat.Var(Term.Name("x"))),
+            None,
+            Term.Xml(
+              List(Lit.String("<div href="), Lit.String(">Hello "), Lit.String("</div>")),
+              List(
+                Term.ApplyInfix(
+                  Lit.String("/"),
+                  Term.Name("+"),
+                  Type.ArgClause(Nil),
+                  List(Term.Name("url"))
+                ),
+                Term.Name("name")
+              )
+            )
+          ),
+          Defn.Val(
+            Nil,
+            List(Pat.Var(Term.Name("noSemicolon"))),
+            None,
+            Term.Xml(
+              List(Lit.String("<h1>"), Lit.String("</h1>")),
+              List(
+                Term.ApplyInfix(
+                  Term.Name("msg"),
+                  Term.Name("infix"),
+                  Type.ArgClause(Nil),
+                  List(Term.Name("upper"))
+                )
+              )
+            )
+          ),
+          Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.Int(2))
+        )
+      )
+    }
   }
 
   checkOK("<foo/>")

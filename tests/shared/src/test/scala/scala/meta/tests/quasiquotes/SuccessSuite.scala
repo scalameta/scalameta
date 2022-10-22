@@ -277,8 +277,8 @@ class SuccessSuite extends TreeSuiteBase {
   test("1 q\"foo[..tpes]\"") {
     val q"$foo[..$types]" = q"foo[T, U]"
     assertEquals(foo.toString, "foo")
-    assertEquals(types.toString, "List(T, U)")
-    assertTrees(types: _*)(Type.Name("T"), Type.Name("U"))
+    assertEquals(types.toString, "[T, U]")
+    assertTree(types)(Type.ArgClause(List(Type.Name("T"), Type.Name("U"))))
   }
 
   test("2 q\"foo[..tpes]\"") {
@@ -293,8 +293,8 @@ class SuccessSuite extends TreeSuiteBase {
     val q"$expr $name[..$tpes] (..$exprs)" = q"x method[T, U] (1, b)"
     assertTree(expr)(Term.Name("x"))
     assertTree(name)(Term.Name("method"))
-    assertEquals(tpes.toString, "List(T, U)")
-    assertTrees(tpes: _*)(Type.Name("T"), Type.Name("U"))
+    assertEquals(tpes.toString, "[T, U]")
+    assertTree(tpes)(Type.ArgClause(List(Type.Name("T"), Type.Name("U"))))
     assertEquals(exprs.toString, "List(1, b)")
     assertTrees(exprs: _*)(Lit.Int(1), Term.Name("b"))
   }
@@ -1004,8 +1004,8 @@ class SuccessSuite extends TreeSuiteBase {
   test("1 t\"tpe[..tpes]") {
     val t"$tpe[..$tpes]" = t"X[Y, Z]"
     assertTree(tpe)(Type.Name("X"))
-    assertEquals(tpes.toString, "List(Y, Z)")
-    assertTrees(tpes: _*)(Type.Name("Y"), Type.Name("Z"))
+    assertEquals(tpes.toString, "[Y, Z]")
+    assertTree(tpes)(Type.ArgClause(List(Type.Name("Y"), Type.Name("Z"))))
   }
 
   test("2 t\"tpe[..tpes]") {

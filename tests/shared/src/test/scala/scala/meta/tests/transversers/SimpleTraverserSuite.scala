@@ -40,6 +40,7 @@ class SimpleTraverserSuite extends FunSuite {
       |x + x
       |x
       |+
+      |
       |x
       |class C(x: x) { def bar(x: x) = ??? }
       |C

@@ -8,63 +8,84 @@ import scala.meta.internal.prettyprinters._
 class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Term](
     "1 + (2 / 3) * 4",
-    """|Term.ApplyInfix (2 / 3) * 4
+    """|Type.ArgClause 1 + @@(2 / 3) * 4
+       |Term.ApplyInfix (2 / 3) * 4
        |Term.ApplyInfix 2 / 3
+       |Type.ArgClause 1 + (2 / @@3) * 4
+       |Type.ArgClause 1 + (2 / 3) * @@4
        |""".stripMargin
   )
 
   checkPositions[Term](
     "1 + (()) * 4",
-    """|Term.ApplyInfix (()) * 4
+    """|Type.ArgClause 1 + @@(()) * 4
+       |Term.ApplyInfix (()) * 4
+       |Type.ArgClause 1 + (()) * @@4
        |""".stripMargin
   )
 
   checkPositions[Term](
     "1 + ((1, 2, 3)) * 4",
-    """|Term.ApplyInfix ((1, 2, 3)) * 4
+    """|Type.ArgClause 1 + @@((1, 2, 3)) * 4
+       |Term.ApplyInfix ((1, 2, 3)) * 4
+       |Term.Tuple (1, 2, 3)
+       |Type.ArgClause 1 + ((1, 2, 3)) * @@4
+       |""".stripMargin
+  )
+
+  checkPositions[Term](
+    "a f (b)",
+    """|Type.ArgClause a f @@(b)
+       |""".stripMargin
+  )
+
+  checkPositions[Term](
+    "a f (123)",
+    """|Type.ArgClause a f @@(123)
+       |""".stripMargin
+  )
+
+  checkPositions[Term](
+    "a f ()",
+    """|Type.ArgClause a f @@()
+       |""".stripMargin
+  )
+
+  checkPositions[Term](
+    "a f (())",
+    """|Type.ArgClause a f @@(())
+       |""".stripMargin
+  )
+
+  checkPositions[Term](
+    "a f ((1, 2, 3))",
+    """|Type.ArgClause a f @@((1, 2, 3))
        |Term.Tuple (1, 2, 3)
        |""".stripMargin
   )
 
   checkPositions[Term](
-    "a f (b)"
-  )
-
-  checkPositions[Term](
-    "a f (123)"
-  )
-
-  checkPositions[Term](
-    "a f ()"
-  )
-
-  checkPositions[Term](
-    "a f (())"
-  )
-
-  checkPositions[Term](
-    "a f ((1, 2, 3))",
-    """|Term.Tuple (1, 2, 3)
-       |""".stripMargin
-  )
-
-  checkPositions[Term](
     "a f (()).foo",
-    """|Term.Select (()).foo
+    """|Type.ArgClause a f @@(()).foo
+       |Term.Select (()).foo
        |""".stripMargin
   )
 
   checkPositions[Term](
     "a f (())(b)",
-    """|Term.Apply (())(b)
+    """|Type.ArgClause a f @@(())(b)
+       |Term.Apply (())(b)
        |""".stripMargin
   )
 
   checkPositions[Term](
     "1 + { 2 / 3 } * 4",
-    """|Term.ApplyInfix { 2 / 3 } * 4
+    """|Type.ArgClause 1 + @@{ 2 / 3 } * 4
+       |Term.ApplyInfix { 2 / 3 } * 4
        |Term.Block { 2 / 3 }
        |Term.ApplyInfix 2 / 3
+       |Type.ArgClause 1 + { 2 / @@3 } * 4
+       |Type.ArgClause 1 + { 2 / 3 } * @@4
        |""".stripMargin
   )
 
@@ -72,19 +93,24 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     "{ 2 / 3 } + 4",
     """|Term.Block { 2 / 3 }
        |Term.ApplyInfix 2 / 3
+       |Type.ArgClause { 2 / @@3 } + 4
+       |Type.ArgClause { 2 / 3 } + @@4
        |""".stripMargin
   )
 
   checkPositions[Term](
     "(1 + 2).foo",
     """|Term.ApplyInfix (1 + 2)
+       |Type.ArgClause (1 + @@2).foo
        |""".stripMargin
   )
   checkPositions[Term](
     "foo == (a + b).c(d)",
-    """|Term.Apply (a + b).c(d)
+    """|Type.ArgClause foo == @@(a + b).c(d)
+       |Term.Apply (a + b).c(d)
        |Term.Select (a + b).c
        |Term.ApplyInfix a + b
+       |Type.ArgClause foo == (a + @@b).c(d)
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -98,12 +124,15 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     // Issue #331
     "case foo if bar || baz =>",
     """|Term.ApplyInfix bar || baz
+       |Type.ArgClause case foo if bar || @@baz =>
        |Term.Block case foo if bar || baz =>@@
        |""".stripMargin
   )
   checkPositions[Stat](
     """a + b + c""",
     """|Term.ApplyInfix a + b
+       |Type.ArgClause a + @@b + c
+       |Type.ArgClause a + b + @@c
        |""".stripMargin
   )
 

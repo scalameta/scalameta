@@ -51,8 +51,9 @@ class PatSuite extends ParseSuite {
   }
 
   test("_: F[t]") {
-    val Typed(Wildcard(), Type.Apply(Type.Name("F"), Type.Var(Type.Name("t")) :: Nil)) =
-      pat("_: F[t]")
+    assertPat("_: F[t]") {
+      Typed(Wildcard(), Type.Apply(Type.Name("F"), Type.ArgClause(List(Type.Var(Type.Name("t"))))))
+    }
   }
 
   test("_: F[_]") {

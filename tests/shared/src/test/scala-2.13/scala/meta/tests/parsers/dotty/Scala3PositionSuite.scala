@@ -48,11 +48,14 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Term.ParamClause (using a: F[A], G[B])
        |Term.Param a: F[A]
        |Type.Apply F[A]
+       |Type.ArgClause [A]
        |Term.Param G[B]
        |Type.Apply G[B]
+       |Type.ArgClause [B]
        |Defn.Def def isZero = i == 0
        |Type.ParamClause extension [A, B](i: A)(using a: F[A], G[B]) def isZero @@= i == 0
        |Term.ApplyInfix i == 0
+       |Type.ArgClause extension [A, B](i: A)(using a: F[A], G[B]) def isZero = i == @@0
        |""".stripMargin
   )
 
@@ -70,9 +73,11 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Defn.Def def isZero = i == 0
        |Type.ParamClause   def isZero @@= i == 0
        |Term.ApplyInfix i == 0
+       |Type.ArgClause   def isZero = i == @@0
        |Defn.Def def isOne = i == 1
        |Type.ParamClause   def isOne @@= i == 1
        |Term.ApplyInfix i == 1
+       |Type.ArgClause   def isOne = i == @@1
        |""".stripMargin
   )
 
@@ -117,8 +122,10 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Template Ord[Int] with Eq[Int] with { def f(): Int = 1 }
        |Init Ord[Int]
        |Type.Apply Ord[Int]
+       |Type.ArgClause [Int]
        |Init Eq[Int]
        |Type.Apply Eq[Int]
+       |Type.ArgClause [Int]
        |Self inline given intOrd: Ord[Int] with Eq[Int] with { @@def f(): Int = 1 }
        |Defn.Def def f(): Int = 1
        |Type.ParamClause inline given intOrd: Ord[Int] with Eq[Int] with { def f@@(): Int = 1 }
@@ -136,6 +143,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Decl.Given inline given intOrd: Ord[Int]
        |Type.ParamClause   inline given intOrd@@: Ord[Int]
        |Type.Apply Ord[Int]
+       |Type.ArgClause [Int]
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -149,6 +157,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Defn.GivenAlias given intOrd: Ord[Int] = intOrd
        |Type.ParamClause   given intOrd@@: Ord[Int] = intOrd
        |Type.Apply Ord[Int]
+       |Type.ArgClause [Int]
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -179,6 +188,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Importer Instances.{ im, given Ordering[?] }
        |Importee.Given given Ordering[?]
        |Type.Apply Ordering[?]
+       |Type.ArgClause [?]
        |Type.Wildcard ?
        |Type.Bounds import Instances.{ im, given Ordering[?@@] }
        |""".stripMargin
@@ -204,6 +214,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |TypeCase case Char => String
        |TypeCase case Array[t] => t
        |Type.Apply Array[t]
+       |Type.ArgClause [t]
        |Type.Bounds type T = @@A match {
        |""".stripMargin
   )
@@ -274,7 +285,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.Bounds type F0 = [T@@] => List[T] ?=> Option[T]
        |Type.ContextFunction List[T] ?=> Option[T]
        |Type.Apply List[T]
+       |Type.ArgClause [T]
        |Type.Apply Option[T]
+       |Type.ArgClause [T]
        |Type.Bounds type F0 = @@[T] => List[T] ?=> Option[T]
        |""".stripMargin
   )
@@ -304,7 +317,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Template derives Gamma[T], Beta[T]
        |Self class Alpha[T] derives Gamma[T], Beta[T]@@
        |Type.Apply Gamma[T]
+       |Type.ArgClause [T]
        |Type.Apply Beta[T]
+       |Type.ArgClause [T]
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -614,6 +629,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  x * x
        |}
        |Term.ApplyInfix x * x
+       |Type.ArgClause   x * @@x
        |""".stripMargin
   )
 

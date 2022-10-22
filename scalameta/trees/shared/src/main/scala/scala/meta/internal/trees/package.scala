@@ -85,7 +85,7 @@ package object trees {
     def isExtractor: Boolean = tree match {
       case quasi: Term.Quasi => true
       case ref: Term.Ref => ref.isStableId
-      case Term.ApplyType(tree, _) => tree.isExtractor
+      case t: Term.ApplyType => t.fun.isExtractor
       case _ => false
     }
   }

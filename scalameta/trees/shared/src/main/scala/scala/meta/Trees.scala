@@ -92,8 +92,13 @@ object Term {
   }
   @ast class Apply(fun: Term, args: List[Term]) extends Term
   @ast class ApplyUsing(fun: Term, args: List[Term]) extends Term
-  @ast class ApplyType(fun: Term, targs: List[Type] @nonEmpty) extends Term
-  @ast class ApplyInfix(lhs: Term, op: Name, targs: List[Type], args: List[Term]) extends Term
+  @ast class ApplyType(fun: Term, targClause: Type.ArgClause @nonEmpty) extends Term {
+    @replacedField("4.6.0") final def targs: List[Type] = targClause.values
+  }
+  @ast class ApplyInfix(lhs: Term, op: Name, targClause: Type.ArgClause, args: List[Term])
+      extends Term {
+    @replacedField("4.6.0") final def targs: List[Type] = targClause.values
+  }
   @ast class ApplyUnary(op: Name, arg: Term) extends Term.Ref {
     checkFields(op.isUnaryOp)
   }
@@ -192,6 +197,8 @@ object Term {
 @branch trait Type extends Tree
 object Type {
   @branch trait Ref extends Type with sm.Ref
+  @ast class ArgClause(values: List[Type]) extends Member.ArgClause
+
   @ast class Name(value: String @nonEmpty) extends sm.Name with Type.Ref
   @ast class AnonymousName() extends Type
   @ast class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref {
@@ -201,7 +208,9 @@ object Type {
   @ast class Singleton(ref: Term.Ref) extends Type.Ref {
     checkFields(ref.isPath || ref.is[Term.Super])
   }
-  @ast class Apply(tpe: Type, args: List[Type] @nonEmpty) extends Type
+  @ast class Apply(tpe: Type, argClause: ArgClause @nonEmpty) extends Type {
+    @replacedField("4.6.0") final def args: List[Type] = argClause.values
+  }
   @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
   @branch trait FunctionType extends Type {
     def params: List[Type]
@@ -370,6 +379,10 @@ object Member {
   }
   @branch trait ParamClause extends Tree {
     def values: List[Param]
+  }
+  @branch trait ArgClause extends Tree {
+    def values: List[Tree]
+    final def nonEmpty: Boolean = values.nonEmpty
   }
 }
 

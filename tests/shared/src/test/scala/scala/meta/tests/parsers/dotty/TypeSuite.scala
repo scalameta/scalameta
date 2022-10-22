@@ -178,7 +178,9 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("F[T]") {
-    val Apply(TypeName("F"), TypeName("T") :: Nil) = tpe("F[T]")
+    assertTpe("F[T]") {
+      Apply(TypeName("F"), ArgClause(TypeName("T") :: Nil))
+    }
   }
 
   test("F#T") {
@@ -393,8 +395,9 @@ class TypeSuite extends BaseDottySuite {
   test("plus-minus-then-underscore-source3") {
     val Type.Function(List(Type.Name("+_")), Type.Name("Int")) =
       tpe("+_ => Int")(dialects.Scala213Source3)
-    val Type.Apply(Type.Name("Option"), List(Type.Name("-_"))) =
-      tpe("Option[- _]")(dialects.Scala213Source3)
+    assertTpe("Option[- _]") {
+      Apply(Type.Name("Option"), ArgClause(List(Type.Name("-_"))))
+    }(dialects.Scala213Source3)
   }
 
   test("[scala213] (x: Int, y)") {
