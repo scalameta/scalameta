@@ -23,16 +23,15 @@ object TreeStructure {
               def anyStructure(x: Any): String = x match {
                 case el: String => enquote(el, DoubleQuotes)
                 case el: Tree => el.structure
-                case el: List[_] => listStructure(el)
-                case el: None.type => "None"
-                case el: Some[_] => "Some(" + anyStructure(el.get) + ")"
+                case None => "None"
+                case Some(el) => "Some(" + anyStructure(el) + ")"
+                case el: List[_] => iterableStructure(el, "List")
+                case el: Seq[_] => iterableStructure(el, "Seq")
                 case el => el.toString
               }
-              def listStructure(xs: List[_]): String = xs match {
-                case xs: Nil.type => "Nil"
-                case xs @ List(List()) => "List(List())"
-                case xs => "List(" + xs.map(anyStructure).mkString(", ") + ")"
-              }
+              def iterableStructure(xs: Iterable[_], cls: String): String =
+                if (xs.isEmpty) "Nil" else xs.map(anyStructure).mkString(s"$cls(", ", ", ")")
+
               r(x.productIterator.map(anyStructure).toList, ", ")
             }
             x match {
