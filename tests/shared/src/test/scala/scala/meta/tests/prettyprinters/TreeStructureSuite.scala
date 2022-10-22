@@ -16,7 +16,7 @@ class TreeStructureSuite extends ParseSuite {
     }
   }
 
-  assertStructure(Lit.Unit())("Lit.Unit(())")
+  assertStructure(Lit.Unit())("Lit.Unit()")
   assertStructure(Lit.Float("12.30f"))("Lit.Float(12.30f)")
   assertStructure(Lit.Double("12.30d"))("Lit.Double(12.30d)")
   assertStructure(Lit.Long(1230))("Lit.Long(1230L)")

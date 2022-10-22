@@ -36,12 +36,12 @@ object TreeStructure {
               r(x.productIterator.map(anyStructure).toList, ", ")
             }
             x match {
-              case x: Quasi =>
+              case _: Quasi =>
                 default
-              case x @ Lit(value: String) =>
+              case Lit(value: String) =>
                 s(enquote(value, DoubleQuotes))
-              case x @ Lit(()) =>
-                s("()")
+              case _: Lit.Unit =>
+                s()
               case x @ Lit.Double(_) =>
                 s(x.tokens.mkString)
               case x @ Lit.Float(_) =>
