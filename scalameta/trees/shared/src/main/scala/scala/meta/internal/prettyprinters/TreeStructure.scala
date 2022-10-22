@@ -11,7 +11,7 @@ import scala.meta.internal.trees.Quasi
 object TreeStructure {
   def apply[T <: Tree]: Structure[T] = {
     Structure {
-      case Name.Anonymous() =>
+      case _: Name.Anonymous =>
         s("Name(\"\")")
       case Name.Indeterminate(value) =>
         s("Name(", enquote(value, DoubleQuotes), ")")
@@ -23,57 +23,47 @@ object TreeStructure {
               def anyStructure(x: Any): String = x match {
                 case el: String => enquote(el, DoubleQuotes)
                 case el: Tree => el.structure
-                case el: List[_] => listStructure(el)
-                case el: None.type => "None"
-                case el: Some[_] => "Some(" + anyStructure(el.get) + ")"
+                case None => "None"
+                case Some(el) => "Some(" + anyStructure(el) + ")"
+                case el: List[_] => iterableStructure(el, "List")
+                case el: Seq[_] => iterableStructure(el, "Seq")
                 case el => el.toString
               }
-              def listStructure(xs: List[_]): String = xs match {
-                case xs: Nil.type => "Nil"
-                case xs @ List(List()) => "List(List())"
-                case xs => "List(" + xs.map(anyStructure).mkString(", ") + ")"
-              }
+              def iterableStructure(xs: Iterable[_], cls: String): String =
+                if (xs.isEmpty) "Nil" else xs.map(anyStructure).mkString(s"$cls(", ", ", ")")
+
               r(x.productIterator.map(anyStructure).toList, ", ")
             }
             x match {
-              case x: Quasi =>
+              case _: Quasi =>
                 default
-              case x @ Lit(value: String) =>
+              case Lit(value: String) =>
                 s(enquote(value, DoubleQuotes))
-              case x @ Lit(()) =>
-                s("()")
-              case x @ Lit.Double(_) =>
+              case _: Lit.Unit =>
+                s()
+              case x: Lit.Double =>
                 s(x.tokens.mkString)
-              case x @ Lit.Float(_) =>
+              case x: Lit.Float =>
                 s(x.tokens.mkString)
-              case x @ Lit(_) =>
-                def isRelevantToken(tok: Token) = tok match {
-                  case Constant.Int(_) => true
-                  case Constant.Long(_) => true
-                  case Constant.Char(_) => true
-                  case Constant.Symbol(_) => true
-                  case Constant.String(_) => true
-                  case KwTrue() => true
-                  case KwFalse() => true
-                  case KwNull() => true
-                  case Ident("-") => true
-                  case _ => false
-                }
-                def showToken(tok: Token) = tok match {
-                  case Constant.Long(v) => Show.Str(v.toString + "L")
-                  case _ => tok.syntax
-                }
-                s(x.tokens.filter(isRelevantToken _).map(showToken _).mkString)
-              case Name.Indeterminate(value) =>
-                s(enquote(value, DoubleQuotes))
-              case Name.Anonymous() =>
-                s(enquote("", DoubleQuotes))
-              case x =>
+              case x: Lit =>
+                s(x.tokens.filter(isRelevantToken).map(showToken).mkString)
+              case _ =>
                 default
             }
           },
           ")"
         )
     }
+  }
+
+  private def isRelevantToken(tok: Token) = tok match {
+    case _: Literal => true
+    case Ident("-") => true
+    case _ => false
+  }
+
+  private def showToken(tok: Token) = tok match {
+    case Constant.Long(v) => Show.Str(v.toString + "L")
+    case _ => tok.syntax
   }
 }
