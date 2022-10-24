@@ -18,7 +18,7 @@ class TraverserOrder extends FunSuite {
    * fields to real ones or just drop the traverser API.
    * https://github.com/scalameta/scalameta/issues/2247
    */
-  test("traversal order is preserved".ignore) {
+  test("traversal order is preserved") {
     val errors = SyntaxAnalysis.onParsed[Tree](ContribSuite.corpus) { ast =>
       val trees1 = asList_Traverser(ast)
       val trees2 = asList_SimpleTraverser(ast)
