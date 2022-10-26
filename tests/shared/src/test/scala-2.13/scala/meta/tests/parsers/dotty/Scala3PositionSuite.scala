@@ -44,6 +44,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.Bounds extension [A@@, B](i: A)(using a: F[A], G[B]) def isZero = i == 0
        |Type.ParamClause extension [A, B@@](i: A)(using a: F[A], G[B]) def isZero = i == 0
        |Type.Bounds extension [A, B@@](i: A)(using a: F[A], G[B]) def isZero = i == 0
+       |Term.ParamClause (i: A)
+       |Term.ParamClause (using a: F[A], G[B])
        |Term.Param a: F[A]
        |Type.Apply F[A]
        |Term.Param G[B]
@@ -60,6 +62,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  def isOne = i == 1
        |}""".stripMargin,
     """|Type.ParamClause extension @@(i: A) {
+       |Term.ParamClause (i: A)
        |Term.Block {
        |  def isZero = i == 0
        |  def isOne = i == 1
@@ -78,6 +81,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     "def foo(implicit a: A, b: B): Unit",
     """|Type.ParamClause def foo@@(implicit a: A, b: B): Unit
+       |Term.ParamClause (implicit a: A, b: B)
        |Term.Param a: A
        |Term.Param b: B
        |""".stripMargin
@@ -89,6 +93,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.ParamClause enum Day[T@@](e: T) extends A with B { case Monday, Tuesday }
        |Type.Bounds enum Day[T@@](e: T) extends A with B { case Monday, Tuesday }
        |Ctor.Primary (e: T)
+       |Term.ParamClause (e: T)
        |Template extends A with B { case Monday, Tuesday }
        |Self enum Day[T](e: T) extends A with B { @@case Monday, Tuesday }
        |Defn.RepeatedEnumCase case Monday, Tuesday
@@ -100,6 +105,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.ParamClause class Day[T@@](e: T) extends A with B { val Monday = 42 }
        |Type.Bounds class Day[T@@](e: T) extends A with B { val Monday = 42 }
        |Ctor.Primary (e: T)
+       |Term.ParamClause (e: T)
        |Template extends A with B { val Monday = 42 }
        |Self class Day[T](e: T) extends A with B { @@val Monday = 42 }
        |Defn.Val val Monday = 42
@@ -116,6 +122,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Self inline given intOrd: Ord[Int] with Eq[Int] with { @@def f(): Int = 1 }
        |Defn.Def def f(): Int = 1
        |Type.ParamClause inline given intOrd: Ord[Int] with Eq[Int] with { def f@@(): Int = 1 }
+       |Term.ParamClause ()
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -211,6 +218,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     "infix def a(param: Int) = param",
     """|Type.ParamClause infix def a@@(param: Int) = param
+       |Term.ParamClause (param: Int)
        |""".stripMargin
   )
   checkPositions[Stat](

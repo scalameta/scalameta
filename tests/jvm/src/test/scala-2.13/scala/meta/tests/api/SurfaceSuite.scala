@@ -376,6 +376,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Term.New
       |scala.meta.Term.NewAnonymous
       |scala.meta.Term.Param
+      |scala.meta.Term.ParamClause
       |scala.meta.Term.PartialFunction
       |scala.meta.Term.Placeholder
       |scala.meta.Term.PolyFunction

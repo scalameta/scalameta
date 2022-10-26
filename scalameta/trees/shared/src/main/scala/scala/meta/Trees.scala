@@ -182,7 +182,9 @@ object Term {
     checkParent(ParentChecks.TermRepeated)
   }
   @ast class Param(mods: List[Mod], name: meta.Name, decltpe: Option[Type], default: Option[Term])
-      extends Member
+      extends Member.Param
+  @ast class ParamClause(values: List[Param], mod: Option[Mod.ParamsType] = None)
+      extends Member.ParamClause
   def fresh(): Term.Name = fresh("fresh")
   def fresh(prefix: String): Term.Name = Term.Name(prefix + Fresh.nextId())
 }
@@ -243,8 +245,10 @@ object Type {
   @ast class AnonymousLambda(tpe: Type) extends Type
   @ast class Macro(body: Term) extends Type
   @deprecated("Method type syntax is no longer supported in any dialect", "4.4.3")
-  @ast class Method(paramss: List[List[Term.Param]], tpe: Type) extends Type {
+  @ast class Method(paramClauses: Seq[Term.ParamClause], tpe: Type) extends Type {
     checkParent(ParentChecks.TypeMethod)
+    @replacedField("4.5.13") final def paramss: List[List[Term.Param]] =
+      paramClauses.map(_.values).toList
   }
   @deprecated("Placeholder replaced with AnonymousParam and Wildcard", ">4.5.13")
   @branch trait Placeholder extends Type {
@@ -374,10 +378,12 @@ object Decl {
       mods: List[Mod],
       name: Term.Name,
       tparamClause: sm.Type.ParamClause,
-      paramss: List[List[Term.Param]],
+      paramClauses: Seq[Term.ParamClause],
       decltpe: sm.Type
   ) extends Decl with Member.Term with Stat.WithMods {
     @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+    @replacedField("4.5.13") final def paramss: List[List[Term.Param]] =
+      paramClauses.map(_.values).toList
   }
   @ast class Type(
       mods: List[Mod],
@@ -391,10 +397,12 @@ object Decl {
       mods: List[Mod],
       name: Term.Name,
       tparamClause: sm.Type.ParamClause,
-      sparams: List[List[Term.Param]],
+      paramClauses: Seq[Term.ParamClause],
       decltpe: sm.Type
   ) extends Decl with Member.Term with Stat.WithMods {
     @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+    @replacedField("4.5.13") final def sparams: List[List[Term.Param]] =
+      paramClauses.map(_.values).toList
   }
 }
 
@@ -422,10 +430,12 @@ object Defn {
       mods: List[Mod],
       name: scala.meta.Name,
       tparamClause: sm.Type.ParamClause,
-      sparams: List[List[Term.Param]],
+      paramClauses: Seq[Term.ParamClause],
       templ: Template
   ) extends Defn with Stat.WithMods {
     @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+    @replacedField("4.5.13") final def sparams: List[List[Term.Param]] =
+      paramClauses.map(_.values).toList
   }
   @ast class Enum(
       mods: List[Mod],
@@ -456,39 +466,47 @@ object Defn {
       mods: List[Mod],
       name: scala.meta.Name,
       tparamClause: sm.Type.ParamClause,
-      sparams: List[List[Term.Param]],
+      paramClauses: Seq[Term.ParamClause],
       decltpe: sm.Type,
       body: Term
   ) extends Defn with Stat.WithMods {
     @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+    @replacedField("4.5.13") final def sparams: List[List[Term.Param]] =
+      paramClauses.map(_.values).toList
   }
   @ast class ExtensionGroup(
       tparamClause: sm.Type.ParamClause,
-      paramss: List[List[Term.Param]],
+      paramClauses: Seq[Term.ParamClause],
       body: Stat
   ) extends Defn {
     @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+    @replacedField("4.5.13") final def paramss: List[List[Term.Param]] =
+      paramClauses.map(_.values).toList
   }
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
       tparamClause: sm.Type.ParamClause,
-      paramss: List[List[Term.Param]],
+      paramClauses: Seq[Term.ParamClause],
       decltpe: Option[sm.Type],
       body: Term
   ) extends Defn with Member.Term with Stat.WithMods {
-    checkFields(paramss.forall(onlyLastParamCanBeRepeated))
+    checkFields(paramClauses.forall(onlyLastParamCanBeRepeated))
     @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+    @replacedField("4.5.13") final def paramss: List[List[Term.Param]] =
+      paramClauses.map(_.values).toList
   }
   @ast class Macro(
       mods: List[Mod],
       name: Term.Name,
       tparamClause: sm.Type.ParamClause,
-      paramss: List[List[Term.Param]],
+      paramClauses: Seq[Term.ParamClause],
       decltpe: Option[sm.Type],
       body: Term
   ) extends Defn with Member.Term with Stat.WithMods {
     @replacedField("4.5.13") final def tparams: List[sm.Type.Param] = tparamClause.values
+    @replacedField("4.5.13") final def paramss: List[List[Term.Param]] =
+      paramClauses.map(_.values).toList
   }
   @ast class Type(
       mods: List[Mod],
@@ -543,15 +561,21 @@ object Pkg {
 // "every definition and every reference should carry a name".
 @branch trait Ctor extends Tree with Member
 object Ctor {
-  @ast class Primary(mods: List[Mod], name: Name, paramss: List[List[Term.Param]]) extends Ctor
+  @ast class Primary(mods: List[Mod], name: Name, paramClauses: Seq[Term.ParamClause])
+      extends Ctor {
+    @replacedField("4.5.13") final def paramss: List[List[Term.Param]] =
+      paramClauses.map(_.values).toList
+  }
   @ast class Secondary(
       mods: List[Mod],
       name: Name,
-      paramss: List[List[Term.Param]] @nonEmpty,
+      paramClauses: Seq[Term.ParamClause] @nonEmpty,
       init: Init,
       stats: List[Stat]
   ) extends Ctor with Stat with Stat.WithMods {
     checkFields(stats.forall(_.isBlockStat))
+    @replacedField("4.5.13") final def paramss: List[List[Term.Param]] =
+      paramClauses.map(_.values).toList
   }
 }
 

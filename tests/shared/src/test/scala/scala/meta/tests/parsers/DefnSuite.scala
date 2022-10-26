@@ -233,46 +233,45 @@ class DefnSuite extends ParseSuite {
          |}""".stripMargin
     )
     assertTree(defn)(
-      Defn
-        .Def(
-          Nil,
-          Term.Name("f"),
-          Nil,
-          Nil,
-          None,
-          Term.Block(
-            List(
-              Term.Function(
-                List(Term.Param(Nil, Term.Name("n"), Some(Type.Name("Int")), None)),
-                Term.Apply(
-                  Term.Select(
-                    Term.Block(
-                      List(
-                        Term.ForYield(
-                          List(
-                            Enumerator.Generator(
-                              Pat.Wildcard(),
-                              Term.Apply(
-                                Term.Select(
-                                  Term.Select(Term.Name("scala"), Term.Name("util")),
-                                  Term.Name("Success")
-                                ),
-                                List(Lit.Int(123))
-                              )
+      Defn.Def(
+        Nil,
+        Term.Name("f"),
+        Type.ParamClause(Nil),
+        Nil,
+        None,
+        Term.Block(
+          List(
+            Term.Function(
+              List(Term.Param(Nil, Term.Name("n"), Some(Type.Name("Int")), None)),
+              Term.Apply(
+                Term.Select(
+                  Term.Block(
+                    List(
+                      Term.ForYield(
+                        List(
+                          Enumerator.Generator(
+                            Pat.Wildcard(),
+                            Term.Apply(
+                              Term.Select(
+                                Term.Select(Term.Name("scala"), Term.Name("util")),
+                                Term.Name("Success")
+                              ),
+                              List(Lit.Int(123))
                             )
-                          ),
-                          Lit.Int(42)
-                        )
+                          )
+                        ),
+                        Lit.Int(42)
                       )
-                    ),
-                    Term.Name("recover")
+                    )
                   ),
-                  List(Term.Name("???"))
-                )
+                  Term.Name("recover")
+                ),
+                List(Term.Name("???"))
               )
             )
           )
         )
+      )
     )
   }
 
