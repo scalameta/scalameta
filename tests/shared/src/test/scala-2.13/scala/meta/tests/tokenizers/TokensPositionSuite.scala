@@ -315,6 +315,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     "def f(a: A = (da)): A",
     """|Type.ParamClause def f@@(a: A = (da)): A
+       |Term.ParamClause (a: A = (da))
        |Term.Param a: A = (da)
        |Term.Name (da)
        |""".stripMargin
@@ -484,6 +485,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Self class A { @@def this(a: A) = this() }
        |Ctor.Secondary def this(a: A) = this()
        |Name.Anonymous this
+       |Term.ParamClause (a: A)
        |Init this()
        |Type.Singleton this
        |Term.This this
@@ -498,6 +500,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     "class A private (b: B)",
     """|Type.ParamClause class A @@private (b: B)
        |Ctor.Primary private (b: B)
+       |Term.ParamClause (b: B)
        |Template class A private (b: B)@@
        |Self class A private (b: B)@@
        |""".stripMargin
@@ -614,6 +617,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     "class A(val b: B)",
     """|Type.ParamClause class A@@(val b: B)
        |Ctor.Primary (val b: B)
+       |Term.ParamClause (val b: B)
        |Term.Param val b: B
        |Mod.ValParam val
        |Template class A(val b: B)@@
@@ -624,6 +628,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     "class A(var b: B)",
     """|Type.ParamClause class A@@(var b: B)
        |Ctor.Primary (var b: B)
+       |Term.ParamClause (var b: B)
        |Term.Param var b: B
        |Mod.VarParam var
        |Template class A(var b: B)@@

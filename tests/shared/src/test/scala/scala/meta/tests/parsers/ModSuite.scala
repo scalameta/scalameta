@@ -8,23 +8,62 @@ class ModSuite extends ParseSuite {
     val Defn.Object(List(Mod.Implicit()), _, _) = templStat("implicit object A")
     val Defn.Class(List(Mod.Implicit()), _, _, _, _) = templStat("implicit class A")
     val Defn.Object(List(Mod.Implicit(), Mod.Case()), _, _) = templStat("implicit case object A")
-    val Defn.Class(
-      _,
-      _,
-      _,
-      Ctor.Primary(_, _, List(List(Term.Param(List(Mod.Implicit(), Mod.ValParam()), _, _, _)))),
-      _
-    ) = templStat("case class A(implicit val a: Int)")
-    val Defn.Class(
-      _,
-      _,
-      _,
-      Ctor.Primary(_, _, List(List(Term.Param(List(Mod.Implicit(), Mod.VarParam()), _, _, _)))),
-      _
-    ) = templStat("case class A(implicit var a: Int)")
+    assertTree(templStat("case class A(implicit val a: Int)")) {
+      Defn.Class(
+        List(Mod.Case()),
+        Type.Name("A"),
+        Nil,
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          Term.ParamClause(
+            Term.Param(
+              List(Mod.Implicit(), Mod.ValParam()),
+              Term.Name("a"),
+              Some(Type.Name("Int")),
+              None
+            ) :: Nil,
+            Some(Mod.Implicit())
+          ) :: Nil
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
+    assertTree(templStat("case class A(implicit var a: Int)")) {
+      Defn.Class(
+        List(Mod.Case()),
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          Term.ParamClause(
+            Term.Param(
+              List(Mod.Implicit(), Mod.VarParam()),
+              Term.Name("a"),
+              Some(Type.Name("Int")),
+              None
+            ) :: Nil,
+            Some(Mod.Implicit())
+          ) :: Nil
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
 
-    val Defn.Def(_, _, _, List(List(Term.Param(List(Mod.Implicit()), _, _, _))), _, _) =
-      templStat("def foo(implicit a: Int): Int = a")
+    assertTree(templStat("def foo(implicit a: Int): Int = a")) {
+      Defn.Def(
+        Nil,
+        Term.Name("foo"),
+        Type.ParamClause(Nil),
+        Term.ParamClause(
+          List(Term.Param(List(Mod.Implicit()), Term.Name("a"), Some(Type.Name("Int")), None)),
+          Some(Mod.Implicit())
+        ) :: Nil,
+        Some(Type.Name("Int")),
+        Term.Name("a")
+      )
+    }
 
     val Defn.Def(List(Mod.Implicit()), _, _, _, _, _) =
       templStat("implicit def foo(a: Int): Int = a")
@@ -59,13 +98,27 @@ class ModSuite extends ParseSuite {
     val Defn.Class(List(Mod.Final(), Mod.Case()), _, _, _, _) =
       templStat("final case class A(a: Int)")
     val Defn.Object(List(Mod.Final(), Mod.Case()), _, _) = templStat("final case object A")
-    val Defn.Class(
-      _,
-      _,
-      _,
-      Ctor.Primary(_, _, List(List(Term.Param(List(Mod.Final(), Mod.ValParam()), _, _, _)))),
-      _
-    ) = templStat("case class A(final val a: Int)")
+
+    assertTree(templStat("case class A(final val a: Int)")) {
+      Defn.Class(
+        List(Mod.Case()),
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          Term.ParamClause(
+            Term.Param(
+              List(Mod.Final(), Mod.ValParam()),
+              Term.Name("a"),
+              Some(Type.Name("Int")),
+              None
+            ) :: Nil
+          ) :: Nil
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
 
     val Defn.Def(List(Mod.Final()), _, _, _, _, _) = templStat("final def foo(a: Int): Int = a")
     val Defn.Val(List(Mod.Final()), _, _, _) = templStat("final val a: Int = 1")
@@ -300,7 +353,7 @@ class ModSuite extends ParseSuite {
         Ctor.Primary(
           Nil,
           Name(""),
-          List(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None)))
+          Term.ParamClause(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None))) :: Nil
         ),
         Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
       )
@@ -325,7 +378,7 @@ class ModSuite extends ParseSuite {
         Ctor.Primary(
           Nil,
           Name(""),
-          List(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None)))
+          Term.ParamClause(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None))) :: Nil
         ),
         Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
       )
@@ -377,7 +430,7 @@ class ModSuite extends ParseSuite {
         Ctor.Primary(
           Nil,
           Name(""),
-          List(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None)))
+          Term.ParamClause(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None))) :: Nil
         ),
         Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
       )
@@ -402,7 +455,7 @@ class ModSuite extends ParseSuite {
         Ctor.Primary(
           Nil,
           Name(""),
-          List(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None)))
+          Term.ParamClause(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None))) :: Nil
         ),
         Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
       )
@@ -436,81 +489,197 @@ class ModSuite extends ParseSuite {
     )
   }
 
-  test("val param") {
-    val Defn.Class(
-      _,
-      _,
-      _,
-      Ctor.Primary(_, _, List(List(Term.Param(List(Mod.ValParam()), _, _, _)))),
-      _
-    ) = templStat("case class A(val a: Int)")
+  test("val param in case class") {
+    assertTree(templStat("case class A(val a: Int)")) {
+      Defn.Class(
+        List(Mod.Case()),
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          Term.ParamClause(
+            List(Term.Param(List(Mod.ValParam()), Term.Name("a"), Some(Type.Name("Int")), None))
+          ) :: Nil
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
+  }
 
-    val Defn.Class(
-      _,
-      _,
-      _,
-      Ctor.Primary(_, _, List(List(Term.Param(List(Mod.ValParam()), _, _, _)))),
-      _
-    ) = templStat("class A(val a: Int)")
+  test("val param in class") {
+    assertTree(templStat("class A(val a: Int)")) {
+      Defn.Class(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          Term.ParamClause(
+            List(Term.Param(List(Mod.ValParam()), Term.Name("a"), Some(Type.Name("Int")), None))
+          ) :: Nil
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
+  }
 
-    val Defn.Class(
-      _,
-      _,
-      _,
-      Ctor.Primary(_, _, List(List(Term.Param(List(Mod.Implicit(), Mod.ValParam()), _, _, _)))),
-      _
-    ) = templStat("case class A(implicit val a: Int)")
+  test("implicit val param in case class") {
+    assertTree(templStat("case class A(implicit val a: Int)")) {
+      Defn.Class(
+        List(Mod.Case()),
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          Term.ParamClause(
+            Term.Param(
+              List(Mod.Implicit(), Mod.ValParam()),
+              Term.Name("a"),
+              Some(Type.Name("Int")),
+              None
+            ) :: Nil,
+            Some(Mod.Implicit())
+          ) :: Nil
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
+  }
 
-    val Defn.Class(
-      _,
-      _,
-      _,
-      Ctor.Primary(_, _, List(List(Term.Param(List(Mod.Implicit(), Mod.ValParam()), _, _, _)))),
-      _
-    ) = templStat("class A(implicit val a: Int)")
+  test("implicit val param in class") {
+    assertTree(templStat("class A(implicit val a: Int)")) {
+      Defn.Class(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          Term.ParamClause(
+            Term.Param(
+              List(Mod.Implicit(), Mod.ValParam()),
+              Term.Name("a"),
+              Some(Type.Name("Int")),
+              None
+            ) :: Nil,
+            Some(Mod.Implicit())
+          ) :: Nil
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
+  }
 
+  test("no val param in def") {
     // No ValParam detected inside parameter list
-    val Defn.Def(_, _, _, List(List(Term.Param(List(), _, _, _))), _, _) =
-      templStat("def foo(a: Int): Int = a")
+    assertTree(templStat("def foo(a: Int): Int = a")) {
+      Defn.Def(
+        Nil,
+        Term.Name("foo"),
+        Type.ParamClause(Nil),
+        Term.ParamClause(
+          List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))
+        ) :: Nil,
+        Some(Type.Name("Int")),
+        Term.Name("a")
+      )
+    }
+  }
 
+  test("val param in def") {
     interceptParseErrors(
       "def foo(val a: Int): Int"
     )
   }
 
-  test("var param") {
-    val Defn.Class(
-      _,
-      _,
-      _,
-      Ctor.Primary(_, _, List(List(Term.Param(List(Mod.VarParam()), _, _, _)))),
-      _
-    ) = templStat("case class A(var a: Int)")
+  test("var param in case class") {
+    assertTree(templStat("case class A(var a: Int)")) {
+      Defn.Class(
+        List(Mod.Case()),
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          Term.ParamClause(
+            List(Term.Param(List(Mod.VarParam()), Term.Name("a"), Some(Type.Name("Int")), None))
+          ) :: Nil
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
+  }
 
-    val Defn.Class(
-      _,
-      _,
-      _,
-      Ctor.Primary(_, _, List(List(Term.Param(List(Mod.VarParam()), _, _, _)))),
-      _
-    ) = templStat("class A(var a: Int)")
+  test("var param in class") {
+    assertTree(templStat("class A(var a: Int)")) {
+      Defn.Class(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          Term.ParamClause(
+            List(Term.Param(List(Mod.VarParam()), Term.Name("a"), Some(Type.Name("Int")), None))
+          ) :: Nil
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
+  }
 
-    val Defn.Class(
-      _,
-      _,
-      _,
-      Ctor.Primary(_, _, List(List(Term.Param(List(Mod.Implicit(), Mod.VarParam()), _, _, _)))),
-      _
-    ) = templStat("case class A(implicit var a: Int)")
+  test("implicit var param in case class") {
+    assertTree(templStat("case class A(implicit var a: Int)")) {
+      Defn.Class(
+        List(Mod.Case()),
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          Term.ParamClause(
+            Term.Param(
+              List(Mod.Implicit(), Mod.VarParam()),
+              Term.Name("a"),
+              Some(Type.Name("Int")),
+              None
+            ) :: Nil,
+            Some(Mod.Implicit())
+          ) :: Nil
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
+  }
 
-    val Defn.Class(
-      _,
-      _,
-      _,
-      Ctor.Primary(_, _, List(List(Term.Param(List(Mod.Implicit(), Mod.VarParam()), _, _, _)))),
-      _
-    ) = templStat("class A(implicit var a: Int)")
+  test("implicit var param in class") {
+    assertTree(templStat("class A(implicit var a: Int)")) {
+      Defn.Class(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          Term.ParamClause(
+            Term.Param(
+              List(Mod.Implicit(), Mod.VarParam()),
+              Term.Name("a"),
+              Some(Type.Name("Int")),
+              None
+            ) :: Nil,
+            Some(Mod.Implicit())
+          ) :: Nil
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
+  }
 
+  test("var param in def") {
     interceptParseErrors(
       "def foo(var a: Int): Int"
     )

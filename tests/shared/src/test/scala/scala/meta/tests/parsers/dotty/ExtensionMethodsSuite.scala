@@ -8,7 +8,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Scala3)
 
   private final val cparam = tparam("c", "Circle")
-  private final val cparamss = List(List(cparam))
+  private final val cparamss: List[Term.ParamClause] = List(List(cparam))
 
   /**
    * For checking examples in repl declare:
