@@ -150,7 +150,9 @@ package object dialects {
 
   implicit val Scala32 = Scala31
 
-  implicit val Scala33 = Scala32.withAllowFewerBraces(true)
+  implicit val Scala33 = Scala32
+    .withAllowFewerBraces(true)
+    .withAllowParamClauseInterleaving(true)
 
   implicit val Scala3 = Scala33
 

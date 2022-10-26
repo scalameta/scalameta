@@ -153,6 +153,8 @@ final class Dialect private (
     val useInfixTypePrecedence: Boolean,
     // Scala213Source3 and Scala3 allow infix operator being placed after nl
     val allowInfixOperatorAfterNL: Boolean,
+    // Scala 3 allows `def f[X](x: X)[Y](y: Y)`
+    val allowParamClauseInterleaving: Boolean,
     /* Scala 3 allows dropping braces for block arguments such as `list.map: a =>`
      * It wasn't available in Scala 3.0 and got introduced later.
      */
@@ -248,6 +250,7 @@ final class Dialect private (
       allowGivenImports = false,
       useInfixTypePrecedence = false,
       allowInfixOperatorAfterNL = false,
+      allowParamClauseInterleaving = false,
       allowFewerBraces = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
@@ -462,6 +465,10 @@ final class Dialect private (
     privateCopy(allowInfixOperatorAfterNL = newValue)
   }
 
+  def withAllowParamClauseInterleaving(newValue: Boolean): Dialect = {
+    privateCopy(allowParamClauseInterleaving = newValue)
+  }
+
   def withAllowFewerBraces(newValue: Boolean): Dialect = {
     privateCopy(allowFewerBraces = newValue)
   }
@@ -531,6 +538,7 @@ final class Dialect private (
       allowGivenImports: Boolean = this.allowGivenImports,
       useInfixTypePrecedence: Boolean = this.useInfixTypePrecedence,
       allowInfixOperatorAfterNL: Boolean = this.allowInfixOperatorAfterNL,
+      allowParamClauseInterleaving: Boolean = this.allowParamClauseInterleaving,
       allowFewerBraces: Boolean = this.allowFewerBraces
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
@@ -594,6 +602,7 @@ final class Dialect private (
       allowGivenImports,
       useInfixTypePrecedence,
       allowInfixOperatorAfterNL,
+      allowParamClauseInterleaving,
       allowFewerBraces
       // NOTE(olafur): add the next argument above this comment.
     )
@@ -677,6 +686,8 @@ final class Dialect private (
       && this.allowGivenImports == that.allowGivenImports
       && this.useInfixTypePrecedence == that.useInfixTypePrecedence
       && this.allowInfixOperatorAfterNL == that.allowInfixOperatorAfterNL
+      && this.allowParamClauseInterleaving == that.allowParamClauseInterleaving
+      && this.allowFewerBraces == that.allowFewerBraces
   )
 
   @deprecated("Use withX method instead", "4.3.11")
