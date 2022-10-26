@@ -578,6 +578,7 @@ object Ctor {
 @branch trait Mod extends Tree
 object Mod {
   @branch trait Variant extends Mod
+  @branch trait ParamsType extends Mod
   @ast class Annot(init: Init) extends Mod {
     @deprecated("Use init instead", "1.9.0")
     def body = init
@@ -588,7 +589,7 @@ object Mod {
   @ast class Protected(within: Ref) extends Mod {
     checkFields(within.isWithin)
   }
-  @ast class Implicit() extends Mod
+  @ast class Implicit() extends ParamsType
   @ast class Final() extends Mod
   @ast class Sealed() extends Mod
   @ast class Open() extends Mod
@@ -604,7 +605,7 @@ object Mod {
   @ast class VarParam() extends Mod
   @ast class Infix() extends Mod
   @ast class Inline() extends Mod
-  @ast class Using() extends Mod
+  @ast class Using() extends ParamsType
   @ast class Opaque() extends Mod
   @ast class Transparent() extends Mod
 }

@@ -312,6 +312,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Mod.Opaque
       |scala.meta.Mod.Open
       |scala.meta.Mod.Override
+      |scala.meta.Mod.ParamsType
       |scala.meta.Mod.Private
       |scala.meta.Mod.Protected
       |scala.meta.Mod.Sealed
