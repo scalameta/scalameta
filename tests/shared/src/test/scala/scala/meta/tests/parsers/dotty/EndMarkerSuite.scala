@@ -1,6 +1,5 @@
 package scala.meta.tests.parsers.dotty
 
-import scala.meta.tests.parsers._
 import scala.meta._
 
 class EndMarkerSuite extends BaseDottySuite {
@@ -18,7 +17,7 @@ class EndMarkerSuite extends BaseDottySuite {
     val markers =
       List("if", "while", "for", "match", "try", "new", "this", "given", "extension", "val")
     for (m <- markers) {
-      parseStat(s"end ${m}")
+      parseStat(s"end $m", dialect)
     }
   }
 

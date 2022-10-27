@@ -1399,11 +1399,13 @@ class TermSuite extends ParseSuite {
 
   test("scala3-syntax") {
 
+    implicit def parseTerm(code: String, dialect: Dialect): Term = term(code)
+
     runTestError[Term](
       """|() match
          |  case _: Unit => ()""".stripMargin,
       "error: { expected but case found"
-    )(term(_))
+    )
 
   }
 

@@ -1,11 +1,10 @@
 package scala.meta.tests.parsers.dotty
 
-import scala.meta.tests.parsers._
 import scala.meta._
 
 class MatchTypeSuite extends BaseDottySuite {
 
-  implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Scala3)
+  implicit def parseBlock(code: String, dialect: Dialect): Stat = blockStat(code)(dialect)
 
   test("simple") {
     val intput =
@@ -232,6 +231,7 @@ class MatchTypeSuite extends BaseDottySuite {
   }
 
   test("wildcard") {
+    implicit val dialect: Dialect = dialects.Scala3Future
     runTestAssert[Stat](
       """|object match_types:
          |  type Combine[L, R] = L match
@@ -302,6 +302,6 @@ class MatchTypeSuite extends BaseDottySuite {
           Nil
         )
       )
-    )(templStat(_)(dialects.Scala3Future))
+    )
   }
 }

@@ -69,11 +69,12 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   ): Unit =
     checkParsedTree(code, _.entrypointStat(), syntax)(tree)
 
-  protected def runTestError[T <: Tree](code: String, expected: String)(
-      implicit parser: String => T
-  ): Unit = {
+  protected def runTestError[T <: Tree](
+      code: String,
+      expected: String
+  )(implicit parser: (String, Dialect) => T, dialect: Dialect): Unit = {
     val error = intercept[ParseException] {
-      val result = parser(code)
+      val result = parser(code, dialect)
       throw new ParseException(
         Position.None,
         s"Statement ${code} should not parse! Got result ${result.structure}"
