@@ -1,11 +1,10 @@
 package scala.meta.tests.parsers.dotty
 
-import scala.meta.tests.parsers._
 import scala.meta._
 
 class GivenUsingSuite extends BaseDottySuite {
 
-  implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Scala3)
+  implicit def parseBlock(code: String, dialect: Dialect): Stat = blockStat(code)(dialect)
 
   /**
    * For checking examples in repl declare:

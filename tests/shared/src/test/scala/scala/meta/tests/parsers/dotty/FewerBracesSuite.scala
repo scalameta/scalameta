@@ -1,12 +1,10 @@
 package scala.meta.tests.parsers.dotty
 
-import scala.meta.tests.parsers._
 import scala.meta._
-import scala.meta.tests.tokenizers.TokenizerSuite
 
-class FeverBracesSuite extends BaseDottySuite {
+class FewerBracesSuite extends BaseDottySuite {
 
-  override implicit val dialect = dialects.Scala3.withAllowFewerBraces(true)
+  protected override implicit val dialect = dialects.Scala3.withAllowFewerBraces(true)
 
   test("simple") {
     runTestAssert[Stat](

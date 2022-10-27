@@ -5,11 +5,11 @@ import scala.meta._
 
 trait BaseDottySuite extends ParseSuite {
 
-  protected val dialect = dialects.Scala3
+  protected implicit val dialect: Dialect = dialects.Scala3
 
-  implicit val parseStat: String => Stat = code => templStat(code)(dialect)
-  implicit val parseSource: String => Source = code => source(code)(dialect)
-  implicit val parseType: String => Type = code => tpe(code)(dialect)
+  implicit def parseStat(code: String, dialect: Dialect): Stat = templStat(code)(dialect)
+  implicit def parseSource(code: String, dialect: Dialect): Source = source(code)(dialect)
+  implicit def parseType(code: String, dialect: Dialect): Type = tpe(code)(dialect)
 
   final val anon = meta.Name.Anonymous()
   final val ctor = Ctor.Primary(Nil, anon, Nil)
@@ -42,8 +42,8 @@ trait BaseDottySuite extends ParseSuite {
    */
   protected def runTestAssert[T <: Tree](
       code: String
-  )(expected: T)(implicit parser: String => T): Unit =
-    runTestAssert(code, Some(code))(expected)(parser)
+  )(expected: T)(implicit parser: (String, Dialect) => T, dialect: Dialect): Unit =
+    runTestAssert(code, Some(code))(expected)(parser, dialect)
 
   /**
    * General method used to assert a given 'code' parses to expected tree structure and back. We
@@ -68,16 +68,15 @@ trait BaseDottySuite extends ParseSuite {
    */
   protected def runTestAssert[T <: Tree](code: String, assertLayout: Option[String])(
       expected: T
-  )(implicit parser: String => T): Unit = {
-    import dialects.Scala3
-    val obtained: T = parser(code)
+  )(implicit parser: (String, Dialect) => T, dialect: Dialect): Unit = {
+    val obtained: T = parser(code, dialect)
     MoreHelpers.requireNonEmptyOrigin(obtained)
     assertNoDiff(obtained.structure, expected.structure, "Generated stat")
 
     // check bijection
     val reprintedCode =
-      scala.meta.internal.prettyprinters.TreeSyntax.reprint[T](obtained)(dialects.Scala3).toString
-    val obtainedAgain: T = parser(reprintedCode)
+      scala.meta.internal.prettyprinters.TreeSyntax.reprint[T](obtained)(dialect).toString
+    val obtainedAgain: T = parser(reprintedCode, dialect)
     assertNoDiff(obtainedAgain.structure, expected.structure, s"Reprinted stat: \n${reprintedCode}")
     assertLayout.foreach(assertNoDiff(reprintedCode, _, "Reprinted stat"))
   }

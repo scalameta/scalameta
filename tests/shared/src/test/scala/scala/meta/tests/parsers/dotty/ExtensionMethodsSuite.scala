@@ -5,7 +5,7 @@ import scala.meta._
 
 class ExtensionMethodsSuite extends BaseDottySuite {
 
-  implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Scala3)
+  implicit def parseBlock(code: String, dialect: Dialect): Stat = blockStat(code)(dialect)
 
   private final val cparam = tparam("c", "Circle")
   private final val cparamss: List[Term.ParamClause] = List(List(cparam))
@@ -437,6 +437,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("extension quasiquotes: triple, no tparams") {
+    val dialect: Dialect = null
     import dialects.Scala3
 
     val q"extension [..$tparams](...$paramss) { ..$stats }" =
@@ -463,6 +464,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("extension quasiquotes: triple, with tparams") {
+    val dialect: Dialect = null
     import dialects.Scala3
 
     val q"extension [..$tparams](...$paramss) { ..$stats }" =
@@ -489,6 +491,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("extension quasiquotes: double, no tparams") {
+    val dialect: Dialect = null
     import dialects.Scala3
 
     val q"extension [..$tparams](..$params) { ..$stats }" =
@@ -506,6 +509,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("extension quasiquotes: double, with tparams") {
+    val dialect: Dialect = null
     import dialects.Scala3
 
     val q"extension [..$tparams](..$params) { ..$stats }" =
@@ -523,6 +527,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("extension quasiquotes: single, no tparams") {
+    val dialect: Dialect = null
     import dialects.Scala3
 
     val q"extension [..$tparams]($param) { ..$stats }" =
@@ -542,6 +547,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("extension quasiquotes: single, with tparams") {
+    val dialect: Dialect = null
     import dialects.Scala3
 
     val q"extension [..$tparams]($param) { ..$stats }" =

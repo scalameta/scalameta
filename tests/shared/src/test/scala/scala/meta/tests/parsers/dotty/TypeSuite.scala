@@ -13,8 +13,6 @@ class TypeSuite extends BaseDottySuite {
     assertTree(tpe(expr))(tree)
   }
 
-  import scala.meta.dialects.Scala3
-
   test("with-type") {
     runTestAssert[Stat](
       """|type A = AnyRef with
@@ -282,7 +280,7 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("F[_ >: lo <: hi]") {
-    implicit val Scala3: Dialect = scala.meta.dialects.Scala31
+    implicit val dialect: Dialect = dialects.Scala31
     val expected =
       Apply(
         TypeName("F"),
@@ -293,7 +291,7 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("F[_ >: lo") {
-    implicit val Scala3: Dialect = scala.meta.dialects.Scala31
+    implicit val dialect: Dialect = dialects.Scala31
     val expected =
       Apply(TypeName("F"), Wildcard(Bounds(Some(TypeName("lo")), None)) :: Nil)
     assertTpe("F[_ >: lo]") { expected }
@@ -301,7 +299,7 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("F[_ <: hi]") {
-    implicit val Scala3: Dialect = scala.meta.dialects.Scala31
+    implicit val dialect: Dialect = dialects.Scala31
     val expected =
       Apply(TypeName("F"), Wildcard(Bounds(None, Some(TypeName("hi")))) :: Nil)
     assertTpe("F[_ <: hi]") { expected }
@@ -309,7 +307,7 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("F[?]") {
-    implicit val Scala3: Dialect = scala.meta.dialects.Scala31
+    implicit val dialect: Dialect = dialects.Scala31
     val expected =
       Apply(TypeName("F"), List(Wildcard(Bounds(None, None))))
     assertTpe("F[?]") { expected }
@@ -317,7 +315,7 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("F[_]") {
-    implicit val Scala3: Dialect = scala.meta.dialects.Scala3Future
+    implicit val dialect: Dialect = dialects.Scala3Future
     assertTpe("F[_]") {
       AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None))))
     }
@@ -331,7 +329,7 @@ class TypeSuite extends BaseDottySuite {
 
   test("F[*]") {
     // will be deprecated in later versions
-    implicit val Scala3: Dialect = scala.meta.dialects.Scala31
+    implicit val dialect: Dialect = dialects.Scala31
     assertTpe("F[*]") {
       AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None))))
     }

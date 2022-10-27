@@ -1,6 +1,5 @@
 package scala.meta.tests.parsers.dotty
 
-import scala.meta.tests.parsers._
 import scala.meta._
 
 class MinorDottySuite extends BaseDottySuite {
@@ -156,6 +155,7 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("opaque-type-bounded-alias-with-quasiquotes") {
+    val dialect: Dialect = null // overrides implicit
     import dialects.Scala3
     checkTree(q"opaque type Foo <: String = String", "opaque type Foo <: String = String")(
       Defn.Type(
@@ -197,7 +197,7 @@ class MinorDottySuite extends BaseDottySuite {
           )
         )
       )
-    )(parseSource)
+    )
   }
 
   test("opaque-type-mix-mods") {
@@ -1165,6 +1165,7 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("underscore-placeholder") {
+    implicit val dialect: Dialect = dialects.Scala3Future
     runTestAssert[Stat](
       """|object A:
          |  type X = +_ => Int
@@ -1213,7 +1214,7 @@ class MinorDottySuite extends BaseDottySuite {
           Nil
         )
       )
-    )(templStat(_)(dialects.Scala3Future))
+    )
   }
 
   test("type-param-last") {

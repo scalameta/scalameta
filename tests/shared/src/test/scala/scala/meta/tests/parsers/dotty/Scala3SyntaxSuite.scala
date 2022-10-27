@@ -1,7 +1,6 @@
 package scala.meta.tests.parsers.dotty
 
 import scala.meta._
-import scala.meta.dialects.Scala3
 
 class Scala3SyntaxSuite extends BaseDottySuite {
 
@@ -34,6 +33,8 @@ class Scala3SyntaxSuite extends BaseDottySuite {
   }
 
   test("enum C extends A with B { case D }") {
+    val dialect: Dialect = null
+    import dialects.Scala3
     assertEquals(
       templStat("enum C extends A with B { case D }").syntax,
       "enum C extends A with B { case D }"
@@ -43,6 +44,8 @@ class Scala3SyntaxSuite extends BaseDottySuite {
   }
 
   test("protected enum C extends A with B { case D }") {
+    val dialect: Dialect = null
+    import dialects.Scala3
     assertEquals(
       templStat("protected enum C extends A with B { case D }").syntax,
       "protected enum C extends A with B { case D }"
