@@ -156,7 +156,7 @@ final class Dialect private (
     /* Scala 3 allows dropping braces for block arguments such as `list.map: a =>`
      * It wasn't available in Scala 3.0 and got introduced later.
      */
-    val allowFewerBraces: Boolean
+    val allowFewerBraces: Boolean,
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -248,7 +248,7 @@ final class Dialect private (
       allowGivenImports = false,
       useInfixTypePrecedence = false,
       allowInfixOperatorAfterNL = false,
-      allowFewerBraces = false
+      allowFewerBraces = false,
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -531,7 +531,7 @@ final class Dialect private (
       allowGivenImports: Boolean = this.allowGivenImports,
       useInfixTypePrecedence: Boolean = this.useInfixTypePrecedence,
       allowInfixOperatorAfterNL: Boolean = this.allowInfixOperatorAfterNL,
-      allowFewerBraces: Boolean = this.allowFewerBraces
+      allowFewerBraces: Boolean = this.allowFewerBraces,
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
@@ -594,7 +594,7 @@ final class Dialect private (
       allowGivenImports,
       useInfixTypePrecedence,
       allowInfixOperatorAfterNL,
-      allowFewerBraces
+      allowFewerBraces,
       // NOTE(olafur): add the next argument above this comment.
     )
   }
@@ -808,7 +808,7 @@ object Dialect extends InternalDialect {
     Scala213Source3,
     Scala212Source3,
     Typelevel211,
-    Typelevel212
+    Typelevel212,
   )
   private[meta] lazy val standards: Map[String, Dialect] =
     standardPairs.map(x => x.source -> x.value).toMap
