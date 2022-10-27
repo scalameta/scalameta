@@ -605,6 +605,8 @@ object TreeSyntax {
       case t: Term.Param =>
         // NOTE: `implicit/using` in parameters is skipped as it applies to whole list
         printParam(t)
+      case t: Term.ParamClause =>
+        printParams(t.values, needParens = !t.parent.exists(_.is[Term]))
 
       // Type
       case t: Type.AnonymousName => m(Path, s(""))
@@ -872,9 +874,9 @@ object TreeSyntax {
         s(w(t.mods, " "), kw("var"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
       case t: Decl.Type => s(w(t.mods, " "), kw("type"), " ", t.name, t.tparamClause, t.bounds)
       case t: Decl.Def =>
-        s(w(t.mods, " "), kw("def "), t.name, t.tparamClause, t.paramss, kw(": "), t.decltpe)
+        s(w(t.mods, " "), kw("def "), t.name, t.tparamClause, t.paramClauses, kw(": "), t.decltpe)
       case t: Decl.Given =>
-        s(w(t.mods, " "), kw("given "), t.name, t.tparamClause, t.sparams, kw(": "), t.decltpe)
+        s(w(t.mods, " "), kw("given "), t.name, t.tparamClause, t.paramClauses, kw(": "), t.decltpe)
       case t: Defn.Val =>
         s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
       case t: Defn.Var =>
@@ -925,7 +927,7 @@ object TreeSyntax {
         r(" ")(
           t.mods,
           kw("given"),
-          givenName(t.name, t.tparamClause, t.sparams),
+          givenName(t.name, t.tparamClause, t.paramClauses),
           p(SimpleTyp, t.decltpe),
           kw("="),
           t.body
@@ -934,7 +936,7 @@ object TreeSyntax {
         r(" ")(
           t.mods,
           kw("given"),
-          givenName(t.name, t.tparamClause, t.sparams),
+          givenName(t.name, t.tparamClause, t.paramClauses),
           t.templ
         )
 
@@ -962,12 +964,21 @@ object TreeSyntax {
           kw("extension"),
           " ",
           t.tparamClause,
-          t.paramss,
+          t.paramClauses,
           m
         )
       case t: Defn.Object => r(" ")(t.mods, kw("object"), t.name, t.templ)
       case t: Defn.Def =>
-        s(w(t.mods, " "), kw("def "), t.name, t.tparamClause, t.paramss, t.decltpe, " = ", t.body)
+        s(
+          w(t.mods, " "),
+          kw("def "),
+          t.name,
+          t.tparamClause,
+          t.paramClauses,
+          t.decltpe,
+          " = ",
+          t.body
+        )
       case t: Defn.Macro =>
         s(
           w(t.mods, " "),
@@ -975,7 +986,7 @@ object TreeSyntax {
           " ",
           t.name,
           t.tparamClause,
-          t.paramss,
+          t.paramClauses,
           t.decltpe,
           " ",
           kw("="),
@@ -990,17 +1001,18 @@ object TreeSyntax {
       case t: Pkg.Object =>
         r(" ")(kw("package"), t.mods, kw("object"), t.name, t.templ)
       case t: Ctor.Primary =>
-        val paramss = r(t.paramss.map(x => printParams(x)))
-        s(w(t.mods, " ", t.mods.nonEmpty && t.paramss.nonEmpty), paramss)
+        val paramClauses = r(t.paramClauses.map(x => printParams(x.values)))
+        s(w(t.mods, " ", t.mods.nonEmpty && t.paramClauses.nonEmpty), paramClauses)
       case t: Ctor.Secondary =>
-        if (t.stats.isEmpty) s(w(t.mods, " "), kw("def"), " ", kw("this"), t.paramss, " = ", t.init)
+        if (t.stats.isEmpty)
+          s(w(t.mods, " "), kw("def"), " ", kw("this"), t.paramClauses, " = ", t.init)
         else
           s(
             w(t.mods, " "),
             kw("def"),
             " ",
             kw("this"),
-            t.paramss,
+            t.paramClauses,
             " {",
             i(t.init),
             "",
@@ -1150,7 +1162,7 @@ object TreeSyntax {
     private def givenName(
         name: meta.Name,
         tparams: Type.ParamClause,
-        sparams: Seq[Seq[Term.Param]]
+        sparams: Seq[Term.ParamClause]
     ): Show.Result = {
       if (!name.is[meta.Name.Anonymous]) {
         s(name, tparams, sparams, ":")
@@ -1207,7 +1219,7 @@ object TreeSyntax {
     implicit def syntaxParams: Syntax[Seq[Term.Param]] = Syntax { params =>
       printParams(params)
     }
-    implicit def syntaxParamss: Syntax[Seq[Seq[Term.Param]]] = Syntax { paramss =>
+    implicit def syntaxParamss: Syntax[Seq[Term.ParamClause]] = Syntax { paramss =>
       r(paramss)
     }
     implicit def syntaxTypeOpt: Syntax[Option[Type]] = Syntax {

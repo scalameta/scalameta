@@ -68,30 +68,34 @@ class JSFacadeSuite extends FunSuite {
                   "pos" -> pos(24, 24),
                   "values" -> a()
                 ),
-                "paramss" -> a(
-                  a(
-                    d(
-                      "type" -> "Term.Param",
-                      "pos" -> pos(25, 44),
-                      "mods" -> a(),
-                      "name" -> d(
-                        "type" -> "Term.Name",
-                        "pos" -> pos(25, 29),
-                        "value" -> "args"
-                      ),
-                      "decltpe" -> d(
-                        "type" -> "Type.Apply",
-                        "pos" -> pos(31, 44),
-                        "tpe" -> d(
-                          "type" -> "Type.Name",
-                          "pos" -> pos(31, 36),
-                          "value" -> "Array"
+                "paramClauses" -> a(
+                  d(
+                    "type" -> "Term.ParamClause",
+                    "pos" -> pos(24, 45),
+                    "values" -> a(
+                      d(
+                        "type" -> "Term.Param",
+                        "pos" -> pos(25, 44),
+                        "mods" -> a(),
+                        "name" -> d(
+                          "type" -> "Term.Name",
+                          "pos" -> pos(25, 29),
+                          "value" -> "args"
                         ),
-                        "args" -> a(
-                          d(
+                        "decltpe" -> d(
+                          "type" -> "Type.Apply",
+                          "pos" -> pos(31, 44),
+                          "tpe" -> d(
                             "type" -> "Type.Name",
-                            "pos" -> pos(37, 43),
-                            "value" -> "String"
+                            "pos" -> pos(31, 36),
+                            "value" -> "Array"
+                          ),
+                          "args" -> a(
+                            d(
+                              "type" -> "Type.Name",
+                              "pos" -> pos(37, 43),
+                              "value" -> "String"
+                            )
                           )
                         )
                       )
