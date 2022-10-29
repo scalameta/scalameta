@@ -564,14 +564,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     quasi[T](ell.rank, tree)
   }
 
-  private def reduce[A <: Tree: AstInfo, B](f: List[B] => A, reduceRank: Int = 1)(
-      list: List[B]
-  ): A =
-    list match {
-      case (t: Quasi) :: Nil if t.rank >= reduceRank => reellipsis[A](t, t.rank - reduceRank)
-      case v => f(v)
-    }
-
   private def unquote[T <: Tree: AstInfo](unquote: Unquote): T with Quasi = {
     require(unquote.input.chars(unquote.start + 1) != '$')
     if (!dialect.allowUnquotes) {
@@ -2994,7 +2986,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     var hadModImplicit = false
     def paramClause(first: Boolean) = autoPos(inParensOnOpenOr {
       def reduceParams(params: List[Term.Param], mod: Option[Mod.ParamsType] = None) =
-        reduce(toParamClause(mod))(params)
+        params.reduceWith(toParamClause(mod))
       def parseParams(mod: Option[Mod.ParamsType] = None) =
         reduceParams(commaSeparated(termParam(ownerIsCase && first, ownerIsType, mod = mod)), mod)
       token match {
@@ -3144,9 +3136,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   ): Type.ParamClause = {
     if (!isAfterOptNewLine[LeftBracket]) emptyTypeParams
     else
-      autoPos(inBrackets(reduce(Type.ParamClause.apply)(commaSeparated {
+      autoPos(inBrackets(commaSeparated {
         typeParam(ownerIsType, ctxBoundsAllowed, allowUnderscore)
-      })))
+      }.reduceWith(Type.ParamClause.apply)))
   }
 
   def typeParam(
@@ -3541,20 +3533,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def collectUparams(): Unit = {
       while (isAfterOptNewLine[LeftParen] && tryAhead[soft.KwUsing]) paramss += autoPrevPos {
         val mod = Some(atCurPos(Mod.Using()))
-        reduce(toParamClause(mod))(inParensOnOpen(commaSeparated {
+        inParensOnOpen(commaSeparated {
           termParam(ownerIsCase = false, ownerIsType = true, mod = mod)
-        }))
+        }).reduceWith(toParamClause(mod))
       }
     }
 
     collectUparams()
 
-    paramss += autoPos(reduce(toParamClause(None))(inParens {
-      List(token match {
-        case t @ Ellipsis(2) => ellipsis[Term.Param](t)
-        case _ => termParam(ownerIsCase = false, ownerIsType = false)
-      })
-    }))
+    paramss += autoPos(inParens(List(token match {
+      case t @ Ellipsis(2) => ellipsis[Term.Param](t)
+      case _ => termParam(ownerIsCase = false, ownerIsType = false)
+    })).reduceWith(toParamClause(None)))
 
     collectUparams()
     newLinesOpt()
@@ -4516,6 +4506,20 @@ object ScalametaParser {
   private def reellipsis[T <: Tree: AstInfo](q: Quasi, rank: Int): T = {
     val became = q.become[T]
     if (became.rank != rank) copyPos(became)(quasi[T](rank, became.tree)) else became
+  }
+
+  private implicit class XtensionList[A <: Tree](private val list: List[A]) extends AnyVal {
+    def reduceWith[B <: Tree: AstInfo](f: List[A] => B, reduceRank: Int = 1): B =
+      ScalametaParser.reduceAs[A, B, B](list, f, reduceRank)
+  }
+
+  private def reduceAs[A <: Tree, B <: Tree, C <: B: AstInfo](
+      list: List[A],
+      f: List[A] => B,
+      reduceRank: Int = 1
+  ): B = list match {
+    case (t: Quasi) :: Nil if t.rank >= reduceRank => reellipsis[C](t, t.rank - reduceRank)
+    case v => f(v)
   }
 
 }
