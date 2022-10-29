@@ -534,10 +534,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     buf.toList
   }
 
-  @inline
-  private def quasi[T <: Tree](rank: Int, tree: Tree)(implicit astInfo: AstInfo[T]): T with Quasi =
-    astInfo.quasi(rank, tree)
-
   def ellipsis[T <: Tree: AstInfo](ell: Ellipsis, rank: Int, extraSkip: => Unit = {}): T = {
     if (ell.rank != rank) {
       syntaxError(Messages.QuasiquoteRankMismatch(ell.rank, rank), at = ell)
@@ -566,11 +562,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
     require(classTag[T].runtimeClass.isAssignableFrom(tree.pt) && debug(ell, tree, tree.structure))
     quasi[T](ell.rank, tree)
-  }
-
-  def reellipsis[T <: Tree: AstInfo](q: Quasi, rank: Int): T = {
-    val became = q.become[T]
-    if (became.rank != rank) copyPos(became)(quasi[T](rank, became.tree)) else became
   }
 
   private def reduce[A <: Tree: AstInfo, B](f: List[B] => A, reduceRank: Int = 1)(
@@ -4480,10 +4471,6 @@ object ScalametaParser {
       case _ => term
     }
 
-  private def copyPos[T <: Tree](tree: Tree)(body: => T): T = {
-    body.withOrigin(tree.origin)
-  }
-
   @inline
   private def maybeAnonymousFunctionUnlessPostfix(expr: Term)(location: Location): Term =
     if (location == Location.PostfixStat) expr else maybeAnonymousFunction(expr)
@@ -4516,6 +4503,19 @@ object ScalametaParser {
       }
     }
 
+  }
+
+  private def copyPos[T <: Tree](tree: Tree)(body: => T): T = {
+    body.withOrigin(tree.origin)
+  }
+
+  @inline
+  private def quasi[T <: Tree](rank: Int, tree: Tree)(implicit astInfo: AstInfo[T]): T with Quasi =
+    astInfo.quasi(rank, tree)
+
+  private def reellipsis[T <: Tree: AstInfo](q: Quasi, rank: Int): T = {
+    val became = q.become[T]
+    if (became.rank != rank) copyPos(became)(quasi[T](rank, became.tree)) else became
   }
 
 }
