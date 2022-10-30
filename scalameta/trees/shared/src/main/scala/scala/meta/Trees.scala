@@ -105,7 +105,7 @@ object Term {
   @ast class Throw(expr: Term) extends Term
   @ast class Ascribe(expr: Term, tpe: Type) extends Term
   @ast class Annotate(expr: Term, annots: List[Mod.Annot] @nonEmpty) extends Term
-  @ast class Tuple(args: List[Term] @nonEmpty) extends Term {
+  @ast class Tuple(args: List[Term] @nonEmpty) extends Term with Member.Tuple {
     // tuple may have one element (see scala.Tuple1)
     // however, this element may not be another single-element Tuple
     checkFields(args match {
@@ -217,7 +217,7 @@ object Type {
       params: List[Type],
       res: Type
   ) extends Type
-  @ast class Tuple(args: List[Type] @nonEmpty) extends Type {
+  @ast class Tuple(args: List[Type] @nonEmpty) extends Type with Member.Tuple {
     // tuple may have one element (see scala.Tuple1)
     // however, this element may not be another single-element Tuple
     checkFields(args match {
@@ -314,7 +314,7 @@ object Pat {
     checkFields(lhs.is[Pat.Var] || lhs.is[Pat.Quasi])
   }
   @ast class Alternative(lhs: Pat, rhs: Pat) extends Pat
-  @ast class Tuple(args: List[Pat] @nonEmpty) extends Pat {
+  @ast class Tuple(args: List[Pat] @nonEmpty) extends Pat with Member.Tuple {
     // tuple may have one element (see scala.Tuple1)
     // however, this element may not be another single-element Tuple
     checkFields(args match {
@@ -358,6 +358,11 @@ object Member {
   }
   @branch trait Type extends Member {
     def name: sm.Type.Name
+  }
+
+  @branch trait Tuple extends Tree {
+    def args: List[Tree]
+    final def nonEmpty: Boolean = args.nonEmpty
   }
 
   @branch trait Param extends Member {
