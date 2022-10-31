@@ -100,6 +100,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val fieldChecks = checkFieldsBuilder.result()
         val parentChecks = checkParentsBuilder.result()
 
+        istats1 ++= imports
+        mstats1 ++= imports
         stats1 ++= imports
         stats1 ++= quasiExtraAbstractDefs
 
@@ -575,12 +577,21 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     builder.result()
   }
 
-  private class ReplacedField(val oldDef: ValOrDefDef, val newVal: ValDef) {
+  private class ReplacedField(val oldDef: ValOrDefDef, val newVal: ValDef, ctor: Tree) {
     def newValDefn: ValDef = {
+      val body =
+        if (ctor eq null)
+          q"""
+            import scala.meta.trees._
+            ${oldDef.name}
+           """
+        else
+          q"""
+            $ctor(${oldDef.name})
+           """
       q"""
         val ${newVal.name}: ${deannotateType(newVal)} = {
-          import scala.meta.trees._
-          ${oldDef.name}
+          ..$body
         }
       """
     }
@@ -591,18 +602,20 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       val fields: Map[String, ValDef] = params.map(p => p.name.toString -> p).toMap
       stats.flatMap {
         case p: ValOrDefDef =>
-          p.mods.annotations.collectFirst { case q"new replacedField($until)" =>
+          val anno = p.mods.annotations.collectFirst {
+            case q"new replacedField($until)" => (until, null)
+            case q"new replacedField($until, $ctor)" => (until, ctor)
+          }
+          anno.map { case (until, ctor) =>
             if (!p.mods.hasFlag(Flag.FINAL))
               c.abort(p.pos, "replacedField-annotated fields must be final")
-            if (p.mods.hasFlag(Flag.OVERRIDE))
-              c.abort(p.pos, "replacedField-annotated fields may not be marked `override`")
             val version = parseVersionAnnot(until, "replacedField", "until")
             val newField = getNewField(p)
             val newVal = fields.getOrElse(
               newField,
               c.abort(p.pos, s"@replacedField: field `$newField` is undefined)")
             )
-            newVal.name.toString -> (version, new ReplacedField(p, newVal))
+            newVal.name.toString -> (version, new ReplacedField(p, newVal, ctor))
           }
         case _ => None
       }.toMap
@@ -613,6 +626,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       def iter(tree: Tree): Option[String] = tree match {
         case Select(Ident(TermName(newField)), _: TermName) => Some(newField)
         case Apply(_, Ident(TermName(newField)) :: Nil) => Some(newField)
+        case Match(Ident(TermName(newField)), _) => Some(newField)
         case Select(x, _) => iter(x)
         case Apply(x, (_: Function) :: Nil) => iter(x)
         case _ => None
