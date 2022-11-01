@@ -10,7 +10,7 @@ private[meta] trait Api {
 
   implicit def termParamClauseToValues(v: Term.ParamClause): List[Term.Param] = v.values
   implicit def termValuesToParamClause(v: List[Term.Param]): Term.ParamClause =
-    Term.ParamClause(v, v.flatMap(_.mods).collectFirst { case x: Mod.ParamsType => x })
+    Term.ParamClause(v, Term.ParamClause.getMod(v))
   implicit def termListValuesToListParamClause(v: List[List[Term.Param]]): List[Term.ParamClause] =
     v.map(termValuesToParamClause)
 

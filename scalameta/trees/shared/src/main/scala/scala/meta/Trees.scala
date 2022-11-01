@@ -190,6 +190,17 @@ object Term {
       extends Member.Param
   @ast class ParamClause(values: List[Param], mod: Option[Mod.ParamsType] = None)
       extends Member.ParamClause
+  object ParamClause {
+    private[meta] def getMod(v: Seq[Param]): Option[Mod.ParamsType] =
+      v.filter(!_.is[Param.Quasi]) match {
+        case head :: tail =>
+          head.mods.collectFirst {
+            case x: Mod.Using => x
+            case x: Mod.Implicit if tail.forall(_.mods.exists(_.is[Mod.Implicit])) => x
+          }
+        case _ => None
+      }
+  }
   def fresh(): Term.Name = fresh("fresh")
   def fresh(prefix: String): Term.Name = Term.Name(prefix + Fresh.nextId())
 }

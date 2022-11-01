@@ -706,7 +706,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
               Some(Type.Name("Boolean")),
               None
             ) :: Nil,
-            None
+            Some(Mod.Implicit())
           ) :: Nil
         ),
         Template(Nil, Nil, Self(Name(""), None), Nil, Nil)

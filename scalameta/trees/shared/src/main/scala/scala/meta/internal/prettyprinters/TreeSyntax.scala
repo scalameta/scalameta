@@ -553,7 +553,8 @@ object TreeSyntax {
             }
             m(Expr, param, " ", kw("=>"), " ", p(Expr, body))
           case Term.Function(params, body) =>
-            m(Expr, s(printParams(params), " ", kw("=>"), " ", p(Expr, body)))
+            val mod = Term.ParamClause.getMod(params)
+            m(Expr, s(printParams(params, mod), " ", kw("=>"), " ", p(Expr, body)))
         }
       case Term.QuotedMacroExpr(Term.Block(stats)) =>
         stats match {
@@ -603,7 +604,7 @@ object TreeSyntax {
         // NOTE: `implicit/using` in parameters is skipped as it applies to whole list
         printParam(t)
       case t: Term.ParamClause =>
-        printParams(t.values, needParens = !t.parent.exists(_.is[Term]))
+        printParams(t.values, t.mod, needParens = !t.parent.exists(_.is[Term]))
 
       // Type
       case t: Type.AnonymousName => m(Path, s(""))
@@ -1000,7 +1001,7 @@ object TreeSyntax {
       case t: Pkg.Object =>
         r(" ")(kw("package"), t.mods, kw("object"), t.name, t.templ)
       case t: Ctor.Primary =>
-        val paramClauses = r(t.paramClauses.map(x => printParams(x.values)))
+        val paramClauses = r(t.paramClauses.map(x => printParams(x.values, x.mod)))
         s(w(t.mods, " ", t.mods.nonEmpty && t.paramClauses.nonEmpty), paramClauses)
       case t: Ctor.Secondary =>
         if (t.stats.isEmpty)
@@ -1203,13 +1204,13 @@ object TreeSyntax {
     implicit def syntaxAnnots: Syntax[Seq[Mod.Annot]] = Syntax { annots =>
       r(annots, " ")
     }
-    private def printParams(t: Seq[Term.Param], needParens: Boolean = true): Show.Result = {
+    private def printParams(
+        t: Seq[Term.Param],
+        modOpt: Option[Mod.ParamsType],
+        needParens: Boolean = true
+    ): Show.Result = {
       val (useParens, mod) = t match {
         case head +: tail =>
-          val modOpt = head.mods.collectFirst {
-            case x: Mod.Using => x
-            case x: Mod.Implicit if tail.forall(_.mods.exists(_.is[Mod.Implicit])) => x
-          }
           val useParens = needParens || tail.nonEmpty ||
             modOpt.fold(head.decltpe.isDefined)(!_.is[Mod.Implicit])
           (useParens, o(modOpt, " "))
