@@ -297,6 +297,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Member.Param
       |scala.meta.Member.ParamClause
       |scala.meta.Member.Term
+      |scala.meta.Member.Tuple
       |scala.meta.Member.Type
       |scala.meta.Mod
       |scala.meta.Mod.Abstract
