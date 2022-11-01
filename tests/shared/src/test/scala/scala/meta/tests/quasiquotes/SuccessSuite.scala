@@ -733,7 +733,7 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("1 q\"(..params) => expr\"") {
     val q"(..$paramz) => $expr" = q"(x: Int, y: String) => 42"
-    assertEquals(paramz.toString, "List(x: Int, y: String)")
+    assertEquals(paramz.toString, "(x: Int, y: String)")
     assertTrees(paramz: _*)(
       Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None),
       Term.Param(Nil, Term.Name("y"), Some(Type.Name("String")), None)

@@ -149,27 +149,32 @@ object Term {
   @ast class TryWithHandler(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
 
   @branch trait FunctionTerm extends Term {
-    def params: List[Term.Param]
+    def paramClause: ParamClause
+    def params: List[Param] = paramClause.values
     def body: Term
   }
-  @ast class ContextFunction(params: List[Term.Param], body: Term) extends FunctionTerm {
+  @ast class ContextFunction(paramClause: ParamClause, body: Term) extends FunctionTerm {
+    @replacedField("4.6.0") final override def params: List[Param] = paramClause.values
     checkFields(
-      params.forall(param =>
-        param.is[Term.Param.Quasi] ||
+      paramClause.values.forall(param =>
+        param.is[Param.Quasi] ||
           (param.name.is[sm.Name.Anonymous] ==> param.default.isEmpty)
       )
     )
   }
-  @ast class Function(params: List[Term.Param], body: Term) extends FunctionTerm {
+  @ast class Function(paramClause: ParamClause, body: Term) extends FunctionTerm {
+    @replacedField("4.6.0") final override def params: List[Param] = paramClause.values
     checkFields(
-      params.forall(param =>
-        param.is[Term.Param.Quasi] ||
-          (param.name.is[sm.Name.Anonymous] ==> param.default.isEmpty)
-      )
-    )
-    checkFields(
-      params.exists(_.is[Term.Param.Quasi]) ||
-        params.exists(_.mods.exists(_.is[Mod.Implicit])) ==> (params.length == 1)
+      paramClause.is[ParamClause.Quasi] || {
+        val params = paramClause.values
+        params.forall { param =>
+          param.is[Param.Quasi] ||
+          param.name.is[sm.Name.Anonymous] ==> param.default.isEmpty
+        } && {
+          params.exists(_.is[Param.Quasi]) ||
+          paramClause.mod.exists(_.is[Mod.Implicit]) ==> (params.lengthCompare(1) == 0)
+        }
+      }
     )
   }
   @ast class AnonymousFunction(body: Term) extends Term
