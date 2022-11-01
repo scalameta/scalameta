@@ -1191,7 +1191,7 @@ object TreeSyntax {
     implicit def syntaxMods: Syntax[Seq[Mod]] = Syntax { mods =>
       r(mods, " ")
     }
-    private def isUsingOrImplicit(m: Mod): Boolean = m.is[Mod.Implicit] || m.is[Mod.Using]
+    private def isUsingOrImplicit(m: Mod): Boolean = m.is[Mod.ParamsType]
     private def printParam(t: Term.Param, keepImplicit: Boolean = false): Show.Result = {
       val mods = if (keepImplicit) t.mods else t.mods.filterNot(isUsingOrImplicit)
       val nameType = if (t.mods.exists(_.is[Mod.Using]) && t.name.is[Name.Anonymous]) {
@@ -1205,19 +1205,18 @@ object TreeSyntax {
       r(annots, " ")
     }
     private def printParams(t: Seq[Term.Param], needParens: Boolean = true): Show.Result = {
-      val prefix = {
-        val prefixOpt = t.headOption.fold[Seq[Mod]](Nil)(_.mods).collectFirst {
-          case _: Mod.Using => "using "
-          case _: Mod.Implicit => "implicit "
-        }
-        val ok = prefixOpt.nonEmpty && t.tail.forall(_.mods.exists(isUsingOrImplicit))
-        if (ok) prefixOpt else None
-      }.getOrElse("")
-      val useParens = needParens || prefix.nonEmpty || t.lengthCompare(1) != 0
-      w("(", s(prefix, r(t.map(printParam(_, prefix.isEmpty)), ", ")), ")", useParens)
-    }
-    implicit def syntaxParams: Syntax[Seq[Term.Param]] = Syntax { params =>
-      printParams(params)
+      val (useParens, mod) = t match {
+        case head +: tail =>
+          val modOpt = head.mods.collectFirst {
+            case x: Mod.Using => x
+            case x: Mod.Implicit if tail.forall(_.mods.exists(_.is[Mod.Implicit])) => x
+          }
+          val useParens = needParens || tail.nonEmpty ||
+            modOpt.fold(head.decltpe.isDefined)(!_.is[Mod.Implicit])
+          (useParens, o(modOpt, " "))
+        case _ => (true, Show.None)
+      }
+      w("(", s(mod, r(t.map(printParam(_, mod eq Show.None)), ", ")), ")", useParens)
     }
     implicit def syntaxParamss: Syntax[Seq[Term.ParamClause]] = Syntax { paramss =>
       r(paramss)
