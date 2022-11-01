@@ -92,7 +92,7 @@ class DeclSuite extends ParseSuite {
         Type.ParamClause(
           Type.Param(
             Nil,
-            Name.Anonymous(),
+            Name.Placeholder(),
             Type.ParamClause(Nil),
             Type.Bounds(None, None),
             Nil,

@@ -312,6 +312,7 @@ object TreeSyntax {
 
       // Name
       case _: Name.Anonymous => s()
+      case _: Name.Placeholder => s("_")
       case _: Term.Anonymous => s("")
       case t: Name.Indeterminate => w("`", t.value, "`", guessIsBackquoted(t))
 
@@ -418,10 +419,6 @@ object TreeSyntax {
                 Function(Term.Param(_, name: Name, None, _) :: Nil, Block(stats)) :: Nil
               ) =>
             m(SimpleExpr, s("{ ", name, " ", kw("=>"), " ", pstats(stats), n("}")))
-          case Block(
-                Function(Term.Param(_, _: Name.Anonymous, _, _) :: Nil, Block(stats)) :: Nil
-              ) =>
-            m(SimpleExpr, s("{ ", kw("_"), " ", kw("=>"), " ", pstats(stats), n("}")))
           case Block(Function(params, Block(stats)) :: Nil) =>
             m(SimpleExpr, s("{ (", r(params, ", "), ") => ", pstats(stats), n("}")))
           case _ =>
@@ -502,7 +499,10 @@ object TreeSyntax {
             )
           case Term.ContextFunction(Term.Param(mods, name: Term.Name, None, _) :: Nil, body) =>
             m(Expr, s(name, " ", kw("?=>"), " ", p(Expr, body)))
-          case Term.ContextFunction(Term.Param(_, _: Name.Anonymous, decltpeOpt, _) :: Nil, body) =>
+          case Term.ContextFunction(
+                Term.Param(_, _: Name.Placeholder, decltpeOpt, _) :: Nil,
+                body
+              ) =>
             val param = decltpeOpt match {
               case Some(decltpe) => s(kw("("), kw("_"), kw(":"), decltpe, kw(")"))
               case None => s(kw("_"))
@@ -543,7 +543,7 @@ object TreeSyntax {
             } else {
               m(Expr, s(name, " ", kw("=>"), " ", p(Expr, body)))
             }
-          case Term.Function(Term.Param(mods, _: Name.Anonymous, decltpeOpt, _) :: Nil, body) =>
+          case Term.Function(Term.Param(mods, _: Name.Placeholder, decltpeOpt, _) :: Nil, body) =>
             val isUsing = mods.exists(_.is[Mod.Using])
             val param = decltpeOpt match {
               case Some(decltpe) if isUsing =>
@@ -735,10 +735,6 @@ object TreeSyntax {
         val mods = t.mods.filterNot(isVariant)
         require(t.mods.length - mods.length <= 1)
         val variance = o(t.mods.find(isVariant))
-        val name = t.name match {
-          case _: Name.Anonymous => s("_")
-          case n => s(n)
-        }
         val tbounds = s(t.tbounds)
         val vbounds = {
           if (t.vbounds.nonEmpty && !dialect.allowViewBounds)
@@ -746,7 +742,7 @@ object TreeSyntax {
           r(t.vbounds.map { s(" ", kw("<%"), " ", _) })
         }
         val cbounds = r(t.cbounds.map { s(kw(":"), " ", _) })
-        s(w(mods, " "), variance, name, t.tparamClause, tbounds, vbounds, cbounds)
+        s(w(mods, " "), variance, t.name, t.tparamClause, tbounds, vbounds, cbounds)
 
       // Pat
       case t: Pat.Var =>

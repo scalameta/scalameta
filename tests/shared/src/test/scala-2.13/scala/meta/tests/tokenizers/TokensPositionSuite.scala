@@ -732,8 +732,6 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
 
   checkPositions[Stat](
     """|(_: X) => 42
-       |""".stripMargin,
-    """|Name.Anonymous _
        |""".stripMargin
   )
 
@@ -741,7 +739,6 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|_ => 42
        |""".stripMargin,
     """|Term.Param _
-       |Name.Anonymous _
        |""".stripMargin
   )
 

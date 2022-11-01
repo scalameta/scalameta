@@ -79,6 +79,12 @@ object ParentChecks {
       case _ => false
     }
 
+  def NamePlaceholder(tree: Name.Placeholder, parent: Tree, destination: String): Boolean =
+    parent match {
+      case _: Term.Param | _: Type.Param => destination == "name"
+      case _ => false
+    }
+
   def TypeVar(tree: Type.Var, parent: Tree, destination: String): Boolean = {
     @tailrec
     def loop(tree: Option[Tree]): Boolean = tree match {

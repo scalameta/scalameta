@@ -46,6 +46,10 @@ object Name {
     checkParent(ParentChecks.NameAnonymous)
   }
   @ast class Indeterminate(value: Predef.String @nonEmpty) extends Name
+  @ast class Placeholder() extends Name {
+    def value = "_"
+    checkParent(ParentChecks.NamePlaceholder)
+  }
 }
 
 @branch trait Lit extends Term with Pat with Type {

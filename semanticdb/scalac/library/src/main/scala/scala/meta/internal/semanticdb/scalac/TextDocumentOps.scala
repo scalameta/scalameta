@@ -179,8 +179,6 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case mtree @ m.Importee.Rename(mname, mrename) =>
                 indexName(mname)
                 return // NOTE: ignore mrename for now, we may decide to make it a binder
-              case mtree @ m.Name.Anonymous() =>
-                ()
               case mtree: m.Ctor =>
                 mctordefs(mtree.pos.start) = mtree.name
               case mtree: m.Term.New =>
@@ -188,6 +186,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case mtree: m.Init =>
                 indexArgNames(mtree)
                 mctorrefs(mtree.pos.start) = mtree.name
+              case _: m.Name.Anonymous | _: m.Name.Placeholder =>
               case mtree: m.Name =>
                 indexName(mtree)
               case mtree: m.Defn.Val =>
