@@ -2,9 +2,16 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
-import scala.meta.dialects.Scala213
 
 class Scala213Suite extends ParseSuite {
+  private def runAssert(
+      code: String
+  )(expected: Tree)(implicit d: Dialect, loc: munit.Location): Unit = {
+    assertTree(templStat(code)(d))(expected)
+  }
+
+  import dialects.Scala213
+
   checkOK("def foo(implicit x: => Int) = 1")
   checkOK("def foo(implicit y: Int, x: => Int) = 1")
 
@@ -114,6 +121,7 @@ class Scala213Suite extends ParseSuite {
   }
 
   test("infix-at-line-start") {
+    implicit val Scala213 = dialects.Scala213Source3
     runAssert(
       """|val x = "hello"
          |  ++ "world"
@@ -125,11 +133,7 @@ class Scala213Suite extends ParseSuite {
         None,
         Term.ApplyInfix(Lit.String("hello"), Term.Name("++"), Nil, List(Lit.String("world")))
       )
-    )(dialects.Scala213Source3)
-  }
-
-  private def runAssert(code: String)(expected: Tree)(implicit d: Dialect): Unit = {
-    assertTree(templStat(code)(d))(expected)
+    )
   }
 
 }
