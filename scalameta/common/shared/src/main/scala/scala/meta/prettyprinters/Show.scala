@@ -117,8 +117,12 @@ private[meta] object Show {
   }
 
   def opt[T](x: Option[T])(implicit show: Show[T]): Result = x.fold[Result](None)(show(_))
-  def opt[T](x: Option[T], suffix: String)(implicit show: Show[T]): Result =
+  def opt[T](x: Option[T], suffix: Result)(implicit show: Show[T]): Result =
     x.fold[Result](None)(x => Sequence(show(x), suffix))
+  def opt[T](prefix: Result, x: Option[T])(implicit show: Show[T]): Result =
+    x.fold[Result](None)(x => Sequence(prefix, show(x)))
+  def opt[T](prefix: Result, x: Option[T], suffix: Result)(implicit show: Show[T]): Result =
+    x.fold[Result](None)(x => Sequence(prefix, show(x), suffix))
 
   def function(fn: StringBuilder => Result): Result = Function(fn)
 

@@ -44,14 +44,14 @@ class TraverserSuite extends FunSuite {
       |C
       |
       |def this(x: x)
-      |_
+      |
       |(x: x)
       |x: x
       |x
       |x
       |{ def bar(x: x) = ??? }
-      |_
-      |_
+      |
+      |
       |def bar(x: x) = ???
       |bar
       |

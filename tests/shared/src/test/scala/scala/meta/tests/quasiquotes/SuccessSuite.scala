@@ -2246,7 +2246,7 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("1 self\"this: tpeopt\"") {
     val self"$name: $tpeopt" = self"this: T"
-    assertEquals(name.toString, "_")
+    assertEquals(name.toString, "")
     assertTree(name)(Name(""))
     assertEquals(tpeopt.toString, "Some(T)")
     assertTree(tpeopt)(Some(Type.Name("T")))
