@@ -4,7 +4,9 @@ import scala.meta._
 import scala.meta.dialects.Scala211
 import munit.FunSuite
 
-abstract class BaseTokenizerSuite extends FunSuite {
+import scala.meta.tests.TreeSuiteBase
+
+abstract class BaseTokenizerSuite extends TreeSuiteBase {
 
   def tokenize(code: String): Tokens = {
     val convert = scala.meta.inputs.Input.stringToInput

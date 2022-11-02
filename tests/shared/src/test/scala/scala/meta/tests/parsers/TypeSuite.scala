@@ -5,14 +5,15 @@ import scala.meta._
 import Term.{Super, Name => TermName}
 import Type.{Name => TypeName, _}
 import Name.Anonymous
-import scala.meta.dialects.Scala211
 import scala.meta.parsers.ParseException
 
 class TypeSuite extends ParseSuite {
 
-  private def assertTpe(expr: String)(tree: Tree): Unit = {
+  private def assertTpe(expr: String)(tree: Tree)(implicit dialect: Dialect): Unit = {
     assertTree(tpe(expr))(tree)
   }
+
+  import scala.meta.dialects.Scala211
 
   test("T") {
     val TypeName("T") = tpe("T")

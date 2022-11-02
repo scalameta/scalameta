@@ -1,5 +1,6 @@
 package scala.meta.tests.prettyprinters
 
+import munit.Location
 import org.scalameta.logger
 
 import scala.meta._
@@ -7,7 +8,7 @@ import scala.meta.tests.parsers.ParseSuite
 
 class TreeStructureSuite extends ParseSuite {
 
-  def assertStructure(tree: Tree)(expected: String): Unit = {
+  def assertStructure(tree: Tree)(expected: String)(implicit loc: Location): Unit = {
     test(logger.revealWhitespace(tree.syntax)) {
       assertNoDiff(
         tree.structure,
