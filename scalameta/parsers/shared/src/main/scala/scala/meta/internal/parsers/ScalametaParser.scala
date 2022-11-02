@@ -1739,56 +1739,37 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }))(location)
   }
 
-  private def convertToParam(tree: Term): Option[Term.Param] = tree match {
-    case q: Quasi =>
-      Some(q.become[Term.Param])
-    case name: Term.Name =>
-      Some(copyPos(tree)(Term.Param(Nil, name, None, None)))
-    case name: Term.Placeholder =>
-      Some(
-        copyPos(tree)(
-          Term.Param(Nil, copyPos(name)(Name.Anonymous()), None, None)
-        )
-      )
-    case Term.Ascribe(quasiName: Term.Quasi, tpt) =>
-      val name = quasiName.become[Term.Name]
-      Some(copyPos(tree)(Term.Param(Nil, name, Some(tpt), None)))
-    case Term.Ascribe(name: Term.Name, tpt) =>
-      Some(copyPos(tree)(Term.Param(Nil, name, Some(tpt), None)))
-    case Term.Ascribe(name: Term.Placeholder, tpt) =>
-      Some(
-        copyPos(tree)(
-          Term.Param(Nil, copyPos(name)(Name.Anonymous()), Some(tpt), None)
-        )
-      )
-    case Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name) =>
-      Some(
-        copyPos(tree)(
-          Term.Param(List(copyPos(kwUsing)(Mod.Using())), name, None, None)
-        )
-      )
-    case Term.Ascribe(Term.Select(kwUsing @ Term.Name(soft.KwUsing.name), name), tpt) =>
-      Some(
-        copyPos(tree)(
-          Term.Param(List(copyPos(kwUsing)(Mod.Using())), name, Some(tpt), None)
-        )
-      )
-    case Term.Ascribe(eta @ Term.Eta(kwUsing @ Term.Name(soft.KwUsing.name)), tpt) =>
-      Some(
-        copyPos(tree)(
-          Term.Param(
-            List(atPos(kwUsing.endTokenPos)(Mod.Using())),
-            atPos(eta.endTokenPos)(Name.Anonymous()),
-            Some(tpt),
-            None
-          )
-        )
-      )
-    case Lit.Unit() =>
-      None
-    case other =>
-      syntaxError(s"not a legal formal parameter", at = other)
+  private def convertToParam(tree: Term): Option[Term.Param] = {
+    def getType: Option[Type] = tree match {
+      case t: Term.Ascribe => Some(t.tpe)
+      case _ => None
+    }
+    @tailrec def getName(t: Tree, nest: Int = 0): Option[Name] = t match {
+      case t: Name => Some(t)
+      case t: Quasi => Some(t.become[Term.Name])
+      case t: Term.Select => Some(t.name)
+      case t: Term.Placeholder => Some(copyPos(t)(Name.Anonymous()))
+      case t: Term.Eta => Some(atPos(t.endTokenPos)(Name.Anonymous()))
+      case t: Term.Ascribe if nest == 0 => getName(t.expr, 1)
+      case _ => None
+    }
+    @tailrec def getMod(t: Tree, nest: Int = 0): List[Mod.ParamsType] = t match {
+      case _: Quasi => Nil
+      case t: Term.Ascribe if nest == 0 => getMod(t.expr, 1)
+      case t: Term.Select if nest <= 1 => getMod(t.qual, 2)
+      case t: Term.Eta => getMod(t.expr, 2)
+      case t @ Term.Name(soft.KwUsing.name) => copyPos(t)(Mod.Using()) :: Nil
+      case _ => Nil
+    }
+    tree match {
+      case q: Quasi => Some(q.become[Term.Param])
+      case _: Lit.Unit => None
+      case t =>
+        val name = getName(t).getOrElse(syntaxError("not a legal formal parameter", at = t))
+        Some(copyPos(t)(Term.Param(getMod(t), name, getType, None)))
+    }
   }
+
   private def convertToParams(tree: Term): List[Term.Param] = tree match {
     case Term.Tuple(ts) => ts.flatMap(convertToParam)
     case _ => convertToParam(tree).toList
