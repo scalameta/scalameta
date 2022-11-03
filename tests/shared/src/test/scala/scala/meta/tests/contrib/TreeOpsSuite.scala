@@ -32,7 +32,7 @@ class TreeOpsSuite extends FunSuite {
     assert(a.descendants.length == 3)
     assert(q"3".descendants.isEmpty)
     val tree: Defn.Val = q"val x = { 2 + 3 }"
-    assert(tree.descendants.size == 7)
+    assertEquals(tree.descendants.size, 8)
   }
 
   test("forall") {

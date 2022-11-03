@@ -13,6 +13,9 @@ private[meta] trait Api {
     Term.ParamClause(v, v.flatMap(_.mods).collectFirst { case x: Mod.ParamsType => x })
   implicit def termListValuesToListParamClause(v: List[List[Term.Param]]): List[Term.ParamClause] =
     v.map(termValuesToParamClause)
+
+  implicit def typeArgsToValues(v: Type.ArgClause): List[Type] = v.values
+  implicit def typeValuesToArgClause(v: List[Type]): Type.ArgClause = Type.ArgClause(v)
 }
 
 private[meta] trait Aliases {

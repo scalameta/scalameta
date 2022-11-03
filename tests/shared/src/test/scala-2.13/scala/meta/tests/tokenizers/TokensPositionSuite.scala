@@ -65,7 +65,11 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Type]("a#B")
   checkPositions[Type]("this.type", "Term.This this")
   checkPositions[Type]("t.type")
-  checkPositions[Type]("F[T]")
+  checkPositions[Type](
+    "F[T]",
+    """|Type.ArgClause [T]
+       |""".stripMargin
+  )
   checkPositions[Type]("K Map V")
   checkPositions[Type]("() => B")
   checkPositions[Type]("A => B")
@@ -127,6 +131,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Type.ParamClause def f[A @@<% B[A]]: C
        |Type.Bounds def f[A @@<% B[A]]: C
        |Type.Apply B[A]
+       |Type.ArgClause [A]
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -180,32 +185,47 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     "(a) op (b)",
     """|Term.Name (a)
+       |Type.ArgClause (a) op @@(b)
        |""".stripMargin
   )
   checkPositions[Stat](
     "(a, b) op (c, d)",
     """|Term.Tuple (a, b)
+       |Type.ArgClause (a, b) op @@(c, d)
        |""".stripMargin
   )
   checkPositions[Stat](
     "(a, b) op ((c, d))",
     """|Term.Tuple (a, b)
+       |Type.ArgClause (a, b) op @@((c, d))
        |Term.Tuple (c, d)
        |""".stripMargin
   )
-  checkPositions[Stat]("1 + 1")
-  checkPositions[Stat]("a f ()")
   checkPositions[Stat](
-    "a f (b)"
+    "1 + 1",
+    """|Type.ArgClause 1 + @@1
+       |""".stripMargin
+  )
+  checkPositions[Stat](
+    "a f ()",
+    """|Type.ArgClause a f @@()
+       |""".stripMargin
+  )
+  checkPositions[Stat](
+    "a f (b)",
+    """|Type.ArgClause a f @@(b)
+       |""".stripMargin
   )
   checkPositions[Stat](
     "(f) [A,B]",
     """|Term.Name (f)
+       |Type.ArgClause [A,B]
        |""".stripMargin
   )
   checkPositions[Stat](
     "(f) [A]",
     """|Term.Name (f)
+       |Type.ArgClause [A]
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -372,6 +392,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Term.Select {1 + 2}.toString
        |Term.Block {1 + 2}
        |Term.ApplyInfix 1 + 2
+       |Type.ArgClause try {1 + @@2}.toString
        |""".stripMargin
   )
   checkPositions[Stat](

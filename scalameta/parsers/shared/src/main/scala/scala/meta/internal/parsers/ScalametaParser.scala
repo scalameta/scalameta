@@ -805,7 +805,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     def entrypointType(): Type = paramType()
 
-    def typeArgs(): List[Type] = inBrackets(types())
+    def typeArgs(): Type.ArgClause = autoPos(inBrackets(types()).reduceWith(Type.ArgClause.apply))
 
     def infixTypeOrTuple(inMatchType: Boolean = false): Type = {
       if (token.is[LeftParen]) tupleInfixType(allowFunctionType = !inMatchType)
@@ -1047,9 +1047,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Type.Project(qual1, name1)
         case tpe: Type.Singleton =>
           tpe
-        case Type.Apply(underlying, args) =>
-          val underlying1 = loop(underlying, convertTypevars = false)
-          val args1 = args.map(loop(_, convertTypevars = true))
+        case t: Type.Apply =>
+          val underlying1 = loop(t.tpe, convertTypevars = false)
+          val args1 = t.argClause match {
+            case q: Type.ArgClause.Quasi => q
+            case x: Type.ArgClause =>
+              copyPos(x)(Type.ArgClause(x.values.map(loop(_, convertTypevars = true))))
+          }
           Type.Apply(underlying1, args1)
         case Type.ApplyInfix(lhs, op, rhs) =>
           val lhs1 = loop(lhs, convertTypevars = false)
@@ -1112,8 +1116,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       loop(t, convertTypevars = allowImmediateTypevars)
     }
 
-    def patternTypeArgs() =
-      inBrackets(commaSeparated(patternTyp(allowInfix = true, allowImmediateTypevars = true)))
+    def patternTypeArgs() = autoPos(inBrackets(commaSeparated {
+      patternTyp(allowInfix = true, allowImmediateTypevars = true)
+    }).reduceWith(Type.ArgClause.apply))
   }
 
   private trait AllowedName[T]
@@ -1880,11 +1885,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case class UnfinishedInfix(
         lhs: Typ,
         op: Op,
-        targs: List[Type]
+        targs: Type.ArgClause
     ) extends Unfinished {
       override def toString = {
-        val s_targs = if (targs.nonEmpty) targs.mkString("[", ", ", "]") else ""
-        s"[$lhs $op$s_targs]"
+        s"[$lhs $op$targs]"
       }
     }
 
@@ -1997,7 +2001,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         } else {
           termName() // op = [+]
         }
-        val targs = if (token.is[LeftBracket]) exprTypeArgs() else Nil // targs = Nil
+        val targs = if (token.is[LeftBracket]) exprTypeArgs() else autoPos(Type.ArgClause(Nil))
 
         // Check whether we're still infix or already postfix by testing the current token.
         // In the running example, we're at `a + [b]` (infix).
@@ -2663,13 +2667,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               case _ =>
             }
           }
-          val targs = token match {
-            case _: LeftBracket => patternTypeArgs()
-            case _ => Nil
-          }
+          val targs = if (token.is[LeftBracket]) Some(patternTypeArgs()) else None
           if (token.is[LeftParen]) {
             val ref = sid.become[Term]
-            val fun = if (targs.nonEmpty) autoEndPos(sid)(Term.ApplyType(ref, targs)) else ref
+            val fun = targs.fold(ref)(x => autoEndPos(sid)(Term.ApplyType(ref, x)))
             Pat.Extract(fun, checkNoTripleDots(argumentPatterns()))
           } else if (targs.nonEmpty)
             syntaxError("pattern must be a value", at = token)

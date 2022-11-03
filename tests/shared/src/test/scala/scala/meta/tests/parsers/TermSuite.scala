@@ -1055,7 +1055,7 @@ class TermSuite extends ParseSuite {
               |)
               |""".stripMargin)
 
-    val Defn.Val(
+    val expected = Defn.Val(
       Nil,
       List(Pat.Var(Term.Name("dynamicStrategy"))),
       None,
@@ -1089,7 +1089,8 @@ class TermSuite extends ParseSuite {
           )
         )
       )
-    ) = res
+    )
+    assertTree(res)(expected)
   }
 
   test("partial-function-returning-implicit-closure") {

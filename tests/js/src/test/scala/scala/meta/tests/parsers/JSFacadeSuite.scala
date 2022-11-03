@@ -90,11 +90,15 @@ class JSFacadeSuite extends FunSuite {
                             "pos" -> pos(31, 36),
                             "value" -> "Array"
                           ),
-                          "args" -> a(
-                            d(
-                              "type" -> "Type.Name",
-                              "pos" -> pos(37, 43),
-                              "value" -> "String"
+                          "argClause" -> d(
+                            "type" -> "Type.ArgClause",
+                            "pos" -> pos(36, 44),
+                            "values" -> a(
+                              d(
+                                "type" -> "Type.Name",
+                                "pos" -> pos(37, 43),
+                                "value" -> "String"
+                              )
                             )
                           )
                         )

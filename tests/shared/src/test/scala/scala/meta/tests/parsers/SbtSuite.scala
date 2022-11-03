@@ -69,19 +69,19 @@ class SbtSuite extends FunSuite {
       |        Term.ApplyInfix(
       |          Term.Name("organization"),
       |          Term.Name(":="),
-      |          Nil,
+      |          Type.ArgClause(Nil),
       |          List(Lit.String("com.example"))
       |        ),
       |        Term.ApplyInfix(
       |          Term.Name("version"),
       |          Term.Name(":="),
-      |          Nil,
+      |          Type.ArgClause(Nil),
       |          List(Lit.String("0.1.0"))
       |        ),
       |        Term.ApplyInfix(
       |          Term.Name("scalaVersion"),
       |          Term.Name(":="),
-      |          Nil,
+      |          Type.ArgClause(Nil),
       |          List(Lit.String("2.11.7"))
       |        )
       |      )
@@ -98,7 +98,7 @@ class SbtSuite extends FunSuite {
       |            Term.ApplyInfix(
       |              Term.Name("project"),
       |              Term.Name("in"),
-      |              Nil,
+      |              Type.ArgClause(Nil),
       |              List(Term.Apply(Term.Name("file"), List(Lit.String("."))))
       |            ),
       |            Term.Name("settings")
@@ -111,7 +111,7 @@ class SbtSuite extends FunSuite {
       |        Term.ApplyInfix(
       |          Term.Name("name"),
       |          Term.Name(":="),
-      |          Nil,
+      |          Type.ArgClause(Nil),
       |          List(Lit.String("hello"))
       |        )
       |      )

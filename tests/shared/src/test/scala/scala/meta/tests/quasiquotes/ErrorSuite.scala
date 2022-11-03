@@ -193,9 +193,9 @@ class ErrorSuite extends FunSuite {
       """
       |<macro>:5: type mismatch when unquoting;
       | found   : List[scala.meta.Term.Name]
-      | required: List[scala.meta.Type]
+      | required: scala.meta.Type.ArgClause
       |      q"foo[..$terms]"
-      |              ^
+      |           ^
     """.trim.stripMargin.replace("\r", "")
     )
   }

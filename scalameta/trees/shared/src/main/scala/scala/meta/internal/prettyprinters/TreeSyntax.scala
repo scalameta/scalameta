@@ -359,7 +359,7 @@ object TreeSyntax {
       case t: Term.ApplyUsing =>
         val args = s("(", kw("using"), " ", r(t.args, ", "), ")")
         m(SimpleExpr1, s(p(SimpleExpr1, t.fun), args))
-      case t: Term.ApplyType => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targs))
+      case t: Term.ApplyType => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targClause))
       case t: Term.ApplyInfix =>
         val args = t.args match {
           case (Lit.Unit()) :: Nil =>
@@ -382,7 +382,7 @@ object TreeSyntax {
 
         m(
           InfixExpr(t.op.value),
-          s(p(InfixExpr(t.op.value), t.lhs, left = true), " ", t.op, t.targs, " ", args)
+          s(p(InfixExpr(t.op.value), t.lhs, left = true), " ", t.op, t.targClause, " ", args)
         )
       case t: Term.ApplyUnary => m(PrefixExpr, s(t.op, p(SimpleExpr, t.arg)))
       case t: Term.Assign => m(Expr1, s(p(SimpleExpr1, t.lhs), " ", kw("="), " ", p(Expr, t.rhs)))
@@ -611,11 +611,9 @@ object TreeSyntax {
       case t: Type.Select => m(SimpleTyp, s(t.qual, kw("."), t.name))
       case t: Type.Project => m(SimpleTyp, s(p(SimpleTyp, t.qual), kw("#"), t.name))
       case t: Type.Singleton => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
+      case t: Type.ArgClause => r(t.values.map(arg => p(Typ, arg)), "[", ", ", "]")
       case t: Type.Apply =>
-        m(
-          SimpleTyp,
-          s(p(SimpleTyp, t.tpe), kw("["), r(t.args.map(arg => p(Typ, arg)), ", "), kw("]"))
-        )
+        m(SimpleTyp, s(p(SimpleTyp, t.tpe), t.argClause))
       case t: Type.ApplyInfix =>
         m(
           InfixTyp(t.op.value),
