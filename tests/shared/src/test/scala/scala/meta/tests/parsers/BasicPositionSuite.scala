@@ -100,7 +100,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
 
   checkPositions[Term](
     "(1 + 2).foo",
-    """|Term.ApplyInfix (1 + 2)
+    """|Term.ApplyInfix 1 + 2
        |Type.ArgClause (1 + @@2).foo
        |""".stripMargin
   )

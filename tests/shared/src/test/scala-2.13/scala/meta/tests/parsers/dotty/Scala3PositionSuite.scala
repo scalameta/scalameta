@@ -544,7 +544,6 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Term.Function (z: String) =>
        |      fx
        |      gx
-       |Term.Param (z: String)
        |Term.Block fx
        |      gx
        |""".stripMargin
@@ -624,7 +623,6 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Term.Function (x: Int) => {
        |  x * x
        |}
-       |Term.Param (x: Int)
        |Term.Block {
        |  x * x
        |}
@@ -636,7 +634,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     """|(using _: C) => ???
        |""".stripMargin,
-    """|Term.Param (using _: C)
+    """|Term.Param using _: C
        |Name.Anonymous _
        |""".stripMargin
   )

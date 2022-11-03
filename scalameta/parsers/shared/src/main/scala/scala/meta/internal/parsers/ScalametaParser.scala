@@ -315,10 +315,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def atPos[T <: Tree](start: StartPos, end: EndPos)(body: => T): T = {
     atPos(start.startTokenPos, end)(body)
   }
+  def atPosOpt[T <: Tree](start: StartPos, end: EndPos)(body: => T): T = {
+    atPosOpt(start.startTokenPos, end)(body)
+  }
 
   @inline
   def atPos[T <: Tree](start: Int, end: EndPos)(body: T): T = {
     atPosWithBody(start, body, end.endTokenPos)
+  }
+  def atPosOpt[T <: Tree](start: Int, end: EndPos)(body: T): T = {
+    if (body.origin ne Origin.None) body
+    else atPos(start, end)(body)
   }
   def atPos[T <: Tree](pos: Int)(body: => T): T = {
     atPosWithBody(pos, body, pos)
@@ -353,10 +360,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val startTokenPos = start.startTokenPos
     body.map(atPos(startTokenPos, end))
   }
+  def atPosTryOpt[T <: Tree](start: StartPos, end: EndPos)(body: => Try[T]): Try[T] = {
+    val startTokenPos = start.startTokenPos
+    body.map(atPosOpt(startTokenPos, end))
+  }
 
   def autoPos[T <: Tree](body: => T): T = atPos(start = auto, end = auto)(body)
+  def autoPosOpt[T <: Tree](body: => T): T = atPosOpt(start = auto, end = auto)(body)
   @inline
   def autoEndPos[T <: Tree](start: Int)(body: => T): T = atPos(start = start, end = auto)(body)
+  @inline
+  def autoEndPosOpt[T <: Tree](start: Int)(body: => T): T =
+    atPosOpt(start = start, end = auto)(body)
   @inline
   def autoEndPos[T <: Tree](start: StartPos)(body: => T): T = autoEndPos(start.startTokenPos)(body)
   @inline
@@ -639,12 +654,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     makeTuple(lpPos, args, invalidLiteralUnitType, Type.Tuple.apply)
   }
 
-  def inParensOrTupleOrUnitExpr(allowRepeated: Boolean): Term = {
+  private def inParensOrTupleOrUnitExpr(allowRepeated: Boolean): Term = {
     val lpPos = auto.startTokenPos
-    val maybeTupleArgs = inParens({
-      if (token.is[RightParen]) Nil
-      else commaSeparated(expr(location = PostfixStat, allowRepeated = allowRepeated))
-    })
+    val maybeTupleArgs = inParensOnOpenOr(
+      commaSeparated(expr(location = PostfixStat, allowRepeated = allowRepeated))
+    )(Nil)
     maybeTupleArgs match {
       case singleArg :: Nil =>
         makeTupleTerm(lpPos, maybeAnonymousFunction(singleArg) :: Nil)
@@ -664,7 +678,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
    * context or not. Formerly, this was threaded through numerous methods as boolean isPattern.
    */
   trait PatternContextSensitive {
-    private def tupleInfixType(allowFunctionType: Boolean = true): Type = autoPos {
+    private def tupleInfixType(allowFunctionType: Boolean = true): Type = autoPosOpt {
       // NOTE: This is a really hardcore disambiguation caused by introduction of Type.Method.
       // We need to accept `(T, U) => W`, `(x: T): x.U` and also support unquoting.
       var hasParams = false
@@ -731,7 +745,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case _ =>
         }
         val tuple = makeTupleType(openParenPos, ts)
-        infixTypeRest(compoundTypeRest(annotTypeRest(simpleTypeRest(tuple))))
+        infixTypeRest(compoundTypeRest(annotTypeRest(simpleTypeRest(tuple, openParenPos))))
       }
     }
 
@@ -759,7 +773,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     }
 
-    def typ(): Type = autoPos {
+    def typ(): Type = autoPosOpt {
       val t: Type =
         if (token.is[LeftBracket] && dialect.allowTypeLambdas) typeLambdaOrPoly()
         else infixTypeOrTuple()
@@ -1010,11 +1024,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             Type.Singleton(ref)
           }
       }
-      simpleTypeRest(autoEndPos(startPos)(res), startPos)
+      simpleTypeRest(autoEndPosOpt(startPos)(res), startPos)
     }
-
-    @inline
-    def simpleTypeRest(t: Type): Type = simpleTypeRest(t, t.startTokenPos)
 
     @tailrec
     private final def simpleTypeRest(t: Type, startPos: Int): Type = token match {
@@ -1221,7 +1232,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (acceptOpt[Dot]) selectors(name) else name
   }
 
-  def literal(isNegated: Boolean = false): Lit = autoPos {
+  def literal(isNegated: Boolean = false): Lit = {
+    val startPos = if (isNegated) auto.endTokenPos else auto.startTokenPos
     def isHex = {
       val syntax = token.syntax
       syntax.startsWith("0x") || syntax.startsWith("0X")
@@ -1269,7 +1281,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         unreachable(debug(token))
     }
     next()
-    res
+    autoEndPos(startPos)(res)
   }
 
   private def interpolateWith[Ctx, Ret <: Tree](
@@ -1448,7 +1460,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def ifClause(mods: List[Mod] = Nil) = {
+  def ifClause(mods: List[Mod] = Nil) = autoEndPos(mods) {
     accept[KwIf]
     val (cond, thenp) = if (token.isNot[LeftParen] && dialect.allowSignificantIndentation) {
       val cond = exprMaybeIndented()
@@ -1504,7 +1516,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       accept[Ident]
       Mod.Inline()
     }
-    maybeAnonymousFunctionUnlessPostfix(autoPos(token match {
+    maybeAnonymousFunctionUnlessPostfix(autoPosOpt(token match {
       case soft.KwInline() if ahead(token.is[KwIf]) =>
         ifClause(List(inlineMod()))
       case InlineMatchMod() =>
@@ -1615,7 +1627,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _ =>
         val startPos = auto.startTokenPos
         @inline def addPos(body: Term) = autoEndPos(startPos)(body)
-        var t: Term = addPos(postfixExpr(allowRepeated, PostfixStat))
+        var t: Term = postfixExpr(allowRepeated, PostfixStat)
         def repeatedTerm(nextTokens: () => Unit) = {
           if (allowRepeated) t = addPos { nextTokens(); Term.Repeated(t) }
           else syntaxError("repeated argument not allowed here", at = token)
@@ -1679,10 +1691,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           // even if it's not parsing the first statement in the template. E.g. `class C { foo; x => x }` will be
           // a parse error, because `x => x` will be deemed a self-type annotation, which ends up being inapplicable there.
           val looksLikeLambda = {
-            val inParens =
-              t.tokens.nonEmpty &&
-                t.tokens.head.is[LeftParen] &&
-                t.tokens.last.is[RightParen]
             object NameLike {
               def unapply(tree: Tree): Boolean = tree match {
                 case Term.Quasi(0, _) => true
@@ -1711,25 +1719,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             t match {
               case Lit.Unit() => true // 1
               case NameLike() => location != TemplateStat // 2-3
-              case ParamLike() => inParens || location == BlockStat // 4-5
+              case ParamLike() => // 4-5
+                location == BlockStat ||
+                scannerTokens(startPos).is[LeftParen] &&
+                scannerTokens(in.prevTokenPos).is[RightParen]
               case Term.Tuple(xs) => xs.forall(ParamLike.unapply) // 6
               case _ => false
             }
           }
           if (looksLikeLambda) {
+            val params = convertToParams(t)
             val contextFunction = token.is[ContextArrow]
             next()
-            t = addPos {
-              val params = convertToParams(t)
-              val trm =
-                if (location != BlockStat) expr()
-                else {
-                  blockExpr(isBlockOptional = true) match {
-                    case partial: Term.PartialFunction if acceptOpt[Colon] =>
-                      autoEndPos(partial)(Term.Ascribe(partial, startInfixType()))
-                    case t => t
-                  }
+            val trm =
+              if (location != BlockStat) expr()
+              else {
+                blockExpr(isBlockOptional = true) match {
+                  case partial: Term.PartialFunction if acceptOpt[Colon] =>
+                    autoEndPos(partial)(Term.Ascribe(partial, startInfixType()))
+                  case t => t
                 }
+              }
+            t = addPos {
               if (contextFunction)
                 Term.ContextFunction(params, trm)
               else
@@ -2048,24 +2059,26 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def prefixExpr(allowRepeated: Boolean): Term =
     if (!isUnaryOp) simpleExpr(allowRepeated)
     else {
+      val startPos = auto.startTokenPos
       val op = termName()
       if (op.value == "-" && token.is[NumericConstant[_]])
-        simpleExprRest(autoEndPos(op)(literal(isNegated = true)), canApply = true)
+        simpleExprRest(literal(isNegated = true), canApply = true, startPos = startPos)
       else {
         simpleExpr0(allowRepeated = true) match {
-          case Success(result) => autoEndPos(op)(Term.ApplyUnary(op, result))
+          case Success(result) => autoEndPos(startPos)(Term.ApplyUnary(op, result))
           case Failure(_) =>
             // maybe it is not unary operator but simply an ident `trait - {...}`
             // we would fail here anyway, let's try to treat it as ident
-            simpleExprRest(op, canApply = true)
+            simpleExprRest(op, canApply = true, startPos = startPos)
         }
       }
     }
 
   def simpleExpr(allowRepeated: Boolean): Term = simpleExpr0(allowRepeated).get
 
-  private def simpleExpr0(allowRepeated: Boolean): Try[Term] = autoPosTry {
+  private def simpleExpr0(allowRepeated: Boolean): Try[Term] = {
     var canApply = true
+    val startPos = auto.startTokenPos
     val t: Try[Term] = {
       token match {
         case MacroQuote() =>
@@ -2087,7 +2100,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case Underscore() =>
           Success(atCurPosNext(Term.Placeholder()))
         case LeftParen() =>
-          Success(autoPos(inParensOrTupleOrUnitExpr(allowRepeated = allowRepeated)))
+          Success(inParensOrTupleOrUnitExpr(allowRepeated = allowRepeated))
         case LeftBrace() =>
           canApply = false
           Success(blockExpr())
@@ -2111,7 +2124,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Failure(new ParseException(token.pos, "illegal start of simple expression"))
       }
     }
-    t.map(term => simpleExprRest(term, canApply = canApply))
+    t.map(term => simpleExprRest(term, canApply = canApply, startPos = startPos))
   }
 
   def polyFunction() = autoPos {
@@ -2156,9 +2169,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     next()
     autoEndPos(curpos)(f(atPos(curpos)(Term.Name(ident))))
   }
-
-  private def simpleExprRest(t: Term, canApply: Boolean): Term =
-    simpleExprRest(t, canApply, t.startTokenPos)
 
   @tailrec
   private def simpleExprRest(t: Term, canApply: Boolean, startPos: Int): Term = {
@@ -2222,11 +2232,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
            * Without manual handling here, filter would be included for `(a+1).filter`
            */
           val param = simpleExpr(allowRepeated = false)
+          val params = convertToParams(param)
           val contextFunction = token.is[ContextArrow]
           next()
           val trm = blockExpr(allowRepeated = false)
           addPos {
-            val params = convertToParams(param)
             if (contextFunction)
               Term.ContextFunction(params, trm)
             else
@@ -2239,7 +2249,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         next()
         addPos(Term.Eta(t))
       case _ =>
-        addPos(t)
+        t
     }
   }
 
@@ -2662,8 +2672,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val sid = stableId()
           if (token.is[NumericConstant[_]]) {
             sid match {
-              case Term.Name("-") =>
-                return autoEndPos(sid)(literal(isNegated = true))
+              case Term.Name("-") => return literal(isNegated = true)
               case _ =>
             }
           }
@@ -2994,7 +3003,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def paramType(): Type =
-    autoPos(token match {
+    autoPosOpt(token match {
       case RightArrow() =>
         val t = autoPos {
           next()
@@ -4303,15 +4312,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       implicitMod.foreach(buf += _)
       modifiersBuf(buf, isLocal = true)
     }
-    if (mods forall {
-        case _: Mod.Implicit | _: Mod.Lazy | _: Mod.Inline | _: Mod.Infix | _: Mod.Annot => true;
+    if (mods.forall {
+        case _: Mod.Implicit | _: Mod.Lazy | _: Mod.Inline | _: Mod.Infix | _: Mod.Annot => true
         case _ => false
-      }) {
+      })
       defOrDclOrSecondaryCtor(mods)
-    } else
-      {
-        tmplDef(mods)
-      } match {
+    else
+      tmplDef(mods) match {
         case stat: Decl.Type if dialect.allowTypeInBlock => stat
         case stat: Decl.Type => syntaxError("is not a valid block statement", at = stat)
         case stat if stat.isBlockStat => stat
