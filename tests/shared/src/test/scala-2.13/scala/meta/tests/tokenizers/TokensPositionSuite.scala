@@ -37,6 +37,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Case](
     "case _ op (a | b) =>",
     """|Pat.ExtractInfix _ op (a | b)
+       |Pat.ArgClause (a | b)
        |Pat.Alternative a | b
        |Term.Block case _ op (a | b) =>@@
        |""".stripMargin
@@ -45,6 +46,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     "case x `.y` () =>",
     """|Pat.ExtractInfix x `.y` ()
        |Term.Name `.y`
+       |Pat.ArgClause ()
        |Term.Block case x `.y` () =>@@
        |""".stripMargin
   )
@@ -678,7 +680,11 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Pat]("_*")
   checkPositions[Pat]("a | b")
   checkPositions[Pat]("(a, b)")
-  checkPositions[Pat]("E(a, b)")
+  checkPositions[Pat](
+    "E(a, b)",
+    """|Pat.ArgClause (a, b)
+       |""".stripMargin
+  )
   checkPositions[Pat]("a E b")
   checkPositions[Pat]("""s"start ${(a)} end"""", "Pat.Var (a)")
   checkPositions[Pat]("<h1>a{b}c{d}e{f}g</h1>")

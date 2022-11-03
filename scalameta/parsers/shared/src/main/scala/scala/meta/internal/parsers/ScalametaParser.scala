@@ -1957,11 +1957,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case Pat.Tuple(arg :: Nil) => arg
         case x => x
       }
-      val args = rhs match {
+      val args = copyPos(rhs)((rhs match {
         case _: Lit.Unit => Nil
-        case Pat.Tuple(args) => args
+        case t: Pat.Tuple => t.args
         case _ => rhs :: Nil
-      }
+      }).reduceWith(Pat.ArgClause.apply))
       atPos(lhsExt, rhsEnd)(Pat.ExtractInfix(lhs, op, args))
     }
   }
@@ -2689,8 +2689,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val targs = if (token.is[LeftBracket]) Some(patternTypeArgs()) else None
           if (token.is[LeftParen]) {
             val ref = sid.become[Term]
-            val fun = targs.fold(ref)(x => autoEndPos(sid)(Term.ApplyType(ref, x)))
-            Pat.Extract(fun, argumentPatterns())
+            Pat.Extract(
+              targs.fold(ref)(x => autoEndPos(sid)(Term.ApplyType(ref, x))),
+              autoPos(argumentPatterns().reduceWith(Pat.ArgClause.apply))
+            )
           } else if (targs.nonEmpty)
             syntaxError("pattern must be a value", at = token)
           else
