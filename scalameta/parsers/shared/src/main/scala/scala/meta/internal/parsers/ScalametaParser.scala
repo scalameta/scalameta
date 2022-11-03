@@ -4464,8 +4464,9 @@ object ScalametaParser {
     if (ok) copyPos(t)(Type.AnonymousLambda(t)) else t
   }
 
-  private def toParamClause(mod: Option[Mod.ParamsType])(v: List[Term.Param]) =
-    Term.ParamClause(v, mod)
+  private def toParamClause(mod: Option[Mod.ParamsType]): List[Term.Param] => Term.ParamClause =
+    if (mod.isDefined) Term.ParamClause(_, mod)
+    else { v => Term.ParamClause(v, Term.ParamClause.getMod(v)) }
 
   private implicit class ImplicitTree[T <: Tree](private val tree: T) extends AnyVal {
 
