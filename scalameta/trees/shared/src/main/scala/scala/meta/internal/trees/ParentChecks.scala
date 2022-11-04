@@ -123,4 +123,12 @@ object ParentChecks {
     }
   }
 
+  private[meta] def MemberTuple(tree: Member.Tuple, parent: Tree, dest: String): Boolean = {
+    tree.args match {
+      case Nil => false
+      case (t: Member.Tuple) :: Nil => t.args.lengthCompare(1) > 0
+      case _ => true
+    }
+  }
+
 }
