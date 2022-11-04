@@ -44,13 +44,17 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
     def specialcaseTermApply: Tree = {
       q"""
         object ApplyToTripleDots {
-          def unapply(tree: _root_.scala.meta.Tree): Option[
-            (_root_.scala.meta.Term, _root_.scala.meta.Term.Quasi)
-          ] = tree match {
-            case _root_.scala.meta.Term.Apply(fn,
-                _root_.scala.collection.immutable.List(arg: _root_.scala.meta.Term.Quasi)
-            ) if arg.rank == 2 =>
-              _root_.scala.Some((fn, arg))
+          def unapply(t: _root_.scala.meta.Term.Apply): Option[(
+            _root_.scala.meta.Term,
+            _root_.scala.Either[
+              _root_.scala.meta.Term.Quasi,
+              _root_.scala.meta.Term.ArgClause.Quasi
+            ]
+          )] = t.argClause match {
+            case arg: _root_.scala.meta.Term.ArgClause.Quasi if arg.rank == 1 =>
+              _root_.scala.Some((t.fun, _root_.scala.Right(arg)))
+            case _root_.scala.List(arg: _root_.scala.meta.Term.Quasi) if arg.rank == 2 =>
+              _root_.scala.Some((t.fun, _root_.scala.Left(arg)))
             case _ => _root_.scala.None
           }
         }
@@ -59,22 +63,37 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
           fn: _root_.scala.meta.Term,
           arg: _root_.scala.meta.internal.trees.Quasi
         ): Unit = fn match {
-          case ApplyToTripleDots(_) =>
-            c.abort(arg.pos,
-              _root_.scala.meta.internal.parsers.Messages.QuasiquoteAdjacentEllipsesInPattern(arg.rank))
-          case _root_.scala.meta.Term.Apply(fn, _) => checkNoTripleDots(fn, arg)
+          case t: _root_.scala.meta.Term.Apply =>
+            ApplyToTripleDots.unapply(t) match {
+              case _root_.scala.None => checkNoTripleDots(t.fun, arg)
+              case _ => c.abort(arg.pos,
+                _root_.scala.meta.internal.parsers.Messages.QuasiquoteAdjacentEllipsesInPattern(arg.rank))
+            }
           case _ => // do nothing
         }
-        $localName match {
-          case ApplyToTripleDots(fn, arg) =>
-            checkNoTripleDots(fn, arg)
-            c.universe.Apply(
-              ${liftPath("scala.meta.internal.trees.Syntactic.TermApply.ArgListList")},
-              _root_.scala.collection.immutable.List(
-                ${liftField(q"fn", tq"_root_.scala.meta.Term")},
-                ${liftField(q"List(List(arg))", tq"List[List[_root_.scala.meta.Term.Quasi]]")}
-              )
+        private def applyTermQuasi(fn: _root_.scala.meta.Term)(arg: _root_.scala.meta.Term.Quasi) = {
+          checkNoTripleDots(fn, arg)
+          c.universe.Apply(
+            ${liftPath("scala.meta.internal.trees.Syntactic.TermApply.ArgListList")},
+            _root_.scala.List(
+              ${liftField(q"fn", tq"_root_.scala.meta.Term")},
+              ${liftField(q"List(List(arg))", tq"List[List[_root_.scala.meta.Term.Quasi]]")}
             )
+          )
+        }
+        private def applyArgClauseQuasi(fn: _root_.scala.meta.Term)(arg: _root_.scala.meta.Term.ArgClause.Quasi) = {
+          checkNoTripleDots(fn, arg)
+          c.universe.Apply(
+            ${liftPath("scala.meta.internal.trees.Syntactic.TermApply.ArgList")},
+            _root_.scala.List(
+              ${liftField(q"fn", tq"_root_.scala.meta.Term")},
+              ${liftField(q"List(arg)", tq"List[_root_.scala.meta.Term.ArgClause.Quasi]")}
+            )
+          )
+        }
+        $localName match {
+          case ApplyToTripleDots(fn, either) =>
+            either.fold(applyTermQuasi(fn), applyArgClauseQuasi(fn))
           case _ =>
             $body
         }

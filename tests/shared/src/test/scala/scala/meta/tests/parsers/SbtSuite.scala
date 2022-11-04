@@ -65,26 +65,26 @@ class SbtSuite extends FunSuite {
       |    None,
       |    Term.Apply(
       |      Term.Name("Seq"),
-      |      List(
+      |      Term.ArgClause(List(
       |        Term.ApplyInfix(
       |          Term.Name("organization"),
       |          Term.Name(":="),
       |          Type.ArgClause(Nil),
-      |          List(Lit.String("com.example"))
+      |          Term.ArgClause(List(Lit.String("com.example")), None)
       |        ),
       |        Term.ApplyInfix(
       |          Term.Name("version"),
       |          Term.Name(":="),
       |          Type.ArgClause(Nil),
-      |          List(Lit.String("0.1.0"))
+      |          Term.ArgClause(List(Lit.String("0.1.0")), None)
       |        ),
       |        Term.ApplyInfix(
       |          Term.Name("scalaVersion"),
       |          Term.Name(":="),
       |          Type.ArgClause(Nil),
-      |          List(Lit.String("2.11.7"))
+      |          Term.ArgClause(List(Lit.String("2.11.7")), None)
       |        )
-      |      )
+      |      ), None)
       |    )
       |  ),
       |  Defn.Val(
@@ -99,22 +99,30 @@ class SbtSuite extends FunSuite {
       |              Term.Name("project"),
       |              Term.Name("in"),
       |              Type.ArgClause(Nil),
-      |              List(Term.Apply(Term.Name("file"), List(Lit.String("."))))
+      |              Term.ArgClause(
+      |                List(
+      |                  Term.Apply(
+      |                    Term.Name("file"),
+      |                    Term.ArgClause(List(Lit.String(".")), None)
+      |                  )
+      |                ),
+      |                None
+      |                )
       |            ),
       |            Term.Name("settings")
       |          ),
-      |          List(Term.Repeated(Term.Name("commonSettings")))
+      |          Term.ArgClause(List(Term.Repeated(Term.Name("commonSettings"))), None)
       |        ),
       |        Term.Name("settings")
       |      ),
-      |      List(
+      |      Term.ArgClause(List(
       |        Term.ApplyInfix(
       |          Term.Name("name"),
       |          Term.Name(":="),
       |          Type.ArgClause(Nil),
-      |          List(Lit.String("hello"))
+      |          Term.ArgClause(List(Lit.String("hello")), None)
       |        )
-      |      )
+      |      ), None)
       |    )
       |  )
       |))

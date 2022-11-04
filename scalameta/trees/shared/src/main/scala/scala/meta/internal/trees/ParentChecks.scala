@@ -10,10 +10,10 @@ import scala.meta.classifiers._
 object ParentChecks {
   @tailrec
   private def termArgument(parent: Tree, destination: String): Boolean = parent match {
-    case _: Term.Apply | _: Term.ApplyInfix | _: Term.Interpolate => destination == "args"
+    case _: Term.ArgClause => true
+    case _: Term.Interpolate => destination == "args"
     case _: Term.ApplyUnary => destination == "arg"
     case _: Term.Assign => destination == "rhs"
-    case _: Init => destination == "argss"
     case _: Term.Block =>
       parent.parent match {
         case Some(p) => termArgument(p, destination)

@@ -16,6 +16,11 @@ private[meta] trait Api {
 
   implicit def typeArgsToValues(v: Type.ArgClause): List[Type] = v.values
   implicit def typeValuesToArgClause(v: List[Type]): Type.ArgClause = Type.ArgClause(v)
+
+  implicit def termArgsToValues(v: Term.ArgClause): List[Term] = v.values
+  implicit def termValuesToArgClause(v: List[Term]): Term.ArgClause = Term.ArgClause(v)
+  implicit def termListValuesToListArgClause(v: List[List[Term]]): List[Term.ArgClause] =
+    v.map(termValuesToArgClause)
 }
 
 private[meta] trait Aliases {

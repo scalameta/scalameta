@@ -85,6 +85,7 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
           Nil
         case t: Pat.Wildcard if t.syntax == "_" =>
           Nil
+        case t @ Term.ArgClause(arg :: Nil, None) if t.syntax == arg.syntax => Nil
         case t =>
           val syntax = t.syntax
           val out = if (syntax.isEmpty) {

@@ -1390,9 +1390,12 @@ class TermSuite extends ParseSuite {
         Nil,
         List(Pat.Var(Term.Name("a"))),
         None,
-        Term.ApplyUsing(
-          Term.ApplyUsing(Term.Apply(Term.Name("f"), Nil), List(Term.Name("a"))),
-          List(Lit.Int(3), Lit.Boolean(true))
+        Term.Apply(
+          Term.Apply(
+            Term.Apply(Term.Name("f"), Nil),
+            Term.ArgClause(List(Term.Name("a")), Some(Mod.Using()))
+          ),
+          Term.ArgClause(List(Lit.Int(3), Lit.Boolean(true)), Some(Mod.Using()))
         )
       )
     )

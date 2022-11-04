@@ -212,7 +212,7 @@ class XmlSuite extends ParseSuite {
                   Lit.String("/"),
                   Term.Name("+"),
                   Type.ArgClause(Nil),
-                  List(Term.Name("url"))
+                  Term.ArgClause(List(Term.Name("url")))
                 ),
                 Term.Name("name")
               )
@@ -229,7 +229,7 @@ class XmlSuite extends ParseSuite {
                   Term.Name("msg"),
                   Term.Name("infix"),
                   Type.ArgClause(Nil),
-                  List(Term.Name("upper"))
+                  Term.ArgClause(List(Term.Name("upper")))
                 )
               )
             )

@@ -584,9 +584,9 @@ class InlineSuite extends BaseDottySuite {
          |}
          |""".stripMargin,
       assertLayout = Some(
-        """|"static meta" - ({
+        """|"static meta" - {
            |  implicit inline def qm = ???
-           |})
+           |}
            |""".stripMargin
       )
     )(

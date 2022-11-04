@@ -100,28 +100,32 @@ trait TextDocumentOps { self: SemanticdbOps =>
             mstarts(mstart1) = mname
             mends(mend1) = mname
           }
+          private def getAssignLhsNames(values: Iterable[m.Term]): List[m.Name] = {
+            val names = List.newBuilder[m.Name]
+            values.foreach {
+              case m.Term.Assign(lhs: m.Term.Name, _) => names += lhs
+              case _ =>
+            }
+            names.result()
+          }
+          private def indexAssignRhs(values: Seq[m.Term]): Unit = {
+            values.foreach {
+              case m.Term.Assign(_, rhs) => indexArgNames(rhs)
+              case _ =>
+            }
+          }
           private def indexArgNames(mapp: m.Tree): Unit = {
             mapp match {
-              case m.Init(tp, _, args) =>
-                margnames(mapp.pos.start) = args.flatMap {
-                  _.collect { case m.Term.Assign(lhs: m.Term.Name, _) =>
-                    lhs
-                  }
-                }
+              case t: m.Init =>
+                margnames(t.pos.start) = getAssignLhsNames(t.argClauses.flatMap(_.values))
+                t.argClauses.foreach(x => indexAssignRhs(x.values))
 
-                args.flatMap {
-                  _.collect { case m.Term.Assign(_, rhs) =>
-                    indexArgNames(rhs)
-                  }
-                }
+              case t: m.Term.Apply =>
+                margnames(t.fun.pos.end) = getAssignLhsNames(t.argClause.values)
+                indexAssignRhs(t.argClause.values)
 
-              case m.Term.Apply(fun, args) =>
-                margnames(fun.pos.end) = args.collect { case m.Term.Assign(lhs: m.Term.Name, _) =>
-                  lhs
-                }
-                args.collect { case m.Term.Assign(_, rhs) => rhs }.foreach(indexArgNames)
-              case m.Term.Select(qual, _) =>
-                indexArgNames(qual)
+              case t: m.Term.Select =>
+                indexArgNames(t.qual)
               case _ =>
             }
           }
@@ -170,13 +174,13 @@ trait TextDocumentOps { self: SemanticdbOps =>
           }
           override def apply(mtree: m.Tree): Unit = {
             mtree match {
-              case mtree @ m.Term.Apply(fun, _) =>
+              case mtree: m.Term.Apply =>
                 indexArgNames(mtree)
-              case mtree @ m.Mod.Private(mname: m.Name.Indeterminate) =>
+              case m.Mod.Private(mname: m.Name.Indeterminate) =>
                 indexWithin(mname)
-              case mtree @ m.Mod.Protected(mname: m.Name.Indeterminate) =>
+              case m.Mod.Protected(mname: m.Name.Indeterminate) =>
                 indexWithin(mname)
-              case mtree @ m.Importee.Rename(mname, mrename) =>
+              case m.Importee.Rename(mname, mrename) =>
                 indexName(mname)
                 return // NOTE: ignore mrename for now, we may decide to make it a binder
               case mtree: m.Ctor =>

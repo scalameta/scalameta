@@ -14,6 +14,7 @@ object RoundtripSuite {
     case q"${name: Term.Name}" => q"${name: Term.Name}"
     case q"$expr.$name" => q"$expr.$name"
     case q"$expr(...$exprssnel)" => q"$expr(...$exprssnel)"
+    case q"$expr(..$exprssnel)" => q"$expr(..$exprssnel)"
     case q"$expr[..$tpesnel]" => q"$expr[..$tpesnel]"
     case q"$expr1 $name[..$tpes] $expr2" => q"$expr1 $name[..$tpes] $expr2"
     case q"$expr $name[..$tpes] (..$exprs)" => q"$expr $name[..$tpes] (..$exprs)"
@@ -23,6 +24,7 @@ object RoundtripSuite {
     case q"+$expr" => q"+$expr"
     case q"$ref = $expr" => q"$ref = $expr"
     case q"$expr1(...$exprssnel) = $expr2" => q"$expr1(...$exprssnel) = $expr2"
+    case q"$expr1(..$exprssnel) = $expr2" => q"$expr1(..$exprssnel) = $expr2"
     case q"return $expr" => q"return $expr"
     case q"throw $expr" => q"throw $expr"
     case q"$expr: $tpe" => q"$expr: $tpe"
@@ -99,6 +101,7 @@ object RoundtripSuite {
     case tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2" =>
       tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2"
     case init"$tpe(...$exprss)" => init"$tpe(...$exprss)"
+    case init"$tpe(..$exprss)" => init"$tpe(..$exprss)"
     case template"{ ..$stats1 } with ..$ctorcalls { $param => ..$stats2 }" =>
       template"{ ..$stats1 } with ..$ctorcalls { $param => ..$stats2 }"
     case mod"@$annot" => mod"@$annot"

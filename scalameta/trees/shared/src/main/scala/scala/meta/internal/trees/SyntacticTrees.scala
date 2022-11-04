@@ -9,9 +9,30 @@ import scala.annotation.tailrec
 // See #277 and #405 for details.
 object Syntactic {
   object TermApply {
+    object ArgList {
+      def apply(fun: Term, argss: List[Term.ArgClause]): Term =
+        argss.foldLeft(fun)((curr, args) => Term.Apply(curr, args))
+
+      def unapply(tree: Tree): Option[(Term, List[Term.ArgClause])] =
+        tree match {
+          case term: Term => Some(unapplyImpl(term, Nil))
+          case _ => None
+        }
+
+      @tailrec
+      private final def unapplyImpl(
+          tree: Term,
+          prev: List[Term.ArgClause]
+      ): (Term, List[Term.ArgClause]) =
+        tree match {
+          case t: Term.Apply => unapplyImpl(t.fun, t.argClause :: prev)
+          case _ => (tree, prev)
+        }
+    }
+
     object ArgListList {
       def apply(fun: Term, argss: List[List[Term]]): Term =
-        argss.foldLeft(fun)((curr, args) => Term.Apply(curr, args))
+        ArgList(fun, argss.map(Term.ArgClause(_)))
 
       def unapply(tree: Tree): Option[(Term, List[List[Term]])] =
         tree match {
@@ -22,7 +43,7 @@ object Syntactic {
       @tailrec
       private final def unapplyImpl(tree: Term, prev: List[List[Term]]): (Term, List[List[Term]]) =
         tree match {
-          case Term.Apply(fun, args) => unapplyImpl(fun, args :: prev)
+          case t: Term.Apply => unapplyImpl(t.fun, t.argClause.values :: prev)
           case _ => (tree, prev)
         }
     }

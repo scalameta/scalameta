@@ -119,12 +119,16 @@ class JSFacadeSuite extends FunSuite {
                     "pos" -> pos(58, 65),
                     "value" -> "println"
                   ),
-                  "args" -> a(
-                    d(
-                      "type" -> "Lit.String",
-                      "pos" -> pos(66, 80),
-                      "value" -> "Hello, World",
-                      "syntax" -> """"Hello, World""""
+                  "argClause" -> d(
+                    "type" -> "Term.ArgClause",
+                    "pos" -> pos(65, 81),
+                    "values" -> a(
+                      d(
+                        "type" -> "Lit.String",
+                        "pos" -> pos(66, 80),
+                        "value" -> "Hello, World",
+                        "syntax" -> """"Hello, World""""
+                      )
                     )
                   )
                 )
@@ -269,9 +273,13 @@ class JSFacadeSuite extends FunSuite {
         "pos" -> pos(0, 4),
         "value" -> "List"
       ),
-      "args" -> a(
-        lit("Lit.Int", 1, "1", pos(8, 9)),
-        lit("Lit.Int", 2, "2", pos(13, 14))
+      "argClause" -> d(
+        "type" -> "Term.ArgClause",
+        "pos" -> pos(4, 17),
+        "values" -> a(
+          lit("Lit.Int", 1, "1", pos(8, 9)),
+          lit("Lit.Int", 2, "2", pos(13, 14))
+        )
       )
     ).asInstanceOf[js.Dictionary[Any]]
     check(parsedDefaultDialect, expected)

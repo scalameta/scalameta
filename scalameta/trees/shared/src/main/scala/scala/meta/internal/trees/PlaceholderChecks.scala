@@ -2,7 +2,7 @@ package scala.meta.internal.trees
 
 import scala.annotation.tailrec
 import scala.collection.mutable
-import scala.meta.{Init, Term, Tree, Type}
+import scala.meta._
 
 object PlaceholderChecks {
 
@@ -19,7 +19,12 @@ object PlaceholderChecks {
   }
 
   def isBlockPlaceholder(args: List[Tree]): Boolean = args match {
-    case List(Term.Block(List(arg))) => isPlaceholder(arg)
+    case List(arg) => isBlockPlaceholder(arg)
+    case _ => false
+  }
+
+  def isBlockPlaceholder(tree: Tree): Boolean = tree match {
+    case Term.Block(List(arg)) => isPlaceholder(arg)
     case _ => false
   }
 
@@ -32,11 +37,15 @@ object PlaceholderChecks {
         case t if isPlaceholder(t) => t.ne(tree) || includeArg
         case t: Term.Select => queue += t.qual; iter
         case t: Term.Tuple => t.args.exists(isPlaceholder) || queue.nonEmpty && iter
-        case t: Init => t.argss.exists(_.exists(isPlaceholder)) || queue.nonEmpty && iter
-        case t: Term.Apply =>
-          isBlockPlaceholder(t.args) || t.args.exists(isPlaceholder) || { queue += t.fun; iter }
-        case t: Term.ApplyInfix =>
-          isBlockPlaceholder(t.args) || { queue += t.lhs; queue ++= t.args; iter }
+        case t: Init =>
+          t.argClauses.exists(_.values.exists(isPlaceholder)) || queue.nonEmpty && iter
+        case t: Term.Apply => queue += t.fun; queue += t.argClause; iter
+        case t: Term.ArgClause =>
+          isBlockPlaceholder(t.values) || (t.parent match {
+            case Some(_: Term.ApplyInfix) => queue ++= t.values; queue.nonEmpty && iter
+            case _ => t.values.exists(isPlaceholder) || queue.nonEmpty && iter
+          })
+        case t: Term.ApplyInfix => queue += t.lhs; queue += t.argClause; iter
         case t: Term.ApplyUnary => queue += t.arg; iter
         case t: Term.ApplyType => queue += t.fun; iter
         case t: Term.New => queue += t.init; iter

@@ -513,6 +513,11 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    42
        |  })
        |Term.Select foo.fold
+       |Term.ArgClause (
+       |   err =>
+       |  {
+       |    42
+       |  })
        |Term.Function err =>
        |  {
        |    42
@@ -555,13 +560,20 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  "yo"
        |)
        |""".stripMargin,
-    """|Term.Function s => 
+    """|Term.ArgClause (
+       |  s => 
+       |    fx
+       |    gx(s),
+       |  "yo"
+       |)
+       |Term.Function s => 
        |    fx
        |    gx(s)
        |Term.Param s
        |Term.Block fx
        |    gx(s)
        |Term.Apply gx(s)
+       |Term.ArgClause (s)
        |Lit.String "yo"
        |""".stripMargin
   )
@@ -575,7 +587,14 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  "yo"
        |)
        |""".stripMargin,
-    """|Term.Function s =>
+    """|Term.ArgClause (
+       |  s =>
+       |    fx
+       |    gx(s)
+       |    /* c1 */,
+       |  "yo"
+       |)
+       |Term.Function s =>
        |    fx
        |    gx(s)
        |    /* c1 */
@@ -584,6 +603,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    gx(s)
        |    /* c1 */
        |Term.Apply gx(s)
+       |Term.ArgClause (s)
        |Lit.String "yo"
        |""".stripMargin
   )

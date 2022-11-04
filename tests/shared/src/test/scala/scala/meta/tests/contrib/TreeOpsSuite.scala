@@ -24,15 +24,15 @@ class TreeOpsSuite extends FunSuite {
 
   test("ancestors") {
     val lit: Tree = q"val x = { 2 + 3 }".find(_.isEqual(q"3")).get
-    assert(lit.ancestors.length == 3)
+    assertEquals(lit.ancestors.length, 4)
     assert(q"val x = { 2 + 3 }".ancestors.isEmpty)
   }
 
   test("descendants") {
-    assert(a.descendants.length == 3)
-    assert(q"3".descendants.isEmpty)
+    assertEquals(a.descendants.length, 3)
+    assertEquals(q"3".descendants.length, 0)
     val tree: Defn.Val = q"val x = { 2 + 3 }"
-    assertEquals(tree.descendants.size, 8)
+    assertEquals(tree.descendants.size, 9)
   }
 
   test("forall") {

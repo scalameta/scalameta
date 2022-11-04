@@ -354,16 +354,16 @@ class MinorDottySuite extends BaseDottySuite {
   test("new A(using b)(c)(using d, e)") {
     runTestAssert[Stat](
       "new A(using b)(c)(using d, e)",
-      Some("new A(b)(c)(d, e)")
+      Some("new A(using b)(c)(using d, e)")
     )(
       Term.New(
         Init(
           Type.Name("A"),
           Name(""),
           List(
-            List(Term.Name("b")),
-            List(Term.Name("c")),
-            List(Term.Name("d"), Term.Name("e"))
+            Term.ArgClause(List(Term.Name("b")), Some(Mod.Using())),
+            Term.ArgClause(List(Term.Name("c")), None),
+            Term.ArgClause(List(Term.Name("d"), Term.Name("e")), Some(Mod.Using()))
           )
         )
       )
@@ -373,7 +373,7 @@ class MinorDottySuite extends BaseDottySuite {
   test("class A extends B(using b)(c)(using d, e)") {
     runTestAssert[Stat](
       "class A extends B(using b)(c)(using d, e)",
-      Some("class A extends B(b)(c)(d, e)")
+      Some("class A extends B(using b)(c)(using d, e)")
     )(
       Defn.Class(
         Nil,
@@ -386,9 +386,9 @@ class MinorDottySuite extends BaseDottySuite {
             Type.Name("B"),
             Name(""),
             List(
-              List(Term.Name("b")),
-              List(Term.Name("c")),
-              List(Term.Name("d"), Term.Name("e"))
+              Term.ArgClause(List(Term.Name("b")), Some(Mod.Using())),
+              Term.ArgClause(List(Term.Name("c")), None),
+              Term.ArgClause(List(Term.Name("d"), Term.Name("e")), Some(Mod.Using()))
             )
           ) :: Nil,
           Self(Name(""), None),
@@ -1282,7 +1282,10 @@ class MinorDottySuite extends BaseDottySuite {
         Nil,
         None,
         Term.ApplyType(
-          Term.ApplyUsing(Term.Select(Lit.String(""), Term.Name("foo2")), List(Term.Name("foo"))),
+          Term.Apply(
+            Term.Select(Lit.String(""), Term.Name("foo2")),
+            Term.ArgClause(List(Term.Name("foo")), Some(Mod.Using()))
+          ),
           List(Type.Name("Any"))
         )
       )

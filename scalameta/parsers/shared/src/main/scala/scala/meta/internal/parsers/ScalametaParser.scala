@@ -1640,10 +1640,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             case _ =>
           }
         } else if (token.is[Colon] && allowFewerBraces) {
+          val colonPos = auto.startTokenPos
           next()
           in.observeIndented()
           val args = blockExpr(allowRepeated = false)
-          val arguments = addPos { Term.Apply(t, List(args)) }
+          val argClause = autoEndPos(colonPos)(Term.ArgClause(args :: Nil))
+          val arguments = addPos { Term.Apply(t, argClause) }
           t = simpleExprRest(arguments, canApply = true, startPos = startPos)
         } else if (acceptOpt[Colon]) {
           if (token.is[At] || (token.is[Ellipsis] && ahead(token.is[At]))) {
@@ -1914,11 +1916,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         syntaxError("repeated argument not allowed here", at = lhs.tokens.last.prev)
 
       def infixExpression() = {
-        val args = rhs match {
+        val args = copyPos(rhs)((rhs match {
           case _: Lit.Unit => Nil
-          case Term.Tuple(args) => args
+          case t: Term.Tuple => t.args
           case _ => rhs :: Nil
-        }
+        }).reduceWith(Term.ArgClause(_)))
         atPos(lhsExt, rhsEnd)(Term.ApplyInfix(lhs, op, targs, args))
       }
 
@@ -2210,14 +2212,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             addPos(t)
         }
       case LeftParen() | LeftBrace() if canApply =>
-        val arguments = addPos {
-          argumentExprsWithUsing() match {
-            case (args, true) => Term.ApplyUsing(t, args)
-            case (args, false) => Term.Apply(t, args)
-          }
-        }
+        val arguments = addPos(Term.Apply(t, getArgClause()))
         simpleExprRest(arguments, canApply = true, startPos = startPos)
       case _: Colon if canApply && allowFewerBraces =>
+        val colonPos = auto.startTokenPos
         val isEol = isEolAfterColon(token)
         next()
         // map:
@@ -2225,6 +2223,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           in.observeIndented()
           blockExpr(allowRepeated = false)
         } else {
+          val paramPos = auto.startTokenPos
 
           /**
            * We need to handle param and then open indented region, otherwise only the block will be
@@ -2242,14 +2241,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val contextFunction = token.is[ContextArrow]
           next()
           val trm = blockExpr(allowRepeated = false)
-          addPos {
+          autoEndPos(paramPos) {
             if (contextFunction)
               Term.ContextFunction(params, trm)
             else
               Term.Function(params, trm)
           }
         }
-        val arguments = addPos { Term.Apply(t, List(args)) }
+        val argClause = autoEndPos(colonPos)(Term.ArgClause(args :: Nil))
+        val arguments = addPos { Term.Apply(t, argClause) }
         simpleExprRest(arguments, canApply = true, startPos = startPos)
       case Underscore() =>
         next()
@@ -2332,21 +2332,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case _ => expr(location = location, allowRepeated = true)
   }
 
-  def argumentExprsWithUsing(location: Location = NoStat): (List[Term], Boolean) = token match {
+  private def getArgClause(location: Location = NoStat): Term.ArgClause = autoPos(token match {
     case _: LeftBrace =>
-      (List(blockExpr(allowRepeated = true)), false)
+      Term.ArgClause(blockExpr(allowRepeated = true) :: Nil)
     case _: LeftParen =>
       inParensOnOpenOr(token match {
         case t @ Ellipsis(2) =>
-          (List(ellipsis[Term](t)), false)
+          (ellipsis[Term](t) :: Nil).reduceWith(Term.ArgClause(_))
         case x =>
-          val using = nextIf(x.toString == soft.KwUsing.name && ahead(token.isNot[CantStartStat]))
-          val exprs = argumentExprsInParens(location)
-          (exprs, using)
-      })((Nil, false))
+          val using = x.toString == soft.KwUsing.name && ahead(token.isNot[CantStartStat])
+          val mod = if (using) Some(atCurPosNext(Mod.Using())) else None
+          argumentExprsInParens(location).reduceWith(Term.ArgClause(_, mod))
+      })(Term.ArgClause(Nil))
     case _ =>
-      (Nil, false)
-  }
+      Term.ArgClause(Nil)
+  })
 
   private def argumentExprsInParens(location: Location = NoStat): List[Term] = {
     @tailrec
@@ -2360,8 +2360,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     checkRep(exprs)
     exprs
   }
-
-  def argumentExprs(location: Location = NoStat): List[Term] = argumentExprsWithUsing(location)._1
 
   private def checkNoTripleDot[T <: Tree](tree: T): T = tree match {
     case q: Quasi if q.rank == 2 => syntaxError(Messages.QuasiquoteRankMismatch(q.rank, 1), at = q)
@@ -3923,7 +3921,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       allowArgss: Boolean,
       allowBraces: Boolean,
       allowTypeSingleton: Boolean
-  ): Init = autoPos {
+  ): Init = autoPosOpt {
     def isPendingArglist = token.is[LeftParen] || (token.is[LeftBrace] && allowBraces)
     def newlineOpt() = {
       if (dialect.allowSignificantIndentation)
@@ -3938,9 +3936,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         if (!allowTypeSingleton && tpe.is[Type.Singleton])
           syntaxError(s"class type required but $tpe found", at = tpe.pos)
         val name = autoPos(Name.Anonymous())
-        val argss = listBy[List[Term]] { argss =>
+        val argss = listBy[Term.ArgClause] { argss =>
           @inline def body() = {
-            argss += argumentExprs()
+            argss += getArgClause()
             newlineOpt()
           }
           newlineOpt()

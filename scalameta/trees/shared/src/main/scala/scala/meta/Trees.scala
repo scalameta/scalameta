@@ -80,6 +80,9 @@ object Lit {
 @branch trait Term extends Stat
 object Term {
   @branch trait Ref extends Term with sm.Ref
+  @ast class ArgClause(values: List[Term], mod: Option[Mod.ArgsType] = None)
+      extends Member.ArgClause
+
   @ast class This(qual: sm.Name) extends Term.Ref
   @ast class Super(thisp: sm.Name, superp: sm.Name) extends Term.Ref
   @ast class Name(value: Predef.String @nonEmpty) extends sm.Name with Term.Ref with Pat
@@ -94,14 +97,18 @@ object Term {
   @ast class Xml(parts: List[Lit] @nonEmpty, args: List[Term]) extends Term {
     checkFields(parts.length == args.length + 1)
   }
-  @ast class Apply(fun: Term, args: List[Term]) extends Term
+  @ast class Apply(fun: Term, argClause: ArgClause) extends Term {
+    @replacedField("4.6.0") final def args: List[Term] = argClause.values
+  }
+  @deprecated("Use Term.Apply, pass Mod.Using to Term.ArgClause", "4.6.0")
   @ast class ApplyUsing(fun: Term, args: List[Term]) extends Term
   @ast class ApplyType(fun: Term, targClause: Type.ArgClause @nonEmpty) extends Term {
     @replacedField("4.6.0") final def targs: List[Type] = targClause.values
   }
-  @ast class ApplyInfix(lhs: Term, op: Name, targClause: Type.ArgClause, args: List[Term])
+  @ast class ApplyInfix(lhs: Term, op: Name, targClause: Type.ArgClause, argClause: ArgClause)
       extends Term {
     @replacedField("4.6.0") final def targs: List[Type] = targClause.values
+    @replacedField("4.6.0") final def args: List[Term] = argClause.values
   }
   @ast class ApplyUnary(op: Name, arg: Term) extends Term.Ref {
     checkFields(op.isUnaryOp)
@@ -602,9 +609,10 @@ object Ctor {
 
 // NOTE: The name here is always Name.Anonymous.
 // See comments to Ctor.Primary and Ctor.Secondary for justification.
-@ast class Init(tpe: Type, name: Name, argss: List[List[Term]]) extends Ref {
+@ast class Init(tpe: Type, name: Name, argClauses: Seq[Term.ArgClause]) extends Ref {
   checkFields(tpe.isConstructable)
   checkParent(ParentChecks.Init)
+  @replacedField("4.6.0") final def argss: List[List[Term]] = argClauses.map(_.values).toList
 }
 
 @ast class Self(name: Name, decltpe: Option[Type]) extends Member
@@ -623,6 +631,7 @@ object Ctor {
 @branch trait Mod extends Tree
 object Mod {
   @branch trait Variant extends Mod
+  @branch trait ArgsType extends Mod
   @branch trait ParamsType extends Mod
   @ast class Annot(init: Init) extends Mod {
     @deprecated("Use init instead", "1.9.0")
@@ -650,7 +659,7 @@ object Mod {
   @ast class VarParam() extends Mod
   @ast class Infix() extends Mod
   @ast class Inline() extends Mod
-  @ast class Using() extends ParamsType
+  @ast class Using() extends ParamsType with ArgsType
   @ast class Opaque() extends Mod
   @ast class Transparent() extends Mod
 }
