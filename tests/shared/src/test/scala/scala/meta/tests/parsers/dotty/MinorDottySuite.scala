@@ -336,7 +336,9 @@ class MinorDottySuite extends BaseDottySuite {
         Template(Nil, List(init("A"), init("B"), init("C")), Self(Name(""), None), Nil)
       )
     )
+  }
 
+  test("(new A(), new B())") {
     runTestAssert[Stat](
       "(new A(), new B())"
     )(
@@ -347,7 +349,54 @@ class MinorDottySuite extends BaseDottySuite {
         )
       )
     )
+  }
 
+  test("new A(using b)(c)(using d, e)") {
+    runTestAssert[Stat](
+      "new A(using b)(c)(using d, e)",
+      Some("new A(b)(c)(d, e)")
+    )(
+      Term.New(
+        Init(
+          Type.Name("A"),
+          Name(""),
+          List(
+            List(Term.Name("b")),
+            List(Term.Name("c")),
+            List(Term.Name("d"), Term.Name("e"))
+          )
+        )
+      )
+    )
+  }
+
+  test("class A extends B(using b)(c)(using d, e)") {
+    runTestAssert[Stat](
+      "class A extends B(using b)(c)(using d, e)",
+      Some("class A extends B(b)(c)(d, e)")
+    )(
+      Defn.Class(
+        Nil,
+        Type.Name("A"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(Nil, Name(""), Nil),
+        Template(
+          Nil,
+          Init(
+            Type.Name("B"),
+            Name(""),
+            List(
+              List(Term.Name("b")),
+              List(Term.Name("c")),
+              List(Term.Name("d"), Term.Name("e"))
+            )
+          ) :: Nil,
+          Self(Name(""), None),
+          Nil,
+          Nil
+        )
+      )
+    )
   }
 
   // Super traits were removed in Scala 3
