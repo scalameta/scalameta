@@ -2303,7 +2303,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case rep: Term.Repeated => rep
       }
       val lpPos = auto.startTokenPos
-      val args = checkNoTripleDots(argumentExprs(location))
+      val args =
+        if (isBrace) checkNoTripleDot(blockExpr(allowRepeated = true)) :: Nil
+        else inParensOnOpenOr(argumentExprsInParens(location))(Nil)
       token match {
         case Dot() | LeftBracket() | LeftParen() | LeftBrace() | Underscore() =>
           findRep(args).foreach(x => syntaxError("repeated argument not allowed here", at = x))
@@ -2319,42 +2321,45 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def argumentExpr(location: Location): Term = {
-    expr(location = location, allowRepeated = true)
+  private def argumentExpr(location: Location): Term = token match {
+    case t @ Ellipsis(2) => syntaxError(Messages.QuasiquoteRankMismatch(2, 1), at = t)
+    case _ => expr(location = location, allowRepeated = true)
   }
 
   def argumentExprsWithUsing(location: Location = NoStat): (List[Term], Boolean) = token match {
-    case LeftBrace() =>
+    case _: LeftBrace =>
       (List(blockExpr(allowRepeated = true)), false)
-    case LeftParen() =>
-      inParensOnOpen(token match {
-        case RightParen() =>
-          (Nil, false)
+    case _: LeftParen =>
+      inParensOnOpenOr(token match {
         case t @ Ellipsis(2) =>
           (List(ellipsis[Term](t)), false)
         case x =>
-          @tailrec
-          def checkRep(exprsLeft: List[Term]): Unit = exprsLeft match {
-            case head :: tail =>
-              if (!head.is[Term.Repeated]) checkRep(tail)
-              else if (tail.nonEmpty) syntaxError("repeated argument not allowed here", at = head)
-            case _ =>
-          }
           val using = nextIf(x.toString == soft.KwUsing.name && ahead(token.isNot[CantStartStat]))
-          val exprs = commaSeparated(argumentExpr(location))
-          checkRep(exprs)
+          val exprs = argumentExprsInParens(location)
           (exprs, using)
-      })
+      })((Nil, false))
     case _ =>
       (Nil, false)
   }
 
+  private def argumentExprsInParens(location: Location = NoStat): List[Term] = {
+    @tailrec
+    def checkRep(exprsLeft: List[Term]): Unit = exprsLeft match {
+      case head :: tail =>
+        if (!head.is[Term.Repeated]) checkRep(tail)
+        else if (tail.nonEmpty) syntaxError("repeated argument not allowed here", at = head)
+      case _ =>
+    }
+    val exprs = commaSeparated(argumentExpr(location))
+    checkRep(exprs)
+    exprs
+  }
+
   def argumentExprs(location: Location = NoStat): List[Term] = argumentExprsWithUsing(location)._1
 
-  private def checkNoTripleDots[T <: Tree](trees: List[T]): List[T] = {
-    val illegalQuasis = trees.collect { case q: Quasi if q.rank == 2 => q }
-    illegalQuasis.foreach(q => syntaxError(Messages.QuasiquoteRankMismatch(q.rank, 1), at = q))
-    trees
+  private def checkNoTripleDot[T <: Tree](tree: T): T = tree match {
+    case q: Quasi if q.rank == 2 => syntaxError(Messages.QuasiquoteRankMismatch(q.rank, 1), at = q)
+    case t => t
   }
 
   def blockExpr(isBlockOptional: Boolean = false, allowRepeated: Boolean = false): Term = {
@@ -2517,6 +2522,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     @tailrec
     private def patternAlternatives(pats: List[Pat]): Pat = {
       val pat = pattern1()
+      checkNoTripleDot(pat)
       if (isBar) {
         next()
         patternAlternatives(pat :: pats)
@@ -2680,7 +2686,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           if (token.is[LeftParen]) {
             val ref = sid.become[Term]
             val fun = targs.fold(ref)(x => autoEndPos(sid)(Term.ApplyType(ref, x)))
-            Pat.Extract(fun, checkNoTripleDots(argumentPatterns()))
+            Pat.Extract(fun, argumentPatterns())
           } else if (targs.nonEmpty)
             syntaxError("pattern must be a value", at = token)
           else
@@ -2713,8 +2719,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           xmlPat()
         case _: LeftParen =>
           val lpPos = auto.startTokenPos
-          val patterns = inParensOnOpen(if (token.is[RightParen]) Nil else noSeq.patterns())
-          val tuple = makeTuple(lpPos, checkNoTripleDots(patterns), Lit.Unit(), Pat.Tuple.apply)
+          val patterns = inParensOnOpenOr(noSeq.patterns())(Nil)
+          val tuple = makeTuple(lpPos, patterns, Lit.Unit(), Pat.Tuple.apply)
           patterns match {
             case x :: Nil if isRhs && !x.is[Quasi] => Pat.Tuple(tuple :: Nil)
             case _ => tuple
@@ -3924,18 +3930,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _ =>
         val tpe = typeParser
         if (!allowTypeSingleton && tpe.is[Type.Singleton])
-          syntaxError(s"class type required but ${tpe.toString()} found", at = tpe.pos)
+          syntaxError(s"class type required but $tpe found", at = tpe.pos)
         val name = autoPos(Name.Anonymous())
-        val argss = mutable.ListBuffer[List[Term]]()
-        @inline def body() = {
-          argss += argumentExprs()
+        val argss = listBy[List[Term]] { argss =>
+          @inline def body() = {
+            argss += argumentExprs()
+            newlineOpt()
+          }
           newlineOpt()
+          if (allowArgss)
+            while (isPendingArglist) body()
+          else if (isPendingArglist) body()
         }
-        newlineOpt()
-        if (allowArgss)
-          while (isPendingArglist) body()
-        else if (isPendingArglist) body()
-        Init(tpe, name, argss.toList)
+        Init(tpe, name, argss)
     }
   }
 
