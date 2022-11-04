@@ -18,8 +18,6 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Type](
     "[_] =>> Unit",
     """|Type.ParamClause [_]
-       |Type.Param _
-       |Name.Anonymous _
        |Type.ParamClause [_@@] =>> Unit
        |Type.Bounds [_@@] =>> Unit
        |""".stripMargin
@@ -635,7 +633,6 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|(using _: C) => ???
        |""".stripMargin,
     """|Term.Param using _: C
-       |Name.Anonymous _
        |""".stripMargin
   )
 

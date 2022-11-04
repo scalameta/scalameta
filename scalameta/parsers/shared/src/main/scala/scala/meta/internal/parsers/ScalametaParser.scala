@@ -1764,8 +1764,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case t: Name => Some(t)
       case t: Quasi => Some(t.become[Term.Name])
       case t: Term.Select => Some(t.name)
-      case t: Term.Placeholder => Some(copyPos(t)(Name.Anonymous()))
-      case t: Term.Eta => Some(atPos(t.endTokenPos)(Name.Anonymous()))
+      case t: Term.Placeholder => Some(copyPos(t)(Name.Placeholder()))
+      case t: Term.Eta => Some(atPos(t.endTokenPos)(Name.Placeholder()))
       case t: Term.Ascribe if nest == 0 => getName(t.expr, 1)
       case _ => None
     }
@@ -3156,7 +3156,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case _: Ident => typeName()
           case t: Unquote => unquote[Name](t)
           case _: Underscore if allowUnderscore =>
-            autoPos { next(); Name.Anonymous() }
+            autoPos { next(); Name.Placeholder() }
           case _ =>
             if (allowUnderscore) syntaxError("identifier or `_' expected", at = token)
             else syntaxError("identifier expected", at = token)

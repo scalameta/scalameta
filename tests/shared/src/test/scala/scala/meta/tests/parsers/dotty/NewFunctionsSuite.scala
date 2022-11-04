@@ -215,7 +215,7 @@ class NewFunctionsSuite extends BaseDottySuite {
             Type.Param(
               Nil,
               Type.Name("F"),
-              List(Type.Param(Nil, Name(""), Nil, Type.Bounds(None, None), Nil, Nil)),
+              List(Type.Param(Nil, phName, Nil, Type.Bounds(None, None), Nil, Nil)),
               Type.Bounds(None, None),
               Nil,
               Nil
@@ -223,7 +223,7 @@ class NewFunctionsSuite extends BaseDottySuite {
             Type.Param(
               Nil,
               Type.Name("G"),
-              List(Type.Param(Nil, Name(""), Nil, Type.Bounds(None, None), Nil, Nil)),
+              List(Type.Param(Nil, phName, Nil, Type.Bounds(None, None), Nil, Nil)),
               Type.Bounds(None, None),
               Nil,
               Nil
@@ -376,7 +376,7 @@ class NewFunctionsSuite extends BaseDottySuite {
             Type.Param(
               Nil,
               Type.Name("F"),
-              List(Type.Param(Nil, Name(""), Nil, Type.Bounds(None, None), Nil, Nil)),
+              List(Type.Param(Nil, phName, Nil, Type.Bounds(None, None), Nil, Nil)),
               Type.Bounds(None, None),
               Nil,
               Nil
@@ -384,7 +384,7 @@ class NewFunctionsSuite extends BaseDottySuite {
             Type.Param(
               Nil,
               Type.Name("G"),
-              List(Type.Param(Nil, Name(""), Nil, Type.Bounds(None, None), Nil, Nil)),
+              List(Type.Param(Nil, phName, Nil, Type.Bounds(None, None), Nil, Nil)),
               Type.Bounds(None, None),
               Nil,
               Nil
@@ -448,7 +448,7 @@ class NewFunctionsSuite extends BaseDottySuite {
             Type.Param(
               Nil,
               Type.Name("F"),
-              List(Type.Param(Nil, Name(""), Nil, Type.Bounds(None, None), Nil, Nil)),
+              List(Type.Param(Nil, phName, Nil, Type.Bounds(None, None), Nil, Nil)),
               Type.Bounds(None, None),
               Nil,
               Nil
@@ -686,7 +686,7 @@ class NewFunctionsSuite extends BaseDottySuite {
           Type.Param(
             Nil,
             Type.Name("F"),
-            List(Type.Param(Nil, Name(""), Nil, Type.Bounds(None, None), Nil, Nil)),
+            List(Type.Param(Nil, phName, Nil, Type.Bounds(None, None), Nil, Nil)),
             Type.Bounds(None, None),
             Nil,
             List(
@@ -695,7 +695,7 @@ class NewFunctionsSuite extends BaseDottySuite {
                   Type.Param(
                     Nil,
                     Type.Name("G"),
-                    List(Type.Param(Nil, Name(""), Nil, Type.Bounds(None, None), Nil, Nil)),
+                    List(Type.Param(Nil, phName, Nil, Type.Bounds(None, None), Nil, Nil)),
                     Type.Bounds(None, None),
                     Nil,
                     Nil

@@ -321,18 +321,18 @@ class TermSuite extends ParseSuite {
 
   test("_ => x") {
     assertTerm("_ => x") {
-      Term.Function(List(Term.Param(Nil, Name.Anonymous(), None, None)), Term.Name("x"))
+      Term.Function(List(Term.Param(Nil, Name.Placeholder(), None, None)), Term.Name("x"))
     }
-    val Term.Function(List(Term.Param(Nil, Name.Anonymous(), None, None)), Term.Name("x")) =
+    val Term.Function(List(Term.Param(Nil, Name.Placeholder(), None, None)), Term.Name("x")) =
       blockStat("_ => x")
     intercept[ParseException] { templStat("_ => x") }
   }
 
   test("(_) => x") {
     assertTerm("(_) => x") {
-      Term.Function(List(Term.Param(Nil, Name.Anonymous(), None, None)), Term.Name("x"))
+      Term.Function(List(Term.Param(Nil, Name.Placeholder(), None, None)), Term.Name("x"))
     }
-    val Term.Function(List(Term.Param(Nil, Name.Anonymous(), None, None)), Term.Name("x")) =
+    val Term.Function(List(Term.Param(Nil, Name.Placeholder(), None, None)), Term.Name("x")) =
       blockStat("(_) => x")
     intercept[ParseException] { templStat("(_) => x") }
   }
@@ -371,7 +371,7 @@ class TermSuite extends ParseSuite {
       Ascribe(Placeholder(), Type.Function(List(Type.Name("Int")), Type.Name("x")))
     }
     val Term.Function(
-      List(Term.Param(Nil, Name.Anonymous(), Some(Type.Name("Int")), None)),
+      List(Term.Param(Nil, Name.Placeholder(), Some(Type.Name("Int")), None)),
       Term.Name("x")
     ) = blockStat("_: Int => x")
     intercept[ParseException] { templStat("_: Int => x") }
@@ -380,16 +380,16 @@ class TermSuite extends ParseSuite {
   test("(_: Int) => x") {
     assertTerm("(_: Int) => x") {
       Term.Function(
-        List(Term.Param(Nil, Name.Anonymous(), Some(Type.Name("Int")), None)),
+        List(Term.Param(Nil, Name.Placeholder(), Some(Type.Name("Int")), None)),
         Term.Name("x")
       )
     }
     val Term.Function(
-      List(Term.Param(Nil, Name.Anonymous(), Some(Type.Name("Int")), None)),
+      List(Term.Param(Nil, Name.Placeholder(), Some(Type.Name("Int")), None)),
       Term.Name("x")
     ) = blockStat("(_: Int) => x")
     val Term.Function(
-      List(Term.Param(Nil, Name.Anonymous(), Some(Type.Name("Int")), None)),
+      List(Term.Param(Nil, Name.Placeholder(), Some(Type.Name("Int")), None)),
       Term.Name("x")
     ) = templStat("(_: Int) => x")
   }

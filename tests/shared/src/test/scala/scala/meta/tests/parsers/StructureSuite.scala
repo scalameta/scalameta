@@ -22,7 +22,7 @@ class StructureSuite extends ParseSuite {
     Case(
       Pat.Wildcard(),
       None,
-      Term.Function(List(Term.Param(Nil, Name(""), None, None)), Lit.Boolean(false))
+      Term.Function(List(Term.Param(Nil, Name.Placeholder(), None, None)), Lit.Boolean(false))
     )
   )
 
@@ -32,7 +32,7 @@ class StructureSuite extends ParseSuite {
       Pat.Wildcard(),
       None,
       Term.Function(
-        List(Term.Param(Nil, Name(""), None, None)),
+        List(Term.Param(Nil, Name.Placeholder(), None, None)),
         Term.Block(List(Lit.Boolean(false)))
       )
     )
@@ -44,7 +44,7 @@ class StructureSuite extends ParseSuite {
       Pat.Wildcard(),
       None,
       Term.Function(
-        List(Term.Param(Nil, Name(""), None, None)),
+        List(Term.Param(Nil, Name.Placeholder(), None, None)),
         Term.Block(List(Lit.Boolean(false), Term.Name("a")))
       )
     )

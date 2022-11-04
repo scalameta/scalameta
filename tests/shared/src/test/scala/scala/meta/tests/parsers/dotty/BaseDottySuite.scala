@@ -12,6 +12,7 @@ trait BaseDottySuite extends ParseSuite {
   implicit def parseType(code: String, dialect: Dialect): Type = tpe(code)(dialect)
 
   final val anon = meta.Name.Anonymous()
+  final val phName = meta.Name.Placeholder()
   final val ctor = Ctor.Primary(Nil, anon, Nil)
   final def ctorp(lp: List[Term.Param] = Nil) = Ctor.Primary(Nil, anon, List(lp))
   final val slf = meta.Self(anon, None)
@@ -24,9 +25,15 @@ trait BaseDottySuite extends ParseSuite {
     Term.Param(Nil, Term.Name(name), Some(pname(tpe)), None)
   final def tparamInline(name: String, tpe: String) =
     Term.Param(List(Mod.Inline()), Term.Name(name), Some(pname(tpe)), None)
-  final def tparamUsing(name: String, tpe: String) =
-    if (name.nonEmpty) Term.Param(List(Mod.Using()), Term.Name(name), Some(pname(tpe)), None)
-    else Term.Param(List(Mod.Using()), anon, Some(pname(tpe)), None)
+
+  final def tparamUsing(name: String, tpe: String) = {
+    val nameTree = name match {
+      case "" => anon
+      case "_" => phName
+      case _ => Term.Name(name)
+    }
+    Term.Param(List(Mod.Using()), nameTree, Some(pname(tpe)), None)
+  }
 
   final def pname(name: String): Type.Name = Type.Name(name)
   final def pparam(s: String): Type.Param =

@@ -985,7 +985,7 @@ class GivenUsingSuite extends BaseDottySuite {
         List(Pat.Var(Term.Name("fun"))),
         None,
         Term.Function(
-          List(Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Context")), None)),
+          List(Term.Param(List(Mod.Using()), phName, Some(Type.Name("Context")), None)),
           Term.Select(Term.Name("ctx"), Term.Name("open"))
         )
       )
