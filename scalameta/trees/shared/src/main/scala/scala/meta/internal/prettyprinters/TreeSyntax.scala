@@ -480,82 +480,17 @@ object TreeSyntax {
               .getOrElse(s())
           )
         )
-      case t: Term.ContextFunction =>
-        t match {
-          case Term.ContextFunction(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, body)
-              if mods.exists(_.is[Mod.Implicit]) =>
-            m(
-              Expr,
-              s(
-                kw("implicit"),
-                " ",
-                name,
-                tptopt.map(s(kw(":"), " ", _)).getOrElse(s()),
-                " ",
-                kw("?=>"),
-                " ",
-                p(Expr, body)
-              )
-            )
-          case Term.ContextFunction(Term.Param(mods, name: Term.Name, None, _) :: Nil, body) =>
-            m(Expr, s(name, " ", kw("?=>"), " ", p(Expr, body)))
-          case Term.ContextFunction(
-                Term.Param(_, _: Name.Placeholder, decltpeOpt, _) :: Nil,
-                body
-              ) =>
-            val param = decltpeOpt match {
-              case Some(decltpe) => s(kw("("), kw("_"), kw(":"), decltpe, kw(")"))
-              case None => s(kw("_"))
-            }
-            m(Expr, param, " ", kw("?=>"), " ", p(Expr, body))
-          case Term.ContextFunction(params, body) =>
-            if (params.headOption.exists(_.mods.exists(_.is[Mod.Using]))) {
-              m(
-                Expr,
-                s("(", kw("using"), " ", r(params, ", "), ") ", kw("?=>"), " ", p(Expr, body))
-              )
-            } else {
-              m(Expr, s("(", r(params, ", "), ") ", kw("?=>"), " ", p(Expr, body)))
-            }
+      case t: Term.FunctionTerm =>
+        val arrow = t match {
+          case _: Term.Function => "=>"
+          case _: Term.ContextFunction => "?=>"
         }
+        val params = t.params
+        val modOpt = Term.ParamClause.getMod(params)
+        val paramsSyntax = printParams(params, modOpt, needParens = false)
+        m(Expr, s(paramsSyntax, " ", kw(arrow), " ", p(Expr, t.body)))
       case t: Term.PolyFunction =>
         m(Expr, t.tparamClause, " ", kw("=>"), " ", p(Expr, t.body))
-      case t: Term.Function =>
-        t match {
-          case Term.Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, body)
-              if mods.exists(_.is[Mod.Implicit]) =>
-            m(
-              Expr,
-              s(
-                kw("implicit"),
-                " ",
-                name,
-                tptopt.map(s(kw(":"), " ", _)).getOrElse(s()),
-                " ",
-                kw("=>"),
-                " ",
-                p(Expr, body)
-              )
-            )
-          case Term.Function(Term.Param(mods, name: Term.Name, None, _) :: Nil, body) =>
-            if (mods.exists(_.is[Mod.Using])) {
-              m(Expr, s("(", kw("using"), " ", name, ") ", kw("=>"), " ", p(Expr, body)))
-            } else {
-              m(Expr, s(name, " ", kw("=>"), " ", p(Expr, body)))
-            }
-          case Term.Function(Term.Param(mods, _: Name.Placeholder, decltpeOpt, _) :: Nil, body) =>
-            val isUsing = mods.exists(_.is[Mod.Using])
-            val param = decltpeOpt match {
-              case Some(decltpe) if isUsing =>
-                s(kw("("), kw("using"), " ", kw("_"), kw(":"), " ", decltpe, kw(")"))
-              case Some(decltpe) => s(kw("("), kw("_"), kw(":"), decltpe, kw(")"))
-              case None => s(kw("_"))
-            }
-            m(Expr, param, " ", kw("=>"), " ", p(Expr, body))
-          case Term.Function(params, body) =>
-            val mod = Term.ParamClause.getMod(params)
-            m(Expr, s(printParams(params, mod), " ", kw("=>"), " ", p(Expr, body)))
-        }
       case Term.QuotedMacroExpr(Term.Block(stats)) =>
         stats match {
           case head :: Nil => s("'{ ", head, " }")
