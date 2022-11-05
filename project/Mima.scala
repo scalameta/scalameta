@@ -23,10 +23,14 @@ object Mima {
     public && include && !exclude
   }
 
+  private val treeAnnotations = Set(
+    "scala.meta.internal.trees.Metadata.astClass",
+    "scala.meta.internal.trees.Metadata.branch"
+  )
   val scalaSpecificCompatibilityPolicy: ProblemFilter = {
     case ReversedMissingMethodProblem(member) => // ignore sealed types
       // trees are sealed
-      !member.owner.annotations.exists(_.name == "scala.meta.internal.trees.Metadata.astClass")
+      !member.owner.annotations.exists(x => treeAnnotations.contains(x.name))
     case _ =>
       true
   }
