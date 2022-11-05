@@ -19,8 +19,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     super.templStat(code)(dialect).resetAllOrigins
   override def blockStat(code: String)(implicit dialect: Dialect) =
     super.blockStat(code)(dialect).resetAllOrigins
-  override def caseClause(code: String)(implicit dialect: Dialect) =
-    super.caseClause(code)(dialect).resetAllOrigins
+  override def parseCase(code: String)(implicit dialect: Dialect) =
+    super.parseCase(code)(dialect).resetAllOrigins
   override def source(code: String)(implicit dialect: Dialect) =
     super.source(code)(dialect).resetAllOrigins
   implicit class XtensionResetOrigin[T <: Tree](tree: T) {

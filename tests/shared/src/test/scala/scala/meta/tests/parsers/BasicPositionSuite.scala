@@ -245,6 +245,17 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
 
   checkPositions[Stat](
+    """(a + (b + (c d)))""",
+    """|Type.ArgClause (a + @@(b + (c d)))
+       |Term.ArgClause (b + (c d))
+       |Term.ApplyInfix b + (c d)
+       |Type.ArgClause (a + (b + @@(c d)))
+       |Term.ArgClause (c d)
+       |Term.Select c d
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
     """(a (b (c d)))""",
     """|Term.ArgClause (b (c d))
        |Term.Apply b (c d)
@@ -257,6 +268,349 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """(((c d) b) a)""",
     """|Term.Select (c d) b
        |Term.Select c d
+       |""".stripMargin
+  )
+
+  checkPositions[Case](
+    """case foo => (a -> b)""",
+    """|Term.ApplyInfix a -> b
+       |Type.ArgClause case foo => (a -> @@b)
+       |""".stripMargin
+  )
+
+  checkPositions[Case](
+    """case foo => (a -> b) -> c""",
+    """|Term.ApplyInfix (a -> b) -> c
+       |Term.ApplyInfix a -> b
+       |Type.ArgClause case foo => (a -> @@b) -> c
+       |Type.ArgClause case foo => (a -> b) -> @@c
+       |""".stripMargin
+  )
+
+  checkPositions[Case](
+    """case foo => (a :+ b)""",
+    """|Term.ApplyInfix a :+ b
+       |Type.ArgClause case foo => (a :+ @@b)
+       |""".stripMargin
+  )
+
+  checkPositions[Case](
+    """case foo => (a :+ b) :+ c""",
+    """|Term.ApplyInfix (a :+ b) :+ c
+       |Term.ApplyInfix a :+ b
+       |Type.ArgClause case foo => (a :+ @@b) :+ c
+       |Type.ArgClause case foo => (a :+ b) :+ @@c
+       |""".stripMargin
+  )
+
+  checkPositions[Case](
+    """case foo => (a +: b)""",
+    """|Term.ApplyInfix a +: b
+       |Type.ArgClause case foo => (a +: @@b)
+       |""".stripMargin
+  )
+
+  checkPositions[Case](
+    """case foo => (a +: b) +: c""",
+    """|Term.ApplyInfix (a +: b) +: c
+       |Term.ApplyInfix a +: b
+       |Type.ArgClause case foo => (a +: @@b) +: c
+       |Type.ArgClause case foo => (a +: b) +: @@c
+       |""".stripMargin
+  )
+
+  checkPositions[Case](
+    """case foo => (a, b)""",
+    """|Term.Tuple (a, b)
+       |""".stripMargin
+  )
+
+  checkPositions[Case](
+    """case foo => (a, b).bar""",
+    """|Term.Select (a, b).bar
+       |Term.Tuple (a, b)
+       |""".stripMargin
+  )
+
+  checkPositions[Case](
+    """case foo => {(a -> b)}""",
+    """|Term.Block {(a -> b)}
+       |Term.ApplyInfix a -> b
+       |Type.ArgClause case foo => {(a -> @@b)}
+       |""".stripMargin
+  )
+
+  checkPositions[Case](
+    """case foo => {(a :+ b)}""",
+    """|Term.Block {(a :+ b)}
+       |Term.ApplyInfix a :+ b
+       |Type.ArgClause case foo => {(a :+ @@b)}
+       |""".stripMargin
+  )
+
+  checkPositions[Case](
+    """case foo => {(a +: b)}""",
+    """|Term.Block {(a +: b)}
+       |Term.ApplyInfix a +: b
+       |Type.ArgClause case foo => {(a +: @@b)}
+       |""".stripMargin
+  )
+
+  checkPositions[Case](
+    """case foo => {(a, b)}""",
+    """|Term.Block {(a, b)}
+       |Term.Tuple (a, b)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """val foo = (a -> b)""",
+    """|Term.ApplyInfix a -> b
+       |Type.ArgClause val foo = (a -> @@b)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """val foo = (a -> b) -> c""",
+    """|Term.ApplyInfix (a -> b) -> c
+       |Term.ApplyInfix a -> b
+       |Type.ArgClause val foo = (a -> @@b) -> c
+       |Type.ArgClause val foo = (a -> b) -> @@c
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """val foo = (a :+ b)""",
+    """|Term.ApplyInfix a :+ b
+       |Type.ArgClause val foo = (a :+ @@b)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """val foo = (a :+ b) :+ c""",
+    """|Term.ApplyInfix (a :+ b) :+ c
+       |Term.ApplyInfix a :+ b
+       |Type.ArgClause val foo = (a :+ @@b) :+ c
+       |Type.ArgClause val foo = (a :+ b) :+ @@c
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """val foo = (a +: b)""",
+    """|Term.ApplyInfix a +: b
+       |Type.ArgClause val foo = (a +: @@b)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """val foo = (a +: b) +: c""",
+    """|Term.ApplyInfix (a +: b) +: c
+       |Term.ApplyInfix a +: b
+       |Type.ArgClause val foo = (a +: @@b) +: c
+       |Type.ArgClause val foo = (a +: b) +: @@c
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """val foo = (a, b)""",
+    """|Term.Tuple (a, b)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """val foo = (a, b).bar""",
+    """|Term.Select (a, b).bar
+       |Term.Tuple (a, b)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """val foo = {(a -> b)}""",
+    """|Term.Block {(a -> b)}
+       |Term.ApplyInfix a -> b
+       |Type.ArgClause val foo = {(a -> @@b)}
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """val foo = {(a :+ b)}""",
+    """|Term.Block {(a :+ b)}
+       |Term.ApplyInfix a :+ b
+       |Type.ArgClause val foo = {(a :+ @@b)}
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """val foo = {(a +: b)}""",
+    """|Term.Block {(a +: b)}
+       |Term.ApplyInfix a +: b
+       |Type.ArgClause val foo = {(a +: @@b)}
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """val foo = {(a, b)}""",
+    """|Term.Block {(a, b)}
+       |Term.Tuple (a, b)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """type foo = (a -> b)""",
+    """|Type.ParamClause type foo @@= (a -> b)
+       |Type.ApplyInfix a -> b
+       |Type.Bounds type foo = @@(a -> b)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """type foo = (a -> b) -> c""",
+    """|Type.ParamClause type foo @@= (a -> b) -> c
+       |Type.ApplyInfix a -> b) -> c
+       |Type.ApplyInfix a -> b
+       |Type.Bounds type foo = @@(a -> b) -> c
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """type foo = (a :+ b)""",
+    """|Type.ParamClause type foo @@= (a :+ b)
+       |Type.ApplyInfix a :+ b
+       |Type.Bounds type foo = @@(a :+ b)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """type foo = (a :+ b) :+ c""",
+    """|Type.ParamClause type foo @@= (a :+ b) :+ c
+       |Type.ApplyInfix a :+ b) :+ c
+       |Type.ApplyInfix a :+ b
+       |Type.Bounds type foo = @@(a :+ b) :+ c
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """type foo = (a +: b)""",
+    """|Type.ParamClause type foo @@= (a +: b)
+       |Type.ApplyInfix a +: b
+       |Type.Bounds type foo = @@(a +: b)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """type foo = (a +: b) +: c""",
+    """|Type.ParamClause type foo @@= (a +: b) +: c
+       |Type.ApplyInfix a +: b) +: c
+       |Type.ApplyInfix a +: b
+       |Type.Bounds type foo = @@(a +: b) +: c
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """type foo = (a, b)""",
+    """|Type.ParamClause type foo @@= (a, b)
+       |Type.Tuple (a, b)
+       |Type.Bounds type foo = @@(a, b)
+       |""".stripMargin
+  )
+
+  //
+  checkPositions[Pat](
+    """foo @ (a -> b)""",
+    """|Pat.ExtractInfix (a -> b)
+       |""".stripMargin
+  )
+
+  checkPositions[Pat](
+    """foo @ (a -> b) -> c""",
+    """|Pat.ExtractInfix (a -> b) -> c
+       |Pat.ExtractInfix (a -> b)
+       |""".stripMargin
+  )
+
+  checkPositions[Pat](
+    """foo @ (a :+ b)""",
+    """|Pat.ExtractInfix (a :+ b)
+       |""".stripMargin
+  )
+
+  checkPositions[Pat](
+    """foo @ (a :+ b) :+ c""",
+    """|Pat.ExtractInfix (a :+ b) :+ c
+       |Pat.ExtractInfix (a :+ b)
+       |""".stripMargin
+  )
+
+  checkPositions[Pat](
+    """foo @ (a +: b)""",
+    """|Pat.ExtractInfix (a +: b)
+       |""".stripMargin
+  )
+
+  checkPositions[Pat](
+    """foo @ (a +: b) +: c""",
+    """|Pat.ExtractInfix (a +: b) +: c
+       |Pat.ExtractInfix (a +: b)
+       |""".stripMargin
+  )
+
+  checkPositions[Pat](
+    """foo @ (a, b)""",
+    """|Pat.Tuple (a, b)
+       |""".stripMargin
+  )
+
+  checkPositions[Pat](
+    """foo @ ((a) | (b))""",
+    """|Pat.Alternative ((a) | (b))
+       |Pat.Var (a)
+       |Pat.Var (b)
+       |""".stripMargin
+  )
+
+  checkPositions[Pat](
+    """foo @ ((a) | ((b) | (c)))""",
+    """|Pat.Alternative ((a) | ((b) | (c)))
+       |Pat.Var (a)
+       |Pat.Alternative ((b) | (c))
+       |Pat.Var (b)
+       |Pat.Var (c)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|object A {
+       |  (try foo finally bar)
+       |}
+       |""".stripMargin,
+    """|Template {
+       |  (try foo finally bar)
+       |}
+       |Self   @@(try foo finally bar)
+       |Term.Try try foo finally bar
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|val A = {
+       |  (try foo finally bar)
+       |}
+       |""".stripMargin,
+    """|Term.Block {
+       |  (try foo finally bar)
+       |}
+       |Term.Try try foo finally bar
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|for {
+       |  a <- (b)
+       |  c = (d)
+       |} yield c
+       |""".stripMargin,
+    """|Enumerator.Generator a <- (b)
+       |Enumerator.Val c = (d)
        |""".stripMargin
   )
 

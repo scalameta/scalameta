@@ -345,6 +345,13 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Term.Block { }
        |""".stripMargin
   )
+  checkPositions[Stat](
+    "try (f) catch { case x => (x); case y => y } finally { }",
+    """|Case case x => (x);
+       |Case case y => y
+       |Term.Block { }
+       |""".stripMargin
+  )
   checkPositions[Stat]("try ()")
   checkPositions[Stat](
     "try (true, false)",
@@ -766,4 +773,31 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |""".stripMargin
   )
 
+  checkPositions[Term](
+    "( (a.b), (( a.b(c) )) )",
+    """|Term.Select a.b
+       |Term.Apply a.b(c)
+       |Term.Select a.b
+       |Term.ArgClause (c)
+       |""".stripMargin
+  )
+
+  checkPositions[Term](
+    "( (a + b), (a match { case foo => foo }) )",
+    """|Term.ApplyInfix a + b
+       |Type.ArgClause ( (a + @@b), (a match { case foo => foo }) )
+       |Term.Match a match { case foo => foo }
+       |Case case foo => foo
+       |""".stripMargin
+  )
+
+  checkPositions[Term](
+    "{ ( (a + b), (a match { case foo => foo }) ) }",
+    """|Term.Tuple ( (a + b), (a match { case foo => foo }) )
+       |Term.ApplyInfix a + b
+       |Type.ArgClause { ( (a + @@b), (a match { case foo => foo }) ) }
+       |Term.Match a match { case foo => foo }
+       |Case case foo => foo
+       |""".stripMargin
+  )
 }

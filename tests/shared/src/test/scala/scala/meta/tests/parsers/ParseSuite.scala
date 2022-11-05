@@ -33,7 +33,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   def templStat(code: String)(implicit dialect: Dialect) =
     parseRule(code, p => p.statSeq(p.templateStat()).head)
   def blockStat(code: String)(implicit dialect: Dialect) = parseRule(code, _.blockStatSeq().head)
-  def caseClause(code: String)(implicit dialect: Dialect) = parseRule(code, _.caseClause())
+  def parseCase(code: String)(implicit dialect: Dialect) = code.applyRule(_.parseCase())
   def source(code: String)(implicit dialect: Dialect) = parseRule(code, _.source())
 
   def ammonite(code: String)(implicit dialect: Dialect) =

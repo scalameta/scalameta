@@ -1032,4 +1032,32 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
 
+  checkPositions[Stat](
+    """|val x: (C { type U = T } { type T = String }) # U
+       |""".stripMargin,
+    """|Type.Project (C { type U = T } { type T = String }) # U
+       |Type.Refine C { type U = T } { type T = String }
+       |Type.Refine C { type U = T }
+       |Defn.Type type U = T
+       |Type.ParamClause val x: (C { type U @@= T } { type T = String }) # U
+       |Type.Bounds val x: (C { type U = @@T } { type T = String }) # U
+       |Defn.Type type T = String
+       |Type.ParamClause val x: (C { type U = T } { type T @@= String }) # U
+       |Type.Bounds val x: (C { type U = T } { type T = @@String }) # U
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|type A = AnyRef with
+       |  type T>: Null
+       """.stripMargin,
+    """|Type.ParamClause type A @@= AnyRef with
+       |Type.Refine type T>: Null
+       |Decl.Type type T>: Null
+       |Type.ParamClause   type T@@>: Null
+       |Type.Bounds >: Null
+       |Type.Bounds type A = @@AnyRef with
+       |""".stripMargin
+  )
+
 }
