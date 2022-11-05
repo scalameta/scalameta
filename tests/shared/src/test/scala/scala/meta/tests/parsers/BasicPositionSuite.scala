@@ -152,4 +152,95 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     assert(last.text == "            // line 2")
   }
 
+  checkPositions[Stat](
+    """(((a +: b) +: c) +: d)""",
+    """|Term.ApplyInfix (a +: b) +: c
+       |Term.ApplyInfix a +: b
+       |Type.ArgClause (((a +: @@b) +: c) +: d)
+       |Type.ArgClause (((a +: b) +: @@c) +: d)
+       |Type.ArgClause (((a +: b) +: c) +: @@d)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """(((a :+ b) :+ c) :+ d)""",
+    """|Term.ApplyInfix (a :+ b) :+ c
+       |Term.ApplyInfix a :+ b
+       |Type.ArgClause (((a :+ @@b) :+ c) :+ d)
+       |Type.ArgClause (((a :+ b) :+ @@c) :+ d)
+       |Type.ArgClause (((a :+ b) :+ c) :+ @@d)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """(a +: (b +: (c +: d) +: b) +: a)""",
+    """|Type.ArgClause (a +: @@(b +: (c +: d) +: b) +: a)
+       |Term.ApplyInfix (b +: (c +: d) +: b) +: a
+       |Term.ApplyInfix b +: (c +: d) +: b
+       |Type.ArgClause (a +: (b +: @@(c +: d) +: b) +: a)
+       |Term.ApplyInfix (c +: d) +: b
+       |Term.ApplyInfix c +: d
+       |Type.ArgClause (a +: (b +: (c +: @@d) +: b) +: a)
+       |Type.ArgClause (a +: (b +: (c +: d) +: @@b) +: a)
+       |Type.ArgClause (a +: (b +: (c +: d) +: b) +: @@a)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """(a +: (b +: (c +: d)))""",
+    """|Type.ArgClause (a +: @@(b +: (c +: d)))
+       |Term.ApplyInfix b +: (c +: d)
+       |Type.ArgClause (a +: (b +: @@(c +: d)))
+       |Term.ApplyInfix c +: d
+       |Type.ArgClause (a +: (b +: (c +: @@d)))
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """(a :+ (b :+ (c :+ d)))""",
+    """|Type.ArgClause (a :+ @@(b :+ (c :+ d)))
+       |Term.ApplyInfix b :+ (c :+ d)
+       |Type.ArgClause (a :+ (b :+ @@(c :+ d)))
+       |Term.ApplyInfix c :+ d
+       |Type.ArgClause (a :+ (b :+ (c :+ @@d)))
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """(a :+ (b :+ (c :+ d) :+ b) :+ a)""",
+    """|Term.ApplyInfix a :+ (b :+ (c :+ d) :+ b)
+       |Type.ArgClause (a :+ @@(b :+ (c :+ d) :+ b) :+ a)
+       |Term.ApplyInfix b :+ (c :+ d) :+ b
+       |Term.ApplyInfix b :+ (c :+ d)
+       |Type.ArgClause (a :+ (b :+ @@(c :+ d) :+ b) :+ a)
+       |Term.ApplyInfix c :+ d
+       |Type.ArgClause (a :+ (b :+ (c :+ @@d) :+ b) :+ a)
+       |Type.ArgClause (a :+ (b :+ (c :+ d) :+ @@b) :+ a)
+       |Type.ArgClause (a :+ (b :+ (c :+ d) :+ b) :+ @@a)
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """(a (b (c d) b) a)""",
+    """|Term.Apply a (b (c d) b)
+       |Term.Select b (c d) b
+       |Term.Apply b (c d)
+       |Term.Select c d
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """(a (b (c d)))""",
+    """|Term.Apply b (c d)
+       |Term.Select c d
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """(((c d) b) a)""",
+    """|Term.Select (c d) b
+       |Term.Select c d
+       |""".stripMargin
+  )
+
 }
