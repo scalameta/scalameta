@@ -154,7 +154,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
 
   checkPositions[Stat](
     """(((a +: b) +: c) +: d)""",
-    """|Term.ApplyInfix a +: b) +: c
+    """|Term.ApplyInfix (a +: b) +: c
        |Term.ApplyInfix a +: b
        |Type.ArgClause (((a +: @@b) +: c) +: d)
        |Type.ArgClause (((a +: b) +: @@c) +: d)
@@ -164,7 +164,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
 
   checkPositions[Stat](
     """(((a :+ b) :+ c) :+ d)""",
-    """|Term.ApplyInfix a :+ b) :+ c
+    """|Term.ApplyInfix (a :+ b) :+ c
        |Term.ApplyInfix a :+ b
        |Type.ArgClause (((a :+ @@b) :+ c) :+ d)
        |Type.ArgClause (((a :+ b) :+ @@c) :+ d)
@@ -238,7 +238,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
 
   checkPositions[Stat](
     """(((c d) b) a)""",
-    """|Term.Select c d) b
+    """|Term.Select (c d) b
        |Term.Select c d
        |""".stripMargin
   )

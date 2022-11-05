@@ -2037,6 +2037,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     }
 
+    val startPos = auto.startTokenPos
+
     // Start the infix chain.
     // We'll use `a + b` as our running example.
     val rhs0 = prefixExpr(allowRepeated)
@@ -2051,7 +2053,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // base contains pending UnfinishedInfix parts and rhsN is the final rhs.
     // For our running example, this'll be List([a +]) and [b].
     // Afterwards, `lhsResult` will be List([a + b]).
-    val lhsResult = ctx.reduceStack(base, rhsN, in.prevTokenPos, None)
+    val endPos = auto.endTokenPos
+    val lhsResult = ctx.reduceStack(base, rhsN, endPos, None) match {
+      case `rhs0` => rhs0
+      case res => atPos(startPos, endPos)(res)
+    }
 
     maybeAnonymousFunctionUnlessPostfix(lhsResult)(location)
   }
