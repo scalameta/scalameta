@@ -1052,7 +1052,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  type T>: Null
        """.stripMargin,
     """|Type.ParamClause type A @@= AnyRef with
-       |Type.Refine type T>: Null
+       |Type.Refine AnyRef with
+       |  type T>: Null
        |Decl.Type type T>: Null
        |Type.ParamClause   type T@@>: Null
        |Type.Bounds >: Null

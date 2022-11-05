@@ -158,30 +158,37 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
   checkPositions[Stat](
     "(f)((((a))))",
-    """|Term.ArgClause ((((a))))
+    """|Term.Name (f)
+       |Term.ArgClause ((((a))))
+       |Term.Name (((a)))
        |""".stripMargin
   )
   checkPositions[Stat](
     "(f)((a))",
-    """|Term.ArgClause ((a))
+    """|Term.Name (f)
+       |Term.ArgClause ((a))
+       |Term.Name (a)
        |""".stripMargin
   )
   checkPositions[Stat](
     "(f)({ case a => a })",
-    """|Term.ArgClause ({ case a => a })
+    """|Term.Name (f)
+       |Term.ArgClause ({ case a => a })
        |Term.PartialFunction { case a => a }
        |Case case a => a
        |""".stripMargin
   )
   checkPositions[Stat](
     "(f)({ x })",
-    """|Term.ArgClause ({ x })
+    """|Term.Name (f)
+       |Term.ArgClause ({ x })
        |Term.Block { x }
        |""".stripMargin
   )
   checkPositions[Stat](
     "(a) op (b)",
-    """|Type.ArgClause (a) op @@(b)
+    """|Term.Name (a)
+       |Type.ArgClause (a) op @@(b)
        |Term.ArgClause (b)
        |""".stripMargin
   )
@@ -219,25 +226,34 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
   checkPositions[Stat](
     "(f) [A,B]",
-    """|Type.ArgClause [A,B]
+    """|Term.Name (f)
+       |Type.ArgClause [A,B]
        |""".stripMargin
   )
   checkPositions[Stat](
     "(f) [A]",
-    """|Type.ArgClause [A]
+    """|Term.Name (f)
+       |Type.ArgClause [A]
        |""".stripMargin
   )
   checkPositions[Stat](
     "- (a)"
   )
   checkPositions[Stat](
-    "(a): (A)"
+    "(a): (A)",
+    """|Type.Name (A)
+       |""".stripMargin
   )
   checkPositions[Stat](
-    "(a) = (b)"
+    "(a) = (b)",
+    """|Term.Name (b)
+       |""".stripMargin
   )
   checkPositions[Stat](
-    "{ (a); (b) }"
+    "{ (a); (b) }",
+    """|Term.Name (a)
+       |Term.Name (b)
+       |""".stripMargin
   )
   checkPositions[Stat](
     "do {d} while (p)",
@@ -245,30 +261,41 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |""".stripMargin
   )
   checkPositions[Stat](
-    "(f) _"
+    "(f) _",
+    """|Term.Name (f)
+       |""".stripMargin
   )
   checkPositions[Stat](
     "for { x <- xs } (f)",
     """|Enumerator.Generator x <- xs
+       |Term.Name (f)
        |""".stripMargin
   )
   checkPositions[Stat](
     "for { x <- xs } yield (f)",
     """|Enumerator.Generator x <- xs
+       |Term.Name (f)
        |""".stripMargin
   )
   checkPositions[Stat](
     "((a), (b)) => (a)",
-    """|Term.Param a
-       |Term.Param b
+    """|Term.Param (a)
+       |Term.Name (a)
+       |Term.Param (b)
+       |Term.Name (b)
+       |Term.Name (a)
        |""".stripMargin
   )
   checkPositions[Stat](
-    "if (p) (t) else (f)"
+    "if (p) (t) else (f)",
+    """|Term.Name (t)
+       |Term.Name (f)
+       |""".stripMargin
   )
   checkPositions[Stat](
     "if (p) (t)",
-    """|Lit.Unit if (p) (t)@@
+    """|Term.Name (t)
+       |Lit.Unit if (p) (t)@@
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -285,7 +312,9 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |""".stripMargin
   )
   checkPositions[Stat](
-    """ s"start ${(a)} end""""
+    """ s"start ${(a)} end"""",
+    """|Term.Name (a)
+       |""".stripMargin
   )
   checkPositions[Stat](
     "(a) match { case x => x }",
@@ -295,12 +324,14 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     "new (A)",
     """|Init (A)
+       |Type.Name (A)
        |""".stripMargin
   )
   checkPositions[Stat](
     "new (A){}",
     """|Template (A){}
        |Init (A)
+       |Type.Name (A)
        |Self new (A){@@}
        |""".stripMargin
   )
@@ -309,6 +340,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ParamClause def f@@(a: A = (da)): A
        |Term.ParamClause (a: A = (da))
        |Term.Param a: A = (da)
+       |Term.Name (da)
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -324,10 +356,14 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |""".stripMargin
   )
   checkPositions[Stat](
-    "return (a)"
+    "return (a)",
+    """|Term.Name (a)
+       |""".stripMargin
   )
   checkPositions[Stat](
-    "(a).b"
+    "(a).b",
+    """|Term.Name (a)
+       |""".stripMargin
   )
   checkPositions[Stat](
     "a.super[B].c",
@@ -336,18 +372,23 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
   checkPositions[Stat]("a.this")
   checkPositions[Stat](
-    "throw (e)"
+    "throw (e)",
+    """|Term.Name (e)
+       |""".stripMargin
   )
   checkPositions[Stat](
     "try (f) catch { case x => x; case y => y } finally { }",
-    """|Case case x => x;
+    """|Term.Name (f)
+       |Case case x => x;
        |Case case y => y
        |Term.Block { }
        |""".stripMargin
   )
   checkPositions[Stat](
     "try (f) catch { case x => (x); case y => y } finally { }",
-    """|Case case x => (x);
+    """|Term.Name (f)
+       |Case case x => (x);
+       |Term.Name (x)
        |Case case y => y
        |Term.Block { }
        |""".stripMargin
@@ -369,29 +410,36 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     "try (a.b).c",
     """|Term.Select (a.b).c
-       |Term.Select a.b
+       |Term.Select (a.b)
        |""".stripMargin
   )
   checkPositions[Stat](
     "try (f) catch (h) finally { }",
-    """|Term.Block { }
+    """|Term.Name (f)
+       |Term.Name (h)
+       |Term.Block { }
        |""".stripMargin
   )
   checkPositions[Stat](
     "try (true, false) catch (h) finally (1, 2)",
     """|Term.Tuple (true, false)
+       |Term.Name (h)
        |Term.Tuple (1, 2)
        |""".stripMargin
   )
   checkPositions[Stat](
     "try (a.b).c catch (h) finally (1, 2)",
     """|Term.Select (a.b).c
-       |Term.Select a.b
+       |Term.Select (a.b)
+       |Term.Name (h)
        |Term.Tuple (1, 2)
        |""".stripMargin
   )
   checkPositions[Stat](
-    "((a), (b))"
+    "((a), (b))",
+    """|Term.Name (a)
+       |Term.Name (b)
+       |""".stripMargin
   )
   checkPositions[Stat](
     "while (p) {d}",
@@ -522,7 +570,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     "@(a @b) def x = 1",
     """|Mod.Annot @(a @b)
        |Init (a @b)
-       |Type.Annotate a @b
+       |Type.Annotate (a @b)
        |Mod.Annot @b
        |Type.ParamClause @(a @b) def x @@= 1
        |""".stripMargin
@@ -531,7 +579,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     "@(a @b(1, 2)(3)) def x = 1",
     """|Mod.Annot @(a @b(1, 2)(3))
        |Init (a @b(1, 2)(3))
-       |Type.Annotate a @b(1, 2)(3)
+       |Type.Annotate (a @b(1, 2)(3))
        |Mod.Annot @b(1, 2)(3)
        |Init b(1, 2)(3)
        |Term.ArgClause (1, 2)
@@ -775,8 +823,8 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
 
   checkPositions[Term](
     "( (a.b), (( a.b(c) )) )",
-    """|Term.Select a.b
-       |Term.Apply a.b(c)
+    """|Term.Select (a.b)
+       |Term.Apply (( a.b(c) ))
        |Term.Select a.b
        |Term.ArgClause (c)
        |""".stripMargin
@@ -784,9 +832,9 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
 
   checkPositions[Term](
     "( (a + b), (a match { case foo => foo }) )",
-    """|Term.ApplyInfix a + b
+    """|Term.ApplyInfix (a + b)
        |Type.ArgClause ( (a + @@b), (a match { case foo => foo }) )
-       |Term.Match a match { case foo => foo }
+       |Term.Match (a match { case foo => foo })
        |Case case foo => foo
        |""".stripMargin
   )
@@ -794,9 +842,9 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Term](
     "{ ( (a + b), (a match { case foo => foo }) ) }",
     """|Term.Tuple ( (a + b), (a match { case foo => foo }) )
-       |Term.ApplyInfix a + b
+       |Term.ApplyInfix (a + b)
        |Type.ArgClause { ( (a + @@b), (a match { case foo => foo }) ) }
-       |Term.Match a match { case foo => foo }
+       |Term.Match (a match { case foo => foo })
        |Case case foo => foo
        |""".stripMargin
   )

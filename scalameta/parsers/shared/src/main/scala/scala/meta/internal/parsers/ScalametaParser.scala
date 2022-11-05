@@ -226,6 +226,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     accept[LeftParen]
     inParensAfterOpen(body)
   }
+  @inline final def inParensOr[T](body: => T)(alt: => T): T = {
+    accept[LeftParen]
+    inParensAfterOpenOr(body)(alt)
+  }
   @inline private def inParensOnOpen[T](body: => T): T = {
     next()
     inParensAfterOpen(body)
@@ -359,10 +363,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def atPosTry[T <: Tree](start: StartPos, end: EndPos)(body: => Try[T]): Try[T] = {
     val startTokenPos = start.startTokenPos
     body.map(atPos(startTokenPos, end))
-  }
-  def atPosTryOpt[T <: Tree](start: StartPos, end: EndPos)(body: => Try[T]): Try[T] = {
-    val startTokenPos = start.startTokenPos
-    body.map(atPosOpt(startTokenPos, end))
   }
 
   def autoPos[T <: Tree](body: => T): T = atPos(start = auto, end = auto)(body)
@@ -678,7 +678,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
    * context or not. Formerly, this was threaded through numerous methods as boolean isPattern.
    */
   trait PatternContextSensitive {
-    private def tupleInfixType(allowFunctionType: Boolean = true): Type = autoPosOpt {
+    private def tupleInfixType(allowFunctionType: Boolean = true): Type = autoPos {
       // NOTE: This is a really hardcore disambiguation caused by introduction of Type.Method.
       // We need to accept `(T, U) => W`, `(x: T): x.U` and also support unquoting.
       var hasParams = false
@@ -716,14 +716,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
 
       val openParenPos = in.tokenPos
-      accept[LeftParen]
-      val ts = if (!token.is[RightParen]) listBy[Type] { tsBuf =>
-        do {
-          tsBuf += paramOrType()
-        } while (acceptOpt[Comma] || token.is[Ellipsis])
-      }
-      else Nil
-      accept[RightParen]
+      val ts = inParensOr(commaSeparated(paramOrType()))(Nil)
       // NOTE: can't have this, because otherwise we run into #312
       // newLineOptWhenFollowedBy[LeftParen]
 
@@ -745,7 +738,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case _ =>
         }
         val tuple = makeTupleType(openParenPos, ts)
-        infixTypeRest(compoundTypeRest(annotTypeRest(simpleTypeRest(tuple, openParenPos))))
+        val compound = compoundTypeRest(
+          annotTypeRest(simpleTypeRest(tuple, openParenPos), openParenPos),
+          openParenPos
+        )
+        infixTypeRest(compound) match {
+          case `compound` => compound
+          case t => autoEndPos(openParenPos)(t)
+        }
       }
     }
 
@@ -891,7 +891,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val ctx = TypeInfixContext
       val base = ctx.stack
       @inline def reduce(rhs: ctx.Typ, op: Option[ctx.Op]): ctx.Typ =
-        ctx.reduceStack(base, rhs, rhs, op)
+        ctx.reduceStack(base, rhs, op)
       @tailrec
       def loop(rhs: ctx.Typ): ctx.Typ = token match {
         case Ident("*") if ahead(token match {
@@ -913,13 +913,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def compoundType(inMatchType: Boolean = false): Type = {
       if (token.is[LeftBrace])
         refinement(innerType = None)
-      else
-        compoundTypeRest(annotType(inMatchType = inMatchType))
+      else {
+        val startPos = auto.startTokenPos
+        compoundTypeRest(annotType(startPos, inMatchType = inMatchType), startPos)
+      }
     }
 
-    def compoundTypeRest(typ: Type): Type = {
-      val startPos = typ.startTokenPos
-
+    def compoundTypeRest(typ: Type, startPos: Int): Type = {
       @tailrec
       def gatherWithTypes(previousType: Type): Type = {
         if (acceptOpt[KwWith]) {
@@ -927,7 +927,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
            * refinements this way so stop looping.
            */
           if (token.is[Indentation.Indent]) {
-            autoPos(Type.Refine(Some(previousType), indented(refineStatSeq())))
+            autoEndPos(startPos)(Type.Refine(Some(previousType), indented(refineStatSeq())))
           } else {
             val rhs = annotType()
             val t = autoEndPos(startPos)(Type.With(previousType, rhs))
@@ -951,12 +951,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
     def annotType(inMatchType: Boolean = false): Type =
-      annotTypeRest(simpleType(inMatchType = inMatchType))
+      annotType(auto.startTokenPos, inMatchType = inMatchType)
 
-    def annotTypeRest(t: Type): Type = {
+    private def annotType(startPos: Int, inMatchType: Boolean): Type =
+      annotTypeRest(simpleType(inMatchType = inMatchType), startPos)
+
+    def annotTypeRest(t: Type, startPos: Int): Type = {
       val annots = ScalametaParser.this.annots(skipNewLines = false)
       if (annots.isEmpty) t
-      else autoEndPos(t)(Type.Annotate(t, annots))
+      else autoEndPos(startPos)(Type.Annotate(t, annots))
     }
 
     def simpleType(inMatchType: Boolean = false): Type = {
@@ -1024,7 +1027,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             Type.Singleton(ref)
           }
       }
-      simpleTypeRest(autoEndPosOpt(startPos)(res), startPos)
+      simpleTypeRest(autoEndPos(startPos)(res), startPos)
     }
 
     @tailrec
@@ -1382,7 +1385,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def typedOpt(): Option[Type] =
     if (acceptOpt[Colon]) {
       if (token.is[At] && ahead(token.is[Ident])) {
-        Some(outPattern.annotTypeRest(autoPos(Type.AnonymousName())))
+        val startPos = auto.startTokenPos
+        Some(outPattern.annotTypeRest(autoEndPos(startPos)(Type.AnonymousName()), startPos))
       } else {
         Some(typ())
       }
@@ -1394,12 +1398,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ----------- EXPRESSIONS ------------------------------------------------ */
 
-  def condExpr(): Term = {
-    accept[LeftParen]
-    val r = expr()
-    accept[RightParen]
-    r
-  }
+  def condExpr(): Term = inParens(expr())
 
   def expr(): Term = expr(location = NoStat, allowRepeated = false)
 
@@ -1516,7 +1515,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       accept[Ident]
       Mod.Inline()
     }
-    maybeAnonymousFunctionUnlessPostfix(autoPosOpt(token match {
+    maybeAnonymousFunctionUnlessPostfix(autoPos(token match {
       case soft.KwInline() if ahead(token.is[KwIf]) =>
         ifClause(List(inlineMod()))
       case InlineMatchMod() =>
@@ -1842,7 +1841,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def reduceStack(
         stack: List[UnfinishedInfix],
         curr: Typ,
-        currEnd: EndPos,
         op: Option[Op]
     ): Typ = {
       val opPrecedence = op.fold(0)(_.precedence)
@@ -1866,7 +1864,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           rhs
         } else {
           val lhs = pop()
-          val fin = finishInfixExpr(lhs, rhs, currEnd)
+          val fin = finishInfixExpr(lhs, rhs)
           loop(fin)
         }
       }
@@ -1878,7 +1876,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // then takes the right-hand side (which can have multiple args), e.g. ` (y, z)`,
     // and creates `x + (y, z)`.
     // We need to carry endPos explicitly because its extent may be bigger than rhs because of parent of whatnot.
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ): Typ
   }
 
   // Infix syntax in terms is borderline crazy.
@@ -1905,10 +1903,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     }
 
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ = {
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ): Typ = {
       val UnfinishedInfix(lhsExt, op, targs) = unf
       val lhs = lhsExt match {
-        case Term.Tuple(arg :: Nil) => arg
+        case Term.Tuple(arg :: Nil) => copyPos(lhsExt)(arg)
         case x => x
       }
 
@@ -1921,7 +1919,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case t: Term.Tuple => t.args
           case _ => rhs :: Nil
         }).reduceWith(Term.ArgClause(_)))
-        atPos(lhsExt, rhsEnd)(Term.ApplyInfix(lhs, op, targs, args))
+        atPos(lhsExt, rhs)(Term.ApplyInfix(lhs, op, targs, args))
       }
 
       op match {
@@ -1934,7 +1932,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
           rhs match {
             case Term.PartialFunction(cases) =>
-              atPos(lhsExt, rhsEnd)(Term.Match(lhs, cases))
+              atPos(lhsExt, rhs)(Term.Match(lhs, cases))
             case _ =>
               syntaxError("match statement requires cases", at = lhs.tokens.last.prev)
           }
@@ -1951,10 +1949,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     case class UnfinishedInfix(lhs: Typ, op: Op) extends Unfinished
 
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ = {
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ): Typ = {
       val UnfinishedInfix(lhsExt, op) = unf
       val lhs = lhsExt match {
-        case Pat.Tuple(arg :: Nil) => arg
+        case Pat.Tuple(arg :: Nil) => copyPos(lhsExt)(arg)
         case x => x
       }
       val args = rhs match {
@@ -1962,7 +1960,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case Pat.Tuple(args) => args
         case _ => rhs :: Nil
       }
-      atPos(lhsExt, rhsEnd)(Pat.ExtractInfix(lhs, op, args))
+      atPos(lhsExt, rhs)(Pat.ExtractInfix(lhs, op, args))
     }
   }
 
@@ -1972,9 +1970,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     case class UnfinishedInfix(lhs: Typ, op: Op) extends Unfinished
 
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ = {
+    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ): Typ = {
       val UnfinishedInfix(lhs, op) = unf
-      atPos(lhs, rhsEnd)(Type.ApplyInfix(lhs, op, rhs))
+      atPos(lhs, rhs)(Type.ApplyInfix(lhs, op, rhs))
     }
   }
 
@@ -1996,7 +1994,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // rhsStartK/rhsEndK may be bigger than then extent of rhsK,
     // so we really have to track them separately.
     @tailrec
-    def loop(rhsK: ctx.Typ): ctx.Typ = {
+    def loop(rhsBegK: Int, rhsK: ctx.Typ): ctx.Typ = {
       if (!token.is[Ident] && !token.is[Unquote] &&
         !(token.is[KwMatch] && dialect.allowMatchAsOperator)) {
         // Infix chain has ended.
@@ -2006,7 +2004,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       } else if (allowRepeated && isVarargStarParam()) {
         rhsK
       } else {
-        val rhsEndK: EndPos = in.prevTokenPos
+        val rhsKwithPos = autoEndPos(rhsBegK)(rhsK)
         // Infix chain continues.
         // In the running example, we're at `a [+] b`.
         val op = if (token.is[KwMatch]) {
@@ -2014,6 +2012,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         } else {
           termName() // op = [+]
         }
+        val lhsK = ctx.reduceStack(base, rhsKwithPos, Some(op))
         val targs = if (token.is[LeftBracket]) exprTypeArgs() else autoPos(Type.ArgClause(Nil))
 
         // Check whether we're still infix or already postfix by testing the current token.
@@ -2021,20 +2020,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         // If we were parsing `val c = a b`, then we'd be at `val c = a b[]` (postfix).
         if (isAfterOptNewLine[ExprIntro]) {
           // Infix chain continues, so we need to reduce the stack.
-          // In the running example, base = List(), rhsK = [a].
-          val lhsK = ctx.reduceStack(base, rhsK, rhsEndK, Some(op)) // lhsK = [a]
+          // In the running example, base = List(), rhsK = [a], lhsK = [a].
           // afterwards, ctx.stack = List([a +])
           ctx.push(ctx.UnfinishedInfix(lhsK, op, targs))
+          val rhsBegKplus1 = auto.startTokenPos
           val rhsKplus1 = argumentExprsOrPrefixExpr(PostfixStat)
           // Try to continue the infix chain.
-          loop(rhsKplus1) // base = List([a +]), rhsKplus1 = List([b])
+          loop(rhsBegKplus1, rhsKplus1) // base = List([a +]), rhsKplus1 = List([b])
         } else {
           // Infix chain has ended with a postfix expression.
           // This never happens in the running example.
-          val finQual = ctx.reduceStack(base, rhsK, rhsEndK, Some(op))
           if (targs.nonEmpty)
             syntaxError("type application is not allowed for postfix operators", at = token)
-          atPos(finQual, op)(Term.Select(finQual, op))
+          atPos(lhsK, op)(Term.Select(lhsK, op))
         }
       }
     }
@@ -2049,16 +2047,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // rhs0 is now [a]
     // If the next token is not an ident or an unquote, the infix chain ends immediately,
     // and `postfixExpr` becomes a fallthrough.
-    val rhsN = loop(rhs0)
+    val rhsN = loop(startPos, rhs0)
 
     // Infix chain has ended.
     // base contains pending UnfinishedInfix parts and rhsN is the final rhs.
     // For our running example, this'll be List([a +]) and [b].
     // Afterwards, `lhsResult` will be List([a + b]).
-    val endPos = auto.endTokenPos
-    val lhsResult = ctx.reduceStack(base, rhsN, endPos, None) match {
+    val lhsResult = ctx.reduceStack(base, rhsN, None) match {
       case `rhs0` => rhs0
-      case res => atPos(startPos, endPos)(res)
+      case res => autoEndPos(startPos)(res)
     }
 
     maybeAnonymousFunctionUnlessPostfix(lhsResult)(location)
@@ -2179,7 +2176,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   @tailrec
-  private def simpleExprRest(t: Term, canApply: Boolean, startPos: Int): Term = {
+  private def simpleExprRest(tree: Term, canApply: Boolean, startPos: Int): Term = {
+    val prevEndPos = auto.endTokenPos
+    @inline def t: Term = atPos(startPos, prevEndPos)(tree)
     @inline def addPos(body: Term): Term = autoEndPos(startPos)(body)
     if (canApply) {
       if (dialect.allowSignificantIndentation) {
@@ -2200,7 +2199,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           simpleExprRest(selector(t, startPos), canApply = true, startPos = startPos)
         }
       case LeftBracket() =>
-        t match {
+        tree match {
           case _: Quasi | _: Term.Name | _: Term.Select | _: Term.Apply | _: Term.ApplyInfix |
               _: Term.ApplyUnary | _: Term.New | _: Term.Placeholder | _: Term.ApplyUsing |
               _: Term.Interpolate =>
@@ -2209,7 +2208,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
             simpleExprRest(app, canApply = true, startPos = startPos)
           case _ =>
-            addPos(t)
+            t
         }
       case LeftParen() | LeftBrace() if canApply =>
         val arguments = addPos(Term.Apply(t, getArgClause()))
@@ -2255,7 +2254,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         next()
         addPos(Term.Eta(t))
       case _ =>
-        t
+        tree
     }
   }
 
@@ -2630,7 +2629,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val op =
           if (isIdentExcept("|") || token.is[Unquote]) Some(termName())
           else None
-        val lhs1 = ctx.reduceStack(base, rhs, rhs, op)
+        val lhs1 = ctx.reduceStack(base, rhs, op)
         op match {
           case Some(op) =>
             if (token.is[LeftBracket])
@@ -2761,6 +2760,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
    * initiated from non-pattern context.
    */
   def typ() = outPattern.typ()
+  def typeIndentedOpt() = outPattern.typeIndentedOpt()
   def quasiquoteType() = outPattern.quasiquoteType()
   def entrypointType() = outPattern.entrypointType()
   def startInfixType() = outPattern.infixType()
@@ -3020,10 +3020,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Type.ByName(typ())
         }
         if (isStar && dialect.allowByNameRepeatedParameters) {
-          autoPos {
-            next()
-            Type.Repeated(t)
-          }
+          next()
+          Type.Repeated(t)
         } else {
           t
         }
@@ -3031,10 +3029,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val t = typ()
         if (!isStar) t
         else {
-          autoPos {
-            next()
-            Type.Repeated(t)
-          }
+          next()
+          Type.Repeated(t)
         }
     })
 
@@ -3611,14 +3607,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val rhs = exprMaybeIndented()
       if (isMacro) Defn.Macro(mods, name, tparams, paramss, restype, rhs)
       else Defn.Def(mods, name, tparams, paramss, restype, rhs)
-    }
-  }
-
-  def typeIndentedOpt() = {
-    if (acceptOpt[Indentation.Indent]) {
-      indentedAfterOpen(typ())
-    } else {
-      typ()
     }
   }
 
