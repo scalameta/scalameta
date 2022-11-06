@@ -295,9 +295,12 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Lit.Symbol
       |scala.meta.Lit.Unit
       |scala.meta.Member
+      |scala.meta.Member.Apply
       |scala.meta.Member.ArgClause
+      |scala.meta.Member.Infix
       |scala.meta.Member.Param
       |scala.meta.Member.ParamClause
+      |scala.meta.Member.SyntaxValuesClause
       |scala.meta.Member.Term
       |scala.meta.Member.Tuple
       |scala.meta.Member.Type
@@ -353,7 +356,9 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Self
       |scala.meta.Source
       |scala.meta.Stat
+      |scala.meta.Stat.WithCtor
       |scala.meta.Stat.WithMods
+      |scala.meta.Stat.WithTemplate
       |scala.meta.Template
       |scala.meta.Term
       |scala.meta.Term.Annotate
@@ -403,6 +408,9 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Term.Tuple
       |scala.meta.Term.While
       |scala.meta.Term.Xml
+      |scala.meta.Tree.WithBody
+      |scala.meta.Tree.WithParamClauses
+      |scala.meta.Tree.WithTParamClause
       |scala.meta.Type
       |scala.meta.Type.And
       |scala.meta.Type.Annotate
