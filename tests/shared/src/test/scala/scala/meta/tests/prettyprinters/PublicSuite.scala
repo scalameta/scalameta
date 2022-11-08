@@ -94,7 +94,7 @@ class PublicSuite extends TreeSuiteBase {
   }
 
   test("scala.meta.dialects.Scala3.toString") {
-    assertNoDiff(scala.meta.dialects.Scala3.toString, "Scala32")
+    assertNoDiff(scala.meta.dialects.Scala3.toString, "Scala33")
   }
 
   test("scala.meta.dialects.Scala30.toString") {
@@ -107,6 +107,10 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.dialects.Scala32.toString") {
     assertNoDiff(scala.meta.dialects.Scala32.toString, "Scala32")
+  }
+
+  test("scala.meta.dialects.Scala33.toString") {
+    assertNoDiff(scala.meta.dialects.Scala33.toString, "Scala33")
   }
 
   test("scala.meta.dialects.Scala3Future.toString") {
