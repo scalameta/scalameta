@@ -4,8 +4,6 @@ import scala.meta._
 
 class FewerBracesSuite extends BaseDottySuite {
 
-  protected override implicit val dialect = dialects.Scala3.withAllowFewerBraces(true)
-
   test("simple") {
     runTestAssert[Stat](
       """|val firstLine = files.get(fileName).fold:
