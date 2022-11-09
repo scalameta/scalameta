@@ -673,6 +673,43 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkSyntax("class C(override implicit val x: Int, y: String)(implicit z: Boolean) extends T")
   }
 
+  test("class C(implicit override val x: Int, final implicit var y: String)") {
+    checkTree(
+      templStat("class C(implicit override val x: Int, final implicit var y: String)"),
+      "class C(implicit override val x: Int, final var y: String)"
+    ) {
+      Defn.Class(
+        Nil,
+        Type.Name("C"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          List(
+            Term.ParamClause(
+              List(
+                Term.Param(
+                  List(Mod.Implicit(), Mod.Override(), Mod.ValParam()),
+                  Term.Name("x"),
+                  Some(Type.Name("Int")),
+                  None
+                ),
+                Term.Param(
+                  List(Mod.Implicit(), Mod.Final(), Mod.Implicit(), Mod.VarParam()),
+                  Term.Name("y"),
+                  Some(Type.Name("String")),
+                  None
+                )
+              ),
+              Some(Mod.Implicit())
+            )
+          )
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    }
+  }
+
   test(
     "#1837 class C(private implicit val x: Int, implicit final val y: String, protected implicit var z: Boolean)"
   ) {
