@@ -689,13 +689,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             Term.ParamClause(
               List(
                 Term.Param(
-                  List(Mod.Implicit(), Mod.Override(), Mod.ValParam()),
+                  List(Mod.Override(), Mod.Implicit(), Mod.ValParam()),
                   Term.Name("x"),
                   Some(Type.Name("Int")),
                   None
                 ),
                 Term.Param(
-                  List(Mod.Implicit(), Mod.Final(), Mod.Implicit(), Mod.VarParam()),
+                  List(Mod.Final(), Mod.Implicit(), Mod.VarParam()),
                   Term.Name("y"),
                   Some(Type.Name("String")),
                   None

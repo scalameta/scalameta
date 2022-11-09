@@ -3045,7 +3045,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   ): Term.Param = autoPos {
     val mods = new ListBuffer[Mod]
     annotsBuf(mods, skipNewLines = false)
-    mod.foreach(mods += _)
     rejectMod[Mod.Open](mods, "Open modifier only applied to classes")
     if (ownerIsType) {
       modifiersBuf(mods, isParams = true)
@@ -3060,6 +3059,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (token.is[soft.KwInline] && tryAhead[Ident]) {
         mods += autoEndPos(StartPosPrev)(Mod.Inline())
       }
+    }
+    mod.foreach { mod =>
+      val clazz = mod.getClass
+      if (!mods.exists(_.getClass eq clazz)) mods += mod
     }
 
     val (isValParam, isVarParam) = (ownerIsType && token.is[KwVal], ownerIsType && token.is[KwVar])
