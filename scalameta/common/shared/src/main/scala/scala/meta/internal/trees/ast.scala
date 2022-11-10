@@ -73,6 +73,13 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           c.abort(cdef.pos, "@leaf classes must define a single parameter list")
         val params = rawparamss.head
 
+        // step 1a: identify modified fields of the class
+        val versionedParams = if (isQuasi) Nil else getVersionedParams(params, stats)
+        val paramsVersions = versionedParams.flatMap(_.getVersions).distinct.sorted(versionOrdering)
+        val replacedFields = versionedParams.flatMap(
+          _.replaced.map { case (version, field) => version -> field.oldDef }
+        )
+
         // step 2: validate the body of the class
 
         var needCopies = !isQuasi
@@ -87,8 +94,14 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           case x: ValOrDefDef =>
             if (x.mods.hasFlag(Flag.ABSTRACT) || x.rhs.isEmpty)
               c.abort(x.pos, "definition without a value")
-            if (x.mods.hasFlag(Flag.FINAL)) istats1 += x
-            else quasiExtraAbstractDefs += x
+            val p = replacedFields
+              .collectFirst { case (version, `x`) =>
+                val mods = x.mods.mapAnnotations(getDeprecatedAnno(version) :: _)
+                q"$mods def ${x.name}: ${x.tpt} = ${x.rhs}"
+              }
+              .getOrElse(x)
+            if (x.mods.hasFlag(Flag.FINAL)) istats1 += p
+            else quasiExtraAbstractDefs += p
           case q"checkFields($arg)" => checkFieldsBuilder += arg
           case x @ q"checkParent($what)" => checkParentsBuilder += x
           case x =>
@@ -104,10 +117,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         mstats1 ++= imports
         stats1 ++= imports
         stats1 ++= quasiExtraAbstractDefs
-
-        // step 3: identify modified fields of the class
-        val versionedParams = if (isQuasi) Nil else getVersionedParams(params, stats)
-        val paramsVersions = versionedParams.flatMap(_.getVersions).distinct.sorted(versionOrdering)
 
         // step 4: turn all parameters into vars, create getters and setters
         params.foreach { p =>
