@@ -157,37 +157,46 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |""".stripMargin
   )
   checkPositions[Stat](
-    "(f)((((a))))"
+    "(f)((((a))))",
+    """|Term.ArgClause ((((a))))
+       |""".stripMargin
   )
   checkPositions[Stat](
-    "(f)((a))"
+    "(f)((a))",
+    """|Term.ArgClause ((a))
+       |""".stripMargin
   )
   checkPositions[Stat](
     "(f)({ case a => a })",
-    """|Term.PartialFunction { case a => a }
+    """|Term.ArgClause ({ case a => a })
+       |Term.PartialFunction { case a => a }
        |Case case a => a
        |""".stripMargin
   )
   checkPositions[Stat](
     "(f)({ x })",
-    """|Term.Block { x }
+    """|Term.ArgClause ({ x })
+       |Term.Block { x }
        |""".stripMargin
   )
   checkPositions[Stat](
     "(a) op (b)",
     """|Type.ArgClause (a) op @@(b)
+       |Term.ArgClause (b)
        |""".stripMargin
   )
   checkPositions[Stat](
     "(a, b) op (c, d)",
     """|Term.Tuple (a, b)
        |Type.ArgClause (a, b) op @@(c, d)
+       |Term.ArgClause (c, d)
        |""".stripMargin
   )
   checkPositions[Stat](
     "(a, b) op ((c, d))",
     """|Term.Tuple (a, b)
        |Type.ArgClause (a, b) op @@((c, d))
+       |Term.ArgClause ((c, d))
        |Term.Tuple (c, d)
        |""".stripMargin
   )
@@ -199,11 +208,13 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     "a f ()",
     """|Type.ArgClause a f @@()
+       |Term.ArgClause ()
        |""".stripMargin
   )
   checkPositions[Stat](
     "a f (b)",
     """|Type.ArgClause a f @@(b)
+       |Term.ArgClause (b)
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -308,7 +319,8 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
   checkPositions[Stat](
     "f((x): _*)",
-    """|Term.Repeated (x): _*
+    """|Term.ArgClause ((x): _*)
+       |Term.Repeated (x): _*
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -456,6 +468,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Type.Singleton this
        |Term.This this
        |Name.Anonymous this
+       |Term.ArgClause ()
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -494,6 +507,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     "@a(1) def b = 1",
     """|Mod.Annot @a(1)
        |Init a(1)
+       |Term.ArgClause (1)
        |Type.ParamClause @a(1) def b @@= 1
        |""".stripMargin
   )
@@ -513,6 +527,8 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Type.Annotate a @b(1, 2)(3)
        |Mod.Annot @b(1, 2)(3)
        |Init b(1, 2)(3)
+       |Term.ArgClause (1, 2)
+       |Term.ArgClause (3)
        |Type.ParamClause @(a @b(1, 2)(3)) def x @@= 1
        |""".stripMargin
   )

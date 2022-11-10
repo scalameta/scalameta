@@ -24,7 +24,7 @@ class ReflectionSuite extends FunSuite {
     val sym = symbolOf[scala.meta.Tree]
     assert(sym.isRoot)
     val root = sym.asRoot
-    assertEquals((root.allBranches.length, root.allLeafs.length), (31, 375))
+    assertEquals((root.allBranches.length, root.allLeafs.length), (32, 378))
   }
 
   test("If") {
@@ -76,7 +76,6 @@ class ReflectionSuite extends FunSuite {
       |Byte
       |Char
       |Int
-      |List[List[scala.meta.Term]]
       |List[scala.meta.Case]
       |List[scala.meta.Enumerator]
       |List[scala.meta.Importee]
@@ -95,10 +94,12 @@ class ReflectionSuite extends FunSuite {
       |List[scala.meta.TypeCase]
       |List[scala.meta.Type]
       |Long
+      |Option[scala.meta.Mod.ArgsType]
       |Option[scala.meta.Mod.ParamsType]
       |Option[scala.meta.Mod.Variant]
       |Option[scala.meta.Term]
       |Option[scala.meta.Type]
+      |Seq[scala.meta.Term.ArgClause]
       |Seq[scala.meta.Term.ParamClause]
       |Short
       |String
@@ -112,6 +113,7 @@ class ReflectionSuite extends FunSuite {
       |scala.meta.Stat
       |scala.meta.Template
       |scala.meta.Term
+      |scala.meta.Term.ArgClause
       |scala.meta.Term.Name
       |scala.meta.Term.Ref
       |scala.meta.Type

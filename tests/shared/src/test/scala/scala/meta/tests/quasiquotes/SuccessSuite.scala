@@ -20,8 +20,8 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("rank-1 liftables") {
-    implicit def custom[U >: List[Term]]: Lift[List[Int], U] =
-      Lift(_.map(x => q"$x".asInstanceOf[Term]))
+    implicit def custom: Lift[List[Int], Term.ArgClause] =
+      Lift(lst => Term.ArgClause(lst.map(x => q"$x".asInstanceOf[Term])))
     assertTree(q"foo(..${List(1, 2, 3)})")(
       Term.Apply(Term.Name("foo"), List(Lit.Int(1), Lit.Int(2), Lit.Int(3)))
     )
@@ -295,7 +295,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(name)(Term.Name("method"))
     assertEquals(tpes.toString, "[T, U]")
     assertTree(tpes)(Type.ArgClause(List(Type.Name("T"), Type.Name("U"))))
-    assertEquals(exprs.toString, "List(1, b)")
+    assertEquals(exprs.toString, "(1, b)")
     assertTrees(exprs: _*)(Lit.Int(1), Term.Name("b"))
   }
 
@@ -406,8 +406,8 @@ class SuccessSuite extends TreeSuiteBase {
   test("q\"1 expr(...exprs) = expr\"") {
     val q"$expr1(...$exprs) = $expr2" = q"foo(a, b) = bar"
     assertTree(expr1)(Term.Name("foo"))
-    assertEquals(exprs.toString, "List(List(a, b))")
-    assertTrees(exprs(0): _*)(Term.Name("a"), Term.Name("b"))
+    assertEquals(exprs.map(_.toString), List("(a, b)"))
+    assertTrees(exprs: _*)(Term.ArgClause(List(Term.Name("a"), Term.Name("b"))))
     assertTree(expr2)(Term.Name("bar"))
   }
 
@@ -426,8 +426,8 @@ class SuccessSuite extends TreeSuiteBase {
   test("1 q\"expr(..exprs)(..exprs) = expr\"") {
     val q"$expr1(..$exprs1)(..$exprs2) = $expr2" = q"foo(a, b)(c) = bar"
     assertTree(expr1)(Term.Name("foo"))
-    assertEquals(exprs1.toString, "List(a, b)")
-    assertEquals(exprs2.toString, "List(c)")
+    assertEquals(exprs1.toString, "(a, b)")
+    assertEquals(exprs2.toString, "(c)")
     assertTrees(exprs1: _*)(Term.Name("a"), Term.Name("b"))
     assertTrees(exprs2: _*)(Term.Name("c"))
     assertTree(expr2)(Term.Name("bar"))
@@ -2203,9 +2203,11 @@ class SuccessSuite extends TreeSuiteBase {
     val init"$tpe(...$exprss)" = init"C(40)(2)"
     assertEquals(tpe.toString, "C")
     assertTree(tpe)(Type.Name("C"))
-    assertEquals(exprss.toString, "List(List(40), List(2))")
-    assertTrees(exprss(0): _*)(Lit.Int(40))
-    assertTrees(exprss(1): _*)(Lit.Int(2))
+    assertEquals(exprss.map(_.toString), List("(40)", "(2)"))
+    assertTrees(exprss: _*)(
+      Term.ArgClause(List(Lit.Int(40))),
+      Term.ArgClause(List(Lit.Int(2)))
+    )
   }
 
   test("2 init\"tpe(...exprss)\"") {
@@ -2218,9 +2220,11 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("1 init\"this(...exprss)\"") {
     val init"this(...$exprss)" = init"this(40)(2)"
-    assertEquals(exprss.toString, "List(List(40), List(2))")
-    assertTrees(exprss(0): _*)(Lit.Int(40))
-    assertTrees(exprss(1): _*)(Lit.Int(2))
+    assertEquals(exprss.map(_.toString), List("(40)", "(2)"))
+    assertTrees(exprss: _*)(
+      Term.ArgClause(List(Lit.Int(40))),
+      Term.ArgClause(List(Lit.Int(2)))
+    )
   }
 
   test("2 init\"this(...exprss)\"") {

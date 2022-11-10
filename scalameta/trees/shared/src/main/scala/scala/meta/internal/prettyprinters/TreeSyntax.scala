@@ -356,29 +356,27 @@ object TreeSyntax {
         val parts = t.parts.map { case Lit(part: String) => part }
         val zipped = parts.zip(t.args).map { case (part, arg) => s(part, "{", p(Expr, arg), "}") }
         m(SimpleExpr1, s(r(zipped), parts.last))
-      case t: Term.Apply => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), t.args))
+
+      case t: Term.ArgClause => s("(", o(t.mod, " "), r(t.values, ", "), ")")
+      case t: Term.Apply =>
+        m(SimpleExpr1, s(p(SimpleExpr1, t.fun), printApplyArgs(t.argClause, " ")))
       case t: Term.ApplyUsing =>
         val args = s("(", kw("using"), " ", r(t.args, ", "), ")")
         m(SimpleExpr1, s(p(SimpleExpr1, t.fun), args))
       case t: Term.ApplyType => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targClause))
       case t: Term.ApplyInfix =>
-        val args = t.args match {
-          case (Lit.Unit()) :: Nil =>
-            s("(())")
-          case (arg: Term) :: Nil =>
-            def needsParens: Boolean = arg match {
-              case _: Term.AnonymousFunction => true
-              case _: Lit | _: Term.Ref | _: Term.Function | _: Term.If | _: Term.Match |
-                  _: Term.ApplyInfix | _: Term.QuotedMacroExpr | _: Term.SplicedMacroExpr |
-                  _: Term.SplicedMacroPat | _: Term.Apply | _: Term.Placeholder =>
-                false
-              case _ =>
-                true
-            }
-
-            if (needsParens) s("(", arg, ")")
-            else s(p(InfixExpr(t.op.value), arg, right = true))
-          case args => s(args)
+        val args = t.argClause.values match {
+          case (arg: Term) :: Nil if (arg match {
+                case _: Term.AnonymousFunction | _: Lit.Unit => false
+                case _: Lit | _: Term.Ref | _: Term.Function | _: Term.If | _: Term.Match |
+                    _: Term.ApplyInfix | _: Term.QuotedMacroExpr | _: Term.SplicedMacroExpr |
+                    _: Term.SplicedMacroPat | _: Term.Apply | _: Term.Placeholder =>
+                  true
+                case _ =>
+                  false
+              }) =>
+            p(InfixExpr(t.op.value), arg, right = true)
+          case _ => printApplyArgs(t.argClause, "")
         }
 
         m(
@@ -955,7 +953,7 @@ object TreeSyntax {
       case t: Init =>
         s(
           if (t.tpe.is[Type.Singleton]) kw("this") else p(RefineTyp, t.tpe),
-          r(t.argss.map(x => s("(", r(x, ", "), ")")))
+          t.argClauses
         )
 
       // Self
@@ -964,7 +962,6 @@ object TreeSyntax {
       // Template
       case t: Template =>
         val isSelfEmpty = t.self.name.is[Name.Anonymous] && t.self.decltpe.isEmpty
-        val isBodyEmpty = isSelfEmpty && t.stats.isEmpty
         val useExtends = (t.inits.nonEmpty || t.early.nonEmpty) &&
           t.parent.exists(p => p.isNot[Defn.Given] && p.isNot[Term.NewAnonymous])
         val extendsKeyword = if (useExtends) "extends" else ""
@@ -972,13 +969,14 @@ object TreeSyntax {
         val pparents = r(t.inits, " with ")
         val derived = r(t.derives, "derives ", ", ", "")
         val isGiven = t.parent.exists(_.is[Defn.Given])
-        def needsAdditionalBraces = t.inits.size == 1 && t.inits.head.argss == Nil
         val withGiven =
           if (!isGiven) ""
-          else if (isBodyEmpty) {
+          else if (isSelfEmpty && t.stats.isEmpty) {
             // this could be just `()`, but it changes the tree
-            if (needsAdditionalBraces) "with {}"
-            else ""
+            t.inits match {
+              case init :: Nil if init.argClauses.isEmpty => "with {}"
+              case _ => ""
+            }
           } else "with"
         val pbody = {
           val isOneLiner =
@@ -996,7 +994,7 @@ object TreeSyntax {
         r(" ")(extendsKeyword, pearly, pparents, derived, withGiven, pbody)
 
       // Mod
-      case Mod.Annot(init) => s(kw("@"), p(SimpleTyp, init.tpe), init.argss)
+      case Mod.Annot(init) => s(kw("@"), p(SimpleTyp, init.tpe), init.argClauses)
       case Mod.Private(Name.Anonymous()) => s(kw("private"))
       case Mod.Private(within) => s(kw("private"), kw("["), within, kw("]"))
       case Mod.Protected(Name.Anonymous()) => s(kw("protected"))
@@ -1105,14 +1103,15 @@ object TreeSyntax {
     }
 
     // Multiples and optionals
-    implicit def syntaxArgs: Syntax[Seq[Term]] = Syntax {
-      case Seq(b: Term.Block) => s(" ", b)
-      case Seq(f @ Term.Function(params, _))
-          if params.exists(_.mods.exists(m => m.is[Mod.Implicit] || m.is[Mod.Using])) =>
-        s(" { ", f, " }")
-      case args => s("(", r(args, ", "), ")")
-    }
-    implicit def syntaxArgss: Syntax[Seq[Seq[Term]]] = Syntax {
+    private def printApplyArgs(args: Term.ArgClause, beforeBrace: String): Show.Result =
+      args.values match {
+        case Seq(b: Term.Block) => s(beforeBrace, b)
+        case Seq(f @ Term.Function(params, _))
+            if params.exists(_.mods.exists(_.is[Mod.ParamsType])) =>
+          s(beforeBrace, "{ ", f, " }")
+        case _ => s(args)
+      }
+    implicit def syntaxArgss: Syntax[Seq[Term.ArgClause]] = Syntax {
       r(_)
     }
     implicit def syntaxTargs: Syntax[Seq[Type]] = Syntax {

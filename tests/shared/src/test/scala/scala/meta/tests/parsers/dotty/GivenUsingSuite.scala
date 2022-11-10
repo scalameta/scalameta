@@ -946,9 +946,12 @@ class GivenUsingSuite extends BaseDottySuite {
         Nil,
         List(Pat.Var(tname("a"))),
         None,
-        Term.ApplyUsing(
-          Term.ApplyUsing(Term.Apply(tname("f"), Nil), List(tname("a"))),
-          List(int(3), Lit.Boolean(true))
+        Term.Apply(
+          Term.Apply(
+            Term.Apply(tname("f"), Nil),
+            Term.ArgClause(List(tname("a")), Some(Mod.Using()))
+          ),
+          Term.ArgClause(List(int(3), Lit.Boolean(true)), Some(Mod.Using()))
         )
       )
     )

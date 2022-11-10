@@ -103,9 +103,9 @@ class ErrorSuite extends FunSuite {
       """
       |<macro>:6: type mismatch when unquoting;
       | found   : List[Dummy]
-      | required: List[scala.meta.Term]
+      | required: scala.meta.Term.ArgClause
       |      q"foo(..$xs)"
-      |              ^
+      |           ^
     """.trim.stripMargin.replace("\r", "")
     )
   }
@@ -772,12 +772,12 @@ class ErrorSuite extends FunSuite {
     """).replace("\r", ""),
       """
       |<macro>:5: rank mismatch when unquoting;
-      | found   : ...$
-      | required: $ or ..$
+      | found   : ..$
+      | required: $
       |Note that you can extract a list into an unquote when pattern matching,
       |it just cannot follow another list either directly or indirectly.
       |        case q"$_(...$argss)(...$_)" =>
-      |                             ^
+      |                            ^
     """.trim.stripMargin
     )
   }
@@ -793,12 +793,12 @@ class ErrorSuite extends FunSuite {
     """).replace("\r", ""),
       """
       |<macro>:5: rank mismatch when unquoting;
-      | found   : ...$
-      | required: $ or ..$
+      | found   : ..$
+      | required: $
       |Note that you can extract a list into an unquote when pattern matching,
       |it just cannot follow another list either directly or indirectly.
       |        case q"$_(...$argss)(foo)(...$_)" =>
-      |                                  ^
+      |                                 ^
     """.trim.stripMargin
     )
   }

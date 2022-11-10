@@ -304,6 +304,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Mod
       |scala.meta.Mod.Abstract
       |scala.meta.Mod.Annot
+      |scala.meta.Mod.ArgsType
       |scala.meta.Mod.Case
       |scala.meta.Mod.Contravariant
       |scala.meta.Mod.Covariant
@@ -362,6 +363,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Term.ApplyType
       |scala.meta.Term.ApplyUnary
       |scala.meta.Term.ApplyUsing
+      |scala.meta.Term.ArgClause
       |scala.meta.Term.Ascribe
       |scala.meta.Term.Assign
       |scala.meta.Term.Block

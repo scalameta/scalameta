@@ -36,30 +36,35 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Term](
     "a f (b)",
     """|Type.ArgClause a f @@(b)
+       |Term.ArgClause (b)
        |""".stripMargin
   )
 
   checkPositions[Term](
     "a f (123)",
     """|Type.ArgClause a f @@(123)
+       |Term.ArgClause (123)
        |""".stripMargin
   )
 
   checkPositions[Term](
     "a f ()",
     """|Type.ArgClause a f @@()
+       |Term.ArgClause ()
        |""".stripMargin
   )
 
   checkPositions[Term](
     "a f (())",
     """|Type.ArgClause a f @@(())
+       |Term.ArgClause (())
        |""".stripMargin
   )
 
   checkPositions[Term](
     "a f ((1, 2, 3))",
     """|Type.ArgClause a f @@((1, 2, 3))
+       |Term.ArgClause ((1, 2, 3))
        |Term.Tuple (1, 2, 3)
        |""".stripMargin
   )
@@ -75,6 +80,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     "a f (())(b)",
     """|Type.ArgClause a f @@(())(b)
        |Term.Apply (())(b)
+       |Term.ArgClause (b)
        |""".stripMargin
   )
 
@@ -111,6 +117,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Term.Select (a + b).c
        |Term.ApplyInfix a + b
        |Type.ArgClause foo == (a + @@b).c(d)
+       |Term.ArgClause (d)
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -189,8 +196,10 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     """(a +: (b +: (c +: d)))""",
     """|Type.ArgClause (a +: @@(b +: (c +: d)))
+       |Term.ArgClause (b +: (c +: d))
        |Term.ApplyInfix b +: (c +: d)
        |Type.ArgClause (a +: (b +: @@(c +: d)))
+       |Term.ArgClause (c +: d)
        |Term.ApplyInfix c +: d
        |Type.ArgClause (a +: (b +: (c +: @@d)))
        |""".stripMargin
@@ -199,8 +208,10 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     """(a :+ (b :+ (c :+ d)))""",
     """|Type.ArgClause (a :+ @@(b :+ (c :+ d)))
+       |Term.ArgClause (b :+ (c :+ d))
        |Term.ApplyInfix b :+ (c :+ d)
        |Type.ArgClause (a :+ (b :+ @@(c :+ d)))
+       |Term.ArgClause (c :+ d)
        |Term.ApplyInfix c :+ d
        |Type.ArgClause (a :+ (b :+ (c :+ @@d)))
        |""".stripMargin
@@ -210,9 +221,11 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """(a :+ (b :+ (c :+ d) :+ b) :+ a)""",
     """|Term.ApplyInfix a :+ (b :+ (c :+ d) :+ b)
        |Type.ArgClause (a :+ @@(b :+ (c :+ d) :+ b) :+ a)
+       |Term.ArgClause (b :+ (c :+ d) :+ b)
        |Term.ApplyInfix b :+ (c :+ d) :+ b
        |Term.ApplyInfix b :+ (c :+ d)
        |Type.ArgClause (a :+ (b :+ @@(c :+ d) :+ b) :+ a)
+       |Term.ArgClause (c :+ d)
        |Term.ApplyInfix c :+ d
        |Type.ArgClause (a :+ (b :+ (c :+ @@d) :+ b) :+ a)
        |Type.ArgClause (a :+ (b :+ (c :+ d) :+ @@b) :+ a)
@@ -223,15 +236,19 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     """(a (b (c d) b) a)""",
     """|Term.Apply a (b (c d) b)
+       |Term.ArgClause (b (c d) b)
        |Term.Select b (c d) b
        |Term.Apply b (c d)
+       |Term.ArgClause (c d)
        |Term.Select c d
        |""".stripMargin
   )
 
   checkPositions[Stat](
     """(a (b (c d)))""",
-    """|Term.Apply b (c d)
+    """|Term.ArgClause (b (c d))
+       |Term.Apply b (c d)
+       |Term.ArgClause (c d)
        |Term.Select c d
        |""".stripMargin
   )
