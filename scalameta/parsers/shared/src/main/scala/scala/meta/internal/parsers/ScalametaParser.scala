@@ -629,29 +629,42 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @inline final def commaSeparated[T <: Tree: AstInfo](part: => T): List[T] =
     tokenSeparated[Comma, T](sepFirst = false, part)
 
-  private def makeTuple[T <: Tree](lpPos: Int, body: List[T], zero: => T, tuple: List[T] => T): T =
-    body match {
-      case Nil => autoEndPos(lpPos)(zero)
-      case only :: Nil =>
-        only match {
-          case q: Quasi if q.rank == 1 => copyPos(q)(tuple(body))
-          case _ => only
-        }
-      case _ => autoEndPos(lpPos)(tuple(body))
-    }
-
-  def makeTupleTerm(lpPos: Int, body: List[Term]): Term = {
-    makeTuple(lpPos, body, Lit.Unit(), Term.Tuple.apply)
+  private def makeTuple[A <: Tree](lpPos: Int, body: List[A], zero: => A, tuple: List[A] => A)(
+      single: A => Either[List[A], A]
+  ): A = body match {
+    case Nil => autoEndPos(lpPos)(zero)
+    case (q: Quasi) :: Nil if q.rank == 1 => copyPos(q)(tuple(body))
+    case t :: Nil =>
+      single(t) match {
+        case Right(x) => x
+        case Left(x) => autoEndPos(lpPos)(tuple(x))
+      }
+    case _ => autoEndPos(lpPos)(tuple(body))
   }
 
-  def makeTupleType(lpPos: Int, body: List[Type]): Type = {
-    val args = body match {
-      case singleArg :: Nil => maybeAnonymousLambda(singleArg) :: Nil
-      case _ => body
+  private def makeTupleTerm(
+      single: Term => Either[List[Term], Term]
+  )(lpPos: Int, body: List[Term]): Term = {
+    makeTuple(lpPos, body, Lit.Unit(), Term.Tuple.apply)(single)
+  }
+
+  private def makeTupleTerm(lpPos: Int, body: List[Term]): Term = {
+    makeTupleTerm(Right(_))(lpPos, body)
+  }
+
+  private def makeTupleType(lpPos: Int, body: List[Type], zero: => Type, wrap: Boolean): Type = {
+    makeTuple(lpPos, body, zero, Type.Tuple.apply) {
+      maybeAnonymousLambda(_) match {
+        case t: Type.Tuple if wrap && t.args.lengthCompare(1) > 0 => Left(t :: Nil)
+        case t => Right(t)
+      }
     }
+  }
+
+  private def makeTupleType(lpPos: Int, body: List[Type]): Type = {
     def invalidLiteralUnitType =
       syntaxError("illegal literal type (), use Unit instead", at = token.pos)
-    makeTuple(lpPos, args, invalidLiteralUnitType, Type.Tuple.apply)
+    makeTupleType(lpPos, body, invalidLiteralUnitType, wrap = false)
   }
 
   private def inParensOrTupleOrUnitExpr(allowRepeated: Boolean): Term = {
@@ -659,16 +672,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val maybeTupleArgs = inParensOnOpenOr(
       commaSeparated(expr(location = PostfixStat, allowRepeated = allowRepeated))
     )(Nil)
-    maybeTupleArgs match {
-      case singleArg :: Nil =>
-        makeTupleTerm(lpPos, maybeAnonymousFunction(singleArg) :: Nil)
-      case multipleArgs =>
-        val repeatedArgs = multipleArgs.collect { case repeated: Term.Repeated => repeated }
-        repeatedArgs.foreach(arg =>
-          syntaxError("repeated argument not allowed here", at = arg.tokens.last.prev)
-        )
-        makeTupleTerm(lpPos, multipleArgs)
+    if (maybeTupleArgs.lengthCompare(1) > 0) maybeTupleArgs.foreach {
+      case arg: Term.Repeated =>
+        syntaxError("repeated argument not allowed here", at = arg.tokens.last.prev)
+      case _ =>
     }
+    makeTupleTerm(x => Right(maybeAnonymousFunction(x)))(lpPos, maybeTupleArgs)
   }
 
   /* -------- IDENTIFIERS AND LITERALS ------------------------------------------- */
@@ -2317,12 +2326,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           findRep(args).foreach(x => syntaxError("repeated argument not allowed here", at = x))
           simpleExprRest(makeTupleTerm(lpPos, args), canApply = true, startPos = lpPos)
         case _ =>
-          args match {
-            case arg :: Nil =>
-              val res = maybeAnonymousFunction(arg)
-              if (isBrace) res else autoEndPos(lpPos)(Term.Tuple(res :: Nil))
-            case _ => makeTupleTerm(lpPos, args)
-          }
+          makeTupleTerm { arg =>
+            val res = maybeAnonymousFunction(arg)
+            if (isBrace) Right(res) else Left(res :: Nil)
+          }(lpPos, args)
       }
     }
   }
@@ -2724,10 +2731,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _: LeftParen =>
           val lpPos = auto.startTokenPos
           val patterns = inParensOnOpenOr(noSeq.patterns())(Nil)
-          val tuple = makeTuple(lpPos, patterns, Lit.Unit(), Pat.Tuple.apply)
-          patterns match {
-            case x :: Nil if isRhs && !x.is[Quasi] => Pat.Tuple(tuple :: Nil)
-            case _ => tuple
+          makeTuple(lpPos, patterns, Lit.Unit(), Pat.Tuple.apply) {
+            case t if !isRhs => Right(t)
+            case t @ Pat.Tuple(_ :: Nil) => Right(t)
+            case t => Left(t :: Nil)
           }
         case _: MacroQuote =>
           QuotedPatternContext.within {
