@@ -1444,11 +1444,28 @@ class TermSuite extends ParseSuite {
                   |  }: qux
                   |}
                   |""".stripMargin
-    interceptMessage[ParseException](
-      """|<input>:5: error: ; expected but : found
-         |    }: qux
-         |     ^""".stripMargin
-    )(term(code))
+    checkTerm(code) {
+      Term.Apply(
+        Term.Name("foo"),
+        Term.ArgClause(
+          Term.Block(
+            Term.Function(
+              List(Term.Param(List(Mod.Implicit()), Term.Name("a"), None, None)),
+              Term.Function(
+                List(Term.Param(List(Mod.Implicit()), Term.Name("b"), None, None)),
+                Term.Ascribe(
+                  Term.PartialFunction(
+                    List(Case(Pat.Var(Term.Name("bar")), None, Term.Name("baz")))
+                  ),
+                  Type.Name("qux")
+                )
+              )
+            ) :: Nil
+          ) :: Nil,
+          None
+        )
+      )
+    }
   }
 
 }
