@@ -1437,4 +1437,18 @@ class TermSuite extends ParseSuite {
     }
   }
 
+  test("implicit closure with ascribe") {
+    val code = """|foo {
+                  |  implicit a => implicit b => {
+                  |    case bar => baz
+                  |  }: qux
+                  |}
+                  |""".stripMargin
+    interceptMessage[ParseException](
+      """|<input>:5: error: ; expected but : found
+         |    }: qux
+         |     ^""".stripMargin
+    )(term(code))
+  }
+
 }

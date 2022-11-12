@@ -174,6 +174,15 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |""".stripMargin
   )
   checkPositions[Stat](
+    "foo { implicit a => { b }: C }",
+    """|Term.Block { implicit a => { b }: C }
+       |Term.Function implicit a => { b }: C
+       |Term.Param implicit a
+       |Term.Ascribe { b }: C
+       |Term.Block { b }
+       |""".stripMargin
+  )
+  checkPositions[Stat](
     "(f)({ x })",
     """|Term.ArgClause ({ x })
        |Term.Block { x }
