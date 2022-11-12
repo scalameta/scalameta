@@ -73,9 +73,21 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |""".stripMargin
   )
   checkPositions[Type]("K Map V")
-  checkPositions[Type]("() => B")
-  checkPositions[Type]("A => B")
-  checkPositions[Type]("(A, B) => C")
+  checkPositions[Type](
+    "() => B",
+    """|Type.FuncParamClause ()
+       |""".stripMargin
+  )
+  checkPositions[Type](
+    "A => B",
+    """|Type.FuncParamClause A
+       |""".stripMargin
+  )
+  checkPositions[Type](
+    "(A, B) => C",
+    """|Type.FuncParamClause (A, B)
+       |""".stripMargin
+  )
   checkPositions[Type]("(A, B)")
   checkPositions[Type]("A with B")
   checkPositions[Type]("A & B")

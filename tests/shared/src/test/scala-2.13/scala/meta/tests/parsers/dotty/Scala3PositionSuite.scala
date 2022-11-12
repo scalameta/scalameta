@@ -270,6 +270,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     "val extractor: (e: Entry, f: Other) => e.Key = extractKey",
     """|Type.Function (e: Entry, f: Other) => e.Key
+       |Type.FuncParamClause (e: Entry, f: Other)
        |Type.TypedParam e: Entry
        |Type.TypedParam f: Other
        |Type.Select e.Key
@@ -283,6 +284,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.ParamClause type F0 = [T@@] => List[T] ?=> Option[T]
        |Type.Bounds type F0 = [T@@] => List[T] ?=> Option[T]
        |Type.ContextFunction List[T] ?=> Option[T]
+       |Type.FuncParamClause List[T]
        |Type.Apply List[T]
        |Type.ArgClause [T]
        |Type.Apply Option[T]
@@ -639,6 +641,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |}
        |""".stripMargin,
     """|Type.Function Int => Int
+       |Type.FuncParamClause Int
        |Term.Function (x: Int) => {
        |  x * x
        |}

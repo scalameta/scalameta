@@ -729,14 +729,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
 
       val openParenPos = in.tokenPos
-      accept[LeftParen]
-      val ts = if (!token.is[RightParen]) listBy[Type] { tsBuf =>
-        do {
-          tsBuf += paramOrType()
-        } while (acceptOpt[Comma] || token.is[Ellipsis])
-      }
-      else Nil
-      accept[RightParen]
+      val ts = inParensOr(commaSeparated(paramOrType()))(Nil)
       // NOTE: can't have this, because otherwise we run into #312
       // newLineOptWhenFollowedBy[LeftParen]
 
@@ -747,10 +740,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         syntaxError(message, at = token)
       }
 
-      if (allowFunctionType && acceptOpt[RightArrow]) {
-        Type.Function(ts, typeIndentedOpt())
-      } else if (allowFunctionType && acceptOpt[ContextArrow]) {
-        Type.ContextFunction(ts, typeIndentedOpt())
+      def funcParams = autoEndPos(openParenPos)(ts.reduceWith(Type.FuncParamClause.apply))
+      if (allowFunctionType && token.is[RightArrow]) {
+        Type.Function(funcParams, { next(); typeIndentedOpt() })
+      } else if (allowFunctionType && token.is[ContextArrow]) {
+        Type.ContextFunction(funcParams, { next(); typeIndentedOpt() })
       } else {
         ts.foreach {
           case t: Type.ByName => syntaxError("by name type not allowed here", at = t)
@@ -787,15 +781,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
     def typ(): Type = autoPosOpt {
+      val startPos = auto.startTokenPos
       val t: Type =
         if (token.is[LeftBracket] && dialect.allowTypeLambdas) typeLambdaOrPoly()
         else infixTypeOrTuple()
 
+      def funcParams = autoEndPos(startPos)((t :: Nil).reduceWith(Type.FuncParamClause.apply))
       token match {
-        case RightArrow() => next(); Type.Function(List(t), typeIndentedOpt())
-        case ContextArrow() => next(); Type.ContextFunction(List(t), typeIndentedOpt())
-        case KwForsome() => next(); Type.Existential(t, existentialStats())
-        case KwMatch() if dialect.allowTypeMatch => next(); Type.Match(t, typeCaseClauses())
+        case RightArrow() => Type.Function(funcParams, { next(); typeIndentedOpt() })
+        case ContextArrow() => Type.ContextFunction(funcParams, { next(); typeIndentedOpt() })
+        case KwForsome() => Type.Existential(t, { next(); existentialStats() })
+        case KwMatch() if dialect.allowTypeMatch => Type.Match(t, { next(); typeCaseClauses() })
         case _ => t
       }
     }
@@ -1056,6 +1052,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       def setPos(outerTpe: Type)(innerTpe: Type): Type =
         if (innerTpe eq outerTpe) outerTpe else copyPos(outerTpe)(innerTpe)
 
+      def convertFuncParamClause(tree: Type.FuncParamClause): Type.FuncParamClause = tree match {
+        case t: Quasi => t
+        case t: Type.FuncParamClause =>
+          copyPos(t)(Type.FuncParamClause(t.values.map(loop(_, convertTypevars = true))))
+      }
+
       def loop(outerTpe: Type, convertTypevars: Boolean): Type = setPos(outerTpe)(outerTpe match {
         case q: Quasi =>
           q
@@ -1084,13 +1086,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val op1 = op
           val rhs1 = loop(rhs, convertTypevars = false)
           Type.ApplyInfix(lhs1, op1, rhs1)
-        case Type.ContextFunction(params, res) =>
-          val params1 = params.map(loop(_, convertTypevars = true))
-          val res1 = loop(res, convertTypevars = false)
+        case t: Type.ContextFunction =>
+          val params1 = convertFuncParamClause(t.paramClause)
+          val res1 = loop(t.res, convertTypevars = false)
           Type.ContextFunction(params1, res1)
-        case Type.Function(params, res) =>
-          val params1 = params.map(loop(_, convertTypevars = true))
-          val res1 = loop(res, convertTypevars = false)
+        case t: Type.Function =>
+          val params1 = convertFuncParamClause(t.paramClause)
+          val res1 = loop(t.res, convertTypevars = false)
           Type.Function(params1, res1)
         case t: Type.PolyFunction =>
           val res1 = loop(t.tpe, convertTypevars = false)
