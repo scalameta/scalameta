@@ -216,9 +216,23 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       )
     })
   )
+  .jsConfigure(
+    _.enablePlugins(NpmPackagePlugin)
+  )
   .jsSettings(
     commonJsSettings,
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+    npmPackageName := "scalameta-parsers",
+    npmPackageDescription := "Library to parse Scala programs",
+    npmPackageRepository := Some("https://github.com/scalameta/scalameta"),
+    npmPackageAuthor := "scalameta",
+    npmPackageLicense := Some("BSD-3-Clause"),
+    npmPackageKeywords := Seq("scala", "parser"),
+    npmPackageStage := org.scalajs.sbtplugin.Stage.FullOpt,
+    npmPackageAdditionalNpmConfig := Map(
+      "homepage" -> _root_.io.circe.Json.fromString("https://scalameta.org/")
+    ),
+    npmPackageREADME := Some(file("README.npm.md"))
   )
   .nativeSettings(nativeSettings)
   .dependsOn(trees)
