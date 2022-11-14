@@ -1437,4 +1437,35 @@ class TermSuite extends ParseSuite {
     }
   }
 
+  test("implicit closure with ascribe") {
+    val code = """|foo {
+                  |  implicit a => implicit b => {
+                  |    case bar => baz
+                  |  }: qux
+                  |}
+                  |""".stripMargin
+    checkTerm(code) {
+      Term.Apply(
+        Term.Name("foo"),
+        Term.ArgClause(
+          Term.Block(
+            Term.Function(
+              List(Term.Param(List(Mod.Implicit()), Term.Name("a"), None, None)),
+              Term.Function(
+                List(Term.Param(List(Mod.Implicit()), Term.Name("b"), None, None)),
+                Term.Ascribe(
+                  Term.PartialFunction(
+                    List(Case(Pat.Var(Term.Name("bar")), None, Term.Name("baz")))
+                  ),
+                  Type.Name("qux")
+                )
+              )
+            ) :: Nil
+          ) :: Nil,
+          None
+        )
+      )
+    }
+  }
+
 }

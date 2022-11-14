@@ -1811,12 +1811,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       Term.Param(List(atPos(implicitPos)(Mod.Implicit())), paramName, paramTpt, None)
     )
     accept[RightArrow]
-    autoEndPos(implicitPos)(
-      Term.Function(
-        List(param),
-        if (location != BlockStat) expr() else blockExpr(isBlockOptional = true)
-      )
-    )
+    autoEndPos(implicitPos)(Term.Function(List(param), expr(location, allowRepeated = false)))
   }
 
   // Encapsulates state and behavior of parsing infix syntax.
