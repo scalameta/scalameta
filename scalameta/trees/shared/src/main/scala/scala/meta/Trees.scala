@@ -230,15 +230,29 @@ object Type {
     @replacedField("4.6.0") final def args: List[Type] = argClause.values
   }
   @ast class ApplyInfix(lhs: Type, op: Name, rhs: Type) extends Type
+
+  @ast class FuncParamClause(values: List[Type]) extends Tree
+  object FunctionType {
+    private[meta] final val paramsToClause: List[Type] => FuncParamClause =
+      FuncParamClause.apply
+  }
   @branch trait FunctionType extends Type {
+    def paramClause: FuncParamClause
+    @deprecated("Please use paramClause instead", "4.6.0")
     def params: List[Type]
     def res: Type
   }
-  @ast class Function(params: List[Type], res: Type) extends FunctionType
+  @ast class Function(paramClause: FuncParamClause, res: Type) extends FunctionType {
+    @replacedField("4.6.0", FunctionType.paramsToClause) final override def params: List[Type] =
+      paramClause.values
+  }
   @ast class PolyFunction(tparamClause: ParamClause, tpe: Type) extends Type {
     @replacedField("4.6.0") final def tparams: List[Param] = tparamClause.values
   }
-  @ast class ContextFunction(params: List[Type], res: Type) extends FunctionType
+  @ast class ContextFunction(paramClause: FuncParamClause, res: Type) extends FunctionType {
+    @replacedField("4.6.0", FunctionType.paramsToClause) final override def params: List[Type] =
+      paramClause.values
+  }
   @ast @deprecated("Implicit functions are not supported in any dialect")
   class ImplicitFunction(
       params: List[Type],

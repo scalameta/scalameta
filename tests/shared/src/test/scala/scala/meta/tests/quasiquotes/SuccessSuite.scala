@@ -1032,8 +1032,8 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("1 t\"(..tpes) => tpe\"") {
     val t"(..$tpes) => $tpe" = t"(X, Y) => Z"
-    assertEquals(tpes.toString, "List(X, Y)")
-    assertTrees(tpes: _*)(Type.Name("X"), Type.Name("Y"))
+    assertEquals(tpes.toString, "(X, Y)")
+    assertTree(tpes)(Type.FuncParamClause(List(Type.Name("X"), Type.Name("Y"))))
     assertTree(tpe)(Type.Name("Z"))
   }
 

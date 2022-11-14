@@ -416,6 +416,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.ByName
       |scala.meta.Type.ContextFunction
       |scala.meta.Type.Existential
+      |scala.meta.Type.FuncParamClause
       |scala.meta.Type.Function
       |scala.meta.Type.FunctionType
       |scala.meta.Type.ImplicitFunction

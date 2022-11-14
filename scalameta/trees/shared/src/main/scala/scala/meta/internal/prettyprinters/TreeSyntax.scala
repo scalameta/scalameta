@@ -560,17 +560,17 @@ object TreeSyntax {
             p(InfixTyp(t.op.value), t.rhs, right = true)
           )
         )
-      case t @ (_: Type.Function | _: Type.ContextFunction) =>
-        val (prefix, tParams, arrow, tRes) = t match {
-          case Type.Function(params, res) => (s(), params, "=>", res)
-          case Type.ContextFunction(params, res) => (s(), params, "?=>", res)
+      case t: Type.FuncParamClause =>
+        t.values match {
+          case arg :: Nil if (arg match {
+                case _: Type.Tuple | _: Type.ByName | _: Type.TypedParam => false
+                case _ => true
+              }) =>
+            s(arg)
+          case args => s("(", r(args, ", "), ")")
         }
-        val params = tParams match {
-          case param :: Nil if param.isNot[Type.Tuple] && param.isNot[Type.TypedParam] =>
-            s(p(AnyInfixTyp, param))
-          case params => s("(", r(params.map(param => p(ParamTyp, param)), ", "), ")")
-        }
-        m(Typ, s(prefix, params, " ", kw(arrow), " ", p(Typ, tRes)))
+      case t: Type.Function => m(Typ, s(t.paramClause, " ", kw("=>"), " ", p(Typ, t.res)))
+      case t: Type.ContextFunction => m(Typ, s(t.paramClause, " ", kw("?=>"), " ", p(Typ, t.res)))
       case t: Type.Tuple => m(SimpleTyp, s("(", r(t.args, ", "), ")"))
       case t: Type.With => m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
       case t: Type.And =>
@@ -1115,9 +1115,6 @@ object TreeSyntax {
       }
     implicit def syntaxArgss: Syntax[Seq[Term.ArgClause]] = Syntax {
       r(_)
-    }
-    implicit def syntaxTargs: Syntax[Seq[Type]] = Syntax {
-      r(_, "[", ", ", "]")
     }
     implicit def syntaxMods: Syntax[Seq[Mod]] = Syntax { mods =>
       r(mods, " ")
