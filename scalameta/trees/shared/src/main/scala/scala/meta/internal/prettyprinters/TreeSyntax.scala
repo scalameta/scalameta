@@ -484,9 +484,7 @@ object TreeSyntax {
           case _: Term.Function => "=>"
           case _: Term.ContextFunction => "?=>"
         }
-        val params = t.params
-        val modOpt = Term.ParamClause.getMod(params)
-        val paramsSyntax = printParams(params, modOpt, needParens = false)
+        val paramsSyntax = printParams(t.paramClause, needParens = false)
         m(Expr, s(paramsSyntax, " ", kw(arrow), " ", p(Expr, t.body)))
       case t: Term.PolyFunction =>
         m(Expr, t.tparamClause, " ", kw("=>"), " ", p(Expr, t.body))
@@ -538,7 +536,7 @@ object TreeSyntax {
         // NOTE: `implicit/using` in parameters is skipped as it applies to whole list
         printParam(t)
       case t: Term.ParamClause =>
-        printParams(t.values, t.mod, needParens = !t.parent.exists(_.is[Term]))
+        printParams(t, needParens = !t.parent.exists(_.is[Term]))
 
       // Type
       case t: Type.AnonymousName => m(Path, s(""))
@@ -932,7 +930,7 @@ object TreeSyntax {
       case t: Pkg.Object =>
         r(" ")(kw("package"), t.mods, kw("object"), t.name, t.templ)
       case t: Ctor.Primary =>
-        val paramClauses = r(t.paramClauses.map(x => printParams(x.values, x.mod)))
+        val paramClauses = r(t.paramClauses.map(printParams(_)))
         s(w(t.mods, " ", t.mods.nonEmpty && t.paramClauses.nonEmpty), paramClauses)
       case t: Ctor.Secondary =>
         if (t.stats.isEmpty)
@@ -1108,8 +1106,7 @@ object TreeSyntax {
     private def printApplyArgs(args: Term.ArgClause, beforeBrace: String): Show.Result =
       args.values match {
         case Seq(b: Term.Block) => s(beforeBrace, b)
-        case Seq(f @ Term.Function(params, _))
-            if params.exists(_.mods.exists(_.is[Mod.ParamsType])) =>
+        case Seq(f: Term.Function) if f.paramClause.mod.isDefined =>
           s(beforeBrace, "{ ", f, " }")
         case _ => s(args)
       }
@@ -1132,19 +1129,17 @@ object TreeSyntax {
     implicit def syntaxAnnots: Syntax[Seq[Mod.Annot]] = Syntax { annots =>
       r(annots, " ")
     }
-    private def printParams(
-        t: Seq[Term.Param],
-        modOpt: Option[Mod.ParamsType],
-        needParens: Boolean = true
-    ): Show.Result = {
-      val (useParens, mod) = t match {
+    private def printParams(t: Term.ParamClause, needParens: Boolean = true): Show.Result = {
+      val v = t.values
+      val (useParens, mod) = v match {
         case head +: tail =>
+          val modOpt = t.mod
           val useParens = needParens || tail.nonEmpty ||
             modOpt.fold(head.decltpe.isDefined)(!_.is[Mod.Implicit])
           (useParens, o(modOpt, " "))
         case _ => (true, Show.None)
       }
-      w("(", s(mod, r(t.map(printParam(_, mod eq Show.None)), ", ")), ")", useParens)
+      w("(", s(mod, r(v.map(printParam(_, mod eq Show.None)), ", ")), ")", useParens)
     }
     implicit def syntaxParamss: Syntax[Seq[Term.ParamClause]] = Syntax { paramss =>
       r(paramss)

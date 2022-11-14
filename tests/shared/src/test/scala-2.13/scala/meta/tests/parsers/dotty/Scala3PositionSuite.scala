@@ -525,6 +525,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  {
        |    42
        |  }
+       |Term.ParamClause err
        |Term.Param err
        |Term.Block {
        |    42
@@ -550,6 +551,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Term.Function (z: String) =>
        |      fx
        |      gx
+       |Term.ParamClause (z: String)
        |Term.Block fx
        |      gx
        |""".stripMargin
@@ -572,6 +574,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Term.Function s => 
        |    fx
        |    gx(s)
+       |Term.ParamClause s
        |Term.Param s
        |Term.Block fx
        |    gx(s)
@@ -601,6 +604,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    fx
        |    gx(s)
        |    /* c1 */
+       |Term.ParamClause s
        |Term.Param s
        |Term.Block fx
        |    gx(s)
@@ -645,6 +649,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Term.Function (x: Int) => {
        |  x * x
        |}
+       |Term.ParamClause (x: Int)
        |Term.Block {
        |  x * x
        |}
@@ -656,7 +661,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     """|(using _: C) => ???
        |""".stripMargin,
-    """|Term.Param using _: C
+    """|Term.ParamClause (using _: C)
+       |Term.Param using _: C
        |""".stripMargin
   )
 

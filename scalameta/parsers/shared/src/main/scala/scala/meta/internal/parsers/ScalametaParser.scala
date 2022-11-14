@@ -2,9 +2,6 @@ package scala.meta
 package internal
 package parsers
 
-import scala.meta.Term.EndMarker
-import scala.meta.Term.QuotedMacroExpr
-import scala.meta.Term.SplicedMacroExpr
 import scala.language.implicitConversions
 import scala.reflect.{ClassTag, classTag}
 import scala.collection.mutable
@@ -1641,7 +1638,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         implicitClosure(location)
       case _ =>
         val startPos = auto.startTokenPos
-        @inline def addPos(body: Term) = autoEndPos(startPos)(body)
+        @inline def addPos[T <: Tree](body: T) = autoEndPos(startPos)(body)
         var t: Term = postfixExpr(allowRepeated, PostfixStat)
         def repeatedTerm(nextTokens: () => Unit) = {
           if (allowRepeated) t = addPos { nextTokens(); Term.Repeated(t) }
@@ -1745,7 +1742,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             }
           }
           if (looksLikeLambda) {
-            val params = convertToParams(t)
+            val params = addPos(convertToParamClause(t))
             val contextFunction = token.is[ContextArrow]
             next()
             val trm =
@@ -1803,21 +1800,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  private def convertToParams(tree: Term): List[Term.Param] = tree match {
+  private def convertToParamClause(tree: Term): Term.ParamClause = (tree match {
     case Term.Tuple(ts) => ts.flatMap(convertToParam)
     case _ => convertToParam(tree).toList
-  }
+  }).reduceWith(toParamClause(None))
 
   def implicitClosure(location: Location): Term.Function = {
     require(token.isNot[KwImplicit] && debug(token))
     val implicitPos = in.prevTokenPos
     val paramName = termName()
     val paramTpt = if (acceptOpt[Colon]) Some(typeOrInfixType(location)) else None
-    val param = autoEndPos(implicitPos)(
-      Term.Param(List(atPos(implicitPos)(Mod.Implicit())), paramName, paramTpt, None)
-    )
+    val mod = atPos(implicitPos)(Mod.Implicit())
+    val param = autoEndPos(implicitPos)(Term.Param(mod :: Nil, paramName, paramTpt, None))
+    val params = copyPos(param)(Term.ParamClause(param :: Nil, Some(mod)))
     accept[RightArrow]
-    autoEndPos(implicitPos)(Term.Function(List(param), expr(location, allowRepeated = false)))
+    autoEndPos(implicitPos)(Term.Function(params, expr(location, allowRepeated = false)))
   }
 
   // Encapsulates state and behavior of parsing infix syntax.
@@ -2247,7 +2244,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
            * Without manual handling here, filter would be included for `(a+1).filter`
            */
           val param = simpleExpr(allowRepeated = false)
-          val params = convertToParams(param)
+          val params = autoEndPos(paramPos)(convertToParamClause(param))
           val contextFunction = token.is[ContextArrow]
           next()
           val trm = blockExpr(allowRepeated = false)
@@ -3385,9 +3382,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     assert(token.text == "end")
     next()
     if (token.is[Ident]) {
-      EndMarker(termName())
+      Term.EndMarker(termName())
     } else {
-      val r = EndMarker(atPos(token)(Term.Name(token.text)))
+      val r = Term.EndMarker(atPos(token)(Term.Name(token.text)))
       next()
       r
     }
