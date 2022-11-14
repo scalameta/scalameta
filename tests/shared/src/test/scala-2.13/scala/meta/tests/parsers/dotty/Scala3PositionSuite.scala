@@ -263,6 +263,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |}""".stripMargin,
     """|Case case List(xs*) => 1
        |Pat.Extract List(xs*)
+       |Pat.ArgClause (xs*)
        |Pat.Repeated xs*
        |""".stripMargin
   )

@@ -231,15 +231,16 @@ object TreeSyntax {
           case p: Pat.Repeated => false
           case p: Pat.Bind => true
           case p: Pat.Alternative => true
+          case p: Pat.ArgClause => p.values.contains(t)
           case p: Pat.Tuple => true
-          case p: Pat.Extract => p.args.exists(_ eq t)
-          case p: Pat.ExtractInfix => (p.lhs eq t) || p.rhs.exists(_ eq t)
-          case p: Pat.Interpolate => p.args.exists(_ eq t)
+          case p: Pat.Extract => false
+          case p: Pat.ExtractInfix => p.lhs eq t
+          case p: Pat.Interpolate => p.args.contains(t)
           case p: Pat.Typed => unreachable
           case p: Pat => unreachable
           case p: Case => p.pat eq t
-          case p: Defn.Val => p.pats.exists(_ eq t)
-          case p: Defn.Var => p.pats.exists(_ eq t)
+          case p: Defn.Val => p.pats.contains(t)
+          case p: Defn.Var => p.pats.contains(t)
           case p: Enumerator.Generator => p.pat eq t
           case p: Enumerator.Val => p.pat eq t
           case _ => false
@@ -699,7 +700,8 @@ object TreeSyntax {
       case t: Pat.Alternative =>
         m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
       case t: Pat.Tuple => m(SimplePattern, s("(", r(t.args, ", "), ")"))
-      case t: Pat.Extract => m(SimplePattern, s(t.fun, t.args))
+      case t: Pat.ArgClause => m(SimplePattern, s("(", r(t.values, ", "), ")"))
+      case t: Pat.Extract => m(SimplePattern, s(t.fun, t.argClause))
       case t: Pat.ExtractInfix =>
         m(
           Pattern3(t.op.value),
@@ -708,8 +710,8 @@ object TreeSyntax {
             " ",
             t.op,
             " ",
-            t.rhs match {
-              case pat :: Nil => s(p(Pattern3(t.op.value), pat, right = true))
+            t.argClause match {
+              case Pat.ArgClause(pat :: Nil) => s(p(Pattern3(t.op.value), pat, right = true))
               case pats => s(pats)
             }
           )
@@ -1117,7 +1119,6 @@ object TreeSyntax {
     implicit def syntaxTargs: Syntax[Seq[Type]] = Syntax {
       r(_, "[", ", ", "]")
     }
-    implicit def syntaxPats: Syntax[Seq[Pat]] = Syntax { pats => s("(", r(pats, ", "), ")") }
     implicit def syntaxMods: Syntax[Seq[Mod]] = Syntax { mods =>
       r(mods, " ")
     }

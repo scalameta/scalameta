@@ -61,8 +61,8 @@ object ParentChecks {
   def PatSeqWildcard(tree: Pat.SeqWildcard, parent: Tree, destination: String): Boolean =
     parent match {
       case _: Pat.Bind => destination == "rhs"
-      case _: Pat.Extract | _: Pat.ExtractInfix | _: Pat.Interpolate | _: Pat.Xml =>
-        destination == "args"
+      case _: Pat.ArgClause => true
+      case _: Pat.Interpolate | _: Pat.Xml => destination == "args"
       case _ => false
     }
 

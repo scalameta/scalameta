@@ -324,6 +324,7 @@ object Type {
 
 @branch trait Pat extends Tree
 object Pat {
+  @ast class ArgClause(values: List[Pat]) extends Member.ArgClause
   @ast class Var(name: Term.Name) extends Pat with Member.Term {
     // NOTE: can't do this check here because of things like `val X = 2`
     // checkFields(name.value(0).isLower)
@@ -343,10 +344,13 @@ object Pat {
     checkParent(ParentChecks.MemberTuple)
   }
   @ast class Repeated(name: Term.Name) extends Pat
-  @ast class Extract(fun: Term, args: List[Pat]) extends Pat {
+  @ast class Extract(fun: Term, argClause: ArgClause) extends Pat {
+    @replacedField("4.6.0") final def args: List[Pat] = argClause.values
     checkFields(fun.isExtractor)
   }
-  @ast class ExtractInfix(lhs: Pat, op: Term.Name, rhs: List[Pat]) extends Pat
+  @ast class ExtractInfix(lhs: Pat, op: Term.Name, argClause: ArgClause) extends Pat {
+    @replacedField("4.6.0") final def rhs: List[Pat] = argClause.values
+  }
   @ast class Interpolate(prefix: Term.Name, parts: List[Lit] @nonEmpty, args: List[Pat])
       extends Pat {
     checkFields(parts.length == args.length + 1)

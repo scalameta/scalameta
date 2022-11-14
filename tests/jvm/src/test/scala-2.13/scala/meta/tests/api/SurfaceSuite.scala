@@ -333,6 +333,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Name.Placeholder
       |scala.meta.Pat
       |scala.meta.Pat.Alternative
+      |scala.meta.Pat.ArgClause
       |scala.meta.Pat.Bind
       |scala.meta.Pat.Extract
       |scala.meta.Pat.ExtractInfix

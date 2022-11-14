@@ -1268,14 +1268,14 @@ class SuccessSuite extends TreeSuiteBase {
   test("1 p\"expr(..pats)\"") {
     val p"$expr(..$pats)" = p"x[A, B](Q, W)"
     assertTree(expr)(Term.ApplyType(Term.Name("x"), List(Type.Name("A"), Type.Name("B"))))
-    assertEquals(pats.toString, "List(Q, W)")
+    assertEquals(pats.toString, "(Q, W)")
     assertTrees(pats: _*)(Term.Name("Q"), Term.Name("W"))
   }
 
   test("2 p\"expr(..pats)\"") {
     val p"$expr(..$pats)" = p"x(Q, W)"
     assertTree(expr)(Term.Name("x"))
-    assertEquals(pats.toString, "List(Q, W)")
+    assertEquals(pats.toString, "(Q, W)")
     assertTrees(pats: _*)(Term.Name("Q"), Term.Name("W"))
   }
 
@@ -1325,7 +1325,7 @@ class SuccessSuite extends TreeSuiteBase {
     val p"$pat $name (..$pats)" = p"x y (Q, W)"
     assertTree(pat)(Pat.Var(Term.Name("x")))
     assertTree(name)(Term.Name("y"))
-    assertEquals(pats.toString, "List(Q, W)")
+    assertEquals(pats.toString, "(Q, W)")
     assertTrees(pats: _*)(Term.Name("Q"), Term.Name("W"))
   }
 
