@@ -226,29 +226,33 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     accept[LeftParen]
     inParensAfterOpen(body)
   }
+  @inline final def inParensOr[T](body: => T)(ifEmpty: => T): T = {
+    accept[LeftParen]
+    inParensAfterOpenOr(body)(ifEmpty)
+  }
   @inline private def inParensOnOpen[T](body: => T): T = {
     next()
     inParensAfterOpen(body)
   }
-  @inline private def inParensOnOpenOr[T](body: => T)(alt: => T): T = {
+  @inline private def inParensOnOpenOr[T](body: => T)(ifEmpty: => T): T = {
     next()
-    inParensAfterOpenOr(body)(alt)
+    inParensAfterOpenOr(body)(ifEmpty)
   }
   @inline private def inParensAfterOpen[T](body: T): T = {
     newLineOpt()
     accept[RightParen]
     body
   }
-  @inline private def inParensAfterOpenOr[T](body: => T)(alt: => T): T =
-    if (acceptOpt[RightParen]) alt
+  @inline private def inParensAfterOpenOr[T](body: => T)(ifEmpty: => T): T =
+    if (acceptOpt[RightParen]) ifEmpty
     else inParensAfterOpen(body)
 
   @inline final def inBraces[T](body: => T): T = {
-    inBracesOr(body, syntaxErrorExpected[LeftBrace])
+    inBracesOr(body)(syntaxErrorExpected[LeftBrace])
   }
-  @inline final def inBracesOr[T](body: => T, alt: => T): T = {
+  @inline final def inBracesOr[T](body: => T)(ifEmpty: => T): T = {
     newLineOpt()
-    if (acceptOpt[LeftBrace]) inBracesAfterOpen(body) else alt
+    if (acceptOpt[LeftBrace]) inBracesAfterOpen(body) else ifEmpty
   }
   @inline private def inBracesOnOpen[T](body: => T): T = {
     next()
@@ -277,9 +281,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     body
   }
 
-  @inline final def inBracesOrNil[T](body: => List[T]): List[T] = inBracesOr(body, Nil)
+  @inline final def inBracesOrNil[T](body: => List[T]): List[T] = inBracesOr(body)(Nil)
   @inline final def dropAnyBraces[T](body: => T): T =
-    inBracesOr(body, body)
+    inBracesOr(body)(body)
 
   @inline final def inBrackets[T](body: => T): T = {
     accept[LeftBracket]
@@ -1464,7 +1468,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       autoEndPos(t)(Term.Match(t, indentedAfterOpen(caseClauses())))
     } else {
       autoEndPos(t)(
-        Term.Match(t, inBracesOr(caseClauses(), syntaxErrorExpected[LeftBrace]))
+        Term.Match(t, inBracesOr(caseClauses())(syntaxErrorExpected[LeftBrace]))
       )
     }
   }
