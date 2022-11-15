@@ -929,11 +929,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       @tailrec
       def gatherWithTypes(previousType: Type): Type = {
         if (acceptOpt[KwWith]) {
+          val startPos = previousType.startTokenPos
           /* Indentation means a refinement and we cannot join
            * refinements this way so stop looping.
            */
           if (token.is[Indentation.Indent]) {
-            autoPos(Type.Refine(Some(previousType), indented(refineStatSeq())))
+            autoEndPos(startPos)(Type.Refine(Some(previousType), indented(refineStatSeq())))
           } else {
             val rhs = annotType()
             val t = autoEndPos(startPos)(Type.With(previousType, rhs))
@@ -3027,10 +3028,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Type.ByName(typ())
         }
         if (isStar && dialect.allowByNameRepeatedParameters) {
-          autoPos {
-            next()
-            Type.Repeated(t)
-          }
+          next()
+          Type.Repeated(t)
         } else {
           t
         }
@@ -3038,10 +3037,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val t = typ()
         if (!isStar) t
         else {
-          autoPos {
-            next()
-            Type.Repeated(t)
-          }
+          next()
+          Type.Repeated(t)
         }
     })
 
