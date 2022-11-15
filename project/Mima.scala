@@ -27,10 +27,14 @@ object Mima {
     "scala.meta.internal.trees.Metadata.astClass",
     "scala.meta.internal.trees.Metadata.branch"
   )
+  private def belongsToTree(member: MemberInfo): Boolean = // trees are sealed
+    member.owner.annotations.exists(x => treeAnnotations.contains(x.name))
+
   val scalaSpecificCompatibilityPolicy: ProblemFilter = {
     case ReversedMissingMethodProblem(member) => // ignore sealed types
-      // trees are sealed
-      !member.owner.annotations.exists(x => treeAnnotations.contains(x.name))
+      !belongsToTree(member)
+    case InheritedNewAbstractMethodProblem(absmeth, newmeth) =>
+      !belongsToTree(absmeth) && !belongsToTree(newmeth)
     case _ =>
       true
   }
