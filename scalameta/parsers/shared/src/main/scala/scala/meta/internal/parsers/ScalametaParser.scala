@@ -2768,6 +2768,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
    * initiated from non-pattern context.
    */
   def typ() = outPattern.typ()
+  def typeIndentedOpt() = outPattern.typeIndentedOpt()
   def quasiquoteType() = outPattern.quasiquoteType()
   def entrypointType() = outPattern.entrypointType()
   def startInfixType() = outPattern.infixType()
@@ -3618,14 +3619,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val rhs = exprMaybeIndented()
       if (isMacro) Defn.Macro(mods, name, tparams, paramss, restype, rhs)
       else Defn.Def(mods, name, tparams, paramss, restype, rhs)
-    }
-  }
-
-  def typeIndentedOpt() = {
-    if (acceptOpt[Indentation.Indent]) {
-      indentedAfterOpen(typ())
-    } else {
-      typ()
     }
   }
 
