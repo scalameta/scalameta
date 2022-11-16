@@ -618,7 +618,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |  case _ =>
        |}
        |""".stripMargin,
-    """|Term.Match a + b) match {
+    """|Term.Match (a + b) match {
        |  case _ =>
        |}
        |Term.ApplyInfix a + b
