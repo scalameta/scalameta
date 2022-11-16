@@ -613,4 +613,19 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |""".stripMargin
   )
 
+  checkPositions[Stat](
+    """|val foo = (a + b) match {
+       |  case _ =>
+       |}
+       |""".stripMargin,
+    """|Term.Match a + b) match {
+       |  case _ =>
+       |}
+       |Term.ApplyInfix a + b
+       |Type.ArgClause val foo = (a + @@b) match {
+       |Case case _ =>
+       |Term.Block @@}
+       |""".stripMargin
+  )
+
 }
