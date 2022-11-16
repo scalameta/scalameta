@@ -748,8 +748,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case t: Type.Repeated => syntaxError("repeated type not allowed here", at = t)
           case _ =>
         }
-        val tuple = makeTupleType(openParenPos, ts)
-        infixTypeRest(compoundTypeRest(annotTypeRest(simpleTypeRest(tuple, openParenPos))))
+        val simple = simpleTypeRest(makeTupleType(openParenPos, ts), openParenPos)
+        val compound = compoundTypeRest(annotTypeRest(simple, openParenPos), openParenPos)
+        infixTypeRest(compound) match {
+          case `compound` => compound
+          case t => autoEndPos(openParenPos)(t)
+        }
       }
     }
 
@@ -919,17 +923,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def compoundType(inMatchType: Boolean = false): Type = {
       if (token.is[LeftBrace])
         refinement(innerType = None)
-      else
-        compoundTypeRest(annotType(inMatchType = inMatchType))
+      else {
+        val startPos = auto.startTokenPos
+        compoundTypeRest(annotType(startPos, inMatchType = inMatchType), startPos)
+      }
     }
 
-    def compoundTypeRest(typ: Type): Type = {
-      val startPos = typ.startTokenPos
-
+    def compoundTypeRest(typ: Type, startPos: Int): Type = {
       @tailrec
       def gatherWithTypes(previousType: Type): Type = {
         if (acceptOpt[KwWith]) {
-          val startPos = previousType.startTokenPos
           /* Indentation means a refinement and we cannot join
            * refinements this way so stop looping.
            */
@@ -958,12 +961,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
     def annotType(inMatchType: Boolean = false): Type =
-      annotTypeRest(simpleType(inMatchType = inMatchType))
+      annotType(auto.startTokenPos, inMatchType = inMatchType)
 
-    def annotTypeRest(t: Type): Type = {
+    private def annotType(startPos: Int, inMatchType: Boolean): Type =
+      annotTypeRest(simpleType(inMatchType = inMatchType), startPos)
+
+    def annotTypeRest(t: Type, startPos: Int): Type = {
       val annots = ScalametaParser.this.annots(skipNewLines = false)
       if (annots.isEmpty) t
-      else autoEndPos(t)(Type.Annotate(t, annots))
+      else autoEndPos(startPos)(Type.Annotate(t, annots))
     }
 
     def simpleType(inMatchType: Boolean = false): Type = {
@@ -1395,7 +1401,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def typedOpt(): Option[Type] =
     if (acceptOpt[Colon]) {
       if (token.is[At] && ahead(token.is[Ident])) {
-        Some(outPattern.annotTypeRest(autoPos(Type.AnonymousName())))
+        val startPos = auto.startTokenPos
+        Some(outPattern.annotTypeRest(autoEndPos(startPos)(Type.AnonymousName()), startPos))
       } else {
         Some(typ())
       }
