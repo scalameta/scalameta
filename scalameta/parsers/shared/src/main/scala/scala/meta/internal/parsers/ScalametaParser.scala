@@ -1407,12 +1407,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ----------- EXPRESSIONS ------------------------------------------------ */
 
-  def condExpr(): Term = {
-    accept[LeftParen]
-    val r = expr()
-    accept[RightParen]
-    r
-  }
+  def condExpr(): Term = inParens(expr())
 
   def expr(): Term = expr(location = NoStat, allowRepeated = false)
 
