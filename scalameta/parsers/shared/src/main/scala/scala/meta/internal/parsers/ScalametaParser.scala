@@ -1458,14 +1458,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def matchClause(t: Term) = {
-    if (acceptOpt[Indentation.Indent]) {
-      autoEndPos(t)(Term.Match(t, indentedAfterOpen(caseClauses())))
-    } else {
-      autoEndPos(t)(
-        Term.Match(t, inBracesOr(caseClauses())(syntaxErrorExpected[LeftBrace]))
-      )
-    }
+  private def matchClause(t: Term, startPos: Int) = {
+    val cases =
+      if (acceptOpt[Indentation.Indent])
+        indentedAfterOpen(caseClauses())
+      else {
+        accept[LeftBrace]
+        inBracesAfterOpen(caseClauses())
+      }
+    autoEndPos(startPos)(Term.Match(t, cases))
   }
 
   def ifClause(mods: List[Mod] = Nil) = autoEndPos(mods) {
@@ -1668,7 +1669,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         } else if (allowRepeated && isVarargStarParam()) {
           repeatedTerm(next)
         } else if (acceptOpt[KwMatch]) {
-          t = matchClause(t)
+          t = matchClause(t, startPos)
         }
 
         // Note the absense of `else if` here!!
@@ -2195,7 +2196,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case Dot() =>
         next()
         if (dialect.allowMatchAsOperator && acceptOpt[KwMatch]) {
-          val clause = matchClause(t)
+          val clause = matchClause(t, startPos)
           // needed if match uses significant identation
           newLineOptWhenFollowedBy[Dot]
           simpleExprRest(clause, canApply = false, startPos = startPos)
