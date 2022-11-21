@@ -466,7 +466,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     """type foo = (a -> b) -> c""",
     """|Type.ParamClause type foo @@= (a -> b) -> c
-       |Type.ApplyInfix a -> b) -> c
+       |Type.ApplyInfix (a -> b) -> c
        |Type.ApplyInfix a -> b
        |Type.Bounds type foo = @@(a -> b) -> c
        |""".stripMargin
@@ -483,7 +483,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     """type foo = (a :+ b) :+ c""",
     """|Type.ParamClause type foo @@= (a :+ b) :+ c
-       |Type.ApplyInfix a :+ b) :+ c
+       |Type.ApplyInfix (a :+ b) :+ c
        |Type.ApplyInfix a :+ b
        |Type.Bounds type foo = @@(a :+ b) :+ c
        |""".stripMargin
@@ -500,7 +500,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     """type foo = (a +: b) +: c""",
     """|Type.ParamClause type foo @@= (a +: b) +: c
-       |Type.ApplyInfix a +: b) +: c
+       |Type.ApplyInfix (a +: b) +: c
        |Type.ApplyInfix a +: b
        |Type.Bounds type foo = @@(a +: b) +: c
        |""".stripMargin
