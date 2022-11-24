@@ -1,0 +1,19 @@
+name: Release JS
+on:
+  push:
+    tags: ["*"]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+      - uses: actions/checkout@v3
+      - uses: olafurpg/setup-scala@v13
+      - run: git fetch --unshallow
+      - name: Publish
+        run: sbt "parsersJS/npmPackageNpmrc; parsersJS/npmPackagePublish"
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+

@@ -28,3 +28,5 @@ addSbtPlugin("org.scalameta" % "sbt-munit" % "0.7.29")
 addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.3.6")
 
 addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.4.7")
+
+addSbtPlugin("io.chrisdavenport" %% "sbt-npm-package" % "0.1.2")
