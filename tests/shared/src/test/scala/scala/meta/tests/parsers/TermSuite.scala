@@ -1468,4 +1468,18 @@ class TermSuite extends ParseSuite {
     }
   }
 
+  test("implicit closure with val") {
+    val code =
+      """|foo { implicit a =>
+         |  val bar = baz
+         |  bar
+         |}
+         |""".stripMargin
+    interceptMessage[ParseException](
+      """|<input>:2: error: illegal start of simple expression
+         |  val bar = baz
+         |  ^""".stripMargin
+    )(term(code))
+  }
+
 }
