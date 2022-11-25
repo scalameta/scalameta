@@ -1475,11 +1475,28 @@ class TermSuite extends ParseSuite {
          |  bar
          |}
          |""".stripMargin
-    interceptMessage[ParseException](
-      """|<input>:2: error: illegal start of simple expression
-         |  val bar = baz
-         |  ^""".stripMargin
-    )(term(code))
+    checkTerm(code) {
+      Term.Apply(
+        Term.Name("foo"),
+        Term.ArgClause(
+          Term.Block(
+            Term.Function(
+              Term.ParamClause(
+                List(Term.Param(List(Mod.Implicit()), Term.Name("a"), None, None)),
+                Some(Mod.Implicit())
+              ),
+              Term.Block(
+                List(
+                  Defn.Val(Nil, List(Pat.Var(Term.Name("bar"))), None, Term.Name("baz")),
+                  Term.Name("bar")
+                )
+              )
+            ) :: Nil
+          ) :: Nil,
+          None
+        )
+      )
+    }
   }
 
 }
