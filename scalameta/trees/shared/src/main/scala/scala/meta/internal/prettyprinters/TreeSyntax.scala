@@ -394,34 +394,24 @@ object TreeSyntax {
       case t: Term.Tuple => m(SimpleExpr1, s("(", r(t.args, ", "), ")"))
       case t: Term.Block =>
         import Term.{Block, Function}
-        def pstats(s: Seq[Stat]) = r(s.map(i(_)), "")
+        def block(pre: Show.Result, x: Seq[Stat]) = {
+          val res =
+            if (pre == Show.None && x.isEmpty) s("{}")
+            else s("{", w(" ", pre), r(x.map(i(_))), n("}"))
+          m(SimpleExpr, res)
+        }
         t match {
           case Block(
                 Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, Block(stats)) :: Nil
               ) if mods.exists(_.is[Mod.Implicit]) =>
-            m(
-              SimpleExpr,
-              s(
-                "{ ",
-                kw("implicit"),
-                " ",
-                name,
-                tptopt.map(s(kw(":"), " ", _)).getOrElse(s()),
-                " ",
-                kw("=>"),
-                " ",
-                pstats(stats),
-                n("}")
-              )
-            )
+            block(s("implicit ", name, o(": ", tptopt), " =>"), stats)
           case Block(
                 Function(Term.Param(_, name: Name, None, _) :: Nil, Block(stats)) :: Nil
               ) =>
-            m(SimpleExpr, s("{ ", name, " ", kw("=>"), " ", pstats(stats), n("}")))
+            block(s(name, " =>"), stats)
           case Block(Function(params, Block(stats)) :: Nil) =>
-            m(SimpleExpr, s("{ (", r(params, ", "), ") => ", pstats(stats), n("}")))
-          case _ =>
-            m(SimpleExpr, if (t.stats.isEmpty) s("{}") else s("{", pstats(t.stats), n("}")))
+            block(s("(", r(params, ", "), ") =>"), stats)
+          case _ => block(s(), t.stats)
         }
       case t: Term.If =>
         m(
