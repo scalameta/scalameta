@@ -39,6 +39,32 @@ class BranchNamerMacros(val c: Context) extends AstReflection with CommonNamerMa
         if (!isQuasi)
           mstats1 += mkQuasi(name, parents, Nil, Nil, stats, "value", "name", "tpe")
 
+        val needsUnapply = !mstats.exists {
+          case DefDef(_, TermName("unapply"), _, _, _, _) => true
+          case _ => false
+        }
+        if (needsUnapply) {
+          def getUnapply(unapplyParams: Seq[ValOrDefDef], annots: Tree*): Tree = {
+            val successTargs = tq"(..${unapplyParams.map(p => p.tpt)})"
+            val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
+            q"""
+              @$InlineAnnotation @..$annots final def unapply(x: $name): $OptionClass[$successTargs] =
+                if (x != null) $SomeModule($successArgs) else $NoneModule
+            """
+          }
+          val params = stats
+            .collect {
+              case x: ValDef => x
+              case x: DefDef if x.tparams.isEmpty && x.vparamss.isEmpty => x
+            }
+            .filter(_.rhs eq EmptyTree)
+          if (params.nonEmpty) {
+            mstats1 += getUnapply(params)
+          } else {
+            mstats1 += q"@$InlineAnnotation final def unapply(x: $name): $BooleanClass = true"
+          }
+        }
+
         val cdef1 =
           q"${Modifiers(flags1, privateWithin, anns1)} trait $name[..$tparams] extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
         val mdef1 =
