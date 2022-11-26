@@ -108,7 +108,9 @@ object Term {
     @replacedField("4.6.0") final def args: List[Term] = argClause.values
   }
   @deprecated("Use Term.Apply, pass Mod.Using to Term.ArgClause", "4.6.0")
-  @ast class ApplyUsing(fun: Term, args: List[Term]) extends Term
+  @ast class ApplyUsing(fun: Term, argClause: ArgClause) extends Term with Member.Apply {
+    @replacedField("4.6.0") final def args: List[Term] = argClause.values
+  }
   @ast class ApplyType(fun: Term, targClause: Type.ArgClause @nonEmpty)
       extends Term with Member.Apply {
     @replacedField("4.6.0") final def targs: List[Type] = targClause.values
@@ -250,7 +252,7 @@ object Type {
     override final def arg: Tree = rhs
   }
 
-  @ast class FuncParamClause(values: List[Type]) extends Tree
+  @ast class FuncParamClause(values: List[Type]) extends Tree with Member.SyntaxValuesClause
   object FunctionType {
     private[meta] final val paramsToClause: List[Type] => FuncParamClause =
       FuncParamClause.apply
