@@ -1468,4 +1468,35 @@ class TermSuite extends ParseSuite {
     }
   }
 
+  test("implicit closure with val") {
+    val code =
+      """|foo { implicit a =>
+         |  val bar = baz
+         |  bar
+         |}
+         |""".stripMargin
+    checkTerm(code) {
+      Term.Apply(
+        Term.Name("foo"),
+        Term.ArgClause(
+          Term.Block(
+            Term.Function(
+              Term.ParamClause(
+                List(Term.Param(List(Mod.Implicit()), Term.Name("a"), None, None)),
+                Some(Mod.Implicit())
+              ),
+              Term.Block(
+                List(
+                  Defn.Val(Nil, List(Pat.Var(Term.Name("bar"))), None, Term.Name("baz")),
+                  Term.Name("bar")
+                )
+              )
+            ) :: Nil
+          ) :: Nil,
+          None
+        )
+      )
+    }
+  }
+
 }

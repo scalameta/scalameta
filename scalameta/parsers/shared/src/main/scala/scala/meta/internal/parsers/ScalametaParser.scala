@@ -1749,15 +1749,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             val params = addPos(convertToParamClause(t))
             val contextFunction = token.is[ContextArrow]
             next()
-            val trm =
-              if (location != BlockStat) expr()
-              else {
-                blockExpr(isBlockOptional = true) match {
-                  case partial: Term.PartialFunction if acceptOpt[Colon] =>
-                    autoEndPos(partial)(Term.Ascribe(partial, startInfixType()))
-                  case t => t
-                }
-              }
+            val trm = termFunctionBody(location)
             t = addPos {
               if (contextFunction)
                 Term.ContextFunction(params, trm)
@@ -1772,6 +1764,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         t
     }))(location)
   }
+
+  private def termFunctionBody(location: Location): Term =
+    if (location != BlockStat) expr()
+    else {
+      blockExpr(isBlockOptional = true) match {
+        case partial: Term.PartialFunction if acceptOpt[Colon] =>
+          autoEndPos(partial)(Term.Ascribe(partial, startInfixType()))
+        case t => t
+      }
+    }
 
   private def convertToParam(tree: Term): Option[Term.Param] = {
     def getType: Option[Type] = tree match {
@@ -1818,7 +1820,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val param = autoEndPos(implicitPos)(Term.Param(mod :: Nil, paramName, paramTpt, None))
     val params = copyPos(param)(Term.ParamClause(param :: Nil, Some(mod)))
     accept[RightArrow]
-    autoEndPos(implicitPos)(Term.Function(params, expr(location, allowRepeated = false)))
+    autoEndPos(implicitPos)(Term.Function(params, termFunctionBody(location)))
   }
 
   // Encapsulates state and behavior of parsing infix syntax.
