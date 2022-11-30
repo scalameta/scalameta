@@ -2980,9 +2980,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* -------- PARAMETERS ------------------------------------------- */
 
-  private def onlyLastParameterCanBeRepeated(params: Term.ParamClause): Unit =
-    if (!params.is[Quasi]) onlyLastParameterCanBeRepeated(params.values)
-
   @tailrec
   private def onlyLastParameterCanBeRepeated(params: List[Term.Param]): Unit = params match {
     case p :: tail if tail.nonEmpty =>
@@ -2999,7 +2996,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     var hadModImplicit = false
     def paramClause(first: Boolean) = autoPos(inParensOnOpenOr {
       def reduceParams(params: List[Term.Param], mod: Option[Mod.ParamsType] = None) =
-        params.reduceWith(toParamClause(mod))
+        params.reduceWith { x =>
+          onlyLastParameterCanBeRepeated(x)
+          toParamClause(mod)(x)
+        }
       def parseParams(mod: Option[Mod.ParamsType] = None) =
         reduceParams(commaSeparated(termParam(ownerIsCase && first, ownerIsType, mod = mod)), mod)
       token match {
@@ -3594,7 +3594,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
     val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
     val paramss = termParamClauses(ownerIsType = false)
-    paramss.foreach(onlyLastParameterCanBeRepeated)
 
     val restype = ReturnTypeContext.within(typedOpt())
     if (restype.isEmpty && isAfterOptNewLine[LeftBrace]) {
