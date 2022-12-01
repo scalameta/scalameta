@@ -12,7 +12,8 @@ object Metadata {
   class branch extends StaticAnnotation
   class astClass extends StaticAnnotation
   class newField(since: String) extends StaticAnnotation
-  class replacedField(until: String, ctor: Any = null) extends StaticAnnotation
+  class replacedField(until: String, pos: Int = -1) extends StaticAnnotation
+  class replacesFields(since: String, ctor: Any) extends StaticAnnotation
   class astCompanion extends StaticAnnotation
   @getter class astField extends StaticAnnotation
   @getter class auxiliary extends StaticAnnotation

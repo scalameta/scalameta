@@ -6,7 +6,7 @@ import scala.meta.inputs._
 import scala.meta.tokens._
 import scala.meta.prettyprinters._
 import scala.meta.internal.trees._
-import scala.meta.internal.trees.Metadata.{newField, replacedField}
+import scala.meta.internal.trees.Metadata.{newField, replacedField, replacesFields}
 import scala.{meta => sm}
 
 @root trait Tree extends InternalTree {
@@ -253,10 +253,6 @@ object Type {
   }
 
   @ast class FuncParamClause(values: List[Type]) extends Tree with Member.SyntaxValuesClause
-  object FunctionType {
-    private[meta] final val paramsToClause: List[Type] => FuncParamClause =
-      FuncParamClause.apply
-  }
   @branch trait FunctionType extends Type with Tree.WithBody {
     def paramClause: FuncParamClause
     @deprecated("Please use paramClause instead", "4.6.0")
@@ -264,18 +260,24 @@ object Type {
     def res: Type
     override def body: Tree = res
   }
-  @ast class Function(paramClause: FuncParamClause, res: Type) extends FunctionType {
-    @replacedField("4.6.0", FunctionType.paramsToClause) final override def params: List[Type] =
-      paramClause.values
+  @ast class Function(
+      @replacesFields("4.6.0", FuncParamClause)
+      paramClause: FuncParamClause,
+      res: Type
+  ) extends FunctionType {
+    @replacedField("4.6.0") final override def params: List[Type] = paramClause.values
   }
   @ast class PolyFunction(tparamClause: ParamClause, tpe: Type)
       extends Type with Tree.WithTParamClause with Tree.WithBody {
     @replacedField("4.6.0") final def tparams: List[Param] = tparamClause.values
     override final def body: Tree = tpe
   }
-  @ast class ContextFunction(paramClause: FuncParamClause, res: Type) extends FunctionType {
-    @replacedField("4.6.0", FunctionType.paramsToClause) final override def params: List[Type] =
-      paramClause.values
+  @ast class ContextFunction(
+      @replacesFields("4.6.0", FuncParamClause)
+      paramClause: FuncParamClause,
+      res: Type
+  ) extends FunctionType {
+    @replacedField("4.6.0") final override def params: List[Type] = paramClause.values
   }
   @ast @deprecated("Implicit functions are not supported in any dialect")
   class ImplicitFunction(
