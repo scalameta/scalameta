@@ -1100,12 +1100,9 @@ object TreeSyntax {
           s(beforeBrace, "{ ", f, " }")
         case _ => s(args)
       }
-    implicit def syntaxArgss: Syntax[Seq[Term.ArgClause]] = Syntax {
-      r(_)
-    }
-    implicit def syntaxMods: Syntax[Seq[Mod]] = Syntax { mods =>
-      r(mods, " ")
-    }
+
+    implicit def syntaxArgss: Syntax[Seq[Term.ArgClause]] = Syntax { r(_) }
+    implicit def syntaxMods: Syntax[Seq[Mod]] = Syntax { r(_, " ") }
     private def isUsingOrImplicit(m: Mod): Boolean = m.is[Mod.ParamsType]
     private def printParam(t: Term.Param, keepImplicit: Boolean = false): Show.Result = {
       val mods = if (keepImplicit) t.mods else t.mods.filterNot(isUsingOrImplicit)
@@ -1116,9 +1113,7 @@ object TreeSyntax {
       }
       s(w(mods, " "), nameType, o(" = ", t.default))
     }
-    implicit def syntaxAnnots: Syntax[Seq[Mod.Annot]] = Syntax { annots =>
-      r(annots, " ")
-    }
+    implicit def syntaxAnnots: Syntax[Seq[Mod.Annot]] = Syntax { r(_, " ") }
     private def printParams(t: Term.ParamClause, needParens: Boolean = true): Show.Result = {
       val v = t.values
       val (useParens, mod) = v match {
@@ -1131,12 +1126,8 @@ object TreeSyntax {
       }
       w("(", s(mod, r(v.map(printParam(_, mod eq Show.None)), ", ")), ")", useParens)
     }
-    implicit def syntaxParamss: Syntax[Seq[Term.ParamClause]] = Syntax { paramss =>
-      r(paramss)
-    }
-    implicit def syntaxTypeOpt: Syntax[Option[Type]] = Syntax {
-      o(kw(": "), _)
-    }
+    implicit def syntaxMemberParamss: Syntax[Seq[Member.ParamClause]] = Syntax { r(_) }
+    implicit def syntaxTypeOpt: Syntax[Option[Type]] = Syntax { o(kw(": "), _) }
     implicit def syntaxImportee: Syntax[Seq[Importee]] = Syntax {
       case Seq(t: Importee.Name) => s(t)
       case Seq(t: Importee.Wildcard) => s(t)

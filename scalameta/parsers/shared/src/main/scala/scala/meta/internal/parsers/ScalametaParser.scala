@@ -205,12 +205,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @inline private def tryAhead[T: TokenClassifier]: Boolean =
     tryAhead(token.is[T])
 
-  private def tryAhead[T](cond: => Boolean): Boolean = {
+  private def tryAhead(cond: => Boolean): Boolean = {
     val forked = in.fork
     next()
     val ok = cond
     if (!ok) in = forked
     ok
+  }
+
+  private def tryAhead[A](bodyFunc: => Option[A]): Option[A] = {
+    val forked = in.fork
+    next()
+    val body = bodyFunc
+    if (body.isEmpty) in = forked
+    body
   }
 
   /** evaluate block after shifting next */
@@ -1394,6 +1402,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def isAfterOptNewLine[T: TokenClassifier]: Boolean = {
     if (token.is[LF]) tryAhead[T] else token.is[T]
+  }
+
+  def isAfterOptNewLine(cond: => Boolean): Boolean = {
+    if (token.is[LF]) tryAhead(cond) else cond
+  }
+
+  def getAfterOptNewLine[A](body: => Option[A]): Option[A] = {
+    if (token.is[LF]) tryAhead(body) else body
   }
 
   /* ------------- TYPES ---------------------------------------------------- */
@@ -2994,7 +3010,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def termParamClauses(
       ownerIsType: Boolean,
       ownerIsCase: Boolean = false
-  ): Seq[Term.ParamClause] = {
+  ): List[Term.ParamClause] = {
+    if (!isAfterOptNewLine[LeftParen]) Nil
+    else termParamClausesOnParen(ownerIsType, ownerIsCase)
+  }
+
+  private def termParamClausesOnParen(
+      ownerIsType: Boolean,
+      ownerIsCase: Boolean = false
+  ): List[Term.ParamClause] = {
     var hadModImplicit = false
     def paramClause(first: Boolean) = autoPos(inParensOnOpenOr {
       def reduceParams(params: List[Term.Param], mod: Option[Mod.ParamsType] = None) =
@@ -3016,14 +3040,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     }(Term.ParamClause(Nil)))
 
-    if (!isAfterOptNewLine[LeftParen]) Nil
-    else
-      listBy[Term.ParamClause] { paramss =>
-        paramss += paramClause(true)
-        while (isAfterOptNewLine[LeftParen] && !hadModImplicit) {
-          paramss += paramClause(false)
-        }
+    listBy[Term.ParamClause] { paramss =>
+      paramss += paramClause(true)
+      while (isAfterOptNewLine[LeftParen] && !hadModImplicit) {
+        paramss += paramClause(false)
       }
+    }
   }
 
   def paramType(): Type =
@@ -3143,16 +3165,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   private def emptyTypeParams: Type.ParamClause = autoPos(Type.ParamClause(Nil))
 
-  def typeParamClauseOpt(
+  private def typeParamClauseOpt(
+      ownerIsType: Boolean,
+      ctxBoundsAllowed: Boolean,
+      allowUnderscore: Boolean = true
+  ): Type.ParamClause =
+    if (!isAfterOptNewLine[LeftBracket]) emptyTypeParams
+    else typeParamClauseOnBracket(ownerIsType, ctxBoundsAllowed, allowUnderscore)
+
+  private def typeParamClauseOnBracket(
       ownerIsType: Boolean,
       ctxBoundsAllowed: Boolean,
       allowUnderscore: Boolean = true
   ): Type.ParamClause = {
-    if (!isAfterOptNewLine[LeftBracket]) emptyTypeParams
-    else
-      autoPos(inBrackets(commaSeparated {
-        typeParam(ownerIsType, ctxBoundsAllowed, allowUnderscore)
-      }.reduceWith(Type.ParamClause.apply)))
+    autoPos(inBrackets(commaSeparated {
+      typeParam(ownerIsType, ctxBoundsAllowed, allowUnderscore)
+    }.reduceWith(Type.ParamClause.apply)))
   }
 
   def typeParam(
