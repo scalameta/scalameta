@@ -107,16 +107,14 @@ class DefnSuite extends ParseSuite {
       Defn.Def(
         Nil,
         Term.Name("x"),
-        Type.ParamClause(
-          Type.Param(
-            Nil,
-            Type.Name("A"),
-            Type.ParamClause(Nil),
-            Type.Bounds(None, Some(Type.Name("B"))),
-            Nil,
-            Nil
-          ) :: Nil
-        ),
+        Type.Param(
+          Nil,
+          Type.Name("A"),
+          Type.ParamClause(Nil),
+          Type.Bounds(None, Some(Type.Name("B"))),
+          Nil,
+          Nil
+        ) :: Nil,
         Nil,
         None,
         Lit.Int(2)
@@ -173,14 +171,10 @@ class DefnSuite extends ParseSuite {
       Defn.Def(
         Nil,
         Term.Name("f"),
-        Type.ParamClause(Nil),
-        Term.ParamClause(
-          Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None) :: Nil,
-          None
-        ) :: Term.ParamClause(
-          Term.Param(Mod.Implicit() :: Nil, Term.Name("b"), Some(Type.Name("Int")), None) :: Nil,
-          Some(Mod.Implicit())
-        ) :: Nil,
+        Nil,
+        (Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None) :: Nil) ::
+          (Term.Param(Mod.Implicit() :: Nil, Term.Name("b"), Some(Type.Name("Int")), None) :: Nil)
+          :: Nil,
         None,
         Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Term.Name("b") :: Nil)
       )
@@ -192,7 +186,7 @@ class DefnSuite extends ParseSuite {
       Defn.Def(
         Nil,
         Term.Name("proc"),
-        Type.ParamClause(Nil),
+        Nil,
         Nil,
         Some(Type.Name("Unit")),
         Term.Block(Term.Return(Lit.Int(42)) :: Nil)

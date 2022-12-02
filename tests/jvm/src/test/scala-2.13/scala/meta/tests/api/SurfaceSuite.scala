@@ -300,6 +300,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Member.Infix
       |scala.meta.Member.Param
       |scala.meta.Member.ParamClause
+      |scala.meta.Member.ParamClauseGroup
       |scala.meta.Member.SyntaxValuesClause
       |scala.meta.Member.Term
       |scala.meta.Member.Tuple
@@ -409,6 +410,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Term.While
       |scala.meta.Term.Xml
       |scala.meta.Tree.WithBody
+      |scala.meta.Tree.WithParamClauseGroup
       |scala.meta.Tree.WithParamClauses
       |scala.meta.Tree.WithTParamClause
       |scala.meta.Type

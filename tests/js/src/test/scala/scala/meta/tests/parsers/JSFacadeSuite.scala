@@ -63,41 +63,47 @@ class JSFacadeSuite extends FunSuite {
                   "pos" -> pos(20, 24),
                   "value" -> "main"
                 ),
-                "tparamClause" -> d(
-                  "type" -> "Type.ParamClause",
-                  "pos" -> pos(24, 24),
-                  "values" -> a()
-                ),
-                "paramClauses" -> a(
+                "paramClauseGroup" -> {
                   d(
-                    "type" -> "Term.ParamClause",
+                    "type" -> "Member.ParamClauseGroup",
                     "pos" -> pos(24, 45),
-                    "values" -> a(
+                    "tparamClause" -> d(
+                      "type" -> "Type.ParamClause",
+                      "pos" -> pos(24, 24),
+                      "values" -> a()
+                    ),
+                    "paramClauses" -> a(
                       d(
-                        "type" -> "Term.Param",
-                        "pos" -> pos(25, 44),
-                        "mods" -> a(),
-                        "name" -> d(
-                          "type" -> "Term.Name",
-                          "pos" -> pos(25, 29),
-                          "value" -> "args"
-                        ),
-                        "decltpe" -> d(
-                          "type" -> "Type.Apply",
-                          "pos" -> pos(31, 44),
-                          "tpe" -> d(
-                            "type" -> "Type.Name",
-                            "pos" -> pos(31, 36),
-                            "value" -> "Array"
-                          ),
-                          "argClause" -> d(
-                            "type" -> "Type.ArgClause",
-                            "pos" -> pos(36, 44),
-                            "values" -> a(
-                              d(
+                        "type" -> "Term.ParamClause",
+                        "pos" -> pos(24, 45),
+                        "values" -> a(
+                          d(
+                            "type" -> "Term.Param",
+                            "pos" -> pos(25, 44),
+                            "mods" -> a(),
+                            "name" -> d(
+                              "type" -> "Term.Name",
+                              "pos" -> pos(25, 29),
+                              "value" -> "args"
+                            ),
+                            "decltpe" -> d(
+                              "type" -> "Type.Apply",
+                              "pos" -> pos(31, 44),
+                              "tpe" -> d(
                                 "type" -> "Type.Name",
-                                "pos" -> pos(37, 43),
-                                "value" -> "String"
+                                "pos" -> pos(31, 36),
+                                "value" -> "Array"
+                              ),
+                              "argClause" -> d(
+                                "type" -> "Type.ArgClause",
+                                "pos" -> pos(36, 44),
+                                "values" -> a(
+                                  d(
+                                    "type" -> "Type.Name",
+                                    "pos" -> pos(37, 43),
+                                    "value" -> "String"
+                                  )
+                                )
                               )
                             )
                           )
@@ -105,7 +111,7 @@ class JSFacadeSuite extends FunSuite {
                       )
                     )
                   )
-                ),
+                },
                 "decltpe" -> d(
                   "type" -> "Type.Name",
                   "pos" -> pos(47, 51),

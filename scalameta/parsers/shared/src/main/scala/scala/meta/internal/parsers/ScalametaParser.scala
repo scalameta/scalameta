@@ -3460,6 +3460,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
+  private def getParamClauseGroup(
+      tparamClause: Type.ParamClause,
+      paramClauses: List[Term.ParamClause]
+  ): Option[Member.ParamClauseGroup] = {
+    def pcGroup = Member.ParamClauseGroup(tparamClause, paramClauses)
+    if (paramClauses.nonEmpty)
+      Some(atPos(tparamClause, paramClauses.last)(pcGroup))
+    else if (tparamClause.is[Quasi] || tparamClause.values.nonEmpty)
+      Some(copyPos(tparamClause)(pcGroup))
+    else None
+  }
+
   /**
    * ```scala
    * Given             ::= 'given' GivenDef
@@ -3473,7 +3485,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val anonymousName = autoPos(Name.Anonymous())
 
     val forked = in.fork
-    val (sigName, sigTparams, sigUparamss) =
+    val (sigName, paramClauseGroup) =
       try {
         val name: meta.Name =
           if (token.is[Ident]) termName() else anonymousName
@@ -3484,13 +3496,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         )
         val uparamss =
           if (token.is[LeftParen] && ahead(token.is[soft.KwUsing]))
-            termParamClauses(ownerIsType = false)
+            termParamClausesOnParen(ownerIsType = false)
           else Nil
         if (acceptOpt[Colon]) {
-          (name, tparams, uparamss)
+          (name, getParamClauseGroup(tparams, uparamss))
         } else {
           in = forked
-          (anonymousName, emptyTypeParams, Nil)
+          (anonymousName, None)
         }
       } catch {
         /**
@@ -3502,7 +3514,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
          */
         case NonFatal(_) =>
           in = forked
-          (anonymousName, emptyTypeParams, Nil)
+          (anonymousName, None)
       }
 
     val decltype = if (token.is[LeftBrace]) refinement(None) else startModType()
@@ -3518,7 +3530,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
     if (acceptOpt[Equals]) {
-      Defn.GivenAlias(mods, sigName, sigTparams, sigUparamss, decltype, exprMaybeIndented())
+      Defn.GivenAlias(mods, sigName, paramClauseGroup, decltype, exprMaybeIndented())
     } else if (token.is[KwWith] || token.is[LeftParen]) {
       val inits = parents()
       val (slf, stats) = {
@@ -3540,11 +3552,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       } else {
         autoEndPos(decltype)(Template(List.empty, inits, slf, stats))
       }
-      Defn.Given(mods, sigName, sigTparams, sigUparamss, rhs)
+      Defn.Given(mods, sigName, paramClauseGroup, rhs)
     } else {
       sigName match {
         case name: Term.Name =>
-          Decl.Given(mods, name, sigTparams, sigUparamss, decltype)
+          Decl.Given(mods, name, paramClauseGroup, decltype)
         case _ =>
           syntaxError("abstract givens cannot be annonymous", at = sigName.pos)
       }
@@ -3605,7 +3617,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       } else {
         syntaxError("Extension without extension method", token)
       }
-    Defn.ExtensionGroup(tparams, paramss.toList, body)
+    Defn.ExtensionGroup(getParamClauseGroup(tparams, paramss.toList), body)
   }
 
   def funDefRest(mods: List[Mod]): Stat = autoEndPos(mods) {
@@ -3622,32 +3634,29 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else
         syntaxError(s"Procedure syntax is not supported. $hint", at = name)
     }
-    val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
-    val paramss = termParamClauses(ownerIsType = false)
+
+    val paramClauses = {
+      val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
+      val paramss = termParamClauses(ownerIsType = false)
+      getParamClauseGroup(tparams, paramss)
+    }
 
     val restype = ReturnTypeContext.within(typedOpt())
     if (restype.isEmpty && isAfterOptNewLine[LeftBrace]) {
       warnProcedureDeprecation
-      Defn.Def(
-        mods,
-        name,
-        tparams,
-        paramss,
-        Some(autoPos(Type.Name("Unit"))),
-        expr()
-      )
+      Defn.Def(mods, name, paramClauses, Some(autoPos(Type.Name("Unit"))), expr())
     } else if (token.is[StatSep] || token.is[RightBrace] || token.is[Indentation.Outdent]) {
       val decltype = restype.getOrElse {
         warnProcedureDeprecation
         autoPos(Type.Name("Unit"))
       }
-      Decl.Def(mods, name, tparams, paramss, decltype)
+      Decl.Def(mods, name, paramClauses, decltype)
     } else {
       accept[Equals]
       val isMacro = acceptOpt[KwMacro]
       val rhs = exprMaybeIndented()
-      if (isMacro) Defn.Macro(mods, name, tparams, paramss, restype, rhs)
-      else Defn.Def(mods, name, tparams, paramss, restype, rhs)
+      if (isMacro) Defn.Macro(mods, name, paramClauses, restype, rhs)
+      else Defn.Def(mods, name, paramClauses, restype, rhs)
     }
   }
 

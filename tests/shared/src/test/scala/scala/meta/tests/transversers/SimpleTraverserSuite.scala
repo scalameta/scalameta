@@ -28,6 +28,7 @@ class SimpleTraverserSuite extends FunSuite {
       |{   def foo(x: x)(x: Int) = x + x   class C(x: x) { def bar(x: x) = ??? } }
       |def foo(x: x)(x: Int) = x + x
       |foo
+      |(x: x)(x: Int)
       |
       |(x: x)
       |x: x
@@ -57,6 +58,7 @@ class SimpleTraverserSuite extends FunSuite {
       |
       |def bar(x: x) = ???
       |bar
+      |(x: x)
       |
       |(x: x)
       |x: x
