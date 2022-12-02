@@ -1481,8 +1481,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(private, final)")
     assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Final())
     assertTree(name)(Term.Name("m"))
-    assertEquals(tparams.toString, "[T, W]")
-    assertTree(tparams)(Type.ParamClause {
+    checkTree(tparams, "[T, W]")(Type.ParamClause {
       List(
         Type.Param(Nil, Type.Name("T"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
         Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
@@ -1615,8 +1614,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(private, final)")
     assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Final())
     assertTree(name)(Term.Name("m"))
-    assertEquals(tparams.toString, "[T, W]")
-    assertTree(tparams)(Type.ParamClause {
+    checkTree(tparams, "[T, W]")(Type.ParamClause {
       List(
         Type.Param(Nil, Type.Name("T"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
         Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
@@ -1665,8 +1663,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(private, final)")
     assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Final())
     assertTree(name)(Term.Name("m"))
-    assertEquals(tparams.toString, "[T, W]")
-    assertTree(tparams)(Type.ParamClause {
+    checkTree(tparams, "[T, W]")(Type.ParamClause {
       List(
         Type.Param(Nil, Type.Name("T"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
         Type.Param(Nil, Type.Name("W"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
@@ -2595,8 +2592,7 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("initial support for ...") {
     val q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs" = q"def f(x: Int) = ???"
-    assert(tparams.isEmpty)
-    assertEquals(paramss.lengthCompare(1), 0)
+    checkTree(tparams, "")(Type.ParamClause(Nil))
     checkTreesWithSyntax(paramss: _*)("(x: Int)")(Term.ParamClause {
       List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))
     })
@@ -2809,13 +2805,11 @@ class SuccessSuite extends TreeSuiteBase {
   test("#468 - function parameter list V") {
     val q"def foo(...$paramss)(..$params)($param): Int = a" =
       q"def foo(a: Int)(b: String)(c: Long): Int = a"
-    assertEquals(paramss.length, 1)
-    assertEquals(params.length, 1)
-    checkTree(paramss(0), "(a: Int)")(Term.ParamClause {
+    checkTreesWithSyntax(paramss: _*)("(a: Int)")(Term.ParamClause {
       List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))
     })
-    checkTree(params(0), "b: String") {
-      Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
+    checkTree(params, "(b: String)") {
+      Term.ParamClause(Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None) :: Nil)
     }
     checkTree(param, "c: Long") {
       Term.Param(Nil, Term.Name("c"), Some(Type.Name("Long")), None)

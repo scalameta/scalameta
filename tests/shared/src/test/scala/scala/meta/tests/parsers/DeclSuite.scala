@@ -209,7 +209,7 @@ class DeclSuite extends ParseSuite {
       Decl.Def(
         Nil,
         Term.Name("f"),
-        Type.ParamClause(Nil),
+        Nil,
         (Term.Param(Mod.Implicit() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil)
           :: Nil,
         Type.Name("Unit")
