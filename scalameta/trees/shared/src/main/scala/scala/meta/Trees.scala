@@ -477,6 +477,7 @@ object Decl {
       with Stat.WithMods
       with Tree.WithTParamClause
       with Tree.WithParamClauses {
+    checkFields(checkValidParamClauses(paramClauses))
     @replacedField("4.6.0") final def tparams: List[sm.Type.Param] = tparamClause.values
     @replacedField("4.6.0") final def paramss: List[List[Term.Param]] =
       paramClauses.map(_.values).toList
@@ -610,7 +611,7 @@ object Defn {
       with Tree.WithTParamClause
       with Tree.WithParamClauses
       with Tree.WithBody {
-    checkFields(paramClauses.forall(onlyLastParamCanBeRepeated))
+    checkFields(checkValidParamClauses(paramClauses))
     @replacedField("4.6.0") final def tparams: List[sm.Type.Param] = tparamClause.values
     @replacedField("4.6.0") final def paramss: List[List[Term.Param]] =
       paramClauses.map(_.values).toList
@@ -628,6 +629,7 @@ object Defn {
       with Tree.WithTParamClause
       with Tree.WithParamClauses
       with Tree.WithBody {
+    checkFields(checkValidParamClauses(paramClauses))
     @replacedField("4.6.0") final def tparams: List[sm.Type.Param] = tparamClause.values
     @replacedField("4.6.0") final def paramss: List[List[Term.Param]] =
       paramClauses.map(_.values).toList

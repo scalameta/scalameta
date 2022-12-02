@@ -225,8 +225,18 @@ package object trees {
     else arrayClass(ScalaRunTime.arrayClass(clazz), rank - 1)
   }
 
-  def onlyLastParamCanBeRepeated(clause: Term.ParamClause): Boolean =
-    clause.is[Quasi] || clause.values.view.dropRight(1).forall { p =>
-      p.is[Quasi] || !p.decltpe.exists(_.is[Type.Repeated])
+  private[meta] def checkValidParamClauses(paramClauses: Iterable[Term.ParamClause]): Boolean = {
+    var hadImplicit = false
+    !paramClauses.exists { pc =>
+      hadImplicit || !pc.is[Quasi] && {
+        hadImplicit = pc.mod.exists(_.is[Mod.Implicit])
+        var hadRepeated = false
+        pc.values.exists { v =>
+          try hadRepeated
+          finally hadRepeated = !v.is[Quasi] && v.decltpe.exists(_.is[Type.Repeated])
+        }
+      }
     }
+  }
+
 }
