@@ -174,9 +174,13 @@ class DefnSuite extends ParseSuite {
         Nil,
         Term.Name("f"),
         Type.ParamClause(Nil),
-        (Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None) :: Nil) ::
-          (Term.Param(Mod.Implicit() :: Nil, Term.Name("b"), Some(Type.Name("Int")), None) :: Nil)
-          :: Nil,
+        Term.ParamClause(
+          Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None) :: Nil,
+          None
+        ) :: Term.ParamClause(
+          Term.Param(Mod.Implicit() :: Nil, Term.Name("b"), Some(Type.Name("Int")), None) :: Nil,
+          Some(Mod.Implicit())
+        ) :: Nil,
         None,
         Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Term.Name("b") :: Nil)
       )

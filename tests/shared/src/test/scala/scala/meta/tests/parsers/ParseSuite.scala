@@ -80,9 +80,10 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
         s"Statement ${code} should not parse! Got result ${result.structure}"
       )
     }
+    val obtained = error.getMessage().replace("\r", "")
     assert(
-      error.getMessage().contains(expected),
-      s"Expected [${error.getMessage}] to contain [${expected}]."
+      obtained.contains(expected),
+      s"Expected [$obtained] to contain [${expected}]."
     )
   }
 }
