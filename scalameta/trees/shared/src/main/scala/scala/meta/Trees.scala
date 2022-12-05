@@ -125,9 +125,10 @@ object Term {
   @ast class ApplyUnary(op: Name, arg: Term) extends Term.Ref {
     checkFields(op.isUnaryOp)
   }
-  @ast class Assign(lhs: Term, rhs: Term) extends Term {
+  @ast class Assign(lhs: Term, rhs: Term) extends Term with Tree.WithBody {
     checkFields(lhs.is[Term.Quasi] || lhs.is[Term.Ref] || lhs.is[Term.Apply])
     checkParent(ParentChecks.TermAssign)
+    override def body: Tree = rhs
   }
   @ast class Return(expr: Term) extends Term
   @ast class Throw(expr: Term) extends Term
@@ -523,10 +524,11 @@ object Defn {
       pats: List[Pat] @nonEmpty,
       decltpe: Option[sm.Type],
       rhs: Option[Term]
-  ) extends Defn with Stat.WithMods {
+  ) extends Defn with Stat.WithMods with Tree.WithBody {
     checkFields(pats.forall(!_.is[Term.Name]))
     checkFields(decltpe.nonEmpty || rhs.nonEmpty)
     checkFields(rhs.isEmpty ==> pats.forall(_.is[Pat.Var]))
+    override def body: Tree = rhs.orNull
   }
   @ast class Given(
       mods: List[Mod],
@@ -774,9 +776,15 @@ object Mod {
 
 @branch trait Enumerator extends Tree
 object Enumerator {
-  @ast class Generator(pat: Pat, rhs: Term) extends Enumerator
-  @ast class CaseGenerator(pat: Pat, rhs: Term) extends Enumerator
-  @ast class Val(pat: Pat, rhs: Term) extends Enumerator
+  @ast class Generator(pat: Pat, rhs: Term) extends Enumerator with Tree.WithBody {
+    override def body: Tree = rhs
+  }
+  @ast class CaseGenerator(pat: Pat, rhs: Term) extends Enumerator with Tree.WithBody {
+    override def body: Tree = rhs
+  }
+  @ast class Val(pat: Pat, rhs: Term) extends Enumerator with Tree.WithBody {
+    override def body: Tree = rhs
+  }
   @ast class Guard(cond: Term) extends Enumerator
 }
 
