@@ -792,7 +792,7 @@ object TreeSyntax {
         s(w(t.mods, " "), kw("var"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
       case t: Decl.Type => s(w(t.mods, " "), kw("type"), " ", t.name, t.tparamClause, t.bounds)
       case t: Decl.Def =>
-        s(w(t.mods, " "), kw("def "), t.name, o(t.paramClauseGroup), kw(": "), t.decltpe)
+        s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, kw(": "), t.decltpe)
       case t: Decl.Given =>
         s(w(t.mods, " "), kw("given "), t.name, o(t.paramClauseGroup), kw(": "), t.decltpe)
       case t: Defn.Val =>
@@ -865,9 +865,9 @@ object TreeSyntax {
         s(kw("extension"), " ", o(t.paramClauseGroup), m)
       case t: Defn.Object => r(" ")(t.mods, kw("object"), t.name, t.templ)
       case t: Defn.Def =>
-        s(w(t.mods, " "), kw("def "), t.name, o(t.paramClauseGroup), t.decltpe, " = ", t.body)
+        s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, t.decltpe, " = ", t.body)
       case t: Defn.Macro =>
-        s(w(t.mods, " "), kw("def "), t.name, o(t.paramClauseGroup), t.decltpe, " = macro ", t.body)
+        s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, t.decltpe, " = macro ", t.body)
       case t: Pkg =>
         if (guessHasBraces(t)) s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
         else s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
@@ -1044,6 +1044,7 @@ object TreeSyntax {
         case _ => s(args)
       }
 
+    implicit def syntaxParamClauseGroups: Syntax[Seq[Member.ParamClauseGroup]] = Syntax { r(_) }
     implicit def syntaxArgss: Syntax[Seq[Term.ArgClause]] = Syntax { r(_) }
     implicit def syntaxMods: Syntax[Seq[Mod]] = Syntax { r(_, " ") }
     private def isUsingOrImplicit(m: Mod): Boolean = m.is[Mod.ParamsType]

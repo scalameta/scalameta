@@ -10,7 +10,7 @@ class InterleavedDefnSuite extends BaseDottySuite {
 
   test("def x = 2") {
     checkTree(templStat("def x = 2")) {
-      Defn.Def(Nil, Term.Name("x"), Nil, Nil, None, Lit.Int(2))
+      Defn.Def(Nil, Term.Name("x"), Nil, None, Lit.Int(2))
     }
   }
 
@@ -111,7 +111,6 @@ class InterleavedDefnSuite extends BaseDottySuite {
         Nil,
         Term.Name("f"),
         Nil,
-        Nil,
         None,
         Term.Block(
           List(
@@ -159,12 +158,34 @@ class InterleavedDefnSuite extends BaseDottySuite {
   }
 
   test("def f[A](a: A, as: A*)[B]: B = ???") {
-    runTestError[Stat](
-      "def f[A](a: A, as: A*)[B]: B = ???",
-      """|error: = expected but [ found
-         |def f[A](a: A, as: A*)[B]: B = ???
-         |                      ^""".stripMargin
-    )
+    runTestAssert[Stat]("def f[A](a: A, as: A*)[B]: B = ???") {
+      Defn.Def(
+        Nil,
+        Term.Name("f"),
+        List(
+          Member.ParamClauseGroup(
+            Type.ParamClause(
+              Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+            ),
+            Term.ParamClause(
+              List(
+                Term.Param(Nil, Term.Name("a"), Some(Type.Name("A")), None),
+                Term.Param(Nil, Term.Name("as"), Some(Type.Repeated(Type.Name("A"))), None)
+              ),
+              None
+            ) :: Nil
+          ),
+          Member.ParamClauseGroup(
+            Type.ParamClause(
+              Type.Param(Nil, Type.Name("B"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+            ),
+            Nil
+          )
+        ),
+        Some(Type.Name("B")),
+        Term.Name("???")
+      )
+    }
   }
 
   test("def f[A](implicit a: A)[B](implicit b: B): B = ???") {
@@ -177,12 +198,49 @@ class InterleavedDefnSuite extends BaseDottySuite {
   }
 
   test("def f[A](a: A, as: A*)[B](b: B, bs: B*)[C](implicit c: C): B = ???") {
-    runTestError[Stat](
-      "def f[A](a: A, as: A*)[B](b: B, bs: B*)[C](implicit c: C): B = ???",
-      """|error: = expected but [ found
-         |def f[A](a: A, as: A*)[B](b: B, bs: B*)[C](implicit c: C): B = ???
-         |                      ^""".stripMargin
-    )
+    runTestAssert[Stat]("def f[A](a: A, as: A*)[B](b: B, bs: B*)[C](implicit c: C): B = ???") {
+      Defn.Def(
+        Nil,
+        Term.Name("f"),
+        List(
+          Member.ParamClauseGroup(
+            Type.ParamClause(
+              Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+            ),
+            Term.ParamClause(
+              List(
+                Term.Param(Nil, Term.Name("a"), Some(Type.Name("A")), None),
+                Term.Param(Nil, Term.Name("as"), Some(Type.Repeated(Type.Name("A"))), None)
+              ),
+              None
+            ) :: Nil
+          ),
+          Member.ParamClauseGroup(
+            Type.ParamClause(
+              Type.Param(Nil, Type.Name("B"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+            ),
+            Term.ParamClause(
+              List(
+                Term.Param(Nil, Term.Name("b"), Some(Type.Name("B")), None),
+                Term.Param(Nil, Term.Name("bs"), Some(Type.Repeated(Type.Name("B"))), None)
+              ),
+              None
+            ) :: Nil
+          ),
+          Member.ParamClauseGroup(
+            Type.ParamClause(
+              Type.Param(Nil, Type.Name("C"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+            ),
+            Term.ParamClause(
+              List(Term.Param(List(Mod.Implicit()), Term.Name("c"), Some(Type.Name("C")), None)),
+              Some(Mod.Implicit())
+            ) :: Nil
+          )
+        ),
+        Some(Type.Name("B")),
+        Term.Name("???")
+      )
+    }
   }
 
 }

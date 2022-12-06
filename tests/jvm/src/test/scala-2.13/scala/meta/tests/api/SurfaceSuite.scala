@@ -419,6 +419,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Tree.WithDeclTpeOpt
       |scala.meta.Tree.WithEnums
       |scala.meta.Tree.WithParamClauseGroup
+      |scala.meta.Tree.WithParamClauseGroups
       |scala.meta.Tree.WithParamClauses
       |scala.meta.Tree.WithTParamClause
       |scala.meta.Type

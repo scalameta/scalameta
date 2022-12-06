@@ -2974,6 +2974,41 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case _ =>
   }
 
+  def memberParamClauseGroups(
+      ownerIsType: Boolean,
+      ctxBoundsAllowed: Boolean
+  ): List[Member.ParamClauseGroup] =
+    listBy[Member.ParamClauseGroup] { groups =>
+      @tailrec def iter(): Unit =
+        getAfterOptNewLine(token match {
+          case _: LeftParen =>
+            val tparams = emptyTypeParams
+            Some(autoPos {
+              termParamClausesOnParen(ownerIsType, ellipsisMaxRank = 3) match {
+                case (x: Quasi) :: Nil if x.rank == 2 => reellipsis[Member.ParamClauseGroup](x, 1)
+                case x => Member.ParamClauseGroup(tparams, x)
+              }
+            })
+          case _: LeftBracket =>
+            Some(autoPos {
+              val tparamClause = typeParamClauseOnBracket(ownerIsType, ctxBoundsAllowed)
+              val paramClauses = termParamClauses(ownerIsType)
+              Member.ParamClauseGroup(tparamClause, paramClauses)
+            })
+          case _ => None
+        }) match {
+          case Some(group) =>
+            groups += group
+            // can't have consecutive type clauses (so params must be present)
+            // also, only the very last param may contain implicit
+            val ok = group.is[Quasi] || group.paramClauses.lastOption
+              .exists { x => x.is[Quasi] || !x.mod.exists(_.is[Mod.Implicit]) }
+            if (ok) iter()
+          case _ =>
+        }
+      iter()
+    }
+
   def termParamClauses(
       ownerIsType: Boolean,
       ownerIsCase: Boolean = false
@@ -2984,7 +3019,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   private def termParamClausesOnParen(
       ownerIsType: Boolean,
-      ownerIsCase: Boolean = false
+      ownerIsCase: Boolean = false,
+      ellipsisMaxRank: Int = 2
   ): List[Term.ParamClause] = {
     var hadModImplicit = false
     def paramClause(first: Boolean) = autoPos(inParensOnOpenOr {
@@ -2996,7 +3032,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       def parseParams(mod: Option[Mod.ParamsType] = None) =
         reduceParams(commaSeparated(termParam(ownerIsCase && first, ownerIsType, mod = mod)), mod)
       token match {
-        case t @ Ellipsis(2) =>
+        case t @ Ellipsis(rank) if rank >= 2 && rank <= ellipsisMaxRank =>
           reduceParams(List(ellipsis[Term.Param](t)))
         case _: KwImplicit =>
           hadModImplicit = true
@@ -3594,11 +3630,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         syntaxError(s"Procedure syntax is not supported. $hint", at = name)
     }
 
-    val paramClauses = {
+    def nonInterleavedParamClauses = {
       val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
       val paramss = termParamClauses(ownerIsType = false)
       getParamClauseGroup(tparams, paramss)
     }
+    val paramClauses: List[Member.ParamClauseGroup] =
+      if (dialect.allowParamClauseInterleaving)
+        memberParamClauseGroups(ownerIsType = false, ctxBoundsAllowed = true)
+      else nonInterleavedParamClauses.toList
 
     val restype = ReturnTypeContext.within(typedOpt())
     if (restype.isEmpty && isAfterOptNewLine[LeftBrace]) {
