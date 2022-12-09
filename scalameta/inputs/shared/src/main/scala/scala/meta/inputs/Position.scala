@@ -18,6 +18,8 @@ sealed trait Position {
   def endLine: Int
   def endColumn: Int
   def text: String
+
+  final def isEmpty: Boolean = start == end
 }
 
 object Position {
