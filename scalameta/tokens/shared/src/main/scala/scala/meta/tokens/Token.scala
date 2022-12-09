@@ -19,6 +19,8 @@ import scala.meta.internal.prettyprinters._
   def end: Int
   def pos: Position
   def text: String = pos.text
+
+  final def isEmpty: Boolean = start == end
 }
 
 object Token {
