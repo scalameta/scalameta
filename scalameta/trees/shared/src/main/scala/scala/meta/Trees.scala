@@ -4,6 +4,7 @@ import org.scalameta.invariants._
 import scala.meta.classifiers._
 import scala.meta.inputs._
 import scala.meta.tokens._
+import scala.meta.trees._
 import scala.meta.prettyprinters._
 import scala.meta.internal.trees._
 import scala.meta.internal.trees.Metadata.{newField, replacedField, replacesFields}
@@ -32,6 +33,12 @@ object Tree extends InternalTreeXtensions {
   @branch trait WithBody extends Tree { def body: Tree }
   @branch trait WithParamClauses extends Tree { def paramClauses: Seq[Term.ParamClause] }
   @branch trait WithTParamClause extends Tree { def tparamClause: Type.ParamClause }
+  @branch trait WithParamClauseGroup extends Tree with WithParamClauses {
+    def paramClauseGroup: Option[Member.ParamClauseGroup]
+
+    final def paramClauses: Seq[Term.ParamClause] =
+      paramClauseGroup.fold(Seq.empty[Term.ParamClause])(_.paramClauses)
+  }
 
 }
 
@@ -444,6 +451,44 @@ object Member {
   @branch trait ParamClause extends SyntaxValuesClause {
     def values: List[Param]
   }
+
+  @ast class ParamClauseGroup(
+      tparamClause: sm.Type.ParamClause,
+      paramClauses: List[sm.Term.ParamClause]
+  ) extends Tree with Tree.WithTParamClause with Tree.WithParamClauses {
+    checkFields(checkValidParamClauses(paramClauses))
+  }
+
+  object ParamClauseGroup {
+    private[meta] def toTparams(
+        paramClauseGroup: Option[ParamClauseGroup]
+    ): List[sm.Type.Param] =
+      paramClauseGroup.fold(List.empty[sm.Type.Param])(_.tparamClause.values)
+
+    private[meta] def toParamss(
+        paramClauseGroup: Option[ParamClauseGroup]
+    ): List[List[sm.Term.Param]] =
+      paramClauseGroup.fold(List.empty[List[sm.Term.Param]])(_.paramClauses.map(_.values))
+  }
+
+  private[meta] object ParamClauseGroupCtor {
+    def apply(
+        tparams: List[sm.Type.Param],
+        paramss: List[List[sm.Term.Param]]
+    ): Option[ParamClauseGroup] = {
+      if (tparams.isEmpty && paramss.isEmpty) None
+      else Some(ParamClauseGroup(tparamClause = tparams, paramClauses = paramss))
+    }
+  }
+
+  private[meta] object ParamClauseGroupCtorGiven {
+    def apply(
+        tparams: List[sm.Type.Param],
+        sparams: List[List[sm.Term.Param]]
+    ): Option[ParamClauseGroup] =
+      ParamClauseGroupCtor(tparams, sparams)
+  }
+
   @branch trait ArgClause extends SyntaxValuesClause {
     def values: List[Tree]
   }
@@ -467,22 +512,20 @@ object Decl {
       extends Decl with Stat.WithMods
   @ast class Var(mods: List[Mod], pats: List[Pat] @nonEmpty, decltpe: sm.Type)
       extends Decl with Stat.WithMods
+
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
-      tparamClause: sm.Type.ParamClause,
-      paramClauses: Seq[Term.ParamClause],
+      @replacesFields("4.6.0", Member.ParamClauseGroupCtor)
+      paramClauseGroup: Option[Member.ParamClauseGroup],
       decltpe: sm.Type
-  ) extends Decl
-      with Member.Term
-      with Stat.WithMods
-      with Tree.WithTParamClause
-      with Tree.WithParamClauses {
-    checkFields(checkValidParamClauses(paramClauses))
-    @replacedField("4.6.0") final def tparams: List[sm.Type.Param] = tparamClause.values
-    @replacedField("4.6.0") final def paramss: List[List[Term.Param]] =
-      paramClauses.map(_.values).toList
+  ) extends Decl with Member.Term with Stat.WithMods with Tree.WithParamClauseGroup {
+    @replacedField("4.6.0", pos = 2) final def tparams: List[sm.Type.Param] =
+      Member.ParamClauseGroup.toTparams(paramClauseGroup)
+    @replacedField("4.6.0", pos = 3) final def paramss: List[List[Term.Param]] =
+      Member.ParamClauseGroup.toParamss(paramClauseGroup)
   }
+
   @ast class Type(
       mods: List[Mod],
       name: sm.Type.Name,
@@ -494,17 +537,14 @@ object Decl {
   @ast class Given(
       mods: List[Mod],
       name: Term.Name,
-      tparamClause: sm.Type.ParamClause,
-      paramClauses: Seq[Term.ParamClause],
+      @replacesFields("4.6.0", Member.ParamClauseGroupCtorGiven)
+      paramClauseGroup: Option[Member.ParamClauseGroup],
       decltpe: sm.Type
-  ) extends Decl
-      with Member.Term
-      with Stat.WithMods
-      with Tree.WithTParamClause
-      with Tree.WithParamClauses {
-    @replacedField("4.6.0") final def tparams: List[sm.Type.Param] = tparamClause.values
-    @replacedField("4.6.0") final def sparams: List[List[Term.Param]] =
-      paramClauses.map(_.values).toList
+  ) extends Decl with Member.Term with Stat.WithMods with Tree.WithParamClauseGroup {
+    @replacedField("4.6.0", pos = 2) final def tparams: List[sm.Type.Param] =
+      Member.ParamClauseGroup.toTparams(paramClauseGroup)
+    @replacedField("4.6.0", pos = 3) final def sparams: List[List[Term.Param]] =
+      Member.ParamClauseGroup.toParamss(paramClauseGroup)
   }
 }
 
@@ -533,17 +573,14 @@ object Defn {
   @ast class Given(
       mods: List[Mod],
       name: scala.meta.Name,
-      tparamClause: sm.Type.ParamClause,
-      paramClauses: Seq[Term.ParamClause],
+      @replacesFields("4.6.0", Member.ParamClauseGroupCtorGiven)
+      paramClauseGroup: Option[Member.ParamClauseGroup],
       templ: Template
-  ) extends Defn
-      with Stat.WithMods
-      with Tree.WithTParamClause
-      with Tree.WithParamClauses
-      with Stat.WithTemplate {
-    @replacedField("4.6.0") final def tparams: List[sm.Type.Param] = tparamClause.values
-    @replacedField("4.6.0") final def sparams: List[List[Term.Param]] =
-      paramClauses.map(_.values).toList
+  ) extends Defn with Stat.WithMods with Tree.WithParamClauseGroup with Stat.WithTemplate {
+    @replacedField("4.6.0", pos = 2) final def tparams: List[sm.Type.Param] =
+      Member.ParamClauseGroup.toTparams(paramClauseGroup)
+    @replacedField("4.6.0", pos = 3) final def sparams: List[List[Term.Param]] =
+      Member.ParamClauseGroup.toParamss(paramClauseGroup)
   }
   @ast class Enum(
       mods: List[Mod],
@@ -578,64 +615,63 @@ object Defn {
   @ast class GivenAlias(
       mods: List[Mod],
       name: scala.meta.Name,
-      tparamClause: sm.Type.ParamClause,
-      paramClauses: Seq[Term.ParamClause],
+      @replacesFields("4.6.0", Member.ParamClauseGroupCtorGiven)
+      paramClauseGroup: Option[Member.ParamClauseGroup],
       decltpe: sm.Type,
       body: Term
-  ) extends Defn
-      with Stat.WithMods
-      with Tree.WithTParamClause
-      with Tree.WithParamClauses
-      with Tree.WithBody {
-    @replacedField("4.6.0") final def tparams: List[sm.Type.Param] = tparamClause.values
-    @replacedField("4.6.0") final def sparams: List[List[Term.Param]] =
-      paramClauses.map(_.values).toList
+  ) extends Defn with Stat.WithMods with Tree.WithParamClauseGroup with Tree.WithBody {
+    @replacedField("4.6.0", pos = 2) final def tparams: List[sm.Type.Param] =
+      Member.ParamClauseGroup.toTparams(paramClauseGroup)
+    @replacedField("4.6.0", pos = 3) final def sparams: List[List[Term.Param]] =
+      Member.ParamClauseGroup.toParamss(paramClauseGroup)
   }
   @ast class ExtensionGroup(
-      tparamClause: sm.Type.ParamClause,
-      paramClauses: Seq[Term.ParamClause],
+      @replacesFields("4.6.0", Member.ParamClauseGroupCtor)
+      paramClauseGroup: Option[Member.ParamClauseGroup],
       body: Stat
-  ) extends Defn with Tree.WithTParamClause with Tree.WithParamClauses with Tree.WithBody {
-    @replacedField("4.6.0") final def tparams: List[sm.Type.Param] = tparamClause.values
-    @replacedField("4.6.0") final def paramss: List[List[Term.Param]] =
-      paramClauses.map(_.values).toList
+  ) extends Defn with Tree.WithParamClauseGroup with Tree.WithBody {
+    @replacedField("4.6.0", pos = 0) final def tparams: List[sm.Type.Param] =
+      Member.ParamClauseGroup.toTparams(paramClauseGroup)
+    @replacedField("4.6.0", pos = 1) final def paramss: List[List[Term.Param]] =
+      Member.ParamClauseGroup.toParamss(paramClauseGroup)
   }
+
   @ast class Def(
       mods: List[Mod],
       name: Term.Name,
-      tparamClause: sm.Type.ParamClause,
-      paramClauses: Seq[Term.ParamClause],
+      @replacesFields("4.6.0", Member.ParamClauseGroupCtor)
+      paramClauseGroup: Option[Member.ParamClauseGroup],
       decltpe: Option[sm.Type],
       body: Term
   ) extends Defn
       with Member.Term
       with Stat.WithMods
-      with Tree.WithTParamClause
-      with Tree.WithParamClauses
+      with Tree.WithParamClauseGroup
       with Tree.WithBody {
-    checkFields(checkValidParamClauses(paramClauses))
-    @replacedField("4.6.0") final def tparams: List[sm.Type.Param] = tparamClause.values
-    @replacedField("4.6.0") final def paramss: List[List[Term.Param]] =
-      paramClauses.map(_.values).toList
+    @replacedField("4.6.0", pos = 2) final def tparams: List[sm.Type.Param] =
+      Member.ParamClauseGroup.toTparams(paramClauseGroup)
+    @replacedField("4.6.0", pos = 3) final def paramss: List[List[Term.Param]] =
+      Member.ParamClauseGroup.toParamss(paramClauseGroup)
   }
+
   @ast class Macro(
       mods: List[Mod],
       name: Term.Name,
-      tparamClause: sm.Type.ParamClause,
-      paramClauses: Seq[Term.ParamClause],
+      @replacesFields("4.6.0", Member.ParamClauseGroupCtor)
+      paramClauseGroup: Option[Member.ParamClauseGroup],
       decltpe: Option[sm.Type],
       body: Term
   ) extends Defn
       with Member.Term
       with Stat.WithMods
-      with Tree.WithTParamClause
-      with Tree.WithParamClauses
+      with Tree.WithParamClauseGroup
       with Tree.WithBody {
-    checkFields(checkValidParamClauses(paramClauses))
-    @replacedField("4.6.0") final def tparams: List[sm.Type.Param] = tparamClause.values
-    @replacedField("4.6.0") final def paramss: List[List[Term.Param]] =
-      paramClauses.map(_.values).toList
+    @replacedField("4.6.0", pos = 2) final def tparams: List[sm.Type.Param] =
+      Member.ParamClauseGroup.toTparams(paramClauseGroup)
+    @replacedField("4.6.0", pos = 3) final def paramss: List[List[Term.Param]] =
+      Member.ParamClauseGroup.toParamss(paramClauseGroup)
   }
+
   @ast class Type(
       mods: List[Mod],
       name: sm.Type.Name,

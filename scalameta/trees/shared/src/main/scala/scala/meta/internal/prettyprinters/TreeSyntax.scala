@@ -787,15 +787,17 @@ object TreeSyntax {
       case Lit.Unit() => m(Literal, s("()"))
 
       // Member
+      case t: Member.ParamClauseGroup =>
+        s(t.tparamClause, t.paramClauses)
       case t: Decl.Val =>
         s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
       case t: Decl.Var =>
         s(w(t.mods, " "), kw("var"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
       case t: Decl.Type => s(w(t.mods, " "), kw("type"), " ", t.name, t.tparamClause, t.bounds)
       case t: Decl.Def =>
-        s(w(t.mods, " "), kw("def "), t.name, t.tparamClause, t.paramClauses, kw(": "), t.decltpe)
+        s(w(t.mods, " "), kw("def "), t.name, o(t.paramClauseGroup), kw(": "), t.decltpe)
       case t: Decl.Given =>
-        s(w(t.mods, " "), kw("given "), t.name, t.tparamClause, t.paramClauses, kw(": "), t.decltpe)
+        s(w(t.mods, " "), kw("given "), t.name, o(t.paramClauseGroup), kw(": "), t.decltpe)
       case t: Defn.Val =>
         s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
       case t: Defn.Var =>
@@ -843,29 +845,13 @@ object TreeSyntax {
         }
 
       case t: Defn.GivenAlias =>
-        r(" ")(
-          t.mods,
-          kw("given"),
-          givenName(t.name, t.tparamClause, t.paramClauses),
-          p(SimpleTyp, t.decltpe),
-          kw("="),
-          t.body
-        )
+        val name = givenName(t.name, t.paramClauseGroup)
+        r(" ")(t.mods, kw("given"), name, p(SimpleTyp, t.decltpe), kw("="), t.body)
       case t: Defn.Given =>
-        r(" ")(
-          t.mods,
-          kw("given"),
-          givenName(t.name, t.tparamClause, t.paramClauses),
-          t.templ
-        )
+        r(" ")(t.mods, kw("given"), givenName(t.name, t.paramClauseGroup), t.templ)
 
       case t: Defn.Enum =>
-        r(" ")(
-          t.mods,
-          kw("enum"),
-          s(t.name, t.tparamClause, t.ctor),
-          t.templ
-        )
+        r(" ")(t.mods, kw("enum"), s(t.name, t.tparamClause, t.ctor), t.templ)
       case t: Defn.RepeatedEnumCase =>
         s(w(t.mods, " "), kw("case"), " ", r(t.cases, ", "))
       case t: Defn.EnumCase =>
@@ -879,41 +865,12 @@ object TreeSyntax {
           case onestat =>
             s(" ", onestat)
         }
-        s(
-          kw("extension"),
-          " ",
-          t.tparamClause,
-          t.paramClauses,
-          m
-        )
+        s(kw("extension"), " ", o(t.paramClauseGroup), m)
       case t: Defn.Object => r(" ")(t.mods, kw("object"), t.name, t.templ)
       case t: Defn.Def =>
-        s(
-          w(t.mods, " "),
-          kw("def "),
-          t.name,
-          t.tparamClause,
-          t.paramClauses,
-          t.decltpe,
-          " = ",
-          t.body
-        )
+        s(w(t.mods, " "), kw("def "), t.name, o(t.paramClauseGroup), t.decltpe, " = ", t.body)
       case t: Defn.Macro =>
-        s(
-          w(t.mods, " "),
-          kw("def"),
-          " ",
-          t.name,
-          t.tparamClause,
-          t.paramClauses,
-          t.decltpe,
-          " ",
-          kw("="),
-          " ",
-          kw("macro"),
-          " ",
-          t.body
-        )
+        s(w(t.mods, " "), kw("def "), t.name, o(t.paramClauseGroup), t.decltpe, " = macro ", t.body)
       case t: Pkg =>
         if (guessHasBraces(t)) s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
         else s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
@@ -1078,19 +1035,8 @@ object TreeSyntax {
       case t: Term.AnonymousFunction => s(t.body)
     }
 
-    private def givenName(
-        name: meta.Name,
-        tparams: Type.ParamClause,
-        sparams: Seq[Term.ParamClause]
-    ): Show.Result = {
-      if (!name.is[meta.Name.Anonymous]) {
-        s(name, tparams, sparams, ":")
-      } else if (tparams.values.nonEmpty || sparams.nonEmpty) {
-        s(tparams, sparams, ":")
-      } else {
-        s()
-      }
-    }
+    private def givenName(name: meta.Name, pcGroup: Option[Member.ParamClauseGroup]): Show.Result =
+      w(s(name, o(pcGroup)), ":")
 
     // Multiples and optionals
     private def printApplyArgs(args: Term.ArgClause, beforeBrace: String): Show.Result =

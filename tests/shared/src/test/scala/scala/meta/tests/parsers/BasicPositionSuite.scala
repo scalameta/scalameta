@@ -123,8 +123,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     // Issue #333
     """def shortInfo: String = s"created=$x"""",
-    """|Type.ParamClause def shortInfo@@: String = s"created=$x"
-       |Term.Interpolate s"created=$x"
+    """|Term.Interpolate s"created=$x"
        |""".stripMargin
   )
   checkPositions[Case](
