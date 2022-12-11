@@ -1797,7 +1797,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   }
 
-  test("match-chained-complex-operator") {
+  test("match-chained-complex-operator 1") {
     runTestAssert[Stat](
       """|val hello = xs match
          |  case Nil => 0
@@ -1805,7 +1805,6 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |+ 1 match
          |  case 1 => true
          |  case 2 => false
-         |
          |""".stripMargin,
       Some(
         """|val hello = xs match {
@@ -1839,6 +1838,93 @@ class ControlSyntaxSuite extends BaseDottySuite {
           )
         )
       )
+    )
+  }
+
+  test("match-chained-complex-operator 2") {
+    runTestAssert[Stat](
+      """|val hello = 1 + xs match
+         |  case Nil => 0
+         |  case x :: xs1 => 1
+         |+ 1 match
+         |  case 1 => true
+         |  case 2 => false
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("hello"))),
+        None,
+        Term.Match(
+          Term.ApplyInfix(int(1), tname("+"), Nil, List(tname("xs"))),
+          List(
+            Case(tname("Nil"), None, int(0)),
+            Case(
+              Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
+              None,
+              Term.Match(
+                Term.ApplyInfix(int(1), tname("+"), Nil, List(int(1))),
+                List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
+                Nil
+              )
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("match-chained-complex-operator 3") {
+    runTestAssert[Stat](
+      """|val hello =
+         |  1 + xs match
+         |    case Nil => 0
+         |    case x :: xs1 => 1
+         |  + 1 match
+         |    case 1 => true
+         |    case 2 => false
+         |""".stripMargin,
+      assertLayout = None
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("hello"))),
+        None,
+        Term.Match(
+          Term.ApplyInfix(int(1), tname("+"), Nil, List(tname("xs"))),
+          List(
+            Case(tname("Nil"), None, int(0)),
+            Case(
+              Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
+              None,
+              Term.Match(
+                Term.ApplyInfix(int(1), tname("+"), Nil, List(int(1))),
+                List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
+                Nil
+              )
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("match-chained-complex-operator 4") {
+    runTestError[Stat](
+      """|val hello = 1 foo xs match
+         |  case Nil => 0
+         |  case x :: xs1 => 1
+         |`foo` 1 match
+         |  case 1 => true
+         |  case 2 => false
+         |
+         |""".stripMargin,
+      """|error: ; expected but integer constant found
+         |`foo` 1 match
+         |      ^""".stripMargin
     )
 
   }
