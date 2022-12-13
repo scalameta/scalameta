@@ -1499,4 +1499,29 @@ class TermSuite extends ParseSuite {
     }
   }
 
+  test("if-with-parens-no-block [scala2]") {
+    assertTerm(
+      """|if (isEmpty)
+         |  (None, None)
+         |else {
+         |  (Some(e), Some(f))
+         |}
+         |""".stripMargin
+    )(
+      Term.If(
+        Term.Name("isEmpty"),
+        Term.Tuple(List(Term.Name("None"), Term.Name("None"))),
+        Term.Block(
+          Term.Tuple(
+            List(
+              Term.Apply(Term.Name("Some"), List(Term.Name("e"))),
+              Term.Apply(Term.Name("Some"), List(Term.Name("f")))
+            )
+          ) :: Nil
+        ),
+        Nil
+      )
+    )
+  }
+
 }
