@@ -39,7 +39,9 @@ trait BaseDottySuite extends ParseSuite {
   final def pparam(s: String): Type.Param =
     Type.Param(Nil, Type.Name(s), Nil, Type.Bounds(None, None), Nil, Nil)
 
-  final def int(i: Int) = Lit.Int(i)
+  final def bool(v: Boolean) = Lit.Boolean(v)
+  final def int(v: Int) = Lit.Int(v)
+  final def str(v: String) = Lit.String(v)
   final def init(name: String): Init = Init(pname(name), anon, Nil)
 
   /**
