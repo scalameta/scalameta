@@ -1658,127 +1658,137 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         implicitClosure(location)
       case _ =>
         val startPos = auto.startTokenPos
-        @inline def addPos[T <: Tree](body: T) = autoEndPos(startPos)(body)
-        var t: Term = postfixExpr(allowRepeated, PostfixStat)
-        def repeatedTerm(nextTokens: () => Unit) = {
-          if (allowRepeated) t = addPos { nextTokens(); Term.Repeated(t) }
-          else syntaxError("repeated argument not allowed here", at = token)
-        }
-        if (token.is[Equals]) {
-          t match {
-            case _: Term.Ref | _: Term.Apply | _: Quasi =>
-              next()
-              t = addPos(Term.Assign(t, expr(location = NoStat, allowRepeated = true)))
-            case _ =>
-          }
-        } else if (token.is[Colon] && allowFewerBraces) {
-          val colonPos = auto.startTokenPos
-          next()
-          in.observeIndented()
-          val args = blockExpr(allowRepeated = false)
-          val argClause = autoEndPos(colonPos)(Term.ArgClause(args :: Nil))
-          val arguments = addPos { Term.Apply(t, argClause) }
-          t = simpleExprRest(arguments, canApply = true, startPos = startPos)
-        } else if (acceptOpt[Colon]) {
-          if (token.is[At] || (token.is[Ellipsis] && ahead(token.is[At]))) {
-            t = addPos(Term.Annotate(t, annots(skipNewLines = false)))
-          } else if (token.is[Underscore] && ahead(isStar)) {
-            repeatedTerm(nextTwice)
-          } else {
-            // this does not necessarily correspond to syntax, but is necessary to accept lambdas
-            // check out the `if (token.is[RightArrow]) { ... }` block below
-            t = addPos(Term.Ascribe(t, typeOrInfixType(location)))
-          }
-        } else if (allowRepeated && isVarargStarParam()) {
-          repeatedTerm(next)
-        } else if (acceptOpt[KwMatch]) {
-          t = matchClause(t, startPos)
-        }
-
-        // Note the absense of `else if` here!!
-        if (token.is[RightArrow] || token.is[ContextArrow]) {
-          // This is a tricky one. In order to parse lambdas, we need to recognize token sequences
-          // like `(...) => ...`, `id | _ => ...` and `implicit id | _ => ...`.
-          //
-          // If we exclude Implicit (which is parsed elsewhere anyway), then we can see that
-          // these sequences are non-trivially ambiguous with tuples and self-type annotations
-          // (i.e. are not resolvable with static lookahead).
-          //
-          // Therefore, when we encounter RightArrow, the part in parentheses is already parsed into a Term,
-          // and we need to figure out whether that term represents what we expect from a lambda's param list
-          // in order to disambiguate. The term that we have at hand might wildly differ from the param list that one would expect.
-          // For example, when parsing `() => x`, we arrive at RightArrow having `Lit.Unit` as the parsed term.
-          // That's why we later need `convertToParams` to make sense of what the parser has produced.
-          //
-          // Rules:
-          // 1. `() => ...` means lambda
-          // 2. `x => ...` means self-type annotation, but only in template position
-          // 3. `(x) => ...` means self-type annotation, but only in template position
-          // 4a. `x: Int => ...` means self-type annotation in template position
-          // 4b. `x: Int => ...` means lambda in block position
-          // 4c. `x: Int => ...` means ascription, i.e. `x: (Int => ...)`, in expression position
-          // 5a.  `(x: Int) => ...` means lambda
-          // 5b. `(using x: Int) => ...` means lambda for dotty
-          // 6. `(x, y) => ...` or `(x: Int, y: Int) => ...` or with more entries means lambda
-          //
-          // A funny thing is that scalac's parser tries to disambiguate between self-type annotations and lambdas
-          // even if it's not parsing the first statement in the template. E.g. `class C { foo; x => x }` will be
-          // a parse error, because `x => x` will be deemed a self-type annotation, which ends up being inapplicable there.
-          val looksLikeLambda = {
-            object NameLike {
-              def unapply(tree: Tree): Boolean = tree match {
-                case Term.Quasi(0, _) => true
-                case Term.Select(Term.Name(soft.KwUsing.name), _) if dialect.allowGivenUsing =>
-                  true
-                case Term.Ascribe(Term.Select(Term.Name(soft.KwUsing.name), _), _)
-                    if dialect.allowGivenUsing =>
-                  true
-                case _: Term.Name => true
-                case Term.Eta(Term.Name(soft.KwUsing.name)) if dialect.allowGivenUsing => true
-                case _: Term.Placeholder => true
-                case _ => false
-              }
-            }
-            object ParamLike {
-              @tailrec
-              def unapply(tree: Tree): Boolean = tree match {
-                case Term.Quasi(0, _) => true
-                case Term.Quasi(1, t) => unapply(t)
-                case NameLike() => true
-                case Term.Ascribe(Term.Quasi(0, _), _) => true
-                case Term.Ascribe(NameLike(), _) => true
-                case _ => false
-              }
-            }
-            t match {
-              case Lit.Unit() => true // 1
-              case NameLike() => location != TemplateStat // 2-3
-              case ParamLike() => // 4-5
-                location == BlockStat ||
-                scannerTokens(startPos).is[LeftParen] &&
-                scannerTokens(in.prevTokenPos).is[RightParen]
-              case Term.Tuple(xs) => xs.forall(ParamLike.unapply) // 6
-              case _ => false
-            }
-          }
-          if (looksLikeLambda) {
-            val params = addPos(convertToParamClause(t))
-            val contextFunction = token.is[ContextArrow]
-            next()
-            val trm = termFunctionBody(location)
-            t = addPos {
-              if (contextFunction)
-                Term.ContextFunction(params, trm)
-              else
-                Term.Function(params, trm)
-            }
-          } else {
-            // do nothing, which will either allow self-type annotation parsing to kick in
-            // or will trigger an unexpected token error down the line
-          }
-        }
-        t
+        val t: Term = postfixExpr(allowRepeated, PostfixStat)
+        exprOtherRest(startPos, t, location, allowRepeated)
     }))(location)
+  }
+
+  private def exprOtherRest(
+      startPos: Int,
+      prefix: Term,
+      location: Location,
+      allowRepeated: Boolean
+  ): Term = {
+    @inline def addPos[T <: Tree](body: T) = autoEndPos(startPos)(body)
+    var t: Term = prefix
+    def repeatedTerm(nextTokens: () => Unit) = {
+      if (allowRepeated) t = addPos { nextTokens(); Term.Repeated(t) }
+      else syntaxError("repeated argument not allowed here", at = token)
+    }
+    if (token.is[Equals]) {
+      t match {
+        case _: Term.Ref | _: Term.Apply | _: Quasi =>
+          next()
+          t = addPos(Term.Assign(t, expr(location = NoStat, allowRepeated = true)))
+        case _ =>
+      }
+    } else if (token.is[Colon] && allowFewerBraces) {
+      val colonPos = auto.startTokenPos
+      next()
+      in.observeIndented()
+      val args = blockExpr(allowRepeated = false)
+      val argClause = autoEndPos(colonPos)(Term.ArgClause(args :: Nil))
+      val arguments = addPos { Term.Apply(t, argClause) }
+      t = simpleExprRest(arguments, canApply = true, startPos = startPos)
+    } else if (acceptOpt[Colon]) {
+      if (token.is[At] || (token.is[Ellipsis] && ahead(token.is[At]))) {
+        t = addPos(Term.Annotate(t, annots(skipNewLines = false)))
+      } else if (token.is[Underscore] && ahead(isStar)) {
+        repeatedTerm(nextTwice)
+      } else {
+        // this does not necessarily correspond to syntax, but is necessary to accept lambdas
+        // check out the `if (token.is[RightArrow]) { ... }` block below
+        t = addPos(Term.Ascribe(t, typeOrInfixType(location)))
+      }
+    } else if (allowRepeated && isVarargStarParam()) {
+      repeatedTerm(next)
+    } else if (acceptOpt[KwMatch]) {
+      t = matchClause(t, startPos)
+    }
+
+    // Note the absense of `else if` here!!
+    if (token.is[RightArrow] || token.is[ContextArrow]) {
+      // This is a tricky one. In order to parse lambdas, we need to recognize token sequences
+      // like `(...) => ...`, `id | _ => ...` and `implicit id | _ => ...`.
+      //
+      // If we exclude Implicit (which is parsed elsewhere anyway), then we can see that
+      // these sequences are non-trivially ambiguous with tuples and self-type annotations
+      // (i.e. are not resolvable with static lookahead).
+      //
+      // Therefore, when we encounter RightArrow, the part in parentheses is already parsed into a Term,
+      // and we need to figure out whether that term represents what we expect from a lambda's param list
+      // in order to disambiguate. The term that we have at hand might wildly differ from the param list that one would expect.
+      // For example, when parsing `() => x`, we arrive at RightArrow having `Lit.Unit` as the parsed term.
+      // That's why we later need `convertToParams` to make sense of what the parser has produced.
+      //
+      // Rules:
+      // 1. `() => ...` means lambda
+      // 2. `x => ...` means self-type annotation, but only in template position
+      // 3. `(x) => ...` means self-type annotation, but only in template position
+      // 4a. `x: Int => ...` means self-type annotation in template position
+      // 4b. `x: Int => ...` means lambda in block position
+      // 4c. `x: Int => ...` means ascription, i.e. `x: (Int => ...)`, in expression position
+      // 5a.  `(x: Int) => ...` means lambda
+      // 5b. `(using x: Int) => ...` means lambda for dotty
+      // 6. `(x, y) => ...` or `(x: Int, y: Int) => ...` or with more entries means lambda
+      //
+      // A funny thing is that scalac's parser tries to disambiguate between self-type annotations and lambdas
+      // even if it's not parsing the first statement in the template. E.g. `class C { foo; x => x }` will be
+      // a parse error, because `x => x` will be deemed a self-type annotation, which ends up being inapplicable there.
+      val looksLikeLambda = {
+        object NameLike {
+          def unapply(tree: Tree): Boolean = tree match {
+            case Term.Quasi(0, _) => true
+            case Term.Select(Term.Name(soft.KwUsing.name), _) if dialect.allowGivenUsing =>
+              true
+            case Term.Ascribe(Term.Select(Term.Name(soft.KwUsing.name), _), _)
+                if dialect.allowGivenUsing =>
+              true
+            case _: Term.Name => true
+            case Term.Eta(Term.Name(soft.KwUsing.name)) if dialect.allowGivenUsing => true
+            case _: Term.Placeholder => true
+            case _ => false
+          }
+        }
+        object ParamLike {
+          @tailrec
+          def unapply(tree: Tree): Boolean = tree match {
+            case Term.Quasi(0, _) => true
+            case Term.Quasi(1, t) => unapply(t)
+            case NameLike() => true
+            case Term.Ascribe(Term.Quasi(0, _), _) => true
+            case Term.Ascribe(NameLike(), _) => true
+            case _ => false
+          }
+        }
+        t match {
+          case Lit.Unit() => true // 1
+          case NameLike() => location != TemplateStat // 2-3
+          case ParamLike() => // 4-5
+            location == BlockStat ||
+            scannerTokens(startPos).is[LeftParen] &&
+            scannerTokens(in.prevTokenPos).is[RightParen]
+          case Term.Tuple(xs) => xs.forall(ParamLike.unapply) // 6
+          case _ => false
+        }
+      }
+      if (looksLikeLambda) {
+        val params = addPos(convertToParamClause(t))
+        val contextFunction = token.is[ContextArrow]
+        next()
+        val trm = termFunctionBody(location)
+        t = addPos {
+          if (contextFunction)
+            Term.ContextFunction(params, trm)
+          else
+            Term.Function(params, trm)
+        }
+      } else {
+        // do nothing, which will either allow self-type annotation parsing to kick in
+        // or will trigger an unexpected token error down the line
+      }
+    }
+    t
   }
 
   private def termFunctionBody(location: Location): Term =
@@ -2018,6 +2028,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       )
 
   def postfixExpr(allowRepeated: Boolean, location: Location = NoStat): Term = {
+    val startPos = auto.startTokenPos
+
+    // Start the infix chain.
+    // We'll use `a + b` as our running example.
+    val rhs0 = prefixExpr(allowRepeated)
+
+    postfixExpr(startPos, rhs0, allowRepeated, location)
+  }
+
+  private def postfixExpr(
+      startPos: Int,
+      rhs0: Term,
+      allowRepeated: Boolean,
+      location: Location
+  ): Term = {
     val ctx = termInfixContext
     val base = ctx.stack
 
@@ -2067,12 +2092,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         }
       }
     }
-
-    val startPos = auto.startTokenPos
-
-    // Start the infix chain.
-    // We'll use `a + b` as our running example.
-    val rhs0 = prefixExpr(allowRepeated)
 
     // Iteratively read the infix chain via `loop`.
     // rhs0 is now [a]
