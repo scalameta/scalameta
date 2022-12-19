@@ -1,27 +1,27 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.reflect.internal.util.Position
-import scala.tools.nsc.reporters.{Reporter, StoreReporter}
+import scala.tools.nsc.reporters.{FilteringReporter, StoreReporter}
+import scala.tools.nsc.Settings
 
-class SemanticdbReporter(underlying: Reporter) extends StoreReporter {
-  override protected def info0(
-      pos: Position,
-      msg: String,
-      severity: Severity,
-      force: Boolean
-  ): Unit = {
-    super.info0(pos, msg, severity, force)
-    severity.id match {
-      case 0 => underlying.info(pos, msg, force)
-      case 1 => underlying.warning(pos, msg)
-      case 2 => underlying.error(pos, msg)
-      case _ =>
-    }
-
+class SemanticdbReporter(underlying: FilteringReporter)
+    extends StoreReporter(SemanticdbReporter.defaultSettings(underlying.settings)) {
+  override def doReport(pos: Position, msg: String, severity: Severity): Unit = {
+    super.doReport(pos, msg, severity)
+    underlying.doReport(pos, msg, severity)
   }
 
-  override def hasErrors: Boolean = underlying.hasErrors
+  // overriding increment is enough so make sure that error/warning
+  // counts are the same as in underlying reporter
 
-  override def hasWarnings: Boolean = underlying.hasWarnings
-
+  override def increment(severity: Severity): Unit = {
+    super.increment(severity)
+    underlying.increment(severity)
+  }
+}
+object SemanticdbReporter {
+  def defaultSettings(s: Settings): Settings = {
+    s.processArguments(List("-Xmaxwarns", "-1", "-Xmaxerrs", "-1"), true)
+    s
+  }
 }
