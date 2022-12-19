@@ -10,7 +10,7 @@ import scala.meta.io.AbsolutePath
 import scala.meta.io.RelativePath
 import scala.meta.metac
 import scala.meta.testkit.StringFS
-import scala.meta.tests.cli.CliSuite
+import scala.meta.tests.cli.CliTestUtils
 import scala.meta.tests.metacp.Library
 
 class ConfigSuite extends FunSuite {
@@ -34,7 +34,7 @@ class ConfigSuite extends FunSuite {
     // ~100x slower than regular unit test.
     test(name.tag(Slow)) {
       val sourceroot = StringFS.fromString(input)
-      val (metacIsSuccess, metacOut, metacErr) = CliSuite.withReporter { reporter =>
+      val (metacIsSuccess, metacOut, metacErr) = CliTestUtils.withReporter { reporter =>
         val settings = metac
           .Settings()
           .withScalacArgs(
