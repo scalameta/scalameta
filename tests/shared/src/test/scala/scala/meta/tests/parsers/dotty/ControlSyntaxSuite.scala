@@ -131,11 +131,27 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    x += 1
          |}
          |""".stripMargin
-    runTestError[Stat](
-      code,
-      """|error: then expected but \n found
-         |  if (x > 0) && (y > 0)
-         |                       ^""".stripMargin
+    val layout =
+      """|{
+         |  if (x > 0) &&(y > 0)
+         |  x += 1
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout))(
+      Term.Block(
+        List(
+          Term.If(
+            Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
+            Term.Apply(
+              tname("&&"),
+              List(Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0))))
+            ),
+            Lit.Unit(),
+            Nil
+          ),
+          Term.ApplyInfix(tname("x"), tname("+="), Nil, List(int(1)))
+        )
+      )
     )
   }
 
@@ -148,9 +164,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin
     runTestError[Stat](
       code,
-      """|error: then expected but \n found
+      """|error: ; expected but integer constant found
          |  if (x > 0) && y > 0
-         |                     ^""".stripMargin
+         |                    ^""".stripMargin
     )
   }
 
@@ -1298,11 +1314,25 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    x += 1
          |}
          |""".stripMargin
-    runTestError[Stat](
-      code,
-      """|error: do expected but \n found
-         |  while (x > 0) && (y > 0)
-         |                          ^""".stripMargin
+    val layout =
+      """|{
+         |  while (x > 0) &&(y > 0)
+         |  x += 1
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout))(
+      Term.Block(
+        List(
+          Term.While(
+            Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
+            Term.Apply(
+              tname("&&"),
+              List(Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0))))
+            )
+          ),
+          Term.ApplyInfix(tname("x"), tname("+="), Nil, List(int(1)))
+        )
+      )
     )
   }
 
@@ -1315,9 +1345,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin
     runTestError[Stat](
       code,
-      """|error: do expected but \n found
+      """|error: ; expected but integer constant found
          |  while (x > 0) && y > 0
-         |                        ^""".stripMargin
+         |                       ^""".stripMargin
     )
   }
 

@@ -153,17 +153,6 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
     }
 
     @classifier
-    trait StopScanToken {
-      def unapply(token: Token): Boolean = token match {
-        case _: KwPackage | _: KwExport | _: KwImport | _: KwIf | _: KwElse | _: KwWhile | _: KwDo |
-            _: KwFor | _: KwYield | _: KwNew | _: KwTry | _: KwCatch | _: KwFinally | _: KwThrow |
-            _: KwReturn | _: KwMatch | _: EOF | _: Semicolon | Modifier() | DefIntro() =>
-          true
-        case _ => false
-      }
-    }
-
-    @classifier
     trait EndMarkerIntro {
       def unapply(token: Token): Boolean = token match {
         case Ident("end") if dialect.allowEndMarker =>

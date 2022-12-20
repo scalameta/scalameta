@@ -213,13 +213,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     ok
   }
 
-  private def tryAhead[A](bodyFunc: => Option[A]): Option[A] = {
+  private def tryParse[A](bodyFunc: => Option[A]): Option[A] = {
     val forked = in.fork
-    next()
     val body = bodyFunc
     if (body.isEmpty) in = forked
     body
   }
+
+  private def tryAhead[A](bodyFunc: => Option[A]): Option[A] =
+    tryParse(next(bodyFunc))
 
   /** evaluate block after shifting next */
   @inline private def next[T](body: => T): T = {
@@ -406,6 +408,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @inline private def acceptOpt[T: TokenClassifier]: Boolean =
     nextIf(token.is[T])
 
+  @inline private def acceptAfterOptNL[T <: Token: TokenInfo]: Unit = {
+    newLineOpt()
+    accept[T]
+  }
+
   def acceptStatSep(): Unit = token match {
     case LF() | LFLF() => next()
     case _ if in.observeOutdented() =>
@@ -491,29 +498,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private def isIdentAnd(token: Token, pred: String => Boolean): Boolean = token match {
     case Ident(x) => pred(x)
     case _ => false
-  }
-
-  def followedByToken[T: TokenClassifier]: Boolean = {
-    def startBlock = token.is[LeftBrace] || token.is[Indentation.Indent]
-    def endBlock = token.is[RightBrace] || token.is[Indentation.Outdent]
-    @tailrec
-    def lookForToken(braces: Int = 0): Boolean = {
-      if (braces == 0 && token.is[T]) true
-      else if (braces == 0 && (token.is[StopScanToken] || endBlock)) false
-      else if (token.is[EOF]) false
-      else {
-        val newBraces =
-          if (startBlock) braces + 1
-          else if (endBlock) braces - 1
-          else braces
-        next()
-        lookForToken(newBraces)
-      }
-    }
-    val fork = in.fork
-    val isFollowedBy = lookForToken()
-    in = fork
-    isFollowedBy
   }
   def isIdentAnd(pred: String => Boolean): Boolean = isIdentAnd(token, pred)
   def isUnaryOp: Boolean = isIdentAnd(name => Term.Name(name).isUnaryOp)
@@ -1494,19 +1478,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def ifClause(mods: List[Mod] = Nil) = autoEndPos(mods) {
     accept[KwIf]
-    val (cond, thenp) = if (token.isNot[LeftParen] && dialect.allowSignificantIndentation) {
-      val cond = exprMaybeIndented()
-      newLineOpt()
-      accept[KwThen]
-      (cond, exprMaybeIndented())
-    } else {
-      val cond = condExprInParens[KwThen]
-      newLinesOpt()
-      if (!tryAcceptWithOptLF[KwThen])
-        in.observeIndented()
-      (cond, exprMaybeIndented())
-    }
+    val cond =
+      if (token.is[LeftParen])
+        condExprInParens[KwThen]
+      else
+        try exprMaybeIndented()
+        finally acceptAfterOptNL[KwThen]
 
+    val thenp = exprMaybeIndented()
     if (tryAcceptWithOptLF[KwElse]) {
       Term.If(cond, thenp, exprMaybeIndented(), mods)
     } else if (token.is[Semicolon] && tryAhead[KwElse]) {
@@ -1516,28 +1495,30 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def condExprInParens[T <: Token: TokenInfo]: Term = {
-    def isFollowedBy[U: TokenClassifier] = {
-      if (token.is[LF] || token.is[LFLF] || token.is[EOF]) {
-        false
-      } else { followedByToken[U] }
-    }
+  private def condExprInParens[T <: Token: TokenInfo]: Term =
     if (dialect.allowSignificantIndentation) {
-      val forked = in.fork
+      val startPos = auto.startTokenPos
       val simpleExpr = condExpr()
-      if ((token.is[Ident] && token.isLeadingInfixOperator) || token.is[Dot] || isFollowedBy[T]) {
-        in = forked
-        val exprCond = expr()
-        val nextIsDelimiterKw =
-          if (token.is[LF] || token.is[LFLF]) ahead { newLineOpt(); token.is[T] }
-          else token.is[T]
-        if (nextIsDelimiterKw)
-          exprCond
-        else
-          syntaxErrorExpected[T]
-      } else simpleExpr
-    } else condExpr()
-  }
+      val otherRest = if (!token.is[AtEOL]) tryParse {
+        val simpleRest = simpleExprRest(simpleExpr, canApply = true, startPos = startPos)
+        Try {
+          postfixExpr(startPos, simpleRest, location = NoStat, allowRepeated = false)
+        }.toOption.flatMap { x =>
+          val exprCond = exprOtherRest(startPos, x, location = NoStat, allowRepeated = false)
+          newLinesOpt()
+          if (acceptOpt[T]) Some(exprCond) else None
+        }
+      }
+      else None
+      otherRest.getOrElse {
+        newLinesOpt()
+        if (!acceptOpt[T]) in.observeIndented()
+        simpleExpr
+      }
+    } else {
+      try condExpr()
+      finally newLinesOpt()
+    }
 
   // FIXME: when parsing `(2 + 3)`, do we want the ApplyInfix's position to include parentheses?
   // if yes, then nothing has to change here
@@ -1589,24 +1570,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         }
       case KwWhile() =>
         next()
-        if (token.is[LeftParen]) {
-          val cond = condExprInParens[KwDo]
-          newLinesOpt()
-          if (!acceptOpt[KwDo]) {
-            in.observeIndented()
-          }
-          Term.While(cond, exprMaybeIndented())
-        } else if (token.is[Indentation.Indent]) {
-          val cond = block()
-          newLineOpt()
-          accept[KwDo]
-          Term.While(cond, exprMaybeIndented())
-        } else {
-          val cond = expr()
-          newLineOpt()
-          accept[KwDo]
-          Term.While(cond, exprMaybeIndented())
-        }
+        val cond =
+          if (token.is[LeftParen])
+            condExprInParens[KwDo]
+          else
+            try if (token.is[Indentation.Indent]) block() else expr()
+            finally acceptAfterOptNL[KwDo]
+        Term.While(cond, exprMaybeIndented())
       case KwDo() if dialect.allowDoWhile =>
         next()
         val body = expr()
