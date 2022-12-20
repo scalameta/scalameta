@@ -126,10 +126,48 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("new-if-expr-without-then") {
     val code =
-      """|if (x > 0) && (y > 0)
-         |  x += 1
+      """|{
+         |  if (x > 0) && (y > 0)
+         |    x += 1
+         |}
          |""".stripMargin
-    runTestError[Stat](code, "then expected but \\n found")
+    val layout =
+      """|{
+         |  if (x > 0) &&(y > 0)
+         |  x += 1
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout))(
+      Term.Block(
+        List(
+          Term.If(
+            Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
+            Term.Apply(
+              tname("&&"),
+              List(Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0))))
+            ),
+            Lit.Unit(),
+            Nil
+          ),
+          Term.ApplyInfix(tname("x"), tname("+="), Nil, List(int(1)))
+        )
+      )
+    )
+  }
+
+  test("new-if-expr-without-then-2") {
+    val code =
+      """|{
+         |  if (x > 0) && y > 0
+         |    x += 1
+         |}
+         |""".stripMargin
+    runTestError[Stat](
+      code,
+      """|error: ; expected but integer constant found
+         |  if (x > 0) && y > 0
+         |                    ^""".stripMargin
+    )
   }
 
   test("new-if-else-multiple") {
@@ -1178,12 +1216,139 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("while-cond-expr-do [non symbolic op]") {
+    val output = "while (x > 0 and y > 0) x += 1"
+    val expected = Term.While(
+      Term.ApplyInfix(
+        Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
+        tname("and"),
+        Nil,
+        List(Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0))))
+      ),
+      Term.ApplyInfix(tname("x"), tname("+="), Nil, List(int(1)))
+    )
+
+    val code1 =
+      """|  while (x > 0) and (y > 0) do
+         |    x += 1
+         |""".stripMargin
+    runTestAssert[Stat](code1, assertLayout = Some(output))(expected)
+
+    val code2 =
+      """|  while (x > 0) and (y > 0)
+         |  do
+         |    x += 1
+         |""".stripMargin
+    runTestAssert[Stat](code2, assertLayout = Some(output))(expected)
+  }
+
+  test("if-cond-expr-with-apply-type") {
+    val code =
+      """|if (sym == defn.BooleanClass) classOf[Boolean]
+         |else if (sym == defn.ByteClass) classOf[Byte]
+         |""".stripMargin
+    val layout =
+      "if (sym == defn.BooleanClass) classOf[Boolean] else if (sym == defn.ByteClass) classOf[Byte]"
+    val expected = Term.If(
+      Term.ApplyInfix(
+        tname("sym"),
+        tname("=="),
+        Nil,
+        List(Term.Select(tname("defn"), tname("BooleanClass")))
+      ),
+      Term.ApplyType(tname("classOf"), List(pname("Boolean"))),
+      Term.If(
+        Term.ApplyInfix(
+          tname("sym"),
+          tname("=="),
+          Nil,
+          List(Term.Select(tname("defn"), tname("ByteClass")))
+        ),
+        Term.ApplyType(tname("classOf"), List(pname("Byte"))),
+        Lit.Unit(),
+        Nil
+      ),
+      Nil
+    )
+    runTestAssert[Stat](code, Some(layout))(expected)
+  }
+
+  test("if-cond-expr-with-block") {
+    val code =
+      """|if (sym == defn.BooleanClass) { classOf[Boolean] }
+         |else if (sym == defn.ByteClass) classOf[Byte]
+         |""".stripMargin
+    val layout =
+      """|if (sym == defn.BooleanClass) {
+         |  classOf[Boolean]
+         |} else if (sym == defn.ByteClass) classOf[Byte]
+         |""".stripMargin
+    val expected = Term.If(
+      Term.ApplyInfix(
+        tname("sym"),
+        tname("=="),
+        Nil,
+        List(Term.Select(tname("defn"), tname("BooleanClass")))
+      ),
+      Term.Block(Term.ApplyType(tname("classOf"), List(pname("Boolean"))) :: Nil),
+      Term.If(
+        Term.ApplyInfix(
+          tname("sym"),
+          tname("=="),
+          Nil,
+          List(Term.Select(tname("defn"), tname("ByteClass")))
+        ),
+        Term.ApplyType(tname("classOf"), List(pname("Byte"))),
+        Lit.Unit(),
+        Nil
+      ),
+      Nil
+    )
+    runTestAssert[Stat](code, Some(layout))(expected)
+  }
+
   test("while-cond-expr-without-do") {
     val code =
-      """|while (x > 0) && (y > 0)
-         |  x += 1
+      """|{
+         |  while (x > 0) && (y > 0)
+         |    x += 1
+         |}
          |""".stripMargin
-    runTestError[Stat](code, "do expected but \\n found")
+    val layout =
+      """|{
+         |  while (x > 0) &&(y > 0)
+         |  x += 1
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout))(
+      Term.Block(
+        List(
+          Term.While(
+            Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
+            Term.Apply(
+              tname("&&"),
+              List(Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0))))
+            )
+          ),
+          Term.ApplyInfix(tname("x"), tname("+="), Nil, List(int(1)))
+        )
+      )
+    )
+  }
+
+  test("while-cond-expr-without-do-2") {
+    val code =
+      """|{
+         |  while (x > 0) && y > 0
+         |    x += 1
+         |}
+         |""".stripMargin
+    runTestError[Stat](
+      code,
+      """|error: ; expected but integer constant found
+         |  while (x > 0) && y > 0
+         |                       ^""".stripMargin
+    )
   }
 
   // --------------------------
