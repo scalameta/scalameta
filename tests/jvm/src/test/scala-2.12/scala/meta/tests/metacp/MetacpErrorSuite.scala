@@ -8,7 +8,7 @@ import scala.meta.cli._
 import scala.meta.io._
 import scala.meta.metacp.Settings
 import scala.meta.tests._
-import scala.meta.tests.cli.CliSuite
+import scala.meta.tests.cli.CliTestUtils
 
 class MetacpErrorSuite extends FunSuite {
 
@@ -17,7 +17,7 @@ class MetacpErrorSuite extends FunSuite {
   private val settings = Settings().withOut(tmp).withIncludeJdk(true)
 
   test("missing symbol 1".tag(Slow)) {
-    val (result, out, err) = CliSuite.withReporter { reporter =>
+    val (result, out, err) = CliTestUtils.withReporter { reporter =>
       val scalametaSettings = settings.withClasspath(
         Library(
           "org.scalameta",
@@ -54,7 +54,7 @@ class MetacpErrorSuite extends FunSuite {
       Files.copy(source, destination)
     }
 
-    val (result, out, err) = CliSuite.withReporter { reporter =>
+    val (result, out, err) = CliTestUtils.withReporter { reporter =>
       val classpath = Classpath(AbsolutePath(tmp))
       Metacp.process(settings.withClasspath(classpath), reporter)
     }
@@ -88,7 +88,7 @@ class MetacpErrorSuite extends FunSuite {
       .withClasspath(Classpath(AbsolutePath(manifest)))
 
     assert(!Files.list(output).iterator.hasNext)
-    val (result, out, err) = CliSuite.withReporter { reporter =>
+    val (result, out, err) = CliTestUtils.withReporter { reporter =>
       Metacp.process(settings, reporter)
     }
     assert(result.classpath.isEmpty)
@@ -127,7 +127,7 @@ class MetacpErrorSuite extends FunSuite {
       .withStubBrokenSignatures(true)
       .withLogBrokenSignatures(true)
 
-    val (result, out, err) = CliSuite.withReporter { reporter =>
+    val (result, out, err) = CliTestUtils.withReporter { reporter =>
       Metacp.process(settings, reporter)
     }
     assert(result.isSuccess)

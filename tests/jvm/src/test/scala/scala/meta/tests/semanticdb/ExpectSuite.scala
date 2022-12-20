@@ -11,63 +11,64 @@ import java.util.jar._
 import scala.collection.JavaConverters._
 import scala.meta._
 import scala.meta.cli._
+import scala.meta.tests.cli.CliTestUtils
 import scala.meta.internal.io._
 import scala.meta.internal.semanticdb._
 import scala.meta.io.Classpath
 import scala.meta.io.AbsolutePath
-import scala.meta.tests.cli._
 import munit.FunSuite
 import munit.internal.difflib.DiffUtils
 import scala.meta.tests.metacp.Library
 import scala.meta.tests.metacp.MetacpOps
 
 class ExpectSuite extends FunSuite {
-  ScalaVersion.doIfLatest212("ExpectSuite") {
-    test("scalalib.expect") {
-      import ScalalibExpect._
-      this.assertNoDiff(loadObtained, loadExpected)
-    }
-    test("metacp.expect") {
-      import MetacpExpect._
-      this.assertNoDiff(loadObtained, loadExpected)
-    }
-    test("metac.expect") {
-      import MetacExpect._
-      val expected = loadExpected
-      val expectedCompat = if (ScalaVersion.atLeast212_14) {
-        expected
-      } else {
-        // Predef.type etc. was fixed in 2.12.14
-        expected
-          .replace("[43:21..43:22): x => types/Test.C#x.\n", "")
-          .replace("[44:21..44:22): p => types/Test.C#p.\n", "")
-          .replace("[25:23..25:29): Predef => scala/Predef.\n", "")
-          .replace("[23:13..23:19): Predef => scala/Predef.\n", "")
-          .replace("[44:23..44:24): x => types/P#x.\n", "")
-          .replace("Occurrences => 57 entries", "Occurrences => 56 entries")
-          .replace("Occurrences => 147 entries", "Occurrences => 146 entries")
-          .replace("Occurrences => 262 entries", "Occurrences => 259 entries")
-      }
-      this.assertNoDiff(loadObtained, expectedCompat)
-    }
 
-    test("metac-metacp.diff") {
-      import MetacMetacpDiffExpect._
-      this.assertNoDiff(loadObtained, loadExpected)
-    }
-    test("manifest.metap") {
-      import ManifestMetap._
-      this.assertNoDiff(loadObtained, loadExpected)
-    }
+  override def munitIgnore: Boolean = !ScalaVersion.isLatest212Or213
 
-    test("manifest.metacp") {
-      import ManifestMetacp._
-      this.assertNoDiff(loadObtained, loadExpected)
+  test("scalalib.expect") {
+    import ScalalibExpect._
+    this.assertNoDiff(loadObtained, loadExpected)
+  }
+  test("metacp.expect") {
+    import MetacpExpect._
+    this.assertNoDiff(loadObtained, loadExpected)
+  }
+  test("metac.expect") {
+    import MetacExpect._
+    val expected = loadExpected
+    val expectedCompat = if (ScalaVersion.atLeast212_14) {
+      expected
+    } else {
+      // Predef.type etc. was fixed in 2.12.14
+      expected
+        .replace("[43:21..43:22): x => types/Test.C#x.\n", "")
+        .replace("[44:21..44:22): p => types/Test.C#p.\n", "")
+        .replace("[25:23..25:29): Predef => scala/Predef.\n", "")
+        .replace("[23:13..23:19): Predef => scala/Predef.\n", "")
+        .replace("[44:23..44:24): x => types/P#x.\n", "")
+        .replace("Occurrences => 57 entries", "Occurrences => 56 entries")
+        .replace("Occurrences => 147 entries", "Occurrences => 146 entries")
+        .replace("Occurrences => 262 entries", "Occurrences => 259 entries")
     }
-    test("metacp.undefined") {
-      import MetacpUndefined._
-      this.assertNoDiff(loadObtained, loadExpected)
-    }
+    this.assertNoDiff(loadObtained, expectedCompat)
+  }
+
+  test("metac-metacp.diff") {
+    import MetacMetacpDiffExpect._
+    this.assertNoDiff(loadObtained, loadExpected)
+  }
+  test("manifest.metap") {
+    import ManifestMetap._
+    this.assertNoDiff(loadObtained, loadExpected)
+  }
+
+  test("manifest.metacp") {
+    import ManifestMetacp._
+    this.assertNoDiff(loadObtained, loadExpected)
+  }
+  test("metacp.undefined") {
+    import MetacpUndefined._
+    this.assertNoDiff(loadObtained, loadExpected)
   }
 }
 
@@ -78,8 +79,14 @@ trait ExpectHelpers extends munit.Assertions {
     new String(Files.readAllBytes(path), UTF_8)
   def loadObtained: String
 
-  def path: Path =
-    Paths.get("tests", "jvm", "src", "test", "resources", filename)
+  def path: Path = {
+    def filenameToPath(filename: String) =
+      Paths.get("tests", "jvm", "src", "test", "resources", filename)
+    val filenameWithVersion = if (ScalaVersion.is212) filename + "_2.12" else filename + "_2.13"
+    val baseFile = filenameToPath(filename)
+    if (baseFile.toFile().exists()) baseFile
+    else filenameToPath(filenameWithVersion)
+  }
   def manifestJar: Path = path.resolveSibling("manifest.jar")
   def classDirectory: Path = Paths.get(BuildInfo.databaseClasspath)
 
@@ -127,7 +134,7 @@ trait ExpectHelpers extends munit.Assertions {
   }.toMap
 
   protected def metap(dirOrJar: Path): String = {
-    val (success, out, err) = CliSuite.communicate { (out, err) =>
+    val (success, out, err) = CliTestUtils.communicate { (out, err) =>
       import scala.meta.metap.Format._
       val settings = scala.meta.metap.Settings().withFormat(Detailed).withPaths(List(dirOrJar))
       val reporter = Reporter().withOut(out).withErr(err)
@@ -144,7 +151,7 @@ trait ExpectHelpers extends munit.Assertions {
 
   protected def metacp(in: Path): Path = {
     val target = Files.createTempDirectory("target_")
-    val (outPath, out, err) = CliSuite.communicate { (out, err) =>
+    val (outPath, out, err) = CliTestUtils.communicate { (out, err) =>
       val settings = scala.meta.metacp
         .Settings()
         .withOut(AbsolutePath(target))

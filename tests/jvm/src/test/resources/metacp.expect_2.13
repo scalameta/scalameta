@@ -1,0 +1,4113 @@
+A.class
+-------
+
+Summary:
+Schema => SemanticDB v4
+Uri => A.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+_empty_/A# => class A extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+_empty_/A#`<init>`(). => primary ctor <init>()
+_empty_/A#b(). => method b: B
+  B => _empty_/B#
+
+advanced/C.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => advanced/C.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+advanced/C# => class C[T] extends AnyRef { +2 decls }
+  T => advanced/C#[T]
+  AnyRef => scala/AnyRef#
+advanced/C#[T] => typeparam T
+advanced/C#`<init>`(). => primary ctor <init>()
+advanced/C#t(). => method t: T
+  T => advanced/C#[T]
+
+advanced/D.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => advanced/D.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+advanced/D# => class D[CC[_]] extends C[CC[_] forSome { type _ }] { +2 decls }
+  CC => advanced/D#[CC]
+  _ => advanced/D#[CC][`1`]
+  C => advanced/C#
+  _ => advanced/D#_$2#
+advanced/D#[CC] => typeparam CC[_]
+  _ => advanced/D#[CC][`1`]
+advanced/D#[CC][`1`] => typeparam _
+advanced/D#`<init>`(). => primary ctor <init>()
+
+advanced/Existential.class
+--------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => advanced/Existential.class
+Text => empty
+Language => Scala
+Symbols => 5 entries
+
+Symbols:
+advanced/Existential# => class Existential extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+advanced/Existential#`<init>`(). => primary ctor <init>()
+advanced/Existential#e1(). => method e1: List[_] forSome { type _ }
+  List => scala/package.List#
+  _ => local0
+advanced/Existential#e2(). => method e2: C[List[T] forSome { type T }]
+  C => advanced/C#
+  List => scala/package.List#
+  T => local1
+advanced/Existential#e4(). => method e4: U[Int] forSome { type U[T <: Int] }
+  U => local2
+  Int => scala/Int#
+  T => local3
+
+advanced/Structural.class
+-------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => advanced/Structural.class
+Text => empty
+Language => Scala
+Symbols => 5 entries
+
+Symbols:
+advanced/Structural# => class Structural extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+advanced/Structural#`<init>`(). => primary ctor <init>()
+advanced/Structural#s1(). => method s1: AnyRef { val def x: Int }
+  AnyRef => scala/AnyRef#
+  x => local0
+  Int => scala/Int#
+advanced/Structural#s2(). => method s2: AnyRef { val def x: Int }
+  AnyRef => scala/AnyRef#
+  x => local1
+  Int => scala/Int#
+advanced/Structural#s3(). => method s3: AnyRef { def m(x: Int): Int }
+  AnyRef => scala/AnyRef#
+  m => local2
+  x => local3
+  Int => scala/Int#
+
+advanced/Test.class
+-------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => advanced/Test.class
+Text => empty
+Language => Scala
+Symbols => 14 entries
+
+Symbols:
+advanced/Test. => final object Test extends AnyRef { +13 decls }
+  AnyRef => scala/AnyRef#
+advanced/Test.e. => val method e: Existential
+  Existential => advanced/Existential#
+advanced/Test.e1. => val method e1: List[Any]
+  List => scala/collection/immutable/List#
+  Any => scala/Any#
+advanced/Test.e1x. => val method e1x: Any
+  Any => scala/Any#
+advanced/Test.e2. => val method e2: C[List[T] forSome { type T }]
+  C => advanced/C#
+  List => scala/package.List#
+  T => advanced/Test.T#
+advanced/Test.e2x. => val method e2x: List[Any]
+  List => scala/collection/immutable/List#
+  Any => scala/Any#
+advanced/Test.e2xx. => val method e2xx: Any
+  Any => scala/Any#
+advanced/Test.s. => val method s: Structural
+  Structural => advanced/Structural#
+advanced/Test.s1. => val method s1: AnyRef { val def x: Int }
+  AnyRef => scala/AnyRef#
+  x => local0
+  Int => scala/Int#
+advanced/Test.s1x. => val method s1x: Int
+  Int => scala/Int#
+advanced/Test.s2. => val method s2: AnyRef { val def x: Int }
+  AnyRef => scala/AnyRef#
+  x => local1
+  Int => scala/Int#
+advanced/Test.s2x. => val method s2x: Int
+  Int => scala/Int#
+advanced/Test.s3. => val method s3: AnyRef { def m(x: Int): Int }
+  AnyRef => scala/AnyRef#
+  m => local2
+  x => local3
+  Int => scala/Int#
+advanced/Test.s3x. => val method s3x: Int
+  Int => scala/Int#
+
+annot/Alias.class
+-----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => annot/Alias.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+annot/Alias. => final object Alias extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+annot/Alias.A# => type A = ClassAnnotation @<?>
+  ClassAnnotation => com/javacp/annot/ClassAnnotation#
+
+annot/Annotations.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => annot/Annotations.class
+Text => empty
+Language => Scala
+Symbols => 8 entries
+
+Symbols:
+annot/Annotations# => @ClassAnnotation class Annotations[@TypeParameterAnnotation T] extends AnyRef { self: AnyRef => +5 decls }
+  ClassAnnotation => com/javacp/annot/ClassAnnotation#
+  T => annot/Annotations#[T]
+  TypeParameterAnnotation => com/javacp/annot/TypeParameterAnnotation#
+  AnyRef => scala/AnyRef#
+annot/Annotations#T# => @TypeAnnotation abstract type T
+  TypeAnnotation => com/javacp/annot/TypeAnnotation#
+annot/Annotations#[T] => @TypeParameterAnnotation typeparam T
+  TypeParameterAnnotation => com/javacp/annot/TypeParameterAnnotation#
+annot/Annotations#`<init>`(). => primary ctor <init>(@ParameterAnnotation x: T)
+  x => annot/Annotations#`<init>`().(x)
+  ParameterAnnotation => com/javacp/annot/ParameterAnnotation#
+  T => annot/Annotations#[T]
+annot/Annotations#`<init>`().(x) => @ParameterAnnotation param x: T
+  ParameterAnnotation => com/javacp/annot/ParameterAnnotation#
+  T => annot/Annotations#[T]
+annot/Annotations#field. => val method field: Int
+  Int => scala/Int#
+annot/Annotations#method(). => @MethodAnnotation method method: Int
+  MethodAnnotation => com/javacp/annot/MethodAnnotation#
+  Int => scala/Int#
+annot/Annotations#x. => @ParameterAnnotation private[this] val method x: T
+  ParameterAnnotation => com/javacp/annot/ParameterAnnotation#
+  T => annot/Annotations#[T]
+
+annot/B.class
+-------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => annot/B.class
+Text => empty
+Language => Scala
+Symbols => 5 entries
+
+Symbols:
+annot/B# => class B extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+annot/B#`<init>`(). => @ConstructorAnnotation primary ctor <init>(x: Int)
+  ConstructorAnnotation => com/javacp/annot/ConstructorAnnotation#
+  x => annot/B#`<init>`().(x)
+  Int => scala/Int#
+annot/B#`<init>`().(x) => param x: Int
+  Int => scala/Int#
+annot/B#`<init>`(+1). => @ConstructorAnnotation ctor <init>()
+  ConstructorAnnotation => com/javacp/annot/ConstructorAnnotation#
+annot/B#x. => private[this] val method x: Int
+  Int => scala/Int#
+
+annot/M.class
+-------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => annot/M.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+annot/M. => @ObjectAnnotation final object M extends AnyRef { +1 decls }
+  ObjectAnnotation => com/javacp/annot/ObjectAnnotation#
+  AnyRef => scala/AnyRef#
+annot/M.m(). => @MacroAnnotation macro m[TT]: Int
+  MacroAnnotation => com/javacp/annot/MacroAnnotation#
+  TT => annot/M.m().[TT]
+  Int => scala/Int#
+annot/M.m().[TT] => typeparam TT
+
+annot/T.class
+-------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => annot/T.class
+Text => empty
+Language => Scala
+Symbols => 1 entries
+
+Symbols:
+annot/T# => @TraitAnnotation trait T extends AnyRef
+  TraitAnnotation => com/javacp/annot/TraitAnnotation#
+  AnyRef => scala/AnyRef#
+
+B.class
+-------
+
+Summary:
+Schema => SemanticDB v4
+Uri => B.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+_empty_/B# => class B extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+_empty_/B#`<init>`(). => primary ctor <init>()
+_empty_/B#a(). => method a: A
+  A => _empty_/A#
+
+classes/C1.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => classes/C1.class
+Text => empty
+Language => Scala
+Symbols => 7 entries
+
+Symbols:
+classes/C1# => final class C1 extends AnyVal { +4 decls }
+  AnyVal => scala/AnyVal#
+classes/C1#`<init>`(). => primary ctor <init>(val x1: Int)
+  x1 => classes/C1#`<init>`().(x1)
+  Int => scala/Int#
+classes/C1#`<init>`().(x1) => val param x1: Int
+  Int => scala/Int#
+classes/C1#equals(). => method equals(x$1: Any): Boolean
+  x$1 => classes/C1#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+classes/C1#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+classes/C1#hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+classes/C1#x1. => val method x1: Int
+  Int => scala/Int#
+
+classes/C2.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => classes/C2.class
+Text => empty
+Language => Scala
+Symbols => 8 entries
+
+Symbols:
+classes/C2# => final class C2 extends AnyVal { +4 decls }
+  AnyVal => scala/AnyVal#
+classes/C2#`<init>`(). => primary ctor <init>(val x2: Int)
+  x2 => classes/C2#`<init>`().(x2)
+  Int => scala/Int#
+classes/C2#`<init>`().(x2) => val param x2: Int
+  Int => scala/Int#
+classes/C2#equals(). => method equals(x$1: Any): Boolean
+  x$1 => classes/C2#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+classes/C2#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+classes/C2#hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+classes/C2#x2. => val method x2: Int
+  Int => scala/Int#
+classes/C2. => final object C2 extends AnyRef
+  AnyRef => scala/AnyRef#
+
+classes/C3.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => classes/C3.class
+Text => empty
+Language => Scala
+Symbols => 27 entries
+
+Symbols:
+classes/C3# => case class C3 extends AnyRef with Product with Serializable { +13 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/package.Serializable#
+classes/C3#`<init>`(). => primary ctor <init>(val x: Int)
+  x => classes/C3#`<init>`().(x)
+  Int => scala/Int#
+classes/C3#`<init>`().(x) => val param x: Int
+  Int => scala/Int#
+classes/C3#canEqual(). => method canEqual(x$1: Any): Boolean
+  x$1 => classes/C3#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+classes/C3#canEqual().(x$1) => param x$1: Any
+  Any => scala/Any#
+classes/C3#copy$default$1(). => method copy$default$1: Int @<?>
+  Int => scala/Int#
+classes/C3#copy(). => method copy(x: Int): C3
+  x => classes/C3#copy().(x)
+  Int => scala/Int#
+  C3 => classes/C3#
+classes/C3#copy().(x) => default param x: Int
+  Int => scala/Int#
+classes/C3#equals(). => method equals(x$1: Any): Boolean
+  x$1 => classes/C3#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+classes/C3#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+classes/C3#hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+classes/C3#productArity(). => method productArity: Int
+  Int => scala/Int#
+classes/C3#productElement(). => method productElement(x$1: Int): Any
+  x$1 => classes/C3#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+classes/C3#productElement().(x$1) => param x$1: Int
+  Int => scala/Int#
+classes/C3#productElementName(). => method productElementName(x$1: Int): String
+  x$1 => classes/C3#productElementName().(x$1)
+  Int => scala/Int#
+  String => java/lang/String#
+classes/C3#productElementName().(x$1) => param x$1: Int
+  Int => scala/Int#
+classes/C3#productIterator(). => method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+classes/C3#productPrefix(). => method productPrefix: String
+  String => java/lang/String#
+classes/C3#toString(). => method toString(): String
+  String => java/lang/String#
+classes/C3#x. => val method x: Int
+  Int => scala/Int#
+classes/C3. => final object C3 extends AbstractFunction1[Int, C3] with Serializable { +4 decls }
+  AbstractFunction1 => scala/runtime/AbstractFunction1#
+  Int => scala/Int#
+  C3 => classes/C3#
+  Serializable => java/io/Serializable#
+classes/C3.apply(). => method apply(x: Int): C3
+  x => classes/C3.apply().(x)
+  Int => scala/Int#
+  C3 => classes/C3#
+classes/C3.apply().(x) => param x: Int
+  Int => scala/Int#
+classes/C3.toString(). => final method toString(): String
+  String => java/lang/String#
+classes/C3.unapply(). => method unapply(x$0: C3): Option[Int]
+  x$0 => classes/C3.unapply().(x$0)
+  C3 => classes/C3#
+  Option => scala/Option#
+  Int => scala/Int#
+classes/C3.unapply().(x$0) => param x$0: C3
+  C3 => classes/C3#
+classes/C3.writeReplace(). => private method writeReplace(): Object
+  Object => java/lang/Object#
+
+classes/C4.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => classes/C4.class
+Text => empty
+Language => Scala
+Symbols => 26 entries
+
+Symbols:
+classes/C4# => case class C4 extends AnyRef with Product with Serializable { +13 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/package.Serializable#
+classes/C4#`<init>`(). => primary ctor <init>(val x: Int)
+  x => classes/C4#`<init>`().(x)
+  Int => scala/Int#
+classes/C4#`<init>`().(x) => val param x: Int
+  Int => scala/Int#
+classes/C4#canEqual(). => method canEqual(x$1: Any): Boolean
+  x$1 => classes/C4#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+classes/C4#canEqual().(x$1) => param x$1: Any
+  Any => scala/Any#
+classes/C4#copy$default$1(). => method copy$default$1: Int @<?>
+  Int => scala/Int#
+classes/C4#copy(). => method copy(x: Int): C4
+  x => classes/C4#copy().(x)
+  Int => scala/Int#
+  C4 => classes/C4#
+classes/C4#copy().(x) => default param x: Int
+  Int => scala/Int#
+classes/C4#equals(). => method equals(x$1: Any): Boolean
+  x$1 => classes/C4#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+classes/C4#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+classes/C4#hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+classes/C4#productArity(). => method productArity: Int
+  Int => scala/Int#
+classes/C4#productElement(). => method productElement(x$1: Int): Any
+  x$1 => classes/C4#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+classes/C4#productElement().(x$1) => param x$1: Int
+  Int => scala/Int#
+classes/C4#productElementName(). => method productElementName(x$1: Int): String
+  x$1 => classes/C4#productElementName().(x$1)
+  Int => scala/Int#
+  String => java/lang/String#
+classes/C4#productElementName().(x$1) => param x$1: Int
+  Int => scala/Int#
+classes/C4#productIterator(). => method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+classes/C4#productPrefix(). => method productPrefix: String
+  String => java/lang/String#
+classes/C4#toString(). => method toString(): String
+  String => java/lang/String#
+classes/C4#x. => val method x: Int
+  Int => scala/Int#
+classes/C4. => final object C4 extends AnyRef with Serializable { +3 decls }
+  AnyRef => scala/AnyRef#
+  Serializable => java/io/Serializable#
+classes/C4.apply(). => method apply(x: Int): C4
+  x => classes/C4.apply().(x)
+  Int => scala/Int#
+  C4 => classes/C4#
+classes/C4.apply().(x) => param x: Int
+  Int => scala/Int#
+classes/C4.unapply(). => method unapply(x$0: C4): Option[Int]
+  x$0 => classes/C4.unapply().(x$0)
+  C4 => classes/C4#
+  Option => scala/Option#
+  Int => scala/Int#
+classes/C4.unapply().(x$0) => param x$0: C4
+  C4 => classes/C4#
+classes/C4.writeReplace(). => private method writeReplace(): Object
+  Object => java/lang/Object#
+
+classes/C6.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => classes/C6.class
+Text => empty
+Language => Scala
+Symbols => 27 entries
+
+Symbols:
+classes/C6# => case class C6 extends AnyRef with Product with Serializable { +13 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/package.Serializable#
+classes/C6#`<init>`(). => primary ctor <init>(val x: Int)
+  x => classes/C6#`<init>`().(x)
+  Int => scala/Int#
+classes/C6#`<init>`().(x) => val param x: Int
+  Int => scala/Int#
+classes/C6#canEqual(). => method canEqual(x$1: Any): Boolean
+  x$1 => classes/C6#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+classes/C6#canEqual().(x$1) => param x$1: Any
+  Any => scala/Any#
+classes/C6#copy$default$1(). => method copy$default$1: Int @<?>
+  Int => scala/Int#
+classes/C6#copy(). => method copy(x: Int): C6
+  x => classes/C6#copy().(x)
+  Int => scala/Int#
+  C6 => classes/C6#
+classes/C6#copy().(x) => default param x: Int
+  Int => scala/Int#
+classes/C6#equals(). => method equals(x$1: Any): Boolean
+  x$1 => classes/C6#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+classes/C6#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+classes/C6#hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+classes/C6#productArity(). => method productArity: Int
+  Int => scala/Int#
+classes/C6#productElement(). => method productElement(x$1: Int): Any
+  x$1 => classes/C6#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+classes/C6#productElement().(x$1) => param x$1: Int
+  Int => scala/Int#
+classes/C6#productElementName(). => method productElementName(x$1: Int): String
+  x$1 => classes/C6#productElementName().(x$1)
+  Int => scala/Int#
+  String => java/lang/String#
+classes/C6#productElementName().(x$1) => param x$1: Int
+  Int => scala/Int#
+classes/C6#productIterator(). => method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+classes/C6#productPrefix(). => method productPrefix: String
+  String => java/lang/String#
+classes/C6#toString(). => method toString(): String
+  String => java/lang/String#
+classes/C6#x. => private val method x: Int
+  Int => scala/Int#
+classes/C6. => final object C6 extends AbstractFunction1[Int, C6] with Serializable { +4 decls }
+  AbstractFunction1 => scala/runtime/AbstractFunction1#
+  Int => scala/Int#
+  C6 => classes/C6#
+  Serializable => java/io/Serializable#
+classes/C6.apply(). => method apply(x: Int): C6
+  x => classes/C6.apply().(x)
+  Int => scala/Int#
+  C6 => classes/C6#
+classes/C6.apply().(x) => param x: Int
+  Int => scala/Int#
+classes/C6.toString(). => final method toString(): String
+  String => java/lang/String#
+classes/C6.unapply(). => method unapply(x$0: C6): Option[Int]
+  x$0 => classes/C6.unapply().(x$0)
+  C6 => classes/C6#
+  Option => scala/Option#
+  Int => scala/Int#
+classes/C6.unapply().(x$0) => param x$0: C6
+  C6 => classes/C6#
+classes/C6.writeReplace(). => private method writeReplace(): Object
+  Object => java/lang/Object#
+
+classes/C7.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => classes/C7.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+classes/C7# => class C7 extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+classes/C7#`<init>`(). => primary ctor <init>(x: Int)
+  x => classes/C7#`<init>`().(x)
+  Int => scala/Int#
+classes/C7#`<init>`().(x) => param x: Int
+  Int => scala/Int#
+classes/C7#x. => private[this] val method x: Int
+  Int => scala/Int#
+
+classes/C8.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => classes/C8.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+classes/C8# => class C8 extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+classes/C8#`<init>`(). => primary ctor <init>(x: Int)
+  x => classes/C8#`<init>`().(x)
+  Int => scala/Int#
+classes/C8#`<init>`().(x) => param x: Int
+  Int => scala/Int#
+classes/C8#x. => private[this] val method x: Int
+  Int => scala/Int#
+
+classes/C9.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => classes/C9.class
+Text => empty
+Language => Scala
+Symbols => 6 entries
+
+Symbols:
+classes/C9# => class C9 extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+classes/C9#`<init>`(). => primary ctor <init>(var x: Int)
+  x => classes/C9#`<init>`().(x)
+  Int => scala/Int#
+classes/C9#`<init>`().(x) => var param x: Int
+  Int => scala/Int#
+classes/C9#`x_=`(). => private[this] var method x_=(x$1: Int): Unit
+  x$1 => classes/C9#`x_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+classes/C9#`x_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+classes/C9#x(). => private[this] var method x: Int
+  Int => scala/Int#
+
+classes/Chain.class
+-------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => classes/Chain.class
+Text => empty
+Language => Scala
+Symbols => 18 entries
+
+Symbols:
+classes/Chain. => final object Chain extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+classes/Chain.A# => class A extends AnyRef { +5 decls }
+  AnyRef => scala/AnyRef#
+classes/Chain.A#`<init>`(). => primary ctor <init>()
+classes/Chain.A#tst1(). => method tst1(i: Int): A
+  i => classes/Chain.A#tst1().(i)
+  Int => scala/Int#
+  A => classes/Chain.A#
+classes/Chain.A#tst1().(i) => param i: Int
+  Int => scala/Int#
+classes/Chain.A#tst2(). => method tst2(i: Int): A
+  i => classes/Chain.A#tst2().(i)
+  Int => scala/Int#
+  A => classes/Chain.A#
+classes/Chain.A#tst2().(i) => param i: Int
+  Int => scala/Int#
+classes/Chain.A#tst3(). => method tst3(i: Int, j: Int): A
+  i => classes/Chain.A#tst3().(i)
+  Int => scala/Int#
+  j => classes/Chain.A#tst3().(j)
+  A => classes/Chain.A#
+classes/Chain.A#tst3().(i) => param i: Int
+  Int => scala/Int#
+classes/Chain.A#tst3().(j) => param j: Int
+  Int => scala/Int#
+classes/Chain.A#tst4(). => method tst4(i: Int, j: A): A
+  i => classes/Chain.A#tst4().(i)
+  Int => scala/Int#
+  j => classes/Chain.A#tst4().(j)
+  A => classes/Chain.A#
+classes/Chain.A#tst4().(i) => param i: Int
+  Int => scala/Int#
+classes/Chain.A#tst4().(j) => param j: A
+  A => classes/Chain.A#
+classes/Chain.a. => val method a: A
+  A => classes/Chain.A#
+classes/Chain.tst$default$2(). => method tst$default$2: A @<?>
+  A => classes/Chain.A#
+classes/Chain.tst(). => method tst(i: Int, j: A): A
+  i => classes/Chain.tst().(i)
+  Int => scala/Int#
+  j => classes/Chain.tst().(j)
+  A => classes/Chain.A#
+classes/Chain.tst().(i) => param i: Int
+  Int => scala/Int#
+classes/Chain.tst().(j) => default param j: A
+  A => classes/Chain.A#
+
+classes/M.class
+---------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => classes/M.class
+Text => empty
+Language => Scala
+Symbols => 7 entries
+
+Symbols:
+classes/M. => final object M extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+classes/M.C5# => implicit class C5 extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+classes/M.C5#`<init>`(). => primary ctor <init>(x: Int)
+  x => classes/M.C5#`<init>`().(x)
+  Int => scala/Int#
+classes/M.C5#`<init>`().(x) => param x: Int
+  Int => scala/Int#
+classes/M.C5#x. => private[this] val method x: Int
+  Int => scala/Int#
+classes/M.C5(). => implicit method C5(x: Int): C5
+  x => classes/M.C5().(x)
+  Int => scala/Int#
+  C5 => classes/M.C5#
+classes/M.C5().(x) => param x: Int
+  Int => scala/Int#
+
+classes/N.class
+---------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => classes/N.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+classes/N. => final object N extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+classes/N.anonClass. => val method anonClass: C7 { val def local: Nothing }
+  C7 => classes/C7#
+  local => local0
+  Nothing => scala/Nothing#
+classes/N.anonFun. => val method anonFun: List[Int]
+  List => scala/collection/immutable/List#
+  Int => scala/Int#
+
+com/javacp/annot/ClassAnnotation.class
+--------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/ClassAnnotation.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/ClassAnnotation# => abstract interface ClassAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/ConstructorAnnotation.class
+--------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/ConstructorAnnotation.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/ConstructorAnnotation# => abstract interface ConstructorAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/FieldAnnotation.class
+--------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/FieldAnnotation.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/FieldAnnotation# => abstract interface FieldAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/InterfaceAnnotation.class
+------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/InterfaceAnnotation.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/InterfaceAnnotation# => abstract interface InterfaceAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/LocalAnnotation.class
+--------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/LocalAnnotation.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/LocalAnnotation# => abstract interface LocalAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/MacroAnnotation.class
+--------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/MacroAnnotation.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/MacroAnnotation# => abstract interface MacroAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/MethodAnnotation.class
+---------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/MethodAnnotation.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/MethodAnnotation# => abstract interface MethodAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/ObjectAnnotation.class
+---------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/ObjectAnnotation.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/ObjectAnnotation# => abstract interface ObjectAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/PackageAnnotation.class
+----------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/PackageAnnotation.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/PackageAnnotation# => abstract interface PackageAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/PackageObjectAnnotation.class
+----------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/PackageObjectAnnotation.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/PackageObjectAnnotation# => abstract interface PackageObjectAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/ParameterAnnotation.class
+------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/ParameterAnnotation.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/ParameterAnnotation# => abstract interface ParameterAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/SelfParameterAnnotation.class
+----------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/SelfParameterAnnotation.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/SelfParameterAnnotation# => abstract interface SelfParameterAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/TraitAnnotation.class
+--------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/TraitAnnotation.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/TraitAnnotation# => abstract interface TraitAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/TypeAnnotation.class
+-------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/TypeAnnotation.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/TypeAnnotation# => abstract interface TypeAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/TypeParameterAnnotation.class
+----------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/TypeParameterAnnotation.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/TypeParameterAnnotation# => abstract interface TypeParameterAnnotation extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/usage/AnnotatedInterface.class
+-----------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/usage/AnnotatedInterface.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/annot/usage/AnnotatedInterface# => abstract interface AnnotatedInterface extends Object with Annotation
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+
+com/javacp/annot/usage/AnnotatedPackage.class
+---------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/annot/usage/AnnotatedPackage.class
+Text => empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/annot/usage/AnnotatedPackage# => class AnnotatedPackage extends Object { +1 decls }
+  Object => java/lang/Object#
+com/javacp/annot/usage/AnnotatedPackage#`<init>`(). => ctor <init>()
+
+com/javacp/ClassSuffix.class
+----------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/ClassSuffix.class
+Text => empty
+Language => Java
+Symbols => 11 entries
+
+Symbols:
+com/javacp/ClassSuffix# => class ClassSuffix extends Object { +3 decls }
+  Object => java/lang/Object#
+com/javacp/ClassSuffix#Inner# => private[javacp] class Inner[A] extends Object { +2 decls }
+  javacp => com/javacp/
+  A => com/javacp/ClassSuffix#Inner#[A]
+  Object => java/lang/Object#
+com/javacp/ClassSuffix#Inner#Bar# => private[javacp] class Bar extends Object { +2 decls }
+  javacp => com/javacp/
+  Object => java/lang/Object#
+com/javacp/ClassSuffix#Inner#Bar#Fuz# => private[javacp] class Fuz[B] extends Object { +1 decls }
+  javacp => com/javacp/
+  B => com/javacp/ClassSuffix#Inner#Bar#Fuz#[B]
+  Object => java/lang/Object#
+com/javacp/ClassSuffix#Inner#Bar#Fuz#[B] => typeparam B
+com/javacp/ClassSuffix#Inner#Bar#Fuz#`<init>`(). => private[javacp] ctor <init>()
+  javacp => com/javacp/
+com/javacp/ClassSuffix#Inner#Bar#`<init>`(). => private[javacp] ctor <init>()
+  javacp => com/javacp/
+com/javacp/ClassSuffix#Inner#[A] => typeparam A
+com/javacp/ClassSuffix#Inner#`<init>`(). => private[javacp] ctor <init>()
+  javacp => com/javacp/
+com/javacp/ClassSuffix#`<init>`(). => ctor <init>()
+com/javacp/ClassSuffix#suffix. => field suffix: Inner[String]#Bar#Fuz[Integer]
+  Inner => com/javacp/ClassSuffix#Inner#
+  String => java/lang/String#
+  Bar => com/javacp/ClassSuffix#Inner#Bar#
+  Fuz => com/javacp/ClassSuffix#Inner#Bar#Fuz#
+  Integer => java/lang/Integer#
+
+com/javacp/Coin.class
+---------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/Coin.class
+Text => empty
+Language => Java
+Symbols => 12 entries
+
+Symbols:
+com/javacp/Coin# => final enum class Coin extends Enum[Coin] { +9 decls }
+  Enum => java/lang/Enum#
+  Coin => com/javacp/Coin#
+com/javacp/Coin#DIME. => final static enum field DIME: Coin
+  Coin => com/javacp/Coin#
+com/javacp/Coin#NICKEL. => final static enum field NICKEL: Coin
+  Coin => com/javacp/Coin#
+com/javacp/Coin#PENNY. => final static enum field PENNY: Coin
+  Coin => com/javacp/Coin#
+com/javacp/Coin#QUARTER. => final static enum field QUARTER: Coin
+  Coin => com/javacp/Coin#
+com/javacp/Coin#`<init>`(). => private ctor <init>($enum$name: Int)
+  $enum$name => com/javacp/Coin#`<init>`().($enum$name)
+  Int => scala/Int#
+com/javacp/Coin#`<init>`().($enum$name) => param $enum$name: Int
+  Int => scala/Int#
+com/javacp/Coin#value(). => method value(): Int
+  Int => scala/Int#
+com/javacp/Coin#value. => private final field value: Int
+  Int => scala/Int#
+com/javacp/Coin#valueOf(). => static method valueOf(name: String): Coin
+  name => com/javacp/Coin#valueOf().(name)
+  String => java/lang/String#
+  Coin => com/javacp/Coin#
+com/javacp/Coin#valueOf().(name) => param name: String
+  String => java/lang/String#
+com/javacp/Coin#values(). => static method values(): Array[Coin]
+  Array => scala/Array#
+  Coin => com/javacp/Coin#
+
+com/javacp/Interface.class
+--------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/Interface.class
+Text => empty
+Language => Java
+Symbols => 4 entries
+
+Symbols:
+com/javacp/Interface# => abstract interface Interface extends Object { +3 decls }
+  Object => java/lang/Object#
+com/javacp/Interface#a(). => abstract method a(): Unit
+  Unit => scala/Unit#
+com/javacp/Interface#d(). => default method d(): Unit
+  Unit => scala/Unit#
+com/javacp/Interface#s(). => static method s(): Unit
+  Unit => scala/Unit#
+
+com/javacp/Logger.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/Logger.class
+Text => empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+com/javacp/Logger# => class Logger extends Object { +1 decls }
+  Object => java/lang/Object#
+com/javacp/Logger#`<init>`(). => ctor <init>()
+
+com/javacp/MetacJava.class
+--------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/MetacJava.class
+Text => empty
+Language => Java
+Symbols => 28 entries
+
+Symbols:
+com/javacp/MetacJava# => class MetacJava extends Object { +8 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#Overload1# => class Overload1 extends Object { +2 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#Overload1#A# => class A extends Object { +1 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#Overload1#A#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#Overload1#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#Overload2# => class Overload2 extends Object { +2 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#Overload2#A# => class A extends Object { +1 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#Overload2#A#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#Overload2#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#Overload3# => static class Overload3 extends Object { +2 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#Overload3#A# => static class A extends Object { +1 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#Overload3#A#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#Overload3#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#StaticInner# => static class StaticInner extends Object { +4 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#StaticInner#NonStatic# => class NonStatic extends Object { +2 decls }
+  Object => java/lang/Object#
+com/javacp/MetacJava#StaticInner#NonStatic#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#StaticInner#NonStatic#method(). => method method(e: NonStatic): Unit
+  e => com/javacp/MetacJava#StaticInner#NonStatic#method().(e)
+  NonStatic => com/javacp/MetacJava#StaticInner#NonStatic#
+  Unit => scala/Unit#
+com/javacp/MetacJava#StaticInner#NonStatic#method().(e) => param e: NonStatic
+  NonStatic => com/javacp/MetacJava#StaticInner#NonStatic#
+com/javacp/MetacJava#StaticInner#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#StaticInner#isNotStatic(). => method isNotStatic(): Unit
+  Unit => scala/Unit#
+com/javacp/MetacJava#StaticInner#isStatic(). => static method isStatic(): Unit
+  Unit => scala/Unit#
+com/javacp/MetacJava#`<init>`(). => ctor <init>()
+com/javacp/MetacJava#overload(). => method overload(a: A): Unit
+  a => com/javacp/MetacJava#overload().(a)
+  A => com/javacp/MetacJava#Overload1#A#
+  Unit => scala/Unit#
+com/javacp/MetacJava#overload().(a) => param a: A
+  A => com/javacp/MetacJava#Overload1#A#
+com/javacp/MetacJava#overload(+1). => method overload(a: A): Unit
+  a => com/javacp/MetacJava#overload(+1).(a)
+  A => com/javacp/MetacJava#Overload2#A#
+  Unit => scala/Unit#
+com/javacp/MetacJava#overload(+1).(a) => param a: A
+  A => com/javacp/MetacJava#Overload2#A#
+com/javacp/MetacJava#overload(+2). => static method overload(a: A): Unit
+  a => com/javacp/MetacJava#overload(+2).(a)
+  A => com/javacp/MetacJava#Overload3#A#
+  Unit => scala/Unit#
+com/javacp/MetacJava#overload(+2).(a) => param a: A
+  A => com/javacp/MetacJava#Overload3#A#
+
+com/javacp/NonGeneric.class
+---------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/NonGeneric.class
+Text => empty
+Language => Java
+Symbols => 3 entries
+
+Symbols:
+com/javacp/NonGeneric# => class NonGeneric extends Exception with Serializable with Flushable { +2 decls }
+  Exception => java/lang/Exception#
+  Serializable => java/io/Serializable#
+  Flushable => java/io/Flushable#
+com/javacp/NonGeneric#`<init>`(). => ctor <init>()
+com/javacp/NonGeneric#flush(). => method flush(): Unit
+  Unit => scala/Unit#
+
+com/javacp/Recursive.class
+--------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/Recursive.class
+Text => empty
+Language => Java
+Symbols => 13 entries
+
+Symbols:
+com/javacp/Recursive# => abstract class Recursive[A <: Recursive[A, B] & Serializable, B <: Inner[A, B]] extends Object { +4 decls }
+  A => com/javacp/Recursive#[A]
+  Recursive => com/javacp/Recursive#
+  B => com/javacp/Recursive#[B]
+  Serializable => java/io/Serializable#
+  Inner => com/javacp/Recursive#Inner#
+  Object => java/lang/Object#
+com/javacp/Recursive#Inner# => abstract static class Inner[A <: Recursive[A, B] & Serializable, B <: Inner[A, B]] extends Object { +1 decls }
+  A => com/javacp/Recursive#Inner#[A]
+  Recursive => com/javacp/Recursive#
+  B => com/javacp/Recursive#Inner#[B]
+  Serializable => java/io/Serializable#
+  Inner => com/javacp/Recursive#Inner#
+  Object => java/lang/Object#
+com/javacp/Recursive#Inner#[A] => typeparam A <: Recursive[A, B] & Serializable
+  Recursive => com/javacp/Recursive#
+  A => com/javacp/Recursive#Inner#[A]
+  B => com/javacp/Recursive#Inner#[B]
+  Serializable => java/io/Serializable#
+com/javacp/Recursive#Inner#[B] => typeparam B <: Inner[A, B]
+  Inner => com/javacp/Recursive#Inner#
+  A => com/javacp/Recursive#Inner#[A]
+  B => com/javacp/Recursive#Inner#[B]
+com/javacp/Recursive#Inner#`<init>`(). => ctor <init>()
+com/javacp/Recursive#Inner2# => abstract class Inner2[C <: Comparable[C]] extends Object { +1 decls }
+  C => com/javacp/Recursive#Inner2#[C]
+  Comparable => java/lang/Comparable#
+  Object => java/lang/Object#
+com/javacp/Recursive#Inner2#[C] => typeparam C <: Comparable[C]
+  Comparable => java/lang/Comparable#
+  C => com/javacp/Recursive#Inner2#[C]
+com/javacp/Recursive#Inner2#`<init>`(). => ctor <init>()
+com/javacp/Recursive#[A] => typeparam A <: Recursive[A, B] & Serializable
+  Recursive => com/javacp/Recursive#
+  A => com/javacp/Recursive#[A]
+  B => com/javacp/Recursive#[B]
+  Serializable => java/io/Serializable#
+com/javacp/Recursive#[B] => typeparam B <: Inner[A, B]
+  Inner => com/javacp/Recursive#Inner#
+  A => com/javacp/Recursive#[A]
+  B => com/javacp/Recursive#[B]
+com/javacp/Recursive#`<init>`(). => ctor <init>()
+com/javacp/Recursive#foo(). => method foo[Anon](): ArrayList[Anon]
+  Anon => com/javacp/Recursive#foo().[Anon]
+  ArrayList => java/util/ArrayList#
+com/javacp/Recursive#foo().[Anon] => typeparam Anon
+
+com/javacp/Test.class
+---------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/Test.class
+Text => empty
+Language => Java
+Symbols => 73 entries
+
+Symbols:
+com/javacp/Test# => final class Test[A <: CharSequence & Serializable, B] extends ArrayList[A] with Comparable[B] with Serializable { +39 decls }
+  A => com/javacp/Test#[A]
+  CharSequence => java/lang/CharSequence#
+  Serializable => java/io/Serializable#
+  B => com/javacp/Test#[B]
+  ArrayList => java/util/ArrayList#
+  Comparable => java/lang/Comparable#
+com/javacp/Test#Boolean. => field Boolean: Boolean
+  Boolean => scala/Boolean#
+com/javacp/Test#Byte. => field Byte: Byte
+  Byte => scala/Byte#
+com/javacp/Test#Char. => field Char: Char
+  Char => scala/Char#
+com/javacp/Test#Float. => field Float: Float
+  Float => scala/Float#
+com/javacp/Test#InnerShadowTypeParam# => private[javacp] class InnerShadowTypeParam[A] extends Object { +2 decls }
+  javacp => com/javacp/
+  A => com/javacp/Test#InnerShadowTypeParam#[A]
+  Object => java/lang/Object#
+com/javacp/Test#InnerShadowTypeParam#[A] => typeparam A
+com/javacp/Test#InnerShadowTypeParam#`<init>`(). => private[javacp] ctor <init>()
+  javacp => com/javacp/
+com/javacp/Test#InnerShadowTypeParam#move(). => method move(a: A, b: B): Unit
+  a => com/javacp/Test#InnerShadowTypeParam#move().(a)
+  A => com/javacp/Test#InnerShadowTypeParam#[A]
+  b => com/javacp/Test#InnerShadowTypeParam#move().(b)
+  B => com/javacp/Test#[B]
+  Unit => scala/Unit#
+com/javacp/Test#InnerShadowTypeParam#move().(a) => param a: A
+  A => com/javacp/Test#InnerShadowTypeParam#[A]
+com/javacp/Test#InnerShadowTypeParam#move().(b) => param b: B
+  B => com/javacp/Test#[B]
+com/javacp/Test#Int. => field Int: Int
+  Int => scala/Int#
+com/javacp/Test#Long. => field Long: Long
+  Long => scala/Long#
+com/javacp/Test#Short. => field Short: Short
+  Short => scala/Short#
+com/javacp/Test#StaticClass# => private[javacp] static class StaticClass extends Object { +1 decls }
+  javacp => com/javacp/
+  Object => java/lang/Object#
+com/javacp/Test#StaticClass#`<init>`(). => private[javacp] ctor <init>()
+  javacp => com/javacp/
+com/javacp/Test#[A] => typeparam A <: CharSequence & Serializable
+  CharSequence => java/lang/CharSequence#
+  Serializable => java/io/Serializable#
+com/javacp/Test#[B] => typeparam B
+com/javacp/Test#`<init>`(). => ctor <init>()
+com/javacp/Test#anonymous. => field anonymous: Serializable
+  Serializable => java/io/Serializable#
+com/javacp/Test#arrayField. => private[javacp] final field arrayField: Array[Int]
+  javacp => com/javacp/
+  Array => scala/Array#
+  Int => scala/Int#
+com/javacp/Test#arrayMethod(). => private[javacp] method arrayMethod(): Array[Int]
+  javacp => com/javacp/
+  Array => scala/Array#
+  Int => scala/Int#
+com/javacp/Test#compareTo(). => final method compareTo(b: B): Int
+  b => com/javacp/Test#compareTo().(b)
+  B => com/javacp/Test#[B]
+  Int => scala/Int#
+com/javacp/Test#compareTo().(b) => param b: B
+  B => com/javacp/Test#[B]
+com/javacp/Test#genericField. => private[javacp] field genericField: ArrayList[A]
+  javacp => com/javacp/
+  ArrayList => java/util/ArrayList#
+  A => com/javacp/Test#[A]
+com/javacp/Test#genericMethod(). => private[javacp] method genericMethod(): ArrayList[A]
+  javacp => com/javacp/
+  ArrayList => java/util/ArrayList#
+  A => com/javacp/Test#[A]
+com/javacp/Test#genericParams(). => private[javacp] method genericParams(a: A, b: B): Unit
+  javacp => com/javacp/
+  a => com/javacp/Test#genericParams().(a)
+  A => com/javacp/Test#[A]
+  b => com/javacp/Test#genericParams().(b)
+  B => com/javacp/Test#[B]
+  Unit => scala/Unit#
+com/javacp/Test#genericParams().(a) => param a: A
+  A => com/javacp/Test#[A]
+com/javacp/Test#genericParams().(b) => param b: B
+  B => com/javacp/Test#[B]
+com/javacp/Test#m1(). => private[javacp] method m1[T <: X](): Unit
+  javacp => com/javacp/
+  T => com/javacp/Test#m1().[T]
+  X => com/javacp/X#
+  Unit => scala/Unit#
+com/javacp/Test#m1().[T] => typeparam T <: X
+  X => com/javacp/X#
+com/javacp/Test#m2(). => private[javacp] method m2[T <: X & Y](): Unit
+  javacp => com/javacp/
+  T => com/javacp/Test#m2().[T]
+  X => com/javacp/X#
+  Y => com/javacp/Y#
+  Unit => scala/Unit#
+com/javacp/Test#m2().[T] => typeparam T <: X & Y
+  X => com/javacp/X#
+  Y => com/javacp/Y#
+com/javacp/Test#m3(). => private[javacp] method m3[T <: X & Y & Z](): Unit
+  javacp => com/javacp/
+  T => com/javacp/Test#m3().[T]
+  X => com/javacp/X#
+  Y => com/javacp/Y#
+  Z => com/javacp/Z#
+  Unit => scala/Unit#
+com/javacp/Test#m3().[T] => typeparam T <: X & Y & Z
+  X => com/javacp/X#
+  Y => com/javacp/Y#
+  Z => com/javacp/Z#
+com/javacp/Test#methodTypeParams(). => private[javacp] method methodTypeParams[C <: Integer](c: C): Unit
+  javacp => com/javacp/
+  C => com/javacp/Test#methodTypeParams().[C]
+  Integer => java/lang/Integer#
+  c => com/javacp/Test#methodTypeParams().(c)
+  Unit => scala/Unit#
+com/javacp/Test#methodTypeParams().(c) => param c: C
+  C => com/javacp/Test#methodTypeParams().[C]
+com/javacp/Test#methodTypeParams().[C] => typeparam C <: Integer
+  Integer => java/lang/Integer#
+com/javacp/Test#overload(). => method overload(a: Logger): Unit
+  a => com/javacp/Test#overload().(a)
+  Logger => java/util/logging/Logger#
+  Unit => scala/Unit#
+com/javacp/Test#overload().(a) => param a: Logger
+  Logger => java/util/logging/Logger#
+com/javacp/Test#overload(+1). => method overload(a: Logger): Unit
+  a => com/javacp/Test#overload(+1).(a)
+  Logger => com/javacp/Logger#
+  Unit => scala/Unit#
+com/javacp/Test#overload(+1).(a) => param a: Logger
+  Logger => com/javacp/Logger#
+com/javacp/Test#packagePrivateField. => private[javacp] field packagePrivateField: Int
+  javacp => com/javacp/
+  Int => scala/Int#
+com/javacp/Test#packagePrivateMethod(). => private[javacp] method packagePrivateMethod(): Unit
+  javacp => com/javacp/
+  Unit => scala/Unit#
+com/javacp/Test#primitiveParams(). => private[javacp] method primitiveParams(a: Int, b: Long, c: Float, d: Double, e: Short, f: Byte, g: Boolean, h: Char): Unit
+  javacp => com/javacp/
+  a => com/javacp/Test#primitiveParams().(a)
+  Int => scala/Int#
+  b => com/javacp/Test#primitiveParams().(b)
+  Long => scala/Long#
+  c => com/javacp/Test#primitiveParams().(c)
+  Float => scala/Float#
+  d => com/javacp/Test#primitiveParams().(d)
+  Double => scala/Double#
+  e => com/javacp/Test#primitiveParams().(e)
+  Short => scala/Short#
+  f => com/javacp/Test#primitiveParams().(f)
+  Byte => scala/Byte#
+  g => com/javacp/Test#primitiveParams().(g)
+  Boolean => scala/Boolean#
+  h => com/javacp/Test#primitiveParams().(h)
+  Char => scala/Char#
+  Unit => scala/Unit#
+com/javacp/Test#primitiveParams().(a) => param a: Int
+  Int => scala/Int#
+com/javacp/Test#primitiveParams().(b) => param b: Long
+  Long => scala/Long#
+com/javacp/Test#primitiveParams().(c) => param c: Float
+  Float => scala/Float#
+com/javacp/Test#primitiveParams().(d) => param d: Double
+  Double => scala/Double#
+com/javacp/Test#primitiveParams().(e) => param e: Short
+  Short => scala/Short#
+com/javacp/Test#primitiveParams().(f) => param f: Byte
+  Byte => scala/Byte#
+com/javacp/Test#primitiveParams().(g) => param g: Boolean
+  Boolean => scala/Boolean#
+com/javacp/Test#primitiveParams().(h) => param h: Char
+  Char => scala/Char#
+com/javacp/Test#privateField. => private field privateField: Int
+  Int => scala/Int#
+com/javacp/Test#privateMethod(). => private method privateMethod(): Unit
+  Unit => scala/Unit#
+com/javacp/Test#protectedField. => protected field protectedField: Int
+  Int => scala/Int#
+com/javacp/Test#protectedMethod(). => protected method protectedMethod(): Unit
+  Unit => scala/Unit#
+com/javacp/Test#publicField. => field publicField: Int
+  Int => scala/Int#
+com/javacp/Test#publicMethod(). => method publicMethod(): Unit
+  Unit => scala/Unit#
+com/javacp/Test#staticField. => private[javacp] static field staticField: Int
+  javacp => com/javacp/
+  Int => scala/Int#
+com/javacp/Test#staticMethod(). => private[javacp] static method staticMethod(): Unit
+  javacp => com/javacp/
+  Unit => scala/Unit#
+com/javacp/Test#strictfpMethod(). => @strictfp private[javacp] method strictfpMethod(): Unit
+  strictfp => scala/annotation/strictfp#
+  javacp => com/javacp/
+  Unit => scala/Unit#
+com/javacp/Test#typeParams(). => private[javacp] method typeParams(a: ArrayList[HashMap[A, Array[String]]], b: Hashtable[String, B]): Unit
+  javacp => com/javacp/
+  a => com/javacp/Test#typeParams().(a)
+  ArrayList => java/util/ArrayList#
+  HashMap => java/util/HashMap#
+  A => com/javacp/Test#[A]
+  Array => scala/Array#
+  String => java/lang/String#
+  b => com/javacp/Test#typeParams().(b)
+  Hashtable => java/util/Hashtable#
+  B => com/javacp/Test#[B]
+  Unit => scala/Unit#
+com/javacp/Test#typeParams().(a) => param a: ArrayList[HashMap[A, Array[String]]]
+  ArrayList => java/util/ArrayList#
+  HashMap => java/util/HashMap#
+  A => com/javacp/Test#[A]
+  Array => scala/Array#
+  String => java/lang/String#
+com/javacp/Test#typeParams().(b) => param b: Hashtable[String, B]
+  Hashtable => java/util/Hashtable#
+  String => java/lang/String#
+  B => com/javacp/Test#[B]
+com/javacp/Test#vararg(). => private[javacp] method vararg(a: Int, args: String*): Unit
+  javacp => com/javacp/
+  a => com/javacp/Test#vararg().(a)
+  Int => scala/Int#
+  args => com/javacp/Test#vararg().(args)
+  String => java/lang/String#
+  Unit => scala/Unit#
+com/javacp/Test#vararg().(a) => param a: Int
+  Int => scala/Int#
+com/javacp/Test#vararg().(args) => param args: String*
+  String => java/lang/String#
+com/javacp/Test#wildcard(). => method wildcard(wildcard: ArrayList[local_wildcard]): Unit
+  wildcard => com/javacp/Test#wildcard().(wildcard)
+  ArrayList => java/util/ArrayList#
+  local_wildcard => local_wildcard
+  Unit => scala/Unit#
+com/javacp/Test#wildcard().(wildcard) => param wildcard: ArrayList[local_wildcard]
+  ArrayList => java/util/ArrayList#
+  local_wildcard => local_wildcard
+com/javacp/Test#wildcard(+1). => method wildcard(a: Collection[local_wildcard], b: Collection[local_wildcard]): Unit
+  a => com/javacp/Test#wildcard(+1).(a)
+  Collection => java/util/Collection#
+  local_wildcard => local_wildcard
+  b => com/javacp/Test#wildcard(+1).(b)
+  Unit => scala/Unit#
+com/javacp/Test#wildcard(+1).(a) => param a: Collection[local_wildcard]
+  Collection => java/util/Collection#
+  local_wildcard => local_wildcard
+com/javacp/Test#wildcard(+1).(b) => param b: Collection[local_wildcard]
+  Collection => java/util/Collection#
+  local_wildcard => local_wildcard
+
+com/javacp/X.class
+------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/X.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/X# => abstract interface X extends Object
+  Object => java/lang/Object#
+
+com/javacp/Y.class
+------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/Y.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/Y# => abstract interface Y extends Object
+  Object => java/lang/Object#
+
+com/javacp/Z.class
+------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/Z.class
+Text => empty
+Language => Java
+Symbols => 1 entries
+
+Symbols:
+com/javacp/Z# => abstract interface Z extends Object
+  Object => java/lang/Object#
+
+example/A.class
+---------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/A.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+example/A# => trait A extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/A#foo(). => abstract method foo: Int
+  Int => scala/Int#
+
+example/Access.class
+--------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Access.class
+Text => empty
+Language => Scala
+Symbols => 9 entries
+
+Symbols:
+example/Access# => class Access extends AnyRef { +8 decls }
+  AnyRef => scala/AnyRef#
+example/Access#`<init>`(). => primary ctor <init>()
+example/Access#m1(). => private method m1: Nothing
+  Nothing => scala/Nothing#
+example/Access#m2(). => private[this] method m2: Nothing
+  Nothing => scala/Nothing#
+example/Access#m3(). => private[Access] method m3: Nothing
+  Access => example/Access#
+  Nothing => scala/Nothing#
+example/Access#m4(). => protected method m4: Nothing
+  Nothing => scala/Nothing#
+example/Access#m5(). => protected[this] method m5: Nothing
+  Nothing => scala/Nothing#
+example/Access#m6(). => protected[example] method m6: Nothing
+  example => example/
+  Nothing => scala/Nothing#
+example/Access#m7(). => method m7: Nothing
+  Nothing => scala/Nothing#
+
+example/Anonymous.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Anonymous.class
+Text => empty
+Language => Scala
+Symbols => 8 entries
+
+Symbols:
+example/Anonymous# => class Anonymous extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+example/Anonymous#Foo# => trait Foo extends AnyRef
+  AnyRef => scala/AnyRef#
+example/Anonymous#`<init>`(). => primary ctor <init>()
+example/Anonymous#m1(). => method m1[T[_], _]: Nothing
+  T => example/Anonymous#m1().[T]
+  _ => example/Anonymous#m1().[T][`1`]
+  _ => example/Anonymous#m1().[`2`]
+  Nothing => scala/Nothing#
+example/Anonymous#m1().[T] => typeparam T[_]
+  _ => example/Anonymous#m1().[T][`1`]
+example/Anonymous#m1().[T][`1`] => typeparam _
+example/Anonymous#m1().[`2`] => typeparam _
+example/Anonymous#m2(). => method m2: Map[_, List[_] forSome { type _ }] forSome { type _ }
+  Map => scala/Predef.Map#
+  _ => local0
+  List => scala/package.List#
+  _ => local1
+
+example/B.class
+---------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/B.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+example/B# => class B extends AnyRef with A { +2 decls }
+  AnyRef => scala/AnyRef#
+  A => example/A#
+example/B#`<init>`(). => primary ctor <init>()
+example/B#foo(). => method foo: Int
+  Int => scala/Int#
+
+example/EmptyObject.class
+-------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/EmptyObject.class
+Text => empty
+Language => Scala
+Symbols => 1 entries
+
+Symbols:
+example/EmptyObject. => final object EmptyObject extends AnyRef
+  AnyRef => scala/AnyRef#
+
+example/EtaExpansion.class
+--------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/EtaExpansion.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+example/EtaExpansion# => class EtaExpansion extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/EtaExpansion#`<init>`(). => primary ctor <init>()
+example/EtaExpansion#meth(). => method meth(): String
+  String => java/lang/String#
+example/EtaExpansion#prop(). => method prop: String
+  String => java/lang/String#
+
+example/Example.class
+---------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Example.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+example/Example. => final object Example extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/Example.main(). => method main(args: Array[String]): Unit
+  args => example/Example.main().(args)
+  Array => scala/Array#
+  String => scala/Predef.String#
+  Unit => scala/Unit#
+example/Example.main().(args) => param args: Array[String]
+  Array => scala/Array#
+  String => scala/Predef.String#
+example/Example.x. => val method x: ClassTag[Int]
+  ClassTag => scala/reflect/ClassTag#
+  Int => scala/Int#
+
+example/FilenameWithSpaces.class
+--------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/FilenameWithSpaces.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+example/FilenameWithSpaces# => class FilenameWithSpaces extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/FilenameWithSpaces#`<init>`(). => primary ctor <init>()
+
+example/ForComprehension.class
+------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/ForComprehension.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+example/ForComprehension# => class ForComprehension extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/ForComprehension#`<init>`(). => primary ctor <init>()
+
+example/ImplicitConversion.class
+--------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/ImplicitConversion.class
+Text => empty
+Language => Scala
+Symbols => 13 entries
+
+Symbols:
+example/ImplicitConversion# => class ImplicitConversion extends AnyRef { +11 decls }
+  AnyRef => scala/AnyRef#
+example/ImplicitConversion#`<init>`(). => primary ctor <init>()
+example/ImplicitConversion#a. => val method a: Int
+  Int => scala/Int#
+example/ImplicitConversion#b. => val method b: Long
+  Long => scala/Long#
+example/ImplicitConversion#c. => val method c: Long
+  Long => scala/Long#
+example/ImplicitConversion#char. => val method char: Char
+  Char => scala/Char#
+example/ImplicitConversion#message. => val method message: String
+  String => java/lang/String#
+example/ImplicitConversion#number. => val method number: Int
+  Int => scala/Int#
+example/ImplicitConversion#string2Number(). => implicit method string2Number(string: String): Int
+  string => example/ImplicitConversion#string2Number().(string)
+  String => scala/Predef.String#
+  Int => scala/Int#
+example/ImplicitConversion#string2Number().(string) => param string: String
+  String => scala/Predef.String#
+example/ImplicitConversion#toLong. => val method toLong: Int
+  Int => scala/Int#
+example/ImplicitConversion#tuple. => val method tuple: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+example/ImplicitConversion#x. => val method x: Int
+  Int => scala/Int#
+
+example/InstrumentTyper.class
+-----------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/InstrumentTyper.class
+Text => empty
+Language => Scala
+Symbols => 8 entries
+
+Symbols:
+example/InstrumentTyper# => class InstrumentTyper extends AnyRef { self: AnyRef => +6 decls }
+  AnyRef => scala/AnyRef#
+example/InstrumentTyper#AnnotatedType# => type AnnotatedType = Int @<?>
+  Int => scala/Int#
+example/InstrumentTyper#`<init>`(). => primary ctor <init>()
+example/InstrumentTyper#all(). => method all: List[Any]
+  List => scala/collection/immutable/List#
+  Any => scala/Any#
+example/InstrumentTyper#clazzOf. => final val method clazzOf: Class[Option[Int]]
+  Class => java/lang/Class#
+  Option => scala/Option#
+  Int => scala/Int#
+example/InstrumentTyper#existential(). => method existential: U[Int] forSome { type U[T <: Int] }
+  U => local0
+  Int => scala/Int#
+  T => local1
+example/InstrumentTyper#singletonType(). => method singletonType(x: Predef.type): Nothing
+  x => example/InstrumentTyper#singletonType().(x)
+  Predef => scala/Predef.
+  Nothing => scala/Nothing#
+example/InstrumentTyper#singletonType().(x) => param x: Predef.type
+  Predef => scala/Predef.
+
+example/Issue1749.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue1749.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+example/Issue1749# => class Issue1749 extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/Issue1749#`<init>`(). => primary ctor <init>()
+example/Issue1749#x1. => val method x1: Int
+  Int => scala/Int#
+example/Issue1749#x2. => val method x2: Int
+  Int => scala/Int#
+
+example/Issue1854.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue1854.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+example/Issue1854# => class Issue1854 extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/Issue1854#`<init>`(). => primary ctor <init>()
+example/Issue1854#map. => val method map: Map[String, String]
+  Map => scala/collection/mutable/Map#
+  String => scala/Predef.String#
+
+example/Issue2040.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue2040.class
+Text => empty
+Language => Scala
+Symbols => 16 entries
+
+Symbols:
+example/Issue2040. => final object Issue2040 extends AnyRef { +6 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2040.AnyShouldWrapper# => trait AnyShouldWrapper extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2040.AnyShouldWrapper#shouldBe(). => abstract method shouldBe(right: Any): Boolean
+  right => example/Issue2040.AnyShouldWrapper#shouldBe().(right)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/Issue2040.AnyShouldWrapper#shouldBe().(right) => param right: Any
+  Any => scala/Any#
+example/Issue2040.BarSpec# => trait BarSpec extends AnyRef with Base { +1 decls }
+  AnyRef => scala/AnyRef#
+  Base => example/Issue2040.Base#
+example/Issue2040.BarSpec#convertToAnyShouldWrapper(). => abstract implicit method convertToAnyShouldWrapper(o: Any)(implicit prettifier: Prettifier): AnyShouldWrapper
+  o => example/Issue2040.BarSpec#convertToAnyShouldWrapper().(o)
+  Any => scala/Any#
+  prettifier => example/Issue2040.BarSpec#convertToAnyShouldWrapper().(prettifier)
+  Prettifier => example/Issue2040.Prettifier#
+  AnyShouldWrapper => example/Issue2040.AnyShouldWrapper#
+example/Issue2040.BarSpec#convertToAnyShouldWrapper().(o) => param o: Any
+  Any => scala/Any#
+example/Issue2040.BarSpec#convertToAnyShouldWrapper().(prettifier) => implicit param prettifier: Prettifier
+  Prettifier => example/Issue2040.Prettifier#
+example/Issue2040.Base# => trait Base extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2040.Base#i(). => method i(): Int
+  Int => scala/Int#
+example/Issue2040.FooSpec# => trait FooSpec extends AnyRef with Base { +1 decls }
+  AnyRef => scala/AnyRef#
+  Base => example/Issue2040.Base#
+example/Issue2040.FooSpec#convertToAnyShouldWrapper(). => abstract implicit method convertToAnyShouldWrapper(o: Any): AnyShouldWrapper
+  o => example/Issue2040.FooSpec#convertToAnyShouldWrapper().(o)
+  Any => scala/Any#
+  AnyShouldWrapper => example/Issue2040.AnyShouldWrapper#
+example/Issue2040.FooSpec#convertToAnyShouldWrapper().(o) => param o: Any
+  Any => scala/Any#
+example/Issue2040.Prettifier# => trait Prettifier extends AnyRef
+  AnyRef => scala/AnyRef#
+example/Issue2040.Prettifier. => final object Prettifier extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2040.Prettifier.default. => implicit val method default: Prettifier
+  Prettifier => example/Issue2040.Prettifier#
+
+example/Issue2116.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue2116.class
+Text => empty
+Language => Scala
+Symbols => 8 entries
+
+Symbols:
+example/Issue2116# => abstract class Issue2116 extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2116#`<init>`(). => primary ctor <init>()
+example/Issue2116#check$default$1(). => method check$default$1: Boolean @<?>
+  Boolean => scala/Boolean#
+example/Issue2116#check$default$2(). => method check$default$2: Boolean @<?>
+  Boolean => scala/Boolean#
+example/Issue2116#check(). => method check(includeDocs: Boolean, includeCommitCharacter: Boolean)(implicit loc: ExecutionContext): Unit
+  includeDocs => example/Issue2116#check().(includeDocs)
+  Boolean => scala/Boolean#
+  includeCommitCharacter => example/Issue2116#check().(includeCommitCharacter)
+  loc => example/Issue2116#check().(loc)
+  ExecutionContext => scala/concurrent/ExecutionContext#
+  Unit => scala/Unit#
+example/Issue2116#check().(includeCommitCharacter) => default param includeCommitCharacter: Boolean
+  Boolean => scala/Boolean#
+example/Issue2116#check().(includeDocs) => default param includeDocs: Boolean
+  Boolean => scala/Boolean#
+example/Issue2116#check().(loc) => implicit param loc: ExecutionContext
+  ExecutionContext => scala/concurrent/ExecutionContext#
+
+example/Issue2116_2.class
+-------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue2116_2.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+example/Issue2116_2# => class Issue2116_2 extends Issue2116 { +2 decls }
+  Issue2116 => example/Issue2116#
+example/Issue2116_2#`<init>`(). => primary ctor <init>()
+example/Issue2116_2#ec. => implicit val method ec: ExecutionContextExecutor
+  ExecutionContextExecutor => scala/concurrent/ExecutionContextExecutor#
+
+example/Issue2144.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue2144.class
+Text => empty
+Language => Scala
+Symbols => 13 entries
+
+Symbols:
+example/Issue2144. => final object Issue2144 extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2144.Test# => class Test extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2144.Test#`<init>`(). => primary ctor <init>(a: Boolean, b: Int, c: Int)
+  a => example/Issue2144.Test#`<init>`().(a)
+  Boolean => scala/Boolean#
+  b => example/Issue2144.Test#`<init>`().(b)
+  Int => scala/Int#
+  c => example/Issue2144.Test#`<init>`().(c)
+example/Issue2144.Test#`<init>`().(a) => param a: Boolean
+  Boolean => scala/Boolean#
+example/Issue2144.Test#`<init>`().(b) => default param b: Int
+  Int => scala/Int#
+example/Issue2144.Test#`<init>`().(c) => default param c: Int
+  Int => scala/Int#
+example/Issue2144.Test#a. => private[this] val method a: Boolean
+  Boolean => scala/Boolean#
+example/Issue2144.Test#b. => private[this] val method b: Int
+  Int => scala/Int#
+example/Issue2144.Test#c. => private[this] val method c: Int
+  Int => scala/Int#
+example/Issue2144.Test. => final object Test extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2144.Test.`<init>$default$2`(). => method <init>$default$2: Int @<?>
+  Int => scala/Int#
+example/Issue2144.Test.`<init>$default$3`(). => method <init>$default$3: Int @<?>
+  Int => scala/Int#
+example/Issue2144.x. => val method x: Test
+  Test => example/Issue2144.Test#
+
+example/local$minusfile.class
+-----------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/local$minusfile.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+example/`local-file`# => class local-file extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/`local-file`#`<init>`(). => primary ctor <init>()
+
+example/Local.class
+-------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Local.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+example/Local# => class Local extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/Local#`<init>`(). => primary ctor <init>()
+example/Local#a(). => method a(): Int
+  Int => scala/Int#
+
+example/MacroAnnotations.class
+------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/MacroAnnotations.class
+Text => empty
+Language => Scala
+Symbols => 5 entries
+
+Symbols:
+example/MacroAnnotations# => class MacroAnnotations extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/MacroAnnotations#`<init>`(). => primary ctor <init>()
+example/MacroAnnotations#classNumber(). => method classNumber: Int
+  Int => scala/Int#
+example/MacroAnnotations. => final object MacroAnnotations extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/MacroAnnotations.objectNumber(). => method objectNumber: Int
+  Int => scala/Int#
+
+example/MetacJava.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/MetacJava.class
+Text => empty
+Language => Scala
+Symbols => 10 entries
+
+Symbols:
+example/MetacJava# => class MetacJava extends AnyRef { +9 decls }
+  AnyRef => scala/AnyRef#
+example/MetacJava#`<init>`(). => primary ctor <init>()
+example/MetacJava#coin. => val method coin: Coin
+  Coin => com/javacp/Coin#
+example/MetacJava#entry. => val method entry: Entry[Int, Int]
+  Entry => java/util/Map#Entry#
+  Int => scala/Int#
+example/MetacJava#inner. => val method inner: MetacJava
+  MetacJava => com/javacp/MetacJava#
+example/MetacJava#interface. => val method interface: Interface
+  Interface => com/javacp/Interface#
+example/MetacJava#nonStatic. => val method nonStatic: staticInner.NonStatic
+  staticInner => example/MetacJava#staticInner.
+  NonStatic => com/javacp/MetacJava#StaticInner#NonStatic#
+example/MetacJava#overload1. => val method overload1: inner.Overload1
+  inner => example/MetacJava#inner.
+  Overload1 => com/javacp/MetacJava#Overload1#
+example/MetacJava#overload2. => val method overload2: inner.Overload2
+  inner => example/MetacJava#inner.
+  Overload2 => com/javacp/MetacJava#Overload2#
+example/MetacJava#staticInner. => val method staticInner: StaticInner
+  StaticInner => com/javacp/MetacJava#StaticInner#
+
+example/Methods.class
+---------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Methods.class
+Text => empty
+Language => Scala
+Symbols => 76 entries
+
+Symbols:
+example/Methods# => class Methods[T] extends AnyRef { +35 decls }
+  T => example/Methods#[T]
+  AnyRef => scala/AnyRef#
+example/Methods#AList# => type AList[T] = List[T]
+  T => example/Methods#AList#[T]
+  List => example/Methods#List#
+example/Methods#AList#[T] => typeparam T
+example/Methods#List# => class List[T] extends AnyRef { +1 decls }
+  T => example/Methods#List#[T]
+  AnyRef => scala/AnyRef#
+example/Methods#List#[T] => typeparam T
+example/Methods#List#`<init>`(). => primary ctor <init>()
+example/Methods#[T] => typeparam T
+example/Methods#`<init>`(). => primary ctor <init>()
+example/Methods#`m8().`(). => method m8().(): Nothing
+  Nothing => scala/Nothing#
+example/Methods#`m9().`# => class m9(). extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/Methods#`m9().`#`<init>`(). => primary ctor <init>()
+example/Methods#m1(). => method m1: Nothing
+  Nothing => scala/Nothing#
+example/Methods#m2(). => method m2(): Nothing
+  Nothing => scala/Nothing#
+example/Methods#m3(). => method m3(x: Int): Nothing
+  x => example/Methods#m3().(x)
+  Int => scala/Int#
+  Nothing => scala/Nothing#
+example/Methods#m3().(x) => param x: Int
+  Int => scala/Int#
+example/Methods#m4(). => method m4(x: Int)(y: Int): Nothing
+  x => example/Methods#m4().(x)
+  Int => scala/Int#
+  y => example/Methods#m4().(y)
+  Nothing => scala/Nothing#
+example/Methods#m4().(x) => param x: Int
+  Int => scala/Int#
+example/Methods#m4().(y) => param y: Int
+  Int => scala/Int#
+example/Methods#m5(). => method m5(x: String): Nothing
+  x => example/Methods#m5().(x)
+  String => scala/Predef.String#
+  Nothing => scala/Nothing#
+example/Methods#m5().(x) => param x: String
+  String => scala/Predef.String#
+example/Methods#m5(+1). => method m5(x: Int): Nothing
+  x => example/Methods#m5(+1).(x)
+  Int => scala/Int#
+  Nothing => scala/Nothing#
+example/Methods#m5(+1).(x) => param x: Int
+  Int => scala/Int#
+example/Methods#m6(). => method m6(x: Int): Nothing
+  x => example/Methods#m6().(x)
+  Int => scala/Int#
+  Nothing => scala/Nothing#
+example/Methods#m6().(x) => param x: Int
+  Int => scala/Int#
+example/Methods#m6(+1). => method m6(x: List[T]): Nothing
+  x => example/Methods#m6(+1).(x)
+  List => example/Methods#List#
+  T => example/Methods#[T]
+  Nothing => scala/Nothing#
+example/Methods#m6(+1).(x) => param x: List[T]
+  List => example/Methods#List#
+  T => example/Methods#[T]
+example/Methods#m6(+2). => method m6(x: List[T]): Nothing
+  x => example/Methods#m6(+2).(x)
+  List => scala/package.List#
+  T => example/Methods#[T]
+  Nothing => scala/Nothing#
+example/Methods#m6(+2).(x) => param x: List[T]
+  List => scala/package.List#
+  T => example/Methods#[T]
+example/Methods#m7a(). => method m7a[U](c: Methods[T], l: List[U])(implicit evidence$1: Ordering[U]): Nothing
+  U => example/Methods#m7a().[U]
+  c => example/Methods#m7a().(c)
+  Methods => example/Methods#
+  T => example/Methods#[T]
+  l => example/Methods#m7a().(l)
+  List => example/Methods#List#
+  evidence$1 => example/Methods#m7a().(evidence$1)
+  Ordering => scala/math/Ordering#
+  Nothing => scala/Nothing#
+example/Methods#m7a().(c) => param c: Methods[T]
+  Methods => example/Methods#
+  T => example/Methods#[T]
+example/Methods#m7a().(evidence$1) => implicit param evidence$1: Ordering[U]
+  Ordering => scala/math/Ordering#
+  U => example/Methods#m7a().[U]
+example/Methods#m7a().(l) => param l: List[U]
+  List => example/Methods#List#
+  U => example/Methods#m7a().[U]
+example/Methods#m7a().[U] => typeparam U
+example/Methods#m7b(). => method m7b[U](l: List[U])(implicit evidence$2: Function1[U, T]): Nothing
+  U => example/Methods#m7b().[U]
+  l => example/Methods#m7b().(l)
+  List => example/Methods#List#
+  evidence$2 => example/Methods#m7b().(evidence$2)
+  Function1 => scala/Function1#
+  T => example/Methods#[T]
+  Nothing => scala/Nothing#
+example/Methods#m7b().(evidence$2) => implicit param evidence$2: Function1[U, T]
+  Function1 => scala/Function1#
+  U => example/Methods#m7b().[U]
+  T => example/Methods#[T]
+example/Methods#m7b().(l) => param l: List[U]
+  List => example/Methods#List#
+  U => example/Methods#m7b().[U]
+example/Methods#m7b().[U] => typeparam U
+example/Methods#m9(). => method m9(x: m9().): Nothing
+  x => example/Methods#m9().(x)
+  m9(). => example/Methods#`m9().`#
+  Nothing => scala/Nothing#
+example/Methods#m9().(x) => param x: m9().
+  m9(). => example/Methods#`m9().`#
+example/Methods#m10(). => method m10(x: AList[T]): Nothing
+  x => example/Methods#m10().(x)
+  AList => example/Methods#AList#
+  T => example/Methods#[T]
+  Nothing => scala/Nothing#
+example/Methods#m10().(x) => param x: AList[T]
+  AList => example/Methods#AList#
+  T => example/Methods#[T]
+example/Methods#m11(). => method m11(x: Predef.type): Nothing
+  x => example/Methods#m11().(x)
+  Predef => scala/Predef.
+  Nothing => scala/Nothing#
+example/Methods#m11().(x) => param x: Predef.type
+  Predef => scala/Predef.
+example/Methods#m11(+1). => method m11(x: Example.type): Nothing
+  x => example/Methods#m11(+1).(x)
+  Example => example/Example.
+  Nothing => scala/Nothing#
+example/Methods#m11(+1).(x) => param x: Example.type
+  Example => example/Example.
+example/Methods#m12a(). => method m12a(x: AnyRef {}): Nothing
+  x => example/Methods#m12a().(x)
+  AnyRef => scala/AnyRef#
+  Nothing => scala/Nothing#
+example/Methods#m12a().(x) => param x: AnyRef {}
+  AnyRef => scala/AnyRef#
+example/Methods#m12b(). => method m12b(x: AnyRef { val def x: Int }): Nothing
+  x => example/Methods#m12b().(x)
+  AnyRef => scala/AnyRef#
+  x => local0
+  Int => scala/Int#
+  Nothing => scala/Nothing#
+example/Methods#m12b().(x) => param x: AnyRef { val def x: Int }
+  AnyRef => scala/AnyRef#
+  x => local0
+  Int => scala/Int#
+example/Methods#m13(). => method m13(x: Int): Nothing
+  x => example/Methods#m13().(x)
+  Int => scala/Int#
+  Nothing => scala/Nothing#
+example/Methods#m13().(x) => param x: Int
+  Int => scala/Int#
+example/Methods#m14(). => method m14(x: T forSome { type T }): Nothing
+  x => example/Methods#m14().(x)
+  T => local1
+  Nothing => scala/Nothing#
+example/Methods#m14().(x) => param x: T forSome { type T }
+  T => local1
+example/Methods#m15(). => method m15(x: => Int): Nothing
+  x => example/Methods#m15().(x)
+  Int => scala/Int#
+  Nothing => scala/Nothing#
+example/Methods#m15().(x) => param x: => Int
+  Int => scala/Int#
+example/Methods#m16(). => method m16(x: Int*): Nothing
+  x => example/Methods#m16().(x)
+  Int => scala/Int#
+  Nothing => scala/Nothing#
+example/Methods#m16().(x) => param x: Int*
+  Int => scala/Int#
+example/Methods#m17(). => method m17(a: Int): Nothing
+  a => example/Methods#m17().(a)
+  Int => scala/Int#
+  Nothing => scala/Nothing#
+example/Methods#m17().(a) => param a: Int
+  Int => scala/Int#
+example/Methods#m17(+1). => method m17(b: String): Nothing
+  b => example/Methods#m17(+1).(b)
+  String => scala/Predef.String#
+  Nothing => scala/Nothing#
+example/Methods#m17(+1).(b) => param b: String
+  String => scala/Predef.String#
+example/Methods#m17. => final object m17 extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/Methods#m17.m(). => method m(): Nothing
+  Nothing => scala/Nothing#
+example/Methods#m18(). => method m18(a: Int): Nothing
+  a => example/Methods#m18().(a)
+  Int => scala/Int#
+  Nothing => scala/Nothing#
+example/Methods#m18().(a) => param a: Int
+  Int => scala/Int#
+example/Methods#m18(+1). => method m18(b: String): Nothing
+  b => example/Methods#m18(+1).(b)
+  String => scala/Predef.String#
+  Nothing => scala/Nothing#
+example/Methods#m18(+1).(b) => param b: String
+  String => scala/Predef.String#
+example/Methods#m18. => val method m18: m17.type
+  m17 => example/Methods#m17.
+example/Methods#m19$default$2(). => method m19$default$2: Int @<?>
+  Int => scala/Int#
+example/Methods#m19$default$3(). => method m19$default$3(x: Int, y: Int): Int @<?>
+  x => example/Methods#m19$default$3().(x)
+  Int => scala/Int#
+  y => example/Methods#m19$default$3().(y)
+example/Methods#m19$default$3().(x) => param x: Int
+  Int => scala/Int#
+example/Methods#m19$default$3().(y) => param y: Int
+  Int => scala/Int#
+example/Methods#m19(). => method m19(x: Int, y: Int)(z: Int): Nothing
+  x => example/Methods#m19().(x)
+  Int => scala/Int#
+  y => example/Methods#m19().(y)
+  z => example/Methods#m19().(z)
+  Nothing => scala/Nothing#
+example/Methods#m19().(x) => param x: Int
+  Int => scala/Int#
+example/Methods#m19().(y) => default param y: Int
+  Int => scala/Int#
+example/Methods#m19().(z) => default param z: Int
+  Int => scala/Int#
+
+example/MethodUsages.class
+--------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/MethodUsages.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+example/MethodUsages# => class MethodUsages extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/MethodUsages#`<init>`(). => primary ctor <init>()
+example/MethodUsages#m. => val method m: Methods[Int]
+  Methods => example/Methods#
+  Int => scala/Int#
+
+example/NamedApplyBlockCaseClassConstruction.class
+--------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/NamedApplyBlockCaseClassConstruction.class
+Text => empty
+Language => Scala
+Symbols => 42 entries
+
+Symbols:
+example/NamedApplyBlockCaseClassConstruction. => final object NamedApplyBlockCaseClassConstruction extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+example/NamedApplyBlockCaseClassConstruction.Msg# => case class Msg extends AnyRef with Product with Serializable { +17 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/package.Serializable#
+example/NamedApplyBlockCaseClassConstruction.Msg#`<init>`(). => primary ctor <init>(val body: String, val head: String, val tail: String)
+  body => example/NamedApplyBlockCaseClassConstruction.Msg#`<init>`().(body)
+  String => scala/Predef.String#
+  head => example/NamedApplyBlockCaseClassConstruction.Msg#`<init>`().(head)
+  tail => example/NamedApplyBlockCaseClassConstruction.Msg#`<init>`().(tail)
+example/NamedApplyBlockCaseClassConstruction.Msg#`<init>`().(body) => val param body: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#`<init>`().(head) => val default param head: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#`<init>`().(tail) => val param tail: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#body. => val method body: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#canEqual(). => method canEqual(x$1: Any): Boolean
+  x$1 => example/NamedApplyBlockCaseClassConstruction.Msg#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/NamedApplyBlockCaseClassConstruction.Msg#canEqual().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/NamedApplyBlockCaseClassConstruction.Msg#copy$default$1(). => method copy$default$1: String @<?>
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#copy$default$2(). => method copy$default$2: String @<?>
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#copy$default$3(). => method copy$default$3: String @<?>
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#copy(). => method copy(body: String, head: String, tail: String): Msg
+  body => example/NamedApplyBlockCaseClassConstruction.Msg#copy().(body)
+  String => scala/Predef.String#
+  head => example/NamedApplyBlockCaseClassConstruction.Msg#copy().(head)
+  tail => example/NamedApplyBlockCaseClassConstruction.Msg#copy().(tail)
+  Msg => example/NamedApplyBlockCaseClassConstruction.Msg#
+example/NamedApplyBlockCaseClassConstruction.Msg#copy().(body) => default param body: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#copy().(head) => default param head: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#copy().(tail) => default param tail: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#equals(). => method equals(x$1: Any): Boolean
+  x$1 => example/NamedApplyBlockCaseClassConstruction.Msg#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/NamedApplyBlockCaseClassConstruction.Msg#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/NamedApplyBlockCaseClassConstruction.Msg#hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+example/NamedApplyBlockCaseClassConstruction.Msg#head. => val method head: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#productArity(). => method productArity: Int
+  Int => scala/Int#
+example/NamedApplyBlockCaseClassConstruction.Msg#productElement(). => method productElement(x$1: Int): Any
+  x$1 => example/NamedApplyBlockCaseClassConstruction.Msg#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+example/NamedApplyBlockCaseClassConstruction.Msg#productElement().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/NamedApplyBlockCaseClassConstruction.Msg#productElementName(). => method productElementName(x$1: Int): String
+  x$1 => example/NamedApplyBlockCaseClassConstruction.Msg#productElementName().(x$1)
+  Int => scala/Int#
+  String => java/lang/String#
+example/NamedApplyBlockCaseClassConstruction.Msg#productElementName().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/NamedApplyBlockCaseClassConstruction.Msg#productIterator(). => method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+example/NamedApplyBlockCaseClassConstruction.Msg#productPrefix(). => method productPrefix: String
+  String => java/lang/String#
+example/NamedApplyBlockCaseClassConstruction.Msg#tail. => val method tail: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg#toString(). => method toString(): String
+  String => java/lang/String#
+example/NamedApplyBlockCaseClassConstruction.Msg. => final object Msg extends AbstractFunction3[String, String, String, Msg] with Serializable { +6 decls }
+  AbstractFunction3 => scala/runtime/AbstractFunction3#
+  String => scala/Predef.String#
+  Msg => example/NamedApplyBlockCaseClassConstruction.Msg#
+  Serializable => java/io/Serializable#
+example/NamedApplyBlockCaseClassConstruction.Msg.`<init>$default$2`(). => method <init>$default$2: String @<?>
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg.apply$default$2(). => method apply$default$2: String @<?>
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg.apply(). => method apply(body: String, head: String, tail: String): Msg
+  body => example/NamedApplyBlockCaseClassConstruction.Msg.apply().(body)
+  String => scala/Predef.String#
+  head => example/NamedApplyBlockCaseClassConstruction.Msg.apply().(head)
+  tail => example/NamedApplyBlockCaseClassConstruction.Msg.apply().(tail)
+  Msg => example/NamedApplyBlockCaseClassConstruction.Msg#
+example/NamedApplyBlockCaseClassConstruction.Msg.apply().(body) => param body: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg.apply().(head) => default param head: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg.apply().(tail) => param tail: String
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg.toString(). => final method toString(): String
+  String => java/lang/String#
+example/NamedApplyBlockCaseClassConstruction.Msg.unapply(). => method unapply(x$0: Msg): Option[Tuple3[String, String, String]]
+  x$0 => example/NamedApplyBlockCaseClassConstruction.Msg.unapply().(x$0)
+  Msg => example/NamedApplyBlockCaseClassConstruction.Msg#
+  Option => scala/Option#
+  Tuple3 => scala/Tuple3#
+  String => scala/Predef.String#
+example/NamedApplyBlockCaseClassConstruction.Msg.unapply().(x$0) => param x$0: Msg
+  Msg => example/NamedApplyBlockCaseClassConstruction.Msg#
+example/NamedApplyBlockCaseClassConstruction.Msg.writeReplace(). => private method writeReplace(): Object
+  Object => java/lang/Object#
+example/NamedApplyBlockCaseClassConstruction.bodyText. => val method bodyText: String
+  String => java/lang/String#
+example/NamedApplyBlockCaseClassConstruction.msg. => val method msg: Msg
+  Msg => example/NamedApplyBlockCaseClassConstruction.Msg#
+
+example/NamedApplyBlockMethods.class
+------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/NamedApplyBlockMethods.class
+Text => empty
+Language => Scala
+Symbols => 11 entries
+
+Symbols:
+example/NamedApplyBlockMethods. => final object NamedApplyBlockMethods extends AnyRef { +7 decls }
+  AnyRef => scala/AnyRef#
+example/NamedApplyBlockMethods.baseCase(). => method baseCase: Int
+  Int => scala/Int#
+example/NamedApplyBlockMethods.foo$default$1(). => method foo$default$1: Int @<?>
+  Int => scala/Int#
+example/NamedApplyBlockMethods.foo$default$2(). => method foo$default$2: Int @<?>
+  Int => scala/Int#
+example/NamedApplyBlockMethods.foo$default$3(). => method foo$default$3: Int @<?>
+  Int => scala/Int#
+example/NamedApplyBlockMethods.foo(). => method foo(a: Int, b: Int, c: Int): Int
+  a => example/NamedApplyBlockMethods.foo().(a)
+  Int => scala/Int#
+  b => example/NamedApplyBlockMethods.foo().(b)
+  c => example/NamedApplyBlockMethods.foo().(c)
+example/NamedApplyBlockMethods.foo().(a) => default param a: Int
+  Int => scala/Int#
+example/NamedApplyBlockMethods.foo().(b) => default param b: Int
+  Int => scala/Int#
+example/NamedApplyBlockMethods.foo().(c) => default param c: Int
+  Int => scala/Int#
+example/NamedApplyBlockMethods.local. => val method local: Int
+  Int => scala/Int#
+example/NamedApplyBlockMethods.recursive(). => method recursive: Int
+  Int => scala/Int#
+
+example/NamedArguments.class
+----------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/NamedArguments.class
+Text => empty
+Language => Scala
+Symbols => 28 entries
+
+Symbols:
+example/NamedArguments# => class NamedArguments extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/NamedArguments#User# => case class User extends AnyRef with Product with Serializable { +13 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/package.Serializable#
+example/NamedArguments#User#`<init>`(). => primary ctor <init>(val name: String)
+  name => example/NamedArguments#User#`<init>`().(name)
+  String => scala/Predef.String#
+example/NamedArguments#User#`<init>`().(name) => val param name: String
+  String => scala/Predef.String#
+example/NamedArguments#User#canEqual(). => method canEqual(x$1: Any): Boolean
+  x$1 => example/NamedArguments#User#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/NamedArguments#User#canEqual().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/NamedArguments#User#copy$default$1(). => method copy$default$1: String @<?>
+  String => scala/Predef.String#
+example/NamedArguments#User#copy(). => method copy(name: String): User
+  name => example/NamedArguments#User#copy().(name)
+  String => scala/Predef.String#
+  User => example/NamedArguments#User#
+example/NamedArguments#User#copy().(name) => default param name: String
+  String => scala/Predef.String#
+example/NamedArguments#User#equals(). => method equals(x$1: Any): Boolean
+  x$1 => example/NamedArguments#User#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/NamedArguments#User#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/NamedArguments#User#hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+example/NamedArguments#User#name. => val method name: String
+  String => scala/Predef.String#
+example/NamedArguments#User#productArity(). => method productArity: Int
+  Int => scala/Int#
+example/NamedArguments#User#productElement(). => method productElement(x$1: Int): Any
+  x$1 => example/NamedArguments#User#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+example/NamedArguments#User#productElement().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/NamedArguments#User#productElementName(). => method productElementName(x$1: Int): String
+  x$1 => example/NamedArguments#User#productElementName().(x$1)
+  Int => scala/Int#
+  String => java/lang/String#
+example/NamedArguments#User#productElementName().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/NamedArguments#User#productIterator(). => method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+example/NamedArguments#User#productPrefix(). => method productPrefix: String
+  String => java/lang/String#
+example/NamedArguments#User#toString(). => method toString(): String
+  String => java/lang/String#
+example/NamedArguments#User. => final object User extends AbstractFunction1[String, User] with Serializable { +3 decls }
+  AbstractFunction1 => scala/runtime/AbstractFunction1#
+  String => scala/Predef.String#
+  User => example/NamedArguments#User#
+  Serializable => java/io/Serializable#
+example/NamedArguments#User.apply(). => method apply(name: String): User
+  name => example/NamedArguments#User.apply().(name)
+  String => scala/Predef.String#
+  User => example/NamedArguments#User#
+example/NamedArguments#User.apply().(name) => param name: String
+  String => scala/Predef.String#
+example/NamedArguments#User.toString(). => final method toString(): String
+  String => java/lang/String#
+example/NamedArguments#User.unapply(). => method unapply(x$0: User): Option[String]
+  x$0 => example/NamedArguments#User.unapply().(x$0)
+  User => example/NamedArguments#User#
+  Option => scala/Option#
+  String => scala/Predef.String#
+example/NamedArguments#User.unapply().(x$0) => param x$0: User
+  User => example/NamedArguments#User#
+example/NamedArguments#`<init>`(). => primary ctor <init>()
+
+example/StructuralTypes.class
+-----------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/StructuralTypes.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+example/StructuralTypes. => final object StructuralTypes extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/StructuralTypes.a. => val method a: AnyRef { val def b: Int }
+  AnyRef => scala/AnyRef#
+  b => local0
+  Int => scala/Int#
+
+example/StructuralTypes2.class
+------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/StructuralTypes2.class
+Text => empty
+Language => Scala
+Symbols => 1 entries
+
+Symbols:
+example/StructuralTypes2. => final object StructuralTypes2 extends AnyRef
+  AnyRef => scala/AnyRef#
+
+example/SymbolTest.class
+------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/SymbolTest.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+example/SymbolTest# => trait SymbolTest extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/SymbolTest#arg(). => method arg: Int
+  Int => scala/Int#
+example/SymbolTest#shouldBe(). => abstract method shouldBe(right: Any): Unit
+  right => example/SymbolTest#shouldBe().(right)
+  Any => scala/Any#
+  Unit => scala/Unit#
+example/SymbolTest#shouldBe().(right) => param right: Any
+  Any => scala/Any#
+
+example/Synthetic.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Synthetic.class
+Text => empty
+Language => Scala
+Symbols => 41 entries
+
+Symbols:
+example/Synthetic# => class Synthetic extends AnyRef { +12 decls }
+  AnyRef => scala/AnyRef#
+example/Synthetic#F# => class F extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/Synthetic#F#`<init>`(). => primary ctor <init>()
+example/Synthetic#J# => class J[T] extends AnyRef { +3 decls }
+  T => example/Synthetic#J#[T]
+  AnyRef => scala/AnyRef#
+example/Synthetic#J#[T] => typeparam T
+example/Synthetic#J#`<init>`(). => primary ctor <init>()(implicit evidence$1: Manifest[T])
+  evidence$1 => example/Synthetic#J#`<init>`().(evidence$1)
+  Manifest => scala/Predef.Manifest#
+  T => example/Synthetic#J#[T]
+example/Synthetic#J#`<init>`().(evidence$1) => implicit param evidence$1: Manifest[T]
+  Manifest => scala/Predef.Manifest#
+  T => example/Synthetic#J#[T]
+example/Synthetic#J#arr. => val method arr: Array[T]
+  Array => scala/Array#
+  T => example/Synthetic#J#[T]
+example/Synthetic#J#evidence$1. => private[this] implicit val method evidence$1: Manifest[T]
+  Manifest => scala/Predef.Manifest#
+  T => example/Synthetic#J#[T]
+example/Synthetic#Name. => val method Name: Regex
+  Regex => scala/util/matching/Regex#
+example/Synthetic#`<init>`(). => primary ctor <init>()
+example/Synthetic#f. => val method f: Ordered[F]
+  Ordered => scala/package.Ordered#
+  F => example/Synthetic#F#
+example/Synthetic#lst. => val method lst: Stream[Int]
+  Stream => scala/collection/immutable/Stream#
+  Int => scala/Int#
+example/Synthetic#name. => val method name: String
+  String => scala/Predef.String#
+example/Synthetic#ordering. => implicit val method ordering: Ordering[F]
+  Ordering => scala/package.Ordering#
+  F => example/Synthetic#F#
+example/Synthetic#s. => final object s extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/Synthetic#s.Bar# => case class Bar extends AnyRef with Product with Serializable { +11 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/package.Serializable#
+example/Synthetic#s.Bar#`<init>`(). => primary ctor <init>()
+example/Synthetic#s.Bar#canEqual(). => method canEqual(x$1: Any): Boolean
+  x$1 => example/Synthetic#s.Bar#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/Synthetic#s.Bar#canEqual().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/Synthetic#s.Bar#copy(). => method copy(): Bar
+  Bar => example/Synthetic#s.Bar#
+example/Synthetic#s.Bar#equals(). => method equals(x$1: Any): Boolean
+  x$1 => example/Synthetic#s.Bar#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/Synthetic#s.Bar#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/Synthetic#s.Bar#hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+example/Synthetic#s.Bar#productArity(). => method productArity: Int
+  Int => scala/Int#
+example/Synthetic#s.Bar#productElement(). => method productElement(x$1: Int): Any
+  x$1 => example/Synthetic#s.Bar#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+example/Synthetic#s.Bar#productElement().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/Synthetic#s.Bar#productElementName(). => method productElementName(x$1: Int): String
+  x$1 => example/Synthetic#s.Bar#productElementName().(x$1)
+  Int => scala/Int#
+  String => java/lang/String#
+example/Synthetic#s.Bar#productElementName().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/Synthetic#s.Bar#productIterator(). => method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+example/Synthetic#s.Bar#productPrefix(). => method productPrefix: String
+  String => java/lang/String#
+example/Synthetic#s.Bar#toString(). => method toString(): String
+  String => java/lang/String#
+example/Synthetic#s.Bar. => final object Bar extends AbstractFunction0[Bar] with Serializable { +3 decls }
+  AbstractFunction0 => scala/runtime/AbstractFunction0#
+  Bar => example/Synthetic#s.Bar#
+  Serializable => java/io/Serializable#
+example/Synthetic#s.Bar.apply(). => method apply(): Bar
+  Bar => example/Synthetic#s.Bar#
+example/Synthetic#s.Bar.toString(). => final method toString(): String
+  String => java/lang/String#
+example/Synthetic#s.Bar.unapply(). => method unapply(x$0: Bar): Boolean
+  x$0 => example/Synthetic#s.Bar.unapply().(x$0)
+  Bar => example/Synthetic#s.Bar#
+  Boolean => scala/Boolean#
+example/Synthetic#s.Bar.unapply().(x$0) => param x$0: Bar
+  Bar => example/Synthetic#s.Bar#
+example/Synthetic#s.apply(). => method apply(): Int
+  Int => scala/Int#
+example/Synthetic#x$2. => private[this] val method x$2: Tuple2[Int, Stream[Int]]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+  Stream => scala/package.Stream#
+example/Synthetic#x. => val method x: Int
+  Int => scala/Int#
+example/Synthetic#xs. => val method xs: Stream[Int]
+  Stream => scala/package.Stream#
+  Int => scala/Int#
+
+example/T.class
+---------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/T.class
+Text => empty
+Language => Scala
+Symbols => 102 entries
+
+Symbols:
+example/T# => trait T extends AnyRef { +101 decls }
+  AnyRef => scala/AnyRef#
+example/T#`1`(). => method 1: Int
+  Int => scala/Int#
+example/T#`2`(). => method 2: Int
+  Int => scala/Int#
+example/T#`3`(). => method 3: Int
+  Int => scala/Int#
+example/T#`4`(). => method 4: Int
+  Int => scala/Int#
+example/T#`5`(). => method 5: Int
+  Int => scala/Int#
+example/T#`6`(). => method 6: Int
+  Int => scala/Int#
+example/T#`7`(). => method 7: Int
+  Int => scala/Int#
+example/T#`8`(). => method 8: Int
+  Int => scala/Int#
+example/T#`9`(). => method 9: Int
+  Int => scala/Int#
+example/T#`10`(). => method 10: Int
+  Int => scala/Int#
+example/T#`11`(). => method 11: Int
+  Int => scala/Int#
+example/T#`12`(). => method 12: Int
+  Int => scala/Int#
+example/T#`13`(). => method 13: Int
+  Int => scala/Int#
+example/T#`14`(). => method 14: Int
+  Int => scala/Int#
+example/T#`15`(). => method 15: Int
+  Int => scala/Int#
+example/T#`16`(). => method 16: Int
+  Int => scala/Int#
+example/T#`17`(). => method 17: Int
+  Int => scala/Int#
+example/T#`18`(). => method 18: Int
+  Int => scala/Int#
+example/T#`19`(). => method 19: Int
+  Int => scala/Int#
+example/T#`20`(). => method 20: Int
+  Int => scala/Int#
+example/T#`21`(). => method 21: Int
+  Int => scala/Int#
+example/T#`22`(). => method 22: Int
+  Int => scala/Int#
+example/T#`23`(). => method 23: Int
+  Int => scala/Int#
+example/T#`24`(). => method 24: Int
+  Int => scala/Int#
+example/T#`25`(). => method 25: Int
+  Int => scala/Int#
+example/T#`26`(). => method 26: Int
+  Int => scala/Int#
+example/T#`27`(). => method 27: Int
+  Int => scala/Int#
+example/T#`28`(). => method 28: Int
+  Int => scala/Int#
+example/T#`29`(). => method 29: Int
+  Int => scala/Int#
+example/T#`30`(). => method 30: Int
+  Int => scala/Int#
+example/T#`31`(). => method 31: Int
+  Int => scala/Int#
+example/T#`32`(). => method 32: Int
+  Int => scala/Int#
+example/T#`33`(). => method 33: Int
+  Int => scala/Int#
+example/T#`34`(). => method 34: Int
+  Int => scala/Int#
+example/T#`35`(). => method 35: Int
+  Int => scala/Int#
+example/T#`36`(). => method 36: Int
+  Int => scala/Int#
+example/T#`37`(). => method 37: Int
+  Int => scala/Int#
+example/T#`38`(). => method 38: Int
+  Int => scala/Int#
+example/T#`39`(). => method 39: Int
+  Int => scala/Int#
+example/T#`40`(). => method 40: Int
+  Int => scala/Int#
+example/T#`41`(). => method 41: Int
+  Int => scala/Int#
+example/T#`42`(). => method 42: Int
+  Int => scala/Int#
+example/T#`43`(). => method 43: Int
+  Int => scala/Int#
+example/T#`44`(). => method 44: Int
+  Int => scala/Int#
+example/T#`45`(). => method 45: Int
+  Int => scala/Int#
+example/T#`46`(). => method 46: Int
+  Int => scala/Int#
+example/T#`47`(). => method 47: Int
+  Int => scala/Int#
+example/T#`48`(). => method 48: Int
+  Int => scala/Int#
+example/T#`49`(). => method 49: Int
+  Int => scala/Int#
+example/T#`50`(). => method 50: Int
+  Int => scala/Int#
+example/T#`51`(). => method 51: Int
+  Int => scala/Int#
+example/T#`52`(). => method 52: Int
+  Int => scala/Int#
+example/T#`53`(). => method 53: Int
+  Int => scala/Int#
+example/T#`54`(). => method 54: Int
+  Int => scala/Int#
+example/T#`55`(). => method 55: Int
+  Int => scala/Int#
+example/T#`56`(). => method 56: Int
+  Int => scala/Int#
+example/T#`57`(). => method 57: Int
+  Int => scala/Int#
+example/T#`58`(). => method 58: Int
+  Int => scala/Int#
+example/T#`59`(). => method 59: Int
+  Int => scala/Int#
+example/T#`60`(). => method 60: Int
+  Int => scala/Int#
+example/T#`61`(). => method 61: Int
+  Int => scala/Int#
+example/T#`62`(). => method 62: Int
+  Int => scala/Int#
+example/T#`63`(). => method 63: Int
+  Int => scala/Int#
+example/T#`64`(). => method 64: Int
+  Int => scala/Int#
+example/T#`65`(). => method 65: Int
+  Int => scala/Int#
+example/T#`66`(). => method 66: Int
+  Int => scala/Int#
+example/T#`67`(). => method 67: Int
+  Int => scala/Int#
+example/T#`68`(). => method 68: Int
+  Int => scala/Int#
+example/T#`69`(). => method 69: Int
+  Int => scala/Int#
+example/T#`70`(). => method 70: Int
+  Int => scala/Int#
+example/T#`71`(). => method 71: Int
+  Int => scala/Int#
+example/T#`72`(). => method 72: Int
+  Int => scala/Int#
+example/T#`73`(). => method 73: Int
+  Int => scala/Int#
+example/T#`74`(). => method 74: Int
+  Int => scala/Int#
+example/T#`75`(). => method 75: Int
+  Int => scala/Int#
+example/T#`76`(). => method 76: Int
+  Int => scala/Int#
+example/T#`77`(). => method 77: Int
+  Int => scala/Int#
+example/T#`78`(). => method 78: Int
+  Int => scala/Int#
+example/T#`79`(). => method 79: Int
+  Int => scala/Int#
+example/T#`80`(). => method 80: Int
+  Int => scala/Int#
+example/T#`81`(). => method 81: Int
+  Int => scala/Int#
+example/T#`82`(). => method 82: Int
+  Int => scala/Int#
+example/T#`83`(). => method 83: Int
+  Int => scala/Int#
+example/T#`84`(). => method 84: Int
+  Int => scala/Int#
+example/T#`85`(). => method 85: Int
+  Int => scala/Int#
+example/T#`86`(). => method 86: Int
+  Int => scala/Int#
+example/T#`87`(). => method 87: Int
+  Int => scala/Int#
+example/T#`88`(). => method 88: Int
+  Int => scala/Int#
+example/T#`89`(). => method 89: Int
+  Int => scala/Int#
+example/T#`90`(). => method 90: Int
+  Int => scala/Int#
+example/T#`91`(). => method 91: Int
+  Int => scala/Int#
+example/T#`92`(). => method 92: Int
+  Int => scala/Int#
+example/T#`93`(). => method 93: Int
+  Int => scala/Int#
+example/T#`94`(). => method 94: Int
+  Int => scala/Int#
+example/T#`95`(). => method 95: Int
+  Int => scala/Int#
+example/T#`96`(). => method 96: Int
+  Int => scala/Int#
+example/T#`97`(). => method 97: Int
+  Int => scala/Int#
+example/T#`98`(). => method 98: Int
+  Int => scala/Int#
+example/T#`99`(). => method 99: Int
+  Int => scala/Int#
+example/T#`100`(). => method 100: Int
+  Int => scala/Int#
+example/T#`101`(). => method 101: Int
+  Int => scala/Int#
+
+example/ValPattern.class
+------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/ValPattern.class
+Text => empty
+Language => Scala
+Symbols => 17 entries
+
+Symbols:
+example/ValPattern# => class ValPattern extends AnyRef { +13 decls }
+  AnyRef => scala/AnyRef#
+example/ValPattern#`<init>`(). => primary ctor <init>()
+example/ValPattern#`leftVar_=`(). => var method leftVar_=(x$1: Int): Unit
+  x$1 => example/ValPattern#`leftVar_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/ValPattern#`leftVar_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/ValPattern#`number1Var_=`(). => var method number1Var_=(x$1: Int): Unit
+  x$1 => example/ValPattern#`number1Var_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/ValPattern#`number1Var_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/ValPattern#`rightVar_=`(). => var method rightVar_=(x$1: Int): Unit
+  x$1 => example/ValPattern#`rightVar_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/ValPattern#`rightVar_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/ValPattern#app(). => method app(): Unit
+  Unit => scala/Unit#
+example/ValPattern#left. => val method left: Int
+  Int => scala/Int#
+example/ValPattern#leftVar(). => var method leftVar: Int
+  Int => scala/Int#
+example/ValPattern#number1. => val method number1: Int
+  Int => scala/Int#
+example/ValPattern#number1Var(). => var method number1Var: Int
+  Int => scala/Int#
+example/ValPattern#right. => val method right: Int
+  Int => scala/Int#
+example/ValPattern#rightVar(). => var method rightVar: Int
+  Int => scala/Int#
+example/ValPattern#x$1. => private[this] val method x$1: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+example/ValPattern#x$2. => private[this] val method x$2: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+
+example/Vals.class
+------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Vals.class
+Text => empty
+Language => Scala
+Symbols => 33 entries
+
+Symbols:
+example/Vals# => abstract class Vals extends AnyRef { +23 decls }
+  AnyRef => scala/AnyRef#
+example/Vals#`<init>`(). => primary ctor <init>(p: Int, val xp: Int, var yp: Int)
+  p => example/Vals#`<init>`().(p)
+  Int => scala/Int#
+  xp => example/Vals#`<init>`().(xp)
+  yp => example/Vals#`<init>`().(yp)
+example/Vals#`<init>`().(p) => param p: Int
+  Int => scala/Int#
+example/Vals#`<init>`().(xp) => val param xp: Int
+  Int => scala/Int#
+example/Vals#`<init>`().(yp) => var param yp: Int
+  Int => scala/Int#
+example/Vals#`yam_=`(). => abstract var method yam_=(x$1: Int): Unit
+  x$1 => example/Vals#`yam_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/Vals#`yam_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/Vals#`yfm_=`(). => final var method yfm_=(x$1: Int): Unit
+  x$1 => example/Vals#`yfm_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/Vals#`yfm_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/Vals#`yim_=`(). => var method yim_=(x$1: Int): Unit
+  x$1 => example/Vals#`yim_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/Vals#`yim_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/Vals#`ylm_=`(). => private[this] var method ylm_=(x$1: Int): Unit
+  x$1 => example/Vals#`ylm_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/Vals#`ylm_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/Vals#`ym_=`(). => var method ym_=(x$1: Int): Unit
+  x$1 => example/Vals#`ym_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/Vals#`ym_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/Vals#`yp_=`(). => var method yp_=(x$1: Int): Unit
+  x$1 => example/Vals#`yp_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/Vals#`yp_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/Vals#m(). => method m: Unit
+  Unit => scala/Unit#
+example/Vals#p. => private[this] val method p: Int
+  Int => scala/Int#
+example/Vals#xam. => abstract val method xam: Int
+  Int => scala/Int#
+example/Vals#xfm. => final val method xfm: Int
+  Int => scala/Int#
+example/Vals#xim. => implicit val method xim: Int
+  Int => scala/Int#
+example/Vals#xlm. => private[this] val method xlm: Int
+  Int => scala/Int#
+example/Vals#xm. => val method xm: Int
+  Int => scala/Int#
+example/Vals#xp. => val method xp: Int
+  Int => scala/Int#
+example/Vals#xzlm. => private[this] lazy val method xzlm: Int
+  Int => scala/Int#
+example/Vals#xzm. => lazy val method xzm: Int
+  Int => scala/Int#
+example/Vals#yam(). => abstract var method yam: Int
+  Int => scala/Int#
+example/Vals#yfm(). => final var method yfm: Int
+  Int => scala/Int#
+example/Vals#yim(). => implicit var method yim: Int
+  Int => scala/Int#
+example/Vals#ylm(). => private[this] var method ylm: Int
+  Int => scala/Int#
+example/Vals#ym(). => var method ym: Int
+  Int => scala/Int#
+example/Vals#yp(). => var method yp: Int
+  Int => scala/Int#
+
+example/ValUsages.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/ValUsages.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+example/ValUsages. => final object ValUsages extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/ValUsages.v. => val method v: Vals
+  Vals => example/Vals#
+
+example/Vararg.class
+--------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Vararg.class
+Text => empty
+Language => Scala
+Symbols => 6 entries
+
+Symbols:
+example/Vararg# => class Vararg extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/Vararg#`<init>`(). => primary ctor <init>()
+example/Vararg#add1(). => method add1(a: Int*): Unit
+  a => example/Vararg#add1().(a)
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/Vararg#add1().(a) => param a: Int*
+  Int => scala/Int#
+example/Vararg#add2(). => method add2(a: Seq[Int]*): Unit
+  a => example/Vararg#add2().(a)
+  Seq => scala/package.Seq#
+  Int => scala/Int#
+  Unit => scala/Unit#
+example/Vararg#add2().(a) => param a: Seq[Int]*
+  Seq => scala/package.Seq#
+  Int => scala/Int#
+
+example/X.class
+---------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/X.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+example/X. => final object X extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/X.x(). => @deprecated method x: Int
+  deprecated => scala/deprecated#
+  Int => scala/Int#
+
+exclude/Exclude.class
+---------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => exclude/Exclude.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+exclude/Exclude# => class Exclude extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+exclude/Exclude#`<init>`(). => primary ctor <init>()
+
+flags/p/package.class
+---------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => flags/p/package.class
+Text => empty
+Language => Scala
+Symbols => 55 entries
+
+Symbols:
+flags/p/package. => final package object p extends AnyRef { +16 decls }
+  AnyRef => scala/AnyRef#
+flags/p/package.AA# => class AA extends AnyRef { +5 decls }
+  AnyRef => scala/AnyRef#
+flags/p/package.AA#`<init>`(). => primary ctor <init>(x: Int, val y: Int, var z: Int)
+  x => flags/p/package.AA#`<init>`().(x)
+  Int => scala/Int#
+  y => flags/p/package.AA#`<init>`().(y)
+  z => flags/p/package.AA#`<init>`().(z)
+flags/p/package.AA#`<init>`().(x) => param x: Int
+  Int => scala/Int#
+flags/p/package.AA#`<init>`().(y) => val param y: Int
+  Int => scala/Int#
+flags/p/package.AA#`<init>`().(z) => var param z: Int
+  Int => scala/Int#
+flags/p/package.AA#`z_=`(). => var method z_=(x$1: Int): Unit
+  x$1 => flags/p/package.AA#`z_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+flags/p/package.AA#`z_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+flags/p/package.AA#x. => private[this] val method x: Int
+  Int => scala/Int#
+flags/p/package.AA#y. => val method y: Int
+  Int => scala/Int#
+flags/p/package.AA#z(). => var method z: Int
+  Int => scala/Int#
+flags/p/package.C# => abstract class C[+T, -U, V] extends AnyRef { +6 decls }
+  T => flags/p/package.C#[T]
+  U => flags/p/package.C#[U]
+  V => flags/p/package.C#[V]
+  AnyRef => scala/AnyRef#
+flags/p/package.C#[T] => covariant typeparam T
+flags/p/package.C#[U] => contravariant typeparam U
+flags/p/package.C#[V] => typeparam V
+flags/p/package.C#`<init>`(). => primary ctor <init>(x: T, y: U, z: V)
+  x => flags/p/package.C#`<init>`().(x)
+  T => flags/p/package.C#[T]
+  y => flags/p/package.C#`<init>`().(y)
+  U => flags/p/package.C#[U]
+  z => flags/p/package.C#`<init>`().(z)
+  V => flags/p/package.C#[V]
+flags/p/package.C#`<init>`().(x) => param x: T
+  T => flags/p/package.C#[T]
+flags/p/package.C#`<init>`().(y) => param y: U
+  U => flags/p/package.C#[U]
+flags/p/package.C#`<init>`().(z) => param z: V
+  V => flags/p/package.C#[V]
+flags/p/package.C#`<init>`(+1). => ctor <init>()
+flags/p/package.C#w(). => abstract method w: Int
+  Int => scala/Int#
+flags/p/package.C#x. => private[this] val method x: T
+  T => flags/p/package.C#[T]
+flags/p/package.C#y. => private[this] val method y: U
+  U => flags/p/package.C#[U]
+flags/p/package.C#z. => private[this] val method z: V
+  V => flags/p/package.C#[V]
+flags/p/package.S# => class S[@specialized T] extends AnyRef { +1 decls }
+  T => flags/p/package.S#[T]
+  specialized => scala/specialized#
+  AnyRef => scala/AnyRef#
+flags/p/package.S#[T] => @specialized typeparam T
+  specialized => scala/specialized#
+flags/p/package.S#`<init>`(). => primary ctor <init>()
+flags/p/package.T1# => type T1 = Int
+  Int => scala/Int#
+flags/p/package.T2# => type T2[T] = S[T]
+  T => flags/p/package.T2#[T]
+  S => flags/p/package.S#
+flags/p/package.T2#[T] => typeparam T
+flags/p/package.U# => abstract type U <: Int
+  Int => scala/Int#
+flags/p/package.V# => abstract type V >: Int
+  Int => scala/Int#
+flags/p/package.X. => final case object X extends AnyRef with Product with Serializable { +8 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/package.Serializable#
+flags/p/package.X.canEqual(). => method canEqual(x$1: Any): Boolean
+  x$1 => flags/p/package.X.canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+flags/p/package.X.canEqual().(x$1) => param x$1: Any
+  Any => scala/Any#
+flags/p/package.X.hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+flags/p/package.X.productArity(). => method productArity: Int
+  Int => scala/Int#
+flags/p/package.X.productElement(). => method productElement(x$1: Int): Any
+  x$1 => flags/p/package.X.productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+flags/p/package.X.productElement().(x$1) => param x$1: Int
+  Int => scala/Int#
+flags/p/package.X.productIterator(). => method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+flags/p/package.X.productPrefix(). => method productPrefix: String
+  String => java/lang/String#
+flags/p/package.X.toString(). => method toString(): String
+  String => java/lang/String#
+flags/p/package.X.writeReplace(). => private method writeReplace(): Object
+  Object => java/lang/Object#
+flags/p/package.Y# => final class Y extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+flags/p/package.Y#`<init>`(). => primary ctor <init>()
+flags/p/package.Z# => sealed trait Z extends AnyRef
+  AnyRef => scala/AnyRef#
+flags/p/package.`y_=`(). => protected var method y_=(x$1: Int): Unit
+  x$1 => flags/p/package.`y_=`().(x$1)
+  Int => scala/Int#
+  Unit => scala/Unit#
+flags/p/package.`y_=`().(x$1) => param x$1: Int
+  Int => scala/Int#
+flags/p/package.m(). => macro m[TT]: Int
+  TT => flags/p/package.m().[TT]
+  Int => scala/Int#
+flags/p/package.m().[TT] => typeparam TT
+flags/p/package.x. => private lazy val method x: Int
+  Int => scala/Int#
+flags/p/package.xs1. => val method xs1: Nothing
+  Nothing => scala/Nothing#
+flags/p/package.y(). => protected implicit var method y: Int
+  Int => scala/Int#
+flags/p/package.z(). => method z(pp: Int): Int
+  pp => flags/p/package.z().(pp)
+  Int => scala/Int#
+flags/p/package.z().(pp) => param pp: Int
+  Int => scala/Int#
+
+Imports.class
+-------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => Imports.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+_empty_/Imports# => class Imports extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+_empty_/Imports#`<init>`(). => primary ctor <init>()
+
+locals/Test.class
+-----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => locals/Test.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+locals/Test. => final object Test extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+locals/Test.xs. => val method xs: List[Int]
+  List => scala/collection/immutable/List#
+  Int => scala/Int#
+
+objects/X.class
+---------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => objects/X.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+objects/X. => final object X extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+objects/X.Y. => final object Y extends AnyRef
+  AnyRef => scala/AnyRef#
+
+prefixes/C.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => prefixes/C.class
+Text => empty
+Language => Scala
+Symbols => 7 entries
+
+Symbols:
+prefixes/C# => class C extends AnyRef { +5 decls }
+  AnyRef => scala/AnyRef#
+prefixes/C#N. => final object N extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+prefixes/C#N.U# => abstract type U
+prefixes/C#T# => abstract type T
+prefixes/C#`<init>`(). => primary ctor <init>()
+prefixes/C#k1(). => method k1: U
+  U => prefixes/C#N.U#
+prefixes/C#m1(). => method m1: T
+  T => prefixes/C#T#
+
+prefixes/M.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => prefixes/M.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+prefixes/M. => final object M extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+prefixes/M.T# => abstract type T
+prefixes/M.n1(). => method n1: T
+  T => prefixes/M.T#
+
+prefixes/O.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => prefixes/O.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+prefixes/O. => final object O extends C { +1 decls }
+  C => prefixes/C#
+prefixes/O.o1(). => method o1: O.this.T
+  O => prefixes/O.
+  T => prefixes/C#T#
+
+prefixes/Test.class
+-------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => prefixes/Test.class
+Text => empty
+Language => Scala
+Symbols => 7 entries
+
+Symbols:
+prefixes/Test. => final object Test extends AnyRef { +6 decls }
+  AnyRef => scala/AnyRef#
+prefixes/Test.c. => val method c: C
+  C => prefixes/C#
+prefixes/Test.k2(). => method k2: c.N.U
+  c => prefixes/Test.c.
+  N => prefixes/C#N.
+  U => prefixes/C#N.U#
+prefixes/Test.k3(). => method k3: c.N.U
+  c => prefixes/Test.c.
+  N => prefixes/C#N.
+  U => prefixes/C#N.U#
+prefixes/Test.m2(). => method m2: c.T
+  c => prefixes/Test.c.
+  T => prefixes/C#T#
+prefixes/Test.n2(). => method n2: T
+  T => prefixes/M.T#
+prefixes/Test.n3(). => method n3: T
+  T => prefixes/M.T#
+
+selfs/B.class
+-------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/B.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+selfs/B# => class B extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+selfs/B#`<init>`(). => primary ctor <init>()
+
+selfs/C1.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/C1.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+selfs/C1# => class C1 extends B { +1 decls }
+  B => selfs/B#
+selfs/C1#`<init>`(). => primary ctor <init>()
+
+selfs/C2.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/C2.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+selfs/C2# => class C2 extends B { self: B => +1 decls }
+  B => selfs/B#
+selfs/C2#`<init>`(). => primary ctor <init>()
+
+selfs/C3.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/C3.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+selfs/C3# => class C3 extends B { self: B with Int {} => +1 decls }
+  B => selfs/B#
+  Int => scala/Int#
+selfs/C3#`<init>`(). => primary ctor <init>()
+
+selfs/C4.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/C4.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+selfs/C4# => class C4 extends B { +1 decls }
+  B => selfs/B#
+selfs/C4#`<init>`(). => primary ctor <init>()
+
+selfs/C5.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/C5.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+selfs/C5# => class C5 extends B { self: B => +1 decls }
+  B => selfs/B#
+selfs/C5#`<init>`(). => primary ctor <init>()
+
+selfs/C6.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/C6.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+selfs/C6# => class C6 extends B { self: B => +1 decls }
+  B => selfs/B#
+selfs/C6#`<init>`(). => primary ctor <init>()
+
+selfs/C7.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => selfs/C7.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+selfs/C7# => abstract class C7 extends AnyRef { self: B => +1 decls }
+  AnyRef => scala/AnyRef#
+  B => selfs/B#
+selfs/C7#`<init>`(). => primary ctor <init>()
+
+traits/C.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => traits/C.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+traits/C# => class C extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+traits/C#`<init>`(). => primary ctor <init>()
+
+traits/T.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => traits/T.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+traits/T# => trait T extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+traits/T#x(). => method x: Int
+  Int => scala/Int#
+
+traits/U.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => traits/U.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+traits/U# => sealed trait U extends AnyRef
+  AnyRef => scala/AnyRef#
+traits/U. => final object U extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+traits/U.u(). => method u: U
+  U => traits/U#
+
+traits/V.class
+--------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => traits/V.class
+Text => empty
+Language => Scala
+Symbols => 1 entries
+
+Symbols:
+traits/V# => trait V extends AnyRef { self: C =>  }
+  AnyRef => scala/AnyRef#
+  C => traits/C#
+
+types/ann.class
+---------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => types/ann.class
+Text => empty
+Language => Scala
+Symbols => 5 entries
+
+Symbols:
+types/ann# => class ann[T] extends Annotation with StaticAnnotation { +2 decls }
+  T => types/ann#[T]
+  Annotation => scala/annotation/Annotation#
+  StaticAnnotation => scala/annotation/StaticAnnotation#
+types/ann#[T] => typeparam T
+types/ann#`<init>`(). => primary ctor <init>(x: T)
+  x => types/ann#`<init>`().(x)
+  T => types/ann#[T]
+types/ann#`<init>`().(x) => param x: T
+  T => types/ann#[T]
+types/ann#x. => private[this] val method x: T
+  T => types/ann#[T]
+
+types/ann1.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => types/ann1.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+types/ann1# => class ann1 extends Annotation with StaticAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  StaticAnnotation => scala/annotation/StaticAnnotation#
+types/ann1#`<init>`(). => primary ctor <init>()
+
+types/ann2.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => types/ann2.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+types/ann2# => class ann2 extends Annotation with StaticAnnotation { +1 decls }
+  Annotation => scala/annotation/Annotation#
+  StaticAnnotation => scala/annotation/StaticAnnotation#
+types/ann2#`<init>`(). => primary ctor <init>()
+
+types/B.class
+-------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => types/B.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+types/B# => class B extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+types/B#`<init>`(). => primary ctor <init>()
+
+types/C.class
+-------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => types/C.class
+Text => empty
+Language => Scala
+Symbols => 2 entries
+
+Symbols:
+types/C# => class C extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+types/C#`<init>`(). => primary ctor <init>()
+
+types/P.class
+-------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => types/P.class
+Text => empty
+Language => Scala
+Symbols => 7 entries
+
+Symbols:
+types/P# => class P extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+types/P#C# => class C extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+types/P#C#`<init>`(). => primary ctor <init>()
+types/P#X# => class X extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+types/P#X#`<init>`(). => primary ctor <init>()
+types/P#`<init>`(). => primary ctor <init>()
+types/P#x. => val method x: X
+  X => types/P#X#
+
+types/T.class
+-------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => types/T.class
+Text => empty
+Language => Scala
+Symbols => 7 entries
+
+Symbols:
+types/T# => class T extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+types/T#C# => class C extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+types/T#C#`<init>`(). => primary ctor <init>()
+types/T#X# => class X extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+types/T#X#`<init>`(). => primary ctor <init>()
+types/T#`<init>`(). => primary ctor <init>()
+types/T#x. => val method x: X
+  X => types/T#X#
+
+types/Test.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => types/Test.class
+Text => empty
+Language => Scala
+Symbols => 107 entries
+
+Symbols:
+types/Test. => final object Test extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+types/Test.C# => class C extends M { +36 decls }
+  M => types/Test.M#
+types/Test.C#ByNameType. => final object ByNameType extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+types/Test.C#ByNameType.m1(). => method m1(x: => Int): Int
+  x => types/Test.C#ByNameType.m1().(x)
+  Int => scala/Int#
+types/Test.C#ByNameType.m1().(x) => param x: => Int
+  Int => scala/Int#
+types/Test.C#ClassInfoType1. => final object ClassInfoType1 extends AnyRef
+  AnyRef => scala/AnyRef#
+types/Test.C#ClassInfoType2# => class ClassInfoType2 extends B { +2 decls }
+  B => types/B#
+types/Test.C#ClassInfoType2#`<init>`(). => primary ctor <init>()
+types/Test.C#ClassInfoType2#x(). => method x: Int
+  Int => scala/Int#
+types/Test.C#ClassInfoType3# => trait ClassInfoType3[T] extends AnyRef
+  T => types/Test.C#ClassInfoType3#[T]
+  AnyRef => scala/AnyRef#
+types/Test.C#ClassInfoType3#[T] => typeparam T
+types/Test.C#Either. => val method Either: Either.type
+  Either => scala/util/Either.
+types/Test.C#MethodType. => final object MethodType extends AnyRef { +6 decls }
+  AnyRef => scala/AnyRef#
+types/Test.C#MethodType.m3(). => method m3: Int
+  Int => scala/Int#
+types/Test.C#MethodType.m4(). => method m4(): Int
+  Int => scala/Int#
+types/Test.C#MethodType.m5(). => method m5(x: Int): Int
+  x => types/Test.C#MethodType.m5().(x)
+  Int => scala/Int#
+types/Test.C#MethodType.m5().(x) => param x: Int
+  Int => scala/Int#
+types/Test.C#MethodType.m6(). => method m6[T](x: T): T
+  T => types/Test.C#MethodType.m6().[T]
+  x => types/Test.C#MethodType.m6().(x)
+types/Test.C#MethodType.m6().(x) => param x: T
+  T => types/Test.C#MethodType.m6().[T]
+types/Test.C#MethodType.m6().[T] => typeparam T
+types/Test.C#MethodType.x1(). => method x1: Int
+  Int => scala/Int#
+types/Test.C#MethodType.x2(). => method x2: Int
+  Int => scala/Int#
+types/Test.C#RepeatedType# => case class RepeatedType extends AnyRef with Product with Serializable { +12 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/package.Serializable#
+types/Test.C#RepeatedType#`<init>`(). => primary ctor <init>(val s: String*)
+  s => types/Test.C#RepeatedType#`<init>`().(s)
+  String => scala/Predef.String#
+types/Test.C#RepeatedType#`<init>`().(s) => val param s: String*
+  String => scala/Predef.String#
+types/Test.C#RepeatedType#canEqual(). => method canEqual(x$1: Any): Boolean
+  x$1 => types/Test.C#RepeatedType#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+types/Test.C#RepeatedType#canEqual().(x$1) => param x$1: Any
+  Any => scala/Any#
+types/Test.C#RepeatedType#equals(). => method equals(x$1: Any): Boolean
+  x$1 => types/Test.C#RepeatedType#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+types/Test.C#RepeatedType#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+types/Test.C#RepeatedType#hashCode(). => method hashCode(): Int
+  Int => scala/Int#
+types/Test.C#RepeatedType#m1(). => method m1(x: Int*): Int
+  x => types/Test.C#RepeatedType#m1().(x)
+  Int => scala/Int#
+types/Test.C#RepeatedType#m1().(x) => param x: Int*
+  Int => scala/Int#
+types/Test.C#RepeatedType#productArity(). => method productArity: Int
+  Int => scala/Int#
+types/Test.C#RepeatedType#productElement(). => method productElement(x$1: Int): Any
+  x$1 => types/Test.C#RepeatedType#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+types/Test.C#RepeatedType#productElement().(x$1) => param x$1: Int
+  Int => scala/Int#
+types/Test.C#RepeatedType#productElementName(). => method productElementName(x$1: Int): String
+  x$1 => types/Test.C#RepeatedType#productElementName().(x$1)
+  Int => scala/Int#
+  String => java/lang/String#
+types/Test.C#RepeatedType#productElementName().(x$1) => param x$1: Int
+  Int => scala/Int#
+types/Test.C#RepeatedType#productIterator(). => method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+types/Test.C#RepeatedType#productPrefix(). => method productPrefix: String
+  String => java/lang/String#
+types/Test.C#RepeatedType#s. => val method s: String*
+  String => scala/Predef.String#
+types/Test.C#RepeatedType#toString(). => method toString(): String
+  String => java/lang/String#
+types/Test.C#RepeatedType. => final object RepeatedType extends AbstractFunction1[String*, RepeatedType] with Serializable { +3 decls }
+  AbstractFunction1 => scala/runtime/AbstractFunction1#
+  String => scala/Predef.String#
+  RepeatedType => types/Test.C#RepeatedType#
+  Serializable => java/io/Serializable#
+types/Test.C#RepeatedType.apply(). => method apply(s: String*): RepeatedType
+  s => types/Test.C#RepeatedType.apply().(s)
+  String => scala/Predef.String#
+  RepeatedType => types/Test.C#RepeatedType#
+types/Test.C#RepeatedType.apply().(s) => param s: String*
+  String => scala/Predef.String#
+types/Test.C#RepeatedType.toString(). => final method toString(): String
+  String => java/lang/String#
+types/Test.C#RepeatedType.unapplySeq(). => method unapplySeq(x$0: RepeatedType): Option[Seq[String]]
+  x$0 => types/Test.C#RepeatedType.unapplySeq().(x$0)
+  RepeatedType => types/Test.C#RepeatedType#
+  Option => scala/Option#
+  Seq => scala/package.Seq#
+  String => scala/Predef.String#
+types/Test.C#RepeatedType.unapplySeq().(x$0) => param x$0: RepeatedType
+  RepeatedType => types/Test.C#RepeatedType#
+types/Test.C#TypeType. => final object TypeType extends AnyRef { +5 decls }
+  AnyRef => scala/AnyRef#
+types/Test.C#TypeType.T1# => abstract type T1
+types/Test.C#TypeType.T4# => type T4 = C
+  C => types/Test.C#
+types/Test.C#TypeType.T5# => type T5[U] = U
+  U => types/Test.C#TypeType.T5#[U]
+types/Test.C#TypeType.T5#[U] => typeparam U
+types/Test.C#TypeType.m2(). => method m2[T2 = C]: Nothing
+  T2 => types/Test.C#TypeType.m2().[T2]
+  C => types/Test.C#
+  Nothing => scala/Nothing#
+types/Test.C#TypeType.m2().[T2] => typeparam T2 = C
+  C => types/Test.C#
+types/Test.C#TypeType.m3(). => method m3[M3[_]]: Nothing
+  M3 => types/Test.C#TypeType.m3().[M3]
+  _ => types/Test.C#TypeType.m3().[M3][`2`]
+  Nothing => scala/Nothing#
+types/Test.C#TypeType.m3().[M3] => typeparam M3[_]
+  _ => types/Test.C#TypeType.m3().[M3][`2`]
+types/Test.C#TypeType.m3().[M3][`2`] => typeparam _
+types/Test.C#`<init>`(). => primary ctor <init>()
+types/Test.C#annType1. => val method annType1: T @<?>
+  T => types/T#
+types/Test.C#annType2. => val method annType2: T @<?> @<?>
+  T => types/T#
+types/Test.C#compoundType1. => val method compoundType1: AnyRef { def k: Int }
+  AnyRef => scala/AnyRef#
+  k => local0
+  Int => scala/Int#
+types/Test.C#compoundType2. => val method compoundType2: M with N {}
+  M => types/Test.M#
+  N => types/Test.N#
+types/Test.C#compoundType3. => val method compoundType3: M with N { def k: Int }
+  M => types/Test.M#
+  N => types/Test.N#
+  k => local1
+  Int => scala/Int#
+types/Test.C#compoundType4. => val method compoundType4: AnyRef { def k: Int }
+  AnyRef => scala/AnyRef#
+  k => local2
+  Int => scala/Int#
+types/Test.C#compoundType5. => val method compoundType5: M with N {}
+  M => types/Test.M#
+  N => types/Test.N#
+types/Test.C#compoundType6. => val method compoundType6: M with N { def k: Int }
+  M => types/Test.M#
+  N => types/Test.N#
+  k => local3
+  Int => scala/Int#
+types/Test.C#existentialType1. => val method existentialType1: T forSome { type T }
+  T => local4
+types/Test.C#existentialType2. => val method existentialType2: List[_] forSome { type _ }
+  List => scala/package.List#
+  _ => local5
+types/Test.C#existentialType3. => val method existentialType3: Class[?0] forSome { type ?0 }
+  Class => java/lang/Class#
+  ?0 => local6
+types/Test.C#existentialType4. => val method existentialType4: Class[?0] forSome { type ?0 }
+  Class => java/lang/Class#
+  ?0 => local7
+types/Test.C#p. => val method p: P
+  P => types/P#
+types/Test.C#singleType1. => val method singleType1: x.type
+  x => types/Test.C#x.
+types/Test.C#singleType2. => val method singleType2: p.x.type
+  p => types/Test.C#p.
+  x => types/P#x.
+types/Test.C#superType1. => val method superType1: Int
+  Int => scala/Int#
+types/Test.C#superType2. => val method superType2: Int
+  Int => scala/Int#
+types/Test.C#superType3. => val method superType3: Int
+  Int => scala/Int#
+types/Test.C#thisType1. => val method thisType1: C.this.type
+  C => types/Test.C#
+types/Test.C#thisType2. => val method thisType2: C.this.type
+  C => types/Test.C#
+types/Test.C#typeLambda1(). => method typeLambda1[M[_]]: Nothing
+  M => types/Test.C#typeLambda1().[M]
+  _ => types/Test.C#typeLambda1().[M][`1`]
+  Nothing => scala/Nothing#
+types/Test.C#typeLambda1().[M] => typeparam M[_]
+  _ => types/Test.C#typeLambda1().[M][`1`]
+types/Test.C#typeLambda1().[M][`1`] => typeparam _
+types/Test.C#typeRef1. => val method typeRef1: C
+  C => types/Test.C#
+types/Test.C#typeRef2. => val method typeRef2: p.C
+  p => types/Test.C#p.
+  C => types/P#C#
+types/Test.C#typeRef3. => val method typeRef3: T#C
+  T => types/T#
+  C => types/T#C#
+types/Test.C#typeRef4. => val method typeRef4: List[Int]
+  List => scala/package.List#
+  Int => scala/Int#
+types/Test.C#x. => val method x: p.X
+  p => types/Test.C#p.
+  X => types/P#X#
+types/Test.Literal. => final object Literal extends AnyRef { +15 decls }
+  AnyRef => scala/AnyRef#
+types/Test.Literal.bool. => final val method bool: true
+types/Test.Literal.char. => final val method char: 'a'
+types/Test.Literal.clazzOfInt. => final val method clazzOfInt: Class[Int]
+  Class => java/lang/Class#
+  Int => scala/Int#
+types/Test.Literal.clazzOfJStr. => final val method clazzOfJStr: Class[String]
+  Class => java/lang/Class#
+  String => java/lang/String#
+types/Test.Literal.clazzOfM. => final val method clazzOfM: Class[M]
+  Class => java/lang/Class#
+  M => types/Test.M#
+types/Test.Literal.clazzOfOption. => final val method clazzOfOption: Class[Option[Int]]
+  Class => java/lang/Class#
+  Option => scala/Option#
+  Int => scala/Int#
+types/Test.Literal.clazzOfTRef. => final val method clazzOfTRef: Class[T#C]
+  Class => java/lang/Class#
+  T => types/T#
+  C => types/T#C#
+types/Test.Literal.double. => final val method double: 2.0
+types/Test.Literal.float. => final val method float: 1.0f
+types/Test.Literal.int. => final val method int: 1
+types/Test.Literal.javaEnum. => final val method javaEnum: NOFOLLOW_LINKS.type
+  NOFOLLOW_LINKS => java/nio/file/LinkOption#NOFOLLOW_LINKS.
+types/Test.Literal.long. => final val method long: 1L
+types/Test.Literal.nil. => final val method nil: null
+types/Test.Literal.string. => final val method string: "a"
+types/Test.Literal.unit. => final val method unit: Unit
+  Unit => scala/Unit#
+types/Test.M# => class M extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+types/Test.M#`<init>`(). => primary ctor <init>()
+types/Test.M#m(). => method m: Int
+  Int => scala/Int#
+types/Test.N# => trait N extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+types/Test.N#n(). => method n: Int
+  Int => scala/Int#

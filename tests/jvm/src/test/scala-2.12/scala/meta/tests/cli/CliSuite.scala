@@ -29,7 +29,7 @@ class CliSuite extends FunSuite {
 
   test("metac " + HelloWorld.scalaFile) {
     import HelloWorld._
-    val (success, out, err) = CliSuite.communicate { (out, err) =>
+    val (success, out, err) = CliTestUtils.communicate { (out, err) =>
       val scalacArgs = List(
         "-cp",
         Library.scalaLibrary.classpath().syntax,
@@ -50,7 +50,7 @@ class CliSuite extends FunSuite {
 
   test("metap " + HelloWorld.scalaFile) {
     import HelloWorld._
-    val (success, out, err) = CliSuite.withReporter { reporter =>
+    val (success, out, err) = CliTestUtils.withReporter { reporter =>
       val format = scala.meta.metap.Format.Detailed
       val settings =
         scala.meta.metap.Settings().withFormat(format).withPaths(List(semanticdb))
@@ -113,7 +113,7 @@ class CliSuite extends FunSuite {
     val target = Files.createTempDirectory("target_")
     val inSourcerootSemanticdb = target.resolve("META-INF/semanticdb/Left.scala.semanticdb")
 
-    val (success, out, err) = CliSuite.communicate { (out, err) =>
+    val (success, out, err) = CliTestUtils.communicate { (out, err) =>
       val scalacArgs = List(
         "-cp",
         Library.scalaLibrary.classpath().syntax,
@@ -145,21 +145,5 @@ class CliSuite extends FunSuite {
         target
       )
     assert(rightResults.isEmpty)
-  }
-}
-
-object CliSuite {
-  def withReporter[T](op: Reporter => T): (T, String, String) = {
-    communicate { (out, err) => op(Reporter().withOut(out).withErr(err)) }
-  }
-  def communicate[T](op: (PrintStream, PrintStream) => T): (T, String, String) = {
-    val outbaos = new ByteArrayOutputStream
-    val outps = new PrintStream(outbaos, true, UTF_8.name)
-    val errbaos = new ByteArrayOutputStream
-    val errps = new PrintStream(errbaos, true, UTF_8.name)
-    val result = op(outps, errps)
-    val outs = new String(outbaos.toByteArray, UTF_8)
-    val errs = new String(errbaos.toByteArray, UTF_8)
-    (result, outs, errs)
   }
 }
