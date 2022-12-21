@@ -500,7 +500,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case _ => false
   }
   def isIdentAnd(pred: String => Boolean): Boolean = isIdentAnd(token, pred)
-  def isUnaryOp: Boolean = isIdentAnd(name => Term.Name(name).isUnaryOp)
+  def isUnaryOp: Boolean = isIdentAnd(_.isUnaryOp)
   def isIdentExcept(except: String) = isIdentAnd(_ != except)
   def isIdentOf(name: String) = isIdentAnd(_ == name)
   def isIdent: Boolean = isIdentAnd(_ => true)

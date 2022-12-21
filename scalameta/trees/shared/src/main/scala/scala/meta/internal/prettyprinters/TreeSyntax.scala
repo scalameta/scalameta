@@ -88,16 +88,13 @@ object TreeSyntax {
 
     def p(og: SyntacticGroup, t: Tree, left: Boolean = false, right: Boolean = false) = {
       def opNeedsParens(oo: String, io: String, customPrecedence: Boolean = true): Boolean = {
-        implicit class XtensionMySyntacticInfo(name: String) {
-          def isleftassoc: Boolean = name.last != ':'
-          def precedence: Int = if (customPrecedence) Name(name).precedence else 0
-        }
+        def precedence(op: String) = if (customPrecedence) op.precedence else 0
         require(left != right)
-        val (ol, il) = (oo.isleftassoc, io.isleftassoc)
+        val (ol, il) = (oo.isLeftAssoc, io.isLeftAssoc)
         if (ol ^ il) true
         else {
           val (l, r) = (ol, !ol)
-          val (op, ip) = (oo.precedence, io.precedence)
+          val (op, ip) = (precedence(oo), precedence(io))
           if (op < ip) r
           else if (op > ip) l
           else l ^ left

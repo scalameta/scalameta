@@ -20,9 +20,7 @@ package object trees {
     }
   }
 
-  implicit class XtensionTreesName(name: Name) {
-    import name._
-
+  implicit class XtensionTreesName(private val name: Name) extends AnyVal {
     def isDefinition: Boolean = name.parent match {
       case Some(parent: Member) => parent.name == name
       case _ => false
@@ -31,19 +29,33 @@ package object trees {
 
     // some heuristic is needed to govern associativity and precedence of unquoted operators
     def isLeftAssoc: Boolean =
-      if (name.is[Name.Quasi]) true
-      else value.last != ':'
+      name.is[Name.Quasi] || name.value.isLeftAssoc
+
+    // opPrecedence?
+    def precedence: Int =
+      if (name.is[Name.Quasi]) 1 else name.value.precedence
+
+    def isUnaryOp: Boolean = name.value.isUnaryOp
+  }
+
+  implicit class XtensionTreesString(private val value: String) extends AnyVal {
+    import XtensionTreesString._
+
+    // some heuristic is needed to govern associativity and precedence of unquoted operators
+    def isLeftAssoc: Boolean = value.last != ':'
+
     def isUnaryOp: Boolean = Set("-", "+", "~", "!").contains(value)
+
     def isAssignmentOp = value match {
       case "!=" | "<=" | ">=" | "" => false
       case _ =>
         (value.last == '=' && value.head != '='
         && isOperatorPart(value.head))
     }
+
     // opPrecedence?
     def precedence: Int =
-      if (name.is[Name.Quasi]) 1
-      else if (isAssignmentOp) 0
+      if (isAssignmentOp) 0
       else if (isScalaLetter(value.head)) 1
       else
         (value.head: @scala.annotation.switch) match {
@@ -57,7 +69,9 @@ package object trees {
           case '*' | '/' | '%' => 9
           case _ => 10
         }
+  }
 
+  object XtensionTreesString {
     private final val otherLetters = Set[Char]('\u0024', '\u005F') // '$' and '_'
     private final val letterGroups = {
       import JCharacter._
