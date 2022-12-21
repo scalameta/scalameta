@@ -131,8 +131,7 @@ class InfixSuite extends BaseDottySuite {
   }
 
   test("issue-2880 1") {
-    implicit val dialect = dialects.Scala3Future
-    runTestError[Stat](
+    runTestAssert[Stat](
       """|Flow {
          |    b.add()
          |
@@ -141,9 +140,33 @@ class InfixSuite extends BaseDottySuite {
          |    ~> removeItems
          |}
          |""".stripMargin,
-      """|error: ; expected but . found
-         |      ~> removeItems.in0
-         |                    ^""".stripMargin
+      Some(
+        """|Flow {
+           |  b.add()
+           |  input_< ~> filtering ~> removeItems.in0 ~> removeItems
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Apply(
+        tname("Flow"),
+        Term.Block(
+          List(
+            Term.Apply(Term.Select(tname("b"), tname("add")), Nil),
+            Term.ApplyInfix(
+              Term.ApplyInfix(
+                Term.ApplyInfix(tname("input_<"), tname("~>"), Nil, List(tname("filtering"))),
+                tname("~>"),
+                Nil,
+                List(Term.Select(tname("removeItems"), tname("in0")))
+              ),
+              tname("~>"),
+              Nil,
+              List(tname("removeItems"))
+            )
+          )
+        ) :: Nil
+      )
     )
   }
 
@@ -160,7 +183,10 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       Some(
         """|Flow {
-           |  def foo = (b.add() input_< ~> filtering ~> removeItems1 ~>).removeItems2
+           |  def foo = {
+           |    b.add()
+           |    input_< ~> filtering ~> removeItems1 ~> removeItems2
+           |  }
            |}
            |""".stripMargin
       )
@@ -173,24 +199,21 @@ class InfixSuite extends BaseDottySuite {
             tname("foo"),
             None,
             None,
-            Term.Select(
-              Term.ApplyInfix(
+            Term.Block(
+              List(
+                Term.Apply(Term.Select(tname("b"), tname("add")), Nil),
                 Term.ApplyInfix(
                   Term.ApplyInfix(
-                    Term.Apply(Term.Select(tname("b"), tname("add")), Nil),
-                    tname("input_<"),
+                    Term.ApplyInfix(tname("input_<"), tname("~>"), Nil, List(tname("filtering"))),
+                    tname("~>"),
                     Nil,
-                    List(tname("~>"))
+                    List(tname("removeItems1"))
                   ),
-                  tname("filtering"),
+                  tname("~>"),
                   Nil,
-                  List(tname("~>"))
-                ),
-                tname("removeItems1"),
-                Nil,
-                List(tname("~>"))
-              ),
-              tname("removeItems2")
+                  List(tname("removeItems2"))
+                )
+              )
             )
           ) :: Nil
         ) :: Nil
@@ -232,11 +255,7 @@ class InfixSuite extends BaseDottySuite {
          |  || xs.isEmpty
          |""".stripMargin,
       Some(
-        """|def condition = {
-           |  x > 0
-           |  ||
-           |  xs.exists(_ > 0) || xs.isEmpty
-           |}
+        """|def condition = x > 0 || xs.exists(_ > 0) || xs.isEmpty
            |""".stripMargin
       )
     )(
@@ -245,22 +264,35 @@ class InfixSuite extends BaseDottySuite {
         tname("condition"),
         None,
         None,
-        Term.Block(
-          List(
-            Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
-            tname("||"),
+        Term.ApplyInfix(
+          Term.ApplyInfix(
             Term.ApplyInfix(
+              tname("x"),
+              tname(">"),
+              Nil,
+              List(int(0))
+            ),
+            tname("||"),
+            Nil,
+            List(
               Term.Apply(
                 Term.Select(tname("xs"), tname("exists")),
-                Term.AnonymousFunction(
-                  Term.ApplyInfix(Term.Placeholder(), tname(">"), Nil, List(int(0)))
-                ) :: Nil
-              ),
-              tname("||"),
-              Nil,
-              List(Term.Select(tname("xs"), tname("isEmpty")))
+                List(
+                  Term.AnonymousFunction(
+                    Term.ApplyInfix(
+                      Term.Placeholder(),
+                      tname(">"),
+                      Nil,
+                      List(int(0))
+                    )
+                  )
+                )
+              )
             )
-          )
+          ),
+          tname("||"),
+          Nil,
+          List(Term.Select(tname("xs"), tname("isEmpty")))
         )
       )
     )
@@ -294,12 +326,13 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       Some(
         """|{
-           |  freezing | boiling
+           |  freezing
+           |  |.boiling
            |}
            |""".stripMargin
       )
     )(
-      Term.Block(List(Term.ApplyInfix(tname("freezing"), tname("|"), Nil, List(tname("boiling")))))
+      Term.Block(List(tname("freezing"), Term.Select(tname("|"), tname("boiling"))))
     )
   }
 
@@ -313,14 +346,12 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       Some(
         """|{
-           |  freezing
-           |  |
-           |  boiling
+           |  freezing | boiling
            |}
            |""".stripMargin
       )
     )(
-      Term.Block(List(tname("freezing"), tname("|"), tname("boiling")))
+      Term.Block(List(Term.ApplyInfix(tname("freezing"), tname("|"), Nil, List(tname("boiling")))))
     )
   }
 
@@ -334,35 +365,26 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       Some(
         """|{
-           |  freezing
-           |  |
-           |  boiling
+           |  freezing | boiling
            |}
            |""".stripMargin
       )
     )(
-      Term.Block(List(Term.Name("freezing"), Term.Name("|"), Term.Name("boiling")))
+      Term.Block(List(Term.ApplyInfix(tname("freezing"), tname("|"), Nil, List(tname("boiling")))))
     )
   }
 
   test("scala3 infix syntax 3.5") {
-    runTestAssert[Stat](
+    runTestError[Stat](
       """|{
          |  freezing
          |    |
          |  boiling
          |}
          |""".stripMargin,
-      Some(
-        """|{
-           |  freezing
-           |  |
-           |  boiling
-           |}
-           |""".stripMargin
-      )
-    )(
-      Term.Block(List(tname("freezing"), tname("|"), tname("boiling")))
+      """|error: Invalid indented leading infix operator found
+         |    |
+         |    ^""".stripMargin
     )
   }
 
@@ -397,9 +419,7 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       Some(
         """|{
-           |  println("hello")
-           |  ???
-           |  ??? match {
+           |  println("hello") ??? ??? match {
            |    case 0 => 1
            |  }
            |}
@@ -407,11 +427,16 @@ class InfixSuite extends BaseDottySuite {
       )
     )(
       Term.Block(
-        List(
-          Term.Apply(tname("println"), List(Lit.String("hello"))),
-          tname("???"),
-          Term.Match(tname("???"), List(Case(int(0), None, int(1))), Nil)
-        )
+        Term.Match(
+          Term.ApplyInfix(
+            Term.Apply(tname("println"), List(str("hello"))),
+            tname("???"),
+            Nil,
+            List(tname("???"))
+          ),
+          List(Case(int(0), None, int(1))),
+          Nil
+        ) :: Nil
       )
     )
   }
@@ -428,9 +453,7 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       Some(
         """|{
-           |  println("hello")
-           |  ???
-           |  ??? match {
+           |  println("hello") ??? ??? match {
            |    case 0 => 1
            |  }
            |}
@@ -438,11 +461,16 @@ class InfixSuite extends BaseDottySuite {
       )
     )(
       Term.Block(
-        List(
-          Term.Apply(tname("println"), List(Lit.String("hello"))),
-          tname("???"),
-          Term.Match(tname("???"), List(Case(int(0), None, int(1))), Nil)
-        )
+        Term.Match(
+          Term.ApplyInfix(
+            Term.Apply(tname("println"), List(str("hello"))),
+            tname("???"),
+            Nil,
+            List(tname("???"))
+          ),
+          List(Case(int(0), None, int(1))),
+          Nil
+        ) :: Nil
       )
     )
   }

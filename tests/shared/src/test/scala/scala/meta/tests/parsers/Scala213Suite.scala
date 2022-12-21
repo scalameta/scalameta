@@ -138,17 +138,34 @@ class Scala213Suite extends ParseSuite {
 
   test("issue-2880") {
     implicit val Scala213 = dialects.Scala213Source3
-    runTestError[Stat](
+    runAssert(
       """|Flow {
          |    b.add()
          |
          |    input_< ~> filtering ~> removeItems.in0
          |}
-         |""".stripMargin,
-      """|error: ; expected but . found
-         |    input_< ~> filtering ~> removeItems.in0
-         |                                       ^""".stripMargin
-    )(templStat(_)(_), dialects.Scala213Source3)
+         |""".stripMargin
+    )(
+      Term.Apply(
+        Term.Name("Flow"),
+        Term.Block(
+          List(
+            Term.Apply(Term.Select(Term.Name("b"), Term.Name("add")), Nil),
+            Term.ApplyInfix(
+              Term.ApplyInfix(
+                Term.Name("input_<"),
+                Term.Name("~>"),
+                Nil,
+                List(Term.Name("filtering"))
+              ),
+              Term.Name("~>"),
+              Nil,
+              List(Term.Select(Term.Name("removeItems"), Term.Name("in0")))
+            )
+          )
+        ) :: Nil
+      )
+    )
   }
 
 }

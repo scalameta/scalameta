@@ -126,7 +126,7 @@ class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect)
     }
   }
 
-  def isLeadingInfixOperator(index: Int): Boolean = dialect.allowInfixOperatorAfterNL && {
+  def isLeadingInfixOperator(index: Int): Boolean = {
     val token = tokens(index)
     token.is[Ident] && token.isIdentSymbolicInfixOperator && {
       val nextSafeIndex = getNextSafeIndex(index)
@@ -137,6 +137,19 @@ class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect)
       })
     }
   }
+
+  def getTokenAtLineStart(idx: Int): Token =
+    getTokenAtLineStart(idx, tokens(idx))
+
+  @tailrec
+  private def getTokenAtLineStart(idx: Int, nextNonSpace: Token): Token =
+    if (idx == 0) nextNonSpace
+    else
+      tokens(idx) match {
+        case _: AtEOL => nextNonSpace
+        case _: HSpace => getTokenAtLineStart(idx - 1, nextNonSpace)
+        case t => getTokenAtLineStart(idx - 1, t)
+      }
 
   val soft = new SoftKeywords(dialect)
 
