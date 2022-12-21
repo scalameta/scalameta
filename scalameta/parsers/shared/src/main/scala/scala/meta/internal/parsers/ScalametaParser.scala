@@ -499,20 +499,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case Ident(x) => pred(x)
     case _ => false
   }
-  def isIdentAnd(pred: String => Boolean): Boolean = isIdentAnd(token, pred)
-  def isUnaryOp: Boolean = isIdentAnd(_.isUnaryOp)
-  def isIdentExcept(except: String) = isIdentAnd(_ != except)
-  def isIdentOf(name: String) = isIdentAnd(_ == name)
-  def isIdent: Boolean = isIdentAnd(_ => true)
-  def isStar: Boolean = isIdentOf("*")
-  def isBar: Boolean = isIdentOf("|")
-  def isAmpersand: Boolean = isIdentOf("&")
-  def isBackquoted: Boolean = {
-    val syntax = token.syntax
-    syntax.startsWith("`") && syntax.endsWith("`")
-  }
-  def isVarargStarParam() =
-    dialect.allowPostfixStarVarargSplices && isStar && token.next.is[RightParen]
+  def isUnaryOp: Boolean = isIdentAnd(token, _.isUnaryOp)
+  def isIdentExcept(except: String) = isIdentAnd(token, _ != except)
+  def isIdentOf(tok: Token, name: String) = isIdentAnd(tok, _ == name)
+  @inline def isStar: Boolean = isStar(token)
+  def isStar(tok: Token): Boolean = isIdentOf(tok, "*")
+  def isBar: Boolean = isIdentOf(token, "|")
+  def isVarargStarParam(tok: Token, allowRepeated: Boolean) =
+    allowRepeated && dialect.allowPostfixStarVarargSplices && isStar(tok) && tok.next.is[RightParen]
 
   private trait MacroIdent {
     protected def ident(token: Token): Option[String]
@@ -1670,7 +1664,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         // check out the `if (token.is[RightArrow]) { ... }` block below
         t = addPos(Term.Ascribe(t, typeOrInfixType(location)))
       }
-    } else if (allowRepeated && isVarargStarParam()) {
+    } else if (isVarargStarParam(token, allowRepeated)) {
       repeatedTerm(next)
     } else if (acceptOpt[KwMatch]) {
       t = matchClause(t, startPos)
@@ -2028,7 +2022,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         // In the running example, we're at `a + b[]`
         // with base = List([a +]), rhsK = List([b]).
         rhsK
-      } else if (allowRepeated && isVarargStarParam()) {
+      } else if (isVarargStarParam(token, allowRepeated)) {
         rhsK
       } else {
         val rhsEndK: EndPos = in.prevTokenPos
@@ -2563,7 +2557,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       // * p"X" => Pat.Var (needs postprocessing, parsed as Term.Name)
       // * p"`x`" => Term.Name (ok)
       // * p"`X`" => Term.Name (ok)
-      val nonbqIdent = isIdent && !isBackquoted
+      val nonbqIdent = token.is[Ident] && !token.isBackquoted
       argumentPattern() match {
         case pat: Term.Name if nonbqIdent => copyPos(pat)(Pat.Var(pat))
         case pat => pat
@@ -2695,7 +2689,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     ): Pat =
       autoPos(token match {
         case _: Ident | _: KwThis | _: Unquote =>
-          val isBackquoted = parser.isBackquoted
+          val isBackquoted = token.isBackquoted
           val sid = stableId()
           if (token.is[NumericConstant[_]]) {
             sid match {
