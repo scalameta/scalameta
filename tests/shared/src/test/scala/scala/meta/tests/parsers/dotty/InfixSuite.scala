@@ -12,11 +12,11 @@ class InfixSuite extends BaseDottySuite {
     )(
       Defn.Def(
         List(Mod.Infix()),
-        Term.Name("a"),
+        tname("a"),
         Nil,
-        List(List(Term.Param(Nil, Term.Name("param"), Some(Type.Name("Int")), None))),
+        List(List(Term.Param(Nil, tname("param"), Some(pname("Int")), None))),
         None,
-        Term.Name("param")
+        tname("param")
       )
     )
   }
@@ -36,7 +36,7 @@ class InfixSuite extends BaseDottySuite {
     )(
       Defn.Class(
         Nil,
-        Type.Name("A"),
+        pname("A"),
         Nil,
         Ctor.Primary(Nil, Name(""), Nil),
         Template(
@@ -46,20 +46,20 @@ class InfixSuite extends BaseDottySuite {
           List(
             Decl.Type(
               List(Mod.Infix()),
-              Type.Name("or"),
+              pname("or"),
               List(
-                Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil),
-                Type.Param(Nil, Type.Name("Y"), Nil, Type.Bounds(None, None), Nil, Nil)
+                Type.Param(Nil, pname("X"), Nil, Type.Bounds(None, None), Nil, Nil),
+                Type.Param(Nil, pname("Y"), Nil, Type.Bounds(None, None), Nil, Nil)
               ),
               Type.Bounds(None, None)
             ),
             Defn.Def(
               List(Mod.Infix()),
-              Term.Name("x"),
+              tname("x"),
               Nil,
-              List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))),
-              Some(Type.ApplyInfix(Type.Name("String"), Type.Name("or"), Type.Name("Int"))),
-              Lit.Int(1)
+              List(List(Term.Param(Nil, tname("a"), Some(pname("Int")), None))),
+              Some(Type.ApplyInfix(pname("String"), pname("or"), pname("Int"))),
+              int(1)
             )
           )
         )
@@ -72,7 +72,7 @@ class InfixSuite extends BaseDottySuite {
     runTestAssert[Stat]("infix class A[B, C]")(
       Defn.Class(
         List(Mod.Infix()),
-        Type.Name("A"),
+        pname("A"),
         List(
           pparam("B"),
           pparam("C")
@@ -87,7 +87,7 @@ class InfixSuite extends BaseDottySuite {
     runTestAssert[Stat]("infix trait A[B, C]")(
       Defn.Trait(
         List(Mod.Infix()),
-        Type.Name("A"),
+        pname("A"),
         List(
           pparam("B"),
           pparam("C")
@@ -102,12 +102,12 @@ class InfixSuite extends BaseDottySuite {
     runTestAssert[Stat]("infix def infix(infix: infix): infix = new infix {}")(
       Defn.Def(
         List(Mod.Infix()),
-        Term.Name("infix"),
+        tname("infix"),
         Nil,
-        List(List(Term.Param(Nil, Term.Name("infix"), Some(Type.Name("infix")), None))),
-        Some(Type.Name("infix")),
+        List(List(Term.Param(Nil, tname("infix"), Some(pname("infix")), None))),
+        Some(pname("infix")),
         Term.NewAnonymous(
-          Template(Nil, List(Init(Type.Name("infix"), Name(""), Nil)), Self(Name(""), None), Nil)
+          Template(Nil, List(Init(pname("infix"), Name(""), Nil)), Self(Name(""), None), Nil)
         )
       )
     )
@@ -117,14 +117,331 @@ class InfixSuite extends BaseDottySuite {
     runTestAssert[Stat]("extension (i: Int) infix def zero(other: Int): Int = 0")(
       Defn.ExtensionGroup(
         Nil,
-        List(List(Term.Param(Nil, Term.Name("i"), Some(Type.Name("Int")), None))),
+        List(List(Term.Param(Nil, tname("i"), Some(pname("Int")), None))),
         Defn.Def(
           List(Mod.Infix()),
-          Term.Name("zero"),
+          tname("zero"),
           Nil,
-          List(List(Term.Param(Nil, Term.Name("other"), Some(Type.Name("Int")), None))),
-          Some(Type.Name("Int")),
-          Lit.Int(0)
+          List(List(Term.Param(Nil, tname("other"), Some(pname("Int")), None))),
+          Some(pname("Int")),
+          int(0)
+        )
+      )
+    )
+  }
+
+  test("issue-2880 1") {
+    implicit val dialect = dialects.Scala3Future
+    runTestError[Stat](
+      """|Flow {
+         |    b.add()
+         |
+         |    input_< ~> filtering
+         |      ~> removeItems.in0
+         |    ~> removeItems
+         |}
+         |""".stripMargin,
+      """|error: ; expected but . found
+         |      ~> removeItems.in0
+         |                    ^""".stripMargin
+    )
+  }
+
+  test("issue-2880 2") {
+    runTestAssert[Stat](
+      """|Flow {
+         |  def foo =
+         |    b.add()
+         |
+         |    input_< ~> filtering
+         |     ~> removeItems1
+         |    ~> removeItems2
+         |}
+         |""".stripMargin,
+      Some(
+        """|Flow {
+           |  def foo = (b.add() input_< ~> filtering ~> removeItems1 ~>).removeItems2
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Apply(
+        tname("Flow"),
+        Term.Block(
+          Defn.Def(
+            Nil,
+            tname("foo"),
+            None,
+            None,
+            Term.Select(
+              Term.ApplyInfix(
+                Term.ApplyInfix(
+                  Term.ApplyInfix(
+                    Term.Apply(Term.Select(tname("b"), tname("add")), Nil),
+                    tname("input_<"),
+                    Nil,
+                    List(tname("~>"))
+                  ),
+                  tname("filtering"),
+                  Nil,
+                  List(tname("~>"))
+                ),
+                tname("removeItems1"),
+                Nil,
+                List(tname("~>"))
+              ),
+              tname("removeItems2")
+            )
+          ) :: Nil
+        ) :: Nil
+      )
+    )
+  }
+
+  test("scala3 infix syntax 1") {
+    runTestAssert[Stat](
+      """|val str = "hello"
+         |  ++ " world"
+         |  ++ "!"
+         |""".stripMargin,
+      Some(
+        """|val str = "hello" ++ " world" ++ "!"
+           |""".stripMargin
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("str"))),
+        None,
+        Term.ApplyInfix(
+          Term.ApplyInfix(Lit.String("hello"), tname("++"), Nil, List(Lit.String(" world"))),
+          tname("++"),
+          Nil,
+          List(Lit.String("!"))
+        )
+      )
+    )
+  }
+
+  test("scala3 infix syntax 2") {
+    runTestAssert[Stat](
+      """|def condition =
+         |  x > 0
+         |  ||
+         |  xs.exists(_ > 0)
+         |  || xs.isEmpty
+         |""".stripMargin,
+      Some(
+        """|def condition = {
+           |  x > 0
+           |  ||
+           |  xs.exists(_ > 0) || xs.isEmpty
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        tname("condition"),
+        None,
+        None,
+        Term.Block(
+          List(
+            Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
+            tname("||"),
+            Term.ApplyInfix(
+              Term.Apply(
+                Term.Select(tname("xs"), tname("exists")),
+                Term.AnonymousFunction(
+                  Term.ApplyInfix(Term.Placeholder(), tname(">"), Nil, List(int(0)))
+                ) :: Nil
+              ),
+              tname("||"),
+              Nil,
+              List(Term.Select(tname("xs"), tname("isEmpty")))
+            )
+          )
+        )
+      )
+    )
+  }
+
+  test("scala3 infix syntax 3.1") {
+    runTestAssert[Stat](
+      """|{
+         |  freezing
+         |    | boiling
+         |}
+         |""".stripMargin,
+      Some(
+        """|{
+           |  freezing | boiling
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Block(List(Term.ApplyInfix(tname("freezing"), tname("|"), Nil, List(tname("boiling")))))
+    )
+  }
+
+  test("scala3 infix syntax 3.2") {
+    runTestAssert[Stat](
+      """|{
+         |  freezing
+         |
+         |    | boiling
+         |}
+         |""".stripMargin,
+      Some(
+        """|{
+           |  freezing | boiling
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Block(List(Term.ApplyInfix(tname("freezing"), tname("|"), Nil, List(tname("boiling")))))
+    )
+  }
+
+  test("scala3 infix syntax 3.3") {
+    runTestAssert[Stat](
+      """|{
+         |  freezing
+         |    |
+         |    boiling
+         |}
+         |""".stripMargin,
+      Some(
+        """|{
+           |  freezing
+           |  |
+           |  boiling
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Block(List(tname("freezing"), tname("|"), tname("boiling")))
+    )
+  }
+
+  test("scala3 infix syntax 3.4") {
+    runTestAssert[Stat](
+      """|{
+         |  freezing
+         |  |
+         |  boiling
+         |}
+         |""".stripMargin,
+      Some(
+        """|{
+           |  freezing
+           |  |
+           |  boiling
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Block(List(Term.Name("freezing"), Term.Name("|"), Term.Name("boiling")))
+    )
+  }
+
+  test("scala3 infix syntax 3.5") {
+    runTestAssert[Stat](
+      """|{
+         |  freezing
+         |    |
+         |  boiling
+         |}
+         |""".stripMargin,
+      Some(
+        """|{
+           |  freezing
+           |  |
+           |  boiling
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Block(List(tname("freezing"), tname("|"), tname("boiling")))
+    )
+  }
+
+  test("scala3 infix syntax 4") {
+    runTestAssert[Stat](
+      """|{
+         |  freezing
+         |    !boiling
+         |}
+         |""".stripMargin,
+      Some(
+        """|{
+           |  freezing
+           |  !boiling
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Block(List(tname("freezing"), Term.ApplyUnary(tname("!"), tname("boiling"))))
+    )
+  }
+
+  test("scala3 infix syntax 5.1") {
+    runTestAssert[Stat](
+      """|{
+         |  println("hello")
+         |  ???
+         |  ??? match {
+         |    case 0 => 1
+         |  }
+         |}
+         |""".stripMargin,
+      Some(
+        """|{
+           |  println("hello")
+           |  ???
+           |  ??? match {
+           |    case 0 => 1
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Block(
+        List(
+          Term.Apply(tname("println"), List(Lit.String("hello"))),
+          tname("???"),
+          Term.Match(tname("???"), List(Case(int(0), None, int(1))), Nil)
+        )
+      )
+    )
+  }
+
+  test("scala3 infix syntax 5.2") {
+    runTestAssert[Stat](
+      """|{
+         |  println("hello")
+         |    ???
+         |    ??? match {
+         |      case 0 => 1
+         |    }
+         |}
+         |""".stripMargin,
+      Some(
+        """|{
+           |  println("hello")
+           |  ???
+           |  ??? match {
+           |    case 0 => 1
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Block(
+        List(
+          Term.Apply(tname("println"), List(Lit.String("hello"))),
+          tname("???"),
+          Term.Match(tname("???"), List(Case(int(0), None, int(1))), Nil)
         )
       )
     )
