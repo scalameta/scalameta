@@ -5721,7 +5721,7 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/XmaxWarn.scala
 Text => empty
 Language => Scala
-Diagnostics => 70 entries
+Diagnostics => 101 entries
 
 Diagnostics:
 [10:12..10:13) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
@@ -5794,3 +5794,34 @@ Diagnostics:
 [77:13..77:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
 [78:13..78:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
 [79:13..79:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[80:13..80:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[81:13..81:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[82:13..82:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[83:13..83:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[84:13..84:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[85:13..85:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[86:13..86:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[87:13..87:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[88:13..88:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[89:13..89:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[90:13..90:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[91:13..91:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[92:13..92:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[93:13..93:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[94:13..94:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[95:13..95:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[96:13..96:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[97:13..97:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[98:13..98:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[99:13..99:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[100:13..100:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[101:13..101:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[102:13..102:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[103:13..103:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[104:13..104:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[105:13..105:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[106:13..106:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[107:13..107:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[108:13..108:14) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[109:14..109:15) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
+[110:14..110:15) [warning] method x in object X is deprecated (since forever): to test -Xmaxwarn
