@@ -106,6 +106,11 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
       @inline
       def strictNext: Token = getStrictAfterSafe(nextSafe)
 
+      def isBackquoted: Boolean = {
+        val text = token.text
+        text.startsWith("`") && text.endsWith("`")
+      }
+
       def isLeadingInfixOperator: Boolean = dialect.allowInfixOperatorAfterNL && {
         val text = token.text
         @tailrec
