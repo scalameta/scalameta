@@ -1850,7 +1850,18 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  case 1 => true
          |  case 2 => false
          |""".stripMargin,
-      assertLayout = None
+      Some(
+        """|val hello = 1 + xs match {
+           |  case Nil =>
+           |    0
+           |  case x :: xs1 =>
+           |    1 + 1 match {
+           |      case 1 => true
+           |      case 2 => false
+           |    }
+           |}
+           |""".stripMargin
+      )
     )(
       Defn.Val(
         Nil,
@@ -1886,7 +1897,18 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    case 1 => true
          |    case 2 => false
          |""".stripMargin,
-      assertLayout = None
+      Some(
+        """|val hello = 1 + xs match {
+           |  case Nil =>
+           |    0
+           |  case x :: xs1 =>
+           |    1 + 1 match {
+           |      case 1 => true
+           |      case 2 => false
+           |    }
+           |}
+           |""".stripMargin
+      )
     )(
       Defn.Val(
         Nil,
