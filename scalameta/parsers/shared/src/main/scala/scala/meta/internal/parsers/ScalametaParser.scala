@@ -1842,6 +1842,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // `push` takes `b`, reads `*`, checks for type arguments and adds [b *] on the top of the stack.
     // Other methods working on the stack are self-explanatory.
     var stack: List[UnfinishedInfix] = Nil
+    @inline def isDone(base: List[UnfinishedInfix]): Boolean = this.stack == base
     def head = stack.head
     def push(unfinishedInfix: UnfinishedInfix): Unit = stack ::= unfinishedInfix
     def pop(): UnfinishedInfix =
@@ -1853,13 +1854,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         curr: Typ,
         currEnd: EndPos,
         op: Option[Op]
-    ): Typ = {
+    ): Typ = if (isDone(stack)) curr
+    else {
       val opPrecedence = op.fold(0)(_.precedence)
       val leftAssoc = op.forall(_.isLeftAssoc)
 
-      def isDone = this.stack == stack
-      def lowerPrecedence = !isDone && (opPrecedence < this.head.precedence)
-      def samePrecedence = !isDone && (opPrecedence == this.head.precedence)
+      def lowerPrecedence = opPrecedence < this.head.precedence
+      def samePrecedence = opPrecedence == this.head.precedence
       def canReduce = lowerPrecedence || leftAssoc && samePrecedence
 
       if (samePrecedence) {
@@ -1876,7 +1877,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         } else {
           val lhs = pop()
           val fin = finishInfixExpr(lhs, rhs, currEnd)
-          loop(fin)
+          if (isDone(stack)) fin else loop(fin)
         }
       }
 
