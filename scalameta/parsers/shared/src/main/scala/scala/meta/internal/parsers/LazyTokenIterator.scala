@@ -381,7 +381,7 @@ private[parsers] class LazyTokenIterator private (
 
       val resOpt = if (dialect.allowSignificantIndentation) {
         val hasLF = lastNewlinePos != -1 || hasMultilineComment
-        if (hasLF && next != null && !next.isLeadingInfixOperator) {
+        if (hasLF && next != null) {
 
           val nextIndent = countIndent(nextPos)
 
@@ -398,16 +398,20 @@ private[parsers] class LazyTokenIterator private (
            *     foo()
            *     ```
            */
-          def getOutdentIfNeeded() = sepRegions.headOption
-            .filter { r =>
-              r.isIndented && {
-                // need to check prev.prev in case of `end match`
+          def getOutdentIfNeeded() = sepRegions match {
+            case r :: tail if r.isIndented =>
+              val ok =
                 if (nextIndent < r.indent)
-                  prev.isNot[CanContinueOnNextLine] || prev.prev.is[soft.KwEnd]
+                  r.closeOnNonCase ||
+                  // exclude leading infix op
+                  !(!newlines && newlineStreak && next.isLeadingInfixOperator &&
+                    tail.find(_.isIndented).forall(_.indent <= nextIndent)) &&
+                  // need to check prev.prev in case of `end match`
+                  (prev.isNot[CanContinueOnNextLine] || prev.prev.is[soft.KwEnd])
                 else r.closeOnNonCase && next.isNot[KwCase] && nextIndent == r.indent
-              }
-            }
-            .map { region => (sepRegions.tail, mkOutdentTo(region, nextPos)) }
+              if (ok) Some((tail, mkOutdentTo(r, nextPos))) else None
+            case _ => None
+          }
 
           /**
            * Indent is needed in the following cases:
