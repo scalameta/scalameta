@@ -111,23 +111,34 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
         text.startsWith("`") && text.endsWith("`")
       }
 
-      def isLeadingInfixOperator: Boolean = dialect.allowInfixOperatorAfterNL && {
+      def isSymbolicInfixOperator: Boolean = token.is[Ident] && isIdentSymbolicInfixOperator
+
+      def isIdentSymbolicInfixOperator: Boolean = isBackquoted || {
         val text = token.text
+
         @tailrec
         def iter(idx: Int, nonEmpty: Boolean): Boolean = {
           val ch = text(idx)
           if (ch == '_') nonEmpty || idx > 0 && iter(idx - 1, false)
           else Chars.isOperatorPart(ch) && (idx == 0 || iter(idx - 1, true))
         }
-        text.isEmpty || (text(0) != '@' && iter(text.length - 1, false))
-      } && (nextSafe match {
-        case nt: Whitespace =>
-          getStrictAfterSafe(nt) match {
-            case _: Ident | _: Interpolation.Id | _: LeftParen | _: LeftBrace | _: Literal => true
-            case _ => false
-          }
-        case _ => false
-      })
+
+        val len = text.length
+        len == 0 || (text(0) != '@' && iter(len - 1, false))
+      }
+
+      def isLeadingInfixOperator: Boolean =
+        token.is[Ident] && isIdentLeadingInfixOperator
+
+      def isIdentLeadingInfixOperator: Boolean =
+        dialect.allowInfixOperatorAfterNL && isSymbolicInfixOperator && (nextSafe match {
+          case nt: Whitespace =>
+            getStrictAfterSafe(nt) match {
+              case _: Ident | _: Interpolation.Id | _: LeftParen | _: LeftBrace | _: Literal => true
+              case _ => false
+            }
+          case _ => false
+        })
 
     }
   }
