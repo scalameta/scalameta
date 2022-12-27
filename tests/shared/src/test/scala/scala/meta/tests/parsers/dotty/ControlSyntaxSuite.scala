@@ -1980,6 +1980,143 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("match-chained-complex-operator 5") {
+    runTestAssert[Stat](
+      """|val hello = 1 foo xs match
+         |case Nil => 0
+         |case x :: xs1 => 1
+         |`foo` 1 match
+         |  case 1 => true
+         |  case 2 => false
+         |
+         |""".stripMargin,
+      Some(
+        """|val hello = 1 foo xs match {
+           |  case Nil =>
+           |    0
+           |  case x :: xs1 =>
+           |    1 foo 1 match {
+           |      case 1 => true
+           |      case 2 => false
+           |    }
+           |}""".stripMargin
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("hello"))),
+        None,
+        Term.Match(
+          Term.ApplyInfix(int(1), tname("foo"), Nil, List(tname("xs"))),
+          List(
+            Case(tname("Nil"), None, int(0)),
+            Case(
+              Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
+              None,
+              Term.Match(
+                Term.ApplyInfix(int(1), tname("foo"), Nil, List(int(1))),
+                List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
+                Nil
+              )
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("match-non-chained-complex-operator 6") {
+    runTestAssert[Stat](
+      """|{
+         |  val hello = 1 foo xs match
+         |  case Nil => 0
+         |  case x :: xs1 => 1
+         |  end match
+         |  `foo` match
+         |  case 1 => true
+         |  case 2 => false
+         |}
+         |""".stripMargin,
+      Some(
+        """|{
+           |  val hello = 1 foo xs match {
+           |    case Nil => 0
+           |    case x :: xs1 => 1
+           |  }
+           |  end match
+           |  foo match {
+           |    case 1 => true
+           |    case 2 => false
+           |  }
+           |}""".stripMargin
+      )
+    )(
+      Term.Block(
+        List(
+          Defn.Val(
+            Nil,
+            List(Pat.Var(tname("hello"))),
+            None,
+            Term.Match(
+              Term.ApplyInfix(int(1), tname("foo"), Nil, List(tname("xs"))),
+              List(
+                Case(tname("Nil"), None, int(0)),
+                Case(
+                  Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
+                  None,
+                  int(1)
+                )
+              ),
+              Nil
+            )
+          ),
+          Term.EndMarker(tname("match")),
+          Term.Match(
+            tname("foo"),
+            List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
+            Nil
+          )
+        )
+      )
+    )
+  }
+
+  test("match-nested") {
+    runTestAssert[Stat](
+      """|foo match
+         |  case a =>
+         |    bar match
+         |      case aa =>
+         |  case b =>
+         |    baz
+         |""".stripMargin,
+      Some(
+        """|foo match {
+           |  case a =>
+           |    bar match {
+           |      case aa =>
+           |    }
+           |  case b =>
+           |    baz
+           |}""".stripMargin
+      )
+    )(
+      Term.Match(
+        tname("foo"),
+        List(
+          Case(
+            Pat.Var(tname("a")),
+            None,
+            Term.Match(tname("bar"), List(Case(Pat.Var(tname("aa")), None, Term.Block(Nil))), Nil)
+          ),
+          Case(Pat.Var(tname("b")), None, tname("baz"))
+        ),
+        Nil
+      )
+    )
+  }
+
   test("match-dot") {
     val expected = Term.If(
       Term.Match(
