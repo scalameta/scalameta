@@ -344,16 +344,18 @@ private[parsers] class LazyTokenIterator private (
       var lastNewlinePos = -1
       var newlineStreak = false
       var newlines = false
-      var hasMultilineComment = false
+      var hasLF = false
       while (i < nextPos) {
         val token = scannerTokens(i)
-        if (token.is[LF] || token.is[FF]) {
+        if (token.is[EOL]) {
           lastNewlinePos = i
+          hasLF = true
           if (newlineStreak) newlines = true
           newlineStreak = true
+        } else if (!token.is[Whitespace]) {
+          newlineStreak = false
+          hasLF |= token.is[MultilineComment]
         }
-        hasMultilineComment |= token.is[MultilineComment]
-        newlineStreak &= token.is[Whitespace]
         i += 1
       }
 
@@ -367,7 +369,7 @@ private[parsers] class LazyTokenIterator private (
       def canProduceLF: Boolean = {
         lastNewlinePos != -1 &&
         prev != null && (prev.is[CanEndStat] || token.is[Indentation.Outdent]) &&
-        next != null && next.isNot[CantStartStat] && sepRegions.headOption.forall {
+        next.isNot[CantStartStat] && sepRegions.headOption.forall {
           case _: RegionBrace | _: RegionCase | _: RegionEnum => true
           case _: RegionIndent | _: RegionIndentEnum => true
           case x: RegionParen => x.canProduceLF
@@ -379,10 +381,10 @@ private[parsers] class LazyTokenIterator private (
         if (canProduceLF) Some((sepRegions, lastWhitespaceToken))
         else None
 
-      val resOpt = if (dialect.allowSignificantIndentation) {
-        val hasLF = lastNewlinePos != -1 || hasMultilineComment
-        if (hasLF && next != null) {
-
+      val resOpt =
+        if (next == null || !hasLF) None
+        else if (!dialect.allowSignificantIndentation) getIfCanProduceLF
+        else {
           val nextIndent = countIndent(nextPos)
 
           /**
@@ -457,10 +459,7 @@ private[parsers] class LazyTokenIterator private (
           getOutdentIfNeeded()
             .orElse { getIndentIfNeeded }
             .orElse { getIfCanProduceLF }
-        } else None
-      } else {
-        getIfCanProduceLF
-      }
+        }
       resOpt match {
         case Some(res) => res
         case _ => nextToken(prevPos, nextPos, sepRegions)
