@@ -69,7 +69,7 @@ class SoftKeywords(dialect: Dialect) {
   @classifier
   trait KwEnd {
     val name = "end"
-    @inline def isEnabled = dialect.allowSignificantIndentation
+    @inline def isEnabled = dialect.allowEndMarker
     @inline final def unapply(token: Token): Boolean = isEnabled && name == token.toString
     @inline final def unapply(token: String): Boolean = isEnabled && name == token
   }

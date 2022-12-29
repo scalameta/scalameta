@@ -159,27 +159,18 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
     }
 
     @classifier
-    trait EndMarkerWord {
-      def unapply(token: Token): Boolean = token match {
-        case _: Ident | _: KwIf | _: KwWhile | _: KwFor | _: KwMatch | _: KwTry | _: KwNew |
-            _: KwThis | _: KwGiven | _: KwVal =>
-          true
-        case _ => false
-      }
-    }
-
-    @classifier
     trait EndMarkerIntro {
-      def unapply(token: Token): Boolean = token match {
-        case Ident("end") if dialect.allowEndMarker =>
-          val nt = token.strictNext
-          nt.is[EndMarkerWord] && {
-            val nt2 = nt.strictNext
-            nt2.is[EOF] || nt2.is[AtEOL]
+      def unapply(token: Token): Boolean = token.is[soft.KwEnd] && (token.strictNext match {
+        case nt @ (_: Ident | _: KwIf | _: KwWhile | _: KwFor | _: KwMatch | _: KwTry | _: KwNew |
+            _: KwThis | _: KwGiven | _: KwVal) =>
+          nt.strictNext match {
+            case _: EOF | _: AtEOL => true
+            case _ => false
           }
         case _ => false
-      }
+      })
     }
+
     // then  else  do  catch  finally  yield  match
     @classifier
     trait CanContinueOnNextLine {
