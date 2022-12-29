@@ -1919,32 +1919,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (lhs.is[Term.Repeated])
         syntaxError("repeated argument not allowed here", at = lhs.tokens.last.prev)
 
-      def infixExpression() = {
-        val args = copyPos(rhs)((rhs match {
-          case _: Lit.Unit => Nil
-          case t: Term.Tuple => t.args
-          case _ => rhs :: Nil
-        }).reduceWith(Term.ArgClause(_)))
-        atPos(lhsExt, rhsEnd)(Term.ApplyInfix(lhs, op, targs, args))
-      }
-
-      op match {
-        case _: Quasi =>
-          infixExpression()
-        case Term.Name("match") =>
-          if (targs.nonEmpty) {
-            syntaxError("no type parameters can be added for match", at = lhs.tokens.last.prev)
-          }
-
-          rhs match {
-            case Term.PartialFunction(cases) =>
-              atPos(lhsExt, rhsEnd)(Term.Match(lhs, cases))
-            case _ =>
-              syntaxError("match statement requires cases", at = lhs.tokens.last.prev)
-          }
-        case _ =>
-          infixExpression()
-      }
+      val args = copyPos(rhs)((rhs match {
+        case _: Lit.Unit => Nil
+        case t: Term.Tuple => t.args
+        case _ => rhs :: Nil
+      }).reduceWith(Term.ArgClause(_)))
+      atPos(lhsExt, rhsEnd)(Term.ApplyInfix(lhs, op, targs, args))
     }
   }
 
@@ -2063,7 +2043,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Some(getPostfixOrNextRhs(op))
         case _: KwMatch if dialect.allowMatchAsOperator =>
           val op = atCurPosNext(Term.Name("match"))
-          Some(getPostfixOrNextRhs(op))
+          val lhs = getPrevLhs(op)
+          Some(Right(matchClause(lhs, lhs.startTokenPos)))
         case _ => None
       }
       resOpt match {
