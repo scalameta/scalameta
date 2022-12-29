@@ -81,12 +81,13 @@ trait BaseDottySuite extends ParseSuite {
     val expectedStructure = expected.structure
     val obtained: T = parser(code, dialect)
     MoreHelpers.requireNonEmptyOrigin(obtained)
-    assertNoDiff(obtained.structure, expectedStructure, "Generated stat")
 
     // check bijection
     val reprintedCode =
       scala.meta.internal.prettyprinters.TreeSyntax.reprint[T](obtained)(dialect).toString
     assertLayout.foreach(assertNoDiff(reprintedCode, _, s"Reprinted syntax:\n $expectedStructure"))
+
+    assertNoDiff(obtained.structure, expectedStructure, "Generated stat")
     val obtainedAgain: T = parser(reprintedCode, dialect)
     assertNoDiff(obtainedAgain.structure, expectedStructure, s"Reprinted stat: \n${reprintedCode}")
   }

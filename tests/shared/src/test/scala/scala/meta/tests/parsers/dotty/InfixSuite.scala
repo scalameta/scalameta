@@ -447,4 +447,80 @@ class InfixSuite extends BaseDottySuite {
     )
   }
 
+  test("scala3 infix syntax 6") {
+    runTestAssert[Stat](
+      """|{
+         |  def toBeContinued(altToken: Token): Boolean =
+         |    inline def canContinue =
+         |      !in.canStartStatTokens.contains(in.token)  // not statement, so take as continued expr
+         |    || followedByToken(altToken)                 // scan ahead to see whether we find a `then` or `do`
+         |
+         |    !in.isNewLine       // a newline token means the expression is finished
+         |    && !migrateTo3      // old syntax
+         |    && canContinue
+         |  end toBeContinued
+         |}
+         |""".stripMargin,
+      Some(
+        """|{
+           |  def toBeContinued(altToken: Token): Boolean = {
+           |    inline def canContinue = !in.canStartStatTokens.contains(in.token) || followedByToken(altToken)
+           |    !in.isNewLine && !migrateTo3 && canContinue
+           |  }
+           |  end toBeContinued
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Block(
+        List(
+          Defn.Def(
+            Nil,
+            tname("toBeContinued"),
+            Nil,
+            List(List(tparam("altToken", "Token"))),
+            Some(pname("Boolean")),
+            Term.Block(
+              List(
+                Defn.Def(
+                  List(Mod.Inline()),
+                  tname("canContinue"),
+                  None,
+                  None,
+                  Term.ApplyInfix(
+                    Term.ApplyUnary(
+                      tname("!"),
+                      Term.Apply(
+                        Term.Select(
+                          Term.Select(tname("in"), tname("canStartStatTokens")),
+                          tname("contains")
+                        ),
+                        List(Term.Select(tname("in"), tname("token")))
+                      )
+                    ),
+                    tname("||"),
+                    Nil,
+                    List(Term.Apply(tname("followedByToken"), List(tname("altToken"))))
+                  )
+                ),
+                Term.ApplyInfix(
+                  Term.ApplyInfix(
+                    Term.ApplyUnary(tname("!"), Term.Select(tname("in"), tname("isNewLine"))),
+                    tname("&&"),
+                    Nil,
+                    List(Term.ApplyUnary(tname("!"), tname("migrateTo3")))
+                  ),
+                  tname("&&"),
+                  Nil,
+                  List(tname("canContinue"))
+                )
+              )
+            )
+          ),
+          Term.EndMarker(tname("toBeContinued"))
+        )
+      )
+    )
+  }
+
 }
