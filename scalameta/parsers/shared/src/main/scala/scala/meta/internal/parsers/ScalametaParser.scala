@@ -3418,13 +3418,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def endMarker(): Stat = autoPos {
     assert(token.text == "end")
     next()
-    if (token.is[Ident]) {
-      Term.EndMarker(termName())
-    } else {
-      val r = Term.EndMarker(atPos(token)(Term.Name(token.text)))
-      next()
-      r
-    }
+    Term.EndMarker(atCurPosNext(Term.Name(token match {
+      case t: Ident => t.value
+      case t => t.text
+    })))
   }
 
   def patDefOrDcl(mods: List[Mod]): Stat = autoEndPos(mods) {
