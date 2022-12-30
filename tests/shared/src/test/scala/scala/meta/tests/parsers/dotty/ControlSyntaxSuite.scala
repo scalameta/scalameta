@@ -2134,6 +2134,74 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("if-then-else with parens in cond and leading infix") {
+    runTestAssert[Stat](
+      """|def foo =
+         |  if (bar eq baz)
+         |                && (qux != xyz)
+         |  then
+         |          found
+         |  else
+         |          notfound
+         |""".stripMargin,
+      Some(
+        """|def foo = if ((bar eq baz) && qux != xyz) found else notfound
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        tname("foo"),
+        None,
+        None,
+        Term.If(
+          Term.ApplyInfix(
+            Term.ApplyInfix(tname("bar"), tname("eq"), Nil, List(tname("baz"))),
+            tname("&&"),
+            Nil,
+            Term.ApplyInfix(tname("qux"), tname("!="), Nil, List(tname("xyz"))) :: Nil
+          ),
+          tname("found"),
+          tname("notfound"),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("if-then-else with parens in cond and non-leading infix") {
+    runTestAssert[Stat](
+      """|def foo =
+         |  if (bar eq baz)
+         |                .qux
+         |  then
+         |          found
+         |  else
+         |          notfound
+         |""".stripMargin,
+      Some(
+        """|def foo = if ((bar eq baz).qux) found else notfound
+           |""".stripMargin
+      )
+    )(
+      Defn.Def(
+        Nil,
+        tname("foo"),
+        None,
+        None,
+        Term.If(
+          Term.Select(
+            Term.ApplyInfix(tname("bar"), tname("eq"), Nil, List(tname("baz"))),
+            tname("qux")
+          ),
+          tname("found"),
+          tname("notfound"),
+          Nil
+        )
+      )
+    )
+  }
+
   test("match-dot") {
     val expected = Term.If(
       Term.Match(
