@@ -403,8 +403,7 @@ private[parsers] class LazyTokenIterator private (
               val ok =
                 if (nextIndent < r.indent)
                   r.closeOnNonCase ||
-                  // exclude leading infix op
-                  !(!newlines && newlineStreak && next.isLeadingInfixOperator &&
+                  !(!newlines && next.isLeadingInfixOperator && // exclude leading infix op
                     tail.find(_.isIndented).forall(_.indent <= nextIndent)) &&
                   // need to check prev.prev in case of `end match`
                   (prev.isNot[CanContinueOnNextLine] || prev.prev.is[soft.KwEnd])
