@@ -14,7 +14,7 @@ import scala.meta.tokens.Tokens
 
 import org.scalameta.debug
 
-class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
+class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect) {
 
   // NOTE: This is a cache that's necessary for reasonable performance of prev/next for tokens.
   // It maps character positions in input's content into indices in the scannerTokens vector.
@@ -34,10 +34,6 @@ class ScannerTokens(tokens: Tokens, input: Input)(implicit dialect: Dialect) {
     }
     result
   }
-
-  @inline def apply(idx: Int): Token = tokens(idx)
-  @inline def length: Int = tokens.length
-  @inline def head: Token = tokens.head
 
   import Implicits._
 
