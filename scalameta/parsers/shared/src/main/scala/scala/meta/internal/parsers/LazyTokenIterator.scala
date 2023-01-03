@@ -258,7 +258,7 @@ private[parsers] class LazyTokenIterator private (
         (nextRegions, currRef)
       case _: KwEnum =>
         (RegionEnumArtificialMark :: sepRegions, currRef)
-      case CaseIntro() =>
+      case _ if isCaseIntro(currPos) =>
         val nextRegions = sepRegions.headOption match {
           case Some(_: RegionEnum | _: RegionIndentEnum) => sepRegions
           case Some(_: RegionCase) => RegionArrow :: sepRegions.tail
@@ -358,7 +358,7 @@ private[parsers] class LazyTokenIterator private (
 
       def canProduceLF: Boolean = {
         lastNewlinePos != -1 &&
-        prev != null && (prev.is[CanEndStat] || token.is[Indentation.Outdent]) &&
+        prev != null && (token.is[Indentation.Outdent] || canEndStat(prevPos)) &&
         next.isNot[CantStartStat] && sepRegions.headOption.forall {
           case _: RegionBrace | _: RegionCase | _: RegionEnum => true
           case _: RegionIndent | _: RegionIndentEnum => true
@@ -399,7 +399,7 @@ private[parsers] class LazyTokenIterator private (
                     isLeadingInfixOperator(nextPos) && // exclude leading infix op
                     tail.find(_.isIndented).forall(_.indent <= nextIndent)) &&
                   // need to check prev.prev in case of `end match`
-                  (prev.isNot[CanContinueOnNextLine] || prev.prev.is[soft.KwEnd])
+                  (prev.isNot[CanContinueOnNextLine] || getPrevToken(prevPos).is[soft.KwEnd])
                 else r.closeOnNonCase && next.isNot[KwCase] && nextIndent == r.indent
               if (ok) Some((tail, mkOutdentTo(r, nextPos))) else None
             case _ => None
@@ -427,16 +427,16 @@ private[parsers] class LazyTokenIterator private (
 
               // !next.is[RightBrace] - braces can sometimes have -1 and we can start indent on }
               if (nextIndent > currIndent && prev.is[RightArrow]) {
-                indentOnArrow && next.isNot[RightBrace] && next.isNot[EndMarkerIntro]
+                indentOnArrow && next.isNot[RightBrace] && !isEndMarkerIntro(nextPos)
               } else if (nextIndent > currIndent) {
                 // if does not work with indentation in pattern matches
                 val shouldNotIndentIf =
                   prev.is[KwIf] && sepRegions.headOption.contains(RegionArrow)
-                !shouldNotIndentIf && prev.is[CanStartIndent] && !next.is[RightBrace]
+                !shouldNotIndentIf && !next.is[RightBrace] && canStartIndent(prevPos)
               } else
                 // always add indent for indented `match` block
                 // check the previous token to avoid infinity loop
-                ((prev.is[KwMatch] || prev.is[KwCatch]) && !prev.prev.is[soft.KwEnd]) &&
+                ((prev.is[KwMatch] || prev.is[KwCatch]) && !getPrevToken(prevPos).is[soft.KwEnd]) &&
                 next.is[KwCase] && token.isNot[Indentation.Indent]
             }
             if (ok) Some {
