@@ -10,20 +10,20 @@ import scala.meta.tokens.Tokens
 object LazyTokenIterator {
 
   def apply(st: ScannerTokens)(implicit dialect: Dialect): LazyTokenIterator =
-    new LazyTokenIterator(st, Nil, TokenRef(st.tokens(0), 0, 1, 0), -1)
+    new LazyTokenIterator(st, Nil, TokenRef(st.tokens(0), 0), -1)
 
-  private case class TokenRef(
-      token: Token,
-      pos: Int,
-      nextPos: Int,
-      pointPos: Int
+  private class TokenRef private (
+      val token: Token,
+      val pos: Int,
+      val nextPos: Int,
+      val pointPos: Int
   )
 
-  private def mkIndentToken(token: Token): Token =
-    new Indentation.Indent(token.input, token.dialect, token.start, token.end)
-
-  private def mkOutdentToken(token: Token): Token =
-    new Indentation.Outdent(token.input, token.dialect, token.start, token.end)
+  private object TokenRef {
+    def apply(token: Token, pos: Int) = new TokenRef(token, pos, pos + 1, pos)
+    def apply(token: Token, pos: Int, nextPos: Int, pointPos: Int) =
+      new TokenRef(token, pos, nextPos, pointPos)
+  }
 
   private def multilineCommentIndent(t: Comment): Int = {
     @tailrec
@@ -67,7 +67,7 @@ private[parsers] class LazyTokenIterator private (
       val (expected, pointPos) = countIndentAndNewlineIndex(tokenPos)
       if (expected > existingIndent) {
         sepRegions = f(expected, sepRegions)
-        val indent = mkIndentToken(token)
+        val indent = mkIndentToken(pointPos)
         curr = TokenRef(indent, curr.pos, curr.pos, pointPos)
         true
       } else false
@@ -148,12 +148,22 @@ private[parsers] class LazyTokenIterator private (
             case _ => false
           }) =>
         sepRegions = tail
-        val outdent = mkOutdentToken(curr.token)
         val outdentPos = findOutdentPos(prevPos, curr.pos, region)
+        val outdent = mkOutdentToken(outdentPos)
         curr = TokenRef(outdent, curr.pos, curr.pos, outdentPos)
         true
       case _ => false
     })
+
+  private def mkIndentToken(pointPos: Int): Token = {
+    val token = tokens(pointPos)
+    new Indentation.Indent(token.input, token.dialect, token.start, token.start)
+  }
+
+  private def mkOutdentToken(pointPos: Int): Token = {
+    val token = tokens(pointPos)
+    new Indentation.Outdent(token.input, token.dialect, token.start, token.start)
+  }
 
   private def findOutdentPos(prevPos: Int, currPos: Int, region: SepRegion): Int = {
     val outdent = region.indent
@@ -164,7 +174,7 @@ private[parsers] class LazyTokenIterator private (
       } else {
         tokens(i) match {
           case _: EOL =>
-            iter(i + 1, if (pos == prevPos) i else pos, 0)
+            iter(i + 1, i, 0)
           case _: HSpace if indent >= 0 =>
             iter(i + 1, pos, indent + 1)
           case _: Whitespace =>
@@ -209,17 +219,17 @@ private[parsers] class LazyTokenIterator private (
         next.pos.startLine > curr.pos.endLine
 
     def mkIndent(pointPos: Int): TokenRef =
-      TokenRef(mkIndentToken(curr), prevPos, currPos, pointPos)
+      TokenRef(mkIndentToken(pointPos), prevPos, currPos, pointPos)
 
     def mkOutdent(region: SepRegion): TokenRef =
       mkOutdentTo(region, currPos)
 
     def mkOutdentTo(region: SepRegion, maxPointPos: Int): TokenRef = {
       val pointPos = findOutdentPos(prevPos, maxPointPos, region)
-      TokenRef(mkOutdentToken(curr), prevPos, currPos, pointPos)
+      TokenRef(mkOutdentToken(pointPos), prevPos, currPos, pointPos)
     }
 
-    def currRef: TokenRef = TokenRef(curr, currPos, currPos + 1, currPos)
+    def currRef: TokenRef = TokenRef(curr, currPos)
 
     def nonTrivial = curr match {
       case _: LeftParen => (RegionParen(false) :: sepRegions, currRef)
@@ -343,7 +353,7 @@ private[parsers] class LazyTokenIterator private (
         val token = tokens(lastNewlinePos)
         val out =
           if (newlines) LFLF(token.input, token.dialect, token.start, token.end) else token
-        TokenRef(out, lastNewlinePos, lastNewlinePos + 1, lastNewlinePos)
+        TokenRef(out, lastNewlinePos)
       }
 
       def canProduceLF: Boolean = {
@@ -365,7 +375,7 @@ private[parsers] class LazyTokenIterator private (
         if (next == null || !hasLF) None
         else if (!dialect.allowSignificantIndentation) getIfCanProduceLF
         else {
-          val nextIndent = countIndent(nextPos)
+          val (nextIndent, indentPos) = countIndentAndNewlineIndex(nextPos)
 
           /**
            * Outdent is needed in following cases:
@@ -430,7 +440,7 @@ private[parsers] class LazyTokenIterator private (
             }
             if (ok) Some {
               val region = RegionIndent(nextIndent, prev.is[KwMatch])
-              (region :: sepRegions, mkIndent(lastNewlinePos))
+              (region :: sepRegions, mkIndent(indentPos))
             }
             else None
           }
