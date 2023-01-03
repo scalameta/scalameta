@@ -36,22 +36,32 @@ class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect)
   }
 
   @tailrec
-  private final def getPrev(token: Token): Token = {
-    val prev = token.prevSafe
-    if (prev.is[Trivia]) getPrev(prev) else prev
+  final def getPrevIndex(index: Int): Int = {
+    val prev = getPrevSafeIndex(index)
+    if (tokens(prev).is[Trivia]) getPrevIndex(prev) else prev
   }
 
-  @tailrec
-  private final def getNext(token: Token): Token = {
-    val next = token.nextSafe
-    if (next.is[Trivia]) getNext(next) else next
-  }
+  def getPrevToken(index: Int): Token = tokens(getPrevIndex(index))
 
   @tailrec
-  private final def getStrictAfterSafe(token: Token): Token = {
-    if (token.is[HSpace] || token.is[Comment]) getStrictAfterSafe(token.nextSafe)
-    else token
+  final def getNextIndex(index: Int): Int = {
+    val next = getNextSafeIndex(index)
+    if (tokens(next).is[Trivia]) getNextIndex(next) else next
   }
+
+  def getNextToken(index: Int): Token = tokens(getNextIndex(index))
+
+  @tailrec
+  final def getStrictAfterSafe(index: Int): Int = {
+    val token = tokens(index)
+    if (token.is[HSpace] || token.is[Comment]) getStrictAfterSafe(getNextSafeIndex(index))
+    else index
+  }
+
+  def getStrictNext(index: Int): Int = getStrictAfterSafe(getNextSafeIndex(index))
+
+  @inline def getPrevSafeIndex(index: Int): Int = Math.max(index - 1, 0)
+  @inline def getNextSafeIndex(index: Int): Int = Math.min(index + 1, tokens.length - 1)
 
   // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
@@ -85,26 +95,21 @@ class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect)
     }
 
     @inline
-    def prev: Token = getPrev(token)
+    def prev: Token = getPrevToken(index)
 
     @inline
-    def prevSafe: Token = tokens(Math.max(index - 1, 0))
+    def next: Token = getNextToken(index)
 
     @inline
-    def next: Token = getNext(token)
+    def nextSafe: Token = tokens(getNextSafeIndex(index))
 
     @inline
-    def nextSafe: Token = tokens(Math.min(index + 1, tokens.length - 1))
-
-    @inline
-    def strictNext: Token = getStrictAfterSafe(nextSafe)
+    def strictNext: Token = tokens(getStrictNext(index))
 
     def isBackquoted: Boolean = {
       val text = token.text
       text.startsWith("`") && text.endsWith("`")
     }
-
-    def isSymbolicInfixOperator: Boolean = token.is[Ident] && isIdentSymbolicInfixOperator
 
     def isIdentSymbolicInfixOperator: Boolean = isBackquoted || {
       val text = token.text
@@ -119,20 +124,18 @@ class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect)
       val len = text.length
       len == 0 || (text(0) != '@' && iter(len - 1, false))
     }
+  }
 
-    def isLeadingInfixOperator: Boolean =
-      token.is[Ident] && isIdentLeadingInfixOperator
-
-    def isIdentLeadingInfixOperator: Boolean =
-      dialect.allowInfixOperatorAfterNL && isSymbolicInfixOperator && (nextSafe match {
-        case nt: Whitespace =>
-          getStrictAfterSafe(nt) match {
-            case _: Ident | _: Interpolation.Id | _: LeftParen | _: LeftBrace | _: Literal => true
-            case _ => false
-          }
+  def isLeadingInfixOperator(index: Int): Boolean = dialect.allowInfixOperatorAfterNL && {
+    val token = tokens(index)
+    token.is[Ident] && token.isIdentSymbolicInfixOperator && {
+      val nextSafeIndex = getNextSafeIndex(index)
+      tokens(nextSafeIndex).is[Whitespace] &&
+      (tokens(getStrictAfterSafe(nextSafeIndex)) match {
+        case _: Ident | _: Interpolation.Id | _: LeftParen | _: LeftBrace | _: Literal => true
         case _ => false
       })
-
+    }
   }
 
   val soft = new SoftKeywords(dialect)

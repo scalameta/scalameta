@@ -354,7 +354,7 @@ private[parsers] class LazyTokenIterator private (
           case _: RegionIndent | _: RegionIndentEnum => true
           case x: RegionParen => x.canProduceLF
           case _ => false
-        } && !next.isLeadingInfixOperator
+        } && !isLeadingInfixOperator(nextPos)
       }
 
       def getIfCanProduceLF =
@@ -385,7 +385,7 @@ private[parsers] class LazyTokenIterator private (
               val ok =
                 if (nextIndent < r.indent)
                   r.closeOnNonCase ||
-                  !(!newlines && next.isLeadingInfixOperator && // exclude leading infix op
+                  !(!newlines && isLeadingInfixOperator(nextPos) && // exclude leading infix op
                     tail.find(_.isIndented).forall(_.indent <= nextIndent)) &&
                   // need to check prev.prev in case of `end match`
                   (prev.isNot[CanContinueOnNextLine] || prev.prev.is[soft.KwEnd])
