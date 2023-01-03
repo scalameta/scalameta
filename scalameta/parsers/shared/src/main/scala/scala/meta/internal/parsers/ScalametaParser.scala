@@ -314,15 +314,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def endTokenPos = if (in.token.is[Indentation.Outdent]) in.tokenPos else in.prevTokenPos
   }
   implicit def intToIndexPos(index: Int): Pos = new IndexPos(index)
-  implicit def tokenToTokenPos(token: Token): Pos = new IndexPos(token.index)
   implicit def treeToTreePos(tree: Tree): Pos = new TreePos(tree)
   implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.fold[Pos](AutoPos)(treeToTreePos)
   implicit def modsToPos(mods: List[Mod]): Pos = mods.headOption
   def auto = AutoPos
 
-  def atPos[T <: Tree](token: Token)(body: => T): T = {
-    atPos(token.index)(body)
-  }
   def atPos[T <: Tree](start: StartPos, end: EndPos)(body: => T): T = {
     atPos(start.startTokenPos, end)(body)
   }
@@ -573,7 +569,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
     // NOTE: I considered having Input.Slice produce absolute positions from the get-go,
     // but then such positions wouldn't be usable with Input.Slice.chars.
-    val unquotedTree = atPos(unquote) {
+    val unquotedTree = atCurPosNext {
       try {
         val unquoteInput = Input.Slice(input, unquote.start + 1, unquote.end)
         val unquoteParser = new ScalametaParser(unquoteInput)(dialect.unquoteVariant())
@@ -584,7 +580,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case ex: Exception => throw ex.absolutize
       }
     }
-    next()
     copyPos(unquotedTree)(quasi[T](0, unquotedTree))
   }
 
