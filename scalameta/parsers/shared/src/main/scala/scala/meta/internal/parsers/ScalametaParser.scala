@@ -32,6 +32,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   import ScalametaParser._
 
   private val scannerTokens: ScannerTokens = ScannerTokens(input)
+  import scannerTokens._
   import scannerTokens.Implicits._
   import scannerTokens.Classifiers._
 
@@ -351,7 +352,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val endTokenPos = if (endPos < startTokenPos) startTokenPos - 1 else endPos
 
     def skipBy(range: Range, f: Token => Boolean): Int =
-      range.dropWhile(i => f(scannerTokens(i))).headOption.getOrElse(range.start)
+      range.dropWhile(i => f(tokens(i))).headOption.getOrElse(range.start)
     @inline def skipTrivia(range: Range): Int = skipBy(range, _.is[Trivia])
     @inline def skipWhitespace(range: Range): Int = skipBy(range, _.is[Whitespace])
 
@@ -360,7 +361,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (rangeFromStart.isEmpty) (startTokenPos, endTokenPos)
       else (skipTrivia(rangeFromStart), skipWhitespace(rangeFromStart.reverse))
 
-    val endExcl = if (start == end && scannerTokens(start).is[Trivia]) end else end + 1
+    val endExcl = if (start == end && tokens(start).is[Trivia]) end else end + 1
     val pos = TokenStreamPosition(start, endExcl)
     body.withOrigin(Origin.Parsed(input, dialect, pos))
   }
@@ -1727,8 +1728,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case NameLike() => location != TemplateStat // 2-3
           case ParamLike() => // 4-5
             location == BlockStat ||
-            scannerTokens(startPos).is[LeftParen] &&
-            scannerTokens(prevTokenPos).is[RightParen]
+            tokens(startPos).is[LeftParen] &&
+            tokens(prevTokenPos).is[RightParen]
           case Term.Tuple(xs) => xs.forall(ParamLike.unapply) // 6
           case _ => false
         }
@@ -4207,7 +4208,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def failMix(advice: Option[String]) = {
       val message = "these statements can't be mixed together"
       val addendum = advice.fold("")(", " + _)
-      syntaxError(message + addendum, at = scannerTokens.head)
+      syntaxError(message + addendum, at = tokens.head)
     }
     statSeq(consumeStat) match {
       case Nil => failEmpty()

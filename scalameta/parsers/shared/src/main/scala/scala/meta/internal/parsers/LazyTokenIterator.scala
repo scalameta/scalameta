@@ -9,13 +9,8 @@ import scala.meta.tokens.Tokens
 
 object LazyTokenIterator {
 
-  def apply(scannerTokens: ScannerTokens)(implicit dialect: Dialect): LazyTokenIterator =
-    new LazyTokenIterator(
-      scannerTokens,
-      Nil,
-      TokenRef(scannerTokens(0), 0, 1, 0),
-      -1
-    )
+  def apply(st: ScannerTokens)(implicit dialect: Dialect): LazyTokenIterator =
+    new LazyTokenIterator(st, Nil, TokenRef(st.tokens(0), 0, 1, 0), -1)
 
   private case class TokenRef(
       token: Token,
@@ -56,6 +51,7 @@ private[parsers] class LazyTokenIterator private (
     extends TokenIterator {
 
   import LazyTokenIterator._
+  import scannerTokens._
   import scannerTokens.Classifiers._
   import scannerTokens.Implicits._
 
@@ -172,7 +168,7 @@ private[parsers] class LazyTokenIterator private (
       if (i >= currPos) {
         if (pos < currPos) pos else currPos - 1
       } else {
-        scannerTokens(i) match {
+        tokens(i) match {
           case _: EOL =>
             iter(i + 1, if (pos == prevPos) i else pos, 0)
           case _: HSpace if indent >= 0 =>
@@ -188,7 +184,7 @@ private[parsers] class LazyTokenIterator private (
 
     val iterPos = 1 + prevPos
     if (iterPos < currPos) iter(iterPos, prevPos, -1)
-    else if (scannerTokens(currPos).is[EOF]) currPos
+    else if (tokens(currPos).is[EOF]) currPos
     else prevPos
   }
 
@@ -198,14 +194,14 @@ private[parsers] class LazyTokenIterator private (
       currPos: Int,
       sepRegions: List[SepRegion]
   ): (List[SepRegion], TokenRef) = {
-    val prev = if (prevPos >= 0) scannerTokens(prevPos) else null
-    val curr = scannerTokens(currPos)
+    val prev = if (prevPos >= 0) tokens(prevPos) else null
+    val curr = tokens(currPos)
     val (nextPos, next) = {
       @tailrec
       def iter(i: Int): (Int, Token) =
-        if (i == scannerTokens.length) (-1, null)
+        if (i == tokens.length) (-1, null)
         else
-          scannerTokens(i) match {
+          tokens(i) match {
             case _: Trivia => iter(i + 1)
             case t => (i, t)
           }
@@ -346,7 +342,7 @@ private[parsers] class LazyTokenIterator private (
       var newlines = false
       var hasLF = false
       while (i < nextPos) {
-        val token = scannerTokens(i)
+        val token = tokens(i)
         if (token.is[EOL]) {
           lastNewlinePos = i
           hasLF = true
@@ -360,7 +356,7 @@ private[parsers] class LazyTokenIterator private (
       }
 
       def lastWhitespaceToken = {
-        val token = scannerTokens(lastNewlinePos)
+        val token = tokens(lastNewlinePos)
         val out =
           if (newlines) LFLF(token.input, token.dialect, token.start, token.end) else token
         TokenRef(out, lastNewlinePos, lastNewlinePos + 1, lastNewlinePos)
@@ -489,7 +485,7 @@ private[parsers] class LazyTokenIterator private (
     def countIndentInternal(pos: Int, acc: Int = 0): (Int, Int) = {
       if (pos < 0) (acc, pos)
       else {
-        val token = scannerTokens(pos)
+        val token = tokens(pos)
         token match {
           case _: EOL | _: BOF => (acc, pos)
           case AsMultilineComment(c) => (multilineCommentIndent(c), pos)
@@ -500,7 +496,7 @@ private[parsers] class LazyTokenIterator private (
       }
     }
 
-    if (scannerTokens(tokenPosition).is[Whitespace]) (-1, -1)
+    if (tokens(tokenPosition).is[Whitespace]) (-1, -1)
     else countIndentInternal(tokenPosition - 1)
   }
 
@@ -510,9 +506,10 @@ private[parsers] class LazyTokenIterator private (
   @tailrec
   private def isAheadNewLine(currentPosition: Int): Boolean = {
     val nextPos = currentPosition + 1
-    if (nextPos >= scannerTokens.length) false
-    else if (scannerTokens(nextPos).is[LF]) true
-    else scannerTokens(nextPos).is[Trivia] && isAheadNewLine(nextPos)
+    nextPos < tokens.length && {
+      val nextToken = tokens(nextPos)
+      nextToken.is[LF] || nextToken.is[Trivia] && isAheadNewLine(nextPos)
+    }
   }
 
 }
