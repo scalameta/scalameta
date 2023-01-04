@@ -52,8 +52,6 @@ private[parsers] class LazyTokenIterator private (
 
   import LazyTokenIterator._
   import scannerTokens._
-  import scannerTokens.Classifiers._
-  import scannerTokens.Implicits._
 
   override def next(): Unit = {
     val (newSepRegions, newTokenRef) = nextToken(curr.pos, curr.nextPos, sepRegions)

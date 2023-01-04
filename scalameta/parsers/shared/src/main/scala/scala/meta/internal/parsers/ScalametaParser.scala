@@ -33,8 +33,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   private val scannerTokens: ScannerTokens = ScannerTokens(input)
   import scannerTokens._
-  import scannerTokens.Implicits._
-  import scannerTokens.Classifiers._
 
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
