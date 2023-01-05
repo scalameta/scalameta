@@ -426,31 +426,45 @@ class MinorDottySuite extends BaseDottySuite {
 
   test("changed-operator-syntax") {
     // https://dotty.epfl.ch/docs/reference/changed-features/operators.html#syntax-change
-    runTestAssert[Source]("""|object X {
-                             |  println("hello")
-                             |  ???
-                             |  ??? match {
-                             |    case 0 => 1
-                             |  }
-                             |}
-                             |""".stripMargin)(
+    runTestAssert[Source](
+      """|object X {
+         |  println("hello")
+         |  ???
+         |  ??? match {
+         |    case 0 => 1
+         |  }
+         |}
+         |""".stripMargin,
+      Some(
+        """|object X {
+           |  println("hello") ??? ??? match {
+           |    case 0 => 1
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
       Source(
-        List(
-          Defn.Object(
+        Defn.Object(
+          Nil,
+          tname("X"),
+          Template(
             Nil,
-            Term.Name("X"),
-            Template(
-              Nil,
-              Nil,
-              Self(Name(""), None),
-              List(
-                Term.Apply(Term.Name("println"), List(Lit.String("hello"))),
-                Term.Name("???"),
-                Term.Match(Term.Name("???"), List(Case(Lit.Int(0), None, Lit.Int(1))))
-              )
-            )
+            Nil,
+            Self(Name(""), None),
+            Term.Match(
+              Term.ApplyInfix(
+                Term.Apply(tname("println"), List(str("hello"))),
+                tname("???"),
+                Nil,
+                List(tname("???"))
+              ),
+              List(Case(int(0), None, int(1))),
+              Nil
+            ) :: Nil,
+            Nil
           )
-        )
+        ) :: Nil
       )
     )
   }
