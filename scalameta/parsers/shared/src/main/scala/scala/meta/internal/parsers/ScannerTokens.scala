@@ -75,7 +75,7 @@ class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect)
 
         def originMatch =
           (token.is[LFLF] || token.is[Indentation.Outdent] || token.is[Indentation.Indent]) &&
-            scannerToken.start == token.start && scannerToken.end == token.end
+            scannerToken.start == token.start
 
         if (exactMatch || originMatch) roughIndex
         else lurk(roughIndex - 1)
