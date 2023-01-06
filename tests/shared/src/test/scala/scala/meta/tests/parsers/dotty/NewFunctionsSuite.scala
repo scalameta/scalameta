@@ -637,6 +637,110 @@ class NewFunctionsSuite extends BaseDottySuite {
     )
   }
 
+  test("dependent-type-arrow-after-nl") {
+    runTestAssert[Stat](
+      """|type T = 
+         |  (e: Entry) 
+         |  => e.Key
+         |""".stripMargin,
+      Some("type T = (e: Entry) => e.Key")
+    )(
+      Defn.Type(
+        Nil,
+        pname("T"),
+        Nil,
+        Type.Function(
+          List(Type.TypedParam(pname("e"), pname("Entry"))),
+          Type.Select(tname("e"), pname("Key"))
+        ),
+        Type.Bounds(None, None)
+      )
+    )
+  }
+
+  test("dependent-type-arrow-after-nl bad indent") {
+    runTestError[Stat](
+      """|type T = 
+         |  (e: Entry) 
+         |=> e.Key
+         |""".stripMargin,
+      """|error: ; expected but => found
+         |=> e.Key
+         |^""".stripMargin
+    )
+  }
+
+  test("context-function-arrow-after-nl") {
+    runTestError[Stat](
+      """|type Executable[T] =
+         |  ExecutionContext
+         |  ?=> T
+         |""".stripMargin,
+      """|error: outdent expected but ?=> found
+         |  ?=> T
+         |  ^""".stripMargin
+    )
+  }
+
+  test("context-function-arrow-after-nl with parens") {
+    runTestError[Stat](
+      """|type Executable[T] =
+         |  (ExecutionContext)
+         |  ?=> T
+         |""".stripMargin,
+      """|error: outdent expected but ?=> found
+         |  ?=> T
+         |  ^""".stripMargin
+    )
+  }
+
+  test("context-function-arrow-after-nl bad indent") {
+    runTestError[Stat](
+      """|type Executable[T] =
+         |  ExecutionContext
+         |?=> T
+         |""".stripMargin,
+      """|error: illegal start of definition ?=>
+         |?=> T
+         |^""".stripMargin
+    )
+  }
+
+  test("lambda-function-arrow-after-nl") {
+    runTestError[Stat](
+      """|type Tuple =
+         |  [X]
+         |  =>> (X, X)
+         |""".stripMargin,
+      """|error: expected =>> or =>
+         |  [X]
+         |     ^""".stripMargin
+    )
+  }
+
+  test("lambda-function-arrow-after-nl no NL after =") {
+    runTestError[Stat](
+      """|type Tuple = [X]
+         |  =>> (X, X)
+         |""".stripMargin,
+      """|error: expected =>> or =>
+         |type Tuple = [X]
+         |                ^""".stripMargin
+    )
+  }
+
+  test("lambda-function-arrow-after-nl bad indent") {
+    runTestError[Stat](
+      """|type Tuple =
+         |  [X]
+         |=>> (X, X)
+         |""".stripMargin,
+      """|error: expected =>> or =>
+         |  [X]
+         |     ^""".stripMargin
+    )
+  }
+
   test("type-lambda-bounds") {
     runTestAssert[Stat](
       "type U <: [X] =>> Any"
