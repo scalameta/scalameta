@@ -658,37 +658,39 @@ class NewFunctionsSuite extends BaseDottySuite {
       Some(expectedSyntax)
     )(expectedTree)
 
-    runTestError[Stat](
+    runTestAssert[Stat](
       """|type T = 
          |  (e: Entry) 
          |=> e.Key
          |""".stripMargin,
-      """|error: ; expected but => found
-         |=> e.Key
-         |^""".stripMargin
-    )
+      Some(expectedSyntax)
+    )(expectedTree)
   }
 
   test("context-function-arrow-after-nl") {
-    runTestError[Stat](
-      """|type Executable[T] =
-         |  ExecutionContext
-         |  ?=> T
-         |""".stripMargin,
-      """|error: outdent expected but ?=> found
-         |  ?=> T
-         |  ^""".stripMargin
+    val expectedSyntax = "type Executable[T] = ExecutionContext ?=> T"
+    val expectedTree = Defn.Type(
+      Nil,
+      pname("Executable"),
+      List(pparam("T")),
+      Type.ContextFunction(List(pname("ExecutionContext")), pname("T"))
     )
 
-    runTestError[Stat](
+    runTestAssert[Stat](
+      """|type Executable[T] =
+         |  ExecutionContext
+         |  ?=> T
+         |""".stripMargin,
+      Some(expectedSyntax)
+    )(expectedTree)
+
+    runTestAssert[Stat](
       """|type Executable[T] =
          |  ExecutionContext
          |?=> T
          |""".stripMargin,
-      """|error: illegal start of definition ?=>
-         |?=> T
-         |^""".stripMargin
-    )
+      Some(expectedSyntax)
+    )(expectedTree)
   }
 
   test("type-lambda-bounds") {

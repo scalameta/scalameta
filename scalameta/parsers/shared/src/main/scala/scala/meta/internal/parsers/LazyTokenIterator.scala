@@ -372,7 +372,10 @@ private[parsers] class LazyTokenIterator private (
         else None
 
       val resOpt =
-        if (next == null || !hasLF) None
+        if (next == null || !hasLF || (next match {
+            case _: RightArrow | _: LeftArrow | _: ContextArrow | _: TypeLambdaArrow => true
+            case _ => false
+          })) None
         else if (!dialect.allowSignificantIndentation) getIfCanProduceLF
         else {
           val (nextIndent, indentPos) = countIndentAndNewlineIndex(nextPos)
