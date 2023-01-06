@@ -12,28 +12,7 @@ import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
 import scala.meta.tokens.Tokens
 
-import org.scalameta.debug
-
-class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect) {
-
-  // NOTE: This is a cache that's necessary for reasonable performance of prev/next for tokens.
-  // It maps character positions in input's content into indices in the scannerTokens vector.
-  // One complication here is that there can be multiple tokens that sort of occupy a given position,
-  // so the clients of this cache need to be wary of that!
-  private val cache: Array[Int] = {
-    val result = new Array[Int](input.chars.length + 1)
-    var i = 0
-    while (i < tokens.length) {
-      val token = tokens(i)
-      var j = token.start
-      do {
-        result(j) = i
-        j += 1
-      } while (j < token.end)
-      i += 1
-    }
-    result
-  }
+class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
   @tailrec
   final def getPrevIndex(index: Int): Int = {
@@ -74,37 +53,6 @@ class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect)
 
     def asString: String =
       s"[${token.getClass.getSimpleName}@${token.end}]${token.syntax.replace("\n", "")}"
-
-    def index: Int = {
-      @tailrec
-      def lurk(roughIndex: Int): Int = {
-        require(roughIndex >= 0 && debug(token), s"tok=$asString")
-        val scannerToken = tokens(roughIndex)
-
-        def exactMatch = scannerToken eq token
-
-        def originMatch =
-          (token.is[LFLF] || token.is[Indentation.Outdent] || token.is[Indentation.Indent]) &&
-            scannerToken.start == token.start
-
-        if (exactMatch || originMatch) roughIndex
-        else lurk(roughIndex - 1)
-      }
-
-      lurk(cache(token.start))
-    }
-
-    @inline
-    def prev: Token = getPrevToken(index)
-
-    @inline
-    def next: Token = getNextToken(index)
-
-    @inline
-    def nextSafe: Token = tokens(getNextSafeIndex(index))
-
-    @inline
-    def strictNext: Token = tokens(getStrictNext(index))
 
     def isBackquoted: Boolean = {
       val text = token.text
@@ -163,17 +111,17 @@ class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect)
     }
   }
 
-  @classifier
-  trait EndMarkerIntro {
-    def unapply(token: Token): Boolean = token.is[soft.KwEnd] && (token.strictNext match {
-      case nt @ (_: Ident | _: KwIf | _: KwWhile | _: KwFor | _: KwMatch | _: KwTry | _: KwNew |
-          _: KwThis | _: KwGiven | _: KwVal) =>
-        nt.strictNext match {
+  def isEndMarkerIntro(index: Int): Boolean = tokens(index).is[soft.KwEnd] && {
+    val nextIndex = getStrictNext(index)
+    tokens(nextIndex) match {
+      case _: Ident | _: KwIf | _: KwWhile | _: KwFor | _: KwMatch | _: KwTry | _: KwNew |
+          _: KwThis | _: KwGiven | _: KwVal =>
+        tokens(getStrictNext(nextIndex)) match {
           case _: EOF | _: AtEOL => true
           case _ => false
         }
       case _ => false
-    })
+    }
   }
 
   // then  else  do  catch  finally  yield  match
@@ -186,43 +134,34 @@ class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect)
     }
   }
 
-  @classifier
-  trait ExprIntro {
-    def unapply(token: Token): Boolean = token match {
-      case _: Ident => !token.is[SoftModifier] && !token.is[EndMarkerIntro]
-      case _: Literal | _: Interpolation.Id | _: Xml.Start | _: KwDo | _: KwFor | _: KwIf |
-          _: KwNew | _: KwReturn | _: KwSuper | _: KwThis | _: KwThrow | _: KwTry | _: KwWhile |
-          _: LeftParen | _: LeftBrace | _: Underscore | _: Unquote | _: MacroSplice |
-          _: MacroQuote | _: Indentation.Indent =>
-        true
-      case _: LeftBracket => dialect.allowPolymorphicFunctions
+  def isExprIntro(token: Token, index: => Int): Boolean = token match {
+    case _: Ident => !isSoftModifier(index) && !isEndMarkerIntro(index)
+    case _: Literal | _: Interpolation.Id | _: Xml.Start | _: KwDo | _: KwFor | _: KwIf | _: KwNew |
+        _: KwReturn | _: KwSuper | _: KwThis | _: KwThrow | _: KwTry | _: KwWhile | _: LeftParen |
+        _: LeftBrace | _: Underscore | _: Unquote | _: MacroSplice | _: MacroQuote |
+        _: Indentation.Indent =>
+      true
+    case _: LeftBracket => dialect.allowPolymorphicFunctions
+    case _ => false
+  }
+
+  def isSoftModifier(index: Int): Boolean = {
+    @inline def nextIsDclIntroOrModifierOr(f: Token => Boolean): Boolean = {
+      val next = getNextIndex(index)
+      isDclIntro(next) || isModifier(next) || f(tokens(next))
+    }
+
+    tokens(index).toString match {
+      case soft.KwTransparent() => nextIsDclIntroOrModifierOr(_.is[KwTrait])
+      case soft.KwOpaque() => nextIsDclIntroOrModifierOr(_ => false)
+      case soft.KwInline() => nextIsDclIntroOrModifierOr(matchesAfterInlineMatchMod)
+      case soft.KwOpen() | soft.KwInfix() => isDefIntro(getNextIndex(index))
       case _ => false
     }
   }
 
-  @classifier
-  trait SoftModifier {
-    def unapply(token: Token): Boolean = {
-      @inline def nextIsDclIntroOrModifierOr(f: Token => Boolean): Boolean =
-        token.next match {
-          case DclIntro() | Modifier() => true
-          case t => f(t)
-        }
-      token.toString match {
-        case soft.KwTransparent() => nextIsDclIntroOrModifierOr(_.is[KwTrait])
-        case soft.KwOpaque() => nextIsDclIntroOrModifierOr(_ => false)
-        case soft.KwInline() => nextIsDclIntroOrModifierOr(matchesAfterInlineMatchMod)
-        case soft.KwOpen() | soft.KwInfix() => token.next.is[DefIntro]
-        case _ => false
-      }
-    }
-  }
-
-  @classifier
-  trait InlineMatchMod {
-    @inline def unapply(token: Token): Boolean =
-      token.is[soft.KwInline] && matchesAfterInlineMatchMod(token.next)
-  }
+  @inline def isInlineMatchMod(index: Int): Boolean =
+    tokens(index).is[soft.KwInline] && matchesAfterInlineMatchMod(getNextToken(index))
 
   private def matchesAfterInlineMatchMod(token: Token): Boolean = token match {
     case _: LeftParen | _: LeftBrace | _: KwNew | _: Ident | _: Literal | _: Interpolation.Id |
@@ -231,64 +170,41 @@ class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect)
     case _ => false
   }
 
-  @classifier
-  trait CaseIntro {
-    def unapply(token: Token): Boolean = {
-      token.is[KwCase] && !token.next.isClassOrObject
-    }
+  def isCaseIntro(index: Int): Boolean =
+    tokens(index).is[KwCase] && !getNextToken(index).isClassOrObject
+
+  @tailrec
+  final def isDefIntro(index: Int): Boolean = tokens(index) match {
+    case _: At => true
+    case _: Unquote | _: Ellipsis => isDefIntro(getNextIndex(index))
+    case _: KwCase => getNextToken(index).isClassOrObjectOrEnum
+    case _ => isDclIntro(index) || isModifier(index) || isTemplateIntro(index)
   }
 
-  @classifier
-  trait DefIntro {
-    @tailrec
-    final def unapply(token: Token): Boolean = token match {
-      case _: At | Modifier() | TemplateIntro() | DclIntro() => true
-      case _: Unquote | _: Ellipsis => unapply(token.next)
-      case _: KwCase => token.next.isClassOrObjectOrEnum
+  @tailrec
+  final def isTemplateIntro(index: Int): Boolean = tokens(index) match {
+    case _: At | _: KwClass | _: KwObject | _: KwTrait => true
+    case _: Unquote => isTemplateIntro(getNextIndex(index))
+    case _: KwCase => getNextToken(index).isClassOrObjectOrEnum
+    case _ => isModifier(index)
+  }
+
+  @tailrec
+  final def isDclIntro(index: Int): Boolean = tokens(index) match {
+    case _: KwDef | _: KwType | _: KwEnum | _: KwVal | _: KwVar | _: KwGiven => true
+    case _: Unquote => isDclIntro(getNextIndex(index))
+    case _ => isKwExtension(index)
+  }
+
+  // Logic taken from the Scala 3 parser
+  def isKwExtension(index: Int): Boolean =
+    tokens(index).is[soft.KwExtension] && (getNextToken(index) match {
+      case _: LeftParen | _: LeftBracket => true
       case _ => false
-    }
-  }
+    })
 
-  @classifier
-  trait TemplateIntro {
-    @tailrec
-    final def unapply(token: Token): Boolean = token match {
-      case _: At | _: KwClass | _: KwObject | _: KwTrait | Modifier() => true
-      case _: Unquote => unapply(token.next)
-      case _: KwCase => token.next.isClassOrObjectOrEnum
-      case _ => false
-    }
-  }
-
-  @classifier
-  trait DclIntro {
-    @tailrec
-    final def unapply(token: Token): Boolean = token match {
-      case _: KwDef | _: KwType | _: KwEnum | _: KwVal | _: KwVar | _: KwGiven | KwExtension() =>
-        true
-      case _: Unquote => unapply(token.next)
-      case _ => false
-    }
-  }
-
-  @classifier
-  trait KwExtension {
-    def unapply(token: Token) = {
-      // Logic taken from the Scala 3 parser
-      token.is[soft.KwExtension] && (token.next match {
-        case _: LeftParen | _: LeftBracket => true
-        case _ => false
-      })
-    }
-  }
-
-  @classifier
-  trait Modifier {
-    def unapply(token: Token): Boolean = token match {
-      case _: ModifierKeyword | SoftModifier() => true
-      case _ => false
-    }
-  }
+  def isModifier(index: Int): Boolean =
+    tokens(index).is[ModifierKeyword] || isSoftModifier(index)
 
   @classifier
   trait NonParamsModifier {
@@ -300,12 +216,9 @@ class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect)
     }
   }
 
-  @classifier
-  trait NonlocalModifier {
-    def unapply(token: Token): Boolean = token match {
-      case _: KwPrivate | _: KwProtected | _: KwOverride | soft.KwOpen() => true
-      case _ => false
-    }
+  def isNonlocalModifier(token: Token): Boolean = token match {
+    case _: KwPrivate | _: KwProtected | _: KwOverride | soft.KwOpen() => true
+    case _ => false
   }
 
   @classifier
@@ -316,35 +229,30 @@ class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect)
     }
   }
 
-  @classifier
-  trait CaseDefEnd {
-    def unapply(token: Token): Boolean = token match {
-      case _: RightBrace | _: RightParen | _: EOF | _: Indentation.Outdent => true
-      case _: KwCase => !token.next.isClassOrObject
-      case _: Ellipsis => token.next.is[KwCase]
-      case _ => false
-    }
+  def isCaseDefEnd(token: Token, index: => Int): Boolean = token match {
+    case _: RightBrace | _: RightParen | _: EOF | _: Indentation.Outdent => true
+    case _: KwCase => !getNextToken(index).isClassOrObject
+    case _: Ellipsis => getNextToken(index).is[KwCase]
+    case _ => false
   }
 
-  @classifier
-  trait CanStartIndent {
-    def unapply(token: Token): Boolean = token match {
-      case _: KwYield | _: KwTry | _: KwCatch | _: KwFinally | _: KwMatch | _: KwDo | _: KwFor |
-          _: KwThen | _: KwElse | _: KwWhile | _: KwIf | _: RightArrow | _: KwReturn |
-          _: LeftArrow | _: ContextArrow =>
-        true
-      case _: Equals =>
-        token.next match {
-          case _: KwMacro => false
-          case _ => true
-        }
-      case _: KwWith =>
-        token.next match {
-          case _: KwImport | _: KwExport | DefIntro() => true
-          case _ => false
-        }
-      case _ => false
-    }
+  def canStartIndent(index: Int): Boolean = tokens(index) match {
+    case _: KwYield | _: KwTry | _: KwCatch | _: KwFinally | _: KwMatch | _: KwDo | _: KwFor |
+        _: KwThen | _: KwElse | _: KwWhile | _: KwIf | _: RightArrow | _: KwReturn | _: LeftArrow |
+        _: ContextArrow =>
+      true
+    case _: Equals =>
+      getNextToken(index) match {
+        case _: KwMacro => false
+        case _ => true
+      }
+    case _: KwWith =>
+      val nextIndex = getNextIndex(index)
+      isDefIntro(nextIndex) || (tokens(nextIndex) match {
+        case _: KwImport | _: KwExport => true
+        case _ => false
+      })
+    case _ => false
   }
 
   @classifier
@@ -360,31 +268,18 @@ class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect)
     }
   }
 
-  @classifier
-  trait CanEndStat {
-    def unapply(token: Token): Boolean = token match {
-      case _: Ident | _: KwGiven | _: Literal | _: Interpolation.End | _: Xml.End | _: KwReturn |
-          _: KwThis | _: KwType | _: RightParen | _: RightBracket | _: RightBrace | _: Underscore |
-          _: Ellipsis | _: Unquote =>
-        true
-      case _ => token.prev.is[EndMarkerIntro]
-    }
+  def canEndStat(index: Int): Boolean = tokens(index) match {
+    case _: Ident | _: KwGiven | _: Literal | _: Interpolation.End | _: Xml.End | _: KwReturn |
+        _: KwThis | _: KwType | _: RightParen | _: RightBracket | _: RightBrace | _: Underscore |
+        _: Ellipsis | _: Unquote =>
+      true
+    case _ => isEndMarkerIntro(getPrevIndex(index))
   }
 
   @classifier
   trait StatSep {
     def unapply(token: Token): Boolean = token match {
       case _: Semicolon | _: LF | _: LFLF | _: EOF => true
-      case _ => false
-    }
-  }
-
-  @classifier
-  trait CanStartColonEol {
-    def unapply(token: Token): Boolean = token match {
-      case _: KwTrait | _: KwClass | _: KwObject | _: KwEnum | _: KwType | _: KwPackage |
-          _: KwGiven | _: KwNew =>
-        true
       case _ => false
     }
   }
@@ -402,8 +297,7 @@ class ScannerTokens(val tokens: Tokens, input: Input)(implicit dialect: Dialect)
 object ScannerTokens {
 
   def apply(input: Input)(implicit dialect: Dialect): ScannerTokens = {
-    val tokens = input.tokenize.get
-    new ScannerTokens(tokens, input)
+    new ScannerTokens(input.tokenize.get)
   }
 
 }
