@@ -637,6 +637,134 @@ class NewFunctionsSuite extends BaseDottySuite {
     )
   }
 
+  test("dependent-type-arrow-after-nl") {
+    runTestAssert[Stat](
+      """|type T = 
+         |  (e: Entry) 
+         |  => e.Key
+         |""".stripMargin,
+      Some("type T = (e: Entry) => e.Key")
+    )(
+      Defn.Type(
+        Nil,
+        pname("T"),
+        Nil,
+        Type.Function(
+          List(Type.TypedParam(pname("e"), pname("Entry"))),
+          Type.Select(tname("e"), pname("Key"))
+        ),
+        Type.Bounds(None, None)
+      )
+    )
+  }
+
+  test("dependent-type-arrow-after-nl bad indent") {
+    runTestError[Stat](
+      """|type T = 
+         |  (e: Entry) 
+         |=> e.Key
+         |""".stripMargin,
+      """|error: ; expected but => found
+         |=> e.Key
+         |^""".stripMargin
+    )
+  }
+
+  test("context-function-arrow-after-nl") {
+    runTestAssert[Stat](
+      """|type Executable[T] =
+         |  ExecutionContext
+         |  ?=> T
+         |""".stripMargin,
+      Some("type Executable[T] = ExecutionContext ?=> T")
+    )(
+      Defn.Type(
+        Nil,
+        pname("Executable"),
+        pparam("T") :: Nil,
+        Type.ContextFunction(pname("ExecutionContext") :: Nil, pname("T")),
+        Type.Bounds(None, None)
+      )
+    )
+  }
+
+  test("context-function-arrow-after-nl with parens") {
+    runTestAssert[Stat](
+      """|type Executable[T] =
+         |  (ExecutionContext)
+         |  ?=> T
+         |""".stripMargin,
+      Some("type Executable[T] = ExecutionContext ?=> T")
+    )(
+      Defn.Type(
+        Nil,
+        pname("Executable"),
+        pparam("T") :: Nil,
+        Type.ContextFunction(pname("ExecutionContext") :: Nil, pname("T")),
+        Type.Bounds(None, None)
+      )
+    )
+  }
+
+  test("context-function-arrow-after-nl bad indent") {
+    runTestError[Stat](
+      """|type Executable[T] =
+         |  ExecutionContext
+         |?=> T
+         |""".stripMargin,
+      """|error: illegal start of definition ?=>
+         |?=> T
+         |^""".stripMargin
+    )
+  }
+
+  test("lambda-function-arrow-after-nl") {
+    runTestAssert[Stat](
+      """|type Tuple =
+         |  [X]
+         |  =>> (X, X)
+         |""".stripMargin,
+      Some("type Tuple = [X] =>> (X, X)")
+    )(
+      Defn.Type(
+        Nil,
+        pname("Tuple"),
+        Nil,
+        Type.Lambda(pparam("X") :: Nil, Type.Tuple(List(pname("X"), pname("X")))),
+        Type.Bounds(None, None)
+      )
+    )
+  }
+
+  test("lambda-function-arrow-after-nl no NL after =") {
+    runTestAssert[Stat](
+      """|type Tuple = [X]
+         |  =>> (X, X)
+         |""".stripMargin,
+      Some("type Tuple = [X] =>> (X, X)")
+    )(
+      Defn.Type(
+        Nil,
+        pname("Tuple"),
+        Nil,
+        Type.Lambda(pparam("X") :: Nil, Type.Tuple(List(pname("X"), pname("X")))),
+        Type.Bounds(None, None)
+      )
+    )
+  }
+
+  test("lambda-function-arrow-after-nl bad indent") {
+    runTestError[Stat](
+      """|type Tuple =
+         |  [X]
+         |=>> (X, X)
+         |""".stripMargin,
+      """|error: expected =>> or =>
+         |  [X]
+         |     ^""".stripMargin
+    )
+  }
+
   test("type-lambda-bounds") {
     runTestAssert[Stat](
       "type U <: [X] =>> Any"
