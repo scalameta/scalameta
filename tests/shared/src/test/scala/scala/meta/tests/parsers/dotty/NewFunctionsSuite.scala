@@ -671,26 +671,38 @@ class NewFunctionsSuite extends BaseDottySuite {
   }
 
   test("context-function-arrow-after-nl") {
-    runTestError[Stat](
+    runTestAssert[Stat](
       """|type Executable[T] =
          |  ExecutionContext
          |  ?=> T
          |""".stripMargin,
-      """|error: outdent expected but ?=> found
-         |  ?=> T
-         |  ^""".stripMargin
+      Some("type Executable[T] = ExecutionContext ?=> T")
+    )(
+      Defn.Type(
+        Nil,
+        pname("Executable"),
+        pparam("T") :: Nil,
+        Type.ContextFunction(pname("ExecutionContext") :: Nil, pname("T")),
+        Type.Bounds(None, None)
+      )
     )
   }
 
   test("context-function-arrow-after-nl with parens") {
-    runTestError[Stat](
+    runTestAssert[Stat](
       """|type Executable[T] =
          |  (ExecutionContext)
          |  ?=> T
          |""".stripMargin,
-      """|error: outdent expected but ?=> found
-         |  ?=> T
-         |  ^""".stripMargin
+      Some("type Executable[T] = ExecutionContext ?=> T")
+    )(
+      Defn.Type(
+        Nil,
+        pname("Executable"),
+        pparam("T") :: Nil,
+        Type.ContextFunction(pname("ExecutionContext") :: Nil, pname("T")),
+        Type.Bounds(None, None)
+      )
     )
   }
 
@@ -707,25 +719,37 @@ class NewFunctionsSuite extends BaseDottySuite {
   }
 
   test("lambda-function-arrow-after-nl") {
-    runTestError[Stat](
+    runTestAssert[Stat](
       """|type Tuple =
          |  [X]
          |  =>> (X, X)
          |""".stripMargin,
-      """|error: expected =>> or =>
-         |  [X]
-         |     ^""".stripMargin
+      Some("type Tuple = [X] =>> (X, X)")
+    )(
+      Defn.Type(
+        Nil,
+        pname("Tuple"),
+        Nil,
+        Type.Lambda(pparam("X") :: Nil, Type.Tuple(List(pname("X"), pname("X")))),
+        Type.Bounds(None, None)
+      )
     )
   }
 
   test("lambda-function-arrow-after-nl no NL after =") {
-    runTestError[Stat](
+    runTestAssert[Stat](
       """|type Tuple = [X]
          |  =>> (X, X)
          |""".stripMargin,
-      """|error: expected =>> or =>
-         |type Tuple = [X]
-         |                ^""".stripMargin
+      Some("type Tuple = [X] =>> (X, X)")
+    )(
+      Defn.Type(
+        Nil,
+        pname("Tuple"),
+        Nil,
+        Type.Lambda(pparam("X") :: Nil, Type.Tuple(List(pname("X"), pname("X")))),
+        Type.Bounds(None, None)
+      )
     )
   }
 

@@ -719,12 +719,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         syntaxError(message, at = token)
       }
 
-      def funcParams = autoEndPos(openParenPos)(ts.reduceWith(Type.FuncParamClause.apply))
-      if (allowFunctionType && token.is[RightArrow]) {
-        Type.Function(funcParams, { next(); typeIndentedOpt() })
-      } else if (allowFunctionType && token.is[ContextArrow]) {
-        Type.ContextFunction(funcParams, { next(); typeIndentedOpt() })
-      } else {
+      def maybeFunc = getAfterOptNewLine(token match {
+        case _: RightArrow => Some(typeFuncOnArrow(openParenPos, ts, Type.Function(_, _)))
+        case _: ContextArrow => Some(typeFuncOnArrow(openParenPos, ts, Type.ContextFunction(_, _)))
+        case _ => None
+      })
+      (if (allowFunctionType) maybeFunc else None).getOrElse {
         ts.foreach {
           case t: Type.ByName => syntaxError("by name type not allowed here", at = t)
           case t: Type.Repeated => syntaxError("repeated type not allowed here", at = t)
@@ -741,17 +741,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     private def typeLambdaOrPoly(): Type = {
       val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
-      if (acceptOpt[TypeLambdaArrow]) {
-        val tpe = typeIndentedOpt()
-        Type.Lambda(quants, tpe)
-      } else if (acceptOpt[RightArrow]) {
-        val tpe = typeIndentedOpt()
-        if (tpe.is[Type.FunctionType])
-          Type.PolyFunction(quants, tpe)
-        else
-          syntaxError("polymorphic function types must have a value parameter", at = token)
-      } else {
-        syntaxError("expected =>> or =>", at = token)
+      newLineOpt()
+      token match {
+        case _: TypeLambdaArrow => next(); Type.Lambda(quants, typeIndentedOpt())
+        case t: RightArrow =>
+          next()
+          typeIndentedOpt() match {
+            case tpe: Type.FunctionType => Type.PolyFunction(quants, tpe)
+            case _ => syntaxError("polymorphic function types must have a value parameter", at = t)
+          }
+        case t => syntaxError("expected =>> or =>", at = t)
       }
     }
 
@@ -769,14 +768,23 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         if (token.is[LeftBracket] && dialect.allowTypeLambdas) typeLambdaOrPoly()
         else infixTypeOrTuple()
 
-      def funcParams = autoEndPos(startPos)((t :: Nil).reduceWith(Type.FuncParamClause.apply))
-      token match {
-        case RightArrow() => Type.Function(funcParams, { next(); typeIndentedOpt() })
-        case ContextArrow() => Type.ContextFunction(funcParams, { next(); typeIndentedOpt() })
-        case KwForsome() => Type.Existential(t, { next(); existentialStats() })
-        case KwMatch() if dialect.allowTypeMatch => Type.Match(t, { next(); typeCaseClauses() })
-        case _ => t
-      }
+      getAfterOptNewLine(token match {
+        case RightArrow() => Some(typeFuncOnArrow(startPos, t :: Nil, Type.Function(_, _)))
+        case ContextArrow() => Some(typeFuncOnArrow(startPos, t :: Nil, Type.ContextFunction(_, _)))
+        case _: KwForsome => next(); Some(Type.Existential(t, existentialStats()))
+        case _: KwMatch if dialect.allowTypeMatch => next(); Some(Type.Match(t, typeCaseClauses()))
+        case _ => None
+      }).getOrElse(t)
+    }
+
+    private def typeFuncOnArrow(
+        paramPos: Int,
+        params: List[Type],
+        ctor: (Type.FuncParamClause, Type) => Type.FunctionType
+    ): Type.FunctionType = {
+      val funcParams = autoEndPos(paramPos)(params.reduceWith(Type.FuncParamClause.apply))
+      next()
+      ctor(funcParams, typeIndentedOpt())
     }
 
     def typeCaseClauses(): List[TypeCase] = {
