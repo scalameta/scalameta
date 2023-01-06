@@ -637,6 +637,60 @@ class NewFunctionsSuite extends BaseDottySuite {
     )
   }
 
+  test("dependent-type-arrow-after-nl") {
+    val expectedSyntax = "type T = (e: Entry) => e.Key"
+    val expectedTree = Defn.Type(
+      Nil,
+      pname("T"),
+      Nil,
+      Type.Function(
+        List(Type.TypedParam(pname("e"), pname("Entry"))),
+        Type.Select(tname("e"), pname("Key"))
+      ),
+      Type.Bounds(None, None)
+    )
+
+    runTestAssert[Stat](
+      """|type T = 
+         |  (e: Entry) 
+         |  => e.Key
+         |""".stripMargin,
+      Some(expectedSyntax)
+    )(expectedTree)
+
+    runTestError[Stat](
+      """|type T = 
+         |  (e: Entry) 
+         |=> e.Key
+         |""".stripMargin,
+      """|error: ; expected but => found
+         |=> e.Key
+         |^""".stripMargin
+    )
+  }
+
+  test("context-function-arrow-after-nl") {
+    runTestError[Stat](
+      """|type Executable[T] =
+         |  ExecutionContext
+         |  ?=> T
+         |""".stripMargin,
+      """|error: outdent expected but ?=> found
+         |  ?=> T
+         |  ^""".stripMargin
+    )
+
+    runTestError[Stat](
+      """|type Executable[T] =
+         |  ExecutionContext
+         |?=> T
+         |""".stripMargin,
+      """|error: illegal start of definition ?=>
+         |?=> T
+         |^""".stripMargin
+    )
+  }
+
   test("type-lambda-bounds") {
     runTestAssert[Stat](
       "type U <: [X] =>> Any"
