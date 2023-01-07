@@ -54,7 +54,7 @@ private[parsers] class LazyTokenIterator private (
   import scannerTokens._
 
   override def next(): Unit = {
-    val (newSepRegions, newTokenRef) = nextToken(curr.pos, curr.nextPos, sepRegions)
+    val (newSepRegions, newTokenRef) = nextToken(curr.token, curr.pos, curr.nextPos, sepRegions)
     prevPos = curr.pointPos
     curr = newTokenRef
     sepRegions = newSepRegions
@@ -194,6 +194,7 @@ private[parsers] class LazyTokenIterator private (
 
   @tailrec
   private def nextToken(
+      prevToken: Token,
       prevPos: Int,
       currPos: Int,
       sepRegions: List[SepRegion]
@@ -327,7 +328,7 @@ private[parsers] class LazyTokenIterator private (
       case _ =>
         (sepRegions, currRef)
     }
-    if (isTrailingComma) nextToken(currPos, currPos + 1, sepRegions)
+    if (isTrailingComma) nextToken(curr, currPos, currPos + 1, sepRegions)
     else if (curr.isNot[Trivia]) nonTrivial
     else {
       var i = prevPos + 1
@@ -358,7 +359,7 @@ private[parsers] class LazyTokenIterator private (
 
       def canProduceLF: Boolean = {
         lastNewlinePos != -1 &&
-        prev != null && (token.is[Indentation.Outdent] || canEndStat(prevPos)) &&
+        (prevToken.is[Indentation.Outdent] || prevPos >= 0 && canEndStat(prevPos)) &&
         next.isNot[CantStartStat] && sepRegions.headOption.forall {
           case _: RegionBrace | _: RegionCase | _: RegionEnum => true
           case _: RegionIndent | _: RegionIndentEnum => true
@@ -437,7 +438,7 @@ private[parsers] class LazyTokenIterator private (
                 // always add indent for indented `match` block
                 // check the previous token to avoid infinity loop
                 ((prev.is[KwMatch] || prev.is[KwCatch]) && !getPrevToken(prevPos).is[soft.KwEnd]) &&
-                next.is[KwCase] && token.isNot[Indentation.Indent]
+                next.is[KwCase] && prevToken.isNot[Indentation.Indent]
             }
             if (ok) Some {
               val region = RegionIndent(nextIndent, prev.is[KwMatch])
@@ -452,7 +453,7 @@ private[parsers] class LazyTokenIterator private (
         }
       resOpt match {
         case Some(res) => res
-        case _ => nextToken(prevPos, nextPos, sepRegions)
+        case _ => nextToken(prevToken, prevPos, nextPos, sepRegions)
       }
     }
   }
