@@ -12,7 +12,7 @@ import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
 import scala.meta.tokens.Tokens
 
-class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
+final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
   @tailrec
   final def getPrevIndex(index: Int): Int = {
@@ -292,12 +292,107 @@ class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       dialect.allowStarWildcardImport && token.syntax == "*"
   }
 
+  /**
+   * When token on `tokenPosition` is not a whitespace and is a first non-whitespace character in a
+   * current line then a result is a number of whitespace characters counted. Otherwise
+   * {{{(-1, -1)}}} is returned.
+   *
+   * Returns a tuple2 where:
+   *   - first value is indentation level
+   *   - second is `LF` token index
+   */
+  private[parsers] def countIndentAndNewlineIndex(tokenPosition: Int): (Int, Int) = {
+    @tailrec
+    def countIndentInternal(pos: Int, acc: Int = 0): (Int, Int) = {
+      if (pos < 0) (acc, pos)
+      else {
+        val token = tokens(pos)
+        token match {
+          case _: EOL | _: BOF => (acc, pos)
+          case AsMultilineComment(c) => (ScannerTokens.multilineCommentIndent(c), pos)
+          case _: Comment => countIndentInternal(pos - 1)
+          case _: HSpace => countIndentInternal(pos - 1, acc + 1)
+          case _ => (-1, -1)
+        }
+      }
+    }
+
+    if (tokens(tokenPosition).is[Whitespace]) (-1, -1)
+    else countIndentInternal(tokenPosition - 1)
+  }
+
+  private[parsers] def countIndent(tokenPosition: Int): Int =
+    countIndentAndNewlineIndex(tokenPosition)._1
+
+  private[parsers] def mkIndentToken(pointPos: Int): Token = {
+    val token = tokens(pointPos)
+    new Indentation.Indent(token.input, token.dialect, token.start, token.start)
+  }
+
+  private[parsers] def mkOutdentToken(pointPos: Int): Token = {
+    val token = tokens(pointPos)
+    new Indentation.Outdent(token.input, token.dialect, token.start, token.start)
+  }
+
+  private[parsers] def findOutdentPos(prevPos: Int, currPos: Int, region: SepRegion): Int = {
+    val outdent = region.indent
+
+    @tailrec
+    def iter(i: Int, pos: Int, indent: Int): Int = {
+      if (i >= currPos) {
+        if (pos < currPos) pos else currPos - 1
+      } else {
+        tokens(i) match {
+          case _: EOL =>
+            iter(i + 1, i, 0)
+          case _: HSpace if indent >= 0 =>
+            iter(i + 1, pos, indent + 1)
+          case _: Whitespace =>
+            iter(i + 1, pos, indent)
+          case _: Comment if indent < 0 || outdent <= indent =>
+            iter(i + 1, i + 1, -1)
+          case _ => pos
+        }
+      }
+    }
+
+    val iterPos = 1 + prevPos
+    if (iterPos < currPos) iter(iterPos, prevPos, -1)
+    else if (tokens(currPos).is[EOF]) currPos
+    else prevPos
+  }
+
+  @tailrec
+  private[parsers] def isAheadNewLine(currentPosition: Int): Boolean = {
+    val nextPos = currentPosition + 1
+    nextPos < tokens.length && {
+      val nextToken = tokens(nextPos)
+      nextToken.is[LF] || nextToken.is[Trivia] && isAheadNewLine(nextPos)
+    }
+  }
+
 }
 
 object ScannerTokens {
 
   def apply(input: Input)(implicit dialect: Dialect): ScannerTokens = {
     new ScannerTokens(input.tokenize.get)
+  }
+
+  private def multilineCommentIndent(t: Comment): Int = {
+    @tailrec
+    def loop(idx: Int, indent: Int, isAfterNewline: Boolean): Int = {
+      if (idx == t.value.length) indent
+      else {
+        t.value.charAt(idx) match {
+          case '\n' => loop(idx + 1, 0, isAfterNewline = true)
+          case ' ' | '\t' if isAfterNewline => loop(idx + 1, indent + 1, isAfterNewline)
+          case _ => loop(idx + 1, indent, isAfterNewline = false)
+        }
+      }
+    }
+
+    loop(0, 0, false)
   }
 
 }
