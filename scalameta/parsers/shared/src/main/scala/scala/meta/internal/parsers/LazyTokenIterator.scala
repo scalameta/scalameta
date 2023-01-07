@@ -10,50 +10,37 @@ import scala.meta.tokens.Tokens
 object LazyTokenIterator {
 
   def apply(st: ScannerTokens)(implicit dialect: Dialect): LazyTokenIterator =
-    new LazyTokenIterator(st, Nil, TokenRef(st.tokens(0), 0), -1)
-
-  private class TokenRef private (
-      val token: Token,
-      val pos: Int,
-      val nextPos: Int,
-      val pointPos: Int
-  )
-
-  private object TokenRef {
-    def apply(token: Token, pos: Int) = new TokenRef(token, pos, pos + 1, pos)
-    def apply(token: Token, pos: Int, nextPos: Int, pointPos: Int) =
-      new TokenRef(token, pos, nextPos, pointPos)
-  }
+    new LazyTokenIterator(st, TokenRef(Nil, st.tokens(0), 0), -1)
 
 }
 
 private[parsers] class LazyTokenIterator private (
     private val scannerTokens: ScannerTokens,
-    private var sepRegions: List[SepRegion],
-    private var curr: LazyTokenIterator.TokenRef,
+    private var curr: TokenRef,
     private var prevPos: Int
 )(implicit dialect: Dialect)
     extends TokenIterator {
 
-  import LazyTokenIterator._
   import scannerTokens._
 
+  private def getNextTokenRef(): TokenRef =
+    nextToken(curr.token, curr.pos, curr.nextPos, curr.regions)
+
   override def next(): Unit = {
-    val (newSepRegions, newTokenRef) = nextToken(curr.token, curr.pos, curr.nextPos, sepRegions)
     prevPos = curr.pointPos
-    curr = newTokenRef
-    sepRegions = newSepRegions
+    curr = getNextTokenRef()
   }
 
   private def observeIndented0(f: (Int, List[SepRegion]) => List[SepRegion]): Boolean = {
     if (!dialect.allowSignificantIndentation) false
     else {
-      val existingIndent = sepRegions.find(_.isIndented).fold(0)(_.indent)
+      val currRegions = curr.regions
+      val existingIndent = currRegions.find(_.isIndented).fold(0)(_.indent)
       val (expected, pointPos) = countIndentAndNewlineIndex(tokenPos)
       if (expected > existingIndent) {
-        sepRegions = f(expected, sepRegions)
+        val regions = f(expected, currRegions)
         val indent = mkIndentToken(pointPos)
-        curr = TokenRef(indent, curr.pos, curr.pos, pointPos)
+        curr = TokenRef(regions, indent, curr.pos, curr.pos, pointPos)
         true
       } else false
     }
@@ -63,18 +50,18 @@ private[parsers] class LazyTokenIterator private (
    * Deals with different rules for indentation after self type arrow.
    */
   def undoIndent(): Unit = {
-    sepRegions match {
+    curr.regions match {
       case (region: SepRegionIndented) :: others if curr.token.is[Indentation.Indent] =>
         next()
-        sepRegions = sepRegions match {
+        curr = curr.withRegions(curr.regions match {
           // deal with  region added by `case` in enum after self type
           case RegionArrow :: _ => others
           // if no region was added
           case `region` :: _ => others
           // keep any added region in `next()`
           case head :: _ => head :: others
-          case _ => sepRegions
-        }
+          case xs => xs
+        })
       case _ =>
     }
   }
@@ -115,27 +102,26 @@ private[parsers] class LazyTokenIterator private (
     val foundIndentation = countIndent(curr.pointPos)
     if (foundIndentation < 0)
       // empty sepregions means we are at toplevel
-      sepRegions.headOption.fold(0)(_.indent)
+      curr.regions.headOption.fold(0)(_.indent)
     else
       foundIndentation
   }
 
-  def previousIndentation: Int = sepRegions match {
+  def previousIndentation: Int = curr.regions match {
     case _ :: r :: _ => r.indent
     case _ => 0
   }
 
   def observeOutdented(): Boolean =
-    dialect.allowSignificantIndentation && (sepRegions match {
+    dialect.allowSignificantIndentation && (curr.regions match {
       case (region: SepRegionIndented) :: tail if (curr.token match {
             case _: KwThen | _: KwElse | _: KwDo | _: KwYield => true
             case _: KwMatch | _: KwCatch | _: KwFinally => true
             case _ => false
           }) =>
-        sepRegions = tail
         val outdentPos = findOutdentPos(prevPos, curr.pos, region)
         val outdent = mkOutdentToken(outdentPos)
-        curr = TokenRef(outdent, curr.pos, curr.pos, outdentPos)
+        curr = TokenRef(tail, outdent, curr.pos, curr.pos, outdentPos)
         true
       case _ => false
     })
@@ -146,7 +132,7 @@ private[parsers] class LazyTokenIterator private (
       prevPos: Int,
       currPos: Int,
       sepRegions: List[SepRegion]
-  ): (List[SepRegion], TokenRef) = {
+  ): TokenRef = {
     val prev = if (prevPos >= 0) tokens(prevPos) else null
     val curr = tokens(currPos)
     val (nextPos, next) = {
@@ -167,28 +153,28 @@ private[parsers] class LazyTokenIterator private (
         next.is[CloseDelim] &&
         next.pos.startLine > curr.pos.endLine
 
-    def mkIndent(pointPos: Int): TokenRef =
-      TokenRef(mkIndentToken(pointPos), prevPos, currPos, pointPos)
+    def mkIndent(pointPos: Int, regions: List[SepRegion]): TokenRef =
+      TokenRef(regions, mkIndentToken(pointPos), prevPos, currPos, pointPos)
 
-    def mkOutdent(region: SepRegion): TokenRef =
-      mkOutdentTo(region, currPos)
+    def mkOutdent(region: SepRegion, regions: List[SepRegion]): TokenRef =
+      mkOutdentTo(region, currPos, regions)
 
-    def mkOutdentTo(region: SepRegion, maxPointPos: Int): TokenRef = {
+    def mkOutdentTo(region: SepRegion, maxPointPos: Int, regions: List[SepRegion]): TokenRef = {
       val pointPos = findOutdentPos(prevPos, maxPointPos, region)
-      TokenRef(mkOutdentToken(pointPos), prevPos, currPos, pointPos)
+      TokenRef(regions, mkOutdentToken(pointPos), prevPos, currPos, pointPos)
     }
 
-    def currRef: TokenRef = TokenRef(curr, currPos)
+    def currRef(regions: List[SepRegion]): TokenRef = TokenRef(regions, curr, currPos)
 
     def nonTrivial = curr match {
-      case _: LeftParen => (RegionParen(false) :: sepRegions, currRef)
-      case _: LeftBracket => (RegionBracket :: sepRegions, currRef)
+      case _: LeftParen => currRef(RegionParen(false) :: sepRegions)
+      case _: LeftBracket => currRef(RegionBracket :: sepRegions)
       case _: Comma =>
         sepRegions match {
           case (head: SepRegionIndented) :: tail
               if tail.find(!_.isIndented).exists(_.isInstanceOf[RegionParen]) =>
-            (tail, mkOutdent(head))
-          case _ => (sepRegions, currRef)
+            mkOutdent(head, tail)
+          case _ => currRef(sepRegions)
         }
       case _: LeftBrace =>
         val indentInBrace = if (isAheadNewLine(currPos)) countIndent(nextPos) else -1
@@ -204,29 +190,29 @@ private[parsers] class LazyTokenIterator private (
             val indentOnArrow = !prev.isAny[KwMatch, KwCatch]
             RegionBrace(indentInBrace, indentOnArrow) :: sepRegions
           }
-        (nextRegions, currRef)
+        currRef(nextRegions)
       case _: KwEnum =>
-        (RegionEnumArtificialMark :: sepRegions, currRef)
+        currRef(RegionEnumArtificialMark :: sepRegions)
       case _ if isCaseIntro(currPos) =>
         val nextRegions = sepRegions.headOption match {
           case Some(_: RegionEnum | _: RegionIndentEnum) => sepRegions
           case Some(_: RegionCase) => RegionArrow :: sepRegions.tail
           case _ => RegionArrow :: sepRegions
         }
-        (nextRegions, currRef)
+        currRef(nextRegions)
       case _: RightBrace =>
         // produce outdent for every indented region before RegionBrace|RegionEnum
         @tailrec
-        def nextRegions(in: List[SepRegion]): (List[SepRegion], TokenRef) = {
+        def nextRegions(in: List[SepRegion]): TokenRef = {
           in match {
             case (_: RegionBrace | _: RegionEnum) :: xs =>
-              (xs, currRef)
+              currRef(xs)
             case (x: SepRegionIndented) :: xs =>
-              (xs, mkOutdent(x))
+              mkOutdent(x, xs)
             case _ :: xs =>
               nextRegions(xs)
             case Nil =>
-              (Nil, currRef)
+              currRef(Nil)
           }
         }
         nextRegions(sepRegions)
@@ -234,23 +220,23 @@ private[parsers] class LazyTokenIterator private (
         val nextRegions =
           if (sepRegions.headOption.contains(RegionBracket)) sepRegions.tail
           else sepRegions
-        (nextRegions, currRef)
+        currRef(nextRegions)
       case _: EOF =>
         sepRegions match {
-          case (x: SepRegionIndented) :: xs => (xs, mkOutdent(x))
-          case other => (other, currRef)
+          case (x: SepRegionIndented) :: xs => mkOutdent(x, xs)
+          case other => currRef(other)
         }
       case _: RightParen =>
         sepRegions match {
-          case (x: SepRegionIndented) :: xs => (xs, mkOutdent(x))
-          case (_: RegionParen) :: xs => (xs, currRef)
-          case _ => (sepRegions, currRef)
+          case (x: SepRegionIndented) :: xs => mkOutdent(x, xs)
+          case (_: RegionParen) :: xs => currRef(xs)
+          case _ => currRef(sepRegions)
         }
       case _: LeftArrow =>
         val nextRegions =
           if (sepRegions.headOption.contains(RegionArrow)) sepRegions.tail
           else sepRegions
-        (nextRegions, currRef)
+        currRef(nextRegions)
       case _: RightArrow =>
         val nextRegions =
           if (sepRegions.headOption.contains(RegionArrow)) {
@@ -266,15 +252,15 @@ private[parsers] class LazyTokenIterator private (
             else
               newRegions
           } else sepRegions
-        (nextRegions, currRef)
+        currRef(nextRegions)
       case _: KwFor if dialect.allowSignificantIndentation =>
         val updatedSepRegions = sepRegions match {
           case (_: RegionParen) :: tail => RegionParen(true) :: tail
           case _ => sepRegions
         }
-        (updatedSepRegions, currRef)
+        currRef(updatedSepRegions)
       case _ =>
-        (sepRegions, currRef)
+        currRef(sepRegions)
     }
     if (isTrailingComma) nextToken(curr, currPos, currPos + 1, sepRegions)
     else if (curr.isNot[Trivia]) nonTrivial
@@ -302,7 +288,7 @@ private[parsers] class LazyTokenIterator private (
         val token = tokens(lastNewlinePos)
         val out =
           if (newlines) LFLF(token.input, token.dialect, token.start, token.end) else token
-        TokenRef(out, lastNewlinePos)
+        TokenRef(sepRegions, out, lastNewlinePos)
       }
 
       def canProduceLF: Boolean = {
@@ -317,8 +303,7 @@ private[parsers] class LazyTokenIterator private (
       }
 
       def getIfCanProduceLF =
-        if (canProduceLF) Some((sepRegions, lastWhitespaceToken))
-        else None
+        if (canProduceLF) Some(lastWhitespaceToken) else None
 
       val resOpt =
         if (next == null || !hasLF) None
@@ -350,7 +335,7 @@ private[parsers] class LazyTokenIterator private (
                   // need to check prev.prev in case of `end match`
                   (prev.isNot[CanContinueOnNextLine] || getPrevToken(prevPos).is[soft.KwEnd])
                 else r.closeOnNonCase && next.isNot[KwCase] && nextIndent == r.indent
-              if (ok) Some((tail, mkOutdentTo(r, nextPos))) else None
+              if (ok) Some(mkOutdentTo(r, nextPos, tail)) else None
             case _ => None
           }
 
@@ -388,10 +373,8 @@ private[parsers] class LazyTokenIterator private (
                 prev.isAny[KwMatch, KwCatch] && !getPrevToken(prevPos).is[soft.KwEnd] &&
                 next.is[KwCase] && prevToken.isNot[Indentation.Indent]
             }
-            if (ok) Some {
-              val region = RegionIndent(nextIndent, prev.is[KwMatch])
-              (region :: sepRegions, mkIndent(indentPos))
-            }
+            if (ok)
+              Some(mkIndent(indentPos, RegionIndent(nextIndent, prev.is[KwMatch]) :: sepRegions))
             else None
           }
 
@@ -413,6 +396,6 @@ private[parsers] class LazyTokenIterator private (
   override def token: Token = curr.token
 
   override def fork: TokenIterator =
-    new LazyTokenIterator(scannerTokens, sepRegions, curr, prevPos)
+    new LazyTokenIterator(scannerTokens, curr, prevPos)
 
 }
