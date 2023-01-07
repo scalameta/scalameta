@@ -33,7 +33,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   @tailrec
   final def getStrictAfterSafe(index: Int): Int = {
     val token = tokens(index)
-    if (token.is[HSpace] || token.is[Comment]) getStrictAfterSafe(getNextSafeIndex(index))
+    if (token.isAny[HSpace, Comment]) getStrictAfterSafe(getNextSafeIndex(index))
     else index
   }
 
@@ -48,7 +48,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   // This leads to extremely dirty and seriously crazy code.
   implicit class XtensionTokenClass(token: Token) {
 
-    def isClassOrObject = token.is[KwClass] || token.is[KwObject]
+    def isClassOrObject = token.isAny[KwClass, KwObject]
     def isClassOrObjectOrEnum = isClassOrObject || (token.is[Ident] && dialect.allowEnums)
 
     def asString: String =

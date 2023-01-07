@@ -212,8 +212,11 @@ class SurfaceSuite extends FunSuite {
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
       |* (scala.meta.inputs.Input, scala.meta.Dialect).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
       |* (scala.meta.inputs.Input, scala.meta.Dialect).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
-      |* T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
-      |* T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit scala.meta.classifiers.Classifier[T,U]): Boolean
+      |* T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit XtensionClassifiable.this.C[U]): Boolean
+      |* T(implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionClassifiable.this.C[U1], XtensionClassifiable.this.C[U2]): Boolean
+      |* T(implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionClassifiable.this.C[U1], XtensionClassifiable.this.C[U2], XtensionClassifiable.this.C[U3]): Boolean
+      |* T(implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionClassifiable.this.C[U1], XtensionClassifiable.this.C[U2], XtensionClassifiable.this.C[U3], XtensionClassifiable.this.C[U4]): Boolean
+      |* T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit XtensionClassifiable.this.C[U]): Boolean
       |* T(implicit scala.meta.prettyprinters.Structure[T]).structure: String
       |* T(implicit scala.meta.prettyprinters.Syntax[T]).syntax: String
       |* T.parse(implicit scala.meta.common.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect): scala.meta.parsers.Parsed[U]

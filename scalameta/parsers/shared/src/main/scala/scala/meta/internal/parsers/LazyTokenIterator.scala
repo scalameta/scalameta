@@ -201,7 +201,7 @@ private[parsers] class LazyTokenIterator private (
           if (sepRegions.headOption.contains(RegionEnumArtificialMark))
             RegionEnum(indentInBrace) :: sepRegions.tail
           else {
-            val indentOnArrow = !(prev.is[KwMatch] || prev.is[KwCatch])
+            val indentOnArrow = !prev.isAny[KwMatch, KwCatch]
             RegionBrace(indentInBrace, indentOnArrow) :: sepRegions
           }
         (nextRegions, currRef)
@@ -385,7 +385,7 @@ private[parsers] class LazyTokenIterator private (
               } else
                 // always add indent for indented `match` block
                 // check the previous token to avoid infinity loop
-                ((prev.is[KwMatch] || prev.is[KwCatch]) && !getPrevToken(prevPos).is[soft.KwEnd]) &&
+                prev.isAny[KwMatch, KwCatch] && !getPrevToken(prevPos).is[soft.KwEnd] &&
                 next.is[KwCase] && prevToken.isNot[Indentation.Indent]
             }
             if (ok) Some {
