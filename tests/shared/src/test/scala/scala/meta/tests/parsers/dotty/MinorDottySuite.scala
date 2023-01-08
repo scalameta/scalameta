@@ -1492,4 +1492,64 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("class Baz1 @deprecated(implicit c: C)") {
+    runTestError[Stat](
+      "class Baz1 @deprecated(implicit c: C)",
+      """|error: => expected but ) found
+         |class Baz1 @deprecated(implicit c: C)
+         |                                    ^""".stripMargin
+    )
+  }
+
+  test("class Baz1 @deprecated(c: C)") {
+    runTestAssert[Stat](
+      "class Baz1 @deprecated(c: C)",
+      Some("class Baz1 @deprecated(c: C)")
+    )(
+      Defn.Class(
+        Nil,
+        pname("Baz1"),
+        Nil,
+        Ctor.Primary(
+          List(
+            Mod.Annot(
+              Init(pname("deprecated"), anon, List(List(Term.Ascribe(tname("c"), pname("C")))))
+            )
+          ),
+          anon,
+          Nil
+        ),
+        tpl(Nil)
+      )
+    )
+  }
+
+  test("class Baz1 @deprecated(c: C = some)") {
+    runTestError[Stat](
+      "class Baz1 @deprecated(c: C = some)",
+      """|error: ) expected but = found
+         |class Baz1 @deprecated(c: C = some)
+         |                            ^""".stripMargin
+    )
+  }
+
+  test("class Baz1 @deprecated(foo)(c: C)") {
+    runTestAssert[Stat](
+      "class Baz1 @deprecated(foo)(c: C)",
+      Some("class Baz1 @deprecated(foo) (c: C)")
+    )(
+      Defn.Class(
+        Nil,
+        pname("Baz1"),
+        Nil,
+        Ctor.Primary(
+          List(Mod.Annot(Init(pname("deprecated"), anon, List(List(tname("foo")))))),
+          anon,
+          List(List(Term.Param(Nil, Term.Name("c"), Some(Type.Name("C")), None)))
+        ),
+        tpl(Nil)
+      )
+    )
+  }
+
 }
