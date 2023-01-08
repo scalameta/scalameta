@@ -1493,31 +1493,37 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("class Baz1 @deprecated(implicit c: C)") {
-    runTestError[Stat](
-      "class Baz1 @deprecated(implicit c: C)",
-      """|error: => expected but ) found
-         |class Baz1 @deprecated(implicit c: C)
-         |                                    ^""".stripMargin
-    )
-  }
-
-  test("class Baz1 @deprecated(c: C)") {
     runTestAssert[Stat](
-      "class Baz1 @deprecated(c: C)",
-      Some("class Baz1 @deprecated(c: C)")
+      "class Baz1 @deprecated(implicit c: C)",
+      Some("class Baz1 @deprecated (implicit c: C)")
     )(
       Defn.Class(
         Nil,
         pname("Baz1"),
         Nil,
         Ctor.Primary(
-          List(
-            Mod.Annot(
-              Init(pname("deprecated"), anon, List(List(Term.Ascribe(tname("c"), pname("C")))))
-            )
-          ),
+          List(Mod.Annot(init("deprecated"))),
           anon,
-          Nil
+          List(List(Term.Param(List(Mod.Implicit()), tname("c"), Some(pname("C")), None)))
+        ),
+        tpl(Nil)
+      )
+    )
+  }
+
+  test("class Baz1 @deprecated(c: C)") {
+    runTestAssert[Stat](
+      "class Baz1 @deprecated(c: C)",
+      Some("class Baz1 @deprecated (c: C)")
+    )(
+      Defn.Class(
+        Nil,
+        pname("Baz1"),
+        Nil,
+        Ctor.Primary(
+          List(Mod.Annot(init("deprecated"))),
+          anon,
+          List(List(tparam("c", "C")))
         ),
         tpl(Nil)
       )
@@ -1525,11 +1531,21 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("class Baz1 @deprecated(c: C = some)") {
-    runTestError[Stat](
+    runTestAssert[Stat](
       "class Baz1 @deprecated(c: C = some)",
-      """|error: ) expected but = found
-         |class Baz1 @deprecated(c: C = some)
-         |                            ^""".stripMargin
+      Some("class Baz1 @deprecated (c: C = some)")
+    )(
+      Defn.Class(
+        Nil,
+        pname("Baz1"),
+        Nil,
+        Ctor.Primary(
+          List(Mod.Annot(init("deprecated"))),
+          anon,
+          List(List(Term.Param(Nil, tname("c"), Some(pname("C")), Some(tname("some")))))
+        ),
+        tpl(Nil)
+      )
     )
   }
 

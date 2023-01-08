@@ -2947,6 +2947,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def annotsBuf[T >: Mod.Annot](
       annots: ListBuffer[T],
       skipNewLines: Boolean,
+      insidePrimaryCtorAnnot: Boolean = false,
       allowArgss: Boolean = true
   ): Unit = {
     while (token match {
@@ -2954,7 +2955,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           next()
           annots += (token match {
             case t: Unquote => unquote[Mod.Annot](t)
-            case _ => autoEndPos(prevTokenPos)(Mod.Annot(initRest(exprSimpleType(), allowArgss)))
+            case _ =>
+              autoEndPos(prevTokenPos) {
+                Mod.Annot(initRest(exprSimpleType(), allowArgss, insidePrimaryCtorAnnot))
+              }
           })
           true
         case t: Ellipsis if ahead(token.is[At]) =>
@@ -3828,7 +3832,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def primaryCtor(owner: TemplateOwner): Ctor.Primary = autoPos {
     if (owner.isClass || (owner.isTrait && dialect.allowTraitParameters) || owner.isEnum) {
       val mods = listBy[Mod] { buf =>
-        annotsBuf(buf, skipNewLines = false, allowArgss = false)
+        annotsBuf(buf, skipNewLines = false, allowArgss = false, insidePrimaryCtorAnnot = true)
         ctorModifiers().foreach(buf += _)
       }
       val name = autoPos(Name.Anonymous())
@@ -3916,6 +3920,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def initRest(
       typeParser: => Type,
       allowArgss: Boolean,
+      insidePrimaryCtorAnnot: Boolean = false,
       allowBraces: Boolean = false,
       allowTypeSingleton: Boolean = true
   ): Init = autoPosOpt {
@@ -3936,12 +3941,26 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val argss = listBy[Term.ArgClause] { argss =>
           @inline def body() = {
             argss += getArgClause()
-            newlineOpt()
           }
-          newlineOpt()
-          if (allowArgss)
-            while (isPendingArglist) body()
-          else if (isPendingArglist) body()
+          def isLegalAnnotArg(): Boolean = ahead(token match {
+            // explained here:
+            // https://github.com/lampepfl/dotty/blob/675ae0c6440d5527150d650ad45d20fda5e03e69/compiler/src/dotty/tools/dotc/parsing/Parsers.scala#L2581
+            case _: RightParen => argss.isEmpty
+            case _: Ident => next(); !token.is[Colon]
+            case _: At => false
+            case _ => !isModifier(tokenPos)
+          })
+          def maybeBody() = {
+            newlineOpt()
+            val ok = token match {
+              case _: LeftParen => !insidePrimaryCtorAnnot || isLegalAnnotArg()
+              case _: LeftBrace => allowBraces
+              case _ => false
+            }
+            if (ok) body()
+            ok
+          }
+          if (maybeBody() && allowArgss) while (maybeBody()) {}
         }
         Init(tpe, name, argss)
     }
