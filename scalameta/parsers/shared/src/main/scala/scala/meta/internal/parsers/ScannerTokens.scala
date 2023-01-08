@@ -357,7 +357,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     }
 
     val iterPos = 1 + prevPos
-    if (iterPos < currPos) iter(iterPos, prevPos, -1)
+    if (iterPos < currPos) iter(iterPos, prevPos, if (tokens(prevPos).is[EOL]) 0 else -1)
     else if (tokens(currPos).is[EOF]) currPos
     else prevPos
   }

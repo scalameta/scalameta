@@ -10,14 +10,14 @@ import scala.meta.tokens.Tokens
 object LazyTokenIterator {
 
   def apply(st: ScannerTokens)(implicit dialect: Dialect): LazyTokenIterator =
-    new LazyTokenIterator(st, TokenRef(Nil, st.tokens(0), 0), -1)
+    new LazyTokenIterator(st, TokenRef(Nil, null, -1), TokenRef(Nil, st.tokens(0), 0))
 
 }
 
 private[parsers] class LazyTokenIterator private (
     private val scannerTokens: ScannerTokens,
-    private var curr: TokenRef,
-    private var prevPos: Int
+    private var prev: TokenRef,
+    private var curr: TokenRef
 )(implicit dialect: Dialect)
     extends TokenIterator {
 
@@ -27,7 +27,7 @@ private[parsers] class LazyTokenIterator private (
     nextToken(curr.token, curr.pos, curr.nextPos, curr.regions)
 
   override def next(): Unit = {
-    prevPos = curr.pointPos
+    prev = curr
     curr = getNextTokenRef()
   }
 
@@ -119,7 +119,7 @@ private[parsers] class LazyTokenIterator private (
             case _: KwMatch | _: KwCatch | _: KwFinally => true
             case _ => false
           }) =>
-        val outdentPos = findOutdentPos(prevPos, curr.pos, region)
+        val outdentPos = findOutdentPos(prevTokenPos, curr.pos, region)
         val outdent = mkOutdentToken(outdentPos)
         curr = TokenRef(tail, outdent, curr.pos, curr.pos, outdentPos)
         true
@@ -367,13 +367,13 @@ private[parsers] class LazyTokenIterator private (
     }
   }
 
-  override def prevTokenPos: Int = prevPos
+  override def prevTokenPos: Int = prev.pointPos
+  override def prevToken: Token = prev.token
 
   override def tokenPos: Int = curr.pointPos
-
   override def token: Token = curr.token
 
   override def fork: TokenIterator =
-    new LazyTokenIterator(scannerTokens, curr, prevPos)
+    new LazyTokenIterator(scannerTokens, prev, curr)
 
 }

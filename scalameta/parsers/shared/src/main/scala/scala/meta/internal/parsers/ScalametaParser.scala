@@ -1716,7 +1716,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case ParamLike() => // 4-5
             location == BlockStat ||
             tokens(startPos).is[LeftParen] &&
-            tokens(prevTokenPos).is[RightParen]
+            in.prevToken.is[RightParen]
           case Term.Tuple(xs) => xs.forall(ParamLike.unapply) // 6
           case _ => false
         }
@@ -2147,7 +2147,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             next()
             template(enumCaseAllowed = false, secondaryConstructorAllowed = false) match {
               case trivial @ Template(Nil, List(init), Self(Name.Anonymous(), None), Nil) =>
-                if (!getPrevToken(tokenPos).is[RightBrace]) Term.New(init)
+                if (!in.prevToken.is[RightBrace]) Term.New(init)
                 else Term.NewAnonymous(trivial)
               case other =>
                 Term.NewAnonymous(other)
