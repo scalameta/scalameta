@@ -309,9 +309,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def startTokenPos = tokenPos
     def endTokenPos = prevTokenPos
   }
-  case object StartPosPrev extends StartPos {
-    def startTokenPos = prevTokenPos
-  }
   case object EndPosPreOutdent extends EndPos {
     def endTokenPos = if (token.is[Indentation.Outdent]) tokenPos else prevTokenPos
   }
@@ -2204,7 +2201,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     accept[MacroQuote]
     QuotedSpliceContext.within {
       if (acceptOpt[LeftBrace]) {
-        val block = autoEndPos(StartPosPrev)(Term.Block(inBracesAfterOpen(blockStatSeq())))
+        val block = autoEndPos(prevTokenPos)(Term.Block(inBracesAfterOpen(blockStatSeq())))
         Term.QuotedMacroExpr(block)
       } else if (acceptOpt[LeftBracket]) {
         Term.QuotedMacroType(inBracketsAfterOpen(typ()))
@@ -2431,7 +2428,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def caseClause(forceSingleExpr: Boolean = false): Case = atPos(StartPosPrev, EndPosPreOutdent) {
+  def caseClause(forceSingleExpr: Boolean = false): Case = atPos(prevTokenPos, EndPosPreOutdent) {
     if (token.isNot[KwCase]) {
       def caseBody() = {
         accept[RightArrow]
@@ -3005,7 +3002,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           next()
           annots += (token match {
             case t: Unquote => unquote[Mod.Annot](t)
-            case _ => autoEndPos(StartPosPrev)(Mod.Annot(initInsideAnnotation(allowArgss)))
+            case _ => autoEndPos(prevTokenPos)(Mod.Annot(initInsideAnnotation(allowArgss)))
           })
           true
         case t: Ellipsis if ahead(token.is[At]) =>
@@ -3110,7 +3107,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     } else {
       if (token.is[soft.KwInline] && tryAhead[Ident]) {
-        mods += autoEndPos(StartPosPrev)(Mod.Inline())
+        mods += autoEndPos(prevTokenPos)(Mod.Inline())
       }
     }
     mod.foreach { mod =>
@@ -3623,7 +3620,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     val body: Stat =
       if (acceptOpt[LeftBrace]) {
-        autoEndPos(StartPosPrev)(Term.Block(inBracesAfterOpen(statSeq(templateStat()))))
+        autoEndPos(prevTokenPos)(Term.Block(inBracesAfterOpen(statSeq(templateStat()))))
       } else if (in.observeIndented()) {
         val block = autoPos(Term.Block(indentedOnOpen(statSeq(templateStat()))))
         block.stats match {
