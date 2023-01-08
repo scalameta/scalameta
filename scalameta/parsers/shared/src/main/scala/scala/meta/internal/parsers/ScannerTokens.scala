@@ -371,6 +371,10 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     }
   }
 
+  @inline
+  private[parsers] def nextToken(ref: TokenRef): TokenRef =
+    nextToken(ref.token, ref.pos, ref.nextPos, ref.regions)
+
   @tailrec
   private[parsers] def nextToken(
       prevToken: Token,
@@ -401,7 +405,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       TokenRef(regions, mkOutdentToken(pointPos), prevPos, currPos, pointPos)
     }
 
-    def currRef(regions: List[SepRegion]): TokenRef = TokenRef(regions, curr, currPos)
+    def currRef(regions: List[SepRegion], next: TokenRef = null): TokenRef =
+      TokenRef(regions, curr, currPos, next)
 
     def nonTrivial = curr match {
       case _: LeftParen => currRef(RegionParen(false) :: sepRegions)
@@ -511,7 +516,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         val token = tokens(lastNewlinePos)
         val out =
           if (newlines) LFLF(token.input, token.dialect, token.start, token.end) else token
-        TokenRef(sepRegions, out, lastNewlinePos)
+        TokenRef(sepRegions, out, lastNewlinePos, null)
       }
 
       def canProduceLF: Boolean = {

@@ -1,16 +1,17 @@
 package scala.meta.internal.parsers
 
-import scala.annotation.tailrec
 import scala.meta.Dialect
 import scala.meta.classifiers._
 import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
-import scala.meta.tokens.Tokens
 
 object LazyTokenIterator {
 
-  def apply(st: ScannerTokens)(implicit dialect: Dialect): LazyTokenIterator =
-    new LazyTokenIterator(st, TokenRef(Nil, null, -1), TokenRef(Nil, st.tokens(0), 0))
+  def apply(st: ScannerTokens)(implicit dialect: Dialect): LazyTokenIterator = {
+    val curr = TokenRef(Nil, st.tokens(0), 0, null)
+    val prev = TokenRef(Nil, null, -1, curr)
+    new LazyTokenIterator(st, prev, curr)
+  }
 
 }
 
@@ -23,12 +24,20 @@ private[parsers] class LazyTokenIterator private (
 
   import scannerTokens._
 
-  private def getNextTokenRef(): TokenRef =
-    nextToken(curr.token, curr.pos, curr.nextPos, curr.regions)
+  private def getNextTokenRef(): TokenRef = {
+    if (curr.next eq null) curr.next = nextToken(curr)
+    curr.next
+  }
 
   override def next(): Unit = {
     prev = curr
+    // also adds to prev in case we are forked
     curr = getNextTokenRef()
+  }
+
+  private def resetCurr(ref: TokenRef): Unit = {
+    prev.next = ref
+    curr = ref
   }
 
   private def observeIndented0(f: (Int, List[SepRegion]) => List[SepRegion]): Boolean = {
@@ -40,7 +49,7 @@ private[parsers] class LazyTokenIterator private (
       if (expected > existingIndent) {
         val regions = f(expected, currRegions)
         val indent = mkIndentToken(pointPos)
-        curr = TokenRef(regions, indent, curr.pos, curr.pos, pointPos)
+        resetCurr(TokenRef(regions, indent, curr.pos, curr.pos, pointPos))
         true
       } else false
     }
@@ -53,7 +62,7 @@ private[parsers] class LazyTokenIterator private (
     curr.regions match {
       case (region: SepRegionIndented) :: others if curr.token.is[Indentation.Indent] =>
         next()
-        curr = curr.withRegions(curr.regions match {
+        resetCurr(curr.withRegions(curr.regions match {
           // deal with  region added by `case` in enum after self type
           case RegionArrow :: _ => others
           // if no region was added
@@ -61,7 +70,7 @@ private[parsers] class LazyTokenIterator private (
           // keep any added region in `next()`
           case head :: _ => head :: others
           case xs => xs
-        })
+        }))
       case _ =>
     }
   }
@@ -121,7 +130,7 @@ private[parsers] class LazyTokenIterator private (
           }) =>
         val outdentPos = findOutdentPos(prevTokenPos, curr.pos, region)
         val outdent = mkOutdentToken(outdentPos)
-        curr = TokenRef(tail, outdent, curr.pos, curr.pos, outdentPos)
+        resetCurr(TokenRef(tail, outdent, curr.pos, curr.pos, outdentPos, curr.withRegions(tail)))
         true
       case _ => false
     })
