@@ -1586,16 +1586,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val enums: List[Enumerator] =
           if (acceptOpt[LeftBrace]) inBracesAfterOpen(enumerators())
           else if (token.is[LeftParen]) {
-            val forked = in.fork
-            Try(inParensOnOpen(enumerators())) match {
+            def parseInParens() = inParensOnOpen(enumerators())
+            if (dialect.allowSignificantIndentation)
               // Dotty retry in case of `for (a,b) <- list1.zip(list2) yield (a, b)`
-              case Failure(_) if dialect.allowSignificantIndentation =>
-                in = forked
-                enumerators()
-              case Failure(exception) => throw exception
-              case Success(value) =>
-                value
-            }
+              tryParse(Try(parseInParens()).toOption).getOrElse(enumerators())
+            else
+              parseInParens()
           } else if (acceptOpt[Indentation.Indent]) {
             indentedAfterOpen(enumerators())
           } else {
@@ -3499,9 +3495,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     accept[KwGiven]
     val anonymousName = autoPos(Name.Anonymous())
 
-    val forked = in.fork
-    val (sigName, paramClauseGroup) =
-      try {
+    val (sigName, paramClauseGroup) = tryParse {
+      Try {
         val name: meta.Name =
           if (token.is[Ident]) termName() else anonymousName
         val tparams = typeParamClauseOpt(
@@ -3514,12 +3509,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             termParamClausesOnParen(ownerIsType = false)
           else Nil
         if (acceptOpt[Colon]) {
-          (name, getParamClauseGroup(tparams, uparamss))
+          Some((name, getParamClauseGroup(tparams, uparamss)))
         } else {
-          in = forked
-          (anonymousName, None)
+          None
         }
-      } catch {
+      }.getOrElse {
+
         /**
          * We are first trying to parse non-anonymous given, which
          *   - requires `:` for type, if none is found it means it's anonymous
@@ -3527,10 +3522,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
          *     {{{given Conversion[AppliedName, Expr.Apply[Id]] = ???}}} This will fail because type
          *     params cannot have `.`
          */
-        case NonFatal(_) =>
-          in = forked
-          (anonymousName, None)
+        None
       }
+    }.getOrElse((anonymousName, None))
 
     val decltype = if (token.is[LeftBrace]) refinement(None) else startModType()
 
@@ -4307,15 +4301,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       enumCaseAllowed: Boolean = false,
       secondaryConstructorAllowed: Boolean = false
   ): (Self, List[Stat]) = {
-    val forked = in.fork
-    val selfTree: Self = selfOpt() match {
-      case Some(selfTree) if acceptOpt[RightArrow] =>
-        in.undoIndent()
-        selfTree
-      case _ =>
-        in = forked
-        selfEmpty()
-    }
+    val selfTree: Self = tryParse(selfOpt() match {
+      case x: Some[Self] if acceptOpt[RightArrow] => in.undoIndent(); x
+      case _ => None
+    }).getOrElse(selfEmpty())
     val stats = listBy[Stat] { buf =>
       statSeqBuf(buf, templateStat(enumCaseAllowed, secondaryConstructorAllowed))
     }
@@ -4495,18 +4484,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         statSeqBuf(buf, statpf)
         f(buf.toList)
     }
-    val bracelessPackageStatsOpt: Option[List[Stat]] = if (token.is[KwPackage]) {
-      val forked = in.fork
+    val bracelessPackageStatsOpt: Option[List[Stat]] = if (token.is[KwPackage]) tryParse {
       val startPos = tokenPos
       next()
-      val refOpt = if (!token.is[KwObject]) {
+      if (token.is[KwObject]) None
+      else {
         val ref = qualId()
         newLineOpt()
-        if (token.is[LeftBrace] || isColonEol()) None else Some(ref)
-      } else None
-      if (refOpt.isEmpty) in = forked
-      refOpt.map(ref => List(autoEndPos(startPos)(Pkg(ref, bracelessPackageStats(identity)))))
-    } else None
+        if (token.is[LeftBrace] || isColonEol()) None
+        else Some(List(autoEndPos(startPos)(Pkg(ref, bracelessPackageStats(identity)))))
+      }
+    }
+    else None
     Source(bracelessPackageStatsOpt.getOrElse { statSeqBuf(buf, statpf); buf.toList })
   }
 }
