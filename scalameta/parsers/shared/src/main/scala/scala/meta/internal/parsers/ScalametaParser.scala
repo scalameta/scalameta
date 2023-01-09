@@ -148,23 +148,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ------------- TOKEN STREAM HELPERS -------------------------------------------- */
 
-  def isColonEol(): Boolean = {
-    token.is[Colon] && isEolAfterColon(tokenPos)
-  }
+  private def isColonEol(): Boolean =
+    token.is[Colon] && dialect.allowSignificantIndentation && isEolAfter(tokenPos)
 
-  def isEolAfterColon(colonPos: => Int): Boolean = {
-
-    @tailrec
-    def isNextEOL(index: Int): Boolean = {
-      val nextIndex = getNextSafeIndex(index)
-      tokens(nextIndex) match {
-        case _: AtEOL | MultilineComment() => true
-        case _: Trivia => isNextEOL(nextIndex)
-        case _ => false
-      }
+  @tailrec
+  private def isEolAfter(index: Int): Boolean = {
+    val nextIndex = getNextSafeIndex(index)
+    tokens(nextIndex) match {
+      case _: AtEOL | MultilineComment() => true
+      case _: Trivia => isEolAfter(nextIndex)
+      case _ => false
     }
-
-    dialect.allowSignificantIndentation && isNextEOL(colonPos)
   }
 
   /* ------------- PARSER-SPECIFIC TOKENS -------------------------------------------- */
@@ -1637,13 +1631,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           t = addPos(Term.Assign(t, expr(location = NoStat, allowRepeated = true)))
         case _ =>
       }
-    } else if (token.is[Colon] && allowFewerBraces) {
+    } else if (token.is[Colon] && dialect.allowFewerBraces && isEolAfter(tokenPos)) {
       val colonPos = tokenPos
       next()
       in.observeIndented()
       val args = blockExpr(allowRepeated = false)
       val argClause = autoEndPos(colonPos)(Term.ArgClause(args :: Nil))
-      val arguments = addPos { Term.Apply(t, argClause) }
+      val arguments = addPos(Term.Apply(t, argClause))
       t = simpleExprRest(arguments, canApply = true, startPos = startPos)
     } else if (acceptOpt[Colon]) {
       if (token.is[At] || (token.is[Ellipsis] && ahead(token.is[At]))) {
@@ -2249,89 +2243,57 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case LeftParen() | LeftBrace() if canApply =>
         val arguments = addPos(Term.Apply(t, getArgClause()))
         simpleExprRest(arguments, canApply = true, startPos = startPos)
-      case _: Colon if canApply && allowFewerBraces =>
+      case _: Colon if canApply && dialect.allowFewerBraces =>
         val colonPos = tokenPos
-        val isEol = isEolAfterColon(colonPos)
-        next()
         // map:
-        val args = if (isEol) {
+        val argsOpt = if (isEolAfter(colonPos)) Some {
+          next()
           in.observeIndented()
           blockExpr(allowRepeated = false)
-        } else {
-          val paramPos = tokenPos
-
-          /**
-           * We need to handle param and then open indented region, otherwise only the block will be
-           * handles and any `.` will be accepted into the block:
-           * ```
-           * .map: a =>
-           *   a+1
-           * .filter: x =>
-           *   x > 2
-           * ```
-           * Without manual handling here, filter would be included for `(a+1).filter`
-           */
-          val param = simpleExpr(allowRepeated = false)
-          val params = autoEndPos(paramPos)(convertToParamClause(param))
-          val contextFunction = token.is[ContextArrow]
-          next()
-          val trm = blockExpr(allowRepeated = false)
-          autoEndPos(paramPos) {
-            if (contextFunction)
-              Term.ContextFunction(params, trm)
-            else
-              Term.Function(params, trm)
-          }
         }
-        val argClause = autoEndPos(colonPos)(Term.ArgClause(args :: Nil))
-        val arguments = addPos { Term.Apply(t, argClause) }
-        simpleExprRest(arguments, canApply = true, startPos = startPos)
+        else
+          tryAhead(Try {
+            val paramPos = tokenPos
+
+            /**
+             * We need to handle param and then open indented region, otherwise only the block will
+             * be handles and any `.` will be accepted into the block:
+             * ```
+             * .map: a =>
+             * a+1
+             * .filter: x =>
+             * x > 2
+             * ```
+             * Without manual handling here, filter would be included for `(a+1).filter`
+             */
+            val param = simpleExpr(allowRepeated = false)
+            val contextFunction = token.is[ContextArrow]
+            if (contextFunction || token.is[RightArrow]) Some {
+              val params = autoEndPos(paramPos)(convertToParamClause(param))
+              next()
+              val trm = blockExpr(allowRepeated = false)
+              autoEndPos(paramPos) {
+                if (contextFunction)
+                  Term.ContextFunction(params, trm)
+                else
+                  Term.Function(params, trm)
+              }
+            }
+            else None
+          }.getOrElse(None))
+
+        argsOpt match {
+          case Some(args) =>
+            val argClause = autoEndPos(colonPos)(Term.ArgClause(args :: Nil))
+            val arguments = addPos(Term.Apply(t, argClause))
+            simpleExprRest(arguments, canApply = true, startPos = startPos)
+          case _ => t
+        }
       case Underscore() =>
         next()
         addPos(Term.Eta(t))
       case _ =>
         t
-    }
-  }
-
-  private def allowFewerBraces: Boolean =
-    dialect.allowFewerBraces && (isEolAfterColon(tokenPos) || followingIsLambdaAfterColon())
-
-  private def followingIsLambdaAfterColon(): Boolean = {
-
-    /**
-     * Skip matching pairs of `(...)` or `[...]` parentheses.
-     * @pre
-     *   The current token is `(` or `[`
-     */
-    def skipParens[T1: TokenClassifier, T2: TokenClassifier]: Boolean = {
-      // starts on left delimiter
-      @tailrec
-      def iter(nest: Int): Boolean = {
-        next()
-        if (token.is[EOF]) false
-        else if (token.is[T2]) nest == 0 || iter(nest - 1)
-        else if (token.is[T1]) iter(nest + 1)
-        else iter(nest)
-      }
-      // stops on right delimiter (true), or end (false)
-      iter(0)
-    }
-
-    ahead {
-      val okParams = token match {
-        case _: Ident | _: Underscore => true
-        case _: LeftParen => skipParens[LeftParen, RightParen]
-        case _: LeftBracket => skipParens[LeftBracket, RightBracket]
-        case _ => false
-      }
-      okParams && {
-        next()
-        token.is[RightArrow] || token.is[ContextArrow]
-      } && {
-        next()
-        token.is[Indentation.Indent]
-      }
     }
   }
 
