@@ -344,19 +344,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     finally next()
   }
 
-  def atPosWithBody[T <: Tree](startTokenPos: Int, body: T, endPos: Int): T = {
-    val endTokenPos = if (endPos < startTokenPos) startTokenPos - 1 else endPos
-
-    def skipBy(range: Range, f: Token => Boolean): Int =
-      range.dropWhile(i => f(tokens(i))).headOption.getOrElse(range.start)
-    @inline def skipTrivia(range: Range): Int = skipBy(range, _.is[Trivia])
-    @inline def skipWhitespace(range: Range): Int = skipBy(range, _.is[Whitespace])
-
-    val rangeFromStart = startTokenPos to endTokenPos
-    val (start, end) =
-      if (rangeFromStart.isEmpty) (startTokenPos, endTokenPos)
-      else (skipTrivia(rangeFromStart), skipWhitespace(rangeFromStart.reverse))
-
+  def atPosWithBody[T <: Tree](startPos: Int, body: T, endPos: Int): T = {
+    @tailrec def getStart(pos: Int): Int =
+      if (pos > endPos) startPos else if (tokens(pos).is[Trivia]) getStart(pos + 1) else pos
+    @tailrec def getEnd(pos: Int): Int =
+      if (!tokens(pos).is[Whitespace]) pos else if (pos == startPos) endPos else getEnd(pos - 1)
+    val start = getStart(startPos)
+    val end = if (endPos < startPos) startPos - 1 else getEnd(endPos)
     val endExcl = if (start == end && tokens(start).is[Trivia]) end else end + 1
     val pos = TokenStreamPosition(start, endExcl)
     body.withOrigin(Origin.Parsed(input, dialect, pos))
