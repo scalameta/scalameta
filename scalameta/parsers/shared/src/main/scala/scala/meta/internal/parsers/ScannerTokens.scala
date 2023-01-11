@@ -397,12 +397,37 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def mkIndent(pointPos: Int, regions: List[SepRegion]): TokenRef =
       TokenRef(regions, mkIndentToken(pointPos), prevPos, currPos, pointPos)
 
-    def mkOutdent(region: SepRegion, regions: List[SepRegion]): TokenRef =
-      mkOutdentTo(region, currPos, regions)
-
-    def mkOutdentTo(region: SepRegion, maxPointPos: Int, regions: List[SepRegion]): TokenRef = {
+    def mkOutdentTo(region: SepRegion, maxPointPos: Int, regions: List[SepRegion]) = {
       val pointPos = findOutdentPos(prevPos, maxPointPos, region)
       TokenRef(regions, mkOutdentToken(pointPos), prevPos, currPos, pointPos)
+    }
+
+    def mkOutdents(regions: List[SepRegion])(cond: SepRegion => Boolean): TokenRef =
+      regions match {
+        case (x: SepRegionIndented) :: xs if cond(x) => mkOutdentsTo(x, currPos, xs)(cond)
+        case (x: SepRegionNonIndented) :: xs if !cond(x) => currRef(xs)
+        case xs => currRef(xs)
+      }
+
+    def mkOutdentsTo(
+        region: SepRegionIndented,
+        maxPointPos: Int,
+        regions: List[SepRegion]
+    )(cond: SepRegion => Boolean): TokenRef = {
+      @tailrec
+      def iter(ref: TokenRef, xs: List[SepRegion]): Unit = xs match {
+        case (head: SepRegionIndented) :: tail =>
+          if (cond(head)) {
+            val tr = mkOutdentTo(head, maxPointPos, tail)
+            ref.next = tr
+            iter(tr, tail)
+          }
+        case head :: tail if !cond(head) => ref.next = currRef(tail)
+        case _ => if (currNonTrivial) ref.next = currRef(xs)
+      }
+      val res = mkOutdentTo(region, maxPointPos, regions)
+      iter(res, regions)
+      res
     }
 
     def currRef(regions: List[SepRegion], next: TokenRef = null): TokenRef =
@@ -415,7 +440,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         sepRegions match {
           case (head: SepRegionIndented) :: tail
               if tail.find(!_.isIndented).exists(_.isInstanceOf[RegionParen]) =>
-            mkOutdent(head, tail)
+            mkOutdentsTo(head, currPos, tail)(_ => true)
           case _ => currRef(sepRegions)
         }
       case _: LeftBrace =>
@@ -439,30 +464,23 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         })
       case _: RightBrace =>
         // produce outdent for every indented region before RegionBrace|RegionEnum
-        @tailrec
-        def nextRegions(in: List[SepRegion]): TokenRef = in match {
-          case (_: RegionBrace | _: RegionEnum) :: xs => currRef(xs)
-          case (x: SepRegionIndented) :: xs => mkOutdent(x, xs)
-          case _ :: xs => nextRegions(xs)
-          case Nil => currRef(Nil)
+        val regions = sepRegions.dropWhile {
+          case _: RegionBrace | _: RegionEnum | _: SepRegionIndented => false
+          case _ => true
         }
-        nextRegions(sepRegions)
+        mkOutdents(regions) {
+          case _: RegionBrace | _: RegionEnum => false
+          case _ => true
+        }
       case _: RightBracket =>
         currRef(sepRegions match {
           case RegionBracket :: tail => tail
           case xs => xs
         })
       case _: EOF =>
-        sepRegions match {
-          case (x: SepRegionIndented) :: xs => mkOutdent(x, xs)
-          case other => currRef(other)
-        }
+        mkOutdents(sepRegions.filter(_.isIndented))(_ => true)
       case _: RightParen =>
-        sepRegions match {
-          case (x: SepRegionIndented) :: xs => mkOutdent(x, xs)
-          case (_: RegionParen) :: xs => currRef(xs)
-          case _ => currRef(sepRegions)
-        }
+        mkOutdents(sepRegions)(!_.isInstanceOf[RegionParen])
       case _: LeftArrow =>
         currRef(sepRegions match {
           case RegionArrow :: tail => tail
@@ -553,19 +571,23 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
            *     ```
            */
           def getOutdentIfNeeded() = sepRegions match {
-            case (r: SepRegionIndented) :: tail =>
-              val ok =
-                if (nextIndent < r.indent)
-                  r.closeOnNonCase ||
-                  !(!newlines && dialect.allowInfixOperatorAfterNL &&
-                    isLeadingInfixOperator(nextPos) && // exclude leading infix op
-                    tail.find(_.isIndented).forall(_.indent <= nextIndent)) &&
-                  // need to check prev.prev in case of `end match`
-                  (prev.isNot[CanContinueOnNextLine] || getPrevToken(prevPos).is[soft.KwEnd])
-                else r.closeOnNonCase && next.isNot[KwCase] && nextIndent == r.indent
-              if (ok) Some(mkOutdentTo(r, nextPos, tail)) else None
+            case (r: SepRegionIndented) :: tail if {
+                  if (nextIndent < r.indent)
+                    r.closeOnNonCase ||
+                    !(!newlines && dialect.allowInfixOperatorAfterNL &&
+                      isLeadingInfixOperator(nextPos) && // exclude leading infix op
+                      tail.find(_.isIndented).forall(_.indent <= nextIndent)) &&
+                    // need to check prev.prev in case of `end match`
+                    (prev.isNot[CanContinueOnNextLine] || getPrevToken(prevPos).is[soft.KwEnd])
+                  else outdentOnCase(r)
+                } =>
+              Some(mkOutdentsTo(r, nextPos, tail) { x =>
+                !x.isIndented || nextIndent < x.indent || outdentOnCase(x)
+              })
             case _ => None
           }
+          def outdentOnCase(r: SepRegion): Boolean =
+            r.closeOnNonCase && next.isNot[KwCase] && nextIndent == r.indent
 
           /**
            * Indent is needed in the following cases:
