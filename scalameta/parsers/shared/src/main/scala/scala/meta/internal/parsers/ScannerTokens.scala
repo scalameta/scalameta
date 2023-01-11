@@ -455,8 +455,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _ if isCaseIntro(currPos) =>
         currRef(sepRegions match {
           case (_: RegionEnum | _: RegionIndentEnum) :: _ => sepRegions
-          case (_: RegionCase) :: tail => RegionArrow :: tail
-          case _ => RegionArrow :: sepRegions
+          case (_: RegionCaseBody) :: tail => RegionCaseExpr :: tail
+          case _ => RegionCaseExpr :: sepRegions
         })
       case _: RightBrace =>
         // produce outdent for every indented region before RegionBrace|RegionEnum
@@ -480,19 +480,19 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         }
       case _: LeftArrow =>
         currRef(sepRegions match {
-          case RegionArrow :: tail => tail
+          case RegionCaseExpr :: xs => xs
           case xs => xs
         })
       case _: RightArrow =>
         currRef(sepRegions match {
-          case RegionArrow :: tail =>
+          case RegionCaseExpr :: xs =>
             // add case region for `match {` to calculate proper indentation
             // for statements in indentation dialects
-            if (tail.isEmpty || dialect.allowSignificantIndentation && tail.head.indentOnArrow ||
-              !isAheadNewLine(currPos)) tail
+            if (xs.isEmpty || dialect.allowSignificantIndentation && xs.head.indentOnArrow ||
+              !isAheadNewLine(currPos)) xs
             else {
               val indentInCase = countIndent(nextPos)
-              if (indentInCase > 0) RegionCase(indentInCase) :: tail else tail
+              if (indentInCase > 0) RegionCaseBody(indentInCase) :: xs else xs
             }
           case xs => xs
         })
@@ -538,7 +538,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         lastNewlinePos != -1 &&
         (prevToken.is[Indentation.Outdent] || prevPos >= 0 && canEndStat(prevPos)) &&
         next.isNot[CantStartStat] && regions.headOption.forall {
-          case _: RegionBrace | _: RegionCase | _: RegionEnum => true
+          case _: RegionBrace | _: RegionCaseBody | _: RegionEnum => true
           case _: RegionIndent | _: RegionIndentEnum => true
           case x: RegionParen => x.canProduceLF
           case _ => false
@@ -619,7 +619,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
               case _ if nextIndent < 0 || next.is[RightBrace] => None
               case _ if prevToken.is[Indentation] => None
               // if does not work with indentation in pattern matches
-              case _: KwIf if sepRegions.headOption.contains(RegionArrow) => None
+              case _: KwIf if sepRegions.headOption.contains(RegionCaseExpr) => None
               case _: KwCatch | _: KwMatch =>
                 // always add indent for indented `match` block
                 // check the previous token to avoid infinity loop

@@ -24,13 +24,12 @@ case object RegionBracket extends SepRegionNonIndented
 case class RegionBrace(override val indent: Int, override val indentOnArrow: Boolean)
     extends SepRegionNonIndented
 
-case class RegionCase(override val indent: Int) extends SepRegionNonIndented
+case object RegionCaseExpr extends SepRegionNonIndented
+case class RegionCaseBody(override val indent: Int) extends SepRegionNonIndented
 
 case class RegionEnum(override val indent: Int) extends SepRegionNonIndented
 
 case class RegionIndentEnum(override val indent: Int) extends SepRegionIndented
-
-case object RegionArrow extends SepRegionNonIndented
 
 // NOTE: Special case for Enum region is needed because parsing of 'case' statement is done differently
 case object RegionEnumArtificialMark extends SepRegionNonIndented
