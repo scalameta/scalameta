@@ -1355,7 +1355,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   @inline
   def newLinesOpt(): Unit = {
-    if (token.is[LF] || token.is[LFLF]) next()
+    if (token.isAny[LF, LFLF]) next()
   }
 
   def newLineOptWhenFollowedBy[T: TokenClassifier]: Unit = {
@@ -1656,7 +1656,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
     // Note the absense of `else if` here!!
-    if (token.is[RightArrow] || token.is[ContextArrow]) {
+    if (token.isAny[RightArrow, ContextArrow]) {
       // This is a tricky one. In order to parse lambdas, we need to recognize token sequences
       // like `(...) => ...`, `id | _ => ...` and `implicit id | _ => ...`.
       //
@@ -2212,7 +2212,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     @inline def addPos(body: Term): Term = autoEndPos(startPos)(body)
     if (canApply) {
       if (dialect.allowSignificantIndentation) {
-        newLineOptWhenFollowedBySignificantIndentationAnd(x => x.is[LeftBrace] || x.is[LeftParen])
+        newLineOptWhenFollowedBySignificantIndentationAnd(_.isAny[LeftBrace, LeftParen])
       } else {
         newLineOptWhenFollowedBy[LeftBrace]
       }
@@ -2445,7 +2445,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def enumerators(): List[Enumerator] = listBy[Enumerator] { enums =>
     enumeratorBuf(enums, isFirst = true)
-    while (token.is[StatSep] && tryAhead(!token.is[Indentation.Outdent] && !token.is[KwDo])) {
+    while (token.is[StatSep] && tryAhead(!token.isAny[Indentation.Outdent, KwDo])) {
       enumeratorBuf(enums, isFirst = false)
     }
   }
@@ -2457,7 +2457,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   ): Unit = token match {
     case _: KwIf if !isFirst => buf += enumeratorGuardOnIf()
     case t: Ellipsis => buf += ellipsis[Enumerator](t, 1)
-    case t: Unquote if ahead(!token.is[Equals] && !token.is[LeftArrow]) =>
+    case t: Unquote if ahead(!token.isAny[Equals, LeftArrow]) =>
       buf += unquote[Enumerator](t) // support for q"for ($enum1; ..$enums; $enum2)"
     case _ => generatorBuf(buf, !isFirst, allowNestedIf)
   }
@@ -2556,12 +2556,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       dropAnyBraces(pattern())
     }
 
-    private def isArglistEnd = token.is[RightParen] || token.is[RightBrace] || token.is[EOF]
+    private def isArglistEnd(t: Token): Boolean = t.isAny[RightParen, RightBrace, EOF]
 
     private def getSeqWildcard(isEnabled: Boolean, elseF: => Pat, mapF: Pat => Pat = identity) = {
       if (isEnabled && isSequenceOK && token.is[Underscore]) {
         val startPos = tokenPos
-        if (tryAhead(isStar && next(isArglistEnd)))
+        if (tryAhead(isStar && next(isArglistEnd(token))))
           mapF(autoEndPos(startPos)(Pat.SeqWildcard()))
         else elseF
       } else elseF
@@ -2643,7 +2643,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def badPattern3(token: Token): Nothing = {
       import patInfixContext._
       def isComma = token.is[Comma]
-      def isDelimiter = token.is[RightParen] || token.is[RightBrace]
+      def isDelimiter = token.isAny[RightParen, RightBrace]
       def isCommaOrDelimiter = isComma || isDelimiter
       val (isUnderscore, isStar) = stack match {
         case UnfinishedInfix(lhs, Term.Name("*")) :: _ => (lhs.is[Pat.Wildcard], true)
@@ -2708,7 +2708,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             }
         case _: Underscore =>
           next()
-          if (isSequenceOK && isStar && tryAhead(isArglistEnd))
+          if (isSequenceOK && isStar && tryAhead(isArglistEnd(token)))
             Pat.SeqWildcard()
           else
             Pat.Wildcard()
@@ -2889,7 +2889,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def tparamModifiers(): Option[Mod] = {
     token match {
       case t: Unquote =>
-        if (ahead(token.is[Ident] || token.is[Unquote])) Some(unquote[Mod](t)) else None
+        if (ahead(token.isAny[Ident, Unquote])) Some(unquote[Mod](t)) else None
       case t: Ellipsis => Some(ellipsis[Mod](t, 1))
       case Ident("+") => Some(atCurPosNext(Mod.Covariant()))
       case Ident("-") => Some(atCurPosNext(Mod.Contravariant()))
@@ -3074,7 +3074,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (isVarParam) {
       mods += atCurPosNext(Mod.VarParam())
     }
-    def endParamQuasi = token.is[RightParen] || token.is[Comma]
+    def endParamQuasi = token.isAny[RightParen, Comma]
     mods.headOption
       .collect {
         case q: Mod.Quasi if endParamQuasi => q.become[Term.Param]
@@ -3162,7 +3162,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       annotsBuf(buf, skipNewLines = false)
       if (ownerIsType) tparamModifiers().foreach(buf += _)
     }
-    def endTparamQuasi = token.is[RightBracket] || token.is[Comma]
+    def endTparamQuasi = token.isAny[RightBracket, Comma]
     mods.headOption match {
       case Some(q: Mod.Quasi) if endTparamQuasi =>
         q.become[Type.Param]
@@ -3267,7 +3267,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     } else {
       val importees = inBracesAfterOpen(commaSeparated(importee()))
 
-      def lastIsGiven = importees.last.is[Importee.Given] || importees.last.is[Importee.GivenAll]
+      def lastIsGiven = importees.last.isAny[Importee.Given, Importee.GivenAll]
       val imp =
         if (importees.nonEmpty && lastIsGiven) importees.init else importees
       if (imp.nonEmpty) {
@@ -3310,12 +3310,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def importee(): Importee = autoPos {
     importWildcardOrName() match {
-      case from: Importee.Name if token.is[RightArrow] || token.is[soft.KwAs] =>
+      case from: Importee.Name if token.isAny[RightArrow, soft.KwAs] =>
         next()
         importeeRename(from.name)
       // NOTE: this is completely nuts
       case from: Importee.Wildcard
-          if (token.is[RightArrow] || token.is[soft.KwAs]) && tryAhead(Wildcard.unapply(token)) =>
+          if token.isAny[RightArrow, soft.KwAs] && tryAhead(Wildcard.unapply(token)) =>
         next()
         from
       case other =>
@@ -3496,7 +3496,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     if (acceptOpt[Equals]) {
       Defn.GivenAlias(mods, sigName, paramClauseGroup, decltype, exprMaybeIndented())
-    } else if (token.is[KwWith] || token.is[LeftParen]) {
+    } else if (token.isAny[KwWith, LeftParen]) {
       val inits = parents()
       val (slf, stats) = {
         if (inits.size > 1 && token.isNot[KwWith])
@@ -3610,7 +3610,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (restype.isEmpty && isAfterOptNewLine[LeftBrace]) {
       warnProcedureDeprecation
       Defn.Def(mods, name, paramClauses, Some(autoPos(Type.Name("Unit"))), expr())
-    } else if (token.is[StatSep] || token.is[RightBrace] || token.is[Indentation.Outdent]) {
+    } else if (token.isAny[RightBrace, Indentation.Outdent, StatSep]) {
       val decltype = restype.getOrElse {
         warnProcedureDeprecation
         autoPos(Type.Name("Unit"))
@@ -3922,7 +3922,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def isPendingArglist = token.is[LeftParen] || (token.is[LeftBrace] && allowBraces)
     def newlineOpt() = {
       if (dialect.allowSignificantIndentation)
-        newLineOptWhenFollowedBySignificantIndentationAnd(x => x.is[LeftBrace] || x.is[LeftParen])
+        newLineOptWhenFollowedBySignificantIndentationAnd(_.isAny[LeftBrace, LeftParen])
       else if (allowBraces) newLineOptWhenFollowedBy[LeftBrace]
     }
     token match {
