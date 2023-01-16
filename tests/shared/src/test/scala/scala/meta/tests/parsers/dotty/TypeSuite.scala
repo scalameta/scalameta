@@ -186,7 +186,7 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("with-followed-by-brace") {
-    runTestError[Stat](
+    runTestAssert[Stat](
       """|{
          |  type AA = String with Int with
          |    type T>: Null
@@ -195,7 +195,33 @@ class TypeSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin,
-      "; expected but { found"
+      Some(
+        """|{
+           |  type AA = String with Int { type T >: Null }
+           |  {
+           |    type T >: Int
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Block(
+        List(
+          Defn.Type(
+            Nil,
+            pname("AA"),
+            Nil,
+            Type.Refine(
+              Some(Type.With(pname("String"), pname("Int"))),
+              Decl.Type(Nil, pname("T"), Nil, Type.Bounds(Some(pname("Null")), None)) :: Nil
+            ),
+            Type.Bounds(None, None)
+          ),
+          Term.Block(
+            Decl.Type(Nil, pname("T"), Nil, Type.Bounds(Some(pname("Int")), None)) :: Nil
+          )
+        )
+      )
     )
   }
 

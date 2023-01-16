@@ -902,9 +902,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
     def compoundType(inMatchType: Boolean = false): Type = {
-      if (token.is[LeftBrace])
-        refinement(innerType = None)
-      else {
+      refinement(innerType = None).getOrElse {
         val startPos = tokenPos
         compoundTypeRest(annotType(startPos, inMatchType = inMatchType), startPos)
       }
@@ -913,32 +911,23 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def compoundTypeRest(typ: Type, startPos: Int): Type = {
       @tailrec
       def gatherWithTypes(previousType: Type): Type = {
-        if (acceptOpt[KwWith]) {
+        refinement(Some(previousType)) match {
           /* Indentation means a refinement and we cannot join
            * refinements this way so stop looping.
            */
-          if (token.is[Indentation.Indent]) {
-            autoEndPos(startPos)(Type.Refine(Some(previousType), indented(refineStatSeq())))
-          } else {
-            val rhs = annotType()
-            val t = autoEndPos(startPos)(Type.With(previousType, rhs))
-            gatherWithTypes(t)
-          }
-        } else {
-          previousType
+          case None | Some(`previousType`) =>
+            if (acceptOpt[KwWith]) {
+              val rhs = annotType()
+              val t = autoEndPos(startPos)(Type.With(previousType, rhs))
+              gatherWithTypes(t)
+            } else {
+              previousType
+            }
+          case Some(t) => t
         }
       }
 
-      val t = gatherWithTypes(typ)
-      val wasLF = token.is[LF]
-
-      // the indentation needs to be higher than the containing one
-      def canAddBracesRefinement =
-        !dialect.allowSignificantIndentation || !wasLF || currentIndentation > previousIndentation
-
-      if (isAfterOptNewLine[LeftBrace] && canAddBracesRefinement) {
-        refinement(innerType = Some(t))
-      } else t
+      gatherWithTypes(typ)
     }
 
     def annotType(inMatchType: Boolean = false): Type =
@@ -3488,7 +3477,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     }.getOrElse((anonymousName, None))
 
-    val decltype = if (token.is[LeftBrace]) refinement(None) else startModType()
+    val decltype = refinement(None).getOrElse(startModType())
 
     def parents() = {
       val parents = ListBuffer[Init](
@@ -4171,11 +4160,33 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
+  private def refineWith(innerType: Option[Type], stats: => List[Stat]) =
+    autoEndPos(innerType)(Type.Refine(innerType, stats))
+
+  private def refinement(innerType: Option[Type]): Option[Type] =
+    if (!dialect.allowSignificantIndentation)
+      refinementInBraces(innerType, -1)
+    else if (!token.is[KwWith])
+      refinementInBraces(innerType, previousIndentation + 1)
+    else if (tryAhead[Indentation.Indent])
+      Some(refineWith(innerType, indented(refineStatSeq())))
+    else innerType
+
   @tailrec
-  private def refinement(innerType: Option[Type]): Type.Refine = {
-    val refineType = autoEndPos(innerType)(Type.Refine(innerType, inBraces(refineStatSeq())))
-    if (isAfterOptNewLine[LeftBrace]) refinement(innerType = Some(refineType))
-    else refineType
+  private def refinementInBraces(innerType: Option[Type], minIndent: Int): Option[Type] = {
+    val notRefined = token match {
+      case t: LeftBrace =>
+        dialect.allowSignificantIndentation &&
+        in.prevToken.pos.endLine < t.pos.endLine &&
+        t.pos.startColumn < minIndent
+      case _: LF =>
+        dialect.allowSignificantIndentation &&
+        peekToken.pos.startColumn < minIndent ||
+        !tryAhead[LeftBrace]
+      case _ => true
+    }
+    if (notRefined) innerType
+    else refinementInBraces(Some(refineWith(innerType, inBraces(refineStatSeq()))), minIndent)
   }
 
   def existentialStats(): List[Stat] = inBraces(refineStatSeq()) map {
