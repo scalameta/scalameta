@@ -98,14 +98,47 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("coloneol-type3") {
-    runTestError[Stat](
+    runTestAssert[Stat](
       """|type A = Product:
          |  type T>: Null:
          |    type D <: Product
          |""".stripMargin,
-      """|error: ; expected but : found
-         |type A = Product:
-         |                ^""".stripMargin
+      assertLayout = Some(
+        "type A = Product { type T >: Null { type D <: Product } }"
+      )
+    )(
+      Defn.Type(
+        Nil,
+        Type.Name("A"),
+        Nil,
+        Type.Refine(
+          Some(Type.Name("Product")),
+          List(
+            Decl.Type(
+              Nil,
+              Type.Name("T"),
+              Nil,
+              Type.Bounds(
+                Some(
+                  Type.Refine(
+                    Some(Type.Name("Null")),
+                    List(
+                      Decl.Type(
+                        Nil,
+                        Type.Name("D"),
+                        Nil,
+                        Type.Bounds(None, Some(Type.Name("Product")))
+                      )
+                    )
+                  )
+                ),
+                None
+              )
+            )
+          )
+        ),
+        Type.Bounds(None, None)
+      )
     )
   }
 
@@ -145,6 +178,39 @@ class TypeSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
+        pname("AA"),
+        Nil,
+        Type.Refine(
+          Some(Type.With(pname("String"), pname("Int"))),
+          Decl.Type(
+            Nil,
+            pname("T"),
+            Nil,
+            lowBound(
+              Type.Refine(
+                Some(pname("Null")),
+                Decl.Type(Nil, pname("T"), Nil, lowBound(pname("Int"))) :: Nil
+              )
+            )
+          ) :: Nil
+        ),
+        noBounds
+      )
+    )
+  }
+
+  test("coloneol-followed-by-brace-indent") {
+    runTestAssert[Stat](
+      """|type AA = String with Int:
+         |    type T>: Null:
+         |        type T>: Int
+         |""".stripMargin,
+      assertLayout = Some(
+        "type AA = String with Int { type T >: Null { type T >: Int } }"
+      )
+    )(
+      Defn.Type(
+        Nil,
         Type.Name("AA"),
         Nil,
         Type.Refine(
@@ -170,18 +236,6 @@ class TypeSuite extends BaseDottySuite {
         ),
         Type.Bounds(None, None)
       )
-    )
-  }
-
-  test("coloneol-followed-by-brace-indent") {
-    runTestError[Stat](
-      """|type AA = String with Int:
-         |    type T>: Null:
-         |        type T>: Int
-         |""".stripMargin,
-      """|error: ; expected but : found
-         |type AA = String with Int:
-         |                         ^""".stripMargin
     )
   }
 

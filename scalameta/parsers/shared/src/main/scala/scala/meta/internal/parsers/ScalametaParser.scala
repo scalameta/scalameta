@@ -4166,9 +4166,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private def refinement(innerType: Option[Type]): Option[Type] =
     if (!dialect.allowSignificantIndentation)
       refinementInBraces(innerType, -1)
-    else if (!token.is[KwWith])
+    else if (!token.isAny[Colon, KwWith])
       refinementInBraces(innerType, previousIndentation + 1)
-    else if (tryAhead[Indentation.Indent])
+    else if (tryAhead[Indentation.Indent] || tryAhead(in.observeIndented()))
       Some(refineWith(innerType, indented(refineStatSeq())))
     else innerType
 
