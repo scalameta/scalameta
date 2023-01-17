@@ -97,6 +97,18 @@ class TypeSuite extends BaseDottySuite {
     )
   }
 
+  test("coloneol-type3") {
+    runTestError[Stat](
+      """|type A = Product:
+         |  type T>: Null:
+         |    type D <: Product
+         |""".stripMargin,
+      """|error: ; expected but : found
+         |type A = Product:
+         |                ^""".stripMargin
+    )
+  }
+
   test("with-type-error") {
     runTestError[Stat](
       """|type A = Product with
@@ -161,12 +173,26 @@ class TypeSuite extends BaseDottySuite {
     )
   }
 
+  test("coloneol-followed-by-brace-indent") {
+    runTestError[Stat](
+      """|type AA = String with Int:
+         |    type T>: Null:
+         |        type T>: Int
+         |""".stripMargin,
+      """|error: ; expected but : found
+         |type AA = String with Int:
+         |                         ^""".stripMargin
+    )
+  }
+
   test("with-followed-by-brace") {
     runTestError[Stat](
-      """|type AA = String with Int with
+      """|{
+         |  type AA = String with Int with
          |    type T>: Null
-         |{
-         |  type T>: Int
+         |  {
+         |    type T>: Int
+         |  }
          |}
          |""".stripMargin,
       "; expected but { found"
