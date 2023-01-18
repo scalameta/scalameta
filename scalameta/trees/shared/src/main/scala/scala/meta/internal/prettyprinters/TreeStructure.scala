@@ -39,7 +39,7 @@ object TreeStructure {
                 default
               case Lit(value: String) =>
                 s(enquote(value, DoubleQuotes))
-              case _: Lit.Unit =>
+              case _: Lit.Unit | _: Lit.Null =>
                 s()
               case x: Lit.Double =>
                 s(x.tokens.mkString)
