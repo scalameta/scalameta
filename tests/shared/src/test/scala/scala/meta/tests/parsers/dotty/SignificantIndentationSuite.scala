@@ -1129,6 +1129,50 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("new-for-yield-if-with-indent") {
+    val code =
+      """|for
+         |  a <- x
+         |  b <- y
+         |  if
+         |    a < b
+         |  yield fx
+         |""".stripMargin
+    val output = "for (a <- x; b <- y; if a < b) yield fx"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.ForYield(
+        List(
+          Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
+          Enumerator.Generator(Pat.Var(tname("b")), tname("y")),
+          Enumerator.Guard(Term.ApplyInfix(tname("a"), tname("<"), Nil, List(tname("b"))))
+        ),
+        tname("fx")
+      )
+    )
+  }
+
+  test("old-for-yield-if-with-indent") {
+    val code =
+      """|for {
+         |  a <- x
+         |  b <- y
+         |  if
+         |    a < b
+         |} yield fx
+         |""".stripMargin
+    val output = "for (a <- x; b <- y; if a < b) yield fx"
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.ForYield(
+        List(
+          Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
+          Enumerator.Generator(Pat.Var(tname("b")), tname("y")),
+          Enumerator.Guard(Term.ApplyInfix(tname("a"), tname("<"), Nil, List(tname("b"))))
+        ),
+        tname("fx")
+      )
+    )
+  }
+
   test("for-in-parens") {
     val code = """|def foo =
                   |  (for a <- List(1)
@@ -1996,6 +2040,40 @@ class SignificantIndentationSuite extends BaseDottySuite {
           ),
           Term.Apply(Term.Name("println"), List(Lit.String("Yes"))),
           Term.Apply(Term.Name("println"), List(Lit.String("No"))),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("then-same-line-nested") {
+    runTestAssert[Stat](
+      """|def f =
+         |   if
+         |      if a > 0 then true else false
+         |   then
+         |      println("Yes")
+         |   else
+         |      println("No")
+         |""".stripMargin,
+      assertLayout = Some(
+        "def f = if (if (a > 0) true else false) println(\"Yes\") else println(\"No\")"
+      )
+    )(
+      Defn.Def(
+        Nil,
+        tname("f"),
+        None,
+        None,
+        Term.If(
+          Term.If(
+            Term.ApplyInfix(tname("a"), tname(">"), Nil, List(int(0))),
+            bool(true),
+            bool(false),
+            Nil
+          ),
+          Term.Apply(tname("println"), List(str("Yes"))),
+          Term.Apply(tname("println"), List(str("No"))),
           Nil
         )
       )
