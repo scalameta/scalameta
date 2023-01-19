@@ -551,4 +551,17 @@ class InfixSuite extends BaseDottySuite {
     )
   }
 
+  test("#3051 scala3 leading infix syntax") {
+    runTestError[Stat](
+      """|val httpRoutes2 = (MetricsApp() ++ HomeApp() ++ GreetingApp())
+         |      @@ Middleware.cors(corsConfig)
+         |      @@ Middleware.metrics(MetricsApp.pathLabelMapper)
+         |      @@ Middleware.debug
+         |""".stripMargin,
+      """|error: ; expected but . found
+         |      @@ Middleware.cors(corsConfig)
+         |                   ^""".stripMargin
+    )
+  }
+
 }
