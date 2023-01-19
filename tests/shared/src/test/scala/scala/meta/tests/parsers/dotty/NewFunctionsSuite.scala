@@ -839,4 +839,15 @@ class NewFunctionsSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("#3050 function without body") {
+    runTestError[Stat](
+      """|f{ (x1: A, x2: B => C) => }
+         |""".stripMargin,
+      """|error: ; expected but => found
+         |f{ (x1: A, x2: B => C) => }
+         |                       ^""".stripMargin
+    )
+  }
+
 }
