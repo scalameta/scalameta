@@ -409,11 +409,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         case xs => currRef(xs)
       }
 
-    def mkOutdentsTo(
-        region: SepRegionIndented,
-        maxPointPos: Int,
-        regions: List[SepRegion]
-    )(cond: SepRegion => Boolean): TokenRef = {
+    def mkOutdentsTo(region: SepRegion, maxPointPos: Int, regions: List[SepRegion])(
+        cond: SepRegion => Boolean
+    ): TokenRef = {
       @tailrec
       def iter(ref: TokenRef, xs: List[SepRegion]): Unit = xs match {
         case (head: SepRegionIndented) :: tail =>
@@ -551,6 +549,10 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       def getIfCanProduceLF =
         if (canProduceLF) Some(lastWhitespaceToken) else None
 
+      def isLeadingInfix() =
+        !newlines && dialect.allowInfixOperatorAfterNL &&
+          isLeadingInfixOperator(nextPos)
+
       val resOpt =
         if (next == null || !hasLF) None
         else if (!dialect.allowSignificantIndentation) getIfCanProduceLF
@@ -571,23 +573,25 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
            *     ```
            */
           def getOutdentIfNeeded() = sepRegions match {
-            case (r: SepRegionIndented) :: tail if {
+            case (r: SepRegionIndented) :: xs if {
                   if (nextIndent < r.indent)
                     r.closeOnNonCase ||
-                    !(!newlines && dialect.allowInfixOperatorAfterNL &&
-                      isLeadingInfixOperator(nextPos) && // exclude leading infix op
-                      tail.find(_.isIndented).forall(_.indent <= nextIndent)) &&
+                    !(isLeadingInfix() && // exclude leading infix op
+                      xs.find(_.isIndented).forall(_.indent <= nextIndent)) &&
                     // need to check prev.prev in case of `end match`
                     (prev.isNot[CanContinueOnNextLine] || getPrevToken(prevPos).is[soft.KwEnd])
                   else outdentOnCase(r)
                 } =>
-              Some(mkOutdentsTo(r, nextPos, tail) { x =>
-                !x.isIndented || nextIndent < x.indent || outdentOnCase(x)
-              })
+              emitOutdents(r, xs) {
+                case x: SepRegionIndented => nextIndent < x.indent || outdentOnCase(x)
+                case _ => true
+              }
             case _ => None
           }
           def outdentOnCase(r: SepRegion): Boolean =
             r.closeOnNonCase && next.isNot[KwCase] && nextIndent == r.indent
+          def emitOutdents(r: SepRegion, regions: List[SepRegion])(f: SepRegion => Boolean) =
+            Some(mkOutdentsTo(r, nextPos, regions)(f))
 
           /**
            * Indent is needed in the following cases:
@@ -604,27 +608,30 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
            * level.
            */
           def getIndentIfNeeded = {
-            val ok = nextIndent >= 0 && {
-              val (currIndent, indentOnArrow) =
-                sepRegions.headOption.fold((0, true))(r => (r.indent, r.indentOnArrow))
-
-              // !next.is[RightBrace] - braces can sometimes have -1 and we can start indent on }
-              if (nextIndent > currIndent && prev.is[RightArrow]) {
-                indentOnArrow && next.isNot[RightBrace] && !isEndMarkerIntro(nextPos)
-              } else if (nextIndent > currIndent) {
-                // if does not work with indentation in pattern matches
-                val shouldNotIndentIf =
-                  prev.is[KwIf] && sepRegions.headOption.contains(RegionArrow)
-                !shouldNotIndentIf && !next.is[RightBrace] && canStartIndent(prevPos)
-              } else
+            def exceedsIndent =
+              nextIndent > sepRegions.find(_.indent > 0).fold(0)(_.indent)
+            def emitIndent(regions: List[SepRegion], closeOnNonCase: Boolean = false) =
+              Some(mkIndent(indentPos, RegionIndent(nextIndent, closeOnNonCase) :: regions))
+            // !next.is[RightBrace] - braces can sometimes have -1 and we can start indent on }
+            prev match {
+              case _ if nextIndent < 0 || next.is[RightBrace] => None
+              case _ if prevToken.is[Indentation.Indent] => None
+              case _ if prevToken.is[Indentation.Outdent] => None
+              // if does not work with indentation in pattern matches
+              case _: KwIf if sepRegions.headOption.contains(RegionArrow) => None
+              case _: KwCatch | _: KwMatch =>
                 // always add indent for indented `match` block
                 // check the previous token to avoid infinity loop
-                prev.isAny[KwMatch, KwCatch] && !getPrevToken(prevPos).is[soft.KwEnd] &&
-                next.is[KwCase] && prevToken.isNot[Indentation.Indent]
+                val ok = next.is[KwCase] && !getPrevToken(prevPos).is[soft.KwEnd]
+                if (ok) emitIndent(sepRegions, true) else None
+              case _: RightArrow =>
+                val ok = sepRegions.headOption.forall(_.indentOnArrow) &&
+                  !isEndMarkerIntro(nextPos) && exceedsIndent
+                if (ok) emitIndent(sepRegions) else None
+              case _ =>
+                val ok = canStartIndent(prevPos) && exceedsIndent
+                if (ok) emitIndent(sepRegions) else None
             }
-            if (ok)
-              Some(mkIndent(indentPos, RegionIndent(nextIndent, prev.is[KwMatch]) :: sepRegions))
-            else None
           }
 
           getOutdentIfNeeded()
