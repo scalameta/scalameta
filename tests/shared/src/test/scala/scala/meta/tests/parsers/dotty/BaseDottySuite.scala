@@ -37,7 +37,10 @@ trait BaseDottySuite extends ParseSuite {
 
   final def pname(name: String): Type.Name = Type.Name(name)
   final def pparam(s: String): Type.Param =
-    Type.Param(Nil, Type.Name(s), Nil, Type.Bounds(None, None), Nil, Nil)
+    Type.Param(Nil, Type.Name(s), Nil, noBounds, Nil, Nil)
+
+  final val noBounds = Type.Bounds(None, None)
+  final def lowBound(bound: Type) = Type.Bounds(Some(bound), None)
 
   final def bool(v: Boolean) = Lit.Boolean(v)
   final def int(v: Int) = Lit.Int(v)
