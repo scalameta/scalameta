@@ -475,7 +475,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Case case aa =>
        |Term.Block   @@case bb =>
        |Case case bb =>
-       |Term.Block   @@finally
+       |Term.Block   case bb =>@@
        |Term.Block cc
        |  dd
        |""".stripMargin

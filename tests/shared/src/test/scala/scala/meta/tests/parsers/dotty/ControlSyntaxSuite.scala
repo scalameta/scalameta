@@ -2449,8 +2449,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |      println(ex)
            |    case ex: Throwable =>
            |      throw ex
-           |      end try
            |  }
+           |  end try
            |}
            |""".stripMargin
       )
@@ -2499,11 +2499,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
                 Case(
                   Pat.Typed(Pat.Var(tname("ex")), pname("Throwable")),
                   None,
-                  Term.Block(List(Term.Throw(tname("ex")), Term.EndMarker(tname("try"))))
+                  Term.Throw(tname("ex"))
                 )
               ),
               None
-            )
+            ),
+            Term.EndMarker(tname("try"))
           ),
           Nil
         )
