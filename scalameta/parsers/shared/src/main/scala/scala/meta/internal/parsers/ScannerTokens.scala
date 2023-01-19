@@ -70,7 +70,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       }
 
       val len = text.length
-      len == 0 || (text(0) != '@' && iter(len - 1, false))
+      len == 0 || iter(len - 1, false)
     }
   }
 
