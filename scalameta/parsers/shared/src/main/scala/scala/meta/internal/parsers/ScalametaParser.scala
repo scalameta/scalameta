@@ -2259,19 +2259,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
              * Without manual handling here, filter would be included for `(a+1).filter`
              */
             val param = simpleExpr(allowRepeated = false)
-            val contextFunction = token.is[ContextArrow]
-            if (contextFunction || token.is[RightArrow]) Some {
-              val params = autoEndPos(paramPos)(convertToParamClause(param))
-              next()
-              val trm = blockExpr(allowRepeated = false)
-              autoEndPos(paramPos) {
-                if (contextFunction)
-                  Term.ContextFunction(params, trm)
-                else
-                  Term.Function(params, trm)
+            if (peekToken.is[Indentation.Indent]) {
+              val contextFunction = token.is[ContextArrow]
+              if (contextFunction || token.is[RightArrow]) Some {
+                val params = autoEndPos(paramPos)(convertToParamClause(param))
+                next()
+                val trm = blockExpr(allowRepeated = false)
+                autoEndPos(paramPos) {
+                  if (contextFunction)
+                    Term.ContextFunction(params, trm)
+                  else
+                    Term.Function(params, trm)
+                }
               }
-            }
-            else None
+              else None
+            } else None
           }.getOrElse(None))
 
         argsOpt match {
