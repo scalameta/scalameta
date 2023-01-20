@@ -807,7 +807,7 @@ object TreeSyntax {
           " ",
           kw("="),
           " ",
-          t.rhs.map(s(_)).getOrElse(s(kw("_")))
+          t.body
         )
       case t: Defn.Type =>
         s(
