@@ -3386,7 +3386,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def patDefOrDcl(mods: List[Mod]): Stat = autoEndPos(mods) {
-    val isMutable = token.is[KwVar]
+    val isVal = token.is[KwVal]
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     if (!mods.has[Mod.Override])
       rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
@@ -3395,32 +3395,29 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case name: Term.Name => copyPos(name)(Pat.Var(name))
       case pat => pat
     }
-    val tp: Option[Type] = typedOpt()
+    val tpOpt: Option[Type] = typedOpt()
 
-    if (tp.isEmpty || token.is[Equals]) {
-      accept[Equals]
-      val rhsExpr = exprMaybeIndented()
-      val rhs =
-        if (rhsExpr.is[Term.Placeholder]) {
-          if (tp.nonEmpty && isMutable && lhs.forall(_.is[Pat.Var]))
-            None
-          else
-            syntaxError("unbound placeholder parameter", at = token)
-        } else Some(rhsExpr)
-
-      if (isMutable) Defn.Var(mods, lhs, tp, rhs)
-      else Defn.Val(mods, lhs, tp, rhs.get)
+    if (acceptOpt[Equals]) {
+      val rhs = exprMaybeIndented()
+      if (rhs.is[Term.Placeholder] && (tpOpt.isEmpty || isVal || !lhs.forall(_.is[Pat.Var])))
+        syntaxError("unbound placeholder parameter", at = token)
+      if (isVal)
+        Defn.Val(mods, lhs, tpOpt, rhs)
+      else
+        Defn.Var(mods, lhs, tpOpt, if (rhs.is[Term.Placeholder]) None else Some(rhs))
     } else {
-      if (!isMutable && !dialect.allowLazyValAbstractValues)
+      if (isVal && !dialect.allowLazyValAbstractValues)
         rejectMod[Mod.Lazy](mods, "lazy values may not be abstract")
-      val ids = lhs.map {
-        case q: Quasi => q
-        case name: Pat.Var => name
-        case other => syntaxError("pattern definition may not be abstract", at = other)
+      lhs.foreach { x =>
+        if (!x.is[Quasi] && !x.is[Pat.Var])
+          syntaxError("pattern definition may not be abstract", at = x)
       }
-
-      if (isMutable) Decl.Var(mods, ids, tp.get)
-      else Decl.Val(mods, ids, tp.get)
+      tpOpt.fold { syntaxError("declaration requires a type", at = token) } { tp =>
+        if (isVal)
+          Decl.Val(mods, lhs, tp)
+        else
+          Decl.Var(mods, lhs, tp)
+      }
     }
   }
 
