@@ -3404,7 +3404,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (isVal)
         Defn.Val(mods, lhs, tpOpt, rhs)
       else
-        Defn.Var(mods, lhs, tpOpt, if (rhs.is[Term.Placeholder]) None else Some(rhs))
+        Defn.Var(mods, lhs, tpOpt, rhs)
     } else {
       if (isVal && !dialect.allowLazyValAbstractValues)
         rejectMod[Mod.Lazy](mods, "lazy values may not be abstract")

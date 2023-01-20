@@ -580,19 +580,27 @@ object Defn {
       decltpe: Option[sm.Type],
       rhs: Term
   ) extends Defn with Stat.WithMods with Tree.WithDeclTpeOpt with Tree.WithBody {
+    checkFields(!rhs.is[Term.Placeholder])
     checkFields(pats.forall(!_.is[Term.Name]))
     override def body: Tree = rhs
+  }
+
+  private[meta] object VarRhsCtor {
+    def apply(rhs: Option[Term]): Term = rhs.getOrElse(Term.Placeholder())
+    def toOpt(body: Term): Option[Term] = if (body.is[Term.Placeholder]) None else Some(body)
   }
   @ast class Var(
       mods: List[Mod],
       pats: List[Pat] @nonEmpty,
       decltpe: Option[sm.Type],
-      rhs: Option[Term]
+      @replacesFields("4.7.2", VarRhsCtor)
+      body: Term
   ) extends Defn with Stat.WithMods with Tree.WithDeclTpeOpt with Tree.WithBody {
-    checkFields(pats.forall(!_.is[Term.Name]))
-    checkFields(decltpe.nonEmpty || rhs.nonEmpty)
-    checkFields(rhs.isEmpty ==> pats.forall(_.is[Pat.Var]))
-    override def body: Tree = rhs.orNull
+    checkFields(
+      if (body.is[Term.Placeholder]) decltpe.nonEmpty && pats.forall(_.is[Pat.Var])
+      else pats.forall(!_.is[Term.Name])
+    )
+    @replacedField("4.7.2") final def rhs: Option[Term] = VarRhsCtor.toOpt(body)
   }
   @ast class Given(
       mods: List[Mod],

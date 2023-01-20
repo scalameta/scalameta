@@ -32,8 +32,8 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(q"foo(..${xs: List[Term]})".syntax, "foo(x, y)")
     val xss = List(List(q"x", q"y"))
     assertEquals(q"foo(...${xss: List[List[Term]]})".syntax, "foo(x, y)")
-    val rhs = Some(q"x")
-    assertEquals(q"var foo = ${rhs: Option[Term]}".syntax, "var foo = x")
+    val rhs = q"x"
+    assertEquals(q"var foo = ${rhs: Term}".syntax, "var foo = x")
   }
 
   test("deconstruction ascriptions") {
@@ -41,8 +41,8 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(xs.toString, "List(x, y)")
     val q"foo(...${xss: List[List[Term]]})" = q"foo(x, y)"
     assertEquals(xss.toString, "List(List(x, y))")
-    val q"var foo = ${x: Option[Term]}" = q"var foo = x"
-    assertEquals(x.toString, "Some(x)")
+    val q"var foo = ${x: Term}" = q"var foo = x"
+    assertEquals(x.toString, "x")
   }
 
   test("1 Type.Var or Type.Name") {
@@ -1584,13 +1584,13 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("1 q\"..mods var ..pats: tpeopt = expropt\"") {
-    val q"..$mods var ..$pats: $tpeopt = $expropt" = q"private final var x, y: T = t"
+    val q"..$mods var ..$pats: $tpeopt = $expr" = q"private final var x, y: T = t"
     assertEquals(mods.toString, "List(private, final)")
     assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Final())
     assertEquals(pats.toString, "List(x, y)")
     assertTrees(pats: _*)(Pat.Var(Term.Name("x")), Pat.Var(Term.Name("y")))
     assertTree(tpeopt)(Some(Type.Name("T")))
-    assertTree(expropt)(Some(Term.Name("t")))
+    assertTree(expr)(Term.Name("t"))
   }
 
   test("2 q\"..mods var ..pats: tpeopt = expropt\"") {
