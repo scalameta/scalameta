@@ -551,4 +551,56 @@ class InfixSuite extends BaseDottySuite {
     )
   }
 
+  test("#3051 scala3 leading infix syntax") {
+    runTestAssert[Stat](
+      """|val httpRoutes2 = (MetricsApp() ++ HomeApp() ++ GreetingApp())
+         |      @@ Middleware.cors(corsConfig)
+         |      @@ Middleware.metrics(MetricsApp.pathLabelMapper)
+         |      @@ Middleware.debug
+         |""".stripMargin,
+      Some(
+        """|val httpRoutes2 = (MetricsApp() ++ HomeApp() ++ GreetingApp()) @@ Middleware.cors(corsConfig) @@ Middleware.metrics(MetricsApp.pathLabelMapper) @@ Middleware.debug
+           |""".stripMargin
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("httpRoutes2"))),
+        None,
+        Term.ApplyInfix(
+          Term.ApplyInfix(
+            Term.ApplyInfix(
+              Term.ApplyInfix(
+                Term.ApplyInfix(
+                  Term.Apply(tname("MetricsApp"), Nil),
+                  tname("++"),
+                  Nil,
+                  List(Term.Apply(tname("HomeApp"), Nil))
+                ),
+                tname("++"),
+                Nil,
+                List(Term.Apply(tname("GreetingApp"), Nil))
+              ),
+              tname("@@"),
+              Nil,
+              Term.Apply(
+                Term.Select(tname("Middleware"), tname("cors")),
+                List(tname("corsConfig"))
+              ) :: Nil
+            ),
+            tname("@@"),
+            Nil,
+            Term.Apply(
+              Term.Select(tname("Middleware"), tname("metrics")),
+              List(Term.Select(tname("MetricsApp"), tname("pathLabelMapper")))
+            ) :: Nil
+          ),
+          tname("@@"),
+          Nil,
+          List(Term.Select(tname("Middleware"), tname("debug")))
+        )
+      )
+    )
+  }
+
 }
