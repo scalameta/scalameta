@@ -706,7 +706,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   }
 
   private def getDeprecatedAnno(v: Version) =
-    q"new scala.deprecated(since = ${Literal(Constant(versionToString(v)))})"
+    q"new scala.deprecated(${Literal(Constant(versionToString(v)))})"
 
   private def asValDecl(p: ValOrDefDef): ValDef =
     q"val ${p.name}: ${deannotateType(p)}"
