@@ -9,7 +9,12 @@ import org.scalameta.build.Versions._
 import complete.DefaultParsers._
 import munit.sbtmunit.BuildInfo.munitVersion
 
-lazy val LanguageVersions = Seq(LatestScala213, LatestScala212, LatestScala211)
+lazy val LanguageVersions = Seq(
+  LatestScala213,
+  LatestScala212,
+  LatestScala3,
+  LatestScala211
+)
 lazy val LanguageVersion = LanguageVersions.head
 def customVersion = sys.props.get("scalameta.version")
 def parseTagVersion: String = {
