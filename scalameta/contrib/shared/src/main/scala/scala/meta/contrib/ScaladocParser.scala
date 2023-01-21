@@ -92,14 +92,15 @@ object ScaladocParser {
     // Parsers for all labelled docs instances
     val labelledParsers: List[P[_] => P[DocToken]] = {
 
-      DocToken.tagTokenKinds.map {
-        // Single parameter doc tokens
-        case kind @ DocToken.TagKind(label, 1) =>
+      DocToken.tagTokenKinds.map { kind =>
+        val label = kind.label
+        if (kind.numberParameters == 1) {
+          // Single parameter doc tokens
           def tagKindParser[_: P] = P(s"$label " ~ bodyParser.map(c => DocToken(kind, c.trim)))
           tagKindParser(_: P[_])
-
-        // Multiple parameter doc tokens
-        case kind @ DocToken.TagKind(label, 2) =>
+        } else {
+          require(kind.numberParameters == 2)
+          // Multiple parameter doc tokens
           def parser[_: P] = {
             def nameParser: P[String] = ((AnyChar ~ !" ").rep ~ AnyChar).!.map(_.trim)
 
@@ -111,6 +112,7 @@ object ScaladocParser {
             P(s"$label" ~ nameAndBodyParsers)
           }
           parser(_: P[_])
+        }
       }
     }
 
