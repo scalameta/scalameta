@@ -39,17 +39,26 @@ jobs:
           - "mima"
     steps:
       - uses: actions/checkout@v3
-      - uses: olafurpg/setup-scala@v13
-      - run: git fetch --unshallow
+        with:
+          fetch-depth: 0
+      - name: Set up JVM
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: 'sbt'
       - run: sbt ${{ matrix.command }}
   jdk11:
     name: JDK11 tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: olafurpg/setup-scala@v13
+      - name: Set up JVM
+        uses: actions/setup-java@v3
         with:
-          java-version: adopt@1.11
+          java-version: '11'
+          distribution: 'temurin'
+          cache: 'sbt'
       - run: sbt ++2.13.8 testsJVM/test
   windows:
     name: Windows tests
@@ -64,5 +73,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: olafurpg/setup-scala@v13
+      - name: Set up JVM
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: 'sbt'
       - run: ./bin/scalafmt --test
