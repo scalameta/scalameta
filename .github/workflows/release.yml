@@ -8,9 +8,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - uses: olafurpg/setup-scala@v13
-      - uses: olafurpg/setup-gpg@v3
-      - run: git fetch --unshallow
+      - name: Set up JVM
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: 'sbt'
       - name: Publish
         run: |
           COMMAND="ci-release"

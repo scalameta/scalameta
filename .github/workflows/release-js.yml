@@ -10,8 +10,14 @@ jobs:
         with:
           node-version: "18"
       - uses: actions/checkout@v3
-      - uses: olafurpg/setup-scala@v13
-      - run: git fetch --unshallow
+        with:
+          fetch-depth: 0
+      - name: Set up JVM
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: 'sbt'
       - name: Publish
         run: sbt "parsersJS/npmPackageNpmrc; parsersJS/npmPackagePublish"
         env:
