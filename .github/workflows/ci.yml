@@ -5,35 +5,13 @@ on:
       - main
   pull_request:
 jobs:
-  test:
+  testOther:
     name: ${{ matrix.command }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         command:
-          - "++2.11.12 testsJVM/test"
-          - "++2.12.10 testsJVM/test"
-          - "++2.12.11 testsJVM/test"
-          - "++2.12.12 testsJVM/test"
-          - "++2.12.13 testsJVM/test"
-          - "++2.12.14 testsJVM/test"
-          - "++2.12.16 testsJVM/test"
-          - "++2.12.17 testsJVM/test"
-          - "++2.12.17 testsJS/test"
-          - "++2.12.17 testsNative/test"
-          - "++2.13.1 testsJVM/test"
-          - "++2.13.2 testsJVM/test"
-          - "++2.13.3 testsJVM/test"
-          - "++2.13.4 testsJVM/test"
-          - "++2.13.5 testsJVM/test"
-          - "++2.13.6 testsJVM/test"
-          - "++2.13.7 testsJVM/test"
-          - "++2.13.8 testsJVM/test"
-          - "++2.13.9 testsJVM/test"
-          - "++2.13.10 testsJVM/test"
-          - "++2.13.10 testsJS/test"
-          - "++2.13.10 testsNative/test"
           - "++2.13.10 download-scala-library testsJVM/slow:test"
           - "communitytest/test"
           - "mima"
@@ -48,18 +26,65 @@ jobs:
           distribution: 'temurin'
           cache: 'sbt'
       - run: sbt ${{ matrix.command }}
-  jdk11:
-    name: JDK11 tests
+  testLatestScala:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        type:
+          - 'JVM'
+          - 'JS'
+          - 'Native'
+        scala:
+          - '2.12.17'
+          - '2.13.10'
+        java:
+          - '8'
+          - '11'
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Set up JVM
         uses: actions/setup-java@v3
         with:
-          java-version: '11'
+          java-version: ${{ matrix.java }}
           distribution: 'temurin'
           cache: 'sbt'
-      - run: sbt ++2.13.8 testsJVM/test
+      - run: sbt ++${{ matrix.scala }} tests${{ matrix.type }}/test
+  testOlderScalaOnJVM:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scala:
+          - '2.11.12'
+          - '2.12.10'
+          - '2.12.11'
+          - '2.12.12'
+          - '2.12.13'
+          - '2.12.14'
+          - '2.12.16'
+          - '2.13.1'
+          - '2.13.2'
+          - '2.13.3'
+          - '2.13.4'
+          - '2.13.5'
+          - '2.13.6'
+          - '2.13.7'
+          - '2.13.8'
+          - '2.13.9'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up JVM
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: 'sbt'
+      - run: sbt ++${{ matrix.scala }} testsJVM/test
   windows:
     name: Windows tests
     runs-on: windows-latest
