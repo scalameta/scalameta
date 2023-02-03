@@ -54,7 +54,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val iparents1 = ListBuffer[Tree]() ++ iparents
         def parents1 = List(tq"$iname")
         val mstats1 = ListBuffer[Tree]() ++ mstats
-        val mstats2 = ListBuffer[Tree]()
+        val mstatsLatest = ListBuffer[Tree]()
         val manns1 = ListBuffer[Tree]() ++ mmods.annotations
         def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
         val quasiCopyExtraParamss = ListBuffer[List[ValDef]]()
@@ -343,7 +343,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             ..$internalBody
           }
         """
-        mstats2 += q"""
+        mstatsLatest += q"""
           @$InlineAnnotation def apply(..$applyParams): $iname = $mname.apply(..$internalArgs)
         """
 
@@ -353,21 +353,16 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // apply(A, B, C), apply(A, B, C, D), apply(A, B, C, D, E)
         paramsVersions.foreach { v =>
           val applyParamsBuilder = List.newBuilder[(ValDef, Int)]
-          val applyCastBuilder = List.newBuilder[ValDef]
+          val applyBodyBuilder = List.newBuilder[Tree]
           versionedParams.foreach { vp =>
             val (decl, defn) = vp.getApplyDeclDefnBefore(v)
             decl.foreach(applyParamsBuilder += _)
-            defn.foreach(applyCastBuilder += _)
+            defn.foreach(applyBodyBuilder += _)
           }
           val params = positionVersionedParams(applyParamsBuilder.result())
-          val castFields = applyCastBuilder.result()
-          val anno = getDeprecatedAnno(v)
-          mstats1 += q"""
-            @$anno def apply(..$params): $iname = {
-              ..$castFields
-              $mname.apply(..$internalArgs)
-            }
-          """
+          applyBodyBuilder += q"$mname.apply(..$internalArgs)"
+          val applyBody = applyBodyBuilder.result()
+          mstats1 += q"@${getDeprecatedAnno(v)} def apply(..$params): $iname = { ..$applyBody }"
         }
 
         // step 14: generate Companion.unapply
@@ -385,15 +380,17 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             """
           }
           if (params.nonEmpty) {
+            val latestTree = getUnapply(params)
             mstats1 += paramsVersions.headOption.fold {
-              getUnapply(params)
+              latestTree
             } { ver =>
               getUnapply(paramsForVersion(ver), getDeprecatedAnno(ver))
             }
-            mstats2 += getUnapply(params)
+            mstatsLatest += latestTree
           } else {
-            mstats1 += q"@$InlineAnnotation final def unapply(x: $iname): $BooleanClass = true"
-            mstats2 += q"@$InlineAnnotation final def unapply(x: $iname): $BooleanClass = true"
+            val tree = q"@$InlineAnnotation final def unapply(x: $iname): $BooleanClass = true"
+            mstats1 += tree
+            mstatsLatest += tree
           }
         }
 
@@ -426,8 +423,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         mstats1 += q"""
           object internal { // to be ignored by Mima
-            object Impl {
-              ..$mstats2
+            object Latest {
+              ..$mstatsLatest
             }
           }
         """

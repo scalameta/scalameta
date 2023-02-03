@@ -73,7 +73,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
           // in the current scope. The resulting type inference error (see above) can be fixed by providing an explicit type in the local definition for stats.
           // q"$u.AssignOrNamedArg($fieldName, $fieldValue)"
           }
-          val namePath = getNamePath(nameParts.toSeq ++ Seq("internal", "Impl"))
+          val namePath = getNamePath(nameParts.toSeq ++ Seq("internal", "Latest"))
           q"""$u.Apply($namePath, $args)"""
         } else getNamePath(nameParts)
         q"def $defName($localName: ${adt.tpe}): $u.Tree = $body"
