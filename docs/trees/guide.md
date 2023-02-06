@@ -325,23 +325,36 @@ core design principle of Scalameta trees is that tree pattern matching is the
 dual of tree construction. If you know how to construct a tree, you know how to
 de-construct it.
 
-### With normal constructors
+### With versioned constructor-like matchers
 
-Normal constructors work in pattern position the same way they work in regular
-term position.
+Tree fields can evolve over time, and for each version an appropriate
+`apply()` constructor method is added. However, the same cannot be said
+about matchers, as there can be only one `unapply()`.
 
+Therefore, to evolve the code properly, please use versioned matcher objects.
+Each tree comes with `.Initial` matcher corresponding to the original set of
+fields, and each field change is annotated with the version **after which**
+it was made, along with a versioned matcher `.After_x_y_z`.
+
+For instance,
 ```scala mdoc
 "function(arg1, arg2)".parse[Term].get match {
-  case Term.Apply(function, List(arg1, arg2)) =>
+  case Term.Apply.Initial(function, List(arg1, arg2)) =>
     println("1 " + function)
     println("2 " + arg1)
     println("3 " + arg2)
 }
 ```
-
-Repeated fields are always `List[T]`, so you can safely deconstruct trees with
-the `List(arg1, arg2)` syntax or if you prefer the `arg1 :: arg2 :: Nil` syntax.
-There is no need to use `Seq(arg1, arg2)` or `arg1 +: arg2 +: Nil`.
+or
+```scala mdoc
+"function(using arg1, arg2)".parse[Term].get match {
+  case Term.Apply.After_4_6_0(function, Term.ArgClause.Initial(List(arg1, arg2), mod)) =>
+    println("1 " + function)
+    println("2 " + arg1)
+    println("3 " + arg2)
+    println("4 " + mod)
+}
+```
 
 ### With quasiquotes
 
@@ -473,7 +486,7 @@ Extend `Traverser` if you need to implement a custom tree traversal
 ```scala mdoc:silent
 val traverser = new Traverser {
   override def apply(tree: Tree): Unit = tree match {
-    case Pat.Var(name) =>
+    case Pat.Var.Initial(name) =>
       println(s"stop: $name")
     case node =>
       println(s"${node.productPrefix}: $node")
@@ -519,7 +532,7 @@ introduce infinite recursion in `.transform`
 
 ```scala
 q"a + b".transform {
-  case name @ Term.Name("b") => q"function($name)"
+  case name @ Term.Name.Initial("b") => q"function($name)"
 }.toString
 // [error] java.lang.StackOverflowError
 // at scala.meta.transversers.Api$XtensionCollectionLikeUI$transformer$2$.apply(Api.scala:10)
@@ -536,7 +549,7 @@ Extend `Transformer` if you need to implement a custom tree transformation
 ```scala mdoc:silent
 val transformer = new Transformer {
   override def apply(tree: Tree): Tree = tree match {
-    case name @ Term.Name("b") => q"function($name)"
+    case name @ Term.Name.Initial("b") => q"function($name)"
     case node => super.apply(node)
   }
 }
