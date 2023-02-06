@@ -2,6 +2,8 @@ package scala.meta
 package internal
 package prettyprinters
 
+import scala.annotation.tailrec
+
 sealed trait QuoteStyle
 case object SingleQuotes extends QuoteStyle { override def toString = "'" }
 case object DoubleQuotes extends QuoteStyle { override def toString = "\"" }
@@ -9,10 +11,21 @@ case object TripleQuotes extends QuoteStyle { override def toString = "\"\"\"" }
 
 object enquote {
   def apply(s: String, style: QuoteStyle): String = {
-    val sb = new StringBuilder(style.toString)
-    if (style == TripleQuotes)
-      sb.append(s)
-    else {
+    val styleStr = style.toString
+    val sb = new java.lang.StringBuilder(styleStr)
+    if (style == TripleQuotes) {
+      val styleLen = styleStr.length
+      @tailrec def iter(off: Int): Unit = {
+        val newoff = s.indexOf(styleStr, off)
+        if (newoff < 0) sb.append(s, off, s.length)
+        else {
+          sb.append(s, off, newoff)
+          sb.append("\\\"\\\"\\\"")
+          iter(newoff + styleLen)
+        }
+      }
+      iter(0)
+    } else {
       s.foreach {
         case '\t' => sb.append("\\t")
         case '\b' => sb.append("\\b")
@@ -30,7 +43,7 @@ object enquote {
           else sb.append(c)
       }
     }
-    sb.append(style.toString)
+    sb.append(styleStr)
     sb.toString
   }
 }
