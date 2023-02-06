@@ -76,8 +76,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // step 1a: identify modified fields of the class
         val versionedParams = if (isQuasi) Nil else getVersionedParams(params, stats)
         val paramsVersions = versionedParams.flatMap(_.getVersions).distinct.sorted(versionOrdering)
-        val replacedFields = versionedParams.flatMap(_.replaced.flatMap { case (version, field) =>
-          field.oldDefs.map { case (oldDef, _) => version -> oldDef }
+        val replacedFields = versionedParams.flatMap(_.replaced.flatMap { field =>
+          field.oldDefs.map { case (oldDef, _) => field.version -> oldDef }
         })
         def paramsForVersion(v: Version): List[ValDef] =
           positionVersionedParams(versionedParams.flatMap(_.getApplyDeclDefnBefore(v)._1))
@@ -501,38 +501,36 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   private class VersionedParam(
       val param: ValDef,
       val appended: Option[Version],
-      val replaced: Map[Version, ReplacedField]
+      val replaced: Seq[ReplacedField]
   ) {
     appended.foreach { aver =>
-      replaced.foreach { case (rver, rfield) =>
-        if (versionOrdering.lteq(rver, aver)) {
+      replaced.headOption.foreach { rfield =>
+        if (versionOrdering.lteq(rfield.version, aver)) {
           val oldDef = rfield.oldDefs.head._1
           c.abort(
             param.pos,
             s"${versionToString(aver)} [@newField for ${param.name}] must must precede " +
-              s"${versionToString(rver)} [@replacedField for ${oldDef.name}]"
+              s"${versionToString(rfield.version)} [@replacedField for ${oldDef.name}]"
           )
         }
       }
     }
 
-    def getVersions: Iterable[Version] = appended ++ replaced.keys
+    def getVersions: Iterable[Version] = appended ++ replaced.map(_.version)
     def getApplyDeclDefnBefore(version: Version): (List[(ValDef, Int)], Option[ValDef]) = {
       def checkVersion(ver: Version): Boolean = versionOrdering.lteq(version, ver)
       if (appended.exists(checkVersion)) (Nil, Some(asValDefn(param)))
-      else {
-        val records = replaced.iterator.filter(x => checkVersion(x._1))
-        if (records.isEmpty) (asValDecl(param) -> -1 :: Nil, None)
-        else {
-          val rfield = records.minBy(_._1)(versionOrdering)._2
-          val decls = rfield.oldDefs.map { case (oldDef, pos) => asValDecl(oldDef) -> pos }
-          (decls, Some(rfield.newValDefn))
-        }
-      }
+      else
+        replaced
+          .find(x => checkVersion(x.version))
+          .map { rfield =>
+            val decls = rfield.oldDefs.map { case (oldDef, pos) => asValDecl(oldDef) -> pos }
+            (decls, Some(rfield.newValDefn))
+          }
+          .getOrElse((asValDecl(param) -> -1 :: Nil, None))
     }
     def getDefaultCopyDef(): List[(ValOrDefDef, Int)] = {
-      if (replaced.isEmpty) (param, -1) :: Nil
-      else replaced.minBy(_._1)(versionOrdering)._2.oldDefs
+      replaced.headOption.map(_.oldDefs).getOrElse((param, -1) :: Nil)
     }
   }
 
@@ -559,11 +557,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       stats: List[Tree]
   ): List[VersionedParam] = {
     val appendedFields: Map[String, Version] = getNewFieldVersions(params)
-    val replacedFields: Map[String, Map[Version, ReplacedField]] =
-      ReplacedField.getMap(params, stats)
+    val replacedFields: Map[String, Seq[ReplacedField]] = ReplacedField.getMap(params, stats)
     params.map { p =>
       val pname = p.name.toString
-      new VersionedParam(p, appendedFields.get(pname), replacedFields.getOrElse(pname, Map.empty))
+      new VersionedParam(p, appendedFields.get(pname), replacedFields.getOrElse(pname, Seq.empty))
     }
   }
 
@@ -611,6 +608,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   }
 
   private class ReplacedField(
+      val version: Version,
       val newVal: ValDef,
       ctor: Tree,
       val oldDefs: List[(ValOrDefDef, Int)]
@@ -651,7 +649,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     def getMap(
         params: List[ValDef],
         stats: List[Tree]
-    ): Map[String, Map[Version, ReplacedField]] = {
+    ): Map[String, Seq[ReplacedField]] = {
       val fields: Map[String, (ValDef, Map[Version, Tree])] = params.map { p =>
         val ctorsByVersion = p.mods.annotations.collect {
           case q"new replacesFields($since, $ctor)" =>
@@ -681,11 +679,12 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           k,
           c.abort(v.head._2._1.pos, s"@replacedField: field `$k` is undefined)")
         )
-        k -> v.map(_._2).groupBy(_._2).map { case (ver, oldFields) =>
+        val replacements = v.map(_._2).groupBy(_._2).toSeq.map { case (ver, oldFields) =>
           val ctor = ctorsByVersion.get(ver).orNull
           val oldDefs = oldFields.map { case (oldField, _, pos) => (oldField, pos) }
-          ver -> new ReplacedField(newVal, ctor, oldDefs)
+          new ReplacedField(ver, newVal, ctor, oldDefs)
         }
+        k -> replacements.sortBy(_.version)(versionOrdering)
       }
     }
 
