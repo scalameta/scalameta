@@ -1926,4 +1926,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     }
   }
 
+  test("#3065 embedded triple quotes") {
+    val tree = Lit.String("\n\"\"\"")
+    assertSyntax(tree, "\"\"\"\n\\\"\\\"\\\"\"\"\"")(tree)
+  }
+
 }
