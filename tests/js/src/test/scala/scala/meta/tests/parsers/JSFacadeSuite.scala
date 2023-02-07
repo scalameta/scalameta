@@ -63,7 +63,7 @@ class JSFacadeSuite extends FunSuite {
                   "pos" -> pos(20, 24),
                   "value" -> "main"
                 ),
-                "paramClauseGroup" -> {
+                "paramClauseGroups" -> a(
                   d(
                     "type" -> "Member.ParamClauseGroup",
                     "pos" -> pos(24, 45),
@@ -111,7 +111,7 @@ class JSFacadeSuite extends FunSuite {
                       )
                     )
                   )
-                },
+                ),
                 "decltpe" -> d(
                   "type" -> "Type.Name",
                   "pos" -> pos(47, 51),
