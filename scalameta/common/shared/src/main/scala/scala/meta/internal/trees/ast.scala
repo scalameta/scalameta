@@ -5,8 +5,8 @@ package trees
 import scala.language.experimental.macros
 import scala.annotation.{StaticAnnotation, tailrec}
 import scala.collection.mutable.ListBuffer
+import scala.math.Ordered.orderingToOrdered
 import scala.reflect.macros.whitebox.Context
-import scala.util.control.NonFatal
 
 import org.scalameta.internal.MacroCompat
 
@@ -75,7 +75,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         // step 1a: identify modified fields of the class
         val versionedParams = if (isQuasi) Nil else getVersionedParams(params, stats)
-        val paramsVersions = versionedParams.flatMap(_.getVersions).distinct.sorted(versionOrdering)
+        val paramsVersions = versionedParams.flatMap(_.getVersions).distinct.sorted
         val replacedFields = versionedParams.flatMap(_.replaced.flatMap { field =>
           field.oldDefs.map { case (oldDef, _) => field.version -> oldDef }
         })
@@ -502,12 +502,12 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   ) {
     appended.foreach { aver =>
       replaced.headOption.foreach { rfield =>
-        if (versionOrdering.lteq(rfield.version, aver)) {
+        if (rfield.version <= aver) {
           val oldDef = rfield.oldDefs.head._1
           c.abort(
             param.pos,
-            s"${versionToString(aver)} [@newField for ${param.name}] must must precede " +
-              s"${versionToString(rfield.version)} [@replacedField for ${oldDef.name}]"
+            s"$aver [@newField for ${param.name}] must must precede " +
+              s"${rfield.version} [@replacedField for ${oldDef.name}]"
           )
         }
       }
@@ -515,7 +515,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
     def getVersions: Iterable[Version] = appended ++ replaced.map(_.version)
     def getApplyDeclDefnBefore(version: Version): (List[(ValDef, Int)], Option[ValDef]) = {
-      def checkVersion(ver: Version): Boolean = versionOrdering.lteq(version, ver)
+      def checkVersion(ver: Version): Boolean = version <= ver
       if (appended.exists(checkVersion)) (Nil, Some(asValDefn(param)))
       else
         replaced
@@ -568,13 +568,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     }
 
   private def parseVersionAnnot(version: Tree, annot: String, field: String): Version = {
-    val parsed =
-      try { parseVersion(getAnnotAttribute(version)) }
-      catch {
-        case NonFatal(_) => c.abort(version.pos, s"@$annot must contain $field=major.minor.patch")
-      }
+    val parsed = Version
+      .parse(getAnnotAttribute(version).stripPrefix("\"").stripSuffix("\""))
+      .getOrElse(c.abort(version.pos, s"@$annot must contain $field=major.minor.patch"))
     majorVersion.foreach { major =>
-      if (parsed._1 < major)
+      if (parsed.major < major)
         c.abort(version.pos, s"@$annot: obsolete, old major version (must be $major)")
     }
     parsed
@@ -593,10 +591,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         if (x.rhs == EmptyTree)
           c.abort(x.pos, "@newField fields must provide a default value")
         val version = parseVersionAnnot(since, "newField", "since")
-        if (null != prevVersion && versionOrdering.lt(version, prevVersion)) {
-          val prevVersionStr = versionToString(prevVersion)
-          c.abort(x.pos, s"previous field marked with newer version: $prevVersionStr")
-        }
+        if (null != prevVersion && version < prevVersion)
+          c.abort(x.pos, s"previous field marked with newer version: $prevVersion")
         prevVersion = version
         builder += x.name.toString -> version
       }
@@ -681,7 +677,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           val oldDefs = oldFields.map { case (oldField, _, pos) => (oldField, pos) }
           new ReplacedField(ver, newVal, ctor, oldDefs)
         }
-        k -> replacements.sortBy(_.version)(versionOrdering)
+        k -> replacements.sortBy(_.version)
       }
     }
 
@@ -702,7 +698,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   }
 
   private def getDeprecatedAnno(v: Version) =
-    q"new scala.deprecated(${Literal(Constant(versionToString(v)))})"
+    q"new scala.deprecated(${Literal(Constant(v.toString))})"
 
   private def asValDecl(p: ValOrDefDef): ValDef =
     q"val ${p.name}: ${deannotateType(p)}"
@@ -717,18 +713,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 }
 
 object AstNamerMacros {
-
-  private type Version = (Int, Int, Int)
-  private val versionOrdering = implicitly[Ordering[Version]]
-
-  private def versionToString(v: Version): String =
-    s"${v._1}.${v._2}.${v._3}"
-
-  private def parseVersion(v: String): Version = {
-    val since = v.stripPrefix("\"").stripSuffix("\"")
-    val versions = since.split('.').map(_.toInt)
-    (versions(0), versions(1), versions(2))
-  }
 
   private val majorVersion = {
     val buildVersion: String = BuildInfo.version
