@@ -84,7 +84,7 @@ object TreeSyntax {
     val keywords = tokenizers.keywords(dialect)
     import SyntaxInstances.SyntacticGroup
     import SyntacticGroup.Type._, SyntacticGroup.Term._, SyntacticGroup.Pat._,
-    SyntacticGroup.Literal, SyntacticGroup.Path
+      SyntacticGroup.Literal, SyntacticGroup.Path
 
     def p(og: SyntacticGroup, t: Tree, left: Boolean = false, right: Boolean = false) = {
       def opNeedsParens(oo: String, io: String, customPrecedence: Boolean = true): Boolean = {
