@@ -74,8 +74,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val params = rawparamss.head
 
         // step 1a: identify modified fields of the class
-        val versionedParams = if (isQuasi) Nil else getVersionedParams(params, stats)
-        val paramsVersions = versionedParams.flatMap(_.getVersions).distinct.sorted
+        val (versionedParams, paramsVersions) =
+          if (isQuasi) (Nil, Nil) else getVersionedParams(params, stats)
         val replacedFields = versionedParams.flatMap(_.replaced.flatMap { field =>
           field.oldDefs.map { case (oldDef, _) => field.version -> oldDef }
         })
@@ -513,7 +513,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       }
     }
 
-    def getVersions: Iterable[Version] = appended ++ replaced.map(_.version)
     def getApplyDeclDefnBefore(version: Version): (List[(ValDef, Int)], Option[ValDef]) = {
       def checkVersion(ver: Version): Boolean = version <= ver
       if (appended.exists(checkVersion)) (Nil, Some(asValDefn(param)))
@@ -552,13 +551,20 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   private def getVersionedParams(
       params: List[ValDef],
       stats: List[Tree]
-  ): List[VersionedParam] = {
+  ): (List[VersionedParam], Seq[Version]) = {
     val appendedFields: Map[String, Version] = getNewFieldVersions(params)
     val replacedFields: Map[String, Seq[ReplacedField]] = ReplacedField.getMap(params, stats)
-    params.map { p =>
+    val versionsBuilder = Set.newBuilder[Version]
+    appendedFields.values.foreach(versionsBuilder += _)
+    replacedFields.values.foreach(_.foreach(versionsBuilder += _.version))
+    val versions = versionsBuilder.result().toSeq.sorted
+    val versionedParams = params.map { p =>
       val pname = p.name.toString
-      new VersionedParam(p, appendedFields.get(pname), replacedFields.getOrElse(pname, Seq.empty))
+      val appended = appendedFields.get(pname)
+      val replaced = replacedFields.getOrElse(pname, Seq.empty)
+      new VersionedParam(p, appended, replaced)
     }
+    (versionedParams, versions)
   }
 
   private def getAnnotAttribute(value: Tree): String =
