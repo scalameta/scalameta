@@ -577,9 +577,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     val parsed = Version
       .parse(getAnnotAttribute(version).stripPrefix("\"").stripSuffix("\""))
       .getOrElse(c.abort(version.pos, s"@$annot must contain $field=major.minor.patch"))
-    majorVersion.foreach { major =>
-      if (parsed.major < major)
-        c.abort(version.pos, s"@$annot: obsolete, old major version (must be $major)")
+    buildVersion.foreach { bv =>
+      if (parsed.major < bv.major)
+        c.abort(version.pos, s"@$annot: obsolete, old major version (must be ${bv.major})")
+      if (parsed > bv)
+        c.abort(version.pos, s"@$annot can't refer to future versions (current is $bv)")
     }
     parsed
   }
@@ -720,10 +722,12 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
 object AstNamerMacros {
 
-  private val majorVersion = {
-    val buildVersion: String = BuildInfo.version
-    val majorIdx = buildVersion.indexOf('.')
-    if (majorIdx > 0) Some(buildVersion.substring(0, majorIdx).toInt) else None
+  private val buildVersion: Option[Version] = {
+    val bv = BuildInfo.version
+    val idx = bv.indexWhere(x => x == '-' || x == '+')
+    val version = if (idx < 0) bv else bv.substring(0, idx)
+    // filter in case buildVersion is incorrectly set (Windows forces 0.0.0)
+    Version.parse(version).toOption.filter(_ != Version.zero)
   }
 
 }
