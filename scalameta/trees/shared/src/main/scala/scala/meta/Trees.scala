@@ -161,7 +161,7 @@ object Term {
       cond: Term,
       thenp: Term,
       elsep: Term,
-      @newField(since = "4.4.0") mods: List[Mod] = Nil
+      @newField("4.4.0") mods: List[Mod] = Nil
   ) extends Term
   @ast class QuotedMacroExpr(body: Term) extends Term
   @ast class QuotedMacroType(tpe: Type) extends Term
@@ -170,7 +170,7 @@ object Term {
   @ast class Match(
       expr: Term,
       cases: List[Case] @nonEmpty,
-      @newField(since = "4.4.5") mods: List[Mod] = Nil
+      @newField("4.4.5") mods: List[Mod] = Nil
   ) extends Term with Tree.WithCases
   @ast class Try(expr: Term, catchp: List[Case], finallyp: Option[Term])
       extends Term with Tree.WithCases {

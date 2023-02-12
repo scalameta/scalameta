@@ -609,7 +609,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           c.abort(x.pos, "override fields may not be marked @newField")
         if (x.rhs == EmptyTree)
           c.abort(x.pos, "@newField fields must provide a default value")
-        val version = parseVersionAnnot(since, "newField", "since")
+        val version = parseVersionAnnot(since, "newField", "after")
         if (null != prevVersion && version < prevVersion)
           c.abort(x.pos, s"previous field marked with newer version: $prevVersion")
         prevVersion = version
@@ -665,7 +665,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       val fields: Map[String, (ValDef, Map[Version, Tree])] = params.map { p =>
         val ctorsByVersion = p.mods.annotations.collect {
           case q"new replacesFields($since, $ctor)" =>
-            val version = parseVersionAnnot(since, "replacesFields", "since")
+            val version = parseVersionAnnot(since, "replacesFields", "after")
             version -> ctor
         }.toMap
         p.name.toString -> (p, ctorsByVersion)
