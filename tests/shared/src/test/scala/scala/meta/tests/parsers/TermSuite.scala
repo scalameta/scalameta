@@ -112,6 +112,14 @@ class TermSuite extends ParseSuite {
     assertTerm("f(x = xs: _*)") {
       Term.Apply(Term.Name("f"), List(Assign(Term.Name("x"), Repeated(Term.Name("xs")))))
     }
+    val Term.Apply.After_4_6_0(
+      Term.Name("f"),
+      Term.ArgClause(List(Assign(Term.Name("x"), Repeated(Term.Name("xs")))), None)
+    ) = term("f(x = xs: _*)")
+    val Term.Apply.internal.Latest(
+      Term.Name("f"),
+      Term.ArgClause(List(Assign(Term.Name("x"), Repeated(Term.Name("xs")))), None)
+    ) = term("f(x = xs: _*)")
   }
 
   test("f(x = (xs: _*))") {

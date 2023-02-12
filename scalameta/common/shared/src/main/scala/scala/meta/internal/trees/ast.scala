@@ -79,6 +79,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val replacedFields = versionedParams.flatMap(_.replaced.flatMap { field =>
           field.oldDefs.map { case (oldDef, _) => field.version -> oldDef }
         })
+        val mstatsPerVersion = paramsVersions.map { ver => (ver, ListBuffer[Tree]()) }
         def paramsForVersion(v: Version): List[ValDef] =
           positionVersionedParams(versionedParams.flatMap(_.getApplyDeclDefnBefore(v)._1))
 
@@ -351,7 +352,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // generate new applies for each new field added
         // with field A, B and additional binary compat ones C, D and E, we generate:
         // apply(A, B, C), apply(A, B, C, D), apply(A, B, C, D, E)
-        paramsVersions.foreach { v =>
+        mstatsPerVersion.foreach { case (v, verMstats) =>
           val applyParamsBuilder = List.newBuilder[(ValDef, Int)]
           val applyBodyBuilder = List.newBuilder[Tree]
           versionedParams.foreach { vp =>
@@ -362,6 +363,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           val params = positionVersionedParams(applyParamsBuilder.result())
           applyBodyBuilder += q"$mname.apply(..$internalArgs)"
           val applyBody = applyBodyBuilder.result()
+          verMstats += q"def apply(..$params): $iname = { ..$applyBody }"
           mstats1 += q"@${getDeprecatedAnno(v)} def apply(..$params): $iname = { ..$applyBody }"
         }
 
@@ -381,10 +383,18 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           }
           if (params.nonEmpty) {
             val latestTree = getUnapply(params)
-            mstats1 += paramsVersions.headOption.fold {
-              latestTree
-            } { ver =>
-              getUnapply(paramsForVersion(ver), getDeprecatedAnno(ver))
+            mstatsPerVersion match {
+              case (headVer, headMstats) :: tail =>
+                val headParams = paramsForVersion(headVer)
+                headMstats += getUnapply(headParams)
+                tail.foreach { case (ver, verMstats) =>
+                  verMstats += getUnapply(paramsForVersion(ver))
+                }
+                val afterLastVer = getAfterVersion(mstatsPerVersion.last._1)
+                val anno = getDeprecatedAnno(headVer, s"; use `.$afterLastVer`")
+                mstats1 += getUnapply(headParams, anno)
+              case Nil =>
+                mstats1 += latestTree
             }
             mstatsLatest += latestTree
           } else {
@@ -421,13 +431,14 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           )
         }
 
-        mstats1 += q"""
-          object internal { // to be ignored by Mima
-            object Latest {
-              ..$mstatsLatest
-            }
-          }
-        """
+        val latestTermName = mstatsPerVersion.foldLeft(TermName(initialName)) {
+          case (afterPrevVer, (ver, verMstats)) =>
+            mstats1 += q"object $afterPrevVer { ..$verMstats }"
+            getAfterVersion(ver)
+        }
+        mstats1 += q"object $latestTermName { ..$mstatsLatest }"
+        // to be ignored by Mima, use "internal"
+        mstats1 += q"object internal { final val Latest = $latestTermName }"
 
         mstats1 += q"$mods1 class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
         val cdef1 = q"$imods1 trait $iname extends ..$iparents1 { $iself => ..$istats1 }"
@@ -551,13 +562,13 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   private def getVersionedParams(
       params: List[ValDef],
       stats: List[Tree]
-  ): (List[VersionedParam], Seq[Version]) = {
+  ): (List[VersionedParam], List[Version]) = {
     val appendedFields: Map[String, Version] = getNewFieldVersions(params)
     val replacedFields: Map[String, Seq[ReplacedField]] = ReplacedField.getMap(params, stats)
     val versionsBuilder = Set.newBuilder[Version]
     appendedFields.values.foreach(versionsBuilder += _)
     replacedFields.values.foreach(_.foreach(versionsBuilder += _.version))
-    val versions = versionsBuilder.result().toSeq.sorted
+    val versions = versionsBuilder.result().toList.sorted
     val versionedParams = params.map { p =>
       val pname = p.name.toString
       val appended = appendedFields.get(pname)
@@ -705,8 +716,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     }
   }
 
-  private def getDeprecatedAnno(v: Version) =
-    q"new scala.deprecated(${Literal(Constant(v.toString))})"
+  private def getDeprecatedAnno(v: Version, why: String = "") =
+    q"new scala.deprecated(${Literal(Constant(v.toString + why))})"
+
+  private def getAfterVersion(v: Version) = TermName(afterNamePrefix + v.asString('_'))
 
   private def asValDecl(p: ValOrDefDef): ValDef =
     q"val ${p.name}: ${deannotateType(p)}"
@@ -728,6 +741,26 @@ object AstNamerMacros {
     val version = if (idx < 0) bv else bv.substring(0, idx)
     // filter in case buildVersion is incorrectly set (Windows forces 0.0.0)
     Version.parse(version).toOption.filter(_ != Version.zero)
+  }
+
+  val initialName = "Initial"
+  val afterNamePrefix = "After_"
+
+  def getLatestAfterName(moduleNames: Iterable[String]): Option[String] = {
+    var maxVersion = Version.zero
+    var maxName: Option[String] = None
+    moduleNames.foreach { name =>
+      if (name == initialName) {
+        if (maxName.isEmpty) maxName = Some(name)
+      } else if (name.startsWith(afterNamePrefix))
+        Version.parse(name.substring(afterNamePrefix.length), '_').toOption.foreach { v =>
+          if (v > maxVersion) {
+            maxName = Some(name)
+            maxVersion = v
+          }
+        }
+    }
+    maxName
   }
 
 }

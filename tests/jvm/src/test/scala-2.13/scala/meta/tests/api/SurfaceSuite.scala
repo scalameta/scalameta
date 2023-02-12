@@ -4,6 +4,7 @@ package api
 import munit._
 import org.scalameta.explore
 import scala.compat.Platform.EOL
+import scala.meta.internal.trees.AstNamerMacros
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}
 
@@ -35,7 +36,11 @@ class SurfaceSuite extends FunSuite {
     // in via the bloop-frontend dependency in testsJVM.
     fullName.startsWith("monix") ||
     fullName.startsWith("scala.meta.lsp") ||
-    fullName.startsWith("scala.meta.jsonrpc")
+    fullName.startsWith("scala.meta.jsonrpc") || {
+      val name = fullName.substring(fullName.lastIndexOf('.') + 1)
+      name == AstNamerMacros.initialName ||
+      name.startsWith(AstNamerMacros.afterNamePrefix)
+    }
   }
   lazy val allStatics = explore.allStatics("scala.meta").filterNot(lsp4s)
   lazy val trees = wildcardImportStatics.filter(s =>
