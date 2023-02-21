@@ -2127,9 +2127,8 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("1 param\"..mods paramname: tpeopt = expropt\"") {
-    val param"..$mods $paramname: $tpeopt = $expropt" = param"private final x: X = 42"
-    assertEquals(mods.toString, "List(private, final)")
-    assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Final())
+    val param"..$mods $paramname: $tpeopt = $expropt" = param"private final val x: X = 42"
+    assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Final(), Mod.ValParam())
     assertTree(paramname)(Term.Name("x"))
     assertTree(tpeopt)(Some(Type.Name("X")))
     assertTree(expropt)(Some(Lit.Int(42)))

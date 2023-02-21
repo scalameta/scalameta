@@ -3087,6 +3087,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val mods = new ListBuffer[Mod]
     annotsBuf(mods, skipNewLines = false)
     rejectMod[Mod.Open](mods, "Open modifier only applied to classes")
+    val numAnnots = mods.length
     if (ownerIsType) {
       modifiersBuf(mods, isParams = true)
       rejectMod[Mod.Lazy](
@@ -3101,16 +3102,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         mods += autoEndPos(prevTokenPos)(Mod.Inline())
       }
     }
+    val hasExplicitMods = mods.view.drop(numAnnots).exists(!_.is[Mod.Quasi])
+
     mod.foreach { mod =>
       val clazz = mod.getClass
-      if (!mods.exists(_.getClass eq clazz)) mods += mod
+      mods.find(_.getClass eq clazz) match {
+        case None => mods += mod
+        case Some(x) => if (paramIdx == 0) syntaxError("repeated modifier", at = x)
+      }
     }
 
     val varOrVarParamMod = token match {
       case _ if !ownerIsType => None
       case _: KwVal => Some(atCurPosNext(Mod.ValParam()))
       case _: KwVar => Some(atCurPosNext(Mod.VarParam()))
-      case _ => None
+      case _ => if (hasExplicitMods) syntaxErrorExpected[KwVal]; None
     }
     varOrVarParamMod.foreach(mods += _)
 
