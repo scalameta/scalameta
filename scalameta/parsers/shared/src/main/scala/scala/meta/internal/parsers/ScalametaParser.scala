@@ -3143,9 +3143,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                 val tpt = paramType()
                 if (tpt.is[Type.ByName]) {
                   def mayNotBeByName(mod: Mod) =
-                    syntaxError(s"$mod parameters may not be call-by-name", at = name)
+                    syntaxError(s"`$mod' parameters may not be call-by-name", at = name)
                   val isLocalToThis: Boolean =
-                    ownerIsCase || varOrVarParamMod.isEmpty || mods.exists {
+                    (!ownerIsCase && varOrVarParamMod.isEmpty) || mods.exists {
                       case Mod.Private(_: Term.This) => true; case _ => false
                     }
                   val badMod =

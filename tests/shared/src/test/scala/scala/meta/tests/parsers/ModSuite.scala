@@ -817,7 +817,6 @@ class ModSuite extends ParseSuite {
   }
 
   test("by-name parameter: case class with val") {
-    // XXX: fails before #3084, succeeds after it
     val actual = interceptParseError("case class A(val b: => B)")
     val expected =
       s"""|error: `val' parameters may not be call-by-name
