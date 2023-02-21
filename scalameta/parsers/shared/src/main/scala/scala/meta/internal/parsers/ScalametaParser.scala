@@ -3106,13 +3106,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (!mods.exists(_.getClass eq clazz)) mods += mod
     }
 
-    val (isValParam, isVarParam) = (ownerIsType && token.is[KwVal], ownerIsType && token.is[KwVar])
-    if (isValParam) {
-      mods += atCurPosNext(Mod.ValParam())
+    val varOrVarParamMod = token match {
+      case _ if !ownerIsType => None
+      case _: KwVal => Some(atCurPosNext(Mod.ValParam()))
+      case _: KwVar => Some(atCurPosNext(Mod.VarParam()))
+      case _ => None
     }
-    if (isVarParam) {
-      mods += atCurPosNext(Mod.VarParam())
-    }
+    varOrVarParamMod.foreach(mods += _)
+
     def endParamQuasi = token.isAny[RightParen, Comma]
     mods.headOption
       .collect {
@@ -3141,23 +3142,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                 if (!anonymousUsing) accept[Colon]
                 val tpt = paramType()
                 if (tpt.is[Type.ByName]) {
-                  def mayNotBeByName(subj: String) =
-                    syntaxError(s"$subj parameters may not be call-by-name", at = name)
-                  val isLocalToThis: Boolean = {
-                    val isExplicitlyLocal = mods.exists {
+                  def mayNotBeByName(mod: Mod) =
+                    syntaxError(s"$mod parameters may not be call-by-name", at = name)
+                  val isLocalToThis: Boolean =
+                    ownerIsCase || varOrVarParamMod.isEmpty || mods.exists {
                       case Mod.Private(_: Term.This) => true; case _ => false
                     }
-                    if (ownerIsCase) isExplicitlyLocal
-                    else isExplicitlyLocal || (!isValParam && !isVarParam)
-                  }
-                  if (ownerIsType && !isLocalToThis) {
-                    if (isVarParam)
-                      mayNotBeByName("`var'")
-                    else
-                      mayNotBeByName("`val'")
-                  } else if (!dialect.allowImplicitByNameParameters &&
-                    mod.exists(_.is[Mod.Implicit]))
-                    mayNotBeByName("implicit")
+                  val badMod =
+                    if (ownerIsType && !isLocalToThis) varOrVarParamMod
+                    else if (dialect.allowImplicitByNameParameters) None
+                    else mod.find(_.is[Mod.Implicit])
+                  badMod.foreach(mayNotBeByName)
                 }
                 Some(tpt)
               }
