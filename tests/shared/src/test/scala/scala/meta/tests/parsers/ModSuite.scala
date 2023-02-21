@@ -407,7 +407,7 @@ class ModSuite extends ParseSuite {
   }
 
   test("covariant in def") {
-    interceptParseErrors(
+    interceptParseError(
       "def foo[+T](t: T): Int"
     )
   }
@@ -484,7 +484,7 @@ class ModSuite extends ParseSuite {
   }
 
   test("contravariant in def") {
-    interceptParseErrors(
+    interceptParseError(
       "def foo[-T](t: T): Int"
     )
   }
@@ -590,7 +590,7 @@ class ModSuite extends ParseSuite {
   }
 
   test("val param in def") {
-    interceptParseErrors(
+    interceptParseError(
       "def foo(val a: Int): Int"
     )
   }
@@ -680,7 +680,7 @@ class ModSuite extends ParseSuite {
   }
 
   test("var param in def") {
-    interceptParseErrors(
+    interceptParseError(
       "def foo(var a: Int): Int"
     )
   }
@@ -774,6 +774,6 @@ class ModSuite extends ParseSuite {
   }
 
   test("Annotation after modifier") {
-    interceptParseErrors("implicit @foo def foo(a: Int): Int")
+    interceptParseError("implicit @foo def foo(a: Int): Int")
   }
 }

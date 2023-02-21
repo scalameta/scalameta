@@ -38,22 +38,23 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
 
   def ammonite(code: String)(implicit dialect: Dialect) =
     code.asAmmoniteInput.parseRule(_.entryPointAmmonite())
+
   def interceptParseErrors(stats: String*)(implicit loc: munit.Location) = {
-    stats.foreach { stat =>
-      try {
-        intercept[parsers.ParseException] {
-          templStat(stat)
-        }
-      } catch {
-        case scala.util.control.NonFatal(t) =>
-          val msg = "no exception was thrown"
-          val richFeedback = t.getMessage.replace(msg, s"$msg for '$stat'")
-          fail(richFeedback)
-      }
-    }
+    stats.foreach(interceptParseError(_))
   }
+
+  def interceptParseError(stat: String)(implicit loc: munit.Location): String =
+    try {
+      intercept[parsers.ParseException] { templStat(stat) }.getMessage().replace("\r", "")
+    } catch {
+      case scala.util.control.NonFatal(t) =>
+        val msg = "no exception was thrown"
+        val richFeedback = t.getMessage.replace(msg, s"$msg for '$stat'")
+        fail(richFeedback)
+    }
+
   def checkError(stat: String)(implicit dialect: Dialect) =
-    test(logger.revealWhitespace(stat).take(50)) { interceptParseErrors(stat) }
+    test(logger.revealWhitespace(stat).take(50)) { interceptParseError(stat) }
   def checkOK(stat: String)(implicit dialect: Dialect) =
     test(logger.revealWhitespace(stat).take(50)) { templStat(stat) }
 
