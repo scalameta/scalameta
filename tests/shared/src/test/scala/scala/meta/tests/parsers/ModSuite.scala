@@ -800,4 +800,39 @@ class ModSuite extends ParseSuite {
     assert(actual.contains(expected), actual)
   }
 
+  test("by-name parameter: class with val") {
+    val actual = interceptParseError("class A(val b: => B)")
+    val expected =
+      s"""|error: `val' parameters may not be call-by-name
+          |class A(val b: => B)
+          |            ^""".stripMargin
+    assert(actual.contains(expected), actual)
+  }
+
+  test("by-name parameter: class with private[this] val") {
+    assertNoDiff(
+      templStat("class A(private[this] val b: => B)").syntax,
+      "class A(private[this] val b: => B)"
+    )
+  }
+
+  test("by-name parameter: case class with val") {
+    // XXX: fails before #3084, succeeds after it
+    val actual = interceptParseError("case class A(val b: => B)")
+    val expected =
+      s"""|error: `val' parameters may not be call-by-name
+          |case class A(val b: => B)
+          |                 ^""".stripMargin
+    assert(actual.contains(expected), actual)
+  }
+
+  test("by-name parameter: class with implicit val") {
+    val actual = interceptParseError("class A(implicit val b: => B)")
+    val expected =
+      s"""|error: `val' parameters may not be call-by-name
+          |class A(implicit val b: => B)
+          |                     ^""".stripMargin
+    assert(actual.contains(expected), actual)
+  }
+
 }
