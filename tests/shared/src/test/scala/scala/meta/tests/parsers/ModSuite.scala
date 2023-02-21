@@ -776,4 +776,28 @@ class ModSuite extends ParseSuite {
   test("Annotation after modifier") {
     interceptParseError("implicit @foo def foo(a: Int): Int")
   }
+
+  test("missing val after parameter modifier") {
+    assertNoDiff(
+      templStat("class A(implicit b: B, implicit c: C)").syntax,
+      "class A(implicit b: B, implicit c: C)"
+    )
+  }
+
+  test("repeated parameter modifier") {
+    assertNoDiff(
+      templStat("class A(implicit implicit b: B)").syntax,
+      "class A(implicit implicit b: B)"
+    )
+  }
+
+  test("repeated parameter modifier on second parameter") {
+    val actual = interceptParseError("class A(implicit b: B, implicit implicit c: C)")
+    val expected =
+      s"""|error: repeated modifier
+          |class A(implicit b: B, implicit implicit c: C)
+          |                                ^""".stripMargin
+    assert(actual.contains(expected), actual)
+  }
+
 }
