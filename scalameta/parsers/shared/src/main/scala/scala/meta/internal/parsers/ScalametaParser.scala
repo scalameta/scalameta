@@ -3103,7 +3103,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
     mod.foreach { mod =>
       val clazz = mod.getClass
-      if (!mods.exists(_.getClass eq clazz)) mods += mod
+      mods.find(_.getClass eq clazz) match {
+        case None => mods += mod
+        case Some(x) => if (paramIdx == 0) syntaxError("repeated modifier", at = x)
+      }
     }
 
     val varOrVarParamMod = token match {

@@ -785,10 +785,12 @@ class ModSuite extends ParseSuite {
   }
 
   test("repeated parameter modifier") {
-    assertNoDiff(
-      templStat("class A(implicit implicit b: B)").syntax,
-      "class A(implicit implicit b: B)"
-    )
+    val actual = interceptParseError("class A(implicit implicit b: B)")
+    val expected =
+      s"""|error: repeated modifier
+          |class A(implicit implicit b: B)
+          |                 ^""".stripMargin
+    assert(actual.contains(expected), actual)
   }
 
   test("repeated parameter modifier on second parameter") {
