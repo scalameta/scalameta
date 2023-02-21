@@ -583,7 +583,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   final def tokenSeparated[Sep: TokenClassifier, T <: Tree: AstInfo](
       sepFirst: Boolean,
-      part: => T
+      part: Int => T
   ): List[T] = listBy[T] { ts =>
     @tailrec
     def iter(sep: Boolean): Unit = token match {
@@ -591,7 +591,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         ts += ellipsis[T](t, 1)
         iter(false)
       case _ if sep =>
-        ts += part
+        ts += part(ts.length)
         iter(false)
       case _ if acceptOpt[Sep] =>
         iter(true)
@@ -601,6 +601,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   @inline final def commaSeparated[T <: Tree: AstInfo](part: => T): List[T] =
+    commaSeparatedWithIndex(_ => part)
+
+  @inline final def commaSeparatedWithIndex[T <: Tree: AstInfo](part: Int => T): List[T] =
     tokenSeparated[Comma, T](sepFirst = false, part)
 
   private def makeTuple[A <: Tree](lpPos: Int, body: List[A], zero: => A, tuple: List[A] => A)(
@@ -3030,7 +3033,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           toParamClause(mod)(x)
         }
       def parseParams(mod: Option[Mod.ParamsType] = None) =
-        reduceParams(commaSeparated(termParam(ownerIsCase && first, ownerIsType, mod = mod)), mod)
+        reduceParams(
+          commaSeparatedWithIndex(termParam(ownerIsCase && first, ownerIsType, mod = mod)),
+          mod
+        )
       token match {
         case t @ Ellipsis(rank) if rank >= 2 && rank <= ellipsisMaxRank =>
           reduceParams(List(ellipsis[Term.Param](t)))
@@ -3077,7 +3083,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       ownerIsCase: Boolean,
       ownerIsType: Boolean,
       mod: Option[Mod.ParamsType] = None
-  ): Term.Param = autoPos {
+  )(paramIdx: Int): Term.Param = autoPos {
     val mods = new ListBuffer[Mod]
     annotsBuf(mods, skipNewLines = false)
     rejectMod[Mod.Open](mods, "Open modifier only applied to classes")
@@ -3164,7 +3170,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def quasiquoteTermParam(): Term.Param = entrypointTermParam()
 
   def entrypointTermParam(): Term.Param =
-    termParam(ownerIsCase = false, ownerIsType = true)
+    termParam(ownerIsCase = false, ownerIsType = true)(0)
 
   private def emptyTypeParams: Type.ParamClause = autoPos(Type.ParamClause(Nil))
 
@@ -3582,7 +3588,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def collectUparams(): Unit = {
       while (isAfterOptNewLine[LeftParen] && tryAhead[soft.KwUsing]) paramss += autoPrevPos {
         val mod = Some(atCurPos(Mod.Using()))
-        inParensOnOpen(commaSeparated {
+        inParensOnOpen(commaSeparatedWithIndex {
           termParam(ownerIsCase = false, ownerIsType = true, mod = mod)
         }).reduceWith(toParamClause(mod))
       }
@@ -3592,7 +3598,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     paramss += autoPos(inParens(List(token match {
       case t @ Ellipsis(2) => ellipsis[Term.Param](t)
-      case _ => termParam(ownerIsCase = false, ownerIsType = false)
+      case _ => termParam(ownerIsCase = false, ownerIsType = false)(0)
     })).reduceWith(toParamClause(None)))
 
     collectUparams()
