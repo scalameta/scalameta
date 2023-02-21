@@ -3089,10 +3089,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     rejectMod[Mod.Open](mods, "Open modifier only applied to classes")
     if (ownerIsType) {
       modifiersBuf(mods, isParams = true)
-      rejectMod[Mod.Lazy](
-        mods,
-        "lazy modifier not allowed here. Use call-by-name parameters instead."
-      )
+      rejectMod[Mod.Lazy](mods, "`lazy' modifier not allowed here, use call-by-name")
       rejectMod[Mod.Sealed](mods, "`sealed' modifier can be used only for classes")
       if (!mods.has[Mod.Override])
         rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
@@ -3124,13 +3121,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _ => None
       })
       .getOrElse {
-        var anonymousUsing = false
-        val name = if (mod.exists(_.is[Mod.Using]) && !peekToken.is[Colon]) { // anonymous using
-          anonymousUsing = true
-          autoPos(Name.Anonymous())
-        } else {
-          termName().become[Name]
-        }
+        val anonymousUsing = mod.exists(_.is[Mod.Using]) && !peekToken.is[Colon]
+        val name = if (anonymousUsing) autoPos(Name.Anonymous()) else termName().become[Name]
         name match {
           case q: Quasi if endParamQuasi =>
             q.become[Term.Param]
