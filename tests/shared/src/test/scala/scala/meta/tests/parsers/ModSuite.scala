@@ -778,24 +778,28 @@ class ModSuite extends ParseSuite {
   }
 
   test("missing val after parameter modifier") {
-    assertNoDiff(
-      templStat("class A(implicit b: B, implicit c: C)").syntax,
-      "class A(implicit b: B, implicit c: C)"
-    )
+    val actual = interceptParseError("class A(implicit b: B, implicit c: C)")
+    val expected =
+      s"""|error: val expected but identifier found
+          |class A(implicit b: B, implicit c: C)
+          |                                ^""".stripMargin
+    assert(actual.contains(expected), actual)
   }
 
-  test("repeated parameter modifier") {
-    assertNoDiff(
-      templStat("class A(implicit implicit b: B)").syntax,
-      "class A(implicit implicit b: B)"
-    )
+  test("repeated parameter modifier on first parameter") {
+    val actual = interceptParseError("class A(implicit implicit val b: B)")
+    val expected =
+      s"""|error: repeated modifier
+          |class A(implicit implicit val b: B)
+          |                 ^""".stripMargin
+    assert(actual.contains(expected), actual)
   }
 
   test("repeated parameter modifier on second parameter") {
-    val actual = interceptParseError("class A(implicit b: B, implicit implicit c: C)")
+    val actual = interceptParseError("class A(implicit b: B, implicit implicit val c: C)")
     val expected =
       s"""|error: repeated modifier
-          |class A(implicit b: B, implicit implicit c: C)
+          |class A(implicit b: B, implicit implicit val c: C)
           |                                ^""".stripMargin
     assert(actual.contains(expected), actual)
   }
