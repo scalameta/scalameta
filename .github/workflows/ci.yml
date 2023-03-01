@@ -90,7 +90,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: olafurpg/setup-scala@v13
+      - uses: olafurpg/setup-scala@v14
       - run: sbtx ci-windows
         shell: bash
   checks:
