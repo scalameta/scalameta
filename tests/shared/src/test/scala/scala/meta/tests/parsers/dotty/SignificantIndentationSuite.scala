@@ -104,6 +104,35 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  // https://github.com/scalameta/scalameta/issues/3093
+  test("anonymous-class-in-block") {
+    val code = """|if(x) {
+                  |  new A:
+                  |    def f: Int
+                  |}
+                  |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = None)(
+      Term.If(
+        Term.Name("x"),
+        Term.Block(
+          List(
+            Term.NewAnonymous(
+              Template(
+                Nil,
+                List(Init(Type.Name("A"), Name(""), Nil)),
+                Self(Name(""), None),
+                List(Decl.Def(Nil, Term.Name("f"), Nil, Type.Name("Int"))),
+                Nil
+              )
+            )
+          )
+        ),
+        Lit.Unit(),
+        Nil
+      )
+    )
+  }
+
   test("empty-anonymous-class") {
     val code = """|new:
                   |  def f: Int
