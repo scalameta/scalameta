@@ -23,7 +23,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   private def isDigit(c: Char) = java.lang.Character isDigit c
   private var openComments = 0
-  protected def putCommentChar(): Unit = nextChar()
+  protected def putCommentChar(): Unit = nextCommentChar()
 
   @tailrec private def skipLineComment(): Unit = ch match {
     case SU | CR | LF =>
