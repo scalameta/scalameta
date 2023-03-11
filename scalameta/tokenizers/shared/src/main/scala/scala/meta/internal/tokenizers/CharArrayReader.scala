@@ -132,13 +132,18 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter)
 
   /** Handle line ends */
   private def potentialLineEnd(): Unit = {
-    if (ch == LF || ch == FF) {
-      if (!dialect.allowMultilinePrograms) {
-        readerError("line breaks are not allowed in single-line quasiquotes", at = charOffset - 1)
-      }
+    if (checkLineEnd() && !dialect.allowMultilinePrograms) {
+      readerError("line breaks are not allowed in single-line quasiquotes", at = charOffset - 1)
+    }
+  }
+
+  private def checkLineEnd(): Boolean = {
+    val ok = ch == LF || ch == FF
+    if (ok) {
       lastLineStartOffset = lineStartOffset
       lineStartOffset = charOffset
     }
+    ok
   }
 
   /** A new reader that takes off at the current character position */
