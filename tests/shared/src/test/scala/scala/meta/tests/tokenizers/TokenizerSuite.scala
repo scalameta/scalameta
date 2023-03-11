@@ -654,6 +654,21 @@ class TokenizerSuite extends BaseTokenizerSuite {
     """.trim.stripMargin)
   }
 
+  test("showRaw with comments - skip unicode escape 1") {
+    val comment = "// Note: '\\u000A' = '\\n'"
+    intercept[TokenizeException] {
+      tokenize(comment).map(_.structure).mkString("\n")
+    }
+  }
+
+  test("showRaw with comments - skip unicode escape 2") {
+    val comment = "/* Note: '\\u000A' = '\\n' */"
+    assertNoDiff(
+      tokenize(comment).map(_.structure).mkString("\n"),
+      Seq("BOF [0..0)", s"$comment [0..27)", "EOF [27..27)").mkString("\n")
+    )
+  }
+
   test("interpolation start & end - episode 01") {
     assert(tokenize("q\"\"").map(_.structure).mkString("\n") == """
       |BOF [0..0)
