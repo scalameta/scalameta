@@ -29,7 +29,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     case SU | CR | LF =>
     case '$' if isUnquoteNextNoDollar() =>
       syntaxError("can't unquote into single-line comments", at = charOffset - 1)
-    case _ => nextChar(); skipLineComment()
+    case _ => putCommentChar(); skipLineComment()
   }
   private def maybeOpen(): Unit = {
     putCommentChar()
@@ -41,9 +41,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   private def maybeClose(): Boolean = {
     putCommentChar()
     (ch == '/') && {
-      putCommentChar()
       openComments -= 1
-      openComments == 0
+      val close = openComments == 0
+      if (close) nextChar() else putCommentChar()
+      close
     }
   }
   @tailrec final def skipNestedComments(): Unit = ch match {
@@ -58,12 +59,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   def skipBlockComment(): Unit = skipNestedComments()
 
   private def skipToCommentEnd(isLineComment: Boolean): Unit = {
-    nextChar()
+    putCommentChar()
     if (isLineComment) skipLineComment()
     else {
       openComments = 1
-      val isDocComment = (ch == '*') && { nextChar(); true }
-      if (isDocComment) {
+      if (ch == '*') {
+        putCommentChar()
         // Check for the amazing corner case of /**/
         if (ch == '/')
           nextChar()
