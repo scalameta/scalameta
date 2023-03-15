@@ -4175,14 +4175,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     } else if (isColonEol()) {
       accept[Colon]
 
-      val nextIndented =
-        if (enumCaseAllowed)
-          in.observeIndentedEnum()
-        else
-          in.observeIndented()
+      if (enumCaseAllowed)
+        in.observeIndentedEnum()
+      else
+        in.observeIndented()
 
-      if (nextIndented)
-        indentedOnOpen(templateStatSeq(enumCaseAllowed, secondaryConstructorAllowed))
+      if (acceptOpt[Indentation.Indent])
+        indentedAfterOpen(templateStatSeq(enumCaseAllowed, secondaryConstructorAllowed))
       else if (!enumCaseAllowed && isEndMarkerIntro(tokenPos))
         (selfEmpty(), Nil)
       else
