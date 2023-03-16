@@ -55,6 +55,16 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter)
     }
   }
 
+  final def nextCommentChar(): Unit = {
+    if (charOffset >= buf.length) {
+      ch = SU
+    } else {
+      ch = buf(charOffset)
+      charOffset += 1
+      checkLineEnd()
+    }
+  }
+
   /**
    * Advance one character, leaving CR;LF pairs intact. This is for use in multi-line strings, so
    * there are no "potential line ends" here.
@@ -132,13 +142,18 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter)
 
   /** Handle line ends */
   private def potentialLineEnd(): Unit = {
-    if (ch == LF || ch == FF) {
-      if (!dialect.allowMultilinePrograms) {
-        readerError("line breaks are not allowed in single-line quasiquotes", at = charOffset - 1)
-      }
+    if (checkLineEnd() && !dialect.allowMultilinePrograms) {
+      readerError("line breaks are not allowed in single-line quasiquotes", at = charOffset - 1)
+    }
+  }
+
+  private def checkLineEnd(): Boolean = {
+    val ok = ch == LF || ch == FF
+    if (ok) {
       lastLineStartOffset = lineStartOffset
       lineStartOffset = charOffset
     }
+    ok
   }
 
   /** A new reader that takes off at the current character position */
