@@ -19,7 +19,7 @@ final class Dialect private (
     // Are extractor varargs specified using colons, i.e. is `case Extractor(xs: _*)` legal or not?
     val allowColonForExtractorVarargs: Boolean,
     // Are enums allowed?
-    // They are in Dotty, but not in Scala 2.12 or older.
+    // They are in Dotty, but not in Scala 2.13 or older.
     val allowEnums: Boolean,
     // Are implicit by name parameters supported?
     // They are in Dotty, but not in Scala 2.12 or older.
@@ -50,7 +50,7 @@ final class Dialect private (
     // Are trailing commas allowed? SIP-27.
     val allowTrailingCommas: Boolean,
     // Are trait allowed to have parameters?
-    // They are in Dotty, but not in Scala 2.12 or older.
+    // They are in Dotty, but not in Scala 2.13 or older.
     val allowTraitParameters: Boolean,
     // Are type lambdas allowed, i.e. is `[T] => (T, T)` legal or not?
     val allowTypeLambdas: Boolean,
