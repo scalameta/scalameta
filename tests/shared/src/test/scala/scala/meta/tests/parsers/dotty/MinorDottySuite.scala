@@ -437,7 +437,9 @@ class MinorDottySuite extends BaseDottySuite {
          |""".stripMargin,
       Some(
         """|object X {
-           |  println("hello") ??? ??? match {
+           |  println("hello")
+           |  ???
+           |  ??? match {
            |    case 0 => 1
            |  }
            |}
@@ -452,16 +454,11 @@ class MinorDottySuite extends BaseDottySuite {
             Nil,
             Nil,
             Self(Name(""), None),
-            Term.Match(
-              Term.ApplyInfix(
-                Term.Apply(tname("println"), List(str("hello"))),
-                tname("???"),
-                Nil,
-                List(tname("???"))
-              ),
-              List(Case(int(0), None, int(1))),
-              Nil
-            ) :: Nil,
+            List(
+              Term.Apply(tname("println"), List(str("hello"))),
+              tname("???"),
+              Term.Match(tname("???"), List(Case(int(0), None, int(1))), Nil)
+            ),
             Nil
           )
         ) :: Nil

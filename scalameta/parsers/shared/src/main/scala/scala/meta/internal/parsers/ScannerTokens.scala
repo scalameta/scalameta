@@ -6,6 +6,7 @@ import scala.meta.classifiers._
 import scala.meta.inputs.Input
 import scala.meta.internal.classifiers.classifier
 import scala.meta.internal.tokenizers._
+import scala.meta.internal.trees._
 import scala.meta.prettyprinters._
 import scala.meta.tokenizers._
 import scala.meta.tokens.Token
@@ -74,17 +75,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     }
   }
 
-  def isLeadingInfixOperator(index: Int): Boolean = {
-    val token = tokens(index)
-    token.is[Ident] && token.isIdentSymbolicInfixOperator && {
-      val nextSafeIndex = getNextSafeIndex(index)
-      tokens(nextSafeIndex).is[Whitespace] &&
-      (tokens(getStrictAfterSafe(nextSafeIndex)) match {
-        case _: Ident | _: Interpolation.Id | _: LeftParen | _: LeftBrace | _: Literal => true
-        case _ => false
-      })
-    }
-  }
+  // https://github.com/lampepfl/dotty/blob/4e7ab609/compiler/src/dotty/tools/dotc/parsing/Scanners.scala#L435
+  def canBeLeadingInfixArg(argToken: Token, argTokenPos: Int): Boolean =
+    isExprIntro(argToken, argTokenPos) && (argToken match {
+      case x: Ident => x.value.isUnaryOp || !x.isIdentSymbolicInfixOperator
+      case _ => true
+    })
 
   def getTokenAtLineStart(idx: Int): Token =
     getTokenAtLineStart(idx, tokens(idx))
@@ -554,7 +550,13 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
       def isLeadingInfix() =
         !newlines && dialect.allowInfixOperatorAfterNL &&
-          isLeadingInfixOperator(nextPos)
+          next.is[Ident] && next.isIdentSymbolicInfixOperator && {
+            val nextSafeIndex = getNextSafeIndex(nextPos)
+            tokens(nextSafeIndex).is[Whitespace] && {
+              val argPos = getStrictAfterSafe(nextSafeIndex)
+              canBeLeadingInfixArg(tokens(argPos), argPos)
+            }
+          }
 
       val resOpt =
         if (next == null || !hasLF) None
