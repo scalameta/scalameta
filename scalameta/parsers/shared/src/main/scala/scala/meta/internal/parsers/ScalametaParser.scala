@@ -2024,10 +2024,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             val opLine = opPos.startLine
             val argLine = argPos.startLine
             val opCol = opPos.startColumn
-            val okInfix = isExprIntro(argToken, tokenPos) && {
+            val okInfix = canBeLeadingInfixArg(argToken, tokenPos) && {
               if (opLine == argLine) opPos.endColumn < argPos.startColumn // space on same line
               else opLine == argLine - 1 && opCol <= argPos.startColumn // indent on next line
-            } && !isLeadingInfixOperator(tokenPos)
+            }
             if (okInfix) Some(Right(getNextRhs(op, autoPos(Type.ArgClause(Nil)))))
             else {
               val indentedWithoutArg = opLine != argLine &&

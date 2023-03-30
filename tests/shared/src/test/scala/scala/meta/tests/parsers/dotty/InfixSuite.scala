@@ -419,7 +419,9 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       Some(
         """|{
-           |  println("hello") ??? ??? match {
+           |  println("hello")
+           |  ???
+           |  ??? match {
            |    case 0 => 1
            |  }
            |}
@@ -427,22 +429,21 @@ class InfixSuite extends BaseDottySuite {
       )
     )(
       Term.Block(
-        Term.Match(
-          Term.ApplyInfix(
-            Term.Apply(tname("println"), List(str("hello"))),
+        List(
+          Term.Apply(tname("println"), List(str("hello"))),
+          tname("???"),
+          Term.Match(
             tname("???"),
-            Nil,
-            List(tname("???"))
-          ),
-          List(Case(int(0), None, int(1))),
-          Nil
-        ) :: Nil
+            List(Case(int(0), None, int(1))),
+            Nil
+          )
+        )
       )
     )
   }
 
   test("scala3 infix syntax 5.2") {
-    runTestAssert[Stat](
+    runTestError[Stat](
       """|{
          |  println("hello")
          |    ???
@@ -451,27 +452,9 @@ class InfixSuite extends BaseDottySuite {
          |    }
          |}
          |""".stripMargin,
-      Some(
-        """|{
-           |  println("hello") ??? ??? match {
-           |    case 0 => 1
-           |  }
-           |}
-           |""".stripMargin
-      )
-    )(
-      Term.Block(
-        Term.Match(
-          Term.ApplyInfix(
-            Term.Apply(tname("println"), List(str("hello"))),
-            tname("???"),
-            Nil,
-            List(tname("???"))
-          ),
-          List(Case(int(0), None, int(1))),
-          Nil
-        ) :: Nil
-      )
+      """|error: Invalid indented leading infix operator found
+         |    ???
+         |    ^""".stripMargin
     )
   }
 
