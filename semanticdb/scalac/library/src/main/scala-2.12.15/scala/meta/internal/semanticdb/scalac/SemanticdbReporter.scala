@@ -19,15 +19,20 @@ class SemanticdbReporter(underlying: Reporter)
       case 2 => underlying.error(pos, msg)
       case _ =>
     }
-
   }
 
   override def hasErrors: Boolean = underlying.hasErrors
 
   override def hasWarnings: Boolean = underlying.hasWarnings
 
-}
 
+  // overriding increment is enough so make sure that error/warning
+  // counts are the same as in underlying reporter
+   override def increment(severity: Severity): Unit = {
+    super.increment(severity)
+    underlying.increment(severity)
+  }
+}
 object SemanticdbReporter {
   def defaultSettings(): Settings = {
     val s = new Settings()
