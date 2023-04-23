@@ -225,4 +225,21 @@ class TargetedSuite extends SemanticdbSuite {
       assertEquals(toInt, "scala/Int#toLong().")
     }
   )
+
+  targeted(
+    """
+    package n
+      | object ForCompWithFilter {
+      |  val foo: Option[(Int, Int)] = None
+      |  for {
+      |    (_, _) <- <<foo>>
+      |    (_, _) <- <<foo>>
+      |  } yield ()
+      |}
+    """.stripMargin,
+    (_, foo1, foo2) => {
+      assertEquals(foo1, "n/ForCompWithFilter.foo.")
+      assertEquals(foo2, "n/ForCompWithFilter.foo.")
+    }
+  )
 }

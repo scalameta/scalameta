@@ -42,4 +42,8 @@ class ForComprehension {
       f
     )
   }
+  val x: Option[(Int, Int)] = None
+  for {
+    (_, _) <- x
+  } yield ()
 }
