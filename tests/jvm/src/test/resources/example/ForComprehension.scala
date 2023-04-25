@@ -42,4 +42,8 @@ class ForComprehension/*<=example.ForComprehension#*/ {
       f/*=>local15*/
     )
   }
+  val x/*<=example.ForComprehension#x.*/: Option/*=>scala.Option#*/[(Int/*=>scala.Int#*/, Int/*=>scala.Int#*/)] = None/*=>scala.None.*/
+  for {
+    (_, _) <- x/*=>example.ForComprehension#x.*/
+  } yield ()
 }

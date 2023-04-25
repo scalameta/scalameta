@@ -1485,14 +1485,18 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/ForComprehension.scala
 Text => non-empty
 Language => Scala
-Symbols => 13 entries
-Occurrences => 50 entries
-Synthetics => 12 entries
+Symbols => 15 entries
+Occurrences => 56 entries
+Synthetics => 13 entries
 
 Symbols:
-example/ForComprehension# => class ForComprehension extends AnyRef { +1 decls }
+example/ForComprehension# => class ForComprehension extends AnyRef { +2 decls }
   AnyRef => scala/AnyRef#
 example/ForComprehension#`<init>`(). => primary ctor <init>()
+example/ForComprehension#x. => val method x: Option[Tuple2[Int, Int]]
+  Option => scala/Option#
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
 local0 => param a: Int
   Int => scala/Int#
 local1 => val local b: Int
@@ -1518,6 +1522,9 @@ local14 => val local e: Tuple4[Int, Int, Int, Int]
   Int => scala/Int#
 local15 => param f: Tuple4[Int, Int, Int, Int]
   Tuple4 => scala/Tuple4#
+  Int => scala/Int#
+local16 => param check$ifrefutable$2: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
   Int => scala/Int#
 
 Occurrences:
@@ -1571,6 +1578,12 @@ Occurrences:
 [39:6..39:7): d => local12
 [40:6..40:7): e => local14
 [41:6..41:7): f => local15
+[44:6..44:7): x <= example/ForComprehension#x.
+[44:9..44:15): Option => scala/Option#
+[44:17..44:20): Int => scala/Int#
+[44:22..44:25): Int => scala/Int#
+[44:30..44:34): None => scala/None.
+[46:14..46:15): x => example/ForComprehension#x.
 
 Synthetics:
 [3:2..8:19): for {
@@ -1730,6 +1743,15 @@ Synthetics:
   apply => scala/collection/IterableFactory#apply().
   Tuple4 => scala/Tuple4#
   Int => scala/Int#
+[45:2..47:12): for {
+    (_, _) <- x
+  } yield () => orig(x).withFilter({(check$ifrefutable$2) => orig()}).map[Unit]({(local17) => orig((_, _) <- x
+  } yield ())})
+  withFilter => scala/Option#withFilter().
+  check$ifrefutable$2 => local16
+  map => scala/Option#WithFilter#map().
+  Unit => scala/Unit#
+  local17 => local17
 
 semanticdb/integration/src/main/scala/example/ImplicitConversion.scala
 ----------------------------------------------------------------------

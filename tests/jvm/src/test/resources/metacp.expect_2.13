@@ -1781,12 +1781,16 @@ Schema => SemanticDB v4
 Uri => example/ForComprehension.class
 Text => empty
 Language => Scala
-Symbols => 2 entries
+Symbols => 3 entries
 
 Symbols:
-example/ForComprehension# => class ForComprehension extends AnyRef { +1 decls }
+example/ForComprehension# => class ForComprehension extends AnyRef { +2 decls }
   AnyRef => scala/AnyRef#
 example/ForComprehension#`<init>`(). => primary ctor <init>()
+example/ForComprehension#x. => val method x: Option[Tuple2[Int, Int]]
+  Option => scala/Option#
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
 
 example/ImplicitConversion.class
 --------------------------------

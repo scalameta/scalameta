@@ -728,7 +728,15 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   case _ =>
                 }
               case select: g.Select if isSyntheticName(select) =>
-                tryFindMtree(select.qualifier)
+                select.qualifier match {
+                  // This case handles multiple synthetics in a row, for example
+                  //
+                  // ```val foo: Option[(Int, Int)] = None
+                  //    for { (_, _) <- foo } yield ()```
+                  // where `for` expands to `foo.withFilter(...).map(...)`
+                  case g.Apply(s: g.Select, _) if isSyntheticName(s) => traverse(s)
+                  case _ => tryFindMtree(select.qualifier)
+                }
                 tryFindSynthetic(select)
               case gtree: g.AppliedTypeTree =>
                 tryFindMtree(gtree)
