@@ -150,9 +150,10 @@ object Token {
     @freeform("xml end") class End extends Token
   }
 
+  @branch trait Indentation extends Whitespace
   object Indentation {
-    @freeform("indent") class Indent extends Token
-    @freeform("outdent") class Outdent extends Token
+    @freeform("indent") class Indent extends Indentation
+    @freeform("outdent") class Outdent extends Indentation
   }
 
   // Trivia
