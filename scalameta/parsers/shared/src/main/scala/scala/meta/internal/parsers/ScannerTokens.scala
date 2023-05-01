@@ -15,6 +15,8 @@ import scala.meta.tokens.Tokens
 
 final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
+  import ScannerTokens._
+
   @tailrec
   final def getPrevIndex(index: Int): Int = {
     val prev = getPrevSafeIndex(index)
@@ -305,7 +307,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         val token = tokens(pos)
         token match {
           case _: EOL | _: BOF => (acc, pos)
-          case AsMultilineComment(c) => (ScannerTokens.multilineCommentIndent(c), pos)
+          case AsMultilineComment(c) => (multilineCommentIndent(c), pos)
           case _: Comment => countIndentInternal(pos - 1)
           case _: HSpace => countIndentInternal(pos - 1, acc + 1)
           case _ => (-1, -1)
@@ -462,21 +464,19 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case _: RegionBrace | _: RegionEnum | _: SepRegionIndented => false
           case _ => true
         }
-        mkOutdents(regions)(_ => true) {
-          case (_: RegionBrace | _: RegionEnum) :: xs => currRef(xs)
-          case xs => currRef(xs)
+        mkOutdents(regions)(_ => true) { rs =>
+          currRef(dropUntil(rs) {
+            case _: RegionBrace | _: RegionEnum => true
+            case _ => false
+          })
         }
       case _: RightBracket =>
-        currRef(sepRegions match {
-          case RegionBracket :: tail => tail
-          case xs => xs
-        })
+        currRef(dropUntil(sepRegions)(_ eq RegionBracket))
       case _: EOF =>
         mkOutdents(sepRegions.filter(_.isIndented))(_ => true)(currRef(_))
       case _: RightParen =>
-        mkOutdents(sepRegions)(_ => true) {
-          case (_: RegionParen) :: xs => currRef(xs)
-          case xs => currRef(xs)
+        mkOutdents(sepRegions)(_ => true) { rs =>
+          currRef(dropUntil(rs)(_.isInstanceOf[RegionParen]))
         }
       case _: LeftArrow =>
         currRef(sepRegions match {
@@ -670,5 +670,12 @@ object ScannerTokens {
 
     loop(0, 0, false)
   }
+
+  @tailrec
+  def dropUntil(regions: List[SepRegion])(f: SepRegion => Boolean): List[SepRegion] =
+    regions match {
+      case head :: tail => if (f(head)) tail else dropUntil(tail)(f)
+      case _ => Nil
+    }
 
 }
