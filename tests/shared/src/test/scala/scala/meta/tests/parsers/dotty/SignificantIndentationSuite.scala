@@ -2486,4 +2486,23 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
 
   }
+
+  test("#3113") {
+    runTestError[Source](
+      """|object Hello {
+         |  val fun = () =>
+         |    if (true) {
+         |      new Object { obj =>
+         |        println(toString)
+         |      }
+         |    }
+         |
+         |  def main(args: Array[String]): Unit = fun()
+         |}""".stripMargin,
+      """|error: outdent expected but } found
+         |}
+         |^""".stripMargin
+    )
+  }
+
 }
