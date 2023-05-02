@@ -376,7 +376,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       prevToken: Token,
       prevPos: Int,
       currPos: Int,
-      sepRegions: List[SepRegion]
+      sepRegionsOrig: List[SepRegion]
   ): TokenRef = {
     val prev = if (prevPos >= 0) tokens(prevPos) else null
     val curr = tokens(currPos)
@@ -427,7 +427,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def currRef(regions: List[SepRegion], next: TokenRef = null): TokenRef =
       TokenRef(regions, curr, currPos, next)
 
-    def nonTrivial = curr match {
+    def nonTrivial(sepRegions: List[SepRegion]) = curr match {
       case _: LeftParen => currRef(RegionParen(false) :: sepRegions)
       case _: LeftBracket => currRef(RegionBracket :: sepRegions)
       case _: Comma =>
@@ -505,8 +505,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     }
 
     if (currNonTrivial)
-      if (isTrailingComma) nextToken(curr, currPos, currPos + 1, sepRegions)
-      else nonTrivial
+      if (isTrailingComma) nextToken(curr, currPos, currPos + 1, sepRegionsOrig)
+      else nonTrivial(sepRegionsOrig)
     else {
       var i = prevPos + 1
       var lastNewlinePos = -1
@@ -527,17 +527,17 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         i += 1
       }
 
-      def lastWhitespaceToken = {
+      def lastWhitespaceToken(regions: List[SepRegion]) = {
         val token = tokens(lastNewlinePos)
         val out =
           if (newlines) LFLF(token.input, token.dialect, token.start, token.end) else token
-        TokenRef(sepRegions, out, lastNewlinePos, null)
+        TokenRef(regions, out, lastNewlinePos, null)
       }
 
-      def canProduceLF: Boolean = {
+      def canProduceLF(regions: List[SepRegion]): Boolean = {
         lastNewlinePos != -1 &&
         (prevToken.is[Indentation.Outdent] || prevPos >= 0 && canEndStat(prevPos)) &&
-        next.isNot[CantStartStat] && sepRegions.headOption.forall {
+        next.isNot[CantStartStat] && regions.headOption.forall {
           case _: RegionBrace | _: RegionCase | _: RegionEnum => true
           case _: RegionIndent | _: RegionIndentEnum => true
           case x: RegionParen => x.canProduceLF
@@ -545,8 +545,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         }
       }
 
-      def getIfCanProduceLF =
-        if (canProduceLF) Some(lastWhitespaceToken) else None
+      def getIfCanProduceLF(regions: List[SepRegion]) =
+        if (canProduceLF(regions)) Some(lastWhitespaceToken(regions)) else None
 
       def isLeadingInfix() =
         !newlines && dialect.allowInfixOperatorAfterNL &&
@@ -560,7 +560,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
       val resOpt =
         if (next == null || !hasLF) None
-        else if (!dialect.allowSignificantIndentation) getIfCanProduceLF
+        else if (!dialect.allowSignificantIndentation) getIfCanProduceLF(sepRegionsOrig)
         else {
           val (nextIndent, indentPos) = countIndentAndNewlineIndex(nextPos)
 
@@ -577,7 +577,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
            *     foo()
            *     ```
            */
-          def getOutdentIfNeeded() = sepRegions match {
+          def getOutdentIfNeeded(sepRegions: List[SepRegion]) = sepRegions match {
             case (r: SepRegionIndented) :: xs if {
                   if (nextIndent < r.indent)
                     r.closeOnNonCase ||
@@ -609,7 +609,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
            * Notice: Indentation after `:` isn't hadled here. It's produced manually on the parser
            * level.
            */
-          def getIndentIfNeeded = {
+          def getIndentIfNeeded(sepRegions: List[SepRegion]) = {
             def exceedsIndent =
               nextIndent > sepRegions.find(_.indent > 0).fold(0)(_.indent)
             def emitIndent(regions: List[SepRegion], closeOnNonCase: Boolean = false) =
@@ -636,13 +636,17 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             }
           }
 
-          getOutdentIfNeeded()
-            .orElse { getIndentIfNeeded }
-            .orElse { getIfCanProduceLF }
+          def iter(regions: List[SepRegion]): Option[TokenRef] = {
+            val res = getOutdentIfNeeded(regions).orElse(getIndentIfNeeded(regions))
+            if (res.isEmpty) getIfCanProduceLF(regions)
+            else res
+          }
+
+          iter(sepRegionsOrig)
         }
       resOpt match {
         case Some(res) => res
-        case _ => nextToken(prevToken, prevPos, nextPos, sepRegions)
+        case _ => nextToken(prevToken, prevPos, nextPos, sepRegionsOrig)
       }
     }
   }
