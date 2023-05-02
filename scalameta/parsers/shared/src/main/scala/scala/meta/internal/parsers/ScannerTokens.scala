@@ -626,12 +626,13 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                 // check the previous token to avoid infinity loop
                 val ok = next.is[KwCase] && !getPrevToken(prevPos).is[soft.KwEnd]
                 if (ok) emitIndent(sepRegions, true) else None
+              case _ if !exceedsIndent => None
               case _: RightArrow =>
                 val ok = sepRegions.headOption.forall(_.indentOnArrow) &&
-                  !isEndMarkerIntro(nextPos) && exceedsIndent
+                  !isEndMarkerIntro(nextPos)
                 if (ok) emitIndent(sepRegions) else None
               case _ =>
-                val ok = canStartIndent(prevPos) && exceedsIndent
+                val ok = canStartIndent(prevPos)
                 if (ok) emitIndent(sepRegions) else None
             }
           }
