@@ -2184,6 +2184,7 @@ Text => non-empty
 Language => Scala
 Symbols => 13 entries
 Occurrences => 26 entries
+Synthetics => 1 entries
 
 Symbols:
 example/Issue2116# => abstract class Issue2116 extends AnyRef { +4 decls }
@@ -2245,6 +2246,12 @@ Occurrences:
 [15:54..15:60): global => scala/concurrent/ExecutionContext.global().
 [17:2..17:7): check => example/Issue2116#check().
 [18:4..18:26): includeCommitCharacter => example/Issue2116#check().(includeCommitCharacter)
+
+Synthetics:
+[17:2..19:3): check(
+    includeCommitCharacter = true
+  ) => *(ec)
+  ec => example/Issue2116_2#ec.
 
 semanticdb/integration/src/main/scala/example/Issue2144.scala
 -------------------------------------------------------------
