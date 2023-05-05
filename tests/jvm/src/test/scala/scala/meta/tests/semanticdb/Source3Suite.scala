@@ -95,6 +95,10 @@ class Source3Suite extends FunSuite {
       ScalaVersion.Full("2.12.17") -> expected.replace(
         "scala/package.List.",
         "scala/collection/immutable/List."
+      ),
+      ScalaVersion.Full("2.12.18") -> expected.replace(
+        "scala/package.List.",
+        "scala/collection/immutable/List."
       )
     )
   )
