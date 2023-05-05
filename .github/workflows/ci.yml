@@ -32,9 +32,10 @@ jobs:
           - "++2.13.8 testsJVM/test"
           - "++2.13.9 testsJVM/test"
           - "++2.13.10 testsJVM/test"
-          - "++2.13.10 testsJS/test"
-          - "++2.13.10 testsNative/test"
-          - "++2.13.10 download-scala-library testsJVM/slow:test"
+          - "++2.13.11 testsJVM/test"
+          - "++2.13.11 testsJS/test"
+          - "++2.13.11 testsNative/test"
+          - "++2.13.11 download-scala-library testsJVM/slow:test"
           - "communitytest/test"
           - "mima"
     steps:
@@ -50,7 +51,7 @@ jobs:
       - uses: olafurpg/setup-scala@v13
         with:
           java-version: adopt@1.11
-      - run: sbt ++2.13.8 testsJVM/test
+      - run: sbt ++2.13.11 testsJVM/test
   windows:
     name: Windows tests
     runs-on: windows-latest
