@@ -281,10 +281,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
   @inline private def indentedAfterOpen[T](body: T): T = {
     newLinesOpt()
-    if (!acceptOpt[Indentation.Outdent]) {
-      in.observeOutdented()
-      accept[Indentation.Outdent]
-    }
+    accept[Indentation.Outdent]
     body
   }
 
@@ -1488,7 +1485,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         }
       }.getOrElse {
         newLinesOpt()
-        if (!acceptOpt[T]) in.observeIndented()
+        acceptOpt[T]
         simpleExpr
       }
     } else {
@@ -1585,7 +1582,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         } else if (acceptOpt[KwYield]) {
           Term.ForYield(enums, exprMaybeIndented())
         } else {
-          in.observeIndented()
           Term.For(enums, exprMaybeIndented())
         }
       case KwReturn() =>
@@ -4432,7 +4428,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _ => true
     }
 
-    @tailrec def iter(): Unit = if (notCaseDefEnd() && !in.observeOutdented()) token match {
+    @tailrec def iter(): Unit = if (notCaseDefEnd()) token match {
       case _: KwExport =>
         stats += exportStmt()
         acceptStatSepOpt()
