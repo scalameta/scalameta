@@ -436,8 +436,11 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       TokenRef(regions, curr, currPos, next)
 
     def nonTrivial(sepRegions: List[SepRegion]) = curr match {
-      case _: LeftParen => currRef(RegionParen(false) :: sepRegions)
-      case _: LeftBracket => currRef(RegionBracket :: sepRegions)
+      case _: EOF =>
+        mkOutdentsOpt(currPos, sepRegions) {
+          case (r: SepRegionIndented) :: rs => (Left(r), rs)
+          case _ :: rs => (Right(true), rs)
+        }.fold(currRef(_), identity)
       case _: Comma =>
         sepRegions match {
           case (head: SepRegionIndented) :: tail
@@ -448,6 +451,13 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             }
           case _ => currRef(sepRegions)
         }
+      case _: KwEnum => currRef(RegionEnumArtificialMark :: sepRegions)
+      case _ if isCaseIntro(currPos) =>
+        currRef(sepRegions match {
+          case (_: RegionEnum | _: RegionIndentEnum) :: _ => sepRegions
+          case (_: RegionCaseBody) :: tail => RegionCaseExpr :: tail
+          case _ => RegionCaseExpr :: sepRegions
+        })
       case _: LeftBrace =>
         val indentInBrace = if (isAheadNewLine(currPos)) countIndent(nextPos) else -1
         def indentOnArrow = !prev.isAny[KwMatch, KwCatch]
@@ -460,13 +470,6 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case RegionEnumArtificialMark :: tail => RegionEnum(indentInBrace) :: tail
           case xs => RegionBrace(indentInBrace, indentOnArrow) :: xs
         })
-      case _: KwEnum => currRef(RegionEnumArtificialMark :: sepRegions)
-      case _ if isCaseIntro(currPos) =>
-        currRef(sepRegions match {
-          case (_: RegionEnum | _: RegionIndentEnum) :: _ => sepRegions
-          case (_: RegionCaseBody) :: tail => RegionCaseExpr :: tail
-          case _ => RegionCaseExpr :: sepRegions
-        })
       case _: RightBrace =>
         // produce outdent for every indented region before RegionBrace|RegionEnum
         mkOutdentsOpt(currPos, sepRegions) {
@@ -474,13 +477,10 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case (_: RegionBrace | _: RegionEnum) :: rs => (Right(false), rs)
           case _ :: rs => (Right(true), rs)
         }.fold(currRef(_), identity)
+      case _: LeftBracket => currRef(RegionBracket :: sepRegions)
       case _: RightBracket =>
         currRef(dropUntil(sepRegions)(_ eq RegionBracket))
-      case _: EOF =>
-        mkOutdentsOpt(currPos, sepRegions) {
-          case (r: SepRegionIndented) :: rs => (Left(r), rs)
-          case _ :: rs => (Right(true), rs)
-        }.fold(currRef(_), identity)
+      case _: LeftParen => currRef(RegionParen(false) :: sepRegions)
       case _: RightParen =>
         mkOutdentsOpt(currPos, sepRegions) {
           case (r: SepRegionIndented) :: rs => (Left(r), rs)
