@@ -2488,7 +2488,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
   }
 
   test("#3113") {
-    runTestError[Source](
+    runTestAssert[Source](
       """|object Hello {
          |  val fun = () =>
          |    if (true) {
@@ -2499,9 +2499,62 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |
          |  def main(args: Array[String]): Unit = fun()
          |}""".stripMargin,
-      """|error: outdent expected but } found
-         |}
-         |^""".stripMargin
+      assertLayout = Some(
+        """|object Hello {
+           |  val fun = () => if (true) {
+           |    new Object { obj => println(toString) }
+           |  }
+           |  def main(args: Array[String]): Unit = fun()
+           |}
+           |""".stripMargin
+      )
+    )(
+      Source(
+        Defn.Object(
+          Nil,
+          tname("Hello"),
+          Template(
+            Nil,
+            Nil,
+            Self(Name(""), None),
+            List(
+              Defn.Val(
+                Nil,
+                List(Pat.Var(tname("fun"))),
+                None,
+                Term.Function(
+                  Nil,
+                  Term.If(
+                    bool(true),
+                    Term.Block(
+                      Term.NewAnonymous(
+                        Template(
+                          Nil,
+                          List(Init(pname("Object"), Name(""), Nil)),
+                          Self(tname("obj"), None),
+                          List(Term.Apply(tname("println"), List(tname("toString")))),
+                          Nil
+                        )
+                      ) :: Nil
+                    ),
+                    Lit.Unit(),
+                    Nil
+                  )
+                )
+              ),
+              Defn.Def(
+                Nil,
+                tname("main"),
+                Nil,
+                List(List(tparam("args", Type.Apply(pname("Array"), List(pname("String")))))),
+                Some(pname("Unit")),
+                Term.Apply(tname("fun"), Nil)
+              )
+            ),
+            Nil
+          )
+        ) :: Nil
+      )
     )
   }
 
