@@ -538,8 +538,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         lastNewlinePos != -1 &&
         (prevToken.is[Indentation.Outdent] || prevPos >= 0 && canEndStat(prevPos)) &&
         next.isNot[CantStartStat] && regions.headOption.forall {
-          case _: RegionBrace | _: RegionCaseBody | _: RegionEnum => true
-          case _: RegionIndent | _: RegionIndentEnum => true
+          case _: CanProduceLF => true
           case x: RegionParen => x.canProduceLF
           case _ => false
         }
