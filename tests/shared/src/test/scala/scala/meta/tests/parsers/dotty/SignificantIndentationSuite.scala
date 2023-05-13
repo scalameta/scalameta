@@ -1249,7 +1249,16 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  case false => 1
          |
          |""".stripMargin,
-      assertLayout = None
+      Some(
+        """|val hello = (xs match {
+           |  case Nil => "empty"
+           |  case x :: xs1 => "nonempty"
+           |}) match {
+           |  case true => 0
+           |  case false => 1
+           |}
+           |""".stripMargin
+      )
     )(
       Defn.Val(
         Nil,

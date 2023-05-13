@@ -2555,4 +2555,986 @@ class ControlSyntaxSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("if-then 1") {
+    runTestAssert[Stat](
+      """|object foo:
+         |  def bar =
+         |    if map:
+         |      op(c == true)
+         |    then err(context)
+         |""".stripMargin,
+      assertLayout = Some(
+        """|object foo { def bar = if (map(op(c == true))) err(context) }
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        tname("foo"),
+        Template(
+          Nil,
+          Nil,
+          slf,
+          Defn.Def(
+            Nil,
+            tname("bar"),
+            Nil,
+            None,
+            Term.If(
+              Term.Apply(
+                tname("map"),
+                Term.Apply(
+                  tname("op"),
+                  Term.ApplyInfix(tname("c"), tname("=="), Nil, List(bool(true))) :: Nil
+                ) :: Nil
+              ),
+              Term.Apply(tname("err"), List(tname("context"))),
+              Lit.Unit(),
+              Nil
+            )
+          ) :: Nil,
+          Nil
+        )
+      )
+    )
+  }
+
+  test("if-then 2") {
+    runTestAssert[Stat](
+      """|object foo:
+         |  def bar =
+         |    if (a + b) { op(c == true) } then err(context)
+         |""".stripMargin,
+      assertLayout = Some(
+        """|object foo {
+           |  def bar = if ((a + b) {
+           |    op(c == true)
+           |  }) err(context)
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        tname("foo"),
+        Template(
+          Nil,
+          Nil,
+          slf,
+          Defn.Def(
+            Nil,
+            tname("bar"),
+            Nil,
+            None,
+            Term.If(
+              Term.Apply(
+                Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+                Term.Block(
+                  Term.Apply(
+                    tname("op"),
+                    Term.ApplyInfix(tname("c"), tname("=="), Nil, List(bool(true))) :: Nil
+                  ) :: Nil
+                ) :: Nil
+              ),
+              Term.Apply(tname("err"), List(tname("context"))),
+              Lit.Unit(),
+              Nil
+            )
+          ) :: Nil,
+          Nil
+        )
+      )
+    )
+  }
+
+  test("if-then 3") {
+    runTestAssert[Stat](
+      """|object foo:
+         |  def bar =
+         |    if (a + b) op c == true then err(context)
+         |""".stripMargin,
+      assertLayout = Some(
+        """|object foo { def bar = if (a + b op c == true) err(context) }
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        tname("foo"),
+        Template(
+          Nil,
+          Nil,
+          slf,
+          Defn.Def(
+            Nil,
+            tname("bar"),
+            Nil,
+            None,
+            Term.If(
+              Term.ApplyInfix(
+                Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+                tname("op"),
+                Nil,
+                Term.ApplyInfix(tname("c"), tname("=="), Nil, List(bool(true))) :: Nil
+              ),
+              Term.Apply(tname("err"), List(tname("context"))),
+              Lit.Unit(),
+              Nil
+            )
+          ) :: Nil
+        )
+      )
+    )
+  }
+
+  test("if-then 4") {
+    runTestAssert[Stat](
+      """|object foo:
+         |  def bar =
+         |    if (a + b) op c err(context)
+         |""".stripMargin,
+      assertLayout = Some(
+        """|object foo { def bar = if (a + b) op c err(context) }
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        tname("foo"),
+        Template(
+          Nil,
+          Nil,
+          slf,
+          Defn.Def(
+            Nil,
+            tname("bar"),
+            Nil,
+            None,
+            Term.If(
+              Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+              Term.ApplyInfix(
+                tname("op"),
+                tname("c"),
+                Nil,
+                List(Term.Apply(tname("err"), List(tname("context"))))
+              ),
+              Lit.Unit(),
+              Nil
+            )
+          ) :: Nil,
+          Nil
+        )
+      )
+    )
+  }
+
+  test("if-then 5") {
+    runTestAssert[Stat](
+      """|object foo:
+         |  def bar =
+         |    if (a + b) (op c err(context))
+         |""".stripMargin,
+      assertLayout = Some(
+        """|object foo { def bar = if (a + b) op c err(context) }
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        tname("foo"),
+        Template(
+          Nil,
+          Nil,
+          slf,
+          Defn.Def(
+            Nil,
+            tname("bar"),
+            Nil,
+            None,
+            Term.If(
+              Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+              Term.ApplyInfix(
+                tname("op"),
+                tname("c"),
+                Nil,
+                List(Term.Apply(tname("err"), List(tname("context"))))
+              ),
+              Lit.Unit(),
+              Nil
+            )
+          ) :: Nil,
+          Nil
+        )
+      )
+    )
+  }
+
+  test("if-then 6") {
+    val code =
+      """|object a {
+         |  constraint.contains(tl) || other.isRemovable(tl) || {
+         |          val tvars = tl.paramRefs.map(other.typeVarOfParam(_)).collect { case tv: TypeVar => tv }
+         |          if this.isCommittable then
+         |            tvars.foreach(tvar => if !tvar.inst.exists && !isOwnedAnywhere(this, tvar) then includeVar(tvar))
+         |          typeComparer.addToConstraint(tl, tvars)
+         |        }
+         |}
+         |""".stripMargin
+    val output =
+      """|object a {
+         |  constraint.contains(tl) || other.isRemovable(tl) || {
+         |    val tvars = tl.paramRefs.map(other.typeVarOfParam(_)).collect({
+         |      case tv: TypeVar => tv
+         |    })
+         |    if (this.isCommittable) tvars.foreach(tvar => if (!tvar.inst.exists && !isOwnedAnywhere(this, tvar)) includeVar(tvar))
+         |    typeComparer.addToConstraint(tl, tvars)
+         |  }
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Object(
+        Nil,
+        tname("a"),
+        Template(
+          Nil,
+          Nil,
+          slf,
+          Term.ApplyInfix(
+            Term.ApplyInfix(
+              Term.Apply(
+                Term.Select(tname("constraint"), tname("contains")),
+                List(tname("tl"))
+              ),
+              tname("||"),
+              Nil,
+              Term.Apply(
+                Term.Select(tname("other"), tname("isRemovable")),
+                List(tname("tl"))
+              ) :: Nil
+            ),
+            tname("||"),
+            Nil,
+            Term.Block(
+              List(
+                Defn.Val(
+                  Nil,
+                  List(Pat.Var(tname("tvars"))),
+                  None,
+                  Term.Apply(
+                    Term.Select(
+                      Term.Apply(
+                        Term.Select(Term.Select(tname("tl"), tname("paramRefs")), tname("map")),
+                        Term.AnonymousFunction(
+                          Term.Apply(
+                            Term.Select(tname("other"), tname("typeVarOfParam")),
+                            List(Term.Placeholder())
+                          )
+                        ) :: Nil
+                      ),
+                      tname("collect")
+                    ),
+                    Term.PartialFunction(
+                      Case(
+                        Pat.Typed(Pat.Var(tname("tv")), pname("TypeVar")),
+                        None,
+                        tname("tv")
+                      ) :: Nil
+                    ) :: Nil
+                  )
+                ),
+                Term.If(
+                  Term.Select(Term.This(Name("")), tname("isCommittable")),
+                  Term.Apply(
+                    Term.Select(tname("tvars"), tname("foreach")),
+                    Term.Function(
+                      List(Term.Param(Nil, tname("tvar"), None, None)),
+                      Term.If(
+                        Term.ApplyInfix(
+                          Term.ApplyUnary(
+                            tname("!"),
+                            Term.Select(
+                              Term.Select(tname("tvar"), tname("inst")),
+                              tname("exists")
+                            )
+                          ),
+                          tname("&&"),
+                          Nil,
+                          Term.ApplyUnary(
+                            tname("!"),
+                            Term.Apply(
+                              tname("isOwnedAnywhere"),
+                              List(Term.This(Name("")), tname("tvar"))
+                            )
+                          ) :: Nil
+                        ),
+                        Term.Apply(
+                          tname("includeVar"),
+                          List(tname("tvar"))
+                        ),
+                        Lit.Unit(),
+                        Nil
+                      )
+                    ) :: Nil
+                  ),
+                  Lit.Unit(),
+                  Nil
+                ),
+                Term.Apply(
+                  Term.Select(tname("typeComparer"), tname("addToConstraint")),
+                  List(tname("tl"), tname("tvars"))
+                )
+              )
+            ) :: Nil
+          ) :: Nil,
+          Nil
+        )
+      )
+    )
+  }
+
+  test("if-then 7") {
+    val code =
+      """
+  private def genScalaClass(td: TypeDef): js.ClassDef = {
+    val hashedDefs = ir.Hashers.hashMemberDefs(allMemberDefs)
+
+    val kind =
+      if (isStaticModule(sym)) ClassKind.ModuleClass
+      else if (isHijacked) ClassKind.HijackedClass
+      else ClassKind.Class
+  }
+    """.stripMargin
+    val output =
+      """|private def genScalaClass(td: TypeDef): js.ClassDef = {
+         |  val hashedDefs = ir.Hashers.hashMemberDefs(allMemberDefs)
+         |  val kind = if (isStaticModule(sym)) ClassKind.ModuleClass else if (isHijacked) ClassKind.HijackedClass else ClassKind.Class
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Def(
+        List(Mod.Private(Name(""))),
+        tname("genScalaClass"),
+        Nil,
+        List(List(Term.Param(Nil, tname("td"), Some(pname("TypeDef")), None))),
+        Some(Type.Select(tname("js"), pname("ClassDef"))),
+        Term.Block(
+          List(
+            Defn.Val(
+              Nil,
+              List(Pat.Var(tname("hashedDefs"))),
+              None,
+              Term.Apply(
+                Term.Select(Term.Select(tname("ir"), tname("Hashers")), tname("hashMemberDefs")),
+                List(tname("allMemberDefs"))
+              )
+            ),
+            Defn.Val(
+              Nil,
+              List(Pat.Var(tname("kind"))),
+              None,
+              Term.If(
+                Term.Apply(tname("isStaticModule"), List(tname("sym"))),
+                Term.Select(tname("ClassKind"), tname("ModuleClass")),
+                Term.If(
+                  tname("isHijacked"),
+                  Term.Select(tname("ClassKind"), tname("HijackedClass")),
+                  Term.Select(tname("ClassKind"), tname("Class")),
+                  Nil
+                ),
+                Nil
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+
+  test("try catch with case guard") {
+    runTestAssert[Stat](
+      """|arg match {
+         |  case arg: Showable =>
+         |    try arg.show
+         |    catch {
+         |      case ex: CyclicReference => "... (caught cyclic reference) ..."
+         |      case NonFatal(ex)
+         |      if !ctx.mode.is(Mode.PrintShowExceptions) &&
+         |         !ctx.settings.YshowPrintErrors.value =>
+         |        val msg = ex match
+         |          case te: TypeError => te.toMessage
+         |          case _ => ex.getMessage
+         |        s"[cannot display due to $msg, raw string = ${arg.toString}]"
+         |    }
+         |  case _ => String.valueOf(arg)
+         |}
+         |""".stripMargin,
+      assertLayout = Some(
+        """|arg match {
+           |  case arg: Showable =>
+           |    try arg.show catch {
+           |      case ex: CyclicReference => "... (caught cyclic reference) ..."
+           |      case NonFatal(ex) if !ctx.mode.is(Mode.PrintShowExceptions) && !ctx.settings.YshowPrintErrors.value =>
+           |        val msg = ex match {
+           |          case te: TypeError =>
+           |            te.toMessage
+           |          case _ =>
+           |            ex.getMessage
+           |        }
+           |        s"[cannot display due to $msg, raw string = ${arg.toString}]"
+           |    }
+           |  case _ =>
+           |    String.valueOf(arg)
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Match(
+        tname("arg"),
+        List(
+          Case(
+            Pat.Typed(Pat.Var(tname("arg")), pname("Showable")),
+            None,
+            Term.Try(
+              Term.Select(tname("arg"), tname("show")),
+              List(
+                Case(
+                  Pat.Typed(Pat.Var(tname("ex")), pname("CyclicReference")),
+                  None,
+                  str("... (caught cyclic reference) ...")
+                ),
+                Case(
+                  Pat.Extract(tname("NonFatal"), List(Pat.Var(tname("ex")))),
+                  Some(
+                    Term.ApplyInfix(
+                      Term.ApplyUnary(
+                        tname("!"),
+                        Term.Apply(
+                          Term.Select(Term.Select(tname("ctx"), tname("mode")), tname("is")),
+                          List(Term.Select(tname("Mode"), tname("PrintShowExceptions")))
+                        )
+                      ),
+                      tname("&&"),
+                      Nil,
+                      Term.ApplyUnary(
+                        tname("!"),
+                        Term.Select(
+                          Term.Select(
+                            Term.Select(tname("ctx"), tname("settings")),
+                            tname("YshowPrintErrors")
+                          ),
+                          tname("value")
+                        )
+                      ) :: Nil
+                    )
+                  ),
+                  Term.Block(
+                    List(
+                      Defn.Val(
+                        Nil,
+                        List(Pat.Var(tname("msg"))),
+                        None,
+                        Term.Match(
+                          tname("ex"),
+                          List(
+                            Case(
+                              Pat.Typed(Pat.Var(tname("te")), pname("TypeError")),
+                              None,
+                              Term.Select(tname("te"), tname("toMessage"))
+                            ),
+                            Case(
+                              Pat.Wildcard(),
+                              None,
+                              Term.Select(tname("ex"), tname("getMessage"))
+                            )
+                          ),
+                          Nil
+                        )
+                      ),
+                      Term.Interpolate(
+                        tname("s"),
+                        List(str("[cannot display due to "), str(", raw string = "), str("]")),
+                        List(tname("msg"), Term.Select(tname("arg"), tname("toString")))
+                      )
+                    )
+                  )
+                )
+              ),
+              None
+            )
+          ),
+          Case(
+            Pat.Wildcard(),
+            None,
+            Term.Apply(Term.Select(tname("String"), tname("valueOf")), List(tname("arg")))
+          )
+        ),
+        Nil
+      )
+    )
+  }
+
+  test("partial function with guard") {
+    runTestAssert[Stat](
+      """|val tvars = targs.filter(_.isInstanceOf[InferredTypeTree]).tpes.collect {
+         |  case tvar: TypeVar
+         |  if !tvar.isInstantiated &&
+         |     ctx.typerState.ownedVars.contains(tvar) &&
+         |     !locked.contains(tvar) => tvar
+         |}
+         |""".stripMargin,
+      assertLayout = Some(
+        """|val tvars = targs.filter(_.isInstanceOf[InferredTypeTree]).tpes.collect({
+           |  case tvar: TypeVar if !tvar.isInstantiated && ctx.typerState.ownedVars.contains(tvar) && !locked.contains(tvar) => tvar
+           |})
+           |""".stripMargin
+      )
+    )(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("tvars"))),
+        None,
+        Term.Apply(
+          Term.Select(
+            Term.Select(
+              Term.Apply(
+                Term.Select(tname("targs"), tname("filter")),
+                Term.AnonymousFunction(
+                  Term.ApplyType(
+                    Term.Select(Term.Placeholder(), tname("isInstanceOf")),
+                    List(pname("InferredTypeTree"))
+                  )
+                ) :: Nil
+              ),
+              tname("tpes")
+            ),
+            tname("collect")
+          ),
+          Term.PartialFunction(
+            Case(
+              Pat.Typed(Pat.Var(tname("tvar")), pname("TypeVar")),
+              Some(
+                Term.ApplyInfix(
+                  Term.ApplyInfix(
+                    Term.ApplyUnary(
+                      tname("!"),
+                      Term.Select(tname("tvar"), tname("isInstantiated"))
+                    ),
+                    tname("&&"),
+                    Nil,
+                    Term.Apply(
+                      Term.Select(
+                        Term.Select(
+                          Term.Select(tname("ctx"), tname("typerState")),
+                          tname("ownedVars")
+                        ),
+                        tname("contains")
+                      ),
+                      List(tname("tvar"))
+                    ) :: Nil
+                  ),
+                  tname("&&"),
+                  Nil,
+                  Term.ApplyUnary(
+                    tname("!"),
+                    Term.Apply(Term.Select(tname("locked"), tname("contains")), List(tname("tvar")))
+                  ) :: Nil
+                )
+              ),
+              tname("tvar")
+            ) :: Nil
+          ) :: Nil
+        )
+      )
+    )
+  }
+
+  test("nested if else without indent") {
+    runTestAssert[Stat](
+      """|if columnsVar != null then columnsVar.toInt
+         |else if Properties.isWin then
+         |  if ansiconVar != null then
+         |    ansiconVar.toInt
+         |  else defaultWidth
+         |else defaultWidth
+         |""".stripMargin,
+      assertLayout = Some(
+        """|if (columnsVar != null) columnsVar.toInt else if (Properties.isWin) if (ansiconVar != null) ansiconVar.toInt else defaultWidth else defaultWidth
+           |""".stripMargin
+      )
+    )(
+      Term.If(
+        Term.ApplyInfix(tname("columnsVar"), tname("!="), Nil, List(Lit.Null())),
+        Term.Select(tname("columnsVar"), tname("toInt")),
+        Term.If(
+          Term.Select(tname("Properties"), tname("isWin")),
+          Term.If(
+            Term.ApplyInfix(tname("ansiconVar"), tname("!="), Nil, List(Lit.Null())),
+            Term.Select(tname("ansiconVar"), tname("toInt")),
+            tname("defaultWidth"),
+            Nil
+          ),
+          tname("defaultWidth"),
+          Nil
+        ),
+        Nil
+      )
+    )
+  }
+
+  test("if-then without else") {
+    runTestAssert[Stat](
+      """|object foo:
+         |  private def assertBounds(context: String) =
+         |    if idx >= query.length then err(context)
+         |
+         |  private def err(problem: String) =
+         |    throw new QueryParseException(query, idx, problem)
+         |""".stripMargin,
+      assertLayout = Some(
+        """|object foo {
+           |  private def assertBounds(context: String) = if (idx >= query.length) err(context)
+           |  private def err(problem: String) = throw new QueryParseException(query, idx, problem)
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        tname("foo"),
+        Template(
+          Nil,
+          Nil,
+          slf,
+          List(
+            Defn.Def(
+              List(Mod.Private(Name(""))),
+              tname("assertBounds"),
+              Nil,
+              List(List(tparam("context", "String"))),
+              None,
+              Term.If(
+                Term.ApplyInfix(
+                  tname("idx"),
+                  tname(">="),
+                  Nil,
+                  List(Term.Select(tname("query"), tname("length")))
+                ),
+                Term.Apply(tname("err"), List(tname("context"))),
+                Lit.Unit(),
+                Nil
+              )
+            ),
+            Defn.Def(
+              List(Mod.Private(Name(""))),
+              tname("err"),
+              Nil,
+              List(List(tparam("problem", "String"))),
+              None,
+              Term.Throw(
+                Term.New(
+                  Init(
+                    pname("QueryParseException"),
+                    Name(""),
+                    List(List(tname("query"), tname("idx"), tname("problem")))
+                  )
+                )
+              )
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("old-style if") {
+    runTestAssert[Stat](
+      """|while (idx < str.length)
+         |  if ((str charAt idx) != '$' || isEscaped)
+         |    idx += 1
+         |  else
+         |    idx
+         |""".stripMargin,
+      assertLayout = Some(
+        """|while (idx < str.length) if ((str charAt idx) != '$' || isEscaped) idx += 1 else idx
+           |""".stripMargin
+      )
+    )(
+      Term.While(
+        Term.ApplyInfix(
+          tname("idx"),
+          tname("<"),
+          Nil,
+          List(Term.Select(tname("str"), tname("length")))
+        ),
+        Term.If(
+          Term.ApplyInfix(
+            Term.ApplyInfix(
+              Term.ApplyInfix(tname("str"), tname("charAt"), Nil, List(tname("idx"))),
+              tname("!="),
+              Nil,
+              List(Lit.Char('$'))
+            ),
+            tname("||"),
+            Nil,
+            List(tname("isEscaped"))
+          ),
+          Term.ApplyInfix(tname("idx"), tname("+="), Nil, List(int(1))),
+          tname("idx"),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("old-style for and if") {
+    runTestAssert[Stat](
+      """|for (c <- str)
+         |    if (c == '\n') { line += 1; char = 0 } else { char += 1 }
+         |""".stripMargin,
+      assertLayout = Some(
+        """|for (c <- str) if (c == '\n') {
+           |  line += 1
+           |  char = 0
+           |} else {
+           |  char += 1
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.For(
+        List(Enumerator.Generator(Pat.Var(tname("c")), tname("str"))),
+        Term.If(
+          Term.ApplyInfix(tname("c"), tname("=="), Nil, List(Lit.Char('\n'))),
+          Term.Block(
+            List(
+              Term.ApplyInfix(tname("line"), tname("+="), Nil, List(int(1))),
+              Term.Assign(tname("char"), int(0))
+            )
+          ),
+          Term.Block(
+            Term.ApplyInfix(tname("char"), tname("+="), Nil, List(int(1))) :: Nil
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("several if-then, some nested") {
+    val code =
+      """|classDef
+         |      .foreach {
+         |        case typeSymbol: Symbol =>
+         |          if typ then {
+         |            // foo
+         |          }
+         |          if typeDef then
+         |            if typJava then {
+         |              // foo
+         |            }
+         |        case _ =>
+         |    }
+         |""".stripMargin
+    val output =
+      """|classDef.foreach({
+         |  case typeSymbol: Symbol =>
+         |    if (typ) {}
+         |    if (typeDef) if (typJava) {}
+         |  case _ =>
+         |})
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.Apply(
+        Term.Select(tname("classDef"), tname("foreach")),
+        Term.PartialFunction(
+          List(
+            Case(
+              Pat.Typed(Pat.Var(tname("typeSymbol")), pname("Symbol")),
+              None,
+              Term.Block(
+                List(
+                  Term.If(tname("typ"), Term.Block(Nil), Lit.Unit(), Nil),
+                  Term.If(
+                    tname("typeDef"),
+                    Term.If(tname("typJava"), Term.Block(Nil), Lit.Unit(), Nil),
+                    Lit.Unit(),
+                    Nil
+                  )
+                )
+              )
+            ),
+            Case(Pat.Wildcard(), None, Term.Block(Nil))
+          )
+        ) :: Nil
+      )
+    )
+  }
+
+  test("old-style if, with outdent") {
+    val code =
+      """|if (indexes.size > 1)
+         |          val msg = s"ERROR: Multiple index pages for doc found ${indexes.map(_.file)}"
+         |          report.error(msg)
+         |""".stripMargin
+    val output =
+      """|if (indexes.size > 1) {
+         |  val msg = s"ERROR: Multiple index pages for doc found ${indexes.map(_.file)}"
+         |  report.error(msg)
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.If(
+        Term.ApplyInfix(
+          Term.Select(tname("indexes"), tname("size")),
+          tname(">"),
+          Nil,
+          List(int(1))
+        ),
+        Term.Block(
+          List(
+            Defn.Val(
+              Nil,
+              List(Pat.Var(tname("msg"))),
+              None,
+              Term.Interpolate(
+                tname("s"),
+                List(str("ERROR: Multiple index pages for doc found "), str("")),
+                Term.Apply(
+                  Term.Select(tname("indexes"), tname("map")),
+                  List(Term.AnonymousFunction(Term.Select(Term.Placeholder(), tname("file"))))
+                ) :: Nil
+              )
+            ),
+            Term.Apply(
+              Term.Select(tname("report"), tname("error")),
+              List(tname("msg"))
+            )
+          )
+        ),
+        Lit.Unit(),
+        Nil
+      )
+    )
+  }
+
+  test("if-then in parens") {
+    val code =
+      """|{
+         |  if this then
+         |    tvars.foreach(tvar => if !tvar then includeVar(tvar))
+         |  typeComparer.addToConstraint(tvars)
+         |}
+         |""".stripMargin
+    val output =
+      """|{
+         |  if (this) tvars.foreach(tvar => if (!tvar) includeVar(tvar))
+         |  typeComparer.addToConstraint(tvars)
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.Block(
+        List(
+          Term.If(
+            Term.This(Name("")),
+            Term.Apply(
+              Term.Select(tname("tvars"), tname("foreach")),
+              Term.Function(
+                Term.ParamClause(List(tparam("tvar"))),
+                Term.If(
+                  Term.ApplyUnary(tname("!"), tname("tvar")),
+                  Term.Apply(tname("includeVar"), List(tname("tvar"))),
+                  Lit.Unit(),
+                  Nil
+                )
+              ) :: Nil
+            ),
+            Lit.Unit(),
+            Nil
+          ),
+          Term.Apply(
+            Term.Select(tname("typeComparer"), tname("addToConstraint")),
+            List(tname("tvars"))
+          )
+        )
+      )
+    )
+  }
+
+  test("for-if in parens") {
+    val code =
+      """|{
+         |  val abstractTypeNames =
+         |    for (parent <- parents; mbr <- parent.abstractTypeMembers if qualifies(mbr.symbol))
+         |    yield mbr.name.asTypeName
+         |
+         |  for name <- abstractTypeNames do
+         |    foo
+         |}
+         |""".stripMargin
+    val output =
+      """|{
+         |  val abstractTypeNames = for (parent <- parents; mbr <- parent.abstractTypeMembers; if qualifies(mbr.symbol)) yield mbr.name.asTypeName
+         |  for (name <- abstractTypeNames) foo
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.Block(
+        List(
+          Defn.Val(
+            Nil,
+            List(Pat.Var(tname("abstractTypeNames"))),
+            None,
+            Term.ForYield(
+              List(
+                Enumerator.Generator(Pat.Var(tname("parent")), tname("parents")),
+                Enumerator.Generator(
+                  Pat.Var(tname("mbr")),
+                  Term.Select(tname("parent"), tname("abstractTypeMembers"))
+                ),
+                Enumerator.Guard(
+                  Term.Apply(
+                    tname("qualifies"),
+                    List(Term.Select(tname("mbr"), tname("symbol")))
+                  )
+                )
+              ),
+              Term.Select(Term.Select(tname("mbr"), tname("name")), tname("asTypeName"))
+            )
+          ),
+          Term.For(
+            List(Enumerator.Generator(Pat.Var(tname("name")), tname("abstractTypeNames"))),
+            tname("foo")
+          )
+        )
+      )
+    )
+  }
+
+  test("several nested if, with () as body") {
+    val code =
+      """
+          if !other
+          then
+            if (member)
+              ()
+            else
+              overrideError()
+          else
+            checkOverrideDeprecated()
+    """.stripMargin
+    val output =
+      """|if (!other) if (member) () else overrideError() else checkOverrideDeprecated()
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.If(
+        Term.ApplyUnary(tname("!"), tname("other")),
+        Term.If(tname("member"), Lit.Unit(), Term.Apply(tname("overrideError"), Nil), Nil),
+        Term.Apply(tname("checkOverrideDeprecated"), Nil),
+        Nil
+      )
+    )
+  }
+
 }
