@@ -21,8 +21,12 @@ trait BaseDottySuite extends ParseSuite {
   final def tpl(stats: List[Stat]): Template = Template(Nil, Nil, slf, stats)
   final def tparamval(name: String, tpe: String) =
     Term.Param(List(Mod.ValParam()), Term.Name(name), Some(pname(tpe)), None)
-  final def tparam(name: String, tpe: String = null) =
-    Term.Param(Nil, Term.Name(name), Option(tpe).map(pname), None)
+  final def tparam(name: String, tpe: Option[Type] = None): Term.Param =
+    Term.Param(Nil, Term.Name(name), tpe, None)
+  final def tparam(name: String, tpe: Type): Term.Param =
+    tparam(name, Option(tpe))
+  final def tparam(name: String, tpe: String): Term.Param =
+    tparam(name, Option(tpe).map(pname))
   final def tparamInline(name: String, tpe: String) =
     Term.Param(List(Mod.Inline()), Term.Name(name), Some(pname(tpe)), None)
 

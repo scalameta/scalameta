@@ -11,7 +11,8 @@ private[parsers] class TokenRef private (
     var next: TokenRef = null
 ) {
   def withRegions(regions: List[SepRegion]): TokenRef =
-    new TokenRef(regions, token, pos, nextPos, pointPos)
+    if (regions eq this.regions) this
+    else new TokenRef(regions, token, pos, nextPos, pointPos)
 }
 
 private[parsers] object TokenRef {
