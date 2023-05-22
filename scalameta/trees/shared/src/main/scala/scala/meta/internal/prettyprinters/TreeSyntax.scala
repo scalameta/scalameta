@@ -411,6 +411,10 @@ object TreeSyntax {
           case _ => block(s(), t.stats)
         }
       case t: Term.If =>
+        val needParens: Boolean = t.thenp match {
+          case innerIf: Term.If => !guessHasElsep(innerIf) && guessHasElsep(t)
+          case _ => false
+        }
         m(
           Expr1,
           s(
@@ -419,7 +423,7 @@ object TreeSyntax {
             " (",
             t.cond,
             ") ",
-            p(Expr, t.thenp),
+            if (needParens) s("(", t.thenp, ")") else p(Expr, t.thenp),
             if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()
           )
         )
