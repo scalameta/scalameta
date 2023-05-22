@@ -838,4 +838,13 @@ class ModSuite extends ParseSuite {
     assert(actual.contains(expected), actual)
   }
 
+  test("#3122 missing val after package-private modifier") {
+    val code = "case class Foo(private[example] field: String)"
+    val expected =
+      s"""|<input>:1: error: val expected but identifier found
+          |case class Foo(private[example] field: String)
+          |                                ^""".stripMargin
+    assertEquals(interceptParseError(code), expected)
+  }
+
 }
