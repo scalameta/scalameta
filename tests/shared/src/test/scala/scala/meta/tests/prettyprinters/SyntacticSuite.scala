@@ -464,6 +464,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("some tricky parenthesization") {
     assertEquals(templStat("if (1) 2 else 3 + 4").syntax, "if (1) 2 else 3 + 4")
     assertEquals(templStat("(if (1) 2 else 3) + 4").syntax, "(if (1) 2 else 3) + 4")
+    assertEquals(templStat("if (1) (if (2) 3) else 4").syntax, "if (1) if (2) 3 else 4")
+    assertEquals(templStat("if (1) if (2) 3 else () else 4").syntax, "if (1) if (2) 3 else 4")
     assertEquals(
       templStat("if (1) 2 else 3 match { case _ => }").syntax,
       s"if (1) 2 else 3 match {${EOL}  case _ =>${EOL}}"
