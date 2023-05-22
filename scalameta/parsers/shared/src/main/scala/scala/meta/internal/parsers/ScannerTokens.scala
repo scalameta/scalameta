@@ -617,8 +617,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             // !next.is[RightBrace] - braces can sometimes have -1 and we can start indent on }
             prev match {
               case _ if nextIndent < 0 || next.is[RightBrace] => None
-              case _ if prevToken.is[Indentation.Indent] => None
-              case _ if prevToken.is[Indentation.Outdent] => None
+              case _ if prevToken.is[Indentation] => None
               // if does not work with indentation in pattern matches
               case _: KwIf if sepRegions.headOption.contains(RegionArrow) => None
               case _: KwCatch | _: KwMatch =>
