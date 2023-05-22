@@ -841,10 +841,25 @@ class ModSuite extends ParseSuite {
   test("#3122 missing val after package-private modifier") {
     val code = "case class Foo(private[example] field: String)"
     val expected =
-      s"""|<input>:1: error: val expected but identifier found
-          |case class Foo(private[example] field: String)
-          |                                ^""".stripMargin
-    assertEquals(interceptParseError(code), expected)
+      Defn.Class(
+        List(Mod.Case()),
+        Type.Name("Foo"),
+        Nil,
+        Ctor.Primary(
+          Nil,
+          Name(""),
+          List(
+            Term.Param(
+              List(Mod.Private(Name("example"))),
+              Term.Name("field"),
+              Some(Type.Name("String")),
+              None
+            ) :: Nil
+          )
+        ),
+        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+      )
+    assertTree(templStat(code))(expected)
   }
 
 }
