@@ -86,7 +86,13 @@ object TreeSyntax {
     import SyntacticGroup.Type._, SyntacticGroup.Term._, SyntacticGroup.Pat._,
       SyntacticGroup.Literal, SyntacticGroup.Path
 
-    def p(og: SyntacticGroup, t: Tree, left: Boolean = false, right: Boolean = false) = {
+    def p(
+        og: SyntacticGroup,
+        t: Tree,
+        left: Boolean = false,
+        right: Boolean = false,
+        force: Boolean = false
+    ) = {
       def opNeedsParens(oo: String, io: String, customPrecedence: Boolean = true): Boolean = {
         def precedence(op: String) = if (customPrecedence) op.precedence else 0
         require(left != right)
@@ -111,7 +117,8 @@ object TreeSyntax {
         }
       }
       s(t) match {
-        case Show.Meta(ig: SyntacticGroup, res) if groupNeedsParens(og, ig) => s("(", res, ")")
+        case Show.Meta(ig: SyntacticGroup, res) if force || groupNeedsParens(og, ig) =>
+          s("(", res, ")")
         case res => res
       }
     }
@@ -411,6 +418,10 @@ object TreeSyntax {
           case _ => block(s(), t.stats)
         }
       case t: Term.If =>
+        val needParens: Boolean = t.thenp match {
+          case innerIf: Term.If => !guessHasElsep(innerIf) && guessHasElsep(t)
+          case _ => false
+        }
         m(
           Expr1,
           s(
@@ -419,7 +430,7 @@ object TreeSyntax {
             " (",
             t.cond,
             ") ",
-            p(Expr, t.thenp),
+            p(Expr, t.thenp, force = needParens),
             if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()
           )
         )
