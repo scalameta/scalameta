@@ -149,7 +149,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       isDclIntro(next) || isModifier(next) || f(tokens(next))
     }
 
-    tokens(index).toString match {
+    tokens(index).text match {
       case soft.KwTransparent() => nextIsDclIntroOrModifierOr(_.is[KwTrait])
       case soft.KwOpaque() => nextIsDclIntroOrModifierOr(_ => false)
       case soft.KwInline() => nextIsDclIntroOrModifierOr(matchesAfterInlineMatchMod)
@@ -207,7 +207,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   @classifier
   trait NonParamsModifier {
     def unapply(token: Token): Boolean = {
-      token.toString match {
+      token.text match {
         case soft.KwOpen() | soft.KwOpaque() | soft.KwTransparent() | soft.KwInfix() => true
         case _ => false
       }
