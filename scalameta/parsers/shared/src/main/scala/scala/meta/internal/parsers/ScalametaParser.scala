@@ -3099,7 +3099,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         mods += autoEndPos(prevTokenPos)(Mod.Inline())
       }
     }
-    val hasExplicitMods = mods.view.drop(numAnnots).exists(!_.is[Mod.Quasi])
+    val hasExplicitMods = mods.view.drop(numAnnots).exists {
+      case _: Mod.Quasi => false
+      case m: Mod.Private => m.within.is[Name.Anonymous]
+      case m: Mod.Protected => m.within.is[Name.Anonymous]
+      case _ => true
+    }
 
     mod.foreach { mod =>
       val clazz = mod.getClass
