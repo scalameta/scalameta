@@ -7,7 +7,9 @@ sealed trait SepRegion {
   def isIndented: Boolean
 }
 
-sealed trait SepRegionIndented extends SepRegion {
+sealed trait CanProduceLF
+
+sealed trait SepRegionIndented extends SepRegion with CanProduceLF {
   override final def isIndented = true
 }
 sealed trait SepRegionNonIndented extends SepRegion {
@@ -22,12 +24,12 @@ case class RegionParen(canProduceLF: Boolean) extends SepRegionNonIndented
 case object RegionBracket extends SepRegionNonIndented
 
 case class RegionBrace(override val indent: Int, override val indentOnArrow: Boolean)
-    extends SepRegionNonIndented
+    extends SepRegionNonIndented with CanProduceLF
 
 case object RegionCaseExpr extends SepRegionNonIndented
-case class RegionCaseBody(override val indent: Int) extends SepRegionNonIndented
+case class RegionCaseBody(override val indent: Int) extends SepRegionNonIndented with CanProduceLF
 
-case class RegionEnum(override val indent: Int) extends SepRegionNonIndented
+case class RegionEnum(override val indent: Int) extends SepRegionNonIndented with CanProduceLF
 
 case class RegionIndentEnum(override val indent: Int) extends SepRegionIndented
 
