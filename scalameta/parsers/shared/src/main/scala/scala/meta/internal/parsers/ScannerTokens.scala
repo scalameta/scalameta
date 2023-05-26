@@ -720,6 +720,11 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                 val ok = next.is[KwCase] && sepRegions.headOption.contains(RegionCaseMark)
                 if (ok) emitIndent(sepRegions) else None
               case _ if !exceedsIndent => None
+              case _: Colon =>
+                sepRegions match {
+                  case RegionEnumArtificialMark :: xs => emitIndent(xs)
+                  case _ => None
+                }
               case _: RightArrow =>
                 sepRegions match {
                   case (rc: RegionCaseBody) :: (_: RegionBrace) :: _ if rc.arrow eq prev => None
