@@ -81,7 +81,7 @@ private[parsers] class LazyTokenIterator private (
           case Some(RegionEnumArtificialMark) if token.is[KwEnum] => prev.tail
           case Some(_: RegionBrace) if token.is[LeftBrace] => prev.tail
           //  Handle fewer braces and partial function.
-          case Some(RegionArrow) if dialect.allowFewerBraces && token.is[KwCase] => prev.tail
+          case Some(RegionCaseExpr) if dialect.allowFewerBraces && token.is[KwCase] => prev.tail
           case _ => prev
         }
       RegionIndent(i, false) :: undoRegionChange
@@ -91,7 +91,7 @@ private[parsers] class LazyTokenIterator private (
   def observeIndentedEnum(): Boolean = {
     observeIndented0((i, prev) => {
       val nextPrev = prev match {
-        case RegionArrow :: RegionEnumArtificialMark :: other => other
+        case RegionCaseExpr :: RegionEnumArtificialMark :: other => other
         case RegionEnumArtificialMark :: other => other
         case x => x
       }
