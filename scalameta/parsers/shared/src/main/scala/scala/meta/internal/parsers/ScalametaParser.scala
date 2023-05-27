@@ -2172,7 +2172,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (QuotedPatternContext.isInside())
         Term.SplicedMacroPat(autoPos(inBraces(pattern())))
       else
-        Term.SplicedMacroExpr(autoPos(Term.Block(inBraces(blockStatSeq()))))
+        Term.SplicedMacroExpr(autoPos(inBraces(blockWithinDelims())))
     }
   }
 
@@ -2180,7 +2180,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     accept[MacroQuote]
     QuotedSpliceContext.within {
       if (acceptOpt[LeftBrace]) {
-        val block = autoEndPos(prevTokenPos)(Term.Block(inBracesAfterOpen(blockStatSeq())))
+        val block = autoEndPos(prevTokenPos)(inBracesAfterOpen(blockWithinDelims()))
         Term.QuotedMacroExpr(block)
       } else if (acceptOpt[LeftBracket]) {
         Term.QuotedMacroType(inBracketsAfterOpen(typ()))
@@ -2366,8 +2366,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     else block(isBlockOptional, allowRepeated)
   }
 
+  private def blockWithinDelims(allowRepeated: Boolean = false) =
+    Term.Block(blockStatSeq(allowRepeated = allowRepeated))
+
   def block(isBlockOptional: Boolean = false, allowRepeated: Boolean = false): Term = autoPos {
-    def blockWithStats = Term.Block(blockStatSeq(allowRepeated = allowRepeated))
+    def blockWithStats = blockWithinDelims(allowRepeated = allowRepeated)
     if (!isBlockOptional && acceptOpt[LeftBrace]) {
       inBracesAfterOpen(blockWithStats)
     } else {
