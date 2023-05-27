@@ -6,6 +6,8 @@ import scala.meta.dialects.Scala211
 
 class TermSuite extends ParseSuite {
 
+  implicit def parseTerm(code: String, dialect: Dialect): Term = term(code)(dialect)
+
   private def assertTerm(expr: String)(tree: Tree): Unit = {
     assertTree(term(expr))(tree)
   }
@@ -1411,8 +1413,6 @@ class TermSuite extends ParseSuite {
 
   test("scala3-syntax") {
 
-    implicit def parseTerm(code: String, dialect: Dialect): Term = term(code)
-
     runTestError[Term](
       """|() match
          |  case _: Unit => ()""".stripMargin,
@@ -1556,6 +1556,20 @@ class TermSuite extends ParseSuite {
         ) :: Nil
       )
     )
+  }
+
+  test("#3136: block catch handler, in braces") {
+    val code =
+      """|try ??? catch {
+         |  val a = 10
+         |  handler(a)
+         |}
+         |""".stripMargin
+    val msg =
+      """|<input>:2: error: illegal start of simple expression
+         |  val a = 10
+         |  ^""".stripMargin
+    runTestError[Term](code, msg)
   }
 
 }

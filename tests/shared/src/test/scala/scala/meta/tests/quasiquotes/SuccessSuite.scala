@@ -702,6 +702,13 @@ class SuccessSuite extends TreeSuiteBase {
     )
   }
 
+  test("0 q\"try expr catch expr finally expropt\"") {
+    val q"try $expr catch $exprr finally $expropt" = q"try foo catch pf finally bar"
+    assertTree(expr)(Term.Name("foo"))
+    assertTree(exprr)(Term.Name("pf"))
+    assertTree(expropt)(Some(Term.Name("bar")))
+  }
+
   test("1 q\"try expr catch expr finally expropt\"") {
     val q"try $expr catch $exprr finally $expropt" = q"try { foo } catch { pf } finally { bar }"
     assertTree(expr)(Term.Block(List(Term.Name("foo"))))
