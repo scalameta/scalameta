@@ -1579,4 +1579,81 @@ class TermSuite extends ParseSuite {
     )
   }
 
+  test("#3138: infix with a following block") {
+    val codeOnNextLine =
+      """|{
+         |  Foo bar (2, 3)
+         |  { a }
+         |}
+         |""".stripMargin
+    val codeOnSameLine =
+      """|{
+         |  Foo bar (2, 3) { a }
+         |}
+         |""".stripMargin
+    val syntaxOnNextLine =
+      """|{
+         |  Foo bar (2, 3)
+         |  {
+         |    a
+         |  }
+         |}
+         |""".stripMargin
+    val syntaxOnSameLine =
+      """|{
+         |  Foo bar (2, 3) {
+         |    a
+         |  }
+         |}
+         |""".stripMargin
+    val treeOnNextLine = Term.Block(
+      List(
+        Term.ApplyInfix(Term.Name("Foo"), Term.Name("bar"), Nil, List(Lit.Int(2), Lit.Int(3))),
+        Term.Block(List(Term.Name("a")))
+      )
+    )
+    val treeOnSameLine = Term.Block(
+      Term.ApplyInfix(
+        Term.Name("Foo"),
+        Term.Name("bar"),
+        Nil,
+        Term.Apply(
+          Term.Tuple(List(Lit.Int(2), Lit.Int(3))),
+          List(Term.Block(List(Term.Name("a"))))
+        ) :: Nil
+      ) :: Nil
+    )
+    runTestAssert[Stat](codeOnNextLine, Some(syntaxOnNextLine))(treeOnNextLine)
+    runTestAssert[Stat](codeOnSameLine, Some(syntaxOnSameLine))(treeOnSameLine)
+  }
+
+  test("#3138: apply with a following block") {
+    val codeOnNextLine =
+      """|{
+         |  Foo.bar (2, 3)
+         |  { a }
+         |}
+         |""".stripMargin
+    val codeOnSameLine =
+      """|{
+         |  Foo.bar (2, 3) { a }
+         |}
+         |""".stripMargin
+    val syntaxOnSameLine =
+      """|{
+         |  Foo.bar(2, 3) {
+         |    a
+         |  }
+         |}
+         |""".stripMargin
+    val treeOnSameLine = Term.Block(
+      Term.Apply(
+        Term.Apply(Term.Select(Term.Name("Foo"), Term.Name("bar")), List(Lit.Int(2), Lit.Int(3))),
+        List(Term.Block(List(Term.Name("a"))))
+      ) :: Nil
+    )
+    runTestAssert[Stat](codeOnNextLine, Some(syntaxOnSameLine))(treeOnSameLine)
+    runTestAssert[Stat](codeOnSameLine, Some(syntaxOnSameLine))(treeOnSameLine)
+  }
+
 }
