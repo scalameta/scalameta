@@ -37,7 +37,8 @@ object Token {
   @branch trait Trivia extends Token
   @branch trait Whitespace extends Trivia
   @branch trait HSpace extends Whitespace
-  @branch trait AtEOL extends Whitespace
+  @branch trait AtEOLorF extends Token
+  @branch trait AtEOL extends Whitespace with AtEOLorF
   @branch trait EOL extends AtEOL
 
   @branch trait Symbolic extends Token
@@ -163,11 +164,11 @@ object Token {
   @fixed("\n") class LF extends EOL
   @fixed("\f") class FF extends EOL
   @freeform("comment") class Comment(value: String) extends Trivia
-  @freeform("beginning of file") class BOF extends Token {
+  @freeform("beginning of file") class BOF extends AtEOLorF {
     def this(input: Input, dialect: Dialect) = this(input, dialect, 0)
     def end = start
   }
-  @freeform("end of file") class EOF extends Token {
+  @freeform("end of file") class EOF extends AtEOLorF {
     def this(input: Input, dialect: Dialect) = this(input, dialect, input.chars.length)
     def end = start
   }

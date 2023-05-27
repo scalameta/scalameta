@@ -154,7 +154,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private def isEolAfter(index: Int): Boolean = {
     val nextIndex = getNextSafeIndex(index)
     tokens(nextIndex) match {
-      case _: AtEOL | MultilineComment() => true
+      case _: AtEOLorF | MultilineComment() => true
       case _: Trivia => isEolAfter(nextIndex)
       case _ => false
     }

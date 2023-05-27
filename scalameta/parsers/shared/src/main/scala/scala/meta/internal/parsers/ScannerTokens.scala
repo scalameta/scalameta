@@ -114,10 +114,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     tokens(nextIndex) match {
       case _: Ident | _: KwIf | _: KwWhile | _: KwFor | _: KwMatch | _: KwTry | _: KwNew |
           _: KwThis | _: KwGiven | _: KwVal =>
-        tokens(getStrictNext(nextIndex)) match {
-          case _: EOF | _: AtEOL => true
-          case _ => false
-        }
+        tokens(getStrictNext(nextIndex)).is[AtEOLorF]
       case _ => false
     }
   }
@@ -257,7 +254,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   @classifier
   trait StatSep {
     def unapply(token: Token): Boolean = token match {
-      case _: Semicolon | _: LF | _: LFLF | _: EOF => true
+      case _: Semicolon | _: AtEOLorF => true
       case _ => false
     }
   }
