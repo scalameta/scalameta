@@ -6,6 +6,8 @@ import scala.meta.dialects.Scala211
 
 class TermSuite extends ParseSuite {
 
+  implicit def parseTerm(code: String, dialect: Dialect): Term = term(code)(dialect)
+
   private def assertTerm(expr: String)(tree: Tree): Unit = {
     assertTree(term(expr))(tree)
   }
@@ -1411,8 +1413,6 @@ class TermSuite extends ParseSuite {
 
   test("scala3-syntax") {
 
-    implicit def parseTerm(code: String, dialect: Dialect): Term = term(code)
-
     runTestError[Term](
       """|() match
          |  case _: Unit => ()""".stripMargin,
@@ -1554,6 +1554,27 @@ class TermSuite extends ParseSuite {
             Term.Block(Nil)
           ) :: Nil
         ) :: Nil
+      )
+    )
+  }
+
+  test("#3136: block catch handler, in braces") {
+    val code =
+      """|try ??? catch {
+         |  val a = 10
+         |  handler(a)
+         |}
+         |""".stripMargin
+    checkTerm(code, code)(
+      Term.TryWithHandler(
+        Term.Name("???"),
+        Term.Block(
+          List(
+            Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), None, Lit.Int(10)),
+            Term.Apply(Term.Name("handler"), List(Term.Name("a")))
+          )
+        ),
+        None
       )
     )
   }

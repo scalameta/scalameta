@@ -3537,4 +3537,18 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("#3136: block catch handler, indented") {
+    val code =
+      """|try ???
+         |catch
+         |  val a = 10
+         |  handler(a)
+         |""".stripMargin
+    val msg =
+      """|<input>:3: error: illegal start of simple expression
+         |  val a = 10
+         |  ^""".stripMargin
+    runTestError[Stat](code, msg)
+  }
+
 }
