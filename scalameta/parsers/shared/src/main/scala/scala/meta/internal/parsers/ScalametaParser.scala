@@ -1520,7 +1520,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case LeftBrace() | Indentation.Indent() => block()
           case _ => expr()
         }
-        def caseClausesOrExpr = caseClausesIfAny().toRight(expr())
+        def caseClausesOrExpr = caseClausesIfAny().toRight(blockWithinDelims())
 
         def finallyopt =
           if (tryAcceptWithOptLF[KwFinally]) {
@@ -1532,7 +1532,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         def tryWithCases(cases: List[Case]) = Term.Try(body, cases, finallyopt)
         def tryWithHandler(handler: Term) = Term.TryWithHandler(body, handler, finallyopt)
         def fromCaseClausesOrExpr(obj: => Either[Term, List[Case]]): Term = {
-          obj.fold(tryWithHandler, tryWithCases)
+          val catchPos = tokenPos
+          obj.fold(x => tryWithHandler(autoEndPos(catchPos)(x)), tryWithCases)
         }
 
         if (tryAcceptWithOptLF[KwCatch]) token match {

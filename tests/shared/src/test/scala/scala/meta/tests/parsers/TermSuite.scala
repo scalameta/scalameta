@@ -1565,11 +1565,18 @@ class TermSuite extends ParseSuite {
          |  handler(a)
          |}
          |""".stripMargin
-    val msg =
-      """|<input>:2: error: illegal start of simple expression
-         |  val a = 10
-         |  ^""".stripMargin
-    runTestError[Term](code, msg)
+    checkTerm(code, code)(
+      Term.TryWithHandler(
+        Term.Name("???"),
+        Term.Block(
+          List(
+            Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), None, Lit.Int(10)),
+            Term.Apply(Term.Name("handler"), List(Term.Name("a")))
+          )
+        ),
+        None
+      )
+    )
   }
 
 }
