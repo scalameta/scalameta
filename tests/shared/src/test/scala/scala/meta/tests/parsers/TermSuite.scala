@@ -1591,14 +1591,6 @@ class TermSuite extends ParseSuite {
          |  Foo bar (2, 3) { a }
          |}
          |""".stripMargin
-    val syntaxOnNextLine =
-      """|{
-         |  Foo bar (2, 3)
-         |  {
-         |    a
-         |  }
-         |}
-         |""".stripMargin
     val syntaxOnSameLine =
       """|{
          |  Foo bar (2, 3) {
@@ -1606,12 +1598,6 @@ class TermSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin
-    val treeOnNextLine = Term.Block(
-      List(
-        Term.ApplyInfix(Term.Name("Foo"), Term.Name("bar"), Nil, List(Lit.Int(2), Lit.Int(3))),
-        Term.Block(List(Term.Name("a")))
-      )
-    )
     val treeOnSameLine = Term.Block(
       Term.ApplyInfix(
         Term.Name("Foo"),
@@ -1623,7 +1609,7 @@ class TermSuite extends ParseSuite {
         ) :: Nil
       ) :: Nil
     )
-    runTestAssert[Stat](codeOnNextLine, Some(syntaxOnNextLine))(treeOnNextLine)
+    runTestAssert[Stat](codeOnNextLine, Some(syntaxOnSameLine))(treeOnSameLine)
     runTestAssert[Stat](codeOnSameLine, Some(syntaxOnSameLine))(treeOnSameLine)
   }
 
