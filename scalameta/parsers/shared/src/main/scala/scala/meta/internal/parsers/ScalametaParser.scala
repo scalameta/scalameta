@@ -1520,30 +1520,29 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case LeftBrace() | Indentation.Indent() => block()
           case _ => expr()
         }
-        def caseClausesOrExpr = caseClausesIfAny().getOrElse(expr())
-        val catchopt =
-          if (tryAcceptWithOptLF[KwCatch]) Some {
-            if (nextIf(isCaseIntro(tokenPos))) caseClause(true)
-            else if (acceptOpt[Indentation.Indent]) indentedAfterOpen(caseClausesOrExpr)
-            else if (acceptOpt[LeftBrace]) inBracesAfterOpen(caseClausesOrExpr)
-            else expr()
-          }
-          else { None }
+        def caseClausesOrExpr = caseClausesIfAny().toRight(expr())
 
-        val finallyopt =
+        def finallyopt =
           if (tryAcceptWithOptLF[KwFinally]) {
             Some(exprMaybeIndented())
           } else {
             None
           }
 
-        catchopt match {
-          case None => Term.Try(body, Nil, finallyopt)
-          case Some(c: Case) => Term.Try(body, List(c), finallyopt)
-          case Some(cases: List[_]) => Term.Try(body, cases.require[List[Case]], finallyopt)
-          case Some(term: Term) => Term.TryWithHandler(body, term, finallyopt)
-          case _ => unreachable(debug(catchopt))
+        def tryWithCases(cases: List[Case]) = Term.Try(body, cases, finallyopt)
+        def tryWithHandler(handler: Term) = Term.TryWithHandler(body, handler, finallyopt)
+        def fromCaseClausesOrExpr(obj: => Either[Term, List[Case]]): Term = {
+          obj.fold(tryWithHandler, tryWithCases)
         }
+
+        if (tryAcceptWithOptLF[KwCatch]) token match {
+          case _: KwCase => next(); tryWithCases(caseClause(true) :: Nil)
+          case _: Indentation.Indent => fromCaseClausesOrExpr(indentedOnOpen(caseClausesOrExpr))
+          case _: LeftBrace => fromCaseClausesOrExpr(inBracesOnOpen(caseClausesOrExpr))
+          case _ => tryWithHandler(expr())
+        }
+        else tryWithCases(Nil)
+
       case KwWhile() =>
         next()
         val cond =
