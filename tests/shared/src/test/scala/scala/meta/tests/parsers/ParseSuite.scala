@@ -13,6 +13,10 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   val EOL = scala.compat.Platform.EOL
   val escapedEOL = if (EOL == "\n") """\n""" else """\r\n"""
 
+  implicit def parseStat(code: String, dialect: Dialect): Stat = templStat(code)(dialect)
+  implicit def parseSource(code: String, dialect: Dialect): Source = source(code)(dialect)
+  implicit def parseType(code: String, dialect: Dialect): Type = tpe(code)(dialect)
+
   // This should eventually be replaced by DiffAssertions.assertNoDiff
   def assertSameLines(actual: String, expected: String) = {
     val actualLines = actual.linesIterator.toList
@@ -87,6 +91,56 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       s"Expected [$obtained] to contain [${expected}]."
     )
   }
+
+  /**
+   * Check if code can be parsed to expected syntax tree.
+   *
+   * @see
+   *   runTestAssert(code, assertLayout)(expected)
+   */
+  protected def runTestAssert[T <: Tree](
+      code: String
+  )(expected: T)(implicit parser: (String, Dialect) => T, dialect: Dialect): Unit =
+    runTestAssert(code, Some(code))(expected)(parser, dialect)
+
+  /**
+   * General method used to assert a given 'code' parses to expected tree structure and back. We
+   * cannot assert trees by equality(==) that's why we check if they are identical by asserting
+   * their structure representation and optionally syntax. If expectedLayout is provided then we
+   * print back generated tree structure and assert generated text is equal to expectedLayout (in
+   * most cases it should be the same as 'code' param but sometimes formatting is a little different
+   * or for safety () are added). If you are not interested in asserting layout just provide None.
+   * After printing generated tree to text representation we parse it again. This ensures that
+   * invariant holds: parse(code) = parse(print(parse(code))) Reprint cannot be handled by
+   * `tree.syntax` because syntax is cached by default and would not be reprinted but only input
+   * code would be returned.
+   *
+   * @param code
+   *   valid scala code
+   * @param assertLayout
+   *   string representation of code to be printed
+   * @param expected
+   *   provided 'code' should parse to this tree structure
+   * @param parser
+   *   Function used to convert code into structured tree
+   */
+  protected def runTestAssert[T <: Tree](code: String, assertLayout: Option[String])(
+      expected: T
+  )(implicit parser: (String, Dialect) => T, dialect: Dialect): Unit = {
+    val expectedStructure = expected.structure
+    val obtained: T = parser(code, dialect)
+    MoreHelpers.requireNonEmptyOrigin(obtained)
+
+    // check bijection
+    val reprintedCode =
+      scala.meta.internal.prettyprinters.TreeSyntax.reprint[T](obtained)(dialect).toString
+    assertLayout.foreach(assertNoDiff(reprintedCode, _, s"Reprinted syntax:\n $expectedStructure"))
+
+    assertNoDiff(obtained.structure, expectedStructure, "Generated stat")
+    val obtainedAgain: T = parser(reprintedCode, dialect)
+    assertNoDiff(obtainedAgain.structure, expectedStructure, s"Reprinted stat: \n${reprintedCode}")
+  }
+
 }
 
 object MoreHelpers {
