@@ -46,10 +46,14 @@ case object RegionTemplateMark extends RegionTemplateDecl
 case object RegionTemplateInherit extends RegionTemplateDecl
 
 /**
- * this marks the template body; for instance, helps override handling of `case` designed for
- * catch/match/partial function but inappropriate for enum
+ * this marks the template body (or constructs which look like a template body, such as extensions).
+ * for instance, helps override handling of `case` designed for catch/match/partial function but
+ * inappropriate for enum.
  */
 case object RegionTemplateBody extends RegionNonDelimNonIndented
+
+/** this marks the initial part of extension */
+case object RegionExtensionMark extends RegionNonDelimNonIndented
 
 /**
  * All control statements

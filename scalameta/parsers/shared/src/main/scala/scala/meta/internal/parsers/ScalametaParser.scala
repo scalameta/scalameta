@@ -3631,20 +3631,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     collectUparams()
     newLinesOpt()
 
-    val body: Stat =
-      if (acceptOpt[LeftBrace]) {
-        autoEndPos(prevTokenPos)(Term.Block(inBracesAfterOpen(statSeq(templateStat()))))
-      } else if (in.observeIndented()) {
-        val block = autoPos(Term.Block(indentedOnOpen(statSeq(templateStat()))))
+    def getStats() = statSeq(templateStat())
+    val body: Stat = token match {
+      case _: LeftBrace => autoPos(Term.Block(inBracesOnOpen(getStats())))
+      case _: Indentation.Indent =>
+        val block = autoPos(Term.Block(indentedOnOpen(getStats())))
         block.stats match {
           case stat :: Nil => stat
           case _ => block
         }
-      } else if (isDefIntro(tokenPos)) {
-        nonLocalDefOrDcl()
-      } else {
-        syntaxError("Extension without extension method", token)
-      }
+      case _ if isDefIntro(tokenPos) => nonLocalDefOrDcl()
+      case _ => syntaxError("Extension without extension method", token)
+    }
     Defn.ExtensionGroup(getParamClauseGroup(tparams, paramss.toList), body)
   }
 
