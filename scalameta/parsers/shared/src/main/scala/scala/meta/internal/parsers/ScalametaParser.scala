@@ -2306,10 +2306,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val args =
         if (isBrace) checkNoTripleDot(blockExpr(allowRepeated = true)) :: Nil
         else inParensOnOpenOr(argumentExprsInParens(location))(Nil)
+      def getRest() = {
+        findRep(args).foreach(x => syntaxError("repeated argument not allowed here", at = x))
+        simpleExprRest(makeTupleTerm(lpPos, args), canApply = true, startPos = lpPos)
+      }
       token match {
-        case Dot() | LeftBracket() | LeftParen() | LeftBrace() | Underscore() =>
-          findRep(args).foreach(x => syntaxError("repeated argument not allowed here", at = x))
-          simpleExprRest(makeTupleTerm(lpPos, args), canApply = true, startPos = lpPos)
+        case _: Dot | _: OpenDelim | _: Underscore => getRest()
+        case _: LF if peekToken.is[LeftBrace] => next(); getRest()
         case _ =>
           makeTupleTerm { arg =>
             val res = maybeAnonymousFunction(arg)
