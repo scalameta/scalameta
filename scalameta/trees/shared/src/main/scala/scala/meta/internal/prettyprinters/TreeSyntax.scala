@@ -518,10 +518,8 @@ object TreeSyntax {
       case t: Term.New => m(SimpleExpr, s(kw("new"), " ", t.init))
       case t: Term.EndMarker => s(kw("end"), " ", t.name.value)
       case t: Term.NewAnonymous =>
-        val needsExplicitBraces = {
-          val selfIsEmpty = t.templ.self.name.is[Name.Anonymous] && t.templ.self.decltpe.isEmpty
-          t.templ.early.isEmpty && t.templ.inits.length < 2 && selfIsEmpty && t.templ.stats.isEmpty
-        }
+        val needsExplicitBraces = t.templ.early.isEmpty && t.templ.inits.lengthCompare(2) < 0 &&
+          t.templ.self.isEmpty && t.templ.stats.isEmpty
         m(SimpleExpr, s(kw("new"), " ", t.templ), w(" {", "", "}", needsExplicitBraces))
       case _: Term.Placeholder => m(SimpleExpr1, kw("_"))
       case t: Term.Eta => m(PostfixExpr, s(p(SimpleExpr1, t.expr), " ", kw("_")))
@@ -912,11 +910,13 @@ object TreeSyntax {
         )
 
       // Self
-      case t: Self => s(t.name, t.decltpe)
+      case t: Self =>
+        if (t.isNameAnonymous && t.decltpe.nonEmpty) s("_", t.decltpe)
+        else s(t.name, t.decltpe)
 
       // Template
       case t: Template =>
-        val isSelfEmpty = t.self.name.is[Name.Anonymous] && t.self.decltpe.isEmpty
+        val isSelfEmpty = t.self.isEmpty
         val useExtends = (t.inits.nonEmpty || t.early.nonEmpty) &&
           t.parent.exists(p => p.isNot[Defn.Given] && p.isNot[Term.NewAnonymous])
         val extendsKeyword = if (useExtends) "extends" else ""
@@ -1061,7 +1061,7 @@ object TreeSyntax {
     private def isUsingOrImplicit(m: Mod): Boolean = m.is[Mod.ParamsType]
     private def printParam(t: Term.Param, keepImplicit: Boolean = false): Show.Result = {
       val mods = if (keepImplicit) t.mods else t.mods.filterNot(isUsingOrImplicit)
-      val nameType = if (t.name.is[Name.Anonymous]) {
+      val nameType = if (t.isNameAnonymous) {
         o(t.decltpe)
       } else {
         s(t.name, t.decltpe)

@@ -4108,7 +4108,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (isAfterOptNewLine[LeftBrace]) {
       // @S: pre template body cannot stub like post body can!
       val (self, body) = templateBody(enumCaseAllowed)
-      if (token.is[KwWith] && self.name.is[Name.Anonymous] && self.decltpe.isEmpty) {
+      if (token.is[KwWith] && self.isEmpty) {
         val edefs = body.map(ensureEarlyDef)
         next()
         val parents = templateParents(afterExtend)

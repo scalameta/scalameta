@@ -66,12 +66,13 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       code: String,
       f: ScalametaParser => T,
       syntax: String = null
-  )(tree: Tree)(implicit loc: munit.Location): Unit =
+  )(tree: Tree)(implicit loc: munit.Location, dialect: Dialect): Unit =
     checkTree(parseRule(code, f), syntax)(tree)
 
-  protected def checkStat(code: String, syntax: String = null)(tree: Tree)(
-      implicit loc: munit.Location
-  ): Unit =
+  protected def checkStat(
+      code: String,
+      syntax: String = null
+  )(tree: Tree)(implicit loc: munit.Location, dialect: Dialect): Unit =
     checkParsedTree(code, _.entrypointStat(), syntax)(tree)
 
   protected def runTestError[T <: Tree](

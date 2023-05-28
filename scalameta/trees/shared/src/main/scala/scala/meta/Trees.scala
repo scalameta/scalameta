@@ -440,6 +440,7 @@ object Pat {
 
 @branch trait Member extends Tree {
   def name: Name
+  final def isNameAnonymous: Boolean = name.is[Name.Anonymous]
 }
 object Member {
   @branch trait Term extends Member {
@@ -837,7 +838,9 @@ object Ctor {
   @replacedField("4.6.0") final def argss: List[List[Term]] = argClauses.map(_.values).toList
 }
 
-@ast class Self(name: Name, decltpe: Option[Type]) extends Member with Tree.WithDeclTpeOpt
+@ast class Self(name: Name, decltpe: Option[Type]) extends Member with Tree.WithDeclTpeOpt {
+  final def isEmpty: Boolean = isNameAnonymous && decltpe.isEmpty
+}
 
 @ast class Template(
     early: List[Stat],
