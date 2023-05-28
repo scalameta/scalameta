@@ -1111,7 +1111,7 @@ object TreeSyntax {
     }
   }
 
-  def reprint[T <: Tree](x: T)(dialect: Dialect): Show.Result = {
+  def reprint[T <: Tree](x: T)(implicit dialect: Dialect): Show.Result = {
     new SyntaxInstances(dialect).syntaxTree[T].apply(x)
   }
 }
