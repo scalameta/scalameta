@@ -910,7 +910,9 @@ object TreeSyntax {
         )
 
       // Self
-      case t: Self => s(t.name, t.decltpe)
+      case t: Self =>
+        if (t.isNameAnonymous && t.decltpe.nonEmpty) s("_", t.decltpe)
+        else s(t.name, t.decltpe)
 
       // Template
       case t: Template =>
