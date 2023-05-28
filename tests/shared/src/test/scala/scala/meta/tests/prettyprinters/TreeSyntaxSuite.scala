@@ -58,6 +58,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
 
   testBlockAfterDef(k => testBlockAddNL(s"$k foo: Int"))
   testBlockNoNL("class foo { self => }")
+  testBlockNoNL("class foo { _: Int => }", "class foo { : Int => }")
   testBlockNoNL("type foo")
   testBlockAfterDef(k => testBlockAddNL(s"$k foo: Int = 1"))
   testBlockAfterDef(k => testBlockNoNL(s"$k foo: Int = {1}", s"$k foo: Int = {\n  1\n}"))

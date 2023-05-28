@@ -382,4 +382,17 @@ class TemplateSuite extends ParseSuite {
     assertNoDiff(err.shortMessage, "class type required but A.type found")
   }
 
+  test("#3142: template with anonymous self type") {
+    val code = "class foo { _: Int => }"
+    val syntax = "class foo { : Int => }"
+    val tree = Defn.Class(
+      Nil,
+      Type.Name("foo"),
+      Nil,
+      Ctor.Primary(Nil, Name(""), Nil),
+      Template(Nil, Nil, Self(Name(""), Some(Type.Name("Int"))), Nil, Nil)
+    )
+    checkStat(code, syntax)(tree)
+  }
+
 }
