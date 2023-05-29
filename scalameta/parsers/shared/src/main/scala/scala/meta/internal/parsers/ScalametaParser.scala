@@ -2312,7 +2312,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
       token match {
         case _: Dot | _: OpenDelim | _: Underscore => getRest()
-        case _: LF if peekToken.is[LeftBrace] => next(); getRest()
+        // see ArgumentExprs in:
+        // https://scala-lang.org/files/archive/spec/2.13/13-syntax-summary.html#context-free-syntax
+        case _: LF if !isBrace && !dialect.allowSignificantIndentation && tryAhead[LeftBrace] =>
+          getRest()
         case _ =>
           makeTupleTerm { arg =>
             val res = maybeAnonymousFunction(arg)
