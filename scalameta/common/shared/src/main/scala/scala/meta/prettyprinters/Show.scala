@@ -58,6 +58,7 @@ private[meta] object Show {
       loop(this)
       sb.toString
     }
+    final def isEmpty: Boolean = this eq None
   }
   final case object None extends Result
   final case class Str(value: String) extends Result
