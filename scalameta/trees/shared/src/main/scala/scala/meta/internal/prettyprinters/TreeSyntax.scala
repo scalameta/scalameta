@@ -911,15 +911,12 @@ object TreeSyntax {
 
       // Self
       case t: Self =>
-        if (t.isNameAnonymous && t.decltpe.nonEmpty) s("_", t.decltpe)
-        else s(t.name, t.decltpe)
+        val name = if (t.isNameAnonymous && t.decltpe.nonEmpty) kw("_") else s(t.name)
+        w(s(name, t.decltpe), " =>")
 
       // Template
       case t: Template =>
         val isSelfEmpty = t.self.isEmpty
-        val useExtends = (t.inits.nonEmpty || t.early.nonEmpty) &&
-          t.parent.exists(p => p.isNot[Defn.Given] && p.isNot[Term.NewAnonymous])
-        val extendsKeyword = if (useExtends) "extends" else ""
         val pearly = r(t.early, "{ ", "; ", " } with")
         val pparents = r(t.inits, " with ")
         val derived = r(t.derives, "derives ", ", ", "")
@@ -933,18 +930,16 @@ object TreeSyntax {
               case _ => ""
             }
           } else "with"
-        val pbody = {
-          val isOneLiner =
-            t.stats.length == 0 ||
-              (t.stats.length == 1 && !s(t.stats.head).toString.contains(EOL))
-          (!isSelfEmpty, t.stats) match {
-            case (false, Nil) => s()
-            case (false, List(stat)) if isOneLiner => s("{ ", stat, " }")
-            case (false, stats) => s("{", r(stats.map(i(_)), ""), n("}"))
-            case (true, Nil) => s("{ ", t.self, " => }")
-            case (true, List(stat)) if isOneLiner => s("{ ", t.self, " => ", stat, " }")
-            case (true, stats) => s("{ ", t.self, " =>", r(stats.map(i(_)), ""), n("}"))
-          }
+        val noExtends = pparents.isEmpty && pearly.isEmpty ||
+          isGiven || t.parent.exists(_.is[Term.NewAnonymous])
+        val extendsKeyword = if (noExtends) "" else "extends"
+        val pbody = t.stats match {
+          case Nil => w("{ ", t.self, " }")
+          case stat :: Nil =>
+            val statStr = s(stat).toString
+            if (statStr.contains(EOL)) s("{", w(" ", t.self), i(stat), n("}"))
+            else r(" ")("{", t.self, statStr, "}")
+          case stats => s("{", w(" ", t.self), r(stats.map(i(_))), n("}"))
         }
         r(" ")(extendsKeyword, pearly, pparents, derived, withGiven, pbody)
 
