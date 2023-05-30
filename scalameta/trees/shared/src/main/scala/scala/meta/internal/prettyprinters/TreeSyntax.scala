@@ -296,6 +296,30 @@ object TreeSyntax {
       }
       !isOnlyChildOfOnlyChild(t)
     }
+    @annotation.tailrec
+    def guessNeedsLineSep(t: Tree): Boolean = t match {
+      case t: Term.ApplyUnary => guessNeedsLineSep(t.arg)
+      case _: Decl.Val | _: Decl.Var | _: Decl.Def | _: Defn.Type | _: Term.Ref | _: Member.Apply |
+          _: Term.Ascribe | _: Term.Tuple | _: Term.New | _: Term.Interpolate | _: Term.Xml |
+          _: Lit =>
+        true
+      case t: Term.Do => false
+      case t: Tree.WithBody => guessNeedsLineSep(t.body)
+      case t: Stat.WithTemplate => t.templ.self.isEmpty && t.templ.stats.isEmpty
+      case t: Term.ApplyInfix =>
+        val args = t.argClause.values
+        args.lengthCompare(1) != 0 || guessNeedsLineSep(args.head)
+      case t: Term.Return => guessNeedsLineSep(t.expr)
+      case t: Term.Throw => guessNeedsLineSep(t.expr)
+      case t: Term.If => guessNeedsLineSep(if (guessHasElsep(t)) t.elsep else t.thenp)
+      case t: Term.Try =>
+        t.finallyp match {
+          case Some(x) => guessNeedsLineSep(x)
+          case _ => t.catchp.isEmpty && guessNeedsLineSep(t.expr)
+        }
+      case t: Term.TryWithHandler => guessNeedsLineSep(t.finallyp.getOrElse(t.catchp))
+      case _ => false
+    }
 
     // Branches
     implicit def syntaxTree[T <: Tree]: Syntax[T] = Syntax {
@@ -398,10 +422,24 @@ object TreeSyntax {
       case t: Term.Tuple => m(SimpleExpr1, s("(", r(t.args, ", "), ")"))
       case t: Term.Block =>
         import Term.{Block, Function}
+        def withBlankLines(x: Seq[Stat]) = {
+          val builder = List.newBuilder[Show.Result]
+          var prevStat: Stat = null
+          x.foreach { stat =>
+            if (stat.is[Block] && null != prevStat && guessNeedsLineSep(prevStat)) builder += EOL
+            builder += i(stat)
+            prevStat = stat
+          }
+          builder.result()
+        }
         def block(pre: Show.Result, x: Seq[Stat]) = {
           val res =
             if (pre == Show.None && x.isEmpty) s("{}")
-            else s("{", w(" ", pre), r(x.map(i(_))), n("}"))
+            else {
+              val stats =
+                if (dialect.allowSignificantIndentation) x.map(i(_)) else withBlankLines(x)
+              s("{", w(" ", pre), r(stats), n("}"))
+            }
           m(SimpleExpr, res)
         }
         t match {

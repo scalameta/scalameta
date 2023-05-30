@@ -18,7 +18,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
   ): Unit = {
     val stat = statStr.trim // make sure no trailing newlines
     test(s"${loc.line}: $stat") {
-      val sep = "" // XXX: after fixing TreeSyntax, modify this
+      val sep = if (needNL) "\n" else ""
       val statSyntax = Option(syntaxStr).getOrElse(stat).replace("\n", "\n  ")
 
       val expectedSyntax =
