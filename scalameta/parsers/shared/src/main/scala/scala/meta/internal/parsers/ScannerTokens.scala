@@ -168,9 +168,6 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     case _ => false
   }
 
-  def isCaseIntro(index: Int): Boolean =
-    tokens(index).is[KwCase] && !getNextToken(index).isClassOrObject
-
   @tailrec
   final def isDefIntro(index: Int): Boolean = tokens(index) match {
     case _: At => true
@@ -225,13 +222,6 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _: RightBrace | _: EOF | _: Indentation.Outdent => true
       case _ => false
     }
-  }
-
-  def isCaseDefEnd(token: Token, index: => Int): Boolean = token match {
-    case _: RightBrace | _: RightParen | _: EOF | _: Indentation.Outdent => true
-    case _: KwCase => !getNextToken(index).isClassOrObject
-    case _: Ellipsis => getNextToken(index).is[KwCase]
-    case _ => false
   }
 
   def canStartIndent(index: Int): Boolean = tokens(index) match {
@@ -452,7 +442,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case _ => currRef(sepRegions)
         }
       case _: KwEnum => currRef(RegionEnumArtificialMark :: sepRegions)
-      case _ if isCaseIntro(currPos) =>
+      case _: KwCase if !next.isClassOrObject =>
         currRef(sepRegions match {
           case (_: RegionEnum | _: RegionIndentEnum) :: _ => sepRegions
           case (_: RegionCaseBody) :: tail => RegionCaseExpr :: tail

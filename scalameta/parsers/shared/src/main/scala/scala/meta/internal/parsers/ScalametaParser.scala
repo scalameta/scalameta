@@ -2364,8 +2364,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case t => t
   }
 
+  private def isCaseIntro(): Boolean =
+    token.is[KwCase] && isCaseIntroOnKwCase()
+
+  // call it only if token is KwCase
+  private def isCaseIntroOnKwCase(): Boolean = !peekToken.isClassOrObject
+
   def blockExpr(isBlockOptional: Boolean = false, allowRepeated: Boolean = false): Term = {
-    if (isCaseIntro(peekIndex) || peekToken.is[Ellipsis] && getNextToken(peekIndex).is[KwCase])
+    val hasCases = ahead(token match {
+      case _: KwCase => isCaseIntroOnKwCase()
+      case _: Ellipsis => peekToken.is[KwCase]
+      case _ => false
+    })
+    if (hasCases)
       autoPos(Term.PartialFunction {
         if (acceptOpt[LeftBrace]) inBracesAfterOpen(caseClauses()) else indented(caseClauses())
       })
@@ -2424,8 +2435,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case t: Ellipsis =>
         cases += ellipsis[Case](t, 1, accept[KwCase])
         while (token.is[StatSep]) next()
-        iter
-      case _ if isCaseIntro(tokenPos) =>
+        iter()
+      case _: KwCase if isCaseIntroOnKwCase() =>
         next()
         token match {
           case t: Unquote =>
@@ -2433,9 +2444,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             while (token.is[StatSep]) next()
           case _ =>
             cases += caseClause()
-            if (token.is[StatSep] && isCaseIntro(peekIndex)) acceptStatSep()
+            if (!token.is[EOF] && token.is[StatSep])
+              tryAhead(isCaseIntro())
         }
-        iter
+        iter()
       case _ =>
     }
     iter()
@@ -4413,7 +4425,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def blockStatSeq(allowRepeated: Boolean = false): List[Stat] = listBy[Stat] { stats =>
-    def notCaseDefEnd(): Boolean = !isCaseDefEnd(token, tokenPos)
+    def notCaseDefEnd(): Boolean = token match {
+      case _: RightBrace | _: RightParen | _: EOF | _: Indentation.Outdent => false
+      case _: KwCase => !isCaseIntroOnKwCase()
+      case _: Ellipsis => !peekToken.is[KwCase]
+      case _ => true
+    }
 
     @tailrec def iter(): Unit = if (notCaseDefEnd() && !in.observeOutdented()) token match {
       case _: KwExport =>
