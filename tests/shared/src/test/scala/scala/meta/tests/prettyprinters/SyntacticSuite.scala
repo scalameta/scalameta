@@ -1933,4 +1933,36 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertSyntax(tree, "\"\"\"\n\\\"\\\"\\\"\"\"\"")(tree)
   }
 
+  test("#2046 new line separator required before some Term.Block") {
+    assertEquals(
+      blockStat("{{a}; val b = 1; val c = 2; {d}; {e}}").syntax,
+      s"""|{
+          |  {
+          |    a
+          |  }
+          |  val b = 1
+          |  val c = 2
+          |
+          |  {
+          |    d
+          |  }
+          |  {
+          |    e
+          |  }
+          |}
+        """.stripMargin.trim.replace("\n", EOL)
+    )
+    assertEquals(
+      blockStat("{if (a) while (b) for (c <- d) -e; {f}}").syntax,
+      s"""|{
+          |  if (a) while (b) for (c <- d) -e
+          |
+          |  {
+          |    f
+          |  }
+          |}
+        """.stripMargin.trim.replace("\n", EOL)
+    )
+  }
+
 }
