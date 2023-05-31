@@ -75,28 +75,24 @@ private[parsers] class LazyTokenIterator private (
        * In case the region was needed, we will add it again as we haven't yet progressed
        * to the next token.
        */
-      val undoRegionChange =
-        prev.headOption match {
-          case Some(RegionParen) if token.is[LeftParen] => prev.tail
-          case Some(RegionEnumArtificialMark) if token.is[KwEnum] => prev.tail
-          case Some(_: RegionBrace) if token.is[LeftBrace] => prev.tail
-          //  Handle fewer braces and partial function.
-          case Some(RegionCaseExpr) if dialect.allowFewerBraces && token.is[KwCase] => prev.tail
-          case _ => prev
-        }
-      RegionIndent(i, false) :: undoRegionChange
+      val undoRegionChange = prev match {
+        case RegionParen :: tail if token.is[LeftParen] => tail
+        case RegionEnumArtificialMark :: tail if token.is[KwEnum] => tail
+        case (_: RegionBrace) :: tail if token.is[LeftBrace] => tail
+        case _ => prev
+      }
+      RegionIndent(i) :: undoRegionChange
     }
   }
 
   def observeIndentedEnum(): Boolean = {
-    observeIndented0((i, prev) => {
+    observeIndented0 { (i, prev) =>
       val nextPrev = prev match {
-        case RegionCaseExpr :: RegionEnumArtificialMark :: other => other
         case RegionEnumArtificialMark :: other => other
         case x => x
       }
-      RegionIndentEnum(i) :: nextPrev
-    })
+      RegionIndent(i) :: nextPrev
+    }
   }
 
   private def getIndentation(ref: TokenRef): Int = {
@@ -114,19 +110,6 @@ private[parsers] class LazyTokenIterator private (
     case _ :: r :: _ => r.indent
     case _ => 0
   }
-
-  def observeOutdented(): Boolean =
-    dialect.allowSignificantIndentation && (curr.regions match {
-      case (region: SepRegionIndented) :: tail if (curr.token match {
-            case _: KwMatch | _: KwCatch | _: KwFinally => true
-            case _ => false
-          }) =>
-        val outdentPos = findOutdentPos(prevTokenPos, curr.pos, region)
-        val outdent = mkOutdentToken(outdentPos)
-        resetCurr(TokenRef(tail, outdent, curr.pos, curr.pos, outdentPos, curr.withRegions(tail)))
-        true
-      case _ => false
-    })
 
   override def prevTokenPos: Int = prev.pointPos
   override def prevToken: Token = prev.token
