@@ -77,7 +77,7 @@ private[parsers] class LazyTokenIterator private (
        */
       val undoRegionChange =
         prev.headOption match {
-          case Some(_: RegionParen) if token.is[LeftParen] => prev.tail
+          case Some(RegionParen) if token.is[LeftParen] => prev.tail
           case Some(RegionEnumArtificialMark) if token.is[KwEnum] => prev.tail
           case Some(_: RegionBrace) if token.is[LeftBrace] => prev.tail
           //  Handle fewer braces and partial function.
@@ -118,7 +118,6 @@ private[parsers] class LazyTokenIterator private (
   def observeOutdented(): Boolean =
     dialect.allowSignificantIndentation && (curr.regions match {
       case (region: SepRegionIndented) :: tail if (curr.token match {
-            case _: KwThen | _: KwElse | _: KwDo | _: KwYield => true
             case _: KwMatch | _: KwCatch | _: KwFinally => true
             case _ => false
           }) =>
