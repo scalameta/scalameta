@@ -3551,4 +3551,154 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestError[Stat](code, msg)
   }
 
+  test("match with dedented single case") {
+    val code =
+      """|val a = this match
+         |      case a =>
+         |         that match
+         |        case b => bb
+         |         end match
+         |      case b =>
+         |         that match
+         |        case c => cc
+         |""".stripMargin
+    val output =
+      """|val a = this match {
+         |  case a =>
+         |    that match {
+         |      case b =>
+         |        bb
+         |        end match
+         |    }
+         |  case b =>
+         |    that match {
+         |      case c => cc
+         |    }
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("a"))),
+        None,
+        Term.Match(
+          Term.This(Name("")),
+          List(
+            Case(
+              Pat.Var(tname("a")),
+              None,
+              Term.Match(
+                tname("that"),
+                List(
+                  Case(
+                    Pat.Var(tname("b")),
+                    None,
+                    Term.Block(List(tname("bb"), Term.EndMarker(tname("match"))))
+                  )
+                ),
+                Nil
+              )
+            ),
+            Case(
+              Pat.Var(tname("b")),
+              None,
+              Term.Match(tname("that"), List(Case(Pat.Var(tname("c")), None, tname("cc"))), Nil)
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("single-line try within catch case, then another case") {
+    val code =
+      """|try foo
+         |catch
+         |case _ =>
+         |    try bar finally qux
+         |    try bar catch baz finally qux
+         |    try bar catch case _ => baz finally qux
+         |case xyz =>
+         |""".stripMargin
+    val output =
+      """|try foo catch {
+         |  case _ =>
+         |    try bar finally qux
+         |    try bar catch baz finally qux
+         |    try bar catch {
+         |      case _ => baz
+         |    } finally qux
+         |  case xyz =>
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.Try(
+        tname("foo"),
+        List(
+          Case(
+            Pat.Wildcard(),
+            None,
+            Term.Block(
+              List(
+                Term.Try(tname("bar"), Nil, Some(tname("qux"))),
+                Term.TryWithHandler(tname("bar"), tname("baz"), Some(tname("qux"))),
+                Term.Try(
+                  tname("bar"),
+                  List(Case(Pat.Wildcard(), None, tname("baz"))),
+                  Some(tname("qux"))
+                )
+              )
+            )
+          ),
+          Case(Pat.Var(tname("xyz")), None, Term.Block(Nil))
+        ),
+        None
+      )
+    )
+  }
+
+  test("single-line try within catch case, then another case") {
+    val code =
+      """|try foo
+         |catch
+         |case _ =>
+         |    try bar finally qux
+         |    try bar catch baz finally qux
+         |    try bar catch case _ => baz finally qux
+         |finally xyz
+         |""".stripMargin
+    val output =
+      """|try foo catch {
+         |  case _ =>
+         |    try bar finally qux
+         |    try bar catch baz finally qux
+         |    try bar catch {
+         |      case _ => baz
+         |    } finally qux
+         |} finally xyz
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term.Try(
+        tname("foo"),
+        Case(
+          Pat.Wildcard(),
+          None,
+          Term.Block(
+            List(
+              Term.Try(tname("bar"), Nil, Some(tname("qux"))),
+              Term.TryWithHandler(tname("bar"), tname("baz"), Some(tname("qux"))),
+              Term.Try(
+                tname("bar"),
+                List(Case(Pat.Wildcard(), None, tname("baz"))),
+                Some(tname("qux"))
+              )
+            )
+          )
+        ) :: Nil,
+        Some(tname("xyz"))
+      )
+    )
+  }
+
 }
