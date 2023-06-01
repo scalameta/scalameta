@@ -16,7 +16,6 @@ trait TokenIterator {
   def currentIndentation: Int
 
   def observeIndented(): Boolean
-  def observeOutdented(): Boolean
   def observeIndentedEnum(): Boolean
   def undoIndent(): Unit
 

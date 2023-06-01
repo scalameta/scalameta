@@ -399,7 +399,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def acceptStatSep(): Unit = token match {
     case LF() | LFLF() => next()
-    case _ if in.observeOutdented() =>
     case t if isEndMarkerIntro(tokenPos) =>
     case _ => accept[Semicolon]
   }
@@ -1512,9 +1511,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case KwTry() =>
         next()
         val body: Term = token match {
+          case _: Indentation.Indent => block()
           case _ if dialect.allowTryWithAnyExpr => expr()
-          case LeftParen() => inParensOnOpen(expr())
-          case LeftBrace() | Indentation.Indent() => block()
+          case _: LeftParen => inParensOnOpen(expr())
+          case _: LeftBrace => block()
           case _ => expr()
         }
         def caseClausesOrExpr = caseClausesIfAny().toRight(blockWithinDelims())

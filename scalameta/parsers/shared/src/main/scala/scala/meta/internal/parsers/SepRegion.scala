@@ -5,8 +5,6 @@ import scala.meta.tokens.Token
 
 sealed trait SepRegion {
   def indent = -1
-  def closeOnNonCase = false
-  def indentOnArrow = true
   def isIndented: Boolean
 }
 
@@ -24,22 +22,19 @@ sealed trait RegionDelim extends SepRegion
 // this describes non-delimiters which are also non-indented (likely all of them)
 sealed trait RegionNonDelimNonIndented extends SepRegionNonIndented
 
-case class RegionIndent(override val indent: Int, override val closeOnNonCase: Boolean)
-    extends SepRegionIndented with RegionDelim
+case class RegionIndent(override val indent: Int) extends SepRegionIndented with RegionDelim
 
 case object RegionParen extends SepRegionNonIndented with RegionDelim
 
 case object RegionBracket extends SepRegionNonIndented with RegionDelim
 
-case class RegionBrace(override val indent: Int, override val indentOnArrow: Boolean)
+case class RegionBrace(override val indent: Int)
     extends SepRegionNonIndented with CanProduceLF with RegionDelim
 
-case object RegionCaseExpr extends RegionNonDelimNonIndented
-case class RegionCaseBody(override val indent: Int) extends SepRegionNonIndented with CanProduceLF
-
-case class RegionEnum(override val indent: Int) extends SepRegionNonIndented with CanProduceLF
-
-case class RegionIndentEnum(override val indent: Int) extends SepRegionIndented
+case object RegionCaseMark extends RegionNonDelimNonIndented
+final class RegionCaseExpr(override val indent: Int) extends RegionNonDelimNonIndented
+final class RegionCaseBody(override val indent: Int, val arrow: Token)
+    extends SepRegionNonIndented with CanProduceLF
 
 // NOTE: Special case for Enum region is needed because parsing of 'case' statement is done differently
 case object RegionEnumArtificialMark extends RegionNonDelimNonIndented
@@ -162,3 +157,5 @@ case object RegionForBraces extends RegionFor {
 case object RegionForOther extends RegionFor {
   def isTerminatingTokenRequired(): Boolean = true
 }
+
+final class RegionIndentTry(override val indent: Int) extends SepRegionIndented
