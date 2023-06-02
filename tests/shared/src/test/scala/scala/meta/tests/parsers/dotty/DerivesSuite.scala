@@ -14,21 +14,21 @@ class DerivesSuite extends BaseDottySuite {
     runTestAssert[Stat](derivesEnum)(
       Defn.Enum(
         Nil,
-        Type.Name("Tree"),
-        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
-        Ctor.Primary(Nil, Name(""), Nil),
+        pname("Tree"),
+        List(pparam("T")),
+        ctor,
         Template(
           Nil,
           Nil,
-          Self(Name(""), None),
+          slf,
           List(
-            Defn.EnumCase(Nil, Term.Name("Branch"), Nil, Ctor.Primary(Nil, Name(""), Nil), Nil),
-            Defn.EnumCase(Nil, Term.Name("Leaf"), Nil, Ctor.Primary(Nil, Name(""), Nil), Nil)
+            Defn.EnumCase(Nil, tname("Branch"), Nil, ctor, Nil),
+            Defn.EnumCase(Nil, tname("Leaf"), Nil, ctor, Nil)
           ),
           List(
-            Type.Name("Eq"),
-            Type.Name("Ordering"),
-            Type.Name("Show")
+            pname("Eq"),
+            pname("Ordering"),
+            pname("Show")
           )
         )
       )
@@ -46,22 +46,21 @@ class DerivesSuite extends BaseDottySuite {
     )(
       Defn.Enum(
         Nil,
-        Type.Name("Tree"),
-        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
-        Ctor.Primary(Nil, Name(""), Nil),
+        pname("Tree"),
+        List(pparam("T")),
+        ctor,
         Template(
           Nil,
-          List(Init(Type.Name("Bee"), Name(""), Nil)),
-          Self(Name(""), None),
+          List(init("Bee")),
+          slf,
           List(
-            Defn.EnumCase(Nil, Term.Name("Branch"), Nil, Ctor.Primary(Nil, Name(""), Nil), Nil),
-            Defn.EnumCase(Nil, Term.Name("Leaf"), Nil, Ctor.Primary(Nil, Name(""), Nil), Nil)
+            Defn.EnumCase(Nil, tname("Branch"), Nil, ctor, Nil),
+            Defn.EnumCase(Nil, tname("Leaf"), Nil, ctor, Nil)
           ),
           List(
-            Type.Name("Eq"),
-            Type
-              .Select(Term.Select(Term.Name("scala"), Term.Name("derives")), Type.Name("Ordering")),
-            Type.Name("Show")
+            pname("Eq"),
+            Type.Select(Term.Select(tname("scala"), tname("derives")), pname("Ordering")),
+            pname("Show")
           )
         )
       )
@@ -70,117 +69,259 @@ class DerivesSuite extends BaseDottySuite {
   }
 
   test("case-class-derives") {
-    val derivesEnum =
-      runTestAssert[Stat](
-        """|case class Node(name : String) extends Tree derives Eq:
+    runTestAssert[Stat](
+      """|case class Node(name : String) extends Tree derives Eq:
+         |  def hello() = ""
+         |  def bye() = ""
+         |
+         |""".stripMargin,
+      assertLayout = Some(
+        """|case class Node(name: String) extends Tree derives Eq {
            |  def hello() = ""
            |  def bye() = ""
-           |
-           |""".stripMargin,
-        assertLayout = Some(
-          """|case class Node(name: String) extends Tree derives Eq {
-             |  def hello() = ""
-             |  def bye() = ""
-             |}
-             |""".stripMargin
-        )
-      )(
-        Defn.Class(
-          List(Mod.Case()),
-          Type.Name("Node"),
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Class(
+        List(Mod.Case()),
+        pname("Node"),
+        Nil,
+        ctorp(List(tparam("name", "String"))),
+        Template(
           Nil,
-          Ctor.Primary(
-            Nil,
-            Name(""),
-            List(List(Term.Param(Nil, Term.Name("name"), Some(Type.Name("String")), None)))
+          List(init("Tree")),
+          slf,
+          List(
+            Defn.Def(Nil, tname("hello"), Nil, List(List()), None, str("")),
+            Defn.Def(Nil, tname("bye"), Nil, List(List()), None, str(""))
           ),
-          Template(
-            Nil,
-            List(Init(Type.Name("Tree"), Name(""), Nil)),
-            Self(Name(""), None),
-            List(
-              Defn.Def(Nil, Term.Name("hello"), Nil, List(List()), None, Lit.String("")),
-              Defn.Def(Nil, Term.Name("bye"), Nil, List(List()), None, Lit.String(""))
-            ),
-            List(
-              Type.Name("Eq")
-            )
+          List(
+            pname("Eq")
           )
         )
       )
+    )
 
   }
 
   test("newline-derives") {
-    val derivesEnum =
-      runTestAssert[Stat](
-        """|class A
-           |    derives AVeryLongName1,
-           |      AVeryLongName2,
-           |      AVeryLongName3
-           |""".stripMargin,
-        assertLayout = Some(
-          "class A derives AVeryLongName1, AVeryLongName2, AVeryLongName3"
-        )
-      )(
-        Defn.Class(
+    runTestAssert[Stat](
+      """|class A
+         |    derives AVeryLongName1,
+         |      AVeryLongName2,
+         |      AVeryLongName3
+         |""".stripMargin,
+      assertLayout = Some(
+        "class A derives AVeryLongName1, AVeryLongName2, AVeryLongName3"
+      )
+    )(
+      Defn.Class(
+        Nil,
+        pname("A"),
+        Nil,
+        ctor,
+        Template(
           Nil,
-          Type.Name("A"),
           Nil,
-          Ctor.Primary(Nil, Name(""), Nil),
-          Template(
-            Nil,
-            Nil,
-            Self(Name(""), None),
-            Nil,
-            List(
-              Type.Name("AVeryLongName1"),
-              Type.Name("AVeryLongName2"),
-              Type.Name("AVeryLongName3")
-            )
+          slf,
+          Nil,
+          List(
+            pname("AVeryLongName1"),
+            pname("AVeryLongName2"),
+            pname("AVeryLongName3")
           )
         )
       )
+    )
   }
 
   test("newline-derives-params") {
-    val derivesEnum =
-      runTestAssert[Stat](
-        """|class A[T](a: Int, b: Int)
-           |    derives Alpha[T],
-           |      Epsilon[T] {
-           |  def a = ???
-           |}
-           |""".stripMargin,
-        assertLayout = Some(
-          "class A[T](a: Int, b: Int) derives Alpha[T], Epsilon[T] { def a = ??? }"
-        )
-      )(
-        Defn.Class(
-          Nil,
-          Type.Name("A"),
-          List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
-          Ctor.Primary(
-            Nil,
-            Name(""),
-            List(
-              List(
-                Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None),
-                Term.Param(Nil, Term.Name("b"), Some(Type.Name("Int")), None)
-              )
-            )
-          ),
-          Template(
-            Nil,
-            Nil,
-            Self(Name(""), None),
-            List(Defn.Def(Nil, Term.Name("a"), Nil, Nil, None, Term.Name("???"))),
-            List(
-              Type.Apply(Type.Name("Alpha"), List(Type.Name("T"))),
-              Type.Apply(Type.Name("Epsilon"), List(Type.Name("T")))
-            )
-          )
+    val layout = "class A[T](a: Int, b: Int) derives Alpha[T], Epsilon[T] { def a = ??? }"
+    val tree = Defn.Class(
+      Nil,
+      pname("A"),
+      List(pparam("T")),
+      ctorp(List(tparam("a", "Int"), tparam("b", "Int"))),
+      Template(
+        Nil,
+        Nil,
+        slf,
+        List(Defn.Def(Nil, tname("a"), Nil, Nil, None, tname("???"))),
+        List(
+          Type.Apply(pname("Alpha"), List(pname("T"))),
+          Type.Apply(pname("Epsilon"), List(pname("T")))
         )
       )
+    )
+    runTestAssert[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    derives Alpha[T],
+         |      Epsilon[T] {
+         |  def a = ???
+         |}
+         |""".stripMargin,
+      Some(layout)
+    )(tree)
+    runTestError[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    derives
+         |      Alpha[T],
+         |      Epsilon[T]
+         |      {
+         |  def a = ???
+         |}
+         |""".stripMargin,
+      """|<input>:2: error: identifier expected but \n found
+         |    derives
+         |           ^""".stripMargin
+    )
   }
+
+  test("newline-derives-coloneol") {
+    val layout = "class A[T](a: Int, b: Int) derives Alpha[T], Epsilon[T] { def a = ??? }"
+    val tree = Defn.Class(
+      Nil,
+      pname("A"),
+      List(pparam("T")),
+      ctorp(List(tparam("a", "Int"), tparam("b", "Int"))),
+      Template(
+        Nil,
+        Nil,
+        slf,
+        List(Defn.Def(Nil, tname("a"), Nil, Nil, None, tname("???"))),
+        List(
+          Type.Apply(pname("Alpha"), List(pname("T"))),
+          Type.Apply(pname("Epsilon"), List(pname("T")))
+        )
+      )
+    )
+    runTestAssert[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    derives Alpha[T],
+         |      Epsilon[T]:
+         |  def a = ???
+         |""".stripMargin,
+      Some(layout)
+    )(tree)
+    runTestError[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    derives
+         |      Alpha[T],
+         |      Epsilon[T]:
+         |  def a = ???
+         |""".stripMargin,
+      """|<input>:2: error: identifier expected but \n found
+         |    derives
+         |           ^""".stripMargin
+    )
+    runTestError[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    derives
+         |   Alpha[T],
+         |   Epsilon[T]:
+         |  def a = ???
+         |""".stripMargin,
+      """|<input>:2: error: identifier expected but \n found
+         |    derives
+         |           ^""".stripMargin
+    )
+  }
+
+  test("newline-extends-derives-coloneol") {
+    val layout = "class A[T](a: Int, b: Int) extends Alpha[T] derives Epsilon[T] { def a = ??? }"
+    val tree = Defn.Class(
+      Nil,
+      pname("A"),
+      List(pparam("T")),
+      ctorp(List(tparam("a", "Int"), tparam("b", "Int"))),
+      Template(
+        Nil,
+        List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), Name(""), Nil)),
+        slf,
+        List(Defn.Def(Nil, tname("a"), Nil, None, tname("???"))),
+        List(Type.Apply(pname("Epsilon"), List(pname("T"))))
+      )
+    )
+    runTestAssert[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    extends Alpha[T]
+         |    derives Epsilon[T]:
+         |  def a = ???
+         |""".stripMargin,
+      Some(layout)
+    )(tree)
+    runTestError[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    extends
+         |      Alpha[T]
+         |    derives
+         |      Epsilon[T]:
+         |  def a = ???
+         |""".stripMargin,
+      """|<input>:4: error: identifier expected but \n found
+         |    derives
+         |           ^""".stripMargin
+    )
+    runTestError[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    extends
+         |   Alpha[T]
+         |    derives
+         |   Epsilon[T]:
+         |  def a = ???
+         |""".stripMargin,
+      """|<input>:4: error: identifier expected but \n found
+         |    derives
+         |           ^""".stripMargin
+    )
+  }
+
+  test("not-derives") {
+    val layout =
+      """|class A {
+         |  def derives() = ???
+         |  derives()
+         |}
+         |""".stripMargin
+    val tree = Defn.Class(
+      Nil,
+      pname("A"),
+      Nil,
+      ctor,
+      Template(
+        Nil,
+        Nil,
+        slf,
+        List(
+          Defn.Def(
+            Nil,
+            tname("derives"),
+            Nil,
+            List(Nil),
+            None,
+            tname("???")
+          ),
+          Term.Apply(tname("derives"), Nil)
+        ),
+        Nil
+      )
+    )
+    runTestAssert[Stat]( // no newline
+      """|class A:
+         |  def derives() = ???
+         |  derives()
+         |""".stripMargin,
+      Some(layout)
+    )(tree)
+    runTestAssert[Stat]( // with newline
+      """|class A:
+         |  def
+         |    derives() = ???
+         |  derives()
+         |""".stripMargin,
+      Some(layout)
+    )(tree)
+  }
+
 }
