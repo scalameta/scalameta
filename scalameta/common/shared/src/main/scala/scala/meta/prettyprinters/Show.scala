@@ -129,6 +129,6 @@ private[meta] object Show {
 
   implicit def printResult[R <: Result]: Show[R] = apply(identity)
   implicit def printString[T <: String]: Show[T] = apply(Show.Str(_))
-  implicit def stringAsResult(value: String) = if (value.isEmpty) None else Show.Str(value)
+  implicit def stringAsResult(value: String): Result = if (value.isEmpty) None else Show.Str(value)
   implicit def showAsResult[T](x: T)(implicit show: Show[T]): Result = show(x)
 }

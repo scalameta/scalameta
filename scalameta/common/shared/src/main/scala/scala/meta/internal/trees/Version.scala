@@ -12,7 +12,7 @@ object Version {
 
   final val zero = Version(0, 0, 0)
 
-  implicit val ordering = new Ordering[Version] {
+  implicit val ordering: Ordering[Version] = new Ordering[Version] {
     override def compare(x: Version, y: Version): Int = {
       val cmpMajor = x.major.compare(y.major)
       if (cmpMajor != 0) return cmpMajor
