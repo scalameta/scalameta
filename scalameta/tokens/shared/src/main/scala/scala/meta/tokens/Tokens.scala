@@ -89,7 +89,7 @@ object Tokens {
   private[meta] def apply(tokens: Array[Token]): Tokens = apply(tokens, 0, tokens.length)
   private[meta] def apply(tokens: Array[Token], start: Int, end: Int): Tokens =
     new Tokens(tokens, start, end)
-  def unapplySeq(tokens: Tokens): Option[Seq[Token]] = Some(tokens)
+  def unapplySeq(tokens: Tokens): Some[Seq[Token]] = Some(tokens)
 
   private def convertTokensToInput(tokens: Tokens): Input = Input.String(tokens.syntax)
   implicit val tokensToInput: Convert[Tokens, Input] = Convert(convertTokensToInput)
