@@ -705,8 +705,10 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           def getIndentIfNeeded(sepRegions: List[SepRegion]) = {
             def getPrevIndent() = findIndent(sepRegions)
             def exceedsIndent = nextIndent > getPrevIndent()
+            def emitIndentWithRegion(region: SepRegionIndented, regions: List[SepRegion]) =
+              Some(Right(mkIndent(indentPos, region :: regions)))
             def emitIndent(regions: List[SepRegion]) =
-              Some(Right(mkIndent(indentPos, RegionIndent(nextIndent) :: regions)))
+              emitIndentWithRegion(RegionIndent(nextIndent), regions)
             // !next.is[RightBrace] - braces can sometimes have -1 and we can start indent on }
             prev match {
               case _ if nextIndent < 0 || next.is[RightBrace] => None
@@ -725,7 +727,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                   case _ => emitIndent(sepRegions)
                 }
               case _: KwTry =>
-                Some(Right(mkIndent(indentPos, new RegionIndentTry(nextIndent) :: sepRegions)))
+                emitIndentWithRegion(new RegionIndentTry(nextIndent), sepRegions)
               case _ =>
                 sepRegions match {
                   case RegionForBraces :: xs if prev.is[RightBrace] =>
