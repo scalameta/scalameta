@@ -61,8 +61,8 @@ private[parsers] class LazyTokenIterator private (
   def undoIndent(): Unit = {
     curr.regions match {
       case (_: SepRegionIndented) :: others if curr.token.is[Indentation.Indent] =>
-        val ref = nextToken(curr.token, curr.pos, curr.nextPos, others)
-        resetCurr(ref)
+        // don't change prev.next in case this fork fails
+        curr = nextToken(curr.token, curr.pos, curr.nextPos, others)
       case _ =>
     }
   }
