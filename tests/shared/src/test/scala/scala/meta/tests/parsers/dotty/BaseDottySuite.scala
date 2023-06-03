@@ -12,6 +12,7 @@ trait BaseDottySuite extends ParseSuite {
   final val ctor = Ctor.Primary(Nil, anon, Nil)
   final def ctorp(lp: List[Term.Param] = Nil) = Ctor.Primary(Nil, anon, List(lp))
   final val slf = meta.Self(anon, None)
+  final def self(name: String, tpe: String = null) = meta.Self(tname(name), Option(tpe).map(pname))
 
   final def tname(name: String): Term.Name = Term.Name(name)
   final def tpl(stats: List[Stat]): Template = Template(Nil, Nil, slf, stats)
