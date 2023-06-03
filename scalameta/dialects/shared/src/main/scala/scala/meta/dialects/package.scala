@@ -3,7 +3,7 @@ package scala.meta
 import org.scalameta.invariants._
 
 package object dialects {
-  implicit val Scala210 = Dialect(
+  implicit val Scala210: Dialect = Dialect(
     allowAndTypes = false,
     allowAtForExtractorVarargs = true,
     allowCaseClassWithoutParameterList = true,
@@ -28,26 +28,26 @@ package object dialects {
     toplevelSeparator = ""
   )
 
-  implicit val Scala211 = Scala210
+  implicit val Scala211: Dialect = Scala210
     .withAllowCaseClassWithoutParameterList(false)
     .withAllowSpliceUnderscores(true) // SI-7715, only fixed in 2.11.0-M5
 
-  implicit val Typelevel211 = Scala211
+  implicit val Typelevel211: Dialect = Scala211
     .withAllowLiteralTypes(true)
 
   @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
-  implicit val Paradise211 = Scala211
+  implicit val Paradise211: Dialect = Scala211
     .withAllowInlineMods(true)
 
   @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
-  implicit val ParadiseTypelevel211 = Typelevel211
+  implicit val ParadiseTypelevel211: Dialect = Typelevel211
     .withAllowInlineMods(true)
 
-  implicit val Scala212 = Scala211
+  implicit val Scala212: Dialect = Scala211
     .withAllowTrailingCommas(true)
     .withAllowQuestionMarkAsTypeWildcard(true)
 
-  implicit val Scala213 = Scala212
+  implicit val Scala213: Dialect = Scala212
     .withAllowImplicitByNameParameters(true)
     .withAllowLiteralTypes(true)
     .withAllowNumericLiteralUnderscoreSeparators(true)
@@ -56,7 +56,7 @@ package object dialects {
   /**
    * Dialect starting with Scala 2.13.6 for `-Xsource:3` option
    */
-  implicit val Scala213Source3 = Scala213
+  implicit val Scala213Source3: Dialect = Scala213
     .withAllowAsForImportRename(true)
     .withAllowStarWildcardImport(true)
     .withAllowOpenClass(true)
@@ -69,7 +69,7 @@ package object dialects {
   /**
    * Dialect starting with Scala 2.12.14 for `-Xsource:3` option
    */
-  implicit val Scala212Source3 = Scala212
+  implicit val Scala212Source3: Dialect = Scala212
     .withAllowAsForImportRename(true)
     .withAllowStarWildcardImport(true)
     .withAllowOpenClass(true)
@@ -78,31 +78,31 @@ package object dialects {
     .withAllowPlusMinusUnderscoreAsIdent(true)
     .withAllowGivenImports(true)
 
-  implicit val Scala = Scala213 // alias for latest Scala dialect.
+  implicit val Scala: Dialect = Scala213 // alias for latest Scala dialect.
 
-  implicit val Sbt0136 = Scala210
+  implicit val Sbt0136: Dialect = Scala210
     .withAllowToplevelTerms(true)
 
-  implicit val Sbt0137 = Scala211
+  implicit val Sbt0137: Dialect = Scala211
     .withAllowToplevelTerms(true)
 
-  implicit val Sbt1 = Scala212
+  implicit val Sbt1: Dialect = Scala212
     .withAllowToplevelTerms(true)
 
-  implicit val Sbt = Sbt1 // alias for latest Sbt dialect.
+  implicit val Sbt: Dialect = Sbt1 // alias for latest Sbt dialect.
 
-  implicit val Typelevel212 = Scala212
+  implicit val Typelevel212: Dialect = Scala212
     .withAllowLiteralTypes(true)
 
   @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
-  implicit val Paradise212 = Scala212
+  implicit val Paradise212: Dialect = Scala212
     .withAllowInlineMods(true)
 
   @deprecated("Scalameta macro annotations are no longer supported", "4.3.11")
-  implicit val ParadiseTypelevel212 = Typelevel212
+  implicit val ParadiseTypelevel212: Dialect = Typelevel212
     .withAllowInlineMods(true)
 
-  implicit val Scala30 = Scala213
+  implicit val Scala30: Dialect = Scala213
     // there 3 different ways to specify vargs, some will be removed in future Scala 3 versions
     .withAllowAtForExtractorVarargs(true) // both @ and : work currently for Scala 3
     .withAllowColonForExtractorVarargs(true) // both @ and : work currently for Scala 3
@@ -146,21 +146,21 @@ package object dialects {
     .withUseInfixTypePrecedence(true)
     .withAllowInfixOperatorAfterNL(true)
 
-  implicit val Scala31 = Scala30
+  implicit val Scala31: Dialect = Scala30
 
-  implicit val Scala32 = Scala31
+  implicit val Scala32: Dialect = Scala31
 
-  implicit val Scala33 = Scala32
+  implicit val Scala33: Dialect = Scala32
     .withAllowFewerBraces(true)
     .withAllowParamClauseInterleaving(true)
 
-  implicit val Scala3 = Scala33
+  implicit val Scala3: Dialect = Scala33
 
-  implicit val Scala3Future = Scala3
+  implicit val Scala3Future: Dialect = Scala3
     .withAllowUnderscoreAsTypePlaceholder(true)
 
   @deprecated("Use Scala3 instead", "4.4.2")
-  implicit val Dotty = Scala3
+  implicit val Dotty: Dialect = Scala3
 
   private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
     require(!underlying.allowUnquotes)
