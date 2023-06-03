@@ -2567,4 +2567,52 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("newline within self-type") {
+    val layout = "trait T2 { self: T => enum T2Enum { case EnumCase } }"
+    val tree = Defn.Trait(
+      Nil,
+      pname("T2"),
+      Nil,
+      ctor,
+      Template(
+        Nil,
+        Nil,
+        self("self", "T"),
+        Defn.Enum(
+          Nil,
+          pname("T2Enum"),
+          Nil,
+          ctor,
+          Template(
+            Nil,
+            Nil,
+            slf,
+            List(Defn.EnumCase(Nil, tname("EnumCase"), Nil, ctor, Nil)),
+            Nil
+          )
+        ) :: Nil,
+        Nil
+      )
+    )
+    runTestAssert[Stat](
+      """|trait T2 {
+         |  self:
+         |    T =>
+         |  enum T2Enum:
+         |    case EnumCase
+         |}""".stripMargin,
+      assertLayout = Some(layout)
+    )(tree)
+    runTestAssert[Stat](
+      """|trait T2:
+         |  self:
+         |    T
+         |    =>
+         |  enum T2Enum:
+         |    case EnumCase
+         |""".stripMargin,
+      assertLayout = Some(layout)
+    )(tree)
+  }
+
 }
