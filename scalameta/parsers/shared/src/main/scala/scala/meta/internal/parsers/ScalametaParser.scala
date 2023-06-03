@@ -166,20 +166,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     LazyTokenIterator(scannerTokens)
   }
 
-  private def currentIndentation: Int = {
-    in.currentIndentation
-  }
-
-  private def previousIndentation: Int = {
-    in.previousIndentation
-  }
-
   @inline def tokenPos = in.tokenPos
   @inline def prevTokenPos = in.prevTokenPos
-  def token = in.token
+  @inline def token = in.token
+  @inline def prevToken = in.prevToken
   @inline def peekIndex = in.peekIndex
   @inline def peekToken = in.peekToken
-  def next() = in.next()
+  @inline def next() = in.next()
   def nextTwice() = { next(); next() }
 
   @inline private def nextIf(cond: Boolean): Boolean = {
@@ -1356,7 +1349,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def newLineOptWhenFollowedBySignificantIndentationAnd(cond: Token => Boolean): Boolean = {
     token.is[LF] && {
-      val prev = currentIndentation
+      val prev = in.currentIndentation
       prev >= 0 && nextIf(cond(peekToken) && in.peekIndentation > prev)
     }
   }
@@ -1705,7 +1698,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case ParamLike() => // 4-5
             location == BlockStat ||
             tokens(startPos).is[LeftParen] &&
-            in.prevToken.is[RightParen]
+            prevToken.is[RightParen]
           case Term.Tuple(xs) => xs.forall(ParamLike.unapply) // 6
           case _ => false
         }
@@ -2138,7 +2131,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             next()
             template(enumCaseAllowed = false, secondaryConstructorAllowed = false) match {
               case trivial @ Template(Nil, List(init), Self(Name.Anonymous(), None), Nil) =>
-                if (!in.prevToken.is[RightBrace]) Term.New(init)
+                if (!prevToken.is[RightBrace]) Term.New(init)
                 else Term.NewAnonymous(trivial)
               case other =>
                 Term.NewAnonymous(other)
@@ -4226,7 +4219,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (!dialect.allowSignificantIndentation)
       refinementInBraces(innerType, -1)
     else if (!token.isAny[Colon, KwWith])
-      refinementInBraces(innerType, previousIndentation + 1)
+      refinementInBraces(innerType, in.previousIndentation + 1)
     else if (tryAhead[Indentation.Indent] || tryAhead(in.observeIndented()))
       Some(refineWith(innerType, indented(refineStatSeq())))
     else innerType
@@ -4236,7 +4229,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val notRefined = token match {
       case t: LeftBrace =>
         dialect.allowSignificantIndentation &&
-        in.prevToken.pos.endLine < t.pos.endLine &&
+        prevToken.pos.endLine < t.pos.endLine &&
         t.pos.startColumn < minIndent
       case _: LF =>
         dialect.allowSignificantIndentation &&
