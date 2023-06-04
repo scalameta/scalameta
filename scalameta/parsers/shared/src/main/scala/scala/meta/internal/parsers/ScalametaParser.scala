@@ -882,6 +882,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val base = ctx.stack
       @inline def reduce(rhs: ctx.Typ, op: Option[ctx.Op]): ctx.Typ =
         ctx.reduceStack(base, rhs, rhs, op)
+      def getNextRhs(op: ctx.Op, rhs: ctx.Typ): ctx.Typ = {
+        newLineOptWhenFollowedBy[TypeIntro]
+        ctx.push(ctx.UnfinishedInfix(reduce(rhs, Some(op)), op))
+        compoundType(inMatchType = inMatchType)
+      }
       @tailrec
       def loop(rhs: ctx.Typ): ctx.Typ = token match {
         case Ident("*") if (peekToken match {
@@ -890,10 +895,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             }) => // we assume that this is a type specification for a vararg parameter
           reduce(rhs, None)
         case _: Ident | _: Unquote =>
-          val op = typeName()
-          newLineOptWhenFollowedBy[TypeIntro]
-          ctx.push(ctx.UnfinishedInfix(reduce(rhs, Some(op)), op))
-          loop(compoundType(inMatchType = inMatchType))
+          loop(getNextRhs(typeName(), rhs))
         case _ =>
           reduce(rhs, None)
       }
