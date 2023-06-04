@@ -1946,6 +1946,35 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         at = at
       )
 
+  private def tryGetNextInfixOpIfLeading[A <: Name](startPos: Int)(f: String => A): Option[A] =
+    peekToken match {
+      case opToken: Ident if opToken.isIdentSymbolicInfixOperator =>
+        tryAhead {
+          val opIndex = tokenPos
+          next()
+          newLineOpt()
+          val argToken = token
+          val opPos = opToken.pos
+          val argPos = argToken.pos
+          val opLine = opPos.startLine
+          val argLine = argPos.startLine
+          val opCol = opPos.startColumn
+          val okInfix = canBeLeadingInfixArg(argToken, tokenPos) && {
+            if (opLine == argLine) opPos.endColumn < argPos.startColumn // space on same line
+            else opLine == argLine - 1 && opCol <= argPos.startColumn // indent on next line
+          }
+          if (okInfix) Some(atPos(opIndex)(f(opToken.value)))
+          else {
+            val indentedWithoutArg = opLine != argLine &&
+              opCol > scannerTokens.getTokenAtLineStart(startPos).pos.startColumn
+            if (indentedWithoutArg)
+              syntaxError(s"Invalid indented leading infix operator found", at = opToken)
+            None
+          }
+        }
+      case _ => None
+    }
+
   def postfixExpr(allowRepeated: Boolean, location: Location = NoStat): Term = {
     val startPos = tokenPos
 
@@ -2009,33 +2038,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         }
       }
 
-      def tryGetNextRhsIfLeading: Option[Either[Term, Term]] = peekToken match {
-        case opToken: Ident if opToken.isIdentSymbolicInfixOperator =>
-          tryAhead {
-            val op = atCurPosNext(Term.Name(opToken.value))
-            newLineOpt()
-            val argToken = token
-            val opPos = opToken.pos
-            val argPos = argToken.pos
-            val opLine = opPos.startLine
-            val argLine = argPos.startLine
-            val opCol = opPos.startColumn
-            val okInfix = canBeLeadingInfixArg(argToken, tokenPos) && {
-              if (opLine == argLine) opPos.endColumn < argPos.startColumn // space on same line
-              else opLine == argLine - 1 && opCol <= argPos.startColumn // indent on next line
-            }
-            if (okInfix) Some(Right(getNextRhs(op, autoPos(Type.ArgClause(Nil)))))
-            else {
-              val indentedWithoutArg = opLine != argLine &&
-                opCol > scannerTokens.getTokenAtLineStart(startPos).pos.startColumn
-              if (indentedWithoutArg)
-                syntaxError(s"Invalid indented leading infix operator found", at = opToken)
-              None
-            }
-          }
-        case _ => None
-      }
-
       val resOpt = token match {
         case t: Unquote =>
           val op = unquote[Term.Name](t)
@@ -2048,7 +2050,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val lhs = getPrevLhs(op)
           Some(Right(matchClause(lhs, lhs.startTokenPos)))
         case _: LF if dialect.allowInfixOperatorAfterNL =>
-          tryGetNextRhsIfLeading
+          tryGetNextInfixOpIfLeading(startPos)(Term.Name.apply).map { op =>
+            Right(getNextRhs(op, autoPos(Type.ArgClause(Nil))))
+          }
         case _ => None
       }
       resOpt match {
