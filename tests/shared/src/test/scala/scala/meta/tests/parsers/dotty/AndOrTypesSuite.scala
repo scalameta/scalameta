@@ -95,4 +95,48 @@ class AndOrTypesSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("#3119") {
+    val layout =
+      """|object A {
+         |  type AllTraits = Trait1 & Trait2 & Trait3
+         |  (& Trait4 &).Trait5
+         |}
+         |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      Template(
+        Nil,
+        Nil,
+        slf,
+        List(
+          Defn.Type(
+            Nil,
+            pname("AllTraits"),
+            Nil,
+            Type.ApplyInfix(
+              Type.ApplyInfix(pname("Trait1"), pname("&"), pname("Trait2")),
+              pname("&"),
+              pname("Trait3")
+            ),
+            noBounds
+          ),
+          Term.Select(
+            Term.ApplyInfix(tname("&"), tname("Trait4"), Nil, List(tname("&"))),
+            tname("Trait5")
+          )
+        ),
+        Nil
+      )
+    )
+    runTestAssert[Stat](
+      """|object A:
+         |  type AllTraits = Trait1 & Trait2 & Trait3
+         |    & Trait4 & Trait5
+         |""".stripMargin,
+      Some(layout)
+    )(tree)
+  }
+
 }
