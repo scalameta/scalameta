@@ -896,6 +896,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           reduce(rhs, None)
         case _: Ident | _: Unquote =>
           loop(getNextRhs(typeName(), rhs))
+        case _: LF if dialect.allowInfixOperatorAfterNL =>
+          tryGetNextInfixOpIfLeading(t.startTokenPos)(Type.Name.apply) match {
+            case Some(op) => loop(getNextRhs(op, rhs))
+            case _ => reduce(rhs, None)
+          }
         case _ =>
           reduce(rhs, None)
       }
