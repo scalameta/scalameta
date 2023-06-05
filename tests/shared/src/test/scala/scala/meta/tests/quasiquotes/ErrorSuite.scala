@@ -436,7 +436,7 @@ class ErrorSuite extends FunSuite {
       val p"$ref[..$tpes](..$pats)" = p"x[A, B]"
     """).replace("\r", ""),
       """
-      |<macro>:4: pattern must be a value
+      |<macro>:4: pattern must be a value or have parens: x[A, B]
       |      val p"$ref[..$tpes](..$pats)" = p"x[A, B]"
       |                                               ^
     """.trim.stripMargin.replace("\r", "")
