@@ -539,7 +539,7 @@ class TypeSuite extends BaseDottySuite {
           Nil,
           Type.Bounds(
             None,
-            Some(Type.Apply(pname("C"), List(Type.Wildcard(noBounds))))
+            Some(Type.AnonymousLambda(Type.Apply(pname("C"), List(Type.AnonymousParam(None)))))
           ),
           Nil,
           Nil
@@ -550,7 +550,7 @@ class TypeSuite extends BaseDottySuite {
           Term.Select(tname("bar"), tname("baz")),
           List(
             Type.Wildcard(noBounds),
-            Type.Apply(pname("F"), List(Type.Wildcard(Type.Bounds(None, None))))
+            Type.AnonymousLambda(Type.Apply(pname("F"), List(Type.AnonymousParam(None))))
           )
         )
       )
@@ -592,9 +592,11 @@ class TypeSuite extends BaseDottySuite {
     runTestAssert[Stat]("gr.pure[Resource[F, _]]")(
       Term.ApplyType(
         Term.Select(tname("gr"), tname("pure")),
-        Type.Apply(
-          pname("Resource"),
-          List(pname("F"), Type.Wildcard(noBounds))
+        Type.AnonymousLambda(
+          Type.Apply(
+            pname("Resource"),
+            List(pname("F"), Type.AnonymousParam(None))
+          )
         ) :: Nil
       )
     )

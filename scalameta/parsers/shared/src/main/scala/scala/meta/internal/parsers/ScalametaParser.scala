@@ -809,7 +809,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
     def entrypointType(): Type = paramType()
 
-    def typeArgs(): Type.ArgClause = autoPos(inBrackets(types()).reduceWith(Type.ArgClause.apply))
+    def typeArgs(): Type.ArgClause =
+      TypeBracketsContext.within(autoPos(inBrackets(types()).reduceWith(Type.ArgClause.apply)))
 
     def infixTypeOrTuple(inMatchType: Boolean = false): Type = {
       if (token.is[LeftParen]) tupleInfixType(allowFunctionType = !inMatchType)
@@ -959,7 +960,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Type.Macro(macroSplice())
         case _: Underscore if inMatchType =>
           next(); Type.PatWildcard()
-        case _: Underscore if dialect.allowUnderscoreAsTypePlaceholder =>
+        case _: Underscore
+            if dialect.allowUnderscoreAsTypePlaceholder ||
+              dialect.allowTypeLambdas &&
+              TypeBracketsContext.isDeeper(1) && !peekToken.isAny[Supertype, Subtype] =>
           next(); Type.AnonymousParam(None)
         case _: Underscore =>
           wildcardType()
@@ -3202,9 +3206,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       ctxBoundsAllowed: Boolean,
       allowUnderscore: Boolean = true
   ): Type.ParamClause = {
-    autoPos(inBrackets(commaSeparated {
+    TypeBracketsContext.within(autoPos(inBrackets(commaSeparated {
       typeParam(ownerIsType, ctxBoundsAllowed, allowUnderscore)
-    }.reduceWith(Type.ParamClause.apply)))
+    }.reduceWith(Type.ParamClause.apply))))
   }
 
   def typeParam(
