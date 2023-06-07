@@ -147,6 +147,7 @@ package object dialects {
     .withAllowInfixOperatorAfterNL(true)
 
   implicit val Scala31: Dialect = Scala30
+    .withAllowErasedDefs(true)
 
   implicit val Scala32: Dialect = Scala31
 
