@@ -2568,7 +2568,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
   }
 
   test("newline within self-type") {
-    val layout = "trait T2 { self: T => enum T2Enum { case EnumCase } }"
+    val layout =
+      """|trait T2 {
+         |  self(T => {})
+         |  enum T2Enum { case EnumCase }
+         |}
+         |""".stripMargin
     val tree = Defn.Trait(
       Nil,
       pname("T2"),
@@ -2577,20 +2582,26 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Template(
         Nil,
         Nil,
-        self("self", "T"),
-        Defn.Enum(
-          Nil,
-          pname("T2Enum"),
-          Nil,
-          ctor,
-          Template(
+        slf,
+        List(
+          Term.Apply(
+            tname("self"),
+            List(Term.Function(List(tparam(Nil, "T")), Term.Block(Nil)))
+          ),
+          Defn.Enum(
             Nil,
+            pname("T2Enum"),
             Nil,
-            slf,
-            List(Defn.EnumCase(Nil, tname("EnumCase"), Nil, ctor, Nil)),
-            Nil
+            ctor,
+            Template(
+              Nil,
+              Nil,
+              slf,
+              List(Defn.EnumCase(Nil, tname("EnumCase"), Nil, ctor, Nil)),
+              Nil
+            )
           )
-        ) :: Nil,
+        ),
         Nil
       )
     )

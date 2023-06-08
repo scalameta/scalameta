@@ -150,16 +150,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @inline private def isColonIndent(): Boolean = token.is[Colon] && isIndentAfter()
   @inline private def isIndentAfter(): Boolean = peekToken.is[Indentation.Indent]
 
-  @tailrec
-  private def isEolAfter(index: Int): Boolean = {
-    val nextIndex = getNextSafeIndex(index)
-    tokens(nextIndex) match {
-      case _: AtEOLorF | MultilineComment() => true
-      case _: Trivia => isEolAfter(nextIndex)
-      case _ => false
-    }
-  }
-
   /* ------------- PARSER-SPECIFIC TOKENS -------------------------------------------- */
 
   var in: TokenIterator = {
@@ -1609,6 +1599,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }))(location)
   }
 
+  private def isEolAfterColonFewerBracesBody(): Boolean = peekToken match {
+    case _: Indentation.Indent => true
+    case _: Indentation | _: LF => syntaxError("expected fewer-braces method body", token)
+    case _ => false
+  }
+
   private def exprOtherRest(
       startPos: Int,
       prefix: Term,
@@ -1628,10 +1624,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           t = addPos(Term.Assign(t, expr(location = NoStat, allowRepeated = true)))
         case _ =>
       }
-    } else if (token.is[Colon] && dialect.allowFewerBraces && isEolAfter(tokenPos)) {
+    } else if (token.is[Colon] && dialect.allowFewerBraces && isEolAfterColonFewerBracesBody()) {
       val colonPos = tokenPos
       next()
-      if (!in.observeIndented()) syntaxError("expected fewer-braces method body", prevToken)
       val args = blockExpr(allowRepeated = false)
       val argClause = autoEndPos(colonPos)(Term.ArgClause(args :: Nil))
       val arguments = addPos(Term.Apply(t, argClause))
@@ -2242,9 +2237,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _: Colon if canApply && dialect.allowFewerBraces =>
         val colonPos = tokenPos
         // map:
-        val argsOpt = if (isEolAfter(colonPos)) Some {
+        val argsOpt = if (isEolAfterColonFewerBracesBody()) Some {
           next()
-          if (!in.observeIndented()) syntaxError("expected fewer-braces method body", prevToken)
           blockExpr(allowRepeated = false)
         }
         else
@@ -4050,13 +4044,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _ =>
         return None
     }
-    val decltpe = token match {
-      case Colon() =>
-        next()
-        Some(startInfixType())
-      case _ =>
-        None
-    }
+    val decltpe =
+      if (!acceptOpt[Colon]) None
+      else if (token.isAny[Indentation, LF]) None // fewer braces
+      else Some(startInfixType())
     Some(autoEndPos(name)(Self(name, decltpe)))
   }
 

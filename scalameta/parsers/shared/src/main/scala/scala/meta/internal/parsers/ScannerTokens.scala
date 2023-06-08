@@ -575,6 +575,19 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case (_: RegionControl) :: xs => currRef(xs)
           case xs => currRef(xs)
         }
+      case _: KwDef | _: KwVal | _: KwVar
+          if dialect.allowSignificantIndentation && !prev.is[soft.KwEnd] =>
+        currRef(RegionDefMark :: sepRegions)
+      case _: Colon =>
+        sepRegions match {
+          case RegionDefMark :: rs => currRef(RegionDefType :: rs)
+          case rs => currRef(rs)
+        }
+      case _: Equals =>
+        sepRegions match {
+          case (_: RegionDefDecl) :: rs => currRef(rs)
+          case rs => currRef(rs)
+        }
       case _: KwExtends => getTemplateInherit(sepRegions)
       case _: Ident =>
         curr.text match {
@@ -655,6 +668,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           next.isNot[CantStartStat])
           (regions match {
             case Nil => Some(regions)
+            case RegionDefType :: rs if !next.isAny[LeftParen, LeftBracket, Equals] => Some(rs)
             // `extends` and `with` are covered by canEndStat() and CantStartStat above
             case RegionTemplateMark :: rs if !next.isAny[LeftBrace, soft.KwDerives] => Some(rs)
             case RegionTemplateInherit :: rs if !next.isAny[LeftBrace, soft.KwDerives] =>
@@ -762,16 +776,37 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                 val ok = next.is[KwCase] && sepRegions.headOption.contains(RegionCaseMark)
                 if (ok) emitIndent(sepRegions) else None
               case _: Colon =>
+                /**
+                 * Colon with NL can appear in several contexts:
+                 *   - after package/class/etc: handled with RegionColonEol
+                 *   - after variable and before its type:
+                 *     - within `def`, `val`, `var` declaration or definition: excluded with
+                 *       RegionDefMark
+                 *     - cast within an argument expression: doesn't allow newline as it can then be
+                 *       confused with a fewer-braces invocation
+                 *     - within self-type: not allowed by the compiler
+                 *   - after fewer-braces method call: will apply if not handled otherwise
+                 */
+                def couldBeFewerBraces(): Boolean =
+                  dialect.allowFewerBraces && !sepRegions.contains(RegionDefMark) &&
+                    getPrevToken(prevPos).isAny[Ident, CloseDelim]
                 sepRegions match {
                   case (_: RegionTemplateDecl) :: rs =>
                     if (exceedsIndent) emitIndent(RegionTemplateBody :: rs)
                     else if (next.is[soft.KwEnd]) emitIndentAndOutdent(rs)
                     else Some(Right(lastWhitespaceToken(rs)))
-                  case _ if !exceedsIndent => None
+                  case (_: RegionDefDecl) :: _ => None
+                  case rs if !exceedsIndent =>
+                    if (couldBeFewerBraces()) Some(Right(lastWhitespaceToken(rs)))
+                    else None
                   case _ =>
                     next match {
                       // RefineDcl
                       case _: KwVal | _: KwDef | _: KwType | _: Semicolon => emitIndent(sepRegions)
+                      // fewer braces partial function
+                      case _: KwCase => emitIndent(RegionCaseMark :: sepRegions)
+                      // fewer braces function (although could be self-type)
+                      case _ if couldBeFewerBraces() => emitIndent(sepRegions)
                       case _ => None
                     }
                 }
