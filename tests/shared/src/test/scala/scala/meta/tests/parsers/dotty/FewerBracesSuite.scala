@@ -628,45 +628,25 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("#3164 empty argument 1") {
-    runTestAssert[Stat](
+    runTestError[Stat](
       """|object a:
          |  test("foo"):
          |""".stripMargin,
-      Some("""object a { test("foo") {} }""")
-    )(
-      Defn.Object(
-        Nil,
-        tname("a"),
-        Template(
-          Nil,
-          Nil,
-          slf,
-          List(Term.Apply(Term.Apply(tname("test"), List(str("foo"))), List(Term.Block(Nil)))),
-          Nil
-        )
-      )
+      """|<input>:2: error: expected fewer-braces method body
+         |  test("foo"):
+         |             ^""".stripMargin
     )
   }
 
   test("#3164 empty argument 2") {
-    runTestAssert[Stat](
+    runTestError[Stat](
       """|object a:
          |  foo :
          |  bar
          |""".stripMargin,
-      Some("object a { foo(bar) }")
-    )(
-      Defn.Object(
-        Nil,
-        tname("a"),
-        Template(
-          Nil,
-          Nil,
-          slf,
-          List(Term.Apply(tname("foo"), List(tname("bar")))),
-          Nil
-        )
-      )
+      """|<input>:2: error: expected fewer-braces method body
+         |  foo :
+         |      ^""".stripMargin
     )
   }
 
