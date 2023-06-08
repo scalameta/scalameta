@@ -626,4 +626,80 @@ class FewerBracesSuite extends BaseDottySuite {
       "error: ; expected but . found"
     )
   }
+
+  test("#3164 empty argument 1") {
+    runTestAssert[Stat](
+      """|object a:
+         |  test("foo"):
+         |""".stripMargin,
+      Some("""object a { test("foo") {} }""")
+    )(
+      Defn.Object(
+        Nil,
+        tname("a"),
+        Template(
+          Nil,
+          Nil,
+          slf,
+          List(Term.Apply(Term.Apply(tname("test"), List(str("foo"))), List(Term.Block(Nil)))),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("#3164 empty argument 2") {
+    runTestAssert[Stat](
+      """|object a:
+         |  foo :
+         |  bar
+         |""".stripMargin,
+      Some("object a { foo(bar) }")
+    )(
+      Defn.Object(
+        Nil,
+        tname("a"),
+        Template(
+          Nil,
+          Nil,
+          slf,
+          List(Term.Apply(tname("foo"), List(tname("bar")))),
+          Nil
+        )
+      )
+    )
+  }
+
+  test("#3164 empty argument 3") {
+    runTestAssert[Stat](
+      """|object a:
+         |  foo :
+         |    bar
+         |""".stripMargin,
+      Some("object a { foo(bar) }")
+    )(
+      Defn.Object(
+        Nil,
+        tname("a"),
+        Template(Nil, Nil, slf, List(Term.Apply(tname("foo"), List(tname("bar")))), Nil)
+      )
+    )
+  }
+
+  test("#3164 empty argument 4") {
+    runTestAssert[Stat](
+      """|object a:
+         |  foo
+         |  : bar
+         |""".stripMargin,
+      Some("object a { foo: bar }")
+    )(
+      Defn.Object(
+        Nil,
+        tname("a"),
+        Template(Nil, Nil, slf, List(Term.Ascribe(tname("foo"), pname("bar"))), Nil)
+      )
+    )
+  }
+
 }
