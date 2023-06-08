@@ -40,16 +40,17 @@ private[parsers] class LazyTokenIterator private (
     curr = ref
   }
 
-  private def observeIndented0(f: (Int, List[SepRegion]) => List[SepRegion]): Boolean = {
+  private def observeIndented0(f: List[SepRegion] => List[SepRegion]): Boolean = {
     if (!dialect.allowSignificantIndentation) false
     else {
       val currRegions = curr.regions
       val existingIndent = currRegions.find(_.isIndented).fold(0)(_.indent)
       val (expected, pointPos) = countIndentAndNewlineIndex(tokenPos)
       if (expected > existingIndent) {
-        val regions = f(expected, currRegions)
+        val regions = f(currRegions)
+        val indentRegions = RegionIndent(expected) :: regions
         val indent = mkIndentToken(pointPos)
-        resetCurr(TokenRef(regions, indent, curr.pos, curr.pos, pointPos))
+        resetCurr(TokenRef(indentRegions, indent, curr.pos, curr.pos, pointPos))
         true
       } else false
     }
@@ -68,30 +69,28 @@ private[parsers] class LazyTokenIterator private (
   }
 
   def observeIndented(): Boolean = {
-    observeIndented0 { (i, prev) =>
+    observeIndented0 { prev =>
       /* When adding RegionIndent (we wrap the current code block in indentation)
        * we might no longer need the region added on the current token.
        *
        * In case the region was needed, we will add it again as we haven't yet progressed
        * to the next token.
        */
-      val undoRegionChange = prev match {
+      prev match {
         case RegionParen :: tail if token.is[LeftParen] => tail
         case RegionEnumArtificialMark :: tail if token.is[KwEnum] => tail
         case (_: RegionBrace) :: tail if token.is[LeftBrace] => tail
         case _ => prev
       }
-      RegionIndent(i) :: undoRegionChange
     }
   }
 
   def observeIndentedEnum(): Boolean = {
-    observeIndented0 { (i, prev) =>
-      val nextPrev = prev match {
+    observeIndented0 { prev =>
+      prev match {
         case RegionEnumArtificialMark :: other => other
         case x => x
       }
-      RegionIndent(i) :: nextPrev
     }
   }
 
