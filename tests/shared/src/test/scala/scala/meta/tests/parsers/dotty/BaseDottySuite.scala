@@ -16,25 +16,32 @@ trait BaseDottySuite extends ParseSuite {
 
   final def tname(name: String): Term.Name = Term.Name(name)
   final def tpl(stats: List[Stat]): Template = Template(Nil, Nil, slf, stats)
-  final def tparamval(name: String, tpe: String) =
-    Term.Param(List(Mod.ValParam()), Term.Name(name), Some(pname(tpe)), None)
-  final def tparam(name: String, tpe: Option[Type] = None): Term.Param =
-    Term.Param(Nil, Term.Name(name), tpe, None)
-  final def tparam(name: String, tpe: Type): Term.Param =
-    tparam(name, Option(tpe))
-  final def tparam(name: String, tpe: String): Term.Param =
-    tparam(name, Option(tpe).map(pname))
-  final def tparamInline(name: String, tpe: String) =
-    Term.Param(List(Mod.Inline()), Term.Name(name), Some(pname(tpe)), None)
 
-  final def tparamUsing(name: String, tpe: String) = {
+  final def tparam(mods: List[Mod], name: String, tpe: Option[Type] = None): Term.Param = {
     val nameTree = name match {
       case "" => anon
       case "_" => phName
       case _ => Term.Name(name)
     }
-    Term.Param(List(Mod.Using()), nameTree, Some(pname(tpe)), None)
+    Term.Param(mods, nameTree, tpe, None)
   }
+  final def tparam(name: String, tpe: Option[Type]): Term.Param =
+    tparam(Nil, name, tpe)
+  final def tparam(mods: List[Mod], name: String, tpe: Type): Term.Param =
+    tparam(mods, name, Option(tpe))
+  final def tparam(name: String, tpe: Type): Term.Param =
+    tparam(Nil, name, tpe)
+  final def tparam(mods: List[Mod], name: String, tpe: String): Term.Param =
+    tparam(mods, name, Option(tpe).map(pname))
+  final def tparam(name: String, tpe: String): Term.Param =
+    tparam(Nil, name, tpe)
+
+  final def tparamval(name: String, tpe: String) =
+    tparam(List(Mod.ValParam()), name, tpe)
+  final def tparamInline(name: String, tpe: String) =
+    tparam(List(Mod.Inline()), name, tpe)
+  final def tparamUsing(name: String, tpe: String) =
+    tparam(List(Mod.Using()), name, tpe)
 
   final def pname(name: String): Type.Name = Type.Name(name)
   final def pparam(s: String): Type.Param =
