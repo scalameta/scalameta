@@ -89,4 +89,13 @@ class SoftKeywords(dialect: Dialect) {
     @inline final def unapply(token: Token): Boolean = isEnabled && name == token.text
     @inline final def unapply(token: String): Boolean = isEnabled && name == token
   }
+
+  @classifier
+  trait KwErased {
+    val name = "erased"
+    @inline def isEnabled = dialect.allowErasedDefs
+    @inline final def unapply(token: Token): Boolean = isEnabled && name == token.text
+    @inline final def unapply(token: String): Boolean = isEnabled && name == token
+  }
+
 }

@@ -595,7 +595,7 @@ object TreeSyntax {
       case t: Type.FuncParamClause =>
         t.values match {
           case arg :: Nil if (arg match {
-                case _: Type.Tuple | _: Type.ByName | _: Type.TypedParam => false
+                case _: Type.Tuple | _: Type.ByName | _: Type.FunctionParamOrArg => false
                 case _ => true
               }) =>
             s(arg)
@@ -695,7 +695,8 @@ object TreeSyntax {
         }
       case t: Type.ByName => m(ParamTyp, s(kw("=>"), " ", p(Typ, t.tpe)))
       case t: Type.Var => m(SimpleTyp, s(t.name.value))
-      case t: Type.TypedParam => m(SimpleTyp, s(t.name.value), ": ", p(Typ, t.typ))
+      case t: Type.FunctionArg => m(ParamTyp, w(t.mods, " "), p(Typ, t.tpe))
+      case t: Type.TypedParam => m(SimpleTyp, w(t.mods, " "), s(t.name.value), ": ", p(Typ, t.typ))
       case t: Type.ParamClause => r(t.values, "[", ", ", "]")
       case t: Type.Param =>
         def isVariant(m: Mod) = m.is[Mod.Variant]
@@ -991,6 +992,7 @@ object TreeSyntax {
       case _: Mod.Open => kw("open")
       case _: Mod.Opaque => kw("opaque")
       case _: Mod.Using => kw("using")
+      case _: Mod.Erased => kw("erased")
       case _: Mod.Transparent => kw("transparent")
       case _: Mod.Override => kw("override")
       case _: Mod.Case => kw("case")

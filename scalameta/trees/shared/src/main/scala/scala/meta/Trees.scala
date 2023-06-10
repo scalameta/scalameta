@@ -367,7 +367,22 @@ object Type {
     checkParent(ParentChecks.TypeVar)
   }
 
-  @ast class TypedParam(name: Name, typ: Type) extends Type with Member.Type
+  @branch trait FunctionParamOrArg extends Type {
+    def mods: List[Mod]
+    def nameOpt: Option[Name]
+    def tpe: Type
+  }
+
+  @ast class TypedParam(name: Name, typ: Type, @newField("4.7.8") mods: List[Mod] = Nil)
+      extends FunctionParamOrArg with Member.Type {
+    override def nameOpt: Option[Name] = Some(name)
+    override def tpe: Type = typ
+  }
+
+  @ast class FunctionArg(mods: List[Mod], tpe: Type) extends FunctionParamOrArg {
+    override def nameOpt: Option[Name] = None
+  }
+
   @ast class Param(
       mods: List[Mod],
       name: meta.Name,
@@ -888,6 +903,7 @@ object Mod {
   @ast class Using() extends ParamsType with ArgsType
   @ast class Opaque() extends Mod
   @ast class Transparent() extends Mod
+  @ast class Erased() extends Mod
 }
 
 @branch trait Enumerator extends Tree

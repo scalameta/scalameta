@@ -320,6 +320,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Mod.Case
       |scala.meta.Mod.Contravariant
       |scala.meta.Mod.Covariant
+      |scala.meta.Mod.Erased
       |scala.meta.Mod.Final
       |scala.meta.Mod.Implicit
       |scala.meta.Mod.Infix
@@ -442,6 +443,8 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.Existential
       |scala.meta.Type.FuncParamClause
       |scala.meta.Type.Function
+      |scala.meta.Type.FunctionArg
+      |scala.meta.Type.FunctionParamOrArg
       |scala.meta.Type.FunctionType
       |scala.meta.Type.ImplicitFunction
       |scala.meta.Type.Lambda
