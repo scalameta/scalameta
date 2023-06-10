@@ -3441,7 +3441,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
             Term.Apply(
               Term.Select(tname("tvars"), tname("foreach")),
               Term.Function(
-                Term.ParamClause(List(tparam("tvar"))),
+                Term.ParamClause(List(tparam(Nil, "tvar"))),
                 Term.If(
                   Term.ApplyUnary(tname("!"), tname("tvar")),
                   Term.Apply(tname("includeVar"), List(tname("tvar"))),
