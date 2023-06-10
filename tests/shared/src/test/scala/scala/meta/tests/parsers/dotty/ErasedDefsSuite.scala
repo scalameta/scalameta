@@ -25,11 +25,21 @@ class ErasedDefsSuite extends BaseDottySuite {
 
   test("val with erased lambda") {
     val code = "val lambdaWithErasedEv: (erased Ev, Int) => Int = (erased ev, x) => x + 2"
-    runTestError[Stat](
-      code,
-      """|<input>:1: error: identifier expected but , found
-         |val lambdaWithErasedEv: (erased Ev, Int) => Int = (erased ev, x) => x + 2
-         |                                  ^""".stripMargin
+    runTestAssert[Stat](code)(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("lambdaWithErasedEv"))),
+        Some(
+          Type.Function(
+            List(Type.FunctionArg(List(Mod.Erased()), pname("Ev")), pname("Int")),
+            pname("Int")
+          )
+        ),
+        Term.Function(
+          List(tparam(List(Mod.Erased()), "ev"), tparam(Nil, "x")),
+          Term.ApplyInfix(tname("x"), tname("+"), Nil, List(int(2)))
+        )
+      )
     )
   }
 
@@ -186,11 +196,18 @@ class ErasedDefsSuite extends BaseDottySuite {
 
   test("dependent-type") {
     val code = "val extractor: (erased e: Entry) => e.Key = extractKey"
-    runTestError[Stat](
-      code,
-      """|<input>:1: error: identifier expected but : found
-         |val extractor: (erased e: Entry) => e.Key = extractKey
-         |                        ^""".stripMargin
+    runTestAssert[Stat](code)(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(Term.Name("extractor"))),
+        Some(
+          Type.Function(
+            List(Type.TypedParam(Type.Name("e"), Type.Name("Entry"), List(Mod.Erased()))),
+            Type.Select(Term.Name("e"), Type.Name("Key"))
+          )
+        ),
+        Term.Name("extractKey")
+      )
     )
   }
 

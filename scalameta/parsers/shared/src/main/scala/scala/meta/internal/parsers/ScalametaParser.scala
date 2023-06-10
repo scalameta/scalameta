@@ -654,7 +654,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       var hasTypes = false
 
       @tailrec
-      def paramOrType(): Type = token match {
+      def paramOrType(modsBuf: mutable.Builder[Mod, List[Mod]]): Type = token match {
         case t: Ellipsis =>
           ellipsis[Type](t)
         case t: Unquote =>
@@ -662,7 +662,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case KwImplicit() if !hasImplicits =>
           next()
           hasImplicits = true
-          paramOrType()
+          paramOrType(modsBuf)
         case t: Ident if tryAhead[Colon] =>
           if (hasTypes)
             syntaxError(
@@ -672,7 +672,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           hasParams = true
           val startPos = prevTokenPos
           next() // skip colon
-          autoEndPos(startPos)(Type.TypedParam(identName(t, startPos, Type.Name(_)), typ()))
+          val mods = modsBuf.result()
+          val modPos = if (mods.isEmpty) startPos else mods.head.startTokenPos
+          val name = identName(t, startPos, Type.Name.apply)
+          autoEndPos(modPos)(Type.TypedParam(name, typ(), mods))
+        case soft.KwErased() if allowFunctionType =>
+          paramOrType(modsBuf += atCurPosNext(Mod.Erased()))
         case _ =>
           if (hasParams)
             syntaxError(
@@ -680,11 +685,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               at = token
             )
           hasTypes = true
-          paramType()
+          val mods = modsBuf.result()
+          val tpe = paramType()
+          if (mods.isEmpty) tpe else autoEndPos(mods.head)(Type.FunctionArg(mods, tpe))
       }
 
       val openParenPos = tokenPos
-      val ts = inParensOr(commaSeparated(paramOrType()))(Nil)
+      val ts = inParensOr(commaSeparated(paramOrType(List.newBuilder[Mod])))(Nil)
       // NOTE: can't have this, because otherwise we run into #312
       // newLineOptWhenFollowedBy[LeftParen]
 
@@ -701,10 +708,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _ => None
       })
       (if (allowFunctionType) maybeFunc else None).getOrElse {
-        ts.foreach {
-          case t: Type.ByName => syntaxError("by name type not allowed here", at = t)
-          case t: Type.Repeated => syntaxError("repeated type not allowed here", at = t)
-          case _ =>
+        ts.find {
+          case _: Type.ByName | _: Type.Repeated => true
+          case t: Type.FunctionParamOrArg => t.mods.nonEmpty
+          case _ => false
+        }.foreach { t =>
+          syntaxError(s"'${t.productPrefix}' type not allowed here", at = t)
         }
         val simple = simpleTypeRest(makeTupleType(openParenPos, ts), openParenPos)
         val compound = compoundTypeRest(annotTypeRest(simple, openParenPos), openParenPos)
