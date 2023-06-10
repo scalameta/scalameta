@@ -1638,7 +1638,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
     // Note the absense of `else if` here!!
-    if (token.isAny[RightArrow, ContextArrow]) {
+    val contextFunction = token.is[ContextArrow]
+    if (contextFunction || token.is[RightArrow]) {
       // This is a tricky one. In order to parse lambdas, we need to recognize token sequences
       // like `(...) => ...`, `id | _ => ...` and `implicit id | _ => ...`.
       //
@@ -1666,46 +1667,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       // A funny thing is that scalac's parser tries to disambiguate between self-type annotations and lambdas
       // even if it's not parsing the first statement in the template. E.g. `class C { foo; x => x }` will be
       // a parse error, because `x => x` will be deemed a self-type annotation, which ends up being inapplicable there.
-      val looksLikeLambda = {
-        object NameLike {
-          def unapply(tree: Tree): Boolean = tree match {
-            case Term.Quasi(0, _) => true
-            case Term.Select(Term.Name(soft.KwUsing.name), _) if dialect.allowGivenUsing =>
-              true
-            case Term.Ascribe(Term.Select(Term.Name(soft.KwUsing.name), _), _)
-                if dialect.allowGivenUsing =>
-              true
-            case _: Term.Name => true
-            case Term.Eta(Term.Name(soft.KwUsing.name)) if dialect.allowGivenUsing => true
-            case _: Term.Placeholder => true
-            case _ => false
-          }
-        }
-        object ParamLike {
-          @tailrec
-          def unapply(tree: Tree): Boolean = tree match {
-            case Term.Quasi(0, _) => true
-            case Term.Quasi(1, t) => unapply(t)
-            case NameLike() => true
-            case Term.Ascribe(Term.Quasi(0, _), _) => true
-            case Term.Ascribe(NameLike(), _) => true
-            case _ => false
-          }
-        }
-        t match {
-          case Lit.Unit() => true // 1
-          case NameLike() => location != TemplateStat // 2-3
-          case ParamLike() => // 4-5
-            location == BlockStat ||
-            tokens(startPos).is[LeftParen] &&
-            prevToken.is[RightParen]
-          case Term.Tuple(xs) => xs.forall(ParamLike.unapply) // 6
-          case _ => false
-        }
-      }
-      if (looksLikeLambda) {
-        val params = addPos(convertToParamClause(t))
-        val contextFunction = token.is[ContextArrow]
+      convertToParamClause(t)(
+        isNameAllowed = location != TemplateStat,
+        isParamAllowed = location == BlockStat ||
+          tokens(startPos).is[LeftParen] &&
+          prevToken.is[RightParen]
+      ).foreach { pc =>
+        val params = addPos(pc)
         next()
         val trm = termFunctionBody(location)
         t = addPos {
@@ -1714,10 +1682,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           else
             Term.Function(params, trm)
         }
-      } else {
-        // do nothing, which will either allow self-type annotation parsing to kick in
-        // or will trigger an unexpected token error down the line
       }
+      // if couldn't convert to params:
+      // do nothing, which will either allow self-type annotation parsing to kick in
+      // or will trigger an unexpected token error down the line
     }
     t
   }
@@ -1732,41 +1700,66 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     }
 
-  private def convertToParam(tree: Term): Option[Term.Param] = {
-    def getType: Option[Type] = tree match {
-      case t: Term.Ascribe => Some(t.tpe)
+  private def convertToParam(tree: Tree): Option[Term.Param] = {
+    def getModFromName(name: Name): Option[Mod] = name.value match {
+      case soft.KwUsing() => Some(copyPos(name)(Mod.Using()))
       case _ => None
     }
-    @tailrec def getName(t: Tree, nest: Int = 0): Option[Name] = t match {
-      case t: Name => Some(t)
-      case t: Quasi => Some(t.become[Term.Name])
-      case t: Term.Select => Some(t.name)
-      case t: Term.Placeholder => Some(copyPos(t)(Name.Placeholder()))
-      case t: Term.Eta => Some(atPos(t.endTokenPos)(Name.Placeholder()))
-      case t: Term.Ascribe if nest == 0 => getName(t.expr, 1)
+    def getMod(t: Tree, mods: List[Mod] = Nil): Option[List[Mod]] = t match {
+      case t: Term.Name => getModFromName(t).map(_ :: mods)
       case _ => None
     }
-    @tailrec def getMod(t: Tree, nest: Int = 0): List[Mod.ParamsType] = t match {
-      case _: Quasi => Nil
-      case t: Term.Ascribe if nest == 0 => getMod(t.expr, 1)
-      case t: Term.Select if nest <= 1 => getMod(t.qual, 2)
-      case t: Term.Eta => getMod(t.expr, 2)
-      case t @ Term.Name(soft.KwUsing.name) => copyPos(t)(Mod.Using()) :: Nil
-      case _ => Nil
+    def getNameAndMod(t: Tree): Option[(Name, List[Mod])] = t match {
+      case t: Name => Some((t, Nil))
+      case t: Quasi => Some((t.become[Term.Name], Nil))
+      case t: Term.Select => getMod(t.qual).map((t.name, _))
+      case t: Term.Placeholder => Some((copyPos(t)(Name.Placeholder()), Nil))
+      case t: Term.Eta => getMod(t.expr).map((atPos(t.endTokenPos)(Name.Placeholder()), _))
+      case _ => None
     }
+
     tree match {
       case q: Quasi => Some(q.become[Term.Param])
       case _: Lit.Unit => None
+      case t: Term.Ascribe =>
+        getNameAndMod(t.expr).map { case (name, mod) =>
+          copyPos(t)(Term.Param(mod, name, Some(t.tpe), None))
+        }
       case t =>
-        val name = getName(t).getOrElse(syntaxError("not a legal formal parameter", at = t))
-        Some(copyPos(t)(Term.Param(getMod(t), name, getType, None)))
+        getNameAndMod(t).map { case (name, mod) =>
+          copyPos(t)(Term.Param(mod, name, None, None))
+        }
     }
   }
 
-  private def convertToParamClause(tree: Term): Term.ParamClause = (tree match {
-    case Term.Tuple(ts) => ts.flatMap(convertToParam)
-    case _ => convertToParam(tree).toList
-  }).reduceWith(toParamClause(None))
+  private def convertToParamClause(tree: Term)(
+      isNameAllowed: => Boolean,
+      isParamAllowed: => Boolean
+  ): Option[Term.ParamClause] =
+    (tree match {
+      case _: Lit.Unit => Some(Nil)
+      case q: Quasi =>
+        q.rank match {
+          case 0 if isNameAllowed => Some(q.become[Term.Param] :: Nil)
+          case 1 if isParamAllowed => Some(q.become[Term.Param] :: Nil)
+          case _ => None
+        }
+      case t: Term.Tuple =>
+        val params = new ListBuffer[Term.Param]
+        @tailrec def iter(ts: List[Term]): Option[List[Term.Param]] = ts match {
+          case Nil => Some(params.toList)
+          case head :: tail =>
+            convertToParam(head) match {
+              case None => None
+              case Some(p) => params += p; iter(tail)
+            }
+        }
+        iter(t.args)
+      case t =>
+        convertToParam(t)
+          .filter(p => if (p.decltpe.isEmpty && p.mods.isEmpty) isNameAllowed else isParamAllowed)
+          .map(_ :: Nil)
+    }).map(_.reduceWith(toParamClause(None)))
 
   def implicitClosure(location: Location): Term.Function = {
     require(token.isNot[KwImplicit] && debug(token))
@@ -2251,10 +2244,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
              * Without manual handling here, filter would be included for `(a+1).filter`
              */
             val param = simpleExpr(allowRepeated = false)
-            if (peekToken.is[Indentation.Indent]) {
-              val contextFunction = token.is[ContextArrow]
-              if (contextFunction || token.is[RightArrow]) Some {
-                val params = autoEndPos(paramPos)(convertToParamClause(param))
+            val contextFunction = token.is[ContextArrow]
+            if ((contextFunction || token.is[RightArrow]) && peekToken.is[Indentation.Indent])
+              convertToParamClause(param)(true, true).map { pc =>
+                val params = autoEndPos(paramPos)(pc)
                 next()
                 val trm = blockExpr(allowRepeated = false)
                 autoEndPos(paramPos) {
@@ -2264,8 +2257,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                     Term.Function(params, trm)
                 }
               }
-              else None
-            } else None
+            else None
           }.getOrElse(None))
 
         argsOpt match {
