@@ -1718,16 +1718,50 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private def convertToParam(tree: Tree): Option[Term.Param] = {
     def getModFromName(name: Name): Option[Mod] = name.value match {
       case soft.KwUsing() => Some(copyPos(name)(Mod.Using()))
+      case soft.KwErased() => Some(copyPos(name)(Mod.Erased()))
       case _ => None
     }
+    @tailrec
     def getMod(t: Tree, mods: List[Mod] = Nil): Option[List[Mod]] = t match {
       case t: Term.Name => getModFromName(t).map(_ :: mods)
+      case t: Term.Select =>
+        getModFromName(t.name) match {
+          case Some(mod) => getMod(t.qual, mod :: mods)
+          case _ => None
+        }
+      case t: Term.ApplyInfix =>
+        t.args match {
+          case (n: Name) :: Nil if t.targs.isEmpty =>
+            val mOpt = for {
+              m1 <- getModFromName(t.op)
+              m2 <- getModFromName(n)
+            } yield m1 :: m2 :: mods
+            mOpt match {
+              case Some(m) => getMod(t.lhs, m)
+              case _ => None
+            }
+          case _ => None
+        }
       case _ => None
     }
     def getNameAndMod(t: Tree): Option[(Name, List[Mod])] = t match {
       case t: Name => Some((t, Nil))
       case t: Quasi => Some((t.become[Term.Name], Nil))
       case t: Term.Select => getMod(t.qual).map((t.name, _))
+      case t: Term.ApplyInfix =>
+        t.args match {
+          case arg :: Nil if t.targs.isEmpty =>
+            for {
+              mod <- getModFromName(t.op)
+              name <- arg match {
+                case n: Term.Placeholder => Some(copyPos(n)(Name.Placeholder()))
+                case n: Name => Some(n)
+                case _ => None
+              }
+              mods <- getMod(t.lhs, mod :: Nil)
+            } yield (name, mods)
+          case _ => None
+        }
       case t: Term.Placeholder => Some((copyPos(t)(Name.Placeholder()), Nil))
       case t: Term.Eta => getMod(t.expr).map((atPos(t.endTokenPos)(Name.Placeholder()), _))
       case _ => None

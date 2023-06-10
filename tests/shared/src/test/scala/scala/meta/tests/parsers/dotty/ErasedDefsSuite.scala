@@ -84,41 +84,64 @@ class ErasedDefsSuite extends BaseDottySuite {
       """|List(1, 2, 3).map {
          |  (using erased i: Int) => i
          |}""".stripMargin
-    runTestError[Stat](
-      code,
-      """|<input>:2: error: ; expected but => found
-         |  (using erased i: Int) => i
-         |                        ^""".stripMargin
+    runTestAssert[Stat](code)(
+      Term.Apply(
+        Term.Select(
+          Term.Apply(tname("List"), List(int(1), int(2), int(3))),
+          tname("map")
+        ),
+        Term.Block(
+          Term.Function(
+            List(tparam(List(Mod.Using(), Mod.Erased()), "i", "Int")),
+            tname("i")
+          ) :: Nil
+        ) :: Nil
+      )
     )
   }
 
   test("anonymous-method 1") {
     val code = "val fun = (using erased ctx: Context) => ctx.open"
-    runTestError[Stat](
-      code,
-      """|<input>:1: error: ; expected but => found
-         |val fun = (using erased ctx: Context) => ctx.open
-         |                                      ^""".stripMargin
+    runTestAssert[Stat](code)(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("fun"))),
+        None,
+        Term.Function(
+          List(tparam(List(Mod.Using(), Mod.Erased()), "ctx", "Context")),
+          Term.Select(tname("ctx"), tname("open"))
+        )
+      )
     )
   }
 
   test("anonymous-method 2") {
     val code = "val fun = (using erased ctx) => ctx.open"
-    runTestError[Stat](
-      code,
-      """|<input>:1: error: ; expected but => found
-         |val fun = (using erased ctx) => ctx.open
-         |                             ^""".stripMargin
+    runTestAssert[Stat](code)(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("fun"))),
+        None,
+        Term.Function(
+          List(tparam(List(Mod.Using(), Mod.Erased()), "ctx")),
+          Term.Select(tname("ctx"), tname("open"))
+        )
+      )
     )
   }
 
   test("anonymous-method 3") {
     val code = "val fun = (using erased _: Context) => ctx.open"
-    runTestError[Stat](
-      code,
-      """|<input>:1: error: ; expected but => found
-         |val fun = (using erased _: Context) => ctx.open
-         |                                    ^""".stripMargin
+    runTestAssert[Stat](code)(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("fun"))),
+        None,
+        Term.Function(
+          List(tparam(List(Mod.Using(), Mod.Erased()), "_", "Context")),
+          Term.Select(tname("ctx"), tname("open"))
+        )
+      )
     )
   }
 
@@ -128,11 +151,16 @@ class ErasedDefsSuite extends BaseDottySuite {
          |  (using erased ctx: Context) => 3
          |}
          |""".stripMargin
-    runTestError[Stat](
-      code,
-      """|<input>:2: error: ; expected but => found
-         |  (using erased ctx: Context) => 3
-         |                              ^""".stripMargin
+    runTestAssert[Stat](code)(
+      Term.Apply(
+        tname("LazyBody"),
+        Term.Block(
+          Term.Function(
+            List(tparam(List(Mod.Using(), Mod.Erased()), "ctx", "Context")),
+            Lit.Int(3)
+          ) :: Nil
+        ) :: Nil
+      )
     )
   }
 
