@@ -11,11 +11,15 @@ class ErasedDefsSuite extends BaseDottySuite {
 
   test("def with erased params") {
     val code = "def methodWithErasedEv(erased ev: Ev, x: Int): Int = x + 2"
-    runTestError[Stat](
-      code,
-      """|<input>:1: error: : expected but identifier found
-         |def methodWithErasedEv(erased ev: Ev, x: Int): Int = x + 2
-         |                              ^""".stripMargin
+    runTestAssert[Stat](code)(
+      Defn.Def(
+        Nil,
+        tname("methodWithErasedEv"),
+        Nil,
+        List(List(tparam(List(Mod.Erased()), "ev", "Ev"), tparam("x", "Int"))),
+        Some(pname("Int")),
+        Term.ApplyInfix(tname("x"), tname("+"), Nil, List(Lit.Int(2)))
+      )
     )
   }
 
@@ -41,21 +45,35 @@ class ErasedDefsSuite extends BaseDottySuite {
 
   test("def with only one erased param") {
     val code = "def methodWithErasedEv(x: Int, erased ev: Ev): Int = ???"
-    runTestError[Stat](
-      code,
-      """|<input>:1: error: : expected but identifier found
-         |def methodWithErasedEv(x: Int, erased ev: Ev): Int = ???
-         |                                      ^""".stripMargin
+    runTestAssert[Stat](code)(
+      Defn.Def(
+        Nil,
+        tname("methodWithErasedEv"),
+        Nil,
+        List(List(tparam("x", "Int"), tparam(List(Mod.Erased()), "ev", "Ev"))),
+        Some(pname("Int")),
+        tname("???")
+      )
     )
   }
 
   test("def with both using and erased") {
     val code = "def turnedOn(using erased ev: IsOff[S]): Machine[On] = new Machine[On]"
-    runTestError[Stat](
-      code,
-      """|<input>:1: error: identifier expected but : found
-         |def turnedOn(using erased ev: IsOff[S]): Machine[On] = new Machine[On]
-         |                            ^""".stripMargin
+    runTestAssert[Stat](code)(
+      Defn.Def(
+        Nil,
+        tname("turnedOn"),
+        Nil,
+        List(
+          tparam(
+            List(Mod.Erased(), Mod.Using()),
+            "ev",
+            Type.Apply(pname("IsOff"), List(pname("S")))
+          ) :: Nil
+        ),
+        Some(Type.Apply(pname("Machine"), List(pname("On")))),
+        Term.New(Init(Type.Apply(pname("Machine"), List(pname("On"))), anon, Nil))
+      )
     )
   }
 
