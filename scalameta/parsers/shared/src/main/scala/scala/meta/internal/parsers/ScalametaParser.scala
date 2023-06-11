@@ -376,10 +376,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def syntaxErrorExpected[T <: Token](implicit tokenInfo: TokenInfo[T]): Nothing =
     syntaxError(s"${tokenInfo.name} expected but ${token.name} found", at = token)
 
+  def expect[T <: Token: TokenInfo]: Unit = if (!token.is[T]) syntaxErrorExpected[T]
+
   /** Consume one token of the specified type, or signal an error if it is not there. */
-  def accept[T <: Token: TokenInfo]: Unit =
-    if (!token.is[T]) syntaxErrorExpected[T]
-    else if (token.isNot[EOF]) next()
+  def accept[T <: Token: TokenInfo]: Unit = {
+    expect[T]
+    if (token.isNot[EOF]) next()
+  }
 
   /** If current token is T consume it. */
   @inline private def acceptOpt[T: TokenClassifier]: Boolean =
@@ -1135,6 +1138,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def termName(): Term.Name = name(Term.Name(_))
   def typeName(): Type.Name = name(Type.Name(_))
+  @inline private def anonNameEmpty(): Name.Anonymous = autoPos(Name.Anonymous())
+  @inline private def anonName(): Name.Anonymous = atCurPosNext(Name.Anonymous())
+  private def anonThis(): Term.This = atCurPosNext(Term.This(anonNameEmpty()))
 
   def path(thisOK: Boolean = true): Term.Ref = {
     val startsAtBofIfUnquote = dialect.allowUnquotes && getPrevToken(tokenPos).is[BOF]
@@ -1161,7 +1167,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
     }
     def getAnonQual(): Name =
-      try autoPos(Name.Anonymous())
+      try anonNameEmpty()
       finally next()
     def getQual(name: Term.Name): Name = {
       next()
@@ -1201,7 +1207,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         typeName().becomeOr[Name](x => copyPos(x)(Name.Indeterminate(x.value)))
       }
     } else {
-      autoPos(Name.Anonymous())
+      anonNameEmpty()
     }
   }
 
@@ -1393,9 +1399,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     token match {
       case Ident(_) => termName()
       case LeftBrace() => dropTrivialBlock(expr(location = NoStat, allowRepeated = true))
-      case KwThis() =>
-        val qual = autoPos { next(); Name.Anonymous() }
-        copyPos(qual)(Term.This(qual))
+      case _: KwThis => anonThis()
       case _ =>
         syntaxError(
           "error in interpolated string: identifier, `this' or block expected",
@@ -2130,9 +2134,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Success(autoPos {
             next()
             template(enumCaseAllowed = false, secondaryConstructorAllowed = false) match {
-              case trivial @ Template(Nil, List(init), Self(Name.Anonymous(), None), Nil) =>
-                if (!prevToken.is[RightBrace]) Term.New(init)
-                else Term.NewAnonymous(trivial)
+              case Template(Nil, init :: Nil, Self(_: Name.Anonymous, None), Nil)
+                  if !prevToken.is[RightBrace] =>
+                Term.New(init)
               case other =>
                 Term.NewAnonymous(other)
             }
@@ -2800,12 +2804,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   private def accessModifier(mod: Ref => Mod): Mod = autoPos {
     next()
-    if (!acceptOpt[LeftBracket]) mod(autoPos(Name.Anonymous()))
+    if (!acceptOpt[LeftBracket]) mod(anonNameEmpty())
     else {
       val result = mod {
         if (token.is[KwThis]) {
-          val name = autoPos { next(); Name.Anonymous() }
-          copyPos(name)(Term.This(name))
+          anonThis()
         } else {
           termName().becomeOr[Ref](x => copyPos(x)(Name.Indeterminate(x.value)))
         }
@@ -3143,7 +3146,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       })
       .getOrElse {
         val anonymousUsing = mod.exists(_.is[Mod.Using]) && !peekToken.is[Colon]
-        val name = if (anonymousUsing) autoPos(Name.Anonymous()) else termName().become[Name]
+        val name = if (anonymousUsing) anonNameEmpty() else termName().become[Name]
         name match {
           case q: Quasi if endParamQuasi =>
             q.become[Term.Param]
@@ -3493,12 +3496,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
    */
   private def givenDecl(mods: List[Mod]): Stat = autoEndPos(mods) {
     accept[KwGiven]
-    val anonymousName = autoPos(Name.Anonymous())
-
     val (sigName, paramClauseGroup) = tryParse {
       Try {
         val name: meta.Name =
-          if (token.is[Ident]) termName() else anonymousName
+          if (token.is[Ident]) termName() else anonNameEmpty()
         val tparams = typeParamClauseOpt(
           ownerIsType = false,
           ctxBoundsAllowed = true,
@@ -3524,7 +3525,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
          */
         None
       }
-    }.getOrElse((anonymousName, None))
+    }.getOrElse((anonNameEmpty(), None))
 
     val decltype = refinement(None).getOrElse(startModType())
 
@@ -3879,11 +3880,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         annotsBuf(buf, skipNewLines = false, allowArgss = false, insidePrimaryCtorAnnot = true)
         ctorModifiers().foreach(buf += _)
       }
-      val name = autoPos(Name.Anonymous())
+      val name = anonNameEmpty()
       val paramss = termParamClauses(ownerIsType = true, owner == OwnedByCaseClass)
       Ctor.Primary(mods, name, paramss)
     } else if (owner.isTrait) {
-      Ctor.Primary(Nil, autoPos(Name.Anonymous()), Seq.empty)
+      Ctor.Primary(Nil, anonNameEmpty(), Seq.empty)
     } else {
       unreachable(debug(owner))
     }
@@ -3892,8 +3893,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def secondaryCtor(mods: List[Mod]): Ctor.Secondary = autoEndPos(mods) {
     accept[KwDef]
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
-    val name = atCurPos(Name.Anonymous())
-    accept[KwThis]
+    expect[KwThis]
+    val name = anonName()
     if (token.isNot[LeftParen]) {
       syntaxError("auxiliary constructor needs non-implicit parameter list", at = token.pos)
     } else {
@@ -3909,8 +3910,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     accept[KwDef]
-    val name = atCurPos(Name.Anonymous())
-    accept[KwThis]
+    expect[KwThis]
+    val name = anonName()
     val paramss = termParamClauses(ownerIsType = true)
     newLineOptWhenFollowedBy[LeftBrace]
     if (token.is[EOF]) Ctor.Primary(mods, name, paramss)
@@ -3942,7 +3943,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def initInsideConstructor(): Init = {
     def tpe = {
-      val t = autoPos(Term.This(autoPos { accept[KwThis]; Name.Anonymous() }))
+      expect[KwThis]
+      val t = anonThis()
       copyPos(t)(Type.Singleton(t))
     }
     initRest(tpe, allowArgss = true, allowBraces = true)
@@ -3981,7 +3983,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val tpe = typeParser
         if (!allowTypeSingleton && tpe.is[Type.Singleton])
           syntaxError(s"class type required but $tpe found", at = tpe.pos)
-        val name = autoPos(Name.Anonymous())
+        val name = anonNameEmpty()
         val argss = listBy[Term.ArgClause] { argss =>
           @inline def body() = {
             argss += getArgClause()
@@ -4017,7 +4019,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def entrypointSelf(): Self = self()
 
   private def selfEmpty(): Self = {
-    val name = autoPos(Name.Anonymous())
+    val name = anonNameEmpty()
     copyPos(name)(Self(name, None))
   }
 
@@ -4026,10 +4028,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   private def selfOpt(): Option[Self] = {
     val name = token match {
-      case Ident(_) =>
-        termName()
-      case Underscore() | KwThis() =>
-        autoPos { next(); Name.Anonymous() }
+      case _: Ident => termName()
+      case _: Underscore | _: KwThis => anonName()
       case t: Unquote =>
         if (peekToken.is[Colon]) unquote[Name.Quasi](t)
         else return Some(unquote[Self.Quasi](t))
