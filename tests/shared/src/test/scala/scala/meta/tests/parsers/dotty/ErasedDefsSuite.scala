@@ -136,4 +136,14 @@ class ErasedDefsSuite extends BaseDottySuite {
     )
   }
 
+  test("dependent-type") {
+    val code = "val extractor: (erased e: Entry) => e.Key = extractKey"
+    runTestError[Stat](
+      code,
+      """|<input>:1: error: identifier expected but : found
+         |val extractor: (erased e: Entry) => e.Key = extractKey
+         |                        ^""".stripMargin
+    )
+  }
+
 }
