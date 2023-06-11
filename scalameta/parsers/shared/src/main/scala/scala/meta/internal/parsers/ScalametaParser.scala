@@ -2828,7 +2828,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _: KwPrivate if !isLocal => privateModifier()
       case _: KwProtected if !isLocal => protectedModifier()
       case _ =>
-        token.toString match {
+        token.text match {
           case soft.KwInline() => atCurPosNext(Mod.Inline())
           case soft.KwInfix() => atCurPosNext(Mod.Infix())
           case soft.KwOpen() if !isLocal => atCurPosNext(Mod.Open())
@@ -2846,61 +2846,59 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def quasiquoteModifier(): Mod = entrypointModifier()
 
   def entrypointModifier(): Mod = {
+    def fail(t: Token, what: String = "modifier"): Nothing =
+      syntaxError(s"$what expected but ${t.name} found", at = t)
     val mod = token match {
       case t: Unquote => unquote[Mod](t)
-      case At() =>
+      case _: At =>
         annots(skipNewLines = true) match {
-          case annot :: Nil => annot
-          case _ :: other :: _ =>
-            syntaxError(s"end of file expected but ${token.name} found", at = other)
           case Nil => unreachable
+          case annot :: Nil => annot
+          case _ => fail(token, "end of file")
         }
-      case KwPrivate() => privateModifier()
-      case KwProtected() => protectedModifier()
-      case KwImplicit() => atCurPosNext(Mod.Implicit())
-      case KwFinal() => atCurPosNext(Mod.Final())
-      case KwSealed() => atCurPosNext(Mod.Sealed())
-      case KwOverride() => atCurPosNext(Mod.Override())
-      case KwCase() => atCurPosNext(Mod.Case())
-      case KwAbstract() => atCurPosNext(Mod.Abstract())
-      case Ident("+") => atCurPosNext(Mod.Covariant())
-      case Ident("-") => atCurPosNext(Mod.Contravariant())
-      case KwLazy() => atCurPosNext(Mod.Lazy())
-      case KwVal() if !dialect.allowUnquotes => atCurPosNext(Mod.ValParam())
-      case KwVar() if !dialect.allowUnquotes => atCurPosNext(Mod.VarParam())
-      case Ident("valparam") if dialect.allowUnquotes => atCurPosNext(Mod.ValParam())
-      case Ident("varparam") if dialect.allowUnquotes => atCurPosNext(Mod.VarParam())
-      case _ =>
-        token.toString match {
+      case _: KwPrivate => privateModifier()
+      case _: KwProtected => protectedModifier()
+      case _: KwImplicit => atCurPosNext(Mod.Implicit())
+      case _: KwFinal => atCurPosNext(Mod.Final())
+      case _: KwSealed => atCurPosNext(Mod.Sealed())
+      case _: KwOverride => atCurPosNext(Mod.Override())
+      case _: KwCase => atCurPosNext(Mod.Case())
+      case _: KwAbstract => atCurPosNext(Mod.Abstract())
+      case _: KwLazy => atCurPosNext(Mod.Lazy())
+      case _: KwVal if !dialect.allowUnquotes => atCurPosNext(Mod.ValParam())
+      case _: KwVar if !dialect.allowUnquotes => atCurPosNext(Mod.VarParam())
+      case t: Ident =>
+        t.text match {
+          case "+" => atCurPosNext(Mod.Covariant())
+          case "-" => atCurPosNext(Mod.Contravariant())
+          case "valparam" if dialect.allowUnquotes => atCurPosNext(Mod.ValParam())
+          case "varparam" if dialect.allowUnquotes => atCurPosNext(Mod.VarParam())
           case soft.KwOpen() => atCurPosNext(Mod.Open())
           case soft.KwTransparent() => atCurPosNext(Mod.Transparent())
           case soft.KwInline() => atCurPosNext(Mod.Inline())
           case soft.KwInfix() => atCurPosNext(Mod.Infix())
-          case _ =>
-            syntaxError(s"modifier expected but ${parser.token.name} found", at = parser.token)
+          case _ => fail(t)
         }
+      case t => fail(t)
     }
     newLinesOpt()
     mod
   }
 
-  def ctorModifiers(): Option[Mod] = token match {
-    case t: Unquote if peekToken.is[LeftParen] => Some(unquote[Mod](t))
-    case t: Ellipsis => Some(ellipsis[Mod](t, 1))
-    case KwPrivate() => Some(privateModifier())
-    case KwProtected() => Some(protectedModifier())
-    case _ => None
+  private def ctorModifiers(buf: ListBuffer[Mod]): Unit = token match {
+    case t: Unquote => if (peekToken.is[LeftParen]) buf += unquote[Mod](t)
+    case t: Ellipsis => buf += ellipsis[Mod](t, 1)
+    case _: KwPrivate => buf += privateModifier()
+    case _: KwProtected => buf += protectedModifier()
+    case _ =>
   }
 
-  def tparamModifiers(): Option[Mod] = {
-    token match {
-      case t: Unquote =>
-        if (peekToken.isAny[Ident, Unquote]) Some(unquote[Mod](t)) else None
-      case t: Ellipsis => Some(ellipsis[Mod](t, 1))
-      case Ident("+") => Some(atCurPosNext(Mod.Covariant()))
-      case Ident("-") => Some(atCurPosNext(Mod.Contravariant()))
-      case _ => None
-    }
+  private def tparamModifiers(buf: ListBuffer[Mod]): Unit = token match {
+    case t: Unquote => if (peekToken.isAny[Ident, Unquote]) buf += unquote[Mod](t)
+    case t: Ellipsis => buf += ellipsis[Mod](t, 1)
+    case Ident("+") => buf += atCurPosNext(Mod.Covariant())
+    case Ident("-") => buf += atCurPosNext(Mod.Contravariant())
+    case _ =>
   }
 
   def modifiersBuf(
@@ -3207,7 +3205,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   ): Type.Param = autoPos {
     val mods: List[Mod] = listBy[Mod] { buf =>
       annotsBuf(buf, skipNewLines = false)
-      if (ownerIsType) tparamModifiers().foreach(buf += _)
+      if (ownerIsType) tparamModifiers(buf)
     }
     def endTparamQuasi = token.isAny[RightBracket, Comma]
     mods.headOption match {
@@ -3877,7 +3875,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (owner.isClass || (owner.isTrait && dialect.allowTraitParameters) || owner.isEnum) {
       val mods = listBy[Mod] { buf =>
         annotsBuf(buf, skipNewLines = false, allowArgss = false, insidePrimaryCtorAnnot = true)
-        ctorModifiers().foreach(buf += _)
+        ctorModifiers(buf)
       }
       val name = autoPos(Name.Anonymous())
       val paramss = termParamClauses(ownerIsType = true, owner == OwnedByCaseClass)
