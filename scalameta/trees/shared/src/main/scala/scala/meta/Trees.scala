@@ -862,10 +862,11 @@ object Mod {
     @deprecated("Use init instead", "1.9.0")
     def body = init
   }
-  @ast class Private(within: Ref) extends Mod {
+  @branch trait WithWithin extends Mod { def within: Ref }
+  @ast class Private(within: Ref) extends Mod with WithWithin {
     checkFields(within.isWithin)
   }
-  @ast class Protected(within: Ref) extends Mod {
+  @ast class Protected(within: Ref) extends Mod with WithWithin {
     checkFields(within.isWithin)
   }
   @ast class Implicit() extends ParamsType
