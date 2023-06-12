@@ -374,34 +374,35 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         }
         if (needsUnapply) {
           def getUnapply(unapplyParams: List[ValDef], annots: Tree*): Tree = {
-            val successTargs = tq"(..${unapplyParams.map(p => p.tpt)})"
-            val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
-            q"""
-              @$InlineAnnotation @..$annots final def unapply(x: $iname): $OptionClass[$successTargs] =
-                if (x != null && x.isInstanceOf[$name]) $SomeModule($successArgs) else $NoneModule
-            """
-          }
-          if (params.nonEmpty) {
-            val latestTree = getUnapply(params)
-            mstatsPerVersion match {
-              case (headVer, headMstats) :: tail =>
-                val headParams = paramsForVersion(headVer)
-                headMstats += getUnapply(headParams)
-                tail.foreach { case (ver, verMstats) =>
-                  verMstats += getUnapply(paramsForVersion(ver))
-                }
-                val afterLastVer = getAfterVersion(mstatsPerVersion.last._1)
-                val anno = getDeprecatedAnno(headVer, s"; use `.$afterLastVer`")
-                mstats1 += getUnapply(headParams, anno)
-              case Nil =>
-                mstats1 += latestTree
+            if (unapplyParams.isEmpty) {
+              q"""
+                @$InlineAnnotation @..$annots final def unapply(x: $iname): $BooleanClass =
+                  x != null && x.isInstanceOf[$name]
+              """
+            } else {
+              val successTargs = tq"(..${unapplyParams.map(p => p.tpt)})"
+              val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
+              q"""
+                @$InlineAnnotation @..$annots final def unapply(x: $iname): $OptionClass[$successTargs] =
+                  if (x != null && x.isInstanceOf[$name]) $SomeModule($successArgs) else $NoneModule
+              """
             }
-            mstatsLatest += latestTree
-          } else {
-            val tree = q"@$InlineAnnotation final def unapply(x: $iname): $BooleanClass = true"
-            mstats1 += tree
-            mstatsLatest += tree
           }
+          val latestTree = getUnapply(params)
+          mstatsPerVersion match {
+            case (headVer, headMstats) :: tail =>
+              val headParams = paramsForVersion(headVer)
+              headMstats += getUnapply(headParams)
+              tail.foreach { case (ver, verMstats) =>
+                verMstats += getUnapply(paramsForVersion(ver))
+              }
+              val afterLastVer = getAfterVersion(mstatsPerVersion.last._1)
+              val anno = getDeprecatedAnno(headVer, s"; use `.$afterLastVer`")
+              mstats1 += getUnapply(headParams, anno)
+            case Nil =>
+              mstats1 += latestTree
+          }
+          mstatsLatest += latestTree
         }
 
         // step 15: finish codegen for Quasi
