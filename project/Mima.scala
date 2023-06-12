@@ -19,8 +19,10 @@ object Mima {
     }
     val public = ref.isPublic && notScopedPrivate
     def include = fullName.startsWith("scala.meta.")
-    def exclude = fullName.contains(".internal.") || fullName.contains(".contrib.") ||
-      fullName.contains("$internal$")
+    def exclude = fullName.split(Array('.', '#', '$')).exists {
+      case "internal" | "contrib" => true
+      case _ => false
+    }
     public && include && !exclude
   }
 
