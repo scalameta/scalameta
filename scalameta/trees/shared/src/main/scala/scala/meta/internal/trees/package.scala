@@ -15,7 +15,7 @@ package object trees {
     def isWithin: Boolean = ref match {
       case _: Ref.Quasi => true
       case _: Name => true
-      case Term.This(Name.Anonymous()) => true
+      case Term.This(_: Name.Anonymous) => true
       case _ => false
     }
   }
@@ -134,7 +134,7 @@ package object trees {
       case _: Type.ApplyInfix => true
       case _: Type.Refine => true
       case _: Type.AnonymousLambda => true
-      case Type.Singleton(Term.This(Name.Anonymous())) => true
+      case Type.Singleton(Term.This(_: Name.Anonymous)) => true
       case _ => false
     }
   }
@@ -146,10 +146,11 @@ package object trees {
       case _ => false
     }
     def accessBoundary: Option[Ref] = mod match {
-      case Mod.Private(Name.Anonymous()) => None
-      case Mod.Protected(Name.Anonymous()) => None
-      case Mod.Private(ref) => Some(ref)
-      case Mod.Protected(ref) => Some(ref)
+      case m: Mod.WithWithin =>
+        m.within match {
+          case r: Name if r.value.isEmpty => None
+          case r => Some(r)
+        }
       case _ => None
     }
     def isNakedAccessMod: Boolean = isAccessMod && accessBoundary.isEmpty
