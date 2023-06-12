@@ -2120,7 +2120,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(q"..$mods def this(...$paramss) = $init")(
       Ctor.Secondary(
         List(Mod.Private(Name("")), Mod.Final()),
-        Name(""),
+        Name.This(),
         List(
           List(
             Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
@@ -2253,15 +2253,15 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("1 self\"this: tpeopt\"") {
     val self"$name: $tpeopt" = self"this: T"
-    assertEquals(name.toString, "")
-    assertTree(name)(Name(""))
+    assertEquals(name.toString, "this")
+    assertTree(name)(Name.This())
     assertEquals(tpeopt.toString, "Some(T)")
     assertTree(tpeopt)(Some(Type.Name("T")))
   }
 
   test("2 self\"this: tpeopt\"") {
     val tpeopt = t"T"
-    assertTree(self"this: $tpeopt")(Self(Name(""), Some(Type.Name("T"))))
+    assertTree(self"this: $tpeopt")(Self(Name.This(), Some(Type.Name("T"))))
   }
 
   test("1 template\"{ ..stats } with ..inits { self => ..stats }\"") {

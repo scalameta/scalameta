@@ -345,6 +345,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Name.Anonymous
       |scala.meta.Name.Indeterminate
       |scala.meta.Name.Placeholder
+      |scala.meta.Name.This
       |scala.meta.Pat
       |scala.meta.Pat.Alternative
       |scala.meta.Pat.ArgClause
