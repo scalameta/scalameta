@@ -500,7 +500,6 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Init this()
        |Type.Singleton this
        |Term.This this
-       |Name.Anonymous this
        |Term.ArgClause ()
        |""".stripMargin
   )
@@ -768,7 +767,6 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Defn.Def private [this] def foo: Int = ???
        |Mod.Private private [this]
        |Term.This this
-       |Name.Anonymous this
        |""".stripMargin
   )
 
@@ -791,7 +789,6 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|q"x $this x"
        |""".stripMargin,
     """|Term.This this
-       |Name.Anonymous this
        |""".stripMargin
   )
 

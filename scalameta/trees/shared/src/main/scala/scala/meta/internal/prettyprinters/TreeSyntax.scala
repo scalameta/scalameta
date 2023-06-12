@@ -983,10 +983,8 @@ object TreeSyntax {
 
       // Mod
       case Mod.Annot(init) => s(kw("@"), p(SimpleTyp, init.tpe), init.argClauses)
-      case Mod.Private(Name.Anonymous()) => s(kw("private"))
-      case Mod.Private(within) => s(kw("private"), kw("["), within, kw("]"))
-      case Mod.Protected(Name.Anonymous()) => s(kw("protected"))
-      case Mod.Protected(within) => s(kw("protected"), kw("["), within, kw("]"))
+      case Mod.Private(within) => s(kw("private"), w("[", within, "]"))
+      case Mod.Protected(within) => s(kw("protected"), w("[", within, "]"))
       case _: Mod.Implicit => kw("implicit")
       case _: Mod.Final => kw("final")
       case _: Mod.Sealed => kw("sealed")
