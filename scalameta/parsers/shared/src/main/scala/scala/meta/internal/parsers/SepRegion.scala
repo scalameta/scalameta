@@ -36,8 +36,20 @@ final class RegionCaseExpr(override val indent: Int) extends RegionNonDelimNonIn
 final class RegionCaseBody(override val indent: Int, val arrow: Token)
     extends SepRegionNonIndented with CanProduceLF
 
-// NOTE: Special case for Enum region is needed because parsing of 'case' statement is done differently
-case object RegionEnumArtificialMark extends RegionNonDelimNonIndented
+/** region hierarchy to mark packages, classes, etc which can use `colon-eol` before template */
+sealed trait RegionTemplateDecl extends RegionNonDelimNonIndented
+
+/** the initial part of declaration, before the template */
+case object RegionTemplateMark extends RegionTemplateDecl
+
+/** the initial part of the template, containing any inherit clauses */
+case object RegionTemplateInherit extends RegionTemplateDecl
+
+/**
+ * this marks the template body; for instance, helps override handling of `case` designed for
+ * catch/match/partial function but inappropriate for enum
+ */
+case object RegionTemplateBody extends RegionNonDelimNonIndented
 
 /**
  * All control statements

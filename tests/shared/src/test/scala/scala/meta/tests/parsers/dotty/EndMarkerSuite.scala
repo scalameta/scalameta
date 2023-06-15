@@ -346,9 +346,9 @@ class EndMarkerSuite extends BaseDottySuite {
          |  end Bar
          |end Foo
          |""".stripMargin,
-      """|<input>:3: error: expected template body
-         |  trait Bar:
-         |  ^""".stripMargin
+      """|<input>:2: error: expected template body
+         |  trait Baz:
+         |            ^""".stripMargin
     )
   }
 
@@ -368,9 +368,9 @@ class EndMarkerSuite extends BaseDottySuite {
     runTestError[Source](
       """|trait Foo:
          |""".stripMargin,
-      """|<input>:2: error: expected template body
-         |
-         |^""".stripMargin
+      """|<input>:1: error: expected template body
+         |trait Foo:
+         |          ^""".stripMargin
     )
   }
 
