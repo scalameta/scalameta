@@ -11,7 +11,8 @@ private[parsers] trait NestedContext {
       nested -= 1
     }
   }
-  def isInside() = nested > 0
+  @inline def isInside() = isDeeper(0)
+  @inline def isDeeper(level: Int) = nested > level
 }
 
 private[parsers] object QuotedSpliceContext extends NestedContext
@@ -19,3 +20,5 @@ private[parsers] object QuotedSpliceContext extends NestedContext
 private[parsers] object QuotedPatternContext extends NestedContext
 
 private[parsers] object ReturnTypeContext extends NestedContext
+
+private[parsers] object TypeBracketsContext extends NestedContext

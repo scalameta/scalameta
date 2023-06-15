@@ -527,4 +527,94 @@ class TypeSuite extends BaseDottySuite {
     assertNoDiff(err.shortMessage, "can't have multiple parameter lists in function types")
   }
 
+  test("#3162 [scala30] higher-kinded is not wildcard 1") {
+    implicit val dialect: Dialect = dialects.Scala30
+    runTestAssert[Stat]("def foo[A <: C[_]] = bar.baz[_, F[_]]")(
+      Defn.Def(
+        Nil,
+        tname("foo"),
+        Type.Param(
+          Nil,
+          pname("A"),
+          Nil,
+          Type.Bounds(
+            None,
+            Some(Type.AnonymousLambda(Type.Apply(pname("C"), List(Type.AnonymousParam(None)))))
+          ),
+          Nil,
+          Nil
+        ) :: Nil,
+        Nil,
+        None,
+        Term.ApplyType(
+          Term.Select(tname("bar"), tname("baz")),
+          List(
+            Type.Wildcard(noBounds),
+            Type.AnonymousLambda(Type.Apply(pname("F"), List(Type.AnonymousParam(None))))
+          )
+        )
+      )
+    )
+  }
+
+  test("#3162 [scala3+] higher-kinded is not wildcard 1") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowUnderscoreAsTypePlaceholder(true)
+    runTestAssert[Stat]("def foo[A <: C[_]] = bar.baz[_, F[_]]")(
+      Defn.Def(
+        Nil,
+        tname("foo"),
+        Type.Param(
+          Nil,
+          pname("A"),
+          Nil,
+          Type.Bounds(
+            None,
+            Some(Type.AnonymousLambda(Type.Apply(pname("C"), List(Type.AnonymousParam(None)))))
+          ),
+          Nil,
+          Nil
+        ) :: Nil,
+        Nil,
+        None,
+        Term.ApplyType(
+          Term.Select(tname("bar"), tname("baz")),
+          List(
+            Type.AnonymousParam(None),
+            Type.AnonymousLambda(Type.Apply(pname("F"), List(Type.AnonymousParam(None))))
+          )
+        )
+      )
+    )
+  }
+
+  test("#3162 [scala30] higher-kinded is not wildcard 2") {
+    implicit val dialect: Dialect = dialects.Scala30
+    runTestAssert[Stat]("gr.pure[Resource[F, _]]")(
+      Term.ApplyType(
+        Term.Select(tname("gr"), tname("pure")),
+        Type.AnonymousLambda(
+          Type.Apply(
+            pname("Resource"),
+            List(pname("F"), Type.AnonymousParam(None))
+          )
+        ) :: Nil
+      )
+    )
+  }
+
+  test("#3162 [scala3+] higher-kinded is not wildcard 2") {
+    implicit val dialect: Dialect = dialects.Scala3.withAllowUnderscoreAsTypePlaceholder(true)
+    runTestAssert[Stat]("gr.pure[Resource[F, _]]")(
+      Term.ApplyType(
+        Term.Select(tname("gr"), tname("pure")),
+        Type.AnonymousLambda(
+          Type.Apply(
+            pname("Resource"),
+            List(pname("F"), Type.AnonymousParam(None))
+          )
+        ) :: Nil
+      )
+    )
+  }
+
 }
