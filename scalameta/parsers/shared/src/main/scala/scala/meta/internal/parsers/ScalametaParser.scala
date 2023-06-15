@@ -1627,7 +1627,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     } else if (token.is[Colon] && dialect.allowFewerBraces && isEolAfter(tokenPos)) {
       val colonPos = tokenPos
       next()
-      in.observeIndented()
+      if (!in.observeIndented()) syntaxError("expected fewer-braces method body", prevToken)
       val args = blockExpr(allowRepeated = false)
       val argClause = autoEndPos(colonPos)(Term.ArgClause(args :: Nil))
       val arguments = addPos(Term.Apply(t, argClause))
@@ -2247,7 +2247,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         // map:
         val argsOpt = if (isEolAfter(colonPos)) Some {
           next()
-          in.observeIndented()
+          if (!in.observeIndented()) syntaxError("expected fewer-braces method body", prevToken)
           blockExpr(allowRepeated = false)
         }
         else
