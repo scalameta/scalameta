@@ -42,6 +42,7 @@ private[parsers] class LazyTokenIterator private (
 
   private def observeIndented0(f: List[SepRegion] => List[SepRegion]): Boolean = {
     if (!dialect.allowSignificantIndentation) false
+    else if (curr.token.is[Indentation.Indent]) true
     else {
       val currRegions = curr.regions
       val existingIndent = currRegions.find(_.isIndented).fold(0)(_.indent)
