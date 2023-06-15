@@ -309,9 +309,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     new Indentation.Outdent(token.input, token.dialect, token.start, token.start)
   }
 
-  private[parsers] def findOutdentPos(prevPos: Int, currPos: Int, region: SepRegion): Int = {
-    val outdent = region.indent
-
+  private[parsers] def findOutdentPos(prevPos: Int, currPos: Int, outdent: Int): Int = {
     @tailrec
     def iter(i: Int, pos: Int, indent: Int): Int = {
       if (i >= currPos) {
@@ -369,11 +367,15 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         next.is[CloseDelim] &&
         next.pos.startLine > curr.pos.endLine
 
-    def mkIndent(pointPos: Int, regions: List[SepRegion]): TokenRef =
-      TokenRef(regions, mkIndentToken(pointPos), prevPos, currPos, pointPos)
+    def mkIndent(pointPos: Int, regions: List[SepRegion], next: TokenRef = null): TokenRef =
+      TokenRef(regions, mkIndentToken(pointPos), prevPos, currPos, pointPos, next)
 
     def mkOutdentTo(region: SepRegionIndented, maxPointPos: Int, regions: List[SepRegion]) = {
-      val pointPos = findOutdentPos(prevPos, maxPointPos, region)
+      mkOutdentAt(region.indent, maxPointPos, regions)
+    }
+
+    def mkOutdentAt(outdent: Int, maxPointPos: Int, regions: List[SepRegion]) = {
+      val pointPos = findOutdentPos(prevPos, maxPointPos, outdent)
       TokenRef(regions, mkOutdentToken(pointPos), prevPos, currPos, pointPos)
     }
 
@@ -705,10 +707,10 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           def getIndentIfNeeded(sepRegions: List[SepRegion]) = {
             def getPrevIndent() = findIndent(sepRegions)
             def exceedsIndent = nextIndent > getPrevIndent()
-            def emitIndentWithRegion(region: SepRegionIndented, regions: List[SepRegion]) =
-              Some(Right(mkIndent(indentPos, region :: regions)))
-            def emitIndent(regions: List[SepRegion]) =
-              emitIndentWithRegion(RegionIndent(nextIndent), regions)
+            def emitIndentWith(ri: SepRegionIndented, rs: List[SepRegion], next: TokenRef = null) =
+              Some(Right(mkIndent(indentPos, ri :: rs, next)))
+            def emitIndent(regions: List[SepRegion], next: TokenRef = null) =
+              emitIndentWith(RegionIndent(nextIndent), regions, next)
             // !next.is[RightBrace] - braces can sometimes have -1 and we can start indent on }
             prev match {
               case _ if nextIndent < 0 || next.is[RightBrace] => None
@@ -732,7 +734,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                   case _ => emitIndent(sepRegions)
                 }
               case _: KwTry =>
-                emitIndentWithRegion(new RegionIndentTry(nextIndent), sepRegions)
+                emitIndentWith(new RegionIndentTry(nextIndent), sepRegions)
               case _ =>
                 sepRegions match {
                   case RegionForBraces :: xs if prev.is[RightBrace] =>
