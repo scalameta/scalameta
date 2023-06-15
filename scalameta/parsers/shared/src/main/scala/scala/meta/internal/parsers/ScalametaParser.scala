@@ -4199,9 +4199,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     } else if (isColonEol()) {
       accept[Colon]
 
-      if (enumCaseAllowed)
-        in.observeIndentedEnum()
-      else
+      if (!enumCaseAllowed)
         in.observeIndented()
 
       if (acceptOpt[Indentation.Indent])

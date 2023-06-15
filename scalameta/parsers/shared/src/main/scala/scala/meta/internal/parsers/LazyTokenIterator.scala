@@ -78,18 +78,8 @@ private[parsers] class LazyTokenIterator private (
        */
       prev match {
         case RegionParen :: tail if token.is[LeftParen] => tail
-        case RegionEnumArtificialMark :: tail if token.is[KwEnum] => tail
         case (_: RegionBrace) :: tail if token.is[LeftBrace] => tail
         case _ => prev
-      }
-    }
-  }
-
-  def observeIndentedEnum(): Boolean = {
-    observeIndented0 { prev =>
-      prev match {
-        case RegionEnumArtificialMark :: other => other
-        case x => x
       }
     }
   }
