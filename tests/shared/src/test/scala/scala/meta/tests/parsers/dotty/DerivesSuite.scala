@@ -163,7 +163,7 @@ class DerivesSuite extends BaseDottySuite {
          |""".stripMargin,
       Some(layout)
     )(tree)
-    runTestError[Stat](
+    runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
          |    derives
          |      Alpha[T],
@@ -172,10 +172,8 @@ class DerivesSuite extends BaseDottySuite {
          |  def a = ???
          |}
          |""".stripMargin,
-      """|<input>:2: error: identifier expected but \n found
-         |    derives
-         |           ^""".stripMargin
-    )
+      Some(layout)
+    )(tree)
   }
 
   test("newline-derives-coloneol") {
@@ -204,28 +202,24 @@ class DerivesSuite extends BaseDottySuite {
          |""".stripMargin,
       Some(layout)
     )(tree)
-    runTestError[Stat](
+    runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
          |    derives
          |      Alpha[T],
          |      Epsilon[T]:
          |  def a = ???
          |""".stripMargin,
-      """|<input>:2: error: identifier expected but \n found
-         |    derives
-         |           ^""".stripMargin
-    )
-    runTestError[Stat](
+      Some(layout)
+    )(tree)
+    runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
          |    derives
          |   Alpha[T],
          |   Epsilon[T]:
          |  def a = ???
          |""".stripMargin,
-      """|<input>:2: error: identifier expected but \n found
-         |    derives
-         |           ^""".stripMargin
-    )
+      Some(layout)
+    )(tree)
   }
 
   test("newline-extends-derives-coloneol") {
@@ -251,7 +245,7 @@ class DerivesSuite extends BaseDottySuite {
          |""".stripMargin,
       Some(layout)
     )(tree)
-    runTestError[Stat](
+    runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
          |    extends
          |      Alpha[T]
@@ -259,11 +253,9 @@ class DerivesSuite extends BaseDottySuite {
          |      Epsilon[T]:
          |  def a = ???
          |""".stripMargin,
-      """|<input>:4: error: identifier expected but \n found
-         |    derives
-         |           ^""".stripMargin
-    )
-    runTestError[Stat](
+      Some(layout)
+    )(tree)
+    runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
          |    extends
          |   Alpha[T]
@@ -271,10 +263,8 @@ class DerivesSuite extends BaseDottySuite {
          |   Epsilon[T]:
          |  def a = ???
          |""".stripMargin,
-      """|<input>:4: error: identifier expected but \n found
-         |    derives
-         |           ^""".stripMargin
-    )
+      Some(layout)
+    )(tree)
   }
 
   test("not-derives") {

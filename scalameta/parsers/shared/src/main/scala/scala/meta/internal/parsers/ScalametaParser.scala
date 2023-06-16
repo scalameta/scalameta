@@ -4086,6 +4086,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def derivesClasses(): List[Type] = {
     if (isAfterOptNewLine[soft.KwDerives]) {
       next()
+      newLineOpt()
       val deriving = ListBuffer[Type]()
       do token match {
         case t: Ellipsis => deriving += ellipsis[Type](t, 1)
