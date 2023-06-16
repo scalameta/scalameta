@@ -2141,7 +2141,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           canApply = false
           Success(autoPos {
             next()
-            template(enumCaseAllowed = false, secondaryConstructorAllowed = false) match {
+            template(OwnedByTrait) match {
               case Template(Nil, init :: Nil, Self(_: Name.Anonymous, None), Nil)
                   if !prevToken.is[RightBrace] =>
                 Term.New(init)
@@ -3880,7 +3880,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   /* -------- CONSTRUCTORS ------------------------------------------- */
 
   def primaryCtor(owner: TemplateOwner): Ctor.Primary = autoPos {
-    if (owner.isClass || (owner.isTrait && dialect.allowTraitParameters) || owner.isEnum) {
+    if (owner.isPrimaryCtorAllowed) {
       val mods = listBy[Mod] { buf =>
         annotsBuf(buf, skipNewLines = false, allowArgss = false, insidePrimaryCtorAnnot = true)
         ctorModifiers(buf)
@@ -3888,10 +3888,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val name = anonNameEmpty()
       val paramss = termParamClauses(ownerIsType = true, owner == OwnedByCaseClass)
       Ctor.Primary(mods, name, paramss)
-    } else if (owner.isTrait) {
-      Ctor.Primary(Nil, anonNameEmpty(), Seq.empty)
     } else {
-      unreachable(debug(owner))
+      Ctor.Primary(Nil, anonNameEmpty(), Seq.empty)
     }
   }
 
@@ -4054,16 +4052,36 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   /* -------- TEMPLATES ------------------------------------------- */
 
   sealed trait TemplateOwner {
-    def isTerm = this eq OwnedByObject
-    def isClass = (this eq OwnedByCaseClass) || (this eq OwnedByClass)
-    def isTrait = this eq OwnedByTrait
-    def isEnum = this eq OwnedByEnum
+    def isEnumCaseAllowed: Boolean
+    def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean
+    def isSecondaryCtorAllowed: Boolean
   }
-  object OwnedByTrait extends TemplateOwner
-  object OwnedByCaseClass extends TemplateOwner
-  object OwnedByClass extends TemplateOwner
-  object OwnedByEnum extends TemplateOwner
-  object OwnedByObject extends TemplateOwner
+  object OwnedByTrait extends TemplateOwner {
+    final override def isEnumCaseAllowed: Boolean = false
+    final override def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean =
+      dialect.allowTraitParameters
+    final override def isSecondaryCtorAllowed: Boolean = false
+  }
+  object OwnedByCaseClass extends TemplateOwner {
+    final override def isEnumCaseAllowed: Boolean = false
+    final override def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = true
+    final override def isSecondaryCtorAllowed: Boolean = true
+  }
+  object OwnedByClass extends TemplateOwner {
+    final override def isEnumCaseAllowed: Boolean = false
+    final override def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = true
+    final override def isSecondaryCtorAllowed: Boolean = true
+  }
+  object OwnedByEnum extends TemplateOwner {
+    final override def isEnumCaseAllowed: Boolean = true
+    final override def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = true
+    final override def isSecondaryCtorAllowed: Boolean = true
+  }
+  object OwnedByObject extends TemplateOwner {
+    final override def isEnumCaseAllowed: Boolean = false
+    final override def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = false
+    final override def isSecondaryCtorAllowed: Boolean = false
+  }
 
   def init() = {
     token match {
@@ -4098,48 +4116,39 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   private def templateAfterExtends(
-      edefs: List[Stat],
-      parents: List[Init],
-      enumCaseAllowed: Boolean,
-      secondaryConstructorAllowed: Boolean,
-      parenMeansSyntaxError: Boolean = false
+      owner: TemplateOwner,
+      parents: List[Init] = Nil,
+      edefs: List[Stat] = Nil
   ): Template = {
     val derived = derivesClasses()
-    val (self, body) = templateBodyOpt(
-      parenMeansSyntaxError = parenMeansSyntaxError,
-      enumCaseAllowed,
-      secondaryConstructorAllowed
-    )
+    val (self, body) = templateBodyOpt(owner)
     Template(edefs, parents, self, body, derived)
   }
 
   def template(
-      afterExtend: Boolean = false,
-      enumCaseAllowed: Boolean,
-      secondaryConstructorAllowed: Boolean
+      owner: TemplateOwner,
+      afterExtend: Boolean = false
   ): Template = autoPos {
     if (isAfterOptNewLine[LeftBrace]) {
       // @S: pre template body cannot stub like post body can!
-      val (self, body) = templateBody(enumCaseAllowed)
+      val (self, body) = templateBody(owner)
       if (token.is[KwWith] && self.isEmpty) {
         val edefs = body.map(ensureEarlyDef)
         next()
         val parents = templateParents(afterExtend)
-        templateAfterExtends(edefs, parents, enumCaseAllowed, secondaryConstructorAllowed)
+        templateAfterExtends(owner, parents, edefs)
       } else {
         Template(Nil, Nil, self, body)
       }
     } else {
       val parents = if (token.is[Colon]) Nil else templateParents(afterExtend)
-      templateAfterExtends(Nil, parents, enumCaseAllowed, secondaryConstructorAllowed)
+      templateAfterExtends(owner, parents)
     }
   }
 
   def quasiquoteTemplate(): Template = entrypointTemplate()
 
-  def entrypointTemplate(): Template = autoPos(
-    template(enumCaseAllowed = false, secondaryConstructorAllowed = true)
-  )
+  def entrypointTemplate(): Template = autoPos(template(OwnedByClass))
 
   def ensureEarlyDef(tree: Stat): Stat = tree match {
     case q: Quasi => q
@@ -4157,55 +4166,39 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _ => true
       })) {
       unquote[Template](token.asInstanceOf[Unquote])
-    } else if (acceptOpt[KwExtends] || (owner.isTrait && acceptOpt[Subtype])) {
-      template(
-        afterExtend = true,
-        enumCaseAllowed = owner.isEnum,
-        secondaryConstructorAllowed = owner.isClass || owner.isEnum
-      )
+    } else if (acceptOpt[KwExtends] || (owner eq OwnedByTrait) && acceptOpt[Subtype]) {
+      template(owner, afterExtend = true)
     } else {
-      templateAfterExtends(
-        Nil,
-        Nil,
-        enumCaseAllowed = owner.isEnum,
-        secondaryConstructorAllowed = owner.isClass || owner.isEnum,
-        parenMeansSyntaxError = !owner.isClass
-      )
+      templateAfterExtends(owner)
     }
   }
 
-  def templateBody(
-      enumCaseAllowed: Boolean = false,
-      secondaryConstructorAllowed: Boolean = false
-  ): (Self, List[Stat]) =
-    inBraces(templateStatSeq(enumCaseAllowed, secondaryConstructorAllowed))
+  @inline private def templateBody(owner: TemplateOwner): (Self, List[Stat]) =
+    inBraces(templateStatSeq(owner))
 
-  def templateBodyOpt(
-      parenMeansSyntaxError: Boolean,
-      enumCaseAllowed: Boolean = false,
-      secondaryConstructorAllowed: Boolean = false
-  ): (Self, List[Stat]) = {
+  def templateBodyOpt(owner: TemplateOwner): (Self, List[Stat]) = {
     if (isAfterOptNewLine[LeftBrace]) {
-      templateBody(enumCaseAllowed, secondaryConstructorAllowed)
+      templateBody(owner)
     } else if (isColonEol()) {
       accept[Colon]
 
-      if (!enumCaseAllowed)
+      if (!owner.isEnumCaseAllowed)
         in.observeIndented()
 
       if (acceptOpt[Indentation.Indent])
-        indentedAfterOpen(templateStatSeq(enumCaseAllowed, secondaryConstructorAllowed))
-      else if (!enumCaseAllowed && isEndMarkerIntro(tokenPos))
+        indentedAfterOpen(templateStatSeq(owner))
+      else if (!owner.isEnumCaseAllowed && isEndMarkerIntro(tokenPos))
         (selfEmpty(), Nil)
       else
         syntaxError("expected template body", token)
-    } else {
-      if (token.is[LeftParen]) {
-        if (parenMeansSyntaxError) {
-          val what = if (dialect.allowTraitParameters) "objects" else "traits or objects"
-          syntaxError(s"$what may not have parameters", at = token)
-        } else syntaxError("unexpected opening parenthesis", at = token)
+    } else if (token.is[LeftParen]) {
+      if (owner.isPrimaryCtorAllowed)
+        syntaxError("unexpected opening parenthesis", at = token)
+      else {
+        val what = owner.getClass.getSimpleName.stripPrefix("OwnedBy")
+        syntaxError(s"$what may not have parameters", at = token)
       }
+    } else {
       (selfEmpty(), Nil)
     }
   }
@@ -4335,7 +4328,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       nonLocalDefOrDcl()
   }
 
-  def templateStatSeq(
+  @inline private def templateStatSeq(owner: TemplateOwner): (Self, List[Stat]) =
+    templateStatSeq(owner.isEnumCaseAllowed, owner.isSecondaryCtorAllowed)
+
+  private def templateStatSeq(
       enumCaseAllowed: Boolean = false,
       secondaryConstructorAllowed: Boolean = false
   ): (Self, List[Stat]) = {
