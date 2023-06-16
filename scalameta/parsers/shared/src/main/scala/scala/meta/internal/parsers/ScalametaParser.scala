@@ -4097,15 +4097,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def template(
+  private def templateAfterExtends(
       edefs: List[Stat],
       parents: List[Init],
       enumCaseAllowed: Boolean,
-      secondaryConstructorAllowed: Boolean
+      secondaryConstructorAllowed: Boolean,
+      parenMeansSyntaxError: Boolean = false
   ): Template = {
     val derived = derivesClasses()
-    val (self, body) =
-      templateBodyOpt(parenMeansSyntaxError = false, enumCaseAllowed, secondaryConstructorAllowed)
+    val (self, body) = templateBodyOpt(
+      parenMeansSyntaxError = parenMeansSyntaxError,
+      enumCaseAllowed,
+      secondaryConstructorAllowed
+    )
     Template(edefs, parents, self, body, derived)
   }
 
@@ -4121,13 +4125,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val edefs = body.map(ensureEarlyDef)
         next()
         val parents = templateParents(afterExtend)
-        template(edefs, parents, enumCaseAllowed, secondaryConstructorAllowed)
+        templateAfterExtends(edefs, parents, enumCaseAllowed, secondaryConstructorAllowed)
       } else {
         Template(Nil, Nil, self, body)
       }
     } else {
       val parents = if (token.is[Colon]) Nil else templateParents(afterExtend)
-      template(Nil, parents, enumCaseAllowed, secondaryConstructorAllowed)
+      templateAfterExtends(Nil, parents, enumCaseAllowed, secondaryConstructorAllowed)
     }
   }
 
@@ -4160,22 +4164,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         secondaryConstructorAllowed = owner.isClass || owner.isEnum
       )
     } else {
-      if (isAfterOptNewLine[soft.KwDerives]) {
-        template(
-          Nil,
-          Nil,
-          enumCaseAllowed = owner.isEnum,
-          secondaryConstructorAllowed = owner.isClass || owner.isEnum
-        )
-      } else {
-        val (self, body) =
-          templateBodyOpt(
-            parenMeansSyntaxError = !owner.isClass,
-            enumCaseAllowed = owner.isEnum,
-            secondaryConstructorAllowed = owner.isClass || owner.isEnum
-          )
-        Template(Nil, Nil, self, body)
-      }
+      templateAfterExtends(
+        Nil,
+        Nil,
+        enumCaseAllowed = owner.isEnum,
+        secondaryConstructorAllowed = owner.isClass || owner.isEnum,
+        parenMeansSyntaxError = !owner.isClass
+      )
     }
   }
 
