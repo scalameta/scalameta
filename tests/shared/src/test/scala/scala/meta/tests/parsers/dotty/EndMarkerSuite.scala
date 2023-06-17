@@ -337,4 +337,41 @@ class EndMarkerSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("trait-empty-body-no-end-marker") {
+    runTestError[Source](
+      """|trait Foo:
+         |  trait Baz:
+         |  trait Bar:
+         |  end Bar
+         |end Foo
+         |""".stripMargin,
+      """|<input>:3: error: expected template body
+         |  trait Bar:
+         |  ^""".stripMargin
+    )
+  }
+
+  test("trait-empty-body-outer-end-marker") {
+    runTestError[Source](
+      """|trait Foo:
+         |  trait Bar:
+         |end Foo
+         |""".stripMargin,
+      """|<input>:2: error: expected template body
+         |  trait Bar:
+         |            ^""".stripMargin
+    )
+  }
+
+  test("trait-empty-body-no-end-marker") {
+    runTestError[Source](
+      """|trait Foo:
+         |""".stripMargin,
+      """|<input>:2: error: expected template body
+         |
+         |^""".stripMargin
+    )
+  }
+
 }
