@@ -267,6 +267,139 @@ class DerivesSuite extends BaseDottySuite {
     )(tree)
   }
 
+  test("newline-extends-derives-coloneol-not-like-refine-type") {
+    val layout = "class A[T](a: Int, b: Int) extends Alpha[T] derives Epsilon[T] { require(true) }"
+    val tree = Defn.Class(
+      Nil,
+      pname("A"),
+      List(pparam("T")),
+      ctorp(List(tparam("a", "Int"), tparam("b", "Int"))),
+      Template(
+        Nil,
+        List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, Nil)),
+        slf,
+        List(Term.Apply(tname("require"), List(bool(true)))),
+        List(Type.Apply(pname("Epsilon"), List(pname("T"))))
+      )
+    )
+    runTestAssert[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    extends Alpha[T]
+         |    derives Epsilon[T]:
+         |  require(true)
+         |""".stripMargin,
+      Some(layout)
+    )(tree)
+    runTestAssert[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    extends
+         |      Alpha[T]
+         |    derives
+         |      Epsilon[T]:
+         |  require(true)
+         |""".stripMargin,
+      Some(layout)
+    )(tree)
+    runTestAssert[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    extends
+         |   Alpha[T]
+         |    derives
+         |   Epsilon[T]:
+         |  require(true)
+         |""".stripMargin,
+      Some(layout)
+    )(tree)
+  }
+
+  test("newline-extends-with-not-derives-coloneol-not-like-refine-type") {
+    val layout = "class A[T](a: Int, b: Int) extends Alpha[T] with Epsilon[T] { require(true) }"
+    val tree = Defn.Class(
+      Nil,
+      pname("A"),
+      List(pparam("T")),
+      ctorp(List(tparam("a", "Int"), tparam("b", "Int"))),
+      Template(
+        Nil,
+        List(
+          Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, Nil),
+          Init(Type.Apply(pname("Epsilon"), List(pname("T"))), anon, Nil)
+        ),
+        slf,
+        List(Term.Apply(tname("require"), List(bool(true)))),
+        Nil
+      )
+    )
+    runTestAssert[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    extends Alpha[T]
+         |    with Epsilon[T]:
+         |  require(true)
+         |""".stripMargin,
+      Some(layout)
+    )(tree)
+    runTestAssert[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    extends
+         |      Alpha[T]
+         |    with
+         |      Epsilon[T]:
+         |  require(true)
+         |""".stripMargin,
+      Some(layout)
+    )(tree)
+    runTestAssert[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    extends
+         |   Alpha[T]
+         |    with
+         |   Epsilon[T]:
+         |  require(true)
+         |""".stripMargin,
+      Some(layout)
+    )(tree)
+  }
+
+  test("newline-extends-not-derives-coloneol-not-like-refine-type") {
+    val layout = "class A[T](a: Int, b: Int) extends Alpha[T] { require(true) }"
+    val tree = Defn.Class(
+      Nil,
+      pname("A"),
+      List(pparam("T")),
+      ctorp(List(tparam("a", "Int"), tparam("b", "Int"))),
+      Template(
+        Nil,
+        List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, Nil)),
+        slf,
+        List(Term.Apply(tname("require"), List(bool(true)))),
+        Nil
+      )
+    )
+    runTestAssert[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    extends Alpha[T]:
+         |  require(true)
+         |""".stripMargin,
+      Some(layout)
+    )(tree)
+    runTestAssert[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    extends
+         |      Alpha[T]:
+         |  require(true)
+         |""".stripMargin,
+      Some(layout)
+    )(tree)
+    runTestAssert[Stat](
+      """|class A[T](a: Int, b: Int)
+         |    extends
+         |   Alpha[T]:
+         |  require(true)
+         |""".stripMargin,
+      Some(layout)
+    )(tree)
+  }
+
   test("not-derives") {
     val layout =
       """|class A {
