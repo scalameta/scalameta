@@ -70,6 +70,8 @@ final class Dialect private (
     val allowTryWithAnyExpr: Boolean,
     // Given/using introduced in dotty
     val allowGivenUsing: Boolean,
+    // https://dotty.epfl.ch/docs/reference/experimental/erased-defs.html
+    val allowErasedDefs: Boolean,
     // Extension methods introduced in dotty
     val allowExtensionMethods: Boolean,
     // Open modifier for classes introduced in dotty
@@ -215,6 +217,7 @@ final class Dialect private (
       allowNumericLiteralUnderscoreSeparators = false,
       allowTryWithAnyExpr = false,
       allowGivenUsing = false,
+      allowErasedDefs = false,
       allowExtensionMethods = false,
       allowOpenClass = false,
       allowToplevelStatements = false,
@@ -335,6 +338,9 @@ final class Dialect private (
   }
   def withAllowGivenUsing(newValue: Boolean): Dialect = {
     privateCopy(allowGivenUsing = newValue)
+  }
+  def withAllowErasedDefs(newValue: Boolean): Dialect = {
+    privateCopy(allowErasedDefs = newValue)
   }
   def withAllowExtensionMethods(newValue: Boolean): Dialect = {
     privateCopy(allowExtensionMethods = newValue)
@@ -503,6 +509,7 @@ final class Dialect private (
         this.allowNumericLiteralUnderscoreSeparators,
       allowTryWithAnyExpr: Boolean = this.allowTryWithAnyExpr,
       allowGivenUsing: Boolean = this.allowGivenUsing,
+      allowErasedDefs: Boolean = this.allowErasedDefs,
       allowExtensionMethods: Boolean = this.allowExtensionMethods,
       allowOpenClass: Boolean = this.allowOpenClass,
       allowToplevelStatements: Boolean = this.allowToplevelStatements,
@@ -567,6 +574,7 @@ final class Dialect private (
       allowNumericLiteralUnderscoreSeparators,
       allowTryWithAnyExpr,
       allowGivenUsing,
+      allowErasedDefs,
       allowExtensionMethods,
       allowOpenClass,
       allowToplevelStatements,
@@ -651,6 +659,7 @@ final class Dialect private (
       && this.allowNumericLiteralUnderscoreSeparators == that.allowNumericLiteralUnderscoreSeparators
       && this.allowTryWithAnyExpr == that.allowTryWithAnyExpr
       && this.allowGivenUsing == that.allowGivenUsing
+      && this.allowErasedDefs == that.allowErasedDefs
       && this.allowExtensionMethods == that.allowExtensionMethods
       && this.allowOpenClass == that.allowOpenClass
       && this.allowToplevelStatements == that.allowToplevelStatements
