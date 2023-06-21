@@ -1928,6 +1928,28 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     }
   }
 
+  test("#2774 1") {
+    val tree =
+      Term.Param(Mod.Erased() :: Mod.Using() :: Nil, Term.Name("foo"), Some(Type.Name("Bar")), None)
+    assertSyntax(tree, "erased foo: Bar")(tree)
+  }
+
+  test("#2774 2") {
+    val tree = Type.Function(
+      List(Type.TypedParam(Type.Name("e"), Type.Name("Entry"), List(Mod.Erased()))),
+      Type.Select(Term.Name("e"), Type.Name("Key"))
+    )
+    assertSyntax(tree, "(erased e: Entry) => e.Key")(tree)
+  }
+
+  test("#2774 3") {
+    val tree = Type.Function(
+      List(Type.FunctionArg(List(Mod.Erased()), Type.Name("Ev")), Type.Name("Int")),
+      Type.Name("Int")
+    )
+    assertSyntax(tree, "(erased Ev, Int) => Int")(tree)
+  }
+
   test("#3065 embedded triple quotes") {
     val tree = Lit.String("\n\"\"\"")
     assertSyntax(tree, "\"\"\"\n\\\"\\\"\\\"\"\"\"")(tree)
