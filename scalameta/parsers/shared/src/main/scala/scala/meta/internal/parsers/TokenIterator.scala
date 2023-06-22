@@ -15,8 +15,6 @@ trait TokenIterator {
   def tokenPos: Int
   def currentIndentation: Int
 
-  def observeIndented(): Boolean
-
   def peekToken: Token
   def peekIndex: Int
   def peekIndentation: Int
