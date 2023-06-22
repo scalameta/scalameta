@@ -579,12 +579,22 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _: Ident =>
         curr.text match {
           case soft.KwDerives() => getTemplateInherit(sepRegions)
+          case soft.KwExtension()
+              if next.isAny[LeftParen, LeftBracket] &&
+                prevToken.isAny[StatSep, Indentation.Outdent] =>
+            currRef(RegionExtensionMark :: sepRegions)
           case _ => currRef(sepRegions)
         }
       case _ => currRef(sepRegions)
     }
 
     def getNonTrivialRegions(regions: List[SepRegion]) = regions match {
+      case RegionExtensionMark :: rs =>
+        curr match {
+          case _: LeftBrace => RegionTemplateBody :: rs
+          case _: LeftParen | _: LeftBracket => regions
+          case _ => rs
+        }
       case all @ (r: RegionControl) :: rs if r.isNotTerminatingTokenIfOptional(curr) =>
         r match {
           case rc: RegionControlMaybeCond if prev.is[RightParen] =>
@@ -790,6 +800,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                     emitIndent(x.asCond() :: xs)
                   case (_: RegionTemplateDecl) :: _ if next.is[LeftParen] =>
                     Some(Left(sepRegions)) // skip this newline
+                  case RegionExtensionMark :: rs if prev.is[RightParen] && !next.is[LeftParen] =>
+                    emitIndent(RegionTemplateBody :: rs)
                   case xs => if (canStartIndent(prevPos)) emitIndent(xs) else None
                 }
             }
