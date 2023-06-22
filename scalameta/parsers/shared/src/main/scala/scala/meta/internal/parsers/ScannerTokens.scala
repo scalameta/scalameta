@@ -452,6 +452,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       }
     }
 
+    def getTemplateInherit(sepRegions: List[SepRegion]): TokenRef =
+      currRef(sepRegions match {
+        case RegionTemplateMark :: rs => RegionTemplateInherit :: rs
+        case rs => rs
+      })
+
     def nonTrivial(sepRegions: List[SepRegion]) = curr match {
       case _: EOF =>
         mkOutdentsOpt(currPos, sepRegions) {
@@ -468,7 +474,10 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             }
           case _ => currRef(sepRegions)
         }
-      case _: KwEnum => currRef(RegionEnumArtificialMark :: sepRegions)
+      case _: KwEnum => currRef(RegionTemplateMark :: sepRegions)
+      case _: KwObject | _: KwClass | _: KwTrait | _: KwPackage | _: KwNew
+          if dialect.allowSignificantIndentation =>
+        currRef(RegionTemplateMark :: sepRegions)
       case _: KwMatch if !prev.is[soft.KwEnd] =>
         getCaseIntro(sepRegions)
       case _: KwCatch =>
@@ -481,7 +490,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           // x could be RegionIndent or RegionBrace
           case x :: RegionCaseMark :: xs => expr() :: x :: xs
           case (_: RegionBrace) :: xs if (xs.headOption match {
-                case Some(_: RegionFor | RegionEnumArtificialMark) => false
+                case Some(_: RegionFor | RegionTemplateBody) => false
                 case _ => !next.isClassOrObject
               }) =>
             expr() :: sepRegions
@@ -498,12 +507,17 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case xs => currRef(xs)
         }
       case _: LeftBrace =>
-        currRef(RegionBrace(countIndent(nextPos)) :: sepRegions)
+        val lbRegions = sepRegions match {
+          case RegionTemplateMark :: rs => RegionTemplateBody :: rs
+          case RegionTemplateInherit :: rs if !prev.is[KwExtends] => RegionTemplateBody :: rs
+          case rs => rs
+        }
+        currRef(RegionBrace(countIndent(nextPos)) :: lbRegions)
       case _: RightBrace =>
         // produce outdent for every indented region before RegionBrace|RegionEnum
         mkOutdentsOpt(currPos, sepRegions) {
           case (r: SepRegionIndented) :: rs => (Left(r), rs)
-          case (_: RegionBrace) :: (RegionEnumArtificialMark | RegionCaseMark) :: rs =>
+          case (_: RegionBrace) :: (RegionTemplateBody | RegionCaseMark) :: rs =>
             (Right(false), rs)
           case (_: RegionBrace) :: rs => (Right(false), rs)
           case _ :: rs => (Right(true), rs)
@@ -560,6 +574,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             outdentThenCurrRef(r, xs)
           case (_: RegionControl) :: xs => currRef(xs)
           case xs => currRef(xs)
+        }
+      case _: KwExtends => getTemplateInherit(sepRegions)
+      case _: Ident =>
+        curr.text match {
+          case soft.KwDerives() => getTemplateInherit(sepRegions)
+          case _ => currRef(sepRegions)
         }
       case _ => currRef(sepRegions)
     }
@@ -625,6 +645,10 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           next.isNot[CantStartStat])
           (regions match {
             case Nil => Some(regions)
+            // `extends` and `with` are covered by canEndStat() and CantStartStat above
+            case RegionTemplateMark :: rs if !next.isAny[LeftBrace, soft.KwDerives] => Some(rs)
+            case RegionTemplateInherit :: rs if !next.isAny[LeftBrace, soft.KwDerives] =>
+              if (prev.is[soft.KwDerives]) None else Some(rs)
             case (_: CanProduceLF) :: _ => Some(regions)
             case _ => None
           }).map(rs => Right(lastWhitespaceToken(rs)))
@@ -681,6 +705,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                 (Right(true), rs)
               case (r: RegionIndent) :: (rs @ (rc: RegionControl) :: xs) if nextIndent < r.indent =>
                 (Left(r), if (rc.isNotTerminatingTokenIfOptional(next)) xs else rs)
+              case (r: RegionIndent) :: RegionTemplateBody :: xs if nextIndent < r.indent =>
+                (Left(r), xs)
               case (r: SepRegionIndented) :: xs if (prev match {
                     // then  [else]  [do]  catch  [finally]  [yield]  match
                     case _: KwElse | _: KwDo | _: KwFinally | _: KwYield => false
@@ -713,6 +739,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
               Some(Right(mkIndent(indentPos, ri :: rs, next)))
             def emitIndent(regions: List[SepRegion], next: TokenRef = null) =
               emitIndentWith(RegionIndent(nextIndent), regions, next)
+            def emitIndentAndOutdent(regions: List[SepRegion]) =
+              emitIndent(regions, mkOutdentAt(nextIndent, nextPos, regions))
             // !next.is[RightBrace] - braces can sometimes have -1 and we can start indent on }
             prev match {
               case _ if nextIndent < 0 || next.is[RightBrace] => None
@@ -723,12 +751,21 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                 // check the previous token to avoid infinity loop
                 val ok = next.is[KwCase] && sepRegions.headOption.contains(RegionCaseMark)
                 if (ok) emitIndent(sepRegions) else None
-              case _ if !exceedsIndent => None
               case _: Colon =>
                 sepRegions match {
-                  case RegionEnumArtificialMark :: xs => emitIndent(xs)
-                  case _ => None
+                  case (_: RegionTemplateDecl) :: rs =>
+                    if (exceedsIndent) emitIndent(RegionTemplateBody :: rs)
+                    else if (next.is[soft.KwEnd]) emitIndentAndOutdent(rs)
+                    else Some(Right(lastWhitespaceToken(rs)))
+                  case _ if !exceedsIndent => None
+                  case _ =>
+                    next match {
+                      // RefineDcl
+                      case _: KwVal | _: KwDef | _: KwType | _: Semicolon => emitIndent(sepRegions)
+                      case _ => None
+                    }
                 }
+              case _ if !exceedsIndent => None
               case _: RightArrow =>
                 sepRegions match {
                   case (rc: RegionCaseBody) :: (_: RegionBrace) :: _ if rc.arrow eq prev => None
@@ -751,6 +788,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                     if (ko) None else emitIndent(x.asBody().fold(xs)(_ :: xs))
                   case (x: RegionControlMaybeCond) :: xs if x.isControlKeyword(prev) =>
                     emitIndent(x.asCond() :: xs)
+                  case (_: RegionTemplateDecl) :: _ if next.is[LeftParen] =>
+                    Some(Left(sepRegions)) // skip this newline
                   case xs => if (canStartIndent(prevPos)) emitIndent(xs) else None
                 }
             }

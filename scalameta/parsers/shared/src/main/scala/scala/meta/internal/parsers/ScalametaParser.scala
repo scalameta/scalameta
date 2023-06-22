@@ -147,8 +147,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ------------- TOKEN STREAM HELPERS -------------------------------------------- */
 
-  private def isColonEol(): Boolean =
-    token.is[Colon] && dialect.allowSignificantIndentation && isEolAfter(tokenPos)
+  @inline private def isColonIndent(): Boolean = token.is[Colon] && isIndentAfter()
+  @inline private def isIndentAfter(): Boolean = peekToken.is[Indentation.Indent]
 
   @tailrec
   private def isEolAfter(index: Int): Boolean = {
@@ -2264,7 +2264,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
              */
             val param = simpleExpr(allowRepeated = false)
             val contextFunction = token.is[ContextArrow]
-            if ((contextFunction || token.is[RightArrow]) && peekToken.is[Indentation.Indent])
+            if ((contextFunction || token.is[RightArrow]) && isIndentAfter())
               convertToParamClause(param)(true, true).map { pc =>
                 val params = autoEndPos(paramPos)(pc)
                 next()
@@ -4193,18 +4193,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def templateBodyOpt(owner: TemplateOwner): (Self, List[Stat]) = {
     if (isAfterOptNewLine[LeftBrace]) {
       templateBody(owner)
-    } else if (isColonEol()) {
-      accept[Colon]
-
-      if (!owner.isEnumCaseAllowed)
-        in.observeIndented()
-
-      if (acceptOpt[Indentation.Indent])
-        indentedAfterOpen(templateStatSeq(owner))
-      else if (!owner.isEnumCaseAllowed && isEndMarkerIntro(tokenPos))
-        (selfEmpty(), Nil)
-      else
-        syntaxError("expected template body", token)
+    } else if (token.is[Colon] && peekToken.isAny[Indentation, LF]) {
+      next()
+      if (!token.is[Indentation.Indent]) syntaxError("expected template body", token)
+      indentedOnOpen(templateStatSeq(owner))
     } else if (token.is[LeftParen]) {
       if (owner.isPrimaryCtorAllowed)
         syntaxError("unexpected opening parenthesis", at = token)
@@ -4225,7 +4217,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       refinementInBraces(innerType, -1)
     else if (!token.isAny[Colon, KwWith])
       refinementInBraces(innerType, in.previousIndentation + 1)
-    else if (tryAhead[Indentation.Indent] || tryAhead(in.observeIndented()))
+    else if (tryAhead[Indentation.Indent])
       Some(refineWith(innerType, indented(refineStatSeq())))
     else innerType
 
@@ -4491,10 +4483,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       Pkg.Object(Nil, termName(), templateOpt(OwnedByObject))
     else {
       def packageBody =
-        if (isColonEol()) {
+        if (isColonIndent()) {
           next()
-          in.observeIndented()
-          indented(statSeq(statpf))
+          indentedOnOpen(statSeq(statpf))
         } else {
           inBracesOrNil(statSeq(statpf))
         }
@@ -4528,10 +4519,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         if (token.is[LeftBrace]) {
           inPackage(inBracesOnOpen(statSeq(statpf)))
           bracelessPackageStats(f)
-        } else if (isColonEol()) {
+        } else if (isColonIndent()) {
           next()
-          in.observeIndented()
-          inPackage(indented(statSeq(statpf)))
+          inPackage(indentedOnOpen(statSeq(statpf)))
           bracelessPackageStats(f)
         } else {
           bracelessPackageStats(x => f(List(autoEndPos(startPos)(Pkg(qid, x)))))
@@ -4550,7 +4540,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else {
         val ref = qualId()
         newLineOpt()
-        if (token.is[LeftBrace] || isColonEol()) None
+        if (token.is[LeftBrace] || isColonIndent()) None
         else Some(List(autoEndPos(startPos)(Pkg(ref, bracelessPackageStats(identity)))))
       }
     }
