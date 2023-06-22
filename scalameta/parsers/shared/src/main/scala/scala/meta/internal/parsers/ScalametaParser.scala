@@ -4298,7 +4298,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       stats: ListBuffer[T],
       statpf: PartialFunction[Token, T],
       errorMsg: String = "illegal start of definition"
-  ): Unit = {
+  ): Boolean = {
     val isIndented = acceptOpt[Indentation.Indent]
     val statpfAdd = statpf.runWith(stats += _)
 
@@ -4307,7 +4307,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else if (token.is[StatSep]) acceptStatSep()
       else syntaxError(errorMsg + s" ${token.name}", at = token)
     }
+
     if (isIndented) accept[Indentation.Outdent]
+    isIndented
   }
 
   val topStat: PartialFunction[Token, Stat] = {
@@ -4336,12 +4338,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       enumCaseAllowed: Boolean = false,
       secondaryConstructorAllowed: Boolean = false
   ): (Self, List[Stat]) = {
-    val selfTree: Self = tryParse(selfOpt() match {
-      case x: Some[Self] if acceptOpt[RightArrow] => in.undoIndent(); x
+    val selfTreeOpt = tryParse(selfOpt() match {
+      case x: Some[Self] if acceptOpt[RightArrow] => x
       case _ => None
-    }).getOrElse(selfEmpty())
+    })
+    val selfTree = selfTreeOpt.getOrElse(selfEmpty())
     val stats = listBy[Stat] { buf =>
-      statSeqBuf(buf, templateStat(enumCaseAllowed, secondaryConstructorAllowed))
+      def getStats() =
+        statSeqBuf(buf, templateStat(enumCaseAllowed, secondaryConstructorAllowed))
+      val wasIndented = getStats() // some stats could be indented relative to self-type
+      if (wasIndented && selfTreeOpt.isDefined) getStats() // and the rest might not be
     }
     (selfTree, stats)
   }
