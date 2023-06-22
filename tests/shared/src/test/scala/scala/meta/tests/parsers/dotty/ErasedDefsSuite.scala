@@ -35,11 +35,13 @@ class ErasedDefsSuite extends BaseDottySuite {
 
   test("erased val") {
     val code = "erased val erasedEvidence: Ev = null"
-    runTestError[Stat](
-      code,
-      """|<input>:1: error: ; expected but val found
-         |erased val erasedEvidence: Ev = null
-         |       ^""".stripMargin
+    runTestAssert[Stat](code)(
+      Defn.Val(
+        List(Mod.Erased()),
+        List(Pat.Var(tname("erasedEvidence"))),
+        Some(pname("Ev")),
+        Lit.Null()
+      )
     )
   }
 
@@ -79,21 +81,21 @@ class ErasedDefsSuite extends BaseDottySuite {
 
   test("erased class") {
     val code = "erased class CanRead"
-    runTestError[Stat](
-      code,
-      """|<input>:1: error: ; expected but class found
-         |erased class CanRead
-         |       ^""".stripMargin
+    runTestAssert[Stat](code)(
+      Defn.Class(List(Mod.Erased()), pname("CanRead"), Nil, ctor, tpl(Nil))
     )
   }
 
   test("erased given") {
     val code = "erased given IsEmpty[Empty] = new IsEmpty[Empty]"
-    runTestError[Stat](
-      code,
-      """|<input>:1: error: ; expected but given found
-         |erased given IsEmpty[Empty] = new IsEmpty[Empty]
-         |       ^""".stripMargin
+    runTestAssert[Stat](code)(
+      Defn.GivenAlias(
+        List(Mod.Erased()),
+        anon,
+        None,
+        Type.Apply(pname("IsEmpty"), List(pname("Empty"))),
+        Term.New(Init(Type.Apply(pname("IsEmpty"), List(pname("Empty"))), anon, Nil))
+      )
     )
   }
 
