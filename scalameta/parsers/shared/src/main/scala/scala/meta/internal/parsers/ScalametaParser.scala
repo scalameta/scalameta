@@ -3113,9 +3113,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (!mods.has[Mod.Override])
         rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     } else {
-      if (token.is[soft.KwInline] && tryAhead[Ident]) {
-        mods += autoEndPos(prevTokenPos)(Mod.Inline())
-      }
+      @tailrec
+      def otherMods(): Unit =
+        if (peekToken.isNot[Colon]) {
+          val mod = token.text match {
+            case soft.KwInline() => Mod.Inline()
+            case soft.KwErased() => Mod.Erased()
+            case _ => null
+          }
+          if (mod ne null) {
+            mods += atCurPosNext(mod)
+            otherMods()
+          }
+        }
+      otherMods()
     }
     val hasExplicitMods = mods.view.drop(numAnnots).exists {
       case _: Mod.Quasi => false
