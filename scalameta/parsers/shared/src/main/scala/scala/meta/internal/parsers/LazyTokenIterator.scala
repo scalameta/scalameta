@@ -44,11 +44,10 @@ private[parsers] class LazyTokenIterator private (
     if (!dialect.allowSignificantIndentation) false
     else if (curr.token.is[Indentation.Indent]) true
     else {
-      val currRegions = curr.regions
-      val existingIndent = currRegions.find(_.isIndented).fold(0)(_.indent)
+      val existingIndent = curr.regions.find(_.isIndented).fold(0)(_.indent)
       val (expected, pointPos) = countIndentAndNewlineIndex(tokenPos)
       if (expected > existingIndent) {
-        val regions = f(currRegions)
+        val regions = f(prev.regions)
         val indentRegions = RegionIndent(expected) :: regions
         val indent = mkIndentToken(pointPos)
         resetCurr(TokenRef(indentRegions, indent, curr.pos, curr.pos, pointPos))
