@@ -36,6 +36,12 @@ final class RegionCaseExpr(override val indent: Int) extends RegionNonDelimNonIn
 final class RegionCaseBody(override val indent: Int, val arrow: Token)
     extends SepRegionNonIndented with CanProduceLF
 
+sealed trait RegionDefDecl extends RegionNonDelimNonIndented
+// initial mark of a definition (before colon)
+case object RegionDefMark extends RegionDefDecl
+// the type part of a definition (between colon and optional equals)
+case object RegionDefType extends RegionDefDecl
+
 /** region hierarchy to mark packages, classes, etc which can use `colon-eol` before template */
 sealed trait RegionTemplateDecl extends RegionNonDelimNonIndented
 
