@@ -60,11 +60,20 @@ object Stat {
 
 @branch trait Name extends Ref { def value: String }
 object Name {
-  def apply(value: String): Name = if (value == "") Name.Anonymous() else Name.Indeterminate(value)
+  def apply(value: String): Name = value match {
+    case "this" => Name.This()
+    case "" => Name.Anonymous()
+    case "_" => Name.Placeholder()
+    case _ => Name.Indeterminate(value)
+  }
   def unapply(name: Name): Option[String] = Some(name.value)
   @ast class Anonymous() extends Name {
     def value = ""
     checkParent(ParentChecks.NameAnonymous)
+  }
+  @ast class This extends Name {
+    def value = "this"
+    checkParent(ParentChecks.NameThis)
   }
   @ast class Indeterminate(value: Predef.String @nonEmpty) extends Name
   @ast class Placeholder() extends Name {

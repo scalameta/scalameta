@@ -1150,7 +1150,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def termName(): Term.Name = name(Term.Name(_))
   def typeName(): Type.Name = name(Type.Name(_))
   @inline private def anonNameEmpty(): Name.Anonymous = autoPos(Name.Anonymous())
-  @inline private def anonName(): Name.Anonymous = atCurPosNext(Name.Anonymous())
+  @inline private def nameThis(): Name.This = atCurPosNext(Name.This())
+  @inline private def namePlaceholder(): Name.Placeholder = atCurPosNext(Name.Placeholder())
   private def anonThis(): Term.This = atCurPosNext(Term.This(anonNameEmpty()))
 
   def path(thisOK: Boolean = true): Term.Ref = {
@@ -3239,7 +3240,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case _: Ident => typeName()
           case t: Unquote => unquote[Name](t)
           case _: Underscore if allowUnderscore =>
-            autoPos { next(); Name.Placeholder() }
+            namePlaceholder()
           case _ =>
             if (allowUnderscore) syntaxError("identifier or `_' expected", at = token)
             else syntaxError("identifier expected", at = token)
@@ -3908,7 +3909,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     accept[KwDef]
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     expect[KwThis]
-    val name = anonName()
+    val name = nameThis()
     if (token.isNot[LeftParen]) {
       syntaxError("auxiliary constructor needs non-implicit parameter list", at = token.pos)
     } else {
@@ -3924,12 +3925,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     accept[KwDef]
-    expect[KwThis]
-    val name = anonName()
+    val beforeThisPos = prevTokenPos
+    val thisPos = tokenPos
+    accept[KwThis]
     val paramss = termParamClauses(ownerIsType = true)
     newLineOptWhenFollowedBy[LeftBrace]
-    if (token.is[EOF]) Ctor.Primary(mods, name, paramss)
-    else secondaryCtorRest(mods, name, paramss)
+    if (token.is[EOF])
+      Ctor.Primary(mods, atPos(thisPos, beforeThisPos)(Name.Anonymous()), paramss)
+    else secondaryCtorRest(mods, atPos(thisPos)(Name.This()), paramss)
   }
 
   def entrypointCtor(): Ctor = {
@@ -3938,7 +3941,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def secondaryCtorRest(
       mods: List[Mod],
-      name: Name,
+      name: Name.This,
       paramss: Seq[Term.ParamClause]
   ): Ctor.Secondary = {
     val hasLeftBrace = isAfterOptNewLine[LeftBrace] || { accept[Equals]; token.is[LeftBrace] }
@@ -4043,7 +4046,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private def selfOpt(): Option[Self] = {
     val name = token match {
       case _: Ident => termName()
-      case _: Underscore | _: KwThis => anonName()
+      case _: KwThis => nameThis()
+      case _: Underscore => namePlaceholder()
       case t: Unquote =>
         if (peekToken.is[Colon]) unquote[Name.Quasi](t)
         else return Some(unquote[Self.Quasi](t))

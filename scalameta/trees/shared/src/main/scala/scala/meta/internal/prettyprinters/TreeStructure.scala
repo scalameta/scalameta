@@ -12,7 +12,11 @@ object TreeStructure {
   def apply[T <: Tree]: Structure[T] = {
     Structure {
       case _: Name.Anonymous =>
-        s("Name(\"\")")
+        s(s"""Name.Anonymous()""")
+      case _: Name.This =>
+        s(s"""Name.This()""")
+      case _: Name.Placeholder =>
+        s(s"""Name.Placeholder()""")
       case Name.Indeterminate(value) =>
         s("Name(", enquote(value, DoubleQuotes), ")")
       case x =>

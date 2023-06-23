@@ -190,7 +190,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
               case mtree: m.Init =>
                 indexArgNames(mtree)
                 mctorrefs(mtree.pos.start) = mtree.name
-              case _: m.Name.Anonymous | _: m.Name.Placeholder =>
+              case _: m.Name.Anonymous | _: m.Name.Placeholder | _: m.Name.This =>
               case mtree: m.Name =>
                 indexName(mtree)
               case mtree: m.Defn.Val =>
@@ -260,7 +260,8 @@ trait TextDocumentOps { self: SemanticdbOps =>
             if (occurrences.contains(pos)) return
 
             val gsym = {
-              def isClassRefInCtorCall = gsym0.isConstructor && mtree.isNot[m.Name.Anonymous]
+              def isClassRefInCtorCall = gsym0.isConstructor &&
+                !mtree.isAny[m.Name.Anonymous, m.Name.This]
               if (gsym0 != null && isClassRefInCtorCall) gsym0.owner
               else gsym0
             }

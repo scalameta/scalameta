@@ -340,6 +340,7 @@ object TreeSyntax {
         }
 
       // Name
+      case _: Name.This => s("this")
       case _: Name.Anonymous => s()
       case _: Name.Placeholder => s("_")
       case _: Term.Anonymous => s("")
@@ -950,8 +951,7 @@ object TreeSyntax {
 
       // Self
       case t: Self =>
-        val name = if (t.isNameAnonymous && t.decltpe.nonEmpty) kw("_") else s(t.name)
-        w(s(name, t.decltpe), " =>")
+        w(s(t.name, t.decltpe), " =>")
 
       // Template
       case t: Template =>

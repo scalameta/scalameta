@@ -546,7 +546,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           List(
             Ctor.Secondary(
               Nil,
-              Name(""),
+              Name.This(),
               List(List(Term.Param(Nil, tname("msg"), Some(pname("String")), None))),
               Init(
                 Type.Singleton(Term.This(Name(""))),
@@ -588,7 +588,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           List(
             Ctor.Secondary(
               Nil,
-              Name(""),
+              Name.This(),
               List(List(Term.Param(Nil, tname("msg"), Some(pname("String")), None))),
               Init(
                 Type.Singleton(Term.This(Name(""))),
