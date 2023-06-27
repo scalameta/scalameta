@@ -16,6 +16,8 @@ class PatSuite extends ParseSuite {
     assertTree(patternTyp(expr))(tree)
   }
 
+  implicit def caseParser(code: String, dialect: Dialect): Case = super.parseCase(code)(dialect)
+
   test("_") {
     val Wildcard() = pat("_")
   }
@@ -259,6 +261,21 @@ class PatSuite extends ParseSuite {
         Pat.Tuple(List(Term.Name("A"), Term.Name("B"), Term.Name("C"))),
         Term.Name("::"),
         List(Term.Name("A"), Term.Name("B"), Term.Name("C"))
+      )
+    }
+  }
+
+  test("case: at top level") {
+    val code =
+      """|case foo
+         |  if true =>
+         |  List(bar)
+         |""".stripMargin
+    checkTree(parseCase(code)) {
+      Case(
+        Pat.Var(Term.Name("foo")),
+        Some(Lit.Boolean(true)),
+        Term.Apply(Term.Name("List"), List(Term.Name("bar")))
       )
     }
   }
