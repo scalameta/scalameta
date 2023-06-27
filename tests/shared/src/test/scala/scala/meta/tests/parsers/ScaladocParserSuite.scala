@@ -644,21 +644,19 @@ class ScaladocParserSuite extends FunSuite {
                   ListItem(
                     Text(
                       Seq(
-                        Word(list11)
+                        Word(list11),
+                        Word("i.e."),
+                        Word("foo")
+                      )
+                    ),
+                    Seq(
+                      ListBlock(
+                        "i.",
+                        Seq(ListItem(Text(Seq(Word(list21)))))
                       )
                     )
                   )
                 )
-              ),
-              Text(
-                Seq(
-                  Word("i.e."),
-                  Word("foo")
-                )
-              ),
-              ListBlock(
-                "i.",
-                Seq(ListItem(Text(Seq(Word(list21)))))
               ),
               ListBlock(
                 "-",
@@ -672,8 +670,25 @@ class ScaladocParserSuite extends FunSuite {
                           ListItem(
                             Text(
                               Seq(
-                                Word(list22)
+                                Word(list22),
+                                Word("i.e."),
+                                Word("bar")
                               )
+                            ),
+                            Seq(
+                              ListBlock(
+                                "i.",
+                                Seq(
+                                  ListItem(
+                                    Text(
+                                      Seq(
+                                        Word(list32)
+                                      )
+                                    )
+                                  )
+                                )
+                              ),
+                              Text(Seq(Word("baz")))
                             )
                           )
                         )
@@ -681,26 +696,7 @@ class ScaladocParserSuite extends FunSuite {
                     )
                   )
                 )
-              ),
-              Text(
-                Seq(
-                  Word("i.e."),
-                  Word("bar")
-                )
-              ),
-              ListBlock(
-                "i.",
-                Seq(
-                  ListItem(
-                    Text(
-                      Seq(
-                        Word(list32)
-                      )
-                    )
-                  )
-                )
-              ),
-              Text(Seq(Word("baz")))
+              )
             )
           )
         )

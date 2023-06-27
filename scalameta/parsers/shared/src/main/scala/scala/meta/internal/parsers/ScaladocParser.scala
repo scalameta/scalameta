@@ -121,7 +121,7 @@ object ScaladocParser {
         CharIn("@=") |
         (codePrefix ~ nl) | mdCodeBlockPrefix |
         tableSep | tableDelim |
-        listPrefix
+        listPrefix ~ &(" ")
     }
   }
 
