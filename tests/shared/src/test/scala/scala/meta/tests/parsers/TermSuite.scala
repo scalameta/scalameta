@@ -1642,4 +1642,29 @@ class TermSuite extends ParseSuite {
     runTestAssert[Stat](codeOnSameLine, Some(syntaxOnSameLine))(treeOnSameLine)
   }
 
+  test("case: inside partial function") {
+    runTestAssert[Term](
+      """|{
+         |  case foo
+         |    if true =>
+         |    List(bar)
+         |}
+         |""".stripMargin,
+      Some(
+        """|{
+           |  case foo if true =>
+           |    List(bar)
+           |}""".stripMargin
+      )
+    )(
+      Term.PartialFunction(
+        Case(
+          Pat.Var(Term.Name("foo")),
+          Some(Lit.Boolean(true)),
+          Term.Apply(Term.Name("List"), List(Term.Name("bar")))
+        ) :: Nil
+      )
+    )
+  }
+
 }
