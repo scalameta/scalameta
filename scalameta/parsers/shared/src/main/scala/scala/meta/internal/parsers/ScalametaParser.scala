@@ -2743,9 +2743,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               targs.fold(ref)(x => autoEndPos(sid)(Term.ApplyType(ref, x))),
               autoPos(argumentPatterns().reduceWith(Pat.ArgClause.apply))
             )
-          } else if (targs.nonEmpty)
-            syntaxError("pattern must be a value", at = token)
-          else
+          } else {
+            targs.foreach { x =>
+              syntaxError(s"pattern must be a value or have parens: $sid$x", at = token)
+            }
             sid match {
               case name: Term.Name.Quasi => name.become[Pat]
               case name: Term.Name =>
@@ -2761,6 +2762,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               case select: Term.Select => select
               case _ => unreachable(debug(token, token.structure, sid, sid.structure))
             }
+          }
         case _: Underscore =>
           next()
           if (isSequenceOK && isStar && nextIf(isArglistEnd(peekToken)))
