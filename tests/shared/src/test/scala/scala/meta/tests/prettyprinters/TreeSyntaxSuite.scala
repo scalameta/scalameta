@@ -40,7 +40,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
         }
       } else {
         val treeWithNL = getTreeWithNL()
-        assertNoDiff(TreeSyntax.reprint(treeWithNL).toString, expectedSyntax)
+        assertNoDiff(treeWithNL.reprint, expectedSyntax)
         assertNoDiff(treeWithNL.structure, treeWithSemiStructure)
       }
     }
