@@ -4,7 +4,7 @@ package parsers
 
 // Tests from https://github.com/scala/scala/pull/5245/files
 class TrailingCommaSuite extends ParseSuite {
-  implicit val Scala2122 = scala.meta.dialects.Scala212.copy(allowTrailingCommas = true)
+  implicit val Scala2122: Dialect = scala.meta.dialects.Scala212.copy(allowTrailingCommas = true)
 
   // Negative tests
   checkError("""trait ArgumentExprs1 { f(23, "bar", )(Ev0, Ev1) }""")
