@@ -694,13 +694,13 @@ class ScaladocParserSuite extends FunSuite {
                   ListItem(
                     Text(
                       Seq(
-                        Word(list32),
-                        Word("baz")
+                        Word(list32)
                       )
                     )
                   )
                 )
-              )
+              ),
+              Text(Seq(Word("baz")))
             )
           )
         )

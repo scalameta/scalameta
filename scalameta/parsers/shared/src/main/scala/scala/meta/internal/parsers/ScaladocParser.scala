@@ -115,8 +115,10 @@ object ScaladocParser {
   private def nextPartParser[_: P](indent: Int, mdOffset: Int = 0): P[Unit] = P {
     // used to terminate previous part, hence indent can be less
     nl | hspacesMinWithLen(0).flatMap { offset =>
+      def dedented = if (offset < indent) Pass else Fail
       def mdCodeBlockPrefix = if (offset <= getMdOffsetMax(mdOffset)) mdCodeBlockFence else Fail
-      CharIn("@=") |
+      dedented |
+        CharIn("@=") |
         (codePrefix ~ nl) | mdCodeBlockPrefix |
         tableSep | tableDelim |
         listPrefix
