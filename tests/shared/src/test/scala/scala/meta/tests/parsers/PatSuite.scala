@@ -271,12 +271,13 @@ class PatSuite extends ParseSuite {
          |  if true =>
          |  List(bar)
          |""".stripMargin
-    runTestError[Case](
-      code,
-      """|<input>:1: error: => expected but \n found
-         |case foo
-         |        ^""".stripMargin
-    )
+    checkTree(parseCase(code)) {
+      Case(
+        Pat.Var(Term.Name("foo")),
+        Some(Lit.Boolean(true)),
+        Term.Apply(Term.Name("List"), List(Term.Name("bar")))
+      )
+    }
   }
 
 }

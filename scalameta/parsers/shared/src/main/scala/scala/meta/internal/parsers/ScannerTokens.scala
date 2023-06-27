@@ -494,6 +494,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                 case _ => !next.isClassOrObject
               }) =>
             expr() :: sepRegions
+          // `case` is at top-level (likely quasiquote)
+          case Nil if prevPos == 0 && !next.isClassOrObject => expr() :: Nil
           case xs => xs
         })
       case _: KwFinally =>
