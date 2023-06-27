@@ -133,8 +133,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
     MoreHelpers.requireNonEmptyOrigin(obtained)
 
     // check bijection
-    val reprintedCode =
-      scala.meta.internal.prettyprinters.TreeSyntax.reprint[T](obtained)(dialect).toString
+    val reprintedCode = obtained.reprint
     assertLayout.foreach(assertNoDiff(reprintedCode, _, s"Reprinted syntax:\n $expectedStructure"))
 
     assertNoDiff(obtained.structure, expectedStructure, "Generated stat")

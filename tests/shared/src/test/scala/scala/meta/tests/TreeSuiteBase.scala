@@ -25,36 +25,46 @@ abstract class TreeSuiteBase extends FunSuite {
     }
 
   protected def assertSyntax(obtained: Tree, syntax: String = null)(expected: Tree)(
-      implicit loc: munit.Location
+      implicit loc: munit.Location,
+      dialect: Dialect
   ): Unit =
-    assertNoDiff(obtained.syntax, Option(syntax).getOrElse(expected.syntax), expected.structure)
+    assertNoDiff(obtained.reprint, Option(syntax).getOrElse(expected.reprint), expected.structure)
 
   protected def checkTree(obtained: Tree, syntax: String = null)(expected: Tree)(
-      implicit loc: munit.Location
+      implicit loc: munit.Location,
+      dialect: Dialect
   ): Unit = {
     assertTree(obtained)(expected)
     assertSyntax(obtained, syntax)(expected)
   }
 
   protected def checkTrees(obtained: Tree*)(expected: Tree*)(
-      implicit loc: munit.Location
+      implicit loc: munit.Location,
+      dialect: Dialect
   ): Unit = {
     assertEquals(obtained.length, expected.length)
     obtained.zip(expected).foreach { case (o, e) => checkTree(o)(e) }
   }
 
   protected def checkTreesWithSyntax(obtained: Tree*)(syntax: String*)(expected: Tree*)(
-      implicit loc: munit.Location
+      implicit loc: munit.Location,
+      dialect: Dialect
   ): Unit = {
     assertEquals(obtained.length, syntax.length)
     checkTreesWithSyntax(obtained.zip(syntax): _*)(expected: _*)
   }
 
   protected def checkTreesWithSyntax(obtained: (Tree, String)*)(expected: Tree*)(
-      implicit loc: munit.Location
+      implicit loc: munit.Location,
+      dialect: Dialect
   ): Unit = {
     assertEquals(obtained.length, expected.length)
     obtained.zip(expected).foreach { case ((o, s), e) => checkTree(o, s)(e) }
+  }
+
+  protected implicit class implicitTree[T <: Tree](tree: T) {
+    def reprint(implicit dialect: Dialect): String =
+      scala.meta.internal.prettyprinters.TreeSyntax.reprint(tree).toString
   }
 
 }

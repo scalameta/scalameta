@@ -14,10 +14,7 @@ class RegressionSyntaxSuite extends ParseSuite {
       newDialect: Dialect = dialects.Scala213
   )(implicit dialect: Dialect) = test(testOpts) {
     val obtained = code.parse[Stat].get
-    val reprintedCode =
-      scala.meta.internal.prettyprinters.TreeSyntax
-        .reprint(obtained)(newDialect)
-        .toString
+    val reprintedCode = obtained.reprint(newDialect)
     assertEquals(reprintedCode, expected)
   }
 
