@@ -30,14 +30,14 @@ object MetacpOps {
         references += symbol
       }
     }
-    def visitScope(scope: Option[s.Scope])(thunk: () => Unit): Unit = {
+    def visitScope(scope: Option[s.Scope])(thunk: => Unit): Unit = {
       var toEnter: Seq[String] = Nil
       scope.foreach { s =>
         toEnter = s.hardlinks.map(_.symbol)
         isHardlink ++= toEnter
         s.symlinks.foreach(visitSymbol)
       }
-      thunk()
+      thunk
       isHardlink --= toEnter
     }
     def visitType(tpe: s.Type): Unit = tpe match {
@@ -62,14 +62,14 @@ object MetacpOps {
       case s.WithType(types) =>
         types.foreach(visitType)
       case s.StructuralType(tpe, declarations) =>
-        visitScope(declarations) { () => visitType(tpe) }
+        visitScope(declarations) { visitType(tpe) }
       case s.AnnotatedType(annotations, tpe) =>
         annotations.foreach(annot => visitType(annot.tpe))
         visitType(tpe)
       case s.ExistentialType(tpe, declarations) =>
-        visitScope(declarations) { () => visitType(tpe) }
+        visitScope(declarations) { visitType(tpe) }
       case s.UniversalType(typeParameters, tpe) =>
-        visitScope(typeParameters) { () => visitType(tpe) }
+        visitScope(typeParameters) { visitType(tpe) }
       case s.ByNameType(tpe) =>
         visitType(tpe)
       case s.RepeatedType(tpe) =>
@@ -80,21 +80,23 @@ object MetacpOps {
           visitType(kase.key)
           visitType(kase.body)
         }
+      case x: s.LambdaType =>
+        visitScope(x.parameters) { visitType(x.returnType) }
       case s.NoType =>
     }
     def visitSignature(signature: s.Signature): Unit = signature match {
       case s.ClassSignature(typeParameters, parents, self, declarations) =>
-        visitScope(typeParameters) { () =>
-          visitScope(declarations) { () =>
+        visitScope(typeParameters) {
+          visitScope(declarations) {
             parents.foreach(visitType)
             visitType(self)
           }
         }
       case s.MethodSignature(typeParameters, parameterLists, returnType) =>
-        parameterLists.foreach(s => visitScope(Some(s))(() => ()))
-        visitScope(typeParameters) { () => visitType(returnType) }
+        parameterLists.foreach(s => visitScope(Some(s))(()))
+        visitScope(typeParameters) { visitType(returnType) }
       case s.TypeSignature(typeParameters, lowerBound, upperBound) =>
-        visitScope(typeParameters) { () =>
+        visitScope(typeParameters) {
           visitType(lowerBound)
           visitType(upperBound)
         }
