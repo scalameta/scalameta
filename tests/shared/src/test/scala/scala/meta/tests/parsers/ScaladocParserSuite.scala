@@ -609,6 +609,102 @@ class ScaladocParserSuite extends FunSuite {
     assertEquals(result, expected)
   }
 
+  test("lists 2: #3145") {
+    val list11 = "List11"
+    val list12 = "List12"
+    val list21 = "List21"
+    val list22 = "List22"
+    val list32 = "List32"
+
+    val result =
+      parseString(
+        s"""
+      /**
+        * Some text:
+        * 1. $list11
+        *  i.e. foo
+        *  i. $list21
+        * - $list12
+        *  i. $list22
+        *  i.e. bar
+        *   i. $list32
+        *  baz
+        */
+       """
+      )
+    val expected = Option(
+      Scaladoc(
+        Seq(
+          Paragraph(
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                "1.",
+                Seq(
+                  ListItem(
+                    Text(
+                      Seq(
+                        Word(list11),
+                        Word("i.e."),
+                        Word("foo")
+                      )
+                    ),
+                    Seq(
+                      ListBlock(
+                        "i.",
+                        Seq(ListItem(Text(Seq(Word(list21)))))
+                      )
+                    )
+                  )
+                )
+              ),
+              ListBlock(
+                "-",
+                Seq(
+                  ListItem(
+                    Text(Seq(Word(list12))),
+                    Seq(
+                      ListBlock(
+                        "i.",
+                        Seq(
+                          ListItem(
+                            Text(
+                              Seq(
+                                Word(list22),
+                                Word("i.e."),
+                                Word("bar")
+                              )
+                            ),
+                            Seq(
+                              ListBlock(
+                                "i.",
+                                Seq(
+                                  ListItem(
+                                    Text(
+                                      Seq(
+                                        Word(list32)
+                                      )
+                                    )
+                                  )
+                                )
+                              ),
+                              Text(Seq(Word("baz")))
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+    assertEquals(result, expected)
+  }
+
   test("lists 3") {
     val list11 = "List11"
     val list12 = "List12"

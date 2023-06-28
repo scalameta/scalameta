@@ -112,30 +112,36 @@ object ScaladocParser {
     pattern.map { case (x, y) => new Link(x, y) }
   }
 
-  private def nextPartParser[_: P](mdOffset: Int = 0): P[Unit] = P {
+  private def nextPartParser[_: P](indent: Int, mdOffset: Int = 0): P[Unit] = P {
     // used to terminate previous part, hence indent can be less
-    def mdCodeBlockPrefix = hspace.rep(max = getMdOffsetMax(mdOffset)) ~ mdCodeBlockFence
-    def anotherBeg = P(CharIn("@=") | (codePrefix ~ nl) | listPrefix | tableSep | tableDelim)
-    nl | mdCodeBlockPrefix | hspaces0 ~/ anotherBeg
+    nl | hspacesMinWithLen(0).flatMap { offset =>
+      def dedented = if (offset < indent) Pass else Fail
+      def mdCodeBlockPrefix = if (offset <= getMdOffsetMax(mdOffset)) mdCodeBlockFence else Fail
+      dedented |
+        CharIn("@=") |
+        (codePrefix ~ nl) | mdCodeBlockPrefix |
+        tableSep | tableDelim |
+        listPrefix ~ &(" ")
+    }
   }
 
-  private def textParser[_: P](mdOffset: Int = 0): P[Text] = P {
-    def end = P(nl ~/ nextPartParser(mdOffset))
+  private def textParser[_: P](indent: Int, mdOffset: Int = 0): P[Text] = P {
+    def end = P(nl ~/ nextPartParser(indent, mdOffset))
     def part: P[TextPart] = P(codeExprParser | linkParser | wordParser)
     def sep = P(!end ~ nl.? ~ hspaces0)
     hspaces0 ~ part.rep(1, sep = sep).map(x => Text(x))
   }
 
   // this is to be used at the start of a line
-  private def leadTextParser[_: P](mdOffset: Int = 0) =
-    !nextPartParser(mdOffset) ~ textParser(mdOffset)
+  private def leadTextParser[_: P](indent: Int, mdOffset: Int = 0) =
+    !nextPartParser(indent, mdOffset) ~ textParser(indent, mdOffset)
 
-  private def tagParser[_: P]: P[Tag] = P {
-    def label = P((nl ~ !nextPartParser()).? ~ hspaces0 ~ wordParser)
+  private def tagParser[_: P](indent: Int): P[Tag] = P {
+    def label = P((nl ~ !nextPartParser(indent)).? ~ hspaces0 ~ wordParser)
     // special case: @usecase takes a single code line, on the same line
     def labelInline = P(hspaces0 ~ (!nl ~ AnyChar).rep(1).!.map(Word))
     def desc = P {
-      (textParser().? ~ embeddedTermsParser())
+      (textParser(indent).? ~ embeddedTermsParser())
         .map { case (x, terms) => x.fold(terms)(_ +: terms) }
     }
     hspaces0 ~ ("@" ~ labelParser).!.flatMap { tag =>
@@ -162,7 +168,7 @@ object ScaladocParser {
   }
 
   private def listItemParser[_: P](indent: Int, mdOffset: Int) = P {
-    (textParser(mdOffset) ~ embeddedTermsParser(indent, mdOffset))
+    (textParser(indent, mdOffset) ~ embeddedTermsParser(indent, mdOffset))
       .map { case (x, terms) => ListItem(x, terms) }
   }
 
@@ -238,16 +244,16 @@ object ScaladocParser {
 
   private def termParser[_: P] = P {
     def leadingParser = // might not consume full line
-      tagParser
+      tagParser(0)
     def completeParser = // will consume full line
       listBlockParser() |
         mdCodeBlockParser() |
         codeBlockParser |
         headingParser |
         tableParser |
-        textParser() // keep at the end, this is the fallback
+        textParser(0) // keep at the end, this is the fallback
     (nl | Start) ~ (leadingParser | (completeParser ~ nlOrEndPeek)) |
-      textParser() // could be following an element leaving trailing text, e.g. tagParser
+      textParser(0) // could be following an element leaving trailing text, e.g. tagParser
   }
 
   private def embeddedTermsParser[_: P](indent: Int = 0, mdOffset: Int = 0): P[Seq[Term]] = P {
@@ -256,7 +262,7 @@ object ScaladocParser {
         mdCodeBlockParser(mdOffset) |
         codeBlockParser |
         tableParser |
-        leadTextParser(mdOffset) // keep at the end, this is the fallback
+        leadTextParser(indent, mdOffset) // keep at the end, this is the fallback
     (nl ~ completeParser ~ nlOrEndPeek).rep
   }
 
