@@ -64,22 +64,10 @@ class CommunityDottySuite extends FunSuite {
     )
 
   val communityBuilds = List(
-    CommunityBuild(
-      "https://github.com/lampepfl/dotty.git",
-      // commit hash from 12.07.2021
-      "c99f6caa74e74a67dd42e8df6ede53c29cd7fce9",
-      "dotty",
-      dottyExclusionList,
-      dialect = dialects.Scala31
-    ),
-    CommunityBuild(
-      "https://github.com/scalameta/munit.git",
-      // latest commit from 30.03.2021
-      "06346adfe3519c384201eec531762dad2f4843dc",
-      "munit",
-      munitExclusionList,
-      dialect = dialects.Scala213
-    )
+    // commit hash from 12.07.2021
+    dottyBuild("c99f6caa74e74a67dd42e8df6ede53c29cd7fce9", dialects.Scala31),
+    // latest commit from 30.03.2021
+    munitBuild("06346adfe3519c384201eec531762dad2f4843dc", dialects.Scala213)
   )
 
   for (build <- communityBuilds) {
@@ -177,9 +165,15 @@ class CommunityDottySuite extends FunSuite {
     build.excluded.exists(el => path.endsWith(el))
   }
 
-  final def dottyExclusionList = List()
+  private def dottyBuild(ref: String, dialect: Dialect): CommunityBuild = {
+    val exclude = Nil
+    CommunityBuild("https://github.com/lampepfl/dotty.git", ref, "dotty", exclude, dialect)
+  }
 
-  final def munitExclusionList = List()
+  private def munitBuild(ref: String, dialect: Dialect): CommunityBuild = {
+    val exclude = Nil
+    CommunityBuild("https://github.com/scalameta/munit.git", ref, "munit", exclude, dialect)
+  }
 
   final val ignoreParts = List(
     "/tests/",
