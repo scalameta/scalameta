@@ -64,8 +64,10 @@ class CommunityDottySuite extends FunSuite {
     )
 
   val communityBuilds = List(
-    // commit hash from 12.07.2021
-    dottyBuild("c99f6caa74e74a67dd42e8df6ede53c29cd7fce9", dialects.Scala31),
+    dottyBuild("3.0.2", dialects.Scala30),
+    dottyBuild("3.1.3", dialects.Scala31),
+    dottyBuild("3.2.2", dialects.Scala32),
+    dottyBuild("3.3.1-RC1", dialects.Scala33),
     // latest commit from 30.03.2021
     munitBuild("06346adfe3519c384201eec531762dad2f4843dc", dialects.Scala213)
   )
