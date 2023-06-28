@@ -3832,7 +3832,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def classDef(mods: List[Mod]): Defn.Class = autoEndPos(mods) {
     accept[KwClass]
-    rejectMod[Mod.Override](mods, Messages.InvalidOverrideClass)
 
     val className = typeName()
     def culprit = Some(s"class $className")
