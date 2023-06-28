@@ -201,8 +201,6 @@ class ModSuite extends ParseSuite {
       "override override case class A(a: Int)",
       "override override type A",
       "def foo(override val a: Int): Int = a",
-      "override class A",
-      "override case class A(a: Int)",
       "override trait A"
     )
   }
@@ -329,9 +327,7 @@ class ModSuite extends ParseSuite {
       "abstract override abstract override trait A",
       "abstract override abstract override case class A(a: Int)",
       "abstract override abstract override type A",
-      "def foo(abstract override val a: Int): Int = a",
-      "abstract override class A",
-      "abstract override case class A(a: Int)"
+      "def foo(abstract override val a: Int): Int = a"
     )
   }
 
