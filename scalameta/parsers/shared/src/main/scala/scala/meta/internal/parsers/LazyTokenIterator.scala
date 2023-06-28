@@ -1,13 +1,11 @@
 package scala.meta.internal.parsers
 
-import scala.meta.Dialect
 import scala.meta.classifiers._
 import scala.meta.tokens.Token
-import scala.meta.tokens.Token._
 
 object LazyTokenIterator {
 
-  def apply(st: ScannerTokens)(implicit dialect: Dialect): LazyTokenIterator = {
+  def apply(st: ScannerTokens): LazyTokenIterator = {
     val curr = TokenRef(Nil, st.tokens(0), 0, null)
     val prev = TokenRef(Nil, null, -1, curr)
     new LazyTokenIterator(st, prev, curr)
@@ -19,8 +17,7 @@ private[parsers] class LazyTokenIterator private (
     private val scannerTokens: ScannerTokens,
     private var prev: TokenRef,
     private var curr: TokenRef
-)(implicit dialect: Dialect)
-    extends TokenIterator {
+) extends TokenIterator {
 
   import scannerTokens._
 
@@ -38,38 +35,6 @@ private[parsers] class LazyTokenIterator private (
   private def resetCurr(ref: TokenRef): Unit = {
     prev.next = ref
     curr = ref
-  }
-
-  private def observeIndented0(f: List[SepRegion] => List[SepRegion]): Boolean = {
-    if (!dialect.allowSignificantIndentation) false
-    else if (curr.token.is[Indentation.Indent]) true
-    else {
-      val existingIndent = curr.regions.find(_.isIndented).fold(0)(_.indent)
-      val (expected, pointPos) = countIndentAndNewlineIndex(tokenPos)
-      if (expected > existingIndent) {
-        val regions = f(prev.regions)
-        val indentRegions = RegionIndent(expected) :: regions
-        val indent = mkIndentToken(pointPos)
-        resetCurr(TokenRef(indentRegions, indent, curr.pos, curr.pos, pointPos))
-        true
-      } else false
-    }
-  }
-
-  def observeIndented(): Boolean = {
-    observeIndented0 { prev =>
-      /* When adding RegionIndent (we wrap the current code block in indentation)
-       * we might no longer need the region added on the current token.
-       *
-       * In case the region was needed, we will add it again as we haven't yet progressed
-       * to the next token.
-       */
-      prev match {
-        case RegionParen :: tail if token.is[LeftParen] => tail
-        case (_: RegionBrace) :: tail if token.is[LeftBrace] => tail
-        case _ => prev
-      }
-    }
   }
 
   private def getIndentation(ref: TokenRef): Int = {
