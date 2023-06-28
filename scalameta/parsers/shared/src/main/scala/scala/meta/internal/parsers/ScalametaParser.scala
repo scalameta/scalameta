@@ -1626,6 +1626,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (allowRepeated) addPos { nextTokens(); Term.Repeated(t) }
       else syntaxError("repeated argument not allowed here", at = token)
     }
+    @tailrec
     def iter(t: Term): Term = if (token.is[Equals]) {
       t match {
         case _: Term.Ref | _: Term.Apply | _: Quasi =>
@@ -1642,13 +1643,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       simpleExprRest(arguments, canApply = true, startPos = startPos)
     } else if (acceptOpt[Colon]) {
       if (token.is[At] || (token.is[Ellipsis] && peekToken.is[At])) {
-        addPos(Term.Annotate(t, annots(skipNewLines = false)))
+        iter(addPos(Term.Annotate(t, annots(skipNewLines = false))))
       } else if (token.is[Underscore] && isStar(peekToken)) {
         repeatedTerm(t, nextTwice)
       } else {
         // this does not necessarily correspond to syntax, but is necessary to accept lambdas
         // check out the `if (token.is[RightArrow]) { ... }` block below
-        addPos(Term.Ascribe(t, typeOrInfixType(location)))
+        iter(addPos(Term.Ascribe(t, typeOrInfixType(location))))
       }
     } else if (isVarargStarParam(allowRepeated)) {
       repeatedTerm(t, next)

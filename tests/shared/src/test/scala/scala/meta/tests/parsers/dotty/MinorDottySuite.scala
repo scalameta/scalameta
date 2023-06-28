@@ -1570,11 +1570,26 @@ class MinorDottySuite extends BaseDottySuite {
       """|underlyingStableClassRef(mbr.info.loBound): @unchecked match {
          |  case ref: TypeRef =>
          |}""".stripMargin
-    runTestError[Stat](
-      code,
-      """|<input>:1: error: ; expected but match found
-         |underlyingStableClassRef(mbr.info.loBound): @unchecked match {
-         |                                                       ^""".stripMargin
+    val layout =
+      """|(underlyingStableClassRef(mbr.info.loBound): @unchecked) match {
+         |  case ref: TypeRef =>
+         |}""".stripMargin
+    runTestAssert[Stat](code, Some(layout))(
+      Term.Match(
+        Term.Annotate(
+          Term.Apply(
+            Term.Name("underlyingStableClassRef"),
+            List(
+              Term.Select(Term.Select(Term.Name("mbr"), Term.Name("info")), Term.Name("loBound"))
+            )
+          ),
+          List(Mod.Annot(Init(Type.Name("unchecked"), Name.Anonymous(), Nil)))
+        ),
+        List(
+          Case(Pat.Typed(Pat.Var(Term.Name("ref")), Type.Name("TypeRef")), None, Term.Block(Nil))
+        ),
+        Nil
+      )
     )
   }
 
