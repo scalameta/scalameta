@@ -181,8 +181,6 @@ class CommunityDottySuite extends FunSuite {
     "/test-resources/scripting/",
     "/test-resources/repl/",
     "/sbt-test/",
-    "/out/",
-    "/language-server/src/dotty/",
-    "/library/src/scala/CanThrow.scala"
+    "/out/"
   )
 }
