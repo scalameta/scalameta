@@ -41,7 +41,8 @@ class CommunityDottySuite extends FunSuite {
       commit: String,
       name: String,
       excluded: List[String],
-      isScala3: Boolean
+      dialect: Dialect,
+      dialectAlt: Option[Dialect] = None
   )
   case class TestStats(
       checkedFiles: Int,
@@ -69,7 +70,7 @@ class CommunityDottySuite extends FunSuite {
       "c99f6caa74e74a67dd42e8df6ede53c29cd7fce9",
       "dotty",
       dottyExclusionList,
-      isScala3 = true
+      dialect = dialects.Scala31
     ),
     CommunityBuild(
       "https://github.com/scalameta/munit.git",
@@ -77,7 +78,7 @@ class CommunityDottySuite extends FunSuite {
       "06346adfe3519c384201eec531762dad2f4843dc",
       "munit",
       munitExclusionList,
-      isScala3 = false
+      dialect = dialects.Scala213
     )
   )
 
@@ -138,10 +139,14 @@ class CommunityDottySuite extends FunSuite {
       implicit build: CommunityBuild
   ): TestStats = {
     val fileContent = Input.File(absPath)
-    val isScala3 =
-      if (build.isScala3) !absPathString.contains("/scala-2")
-      else absPathString.contains("/scala-3")
-    implicit val dialect: Dialect = if (isScala3) dialects.Scala31 else dialects.Scala213
+    implicit val dialect: Dialect =
+      if (build.dialect.allowSignificantIndentation) {
+        if (!absPathString.contains("/scala-2")) build.dialect
+        else build.dialectAlt.getOrElse(dialects.Scala213)
+      } else {
+        if (!absPathString.contains("/scala-3")) build.dialect
+        else build.dialectAlt.getOrElse(dialects.Scala3)
+      }
     val lines = fileContent.chars.count(_ == '\n')
     if (excluded(absPathString, build)) {
       try {
