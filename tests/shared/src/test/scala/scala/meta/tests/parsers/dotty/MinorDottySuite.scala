@@ -1565,4 +1565,17 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("expr with annotation, then match") {
+    val code =
+      """|underlyingStableClassRef(mbr.info.loBound): @unchecked match {
+         |  case ref: TypeRef =>
+         |}""".stripMargin
+    runTestError[Stat](
+      code,
+      """|<input>:1: error: ; expected but match found
+         |underlyingStableClassRef(mbr.info.loBound): @unchecked match {
+         |                                                       ^""".stripMargin
+    )
+  }
+
 }

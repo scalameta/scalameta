@@ -1667,4 +1667,17 @@ class TermSuite extends ParseSuite {
     )
   }
 
+  test("expr with annotation, then match") {
+    val code =
+      """|underlyingStableClassRef(mbr.info.loBound): @unchecked match {
+         |  case ref: TypeRef =>
+         |}""".stripMargin
+    runTestError[Term](
+      code,
+      """|<input>:1: error: end of file expected but match found
+         |underlyingStableClassRef(mbr.info.loBound): @unchecked match {
+         |                                                       ^""".stripMargin
+    )
+  }
+
 }
