@@ -1622,17 +1622,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       allowRepeated: Boolean
   ): Term = {
     @inline def addPos[T <: Tree](body: T) = autoEndPos(startPos)(body)
-    var t: Term = prefix
-    def repeatedTerm(nextTokens: () => Unit) = {
-      if (allowRepeated) t = addPos { nextTokens(); Term.Repeated(t) }
+    def repeatedTerm(t: Term, nextTokens: () => Unit): Term = {
+      if (allowRepeated) addPos { nextTokens(); Term.Repeated(t) }
       else syntaxError("repeated argument not allowed here", at = token)
     }
-    if (token.is[Equals]) {
+    @tailrec
+    def iter(t: Term): Term = if (token.is[Equals]) {
       t match {
         case _: Term.Ref | _: Term.Apply | _: Quasi =>
           next()
-          t = addPos(Term.Assign(t, expr(location = NoStat, allowRepeated = true)))
-        case _ =>
+          addPos(Term.Assign(t, expr(location = NoStat, allowRepeated = true)))
+        case _ => t
       }
     } else if (token.is[Colon] && dialect.allowFewerBraces && isEolAfterColonFewerBracesBody()) {
       val colonPos = tokenPos
@@ -1640,22 +1640,26 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val args = blockExpr(allowRepeated = false)
       val argClause = autoEndPos(colonPos)(Term.ArgClause(args :: Nil))
       val arguments = addPos(Term.Apply(t, argClause))
-      t = simpleExprRest(arguments, canApply = true, startPos = startPos)
+      simpleExprRest(arguments, canApply = true, startPos = startPos)
     } else if (acceptOpt[Colon]) {
       if (token.is[At] || (token.is[Ellipsis] && peekToken.is[At])) {
-        t = addPos(Term.Annotate(t, annots(skipNewLines = false)))
+        iter(addPos(Term.Annotate(t, annots(skipNewLines = false))))
       } else if (token.is[Underscore] && isStar(peekToken)) {
-        repeatedTerm(nextTwice)
+        repeatedTerm(t, nextTwice)
       } else {
         // this does not necessarily correspond to syntax, but is necessary to accept lambdas
         // check out the `if (token.is[RightArrow]) { ... }` block below
-        t = addPos(Term.Ascribe(t, typeOrInfixType(location)))
+        iter(addPos(Term.Ascribe(t, typeOrInfixType(location))))
       }
     } else if (isVarargStarParam(allowRepeated)) {
-      repeatedTerm(next)
+      repeatedTerm(t, next)
     } else if (acceptOpt[KwMatch]) {
-      t = matchClause(t, startPos)
+      matchClause(t, startPos)
+    } else {
+      t
     }
+
+    val res: Term = iter(prefix)
 
     // Note the absense of `else if` here!!
     val contextFunction = token.is[ContextArrow]
@@ -1687,16 +1691,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       // A funny thing is that scalac's parser tries to disambiguate between self-type annotations and lambdas
       // even if it's not parsing the first statement in the template. E.g. `class C { foo; x => x }` will be
       // a parse error, because `x => x` will be deemed a self-type annotation, which ends up being inapplicable there.
-      convertToParamClause(t)(
+      convertToParamClause(res)(
         isNameAllowed = location != TemplateStat,
         isParamAllowed = location == BlockStat ||
           tokens(startPos).is[LeftParen] &&
           prevToken.is[RightParen]
-      ).foreach { pc =>
+      ).fold(res) { pc =>
         val params = addPos(pc)
         next()
         val trm = termFunctionBody(location)
-        t = addPos {
+        addPos {
           if (contextFunction)
             Term.ContextFunction(params, trm)
           else
@@ -1706,8 +1710,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       // if couldn't convert to params:
       // do nothing, which will either allow self-type annotation parsing to kick in
       // or will trigger an unexpected token error down the line
-    }
-    t
+    } else res
   }
 
   private def termFunctionBody(location: Location): Term =
