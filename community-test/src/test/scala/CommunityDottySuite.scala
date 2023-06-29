@@ -41,7 +41,8 @@ class CommunityDottySuite extends FunSuite {
       commit: String,
       name: String,
       excluded: List[String],
-      isScala3: Boolean
+      dialect: Dialect,
+      dialectAlt: Option[Dialect] = None
   )
   case class TestStats(
       checkedFiles: Int,
@@ -63,22 +64,12 @@ class CommunityDottySuite extends FunSuite {
     )
 
   val communityBuilds = List(
-    CommunityBuild(
-      "https://github.com/lampepfl/dotty.git",
-      // commit hash from 12.07.2021
-      "c99f6caa74e74a67dd42e8df6ede53c29cd7fce9",
-      "dotty",
-      dottyExclusionList,
-      isScala3 = true
-    ),
-    CommunityBuild(
-      "https://github.com/scalameta/munit.git",
-      // latest commit from 30.03.2021
-      "06346adfe3519c384201eec531762dad2f4843dc",
-      "munit",
-      munitExclusionList,
-      isScala3 = false
-    )
+    dottyBuild("3.0.2", dialects.Scala30),
+    dottyBuild("3.1.3", dialects.Scala31),
+    dottyBuild("3.2.2", dialects.Scala32),
+    dottyBuild("3.3.1-RC1", dialects.Scala33),
+    // latest commit from 30.03.2021
+    munitBuild("06346adfe3519c384201eec531762dad2f4843dc", dialects.Scala213)
   )
 
   for (build <- communityBuilds) {
@@ -138,10 +129,14 @@ class CommunityDottySuite extends FunSuite {
       implicit build: CommunityBuild
   ): TestStats = {
     val fileContent = Input.File(absPath)
-    val isScala3 =
-      if (build.isScala3) !absPathString.contains("/scala-2")
-      else absPathString.contains("/scala-3")
-    implicit val dialect: Dialect = if (isScala3) dialects.Scala31 else dialects.Scala213
+    implicit val dialect: Dialect =
+      if (build.dialect.allowSignificantIndentation) {
+        if (!absPathString.contains("/scala-2")) build.dialect
+        else build.dialectAlt.getOrElse(dialects.Scala213)
+      } else {
+        if (!absPathString.contains("/scala-3")) build.dialect
+        else build.dialectAlt.getOrElse(dialects.Scala3)
+      }
     val lines = fileContent.chars.count(_ == '\n')
     if (excluded(absPathString, build)) {
       try {
@@ -172,9 +167,15 @@ class CommunityDottySuite extends FunSuite {
     build.excluded.exists(el => path.endsWith(el))
   }
 
-  final def dottyExclusionList = List()
+  private def dottyBuild(ref: String, dialect: Dialect): CommunityBuild = {
+    val exclude = Nil
+    CommunityBuild("https://github.com/lampepfl/dotty.git", ref, "dotty", exclude, dialect)
+  }
 
-  final def munitExclusionList = List()
+  private def munitBuild(ref: String, dialect: Dialect): CommunityBuild = {
+    val exclude = Nil
+    CommunityBuild("https://github.com/scalameta/munit.git", ref, "munit", exclude, dialect)
+  }
 
   final val ignoreParts = List(
     "/tests/",
