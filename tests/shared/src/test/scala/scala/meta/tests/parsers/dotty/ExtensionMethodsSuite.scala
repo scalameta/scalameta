@@ -566,4 +566,142 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
   }
 
+  test("#3215 1") {
+    runTestAssert[Stat](
+      """|  extension (x: X)
+         |
+         |    def foo: Foo =
+         |      getFoo
+         |    end foo
+         |
+         |    def bar: Bar =
+         |      getBar
+         |    end bar
+         |""".stripMargin,
+      assertLayout = Some(
+        """|extension (x: X){
+           |  def foo: Foo = getFoo
+           |  end foo
+           |  def bar: Bar = getBar
+           |  end bar
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.ExtensionGroup(
+        Nil,
+        List(List(tparam("x", "X"))),
+        Term.Block(
+          List(
+            Defn.Def(Nil, tname("foo"), Nil, Some(pname("Foo")), tname("getFoo")),
+            Term.EndMarker(tname("foo")),
+            Defn.Def(Nil, tname("bar"), Nil, Some(pname("Bar")), tname("getBar")),
+            Term.EndMarker(tname("bar"))
+          )
+        )
+      )
+    )
+  }
+
+  test("#3215 2") {
+    runTestAssert[Stat](
+      """|object MtagsEnrichments extends ScalametaCommonEnrichments:
+         |  extension (x: X)
+         |
+         |    def foo: Foo =
+         |      getFoo
+         |    end foo
+         |
+         |    def bar: Bar =
+         |      getBar
+         |    end bar
+         |""".stripMargin,
+      assertLayout = Some(
+        """|object MtagsEnrichments extends ScalametaCommonEnrichments {
+           |  extension (x: X){
+           |    def foo: Foo = getFoo
+           |    end foo
+           |    def bar: Bar = getBar
+           |    end bar
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        tname("MtagsEnrichments"),
+        Template(
+          Nil,
+          List(init("ScalametaCommonEnrichments")),
+          slf,
+          Defn.ExtensionGroup(
+            Nil,
+            List(List(tparam("x", "X"))),
+            Term.Block(
+              List(
+                Defn.Def(Nil, tname("foo"), Nil, Some(pname("Foo")), tname("getFoo")),
+                Term.EndMarker(tname("foo")),
+                Defn.Def(Nil, tname("bar"), Nil, Some(pname("Bar")), tname("getBar")),
+                Term.EndMarker(tname("bar"))
+              )
+            )
+          ) :: Nil,
+          Nil
+        )
+      )
+    )
+  }
+
+  test("#3215 3") {
+    runTestAssert[Stat](
+      """|object MtagsEnrichments extends ScalametaCommonEnrichments {
+         |  extension (x: X)
+         |
+         |    def foo: Foo =
+         |      getFoo
+         |    end foo
+         |
+         |    def bar: Bar =
+         |      getBar
+         |    end bar
+         |}
+         |""".stripMargin,
+      assertLayout = Some(
+        """|object MtagsEnrichments extends ScalametaCommonEnrichments {
+           |  extension (x: X){
+           |    def foo: Foo = getFoo
+           |    end foo
+           |    def bar: Bar = getBar
+           |    end bar
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        tname("MtagsEnrichments"),
+        Template(
+          Nil,
+          List(init("ScalametaCommonEnrichments")),
+          slf,
+          Defn.ExtensionGroup(
+            Nil,
+            List(List(tparam("x", "X"))),
+            Term.Block(
+              List(
+                Defn.Def(Nil, tname("foo"), Nil, Some(pname("Foo")), tname("getFoo")),
+                Term.EndMarker(tname("foo")),
+                Defn.Def(Nil, tname("bar"), Nil, Some(pname("Bar")), tname("getBar")),
+                Term.EndMarker(tname("bar"))
+              )
+            )
+          ) :: Nil,
+          Nil
+        )
+      )
+    )
+  }
+
 }
