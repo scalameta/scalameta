@@ -344,4 +344,21 @@ class DefnSuite extends ParseSuite {
       blockStat("infix def x = 42")
     }
   }
+
+  test("#3210") {
+    val code =
+      """|a3 match {
+         |  case Some(_) =>
+         |    case class A6(a7: A8)
+         |
+         |    object A9
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: ; expected but object found
+         |    object A9
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
