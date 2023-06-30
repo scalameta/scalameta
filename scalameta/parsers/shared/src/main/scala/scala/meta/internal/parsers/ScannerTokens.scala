@@ -482,20 +482,17 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         getCaseIntro(sepRegions)
       case _: KwCatch =>
         getCaseIntro(sepRegions)
-      case _: KwCase =>
+      case _: KwCase if !next.isClassOrObject =>
         def expr() = new RegionCaseExpr(countIndent(currPos))
         currRef(sepRegions match {
           // `case` follows the body of a previous case
           case (_: RegionCaseBody) :: xs => expr() :: xs
           // x could be RegionIndent or RegionBrace
           case x :: RegionCaseMark :: xs => expr() :: x :: xs
-          case (_: RegionBrace) :: xs if (xs.headOption match {
-                case Some(_: RegionFor | RegionTemplateBody) => false
-                case _ => !next.isClassOrObject
-              }) =>
-            expr() :: sepRegions
+          case (_: RegionBrace) :: (_: RegionFor | RegionTemplateBody) :: _ => sepRegions
+          case (_: RegionBrace) :: _ => expr() :: sepRegions
           // `case` is at top-level (likely quasiquote)
-          case Nil if prevPos == 0 && !next.isClassOrObject => expr() :: Nil
+          case Nil if prevPos == 0 => expr() :: Nil
           case xs => xs
         })
       case _: KwFinally =>

@@ -344,4 +344,44 @@ class DefnSuite extends ParseSuite {
       blockStat("infix def x = 42")
     }
   }
+
+  test("#3210") {
+    val code =
+      """|a3 match {
+         |  case Some(_) =>
+         |    case class A6(a7: A8)
+         |
+         |    object A9
+         |}
+         |""".stripMargin
+    val layout =
+      """|a3 match {
+         |  case Some(_) =>
+         |    case class A6(a7: A8)
+         |    object A9
+         |}
+         |""".stripMargin
+    val tree = Term.Match(
+      tname("a3"),
+      Case(
+        Pat.Extract(tname("Some"), List(Pat.Wildcard())),
+        None,
+        Term.Block(
+          List(
+            Defn.Class(
+              List(Mod.Case()),
+              pname("A6"),
+              Nil,
+              ctorp(List(tparam("a7", "A8"))),
+              tpl(Nil)
+            ),
+            Defn.Object(Nil, tname("A9"), tpl(Nil))
+          )
+        )
+      ) :: Nil,
+      Nil
+    )
+    runTestAssert[Stat](code, assertLayout = Some(layout))(tree)
+  }
+
 }
