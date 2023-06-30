@@ -618,10 +618,12 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(
         """|object MtagsEnrichments extends ScalametaCommonEnrichments {
-           |  extension (x: X) def foo: Foo = getFoo
-           |  end foo
-           |  def bar: Bar = getBar
-           |  end bar
+           |  extension (x: X){
+           |    def foo: Foo = getFoo
+           |    end foo
+           |    def bar: Bar = getBar
+           |    end bar
+           |  }
            |}
            |""".stripMargin
       )
@@ -633,16 +635,18 @@ class ExtensionMethodsSuite extends BaseDottySuite {
           Nil,
           List(init("ScalametaCommonEnrichments")),
           slf,
-          List(
-            Defn.ExtensionGroup(
-              Nil,
-              List(List(tparam("x", "X"))),
-              Defn.Def(Nil, tname("foo"), Nil, Some(pname("Foo")), tname("getFoo"))
-            ),
-            Term.EndMarker(tname("foo")),
-            Defn.Def(Nil, tname("bar"), Nil, Some(pname("Bar")), tname("getBar")),
-            Term.EndMarker(tname("bar"))
-          ),
+          Defn.ExtensionGroup(
+            Nil,
+            List(List(tparam("x", "X"))),
+            Term.Block(
+              List(
+                Defn.Def(Nil, tname("foo"), Nil, Some(pname("Foo")), tname("getFoo")),
+                Term.EndMarker(tname("foo")),
+                Defn.Def(Nil, tname("bar"), Nil, Some(pname("Bar")), tname("getBar")),
+                Term.EndMarker(tname("bar"))
+              )
+            )
+          ) :: Nil,
           Nil
         )
       )
@@ -665,10 +669,12 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(
         """|object MtagsEnrichments extends ScalametaCommonEnrichments {
-           |  extension (x: X) def foo: Foo = getFoo
-           |  end foo
-           |  def bar: Bar = getBar
-           |  end bar
+           |  extension (x: X){
+           |    def foo: Foo = getFoo
+           |    end foo
+           |    def bar: Bar = getBar
+           |    end bar
+           |  }
            |}
            |""".stripMargin
       )
@@ -680,16 +686,18 @@ class ExtensionMethodsSuite extends BaseDottySuite {
           Nil,
           List(init("ScalametaCommonEnrichments")),
           slf,
-          List(
-            Defn.ExtensionGroup(
-              Nil,
-              List(List(tparam("x", "X"))),
-              Defn.Def(Nil, tname("foo"), Nil, Some(pname("Foo")), tname("getFoo"))
-            ),
-            Term.EndMarker(tname("foo")),
-            Defn.Def(Nil, tname("bar"), Nil, Some(pname("Bar")), tname("getBar")),
-            Term.EndMarker(tname("bar"))
-          ),
+          Defn.ExtensionGroup(
+            Nil,
+            List(List(tparam("x", "X"))),
+            Term.Block(
+              List(
+                Defn.Def(Nil, tname("foo"), Nil, Some(pname("Foo")), tname("getFoo")),
+                Term.EndMarker(tname("foo")),
+                Defn.Def(Nil, tname("bar"), Nil, Some(pname("Bar")), tname("getBar")),
+                Term.EndMarker(tname("bar"))
+              )
+            )
+          ) :: Nil,
           Nil
         )
       )

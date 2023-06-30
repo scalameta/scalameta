@@ -596,7 +596,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case soft.KwDerives() => getTemplateInherit(sepRegions)
           case soft.KwExtension()
               if next.isAny[LeftParen, LeftBracket] &&
-                prevToken.isAny[StatSep, Indentation.Outdent] =>
+                prevToken.isAny[StatSep, Indentation, LeftBrace] =>
             currRef(RegionExtensionMark :: sepRegions)
           case _ => currRef(sepRegions)
         }
