@@ -20,8 +20,7 @@ object Chars {
   final val SU = '\u001A'
 
   /**
-   * Convert a character digit to an Int according to given base,
-   * -1 if no success
+   * Convert a character digit to an Int according to given base, -1 if no success
    */
   def digit2int(ch: Char, base: Int): Int = {
     val num =

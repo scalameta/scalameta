@@ -69,10 +69,10 @@ class LiftableMacros(val c: Context) extends AdtReflection {
           val fields = adt match { case leaf: Leaf => leaf.fields; case _ => Nil }
           val args = fields.map { f =>
             q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})"
-          // NOTE: we can't really use AssignOrNamedArg here, sorry
-          // Test.scala:10: warning: type-checking the invocation of method apply checks if the named argument expression 'stats = ...' is a valid assignment
-          // in the current scope. The resulting type inference error (see above) can be fixed by providing an explicit type in the local definition for stats.
-          // q"$u.AssignOrNamedArg($fieldName, $fieldValue)"
+            // NOTE: we can't really use AssignOrNamedArg here, sorry
+            // Test.scala:10: warning: type-checking the invocation of method apply checks if the named argument expression 'stats = ...' is a valid assignment
+            // in the current scope. The resulting type inference error (see above) can be fixed by providing an explicit type in the local definition for stats.
+            // q"$u.AssignOrNamedArg($fieldName, $fieldValue)"
           }
           val latestAfterVersion = if (fields.nonEmpty) {
             val moduleNames = adt.sym.companion.info.decls
