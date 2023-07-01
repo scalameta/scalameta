@@ -820,7 +820,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   // #3219
   checkPositions[Term](
     "(10) + 1 toInt",
-    """|Term.ApplyInfix 10) + 1
+    """|Term.ApplyInfix (10) + 1
        |Type.ArgClause (10) + @@1 toInt
        |""".stripMargin
   )

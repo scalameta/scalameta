@@ -1082,7 +1082,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   // #3219
   checkPositions[Stat](
     "(10) + 1 toInt",
-    """|Term.ApplyInfix 10) + 1
+    """|Term.ApplyInfix (10) + 1
        |Type.ArgClause (10) + @@1 toInt
        |""".stripMargin
   )
@@ -1091,7 +1091,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  fx
        |""".stripMargin,
     """|Term.ApplyInfix (10) + 1 == 11
-       |Term.ApplyInfix 10) + 1
+       |Term.ApplyInfix (10) + 1
        |Type.ArgClause if (10) + @@1 == 11 then
        |Type.ArgClause if (10) + 1 == @@11 then
        |Lit.Unit @@

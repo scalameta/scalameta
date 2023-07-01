@@ -2037,6 +2037,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val ctx = termInfixContext
     val base = ctx.stack
 
+    def getLhsStartPos(lhs: ctx.Typ): Int =
+      if (lhs eq rhs0) startPos else lhs.startTokenPos
+
     // Skip to later in the `postfixExpr` method to start mental debugging.
     // rhsStartK/rhsEndK may be bigger than then extent of rhsK,
     // so we really have to track them separately.
@@ -2049,13 +2052,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
 
       def getNextRhs(op: Term.Name, targs: Type.ArgClause): Term = {
-        ctx.push(ctx.UnfinishedInfix(getPrevLhs(op), op, targs))
+        val lhs = getPrevLhs(op)
+        val wrap = (lhs eq rhs0) && lhs.startTokenPos != startPos
+        val lhsExt = if (wrap) atPosWithBody(startPos, Term.Tuple(lhs :: Nil), rhsEndK) else lhs
+        ctx.push(ctx.UnfinishedInfix(lhsExt, op, targs))
         argumentExprsOrPrefixExpr(PostfixStat)
       }
 
       def getPostfix(op: Term.Name): Term = {
         val finQual = getPrevLhs(op)
-        atPos(finQual, op)(Term.Select(finQual, op))
+        atPos(getLhsStartPos(finQual), op)(Term.Select(finQual, op))
       }
 
       def getPostfixOrNextRhs(op: Term.Name): Either[Term, Term] = {
@@ -2091,7 +2097,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _: KwMatch if dialect.allowMatchAsOperator =>
           val op = atCurPosNext(Term.Name("match"))
           val lhs = getPrevLhs(op)
-          Some(Right(matchClause(lhs, lhs.startTokenPos)))
+          Some(Right(matchClause(lhs, getLhsStartPos(lhs))))
         case _: LF if dialect.allowInfixOperatorAfterNL =>
           tryGetNextInfixOpIfLeading(startPos)(Term.Name.apply).map { op =>
             Right(getNextRhs(op, autoPos(Type.ArgClause(Nil))))
