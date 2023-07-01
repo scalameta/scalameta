@@ -1702,11 +1702,22 @@ class TermSuite extends ParseSuite {
          |  x <- a to b
          |} yield x
          |""".stripMargin
-    val error =
-      """|<input>:3: error: } expected but <- found
-         |  x <- a to b
-         |    ^""".stripMargin
-    runTestError[Term](code, error)
+    val layout = "for ( case (a, b) <- pairs; x <- a to b) yield x"
+    runTestAssert[Term](code, Some(layout))(
+      Term.ForYield(
+        List(
+          Enumerator.CaseGenerator(
+            Pat.Tuple(List(Pat.Var(tname("a")), Pat.Var(tname("b")))),
+            tname("pairs")
+          ),
+          Enumerator.Generator(
+            Pat.Var(tname("x")),
+            Term.ApplyInfix(tname("a"), tname("to"), Nil, List(tname("b")))
+          )
+        ),
+        tname("x")
+      )
+    )
   }
 
 }
