@@ -1695,4 +1695,29 @@ class TermSuite extends ParseSuite {
     )
   }
 
+  test("#3220") {
+    val code =
+      """|for {
+         |  case (a, b) <- pairs
+         |  x <- a to b
+         |} yield x
+         |""".stripMargin
+    val layout = "for ( case (a, b) <- pairs; x <- a to b) yield x"
+    runTestAssert[Term](code, Some(layout))(
+      Term.ForYield(
+        List(
+          Enumerator.CaseGenerator(
+            Pat.Tuple(List(Pat.Var(tname("a")), Pat.Var(tname("b")))),
+            tname("pairs")
+          ),
+          Enumerator.Generator(
+            Pat.Var(tname("x")),
+            Term.ApplyInfix(tname("a"), tname("to"), Nil, List(tname("b")))
+          )
+        ),
+        tname("x")
+      )
+    )
+  }
+
 }

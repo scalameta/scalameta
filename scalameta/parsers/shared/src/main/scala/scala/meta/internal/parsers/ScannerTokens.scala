@@ -543,7 +543,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             new RegionCaseBody(bodyIndent, curr) :: xs
           case xs => xs
         })
-      case _: KwFor if dialect.allowSignificantIndentation =>
+      case _: KwFor =>
         currRef(RegionFor(next) :: sepRegions)
       case _: KwWhile if dialect.allowSignificantIndentation =>
         currRef(RegionWhile(next) :: sepRegions)
