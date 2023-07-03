@@ -211,25 +211,6 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     }
   }
 
-  def canStartIndent(index: Int): Boolean = tokens(index) match {
-    case _: KwYield | _: KwTry | _: KwCatch | _: KwFinally | _: KwMatch | _: KwDo | _: KwFor |
-        _: KwThen | _: KwElse | _: KwWhile | _: KwIf | _: RightArrow | _: KwReturn | _: LeftArrow |
-        _: ContextArrow =>
-      true
-    case _: Equals =>
-      getNextToken(index) match {
-        case _: KwMacro => false
-        case _ => true
-      }
-    case _: KwWith =>
-      val nextIndex = getNextIndex(index)
-      isDefIntro(nextIndex) || (tokens(nextIndex) match {
-        case _: KwImport | _: KwExport => true
-        case _ => false
-      })
-    case _ => false
-  }
-
   @classifier
   trait CantStartStat {
     def unapply(token: Token): Boolean = token match {
@@ -836,7 +817,16 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                     Some(Left(sepRegions)) // skip this newline
                   case RegionExtensionMark :: rs if prev.is[RightParen] && !next.is[LeftParen] =>
                     emitIndent(RegionTemplateBody :: rs)
-                  case xs => if (canStartIndent(prevPos)) emitIndent(xs) else None
+                  case xs =>
+                    val ok = prev match {
+                      case _: KwYield | _: KwFinally | _: KwDo | _: KwFor | _: KwThen | _: KwElse |
+                          _: KwWhile | _: KwIf | _: KwReturn | _: LeftArrow | _: ContextArrow =>
+                        true
+                      case _: Equals => !next.is[KwMacro]
+                      case _: KwWith => isDefIntro(nextPos) || next.isAny[KwImport, KwExport]
+                      case _ => false
+                    }
+                    if (ok) emitIndent(xs) else None
                 }
             }
           }
