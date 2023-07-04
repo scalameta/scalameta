@@ -1720,4 +1720,23 @@ class TermSuite extends ParseSuite {
     )
   }
 
+  test("#3224") {
+    val code =
+      """|for {
+         |  x2 <- x1
+         |} yield x2
+         |  .x3 {
+         |    case x4
+         |        if x5.x6
+         |          .x7(x8) =>
+         |        x9
+         |  }
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: => expected but \n found
+         |    case x4
+         |           ^""".stripMargin
+    runTestError[Term](code, error)
+  }
+
 }

@@ -3726,4 +3726,43 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("#3224") {
+    val code =
+      """|for {
+         |  x2 <- x1
+         |} yield x2
+         |  .x3 {
+         |    case x4
+         |        if x5.x6
+         |          .x7(x8) =>
+         |        x9
+         |  }
+         |""".stripMargin
+    val layout =
+      """|for (x2 <- x1) yield x2.x3({
+         |  case x4 if x5.x6.x7(x8) => x9
+         |})
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout))(
+      Term.ForYield(
+        List(Enumerator.Generator(Pat.Var(tname("x2")), tname("x1"))),
+        Term.Apply(
+          Term.Select(tname("x2"), tname("x3")),
+          Term.PartialFunction(
+            Case(
+              Pat.Var(tname("x4")),
+              Some(
+                Term.Apply(
+                  Term.Select(Term.Select(tname("x5"), tname("x6")), tname("x7")),
+                  List(tname("x8"))
+                )
+              ),
+              tname("x9")
+            ) :: Nil
+          ) :: Nil
+        )
+      )
+    )
+  }
+
 }
