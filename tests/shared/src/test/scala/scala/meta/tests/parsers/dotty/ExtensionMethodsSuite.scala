@@ -112,7 +112,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     runTestAssert[Stat](
       code,
       assertLayout = Some(
-        """|extension (c: Circle){
+        """|extension (c: Circle) {
            |  def crc: Int = 2
            |}
            |""".stripMargin
@@ -133,7 +133,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
                   |  def crc: Int = 2
                   |}
                   |""".stripMargin
-    val output = """|extension (c: Circle)(using Context, x: Int){
+    val output = """|extension (c: Circle)(using Context, x: Int) {
                     |  def crc: Int = 2
                     |}
                     |""".stripMargin
@@ -161,7 +161,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
                   |  def crc: Int = 2
                   |}
                   |""".stripMargin
-    val output = """|extension (c: Circle)(using Context, x: Int){
+    val output = """|extension (c: Circle)(using Context, x: Int) {
                     |  def crc: Int = 2
                     |}
                     |""".stripMargin
@@ -188,7 +188,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
                   |}
                   |""".stripMargin
     val output =
-      """|extension (c: Circle)(using Context, x: Int)(using y: String, File){
+      """|extension (c: Circle)(using Context, x: Int)(using y: String, File) {
          |  def crc: Int = 2
          |}
          |""".stripMargin
@@ -409,7 +409,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |  export richInt.*
          |""".stripMargin,
       assertLayout = Some(
-        """|extension (i: Int){
+        """|extension (i: Int) {
            |  private def richInt = RichInt(i)
            |  export richInt.*
            |}
@@ -579,7 +579,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |    end bar
          |""".stripMargin,
       assertLayout = Some(
-        """|extension (x: X){
+        """|extension (x: X) {
            |  def foo: Foo = getFoo
            |  end foo
            |  def bar: Bar = getBar
@@ -618,7 +618,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(
         """|object MtagsEnrichments extends ScalametaCommonEnrichments {
-           |  extension (x: X){
+           |  extension (x: X) {
            |    def foo: Foo = getFoo
            |    end foo
            |    def bar: Bar = getBar
@@ -669,7 +669,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(
         """|object MtagsEnrichments extends ScalametaCommonEnrichments {
-           |  extension (x: X){
+           |  extension (x: X) {
            |    def foo: Foo = getFoo
            |    end foo
            |    def bar: Bar = getBar
@@ -720,7 +720,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(
         """|object A { self =>
-           |  extension (x: X){
+           |  extension (x: X) {
            |    @annoFoo def foo: Foo = getFoo
            |    @annoBar def bar: Bar = getBar
            |  }
@@ -777,7 +777,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(
         """|object A { self =>
-           |  extension (x: X){
+           |  extension (x: X) {
            |    private def foo: Foo = getFoo
            |    protected def bar: Bar = getBar
            |  }
