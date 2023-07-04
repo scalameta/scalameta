@@ -16,7 +16,7 @@ class CommunityDottySuite extends FunSuite {
 
   val communityDirectory = Paths.get("community-projects")
 
-  def fetchCommunityBuild(build: CommunityBuild): Unit = {
+  def fetchCommunityBuild(build: CommunityBuild): Path = {
     if (!Files.exists(communityDirectory)) Files.createDirectory(communityDirectory)
 
     val folderPath = communityDirectory.resolve(build.name)
@@ -34,6 +34,8 @@ class CommunityDottySuite extends FunSuite {
 
       assert(clue(result) == 0, s"Checking out community build ${build.name} failed")
     }
+
+    folderPath
   }
 
   case class CommunityBuild(
@@ -80,9 +82,9 @@ class CommunityDottySuite extends FunSuite {
   }
 
   def check(implicit build: CommunityBuild): Unit = {
-    fetchCommunityBuild(build)
+    val folder = fetchCommunityBuild(build)
 
-    val stats = checkFilesRecursive(communityDirectory.resolve(build.name))
+    val stats = checkFilesRecursive(folder.toAbsolutePath).fold(InitTestStats)(merger)
     val timePer1KLines = Math.round(stats.timeTaken / (stats.linesParsed / 1000.0))
 
     println("--------------------------")
@@ -109,25 +111,22 @@ class CommunityDottySuite extends FunSuite {
     t1 - t0
   }
 
-  def checkFilesRecursive(parent: Path)(implicit build: CommunityBuild): TestStats = {
-    val absPath = parent.toAbsolutePath
-    val absPathString = absPath.toString
-    if (ignoreParts.exists(absPathString.contains))
-      return InitTestStats
-    if (Files.isDirectory(parent)) {
-      import scala.collection.JavaConverters._
-      Files
-        .list(parent)
-        .map(checkFilesRecursive)
-        .iterator()
-        .asScala
-        .fold(InitTestStats)(merger)
-    } else {
-      if (absPathString.endsWith(".scala")) {
-        checkAbsPath(absPath, absPathString)
-      } else InitTestStats
+  private def checkFilesRecursive(path: Path)(implicit cb: CommunityBuild): Iterator[TestStats] =
+    if (ignoreParts.exists(path.endsWith)) Iterator.empty
+    else {
+      val ds = Files.newDirectoryStream(path)
+      val (dirs, files) =
+        try {
+          import scala.collection.JavaConverters._
+          ds.iterator().asScala.toList.partition(Files.isDirectory(_))
+        } finally {
+          ds.close()
+        }
+      files.iterator.flatMap { x =>
+        val fileStr = x.toString
+        if (fileStr.endsWith(".scala")) Some(checkAbsPath(x, fileStr)) else None
+      } ++ dirs.iterator.flatMap(checkFilesRecursive)
     }
-  }
 
   def checkAbsPath(absPath: Path, absPathString: String)(
       implicit build: CommunityBuild
@@ -180,10 +179,11 @@ class CommunityDottySuite extends FunSuite {
   }
 
   final val ignoreParts = List(
-    "/tests/",
-    "/test-resources/scripting/",
-    "/test-resources/repl/",
-    "/sbt-test/",
-    "/out/"
-  )
+    ".git/",
+    "tests/",
+    "test-resources/scripting/",
+    "test-resources/repl/",
+    "sbt-test/",
+    "out/"
+  ).map(Paths.get(_))
 }
