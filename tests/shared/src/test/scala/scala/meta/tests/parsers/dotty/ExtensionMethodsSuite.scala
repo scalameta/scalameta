@@ -704,4 +704,120 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
   }
 
+  test("#3231 1") {
+    runTestAssert[Stat](
+      """|object A {
+         |  self =>
+         |  extension (x: X)
+         |    @annoFoo
+         |    def foo: Foo =
+         |      getFoo
+         |
+         |    @annoBar
+         |    def bar: Bar =
+         |      getBar
+         |}
+         |""".stripMargin,
+      assertLayout = Some(
+        """|object A { self =>
+           |  extension (x: X){
+           |    @annoFoo def foo: Foo = getFoo
+           |    @annoBar def bar: Bar = getBar
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        tname("A"),
+        Template(
+          Nil,
+          Nil,
+          Self(tname("self"), None),
+          Defn.ExtensionGroup(
+            Nil,
+            List(List(tparam("x", "X"))),
+            Term.Block(
+              List(
+                Defn.Def(
+                  List(Mod.Annot(Init(pname("annoFoo"), Name.Anonymous(), Nil))),
+                  tname("foo"),
+                  Nil,
+                  Some(pname("Foo")),
+                  tname("getFoo")
+                ),
+                Defn.Def(
+                  List(Mod.Annot(Init(pname("annoBar"), Name.Anonymous(), Nil))),
+                  tname("bar"),
+                  Nil,
+                  Some(pname("Bar")),
+                  tname("getBar")
+                )
+              )
+            )
+          ) :: Nil,
+          Nil
+        )
+      )
+    )
+  }
+
+  test("#3231 2") {
+    runTestAssert[Stat](
+      """|object A {
+         |  self =>
+         |  extension (x: X)
+         |    private def foo: Foo =
+         |      getFoo
+         |
+         |    protected def bar: Bar =
+         |      getBar
+         |}
+         |""".stripMargin,
+      assertLayout = Some(
+        """|object A { self =>
+           |  extension (x: X){
+           |    private def foo: Foo = getFoo
+           |    protected def bar: Bar = getBar
+           |  }
+           |}
+           |""".stripMargin
+      )
+    )(
+      Defn.Object(
+        Nil,
+        tname("A"),
+        Template(
+          Nil,
+          Nil,
+          Self(tname("self"), None),
+          Defn.ExtensionGroup(
+            Nil,
+            List(List(tparam("x", "X"))),
+            Term.Block(
+              List(
+                Defn.Def(
+                  List(Mod.Private(Name.Anonymous())),
+                  tname("foo"),
+                  Nil,
+                  Some(pname("Foo")),
+                  tname("getFoo")
+                ),
+                Defn.Def(
+                  List(Mod.Protected(Name.Anonymous())),
+                  tname("bar"),
+                  Nil,
+                  Some(pname("Bar")),
+                  tname("getBar")
+                )
+              )
+            )
+          ) :: Nil,
+          Nil
+        )
+      )
+    )
+  }
+
 }
