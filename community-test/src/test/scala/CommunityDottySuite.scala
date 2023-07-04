@@ -73,7 +73,7 @@ class CommunityDottySuite extends FunSuite {
   )
 
   for (build <- communityBuilds) {
-    test(s"community-build-${build.name}") {
+    test(s"community-build-${build.name}-${build.commit}") {
       check(build)
     }
   }
