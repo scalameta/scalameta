@@ -19,18 +19,18 @@ class CommunityDottySuite extends FunSuite {
   def fetchCommunityBuild(build: CommunityBuild): Unit = {
     if (!Files.exists(communityDirectory)) Files.createDirectory(communityDirectory)
 
-    val folder = communityDirectory.resolve(build.name).toString
-    if (!Files.exists(communityDirectory.resolve(build.name))) {
-      val gclone = s"git clone ${build.giturl} ${folder}"
-      val gchangecommit = s"""sh -c "cd ${folder} && git checkout ${build.commit} " """
-
-      val result: Int = (gclone #&& gchangecommit) !
-
+    val folderPath = communityDirectory.resolve(build.name)
+    val folder = folderPath.toString
+    if (!Files.exists(folderPath)) {
+      val gclone = s"git clone --depth=1 --no-single-branch ${build.giturl} $folder"
+      val result: Int = gclone.!
       assert(clue(result) == 0, s"Fetching community build ${build.name} failed")
-    } else {
+    }
+
+    locally {
       val gchangecommit =
-        s"""sh -c "cd ${folder} && git fetch origin && git checkout ${build.commit} " """
-      val result: Int = gchangecommit !
+        s"""sh -c "cd ${folder} && git fetch --depth=1 origin ${build.commit} && git checkout ${build.commit} " """
+      val result: Int = gchangecommit.!
 
       assert(clue(result) == 0, s"Checking out community build ${build.name} failed")
     }
