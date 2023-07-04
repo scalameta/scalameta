@@ -720,8 +720,10 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(
         """|object A { self =>
-           |  extension (x: X) @annoFoo def foo: Foo = getFoo
-           |  @annoBar def bar: Bar = getBar
+           |  extension (x: X){
+           |    @annoFoo def foo: Foo = getFoo
+           |    @annoBar def bar: Bar = getBar
+           |  }
            |}
            |""".stripMargin
       )
@@ -733,26 +735,28 @@ class ExtensionMethodsSuite extends BaseDottySuite {
           Nil,
           Nil,
           Self(tname("self"), None),
-          List(
-            Defn.ExtensionGroup(
-              Nil,
-              List(List(tparam("x", "X"))),
-              Defn.Def(
-                List(Mod.Annot(Init(pname("annoFoo"), Name.Anonymous(), Nil))),
-                tname("foo"),
-                Nil,
-                Some(pname("Foo")),
-                tname("getFoo")
+          Defn.ExtensionGroup(
+            Nil,
+            List(List(tparam("x", "X"))),
+            Term.Block(
+              List(
+                Defn.Def(
+                  List(Mod.Annot(Init(pname("annoFoo"), Name.Anonymous(), Nil))),
+                  tname("foo"),
+                  Nil,
+                  Some(pname("Foo")),
+                  tname("getFoo")
+                ),
+                Defn.Def(
+                  List(Mod.Annot(Init(pname("annoBar"), Name.Anonymous(), Nil))),
+                  tname("bar"),
+                  Nil,
+                  Some(pname("Bar")),
+                  tname("getBar")
+                )
               )
-            ),
-            Defn.Def(
-              List(Mod.Annot(Init(pname("annoBar"), Name.Anonymous(), Nil))),
-              tname("bar"),
-              Nil,
-              Some(pname("Bar")),
-              tname("getBar")
             )
-          ),
+          ) :: Nil,
           Nil
         )
       )
@@ -773,8 +777,10 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(
         """|object A { self =>
-           |  extension (x: X) private def foo: Foo = getFoo
-           |  protected def bar: Bar = getBar
+           |  extension (x: X){
+           |    private def foo: Foo = getFoo
+           |    protected def bar: Bar = getBar
+           |  }
            |}
            |""".stripMargin
       )
@@ -786,26 +792,28 @@ class ExtensionMethodsSuite extends BaseDottySuite {
           Nil,
           Nil,
           Self(tname("self"), None),
-          List(
-            Defn.ExtensionGroup(
-              Nil,
-              List(List(tparam("x", "X"))),
-              Defn.Def(
-                List(Mod.Private(Name.Anonymous())),
-                tname("foo"),
-                Nil,
-                Some(pname("Foo")),
-                tname("getFoo")
+          Defn.ExtensionGroup(
+            Nil,
+            List(List(tparam("x", "X"))),
+            Term.Block(
+              List(
+                Defn.Def(
+                  List(Mod.Private(Name.Anonymous())),
+                  tname("foo"),
+                  Nil,
+                  Some(pname("Foo")),
+                  tname("getFoo")
+                ),
+                Defn.Def(
+                  List(Mod.Protected(Name.Anonymous())),
+                  tname("bar"),
+                  Nil,
+                  Some(pname("Bar")),
+                  tname("getBar")
+                )
               )
-            ),
-            Defn.Def(
-              List(Mod.Protected(Name.Anonymous())),
-              tname("bar"),
-              Nil,
-              Some(pname("Bar")),
-              tname("getBar")
             )
-          ),
+          ) :: Nil,
           Nil
         )
       )
