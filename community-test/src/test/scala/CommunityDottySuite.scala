@@ -71,6 +71,14 @@ class CommunityDottySuite extends FunSuite {
     dottyBuild("3.1.3", dialects.Scala31, 946),
     dottyBuild("3.2.2", dialects.Scala32, 996),
     dottyBuild("3.3.1-RC1", dialects.Scala33, 1028),
+    // spark
+    sparkBuild("v1.6.3", dialects.Scala213, 2144),
+    sparkBuild("v2.0.2", dialects.Scala213, 2468),
+    sparkBuild("v2.1.3", dialects.Scala213, 2611),
+    sparkBuild("v2.2.3", dialects.Scala213, 2748),
+    sparkBuild("v2.3.3", dialects.Scala213, 2968),
+    sparkBuild("v2.4.8", dialects.Scala213, 3165),
+    sparkBuild("v3.4.1", dialects.Scala213, 4491),
     // latest commit from 30.03.2021
     munitBuild("06346adfe3519c384201eec531762dad2f4843dc", dialects.Scala213, 102)
   )
@@ -176,6 +184,10 @@ class CommunityDottySuite extends FunSuite {
 
   private def munitBuild(ref: String, dialect: Dialect, files: Int): CommunityBuild = {
     CommunityBuild("https://github.com/scalameta/munit.git", ref, "munit", Nil, files, dialect)
+  }
+
+  private def sparkBuild(ref: String, dialect: Dialect, files: Int): CommunityBuild = {
+    CommunityBuild("https://github.com/apache/spark.git", ref, "spark", Nil, files, dialect)
   }
 
   final val ignoreParts = List(
