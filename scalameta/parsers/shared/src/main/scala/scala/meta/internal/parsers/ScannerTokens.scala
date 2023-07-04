@@ -534,7 +534,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case (_: RegionDelim) :: (_: RegionFor) :: _ => sepRegions
           case xs => RegionIf(next) :: xs
         })
-      case _: KwThen if dialect.allowSignificantIndentation =>
+      case _: KwThen =>
         sepRegions match {
           case (r: RegionIndent) :: (_: RegionIf) :: xs =>
             outdentThenCurrRef(r, xs, Some(RegionThen))
@@ -548,7 +548,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case (_: RegionControl) :: xs => currRef(xs)
           case xs => currRef(xs)
         }
-      case _: KwDo | _: KwYield if dialect.allowSignificantIndentation =>
+      case _: KwDo | _: KwYield =>
         sepRegions match {
           case (r: RegionIndent) :: (_: RegionControl) :: xs =>
             outdentThenCurrRef(r, xs)
