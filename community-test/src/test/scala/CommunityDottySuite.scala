@@ -41,6 +41,7 @@ class CommunityDottySuite extends FunSuite {
       commit: String,
       name: String,
       excluded: List[String],
+      checkedFiles: Int,
       dialect: Dialect,
       dialectAlt: Option[Dialect] = None
   )
@@ -64,12 +65,12 @@ class CommunityDottySuite extends FunSuite {
     )
 
   val communityBuilds = List(
-    dottyBuild("3.0.2", dialects.Scala30),
-    dottyBuild("3.1.3", dialects.Scala31),
-    dottyBuild("3.2.2", dialects.Scala32),
-    dottyBuild("3.3.1-RC1", dialects.Scala33),
+    dottyBuild("3.0.2", dialects.Scala30, 886),
+    dottyBuild("3.1.3", dialects.Scala31, 946),
+    dottyBuild("3.2.2", dialects.Scala32, 996),
+    dottyBuild("3.3.1-RC1", dialects.Scala33, 1028),
     // latest commit from 30.03.2021
-    munitBuild("06346adfe3519c384201eec531762dad2f4843dc", dialects.Scala213)
+    munitBuild("06346adfe3519c384201eec531762dad2f4843dc", dialects.Scala213, 102)
   )
 
   for (build <- communityBuilds) {
@@ -96,6 +97,9 @@ class CommunityDottySuite extends FunSuite {
     println(s"Parsing speed per 1k lines ===> ${timePer1KLines} ms/1klines")
     println("--------------------------")
     stats.lastError.foreach(e => throw e)
+
+    assertEquals(stats.errors, 0)
+    assertEquals(stats.checkedFiles, build.checkedFiles)
   }
 
   def timeIt(block: => Unit): Long = {
@@ -167,14 +171,12 @@ class CommunityDottySuite extends FunSuite {
     build.excluded.exists(el => path.endsWith(el))
   }
 
-  private def dottyBuild(ref: String, dialect: Dialect): CommunityBuild = {
-    val exclude = Nil
-    CommunityBuild("https://github.com/lampepfl/dotty.git", ref, "dotty", exclude, dialect)
+  private def dottyBuild(ref: String, dialect: Dialect, files: Int): CommunityBuild = {
+    CommunityBuild("https://github.com/lampepfl/dotty.git", ref, "dotty", Nil, files, dialect)
   }
 
-  private def munitBuild(ref: String, dialect: Dialect): CommunityBuild = {
-    val exclude = Nil
-    CommunityBuild("https://github.com/scalameta/munit.git", ref, "munit", exclude, dialect)
+  private def munitBuild(ref: String, dialect: Dialect, files: Int): CommunityBuild = {
+    CommunityBuild("https://github.com/scalameta/munit.git", ref, "munit", Nil, files, dialect)
   }
 
   final val ignoreParts = List(
