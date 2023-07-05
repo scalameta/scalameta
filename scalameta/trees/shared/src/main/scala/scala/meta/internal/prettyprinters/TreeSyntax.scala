@@ -905,13 +905,7 @@ object TreeSyntax {
         s(w(t.mods, " "), kw("case"), " ", t.name, t.tparamClause, t.ctor, init())
 
       case t: Defn.ExtensionGroup =>
-        val m = t.body match {
-          case block: Term.Block =>
-            s(block)
-          case onestat =>
-            s(" ", onestat)
-        }
-        s(kw("extension"), " ", o(t.paramClauseGroup), m)
+        s(kw("extension"), " ", o(t.paramClauseGroup, " "), t.body)
       case t: Defn.Object => r(" ")(t.mods, kw("object"), t.name, t.templ)
       case t: Defn.Def =>
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, t.decltpe, " = ", t.body)
