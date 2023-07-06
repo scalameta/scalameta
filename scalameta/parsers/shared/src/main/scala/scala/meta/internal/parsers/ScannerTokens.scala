@@ -592,7 +592,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         r match {
           case rc: RegionControlMaybeCond if prev.is[RightParen] =>
             curr match {
-              case _: Dot => rc.asCond() :: rs
+              case _: Dot | _: KwMatch => rc.asCond() :: rs
               // might continue cond or start body
               case _: Ident | _: LeftBrace | _: LeftBracket | _: LeftParen | _: Underscore
                   if dialect.allowSignificantIndentation =>

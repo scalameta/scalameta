@@ -3765,4 +3765,26 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )
   }
 
+  test("while cond uses match") {
+    val code1 =
+      """|if sArr(last) == ')' then
+         |  while (sArr(last): @switch).match
+         |    case _ => false
+         |  do last -= 1
+         |""".stripMargin
+    val code2 =
+      """|if sArr(last) == ')' then
+         |  while (sArr(last): @switch) match
+         |    case _ => false
+         |  do last -= 1
+         |""".stripMargin
+    val layout =
+      """|if (sArr(last) == ')') while ((sArr(last): @switch) match {
+         |  case _ => false
+         |}) last -= 1
+         |""".stripMargin
+    assertNoDiff(parseStat(code1, dialect).reprint, layout)
+    assertNoDiff(parseStat(code2, dialect).reprint, layout)
+  }
+
 }
