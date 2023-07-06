@@ -3784,11 +3784,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |}) last -= 1
          |""".stripMargin
     assertNoDiff(parseStat(code1, dialect).reprint, layout)
-    val error2 =
-      """|<input>:2: error: illegal start of simple expression
-         |  while (sArr(last): @switch) match
-         |                              ^""".stripMargin
-    runTestError[Stat](code2, error2)
+    assertNoDiff(parseStat(code2, dialect).reprint, layout)
   }
 
 }
