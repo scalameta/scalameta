@@ -29,14 +29,14 @@ import scala.meta.internal.prettyprinters._
 @data class Tokens private (
     private val tokens: Array[Token],
     private val start: Int,
-    private val end: Int
+    val length: Int
 ) extends immutable.IndexedSeq[Token] with IndexedSeqOptimized[Token] {
   def apply(idx: Int): Token = tokens(start + idx)
-  def length: Int = end - start
+  def end: Int = start + length // for MIMA compat
   override def slice(from: Int, until: Int): Tokens = {
     val lo = start + from.max(0).min(length)
-    val hi = lo.max(start + until.min(length))
-    Tokens(tokens, lo, hi)
+    val len = 0.max(start + until.min(length) - lo)
+    new Tokens(tokens, lo, len)
   }
 
   /* Both head and headOption need to be implemented here due to
@@ -88,7 +88,7 @@ import scala.meta.internal.prettyprinters._
 object Tokens {
   private[meta] def apply(tokens: Array[Token]): Tokens = apply(tokens, 0, tokens.length)
   private[meta] def apply(tokens: Array[Token], start: Int, end: Int): Tokens =
-    new Tokens(tokens, start, end)
+    new Tokens(tokens, start, end - start)
   def unapplySeq(tokens: Tokens): Option[Seq[Token]] = Some(tokens)
 
   private def convertTokensToInput(tokens: Tokens): Input = Input.String(tokens.syntax)
