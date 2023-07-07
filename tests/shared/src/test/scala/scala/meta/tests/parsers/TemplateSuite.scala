@@ -6,9 +6,18 @@ import scala.meta.dialects.Scala211
 
 class TemplateSuite extends ParseSuite {
   test("trait T") {
-    assertTree(templStat("trait T")) {
+    val tree = templStat("trait T")
+    assertTree(tree) {
       Trait(Nil, Type.Name("T"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate())
     }
+    def testTokens(t: Tree): Unit = {
+      interceptMessage[NoSuchElementException]("token 0 out of 0")(t.tokens.head)
+      interceptMessage[NoSuchElementException]("token -1 out of 0")(t.tokens.last)
+    }
+    val traitTree = tree.asInstanceOf[Trait]
+    testTokens(traitTree.tparamClause)
+    testTokens(traitTree.ctor)
+    testTokens(traitTree.templ)
   }
 
   test("trait T {}") {
