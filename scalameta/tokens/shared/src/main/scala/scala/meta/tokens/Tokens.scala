@@ -31,7 +31,10 @@ import scala.meta.internal.prettyprinters._
     private val start: Int,
     val length: Int
 ) extends immutable.IndexedSeq[Token] with IndexedSeqOptimized[Token] {
-  def apply(idx: Int): Token = tokens(start + idx)
+  @inline private def get(idx: Int): Token = tokens(start + idx)
+  def apply(idx: Int): Token =
+    if (idx >= 0 && idx < length) get(idx)
+    else throw new NoSuchElementException(s"token $idx out of $length")
   def end: Int = start + length // for MIMA compat
   override def slice(from: Int, until: Int): Tokens = {
     val lo = start + from.max(0).min(length)
@@ -44,8 +47,10 @@ import scala.meta.internal.prettyprinters._
    * https://github.com/scala/scala/commit/b20dd00b11f06c14c823d277cdfb58043a2586fc
    */
   override def head: Token = apply(0)
+  override def headOption: Option[Token] = if (isEmpty) None else Some(get(0))
 
-  override def headOption: Option[Token] = if (isEmpty) None else Some(head)
+  override def last: Token = apply(length - 1)
+  override def lastOption: Option[Token] = if (isEmpty) None else Some(get(length - 1))
 
   override def toString = scala.meta.internal.prettyprinters.TokensToString(this)
 

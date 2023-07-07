@@ -11,8 +11,8 @@ class TemplateSuite extends ParseSuite {
       Trait(Nil, Type.Name("T"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate())
     }
     def testTokens(t: Tree): Unit = {
-      assertNoDiff(t.tokens.head.productPrefix, "EOF")
-      assertNoDiff(t.tokens.last.productPrefix, "Ident")
+      interceptMessage[NoSuchElementException]("token 0 out of 0")(t.tokens.head)
+      interceptMessage[NoSuchElementException]("token -1 out of 0")(t.tokens.last)
     }
     val traitTree = tree.asInstanceOf[Trait]
     testTokens(traitTree.tparamClause)
