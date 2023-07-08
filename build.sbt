@@ -9,7 +9,7 @@ import org.scalameta.build.Versions._
 import complete.DefaultParsers._
 import munit.sbtmunit.BuildInfo.munitVersion
 
-lazy val LanguageVersions = Seq(LatestScala213, LatestScala212, LatestScala211)
+lazy val LanguageVersions = LatestScalaVersions
 lazy val LanguageVersion = LanguageVersions.head
 def customVersion = sys.props.get("scalameta.version")
 def parseTagVersion: String = {
@@ -769,7 +769,7 @@ def compatibilityPolicyViolation(ticket: String) = Seq(
 
 lazy val fullCrossVersionSettings = Seq(
   crossVersion := CrossVersion.full,
-  crossScalaVersions := LanguageVersions ++ LegacyScalaVersions,
+  crossScalaVersions := AllScalaVersions,
   Compile / unmanagedSourceDirectories += {
     // NOTE: sbt 0.13.8 provides cross-version support for Scala sources
     // (http://www.scala-sbt.org/0.13/docs/sbt-0.13-Tech-Previews.html#Cross-version+support+for+Scala+sources).
