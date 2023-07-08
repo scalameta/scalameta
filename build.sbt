@@ -525,17 +525,10 @@ lazy val requiresMacrosSetting = Def.settings(
   }
 )
 
-lazy val isScala211 = Def.setting {
-  scalaVersion.value.startsWith("2.11")
-}
-
-lazy val isScala212 = Def.setting {
-  scalaVersion.value.startsWith("2.12")
-}
-
-lazy val isScala213 = Def.setting {
-  scalaVersion.value.startsWith("2.13")
-}
+def isScalaBinaryVersion(version: String) =
+  Def.setting { scalaBinaryVersion.value == version }
+lazy val isScala211 = isScalaBinaryVersion("2.11")
+lazy val isScala213 = isScalaBinaryVersion("2.13")
 
 lazy val sharedSettings = Def.settings(
   version ~= { dynVer =>
@@ -619,7 +612,7 @@ lazy val protobufSettings = Def.settings(
   PB.additionalDependencies := Nil,
   libraryDependencies ++= {
     val scalapbVersion =
-      if (scalaBinaryVersion.value == "2.11") {
+      if (isScala211.value) {
         "0.9.7"
       } else if (scalaVersion.value == "2.13.0" || scalaVersion.value == "2.13.1") {
         "0.10.11"
