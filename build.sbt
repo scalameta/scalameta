@@ -380,14 +380,13 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   )
   .settings(testSettings: _*)
   .jvmSettings(
-    libraryDependencies ++= List(
-      "io.get-coursier" %% "coursier" % "2.0.0-RC5-6"
-    ),
+    libraryDependencies += {
+      val coursierVersion = if (isScala211.value) "2.0.0-RC5-6" else "2.1.5"
+      "io.get-coursier" %% "coursier" % coursierVersion
+    },
     dependencyOverrides += {
-      if (isScala211.value)
-        "org.scala-lang.modules" %%% "scala-xml" % "1.2.0"
-      else
-        "org.scala-lang.modules" %%% "scala-xml" % "2.1.0"
+      val scalaXmlVersion = if (isScala211.value) "1.3.0" else "2.1.0"
+      "org.scala-lang.modules" %%% "scala-xml" % scalaXmlVersion
     },
     // Needed because some tests rely on the --usejavacp option
     Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
@@ -613,7 +612,7 @@ lazy val protobufSettings = Def.settings(
   libraryDependencies ++= {
     val scalapbVersion =
       if (isScala211.value) {
-        "0.9.7"
+        "0.9.8"
       } else if (scalaVersion.value == "2.13.0" || scalaVersion.value == "2.13.1") {
         "0.10.11"
       } else {
