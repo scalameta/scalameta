@@ -86,7 +86,7 @@ jobs:
           java-version: '8'
           distribution: 'temurin'
           cache: 'sbt'
-      - run: sbt ++${{ matrix.scala }} testsJVM/test
+      - run: sbt ++${{ matrix.scala }}! testsJVM/test
   windows:
     name: Windows tests
     runs-on: windows-latest
