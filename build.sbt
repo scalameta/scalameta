@@ -186,9 +186,7 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     // scalacOptions += "-Xprint:typer",
     enableHardcoreMacros,
     libraryDependencies ++= List(
-      // NOTE(olafur): use shaded version of fastparse 2.3.1 to avoid any
-      // binary incompatibilites with the v2.3.1 version used by Scalameta.
-      "org.scalameta" %%% "fastparse-v2" % "2.3.1"
+      "com.lihaoyi" %%% "fastparse" % "2.3.3"
     ),
     mergedModule({ base =>
       val scalameta = base / "scalameta"
@@ -862,11 +860,11 @@ lazy val docs = project
 lazy val shadingSettings = Def.settings(
   shadedModules ++= Set(
     "com.lihaoyi" %% "geny",
-    "org.scalameta" %% "fastparse-v2"
+    "com.lihaoyi" %% "fastparse"
   ),
   shadingRules ++= Seq(
     "geny",
-    "scala.meta.internal.fastparse"
+    "fastparse"
   ).map(ShadingRule.moveUnder(_, "scala.meta.shaded.internal")),
   validNamespaces ++= Set("scala.meta", "org.scalameta", "scala", "java")
 )
