@@ -36,6 +36,7 @@ import scala.meta.internal.prettyprinters._
     if (idx >= 0 && idx < length) get(idx)
     else throw new NoSuchElementException(s"token $idx out of $length")
   def end: Int = start + length // for MIMA compat
+
   override def slice(from: Int, until: Int): Tokens = {
     val lo = start + from.max(0).min(length)
     val len = 0.max(start + until.min(length) - lo)
@@ -77,17 +78,11 @@ import scala.meta.internal.prettyprinters._
 
   override def splitAt(n: Int): (Tokens, Tokens) = (take(n), drop(n))
 
-  override def span(p: Token => Boolean): (Tokens, Tokens) = {
-    val index = indexWhere(!p.apply(_))
+  override def span(p: Token => Boolean): (Tokens, Tokens) =
+    splitAt(segmentLength(p))
 
-    splitAt(if (index < 0) length else index)
-  }
-
-  def spanRight(p: Token => Boolean): (Tokens, Tokens) = {
-    val index = reverseIterator.indexWhere(!p.apply(_))
-
-    splitAt(length - (if (index < 0) length else index))
-  }
+  def spanRight(p: Token => Boolean): (Tokens, Tokens) =
+    splitAt(length - segmentLengthRight(p))
 }
 
 object Tokens {
