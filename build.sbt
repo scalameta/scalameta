@@ -833,6 +833,7 @@ lazy val docs = project
   .dependsOn(scalameta.jvm)
   .settings(
     sharedSettings,
+    crossScalaVersions := List(LatestScala213),
     nonPublishableSettings,
     buildInfoKeys := Seq[BuildInfoKey](
       "scalameta" -> scalameta
