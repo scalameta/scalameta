@@ -4,8 +4,8 @@ import scala.annotation.switch
 import scala.meta.Dialect
 import scala.meta.inputs.Input
 
-import scala.meta.internal.fastparse._
-import scala.meta.internal.fastparse.NoWhitespace._
+import fastparse._
+import fastparse.NoWhitespace._
 import scala.annotation.tailrec
 
 /**

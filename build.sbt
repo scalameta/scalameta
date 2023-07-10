@@ -177,16 +177,16 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
 
 lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/trees"))
+  .enablePlugins(ShadingPlugin)
   .settings(
     publishableSettings,
+    shadingSettings,
     description := "Scalameta abstract syntax trees",
     // NOTE: uncomment this to update ast.md
     // scalacOptions += "-Xprint:typer",
     enableHardcoreMacros,
     libraryDependencies ++= List(
-      // NOTE(olafur): use shaded version of fastparse 2.3.1 to avoid any
-      // binary incompatibilites with the v2.3.1 version used by Scalameta.
-      "org.scalameta" %%% "fastparse-v2" % "2.3.1"
+      "com.lihaoyi" %%% "fastparse" % "2.3.3"
     ),
     mergedModule({ base =>
       val scalameta = base / "scalameta"
@@ -207,8 +207,10 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
 
 lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/parsers"))
+  .enablePlugins(ShadingPlugin)
   .settings(
     publishableSettings,
+    shadingSettings,
     description := "Scalameta APIs for parsing and their baseline implementation",
     enableHardcoreMacros,
     mergedModule({ base =>
@@ -261,8 +263,10 @@ def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
 
 lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/scalameta"))
+  .enablePlugins(ShadingPlugin)
   .settings(
     publishableSettings,
+    shadingSettings,
     description := "Scalameta umbrella module that includes all public APIs",
     libraryDependencies ++= List(
       "org.scala-lang" % "scalap" % scalaVersion.value
@@ -343,8 +347,10 @@ lazy val semanticdbIntegrationMacros = project
 
 lazy val testkit = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/testkit"))
+  .enablePlugins(ShadingPlugin)
   .settings(
     publishableSettings,
+    shadingSettings,
     hasLargeIntegrationTests,
     libraryDependencies ++= Seq(
       "org.scalameta" %%% "munit" % munitVersion,
@@ -850,3 +856,15 @@ lazy val docs = project
     mimaPreviousArtifacts := Set.empty
   )
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin)
+
+lazy val shadingSettings = Def.settings(
+  shadedModules ++= Set(
+    "com.lihaoyi" %% "geny",
+    "com.lihaoyi" %% "fastparse"
+  ),
+  shadingRules ++= Seq(
+    "geny",
+    "fastparse"
+  ).map(ShadingRule.moveUnder(_, "scala.meta.shaded.internal")),
+  validNamespaces ++= Set("scala.meta", "org.scalameta", "scala", "java")
+)
