@@ -55,10 +55,26 @@ import scala.meta.internal.prettyprinters._
 
   override def toString = scala.meta.internal.prettyprinters.TokensToString(this)
 
-  override def segmentLength(p: Token => Boolean, from: Int = 0): Int = super.segmentLength(p, from)
+  override def segmentLength(p: Token => Boolean, from: Int = 0): Int = {
+    if (from >= length) 0
+    else {
+      val lo = start + from
+      val hi = end
+      var i = lo
+      while (i < hi && p(tokens(i))) i += 1
+      i - lo
+    }
+  }
 
-  def segmentLengthRight(p: Token => Boolean, from: Int = 0): Int =
-    reverseIterator.drop(from).takeWhile(p).length
+  def segmentLengthRight(p: Token => Boolean, from: Int = 0): Int = {
+    if (from >= length) 0
+    else {
+      val hi = end - from - 1
+      var i = hi
+      while (i >= start && p(tokens(i))) i -= 1
+      hi - i
+    }
+  }
 
   override def take(n: Int): Tokens = slice(0, n)
 
