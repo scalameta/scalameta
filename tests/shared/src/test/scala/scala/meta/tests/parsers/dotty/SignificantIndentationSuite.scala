@@ -2673,11 +2673,34 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |        if baz =>
          |  end foo
          |""".stripMargin
-    val error =
-      """|<input>:3: error: => expected but \n found
-         |    case sym
-         |            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object a {
+         |  def foo: Bar = {
+         |    case sym if baz =>
+         |  }
+         |  end foo
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("a"),
+        tpl(
+          List(
+            Defn.Def(
+              Nil,
+              tname("foo"),
+              Nil,
+              Some(pname("Bar")),
+              Term.PartialFunction(
+                List(Case(Pat.Var(tname("sym")), Some(tname("baz")), Term.Block(Nil)))
+              )
+            ),
+            Term.EndMarker(tname("foo"))
+          )
+        )
+      )
+    }
   }
 
   test("def body is non-partial function") {

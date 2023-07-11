@@ -472,6 +472,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case x :: RegionCaseMark :: xs => expr() :: x :: xs
           case (_: RegionBrace) :: (_: RegionFor | RegionTemplateBody) :: _ => sepRegions
           case (_: RegionBrace) :: _ => expr() :: sepRegions
+          case (_: RegionIndent) :: _ if prev.is[Equals] && prevToken.is[Indentation.Indent] =>
+            expr() :: sepRegions
           // `case` is at top-level (likely quasiquote)
           case Nil if prevPos == 0 => expr() :: Nil
           case xs => xs
