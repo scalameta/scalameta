@@ -2665,4 +2665,66 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Stat](code, assertLayout = Some(layout))(tree)
   }
 
+  test("def body is partial function") {
+    val code =
+      """|object a:
+         |  def foo: Bar =
+         |    case sym
+         |        if baz =>
+         |  end foo
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: => expected but \n found
+         |    case sym
+         |            ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("def body is non-partial function") {
+    val code =
+      """|object a:
+         |  def foo: Bar =
+         |    case class Baz(baz: Int)
+         |    new Baz(0)
+         |""".stripMargin
+    val layout =
+      """|object a {
+         |  def foo: Bar = {
+         |    case class Baz(baz: Int)
+         |    new Baz(0)
+         |  }
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("a"),
+        tpl(
+          Defn.Def(
+            Nil,
+            tname("foo"),
+            Nil,
+            Some(pname("Bar")),
+            Term.Block(
+              List(
+                Defn.Class(
+                  List(Mod.Case()),
+                  pname("Baz"),
+                  Nil,
+                  Ctor.Primary(
+                    Nil,
+                    anon,
+                    List(List(Term.Param(Nil, tname("baz"), Some(pname("Int")), None)))
+                  ),
+                  tpl(Nil)
+                ),
+                Term.New(Init(pname("Baz"), anon, List(List(int(0)))))
+              )
+            )
+          ) :: Nil
+        )
+      )
+    }
+  }
+
 }
