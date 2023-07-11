@@ -3,8 +3,6 @@ package scala.meta.testkit
 import java.io.File
 import java.net.URL
 
-import geny.Generator
-
 import sys.process._
 import java.net.URL
 import java.io.File
@@ -113,17 +111,17 @@ object Corpus {
    * @param corpus
    *   See [[Corpus]].
    * @return
-   *   A generator of [[CorpusFile]]. Use Generator.take to limit the size of your experiment and
+   *   An iterator of [[CorpusFile]]. Use Iterator.take to limit the size of your experiment and
    *   Generator.toBuffer.par to run analysis using all available cores on the machine.
    */
-  def files(corpus: Corpus): Generator[CorpusFile] = {
+  def files(corpus: Corpus): Iterator[CorpusFile] = {
     val repos = createReposDir(corpus)
     val files = Option(repos.listFiles()).getOrElse {
       throw new IllegalStateException(
         s"${repos.getAbsolutePath} is not a directory! Please delete if it's a file and retry."
       )
     }
-    Generator.from(files.toList).flatMap { repo =>
+    files.iterator.flatMap { repo =>
       val commit = FileOps.readFile(new File(repo, "COMMIT")).trim
       val url = FileOps.readFile(new File(repo, "URL")).trim
       FileOps
