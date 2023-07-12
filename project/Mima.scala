@@ -46,6 +46,9 @@ object Mima {
     ProblemFilters.exclude[A]("scala.meta." + metaType)
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
+    // testkit
+    exclude[IncompatibleResultTypeProblem]("testkit.Corpus.files"),
+    exclude[IncompatibleResultTypeProblem]("testkit.FileOps.listFiles"),
     // newField; these methods should have been package-private
     exclude[DirectMissingMethodProblem]("Defn#Type.setBounds"),
     exclude[DirectMissingMethodProblem]("Template.setDerives"),

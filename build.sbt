@@ -347,14 +347,11 @@ lazy val semanticdbIntegrationMacros = project
 
 lazy val testkit = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/testkit"))
-  .enablePlugins(ShadingPlugin)
   .settings(
     publishableSettings,
-    shadingSettings,
     hasLargeIntegrationTests,
     libraryDependencies ++= Seq(
-      "org.scalameta" %%% "munit" % munitVersion,
-      "com.lihaoyi" %%% "geny" % "0.7.1"
+      "org.scalameta" %%% "munit" % munitVersion
     ),
     testFrameworks := List(new TestFramework("munit.Framework")),
     description := "Testing utilities for scalameta APIs"
