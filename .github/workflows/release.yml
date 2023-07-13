@@ -6,6 +6,13 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - 'JVM'
+          - 'JS'
+          - 'Native'
     steps:
       - uses: actions/checkout@v3
         with:
@@ -38,6 +45,7 @@ jobs:
             sbt docs/docusaurusPublishGhpages
           fi
         env:
+          SCALAMETA_PLATFORM: ${{ matrix.platform }}
           GIT_USER: scalameta@scalameta.org
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
