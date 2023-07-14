@@ -105,7 +105,8 @@ lazy val nativeSettings = Seq(
 lazy val semanticdbScalacCore = project
   .in(file("semanticdb/scalac/library"))
   .settings(
-    publishableSettings,
+    sharedSettings,
+    publishJVMSettings,
     fullCrossVersionSettings,
     mimaPreviousArtifacts := Set.empty,
     moduleName := "semanticdb-scalac-core",
@@ -119,7 +120,8 @@ lazy val semanticdbScalacPlugin = project
   .settings(
     moduleName := "semanticdb-scalac",
     description := "Scalac 2.x compiler plugin that generates SemanticDB on compile",
-    publishableSettings,
+    sharedSettings,
+    publishJVMSettings,
     mimaPreviousArtifacts := Set.empty,
     mergeSettings,
     fullCrossVersionSettings,
@@ -145,7 +147,8 @@ lazy val semanticdbScalacPlugin = project
 lazy val metac = project
   .in(file("semanticdb/metac"))
   .settings(
-    publishableSettings,
+    sharedSettings,
+    publishJVMSettings,
     fullCrossVersionSettings,
     crossScalaVersions := LanguageVersions,
     mimaPreviousArtifacts := Set.empty,
@@ -159,7 +162,7 @@ lazy val metac = project
 lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/common"))
   .settings(
-    publishableSettings,
+    sharedSettings,
     libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.3.0",
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros,
@@ -169,6 +172,7 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     ),
     protobufSettings
   )
+  .configureCross(crossPlatformPublishSettings)
   .jsSettings(
     commonJsSettings
   )
@@ -179,7 +183,7 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/trees"))
   .enablePlugins(ShadingPlugin)
   .settings(
-    publishableSettings,
+    sharedSettings,
     shadingSettings,
     description := "Scalameta abstract syntax trees",
     // NOTE: uncomment this to update ast.md
@@ -199,6 +203,7 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       )
     })
   )
+  .configureCross(crossPlatformPublishSettings)
   .jsSettings(
     commonJsSettings
   )
@@ -209,7 +214,7 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/parsers"))
   .enablePlugins(ShadingPlugin)
   .settings(
-    publishableSettings,
+    sharedSettings,
     shadingSettings,
     description := "Scalameta APIs for parsing and their baseline implementation",
     enableHardcoreMacros,
@@ -220,6 +225,7 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       )
     })
   )
+  .configureCross(crossPlatformPublishSettings)
   .jsConfigure(
     _.enablePlugins(NpmPackagePlugin)
   )
@@ -265,7 +271,7 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/scalameta"))
   .enablePlugins(ShadingPlugin)
   .settings(
-    publishableSettings,
+    sharedSettings,
     shadingSettings,
     description := "Scalameta umbrella module that includes all public APIs",
     libraryDependencies ++= List(
@@ -285,6 +291,7 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       )
     })
   )
+  .configureCross(crossPlatformPublishSettings)
   .jvmSettings(
     Compile / unmanagedSourceDirectories ++= List(
       (ThisBuild / baseDirectory).value / "semanticdb" / "metacp",
@@ -348,7 +355,7 @@ lazy val semanticdbIntegrationMacros = project
 lazy val testkit = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/testkit"))
   .settings(
-    publishableSettings,
+    sharedSettings,
     hasLargeIntegrationTests,
     libraryDependencies ++= Seq(
       "org.scalameta" %%% "munit" % munitVersion
@@ -357,6 +364,7 @@ lazy val testkit = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     description := "Testing utilities for scalameta APIs"
   )
   .dependsOn(scalameta)
+  .configureCross(crossPlatformPublishSettings)
   .jvmSettings(
     libraryDependencies ++= {
       if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4")
@@ -645,7 +653,6 @@ lazy val publishableSettings = Def.settings(
     if (credentialsFile != null) List(new FileCredentials(credentialsFile))
     else Nil
   },
-  sharedSettings,
   Compile / publishArtifact := true,
   Test / publishArtifact := false,
   publishMavenStyle := true,
@@ -865,3 +872,17 @@ lazy val shadingSettings = Def.settings(
   ).map(ShadingRule.moveUnder(_, "scala.meta.shaded.internal")),
   validNamespaces ++= Set("scala.meta", "org.scalameta", "scala", "java")
 )
+
+def platformPublishSettings(platform: sbtcrossproject.Platform) =
+  if (Platforms.shouldBuildPlatform(platform))
+    publishableSettings
+  else
+    nonPublishableSettings
+
+def crossPlatformPublishSettings(project: sbtcrossproject.CrossProject) =
+  project.projects.keys.foldLeft(project) { case (res, platform) =>
+    val settings = platformPublishSettings(platform)
+    if (settings.isEmpty) res else res.configurePlatform(platform)(_.settings(settings))
+  }
+
+val publishJVMSettings = platformPublishSettings(JVMPlatform)
