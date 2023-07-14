@@ -1597,9 +1597,30 @@ class MinorDottySuite extends BaseDottySuite {
     val code =
       """|obj match { case arr: Array[Array[_]] => }
          |""".stripMargin
-    val error =
-      "Array[_] (of class scala.meta.Type$AnonymousLambda$TypeAnonymousLambdaImpl)"
-    interceptMessage[MatchError](error)(code.parse[Stat])
+    val layout =
+      """|obj match {
+         |  case arr: Array[Array[_]] =>
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout))(
+      Term.Match(
+        tname("obj"),
+        Case(
+          Pat.Typed(
+            Pat.Var(tname("arr")),
+            Type.Apply(
+              pname("Array"),
+              Type.AnonymousLambda(
+                Type.Apply(pname("Array"), List(Type.AnonymousParam(None)))
+              ) :: Nil
+            )
+          ),
+          None,
+          Term.Block(Nil)
+        ) :: Nil,
+        Nil
+      )
+    )
   }
 
 }

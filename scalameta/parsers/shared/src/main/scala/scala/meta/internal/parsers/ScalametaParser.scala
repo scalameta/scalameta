@@ -1097,6 +1097,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Type.Annotate(underlying1, annots1)
         case t: Type.Wildcard =>
           Type.Wildcard(t.bounds)
+        case t: Type.AnonymousLambda =>
+          Type.AnonymousLambda(loop(t.tpe, convertTypevars = false))
         case t: Type.AnonymousParam =>
           Type.AnonymousParam(t.variant)
         case t: Type.Placeholder =>
