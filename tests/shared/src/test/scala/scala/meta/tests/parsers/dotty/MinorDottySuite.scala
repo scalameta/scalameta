@@ -1610,9 +1610,7 @@ class MinorDottySuite extends BaseDottySuite {
             Pat.Var(tname("arr")),
             Type.Apply(
               pname("Array"),
-              Type.AnonymousLambda(
-                Type.Apply(pname("Array"), List(Type.AnonymousParam(None)))
-              ) :: Nil
+              List(Type.Apply(pname("Array"), List(Type.Wildcard(noBounds))))
             )
           ),
           None,
