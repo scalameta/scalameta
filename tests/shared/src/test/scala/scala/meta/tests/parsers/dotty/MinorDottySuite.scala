@@ -1593,4 +1593,34 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("match on array-of-wildcard") {
+    val code =
+      """|obj match { case arr: Array[Array[_]] => }
+         |""".stripMargin
+    val layout =
+      """|obj match {
+         |  case arr: Array[Array[_]] =>
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout))(
+      Term.Match(
+        tname("obj"),
+        Case(
+          Pat.Typed(
+            Pat.Var(tname("arr")),
+            Type.Apply(
+              pname("Array"),
+              Type.AnonymousLambda(
+                Type.Apply(pname("Array"), List(Type.AnonymousParam(None)))
+              ) :: Nil
+            )
+          ),
+          None,
+          Term.Block(Nil)
+        ) :: Nil,
+        Nil
+      )
+    )
+  }
+
 }
