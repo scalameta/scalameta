@@ -1593,4 +1593,13 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("match on array-of-wildcard") {
+    val code =
+      """|obj match { case arr: Array[Array[_]] => }
+         |""".stripMargin
+    val error =
+      "Array[_] (of class scala.meta.Type$AnonymousLambda$TypeAnonymousLambdaImpl)"
+    interceptMessage[MatchError](error)(code.parse[Stat])
+  }
+
 }
