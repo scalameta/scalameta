@@ -963,7 +963,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _: Underscore if inMatchType =>
           next(); Type.PatWildcard()
         case _: Underscore
-            if dialect.allowUnderscoreAsTypePlaceholder ||
+            if dialect.allowUnderscoreAsTypePlaceholder &&
               dialect.allowTypeLambdas &&
               TypeBracketsContext.isDeeper(1) && !peekToken.isAny[Supertype, Subtype] =>
           next(); Type.AnonymousParam(None)

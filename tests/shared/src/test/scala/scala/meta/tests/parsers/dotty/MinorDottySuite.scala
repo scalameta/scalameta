@@ -1593,4 +1593,66 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("array-of-array") {
+    val code =
+      """|class Foo {
+         |  val obj: Any = null
+         |  val dataset = obj match { case arr: Array[Array[_]] => arr }
+         |}
+         |""".stripMargin
+    val layout =
+      """|class Foo {
+         |  val obj: Any = null
+         |  val dataset = obj match {
+         |    case arr: Array[Array[_]] => arr
+         |  }
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout))(
+      Defn.Class(
+        Nil,
+        Type.Name("Foo"),
+        Type.ParamClause(Nil),
+        Ctor.Primary(Nil, Name.Anonymous(), Nil),
+        Template(
+          Nil,
+          Nil,
+          Self(Name.Anonymous(), None),
+          List(
+            Defn.Val(Nil, List(Pat.Var(Term.Name("obj"))), Some(Type.Name("Any")), Lit.Null()),
+            Defn.Val(
+              Nil,
+              List(Pat.Var(Term.Name("dataset"))),
+              None,
+              Term.Match(
+                Term.Name("obj"),
+                List(
+                  Case(
+                    Pat.Typed(
+                      Pat.Var(Term.Name("arr")),
+                      Type.Apply(
+                        Type.Name("Array"),
+                        Type.ArgClause(
+                          List(
+                            Type.Apply(
+                              Type.Name("Array"),
+                              Type.ArgClause(List(Type.Wildcard(Type.Bounds(None, None))))
+                            )
+                          )
+                        )
+                      )
+                    ),
+                    None,
+                    Term.Name("arr")
+                  )
+                ),
+                Nil
+              )
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
 }
