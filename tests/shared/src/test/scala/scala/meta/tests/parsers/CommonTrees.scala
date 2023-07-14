@@ -88,6 +88,7 @@ trait CommonTrees {
   final def bool(v: Boolean) = Lit.Boolean(v)
   final def int(v: Int) = Lit.Int(v)
   final def str(v: String) = Lit.String(v)
-  final def init(name: String): Init = Init(pname(name), anon, Nil)
+  final def init(name: String, args: List[Term.ArgClause] = Nil): Init =
+    Init(pname(name), anon, args)
 
 }

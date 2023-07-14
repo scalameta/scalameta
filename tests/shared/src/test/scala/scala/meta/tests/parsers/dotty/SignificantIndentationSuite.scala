@@ -2760,11 +2760,23 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    e = f
          |  )
          |""".stripMargin
-    val error =
-      """|<input>:5: error: ; expected but , found
-         |      d,
-         |       ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "object a { A(b = new B, c = d, e = f) }"
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("a"),
+        tpl(
+          Term.Apply(
+            tname("A"),
+            List(
+              Term.Assign(tname("b"), Term.New(init("B"))),
+              Term.Assign(tname("c"), tname("d")),
+              Term.Assign(tname("e"), tname("f"))
+            )
+          ) :: Nil
+        )
+      )
+    }
   }
 
   test("#3252 `new` in arg, then comma 2") {
@@ -2777,11 +2789,26 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    e = f
          |  )
          |""".stripMargin
-    val error =
-      """|<input>:5: error: ; expected but , found
-         |      d,
-         |       ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "object a { A(b = new B(0), c = d, e = f) }"
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("a"),
+        tpl(
+          Term.Apply(
+            tname("A"),
+            List(
+              Term.Assign(
+                tname("b"),
+                Term.New(init("B", List(List(int(0)))))
+              ),
+              Term.Assign(tname("c"), tname("d")),
+              Term.Assign(tname("e"), tname("f"))
+            )
+          ) :: Nil
+        )
+      )
+    }
   }
 
   test("#3252 `new` in arg, then comma 3") {
@@ -2808,7 +2835,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                 Term.NewAnonymous(
                   Template(
                     Nil,
-                    List(Init(pname("B"), anon, List(List(int(0))))),
+                    List(init("B", List(List(int(0))))),
                     slf,
                     List(Defn.Def(Nil, tname("foo"), Nil, None, tname("???"))),
                     Nil
