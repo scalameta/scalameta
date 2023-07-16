@@ -2750,4 +2750,105 @@ class SignificantIndentationSuite extends BaseDottySuite {
     }
   }
 
+  test("#3252 `new` in arg, then comma 1") {
+    val code =
+      """|object a:
+         |  A(
+         |    b = new B,
+         |    c =
+         |      d,
+         |    e = f
+         |  )
+         |""".stripMargin
+    val layout = "object a { A(b = new B, c = d, e = f) }"
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("a"),
+        tpl(
+          Term.Apply(
+            tname("A"),
+            List(
+              Term.Assign(tname("b"), Term.New(init("B"))),
+              Term.Assign(tname("c"), tname("d")),
+              Term.Assign(tname("e"), tname("f"))
+            )
+          ) :: Nil
+        )
+      )
+    }
+  }
+
+  test("#3252 `new` in arg, then comma 2") {
+    val code =
+      """|object a:
+         |  A(
+         |    b = new B(0),
+         |    c =
+         |      d,
+         |    e = f
+         |  )
+         |""".stripMargin
+    val layout = "object a { A(b = new B(0), c = d, e = f) }"
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("a"),
+        tpl(
+          Term.Apply(
+            tname("A"),
+            List(
+              Term.Assign(
+                tname("b"),
+                Term.New(init("B", List(List(int(0)))))
+              ),
+              Term.Assign(tname("c"), tname("d")),
+              Term.Assign(tname("e"), tname("f"))
+            )
+          ) :: Nil
+        )
+      )
+    }
+  }
+
+  test("#3252 `new` in arg, then comma 3") {
+    val code =
+      """|object a:
+         |  A(
+         |    b = new B(0) { def foo = ??? },
+         |    c =
+         |      d,
+         |    e = f
+         |  )
+         |""".stripMargin
+    val layout = "object a { A(b = new B(0) { def foo = ??? }, c = d, e = f) }"
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("a"),
+        tpl(
+          Term.Apply(
+            tname("A"),
+            List(
+              Term.Assign(
+                tname("b"),
+                Term.NewAnonymous(
+                  Template(
+                    Nil,
+                    List(init("B", List(List(int(0))))),
+                    slf,
+                    List(Defn.Def(Nil, tname("foo"), Nil, None, tname("???"))),
+                    Nil
+                  )
+                )
+              ),
+              Term.Assign(tname("c"), tname("d")),
+              Term.Assign(tname("e"), tname("f"))
+            )
+          ) :: Nil
+        )
+      )
+    }
+  }
+
 }

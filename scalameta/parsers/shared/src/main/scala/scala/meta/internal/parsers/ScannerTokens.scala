@@ -453,6 +453,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
               case (r: SepRegionIndented) :: rs => (Left(r), rs)
               case rs => (Right(false), rs)
             }
+          case RegionTemplateMark :: rs => currRef(rs)
           case _ => currRef(sepRegions)
         }
       case _: KwEnum => currRef(RegionTemplateMark :: sepRegions)
