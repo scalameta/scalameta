@@ -964,7 +964,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           next(); Type.PatWildcard()
         case _: Underscore
             if dialect.allowUnderscoreAsTypePlaceholder ||
-              dialect.allowTypeLambdas &&
+              dialect.allowTypeLambdas && !PatternTypeContext.isInside() &&
               TypeBracketsContext.isDeeper(1) && !peekToken.isAny[Supertype, Subtype] =>
           next(); Type.AnonymousParam(None)
         case _: Underscore =>
@@ -1107,7 +1107,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case tpe: Lit =>
           tpe
       })
-      val t: Type = {
+      val t: Type = PatternTypeContext.within {
         if (allowInfix) {
           val t = if (token.is[LeftParen]) tupleInfixType() else compoundType()
           token match {

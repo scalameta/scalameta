@@ -22,3 +22,5 @@ private[parsers] object QuotedPatternContext extends NestedContext
 private[parsers] object ReturnTypeContext extends NestedContext
 
 private[parsers] object TypeBracketsContext extends NestedContext
+
+private[parsers] object PatternTypeContext extends NestedContext
