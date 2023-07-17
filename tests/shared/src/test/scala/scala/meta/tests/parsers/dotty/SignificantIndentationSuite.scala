@@ -2851,4 +2851,66 @@ class SignificantIndentationSuite extends BaseDottySuite {
     }
   }
 
+  test("#3257 `new` in arg value after indent, then comma") {
+    val code =
+      """|object a:
+         |  A(
+         |    b =
+         |      new B,
+         |    c = d
+         |  )
+         |""".stripMargin
+    val layout = "object a { A(b = new B, c = d) }"
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("a"),
+        tpl(
+          Term.Apply(
+            tname("A"),
+            List(
+              Term.Assign(tname("b"), Term.New(init("B"))),
+              Term.Assign(tname("c"), tname("d"))
+            )
+          ) :: Nil
+        )
+      )
+    }
+  }
+
+  test("#3257 `if-no-else` in arg value after indent, then comma") {
+    val code =
+      """|object a:
+         |  A(
+         |    b =
+         |      if (a + b) c,
+         |    c = d
+         |  )
+         |""".stripMargin
+    val layout = "object a { A(b = if (a + b) c, c = d) }"
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("a"),
+        tpl(
+          Term.Apply(
+            tname("A"),
+            List(
+              Term.Assign(
+                tname("b"),
+                Term.If(
+                  Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+                  tname("c"),
+                  Lit.Unit(),
+                  Nil
+                )
+              ),
+              Term.Assign(tname("c"), tname("d"))
+            )
+          ) :: Nil
+        )
+      )
+    }
+  }
+
 }
