@@ -19,17 +19,16 @@ sealed trait SepRegionNonIndented extends SepRegion {
 
 // this describes delimiters (indent, parens, braces, brackets)
 sealed trait RegionDelim extends SepRegion
+// this describes delimiters which are non-indented
+sealed trait RegionDelimNonIndented extends SepRegionNonIndented with RegionDelim
 // this describes non-delimiters which are also non-indented (likely all of them)
 sealed trait RegionNonDelimNonIndented extends SepRegionNonIndented
 
 case class RegionIndent(override val indent: Int) extends SepRegionIndented with RegionDelim
 
-case object RegionParen extends SepRegionNonIndented with RegionDelim
-
-case object RegionBracket extends SepRegionNonIndented with RegionDelim
-
-case class RegionBrace(override val indent: Int)
-    extends SepRegionNonIndented with CanProduceLF with RegionDelim
+case object RegionParen extends RegionDelimNonIndented
+case object RegionBracket extends RegionDelimNonIndented
+case class RegionBrace(override val indent: Int) extends RegionDelimNonIndented with CanProduceLF
 
 case object RegionCaseMark extends RegionNonDelimNonIndented
 final class RegionCaseExpr(override val indent: Int) extends RegionNonDelimNonIndented
