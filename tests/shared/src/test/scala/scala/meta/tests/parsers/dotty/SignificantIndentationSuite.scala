@@ -2851,4 +2851,36 @@ class SignificantIndentationSuite extends BaseDottySuite {
     }
   }
 
+  test("#3257 `new` in arg value after indent, then comma") {
+    val code =
+      """|object a:
+         |  A(
+         |    b =
+         |      new B,
+         |    c = d
+         |  )
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: ; expected but , found
+         |      new B,
+         |           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3257 `if-no-else` in arg value after indent, then comma") {
+    val code =
+      """|object a:
+         |  A(
+         |    b =
+         |      if (a + b) c,
+         |    c = d
+         |  )
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: ; expected but , found
+         |      if (a + b) c,
+         |                  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
