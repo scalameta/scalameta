@@ -2860,11 +2860,22 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    c = d
          |  )
          |""".stripMargin
-    val error =
-      """|<input>:4: error: ; expected but , found
-         |      new B,
-         |           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "object a { A(b = new B, c = d) }"
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("a"),
+        tpl(
+          Term.Apply(
+            tname("A"),
+            List(
+              Term.Assign(tname("b"), Term.New(init("B"))),
+              Term.Assign(tname("c"), tname("d"))
+            )
+          ) :: Nil
+        )
+      )
+    }
   }
 
   test("#3257 `if-no-else` in arg value after indent, then comma") {
@@ -2876,11 +2887,30 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    c = d
          |  )
          |""".stripMargin
-    val error =
-      """|<input>:4: error: ; expected but , found
-         |      if (a + b) c,
-         |                  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "object a { A(b = if (a + b) c, c = d) }"
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("a"),
+        tpl(
+          Term.Apply(
+            tname("A"),
+            List(
+              Term.Assign(
+                tname("b"),
+                Term.If(
+                  Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+                  tname("c"),
+                  Lit.Unit(),
+                  Nil
+                )
+              ),
+              Term.Assign(tname("c"), tname("d"))
+            )
+          ) :: Nil
+        )
+      )
+    }
   }
 
 }

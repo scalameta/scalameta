@@ -446,16 +446,16 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case _ :: rs => (Right(true), rs)
         }.fold(currRef(_), identity)
       case _: Comma =>
-        sepRegions match {
-          case (head: SepRegionIndented) :: tail
-              if tail.find(!_.isIndented).contains(RegionParen) =>
-            mkOutdents(head, currPos, tail) {
-              case (r: SepRegionIndented) :: rs => (Left(r), rs)
-              case rs => (Right(false), rs)
-            }
-          case RegionTemplateMark :: rs => currRef(rs)
-          case _ => currRef(sepRegions)
-        }
+        if (inParens(sepRegions))
+          mkOutdentsOpt(currPos, sepRegions) {
+            case (r: SepRegionIndented) :: rs => (Left(r), rs)
+            case (_: RegionNonDelimNonIndented) :: rs => (Right(true), rs)
+            case rs => (Right(false), rs)
+          } match {
+            case Right(tokenRef) => tokenRef
+            case Left(regions) => currRef(regions)
+          }
+        else currRef(sepRegions)
       case _: KwEnum => currRef(RegionTemplateMark :: sepRegions)
       case _: KwObject | _: KwClass | _: KwTrait | _: KwPackage | _: KwNew
           if dialect.allowSignificantIndentation =>
@@ -901,5 +901,12 @@ object ScannerTokens {
 
   private def findIndent(sepRegions: List[SepRegion]): Int =
     sepRegions.find(_.indent >= 0).fold(0)(_.indent)
+
+  @tailrec
+  private def inParens(regions: List[SepRegion]): Boolean =
+    regions.nonEmpty && (regions.head match {
+      case r: RegionDelimNonIndented => r eq RegionParen
+      case _ => inParens(regions.tail)
+    })
 
 }
