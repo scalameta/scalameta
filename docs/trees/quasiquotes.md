@@ -53,7 +53,7 @@ the end of the document.
 | Selection         | `t"$eref.$tname"`                                                         |
 | Projection        | `t"$tpe#$tname"`                                                          |
 | Singleton         | `t"$eref.type"`                                                           |
-| Application       | `t"$tpe[..$tpesnel]` (vote for #519 to support `q"$expr[...$tpess]"`)     |
+| Application       | `t"$tpe[..$tpesnel]`                                                      |
 | Infix Application | `t"$tpe $tname $tpe"`                                                     |
 | With              | `t"$tpe with $tpe"` (only for supported dialects)                         |
 | And               | `t"$tpe & $tpe"` (only for supported dialects)                            |
