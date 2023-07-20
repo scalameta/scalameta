@@ -2924,11 +2924,45 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    case "empty"    => 0
          |    case "nonempty" => 1
          |""".stripMargin
-    val error =
-      """|<input>:6: error: ; expected but match found
-         |  match
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object small {
+         |  val value = (Nil match {
+         |    case Nil => "empty"
+         |    case _ => "nonempty"
+         |  }) match {
+         |    case "empty" => 0
+         |    case "nonempty" => 1
+         |  }
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("small"),
+        tpl(
+          Defn.Val(
+            Nil,
+            List(Pat.Var(tname("value"))),
+            None,
+            Term.Match(
+              Term.Match(
+                tname("Nil"),
+                List(
+                  Case(tname("Nil"), None, str("empty")),
+                  Case(Pat.Wildcard(), None, str("nonempty"))
+                ),
+                Nil
+              ),
+              List(
+                Case(str("empty"), None, int(0)),
+                Case(str("nonempty"), None, int(1))
+              ),
+              Nil
+            )
+          ) :: Nil
+        )
+      )
+    }
   }
 
   test("#3261 chained `match` with outdent, block, in assign") {
@@ -2943,11 +2977,53 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    case "empty"    => 0
          |    case "nonempty" => 1
          |""".stripMargin
-    val error =
-      """|<input>:7: error: ; expected but match found
-         |  match
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object small {
+         |  val value = {
+         |    foo()
+         |    Nil match {
+         |      case Nil => "empty"
+         |      case _ => "nonempty"
+         |    }
+         |  } match {
+         |    case "empty" => 0
+         |    case "nonempty" => 1
+         |  }
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("small"),
+        tpl(
+          Defn.Val(
+            Nil,
+            List(Pat.Var(tname("value"))),
+            None,
+            Term.Match(
+              Term.Block(
+                List(
+                  Term.Apply(tname("foo"), Term.ArgClause(Nil, None)),
+                  Term.Match(
+                    tname("Nil"),
+                    List(
+                      Case(tname("Nil"), None, str("empty")),
+                      Case(Pat.Wildcard(), None, str("nonempty"))
+                    ),
+                    Nil
+                  )
+                )
+              ),
+              List(
+                Case(str("empty"), None, int(0)),
+                Case(str("nonempty"), None, int(1))
+              ),
+              Nil
+            )
+          ) :: Nil
+        )
+      )
+    }
   }
 
   test("#3261 chained `match` with outdent, no block, in if cond") {
@@ -2963,11 +3039,45 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  then
          |    bar
          |""".stripMargin
-    val error =
-      """|<input>:6: error: then expected but match found
-         |  match
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object small {
+         |  if ((Nil match {
+         |    case Nil => "empty"
+         |    case _ => "nonempty"
+         |  }) match {
+         |    case "empty" => true
+         |    case "nonempty" => false
+         |  }) bar
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("small"),
+        tpl(
+          Term.If(
+            Term.Match(
+              Term.Match(
+                tname("Nil"),
+                List(
+                  Case(tname("Nil"), None, str("empty")),
+                  Case(Pat.Wildcard(), None, str("nonempty"))
+                ),
+                Nil
+              ),
+              List(
+                Case(str("empty"), None, bool(true)),
+                Case(str("nonempty"), None, bool(false))
+              ),
+              Nil
+            ),
+            tname("bar"),
+            Lit.Unit(),
+            Nil
+          ) :: Nil
+        )
+      )
+    }
   }
 
   test("#3261 chained `match` with outdent, block, in if cond") {
@@ -2984,11 +3094,53 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  then
          |    bar
          |""".stripMargin
-    val error =
-      """|<input>:7: error: then expected but match found
-         |  match
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object small {
+         |  if ({
+         |    foo()
+         |    Nil match {
+         |      case Nil => "empty"
+         |      case _ => "nonempty"
+         |    }
+         |  } match {
+         |    case "empty" => true
+         |    case "nonempty" => false
+         |  }) bar
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("small"),
+        tpl(
+          Term.If(
+            Term.Match(
+              Term.Block(
+                List(
+                  Term.Apply(tname("foo"), Nil),
+                  Term.Match(
+                    tname("Nil"),
+                    List(
+                      Case(tname("Nil"), None, str("empty")),
+                      Case(Pat.Wildcard(), None, str("nonempty"))
+                    ),
+                    Nil
+                  )
+                )
+              ),
+              List(
+                Case(str("empty"), None, bool(true)),
+                Case(str("nonempty"), None, bool(false))
+              ),
+              Nil
+            ),
+            tname("bar"),
+            Lit.Unit(),
+            Nil
+          ) :: Nil
+        )
+      )
+    }
   }
 
   test("#3261 chained `match` with outdent, no block, in try") {
@@ -3004,11 +3156,51 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  catch
          |    case e => e.getMessage()
          |""".stripMargin
-    val error =
-      """|<input>:6: error: ; expected but match found
-         |  match
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object small {
+         |  try (Nil match {
+         |    case Nil => "empty"
+         |    case _ => "nonempty"
+         |  }) match {
+         |    case "empty" => 0
+         |    case "nonempty" => 1
+         |  } catch {
+         |    case e =>
+         |      e.getMessage()
+         |  }
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("small"),
+        tpl(
+          Term.Try(
+            Term.Match(
+              Term.Match(
+                tname("Nil"),
+                List(
+                  Case(tname("Nil"), None, str("empty")),
+                  Case(Pat.Wildcard(), None, str("nonempty"))
+                ),
+                Nil
+              ),
+              List(
+                Case(str("empty"), None, int(0)),
+                Case(str("nonempty"), None, int(1))
+              ),
+              Nil
+            ),
+            Case(
+              Pat.Var(tname("e")),
+              None,
+              Term.Apply(Term.Select(tname("e"), tname("getMessage")), Nil)
+            ) :: Nil,
+            None
+          ) :: Nil
+        )
+      )
+    }
   }
 
   test("#3261 chained `match` with outdent, block, in try") {
@@ -3025,11 +3217,59 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  catch
          |    case e => e.getMessage()
          |""".stripMargin
-    val error =
-      """|<input>:7: error: ; expected but match found
-         |  match
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object small {
+         |  try {
+         |    foo()
+         |    Nil match {
+         |      case Nil => "empty"
+         |      case _ => "nonempty"
+         |    }
+         |  } match {
+         |    case "empty" => 0
+         |    case "nonempty" => 1
+         |  } catch {
+         |    case e =>
+         |      e.getMessage()
+         |  }
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("small"),
+        tpl(
+          Term.Try(
+            Term.Match(
+              Term.Block(
+                List(
+                  Term.Apply(tname("foo"), Term.ArgClause(Nil, None)),
+                  Term.Match(
+                    tname("Nil"),
+                    List(
+                      Case(tname("Nil"), None, str("empty")),
+                      Case(Pat.Wildcard(), None, str("nonempty"))
+                    ),
+                    Nil
+                  )
+                )
+              ),
+              List(
+                Case(str("empty"), None, int(0)),
+                Case(str("nonempty"), None, int(1))
+              ),
+              Nil
+            ),
+            Case(
+              Pat.Var(tname("e")),
+              None,
+              Term.Apply(Term.Select(tname("e"), tname("getMessage")), Nil)
+            ) :: Nil,
+            None
+          ) :: Nil
+        )
+      )
+    }
   }
 
   test("#3261 partial func, in try") {
@@ -3041,11 +3281,39 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  catch
          |    case e => e.getMessage()
          |""".stripMargin
-    val error =
-      """|<input>:3: error: outdent expected but case found
+    val layout =
+      """|object small {
+         |  try {
          |    case Nil => "empty"
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+         |    case _ => "nonempty"
+         |  } catch {
+         |    case e =>
+         |      e.getMessage()
+         |  }
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("small"),
+        tpl(
+          Term.Try(
+            Term.PartialFunction(
+              List(
+                Case(tname("Nil"), None, str("empty")),
+                Case(Pat.Wildcard(), None, str("nonempty"))
+              )
+            ),
+            Case(
+              Pat.Var(tname("e")),
+              None,
+              Term.Apply(Term.Select(tname("e"), tname("getMessage")), Nil)
+            ) :: Nil,
+            None
+          ) :: Nil
+        )
+      )
+    }
   }
 
 }

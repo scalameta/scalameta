@@ -1420,14 +1420,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         )
     }
 
-  private def exprMaybeIndented(): Term = {
-    if (token.is[Indentation.Indent]) {
-      blockExpr()
-    } else {
-      expr()
-    }
-  }
-
   private def tryAcceptWithOptLF[T: TokenClassifier]: Boolean = {
     acceptOpt[T] || {
       val ok = token.is[LF] && tryAhead[T]
@@ -1466,12 +1458,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (token.is[LeftParen])
         condExprInParens[KwThen]
       else
-        try exprMaybeIndented()
+        try expr()
         finally acceptAfterOptNL[KwThen]
 
-    val thenp = exprMaybeIndented()
+    val thenp = expr()
     if (tryAcceptWithOptLF[KwElse]) {
-      Term.If(cond, thenp, exprMaybeIndented(), mods)
+      Term.If(cond, thenp, expr(), mods)
     } else if (token.is[Semicolon] && tryAhead[KwElse]) {
       next(); Term.If(cond, thenp, expr(), mods)
     } else {
@@ -1521,17 +1513,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case KwTry() =>
         next()
         val body: Term = token match {
-          case _: Indentation.Indent => block()
           case _ if dialect.allowTryWithAnyExpr => expr()
           case _: LeftParen => inParensOnOpen(expr())
           case _: LeftBrace => block()
+          case _: Indentation.Indent => block()
           case _ => expr()
         }
         def caseClausesOrExpr = caseClausesIfAny().toRight(blockWithinDelims())
 
         def finallyopt =
           if (tryAcceptWithOptLF[KwFinally]) {
-            Some(exprMaybeIndented())
+            Some(expr())
           } else {
             None
           }
@@ -1557,9 +1549,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           if (token.is[LeftParen])
             condExprInParens[KwDo]
           else
-            try if (token.is[Indentation.Indent]) block() else expr()
+            try expr()
             finally acceptAfterOptNL[KwDo]
-        Term.While(cond, exprMaybeIndented())
+        Term.While(cond, expr())
       case KwDo() if dialect.allowDoWhile =>
         next()
         val body = expr()
@@ -1588,11 +1580,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
         newLinesOpt()
         if (acceptOpt[KwDo]) {
-          Term.For(enums, exprMaybeIndented())
+          Term.For(enums, expr())
         } else if (acceptOpt[KwYield]) {
-          Term.ForYield(enums, exprMaybeIndented())
+          Term.ForYield(enums, expr())
         } else {
-          Term.For(enums, exprMaybeIndented())
+          Term.For(enums, expr())
         }
       case KwReturn() =>
         next()
@@ -3520,7 +3512,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val tpOpt: Option[Type] = typedOpt()
 
     if (acceptOpt[Equals]) {
-      val rhs = exprMaybeIndented()
+      val rhs = expr()
       if (rhs.is[Term.Placeholder] && (tpOpt.isEmpty || isVal || !lhs.forall(_.is[Pat.Var])))
         syntaxError("unbound placeholder parameter", at = token)
       if (isVal)
@@ -3609,7 +3601,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
 
     if (acceptOpt[Equals]) {
-      Defn.GivenAlias(mods, sigName, paramClauseGroup, decltype, exprMaybeIndented())
+      Defn.GivenAlias(mods, sigName, paramClauseGroup, decltype, expr())
     } else if (token.isAny[KwWith, LeftParen]) {
       val inits = parents()
       val (slf, stats) = {
@@ -3735,7 +3727,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     } else {
       accept[Equals]
       val isMacro = acceptOpt[KwMacro]
-      val rhs = exprMaybeIndented()
+      val rhs = expr()
       if (isMacro) Defn.Macro(mods, name, paramClauses, restype, rhs)
       else Defn.Def(mods, name, paramClauses, restype, rhs)
     }
