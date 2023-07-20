@@ -2913,4 +2913,139 @@ class SignificantIndentationSuite extends BaseDottySuite {
     }
   }
 
+  test("#3261 chained `match` with outdent, no block, in assign") {
+    val code =
+      """|object small:
+         |  val value =
+         |    Nil match
+         |    case Nil => "empty"
+         |    case _   => "nonempty"
+         |  match
+         |    case "empty"    => 0
+         |    case "nonempty" => 1
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: ; expected but match found
+         |  match
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3261 chained `match` with outdent, block, in assign") {
+    val code =
+      """|object small:
+         |  val value =
+         |    foo()
+         |    Nil match
+         |    case Nil => "empty"
+         |    case _   => "nonempty"
+         |  match
+         |    case "empty"    => 0
+         |    case "nonempty" => 1
+         |""".stripMargin
+    val error =
+      """|<input>:7: error: ; expected but match found
+         |  match
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3261 chained `match` with outdent, no block, in if cond") {
+    val code =
+      """|object small:
+         |  if
+         |    Nil match
+         |    case Nil => "empty"
+         |    case _   => "nonempty"
+         |  match
+         |    case "empty"    => true
+         |    case "nonempty" => false
+         |  then
+         |    bar
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: then expected but match found
+         |  match
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3261 chained `match` with outdent, block, in if cond") {
+    val code =
+      """|object small:
+         |  if
+         |    foo()
+         |    Nil match
+         |    case Nil => "empty"
+         |    case _   => "nonempty"
+         |  match
+         |    case "empty"    => true
+         |    case "nonempty" => false
+         |  then
+         |    bar
+         |""".stripMargin
+    val error =
+      """|<input>:7: error: then expected but match found
+         |  match
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3261 chained `match` with outdent, no block, in try") {
+    val code =
+      """|object small:
+         |  try
+         |    Nil match
+         |    case Nil => "empty"
+         |    case _   => "nonempty"
+         |  match
+         |    case "empty"    => 0
+         |    case "nonempty" => 1
+         |  catch
+         |    case e => e.getMessage()
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: ; expected but match found
+         |  match
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3261 chained `match` with outdent, block, in try") {
+    val code =
+      """|object small:
+         |  try
+         |    foo()
+         |    Nil match
+         |    case Nil => "empty"
+         |    case _   => "nonempty"
+         |  match
+         |    case "empty"    => 0
+         |    case "nonempty" => 1
+         |  catch
+         |    case e => e.getMessage()
+         |""".stripMargin
+    val error =
+      """|<input>:7: error: ; expected but match found
+         |  match
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3261 partial func, in try") {
+    val code =
+      """|object small:
+         |  try
+         |    case Nil => "empty"
+         |    case _   => "nonempty"
+         |  catch
+         |    case e => e.getMessage()
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: outdent expected but case found
+         |    case Nil => "empty"
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
