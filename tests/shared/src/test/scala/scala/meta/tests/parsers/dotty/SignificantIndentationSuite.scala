@@ -2913,4 +2913,407 @@ class SignificantIndentationSuite extends BaseDottySuite {
     }
   }
 
+  test("#3261 chained `match` with outdent, no block, in assign") {
+    val code =
+      """|object small:
+         |  val value =
+         |    Nil match
+         |    case Nil => "empty"
+         |    case _   => "nonempty"
+         |  match
+         |    case "empty"    => 0
+         |    case "nonempty" => 1
+         |""".stripMargin
+    val layout =
+      """|object small {
+         |  val value = (Nil match {
+         |    case Nil => "empty"
+         |    case _ => "nonempty"
+         |  }) match {
+         |    case "empty" => 0
+         |    case "nonempty" => 1
+         |  }
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("small"),
+        tpl(
+          Defn.Val(
+            Nil,
+            List(Pat.Var(tname("value"))),
+            None,
+            Term.Match(
+              Term.Match(
+                tname("Nil"),
+                List(
+                  Case(tname("Nil"), None, str("empty")),
+                  Case(Pat.Wildcard(), None, str("nonempty"))
+                ),
+                Nil
+              ),
+              List(
+                Case(str("empty"), None, int(0)),
+                Case(str("nonempty"), None, int(1))
+              ),
+              Nil
+            )
+          ) :: Nil
+        )
+      )
+    }
+  }
+
+  test("#3261 chained `match` with outdent, block, in assign") {
+    val code =
+      """|object small:
+         |  val value =
+         |    foo()
+         |    Nil match
+         |    case Nil => "empty"
+         |    case _   => "nonempty"
+         |  match
+         |    case "empty"    => 0
+         |    case "nonempty" => 1
+         |""".stripMargin
+    val layout =
+      """|object small {
+         |  val value = {
+         |    foo()
+         |    Nil match {
+         |      case Nil => "empty"
+         |      case _ => "nonempty"
+         |    }
+         |  } match {
+         |    case "empty" => 0
+         |    case "nonempty" => 1
+         |  }
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("small"),
+        tpl(
+          Defn.Val(
+            Nil,
+            List(Pat.Var(tname("value"))),
+            None,
+            Term.Match(
+              Term.Block(
+                List(
+                  Term.Apply(tname("foo"), Term.ArgClause(Nil, None)),
+                  Term.Match(
+                    tname("Nil"),
+                    List(
+                      Case(tname("Nil"), None, str("empty")),
+                      Case(Pat.Wildcard(), None, str("nonempty"))
+                    ),
+                    Nil
+                  )
+                )
+              ),
+              List(
+                Case(str("empty"), None, int(0)),
+                Case(str("nonempty"), None, int(1))
+              ),
+              Nil
+            )
+          ) :: Nil
+        )
+      )
+    }
+  }
+
+  test("#3261 chained `match` with outdent, no block, in if cond") {
+    val code =
+      """|object small:
+         |  if
+         |    Nil match
+         |    case Nil => "empty"
+         |    case _   => "nonempty"
+         |  match
+         |    case "empty"    => true
+         |    case "nonempty" => false
+         |  then
+         |    bar
+         |""".stripMargin
+    val layout =
+      """|object small {
+         |  if ((Nil match {
+         |    case Nil => "empty"
+         |    case _ => "nonempty"
+         |  }) match {
+         |    case "empty" => true
+         |    case "nonempty" => false
+         |  }) bar
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("small"),
+        tpl(
+          Term.If(
+            Term.Match(
+              Term.Match(
+                tname("Nil"),
+                List(
+                  Case(tname("Nil"), None, str("empty")),
+                  Case(Pat.Wildcard(), None, str("nonempty"))
+                ),
+                Nil
+              ),
+              List(
+                Case(str("empty"), None, bool(true)),
+                Case(str("nonempty"), None, bool(false))
+              ),
+              Nil
+            ),
+            tname("bar"),
+            Lit.Unit(),
+            Nil
+          ) :: Nil
+        )
+      )
+    }
+  }
+
+  test("#3261 chained `match` with outdent, block, in if cond") {
+    val code =
+      """|object small:
+         |  if
+         |    foo()
+         |    Nil match
+         |    case Nil => "empty"
+         |    case _   => "nonempty"
+         |  match
+         |    case "empty"    => true
+         |    case "nonempty" => false
+         |  then
+         |    bar
+         |""".stripMargin
+    val layout =
+      """|object small {
+         |  if ({
+         |    foo()
+         |    Nil match {
+         |      case Nil => "empty"
+         |      case _ => "nonempty"
+         |    }
+         |  } match {
+         |    case "empty" => true
+         |    case "nonempty" => false
+         |  }) bar
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("small"),
+        tpl(
+          Term.If(
+            Term.Match(
+              Term.Block(
+                List(
+                  Term.Apply(tname("foo"), Nil),
+                  Term.Match(
+                    tname("Nil"),
+                    List(
+                      Case(tname("Nil"), None, str("empty")),
+                      Case(Pat.Wildcard(), None, str("nonempty"))
+                    ),
+                    Nil
+                  )
+                )
+              ),
+              List(
+                Case(str("empty"), None, bool(true)),
+                Case(str("nonempty"), None, bool(false))
+              ),
+              Nil
+            ),
+            tname("bar"),
+            Lit.Unit(),
+            Nil
+          ) :: Nil
+        )
+      )
+    }
+  }
+
+  test("#3261 chained `match` with outdent, no block, in try") {
+    val code =
+      """|object small:
+         |  try
+         |    Nil match
+         |    case Nil => "empty"
+         |    case _   => "nonempty"
+         |  match
+         |    case "empty"    => 0
+         |    case "nonempty" => 1
+         |  catch
+         |    case e => e.getMessage()
+         |""".stripMargin
+    val layout =
+      """|object small {
+         |  try (Nil match {
+         |    case Nil => "empty"
+         |    case _ => "nonempty"
+         |  }) match {
+         |    case "empty" => 0
+         |    case "nonempty" => 1
+         |  } catch {
+         |    case e =>
+         |      e.getMessage()
+         |  }
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("small"),
+        tpl(
+          Term.Try(
+            Term.Match(
+              Term.Match(
+                tname("Nil"),
+                List(
+                  Case(tname("Nil"), None, str("empty")),
+                  Case(Pat.Wildcard(), None, str("nonempty"))
+                ),
+                Nil
+              ),
+              List(
+                Case(str("empty"), None, int(0)),
+                Case(str("nonempty"), None, int(1))
+              ),
+              Nil
+            ),
+            Case(
+              Pat.Var(tname("e")),
+              None,
+              Term.Apply(Term.Select(tname("e"), tname("getMessage")), Nil)
+            ) :: Nil,
+            None
+          ) :: Nil
+        )
+      )
+    }
+  }
+
+  test("#3261 chained `match` with outdent, block, in try") {
+    val code =
+      """|object small:
+         |  try
+         |    foo()
+         |    Nil match
+         |    case Nil => "empty"
+         |    case _   => "nonempty"
+         |  match
+         |    case "empty"    => 0
+         |    case "nonempty" => 1
+         |  catch
+         |    case e => e.getMessage()
+         |""".stripMargin
+    val layout =
+      """|object small {
+         |  try {
+         |    foo()
+         |    Nil match {
+         |      case Nil => "empty"
+         |      case _ => "nonempty"
+         |    }
+         |  } match {
+         |    case "empty" => 0
+         |    case "nonempty" => 1
+         |  } catch {
+         |    case e =>
+         |      e.getMessage()
+         |  }
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("small"),
+        tpl(
+          Term.Try(
+            Term.Match(
+              Term.Block(
+                List(
+                  Term.Apply(tname("foo"), Term.ArgClause(Nil, None)),
+                  Term.Match(
+                    tname("Nil"),
+                    List(
+                      Case(tname("Nil"), None, str("empty")),
+                      Case(Pat.Wildcard(), None, str("nonempty"))
+                    ),
+                    Nil
+                  )
+                )
+              ),
+              List(
+                Case(str("empty"), None, int(0)),
+                Case(str("nonempty"), None, int(1))
+              ),
+              Nil
+            ),
+            Case(
+              Pat.Var(tname("e")),
+              None,
+              Term.Apply(Term.Select(tname("e"), tname("getMessage")), Nil)
+            ) :: Nil,
+            None
+          ) :: Nil
+        )
+      )
+    }
+  }
+
+  test("#3261 partial func, in try") {
+    val code =
+      """|object small:
+         |  try
+         |    case Nil => "empty"
+         |    case _   => "nonempty"
+         |  catch
+         |    case e => e.getMessage()
+         |""".stripMargin
+    val layout =
+      """|object small {
+         |  try {
+         |    case Nil => "empty"
+         |    case _ => "nonempty"
+         |  } catch {
+         |    case e =>
+         |      e.getMessage()
+         |  }
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("small"),
+        tpl(
+          Term.Try(
+            Term.PartialFunction(
+              List(
+                Case(tname("Nil"), None, str("empty")),
+                Case(Pat.Wildcard(), None, str("nonempty"))
+              )
+            ),
+            Case(
+              Pat.Var(tname("e")),
+              None,
+              Term.Apply(Term.Select(tname("e"), tname("getMessage")), Nil)
+            ) :: Nil,
+            None
+          ) :: Nil
+        )
+      )
+    }
+  }
+
 }
