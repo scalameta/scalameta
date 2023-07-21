@@ -1515,8 +1515,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val body: Term = token match {
           case _ if dialect.allowTryWithAnyExpr => expr()
           case _: LeftParen => inParensOnOpen(expr())
-          case _: LeftBrace => block()
-          case _: Indentation.Indent => block()
+          case _: LeftBrace => blockOnBrace()
+          case _: Indentation.Indent => blockOnIndent()
           case _ => expr()
         }
         def caseClausesOrExpr = caseClausesIfAny().toRight(blockWithinDelims())
@@ -1629,10 +1629,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _ => t
       }
     } else if (token.is[Colon] && dialect.allowFewerBraces && isEolAfterColonFewerBracesBody()) {
-      val colonPos = tokenPos
-      next()
-      val args = blockExpr(allowRepeated = false)
-      val argClause = autoEndPos(colonPos)(Term.ArgClause(args :: Nil))
+      val argClause = autoPos { next(); Term.ArgClause(blockExprOnIndent() :: Nil) }
       val arguments = addPos(Term.Apply(t, argClause))
       simpleExprRest(arguments, canApply = true, startPos = startPos)
     } else if (acceptOpt[Colon]) {
@@ -1709,13 +1706,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   private def termFunctionBody(location: Location): Term =
     if (location != BlockStat) expr()
-    else {
-      blockExpr(isBlockOptional = true) match {
+    else
+      (token match {
+        case _: LeftBrace => blockExprOnBrace(isOptional = true)
+        case _: Indentation.Indent => blockExprOnIndent()
+        case _ => blockOnOther()
+      }) match {
         case partial: Term.PartialFunction if acceptOpt[Colon] =>
           autoEndPos(partial)(Term.Ascribe(partial, startInfixType()))
         case t => t
       }
-    }
 
   private def convertToParam(tree: Tree): Option[Term.Param] = {
     def getModFromName(name: Name): Option[Mod] = name.value match {
@@ -2178,7 +2178,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Success(inParensOrTupleOrUnitExpr(allowRepeated = allowRepeated))
         case LeftBrace() =>
           canApply = false
-          Success(blockExpr())
+          Success(blockExprOnBrace())
         case KwNew() =>
           canApply = false
           Success(autoPos {
@@ -2194,7 +2194,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case LeftBracket() if dialect.allowPolymorphicFunctions =>
           Success(polyFunction())
         case Indentation.Indent() =>
-          Success(blockExpr())
+          Success(blockExprOnIndent())
         case _ =>
           Failure(new ParseException(token.pos, "illegal start of simple expression"))
       }
@@ -2286,7 +2286,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         // map:
         val argsOpt = if (isEolAfterColonFewerBracesBody()) Some {
           next()
-          blockExpr(allowRepeated = false)
+          blockExprOnIndent()
         }
         else
           tryAhead(Try {
@@ -2309,7 +2309,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               convertToParamClause(param)(true, true).map { pc =>
                 val params = autoEndPos(paramPos)(pc)
                 next()
-                val trm = blockExpr(allowRepeated = false)
+                val trm = blockExprOnIndent()
                 autoEndPos(paramPos) {
                   if (contextFunction)
                     Term.ContextFunction(params, trm)
@@ -2345,7 +2345,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
       val lpPos = tokenPos
       val args =
-        if (isBrace) checkNoTripleDot(blockExpr(allowRepeated = true)) :: Nil
+        if (isBrace) checkNoTripleDot(blockExprOnBrace(allowRepeated = true)) :: Nil
         else inParensOnOpenOr(argumentExprsInParens(location))(Nil)
       def getRest() = {
         findRep(args).foreach(x => syntaxError("repeated argument not allowed here", at = x))
@@ -2373,7 +2373,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   private def getArgClause(location: Location = NoStat): Term.ArgClause = autoPos(token match {
     case _: LeftBrace =>
-      Term.ArgClause(blockExpr(allowRepeated = true) :: Nil)
+      Term.ArgClause(blockExprOnBrace(allowRepeated = true) :: Nil)
     case _: LeftParen =>
       inParensOnOpenOr(token match {
         case t @ Ellipsis(2) =>
@@ -2411,32 +2411,33 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   // call it only if token is KwCase
   private def isCaseIntroOnKwCase(): Boolean = !peekToken.isClassOrObject
 
-  def blockExpr(isBlockOptional: Boolean = false, allowRepeated: Boolean = false): Term = {
+  private def blockExprPartial(f: (=> Term) => Term)(orElse: => Term): Term = {
     val hasCases = ahead(token match {
       case _: KwCase => isCaseIntroOnKwCase()
       case _: Ellipsis => peekToken.is[KwCase]
       case _ => false
     })
-    if (hasCases)
-      autoPos(Term.PartialFunction {
-        if (acceptOpt[LeftBrace]) inBracesAfterOpen(caseClauses()) else indented(caseClauses())
-      })
-    else block(isBlockOptional, allowRepeated)
+    if (hasCases) autoPos(f(Term.PartialFunction(caseClauses()))) else orElse
   }
 
   private def blockWithinDelims(allowRepeated: Boolean = false) =
     Term.Block(blockStatSeq(allowRepeated = allowRepeated))
 
-  def block(isBlockOptional: Boolean = false, allowRepeated: Boolean = false): Term = autoPos {
-    def blockWithStats = blockWithinDelims(allowRepeated = allowRepeated)
-    if (!isBlockOptional && acceptOpt[LeftBrace]) {
-      inBracesAfterOpen(blockWithStats)
-    } else {
-      val possibleBlock =
-        if (acceptOpt[Indentation.Indent]) indentedAfterOpen(blockWithStats) else blockWithStats
-      dropOuterBlock(possibleBlock)
+  private def blockInDelims(f: (=> Term.Block) => Term, allowRepeated: Boolean = false): Term =
+    autoPos(f(blockWithinDelims(allowRepeated = allowRepeated)))
+
+  private def blockOnIndent(): Term = blockInDelims(x => dropOuterBlock(indentedOnOpen(x)))
+  private def blockExprOnIndent(): Term = blockExprPartial(indentedOnOpen)(blockOnIndent())
+
+  private def blockOnBrace(allowRepeated: Boolean = false): Term =
+    blockInDelims(inBracesOnOpen, allowRepeated)
+  private def blockExprOnBrace(allowRepeated: Boolean = false, isOptional: Boolean = false): Term =
+    blockExprPartial(inBracesOnOpen) {
+      if (isOptional) blockOnOther(allowRepeated) else blockOnBrace(allowRepeated)
     }
-  }
+
+  private def blockOnOther(allowRepeated: Boolean = false): Term =
+    blockInDelims(dropOuterBlock(_), allowRepeated)
 
   def caseClause(forceSingleExpr: Boolean = false): Case = atPos(prevTokenPos, EndPosPreOutdent) {
     if (token.isNot[KwCase]) {
