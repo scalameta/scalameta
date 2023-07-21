@@ -1519,7 +1519,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case _: Indentation.Indent => blockOnIndent()
           case _ => expr()
         }
-        def caseClausesOrExpr = caseClausesIfAny().toRight(blockWithinDelims())
 
         def finallyopt =
           if (tryAcceptWithOptLF[KwFinally]) {
@@ -1530,15 +1529,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
         def tryWithCases(cases: List[Case]) = Term.Try(body, cases, finallyopt)
         def tryWithHandler(handler: Term) = Term.TryWithHandler(body, handler, finallyopt)
-        def fromCaseClausesOrExpr(obj: => Either[Term, List[Case]]): Term = {
+        def tryInDelims(f: (=> Either[Term, List[Case]]) => Either[Term, List[Case]]): Term = {
           val catchPos = tokenPos
-          obj.fold(x => tryWithHandler(autoEndPos(catchPos)(x)), tryWithCases)
+          f(caseClausesIfAny().toRight(blockWithinDelims()))
+            .fold(x => tryWithHandler(autoEndPos(catchPos)(x)), tryWithCases)
         }
 
         if (tryAcceptWithOptLF[KwCatch]) token match {
           case _: KwCase => next(); tryWithCases(caseClause(true) :: Nil)
-          case _: Indentation.Indent => fromCaseClausesOrExpr(indentedOnOpen(caseClausesOrExpr))
-          case _: LeftBrace => fromCaseClausesOrExpr(inBracesOnOpen(caseClausesOrExpr))
+          case _: Indentation.Indent => tryInDelims(indentedOnOpen)
+          case _: LeftBrace => tryInDelims(inBracesOnOpen)
           case _ => tryWithHandler(expr())
         }
         else tryWithCases(Nil)
