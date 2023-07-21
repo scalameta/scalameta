@@ -276,6 +276,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     accept[LeftBracket]
     inBracketsAfterOpen(body)
   }
+  @inline private def inBracketsOnOpen[T](body: => T): T = {
+    next()
+    inBracketsAfterOpen(body)
+  }
   @inline private def inBracketsAfterOpen[T](body: T): T = {
     accept[RightBracket]
     body
@@ -2209,29 +2213,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     Term.PolyFunction(quants, term)
   }
 
-  def macroSplice(): Term = autoPos {
-    accept[MacroSplice]
-    QuotedSpliceContext.within {
-      if (QuotedPatternContext.isInside())
-        Term.SplicedMacroPat(autoPos(inBraces(pattern())))
-      else
-        Term.SplicedMacroExpr(autoPos(inBraces(blockWithinDelims())))
-    }
-  }
+  private def macroSplice(): Term = autoPos(QuotedSpliceContext.within {
+    next()
+    if (QuotedPatternContext.isInside()) Term.SplicedMacroPat(autoPos(inBraces(pattern())))
+    else Term.SplicedMacroExpr(autoPos(inBraces(blockWithinDelims())))
+  })
 
-  def macroQuote(): Term = autoPos {
-    accept[MacroQuote]
-    QuotedSpliceContext.within {
-      if (acceptOpt[LeftBrace]) {
-        val block = autoEndPos(prevTokenPos)(inBracesAfterOpen(blockWithinDelims()))
-        Term.QuotedMacroExpr(block)
-      } else if (acceptOpt[LeftBracket]) {
-        Term.QuotedMacroType(inBracketsAfterOpen(typ()))
-      } else {
-        syntaxError("Quotation only works for expressions and types", at = token)
-      }
+  private def macroQuote(): Term = autoPos(QuotedSpliceContext.within {
+    next()
+    token match {
+      case _: LeftBrace => Term.QuotedMacroExpr(autoPos(inBracesOnOpen(blockWithinDelims())))
+      case _: LeftBracket => Term.QuotedMacroType(inBracketsOnOpen(typ()))
+      case t => syntaxError("Quotation only works for expressions and types", at = t)
     }
-  }
+  })
 
   @inline private def macroQuotedIdent(ident: String): Term =
     macroIdent(ident, Term.QuotedMacroExpr.apply)
