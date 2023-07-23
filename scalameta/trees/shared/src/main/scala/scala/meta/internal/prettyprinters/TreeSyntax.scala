@@ -423,24 +423,10 @@ object TreeSyntax {
       case t: Term.Tuple => m(SimpleExpr1, s("(", r(t.args, ", "), ")"))
       case t: Term.Block =>
         import Term.{Block, Function}
-        def withBlankLines(x: Seq[Stat]) = {
-          val builder = List.newBuilder[Show.Result]
-          var prevStat: Stat = null
-          x.foreach { stat =>
-            if (stat.is[Block] && null != prevStat && guessNeedsLineSep(prevStat)) builder += EOL
-            builder += i(stat)
-            prevStat = stat
-          }
-          builder.result()
-        }
         def block(pre: Show.Result, x: Seq[Stat]) = {
           val res =
             if (pre == Show.None && x.isEmpty) s("{}")
-            else {
-              val stats =
-                if (dialect.allowSignificantIndentation) x.map(i(_)) else withBlankLines(x)
-              s("{", w(" ", pre), r(stats), n("}"))
-            }
+            else s("{", w(" ", pre), x, n("}"))
           m(SimpleExpr, res)
         }
         t match {
@@ -528,7 +514,7 @@ object TreeSyntax {
       case Term.QuotedMacroExpr(Term.Block(stats)) =>
         stats match {
           case head :: Nil => s("'{ ", head, " }")
-          case other => s("'{", r(other.map(i(_)), ""), n("}"))
+          case other => s("'{", other, n("}"))
         }
       case t: Term.QuotedMacroExpr =>
         m(SimpleExpr, s("'", p(Expr, t.body)))
@@ -537,7 +523,7 @@ object TreeSyntax {
       case Term.SplicedMacroExpr(Term.Block(stats)) =>
         stats match {
           case head :: Nil => s("${ ", head, " }")
-          case other => s("${", r(other.map(i(_)), ""), n("}"))
+          case other => s("${", other, n("}"))
         }
       case Term.SplicedMacroPat(pat) =>
         s("${ ", pat, " }")
@@ -932,7 +918,7 @@ object TreeSyntax {
             " {",
             i(t.init),
             "",
-            r(t.stats.map(i(_)), ""),
+            t.stats,
             n("}")
           )
 
@@ -972,7 +958,7 @@ object TreeSyntax {
             val statStr = s(stat).toString
             if (statStr.contains(EOL)) s("{", w(" ", t.self), i(stat), n("}"))
             else r(" ")("{", t.self, statStr, "}")
-          case stats => s("{", w(" ", t.self), r(stats.map(i(_))), n("}"))
+          case stats => s("{", w(" ", t.self), stats, n("}"))
         }
         r(" ")(extendsKeyword, pearly, pparents, derived, withGiven, pbody)
 
@@ -1058,7 +1044,7 @@ object TreeSyntax {
         val pbody = (t.stats, isOneLiner) match {
           case (Nil, true) => s("")
           case (List(stat), true) => s(" ", stat)
-          case (stats, _) => r(stats.map(i(_)), "")
+          case (stats, _) => s(stats)
         }
         s("case ", ppat, pcond, " ", kw("=>"), pbody)
 
@@ -1120,6 +1106,21 @@ object TreeSyntax {
       case Seq(t: Importee.Rename) => s("{", t, "}")
       case importees => s("{ ", r(importees, ", "), " }")
     }
+
+    private def printStats(stats: Seq[Stat]) = r {
+      val builder = List.newBuilder[Show.Result]
+      var prevStat: Stat = null
+      stats.foreach { stat =>
+        if (stat.is[Term.Block] && null != prevStat && guessNeedsLineSep(prevStat))
+          builder += System.lineSeparator
+        builder += i(stat)
+        prevStat = stat
+      }
+      builder.result()
+    }
+
+    implicit def syntaxStats: Syntax[Seq[Stat]] =
+      if (dialect.allowSignificantIndentation) Syntax(x => r(x.map(i(_)))) else Syntax(printStats)
 
   }
   def apply[T <: Tree](dialect: Dialect): Syntax[T] = {
