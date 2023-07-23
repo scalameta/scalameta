@@ -373,9 +373,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           if (token == INTERPOLATIONID) {
             nextRawChar()
             if (ch == '\"') {
-              val lookahead = lookaheadReader
-              lookahead.nextChar()
-              if (lookahead.ch == '\"') {
+              if (lookaheadReader.getc() == '\"') {
                 nextRawChar() // now eat it
                 offset += 3
                 nextRawChar()
@@ -549,9 +547,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         '|' | '\\' =>
       putChar(ch); nextChar(); getOperatorRest()
     case '/' =>
-      val lookahead = lookaheadReader
-      lookahead.nextChar()
-      if (lookahead.ch == '/' || lookahead.ch == '*') {
+      val peekNextChar = lookaheadReader.getc()
+      if (peekNextChar == '/' || peekNextChar == '*') {
         finishNamed()
       } else {
         putChar('/')
