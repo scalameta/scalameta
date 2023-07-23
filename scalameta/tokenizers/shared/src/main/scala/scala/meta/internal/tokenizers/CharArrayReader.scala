@@ -6,30 +6,27 @@ import Chars._
 import scala.meta.inputs._
 import scala.util.control.NonFatal
 
-trait CharArrayReaderData {
+private[tokenizers] case class CharArrayReader private (
+    buf: Array[Char],
+    dialect: Dialect,
+    reporter: Reporter,
+    /** the last read character */
+    var ch: Char = SU,
+    /** The offset one past the last read character */
+    var charOffset: Int = 0,
+    /** The start offset of the current line */
+    private var lineStartOffset: Int = 0,
+    /** The start offset of the line before the current one */
+    private var lastLineStartOffset: Int = 0,
+    private var lastUnicodeOffset: Int = -1,
+    /** Is last character a unicode escape \\uxxxx? */
+    var isUnicodeEscape: Boolean = false
+) {
 
-  /** the last read character */
-  var ch: Char = _
+  def this(input: Input, dialect: Dialect, reporter: Reporter) =
+    this(buf = input.chars, dialect = dialect, reporter = reporter)
 
-  /** The offset one past the last read character */
-  var charOffset: Int = 0
-
-  /** The start offset of the current line */
-  var lineStartOffset: Int = 0
-
-  /** The start offset of the line before the current one */
-  var lastLineStartOffset: Int = 0
-
-  protected var lastUnicodeOffset = -1
-}
-
-class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter)
-    extends CharArrayReaderData { self =>
-  val buf = input.chars
   import reporter._
-
-  /** Is last character a unicode escape \\uxxxx? */
-  var isUnicodeEscape = false
 
   /** Advance one character; reducing CR;LF pairs to just LF */
   final def nextChar(): Unit = {
@@ -157,16 +154,12 @@ class CharArrayReader(input: Input, dialect: Dialect, reporter: Reporter)
   }
 
   /** A new reader that takes off at the current character position */
-  def lookaheadReader = new CharArrayLookaheadReader
+  def lookaheadReader = copy()
 
-  class CharArrayLookaheadReader extends CharArrayReader(input, dialect, reporter) {
-    charOffset = self.charOffset
-    ch = self.ch
-
-    /** A mystery why CharArrayReader.nextChar() returns Unit */
-    def getc() = { nextChar(); ch }
-    def getu() = {
-      require(buf(charOffset) == '\\'); ch = '\\'; charOffset += 1; potentialUnicode(); ch
-    }
+  /** A mystery why CharArrayReader.nextChar() returns Unit */
+  def getc() = { nextChar(); ch }
+  private def getu() = {
+    require(buf(charOffset) == '\\'); ch = '\\'; charOffset += 1; potentialUnicode(); ch
   }
+
 }
