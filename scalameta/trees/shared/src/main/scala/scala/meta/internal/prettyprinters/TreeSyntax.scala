@@ -302,7 +302,7 @@ object TreeSyntax {
       case _: Decl.Val | _: Decl.Var | _: Decl.Def | _: Defn.Type | _: Term.Ref | _: Member.Apply |
           _: Term.Ascribe | _: Term.Tuple | _: Term.New | _: Term.Interpolate | _: Term.Xml |
           _: Lit =>
-        true
+        !dialect.allowSignificantIndentation
       case t: Term.Do => false
       case t: Tree.WithBody => guessNeedsLineSep(t.body)
       case t: Stat.WithTemplate => t.templ.self.isEmpty && t.templ.stats.isEmpty
@@ -1119,8 +1119,7 @@ object TreeSyntax {
       builder.result()
     }
 
-    implicit def syntaxStats: Syntax[Seq[Stat]] =
-      if (dialect.allowSignificantIndentation) Syntax(x => r(x.map(i(_)))) else Syntax(printStats)
+    implicit def syntaxStats: Syntax[Seq[Stat]] = Syntax(printStats)
 
   }
   def apply[T <: Tree](dialect: Dialect): Syntax[T] = {
