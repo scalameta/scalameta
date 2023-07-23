@@ -3316,4 +3316,96 @@ class SignificantIndentationSuite extends BaseDottySuite {
     }
   }
 
+  test("blank after template 1") {
+    val code =
+      """|class DerivationSpec {
+         |  case class Foo()
+         |
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
+         |
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
+         |}
+         |""".stripMargin
+    val layout =
+      """|class DerivationSpec {
+         |  case class Foo() { deriveEncoder[Foo] }
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Class(
+      Nil,
+      pname("DerivationSpec"),
+      Nil,
+      ctor,
+      tpl(
+        List(
+          Defn.Class(
+            List(Mod.Case()),
+            pname("Foo"),
+            Nil,
+            ctorp(Nil),
+            tpl(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
+          ),
+          Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
+        )
+      )
+    )
+    // code parses as specified tree
+    checkStat(code, layout)(tree)
+    // however, the parsed layout itself has different syntax (and, hence, tree)
+    assertNotEquals(parseStat(layout, implicitly[Dialect]).reprint, layout)
+  }
+
+  test("blank after template 2") {
+    val code =
+      """|class DerivationSpec {
+         |  case class Foo() extends Bar
+         |
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
+         |
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
+         |}
+         |""".stripMargin
+    val layout =
+      """|class DerivationSpec {
+         |  case class Foo() extends Bar { deriveEncoder[Foo] }
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Class(
+      Nil,
+      pname("DerivationSpec"),
+      Nil,
+      ctor,
+      tpl(
+        List(
+          Defn.Class(
+            List(Mod.Case()),
+            pname("Foo"),
+            Nil,
+            ctorp(Nil),
+            tpl(List(init("Bar")), List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
+          ),
+          Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
+        )
+      )
+    )
+    // code parses as specified tree
+    checkStat(code, layout)(tree)
+    // however, the parsed layout itself has different syntax (and, hence, tree)
+    assertNotEquals(parseStat(layout, implicitly[Dialect]).reprint, layout)
+  }
+
 }
