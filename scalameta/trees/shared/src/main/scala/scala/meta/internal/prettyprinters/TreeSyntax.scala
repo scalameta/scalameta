@@ -468,7 +468,7 @@ object TreeSyntax {
             " ",
             kw("match"),
             " {",
-            r(t.cases.map(i(_)), ""),
+            t.cases,
             n("}")
           )
         )
@@ -479,7 +479,7 @@ object TreeSyntax {
             kw("try"),
             " ",
             p(Expr, t.expr),
-            if (t.catchp.nonEmpty) s(" ", kw("catch"), " {", r(t.catchp.map(i(_)), ""), n("}"))
+            if (t.catchp.nonEmpty) s(" ", kw("catch"), " {", t.catchp, n("}"))
             else s(""),
             t.finallyp
               .map { finallyp => s(" ", kw("finally"), " ", finallyp) }
@@ -531,7 +531,7 @@ object TreeSyntax {
         m(SimpleExpr, s("$", p(Expr, t.body)))
       case t: Pat.Macro => m(SimplePattern, s(t.body))
       case t: Type.Macro => m(SimpleTyp, s(t.body))
-      case t: Term.PartialFunction => m(SimpleExpr, s("{", r(t.cases.map(i(_)), ""), n("}")))
+      case t: Term.PartialFunction => m(SimpleExpr, s("{", t.cases, n("}")))
       case t: Term.While =>
         m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
       case t: Term.Do =>
@@ -634,7 +634,7 @@ object TreeSyntax {
       case t: Type.Match =>
         m(
           Type,
-          s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", r(t.cases.map(i(_)), ""), n("}"))
+          s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", t.cases, n("}"))
         )
       case t: Type.AnonymousLambda => s(t.tpe)
       case t: Type.AnonymousParam =>
@@ -1106,6 +1106,8 @@ object TreeSyntax {
       case Seq(t: Importee.Rename) => s("{", t, "}")
       case importees => s("{ ", r(importees, ", "), " }")
     }
+
+    implicit def syntaxCases: Syntax[Seq[CaseTree]] = Syntax { cases => r(cases.map(i(_))) }
 
     private def printStats(stats: Seq[Stat]) = r {
       val builder = List.newBuilder[Show.Result]
