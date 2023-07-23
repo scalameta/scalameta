@@ -50,7 +50,9 @@ trait CommonTrees {
   final def self(name: String, tpe: String = null) = meta.Self(tname(name), Option(tpe).map(pname))
 
   final def tname(name: String): Term.Name = Term.Name(name)
-  final def tpl(stats: List[Stat]): Template = Template(Nil, Nil, slf, stats)
+  final def tpl(inits: List[Init], stats: List[Stat]): Template =
+    Template(Nil, inits, slf, stats)
+  final def tpl(stats: List[Stat]): Template = tpl(Nil, stats)
 
   final def tparam(mods: List[Mod], name: String, tpe: Option[Type] = None): Term.Param = {
     val nameTree = name match {
