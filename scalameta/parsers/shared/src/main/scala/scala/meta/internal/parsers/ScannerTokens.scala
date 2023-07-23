@@ -646,16 +646,19 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       }
 
       def getIfCanProduceLF(regions: List[SepRegion]) = {
+        @inline def derives(token: Token) = token.is[soft.KwDerives]
+        @inline def blankBraceOr(ok: => Boolean): Boolean = if (next.is[LeftBrace]) newlines else ok
         if (lastNewlinePos != -1 &&
           (prevToken.is[Indentation.Outdent] || prevPos >= 0 && canEndStat(prevPos)) &&
           next.isNot[CantStartStat])
           (regions match {
             case Nil => Some(regions)
-            case RegionDefType :: rs if !next.isAny[LeftParen, LeftBracket, Equals] => Some(rs)
+            case RegionDefType :: rs =>
+              if (next.isAny[LeftParen, LeftBracket, Equals]) None else Some(rs)
             // `extends` and `with` are covered by canEndStat() and CantStartStat above
-            case RegionTemplateMark :: rs if !next.isAny[LeftBrace, soft.KwDerives] => Some(rs)
-            case RegionTemplateInherit :: rs if !next.isAny[LeftBrace, soft.KwDerives] =>
-              if (prev.is[soft.KwDerives]) None else Some(rs)
+            case RegionTemplateMark :: rs => if (blankBraceOr(!derives(next))) Some(rs) else None
+            case RegionTemplateInherit :: rs =>
+              if (blankBraceOr(!derives(next) && !derives(prev))) Some(rs) else None
             case (_: CanProduceLF) :: _ => Some(regions)
             case _ => None
           }).map(rs => Right(lastWhitespaceToken(rs)))
