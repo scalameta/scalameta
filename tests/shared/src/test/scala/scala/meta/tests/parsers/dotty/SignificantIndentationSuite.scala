@@ -3332,7 +3332,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|class DerivationSpec {
-         |  case class Foo() { deriveEncoder[Foo] }
+         |  case class Foo()
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
          |  {
          |    deriveEncoder[Foo]
          |  }
@@ -3350,8 +3353,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
             pname("Foo"),
             Nil,
             ctorp(Nil),
-            tpl(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
+            tpl(Nil)
           ),
+          Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo"))))),
           Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
         )
       )
@@ -3378,7 +3382,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|class DerivationSpec {
-         |  case class Foo() extends Bar { deriveEncoder[Foo] }
+         |  case class Foo() extends Bar
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
          |  {
          |    deriveEncoder[Foo]
          |  }
@@ -3396,8 +3403,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
             pname("Foo"),
             Nil,
             ctorp(Nil),
-            tpl(List(init("Bar")), List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
+            tpl(List(init("Bar")), Nil)
           ),
+          Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo"))))),
           Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
         )
       )
