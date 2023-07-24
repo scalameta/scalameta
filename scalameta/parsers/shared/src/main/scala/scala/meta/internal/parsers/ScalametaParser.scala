@@ -33,6 +33,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private val scannerTokens: ScannerTokens = ScannerTokens(input)
   import scannerTokens._
 
+  /* ------------- NESTED CONTEXT OBJECTS ----------------------------------------- */
+  // must all be parser-specific, to avoid sharing state with other parsers
+  private object QuotedSpliceContext extends NestedContext
+  private object QuotedPatternContext extends NestedContext
+  private object ReturnTypeContext extends NestedContext
+  private object TypeBracketsContext extends NestedContext
+  private object PatternTypeContext extends NestedContext
+
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
   def parseRule[T <: Tree](rule: this.type => T): T = {
