@@ -11,10 +11,6 @@ import java.{util => ju}
 @deprecated("No longer used", "4.3.0")
 object PlatformTokenizerCache {
   // On the JVM, this is a weak hashmap.
+  // still used in scalafmt-dynamic-3.7.10
   val megaCache = new ju.HashMap[Dialect, mutable.Map[Input, Tokens]]()
-  val miniCacheSyncRoot = new Object
-  def newUnsyncResult: mutable.Map[Input, Tokens] = mutable.HashMap.empty[Input, Tokens]
-  def putIfAbsent(dialect: Dialect, cache: mutable.Map[Input, Tokens]): mutable.Map[Input, Tokens] =
-    if (!megaCache.containsKey(dialect)) megaCache.put(dialect, cache)
-    else megaCache.get(dialect)
 }
