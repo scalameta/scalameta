@@ -7,7 +7,7 @@ import scala.meta.io._
 object PathIO {
 
   def workingDirectory: AbsolutePath =
-    AbsolutePath(PlatformPathIO.workingDirectoryString)
+    AbsolutePath.workingDirectory
 
   // These two methods work on strings instead of AbsolutePath because AbsolutePath
   // with unix / slashes is non-sensical on Windows.
