@@ -13,10 +13,7 @@ import java.util.{concurrent => juc}
 object PlatformTokenizerCache {
   // NOTE: Manipulated by tokenization code in the ScalametaTokenizer class.
   // Caching just in toTokenize wouldn't be enough, because someone could call the tokenizer directly.
+  // still used in scalafmt-dynamic-3.7.10
   val megaCache: ju.Map[Dialect, mutable.Map[Input, Tokens]] =
     new juc.ConcurrentHashMap[Dialect, mutable.Map[Input, Tokens]]()
-  val miniCacheSyncRoot = new Object
-  def newUnsyncResult: mutable.Map[Input, Tokens] = mutable.WeakHashMap.empty[Input, Tokens]
-  def putIfAbsent(dialect: Dialect, cache: mutable.Map[Input, Tokens]): mutable.Map[Input, Tokens] =
-    megaCache.putIfAbsent(dialect, cache)
 }
