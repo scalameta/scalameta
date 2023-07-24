@@ -28,7 +28,7 @@ trait InputOps { self: SemanticdbOps =>
       file.toRelative(config.sourceroot).toURI(isDirectory = false)
     }
 
-    def isInSourceroot(sourceroot: AbsolutePath): Boolean = gsource.file match {
+    def isInSourceroot(): Boolean = gsource.file match {
       case gfile: GPlainFile =>
         gfile.file.toPath.startsWith(config.sourceroot.toNIO) || !gfile.file.toPath.isAbsolute
       case _: VirtualFile =>
