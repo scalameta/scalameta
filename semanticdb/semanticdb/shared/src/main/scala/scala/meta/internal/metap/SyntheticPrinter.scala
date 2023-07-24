@@ -6,6 +6,8 @@ import scala.collection.mutable
 
 trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformationPrinter {
 
+  import SyntheticPrinter._
+
   def pprint(synth: Synthetic): Unit = {
     opt(synth.range)(pprint)
     opt(": ", doc.substring(synth.range), "")(out.print)
@@ -41,11 +43,7 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
       case tree: ApplyTree =>
         pprint(tree.function)
         out.print("(")
-        rep(tree.arguments, ", ")(pprint)
-        out.print(")")
-      case tree: ApplyContextTree =>
-        pprint(tree.function)
-        out.print("(using ")
+        if (SymbolInformation.Property.GIVEN.in(tree.properties)) out.print("using ")
         rep(tree.arguments, ", ")(pprint)
         out.print(")")
       case tree: FunctionTree =>
@@ -80,4 +78,10 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
 
   }
 
+}
+
+object SyntheticPrinter {
+  implicit class ImplicitProperty(private val obj: SymbolInformation.Property) extends AnyVal {
+    def in(properties: Int): Boolean = (properties & obj.value) != 0
+  }
 }
