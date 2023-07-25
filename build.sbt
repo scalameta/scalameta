@@ -184,7 +184,6 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .enablePlugins(ShadingPlugin)
   .settings(
     sharedSettings,
-    shadingSettings,
     description := "Scalameta abstract syntax trees",
     // NOTE: uncomment this to update ast.md
     // scalacOptions += "-Xprint:typer",
@@ -204,6 +203,7 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     })
   )
   .configureCross(crossPlatformPublishSettings)
+  .jvmSettings(shadingSettings)
   .jsSettings(
     commonJsSettings
   )
@@ -215,7 +215,6 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .enablePlugins(ShadingPlugin)
   .settings(
     sharedSettings,
-    shadingSettings,
     description := "Scalameta APIs for parsing and their baseline implementation",
     enableHardcoreMacros,
     mergedModule({ base =>
@@ -226,6 +225,7 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     })
   )
   .configureCross(crossPlatformPublishSettings)
+  .jvmSettings(shadingSettings)
   .jsConfigure(
     _.enablePlugins(NpmPackagePlugin)
   )
@@ -272,7 +272,6 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .enablePlugins(ShadingPlugin)
   .settings(
     sharedSettings,
-    shadingSettings,
     description := "Scalameta umbrella module that includes all public APIs",
     libraryDependencies ++= List(
       "org.scala-lang" % "scalap" % scalaVersion.value
@@ -293,6 +292,7 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   )
   .configureCross(crossPlatformPublishSettings)
   .jvmSettings(
+    shadingSettings,
     Compile / unmanagedSourceDirectories ++= List(
       (ThisBuild / baseDirectory).value / "semanticdb" / "metacp",
       (ThisBuild / baseDirectory).value / "semanticdb" / "symtab"
