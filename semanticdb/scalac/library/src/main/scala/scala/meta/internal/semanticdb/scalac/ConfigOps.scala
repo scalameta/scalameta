@@ -52,6 +52,8 @@ object SemanticdbConfig {
     overrides = BinaryMode.On
   )
 
+  private val prefix = "-P:semanticdb:"
+
   private val SetFailures = "failures:(.*)".r
   private val SetProfiling = "profiling:(.*)".r
   private val SetInclude = "include:(.*)".r
@@ -80,20 +82,19 @@ object SemanticdbConfig {
       base: SemanticdbConfig
   ): SemanticdbConfig = {
     def deprecated(option: String, instead: String): Unit = {
-      reporter.warning(
-        NoPosition,
-        s"-P:semanticdb:$option is deprecated. Use -P:semanticdb:$instead instead."
-      )
+      reporter.warning(NoPosition, s"$prefix$option is deprecated. Use -$prefix$instead instead.")
     }
     def unsupported(option: String, instead: String = ""): Unit = {
       val buf = new StringBuilder
-      buf.append(s"-P:semanticdb:$option is no longer supported.")
-      if (instead.nonEmpty) buf.append(s" . Use -P:semanticdb:$instead instead.")
+      buf.append(s"$prefix$option is no longer supported.")
+      if (instead.nonEmpty) buf.append(s" . Use $prefix$instead instead.")
       errFn(buf.toString)
     }
     var config = base
-    val relevantOptions = scalacOptions.filter(_.startsWith("-P:semanticdb:"))
-    val strippedOptions = relevantOptions.map(_.stripPrefix("-P:semanticdb:"))
+    val strippedOptions = scalacOptions.flatMap { x =>
+      val stripped = x.stripPrefix(prefix)
+      if (x eq stripped) None else Some(stripped)
+    }
     strippedOptions.foreach {
       case SetFailures(FailureMode(failures)) =>
         config = config.copy(failures = failures)
