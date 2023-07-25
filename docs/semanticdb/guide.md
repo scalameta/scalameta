@@ -184,7 +184,7 @@ and the "Value" column describes the `<value>` component):
 
 <table>
   <tr>
-    <td width="310px">Option</td>
+    <td>Option</td>
     <td>Value</td>
     <td>Explanation</td>
     <td>Default</td>
