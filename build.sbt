@@ -181,7 +181,6 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
 
 lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/trees"))
-  .enablePlugins(ShadingPlugin)
   .settings(
     sharedSettings,
     description := "Scalameta abstract syntax trees",
@@ -203,7 +202,7 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     })
   )
   .configureCross(crossPlatformPublishSettings)
-  .jvmSettings(shadingSettings)
+  .configureCross(crossPlatformShading)
   .jsSettings(
     commonJsSettings
   )
@@ -212,7 +211,6 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
 
 lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/parsers"))
-  .enablePlugins(ShadingPlugin)
   .settings(
     sharedSettings,
     description := "Scalameta APIs for parsing and their baseline implementation",
@@ -225,7 +223,7 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     })
   )
   .configureCross(crossPlatformPublishSettings)
-  .jvmSettings(shadingSettings)
+  .configureCross(crossPlatformShading)
   .jsConfigure(
     _.enablePlugins(NpmPackagePlugin)
   )
@@ -269,7 +267,6 @@ def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
 
 lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/scalameta"))
-  .enablePlugins(ShadingPlugin)
   .settings(
     sharedSettings,
     description := "Scalameta umbrella module that includes all public APIs",
@@ -291,8 +288,8 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     })
   )
   .configureCross(crossPlatformPublishSettings)
+  .configureCross(crossPlatformShading)
   .jvmSettings(
-    shadingSettings,
     Compile / unmanagedSourceDirectories ++= List(
       (ThisBuild / baseDirectory).value / "semanticdb" / "metacp",
       (ThisBuild / baseDirectory).value / "semanticdb" / "symtab"
@@ -884,5 +881,10 @@ def crossPlatformPublishSettings(project: sbtcrossproject.CrossProject) =
     val settings = platformPublishSettings(platform)
     if (settings.isEmpty) res else res.configurePlatform(platform)(_.settings(settings))
   }
+
+def crossPlatformShading(project: sbtcrossproject.CrossProject) =
+  project.jvmConfigure(
+    _.enablePlugins(ShadingPlugin).settings(shadingSettings)
+  )
 
 val publishJVMSettings = platformPublishSettings(JVMPlatform)
