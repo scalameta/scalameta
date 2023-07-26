@@ -235,8 +235,8 @@ and the "Value" column describes the `<value>` component):
       Used to relativize source file paths into
       <code>TextDocument.uri</code>.
       <br/>
-      If the value starts with `targetroot:`, the remaining part is 
-      interpreted as relative to `targetroot` (see below; must be
+      If the value starts with <code>targetroot:</code>, the remaining part is 
+      interpreted as relative to <code>targetroot</code> (see below; must be
       specified first) instead of current working directory.
     </td>
     <td>Current working directory</td>
