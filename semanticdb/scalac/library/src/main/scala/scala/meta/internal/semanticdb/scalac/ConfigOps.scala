@@ -104,8 +104,18 @@ object SemanticdbConfig {
         config = config.copy(fileFilter = config.fileFilter.copy(include = include.r))
       case SetExclude(exclude) =>
         config = config.copy(fileFilter = config.fileFilter.copy(exclude = exclude.r))
-      case SetSourceroot(path) =>
-        config = config.copy(sourceroot = AbsolutePath(path))
+      case SetSourceroot(pattern) =>
+        val abspath = pattern match {
+          case SetTargetroot(relative) =>
+            if (config.targetroot eq SemanticdbConfig.default.targetroot)
+              reporter.error(
+                NoPosition,
+                s"${prefix}sourceroot:$pattern must follow '${prefix}targetroot:'."
+              )
+            config.targetroot.resolve(relative)
+          case p => AbsolutePath(p)
+        }
+        config = config.copy(sourceroot = abspath)
       case SetTargetroot(path) =>
         config = config.copy(targetroot = AbsolutePath(path))
       case SetText(BinaryMode(mode)) =>
