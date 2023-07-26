@@ -865,11 +865,11 @@ lazy val docs = project
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin)
 
 lazy val shadingSettings = Def.settings(
-  shadedModules ++= {
+  shadedDependencies ++= {
     if (!isScala211.value)
       Set(
-        "com.lihaoyi" %% "geny",
-        "com.lihaoyi" %% "fastparse"
+        "com.lihaoyi" %%% "geny" % "foo",
+        "com.lihaoyi" %%% "fastparse" % "foo"
       )
     else Set.empty
   },
@@ -894,7 +894,7 @@ def crossPlatformPublishSettings(project: sbtcrossproject.CrossProject) =
 
 def crossPlatformShading(project: sbtcrossproject.CrossProject) =
   if (shadingSettings.nonEmpty)
-    project.jvmConfigure(_.enablePlugins(ShadingPlugin).settings(shadingSettings))
+    project.enablePlugins(ShadingPlugin).settings(shadingSettings)
   else project
 
 val publishJVMSettings = platformPublishSettings(JVMPlatform)
