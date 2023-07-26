@@ -3333,6 +3333,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|class DerivationSpec {
          |  case class Foo()
+         |
          |  {
          |    deriveEncoder[Foo]
          |  }
@@ -3360,10 +3361,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         )
       )
     )
-    // code parses as specified tree
-    checkStat(code, layout)(tree)
-    // however, the parsed layout itself has different syntax (and, hence, tree)
-    assertNotEquals(parseStat(layout, implicitly[Dialect]).reprint, layout)
+    runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("blank after template 2") {
@@ -3383,6 +3381,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|class DerivationSpec {
          |  case class Foo() extends Bar
+         |
          |  {
          |    deriveEncoder[Foo]
          |  }
@@ -3410,10 +3409,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         )
       )
     )
-    // code parses as specified tree
-    checkStat(code, layout)(tree)
-    // however, the parsed layout itself has different syntax (and, hence, tree)
-    assertNotEquals(parseStat(layout, implicitly[Dialect]).reprint, layout)
+    runTestAssert[Stat](code, Some(layout))(tree)
   }
 
 }
