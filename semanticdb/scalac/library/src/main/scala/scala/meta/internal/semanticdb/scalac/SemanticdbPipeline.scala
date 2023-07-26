@@ -55,7 +55,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
 
       def saveSemanticdbForCompilationUnit(unit: g.CompilationUnit): Unit = {
         try {
-          if (unit.isIgnored || !unit.source.isInSourceroot(config.sourceroot)) return
+          if (unit.isIgnored || !unit.source.isInSourceroot()) return
           val sdoc = unit.toTextDocument
           sdoc.save(config.targetroot)
         } catch handleCrash(Some(unit))
@@ -98,7 +98,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
         try {
           if (config.diagnostics.isOn) {
             val diagnostics = unit.reportedDiagnostics(Map.empty)
-            if (diagnostics.nonEmpty && unit.source.isInSourceroot(config.sourceroot)) {
+            if (diagnostics.nonEmpty && unit.source.isInSourceroot()) {
               val sdoc = s.TextDocument(
                 schema = s.Schema.SEMANTICDB4,
                 uri = unit.source.toUri,
