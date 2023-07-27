@@ -12,16 +12,7 @@ import scala.collection.JavaConverters._
 sealed abstract case class RelativePath(toNIO: Path) {
   require(!toNIO.isAbsolute, s"$toNIO is not relative!")
   def toFile: File = toNIO.toFile
-  def toURI(isDirectory: Boolean): URI = {
-    val suffix = if (isDirectory) "/" else ""
-    // Can't use toNIO.toUri because it produces an absolute URI.
-    val names = toNIO.iterator().asScala
-    val uris = names.map { name =>
-      // URI encode each part of the path individually.
-      new URI(null, null, name.toString, null)
-    }
-    URI.create(uris.mkString("", "/", suffix))
-  }
+  def toURI(isDirectory: Boolean): URI = RelativePath.toURI(toNIO, isDirectory)
 
   def syntax: String = toString
   def structure: String = s"""RelativePath("$syntax")"""
@@ -46,4 +37,16 @@ object RelativePath {
   // throws Illegal argument exception if path is not relative.
   def apply(path: nio.Path): RelativePath =
     new RelativePath(path) {}
+
+  private[meta] def toURI(path: Path, isDirectory: Boolean): URI = {
+    val suffix = if (isDirectory) "/" else ""
+    // Can't use toNIO.toUri because it produces an absolute URI.
+    val names = path.iterator().asScala
+    val uris = names.map { name =>
+      // URI encode each part of the path individually.
+      new URI(null, null, name.toString, null)
+    }
+    URI.create(uris.mkString("", "/", suffix))
+  }
+
 }
