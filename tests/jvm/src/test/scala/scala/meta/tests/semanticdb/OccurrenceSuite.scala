@@ -31,7 +31,7 @@ class OccurrenceSuite extends FunSuite {
     assertNoDiff(body.obtained, expectedCompat)
   }
 
-  ScalaVersion.doIf212("OccurrenceSuite") {
+  ScalaVersion.doIf("OccurrenceSuite", ScalaVersion.is212) {
     OccurrenceSuite.testCases.foreach { t =>
       test(t.name) {
         testBody(t.body)

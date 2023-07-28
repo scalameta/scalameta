@@ -17,17 +17,15 @@ object ScalaVersion {
     version == BuildInfo.latestScala213Version
   }
 
-  def is212: Boolean = {
-    version.startsWith("2.12")
-  }
+  def is(major: Int, minor: Int): Boolean =
+    BuildInfo.scalaBinaryVersion == s"$major.$minor"
 
-  def doIf212[T](what: String)(thunk: => T): Unit = {
-    if (is212) {
-      thunk
-    } else {
-      println(s"Skipping $what because scalaVersion is ${Properties.versionNumberString}")
-    }
-  }
+  def is212: Boolean = is(2, 12)
+  def is213: Boolean = is(2, 13)
+
+  def doIf[T](what: String, flag: Boolean)(thunk: => T): Unit =
+    if (flag) thunk
+    else println(s"Skipping $what because scalaVersion is $version")
 
   def isSupported(minimal212: Int, minimal213: Int): Boolean = {
     val Array(major, minor, patch) =
@@ -44,10 +42,10 @@ object ScalaVersion {
   def getExpected(compat: Seq[(Version, String)], expected: String) = {
     compat
       .collectFirst {
-        case (Full(ver), expected) if version == ver => expected
-        case (Scala213, expected) if version.startsWith("2.13") => expected
-        case (Scala212, expected) if version.startsWith("2.12") => expected
-        case (Scala211, expected) if version.startsWith("2.11") => expected
+        case (Full(`version`), expected) => expected
+        case (Scala213, expected) if is(2, 13) => expected
+        case (Scala212, expected) if is(2, 12) => expected
+        case (Scala211, expected) if is(2, 11) => expected
       }
       .getOrElse(expected)
   }
