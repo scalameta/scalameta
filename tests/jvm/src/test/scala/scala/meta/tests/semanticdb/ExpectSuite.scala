@@ -82,7 +82,7 @@ trait ExpectHelpers extends munit.Assertions {
   def path: Path = {
     def filenameToPath(filename: String) =
       Paths.get("tests", "jvm", "src", "test", "resources", filename)
-    val filenameWithVersion = filename + BuildInfo.scalaBinaryVersion
+    val filenameWithVersion = filename + "_" + BuildInfo.scalaBinaryVersion
     val baseFile = filenameToPath(filename)
     if (baseFile.toFile().exists()) baseFile
     else filenameToPath(filenameWithVersion)
