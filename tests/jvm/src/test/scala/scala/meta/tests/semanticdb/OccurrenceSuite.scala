@@ -50,6 +50,8 @@ object OccurrenceSuite {
       body: () => TestBody
   )
   def testCases(): collection.Seq[TestCase] = {
+    val sourceroot = AbsolutePath(BuildInfo.databaseSourcepath)
+    val targetroot = AbsolutePath(BuildInfo.databaseClasspath)
     for {
       dir <- BuildInfo.integrationSourceDirectories
       absdir = AbsolutePath(dir)
@@ -57,14 +59,11 @@ object OccurrenceSuite {
       source <- FileIO.listAllFilesRecursively(absdir)
       if PathIO.extension(source.toNIO) == "scala"
       if !isExcluded(source)
+      relpath = source.toRelative(absdir)
     } yield {
-      val relpath = source.toRelative(absdir)
-      val testname = relpath.toURI(false).toString
       TestCase(
-        testname,
+        relpath.toURI(false).toString,
         () => {
-          val sourceroot = AbsolutePath(BuildInfo.databaseSourcepath)
-          val targetroot = AbsolutePath(BuildInfo.databaseClasspath)
           val semanticdb = SemanticdbPaths.toSemanticdb(source.toRelative(sourceroot), targetroot)
           val textdocument = TextDocuments.parseFrom(semanticdb.readAllBytes).documents.head
           val expectpath = expectroot.resolve(relpath)
