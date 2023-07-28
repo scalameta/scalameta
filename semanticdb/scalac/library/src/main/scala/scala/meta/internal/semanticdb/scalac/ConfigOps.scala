@@ -19,6 +19,8 @@ case class SemanticdbConfig(
     synthetics: BinaryMode,
     overrides: BinaryMode
 ) {
+  private[scalac] lazy val realSourceRoot = sourceroot.toNIO.toRealPath()
+
   def syntax: String = {
     val p = SemanticdbPlugin.name
     List(

@@ -25,4 +25,5 @@ trait Path extends Iterable[Path] {
   def toUri: URI
   def toAbsolutePath: Path
   def toFile: java.io.File
+  def toRealPath(): Path
 }
