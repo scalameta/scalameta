@@ -14,7 +14,7 @@ import scala.meta.internal.semanticdb.TextDocument
 import scala.meta.internal.semanticdb.TextDocuments
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
 import scala.meta.io.AbsolutePath
-import scala.meta.tests.BuildInfo
+import scala.meta.tests.{BuildInfo, Utils}
 
 class OccurrenceSuite extends FunSuite {
   ScalaVersion.doIf212("OccurrenceSuite") {
@@ -39,7 +39,6 @@ class OccurrenceSuite extends FunSuite {
 object OccurrenceSuite {
   def isExcluded(path: AbsolutePath): Boolean =
     path.toNIO.endsWith("Exclude.scala")
-  val expectroot = AbsolutePath(Paths.get("tests", "jvm", "src", "test", "resources"))
   case class TestBody(
       obtained: String,
       expected: String,
@@ -60,13 +59,14 @@ object OccurrenceSuite {
       if PathIO.extension(source.toNIO) == "scala"
       if !isExcluded(source)
       relpath = source.toRelative(absdir)
+      expectNioPath <- Utils.getResourceOpt(relpath.toString)
     } yield {
       TestCase(
         relpath.toURI(false).toString,
         () => {
           val semanticdb = SemanticdbPaths.toSemanticdb(source.toRelative(sourceroot), targetroot)
           val textdocument = TextDocuments.parseFrom(semanticdb.readAllBytes).documents.head
-          val expectpath = expectroot.resolve(relpath)
+          val expectpath = AbsolutePath(expectNioPath)
           val obtained = OccurrenceSuite.printTextDocument(textdocument)
           val expected =
             if (expectpath.isFile) {

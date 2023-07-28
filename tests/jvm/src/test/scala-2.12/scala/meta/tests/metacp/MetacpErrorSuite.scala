@@ -81,11 +81,8 @@ class MetacpErrorSuite extends FunSuite {
   test("missing symbol 3") {
     val output = Files.createTempDirectory("metacp")
     output.toFile.deleteOnExit()
-    val resources = Paths.get("tests", "jvm", "src", "test", "resources")
-    val manifest = resources.resolve("manifest.jar")
-    val settings = Settings()
-      .withOut(AbsolutePath(output))
-      .withClasspath(Classpath(AbsolutePath(manifest)))
+    val manifest = Utils.getResourceOpt("manifest.jar").get
+    val settings = Settings().withOut(AbsolutePath(output)).withClasspath(Classpath(manifest))
 
     assert(!Files.list(output).iterator.hasNext)
     val (result, out, err) = CliTestUtils.withReporter { reporter =>

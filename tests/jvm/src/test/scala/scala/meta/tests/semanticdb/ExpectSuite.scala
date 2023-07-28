@@ -80,12 +80,12 @@ trait ExpectHelpers extends munit.Assertions {
   def loadObtained: String
 
   def path: Path = {
-    def filenameToPath(filename: String) =
-      Paths.get("tests", "jvm", "src", "test", "resources", filename)
+    def filenameToPath(filename: String) = Utils.getResourceOpt(filename)
     val filenameWithVersion = filename + "_" + BuildInfo.scalaBinaryVersion
-    val baseFile = filenameToPath(filename)
-    if (baseFile.toFile().exists()) baseFile
-    else filenameToPath(filenameWithVersion)
+    filenameToPath(filename) match {
+      case Some(baseFile) if baseFile.toFile().exists() => baseFile
+      case _ => filenameToPath(filenameWithVersion).get
+    }
   }
   def manifestJar: Path = path.resolveSibling("manifest.jar")
   def classDirectory: Path = Paths.get(BuildInfo.databaseClasspath)
@@ -318,11 +318,10 @@ object SaveExpectTest {
 object SaveManifestTest {
   def main(args: Array[String]): Unit = {
     val classes = ManifestMetacp.classDirectory
-    val resources = Paths.get("tests", "jvm", "src", "test", "resources")
 
-    val manifest = resources.resolve("manifest.jar")
-    val part0 = resources.resolve("part0.jar")
-    val part1 = resources.resolve("part1.jar")
+    val manifest = Utils.getResourceOpt("manifest.jar").get
+    val part0 = Utils.getResourceOpt("part0.jar").get
+    val part1 = Utils.getResourceOpt("part1.jar").get
 
     withJar(manifest) { jos =>
       jos.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"))
