@@ -425,6 +425,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
   },
   buildInfoKeys := Seq[BuildInfoKey](
     scalaVersion,
+    scalaBinaryVersion,
     "latestScala212Version" -> LatestScala212,
     "latestScala213Version" -> LatestScala213,
     "databaseSourcepath" ->
