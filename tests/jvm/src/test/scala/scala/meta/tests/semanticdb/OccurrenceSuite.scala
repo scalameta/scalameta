@@ -17,20 +17,24 @@ import scala.meta.io.AbsolutePath
 import scala.meta.tests.{BuildInfo, Utils}
 
 class OccurrenceSuite extends FunSuite {
+
+  private def testBody(body: OccurrenceSuite.TestBody): Unit = {
+    val expectedCompat = if (ScalaVersion.atLeast212_14) {
+      body.expected
+    } else {
+      // Predef.type etc. was fixed in 2.12.14
+      body.expected
+        .replace("Predef/*=>scala.Predef.*/.type", "Predef.type")
+        .replace("x/*=>types.Test.C#x.*/.type", "x.type")
+        .replace("p/*=>types.Test.C#p.*/.x/*=>types.P#x.*/.type", "p.x.type")
+    }
+    assertNoDiff(body.obtained, expectedCompat)
+  }
+
   ScalaVersion.doIf212("OccurrenceSuite") {
-    OccurrenceSuite.testCases().foreach { t =>
+    OccurrenceSuite.testCases.foreach { t =>
       test(t.name) {
-        val body = t.body()
-        val expectedCompat = if (ScalaVersion.atLeast212_14) {
-          body.expected
-        } else {
-          // Predef.type etc. was fixed in 2.12.14
-          body.expected
-            .replace("Predef/*=>scala.Predef.*/.type", "Predef.type")
-            .replace("x/*=>types.Test.C#x.*/.type", "x.type")
-            .replace("p/*=>types.Test.C#p.*/.x/*=>types.P#x.*/.type", "p.x.type")
-        }
-        assertNoDiff(body.obtained, expectedCompat)
+        testBody(t.body)
       }
     }
   }
@@ -44,11 +48,10 @@ object OccurrenceSuite {
       expected: String,
       expectpath: AbsolutePath
   )
-  case class TestCase(
-      name: String,
-      body: () => TestBody
-  )
-  def testCases(): collection.Seq[TestCase] = {
+  class TestCase(val name: String)(f: => TestBody) {
+    lazy val body: TestBody = f
+  }
+  lazy val testCases: collection.Seq[TestCase] = {
     val sourceroot = AbsolutePath(BuildInfo.databaseSourcepath)
     val targetroot = AbsolutePath(BuildInfo.databaseClasspath)
     for {
@@ -61,9 +64,8 @@ object OccurrenceSuite {
       relpath = source.toRelative(absdir)
       expectNioPath <- Utils.getResourceOpt(relpath.toString)
     } yield {
-      TestCase(
-        relpath.toURI(false).toString,
-        () => {
+      new TestCase(relpath.toURI(false).toString)(
+        {
           val semanticdb = SemanticdbPaths.toSemanticdb(source.toRelative(sourceroot), targetroot)
           val textdocument = TextDocuments.parseFrom(semanticdb.readAllBytes).documents.head
           val expectpath = AbsolutePath(expectNioPath)
@@ -74,18 +76,14 @@ object OccurrenceSuite {
             } else {
               "// missing expect file\n"
             }
-          TestBody(
-            obtained,
-            expected,
-            expectpath
-          )
+          TestBody(obtained, expected, expectpath)
         }
       )
     }
   }
   def saveExpected(): Unit = {
-    testCases().foreach { t =>
-      val body = t.body()
+    testCases.foreach { t =>
+      val body = t.body
       Files.createDirectories(body.expectpath.toNIO.getParent)
       Files.write(body.expectpath.toNIO, body.obtained.getBytes(StandardCharsets.UTF_8))
     }
