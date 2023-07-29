@@ -34,7 +34,7 @@ class OccurrenceSuite extends FunSuite {
   ScalaVersion.doIf("OccurrenceSuite", ScalaVersion.is212) {
     OccurrenceSuite.testCases.foreach { t =>
       test(t.name) {
-        testBody(t.body)
+        t.body.fold(fail(_), testBody)
       }
     }
   }
@@ -48,8 +48,8 @@ object OccurrenceSuite {
       expected: String,
       expectpath: AbsolutePath
   )
-  class TestCase(val name: String)(f: => TestBody) {
-    lazy val body: TestBody = f
+  class TestCase(val name: String)(f: => Either[String, TestBody]) {
+    lazy val body: Either[String, TestBody] = f
   }
   lazy val testCases: collection.Seq[TestCase] = {
     val sourceroot = AbsolutePath(BuildInfo.databaseSourcepath)
@@ -62,31 +62,24 @@ object OccurrenceSuite {
       if PathIO.extension(source.toNIO) == "scala"
       if !isExcluded(source)
       relpath = source.toRelative(absdir)
-      expectNioPath <- Utils.getResourceOpt(relpath.toString)
+      expectpathOpt = Utils.getAbsResourceOpt(relpath.toString)
     } yield {
       new TestCase(relpath.toURI(false).toString)(
-        {
+        expectpathOpt.toRight("// missing expect file\n").right.map { expectpath =>
           val semanticdb = SemanticdbPaths.toSemanticdb(source.toRelative(sourceroot), targetroot)
           val textdocument = TextDocuments.parseFrom(semanticdb.readAllBytes).documents.head
-          val expectpath = AbsolutePath(expectNioPath)
           val obtained = OccurrenceSuite.printTextDocument(textdocument)
-          val expected =
-            if (expectpath.isFile) {
-              FileIO.slurp(expectpath, StandardCharsets.UTF_8)
-            } else {
-              "// missing expect file\n"
-            }
+          val expected = FileIO.slurp(expectpath, StandardCharsets.UTF_8)
           TestBody(obtained, expected, expectpath)
         }
       )
     }
   }
   def saveExpected(): Unit = {
-    testCases.foreach { t =>
-      val body = t.body
+    testCases.foreach(_.body.right.foreach { body =>
       Files.createDirectories(body.expectpath.toNIO.getParent)
       Files.write(body.expectpath.toNIO, body.obtained.getBytes(StandardCharsets.UTF_8))
-    }
+    })
   }
   def printTextDocument(doc: TextDocument): String = {
     val symtab = doc.symbols.iterator.map(info => info.symbol -> info).toMap
