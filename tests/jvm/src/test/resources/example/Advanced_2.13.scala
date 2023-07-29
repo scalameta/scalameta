@@ -33,14 +33,14 @@ object Test/*<=advanced.Test.*/ {
 
   val e/*<=advanced.Test.e.*/ = new Existential/*=>advanced.Existential#*/
   val e1/*<=advanced.Test.e1.*/ = e/*=>advanced.Test.e.*/.e1/*=>advanced.Existential#e1().*/
-  val e1x/*<=advanced.Test.e1x.*/ = e/*=>advanced.Test.e.*/.e1/*=>advanced.Existential#e1().*/.head/*=>scala.collection.IterableLike#head().*/
+  val e1x/*<=advanced.Test.e1x.*/ = e/*=>advanced.Test.e.*/.e1/*=>advanced.Existential#e1().*/.head/*=>scala.collection.IterableOps#head().*/
   val e2/*<=advanced.Test.e2.*/ = e/*=>advanced.Test.e.*/.e2/*=>advanced.Existential#e2().*/
   val e2x/*<=advanced.Test.e2x.*/ = e/*=>advanced.Test.e.*/.e2/*=>advanced.Existential#e2().*/.t/*=>advanced.C#t().*/
-  val e2xx/*<=advanced.Test.e2xx.*/ = e/*=>advanced.Test.e.*/.e2/*=>advanced.Existential#e2().*/.t/*=>advanced.C#t().*/.head/*=>scala.collection.IterableLike#head().*/
+  val e2xx/*<=advanced.Test.e2xx.*/ = e/*=>advanced.Test.e.*/.e2/*=>advanced.Existential#e2().*/.t/*=>advanced.C#t().*/.head/*=>scala.collection.IterableOps#head().*/
   locally/*=>scala.Predef.locally().*/ {
     (???/*=>scala.Predef.`???`().*/ : Any/*=>scala.Any#*/) match {
       case e3/*<=local11*/: List/*=>scala.package.List#*/[_] =>
-        val e3x/*<=local13*/ = e3/*=>local11*/.head/*=>scala.collection.IterableLike#head().*/
+        val e3x/*<=local13*/ = e3/*=>local11*/.head/*=>scala.collection.IterableOps#head().*/
         ()
     }
   }

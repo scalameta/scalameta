@@ -15,7 +15,7 @@ class Methods/*<=example.Methods#*/[T/*<=example.Methods#[T]*/] {
   def m6/*<=example.Methods#m6().*/(x/*<=example.Methods#m6().(x)*/: Int/*=>scala.Int#*/) = ???/*=>scala.Predef.`???`().*/
   def m6/*<=example.Methods#m6(+1).*/(x/*<=example.Methods#m6(+1).(x)*/: List/*=>example.Methods#List#*/[T/*=>example.Methods#[T]*/]) = ???/*=>scala.Predef.`???`().*/
   def m6/*<=example.Methods#m6(+2).*/(x/*<=example.Methods#m6(+2).(x)*/: scala.List/*=>scala.package.List#*/[T/*=>example.Methods#[T]*/]) = ???/*=>scala.Predef.`???`().*/
-  def m7a/*<=example.Methods#m7a().*/[U/*<=example.Methods#m7a().[U]*/: Ordering/*=>scala.math.Ordering#*/](c/*<=example.Methods#m7a().(c)*/: Methods/*=>example.Methods#*/[T/*=>example.Methods#[T]*/], l/*<=example.Methods#m7a().(l)*/: List/*=>example.Methods#List#*/[U/*=>example.Methods#m7a().[U]*/]) = ???/*=>scala.Predef.`???`().*/
+  def m7a/*<=example.Methods#m7a().*/[U/*<=example.Methods#m7a().[U]*/: Ordering/*=>example.Methods#m7a().(evidence$1)*/](c/*<=example.Methods#m7a().(c)*/: Methods/*=>example.Methods#*/[T/*=>example.Methods#[T]*/], l/*<=example.Methods#m7a().(l)*/: List/*=>example.Methods#List#*/[U/*=>example.Methods#m7a().[U]*/]) = ???/*=>scala.Predef.`???`().*/
   def m7b/*<=example.Methods#m7b().*/[U/*<=example.Methods#m7b().[U]*/ <% T/*=>example.Methods#[T]*/](l/*<=example.Methods#m7b().(l)*/: List/*=>example.Methods#List#*/[U/*=>example.Methods#m7b().[U]*/]) = ???/*=>scala.Predef.`???`().*/
   def `m8().`/*<=example.Methods#`m8().`().*/() = ???/*=>scala.Predef.`???`().*/
   class `m9().`/*<=example.Methods#`m9().`#*/

@@ -11,6 +11,6 @@ class Issue1749/*<=example.Issue1749#*/ {
 }
 
 class Issue1854/*<=example.Issue1854#*/ {
-  val map/*<=example.Issue1854#map.*/ = collection.mutable.Map/*=>scala.collection.mutable.Map.*/.empty/*=>scala.collection.mutable.Map.empty().*/[String/*=>scala.Predef.String#*/, String/*=>scala.Predef.String#*/]
+  val map/*<=example.Issue1854#map.*/ = collection.mutable.Map/*=>scala.collection.mutable.Map.*/.empty/*=>scala.collection.MapFactory.Delegate#empty().*/[String/*=>scala.Predef.String#*/, String/*=>scala.Predef.String#*/]
   map/*=>example.Issue1854#map.*/("a") = "b"
 }

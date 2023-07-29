@@ -6,7 +6,7 @@ import scala.language/*=>scala.language.*/.higherKinds/*=>scala.language.higherK
 import types.Test/*=>types.Test.*/._
 
 class InstrumentTyper/*<=example.InstrumentTyper#*/ { self/*<=local0*/: AnyRef =>
-  def all/*<=example.InstrumentTyper#all().*/ = List/*=>scala.collection.immutable.List.*/(
+  def all/*<=example.InstrumentTyper#all().*/ = List/*=>scala.package.List.*/(
     Literal/*=>types.Test.Literal.*/.int/*=>types.Test.Literal.int.*/,
     Literal/*=>types.Test.Literal.*/.long/*=>types.Test.Literal.long.*/,
     Literal/*=>types.Test.Literal.*/.float/*=>types.Test.Literal.float.*/,

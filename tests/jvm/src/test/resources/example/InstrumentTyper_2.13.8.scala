@@ -6,7 +6,7 @@ import scala.language/*=>scala.language.*/.higherKinds/*=>scala.language.higherK
 import types.Test/*=>types.Test.*/._
 
 class InstrumentTyper/*<=example.InstrumentTyper#*/ { self/*<=local0*/: AnyRef =>
-  def all/*<=example.InstrumentTyper#all().*/ = List/*=>scala.collection.immutable.List.*/(
+  def all/*<=example.InstrumentTyper#all().*/ = List/*=>scala.package.List.*/(
     Literal/*=>types.Test.Literal.*/.int/*=>types.Test.Literal.int.*/,
     Literal/*=>types.Test.Literal.*/.long/*=>types.Test.Literal.long.*/,
     Literal/*=>types.Test.Literal.*/.float/*=>types.Test.Literal.float.*/,
@@ -19,7 +19,7 @@ class InstrumentTyper/*<=example.InstrumentTyper#*/ { self/*<=local0*/: AnyRef =
     Literal/*=>types.Test.Literal.*/.javaEnum/*=>types.Test.Literal.javaEnum.*/,
     Literal/*=>types.Test.Literal.*/.clazzOfInt/*=>types.Test.Literal.clazzOfInt.*/,
     Literal/*=>types.Test.Literal.*/.clazzOfOption/*=>types.Test.Literal.clazzOfOption.*/,
-    List/*=>scala.collection.immutable.Nil.*/()
+    List/*=>scala.package.List.*/()
   )
   def existential/*<=example.InstrumentTyper#existential().*/: U/*=>local1*/[Int/*=>scala.Int#*/] forSome { type U/*<=local1*/[T/*<=local2*/ <: Int] } = ???/*=>scala.Predef.`???`().*/
   type AnnotatedType/*<=example.InstrumentTyper#AnnotatedType#*/ = Int/*=>scala.Int#*/ @param

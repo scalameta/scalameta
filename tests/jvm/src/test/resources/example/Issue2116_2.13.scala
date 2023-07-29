@@ -13,7 +13,7 @@ abstract class Issue2116/*<=example.Issue2116#*/ {
 
 class Issue2116_2/*<=example.Issue2116_2#*/ extends Issue2116/*=>example.Issue2116#*/ {
 
-  implicit val ec/*<=example.Issue2116_2#ec.*/ = scala.concurrent.ExecutionContext/*=>scala.concurrent.ExecutionContext.*/.global/*=>scala.concurrent.ExecutionContext.global().*/
+  implicit val ec/*<=example.Issue2116_2#ec.*/ = scala.concurrent.ExecutionContext/*=>scala.concurrent.ExecutionContext.*/.global/*=>scala.concurrent.ExecutionContext.global.*/
 
   check/*=>example.Issue2116#check().*/(
     includeCommitCharacter/*=>example.Issue2116#check().(includeCommitCharacter)*/ = true

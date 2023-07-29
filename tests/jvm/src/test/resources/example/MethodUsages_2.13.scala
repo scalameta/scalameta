@@ -10,7 +10,7 @@ class MethodUsages/*<=example.MethodUsages#*/ {
   m/*=>example.MethodUsages#m.*/.m5/*=>example.Methods#m5(+1).*/(0)
   m/*=>example.MethodUsages#m.*/.m6/*=>example.Methods#m6().*/(0)
   m/*=>example.MethodUsages#m.*/.m6/*=>example.Methods#m6(+1).*/(new m/*=>example.MethodUsages#m.*/.List/*=>example.Methods#List#*/[Int/*=>scala.Int#*/]/*=>example.Methods#List#`<init>`().*/)
-  m/*=>example.MethodUsages#m.*/.m6/*=>example.Methods#m6(+2).*/(Nil/*=>scala.collection.immutable.Nil.*/)
+  m/*=>example.MethodUsages#m.*/.m6/*=>example.Methods#m6(+2).*/(Nil/*=>scala.package.Nil.*/)
   m/*=>example.MethodUsages#m.*/.m7a/*=>example.Methods#m7a().*/(m/*=>example.MethodUsages#m.*/, new m/*=>example.MethodUsages#m.*/.List/*=>example.Methods#List#*/[Int/*=>scala.Int#*/]/*=>example.Methods#List#`<init>`().*/)
   m/*=>example.MethodUsages#m.*/.m7b/*=>example.Methods#m7b().*/(new m/*=>example.MethodUsages#m.*/.List/*=>example.Methods#List#*/[Int/*=>scala.Int#*/]/*=>example.Methods#List#`<init>`().*/)
   m/*=>example.MethodUsages#m.*/.`m8().`/*=>example.Methods#`m8().`().*/()

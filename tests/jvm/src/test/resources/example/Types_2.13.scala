@@ -57,7 +57,7 @@ object Test/*<=types.Test.*/ {
     val compoundType3/*<=types.Test.C#compoundType3.*/: M/*=>types.Test.M#*/ with N/*=>types.Test.N#*/ { def k/*<=local1*/: Int/*=>scala.Int#*/ } = ???/*=>scala.Predef.`???`().*/
     val compoundType4/*<=types.Test.C#compoundType4.*/ = new /*<=local2*/{ def k/*<=local3*/: Int/*=>scala.Int#*/ = ???/*=>scala.Predef.`???`().*/ }
     val compoundType5/*<=types.Test.C#compoundType5.*/ = new /*<=local4*/M/*=>types.Test.M#*/ with N/*=>types.Test.N#*/
-    val compoundType6/*<=types.Test.C#compoundType6.*/ = new /*<=local5*/M/*=>types.Test.M#*/ with N/*=>types.Test.N#*/ { def k/*<=local6*/: Int/*=>scala.Int#*/ = ???/*=>scala.Predef.`???`().*/ }
+    val compoundType6/*<=types.Test.C#compoundType6.*/ = new M/*=>types.Test.M#*/ with N/*=>types.Test.N#*/ { def k/*<=local6*/: Int/*=>scala.Int#*/ = ???/*=>scala.Predef.`???`().*/ }
 
     val annType1/*<=types.Test.C#annType1.*/: T/*=>types.T#*/ @ann/*=>types.ann#*/(42) = ???/*=>scala.Predef.`???`().*/
     val annType2/*<=types.Test.C#annType2.*/: T/*=>types.T#*/ @ann1/*=>types.ann1#*/ @ann2/*=>types.ann2#*/ = ???/*=>scala.Predef.`???`().*/
@@ -88,7 +88,7 @@ object Test/*<=types.Test.*/ {
     }
 
     case class RepeatedType/*<=types.Test.C#RepeatedType#*/(s/*<=types.Test.C#RepeatedType#s.*/: String/*=>java.lang.String#*/*) {
-      def m1/*<=types.Test.C#RepeatedType#m1().*/(x/*<=types.Test.C#RepeatedType#m1().(x)*/: Int/*=>scala.Int#*/*): Int/*=>scala.Int#*/ = s/*=>types.Test.C#RepeatedType#s.*/.length/*=>scala.collection.SeqLike#length().*/
+      def m1/*<=types.Test.C#RepeatedType#m1().*/(x/*<=types.Test.C#RepeatedType#m1().(x)*/: Int/*=>scala.Int#*/*): Int/*=>scala.Int#*/ = s/*=>types.Test.C#RepeatedType#s.*/.length/*=>scala.collection.SeqOps#length().*/
     }
 
     object TypeType/*<=types.Test.C#TypeType.*/ {
