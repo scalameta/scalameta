@@ -469,9 +469,10 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         currRef(sepRegions match {
           // `case` follows the body of a previous case
           case (_: RegionCaseBody) :: xs => expr() :: xs
-          // x could be RegionIndent or RegionBrace
+          // head could be RegionIndent or RegionBrace
           case x :: RegionCaseMark :: xs => expr() :: x :: xs
-          case (_: RegionBrace) :: (_: RegionFor | RegionTemplateBody) :: _ => sepRegions
+          case (_: RegionDelim) :: (_: RegionFor | RegionTemplateBody) :: _ => sepRegions
+          // partial function
           case (_: RegionBrace) :: _ => expr() :: sepRegions
           case (_: RegionIndent) :: _ if prev.is[Equals] && prevToken.is[Indentation.Indent] =>
             expr() :: sepRegions
