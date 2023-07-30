@@ -6,7 +6,7 @@ import Chars._
 import scala.meta.inputs._
 import scala.util.control.NonFatal
 
-private[tokenizers] case class CharArrayReader private (
+private[meta] case class CharArrayReader private (
     buf: Array[Char],
     dialect: Dialect,
     reporter: Reporter,
@@ -15,7 +15,7 @@ private[tokenizers] case class CharArrayReader private (
     /** The offset one past the last read character */
     var charOffset: Int = 0,
     /** The start offset of the current line */
-    private var lineStartOffset: Int = 0,
+    var lineStartOffset: Int = 0,
     /** The start offset of the line before the current one */
     private var lastLineStartOffset: Int = 0,
     private var lastUnicodeOffset: Int = -1,
