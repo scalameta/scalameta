@@ -4088,24 +4088,25 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   private def self(): Self =
-    selfOpt().getOrElse(syntaxError("expected identifier, `this' or unquote", at = token))
+    selfEither().fold(syntaxError(_, token), identity)
 
-  private def selfOpt(): Option[Self] = {
+  private def selfEither(): Either[String, Self] = {
+    val startPos = tokenPos
     val name = token match {
       case t: Ident => termName(t)
       case _: KwThis => nameThis()
       case _: Underscore => namePlaceholder()
       case t: Unquote =>
         if (peekToken.is[Colon]) unquote[Name.Quasi](t)
-        else return Some(unquote[Self.Quasi](t))
+        else return Right(unquote[Self.Quasi](t))
       case _ =>
-        return None
+        return Left("expected identifier, `this' or unquote")
     }
     val decltpe =
       if (!acceptOpt[Colon]) None
       else if (token.isAny[Indentation, LF]) None // fewer braces
       else Some(startInfixType())
-    Some(autoEndPos(name)(Self(name, decltpe)))
+    Right(autoEndPos(startPos)(Self(name, decltpe)))
   }
 
   /* -------- TEMPLATES ------------------------------------------- */
@@ -4389,7 +4390,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       enumCaseAllowed: Boolean = false,
       secondaryConstructorAllowed: Boolean = false
   ): (Self, List[Stat]) = {
-    val selfTreeOpt = tryParse(selfOpt() match {
+    val selfTreeOpt = tryParse(selfEither().right.toOption match {
       case x: Some[Self] if acceptOpt[RightArrow] => x
       case _ => None
     })
