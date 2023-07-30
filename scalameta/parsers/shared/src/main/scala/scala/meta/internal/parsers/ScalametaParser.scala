@@ -4078,20 +4078,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ---------- SELFS --------------------------------------------- */
 
-  def quasiquoteSelf(): Self = entrypointSelf()
+  def quasiquoteSelf(): Self = self(quasiquote = true)
 
-  def entrypointSelf(): Self = self()
+  def entrypointSelf(): Self = self(quasiquote = false)
 
   private def selfEmpty(): Self = {
     val name = anonNameEmpty()
     copyPos(name)(Self(name, None))
   }
 
-  private def self(): Self =
-    selfEither().fold(syntaxError(_, token), identity)
+  private def self(quasiquote: Boolean): Self =
+    selfEither(quasiquote).fold(syntaxError(_, token), identity)
 
-  private def selfEither(): Either[String, Self] = {
-    val startPos = tokenPos
+  private def selfEitherImpl(): Either[String, Self] = {
     val name = token match {
       case t: Ident => termName(t)
       case _: KwThis => nameThis()
@@ -4106,7 +4105,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       if (!acceptOpt[Colon]) None
       else if (token.isAny[Indentation, LF]) None // fewer braces
       else Some(startInfixType())
-    Right(autoEndPos(startPos)(Self(name, decltpe)))
+    Right(Self(name, decltpe))
+  }
+
+  private def selfEither(quasiquote: Boolean = false): Either[String, Self] = {
+    val startPos = tokenPos
+    selfEitherImpl().right.map { self =>
+      token match {
+        case _: RightArrow => next()
+        case _: EOF if quasiquote =>
+        case _ => return Left("expected `=>`")
+      }
+      autoEndPos(startPos)(self)
+    }
   }
 
   /* -------- TEMPLATES ------------------------------------------- */
@@ -4390,10 +4401,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       enumCaseAllowed: Boolean = false,
       secondaryConstructorAllowed: Boolean = false
   ): (Self, List[Stat]) = {
-    val selfTreeOpt = tryParse(selfEither().right.toOption match {
-      case x: Some[Self] if acceptOpt[RightArrow] => x
-      case _ => None
-    })
+    val selfTreeOpt = tryParse(selfEither().right.toOption)
     val selfTree = selfTreeOpt.getOrElse(selfEmpty())
     val stats = listBy[Stat] { buf =>
       def getStats() =

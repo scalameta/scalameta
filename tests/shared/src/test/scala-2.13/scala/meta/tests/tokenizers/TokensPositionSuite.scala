@@ -646,7 +646,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ParamClause trait A @@{ self: B => }
        |Ctor.Primary trait A @@{ self: B => }
        |Template { self: B => }
-       |Self self: B
+       |Self self: B =>
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -654,7 +654,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ParamClause trait A @@{ _: B => }
        |Ctor.Primary trait A @@{ _: B => }
        |Template { _: B => }
-       |Self _: B
+       |Self _: B =>
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -662,7 +662,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ParamClause trait A @@{ self => }
        |Ctor.Primary trait A @@{ self => }
        |Template { self => }
-       |Self self
+       |Self self =>
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -670,7 +670,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ParamClause trait A @@{ this: B => }
        |Ctor.Primary trait A @@{ this: B => }
        |Template { this: B => }
-       |Self this: B
+       |Self this: B =>
        |""".stripMargin
   )
 
@@ -723,7 +723,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |
        |  def foo: Boolean = true
        |}
-       |Self self: X with B with C
+       |Self self: X with B with C =>
        |Type.With X with B with C
        |Type.With X with B
        |Defn.Def def foo: Boolean = true
@@ -745,7 +745,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |  def foo: Boolean = true // c2
        |  // c3
        |}
-       |Self self: X with B with C
+       |Self self: X with B with C =>
        |Type.With X with B with C
        |Type.With X with B
        |Defn.Def def foo: Boolean = true
