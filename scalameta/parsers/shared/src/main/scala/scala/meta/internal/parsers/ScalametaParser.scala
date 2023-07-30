@@ -686,7 +686,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           next() // skip colon
           val mods = modsBuf.result()
           val modPos = if (mods.isEmpty) startPos else mods.head.startTokenPos
-          val name = identName(t, startPos, Type.Name.apply)
+          val name = atPos(startPos)(Type.Name(t.value))
           autoEndPos(modPos)(Type.TypedParam(name, typ(), mods))
         case soft.KwErased() if allowFunctionType =>
           paramOrType(modsBuf += atCurPosNext(Mod.Erased()))
@@ -1146,14 +1146,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     implicit object AllowedTypeName extends AllowedName[Type.Name]
   }
 
-  private def identName[T <: Tree](ident: Ident, pos: Int, ctor: String => T): T =
-    atPos(pos)(ctor(ident.value))
+  private def identName[T <: Tree](ident: Ident, ctor: String => T): T =
+    atCurPosNext(ctor(ident.value))
   private def name[T <: Tree: AllowedName: AstInfo](ctor: String => T): T =
     token match {
       case t: Ident =>
-        val res = identName(t, tokenPos, ctor)
-        next()
-        res
+        identName(t, ctor)
       case t: Unquote =>
         unquote[T](t)
       case _ =>
@@ -1162,6 +1160,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def termName(): Term.Name = name(Term.Name(_))
   def typeName(): Type.Name = name(Type.Name(_))
+  private def termName(t: Ident): Term.Name = identName(t, Term.Name.apply)
+  private def typeName(t: Ident): Type.Name = identName(t, Type.Name.apply)
   @inline private def anonNameEmpty(): Name.Anonymous = autoPos(Name.Anonymous())
   @inline private def nameThis(): Name.This = atCurPosNext(Name.This())
   @inline private def namePlaceholder(): Name.Placeholder = atCurPosNext(Name.Placeholder())
@@ -1422,7 +1422,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def unquoteExpr(): Term =
     token match {
-      case Ident(_) => termName()
+      case t: Ident => termName(t)
       case LeftBrace() => dropTrivialBlock(expr(location = NoStat, allowRepeated = true))
       case _: KwThis => anonThis()
       case _ =>
@@ -3283,7 +3283,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         q.become[Type.Param]
       case _ =>
         val name = token match {
-          case _: Ident => typeName()
+          case t: Ident => typeName(t)
           case t: Unquote => unquote[Name](t)
           case _: Underscore if allowUnderscore =>
             namePlaceholder()
@@ -3563,8 +3563,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     accept[KwGiven]
     val (sigName, paramClauseGroup) = tryParse {
       Try {
-        val name: meta.Name =
-          if (token.is[Ident]) termName() else anonNameEmpty()
+        val name: meta.Name = token match {
+          case t: Ident => termName(t)
+          case _ => anonNameEmpty()
+        }
         val tparams = typeParamClauseOpt(
           ownerIsType = false,
           ctxBoundsAllowed = true,
@@ -4090,7 +4092,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   private def selfOpt(): Option[Self] = {
     val name = token match {
-      case _: Ident => termName()
+      case t: Ident => termName(t)
       case _: KwThis => nameThis()
       case _: Underscore => namePlaceholder()
       case t: Unquote =>
