@@ -2,7 +2,6 @@ package scala.meta.tests.semanticdb
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.nio.file.Paths
 import munit.FunSuite
 import scala.meta.inputs.Input
 import scala.meta.inputs.Position
@@ -31,7 +30,7 @@ class OccurrenceSuite extends FunSuite {
     assertNoDiff(body.obtained, expectedCompat)
   }
 
-  ScalaVersion.doIf("OccurrenceSuite", ScalaVersion.is212) {
+  ScalaVersion.doIf("OccurrenceSuite", ScalaVersion.is212 || ScalaVersion.is213) {
     OccurrenceSuite.testCases.foreach { t =>
       test(t.name) {
         t.body.fold(fail(_), testBody)
@@ -62,8 +61,15 @@ object OccurrenceSuite {
       if PathIO.extension(source.toNIO) == "scala"
       if !isExcluded(source)
       relpath = source.toRelative(absdir)
-      expectpathOpt = Utils.getAbsResourceOpt(relpath.toString)
     } yield {
+      val relpathstr = relpath.toString
+      val relpathnoext = relpathstr.stripSuffix(".scala")
+      def forVer(version: String) = relpathnoext + "_" + version + ".scala"
+      val expectpathOpt = Utils.getFirstAbsResourceOpt(
+        forVer(BuildInfo.scalaVersion),
+        forVer(BuildInfo.scalaBinaryVersion),
+        relpathstr
+      )
       new TestCase(relpath.toURI(false).toString)(
         expectpathOpt.toRight("// missing expect file\n").right.map { expectpath =>
           val semanticdb = SemanticdbPaths.toSemanticdb(source.toRelative(sourceroot), targetroot)
