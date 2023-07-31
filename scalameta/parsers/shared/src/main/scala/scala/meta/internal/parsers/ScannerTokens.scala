@@ -469,11 +469,14 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         currRef(sepRegions match {
           // `case` follows the body of a previous case
           case (_: RegionCaseBody) :: xs => expr() :: xs
-          // x could be RegionIndent or RegionBrace
+          // head could be RegionIndent or RegionBrace
           case x :: RegionCaseMark :: xs => expr() :: x :: xs
-          case (_: RegionBrace) :: (_: RegionFor | RegionTemplateBody) :: _ => sepRegions
+          case (_: RegionDelim) :: (_: RegionFor | RegionTemplateBody) :: _ => sepRegions
+          // partial function
           case (_: RegionBrace) :: _ => expr() :: sepRegions
-          case (_: RegionIndent) :: _ if prev.is[Equals] && prevToken.is[Indentation.Indent] =>
+          // partial function in assignment or fewer braces
+          case (_: RegionIndent) :: _
+              if prevToken.is[Indentation.Indent] && prev.isAny[Equals, Colon] =>
             expr() :: sepRegions
           // `case` is at top-level (likely quasiquote)
           case Nil if prevPos == 0 => expr() :: Nil
@@ -789,8 +792,6 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                     next match {
                       // RefineDcl
                       case _: KwVal | _: KwDef | _: KwType | _: Semicolon => emitIndent(sepRegions)
-                      // fewer braces partial function
-                      case _: KwCase => emitIndent(RegionCaseMark :: sepRegions)
                       // fewer braces function (although could be self-type)
                       case _ if couldBeFewerBraces() => emitIndent(sepRegions)
                       case _ => None
