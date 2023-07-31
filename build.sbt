@@ -188,7 +188,7 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     // scalacOptions += "-Xprint:typer",
     enableHardcoreMacros,
     libraryDependencies ++= List(
-      "com.lihaoyi" %%% "fastparse" % "2.3.3"
+      "com.lihaoyi" %%% "fastparse" % "3.0.2"
     ),
     mergedModule({ base =>
       val scalameta = base / "scalameta"
