@@ -36,7 +36,7 @@ addCommandAlias("benchAll", benchAll.command)
 addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
 commands += Command.command("ci-windows") { s =>
-  s"testsJVM/all:testOnly -- --exclude-tags=SkipWindows" ::
+  "testsJVM/all:testOnly -- --exclude-tags=SkipWindows" ::
     s
 }
 commands += Command.command("mima") { s =>
@@ -319,14 +319,14 @@ lazy val semanticdbIntegration = project
         else "-Ywarn-unused-import"
       Seq(
         s"-Xplugin:$pluginJar",
-        s"-Xplugin-require:semanticdb",
+        "-Xplugin-require:semanticdb",
         warnUnusedImports,
-        s"-Yrangepos",
-        s"-P:semanticdb:text:on", // include text to print occurrences in expect suite
-        s"-P:semanticdb:failures:error", // fail fast during development.
-        s"-P:semanticdb:exclude:Exclude.scala",
+        "-Yrangepos",
+        "-P:semanticdb:text:on", // include text to print occurrences in expect suite
+        "-P:semanticdb:failures:error", // fail fast during development.
+        "-P:semanticdb:exclude:Exclude.scala",
         s"-P:semanticdb:sourceroot:${(ThisBuild / baseDirectory).value}",
-        s"-P:semanticdb:synthetics:on"
+        "-P:semanticdb:synthetics:on"
       )
     },
     Compile / javaHome := {
@@ -550,7 +550,7 @@ lazy val sharedSettings = Def.settings(
   organization := "org.scalameta",
   libraryDependencies ++= {
     if (isScala213.value) Nil
-    else List(compilerPlugin("org.scalamacros" % s"paradise" % "2.1.1" cross CrossVersion.full))
+    else List(compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full))
   },
   scalacOptions ++= {
     if (isScala213.value) List("-Ymacro-annotations")
