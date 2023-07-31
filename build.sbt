@@ -339,7 +339,7 @@ lazy val semanticdbIntegration = project
     },
     javacOptions += "-parameters"
   )
-  .dependsOn(semanticdbIntegrationMacros)
+  .dependsOn(semanticdbIntegrationMacros, semanticdbScalacPlugin)
 
 lazy val semanticdbIntegrationMacros = project
   .in(file("semanticdb/integration-macros"))
