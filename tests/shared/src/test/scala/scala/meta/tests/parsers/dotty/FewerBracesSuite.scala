@@ -699,10 +699,11 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|object MyApp {
          |  def test(str: String)(block: => Boolean): Unit = println(str + " : " + block)
-         |  (test("First test") {
+         |  test("First test") {
          |    case class Foo(x: Int, y: String)
          |    1 == 1
-         |  } test "Second test")(1 == 1)
+         |  }
+         |  test("Second test")(1 == 1)
          |}
          |""".stripMargin
     assertNoDiff(parseStat(code, dialect).reprint, layout)
