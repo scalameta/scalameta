@@ -7,6 +7,7 @@ import scala.tools.nsc.reporters.Reporter
 import scala.util.matching.Regex
 
 case class SemanticdbConfig(
+    severity: FailureMode,
     failures: FailureMode,
     profiling: BinaryMode,
     fileFilter: FileFilter,
@@ -24,6 +25,7 @@ case class SemanticdbConfig(
   def syntax: String = {
     val p = SemanticdbPlugin.name
     List(
+      SemanticdbConfig.severity -> severity.name,
       "failures" -> failures.name,
       "profiling" -> profiling.name,
       "include" -> fileFilter.include,
@@ -41,6 +43,7 @@ case class SemanticdbConfig(
 }
 object SemanticdbConfig {
   def default = SemanticdbConfig(
+    severity = FailureMode.Info,
     failures = FailureMode.Error,
     profiling = BinaryMode.Off,
     fileFilter = FileFilter.matchEverything,
@@ -56,6 +59,8 @@ object SemanticdbConfig {
 
   private val prefix = "-P:semanticdb:"
 
+  private val severity = "reporter_severity"
+  private val SetReporterSeverity = s"$severity:(.*)".r
   private val SetFailures = "failures:(.*)".r
   private val SetProfiling = "profiling:(.*)".r
   private val SetInclude = "include:(.*)".r
@@ -98,6 +103,8 @@ object SemanticdbConfig {
       if (x eq stripped) None else Some(stripped)
     }
     strippedOptions.foreach {
+      case SetReporterSeverity(FailureMode(severity)) =>
+        config = config.copy(severity = severity)
       case SetFailures(FailureMode(failures)) =>
         config = config.copy(failures = failures)
       case SetProfiling(BinaryMode(mode)) =>
@@ -172,16 +179,16 @@ object SemanticdbConfig {
   }
 }
 
-sealed abstract class FailureMode {
+sealed abstract class FailureMode(val level: Int) {
   def name: String = toString.toLowerCase
 }
 object FailureMode {
   def unapply(arg: String): Option[FailureMode] = all.find(_.toString.equalsIgnoreCase(arg))
   def all = List(Error, Warning, Info, Ignore)
-  case object Error extends FailureMode
-  case object Warning extends FailureMode
-  case object Info extends FailureMode
-  case object Ignore extends FailureMode
+  case object Error extends FailureMode(2)
+  case object Warning extends FailureMode(1)
+  case object Info extends FailureMode(0)
+  case object Ignore extends FailureMode(Int.MaxValue)
 }
 
 sealed abstract class BinaryMode {

@@ -203,6 +203,20 @@ and the "Value" column describes the `<value>` component):
     <td><code>warning</code></td>
   </tr>
   <tr>
+    <td><code>reporter_severity</code></td>
+    <td>
+      same as <code>failures</code> above
+    </td>
+    <td>
+      SemanticDB requires the compiler to report various messages, by
+      inserting itself as a compiler reporter, but we might not want to
+      see them displayed (or passed to the original, downstream compiler
+      reporters). This option allows the user to specify the severity
+      level of messages to be forwarded to the original reporter.
+    </td>
+    <td><code>info</code></td>
+  </tr>
+  <tr>
     <td><code>profiling</code></td>
     <td>
       <code>on</code>,<br/>

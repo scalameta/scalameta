@@ -322,6 +322,7 @@ lazy val semanticdbIntegration = project
         "-Xplugin-require:semanticdb",
         warnUnusedImports,
         "-Yrangepos",
+        "-P:semanticdb:reporter_severity:error", // don't report below error
         "-P:semanticdb:text:on", // include text to print occurrences in expect suite
         "-P:semanticdb:failures:error", // fail fast during development.
         "-P:semanticdb:exclude:Exclude.scala",

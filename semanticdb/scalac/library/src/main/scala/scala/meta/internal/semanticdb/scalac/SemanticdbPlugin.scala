@@ -20,7 +20,7 @@ class SemanticdbPlugin(val global: Global) extends Plugin with SemanticdbPipelin
     config = SemanticdbConfig.parse(originalOptions, errFn, g.reporter, baseConfig)
     g.reporter match {
       case _: SemanticdbReporter => // do nothing, already hijacked
-      case r => if (isSupportedCompiler) g.reporter = new SemanticdbReporter(r)
+      case r => if (isSupportedCompiler) g.reporter = new SemanticdbReporter(r, config.severity)
     }
     true
   }
