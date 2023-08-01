@@ -5,12 +5,9 @@ import scala.meta.io.AbsolutePath
 import scala.tools.nsc.Global
 import scala.tools.nsc.plugins.Plugin
 
-class SemanticdbPlugin(val global: Global)
-    extends Plugin with HijackReporter with SemanticdbPipeline {
+class SemanticdbPlugin(val global: Global) extends Plugin with SemanticdbPipeline {
   val name = SemanticdbPlugin.name
   val description = SemanticdbPlugin.description
-
-  override val semanticdbReporter = hijackReporter()
 
   val components = {
     if (isSupportedCompiler) List(SemanticdbTyperComponent, SemanticdbJvmComponent)
@@ -21,6 +18,10 @@ class SemanticdbPlugin(val global: Global)
     val originalOptions = options.map(option => "-P:" + name + ":" + option)
     val baseConfig = SemanticdbConfig.default.copy(targetroot = outputDirectory)
     config = SemanticdbConfig.parse(originalOptions, errFn, g.reporter, baseConfig)
+    g.reporter match {
+      case _: SemanticdbReporter => // do nothing, already hijacked
+      case r => if (isSupportedCompiler) g.reporter = new SemanticdbReporter(r)
+    }
     true
   }
 
