@@ -889,8 +889,8 @@ def crossPlatformPublishSettings(project: sbtcrossproject.CrossProject) =
   }
 
 def crossPlatformShading(project: sbtcrossproject.CrossProject) =
-  project.jvmConfigure(
-    _.enablePlugins(ShadingPlugin).settings(shadingSettings)
-  )
+  if (shadingSettings.nonEmpty)
+    project.jvmConfigure(_.enablePlugins(ShadingPlugin).settings(shadingSettings))
+  else project
 
 val publishJVMSettings = platformPublishSettings(JVMPlatform)
