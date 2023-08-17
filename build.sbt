@@ -865,10 +865,14 @@ lazy val docs = project
   .enablePlugins(BuildInfoPlugin, DocusaurusPlugin)
 
 lazy val shadingSettings = Def.settings(
-  shadedModules ++= Set(
-    "com.lihaoyi" %% "geny",
-    "com.lihaoyi" %% "fastparse"
-  ),
+  shadedModules ++= {
+    if (!isScala211.value)
+      Set(
+        "com.lihaoyi" %% "geny",
+        "com.lihaoyi" %% "fastparse"
+      )
+    else Set.empty
+  },
   shadingRules ++= Seq(
     "geny",
     "fastparse"
