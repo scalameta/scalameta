@@ -605,6 +605,11 @@ lazy val mergeSettings = Def.settings(
 
 lazy val protobufSettings = Def.settings(
   sharedSettings,
+  Compile / packageSrc / mappings ++= {
+    val base = (Compile / sourceManaged).value
+    val files = (Compile / managedSources).value
+    files.map(f => (f, f.relativeTo(base).get.getPath))
+  },
   Compile / PB.targets := Seq(
     protocbridge.Target(
       generator = PB.gens.plugin("scala"),
