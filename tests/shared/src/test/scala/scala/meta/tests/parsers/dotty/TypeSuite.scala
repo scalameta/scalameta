@@ -617,4 +617,17 @@ class TypeSuite extends BaseDottySuite {
     )
   }
 
+  test("star-dot") {
+
+    runTestError[Stat](
+      """|
+         |given Conversion[*.type, List[*.type]] with
+         |  def apply(ast: *.type) = ast :: Nil
+         |""".stripMargin,
+      """|<input>:2: error: ] expected but . found
+         |given Conversion[*.type, List[*.type]] with
+         |                  ^""".stripMargin
+    )
+  }
+
 }
