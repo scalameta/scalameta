@@ -966,7 +966,32 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val variant = if (value(0) == '+') Mod.Covariant() else Mod.Contravariant()
         Type.AnonymousParam(Some(atPos(startPos)(variant)))
       }
+      def pathSimpleType(): Type = {
+        val ref = path()
+        if (token.isNot[Dot]) {
+          ref match {
+            case q: Quasi =>
+              q.become[Type]
+            case Term.Select(qual: Term.Quasi, name: Term.Name.Quasi) =>
+              val newQual = qual.become[Term.Ref]
+              val newName = name.become[Type.Name]
+              Type.Select(newQual, newName)
+            case Term.Select(qual: Term.Ref, name) =>
+              val newName = name.becomeOr(x => copyPos(x)(Type.Name(x.value)))
+              Type.Select(qual, newName)
+            case name: Term.Name =>
+              Type.Name(name.value)
+            case _ =>
+              syntaxError("identifier expected", at = ref)
+          }
+        } else {
+          next()
+          accept[KwType]
+          Type.Singleton(ref.become[Term.Ref])
+        }
+      }
       val res = token match {
+        case _: Ident if peekToken.is[Dot] => pathSimpleType()
         case LeftParen() => makeTupleType(startPos, inParensOnOpen(types()))
         case MacroSplicedIdent(ident) =>
           Type.Macro(macroSplicedIdent(ident))
@@ -1000,29 +1025,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           else syntaxError(s"$dialect doesn't support literal types", at = path())
         case Ident("-") if dialect.allowLiteralTypes && tryAhead[NumericConstant[_]] =>
           literal(isNegated = true)
-        case _ =>
-          val ref = path().become[Term.Ref]
-          if (token.isNot[Dot]) {
-            ref match {
-              case q: Quasi =>
-                q.become[Type]
-              case Term.Select(qual: Term.Quasi, name: Term.Name.Quasi) =>
-                val newQual = qual.become[Term.Ref]
-                val newName = name.become[Type.Name]
-                Type.Select(newQual, newName)
-              case Term.Select(qual: Term.Ref, name) =>
-                val newName = name.becomeOr(x => copyPos(x)(Type.Name(x.value)))
-                Type.Select(qual, newName)
-              case name: Term.Name =>
-                Type.Name(name.value)
-              case _ =>
-                syntaxError("identifier expected", at = ref)
-            }
-          } else {
-            next()
-            accept[KwType]
-            Type.Singleton(ref)
-          }
+        case _ => pathSimpleType()
       }
       simpleTypeRest(autoEndPosOpt(startPos)(res), startPos)
     }
