@@ -2057,17 +2057,25 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         ctx.reduceStack(base, rhsK, rhsEndK, Some(op))
       }
 
-      def getNextRhs(op: Term.Name, targs: Type.ArgClause): Term = {
+      def getNextRhs(op: Term.Name, targs: Type.ArgClause) =
+        getNextRhsWith(op, targs, argumentExprsOrPrefixExpr(PostfixStat))
+
+      def getNextRhsWith(op: Term.Name, targs: Type.ArgClause, rhs: Term) = {
         val lhs = getPrevLhs(op)
         val wrap = (lhs eq rhs0) && lhs.startTokenPos != startPos
         val lhsExt = if (wrap) atPosWithBody(startPos, Term.Tuple(lhs :: Nil), rhsEndK) else lhs
         ctx.push(ctx.UnfinishedInfix(lhsExt, op, targs))
-        argumentExprsOrPrefixExpr(PostfixStat)
+        Right(rhs)
       }
 
-      def getPostfix(op: Term.Name): Term = {
+      def getPostfix(op: Term.Name, targs: Type.ArgClause) = {
+        // Infix chain has ended with a postfix expression.
+        // This never happens in the running example.
+        if (targs.nonEmpty)
+          syntaxError("type application is not allowed for postfix operators", at = token)
         val finQual = getPrevLhs(op)
-        atPos(getLhsStartPos(finQual), op)(Term.Select(finQual, op))
+        val term: Term = atPos(getLhsStartPos(finQual), op)(Term.Select(finQual, op))
+        Left(term)
       }
 
       def getPostfixOrNextRhs(op: Term.Name): Either[Term, Term] = {
@@ -2082,14 +2090,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           else isExprIntro(token, tokenPos)) {
           // Infix chain continues, so we need to reduce the stack.
           // In the running example, base = List(), rhsK = [a].
-          Right(getNextRhs(op, targs)) // [a]
+          getNextRhs(op, targs) // [a]
           // afterwards, ctx.stack = List([a +])
         } else {
-          // Infix chain has ended with a postfix expression.
-          // This never happens in the running example.
-          if (targs.nonEmpty)
-            syntaxError("type application is not allowed for postfix operators", at = token)
-          Left(getPostfix(op))
+          getPostfix(op, targs)
         }
       }
 
@@ -2106,7 +2110,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Some(Right(matchClause(lhs, getLhsStartPos(lhs))))
         case _: LF if dialect.allowInfixOperatorAfterNL =>
           tryGetNextInfixOpIfLeading(startPos)(Term.Name.apply).map { op =>
-            Right(getNextRhs(op, autoPos(Type.ArgClause(Nil))))
+            getNextRhs(op, autoPos(Type.ArgClause(Nil)))
           }
         case _ => None
       }
