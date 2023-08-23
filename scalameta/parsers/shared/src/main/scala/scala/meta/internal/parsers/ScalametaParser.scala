@@ -2286,46 +2286,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         simpleExprRest(arguments, canApply = true, startPos = startPos)
       case _: Colon if canApply && dialect.allowFewerBraces =>
         val colonPos = tokenPos
-        // map:
-        val argsOpt = if (isEolAfterColonFewerBracesBody()) Some {
-          next()
-          blockExprOnIndent()
-        }
-        else
-          tryAhead(Try {
-            val paramPos = tokenPos
-
-            /**
-             * We need to handle param and then open indented region, otherwise only the block will
-             * be handles and any `.` will be accepted into the block:
-             * ```
-             * .map: a =>
-             * a+1
-             * .filter: x =>
-             * x > 2
-             * ```
-             * Without manual handling here, filter would be included for `(a+1).filter`
-             */
-            val param = simpleExpr(allowRepeated = false)
-            val contextFunction = token.is[ContextArrow]
-            if ((contextFunction || token.is[RightArrow]) && isIndentAfter())
-              convertToParamClause(param)(true, true).map { pc =>
-                val params = autoEndPos(paramPos)(pc)
-                next()
-                val trm = blockExprOnIndent()
-                autoEndPos(paramPos) {
-                  if (contextFunction)
-                    Term.ContextFunction(params, trm)
-                  else
-                    Term.Function(params, trm)
-                }
-              }
-            else None
-          }.getOrElse(None))
-
-        argsOpt match {
-          case Some(args) =>
-            val argClause = autoEndPos(colonPos)(Term.ArgClause(args :: Nil))
+        getFewerBracesArgOnColon() match {
+          case Some(arg) =>
+            val argClause = autoEndPos(colonPos)(Term.ArgClause(arg :: Nil))
             val arguments = addPos(Term.Apply(t, argClause))
             simpleExprRest(arguments, canApply = true, startPos = startPos)
           case _ => t
@@ -2336,6 +2299,44 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _ =>
         t
     }
+  }
+
+  private def getFewerBracesArgOnColon(): Option[Term] = {
+    if (isEolAfterColonFewerBracesBody()) Some {
+      next()
+      blockExprOnIndent()
+    }
+    else
+      tryAhead(Try {
+        val paramPos = tokenPos
+
+        /**
+         * We need to handle param and then open indented region, otherwise only the block will be
+         * handles and any `.` will be accepted into the block:
+         * ```
+         * .map: a =>
+         * a+1
+         * .filter: x =>
+         * x > 2
+         * ```
+         * Without manual handling here, filter would be included for `(a+1).filter`
+         */
+        val param = simpleExpr(allowRepeated = false)
+        val contextFunction = token.is[ContextArrow]
+        if ((contextFunction || token.is[RightArrow]) && isIndentAfter())
+          convertToParamClause(param)(true, true).map { pc =>
+            val params = autoEndPos(paramPos)(pc)
+            next()
+            val trm = blockExprOnIndent()
+            autoEndPos(paramPos) {
+              if (contextFunction)
+                Term.ContextFunction(params, trm)
+              else
+                Term.Function(params, trm)
+            }
+          }
+        else None
+      }.getOrElse(None))
   }
 
   private def argumentExprsOrPrefixExpr(location: Location): Term = {
