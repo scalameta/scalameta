@@ -73,7 +73,7 @@ class PatSuite extends ParseSuite {
 
   test("_: F[*]") {
     // might be deprecated later
-    implicit val Scala3: Dialect = scala.meta.dialects.Scala31
+    implicit val Scala3: Dialect = scala.meta.dialects.Scala31.withAllowStarAsTypePlaceholder(true)
     assertPat("_: F[*]") {
       Typed(
         Wildcard(),

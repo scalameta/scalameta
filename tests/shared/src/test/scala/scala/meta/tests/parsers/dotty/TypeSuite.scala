@@ -437,7 +437,7 @@ class TypeSuite extends BaseDottySuite {
 
   test("F[*]") {
     // will be deprecated in later versions
-    implicit val dialect: Dialect = dialects.Scala31
+    implicit val dialect: Dialect = dialects.Scala31.withAllowStarAsTypePlaceholder(true)
     assertTpe("F[*]") {
       AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None))))
     }
@@ -617,4 +617,70 @@ class TypeSuite extends BaseDottySuite {
     )
   }
 
+  test("star-dot") {
+
+    runTestAssert[Stat](
+      """|
+         |given Conversion[*.type, List[*.type]] with
+         |  def apply(ast: *.type) = ast :: Nil
+         |""".stripMargin,
+      Some("given Conversion[*.type, List[*.type]] with { def apply(ast: *.type) = ast :: Nil }")
+    )(
+      Defn.Given(
+        Nil,
+        Name.Anonymous(),
+        None,
+        Template(
+          Nil,
+          List(
+            Init(
+              Type.Apply(
+                Type.Name("Conversion"),
+                Type.ArgClause(
+                  List(
+                    Type.Singleton(Term.Name("*")),
+                    Type.Apply(
+                      Type.Name("List"),
+                      Type.ArgClause(List(Type.Singleton(Term.Name("*"))))
+                    )
+                  )
+                )
+              ),
+              Name.Anonymous(),
+              Nil
+            )
+          ),
+          Self(Name.Anonymous(), None),
+          List(
+            Defn.Def(
+              Nil,
+              Term.Name("apply"),
+              List(
+                Member.ParamClauseGroup(
+                  Type.ParamClause(Nil),
+                  List(
+                    Term.ParamClause(
+                      List(
+                        Term
+                          .Param(Nil, Term.Name("ast"), Some(Type.Singleton(Term.Name("*"))), None)
+                      ),
+                      None
+                    )
+                  )
+                )
+              ),
+              None,
+              Term.ApplyInfix(
+                Term.Name("ast"),
+                Term.Name("::"),
+                Type.ArgClause(Nil),
+                Term.ArgClause(List(Term.Name("Nil")), None)
+              )
+            )
+          ),
+          Nil
+        )
+      )
+    )
+  }
 }

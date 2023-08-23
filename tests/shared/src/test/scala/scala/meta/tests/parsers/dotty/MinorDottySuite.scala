@@ -1455,6 +1455,7 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("kleisli") {
+    val localDialect = dialect.withAllowStarAsTypePlaceholder(true)
     runTestAssert[Stat](
       "new (Kleisli[F, Span[F], *] ~> F) {}"
     )(
@@ -1486,7 +1487,7 @@ class MinorDottySuite extends BaseDottySuite {
           Nil
         )
       )
-    )
+    )(stat(_)(_), localDialect)
   }
 
   test("class Baz1 @deprecated(implicit c: C)") {
