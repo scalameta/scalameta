@@ -277,30 +277,27 @@ class FewerBracesSuite extends BaseDottySuite {
     )(
       Defn.Def(
         Nil,
-        Term.Name("O"),
-        Nil,
+        tname("O"),
         Nil,
         None,
         Term.Apply(
-          Term.Select(Term.Name("credentials"), Term.Name("++")),
-          List(
-            Term.Block(
-              List(
-                Defn.Val(
+          Term.Select(tname("credentials"), tname("++")),
+          Term.Block(
+            List(
+              Defn.Val(
+                Nil,
+                List(Pat.Var(tname("file"))),
+                None,
+                Term.ApplyInfix(
+                  Term.Select(tname("Path"), tname("userHome")),
+                  tname("/"),
                   Nil,
-                  List(Pat.Var(Term.Name("file"))),
-                  None,
-                  Term.ApplyInfix(
-                    Term.Select(Term.Name("Path"), Term.Name("userHome")),
-                    Term.Name("/"),
-                    Nil,
-                    List(Lit.String(".credentials"))
-                  )
-                ),
-                Term.Name("file")
-              )
+                  List(str(".credentials"))
+                )
+              ),
+              tname("file")
             )
-          )
+          ) :: Nil
         )
       )
     )
@@ -707,6 +704,130 @@ class FewerBracesSuite extends BaseDottySuite {
          |}
          |""".stripMargin
     assertNoDiff(parseStat(code, dialect).reprint, layout)
+  }
+
+  test("#3319 lambda complex lhs") {
+    val code =
+      """object MyApp:
+        |  List(1,2,3) foreach: x =>
+        |    println(x)
+        |""".stripMargin
+    val error =
+      """|<input>:2: error: ; expected but => found
+         |  List(1,2,3) foreach: x =>
+         |                         ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3319 lambda simple lhs") {
+    val code =
+      """object MyApp:
+        |  ids foreach: x =>
+        |    println(x)
+        |""".stripMargin
+    val error =
+      """|<input>:2: error: ; expected but => found
+         |  ids foreach: x =>
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3319 lambda 'chained'") {
+    val code =
+      """object MyApp:
+        |  ids map: x =>
+        |      foo(x)
+        |    map: x =>
+        |      bar(x)
+        |""".stripMargin
+    val error =
+      """|<input>:2: error: ; expected but => found
+         |  ids map: x =>
+         |             ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3319 lambda block") {
+    val code =
+      """object MyApp:
+        |  ids map: x =>
+        |      foo(x)
+        |      bar(x)
+        |""".stripMargin
+    val error =
+      """|<input>:2: error: ; expected but => found
+         |  ids map: x =>
+         |             ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3319 function complex lhs") {
+    val code =
+      """object MyApp:
+        |  List(1,2,3) foreach:
+        |    println
+        |""".stripMargin
+    val layout = "object MyApp { List(1, 2, 3).foreach(println) }"
+    val tree = Defn.Object(
+      Nil,
+      tname("MyApp"),
+      tpl(
+        Term.Apply(
+          Term.Select(Term.Apply(tname("List"), List(int(1), int(2), int(3))), tname("foreach")),
+          List(tname("println"))
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("#3319 function simple lhs") {
+    val code =
+      """object MyApp:
+        |  ids foreach:
+        |    println
+        |""".stripMargin
+    val layout = "object MyApp { ids.foreach(println) }"
+    val tree = Defn.Object(
+      Nil,
+      tname("MyApp"),
+      tpl(
+        Term.Apply(
+          Term.Select(tname("ids"), tname("foreach")),
+          List(tname("println"))
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("#3319 function 'chained'") {
+    val code =
+      """object MyApp:
+        |  ids map:
+        |      foo
+        |    map:
+        |      bar
+        |""".stripMargin
+    val layout =
+      """|object MyApp {
+         |  ids.map(foo)
+         |  map(bar)
+         |}""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("MyApp"),
+      tpl(
+        List(
+          Term.Apply(
+            Term.Select(tname("ids"), tname("map")),
+            List(tname("foo"))
+          ),
+          Term.Apply(tname("map"), List(tname("bar")))
+        )
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
   }
 
 }
