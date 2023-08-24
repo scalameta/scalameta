@@ -268,7 +268,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |    file
          |""".stripMargin,
       assertLayout = Some(
-        """|def O = credentials.++ {
+        """|def O = credentials ++ {
            |  val file = Path.userHome / ".credentials"
            |  file
            |}
@@ -280,8 +280,10 @@ class FewerBracesSuite extends BaseDottySuite {
         tname("O"),
         Nil,
         None,
-        Term.Apply(
-          Term.Select(tname("credentials"), tname("++")),
+        Term.ApplyInfix(
+          tname("credentials"),
+          tname("++"),
+          Nil,
           Term.Block(
             List(
               Defn.Val(
@@ -712,11 +714,23 @@ class FewerBracesSuite extends BaseDottySuite {
         |  List(1,2,3) foreach: x =>
         |    println(x)
         |""".stripMargin
-    val error =
-      """|<input>:2: error: ; expected but => found
-         |  List(1,2,3) foreach: x =>
-         |                         ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "object MyApp { List(1, 2, 3) foreach (x => println(x)) }"
+    val tree = Defn.Object(
+      Nil,
+      tname("MyApp"),
+      tpl(
+        Term.ApplyInfix(
+          Term.Apply(tname("List"), List(int(1), int(2), int(3))),
+          tname("foreach"),
+          Nil,
+          Term.Function(
+            List(tparam("x", None)),
+            Term.Apply(tname("println"), List(tname("x")))
+          ) :: Nil
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("#3319 lambda simple lhs") {
@@ -725,11 +739,23 @@ class FewerBracesSuite extends BaseDottySuite {
         |  ids foreach: x =>
         |    println(x)
         |""".stripMargin
-    val error =
-      """|<input>:2: error: ; expected but => found
-         |  ids foreach: x =>
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "object MyApp { ids foreach (x => println(x)) }"
+    val tree = Defn.Object(
+      Nil,
+      tname("MyApp"),
+      tpl(
+        Term.ApplyInfix(
+          tname("ids"),
+          tname("foreach"),
+          Nil,
+          Term.Function(
+            List(tparam("x", None)),
+            Term.Apply(tname("println"), List(tname("x")))
+          ) :: Nil
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("#3319 lambda 'chained'") {
@@ -740,11 +766,36 @@ class FewerBracesSuite extends BaseDottySuite {
         |    map: x =>
         |      bar(x)
         |""".stripMargin
-    val error =
-      """|<input>:2: error: ; expected but => found
-         |  ids map: x =>
-         |             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object MyApp {
+         |  ids map (x => foo(x))
+         |  map(x => bar(x))
+         |}""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("MyApp"),
+      tpl(
+        List(
+          Term.ApplyInfix(
+            tname("ids"),
+            tname("map"),
+            Nil,
+            Term.Function(
+              List(tparam("x", None)),
+              Term.Apply(tname("foo"), List(tname("x")))
+            ) :: Nil
+          ),
+          Term.Apply(
+            tname("map"),
+            Term.Function(
+              List(tparam("x", None)),
+              Term.Apply(tname("bar"), List(tname("x")))
+            ) :: Nil
+          )
+        )
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("#3319 lambda block") {
@@ -754,11 +805,34 @@ class FewerBracesSuite extends BaseDottySuite {
         |      foo(x)
         |      bar(x)
         |""".stripMargin
-    val error =
-      """|<input>:2: error: ; expected but => found
-         |  ids map: x =>
-         |             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|object MyApp {
+         |  ids map (x => {
+         |    foo(x)
+         |    bar(x)
+         |  })
+         |}""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("MyApp"),
+      tpl(
+        Term.ApplyInfix(
+          tname("ids"),
+          tname("map"),
+          Nil,
+          Term.Function(
+            List(tparam("x", None)),
+            Term.Block(
+              List(
+                Term.Apply(tname("foo"), List(tname("x"))),
+                Term.Apply(tname("bar"), List(tname("x")))
+              )
+            )
+          ) :: Nil
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("#3319 function complex lhs") {
@@ -767,13 +841,15 @@ class FewerBracesSuite extends BaseDottySuite {
         |  List(1,2,3) foreach:
         |    println
         |""".stripMargin
-    val layout = "object MyApp { List(1, 2, 3).foreach(println) }"
+    val layout = "object MyApp { List(1, 2, 3) foreach println }"
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
       tpl(
-        Term.Apply(
-          Term.Select(Term.Apply(tname("List"), List(int(1), int(2), int(3))), tname("foreach")),
+        Term.ApplyInfix(
+          Term.Apply(tname("List"), List(int(1), int(2), int(3))),
+          tname("foreach"),
+          Nil,
           List(tname("println"))
         ) :: Nil
       )
@@ -787,13 +863,15 @@ class FewerBracesSuite extends BaseDottySuite {
         |  ids foreach:
         |    println
         |""".stripMargin
-    val layout = "object MyApp { ids.foreach(println) }"
+    val layout = "object MyApp { ids foreach println }"
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
       tpl(
-        Term.Apply(
-          Term.Select(tname("ids"), tname("foreach")),
+        Term.ApplyInfix(
+          tname("ids"),
+          tname("foreach"),
+          Nil,
           List(tname("println"))
         ) :: Nil
       )
@@ -811,7 +889,7 @@ class FewerBracesSuite extends BaseDottySuite {
         |""".stripMargin
     val layout =
       """|object MyApp {
-         |  ids.map(foo)
+         |  ids map foo
          |  map(bar)
          |}""".stripMargin
     val tree = Defn.Object(
@@ -819,10 +897,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("MyApp"),
       tpl(
         List(
-          Term.Apply(
-            Term.Select(tname("ids"), tname("map")),
-            List(tname("foo"))
-          ),
+          Term.ApplyInfix(tname("ids"), tname("map"), Nil, List(tname("foo"))),
           Term.Apply(tname("map"), List(tname("bar")))
         )
       )
