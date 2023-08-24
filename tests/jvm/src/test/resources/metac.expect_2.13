@@ -489,7 +489,7 @@ Occurrences:
 
 Diagnostics:
 [1:0..1:33) [warning] Unused import of deprecated lazy value higherKinds: higherKinds no longer needs to be imported explicitly
-[6:15..6:15) [warning] Top-level wildcard is not allowed and will error under -Xsource:3
+[6:15..6:15) [warning] Top-level wildcard is not allowed
 
 Synthetics:
 [8:2..8:9): locally => *[Unit]
@@ -1135,7 +1135,7 @@ Occurrences:
 [10:2..10:6): meth => example/EtaExpansion#meth().
 
 Diagnostics:
-[9:2..9:6) [warning] Methods without a parameter list and by-name params can no longer be converted to functions as `m _`, write a function literal `() => m` instead
+[9:2..9:6) [warning] Methods without a parameter list and by-name params can no longer be converted to functions as `m _`, write a function literal `() => m` instead [quickfixable]
 
 Synthetics:
 [3:2..3:6): Some => *.apply[Int]
@@ -2198,10 +2198,10 @@ Occurrences:
 Diagnostics:
 [22:4..22:5) [warning] Auto-application to `()` is deprecated. Supply the empty argument list `()` explicitly to invoke method i,
 or remove the empty argument list from its definition (Java-defined methods are exempt).
-In Scala 3, an unapplied method like this will be eta-expanded into a function.
+In Scala 3, an unapplied method like this will be eta-expanded into a function. [quickfixable]
 [30:4..30:5) [warning] Auto-application to `()` is deprecated. Supply the empty argument list `()` explicitly to invoke method i,
 or remove the empty argument list from its definition (Java-defined methods are exempt).
-In Scala 3, an unapplied method like this will be eta-expanded into a function.
+In Scala 3, an unapplied method like this will be eta-expanded into a function. [quickfixable]
 
 Synthetics:
 [22:4..22:5): i => convertToAnyShouldWrapper(*)
@@ -2284,7 +2284,7 @@ Occurrences:
 [18:4..18:26): includeCommitCharacter => example/Issue2116#check().(includeCommitCharacter)
 
 Diagnostics:
-[15:15..15:15) [warning] Implicit definition should have explicit type (inferred scala.concurrent.ExecutionContextExecutor)
+[15:15..15:15) [warning] Implicit definition should have explicit type (inferred scala.concurrent.ExecutionContextExecutor) [quickfixable]
 
 Synthetics:
 [17:2..19:3): check(
@@ -3739,7 +3739,6 @@ Diagnostics:
 [2:29..2:44) [warning] Unused import
 [8:2..8:5) [warning] reflective access of structural type member value b should be enabled
 by making the implicit value scala.language.reflectiveCalls visible.
-----
 This can be achieved by adding the import clause 'import scala.language.reflectiveCalls'
 or by setting the compiler option -language:reflectiveCalls.
 See the Scaladoc for value scala.language.reflectiveCalls for a discussion

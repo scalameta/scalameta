@@ -1,10 +1,10 @@
 package scala.meta.testkit
 
+import java.io.File
 import scala.collection.mutable
+import scala.reflect.internal.util.CodeAction
 import scala.tools.nsc.Global
 import scala.tools.nsc.Settings
-
-import java.io.File
 
 /**
  * Borrowed from
@@ -48,8 +48,10 @@ object ScalacParser {
             fail = true
           }
         }
-      override def incompleteInputError(msg: String) = { fail = true }
-      override def syntaxError(offset: Offset, msg: String) = { fail = true }
+      override def incompleteInputError(msg: String, actions: List[CodeAction]) = { fail = true }
+      override def syntaxError(offset: Offset, msg: String, actions: List[CodeAction]) = {
+        fail = true
+      }
     }
     parser.parse()
     !fail
