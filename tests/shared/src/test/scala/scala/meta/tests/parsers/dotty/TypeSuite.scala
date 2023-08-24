@@ -617,4 +617,44 @@ class TypeSuite extends BaseDottySuite {
     )
   }
 
+  test("star-dot") {
+
+    runTestAssert[Stat](
+      """|
+         |given Conversion[*.type, List[*.type]] with
+         |  def apply(ast: *.type) = ast :: Nil
+         |""".stripMargin,
+      Some("given Conversion[*.type, List[*.type]] with { def apply(ast: *.type) = ast :: Nil }")
+    )(
+      Defn.Given(
+        Nil,
+        anon,
+        None,
+        tpl(
+          Init(
+            Type.Apply(
+              pname("Conversion"),
+              List(
+                Type.Singleton(tname("*")),
+                Type.Apply(pname("List"), List(Type.Singleton(tname("*"))))
+              )
+            ),
+            anon,
+            Nil
+          ) :: Nil,
+          List(
+            Defn.Def(
+              Nil,
+              tname("apply"),
+              Nil,
+              List(List(tparam("ast", Type.Singleton(tname("*"))))),
+              None,
+              Term.ApplyInfix(tname("ast"), tname("::"), Nil, List(tname("Nil")))
+            )
+          )
+        )
+      )
+    )
+  }
+
 }
