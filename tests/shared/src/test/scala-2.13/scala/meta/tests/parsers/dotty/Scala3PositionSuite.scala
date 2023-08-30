@@ -1107,6 +1107,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Term.ApplyInfix bar foreach:
        |    baz
        |Type.ArgClause   bar foreach@@:
+       |Term.ArgClause :
+       |    baz
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -1117,6 +1119,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Term.ApplyInfix bar foreach: baz =>
        |    println(baz)
        |Type.ArgClause   bar foreach@@: baz =>
+       |Term.ArgClause : baz =>
+       |    println(baz)
        |Term.Function baz =>
        |    println(baz)
        |Term.ParamClause baz
