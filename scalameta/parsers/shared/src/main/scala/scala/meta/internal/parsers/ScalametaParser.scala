@@ -2096,9 +2096,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           getNextRhs(op, targs) // [a]
           // afterwards, ctx.stack = List([a +])
         } else {
-          (if (token.is[Colon] && dialect.allowFewerBraces) getFewerBracesArgOnColon() else None)
-            .map(arg => getNextRhsWith(op, targs, arg))
-            .getOrElse(getPostfix(op, targs))
+          val argPos = tokenPos
+          (token match {
+            case _: Colon if dialect.allowFewerBraces => getFewerBracesArgOnColon()
+            case _ => None
+          }) match {
+            case None => getPostfix(op, targs)
+            case Some(x) => getNextRhsWith(op, targs, autoEndPos(argPos)(Term.Tuple(x :: Nil)))
+          }
         }
       }
 

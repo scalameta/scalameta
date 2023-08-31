@@ -1098,4 +1098,36 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
 
+  // #3319
+  checkPositions[Stat](
+    """|val foo =
+       |  bar foreach:
+       |    baz
+       |""".stripMargin,
+    """|Term.ApplyInfix bar foreach:
+       |    baz
+       |Type.ArgClause   bar foreach@@:
+       |Term.ArgClause :
+       |    baz
+       |""".stripMargin
+  )
+  checkPositions[Stat](
+    """|val foo =
+       |  bar foreach: baz =>
+       |    println(baz)
+       |""".stripMargin,
+    """|Term.ApplyInfix bar foreach: baz =>
+       |    println(baz)
+       |Type.ArgClause   bar foreach@@: baz =>
+       |Term.ArgClause : baz =>
+       |    println(baz)
+       |Term.Function baz =>
+       |    println(baz)
+       |Term.ParamClause baz
+       |Term.Param baz
+       |Term.Apply println(baz)
+       |Term.ArgClause (baz)
+       |""".stripMargin
+  )
+
 }
