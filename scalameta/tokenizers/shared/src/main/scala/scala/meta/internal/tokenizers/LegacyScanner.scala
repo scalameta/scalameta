@@ -102,7 +102,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   /**
    * A character buffer for literals
    */
-  val cbuf = new StringBuilder
+  val cbuf = new java.lang.StringBuilder
 
   /**
    * append Unicode character to "cbuf" buffer
@@ -120,7 +120,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   /** Clear buffer and set name and token */
   private def finishNamed(isBackquoted: Boolean = false): Unit = {
-    curr.setIdentifier(cbuf, dialect, check = !isBackquoted) { x =>
+    curr.setIdentifier(getAndResetCBuf(), dialect, check = !isBackquoted) { x =>
       if (x.token == IDENTIFIER && emitIdentifierDeprecationWarnings)
         deprecationWarning(
           s"${x.name} is now a reserved word; usage as an identifier is deprecated",
@@ -141,8 +141,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   /** Clear buffer and set string */
   private def setStrVal(): Unit = {
-    strVal = cbuf.toString
-    cbuf.clear()
+    strVal = getAndResetCBuf()
+  }
+
+  private def getAndResetCBuf(): String = {
+    try cbuf.toString
+    finally cbuf.setLength(0)
   }
 
   /**
@@ -622,7 +626,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         putChar(ch)
         nextRawChar()
       } while (isUnicodeIdentifierPart(ch))
-      next.setIdentifier(cbuf, dialect) { x =>
+      next.setIdentifier(getAndResetCBuf(), dialect) { x =>
         if (x.token != IDENTIFIER && x.token != THIS)
           syntaxError(
             "invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected",
@@ -797,11 +801,13 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     else isSeparator
   }
 
-  def checkNoTrailingSeparator(): Unit =
-    if (cbuf.nonEmpty && isNumberSeparator(cbuf.last)) {
-      syntaxError("trailing separator is not allowed", at = offset + cbuf.length - 1)
-      cbuf.setLength(cbuf.length - 1)
+  def checkNoTrailingSeparator(): Unit = {
+    val last = cbuf.length() - 1
+    if (last >= 0 && isNumberSeparator(cbuf.charAt(last))) {
+      syntaxError("trailing separator is not allowed", at = offset + last)
+      cbuf.setLength(last)
     }
+  }
 
   /**
    * read fractional part and exponent of floating point number if one is present.
