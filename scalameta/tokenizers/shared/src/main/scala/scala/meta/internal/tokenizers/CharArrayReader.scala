@@ -30,25 +30,13 @@ private[meta] case class CharArrayReader private (
 
   /** Advance one character; reducing CR;LF pairs to just LF */
   final def nextChar(): Unit = {
-    // If the last character is a unicode escape, skip charOffset to the end of
-    // the last character. In case `potentialUnicode` restores charOffset
-    // to the head of last character.
-    if (isUnicodeEscape) charOffset = lastUnicodeOffset
-    isUnicodeEscape = false
-    if (charOffset >= buf.length) {
-      ch = SU
-    } else {
-      val c = buf(charOffset)
-      ch = c
-      charOffset += 1
-      if (c == '\\') potentialUnicode()
-      if (ch < ' ') {
-        skipCR()
-        potentialLineEnd()
-      }
-      if (ch == '"' && !dialect.allowMultilinePrograms) {
-        readerError("double quotes are not allowed in single-line quasiquotes", at = charOffset - 1)
-      }
+    nextRawChar()
+    if (ch < ' ') {
+      skipCR()
+      potentialLineEnd()
+    }
+    if (ch == '"' && !dialect.allowMultilinePrograms) {
+      readerError("double quotes are not allowed in single-line quasiquotes", at = charOffset - 1)
     }
   }
 
@@ -67,6 +55,9 @@ private[meta] case class CharArrayReader private (
    * there are no "potential line ends" here.
    */
   final def nextRawChar(): Unit = {
+    // If the last character is a unicode escape, skip charOffset to the end of
+    // the last character. In case `potentialUnicode` restores charOffset
+    // to the head of last character.
     if (isUnicodeEscape) charOffset = lastUnicodeOffset
     isUnicodeEscape = false
     if (charOffset >= buf.length) {
