@@ -27,7 +27,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   @tailrec private def skipLineComment(): Unit = ch match {
     case SU | CR | LF =>
     case '$' if isUnquoteNextNoDollar() =>
-      syntaxError("can't unquote into single-line comments", at = charOffset - 1)
+      syntaxError("can't unquote into single-line comments", at = begCharOffset)
     case _ => putCommentChar(); skipLineComment()
   }
   private def maybeOpen(): Unit = {
@@ -51,7 +51,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     case '*' => if (!maybeClose()) skipNestedComments()
     case SU => incompleteInputError("unclosed comment", at = offset)
     case '$' if isUnquoteNextNoDollar() =>
-      syntaxError("can't unquote into multi-line comments", at = charOffset - 1)
+      syntaxError("can't unquote into multi-line comments", at = begCharOffset)
     case _ => putCommentChar(); skipNestedComments()
   }
 
@@ -72,7 +72,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
   }
 
-  private def isAtEnd = charOffset >= buf.length
+  private def isAtEnd = endCharOffset >= buf.length
 
   /**
    * A character buffer for literals
@@ -109,7 +109,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     curr.token = token
     curr.strVal = new String(input.chars, start, endExclusive - start)
     curr.endOffset = endExclusive - 1
-    reader.charOffset = endExclusive
+    reader.endCharOffset = endExclusive
     reader.nextChar()
   }
 
@@ -203,7 +203,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
     // Read a token or copy it from `next` tokenData
     if (next.token == EMPTY) {
-      lastOffset = charOffset - 1
+      lastOffset = begCharOffset
       if (lastOffset > 0 && buf(lastOffset) == '\n' && buf(lastOffset - 1) == '\r') {
         lastOffset -= 1
       }
@@ -235,8 +235,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     // and need to be reverse engineered having some context (previous tokens, number of quotes in the interpolation) in mind.
     // Therefore I don't even attempt to handle them here, and instead apply fixups elsewhere when converting legacy TOKENS into new LegacyToken instances.
     if (curr.token != STRINGPART) { // endOffset of STRINGPART tokens is set elsewhere
-      curr.endOffset = charOffset - 2
-      if (charOffset >= buf.length && ch == SU) curr.endOffset = buf.length - 1
+      curr.endOffset = begCharOffset - 1
+      if (endCharOffset >= buf.length && ch == SU) curr.endOffset = buf.length - 1
     }
   }
 
@@ -244,7 +244,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    * read next token, filling TokenData fields of Scanner.
    */
   private final def fetchToken(): Unit = {
-    offset = charOffset - 1
+    offset = begCharOffset
 
     if (inStringInterpolation) return getStringPart(multiLine = startsStringPart(sepRegions.tail))
     else if (fetchXmlPart()) return
@@ -288,7 +288,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         }
       case '<' => // is XMLSTART?
         def fetchLT() = {
-          val last = if (charOffset >= 2) buf(charOffset - 2) else ' '
+          val last = if (endCharOffset >= 2) buf(endCharOffset - 2) else ' '
           nextChar()
           last match {
             case ' ' | '\t' | '\n' | '{' | '(' | '>' if isNameStart(ch) || ch == '!' || ch == '?' =>
@@ -378,9 +378,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         def fetchSingleQuote() = {
           nextRawChar()
           if (isUnquoteDollar())
-            syntaxError("can't unquote into character literals", at = charOffset - 1)
+            syntaxError("can't unquote into character literals", at = begCharOffset)
           else if (ch == LF && !isUnicodeEscape)
-            syntaxError("can't use unescaped LF in character literals", at = charOffset - 1)
+            syntaxError("can't use unescaped LF in character literals", at = begCharOffset)
           else if (isIdentifierStart(ch))
             charLitOr(getIdentRest)
           else if (isOperatorPart(ch) && (ch != '\\' || isUnicodeEscape))
@@ -484,7 +484,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       finishNamed(isBackquoted = true)
       if (name.isEmpty) syntaxError("empty quoted identifier", at = offset)
     } else if (ch == '$') {
-      syntaxError("can't unquote into quoted identifiers", at = charOffset - 1)
+      syntaxError("can't unquote into quoted identifiers", at = begCharOffset)
     } else {
       syntaxError("unclosed quoted identifier", at = offset)
     }
@@ -548,7 +548,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       nextChar()
       token = STRINGLIT
     } else if (ch == '$') {
-      syntaxError("can't unquote into string literals", at = charOffset - 1)
+      syntaxError("can't unquote into string literals", at = begCharOffset)
     } else {
       syntaxError("unclosed string literal", at = offset)
     }
@@ -566,7 +566,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     } else if (ch == SU) {
       incompleteInputError("unclosed multi-line string literal", at = offset)
     } else if (isUnquoteDollar()) {
-      syntaxError("can't unquote into string literals", at = charOffset - 1)
+      syntaxError("can't unquote into string literals", at = begCharOffset)
     } else {
       putChar(ch)
       nextRawChar()
@@ -579,8 +579,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     def finishStringPart() = {
       setStrVal()
       token = STRINGPART
-      next.lastOffset = charOffset - 1
-      next.offset = charOffset - 1
+      next.lastOffset = begCharOffset
+      next.offset = begCharOffset
     }
     def identifier() = {
       do {
@@ -618,7 +618,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       getStringPart(multiLine)
     } else if (ch == '$' && !isUnicodeEscape) {
       if (isUnquoteNextNoDollar()) {
-        syntaxError("can't unquote into string interpolations", at = charOffset - 1)
+        syntaxError("can't unquote into string interpolations", at = begCharOffset)
       } else {
         nextRawChar()
         if (ch == '$' || (ch == '"' && dialect.allowInterpolationDolarQuoteEscape)) {
@@ -627,12 +627,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           getStringPart(multiLine)
         } else if (ch == '{') {
           finishStringPart()
-          endOffset = charOffset - 3
+          endOffset = endCharOffset - 3
           nextRawChar()
           next.token = LBRACE
         } else if (ch == '_' && dialect.allowSpliceUnderscores) {
           finishStringPart()
-          endOffset = charOffset - 3
+          endOffset = endCharOffset - 3
           nextRawChar()
           if (Character.isUnicodeIdentifierStart(ch)) {
             putChar('_')
@@ -640,7 +640,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           } else next.token = USCORE
         } else if (Character.isUnicodeIdentifierStart(ch)) {
           finishStringPart()
-          endOffset = charOffset - 3
+          endOffset = endCharOffset - 3
           identifier()
         } else {
           var supportedCombos = List("`$$'", "`$'ident", "`$'this", "`$'BlockExpr")
@@ -701,9 +701,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    */
   protected def getLitChar(): Unit =
     if (ch == '\\' && !isUnicodeEscape) {
+      val start = begCharOffset
       nextChar()
       if ('0' <= ch && ch <= '7') {
-        val start = charOffset - 2
         val leadch: Char = ch
         var oct: Int = digit2int(ch, 8)
         nextChar()
@@ -741,7 +741,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
 
   private def invalidEscape(): Unit = {
-    syntaxError("invalid escape character", at = charOffset - 1)
+    syntaxError("invalid escape character", at = begCharOffset)
     putChar(ch)
   }
 
@@ -749,9 +749,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   private def getLitChars(delimiter: Char): Boolean = {
     @inline def naturalBreak = (ch == SU || ch == CR || ch == LF) && !isUnicodeEscape
     ch == delimiter || !isAtEnd && !naturalBreak && {
-      val offset = charOffset
+      val offset = endCharOffset
       getLitChar()
-      offset != charOffset && getLitChars(delimiter)
+      offset != endCharOffset && getLitChars(delimiter)
     }
   }
 
@@ -958,7 +958,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   private def getUnquote(): Unit = {
     require(ch == '$')
-    val start = charOffset
+    val start = endCharOffset
     val endInclusive = {
       val exploratoryInput = Input.Slice(input, start, input.chars.length)
       val exploratoryScanner = new LegacyScanner(exploratoryInput, dialect.unquoteVariant())
