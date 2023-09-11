@@ -129,13 +129,16 @@ private[meta] case class CharArrayReader private (
 
   /** replace CR;LF by LF */
   private def skipCR() =
-    if (ch == CR && charOffset < buf.length)
-      buf(charOffset) match {
-        case '\\' =>
-          if (lookaheadReader.getu == LF)
-            potentialUnicode()
-        case _ =>
+    if (ch == CR && charOffset < buf.length && buf(charOffset) == '\\') {
+      val lookahead = lookaheadReader
+      lookahead.charOffset += 1 // skip the backslash
+      lookahead.potentialUnicode()
+      if (lookahead.ch == LF) {
+        ch = LF
+        isUnicodeEscape = true
+        lastUnicodeOffset = lookahead.lastUnicodeOffset
       }
+    }
 
   /** Handle line ends */
   private def potentialLineEnd(): Unit = {
@@ -158,8 +161,5 @@ private[meta] case class CharArrayReader private (
 
   /** A mystery why CharArrayReader.nextChar() returns Unit */
   def getc() = { nextChar(); ch }
-  private def getu() = {
-    require(buf(charOffset) == '\\'); ch = '\\'; charOffset += 1; potentialUnicode(); ch
-  }
 
 }
