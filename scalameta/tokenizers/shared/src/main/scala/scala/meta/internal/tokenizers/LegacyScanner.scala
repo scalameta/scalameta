@@ -379,11 +379,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           nextRawChar()
           if (isUnquoteDollar())
             syntaxError("can't unquote into character literals", at = begCharOffset)
-          else if (ch == LF && !isUnicodeEscape)
+          else if (ch == LF && buf(begCharOffset) != '\\')
             syntaxError("can't use unescaped LF in character literals", at = begCharOffset)
           else if (isIdentifierStart(ch))
             charLitOr(getIdentRest)
-          else if (isOperatorPart(ch) && (ch != '\\' || isUnicodeEscape))
+          else if (isOperatorPart(ch) && (ch != '\\' || wasMultiChar))
             charLitOr(getOperatorRest)
           else {
             def isNotBraceOrBracketLiteral = {
@@ -616,7 +616,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         nextRawChar()
       }
       getStringPart(multiLine)
-    } else if (ch == '$' && !isUnicodeEscape) {
+    } else if (ch == '$' && !wasMultiChar) {
       if (isUnquoteNextNoDollar()) {
         syntaxError("can't unquote into string interpolations", at = begCharOffset)
       } else {
@@ -651,7 +651,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       }
     } else {
       val isUnclosedLiteral =
-        !isUnicodeEscape && (ch == SU || (!multiLine && (ch == CR || ch == LF)))
+        !wasMultiChar && (ch == SU || (!multiLine && (ch == CR || ch == LF)))
       if (isUnclosedLiteral) {
         if (multiLine)
           incompleteInputError("unclosed multi-line string interpolation", at = offset)
@@ -700,7 +700,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    * character.
    */
   protected def getLitChar(): Unit =
-    if (ch == '\\' && !isUnicodeEscape) {
+    if (ch == '\\' && !wasMultiChar) {
       val start = begCharOffset
       nextChar()
       if ('0' <= ch && ch <= '7') {
@@ -747,7 +747,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   @tailrec
   private def getLitChars(delimiter: Char): Boolean = {
-    @inline def naturalBreak = (ch == SU || ch == CR || ch == LF) && !isUnicodeEscape
+    @inline def naturalBreak = (ch == SU || ch == CR || ch == LF) && !wasMultiChar
     ch == delimiter || !isAtEnd && !naturalBreak && {
       val offset = endCharOffset
       getLitChar()
