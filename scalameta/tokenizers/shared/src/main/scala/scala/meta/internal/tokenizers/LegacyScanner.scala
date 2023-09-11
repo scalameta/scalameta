@@ -21,7 +21,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   next.input = this.input
   prev.input = this.input
 
-  private def isDigit(c: Char) = java.lang.Character isDigit c
   private var openComments = 0
   protected def putCommentChar(): Unit = nextCommentChar()
 
@@ -523,10 +522,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   @tailrec
   private final def getIdentRest(): Unit = {
-    @inline def isNonUnquoteIdentifierPart(c: Char) = {
-      if (c == '$') !isUnquoteNextNoDollar()
-      else isUnicodeIdentifierPart(c)
-    }
     if (ch == '_') {
       putChar(ch)
       nextChar()
@@ -534,7 +529,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         getIdentRest()
       else
         getOperatorRest()
-    } else if (isNonUnquoteIdentifierPart(ch)) {
+    } else if (if (ch == '$') !isUnquoteNextNoDollar() else isUnicodeIdentifierPart(ch)) {
       putChar(ch)
       nextChar()
       getIdentRest()
@@ -790,7 +785,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
   }
 
-  @inline private def isNumberSeparator(c: Char): Boolean = {
+  @inline private def isNumberSeparator(c: Int): Boolean = {
     val isSeparator = c == '_'
     if (isSeparator && !dialect.allowNumericLiteralUnderscoreSeparators)
       syntaxError("numeric separators are not allowed", at = offset)
@@ -908,7 +903,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       val c = lookahead.getc()
 
       /* Prohibit 1. */
-      if (!isDigit(c))
+      if (!Character.isDigit(c))
         return setStrVal()
 
       val isDefinitelyNumber = (c: @switch) match {
@@ -929,7 +924,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         /* A little more special handling for e.g. 5e7 */
         case 'e' | 'E' =>
           val ch = lookahead.getc()
-          !isIdentifierPart(ch) || (isDigit(ch) || ch == '+' || ch == '-')
+          !isIdentifierPart(ch) || (Character.isDigit(ch) || ch == '+' || ch == '-')
 
         case x =>
           !isIdentifierStart(x)

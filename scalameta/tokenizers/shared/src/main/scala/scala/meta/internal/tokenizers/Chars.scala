@@ -22,7 +22,7 @@ object Chars {
   /**
    * Convert a character digit to an Int according to given base, -1 if no success
    */
-  def digit2int(ch: Char, base: Int): Int = {
+  def digit2int(ch: Int, base: Int): Int = {
     val num =
       (
         if (ch <= '9') ch - '0'
@@ -64,19 +64,19 @@ object Chars {
     '0' <= c && c <= '9' || 'A' <= c && c <= 'Z' || 'a' <= c && c <= 'z'
 
   /** Can character start an alphanumeric Scala identifier? */
-  @inline def isIdentifierStart(c: Char): Boolean =
+  @inline def isIdentifierStart(c: Int): Boolean =
     (c == '_') || isIdentifierPart(c)
 
   /** Can character form part of an alphanumeric Scala identifier? */
-  def isIdentifierPart(c: Char) =
+  def isIdentifierPart(c: Int) =
     (c == '$') || Character.isUnicodeIdentifierPart(c)
 
-  @inline def isUnicodeIdentifierPart(c: Char) =
+  @inline def isUnicodeIdentifierPart(c: Int) =
     // strangely enough, Character.isUnicodeIdentifierPart(SU) returns true!
     (c != SU) && Character.isUnicodeIdentifierPart(c)
 
   /** Is character a math or other symbol in Unicode? */
-  def isSpecial(c: Char) = {
+  def isSpecial(c: Int) = {
     val chtp = Character.getType(c)
     chtp == Character.MATH_SYMBOL.toInt || chtp == Character.OTHER_SYMBOL.toInt
   }
@@ -89,12 +89,13 @@ object Chars {
   def isScalaLetter(ch: Char) = letterGroups(JCharacter.getType(ch).toByte) || otherLetters(ch)
 
   /** Can character form part of a Scala operator name? */
-  def isOperatorPart(c: Char): Boolean = (c: @switch) match {
+  def isOperatorPart(c: Int): Boolean = (c: @switch) match {
     case '~' | '!' | '@' | '#' | '%' | '^' | '*' | '+' | '-' | '<' | '>' | '?' | ':' | '=' | '&' |
         '|' | '/' | '\\' =>
       true
     case c => isSpecial(c)
   }
+  @inline def isOperatorPart(c: Char): Boolean = isOperatorPart(c.toInt)
 
   /**
    * {{{
@@ -133,7 +134,7 @@ object Chars {
    *
    * We do not allow a name to start with ':'. See [3] and Appendix B of XML 1.0 specification
    */
-  def isNameStart(ch: Char) = {
+  def isNameStart(ch: Int) = {
     import java.lang.Character._
 
     getType(ch).toByte match {
