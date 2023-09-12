@@ -426,8 +426,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
             def isNotBraceOrBracketLiteral = {
               val lookahead = lookaheadReader
               val nextNonWhitespace = lookahead.nextNonWhitespace
-              lookahead.nextRawChar()
-              (nextNonWhitespace == '{' || nextNonWhitespace == '[') && lookahead.ch != '\''
+              (nextNonWhitespace == '{' || nextNonWhitespace == '[') && {
+                lookahead.nextRawChar()
+                lookahead.ch != '\''
+              }
             }
             if (dialect.allowSpliceAndQuote && isNotBraceOrBracketLiteral) {
               token = MACROQUOTE
