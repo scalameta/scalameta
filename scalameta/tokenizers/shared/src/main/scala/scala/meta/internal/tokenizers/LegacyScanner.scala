@@ -22,7 +22,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   prev.input = this.input
 
   private var openComments = 0
-  protected def putCommentChar(): Unit = nextCommentChar()
+  private def putCommentChar(): Unit = nextCommentChar()
 
   @tailrec private def skipLineComment(): Unit = ch match {
     case SU | CR | LF =>
@@ -46,7 +46,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       close
     }
   }
-  @tailrec final def skipNestedComments(): Unit = ch match {
+  @tailrec private final def skipNestedComments(): Unit = ch match {
     case '/' => maybeOpen(); skipNestedComments()
     case '*' => if (!maybeClose()) skipNestedComments()
     case SU => incompleteInputError("unclosed comment", at = offset)
@@ -54,10 +54,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       syntaxError("can't unquote into multi-line comments", at = charOffset - 1)
     case _ => putCommentChar(); skipNestedComments()
   }
-  def skipDocComment(): Unit = skipNestedComments()
-  def skipBlockComment(): Unit = skipNestedComments()
 
-  private def skipToCommentEnd(isLineComment: Boolean): Unit = {
+  private def skipToCommentEnd(): Unit = {
+    val isLineComment = ch == '/'
     putCommentChar()
     if (isLineComment) skipLineComment()
     else {
@@ -68,46 +67,22 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         if (ch == '/')
           nextChar()
         else
-          skipDocComment()
-      } else skipBlockComment()
+          skipNestedComments()
+      } else skipNestedComments()
     }
   }
 
-  /**
-   * Precondition: ch == '/' Returns true if a comment was skipped.
-   */
-  def skipComment(): Boolean = ch match {
-    case '/' | '*' => skipToCommentEnd(isLineComment = ch == '/'); true
-    case _ => false
-  }
-  def flushDoc(): Unit = ()
-
-  /**
-   * To prevent doc comments attached to expressions from leaking out of scope onto the next
-   * documentable entity, they are discarded upon passing a right brace, bracket, or parenthesis.
-   */
-  def discardDocBuffer(): Unit = ()
-
-  def isAtEnd = charOffset >= buf.length
-
-  def resume(lastCode: LegacyToken) = {
-    token = lastCode
-    if (next.token != EMPTY)
-      syntaxError("unexpected end of input: possible missing '}' in XML block", at = offset)
-
-    nextToken()
-  }
+  private def isAtEnd = charOffset >= buf.length
 
   /**
    * A character buffer for literals
    */
-  val cbuf = new java.lang.StringBuilder
+  private val cbuf = new java.lang.StringBuilder
 
   /**
    * append Unicode character to "cbuf" buffer
    */
-  protected def putChar(c: Char): Unit = {
-//      assert(cbuf.size < 10000, cbuf)
+  private def putChar(c: Char): Unit = {
     cbuf.append(c)
   }
 
@@ -115,7 +90,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    * Determines whether this scanner should emit identifier deprecation warnings, e.g. when seeing
    * `macro' or `then', which are planned to become keywords in future versions of Scala.
    */
-  protected def emitIdentifierDeprecationWarnings = true
+  private def emitIdentifierDeprecationWarnings = true
 
   /** Clear buffer and set name and token */
   private def finishNamed(isBackquoted: Boolean = false): Unit = {
@@ -158,7 +133,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    *   - STRINGLIT if region is a string interpolation expression starting with '${' (the STRINGLIT
    *     appears twice in succession on the stack iff the expression is a multiline string literal).
    */
-  var sepRegions: List[LegacyToken] = List()
+  private var sepRegions: List[LegacyToken] = List()
 
   @inline private def pushSepRegions(sr: LegacyToken) = sepRegions = sr :: sepRegions
 
@@ -175,7 +150,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    * The keys are offset start positions of an xml literal and the values are the respective offset
    * end positions and a boolean indicating if the part is the last part.
    */
-  val upcomingXmlLiteralParts = mutable.Map.empty[Offset, (Offset, Boolean)]
+  private val upcomingXmlLiteralParts = mutable.Map.empty[Offset, (Offset, Boolean)]
 
 // Get next token ------------------------------------------------------------
 
@@ -198,15 +173,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
 
   /**
-   * read next token and return last offset
-   */
-  def skipToken(): Offset = {
-    val off = offset
-    nextToken()
-    off
-  }
-
-  /**
    * Produce next token, filling curr TokenData fields of Scanner.
    */
   def nextToken(): Unit = {
@@ -226,12 +192,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           popSepRegions()
         if (sepRegions.nonEmpty)
           popSepRegions()
-
-        discardDocBuffer()
       case RBRACKET | RPAREN =>
         if (isSepRegionsHead(lastToken)) popSepRegions()
-
-        discardDocBuffer()
       case ARROW =>
         if (isSepRegionsHead(lastToken)) popSepRegions()
       case STRINGLIT =>
@@ -281,7 +243,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   /**
    * read next token, filling TokenData fields of Scanner.
    */
-  protected final def fetchToken(): Unit = {
+  private final def fetchToken(): Unit = {
     offset = charOffset - 1
 
     if (inStringInterpolation) return getStringPart(multiLine = startsStringPart(sepRegions.tail))
@@ -346,11 +308,13 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         getOperatorRest()
       case '/' =>
         nextChar()
-        if (skipComment()) {
-          token = COMMENT
-        } else {
-          putChar('/')
-          getOperatorRest()
+        ch match {
+          case '/' | '*' =>
+            skipToCommentEnd()
+            token = COMMENT
+          case _ =>
+            putChar('/')
+            getOperatorRest()
         }
       case '0' =>
         def fetchZero() = {
@@ -776,7 +740,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       nextChar()
     }
 
-  protected def invalidEscape(): Unit = {
+  private def invalidEscape(): Unit = {
     syntaxError("invalid escape character", at = charOffset - 1)
     putChar(ch)
   }
@@ -798,7 +762,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     else isSeparator
   }
 
-  def checkNoTrailingSeparator(): Unit = {
+  private def checkNoTrailingSeparator(): Unit = {
     val last = cbuf.length() - 1
     if (last >= 0 && isNumberSeparator(cbuf.charAt(last))) {
       syntaxError("trailing separator is not allowed", at = offset + last)
@@ -809,7 +773,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   /**
    * read fractional part and exponent of floating point number if one is present.
    */
-  protected def getFraction(): Unit = {
+  private def getFraction(): Unit = {
     while ('0' <= ch && ch <= '9' || isNumberSeparator(ch)) {
       putChar(ch)
       nextChar()
@@ -851,7 +815,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     setStrVal()
   }
 
-  def checkNoLetter(): Unit = {
+  private def checkNoLetter(): Unit = {
     if (isIdentifierPart(ch) && ch >= ' ' && !isNumberSeparator(ch))
       syntaxError("Invalid literal number", at = offset)
   }
@@ -859,7 +823,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   /**
    * Read a number into strVal and set base
    */
-  protected def getNumber(): Unit = {
+  private def getNumber(): Unit = {
     val base1 = if (base < 10) 10 else base
     // Read 8,9's even if format is octal, produce a malformed number error afterwards.
     // At this point, we have already read the first digit, so to tell an innocent 0 apart
@@ -946,7 +910,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    * Parse character literal if current character is followed by \', or follow with given op and
    * return a symbol literal token
    */
-  def charLitOr(op: () => Unit): Unit = {
+  private def charLitOr(op: () => Unit): Unit = {
     putChar(ch)
     nextChar()
     if (ch == '\'') {
@@ -960,7 +924,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
   }
 
-  def getXml(): Unit = {
+  private def getXml(): Unit = {
     // 1. Collect positions of scala expressions inside this xml literal.
     import fastparse.Parsed
     val start = offset
@@ -992,7 +956,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
 // Unquotes -----------------------------------------------------------------
 
-  def getUnquote(): Unit = {
+  private def getUnquote(): Unit = {
     require(ch == '$')
     val start = charOffset
     val endInclusive = {
