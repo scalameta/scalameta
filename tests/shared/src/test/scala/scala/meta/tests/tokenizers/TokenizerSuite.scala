@@ -988,6 +988,22 @@ class TokenizerSuite extends BaseTokenizerSuite {
     assert(lf.syntax == "\n")
   }
 
+  test("Interpolated tree parsed succesfully with windows newline, with LF escaped") {
+    assertTokenizedAsStructureLines(
+      """ q"foo"""" + "\r\\u000A",
+      """
+        |BOF [0..0)
+        |  [0..1)
+        |q [1..2)
+        |" [2..3)
+        |foo [3..6)
+        |" [6..7)
+        |\n [7..8)
+        |EOF [14..14)
+        |""".stripMargin
+    )
+  }
+
   test("Interpolated tree parsed succesfully with unix newline") {
     val Tokens(bof, _, _, _, part: Interpolation.Part, _, lf: LF, eof) =
       (""" q"foo"""" + "\n").tokenize.get
