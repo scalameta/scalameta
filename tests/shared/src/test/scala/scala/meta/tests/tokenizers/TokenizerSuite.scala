@@ -1166,4 +1166,11 @@ class TokenizerSuite extends BaseTokenizerSuite {
       ("raw\"\"\"\\$host\\$share\\\"\"\"").tokenize.get
 
   }
+
+  test("#3328") {
+    val code = "val \\uD835\\uDF11: Double"
+    val res = dialects.Scala212(code).tokenize
+    assertEquals(res.toEither.left.get.message, "illegal character '\\ud835'")
+  }
+
 }
