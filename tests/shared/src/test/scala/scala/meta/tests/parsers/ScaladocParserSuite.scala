@@ -1856,6 +1856,38 @@ class ScaladocParserSuite extends FunSuite {
     assertEquals(result, expectation)
   }
 
+  test("enclosed java tag") {
+    assertEquals(
+      parseString(
+        """
+       /**
+        * {@tag1}
+        * {@tag2 with desc}
+        * {@not a
+        * tag}
+        */
+       """
+      ),
+      Option(
+        Scaladoc(
+          Paragraph(
+            Text(
+              Seq(
+                Word("{@tag1}"),
+                Word("{@tag2"),
+                Word("with"),
+                Word("desc}"),
+                Word("{@not"),
+                Word("a"),
+                Word("tag}")
+              )
+            ) :: Nil
+          ) :: Nil
+        )
+      )
+    )
+  }
+
   test("table escaped pipe") {
     val result = parseString(
       """
