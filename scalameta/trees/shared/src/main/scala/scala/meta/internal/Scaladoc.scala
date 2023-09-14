@@ -47,6 +47,11 @@ object Scaladoc {
     override def syntax: String = s"{{{$code}}}$punct"
   }
 
+  /** Represents an enclosed tagged documentation remark */
+  final case class EnclosedJavaTag(tag: String, desc: Seq[String] = Nil) extends TextPart {
+    override def syntax: String = desc.mkString(s"{@$tag", " ", "}")
+  }
+
   /** A block of one or more lines of code */
   final case class CodeBlock(code: Seq[String]) extends Term
 

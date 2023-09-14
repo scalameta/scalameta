@@ -126,7 +126,7 @@ object ScaladocParser {
 
   private def textParser[_: P](indent: Int, mdOffset: Int = 0): P[Text] = P {
     def end = P(nl ~/ nextPartParser(indent, mdOffset))
-    def part: P[TextPart] = P(codeExprParser | linkParser | wordParser)
+    def part: P[TextPart] = P(codeExprParser | linkParser | enclosedJavaTagParser | wordParser)
     def sep = P(!end ~ nl.? ~ hspaces0)
     hspaces0 ~ part.rep(1, sep = sep).map(x => Text(x))
   }
@@ -151,6 +151,15 @@ object ScaladocParser {
       def descOpt = if (tagType.optDesc) desc else Pass(Nil)
       (labelOpt ~ descOpt).map { case (label, desc) => Tag(tagType, label, desc) }
     }
+  }
+
+  private def enclosedJavaTagParser[_: P]: P[EnclosedJavaTag] = P {
+    def enclosed = (!(space | "}") ~ AnyChar).rep(1)
+    def ltBrace = "{" ~ hspaces0
+    def rtBrace = hspaces0 ~ "}"
+    def tag = ("@" ~ enclosed).!
+    def desc = (hspaces1 ~ enclosed.!).rep
+    (ltBrace ~ tag ~ desc ~ rtBrace).map { case (tag, desc) => EnclosedJavaTag(tag, desc) }
   }
 
   private def listBlockParser[_: P](indent: Int = 0): P[ListBlock] = P {

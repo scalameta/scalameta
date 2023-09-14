@@ -1873,10 +1873,8 @@ class ScaladocParserSuite extends FunSuite {
           Paragraph(
             Text(
               Seq(
-                Word("{@tag1}"),
-                Word("{@tag2"),
-                Word("with"),
-                Word("desc}"),
+                EnclosedJavaTag("@tag1"),
+                EnclosedJavaTag("@tag2", List("with", "desc")),
                 Word("{@not"),
                 Word("a"),
                 Word("tag}")
