@@ -57,11 +57,10 @@ private[meta] case class CharArrayReader private (
     if (endCharOffset >= buf.length) {
       ch = SU
     } else {
-      val c = buf(endCharOffset)
-      ch = c
       begCharOffset = endCharOffset
-      endCharOffset += 1
-      if (c == '\\') potentialUnicode()
+      val (c, nextOffset) = readUnicodeChar(endCharOffset)
+      ch = c
+      endCharOffset = nextOffset
     }
   }
 
@@ -70,48 +69,42 @@ private[meta] case class CharArrayReader private (
     ch
   }
 
-  /** Interpret \\uxxxx escapes */
-  private def potentialUnicode() = {
+  /** Read next char interpreting \\uxxxx escapes; doesn't mutate internal state */
+  private def readUnicodeChar(offset: Int): (Char, Int) = {
+    val c = buf(offset)
+    val firstOffset = offset + 1 // offset after a single character
+
     def evenSlashPrefix: Boolean = {
-      var p = endCharOffset - 2
+      var p = firstOffset - 2
       while (p >= 0 && buf(p) == '\\') p -= 1
-      (endCharOffset - p) % 2 == 0
-    }
-    def udigit: Int = {
-      if (endCharOffset >= buf.length) {
-        // Since the positioning code is very insistent about throwing exceptions,
-        // we have to point to start of range so our error message can be seen, since
-        // we are one past EOF.  This happens with e.g. val x = \ u 1 <EOF>
-        readerError("incomplete unicode escape", at = begCharOffset)
-        SU
-      } else {
-        val d = digit2int(buf(endCharOffset), 16)
-        if (d >= 0) endCharOffset += 1
-        else readerError("error in unicode escape", at = endCharOffset)
-        d
-      }
+      (firstOffset - p) % 2 == 0
     }
 
-    if (endCharOffset < buf.length && buf(endCharOffset) == 'u' && evenSlashPrefix) {
-      do endCharOffset += 1 while (endCharOffset < buf.length && buf(endCharOffset) == 'u')
-      try {
-        val code = udigit << 12 | udigit << 8 | udigit << 4 | udigit
-        ch = code.toChar
-      } catch {
-        case NonFatal(_) =>
-      }
-    }
+    if (c != '\\' || firstOffset >= buf.length || buf(firstOffset) != 'u' || !evenSlashPrefix)
+      return (c, firstOffset)
+
+    var escapedOffset = firstOffset // offset after an escaped character
+    do escapedOffset += 1 while (escapedOffset < buf.length && buf(escapedOffset) == 'u')
+
+    // need 4 digits
+    if (escapedOffset + 3 >= buf.length)
+      return (c, firstOffset)
+
+    def udigit: Int =
+      try digit2int(buf(escapedOffset), 16)
+      finally escapedOffset += 1
+
+    val code = udigit << 12 | udigit << 8 | udigit << 4 | udigit
+    (code.toChar, escapedOffset)
   }
 
   /** replace CR;LF by LF */
   private def skipCR() =
     if (ch == CR && endCharOffset < buf.length && buf(endCharOffset) == '\\') {
-      val lookahead = lookaheadReader
-      lookahead.endCharOffset += 1 // skip the backslash
-      lookahead.potentialUnicode()
-      if (lookahead.ch == LF) {
+      val (c, nextOffset) = readUnicodeChar(endCharOffset)
+      if (c == LF) {
         ch = LF
-        endCharOffset = lookahead.endCharOffset
+        endCharOffset = nextOffset
       }
     }
 
