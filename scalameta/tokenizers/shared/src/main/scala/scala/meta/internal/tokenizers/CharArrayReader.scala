@@ -13,14 +13,12 @@ private[meta] case class CharArrayReader private (
     /** the last read character */
     var ch: Char = SU,
     /** The offset one past the last read character */
-    var charOffset: Int = 0,
+    var begCharOffset: Int = -1, // included
+    var endCharOffset: Int = 0, // excluded
     /** The start offset of the current line */
     var lineStartOffset: Int = 0,
     /** The start offset of the line before the current one */
-    private var lastLineStartOffset: Int = 0,
-    private var lastUnicodeOffset: Int = -1,
-    /** Is last character a unicode escape \\uxxxx? */
-    var isUnicodeEscape: Boolean = false
+    private var lastLineStartOffset: Int = 0
 ) {
 
   def this(input: Input, dialect: Dialect, reporter: Reporter) =
@@ -36,16 +34,17 @@ private[meta] case class CharArrayReader private (
       potentialLineEnd()
     }
     if (ch == '"' && !dialect.allowMultilinePrograms) {
-      readerError("double quotes are not allowed in single-line quasiquotes", at = charOffset - 1)
+      readerError("double quotes are not allowed in single-line quasiquotes", at = begCharOffset)
     }
   }
 
   final def nextCommentChar(): Unit = {
-    if (charOffset >= buf.length) {
+    if (endCharOffset >= buf.length) {
       ch = SU
     } else {
-      ch = buf(charOffset)
-      charOffset += 1
+      ch = buf(endCharOffset)
+      begCharOffset = endCharOffset
+      endCharOffset += 1
       checkLineEnd()
     }
   }
@@ -55,17 +54,13 @@ private[meta] case class CharArrayReader private (
    * there are no "potential line ends" here.
    */
   final def nextRawChar(): Unit = {
-    // If the last character is a unicode escape, skip charOffset to the end of
-    // the last character. In case `potentialUnicode` restores charOffset
-    // to the head of last character.
-    if (isUnicodeEscape) charOffset = lastUnicodeOffset
-    isUnicodeEscape = false
-    if (charOffset >= buf.length) {
+    if (endCharOffset >= buf.length) {
       ch = SU
     } else {
-      val c = buf(charOffset)
+      val c = buf(endCharOffset)
       ch = c
-      charOffset += 1
+      begCharOffset = endCharOffset
+      endCharOffset += 1
       if (c == '\\') potentialUnicode()
     }
   }
@@ -78,63 +73,52 @@ private[meta] case class CharArrayReader private (
   /** Interpret \\uxxxx escapes */
   private def potentialUnicode() = {
     def evenSlashPrefix: Boolean = {
-      var p = charOffset - 2
+      var p = endCharOffset - 2
       while (p >= 0 && buf(p) == '\\') p -= 1
-      (charOffset - p) % 2 == 0
+      (endCharOffset - p) % 2 == 0
     }
     def udigit: Int = {
-      if (charOffset >= buf.length) {
+      if (endCharOffset >= buf.length) {
         // Since the positioning code is very insistent about throwing exceptions,
-        // we have to decrement the position so our error message can be seen, since
+        // we have to point to start of range so our error message can be seen, since
         // we are one past EOF.  This happens with e.g. val x = \ u 1 <EOF>
-        readerError("incomplete unicode escape", at = charOffset - 1)
+        readerError("incomplete unicode escape", at = begCharOffset)
         SU
       } else {
-        val d = digit2int(buf(charOffset), 16)
-        if (d >= 0) charOffset += 1
-        else readerError("error in unicode escape", at = charOffset)
+        val d = digit2int(buf(endCharOffset), 16)
+        if (d >= 0) endCharOffset += 1
+        else readerError("error in unicode escape", at = endCharOffset)
         d
       }
     }
 
-    // save the end of the current token (exclusive) in case this method
-    // advances the offset more than once. See UnicodeEscapeSuite for a
-    // and https://github.com/scalacenter/scalafix/issues/593 for
-    // an example why this this is necessary.
-    val end = charOffset
-    if (charOffset < buf.length && buf(charOffset) == 'u' && evenSlashPrefix) {
-      do charOffset += 1 while (charOffset < buf.length && buf(charOffset) == 'u')
+    if (endCharOffset < buf.length && buf(endCharOffset) == 'u' && evenSlashPrefix) {
+      do endCharOffset += 1 while (endCharOffset < buf.length && buf(endCharOffset) == 'u')
       try {
         val code = udigit << 12 | udigit << 8 | udigit << 4 | udigit
-        lastUnicodeOffset = charOffset
-        isUnicodeEscape = true
         ch = code.toChar
       } catch {
         case NonFatal(_) =>
       }
     }
-
-    // restore the charOffset to the saved position
-    if (end < buf.length) charOffset = end
   }
 
   /** replace CR;LF by LF */
   private def skipCR() =
-    if (ch == CR && charOffset < buf.length && buf(charOffset) == '\\') {
+    if (ch == CR && endCharOffset < buf.length && buf(endCharOffset) == '\\') {
       val lookahead = lookaheadReader
-      lookahead.charOffset += 1 // skip the backslash
+      lookahead.endCharOffset += 1 // skip the backslash
       lookahead.potentialUnicode()
       if (lookahead.ch == LF) {
         ch = LF
-        isUnicodeEscape = true
-        lastUnicodeOffset = lookahead.lastUnicodeOffset
+        endCharOffset = lookahead.endCharOffset
       }
     }
 
   /** Handle line ends */
   private def potentialLineEnd(): Unit = {
     if (checkLineEnd() && !dialect.allowMultilinePrograms) {
-      readerError("line breaks are not allowed in single-line quasiquotes", at = charOffset - 1)
+      readerError("line breaks are not allowed in single-line quasiquotes", at = begCharOffset)
     }
   }
 
@@ -142,7 +126,7 @@ private[meta] case class CharArrayReader private (
     val ok = ch == LF || ch == FF
     if (ok) {
       lastLineStartOffset = lineStartOffset
-      lineStartOffset = charOffset
+      lineStartOffset = endCharOffset
     }
     ok
   }
@@ -152,5 +136,7 @@ private[meta] case class CharArrayReader private (
 
   /** A mystery why CharArrayReader.nextChar() returns Unit */
   def getc() = { nextChar(); ch }
+
+  final def wasMultiChar: Boolean = begCharOffset < endCharOffset - 1
 
 }
