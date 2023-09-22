@@ -11,7 +11,7 @@ private[meta] case class CharArrayReader private (
     dialect: Dialect,
     reporter: Reporter,
     /** the last read character */
-    var ch: Char = SU,
+    var ch: Int = SU,
     /** The offset one past the last read character */
     var begCharOffset: Int = -1, // included
     var endCharOffset: Int = 0, // excluded
@@ -58,9 +58,21 @@ private[meta] case class CharArrayReader private (
       ch = SU
     } else {
       begCharOffset = endCharOffset
-      val (c, nextOffset) = readUnicodeChar(endCharOffset)
-      ch = c
-      endCharOffset = nextOffset
+      val (hi, hiEnd) = readUnicodeChar(endCharOffset)
+      if (!Character.isHighSurrogate(hi)) {
+        ch = hi
+        endCharOffset = hiEnd
+      } else if (hiEnd >= buf.length)
+        readerError("invalid unicode surrogate pair", at = begCharOffset)
+      else {
+        val (lo, loEnd) = readUnicodeChar(hiEnd)
+        if (!Character.isLowSurrogate(lo))
+          readerError("invalid unicode surrogate pair", at = begCharOffset)
+        else {
+          ch = Character.toCodePoint(hi, lo)
+          endCharOffset = loEnd
+        }
+      }
     }
   }
 

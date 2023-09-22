@@ -82,8 +82,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   /**
    * append Unicode character to "cbuf" buffer
    */
-  private def putChar(c: Char): Unit = {
-    cbuf.append(c)
+  private def putChar(c: Int): Unit = {
+    cbuf.appendCodePoint(c)
   }
 
   /**
@@ -258,7 +258,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     (ch: @switch) match {
       case ' ' | '\t' | CR | LF | FF =>
         token = WHITESPACE
-        strVal = ch.toString
+        strVal = ch.toChar.toString
         nextChar()
       // nextToken()
       case
@@ -704,7 +704,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       val start = begCharOffset
       nextChar()
       if ('0' <= ch && ch <= '7') {
-        val leadch: Char = ch
+        val leadch = ch
         var oct: Int = digit2int(ch, 8)
         nextChar()
         if ('0' <= ch && ch <= '7') {
@@ -718,7 +718,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         val alt = if (oct == LF) "\\n" else "\\u%04x" format oct
         def msg(what: String) = s"Octal escape literals are $what, use $alt instead."
         deprecationWarning(msg("deprecated"), at = start)
-        putChar(oct.toChar)
+        putChar(oct)
       } else {
         ch match {
           case 'b' => putChar('\b')

@@ -1170,7 +1170,23 @@ class TokenizerSuite extends BaseTokenizerSuite {
   test("#3328") {
     val code = "val \\uD835\\uDF11: Double"
     val res = dialects.Scala212(code).tokenize
-    assertEquals(res.toEither.left.get.message, "illegal character '\\ud835'")
+    assertEquals(res.get.toString, code)
+  }
+
+  test("#3328 2") {
+    assertTokenizedAsStructureLines(
+      "val \uD835\uDF11: Double",
+      """
+        |BOF [0..0)
+        |val [0..3)
+        |  [3..4)
+        |\uD835\uDF11 [4..6)
+        |: [6..7)
+        |  [7..8)
+        |Double [8..14)
+        |EOF [14..14)
+        |""".stripMargin
+    )
   }
 
 }
