@@ -873,10 +873,14 @@ lazy val shadingSettings = Def.settings(
       )
     else Set.empty
   },
-  shadingRules ++= Seq(
-    "geny",
-    "fastparse"
-  ).map(ShadingRule.moveUnder(_, "scala.meta.shaded.internal")),
+  shadingRules ++= {
+    if (!isScala211.value)
+      Seq(
+        "geny",
+        "fastparse"
+      ).map(ShadingRule.moveUnder(_, "scala.meta.shaded.internal"))
+    else Seq.empty
+  },
   validNamespaces ++= Set("scala.meta", "org.scalameta", "scala", "java")
 )
 
