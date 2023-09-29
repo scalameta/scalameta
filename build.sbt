@@ -223,6 +223,31 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
 ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
   .jsSettings(commonJsSettings).nativeSettings(nativeSettings).dependsOn(common) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
 
+lazy val parsersExtra = crossProject(JVMPlatform)
+  .in(file("parsersExtra"))
+  .settings(
+    sharedSettings,
+    description := "todo",
+    mergedModule({ base =>
+      List(
+        base / "scalameta" / "parsers",
+      )
+    })
+  )
+  .dependsOn(trees)
+
+lazy val quasiquotes3 = crossProject(JVMPlatform)
+  .in(file("quasiquotes3"))
+  .settings(
+    // sharedSettings,
+    scalaVersion := "3.3.1",
+    // scalacOptions += "-Xcheck-macros",
+    description := "Scalameta APIs for parsing and their baseline implementation",
+    libraryDependencies ++= Seq(
+      "org.scalameta" %%% "munit" % munitVersion
+    )
+  ).dependsOn(parsersExtra)
+
 lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).settings(
   moduleName := "parsers",
   sharedSettings,
