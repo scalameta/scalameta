@@ -866,20 +866,21 @@ lazy val docs = project
 
 lazy val shadingSettings = Def.settings(
   shadedDependencies ++= {
-    if (!isScala211.value)
-      Set(
-        "com.lihaoyi" %%% "geny" % "foo",
-        "com.lihaoyi" %%% "fastparse" % "foo"
-      )
-    else Set.empty
+    if (isScala211.value) Set.empty
+    else
+      ShadedDependency.all.map { x =>
+        if (x.isPlatformSpecific)
+          x.groupID %%% x.artifactID % "foo"
+        else
+          x.groupID %% x.artifactID % "foo"
+      }.toSet
   },
   shadingRules ++= {
-    if (!isScala211.value)
-      Seq(
-        "geny",
-        "fastparse"
-      ).map(ShadingRule.moveUnder(_, "scala.meta.shaded.internal"))
-    else Seq.empty
+    if (isScala211.value) Seq.empty
+    else
+      ShadedDependency.all.map { x =>
+        ShadingRule.moveUnder(x.namespace, "scala.meta.shaded.internal")
+      }
   },
   validNamespaces ++= Set("scala.meta", "org.scalameta", "scala", "java")
 )
