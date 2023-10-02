@@ -389,7 +389,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(testSettings: _*)
   .jvmSettings(
     libraryDependencies += {
-      val coursierVersion = if (isScala211.value) "2.0.0-RC5-6" else "2.1.6"
+      val coursierVersion = if (isScala211.value) "2.0.0-RC5-6" else "2.1.7"
       "io.get-coursier" %% "coursier" % coursierVersion
     },
     dependencyOverrides += {
