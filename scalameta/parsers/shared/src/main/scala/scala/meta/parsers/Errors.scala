@@ -6,7 +6,7 @@ import org.scalameta.data._
 import scala.meta.inputs._
 import scala.meta.internal.inputs._
 
-@root trait Parsed[+T] {
+trait Parsed[+T] extends Product with Serializable with Metadata.Adt with Equals {
 
   def fold[A](fe: Parsed.Error => A, ft: T => A): A = this match {
     case x: Parsed.Success[_] => ft(x.tree)
@@ -23,15 +23,15 @@ import scala.meta.internal.inputs._
 }
 
 object Parsed {
-  @leaf class Success[+T](tree: T) extends Parsed[T] {
+  case class Success[+T](tree: T) extends Parsed[T] {
     override def toString = tree.toString
   }
-  @leaf class Error(pos: Position, message: String, details: Exception) extends Parsed[Nothing] {
+  case class Error(pos: Position, message: String, details: Exception) extends Parsed[Nothing] {
     override def toString = details.toString
   }
 }
 
-@data class ParseException(pos: Position, shortMessage: String)
+case class ParseException(pos: Position, shortMessage: String)
     extends Exception(pos.formatMessage("error", shortMessage)) {
   def fullMessage = getMessage
   override def toString = fullMessage
