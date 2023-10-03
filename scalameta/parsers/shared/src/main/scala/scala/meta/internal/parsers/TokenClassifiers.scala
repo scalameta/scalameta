@@ -5,10 +5,10 @@ import scala.meta.internal.classifiers.classifier
 import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
 
-@classifier
-trait MultilineComment {
+object MultilineComment {
   def unapply(token: Token): Boolean =
     token.is[Comment] && AsMultilineComment.isMultiline(token)
+  def apply(token: Token): Boolean = unapply(token)
 }
 
 object AsMultilineComment {
