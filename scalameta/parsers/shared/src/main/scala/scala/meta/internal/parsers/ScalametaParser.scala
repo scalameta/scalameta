@@ -2647,7 +2647,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def pattern1(isForComprehension: Boolean = false): Pat = {
       val p = pattern2(isForComprehension)
       @inline def typed() =
-        Pat.Typed(p, patternTyp(allowInfix = false, allowImmediateTypevars = false))
+        Pat.Typed(p, super.patternTyp(allowInfix = false, allowImmediateTypevars = false))
       val pat = p match {
         case _ if token.isNot[Colon] => p
         case _: Quasi =>
@@ -2758,7 +2758,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               case _ =>
             }
           }
-          val targs = if (token.is[LeftBracket]) Some(patternTypeArgs()) else None
+          val targs = if (token.is[LeftBracket]) Some(super.patternTypeArgs()) else None
           if (token.is[LeftParen]) {
             val ref = sid.become[Term]
             Pat.Extract(
@@ -2813,7 +2813,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Pat.Macro(macroQuotedIdent(ident))
         case _: KwGiven =>
           next()
-          Pat.Given(patternTyp(allowInfix = false, allowImmediateTypevars = false))
+          Pat.Given(super.patternTyp(allowInfix = false, allowImmediateTypevars = false))
         case t =>
           onError(t)
       })
