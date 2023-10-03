@@ -78,7 +78,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   protected def runTestError[T <: Tree](
       code: String,
       expected: String
-  )(implicit parser: (String, Dialect) => T, dialect: Dialect): Unit = {
+  )(implicit parser: (String, Dialect) => T, dialect: Dialect, loc: munit.Location): Unit = {
     val error = intercept[ParseException] {
       val result = parser(code, dialect)
       throw new ParseException(

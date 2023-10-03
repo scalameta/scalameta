@@ -158,10 +158,12 @@ package object trees {
   }
 
   implicit class XtensionTreesMods(private val mods: collection.Iterable[Mod]) extends AnyVal {
-    def has[T <: Mod](implicit classifier: Classifier[Mod, T]): Boolean =
-      mods.exists(classifier.apply)
-    def first[T <: Mod](implicit tag: ClassTag[T], classifier: Classifier[Mod, T]): Option[T] =
-      mods.collectFirst { case m if classifier.apply(m) => m.require[T] }
+    def has[T <: Mod](implicit tag: ClassTag[T]): Boolean =
+      mods.exists { case m => tag.runtimeClass.isAssignableFrom(m.getClass) }
+    def first[T <: Mod](implicit tag: ClassTag[T]): Option[T] =
+      mods.collectFirst {
+        case m if tag.runtimeClass.isAssignableFrom(m.getClass) => m.asInstanceOf[T]
+      }
   }
 
   implicit class XtensionTreesStat(private val stat: Stat) extends AnyVal {
