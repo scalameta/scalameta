@@ -141,16 +141,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     require(input.isInstanceOf[Input.Ammonite])
     val builder = List.newBuilder[Source]
 
-    builder += parseRuleAfterBOF(parseSourceImpl())
-    while (in.token match {
+    doWhile {
+      builder += parseRuleAfterBOF(parseSourceImpl())
+    } {
+      in.token match {
         case t: Token.EOF if t.end < input.chars.length =>
           in.next()
           accept[Token.At]
           accept[Token.BOF]
           true
         case _ => false
-      }) {
-      builder += parseRuleAfterBOF(parseSourceImpl())
+      }
     }
     MultiSource(builder.result())
   }
@@ -198,7 +199,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @inline private def tryAheadNot[T: ClassTag]: Boolean =
     nextIf(!peekToken.is[T])
 
-  private def unreachable(debugges: Map[String, Any]): Nothing = UnreachableError.raise(debugges)
+  private def unreachable(debuggees: Map[String, Any]): Nothing = UnreachableError.raise(debuggees)
   private def unreachable(token: Token): Nothing = unreachable(Map("token" -> token))
   private def unreachable: Nothing = unreachable(Map.empty[String, Any])
 
@@ -507,21 +508,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def errorMessage: String = Messages.IllegalCombinationModifiers(m1, m2)
   }
 
-  implicit val InvalidOpenFinal: InvalidModCombination[Mod.Open, Mod.Final] =
+  private implicit val InvalidOpenFinal: InvalidModCombination[Mod.Open, Mod.Final] =
     new InvalidModCombination(Mod.Open(), Mod.Final())
-  implicit val InvalidOpenSealed: InvalidModCombination[Mod.Open, Mod.Sealed] =
+  private implicit val InvalidOpenSealed: InvalidModCombination[Mod.Open, Mod.Sealed] =
     new InvalidModCombination(Mod.Open(), Mod.Sealed())
-  implicit val InvalidCaseImplicit: InvalidModCombination[Mod.Case, Mod.Implicit] =
+  private implicit val InvalidCaseImplicit: InvalidModCombination[Mod.Case, Mod.Implicit] =
     new InvalidModCombination(Mod.Case(), Mod.Implicit())
-  implicit val InvalidFinalAbstract: InvalidModCombination[Mod.Final, Mod.Abstract] =
+  private implicit val InvalidFinalAbstract: InvalidModCombination[Mod.Final, Mod.Abstract] =
     new InvalidModCombination(Mod.Final(), Mod.Abstract())
-  implicit val InvalidFinalSealed: InvalidModCombination[Mod.Final, Mod.Sealed] =
+  private implicit val InvalidFinalSealed: InvalidModCombination[Mod.Final, Mod.Sealed] =
     new InvalidModCombination(Mod.Final(), Mod.Sealed())
-  implicit val InvalidOverrideAbstract: InvalidModCombination[Mod.Override, Mod.Abstract] =
+  private implicit val InvalidOverrideAbstract: InvalidModCombination[Mod.Override, Mod.Abstract] =
     new InvalidModCombination(Mod.Override(), Mod.Abstract())
-  implicit val InvalidPrivateProtected: InvalidModCombination[Mod.Private, Mod.Protected] =
+  private implicit val InvalidPrivateProtected: InvalidModCombination[Mod.Private, Mod.Protected] =
     new InvalidModCombination(Mod.Private(Name.Anonymous()), Mod.Protected(Name.Anonymous()))
-  implicit val InvalidProtectedPrivate: InvalidModCombination[Mod.Protected, Mod.Private] =
+  private implicit val InvalidProtectedPrivate: InvalidModCombination[Mod.Protected, Mod.Private] =
     new InvalidModCombination(Mod.Protected(Name.Anonymous()), Mod.Private(Name.Anonymous()))
 
   /* -------------- TOKEN CLASSES ------------------------------------------- */
@@ -1888,8 +1889,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           .map(_ :: Nil)
     }).map(_.reduceWith(toParamClause(None)))
 
-  def implicitClosure(location: Location): Term.Function = {
-    assert(token.isNot[KwImplicit], s"Expected implicit keyword but found ${token.name}")
+  private def implicitClosure(location: Location): Term.Function = {
     val implicitPos = prevTokenPos
     val paramName = termName()
     val paramTpt = if (acceptOpt[Colon]) Some(typeOrInfixType(location)) else None
@@ -3398,8 +3398,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                     "use `def f[A](a: A)(implicit ev: A => Int)`."
                   syntaxError(s"View bounds are not supported. $msg", at = token)
                 }
-                vbounds += getBound()
-                while (token.is[Viewbound]) { vbounds += getBound() }
+                doWhile {
+                  vbounds += getBound()
+                }(token.is[Viewbound])
               }
               while (token.is[Colon]) cbounds += getBound()
             }
@@ -4263,12 +4264,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       next()
       newLineOpt()
       val deriving = ListBuffer[Type]()
-      def matching() = token match {
-        case t: Ellipsis => deriving += ellipsis[Type](t, 1)
-        case _ => deriving += startModType()
-      }
-      matching()
-      while (acceptOpt[Comma]) { matching }
+      doWhile {
+        token match {
+          case t: Ellipsis => deriving += ellipsis[Type](t, 1)
+          case _ => deriving += startModType()
+        }
+      }(acceptOpt[Comma])
       deriving.toList
     } else {
       Nil
@@ -4693,6 +4694,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 }
 
 object ScalametaParser {
+
+  def doWhile(body: => Unit)(cond: => Boolean): Unit = {
+    body
+    while (cond) body
+  }
 
   private def dropTrivialBlock(term: Term): Term =
     term match {
