@@ -140,16 +140,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def entryPointAmmonite(): MultiSource = {
     require(input.isInstanceOf[Input.Ammonite])
     val builder = List.newBuilder[Source]
-    do {
+
+    doWhile {
       builder += parseRuleAfterBOF(parseSourceImpl())
-    } while (in.token match {
-      case t: Token.EOF if t.end < input.chars.length =>
-        in.next()
-        accept[Token.At]
-        accept[Token.BOF]
-        true
-      case _ => false
-    })
+    } {
+      in.token match {
+        case t: Token.EOF if t.end < input.chars.length =>
+          in.next()
+          accept[Token.At]
+          accept[Token.BOF]
+          true
+        case _ => false
+      }
+    }
     MultiSource(builder.result())
   }
 
@@ -195,6 +198,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   @inline private def tryAheadNot[T: ClassTag]: Boolean =
     nextIf(!peekToken.is[T])
+
+  private def unreachable(debuggees: Map[String, Any]): Nothing = UnreachableError.raise(debuggees)
+  private def unreachable(token: Token): Nothing = unreachable(Map("token" -> token))
+  private def unreachable: Nothing = unreachable(Map.empty[String, Any])
 
   private def tryAhead(cond: => Boolean): Boolean = {
     val forked = in.fork
@@ -372,8 +379,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* ------------- ERROR HANDLING ------------------------------------------- */
 
-  lazy val reporter = Reporter()
-  import reporter._
+  final lazy val reporter = Reporter()
+  import this.reporter._
 
   implicit class XtensionToken(token: Token) {
     def is[T: ClassTag] = {
@@ -501,17 +508,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def errorMessage: String = Messages.IllegalCombinationModifiers(m1, m2)
   }
 
-  implicit object InvalidOpenFinal extends InvalidModCombination(Mod.Open(), Mod.Final())
-  implicit object InvalidOpenSealed extends InvalidModCombination(Mod.Open(), Mod.Sealed())
-  implicit object InvalidCaseImplicit extends InvalidModCombination(Mod.Case(), Mod.Implicit())
-  implicit object InvalidFinalAbstract extends InvalidModCombination(Mod.Final(), Mod.Abstract())
-  implicit object InvalidFinalSealed extends InvalidModCombination(Mod.Final(), Mod.Sealed())
-  implicit object InvalidOverrideAbstract
-      extends InvalidModCombination(Mod.Override(), Mod.Abstract())
-  implicit object InvalidPrivateProtected
-      extends InvalidModCombination(Mod.Private(Name.Anonymous()), Mod.Protected(Name.Anonymous()))
-  implicit object InvalidProtectedPrivate
-      extends InvalidModCombination(Mod.Protected(Name.Anonymous()), Mod.Private(Name.Anonymous()))
+  private implicit val InvalidOpenFinal: InvalidModCombination[Mod.Open, Mod.Final] =
+    new InvalidModCombination(Mod.Open(), Mod.Final())
+  private implicit val InvalidOpenSealed: InvalidModCombination[Mod.Open, Mod.Sealed] =
+    new InvalidModCombination(Mod.Open(), Mod.Sealed())
+  private implicit val InvalidCaseImplicit: InvalidModCombination[Mod.Case, Mod.Implicit] =
+    new InvalidModCombination(Mod.Case(), Mod.Implicit())
+  private implicit val InvalidFinalAbstract: InvalidModCombination[Mod.Final, Mod.Abstract] =
+    new InvalidModCombination(Mod.Final(), Mod.Abstract())
+  private implicit val InvalidFinalSealed: InvalidModCombination[Mod.Final, Mod.Sealed] =
+    new InvalidModCombination(Mod.Final(), Mod.Sealed())
+  private implicit val InvalidOverrideAbstract: InvalidModCombination[Mod.Override, Mod.Abstract] =
+    new InvalidModCombination(Mod.Override(), Mod.Abstract())
+  private implicit val InvalidPrivateProtected: InvalidModCombination[Mod.Private, Mod.Protected] =
+    new InvalidModCombination(Mod.Private(Name.Anonymous()), Mod.Protected(Name.Anonymous()))
+  private implicit val InvalidProtectedPrivate: InvalidModCombination[Mod.Protected, Mod.Private] =
+    new InvalidModCombination(Mod.Protected(Name.Anonymous()), Mod.Private(Name.Anonymous()))
 
   /* -------------- TOKEN CLASSES ------------------------------------------- */
 
@@ -583,7 +595,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // Unquote's pt may not be directly equal unwrapped ellipsis's pt, but be its refinement instead.
     // For example, in `new { ..$stats }`, ellipsis's pt is List[Stat], but quasi's pt is Term.
     // This is an artifact of the current implementation, so we just need to keep it mind and work around it.
-    require(classTag[T].runtimeClass.isAssignableFrom(tree.pt) && debug(ell, tree, tree.structure))
+    assert(
+      classTag[T].runtimeClass.isAssignableFrom(tree.pt),
+      s"ellipsis: ${ell},\ntree: ${tree},\nstructure: ${tree.structure}"
+    )
     quasi[T](ell.rank, tree)
   }
 
@@ -611,7 +626,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def unquote[T <: Tree: AstInfo]: T with Quasi =
     token match {
       case t: Unquote => unquote[T](t)
-      case _ => unreachable(debug(token))
+      case _ => unreachable(token)
     }
 
   final def tokenSeparated[Sep: ClassTag, T <: Tree: AstInfo](
@@ -1332,7 +1347,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case KwNull() =>
         Lit.Null()
       case _ =>
-        unreachable(debug(token))
+        unreachable(token)
     }
     next()
     autoEndPos(startPos)(res)
@@ -1874,8 +1889,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           .map(_ :: Nil)
     }).map(_.reduceWith(toParamClause(None)))
 
-  def implicitClosure(location: Location): Term.Function = {
-    require(token.isNot[KwImplicit] && debug(token))
+  private def implicitClosure(location: Location): Term.Function = {
     val implicitPos = prevTokenPos
     val paramName = termName()
     val paramTpt = if (acceptOpt[Colon]) Some(typeOrInfixType(location)) else None
@@ -2592,7 +2606,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def entrypointEnumerator(): Enumerator = {
     listBy[Enumerator](enumeratorBuf(_, isFirst = false, allowNestedIf = false)) match {
       case enumerator :: Nil => enumerator
-      case other => unreachable(debug(other))
+      case other => unreachable(Map("enumerators" -> other))
     }
   }
 
@@ -2829,7 +2843,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                   Pat.Var(name)
                 else name
               case select: Term.Select => select
-              case _ => unreachable(debug(token, token.structure, sid, sid.structure))
+              case _ =>
+                unreachable(
+                  Map(
+                    "token" -> token,
+                    "tokenStructure" -> token.structure,
+                    "sid" -> sid,
+                    "sidStructure" -> sid.structure
+                  )
+                )
             }
           }
         case _: Underscore =>
@@ -3376,7 +3398,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
                     "use `def f[A](a: A)(implicit ev: A => Int)`."
                   syntaxError(s"View bounds are not supported. $msg", at = token)
                 }
-                do vbounds += getBound() while (token.is[Viewbound])
+                doWhile {
+                  vbounds += getBound()
+                }(token.is[Viewbound])
               }
               while (token.is[Colon]) cbounds += getBound()
             }
@@ -3481,7 +3505,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     importWildcardOrName() match {
       case to: Importee.Name => Importee.Rename(from, to.name)
       case _: Importee.Wildcard => Importee.Unimport(from)
-      case other => unreachable(debug(other, other.structure))
+      case other => unreachable(Map("importees" -> other, "importeesStructure" -> other.structure))
     }
   }
 
@@ -4240,10 +4264,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       next()
       newLineOpt()
       val deriving = ListBuffer[Type]()
-      do token match {
-        case t: Ellipsis => deriving += ellipsis[Type](t, 1)
-        case _ => deriving += startModType()
-      } while (acceptOpt[Comma])
+      doWhile {
+        token match {
+          case t: Ellipsis => deriving += ellipsis[Type](t, 1)
+          case _ => deriving += startModType()
+        }
+      }(acceptOpt[Comma])
       deriving.toList
     } else {
       Nil
@@ -4413,14 +4439,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     body.become[Stat]
   }
 
-  def statSeq[T <: Tree: AstInfo](
+  def statSeq[T <: Tree](
       statpf: PartialFunction[Token, T],
       errorMsg: String = "illegal start of definition"
   ): List[T] = {
     listBy[T](statSeqBuf(_, statpf, errorMsg))
   }
 
-  def statSeqBuf[T <: Tree: AstInfo](
+  def statSeqBuf[T <: Tree](
       stats: ListBuffer[T],
       statpf: PartialFunction[Token, T],
       errorMsg: String = "illegal start of definition"
@@ -4668,6 +4694,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 }
 
 object ScalametaParser {
+
+  def doWhile(body: => Unit)(cond: => Boolean): Unit = {
+    body
+    while (cond) body
+  }
 
   private def dropTrivialBlock(term: Term): Term =
     term match {
