@@ -40,7 +40,9 @@ trait CommonNamerMacros extends MacroHelpers {
   }
 
   private val quasiTypeName = TypeName(CommonNamerMacros.quasiName)
-  def isQuasiClass(cdef: ClassDef) = cdef.name.toString == CommonNamerMacros.quasiName
+  @inline private[trees] def isQuasiClass(cdef: ClassDef) = isQuasiName(cdef.name)
+  @inline private[trees] def isQuasiName(name: TypeName) =
+    name.toString == CommonNamerMacros.quasiName
 
   private def mkQuasiParent(parent: Tree): Tree = parent match {
     case Ident(name) => Select(Ident(name.toTermName), quasiTypeName)
@@ -57,7 +59,6 @@ trait CommonNamerMacros extends MacroHelpers {
       extraStubs: String*
   ): ClassDef = {
     val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new $AstAnnotation"))
-    val qname = quasiTypeName
     val qparents = tq"$name" +: tq"$QuasiClass" +: parents.map(mkQuasiParent)
 
     val qstats = mutable.ListBuffer[Tree]()
@@ -103,6 +104,16 @@ trait CommonNamerMacros extends MacroHelpers {
       case _ =>
     }
 
-    q"$qmods class $qname(rank: $IntClass, tree: $TreeClass) extends ..$qparents { ..$qstats }"
+    q"$qmods class $quasiTypeName(rank: $IntClass, tree: $TreeClass) extends ..$qparents { ..$qstats }"
+  }
+
+  def mkAstInfo(name: TypeName): Tree = {
+    val termName = name.toTermName
+    val ctor = if (isQuasiName(name)) q"$termName" else q"$termName.${quasiTypeName.toTermName}"
+    q"""
+      implicit def astInfo: $AstInfoClass[$name] = new $AstInfoClass[$name] {
+        def quasi(rank: $IntClass, tree: $TreeClass): $name with $QuasiClass = $ctor.apply(rank, tree)
+      }
+    """
   }
 }

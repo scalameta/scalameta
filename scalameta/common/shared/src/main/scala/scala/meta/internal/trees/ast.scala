@@ -262,6 +262,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         // step 10: generate boilerplate required by the classifier infrastructure
         mstats1 ++= mkClassifier(iname)
+        mstats1 += mkAstInfo(iname)
 
         // step 11: implement Product
         iparents1 += tq"$ProductClass"
