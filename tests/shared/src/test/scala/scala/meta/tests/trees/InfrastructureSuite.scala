@@ -3,9 +3,11 @@ package trees
 
 import munit._
 import scala.meta._
+import scala.meta.internal.trees.AstInfos._
 import scala.meta.dialects.{Scala211, QuasiquoteTerm}
 
 class InfrastructureSuite extends TreeSuiteBase {
+
   test("become for Quasi-0") {
     val dialect = QuasiquoteTerm(Scala211, multiline = false)
     val q = dialect("$hello").parse[Term].get.asInstanceOf[Term.Quasi]
