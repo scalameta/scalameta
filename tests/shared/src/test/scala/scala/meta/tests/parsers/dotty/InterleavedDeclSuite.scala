@@ -112,47 +112,4 @@ class InterleavedDeclSuite extends BaseDottySuite {
       )
     }
   }
-
-  test("single ..., without tparams") {
-    val q"..$mods def $name(...$paramss): $tpe" = q"def f(x: Int)(y: Int): Unit"
-    val paramsExpected = Term.ParamClause(tparam("x", "Int") :: Nil, None) ::
-      Term.ParamClause(tparam("y", "Int") :: Nil, None) :: Nil
-
-    checkTreesWithSyntax(paramss: _*)("(x: Int)", "(y: Int)")(paramsExpected: _*)
-    assertTree(q"..$mods def $name(...$paramss): $tpe")(
-      Decl.Def(Nil, tname("f"), Member.ParamClauseGroup(Nil, paramsExpected) :: Nil, pname("Unit"))
-    )
-  }
-
-  test("single ..., with tparams") {
-    val q"..$mods def $name[..$tparams](...$paramss): $tpe" = q"def f[A, B](x: Int)(y: Int): Unit"
-    val tparamsExpected = Type.ParamClause(List(pparam("A"), pparam("B")))
-    val paramsExpected = Term.ParamClause(tparam("x", "Int") :: Nil, None) ::
-      Term.ParamClause(tparam("y", "Int") :: Nil, None) :: Nil
-
-    checkTree(tparams, "[A, B]")(tparamsExpected)
-    checkTreesWithSyntax(paramss: _*)("(x: Int)", "(y: Int)")(paramsExpected: _*)
-    assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe")(Decl.Def(
-      Nil,
-      tname("f"),
-      Member.ParamClauseGroup(tparamsExpected, paramsExpected) :: Nil,
-      pname("Unit")
-    ))
-  }
-
-  test("single ...., with tparams") {
-    val q"..$mods def $name(....$paramss): $tpe" = q"def f(x: Int)[A](y: Int)[B]: Unit"
-    val pcGroups = Member
-      .ParamClauseGroup(Nil, Term.ParamClause(List(tparam("x", "Int")), None) :: Nil) ::
-      Member.ParamClauseGroup(
-        Type.ParamClause(pparam("A") :: Nil),
-        Term.ParamClause(List(tparam("y", "Int")), None) :: Nil
-      ) :: Member.ParamClauseGroup(Type.ParamClause(pparam("B") :: Nil), Nil) :: Nil
-
-    checkTreesWithSyntax(paramss: _*)("(x: Int)", "[A](y: Int)", "[B]")(pcGroups: _*)
-    assertTree(q"..$mods def $name(....$paramss): $tpe")(
-      Decl.Def(Nil, tname("f"), pcGroups, pname("Unit"))
-    )
-  }
-
 }

@@ -33,7 +33,6 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
 
   type MetaParser = (Input, Dialect) => MetaTree
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
-  val XtensionParsersDialectApply = "shadow extension method conflict"
 
   // NOTE: only Mode.Pattern really needs holes, and that's only because of Scala's limitations
   // read a comment in liftUnquote for more information on that

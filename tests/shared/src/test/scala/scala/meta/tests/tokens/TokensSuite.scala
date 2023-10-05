@@ -16,7 +16,9 @@ class TokensSuite {
   val d1: Seq[Token] = d ++ d
   val d2: Seq[Token] = newToken +: d
   val d3: Seq[Token] = d :+ newToken
-  val (d41: Token) +: (d42: Seq[Token]) :+ (d43: Token) = d
+  val d41: Token = d.head
+  val d42: Token = d(1)
+  val d43: Token = d(2)
   val d5a: Seq[Int] = d.map(_ => 42)
   val d5b: Seq[Token] = d5a.map(_ => newToken)
   val d5c: Seq[Token] = d.map(_.toString).flatMap(_ => List(newToken))

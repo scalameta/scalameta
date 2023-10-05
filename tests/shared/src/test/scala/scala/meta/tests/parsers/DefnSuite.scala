@@ -299,7 +299,7 @@ class DefnSuite extends ParseSuite {
     val layout = """|new A { def b: C = ??? }
                     |""".stripMargin
     val tree = Term.NewAnonymous(tpl(
-      List(Init(pname("A"), anon, Nil)),
+      List(Init(pname("A"), anon, List.empty[Term.ArgClause])),
       List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
     ))
     runTestAssert[Stat](code, layout)(tree)
@@ -315,7 +315,7 @@ class DefnSuite extends ParseSuite {
     val layout = """|new A { def b: C = ??? }
                     |""".stripMargin
     val tree = Term.NewAnonymous(tpl(
-      List(Init(pname("A"), anon, Nil)),
+      List(Init(pname("A"), anon, List.empty[Term.ArgClause])),
       List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
     ))
     runTestAssert[Stat](code, layout)(tree)
@@ -350,7 +350,7 @@ class DefnSuite extends ParseSuite {
     val layout = """|new A { def b: C = ??? }
                     |""".stripMargin
     val tree = Term.NewAnonymous(tpl(
-      List(Init(pname("A"), anon, Nil)),
+      List(Init(pname("A"), anon, List.empty[Term.ArgClause])),
       List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
     ))
     runTestAssert[Stat](code, layout)(tree)
@@ -367,7 +367,7 @@ class DefnSuite extends ParseSuite {
     val layout = """|new A { def b: C = ??? }
                     |""".stripMargin
     val tree = Term.NewAnonymous(tpl(
-      List(Init(pname("A"), anon, Nil)),
+      List(Init(pname("A"), anon, List.empty[Term.ArgClause])),
       List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
     ))
     runTestAssert[Stat](code, layout)(tree)
