@@ -2,6 +2,7 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
+import scala.meta.contrib.TreeOps
 
 class LitSuite extends ParseSuite {
 
@@ -69,7 +70,7 @@ class LitSuite extends ParseSuite {
 
   test("\"foo\"")(assertTree(term("\"foo\""))(str("foo")))
 
-  test("'foo'")(assertTree(term("'foo"))(Lit.Symbol('foo)))
+  test("'foo'")(assertTree(term("'foo"))(Lit.Symbol(Symbol("foo"))))
 
   test("null")(assertTree(term("null"))(Lit.Null()))
 
@@ -81,7 +82,7 @@ class LitSuite extends ParseSuite {
   }
 
   test("#344") {
-    val minusOne = term("1 + -1").collect { case Term.ApplyInfix(_, _, _, List(minusOne)) =>
+    val minusOne = TreeOps.collect(term("1 + -1")) { case Term.ApplyInfix(_, _, _, List(minusOne)) =>
       minusOne
     }.head
     assertEquals(minusOne.tokens.structure, "Tokens(Ident(-) [4..5), Constant.Int(1) [5..6))")

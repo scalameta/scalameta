@@ -38,21 +38,6 @@ class PublicSuite extends TreeSuiteBase {
     assertWithOriginalSyntax(tree, "foo + bar // baz", "foo + bar")
   }
 
-  test("scala.meta.Tree.toString (quasiquotes)") {
-    val tree = q"foo + bar // baz"
-    assertEquals(tree.toString, "foo + bar // baz")
-  }
-
-  test("scala.meta.Tree.structure (quasiquoted)") {
-    val tree = q"foo + bar // baz"
-    assertTree(tree)(Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar"))))
-  }
-
-  test("scala.meta.Tree.syntax (quasiquoted)") {
-    val tree = q"foo + bar // baz"
-    assertWithOriginalSyntax(tree, "foo + bar // baz", "foo + bar")
-  }
-
   test("scala.meta.dialects.Scala3.toString") {
     assertNoDiff(scala.meta.dialects.Scala3.toString, "Scala36")
   }

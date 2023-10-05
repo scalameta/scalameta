@@ -6,10 +6,11 @@ import scala.meta.tokenizers.TokenizerOptions
 import scala.meta.trees.Origin
 
 import munit._
+import scala.meta.contrib.TreeOps
 
 object MoreHelpers {
   def requireNonEmptyOrigin(tree: Tree): tree.type = {
-    val missingOrigin = tree.collect { case t if t.origin == Origin.None => t }
+    val missingOrigin = TreeOps.collect(tree) { case t if t.origin == Origin.None => t }
     Assertions.assertEquals(
       missingOrigin.map(_.structure),
       Nil,

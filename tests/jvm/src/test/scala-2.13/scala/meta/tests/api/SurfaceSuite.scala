@@ -63,6 +63,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Tree
          |scala.meta.Tree.ImplicitOptionTree
          |scala.meta.Tree.ImplicitTree
+         |scala.meta.VersionSpecificApis
          |scala.meta.XtensionDialectApply
          |scala.meta.XtensionDialectTokenSyntax
          |scala.meta.XtensionDialectTokensSyntax

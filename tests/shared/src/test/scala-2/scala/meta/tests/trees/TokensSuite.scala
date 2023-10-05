@@ -2,6 +2,7 @@ package scala.meta.tests
 package trees
 
 import scala.meta._
+import scala.meta.contrib.TreeOps
 
 class TokensSuite extends TreeSuiteBase {
 
