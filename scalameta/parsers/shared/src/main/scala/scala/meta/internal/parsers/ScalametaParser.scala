@@ -569,16 +569,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     buf.toList
   }
 
-  def ellipsis[T <: Tree: AstInfo](ell: Ellipsis, rank: Int, extraSkip: => Unit = {}): T = {
+  def ellipsis[T <: Tree: AstInfo: ClassTag](
+      ell: Ellipsis,
+      rank: Int,
+      extraSkip: => Unit = {}
+  ): T = {
     if (ell.rank != rank) {
       syntaxError(Messages.QuasiquoteRankMismatch(ell.rank, rank), at = ell)
     }
     ellipsis(ell, extraSkip)
   }
 
-  def ellipsis[T <: Tree: AstInfo](ell: Ellipsis): T = ellipsis(ell, {})
+  def ellipsis[T <: Tree: AstInfo: ClassTag](ell: Ellipsis): T = ellipsis(ell, {})
 
-  def ellipsis[T <: Tree: AstInfo](ell: Ellipsis, extraSkip: => Unit): T = autoPos {
+  def ellipsis[T <: Tree: AstInfo: ClassTag](ell: Ellipsis, extraSkip: => Unit): T = autoPos {
     if (!dialect.allowUnquotes) {
       syntaxError(s"$dialect doesn't support ellipses", at = ell)
     }
@@ -629,7 +633,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _ => unreachable(token)
     }
 
-  final def tokenSeparated[Sep: ClassTag, T <: Tree: AstInfo](
+  final def tokenSeparated[Sep: ClassTag, T <: Tree: AstInfo: ClassTag](
       sepFirst: Boolean,
       part: Int => T
   ): List[T] = listBy[T] { ts =>
@@ -648,10 +652,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     iter(!sepFirst)
   }
 
-  @inline final def commaSeparated[T <: Tree: AstInfo](part: => T): List[T] =
+  @inline final def commaSeparated[T <: Tree: AstInfo: ClassTag](part: => T): List[T] =
     commaSeparatedWithIndex(_ => part)
 
-  @inline final def commaSeparatedWithIndex[T <: Tree: AstInfo](part: Int => T): List[T] =
+  @inline final def commaSeparatedWithIndex[T <: Tree: AstInfo: ClassTag](part: Int => T): List[T] =
     tokenSeparated[Comma, T](sepFirst = false, part)
 
   private def makeTuple[A <: Tree](lpPos: Int, body: List[A], zero: => A, tuple: List[A] => A)(
