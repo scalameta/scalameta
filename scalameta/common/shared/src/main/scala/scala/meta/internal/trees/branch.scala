@@ -36,8 +36,10 @@ class BranchNamerMacros(val c: Context) extends AstReflection with CommonNamerMa
         mstats1 += q"$CommonTyperMacrosModule.hierarchyCheck[$name]"
         val anns1 = anns :+ q"new $AdtMetadataModule.branch" :+ q"new $AstMetadataModule.branch"
         mstats1 ++= mkClassifier(name)
-        if (!isQuasi)
+        if (!isQuasi) {
+          mstats1 += mkAstInfo(name)
           mstats1 += mkQuasi(name, parents, Nil, Nil, stats, "value", "name", "tpe")
+        }
 
         val needsUnapply = !mstats.exists {
           case DefDef(_, TermName("unapply"), _, _, _, _) => true
