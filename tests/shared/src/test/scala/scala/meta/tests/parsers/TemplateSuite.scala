@@ -47,7 +47,12 @@ class TemplateSuite extends ParseSuite {
         Type.Name("A"),
         Type.ParamClause(Nil),
         EmptyCtor(),
-        Template(Nil, Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)
+        Template(
+          Nil,
+          Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil,
+          EmptySelf(),
+          Nil
+        )
       )
     }
   }
@@ -78,7 +83,7 @@ class TemplateSuite extends ParseSuite {
         EmptyCtor(),
         Template(
           Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
-          Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil,
+          Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil,
           EmptySelf(),
           Nil
         )
@@ -142,7 +147,12 @@ class TemplateSuite extends ParseSuite {
         Type.Name("A"),
         Type.ParamClause(Nil),
         EmptyCtor(),
-        Template(Nil, Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)
+        Template(
+          Nil,
+          Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil,
+          EmptySelf(),
+          Nil
+        )
       )
     }
   }
@@ -156,7 +166,7 @@ class TemplateSuite extends ParseSuite {
         EmptyCtor(),
         Template(
           Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
-          Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil,
+          Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil,
           EmptySelf(),
           Nil
         )
@@ -356,7 +366,7 @@ class TemplateSuite extends ParseSuite {
     val Object(
       Nil,
       Term.Name("A"),
-      Template(Nil, Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)
+      Template(Nil, Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil, EmptySelf(), Nil)
     ) =
       templStat("object A extends B")
   }
@@ -367,7 +377,7 @@ class TemplateSuite extends ParseSuite {
       Term.Name("A"),
       Template(
         Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit(2)) :: Nil,
-        Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil,
+        Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil,
         EmptySelf(),
         Nil
       )

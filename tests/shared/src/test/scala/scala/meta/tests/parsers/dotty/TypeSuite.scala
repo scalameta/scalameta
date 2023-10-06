@@ -356,7 +356,10 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("T @foo") {
-    val Annotate(TypeName("T"), Mod.Annot(Init(Type.Name("foo"), Name.Anonymous(), Nil)) :: Nil) =
+    val Annotate(
+      TypeName("T"),
+      Mod.Annot(Init(Type.Name("foo"), Name.Anonymous(), emptyArgClause)) :: Nil
+    ) =
       tpe("T @foo")
   }
 
@@ -640,7 +643,7 @@ class TypeSuite extends BaseDottySuite {
               )
             ),
             anon,
-            Nil
+            emptyArgClause
           ) :: Nil,
           List(
             Defn.Def(

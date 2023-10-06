@@ -593,7 +593,7 @@ class MinorDottySuite extends BaseDottySuite {
         Some(
           Type.Annotate(
             Type.AnonymousName(),
-            List(Mod.Annot(Init(Type.Name("unchecked"), Name(""), Nil)))
+            List(Mod.Annot(Init(Type.Name("unchecked"), Name(""), emptyArgClause)))
           )
         ),
         Term.Name("args")
@@ -609,7 +609,11 @@ class MinorDottySuite extends BaseDottySuite {
             Type.AnonymousName(),
             List(
               Mod.Annot(
-                Init(Type.Select(Term.Name("annotation"), Type.Name("switch")), Name(""), Nil)
+                Init(
+                  Type.Select(Term.Name("annotation"), Type.Name("switch")),
+                  Name(""),
+                  emptyArgClause
+                )
               )
             )
           )

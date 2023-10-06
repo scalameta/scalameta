@@ -84,7 +84,7 @@ class ErasedDefsSuite extends BaseDottySuite {
           ) :: Nil
         ),
         Some(Type.Apply(pname("Machine"), List(pname("On")))),
-        Term.New(Init(Type.Apply(pname("Machine"), List(pname("On"))), anon, Nil))
+        Term.New(Init(Type.Apply(pname("Machine"), List(pname("On"))), anon, emptyArgClause))
       )
     )
   }
@@ -104,7 +104,7 @@ class ErasedDefsSuite extends BaseDottySuite {
         anon,
         None,
         Type.Apply(pname("IsEmpty"), List(pname("Empty"))),
-        Term.New(Init(Type.Apply(pname("IsEmpty"), List(pname("Empty"))), anon, Nil))
+        Term.New(Init(Type.Apply(pname("IsEmpty"), List(pname("Empty"))), anon, emptyArgClause))
       )
     )
   }

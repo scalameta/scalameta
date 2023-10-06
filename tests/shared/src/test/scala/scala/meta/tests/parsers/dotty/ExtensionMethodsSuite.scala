@@ -741,14 +741,14 @@ class ExtensionMethodsSuite extends BaseDottySuite {
             Term.Block(
               List(
                 Defn.Def(
-                  List(Mod.Annot(Init(pname("annoFoo"), Name.Anonymous(), Nil))),
+                  List(Mod.Annot(Init(pname("annoFoo"), Name.Anonymous(), emptyArgClause))),
                   tname("foo"),
                   Nil,
                   Some(pname("Foo")),
                   tname("getFoo")
                 ),
                 Defn.Def(
-                  List(Mod.Annot(Init(pname("annoBar"), Name.Anonymous(), Nil))),
+                  List(Mod.Annot(Init(pname("annoBar"), Name.Anonymous(), emptyArgClause))),
                   tname("bar"),
                   Nil,
                   Some(pname("Bar")),
