@@ -48,7 +48,7 @@ object ScaladocParser {
     comment.content.map(parseRec)
   }
 
-  private[this] def generateHeadingParser[_: P](headingType: Heading): P[DocToken] = {
+  private[this] def generateHeadingParser[$: P](headingType: Heading): P[DocToken] = {
     val headingSymbols = "=" * headingType.level
     P(
       // Code block start
@@ -65,13 +65,13 @@ object ScaladocParser {
    */
   private[this] def parsers: List[P[_] => P[DocToken]] = {
 
-    def bodyParser[_: P] = ((AnyChar ~ !("\n@" | "{{{" | "\n\n" | End)).rep ~ AnyChar).!.map(_.trim)
+    def bodyParser[$: P] = ((AnyChar ~ !("\n@" | "{{{" | "\n\n" | End)).rep ~ AnyChar).!.map(_.trim)
 
     // Paragraph Parser
-    def paragraphParser[_: P] = "\n\n".rep.!.map(_ => DocToken(Paragraph))
+    def paragraphParser[$: P] = "\n\n".rep.!.map(_ => DocToken(Paragraph))
 
     // Parser for CodeBlock instances
-    def codeBlockParser[_: P] =
+    def codeBlockParser[$: P] =
       P(
         // Code block start
         "{{{"
@@ -87,7 +87,7 @@ object ScaladocParser {
     }.toList
 
     // Parser for Inheritdoc instances
-    def inheritDocParser[_: P] = P("@inheritdoc".!).map(_ => DocToken(InheritDoc))
+    def inheritDocParser[$: P] = P("@inheritdoc".!).map(_ => DocToken(InheritDoc))
 
     // Parsers for all labelled docs instances
     val labelledParsers: List[P[_] => P[DocToken]] = {
@@ -96,12 +96,12 @@ object ScaladocParser {
         val label = kind.label
         if (kind.numberParameters == 1) {
           // Single parameter doc tokens
-          def tagKindParser[_: P] = P(s"$label " ~ bodyParser.map(c => DocToken(kind, c.trim)))
+          def tagKindParser[$: P] = P(s"$label " ~ bodyParser.map(c => DocToken(kind, c.trim)))
           tagKindParser(_: P[_])
         } else {
           require(kind.numberParameters == 2)
           // Multiple parameter doc tokens
-          def parser[_: P] = {
+          def parser[$: P] = {
             def nameParser: P[String] = ((AnyChar ~ !" ").rep ~ AnyChar).!.map(_.trim)
 
             def nameAndBodyParsers: P[DocToken] = {
@@ -117,7 +117,7 @@ object ScaladocParser {
     }
 
     // Fallback parser(Used when no label or description is provided)
-    def descriptionParser[_: P] = bodyParser.map(DocToken(Description, _))
+    def descriptionParser[$: P] = bodyParser.map(DocToken(Description, _))
 
     List(
       paragraphParser(_: P[_]),
