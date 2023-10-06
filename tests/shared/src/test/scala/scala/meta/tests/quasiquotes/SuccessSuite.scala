@@ -505,13 +505,13 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("1 q\"throw expr\"") {
     val q"throw $expr" = q"throw new RuntimeException"
-    assertTree(expr)(Term.New(Init(Type.Name("RuntimeException"), Name(""), Nil)))
+    assertTree(expr)(Term.New(Init(Type.Name("RuntimeException"), Name(""), emptyArgClause)))
   }
 
   test("2 q\"throw expr\"") {
     val expr = q"new RuntimeException"
     assertTree(q"throw $expr")(
-      Term.Throw(Term.New(Init(Type.Name("RuntimeException"), Name(""), Nil)))
+      Term.Throw(Term.New(Init(Type.Name("RuntimeException"), Name(""), emptyArgClause)))
     )
   }
 
@@ -532,8 +532,8 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(exprr)(Term.Name("foo"))
     assertEquals(annotz.toString, "List(@w, @e)")
     assertTrees(annotz: _*)(
-      Mod.Annot(Init(Type.Name("w"), Name(""), Nil)),
-      Mod.Annot(Init(Type.Name("e"), Name(""), Nil))
+      Mod.Annot(Init(Type.Name("w"), Name(""), emptyArgClause)),
+      Mod.Annot(Init(Type.Name("e"), Name(""), emptyArgClause))
     )
     assertTree(ar)(Mod.Annot(Init(Type.Name("r"), Name(""), Nil)))
   }
@@ -544,10 +544,10 @@ class SuccessSuite extends TreeSuiteBase {
       Term.Annotate(
         Term.Name("foo"),
         List(
-          Mod.Annot(Init(Type.Name("q"), Name(""), Nil)),
-          Mod.Annot(Init(Type.Name("w"), Name(""), Nil)),
-          Mod.Annot(Init(Type.Name("e"), Name(""), Nil)),
-          Mod.Annot(Init(Type.Name("r"), Name(""), Nil))
+          Mod.Annot(Init(Type.Name("q"), Name(""), emptyArgClause)),
+          Mod.Annot(Init(Type.Name("w"), Name(""), emptyArgClause)),
+          Mod.Annot(Init(Type.Name("e"), Name(""), emptyArgClause)),
+          Mod.Annot(Init(Type.Name("r"), Name(""), emptyArgClause))
         )
       )
     )
@@ -893,7 +893,7 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("1 q\"new { ..stat } with ..inits { self => ..stats }\"") {
     val q"new $x" = q"new Foo"
-    assertTree(x)(Init(Type.Name("Foo"), Name(""), Nil))
+    assertTree(x)(Init(Type.Name("Foo"), Name(""), emptyArgClause))
   }
 
   test("2 q\"new { ..stat } with ..inits { self => ..stats }\"") {
@@ -901,7 +901,7 @@ class SuccessSuite extends TreeSuiteBase {
       q"new {val a = 2; val b = 4} with A { self => val b = 3 }"
     assertEquals(stats.toString, "List(val a = 2)")
     assertTrees(stats: _*)(Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), None, Lit.Int(2)))
-    assertTree(a)(Init(Type.Name("A"), Name(""), Nil))
+    assertTree(a)(Init(Type.Name("A"), Name(""), emptyArgClause))
     assertTree(self)(Self(Term.Name("self"), None))
     assertEquals(statz.toString, "List(val b = 3)")
     assertTrees(statz: _*)(Defn.Val(Nil, List(Pat.Var(Term.Name("b"))), None, Lit.Int(3)))
@@ -924,7 +924,7 @@ class SuccessSuite extends TreeSuiteBase {
             Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), None, Lit.Int(2)),
             Defn.Val(Nil, List(Pat.Var(Term.Name("b"))), None, Lit.Int(4))
           ),
-          List(Init(Type.Name("A"), Name(""), Nil)),
+          List(Init(Type.Name("A"), Name(""), emptyArgClause)),
           Self(Term.Name("self"), Some(Type.Name("A"))),
           List(Defn.Val(Nil, List(Pat.Var(Term.Name("b"))), None, Lit.Int(3))),
           Nil
@@ -1117,8 +1117,8 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(tpe)(Type.Name("X"))
     assertEquals(annots.toString, "List(@a, @b)")
     assertTrees(annots: _*)(
-      Mod.Annot(Init(Type.Name("a"), Name(""), Nil)),
-      Mod.Annot(Init(Type.Name("b"), Name(""), Nil))
+      Mod.Annot(Init(Type.Name("a"), Name(""), emptyArgClause)),
+      Mod.Annot(Init(Type.Name("b"), Name(""), emptyArgClause))
     )
   }
 
@@ -1129,8 +1129,8 @@ class SuccessSuite extends TreeSuiteBase {
       Type.Annotate(
         Type.Name("X"),
         List(
-          Mod.Annot(Init(Type.Name("a"), Name(""), Nil)),
-          Mod.Annot(Init(Type.Name("b"), Name(""), Nil))
+          Mod.Annot(Init(Type.Name("a"), Name(""), emptyArgClause)),
+          Mod.Annot(Init(Type.Name("b"), Name(""), emptyArgClause))
         )
       )
     )
@@ -1768,7 +1768,13 @@ class SuccessSuite extends TreeSuiteBase {
       )
     })
     assertTree(template)(
-      Template(Nil, List(Init(Type.Name("Y"), Name(""), Nil)), Self(Name(""), None), Nil, Nil)
+      Template(
+        Nil,
+        List(Init(Type.Name("Y"), Name(""), emptyArgClause)),
+        Self(Name(""), None),
+        Nil,
+        Nil
+      )
     )
   }
 
@@ -1833,7 +1839,7 @@ class SuccessSuite extends TreeSuiteBase {
         ),
         Template(
           Nil,
-          List(Init(Type.Name("F"), Name(""), Nil)),
+          List(Init(Type.Name("F"), Name(""), emptyArgClause)),
           Self(Name(""), None),
           List(Defn.Def(Nil, Term.Name("m"), Nil, Nil, None, Lit.Int(42))),
           Nil
@@ -1856,7 +1862,13 @@ class SuccessSuite extends TreeSuiteBase {
       )
     })
     assertTree(template)(
-      Template(Nil, List(Init(Type.Name("Y"), Name(""), Nil)), Self(Name(""), None), Nil, Nil)
+      Template(
+        Nil,
+        List(Init(Type.Name("Y"), Name(""), emptyArgClause)),
+        Self(Name(""), None),
+        Nil,
+        Nil
+      )
     )
   }
 
@@ -1903,7 +1915,7 @@ class SuccessSuite extends TreeSuiteBase {
         Ctor.Primary(Nil, Name(""), Nil),
         Template(
           Nil,
-          List(Init(Type.Name("F"), Name(""), Nil)),
+          List(Init(Type.Name("F"), Name(""), emptyArgClause)),
           Self(Name(""), None),
           List(Defn.Def(Nil, Term.Name("m"), Nil, Nil, None, Lit.Int(42))),
           Nil
@@ -1918,7 +1930,13 @@ class SuccessSuite extends TreeSuiteBase {
     assertTrees(mods: _*)(Mod.Private(Name("")), Mod.Final())
     assertTree(name)(Term.Name("Q"))
     assertTree(template)(
-      Template(Nil, List(Init(Type.Name("Y"), Name(""), Nil)), Self(Name(""), None), Nil, Nil)
+      Template(
+        Nil,
+        List(Init(Type.Name("Y"), Name(""), emptyArgClause)),
+        Self(Name(""), None),
+        Nil,
+        Nil
+      )
     )
   }
 
@@ -1952,7 +1970,7 @@ class SuccessSuite extends TreeSuiteBase {
         Term.Name("Q"),
         Template(
           Nil,
-          List(Init(Type.Name("F"), Name(""), Nil)),
+          List(Init(Type.Name("F"), Name(""), emptyArgClause)),
           Self(Name(""), None),
           List(Defn.Def(Nil, Term.Name("m"), Nil, Nil, None, Lit.Int(42))),
           Nil
@@ -1965,7 +1983,13 @@ class SuccessSuite extends TreeSuiteBase {
     val q"package object $name $template" = q"package object Q extends Y"
     assertTree(name)(Term.Name("Q"))
     assertTree(template)(
-      Template(Nil, List(Init(Type.Name("Y"), Name(""), Nil)), Self(Name(""), None), Nil, Nil)
+      Template(
+        Nil,
+        List(Init(Type.Name("Y"), Name(""), emptyArgClause)),
+        Self(Name(""), None),
+        Nil,
+        Nil
+      )
     )
   }
 
@@ -1996,7 +2020,7 @@ class SuccessSuite extends TreeSuiteBase {
         Term.Name("Q"),
         Template(
           Nil,
-          List(Init(Type.Name("F"), Name(""), Nil)),
+          List(Init(Type.Name("F"), Name(""), emptyArgClause)),
           Self(Name(""), None),
           List(Defn.Def(Nil, Term.Name("m"), Nil, Nil, None, Lit.Int(42))),
           Nil
@@ -2273,7 +2297,10 @@ class SuccessSuite extends TreeSuiteBase {
       Defn.Val(Nil, List(Pat.Var(Term.Name("b"))), None, Lit.Int(2))
     )
     assertEquals(inits.toString, "List(T, U)")
-    assertTrees(inits: _*)(Init(Type.Name("T"), Name(""), Nil), Init(Type.Name("U"), Name(""), Nil))
+    assertTrees(inits: _*)(
+      Init(Type.Name("T"), Name(""), emptyArgClause),
+      Init(Type.Name("U"), Name(""), emptyArgClause)
+    )
     assertTree(self)(Self(Term.Name("self"), Some(Type.Name("Z"))))
     assertEquals(stats2.toString, "List(def m = 2, def n = 2)")
     assertTrees(stats2: _*)(
@@ -2293,7 +2320,10 @@ class SuccessSuite extends TreeSuiteBase {
           Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), None, Lit.Int(2)),
           Defn.Val(Nil, List(Pat.Var(Term.Name("b"))), None, Lit.Int(2))
         ),
-        List(Init(Type.Name("T"), Name(""), Nil), Init(Type.Name("U"), Name(""), Nil)),
+        List(
+          Init(Type.Name("T"), Name(""), emptyArgClause),
+          Init(Type.Name("U"), Name(""), emptyArgClause)
+        ),
         Self(Term.Name("self"), Some(Type.Name("S"))),
         List(
           Defn.Def(Nil, Term.Name("m"), Nil, Nil, None, Lit.Int(2)),
@@ -2306,12 +2336,12 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("1 mod\"@expr\"") {
     val mod"@$expr" = mod"@a"
-    assertTree(expr)(Mod.Annot(Init(Type.Name("a"), Name(""), Nil)))
+    assertTree(expr)(Mod.Annot(Init(Type.Name("a"), Name(""), emptyArgClause)))
   }
 
   test("2 mod\"@expr\"") {
     val expr = mod"@a"
-    assertTree(mod"@$expr")(Mod.Annot(Init(Type.Name("a"), Name(""), Nil)))
+    assertTree(mod"@$expr")(Mod.Annot(Init(Type.Name("a"), Name(""), emptyArgClause)))
   }
 
   test("1 mod\"private[name]\"") {
@@ -2871,7 +2901,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("#2841 empty, with extends") {
     val q"..$mods object $ename extends $template" = q"object X extends Y"
     assertTree(template) {
-      Init(Type.Name("Y"), Name(""), Nil)
+      Init(Type.Name("Y"), Name(""), emptyArgClause)
     }
     assertEquals(mods, Nil)
   }
@@ -2879,7 +2909,13 @@ class SuccessSuite extends TreeSuiteBase {
   test("#2841 empty") {
     val q"..$mods object $ename $template" = q"object X extends Y"
     assertTree(template) {
-      Template(Nil, List(Init(Type.Name("Y"), Name(""), Nil)), Self(Name(""), None), Nil, Nil)
+      Template(
+        Nil,
+        List(Init(Type.Name("Y"), Name(""), emptyArgClause)),
+        Self(Name(""), None),
+        Nil,
+        Nil
+      )
     }
     assertEquals(mods, Nil)
   }
@@ -2895,7 +2931,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(template) {
       Template(
         Nil,
-        List(Init(Type.Name("Y"), Name(""), Nil)),
+        List(Init(Type.Name("Y"), Name(""), emptyArgClause)),
         Self(Name(""), None),
         List(Decl.Def(Nil, Term.Name("foo"), Nil, Nil, Type.Name("Unit"))),
         Nil
@@ -2910,7 +2946,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods, Nil)
     assertEquals(earlydefns, Nil)
     assertTrees(parents: _*) {
-      Init(Type.Name("Y"), Name.Anonymous(), Nil)
+      Init(Type.Name("Y"), Name.Anonymous(), emptyArgClause)
     }
     assertTree(self)(Self(Name(""), None))
     assertEquals(stats, Nil)
@@ -2922,7 +2958,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods, Nil)
     assertEquals(earlydefns, Nil)
     assertTrees(parents: _*) {
-      Init(Type.Name("Y"), Name.Anonymous(), Nil)
+      Init(Type.Name("Y"), Name.Anonymous(), emptyArgClause)
     }
     assertTree(self)(Self(Name(""), None))
     assertTrees(stats: _*) {
@@ -2935,7 +2971,7 @@ class SuccessSuite extends TreeSuiteBase {
       q"object X extends Y"
     assertEquals(mods, Nil)
     assertTrees(parents: _*) {
-      Init(Type.Name("Y"), Name.Anonymous(), Nil)
+      Init(Type.Name("Y"), Name.Anonymous(), emptyArgClause)
     }
     assertEquals(stats, Nil)
   }
@@ -2945,7 +2981,7 @@ class SuccessSuite extends TreeSuiteBase {
       q"object X extends Y { def foo }"
     assertEquals(mods, Nil)
     assertTrees(parents: _*) {
-      Init(Type.Name("Y"), Name.Anonymous(), Nil)
+      Init(Type.Name("Y"), Name.Anonymous(), emptyArgClause)
     }
     assertTrees(stats: _*) {
       Decl.Def(Nil, Term.Name("foo"), Nil, Nil, Type.Name("Unit"))

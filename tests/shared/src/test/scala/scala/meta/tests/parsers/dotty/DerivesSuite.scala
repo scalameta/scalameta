@@ -231,7 +231,7 @@ class DerivesSuite extends BaseDottySuite {
       ctorp(List(tparam("a", "Int"), tparam("b", "Int"))),
       Template(
         Nil,
-        List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), Name(""), Nil)),
+        List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), Name(""), emptyArgClause)),
         slf,
         List(Defn.Def(Nil, tname("a"), Nil, None, tname("???"))),
         List(Type.Apply(pname("Epsilon"), List(pname("T"))))
@@ -276,7 +276,7 @@ class DerivesSuite extends BaseDottySuite {
       ctorp(List(tparam("a", "Int"), tparam("b", "Int"))),
       Template(
         Nil,
-        List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, Nil)),
+        List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, emptyArgClause)),
         slf,
         List(Term.Apply(tname("require"), List(bool(true)))),
         List(Type.Apply(pname("Epsilon"), List(pname("T"))))
@@ -322,8 +322,8 @@ class DerivesSuite extends BaseDottySuite {
       Template(
         Nil,
         List(
-          Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, Nil),
-          Init(Type.Apply(pname("Epsilon"), List(pname("T"))), anon, Nil)
+          Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, emptyArgClause),
+          Init(Type.Apply(pname("Epsilon"), List(pname("T"))), anon, emptyArgClause)
         ),
         slf,
         List(Term.Apply(tname("require"), List(bool(true)))),
@@ -369,7 +369,7 @@ class DerivesSuite extends BaseDottySuite {
       ctorp(List(tparam("a", "Int"), tparam("b", "Int"))),
       Template(
         Nil,
-        List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, Nil)),
+        List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, emptyArgClause)),
         slf,
         List(Term.Apply(tname("require"), List(bool(true)))),
         Nil

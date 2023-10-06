@@ -107,7 +107,12 @@ class InfixSuite extends BaseDottySuite {
         List(List(Term.Param(Nil, tname("infix"), Some(pname("infix")), None))),
         Some(pname("infix")),
         Term.NewAnonymous(
-          Template(Nil, List(Init(pname("infix"), Name(""), Nil)), Self(Name(""), None), Nil)
+          Template(
+            Nil,
+            List(Init(pname("infix"), Name(""), emptyArgClause)),
+            Self(Name(""), None),
+            Nil
+          )
         )
       )
     )

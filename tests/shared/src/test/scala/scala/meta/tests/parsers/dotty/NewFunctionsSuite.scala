@@ -116,7 +116,7 @@ class NewFunctionsSuite extends BaseDottySuite {
               Pat.Var(Term.Name("t")),
               Type.Annotate(
                 Type.ContextFunction(List(Type.Name("Context")), Type.Name("Symbol")),
-                List(Mod.Annot(Init(Type.Name("unchecked"), Name(""), Nil)))
+                List(Mod.Annot(Init(Type.Name("unchecked"), Name(""), emptyArgClause)))
               )
             ),
             None,

@@ -220,7 +220,10 @@ class TermSuite extends ParseSuite {
 
   test("1: @foo") {
     assertTerm("1: @foo") {
-      Annotate(Lit.Int(1), Mod.Annot(Init(Type.Name("foo"), Name.Anonymous(), Nil)) :: Nil)
+      Annotate(
+        Lit.Int(1),
+        Mod.Annot(Init(Type.Name("foo"), Name.Anonymous(), emptyArgClause)) :: Nil
+      )
     }
   }
 
@@ -584,7 +587,7 @@ class TermSuite extends ParseSuite {
 
   test("new A") {
     assertTerm("new A") {
-      New(Init(Type.Name("A"), Name.Anonymous(), Nil))
+      New(Init(Type.Name("A"), Name.Anonymous(), emptyArgClause))
     }
   }
 
@@ -597,7 +600,12 @@ class TermSuite extends ParseSuite {
   test("new A {}") {
     assertTerm("new A {}") {
       NewAnonymous(
-        Template(Nil, Init(Type.Name("A"), Name.Anonymous(), Nil) :: Nil, EmptySelf(), Nil)
+        Template(
+          Nil,
+          Init(Type.Name("A"), Name.Anonymous(), emptyArgClause) :: Nil,
+          EmptySelf(),
+          Nil
+        )
       )
     }
   }
@@ -607,8 +615,8 @@ class TermSuite extends ParseSuite {
       NewAnonymous(
         Template(
           Nil,
-          Init(Type.Name("A"), Name.Anonymous(), Nil) ::
-            Init(Type.Name("B"), Name.Anonymous(), Nil) :: Nil,
+          Init(Type.Name("A"), Name.Anonymous(), emptyArgClause) ::
+            Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil,
           EmptySelf(),
           Nil
         )
@@ -621,7 +629,7 @@ class TermSuite extends ParseSuite {
       NewAnonymous(
         Template(
           Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(1)) :: Nil,
-          Init(Type.Name("A"), Name.Anonymous(), Nil) :: Nil,
+          Init(Type.Name("A"), Name.Anonymous(), emptyArgClause) :: Nil,
           EmptySelf(),
           Nil
         )
@@ -1685,7 +1693,7 @@ class TermSuite extends ParseSuite {
               Term.Select(Term.Select(Term.Name("mbr"), Term.Name("info")), Term.Name("loBound"))
             )
           ),
-          List(Mod.Annot(Init(Type.Name("unchecked"), Name.Anonymous(), Nil)))
+          List(Mod.Annot(Init(Type.Name("unchecked"), Name.Anonymous(), emptyArgClause)))
         ),
         List(
           Case(Pat.Typed(Pat.Var(Term.Name("ref")), Type.Name("TypeRef")), None, Term.Block(Nil))

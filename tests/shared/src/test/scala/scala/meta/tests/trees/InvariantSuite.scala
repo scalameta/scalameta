@@ -13,7 +13,7 @@ class InvariantSuite extends TreeSuiteBase {
       Nil,
       Name.Anonymous(),
       List(List()),
-      Init(Type.Singleton(Term.This(Name.Anonymous())), Name.Anonymous(), Nil),
+      Init(Type.Singleton(Term.This(Name.Anonymous())), Name.Anonymous(), emptyArgClause),
       Nil
     )
     val stats = List(secondaryCtor)

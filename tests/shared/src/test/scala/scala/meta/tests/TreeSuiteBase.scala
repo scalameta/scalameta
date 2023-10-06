@@ -6,6 +6,8 @@ import scala.meta._
 
 abstract class TreeSuiteBase extends FunSuite {
 
+  def emptyArgClause = Seq.empty[Term.ArgClause]
+
   protected def assertTree(obtained: Tree)(expected: Tree)(implicit loc: munit.Location): Unit =
     assertNoDiff(obtained.structure, expected.structure)
 

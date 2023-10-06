@@ -161,7 +161,7 @@ class EnumSuite extends BaseDottySuite {
     val tparam =
       Type.Param(List(Mod.Covariant()), pname("T"), Nil, Type.Bounds(None, None), Nil, Nil)
     val xparam = List(Term.Param(Nil, tname("x"), Some(pname("T")), None))
-    def ext(tp: String) = Init(Type.Apply(pname("Option"), List(pname(tp))), anon, Nil)
+    def ext(tp: String) = Init(Type.Apply(pname("Option"), List(pname(tp))), anon, emptyArgClause)
 
     {
       val opt = """
@@ -348,7 +348,7 @@ class EnumSuite extends BaseDottySuite {
       enumWithCase(
         "Option",
         Defn.EnumCase(
-          List(Mod.Annot(Init(Type.Name("deprecated"), Name(""), Nil))),
+          List(Mod.Annot(Init(Type.Name("deprecated"), Name(""), emptyArgClause))),
           tname("Some"),
           Nil,
           ctorp(List(tparam("x", "Int"))),
@@ -369,7 +369,7 @@ class EnumSuite extends BaseDottySuite {
   }
 
   test("case-extends") {
-    val init = Init(Type.Apply(pname("Option"), List(pname("Nothing"))), anon, Nil)
+    val init = Init(Type.Apply(pname("Option"), List(pname("Nothing"))), anon, emptyArgClause)
     runTestAssert[Stat]("enum Option { case None extends Option[Nothing] }")(
       enumWithCase("Option", Defn.EnumCase(Nil, tname("None"), Nil, ctor, List(init)))
     )
@@ -444,7 +444,7 @@ class EnumSuite extends BaseDottySuite {
     val expected = "@annot enum A { case B, C }"
     runTestAssert[Stat](code, assertLayout = Some(expected))(
       Defn.Enum(
-        List(Mod.Annot(Init(Type.Name("annot"), Name(""), Nil))),
+        List(Mod.Annot(Init(Type.Name("annot"), Name(""), emptyArgClause))),
         Type.Name("A"),
         Nil,
         Ctor.Primary(Nil, Name(""), Nil),

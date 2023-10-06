@@ -385,7 +385,7 @@ class InlineSuite extends BaseDottySuite {
         Term.Block(
           List(
             Term.Match(
-              Term.New(Init(Type.Name("X"), Name(""), Nil)),
+              Term.New(Init(Type.Name("X"), Name(""), emptyArgClause)),
               List(Case(Pat.Var(Term.Name("x")), None, Term.Name("x"))),
               List(Mod.Inline())
             )
@@ -455,8 +455,8 @@ class InlineSuite extends BaseDottySuite {
         Some(Type.Name("A")),
         Term.If(
           Term.Name("b"),
-          Term.New(Init(Type.Name("A"), Name(""), Nil)),
-          Term.New(Init(Type.Name("B"), Name(""), Nil)),
+          Term.New(Init(Type.Name("A"), Name(""), emptyArgClause)),
+          Term.New(Init(Type.Name("B"), Name(""), emptyArgClause)),
           Nil
         )
       )

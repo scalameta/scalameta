@@ -34,7 +34,9 @@ class GivenUsingSuite extends BaseDottySuite {
         Nil,
         Template(
           Nil,
-          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          List(
+            Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), emptyArgClause)
+          ),
           Self(Name(""), None),
           List(defone),
           Nil
@@ -52,7 +54,9 @@ class GivenUsingSuite extends BaseDottySuite {
         Nil,
         Template(
           Nil,
-          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          List(
+            Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), emptyArgClause)
+          ),
           Self(Name(""), None),
           List(defone),
           Nil
@@ -70,7 +74,9 @@ class GivenUsingSuite extends BaseDottySuite {
         Nil,
         Template(
           Nil,
-          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          List(
+            Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), emptyArgClause)
+          ),
           Self(Name(""), None),
           List(defone),
           Nil
@@ -88,8 +94,8 @@ class GivenUsingSuite extends BaseDottySuite {
       Template(
         Nil,
         List(
-          Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil),
-          Init(Type.Apply(Type.Name("Eq"), List(Type.Name("Int"))), Name(""), Nil)
+          Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), emptyArgClause),
+          Init(Type.Apply(Type.Name("Eq"), List(Type.Name("Int"))), Name(""), emptyArgClause)
         ),
         Self(Name(""), None),
         List(Defn.Def(Nil, Term.Name("fx"), Nil, Nil, None, Lit.Int(3))),
@@ -119,7 +125,9 @@ class GivenUsingSuite extends BaseDottySuite {
         Nil,
         Template(
           Nil,
-          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          List(
+            Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), emptyArgClause)
+          ),
           Self(Name(""), None),
           List(defone(List(Mod.Override()))),
           Nil
@@ -143,7 +151,9 @@ class GivenUsingSuite extends BaseDottySuite {
         Nil,
         Template(
           Nil,
-          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          List(
+            Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), emptyArgClause)
+          ),
           Self(Name(""), None),
           List(Defn.Def(Nil, Term.Name("fn"), Nil, Nil, None, Lit.Unit())),
           Nil
@@ -180,7 +190,7 @@ class GivenUsingSuite extends BaseDottySuite {
                 List(Type.Name("Json"))
               ),
               Name(""),
-              Nil
+              emptyArgClause
             )
           ),
           Self(Name(""), None),
@@ -203,7 +213,9 @@ class GivenUsingSuite extends BaseDottySuite {
         Nil,
         Template(
           Nil,
-          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          List(
+            Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), emptyArgClause)
+          ),
           Self(Term.Name("current"), None),
           Nil,
           Nil
@@ -233,7 +245,7 @@ class GivenUsingSuite extends BaseDottySuite {
               Type
                 .Apply(Type.Name("Ord"), List(Type.Apply(Type.Name("List"), List(Type.Name("T"))))),
               Name(""),
-              Nil
+              emptyArgClause
             )
           ),
           Self(Name(""), None),
@@ -258,7 +270,7 @@ class GivenUsingSuite extends BaseDottySuite {
               Type
                 .Apply(Type.Name("Ord"), List(Type.Apply(Type.Name("List"), List(Type.Name("T"))))),
               Name(""),
-              Nil
+              emptyArgClause
             )
           ),
           Self(Name(""), None),
@@ -379,7 +391,13 @@ class GivenUsingSuite extends BaseDottySuite {
         Name(""),
         Nil,
         Nil,
-        Template(Nil, List(Init(Type.Name("C"), Name(""), Nil)), Self(Name(""), None), Nil, Nil)
+        Template(
+          Nil,
+          List(Init(Type.Name("C"), Name(""), emptyArgClause)),
+          Self(Name(""), None),
+          Nil,
+          Nil
+        )
       )
     )
   }
@@ -432,7 +450,7 @@ class GivenUsingSuite extends BaseDottySuite {
         Template(
           Nil,
           List(
-            Init(Type.Name("AnyRef"), Name(""), Nil)
+            Init(Type.Name("AnyRef"), Name(""), emptyArgClause)
           ),
           Self(Name(""), None),
           List(
@@ -495,7 +513,9 @@ class GivenUsingSuite extends BaseDottySuite {
         Nil,
         Template(
           Nil,
-          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          List(
+            Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), emptyArgClause)
+          ),
           Self(Name(""), None),
           List(
             Import(
@@ -529,7 +549,9 @@ class GivenUsingSuite extends BaseDottySuite {
         Nil,
         Template(
           Nil,
-          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          List(
+            Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), emptyArgClause)
+          ),
           Self(Name(""), None),
           List(
             Export(List(Importer(Term.Name("math"), List(Importee.Name(Name("max")))))),
@@ -557,7 +579,7 @@ class GivenUsingSuite extends BaseDottySuite {
         Nil,
         Template(
           Nil,
-          List(Init(Type.Refine(None, Nil), Name(""), Nil)),
+          List(Init(Type.Refine(None, Nil), Name(""), emptyArgClause)),
           Self(Name(""), None),
           List(
             Defn.ExtensionGroup(
@@ -1042,7 +1064,7 @@ class GivenUsingSuite extends BaseDottySuite {
           Case(
             Pat.Bind(Pat.Var(Term.Name("ctx")), Pat.Given(Type.Name("Context"))),
             None,
-            Term.New(Init(Type.Name("Provider"), Name(""), Nil))
+            Term.New(Init(Type.Name("Provider"), Name(""), emptyArgClause))
           ),
           Case(
             Pat.Bind(
@@ -1050,7 +1072,7 @@ class GivenUsingSuite extends BaseDottySuite {
               Pat.Given(Type.Function(List(Type.Name("Context")), Type.Name("String")))
             ),
             None,
-            Term.New(Init(Type.Name("Provider"), Name(""), Nil))
+            Term.New(Init(Type.Name("Provider"), Name(""), emptyArgClause))
           )
         ),
         Nil

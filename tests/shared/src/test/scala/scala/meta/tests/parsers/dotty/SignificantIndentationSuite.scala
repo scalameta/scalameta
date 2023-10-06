@@ -95,7 +95,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Term.NewAnonymous(
         Template(
           Nil,
-          List(Init(pname("A"), Name(""), Nil)),
+          List(Init(pname("A"), Name(""), emptyArgClause)),
           Self(Name(""), None),
           List(Decl.Def(Nil, tname("f"), Nil, Nil, pname("Int"))),
           Nil
@@ -119,7 +119,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             Term.NewAnonymous(
               Template(
                 Nil,
-                List(Init(Type.Name("A"), Name(""), Nil)),
+                List(Init(Type.Name("A"), Name(""), emptyArgClause)),
                 Self(Name(""), None),
                 List(Decl.Def(Nil, Term.Name("f"), Nil, Type.Name("Int"))),
                 Nil
@@ -406,7 +406,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Ctor.Primary(Nil, Name(""), Nil),
         Template(
           Nil,
-          List(Init(pname("B"), Name(""), Nil)),
+          List(Init(pname("B"), Name(""), emptyArgClause)),
           Self(tname("thisPhase"), None),
           List(tname("expr1"), tname("expr2"))
         )
@@ -862,7 +862,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         Template(
           Nil,
-          List(Init(Type.Apply(pname("Ord"), List(pname("Int"))), Name(""), Nil)),
+          List(Init(Type.Apply(pname("Ord"), List(pname("Int"))), Name(""), emptyArgClause)),
           Self(Name(""), None),
           List(
             Defn.Def(Nil, tname("fa"), Nil, Nil, Some(pname("Int")), int(1)),
@@ -904,7 +904,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Ctor.Primary(Nil, Name(""), Nil),
         Template(
           Nil,
-          List(Init(pname("A"), Name(""), Nil), Init(pname("B"), Name(""), Nil)),
+          List(Init(pname("A"), Name(""), Nil), Init(pname("B"), Name(""), emptyArgClause)),
           Self(Name(""), None),
           Nil,
           Nil
@@ -935,7 +935,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                 Nil,
                 tname("a"),
                 Some(pname("A")),
-                Some(Term.New(Init(pname("A"), Name(""), Nil)))
+                Some(Term.New(Init(pname("A"), Name(""), emptyArgClause)))
               )
             )
           )
@@ -1950,7 +1950,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
               tname("ExampleThing"),
               Template(
                 Nil,
-                List(Init(pname("CompositeThing"), Name(""), Nil)),
+                List(Init(pname("CompositeThing"), Name(""), emptyArgClause)),
                 Self(Name(""), None),
                 Nil,
                 Nil
@@ -2310,7 +2310,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         Template(
           Nil,
-          List(Init(pname("Foo"), Name(""), Nil)),
+          List(Init(pname("Foo"), Name(""), emptyArgClause)),
           Self(Name(""), None),
           List(
             Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
@@ -2338,7 +2338,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         Template(
           Nil,
-          List(Init(pname("Foo"), Name(""), Nil)),
+          List(Init(pname("Foo"), Name(""), emptyArgClause)),
           Self(Name(""), None),
           List(
             Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
@@ -2380,7 +2380,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     pname("StaticAnnotation")
                   ),
                   Name(""),
-                  Nil
+                  emptyArgClause
                 )
               ),
               Self(Name(""), None),
@@ -2402,7 +2402,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     pname("StaticAnnotation")
                   ),
                   Name(""),
-                  Nil
+                  emptyArgClause
                 )
               ),
               Self(Name(""), None),
@@ -2412,8 +2412,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
           ),
           Defn.Class(
             List(
-              Mod.Annot(Init(pname("A1"), Name(""), Nil)),
-              Mod.Annot(Init(pname("A2"), Name(""), Nil))
+              Mod.Annot(Init(pname("A1"), Name(""), emptyArgClause)),
+              Mod.Annot(Init(pname("A2"), Name(""), emptyArgClause))
             ),
             pname("B"),
             Nil,
@@ -2539,7 +2539,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                       Term.NewAnonymous(
                         Template(
                           Nil,
-                          List(Init(pname("Object"), Name(""), Nil)),
+                          List(Init(pname("Object"), Name(""), emptyArgClause)),
                           Self(tname("obj"), None),
                           List(Term.Apply(tname("println"), List(tname("toString")))),
                           Nil
