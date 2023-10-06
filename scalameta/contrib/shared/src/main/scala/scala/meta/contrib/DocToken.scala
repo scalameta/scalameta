@@ -47,7 +47,7 @@ object DocToken {
   /**
    * Parser that for obtaining a class reference from an scaladoc body.
    */
-  private def referenceParser[_: P]: P[String] = P(
+  private def referenceParser[$: P]: P[String] = P(
     // Removes the elements previous to the references.
     ((AnyChar ~ !"[[").rep ~ AnyChar).?
     // Retrieves the element within a
