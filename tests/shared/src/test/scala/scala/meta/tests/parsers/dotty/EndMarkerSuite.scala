@@ -374,4 +374,16 @@ class EndMarkerSuite extends BaseDottySuite {
     )
   }
 
+  test("#3366 not an end marker") {
+    val code =
+      """|x.end match
+         |    case _ => ()
+         |""".stripMargin
+    val error =
+      """|<input>:1: error: { expected but \n found
+         |x.end match
+         |           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
