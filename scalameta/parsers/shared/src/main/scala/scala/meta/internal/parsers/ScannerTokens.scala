@@ -19,31 +19,34 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
   @tailrec
   final def getPrevIndex(index: Int): Int = {
-    val prev = getPrevSafeIndex(index)
-    if (tokens(prev).is[Trivia]) getPrevIndex(prev) else prev
+    if (index <= 0) 0
+    else {
+      val prev = index - 1
+      if (tokens(prev).is[Trivia]) getPrevIndex(prev) else prev
+    }
   }
 
   def getPrevToken(index: Int): Token = tokens(getPrevIndex(index))
 
   @tailrec
   final def getNextIndex(index: Int): Int = {
-    val next = getNextSafeIndex(index)
-    if (tokens(next).is[Trivia]) getNextIndex(next) else next
+    if (index >= tokens.length - 1) tokens.length - 1
+    else {
+      val next = index + 1
+      if (tokens(next).is[Trivia]) getNextIndex(next) else next
+    }
   }
 
   def getNextToken(index: Int): Token = tokens(getNextIndex(index))
 
   @tailrec
-  final def getStrictAfterSafe(index: Int): Int = {
-    val token = tokens(index)
-    if (token.isAny[HSpace, Comment]) getStrictAfterSafe(getNextSafeIndex(index))
-    else index
+  final def getStrictNext(index: Int): Int = {
+    if (index >= tokens.length - 1) tokens.length - 1
+    else {
+      val next = index + 1
+      if (tokens(next).isAny[HSpace, Comment]) getStrictNext(next) else next
+    }
   }
-
-  def getStrictNext(index: Int): Int = getStrictAfterSafe(getNextSafeIndex(index))
-
-  @inline def getPrevSafeIndex(index: Int): Int = Math.max(index - 1, 0)
-  @inline def getNextSafeIndex(index: Int): Int = Math.min(index + 1, tokens.length - 1)
 
   // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
@@ -673,11 +676,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       def isLeadingInfix() =
         !newlines && dialect.allowInfixOperatorAfterNL &&
           next.is[Ident] && next.isIdentSymbolicInfixOperator && {
-            val nextSafeIndex = getNextSafeIndex(nextPos)
-            tokens(nextSafeIndex).is[Whitespace] && {
-              val argPos = getStrictAfterSafe(nextSafeIndex)
-              canBeLeadingInfixArg(tokens(argPos), argPos)
-            }
+            val argPos = getStrictNext(nextPos)
+            argPos > nextPos && tokens(nextPos + 1).is[HSpace] &&
+            canBeLeadingInfixArg(tokens(argPos), argPos)
           }
 
       val resOpt =
