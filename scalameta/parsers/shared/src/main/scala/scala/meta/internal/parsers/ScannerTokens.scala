@@ -123,6 +123,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   }
 
   @inline
+  private def isPrecededByNL(index: Int): Boolean = tokens(getStrictPrev(index)).is[AtEOLorF]
+  @inline
   private def isFollowedByNL(index: Int): Boolean = tokens(getStrictNext(index)).is[AtEOLorF]
 
   @inline
@@ -463,6 +465,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         case rs => rs
       })
 
+    def isPrevEndMarker(): Boolean =
+      prevPos > 0 && isEndMarkerIdentifier(prev) && isPrecededByNL(prevPos)
+
     def nonTrivial(sepRegions: List[SepRegion]) = curr match {
       case _: EOF =>
         mkOutdentsOpt(currPos, sepRegions) {
@@ -484,7 +489,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _: KwObject | _: KwClass | _: KwTrait | _: KwPackage | _: KwNew
           if dialect.allowSignificantIndentation =>
         currRef(RegionTemplateMark :: sepRegions)
-      case _: KwMatch if !soft.KwEnd(prev) =>
+      case _: KwMatch if !isPrevEndMarker() =>
         getCaseIntro(sepRegions)
       case _: KwCatch =>
         getCaseIntro(sepRegions)
@@ -586,7 +591,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case xs => currRef(xs)
         }
       case _: KwDef | _: KwVal | _: KwVar
-          if dialect.allowSignificantIndentation && !soft.KwEnd(prev) =>
+          if dialect.allowSignificantIndentation && !isPrevEndMarker() =>
         currRef(RegionDefMark :: sepRegions)
       case _: Colon =>
         sepRegions match {
@@ -678,7 +683,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         @inline def blankBraceOr(ok: => Boolean): Boolean = if (next.is[LeftBrace]) newlines else ok
         def isEndMarker() = isEndMarkerSpecifier(prev) && {
           val prevPrevPos = getStrictPrev(prevPos)
-          isEndMarkerIdentifier(tokens(prevPrevPos))
+          isEndMarkerIdentifier(tokens(prevPrevPos)) && isPrecededByNL(prevPrevPos)
         }
         if (lastNewlinePos != -1 &&
           (prevToken.is[Indentation.Outdent] || canEndStat(prev) || isEndMarker()) &&

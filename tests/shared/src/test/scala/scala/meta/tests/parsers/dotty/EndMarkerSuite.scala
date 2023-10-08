@@ -379,11 +379,18 @@ class EndMarkerSuite extends BaseDottySuite {
       """|x.end match
          |    case _ => ()
          |""".stripMargin
-    val error =
-      """|<input>:1: error: { expected but \n found
-         |x.end match
-         |           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|x.end match {
+         |  case _ => ()
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout))(
+      Term.Match(
+        Term.Select(Term.Name("x"), Term.Name("end")),
+        List(Case(Pat.Wildcard(), None, Lit.Unit())),
+        Nil
+      )
+    )
   }
 
 }
