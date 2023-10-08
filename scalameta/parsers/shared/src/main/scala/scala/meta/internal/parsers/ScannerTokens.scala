@@ -122,18 +122,29 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def apply(token: Token) = unapply(token)
   }
 
-  def isEndMarkerIntro(index: Int): Boolean = soft.KwEnd(tokens(index)) && {
-    val nextIndex = getStrictNext(index)
-    tokens(nextIndex) match {
-      case _: Ident | _: KwIf | _: KwWhile | _: KwFor | _: KwMatch | _: KwTry | _: KwNew |
-          _: KwThis | _: KwGiven | _: KwVal =>
-        tokens(getStrictNext(nextIndex)).is[AtEOLorF]
-      case _ => false
-    }
+  @inline
+  private def isFollowedByNL(index: Int): Boolean = tokens(getStrictNext(index)).is[AtEOLorF]
+
+  @inline
+  private def isEndMarkerIdentifier(token: Token) = soft.KwEnd(token)
+
+  private def isEndMarkerSpecifier(token: Token) = token match {
+    case _: Ident | _: KwIf | _: KwWhile | _: KwFor | _: KwMatch | _: KwTry | _: KwNew | _: KwThis |
+        _: KwGiven | _: KwVal =>
+      true
+    case _ => false
   }
 
-  def isExprIntro(token: Token, index: => Int): Boolean = token match {
-    case _: Ident => !isSoftModifier(index) && !isEndMarkerIntro(index)
+  private def isEndMarkerIntro(index: Int, fNextIndex: => Int) =
+    isEndMarkerIdentifier(tokens(index)) && {
+      val nextIndex = fNextIndex
+      isEndMarkerSpecifier(tokens(nextIndex)) && isFollowedByNL(nextIndex)
+    }
+
+  def isEndMarkerIntro(index: Int): Boolean = isEndMarkerIntro(index, getStrictNext(index))
+
+  def isExprIntro(token: Token, fIndex: => Int): Boolean = token match {
+    case _: Ident => val index = fIndex; !isSoftModifier(index) && !isEndMarkerIntro(index)
     case _: Literal | _: Interpolation.Id | _: Xml.Start | _: KwDo | _: KwFor | _: KwIf | _: KwNew |
         _: KwReturn | _: KwSuper | _: KwThis | _: KwThrow | _: KwTry | _: KwWhile | _: LeftParen |
         _: LeftBrace | _: Underscore | _: Unquote | _: MacroSplice | _: MacroQuote |
@@ -237,12 +248,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def apply(token: Token) = unapply(token)
   }
 
-  def canEndStat(index: Int): Boolean = tokens(index) match {
+  private def canEndStat(token: Token): Boolean = token match {
     case _: Ident | _: KwGiven | _: Literal | _: Interpolation.End | _: Xml.End | _: KwReturn |
         _: KwThis | _: KwType | _: RightParen | _: RightBracket | _: RightBrace | _: Underscore |
         _: Ellipsis | _: Unquote =>
       true
-    case _ => isEndMarkerIntro(getStrictPrev(index))
+    case _ => false
   }
 
   object StatSep {
@@ -665,8 +676,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       def getIfCanProduceLF(regions: List[SepRegion]) = {
         @inline def derives(token: Token) = soft.KwDerives(token)
         @inline def blankBraceOr(ok: => Boolean): Boolean = if (next.is[LeftBrace]) newlines else ok
+        def isEndMarker() = isEndMarkerSpecifier(prev) && {
+          val prevPrevPos = getStrictPrev(prevPos)
+          isEndMarkerIdentifier(tokens(prevPrevPos))
+        }
         if (lastNewlinePos != -1 &&
-          (prevToken.is[Indentation.Outdent] || prevPos >= 0 && canEndStat(prevPos)) &&
+          (prevToken.is[Indentation.Outdent] || canEndStat(prev) || isEndMarker()) &&
           !CantStartStat(next))
           (regions match {
             case Nil => Some(regions)
