@@ -40,6 +40,15 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   def getNextToken(index: Int): Token = tokens(getNextIndex(index))
 
   @tailrec
+  final def getStrictPrev(index: Int): Int = {
+    if (index <= 0) 0
+    else {
+      val prev = index - 1
+      if (tokens(prev).isAny[HSpace, Comment]) getStrictPrev(prev) else prev
+    }
+  }
+
+  @tailrec
   final def getStrictNext(index: Int): Int = {
     if (index >= tokens.length - 1) tokens.length - 1
     else {
@@ -233,7 +242,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         _: KwThis | _: KwType | _: RightParen | _: RightBracket | _: RightBrace | _: Underscore |
         _: Ellipsis | _: Unquote =>
       true
-    case _ => isEndMarkerIntro(getPrevIndex(index))
+    case _ => isEndMarkerIntro(getStrictPrev(index))
   }
 
   object StatSep {
