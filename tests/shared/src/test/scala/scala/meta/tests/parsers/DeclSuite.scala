@@ -6,23 +6,30 @@ import scala.meta.dialects.Scala211
 
 class DeclSuite extends ParseSuite {
   test("val x: Int") {
-    val Decl.Val(Nil, List(Pat.Var(Term.Name("x"))), Type.Name("Int")) = templStat("val x: Int")
+    assertTree(templStat("val x: Int"))(
+      Decl.Val(Nil, List(Pat.Var(Term.Name("x"))), Type.Name("Int"))
+    )
   }
 
   test("var x: Int") {
-    val Decl.Var(Nil, List(Pat.Var(Term.Name("x"))), Type.Name("Int")) = templStat("var x: Int")
+    assertTree(templStat("var x: Int"))(
+      Decl.Var(Nil, List(Pat.Var(Term.Name("x"))), Type.Name("Int"))
+    )
   }
 
   test("val x, y: Int") {
-    val Decl.Val(Nil, List(Pat.Var(Term.Name("x")), Pat.Var(Term.Name("y"))), Type.Name("Int")) =
-      templStat("val x, y: Int")
-    val Decl.Var(Nil, List(Pat.Var(Term.Name("x")), Pat.Var(Term.Name("y"))), Type.Name("Int")) =
-      templStat("var x, y: Int")
+    assertTree(templStat("val x, y: Int"))(
+      Decl.Val(Nil, List(Pat.Var(Term.Name("x")), Pat.Var(Term.Name("y"))), Type.Name("Int"))
+    )
+    assertTree(templStat("var x, y: Int"))(
+      Decl.Var(Nil, List(Pat.Var(Term.Name("x")), Pat.Var(Term.Name("y"))), Type.Name("Int"))
+    )
   }
 
   test("var x, y: Int") {
-    val Decl.Var(Nil, List(Pat.Var(Term.Name("x")), Pat.Var(Term.Name("y"))), Type.Name("Int")) =
-      templStat("var x, y: Int")
+    assertTree(templStat("var x, y: Int"))(
+      Decl.Var(Nil, List(Pat.Var(Term.Name("x")), Pat.Var(Term.Name("y"))), Type.Name("Int"))
+    )
   }
 
   test("type T") {
