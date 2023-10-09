@@ -19,31 +19,43 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
   @tailrec
   final def getPrevIndex(index: Int): Int = {
-    val prev = getPrevSafeIndex(index)
-    if (tokens(prev).is[Trivia]) getPrevIndex(prev) else prev
+    if (index <= 0) 0
+    else {
+      val prev = index - 1
+      if (tokens(prev).is[Trivia]) getPrevIndex(prev) else prev
+    }
   }
 
   def getPrevToken(index: Int): Token = tokens(getPrevIndex(index))
 
   @tailrec
   final def getNextIndex(index: Int): Int = {
-    val next = getNextSafeIndex(index)
-    if (tokens(next).is[Trivia]) getNextIndex(next) else next
+    if (index >= tokens.length - 1) tokens.length - 1
+    else {
+      val next = index + 1
+      if (tokens(next).is[Trivia]) getNextIndex(next) else next
+    }
   }
 
   def getNextToken(index: Int): Token = tokens(getNextIndex(index))
 
   @tailrec
-  final def getStrictAfterSafe(index: Int): Int = {
-    val token = tokens(index)
-    if (token.isAny[HSpace, Comment]) getStrictAfterSafe(getNextSafeIndex(index))
-    else index
+  final def getStrictPrev(index: Int): Int = {
+    if (index <= 0) 0
+    else {
+      val prev = index - 1
+      if (tokens(prev).isAny[HSpace, Comment]) getStrictPrev(prev) else prev
+    }
   }
 
-  def getStrictNext(index: Int): Int = getStrictAfterSafe(getNextSafeIndex(index))
-
-  @inline def getPrevSafeIndex(index: Int): Int = Math.max(index - 1, 0)
-  @inline def getNextSafeIndex(index: Int): Int = Math.min(index + 1, tokens.length - 1)
+  @tailrec
+  final def getStrictNext(index: Int): Int = {
+    if (index >= tokens.length - 1) tokens.length - 1
+    else {
+      val next = index + 1
+      if (tokens(next).isAny[HSpace, Comment]) getStrictNext(next) else next
+    }
+  }
 
   // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
@@ -110,18 +122,31 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def apply(token: Token) = unapply(token)
   }
 
-  def isEndMarkerIntro(index: Int): Boolean = soft.KwEnd(tokens(index)) && {
-    val nextIndex = getStrictNext(index)
-    tokens(nextIndex) match {
-      case _: Ident | _: KwIf | _: KwWhile | _: KwFor | _: KwMatch | _: KwTry | _: KwNew |
-          _: KwThis | _: KwGiven | _: KwVal =>
-        tokens(getStrictNext(nextIndex)).is[AtEOLorF]
-      case _ => false
-    }
+  @inline
+  private def isPrecededByNL(index: Int): Boolean = tokens(getStrictPrev(index)).is[AtEOLorF]
+  @inline
+  private def isFollowedByNL(index: Int): Boolean = tokens(getStrictNext(index)).is[AtEOLorF]
+
+  @inline
+  private def isEndMarkerIdentifier(token: Token) = soft.KwEnd(token)
+
+  private def isEndMarkerSpecifier(token: Token) = token match {
+    case _: Ident | _: KwIf | _: KwWhile | _: KwFor | _: KwMatch | _: KwTry | _: KwNew | _: KwThis |
+        _: KwGiven | _: KwVal =>
+      true
+    case _ => false
   }
 
-  def isExprIntro(token: Token, index: => Int): Boolean = token match {
-    case _: Ident => !isSoftModifier(index) && !isEndMarkerIntro(index)
+  private def isEndMarkerIntro(index: Int, fNextIndex: => Int) =
+    isEndMarkerIdentifier(tokens(index)) && {
+      val nextIndex = fNextIndex
+      isEndMarkerSpecifier(tokens(nextIndex)) && isFollowedByNL(nextIndex)
+    }
+
+  def isEndMarkerIntro(index: Int): Boolean = isEndMarkerIntro(index, getStrictNext(index))
+
+  def isExprIntro(token: Token, fIndex: => Int): Boolean = token match {
+    case _: Ident => val index = fIndex; !isSoftModifier(index) && !isEndMarkerIntro(index)
     case _: Literal | _: Interpolation.Id | _: Xml.Start | _: KwDo | _: KwFor | _: KwIf | _: KwNew |
         _: KwReturn | _: KwSuper | _: KwThis | _: KwThrow | _: KwTry | _: KwWhile | _: LeftParen |
         _: LeftBrace | _: Underscore | _: Unquote | _: MacroSplice | _: MacroQuote |
@@ -225,12 +250,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def apply(token: Token) = unapply(token)
   }
 
-  def canEndStat(index: Int): Boolean = tokens(index) match {
+  private def canEndStat(token: Token): Boolean = token match {
     case _: Ident | _: KwGiven | _: Literal | _: Interpolation.End | _: Xml.End | _: KwReturn |
         _: KwThis | _: KwType | _: RightParen | _: RightBracket | _: RightBrace | _: Underscore |
         _: Ellipsis | _: Unquote =>
       true
-    case _ => isEndMarkerIntro(getPrevIndex(index))
+    case _ => false
   }
 
   object StatSep {
@@ -440,6 +465,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         case rs => rs
       })
 
+    def isPrevEndMarker(): Boolean =
+      prevPos > 0 && isEndMarkerIdentifier(prev) && isPrecededByNL(prevPos)
+
     def nonTrivial(sepRegions: List[SepRegion]) = curr match {
       case _: EOF =>
         mkOutdentsOpt(currPos, sepRegions) {
@@ -461,7 +489,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _: KwObject | _: KwClass | _: KwTrait | _: KwPackage | _: KwNew
           if dialect.allowSignificantIndentation =>
         currRef(RegionTemplateMark :: sepRegions)
-      case _: KwMatch if !soft.KwEnd(prev) =>
+      case _: KwMatch if !isPrevEndMarker() =>
         getCaseIntro(sepRegions)
       case _: KwCatch =>
         getCaseIntro(sepRegions)
@@ -563,7 +591,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case xs => currRef(xs)
         }
       case _: KwDef | _: KwVal | _: KwVar
-          if dialect.allowSignificantIndentation && !soft.KwEnd(prev) =>
+          if dialect.allowSignificantIndentation && !isPrevEndMarker() =>
         currRef(RegionDefMark :: sepRegions)
       case _: Colon =>
         sepRegions match {
@@ -653,8 +681,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       def getIfCanProduceLF(regions: List[SepRegion]) = {
         @inline def derives(token: Token) = soft.KwDerives(token)
         @inline def blankBraceOr(ok: => Boolean): Boolean = if (next.is[LeftBrace]) newlines else ok
+        def isEndMarker() = isEndMarkerSpecifier(prev) && {
+          val prevPrevPos = getStrictPrev(prevPos)
+          isEndMarkerIdentifier(tokens(prevPrevPos)) && isPrecededByNL(prevPrevPos)
+        }
         if (lastNewlinePos != -1 &&
-          (prevToken.is[Indentation.Outdent] || prevPos >= 0 && canEndStat(prevPos)) &&
+          (prevToken.is[Indentation.Outdent] || canEndStat(prev) || isEndMarker()) &&
           !CantStartStat(next))
           (regions match {
             case Nil => Some(regions)
@@ -673,11 +705,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       def isLeadingInfix() =
         !newlines && dialect.allowInfixOperatorAfterNL &&
           next.is[Ident] && next.isIdentSymbolicInfixOperator && {
-            val nextSafeIndex = getNextSafeIndex(nextPos)
-            tokens(nextSafeIndex).is[Whitespace] && {
-              val argPos = getStrictAfterSafe(nextSafeIndex)
-              canBeLeadingInfixArg(tokens(argPos), argPos)
-            }
+            val argPos = getStrictNext(nextPos)
+            argPos > nextPos && tokens(nextPos + 1).is[HSpace] &&
+            canBeLeadingInfixArg(tokens(argPos), argPos)
           }
 
       val resOpt =

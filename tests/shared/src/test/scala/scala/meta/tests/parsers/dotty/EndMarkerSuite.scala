@@ -374,4 +374,23 @@ class EndMarkerSuite extends BaseDottySuite {
     )
   }
 
+  test("#3366 not an end marker") {
+    val code =
+      """|x.end match
+         |    case _ => ()
+         |""".stripMargin
+    val layout =
+      """|x.end match {
+         |  case _ => ()
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, Some(layout))(
+      Term.Match(
+        Term.Select(Term.Name("x"), Term.Name("end")),
+        List(Case(Pat.Wildcard(), None, Lit.Unit())),
+        Nil
+      )
+    )
+  }
+
 }
