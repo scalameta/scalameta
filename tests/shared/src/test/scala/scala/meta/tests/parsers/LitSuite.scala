@@ -5,16 +5,25 @@ import scala.meta._
 import scala.meta.dialects.Scala211
 
 class LitSuite extends ParseSuite {
+
+  // Structure does not always return consisten results
+  private def assertLiteral(obtained: Term, expected: Lit) {
+    obtained match {
+      case lit: Lit => assertEquals(lit.value, expected.value)
+      case _ => fail(s"Expected literal, got ${obtained.structure}")
+    }
+  }
+
   test("true") {
-    val Lit(true) = term("true")
+    assertTree(term("true"))(Lit.Boolean(true))
   }
 
   test("false") {
-    val Lit(false) = term("false")
+    assertTree(term("false"))(Lit.Boolean(false))
   }
 
   test("42") {
-    val Lit(42) = term("42")
+    assertTree(term("42"))(Lit.Int(42))
   }
 
   test("2147483648") {
@@ -22,11 +31,11 @@ class LitSuite extends ParseSuite {
   }
 
   test("2147483647") {
-    val Lit(2147483647) = term("2147483647")
+    assertTree(term("2147483647"))(Lit.Int(2147483647))
   }
 
   test("-2147483648") {
-    val Lit(-2147483648) = term("-2147483648")
+    assertTree(term("-2147483648"))(Lit.Int(-2147483648))
   }
 
   test("-2147483649") {
@@ -34,11 +43,11 @@ class LitSuite extends ParseSuite {
   }
 
   test("42L") {
-    val Lit(42L) = term("42L")
+    assertTree(term("42L"))(Lit.Long(42L))
   }
 
   test("2147483648L") {
-    val Lit(2147483648L) = term("2147483648L")
+    assertTree(term("2147483648L"))(Lit.Long(2147483648L))
   }
 
   test("9223372036854775808L") {
@@ -46,11 +55,11 @@ class LitSuite extends ParseSuite {
   }
 
   test("9223372036854775807L") {
-    val Lit(9223372036854775807L) = term("9223372036854775807L")
+    assertTree(term("9223372036854775807L"))(Lit.Long(9223372036854775807L))
   }
 
   test("-9223372036854775808L") {
-    val Lit(-9223372036854775808L) = term("-9223372036854775808L")
+    assertTree(term("-9223372036854775808L"))(Lit.Long(-9223372036854775808L))
   }
 
   test("-9223372036854775809L") {
@@ -58,40 +67,42 @@ class LitSuite extends ParseSuite {
   }
 
   test("42.42") {
-    val Lit(42.42) = term("42.42")
+    assertLiteral(term("42.42"), Lit.Double(42.42))
   }
 
   test("42.0f") {
-    val Lit(42.42f) = term("42.42f")
+    assertLiteral(term("42.42f"), Lit.Float(42.42f))
   }
 
   test("'c'") {
-    val Lit('c') = term("'c'")
+    assertTree(term("'c'"))(Lit.Char('c'))
   }
 
   test("\"foo\"") {
-    val Lit("foo") = term("\"foo\"")
+    assertTree(term("\"foo\""))(Lit.String("foo"))
   }
 
   test("'foo'") {
-    val Lit('foo) = term("'foo")
+    assertTree(term("'foo"))(Lit.Symbol('foo))
   }
 
   test("null") {
-    val Lit(null) = term("null")
+    assertTree(term("null"))(Lit.Null())
   }
 
   test("()") {
-    val Lit(()) = term("()")
+    assertTree(term("()"))(Lit.Unit())
   }
 
   test("0xCAFEBABE") {
-    val Lit(-889275714) = term("0xCAFEBABE")
-    val Lit(889275714) = term("-0xCAFEBABE")
+    assertLiteral(term("0xCAFEBABE"), Lit.Int(-889275714))
+    assertLiteral(term("-0xCAFEBABE"), Lit.Int(889275714))
   }
 
   test("#344") {
-    val Term.ApplyInfix(_, _, _, List(minusOne)) = term("1 + -1")
+    val minusOne = term("1 + -1").collect { case Term.ApplyInfix(_, _, _, List(minusOne)) =>
+      minusOne
+    }.head
     assert(minusOne.tokens.structure == "Tokens(- [4..5), 1 [5..6))")
   }
 
@@ -105,12 +116,15 @@ class LitSuite extends ParseSuite {
   }
 
   test("#1382") {
-    val Lit("\"\"") = term("\"\"\"\"\"\"\"\"")
-    val Lit("\"\"\"\"\"\"\"") = term("\"\"\"\"\"\"\"\"\"\"\"\"\"")
+    assertLiteral(term("\"\"\"\"\"\"\"\""), Lit.String("\"\""))
+    assertLiteral(term("\"\"\"\"\"\"\"\"\"\"\"\"\""), Lit.String("\"\"\"\"\"\"\""))
 
-    val Term.Interpolate(Name("raw"), List(Lit("\"\"")), Nil) = term("raw\"\"\"\"\"\"\"\"")
-    val Term.Interpolate(Name("raw"), List(Lit("\"\"\"\"\"\"\"")), Nil) =
-      term("raw\"\"\"\"\"\"\"\"\"\"\"\"\"")
+    assertTree(term("raw\"\"\"\"\"\"\"\""))(
+      Term.Interpolate(Term.Name("raw"), List(Lit.String("\"\"")), Nil)
+    )
+    assertTree(term("raw\"\"\"\"\"\"\"\"\"\"\"\"\""))(
+      Term.Interpolate(Term.Name("raw"), List(Lit.String("\"\"\"\"\"\"\"")), Nil)
+    )
   }
 
   test("minus-sign") {

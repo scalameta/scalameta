@@ -5,9 +5,26 @@ import scala.meta._
 
 class ModSuite extends ParseSuite {
   test("implicit") {
-    val Defn.Object(List(Mod.Implicit()), _, _) = templStat("implicit object A")
-    val Defn.Class(List(Mod.Implicit()), _, _, _, _) = templStat("implicit class A")
-    val Defn.Object(List(Mod.Implicit(), Mod.Case()), _, _) = templStat("implicit case object A")
+    assertTree(templStat("implicit object A"))(
+      Defn.Object(List(Mod.Implicit()), Term.Name("A"), Template(Nil, Nil, EmptySelf(), Nil))
+    )
+    assertTree(templStat("implicit class A"))(
+      Defn.Class(
+        List(Mod.Implicit()),
+        Type.Name("A"),
+        Nil,
+        Ctor.Primary(Nil, Name(""), Seq.empty[Term.ParamClause]),
+        Template(Nil, Nil, EmptySelf(), Nil)
+      )
+    )
+    assertTree(templStat("implicit case object A"))(
+      Defn.Object(
+        List(Mod.Implicit(), Mod.Case()),
+        Term.Name("A"),
+        Template(Nil, Nil, EmptySelf(), Nil)
+      )
+    )
+
     assertTree(templStat("case class A(implicit val a: Int)")) {
       Defn.Class(
         List(Mod.Case()),
@@ -65,14 +82,47 @@ class ModSuite extends ParseSuite {
       )
     }
 
-    val Defn.Def(List(Mod.Implicit()), _, _, _, _, _) =
-      templStat("implicit def foo(a: Int): Int = a")
+    assertTree(templStat("implicit def foo(a: Int): Int = a")) {
+      Defn.Def(
+        List(Mod.Implicit()),
+        Term.Name("foo"),
+        Type.ParamClause(Nil),
+        List(
+          Term.ParamClause(
+            List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))
+          )
+        ),
+        Some(Type.Name("Int")),
+        Term.Name("a")
+      )
+    }
 
-    val Defn.Val(List(Mod.Implicit()), _, _, _) = templStat("implicit val a: Int = 1")
-    val Decl.Val(List(Mod.Implicit()), _, _) = templStat("implicit val a: Int")
+    assertTree(templStat("implicit val a: Int = 1")) {
+      Defn.Val(
+        List(Mod.Implicit()),
+        List(Pat.Var(Term.Name("a"))),
+        Some(Type.Name("Int")),
+        Lit.Int(1)
+      )
+    }
 
-    val Defn.Var(List(Mod.Implicit()), _, _, _) = templStat("implicit var a: Int = 1")
-    val Decl.Var(List(Mod.Implicit()), _, _) = templStat("implicit var a: Int")
+    assertTree(templStat("implicit val a: Int")) {
+      Decl.Val(List(Mod.Implicit()), List(Pat.Var(Term.Name("a"))), Type.Name("Int"))
+    }
+
+    assertTree(templStat("implicit var a: Int = 1")) {
+      Defn.Var(
+        List(Mod.Implicit()),
+        List(Pat.Var(Term.Name("a"))),
+        Some(Type.Name("Int")),
+        Some(Lit.Int(1))
+      )
+
+    }
+
+    assertTree(templStat("implicit var a: Int")) {
+      Decl.Var(List(Mod.Implicit()), List(Pat.Var(Term.Name("a"))), Type.Name("Int"))
+    }
 
     interceptParseErrors(
       "implicit implicit var a: Int",
@@ -93,11 +143,22 @@ class ModSuite extends ParseSuite {
   }
 
   test("final") {
-    val Defn.Object(List(Mod.Final()), _, _) = templStat("final object A")
-    val Defn.Class(List(Mod.Final()), _, _, _, _) = templStat("final class A")
-    val Defn.Class(List(Mod.Final(), Mod.Case()), _, _, _, _) =
-      templStat("final case class A(a: Int)")
-    val Defn.Object(List(Mod.Final(), Mod.Case()), _, _) = templStat("final case object A")
+    matchSubStructure[Stat](
+      "final object A",
+      { case Defn.Object(List(Mod.Final()), _, _) => () }
+    )
+    matchSubStructure[Stat](
+      "final class A",
+      { case Defn.Class(List(Mod.Final()), _, _, _, _) => () }
+    )
+    matchSubStructure[Stat](
+      "final case class A(a: Int)",
+      { case Defn.Class(List(Mod.Final(), Mod.Case()), _, _, _, _) => () }
+    )
+    matchSubStructure[Stat](
+      "final case object A",
+      { case Defn.Object(List(Mod.Final(), Mod.Case()), _, _) => () }
+    )
 
     assertTree(templStat("case class A(final val a: Int)")) {
       Defn.Class(
@@ -120,13 +181,35 @@ class ModSuite extends ParseSuite {
       )
     }
 
-    val Defn.Def(List(Mod.Final()), _, _, _, _, _) = templStat("final def foo(a: Int): Int = a")
-    val Defn.Val(List(Mod.Final()), _, _, _) = templStat("final val a: Int = 1")
-    val Decl.Val(List(Mod.Final()), _, _) = templStat("final val a: Int")
+    matchSubStructure[Stat](
+      "final def foo(a: Int): Int = a",
+      { case Defn.Def(List(Mod.Final()), _, _, _, _, _) => () }
+    )
 
-    val Defn.Var(List(Mod.Final()), _, _, _) = templStat("final var a: Int = 1")
-    val Decl.Var(List(Mod.Final()), _, _) = templStat("final var a: Int")
-    val Defn.Type(List(Mod.Final()), _, _, _) = templStat("final type A = Int")
+    matchSubStructure[Stat](
+      "final val a: Int = 1",
+      { case Defn.Val(List(Mod.Final()), _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "final val a: Int",
+      { case Decl.Val(List(Mod.Final()), _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "final var a: Int = 1",
+      { case Defn.Var(List(Mod.Final()), _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "final var a: Int",
+      { case Decl.Var(List(Mod.Final()), _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "final type A = Int",
+      { case Defn.Type(List(Mod.Final()), _, _, _) => () }
+    )
 
     interceptParseErrors(
       "final final var a: Int",
@@ -144,12 +227,25 @@ class ModSuite extends ParseSuite {
   }
 
   test("sealed") {
-    val Defn.Trait(List(Mod.Sealed()), _, _, _, _) = templStat("sealed trait A")
-    val Defn.Class(List(Mod.Sealed()), _, _, _, _) = templStat("sealed class A")
-    val Defn.Class(List(Mod.Sealed(), Mod.Abstract()), _, _, _, _) =
-      templStat("sealed abstract class A")
-    val Defn.Class(List(Mod.Sealed(), Mod.Case()), _, _, _, _) =
-      templStat("sealed case class A(a: Int)")
+    matchSubStructure[Stat](
+      "sealed trait A",
+      { case Defn.Trait(List(Mod.Sealed()), _, _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "sealed class A",
+      { case Defn.Class(List(Mod.Sealed()), _, _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "sealed abstract class A",
+      { case Defn.Class(List(Mod.Sealed(), Mod.Abstract()), _, _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "sealed case class A(a: Int)",
+      { case Defn.Class(List(Mod.Sealed(), Mod.Case()), _, _, _, _) => () }
+    )
 
     interceptParseErrors(
       "sealed sealed var a: Int",
@@ -176,19 +272,55 @@ class ModSuite extends ParseSuite {
   }
 
   test("override") {
-    val Defn.Object(List(Mod.Override()), _, _) = templStat("override object A")
-    val Defn.Object(List(Mod.Override(), Mod.Case()), _, _) = templStat("override case object A")
+    matchSubStructure[Stat](
+      "override object A",
+      { case Defn.Object(List(Mod.Override()), _, _) => () }
+    )
 
-    val Defn.Def(List(Mod.Override()), _, _, _, _, _) =
-      templStat("override def foo(a: Int): Int = a")
-    val Defn.Val(List(Mod.Override()), _, _, _) = templStat("override val a: Int = 1")
-    val Defn.Var(List(Mod.Override()), _, _, _) = templStat("override var a: Int = 1")
-    val Defn.Type(List(Mod.Override()), _, _, _) = templStat("override type A = Int")
+    matchSubStructure[Stat](
+      "override case object A",
+      { case Defn.Object(List(Mod.Override(), Mod.Case()), _, _) => () }
+    )
 
-    val Decl.Def(List(Mod.Override()), _, _, _, _) = templStat("override def foo(a: Int): Int")
-    val Decl.Val(List(Mod.Override()), _, _) = templStat("override val a: Int")
-    val Decl.Var(List(Mod.Override()), _, _) = templStat("override var a: Int")
-    val Decl.Type(List(Mod.Override()), _, _, _) = templStat("override type A")
+    matchSubStructure[Stat](
+      "override def foo(a: Int): Int = a",
+      { case Defn.Def(List(Mod.Override()), _, _, _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "override val a: Int = 1",
+      { case Defn.Val(List(Mod.Override()), _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "override var a: Int = 1",
+      { case Defn.Var(List(Mod.Override()), _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "override type A = Int",
+      { case Defn.Type(List(Mod.Override()), _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "override def foo(a: Int): Int",
+      { case Decl.Def(List(Mod.Override()), _, _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "override val a: Int",
+      { case Decl.Val(List(Mod.Override()), _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "override var a: Int",
+      { case Decl.Var(List(Mod.Override()), _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "override type A",
+      { case Decl.Type(List(Mod.Override()), _, _, _) => () }
+    )
 
     interceptParseErrors(
       "override override var a: Int",
@@ -206,9 +338,15 @@ class ModSuite extends ParseSuite {
   }
 
   test("case") {
-    val Defn.Object(List(Mod.Case()), _, _) = templStat("case object A")
-    val Defn.Class(List(Mod.Case()), _, _, _, _) = templStat("case class A(a: Int)")
+    matchSubStructure[Stat](
+      "case object A",
+      { case Defn.Object(List(Mod.Case()), _, _) => () }
+    )
 
+    matchSubStructure[Stat](
+      "case class A(a: Int)",
+      { case Defn.Class(List(Mod.Case()), _, _, _, _) => () }
+    )
     interceptParseErrors(
       "case case var a: Int",
       "case case val a: Int",
@@ -233,10 +371,20 @@ class ModSuite extends ParseSuite {
   }
 
   test("abstract") {
-    val Defn.Trait(List(Mod.Abstract()), _, _, _, _) = templStat("abstract trait A")
-    val Defn.Class(List(Mod.Abstract()), _, _, _, _) = templStat("abstract class A")
-    val Defn.Class(List(Mod.Abstract(), Mod.Case()), _, _, _, _) =
-      templStat("abstract case class A(a: Int)")
+    matchSubStructure[Stat](
+      "abstract trait A",
+      { case Defn.Trait(List(Mod.Abstract()), _, _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "abstract class A",
+      { case Defn.Class(List(Mod.Abstract()), _, _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "abstract case class A(a: Int)",
+      { case Defn.Class(List(Mod.Abstract(), Mod.Case()), _, _, _, _) => () }
+    )
 
     interceptParseErrors(
       "abstract abstract var a: Int",
@@ -264,7 +412,10 @@ class ModSuite extends ParseSuite {
   }
 
   test("lazy") {
-    val Defn.Val(List(Mod.Lazy()), _, _, _) = templStat("lazy val a: Int = 1")
+    matchSubStructure[Stat](
+      "lazy val a: Int = 1",
+      { case Defn.Val(List(Mod.Lazy()), _, _, _) => () }
+    )
 
     interceptParseErrors(
       "lazy lazy var a: Int",
@@ -294,28 +445,55 @@ class ModSuite extends ParseSuite {
 
   test("abstract override") {
     /* Non-trait members modified by `abstract override` receive a typechecking error */
-    val Defn.Object(List(Mod.Abstract(), Mod.Override()), _, _) =
-      templStat("abstract override object A")
-    val Defn.Object(List(Mod.Abstract(), Mod.Override(), Mod.Case()), _, _) =
-      templStat("abstract override case object A")
+    matchSubStructure[Stat](
+      "abstract override object A",
+      { case Defn.Object(List(Mod.Abstract(), Mod.Override()), _, _) => () }
+    )
 
-    val Defn.Def(List(Mod.Abstract(), Mod.Override()), _, _, _, _, _) =
-      templStat("abstract override def foo(a: Int): Int = a")
-    val Defn.Val(List(Mod.Abstract(), Mod.Override()), _, _, _) =
-      templStat("abstract override val a: Int = 1")
-    val Defn.Var(List(Mod.Abstract(), Mod.Override()), _, _, _) =
-      templStat("abstract override var a: Int = 1")
-    val Defn.Type(List(Mod.Abstract(), Mod.Override()), _, _, _) =
-      templStat("abstract override type A = Int")
+    matchSubStructure[Stat](
+      "abstract override case object A",
+      { case Defn.Object(List(Mod.Abstract(), Mod.Override(), Mod.Case()), _, _) => () }
+    )
 
-    val Decl.Def(List(Mod.Abstract(), Mod.Override()), _, _, _, _) =
-      templStat("abstract override def foo(a: Int): Int")
-    val Decl.Val(List(Mod.Abstract(), Mod.Override()), _, _) =
-      templStat("abstract override val a: Int")
-    val Decl.Var(List(Mod.Abstract(), Mod.Override()), _, _) =
-      templStat("abstract override var a: Int")
-    val Decl.Type(List(Mod.Abstract(), Mod.Override()), _, _, _) =
-      templStat("abstract override type A")
+    matchSubStructure[Stat](
+      "abstract override def foo(a: Int): Int = a",
+      { case Defn.Def(List(Mod.Abstract(), Mod.Override()), _, _, _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "abstract override val a: Int = 1",
+      { case Defn.Val(List(Mod.Abstract(), Mod.Override()), _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "abstract override var a: Int = 1",
+      { case Defn.Var(List(Mod.Abstract(), Mod.Override()), _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "abstract override type A = Int",
+      { case Defn.Type(List(Mod.Abstract(), Mod.Override()), _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "abstract override def foo(a: Int): Int",
+      { case Decl.Def(List(Mod.Abstract(), Mod.Override()), _, _, _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "abstract override val a: Int",
+      { case Decl.Val(List(Mod.Abstract(), Mod.Override()), _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "abstract override var a: Int",
+      { case Decl.Var(List(Mod.Abstract(), Mod.Override()), _, _) => () }
+    )
+
+    matchSubStructure[Stat](
+      "abstract override type A",
+      { case Decl.Type(List(Mod.Abstract(), Mod.Override()), _, _, _) => () }
+    )
 
     interceptParseErrors(
       "abstract override abstract override var a: Int",
@@ -682,15 +860,22 @@ class ModSuite extends ParseSuite {
   }
 
   test("macro") {
-    val Defn.Macro(_, _, _, _, _, _) = templStat("def foo(a: Int): Int = macro myMacroImpl(a)")
+    matchSubStructure[Stat](
+      "def foo(a: Int): Int = macro myMacroImpl(a)",
+      { case Defn.Macro(_, _, _, _, _, _) => () }
+    )
   }
 
   test("final and abstract") {
     // Only check these because abstract cannot only be used for classes
-    val Defn.Class(List(Mod.Final(), Mod.Abstract()), _, _, _, _) =
-      templStat("final abstract class A")
-    val Defn.Class(List(Mod.Final(), Mod.Abstract(), Mod.Case()), _, _, _, _) =
-      templStat("final abstract case class A(a: Int)")
+    matchSubStructure[Stat](
+      "final abstract class A",
+      { case Defn.Class(List(Mod.Final(), Mod.Abstract()), _, _, _, _) => () }
+    )
+    matchSubStructure[Stat](
+      "final abstract case class A(a: Int)",
+      { case Defn.Class(List(Mod.Final(), Mod.Abstract(), Mod.Case()), _, _, _, _) => () }
+    )
 
     interceptParseErrors(
       "final abstract trait A",
@@ -731,42 +916,66 @@ class ModSuite extends ParseSuite {
 
   test("not really invalid private and protected") {
     // NOTE: Surprisingly, the code below is valid Scala.
-    val Defn.Def(
-      List(Mod.Private(Name.Anonymous()), Mod.Protected(Name.Indeterminate("foo"))),
-      _,
-      _,
-      _,
-      _,
-      _
-    ) =
-      templStat("private protected[foo] def foo = ???")
-    val Defn.Def(
-      List(Mod.Private(Name.Indeterminate("foo")), Mod.Protected(Name.Anonymous())),
-      _,
-      _,
-      _,
-      _,
-      _
-    ) =
-      templStat("private[foo] protected def foo = ???")
-    val Defn.Def(
-      List(Mod.Protected(Name.Anonymous()), Mod.Private(Name.Indeterminate("foo"))),
-      _,
-      _,
-      _,
-      _,
-      _
-    ) =
-      templStat("protected private[foo] def foo = ???")
-    val Defn.Def(
-      List(Mod.Protected(Name.Indeterminate("foo")), Mod.Private(Name.Anonymous())),
-      _,
-      _,
-      _,
-      _,
-      _
-    ) =
-      templStat("protected[foo] private def foo = ???")
+    matchSubStructure[Stat](
+      "private protected[foo] def foo = ???",
+      {
+        case Defn.Def(
+              List(Mod.Private(Name.Anonymous()), Mod.Protected(Name.Indeterminate("foo"))),
+              _,
+              _,
+              _,
+              _,
+              _
+            ) =>
+          ()
+      }
+    )
+
+    matchSubStructure[Stat](
+      "private[foo] protected def foo = ???",
+      {
+        case Defn.Def(
+              List(Mod.Private(Name.Indeterminate("foo")), Mod.Protected(Name.Anonymous())),
+              _,
+              _,
+              _,
+              _,
+              _
+            ) =>
+          ()
+      }
+    )
+
+    matchSubStructure[Stat](
+      "protected private[foo] def foo = ???",
+      {
+        case Defn.Def(
+              List(Mod.Protected(Name.Anonymous()), Mod.Private(Name.Indeterminate("foo"))),
+              _,
+              _,
+              _,
+              _,
+              _
+            ) =>
+          ()
+      }
+    )
+
+    matchSubStructure[Stat](
+      "protected[foo] private def foo = ???",
+      {
+        case Defn.Def(
+              List(Mod.Protected(Name.Indeterminate("foo")), Mod.Private(Name.Anonymous())),
+              _,
+              _,
+              _,
+              _,
+              _
+            ) =>
+          ()
+      }
+    )
+
   }
 
   test("Annotation after modifier") {
