@@ -16,6 +16,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   implicit def parseStat(code: String, dialect: Dialect): Stat = templStat(code)(dialect)
   implicit def parseSource(code: String, dialect: Dialect): Source = source(code)(dialect)
   implicit def parseType(code: String, dialect: Dialect): Type = tpe(code)(dialect)
+  implicit def parsePat(code: String, dialect: Dialect): Pat = pat(code)(dialect)
 
   // This should eventually be replaced by DiffAssertions.assertNoDiff
   def assertSameLines(actual: String, expected: String) = {

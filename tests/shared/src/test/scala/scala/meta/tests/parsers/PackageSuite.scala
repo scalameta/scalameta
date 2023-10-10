@@ -90,37 +90,45 @@ class PackageSuite extends ParseSuite {
   }
 
   test("package foo {}; package bar {}") {
-    val Source(
-      (pkgfoo @ Pkg(Term.Name("foo"), Nil)) ::
-        (pkgbar @ Pkg(Term.Name("bar"), Nil)) :: Nil
-    ) =
-      source("package foo {}; package bar {}")
+    assertTree(source("package foo {}; package bar {}"))(
+      Source(
+        (Pkg(Term.Name("foo"), Nil)) ::
+          (Pkg(Term.Name("bar"), Nil)) :: Nil
+      )
+    )
   }
 
   test("package object foo") {
-    val Source(Pkg.Object(Nil, Term.Name("foo"), EmptyTemplate()) :: Nil) =
-      source("package object foo")
+    assertTree(source("package object foo"))(
+      Source(Pkg.Object(Nil, Term.Name("foo"), EmptyTemplate()) :: Nil)
+    )
   }
 
   test("import foo.bar; package object baz") {
-    val Source(
-      Import(Importer(Term.Name("foo"), Importee.Name(Name.Indeterminate("bar")) :: Nil) :: Nil) ::
-        Pkg.Object(Nil, Term.Name("baz"), EmptyTemplate()) :: Nil
-    ) =
-      source("import foo.bar; package object baz")
+
+    assertTree(source("import foo.bar; package object baz"))(
+      Source(
+        Import(
+          Importer(Term.Name("foo"), Importee.Name(Name.Indeterminate("bar")) :: Nil) :: Nil
+        ) ::
+          Pkg.Object(Nil, Term.Name("baz"), EmptyTemplate()) :: Nil
+      )
+    )
   }
 
   test("package foo; package bar; package baz") {
-    val Source(
-      List(Pkg(Term.Name("foo"), List(Pkg(Term.Name("bar"), List(Pkg(Term.Name("baz"), List()))))))
-    ) =
-      source("package foo; package bar; package baz")
+    assertTree(source("package foo; package bar; package baz"))(
+      Source(
+        List(
+          Pkg(Term.Name("foo"), List(Pkg(Term.Name("bar"), List(Pkg(Term.Name("baz"), List())))))
+        )
+      )
+    )
+
   }
 
   test("package { in newline") {
-    val Source(
-      List(Pkg(Term.Name("foo"), List(Pkg(Term.Name("bar"), List(Pkg(Term.Name("baz"), List()))))))
-    ) =
+    assertTree(
       source(
         """|
            |package foo  // foo package left brace in newline
@@ -135,6 +143,12 @@ class PackageSuite extends ParseSuite {
            |}
            |""".stripMargin
       )
-
+    )(
+      Source(
+        List(
+          Pkg(Term.Name("foo"), List(Pkg(Term.Name("bar"), List(Pkg(Term.Name("baz"), List())))))
+        )
+      )
+    )
   }
 }
