@@ -355,43 +355,53 @@ class TemplateSuite extends ParseSuite {
   }
 
   test("object O") {
-    val Object(Nil, Term.Name("O"), EmptyTemplate()) = templStat("object O")
+    assertTree(templStat("object O"))(Object(Nil, Term.Name("O"), EmptyTemplate()))
   }
 
   test("case object O") {
-    val Object(Mod.Case() :: Nil, Term.Name("O"), EmptyTemplate()) = templStat("case object O")
+    assertTree(templStat("case object O"))(
+      Object(Mod.Case() :: Nil, Term.Name("O"), EmptyTemplate())
+    )
   }
 
   test("object A extends B") {
-    val Object(
-      Nil,
-      Term.Name("A"),
-      Template(Nil, Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil, EmptySelf(), Nil)
-    ) =
-      templStat("object A extends B")
+    assertTree(templStat("object A extends B"))(
+      Object(
+        Nil,
+        Term.Name("A"),
+        Template(
+          Nil,
+          Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil,
+          EmptySelf(),
+          Nil
+        )
+      )
+    )
   }
 
   test("object A extends { val x: Int } with B") {
-    val Object(
-      Nil,
-      Term.Name("A"),
-      Template(
-        Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit(2)) :: Nil,
-        Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil,
-        EmptySelf(),
-        Nil
+    assertTree(templStat("object A extends { val x: Int = 2 } with B"))(
+      Object(
+        Nil,
+        Term.Name("A"),
+        Template(
+          Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
+          Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil,
+          EmptySelf(),
+          Nil
+        )
       )
-    ) =
-      templStat("object A extends { val x: Int = 2 } with B")
+    )
   }
 
   test("object A extends { self: B => }") {
-    val Object(
-      Nil,
-      Term.Name("A"),
-      Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)
-    ) =
-      templStat("object A { self: B => }")
+    assertTree(templStat("object A { self: B => }"))(
+      Object(
+        Nil,
+        Term.Name("A"),
+        Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)
+      )
+    )
   }
 
   test("trait B extends A.type") {

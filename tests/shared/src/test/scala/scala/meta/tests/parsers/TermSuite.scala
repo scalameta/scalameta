@@ -861,7 +861,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("\"stat;\".parse[Stat]") {
-    val Term.Name("stat") = stat("stat;")
+    assertTrees(stat("stat;"))(Term.Name("stat"))
   }
 
   test("\"stat;\".parse[Term]") {
