@@ -6,14 +6,6 @@ import scala.meta.dialects.Scala211
 
 class LitSuite extends ParseSuite {
 
-  // Structure does not always return consisten results
-  private def assertLiteral(obtained: Term, expected: Lit) {
-    obtained match {
-      case lit: Lit => assertEquals(lit.value, expected.value)
-      case _ => fail(s"Expected literal, got ${obtained.structure}")
-    }
-  }
-
   test("true") {
     assertTree(term("true"))(Lit.Boolean(true))
   }
@@ -67,11 +59,17 @@ class LitSuite extends ParseSuite {
   }
 
   test("42.42") {
-    assertLiteral(term("42.42"), Lit.Double(42.42))
+    matchSubStructure[Stat](
+      "42.42",
+      { case Lit(42.42) => () }
+    )
   }
 
   test("42.0f") {
-    assertLiteral(term("42.42f"), Lit.Float(42.42f))
+    matchSubStructure[Stat](
+      "42.42f",
+      { case Lit(42.42f) => () }
+    )
   }
 
   test("'c'") {
@@ -95,8 +93,14 @@ class LitSuite extends ParseSuite {
   }
 
   test("0xCAFEBABE") {
-    assertLiteral(term("0xCAFEBABE"), Lit.Int(-889275714))
-    assertLiteral(term("-0xCAFEBABE"), Lit.Int(889275714))
+    matchSubStructure[Stat](
+      "0xCAFEBABE",
+      { case Lit(-889275714) => () }
+    )
+    matchSubStructure[Stat](
+      "-0xCAFEBABE",
+      { case Lit(889275714) => () }
+    )
   }
 
   test("#344") {
@@ -116,8 +120,14 @@ class LitSuite extends ParseSuite {
   }
 
   test("#1382") {
-    assertLiteral(term("\"\"\"\"\"\"\"\""), Lit.String("\"\""))
-    assertLiteral(term("\"\"\"\"\"\"\"\"\"\"\"\"\""), Lit.String("\"\"\"\"\"\"\""))
+    matchSubStructure[Stat](
+      "\"\"\"\"\"\"\"\"",
+      { case Lit("\"\"") => () }
+    )
+    matchSubStructure[Stat](
+      "\"\"\"\"\"\"\"\"\"\"\"\"\"",
+      { case Lit("\"\"\"\"\"\"\"") => () }
+    )
 
     assertTree(term("raw\"\"\"\"\"\"\"\""))(
       Term.Interpolate(Term.Name("raw"), List(Lit.String("\"\"")), Nil)
