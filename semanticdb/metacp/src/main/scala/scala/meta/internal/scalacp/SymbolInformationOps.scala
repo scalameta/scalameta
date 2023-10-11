@@ -202,17 +202,17 @@ trait SymbolInformationOps { self: Scalacp =>
     private val syntheticAnnotationsSymbols = Set(
       "scala/reflect/macros/internal/macroImpl#"
     )
-    private def syntheticAnnotations(annot: s.Annotation): Boolean = {
+    private def syntheticAnnotations(annot: s.AnnotationTree): Boolean = {
       annot.tpe match {
         case s.TypeRef(_, sym, _) => syntheticAnnotationsSymbols.contains(sym)
         case _ => false
       }
     }
 
-    private def annotations: List[s.Annotation] = {
+    private def annotations: List[s.AnnotationTree] = {
       val annots =
         sym.attributes
-          .map(attribute => s.Annotation(attribute.typeRef.toSemanticTpe))
+          .map(attribute => s.AnnotationTree(attribute.typeRef.toSemanticTpe))
           .toList
 
       annots.filterNot(syntheticAnnotations)

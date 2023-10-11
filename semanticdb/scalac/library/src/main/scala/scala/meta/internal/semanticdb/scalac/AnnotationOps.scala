@@ -6,8 +6,8 @@ import scala.meta.internal.{semanticdb => s}
 trait AnnotationOps { self: SemanticdbOps =>
 
   implicit class XtensionAnnotationInfo(gann: g.AnnotationInfo) {
-    def toSemantic: s.Annotation = {
-      s.Annotation(gann.atp.toSemanticTpe)
+    def toSemantic: s.AnnotationTree = {
+      s.AnnotationTree(gann.atp.toSemanticTpe)
     }
   }
 }
