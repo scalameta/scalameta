@@ -1,7 +1,7 @@
 package scala.meta.testkit
 
 import java.io.File
-import java.net.URL
+import java.net.URI
 
 import sys.process._
 import java.net.URL
@@ -101,7 +101,7 @@ object Corpus {
 
   private def downloadReposTar(corpus: Corpus, destination: File): Unit = {
     Phase.run(s"download ${corpus.url}") {
-      new URL(corpus.url).#>(destination).!!
+      new URI(corpus.url).toURL.#>(destination).!!
     }
   }
 
