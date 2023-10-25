@@ -1304,6 +1304,17 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkStat("list reduce (_.a.b.c + _.d.e.f)")(q"list reduce (_.a.b.c + _.d.e.f)")
     checkStat("list reduce (_.a(foo) + _.b(bar))")(q"list reduce (_.a(foo) + _.b(bar))")
   }
+  test("parentheses on function param clauses") {
+    List(
+      "def f: (B => B) => A" -> q"def f: (B => B) => A",
+      "def f: B => B => A" -> q"def f: B => B => A",
+      "def f: B => A" -> q"def f: B => A",
+      "def f: (B => B) => A => A" -> q"def f: (B => B) => A => A",
+      "def f: (B => B) => (A => A) => A" -> q"def f: (B => B) => (A => A) => A"
+    ).foreach { case (code, expected) =>
+      checkStat(code, code)(expected)
+    }
+  }
 
   test("#1864 Terms with leading numerics are backquoted") {
     checkStat("`123foo`")(Term.Name("123foo"))

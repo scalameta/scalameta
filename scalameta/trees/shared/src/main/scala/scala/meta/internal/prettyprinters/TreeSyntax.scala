@@ -582,7 +582,9 @@ object TreeSyntax {
       case t: Type.FuncParamClause =>
         t.values match {
           case arg :: Nil if (arg match {
-                case _: Type.Tuple | _: Type.ByName | _: Type.FunctionParamOrArg => false
+                case _: Type.Tuple | _: Type.ByName | _: Type.FunctionParamOrArg |
+                    _: Type.Function =>
+                  false
                 case _ => true
               }) =>
             s(arg)
