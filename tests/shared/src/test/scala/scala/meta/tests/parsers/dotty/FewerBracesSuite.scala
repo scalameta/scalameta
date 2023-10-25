@@ -486,7 +486,7 @@ class FewerBracesSuite extends BaseDottySuite {
         Nil,
         Type.Name("C"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,

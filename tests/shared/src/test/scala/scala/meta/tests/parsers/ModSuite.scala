@@ -13,7 +13,7 @@ class ModSuite extends ParseSuite {
         List(Mod.Implicit()),
         Type.Name("A"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Seq.empty[Term.ParamClause]),
+        EmptyCtor(),
         Template(Nil, Nil, EmptySelf(), Nil)
       )
     )

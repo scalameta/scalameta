@@ -38,7 +38,7 @@ class EnumSuite extends BaseDottySuite {
         Nil,
         Type.Name("Color"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -48,14 +48,14 @@ class EnumSuite extends BaseDottySuite {
               List(Mod.Private(Name(""))),
               Term.Name("R"),
               Nil,
-              Ctor.Primary(Nil, Name(""), Nil),
+              EmptyCtor(),
               Nil
             ),
             Defn.EnumCase(
               List(Mod.Protected(Name(""))),
               Term.Name("G"),
               Nil,
-              Ctor.Primary(Nil, Name(""), Nil),
+              EmptyCtor(),
               Nil
             )
           ),
@@ -103,7 +103,7 @@ class EnumSuite extends BaseDottySuite {
         Nil,
         Type.Name("Color"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(Nil, Nil, Self(Name(""), None), Nil)
       )
     )
@@ -112,7 +112,7 @@ class EnumSuite extends BaseDottySuite {
         Nil,
         Type.Name("Color"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -384,7 +384,7 @@ class EnumSuite extends BaseDottySuite {
           Nil,
           Term.Name("Red"),
           Nil,
-          Ctor.Primary(Nil, Name(""), Nil),
+          EmptyCtor(),
           List(Init(Type.Name("Color"), Name(""), List(List(Lit.Int(65280)))))
         )
       )
@@ -447,7 +447,7 @@ class EnumSuite extends BaseDottySuite {
         List(Mod.Annot(Init(Type.Name("annot"), Name(""), emptyArgClause))),
         Type.Name("A"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -471,7 +471,7 @@ class EnumSuite extends BaseDottySuite {
         Nil,
         Type.Name("A"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -525,7 +525,7 @@ class EnumSuite extends BaseDottySuite {
         Nil,
         Type.Name("A"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -634,7 +634,7 @@ class EnumSuite extends BaseDottySuite {
               Nil,
               Type.Name("A"),
               Nil,
-              Ctor.Primary(Nil, Name(""), Nil),
+              EmptyCtor(),
               Template(
                 Nil,
                 Nil,
@@ -675,13 +675,13 @@ class EnumSuite extends BaseDottySuite {
         Nil,
         Type.Name("T2Enum"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
           Self(Name(""), None),
           List(
-            Defn.EnumCase(Nil, Term.Name("Hmm"), Nil, Ctor.Primary(Nil, Name(""), Nil), Nil),
+            Defn.EnumCase(Nil, Term.Name("Hmm"), Nil, EmptyCtor(), Nil),
             Defn.Val(
               Nil,
               List(Pat.Var(Term.Name("a"))),
@@ -702,7 +702,7 @@ class EnumSuite extends BaseDottySuite {
     Nil,
     Type.Name(name),
     Nil,
-    Ctor.Primary(Nil, Name(""), Nil),
+    EmptyCtor(),
     Template(
       Nil,
       Nil,

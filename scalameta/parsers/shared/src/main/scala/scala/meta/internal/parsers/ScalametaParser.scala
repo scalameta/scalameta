@@ -4039,7 +4039,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val paramss = termParamClauses(ownerIsType = true, owner == OwnedByCaseClass)
       Ctor.Primary(mods, name, paramss)
     } else {
-      Ctor.Primary(Nil, anonNameEmpty(), Seq.empty)
+      Ctor.Primary(Nil, anonNameEmpty(), Seq.empty[Term.ParamClause])
     }
   }
 

@@ -25,7 +25,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         pname("A"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(Nil, Nil, Self(Name(""), None), List(defx))
       )
     )
@@ -73,7 +73,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         pname("A"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -196,7 +196,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
               Nil,
               pname("T"),
               Nil,
-              Ctor.Primary(Nil, Name(""), Nil),
+              EmptyCtor(),
               Template(
                 Nil,
                 Nil,
@@ -282,7 +282,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         pname("X"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -319,7 +319,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         pname("X"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -359,7 +359,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         pname("X"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -403,7 +403,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         pname("A"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           List(Init(pname("B"), Name(""), emptyArgClause)),
@@ -538,7 +538,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         pname("A"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -580,7 +580,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         pname("A"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -729,7 +729,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         List(Mod.Abstract()),
         pname("Documentation"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -739,7 +739,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
               Nil,
               pname("Graph"),
               Nil,
-              Ctor.Primary(Nil, Name(""), Nil),
+              EmptyCtor(),
               Template(
                 Nil,
                 Nil,
@@ -901,7 +901,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Nil,
         pname("A"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           List(Init(pname("A"), Name(""), Nil), Init(pname("B"), Name(""), emptyArgClause)),
@@ -2005,7 +2005,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
               Nil,
               tname("xhtml"),
               Nil,
-              Ctor.Primary(Nil, Name(""), Nil),
+              EmptyCtor(),
               List(
                 Init(
                   pname("Namespace"),
@@ -2148,7 +2148,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     Nil,
                     pname("SomeOtherPackage"),
                     Nil,
-                    Ctor.Primary(Nil, Name(""), Nil),
+                    EmptyCtor(),
                     tpl(Nil)
                   )
                 )
@@ -2157,7 +2157,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                 Nil,
                 pname("BrokenLink"),
                 Nil,
-                Ctor.Primary(Nil, Name(""), Nil),
+                EmptyCtor(),
                 tpl(Nil)
               )
             )
@@ -2370,7 +2370,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             Nil,
             pname("A1"),
             Nil,
-            Ctor.Primary(Nil, Name(""), Nil),
+            EmptyCtor(),
             Template(
               Nil,
               List(
@@ -2392,7 +2392,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             Nil,
             pname("A2"),
             Nil,
-            Ctor.Primary(Nil, Name(""), Nil),
+            EmptyCtor(),
             Template(
               Nil,
               List(
@@ -2417,7 +2417,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             ),
             pname("B"),
             Nil,
-            Ctor.Primary(Nil, Name(""), Nil),
+            EmptyCtor(),
             tpl(Nil)
           )
         )
@@ -2447,7 +2447,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
             Nil,
             pname("T2"),
             Nil,
-            Ctor.Primary(Nil, Name(""), Nil),
+            EmptyCtor(),
             Template(
               Nil,
               Nil,
@@ -2457,7 +2457,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   Nil,
                   pname("T2Enum"),
                   Nil,
-                  Ctor.Primary(Nil, Name(""), Nil),
+                  EmptyCtor(),
                   Template(
                     Nil,
                     Nil,
@@ -2467,7 +2467,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                         Nil,
                         tname("EnumCase"),
                         Nil,
-                        Ctor.Primary(Nil, Name(""), Nil),
+                        EmptyCtor(),
                         Nil
                       )
                     ),

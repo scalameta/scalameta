@@ -417,7 +417,7 @@ class TemplateSuite extends ParseSuite {
       Nil,
       Type.Name("foo"),
       Nil,
-      Ctor.Primary(Nil, Name(""), Nil),
+      EmptyCtor(),
       Template(Nil, Nil, Self(Name.Placeholder(), Some(Type.Name("Int"))), Nil, Nil)
     )
     checkStat(code, code)(tree)

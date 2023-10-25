@@ -471,7 +471,7 @@ class InlineSuite extends BaseDottySuite {
         List(Mod.Transparent()),
         Type.Name("S"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
       )
     )
@@ -488,7 +488,7 @@ class InlineSuite extends BaseDottySuite {
         List(Mod.Transparent()),
         Type.Name("S"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
       )
     )

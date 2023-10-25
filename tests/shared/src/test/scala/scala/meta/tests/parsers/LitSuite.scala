@@ -155,7 +155,7 @@ class LitSuite extends ParseSuite {
         Nil,
         Type.Name("Foo"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,

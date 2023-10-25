@@ -834,7 +834,7 @@ class NewFunctionsSuite extends BaseDottySuite {
             )
           )
         ),
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
       )
     )

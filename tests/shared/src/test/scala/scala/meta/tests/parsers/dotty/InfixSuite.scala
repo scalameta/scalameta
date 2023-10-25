@@ -38,7 +38,7 @@ class InfixSuite extends BaseDottySuite {
         Nil,
         pname("A"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -77,7 +77,7 @@ class InfixSuite extends BaseDottySuite {
           pparam("B"),
           pparam("C")
         ),
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(Nil, Nil, Self(Name(""), None), Nil)
       )
     )
@@ -92,7 +92,7 @@ class InfixSuite extends BaseDottySuite {
           pparam("B"),
           pparam("C")
         ),
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(Nil, Nil, Self(Name(""), None), Nil)
       )
     )
