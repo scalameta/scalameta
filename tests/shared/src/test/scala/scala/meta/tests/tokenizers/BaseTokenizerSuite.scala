@@ -8,11 +8,19 @@ import scala.meta.tests.TreeSuiteBase
 
 abstract class BaseTokenizerSuite extends TreeSuiteBase {
 
-  def tokenize(code: String): Tokens = {
+  def tokenize(code: String, dialect: Dialect = Scala211): Tokens = {
     val convert = scala.meta.inputs.Input.stringToInput
     val tokenize = scala.meta.tokenizers.Tokenize.scalametaTokenize
-    val dialect = Scala211
+
     code.tokenize(convert, tokenize, dialect).get
+  }
+
+  def assertTokens(
+      code: String,
+      dialect: Dialect = Scala211
+  )(expected: PartialFunction[Tokens, Unit]) = {
+    val obtained = tokenize(code, dialect)
+    expected.lift(obtained).getOrElse(fail("Got unexpected tokens: " + obtained))
   }
 
   def assertTokenizedAsStructureLines(code: String, expected: String)(
