@@ -1367,7 +1367,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         Nil,
         pname("A"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,

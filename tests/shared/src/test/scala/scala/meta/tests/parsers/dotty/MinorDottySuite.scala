@@ -297,7 +297,7 @@ class MinorDottySuite extends BaseDottySuite {
         List(
           Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, List(Type.Name("Eq")))
         ),
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
       )
     )
@@ -332,7 +332,7 @@ class MinorDottySuite extends BaseDottySuite {
         Nil,
         Type.Name("Foo"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(Nil, List(init("A"), init("B"), init("C")), Self(Name(""), None), Nil)
       )
     )
@@ -379,7 +379,7 @@ class MinorDottySuite extends BaseDottySuite {
         Nil,
         Type.Name("A"),
         Type.ParamClause(Nil),
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Init(
@@ -521,7 +521,7 @@ class MinorDottySuite extends BaseDottySuite {
         Nil,
         Type.Name("Foo"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -640,7 +640,7 @@ class MinorDottySuite extends BaseDottySuite {
         Nil,
         Type.Name("X"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -676,7 +676,7 @@ class MinorDottySuite extends BaseDottySuite {
         Nil,
         Type.Name("Kind"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,

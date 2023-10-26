@@ -27,7 +27,7 @@ trait CommonTrees {
   }
 
   object EmptyCtor {
-    def apply() = Ctor.Primary(Nil, Name.Anonymous(), Nil)
+    def apply() = Ctor.Primary(Nil, anon, Seq.empty[Term.ParamClause])
     def unapply(tree: Tree): Boolean = tree match {
       case Ctor.Primary(Nil, Name.Anonymous(), Nil) => true
       case _ => false
@@ -44,7 +44,7 @@ trait CommonTrees {
 
   final val anon = meta.Name.Anonymous()
   final val phName = meta.Name.Placeholder()
-  final val ctor = Ctor.Primary(Nil, anon, Nil)
+  final val ctor = EmptyCtor()
   final def ctorp(lp: List[Term.Param] = Nil) = Ctor.Primary(Nil, anon, List(lp))
   final val slf = meta.Self(anon, None)
   final def self(name: String, tpe: String = null) = meta.Self(tname(name), Option(tpe).map(pname))

@@ -8,7 +8,7 @@ import scala.meta.dialects.Scala211
 
 class InvariantSuite extends TreeSuiteBase {
   test("secondary constructors in templates") {
-    val primaryCtor = Ctor.Primary(Nil, Name.Anonymous(), Nil)
+    val primaryCtor = EmptyCtor()
     val secondaryCtor = Ctor.Secondary(
       Nil,
       Name.Anonymous(),

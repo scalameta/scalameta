@@ -307,7 +307,7 @@ class EndMarkerSuite extends BaseDottySuite {
             Nil,
             Type.Name("Foo"),
             Nil,
-            Ctor.Primary(Nil, Name(""), Nil),
+            EmptyCtor(),
             Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
           ),
           Term.EndMarker(Term.Name("Foo"))
@@ -329,7 +329,7 @@ class EndMarkerSuite extends BaseDottySuite {
             Nil,
             Type.Name("Foo"),
             Nil,
-            Ctor.Primary(Nil, Name(""), Nil),
+            EmptyCtor(),
             Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
           ),
           Term.EndMarker(Term.Name("Foo"))

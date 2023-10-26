@@ -3,8 +3,9 @@ package scala.meta.tests
 import munit._
 
 import scala.meta._
+import scala.meta.tests.parsers.CommonTrees
 
-abstract class TreeSuiteBase extends FunSuite {
+abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 
   def emptyArgClause = Seq.empty[Term.ArgClause]
 

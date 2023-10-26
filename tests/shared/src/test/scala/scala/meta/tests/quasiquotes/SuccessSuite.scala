@@ -1912,7 +1912,7 @@ class SuccessSuite extends TreeSuiteBase {
           Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil),
           Type.Param(Nil, Type.Name("W"), Nil, Type.Bounds(None, None), Nil, Nil)
         ),
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           List(Init(Type.Name("F"), Name(""), emptyArgClause)),
@@ -2038,7 +2038,7 @@ class SuccessSuite extends TreeSuiteBase {
         Nil,
         Type.Name("A"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
       ),
       Defn.Object(Nil, Term.Name("B"), Template(Nil, Nil, Self(Name(""), None), Nil, Nil))
@@ -2056,7 +2056,7 @@ class SuccessSuite extends TreeSuiteBase {
             Nil,
             Type.Name("A"),
             Nil,
-            Ctor.Primary(Nil, Name(""), Nil),
+            EmptyCtor(),
             Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
           ),
           Defn.Object(Nil, Term.Name("B"), Template(Nil, Nil, Self(Name(""), None), Nil, Nil))
@@ -2079,7 +2079,7 @@ class SuccessSuite extends TreeSuiteBase {
             Nil,
             Type.Name("A"),
             Nil,
-            Ctor.Primary(Nil, Name(""), Nil),
+            EmptyCtor(),
             Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
           ),
           Defn.Object(Nil, Term.Name("B"), Template(Nil, Nil, Self(Name(""), None), Nil, Nil))
@@ -2545,7 +2545,7 @@ class SuccessSuite extends TreeSuiteBase {
         Nil,
         Type.Name("A"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -2566,7 +2566,7 @@ class SuccessSuite extends TreeSuiteBase {
         Nil,
         Type.Name("A"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
@@ -2587,7 +2587,7 @@ class SuccessSuite extends TreeSuiteBase {
             Nil,
             Type.Name("A"),
             Nil,
-            Ctor.Primary(Nil, Name(""), Nil),
+            EmptyCtor(),
             Template(
               Nil,
               Nil,
@@ -2674,7 +2674,7 @@ class SuccessSuite extends TreeSuiteBase {
         Nil,
         Type.Name("C"),
         Nil,
-        Ctor.Primary(Nil, Name(""), Nil),
+        EmptyCtor(),
         Template(
           Nil,
           Nil,
