@@ -41,6 +41,7 @@ jobs:
         java:
           - '8'
           - '11'
+          - '21'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,7 +50,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: ${{ matrix.java }}
-          distribution: 'temurin'
+          distribution: 'zulu'
           cache: 'sbt'
       - run: sbt ++${{ matrix.scala }} tests${{ matrix.type }}/test
   testOlderScalaOnJVM:
