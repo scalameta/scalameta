@@ -960,32 +960,39 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("Ident.value for normal") {
-    val Tokens(bof, foo: Ident, eof) = "foo".parse[Term].get.tokens
-    assert(foo.value == "foo")
+    "foo".parse[Term].get.tokens match {
+      case Tokens(bof, foo: Ident, eof) =>
+        assert(foo.value == "foo")
+    }
   }
 
   test("Ident.value for backquoted") {
-    val Tokens(bof, foo: Ident, eof) = "`foo`".parse[Term].get.tokens
-    assert(foo.value == "foo")
-    assert(foo.syntax == "`foo`")
+    "`foo`".parse[Term].get.tokens match {
+      case Tokens(bof, foo: Ident, eof) =>
+        assert(foo.value == "foo")
+        assert(foo.syntax == "`foo`")
+    }
   }
 
   test("Interpolation.Id.value") {
-    val Tokens(bof, _, id: Interpolation.Id, _, _, _, _, eof) = """ q"" """.tokenize.get
-    assert(id.value == "q")
+    assertTokens(""" q"" """) { case Tokens(bof, _, id: Interpolation.Id, _, _, _, _, eof) =>
+      assert(id.value == "q")
+    }
   }
 
   test("Interpolation.Part.value") {
-    val Tokens(bof, _, _, _, part: Interpolation.Part, _, _, eof) = """ q"foo" """.tokenize.get
-    assert(part.value == "foo")
+    assertTokens(""" q"foo" """) { case Tokens(bof, _, _, _, part: Interpolation.Part, _, _, eof) =>
+      assert(part.value == "foo")
+    }
   }
 
   test("Interpolated tree parsed succesfully with windows newline") {
-    val foo = (""" q"foo"""" + "\r\n").tokenize.get
-    val Tokens(bof, _, _, _, part: Interpolation.Part, _, cr: CR, lf: LF, eof) = foo
-    assert(part.value == "foo")
-    assert(cr.syntax == "\r")
-    assert(lf.syntax == "\n")
+    assertTokens(""" q"foo"""" + "\r\n") {
+      case Tokens(bof, _, _, _, part: Interpolation.Part, _, cr: CR, lf: LF, eof) =>
+        assert(part.value == "foo")
+        assert(cr.syntax == "\r")
+        assert(lf.syntax == "\n")
+    }
   }
 
   test("Interpolated tree parsed succesfully with windows newline, with LF escaped") {
@@ -1005,27 +1012,30 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("Interpolated tree parsed succesfully with unix newline") {
-    val Tokens(bof, _, _, _, part: Interpolation.Part, _, lf: LF, eof) =
-      (""" q"foo"""" + "\n").tokenize.get
-    assert(part.value == "foo")
-    assert(lf.syntax == "\n")
+    assertTokens(""" q"foo"""" + "\n") {
+      case Tokens(bof, _, _, _, part: Interpolation.Part, _, lf: LF, eof) =>
+        assert(part.value == "foo")
+        assert(lf.syntax == "\n")
+    }
   }
 
   test("Interpolated with quote escape") {
     val stringInterpolation = """s"$"$name$" in quotes""""
 
-    val Tokens(
-      BOF(),
-      _: Interpolation.Id,
-      Interpolation.Start(),
-      Interpolation.Part("\""),
-      Interpolation.SpliceStart(),
-      Ident("name"),
-      Interpolation.SpliceEnd(),
-      Interpolation.Part("\" in quotes"),
-      Interpolation.End(),
-      EOF()
-    ) = dialects.Scala3(stringInterpolation).tokenize.get
+    assertTokens(stringInterpolation, dialects.Scala3) {
+      case Tokens(
+            BOF(),
+            _: Interpolation.Id,
+            Interpolation.Start(),
+            Interpolation.Part("\""),
+            Interpolation.SpliceStart(),
+            Ident("name"),
+            Interpolation.SpliceEnd(),
+            Interpolation.Part("\" in quotes"),
+            Interpolation.End(),
+            EOF()
+          ) =>
+    }
 
     assert(
       dialects.Scala212(stringInterpolation).tokenize.isInstanceOf[Tokenized.Error],
@@ -1034,71 +1044,90 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
     val stringInterpolationWithUnicode = s"""check_success(s"${'\\' + "u0024"}")"""
 
-    val Tokens(
-      BOF(),
-      Ident("check_success"),
-      LeftParen(),
-      _: Interpolation.Id,
-      Interpolation.Start(),
-      Interpolation.Part("$"),
-      Interpolation.End(),
-      RightParen(),
-      EOF()
-    ) = dialects.Scala3(stringInterpolationWithUnicode).tokenize.get
+    assertTokens(stringInterpolationWithUnicode, dialects.Scala3) {
+      case Tokens(
+            BOF(),
+            Ident("check_success"),
+            LeftParen(),
+            _: Interpolation.Id,
+            Interpolation.Start(),
+            Interpolation.Part("$"),
+            Interpolation.End(),
+            RightParen(),
+            EOF()
+          ) =>
+    }
 
   }
 
   test("Comment.value") {
-    val Tokens(bof, comment: Comment, eof) = "//foo".tokenize.get
-    assert(comment.value == "foo")
+    assertTokens("//foo") { case Tokens(bof, comment: Comment, eof) =>
+      assert(comment.value == "foo")
+    }
   }
 
   test("enum") {
-    val Tokens(BOF(), _: KwEnum, EOF()) = dialects.Scala3("enum").tokenize.get
-    val Tokens(BOF(), Ident("enum"), EOF()) = dialects.Scala212("enum").tokenize.get
-
-    val Tokens(
-      BOF(),
-      Interpolation.Id("s"),
-      Interpolation.Start(),
-      Interpolation.Part(""),
-      Interpolation.SpliceStart(),
-      Ident("enum"),
-      Interpolation.SpliceEnd(),
-      Interpolation.Part(""),
-      Interpolation.End(),
-      EOF()
-    ) = dialects.Scala212("s\"$enum\"").tokenize.get
-
+    assertTokens("enum", dialects.Scala3) { case Tokens(BOF(), _: KwEnum, EOF()) => }
+    assertTokens("enum", dialects.Scala212) { case Tokens(BOF(), Ident("enum"), EOF()) => }
+    assertTokens("s\"$enum\"", dialects.Scala212) {
+      case Tokens(
+            BOF(),
+            Interpolation.Id("s"),
+            Interpolation.Start(),
+            Interpolation.Part(""),
+            Interpolation.SpliceStart(),
+            Ident("enum"),
+            Interpolation.SpliceEnd(),
+            Interpolation.Part(""),
+            Interpolation.End(),
+            EOF()
+          ) =>
+    }
+    assertTokens("s\"$enum\"", dialects.Scala213) {
+      case Tokens(
+            BOF(),
+            Interpolation.Id("s"),
+            Interpolation.Start(),
+            Interpolation.Part(""),
+            Interpolation.SpliceStart(),
+            Ident("enum"),
+            Interpolation.SpliceEnd(),
+            Interpolation.Part(""),
+            Interpolation.End(),
+            EOF()
+          ) =>
+    }
     assert(dialects.Scala3("s\"$enum\"").tokenize.isInstanceOf[Tokenized.Error])
   }
 
   test("macro") {
-    val Tokens(
-      BOF(),
-      MacroQuote(),
-      Space(),
-      LeftBrace(),
-      Space(),
-      Ident("a"),
-      Space(),
-      RightBrace(),
-      EOF()
-    ) =
-      dialects.Scala3("' { a }").tokenize.get
+    assertTokens("' { a }", dialects.Scala3) {
+      case Tokens(
+            BOF(),
+            MacroQuote(),
+            Space(),
+            LeftBrace(),
+            Space(),
+            Ident("a"),
+            Space(),
+            RightBrace(),
+            EOF()
+          ) =>
+    }
 
-    val Tokens(
-      BOF(),
-      MacroSplice(),
-      Space(),
-      LeftBrace(),
-      Space(),
-      Ident("a"),
-      Space(),
-      RightBrace(),
-      EOF()
-    ) =
-      dialects.Scala3("$ { a }").tokenize.get
+    assertTokens("$ { a }", dialects.Scala3) {
+      case Tokens(
+            BOF(),
+            MacroSplice(),
+            Space(),
+            LeftBrace(),
+            Space(),
+            Ident("a"),
+            Space(),
+            RightBrace(),
+            EOF()
+          ) =>
+    }
   }
 
   test("numeric literal separator") {
@@ -1126,20 +1155,20 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("Interpolated string - escape") {
-    val Tokens(
-      BOF(),
-      Interpolation.Id("s"),
-      Interpolation.Start(),
-      Interpolation.Part("\\\"Hello\\\", "),
-      Interpolation.SpliceStart(),
-      Ident("person"),
-      Interpolation.SpliceEnd(),
-      Interpolation.Part(""),
-      Interpolation.End(),
-      EOF()
-    ) =
-      ("""s"\"Hello\", $person"""").tokenize.get
-
+    assertTokens("""s"\"Hello\", $person"""") {
+      case Tokens(
+            BOF(),
+            Interpolation.Id("s"),
+            Interpolation.Start(),
+            Interpolation.Part("\\\"Hello\\\", "),
+            Interpolation.SpliceStart(),
+            Ident("person"),
+            Interpolation.SpliceEnd(),
+            Interpolation.Part(""),
+            Interpolation.End(),
+            EOF()
+          ) =>
+    }
     assert(
       ("""s"\\"Hello"""").tokenize.isInstanceOf[Tokenized.Error]
     )
@@ -1147,24 +1176,24 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("Multiline interpolated string - ignore escape") {
-    val Tokens(
-      BOF(),
-      Interpolation.Id("raw"),
-      Interpolation.Start(),
-      Interpolation.Part("\\"),
-      Interpolation.SpliceStart(),
-      Ident("host"),
-      Interpolation.SpliceEnd(),
-      Interpolation.Part("\\"),
-      Interpolation.SpliceStart(),
-      Ident("share"),
-      Interpolation.SpliceEnd(),
-      Interpolation.Part("\\"),
-      Interpolation.End(),
-      EOF()
-    ) =
-      ("raw\"\"\"\\$host\\$share\\\"\"\"").tokenize.get
-
+    assertTokens("raw\"\"\"\\$host\\$share\\\"\"\"") {
+      case Tokens(
+            BOF(),
+            Interpolation.Id("raw"),
+            Interpolation.Start(),
+            Interpolation.Part("\\"),
+            Interpolation.SpliceStart(),
+            Ident("host"),
+            Interpolation.SpliceEnd(),
+            Interpolation.Part("\\"),
+            Interpolation.SpliceStart(),
+            Ident("share"),
+            Interpolation.SpliceEnd(),
+            Interpolation.Part("\\"),
+            Interpolation.End(),
+            EOF()
+          ) =>
+    }
   }
 
   test("#3328") {

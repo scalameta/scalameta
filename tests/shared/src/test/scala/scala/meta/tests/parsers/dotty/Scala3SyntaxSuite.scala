@@ -39,8 +39,11 @@ class Scala3SyntaxSuite extends BaseDottySuite {
       templStat("enum C extends A with B { case D }").syntax,
       "enum C extends A with B { case D }"
     )
-    val q"enum $name $template" = q"enum C extends A with B { case D }"
-    assertEquals(template.syntax, "extends A with B { case D }")
+    stat("enum C extends A with B { case D }") match {
+      case Defn.Enum(_, _, _, _, template) =>
+        assertEquals(template.syntax, "extends A with B { case D }")
+      case _ => fail("Should parse as enumCaseDef")
+    }
   }
 
   test("protected enum C extends A with B { case D }") {
@@ -50,9 +53,11 @@ class Scala3SyntaxSuite extends BaseDottySuite {
       templStat("protected enum C extends A with B { case D }").syntax,
       "protected enum C extends A with B { case D }"
     )
-    val q"protected enum $name $template" =
-      q"protected enum C extends A with B { case D }"
-    assertEquals(template.syntax, "extends A with B { case D }")
+    stat("protected enum C extends A with B { case D }") match {
+      case Defn.Enum(_, _, _, _, template) =>
+        assertEquals(template.syntax, "extends A with B { case D }")
+      case _ => fail("Should parse as enum")
+    }
   }
 
   test("given intOrd: Ord[Int]") {
