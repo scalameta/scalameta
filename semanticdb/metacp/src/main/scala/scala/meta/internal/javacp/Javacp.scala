@@ -166,12 +166,23 @@ object Javacp {
             method.signature.params
           }
 
-        val parameters: List[s.SymbolInformation] = params.zipWithIndex.map {
-          case (param: JavaTypeSignature, i) =>
-            val paramDisplayName = {
-              if (method.node.parameters == null) "param" + i
-              else method.node.parameters.get(i).name
-            }
+        /* Drop the constructor argument that holds the reference to the outer class.
+         * Previous method doesn't work for JDK 21.
+         */
+        val paramsFiltered = params.zipWithIndex.flatMap { case (param, i) =>
+          val paramDisplayName =
+            Option(method.node.parameters)
+              .flatMap(x => Option(x.get(i)))
+              .flatMap(x => Option(x.name))
+              .getOrElse("param" + i)
+          // this is not a valid name so most likely a reference to outer class
+          if (!paramDisplayName.startsWith("this$"))
+            Some((param, paramDisplayName))
+          else None
+        }
+
+        val parameters: List[s.SymbolInformation] = paramsFiltered.zipWithIndex.map {
+          case ((param: JavaTypeSignature, paramDisplayName), i) =>
             val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramDisplayName))
             val isRepeatedType = method.node.access.hasFlag(o.ACC_VARARGS) && i == params.length - 1
             val paramTpe =
