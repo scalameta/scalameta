@@ -63,6 +63,7 @@ object Javacp {
     val classDisplayName = sdisplayName(node.name)
     val classAccess = node.access | access
     val hasOuterClassReference = node.fields.asScala.exists(isOuterClassReference)
+    val isEnum = node.access.hasFlag(o.ACC_ENUM)
 
     val classKind =
       if (classAccess.hasFlag(o.ACC_INTERFACE)) k.INTERFACE
@@ -155,23 +156,49 @@ object Javacp {
         }
         methodTypeParameters.foreach(buf += _)
 
-        val params =
-          if (isConstructor && hasOuterClassReference &&
-            // Guard against an empty parameter list, which seems to only happen
-            // in the JDK for java/util/regex/Pattern.class
-            method.signature.params.nonEmpty) {
-            // Drop the constructor argument that holds the reference to the outer class.
-            method.signature.params.tail
-          } else {
-            method.signature.params
-          }
+        val collectNonMandatedParams
+            : Tuple2[JavaTypeSignature, Int] => Option[(JavaTypeSignature, Option[String])] = {
+          case (_, 0) if isConstructor && hasOuterClassReference =>
+            // For JDK <21, implicit params holding the reference to the outer class
+            // in constructors can only detected through flags if `-parameters` was passed
+            // to `javac`, so we use the presence of a field as a heuristic proxy to
+            // know when the first param is that reference and should therefore be skipped.
+            //
+            // Note that in JDK >=18, the heuristic is unreliable, as `javac` does not
+            // synthetize the reference field if not needed, even though the constructor
+            // still has an (unused) implicit param that we should skip.
+            //
+            // That means that inner classes not referencing their outer class will have
+            // their implicit constructor param visible if compiled without `-parameters`
+            // on JDK 18, 19 or 20.
+            None
+          case (sigParam, i) =>
+            val nodeParamOpt =
+              Option(method.node.parameters).flatMap(xs => Option(xs.get(i)))
+
+            nodeParamOpt match {
+              case Some(nodeParam)
+                  if (isConstructor && !isEnum &&
+                    (nodeParam.access.hasFlag(o.ACC_MANDATED) ||
+                      nodeParam.access.hasFlag(o.ACC_SYNTHETIC))) =>
+                // Remove params holding the reference to the outer class in constructors
+                None
+              case Some(nodeParam) =>
+                // For JDK >=21, null-named parameters may exist when `-parameters`
+                // was not passed to `javac` and there is a mandated param.
+                // See https://github.com/openjdk/jdk/pull/9862.
+                Some((sigParam, Option(nodeParam.name)))
+              case _ =>
+                Some((sigParam, None))
+            }
+        }
+
+        val params = method.signature.params.zipWithIndex
+          .collect(Function.unlift(collectNonMandatedParams))
 
         val parameters: List[s.SymbolInformation] = params.zipWithIndex.map {
-          case (param: JavaTypeSignature, i) =>
-            val paramDisplayName = {
-              if (method.node.parameters == null) "param" + i
-              else method.node.parameters.get(i).name
-            }
+          case ((param: JavaTypeSignature, paramDisplayNameOpt), i) =>
+            val paramDisplayName = paramDisplayNameOpt.getOrElse("param" + i)
             val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramDisplayName))
             val isRepeatedType = method.node.access.hasFlag(o.ACC_VARARGS) && i == params.length - 1
             val paramTpe =
