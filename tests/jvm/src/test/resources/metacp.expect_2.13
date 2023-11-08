@@ -1244,6 +1244,32 @@ com/javacp/NonGeneric#`<init>`(). => ctor <init>()
 com/javacp/NonGeneric#flush(). => method flush(): Unit
   Unit => scala/Unit#
 
+com/javacp/Outer.class
+----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/Outer.class
+Text => empty
+Language => Java
+Symbols => 5 entries
+
+Symbols:
+com/javacp/Outer# => private[javacp] class Outer extends Object { +2 decls }
+  javacp => com/javacp/
+  Object => java/lang/Object#
+com/javacp/Outer#Inner# => private[javacp] class Inner extends Object { +1 decls }
+  javacp => com/javacp/
+  Object => java/lang/Object#
+com/javacp/Outer#Inner#`<init>`(). => private[javacp] ctor <init>(values: Integer*)
+  javacp => com/javacp/
+  values => com/javacp/Outer#Inner#`<init>`().(values)
+  Integer => java/lang/Integer#
+com/javacp/Outer#Inner#`<init>`().(values) => param values: Integer*
+  Integer => java/lang/Integer#
+com/javacp/Outer#`<init>`(). => private[javacp] ctor <init>()
+  javacp => com/javacp/
+
 com/javacp/Recursive.class
 --------------------------
 
