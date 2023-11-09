@@ -3622,7 +3622,9 @@ improve on this in the future.
   </tr>
   <tr>
     <td><code>Annotation(TypeRef(None, &lt;scala/annotation/strictfp&gt;, List()))</code></td>
-    <td> Declared <code>strictfp</code>; floating-point mode is FP-strict e.g. <code>strictfp class MyClass</code>.</td>
+    <td>
+      Declared <code>strictfp</code>; floating-point mode is FP-strict e.g. <code>strictfp class MyClass</code>. Note that this is the default mode as of JDK17, so this deprecated annotation is no longer emitted for JDK17+ bytecode.
+    </td>
   </tr>
   <tr>
     <td>Not supported</td>

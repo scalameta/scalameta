@@ -20,6 +20,7 @@ import munit.FunSuite
 import munit.internal.difflib.DiffUtils
 import scala.meta.tests.metacp.Library
 import scala.meta.tests.metacp.MetacpOps
+import scala.util.Properties
 
 class ExpectSuite extends FunSuite {
 
@@ -31,7 +32,19 @@ class ExpectSuite extends FunSuite {
   }
   test("metacp.expect") {
     import MetacpExpect._
-    this.assertNoDiff(loadObtained, loadExpected)
+
+    val javaVersion = Properties.javaVersion.takeWhile(_.isDigit).toInt
+    val expected =
+      if (javaVersion >= 17)
+        // strictfp is deprecated since JDK 17 and therefore ACC_STRICT is no longer emitted.
+        // See https://openjdk.org/jeps/306.
+        loadExpected.replace(
+          """|com/javacp/Test#strictfpMethod(). => @strictfp private[javacp] method strictfpMethod(): Unit
+             |  strictfp => scala/annotation/strictfp#""".stripMargin,
+          "com/javacp/Test#strictfpMethod(). => private[javacp] method strictfpMethod(): Unit".stripMargin
+        )
+      else loadExpected
+    this.assertNoDiff(loadObtained, expected)
   }
   test("metac.expect") {
     import MetacExpect._
