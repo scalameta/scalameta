@@ -2988,4 +2988,14 @@ class SuccessSuite extends TreeSuiteBase {
     }
   }
 
+  test("#3388") {
+    val term = q"""new Foo(a = a, b = b)"""
+
+    val q"""new Foo(..$params2)""" = term
+    // exception during macro expansion
+
+    val q"""new Foo(...$params3)""" = term
+    // exception during macro expansion
+  }
+
 }
