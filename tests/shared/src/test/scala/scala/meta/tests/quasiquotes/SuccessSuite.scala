@@ -2990,12 +2990,14 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("#3388") {
     val term = q"""new Foo(a = a, b = b)"""
+    val assignA = Term.Assign(Term.Name("a"), Term.Name("a"))
+    val assignB = Term.Assign(Term.Name("b"), Term.Name("b"))
 
     val q"""new Foo(..$params2)""" = term
-    // exception during macro expansion
+    assertTrees(params2: _*)(assignA, assignB)
 
     val q"""new Foo(...$params3)""" = term
-    // exception during macro expansion
+    assertTrees(params3: _*)(Term.ArgClause(List(assignA, assignB), None))
   }
 
 }

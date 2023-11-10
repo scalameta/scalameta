@@ -38,7 +38,8 @@ object PlaceholderChecks {
         case t: Term.Select => queue += t.qual; iter
         case t: Term.Tuple => t.args.exists(isPlaceholder) || queue.nonEmpty && iter
         case t: Init =>
-          t.argClauses.exists(_.values.exists(isPlaceholder)) || queue.nonEmpty && iter
+          t.argClauses.exists(x => !x.isInstanceOf[Quasi] && x.values.exists(isPlaceholder)) ||
+          queue.nonEmpty && iter
         case t: Term.Apply => queue += t.fun; queue += t.argClause; iter
         case t: Term.ArgClause =>
           isBlockPlaceholder(t.values) || (t.parent match {
