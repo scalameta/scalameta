@@ -905,4 +905,89 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
+  test("#3390 within infix, within indented block") {
+    val code =
+      """object MyApp:
+        |  a >>> b.map:
+        |    foo
+        |    bar(
+        |      baz,
+        |      qux
+        |    )
+        |  >>> c
+        |""".stripMargin
+    val layout =
+      """|object MyApp {
+         |  a >>> b.map {
+         |    foo
+         |    bar(baz, qux) >>> c
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("MyApp"),
+      tpl(
+        Term.ApplyInfix(
+          tname("a"),
+          tname(">>>"),
+          Nil,
+          Term.Apply(
+            Term.Select(tname("b"), tname("map")),
+            Term.Block(
+              List(
+                tname("foo"),
+                Term.ApplyInfix(
+                  Term.Apply(tname("bar"), List(tname("baz"), tname("qux"))),
+                  tname(">>>"),
+                  Nil,
+                  List(tname("c"))
+                )
+              )
+            ) :: Nil
+          ) :: Nil
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("#3390 within infix, at top level") {
+    val code =
+      """a >>> b.map:
+        |  foo
+        |  bar(
+        |    baz,
+        |    qux
+        |  )
+        |>>> c
+        |""".stripMargin
+    val layout =
+      """|a >>> b.map {
+         |  foo
+         |  bar(baz, qux) >>> c
+         |}
+         |""".stripMargin
+    val tree = Term.ApplyInfix(
+      tname("a"),
+      tname(">>>"),
+      Nil,
+      Term.Apply(
+        Term.Select(tname("b"), tname("map")),
+        Term.Block(
+          List(
+            tname("foo"),
+            Term.ApplyInfix(
+              Term.Apply(tname("bar"), List(tname("baz"), tname("qux"))),
+              tname(">>>"),
+              Nil,
+              List(tname("c"))
+            )
+          )
+        ) :: Nil
+      ) :: Nil
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
 }
