@@ -748,15 +748,17 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                     case _ => shouldOutdent(rs)
                   }) =>
                 (Right(true), rs)
-              case (r: RegionIndent) :: (rs @ (rc: RegionControl) :: xs) if nextIndent < r.indent =>
+              case regions @ (r: SepRegionIndented) :: _ if nextIndent >= r.indent =>
+                (Right(false), regions) // we stop here
+              case (r: RegionIndent) :: (rs @ (rc: RegionControl) :: xs) =>
                 (Left(r), if (rc.isNotTerminatingTokenIfOptional(next)) xs else rs)
-              case (r: RegionIndent) :: RegionTemplateBody :: xs if nextIndent < r.indent =>
+              case (r: RegionIndent) :: RegionTemplateBody :: xs =>
                 (Left(r), xs)
               case (r: SepRegionIndented) :: xs if (prev match {
                     // then  [else]  [do]  catch  [finally]  [yield]  match
                     case _: KwElse | _: KwDo | _: KwFinally | _: KwYield => false
                     // exclude leading infix op
-                    case _ => nextIndent < r.indent && (!isLeadingInfix() || shouldOutdent(xs))
+                    case _ => shouldOutdent(xs) || !isLeadingInfix()
                   }) =>
                 (Left(r), xs)
             }
