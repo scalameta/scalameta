@@ -758,12 +758,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                     // then  [else]  [do]  catch  [finally]  [yield]  match
                     case _: KwElse | _: KwDo | _: KwFinally | _: KwYield => false
                     // exclude leading infix op
-                    case _ => shouldOutdent(xs) || !isLeadingInfix()
+                    case _ => nextIndent == 0 || shouldOutdent(xs) || !isLeadingInfix()
                   }) =>
                 (Left(r), xs)
             }
           def shouldOutdent(rs: List[SepRegion]): Boolean =
-            rs.find(_.isIndented).exists(_.indent > nextIndent)
+            rs.find(_.isIndented).exists(_.indent >= nextIndent)
 
           /**
            * Indent is needed in the following cases:

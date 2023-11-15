@@ -920,8 +920,8 @@ class FewerBracesSuite extends BaseDottySuite {
       """|object MyApp {
          |  a >>> b.map {
          |    foo
-         |    bar(baz, qux) >>> c
-         |  }
+         |    bar(baz, qux)
+         |  } >>> c
          |}
          |""".stripMargin
     val tree = Defn.Object(
@@ -929,23 +929,23 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("MyApp"),
       tpl(
         Term.ApplyInfix(
-          tname("a"),
+          Term.ApplyInfix(
+            tname("a"),
+            tname(">>>"),
+            Nil,
+            Term.Apply(
+              Term.Select(tname("b"), tname("map")),
+              Term.Block(
+                List(
+                  tname("foo"),
+                  Term.Apply(tname("bar"), List(tname("baz"), tname("qux")))
+                )
+              ) :: Nil
+            ) :: Nil
+          ),
           tname(">>>"),
           Nil,
-          Term.Apply(
-            Term.Select(tname("b"), tname("map")),
-            Term.Block(
-              List(
-                tname("foo"),
-                Term.ApplyInfix(
-                  Term.Apply(tname("bar"), List(tname("baz"), tname("qux"))),
-                  tname(">>>"),
-                  Nil,
-                  List(tname("c"))
-                )
-              )
-            ) :: Nil
-          ) :: Nil
+          List(tname("c"))
         ) :: Nil
       )
     )
@@ -965,27 +965,27 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|a >>> b.map {
          |  foo
-         |  bar(baz, qux) >>> c
-         |}
+         |  bar(baz, qux)
+         |} >>> c
          |""".stripMargin
     val tree = Term.ApplyInfix(
-      tname("a"),
+      Term.ApplyInfix(
+        tname("a"),
+        tname(">>>"),
+        Nil,
+        Term.Apply(
+          Term.Select(tname("b"), tname("map")),
+          Term.Block(
+            List(
+              tname("foo"),
+              Term.Apply(tname("bar"), List(tname("baz"), tname("qux")))
+            )
+          ) :: Nil
+        ) :: Nil
+      ),
       tname(">>>"),
       Nil,
-      Term.Apply(
-        Term.Select(tname("b"), tname("map")),
-        Term.Block(
-          List(
-            tname("foo"),
-            Term.ApplyInfix(
-              Term.Apply(tname("bar"), List(tname("baz"), tname("qux"))),
-              tname(">>>"),
-              Nil,
-              List(tname("c"))
-            )
-          )
-        ) :: Nil
-      ) :: Nil
+      List(tname("c"))
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
