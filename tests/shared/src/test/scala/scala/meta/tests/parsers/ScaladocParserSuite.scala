@@ -1886,8 +1886,8 @@ class ScaladocParserSuite extends FunSuite {
         )
       )
     )
-    assertEquals(javaTag1.syntax, "{@@tag1}")
-    assertEquals(javaTag2.syntax, "{@@tag2with desc}")
+    assertEquals(javaTag1.syntax, "{@tag1}")
+    assertEquals(javaTag2.syntax, "{@tag2 with desc}")
   }
 
   test("table escaped pipe") {
