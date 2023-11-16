@@ -49,7 +49,7 @@ object Scaladoc {
 
   /** Represents an enclosed tagged documentation remark */
   final case class EnclosedJavaTag(tag: String, desc: Seq[String] = Nil) extends TextPart {
-    override def syntax: String = desc.mkString(s"{@$tag", " ", "}")
+    override def syntax: String = (tag +: desc).mkString("{", " ", "}")
   }
 
   /** A block of one or more lines of code */
