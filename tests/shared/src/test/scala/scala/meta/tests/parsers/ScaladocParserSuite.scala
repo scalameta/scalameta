@@ -1857,6 +1857,8 @@ class ScaladocParserSuite extends FunSuite {
   }
 
   test("enclosed java tag") {
+    val javaTag1 = EnclosedJavaTag("@tag1")
+    val javaTag2 = EnclosedJavaTag("@tag2", List("with", "desc"))
     assertEquals(
       parseString(
         """
@@ -1873,8 +1875,8 @@ class ScaladocParserSuite extends FunSuite {
           Paragraph(
             Text(
               Seq(
-                EnclosedJavaTag("@tag1"),
-                EnclosedJavaTag("@tag2", List("with", "desc")),
+                javaTag1,
+                javaTag2,
                 Word("{@not"),
                 Word("a"),
                 Word("tag}")
@@ -1884,6 +1886,8 @@ class ScaladocParserSuite extends FunSuite {
         )
       )
     )
+    assertEquals(javaTag1.syntax, "{@@tag1}")
+    assertEquals(javaTag2.syntax, "{@@tag2with desc}")
   }
 
   test("table escaped pipe") {
