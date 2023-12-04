@@ -21,6 +21,8 @@ private[meta] case class CharArrayReader private (
     private var lastLineStartOffset: Int = 0
 ) {
 
+  import CharArrayReader._
+
   def this(input: Input, dialect: Dialect, reporter: Reporter) =
     this(buf = input.chars, dialect = dialect, reporter = reporter)
 
@@ -58,14 +60,14 @@ private[meta] case class CharArrayReader private (
       ch = SU
     } else {
       begCharOffset = endCharOffset
-      val (hi, hiEnd) = readUnicodeChar(endCharOffset)
+      val (hi, hiEnd) = readUnicodeChar(buf, endCharOffset)
       if (!Character.isHighSurrogate(hi)) {
         ch = hi
         endCharOffset = hiEnd
       } else if (hiEnd >= buf.length)
         readerError("invalid unicode surrogate pair", at = begCharOffset)
       else {
-        val (lo, loEnd) = readUnicodeChar(hiEnd)
+        val (lo, loEnd) = readUnicodeChar(buf, hiEnd)
         if (!Character.isLowSurrogate(lo))
           readerError("invalid unicode surrogate pair", at = begCharOffset)
         else {
@@ -81,39 +83,10 @@ private[meta] case class CharArrayReader private (
     ch
   }
 
-  /** Read next char interpreting \\uxxxx escapes; doesn't mutate internal state */
-  private def readUnicodeChar(offset: Int): (Char, Int) = {
-    val c = buf(offset)
-    val firstOffset = offset + 1 // offset after a single character
-
-    def evenSlashPrefix: Boolean = {
-      var p = firstOffset - 2
-      while (p >= 0 && buf(p) == '\\') p -= 1
-      (firstOffset - p) % 2 == 0
-    }
-
-    if (c != '\\' || firstOffset >= buf.length || buf(firstOffset) != 'u' || !evenSlashPrefix)
-      return (c, firstOffset)
-
-    var escapedOffset = firstOffset // offset after an escaped character
-    do escapedOffset += 1 while (escapedOffset < buf.length && buf(escapedOffset) == 'u')
-
-    // need 4 digits
-    if (escapedOffset + 3 >= buf.length)
-      return (c, firstOffset)
-
-    def udigit: Int =
-      try digit2int(buf(escapedOffset), 16)
-      finally escapedOffset += 1
-
-    val code = udigit << 12 | udigit << 8 | udigit << 4 | udigit
-    (code.toChar, escapedOffset)
-  }
-
   /** replace CR;LF by LF */
   private def skipCR() =
     if (ch == CR && endCharOffset < buf.length && buf(endCharOffset) == '\\') {
-      val (c, nextOffset) = readUnicodeChar(endCharOffset)
+      val (c, nextOffset) = readUnicodeChar(buf, endCharOffset)
       if (c == LF) {
         ch = LF
         endCharOffset = nextOffset
@@ -143,5 +116,38 @@ private[meta] case class CharArrayReader private (
   def getc() = { nextChar(); ch }
 
   final def wasMultiChar: Boolean = begCharOffset < endCharOffset - 1
+
+}
+
+object CharArrayReader {
+
+  /** Read next char interpreting \\uxxxx escapes; doesn't mutate internal state */
+  private def readUnicodeChar(buf: Array[Char], offset: Int): (Char, Int) = {
+    val c = buf(offset)
+    val firstOffset = offset + 1 // offset after a single character
+
+    def evenSlashPrefix: Boolean = {
+      var p = firstOffset - 2
+      while (p >= 0 && buf(p) == '\\') p -= 1
+      (firstOffset - p) % 2 == 0
+    }
+
+    if (c != '\\' || firstOffset >= buf.length || buf(firstOffset) != 'u' || !evenSlashPrefix)
+      return (c, firstOffset)
+
+    var escapedOffset = firstOffset // offset after an escaped character
+    do escapedOffset += 1 while (escapedOffset < buf.length && buf(escapedOffset) == 'u')
+
+    // need 4 digits
+    if (escapedOffset + 3 >= buf.length)
+      return (c, firstOffset)
+
+    def udigit: Int =
+      try digit2int(buf(escapedOffset), 16)
+      finally escapedOffset += 1
+
+    val code = udigit << 12 | udigit << 8 | udigit << 4 | udigit
+    (code.toChar, escapedOffset)
+  }
 
 }
