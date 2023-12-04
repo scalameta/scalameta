@@ -1218,4 +1218,10 @@ class TokenizerSuite extends BaseTokenizerSuite {
     )
   }
 
+  test("#3402") {
+    val code = "val MIN_HIGH_SURROGATE = '\\uD800'"
+    val res = dialects.Scala212(code).tokenize
+    assertEquals(res.get.toString, code)
+  }
+
 }
