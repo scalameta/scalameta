@@ -1221,10 +1221,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   test("#3402") {
     val code = "val MIN_HIGH_SURROGATE = '\\uD800'"
     val res = dialects.Scala212(code).tokenize
-    res match {
-      case Tokenized.Error(_, "invalid unicode surrogate pair", _) =>
-      case x => fail(s"unexpected tokenize: $x")
-    }
+    assertEquals(res.get.toString, code)
   }
 
 }

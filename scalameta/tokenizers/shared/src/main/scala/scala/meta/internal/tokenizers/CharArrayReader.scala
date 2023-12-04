@@ -61,12 +61,13 @@ private[meta] case class CharArrayReader private (
     } else {
       begCharOffset = endCharOffset
       val (hi, hiEnd) = readUnicodeChar(buf, endCharOffset)
-      if (!Character.isHighSurrogate(hi)) {
+      val isHiSurrogate = Character.isHighSurrogate(hi)
+      if (isHiSurrogate && hiEnd >= buf.length)
+        readerError("invalid unicode surrogate pair", at = begCharOffset)
+      else if (!isHiSurrogate || ch == '\'' && buf(hiEnd) == '\'' && !wasMultiChar) {
         ch = hi
         endCharOffset = hiEnd
-      } else if (hiEnd >= buf.length)
-        readerError("invalid unicode surrogate pair", at = begCharOffset)
-      else {
+      } else {
         val (lo, loEnd) = readUnicodeChar(buf, hiEnd)
         if (!Character.isLowSurrogate(lo))
           readerError("invalid unicode surrogate pair", at = begCharOffset)
