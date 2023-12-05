@@ -22,7 +22,7 @@ jobs:
       - name: Set up JVM
         uses: actions/setup-java@v4
         with:
-          java-version: '8'
+          java-version: '11'
           distribution: 'temurin'
           cache: 'sbt'
       - run: sbt ${{ matrix.command }}
