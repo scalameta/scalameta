@@ -21,26 +21,26 @@ class FewerBracesSuite extends BaseDottySuite {
     )(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("firstLine"))),
+        List(Pat.Var(tname("firstLine"))),
         None,
         Term.Apply(
           Term.Select(
             Term.Apply(
-              Term.Select(Term.Name("files"), Term.Name("get")),
-              List(Term.Name("fileName"))
+              Term.Select(tname("files"), tname("get")),
+              List(tname("fileName"))
             ),
-            Term.Name("fold")
+            tname("fold")
           ),
           List(
             Term.Block(
               List(
                 Defn.Val(
                   Nil,
-                  List(Pat.Var(Term.Name("fileNames"))),
+                  List(Pat.Var(tname("fileNames"))),
                   None,
-                  Term.Select(Term.Name("files"), Term.Name("values"))
+                  Term.Select(tname("files"), tname("values"))
                 ),
-                Term.Name("filenames")
+                tname("filenames")
               )
             )
           )
@@ -63,9 +63,9 @@ class FewerBracesSuite extends BaseDottySuite {
     )(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("firstLine"))),
+        List(Pat.Var(tname("firstLine"))),
         None,
-        Term.Apply(Term.Name("map"), List(Term.Name("indentedCode")))
+        Term.Apply(tname("map"), List(tname("indentedCode")))
       )
     )
   }
@@ -82,11 +82,11 @@ class FewerBracesSuite extends BaseDottySuite {
     )(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("firstLine"))),
+        List(Pat.Var(tname("firstLine"))),
         None,
         Term.Apply(
-          Term.Select(Term.Name("files"), Term.Name("map")),
-          List(Term.Function(List(Term.Param(Nil, Term.Name("a"), None, None)), Term.Name("a")))
+          Term.Select(tname("files"), tname("map")),
+          List(Term.Function(List(Term.Param(Nil, tname("a"), None, None)), tname("a")))
         )
       )
     )
@@ -104,17 +104,17 @@ class FewerBracesSuite extends BaseDottySuite {
     )(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("firstLine"))),
+        List(Pat.Var(tname("firstLine"))),
         None,
         Term.Apply(
-          Term.Select(Term.Name("files"), Term.Name("map")),
+          Term.Select(tname("files"), tname("map")),
           List(
             Term.Function(
               List(
-                Term.Param(Nil, Term.Name("a"), None, None),
-                Term.Param(Nil, Term.Name("b"), None, None)
+                Term.Param(Nil, tname("a"), None, None),
+                Term.Param(Nil, tname("b"), None, None)
               ),
-              Term.Name("a")
+              tname("a")
             )
           )
         )
@@ -137,17 +137,17 @@ class FewerBracesSuite extends BaseDottySuite {
     )(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("firstLine"))),
+        List(Pat.Var(tname("firstLine"))),
         None,
         Term.Apply(
-          Term.Select(Term.Name("files"), Term.Name("map")),
+          Term.Select(tname("files"), tname("map")),
           List(
             Term.PartialFunction(
               List(
                 Case(
-                  Pat.Tuple(List(Pat.Var(Term.Name("a")), Pat.Var(Term.Name("b")))),
+                  Pat.Tuple(List(Pat.Var(tname("a")), Pat.Var(tname("b")))),
                   None,
-                  Term.Name("a")
+                  tname("a")
                 )
               )
             )
@@ -180,7 +180,7 @@ class FewerBracesSuite extends BaseDottySuite {
     )(
       Defn.Def(
         Nil,
-        Term.Name("main"),
+        tname("main"),
         Nil,
         Nil,
         None,
@@ -188,29 +188,29 @@ class FewerBracesSuite extends BaseDottySuite {
           List(
             Defn.Val(
               Nil,
-              List(Pat.Var(Term.Name("firstLine"))),
+              List(Pat.Var(tname("firstLine"))),
               None,
               Term.Apply(
-                Term.Select(Term.Name("files"), Term.Name("map")),
+                Term.Select(tname("files"), tname("map")),
                 List(
                   Term.PartialFunction(
                     List(
                       Case(
-                        Pat.Extract(Term.Name("A"), List(Pat.Var(Term.Name("a")))),
+                        Pat.Extract(tname("A"), List(Pat.Var(tname("a")))),
                         None,
-                        Term.Name("a")
+                        tname("a")
                       ),
                       Case(
-                        Pat.Extract(Term.Name("B"), List(Pat.Var(Term.Name("b")))),
+                        Pat.Extract(tname("B"), List(Pat.Var(tname("b")))),
                         None,
-                        Term.Name("b")
+                        tname("b")
                       )
                     )
                   )
                 )
               )
             ),
-            Defn.Def(Nil, Term.Name("hello"), Nil, Nil, None, Term.Name("???"))
+            Defn.Def(Nil, tname("hello"), Nil, Nil, None, tname("???"))
           )
         )
       )
@@ -236,7 +236,7 @@ class FewerBracesSuite extends BaseDottySuite {
     )(
       Defn.Def(
         Nil,
-        Term.Name("O"),
+        tname("O"),
         Nil,
         Nil,
         None,
@@ -244,15 +244,15 @@ class FewerBracesSuite extends BaseDottySuite {
           List(
             Defn.Val(
               Nil,
-              List(Pat.Var(Term.Name("firstLine"))),
+              List(Pat.Var(tname("firstLine"))),
               None,
-              Term.Apply(Term.Select(Term.Name("files"), Term.Name("fold")), List(Lit.Int(123)))
+              Term.Apply(Term.Select(tname("files"), tname("fold")), List(Lit.Int(123)))
             ),
             Defn.Val(
               Nil,
-              List(Pat.Var(Term.Name("secondLine"))),
+              List(Pat.Var(tname("secondLine"))),
               None,
-              Term.Apply(Term.Select(Term.Name("files"), Term.Name("fold")), List(Lit.Int(123)))
+              Term.Apply(Term.Select(tname("files"), tname("fold")), List(Lit.Int(123)))
             )
           )
         )
@@ -324,7 +324,7 @@ class FewerBracesSuite extends BaseDottySuite {
     )(
       Defn.Def(
         Nil,
-        Term.Name("O"),
+        tname("O"),
         Nil,
         Nil,
         None,
@@ -332,21 +332,21 @@ class FewerBracesSuite extends BaseDottySuite {
           List(
             Defn.Val(
               Nil,
-              List(Pat.Var(Term.Name("firstLine"))),
+              List(Pat.Var(tname("firstLine"))),
               None,
               Term.Apply(
                 Term.Select(
                   Term
-                    .Apply(Term.Select(Term.Name("files"), Term.Name("fold")), List(Lit.Int(123))),
-                  Term.Name("apply")
+                    .Apply(Term.Select(tname("files"), tname("fold")), List(Lit.Int(123))),
+                  tname("apply")
                 ),
                 List(
                   Term.Function(
                     List(
-                      Term.Param(Nil, Term.Name("a"), None, None),
-                      Term.Param(Nil, Term.Name("b"), None, None)
+                      Term.Param(Nil, tname("a"), None, None),
+                      Term.Param(Nil, tname("b"), None, None)
                     ),
-                    Term.Name("a")
+                    tname("a")
                   )
                 )
               )
@@ -370,33 +370,33 @@ class FewerBracesSuite extends BaseDottySuite {
     )(
       Defn.Def(
         Nil,
-        Term.Name("O"),
+        tname("O"),
         Nil,
         Nil,
         None,
         Term.Apply(
           Term.Select(
             Term.Apply(
-              Term.Name("List"),
+              tname("List"),
               List(
                 Term.Tuple(
                   List(
                     Lit.Int(1),
                     Term.Tuple(
-                      List(Term.Apply(Term.Name("List"), List(Lit.String(""))), Lit.Int(3))
+                      List(Term.Apply(tname("List"), List(Lit.String(""))), Lit.Int(3))
                     )
                   )
                 )
               )
             ),
-            Term.Name("map")
+            tname("map")
           ),
           List(
             Term.Function(
               List(
                 Term.Param(
                   Nil,
-                  Term.Name("a"),
+                  tname("a"),
                   Some(
                     Type.Tuple(
                       List(
@@ -414,8 +414,8 @@ class FewerBracesSuite extends BaseDottySuite {
                 )
               ),
               Term.ApplyInfix(
-                Term.Select(Term.Name("a"), Term.Name("_1")),
-                Term.Name("+"),
+                Term.Select(tname("a"), tname("_1")),
+                tname("+"),
                 Nil,
                 List(Lit.Int(1))
               )
@@ -442,26 +442,26 @@ class FewerBracesSuite extends BaseDottySuite {
     )(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("a"))),
+        List(Pat.Var(tname("a"))),
         Some(Type.Name("Int")),
         Term.Apply(
           Term.Apply(
             Term.Select(
               Term.Apply(
-                Term.Select(Term.Name("xs"), Term.Name("map")),
+                Term.Select(tname("xs"), tname("map")),
                 List(
                   Term.Function(
-                    List(Term.Param(Nil, Term.Name("x"), None, None)),
-                    Term.ApplyInfix(Term.Name("x"), Term.Name("*"), Nil, List(Term.Name("x")))
+                    List(Term.Param(Nil, tname("x"), None, None)),
+                    Term.ApplyInfix(tname("x"), tname("*"), Nil, List(tname("x")))
                   )
                 )
               ),
-              Term.Name("filter")
+              tname("filter")
             ),
             List(
               Term.Function(
-                List(Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None)),
-                Term.ApplyInfix(Term.Name("y"), Term.Name(">"), Nil, List(Lit.Int(0)))
+                List(Term.Param(Nil, tname("y"), Some(Type.Name("Int")), None)),
+                Term.ApplyInfix(tname("y"), tname(">"), Nil, List(Lit.Int(0)))
               )
             )
           ),
@@ -491,7 +491,7 @@ class FewerBracesSuite extends BaseDottySuite {
           Nil,
           Nil,
           Self(Name(""), None),
-          List(Term.Apply(Term.Name("f"), List(Lit.Int(22)))),
+          List(Term.Apply(tname("f"), List(Lit.Int(22)))),
           Nil
         )
       )
@@ -515,12 +515,12 @@ class FewerBracesSuite extends BaseDottySuite {
       Term.Apply(
         Term.Select(
           Term.Apply(
-            Term.Select(Term.Name("xs"), Term.Name("map")),
-            List(Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x")))
+            Term.Select(tname("xs"), tname("map")),
+            List(Term.Function(List(Term.Param(Nil, tname("x"), None, None)), tname("x")))
           ),
-          Term.Name("filter")
+          tname("filter")
         ),
-        List(Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x")))
+        List(Term.Function(List(Term.Param(Nil, tname("x"), None, None)), tname("x")))
       )
     )
   }
@@ -544,29 +544,29 @@ class FewerBracesSuite extends BaseDottySuite {
     )(
       Term.If(
         Term.ApplyInfix(
-          Term.Select(Term.Name("arr"), Term.Name("isEmpty")),
-          Term.Name("||"),
+          Term.Select(tname("arr"), tname("isEmpty")),
+          tname("||"),
           Nil,
           List(
             Term.Apply(
-              Term.Name("locally"),
+              tname("locally"),
               List(
                 Term.Block(
                   List(
                     Defn.Val(
                       Nil,
-                      List(Pat.Var(Term.Name("first"))),
+                      List(Pat.Var(tname("first"))),
                       None,
-                      Term.Apply(Term.Name("arr"), List(Lit.Int(0)))
+                      Term.Apply(tname("arr"), List(Lit.Int(0)))
                     ),
-                    Term.ApplyInfix(Term.Name("first"), Term.Name("!="), Nil, List(Lit.Int(1)))
+                    Term.ApplyInfix(tname("first"), tname("!="), Nil, List(Lit.Int(1)))
                   )
                 )
               )
             )
           )
         ),
-        Term.Apply(Term.Name("println"), List(Lit.String("invalid arr"))),
+        Term.Apply(tname("println"), List(Lit.String("invalid arr"))),
         Lit.Unit(),
         Nil
       )
@@ -591,21 +591,21 @@ class FewerBracesSuite extends BaseDottySuite {
     )(
       Defn.Def(
         Nil,
-        Term.Name("test24"),
+        tname("test24"),
         Nil,
         Nil,
         None,
         Term.Block(
           List(
             Term.ApplyInfix(
-              Term.ApplyInfix(Term.Name("x"), Term.Name("<"), Nil, List(Term.Name("y"))),
-              Term.Name("or"),
+              Term.ApplyInfix(tname("x"), tname("<"), Nil, List(tname("y"))),
+              tname("or"),
               Nil,
-              List(Term.ApplyInfix(Term.Name("x"), Term.Name(">"), Nil, List(Term.Name("y"))))
+              List(Term.ApplyInfix(tname("x"), tname(">"), Nil, List(tname("y"))))
             ),
             Term.Apply(
-              Term.Name("or"),
-              List(Term.ApplyInfix(Term.Name("x"), Term.Name("=="), Nil, List(Term.Name("y"))))
+              tname("or"),
+              List(Term.ApplyInfix(tname("x"), tname("=="), Nil, List(tname("y"))))
             )
           )
         )
