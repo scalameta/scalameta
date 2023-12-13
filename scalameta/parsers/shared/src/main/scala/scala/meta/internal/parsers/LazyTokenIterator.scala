@@ -37,16 +37,11 @@ private[parsers] class LazyTokenIterator private (
     curr = ref
   }
 
-  private def getIndentation(ref: TokenRef): Int = {
-    val foundIndentation = countIndent(ref.pointPos)
-    if (foundIndentation < 0)
-      // empty sepregions means we are at toplevel
-      ref.regions.headOption.fold(0)(_.indent)
-    else
-      foundIndentation
+  override def indenting: Boolean = curr.token.is[Token.LF] && {
+    // empty sepregions means we are at toplevel
+    val lastIndentation = curr.regions.headOption.fold(0)(_.indent)
+    lastIndentation >= 0 && lastIndentation < peekToken.pos.startColumn
   }
-
-  override def currentIndentation: Int = getIndentation(curr)
 
   def previousIndentation: Int = curr.regions match {
     case _ :: r :: _ => r.indent
@@ -61,9 +56,6 @@ private[parsers] class LazyTokenIterator private (
 
   override def fork: TokenIterator =
     new LazyTokenIterator(scannerTokens, prev, curr)
-
-  override def peekIndentation: Int =
-    getIndentation(getNextTokenRef())
 
   override def peekToken: Token =
     getNextTokenRef().token
