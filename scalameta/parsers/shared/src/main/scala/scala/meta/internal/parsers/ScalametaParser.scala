@@ -4376,12 +4376,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private def refinementInBraces(innerType: Option[Type], minIndent: Int): Option[Type] = {
     val notRefined = token match {
       case t: LeftBrace =>
-        dialect.allowSignificantIndentation &&
-        prevToken.pos.endLine < t.pos.endLine &&
-        t.pos.startColumn < minIndent
+        minIndent > 0 && t.pos.startColumn < minIndent &&
+        prevToken.pos.endLine < t.pos.endLine
       case _: LF =>
-        dialect.allowSignificantIndentation &&
-        peekToken.pos.startColumn < minIndent ||
+        minIndent > 0 && peekToken.pos.startColumn < minIndent ||
         !tryAhead[LeftBrace]
       case _ => true
     }
