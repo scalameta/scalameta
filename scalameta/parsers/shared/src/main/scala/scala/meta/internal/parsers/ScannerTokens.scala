@@ -291,8 +291,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         val token = tokens(pos)
         token match {
           case _: EOL | _: BOF => (acc, pos)
-          case AsMultilineComment(c) => (multilineCommentIndent(c), pos)
-          case _: Comment => countIndentInternal(pos - 1)
+          case c: Comment =>
+            if (AsMultilineComment.isMultiline(c)) (multilineCommentIndent(c), pos)
+            else countIndentInternal(pos - 1)
           case _: HSpace => countIndentInternal(pos - 1, acc + 1)
           case _ => (-1, -1)
         }
@@ -914,24 +915,22 @@ object ScannerTokens {
     new ScannerTokens(input.tokenize.get)
   }
 
-  private def multilineCommentIndent(t: Comment): Int = {
+  private[parsers] def multilineCommentIndent(t: Comment): Int = {
+    val str: String = t.value
     @tailrec
-    def loop(idx: Int, indent: Int, isAfterNewline: Boolean): Int = {
-      if (idx == t.value.length) indent
-      else {
-        t.value.charAt(idx) match {
-          case '\n' => loop(idx + 1, 0, isAfterNewline = true)
-          case ' ' | '\t' if isAfterNewline => loop(idx + 1, indent + 1, isAfterNewline)
-          case _ => loop(idx + 1, indent, isAfterNewline = false)
+    def loop(idx: Int, indent: Int): Int =
+      if (idx <= 0) indent
+      else
+        str.charAt(idx) match {
+          case '\n' => indent
+          case ' ' | '\t' => loop(idx - 1, indent + 1)
+          case _ => loop(idx - 1, 0)
         }
-      }
-    }
-
-    loop(0, 0, false)
+    loop(str.length - 1, 0)
   }
 
   @tailrec
-  def dropUntil(regions: List[SepRegion])(f: SepRegion => Boolean): List[SepRegion] =
+  private def dropUntil(regions: List[SepRegion])(f: SepRegion => Boolean): List[SepRegion] =
     regions match {
       case head :: tail => if (f(head)) tail else dropUntil(tail)(f)
       case _ => Nil
