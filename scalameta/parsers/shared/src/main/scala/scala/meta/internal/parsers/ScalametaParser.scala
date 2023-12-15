@@ -1444,10 +1444,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def newLineOptWhenFollowedBySignificantIndentationAnd(cond: Token => Boolean): Boolean = {
-    token.is[LF] && {
-      val prev = in.currentIndentation
-      prev >= 0 && nextIf(cond(peekToken) && in.peekIndentation > prev)
-    }
+    nextIf(in.indenting && cond(peekToken))
   }
 
   def isAfterOptNewLine[T: ClassTag]: Boolean = {

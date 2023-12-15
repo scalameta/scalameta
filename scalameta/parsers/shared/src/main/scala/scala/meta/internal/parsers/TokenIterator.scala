@@ -13,9 +13,8 @@ trait TokenIterator {
 
   def token: Token
   def tokenPos: Int
-  def currentIndentation: Int
+  def indenting: Boolean
 
   def peekToken: Token
   def peekIndex: Int
-  def peekIndentation: Int
 }
