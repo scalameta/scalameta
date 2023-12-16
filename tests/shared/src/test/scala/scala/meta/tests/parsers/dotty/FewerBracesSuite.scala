@@ -1014,10 +1014,12 @@ class FewerBracesSuite extends BaseDottySuite {
         |    arg
         |  ++ qux
         |""".stripMargin
-    val layout = "baz(arg ++ qux)"
-    val tree = Term.Apply(
-      tname("baz"),
-      List(Term.ApplyInfix(tname("arg"), tname("++"), Nil, List(tname("qux"))))
+    val layout = "baz(arg) ++ qux"
+    val tree = Term.ApplyInfix(
+      Term.Apply(tname("baz"), List(tname("arg"))),
+      tname("++"),
+      Nil,
+      List(tname("qux"))
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1082,18 +1084,17 @@ class FewerBracesSuite extends BaseDottySuite {
         |  ++
         |  qux
         |""".stripMargin
-    val layout =
-      """
-        |foo.bar(arg) ++ baz {
-        |  arg
-        |  ++
-        |}
-        |""".stripMargin
+    val layout = "foo.bar(arg) ++ baz(arg) ++ qux"
     val tree = Term.ApplyInfix(
-      Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+      Term.ApplyInfix(
+        Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+        tname("++"),
+        Nil,
+        List(Term.Apply(tname("baz"), List(tname("arg"))))
+      ),
       tname("++"),
       Nil,
-      List(Term.Apply(tname("baz"), List(Term.Block(List(tname("arg"), tname("++"))))))
+      List(tname("qux"))
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1109,16 +1110,17 @@ class FewerBracesSuite extends BaseDottySuite {
         |  ++
         |  qux
         |""".stripMargin
-    val layout =
-      """
-        |foo.bar {
-        |  arg
-        |  ++
-        |}
-        |""".stripMargin
-    val tree = Term.Apply(
-      Term.Select(tname("foo"), tname("bar")),
-      List(Term.Block(List(tname("arg"), tname("++"))))
+    val layout = "foo.bar(arg) ++ baz(arg) ++ qux"
+    val tree = Term.ApplyInfix(
+      Term.ApplyInfix(
+        Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+        tname("++"),
+        Nil,
+        List(Term.Apply(tname("baz"), List(tname("arg"))))
+      ),
+      tname("++"),
+      Nil,
+      List(tname("qux"))
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1200,15 +1202,17 @@ class FewerBracesSuite extends BaseDottySuite {
         |    arg
         |  ++ qux
         |""".stripMargin
-    val layout = "foo.bar(arg) ++ baz(arg ++ qux)"
+    val layout = "foo.bar(arg) ++ baz(arg) ++ qux"
     val tree = Term.ApplyInfix(
-      Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+      Term.ApplyInfix(
+        Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+        tname("++"),
+        Nil,
+        List(Term.Apply(tname("baz"), List(tname("arg"))))
+      ),
       tname("++"),
       Nil,
-      Term.Apply(
-        tname("baz"),
-        List(Term.ApplyInfix(tname("arg"), tname("++"), Nil, List(tname("qux"))))
-      ) :: Nil
+      List(tname("qux"))
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1223,20 +1227,17 @@ class FewerBracesSuite extends BaseDottySuite {
         |      arg
         |    ++ qux
         |""".stripMargin
-    val layout = "foo.bar(arg ++ baz(arg) ++ qux)"
-    val tree = Term.Apply(
-      Term.Select(tname("foo"), tname("bar")),
+    val layout = "foo.bar(arg) ++ baz(arg) ++ qux"
+    val tree = Term.ApplyInfix(
       Term.ApplyInfix(
-        Term.ApplyInfix(
-          tname("arg"),
-          tname("++"),
-          Nil,
-          List(Term.Apply(tname("baz"), List(tname("arg"))))
-        ),
+        Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
         tname("++"),
         Nil,
-        List(tname("qux"))
-      ) :: Nil
+        List(Term.Apply(tname("baz"), List(tname("arg"))))
+      ),
+      tname("++"),
+      Nil,
+      List(tname("qux"))
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1253,19 +1254,21 @@ class FewerBracesSuite extends BaseDottySuite {
         |    ++ qux
         |}
         |""".stripMargin
-    val layout = "object a { foo.bar(arg) ++ baz(arg ++ qux) }"
+    val layout = "object a { foo.bar(arg) ++ baz(arg) ++ qux }"
     val tree = Defn.Object(
       Nil,
       tname("a"),
       tpl(
         Term.ApplyInfix(
-          Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+          Term.ApplyInfix(
+            Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+            tname("++"),
+            Nil,
+            List(Term.Apply(tname("baz"), List(tname("arg"))))
+          ),
           tname("++"),
           Nil,
-          Term.Apply(
-            tname("baz"),
-            List(Term.ApplyInfix(tname("arg"), tname("++"), Nil, List(tname("qux"))))
-          ) :: Nil
+          List(tname("qux"))
         ) :: Nil
       )
     )
@@ -1283,19 +1286,24 @@ class FewerBracesSuite extends BaseDottySuite {
         |      arg
         |    ++ qux
         |""".stripMargin
-    val layout = "object a { foo.bar(arg) ++ baz(arg ++ qux) }"
+    val layout = "object a { foo.bar(arg) ++ baz(arg) ++ qux }"
     val tree = Defn.Object(
       Nil,
       tname("a"),
       tpl(
         Term.ApplyInfix(
-          Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+          Term.ApplyInfix(
+            Term.Apply(
+              Term.Select(tname("foo"), tname("bar")),
+              List(tname("arg"))
+            ),
+            tname("++"),
+            Nil,
+            List(Term.Apply(tname("baz"), List(tname("arg"))))
+          ),
           tname("++"),
           Nil,
-          Term.Apply(
-            tname("baz"),
-            List(Term.ApplyInfix(tname("arg"), tname("++"), Nil, List(tname("qux"))))
-          ) :: Nil
+          List(tname("qux"))
         ) :: Nil
       )
     )
@@ -1563,13 +1571,7 @@ class FewerBracesSuite extends BaseDottySuite {
         |        */ abc:
         |                arg3
         |""".stripMargin
-    val layout =
-      """
-        |def mtd = abc(arg1) ++ abc {
-        |  arg2
-        |  ++
-        |} abc arg3
-        |""".stripMargin
+    val layout = "def mtd = abc(arg1) ++ abc(arg2) ++ abc(arg3)"
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
@@ -1580,11 +1582,11 @@ class FewerBracesSuite extends BaseDottySuite {
           Term.Apply(tname("abc"), List(tname("arg1"))),
           tname("++"),
           Nil,
-          List(Term.Apply(tname("abc"), List(Term.Block(List(tname("arg2"), tname("++"))))))
+          List(Term.Apply(tname("abc"), List(tname("arg2"))))
         ),
-        tname("abc"),
+        tname("++"),
         Nil,
-        List(tname("arg3"))
+        List(Term.Apply(tname("abc"), List(tname("arg3"))))
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
