@@ -736,7 +736,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   //    for { (_, _) <- foo } yield ()```
                   // where `for` expands to `foo.withFilter(...).map(...)`
                   case g.Apply(s: g.Select, _) if isSyntheticName(s) => traverse(s)
-                  case _ => tryFindMtree(select.qualifier)
+                  case _ => traverse(select.qualifier)
                 }
                 tryFindSynthetic(select)
               case gtree: g.AppliedTypeTree =>

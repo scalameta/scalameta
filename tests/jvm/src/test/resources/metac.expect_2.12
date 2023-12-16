@@ -2321,6 +2321,76 @@ Occurrences:
 [3:19..3:20): a => example/Issue2144.Test#`<init>`().(a)
 [3:29..3:30): c => example/Issue2144.Test#`<init>`().(c)
 
+semanticdb/integration/src/main/scala/example/Issue5939Metals.scala
+-------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Issue5939Metals.scala
+Text => non-empty
+Language => Scala
+Symbols => 9 entries
+Occurrences => 23 entries
+Synthetics => 2 entries
+
+Symbols:
+example/AA# => class AA extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/AA#`<init>`(). => primary ctor <init>(val f: Function1[Int, Int])
+  f => example/AA#`<init>`().(f)
+  Function1 => scala/Function1#
+  Int => scala/Int#
+example/AA#`<init>`().(f) => val param f: Function1[Int, Int]
+  Function1 => scala/Function1#
+  Int => scala/Int#
+example/AA#f. => val method f: Function1[Int, Int]
+  Function1 => scala/Function1#
+  Int => scala/Int#
+example/AA. => final object AA extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/AA.a. => val method a: AA
+  AA => example/AA#
+example/AA.result. => val method result: Int
+  Int => scala/Int#
+example/AA.toF(). => implicit method toF(a: AA): Function1[Int, Int]
+  a => example/AA.toF().(a)
+  AA => example/AA#
+  Function1 => scala/Function1#
+  Int => scala/Int#
+example/AA.toF().(a) => param a: AA
+  AA => example/AA#
+
+Occurrences:
+[1:8..1:15): example <= example/
+[2:7..2:12): scala => scala/
+[2:13..2:21): language => scala/language.
+[2:22..2:41): implicitConversions => scala/language.implicitConversions.
+[4:6..4:8): AA <= example/AA#
+[4:8..4:8):  <= example/AA#`<init>`().
+[4:13..4:14): f <= example/AA#f.
+[4:16..4:19): Int => scala/Int#
+[4:23..4:26): Int => scala/Int#
+[6:7..6:9): AA <= example/AA.
+[7:15..7:18): toF <= example/AA.toF().
+[7:19..7:20): a <= example/AA.toF().(a)
+[7:22..7:24): AA => example/AA#
+[7:27..7:30): Int => scala/Int#
+[7:34..7:37): Int => scala/Int#
+[7:40..7:41): a => example/AA.toF().(a)
+[7:42..7:43): f => example/AA#f.
+[8:6..8:7): a <= example/AA.a.
+[8:14..8:16): AA => example/AA#
+[8:16..8:16):  => example/AA#`<init>`().
+[8:19..8:20): + => scala/Int#`+`(+4).
+[9:6..9:12): result <= example/AA.result.
+[9:15..9:16): a => example/AA.a.
+
+Synthetics:
+[9:15..9:16): a => *.apply
+  apply => scala/Function1#apply().
+[9:15..9:16): a => toF(*)
+  toF => example/AA.toF().
+
 semanticdb/integration/src/main/scala/example/local-file.scala
 --------------------------------------------------------------
 

@@ -1620,6 +1620,43 @@ example/A# => trait A extends AnyRef { +1 decls }
 example/A#foo(). => abstract method foo: Int
   Int => scala/Int#
 
+example/AA.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/AA.class
+Text => empty
+Language => Scala
+Symbols => 9 entries
+
+Symbols:
+example/AA# => class AA extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/AA#`<init>`(). => primary ctor <init>(val f: Function1[Int, Int])
+  f => example/AA#`<init>`().(f)
+  Function1 => scala/Function1#
+  Int => scala/Int#
+example/AA#`<init>`().(f) => val param f: Function1[Int, Int]
+  Function1 => scala/Function1#
+  Int => scala/Int#
+example/AA#f. => val method f: Function1[Int, Int]
+  Function1 => scala/Function1#
+  Int => scala/Int#
+example/AA. => final object AA extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/AA.a. => val method a: AA
+  AA => example/AA#
+example/AA.result. => val method result: Int
+  Int => scala/Int#
+example/AA.toF(). => implicit method toF(a: AA): Function1[Int, Int]
+  a => example/AA.toF().(a)
+  AA => example/AA#
+  Function1 => scala/Function1#
+  Int => scala/Int#
+example/AA.toF().(a) => param a: AA
+  AA => example/AA#
+
 example/Access.class
 --------------------
 
