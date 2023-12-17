@@ -9,6 +9,7 @@ object TreeToString {
   def apply(tree: Tree) = {
     val dialect = tree.origin match {
       case x: Origin.Parsed => x.dialect
+      case x: Origin.Generated => x.dialect
       case Origin.None if tree.isInstanceOf[Quasi] => QuasiquoteTerm(Scala211, multiline = true)
       case Origin.None => Scala211 // this dialect is as good as any as a default
     }

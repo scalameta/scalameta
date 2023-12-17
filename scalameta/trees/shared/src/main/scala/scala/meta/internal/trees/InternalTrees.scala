@@ -72,6 +72,10 @@ trait InternalTree extends Product {
     }
   }
 
+  def withDialect(dialect: Dialect): Tree = {
+    this.privateCopy(origin = Origin.Generated(dialect))
+  }
+
   // ==============================================================
   // Setters for pieces of internal state defined above.
   // Everyone except for scala.meta's core should be using "private"-less versions of these methods,

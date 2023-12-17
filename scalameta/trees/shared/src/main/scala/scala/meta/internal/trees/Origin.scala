@@ -31,4 +31,7 @@ object Origin {
     }
   }
 
+  @adt.leaf
+  class Generated(dialect: Dialect) extends Origin
+
 }
