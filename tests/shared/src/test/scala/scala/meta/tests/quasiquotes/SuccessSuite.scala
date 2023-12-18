@@ -4,6 +4,7 @@ package quasiquotes
 import munit._
 import scala.meta._
 import scala.meta.dialects.Scala211
+import scala.meta.internal.trees.Origin
 
 import compat.Platform.EOL
 
@@ -632,7 +633,11 @@ class SuccessSuite extends TreeSuiteBase {
     val q"$expr match { case bar => baz; ..case $casez; case q => w}" =
       q"foo match { case bar => baz; case _ => foo ; case q => w }"
     assertTree(expr)(Term.Name("foo"))
-    assertEquals(casez.toString, "List(case _ => foo)")
+    assertWithOriginalSyntax(casez: _*)(
+      "case _ => foo"
+    )(
+      "case _ => foo"
+    )
     assertTrees(casez: _*)(Case(Pat.Wildcard(), None, Term.Name("foo")))
   }
 
@@ -646,7 +651,13 @@ class SuccessSuite extends TreeSuiteBase {
   test("3 q\"expr match { ..case cases }\"") {
     val q"$expr match { ..case $casez }" = q"foo match { case bar => baz; case _ => foo }"
     assertTree(expr)(Term.Name("foo"))
-    assertEquals(casez.toString, "List(case bar => baz, case _ => foo)")
+    assertWithOriginalSyntax(casez: _*)(
+      "case bar => baz",
+      "case _ => foo"
+    )(
+      "case bar => baz",
+      "case _ => foo"
+    )
     assertTrees(casez: _*)(
       Case(Pat.Var(Term.Name("bar")), None, Term.Name("baz")),
       Case(Pat.Wildcard(), None, Term.Name("foo"))
@@ -672,7 +683,13 @@ class SuccessSuite extends TreeSuiteBase {
     val q"try $expr catch { case $case1 ..case $cases; case $case2 } finally $expropt" =
       q"try foo catch { case a => b; case _ => bar; case 1 => 2; case q => w} finally baz"
     assertTree(expr)(Term.Name("foo"))
-    assertEquals(cases.toString, "List(case _ => bar, case 1 => 2)")
+    assertWithOriginalSyntax(cases: _*)(
+      "case _ => bar",
+      "case 1 => 2"
+    )(
+      "case _ => bar",
+      "case 1 => 2"
+    )
     assertTrees(cases: _*)(
       Case(Pat.Wildcard(), None, Term.Name("bar")),
       Case(Lit.Int(1), None, Lit.Int(2))
@@ -2186,7 +2203,11 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(+)")
     assertTrees(mods: _*)(Mod.Covariant())
     assertTree(tparamname)(Type.Name("Z"))
-    assertEquals(tparams.toString, "[Q, W]")
+    assertWithOriginalSyntax(tparams)(
+      "[Q, W]"
+    )(
+      "[Q, W]"
+    )
     assertTree(tparams)(Type.ParamClause {
       List(
         Type.Param(Nil, Type.Name("Q"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
@@ -2539,7 +2560,11 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("1 source\"..stats\"") {
     val source"..$stats" = source"class A { val a = 'a'}"
-    assertEquals(stats.toString, "List(class A { val a = 'a' })")
+    assertWithOriginalSyntax(stats: _*)(
+      "class A { val a = 'a' }"
+    )(
+      "class A { val a = 'a' }"
+    )
     assertTrees(stats: _*)(
       Defn.Class(
         Nil,
@@ -2560,7 +2585,11 @@ class SuccessSuite extends TreeSuiteBase {
   test("2 source\"..stats\"") {
     val source"class B { val b = 'b'}; ..$stats" =
       source"class B { val b = 'b'}; class A { val a = 'a'}"
-    assertEquals(stats.toString, "List(class A { val a = 'a' })")
+    assertWithOriginalSyntax(stats: _*)(
+      "class A { val a = 'a' }"
+    )(
+      "class A { val a = 'a' }"
+    )
     assertTrees(stats: _*)(
       Defn.Class(
         Nil,
@@ -2998,6 +3027,14 @@ class SuccessSuite extends TreeSuiteBase {
 
     val q"""new Foo(...$params3)""" = term
     assertTrees(params3: _*)(Term.ArgClause(List(assignA, assignB), None))
+  }
+
+  test("#3409") {
+    val code: Tree = source"object Generated {}"
+    code.privateOrigin match {
+      case null =>
+      case x => fail(s"origin doesn't match: $x")
+    }
   }
 
 }
