@@ -442,7 +442,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def acceptStatSep(): Unit = token match {
-    case LF() | LFLF() => next()
+    case _: AtEOL => next()
     case t if isEndMarkerIntro(tokenPos) =>
     case _ => accept[Semicolon]
   }
@@ -962,7 +962,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           reduce(rhs, None)
         case _: Ident | _: Unquote =>
           loop(getNextRhs(typeName(), rhs))
-        case _: LF if dialect.allowInfixOperatorAfterNL =>
+        case _: EOL if dialect.allowInfixOperatorAfterNL =>
           tryGetNextInfixOpIfLeading(t.startTokenPos)(Type.Name.apply) match {
             case Some(op) => loop(getNextRhs(op, rhs))
             case _ => reduce(rhs, None)
@@ -1427,20 +1427,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   @inline
   def newLineOpt(): Unit = {
-    if (token.is[LF]) next()
+    if (token.is[EOL]) next()
   }
 
   @inline
   def newLinesOpt(): Unit = {
-    if (token.isAny[LF, LFLF]) next()
+    if (token.is[AtEOL]) next()
   }
 
   def newLineOptWhenFollowedBy(unapply: Token => Boolean): Unit = {
-    token.is[LF] && tryAhead(unapply(token))
+    token.is[EOL] && tryAhead(unapply(token))
   }
 
   def newLineOptWhenFollowedBy[T: ClassTag]: Unit = {
-    token.is[LF] && tryAhead[T]
+    token.is[EOL] && tryAhead[T]
   }
 
   def newLineOptWhenFollowedBySignificantIndentationAnd(cond: Token => Boolean): Boolean = {
@@ -1448,15 +1448,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def isAfterOptNewLine[T: ClassTag]: Boolean = {
-    if (token.is[LF]) tryAhead[T] else token.is[T]
+    if (token.is[EOL]) tryAhead[T] else token.is[T]
   }
 
   def isAfterOptNewLine(body: Token => Boolean): Boolean = {
-    if (token.is[LF]) tryAhead(body(token)) else body(token)
+    if (token.is[EOL]) tryAhead(body(token)) else body(token)
   }
 
   def getAfterOptNewLine[A](body: => Option[A]): Option[A] = {
-    if (token.is[LF]) tryAhead(body) else body
+    if (token.is[EOL]) tryAhead(body) else body
   }
 
   /* ------------- TYPES ---------------------------------------------------- */
@@ -1500,7 +1500,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   private def tryAcceptWithOptLF[T: ClassTag]: Boolean = {
     acceptOpt[T] || {
-      val ok = token.is[LF] && tryAhead[T]
+      val ok = token.is[EOL] && tryAhead[T]
       if (ok) next()
       ok
     }
@@ -1683,7 +1683,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   private def isEolAfterColonFewerBracesBody(): Boolean = peekToken match {
     case _: Indentation.Indent => true
-    case _: Indentation | _: LF => syntaxError("expected fewer-braces method body", token)
+    case _: Indentation | _: EOL => syntaxError("expected fewer-braces method body", token)
     case _ => false
   }
 
@@ -2151,7 +2151,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         // Check whether we're still infix or already postfix by testing the current token.
         // In the running example, we're at `a + [b]` (infix).
         // If we were parsing `val c = a b`, then we'd be at `val c = a b[]` (postfix).
-        if (if (token.is[LF]) nextIf(isExprIntro(peekToken, peekIndex))
+        if (if (token.is[EOL]) nextIf(isExprIntro(peekToken, peekIndex))
           else isExprIntro(token, tokenPos)) {
           // Infix chain continues, so we need to reduce the stack.
           // In the running example, base = List(), rhsK = [a].
@@ -2180,7 +2180,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val op = atCurPosNext(Term.Name("match"))
           val lhs = getPrevLhs(op)
           Some(Right(matchClause(lhs, getLhsStartPos(lhs))))
-        case _: LF if dialect.allowInfixOperatorAfterNL =>
+        case _: EOL if dialect.allowInfixOperatorAfterNL =>
           tryGetNextInfixOpIfLeading(startPos)(Term.Name.apply).map { op =>
             getNextRhs(op, autoPos(Type.ArgClause(Nil)))
           }
@@ -2435,7 +2435,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _: Dot | _: OpenDelim | _: Underscore => getRest()
         // see ArgumentExprs in:
         // https://scala-lang.org/files/archive/spec/2.13/13-syntax-summary.html#context-free-syntax
-        case _: LF if !isBrace && !dialect.allowSignificantIndentation && tryAhead[LeftBrace] =>
+        case _: EOL if !isBrace && !dialect.allowSignificantIndentation && tryAhead[LeftBrace] =>
           getRest()
         case _ =>
           makeTupleTerm { arg =>
@@ -3081,7 +3081,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def loop: Unit = token match {
       case NonParamsModifier() if isParams =>
       case _: Unquote if continueLoop =>
-      case _: LF if !isLocal => next(); loop
+      case _: EOL if !isLocal => next(); loop
       case _: Unquote | _: Ellipsis => appendMod; loop
       case _ if isModifier(tokenPos) => appendMod; loop
       case _ =>
@@ -4191,7 +4191,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
     val decltpe =
       if (!acceptOpt[Colon]) None
-      else if (token.isAny[Indentation, LF]) None // fewer braces
+      else if (token.isAny[Indentation, EOL]) None // fewer braces
       else Some(startInfixType())
     Right(Self(name, decltpe))
   }
@@ -4341,7 +4341,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def templateBodyOpt(owner: TemplateOwner): (Self, List[Stat]) = {
     if (isAfterOptNewLine[LeftBrace]) {
       templateBody(owner)
-    } else if (token.is[Colon] && peekToken.isAny[Indentation, LF]) {
+    } else if (token.is[Colon] && peekToken.isAny[Indentation, EOL]) {
       next()
       if (!token.is[Indentation.Indent]) syntaxError("expected template body", token)
       indentedOnOpen(templateStatSeq(owner))
@@ -4375,7 +4375,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case t: LeftBrace =>
         minIndent > 0 && t.pos.startColumn < minIndent &&
         prevToken.pos.endLine < t.pos.endLine
-      case _: LF =>
+      case _: EOL =>
         minIndent > 0 && peekToken.pos.startColumn < minIndent ||
         !tryAhead[LeftBrace]
       case _ => true
