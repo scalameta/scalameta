@@ -241,8 +241,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _: KwCatch | _: KwElse | _: KwExtends | _: KwFinally | _: KwForsome | _: KwMatch |
           _: KwWith | _: KwYield | _: RightParen | _: LeftBracket | _: RightBracket |
           _: RightBrace | _: Comma | _: Colon | _: Dot | _: Equals | _: Semicolon | _: Hash |
-          _: RightArrow | _: LeftArrow | _: Subtype | _: Supertype | _: Viewbound | _: LF |
-          _: LFLF | _: EOF =>
+          _: RightArrow | _: LeftArrow | _: Subtype | _: Supertype | _: Viewbound | _: AtEOLorF =>
         true
       case _ => false
     }
@@ -348,7 +347,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     val nextPos = currentPosition + 1
     nextPos < tokens.length && {
       val nextToken = tokens(nextPos)
-      nextToken.is[LF] || nextToken.is[Trivia] && isAheadNewLine(nextPos)
+      nextToken.is[EOL] || nextToken.is[Trivia] && isAheadNewLine(nextPos)
     }
   }
 

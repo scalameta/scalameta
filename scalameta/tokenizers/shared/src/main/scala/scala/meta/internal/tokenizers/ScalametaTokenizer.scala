@@ -34,7 +34,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     val isAmmoniteInput: Boolean = input.isInstanceOf[Input.Ammonite]
     def isAtLineStart: Boolean = {
       val last = tokens.get(tokens.size() - 1) // tokens is non-empty, contains BOF
-      last.isInstanceOf[Token.LF] || last.isInstanceOf[Token.FF] || last.isInstanceOf[Token.BOF]
+      last.isInstanceOf[Token.EOL] || last.isInstanceOf[Token.BOF]
     }
 
     def pushLegacyToken(curr: LegacyTokenData, next: => Option[LegacyTokenData]): Unit = {
