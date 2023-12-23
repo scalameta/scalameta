@@ -173,6 +173,7 @@ object Token {
     def end = start
   }
   @freeform("\n\n") private[meta] class LFLF extends AtEOL
+  @freeform("\n") private[meta] class InfixLF(invalid: Option[String]) extends EOL
 
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc

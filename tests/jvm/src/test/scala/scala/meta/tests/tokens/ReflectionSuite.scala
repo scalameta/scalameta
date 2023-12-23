@@ -34,6 +34,7 @@ class ReflectionSuite extends FunSuite {
       |Token.Ident
       |Token.Indentation.Indent
       |Token.Indentation.Outdent
+      |Token.InfixLF
       |Token.Interpolation.End
       |Token.Interpolation.Id
       |Token.Interpolation.Part

@@ -96,19 +96,6 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _ => true
     })
 
-  def getTokenAtLineStart(idx: Int): Token =
-    getTokenAtLineStart(idx, tokens(idx))
-
-  @tailrec
-  private def getTokenAtLineStart(idx: Int, nextNonSpace: Token): Token =
-    if (idx == 0) nextNonSpace
-    else
-      tokens(idx) match {
-        case _: AtEOL => nextNonSpace
-        case _: HSpace => getTokenAtLineStart(idx - 1, nextNonSpace)
-        case t => getTokenAtLineStart(idx - 1, t)
-      }
-
   val soft = new SoftKeywords(dialect)
 
   object TypeIntro {
@@ -693,30 +680,49 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           (prevToken.is[Indentation.Outdent] || canEndStat(prev) || isEndMarker()) &&
           !CantStartStat(next))
           (regions match {
-            case Nil => Some(regions)
             case RegionDefType :: rs =>
               if (next.isAny[LeftParen, LeftBracket, Equals]) None else Some(rs)
             // `extends` and `with` are covered by canEndStat() and CantStartStat above
             case RegionTemplateMark :: rs => if (blankBraceOr(!derives(next))) Some(rs) else None
             case RegionTemplateInherit :: rs =>
               if (blankBraceOr(!derives(next) && !derives(prev))) Some(rs) else None
-            case (_: CanProduceLF) :: _ => Some(regions)
+            case Nil | (_: CanProduceLF) :: _ => Some(regions)
             case _ => None
           }).map(rs => Right(lastWhitespaceToken(rs)))
         else None
       }
 
-      def isLeadingInfix() =
-        !newlines && dialect.allowInfixOperatorAfterNL &&
-          next.is[Ident] && next.isIdentSymbolicInfixOperator && {
-            val argPos = getStrictNext(nextPos)
-            argPos > nextPos && tokens(nextPos + 1).is[HSpace] &&
-            canBeLeadingInfixArg(tokens(argPos), argPos)
-          }
+      // https://dotty.epfl.ch/docs/reference/changed-features/operators.html#syntax-change-1
+      lazy val isLeadingInfix = sepRegionsOrig match {
+        case Nil | (_: CanProduceLF) :: _
+            if !newlines && lastNewlinePos >= 0 && dialect.allowInfixOperatorAfterNL &&
+              next.is[Ident] && next.isIdentSymbolicInfixOperator =>
+          isLeadingInfixArg(nextPos + 1, nextIndent)
+        case _ => LeadingInfix.No
+      }
+
+      def getInfixLFIfNeeded() = {
+        def getInfixLF(invalid: Option[String]) = Some(Right {
+          val lf = tokens(lastNewlinePos)
+          val out = InfixLF(lf.input, lf.dialect, lf.start, lf.end, invalid)
+          TokenRef(sepRegionsOrig, out, lastNewlinePos, null)
+        })
+        isLeadingInfix match {
+          case LeadingInfix.Yes => getInfixLF(None)
+          case LeadingInfix.InvalidArg if (sepRegionsOrig match {
+                // see in `ieLeadingInfix` above, `x` is guaranteed to be CanProduceLF
+                case x :: _ => x.indent >= 0 && x.indent < nextIndent
+                case _ => false
+              }) =>
+            getInfixLF(Some("Invalid indented leading infix operator found"))
+          case _ => None
+        }
+      }
 
       val resOpt =
         if (!hasLF) None
-        else if (!dialect.allowSignificantIndentation) getIfCanProduceLF(sepRegionsOrig)
+        else if (!dialect.allowSignificantIndentation)
+          getInfixLFIfNeeded().orElse(getIfCanProduceLF(sepRegionsOrig))
         else {
 
           /**
@@ -761,7 +767,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                     // then  [else]  [do]  catch  [finally]  [yield]  match
                     case _: KwElse | _: KwDo | _: KwFinally | _: KwYield => false
                     // exclude leading infix op
-                    case _ => findIndent(rs) >= nextIndent || !isLeadingInfix()
+                    case _ => findIndent(rs) >= nextIndent || isLeadingInfix != LeadingInfix.Yes
                   }) =>
                 (Left(r), rs)
             }
@@ -851,7 +857,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                     if (ko) None else emitIndent(rs)
                   case (x: RegionControlMaybeCond) :: rs if prev.is[RightParen] =>
                     val ko = next.is[Dot] || !x.isNotTerminatingTokenIfOptional(next) ||
-                      isLeadingInfix()
+                      isLeadingInfix == LeadingInfix.Yes
                     if (ko) None else emitIndent(x.asBody().fold(rs)(_ :: rs))
                   case (x: RegionControlMaybeCond) :: rs if x.isControlKeyword(prev) =>
                     emitIndent(x.asCond() :: rs)
@@ -879,7 +885,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
           @tailrec
           def iter(regions: List[SepRegion]): Option[Either[List[SepRegion], TokenRef]] = {
-            val res = regionsToRes(regions)
+            val res = regionsToRes(regions).orElse {
+              if (regions ne sepRegionsOrig) None else getInfixLFIfNeeded()
+            }
             if (res.isEmpty) regions match {
               case (r: RegionControl) :: rs
                   if !r.isControlKeyword(prev) &&
@@ -909,9 +917,37 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     }
   }
 
+  private def isLeadingInfixArg(afterOpPos: Int, nextIndent: Int) = {
+    // we don't check for pos to be within bounds since we would exit on EOF first
+    @tailrec def iter(pos: Int, indent: Int, prevNoNL: Boolean): LeadingInfix = tokens(pos) match {
+      case _: EOL => if (prevNoNL) iter(pos + 1, 0, false) else LeadingInfix.InvalidArg
+      case _: Whitespace => iter(pos + 1, if (prevNoNL) indent else indent + 1, prevNoNL)
+      case c: Comment =>
+        val commentIndent = multilineCommentIndent(c)
+        iter(pos + 1, if (commentIndent < 0) indent else commentIndent, true)
+      case t =>
+        if (indent >= 0 && indent < nextIndent) LeadingInfix.InvalidArg
+        else if (canBeLeadingInfixArg(t, pos)) LeadingInfix.Yes
+        else LeadingInfix.InvalidArg
+    }
+    tokens(afterOpPos) match {
+      case _: EOL => iter(afterOpPos + 1, 0, false)
+      case _: Whitespace => iter(afterOpPos + 1, -1, true)
+      case _: Comment => LeadingInfix.InvalidArg
+      case _ => LeadingInfix.No
+    }
+  }
+
 }
 
 object ScannerTokens {
+
+  private sealed trait LeadingInfix
+  private object LeadingInfix {
+    object No extends LeadingInfix
+    object Yes extends LeadingInfix
+    object InvalidArg extends LeadingInfix
+  }
 
   def apply(input: Input)(implicit dialect: Dialect): ScannerTokens = {
     new ScannerTokens(input.tokenize.get)
