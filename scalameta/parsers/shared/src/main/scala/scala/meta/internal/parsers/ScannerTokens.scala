@@ -656,24 +656,22 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       if (isTrailingComma) nextToken(curr, currPos, currPos + 1, sepRegionsOrig)
       else nonTrivial(getNonTrivialRegions(sepRegionsOrig))
     else {
-      var i = prevPos + 1
-      var lastNewlinePos = -1
-      var newlineStreak = false
-      var newlines = false
-      var hasLF = false
-      while (i < nextPos) {
-        val token = tokens(i)
-        if (token.is[EOL]) {
-          lastNewlinePos = i
-          hasLF = true
-          if (newlineStreak) newlines = true
-          newlineStreak = true
-        } else if (!token.is[Whitespace]) {
-          newlineStreak = false
-          hasLF |= MultilineComment(token)
-        }
-        i += 1
-      }
+      @tailrec
+      def findLastEOL(pos: Int): Int =
+        if (pos == prevPos) -1 else if (tokens(pos).is[EOL]) pos else findLastEOL(pos - 1)
+      @tailrec
+      def hasBlank(pos: Int, hadEOL: Boolean): Boolean =
+        if (pos == prevPos) false
+        else
+          tokens(pos) match {
+            case _: EOL => hadEOL || hasBlank(pos - 1, true)
+            case _: Whitespace => hasBlank(pos - 1, hadEOL)
+            case _ => hasBlank(pos - 1, false)
+          }
+
+      val hasLF = indentPos > prevPos // includes indentPos = -1
+      val lastNewlinePos = if (hasLF) findLastEOL(indentPos) else -1
+      val newlines = lastNewlinePos >= 0 && hasBlank(lastNewlinePos - 1, true)
 
       def lastWhitespaceToken(regions: List[SepRegion]) = {
         val token = tokens(lastNewlinePos)
