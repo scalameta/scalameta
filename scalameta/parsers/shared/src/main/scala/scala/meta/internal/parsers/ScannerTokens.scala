@@ -469,12 +469,14 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def isPrevEndMarker(): Boolean =
       prevPos > 0 && isEndMarkerIdentifier(prev) && isPrecededByNL(prevPos)
 
+    def getAtEof(sepRegions: List[SepRegion]) =
+      mkOutdentsOpt(currPos, sepRegions) {
+        case (r: SepRegionIndented) :: rs => (Left(r), rs)
+        case _ :: rs => (Right(true), rs)
+      }.fold(currRef(_), identity)
+
     def nonTrivial(sepRegions: List[SepRegion]) = curr match {
-      case _: EOF =>
-        mkOutdentsOpt(currPos, sepRegions) {
-          case (r: SepRegionIndented) :: rs => (Left(r), rs)
-          case _ :: rs => (Right(true), rs)
-        }.fold(currRef(_), identity)
+      case _: EOF => getAtEof(sepRegions)
       case _: Comma =>
         if (inParens(sepRegions))
           mkOutdentsOpt(currPos, sepRegions) {
@@ -649,7 +651,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _ => regions
     }
 
-    if (currNonTrivial)
+    if (nextPos < 0) getAtEof(getNonTrivialRegions(sepRegionsOrig))
+    else if (currNonTrivial)
       if (isTrailingComma) nextToken(curr, currPos, currPos + 1, sepRegionsOrig)
       else nonTrivial(getNonTrivialRegions(sepRegionsOrig))
     else {
@@ -712,7 +715,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           }
 
       val resOpt =
-        if (next == null || !hasLF) None
+        if (!hasLF) None
         else if (!dialect.allowSignificantIndentation) getIfCanProduceLF(sepRegionsOrig)
         else {
 
