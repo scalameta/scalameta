@@ -367,6 +367,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     val currNonTrivial = !curr.is[Trivia]
     val nextPos = tokens.indexWhere(!_.is[Trivia], currPos + 1)
     val next = if (nextPos >= 0) tokens(nextPos) else null
+    lazy val (nextIndent, indentPos) = countIndentAndNewlineIndex(nextPos)
 
     def isTrailingComma: Boolean =
       dialect.allowTrailingCommas &&
@@ -527,7 +528,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case RegionTemplateInherit :: rs if !prev.is[KwExtends] => RegionTemplateBody :: rs
           case _ => sepRegions
         }
-        currRef(RegionBrace(countIndent(nextPos)) :: lbRegions)
+        currRef(RegionBrace(nextIndent) :: lbRegions)
       case _: RightBrace =>
         // produce outdent for every indented region before RegionBrace|RegionEnum
         mkOutdentsOpt(currPos, sepRegions) {
@@ -554,7 +555,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             // for statements in indentation dialects
             val bodyIndent = rs match {
               case (ri: RegionIndent) :: _ => ri.indent
-              case _ => countIndent(nextPos)
+              case _ => nextIndent
             }
             new RegionCaseBody(bodyIndent, curr) :: rs
           case _ => sepRegions
@@ -714,7 +715,6 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         if (next == null || !hasLF) None
         else if (!dialect.allowSignificantIndentation) getIfCanProduceLF(sepRegionsOrig)
         else {
-          val (nextIndent, indentPos) = countIndentAndNewlineIndex(nextPos)
 
           /**
            * Outdent is needed in following cases:
