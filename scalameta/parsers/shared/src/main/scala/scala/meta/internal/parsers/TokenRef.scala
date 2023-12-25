@@ -12,6 +12,17 @@ private[parsers] class TokenRef private (
 ) {
   def withRegions(regions: List[SepRegion]): TokenRef =
     if (regions eq this.regions) this else new TokenRef(regions, token, pos, nextPos, pointPos)
+
+  override def toString: String = {
+    val buf = new StringBuffer()
+    val tokenName = token.getClass.getSimpleName
+    val tokenStr = if (token.isInstanceOf[Token.Trivia]) tokenName else s"$token($tokenName)"
+    buf.append(s"TR: $tokenStr @ [$pos, $pointPos, $nextPos]\n")
+    regions.zipWithIndex.foreach { case (r, i) =>
+      buf.append(s" SR $i: ${r.indent} ${r.getClass.getSimpleName}\n")
+    }
+    buf.toString()
+  }
 }
 
 private[parsers] object TokenRef {

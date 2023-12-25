@@ -373,10 +373,14 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         Right((head, last))
       }
 
-    def mkOutdentsT[A](xs: List[SepRegion], multiEOL: Boolean = false)(lt: List[SepRegion] => A)(
-        rt: (TokenRef, TokenRef) => A
-    )(implicit f: List[SepRegion] => OutdentInfo): A = mkOutdentsOpt(xs, multiEOL = multiEOL)
-      .fold(lt, rt.tupled)
+    def mkOutdentsT[A](xs: List[SepRegion], multiEOL: Boolean = false)(
+        lt: List[SepRegion] => A
+    )(rt: (TokenRef, TokenRef) => A)(implicit f: List[SepRegion] => OutdentInfo): A = {
+      xs.zipWithIndex.foreach { case (r, i) =>
+        Console.err.println(s" ? OUT $i: ${r.indent} ${r.getClass.getSimpleName}")
+      }
+      mkOutdentsOpt(xs, multiEOL = multiEOL).fold(lt, rt.tupled)
+    }
 
     def mkOutdents(xs: List[SepRegion], multiEOL: Boolean = false)(implicit
         f: List[SepRegion] => OutdentInfo
@@ -441,10 +445,14 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def isPrevEndMarker(): Boolean = prevPos > 0 && isEndMarkerIdentifier(prev) &&
       isPrecededByNL(prevPos)
 
-    def getAtEof(sepRegions: List[SepRegion]) = mkOutdents(sepRegions) {
-      case (r: SepRegionIndented) :: rs => OutdentInfo(r, rs)
-      case _ :: rs => OutdentInfo(null, rs)
-      case _ => null
+    def getAtEof(sepRegions: List[SepRegion]) = {
+      val res = mkOutdents(sepRegions) {
+        case (r: SepRegionIndented) :: rs => OutdentInfo(r, rs)
+        case _ :: rs => OutdentInfo(null, rs)
+        case _ => null
+      }
+      Console.err.println(s"ATEOF: $res")
+      res
     }
 
     def nonTrivial(sepRegions: List[SepRegion]) = curr match {
@@ -626,11 +634,26 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         RegionParen :: RegionForParens :: rs
       case _ => regions
     }
+    Console.err.println(s"PPOS=$prevPos PTOK=$prev [$prevToken]")
+    Console.err.println(
+      s" CPOS=$currPos CTOK=${if (currNonTrivial) curr.toString else curr.getClass.getSimpleName}"
+    )
+    Console.err.println(s" NPOS=$nextPos NTOK=$next")
+    sepRegionsOrig.zipWithIndex.foreach { case (r, i) =>
+      Console.err.println(s" <SR $i: ${r.indent} ${r.getClass.getSimpleName}")
+    }
+    Console.err.println(s" NIND=$nextIndent @ $indentPos")
 
     if (nextPos < 0) getAtEof(getNonTrivialRegions(sepRegionsOrig))
     else if (currNonTrivial)
-      if (isTrailingComma) nextToken(curr, currPos, currPos + 1, sepRegionsOrig)
-      else nonTrivial(getNonTrivialRegions(sepRegionsOrig))
+      if (isTrailingComma) {
+        Console.err.println(s" TC -> NT($currPos, ${currPos + 1})")
+        nextToken(curr, currPos, currPos + 1, sepRegionsOrig)
+      } else {
+        val res = nonTrivial(getNonTrivialRegions(sepRegionsOrig))
+        Console.err.println(res.toString)
+        res
+      }
     else {
       @tailrec
       def findFirstEOL(pos: Int): Int =
@@ -648,6 +671,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       val hasLF = indentPos > prevPos // includes indentPos = -1
       val eolPos = if (hasLF) findFirstEOL(prevPos + 1) else -1
       val multiEOL = eolPos >= 0 && hasBlank(eolPos)
+      Console.err.println(s" EOL=$eolPos (multi=$multiEOL)")
 
       def lastWhitespaceToken(rs: List[SepRegion], lineIndent: Int) = {
         val addRegionLine = lineIndent >= 0 && isIndented(rs, lineIndent)
@@ -713,6 +737,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case _ => None
         }
       }
+
+      Console.err.println(s" EOL=$eolPos (multi=$multiEOL)")
 
       val resOpt =
         if (!hasLF) None
@@ -908,7 +934,14 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           iter(sepRegionsOrig)
         }
       resOpt match {
-        case Some(Right(res)) => res
+        case Some(Right(res)) =>
+          @tailrec
+          def printTr(depth: Int, tr: TokenRef): Unit = if (tr ne null) {
+            Console.err.println(s"[$depth]$tr")
+            printTr(depth + 1, tr.next)
+          }
+          printTr(0, res)
+          res
         case Some(Left(rs)) => nextToken(prevToken, prevPos, nextPos, rs)
         case _ => nextToken(prevToken, prevPos, nextPos, sepRegionsOrig)
       }
