@@ -748,7 +748,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
               case (_: RegionNonDelimNonIndented) :: rs if (prev match {
                     // [then]  else  do  [catch]  finally  yield  [match]
                     case _: KwThen | _: KwCatch | _: KwMatch => false
-                    case _ => shouldOutdent(rs)
+                    case _ => rs.find(_.isIndented).exists(_.indent >= nextIndent)
                   }) =>
                 (Right(true), rs)
               case regions @ (r: SepRegionIndented) :: _ if nextIndent >= r.indent =>
@@ -761,12 +761,10 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                     // then  [else]  [do]  catch  [finally]  [yield]  match
                     case _: KwElse | _: KwDo | _: KwFinally | _: KwYield => false
                     // exclude leading infix op
-                    case _ => nextIndent == 0 || shouldOutdent(rs) || !isLeadingInfix()
+                    case _ => findIndent(rs) >= nextIndent || !isLeadingInfix()
                   }) =>
                 (Left(r), rs)
             }
-          def shouldOutdent(rs: List[SepRegion]): Boolean =
-            rs.find(_.isIndented).exists(_.indent >= nextIndent)
 
           /**
            * Indent is needed in the following cases:

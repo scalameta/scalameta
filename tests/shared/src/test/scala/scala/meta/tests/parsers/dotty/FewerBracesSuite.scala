@@ -1031,14 +1031,16 @@ class FewerBracesSuite extends BaseDottySuite {
         |  ++ qux
         |}
         |""".stripMargin
-    val layout = "object a { baz(arg ++ qux) }"
+    val layout = "object a { baz(arg) ++ qux }"
     val tree = Defn.Object(
       Nil,
       tname("a"),
       tpl(
-        Term.Apply(
-          tname("baz"),
-          List(Term.ApplyInfix(tname("arg"), tname("++"), Nil, List(tname("qux"))))
+        Term.ApplyInfix(
+          Term.Apply(tname("baz"), List(tname("arg"))),
+          tname("++"),
+          Nil,
+          List(tname("qux"))
         ) :: Nil
       )
     )
