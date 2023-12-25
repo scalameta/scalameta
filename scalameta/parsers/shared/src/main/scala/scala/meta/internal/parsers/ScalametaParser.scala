@@ -536,10 +536,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def isIdentOf(tok: Token, name: String) = isIdentAnd(tok, _ == name)
   @inline def isStar: Boolean = isStar(token)
   def isStar(tok: Token): Boolean = isIdentOf(tok, "*")
-  def isBar: Boolean = isIdentOf(token, "|")
   def isVarargStarParam(allowRepeated: Boolean) =
     allowRepeated && dialect.allowPostfixStarVarargSplices &&
-      isStar(token) && peekToken.is[RightParen]
+      isStar && peekToken.is[RightParen]
 
   private trait MacroIdent {
     protected def ident(token: Token): Option[String]
@@ -2143,10 +2142,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         Left(term)
       }
 
+      def emptyTypeArgs = autoPos(Type.ArgClause(Nil))
+
       def getPostfixOrNextRhs(op: Term.Name): Either[Term, Term] = {
         // Infix chain continues.
         // In the running example, we're at `a [+] b`.
-        val targs = if (token.is[LeftBracket]) exprTypeArgs() else autoPos(Type.ArgClause(Nil))
+        val targs = if (token.is[LeftBracket]) exprTypeArgs() else emptyTypeArgs
 
         // Check whether we're still infix or already postfix by testing the current token.
         // In the running example, we're at `a + [b]` (infix).
@@ -2182,7 +2183,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Some(Right(matchClause(lhs, getLhsStartPos(lhs))))
         case _: EOL if dialect.allowInfixOperatorAfterNL =>
           tryGetNextInfixOpIfLeading(startPos)(Term.Name.apply).map { op =>
-            getNextRhs(op, autoPos(Type.ArgClause(Nil)))
+            getNextRhs(op, emptyTypeArgs)
           }
         case _ => None
       }
@@ -2662,7 +2663,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     private def patternAlternatives(pats: List[Pat]): Pat = {
       val pat = pattern1()
       checkNoTripleDot(pat)
-      if (isBar) {
+      if (isIdentOf(token, "|")) {
         next()
         patternAlternatives(pat :: pats)
       } else if (pats.isEmpty) {
