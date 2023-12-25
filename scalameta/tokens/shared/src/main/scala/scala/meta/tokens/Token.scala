@@ -172,10 +172,10 @@ object Token {
     def this(input: Input, dialect: Dialect) = this(input, dialect, input.chars.length)
     def end = start
   }
+  @freeform("\n\n") private[meta] class LFLF extends AtEOL
 
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
-  @freeform("\n\n") private[meta] class LFLF extends AtEOL
   @freeform("ellipsis") private[meta] class Ellipsis(rank: Int) extends Token
   @freeform("unquote") private[meta] class Unquote extends Token
 

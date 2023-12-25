@@ -875,11 +875,13 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             }
           }
 
+          val regionsToRes: List[SepRegion] => Option[Either[List[SepRegion], TokenRef]] =
+            if (prevToken.is[Indentation]) _ => None
+            else getOutdentIfNeeded(_).fold(getIndentIfNeeded, x => Some(Right(x)))
+
           @tailrec
           def iter(regions: List[SepRegion]): Option[Either[List[SepRegion], TokenRef]] = {
-            val res =
-              if (prevToken.is[Indentation]) None
-              else getOutdentIfNeeded(regions).fold(getIndentIfNeeded, x => Some(Right(x)))
+            val res = regionsToRes(regions)
             if (res.isEmpty) regions match {
               case (r: RegionControl) :: rs
                   if !r.isControlKeyword(prev) &&
@@ -921,7 +923,7 @@ object ScannerTokens {
     val str: String = t.value
     @tailrec
     def loop(idx: Int, indent: Int): Int =
-      if (idx <= 0) indent
+      if (idx <= 0) -1
       else
         str.charAt(idx) match {
           case '\n' => indent
