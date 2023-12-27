@@ -674,20 +674,19 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           val prevPrevPos = getStrictPrev(prevPos)
           isEndMarkerIdentifier(tokens(prevPrevPos)) && isPrecededByNL(prevPrevPos)
         }
-        if (lastNewlinePos != -1 &&
-          (prevToken.is[Indentation.Outdent] || canEndStat(prev) || isEndMarker()) &&
-          !CantStartStat(next))
-          (regions match {
-            case RegionDefType :: rs =>
-              if (next.isAny[LeftParen, LeftBracket, Equals]) None else Some(rs)
-            // `extends` and `with` are covered by canEndStat() and CantStartStat above
-            case RegionTemplateMark :: rs => if (blankBraceOr(!derives(next))) Some(rs) else None
-            case RegionTemplateInherit :: rs =>
-              if (blankBraceOr(!derives(next) && !derives(prev))) Some(rs) else None
-            case Nil | (_: CanProduceLF) :: _ => Some(regions)
-            case _ => None
-          }).map(rs => Right(lastWhitespaceToken(rs)))
-        else None
+        @tailrec def strip(rs: List[SepRegion]): Option[List[SepRegion]] = rs match {
+          // `[`, `=` and `#` are covered by CantStartStat
+          case RegionDefType :: xs => if (next.is[LeftParen]) None else strip(xs)
+          // `extends` and `with` are covered by canEndStat() and CantStartStat
+          case RegionTemplateMark :: xs => if (blankBraceOr(!derives(next))) strip(xs) else None
+          case RegionTemplateInherit :: xs =>
+            if (blankBraceOr(!derives(next) && !derives(prev))) strip(xs) else None
+          case Nil | (_: CanProduceLF) :: _ => Some(rs)
+          case _ => None
+        }
+        val ok = lastNewlinePos >= 0 && !CantStartStat(next) &&
+          (prevToken.is[Indentation.Outdent] || canEndStat(prev) || isEndMarker())
+        if (ok) strip(regions).map(rs => Right(lastWhitespaceToken(rs))) else None
       }
 
       // https://dotty.epfl.ch/docs/reference/changed-features/operators.html#syntax-change-1
