@@ -308,4 +308,14 @@ class PatSuite extends ParseSuite {
     }
   }
 
+  test("case: break before `|`") {
+    val code =
+      """|case 'a'
+         |   | 'A' =>
+         |""".stripMargin
+    val layout = "case 'a' | 'A' =>"
+    val tree = Case(Pat.Alternative(Lit.Char('a'), Lit.Char('A')), None, Term.Block(Nil))
+    runTestAssert[Case](code, Some(layout))(tree)
+  }
+
 }

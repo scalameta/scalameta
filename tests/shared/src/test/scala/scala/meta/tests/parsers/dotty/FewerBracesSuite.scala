@@ -990,4 +990,659 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
+  test("scalafmt #3720 1 simple, space after op, top-level, not indented") {
+    val code =
+      """
+        |baz:
+        |  arg
+        |++ qux
+        |""".stripMargin
+    val layout = "baz(arg) ++ qux"
+    val tree = Term.ApplyInfix(
+      Term.Apply(tname("baz"), List(tname("arg"))),
+      tname("++"),
+      Nil,
+      List(tname("qux"))
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 1 simple, space after op, top-level, indented") {
+    val code =
+      """
+        |  baz:
+        |    arg
+        |  ++ qux
+        |""".stripMargin
+    val layout = "baz(arg ++ qux)"
+    val tree = Term.Apply(
+      tname("baz"),
+      List(Term.ApplyInfix(tname("arg"), tname("++"), Nil, List(tname("qux"))))
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 1 simple, space after op, object in braces") {
+    val code =
+      """
+        |object a {
+        |  baz:
+        |    arg
+        |  ++ qux
+        |}
+        |""".stripMargin
+    val layout = "object a { baz(arg) ++ qux }"
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(
+        Term.ApplyInfix(
+          Term.Apply(tname("baz"), List(tname("arg"))),
+          tname("++"),
+          Nil,
+          List(tname("qux"))
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 1 simple, space after op, object indented") {
+    val code =
+      """
+        |object a:
+        |  baz:
+        |    arg
+        |  ++ qux
+        |""".stripMargin
+    val layout = "object a { baz(arg) ++ qux }"
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(
+        Term.ApplyInfix(
+          Term.Apply(tname("baz"), List(tname("arg"))),
+          tname("++"),
+          Nil,
+          List(tname("qux"))
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 2 complex, break after op, top-level, not indented") {
+    val code =
+      """
+        |foo.bar:
+        |  arg
+        |++
+        |  baz:
+        |    arg
+        |  ++
+        |  qux
+        |""".stripMargin
+    val layout =
+      """
+        |foo.bar(arg) ++ baz {
+        |  arg
+        |  ++
+        |}
+        |""".stripMargin
+    val tree = Term.ApplyInfix(
+      Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+      tname("++"),
+      Nil,
+      List(Term.Apply(tname("baz"), List(Term.Block(List(tname("arg"), tname("++"))))))
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 2 complex, break after op, top-level, indented") {
+    val code =
+      """
+        |  foo.bar:
+        |    arg
+        |  ++
+        |  baz:
+        |    arg
+        |  ++
+        |  qux
+        |""".stripMargin
+    val layout =
+      """
+        |foo.bar {
+        |  arg
+        |  ++
+        |}
+        |""".stripMargin
+    val tree = Term.Apply(
+      Term.Select(tname("foo"), tname("bar")),
+      List(Term.Block(List(tname("arg"), tname("++"))))
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 2 complex, break after op, objeect in braces") {
+    val code =
+      """
+        |object a {
+        |  foo.bar:
+        |    arg
+        |  ++
+        |  baz:
+        |    arg
+        |  ++
+        |  qux
+        |}
+        |""".stripMargin
+    val layout = "object a { foo.bar(arg) ++ baz(arg) ++ qux }"
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(
+        Term.ApplyInfix(
+          Term.ApplyInfix(
+            Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+            tname("++"),
+            Nil,
+            List(Term.Apply(tname("baz"), List(tname("arg"))))
+          ),
+          tname("++"),
+          Nil,
+          List(tname("qux"))
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 2 complex, break after op, objeect indented") {
+    val code =
+      """
+        |object a:
+        |  foo.bar:
+        |    arg
+        |  ++
+        |  baz:
+        |    arg
+        |  ++
+        |  qux
+        |""".stripMargin
+    val layout = "object a { foo.bar(arg) ++ baz(arg) ++ qux }"
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(
+        Term.ApplyInfix(
+          Term.ApplyInfix(
+            Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+            tname("++"),
+            Nil,
+            List(Term.Apply(tname("baz"), List(tname("arg"))))
+          ),
+          tname("++"),
+          Nil,
+          List(tname("qux"))
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 3 complex, space after op, top-level, not indented") {
+    val code =
+      """
+        |foo.bar:
+        |  arg
+        |++
+        |  baz:
+        |    arg
+        |  ++ qux
+        |""".stripMargin
+    val layout = "foo.bar(arg) ++ baz(arg ++ qux)"
+    val tree = Term.ApplyInfix(
+      Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+      tname("++"),
+      Nil,
+      Term.Apply(
+        tname("baz"),
+        List(Term.ApplyInfix(tname("arg"), tname("++"), Nil, List(tname("qux"))))
+      ) :: Nil
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 3 complex, space after op, top-level, indented") {
+    val code =
+      """
+        |  foo.bar:
+        |    arg
+        |  ++
+        |    baz:
+        |      arg
+        |    ++ qux
+        |""".stripMargin
+    val layout = "foo.bar(arg ++ baz(arg) ++ qux)"
+    val tree = Term.Apply(
+      Term.Select(tname("foo"), tname("bar")),
+      Term.ApplyInfix(
+        Term.ApplyInfix(
+          tname("arg"),
+          tname("++"),
+          Nil,
+          List(Term.Apply(tname("baz"), List(tname("arg"))))
+        ),
+        tname("++"),
+        Nil,
+        List(tname("qux"))
+      ) :: Nil
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 3 complex, space after op, object in braces") {
+    val code =
+      """
+        |object a {
+        |  foo.bar:
+        |    arg
+        |  ++
+        |    baz:
+        |      arg
+        |    ++ qux
+        |}
+        |""".stripMargin
+    val layout = "object a { foo.bar(arg) ++ baz(arg ++ qux) }"
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(
+        Term.ApplyInfix(
+          Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+          tname("++"),
+          Nil,
+          Term.Apply(
+            tname("baz"),
+            List(Term.ApplyInfix(tname("arg"), tname("++"), Nil, List(tname("qux"))))
+          ) :: Nil
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 3 complex, space after op, object indented") {
+    val code =
+      """
+        |object a:
+        |  foo.bar:
+        |    arg
+        |  ++
+        |    baz:
+        |      arg
+        |    ++ qux
+        |""".stripMargin
+    val layout = "object a { foo.bar(arg) ++ baz(arg ++ qux) }"
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(
+        Term.ApplyInfix(
+          Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+          tname("++"),
+          Nil,
+          Term.Apply(
+            tname("baz"),
+            List(Term.ApplyInfix(tname("arg"), tname("++"), Nil, List(tname("qux"))))
+          ) :: Nil
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 4 complex, partial outdents, unindented def") {
+    val code =
+      """
+        |def mtd =
+        |    abc:
+        |        arg1
+        |      ++
+        |        abc:
+        |            arg2
+        |          ++
+        |            abc:
+        |                arg3
+        |""".stripMargin
+    val layout = "def mtd = abc(arg1 ++ abc(arg2 ++ abc(arg3)))"
+    val tree = Defn.Def(
+      Nil,
+      tname("mtd"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("abc"),
+        Term.ApplyInfix(
+          tname("arg1"),
+          tname("++"),
+          Nil,
+          Term.Apply(
+            tname("abc"),
+            Term.ApplyInfix(
+              tname("arg2"),
+              tname("++"),
+              Nil,
+              List(Term.Apply(tname("abc"), List(tname("arg3"))))
+            ) :: Nil
+          ) :: Nil
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 4 complex, partial outdents, indented def") {
+    val code =
+      """
+        |  def mtd =
+        |    abc:
+        |        arg1
+        |      ++
+        |        abc:
+        |            arg2
+        |          ++
+        |            abc:
+        |                arg3
+        |""".stripMargin
+    val layout = "def mtd = abc(arg1 ++ abc(arg2 ++ abc(arg3)))"
+    val tree = Defn.Def(
+      Nil,
+      tname("mtd"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("abc"),
+        Term.ApplyInfix(
+          tname("arg1"),
+          tname("++"),
+          Nil,
+          Term.Apply(
+            tname("abc"),
+            Term.ApplyInfix(
+              tname("arg2"),
+              tname("++"),
+              Nil,
+              List(Term.Apply(tname("abc"), List(tname("arg3"))))
+            ) :: Nil
+          ) :: Nil
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 4 complex, partial outdents, indented def in braces") {
+    val code =
+      """
+        |  def mtd = {
+        |    abc:
+        |        arg1
+        |      ++
+        |        abc:
+        |            arg2
+        |          ++
+        |            abc:
+        |                arg3
+        |}
+        |""".stripMargin
+    val layout =
+      """
+        |def mtd = {
+        |  abc(arg1 ++ abc(arg2 ++ abc(arg3)))
+        |}
+        |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("mtd"),
+      Nil,
+      None,
+      Term.Block(
+        Term.Apply(
+          tname("abc"),
+          Term.ApplyInfix(
+            tname("arg1"),
+            tname("++"),
+            Nil,
+            Term.Apply(
+              tname("abc"),
+              Term.ApplyInfix(
+                tname("arg2"),
+                tname("++"),
+                Nil,
+                List(Term.Apply(tname("abc"), List(tname("arg3"))))
+              ) :: Nil
+            ) :: Nil
+          ) :: Nil
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 5 complex, full/partial outdents, unindented def") {
+    val code =
+      """
+        |def mtd =
+        |    abc:
+        |        arg1
+        |      ++
+        |        abc:
+        |            arg2
+        |        ++
+        |            abc:
+        |                arg3
+        |""".stripMargin
+    val layout = "def mtd = abc(arg1 ++ abc(arg2) ++ abc(arg3))"
+    val tree = Defn.Def(
+      Nil,
+      tname("mtd"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("abc"),
+        Term.ApplyInfix(
+          Term.ApplyInfix(
+            tname("arg1"),
+            tname("++"),
+            Nil,
+            List(Term.Apply(tname("abc"), List(tname("arg2"))))
+          ),
+          tname("++"),
+          Nil,
+          List(Term.Apply(tname("abc"), List(tname("arg3"))))
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 5 complex, full/partial outdents, indented def") {
+    val code =
+      """
+        |  def mtd =
+        |    abc:
+        |        arg1
+        |      ++
+        |        abc:
+        |            arg2
+        |        ++
+        |            abc:
+        |                arg3
+        |""".stripMargin
+    val layout = "def mtd = abc(arg1 ++ abc(arg2) ++ abc(arg3))"
+    val tree = Defn.Def(
+      Nil,
+      tname("mtd"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("abc"),
+        Term.ApplyInfix(
+          Term.ApplyInfix(
+            tname("arg1"),
+            tname("++"),
+            Nil,
+            List(Term.Apply(tname("abc"), List(tname("arg2"))))
+          ),
+          tname("++"),
+          Nil,
+          List(Term.Apply(tname("abc"), List(tname("arg3"))))
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 5 complex, full/partial outdents, indented def in braces") {
+    val code =
+      """
+        |  def mtd = {
+        |    abc:
+        |        arg1
+        |      ++
+        |        abc:
+        |            arg2
+        |        ++
+        |            abc:
+        |                arg3
+        |  }
+        |""".stripMargin
+    val layout =
+      """
+        |def mtd = {
+        |  abc(arg1 ++ abc(arg2) ++ abc(arg3))
+        |}
+        |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("mtd"),
+      Nil,
+      None,
+      Term.Block(
+        Term.Apply(
+          tname("abc"),
+          Term.ApplyInfix(
+            Term.ApplyInfix(
+              tname("arg1"),
+              tname("++"),
+              Nil,
+              List(Term.Apply(tname("abc"), List(tname("arg2"))))
+            ),
+            tname("++"),
+            Nil,
+            List(Term.Apply(tname("abc"), List(tname("arg3"))))
+          ) :: Nil
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 6 complex, with indented comments") {
+    val code =
+      """
+        |  def mtd =
+        |    abc:
+        |        arg1
+        |    ++ /* c1 */ // c2
+        |        abc:
+        |            arg2
+        |        ++ /*
+        |        c3
+        |        */ abc:
+        |                arg3
+        |""".stripMargin
+    val layout =
+      """
+        |def mtd = abc(arg1) ++ abc {
+        |  arg2
+        |  ++
+        |} abc arg3
+        |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("mtd"),
+      Nil,
+      None,
+      Term.ApplyInfix(
+        Term.ApplyInfix(
+          Term.Apply(tname("abc"), List(tname("arg1"))),
+          tname("++"),
+          Nil,
+          List(Term.Apply(tname("abc"), List(Term.Block(List(tname("arg2"), tname("++"))))))
+        ),
+        tname("abc"),
+        Nil,
+        List(tname("arg3"))
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 6 complex, with outindented comments") {
+    val code =
+      """
+        |  def mtd =
+        |    abc:
+        |        arg1
+        |    ++ /*
+        |   c2
+        |    */ abc:
+        |        arg2
+        |""".stripMargin
+    val layout = "def mtd = abc(arg1) ++ abc(arg2)"
+    val tree = Defn.Def(
+      Nil,
+      tname("mtd"),
+      Nil,
+      None,
+      Term.ApplyInfix(
+        Term.Apply(tname("abc"), List(tname("arg1"))),
+        tname("++"),
+        Nil,
+        List(Term.Apply(tname("abc"), List(tname("arg2"))))
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3720 6 complex, with newline after multiline comment") {
+    val code =
+      """
+        |  def mtd =
+        |    abc:
+        |        arg1
+        |    ++ /*
+        |       c2
+        |    */
+        |    abc:
+        |        arg2
+        |""".stripMargin
+    val layout = "def mtd = abc(arg1) ++ abc(arg2)"
+    val tree = Defn.Def(
+      Nil,
+      tname("mtd"),
+      Nil,
+      None,
+      Term.ApplyInfix(
+        Term.Apply(tname("abc"), List(tname("arg1"))),
+        tname("++"),
+        Nil,
+        List(Term.Apply(tname("abc"), List(tname("arg2"))))
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
 }
