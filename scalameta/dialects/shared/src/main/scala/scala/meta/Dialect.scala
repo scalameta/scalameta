@@ -7,7 +7,7 @@ import scala.collection.immutable.TreeMap
 /**
  * A dialect is used to configure what Scala syntax is allowed during tokenization and parsing.
  */
-final class Dialect private (
+final class Dialect private[meta] (
     // Are `&` intersection types supported by this dialect?
     @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
     val allowAndTypes: Boolean,
@@ -636,9 +636,13 @@ final class Dialect private (
     Dialect.inverseStandards.getOrElse(this, "Dialect()")
   }
 
-  def isEquivalentTo(that: Dialect): Boolean = (
-    // do not include deprecated values in this comparison
-    this.allowAtForExtractorVarargs == that.allowAtForExtractorVarargs
+  def isEquivalentTo(that: Dialect): Boolean =
+    isEquivalentTo(that, ignoreQuasiquotes = false)
+
+  def isEquivalentTo(that: Dialect, ignoreQuasiquotes: Boolean): Boolean = (
+    (this eq that) ||
+      // do not include deprecated values in this comparison
+      this.allowAtForExtractorVarargs == that.allowAtForExtractorVarargs
       && this.allowCaseClassWithoutParameterList == that.allowCaseClassWithoutParameterList
       && this.allowColonForExtractorVarargs == that.allowColonForExtractorVarargs
       && this.allowEnums == that.allowEnums
@@ -646,14 +650,14 @@ final class Dialect private (
       && this.allowInlineIdents == that.allowInlineIdents
       && this.allowInlineMods == that.allowInlineMods
       && this.allowLiteralTypes == that.allowLiteralTypes
-      && this.allowMultilinePrograms == that.allowMultilinePrograms
-      && this.allowPatUnquotes == that.allowPatUnquotes
+      && (ignoreQuasiquotes || this.allowMultilinePrograms == that.allowMultilinePrograms)
+      && (ignoreQuasiquotes || this.allowPatUnquotes == that.allowPatUnquotes)
       && this.allowSpliceUnderscores == that.allowSpliceUnderscores
-      && this.allowTermUnquotes == that.allowTermUnquotes
+      && (ignoreQuasiquotes || this.allowTermUnquotes == that.allowTermUnquotes)
       && this.allowToplevelTerms == that.allowToplevelTerms
       && this.allowTrailingCommas == that.allowTrailingCommas
       && this.allowTraitParameters == that.allowTraitParameters
-      && this.allowTypeLambdas == that.allowTypeLambdas
+      && (ignoreQuasiquotes || this.allowTypeLambdas == that.allowTypeLambdas)
       && this.allowViewBounds == that.allowViewBounds
       && this.allowXmlLiterals == that.allowXmlLiterals
       && this.allowNumericLiteralUnderscoreSeparators == that.allowNumericLiteralUnderscoreSeparators
