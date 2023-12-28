@@ -26,6 +26,8 @@ sealed trait RegionNonDelimNonIndented extends SepRegionNonIndented
 
 case class RegionIndent(override val indent: Int) extends SepRegionIndented with RegionDelim
 
+case class RegionLine(override val indent: Int) extends RegionNonDelimNonIndented with CanProduceLF
+
 case object RegionParen extends RegionDelimNonIndented
 case object RegionBracket extends RegionDelimNonIndented
 case class RegionBrace(override val indent: Int) extends RegionDelimNonIndented with CanProduceLF

@@ -601,4 +601,51 @@ class InfixSuite extends BaseDottySuite {
     runTestAssert[Case](code, Some(layout))(tree)
   }
 
+  test("scalafmt #3720 different leading infix indentations") {
+    val code =
+      """
+        |object a:
+        |  def mtd =
+        |    abc(
+        |        arg1
+        |    )
+        |    ++
+        |    abc(arg2)
+        |      ++
+        |        abc(arg3)
+        |  ++
+        |    abc(arg4)
+        |""".stripMargin
+    val layout = "object a { def mtd = abc(arg1) ++ abc(arg2) ++ abc(arg3) ++ abc(arg4) }"
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("mtd"),
+          Nil,
+          None,
+          Term.ApplyInfix(
+            Term.ApplyInfix(
+              Term.ApplyInfix(
+                Term.Apply(tname("abc"), List(tname("arg1"))),
+                tname("++"),
+                Nil,
+                List(Term.Apply(tname("abc"), List(tname("arg2"))))
+              ),
+              tname("++"),
+              Nil,
+              List(Term.Apply(tname("abc"), List(tname("arg3"))))
+            ),
+            tname("++"),
+            Nil,
+            List(Term.Apply(tname("abc"), List(tname("arg4"))))
+          )
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
 }

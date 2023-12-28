@@ -37,13 +37,15 @@ private[parsers] class LazyTokenIterator private (
     curr = ref
   }
 
-  override def indenting: Boolean = curr.token.is[Token.EOL] && {
-    // empty sepregions means we are at toplevel
-    val lastIndentation = curr.regions.headOption.fold(0)(_.indent)
-    lastIndentation >= 0 && lastIndentation < peekToken.pos.startColumn
+  override def indenting: Boolean = curr.regions match {
+    case (r: RegionLine) :: rs if curr.token.is[Token.EOL] =>
+      // empty sepregions means we are at toplevel
+      rs.headOption.forall(x => x.indent >= 0 && x.indent < r.indent)
+    case _ => false
   }
 
   def previousIndentation: Int = curr.regions match {
+    case (r: RegionLine) :: _ if !curr.token.is[Token.EOL] => r.indent
     case _ :: r :: _ => r.indent
     case _ => 0
   }

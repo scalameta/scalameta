@@ -3412,4 +3412,78 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
+  test("def name after newline") {
+    val code =
+      """|def
+         |  foo: Bar =
+         |    baz
+         |""".stripMargin
+    val layout = "def foo: Bar = baz"
+    val tree = Defn.Def(Nil, tname("foo"), Nil, Some(pname("Bar")), tname("baz"))
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("def colon after newline") {
+    val code =
+      """|def foo
+         |  : Bar =
+         |    baz
+         |""".stripMargin
+    val layout = "def foo: Bar = baz"
+    val tree = Defn.Def(Nil, tname("foo"), Nil, Some(pname("Bar")), tname("baz"))
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("def newline after colon") {
+    val code =
+      """|def foo
+         |  :
+         |  Bar =
+         |    baz
+         |""".stripMargin
+    val layout = "def foo: Bar = baz"
+    val tree = Defn.Def(Nil, tname("foo"), Nil, Some(pname("Bar")), tname("baz"))
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("def newline around hash") {
+    val code =
+      """|def foo: Bar
+         |  #
+         |  SubBar =
+         |    baz
+         |""".stripMargin
+    val layout = "def foo: Bar#SubBar = baz"
+    val tree = Defn.Def(
+      Nil,
+      tname("foo"),
+      Nil,
+      Some(Type.Project(pname("Bar"), pname("SubBar"))),
+      tname("baz")
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("def equals after newline, without type") {
+    val code =
+      """|def foo
+         |  =
+         |    baz
+         |""".stripMargin
+    val layout = "def foo = baz"
+    val tree = Defn.Def(Nil, tname("foo"), Nil, None, tname("baz"))
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("def equals after newline, with type") {
+    val code =
+      """|def foo: Bar
+         |  =
+         |    baz
+         |""".stripMargin
+    val layout = "def foo: Bar = baz"
+    val tree = Defn.Def(Nil, tname("foo"), Nil, Some(pname("Bar")), tname("baz"))
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
 }
