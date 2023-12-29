@@ -482,7 +482,9 @@ class GivenUsingSuite extends BaseDottySuite {
         Nil,
         Template(
           Nil,
-          List(Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), Nil)),
+          List(
+            Init(Type.Apply(Type.Name("Ord"), List(Type.Name("Int"))), Name(""), emptyArgClause)
+          ),
           Self(Name(""), None),
           List(
             Defn.Def(Nil, Term.Name("f"), Nil, List(List()), Some(Type.Name("Int")), Lit.Int(1))

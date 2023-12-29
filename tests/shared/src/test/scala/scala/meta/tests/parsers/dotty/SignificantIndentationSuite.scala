@@ -904,7 +904,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
         EmptyCtor(),
         Template(
           Nil,
-          List(Init(pname("A"), Name(""), Nil), Init(pname("B"), Name(""), emptyArgClause)),
+          List(
+            Init(pname("A"), Name(""), emptyArgClause),
+            Init(pname("B"), Name(""), emptyArgClause)
+          ),
           Self(Name(""), None),
           Nil,
           Nil

@@ -243,12 +243,18 @@ class PatSuite extends ParseSuite {
   }
 
   test("<a>{_*}</a>") {
-    val Pat.Xml(List(Lit("<a>"), Lit("</a>")), List(SeqWildcard())) = pat("<a>{_*}</a>")
+    assertPat("<a>{_*}</a>")(
+      Pat.Xml(List(Lit.String("<a>"), Lit.String("</a>")), List(SeqWildcard()))
+    )
   }
 
   test("<a>{ns @ _*}</a>") {
-    val Pat.Xml(List(Lit("<a>"), Lit("</a>")), List(Bind(Var(Term.Name("ns")), SeqWildcard()))) =
-      pat("<a>{ns @ _*}</a>")
+    assertPat("<a>{ns @ _*}</a>")(
+      Pat.Xml(
+        List(Lit.String("<a>"), Lit.String("</a>")),
+        List(Bind(Var(Term.Name("ns")), SeqWildcard()))
+      )
+    )
   }
 
   test("(A, B, C)") {
