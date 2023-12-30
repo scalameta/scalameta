@@ -11,11 +11,13 @@ class Scala3SyntaxSuite extends BaseDottySuite {
       ).syntax,
       "given intOrd: Ord[Int] with \n{ def f(): Int = 1 }"
     )
-    val Defn.Given(_, _, _, _, template) =
-      templStat(
-        "given intOrd: Ord[Int] with \n{ def f(): Int = 1 }"
-      )
-    assertEquals(template.syntax, "Ord[Int] with \n{ def f(): Int = 1 }")
+
+    matchSubStructure[Stat](
+      "given intOrd: Ord[Int] with \n{ def f(): Int = 1 }",
+      { case givenDefn: Defn.Given =>
+        assertEquals(givenDefn.templ.syntax, "Ord[Int] with \n{ def f(): Int = 1 }")
+      }
+    )
   }
 
   test("private final given intOrd: Ord[Int] with \n{ def f(): Int = 1 }") {
@@ -25,11 +27,13 @@ class Scala3SyntaxSuite extends BaseDottySuite {
       ).syntax,
       "private final given intOrd: Ord[Int] with \n{ def f(): Int = 1 }"
     )
-    val Defn.Given(_, _, _, _, template) =
-      templStat(
-        "private final given intOrd: Ord[Int] with \n{ def f(): Int = 1 }"
-      )
-    assertEquals(template.syntax, "Ord[Int] with \n{ def f(): Int = 1 }")
+
+    matchSubStructure[Stat](
+      "private final given intOrd: Ord[Int] with \n{ def f(): Int = 1 }",
+      { case givenDefn: Defn.Given =>
+        assertEquals(givenDefn.templ.syntax, "Ord[Int] with \n{ def f(): Int = 1 }")
+      }
+    )
   }
 
   test("enum C extends A with B { case D }") {

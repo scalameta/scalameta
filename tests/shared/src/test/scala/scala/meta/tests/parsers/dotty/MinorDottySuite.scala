@@ -12,17 +12,32 @@ class MinorDottySuite extends BaseDottySuite {
    *   - [[https://dotty.epfl.ch/docs/reference/changed-features/wildcards.html]]
    */
   test("open-class") {
-    val Defn.Class(List(Mod.Open()), Type.Name("A"), _, _, _) =
-      templStat("open class A {}")(dialects.Scala3)
+    matchSubStructure[Stat](
+      "open class A {}",
+      { case Defn.Class(List(Mod.Open()), Type.Name("A"), _, _, _) =>
+        ()
+      }
+    )
+    matchSubStructure[Stat](
+      "open trait C {}",
+      { case Defn.Trait(List(Mod.Open()), Type.Name("C"), _, _, _) =>
+        ()
+      }
+    )
 
-    val Defn.Trait(List(Mod.Open()), Type.Name("C"), _, _, _) =
-      templStat("open trait C {}")(dialects.Scala3)
+    matchSubStructure[Stat](
+      "open private trait C {}",
+      { case Defn.Trait(List(Mod.Open(), Mod.Private(Name.Anonymous())), Type.Name("C"), _, _, _) =>
+        ()
+      }
+    )
 
-    val Defn.Trait(List(Mod.Open(), Mod.Private(Name.Anonymous())), Type.Name("C"), _, _, _) =
-      templStat("open private trait C {}")(dialects.Scala3)
-
-    val Defn.Object(List(Mod.Open()), Term.Name("X"), _) =
-      templStat("open object X {}")(dialects.Scala3)
+    matchSubStructure[Stat](
+      "open object X {}",
+      { case Defn.Object(List(Mod.Open()), Term.Name("X"), _) =>
+        ()
+      }
+    )
 
   }
 
@@ -157,7 +172,7 @@ class MinorDottySuite extends BaseDottySuite {
   test("opaque-type-bounded-alias-with-quasiquotes") {
     val dialect: Dialect = null // overrides implicit
     import dialects.Scala3
-    checkTree(q"opaque type Foo <: String = String", "opaque type Foo <: String = String")(
+    runTestAssert[Stat]("opaque type Foo <: String = String")(
       Defn.Type(
         List(Mod.Opaque()),
         pname("Foo"),
@@ -1404,7 +1419,7 @@ class MinorDottySuite extends BaseDottySuite {
             Term.Name("Playground"),
             Template(
               Nil,
-              List(Init(Type.Name("ScastieApp"), Name(""), Nil)),
+              List(Init(Type.Name("ScastieApp"), Name(""), emptyArgClause)),
               Self(Name(""), None),
               List(
                 Term.Apply(
@@ -1482,7 +1497,7 @@ class MinorDottySuite extends BaseDottySuite {
                 )
               ),
               Name(""),
-              Nil
+              emptyArgClause
             )
           ),
           Self(Name(""), None),
@@ -1587,7 +1602,7 @@ class MinorDottySuite extends BaseDottySuite {
               Term.Select(Term.Select(Term.Name("mbr"), Term.Name("info")), Term.Name("loBound"))
             )
           ),
-          List(Mod.Annot(Init(Type.Name("unchecked"), Name.Anonymous(), Nil)))
+          List(Mod.Annot(Init(Type.Name("unchecked"), Name.Anonymous(), emptyArgClause)))
         ),
         List(
           Case(Pat.Typed(Pat.Var(Term.Name("ref")), Type.Name("TypeRef")), None, Term.Block(Nil))

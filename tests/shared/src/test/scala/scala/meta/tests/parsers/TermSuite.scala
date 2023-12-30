@@ -114,14 +114,27 @@ class TermSuite extends ParseSuite {
     assertTerm("f(x = xs: _*)") {
       Term.Apply(Term.Name("f"), List(Assign(Term.Name("x"), Repeated(Term.Name("xs")))))
     }
-    val Term.Apply.After_4_6_0(
-      Term.Name("f"),
-      Term.ArgClause(List(Assign(Term.Name("x"), Repeated(Term.Name("xs")))), None)
-    ) = term("f(x = xs: _*)")
-    val Term.Apply.internal.Latest(
-      Term.Name("f"),
-      Term.ArgClause(List(Assign(Term.Name("x"), Repeated(Term.Name("xs")))), None)
-    ) = term("f(x = xs: _*)")
+    matchSubStructure(
+      "f(x = xs: _*)",
+      {
+        case Term.Apply.After_4_6_0(
+              Term.Name("f"),
+              Term.ArgClause(List(Assign(Term.Name("x"), Repeated(Term.Name("xs")))), None)
+            ) =>
+          ()
+      }
+    )
+
+    matchSubStructure(
+      "f(x = xs: _*)",
+      {
+        case Term.Apply.internal.Latest(
+              Term.Name("f"),
+              Term.ArgClause(List(Assign(Term.Name("x"), Repeated(Term.Name("xs")))), None)
+            ) =>
+          ()
+      }
+    )
   }
 
   test("f(x = (xs: _*))") {
@@ -302,24 +315,26 @@ class TermSuite extends ParseSuite {
     assertTerm("() => x") {
       Term.Function(Nil, Term.Name("x"))
     }
-    val Term.Function(Nil, Term.Name("x")) = blockStat("() => x")
-    val Term.Function(Nil, Term.Name("x")) = templStat("() => x")
+    assertTree(blockStat("() => x"))(Term.Function(Nil, Term.Name("x")))
+    assertTree(templStat("() => x"))(Term.Function(Nil, Term.Name("x")))
   }
 
   test("(()) => x") {
     assertTerm("(()) => x") {
       Term.Function(Nil, Term.Name("x"))
     }
-    val Term.Function(Nil, Term.Name("x")) = blockStat("(()) => x")
-    val Term.Function(Nil, Term.Name("x")) = templStat("(()) => x")
+    assertTree(blockStat("(()) => x"))(Term.Function(Nil, Term.Name("x")))
+    assertTree(templStat("(()) => x"))(Term.Function(Nil, Term.Name("x")))
   }
 
   test("x => x") {
     assertTerm("x => x") {
       Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x"))
     }
-    val Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x")) =
-      blockStat("x => x")
+    assertTree(blockStat("x => x"))(
+      Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x"))
+    )
+
     intercept[ParseException] { templStat("x => x") }
   }
 
@@ -327,8 +342,10 @@ class TermSuite extends ParseSuite {
     assertTerm("(x) => x") {
       Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x"))
     }
-    val Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x")) =
-      blockStat("(x) => x")
+    assertTree(blockStat("(x) => x"))(
+      Term.Function(List(Term.Param(Nil, Term.Name("x"), None, None)), Term.Name("x"))
+    )
+
     intercept[ParseException] { templStat("(x) => x") }
   }
 
@@ -336,8 +353,9 @@ class TermSuite extends ParseSuite {
     assertTerm("_ => x") {
       Term.Function(List(Term.Param(Nil, Name.Placeholder(), None, None)), Term.Name("x"))
     }
-    val Term.Function(List(Term.Param(Nil, Name.Placeholder(), None, None)), Term.Name("x")) =
-      blockStat("_ => x")
+    assertTree(blockStat("_ => x"))(
+      Term.Function(List(Term.Param(Nil, Name.Placeholder(), None, None)), Term.Name("x"))
+    )
     intercept[ParseException] { templStat("_ => x") }
   }
 
@@ -345,8 +363,9 @@ class TermSuite extends ParseSuite {
     assertTerm("(_) => x") {
       Term.Function(List(Term.Param(Nil, Name.Placeholder(), None, None)), Term.Name("x"))
     }
-    val Term.Function(List(Term.Param(Nil, Name.Placeholder(), None, None)), Term.Name("x")) =
-      blockStat("(_) => x")
+    assertTree(blockStat("(_) => x"))(
+      Term.Function(List(Term.Param(Nil, Name.Placeholder(), None, None)), Term.Name("x"))
+    )
     intercept[ParseException] { templStat("(_) => x") }
   }
 
@@ -355,10 +374,12 @@ class TermSuite extends ParseSuite {
     assertTerm("x: Int => x") {
       Term.Ascribe(Term.Name("x"), Type.Function(List(Type.Name("Int")), Type.Name("x")))
     }
-    val Term.Function(
-      List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)),
-      Term.Name("x")
-    ) = blockStat("x: Int => x")
+    assertTree(blockStat("x: Int => x"))(
+      Term.Function(
+        List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)),
+        Term.Name("x")
+      )
+    )
     intercept[ParseException] { templStat("x: Int => x") }
   }
 
@@ -369,24 +390,31 @@ class TermSuite extends ParseSuite {
         Term.Name("x")
       )
     }
-    val Term.Function(
-      List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)),
-      Term.Name("x")
-    ) = blockStat("(x: Int) => x")
-    val Term.Function(
-      List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)),
-      Term.Name("x")
-    ) = templStat("(x: Int) => x")
+    assertTree(blockStat("(x: Int) => x"))(
+      Term.Function(
+        List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)),
+        Term.Name("x")
+      )
+    )
+
+    assertTree(templStat("(x: Int) => x"))(
+      Term.Function(
+        List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)),
+        Term.Name("x")
+      )
+    )
   }
 
   test("_: Int => x") {
     assertTerm("_: Int => x") {
       Ascribe(Placeholder(), Type.Function(List(Type.Name("Int")), Type.Name("x")))
     }
-    val Term.Function(
-      List(Term.Param(Nil, Name.Placeholder(), Some(Type.Name("Int")), None)),
-      Term.Name("x")
-    ) = blockStat("_: Int => x")
+    assertTree(blockStat("_: Int => x"))(
+      Term.Function(
+        List(Term.Param(Nil, Name.Placeholder(), Some(Type.Name("Int")), None)),
+        Term.Name("x")
+      )
+    )
     intercept[ParseException] { templStat("_: Int => x") }
   }
 
@@ -397,14 +425,18 @@ class TermSuite extends ParseSuite {
         Term.Name("x")
       )
     }
-    val Term.Function(
-      List(Term.Param(Nil, Name.Placeholder(), Some(Type.Name("Int")), None)),
-      Term.Name("x")
-    ) = blockStat("(_: Int) => x")
-    val Term.Function(
-      List(Term.Param(Nil, Name.Placeholder(), Some(Type.Name("Int")), None)),
-      Term.Name("x")
-    ) = templStat("(_: Int) => x")
+    assertTree(blockStat("(_: Int) => x"))(
+      Term.Function(
+        List(Term.Param(Nil, Name.Placeholder(), Some(Type.Name("Int")), None)),
+        Term.Name("x")
+      )
+    )
+    assertTree(templStat("(_: Int) => x"))(
+      Term.Function(
+        List(Term.Param(Nil, Name.Placeholder(), Some(Type.Name("Int")), None)),
+        Term.Name("x")
+      )
+    )
   }
 
   test("x: Int, y: Int => x") {
@@ -423,20 +455,24 @@ class TermSuite extends ParseSuite {
         Term.Name("x")
       )
     }
-    val Term.Function(
-      List(
-        Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None),
-        Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None)
-      ),
-      Term.Name("x")
-    ) = blockStat("(x: Int, y: Int) => x")
-    val Term.Function(
-      List(
-        Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None),
-        Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None)
-      ),
-      Term.Name("x")
-    ) = templStat("(x: Int, y: Int) => x")
+    assertTree(blockStat("(x: Int, y: Int) => x"))(
+      Term.Function(
+        List(
+          Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None),
+          Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None)
+        ),
+        Term.Name("x")
+      )
+    )
+    assertTree(templStat("(x: Int, y: Int) => x"))(
+      Term.Function(
+        List(
+          Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None),
+          Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None)
+        ),
+        Term.Name("x")
+      )
+    )
   }
 
   test("{ implicit x => () }") {
@@ -1032,12 +1068,6 @@ class TermSuite extends ParseSuite {
         List(Term.Name("t"))
       )
     }
-  }
-
-  test("block-arg") {
-    val res = term("new Foo({str => str.length})")
-    val termList = q"List($res)"
-    assertTree(term(termList.syntax))(termList)
   }
 
   test("implicit-closure") {

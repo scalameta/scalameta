@@ -6,6 +6,7 @@ import Type.{Name => TypeName, _}
 import Name.Anonymous
 import scala.meta.parsers.ParseException
 import scala.meta.tests.parsers.ParseSuite
+import munit.Location
 
 class TypeSuite extends BaseDottySuite {
 
@@ -280,7 +281,7 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("T") {
-    val TypeName("T") = tpe("T")
+    assertTpe("T")(TypeName("T"))
   }
 
   test("F[T]") {
@@ -290,15 +291,15 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("F#T") {
-    val Project(TypeName("F"), TypeName("T")) = tpe("F#T")
+    assertTpe("F#T")(Project(TypeName("F"), TypeName("T")))
   }
 
   test("A \\/ B") {
-    val ApplyInfix(TypeName("A"), TypeName("\\/"), TypeName("B")) = tpe("A \\/ B")
+    assertTpe("A \\/ B")(ApplyInfix(TypeName("A"), TypeName("\\/"), TypeName("B")))
   }
 
   test("A * B") {
-    val ApplyInfix(TypeName("A"), TypeName("*"), TypeName("B")) = tpe("A * B")
+    assertTpe("A * B")(ApplyInfix(TypeName("A"), TypeName("*"), TypeName("B")))
   }
 
   test("A * B + C") {
@@ -332,51 +333,52 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("f.T") {
-    val Select(TermName("f"), TypeName("T")) = tpe("f.T")
+    assertTpe("f.T")(Select(TermName("f"), TypeName("T")))
   }
 
   test("f.type") {
-    val Singleton(TermName("f")) = tpe("f.type")
+    assertTpe("f.type")(Singleton(TermName("f")))
   }
 
   test("super.T") {
-    val Select(Super(Anonymous(), Anonymous()), TypeName("T")) = tpe("super.T")
+    assertTpe("super.T")(Select(Super(Anonymous(), Anonymous()), TypeName("T")))
   }
 
   test("this.T") {
-    val Select(Term.This(Anonymous()), TypeName("T")) = tpe("this.T")
+    assertTpe("this.T")(Select(Term.This(Anonymous()), TypeName("T")))
   }
 
   test("(A, B)") {
-    val Tuple(TypeName("A") :: TypeName("B") :: Nil) = tpe("(A, B)")
+    assertTpe("(A, B)")(Tuple(TypeName("A") :: TypeName("B") :: Nil))
   }
 
   test("(A, B) => C") {
-    val Function(TypeName("A") :: TypeName("B") :: Nil, TypeName("C")) = tpe("(A, B) => C")
+    assertTpe("(A, B) => C")(Function(TypeName("A") :: TypeName("B") :: Nil, TypeName("C")))
   }
 
   test("T @foo") {
-    val Annotate(
-      TypeName("T"),
-      Mod.Annot(Init(Type.Name("foo"), Name.Anonymous(), emptyArgClause)) :: Nil
-    ) =
-      tpe("T @foo")
+    assertTpe("T @foo")(
+      Annotate(
+        TypeName("T"),
+        Mod.Annot(Init(Type.Name("foo"), Name.Anonymous(), emptyArgClause)) :: Nil
+      )
+    )
   }
 
   test("A with B") {
-    val With(TypeName("A"), TypeName("B")) = tpe("A with B")
+    assertTpe("A with B")(With(TypeName("A"), TypeName("B")))
   }
 
   test("A & B is not a special type") {
-    val ApplyInfix(TypeName("A"), TypeName("&"), TypeName("B")) = tpe("A & B")
+    assertTpe("A & B")(ApplyInfix(TypeName("A"), TypeName("&"), TypeName("B")))
   }
 
   test("A with B {}") {
-    val Refine(Some(With(TypeName("A"), TypeName("B"))), Nil) = tpe("A with B {}")
+    assertTpe("A with B {}")(Refine(Some(With(TypeName("A"), TypeName("B"))), Nil))
   }
 
   test("{}") {
-    val Refine(None, Nil) = tpe("{}")
+    assertTpe("{}")(Refine(None, Nil))
   }
 
   test("A { def x: A; val y: B; type C }") {
@@ -462,15 +464,16 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("a.T forSome { val a: A }") {
-    val Existential(
-      Select(TermName("a"), TypeName("T")),
-      Decl.Val(Nil, Pat.Var(TermName("a")) :: Nil, TypeName("A")) :: Nil
-    ) =
-      tpe("a.T forSome { val a: A }")
+    assertTpe("a.T forSome { val a: A }")(
+      Existential(
+        Select(TermName("a"), TypeName("T")),
+        Decl.Val(Nil, Pat.Var(TermName("a")) :: Nil, TypeName("A")) :: Nil
+      )
+    )
   }
 
   test("A | B is not a special type") {
-    val comp @ ApplyInfix(TypeName("A"), TypeName("|"), TypeName("B")) = tpe("A | B")
+    assertTpe("A | B")(ApplyInfix(TypeName("A"), TypeName("|"), TypeName("B")))
   }
 
   test("42.type") {
@@ -478,16 +481,16 @@ class TypeSuite extends BaseDottySuite {
       tpe("42")(dialects.Scala211)
     }
 
-    val Lit(42) = tpe("42")(dialects.Scala3)
-    val Lit(-42) = tpe("-42")(dialects.Scala3)
-    val Lit(42L) = tpe("42L")(dialects.Scala3)
-    val Lit(42f) = tpe("42f")(dialects.Scala3)
-    val Lit(-42f) = tpe("-42f")(dialects.Scala3)
-    val Lit(42d) = tpe("42d")(dialects.Scala3)
-    val Lit(-42d) = tpe("-42d")(dialects.Scala3)
-    val Lit("42") = tpe("\"42\"")(dialects.Scala3)
-    val Lit(false) = tpe("false")(dialects.Scala3)
-    val Lit(true) = tpe("true")(dialects.Scala3)
+    assertTpe("42")(Lit.Int(42))(dialects.Scala3)
+    assertTpe("-42")(Lit.Int(-42))(dialects.Scala3)
+    assertTpe("42L")(Lit.Long(42L))(dialects.Scala3)
+    matchSubStructure[Type]("42.0f", { case Lit(42.0f) => () })
+    matchSubStructure[Type]("-42.0f", { case Lit(-42.0f) => () })
+    matchSubStructure[Type]("42.0d", { case Lit(42.0d) => () })
+    matchSubStructure[Type]("-42.0d", { case Lit(-42.0d) => () })
+    assertTpe("\"42\"")(Lit.String("42"))(dialects.Scala3)
+    assertTpe("true")(Lit.Boolean(true))(dialects.Scala3)
+    assertTpe("false")(Lit.Boolean(false))(dialects.Scala3)
 
     val exceptionScala3 = intercept[ParseException] {
       tpe("() => ()")(dialects.Scala3)
@@ -502,8 +505,10 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("plus-minus-then-underscore-source3") {
-    val Type.Function(List(Type.Name("+_")), Type.Name("Int")) =
-      tpe("+_ => Int")(dialects.Scala213Source3)
+    matchSubStructure(
+      "+_ => Int",
+      { case Type.Function(List(Type.Name("+_")), Type.Name("Int")) => () }
+    )(parseType, dialects.Scala213Source3, implicitly[Location])
     assertTpe("Option[- _]") {
       Apply(Type.Name("Option"), ArgClause(List(Type.Name("-_"))))
     }(dialects.Scala213Source3)
