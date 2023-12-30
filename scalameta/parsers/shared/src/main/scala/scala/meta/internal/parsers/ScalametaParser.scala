@@ -3705,7 +3705,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case name: Term.Name =>
           Decl.Given(mods, name, paramClauseGroup, decltype)
         case _ =>
-          syntaxError("abstract givens cannot be annonymous", at = sigName.pos)
+          syntaxError("abstract givens cannot be anonymous", at = sigName.pos)
       }
     }
   }
