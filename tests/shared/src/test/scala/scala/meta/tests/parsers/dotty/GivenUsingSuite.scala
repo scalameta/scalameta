@@ -802,15 +802,15 @@ class GivenUsingSuite extends BaseDottySuite {
   test("abstract-given-anonymous") {
     runTestError(
       "given Ord[Int]",
-      "abstract givens cannot be annonymous"
+      "abstract givens cannot be anonymous"
     )
     runTestError(
       "given [T](using ord: Ord[T]): Ord[Set[T]]",
-      "abstract givens cannot be annonymous"
+      "abstract givens cannot be anonymous"
     )
     runTestError(
       "given (using Ord[String]): Ord[Int]",
-      "abstract givens cannot be annonymous"
+      "abstract givens cannot be anonymous"
     )
   }
 
