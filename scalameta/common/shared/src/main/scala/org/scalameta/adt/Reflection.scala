@@ -1,9 +1,10 @@
 package org.scalameta.adt
 
-import scala.reflect.api.Universe
 import org.scalameta.adt.{Metadata => AdtMetadata}
 import scala.meta.internal.trees.{Metadata => AstMetadata}
-import scala.reflect.{classTag, ClassTag}
+
+import scala.reflect.{ClassTag, classTag}
+import scala.reflect.api.Universe
 
 trait Reflection {
   val u: Universe
@@ -44,7 +45,6 @@ trait Reflection {
     }
     def isPayload: Boolean = sym.isField && !sym.isAuxiliary
     def isAuxiliary: Boolean = sym.isField && sym.hasAnnotation[AstMetadata.auxiliary]
-    def isByNeed: Boolean = sym.isField && sym.hasAnnotation[AdtMetadata.byNeedField]
     def asAdt: Adt =
       if (isRoot) sym.asRoot
       else if (isBranch) sym.asBranch
@@ -126,11 +126,8 @@ trait Reflection {
     def owner: Leaf = sym.owner.asLeaf
     def name: TermName = TermName(sym.name.toString.stripPrefix("_"))
     def tpe: Type = sym.info.finalResultType
-    def isPayload: Boolean = sym.isPayload
-    def isAuxiliary: Boolean = sym.isAuxiliary
-    def isByNeed: Boolean = sym.isByNeed
     override def toString =
-      s"field ${owner.prefix}.$name: $tpe" + (if (isAuxiliary) " (auxiliary)" else "")
+      s"field ${owner.prefix}.$name: $tpe" + (if (sym.isAuxiliary) " (auxiliary)" else "")
   }
 
   private def isExemptParentSymbol(bsym: ClassSymbol): Boolean = {
