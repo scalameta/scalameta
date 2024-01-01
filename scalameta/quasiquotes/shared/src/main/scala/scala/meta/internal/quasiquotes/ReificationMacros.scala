@@ -46,7 +46,6 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         extends Mode
   }
 
-  import definitions._
   val InternalLift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Lift")
   val InternalUnlift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Unlift")
   val QuasiquotePrefix = c.freshName("quasiquote")
@@ -192,7 +191,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     }
     def toTpe: u.Type = {
       if (clazz.isArray) {
-        appliedType(ListClass, clazz.getComponentType.toTpe)
+        appliedType(definitions.ListClass, clazz.getComponentType.toTpe)
       } else {
         @tailrec
         def loop(owner: u.Symbol, parts: List[String]): u.Symbol = parts match {
@@ -214,7 +213,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
   private implicit class XtensionRankedTree(tree: u.Tree) {
     def wrap(rank: Int): u.Tree = {
       if (rank == 0) tree
-      else AppliedTypeTree(tq"$ListClass", List(tree.wrap(rank - 1)))
+      else AppliedTypeTree(tq"${definitions.ListClass}", List(tree.wrap(rank - 1)))
     }
   }
 
@@ -279,7 +278,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
               }
             case _ =>
               // NOTE: Luckily, at least this quasiquote works fine both in term and pattern modes
-              if (acc.isEmpty) q"$ListModule(..${prefix.map(liftTree)})"
+              if (acc.isEmpty) q"${definitions.ListModule}(..${prefix.map(liftTree)})"
               else acc
           }
         loop(trees, EmptyTree, Nil)
