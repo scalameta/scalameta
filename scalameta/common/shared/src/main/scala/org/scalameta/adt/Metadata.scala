@@ -10,4 +10,5 @@ object Metadata {
   class leafCompanion extends StaticAnnotation
   class noneClass extends StaticAnnotation
   class byNeedField extends StaticAnnotation
+  class privateField extends StaticAnnotation
 }
