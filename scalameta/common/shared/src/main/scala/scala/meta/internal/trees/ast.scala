@@ -176,9 +176,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             destination: $StringClass = null,
             origin: $OriginClass = privateOrigin): Tree = {
           $privateCopyParentChecks
-          val newAst =
-            new $name(prototype.asInstanceOf[$iname], parent, origin)(..$privateCopyArgs)
-          newAst
+          new $name(prototype.asInstanceOf[$iname], parent, origin)(..$privateCopyArgs)
         }
       """
         // step 7: create the copy method
@@ -197,8 +195,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           val args = params.map(getParamArg)
           stats1 += q"""
             final override def copy(..$params): $iname = {
-              val newAst = $mname.apply(..$args)
-              newAst
+              $mname.apply(..$args)
             }
           """
           quasiCopyExtraParamss += params
@@ -211,8 +208,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           quasiExtraAbstractDefs += iFullCopy
           stats1 += q"""
             private[meta] final override def fullCopy(..$fullCopyParams): $iname = {
-              val newAst = $mname.apply(..${params.map(_.name)})
-              newAst
+              $mname.apply(..${params.map(_.name)})
             }
           """
           if (needCopies) {
