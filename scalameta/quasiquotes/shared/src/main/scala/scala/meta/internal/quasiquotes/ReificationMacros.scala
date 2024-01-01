@@ -379,8 +379,11 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     object Liftables {
       // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
       // but that would bloat the code significantly with duplicated instances for denotations and sigmas
-      implicit def liftableSubTree[T <: MetaTree]: Liftable[T] =
-        Liftable((tree: T) => materializeAst[MetaTree].apply(tree))
+      implicit val liftableSubTree: Liftable[MetaTree] =
+        if (isTerm)
+          materializeAst[MetaTree](true)
+        else
+          materializeAst[MetaTree](false)
       implicit def liftableSubSeqTree[T <: MetaTree]: Liftable[Seq[T]] =
         Liftable((trees: Seq[T]) => Lifts.liftTrees(trees))
       implicit def liftableSubTrees[T <: MetaTree]: Liftable[List[T]] =

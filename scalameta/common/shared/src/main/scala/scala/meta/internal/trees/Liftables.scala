@@ -3,6 +3,7 @@ package internal
 package trees
 
 import scala.language.experimental.macros
+import scala.language.implicitConversions
 import scala.reflect.macros.blackbox.Context
 import org.scalameta.adt.{LiftableMacros => AdtLiftableMacros}
 import scala.meta.internal.trees.{Reflection => AstReflection}
@@ -11,7 +12,8 @@ import scala.meta.internal.trees.Metadata.Ast
 // Implementation of the scala.reflect.api.Universe#Liftable interface for asts.
 trait Liftables {
   val u: scala.reflect.macros.Universe
-  implicit def materializeAst[T <: Ast]: u.Liftable[T] = macro LiftableMacros.impl[T]
+  implicit def materializeAst[T <: Ast](isPrivateOKExpr: Boolean): u.Liftable[T] =
+    macro LiftableMacros.impl[T]
 }
 
 class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with AstReflection {

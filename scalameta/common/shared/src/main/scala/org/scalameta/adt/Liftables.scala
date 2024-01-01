@@ -1,6 +1,7 @@
 package org.scalameta.adt
 
 import scala.language.experimental.macros
+import scala.language.implicitConversions
 import scala.meta.internal.trees.AstNamerMacros
 import scala.reflect.macros.blackbox.Context
 import org.scalameta.adt.Metadata.Adt
@@ -9,7 +10,8 @@ import org.scalameta.adt.{Reflection => AdtReflection}
 // Implementation of the scala.reflect.api.Universe#Liftable interface for adts.
 trait Liftables {
   val u: scala.reflect.macros.Universe
-  implicit def materializeAdt[T <: Adt]: u.Liftable[T] = macro LiftableMacros.impl[T]
+  implicit def materializeAdt[T <: Adt](isPrivateOKExpr: Boolean): u.Liftable[T] =
+    macro LiftableMacros.impl[T]
 }
 
 class LiftableMacros(val c: Context) extends AdtReflection {
@@ -20,7 +22,8 @@ class LiftableMacros(val c: Context) extends AdtReflection {
   def customMatcher(adt: Adt, defName: TermName, localName: TermName): Option[DefDef] = None
   def customWrapper(adt: Adt, defName: TermName, localName: TermName, body: Tree): Option[Tree] =
     None
-  def impl[T: WeakTypeTag]: c.Tree = {
+  def impl[T: WeakTypeTag](isPrivateOKExpr: c.Expr[Boolean]): c.Tree = {
+    val isPrivateOK = c.eval(isPrivateOKExpr)
     val root = weakTypeOf[T].typeSymbol.asAdt.root
     val unsortedAdts = customAdts(root).getOrElse(root.allLeafs)
     val adts = {
@@ -66,7 +69,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
           parts.foldLeft(init) { (acc, part) => q"$u.Select($acc, $u.TermName($part))" }
         val nameParts = adt.sym.fullName.split('.')
         val body = if (adt.sym.isClass) {
-          val fields = adt match { case leaf: Leaf => leaf.fields; case _ => Nil }
+          val fields = adt match { case leaf: Leaf => leaf.fields(isPrivateOK); case _ => Nil }
           val args = fields.map { f =>
             q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})"
             // NOTE: we can't really use AssignOrNamedArg here, sorry
@@ -83,7 +86,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
             latestAfterVersion :: Nil
           } else Nil
           val namePath = getNamePath(nameParts ++ latestAfterVersion)
-          q"""$u.Apply($namePath, $args)"""
+          q"$u.Apply($namePath, $args)"
         } else getNamePath(nameParts)
         q"def $defName($localName: ${adt.tpe}): $u.Tree = $body"
       }
@@ -109,6 +112,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
           implicit def $mainMethod[T <: ${root.sym}]: $u.Liftable[T] = $u.Liftable(($localName: T) => {
             $localName match {
               case ..$clauses
+              case null => null
               case _ => sys.error("none of leafs matched " + $localName.getClass)
             }
           })
