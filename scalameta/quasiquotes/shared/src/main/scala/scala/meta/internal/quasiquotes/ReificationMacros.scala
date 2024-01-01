@@ -36,7 +36,6 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
   case class Hole(name: TermName, arg: ReflectTree, var reifier: ReflectTree)
   sealed trait Mode {
     def isTerm: Boolean = this.isInstanceOf[Mode.Term]
-    def isPattern: Boolean = this.isInstanceOf[Mode.Pattern]
     def multiline: Boolean
     def holes: List[Hole]
   }
@@ -219,6 +218,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
   }
 
   private def reifySkeleton(meta: MetaTree, mode: Mode): ReflectTree = {
+    val isTerm = mode.isTerm
     val pendingQuasis = mutable.Stack[Quasi]()
     implicit class XtensionQuasiHole(quasi: Quasi) {
       def hole: Hole = {
@@ -260,21 +260,21 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
                       // because would violate evaluation order guarantees that we must keep.
                       val currElement = liftTree(curr)
                       val alreadyLiftedList = acc.orElse(liftQuasi(quasi))
-                      if (mode.isTerm) q"$currElement +: $alreadyLiftedList"
+                      if (isTerm) q"$currElement +: $alreadyLiftedList"
                       else pq"$currElement +: $alreadyLiftedList"
                     }),
                     Nil
                   )
               } else {
                 require(prefix.isEmpty && debug(trees, acc, prefix))
-                if (mode.isTerm) loop(rest, q"$acc ++ ${liftQuasi(quasi)}", Nil)
+                if (isTerm) loop(rest, q"$acc ++ ${liftQuasi(quasi)}", Nil)
                 else c.abort(quasi.pos, Messages.QuasiquoteAdjacentEllipsesInPattern(quasi.rank))
               }
             case other +: rest =>
               if (acc.isEmpty) loop(rest, acc, prefix :+ other)
               else {
                 require(prefix.isEmpty && debug(trees, acc, prefix))
-                if (mode.isTerm) loop(rest, q"$acc :+ ${liftTree(other)}", Nil)
+                if (isTerm) loop(rest, q"$acc :+ ${liftTree(other)}", Nil)
                 else loop(rest, pq"$acc :+ ${liftTree(other)}", Nil)
               }
             case _ =>
