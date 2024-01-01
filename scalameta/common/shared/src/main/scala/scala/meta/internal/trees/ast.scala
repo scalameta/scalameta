@@ -190,7 +190,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // Not a big deal though, since XXX.Quasi is an internal class.
         def getParamArg(p: ValDef): TermName = p.name
         def addCopy(params: List[ValDef], annots: Tree*) = {
-          val mods = Modifiers(DEFERRED, typeNames.EMPTY, annots.toList)
+          val mods = getDeferredModifiers(annots.toList)
           istats1 += q"""
             $mods def copy(..$params): $iname
           """
@@ -477,8 +477,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       $CommonTyperMacrosModule.storeField(node.$internalName, $name, ${name.decodedName.toString})
     """
 
+  private def getDeferredModifiers(annots: List[Tree]): Modifiers =
+    Modifiers(DEFERRED, typeNames.EMPTY, annots)
+
   private def declareGetter(name: TermName, tpe: Tree, annots: List[Tree]): Tree =
-    declareGetter(name, tpe, Modifiers(DEFERRED, typeNames.EMPTY, annots))
+    declareGetter(name, tpe, getDeferredModifiers(annots))
 
   private def declareGetter(name: TermName, tpe: Tree, mods: Modifiers): Tree =
     q"$mods def ${getterName(name)}: $tpe"
@@ -494,7 +497,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   }
 
   private def declareSetter(name: TermName, tpe: Tree, annots: List[Tree]): Tree =
-    declareSetter(name, tpe, Modifiers(DEFERRED, typeNames.EMPTY, annots))
+    declareSetter(name, tpe, getDeferredModifiers(annots))
 
   private def declareSetter(name: TermName, tpe: Tree, mods: Modifiers): Tree =
     q"$mods def ${setterName(name)}($name : $tpe): Unit"
