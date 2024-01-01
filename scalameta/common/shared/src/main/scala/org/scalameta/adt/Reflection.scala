@@ -35,12 +35,11 @@ trait Reflection {
     def isRoot: Boolean = sym.hasAnnotation[AdtMetadata.root]
     def isBranch: Boolean = sym.hasAnnotation[AdtMetadata.branch]
     def isLeaf: Boolean = sym.hasAnnotation[AdtMetadata.leafClass]
-    def isField: Boolean = {
-      val isMethodInLeafClass = sym.isMethod && sym.owner.isLeaf
-      val isParamGetter =
-        sym.isTerm && sym.asTerm.isParamAccessor && sym.asTerm.isGetter && sym.isPublic
-      val isAstField = sym.hasAnnotation[AstMetadata.astField]
-      isMethodInLeafClass && (isParamGetter || isAstField)
+    def isField: Boolean = sym match {
+      case m: MethodSymbolApi if m.owner.isLeaf =>
+        sym.hasAnnotation[AstMetadata.astField] ||
+        m.isPublic && m.isParamAccessor && m.isGetter
+      case _ => false
     }
     def isPayload: Boolean = sym.isField && !sym.isAuxiliary
     def isAuxiliary: Boolean = sym.isField && sym.hasAnnotation[AstMetadata.auxiliary]
