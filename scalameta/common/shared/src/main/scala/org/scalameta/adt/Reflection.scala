@@ -42,6 +42,7 @@ trait Reflection {
         m.isPublic && m.isParamAccessor && m.isGetter
       case _ => false
     }
+    private[adt] def isAstClass: Boolean = sym.hasAnnotation[AstMetadata.astClass]
     private[adt] def isAuxiliaryField: Boolean = sym.hasAnnotation[AstMetadata.auxiliary]
     private[adt] def isPayloadField: Boolean = !isAuxiliaryField
     def asAdt: Adt =
