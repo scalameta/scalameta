@@ -6,8 +6,8 @@ import org.scalameta.adt
 import scala.meta.common._
 import scala.meta.inputs._
 import scala.meta.internal.tokens._
-import scala.meta.tokens._
 import scala.meta.tokenizers._
+import scala.meta.tokens._
 
 @adt.root
 trait Origin extends Optional
@@ -16,8 +16,8 @@ object Origin {
   object None extends Origin
 
   @adt.leaf
-  class Parsed(input: Input, dialect: Dialect, pos: TokenStreamPosition) extends Origin {
-    @inline private def tokenize() = dialect(input).tokenize.get
+  class Parsed(source: ParsedSource, pos: TokenStreamPosition) extends Origin {
+    @inline private def tokenize() = source.tokens
 
     def position: Position = {
       val tokens = tokenize()
@@ -29,6 +29,14 @@ object Origin {
     def tokens: Tokens = {
       tokenize().slice(pos.start, pos.end)
     }
+
+    @inline def input: Input = source.input
+    @inline def dialect: Dialect = source.dialect
+  }
+
+  class ParsedSource(val input: Input)(implicit val dialect: Dialect) {
+    lazy val tokenized = implicitly[Tokenize].apply(input, dialect)
+    @inline def tokens = tokenized.get
   }
 
 }

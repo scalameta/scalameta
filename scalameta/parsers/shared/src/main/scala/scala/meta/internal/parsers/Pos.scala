@@ -23,7 +23,9 @@ class IndexPos(index: => Int) extends Pos {
 
 class TreePos(tree: Tree) extends Pos {
   val (startTokenPos, endTokenPos) = tree.origin match {
-    case Origin.Parsed(_, _, pos) => (pos.start, pos.end - 1)
+    case x: Origin.Parsed =>
+      val pos = x.pos
+      (pos.start, pos.end - 1)
     case _ =>
       sys.error(s"internal error: unpositioned prototype ${tree.syntax}: ${tree.structure}")
   }
