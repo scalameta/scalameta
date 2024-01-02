@@ -181,43 +181,45 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     }
   }
 
+  private implicit class XtensionRankedClazz(clazz: Class[_]) {
+    def unwrap: Class[_] = {
+      if (clazz.isArray) clazz.getComponentType.unwrap
+      else clazz
+    }
+    def wrap(rank: Int): Class[_] = {
+      if (rank == 0) clazz
+      else ScalaRunTime.arrayClass(clazz).wrap(rank - 1)
+    }
+    def toTpe: u.Type = {
+      if (clazz.isArray) {
+        appliedType(ListClass, clazz.getComponentType.toTpe)
+      } else {
+        @tailrec
+        def loop(owner: u.Symbol, parts: List[String]): u.Symbol = parts match {
+          case part :: Nil =>
+            if (clazz.getName.endsWith("$")) owner.info.decl(TermName(part))
+            else owner.info.decl(TypeName(part))
+          case part :: rest =>
+            loop(owner.info.decl(TermName(part)), rest)
+          case Nil =>
+            unreachable(debug(clazz))
+        }
+        val name = scala.reflect.NameTransformer.decode(clazz.getName)
+        val result = loop(mirror.RootPackage, name.stripSuffix("$").split(Array('.', '$')).toList)
+        if (result.isModule) result.asModule.info else result.asClass.toType
+      }
+    }
+  }
+
+  private implicit class XtensionRankedTree(tree: u.Tree) {
+    def wrap(rank: Int): u.Tree = {
+      if (rank == 0) tree
+      else AppliedTypeTree(tq"$ListClass", List(tree.wrap(rank - 1)))
+    }
+  }
+
   private def reifySkeleton(meta: MetaTree, mode: Mode): ReflectTree = {
     val pendingQuasis = mutable.Stack[Quasi]()
-    implicit class XtensionRankedClazz(clazz: Class[_]) {
-      def unwrap: Class[_] = {
-        if (clazz.isArray) clazz.getComponentType.unwrap
-        else clazz
-      }
-      def wrap(rank: Int): Class[_] = {
-        if (rank == 0) clazz
-        else ScalaRunTime.arrayClass(clazz).wrap(rank - 1)
-      }
-      def toTpe: u.Type = {
-        if (clazz.isArray) {
-          appliedType(ListClass, clazz.getComponentType.toTpe)
-        } else {
-          @tailrec
-          def loop(owner: u.Symbol, parts: List[String]): u.Symbol = parts match {
-            case part :: Nil =>
-              if (clazz.getName.endsWith("$")) owner.info.decl(TermName(part))
-              else owner.info.decl(TypeName(part))
-            case part :: rest =>
-              loop(owner.info.decl(TermName(part)), rest)
-            case Nil =>
-              unreachable(debug(clazz))
-          }
-          val name = scala.reflect.NameTransformer.decode(clazz.getName)
-          val result = loop(mirror.RootPackage, name.stripSuffix("$").split(Array('.', '$')).toList)
-          if (result.isModule) result.asModule.info else result.asClass.toType
-        }
-      }
-    }
-    implicit class XtensionRankedTree(tree: u.Tree) {
-      def wrap(rank: Int): u.Tree = {
-        if (rank == 0) tree
-        else AppliedTypeTree(tq"$ListClass", List(tree.wrap(rank - 1)))
-      }
-    }
     implicit class XtensionQuasiHole(quasi: Quasi) {
       def hole: Hole = {
         val pos = quasi.pos.absolutize
