@@ -72,10 +72,12 @@ class ModSuite extends ParseSuite {
       Defn.Def(
         Nil,
         Term.Name("foo"),
-        Type.ParamClause(Nil),
-        Term.ParamClause(
-          List(Term.Param(List(Mod.Implicit()), Term.Name("a"), Some(Type.Name("Int")), None)),
-          Some(Mod.Implicit())
+        Member.ParamClauseGroup(
+          Type.ParamClause(Nil),
+          Term.ParamClause(
+            List(Term.Param(List(Mod.Implicit()), Term.Name("a"), Some(Type.Name("Int")), None)),
+            Some(Mod.Implicit())
+          ) :: Nil
         ) :: Nil,
         Some(Type.Name("Int")),
         Term.Name("a")
@@ -86,12 +88,12 @@ class ModSuite extends ParseSuite {
       Defn.Def(
         List(Mod.Implicit()),
         Term.Name("foo"),
-        Type.ParamClause(Nil),
-        List(
+        Member.ParamClauseGroup(
+          Type.ParamClause(Nil),
           Term.ParamClause(
             List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))
-          )
-        ),
+          ) :: Nil
+        ) :: Nil,
         Some(Type.Name("Int")),
         Term.Name("a")
       )
@@ -753,10 +755,8 @@ class ModSuite extends ParseSuite {
       Defn.Def(
         Nil,
         Term.Name("foo"),
-        Type.ParamClause(Nil),
-        Term.ParamClause(
-          List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))
-        ) :: Nil,
+        Nil,
+        List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None)) :: Nil,
         Some(Type.Name("Int")),
         Term.Name("a")
       )
