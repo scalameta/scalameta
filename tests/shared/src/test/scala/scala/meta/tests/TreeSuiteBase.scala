@@ -70,4 +70,24 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
       scala.meta.internal.prettyprinters.TreeSyntax.reprint(tree).toString
   }
 
+  protected def assertWithOriginalSyntax(tree: Tree, original: String, reprinted: String)(
+      implicit loc: munit.Location,
+      dialect: Dialect
+  ): Unit = {
+    val struct = tree.structure
+    assertNoDiff(tree.reprint, reprinted, struct)
+    assertNoDiff(tree.toString, original, struct)
+  }
+
+  protected def assertWithOriginalSyntax(trees: Tree*)(original: String*)(reprinted: String*)(
+      implicit loc: munit.Location,
+      dialect: Dialect
+  ): Unit = {
+    assertEquals(trees.length, original.length)
+    assertEquals(trees.length, reprinted.length)
+    trees.zip(original).zip(reprinted).foreach { case ((t, o), r) =>
+      assertWithOriginalSyntax(t, o, r)
+    }
+  }
+
 }
