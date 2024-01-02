@@ -3,6 +3,7 @@ package org.scalameta.adt
 import org.scalameta.adt.{Metadata => AdtMetadata}
 import scala.meta.internal.trees.{Metadata => AstMetadata}
 
+import scala.annotation.tailrec
 import scala.reflect.{ClassTag, classTag}
 import scala.reflect.api.Universe
 
@@ -88,14 +89,18 @@ trait Reflection {
 
   abstract class Adt(val sym: Symbol) {
     def tpe: Type = if (sym.isTerm) sym.info else sym.asType.toType
-    def prefix: String = {
-      def loop(sym: Symbol): String = {
+    def prefixes: List[String] = {
+      @tailrec
+      def loop(sym: Symbol, suffixes: List[String]): List[String] = {
         // if owner is a package or a package object, it shouldn't be part of the prefix
-        if (sym.owner.isPackageClass || sym.owner.name == typeNames.PACKAGE) sym.name.toString
-        else loop(sym.owner) + "." + sym.name.toString
+        val owner = sym.owner
+        val names = sym.name.toString :: suffixes
+        if (owner.isPackageClass || owner.name == typeNames.PACKAGE) names
+        else loop(owner, names)
       }
-      loop(sym)
+      loop(sym, Nil)
     }
+    def prefix: String = prefixes.mkString(".")
     def root = sym.root.asRoot
     def parents = sym.asClass.baseClasses.filter(sym1 => sym1 != sym && sym1.isAdt).map(_.asAdt)
     def <:<(other: Adt) = sym.asClass.toType <:< other.sym.asClass.toType
