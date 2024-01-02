@@ -4,10 +4,10 @@ package parsers
 import munit._
 import scala.meta._
 import scala.meta.internal.parsers._
+import scala.meta.internal.trees.Origin
 import MoreHelpers._
 
 import org.scalameta.logger
-import scala.meta.internal.trees.Origin
 
 class ParseSuite extends TreeSuiteBase with CommonTrees {
   val EOL = scala.compat.Platform.EOL

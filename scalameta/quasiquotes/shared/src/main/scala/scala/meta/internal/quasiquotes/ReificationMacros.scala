@@ -2,24 +2,24 @@ package scala.meta
 package internal
 package quasiquotes
 
-import scala.runtime.ScalaRunTime
+import scala.collection.mutable
+import scala.compat.Platform.EOL
 import scala.language.implicitConversions
 import scala.reflect.macros.whitebox.Context
-import scala.collection.mutable
+import scala.runtime.ScalaRunTime
+
 import org.scalameta._
 import org.scalameta.adt.{Liftables => AdtLiftables}
 import org.scalameta.invariants._
 
 import scala.annotation.tailrec
 import scala.meta.dialects
-import scala.meta.parsers._
-import scala.meta.tokenizers._
 import scala.meta.internal.tokens.TokenStreamPosition
-import scala.meta.internal.trees._
-import scala.meta.internal.trees.{Liftables => AstLiftables, Reflection => AstReflection}
+import scala.meta.internal.trees.{Liftables => AstLiftables, Reflection => AstReflection, _}
 import scala.meta.internal.parsers.Messages
 import scala.meta.internal.parsers.Absolutize._
-import scala.compat.Platform.EOL
+import scala.meta.parsers._
+import scala.meta.tokenizers._
 
 class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables with AstLiftables {
   lazy val u: c.universe.type = c.universe

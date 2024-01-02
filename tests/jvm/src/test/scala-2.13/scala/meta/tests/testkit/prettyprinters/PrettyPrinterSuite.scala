@@ -1,12 +1,12 @@
 package scala.meta.tests.testkit
 package prettyprinters
 
+import scala.meta._
 import scala.meta.internal.trees.Origin
 import scala.meta.testkit.StructurallyEqual
 
 import org.scalameta.logger
 import munit.FunSuite
-import scala.meta._
 
 class PrettyPrinterSuite extends FunSuite {
   implicit class XtensionResetOrigin[T <: Tree](tree: T) {

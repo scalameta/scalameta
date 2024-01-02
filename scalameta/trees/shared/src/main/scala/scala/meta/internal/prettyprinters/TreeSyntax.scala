@@ -3,25 +3,28 @@ package internal
 package prettyprinters
 
 import scala.meta.classifiers._
-import scala.meta.prettyprinters._
-import Show.{
-  sequence => s,
-  repeat => r,
-  indent => i,
-  newline => n,
-  meta => m,
-  wrap => w,
-  opt => o,
-  function => fn
-}
-import scala.meta.internal.trees.{root => _, branch => _, _}
+import scala.meta.inputs.Position
+import scala.meta.internal.trees.{branch => _, root => _, _}
 import scala.meta.internal.tokenizers.Chars._
+import scala.meta.prettyprinters._
+import scala.meta.tokens.Token
+
 import org.scalameta.adt._
 import org.scalameta.invariants._
 import org.scalameta.unreachable
+
 import scala.compat.Platform.EOL
-import scala.meta.inputs.Position
-import scala.meta.tokens.Token
+
+import Show.{
+  function => fn,
+  indent => i,
+  meta => m,
+  newline => n,
+  opt => o,
+  repeat => r,
+  sequence => s,
+  wrap => w
+}
 
 object TreeSyntax {
   private final object SyntaxInstances {

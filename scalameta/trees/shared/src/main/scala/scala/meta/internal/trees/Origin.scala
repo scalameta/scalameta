@@ -3,6 +3,7 @@ package internal
 package trees
 
 import org.scalameta.adt
+
 import scala.meta.common._
 import scala.meta.inputs._
 import scala.meta.internal.tokens._
