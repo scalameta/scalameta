@@ -36,14 +36,18 @@ trait Reflection {
     def isRoot: Boolean = sym.hasAnnotation[AdtMetadata.root]
     def isBranch: Boolean = sym.hasAnnotation[AdtMetadata.branch]
     def isLeaf: Boolean = sym.hasAnnotation[AdtMetadata.leafClass]
-    def isField: Boolean = sym match {
+    def isField: Boolean = isField(isPrivateOK = false)
+    def isField(isPrivateOK: Boolean): Boolean = sym match {
       case m: MethodSymbolApi if m.owner.isLeaf =>
         sym.hasAnnotation[AstMetadata.astField] ||
+        isPrivateOK && isPrivateField ||
         m.isPublic && m.isParamAccessor && m.isGetter
       case _ => false
     }
     private[adt] def isAuxiliaryField: Boolean = sym.hasAnnotation[AstMetadata.auxiliary]
-    private[adt] def isPayloadField: Boolean = !isAuxiliaryField
+    private[adt] def isPrivateField: Boolean = sym.hasAnnotation[AdtMetadata.privateField]
+    private[adt] def isPayloadField(isPrivateOK: Boolean): Boolean =
+      !isAuxiliaryField && (isPrivateOK || !isPrivateField)
     def asAdt: Adt =
       if (isRoot) sym.asRoot
       else if (isBranch) sym.asBranch
@@ -75,7 +79,10 @@ trait Reflection {
       (sym.leafs ++ sym.branches.flatMap(_.allLeafs)).map(ensureModule).distinct
 
     def root: Symbol = sym.asClass.baseClasses.reverse.find(_.isRoot).getOrElse(NoSymbol)
-    def allFields: List[Symbol] = sym.info.decls.sorted.filter(_.isField)
+    def allFields: List[Symbol] = {
+      val isPrivateOK = sym.isLeaf
+      sym.info.decls.sorted.filter(_.isField(isPrivateOK))
+    }
   }
 
   abstract class Adt(val sym: Symbol) {
@@ -114,12 +121,14 @@ trait Reflection {
   }
   class Leaf(sym: Symbol) extends Adt(sym) {
     if (!sym.isLeaf) sys.error(s"$sym is not a leaf")
-    def fields: List[Field] = allFields.filter(_.sym.isPayloadField)
+    def fields: List[Field] = fields(false)
+    def fields(isPrivateOK: Boolean): List[Field] =
+      allFields.filter(_.sym.isPayloadField(isPrivateOK))
     def allFields: List[Field] = sym.allFields.map(_.asField)
     override def toString = s"leaf $prefix"
   }
   class Field(val sym: Symbol) {
-    if (!sym.isField)
+    if (!sym.isField(isPrivateOK = true))
       sys.error(s"$sym is not a field")
     def owner: Leaf = sym.owner.asLeaf
     def name: TermName = TermName(sym.name.toString.stripPrefix("_"))
