@@ -33,7 +33,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
 
   // NOTE: only Mode.Pattern really needs holes, and that's only because of Scala's limitations
   // read a comment in liftUnquote for more information on that
-  case class Hole(name: TermName, arg: ReflectTree, var reifier: ReflectTree)
+  case class Hole(arg: ReflectTree, idx: Int, var reifier: ReflectTree = EmptyTree)
   sealed trait Mode {
     def isTerm: Boolean = this.isInstanceOf[Mode.Term]
     def multiline: Boolean
@@ -59,28 +59,33 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     reifySkeleton(skeleton, mode)
   }
 
+  private def mkHoles(args: Seq[ReflectTree]) = {
+    val res = List.newBuilder[Hole]
+    var i = 0
+    args.foreach { arg =>
+      res += Hole(arg, i)
+      i += 1
+    }
+    res.result()
+  }
+
   private def extractQuasiquotee(): (Input, Mode) = {
     val reflectInput = c.macroApplication.pos.source
+    def isMultiline(firstPart: ReflectTree) = {
+      reflectInput.content(firstPart.pos.start - 2) == '"'
+    }
     val (parts, mode) = {
-      def isMultiline(firstPart: ReflectTree) = {
-        reflectInput.content(firstPart.pos.start - 2) == '"'
-      }
-      def mkHole(argi: (ReflectTree, Int)) = {
-        val (arg, i) = argi
-        val name = TermName(QuasiquotePrefix + "$hole$" + i)
-        Hole(name, arg, reifier = EmptyTree)
-      }
       try {
         c.macroApplication match {
           case q"$_($_.apply(..$parts)).$_.apply[..$_](..$args)($_)" =>
             require(parts.length == args.length + 1)
-            val holes = args.zipWithIndex.map(mkHole)
+            val holes = mkHoles(args)
             (parts, Mode.Term(isMultiline(parts.head), holes))
           case q"$_($_.apply(..$parts)).$_.unapply[..$_](${unapplySelector: Ident})($_)" =>
             require(unapplySelector.name == TermName("<unapply-selector>"))
             val args = c.internal.subpatterns(unapplySelector).get
             require(parts.length == args.length + 1)
-            val holes = args.zipWithIndex.map(mkHole)
+            val holes = mkHoles(args)
             (parts, Mode.Pattern(isMultiline(parts.head), holes, unapplySelector))
         }
       } catch {
@@ -326,9 +331,9 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
                   case pq"$_: $explicitPt" => explicitPt
                   case _ => TypeTree(inferredPt)
                 }
-                hole.reifier =
-                  atPos(quasi.pos)(q"$InternalUnlift.unapply[$unliftedPt](${hole.name})")
-                pq"${hole.name}"
+                val name = TermName(QuasiquotePrefix + "$hole$" + hole.idx)
+                hole.reifier = atPos(quasi.pos)(q"$InternalUnlift.unapply[$unliftedPt]($name)")
+                pq"$name"
             }
             atPos(quasi.pos)(lifted)
           } else {
