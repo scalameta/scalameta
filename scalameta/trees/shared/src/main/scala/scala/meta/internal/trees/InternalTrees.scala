@@ -35,9 +35,7 @@ trait InternalTree extends Product {
   // Getters for pieces of internal state defined above.
   // ==============================================================
 
-  def parent: Option[Tree] = {
-    if (privateParent != null) scala.Some(privateParent) else None
-  }
+  def parent: Option[Tree] = Option(privateParent)
 
   // NOTE: InternalTree inherits traditional productXXX methods from Product
   // and also adds a new method called productFields.
@@ -48,7 +46,8 @@ trait InternalTree extends Product {
   def productFields: List[String]
 
   private[meta] def origin: Origin = {
-    if (privateOrigin != null) privateOrigin else Origin.None
+    val nullableOrigin = privateOrigin
+    if (nullableOrigin != null) nullableOrigin else Origin.None
   }
 
   def pos: Position = {
@@ -93,7 +92,6 @@ trait InternalTree extends Product {
 
 trait InternalTreeXtensions {
   private[meta] implicit class XtensionOriginTree[T <: Tree](tree: T) {
-    def origin: Origin = if (tree.privateOrigin != null) tree.privateOrigin else Origin.None
     def withOrigin(origin: Origin): T = tree.privateWithOrigin(origin).asInstanceOf[T]
   }
 }
