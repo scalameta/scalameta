@@ -362,10 +362,20 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             defn.foreach(applyBodyBuilder += _)
           }
           val params = positionVersionedParams(applyParamsBuilder.result())
-          applyBodyBuilder += q"$mname.apply(..$internalArgs)"
           val applyBody = applyBodyBuilder.result()
-          verMstats += q"def apply(..$params): $iname = { ..$applyBody }"
-          mstats1 += q"@${getDeprecatedAnno(v)} def apply(..$params): $iname = { ..$applyBody }"
+          val applyCall = q"$mname.apply(..$internalArgs)"
+          verMstats += q"""
+            def apply(..$params): $iname = {
+              ..$applyBody
+              $applyCall
+            }
+          """
+          mstats1 += q"""
+            @${getDeprecatedAnno(v)} def apply(..$params): $iname = {
+              ..$applyBody
+              $applyCall
+            }
+          """
         }
 
         // step 14: generate Companion.unapply
