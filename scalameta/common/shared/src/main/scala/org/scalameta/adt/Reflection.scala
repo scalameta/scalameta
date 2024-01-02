@@ -76,7 +76,7 @@ trait Reflection {
 
     def root: Symbol = sym.asClass.baseClasses.reverse.find(_.isRoot).getOrElse(NoSymbol)
     def fields: List[Symbol] = allFields.filter(p => p.isPayload)
-    def allFields: List[Symbol] = sym.info.decls.filter(_.isField).toList
+    def allFields: List[Symbol] = sym.info.decls.sorted.filter(_.isField)
   }
 
   abstract class Adt(val sym: Symbol) {
