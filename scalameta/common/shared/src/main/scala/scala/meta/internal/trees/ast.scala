@@ -123,8 +123,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         // step 4: turn all parameters into vars, create getters and setters
         params.foreach { p =>
-          val getterAnns = q"new $AstMetadataModule.astField" :: p.mods.annotations
-          istats1 += declareGetter(p.name, p.tpt, getterAnns)
+          istats1 += declareGetter(p.name, p.tpt, astFieldAnnot :: p.mods.annotations)
           val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
           stats1 += defineGetter(p.name, p.tpt, pmods)
         }
@@ -479,6 +478,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
   private def getDeferredModifiers(annots: List[Tree]): Modifiers =
     Modifiers(DEFERRED, typeNames.EMPTY, annots)
+
+  private val astFieldAnnot = q"new $AstMetadataModule.astField"
 
   private def declareGetter(name: TermName, tpe: Tree, annots: List[Tree]): Tree =
     declareGetter(name, tpe, getDeferredModifiers(annots))
