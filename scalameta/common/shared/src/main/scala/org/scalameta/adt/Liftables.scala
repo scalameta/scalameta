@@ -74,7 +74,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
             // in the current scope. The resulting type inference error (see above) can be fixed by providing an explicit type in the local definition for stats.
             // q"$u.AssignOrNamedArg($fieldName, $fieldValue)"
           }
-          val latestAfterVersion = if (fields.nonEmpty) {
+          val latestAfterVersion = if (adt.sym.isAstClass) {
             val moduleNames = adt.sym.companion.info.decls
               .flatMap { x => if (x.isModule) Some(x.name.toString) else None }
             val latestAfterVersion = AstNamerMacros.getLatestAfterName(moduleNames).getOrElse {
