@@ -121,7 +121,14 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         stats1 ++= imports
         stats1 ++= quasiExtraAbstractDefs
 
-        // step 4: turn all parameters into vars, create getters and setters
+        // step 4: implement the unimplemented methods in InternalTree (part 1)
+        val bparams1 = List(
+          q"@$TransientAnnotation private[meta] val privatePrototype: $iname",
+          q"private[meta] val privateParent: $TreeClass",
+          q"private[meta] val privateOrigin: $OriginClass"
+        )
+
+        // step 5: turn all parameters into vars, create getters and setters
         params.foreach { p =>
           istats1 += declareGetter(p.name, p.tpt, astFieldAnnot :: p.mods.annotations)
           val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
@@ -131,13 +138,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           val mods1 = p.mods.mkMutable.unPrivate.unOverride.unDefault
           q"$mods1 val ${internalize(p.name)}: ${p.tpt}"
         }
-
-        // step 5: implement the unimplemented methods in InternalTree (part 1)
-        val bparams1 = List(
-          q"@$TransientAnnotation private[meta] val privatePrototype: $iname",
-          q"private[meta] val privateParent: $TreeClass",
-          q"private[meta] val privateOrigin: $OriginClass"
-        )
 
         // step 6: implement the unimplemented methods in InternalTree (part 1)
         // The purpose of privateCopy is to provide extremely cheap cloning
