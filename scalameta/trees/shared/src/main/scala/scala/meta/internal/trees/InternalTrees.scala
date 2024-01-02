@@ -7,6 +7,7 @@ import scala.meta.prettyprinters._
 import scala.meta.tokenizers._
 import scala.meta.tokens._
 import scala.meta.tokens.Token._
+import scala.meta.trees.Origin
 
 // NOTE: Methods that start with "private" are NOT intended to be called outside scala.meta.
 // Calling these methods from hosts will compile (because hosts are in meta), but is strongly discouraged.
@@ -45,7 +46,7 @@ trait InternalTree extends Product {
   // def productIterator: Iterator[Any]
   def productFields: List[String]
 
-  private[meta] def origin: Origin = {
+  def origin: Origin = {
     val nullableOrigin = privateOrigin
     if (nullableOrigin != null) nullableOrigin else Origin.None
   }

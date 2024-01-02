@@ -3,7 +3,8 @@ package internal
 package prettyprinters
 
 import scala.meta.dialects
-import scala.meta.internal.trees.{Quasi, Origin}
+import scala.meta.internal.trees.Quasi
+import scala.meta.trees.Origin
 
 object TreeToString {
   // this dialect is as good as any as a default

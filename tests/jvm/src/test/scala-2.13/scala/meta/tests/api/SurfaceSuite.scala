@@ -172,6 +172,10 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.transversers.Transformer
       |scala.meta.transversers.Traverser
       |scala.meta.trees
+      |scala.meta.trees.Origin *
+      |scala.meta.trees.Origin.None *
+      |scala.meta.trees.Origin.Parsed *
+      |scala.meta.trees.Origin.ParsedSource *
     """.trim.stripMargin.split('\n').mkString(EOL)
     )
   }

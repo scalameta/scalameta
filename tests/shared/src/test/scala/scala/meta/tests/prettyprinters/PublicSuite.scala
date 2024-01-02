@@ -444,4 +444,9 @@ class PublicSuite extends TreeSuiteBase {
   test("scala.meta.XtensionDialectTreeSyntax") {}
   test("scala.meta.XtensionDialectTokensSyntax") {}
 
+  test("scala.meta.trees.Origin") {}
+  test("scala.meta.trees.Origin.None") {}
+  test("scala.meta.trees.Origin.Parsed") {}
+  test("scala.meta.trees.Origin.ParsedSource") {}
+
 }

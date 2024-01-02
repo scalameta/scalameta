@@ -4,7 +4,7 @@ package parsers
 import munit._
 import scala.meta._
 import scala.meta.internal.parsers._
-import scala.meta.internal.trees.Origin
+import scala.meta.trees.Origin
 import MoreHelpers._
 
 import org.scalameta.logger

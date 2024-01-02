@@ -24,6 +24,7 @@ import scala.meta.prettyprinters._
 import scala.meta.tokenizers._
 import scala.meta.tokens._
 import scala.meta.tokens.Token._
+import scala.meta.trees.Origin
 
 import org.scalameta._
 import org.scalameta.invariants._

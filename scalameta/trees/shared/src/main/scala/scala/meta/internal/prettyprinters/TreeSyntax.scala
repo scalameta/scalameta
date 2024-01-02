@@ -8,6 +8,7 @@ import scala.meta.internal.trees.{branch => _, root => _, _}
 import scala.meta.internal.tokenizers.Chars._
 import scala.meta.prettyprinters._
 import scala.meta.tokens.Token
+import scala.meta.trees.Origin
 
 import org.scalameta.adt._
 import org.scalameta.invariants._
