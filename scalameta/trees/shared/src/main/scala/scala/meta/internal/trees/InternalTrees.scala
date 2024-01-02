@@ -51,12 +51,7 @@ trait InternalTree extends Product {
     if (privateOrigin != null) privateOrigin else Origin.None
   }
 
-  def pos: Position = {
-    origin match {
-      case x: Origin.Parsed => x.position
-      case _ => Position.None
-    }
-  }
+  def pos: Position = origin.position
 
   def tokens(implicit dialect: Dialect): Tokens = {
     origin match {

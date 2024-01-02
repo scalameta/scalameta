@@ -10,10 +10,15 @@ import scala.meta.tokens._
 import scala.meta.tokenizers._
 
 @adt.root
-trait Origin extends Optional
+trait Origin extends Optional {
+  def position: Position
+}
+
 object Origin {
   @adt.none
-  object None extends Origin
+  object None extends Origin {
+    val position: Position = Position.None
+  }
 
   @adt.leaf
   class Parsed(input: Input, dialect: Dialect, pos: TokenStreamPosition) extends Origin {
