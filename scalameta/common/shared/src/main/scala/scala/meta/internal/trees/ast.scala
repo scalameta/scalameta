@@ -122,11 +122,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         stats1 ++= quasiExtraAbstractDefs
 
         // step 4: implement the unimplemented methods in InternalTree (part 1)
-        val bparams1 = List(
-          q"@$TransientAnnotation private[meta] val privatePrototype: $iname",
-          q"private[meta] val privateParent: $TreeClass",
-          q"private[meta] val privateOrigin: $OriginClass"
-        )
+        val privateFields = getPrivateFields(iname)
+        val privateParams = privateFields.asList
+        val bparams1 = privateParams.map(_.field)
 
         // step 5: turn all parameters into vars, create getters and setters
         params.foreach { p =>
@@ -171,9 +169,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         stats1 += q"""
         private[meta] def privateCopy(
             prototype: $TreeClass = this,
-            parent: $TreeClass = privateParent,
+            parent: $TreeClass = ${privateFields.parent.field.name},
             destination: $StringClass = null,
-            origin: $OriginClass = privateOrigin): Tree = {
+            origin: $OriginClass = ${privateFields.origin.field.name}): Tree = {
           $privateCopyParentChecks
           new $name(prototype.asInstanceOf[$iname], parent, origin)(..$privateCopyArgs)
         }
@@ -185,7 +183,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // NOTE: Can't generate XXX.Quasi.copy, because XXX.Quasi already inherits XXX.copy,
         // and there can't be multiple overloaded methods with default parameters.
         // Not a big deal though, since XXX.Quasi is an internal class.
-        def getParamArg(p: ValDef): TermName = p.name
+        def getParamArg(p: ValOrDefDef) = q"${p.name}"
         def addCopy(params: List[ValDef], annots: Tree*) = {
           val mods = getDeferredModifiers(annots.toList)
           istats1 += q"""
@@ -324,12 +322,19 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           errorChecker.traverse(fieldCheck)
           if (!hasErrors) internalBody += fieldCheck
         }
-        val internalInitCount = 3 // privatePrototype, privateParent, privateOrigin
-        val internalInitss = 1.to(internalInitCount).map(_ => q"null")
         val paramInits = params.map { p =>
           q"$CommonTyperMacrosModule.initParam(${p.name})"
         }
-        internalBody += q"val node = new $name(..$internalInitss)(..$paramInits)"
+        privateParams.foreach { p =>
+          internalBody += asValDefn(p.field)
+        }
+        internalBody += q"""
+          val node = new $name(
+            ..${bparams1.map(getParamArg)}
+          )(
+            ..$paramInits
+          )
+        """
         params.foreach(p => internalBody += storeField(p))
         internalBody += q"node"
         val applyParams =

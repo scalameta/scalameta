@@ -3032,7 +3032,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("#3409") {
     val code: Tree = source"object Generated {}"
     code.privateOrigin match {
-      case null =>
+      case Origin.None =>
       case x => fail(s"origin doesn't match: $x")
     }
   }

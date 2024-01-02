@@ -116,4 +116,26 @@ trait CommonNamerMacros extends MacroHelpers {
       }
     """
   }
+
+  protected case class PrivateField(field: ValOrDefDef)
+  protected case class PrivateFields(
+      prototype: PrivateField,
+      parent: PrivateField,
+      origin: PrivateField
+  ) {
+    def asList = prototype :: parent :: origin :: Nil
+  }
+
+  protected def getPrivateFields(iname: TypeName): PrivateFields = PrivateFields(
+    PrivateField(
+      q"@$TransientAnnotation private[meta] override val privatePrototype: $iname = null"
+    ),
+    PrivateField(
+      q"private[meta] override val privateParent: $TreeClass = null"
+    ),
+    PrivateField(
+      q"private[meta] override val privateOrigin: $OriginClass = $OriginModule.None"
+    )
+  )
+
 }
