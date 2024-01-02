@@ -42,8 +42,8 @@ trait Reflection {
         m.isPublic && m.isParamAccessor && m.isGetter
       case _ => false
     }
-    def isPayload: Boolean = sym.isField && !sym.isAuxiliary
-    def isAuxiliary: Boolean = sym.isField && sym.hasAnnotation[AstMetadata.auxiliary]
+    private[adt] def isAuxiliaryField: Boolean = sym.hasAnnotation[AstMetadata.auxiliary]
+    private[adt] def isPayloadField: Boolean = !isAuxiliaryField
     def asAdt: Adt =
       if (isRoot) sym.asRoot
       else if (isBranch) sym.asBranch
@@ -75,7 +75,6 @@ trait Reflection {
       (sym.leafs ++ sym.branches.flatMap(_.allLeafs)).map(ensureModule).distinct
 
     def root: Symbol = sym.asClass.baseClasses.reverse.find(_.isRoot).getOrElse(NoSymbol)
-    def fields: List[Symbol] = allFields.filter(p => p.isPayload)
     def allFields: List[Symbol] = sym.info.decls.sorted.filter(_.isField)
   }
 
@@ -115,7 +114,7 @@ trait Reflection {
   }
   class Leaf(sym: Symbol) extends Adt(sym) {
     if (!sym.isLeaf) sys.error(s"$sym is not a leaf")
-    def fields: List[Field] = sym.fields.map(_.asField)
+    def fields: List[Field] = allFields.filter(_.sym.isPayloadField)
     def allFields: List[Field] = sym.allFields.map(_.asField)
     override def toString = s"leaf $prefix"
   }
@@ -126,7 +125,7 @@ trait Reflection {
     def name: TermName = TermName(sym.name.toString.stripPrefix("_"))
     def tpe: Type = sym.info.finalResultType
     override def toString =
-      s"field ${owner.prefix}.$name: $tpe" + (if (sym.isAuxiliary) " (auxiliary)" else "")
+      s"field ${owner.prefix}.$name: $tpe" + (if (sym.isAuxiliaryField) " (auxiliary)" else "")
   }
 
   private def isExemptParentSymbol(bsym: ClassSymbol): Boolean = {
