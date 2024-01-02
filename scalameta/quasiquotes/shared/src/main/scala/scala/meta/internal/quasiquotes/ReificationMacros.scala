@@ -101,16 +101,16 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       val start = firstPart.pos.start // looks like we can trust this position to point to the character right after the opening quotes
       val end = { // we have to infer this for ourselves, because there's no guarantee we run under -Yrangepos
         var remaining = s_lastpart.length
-        var curr = lastPart.pos.start - 1
+        var curr = lastPart.pos.start
         while (remaining > 0) {
-          curr += 1
           if (reflectInput.content(curr) == '$') {
             curr += 1
             require(reflectInput.content(curr) == '$')
           }
+          curr += 1
           remaining -= 1
         }
-        curr + 1
+        curr
       }
       val metaInput = Input.VirtualFile(reflectInput.path, new String(reflectInput.content))
       Input.Slice(metaInput, start, end)
