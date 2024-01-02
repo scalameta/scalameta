@@ -14,6 +14,7 @@ import scala.annotation.tailrec
 import scala.meta.dialects
 import scala.meta.parsers._
 import scala.meta.tokenizers._
+import scala.meta.internal.tokens.TokenStreamPosition
 import scala.meta.internal.trees._
 import scala.meta.internal.trees.{Liftables => AstLiftables, Reflection => AstReflection}
 import scala.meta.internal.parsers.Messages
@@ -59,7 +60,12 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       if (mode.isTerm) dialects.QuasiquoteTerm(underlyingDialect, mode.multiline)
       else dialects.QuasiquotePat(underlyingDialect, mode.multiline)
     val skeleton = parseSkeleton(parser, input, dialect)
-    reifySkeleton(skeleton, mode)
+    val sourceTree = q"""
+      new _root_.scala.meta.internal.trees.Origin.ParsedSource(
+        _root_.scala.meta.inputs.Input.String(${input.text})
+      )($dialectTree)
+    """
+    reifySkeleton(skeleton, mode, sourceTree)
   }
 
   private def mkHoles(args: Seq[ReflectTree]) = {
@@ -223,7 +229,11 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     }
   }
 
-  private def reifySkeleton(meta: MetaTree, mode: Mode): ReflectTree = {
+  private def reifySkeleton(
+      meta: MetaTree,
+      mode: Mode,
+      sourceTree: ReflectTree
+  ): ReflectTree = {
     val isTerm = mode.isTerm
     val pendingQuasis = mutable.Stack[Quasi]()
     implicit class XtensionQuasiHole(quasi: Quasi) {
@@ -236,6 +246,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         )
       }
     }
+    val sourceName = TermName(c.freshName("parsedSource"))
     object Lifts {
       def liftTree(tree: MetaTree): ReflectTree = {
         Liftables.liftableSubTree(tree)
@@ -348,6 +359,22 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
           pendingQuasis.pop()
         }
       }
+      private val originNone = q"_root_.scala.meta.internal.trees.Origin.None"
+      val liftOrigin: Origin => ReflectTree =
+        if (mode.holes.isEmpty) // otherwise, syntax will not make much sense
+          _ match {
+            case x: Origin.Parsed =>
+              q"""
+                _root_.scala.meta.internal.trees.Origin.Parsed(
+                  $sourceName,
+                  ${liftTokenStreamPosition(x.pos)}
+                )
+              """
+            case _ => originNone
+          }
+        else _ => originNone
+      def liftTokenStreamPosition(obj: TokenStreamPosition): ReflectTree =
+        q"_root_.scala.meta.internal.tokens.TokenStreamPosition(${obj.start}, ${obj.end})"
     }
     object Liftables {
       // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
@@ -364,10 +391,19 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         Liftable((treess: List[List[T]]) => Lifts.liftTreess(treess))
       implicit def liftableOptionSubTree[T <: MetaTree]: Liftable[Option[T]] =
         Liftable((x: Option[T]) => Lifts.liftOptionTree(x))
+      implicit def liftableOrigin[T <: Origin]: Liftable[T] =
+        Liftable((x: T) => Lifts.liftOrigin(x))
+      implicit def liftableTokenStreamPosition[T <: TokenStreamPosition]: Liftable[T] =
+        Liftable((x: T) => Lifts.liftTokenStreamPosition(x))
     }
     mode match {
       case Mode.Term(_, _) =>
-        val internalResult = Lifts.liftTree(meta)
+        val internalResult = q"""
+          {
+            val $sourceName = $sourceTree
+            ${Lifts.liftTree(meta)}
+          }
+        """
         if (sys.props("quasiquote.debug") != null) {
           println(internalResult)
           // println(showRaw(internalResult))
@@ -397,8 +433,12 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
           case Bind(_, Ident(termNames.WILDCARD)) => q"input match { case $pattern => $thenp }"
           case _ => q"input match { case $pattern => $thenp; case _ => $elsep }"
         }
-        val internalResult =
-          q"new { def unapply(input: _root_.scala.meta.Tree) = $matchp }.unapply($unapplySelector)"
+        val internalResult = q"""
+          new {
+            val $sourceName = $sourceTree
+            def unapply(input: _root_.scala.meta.Tree) = $matchp
+          }.unapply($unapplySelector)
+        """
         if (sys.props("quasiquote.debug") != null) {
           println(internalResult)
           // println(showRaw(internalResult))
