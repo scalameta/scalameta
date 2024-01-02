@@ -2,8 +2,8 @@ package scala.meta
 package internal
 package prettyprinters
 
-import scala.meta.internal.trees.{Quasi, Origin}
 import scala.meta.dialects.{Scala211, QuasiquoteTerm}
+import scala.meta.internal.trees.{Quasi, Origin}
 
 object TreeToString {
   def apply(tree: Tree) = {

@@ -2,29 +2,31 @@ package scala.meta
 package internal
 package parsers
 
-import scala.language.implicitConversions
-import scala.reflect.{ClassTag, classTag}
-import scala.collection.mutable
-import mutable.ListBuffer
 import scala.annotation.tailrec
 import scala.collection.immutable._
-import scala.meta.internal.parsers.Location._
-import scala.meta.internal.parsers.Absolutize._
-import scala.meta.inputs._
-import scala.meta.tokens._
-import scala.meta.tokens.Token._
-import scala.meta.internal.tokens._
-import scala.meta.internal.trees._
-import scala.meta.parsers._
-import scala.meta.tokenizers._
-import scala.meta.prettyprinters._
-import scala.meta.classifiers._
-import scala.meta.internal.classifiers._
-import org.scalameta._
-import org.scalameta.invariants._
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
+import scala.language.implicitConversions
+import scala.reflect.{ClassTag, classTag}
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
+
+import scala.meta.classifiers._
+import scala.meta.inputs._
+import scala.meta.internal.classifiers._
+import scala.meta.internal.parsers.Location._
+import scala.meta.internal.parsers.Absolutize._
+import scala.meta.internal.tokens._
+import scala.meta.internal.trees._
+import scala.meta.parsers._
+import scala.meta.prettyprinters._
+import scala.meta.tokenizers._
+import scala.meta.tokens._
+import scala.meta.tokens.Token._
+
+import org.scalameta._
+import org.scalameta.invariants._
 
 class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 

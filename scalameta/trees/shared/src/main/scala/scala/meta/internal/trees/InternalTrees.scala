@@ -2,11 +2,11 @@ package scala.meta
 package internal
 package trees
 
-import scala.meta.prettyprinters._
 import scala.meta.inputs._
+import scala.meta.prettyprinters._
+import scala.meta.tokenizers._
 import scala.meta.tokens._
 import scala.meta.tokens.Token._
-import scala.meta.tokenizers._
 
 // NOTE: Methods that start with "private" are NOT intended to be called outside scala.meta.
 // Calling these methods from hosts will compile (because hosts are in meta), but is strongly discouraged.

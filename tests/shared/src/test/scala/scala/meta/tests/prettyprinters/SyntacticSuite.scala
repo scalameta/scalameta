@@ -2,8 +2,8 @@ package scala.meta.tests
 package prettyprinters
 
 import scala.meta._
-import scala.meta.internal.tokens._
-import scala.meta.internal.trees._
+import scala.meta.internal.tokens.TokenStreamPosition
+import scala.meta.internal.trees.Origin
 import scala.meta.prettyprinters.Show
 
 class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
