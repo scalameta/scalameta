@@ -1136,7 +1136,7 @@ object TreeSyntax {
         // NOTE: Options don't really matter,
         // because if we've parsed a tree, it's not gonna contain lazy seqs anyway.
         // case Origin.Parsed(_, originalDialect, _) if dialect == originalDialect && options == Options.Eager =>
-        case o @ Origin.Parsed(_, `dialect`, _) => s(o.position.text)
+        case o: Origin.Parsed if o.dialect eq dialect => s(o.position.text)
         case _ => reprint(x)(dialect)
       }
     }
