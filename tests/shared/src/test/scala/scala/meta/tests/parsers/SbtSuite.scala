@@ -1,8 +1,10 @@
 package scala.meta.tests
 package parsers
 
+import java.util.regex.Pattern
 import munit._
 import scala.compat.Platform.EOL
+
 import scala.meta._
 import scala.meta.dialects.Sbt0137
 
@@ -31,30 +33,25 @@ class SbtSuite extends FunSuite {
           name := "hello"
         )
     """
-    // NOTE: not checking against simpleBuildSyntax because quasiquotes don't retain tokens
-    assertNoDiff(
-      tree.syntax,
-      """
-        |lazy val commonSettings = Seq(organization := "com.example", version := "0.1.0", scalaVersion := "2.11.7")
-        |lazy val root = (project in file(".")).settings(commonSettings: _*).settings(name := "hello")
-        |    """.stripMargin.split('\n').mkString(EOL)
-    )
+    // native fails with a positive lookahead
+    assertNoDiff(tree.syntax, simpleBuildSyntax.replaceAll("\n(.)", "\n      $1"))
     assertEquals(tree.structure, simpleBuildStructure)
   }
 
-  private def simpleBuildSyntax = """
-    |lazy val commonSettings = Seq(
-    |  organization := "com.example",
-    |  version := "0.1.0",
-    |  scalaVersion := "2.11.7"
-    |)
-    |
-    |lazy val root = (project in file(".")).
-    |  settings(commonSettings: _*).
-    |  settings(
-    |    name := "hello"
-    |  )
-  """.trim.stripMargin.split('\n').mkString(EOL)
+  private def simpleBuildSyntax =
+    """|
+       |lazy val commonSettings = Seq(
+       |  organization := "com.example",
+       |  version := "0.1.0",
+       |  scalaVersion := "2.11.7"
+       |)
+       |
+       |lazy val root = (project in file(".")).
+       |  settings(commonSettings: _*).
+       |  settings(
+       |    name := "hello"
+       |  )
+       |""".stripMargin.replace("\n", EOL)
 
   private def simpleBuildStructure = {
     """

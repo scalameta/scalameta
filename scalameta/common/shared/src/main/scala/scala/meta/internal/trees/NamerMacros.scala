@@ -117,7 +117,7 @@ trait CommonNamerMacros extends MacroHelpers {
     """
   }
 
-  protected case class PrivateField(field: ValOrDefDef)
+  protected case class PrivateField(field: ValOrDefDef, persist: Boolean = false)
   protected case class PrivateFields(
       prototype: PrivateField,
       parent: PrivateField,
@@ -134,7 +134,8 @@ trait CommonNamerMacros extends MacroHelpers {
       q"private[meta] override val privateParent: $TreeClass = null"
     ),
     PrivateField(
-      q"private[meta] override val privateOrigin: $OriginClass = $OriginModule.None"
+      q"private[meta] override val privateOrigin: $OriginClass = $OriginModule.None",
+      true
     )
   )
 
