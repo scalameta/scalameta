@@ -2,7 +2,6 @@ package scala.meta.tests
 package prettyprinters
 
 import scala.meta._
-import scala.meta.internal.tokens.TokenStreamPosition
 import scala.meta.internal.trees.Origin
 import scala.meta.prettyprinters.Show
 
@@ -1823,8 +1822,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val syntax = "('\\n', '\\n')"
     val tree = super.term(expr)
     val charN = Lit.Char('\n')
-    val originSource = new Origin.ParsedSource(Input.String(exprU))
-    val origin = Origin.Parsed(originSource, TokenStreamPosition(1, 2))
+    val origin = Origin.Parsed(new Origin.ParsedSource(Input.String(exprU)), 1, 2)
     val charU = charN.withOrigin(origin)
     checkTree(tree, expr) {
       Term.Tuple(List(charN, charU))

@@ -6,7 +6,6 @@ import org.scalameta.adt
 
 import scala.meta.common._
 import scala.meta.inputs._
-import scala.meta.internal.tokens._
 import scala.meta.tokenizers._
 import scala.meta.tokens._
 
@@ -21,19 +20,20 @@ object Origin {
     val position: Position = Position.None
   }
 
+  // `begTokenIdx` and `endTokenIdx` are half-open interval of index range
   @adt.leaf
-  class Parsed(source: ParsedSource, pos: TokenStreamPosition) extends Origin {
+  class Parsed(source: ParsedSource, begTokenIdx: Int, endTokenIdx: Int) extends Origin {
     @inline private def tokenize() = source.tokens
 
     def position: Position = {
       val tokens = tokenize()
-      val start = tokens(pos.start).start
-      val end = tokens(pos.end - 1).end
+      val start = tokens(begTokenIdx).start
+      val end = tokens(endTokenIdx - 1).end
       Position.Range(input, start, end)
     }
 
     def tokens: Tokens = {
-      tokenize().slice(pos.start, pos.end)
+      tokenize().slice(begTokenIdx, endTokenIdx)
     }
 
     @inline def input: Input = source.input
