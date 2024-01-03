@@ -2,7 +2,6 @@ package scala.meta
 
 import scala.meta.dialects._
 import scala.meta.internal.dialects._
-import scala.collection.immutable.TreeMap
 
 /**
  * A dialect is used to configure what Scala syntax is allowed during tokenization and parsing.
@@ -757,6 +756,25 @@ final class Dialect private[meta] (
     allowPatUnquotes = false,
     allowMultilinePrograms = true
   )
+
+  private[meta] def unquoteTerm(multiline: Boolean): Dialect = {
+    require(!allowUnquotes)
+    privateCopy(
+      allowTermUnquotes = true,
+      allowMultilinePrograms = multiline,
+      allowTypeLambdas = true
+    )
+  }
+
+  private[meta] def unquotePat(multiline: Boolean): Dialect = {
+    require(!allowUnquotes)
+    privateCopy(
+      allowPatUnquotes = true,
+      allowMultilinePrograms = multiline,
+      allowTypeLambdas = true
+    )
+  }
+
 }
 
 object Dialect extends InternalDialect {

@@ -163,23 +163,6 @@ package object dialects {
   @deprecated("Use Scala3 instead", "4.4.2")
   implicit val Dotty: Dialect = Scala3
 
-  private[meta] def QuasiquoteTerm(underlying: Dialect, multiline: Boolean) = {
-    require(!underlying.allowUnquotes)
-    underlying.copy(
-      allowTermUnquotes = true,
-      allowMultilinePrograms = multiline,
-      allowTypeLambdas = true
-    )
-  }
-
-  private[meta] def QuasiquotePat(underlying: Dialect, multiline: Boolean) = {
-    require(!underlying.allowUnquotes)
-    underlying.copy(
-      allowPatUnquotes = true,
-      allowMultilinePrograms = multiline,
-      allowTypeLambdas = true
-    )
-  }
 }
 
 // NOTE: Need this code in this very file in order to avoid issues with knownDirectSubclasses.

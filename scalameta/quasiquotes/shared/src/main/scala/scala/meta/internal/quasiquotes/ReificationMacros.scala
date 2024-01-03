@@ -56,8 +56,8 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     val underlyingDialect = instantiateDialect(dialectTree)
     val parser = instantiateParser(c.macroApplication.symbol)
     val dialect =
-      if (mode.isTerm) dialects.QuasiquoteTerm(underlyingDialect, mode.multiline)
-      else dialects.QuasiquotePat(underlyingDialect, mode.multiline)
+      if (mode.isTerm) underlyingDialect.unquoteTerm(mode.multiline)
+      else underlyingDialect.unquotePat(mode.multiline)
     val skeleton = parseSkeleton(parser, input, dialect)
     val sourceTree = q"""
       new _root_.scala.meta.internal.trees.Origin.ParsedSource(
