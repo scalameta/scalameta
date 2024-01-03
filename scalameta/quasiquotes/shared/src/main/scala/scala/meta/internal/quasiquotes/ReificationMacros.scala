@@ -14,7 +14,6 @@ import org.scalameta.invariants._
 
 import scala.annotation.tailrec
 import scala.meta.dialects
-import scala.meta.internal.tokens.TokenStreamPosition
 import scala.meta.internal.trees.{Liftables => AstLiftables, Reflection => AstReflection, _}
 import scala.meta.internal.parsers.Messages
 import scala.meta.internal.parsers.Absolutize._
@@ -363,18 +362,11 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       val liftOrigin: Origin => ReflectTree =
         if (mode.holes.isEmpty) // otherwise, syntax will not make much sense
           _ match {
-            case x: Origin.Parsed =>
-              q"""
-                _root_.scala.meta.internal.trees.Origin.Parsed(
-                  $sourceName,
-                  ${liftTokenStreamPosition(x.pos)}
-                )
-              """
+            case Origin.Parsed(_, beg, end) =>
+              q"_root_.scala.meta.internal.trees.Origin.Parsed($sourceName, $beg, $end)"
             case _ => originNone
           }
         else _ => originNone
-      def liftTokenStreamPosition(obj: TokenStreamPosition): ReflectTree =
-        q"_root_.scala.meta.internal.tokens.TokenStreamPosition(${obj.start}, ${obj.end})"
     }
     object Liftables {
       // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
@@ -396,8 +388,6 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         Liftable((x: Option[T]) => Lifts.liftOptionTree(x))
       implicit def liftableOrigin[T <: Origin]: Liftable[T] =
         Liftable((x: T) => Lifts.liftOrigin(x))
-      implicit def liftableTokenStreamPosition[T <: TokenStreamPosition]: Liftable[T] =
-        Liftable((x: T) => Lifts.liftTokenStreamPosition(x))
     }
     mode match {
       case Mode.Term(_, _) =>

@@ -353,8 +353,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val start = getStart(startPos)
     val end = if (endPos < startPos) startPos - 1 else getEnd(endPos)
     val endExcl = if (start == end && tokens(start).is[Trivia]) end else end + 1
-    val pos = TokenStreamPosition(start, endExcl)
-    body.withOrigin(Origin.Parsed(originSource, pos))
+    body.withOrigin(Origin.Parsed(originSource, start, endExcl))
   }
 
   def atPosTry[T <: Tree](start: StartPos, end: EndPos)(body: => Try[T]): Try[T] = {
