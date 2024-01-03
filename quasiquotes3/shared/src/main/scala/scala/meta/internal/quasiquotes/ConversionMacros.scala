@@ -4,14 +4,13 @@ package quasiquotes
 
 import scala.compat.Platform.EOL
 import scala.language.experimental.macros
-// import scala.reflect.macros.whitebox.Context
 import scala.quoted._
 import scala.meta.internal.trees.{Reflection => AstReflection}
 
 // NOTE: we don't have the signature as [O, I] to keep symmetry with Unlift
 object Lift {
-  transparent inline def apply[I](outside: Any): I = ${ConversionMacros.liftApplyImpl[I]('outside)}
-  transparent inline def unapply[I](outside: Any): Option[I] = ${ConversionMacros.liftUnapplyImpl[I]('outside)}
+  transparent inline def apply[I](inline outside: Any): I = ${ConversionMacros.liftApplyImpl[I]('outside)}
+  transparent inline def unapply[I](inline outside: Any): Option[I] = ${ConversionMacros.liftUnapplyImpl[I]('outside)}
 }
 
 // NOTE: here we can't have the signature be [I, O], because we never know I
@@ -19,8 +18,8 @@ object Lift {
 // in the case of Unlift.unapply, we only know the expected type of the unquote, not its actual type
 // it would be nice if Scala supported partially provided type argument lists
 object Unlift {
-  transparent inline def apply[O](inside: Any): O = ${ConversionMacros.unliftApplyImpl[O]('inside)}
-  transparent inline def unapply[O](inside: Any): Option[O] = ${ConversionMacros.unliftUnapplyImpl[O]('inside)}
+  transparent inline def apply[O](inline inside: Any): O = ${ConversionMacros.unliftApplyImpl[O]('inside)}
+  transparent inline def unapply[O](inline inside: Any): Option[O] = ${ConversionMacros.unliftUnapplyImpl[O]('inside)}
 }
 
 object ConversionMacros {
@@ -50,7 +49,7 @@ class ConversionMacros(using val topLevelQuotes: Quotes) {//extends AstReflectio
           outside.asExprOf[I]
         } else {
           outsideTpe.asType match
-            case '[t] => 
+            case '[t] =>
               val liftableMaybe = Expr.summon[Lift[t, I]]
               liftableMaybe match
                 case Some(liftable) => '{$liftable.apply(${outsideExpr.asExprOf[t]})}
@@ -68,7 +67,6 @@ class ConversionMacros(using val topLevelQuotes: Quotes) {//extends AstReflectio
   def unliftApply[O: Type](inside: Expr[Any]): Expr[O] = {
     // NOTE: here we just disregard the expected outside type, because I can't find uses for it
     // duality is a fun thing, but it looks like here it just led me into a dead-end
-    // q"$inside"
     inside.asExprOf[O]
   }
 

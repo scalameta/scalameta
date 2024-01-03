@@ -2,9 +2,6 @@ package scala.meta
 package internal
 package quasiquotes
 
-import scala.runtime.ScalaRunTime
-import scala.language.implicitConversions
-import scala.collection.mutable
 import org.scalameta._
 import org.scalameta.adt.{Liftables => AdtLiftables}
 import org.scalameta.invariants._
@@ -17,63 +14,95 @@ import scala.meta.internal.trees._
 import scala.meta.internal.trees.{Liftables => AstLiftables, Reflection => AstReflection}
 import scala.meta.internal.parsers.Messages
 import scala.meta.internal.parsers.Absolutize._
-import scala.compat.Platform.EOL
-import scala.meta.quasiquotes.Qunapply
-import scala.meta.quasiquotes.q
+import scala.meta.quasiquotes._
 
+import scala.runtime.ScalaRunTime
+import scala.language.implicitConversions
+import scala.collection.mutable
+import scala.compat.Platform.EOL
 import scala.quoted._
 
 object ReificationMacros {
-  def quasiquoteImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]], dialectExpr: Expr[Dialect]): Expr[Any] =
-    new ReificationMacros().expandApply(scExpr, argsExpr, dialectExpr, QuasiquoteType.Q)
-  def typeImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]], dialectExpr: Expr[Dialect]) = 
-    new ReificationMacros().expandApply(scExpr, argsExpr, dialectExpr, QuasiquoteType.T)
-  def caseOrPatternImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]], dialectExpr: Expr[Dialect]) = 
-    new ReificationMacros().expandApply(scExpr, argsExpr, dialectExpr, QuasiquoteType.P)
+  def termImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]) =
+    new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Term).asExprOf[scala.meta.Tree]
+  def termParamImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]) =
+    new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.TermParam).asExprOf[scala.meta.Term.Param]
+  def typeImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]) = 
+    new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Type).asExprOf[scala.meta.Type]
+  def typeParamImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]) = 
+    new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.TypeParam).asExprOf[scala.meta.Type.Param]
+  def caseOrPatternImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Tree] = 
+    new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.CaseOrPattern).asExprOf[scala.meta.Tree]
+  def initImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Init] = 
+    new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Init).asExprOf[scala.meta.Init]
+  def selfImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Self] = 
+    new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Self).asExprOf[scala.meta.Self]
+  def templateImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Template] = 
+    new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Template).asExprOf[scala.meta.Template]
+  def modImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Mod] = 
+    new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Mod).asExprOf[scala.meta.Mod]
+  def enumeratorImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Enumerator] = 
+    new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Enumerator).asExprOf[scala.meta.Enumerator]
+  def importerImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Importer] = 
+    new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Importer).asExprOf[scala.meta.Importer]
+  def importeeImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Importee] = 
+    new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Importee).asExprOf[scala.meta.Importee]
+  def sourceImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Source] = 
+    new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Source).asExprOf[scala.meta.Source]
 
-
-  def unapplyQuasiquoteImpl(using Quotes)(qtodoExpr: Expr[Qunapply], argsExpr: Expr[Any], dialectExpr: Expr[Dialect]): Expr[Option[Seq[Any]]] =
-    val scExpr: Expr[StringContext] =
-      qtodoExpr match
-        case '{ ($stringContext: StringContext).q } => stringContext
-        case _ => quotes.reflect.report.errorAndAbort("Expected call to extension method `q(StringContext)`")
-    new ReificationMacros().expandUnapply(scExpr, argsExpr, dialectExpr, QuasiquoteType.Q)
+  def unapplyImpl(using Quotes)(scCallExpr: Expr[QuasiquoteUnapply], scrutineeExpr: Expr[Any]): Expr[Option[Seq[Any]]] =
+    val (stringContext, quasiquoteType) = scCallExpr match
+      case '{ ($sc: StringContext).q } => (sc, QuasiquoteType.Term)
+      case '{ ($sc: StringContext).param } => (sc, QuasiquoteType.TermParam)
+      case '{ ($sc: StringContext).t } => (sc, QuasiquoteType.Type)
+      case '{ ($sc: StringContext).tparam } => (sc, QuasiquoteType.TypeParam)
+      case '{ ($sc: StringContext).p } => (sc, QuasiquoteType.CaseOrPattern)
+      case '{ ($sc: StringContext).init } => (sc, QuasiquoteType.Init)
+      case '{ ($sc: StringContext).self } => (sc, QuasiquoteType.Self)
+      case '{ ($sc: StringContext).template } => (sc, QuasiquoteType.Template)
+      case '{ ($sc: StringContext).mod } => (sc, QuasiquoteType.Mod)
+      case '{ ($sc: StringContext).enumerator } => (sc, QuasiquoteType.Enumerator)
+      case '{ ($sc: StringContext).importer } => (sc, QuasiquoteType.Importer)
+      case '{ ($sc: StringContext).importee } => (sc, QuasiquoteType.Importee)
+      case '{ ($sc: StringContext).source } => (sc, QuasiquoteType.Source)
+      case _ => quotes.reflect.report.errorAndAbort("Expected call to quasiquote extension method. ")
+    new ReificationMacros().expandUnapply(stringContext, scrutineeExpr, quasiquoteType)
 }
 
-class ReificationMacros(using val quotes: Quotes) {
-  import quotes.reflect._
-  import scala.meta.{Tree => MetaTree, Dialect => Dialect}
+class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
+  import topLevelQuotes.reflect._
+  import scala.meta.{Tree => MetaTree, Dialect}
   import scala.meta.inputs.{Position => MetaPosition, _}
   type MetaParser = (Input, Dialect) => MetaTree
-  lazy val RootPackage = quotes.reflect.Symbol.classSymbol("_root_")
+  lazy val RootPackage = topLevelQuotes.reflect.Symbol.classSymbol("_root_")
 
   private sealed trait Mode {
     def isTerm: Boolean = this.isInstanceOf[Mode.Term]
     def isPattern: Boolean = this.isInstanceOf[Mode.Pattern]
     def multiline: Boolean
-    def holes: List[Hole]
   }
   private object Mode {
-    case class Term(multiline: Boolean, holes: List[Hole]) extends Mode
-    case class Pattern(multiline: Boolean, holes: List[Hole], unapplySelector: Expr[Any]) extends Mode
+    case class Term(multiline: Boolean, holes: List[TermHole]) extends Mode
+    case class Pattern(multiline: Boolean, holes: List[PatternHole], unapplySelector: Expr[Any]) extends Mode
   }
-  private case class Hole(name: String, arg: Term, var reifier: Option[Term])
+  private case class TermHole(name: String, arg: Term, var reifier: Option[Term])
+  private case class PatternHole(name: String, posStart: Int, posEnd: Int, tpe: Option[TypeRepr], var symbol: Option[Symbol], var reifier: Option[Term])
 
   lazy val ListClass = TypeRepr.of[scala.List]
 
-  def expandUnapply(strCtx: Expr[StringContext], unapplySelector: Expr[Any], dialectExpr: Expr[Dialect], qType: QuasiquoteType): Expr[Option[Seq[Any]]] = {
+  def expandUnapply(strCtx: Expr[StringContext], unapplySelector: Expr[Any], qType: QuasiquoteType): Expr[Option[Seq[Any]]] = {
     val mode = extractModePattern(strCtx, unapplySelector)
-    expand(strCtx, dialectExpr, qType, mode).asExprOf[Option[Seq[Any]]]
+    expand(strCtx, qType, mode).asExprOf[Option[Seq[Any]]]
   }
 
-  def expandApply(strCtx: Expr[StringContext], args: Expr[Seq[Any]], dialectExpr: Expr[Dialect], qType: QuasiquoteType): Expr[Any] = {
+  def expandApply(strCtx: Expr[StringContext], args: Expr[Seq[Any]], qType: QuasiquoteType): Expr[Any] = {
     val mode = extractModeTerm(strCtx, args)
-    expand(strCtx, dialectExpr, qType, mode)
+    expand(strCtx, qType, mode)
   }
 
-  private def expand(strCtx: Expr[StringContext], dialectExpr: Expr[Dialect], qType: QuasiquoteType, mode: Mode) = {
+  private def expand(strCtx: Expr[StringContext], qType: QuasiquoteType, mode: Mode) = {
     val input = metaInput()
-    val dialect = instantiateDialect(dialectExpr, mode)
+    val dialect = instantiateDialect(mode)
     val parser = instantiateParser(qType)
     val skeleton = parseSkeleton(parser, input, dialect)
     reifySkeleton(skeleton, mode, qType)
@@ -82,41 +111,67 @@ class ReificationMacros(using val quotes: Quotes) {
   private def metaInput() = {
     val pos = Position.ofMacroExpansion
     val reflectInput = pos.sourceFile
-    val start = pos.start + 2
-    val end = pos.end - 1
-    val metaInput = Input.VirtualFile(reflectInput.path, new String(reflectInput.content.get))
+    val content = new String(reflectInput.content.get)
+    val start = {
+      var i = 0
+      while (content(pos.start + i) != '"') i += 1 // skip method name
+      while (content(pos.start + i) == '"') i += 1 // skip quotations
+      pos.start + i
+    }
+    val end = {
+      var i = 0
+      while (content(pos.end - 1 - i) == '"') i += 1 // skip quotations
+      pos.end - i
+    }
+    val metaInput = Input.VirtualFile(reflectInput.path, content)
     Input.Slice(metaInput, start, end)
   }
 
   private def extractModeTerm(strCtxExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Mode = {
     val pos = Position.ofMacroExpansion
-    def isMultiline() = {
-      pos.startLine != pos.endLine
-    }
+    def isMultiline() = pos.startLine != pos.endLine
     def mkHole(argi: (Expr[Any], Int)) = {
       val (arg, i) = argi
       val name = "quasiquote" + "$hole$" + i
-      Hole(name, arg.asTerm, reifier = None)
+      TermHole(name, arg.asTerm, reifier = None)
     }
-    val Varargs(args) = argsExpr
+    val Varargs(args) = argsExpr: @unchecked
     val holes = args.zipWithIndex.map(mkHole)
     Mode.Term(isMultiline(), holes.toList)
   }
 
   private def extractModePattern(strCtxExpr: Expr[StringContext], selectorExpr: Expr[Any]): Mode = {
+    val '{StringContext(${Varargs(parts)}: _*)} = strCtxExpr: @unchecked
     val pos = Position.ofMacroExpansion
-    def isMultiline() = {
-      pos.startLine != pos.endLine
-    }
-    def mkHole(argi: (Expr[Any], Int)) = {
-      val (arg, i) = argi
+
+    // EXPERIMENT: Workaround mechanism for getting type declarations from unapply pattern.
+    // Only works for `val q"${: T}" = (...)`, does nothing for pattern matching cases.
+    // Even then, it stops working if macro entry method is a transparent inline method (which we want to have). 
+    val argTypes: Option[List[TypeRepr]] = None
+      // try
+      //   Symbol.spliceOwner.owner.owner.owner.tree match
+      //     case ValDef(_, tpe, Some(Match(_, List(CaseDef(Unapply(Select(Block(List(typeDef), _), "unapplySeq"), _, _), _, _))))) if typeDef == Symbol.spliceOwner.owner.owner.tree =>
+      //       if parts.length > 2 then
+      //         tpe.tpe match
+      //           case AppliedType(tuple, lst) => Some(lst)
+      //       else
+      //         Some(List(tpe.tpe))
+      //     case _ => None
+      // catch
+      //   case _ => None
+    
+    def isMultiline() = pos.startLine != pos.endLine
+    def mkHole(i: Int) = {
       val name = "quasiquote" + "$hole$" + i
-      Hole(name, arg.asTerm, reifier = None)
+      val posStart = parts(i).asTerm.pos.end
+      val posEnd = parts(i + 1).asTerm.pos.start
+      val argType = argTypes.map(_(i))
+      PatternHole(name, posStart, posEnd, argType, None, None)
     }
-    Mode.Pattern(isMultiline(), List(mkHole(selectorExpr, 0)), selectorExpr) // probably incorrect
+    Mode.Pattern(isMultiline(), List.range(0, parts.length - 1).map(mkHole(_)), selectorExpr)
   }
 
-  private def instantiateDialect(dialectExpr: Expr[Dialect], mode: Mode): Dialect = {
+  private def instantiateDialect(mode: Mode): Dialect = {
     // NOTE: We want to have a higher-order way to abstract over differences in dialects
     // and we're using implicits for that (implicits are values => values are higher-order => good).
     //
@@ -130,18 +185,22 @@ class ReificationMacros(using val quotes: Quotes) {
     // delaying validation of resulting ASTs until runtime.
     val underlyingDialect = {
       def instantiateStandardDialect(sym: Symbol): Option[Dialect] = {
-        val dialectsSym = Symbol.classSymbol("scala.meta.dialects.package$")
-        if (dialectsSym != sym.owner) return None
-        if (dialectsSym.methodMember(sym.name) == Symbol.noSymbol) return None // TODO Seems redundant ??
-        Dialect.standards.get(sym.name.toString)
+        val dialectsSym = Symbol.classSymbol("scala.meta.dialects.package$").companionModule
+        if (dialectsSym == sym.owner.companionModule) {
+          if (dialectsSym.methodMember(sym.name).isEmpty) None
+          else Dialect.standards.get(sym.name)
+        } else None
       }
-      val standardDialectSingleton = instantiateStandardDialect(dialectExpr.asTerm.tpe.termSymbol)
+
+      val dialectExpr = Expr.summon[scala.meta.Dialect]
+      val standardDialectSingleton = dialectExpr.flatMap(expr => instantiateStandardDialect(expr.asTerm.tpe.termSymbol))
+
       standardDialectSingleton
         .getOrElse({
           val suggestion =
             s"to fix this, import something from scala.meta.dialects, e.g. scala.meta.dialects.${Dialect.current}"
           val message =
-            s"${dialectExpr.show} of type ${dialectExpr.asTerm.tpe.show} is not supported by quasiquotes ($suggestion)"
+            s"${dialectExpr.get.show} of type ${dialectExpr.get.asTerm.tpe.show} is not supported by quasiquotes ($suggestion)"
           report.errorAndAbort(message)
         })
     }
@@ -149,11 +208,7 @@ class ReificationMacros(using val quotes: Quotes) {
     else dialects.QuasiquotePat(underlyingDialect, mode.multiline)
   }
   private def instantiateParser(qType: QuasiquoteType): MetaParser = {
-    val parserModule = 
-      qType match
-        case QuasiquoteType.Q => Symbol.classSymbol("scala.meta.quasiquotes.Api.XTensionQuasiquoteTerm")
-        case QuasiquoteType.T => Symbol.classSymbol("scala.meta.quasiquotes.Api.XTensionQuasiquoteType")
-        case QuasiquoteType.P => Symbol.classSymbol("scala.meta.quasiquotes.Api.XTensionQuasiquoteCaseOrPattern")
+    val parserModule = Symbol.classSymbol(qType.parserClass())
     val parsersModuleClass =
       Class.forName("scala.meta.quasiquotes.package$", true, this.getClass.getClassLoader)
     val parsersModule = parsersModuleClass.getField("MODULE$").get(null)
@@ -170,30 +225,37 @@ class ReificationMacros(using val quotes: Quotes) {
     try {
       parser(input, dialect)
     } catch {
-      case TokenizeException(pos, message) => report.errorAndAbort(message) // todo set correct position
-      case ParseException(pos, message) => report.errorAndAbort(message) // todo set correct position
+      case TokenizeException(pos, message) => report.errorAndAbort(message)
+      case ParseException(pos, message) => report.errorAndAbort(message)
     }
   }
   private def reifySkeleton(meta: MetaTree, mode: Mode, qType: QuasiquoteType): Expr[Any] = {
     val pendingQuasis = mutable.Stack[Quasi]()
-    object Internal extends InternalTrait with ExprLifts {
-      def liftTree(tree: MetaTree)(using Quotes): Expr[Any] = {
-        this.liftableSubTree(tree)
+    object Internal extends InternalTrait with ExprLifts(using quotes)(mode.isPattern) {
+      import internalQuotes.reflect._
+      def liftTree(tree: MetaTree): internalQuotes.reflect.Tree = {
+        this.liftableSubTree0(tree).asInstanceOf[internalQuotes.reflect.Tree]
       }
-      def liftOptionTree(maybeTree: Option[MetaTree]): Expr[Option[Any]] = {
+      def liftOptionTree[T: Type](maybeTree: Option[MetaTree]): internalQuotes.reflect.Tree = {
         maybeTree match {
-          case Some(tree: Quasi) => liftQuasi0(tree, optional = true).asExprOf[Option[Any]]
-          case Some(otherTree) => '{Some(${liftTree(otherTree)})}
-          case None => '{None}
+          case Some(tree: Quasi) => liftQuasi0(tree, optional = true)
+          case Some(otherTree) =>
+            if mode.isTerm then Apply(TypeApply(Select.unique('{scala.Some}.asTerm, "apply"), List(TypeTree.of[T])), List(liftTree(otherTree).asInstanceOf[Term]))
+            else 
+              Unapply(TypeApply(Select.unique(Ref(Symbol.classSymbol("scala.Some").companionModule), "unapply"), List(TypeTree.of[T])), Nil, List(liftTree(otherTree)))
+
+          case None =>
+            '{scala.None}.asTerm match
+              case Inlined(_, _, none) => none
         }
       }
-      def liftTrees[T: Type](trees: Seq[MetaTree])(using Quotes): Expr[List[Any]] = {
+      def liftTrees[T: Type](trees: Seq[MetaTree]): Tree = {
         @tailrec
-        def loop(trees: Seq[MetaTree], acc: Option[Expr[List[Any]]], prefix: List[MetaTree]): Expr[List[Any]] =
+        def loop(trees: Seq[MetaTree], acc: Option[Tree], prefix: List[MetaTree]): Tree =
           trees match {
             case (quasi: Quasi) +: rest if quasi.rank == 1 =>
               if (acc.isEmpty) {
-                if (prefix.isEmpty) loop(rest, Some(liftQuasi(quasi).asExprOf[List[Any]]), Nil)
+                if (prefix.isEmpty) loop(rest, Some(liftQuasi0(quasi)), Nil)
                 else
                   loop(
                     rest,
@@ -204,96 +266,103 @@ class ReificationMacros(using val quotes: Quotes) {
                       // because that still wouldn't work in pattern mode.
                       // Finally, we can't do something like q"+:(${liftQuasi(quasi)}, (${liftTree(curr)}))",
                       // because would violate evaluation order guarantees that we must keep.
-                      val currElement = liftTree(curr).asExprOf[T]
-                      val alreadyLiftedList = acc.getOrElse(liftQuasi(quasi)).asExprOf[List[T]]
-                      if (mode.isTerm) Some('{$currElement +: $alreadyLiftedList})//q"$currElement +: $alreadyLiftedList"
-                      else Some('{$currElement +: $alreadyLiftedList})//pq"$currElement +: $alreadyLiftedList"
+                      val currElement = liftTree(curr)
+                      val alreadyLiftedList = acc.getOrElse(liftQuasi(quasi))
+                      val tree = 
+                        if (mode.isTerm) Apply(TypeApply(Select.unique(alreadyLiftedList.asInstanceOf[Term], "+:"), List(TypeTree.of[T])), List(currElement.asInstanceOf[Term]))
+                        else Unapply(TypeApply(Select.unique('{+:}.asTerm, "unapply"), List(TypeTree.of[T], TypeTree.of[List], TypeTree.of[List[T]])), Nil, List(currElement, alreadyLiftedList))
+                      Some(tree)
                     }),
                     Nil
                   )
               } else {
-                // require(prefix.isEmpty && debug(trees, acc, prefix))
-                if (mode.isTerm) then 
-                  liftQuasi(quasi) match
-                    case '{$expr: List[t]} =>
-                      loop(rest, Some('{${acc.get.asExprOf[List[t]]} ++ ${expr}}), Nil)
-                else report.errorAndAbort(Messages.QuasiquoteAdjacentEllipsesInPattern(quasi.rank))// TODO set position: quasi.pos
+                Predef.require(prefix.isEmpty && debug(trees, acc, prefix))
+                if (mode.isTerm) then
+                  val tree = Apply(TypeApply(Select.unique(acc.get.asInstanceOf[Term], "++"), List(TypeTree.of[T])), List(liftQuasi(quasi).asInstanceOf[Term]))
+                  loop(rest, Some(tree), Nil)
+                else report.errorAndAbort(Messages.QuasiquoteAdjacentEllipsesInPattern(quasi.rank))
               }
             case other +: rest =>
               if (acc.isEmpty) loop(rest, acc, prefix :+ other)
               else {
-                // require(prefix.isEmpty && debug(trees, acc, prefix))
-                if (mode.isTerm) 
-                  liftTree(other) match
-                    case '{$expr: t} => loop(rest, Some('{${acc.get.asExprOf[List[t]]} :+ ${expr}}), Nil)
-                else 
-                  liftTree(other) match
-                    case '{$expr: t} => loop(rest, Some('{${acc.get.asExprOf[List[t]]} :+ ${expr}}), Nil) //loop(rest, pq"$acc :+ ${liftTree(other)}", Nil)
+                Predef.require(prefix.isEmpty && debug(trees, acc, prefix))
+                val otherTree = liftTree(other)
+                val tree =
+                  if mode.isTerm then Apply(TypeApply(Select.unique(acc.get.asInstanceOf[Term], ":+"), List(TypeTree.of[T])), List(otherTree.asInstanceOf[Term]))
+                  else Unapply(TypeApply(Select.unique('{:+}.asTerm, "unapply"), List(TypeTree.of[T], TypeTree.of[List], TypeTree.of[List[T]])), Nil, List(acc.get, otherTree))
+                loop(rest, Some(tree), Nil)
               }
             case _ =>
-              // NOTE: Luckily, at least this quasiquote works fine both in term and pattern modes
               if (acc.isEmpty) {
-                val args = prefix.map(liftTree(_).asExprOf[T]).toList
-                '{List[T](${Varargs(args)}: _*)}
+                val args = prefix.map(liftTree(_)).toList
+                val targs = List(TypeTree.of[T])
+                if mode.isTerm then
+                  Select.overloaded('{List}.asTerm, "apply", List(TypeRepr.of[T]), args.asInstanceOf[List[Term]])
+                else
+                  Unapply(TypeApply(Select.unique('{List}.asTerm, "unapplySeq"), List(TypeTree.of[T])), Nil, args)
               }
-              else acc.get.asExprOf[List[Any]]
+              else acc.get
           }
         loop(trees, None, Nil)
       }
-      //   def liftTreess(treess: List[List[MetaTree]]): ReflectTree = {
-      //     val tripleDotQuasis = treess.flatten.collect {
-      //       case quasi: Quasi if quasi.rank == 2 => quasi
-      //     }
-      //     if (tripleDotQuasis.isEmpty) {
-      //       Liftable.liftList[List[MetaTree]](Liftables.liftableSubTrees).apply(treess)
-      //     } else if (tripleDotQuasis.length == 1) {
-      //       if (treess.flatten.length == 1) liftQuasi(tripleDotQuasis(0))
-      //       else
-      //         c.abort(
-      //           tripleDotQuasis(0).pos,
-      //           "implementation restriction: can't mix ...$ with anything else in parameter lists." + EOL +
-      //             "See https://github.com/scalameta/scalameta/issues/406 for details."
-      //         )
-      //     } else {
-      //       c.abort(tripleDotQuasis(1).pos, Messages.QuasiquoteAdjacentEllipsesInPattern(2))
-      //     }
-      //   }
-      def liftQuasi0(quasi: Quasi, optional: Boolean = false): Expr[Any] = {
+        def liftTreess(treess: List[List[MetaTree]]): Tree = {
+          val tripleDotQuasis = treess.flatten.collect {
+            case quasi: Quasi if quasi.rank == 2 => quasi
+          }
+          if (tripleDotQuasis.isEmpty) {
+            val args = treess.map(liftTrees)
+            if mode.isTerm then
+              Select.overloaded('{List}.asTerm, "apply", List(TypeRepr.of[Any]), args.asInstanceOf[List[Term]])
+            else 
+              Unapply(TypeApply(Select.unique('{List}.asTerm, "unapplySeq"), List(TypeTree.of[Any])), Nil, args)
+          } else if (tripleDotQuasis.length == 1) {
+            if (treess.flatten.length == 1) liftQuasi(tripleDotQuasis(0))
+            else
+              report.errorAndAbort(
+                "implementation restriction: can't mix ...$ with anything else in parameter lists." + EOL +
+                  "See https://github.com/scalameta/scalameta/issues/406 for details."
+              )
+          } else {
+            report.errorAndAbort(Messages.QuasiquoteAdjacentEllipsesInPattern(2))
+          }
+        }
+      def liftQuasi0(quasi: Quasi, optional: Boolean = false): Tree = {
         try {
           pendingQuasis.push(quasi)
           if (quasi.rank == 0) {
             val inferredPt = {
               val unwrappedPt = quasi.pt.wrap(pendingQuasis.map(_.rank).sum).toTpe
-              if (optional) AppliedType(TypeRepr.of[Option], List(unwrappedPt)) else unwrappedPt
+              if optional then 
+                unwrappedPt.asType match
+                case '[t] => rei.topLevelQuotes.reflect.TypeRepr.of[Option[t]]
+              else unwrappedPt
             }
             val lifted = mode match {
               case Mode.Term(_, _) =>
                 inferredPt.asType match
-                  case '[t] =>
-                    '{scala.meta.internal.quasiquotes.Lift[t](${quasi.hole.arg.asExpr})}
-              // case Mode.Pattern(_, _, _) =>
-                // // NOTE: Here, we would like to say q"$InternalUnlift[$inferredPt](${quasi.hole.arg})".
-                // // Unfortunately, the way how patterns work prevents us from having it this easy:
-                // // 1) unapplications can't have explicitly specified type arguments
-                // // 2) pattern language is very limited and can't express what we want to express in Unlift
-                // // Therefore, we're forced to take a two-step unquoting scheme: a) match everything in the corresponding hole,
-                // // b) call Unlift.unapply as a normal method in the right-hand side part of the pattern matching clause.
-                // val hole = quasi.hole
-                // val unliftedPt = hole.arg match {
-                //   case pq"_: $explicitPt" => explicitPt
-                //   case pq"$_: $explicitPt" => explicitPt
-                //   case _ => TypeTree(inferredPt)
-                // }
-                // hole.reifier =
-                //   atPos(quasi.pos)(q"$InternalUnlift.unapply[$unliftedPt](${hole.name})")
-                // pq"${hole.name}"
+                  case '[t] => '{scala.meta.internal.quasiquotes.Lift[t](${quasi.termHole.arg.asExpr})}.asTerm
+              case Mode.Pattern(_, _, _) =>
+                // NOTE: Here, we would like to say q"$InternalUnlift[$inferredPt](${quasi.hole.arg})".
+                // Unfortunately, the way how patterns work prevents us from having it this easy:
+                // 1) unapplications can't have explicitly specified type arguments
+                // 2) pattern language is very limited and can't express what we want to express in Unlift
+                // Therefore, we're forced to take a two-step unquoting scheme: a) match everything in the corresponding hole,
+                // b) call Unlift.unapply as a normal method in the right-hand side part of the pattern matching clause.
+                val hole = quasi.patternHole
+                val symbol = Symbol.newBind(Symbol.spliceOwner, hole.name, Flags.EmptyFlags, inferredPt.asInstanceOf[TypeRepr])
+                val reifier =
+                  hole.tpe match
+                    case Some(tpe) => Select.overloaded('{scala.meta.internal.quasiquotes.Unlift}.asTerm, "unapply", List(tpe.asInstanceOf[TypeRepr]), List(Ref(symbol)))
+                    case None => Select.overloaded('{scala.meta.internal.quasiquotes.Unlift}.asTerm, "unapply", List(inferredPt.asInstanceOf[TypeRepr]), List(Ref(symbol)))
+                hole.symbol = Some(symbol).asInstanceOf[Option[rei.topLevelQuotes.reflect.Symbol]]
+                hole.reifier = Some(reifier).asInstanceOf[Option[rei.topLevelQuotes.reflect.Term]]
+                Bind(symbol, Wildcard())
             }
-            // atPos(quasi.pos)(lifted)
             lifted
           } else {
             quasi.tree match {
-              case quasi: Quasi if quasi.rank == 0 => liftQuasi(quasi)
-              case _ => report.errorAndAbort("complex ellipses are not supported yet") //c.abort(quasi.pos, "complex ellipses are not supported yet")
+              case quasi: Quasi if quasi.rank == 0 => liftQuasi0(quasi)
+              case _ => report.errorAndAbort("complex ellipses are not supported yet")
             }
           }
         } finally {
@@ -301,12 +370,12 @@ class ReificationMacros(using val quotes: Quotes) {
         }
       }
 
-      // TODO
       // Depending on pattern types, this is able to cause some custom errors to be thrown
-      // I do not think this is possible to port to scala 3.
+      // We cannot obtain the types of the pattern in Scala 3 for now
       protected def unquotesName(q: scala.meta.internal.trees.Quasi): Boolean = {
-        val tpe = q.hole.arg.tpe
-        tpe != (null) && tpe <:< (TypeRepr.of[scala.meta.Term.Name])
+        // val tpe = q.hole.arg.tpe // works for TermMode
+        // tpe != (null) && tpe <:< (TypeRepr.of[scala.meta.Term.Name])
+        false
       }
     }
 
@@ -329,73 +398,117 @@ class ReificationMacros(using val quotes: Quotes) {
         }
       }
     }
-    // private implicit class XtensionRankedTree(tree: quotes.reflect.TypeRepr) {
-    //   def wrap(rank: Int): TypeRepr = {
-    //     if (rank == 0) tree
-    //     else AppliedType(ListClass, List(tree.wrap(rank - 1))) //AppliedTypeTree(tq"$ListClass", List(tree.wrap(rank - 1)))
-    //   }
-    // }
     implicit class XtensionQuasiHole(quasi: scala.meta.internal.trees.Quasi) {
       import quotes.reflect._
-      def hole: Hole = {
-        val pos = quasi.pos.absolutize // hmm
-        val maybeHole =
-          mode.holes.find(h => pos.start <= h.arg.pos.start && h.arg.pos.start <= pos.end)
-        maybeHole.getOrElse(
-          //unreachable(debug(quasi, quasi.pos.absolutize, mode.holes, mode.holes.map(_.arg.pos)))
-          report.errorAndAbort("OOO")
-        )
+      def termHole: TermHole = {
+        val pos = quasi.pos.absolutize
+        (mode: @unchecked) match
+          case Mode.Term(_, holes) =>
+            val maybeHole =
+              holes.find(h => pos.start <= h.arg.pos.start && h.arg.pos.start <= pos.end)
+            maybeHole.getOrElse{
+              val message = "this code path should've been unreachable"
+              val relevantValues = 
+                s"""
+                |quasi = ${quasi}
+                |quasi.pos.absolutize = ${quasi.pos.absolutize}
+                |holes = ${holes}
+                |""".stripMargin
+              throw new UnreachableError(message + relevantValues)
+            }
+      }
+      def patternHole: PatternHole = {
+        val pos = quasi.pos.absolutize
+        (mode: @unchecked) match
+          case Mode.Pattern(_, holes, _) =>
+            val maybeHole =
+              holes.find(h => pos.start <= h.posStart && h.posStart <= pos.end)
+            maybeHole.getOrElse{
+              val message = "this code path should've been unreachable"
+              val relevantValues = 
+                s"""
+                |quasi = ${quasi}
+                |quasi.pos.absolutize = ${quasi.pos.absolutize}
+                |holes = ${holes}
+                |""".stripMargin
+              throw new UnreachableError(message + relevantValues)
+            }
       }
     }
 
     mode match {
       case Mode.Term(_, _) =>
-        val internalResult = Internal.liftTree(meta)
+        val internalResult = Internal.liftTree(meta).asInstanceOf[Term].asExpr
         if (sys.props("quasiquote.debug") != null) {
           println(internalResult)
           // println(showRaw(internalResult))
         }
         val resType =
           qType match
-            case QuasiquoteType.Q => TypeRepr.of[scala.meta.Tree]
-            case QuasiquoteType.T => TypeRepr.of[scala.meta.Type]
-            case QuasiquoteType.P => TypeRepr.of[scala.meta.Tree]
-        val a = resType.asType match
+            case QuasiquoteType.Term => TypeRepr.of[scala.meta.Tree]
+            case QuasiquoteType.TermParam => TypeRepr.of[scala.meta.Term.Param]
+            case QuasiquoteType.Type => TypeRepr.of[scala.meta.Type]
+            case QuasiquoteType.TypeParam => TypeRepr.of[scala.meta.Type.Param]
+            case QuasiquoteType.CaseOrPattern => TypeRepr.of[scala.meta.Tree]
+            case QuasiquoteType.Init => TypeRepr.of[scala.meta.Init]
+            case QuasiquoteType.Self => TypeRepr.of[scala.meta.Self]
+            case QuasiquoteType.Template => TypeRepr.of[scala.meta.Template]
+            case QuasiquoteType.Mod => TypeRepr.of[scala.meta.Mod]
+            case QuasiquoteType.Enumerator => TypeRepr.of[scala.meta.Enumerator]
+            case QuasiquoteType.Importer => TypeRepr.of[scala.meta.Importer]
+            case QuasiquoteType.Importee => TypeRepr.of[scala.meta.Importee]
+            case QuasiquoteType.Source => TypeRepr.of[scala.meta.Source]
+        resType.asType match
+          case '[t] => '{scala.meta.internal.quasiquotes.Unlift[t]($internalResult)}
+  
+      case Mode.Pattern(_, holes, unapplySelector) =>
+        import Internal.internalQuotes.reflect._
+
+        val pattern = Internal.liftTree(meta)
+
+        val args = holes.map(hole => hole.reifier.get.asInstanceOf[Term])
+        val argsContents = args.flatMap { _.tpe match
+          case AppliedType(tpe, content) if tpe =:= TypeRepr.of[Option] => content
+        }
+        val lst = Select.overloaded('{List}.asTerm, "apply", List(TypeRepr.of[Option[Any]]), args).asExprOf[List[Option[Any]]]
+        val returned = Select.overloaded('{List}.asTerm, "apply", List(TypeRepr.of[Any]), args.map(arg => '{${arg.asExprOf[Option[Any]]}.get}.asTerm)).asExpr
+
+        //// TODO: for now making this produces compiler crashes, but ideally we would want to return a Tuple from transparent inline def unapply 
+        //// (instead of returning Seq[Any] from inline def unapplySeq, like we do now). Ths would make the unapply calls correctly typed
+        //// (instead of always resolving to Any). 
+        // val n = args.length
+        // val returned = Select.overloaded(Ref(Symbol.classSymbol("scala.Tuple" + n).companionModule), "apply", argsContents, args.map(arg => '{${arg.asExprOf[Option[Any]]}.get}.asTerm)).asExpr
+        returned.asTerm.tpe.asType match
           case '[t] =>
-            '{scala.meta.internal.quasiquotes.Unlift[scala.meta.Tree]($internalResult)} // replace scala.meta.Tree depending on StringContext prefix
-        println(a.show) // TODO debug info
-        a
-      case Mode.Pattern(_, holes, unapplySelector) => ???
-        // // inspired by https://github.com/densh/joyquote/blob/master/src/main/scala/JoyQuote.scala
-        // val pattern = Internal.liftTree(meta)
-        // val (thenp, elsep) = {
-        //   if (holes.isEmpty) (q"true", q"false")
-        //   else {
-        //     val resultNames = holes.zipWithIndex.map({ case (_, i) =>
-        //       TermName(QuasiquotePrefix + "$result$" + i)
-        //     })
-        //     val resultPatterns = resultNames.map(name => pq"_root_.scala.Some($name)")
-        //     val resultTerms = resultNames.map(name => q"$name")
-        //     val thenp = q"""
-        //       (..${holes.map(_.reifier)}) match {
-        //         case (..$resultPatterns) => _root_.scala.Some((..$resultTerms))
-        //         case _ => _root_.scala.None
-        //       }
-        //     """
-        //     (thenp, q"_root_.scala.None")
-        //   }
-        // }
-        // val matchp = pattern match {
-        //   case Bind(_, Ident(termNames.WILDCARD)) => q"input match { case $pattern => $thenp }"
-        //   case _ => q"input match { case $pattern => $thenp; case _ => $elsep }"
-        // }
-        // val internalResult =
-        //   q"new { def unapply(input: _root_.scala.meta.Tree) = $matchp }.unapply($unapplySelector)"
-        // if (sys.props("quasiquote.debug") != null) {
-        //   println(internalResult)
-        //   // println(showRaw(internalResult))
-        // }
-        // internalResult
+            def thenp(inputExpr: Expr[Any])(using Quotes) =
+              import quotes.reflect._
+              if (holes.isEmpty) then '{Some(List[Any]())}
+              else
+                '{
+                  val tpl = $lst
+                  if tpl.toList.forall(_.asInstanceOf[Option[Any]].isDefined) then Some(${returned.asExprOf[t]})
+                  else None
+                }
+            def elsep(using Quotes) ='{scala.None}
+            
+            def matchp(input: Expr[Any])(using Quotes) = 
+              Match(
+                input.asTerm,
+                List(
+                  CaseDef(pattern, None, thenp(input).asTerm),
+                  CaseDef(Wildcard(), None, elsep.asTerm)
+                )
+              ).asExprOf[Option[t]]
+
+            val internalResult ='{ ${matchp(unapplySelector)}.asInstanceOf[Option[t]] }
+            
+            if (sys.props("quasiquote.debug") != null) {
+              println(internalResult)
+              // println(showRaw(internalResult))
+            }
+
+            internalResult.asExprOf[Option[Seq[Any]]]
+
     }
   }
 }
