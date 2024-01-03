@@ -1026,18 +1026,16 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("xml literals") {
     val tree = term("<foo>{bar}</foo>")
-    assertTree(tree)(
+    checkTree(tree, "<foo>{bar}</foo>")(
       Term.Xml(List(Lit.String("<foo>"), Lit.String("</foo>")), List(Term.Name("bar")))
     )
-    assertEquals(tree.syntax, "<foo>{bar}</foo>")
   }
 
   test("xml literals unit") {
     val tree = term("<foo>{}</foo>")
-    assertTree(tree)(
+    checkTree(tree, "<foo>{{}}</foo>")(
       Term.Xml(List(Lit.String("<foo>"), Lit.String("</foo>")), List(Term.Block(Nil)))
     )
-    assertEquals(tree.syntax, "<foo>{{}}</foo>")
   }
 
   test("xml literals: pattern position") {
@@ -1048,42 +1046,51 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("interpolator unit") {
     val tree = term("""s"Hello${}World"""")
-    assertTree(tree)(
+    checkTree(tree, """s"Hello${{}}World"""")(
       Term.Interpolate(
         Term.Name("s"),
         List(Lit.String("Hello"), Lit.String("World")),
         List(Term.Block(Nil))
       )
     )
-    assertEquals(tree.syntax, """s"Hello${{}}World"""")
   }
 
   test("interpolator with $ character") {
     val tree = term("""s"$$$foo$$"""")
-    assertTree(tree)(
+    checkTree(tree, """s"$$$foo$$"""")(
       Term.Interpolate(
         Term.Name("s"),
         List(Lit.String("$"), Lit.String("$")),
         List(Term.Name("foo"))
       )
     )
-    assertEquals(tree.syntax, """s"$$$foo$$"""")
   }
 
   test("interpolator braces for operator identifiers") {
-    assertEquals(q"""s"$${+++}bar"""".syntax, """s"$+++bar"""")
-    assertEquals(q"""s"$${+++}_bar"""".syntax, """s"$+++_bar"""")
-    assertEquals(q"""s"$${+++}123"""".syntax, """s"$+++123"""")
-    assertEquals(q"""s"$${+++}***"""".syntax, """s"${+++}***"""")
-    assertEquals(q"""s"$${+++} ***"""".syntax, """s"$+++ ***"""")
+    assertWithOriginalSyntax(q"""s"$${+++}bar"""", """s"$+++bar"""", """s"$+++bar"""")
+    assertWithOriginalSyntax(q"""s"$${+++}_bar"""", """s"$+++_bar"""", """s"$+++_bar"""")
+    assertWithOriginalSyntax(q"""s"$${+++}123"""", """s"$+++123"""", """s"$+++123"""")
+    assertWithOriginalSyntax(q"""s"$${+++}***"""", """s"${+++}***"""", """s"${+++}***"""")
+    assertWithOriginalSyntax(q"""s"$${+++} ***"""", """s"$+++ ***"""", """s"$+++ ***"""")
+  }
+
+  test("interpolator braces for plain identifiers: check tokens") {
+    val tree1: Tree = q"""s"$${foo}bar""""
+    val numTokens = tree1.tokens.length
+    assertEquals(tree1.tokens.length, numTokens)
+
+    val input = Input.String("""s"$${foo}bar"""")
+    val source2 = new Origin.ParsedSource(input)
+    val tree2 = tree1.withOrigin(new Origin.Parsed(source2, 0, numTokens))
+    assertNotEquals(tree2.tokens.length, numTokens)
   }
 
   test("interpolator braces for plain identifiers") {
-    assertEquals(q"""s"$${foo}bar"""".syntax, """s"${foo}bar"""")
-    assertEquals(q"""s"$${foo}_bar"""".syntax, """s"${foo}_bar"""")
-    assertEquals(q"""s"$${foo}123"""".syntax, """s"${foo}123"""")
-    assertEquals(q"""s"$${foo}***"""".syntax, """s"$foo***"""")
-    assertEquals(q"""s"$${foo} ***"""".syntax, """s"$foo ***"""")
+    assertWithOriginalSyntax(q"""s"$${foo}bar"""", """s"${foo}bar"""", """s"${foo}bar"""")
+    assertWithOriginalSyntax(q"""s"$${foo}_bar"""", """s"${foo}_bar"""", """s"${foo}_bar"""")
+    assertWithOriginalSyntax(q"""s"$${foo}123"""", """s"${foo}123"""", """s"${foo}123"""")
+    assertWithOriginalSyntax(q"""s"$${foo}***"""", """s"$foo***"""", """s"$foo***"""")
+    assertWithOriginalSyntax(q"""s"$${foo} ***"""", """s"$foo ***"""", """s"$foo ***"""")
   }
 
   test("interpolator braces for term names beginning with '_'") {
@@ -1093,23 +1100,27 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         parts = List(Lit.String(before), Lit.String(after)),
         args = List(Term.Name("_foo"))
       )
-    assertEquals(interpolate("", "").syntax, """s"${_foo}"""")
-    assertEquals(interpolate("bar", "baz").syntax, """s"bar${_foo}baz"""")
-    assertEquals(interpolate("[", "]").syntax, """s"[${_foo}]"""")
+    assertWithOriginalSyntax(interpolate("", ""), """s"${_foo}"""", """s"${_foo}"""")
+    assertWithOriginalSyntax(
+      interpolate("bar", "baz"),
+      """s"bar${_foo}baz"""",
+      """s"bar${_foo}baz""""
+    )
+    assertWithOriginalSyntax(interpolate("[", "]"), """s"[${_foo}]"""", """s"[${_foo}]"""")
   }
 
   test("empty-arglist application") {
     val tree = term("foo.toString()")
-    assertTree(tree)(Term.Apply(Term.Select(Term.Name("foo"), Term.Name("toString")), Nil))
-    assertEquals(tree.syntax, "foo.toString()")
+    checkTree(tree, "foo.toString()")(
+      Term.Apply(Term.Select(Term.Name("foo"), Term.Name("toString")), Nil)
+    )
   }
 
   test("type parameters with type bounds") {
     val Defn.Def(_, _, List(tree), _, _, _) = templStat("def foo[T <: Int] = ???")
-    assertTree(tree)(
+    checkTree(tree, "T <: Int")(
       Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, Some(Type.Name("Int"))), Nil, Nil)
     )
-    assertEquals(tree.syntax, "T <: Int")
 
     assertTree(templStat("def foo[T <: Int] = ???")) {
       Defn.Def(
@@ -1125,19 +1136,17 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("Lit(()) - 1") {
     val lit @ Lit(()) = term("()")
-    assertTree(lit)(Lit.Unit())
-    assertEquals(lit.syntax, "()")
+    checkTree(lit, "()")(Lit.Unit())
   }
 
   test("Lit(()) - 2") {
     val Term.If(Term.Name("cond"), Lit(42), lit @ Lit.Unit()) = super.term("if (cond) 42")
-    assertTree(lit)(Lit.Unit())
-    assertEquals(lit.syntax, "")
+    checkTree(lit, "()")(Lit.Unit())
   }
 
   test("Type.Function(Tuple, _) #557") {
-    assertEquals(t"((a, b)) => c".syntax, "((a, b)) => c")
-    assertEquals(t"((a, b), c) => c".syntax, "((a, b), c) => c")
+    assertWithOriginalSyntax(t"((a, b)) => c", "((a, b)) => c", "((a, b)) => c")
+    assertWithOriginalSyntax(t"((a, b), c) => c", "((a, b), c) => c", "((a, b), c) => c")
   }
 
   test("Term.Apply(_, List(Term.Function(...))) #572, #574") {
@@ -1164,14 +1173,22 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       Term.Name("foo"),
       List(Term.Function(List(Term.Param(List(), Term.Name("i"), None, None)), Lit.Unit()))
     )
-    assertEquals(tree1.syntax, "foo((i: Int) => ())")
-    assertEquals(tree2.syntax, "foo { implicit i: Int => () }")
-    assertEquals(tree3.syntax, "foo(i => ())")
+    assertWithOriginalSyntax(tree1, "foo((i: Int) => ())", "foo((i: Int) => ())")
+    assertWithOriginalSyntax(
+      tree2,
+      "foo { implicit i: Int => () }",
+      "foo { implicit i: Int => () }"
+    )
+    assertWithOriginalSyntax(tree3, "foo(i => ())", "foo(i => ())")
   }
 
   test("macro defs #581") {
-    assertEquals(q"def f = macro g".syntax, "def f = macro g")
-    assertEquals(q"def f: Int = macro g".syntax, "def f: Int = macro g")
+    assertWithOriginalSyntax(q"def f = macro g", "def f = macro g", "def f = macro g")
+    assertWithOriginalSyntax(
+      q"def f: Int = macro g",
+      "def f: Int = macro g",
+      "def f: Int = macro g"
+    )
   }
 
   test("Pat.Interpolate syntax is correct #587") {
@@ -1180,16 +1197,20 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       List(Lit.String("object "), Lit.String(" { .."), Lit.String(" }")),
       List(Pat.Var(Term.Name("name")), Pat.Var(Term.Name("stats")))
     )
-    assertEquals(interpolate.syntax, """q"object ${name} { ..${stats} }"""")
+    assertWithOriginalSyntax(
+      interpolate,
+      """q"object ${name} { ..${stats} }"""",
+      """q"object ${name} { ..${stats} }""""
+    )
   }
 
   test("Importee.Rename") {
-    assertEquals(q"import a.{b=>c}".syntax, "import a.{b => c}")
+    assertWithOriginalSyntax(q"import a.{b=>c}", "import a.{b => c}", "import a.{b => c}")
   }
 
   test("backquote importees when needed - scalafix #1337") {
-    assertEquals(q"import a.`{ q }`".syntax, "import a.`{ q }`")
-    assertEquals(q"import a.`macro`".syntax, "import a.`macro`")
+    assertWithOriginalSyntax(q"import a.`{ q }`", "import a.`{ q }`", "import a.`{ q }`")
+    assertWithOriginalSyntax(q"import a.`macro`", "import a.`macro`", "import a.`macro`")
   }
 
   test("show[Structure] should uppercase long literals suffix: '2l' -> '2L'") {
@@ -1203,53 +1224,72 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertTree(templStat("foo(0.01f, 0.01F)"))(
       Term.Apply(Term.Name("foo"), List(Lit.Float("0.01"), Lit.Float("0.01")))
     )
-    assertTree(q"val x = 1f")(q"val x = 1F")
+    assertStruct(q"val x = 1f")(
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Float(1f))"""
+    )
+    assertStruct(q"val x = 1F")(
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Float(1f))"""
+    )
   }
 
   test("show[Structure] should lowercase double literals suffix: '0.01D' -> '0.01d'") {
     assertTree(templStat("foo(0.02d, 0.02D, 0.02)"))(
       Term.Apply(Term.Name("foo"), List(Lit.Double("0.02"), Lit.Double("0.02"), Lit.Double("0.02")))
     )
-    assertTree(q"val x = 1d")(q"val x = 1D")
-    assertTree(q"val x = 1.0d")(q"val x = 1.0")
+    assertStruct(q"val x = 1d")(
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1d))"""
+    )
+    assertStruct(q"val x = 1D")(
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1d))"""
+    )
+    assertStruct(q"val x = 1.0")(
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1.0d))"""
+    )
+    assertStruct(q"val x = 1.0d")(
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1.0d))"""
+    )
   }
 
   test("#931 val `a b` = 2") {
-    assertEquals(q"val `a b` = 2".syntax, "val `a b` = 2")
+    assertWithOriginalSyntax(q"val `a b` = 2", "val `a b` = 2", "val `a b` = 2")
   }
 
   test("#2097 val `macro` = 42") {
-    assertEquals(q"val `macro` = 42".syntax, "val `macro` = 42")
+    assertWithOriginalSyntax(q"val `macro` = 42", "val `macro` = 42", "val `macro` = 42")
   }
 
-  test("#1661 Names outside ") {
-    // Must start with either a letter or an operator
-    assertEquals(q"val `foo` = 2".syntax, "val foo = 2")
-    assertEquals(q"val `++++` = 2".syntax, "val ++++ = 2")
-    assertEquals(q"val `_+` = 2".syntax, "val `_+` = 2")
+  test("#1661 Names outside: Must start with either a letter or an operator") {
+    assertWithOriginalSyntax(q"val `foo` = 2", "val foo = 2", "val foo = 2")
+    assertWithOriginalSyntax(q"val `++++` = 2", "val ++++ = 2", "val ++++ = 2")
+    assertWithOriginalSyntax(q"val `_+` = 2", "val `_+` = 2", "val `_+` = 2")
+  }
 
-    // Non-leading operators are accepted only after underscores
-    assertEquals(q"val `a_+` = 2".syntax, "val a_+ = 2")
-    assertEquals(q"val `a_a_+` = 2".syntax, "val a_a_+ = 2")
+  test("#1661 Names outside: Non-leading operators are accepted only after underscores") {
+    assertWithOriginalSyntax(q"val `a_+` = 2", "val a_+ = 2", "val a_+ = 2")
+    assertWithOriginalSyntax(q"val `a_a_+` = 2", "val a_a_+ = 2", "val a_a_+ = 2")
+  }
 
-    // Operators must not be followed by non-operators
-    assertEquals(q"val `+_a` = 2".syntax, "val `+_a` = 2")
-    assertEquals(q"val `a_++` = 2".syntax, "val a_++ = 2")
-    assertEquals(q"val `a_++a` = 2".syntax, "val `a_++a` = 2")
+  test("#1661 Names outside: Operators must not be followed by non-operators") {
+    assertWithOriginalSyntax(q"val `+_a` = 2", "val `+_a` = 2", "val `+_a` = 2")
+    assertWithOriginalSyntax(q"val `a_++` = 2", "val a_++ = 2", "val a_++ = 2")
+    assertWithOriginalSyntax(q"val `a_++a` = 2", "val `a_++a` = 2", "val `a_++a` = 2")
+  }
 
-    // Lexical letters and digits can follow underscores
-    assertEquals(q"val `_a` = 2".syntax, "val _a = 2")
-    assertEquals(q"val `a_a` = 2".syntax, "val a_a = 2")
+  test("#1661 Names outside: Lexical letters and digits can follow underscores") {
+    assertWithOriginalSyntax(q"val `_a` = 2", "val _a = 2", "val _a = 2")
+    assertWithOriginalSyntax(q"val `a_a` = 2", "val a_a = 2", "val a_a = 2")
+  }
 
-    // Non-operators must not be followed by operators
-    assertEquals(q"val `a+` = 2".syntax, "val `a+` = 2")
-    assertEquals(q"val `a-b` = 2".syntax, "val `a-b` = 2")
-    assertEquals(q"val `a:b` = 2".syntax, "val `a:b` = 2")
+  test("#1661 Names outside: Non-operators must not be followed by operators") {
+    assertWithOriginalSyntax(q"val `a+` = 2", "val `a+` = 2", "val `a+` = 2")
+    assertWithOriginalSyntax(q"val `a-b` = 2", "val `a-b` = 2", "val `a-b` = 2")
+    assertWithOriginalSyntax(q"val `a:b` = 2", "val `a:b` = 2", "val `a:b` = 2")
+  }
 
-    // Comments must be handled carefully
-    assertEquals(q"val `/*` = 2".syntax, "val `/*` = 2")
-    assertEquals(q"val `//` = 2".syntax, "val `//` = 2")
-    assertEquals(q"val `a_//` = 2".syntax, "val `a_//` = 2")
+  test("#1661 Names outside: Comments must be handled carefully") {
+    assertWithOriginalSyntax(q"val `/*` = 2", "val `/*` = 2", "val `/*` = 2")
+    assertWithOriginalSyntax(q"val `//` = 2", "val `//` = 2", "val `//` = 2")
+    assertWithOriginalSyntax(q"val `a_//` = 2", "val `a_//` = 2", "val `a_//` = 2")
   }
 
   test("#1817 ApplyInfix parentheses") {
