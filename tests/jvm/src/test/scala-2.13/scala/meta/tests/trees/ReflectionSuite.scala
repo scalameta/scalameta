@@ -51,10 +51,18 @@ class ReflectionSuite extends FunSuite {
 
   test("Term.Name") {
     val iff = symbolOf[scala.meta.Term.Name].asLeaf
-    val List(f1) = iff.fields
-    assert(f1.toString == "field Term.Name.value: String @org.scalameta.invariants.nonEmpty")
-    val List(a1) = iff.allFields
-    assert(a1.toString == "field Term.Name.value: String @org.scalameta.invariants.nonEmpty")
+    assertEquals(
+      iff.fields.map(_.toString),
+      List(
+        "field Term.Name.value: String @org.scalameta.invariants.nonEmpty"
+      )
+    )
+    assertEquals(
+      iff.allFields.map(_.toString),
+      List(
+        "field Term.Name.value: String @org.scalameta.invariants.nonEmpty"
+      )
+    )
   }
 
   test("allFields") {

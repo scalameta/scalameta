@@ -24,7 +24,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.Tree.syntax") {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
-    assert(tree.syntax == "foo + bar")
+    assertWithOriginalSyntax(tree, "foo + bar", "foo + bar")
   }
 
   test("scala.meta.Tree.toString (parsed)") {
@@ -39,12 +39,12 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.Tree.syntax (parsed)") {
     val tree = "foo + bar // baz".parse[Term].get
-    assert(tree.syntax == "foo + bar // baz")
+    assertWithOriginalSyntax(tree, "foo + bar // baz", "foo + bar")
   }
 
   test("scala.meta.Tree.toString (quasiquotes)") {
     val tree = q"foo + bar // baz"
-    assert(tree.toString == "foo + bar")
+    assertEquals(tree.toString, "foo + bar")
   }
 
   test("scala.meta.Tree.structure (quasiquoted)") {
@@ -54,7 +54,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.Tree.syntax (quasiquoted)") {
     val tree = q"foo + bar // baz"
-    assert(tree.syntax == "foo + bar")
+    assertWithOriginalSyntax(tree, "foo + bar", "foo + bar")
   }
 
   test("scala.meta.classifiers.Classifiable.toString") {

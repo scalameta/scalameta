@@ -9,8 +9,11 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 
   def emptyArgClause = Seq.empty[Term.ArgClause]
 
+  protected def assertStruct(obtained: Tree)(expected: String)(implicit loc: munit.Location): Unit =
+    assertNoDiff(obtained.structure, expected)
+
   protected def assertTree(obtained: Tree)(expected: Tree)(implicit loc: munit.Location): Unit =
-    assertNoDiff(obtained.structure, expected.structure)
+    assertStruct(obtained)(expected.structure)
 
   protected def assertTrees(
       obtained: Tree*

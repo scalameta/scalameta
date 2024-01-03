@@ -3038,8 +3038,11 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("#3409 check interpolated origin") {
-    val valX = q"x"
-    val fOfX = q"func($valX)"
+    val valX = q"x // X"
+    val fOfX = q"func( $valX )"
+
+    assertWithOriginalSyntax(valX, "x", "x")
+    assertWithOriginalSyntax(fOfX, "func(x)", "func(x)")
 
     def assertOriginType(obtained: Tree, expected: Class[_ <: Origin]): Unit =
       assertEquals(
