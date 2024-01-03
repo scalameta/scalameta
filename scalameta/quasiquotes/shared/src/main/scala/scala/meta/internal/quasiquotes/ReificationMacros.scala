@@ -61,7 +61,8 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     val skeleton = parseSkeleton(parser, input, dialect)
     val sourceTree = q"""
       new _root_.scala.meta.internal.trees.Origin.ParsedSource(
-        _root_.scala.meta.inputs.Input.String(${input.text})
+        _root_.scala.meta.inputs.Input.String(${input.text}),
+        unquote = true
       )($dialectTree)
     """
     reifySkeleton(skeleton, mode, sourceTree)
