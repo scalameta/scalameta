@@ -1066,12 +1066,153 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )
   }
 
+  Seq(
+    (
+      "${_}",
+      null,
+      """|${{
+         |  _
+         |}}""".stripMargin
+    ),
+    (
+      "${x + y.map { _.length }.max}",
+      null,
+      """|${x + y.map {
+         |  _.length
+         |}.max}""".stripMargin
+    ),
+    ("${_a}", null, "${_a}"),
+    ("${_a}123", null, "${_a}123"),
+    ("${_a} 123", null, "${_a} 123"),
+    ("${_a}_123", null, "${_a}_123"),
+    ("${_a}+123", null, "${_a}+123"),
+    (
+      "${++}",
+      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+         |s"$++"
+         |  ^""".stripMargin,
+      "$++"
+    ),
+    (
+      "${++}123",
+      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+         |s"$++123"
+         |  ^""".stripMargin,
+      "$++123"
+    ),
+    (
+      "${++} 123",
+      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+         |s"$++ 123"
+         |  ^""".stripMargin,
+      "$++ 123"
+    ),
+    (
+      "${++}_123",
+      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+         |s"$++_123"
+         |  ^""".stripMargin,
+      "$++_123"
+    ),
+    ("${++}+123", null, "${++}+123")
+  ).foreach { case (codeInterp, error, termSyntaxInterp) =>
+    test(
+      s"term interpolator braces: test syntax/parsing consistency: $codeInterp -> $termSyntaxInterp"
+    ) {
+      def interp(str: String) = s"""s"${str.replace("\n", EOL)}""""
+      val syntax = interp(termSyntaxInterp)
+      assertEquals(super.templStat(interp(codeInterp)).reprint, syntax)
+      if (error eq null)
+        assertEquals(super.templStat(syntax).reprint, syntax)
+      else
+        interceptMessage[Exception](error.replace("\n", EOL))(super.templStat(syntax))
+    }
+  }
+
+  Seq(
+    ("${_}", null, "${_}"),
+    ("$_", null, "${_}"),
+    ("${_a}", null, "${_a}"),
+    ("${_a}123", null, "${_a}123"),
+    ("${_a} 123", null, "${_a} 123"),
+    ("${_a}_123", null, "${_a}_123"),
+    ("${_a}+123", null, "${_a}+123"),
+    (
+      "${++}",
+      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+         |s"$++"
+         |  ^""".stripMargin,
+      "$++"
+    ),
+    (
+      "${++}123",
+      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+         |s"$++123"
+         |  ^""".stripMargin,
+      "$++123"
+    ),
+    (
+      "${++} 123",
+      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+         |s"$++ 123"
+         |  ^""".stripMargin,
+      "$++ 123"
+    ),
+    (
+      "${++}_123",
+      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+         |s"$++_123"
+         |  ^""".stripMargin,
+      "$++_123"
+    ),
+    (
+      "${++}+123",
+      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+         |s"$+++123"
+         |  ^""".stripMargin,
+      "$+++123"
+    )
+  ).foreach { case (codeInterp, error, patSyntaxInterp) =>
+    test(
+      s"pat interpolator braces: test syntax/parsing consistency: $codeInterp -> $patSyntaxInterp"
+    ) {
+      def interp(str: String) = s"""s"${str.replace("\n", EOL)}""""
+      val syntax = interp(patSyntaxInterp)
+      assertEquals(super.pat(interp(codeInterp)).reprint, syntax)
+      if (error eq null)
+        assertEquals(super.pat(syntax).reprint, syntax)
+      else
+        interceptMessage[Exception](error.replace("\n", EOL))(super.pat(syntax))
+    }
+  }
+
   test("interpolator braces for operator identifiers") {
-    assertWithOriginalSyntax(q"""s"$${+++}bar"""", """s"$+++bar"""", """s"$+++bar"""")
-    assertWithOriginalSyntax(q"""s"$${+++}_bar"""", """s"$+++_bar"""", """s"$+++_bar"""")
-    assertWithOriginalSyntax(q"""s"$${+++}123"""", """s"$+++123"""", """s"$+++123"""")
-    assertWithOriginalSyntax(q"""s"$${+++}***"""", """s"${+++}***"""", """s"${+++}***"""")
-    assertWithOriginalSyntax(q"""s"$${+++} ***"""", """s"$+++ ***"""", """s"$+++ ***"""")
+    implicit def parseStat(code: String, dialect: Dialect): Stat = super.templStat(code)(dialect)
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}bar"""")(
+      """s"$+++bar"""",
+      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+         |s"$+++bar"
+         |  ^""".stripMargin
+    )
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}_bar"""")(
+      """s"$+++_bar"""",
+      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+         |s"$+++_bar"
+         |  ^""".stripMargin
+    )
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}123"""")(
+      """s"$+++123"""",
+      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+         |s"$+++123"
+         |  ^""".stripMargin
+    )
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}***"""")("""s"${+++}***"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++} ***"""")(
+      """s"$+++ ***"""",
+      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+         |s"$+++ ***"
+         |  ^""".stripMargin
+    )
   }
 
   test("interpolator braces for plain identifiers: check tokens") {
@@ -1086,11 +1227,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("interpolator braces for plain identifiers") {
-    assertWithOriginalSyntax(q"""s"$${foo}bar"""", """s"${foo}bar"""", """s"${foo}bar"""")
-    assertWithOriginalSyntax(q"""s"$${foo}_bar"""", """s"${foo}_bar"""", """s"${foo}_bar"""")
-    assertWithOriginalSyntax(q"""s"$${foo}123"""", """s"${foo}123"""", """s"${foo}123"""")
-    assertWithOriginalSyntax(q"""s"$${foo}***"""", """s"$foo***"""", """s"$foo***"""")
-    assertWithOriginalSyntax(q"""s"$${foo} ***"""", """s"$foo ***"""", """s"$foo ***"""")
+    implicit def parseStat(code: String, dialect: Dialect): Stat = super.templStat(code)(dialect)
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}bar"""")("""s"${foo}bar"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}_bar"""")("""s"${foo}_bar"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}123"""")("""s"${foo}123"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}***"""")("""s"$foo***"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo} ***"""")("""s"$foo ***"""")
   }
 
   test("interpolator braces for term names beginning with '_'") {
@@ -1611,33 +1753,21 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkTree(tree)(
       Term.Xml(List(Lit.String("<h1>a"), Lit.String("</h1>")), List(Term.Name("b")))
     )
-    val dialect = implicitly[Dialect]
     val Term.Xml(part1 :: part2 :: Nil, arg1 :: Nil) = tree
 
-    val inputPart1 = Input.VirtualFile(path = "<InternalTrees.tokens>", value = "<h1>a")
     assertEquals(
-      part1.tokens.toList,
-      List(
-        Token.Constant.String(inputPart1, dialect, 0, 5, "<h1>a")
-      )
+      part1.tokens.structure,
+      """Tokens(<h1>a [0..5))"""
     )
 
-    val inputArg1 = Input.VirtualFile(path = "<InternalTrees.tokens>", value = "b")
     assertEquals(
-      arg1.tokens.toList,
-      List(
-        Token.BOF(inputArg1, dialect, 0),
-        Token.Ident(inputArg1, dialect, 0, 1, "b"),
-        Token.EOF(inputArg1, dialect, 1)
-      )
+      arg1.tokens.structure,
+      """Tokens(BOF [0..0), b [0..1), EOF [1..1))"""
     )
 
-    val inputPart2 = Input.VirtualFile(path = "<InternalTrees.tokens>", value = "</h1>")
     assertEquals(
-      part2.tokens.toList,
-      List(
-        Token.Constant.String(inputPart2, dialect, 0, 5, "</h1>")
-      )
+      part2.tokens.structure,
+      """Tokens(</h1> [0..5))"""
     )
   }
 

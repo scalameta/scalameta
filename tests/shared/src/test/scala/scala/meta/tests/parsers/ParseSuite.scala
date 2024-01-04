@@ -153,6 +153,20 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
     assertNoDiff(obtainedAgain.structure, expectedStructure, s"Reprinted stat: \n${reprintedCode}")
   }
 
+  protected def checkWithOriginalSyntax[T <: Tree](tree: T, originalOpt: String = null)(
+      reprinted: String,
+      reprintedFails: String = null
+  )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit = {
+    val original = Option(originalOpt).getOrElse(reprinted)
+    assertOriginalSyntax(tree, original)
+    if (reprintedFails ne null) {
+      runTestError[T](reprinted, reprintedFails)
+      if (original != reprinted)
+        checkTree(parser(original, dialect), reprinted)(tree)
+    } else
+      runTestAssert[T](original, reprinted)(tree)
+  }
+
 }
 
 object MoreHelpers {
