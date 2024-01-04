@@ -18,14 +18,14 @@ object TreeStructure {
       case _: Name.Placeholder =>
         s(s"""Name.Placeholder()""")
       case Name.Indeterminate(value) =>
-        s("Name(", enquote(value, DoubleQuotes), ")")
+        s("Name(", DoubleQuotes(value), ")")
       case x =>
         s(
           x.productPrefix,
           "(", {
             def default = {
               def anyStructure(x: Any): String = x match {
-                case el: String => enquote(el, DoubleQuotes)
+                case el: String => DoubleQuotes(el)
                 case el: Tree => el.structure
                 case None => "None"
                 case Some(el) => "Some(" + anyStructure(el) + ")"
@@ -42,7 +42,7 @@ object TreeStructure {
               case _: Quasi =>
                 default
               case Lit(value: String) =>
-                s(enquote(value, DoubleQuotes))
+                s(DoubleQuotes(value))
               case _: Lit.Unit | _: Lit.Null =>
                 s()
               case x: Lit.Double =>

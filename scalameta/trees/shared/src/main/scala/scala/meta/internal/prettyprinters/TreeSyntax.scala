@@ -804,14 +804,13 @@ object TreeSyntax {
         }
       case t @ Lit.Char(value) =>
         val syntax = t.pos match {
-          case Position.None => enquote(value.toString, SingleQuotes)
+          case Position.None => SingleQuotes(value)
           case pos => pos.text
         }
         m(Literal, s(syntax))
       case t @ Lit.String(value) =>
         val syntax = t.pos match {
-          case Position.None =>
-            enquote(value, if (value.contains('\n')) TripleQuotes else DoubleQuotes)
+          case Position.None => DoubleQuotes.orTriple(value)
           case pos => pos.text
         }
         m(Literal, s(syntax))
