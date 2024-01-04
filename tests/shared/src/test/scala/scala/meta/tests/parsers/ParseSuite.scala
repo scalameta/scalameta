@@ -81,7 +81,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       code: String,
       expected: String
   )(implicit parser: (String, Dialect) => T, dialect: Dialect, loc: munit.Location): Unit = {
-    val error = intercept[ParseException] {
+    val error = intercept[inputs.InputException] {
       val result = parser(code, dialect)
       throw new ParseException(
         Position.None,

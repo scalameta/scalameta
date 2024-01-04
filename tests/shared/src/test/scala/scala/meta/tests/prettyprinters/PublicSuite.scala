@@ -191,6 +191,8 @@ class PublicSuite extends TreeSuiteBase {
     assertNoDiff(scala.meta.dialects.ParadiseTypelevel212.toString, "ParadiseTypelevel212")
   }
 
+  test("scala.meta.inputs.InputException") {}
+
   test("scala.meta.inputs.Input.toString") {
     // covered below
   }
@@ -359,28 +361,24 @@ class PublicSuite extends TreeSuiteBase {
   }
 
   test("scala.meta.tokenizers.TokenizeException.toString") {
-    intercept[TokenizeException] {
-      try """"c""".tokenize.get
-      catch {
-        case ex: TokenizeException =>
-          assert(ex.toString == """
-            |<input>:1: error: unclosed string literal
-            |"c
-            |^
-          """.trim.stripMargin.split('\n').mkString(EOL))
-          throw ex
-      }
-    }
+    interceptMessage[TokenizeException](
+      """|<input>:1: error: unclosed string literal
+         |"c
+         |^""".stripMargin.replace("\n", EOL)
+    )(""""c""".tokenize.get)
   }
 
   test("scala.meta.tokenizers.Tokenized.Error.toString") {
-    val tokenized = """"c""".tokenize
-    tokenized match { case _: Tokenized.Error => ; case _ => }
-    assert(tokenized.toString == """
-      |<input>:1: error: unclosed string literal
-      |"c
-      |^
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    """"c""".tokenize match {
+      case x: Tokenized.Error =>
+        assertEquals(
+          x.toString,
+          """|<input>:1: error: unclosed string literal
+             |"c
+             |^""".stripMargin.replace("\n", EOL)
+        )
+      case x => fail(s"tokenized is not an error: $x")
+    }
   }
 
   test("scala.meta.tokenizers.Tokenized.Success.toString") {
