@@ -40,8 +40,9 @@ object Origin {
     @inline def dialect: Dialect = source.dialect
   }
 
-  class ParsedSource(val input: Input)(implicit val dialect: Dialect) {
-    lazy val tokenized = implicitly[Tokenize].apply(input, dialect)
+  class ParsedSource(val input: Input, unquote: Boolean = false)(implicit val dialect: Dialect) {
+    lazy val tokenized =
+      implicitly[Tokenize].apply(input, if (unquote) dialect.unquotesEnabled else dialect)
     @inline def tokens = tokenized.get
   }
 

@@ -1083,6 +1083,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val source2 = new Origin.ParsedSource(input)
     val tree2 = tree1.withOrigin(new Origin.Parsed(source2, 0, numTokens))
     assertNotEquals(tree2.tokens.length, numTokens)
+
+    val source3 = new Origin.ParsedSource(input, unquote = true)
+    val tree3 = tree1.withOrigin(new Origin.Parsed(source3, 0, numTokens))
+    assertEquals(tree3.tokens.length, numTokens)
   }
 
   test("interpolator braces for plain identifiers") {
