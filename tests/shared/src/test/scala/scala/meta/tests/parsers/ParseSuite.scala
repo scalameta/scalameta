@@ -20,10 +20,10 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   implicit def parseCaseTree(code: String, dialect: Dialect): Case = parseCase(code)(dialect)
 
   // This should eventually be replaced by DiffAssertions.assertNoDiff
-  def assertSameLines(actual: String, expected: String) = {
+  def assertSameLines(actual: String, expected: String)(implicit loc: munit.Location) = {
     val actualLines = actual.linesIterator.toList
     val expectedLines = expected.linesIterator.toList
-    assert(actualLines == expectedLines)
+    assertEquals(actualLines, expectedLines)
   }
 
   def stat(code: String)(implicit dialect: Dialect) = code.applyRule(_.parseStat())
@@ -109,10 +109,12 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
    * @see
    *   runTestAssert(code, assertLayout)(expected)
    */
-  protected def runTestAssert[T <: Tree](
-      code: String
-  )(expected: T)(implicit parser: (String, Dialect) => T, dialect: Dialect): Unit =
-    runTestAssert(code, Some(code))(expected)(parser, dialect)
+  protected def runTestAssert[T <: Tree](code: String, assertLayout: String = null)(
+      expected: Tree
+  )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit = {
+    val assertLayoutOpt = Some(if (assertLayout eq null) code else assertLayout)
+    runTestAssert[T](code, assertLayoutOpt)(expected)
+  }
 
   /**
    * General method used to assert a given 'code' parses to expected tree structure and back. We
@@ -136,8 +138,8 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
    *   Function used to convert code into structured tree
    */
   protected def runTestAssert[T <: Tree](code: String, assertLayout: Option[String])(
-      expected: T
-  )(implicit parser: (String, Dialect) => T, dialect: Dialect): Unit = {
+      expected: Tree
+  )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit = {
     val expectedStructure = expected.structure
     val obtained: T = parser(code, dialect)
     MoreHelpers.requireNonEmptyOrigin(obtained)
