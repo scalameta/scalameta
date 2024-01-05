@@ -2,6 +2,8 @@ package scala.meta.tests
 package quasiquotes
 
 import munit._
+import org.scalameta.invariants.InvariantFailedException
+
 import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.internal.trees.Origin
@@ -288,6 +290,19 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(q"$foo[..$types]")(
       Term.ApplyType(Term.Name("foo"), List(Type.Name("T"), Type.Name("U")))
     )
+  }
+
+  test("4 q\"foo[..tpes]\"") {
+    val foo = q"foo"
+    val types = List.empty[Type]
+    val error =
+      """|invariant failed:
+         |when verifying targClause.!=(null).&&(targClause.isInstanceOf[scala.meta.internal.trees.Quasi].||(targClause.nonEmpty))
+         |found that targClause.isInstanceOf[scala.meta.internal.trees.Quasi] is false
+         |and also targClause.nonEmpty is false
+         |where targClause = """.stripMargin.replace("\n", EOL)
+    interceptMessage[InvariantFailedException](error)(q"$foo[..$types]")
+    interceptMessage[InvariantFailedException](error)(q"$foo[..$types]()")
   }
 
   test("1 q\"expr name[..tpes] (..exprs)\"") {
