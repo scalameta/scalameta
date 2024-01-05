@@ -1489,7 +1489,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def unquoteExpr(): Term =
     token match {
       case t: Ident => termName(t)
-      case LeftBrace() => dropTrivialBlock(expr(location = NoStat, allowRepeated = true))
+      case _: LeftBrace => dropTrivialBlock(expr(location = UnquoteStat, allowRepeated = true))
       case _: KwThis => anonThis()
       case _ =>
         syntaxError(
@@ -1581,7 +1581,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       accept[Ident]
       Mod.Inline()
     }
-    maybeAnonymousFunctionUnlessPostfix(autoPosOpt(token match {
+    maybeAnonymousFunctionForLocation(autoPosOpt(token match {
       case soft.KwInline() if peekToken.is[KwIf] =>
         ifClause(List(inlineMod()))
       case _ if isInlineMatchMod(tokenPos) =>
@@ -2202,7 +2202,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         atPosWithBody(startPos, ctx.reduceStack(base, rhsN, endPos, None), endPos)
       }
 
-    maybeAnonymousFunctionUnlessPostfix(lhsResult)(location)
+    maybeAnonymousFunctionForLocation(lhsResult)(location)
   }
 
   def prefixExpr(allowRepeated: Boolean): Term =
@@ -4698,8 +4698,8 @@ object ScalametaParser {
     }
 
   @inline
-  private def maybeAnonymousFunctionUnlessPostfix(expr: Term)(location: Location): Term =
-    if (location == Location.PostfixStat) expr else maybeAnonymousFunction(expr)
+  private def maybeAnonymousFunctionForLocation(expr: Term)(location: Location): Term =
+    if (location.anonFuncOK) maybeAnonymousFunction(expr) else expr
 
   private def maybeAnonymousFunction(t: Term): Term = {
     val ok = PlaceholderChecks.hasPlaceholder(t, includeArg = false)
@@ -4761,12 +4761,13 @@ object ScalametaParser {
 
 }
 
-class Location private (val value: Int) extends AnyVal
+class Location private (val value: Int, val anonFuncOK: Boolean)
 object Location {
-  val NoStat = new Location(0)
-  val BlockStat = new Location(1)
-  val TemplateStat = new Location(2)
-  val PostfixStat = new Location(3)
+  val NoStat = new Location(0, true)
+  val BlockStat = new Location(1, true)
+  val TemplateStat = new Location(2, true)
+  val PostfixStat = new Location(3, false)
+  val UnquoteStat = new Location(4, false)
 }
 
 object InfixMode extends Enumeration {

@@ -1067,13 +1067,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   Seq(
-    (
-      "${_}",
-      null,
-      """|${{
-         |  _
-         |}}""".stripMargin
-    ),
+    ("${_}", null, "${_}"),
     (
       "${x + y.map { _.length }.max}",
       null,
