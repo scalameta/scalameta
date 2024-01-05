@@ -645,7 +645,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         } else {
           var supportedCombos = List("`$$'", "`$'ident", "`$'this", "`$'BlockExpr")
           if (dialect.allowSpliceUnderscores) supportedCombos = supportedCombos :+ "`$'_"
-          val s_supportedCombos = supportedCombos.init.mkString(", ") + supportedCombos.last
+          val s_supportedCombos = supportedCombos.mkString("Not one of: ", ", ", "")
           syntaxError(s_supportedCombos, at = offset)
         }
       }

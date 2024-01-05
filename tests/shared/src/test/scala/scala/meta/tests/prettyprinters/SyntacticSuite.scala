@@ -1088,28 +1088,28 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     ("${_a}+123", null, "${_a}+123"),
     (
       "${++}",
-      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
          |s"$++"
          |  ^""".stripMargin,
       "$++"
     ),
     (
       "${++}123",
-      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
          |s"$++123"
          |  ^""".stripMargin,
       "$++123"
     ),
     (
       "${++} 123",
-      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
          |s"$++ 123"
          |  ^""".stripMargin,
       "$++ 123"
     ),
     (
       "${++}_123",
-      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
          |s"$++_123"
          |  ^""".stripMargin,
       "$++_123"
@@ -1139,35 +1139,35 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     ("${_a}+123", null, "${_a}+123"),
     (
       "${++}",
-      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
          |s"$++"
          |  ^""".stripMargin,
       "$++"
     ),
     (
       "${++}123",
-      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
          |s"$++123"
          |  ^""".stripMargin,
       "$++123"
     ),
     (
       "${++} 123",
-      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
          |s"$++ 123"
          |  ^""".stripMargin,
       "$++ 123"
     ),
     (
       "${++}_123",
-      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
          |s"$++_123"
          |  ^""".stripMargin,
       "$++_123"
     ),
     (
       "${++}+123",
-      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
          |s"$+++123"
          |  ^""".stripMargin,
       "$+++123"
@@ -1190,26 +1190,26 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     implicit def parseStat(code: String, dialect: Dialect): Stat = super.templStat(code)(dialect)
     checkWithOriginalSyntax[Stat](q"""s"$${+++}bar"""")(
       """s"$+++bar"""",
-      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
          |s"$+++bar"
          |  ^""".stripMargin
     )
     checkWithOriginalSyntax[Stat](q"""s"$${+++}_bar"""")(
       """s"$+++_bar"""",
-      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
          |s"$+++_bar"
          |  ^""".stripMargin
     )
     checkWithOriginalSyntax[Stat](q"""s"$${+++}123"""")(
       """s"$+++123"""",
-      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
          |s"$+++123"
          |  ^""".stripMargin
     )
     checkWithOriginalSyntax[Stat](q"""s"$${+++}***"""")("""s"${+++}***"""")
     checkWithOriginalSyntax[Stat](q"""s"$${+++} ***"""")(
       """s"$+++ ***"""",
-      """|<input>:1: error: `$$', `$'ident, `$'this, `$'BlockExpr`$'_
+      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
          |s"$+++ ***"
          |  ^""".stripMargin
     )
