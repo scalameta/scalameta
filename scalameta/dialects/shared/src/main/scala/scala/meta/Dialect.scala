@@ -757,13 +757,6 @@ final class Dialect private[meta] (
     allowMultilinePrograms = true
   )
 
-  private[meta] def unquotesEnabled: Dialect =
-    privateCopy(
-      allowTermUnquotes = true,
-      allowMultilinePrograms = true,
-      allowTypeLambdas = true
-    )
-
   private[meta] def unquoteTerm(multiline: Boolean): Dialect = {
     require(!allowUnquotes)
     privateCopy(
