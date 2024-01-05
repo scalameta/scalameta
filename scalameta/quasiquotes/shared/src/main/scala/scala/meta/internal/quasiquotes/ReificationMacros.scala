@@ -59,12 +59,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       if (mode.isTerm) underlyingDialect.unquoteTerm(mode.multiline)
       else underlyingDialect.unquotePat(mode.multiline)
     val skeleton = parseSkeleton(parser, input, dialect)
-    val sourceTree = q"""
-      new _root_.scala.meta.internal.trees.Origin.ParsedSource(
-        _root_.scala.meta.inputs.Input.String(${input.text})
-      )($dialectTree)
-    """
-    reifySkeleton(skeleton, mode, sourceTree)
+    reifySkeleton(skeleton, mode, input, dialectTree)
   }
 
   private def mkHoles(args: Seq[ReflectTree]) = {
@@ -231,7 +226,8 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
   private def reifySkeleton(
       meta: MetaTree,
       mode: Mode,
-      sourceTree: ReflectTree
+      input: Input,
+      dialectTree: ReflectTree
   ): ReflectTree = {
     val isTerm = mode.isTerm
     val pendingQuasis = mutable.Stack[Quasi]()
@@ -245,7 +241,10 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         )
       }
     }
-    val sourceName = TermName(c.freshName("parsedSource"))
+
+    val useParsedSource = mode.holes.isEmpty // otherwise, syntax will not make much sense
+    val dialectName = TermName(c.freshName("dialect"))
+    val sourceName = if (useParsedSource) TermName(c.freshName("parsedSource")) else null
     object Lifts {
       def liftTree(tree: MetaTree): ReflectTree = {
         Liftables.liftableSubTree(tree)
@@ -360,7 +359,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       }
       private val originNone = q"_root_.scala.meta.internal.trees.Origin.None"
       val liftOrigin: Origin => ReflectTree =
-        if (mode.holes.isEmpty) // otherwise, syntax will not make much sense
+        if (sourceName ne null)
           _ match {
             case Origin.Parsed(_, beg, end) =>
               q"_root_.scala.meta.internal.trees.Origin.Parsed($sourceName, $beg, $end)"
@@ -389,11 +388,20 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       implicit def liftableOrigin[T <: Origin]: Liftable[T] =
         Liftable((x: T) => Lifts.liftOrigin(x))
     }
+    val valDefns = List(
+      q"val $dialectName = $dialectTree",
+      if (sourceName eq null) null
+      else q"""
+        val $sourceName = new _root_.scala.meta.internal.trees.Origin.ParsedSource(
+          _root_.scala.meta.inputs.Input.String(${input.text})
+        )($dialectName)
+      """
+    ).filter(_ ne null)
     mode match {
       case Mode.Term(_, _) =>
         val internalResult = q"""
           {
-            val $sourceName = $sourceTree
+            ..$valDefns
             ${Lifts.liftTree(meta)}
           }
         """
@@ -428,7 +436,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         }
         val internalResult = q"""
           new {
-            val $sourceName = $sourceTree
+            ..$valDefns
             def unapply(input: _root_.scala.meta.Tree) = $matchp
           }.unapply($unapplySelector)
         """
