@@ -330,8 +330,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     atPosWithBody(start, body, end.endTokenPos)
   }
   def atPosOpt[T <: Tree](start: Int, end: EndPos)(body: T): T = {
-    if (body.origin ne Origin.None) body
-    else atPos(start, end)(body)
+    body.origin match {
+      case o: Origin.Parsed if o.source eq originSource => body
+      case _ => atPos(start, end)(body)
+    }
   }
   def atPos[T <: Tree](pos: Int)(body: => T): T = {
     atPosWithBody(pos, body, pos)

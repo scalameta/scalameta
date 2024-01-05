@@ -48,4 +48,10 @@ object Origin {
     @inline def tokens = tokenized.get
   }
 
+  @adt.leaf
+  class DialectOnly(dialect: Dialect) extends Origin {
+    val position: Position = Position.None
+    def dialectOpt: Option[Dialect] = Some(dialect)
+  }
+
 }
