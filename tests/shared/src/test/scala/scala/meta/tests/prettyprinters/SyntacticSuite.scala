@@ -1120,21 +1120,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("interpolator braces for operator identifiers") {
     implicit def parseStat(code: String, dialect: Dialect): Stat = super.templStat(code)(dialect)
-    interceptMessage[NoSuchElementException]("token 11 out of 6") {
-      checkWithOriginalSyntax[Stat](q"""s"$${+++}bar"""")("""s"${+++}bar"""")
-    }
-    interceptMessage[NoSuchElementException]("token 11 out of 6") {
-      checkWithOriginalSyntax[Stat](q"""s"$${+++}_bar"""")("""s"${+++}_bar"""")
-    }
-    interceptMessage[NoSuchElementException]("token 11 out of 6") {
-      checkWithOriginalSyntax[Stat](q"""s"$${+++}123"""")("""s"${+++}123"""")
-    }
-    interceptMessage[NoSuchElementException]("token 11 out of 6") {
-      checkWithOriginalSyntax[Stat](q"""s"$${+++}***"""")("""s"${+++}***"""")
-    }
-    interceptMessage[NoSuchElementException]("token 11 out of 6") {
-      checkWithOriginalSyntax[Stat](q"""s"$${+++} ***"""")("""s"${+++} ***"""")
-    }
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}bar"""")("""s"${+++}bar"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}_bar"""")("""s"${+++}_bar"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}123"""")("""s"${+++}123"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}***"""")("""s"${+++}***"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++} ***"""")("""s"${+++} ***"""")
   }
 
   test("interpolator braces for plain identifiers: check tokens") {
@@ -1142,7 +1132,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val numTokens = tree1.tokens.length
     assertEquals(tree1.tokens.length, numTokens)
 
-    val input = Input.String("""s"$${foo}bar"""")
+    val input = Input.String(tree1.reprint)
     val source2 = new Origin.ParsedSource(input)
     val tree2 = tree1.withOrigin(new Origin.Parsed(source2, 0, numTokens))
     assertEquals(tree2.tokens.length, numTokens)
@@ -1150,21 +1140,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("interpolator braces for plain identifiers") {
     implicit def parseStat(code: String, dialect: Dialect): Stat = super.templStat(code)(dialect)
-    interceptMessage[NoSuchElementException]("token 11 out of 6") {
-      checkWithOriginalSyntax[Stat](q"""s"$${foo}bar"""")("""s"${foo}bar"""")
-    }
-    interceptMessage[NoSuchElementException]("token 11 out of 6") {
-      checkWithOriginalSyntax[Stat](q"""s"$${foo}_bar"""")("""s"${foo}_bar"""")
-    }
-    interceptMessage[NoSuchElementException]("token 11 out of 6") {
-      checkWithOriginalSyntax[Stat](q"""s"$${foo}123"""")("""s"${foo}123"""")
-    }
-    interceptMessage[NoSuchElementException]("token 11 out of 6") {
-      checkWithOriginalSyntax[Stat](q"""s"$${foo}***"""", """s"${foo}***"""")("""s"$foo***"""")
-    }
-    interceptMessage[NoSuchElementException]("token 11 out of 6") {
-      checkWithOriginalSyntax[Stat](q"""s"$${foo} ***"""", """s"${foo} ***"""")("""s"$foo ***"""")
-    }
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}bar"""")("""s"${foo}bar"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}_bar"""")("""s"${foo}_bar"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}123"""")("""s"${foo}123"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}***"""", """s"${foo}***"""")("""s"$foo***"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo} ***"""", """s"${foo} ***"""")("""s"$foo ***"""")
   }
 
   test("interpolator braces for term names beginning with '_'") {

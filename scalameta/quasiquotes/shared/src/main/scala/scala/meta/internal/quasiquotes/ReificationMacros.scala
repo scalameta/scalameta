@@ -394,7 +394,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       if (sourceName eq null) null
       else q"""
         val $sourceName = new _root_.scala.meta.trees.Origin.ParsedSource(
-          _root_.scala.meta.inputs.Input.String(${input.text})
+          _root_.scala.meta.inputs.Input.String(${input.text.replace("$$", "$")})
         )($dialectName)
       """
     ).filter(_ ne null)
