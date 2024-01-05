@@ -1067,146 +1067,65 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   Seq(
-    ("${_}", null, "${_}"),
+    ("${_}", "${_}"),
     (
       "${x + y.map { _.length }.max}",
-      null,
       """|${x + y.map {
          |  _.length
          |}.max}""".stripMargin
     ),
-    ("${_a}", null, "${_a}"),
-    ("${_a}123", null, "${_a}123"),
-    ("${_a} 123", null, "${_a} 123"),
-    ("${_a}_123", null, "${_a}_123"),
-    ("${_a}+123", null, "${_a}+123"),
-    (
-      "${++}",
-      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
-         |s"$++"
-         |  ^""".stripMargin,
-      "$++"
-    ),
-    (
-      "${++}123",
-      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
-         |s"$++123"
-         |  ^""".stripMargin,
-      "$++123"
-    ),
-    (
-      "${++} 123",
-      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
-         |s"$++ 123"
-         |  ^""".stripMargin,
-      "$++ 123"
-    ),
-    (
-      "${++}_123",
-      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
-         |s"$++_123"
-         |  ^""".stripMargin,
-      "$++_123"
-    ),
-    ("${++}+123", null, "${++}+123")
-  ).foreach { case (codeInterp, error, termSyntaxInterp) =>
+    ("${_a}", "${_a}"),
+    ("${_a}123", "${_a}123"),
+    ("${_a} 123", "${_a} 123"),
+    ("${_a}_123", "${_a}_123"),
+    ("${_a}+123", "${_a}+123"),
+    ("${++}", "${++}"),
+    ("${++}123", "${++}123"),
+    ("${++} 123", "${++} 123"),
+    ("${++}_123", "${++}_123"),
+    ("${++}+123", "${++}+123")
+  ).foreach { case (codeInterp, termSyntaxInterp) =>
     test(
       s"term interpolator braces: test syntax/parsing consistency: $codeInterp -> $termSyntaxInterp"
     ) {
       def interp(str: String) = s"""s"${str.replace("\n", EOL)}""""
       val syntax = interp(termSyntaxInterp)
       assertEquals(super.templStat(interp(codeInterp)).reprint, syntax)
-      if (error eq null)
-        assertEquals(super.templStat(syntax).reprint, syntax)
-      else
-        interceptMessage[Exception](error.replace("\n", EOL))(super.templStat(syntax))
+      assertEquals(super.templStat(syntax).reprint, syntax)
     }
   }
 
   Seq(
-    ("${_}", null, "${_}"),
-    ("$_", null, "${_}"),
-    ("${_a}", null, "${_a}"),
-    ("${_a}123", null, "${_a}123"),
-    ("${_a} 123", null, "${_a} 123"),
-    ("${_a}_123", null, "${_a}_123"),
-    ("${_a}+123", null, "${_a}+123"),
-    (
-      "${++}",
-      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
-         |s"$++"
-         |  ^""".stripMargin,
-      "$++"
-    ),
-    (
-      "${++}123",
-      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
-         |s"$++123"
-         |  ^""".stripMargin,
-      "$++123"
-    ),
-    (
-      "${++} 123",
-      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
-         |s"$++ 123"
-         |  ^""".stripMargin,
-      "$++ 123"
-    ),
-    (
-      "${++}_123",
-      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
-         |s"$++_123"
-         |  ^""".stripMargin,
-      "$++_123"
-    ),
-    (
-      "${++}+123",
-      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
-         |s"$+++123"
-         |  ^""".stripMargin,
-      "$+++123"
-    )
-  ).foreach { case (codeInterp, error, patSyntaxInterp) =>
+    ("${_}", "${_}"),
+    ("$_", "${_}"),
+    ("${_a}", "${_a}"),
+    ("${_a}123", "${_a}123"),
+    ("${_a} 123", "${_a} 123"),
+    ("${_a}_123", "${_a}_123"),
+    ("${_a}+123", "${_a}+123"),
+    ("${++}", "${++}"),
+    ("${++}123", "${++}123"),
+    ("${++} 123", "${++} 123"),
+    ("${++}_123", "${++}_123"),
+    ("${++}+123", "${++}+123")
+  ).foreach { case (codeInterp, patSyntaxInterp) =>
     test(
       s"pat interpolator braces: test syntax/parsing consistency: $codeInterp -> $patSyntaxInterp"
     ) {
       def interp(str: String) = s"""s"${str.replace("\n", EOL)}""""
       val syntax = interp(patSyntaxInterp)
       assertEquals(super.pat(interp(codeInterp)).reprint, syntax)
-      if (error eq null)
-        assertEquals(super.pat(syntax).reprint, syntax)
-      else
-        interceptMessage[Exception](error.replace("\n", EOL))(super.pat(syntax))
+      assertEquals(super.pat(syntax).reprint, syntax)
     }
   }
 
   test("interpolator braces for operator identifiers") {
     implicit def parseStat(code: String, dialect: Dialect): Stat = super.templStat(code)(dialect)
-    checkWithOriginalSyntax[Stat](q"""s"$${+++}bar"""")(
-      """s"$+++bar"""",
-      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
-         |s"$+++bar"
-         |  ^""".stripMargin
-    )
-    checkWithOriginalSyntax[Stat](q"""s"$${+++}_bar"""")(
-      """s"$+++_bar"""",
-      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
-         |s"$+++_bar"
-         |  ^""".stripMargin
-    )
-    checkWithOriginalSyntax[Stat](q"""s"$${+++}123"""")(
-      """s"$+++123"""",
-      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
-         |s"$+++123"
-         |  ^""".stripMargin
-    )
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}bar"""")("""s"${+++}bar"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}_bar"""")("""s"${+++}_bar"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}123"""")("""s"${+++}123"""")
     checkWithOriginalSyntax[Stat](q"""s"$${+++}***"""")("""s"${+++}***"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${+++} ***"""")(
-      """s"$+++ ***"""",
-      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
-         |s"$+++ ***"
-         |  ^""".stripMargin
-    )
+    checkWithOriginalSyntax[Stat](q"""s"$${+++} ***"""")("""s"${+++} ***"""")
   }
 
   test("interpolator braces for plain identifiers: check tokens") {

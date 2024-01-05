@@ -363,21 +363,14 @@ object TreeSyntax {
           case _ => m(Path, s(p(SimpleExpr, t.qual), if (guessIsPostfix(t)) " " else ".", t.name))
         }
       case t: Term.Interpolate =>
-        def needBraces(id: String, charAfter: Option[Char]): Boolean = {
-          val startsWithUnderscore = id.startsWith("_")
-          startsWithUnderscore || {
-            val isOpId = isOperatorPart(id.head)
-            val charAfterIsOp = charAfter.exists(isOperatorPart)
-            val charAfterIsIdPart =
-              charAfter.exists(chr => isNameStart(chr) || Character.isDigit(chr))
-            if (isOpId) charAfterIsOp else charAfterIsIdPart
-          }
-        }
+        /** @see LegacyScanner.getStringPart, when ch == '$' */
+        def needBraces(id: String, nextPart: String): Boolean =
+          !Character.isUnicodeIdentifierStart(id.head) ||
+            nextPart.headOption.exists(Character.isUnicodeIdentifierPart)
 
         val parts = t.parts.map { case Lit(part: String) => part.replace("$", "$$") }
         val zipped = parts.zip(t.args).zip(parts.tail).map {
-          case ((part, id: Name), next)
-              if !guessIsBackquoted(id) && !needBraces(id.value, next.headOption) =>
+          case ((part, id: Name), next) if !guessIsBackquoted(id) && !needBraces(id.value, next) =>
             s(part, "$", id.value)
           case ((part, arg), _) => s(part, "${", p(Expr, arg), "}")
         }
@@ -742,9 +735,12 @@ object TreeSyntax {
           )
         )
       case t: Pat.Interpolate =>
+        /** @see LegacyScanner.getStringPart, when ch == '$' */
+        def needBraces(id: String): Boolean = !Character.isUnicodeIdentifierStart(id.head)
         val parts = t.parts.map { case Lit(part: String) => part }
         val zipped = parts.zip(t.args).map {
-          case (part, id: Name) if !guessIsBackquoted(id) => s(part, "$", id.value)
+          case (part, id: Name) if !guessIsBackquoted(id) && !needBraces(id.value) =>
+            s(part, "$", id.value)
           case (part, arg) =>
             s(part, "${", arg, "}")
         }
