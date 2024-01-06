@@ -10,7 +10,9 @@ class AndOrTypesSuite extends BaseDottySuite {
    *   - [[https://dotty.epfl.ch/docs/reference/new-types/union-types.html]]
    */
   test("view bounds not allowed") {
-    intercept[ParseException] {
+    interceptMessage[IllegalArgumentException](
+      "requirement failed: Scala33 doesn't support view bounds"
+    ) {
       dialects.Scala3("{ def foo[T <% Int](t: T) = ??? }").parse[Term].get
     }
   }

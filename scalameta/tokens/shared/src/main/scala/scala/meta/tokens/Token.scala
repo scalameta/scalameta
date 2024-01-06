@@ -99,7 +99,9 @@ object Token {
   // Symbolic keywords
   @fixed("#") class Hash extends SymbolicKeyword
   @fixed(":") class Colon extends SymbolicKeyword
-  @fixed("<%") class Viewbound extends SymbolicKeyword
+  @fixed("<%") class Viewbound extends SymbolicKeyword {
+    require(dialect.allowViewBounds, s"$dialect doesn't support view bounds")
+  }
   @freeform("<-") class LeftArrow extends SymbolicKeyword
   @fixed("<:") class Subtype extends SymbolicKeyword
   @fixed("=") class Equals extends SymbolicKeyword
@@ -144,11 +146,21 @@ object Token {
     @freeform("interpolation end") class End extends Token
   }
   object Xml {
-    @freeform("xml start") class Start extends Token
-    @freeform("xml part") class Part(value: String) extends Token
-    @freeform("xml splice start") class SpliceStart extends Token
-    @freeform("xml splice end") class SpliceEnd extends Token
-    @freeform("xml end") class End extends Token
+    @freeform("xml start") class Start extends Token {
+      require(dialect.allowXmlLiterals, s"$dialect doesn't support xml literals")
+    }
+    @freeform("xml part") class Part(value: String) extends Token {
+      require(dialect.allowXmlLiterals, s"$dialect doesn't support xml literals")
+    }
+    @freeform("xml splice start") class SpliceStart extends Token {
+      require(dialect.allowXmlLiterals, s"$dialect doesn't support xml literals")
+    }
+    @freeform("xml splice end") class SpliceEnd extends Token {
+      require(dialect.allowXmlLiterals, s"$dialect doesn't support xml literals")
+    }
+    @freeform("xml end") class End extends Token {
+      require(dialect.allowXmlLiterals, s"$dialect doesn't support xml literals")
+    }
   }
 
   @branch trait Indentation extends Whitespace
@@ -177,8 +189,12 @@ object Token {
 
   // NOTE: in order to maintain conceptual compatibility with scala.reflect's implementation,
   // Ellipsis.rank = 1 means .., Ellipsis.rank = 2 means ..., etc
-  @freeform("ellipsis") private[meta] class Ellipsis(rank: Int) extends Token
-  @freeform("unquote") private[meta] class Unquote extends Token
+  @freeform("ellipsis") private[meta] class Ellipsis(rank: Int) extends Token {
+    require(dialect.allowUnquotes, s"$dialect doesn't support unquoting")
+  }
+  @freeform("unquote") private[meta] class Unquote extends Token {
+    require(dialect.allowUnquotes, s"$dialect doesn't support unquoting")
+  }
 
   implicit def classifiable[T <: Token]: Classifiable[T] = null
   implicit def showStructure[T <: Token]: Structure[T] = TokenStructure.apply[T]
