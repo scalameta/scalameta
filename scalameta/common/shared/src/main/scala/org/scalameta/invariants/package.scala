@@ -14,6 +14,7 @@ package object invariants {
   // 1) Values of local variables.
   // 2) Calls to `org.scalameta.debug` as explained in documentation to that method.
   def require(requirement: Boolean): Unit = macro Macros.require
+  def require(requirement: Boolean, clue: String): Unit = macro Macros.requireWithClue
 
   implicit class XtensionRequireCast[T](private val x: T) extends AnyVal {
     // Equivalent to requiring that `x.getClass` is assignable from `U`.
@@ -35,21 +36,29 @@ package invariants {
     import c.universe._
 
     def require(requirement: Tree): Tree = {
+      requireWithClue(requirement, q"null")
+    }
+
+    def requireWithClue(requirement: Tree, clue: Tree): Tree = {
       val failures = c.freshName(TermName("failures"))
       val allDebuggees = freeLocals(requirement) ++ debuggees(requirement)
       q"""
         val $failures = ${instrument(requirement)}
         if (!$failures.isEmpty)
-          $InvariantFailedRaiseMethod(${showCode(requirement)}, $failures, $allDebuggees)
+          $InvariantFailedRaiseMethod(${showCode(requirement)}, $clue, $failures, $allDebuggees)
       """
     }
 
     def requireCast[U](ev: c.Tree)(U: c.WeakTypeTag[U]): c.Tree = {
       val q"$_($x)" = c.prefix.tree
+      val clue = s"${showCode(x)} can not be cast to type ${showDecl(U.tpe.typeSymbol)}"
       q"""
         val temp = ${c.untypecheck(x)}
         val tempClass = if (temp != null) temp.getClass else null
-        $InvariantsRequireMethod(tempClass != null && _root_.scala.reflect.classTag[$U].unapply(temp).isDefined)
+        $InvariantsRequireMethod(
+          tempClass != null && _root_.scala.reflect.classTag[$U].unapply(temp).isDefined,
+          $clue
+        )
         temp.asInstanceOf[$U]
       """
     }

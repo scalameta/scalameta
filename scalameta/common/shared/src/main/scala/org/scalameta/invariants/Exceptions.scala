@@ -5,8 +5,17 @@ import scala.compat.Platform.EOL
 class InvariantFailedException(message: String) extends Exception(message)
 object InvariantFailedException {
   def raise(invariant: String, failures: List[String], debuggees: Map[String, Any]): Nothing = {
+    raise(invariant, null, failures, debuggees)
+  }
+  def raise(
+      invariant: String,
+      clue: String,
+      failures: List[String],
+      debuggees: Map[String, Any]
+  ): Nothing = {
+    val clueStr = if (clue eq null) "" else s" ($clue)"
     val mandatory = s"""
-    |invariant failed:
+    |invariant failed$clueStr:
     |when verifying $invariant
     |found that ${failures.head}
     """.trim.stripMargin.split('\n').mkString(EOL)
