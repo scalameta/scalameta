@@ -7,6 +7,7 @@ import scala.meta.internal.dialects._
  * A dialect is used to configure what Scala syntax is allowed during tokenization and parsing.
  */
 final class Dialect private[meta] (
+    private[meta] val unquoteParentDialect: Dialect,
     // Are `&` intersection types supported by this dialect?
     @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
     val allowAndTypes: Boolean,
@@ -192,6 +193,7 @@ final class Dialect private[meta] (
       toplevelSeparator: String
   ) = {
     this(
+      unquoteParentDialect = null,
       allowAndTypes = allowAndTypes,
       allowAtForExtractorVarargs = allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
@@ -259,7 +261,7 @@ final class Dialect private[meta] (
   }
 
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
-  def allowUnquotes: Boolean = allowTermUnquotes || allowPatUnquotes
+  def allowUnquotes: Boolean = null ne unquoteParentDialect
 
   @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
   def withAllowAndTypes(newValue: Boolean): Dialect = {
@@ -483,6 +485,7 @@ final class Dialect private[meta] (
   // the body inside curly braces.
 
   private[this] def privateCopy(
+      unquoteParentDialect: Dialect = null,
       allowAndTypes: Boolean = this.allowAndTypes,
       allowAtForExtractorVarargs: Boolean = this.allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList: Boolean = this.allowCaseClassWithoutParameterList,
@@ -549,6 +552,7 @@ final class Dialect private[meta] (
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     new Dialect(
+      unquoteParentDialect,
       allowAndTypes,
       allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList,
@@ -636,9 +640,9 @@ final class Dialect private[meta] (
   }
 
   def isEquivalentTo(that: Dialect): Boolean =
-    isEquivalentTo(that, ignoreQuasiquotes = false)
+    unquoteParentOrThis().isEquivalentToInternal(that.unquoteParentOrThis())
 
-  def isEquivalentTo(that: Dialect, ignoreQuasiquotes: Boolean): Boolean = (
+  private def isEquivalentToInternal(that: Dialect): Boolean = (
     (this eq that) ||
       // do not include deprecated values in this comparison
       this.allowAtForExtractorVarargs == that.allowAtForExtractorVarargs
@@ -649,14 +653,11 @@ final class Dialect private[meta] (
       && this.allowInlineIdents == that.allowInlineIdents
       && this.allowInlineMods == that.allowInlineMods
       && this.allowLiteralTypes == that.allowLiteralTypes
-      && (ignoreQuasiquotes || this.allowMultilinePrograms == that.allowMultilinePrograms)
-      && (ignoreQuasiquotes || this.allowPatUnquotes == that.allowPatUnquotes)
       && this.allowSpliceUnderscores == that.allowSpliceUnderscores
-      && (ignoreQuasiquotes || this.allowTermUnquotes == that.allowTermUnquotes)
       && this.allowToplevelTerms == that.allowToplevelTerms
       && this.allowTrailingCommas == that.allowTrailingCommas
       && this.allowTraitParameters == that.allowTraitParameters
-      && (ignoreQuasiquotes || this.allowTypeLambdas == that.allowTypeLambdas)
+      && this.allowTypeLambdas == that.allowTypeLambdas
       && this.allowViewBounds == that.allowViewBounds
       && this.allowXmlLiterals == that.allowXmlLiterals
       && this.allowNumericLiteralUnderscoreSeparators == that.allowNumericLiteralUnderscoreSeparators
@@ -727,6 +728,7 @@ final class Dialect private[meta] (
       toplevelSeparator: String = this.toplevelSeparator
   ): Dialect = {
     privateCopy(
+      unquoteParentDialect = null,
       allowAndTypes,
       allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList,
@@ -751,15 +753,13 @@ final class Dialect private[meta] (
     )
   }
 
-  private[meta] def unquoteVariant(): Dialect = privateCopy(
-    allowTermUnquotes = false,
-    allowPatUnquotes = false,
-    allowMultilinePrograms = true
-  )
+  private[meta] def unquoteParentOrThis(): Dialect =
+    if (null eq unquoteParentDialect) this else unquoteParentDialect
 
   private[meta] def unquoteTerm(multiline: Boolean): Dialect = {
-    require(!allowUnquotes)
+    require(null eq unquoteParentDialect)
     privateCopy(
+      unquoteParentDialect = this,
       allowTermUnquotes = true,
       allowMultilinePrograms = multiline,
       allowTypeLambdas = true
@@ -767,8 +767,9 @@ final class Dialect private[meta] (
   }
 
   private[meta] def unquotePat(multiline: Boolean): Dialect = {
-    require(!allowUnquotes)
+    require(null eq unquoteParentDialect)
     privateCopy(
+      unquoteParentDialect = this,
       allowPatUnquotes = true,
       allowMultilinePrograms = multiline,
       allowTypeLambdas = true
