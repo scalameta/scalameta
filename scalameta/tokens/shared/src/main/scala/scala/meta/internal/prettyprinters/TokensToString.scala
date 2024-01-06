@@ -6,6 +6,8 @@ import scala.meta.tokens._
 
 object TokensToString {
   def apply(tokens: Tokens) = {
-    tokens.mkString("")
+    val sb = new StringBuilder
+    tokens.foreach(t => sb.append(t.text))
+    sb.result()
   }
 }

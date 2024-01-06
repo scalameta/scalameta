@@ -46,9 +46,9 @@ object TreeStructure {
               case _: Lit.Unit | _: Lit.Null =>
                 s()
               case x: Lit.Double =>
-                s(x.tokens.mkString)
+                s(x.tokens.toString)
               case x: Lit.Float =>
-                s(x.tokens.mkString)
+                s(x.tokens.toString)
               case x: Lit =>
                 s(x.tokens.filter(isRelevantToken).map(showToken).mkString)
               case _ =>

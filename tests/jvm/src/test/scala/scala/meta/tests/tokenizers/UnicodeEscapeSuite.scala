@@ -19,7 +19,7 @@ class UnicodeEscapeSuite extends BaseTokenizerSuite {
   def checkRoundtrip(original: String): Unit = {
     test(logger.revealWhitespace(original)) {
       val tokens = tokenize(original)
-      val obtained = tokens.mkString
+      val obtained = tokens.toString
       assertNoDiff(obtained, original)
     }
   }

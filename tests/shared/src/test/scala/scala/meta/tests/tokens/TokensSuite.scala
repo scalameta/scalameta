@@ -152,8 +152,8 @@ class TokensApiSuite extends FunSuite {
     val (beforeL, afterL) = tokens.span(_.name != "identifier")
     val (beforeR, afterR) = tokens.spanRight(_.name != "identifier")
 
-    assertEquals(afterL.head.toString, "foo")
-    assertEquals(beforeR.last.toString, "foo")
+    assertEquals(afterL.head.text, "foo")
+    assertEquals(beforeR.last.text, "foo")
 
     assertEquals(afterL.tail, afterR)
     assertEquals(beforeL, beforeR.dropRight(1))
