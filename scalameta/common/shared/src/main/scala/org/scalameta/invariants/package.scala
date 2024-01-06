@@ -38,10 +38,9 @@ package invariants {
       val failures = c.freshName(TermName("failures"))
       val allDebuggees = freeLocals(requirement) ++ debuggees(requirement)
       q"""
-        ${instrument(requirement)} match {
-          case (true, _) => ()
-          case (false, $failures) => $InvariantFailedRaiseMethod(${showCode(requirement)}, $failures, $allDebuggees)
-        }
+        val $failures = ${instrument(requirement)}
+        if (!$failures.isEmpty)
+          $InvariantFailedRaiseMethod(${showCode(requirement)}, $failures, $allDebuggees)
       """
     }
 
@@ -68,13 +67,13 @@ package invariants {
         override def emit = {
           q"""
             val $result = $tree
-            if ($result) (true, _root_.scala.collection.immutable.Nil)
-            else (false, _root_.scala.collection.immutable.List($diagnostic))
+            if ($result) _root_.scala.collection.immutable.Nil
+            else _root_.scala.collection.immutable.List($diagnostic)
           """
         }
       }
       case class Debug() extends Prop {
-        override def emit = q"(true, _root_.scala.collection.immutable.Nil)"
+        override def emit = q"_root_.scala.collection.immutable.Nil"
       }
       case class Atom(tree: Tree) extends Prop with Simple {
         override def diagnostic = showCode(tree) + " is false"
@@ -92,8 +91,8 @@ package invariants {
               prop.emit
             case prop :: rest =>
               q"""
-                val ($result, $failures) = ${prop.emit}
-                if (!$result) (false, $failures)
+                val $failures = ${prop.emit}
+                if (!$failures.isEmpty) $failures
                 else ${loop(rest)}
               """
           }
@@ -111,12 +110,12 @@ package invariants {
               val restResult = c.freshName(TermName("restResult"))
               val restFailures = c.freshName(TermName("restFailures"))
               q"""
-                val ($result, $failures) = ${prop.emit}
-                if ($result) (true, _root_.scala.collection.immutable.Nil)
+                val $failures = ${prop.emit}
+                if ($failures.isEmpty) _root_.scala.collection.immutable.Nil
                 else {
-                  val ($restResult, $restFailures) = ${loop(rest)}
-                  if ($restResult) (true, _root_.scala.collection.immutable.Nil)
-                  else (false, $failures ++ $restFailures)
+                  val $restFailures = ${loop(rest)}
+                  if ($restFailures.isEmpty) _root_.scala.collection.immutable.Nil
+                  else $failures ++ $restFailures
                 }
               """
           }
