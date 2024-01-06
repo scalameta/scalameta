@@ -1,5 +1,6 @@
 package scala.meta
 
+import scala.meta.Dialect.UnquoteType
 import scala.meta.dialects._
 import scala.meta.internal.dialects._
 
@@ -8,6 +9,9 @@ import scala.meta.internal.dialects._
  */
 final class Dialect private[meta] (
     private[meta] val unquoteParentDialect: Dialect,
+    // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
+    // If yes, they will be parsed as patterns or terms.
+    private[meta] val unquoteType: UnquoteType,
     // Are `&` intersection types supported by this dialect?
     @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
     val allowAndTypes: Boolean,
@@ -30,20 +34,11 @@ final class Dialect private[meta] (
     val allowInlineMods: Boolean,
     // Are literal types allowed, i.e. is `val a : 42 = 42` legal or not?
     val allowLiteralTypes: Boolean,
-    // Are multiline programs allowed?
-    // Some quasiquotes only support single-line snippets.
-    val allowMultilinePrograms: Boolean,
     // Are `|` (union types) supported by this dialect?
     @deprecated("allowOrTypes unneeded, infix types are supported", "4.5.1")
     val allowOrTypes: Boolean,
-    // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
-    // If yes, they will be parsed as patterns.
-    val allowPatUnquotes: Boolean,
     // Are naked underscores allowed after $ in pattern interpolators, i.e. is `case q"$_ + $_" =>` legal or not?
     val allowSpliceUnderscores: Boolean,
-    // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
-    // If yes, they will be parsed as terms.
-    val allowTermUnquotes: Boolean,
     // Are terms on the top level supported by this dialect?
     // Necessary to support popular script-like DSLs.
     val allowToplevelTerms: Boolean,
@@ -179,11 +174,11 @@ final class Dialect private[meta] (
       allowInlineIdents: Boolean,
       allowInlineMods: Boolean,
       allowLiteralTypes: Boolean,
-      allowMultilinePrograms: Boolean,
+      allowMultilinePrograms: Boolean = true, // unused
       allowOrTypes: Boolean,
-      allowPatUnquotes: Boolean,
+      allowPatUnquotes: Boolean = false, // unused
       allowSpliceUnderscores: Boolean,
-      allowTermUnquotes: Boolean,
+      allowTermUnquotes: Boolean = false, // unused
       allowToplevelTerms: Boolean,
       allowTrailingCommas: Boolean,
       allowTraitParameters: Boolean,
@@ -194,6 +189,7 @@ final class Dialect private[meta] (
   ) = {
     this(
       unquoteParentDialect = null,
+      unquoteType = UnquoteType.None,
       allowAndTypes = allowAndTypes,
       allowAtForExtractorVarargs = allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
@@ -203,11 +199,8 @@ final class Dialect private[meta] (
       allowInlineIdents = allowInlineIdents,
       allowInlineMods = allowInlineMods,
       allowLiteralTypes = allowLiteralTypes,
-      allowMultilinePrograms = allowMultilinePrograms,
       allowOrTypes = allowOrTypes,
-      allowPatUnquotes = allowPatUnquotes,
       allowSpliceUnderscores = allowSpliceUnderscores,
-      allowTermUnquotes = allowTermUnquotes,
       allowToplevelTerms = allowToplevelTerms,
       allowTrailingCommas = allowTrailingCommas,
       allowTraitParameters = allowTraitParameters,
@@ -262,6 +255,9 @@ final class Dialect private[meta] (
 
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
   def allowUnquotes: Boolean = null ne unquoteParentDialect
+  def allowPatUnquotes: Boolean = unquoteType.isInstanceOf[UnquoteType.Pat]
+  def allowTermUnquotes: Boolean = unquoteType.isInstanceOf[UnquoteType.Term]
+  def allowMultilinePrograms: Boolean = unquoteType.isMultiline
 
   @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
   def withAllowAndTypes(newValue: Boolean): Dialect = {
@@ -293,22 +289,16 @@ final class Dialect private[meta] (
   def withAllowLiteralTypes(newValue: Boolean): Dialect = {
     privateCopy(allowLiteralTypes = newValue)
   }
-  def withAllowMultilinePrograms(newValue: Boolean): Dialect = {
-    privateCopy(allowMultilinePrograms = newValue)
-  }
+  def withAllowMultilinePrograms(newValue: Boolean): Dialect = ???
   @deprecated("allowOrTypes unneeded, infix types are supported", "4.5.1")
   def withAllowOrTypes(newValue: Boolean): Dialect = {
     privateCopy(allowOrTypes = newValue)
   }
-  def withAllowPatUnquotes(newValue: Boolean): Dialect = {
-    privateCopy(allowPatUnquotes = newValue)
-  }
+  def withAllowPatUnquotes(newValue: Boolean): Dialect = ???
   def withAllowSpliceUnderscores(newValue: Boolean): Dialect = {
     privateCopy(allowSpliceUnderscores = newValue)
   }
-  def withAllowTermUnquotes(newValue: Boolean): Dialect = {
-    privateCopy(allowTermUnquotes = newValue)
-  }
+  def withAllowTermUnquotes(newValue: Boolean): Dialect = ???
   def withAllowToplevelTerms(newValue: Boolean): Dialect = {
     privateCopy(allowToplevelTerms = newValue)
   }
@@ -486,6 +476,7 @@ final class Dialect private[meta] (
 
   private[this] def privateCopy(
       unquoteParentDialect: Dialect = null,
+      unquoteType: UnquoteType = UnquoteType.None,
       allowAndTypes: Boolean = this.allowAndTypes,
       allowAtForExtractorVarargs: Boolean = this.allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList: Boolean = this.allowCaseClassWithoutParameterList,
@@ -495,11 +486,8 @@ final class Dialect private[meta] (
       allowInlineIdents: Boolean = this.allowInlineIdents,
       allowInlineMods: Boolean = this.allowInlineMods,
       allowLiteralTypes: Boolean = this.allowLiteralTypes,
-      allowMultilinePrograms: Boolean = this.allowMultilinePrograms,
       allowOrTypes: Boolean = this.allowOrTypes,
-      allowPatUnquotes: Boolean = this.allowPatUnquotes,
       allowSpliceUnderscores: Boolean = this.allowSpliceUnderscores,
-      allowTermUnquotes: Boolean = this.allowTermUnquotes,
       allowToplevelTerms: Boolean = this.allowToplevelTerms,
       allowTrailingCommas: Boolean = this.allowTrailingCommas,
       allowTraitParameters: Boolean = this.allowTraitParameters,
@@ -553,6 +541,7 @@ final class Dialect private[meta] (
   ): Dialect = {
     new Dialect(
       unquoteParentDialect,
+      unquoteType,
       allowAndTypes,
       allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList,
@@ -562,11 +551,8 @@ final class Dialect private[meta] (
       allowInlineIdents,
       allowInlineMods,
       allowLiteralTypes,
-      allowMultilinePrograms,
       allowOrTypes,
-      allowPatUnquotes,
       allowSpliceUnderscores,
-      allowTermUnquotes,
       allowToplevelTerms,
       allowTrailingCommas,
       allowTraitParameters,
@@ -714,11 +700,11 @@ final class Dialect private[meta] (
       allowInlineIdents: Boolean = this.allowInlineIdents,
       allowInlineMods: Boolean = this.allowInlineMods,
       allowLiteralTypes: Boolean = this.allowLiteralTypes,
-      allowMultilinePrograms: Boolean = this.allowMultilinePrograms,
+      allowMultilinePrograms: Boolean = true, // unused
       allowOrTypes: Boolean = this.allowOrTypes,
-      allowPatUnquotes: Boolean = this.allowPatUnquotes,
+      allowPatUnquotes: Boolean = false, // unused
       allowSpliceUnderscores: Boolean = this.allowSpliceUnderscores,
-      allowTermUnquotes: Boolean = this.allowTermUnquotes,
+      allowTermUnquotes: Boolean = false, // unused
       allowToplevelTerms: Boolean = this.allowToplevelTerms,
       allowTrailingCommas: Boolean = this.allowTrailingCommas,
       allowTraitParameters: Boolean = this.allowTraitParameters,
@@ -729,6 +715,7 @@ final class Dialect private[meta] (
   ): Dialect = {
     privateCopy(
       unquoteParentDialect = null,
+      unquoteType = UnquoteType.None,
       allowAndTypes,
       allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList,
@@ -738,11 +725,8 @@ final class Dialect private[meta] (
       allowInlineIdents,
       allowInlineMods,
       allowLiteralTypes,
-      allowMultilinePrograms,
       allowOrTypes,
-      allowPatUnquotes,
       allowSpliceUnderscores,
-      allowTermUnquotes,
       allowToplevelTerms,
       allowTrailingCommas,
       allowTraitParameters,
@@ -756,25 +740,20 @@ final class Dialect private[meta] (
   private[meta] def unquoteParentOrThis(): Dialect =
     if (null eq unquoteParentDialect) this else unquoteParentDialect
 
-  private[meta] def unquoteTerm(multiline: Boolean): Dialect = {
+  private[meta] def unquote(unquoteType: UnquoteType): Dialect = {
     require(null eq unquoteParentDialect)
     privateCopy(
       unquoteParentDialect = this,
-      allowTermUnquotes = true,
-      allowMultilinePrograms = multiline,
+      unquoteType = unquoteType,
       allowTypeLambdas = true
     )
   }
 
-  private[meta] def unquotePat(multiline: Boolean): Dialect = {
-    require(null eq unquoteParentDialect)
-    privateCopy(
-      unquoteParentDialect = this,
-      allowPatUnquotes = true,
-      allowMultilinePrograms = multiline,
-      allowTypeLambdas = true
-    )
-  }
+  private[meta] def unquoteTerm(multiline: Boolean): Dialect =
+    unquote(UnquoteType.Term(multiline))
+
+  private[meta] def unquotePat(multiline: Boolean): Dialect =
+    unquote(UnquoteType.Pat(multiline))
 
 }
 
@@ -791,12 +770,12 @@ object Dialect extends InternalDialect {
       allowInlineMods: Boolean,
       allowLiteralTypes: Boolean,
       allowMethodTypes: Boolean,
-      allowMultilinePrograms: Boolean,
+      allowMultilinePrograms: Boolean = true, // unused
       @deprecated("allowOrTypes unneeded, infix types are supported", "4.5.1")
       allowOrTypes: Boolean,
-      allowPatUnquotes: Boolean,
+      allowPatUnquotes: Boolean = false, // unused
       allowSpliceUnderscores: Boolean,
-      allowTermUnquotes: Boolean,
+      allowTermUnquotes: Boolean = false, // unused
       allowToplevelTerms: Boolean,
       allowTrailingCommas: Boolean,
       allowTraitParameters: Boolean,
@@ -816,11 +795,8 @@ object Dialect extends InternalDialect {
       allowInlineIdents = allowInlineIdents,
       allowInlineMods = allowInlineMods,
       allowLiteralTypes = allowLiteralTypes,
-      allowMultilinePrograms = allowMultilinePrograms,
       allowOrTypes = allowOrTypes,
-      allowPatUnquotes = allowPatUnquotes,
       allowSpliceUnderscores = allowSpliceUnderscores,
-      allowTermUnquotes = allowTermUnquotes,
       allowToplevelTerms = allowToplevelTerms,
       allowTrailingCommas = allowTrailingCommas,
       allowTraitParameters = allowTraitParameters,
@@ -858,4 +834,28 @@ object Dialect extends InternalDialect {
     standardPairs.map(x => x.source -> x.value).toMap
   private[meta] lazy val inverseStandards: Map[Dialect, String] =
     standardPairs.map(x => x.value -> x.source).toMap
+
+  private[meta] sealed trait UnquoteType {
+    // Are multiline programs allowed?
+    // Some quasiquotes only support single-line snippets.
+    def isMultiline: Boolean
+  }
+  private[meta] object UnquoteType {
+    case object None extends UnquoteType {
+      val isMultiline = true
+    }
+    class Pat private (val isMultiline: Boolean) extends UnquoteType
+    object Pat {
+      def apply(isMultiline: Boolean) = if (isMultiline) multi else single
+      val multi = new Pat(true)
+      val single = new Pat(false)
+    }
+    class Term private (val isMultiline: Boolean) extends UnquoteType
+    object Term {
+      def apply(isMultiline: Boolean) = if (isMultiline) multi else single
+      val multi = new Term(true)
+      val single = new Term(false)
+    }
+  }
+
 }
