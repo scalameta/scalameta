@@ -337,8 +337,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         """
         params.foreach(p => internalBody += storeField(p))
         internalBody += q"node"
-        val applyParams =
-          params.map(p => q"@..${p.mods.annotations} val ${p.name}: ${p.tpt} = ${p.rhs}")
+        val applyParams = params.map(asValDefn)
         val internalArgs = params.map(getParamArg)
         mstats1 += q"""
           def apply(..$applyParams): $iname = {
@@ -667,7 +666,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         case _ => bodyForMultipleOldDefs
       }
       q"""
-        val ${newVal.name}: ${deannotateType(newVal)} = {
+        val ${newVal.name}: ${newVal.tpt} = {
           ..$body
         }
       """
@@ -739,14 +738,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   private def getAfterVersion(v: Version) = TermName(afterNamePrefix + v.asString('_'))
 
   private def asValDecl(p: ValOrDefDef): ValDef =
-    q"val ${p.name}: ${deannotateType(p)}"
+    q"@..${p.mods.annotations} val ${p.name}: ${p.tpt}"
   private def asValDefn(p: ValOrDefDef): ValDef = asValDefn(p, p.rhs)
   private def asValDefn(p: ValOrDefDef, rhs: Tree): ValDef =
-    q"val ${p.name}: ${deannotateType(p)} = $rhs"
-  private def deannotateType(p: ValOrDefDef): Tree = p.tpt match {
-    case Annotated(_, tpt) => tpt
-    case tpt => tpt
-  }
+    q"@..${p.mods.annotations} val ${p.name}: ${p.tpt} = $rhs"
 
 }
 
