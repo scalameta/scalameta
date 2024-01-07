@@ -296,8 +296,10 @@ nodes . Imagine we have a list of type arguments that happens to be empty
 val typeArguments = List.empty[Type]
 ```
 
-If we directly splice the lists into a type application we get a cryptic error
-message "invariant failed"
+If we directly splice the lists into a type application we get an error message
+"invariant failed (targClause should be non-empty)" referring to the `targClause`
+field of `Type.ApplyType` (with additional cryptic information showing specific
+checks performed):
 
 ```scala mdoc:crash
 q"function[..$typeArguments]()"

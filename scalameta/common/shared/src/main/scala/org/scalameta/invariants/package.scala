@@ -14,6 +14,7 @@ package object invariants {
   // 1) Values of local variables.
   // 2) Calls to `org.scalameta.debug` as explained in documentation to that method.
   def require(requirement: Boolean): Unit = macro Macros.require
+  def require(requirement: Boolean, clue: String): Unit = macro Macros.requireWithClue
 
   implicit class XtensionRequireCast[T](private val x: T) extends AnyVal {
     // Equivalent to requiring that `x.getClass` is assignable from `U`.
@@ -35,22 +36,29 @@ package invariants {
     import c.universe._
 
     def require(requirement: Tree): Tree = {
+      requireWithClue(requirement, q"null")
+    }
+
+    def requireWithClue(requirement: Tree, clue: Tree): Tree = {
       val failures = c.freshName(TermName("failures"))
       val allDebuggees = freeLocals(requirement) ++ debuggees(requirement)
       q"""
-        ${instrument(requirement)} match {
-          case (true, _) => ()
-          case (false, $failures) => $InvariantFailedRaiseMethod(${showCode(requirement)}, $failures, $allDebuggees)
-        }
+        val $failures = ${instrument(requirement)}
+        if (!$failures.isEmpty)
+          $InvariantFailedRaiseMethod(${showCode(requirement)}, $clue, $failures, $allDebuggees)
       """
     }
 
     def requireCast[U](ev: c.Tree)(U: c.WeakTypeTag[U]): c.Tree = {
       val q"$_($x)" = c.prefix.tree
+      val clue = s"${showCode(x)} can not be cast to type ${showDecl(U.tpe.typeSymbol)}"
       q"""
         val temp = ${c.untypecheck(x)}
         val tempClass = if (temp != null) temp.getClass else null
-        $InvariantsRequireMethod(tempClass != null && _root_.scala.reflect.classTag[$U].unapply(temp).isDefined)
+        $InvariantsRequireMethod(
+          tempClass != null && _root_.scala.reflect.classTag[$U].unapply(temp).isDefined,
+          $clue
+        )
         temp.asInstanceOf[$U]
       """
     }
@@ -68,13 +76,13 @@ package invariants {
         override def emit = {
           q"""
             val $result = $tree
-            if ($result) (true, _root_.scala.collection.immutable.Nil)
-            else (false, _root_.scala.collection.immutable.List($diagnostic))
+            if ($result) _root_.scala.collection.immutable.Nil
+            else _root_.scala.collection.immutable.List($diagnostic)
           """
         }
       }
       case class Debug() extends Prop {
-        override def emit = q"(true, _root_.scala.collection.immutable.Nil)"
+        override def emit = q"_root_.scala.collection.immutable.Nil"
       }
       case class Atom(tree: Tree) extends Prop with Simple {
         override def diagnostic = showCode(tree) + " is false"
@@ -92,8 +100,8 @@ package invariants {
               prop.emit
             case prop :: rest =>
               q"""
-                val ($result, $failures) = ${prop.emit}
-                if (!$result) (false, $failures)
+                val $failures = ${prop.emit}
+                if (!$failures.isEmpty) $failures
                 else ${loop(rest)}
               """
           }
@@ -111,12 +119,12 @@ package invariants {
               val restResult = c.freshName(TermName("restResult"))
               val restFailures = c.freshName(TermName("restFailures"))
               q"""
-                val ($result, $failures) = ${prop.emit}
-                if ($result) (true, _root_.scala.collection.immutable.Nil)
+                val $failures = ${prop.emit}
+                if ($failures.isEmpty) _root_.scala.collection.immutable.Nil
                 else {
-                  val ($restResult, $restFailures) = ${loop(rest)}
-                  if ($restResult) (true, _root_.scala.collection.immutable.Nil)
-                  else (false, $failures ++ $restFailures)
+                  val $restFailures = ${loop(rest)}
+                  if ($restFailures.isEmpty) _root_.scala.collection.immutable.Nil
+                  else $failures ++ $restFailures
                 }
               """
           }

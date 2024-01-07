@@ -296,7 +296,7 @@ class SuccessSuite extends TreeSuiteBase {
     val foo = q"foo"
     val types = List.empty[Type]
     val error =
-      """|invariant failed:
+      """|invariant failed (targClause should be non-empty):
          |when verifying targClause.!=(null).&&(targClause.isInstanceOf[scala.meta.internal.trees.Quasi].||(targClause.nonEmpty))
          |found that targClause.isInstanceOf[scala.meta.internal.trees.Quasi] is false
          |and also targClause.nonEmpty is false

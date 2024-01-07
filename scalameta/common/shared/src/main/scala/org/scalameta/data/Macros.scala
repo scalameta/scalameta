@@ -19,16 +19,25 @@ class DataTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelp
   import definitions._
 
   def nullCheck(x: c.Tree): c.Tree = {
-    if (x.tpe.baseClasses.contains(ObjectClass)) q"$InvariantsRequireMethod($x != null)"
-    else q"()"
+    if (!x.tpe.baseClasses.contains(ObjectClass)) q"()"
+    else {
+      val clue = s"${showCode(x)} should be non-null"
+      q"""$InvariantsRequireMethod($x != null, $clue)"""
+    }
   }
 
   def emptyCheck(x: c.Tree): c.Tree = {
     val emptyCheckRequested =
       try x.symbol.asTerm.accessed.nonEmpty
       catch { case _: AssertionError => x.symbol.nonEmpty }
-    if (emptyCheckRequested)
-      q"$InvariantsRequireMethod($x != null && ($x.isInstanceOf[$QuasiClass] || $x.nonEmpty))"
-    else q"()"
+    if (emptyCheckRequested) {
+      val clue = s"${showCode(x)} should be non-empty"
+      q"""
+        $InvariantsRequireMethod(
+          $x != null && ($x.isInstanceOf[$QuasiClass] || $x.nonEmpty),
+          $clue
+        )
+      """
+    } else q"()"
   }
 }
