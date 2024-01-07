@@ -42,7 +42,7 @@ object Positions {
           if (sliceStyle == SliceStyle.Show) (s + "<" + slice + ">") else s
       }
       def loopField(x: Any, color: String): Show.Result = x match {
-        case el: String => s(enquote(el, DoubleQuotes).colored(color))
+        case el: String => s(DoubleQuotes(el).colored(color))
         case el: Tree => loopTree(el)
         case el: Nil.type => s("Nil".colored(color))
         case el @ List(List()) => s("List(List())".colored(color))
