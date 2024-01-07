@@ -2445,7 +2445,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case t @ Ellipsis(2) =>
           (ellipsis[Term](t) :: Nil).reduceWith(Term.ArgClause(_))
         case x =>
-          val using = x.toString == soft.KwUsing.name && !CantStartStat(peekToken)
+          val using = x.text == soft.KwUsing.name && !CantStartStat(peekToken)
           val mod = if (using) Some(atCurPosNext(Mod.Using())) else None
           argumentExprsInParens(location).reduceWith(Term.ArgClause(_, mod))
       })(Term.ArgClause(Nil))
