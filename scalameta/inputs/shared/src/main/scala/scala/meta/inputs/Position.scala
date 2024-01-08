@@ -36,11 +36,11 @@ object Position {
   }
 
   final case class Range(input: Input, start: Int, end: Int) extends Position {
-    def startLine: Int = input.offsetToLine(start)
+    lazy val startLine: Int = input.offsetToLine(start)
     def startColumn: Int = start - input.lineToOffset(startLine)
-    def endLine: Int = input.offsetToLine(end)
+    lazy val endLine: Int = input.offsetToLine(end)
     def endColumn: Int = end - input.lineToOffset(endLine)
-    override def text = new String(input.chars, start, end - start)
+    lazy val text = new String(input.chars, start, end - start)
     override def toString = s"[$start..$end) in $input"
   }
 
