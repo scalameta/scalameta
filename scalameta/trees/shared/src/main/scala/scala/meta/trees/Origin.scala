@@ -11,12 +11,14 @@ import scala.meta.tokens._
 @adt.root
 trait Origin extends Optional {
   def position: Position
+  def dialectOpt: Option[Dialect]
 }
 
 object Origin {
   @adt.none
   object None extends Origin {
     val position: Position = Position.None
+    val dialectOpt: Option[Dialect] = scala.None
   }
 
   // `begTokenIdx` and `endTokenIdx` are half-open interval of index range
@@ -30,6 +32,8 @@ object Origin {
       val end = tokens(endTokenIdx - 1).end
       Position.Range(input, start, end)
     }
+
+    def dialectOpt: Option[Dialect] = Some(dialect)
 
     def tokens: Tokens = {
       tokenize().slice(begTokenIdx, endTokenIdx)
