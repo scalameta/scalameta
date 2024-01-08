@@ -1,9 +1,8 @@
-package scala.meta
-package internal
-package trees
+package scala.meta.trees
 
 import org.scalameta.adt
 
+import scala.meta.Dialect
 import scala.meta.common._
 import scala.meta.inputs._
 import scala.meta.tokenizers._

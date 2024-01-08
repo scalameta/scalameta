@@ -24,8 +24,8 @@ trait CommonNamerMacros extends MacroHelpers {
   lazy val PositionModule = q"_root_.scala.meta.inputs.Position"
   lazy val PointClass = tq"_root_.scala.meta.inputs.Point"
   lazy val PointModule = q"_root_.scala.meta.inputs.Point"
-  lazy val OriginClass = tq"_root_.scala.meta.internal.trees.Origin"
-  lazy val OriginModule = q"_root_.scala.meta.internal.trees.Origin"
+  lazy val OriginClass = tq"_root_.scala.meta.trees.Origin"
+  lazy val OriginModule = q"_root_.scala.meta.trees.Origin"
 
   def mkClassifier(name: TypeName): List[Tree] = {
     val q"..$classifierBoilerplate" = q"""

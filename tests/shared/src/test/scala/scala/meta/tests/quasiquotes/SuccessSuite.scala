@@ -6,7 +6,7 @@ import org.scalameta.invariants.InvariantFailedException
 
 import scala.meta._
 import scala.meta.dialects.Scala211
-import scala.meta.internal.trees.Origin
+import scala.meta.trees.Origin
 
 import compat.Platform.EOL
 

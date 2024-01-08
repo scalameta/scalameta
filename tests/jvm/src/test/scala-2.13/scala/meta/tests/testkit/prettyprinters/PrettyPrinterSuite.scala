@@ -2,8 +2,8 @@ package scala.meta.tests.testkit
 package prettyprinters
 
 import scala.meta._
-import scala.meta.internal.trees.Origin
 import scala.meta.testkit.StructurallyEqual
+import scala.meta.trees.Origin
 
 import org.scalameta.logger
 import munit.FunSuite

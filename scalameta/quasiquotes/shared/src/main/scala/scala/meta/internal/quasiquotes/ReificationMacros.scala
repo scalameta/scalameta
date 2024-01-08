@@ -19,6 +19,7 @@ import scala.meta.internal.parsers.Messages
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.parsers._
 import scala.meta.tokenizers._
+import scala.meta.trees.Origin
 
 class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables with AstLiftables {
   lazy val u: c.universe.type = c.universe
@@ -357,12 +358,12 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
           pendingQuasis.pop()
         }
       }
-      private val originNone = q"_root_.scala.meta.internal.trees.Origin.None"
+      private val originNone = q"_root_.scala.meta.trees.Origin.None"
       val liftOrigin: Origin => ReflectTree =
         if (sourceName ne null)
           _ match {
             case Origin.Parsed(_, beg, end) =>
-              q"_root_.scala.meta.internal.trees.Origin.Parsed($sourceName, $beg, $end)"
+              q"_root_.scala.meta.trees.Origin.Parsed($sourceName, $beg, $end)"
             case _ => originNone
           }
         else _ => originNone
@@ -392,7 +393,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       q"val $dialectName = $dialectTree",
       if (sourceName eq null) null
       else q"""
-        val $sourceName = new _root_.scala.meta.internal.trees.Origin.ParsedSource(
+        val $sourceName = new _root_.scala.meta.trees.Origin.ParsedSource(
           _root_.scala.meta.inputs.Input.String(${input.text})
         )($dialectName)
       """
