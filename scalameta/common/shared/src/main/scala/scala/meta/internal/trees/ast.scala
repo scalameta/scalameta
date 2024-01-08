@@ -179,6 +179,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             destination: $StringClass = null,
             origin: $OriginClass = ${privateFields.origin.field.name}): Tree = {
           $privateCopyParentChecks
+          $DataTyperMacrosModule.nullCheck(origin)
           new $name(prototype.asInstanceOf[$iname], parent, origin)(..$privateCopyArgs)
         }
       """
@@ -332,7 +333,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           q"$CommonTyperMacrosModule.initParam(${p.name})"
         }
         privateParams.foreach { p =>
-          if (!p.persist) internalBody += asValDefn(p.field)
+          if (p.persist)
+            internalBody += q"$DataTyperMacrosModule.nullCheck(${p.field.name})"
+          else
+            internalBody += asValDefn(p.field)
         }
         internalBody += q"""
           val node = new $name(

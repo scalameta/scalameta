@@ -24,12 +24,11 @@ trait InternalTree extends Product {
 
   private[meta] def privatePrototype: Tree
   private[meta] def privateParent: Tree
-  private[meta] def privateOrigin: Origin
   private[meta] def privateCopy(
       prototype: Tree = this,
       parent: Tree = privateParent,
       destination: String = null,
-      origin: Origin = privateOrigin
+      origin: Origin = origin
   ): Tree
 
   // ==============================================================
@@ -46,10 +45,7 @@ trait InternalTree extends Product {
   // def productIterator: Iterator[Any]
   def productFields: List[String]
 
-  def origin: Origin = {
-    val nullableOrigin = privateOrigin
-    if (nullableOrigin != null) nullableOrigin else Origin.None
-  }
+  def origin: Origin
 
   def pos: Position = origin.position
 
@@ -68,16 +64,6 @@ trait InternalTree extends Product {
   }
 
   // ==============================================================
-  // Setters for pieces of internal state defined above.
-  // Everyone except for scala.meta's core should be using "private"-less versions of these methods,
-  // because those are only available on appropriate trees.
-  // ==============================================================
-
-  private[meta] def privateWithOrigin(origin: Origin): Tree = {
-    this.privateCopy(origin = origin)
-  }
-
-  // ==============================================================
   // Intellij-friendly stubs.
   // See https://github.com/scalameta/scalameta/pull/907#discussion_r120090447.
   // ==============================================================
@@ -88,6 +74,6 @@ trait InternalTree extends Product {
 
 trait InternalTreeXtensions {
   private[meta] implicit class XtensionOriginTree[T <: Tree](tree: T) {
-    def withOrigin(origin: Origin): T = tree.privateWithOrigin(origin).asInstanceOf[T]
+    def withOrigin(origin: Origin): T = tree.privateCopy(origin = origin).asInstanceOf[T]
   }
 }

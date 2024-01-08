@@ -3046,7 +3046,7 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("#3409") {
     val code: Tree = source"object Generated {}"
-    code.privateOrigin match {
+    code.origin match {
       case x: Origin.Parsed =>
         x.input match {
           case Input.String("object Generated {}") =>

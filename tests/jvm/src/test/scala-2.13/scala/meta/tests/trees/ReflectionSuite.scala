@@ -41,7 +41,7 @@ class ReflectionSuite extends FunSuite {
     assertEquals(
       iff.allFields.map(_.toString),
       List(
-        "field Term.If.privateOrigin: scala.meta.trees.Origin",
+        "field Term.If.origin: scala.meta.trees.Origin",
         "field Term.If.cond: scala.meta.Term",
         "field Term.If.thenp: scala.meta.Term",
         "field Term.If.elsep: scala.meta.Term",
@@ -61,7 +61,7 @@ class ReflectionSuite extends FunSuite {
     assertEquals(
       iff.allFields.map(_.toString),
       List(
-        "field Term.Name.privateOrigin: scala.meta.trees.Origin",
+        "field Term.Name.origin: scala.meta.trees.Origin",
         "field Term.Name.value: String @org.scalameta.invariants.nonEmpty"
       )
     )
