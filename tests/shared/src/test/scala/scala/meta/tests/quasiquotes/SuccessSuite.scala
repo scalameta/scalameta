@@ -649,7 +649,7 @@ class SuccessSuite extends TreeSuiteBase {
       q"foo match { case bar => baz; case _ => foo ; case q => w }"
     assertTree(expr)(Term.Name("foo"))
     assertWithOriginalSyntax(casez: _*)(
-      "case _ => foo"
+      "case _ => foo ;"
     )(
       "case _ => foo"
     )
@@ -667,7 +667,7 @@ class SuccessSuite extends TreeSuiteBase {
     val q"$expr match { ..case $casez }" = q"foo match { case bar => baz; case _ => foo }"
     assertTree(expr)(Term.Name("foo"))
     assertWithOriginalSyntax(casez: _*)(
-      "case bar => baz",
+      "case bar => baz;",
       "case _ => foo"
     )(
       "case bar => baz",
@@ -699,8 +699,8 @@ class SuccessSuite extends TreeSuiteBase {
       q"try foo catch { case a => b; case _ => bar; case 1 => 2; case q => w} finally baz"
     assertTree(expr)(Term.Name("foo"))
     assertWithOriginalSyntax(cases: _*)(
-      "case _ => bar",
-      "case 1 => 2"
+      "case _ => bar;",
+      "case 1 => 2;"
     )(
       "case _ => bar",
       "case 1 => 2"
@@ -2219,7 +2219,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTrees(mods: _*)(Mod.Covariant())
     assertTree(tparamname)(Type.Name("Z"))
     assertWithOriginalSyntax(tparams)(
-      "[Q, W]"
+      "[Q,W]"
     )(
       "[Q, W]"
     )
@@ -2576,7 +2576,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("1 source\"..stats\"") {
     val source"..$stats" = source"class A { val a = 'a'}"
     assertWithOriginalSyntax(stats: _*)(
-      "class A { val a = 'a' }"
+      "class A { val a = 'a'}"
     )(
       "class A { val a = 'a' }"
     )
@@ -2601,7 +2601,7 @@ class SuccessSuite extends TreeSuiteBase {
     val source"class B { val b = 'b'}; ..$stats" =
       source"class B { val b = 'b'}; class A { val a = 'a'}"
     assertWithOriginalSyntax(stats: _*)(
-      "class A { val a = 'a' }"
+      "class A { val a = 'a'}"
     )(
       "class A { val a = 'a' }"
     )
@@ -3047,7 +3047,11 @@ class SuccessSuite extends TreeSuiteBase {
   test("#3409") {
     val code: Tree = source"object Generated {}"
     code.privateOrigin match {
-      case Origin.None =>
+      case x: Origin.Parsed =>
+        x.input match {
+          case Input.String("object Generated {}") =>
+          case y => fail(s"origin input doesn't match: $y")
+        }
       case x => fail(s"origin doesn't match: $x")
     }
   }
@@ -3056,7 +3060,7 @@ class SuccessSuite extends TreeSuiteBase {
     val valX = q"x // X"
     val fOfX = q"func( $valX )"
 
-    assertWithOriginalSyntax(valX, "x", "x")
+    assertWithOriginalSyntax(valX, "x // X", "x")
     assertWithOriginalSyntax(fOfX, "func(x)", "func(x)")
 
     def assertOriginType(obtained: Tree, expected: Class[_ <: Origin]): Unit =
@@ -3065,7 +3069,7 @@ class SuccessSuite extends TreeSuiteBase {
         expected.asInstanceOf[Class[Origin]]
       )
 
-    assertOriginType(valX, Origin.None.getClass)
+    assertOriginType(valX, classOf[Origin.Parsed])
     assertOriginType(fOfX, Origin.None.getClass)
   }
 

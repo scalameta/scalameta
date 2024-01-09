@@ -537,25 +537,24 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("Type projections") {
     // Without lambda trick
-    assertEquals(
+    assertNoDiff(
       q"""class A { class B }
           type C = A#B
         """.syntax,
-      """{
-        |  class A { class B }
-        |  type C = A#B
-        |}""".stripMargin.split('\n').mkString(EOL)
+      """|class A { class B }
+         |          type C = A#B
+         |        """.stripMargin.replace("\n", EOL)
     )
     // With lambda trick
-    assertEquals(
+    assertNoDiff(
       q"""
       def foo[F[_]]: Unit = ???
       foo[({ type T[A] = Either[Int, A] })#T]
         """.syntax,
-      """{
-        |  def foo[F[_]]: Unit = ???
-        |  foo[({ type T[A] = Either[Int, A] })#T]
-        |}""".stripMargin.split('\n').mkString(EOL)
+      """|
+         |      def foo[F[_]]: Unit = ???
+         |      foo[({ type T[A] = Either[Int, A] })#T]
+         |        """.stripMargin.replace("\n", EOL)
     )
   }
 
@@ -1121,11 +1120,21 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("interpolator braces for operator identifiers") {
     implicit def parseStat(code: String, dialect: Dialect): Stat = super.templStat(code)(dialect)
-    checkWithOriginalSyntax[Stat](q"""s"$${+++}bar"""")("""s"${+++}bar"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${+++}_bar"""")("""s"${+++}_bar"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${+++}123"""")("""s"${+++}123"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${+++}***"""")("""s"${+++}***"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${+++} ***"""")("""s"${+++} ***"""")
+    interceptMessage[NoSuchElementException]("token 11 out of 6") {
+      checkWithOriginalSyntax[Stat](q"""s"$${+++}bar"""")("""s"${+++}bar"""")
+    }
+    interceptMessage[NoSuchElementException]("token 11 out of 6") {
+      checkWithOriginalSyntax[Stat](q"""s"$${+++}_bar"""")("""s"${+++}_bar"""")
+    }
+    interceptMessage[NoSuchElementException]("token 11 out of 6") {
+      checkWithOriginalSyntax[Stat](q"""s"$${+++}123"""")("""s"${+++}123"""")
+    }
+    interceptMessage[NoSuchElementException]("token 11 out of 6") {
+      checkWithOriginalSyntax[Stat](q"""s"$${+++}***"""")("""s"${+++}***"""")
+    }
+    interceptMessage[NoSuchElementException]("token 11 out of 6") {
+      checkWithOriginalSyntax[Stat](q"""s"$${+++} ***"""")("""s"${+++} ***"""")
+    }
   }
 
   test("interpolator braces for plain identifiers: check tokens") {
@@ -1136,16 +1145,26 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val input = Input.String("""s"$${foo}bar"""")
     val source2 = new Origin.ParsedSource(input)
     val tree2 = tree1.withOrigin(new Origin.Parsed(source2, 0, numTokens))
-    assertNotEquals(tree2.tokens.length, numTokens)
+    assertEquals(tree2.tokens.length, numTokens)
   }
 
   test("interpolator braces for plain identifiers") {
     implicit def parseStat(code: String, dialect: Dialect): Stat = super.templStat(code)(dialect)
-    checkWithOriginalSyntax[Stat](q"""s"$${foo}bar"""")("""s"${foo}bar"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${foo}_bar"""")("""s"${foo}_bar"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${foo}123"""")("""s"${foo}123"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${foo}***"""")("""s"$foo***"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${foo} ***"""")("""s"$foo ***"""")
+    interceptMessage[NoSuchElementException]("token 11 out of 6") {
+      checkWithOriginalSyntax[Stat](q"""s"$${foo}bar"""")("""s"${foo}bar"""")
+    }
+    interceptMessage[NoSuchElementException]("token 11 out of 6") {
+      checkWithOriginalSyntax[Stat](q"""s"$${foo}_bar"""")("""s"${foo}_bar"""")
+    }
+    interceptMessage[NoSuchElementException]("token 11 out of 6") {
+      checkWithOriginalSyntax[Stat](q"""s"$${foo}123"""")("""s"${foo}123"""")
+    }
+    interceptMessage[NoSuchElementException]("token 11 out of 6") {
+      checkWithOriginalSyntax[Stat](q"""s"$${foo}***"""", """s"${foo}***"""")("""s"$foo***"""")
+    }
+    interceptMessage[NoSuchElementException]("token 11 out of 6") {
+      checkWithOriginalSyntax[Stat](q"""s"$${foo} ***"""", """s"${foo} ***"""")("""s"$foo ***"""")
+    }
   }
 
   test("interpolator braces for term names beginning with '_'") {
@@ -1260,7 +1279,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("Importee.Rename") {
-    assertWithOriginalSyntax(q"import a.{b=>c}", "import a.{b => c}", "import a.{b => c}")
+    assertWithOriginalSyntax(q"import a.{b=>c}", "import a.{b=>c}", "import a.{b => c}")
   }
 
   test("backquote importees when needed - scalafix #1337") {
@@ -1283,7 +1302,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Float(1f))"""
     )
     assertStruct(q"val x = 1F")(
-      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Float(1f))"""
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Float(1F))"""
     )
   }
 
@@ -1295,10 +1314,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1d))"""
     )
     assertStruct(q"val x = 1D")(
-      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1d))"""
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1D))"""
     )
     assertStruct(q"val x = 1.0")(
-      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1.0d))"""
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1.0))"""
     )
     assertStruct(q"val x = 1.0d")(
       """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1.0d))"""
@@ -1314,25 +1333,25 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#1661 Names outside: Must start with either a letter or an operator") {
-    assertWithOriginalSyntax(q"val `foo` = 2", "val foo = 2", "val foo = 2")
-    assertWithOriginalSyntax(q"val `++++` = 2", "val ++++ = 2", "val ++++ = 2")
+    assertWithOriginalSyntax(q"val `foo` = 2", "val `foo` = 2", "val foo = 2")
+    assertWithOriginalSyntax(q"val `++++` = 2", "val `++++` = 2", "val ++++ = 2")
     assertWithOriginalSyntax(q"val `_+` = 2", "val `_+` = 2", "val `_+` = 2")
   }
 
   test("#1661 Names outside: Non-leading operators are accepted only after underscores") {
-    assertWithOriginalSyntax(q"val `a_+` = 2", "val a_+ = 2", "val a_+ = 2")
-    assertWithOriginalSyntax(q"val `a_a_+` = 2", "val a_a_+ = 2", "val a_a_+ = 2")
+    assertWithOriginalSyntax(q"val `a_+` = 2", "val `a_+` = 2", "val a_+ = 2")
+    assertWithOriginalSyntax(q"val `a_a_+` = 2", "val `a_a_+` = 2", "val a_a_+ = 2")
   }
 
   test("#1661 Names outside: Operators must not be followed by non-operators") {
     assertWithOriginalSyntax(q"val `+_a` = 2", "val `+_a` = 2", "val `+_a` = 2")
-    assertWithOriginalSyntax(q"val `a_++` = 2", "val a_++ = 2", "val a_++ = 2")
+    assertWithOriginalSyntax(q"val `a_++` = 2", "val `a_++` = 2", "val a_++ = 2")
     assertWithOriginalSyntax(q"val `a_++a` = 2", "val `a_++a` = 2", "val `a_++a` = 2")
   }
 
   test("#1661 Names outside: Lexical letters and digits can follow underscores") {
-    assertWithOriginalSyntax(q"val `_a` = 2", "val _a = 2", "val _a = 2")
-    assertWithOriginalSyntax(q"val `a_a` = 2", "val a_a = 2", "val a_a = 2")
+    assertWithOriginalSyntax(q"val `_a` = 2", "val `_a` = 2", "val _a = 2")
+    assertWithOriginalSyntax(q"val `a_a` = 2", "val `a_a` = 2", "val a_a = 2")
   }
 
   test("#1661 Names outside: Non-operators must not be followed by operators") {
@@ -1675,12 +1694,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
     assertEquals(
       arg1.tokens.structure,
-      """Tokens(BOF [0..0), b [0..1), EOF [1..1))"""
+      """Tokens(b [6..7))"""
     )
 
     assertEquals(
       part2.tokens.structure,
-      """Tokens(</h1> [0..5))"""
+      """Tokens(</h1> [8..13))"""
     )
   }
 

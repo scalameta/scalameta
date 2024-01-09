@@ -44,7 +44,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.Tree.toString (quasiquotes)") {
     val tree = q"foo + bar // baz"
-    assertEquals(tree.toString, "foo + bar")
+    assertEquals(tree.toString, "foo + bar // baz")
   }
 
   test("scala.meta.Tree.structure (quasiquoted)") {
@@ -54,7 +54,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.Tree.syntax (quasiquoted)") {
     val tree = q"foo + bar // baz"
-    assertWithOriginalSyntax(tree, "foo + bar", "foo + bar")
+    assertWithOriginalSyntax(tree, "foo + bar // baz", "foo + bar")
   }
 
   test("scala.meta.classifiers.Classifiable.toString") {

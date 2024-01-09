@@ -125,6 +125,12 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val privateFields = getPrivateFields(iname)
         val privateParams = privateFields.asList
         val bparams1 = privateParams.map(_.field)
+        val privateApplyParams = privateParams.collect { case PrivateField(p, true) =>
+          val annots = privateFieldAnnot :: p.mods.annotations
+          val mods = Modifiers(p.mods.flags | OVERRIDE | DEFERRED, p.mods.privateWithin, annots)
+          istats1 += declareGetter(p.name, p.tpt, mods)
+          p
+        }
 
         // step 5: turn all parameters into vars, create getters and setters
         params.foreach { p =>
@@ -326,7 +332,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           q"$CommonTyperMacrosModule.initParam(${p.name})"
         }
         privateParams.foreach { p =>
-          internalBody += asValDefn(p.field)
+          if (!p.persist) internalBody += asValDefn(p.field)
         }
         internalBody += q"""
           val node = new $name(
@@ -339,10 +345,22 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         internalBody += q"node"
         val applyParams = params.map(asValDefn)
         val internalArgs = params.map(getParamArg)
+        val bparamDecls = privateApplyParams.map(asValDecl)
+        val fullApplyParams = bparamDecls ++ applyParams.map(asValDecl)
+        val fullInternalArgs = privateApplyParams.map(getParamArg) ++ internalArgs
         mstats1 += q"""
           def apply(..$applyParams): $iname = {
+            $mname.apply(..${privateApplyParams.map(p => p.rhs) ++ internalArgs})
+          }
+        """
+        mstats1 += q"""
+          def apply(..$fullApplyParams): $iname = {
             ..$internalBody
           }
+        """
+        mstatsLatest += q"""
+          @$InlineAnnotation def apply(..$fullApplyParams): $iname =
+            $mname.apply(..$fullInternalArgs)
         """
         mstatsLatest += q"""
           @$InlineAnnotation def apply(..$applyParams): $iname = $mname.apply(..$internalArgs)
@@ -363,6 +381,18 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           val params = positionVersionedParams(applyParamsBuilder.result())
           val applyBody = applyBodyBuilder.result()
           val applyCall = q"$mname.apply(..$internalArgs)"
+          val fullParams = bparamDecls ++ params
+          verMstats += q"""
+            def apply(..$fullParams): $iname = {
+              $mname.apply(..${fullParams.map(_.name)})
+            }
+          """
+          mstats1 += q"""
+            def apply(..$fullParams): $iname = {
+              ..$applyBody
+              $mname.apply(..$fullInternalArgs)
+            }
+          """
           verMstats += q"""
             def apply(..$params): $iname = {
               ..$applyBody
@@ -490,6 +520,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     Modifiers(DEFERRED, typeNames.EMPTY, annots)
 
   private val astFieldAnnot = q"new $AstMetadataModule.astField"
+  private val privateFieldAnnot = q"new $AdtMetadataModule.privateField"
 
   private def declareGetter(name: TermName, tpe: Tree, annots: List[Tree]): Tree =
     declareGetter(name, tpe, getDeferredModifiers(annots))
