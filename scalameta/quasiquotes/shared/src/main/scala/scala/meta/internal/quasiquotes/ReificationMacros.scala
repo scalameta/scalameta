@@ -246,6 +246,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     val useParsedSource = mode.holes.isEmpty // otherwise, syntax will not make much sense
     val dialectName = TermName(c.freshName("dialect"))
     val sourceName = if (useParsedSource) TermName(c.freshName("parsedSource")) else null
+    val dialectOnlyName = TermName(c.freshName("dialectOnly"))
     object Lifts {
       def liftTree(tree: MetaTree): ReflectTree = {
         Liftables.liftableSubTree(tree)
@@ -358,15 +359,15 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
           pendingQuasis.pop()
         }
       }
-      private val originNone = q"_root_.scala.meta.trees.Origin.None"
+      private val dialectOnlyNameTree = q"$dialectOnlyName"
       val liftOrigin: Origin => ReflectTree =
         if (sourceName ne null)
           _ match {
             case Origin.Parsed(_, beg, end) =>
               q"_root_.scala.meta.trees.Origin.Parsed($sourceName, $beg, $end)"
-            case _ => originNone
+            case _ => dialectOnlyNameTree
           }
-        else _ => originNone
+        else _ => dialectOnlyNameTree
     }
     object Liftables {
       // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
@@ -391,6 +392,10 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     }
     val valDefns = List(
       q"val $dialectName = $dialectTree",
+      q"""
+        val $dialectOnlyName =
+          new _root_.scala.meta.trees.Origin.DialectOnly($dialectName)
+      """,
       if (sourceName eq null) null
       else q"""
         val $sourceName = new _root_.scala.meta.trees.Origin.ParsedSource(

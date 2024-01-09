@@ -3070,7 +3070,7 @@ class SuccessSuite extends TreeSuiteBase {
       )
 
     assertOriginType(valX, classOf[Origin.Parsed])
-    assertOriginType(fOfX, Origin.None.getClass)
+    assertOriginType(fOfX, classOf[Origin.DialectOnly])
   }
 
 }
