@@ -611,7 +611,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   private def unquote[T <: Tree: AstInfo](unquote: Unquote): T with Quasi = {
     require(unquote.input.chars(unquote.start + 1) != '$')
-    if (!dialect.allowUnquotes) {
+    val unquoteDialect = dialect.unquoteParentDialect
+    if (null eq unquoteDialect) {
       syntaxError(s"$dialect doesn't support unquotes", at = unquote)
     }
     // NOTE: I considered having Input.Slice produce absolute positions from the get-go,
@@ -619,7 +620,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     val unquotedTree = atCurPosNext {
       try {
         val unquoteInput = Input.Slice(input, unquote.start + 1, unquote.end)
-        val unquoteParser = new ScalametaParser(unquoteInput)(dialect.unquoteVariant())
+        val unquoteParser = new ScalametaParser(unquoteInput)(unquoteDialect)
         if (dialect.allowTermUnquotes) unquoteParser.parseUnquoteTerm()
         else if (dialect.allowPatUnquotes) unquoteParser.parseUnquotePat()
         else unreachable

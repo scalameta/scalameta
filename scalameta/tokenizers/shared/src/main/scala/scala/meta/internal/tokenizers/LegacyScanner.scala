@@ -10,6 +10,7 @@ import scala.meta.inputs._
 import scala.meta.tokenizers.TokenizeException
 
 class LegacyScanner(input: Input, dialect: Dialect) {
+  private val unquoteDialect = dialect.unquoteParentDialect
   val reporter: Reporter = Reporter(input)
   val curr: LegacyTokenData = new LegacyTokenData {}
   val next: LegacyTokenData = new LegacyTokenData {}
@@ -414,7 +415,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         nextChar()
         if ('0' <= ch && ch <= '9') {
           putChar('.'); getFraction()
-        } else if (dialect.allowUnquotes && ch == '.') {
+        } else if (unquoteDialect != null && ch == '.') {
           base = 0
           while (ch == '.') {
             base += 1
@@ -527,7 +528,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   // True means that we need to switch into unquote reading mode.
   private def isUnquoteNextNoDollar(): Boolean = {
-    dialect.allowUnquotes && {
+    unquoteDialect != null && {
       val isDollar = lookaheadReader.getc() == '$'
       if (isDollar) {
         // Skip the first dollar and move on to whatever we've been doing:
@@ -961,7 +962,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     val start = endCharOffset
     val endInclusive = {
       val exploratoryInput = Input.Slice(input, start, input.chars.length)
-      val exploratoryScanner = new LegacyScanner(exploratoryInput, dialect.unquoteVariant())
+      val exploratoryScanner = new LegacyScanner(exploratoryInput, unquoteDialect)
       exploratoryScanner.reader.nextChar()
       exploratoryScanner.nextToken()
       exploratoryScanner.curr.token match {

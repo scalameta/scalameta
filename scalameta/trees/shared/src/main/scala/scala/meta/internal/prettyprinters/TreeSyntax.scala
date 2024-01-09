@@ -329,7 +329,8 @@ object TreeSyntax {
     implicit def syntaxTree[T <: Tree]: Syntax[T] = Syntax {
       // Bottom
       case t: Quasi =>
-        if (!dialect.allowUnquotes)
+        implicit val unquoteDialect: Dialect = dialect.unquoteParentDialect
+        if (null eq unquoteDialect)
           throw new UnsupportedOperationException(s"$dialect doesn't support unquoting")
         if (t.rank > 0) {
           s("." * (t.rank + 1), w("{", t.tree, "}", !t.tree.is[Quasi]))
@@ -339,7 +340,6 @@ object TreeSyntax {
               t.tree.is[Pat.Var] ||
               t.tree.is[Term.This] ||
               t.tree.is[Pat.Wildcard]
-          implicit val syntaxDialect = dialect.unquoteVariant()
           s("$", w("{", t.tree.syntax, "}", !allowBraceless))
         }
 
