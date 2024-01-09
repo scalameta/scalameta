@@ -14,11 +14,8 @@ package object dialects {
     allowInlineMods = false,
     allowLiteralTypes = false,
     allowMethodTypes = false,
-    allowMultilinePrograms = true,
     allowOrTypes = false,
-    allowPatUnquotes = false,
     allowSpliceUnderscores = false, // SI-7715, only fixed in 2.11.0-M5
-    allowTermUnquotes = false,
     allowToplevelTerms = false,
     allowTrailingCommas = false,
     allowTraitParameters = false,
