@@ -173,6 +173,7 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     protobufSettings
   )
   .configureCross(crossPlatformPublishSettings)
+  .configureCross(crossPlatformShading)
   .jsSettings(
     commonJsSettings
   )
@@ -882,7 +883,8 @@ lazy val shadingSettings = Def.settings(
         ShadingRule.moveUnder(x.namespace, "scala.meta.shaded.internal")
       }
   },
-  validNamespaces ++= Set("scala.meta", "org.scalameta", "scala", "java")
+  validEntries ++= Set("semanticdb.proto", "semanticidx.proto"),
+  validNamespaces ++= Set("org", "scala", "java")
 )
 
 def platformPublishSettings(platform: sbtcrossproject.Platform) =
