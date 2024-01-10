@@ -134,7 +134,7 @@ trait CommonNamerMacros extends MacroHelpers {
       q"private[meta] override val privateParent: $TreeClass = null"
     ),
     PrivateField(
-      q"private[meta] override val privateOrigin: $OriginClass = $OriginModule.None",
+      q"override val origin: $OriginClass = $OriginModule.None",
       true
     )
   )
