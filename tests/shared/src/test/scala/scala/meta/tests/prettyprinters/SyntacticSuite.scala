@@ -25,9 +25,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   implicit class XtensionResetOrigin[T <: Tree](tree: T) {
     // NOTE: Ensures that neither the given tree nor its subtrees have their origins set.
     // This is necessary to force prettyprinting as opposed to reusing original syntax.
-    def resetAllOrigins: T = {
-      tree.transform { case tree: Tree => tree.withOrigin(Origin.None) }.asInstanceOf[T]
-    }
+    def resetAllOrigins: T = tree.withOriginRecursive(Origin.None)
   }
 
   import scala.meta.dialects.Scala211
