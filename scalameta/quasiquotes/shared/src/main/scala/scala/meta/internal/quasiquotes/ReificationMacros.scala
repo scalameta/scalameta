@@ -422,14 +422,18 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         val (thenp, elsep) = {
           if (holes.isEmpty) (q"true", q"false")
           else {
-            val resultNames = holes.zipWithIndex.map({ case (_, i) =>
-              TermName(QuasiquotePrefix + "$result$" + i)
-            })
-            val resultPatterns = resultNames.map(name => pq"_root_.scala.Some($name)")
-            val resultTerms = resultNames.map(name => q"$name")
+            val reifers = new mutable.ListBuffer[ReflectTree]
+            val patterns = new mutable.ListBuffer[ReflectTree]
+            val terms = new mutable.ListBuffer[ReflectTree]
+            holes.foreach { h =>
+              val name = TermName(QuasiquotePrefix + "$result$" + h.idx)
+              reifers += h.reifier
+              patterns += pq"_root_.scala.Some($name)"
+              terms += q"$name"
+            }
             val thenp = q"""
-              (..${holes.map(_.reifier)}) match {
-                case (..$resultPatterns) => _root_.scala.Some((..$resultTerms))
+              (..$reifers) match {
+                case (..$patterns) => _root_.scala.Some((..$terms))
                 case _ => _root_.scala.None
               }
             """
