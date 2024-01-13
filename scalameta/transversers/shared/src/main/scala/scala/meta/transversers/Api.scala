@@ -37,6 +37,11 @@ private[meta] trait Api {
       buf.toList
     }
   }
+
+  implicit class XtensionTreeLike[T <: Tree](tree: T) {
+    private[meta] def withOriginRecursive(origin: trees.Origin): T =
+      tree.transform { case t: Tree => t.withOrigin(origin) }.asInstanceOf[T]
+  }
 }
 
 private[meta] trait Aliases {
