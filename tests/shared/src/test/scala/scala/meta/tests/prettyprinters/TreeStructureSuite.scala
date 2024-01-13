@@ -18,8 +18,14 @@ class TreeStructureSuite extends ParseSuite {
   }
 
   assertStructure(Lit.Unit())("Lit.Unit()")
-  assertStructure(Lit.Float("12.30f"))("Lit.Float(12.30f)")
-  assertStructure(Lit.Double("12.30d"))("Lit.Double(12.30d)")
+  assertStructure(Lit.Float(".0f"))("Lit.Float(0f)")
+  assertStructure(Lit.Float("0.00f"))("Lit.Float(0f)")
+  assertStructure(Lit.Float("1230f"))("Lit.Float(1230f)")
+  assertStructure(Lit.Float("12.30f"))("Lit.Float(12.3f)")
+  assertStructure(Lit.Double(".0d"))("Lit.Double(0d)")
+  assertStructure(Lit.Double("0.00d"))("Lit.Double(0d)")
+  assertStructure(Lit.Double("1230d"))("Lit.Double(1230d)")
+  assertStructure(Lit.Double("12.30d"))("Lit.Double(12.3d)")
   assertStructure(Lit.Long(1230))("Lit.Long(1230L)")
   assertStructure(Lit.Int(1230))("Lit.Int(1230)")
   assertStructure(Lit.Null())("Lit.Null()")

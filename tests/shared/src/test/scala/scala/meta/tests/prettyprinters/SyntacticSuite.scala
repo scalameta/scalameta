@@ -1280,7 +1280,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Float(1f))"""
     )
     assertStruct(q"val x = 1F")(
-      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Float(1F))"""
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Float(1f))"""
     )
   }
 
@@ -1292,13 +1292,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1d))"""
     )
     assertStruct(q"val x = 1D")(
-      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1D))"""
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1d))"""
     )
     assertStruct(q"val x = 1.0")(
-      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1.0))"""
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1d))"""
     )
     assertStruct(q"val x = 1.0d")(
-      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1.0d))"""
+      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1d))"""
     )
   }
 
