@@ -3,7 +3,8 @@ package internal
 package prettyprinters
 
 import scala.meta.prettyprinters._
-import Show.{sequence => s, repeat => r}
+import Show.{repeat => r, sequence => s}
+import scala.annotation.tailrec
 import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
 import scala.meta.internal.trees.Quasi
@@ -41,16 +42,18 @@ object TreeStructure {
             x match {
               case _: Quasi =>
                 default
-              case Lit(value: String) =>
-                s(DoubleQuotes(value))
+              case x: Lit.String =>
+                s(DoubleQuotes.orTriple(x.value))
               case _: Lit.Unit | _: Lit.Null =>
                 s()
               case x: Lit.Double =>
-                s(x.tokens.toString)
+                s(asFloat(x.format, 'd'))
               case x: Lit.Float =>
-                s(x.tokens.toString)
+                s(asFloat(x.format, 'f'))
+              case x: Lit.Long =>
+                s(x.value.toString + 'L')
               case x: Lit =>
-                s(x.tokens.filter(isRelevantToken).map(showToken).mkString)
+                s(x.value.toString)
               case _ =>
                 default
             }
@@ -60,14 +63,22 @@ object TreeStructure {
     }
   }
 
-  private def isRelevantToken(tok: Token) = tok match {
-    case _: Literal => true
-    case Ident("-") => true
-    case _ => false
-  }
-
-  private def showToken(tok: Token) = tok match {
-    case Constant.Long(v) => Show.Str(v.toString + "L")
-    case _ => tok.syntax
+  private def asFloat(value: String, suffix: Char): String = {
+    val sb = new java.lang.StringBuilder()
+    val end = value.length - 1
+    val noSuffixEnd = if (Character.toLowerCase(value(end)) == suffix) end - 1 else end
+    def appendNoSuffix = sb.append(value, 0, noSuffixEnd + 1)
+    @tailrec def removeZerosAndDot(idx: Int): Unit =
+      if (idx < 0) appendNoSuffix
+      else
+        value(idx) match {
+          case '0' => removeZerosAndDot(idx - 1)
+          case '.' => if (idx == 0) sb.append('0') else sb.append(value, 0, idx)
+          case _ if value.lastIndexOf('.', idx - 1) < 0 => appendNoSuffix
+          case _ => sb.append(value, 0, idx + 1)
+        }
+    removeZerosAndDot(noSuffixEnd)
+    sb.append(suffix)
+    sb.toString
   }
 }
