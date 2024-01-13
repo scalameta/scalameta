@@ -24,10 +24,10 @@ object Origin {
   // `begTokenIdx` and `endTokenIdx` are half-open interval of index range
   @adt.leaf
   class Parsed(source: ParsedSource, begTokenIdx: Int, endTokenIdx: Int) extends Origin {
-    @inline private def tokenize() = source.tokens
+    @inline def allInputTokens() = source.tokens
 
-    def position: Position = {
-      val tokens = tokenize()
+    lazy val position: Position = {
+      val tokens = allInputTokens()
       val start = tokens(begTokenIdx).start
       val end = tokens(endTokenIdx - 1).end
       Position.Range(input, start, end)
@@ -36,7 +36,7 @@ object Origin {
     def dialectOpt: Option[Dialect] = Some(dialect)
 
     def tokens: Tokens = {
-      tokenize().slice(begTokenIdx, endTokenIdx)
+      allInputTokens().slice(begTokenIdx, endTokenIdx)
     }
 
     @inline def input: Input = source.input

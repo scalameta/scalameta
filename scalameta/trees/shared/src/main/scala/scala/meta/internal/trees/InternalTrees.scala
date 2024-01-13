@@ -2,7 +2,9 @@ package scala.meta
 package internal
 package trees
 
+import scala.collection.mutable
 import scala.meta.inputs._
+import scala.meta.internal.tokenizers.Compat
 import scala.meta.prettyprinters._
 import scala.meta.tokenizers._
 import scala.meta.tokens._
@@ -49,19 +51,33 @@ trait InternalTree extends Product {
 
   def pos: Position = origin.position
 
+  // ==============================================================
+  // Tokens
+  // ==============================================================
+
   def tokens(implicit dialect: Dialect): Tokens = {
-    origin match {
-      case x: Origin.Parsed => x.tokens
-      case _ =>
-        this match {
-          case Lit.String(value) =>
-            val input = Input.VirtualFile("<InternalTrees.tokens>", value)
-            Tokens(Array(Constant.String(input, dialect, 0, value.length, value)))
-          case _ =>
-            dialect(Input.VirtualFile("<InternalTrees.tokens>", this.syntax)).tokenize.get
-        }
+    dialectTokensOpt.getOrElse {
+      tokenCache.getOrElseUpdate(dialect, tokensForDialect(dialect))
     }
   }
+
+  private val tokenCache: mutable.Map[Dialect, Tokens] =
+    Compat.newMutableMap[Dialect, Tokens]
+
+  private lazy val dialectTokensOpt: Option[Tokens] =
+    origin match {
+      case x: Origin.Parsed => Some(x.tokens)
+      case _ => origin.dialectOpt.map(tokensForDialect(_))
+    }
+
+  private def tokensForDialect(implicit dialect: Dialect): Tokens =
+    this match {
+      case Lit.String(value) =>
+        val input = Input.VirtualFile("<InternalTrees.tokens>", value)
+        Tokens(Array(Constant.String(input, dialect, 0, value.length, value)))
+      case _ =>
+        dialect(Input.VirtualFile("<InternalTrees.tokens>", this.syntax)).tokenize.get
+    }
 
   // ==============================================================
   // Intellij-friendly stubs.
