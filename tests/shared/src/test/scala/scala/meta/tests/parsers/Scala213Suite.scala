@@ -31,7 +31,7 @@ class Scala213Suite extends ParseSuite {
         Term.Name("foo"),
         Nil,
         List(List(Term.Param(Nil, Term.Name("a"), Some(Lit.Float("3.14159f")), None))),
-        Lit.Double("0.1d")
+        Lit.Double(".1d")
       )
     )
 

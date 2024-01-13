@@ -1330,16 +1330,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         if (value > max) syntaxError("integer number too large", at = token)
         else if (value < min) syntaxError("integer number too small", at = token)
         Lit.Long(value.toLong)
-      case Constant.Float(rawValue) =>
-        val value = if (isNegated) -rawValue else rawValue
-        if (value > Float.MaxValue) syntaxError("floating point number too large", at = token)
-        else if (value < Float.MinValue) syntaxError("floating point number too small", at = token)
-        Lit.Float(value.toString)
-      case Constant.Double(rawValue) =>
-        val value = if (isNegated) -rawValue else rawValue
-        if (value > Double.MaxValue) syntaxError("floating point number too large", at = token)
-        else if (value < Double.MinValue) syntaxError("floating point number too small", at = token)
-        Lit.Double(value.toString)
+      case tok @ Constant.Float(rawValue) =>
+        if (rawValue > Float.MaxValue)
+          syntaxError("floating point number too large", at = token)
+        else if (rawValue < Float.MinValue)
+          syntaxError("floating point number too small", at = token)
+        val value = tok.text
+        Lit.Float(if (isNegated) '-' + value else value)
+      case tok @ Constant.Double(rawValue) =>
+        if (rawValue > Double.MaxValue)
+          syntaxError("floating point number too large", at = token)
+        else if (rawValue < Double.MinValue)
+          syntaxError("floating point number too small", at = token)
+        val value = tok.text
+        Lit.Double(if (isNegated) '-' + value else value)
       case Constant.Char(value) =>
         Lit.Char(value)
       case Constant.String(value) =>
