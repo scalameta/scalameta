@@ -235,8 +235,12 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     implicit class XtensionQuasiHole(quasi: Quasi) {
       def hole: Hole = {
         val pos = quasi.pos.absolutize
-        val maybeHole =
-          mode.holes.find(h => pos.start <= h.arg.pos.point && h.arg.pos.point <= pos.end)
+        val beg = pos.start
+        val end = pos.end
+        val maybeHole = mode.holes.find { h =>
+          val pt = h.arg.pos.point
+          beg <= pt && pt <= end
+        }
         maybeHole.getOrElse(
           unreachable(debug(quasi, quasi.pos.absolutize, mode.holes, mode.holes.map(_.arg.pos)))
         )
