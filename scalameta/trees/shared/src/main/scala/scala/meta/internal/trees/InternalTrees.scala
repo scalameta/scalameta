@@ -58,22 +58,25 @@ trait InternalTree extends Product {
   // ==============================================================
 
   def tokens(implicit dialect: Dialect): Tokens = {
-    dialectTokensOpt.getOrElse(lookupOrTokenizeFor(dialect))
+    tokensOpt.getOrElse(lookupOrTokenizeFor(dialect))
   }
+
+  def tokenizeFor(dialect: Dialect): Tokens =
+    if (origin.dialectOpt.contains(dialect)) tokensOpt.get else lookupOrTokenizeFor(dialect)
 
   private val tokenCache: mutable.Map[Dialect, Tokens] =
     Compat.newMutableMap[Dialect, Tokens]
 
   private def lookupOrTokenizeFor(dialect: Dialect): Tokens =
-    tokenCache.getOrElseUpdate(dialect, tokensForDialect(dialect))
+    tokenCache.getOrElseUpdate(dialect, tokenizeForDialect(dialect))
 
-  private lazy val dialectTokensOpt: Option[Tokens] =
+  private lazy val tokensOpt: Option[Tokens] =
     origin match {
       case x: Origin.Parsed => Some(x.tokens)
-      case _ => origin.dialectOpt.map(tokensForDialect)
+      case _ => origin.dialectOpt.map(tokenizeForDialect)
     }
 
-  private def tokensForDialect(dialect: Dialect): Tokens =
+  private def tokenizeForDialect(dialect: Dialect): Tokens =
     this match {
       case Lit.String(value) =>
         val input = Input.VirtualFile("<InternalTrees.tokens>", value)
@@ -82,7 +85,7 @@ trait InternalTree extends Product {
     }
 
   private[meta] def textAsInput(implicit dialect: Dialect): Input =
-    Input.VirtualFile("<InternalTrees.text>", dialectText(dialect))
+    Input.VirtualFile("<InternalTrees.text>", printSyntaxFor(dialect))
 
   // ==============================================================
   // Text or syntax
@@ -94,7 +97,7 @@ trait InternalTree extends Product {
     )
   }
 
-  def dialectText(implicit dialect: Dialect): String =
+  def printSyntaxFor(dialect: Dialect): String =
     if (origin.dialectOpt.contains(dialect)) textOpt.get else reprintSyntax(dialect)
 
   private def reprintSyntax(dialect: Dialect): String =
