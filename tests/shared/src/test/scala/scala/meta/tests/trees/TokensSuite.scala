@@ -20,6 +20,10 @@ class TokensSuite extends TreeSuiteBase {
 
   test("Tree.tokens: manual") {
     val tree: Term = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
+    interceptMessage[trees.Error.MissingDialectException](
+      "Tree missing a dialect; update root tree `.withDialectIfRootAndNotSet` first, or call `.dialectText`."
+    )(tree.text)
+    assertEquals(tree.dialectText, "foo + bar")
     assertEquals(tree.syntax, "foo + bar")
     assert(tree.origin eq trees.Origin.None)
     val tokens = tree.tokens
@@ -27,6 +31,8 @@ class TokensSuite extends TreeSuiteBase {
     assert(tokens.forall(_.input.isInstanceOf[Input.VirtualFile]))
     val dialectTree = tree.withDialectIfRootAndNotSet
     assertNotEquals(dialectTree, tree)
+    assertEquals(dialectTree.text, "foo + bar")
+    assertEquals(dialectTree.dialectText, "foo + bar")
     assert(dialectTree.origin ne trees.Origin.None)
     val dialectTokens = dialectTree.tokens
     assertEquals(dialectTokens.syntax, "foo + bar")

@@ -5,10 +5,12 @@ package trees
 import scala.collection.mutable
 import scala.meta.inputs._
 import scala.meta.internal.tokenizers.Compat
+import scala.meta.internal.prettyprinters.TreeSyntax
 import scala.meta.prettyprinters._
 import scala.meta.tokenizers._
 import scala.meta.tokens._
 import scala.meta.tokens.Token._
+import scala.meta.trees.Error
 import scala.meta.trees.Origin
 
 // NOTE: Methods that start with "private" are NOT intended to be called outside scala.meta.
@@ -67,16 +69,38 @@ trait InternalTree extends Product {
   private lazy val dialectTokensOpt: Option[Tokens] =
     origin match {
       case x: Origin.Parsed => Some(x.tokens)
-      case _ => origin.dialectOpt.map(tokensForDialect(_))
+      case _ => origin.dialectOpt.map(tokensForDialect)
     }
 
-  private def tokensForDialect(implicit dialect: Dialect): Tokens =
+  private def tokensForDialect(dialect: Dialect): Tokens =
     this match {
       case Lit.String(value) =>
         val input = Input.VirtualFile("<InternalTrees.tokens>", value)
         Tokens(Array(Constant.String(input, dialect, 0, value.length, value)))
       case _ =>
-        dialect(Input.VirtualFile("<InternalTrees.tokens>", this.syntax)).tokenize.get
+        dialect(Input.VirtualFile("<InternalTrees.tokens>", dialectText(dialect))).tokenize.get
+    }
+
+  // ==============================================================
+  // Text or syntax
+  // ==============================================================
+
+  def text: String = textOpt.getOrElse {
+    throw new Error.MissingDialectException(
+      "Tree missing a dialect; update root tree `.withDialectIfRootAndNotSet` first, or call `.dialectText`."
+    )
+  }
+
+  def dialectText(implicit dialect: Dialect): String =
+    if (origin.dialectOpt.contains(dialect)) textOpt.get else reprintSyntax(dialect)
+
+  private def reprintSyntax(dialect: Dialect): String =
+    TreeSyntax.reprint(this)(dialect).toString
+
+  private lazy val textOpt: Option[String] =
+    origin match {
+      case x: Origin.Parsed => Some(x.position.text)
+      case _ => origin.dialectOpt.map(reprintSyntax)
     }
 
   // ==============================================================

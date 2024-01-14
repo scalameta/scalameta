@@ -172,6 +172,8 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.transversers.Transformer
       |scala.meta.transversers.Traverser
       |scala.meta.trees
+      |scala.meta.trees.Error *
+      |scala.meta.trees.Error.MissingDialectException *
       |scala.meta.trees.Origin *
       |scala.meta.trees.Origin.DialectOnly *
       |scala.meta.trees.Origin.None *
