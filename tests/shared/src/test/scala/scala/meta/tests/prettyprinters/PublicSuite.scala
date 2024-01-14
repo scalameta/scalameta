@@ -443,6 +443,8 @@ class PublicSuite extends TreeSuiteBase {
   test("scala.meta.XtensionDialectApply") {}
   test("scala.meta.XtensionDialectTreeSyntax") {}
   test("scala.meta.XtensionDialectTokensSyntax") {}
+  test("scala.meta.XtensionTree") {}
+  test("scala.meta.XtensionTreeT") {}
 
   test("scala.meta.trees.Origin") {}
   test("scala.meta.trees.Origin.DialectOnly") {}

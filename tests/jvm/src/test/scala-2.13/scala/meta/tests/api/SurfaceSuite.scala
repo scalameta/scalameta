@@ -78,6 +78,8 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.XtensionDialectTokenSyntax
       |scala.meta.XtensionDialectTokensSyntax
       |scala.meta.XtensionDialectTreeSyntax
+      |scala.meta.XtensionTree
+      |scala.meta.XtensionTreeT
       |scala.meta.classifiers
       |scala.meta.classifiers.Classifiable *
       |scala.meta.classifiers.Classifier
@@ -224,6 +226,9 @@ class SurfaceSuite extends FunSuite {
       |* (scala.meta.Dialect, scala.meta.tokens.Tokens).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
       |* (scala.meta.inputs.Input, scala.meta.Dialect).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
       |* (scala.meta.inputs.Input, scala.meta.Dialect).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
+      |* A.equals(Any): Boolean
+      |* A.hashCode(): Int
+      |* A.maybeParse(implicit scala.meta.Dialect, scala.meta.parsers.Parse[A]): scala.meta.package.Parsed[A]
       |* T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit XtensionClassifiable.this.C[U]): Boolean
       |* T(implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionClassifiable.this.C[U1], XtensionClassifiable.this.C[U2]): Boolean
       |* T(implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionClassifiable.this.C[U1], XtensionClassifiable.this.C[U2], XtensionClassifiable.this.C[U3]): Boolean
@@ -242,6 +247,10 @@ class SurfaceSuite extends FunSuite {
       |* scala.meta.Dialect.equals(Any): Boolean
       |* scala.meta.Dialect.hashCode(): Int
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
+      |* scala.meta.Tree.equals(Any): Boolean
+      |* scala.meta.Tree.hashCode(): Int
+      |* scala.meta.Tree.maybeParseAs(implicit scala.meta.Dialect, scala.meta.parsers.Parse[A]): scala.meta.package.Parsed[A]
+      |* scala.meta.Tree.reparseAs(implicit scala.meta.Dialect, scala.meta.parsers.Parse[A]): scala.meta.package.Parsed[A]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
     """.trim.stripMargin.split('\n').mkString(EOL)
