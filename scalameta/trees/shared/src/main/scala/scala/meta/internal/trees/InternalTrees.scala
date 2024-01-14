@@ -58,13 +58,14 @@ trait InternalTree extends Product {
   // ==============================================================
 
   def tokens(implicit dialect: Dialect): Tokens = {
-    dialectTokensOpt.getOrElse {
-      tokenCache.getOrElseUpdate(dialect, tokensForDialect(dialect))
-    }
+    dialectTokensOpt.getOrElse(lookupOrTokenizeFor(dialect))
   }
 
   private val tokenCache: mutable.Map[Dialect, Tokens] =
     Compat.newMutableMap[Dialect, Tokens]
+
+  private def lookupOrTokenizeFor(dialect: Dialect): Tokens =
+    tokenCache.getOrElseUpdate(dialect, tokensForDialect(dialect))
 
   private lazy val dialectTokensOpt: Option[Tokens] =
     origin match {
