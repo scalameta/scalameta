@@ -19,10 +19,18 @@ class TokensSuite extends TreeSuiteBase {
   }
 
   test("Tree.tokens: manual") {
-    val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
-    assert(tree.syntax == "foo + bar")
-    assert(tree.tokens.syntax == "foo + bar")
-    assert(tree.tokens.forall(_.input.isInstanceOf[Input.VirtualFile]))
+    val tree: Term = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
+    assertEquals(tree.syntax, "foo + bar")
+    assert(tree.origin eq trees.Origin.None)
+    val tokens = tree.tokens
+    assertEquals(tokens.syntax, "foo + bar")
+    assert(tokens.forall(_.input.isInstanceOf[Input.VirtualFile]))
+    val dialectTree = tree.withDialectIfRootAndNotSet
+    assertNotEquals(dialectTree, tree)
+    assert(dialectTree.origin ne trees.Origin.None)
+    val dialectTokens = dialectTree.tokens
+    assertEquals(dialectTokens.syntax, "foo + bar")
+    assert(dialectTokens.forall(_.input.isInstanceOf[Input.VirtualFile]))
   }
 
   test("Tree.tokens: empty") {
