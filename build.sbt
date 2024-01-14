@@ -843,7 +843,6 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
 
 lazy val docs = project
   .in(file("scalameta-docs"))
-  .dependsOn(scalameta.jvm)
   .settings(
     sharedSettings,
     crossScalaVersions := List(LatestScala213),
