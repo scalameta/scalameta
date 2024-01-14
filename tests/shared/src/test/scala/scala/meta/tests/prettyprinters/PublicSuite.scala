@@ -450,4 +450,7 @@ class PublicSuite extends TreeSuiteBase {
   test("scala.meta.trees.Origin.Parsed") {}
   test("scala.meta.trees.Origin.ParsedSource") {}
 
+  test("scala.meta.trees.Error") {}
+  test("scala.meta.trees.Error.MissingDialectException") {}
+
 }
