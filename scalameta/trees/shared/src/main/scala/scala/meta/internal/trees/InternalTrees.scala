@@ -77,9 +77,11 @@ trait InternalTree extends Product {
       case Lit.String(value) =>
         val input = Input.VirtualFile("<InternalTrees.tokens>", value)
         Tokens(Array(Constant.String(input, dialect, 0, value.length, value)))
-      case _ =>
-        dialect(Input.VirtualFile("<InternalTrees.tokens>", dialectText(dialect))).tokenize.get
+      case _ => dialect(textAsInput(dialect)).tokenize.get
     }
+
+  private[meta] def textAsInput(implicit dialect: Dialect): Input =
+    Input.VirtualFile("<InternalTrees.text>", dialectText(dialect))
 
   // ==============================================================
   // Text or syntax
