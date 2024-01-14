@@ -93,7 +93,7 @@ trait InternalTree extends Product {
 
   def text: String = textOpt.getOrElse {
     throw new Error.MissingDialectException(
-      "Tree missing a dialect; update root tree `.withDialectIfRootAndNotSet` first, or call `.dialectText`."
+      "Tree missing a dialect; update root tree `.withDialectIfRootAndNotSet` first, or call `.printSyntaxFor`."
     )
   }
 
