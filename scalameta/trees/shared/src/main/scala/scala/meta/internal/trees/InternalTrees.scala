@@ -115,5 +115,8 @@ trait InternalTree extends Product {
 trait InternalTreeXtensions {
   private[meta] implicit class XtensionOriginTree[T <: Tree](tree: T) {
     def withOrigin(origin: Origin): T = tree.privateCopy(origin = origin).asInstanceOf[T]
+
+    def withDialectNonRecursiveIfNotSet(implicit dialect: Dialect): T =
+      if (tree.origin ne Origin.None) tree else withOrigin(Origin.DialectOnly(dialect))
   }
 }

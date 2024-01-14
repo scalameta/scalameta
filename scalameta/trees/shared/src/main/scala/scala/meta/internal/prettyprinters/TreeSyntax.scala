@@ -1132,7 +1132,7 @@ object TreeSyntax {
     // I expect to improve on this in the nearest future, because we had it much better until recently.
     Syntax { (x: T) =>
       x.origin match {
-        case o: Origin.Parsed if o.dialect eq dialect => s(o.position.text)
+        case o: Origin.Parsed if o.dialect.isEquivalentTo(dialect) => s(o.position.text)
         case _ => reprint(x)(dialect)
       }
     }
