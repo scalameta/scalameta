@@ -249,7 +249,7 @@ class SurfaceSuite extends FunSuite {
       |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
       |* scala.meta.Tree.equals(Any): Boolean
       |* scala.meta.Tree.hashCode(): Int
-      |* scala.meta.Tree.maybeParseAs(implicit scala.meta.Dialect, scala.meta.parsers.Parse[A]): scala.meta.package.Parsed[A]
+      |* scala.meta.Tree.maybeParseAs(implicit scala.reflect.ClassTag[A], scala.meta.Dialect, scala.meta.parsers.Parse[A]): scala.meta.package.Parsed[A]
       |* scala.meta.Tree.reparseAs(implicit scala.meta.Dialect, scala.meta.parsers.Parse[A]): scala.meta.package.Parsed[A]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit

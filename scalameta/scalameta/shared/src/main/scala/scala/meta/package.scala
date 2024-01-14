@@ -1,5 +1,7 @@
 package scala
 
+import scala.reflect.ClassTag
+
 package object meta
     extends classifiers.Api
     with classifiers.Aliases
@@ -80,8 +82,13 @@ package object meta
   }
 
   implicit class XtensionTree(private val tree: Tree) extends AnyVal {
-    def maybeParseAs[A <: Tree](implicit dialect: Dialect, parse: parsers.Parse[A]): Parsed[A] =
-      if (tree.isInstanceOf[A]) tree.asInstanceOf[A].maybeParse else reparseAs[A]
+    def maybeParseAs[A <: Tree: ClassTag](
+        implicit dialect: Dialect,
+        parse: parsers.Parse[A]
+    ): Parsed[A] = tree match {
+      case t: A => t.maybeParse
+      case _ => reparseAs[A]
+    }
 
     def reparseAs[A <: Tree](implicit dialect: Dialect, parse: parsers.Parse[A]): Parsed[A] =
       parse(tree.textAsInput, dialect)
