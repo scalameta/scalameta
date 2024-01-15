@@ -11,11 +11,7 @@ import scala.meta.internal.trees.Metadata.{newField, replacedField, replacesFiel
 import scala.{meta => sm}
 
 @root trait Tree extends InternalTree {
-  def parent: Option[Tree]
   def children: List[Tree]
-
-  def pos: Position
-  def tokens(implicit dialect: Dialect): Tokens
 
   override def canEqual(that: Any): Boolean = that.isInstanceOf[Tree]
   override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
