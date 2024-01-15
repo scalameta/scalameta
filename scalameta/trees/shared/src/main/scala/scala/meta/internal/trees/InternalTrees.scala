@@ -57,8 +57,10 @@ trait InternalTree extends Product {
   // Tokens
   // ==============================================================
 
-  def tokens(implicit dialect: Dialect): Tokens = {
-    tokensOpt.getOrElse(lookupOrTokenizeFor(dialect))
+  def tokens(implicit dialect: Dialect): Tokens = tokensOpt.getOrElse {
+    throw new Error.MissingDialectException(
+      "Tree missing a dialect; update root tree `.withDialectIfRootAndNotSet` first, or call `.tokenizeFor`."
+    )
   }
 
   def tokenizeFor(dialect: Dialect): Tokens =
