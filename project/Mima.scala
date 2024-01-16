@@ -46,6 +46,8 @@ object Mima {
     ProblemFilters.exclude[A]("scala.meta." + metaType)
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
+    // Tree
+    exclude[ReversedMissingMethodProblem]("Tree.tokens"), // new version has it, old doesn't; ok?
     // testkit
     exclude[IncompatibleResultTypeProblem]("testkit.Corpus.files"),
     exclude[IncompatibleResultTypeProblem]("testkit.FileOps.listFiles"),
