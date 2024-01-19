@@ -475,7 +475,6 @@ final class Dialect private[meta] (
   // the body inside curly braces.
 
   private[this] def privateCopy(
-      unquoteParentDialect: Dialect = null,
       unquoteType: UnquoteType = UnquoteType.None,
       allowAndTypes: Boolean = this.allowAndTypes,
       allowAtForExtractorVarargs: Boolean = this.allowAtForExtractorVarargs,
@@ -539,8 +538,9 @@ final class Dialect private[meta] (
       allowFewerBraces: Boolean = this.allowFewerBraces
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
+    val notForUnquote = unquoteType eq UnquoteType.None
     new Dialect(
-      unquoteParentDialect,
+      if (notForUnquote) null else this,
       unquoteType,
       allowAndTypes,
       allowAtForExtractorVarargs,
@@ -714,7 +714,6 @@ final class Dialect private[meta] (
       toplevelSeparator: String = this.toplevelSeparator
   ): Dialect = {
     privateCopy(
-      unquoteParentDialect = null,
       unquoteType = UnquoteType.None,
       allowAndTypes,
       allowAtForExtractorVarargs,
@@ -743,7 +742,6 @@ final class Dialect private[meta] (
   private[meta] def unquote(unquoteType: UnquoteType): Dialect = {
     require(null eq unquoteParentDialect)
     privateCopy(
-      unquoteParentDialect = this,
       unquoteType = unquoteType,
       allowTypeLambdas = true
     )
