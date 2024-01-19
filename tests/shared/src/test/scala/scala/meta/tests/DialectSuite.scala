@@ -19,13 +19,13 @@ class DialectSuite extends FunSuite {
 
   test("scala3 isEquivalentTo scala3 without deprecated") {
     val that = Scala3.withAllowAndTypes(false)
-    assertNotEquals(that, Scala3)
+    assertEquals(that, Scala3)
     assert(Scala3.isEquivalentTo(that))
   }
 
   test("scala3 isEquivalentTo scala3copy without deprecated") {
     val that = scala3copy.withAllowAndTypes(false)
-    assertNotEquals(that, scala3copy)
+    assertEquals(that, scala3copy)
     assertNotEquals(that, Scala3)
     assert(Scala3.isEquivalentTo(that))
   }

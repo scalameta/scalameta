@@ -14,7 +14,7 @@ final class Dialect private[meta] (
     private[meta] val unquoteType: UnquoteType,
     // Are `&` intersection types supported by this dialect?
     @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
-    val allowAndTypes: Boolean,
+    val allowAndTypes: Boolean, // unused
     // Are extractor varargs specified using ats, i.e. is `case Extractor(xs @ _*)` legal or not?
     val allowAtForExtractorVarargs: Boolean,
     // Can case classes be declared without a parameter list?
@@ -36,7 +36,7 @@ final class Dialect private[meta] (
     val allowLiteralTypes: Boolean,
     // Are `|` (union types) supported by this dialect?
     @deprecated("allowOrTypes unneeded, infix types are supported", "4.5.1")
-    val allowOrTypes: Boolean,
+    val allowOrTypes: Boolean, // unused
     // Are naked underscores allowed after $ in pattern interpolators, i.e. is `case q"$_ + $_" =>` legal or not?
     val allowSpliceUnderscores: Boolean,
     // Are terms on the top level supported by this dialect?
@@ -58,7 +58,7 @@ final class Dialect private[meta] (
     // might go ahead and drop support completely.
     val allowXmlLiterals: Boolean,
     @deprecated("toplevelSeparator has never been used", ">4.4.35")
-    val toplevelSeparator: String,
+    val toplevelSeparator: String, // unused
     // Are numeric literal underscore separators, i.e. `1_000_000` legal or not?
     val allowNumericLiteralUnderscoreSeparators: Boolean,
     // Can try body contain any expression? (2.13.1 https://github.com/scala/scala/pull/8071)
@@ -165,7 +165,7 @@ final class Dialect private[meta] (
   // - add new `x = FIELD_DEFAULT_VALUE` in the `def this()` constructor below.
 
   def this(
-      allowAndTypes: Boolean,
+      allowAndTypes: Boolean, // unused
       allowAtForExtractorVarargs: Boolean,
       allowCaseClassWithoutParameterList: Boolean,
       allowColonForExtractorVarargs: Boolean,
@@ -175,7 +175,7 @@ final class Dialect private[meta] (
       allowInlineMods: Boolean,
       allowLiteralTypes: Boolean,
       allowMultilinePrograms: Boolean = true, // unused
-      allowOrTypes: Boolean,
+      allowOrTypes: Boolean, // unused
       allowPatUnquotes: Boolean = false, // unused
       allowSpliceUnderscores: Boolean,
       allowTermUnquotes: Boolean = false, // unused
@@ -185,12 +185,12 @@ final class Dialect private[meta] (
       allowTypeLambdas: Boolean,
       allowViewBounds: Boolean,
       allowXmlLiterals: Boolean,
-      toplevelSeparator: String
+      toplevelSeparator: String // unused
   ) = {
     this(
       unquoteParentDialect = null,
       unquoteType = UnquoteType.None,
-      allowAndTypes = allowAndTypes,
+      allowAndTypes = true, // unused
       allowAtForExtractorVarargs = allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
       allowColonForExtractorVarargs = allowColonForExtractorVarargs,
@@ -199,7 +199,7 @@ final class Dialect private[meta] (
       allowInlineIdents = allowInlineIdents,
       allowInlineMods = allowInlineMods,
       allowLiteralTypes = allowLiteralTypes,
-      allowOrTypes = allowOrTypes,
+      allowOrTypes = true, // unused
       allowSpliceUnderscores = allowSpliceUnderscores,
       allowToplevelTerms = allowToplevelTerms,
       allowTrailingCommas = allowTrailingCommas,
@@ -207,7 +207,7 @@ final class Dialect private[meta] (
       allowTypeLambdas = allowTypeLambdas,
       allowViewBounds = allowViewBounds,
       allowXmlLiterals = allowXmlLiterals,
-      toplevelSeparator = toplevelSeparator,
+      toplevelSeparator = "", // unused
       allowNumericLiteralUnderscoreSeparators = false,
       allowTryWithAnyExpr = false,
       allowGivenUsing = false,
@@ -261,7 +261,7 @@ final class Dialect private[meta] (
 
   @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
   def withAllowAndTypes(newValue: Boolean): Dialect = {
-    privateCopy(allowAndTypes = newValue)
+    this
   }
   def withAllowAtForExtractorVarargs(newValue: Boolean): Dialect = {
     privateCopy(allowAtForExtractorVarargs = newValue)
@@ -292,7 +292,7 @@ final class Dialect private[meta] (
   def withAllowMultilinePrograms(newValue: Boolean): Dialect = ???
   @deprecated("allowOrTypes unneeded, infix types are supported", "4.5.1")
   def withAllowOrTypes(newValue: Boolean): Dialect = {
-    privateCopy(allowOrTypes = newValue)
+    this
   }
   def withAllowPatUnquotes(newValue: Boolean): Dialect = ???
   def withAllowSpliceUnderscores(newValue: Boolean): Dialect = {
@@ -319,7 +319,7 @@ final class Dialect private[meta] (
   }
   @deprecated("toplevelSeparator has never been used", ">4.4.35")
   def withToplevelSeparator(newValue: String): Dialect = {
-    privateCopy(toplevelSeparator = newValue)
+    this
   }
   def withAllowNumericLiteralUnderscoreSeparators(newValue: Boolean): Dialect = {
     privateCopy(allowNumericLiteralUnderscoreSeparators = newValue)
@@ -477,7 +477,6 @@ final class Dialect private[meta] (
   private[this] def privateCopy(
       unquoteParentDialect: Dialect = null,
       unquoteType: UnquoteType = UnquoteType.None,
-      allowAndTypes: Boolean = this.allowAndTypes,
       allowAtForExtractorVarargs: Boolean = this.allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList: Boolean = this.allowCaseClassWithoutParameterList,
       allowColonForExtractorVarargs: Boolean = this.allowColonForExtractorVarargs,
@@ -486,7 +485,6 @@ final class Dialect private[meta] (
       allowInlineIdents: Boolean = this.allowInlineIdents,
       allowInlineMods: Boolean = this.allowInlineMods,
       allowLiteralTypes: Boolean = this.allowLiteralTypes,
-      allowOrTypes: Boolean = this.allowOrTypes,
       allowSpliceUnderscores: Boolean = this.allowSpliceUnderscores,
       allowToplevelTerms: Boolean = this.allowToplevelTerms,
       allowTrailingCommas: Boolean = this.allowTrailingCommas,
@@ -494,7 +492,6 @@ final class Dialect private[meta] (
       allowTypeLambdas: Boolean = this.allowTypeLambdas,
       allowViewBounds: Boolean = this.allowViewBounds,
       allowXmlLiterals: Boolean = this.allowXmlLiterals,
-      toplevelSeparator: String = this.toplevelSeparator,
       allowNumericLiteralUnderscoreSeparators: Boolean =
         this.allowNumericLiteralUnderscoreSeparators,
       allowTryWithAnyExpr: Boolean = this.allowTryWithAnyExpr,
@@ -542,7 +539,7 @@ final class Dialect private[meta] (
     new Dialect(
       unquoteParentDialect,
       unquoteType,
-      allowAndTypes,
+      allowAndTypes = true, // unused
       allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList,
       allowColonForExtractorVarargs,
@@ -551,7 +548,7 @@ final class Dialect private[meta] (
       allowInlineIdents,
       allowInlineMods,
       allowLiteralTypes,
-      allowOrTypes,
+      allowOrTypes = true, // unused
       allowSpliceUnderscores,
       allowToplevelTerms,
       allowTrailingCommas,
@@ -559,7 +556,7 @@ final class Dialect private[meta] (
       allowTypeLambdas,
       allowViewBounds,
       allowXmlLiterals,
-      toplevelSeparator,
+      toplevelSeparator = "", // unused
       allowNumericLiteralUnderscoreSeparators,
       allowTryWithAnyExpr,
       allowGivenUsing,
@@ -691,7 +688,7 @@ final class Dialect private[meta] (
 
   @deprecated("Use withX method instead", "4.3.11")
   def copy(
-      allowAndTypes: Boolean = this.allowAndTypes,
+      allowAndTypes: Boolean = true, // unused
       allowAtForExtractorVarargs: Boolean = this.allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList: Boolean = this.allowCaseClassWithoutParameterList,
       allowColonForExtractorVarargs: Boolean = this.allowColonForExtractorVarargs,
@@ -701,7 +698,7 @@ final class Dialect private[meta] (
       allowInlineMods: Boolean = this.allowInlineMods,
       allowLiteralTypes: Boolean = this.allowLiteralTypes,
       allowMultilinePrograms: Boolean = true, // unused
-      allowOrTypes: Boolean = this.allowOrTypes,
+      allowOrTypes: Boolean = true, // unused
       allowPatUnquotes: Boolean = false, // unused
       allowSpliceUnderscores: Boolean = this.allowSpliceUnderscores,
       allowTermUnquotes: Boolean = false, // unused
@@ -711,12 +708,11 @@ final class Dialect private[meta] (
       allowTypeLambdas: Boolean = this.allowTypeLambdas,
       allowViewBounds: Boolean = this.allowViewBounds,
       allowXmlLiterals: Boolean = this.allowXmlLiterals,
-      toplevelSeparator: String = this.toplevelSeparator
+      toplevelSeparator: String = "" // unused
   ): Dialect = {
     privateCopy(
       unquoteParentDialect = null,
       unquoteType = UnquoteType.None,
-      allowAndTypes,
       allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList,
       allowColonForExtractorVarargs,
@@ -725,15 +721,13 @@ final class Dialect private[meta] (
       allowInlineIdents,
       allowInlineMods,
       allowLiteralTypes,
-      allowOrTypes,
       allowSpliceUnderscores,
       allowToplevelTerms,
       allowTrailingCommas,
       allowTraitParameters,
       allowTypeLambdas,
       allowViewBounds,
-      allowXmlLiterals,
-      toplevelSeparator
+      allowXmlLiterals
     )
   }
 
@@ -760,7 +754,7 @@ final class Dialect private[meta] (
 object Dialect extends InternalDialect {
   def apply(
       @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
-      allowAndTypes: Boolean,
+      allowAndTypes: Boolean, // unused
       allowAtForExtractorVarargs: Boolean,
       allowCaseClassWithoutParameterList: Boolean,
       allowColonForExtractorVarargs: Boolean,
@@ -772,7 +766,7 @@ object Dialect extends InternalDialect {
       allowMethodTypes: Boolean,
       allowMultilinePrograms: Boolean = true, // unused
       @deprecated("allowOrTypes unneeded, infix types are supported", "4.5.1")
-      allowOrTypes: Boolean,
+      allowOrTypes: Boolean, // unused
       allowPatUnquotes: Boolean = false, // unused
       allowSpliceUnderscores: Boolean,
       allowTermUnquotes: Boolean = false, // unused
@@ -783,10 +777,10 @@ object Dialect extends InternalDialect {
       allowViewBounds: Boolean,
       allowXmlLiterals: Boolean,
       @deprecated("toplevelSeparator has never been used", ">4.4.35")
-      toplevelSeparator: String
+      toplevelSeparator: String // unused
   ): Dialect = {
     new Dialect(
-      allowAndTypes = allowAndTypes,
+      allowAndTypes = true, // unused
       allowAtForExtractorVarargs = allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
       allowColonForExtractorVarargs = allowColonForExtractorVarargs,
@@ -795,7 +789,7 @@ object Dialect extends InternalDialect {
       allowInlineIdents = allowInlineIdents,
       allowInlineMods = allowInlineMods,
       allowLiteralTypes = allowLiteralTypes,
-      allowOrTypes = allowOrTypes,
+      allowOrTypes = true, // unused
       allowSpliceUnderscores = allowSpliceUnderscores,
       allowToplevelTerms = allowToplevelTerms,
       allowTrailingCommas = allowTrailingCommas,
@@ -803,7 +797,7 @@ object Dialect extends InternalDialect {
       allowTypeLambdas = allowTypeLambdas,
       allowViewBounds = allowViewBounds,
       allowXmlLiterals = allowXmlLiterals,
-      toplevelSeparator = toplevelSeparator
+      toplevelSeparator = "" // unused
     )
   }
   private lazy val standardPairs = Seq[sourcecode.Text[Dialect]](
