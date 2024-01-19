@@ -8,6 +8,20 @@ The code in this repository is primarily divided into three top-level directorie
   metacp to process classpaths and metap to pretty-print SemanticDB payloads.
 - `tests/`: unit and integration tests for both Scalameta and SemanticDB.
 
+## Quickstart
+
+### Native dependencies
+
+The build uses [sbt-protoc](https://github.com/thesamet/sbt-protoc) to generate protobuf files.
+Unfortunately, this relies on a native dependency bundled in a jarfile. If your Linux distribution does
+not support arbitary binaries (such as [NixOS](https://nixos.org) or [Guix](https://guix.gnu.org)) then
+you can force the sbt plugin to use a binary bundled by your distribution by adding the following setting
+to your sbt file.
+
+```shell
+PB.protocExecutable := file("/path/to/protoc")
+```
+
 ## Testing
 
 The exact test command to run tests depends on what you are working on:
