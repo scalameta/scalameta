@@ -26,8 +26,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   def impl(annottees: Tree*): Tree =
     annottees.transformAnnottees(new ImplTransformer {
       override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
-        val fullName = c.internal.enclosingOwner.fullName + "." + cdef.name.toString
-        def isQuasi = isQuasiClass(cdef)
+        val owner = c.internal.enclosingOwner
+        val fullName = owner.fullName + "." + cdef.name.toString
+        val isQuasi = isQuasiClass(cdef)
         val q"$imods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $aself => ..$stats }" =
           cdef
         // NOTE: For stack traces, we'd like to have short class names, because stack traces print full names anyway.
@@ -338,9 +339,13 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           else
             internalBody += asValDefn(p.field)
         }
+        val internalArgs = params.map(getParamArg)
+        val bparamCtorArgs = bparams1.map { p =>
+          getParamArg(p)
+        }
         internalBody += q"""
           val node = new $name(
-            ..${bparams1.map(getParamArg)}
+            ..$bparamCtorArgs
           )(
             ..$paramInits
           )
@@ -348,9 +353,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         params.foreach(p => internalBody += storeField(p))
         internalBody += q"node"
         val applyParams = params.map(asValDefn)
-        val internalArgs = params.map(getParamArg)
+        val applyParamDecls = applyParams.map(asValDecl)
         val bparamDecls = privateApplyParams.map(asValDecl)
-        val fullApplyParams = bparamDecls ++ applyParams.map(asValDecl)
+        val fullApplyParamDecls = bparamDecls ++ applyParamDecls
         val fullInternalArgs = privateApplyParams.map(getParamArg) ++ internalArgs
         mstats1 += q"""
           def apply(..$applyParams): $iname = {
@@ -358,12 +363,12 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           }
         """
         mstats1 += q"""
-          def apply(..$fullApplyParams): $iname = {
+          def apply(..$fullApplyParamDecls): $iname = {
             ..$internalBody
           }
         """
         mstatsLatest += q"""
-          @$InlineAnnotation def apply(..$fullApplyParams): $iname =
+          @$InlineAnnotation def apply(..$fullApplyParamDecls): $iname =
             $mname.apply(..$fullInternalArgs)
         """
         mstatsLatest += q"""
@@ -391,16 +396,16 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               $mname.apply(..${fullParams.map(_.name)})
             }
           """
-          mstats1 += q"""
-            def apply(..$fullParams): $iname = {
-              ..$applyBody
-              $mname.apply(..$fullInternalArgs)
-            }
-          """
           verMstats += q"""
             def apply(..$params): $iname = {
               ..$applyBody
               $applyCall
+            }
+          """
+          mstats1 += q"""
+            def apply(..$fullParams): $iname = {
+              ..$applyBody
+              $mname.apply(..$fullInternalArgs)
             }
           """
           mstats1 += q"""
@@ -476,23 +481,30 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           )
         }
 
-        val latestTermName = mstatsPerVersion.foldLeft(TermName(initialName)) {
-          case (afterPrevVer, (ver, verMstats)) =>
+        val latestName =
+          mstatsPerVersion.foldLeft(initialName) { case (afterPrevVerName, (ver, verMstats)) =>
+            val afterPrevVer = TermName(afterPrevVerName)
             mstats1 += q"object $afterPrevVer { ..$verMstats }"
             getAfterVersion(ver)
-        }
+          }
+        val latestTermName = TermName(latestName)
         mstats1 += q"object $latestTermName { ..$mstatsLatest }"
         // to be ignored by Mima, use "internal"
         mstats1 += q"object internal { final val Latest = $latestTermName }"
 
         mstats1 += q"$mods1 class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+
+        val res = ListBuffer.empty[ImplDef]
+
         val cdef1 = q"$imods1 trait $iname extends ..$iparents1 { $iself => ..$istats1 }"
+        res += cdef1
         val mdef1 =
           q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
+        res += mdef1
         if (c.compilerSettings.contains("-Xprint:typer")) {
           println(cdef1); println(mdef1)
         }
-        List(cdef1, mdef1)
+        res.result()
       }
     })
 
@@ -767,10 +779,12 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     }
   }
 
-  private def getDeprecatedAnno(v: Version, why: String = "") =
-    q"new scala.deprecated(${Literal(Constant(v.toString + why))})"
+  private def getDeprecatedAnno(v: Version, why: String = ""): Tree =
+    getDeprecatedAnno(v.toString + why)
+  private def getDeprecatedAnno(since: String): Tree =
+    q"new scala.deprecated(${Literal(Constant(since))})"
 
-  private def getAfterVersion(v: Version) = TermName(afterNamePrefix + v.asString('_'))
+  private def getAfterVersion(v: Version) = afterNamePrefix + v.asString('_')
 
   private def asValDecl(p: ValOrDefDef): ValDef =
     q"@..${p.mods.annotations} val ${p.name}: ${p.tpt}"

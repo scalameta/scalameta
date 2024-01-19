@@ -955,11 +955,12 @@ class TokenizerSuite extends BaseTokenizerSuite {
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
     assert(tree.pos == Position.None)
     val tokens = tree.tokenizeFor(implicitly[Dialect])
+    val tokensStructure = tokens.structure
     interceptMessage[trees.Error.MissingDialectException](
       "Tree missing a dialect; update root tree `.withDialectIfRootAndNotSet` first, or call `.tokenizeFor`."
     )(tree.tokens)
     assertEquals(
-      tokens.structure,
+      tokensStructure,
       "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))"
     )
   }

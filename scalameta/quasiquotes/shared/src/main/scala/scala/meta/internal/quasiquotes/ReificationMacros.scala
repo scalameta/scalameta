@@ -50,6 +50,8 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
   val InternalUnlift = c.mirror.staticModule("scala.meta.internal.quasiquotes.Unlift")
   val QuasiquotePrefix = c.freshName("quasiquote")
 
+  private val OriginModule = q"_root_.scala.meta.trees.Origin"
+
   def apply(args: ReflectTree*)(dialect: ReflectTree): ReflectTree = expand(dialect)
   def unapply(scrutinee: ReflectTree)(dialect: ReflectTree): ReflectTree = expand(dialect)
   def expand(dialectTree: ReflectTree): ReflectTree = {
@@ -367,8 +369,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       val liftOrigin: Origin => ReflectTree =
         if (sourceName ne null)
           _ match {
-            case Origin.Parsed(_, beg, end) =>
-              q"_root_.scala.meta.trees.Origin.Parsed($sourceName, $beg, $end)"
+            case Origin.Parsed(_, beg, end) => q"$OriginModule.Parsed($sourceName, $beg, $end)"
             case _ => dialectOnlyNameTree
           }
         else _ => dialectOnlyNameTree
@@ -398,11 +399,11 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       q"val $dialectName = $dialectTree",
       q"""
         val $dialectOnlyName =
-          new _root_.scala.meta.trees.Origin.DialectOnly($dialectName)
+          new $OriginModule.DialectOnly($dialectName)
       """,
       if (sourceName eq null) null
       else q"""
-        val $sourceName = new _root_.scala.meta.trees.Origin.ParsedSource(
+        val $sourceName = new $OriginModule.ParsedSource(
           _root_.scala.meta.inputs.Input.String(${input.text.replace("$$", "$")})
         )($dialectName)
       """
