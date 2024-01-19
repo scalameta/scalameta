@@ -53,7 +53,7 @@ class DialectSuite extends FunSuite {
   }
 
   test("scala3.unquoteTerm toString") {
-    assertEquals(Scala3.unquoteTerm(true).toString, "Dialect()")
+    assertEquals(Scala3.unquoteTerm(true).toString, "Scala33")
   }
 
 }
