@@ -628,66 +628,184 @@ final class Dialect private[meta] (
   def isEquivalentTo(that: Dialect): Boolean =
     unquoteParentOrThis().isEquivalentToInternal(that.unquoteParentOrThis())
 
-  private def isEquivalentToInternal(that: Dialect): Boolean = (
-    (this eq that) ||
-      // do not include deprecated values in this comparison
-      this.allowAtForExtractorVarargs == that.allowAtForExtractorVarargs
-      && this.allowCaseClassWithoutParameterList == that.allowCaseClassWithoutParameterList
-      && this.allowColonForExtractorVarargs == that.allowColonForExtractorVarargs
-      && this.allowEnums == that.allowEnums
-      && this.allowImplicitByNameParameters == that.allowImplicitByNameParameters
-      && this.allowInlineIdents == that.allowInlineIdents
-      && this.allowInlineMods == that.allowInlineMods
-      && this.allowLiteralTypes == that.allowLiteralTypes
-      && this.allowSpliceUnderscores == that.allowSpliceUnderscores
-      && this.allowToplevelTerms == that.allowToplevelTerms
-      && this.allowTrailingCommas == that.allowTrailingCommas
-      && this.allowTraitParameters == that.allowTraitParameters
-      && this.allowTypeLambdas == that.allowTypeLambdas
-      && this.allowViewBounds == that.allowViewBounds
-      && this.allowXmlLiterals == that.allowXmlLiterals
-      && this.allowNumericLiteralUnderscoreSeparators == that.allowNumericLiteralUnderscoreSeparators
-      && this.allowTryWithAnyExpr == that.allowTryWithAnyExpr
-      && this.allowGivenUsing == that.allowGivenUsing
-      && this.allowErasedDefs == that.allowErasedDefs
-      && this.allowExtensionMethods == that.allowExtensionMethods
-      && this.allowOpenClass == that.allowOpenClass
-      && this.allowToplevelStatements == that.allowToplevelStatements
-      && this.allowOpaqueTypes == that.allowOpaqueTypes
-      && this.allowExportClause == that.allowExportClause
-      && this.allowCommaSeparatedExtend == that.allowCommaSeparatedExtend
-      && this.allowEndMarker == that.allowEndMarker
-      && this.allowInterpolationDolarQuoteEscape == that.allowInterpolationDolarQuoteEscape
-      && this.allowSignificantIndentation == that.allowSignificantIndentation
-      && this.allowQuestionMarkAsTypeWildcard == that.allowQuestionMarkAsTypeWildcard
-      && this.allowTypeParamUnderscore == that.allowTypeParamUnderscore
-      && this.allowByNameRepeatedParameters == that.allowByNameRepeatedParameters
-      && this.allowLazyValAbstractValues == that.allowLazyValAbstractValues
-      && this.allowUpperCasePatternVarBinding == that.allowUpperCasePatternVarBinding
-      && this.allowDerives == that.allowDerives
-      && this.allowTypeInBlock == that.allowTypeInBlock
-      && this.allowPolymorphicFunctions == that.allowPolymorphicFunctions
-      && this.allowMatchAsOperator == that.allowMatchAsOperator
-      && this.allowTypeMatch == that.allowTypeMatch
-      && this.allowInfixMods == that.allowInfixMods
-      && this.allowSpliceAndQuote == that.allowSpliceAndQuote
-      && this.allowSymbolLiterals == that.allowSymbolLiterals
-      && this.allowDependentFunctionTypes == that.allowDependentFunctionTypes
-      && this.allowPostfixStarVarargSplices == that.allowPostfixStarVarargSplices
-      && this.allowAllTypedPatterns == that.allowAllTypedPatterns
-      && this.allowAsForImportRename == that.allowAsForImportRename
-      && this.allowStarWildcardImport == that.allowStarWildcardImport
-      && this.allowProcedureSyntax == that.allowProcedureSyntax
-      && this.allowDoWhile == that.allowDoWhile
-      && this.allowPlusMinusUnderscoreAsIdent == that.allowPlusMinusUnderscoreAsIdent
-      && this.allowUnderscoreAsTypePlaceholder == that.allowUnderscoreAsTypePlaceholder
-      && this.allowStarAsTypePlaceholder == that.allowStarAsTypePlaceholder
-      && this.allowGivenImports == that.allowGivenImports
-      && this.useInfixTypePrecedence == that.useInfixTypePrecedence
-      && this.allowInfixOperatorAfterNL == that.allowInfixOperatorAfterNL
-      && this.allowParamClauseInterleaving == that.allowParamClauseInterleaving
-      && this.allowFewerBraces == that.allowFewerBraces
+  @inline
+  private def isEquivalentToInternal(
+      allowAtForExtractorVarargs: Boolean,
+      allowCaseClassWithoutParameterList: Boolean,
+      allowColonForExtractorVarargs: Boolean,
+      allowEnums: Boolean,
+      allowImplicitByNameParameters: Boolean,
+      allowInlineIdents: Boolean,
+      allowInlineMods: Boolean,
+      allowLiteralTypes: Boolean,
+      allowSpliceUnderscores: Boolean,
+      allowToplevelTerms: Boolean,
+      allowTrailingCommas: Boolean,
+      allowTraitParameters: Boolean,
+      allowTypeLambdas: Boolean,
+      allowViewBounds: Boolean,
+      allowXmlLiterals: Boolean,
+      allowNumericLiteralUnderscoreSeparators: Boolean,
+      allowTryWithAnyExpr: Boolean,
+      allowGivenUsing: Boolean,
+      allowErasedDefs: Boolean,
+      allowExtensionMethods: Boolean,
+      allowOpenClass: Boolean,
+      allowToplevelStatements: Boolean,
+      allowOpaqueTypes: Boolean,
+      allowExportClause: Boolean,
+      allowCommaSeparatedExtend: Boolean,
+      allowEndMarker: Boolean,
+      allowInterpolationDolarQuoteEscape: Boolean,
+      allowSignificantIndentation: Boolean,
+      allowQuestionMarkAsTypeWildcard: Boolean,
+      allowTypeParamUnderscore: Boolean,
+      allowByNameRepeatedParameters: Boolean,
+      allowLazyValAbstractValues: Boolean,
+      allowUpperCasePatternVarBinding: Boolean,
+      allowDerives: Boolean,
+      allowTypeInBlock: Boolean,
+      allowPolymorphicFunctions: Boolean,
+      allowMatchAsOperator: Boolean,
+      allowTypeMatch: Boolean,
+      allowInfixMods: Boolean,
+      allowSpliceAndQuote: Boolean,
+      allowSymbolLiterals: Boolean,
+      allowDependentFunctionTypes: Boolean,
+      allowPostfixStarVarargSplices: Boolean,
+      allowAllTypedPatterns: Boolean,
+      allowAsForImportRename: Boolean,
+      allowStarWildcardImport: Boolean,
+      allowProcedureSyntax: Boolean,
+      allowDoWhile: Boolean,
+      allowPlusMinusUnderscoreAsIdent: Boolean,
+      allowUnderscoreAsTypePlaceholder: Boolean,
+      allowStarAsTypePlaceholder: Boolean,
+      allowGivenImports: Boolean,
+      useInfixTypePrecedence: Boolean,
+      allowInfixOperatorAfterNL: Boolean,
+      allowParamClauseInterleaving: Boolean,
+      allowFewerBraces: Boolean
+  ): Boolean = (
+    // do not include deprecated values in this comparison
+    this.allowAtForExtractorVarargs == allowAtForExtractorVarargs
+      && this.allowCaseClassWithoutParameterList == allowCaseClassWithoutParameterList
+      && this.allowColonForExtractorVarargs == allowColonForExtractorVarargs
+      && this.allowEnums == allowEnums
+      && this.allowImplicitByNameParameters == allowImplicitByNameParameters
+      && this.allowInlineIdents == allowInlineIdents
+      && this.allowInlineMods == allowInlineMods
+      && this.allowLiteralTypes == allowLiteralTypes
+      && this.allowSpliceUnderscores == allowSpliceUnderscores
+      && this.allowToplevelTerms == allowToplevelTerms
+      && this.allowTrailingCommas == allowTrailingCommas
+      && this.allowTraitParameters == allowTraitParameters
+      && this.allowTypeLambdas == allowTypeLambdas
+      && this.allowViewBounds == allowViewBounds
+      && this.allowXmlLiterals == allowXmlLiterals
+      && this.allowNumericLiteralUnderscoreSeparators == allowNumericLiteralUnderscoreSeparators
+      && this.allowTryWithAnyExpr == allowTryWithAnyExpr
+      && this.allowGivenUsing == allowGivenUsing
+      && this.allowErasedDefs == allowErasedDefs
+      && this.allowExtensionMethods == allowExtensionMethods
+      && this.allowOpenClass == allowOpenClass
+      && this.allowToplevelStatements == allowToplevelStatements
+      && this.allowOpaqueTypes == allowOpaqueTypes
+      && this.allowExportClause == allowExportClause
+      && this.allowCommaSeparatedExtend == allowCommaSeparatedExtend
+      && this.allowEndMarker == allowEndMarker
+      && this.allowInterpolationDolarQuoteEscape == allowInterpolationDolarQuoteEscape
+      && this.allowSignificantIndentation == allowSignificantIndentation
+      && this.allowQuestionMarkAsTypeWildcard == allowQuestionMarkAsTypeWildcard
+      && this.allowTypeParamUnderscore == allowTypeParamUnderscore
+      && this.allowByNameRepeatedParameters == allowByNameRepeatedParameters
+      && this.allowLazyValAbstractValues == allowLazyValAbstractValues
+      && this.allowUpperCasePatternVarBinding == allowUpperCasePatternVarBinding
+      && this.allowDerives == allowDerives
+      && this.allowTypeInBlock == allowTypeInBlock
+      && this.allowPolymorphicFunctions == allowPolymorphicFunctions
+      && this.allowMatchAsOperator == allowMatchAsOperator
+      && this.allowTypeMatch == allowTypeMatch
+      && this.allowInfixMods == allowInfixMods
+      && this.allowSpliceAndQuote == allowSpliceAndQuote
+      && this.allowSymbolLiterals == allowSymbolLiterals
+      && this.allowDependentFunctionTypes == allowDependentFunctionTypes
+      && this.allowPostfixStarVarargSplices == allowPostfixStarVarargSplices
+      && this.allowAllTypedPatterns == allowAllTypedPatterns
+      && this.allowAsForImportRename == allowAsForImportRename
+      && this.allowStarWildcardImport == allowStarWildcardImport
+      && this.allowProcedureSyntax == allowProcedureSyntax
+      && this.allowDoWhile == allowDoWhile
+      && this.allowPlusMinusUnderscoreAsIdent == allowPlusMinusUnderscoreAsIdent
+      && this.allowUnderscoreAsTypePlaceholder == allowUnderscoreAsTypePlaceholder
+      && this.allowStarAsTypePlaceholder == allowStarAsTypePlaceholder
+      && this.allowGivenImports == allowGivenImports
+      && this.useInfixTypePrecedence == useInfixTypePrecedence
+      && this.allowInfixOperatorAfterNL == allowInfixOperatorAfterNL
+      && this.allowParamClauseInterleaving == allowParamClauseInterleaving
+      && this.allowFewerBraces == allowFewerBraces
   )
+
+  @inline
+  private def isEquivalentToInternal(that: Dialect): Boolean =
+    (this eq that) || isEquivalentToInternal(
+      that.allowAtForExtractorVarargs,
+      that.allowCaseClassWithoutParameterList,
+      that.allowColonForExtractorVarargs,
+      that.allowEnums,
+      that.allowImplicitByNameParameters,
+      that.allowInlineIdents,
+      that.allowInlineMods,
+      that.allowLiteralTypes,
+      that.allowSpliceUnderscores,
+      that.allowToplevelTerms,
+      that.allowTrailingCommas,
+      that.allowTraitParameters,
+      that.allowTypeLambdas,
+      that.allowViewBounds,
+      that.allowXmlLiterals,
+      that.allowNumericLiteralUnderscoreSeparators,
+      that.allowTryWithAnyExpr,
+      that.allowGivenUsing,
+      that.allowErasedDefs,
+      that.allowExtensionMethods,
+      that.allowOpenClass,
+      that.allowToplevelStatements,
+      that.allowOpaqueTypes,
+      that.allowExportClause,
+      that.allowCommaSeparatedExtend,
+      that.allowEndMarker,
+      that.allowInterpolationDolarQuoteEscape,
+      that.allowSignificantIndentation,
+      that.allowQuestionMarkAsTypeWildcard,
+      that.allowTypeParamUnderscore,
+      that.allowByNameRepeatedParameters,
+      that.allowLazyValAbstractValues,
+      that.allowUpperCasePatternVarBinding,
+      that.allowDerives,
+      that.allowTypeInBlock,
+      that.allowPolymorphicFunctions,
+      that.allowMatchAsOperator,
+      that.allowTypeMatch,
+      that.allowInfixMods,
+      that.allowSpliceAndQuote,
+      that.allowSymbolLiterals,
+      that.allowDependentFunctionTypes,
+      that.allowPostfixStarVarargSplices,
+      that.allowAllTypedPatterns,
+      that.allowAsForImportRename,
+      that.allowStarWildcardImport,
+      that.allowProcedureSyntax,
+      that.allowDoWhile,
+      that.allowPlusMinusUnderscoreAsIdent,
+      that.allowUnderscoreAsTypePlaceholder,
+      that.allowStarAsTypePlaceholder,
+      that.allowGivenImports,
+      that.useInfixTypePrecedence,
+      that.allowInfixOperatorAfterNL,
+      that.allowParamClauseInterleaving,
+      that.allowFewerBraces
+    )
 
   @deprecated("Use withX method instead", "4.3.11")
   def copy(
