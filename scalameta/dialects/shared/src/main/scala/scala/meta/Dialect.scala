@@ -619,7 +619,7 @@ final class Dialect private[meta] (
 
   // Smart prettyprinting that knows about standard dialects.
   override def toString = {
-    Dialect.inverseStandards.getOrElse(this, "Dialect()")
+    Dialect.inverseStandards.getOrElse(unquoteParentOrThis(), "Dialect()")
   }
 
   def isEquivalentTo(that: Dialect): Boolean =
