@@ -21,20 +21,17 @@ class TokensSuite extends TreeSuiteBase {
   test("Tree.tokens: manual") {
     val dialect = implicitly[Dialect]
     val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
-    interceptMessage[trees.Error.MissingDialectException](
-      "Tree missing a dialect; update root tree `.withDialectIfRootAndNotSet` first, or call `.printSyntaxFor`."
-    )(tree.text)
+    assertEquals(tree.text, "foo + bar")
     assertEquals(tree.printSyntaxFor(dialect), "foo + bar")
     assertEquals(tree.syntax, "foo + bar")
-    assert(tree.origin eq trees.Origin.None)
+    assert(tree.origin ne trees.Origin.None)
+    assertEquals(tree.origin.dialectOpt, Some(dialect))
     val tokens = tree.tokenizeFor(dialect)
-    interceptMessage[trees.Error.MissingDialectException](
-      "Tree missing a dialect; update root tree `.withDialectIfRootAndNotSet` first, or call `.tokenizeFor`."
-    )(tree.tokens)
+    assertEquals(tree.tokens.structure, tokens.structure)
     assertEquals(tokens.syntax, "foo + bar")
     assert(tokens.forall(_.input.isInstanceOf[Input.VirtualFile]))
     val dialectTree = tree.withDialectIfRootAndNotSet
-    assertNotEquals(dialectTree, tree)
+    assertEquals(dialectTree, tree)
     assertEquals(dialectTree.text, "foo + bar")
     assertEquals(dialectTree.printSyntaxFor(dialect), "foo + bar")
     assert(dialectTree.origin ne trees.Origin.None)

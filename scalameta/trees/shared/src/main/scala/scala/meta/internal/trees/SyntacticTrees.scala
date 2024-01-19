@@ -10,7 +10,7 @@ import scala.annotation.tailrec
 object Syntactic {
   object TermApply {
     object ArgList {
-      def apply(fun: Term, argss: List[Term.ArgClause]): Term =
+      def apply(fun: Term, argss: List[Term.ArgClause])(implicit dialect: Dialect): Term =
         argss.foldLeft(fun)((curr, args) => Term.Apply(curr, args))
 
       def unapply(tree: Tree): Option[(Term, List[Term.ArgClause])] =
@@ -31,8 +31,8 @@ object Syntactic {
     }
 
     object ArgListList {
-      def apply(fun: Term, argss: List[List[Term]]): Term =
-        ArgList(fun, argss.map(Term.ArgClause(_)))
+      def apply(fun: Term, argss: List[List[Term]])(implicit dialect: Dialect): Term =
+        ArgList(fun, argss.map(Term.ArgClause(_, None)))
 
       def unapply(tree: Tree): Option[(Term, List[List[Term]])] =
         tree match {

@@ -13,8 +13,6 @@ class TypeSuite extends ParseSuite {
     assertTree(tpe(expr))(tree)
   }
 
-  import scala.meta.dialects.Scala211
-
   test("T") {
     assertTpe("T")(TypeName("T"))
   }

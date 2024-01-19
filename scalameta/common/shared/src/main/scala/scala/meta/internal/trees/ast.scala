@@ -23,12 +23,19 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   import c.universe._
   import Flag._
 
+  private class Mstats(
+      val primary: ListBuffer[Tree] = ListBuffer.empty[Tree],
+      val lowPrio: ListBuffer[Tree] = ListBuffer.empty[Tree]
+  )
+
   def impl(annottees: Tree*): Tree =
     annottees.transformAnnottees(new ImplTransformer {
       override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
         val owner = c.internal.enclosingOwner
         val fullName = owner.fullName + "." + cdef.name.toString
         val isQuasi = isQuasiClass(cdef)
+        // may not return other classes/modules at package level
+        val isTopLevel = owner.isPackage
         val q"$imods class $iname[..$tparams] $ctorMods(...$rawparamss) extends { ..$earlydefns } with ..$iparents { $aself => ..$stats }" =
           cdef
         // NOTE: For stack traces, we'd like to have short class names, because stack traces print full names anyway.
@@ -56,6 +63,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         def parents1 = List(tq"$iname")
         val mstats1 = ListBuffer[Tree]() ++ mstats
         val mstatsLatest = ListBuffer[Tree]()
+        val mstats1LowPriority = ListBuffer.empty[Tree]
+        val mstatsLatestLowPriority = ListBuffer.empty[Tree]
         val manns1 = ListBuffer[Tree]() ++ mmods.annotations
         def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
         val quasiCopyExtraParamss = ListBuffer[List[ValDef]]()
@@ -80,7 +89,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val replacedFields = versionedParams.flatMap(_.replaced.flatMap { field =>
           field.oldDefs.map { case (oldDef, _) => field.version -> oldDef }
         })
-        val mstatsPerVersion = paramsVersions.map { ver => (ver, ListBuffer[Tree]()) }
+        val mstatsPerVersion = paramsVersions.map { ver => (ver, new Mstats()) }
         def paramsForVersion(v: Version): List[ValDef] =
           positionVersionedParams(versionedParams.flatMap(_.getApplyDeclDefnBefore(v)._1))
 
@@ -341,7 +350,15 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         }
         val internalArgs = params.map(getParamArg)
         val bparamCtorArgs = bparams1.map { p =>
-          getParamArg(p)
+          if (p eq privateFields.origin.field)
+            q"""
+               $OriginModule.first(
+                 alternativeOrigin,
+                 $OriginModule.DialectOnly.getFromArgs(..$internalArgs)
+               )
+             """
+          else
+            getParamArg(p)
         }
         internalBody += q"""
           val node = new $name(
@@ -357,22 +374,57 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val bparamDecls = privateApplyParams.map(asValDecl)
         val fullApplyParamDecls = bparamDecls ++ applyParamDecls
         val fullInternalArgs = privateApplyParams.map(getParamArg) ++ internalArgs
-        mstats1 += q"""
-          def apply(..$applyParams): $iname = {
-            $mname.apply(..${privateApplyParams.map(p => p.rhs) ++ internalArgs})
-          }
-        """
-        mstats1 += q"""
-          def apply(..$fullApplyParamDecls): $iname = {
-            ..$internalBody
-          }
-        """
+        if (isTopLevel) {
+          mstats1 += q"""
+            def apply(..$applyParams): $iname = {
+              $mname.apply(..${privateApplyParams.map(p => p.rhs) ++ internalArgs})
+            }
+          """
+          mstats1 += q"""
+            def apply(..$fullApplyParamDecls): $iname = {
+              val alternativeOrigin = origin
+              ..$internalBody
+            }
+          """
+        } else {
+          mstats1 += q"""
+            def apply(..$applyParams)(implicit dialect: $DialectClass): $iname = {
+              $mname.apply(..${privateApplyParams.map(p => p.rhs) ++ internalArgs})
+            }
+          """
+          mstats1 += q"""
+            def apply(..$fullApplyParamDecls)(implicit dialect: $DialectClass): $iname = {
+              val alternativeOrigin =
+                $OriginModule.first(origin, implicitly[$OriginModule.DialectOnly])
+              ..$internalBody
+            }
+          """
+          mstats1LowPriority += q"""
+            @$deprecatedSince_4_9_0 def apply(..$applyParamDecls): $iname = {
+              $mname.apply(..${privateApplyParams.map(p => p.rhs) ++ internalArgs})
+            }
+          """
+          mstats1LowPriority += q"""
+            @$deprecatedSince_4_9_0 def apply(..$fullApplyParamDecls): $iname = {
+              $mname.apply(..$fullInternalArgs)
+            }
+          """
+        }
         mstatsLatest += q"""
-          @$InlineAnnotation def apply(..$fullApplyParamDecls): $iname =
+          @$InlineAnnotation def apply(..$fullApplyParamDecls)(implicit dialect: $DialectClass): $iname =
+            $mname.apply(..$fullInternalArgs)
+        """
+        mstatsLatestLowPriority += q"""
+          @$InlineAnnotation @$deprecatedSince_4_9_0 def apply(..$fullApplyParamDecls): $iname =
             $mname.apply(..$fullInternalArgs)
         """
         mstatsLatest += q"""
-          @$InlineAnnotation def apply(..$applyParams): $iname = $mname.apply(..$internalArgs)
+          @$InlineAnnotation def apply(..$applyParams)(implicit dialect: $DialectClass): $iname =
+            $mname.apply(..$internalArgs)
+        """
+        mstatsLatestLowPriority += q"""
+          @$InlineAnnotation @$deprecatedSince_4_9_0 def apply(..$applyParamDecls): $iname =
+            $mname.apply(..$internalArgs)
         """
 
         // step 13a: generate additional companion apply for added and replaced fields
@@ -391,29 +443,68 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           val applyBody = applyBodyBuilder.result()
           val applyCall = q"$mname.apply(..$internalArgs)"
           val fullParams = bparamDecls ++ params
-          verMstats += q"""
-            def apply(..$fullParams): $iname = {
+          verMstats.lowPrio += q"""
+            @$deprecatedSince_4_9_0 def apply(..$fullParams): $iname = {
               $mname.apply(..${fullParams.map(_.name)})
             }
           """
-          verMstats += q"""
-            def apply(..$params): $iname = {
+          verMstats.primary += q"""
+            def apply(..$fullParams)(implicit dialect: $DialectClass): $iname = {
+              $mname.apply(..${fullParams.map(_.name)})
+            }
+          """
+          verMstats.lowPrio += q"""
+            @$deprecatedSince_4_9_0 def apply(..$params): $iname = {
               ..$applyBody
               $applyCall
             }
           """
-          mstats1 += q"""
-            def apply(..$fullParams): $iname = {
-              ..$applyBody
-              $mname.apply(..$fullInternalArgs)
-            }
-          """
-          mstats1 += q"""
-            @${getDeprecatedAnno(v)} def apply(..$params): $iname = {
+          verMstats.primary += q"""
+            def apply(..$params)(implicit dialect: $DialectClass): $iname = {
               ..$applyBody
               $applyCall
             }
           """
+          if (isTopLevel) {
+            mstats1 += q"""
+              def apply(..$fullParams): $iname = {
+                ..$applyBody
+                $mname.apply(..$fullInternalArgs)
+              }
+            """
+            mstats1 += q"""
+              @${getDeprecatedAnno(v)} def apply(..$params): $iname = {
+                ..$applyBody
+                $applyCall
+              }
+            """
+
+          } else {
+            mstats1LowPriority += q"""
+              @$deprecatedSince_4_9_0 def apply(..$fullParams): $iname = {
+                ..$applyBody
+                $mname.apply(..$fullInternalArgs)
+              }
+            """
+            mstats1LowPriority += q"""
+              @${getDeprecatedAnno(v)} def apply(..$params): $iname = {
+                ..$applyBody
+                $applyCall
+              }
+            """
+            mstats1 += q"""
+              def apply(..$fullParams)(implicit dialect: $DialectClass): $iname = {
+                ..$applyBody
+                $mname.apply(..$fullInternalArgs)
+              }
+            """
+            mstats1 += q"""
+              @${getDeprecatedAnno(v)} def apply(..$params)(implicit dialect: $DialectClass): $iname = {
+                ..$applyBody
+                $applyCall
+              }
+            """
+          }
         }
 
         // step 14: generate Companion.unapply
@@ -441,9 +532,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           mstatsPerVersion match {
             case (headVer, headMstats) :: tail =>
               val headParams = paramsForVersion(headVer)
-              headMstats += getUnapply(headParams)
+              headMstats.primary += getUnapply(headParams)
               tail.foreach { case (ver, verMstats) =>
-                verMstats += getUnapply(paramsForVersion(ver))
+                verMstats.primary += getUnapply(paramsForVersion(ver))
               }
               val afterLastVer = getAfterVersion(mstatsPerVersion.last._1)
               val anno = getDeprecatedAnno(headVer, s"; use `.$afterLastVer`")
@@ -483,12 +574,16 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         val latestName =
           mstatsPerVersion.foldLeft(initialName) { case (afterPrevVerName, (ver, verMstats)) =>
+            val lowPriority = TypeName(afterPrevVerName + "LowPriority")
+            mstats1 += q"private[meta] trait $lowPriority { ..${verMstats.lowPrio} }"
             val afterPrevVer = TermName(afterPrevVerName)
-            mstats1 += q"object $afterPrevVer { ..$verMstats }"
+            mstats1 += q"object $afterPrevVer extends $lowPriority { ..${verMstats.primary} }"
             getAfterVersion(ver)
           }
         val latestTermName = TermName(latestName)
-        mstats1 += q"object $latestTermName { ..$mstatsLatest }"
+        val latestLowPriority = TypeName(latestName + "LowPriority")
+        mstats1 += q"private[meta] trait $latestLowPriority { ..$mstatsLatestLowPriority }"
+        mstats1 += q"object $latestTermName extends $latestLowPriority { ..$mstatsLatest }"
         // to be ignored by Mima, use "internal"
         mstats1 += q"object internal { final val Latest = $latestTermName }"
 
@@ -496,10 +591,17 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         val res = ListBuffer.empty[ImplDef]
 
+        val mparents1 =
+          if (isTopLevel) mparents
+          else {
+            val lowPriority = TypeName(iname.toString() + "LowPriority")
+            res += q"private[meta] trait $lowPriority { ..$mstats1LowPriority }"
+            mparents :+ tq"$lowPriority"
+          }
         val cdef1 = q"$imods1 trait $iname extends ..$iparents1 { $iself => ..$istats1 }"
         res += cdef1
         val mdef1 =
-          q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
+          q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents1 { $mself => ..$mstats1 }"
         res += mdef1
         if (c.compilerSettings.contains("-Xprint:typer")) {
           println(cdef1); println(mdef1)
@@ -778,6 +880,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       )
     }
   }
+
+  private val deprecatedSince_4_9_0 = getDeprecatedAnno("4.9.0")
 
   private def getDeprecatedAnno(v: Version, why: String = ""): Tree =
     getDeprecatedAnno(v.toString + why)

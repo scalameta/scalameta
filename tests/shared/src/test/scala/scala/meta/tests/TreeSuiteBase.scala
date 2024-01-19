@@ -16,7 +16,7 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
   protected def assertTree(obtained: Tree)(expected: Tree)(implicit loc: munit.Location): Unit = {
     assertStruct(obtained)(expected.structure)
     expected.origin match {
-      case _: Origin.DialectOnly => fail("origin should not be DialectOnly")
+      case Origin.None => fail("origin should not be None")
       case _ =>
     }
   }
