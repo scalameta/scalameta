@@ -4,6 +4,7 @@ import munit._
 
 import scala.meta._
 import scala.meta.tests.parsers.CommonTrees
+import scala.meta.trees.Origin
 
 abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 
@@ -12,8 +13,13 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
   protected def assertStruct(obtained: Tree)(expected: String)(implicit loc: munit.Location): Unit =
     assertNoDiff(obtained.structure, expected)
 
-  protected def assertTree(obtained: Tree)(expected: Tree)(implicit loc: munit.Location): Unit =
+  protected def assertTree(obtained: Tree)(expected: Tree)(implicit loc: munit.Location): Unit = {
     assertStruct(obtained)(expected.structure)
+    expected.origin match {
+      case _: Origin.DialectOnly => fail("origin should not be DialectOnly")
+      case _ =>
+    }
+  }
 
   protected def assertTrees(
       obtained: Tree*
