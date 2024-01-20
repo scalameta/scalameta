@@ -1647,4 +1647,166 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
+  test("scalafmt #3763 implicit after space") {
+    val code =
+      """
+        |def a =
+        |   foo: implicit bar =>
+        |      baz
+        |""".stripMargin
+    val error =
+      """|<input>:3: error: identifier expected but implicit found
+         |   foo: implicit bar =>
+         |        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("scalafmt #3763 implicit after newline") {
+    val code =
+      """
+        |def a = foo:
+        |   implicit bar =>
+        |      baz
+        |""".stripMargin
+    val layout = "def a = foo { implicit bar => baz }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          Term.ParamClause(List(tparam(List(Mod.Implicit()), "bar")), Some(Mod.Implicit())),
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 implicit in braces, no fewer") {
+    val code = "def a = foo { implicit bar => baz }"
+    val layout =
+      """|def a = foo {
+         |  implicit bar => baz
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(
+              List(tparam(List(Mod.Implicit()), "bar")),
+              Some(Mod.Implicit())
+            ),
+            tname("baz")
+          ) :: Nil
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scalafmt #3763 erased after space") {
+    val code =
+      """
+        |def a =
+        |   foo: erased bar =>
+        |      baz
+        |""".stripMargin
+    val error =
+      """|<input>:3: error: identifier expected but => found
+         |   foo: erased bar =>
+         |                   ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("scalafmt #3763 erased after newline") {
+    val code =
+      """
+        |def a = foo:
+        |   erased bar =>
+        |      baz
+        |""".stripMargin
+    val layout = "def a = foo(erased bar => baz)"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+      )
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 erased, no fewer braces") {
+    val code =
+      """
+        |def a =
+        |   foo(erased bar => baz)
+        |""".stripMargin
+    val error =
+      """|<input>:3: error: ) expected but => found
+         |   foo(erased bar => baz)
+         |                  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("scalafmt #3763 erased in parens") {
+    val code =
+      """
+        |def a =
+        |   foo: (erased bar) =>
+        |      baz
+        |""".stripMargin
+    val layout = "def a = foo(erased bar => baz)"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+      )
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 multiple erased in parens") {
+    val code =
+      """
+        |def a =
+        |   foo: (erased bar: Int, erased baz: String) =>
+        |      qux
+        |""".stripMargin
+    val layout = "def a = foo((erased bar: Int, erased baz: String) => qux)"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          List(
+            tparam(List(Mod.Erased()), "bar", "Int"),
+            tparam(List(Mod.Erased()), "baz", "String")
+          ),
+          tname("qux")
+        ) :: Nil
+      )
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
 }
