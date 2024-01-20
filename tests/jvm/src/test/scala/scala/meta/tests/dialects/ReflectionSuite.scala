@@ -18,6 +18,6 @@ class ReflectionSuite extends FunSuite {
     val reflectiveStandards =
       dialectGetters.map(m => (m.getName, m.invoke(dialects).asInstanceOf[Dialect]))
     val mismatch = reflectiveStandards.toSet -- Dialect.standards.toSet -- aliases
-    assert(mismatch.isEmpty)
+    assertEquals(mismatch, Set.empty[(String, Dialect)])
   }
 }

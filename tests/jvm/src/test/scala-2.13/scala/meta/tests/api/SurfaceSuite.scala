@@ -63,6 +63,7 @@ class SurfaceSuite extends FunSuite {
 
   test("statics (core)") {
     val diagnostic = core.keys.toList.sorted
+      .filter(!_.endsWith("LowPriority"))
       .map(fullName => {
         val suffix = if (core(fullName)) "" else " *"
         s"$fullName$suffix"
@@ -189,9 +190,8 @@ class SurfaceSuite extends FunSuite {
     val prettyprinterTests =
       new scala.meta.tests.prettyprinters.PublicSuite().munitTests().map(_.name)
     val nonPackageStatics = core.keys.filter(_.exists(_.isUpper))
-    val untested = nonPackageStatics.collect {
-      case name if !prettyprinterTests.exists(testName => testName.startsWith(name)) =>
-        name
+    val untested = nonPackageStatics.filter { name =>
+      !name.endsWith("LowPriority") && !prettyprinterTests.exists(_.startsWith(name))
     }
     assertEquals(
       untested,

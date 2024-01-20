@@ -54,4 +54,37 @@ object Origin {
     def dialectOpt: Option[Dialect] = Some(dialect)
   }
 
+  object DialectOnly {
+    implicit def fromDialect(implicit dialect: Dialect): DialectOnly =
+      new DialectOnly(dialect)
+
+    private[meta] def getFromArgs(args: Any*): DialectOnly = {
+      val queue = scala.collection.mutable.Queue.empty[Iterator[Any]]
+      @scala.annotation.tailrec
+      def loop(iterator: Iterator[Any]): DialectOnly =
+        if (!iterator.hasNext) {
+          if (queue.isEmpty)
+            implicitly[DialectOnly]
+          else
+            loop(queue.dequeue())
+        } else {
+          iterator.next() match {
+            case x: scala.meta.Tree =>
+              x.origin.dialectOpt match {
+                case Some(dialect) => fromDialect(dialect)
+                case _ => loop(iterator)
+              }
+            case x: Iterable[_] =>
+              queue.enqueue(x.iterator)
+              loop(iterator)
+            case _ => loop(iterator)
+          }
+        }
+      loop(Iterator(args))
+    }
+  }
+
+  private[meta] def first(one: Origin, two: Origin): Origin =
+    if (one ne None) one else two
+
 }
