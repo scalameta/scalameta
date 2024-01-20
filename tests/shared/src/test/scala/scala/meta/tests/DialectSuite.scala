@@ -13,7 +13,7 @@ class DialectSuite extends FunSuite {
   }
 
   test("scala3 isEquivalentTo scala3copy") {
-    assertNotEquals(Scala3, scala3copy)
+    assertEquals(Scala3, scala3copy)
     assert(Scala3.isEquivalentTo(scala3copy))
   }
 
@@ -26,7 +26,7 @@ class DialectSuite extends FunSuite {
   test("scala3 isEquivalentTo scala3copy without deprecated") {
     val that = scala3copy.withAllowAndTypes(false)
     assertEquals(that, scala3copy)
-    assertNotEquals(that, Scala3)
+    assertEquals(that, Scala3)
     assert(Scala3.isEquivalentTo(that))
   }
 
@@ -45,7 +45,7 @@ class DialectSuite extends FunSuite {
   }
 
   test("scala3copy toString") {
-    assertEquals(scala3copy.toString, "Dialect()")
+    assertEquals(scala3copy.toString, "Scala33")
   }
 
   test("scala3 without indentation toString") {
