@@ -2500,7 +2500,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private def blockInDelims(f: (=> Term.Block) => Term, allowRepeated: Boolean = false): Term =
     autoPos(f(blockWithinDelims(allowRepeated = allowRepeated)))
 
-  private def blockOnIndent(): Term = blockInDelims(x => dropOuterBlock(indentedOnOpen(x)))
+  private def blockOnIndent(): Term =
+    blockInDelims(x => dropOuterBlock(indentedOnOpen(x), exceptFuncWithMods = true))
   private def blockExprOnIndent(): Term = blockExprPartial(indentedOnOpen)(blockOnIndent())
 
   private def blockOnBrace(allowRepeated: Boolean = false): Term =
@@ -4699,9 +4700,13 @@ object ScalametaParser {
       case _ => term
     }
 
-  private def dropOuterBlock(term: Term.Block): Term =
+  private def dropOuterBlock(term: Term.Block, exceptFuncWithMods: Boolean = false): Term =
     term.stats match {
-      case (stat: Term) :: Nil => stat
+      case (stat: Term) :: Nil =>
+        stat match {
+          case f: Term.Function if exceptFuncWithMods && f.paramClause.mod.isDefined => term
+          case _ => stat
+        }
       case _ => term
     }
 
