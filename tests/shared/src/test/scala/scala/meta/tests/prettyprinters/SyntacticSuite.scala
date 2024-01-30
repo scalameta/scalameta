@@ -150,14 +150,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("foo.bar(bar) { baz }") {
     val tree = templStat("foo.bar(bar) { baz }")
-    assertEquals(
-      tree.syntax,
-      """
-      |foo.bar(bar) {
-      |  baz
-      |}
-    """.trim.stripMargin.split('\n').mkString(EOL)
-    )
+    assertEquals(tree.syntax, "foo.bar(bar)(baz)")
   }
 
   test("Template.self stringifications") {
@@ -1067,9 +1060,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     ("${_}", "${_}"),
     (
       "${x + y.map { _.length }.max}",
-      """|${x + y.map {
-         |  _.length
-         |}.max}""".stripMargin
+      "${x + y.map(_.length).max}"
     ),
     ("${_a}", "${_a}"),
     ("${_a}123", "${_a}123"),
@@ -1695,7 +1686,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkTree(term("foo(bar) { baz: _* }"))(
       Term.Apply(
         Term.Apply(Term.Name("foo"), List(Term.Name("bar"))),
-        List(Term.Block(List(Term.Repeated(Term.Name("baz")))))
+        List(Term.Repeated(Term.Name("baz")))
       )
     )
   }

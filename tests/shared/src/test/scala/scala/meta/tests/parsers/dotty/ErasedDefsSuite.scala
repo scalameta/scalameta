@@ -114,17 +114,16 @@ class ErasedDefsSuite extends BaseDottySuite {
       """|List(1, 2, 3).map {
          |  (using erased i: Int) => i
          |}""".stripMargin
-    runTestAssert[Stat](code)(
+    val layout = "List(1, 2, 3).map { (using erased i: Int) => i }"
+    runTestAssert[Stat](code, layout)(
       Term.Apply(
         Term.Select(
           Term.Apply(tname("List"), List(int(1), int(2), int(3))),
           tname("map")
         ),
-        Term.Block(
-          Term.Function(
-            List(tparam(List(Mod.Using(), Mod.Erased()), "i", "Int")),
-            tname("i")
-          ) :: Nil
+        Term.Function(
+          List(tparam(List(Mod.Using(), Mod.Erased()), "i", "Int")),
+          tname("i")
         ) :: Nil
       )
     )
@@ -181,14 +180,13 @@ class ErasedDefsSuite extends BaseDottySuite {
          |  (using erased ctx: Context) => 3
          |}
          |""".stripMargin
-    runTestAssert[Stat](code)(
+    val layout = "LazyBody { (using erased ctx: Context) => 3 }"
+    runTestAssert[Stat](code, layout)(
       Term.Apply(
         tname("LazyBody"),
-        Term.Block(
-          Term.Function(
-            List(tparam(List(Mod.Using(), Mod.Erased()), "ctx", "Context")),
-            Lit.Int(3)
-          ) :: Nil
+        Term.Function(
+          List(tparam(List(Mod.Using(), Mod.Erased()), "ctx", "Context")),
+          Lit.Int(3)
         ) :: Nil
       )
     )

@@ -1335,12 +1335,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  }
          |""".stripMargin,
       assertLayout = Some(
-        """|def mapSymbols = originals.foreach {
-           |  a => copy.denot match {
-           |    case cd: ClassDenotation =>
-           |    case _ =>
-           |  }
-           |}
+        """|def mapSymbols = originals.foreach(a => copy.denot match {
+           |  case cd: ClassDenotation =>
+           |  case _ =>
+           |})
            |""".stripMargin
       )
     )(
@@ -1352,27 +1350,21 @@ class SignificantIndentationSuite extends BaseDottySuite {
         None,
         Term.Apply(
           Term.Select(tname("originals"), tname("foreach")),
-          List(
-            Term.Block(
+          Term.Function(
+            List(Term.Param(Nil, tname("a"), None, None)),
+            Term.Match(
+              Term.Select(tname("copy"), tname("denot")),
               List(
-                Term.Function(
-                  List(Term.Param(Nil, tname("a"), None, None)),
-                  Term.Match(
-                    Term.Select(tname("copy"), tname("denot")),
-                    List(
-                      Case(
-                        Pat.Typed(Pat.Var(tname("cd")), pname("ClassDenotation")),
-                        None,
-                        Term.Block(Nil)
-                      ),
-                      Case(Pat.Wildcard(), None, Term.Block(Nil))
-                    ),
-                    Nil
-                  )
-                )
-              )
+                Case(
+                  Pat.Typed(Pat.Var(tname("cd")), pname("ClassDenotation")),
+                  None,
+                  Term.Block(Nil)
+                ),
+                Case(Pat.Wildcard(), None, Term.Block(Nil))
+              ),
+              Nil
             )
-          )
+          ) :: Nil
         )
       )
     )
@@ -1523,13 +1515,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |}
          |""".stripMargin,
       assertLayout = Some(
-        """|val success = suffixes.find {
-           |  suffix => try {
-           |    true
-           |  } catch {
-           |    case e: StorageException => false
-           |  }
-           |}
+        """|val success = suffixes.find(suffix => try {
+           |  true
+           |} catch {
+           |  case e: StorageException => false
+           |})
            |""".stripMargin
       )
     )(
@@ -1539,26 +1529,18 @@ class SignificantIndentationSuite extends BaseDottySuite {
         None,
         Term.Apply(
           Term.Select(tname("suffixes"), tname("find")),
-          List(
-            Term.Block(
-              List(
-                Term.Function(
-                  List(Term.Param(Nil, tname("suffix"), None, None)),
-                  Term.Try(
-                    Term.Block(List(bool(true))),
-                    List(
-                      Case(
-                        Pat.Typed(Pat.Var(tname("e")), pname("StorageException")),
-                        None,
-                        bool(false)
-                      )
-                    ),
-                    None
-                  )
-                )
-              )
+          Term.Function(
+            List(Term.Param(Nil, tname("suffix"), None, None)),
+            Term.Try(
+              Term.Block(List(bool(true))),
+              Case(
+                Pat.Typed(Pat.Var(tname("e")), pname("StorageException")),
+                None,
+                bool(false)
+              ) :: Nil,
+              None
             )
-          )
+          ) :: Nil
         )
       )
     )
@@ -1831,12 +1813,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  fun(1, 2, 3) 
          |    {4} 
          |""".stripMargin,
-      assertLayout = Some(
-        """|def method: String = fun(1, 2, 3) {
-           |  4
-           |}
-           |""".stripMargin
-      )
+      assertLayout = "def method: String = fun(1, 2, 3)(4)"
     )(
       Defn.Def(
         Nil,
@@ -1846,7 +1823,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Some(pname("String")),
         Term.Apply(
           Term.Apply(tname("fun"), List(int(1), int(2), int(3))),
-          List(Term.Block(List(int(4))))
+          List(int(4))
         )
       )
     )

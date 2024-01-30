@@ -2607,12 +2607,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    if (a + b) { op(c == true) } then err(context)
          |""".stripMargin,
       assertLayout = Some(
-        """|object foo {
-           |  def bar = if ((a + b) {
-           |    op(c == true)
-           |  }) err(context)
-           |}
-           |""".stripMargin
+        "object foo { def bar = if ((a + b)(op(c == true))) err(context) }"
       )
     )(
       Defn.Object(
@@ -2630,11 +2625,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
             Term.If(
               Term.Apply(
                 Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
-                Term.Block(
-                  Term.Apply(
-                    tname("op"),
-                    Term.ApplyInfix(tname("c"), tname("=="), Nil, List(bool(true))) :: Nil
-                  ) :: Nil
+                Term.Apply(
+                  tname("op"),
+                  Term.ApplyInfix(tname("c"), tname("=="), Nil, List(bool(true))) :: Nil
                 ) :: Nil
               ),
               Term.Apply(tname("err"), List(tname("context"))),

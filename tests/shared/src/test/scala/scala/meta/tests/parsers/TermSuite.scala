@@ -753,22 +753,14 @@ class TermSuite extends ParseSuite {
     assertTerm("Action { implicit request: Request[AnyContent] => Ok }") {
       Term.Apply(
         tname("Action"),
-        List(
-          Term.Block(
-            List(
-              Term.Function(
-                List(
-                  tparam(
-                    List(Mod.Implicit()),
-                    "request",
-                    Type.Apply(pname("Request"), List(pname("AnyContent")))
-                  )
-                ),
-                tname("Ok")
-              )
-            )
-          )
-        )
+        Term.Function(
+          tparam(
+            List(Mod.Implicit()),
+            "request",
+            Type.Apply(pname("Request"), List(pname("AnyContent")))
+          ) :: Nil,
+          tname("Ok")
+        ) :: Nil
       )
     }
   }
@@ -1077,11 +1069,9 @@ class TermSuite extends ParseSuite {
                   |}""".stripMargin) {
       Term.Apply(
         tname("function"),
-        Term.Block(
-          Term.Function(
-            List(tparam(List(Mod.Implicit()), "c")),
-            Term.PartialFunction(List(Case(Pat.Var(tname("bar")), None, tname("foo"))))
-          ) :: Nil
+        Term.Function(
+          List(tparam(List(Mod.Implicit()), "c")),
+          Term.PartialFunction(List(Case(Pat.Var(tname("bar")), None, tname("foo"))))
         ) :: Nil
       )
     }
@@ -1291,7 +1281,7 @@ class TermSuite extends ParseSuite {
                 ),
                 tname("catchSome")
               ),
-              List(Block(List(tname("bar"))))
+              List(tname("bar"))
             )
           )
         )
@@ -1488,19 +1478,17 @@ class TermSuite extends ParseSuite {
     checkTerm(code) {
       Term.Apply(
         tname("foo"),
-        Term.Block(
+        Term.Function(
+          List(tparam(List(Mod.Implicit()), "a")),
           Term.Function(
-            List(tparam(List(Mod.Implicit()), "a")),
-            Term.Function(
-              List(tparam(List(Mod.Implicit()), "b")),
-              Term.Ascribe(
-                Term.PartialFunction(
-                  List(Case(Pat.Var(tname("bar")), None, tname("baz")))
-                ),
-                pname("qux")
-              )
+            List(tparam(List(Mod.Implicit()), "b")),
+            Term.Ascribe(
+              Term.PartialFunction(
+                List(Case(Pat.Var(tname("bar")), None, tname("baz")))
+              ),
+              pname("qux")
             )
-          ) :: Nil
+          )
         ) :: Nil
       )
     }
@@ -1516,19 +1504,17 @@ class TermSuite extends ParseSuite {
     checkTerm(code) {
       Term.Apply(
         tname("foo"),
-        Term.Block(
-          Term.Function(
-            Term.ParamClause(
-              List(tparam(List(Mod.Implicit()), "a")),
-              Some(Mod.Implicit())
-            ),
-            Term.Block(
-              List(
-                Defn.Val(Nil, List(Pat.Var(tname("bar"))), None, tname("baz")),
-                tname("bar")
-              )
+        Term.Function(
+          Term.ParamClause(
+            List(tparam(List(Mod.Implicit()), "a")),
+            Some(Mod.Implicit())
+          ),
+          Term.Block(
+            List(
+              Defn.Val(Nil, List(Pat.Var(tname("bar"))), None, tname("baz")),
+              tname("bar")
             )
-          ) :: Nil
+          )
         ) :: Nil
       )
     }
@@ -1564,21 +1550,20 @@ class TermSuite extends ParseSuite {
       """|f { (x1: A, x2: B => C) =>
          |}
          |""".stripMargin
-    checkTerm(code, code)(
+    val layout = "f((x1: A, x2: B => C) => {})"
+    checkTerm(code, layout)(
       Term.Apply(
         tname("f"),
-        Term.Block(
-          Term.Function(
-            List(
-              tparam(Nil, "x1", "A"),
-              tparam(
-                Nil,
-                "x2",
-                Type.Function(Type.FuncParamClause(List(pname("B"))), pname("C"))
-              )
-            ),
-            Term.Block(Nil)
-          ) :: Nil
+        Term.Function(
+          List(
+            tparam(Nil, "x1", "A"),
+            tparam(
+              Nil,
+              "x2",
+              Type.Function(Type.FuncParamClause(List(pname("B"))), pname("C"))
+            )
+          ),
+          Term.Block(Nil)
         ) :: Nil
       )
     )
@@ -1619,9 +1604,7 @@ class TermSuite extends ParseSuite {
          |""".stripMargin
     val syntaxOnSameLine =
       """|{
-         |  Foo bar (2, 3) {
-         |    a
-         |  }
+         |  Foo bar (2, 3)(a)
          |}
          |""".stripMargin
     val treeOnSameLine = Term.Block(
@@ -1631,7 +1614,7 @@ class TermSuite extends ParseSuite {
         Nil,
         Term.Apply(
           Term.Tuple(List(Lit.Int(2), Lit.Int(3))),
-          List(Term.Block(List(tname("a"))))
+          List(tname("a"))
         ) :: Nil
       ) :: Nil
     )
@@ -1653,15 +1636,13 @@ class TermSuite extends ParseSuite {
          |""".stripMargin
     val syntaxOnSameLine =
       """|{
-         |  Foo.bar(2, 3) {
-         |    a
-         |  }
+         |  Foo.bar(2, 3)(a)
          |}
          |""".stripMargin
     val treeOnSameLine = Term.Block(
       Term.Apply(
         Term.Apply(Term.Select(tname("Foo"), tname("bar")), List(Lit.Int(2), Lit.Int(3))),
-        List(Term.Block(List(tname("a"))))
+        List(tname("a"))
       ) :: Nil
     )
     runTestAssert[Stat](codeOnNextLine, Some(syntaxOnSameLine))(treeOnSameLine)
