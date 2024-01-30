@@ -1788,9 +1788,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       // a parse error, because `x => x` will be deemed a self-type annotation, which ends up being inapplicable there.
       convertToParamClause(res)(
         isNameAllowed = location != TemplateStat,
-        isParamAllowed = location == BlockStat ||
-          tokens(startPos).is[LeftParen] &&
-          prevToken.is[RightParen]
+        isParamAllowed = location.funcParamOK ||
+          tokens(startPos).is[LeftParen] && prevToken.is[RightParen]
       ).fold(res) { pc =>
         val params = addPos(pc)
         next()
@@ -4845,11 +4844,12 @@ object ScalametaParser {
 class Location private (
     val value: Int,
     val anonFuncOK: Boolean = true,
+    val funcParamOK: Boolean = false,
     val fullTypeOK: Boolean = false
 )
 object Location {
-  val NoStat = new Location(0, fullTypeOK = true)
-  val BlockStat = new Location(1)
+  val NoStat = new Location(0, funcParamOK = true, fullTypeOK = true)
+  val BlockStat = new Location(1, funcParamOK = true)
   val TemplateStat = new Location(2)
   val PostfixStat = new Location(3, anonFuncOK = false, fullTypeOK = true)
   val UnquoteStat = new Location(4, anonFuncOK = false)
