@@ -1480,9 +1480,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
     else None
 
-  def typeOrInfixType(location: Location): Type =
-    if (location == NoStat || location == PostfixStat) typ()
-    else startInfixType()
+  private def typeOrInfixType(fullTypeOK: Boolean): Type =
+    if (fullTypeOK) typ() else startInfixType()
+
+  @inline
+  private def typeOrInfixType(location: Location): Type =
+    typeOrInfixType(location.fullTypeOK)
 
   /* ----------- EXPRESSIONS ------------------------------------------------ */
 
@@ -4774,13 +4777,17 @@ object ScalametaParser {
 
 }
 
-class Location private (val value: Int, val anonFuncOK: Boolean)
+class Location private (
+    val value: Int,
+    val anonFuncOK: Boolean = true,
+    val fullTypeOK: Boolean = false
+)
 object Location {
-  val NoStat = new Location(0, true)
-  val BlockStat = new Location(1, true)
-  val TemplateStat = new Location(2, true)
-  val PostfixStat = new Location(3, false)
-  val UnquoteStat = new Location(4, false)
+  val NoStat = new Location(0, fullTypeOK = true)
+  val BlockStat = new Location(1)
+  val TemplateStat = new Location(2)
+  val PostfixStat = new Location(3, anonFuncOK = false, fullTypeOK = true)
+  val UnquoteStat = new Location(4, anonFuncOK = false)
 }
 
 object InfixMode extends Enumeration {
