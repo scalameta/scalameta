@@ -2361,8 +2361,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case _ =>
             addPos(t)
         }
-      case LeftParen() | LeftBrace() if canApply =>
-        val arguments = addPos(Term.Apply(t, getArgClause()))
+      case tok @ (_: LeftParen | _: LeftBrace) if canApply =>
+        def argClause =
+          if (tok.is[LeftBrace]) getArgClauseOnBrace() else getArgClauseOnParen()
+        val arguments = addPos(Term.Apply(t, argClause))
         simpleExprRest(arguments, canApply = true, startPos = startPos)
       case _: Colon if canApply && dialect.allowFewerBraces =>
         val colonPos = tokenPos
@@ -2455,21 +2457,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case _ => expr(location = location, allowRepeated = true)
   }
 
-  private def getArgClause(location: Location = NoStat): Term.ArgClause = autoPos(token match {
-    case _: LeftBrace =>
-      Term.ArgClause(blockExprOnBrace(allowRepeated = true) :: Nil)
-    case _: LeftParen =>
-      inParensOnOpenOr(token match {
-        case t @ Ellipsis(2) =>
-          (ellipsis[Term](t) :: Nil).reduceWith(Term.ArgClause(_))
-        case x =>
-          val using = x.text == soft.KwUsing.name && !CantStartStat(peekToken)
-          val mod = if (using) Some(atCurPosNext(Mod.Using())) else None
-          argumentExprsInParens(location).reduceWith(Term.ArgClause(_, mod))
-      })(Term.ArgClause(Nil))
-    case _ =>
-      Term.ArgClause(Nil)
-  })
+  private def getArgClauseOnBrace(): Term.ArgClause = autoPos {
+    val arg = blockExprOnBrace(allowRepeated = true)
+    Term.ArgClause(arg :: Nil)
+  }
+
+  private def getArgClauseOnParen(location: Location = NoStat): Term.ArgClause = autoPos(
+    inParensOnOpenOr(token match {
+      case t @ Ellipsis(2) =>
+        (ellipsis[Term](t) :: Nil).reduceWith(Term.ArgClause(_))
+      case x =>
+        val using = x.text == soft.KwUsing.name && !CantStartStat(peekToken)
+        val mod = if (using) Some(atCurPosNext(Mod.Using())) else None
+        argumentExprsInParens(location).reduceWith(Term.ArgClause(_, mod))
+    })(Term.ArgClause(Nil))
+  )
 
   private def argumentExprsInParens(location: Location = NoStat): List[Term] = {
     @tailrec
@@ -4142,9 +4144,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           syntaxError(s"class type required but $tpe found", at = tpe.pos)
         val name = anonNameEmpty()
         val argss = listBy[Term.ArgClause] { argss =>
-          @inline def body() = {
-            argss += getArgClause()
-          }
           def isLegalAnnotArg(): Boolean = peekToken match {
             // explained here:
             // https://github.com/lampepfl/dotty/blob/675ae0c6440d5527150d650ad45d20fda5e03e69/compiler/src/dotty/tools/dotc/parsing/Parsers.scala#L2581
@@ -4155,13 +4154,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           }
           def maybeBody() = {
             newlineOpt()
-            val ok = token match {
-              case _: LeftParen => !insidePrimaryCtorAnnot || isLegalAnnotArg()
-              case _: LeftBrace => allowBraces
+            token match {
+              case _: LeftParen if !insidePrimaryCtorAnnot || isLegalAnnotArg() =>
+                argss += getArgClauseOnParen()
+                true
+              case _: LeftBrace if allowBraces =>
+                argss += getArgClauseOnBrace()
+                true
               case _ => false
             }
-            if (ok) body()
-            ok
           }
           if (maybeBody() && allowArgss) while (maybeBody()) {}
         }
