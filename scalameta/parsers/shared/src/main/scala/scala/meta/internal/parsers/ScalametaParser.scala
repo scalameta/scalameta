@@ -585,9 +585,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     ellipsis(ell, extraSkip)
   }
 
-  def ellipsis[T <: Tree: AstInfo: ClassTag](ell: Ellipsis): T = ellipsis(ell, {})
+  def ellipsis[T <: Tree: AstInfo: ClassTag](ell: Ellipsis): T with Quasi = ellipsis(ell, {})
 
-  def ellipsis[T <: Tree: AstInfo: ClassTag](ell: Ellipsis, extraSkip: => Unit): T = autoPos {
+  def ellipsis[T <: Tree: AstInfo: ClassTag](
+      ell: Ellipsis,
+      extraSkip: => Unit
+  ): T with Quasi = autoPos {
     if (!dialect.allowUnquotes) {
       syntaxError(s"$dialect doesn't support ellipses", at = ell)
     }
