@@ -1911,7 +1911,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private def implicitClosure(location: Location): Term.Function = {
     val implicitPos = prevTokenPos
     val paramName = termName()
-    val paramTpt = getDeclTpeOpt(location.fullTypeOK)
+    val paramTpt = getDeclTpeOpt(fullTypeOK = false)
     val mod = atPos(implicitPos)(Mod.Implicit())
     val param = autoEndPos(implicitPos)(Term.Param(mod :: Nil, paramName, paramTpt, None))
     val params = copyPos(param)(Term.ParamClause(param :: Nil, Some(mod)))
