@@ -1483,6 +1483,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
     else None
 
+  private def getDeclTpeOpt(fullTypeOK: Boolean): Option[Type] =
+    if (acceptOpt[Colon]) Some(typeOrInfixType(fullTypeOK)) else None
+
   private def typeOrInfixType(fullTypeOK: Boolean): Type =
     if (fullTypeOK) typ() else startInfixType()
 
@@ -1804,8 +1807,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _: Indentation.Indent => blockExprOnIndent()
         case _ => blockOnOther()
       }) match {
-        case partial: Term.PartialFunction if acceptOpt[Colon] =>
-          autoEndPos(partial)(Term.Ascribe(partial, startInfixType()))
+        case t: Term.PartialFunction =>
+          getDeclTpeOpt(fullTypeOK = false)
+            .fold[Term](t)(tpe => autoEndPos(t)(Term.Ascribe(t, tpe)))
         case t => t
       }
 
@@ -1907,7 +1911,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private def implicitClosure(location: Location): Term.Function = {
     val implicitPos = prevTokenPos
     val paramName = termName()
-    val paramTpt = if (acceptOpt[Colon]) Some(typeOrInfixType(location)) else None
+    val paramTpt = getDeclTpeOpt(location.fullTypeOK)
     val mod = atPos(implicitPos)(Mod.Implicit())
     val param = autoEndPos(implicitPos)(Term.Param(mod :: Nil, paramName, paramTpt, None))
     val params = copyPos(param)(Term.ParamClause(param :: Nil, Some(mod)))
@@ -4190,11 +4194,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _ =>
         return Left("expected identifier, `this' or unquote")
     }
-    val decltpe =
-      if (!acceptOpt[Colon]) None
-      else if (token.isAny[Indentation, EOL]) None // fewer braces
-      else Some(startInfixType())
-    Right(Self(name, decltpe))
+    // possible fewer braces after colon
+    if (!peekToken.isAny[Indentation, EOL]) Right(Self(name, getDeclTpeOpt(fullTypeOK = false)))
+    else if (!token.is[Colon]) Right(Self(name, None))
+    else Left("missing type after self")
   }
 
   private def selfEither(quasiquote: Boolean = false): Either[String, Self] = {
