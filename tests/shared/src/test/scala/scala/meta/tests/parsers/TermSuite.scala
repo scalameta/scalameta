@@ -1794,4 +1794,50 @@ class TermSuite extends ParseSuite {
     )
   }
 
+  test("apply with arguments of various complexity") {
+    val code =
+      """|sc.submitJob(
+         |  rdd,
+         |  (iter: Iterator[Int]) => iter.toArray,
+         |  partitions.getOrElse(rdd.partitions.indices),
+         |  { case (_, _) => return }: (Int, Array[Int]) => Unit,
+         |  { return }
+         |)""".stripMargin
+    val layout =
+      """|sc.submitJob(rdd, (iter: Iterator[Int]) => iter.toArray, partitions.getOrElse(rdd.partitions.indices), {
+         |  case (_, _) =>
+         |    return
+         |}: (Int, Array[Int]) => Unit, {
+         |  return
+         |})
+         |""".stripMargin
+    val tree = Term.Apply(
+      Term.Select(tname("sc"), tname("submitJob")),
+      List(
+        tname("rdd"),
+        Term.Function(
+          List(tparam(Nil, "iter", Type.Apply(pname("Iterator"), List(pname("Int"))))),
+          Term.Select(tname("iter"), tname("toArray"))
+        ),
+        Term.Apply(
+          Term.Select(tname("partitions"), tname("getOrElse")),
+          List(Term.Select(Term.Select(tname("rdd"), tname("partitions")), tname("indices")))
+        ),
+        Term.Ascribe(
+          Term.PartialFunction(
+            List(
+              Case(Pat.Tuple(List(Pat.Wildcard(), Pat.Wildcard())), None, Term.Return(Lit.Unit()))
+            )
+          ),
+          Type.Function(
+            List(pname("Int"), Type.Apply(pname("Array"), List(pname("Int")))),
+            pname("Unit")
+          )
+        ),
+        Term.Block(List(Term.Return(Lit.Unit())))
+      )
+    )
+    runTestAssert[Term](code, Some(layout))(tree)
+  }
+
 }
