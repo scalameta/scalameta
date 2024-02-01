@@ -2405,11 +2405,58 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
      * ```
      * Without manual handling here, filter would be included for `(a+1).filter`
      */
-    val param = simpleExpr(allowRepeated = false)
-    val contextFunction = token.is[ContextArrow]
-    if ((contextFunction || token.is[RightArrow]) && isIndentAfter())
-      convertToParamClause(param)(true, true).map { pc =>
-        val params = autoEndPos(paramPos)(pc)
+    @tailrec
+    def getParamClause(pt: Option[Mod.ParamsType], mods: List[Mod]): Term.ParamClause =
+      token match {
+        case _: KwImplicit if pt.isEmpty =>
+          val mod = atCurPosNext(Mod.Implicit())
+          getParamClause(Some(mod), mod :: mods)
+        case _ =>
+          commaSeparated(getParamWithPos(mods, fullTypeOK = true)).reduceWith(toParamClause(pt))
+      }
+    def getParamAsClause(
+        pt: Option[Mod.ParamsType],
+        mods: List[Mod]
+    ): Option[Term.ParamClause] = {
+      val param = getParamWithPos(mods, fullTypeOK = false)
+      Some(copyPos(param)(reduceAs(param :: Nil, toParamClause(pt))))
+    }
+    def getParamWithPos(mods: List[Mod], fullTypeOK: Boolean) =
+      autoPos(getParam(mods, fullTypeOK))
+    @tailrec
+    def getParam(mods: List[Mod], fullTypeOK: Boolean): Term.Param = {
+      def afterName(name: Name) =
+        Term.Param(mods, name, getDeclTpeOpt(fullTypeOK = fullTypeOK), None)
+      token match {
+        case t: Ellipsis => ellipsis[Term.Param](t, 1)
+        case t: Ident =>
+          val mod = if (peekToken.is[Ident]) {
+            t.text match {
+              case soft.KwErased() => atCurPosNext(Mod.Erased())
+              case soft.KwUsing() => atCurPosNext(Mod.Using())
+              case _ => null
+            }
+          } else null
+          if (mod eq null) afterName(termName(t)) else getParam(mod :: mods, fullTypeOK)
+        case _: Underscore => afterName(namePlaceholder())
+        case _ => syntaxErrorExpected[Ident]
+      }
+    }
+
+    val paramClauseOpt = token match {
+      case _: LeftParen =>
+        Some(autoPos(inParensOnOpenOr(getParamClause(None, Nil))(Term.ParamClause(Nil))))
+      case t: Ellipsis if t.rank == 2 => Some(ellipsis[Term.ParamClause](t))
+      case _: Ident | _: Underscore | _: Ellipsis => getParamAsClause(None, Nil)
+      case _: KwImplicit =>
+        val mod = atCurPosNext(Mod.Implicit())
+        getParamAsClause(Some(mod), mod :: Nil)
+      case _ => None
+    }
+
+    paramClauseOpt.flatMap { params =>
+      val contextFunction = token.is[ContextArrow]
+      if ((contextFunction || token.is[RightArrow]) && isIndentAfter()) Some {
         next()
         val trm = blockExprOnIndent()
         autoEndPos(paramPos) {
@@ -2419,7 +2466,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             Term.Function(params, trm)
         }
       }
-    else None
+      else None
+    }
   }.getOrElse(None)
 
   private def getFewerBracesApplyOnColon(fun: Term, startPos: Int): Option[Term] = {

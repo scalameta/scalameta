@@ -1618,11 +1618,24 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: implicit bar =>
         |      baz
         |""".stripMargin
-    val error =
-      """|<input>:3: error: identifier expected but implicit found
-         |   foo: implicit bar =>
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def a = foo { implicit bar => baz }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          Term.ParamClause(
+            List(tparam(List(Mod.Implicit()), "bar")),
+            Some(Mod.Implicit())
+          ),
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 implicit after space, with type") {
@@ -1632,11 +1645,24 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: implicit bar: Int =>
         |      baz
         |""".stripMargin
-    val error =
-      """|<input>:3: error: identifier expected but implicit found
-         |   foo: implicit bar: Int =>
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def a = foo { implicit bar: Int => baz }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          Term.ParamClause(
+            List(tparam(List(Mod.Implicit()), "bar", "Int")),
+            Some(Mod.Implicit())
+          ),
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 implicit after newline") {
@@ -1741,11 +1767,24 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: using bar =>
         |      baz
         |""".stripMargin
-    val error =
-      """|<input>:3: error: identifier expected but => found
-         |   foo: using bar =>
-         |                  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def a = foo { (using bar) => baz }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          Term.ParamClause(
+            List(tparam(List(Mod.Using()), "bar")),
+            Some(Mod.Using())
+          ),
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 using after space, with type") {
@@ -1755,11 +1794,24 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: using bar: Int =>
         |      baz
         |""".stripMargin
-    val error =
-      """|<input>:3: error: identifier expected but : found
-         |   foo: using bar: Int =>
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def a = foo { (using bar: Int) => baz }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          Term.ParamClause(
+            List(tparam(List(Mod.Using()), "bar", "Int")),
+            Some(Mod.Using())
+          ),
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 using after newline") {
@@ -2083,11 +2135,18 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: erased bar =>
         |      baz
         |""".stripMargin
-    val error =
-      """|<input>:3: error: identifier expected but => found
-         |   foo: erased bar =>
-         |                   ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def a = foo(erased bar => baz)"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+      )
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 erased after space, with type") {
@@ -2097,11 +2156,21 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: erased bar: Int =>
         |      baz
         |""".stripMargin
-    val error =
-      """|<input>:3: error: identifier expected but : found
-         |   foo: erased bar: Int =>
-         |                  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def a = foo((erased bar: Int) => baz)"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          List(tparam(List(Mod.Erased()), "bar", "Int")),
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 erased after newline") {
