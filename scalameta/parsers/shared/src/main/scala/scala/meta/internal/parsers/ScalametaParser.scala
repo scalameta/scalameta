@@ -4402,7 +4402,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       packageOrPackageObjectDef(if (dialect.allowToplevelTerms) consumeStat else topStat)
     case _ if isDefIntro(tokenPos) => nonLocalDefOrDcl(secondaryConstructorAllowed = true)
     case _ if isEndMarkerIntro(tokenPos) => endMarker()
-    case _ if isExprIntro(token, tokenPos) => stat(expr(location = NoStat, allowRepeated = true))
+    case _ if isIdentOrExprIntro(token) => stat(expr(location = NoStat, allowRepeated = true))
     case t: Ellipsis => ellipsis[Stat](t, 1)
   }
 
@@ -4520,7 +4520,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       ellipsis[Stat](t, 1)
     case _ if isEndMarkerIntro(tokenPos) =>
       endMarker()
-    case _ if isExprIntro(token, tokenPos) =>
+    case _ if isIdentOrExprIntro(token) =>
       expr(location = TemplateStat, allowRepeated = false)
   }
 
@@ -4598,7 +4598,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           acceptStatSepOpt()
           iter()
         }
-      case _ if isExprIntro(token, tokenPos) =>
+      case _ if isEndMarkerIntro(tokenPos) =>
+        stats += endMarker()
+        iter()
+      case _ if isIdentOrExprIntro(token) =>
         stats += stat(expr(location = BlockStat, allowRepeated = allowRepeated))
         if (notCaseDefEnd()) {
           acceptStatSep()
@@ -4609,9 +4612,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         iter()
       case t: Ellipsis =>
         stats += ellipsis[Stat](t, 1)
-        iter()
-      case _ if isEndMarkerIntro(tokenPos) =>
-        stats += endMarker()
         iter()
       case _ =>
         syntaxError("illegal start of statement", at = token)

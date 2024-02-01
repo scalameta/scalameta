@@ -132,8 +132,15 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
   def isEndMarkerIntro(index: Int): Boolean = isEndMarkerIntro(index, getStrictNext(index))
 
-  def isExprIntro(token: Token, fIndex: => Int): Boolean = token match {
-    case _: Ident => val index = fIndex; !isSoftModifier(index) && !isEndMarkerIntro(index)
+  def isExprIntro(token: Token, fIndex: => Int): Boolean = isExprIntroImpl(token) {
+    val index = fIndex
+    !isSoftModifier(index) && !isEndMarkerIntro(index)
+  }
+
+  def isIdentOrExprIntro(token: Token): Boolean = isExprIntroImpl(token)(true)
+
+  private def isExprIntroImpl(token: Token)(isIdentOK: => Boolean): Boolean = token match {
+    case _: Ident => isIdentOK
     case _: Literal | _: Interpolation.Id | _: Xml.Start | _: KwDo | _: KwFor | _: KwIf | _: KwNew |
         _: KwReturn | _: KwSuper | _: KwThis | _: KwThrow | _: KwTry | _: KwWhile | _: LeftParen |
         _: LeftBrace | _: Underscore | _: Unquote | _: MacroSplice | _: MacroQuote |
