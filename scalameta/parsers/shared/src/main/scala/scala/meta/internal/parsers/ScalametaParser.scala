@@ -1574,7 +1574,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       tryParse {
         val simpleRest = simpleExprRest(simpleExpr, canApply = true, startPos = startPos)
         Try {
-          postfixExpr(startPos, simpleRest, location = NoStat, allowRepeated = false)
+          postfixExpr(startPos, simpleRest, allowRepeated = false)
         }.toOption.flatMap { x =>
           val exprCond = exprOtherRest(startPos, x, location = NoStat, allowRepeated = false)
           newLinesOpt()
@@ -1599,7 +1599,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       accept[Ident]
       Mod.Inline()
     }
-    maybeAnonymousFunctionForLocation(autoPosOpt(token match {
+    val res = autoPosOpt(token match {
       case soft.KwInline() if peekToken.is[KwIf] =>
         ifClause(List(inlineMod()))
       case _ if isInlineMatchMod(tokenPos) =>
@@ -1694,9 +1694,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         implicitClosure(location)
       case _ =>
         val startPos = tokenPos
-        val t: Term = postfixExpr(allowRepeated, PostfixStat)
+        val t: Term = postfixExpr(allowRepeated)
         exprOtherRest(startPos, t, location, allowRepeated)
-    }))(location)
+    })
+    if (location.anonFuncOK) maybeAnonymousFunction(res) else res
   }
 
   private def exprOtherRest(
@@ -2092,21 +2093,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case _ => None
   }
 
-  def postfixExpr(allowRepeated: Boolean, location: Location = NoStat): Term = {
+  def postfixExpr(allowRepeated: Boolean): Term = {
     val startPos = tokenPos
 
     // Start the infix chain.
     // We'll use `a + b` as our running example.
     val rhs0 = prefixExpr(allowRepeated)
 
-    postfixExpr(startPos, rhs0, allowRepeated, location)
+    postfixExpr(startPos, rhs0, allowRepeated)
   }
 
   private def postfixExpr(
       startPos: Int,
       rhs0: Term,
-      allowRepeated: Boolean,
-      location: Location
+      allowRepeated: Boolean
   ): Term = {
     val ctx = termInfixContext
     val base = ctx.stack
@@ -2211,14 +2211,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     // base contains pending UnfinishedInfix parts and rhsN is the final rhs.
     // For our running example, this'll be List([a +]) and [b].
     // Afterwards, lhsResult will be List([a + b]).
-    val lhsResult =
-      if (rhs0 == rhsN && ctx.isDone(base)) rhs0
-      else {
-        val endPos = prevTokenPos
-        atPosWithBody(startPos, ctx.reduceStack(base, rhsN, endPos, None), endPos)
-      }
-
-    maybeAnonymousFunctionForLocation(lhsResult)(location)
+    if (rhs0 == rhsN && ctx.isDone(base)) rhs0
+    else {
+      val endPos = prevTokenPos
+      atPosWithBody(startPos, ctx.reduceStack(base, rhsN, endPos, None), endPos)
+    }
   }
 
   def prefixExpr(allowRepeated: Boolean): Term =
@@ -4724,10 +4721,6 @@ object ScalametaParser {
       case (stat: Term) :: Nil => stat
       case _ => term
     }
-
-  @inline
-  private def maybeAnonymousFunctionForLocation(expr: Term)(location: Location): Term =
-    if (location.anonFuncOK) maybeAnonymousFunction(expr) else expr
 
   private def maybeAnonymousFunction(t: Term): Term = {
     val ok = PlaceholderChecks.hasPlaceholder(t, includeArg = false)
