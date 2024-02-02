@@ -1387,11 +1387,7 @@ class MinorDottySuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(
         """|import _root_com.olegych.scastie.api.runtime.*
-           |object Playground extends ScastieApp {
-           |  List(1, 2, 3).map {
-           |    (using i: Int) => i
-           |  }
-           |}
+           |object Playground extends ScastieApp { List(1, 2, 3).map { (using i: Int) => i } }
            |""".stripMargin
       )
     )(
@@ -1427,23 +1423,10 @@ class MinorDottySuite extends BaseDottySuite {
                     Term.Apply(Term.Name("List"), List(Lit.Int(1), Lit.Int(2), Lit.Int(3))),
                     Term.Name("map")
                   ),
-                  List(
-                    Term.Block(
-                      List(
-                        Term.Function(
-                          List(
-                            Term.Param(
-                              List(Mod.Using()),
-                              Term.Name("i"),
-                              Some(Type.Name("Int")),
-                              None
-                            )
-                          ),
-                          Term.Name("i")
-                        )
-                      )
-                    )
-                  )
+                  Term.Function(
+                    tparam(List(Mod.Using()), "i", "Int") :: Nil,
+                    Term.Name("i")
+                  ) :: Nil
                 )
               ),
               Nil

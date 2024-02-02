@@ -932,25 +932,14 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("using-lambda-method-parameter") {
-    val output = """|LazyBody {
-                    |  (using ctx: Context) => 3
-                    |}
-                    |""".stripMargin
+    val output = "LazyBody { (using ctx: Context) => 3 }"
     runTestAssert[Stat]("LazyBody { (using ctx: Context) => 3 }", assertLayout = Some(output))(
       Term.Apply(
         Term.Name("LazyBody"),
-        List(
-          Term.Block(
-            List(
-              Term.Function(
-                List(
-                  Term.Param(List(Mod.Using()), Term.Name("ctx"), Some(Type.Name("Context")), None)
-                ),
-                Lit.Int(3)
-              )
-            )
-          )
-        )
+        Term.Function(
+          List(tparam(List(Mod.Using()), "ctx", "Context")),
+          Lit.Int(3)
+        ) :: Nil
       )
     )
 

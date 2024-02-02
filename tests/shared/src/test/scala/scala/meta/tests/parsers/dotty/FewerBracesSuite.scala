@@ -1668,11 +1668,7 @@ class FewerBracesSuite extends BaseDottySuite {
         |   implicit bar =>
         |      baz
         |""".stripMargin
-    val layout =
-      """|def a = foo {
-         |  implicit bar => baz
-         |}
-         |""".stripMargin
+    val layout = "def a = foo { implicit bar => baz }"
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1680,27 +1676,18 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Block(
-          Term.Function(
-            Term.ParamClause(
-              List(tparam(List(Mod.Implicit()), "bar")),
-              Some(Mod.Implicit())
-            ),
-            tname("baz")
-          ) :: Nil
+        Term.Function(
+          Term.ParamClause(List(tparam(List(Mod.Implicit()), "bar")), Some(Mod.Implicit())),
+          tname("baz")
         ) :: Nil
       )
     )
-    runTestAssert[Stat](code, Some(layout))(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 implicit in braces, no fewer") {
     val code = "def a = foo { implicit bar => baz }"
-    val layout =
-      """|def a = foo {
-         |  implicit bar => baz
-         |}
-         |""".stripMargin
+    val layout = "def a = foo { implicit bar => baz }"
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1708,18 +1695,16 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Block(
-          Term.Function(
-            Term.ParamClause(
-              List(tparam(List(Mod.Implicit()), "bar")),
-              Some(Mod.Implicit())
-            ),
-            tname("baz")
-          ) :: Nil
+        Term.Function(
+          Term.ParamClause(
+            List(tparam(List(Mod.Implicit()), "bar")),
+            Some(Mod.Implicit())
+          ),
+          tname("baz")
         ) :: Nil
       )
     )
-    runTestAssert[Stat](code, Some(layout))(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 erased after space") {
@@ -1815,7 +1800,7 @@ class FewerBracesSuite extends BaseDottySuite {
         ) :: Nil
       )
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }

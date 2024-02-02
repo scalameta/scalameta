@@ -190,7 +190,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
   checkPositions[Stat](
     "foo { implicit a => { b }: C }",
-    """|Term.Block { implicit a => { b }: C }
+    """|Term.ArgClause { implicit a => { b }: C }
        |Term.Function implicit a => { b }: C
        |Term.ParamClause implicit a
        |Term.Param implicit a
