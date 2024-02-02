@@ -1152,4 +1152,14 @@ class GivenUsingSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("lazy given") {
+    val code = "lazy given foo: Foo = ???"
+    val error =
+      """|<input>:1: error: lazy not allowed here. Only vals can be lazy
+         |lazy given foo: Foo = ???
+         |^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
