@@ -247,8 +247,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     inParensAfterOpenOr(body)(ifEmpty)
   }
   @inline private def inParensAfterOpen[T](body: T): T = {
-    newLineOpt()
-    accept[RightParen]
+    acceptAfterOptNL[RightParen]
     body
   }
   @inline private def inParensAfterOpenOr[T](body: => T)(ifEmpty: => T): T =
@@ -267,8 +266,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     inBracesAfterOpen(body)
   }
   @inline private def inBracesAfterOpen[T](body: T): T = {
-    newLineOpt()
-    accept[RightBrace]
+    acceptAfterOptNL[RightBrace]
     body
   }
 
@@ -281,8 +279,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     indentedAfterOpen(body)
   }
   @inline private def indentedAfterOpen[T](body: T): T = {
-    newLinesOpt()
-    accept[Indentation.Outdent]
+    acceptAfterOptNL[Indentation.Outdent]
     body
   }
 
@@ -442,10 +439,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @inline private def acceptOpt(unapply: Token => Boolean): Boolean =
     nextIf(unapply(token))
 
-  @inline private def acceptAfterOptNL[T <: Token: ClassTag]: Unit = {
-    newLineOpt()
-    accept[T]
+  private def acceptIfAfterOpt[A <: Token: ClassTag, B <: Token: ClassTag]: Boolean =
+    if (token.is[A]) { next(); true }
+    else if (token.is[B] && peekToken.is[A]) { nextTwice(); true }
+    else false
+
+  @inline private def acceptIfAfterOptNL[T <: Token: ClassTag]: Boolean =
+    acceptIfAfterOpt[T, AtEOL]
+
+  @inline private def acceptAfterOpt[A <: Token: ClassTag, B <: Token: ClassTag]: Unit = {
+    if (token.is[B]) next()
+    accept[A]
   }
+
+  @inline private def acceptAfterOptNL[T <: Token: ClassTag]: Unit =
+    acceptAfterOpt[T, AtEOL]
 
   def acceptStatSep(): Unit = token match {
     case _: AtEOL => next()
