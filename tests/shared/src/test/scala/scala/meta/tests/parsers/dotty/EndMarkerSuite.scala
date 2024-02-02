@@ -6,10 +6,10 @@ class EndMarkerSuite extends BaseDottySuite {
 
   test("end-marker") {
     runTestAssert[Stat]("end token")(
-      Term.EndMarker(Term.Name("token"))
+      Term.EndMarker(tname("token"))
     )
     runTestAssert[Stat]("end match")(
-      Term.EndMarker(Term.Name("match"))
+      Term.EndMarker(tname("match"))
     )
   }
 
@@ -33,11 +33,11 @@ class EndMarkerSuite extends BaseDottySuite {
         List(
           Defn.Object(
             Nil,
-            Term.Name("a"),
-            Template(Nil, Nil, Self(Name(""), None), List(Term.Apply(Term.Name("init"), Nil)))
+            tname("a"),
+            tpl(Term.Apply(tname("init"), Nil))
           ),
-          Term.EndMarker(Term.Name("a")),
-          Defn.Type(Nil, Type.Name("K"), Nil, Type.Name("Map"))
+          Term.EndMarker(tname("a")),
+          Defn.Type(Nil, pname("K"), Nil, pname("Map"))
         )
       )
     )
@@ -55,18 +55,18 @@ class EndMarkerSuite extends BaseDottySuite {
         List(
           Defn.ExtensionGroup(
             Nil,
-            List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))),
+            List(List(tparam("a", "Int"))),
             Defn.Def(
               Nil,
-              Term.Name("b"),
+              tname("b"),
               Nil,
               Nil,
               None,
-              Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Lit.Int(1)))
+              Term.ApplyInfix(tname("a"), tname("+"), Nil, List(int(1)))
             )
           ),
-          Term.EndMarker(Term.Name("extension")),
-          Defn.Type(Nil, Type.Name("K"), Nil, Type.Name("Map"))
+          Term.EndMarker(tname("extension")),
+          Defn.Type(Nil, pname("K"), Nil, pname("Map"))
         )
       )
     )
@@ -74,15 +74,15 @@ class EndMarkerSuite extends BaseDottySuite {
 
   test("end-nomarker") {
     runTestAssert[Stat]("lista append end")(
-      Term.ApplyInfix(Term.Name("lista"), Term.Name("append"), Nil, List(Term.Name("end")))
+      Term.ApplyInfix(tname("lista"), tname("append"), Nil, List(tname("end")))
     )
 
     runTestAssert[Stat]("lista end 3")(
-      Term.ApplyInfix(Term.Name("lista"), Term.Name("end"), Nil, List(Lit.Int(3)))
+      Term.ApplyInfix(tname("lista"), tname("end"), Nil, List(int(3)))
     )
 
     runTestAssert[Stat]("end + 3")(
-      Term.ApplyInfix(Term.Name("end"), Term.Name("+"), Nil, List(Lit.Int(3)))
+      Term.ApplyInfix(tname("end"), tname("+"), Nil, List(int(3)))
     )
 
     val code = """|def a: B = {
@@ -93,14 +93,14 @@ class EndMarkerSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(
       Defn.Def(
         Nil,
-        Term.Name("a"),
+        tname("a"),
         Nil,
         Nil,
-        Some(Type.Name("B")),
+        Some(pname("B")),
         Term.Block(
           List(
-            Term.ApplyInfix(Term.Name("b"), Term.Name("append"), Nil, List(Term.Name("end"))),
-            Term.Name("b")
+            Term.ApplyInfix(tname("b"), tname("append"), Nil, List(tname("end"))),
+            tname("b")
           )
         )
       )
@@ -119,14 +119,14 @@ class EndMarkerSuite extends BaseDottySuite {
     runTestAssert[Stat](code, assertLayout = None)(
       Defn.Def(
         Nil,
-        Term.Name("a"),
+        tname("a"),
         Nil,
         List(List()),
-        Some(Type.Name("Unit")),
+        Some(pname("Unit")),
         Term.Block(
           List(
-            Term.EndMarker(Term.Name("for")),
-            Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Int(3))
+            Term.EndMarker(tname("for")),
+            Defn.Val(Nil, List(Pat.Var(tname("x"))), None, int(3))
           )
         )
       )
@@ -143,8 +143,8 @@ class EndMarkerSuite extends BaseDottySuite {
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.If(
-        Term.ApplyInfix(Term.Name("limit"), Term.Name("<"), Nil, List(Term.Name("end"))),
-        Term.Block(List(Defn.Val(Nil, List(Pat.Var(Term.Name("aa"))), None, Lit.Int(1)))),
+        Term.ApplyInfix(tname("limit"), tname("<"), Nil, List(tname("end"))),
+        Term.Block(List(Defn.Val(Nil, List(Pat.Var(tname("aa"))), None, int(1)))),
         Lit.Unit()
       )
     )
@@ -181,36 +181,36 @@ class EndMarkerSuite extends BaseDottySuite {
         List(
           Defn.Val(
             Nil,
-            List(Pat.Var(Term.Name("a"))),
+            List(Pat.Var(tname("a"))),
             None,
             Term.Match(
-              Term.This(Name("")),
+              Term.This(anon),
               List(
                 Case(
-                  Pat.Var(Term.Name("a")),
+                  Pat.Var(tname("a")),
                   None,
                   Term.Block(
                     List(
                       Term.Match(
-                        Term.Name("that"),
+                        tname("that"),
                         List(
-                          Case(Pat.Var(Term.Name("b")), None, Term.Name("bb")),
-                          Case(Pat.Var(Term.Name("c")), None, Term.Name("cc"))
+                          Case(Pat.Var(tname("b")), None, tname("bb")),
+                          Case(Pat.Var(tname("c")), None, tname("cc"))
                         ),
                         Nil
                       ),
-                      Term.EndMarker(Term.Name("match"))
+                      Term.EndMarker(tname("match"))
                     )
                   )
                 ),
                 Case(
-                  Pat.Var(Term.Name("b")),
+                  Pat.Var(tname("b")),
                   None,
                   Term.Match(
-                    Term.Name("that"),
+                    tname("that"),
                     List(
-                      Case(Pat.Var(Term.Name("c")), None, Term.Name("cc")),
-                      Case(Pat.Wildcard(), None, Term.Name("dd"))
+                      Case(Pat.Var(tname("c")), None, tname("cc")),
+                      Case(Pat.Wildcard(), None, tname("dd"))
                     ),
                     Nil
                   )
@@ -251,28 +251,22 @@ class EndMarkerSuite extends BaseDottySuite {
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Defn.Object(
         Nil,
-        Term.Name("a"),
-        Template(
-          Nil,
-          Nil,
-          Self(Name(""), None),
-          List(
-            Defn.Val(
-              Nil,
-              List(Pat.Tuple(List(Pat.Var(Term.Name("foo")), Pat.Var(Term.Name("boo"))))),
-              None,
-              Term.Block(List(Term.Name("bar"), Term.Name("baz")))
-            ),
-            Term.EndMarker(Term.Name("val")),
-            Defn.Val(
-              Nil,
-              List(Pat.Tuple(List(Pat.Var(Term.Name("foo2")), Pat.Var(Term.Name("boo3"))))),
-              None,
-              Term.Block(List(Term.Name("bar"), Term.Name("baz")))
-            ),
-            Term.EndMarker(Term.Name("val"))
+        tname("a"),
+        tpl(
+          Defn.Val(
+            Nil,
+            List(Pat.Tuple(List(Pat.Var(tname("foo")), Pat.Var(tname("boo"))))),
+            None,
+            Term.Block(List(tname("bar"), tname("baz")))
           ),
-          Nil
+          Term.EndMarker(tname("val")),
+          Defn.Val(
+            Nil,
+            List(Pat.Tuple(List(Pat.Var(tname("foo2")), Pat.Var(tname("boo3"))))),
+            None,
+            Term.Block(List(tname("bar"), tname("baz")))
+          ),
+          Term.EndMarker(tname("val"))
         )
       )
     )
@@ -287,8 +281,8 @@ class EndMarkerSuite extends BaseDottySuite {
     )(
       Source(
         List(
-          Defn.Object(Nil, Term.Name("Foo"), Template(Nil, Nil, Self(Name(""), None), Nil, Nil)),
-          Term.EndMarker(Term.Name("Foo"))
+          Defn.Object(Nil, tname("Foo"), EmptyTemplate()),
+          Term.EndMarker(tname("Foo"))
         )
       )
     )
@@ -305,12 +299,12 @@ class EndMarkerSuite extends BaseDottySuite {
         List(
           Defn.Class(
             Nil,
-            Type.Name("Foo"),
+            pname("Foo"),
             Nil,
             EmptyCtor(),
-            Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+            EmptyTemplate()
           ),
-          Term.EndMarker(Term.Name("Foo"))
+          Term.EndMarker(tname("Foo"))
         )
       )
     )
@@ -327,12 +321,12 @@ class EndMarkerSuite extends BaseDottySuite {
         List(
           Defn.Trait(
             Nil,
-            Type.Name("Foo"),
+            pname("Foo"),
             Nil,
             EmptyCtor(),
-            Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+            EmptyTemplate()
           ),
-          Term.EndMarker(Term.Name("Foo"))
+          Term.EndMarker(tname("Foo"))
         )
       )
     )
@@ -386,7 +380,7 @@ class EndMarkerSuite extends BaseDottySuite {
          |""".stripMargin
     runTestAssert[Stat](code, Some(layout))(
       Term.Match(
-        Term.Select(Term.Name("x"), Term.Name("end")),
+        Term.Select(tname("x"), tname("end")),
         List(Case(Pat.Wildcard(), None, Lit.Unit())),
         Nil
       )

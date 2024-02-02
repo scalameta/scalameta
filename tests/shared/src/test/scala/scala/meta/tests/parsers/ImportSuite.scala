@@ -127,7 +127,7 @@ class ImportSuite extends ParseSuite {
     val expected = Import(
       List(
         Importer(
-          Term.Select(Term.Select(Term.Name("a"), Term.Name("b")), Term.Name("c")),
+          Term.Select(Term.Select(tname("a"), tname("b")), tname("c")),
           List(Importee.GivenAll(), Importee.Wildcard())
         )
       )
@@ -146,7 +146,7 @@ class ImportSuite extends ParseSuite {
     val expectedWithoutWildcard = Import(
       List(
         Importer(
-          Term.Select(Term.Select(Term.Name("a"), Term.Name("b")), Term.Name("c")),
+          Term.Select(Term.Select(tname("a"), tname("b")), tname("c")),
           List(Importee.Name(Indeterminate("given")))
         )
       )

@@ -76,13 +76,13 @@ class MacroSuite extends BaseDottySuite {
       )
     )
     runTestAssert[Stat]("f('{ 2 })")(
-      Term.Apply(tname("f"), List(Term.QuotedMacroExpr(Term.Block(List(Lit.Int(2))))))
+      Term.Apply(tname("f"), List(Term.QuotedMacroExpr(Term.Block(List(int(2))))))
     )
     runTestAssert[Stat]("if (b) '{ true } else '{ false }")(
       Term.If(
         tname("b"),
-        Term.QuotedMacroExpr(Term.Block(List(Lit.Boolean(true)))),
-        Term.QuotedMacroExpr(Term.Block(List(Lit.Boolean(false))))
+        Term.QuotedMacroExpr(Term.Block(List(bool(true)))),
+        Term.QuotedMacroExpr(Term.Block(List(bool(false))))
       )
     )
     runTestAssert[Stat]("'{ val y = a; ${ env } }", assertLayout = None)(
@@ -99,7 +99,7 @@ class MacroSuite extends BaseDottySuite {
     runTestAssert[Stat]("x match { case 'c => 1 }", assertLayout = Some(layoutMatchSimple))(
       Term.Match(
         tname("x"),
-        List(Case(Lit.Symbol('c), None, Lit.Int(1))),
+        List(Case(Lit.Symbol('c), None, int(1))),
         Nil
       )
     )
@@ -107,7 +107,7 @@ class MacroSuite extends BaseDottySuite {
     runTestAssert[Stat]("x match { case '{ a } => 1 }", assertLayout = Some(layoutMatchComplex))(
       Term.Match(
         tname("x"),
-        List(Case(Pat.Macro(Term.QuotedMacroExpr(Term.Block(List(tname("a"))))), None, Lit.Int(1)))
+        List(Case(Pat.Macro(Term.QuotedMacroExpr(Term.Block(List(tname("a"))))), None, int(1)))
       )
     )
 
@@ -135,7 +135,7 @@ class MacroSuite extends BaseDottySuite {
               )
             ),
             None,
-            Lit.Int(1)
+            int(1)
           )
         )
       )
@@ -150,12 +150,12 @@ class MacroSuite extends BaseDottySuite {
          |}""".stripMargin
     )(
       Term.Match(
-        Term.Select(Term.Name("tpr"), Term.Name("asType")),
+        Term.Select(tname("tpr"), tname("asType")),
         List(
           Case(
-            Pat.Macro(Term.QuotedMacroType(Type.Name("t"))),
+            Pat.Macro(Term.QuotedMacroType(pname("t"))),
             None,
-            Term.ApplyType(Term.Name("getTypeTree"), List(Type.Name("t")))
+            Term.ApplyType(tname("getTypeTree"), List(pname("t")))
           )
         ),
         Nil
@@ -174,8 +174,8 @@ class MacroSuite extends BaseDottySuite {
       Term.QuotedMacroExpr(
         Term.Block(
           List(
-            Term.ApplyInfix(Lit.Int(1), tname("+"), Nil, List(Lit.Int(3))),
-            Term.ApplyInfix(Term.QuotedMacroExpr(tname("x")), tname("+"), Nil, List(Lit.Int(3))),
+            Term.ApplyInfix(int(1), tname("+"), Nil, List(int(3))),
+            Term.ApplyInfix(Term.QuotedMacroExpr(tname("x")), tname("+"), Nil, List(int(3))),
             tname("zzz")
           )
         )
@@ -208,7 +208,7 @@ class MacroSuite extends BaseDottySuite {
     )
     runTestAssert[Stat]("'[ Show[$tp] ]")(
       Term.QuotedMacroType(
-        Type.Apply(Type.Name("Show"), List(Type.Macro(Term.SplicedMacroExpr(Term.Name("tp")))))
+        Type.Apply(pname("Show"), List(Type.Macro(Term.SplicedMacroExpr(tname("tp")))))
       )
     )
   }
@@ -235,7 +235,7 @@ class MacroSuite extends BaseDottySuite {
           List(
             Defn.Val(Nil, List(Pat.Var(tname("x"))), None, Term.QuotedMacroExpr(tname("y"))),
             Term.Apply(tname("println"), List(tname("d"))),
-            Lit.Int(1)
+            int(1)
           )
         )
       )
@@ -279,7 +279,7 @@ class MacroSuite extends BaseDottySuite {
           List(
             Defn.Val(Nil, List(Pat.Var(tname("x"))), None, Term.QuotedMacroExpr(tname("y"))),
             Term.Apply(tname("println"), List(tname("d"))),
-            Lit.Int(1)
+            int(1)
           )
         )
       )
@@ -290,11 +290,11 @@ class MacroSuite extends BaseDottySuite {
     val code = "a.map($d => $d.a)"
     runTestAssert[Stat](code)(
       Term.Apply(
-        Term.Select(Term.Name("a"), Term.Name("map")),
+        Term.Select(tname("a"), tname("map")),
         List(
           Term.Function(
-            List(Term.Param(Nil, Term.Name("$d"), None, None)),
-            Term.Select(Term.Name("$d"), Term.Name("a"))
+            List(tparam("$d")),
+            Term.Select(tname("$d"), tname("a"))
           )
         )
       )
@@ -306,13 +306,13 @@ class MacroSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(
       Defn.Type(
         Nil,
-        Type.Name("$F2"),
+        pname("$F2"),
         Nil,
         Type.PolyFunction(
-          List(Type.Param(Nil, Type.Name("$T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+          List(pparam("$T")),
           Type.Function(List(pname("$T")), Type.Apply(pname("Option"), List(pname("$T"))))
         ),
-        Type.Bounds(None, None)
+        noBounds
       )
     )
   }
@@ -402,14 +402,14 @@ class MacroSuite extends BaseDottySuite {
           List(
             Defn.Val(
               Nil,
-              List(Pat.Var(Term.Name("x"))),
-              Some(Type.Name("Int")),
+              List(Pat.Var(tname("x"))),
+              Some(pname("Int")),
               Term.SplicedMacroExpr(
                 Term.Block(
                   List(
                     Term.ContextFunction(
-                      List(Term.Param(Nil, Term.Name("q2"), None, None)),
-                      Term.Name("a")
+                      List(tparam("q2")),
+                      tname("a")
                     )
                   )
                 )
@@ -427,7 +427,7 @@ class MacroSuite extends BaseDottySuite {
     )(
       Term.QuotedMacroExpr(
         Term.Block(
-          List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Term.Name("$")))
+          List(Defn.Val(Nil, List(Pat.Var(tname("x"))), Some(pname("Int")), tname("$")))
         )
       )
     )
@@ -436,7 +436,7 @@ class MacroSuite extends BaseDottySuite {
     )(
       Term.SplicedMacroExpr(
         Term.Block(
-          List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Term.Name("$")))
+          List(Defn.Val(Nil, List(Pat.Var(tname("x"))), Some(pname("Int")), tname("$")))
         )
       )
     )

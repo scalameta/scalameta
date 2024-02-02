@@ -7,15 +7,15 @@ import scala.meta.dialects.Scala211
 class LitSuite extends ParseSuite {
 
   test("true") {
-    assertTree(term("true"))(Lit.Boolean(true))
+    assertTree(term("true"))(bool(true))
   }
 
   test("false") {
-    assertTree(term("false"))(Lit.Boolean(false))
+    assertTree(term("false"))(bool(false))
   }
 
   test("42") {
-    assertTree(term("42"))(Lit.Int(42))
+    assertTree(term("42"))(int(42))
   }
 
   test("2147483648") {
@@ -23,11 +23,11 @@ class LitSuite extends ParseSuite {
   }
 
   test("2147483647") {
-    assertTree(term("2147483647"))(Lit.Int(2147483647))
+    assertTree(term("2147483647"))(int(2147483647))
   }
 
   test("-2147483648") {
-    assertTree(term("-2147483648"))(Lit.Int(-2147483648))
+    assertTree(term("-2147483648"))(int(-2147483648))
   }
 
   test("-2147483649") {
@@ -77,7 +77,7 @@ class LitSuite extends ParseSuite {
   }
 
   test("\"foo\"") {
-    assertTree(term("\"foo\""))(Lit.String("foo"))
+    assertTree(term("\"foo\""))(str("foo"))
   }
 
   test("'foo'") {
@@ -111,7 +111,7 @@ class LitSuite extends ParseSuite {
   }
 
   test("#342") {
-    assertTree(term("""( 50).toString"""))(Term.Select(Lit.Int(50), Term.Name("toString")))
+    assertTree(term("""( 50).toString"""))(Term.Select(int(50), tname("toString")))
   }
 
   test("#360") {
@@ -130,10 +130,10 @@ class LitSuite extends ParseSuite {
     )
 
     assertTree(term("raw\"\"\"\"\"\"\"\""))(
-      Term.Interpolate(Term.Name("raw"), List(Lit.String("\"\"")), Nil)
+      Term.Interpolate(tname("raw"), List(str("\"\"")), Nil)
     )
     assertTree(term("raw\"\"\"\"\"\"\"\"\"\"\"\"\""))(
-      Term.Interpolate(Term.Name("raw"), List(Lit.String("\"\"\"\"\"\"\"")), Nil)
+      Term.Interpolate(tname("raw"), List(str("\"\"\"\"\"\"\"")), Nil)
     )
   }
 
@@ -153,16 +153,10 @@ class LitSuite extends ParseSuite {
     checkStat(code2)(
       Defn.Trait(
         Nil,
-        Type.Name("Foo"),
+        pname("Foo"),
         Nil,
         EmptyCtor(),
-        Template(
-          Nil,
-          Nil,
-          Self(Name(""), None),
-          List(Defn.Def(Nil, Term.Name("negate"), Nil, Nil, Some(Type.Name("-")), Term.Name("-"))),
-          Nil
-        )
+        tpl(Defn.Def(Nil, tname("negate"), Nil, Nil, Some(pname("-")), tname("-")))
       )
     )
   }

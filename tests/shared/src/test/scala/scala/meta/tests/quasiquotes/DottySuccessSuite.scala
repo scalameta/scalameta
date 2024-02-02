@@ -11,10 +11,10 @@ class DottySuccessSuite extends TreeSuiteBase {
   test("1 t\"(..tpes) => tpe [param clause]\"") {
     val t"(..$tpes) => $tpe" = t"(x: X, y: Y) => Z"
 
-    val tpeX = Type.TypedParam(Type.Name("x"), Type.Name("X"))
-    val tpeY = Type.TypedParam(Type.Name("y"), Type.Name("Y"))
+    val tpeX = Type.TypedParam(pname("x"), pname("X"))
+    val tpeY = Type.TypedParam(pname("y"), pname("Y"))
     checkTree(tpes, "(x: X, y: Y)")(Type.FuncParamClause(List(tpeX, tpeY)))
-    checkTree(tpe, "Z")(Type.Name("Z"))
+    checkTree(tpe, "Z")(pname("Z"))
 
     checkTree(t"(..${tpes.values}) => $tpe", "(x: X, y: Y) => Z")(
       Type.Function(tpes, tpe)

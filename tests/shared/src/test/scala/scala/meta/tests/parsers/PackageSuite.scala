@@ -7,7 +7,7 @@ import scala.meta.dialects.Scala211
 class PackageSuite extends ParseSuite {
   test("class C") {
     assertTree(source("class C")) {
-      Source(Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil)
+      Source(Class(Nil, pname("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil)
     }
   }
 
@@ -15,8 +15,8 @@ class PackageSuite extends ParseSuite {
     assertTree(source("package foo; class C")) {
       Source(
         Pkg(
-          Term.Name("foo"),
-          Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
+          tname("foo"),
+          Class(Nil, pname("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
         ) :: Nil
       )
     }
@@ -27,8 +27,8 @@ class PackageSuite extends ParseSuite {
     assertTree(source("package foo { class C }")) {
       Source(
         Pkg(
-          Term.Name("foo"),
-          Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
+          tname("foo"),
+          Class(Nil, pname("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
         ) :: Nil
       )
     }
@@ -39,8 +39,8 @@ class PackageSuite extends ParseSuite {
     assertTree(source("package foo.bar; class C")) {
       Source(
         Pkg(
-          Term.Select(Term.Name("foo"), Term.Name("bar")),
-          Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
+          Term.Select(tname("foo"), tname("bar")),
+          Class(Nil, pname("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
         ) :: Nil
       )
     }
@@ -51,8 +51,8 @@ class PackageSuite extends ParseSuite {
     assertTree(source("package foo.bar { class C }")) {
       Source(
         Pkg(
-          Term.Select(Term.Name("foo"), Term.Name("bar")),
-          Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
+          Term.Select(tname("foo"), tname("bar")),
+          Class(Nil, pname("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
         ) :: Nil
       )
     }
@@ -63,10 +63,10 @@ class PackageSuite extends ParseSuite {
     assertTree(source("package foo; package bar; class C")) {
       Source(
         Pkg(
-          Term.Name("foo"),
+          tname("foo"),
           Pkg(
-            Term.Name("bar"),
-            Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
+            tname("bar"),
+            Class(Nil, pname("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
           ) :: Nil
         ) :: Nil
       )
@@ -78,10 +78,10 @@ class PackageSuite extends ParseSuite {
     assertTree(source("package foo { package bar { class C } }")) {
       Source(
         Pkg(
-          Term.Name("foo"),
+          tname("foo"),
           Pkg(
-            Term.Name("bar"),
-            Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
+            tname("bar"),
+            Class(Nil, pname("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil
           ) :: Nil
         ) :: Nil
       )
@@ -92,15 +92,15 @@ class PackageSuite extends ParseSuite {
   test("package foo {}; package bar {}") {
     assertTree(source("package foo {}; package bar {}"))(
       Source(
-        (Pkg(Term.Name("foo"), Nil)) ::
-          (Pkg(Term.Name("bar"), Nil)) :: Nil
+        (Pkg(tname("foo"), Nil)) ::
+          (Pkg(tname("bar"), Nil)) :: Nil
       )
     )
   }
 
   test("package object foo") {
     assertTree(source("package object foo"))(
-      Source(Pkg.Object(Nil, Term.Name("foo"), EmptyTemplate()) :: Nil)
+      Source(Pkg.Object(Nil, tname("foo"), EmptyTemplate()) :: Nil)
     )
   }
 
@@ -109,9 +109,9 @@ class PackageSuite extends ParseSuite {
     assertTree(source("import foo.bar; package object baz"))(
       Source(
         Import(
-          Importer(Term.Name("foo"), Importee.Name(Name.Indeterminate("bar")) :: Nil) :: Nil
+          Importer(tname("foo"), Importee.Name(Name.Indeterminate("bar")) :: Nil) :: Nil
         ) ::
-          Pkg.Object(Nil, Term.Name("baz"), EmptyTemplate()) :: Nil
+          Pkg.Object(Nil, tname("baz"), EmptyTemplate()) :: Nil
       )
     )
   }
@@ -120,7 +120,7 @@ class PackageSuite extends ParseSuite {
     assertTree(source("package foo; package bar; package baz"))(
       Source(
         List(
-          Pkg(Term.Name("foo"), List(Pkg(Term.Name("bar"), List(Pkg(Term.Name("baz"), List())))))
+          Pkg(tname("foo"), List(Pkg(tname("bar"), List(Pkg(tname("baz"), List())))))
         )
       )
     )
@@ -146,7 +146,7 @@ class PackageSuite extends ParseSuite {
     )(
       Source(
         List(
-          Pkg(Term.Name("foo"), List(Pkg(Term.Name("bar"), List(Pkg(Term.Name("baz"), List())))))
+          Pkg(tname("foo"), List(Pkg(tname("bar"), List(Pkg(tname("baz"), List())))))
         )
       )
     )

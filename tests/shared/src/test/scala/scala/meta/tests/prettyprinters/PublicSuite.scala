@@ -13,17 +13,17 @@ class PublicSuite extends TreeSuiteBase {
   }
 
   test("scala.meta.Tree.toString (manual)") {
-    val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
+    val tree = Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar")))
     assert(tree.toString == "foo + bar")
   }
 
   test("scala.meta.Tree.structure (manual)") {
-    val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
-    assertTree(tree)(Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar"))))
+    val tree = Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar")))
+    assertTree(tree)(Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar"))))
   }
 
   test("scala.meta.Tree.syntax") {
-    val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
+    val tree = Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar")))
     assertWithOriginalSyntax(tree, "foo + bar", "foo + bar")
   }
 
@@ -34,7 +34,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.Tree.structure (parsed)") {
     val tree = "foo + bar // baz".parse[Term].get
-    assertTree(tree)(Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar"))))
+    assertTree(tree)(Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar"))))
   }
 
   test("scala.meta.Tree.syntax (parsed)") {
@@ -49,7 +49,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.Tree.structure (quasiquoted)") {
     val tree = q"foo + bar // baz"
-    assertTree(tree)(Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar"))))
+    assertTree(tree)(Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar"))))
   }
 
   test("scala.meta.Tree.syntax (quasiquoted)") {

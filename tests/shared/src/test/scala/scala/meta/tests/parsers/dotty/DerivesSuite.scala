@@ -87,7 +87,7 @@ class DerivesSuite extends BaseDottySuite {
         List(Mod.Case()),
         pname("Node"),
         Nil,
-        ctorp(List(tparam("name", "String"))),
+        ctorp(tparam("name", "String")),
         Template(
           Nil,
           List(init("Tree")),
@@ -142,7 +142,7 @@ class DerivesSuite extends BaseDottySuite {
       Nil,
       pname("A"),
       List(pparam("T")),
-      ctorp(List(tparam("a", "Int"), tparam("b", "Int"))),
+      ctorp(tparam("a", "Int"), tparam("b", "Int")),
       Template(
         Nil,
         Nil,
@@ -182,7 +182,7 @@ class DerivesSuite extends BaseDottySuite {
       Nil,
       pname("A"),
       List(pparam("T")),
-      ctorp(List(tparam("a", "Int"), tparam("b", "Int"))),
+      ctorp(tparam("a", "Int"), tparam("b", "Int")),
       Template(
         Nil,
         Nil,
@@ -228,10 +228,10 @@ class DerivesSuite extends BaseDottySuite {
       Nil,
       pname("A"),
       List(pparam("T")),
-      ctorp(List(tparam("a", "Int"), tparam("b", "Int"))),
+      ctorp(tparam("a", "Int"), tparam("b", "Int")),
       Template(
         Nil,
-        List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), Name(""), emptyArgClause)),
+        List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, emptyArgClause)),
         slf,
         List(Defn.Def(Nil, tname("a"), Nil, None, tname("???"))),
         List(Type.Apply(pname("Epsilon"), List(pname("T"))))
@@ -273,7 +273,7 @@ class DerivesSuite extends BaseDottySuite {
       Nil,
       pname("A"),
       List(pparam("T")),
-      ctorp(List(tparam("a", "Int"), tparam("b", "Int"))),
+      ctorp(tparam("a", "Int"), tparam("b", "Int")),
       Template(
         Nil,
         List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, emptyArgClause)),
@@ -318,7 +318,7 @@ class DerivesSuite extends BaseDottySuite {
       Nil,
       pname("A"),
       List(pparam("T")),
-      ctorp(List(tparam("a", "Int"), tparam("b", "Int"))),
+      ctorp(tparam("a", "Int"), tparam("b", "Int")),
       Template(
         Nil,
         List(
@@ -366,7 +366,7 @@ class DerivesSuite extends BaseDottySuite {
       Nil,
       pname("A"),
       List(pparam("T")),
-      ctorp(List(tparam("a", "Int"), tparam("b", "Int"))),
+      ctorp(tparam("a", "Int"), tparam("b", "Int")),
       Template(
         Nil,
         List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, emptyArgClause)),

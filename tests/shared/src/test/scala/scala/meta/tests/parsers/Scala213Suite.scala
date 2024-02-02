@@ -18,19 +18,19 @@ class Scala213Suite extends ParseSuite {
   test("literal-types") {
     // https://docs.scala-lang.org/sips/42.type.html
     runAssert("val a: 42 = 42")(
-      Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), Some(Lit.Int(42)), Lit.Int(42))
+      Defn.Val(Nil, List(Pat.Var(tname("a"))), Some(int(42)), int(42))
     )
 
     runAssert("val a: -2 = -2")(
-      Defn.Val(Nil, List(Pat.Var(Term.Name("a"))), Some(Lit.Int(-2)), Lit.Int(-2))
+      Defn.Val(Nil, List(Pat.Var(tname("a"))), Some(int(-2)), int(-2))
     )
 
     runAssert("def foo(a: 3.14159f): .1d")(
       Decl.Def(
         Nil,
-        Term.Name("foo"),
+        tname("foo"),
         Nil,
-        List(List(Term.Param(Nil, Term.Name("a"), Some(Lit.Float("3.14159f")), None))),
+        List(List(tparam("a", Lit.Float("3.14159f")))),
         Lit.Double(".1d")
       )
     )
@@ -38,21 +38,21 @@ class Scala213Suite extends ParseSuite {
     runAssert("def foo(x: 'a'): Option['z']")(
       Decl.Def(
         Nil,
-        Term.Name("foo"),
+        tname("foo"),
         Nil,
-        List(List(Term.Param(Nil, Term.Name("x"), Some(Lit.Char('a')), None))),
-        Type.Apply(Type.Name("Option"), List(Lit.Char('z')))
+        List(List(tparam("x", Lit.Char('a')))),
+        Type.Apply(pname("Option"), List(Lit.Char('z')))
       )
     )
 
     runAssert("def bar[T <: 1](t: T): T = t")(
       Defn.Def(
         Nil,
-        Term.Name("bar"),
-        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, Some(Lit.Int(1))), Nil, Nil)),
-        List(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None))),
-        Some(Type.Name("T")),
-        Term.Name("t")
+        tname("bar"),
+        List(pparam("T", hiBound(int(1)))),
+        List(List(tparam("t", "T"))),
+        Some(pname("T")),
+        tname("t")
       )
     )
   }
@@ -62,22 +62,22 @@ class Scala213Suite extends ParseSuite {
     runAssert("val c = x =>> 3")(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("c"))),
+        List(Pat.Var(tname("c"))),
         None,
-        Term.ApplyInfix(Term.Name("x"), Term.Name("=>>"), Nil, List(Lit.Int(3)))
+        Term.ApplyInfix(tname("x"), tname("=>>"), Nil, List(int(3)))
       )
     )
 
     runAssert("val given = 3")(
-      Defn.Val(Nil, List(Pat.Var(Term.Name("given"))), None, Lit.Int(3))
+      Defn.Val(Nil, List(Pat.Var(tname("given"))), None, int(3))
     )
 
     runAssert("val extension = 3")(
-      Defn.Val(Nil, List(Pat.Var(Term.Name("extension"))), None, Lit.Int(3))
+      Defn.Val(Nil, List(Pat.Var(tname("extension"))), None, int(3))
     )
 
     runAssert("val enum = 3")(
-      Defn.Val(Nil, List(Pat.Var(Term.Name("enum"))), None, Lit.Int(3))
+      Defn.Val(Nil, List(Pat.Var(tname("enum"))), None, int(3))
     )
   }
 
@@ -85,8 +85,8 @@ class Scala213Suite extends ParseSuite {
     runAssert("try (1 + 2).toString")(
       Term.Try(
         Term.Select(
-          Term.ApplyInfix(Lit.Int(1), Term.Name("+"), Nil, List(Lit.Int(2))),
-          Term.Name("toString")
+          Term.ApplyInfix(int(1), tname("+"), Nil, List(int(2))),
+          tname("toString")
         ),
         Nil,
         None
@@ -95,8 +95,8 @@ class Scala213Suite extends ParseSuite {
     runAssert("try { 1 + 2 }.toString")(
       Term.Try(
         Term.Select(
-          Term.Block(List(Term.ApplyInfix(Lit.Int(1), Term.Name("+"), Nil, List(Lit.Int(2))))),
-          Term.Name("toString")
+          Term.Block(List(Term.ApplyInfix(int(1), tname("+"), Nil, List(int(2))))),
+          tname("toString")
         ),
         Nil,
         None
@@ -105,17 +105,17 @@ class Scala213Suite extends ParseSuite {
     runAssert("try (1 :: Nil) map fn")(
       Term.Try(
         Term.ApplyInfix(
-          Term.ApplyInfix(Lit.Int(1), Term.Name("::"), Nil, List(Term.Name("Nil"))),
-          Term.Name("map"),
+          Term.ApplyInfix(int(1), tname("::"), Nil, List(tname("Nil"))),
+          tname("map"),
           Nil,
-          List(Term.Name("fn"))
+          List(tname("fn"))
         ),
         Nil,
         None
       )
     )
     runAssert("try (true, false)")(
-      Term.Try(Term.Tuple(List(Lit.Boolean(true), Lit.Boolean(false))), Nil, None)
+      Term.Try(Term.Tuple(List(bool(true), bool(false))), Nil, None)
     )
     runAssert("try ()")(Term.Try(Lit.Unit(), Nil, None))
   }
@@ -129,9 +129,9 @@ class Scala213Suite extends ParseSuite {
     )(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("x"))),
+        List(Pat.Var(tname("x"))),
         None,
-        Term.ApplyInfix(Lit.String("hello"), Term.Name("++"), Nil, List(Lit.String("world")))
+        Term.ApplyInfix(str("hello"), tname("++"), Nil, List(str("world")))
       )
     )
   }
@@ -147,20 +147,20 @@ class Scala213Suite extends ParseSuite {
          |""".stripMargin
     )(
       Term.Apply(
-        Term.Name("Flow"),
+        tname("Flow"),
         Term.Block(
           List(
-            Term.Apply(Term.Select(Term.Name("b"), Term.Name("add")), Nil),
+            Term.Apply(Term.Select(tname("b"), tname("add")), Nil),
             Term.ApplyInfix(
               Term.ApplyInfix(
-                Term.Name("input_<"),
-                Term.Name("~>"),
+                tname("input_<"),
+                tname("~>"),
                 Nil,
-                List(Term.Name("filtering"))
+                List(tname("filtering"))
               ),
-              Term.Name("~>"),
+              tname("~>"),
               Nil,
-              List(Term.Select(Term.Name("removeItems"), Term.Name("in0")))
+              List(Term.Select(tname("removeItems"), tname("in0")))
             )
           )
         ) :: Nil

@@ -8,11 +8,11 @@ class QuasiquoteSuite extends ParseSuite {
     implicit val dialect = dialects.Scala211.unquoteTerm(multiline = false)
 
     test("single-line disallow normal escaping") {
-      assertTree(term("\\n"))(Term.Select(Term.Name("\\"), Term.Name("n")))
+      assertTree(term("\\n"))(Term.Select(tname("\\"), tname("n")))
     }
 
     test("single-line allow unicode escaping") {
-      assertTree(term("\\u0061"))(Term.Name("a"))
+      assertTree(term("\\u0061"))(tname("a"))
     }
 
     test("single-line disallow line breaks") {
@@ -28,21 +28,21 @@ class QuasiquoteSuite extends ParseSuite {
     implicit val dialect = dialects.Scala211.unquoteTerm(multiline = true)
 
     test("multi-line disallow do normal escaping") {
-      assertTree(term("\\n"))(Term.Select(Term.Name("\\"), Term.Name("n")))
+      assertTree(term("\\n"))(Term.Select(tname("\\"), tname("n")))
     }
 
     test("multi-line allow unicode escaping") {
-      assertTree(term("\\u0061"))(Term.Name("a"))
+      assertTree(term("\\u0061"))(tname("a"))
     }
 
     test("multi-line allow line breaks") {
       assertTree(term("foo + \n bar"))(
-        Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
+        Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar")))
       )
     }
 
     test("multi-line allow double quotes") {
-      assertTree(term("\"a\""))(Lit.String("a"))
+      assertTree(term("\"a\""))(str("a"))
     }
   }
 }

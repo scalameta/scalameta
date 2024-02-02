@@ -10,20 +10,15 @@ class VarargParameterSuite extends ParseSuite {
   test("vararg parameter single argument") {
     val obj = Defn.Def(
       Nil,
-      Term.Name("obj"),
+      tname("obj"),
       Nil,
       List(
         List(
-          Term.Param(
-            Nil,
-            Term.Name("f"),
-            Some(Type.Repeated(Type.Name("Int"))),
-            None
-          )
+          tparam("f", Type.Repeated(pname("Int")))
         )
       ),
-      Some(Type.Name("Boolean")),
-      Lit.Boolean(true)
+      Some(pname("Boolean")),
+      bool(true)
     )
     check("def obj(f: Int*): Boolean = true", obj)
   }
@@ -31,22 +26,17 @@ class VarargParameterSuite extends ParseSuite {
   test("vararg parameter multiple arguments") {
     val obj = Defn.Def(
       Nil,
-      Term.Name("obj"),
+      tname("obj"),
       Nil,
       List(
         List(
-          Term.Param(Nil, Term.Name("a"), Some(Type.Name("String")), None),
-          Term.Param(Nil, Term.Name("b"), Some(Type.Name("Boolean")), None),
-          Term.Param(
-            Nil,
-            Term.Name("f"),
-            Some(Type.Repeated(Type.Name("Int"))),
-            None
-          )
+          tparam("a", "String"),
+          tparam("b", "Boolean"),
+          tparam("f", Type.Repeated(pname("Int")))
         )
       ),
-      Some(Type.Name("Boolean")),
-      Lit.Boolean(true)
+      Some(pname("Boolean")),
+      bool(true)
     )
     check("def obj(a: String, b: Boolean, f: Int*): Boolean = true", obj)
   }
@@ -54,14 +44,14 @@ class VarargParameterSuite extends ParseSuite {
   test("vararg parameter partially applied arguments") {
     val obj = Defn.Def(
       Nil,
-      Term.Name("obj"),
+      tname("obj"),
       Nil,
       List(
-        List(Term.Param(Nil, Term.Name("fa"), Some(Type.Repeated(Type.Name("Int"))), None)),
-        List(Term.Param(Nil, Term.Name("fb"), Some(Type.Repeated(Type.Name("Int"))), None))
+        List(tparam("fa", Type.Repeated(pname("Int")))),
+        List(tparam("fb", Type.Repeated(pname("Int"))))
       ),
-      Some(Type.Name("Boolean")),
-      Lit.Boolean(true)
+      Some(pname("Boolean")),
+      bool(true)
     )
     check("def obj(fa: Int*)(fb: Int*): Boolean = true", obj)
   }
@@ -69,21 +59,16 @@ class VarargParameterSuite extends ParseSuite {
   test("vararg parameter implicit argument") {
     val obj = Defn.Def(
       Nil,
-      Term.Name("obj"),
+      tname("obj"),
       Nil,
       List(
-        List(Term.Param(Nil, Term.Name("fa"), Some(Type.Repeated(Type.Name("Int"))), None)),
+        List(tparam("fa", Type.Repeated(pname("Int")))),
         List(
-          Term.Param(
-            List(Mod.Implicit()),
-            Term.Name("fb"),
-            Some(Type.Repeated(Type.Name("Int"))),
-            None
-          )
+          tparam(List(Mod.Implicit()), "fb", Type.Repeated(pname("Int")))
         )
       ),
-      Some(Type.Name("Boolean")),
-      Lit.Boolean(true)
+      Some(pname("Boolean")),
+      bool(true)
     )
     check("def obj(fa: Int*)(implicit fb: Int*): Boolean = true", obj)
   }

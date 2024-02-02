@@ -10,7 +10,7 @@ class InterleavedDefnSuite extends BaseDottySuite {
 
   test("def x = 2") {
     checkTree(templStat("def x = 2")) {
-      Defn.Def(Nil, Term.Name("x"), Nil, None, Lit.Int(2))
+      Defn.Def(Nil, tname("x"), Nil, None, int(2))
     }
   }
 
@@ -18,18 +18,11 @@ class InterleavedDefnSuite extends BaseDottySuite {
     checkTree(templStat("def x[A <: B] = 2")) {
       Defn.Def(
         Nil,
-        Term.Name("x"),
-        Type.Param(
-          Nil,
-          Type.Name("A"),
-          Type.ParamClause(Nil),
-          Type.Bounds(None, Some(Type.Name("B"))),
-          Nil,
-          Nil
-        ) :: Nil,
+        tname("x"),
+        pparam(Nil, "A", hiBound("B")) :: Nil,
         Nil,
         None,
-        Lit.Int(2)
+        int(2)
       )
     }
   }
@@ -38,18 +31,11 @@ class InterleavedDefnSuite extends BaseDottySuite {
     checkTree(templStat("def x[A: B] = 2")) {
       Defn.Def(
         Nil,
-        Term.Name("x"),
-        Type.Param(
-          Nil,
-          Type.Name("A"),
-          Type.ParamClause(Nil),
-          Type.Bounds(None, None),
-          Nil,
-          Type.Name("B") :: Nil
-        ) :: Nil,
+        tname("x"),
+        pparam(Nil, "A", vb = Nil, cb = pname("B") :: Nil) :: Nil,
         Nil,
         None,
-        Lit.Int(2)
+        int(2)
       )
     }
   }
@@ -58,14 +44,14 @@ class InterleavedDefnSuite extends BaseDottySuite {
     checkTree(templStat("def f(a: Int)(implicit b: Int) = a + b")) {
       Defn.Def(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Nil,
         List(
-          Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None) :: Nil,
-          Term.Param(Mod.Implicit() :: Nil, Term.Name("b"), Some(Type.Name("Int")), None) :: Nil
+          tparam("a", "Int") :: Nil,
+          tparam(Mod.Implicit() :: Nil, "b", "Int") :: Nil
         ),
         None,
-        Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Term.Name("b") :: Nil)
+        Term.ApplyInfix(tname("a"), tname("+"), Nil, tname("b") :: Nil)
       )
     }
   }
@@ -74,11 +60,11 @@ class InterleavedDefnSuite extends BaseDottySuite {
     checkTree(templStat("def f(x: Int) = macro impl")) {
       Defn.Macro(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Nil,
-        List(Term.Param(List(), Term.Name("x"), Some(Type.Name("Int")), None) :: Nil),
+        List(tparam(List(), "x", "Int") :: Nil),
         None,
-        Term.Name("impl")
+        tname("impl")
       )
     }
   }
@@ -87,11 +73,11 @@ class InterleavedDefnSuite extends BaseDottySuite {
     checkTree(templStat("def f(x: Int): Int = macro impl")) {
       Defn.Macro(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Nil,
-        List(Term.Param(List(), Term.Name("x"), Some(Type.Name("Int")), None) :: Nil),
-        Some(Type.Name("Int")),
-        Term.Name("impl")
+        List(tparam(List(), "x", "Int") :: Nil),
+        Some(pname("Int")),
+        tname("impl")
       )
     }
   }
@@ -109,13 +95,13 @@ class InterleavedDefnSuite extends BaseDottySuite {
     checkTree(defn)(
       Defn.Def(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Nil,
         None,
         Term.Block(
           List(
             Term.Function(
-              List(Term.Param(Nil, Term.Name("n"), Some(Type.Name("Int")), None)),
+              List(tparam("n", "Int")),
               Term.Apply(
                 Term.Select(
                   Term.Block(
@@ -126,20 +112,20 @@ class InterleavedDefnSuite extends BaseDottySuite {
                             Pat.Wildcard(),
                             Term.Apply(
                               Term.Select(
-                                Term.Select(Term.Name("scala"), Term.Name("util")),
-                                Term.Name("Success")
+                                Term.Select(tname("scala"), tname("util")),
+                                tname("Success")
                               ),
-                              List(Lit.Int(123))
+                              List(int(123))
                             )
                           )
                         ),
-                        Lit.Int(42)
+                        int(42)
                       )
                     )
                   ),
-                  Term.Name("recover")
+                  tname("recover")
                 ),
-                List(Term.Name("???"))
+                List(tname("???"))
               )
             )
           )
@@ -161,29 +147,29 @@ class InterleavedDefnSuite extends BaseDottySuite {
     runTestAssert[Stat]("def f[A](a: A, as: A*)[B]: B = ???") {
       Defn.Def(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         List(
           Member.ParamClauseGroup(
             Type.ParamClause(
-              Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+              pparam("A") :: Nil
             ),
             Term.ParamClause(
               List(
-                Term.Param(Nil, Term.Name("a"), Some(Type.Name("A")), None),
-                Term.Param(Nil, Term.Name("as"), Some(Type.Repeated(Type.Name("A"))), None)
+                tparam("a", "A"),
+                tparam("as", Type.Repeated(pname("A")))
               ),
               None
             ) :: Nil
           ),
           Member.ParamClauseGroup(
             Type.ParamClause(
-              Type.Param(Nil, Type.Name("B"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+              pparam("B") :: Nil
             ),
             Nil
           )
         ),
-        Some(Type.Name("B")),
-        Term.Name("???")
+        Some(pname("B")),
+        tname("???")
       )
     }
   }
@@ -201,44 +187,44 @@ class InterleavedDefnSuite extends BaseDottySuite {
     runTestAssert[Stat]("def f[A](a: A, as: A*)[B](b: B, bs: B*)[C](implicit c: C): B = ???") {
       Defn.Def(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         List(
           Member.ParamClauseGroup(
             Type.ParamClause(
-              Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+              pparam("A") :: Nil
             ),
             Term.ParamClause(
               List(
-                Term.Param(Nil, Term.Name("a"), Some(Type.Name("A")), None),
-                Term.Param(Nil, Term.Name("as"), Some(Type.Repeated(Type.Name("A"))), None)
+                tparam("a", "A"),
+                tparam("as", Type.Repeated(pname("A")))
               ),
               None
             ) :: Nil
           ),
           Member.ParamClauseGroup(
             Type.ParamClause(
-              Type.Param(Nil, Type.Name("B"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+              pparam("B") :: Nil
             ),
             Term.ParamClause(
               List(
-                Term.Param(Nil, Term.Name("b"), Some(Type.Name("B")), None),
-                Term.Param(Nil, Term.Name("bs"), Some(Type.Repeated(Type.Name("B"))), None)
+                tparam("b", "B"),
+                tparam("bs", Type.Repeated(pname("B")))
               ),
               None
             ) :: Nil
           ),
           Member.ParamClauseGroup(
             Type.ParamClause(
-              Type.Param(Nil, Type.Name("C"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+              pparam("C") :: Nil
             ),
             Term.ParamClause(
-              List(Term.Param(List(Mod.Implicit()), Term.Name("c"), Some(Type.Name("C")), None)),
+              List(tparam(List(Mod.Implicit()), "c", "C")),
               Some(Mod.Implicit())
             ) :: Nil
           )
         ),
-        Some(Type.Name("B")),
-        Term.Name("???")
+        Some(pname("B")),
+        tname("???")
       )
     }
   }

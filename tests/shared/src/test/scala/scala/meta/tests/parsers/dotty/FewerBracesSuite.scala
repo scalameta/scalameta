@@ -86,7 +86,7 @@ class FewerBracesSuite extends BaseDottySuite {
         None,
         Term.Apply(
           Term.Select(tname("files"), tname("map")),
-          List(Term.Function(List(Term.Param(Nil, tname("a"), None, None)), tname("a")))
+          List(Term.Function(List(tparam("a")), tname("a")))
         )
       )
     )
@@ -108,15 +108,7 @@ class FewerBracesSuite extends BaseDottySuite {
         None,
         Term.Apply(
           Term.Select(tname("files"), tname("map")),
-          List(
-            Term.Function(
-              List(
-                Term.Param(Nil, tname("a"), None, None),
-                Term.Param(Nil, tname("b"), None, None)
-              ),
-              tname("a")
-            )
-          )
+          List(Term.Function(List(tparam("a"), tparam("b")), tname("a")))
         )
       )
     )
@@ -338,7 +330,7 @@ class FewerBracesSuite extends BaseDottySuite {
                 Term.Apply(Term.Select(tname("files"), tname("fold")), List(int(123))),
                 tname("apply")
               ),
-              Term.Function(List(tparam(Nil, "a"), tparam(Nil, "b")), tname("a")) :: Nil
+              Term.Function(List(tparam("a"), tparam("b")), tname("a")) :: Nil
             )
           ) :: Nil
         )
@@ -419,21 +411,17 @@ class FewerBracesSuite extends BaseDottySuite {
             Term.Select(
               Term.Apply(
                 Term.Select(tname("xs"), tname("map")),
-                List(
-                  Term.Function(
-                    List(Term.Param(Nil, tname("x"), None, None)),
-                    Term.ApplyInfix(tname("x"), tname("*"), Nil, List(tname("x")))
-                  )
-                )
+                Term.Function(
+                  List(tparam("x")),
+                  Term.ApplyInfix(tname("x"), tname("*"), Nil, List(tname("x")))
+                ) :: Nil
               ),
               tname("filter")
             ),
-            List(
-              Term.Function(
-                List(Term.Param(Nil, tname("y"), Some(pname("Int")), None)),
-                Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0)))
-              )
-            )
+            Term.Function(
+              List(tparam("y", "Int")),
+              Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0)))
+            ) :: Nil
           ),
           List(int(0))
         )
@@ -457,7 +445,7 @@ class FewerBracesSuite extends BaseDottySuite {
         pname("C"),
         Nil,
         EmptyCtor(),
-        tpl(List(Term.Apply(tname("f"), List(int(22)))))
+        tpl(Term.Apply(tname("f"), List(int(22))))
       )
     )
   }
@@ -480,11 +468,11 @@ class FewerBracesSuite extends BaseDottySuite {
         Term.Select(
           Term.Apply(
             Term.Select(tname("xs"), tname("map")),
-            List(Term.Function(List(Term.Param(Nil, tname("x"), None, None)), tname("x")))
+            List(Term.Function(List(tparam("x")), tname("x")))
           ),
           tname("filter")
         ),
-        List(Term.Function(List(Term.Param(Nil, tname("x"), None, None)), tname("x")))
+        List(Term.Function(List(tparam("x")), tname("x")))
       )
     )
   }
@@ -624,7 +612,7 @@ class FewerBracesSuite extends BaseDottySuite {
       Defn.Object(
         Nil,
         tname("a"),
-        tpl(List(Term.Apply(tname("foo"), List(tname("bar")))))
+        tpl(Term.Apply(tname("foo"), List(tname("bar"))))
       )
     )
   }
@@ -640,7 +628,7 @@ class FewerBracesSuite extends BaseDottySuite {
       Defn.Object(
         Nil,
         tname("a"),
-        tpl(List(Term.Ascribe(tname("foo"), pname("bar"))))
+        tpl(Term.Ascribe(tname("foo"), pname("bar")))
       )
     )
   }
@@ -691,7 +679,7 @@ class FewerBracesSuite extends BaseDottySuite {
             List(tparam("x", None)),
             Term.Apply(tname("println"), List(tname("x")))
           ) :: Nil
-        ) :: Nil
+        )
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -716,7 +704,7 @@ class FewerBracesSuite extends BaseDottySuite {
             List(tparam("x", None)),
             Term.Apply(tname("println"), List(tname("x")))
           ) :: Nil
-        ) :: Nil
+        )
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -739,23 +727,21 @@ class FewerBracesSuite extends BaseDottySuite {
       Nil,
       tname("MyApp"),
       tpl(
-        List(
-          Term.ApplyInfix(
-            tname("ids"),
-            tname("map"),
-            Nil,
-            Term.Function(
-              List(tparam("x", None)),
-              Term.Apply(tname("foo"), List(tname("x")))
-            ) :: Nil
-          ),
-          Term.Apply(
-            tname("map"),
-            Term.Function(
-              List(tparam("x", None)),
-              Term.Apply(tname("bar"), List(tname("x")))
-            ) :: Nil
-          )
+        Term.ApplyInfix(
+          tname("ids"),
+          tname("map"),
+          Nil,
+          Term.Function(
+            List(tparam("x", None)),
+            Term.Apply(tname("foo"), List(tname("x")))
+          ) :: Nil
+        ),
+        Term.Apply(
+          tname("map"),
+          Term.Function(
+            List(tparam("x", None)),
+            Term.Apply(tname("bar"), List(tname("x")))
+          ) :: Nil
         )
       )
     )
@@ -793,7 +779,7 @@ class FewerBracesSuite extends BaseDottySuite {
               )
             )
           ) :: Nil
-        ) :: Nil
+        )
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -815,7 +801,7 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("foreach"),
           Nil,
           List(tname("println"))
-        ) :: Nil
+        )
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -837,7 +823,7 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("foreach"),
           Nil,
           List(tname("println"))
-        ) :: Nil
+        )
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -860,10 +846,8 @@ class FewerBracesSuite extends BaseDottySuite {
       Nil,
       tname("MyApp"),
       tpl(
-        List(
-          Term.ApplyInfix(tname("ids"), tname("map"), Nil, List(tname("foo"))),
-          Term.Apply(tname("map"), List(tname("bar")))
-        )
+        Term.ApplyInfix(tname("ids"), tname("map"), Nil, List(tname("foo"))),
+        Term.Apply(tname("map"), List(tname("bar")))
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -910,7 +894,7 @@ class FewerBracesSuite extends BaseDottySuite {
           tname(">>>"),
           Nil,
           List(tname("c"))
-        ) :: Nil
+        )
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -1007,7 +991,7 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("++"),
           Nil,
           List(tname("qux"))
-        ) :: Nil
+        )
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -1031,7 +1015,7 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("++"),
           Nil,
           List(tname("qux"))
-        ) :: Nil
+        )
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -1117,7 +1101,7 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("++"),
           Nil,
           List(tname("qux"))
-        ) :: Nil
+        )
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -1150,7 +1134,7 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("++"),
           Nil,
           List(tname("qux"))
-        ) :: Nil
+        )
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -1233,7 +1217,7 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("++"),
           Nil,
           List(tname("qux"))
-        ) :: Nil
+        )
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -1268,7 +1252,7 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("++"),
           Nil,
           List(tname("qux"))
-        ) :: Nil
+        )
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -1874,7 +1858,7 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("using"),
           tname("bar"),
           Nil,
-          Term.Function(List(tparam(Nil, "Int")), tname("baz")) :: Nil
+          Term.Function(List(tparam("Int")), tname("baz")) :: Nil
         ) :: Nil
       )
     )
@@ -1911,7 +1895,7 @@ class FewerBracesSuite extends BaseDottySuite {
       Term.Apply(
         tname("foo"),
         Term.ArgClause(
-          Term.Function(List(tparam(Nil, "bar")), tname("baz")) :: Nil,
+          Term.Function(List(tparam("bar")), tname("baz")) :: Nil,
           Some(Mod.Using())
         )
       )
@@ -2093,7 +2077,7 @@ class FewerBracesSuite extends BaseDottySuite {
       Term.Apply(
         tname("foo"),
         Term.Function(
-          List(tparam(List(Mod.Using()), "bar", "Int"), tparam(Nil, "baz", "String")),
+          List(tparam(List(Mod.Using()), "bar", "Int"), tparam("baz", "String")),
           tname("qux")
         ) :: Nil
       )
@@ -2118,7 +2102,7 @@ class FewerBracesSuite extends BaseDottySuite {
         tname("foo"),
         Term.Function(
           Term.ParamClause(
-            List(tparam(List(Mod.Using()), "bar", "Int"), tparam(Nil, "using", "String")),
+            List(tparam(List(Mod.Using()), "bar", "Int"), tparam("using", "String")),
             Some(Mod.Using())
           ),
           tname("qux")
@@ -2228,7 +2212,7 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("erased"),
           tname("bar"),
           Nil,
-          Term.Function(List(tparam(Nil, "Int")), tname("baz")) :: Nil
+          Term.Function(List(tparam("Int")), tname("baz")) :: Nil
         ) :: Nil
       )
     )

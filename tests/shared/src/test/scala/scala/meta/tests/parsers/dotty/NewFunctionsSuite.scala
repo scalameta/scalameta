@@ -15,10 +15,7 @@ class NewFunctionsSuite extends BaseDottySuite {
     )
     runTestAssert[Type]("[X >: L <: U] =>> R")(
       Type.Lambda(
-        List(
-          Type
-            .Param(Nil, pname("X"), Nil, Type.Bounds(Some(pname("L")), Some(pname("U"))), Nil, Nil)
-        ),
+        List(pparam(Nil, "X", bounds("L", "U"), vb = Nil, cb = Nil)),
         pname("R")
       )
     )
@@ -37,11 +34,11 @@ class NewFunctionsSuite extends BaseDottySuite {
     runTestAssert[Stat]("type Tuple = [X] =>> (X, X)")(
       Defn.Type(
         Nil,
-        Type.Name("Tuple"),
+        pname("Tuple"),
         Nil,
         Type.Lambda(
-          List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
-          Type.Tuple(List(Type.Name("X"), Type.Name("X")))
+          List(pparam("X")),
+          Type.Tuple(List(pname("X"), pname("X")))
         )
       )
     )
@@ -51,19 +48,14 @@ class NewFunctionsSuite extends BaseDottySuite {
     runTestAssert[Stat]("def table(init: Table ?=> Unit): Unit")(
       Decl.Def(
         Nil,
-        Term.Name("table"),
+        tname("table"),
         Nil,
         List(
           List(
-            Term.Param(
-              Nil,
-              Term.Name("init"),
-              Some(Type.ContextFunction(List(Type.Name("Table")), Type.Name("Unit"))),
-              None
-            )
+            tparam("init", Type.ContextFunction(List(pname("Table")), pname("Unit")))
           )
         ),
-        Type.Name("Unit")
+        pname("Unit")
       )
     )
   }
@@ -72,24 +64,21 @@ class NewFunctionsSuite extends BaseDottySuite {
     runTestAssert[Stat]("def table(init: (T1, List[T2]) ?=> Unit): Unit")(
       Decl.Def(
         Nil,
-        Term.Name("table"),
+        tname("table"),
         Nil,
         List(
           List(
-            Term.Param(
+            tparam(
               Nil,
-              Term.Name("init"),
-              Some(
-                Type.ContextFunction(
-                  List(Type.Name("T1"), Type.Apply(Type.Name("List"), List(Type.Name("T2")))),
-                  Type.Name("Unit")
-                )
-              ),
-              None
+              "init",
+              Type.ContextFunction(
+                List(pname("T1"), Type.Apply(pname("List"), List(pname("T2")))),
+                pname("Unit")
+              )
             )
           )
         ),
-        Type.Name("Unit")
+        pname("Unit")
       )
     )
   }
@@ -98,9 +87,9 @@ class NewFunctionsSuite extends BaseDottySuite {
     runTestAssert[Stat]("type Executable[T] = ExecutionContext ?=> T")(
       Defn.Type(
         Nil,
-        Type.Name("Executable"),
-        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
-        Type.ContextFunction(List(Type.Name("ExecutionContext")), Type.Name("T"))
+        pname("Executable"),
+        List(pparam("T")),
+        Type.ContextFunction(List(pname("ExecutionContext")), pname("T"))
       )
     )
 
@@ -109,14 +98,14 @@ class NewFunctionsSuite extends BaseDottySuite {
                   |}""".stripMargin
     runTestAssert[Stat](code)(
       Term.Match(
-        Term.Name("x"),
+        tname("x"),
         List(
           Case(
             Pat.Typed(
-              Pat.Var(Term.Name("t")),
+              Pat.Var(tname("t")),
               Type.Annotate(
-                Type.ContextFunction(List(Type.Name("Context")), Type.Name("Symbol")),
-                List(Mod.Annot(Init(Type.Name("unchecked"), Name(""), emptyArgClause)))
+                Type.ContextFunction(List(pname("Context")), pname("Symbol")),
+                List(Mod.Annot(Init(pname("unchecked"), anon, emptyArgClause)))
               )
             ),
             None,
@@ -131,27 +120,27 @@ class NewFunctionsSuite extends BaseDottySuite {
     runTestAssert[Stat]("def fx: String ?=> Int = s ?=> 3")(
       Defn.Def(
         Nil,
-        Term.Name("fx"),
+        tname("fx"),
         Nil,
         Nil,
-        Some(Type.ContextFunction(List(Type.Name("String")), Type.Name("Int"))),
-        Term.ContextFunction(List(Term.Param(Nil, Term.Name("s"), None, None)), Lit.Int(3))
+        Some(Type.ContextFunction(List(pname("String")), pname("Int"))),
+        Term.ContextFunction(List(tparam("s")), int(3))
       )
     )
 
     runTestAssert[Stat]("def fy: (String, Int) ?=> Int = (s, i) ?=> 3")(
       Defn.Def(
         Nil,
-        Term.Name("fy"),
+        tname("fy"),
         Nil,
         Nil,
-        Some(Type.ContextFunction(List(Type.Name("String"), Type.Name("Int")), Type.Name("Int"))),
+        Some(Type.ContextFunction(List(pname("String"), pname("Int")), pname("Int"))),
         Term.ContextFunction(
           List(
-            Term.Param(Nil, Term.Name("s"), None, None),
-            Term.Param(Nil, Term.Name("i"), None, None)
+            tparam("s"),
+            tparam("i")
           ),
-          Lit.Int(3)
+          int(3)
         )
       )
     )
@@ -163,20 +152,15 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("t0"))),
+        List(Pat.Var(tname("t0"))),
         None,
         Term.PolyFunction(
-          List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+          List(pparam("T")),
           Term.Function(
             List(
-              Term.Param(
-                Nil,
-                Term.Name("ts"),
-                Some(Type.Apply(Type.Name("List"), List(Type.Name("T")))),
-                None
-              )
+              tparam("ts", Type.Apply(pname("List"), List(pname("T"))))
             ),
-            Term.Select(Term.Name("ts"), Term.Name("headOption"))
+            Term.Select(tname("ts"), tname("headOption"))
           )
         )
       )
@@ -189,13 +173,13 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("pid"))),
+        List(Pat.Var(tname("pid"))),
         None,
         Term.PolyFunction(
-          List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+          List(pparam("T")),
           Term.Function(
-            List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None)),
-            Term.Name("t")
+            List(tparam("t", "T")),
+            tname("t")
           )
         )
       )
@@ -208,49 +192,41 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("t1"))),
+        List(Pat.Var(tname("t1"))),
         None,
         Term.PolyFunction(
           List(
             Type.Param(
               Nil,
-              Type.Name("F"),
-              List(Type.Param(Nil, phName, Nil, Type.Bounds(None, None), Nil, Nil)),
-              Type.Bounds(None, None),
+              pname("F"),
+              List(pparam("_")),
+              noBounds,
               Nil,
               Nil
             ),
             Type.Param(
               Nil,
-              Type.Name("G"),
-              List(Type.Param(Nil, phName, Nil, Type.Bounds(None, None), Nil, Nil)),
-              Type.Bounds(None, None),
+              pname("G"),
+              List(pparam("_")),
+              noBounds,
               Nil,
               Nil
             ),
-            Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)
+            pparam("T")
           ),
           Term.Function(
             List(
-              Term.Param(
+              tparam("ft", Type.Apply(pname("F"), List(pname("T")))),
+              tparam(
                 Nil,
-                Term.Name("ft"),
-                Some(Type.Apply(Type.Name("F"), List(Type.Name("T")))),
-                None
-              ),
-              Term.Param(
-                Nil,
-                Term.Name("f"),
-                Some(
-                  Type.Function(
-                    List(Type.Apply(Type.Name("F"), List(Type.Name("T")))),
-                    Type.Apply(Type.Name("G"), List(Type.Name("T")))
-                  )
-                ),
-                None
+                "f",
+                Type.Function(
+                  List(Type.Apply(pname("F"), List(pname("T")))),
+                  Type.Apply(pname("G"), List(pname("T")))
+                )
               )
             ),
-            Term.Apply(Term.Name("f"), List(Term.Name("ft")))
+            Term.Apply(tname("f"), List(tname("ft")))
           )
         )
       )
@@ -263,13 +239,13 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("F0"),
+        pname("F0"),
         Nil,
         Type.PolyFunction(
-          List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+          List(pparam("T")),
           Type.Function(
-            List(Type.Apply(Type.Name("List"), List(Type.Name("T")))),
-            Type.Apply(Type.Name("Option"), List(Type.Name("T")))
+            List(Type.Apply(pname("List"), List(pname("T")))),
+            Type.Apply(pname("Option"), List(pname("T")))
           )
         )
       )
@@ -283,18 +259,18 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Def(
         Nil,
-        Term.Name("foo"),
+        tname("foo"),
         Nil,
         Nil,
         None,
         Term.Block(
           List(
             Term.ApplyType(
-              Term.Name("f"),
+              tname("f"),
               List(
                 Type.Lambda(
-                  List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
-                  Type.Name("String")
+                  List(pparam("X")),
+                  pname("String")
                 )
               )
             )
@@ -310,26 +286,20 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Def(
         Nil,
-        Term.Name("m"),
-        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+        tname("m"),
+        List(pparam("T")),
         List(
           List(
-            Term.Param(
+            tparam(
               Nil,
-              Term.Name("f"),
-              Some(
-                Type.PolyFunction(
-                  List(Type.Param(Nil, Type.Name("U"), Nil, Type.Bounds(None, None), Nil, Nil)),
-                  Type.Function(List(Type.Name("U")), Type.Name("U"))
-                )
-              ),
-              None
+              "f",
+              Type.PolyFunction(List(pparam("U")), Type.Function(List(pname("U")), pname("U")))
             ),
-            Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None)
+            tparam("t", "T")
           )
         ),
         None,
-        Term.Apply(Term.Name("f"), List(Term.Name("t")))
+        Term.Apply(tname("f"), List(tname("t")))
       )
     )
   }
@@ -340,16 +310,16 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("F2"),
+        pname("F2"),
         Nil,
         Type.PolyFunction(
           List(
-            Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil),
-            Type.Param(Nil, Type.Name("U"), Nil, Type.Bounds(None, None), Nil, Nil)
+            pparam("T"),
+            pparam("U")
           ),
           Type.Function(
-            List(Type.Name("T"), Type.Name("U")),
-            Type.Apply(Type.Name("Either"), List(Type.Name("T"), Type.Name("U")))
+            List(pname("T"), pname("U")),
+            Type.Apply(pname("Either"), List(pname("T"), pname("U")))
           )
         )
       )
@@ -369,37 +339,37 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("F1"),
+        pname("F1"),
         Nil,
         Type.PolyFunction(
           List(
             Type.Param(
               Nil,
-              Type.Name("F"),
-              List(Type.Param(Nil, phName, Nil, Type.Bounds(None, None), Nil, Nil)),
-              Type.Bounds(None, None),
+              pname("F"),
+              List(pparam("_")),
+              noBounds,
               Nil,
               Nil
             ),
             Type.Param(
               Nil,
-              Type.Name("G"),
-              List(Type.Param(Nil, phName, Nil, Type.Bounds(None, None), Nil, Nil)),
-              Type.Bounds(None, None),
+              pname("G"),
+              List(pparam("_")),
+              noBounds,
               Nil,
               Nil
             ),
-            Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)
+            pparam("T")
           ),
           Type.Function(
             List(
-              Type.Apply(Type.Name("F"), List(Type.Name("T"))),
+              Type.Apply(pname("F"), List(pname("T"))),
               Type.Function(
-                List(Type.Apply(Type.Name("F"), List(Type.Name("T")))),
-                Type.Apply(Type.Name("G"), List(Type.Name("T")))
+                List(Type.Apply(pname("F"), List(pname("T")))),
+                Type.Apply(pname("G"), List(pname("T")))
               )
             ),
-            Type.Apply(Type.Name("G"), List(Type.Name("T")))
+            Type.Apply(pname("G"), List(pname("T")))
           )
         )
       )
@@ -412,13 +382,13 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("F0"),
+        pname("F0"),
         Nil,
         Type.PolyFunction(
-          List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+          List(pparam("T")),
           Type.ContextFunction(
-            List(Type.Apply(Type.Name("List"), List(Type.Name("T")))),
-            Type.Apply(Type.Name("Option"), List(Type.Name("T")))
+            List(Type.Apply(pname("List"), List(pname("T")))),
+            Type.Apply(pname("Option"), List(pname("T")))
           )
         )
       )
@@ -441,35 +411,32 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("t1"))),
+        List(Pat.Var(tname("t1"))),
         None,
         Term.PolyFunction(
           List(
             Type.Param(
               Nil,
-              Type.Name("F"),
-              List(Type.Param(Nil, phName, Nil, Type.Bounds(None, None), Nil, Nil)),
-              Type.Bounds(None, None),
+              pname("F"),
+              List(pparam("_")),
+              noBounds,
               Nil,
               Nil
             ),
-            Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)
+            pparam("T")
           ),
           Term.Function(
             List(
-              Term.Param(
+              tparam(
                 Nil,
-                Term.Name("f"),
-                Some(
-                  Type.Function(
-                    List(Type.Apply(Type.Name("F"), List(Type.Name("T")))),
-                    Type.Apply(Type.Name("G"), List(Type.Name("T")))
-                  )
-                ),
-                None
+                "f",
+                Type.Function(
+                  List(Type.Apply(pname("F"), List(pname("T")))),
+                  Type.Apply(pname("G"), List(pname("T")))
+                )
               )
             ),
-            Term.Apply(Term.Name("f"), List(Term.Name("ft")))
+            Term.Apply(tname("f"), List(tname("ft")))
           )
         )
       )
@@ -491,29 +458,17 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("thisIsAPolymorphicFunction"))),
+        List(Pat.Var(tname("thisIsAPolymorphicFunction"))),
         None,
         Term.PolyFunction(
           List(
-            Type.Param(
-              Nil,
-              Type.Name("PolymorphicFunctionTypeParam"),
-              Nil,
-              Type.Bounds(None, None),
-              Nil,
-              Nil
-            )
+            pparam("PolymorphicFunctionTypeParam")
           ),
           Term.Function(
             List(
-              Term.Param(
-                Nil,
-                Term.Name("polymorphicFunctionParam"),
-                Some(Type.Apply(Type.Name("List"), List(Type.Name("T")))),
-                None
-              )
+              tparam("polymorphicFunctionParam", Type.Apply(pname("List"), List(pname("T"))))
             ),
-            Term.Select(Term.Name("ts"), Term.Name("headOption"))
+            Term.Select(tname("ts"), tname("headOption"))
           )
         )
       )
@@ -526,14 +481,14 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("extractor"))),
+        List(Pat.Var(tname("extractor"))),
         Some(
           Type.Function(
-            List(Type.TypedParam(Type.Name("e"), Type.Name("Entry"))),
-            Type.Select(Term.Name("e"), Type.Name("Key"))
+            List(Type.TypedParam(pname("e"), pname("Entry"))),
+            Type.Select(tname("e"), pname("Key"))
           )
         ),
-        Term.Name("extractKey")
+        tname("extractKey")
       )
     )
   }
@@ -544,14 +499,14 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("extractor"))),
+        List(Pat.Var(tname("extractor"))),
         Some(
           Type.ContextFunction(
-            List(Type.TypedParam(Type.Name("e"), Type.Name("Entry"))),
-            Type.Select(Term.Name("e"), Type.Name("Key"))
+            List(Type.TypedParam(pname("e"), pname("Entry"))),
+            Type.Select(tname("e"), pname("Key"))
           )
         ),
-        Term.Name("extractKey")
+        tname("extractKey")
       )
     )
   }
@@ -562,17 +517,17 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("extractor"))),
+        List(Pat.Var(tname("extractor"))),
         Some(
           Type.Function(
             List(
-              Type.TypedParam(Type.Name("e"), Type.Name("Entry")),
-              Type.TypedParam(Type.Name("f"), Type.Name("Other"))
+              Type.TypedParam(pname("e"), pname("Entry")),
+              Type.TypedParam(pname("f"), pname("Other"))
             ),
-            Type.Select(Term.Name("e"), Type.Name("Key"))
+            Type.Select(tname("e"), pname("Key"))
           )
         ),
-        Term.Name("extractKey")
+        tname("extractKey")
       )
     )
   }
@@ -583,13 +538,13 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("T"),
+        pname("T"),
         Nil,
         Type.Function(
-          List(Type.TypedParam(Type.Name("e"), Type.Name("Entry"))),
-          Type.Select(Term.Name("e"), Type.Name("Key"))
+          List(Type.TypedParam(pname("e"), pname("Entry"))),
+          Type.Select(tname("e"), pname("Key"))
         ),
-        Type.Bounds(None, None)
+        noBounds
       )
     )
   }
@@ -600,13 +555,13 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("T"),
+        pname("T"),
         Nil,
         Type.ContextFunction(
-          List(Type.TypedParam(Type.Name("e"), Type.Name("Entry"))),
-          Type.Select(Term.Name("e"), Type.Name("Key"))
+          List(Type.TypedParam(pname("e"), pname("Entry"))),
+          Type.Select(tname("e"), pname("Key"))
         ),
-        Type.Bounds(None, None)
+        noBounds
       )
     )
   }
@@ -617,22 +572,22 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("T"),
+        pname("T"),
         Nil,
         Type.Function(
           List(
-            Type.TypedParam(Type.Name("e"), Type.Name("Entry")),
+            Type.TypedParam(pname("e"), pname("Entry")),
             Type.TypedParam(
-              Type.Name("o"),
+              pname("o"),
               Type.Apply(
-                Type.Name("Other"),
-                List(Type.Wildcard(Type.Bounds(None, Some(Type.Name("P")))))
+                pname("Other"),
+                List(Type.Wildcard(hiBound("P")))
               )
             )
           ),
-          Type.Select(Term.Name("e"), Type.Name("Key"))
+          Type.Select(tname("e"), pname("Key"))
         ),
-        Type.Bounds(None, None)
+        noBounds
       )
     )
   }
@@ -653,7 +608,7 @@ class NewFunctionsSuite extends BaseDottySuite {
           List(Type.TypedParam(pname("e"), pname("Entry"))),
           Type.Select(tname("e"), pname("Key"))
         ),
-        Type.Bounds(None, None)
+        noBounds
       )
     )
   }
@@ -683,7 +638,7 @@ class NewFunctionsSuite extends BaseDottySuite {
         pname("Executable"),
         pparam("T") :: Nil,
         Type.ContextFunction(pname("ExecutionContext") :: Nil, pname("T")),
-        Type.Bounds(None, None)
+        noBounds
       )
     )
   }
@@ -701,7 +656,7 @@ class NewFunctionsSuite extends BaseDottySuite {
         pname("Executable"),
         pparam("T") :: Nil,
         Type.ContextFunction(pname("ExecutionContext") :: Nil, pname("T")),
-        Type.Bounds(None, None)
+        noBounds
       )
     )
   }
@@ -731,7 +686,7 @@ class NewFunctionsSuite extends BaseDottySuite {
         pname("Tuple"),
         Nil,
         Type.Lambda(pparam("X") :: Nil, Type.Tuple(List(pname("X"), pname("X")))),
-        Type.Bounds(None, None)
+        noBounds
       )
     )
   }
@@ -748,7 +703,7 @@ class NewFunctionsSuite extends BaseDottySuite {
         pname("Tuple"),
         Nil,
         Type.Lambda(pparam("X") :: Nil, Type.Tuple(List(pname("X"), pname("X")))),
-        Type.Bounds(None, None)
+        noBounds
       )
     )
   }
@@ -771,14 +726,14 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Decl.Type(
         Nil,
-        Type.Name("U"),
+        pname("U"),
         Nil,
         Type.Bounds(
           None,
           Some(
             Type.Lambda(
-              List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
-              Type.Name("Any")
+              List(pparam("X")),
+              pname("Any")
             )
           )
         )
@@ -792,13 +747,13 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("Macro"),
-        List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
+        pname("Macro"),
+        List(pparam("X")),
         Type.ContextFunction(
-          List(Type.ByName(Type.Name("Quotes"))),
-          Type.Apply(Type.Name("Expr"), List(Type.Name("X")))
+          List(Type.ByName(pname("Quotes"))),
+          Type.Apply(pname("Expr"), List(pname("X")))
         ),
-        Type.Bounds(None, None)
+        noBounds
       )
     )
   }
@@ -809,33 +764,33 @@ class NewFunctionsSuite extends BaseDottySuite {
     )(
       Defn.Class(
         List(Mod.Abstract()),
-        Type.Name("Repository"),
+        pname("Repository"),
         List(
           Type.Param(
             Nil,
-            Type.Name("F"),
-            List(Type.Param(Nil, phName, Nil, Type.Bounds(None, None), Nil, Nil)),
-            Type.Bounds(None, None),
+            pname("F"),
+            List(pparam("_")),
+            noBounds,
             Nil,
             List(
               Type.Lambda(
                 List(
                   Type.Param(
                     Nil,
-                    Type.Name("G"),
-                    List(Type.Param(Nil, phName, Nil, Type.Bounds(None, None), Nil, Nil)),
-                    Type.Bounds(None, None),
+                    pname("G"),
+                    List(pparam("_")),
+                    noBounds,
                     Nil,
                     Nil
                   )
                 ),
-                Type.Apply(Type.Name("MonadCancel"), List(Type.Name("G"), Type.Name("Throwable")))
+                Type.Apply(pname("MonadCancel"), List(pname("G"), pname("Throwable")))
               )
             )
           )
         ),
         EmptyCtor(),
-        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+        EmptyTemplate()
       )
     )
   }
@@ -847,16 +802,11 @@ class NewFunctionsSuite extends BaseDottySuite {
       "f((x1: A, x2: B => C) => {})"
     )(
       Term.Apply(
-        Term.Name("f"),
+        tname("f"),
         Term.Function(
           List(
-            Term.Param(Nil, Term.Name("x1"), Some(Type.Name("A")), None),
-            Term.Param(
-              Nil,
-              Term.Name("x2"),
-              Some(Type.Function(Type.FuncParamClause(List(Type.Name("B"))), Type.Name("C"))),
-              None
-            )
+            tparam("x1", "A"),
+            tparam("x2", Type.Function(Type.FuncParamClause(List(pname("B"))), pname("C")))
           ),
           Term.Block(Nil)
         ) :: Nil

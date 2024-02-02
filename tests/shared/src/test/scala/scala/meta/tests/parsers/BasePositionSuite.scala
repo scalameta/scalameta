@@ -78,7 +78,7 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
           Nil
         case t @ Term.Param(Nil, name, Some(tpe), _) if t.syntax == s"${name}: ${tpe}" =>
           Nil
-        case t @ Init(Type.Name(value), Name.Anonymous(), Nil) if t.syntax == value =>
+        case t @ Init(Type.Name(value), anon, Nil) if t.syntax == value =>
           Nil
         case t: Importee.Wildcard if t.syntax == "_" =>
           Nil

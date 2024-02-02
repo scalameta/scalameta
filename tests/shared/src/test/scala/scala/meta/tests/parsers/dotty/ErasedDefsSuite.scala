@@ -18,7 +18,7 @@ class ErasedDefsSuite extends BaseDottySuite {
         Nil,
         List(List(tparam(List(Mod.Erased()), "ev", "Ev"), tparam("x", "Int"))),
         Some(pname("Int")),
-        Term.ApplyInfix(tname("x"), tname("+"), Nil, List(Lit.Int(2)))
+        Term.ApplyInfix(tname("x"), tname("+"), Nil, List(int(2)))
       )
     )
   }
@@ -36,7 +36,7 @@ class ErasedDefsSuite extends BaseDottySuite {
           )
         ),
         Term.Function(
-          List(tparam(List(Mod.Erased()), "ev"), tparam(Nil, "x")),
+          List(tparam(List(Mod.Erased()), "ev"), tparam("x")),
           Term.ApplyInfix(tname("x"), tname("+"), Nil, List(int(2)))
         )
       )
@@ -92,7 +92,7 @@ class ErasedDefsSuite extends BaseDottySuite {
   test("erased class") {
     val code = "erased class CanRead"
     runTestAssert[Stat](code)(
-      Defn.Class(List(Mod.Erased()), pname("CanRead"), Nil, ctor, tpl(Nil))
+      Defn.Class(List(Mod.Erased()), pname("CanRead"), Nil, ctor, EmptyTemplate())
     )
   }
 
@@ -186,7 +186,7 @@ class ErasedDefsSuite extends BaseDottySuite {
         tname("LazyBody"),
         Term.Function(
           List(tparam(List(Mod.Using(), Mod.Erased()), "ctx", "Context")),
-          Lit.Int(3)
+          int(3)
         ) :: Nil
       )
     )
@@ -197,14 +197,14 @@ class ErasedDefsSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(
       Defn.Val(
         Nil,
-        List(Pat.Var(Term.Name("extractor"))),
+        List(Pat.Var(tname("extractor"))),
         Some(
           Type.Function(
-            List(Type.TypedParam(Type.Name("e"), Type.Name("Entry"), List(Mod.Erased()))),
-            Type.Select(Term.Name("e"), Type.Name("Key"))
+            List(Type.TypedParam(pname("e"), pname("Entry"), List(Mod.Erased()))),
+            Type.Select(tname("e"), pname("Key"))
           )
         ),
-        Term.Name("extractKey")
+        tname("extractKey")
       )
     )
   }
