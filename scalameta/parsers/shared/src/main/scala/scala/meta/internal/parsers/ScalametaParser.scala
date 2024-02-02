@@ -509,14 +509,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def summonClassifierFunc[A, B](implicit v: Classifier[A, B]): A => Boolean = v.apply
 
-  def onlyAcceptMod[M <: Mod: ClassTag, T: TokenClassifier](
+  def onlyAcceptMod[M <: Mod: ClassTag, T](
       mods: List[Mod],
       errorMsg: String
-  )(implicit classifier: Classifier[Mod, M]) = {
-    if (token.isNot[T]) {
+  )(implicit classifier: TokenClassifier[T]) =
+    onlyAcceptMod[M](classifier.apply)(mods)(errorMsg)
+
+  def onlyAcceptMod[M <: Mod: ClassTag](ok: Token => Boolean)(mods: List[Mod])(errorMsg: String) =
+    if (!ok(token)) {
       mods.first[M].foreach(m => syntaxError(errorMsg, at = m))
     }
-  }
 
   class InvalidModCombination[M1 <: Mod, M2 <: Mod](m1: M1, m2: M2) {
     def errorMessage: String = Messages.IllegalCombinationModifiers(m1, m2)
@@ -3569,7 +3571,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       enumCaseAllowed: Boolean = false,
       secondaryConstructorAllowed: Boolean = false
   ): Stat = {
-    onlyAcceptMod[Mod.Lazy, KwVal](mods, "lazy not allowed here. Only vals can be lazy")
+    onlyAcceptMod[Mod.Lazy](_.isAny[KwVal, KwGiven])(mods)(
+      "lazy not allowed here. Only val/given can be lazy."
+    )
     onlyAcceptMod[Mod.Opaque, KwType](mods, "opaque not allowed here. Only types can be opaque.")
     token match {
       case KwVal() | KwVar() =>

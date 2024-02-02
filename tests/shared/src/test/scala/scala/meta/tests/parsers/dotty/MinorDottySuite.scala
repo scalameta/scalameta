@@ -553,7 +553,7 @@ class MinorDottySuite extends BaseDottySuite {
     )
     runTestError[Stat](
       "trait Foo { protected[this] lazy var from: Int }",
-      "lazy not allowed here. Only vals can be lazy"
+      "lazy not allowed here. Only val/given can be lazy"
     )
   }
 

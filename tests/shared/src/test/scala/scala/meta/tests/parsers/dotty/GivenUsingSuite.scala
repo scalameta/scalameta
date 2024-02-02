@@ -1152,4 +1152,11 @@ class GivenUsingSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("lazy given") {
+    val code = "lazy given foo: Foo = ???"
+    val tree = Defn.GivenAlias(List(Mod.Lazy()), tname("foo"), None, pname("Foo"), tname("???"))
+    runTestAssert[Stat](code)(tree)
+  }
+
 }
