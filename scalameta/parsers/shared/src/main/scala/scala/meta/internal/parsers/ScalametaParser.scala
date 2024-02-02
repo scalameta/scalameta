@@ -543,8 +543,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   @inline def isStar: Boolean = isStar(token)
   def isStar(tok: Token): Boolean = isIdentOf(tok, "*")
   def isVarargStarParam(allowRepeated: Boolean) =
-    allowRepeated && dialect.allowPostfixStarVarargSplices &&
-      isStar && peekToken.is[RightParen]
+    isStar && isVarargParamOnStar(allowRepeated)
+  def isVarargParamOnStar(allowRepeated: Boolean) =
+    allowRepeated && dialect.allowPostfixStarVarargSplices && peekToken.is[RightParen]
 
   private trait MacroIdent {
     protected def ident(token: Token): Option[String]
@@ -1698,12 +1699,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }))(location)
   }
 
-  private def isEolAfterColonFewerBracesBody(): Boolean = peekToken match {
-    case _: Indentation.Indent => true
-    case _: Indentation | _: EOL => syntaxError("expected fewer-braces method body", token)
-    case _ => false
-  }
-
   private def exprOtherRest(
       startPos: Int,
       prefix: Term,
@@ -1716,33 +1711,36 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else syntaxError("repeated argument not allowed here", at = token)
     }
     @tailrec
-    def iter(t: Term): Term = if (token.is[Equals]) {
-      t match {
-        case _: Term.Ref | _: Term.Apply | _: Quasi =>
-          next()
-          addPos(Term.Assign(t, expr(location = NoStat, allowRepeated = true)))
-        case _ => t
-      }
-    } else if (token.is[Colon] && dialect.allowFewerBraces && isEolAfterColonFewerBracesBody()) {
-      val argClause = autoPos { next(); Term.ArgClause(blockExprOnIndent() :: Nil) }
-      val arguments = addPos(Term.Apply(t, argClause))
-      simpleExprRest(arguments, canApply = true, startPos = startPos)
-    } else if (acceptOpt[Colon]) {
-      if (token.is[At] || (token.is[Ellipsis] && peekToken.is[At])) {
-        iter(addPos(Term.Annotate(t, annots(skipNewLines = false))))
-      } else if (token.is[Underscore] && isStar(peekToken)) {
-        repeatedTerm(t, nextTwice)
-      } else {
-        // this does not necessarily correspond to syntax, but is necessary to accept lambdas
-        // check out the `if (token.is[RightArrow]) { ... }` block below
-        iter(addPos(Term.Ascribe(t, typeOrInfixType(location))))
-      }
-    } else if (isVarargStarParam(allowRepeated)) {
-      repeatedTerm(t, next)
-    } else if (acceptOpt[KwMatch]) {
-      matchClause(t, startPos)
-    } else {
-      t
+    def iter(t: Term): Term = token match {
+      case _: Equals =>
+        t match {
+          case _: Term.Ref | _: Term.Apply | _: Quasi =>
+            next()
+            addPos(Term.Assign(t, expr(location = NoStat, allowRepeated = true)))
+          case _ => t
+        }
+      case _: Colon =>
+        getFewerBracesApplyOnColon(t, startPos) match {
+          case Some(x) => x
+          case _ =>
+            next()
+            if (token.is[At] || (token.is[Ellipsis] && peekToken.is[At])) {
+              iter(addPos(Term.Annotate(t, annots(skipNewLines = false))))
+            } else if (token.is[Underscore] && isStar(peekToken)) {
+              repeatedTerm(t, nextTwice)
+            } else {
+              // this does not necessarily correspond to syntax, but is necessary to accept lambdas
+              // check out the `if (token.is[RightArrow]) { ... }` block below
+              iter(addPos(Term.Ascribe(t, typeOrInfixType(location))))
+            }
+        }
+      case Ident("*") if isVarargParamOnStar(allowRepeated) =>
+        repeatedTerm(t, next)
+      case _: KwMatch =>
+        next()
+        matchClause(t, startPos)
+      case _ =>
+        t
     }
 
     val res: Term = iter(prefix)
@@ -2167,7 +2165,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         } else {
           val argPos = tokenPos
           (token match {
-            case _: Colon if dialect.allowFewerBraces => getFewerBracesArgOnColon()
+            case _: Colon => getFewerBracesArgOnColon()
             case _ => None
           }) match {
             case None => getPostfix(op, targs)
@@ -2366,15 +2364,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           if (tok.is[LeftBrace]) getArgClauseOnBrace() else getArgClauseOnParen()
         val arguments = addPos(Term.Apply(t, argClause))
         simpleExprRest(arguments, canApply = true, startPos = startPos)
-      case _: Colon if canApply && dialect.allowFewerBraces =>
-        val colonPos = tokenPos
-        getFewerBracesArgOnColon() match {
-          case Some(arg) =>
-            val argClause = autoEndPos(colonPos)(Term.ArgClause(arg :: Nil))
-            val arguments = addPos(Term.Apply(t, argClause))
-            simpleExprRest(arguments, canApply = true, startPos = startPos)
-          case _ => t
-        }
+      case _: Colon if canApply =>
+        getFewerBracesApplyOnColon(t, startPos).getOrElse(t)
       case Underscore() =>
         next()
         addPos(Term.Eta(t))
@@ -2384,41 +2375,56 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   private def getFewerBracesArgOnColon(): Option[Term] = {
-    if (isEolAfterColonFewerBracesBody()) Some {
-      next()
-      blockExprOnIndent()
-    }
+    if (!dialect.allowFewerBraces) None
     else
-      tryAhead(Try {
-        val paramPos = tokenPos
+      peekToken match {
+        case _: Indentation.Indent =>
+          next()
+          Some(blockExprOnIndent())
+        case _: Indentation | _: EOL => syntaxError("expected fewer-braces method body", token)
+        case _ => tryAhead(tryGetArgAsLambda())
+      }
+  }
 
-        /**
-         * We need to handle param and then open indented region, otherwise only the block will be
-         * handles and any `.` will be accepted into the block:
-         * ```
-         * .map: a =>
-         * a+1
-         * .filter: x =>
-         * x > 2
-         * ```
-         * Without manual handling here, filter would be included for `(a+1).filter`
-         */
-        val param = simpleExpr(allowRepeated = false)
-        val contextFunction = token.is[ContextArrow]
-        if ((contextFunction || token.is[RightArrow]) && isIndentAfter())
-          convertToParamClause(param)(true, true).map { pc =>
-            val params = autoEndPos(paramPos)(pc)
-            next()
-            val trm = blockExprOnIndent()
-            autoEndPos(paramPos) {
-              if (contextFunction)
-                Term.ContextFunction(params, trm)
-              else
-                Term.Function(params, trm)
-            }
-          }
-        else None
-      }.getOrElse(None))
+  private def tryGetArgAsLambda(): Option[Term.FunctionTerm] = Try {
+    val paramPos = tokenPos
+
+    /**
+     * We need to handle param and then open indented region, otherwise only the block will be
+     * handles and any `.` will be accepted into the block:
+     * ```
+     * .map: a =>
+     * a+1
+     * .filter: x =>
+     * x > 2
+     * ```
+     * Without manual handling here, filter would be included for `(a+1).filter`
+     */
+    val param = simpleExpr(allowRepeated = false)
+    val contextFunction = token.is[ContextArrow]
+    if ((contextFunction || token.is[RightArrow]) && isIndentAfter())
+      convertToParamClause(param)(true, true).map { pc =>
+        val params = autoEndPos(paramPos)(pc)
+        next()
+        val trm = blockExprOnIndent()
+        autoEndPos(paramPos) {
+          if (contextFunction)
+            Term.ContextFunction(params, trm)
+          else
+            Term.Function(params, trm)
+        }
+      }
+    else None
+  }.getOrElse(None)
+
+  private def getFewerBracesApplyOnColon(fun: Term, startPos: Int): Option[Term] = {
+    val colonPos = tokenPos
+    getFewerBracesArgOnColon().map { arg =>
+      val endPos = auto.endTokenPos
+      val argClause = atPos(colonPos, endPos)(Term.ArgClause(arg :: Nil))
+      val arguments = atPos(startPos, endPos)(Term.Apply(fun, argClause))
+      simpleExprRest(arguments, canApply = true, startPos = startPos)
+    }
   }
 
   private def argumentExprsOrPrefixExpr(location: Location): Term = {
