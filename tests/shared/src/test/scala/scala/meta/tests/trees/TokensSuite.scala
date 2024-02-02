@@ -20,7 +20,7 @@ class TokensSuite extends TreeSuiteBase {
 
   test("Tree.tokens: manual") {
     val dialect = implicitly[Dialect]
-    val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
+    val tree = Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar")))
     assertEquals(tree.text, "foo + bar")
     assertEquals(tree.printSyntaxFor(dialect), "foo + bar")
     assertEquals(tree.syntax, "foo + bar")
@@ -51,7 +51,7 @@ class TokensSuite extends TreeSuiteBase {
 
   test("Tree.tokens: empty") {
     val emptyTemplate = "class C".parse[Stat].get.children(3)
-    assertTree(emptyTemplate)(Template(Nil, Nil, Self(Name(""), None), Nil, Nil))
+    assertTree(emptyTemplate)(EmptyTemplate())
     assert(emptyTemplate.tokens.structure == "Tokens()")
   }
 

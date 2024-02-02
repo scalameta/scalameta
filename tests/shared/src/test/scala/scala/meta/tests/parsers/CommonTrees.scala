@@ -19,7 +19,7 @@ trait CommonTrees {
   }
 
   object EmptySelf {
-    def apply(): Self = Self(Name.Anonymous(), None)
+    def apply(): Self = Self(anon, None)
     def unapply(tree: Tree): Boolean = tree match {
       case Self(Name.Anonymous(), None) => true
       case _ => false
@@ -45,20 +45,22 @@ trait CommonTrees {
   final val anon = meta.Name.Anonymous()
   final val phName = meta.Name.Placeholder()
   final val ctor = EmptyCtor()
-  final def ctorp(lp: List[Term.Param] = Nil) = Ctor.Primary(Nil, anon, List(lp))
+  final def ctorp(lp: Term.Param*): Ctor.Primary = ctorp(lp.toList)
+  final def ctorp(lp: List[Term.Param], lps: List[Term.Param]*): Ctor.Primary =
+    Ctor.Primary(Nil, anon, lp :: lps.toList)
   final val slf = meta.Self(anon, None)
   final def self(name: String, tpe: String = null) = meta.Self(tname(name), Option(tpe).map(pname))
 
   final def tname(name: String): Term.Name = Term.Name(name)
   final def tpl(inits: List[Init], stats: List[Stat]): Template =
     Template(Nil, inits, slf, stats)
-  final def tpl(stats: List[Stat]): Template = tpl(Nil, stats)
+  final def tpl(stats: Stat*): Template = tpl(Nil, stats.toList)
 
   final def tparam(mods: List[Mod], name: String, tpe: Option[Type] = None): Term.Param = {
     val nameTree = name match {
       case "" => anon
       case "_" => phName
-      case _ => Term.Name(name)
+      case _ => tname(name)
     }
     Term.Param(mods, nameTree, tpe, None)
   }
@@ -72,6 +74,8 @@ trait CommonTrees {
     tparam(mods, name, Option(tpe).map(pname))
   final def tparam(name: String, tpe: String): Term.Param =
     tparam(Nil, name, tpe)
+  final def tparam(name: String): Term.Param =
+    tparam(Nil, name)
 
   final def tparamval(name: String, tpe: String) =
     tparam(List(Mod.ValParam()), name, tpe)
@@ -82,10 +86,31 @@ trait CommonTrees {
 
   final def pname(name: String): Type.Name = Type.Name(name)
   final def pparam(s: String): Type.Param =
-    Type.Param(Nil, Type.Name(s), Nil, noBounds, Nil, Nil)
+    pparam(s, noBounds)
+  final def pparam(s: String, bounds: Type.Bounds): Type.Param =
+    pparam(Nil, s, bounds)
+  final def pparam(
+      mods: List[Mod],
+      s: String,
+      bounds: Type.Bounds = noBounds,
+      vb: List[Type] = Nil,
+      cb: List[Type] = Nil
+  ): Type.Param = {
+    val nameTree = s match {
+      case "" => anon
+      case "_" => phName
+      case _ => pname(s)
+    }
+    Type.Param(mods, nameTree, Nil, bounds, vb, cb)
+  }
 
   final val noBounds = Type.Bounds(None, None)
-  final def lowBound(bound: Type) = Type.Bounds(Some(bound), None)
+  final def loBound(bound: Type): Type.Bounds = Type.Bounds(Some(bound), None)
+  final def loBound(bound: String): Type.Bounds = loBound(pname(bound))
+  final def hiBound(bound: Type): Type.Bounds = Type.Bounds(None, Some(bound))
+  final def hiBound(bound: String): Type.Bounds = hiBound(pname(bound))
+  final def bounds(lo: String = null, hi: String = null): Type.Bounds =
+    Type.Bounds(Option(lo).map(pname), Option(hi).map(pname))
 
   final def bool(v: Boolean) = Lit.Boolean(v)
   final def int(v: Int) = Lit.Int(v)

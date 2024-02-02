@@ -10,7 +10,7 @@ class InterleavedDeclSuite extends BaseDottySuite {
 
   test("def f: Unit") {
     checkTree(templStat("def f: Unit")) {
-      Decl.Def(Nil, Term.Name("f"), Nil, Type.Name("Unit"))
+      Decl.Def(Nil, tname("f"), Nil, pname("Unit"))
     }
   }
 
@@ -18,12 +18,12 @@ class InterleavedDeclSuite extends BaseDottySuite {
     checkTree(templStat("def f(x: Int): Unit")) {
       Decl.Def(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Nil,
         List(
-          Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil
+          tparam("x", "Int") :: Nil
         ),
-        Type.Name("Unit")
+        pname("Unit")
       )
     }
   }
@@ -32,12 +32,12 @@ class InterleavedDeclSuite extends BaseDottySuite {
     checkTree(templStat("def f(x: Int*): Unit")) {
       Decl.Def(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Nil,
         List(
-          Term.Param(Nil, Term.Name("x"), Some(Type.Repeated(Type.Name("Int"))), None) :: Nil
+          tparam("x", Type.Repeated(pname("Int"))) :: Nil
         ),
-        Type.Name("Unit")
+        pname("Unit")
       )
     }
   }
@@ -46,12 +46,12 @@ class InterleavedDeclSuite extends BaseDottySuite {
     checkTree(templStat("def f(x: => Int): Unit")) {
       Decl.Def(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Nil,
         List(
-          Term.Param(Nil, Term.Name("x"), Some(Type.ByName(Type.Name("Int"))), None) :: Nil
+          tparam("x", Type.ByName(pname("Int"))) :: Nil
         ),
-        Type.Name("Unit")
+        pname("Unit")
       )
     }
   }
@@ -60,19 +60,19 @@ class InterleavedDeclSuite extends BaseDottySuite {
     checkTree(templStat("def f(implicit x: Int): Unit")) {
       Decl.Def(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Nil,
         List(
-          Term.Param(Mod.Implicit() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil
+          tparam(Mod.Implicit() :: Nil, "x", "Int") :: Nil
         ),
-        Type.Name("Unit")
+        pname("Unit")
       )
     }
   }
 
   test("def f: X") {
     checkTree(templStat("def f: X")) {
-      Decl.Def(Nil, Term.Name("f"), Nil, Type.Name("X"))
+      Decl.Def(Nil, tname("f"), Nil, pname("X"))
     }
   }
 
@@ -80,10 +80,10 @@ class InterleavedDeclSuite extends BaseDottySuite {
     checkTree(templStat("def f[T]: T")) {
       Decl.Def(
         Nil,
-        Term.Name("f"),
-        Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil,
+        tname("f"),
+        pparam("T") :: Nil,
         Nil,
-        Type.Name("T")
+        pname("T")
       )
     }
   }
@@ -101,25 +101,25 @@ class InterleavedDeclSuite extends BaseDottySuite {
     runTestAssert[Stat]("def f[A](a: A, as: A*)[B]: B") {
       Decl.Def(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Member.ParamClauseGroup(
           Type.ParamClause(
-            Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+            pparam("A") :: Nil
           ),
           Term.ParamClause(
             List(
-              Term.Param(Nil, Term.Name("a"), Some(Type.Name("A")), None),
-              Term.Param(Nil, Term.Name("as"), Some(Type.Repeated(Type.Name("A"))), None)
+              tparam("a", "A"),
+              tparam("as", Type.Repeated(pname("A")))
             ),
             None
           ) :: Nil
         ) :: Member.ParamClauseGroup(
           Type.ParamClause(
-            Type.Param(Nil, Type.Name("B"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+            pparam("B") :: Nil
           ),
           Nil
         ) :: Nil,
-        Type.Name("B")
+        pname("B")
       )
     }
   }
@@ -137,39 +137,39 @@ class InterleavedDeclSuite extends BaseDottySuite {
     runTestAssert[Stat]("def f[A](a: A, as: A*)[B](b: B, bs: B*)[C](implicit c: C): B") {
       Decl.Def(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Member.ParamClauseGroup(
           Type.ParamClause(
-            Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+            pparam("A") :: Nil
           ),
           Term.ParamClause(
             List(
-              Term.Param(Nil, Term.Name("a"), Some(Type.Name("A")), None),
-              Term.Param(Nil, Term.Name("as"), Some(Type.Repeated(Type.Name("A"))), None)
+              tparam("a", "A"),
+              tparam("as", Type.Repeated(pname("A")))
             ),
             None
           ) :: Nil
         ) :: Member.ParamClauseGroup(
           Type.ParamClause(
-            Type.Param(Nil, Type.Name("B"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+            pparam("B") :: Nil
           ),
           Term.ParamClause(
             List(
-              Term.Param(Nil, Term.Name("b"), Some(Type.Name("B")), None),
-              Term.Param(Nil, Term.Name("bs"), Some(Type.Repeated(Type.Name("B"))), None)
+              tparam("b", "B"),
+              tparam("bs", Type.Repeated(pname("B")))
             ),
             None
           ) :: Nil
         ) :: Member.ParamClauseGroup(
           Type.ParamClause(
-            Type.Param(Nil, Type.Name("C"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+            pparam("C") :: Nil
           ),
           Term.ParamClause(
-            List(Term.Param(List(Mod.Implicit()), Term.Name("c"), Some(Type.Name("C")), None)),
+            List(tparam(List(Mod.Implicit()), "c", "C")),
             Some(Mod.Implicit())
           ) :: Nil
         ) :: Nil,
-        Type.Name("B")
+        pname("B")
       )
     }
   }
@@ -178,10 +178,10 @@ class InterleavedDeclSuite extends BaseDottySuite {
     val q"..$mods def $name(...$paramss): $tpe" = q"def f(x: Int)(y: Int): Unit"
     val paramsExpected =
       Term.ParamClause(
-        Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil,
+        tparam("x", "Int") :: Nil,
         None
       ) :: Term.ParamClause(
-        Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None) :: Nil,
+        tparam("y", "Int") :: Nil,
         None
       ) :: Nil
 
@@ -189,27 +189,22 @@ class InterleavedDeclSuite extends BaseDottySuite {
     assertTree(q"..$mods def $name(...$paramss): $tpe")(
       Decl.Def(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Member.ParamClauseGroup(Nil, paramsExpected) :: Nil,
-        Type.Name("Unit")
+        pname("Unit")
       )
     )
   }
 
   test("single ..., with tparams") {
     val q"..$mods def $name[..$tparams](...$paramss): $tpe" = q"def f[A, B](x: Int)(y: Int): Unit"
-    val tparamsExpected = Type.ParamClause(
-      List(
-        Type.Param(Nil, Type.Name("A"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
-        Type.Param(Nil, Type.Name("B"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
-      )
-    )
+    val tparamsExpected = Type.ParamClause(List(pparam("A"), pparam("B")))
     val paramsExpected =
       Term.ParamClause(
-        Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil,
+        tparam("x", "Int") :: Nil,
         None
       ) :: Term.ParamClause(
-        Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None) :: Nil,
+        tparam("y", "Int") :: Nil,
         None
       ) :: Nil
 
@@ -218,9 +213,9 @@ class InterleavedDeclSuite extends BaseDottySuite {
     assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe")(
       Decl.Def(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Member.ParamClauseGroup(tparamsExpected, paramsExpected) :: Nil,
-        Type.Name("Unit")
+        pname("Unit")
       )
     )
   }
@@ -229,28 +224,22 @@ class InterleavedDeclSuite extends BaseDottySuite {
     val q"..$mods def $name(....$paramss): $tpe" = q"def f(x: Int)[A](y: Int)[B]: Unit"
     val pcGroups = Member.ParamClauseGroup(
       Nil,
-      Term.ParamClause(
-        List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)),
-        None
-      ) :: Nil
+      Term.ParamClause(List(tparam("x", "Int")), None) :: Nil
     ) :: Member.ParamClauseGroup(
       Type.ParamClause(
-        Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+        pparam("A") :: Nil
       ),
-      Term.ParamClause(
-        List(Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None)),
-        None
-      ) :: Nil
+      Term.ParamClause(List(tparam("y", "Int")), None) :: Nil
     ) :: Member.ParamClauseGroup(
       Type.ParamClause(
-        Type.Param(Nil, Type.Name("B"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
+        pparam("B") :: Nil
       ),
       Nil
     ) :: Nil
 
     checkTreesWithSyntax(paramss: _*)("(x: Int)", "[A](y: Int)", "[B]")(pcGroups: _*)
     assertTree(q"..$mods def $name(....$paramss): $tpe")(
-      Decl.Def(Nil, Term.Name("f"), pcGroups, Type.Name("Unit"))
+      Decl.Def(Nil, tname("f"), pcGroups, pname("Unit"))
     )
   }
 

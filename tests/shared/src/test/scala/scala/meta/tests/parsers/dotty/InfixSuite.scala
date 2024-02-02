@@ -14,7 +14,7 @@ class InfixSuite extends BaseDottySuite {
         List(Mod.Infix()),
         tname("a"),
         Nil,
-        List(List(Term.Param(Nil, tname("param"), Some(pname("Int")), None))),
+        List(List(tparam("param", "Int"))),
         None,
         tname("param")
       )
@@ -39,28 +39,23 @@ class InfixSuite extends BaseDottySuite {
         pname("A"),
         Nil,
         EmptyCtor(),
-        Template(
-          Nil,
-          Nil,
-          Self(Name(""), None),
-          List(
-            Decl.Type(
-              List(Mod.Infix()),
-              pname("or"),
-              List(
-                Type.Param(Nil, pname("X"), Nil, Type.Bounds(None, None), Nil, Nil),
-                Type.Param(Nil, pname("Y"), Nil, Type.Bounds(None, None), Nil, Nil)
-              ),
-              Type.Bounds(None, None)
+        tpl(
+          Decl.Type(
+            List(Mod.Infix()),
+            pname("or"),
+            List(
+              pparam("X"),
+              pparam("Y")
             ),
-            Defn.Def(
-              List(Mod.Infix()),
-              tname("x"),
-              Nil,
-              List(List(Term.Param(Nil, tname("a"), Some(pname("Int")), None))),
-              Some(Type.ApplyInfix(pname("String"), pname("or"), pname("Int"))),
-              int(1)
-            )
+            noBounds
+          ),
+          Defn.Def(
+            List(Mod.Infix()),
+            tname("x"),
+            Nil,
+            List(List(tparam("a", "Int"))),
+            Some(Type.ApplyInfix(pname("String"), pname("or"), pname("Int"))),
+            int(1)
           )
         )
       )
@@ -78,7 +73,7 @@ class InfixSuite extends BaseDottySuite {
           pparam("C")
         ),
         EmptyCtor(),
-        Template(Nil, Nil, Self(Name(""), None), Nil)
+        EmptyTemplate()
       )
     )
   }
@@ -93,7 +88,7 @@ class InfixSuite extends BaseDottySuite {
           pparam("C")
         ),
         EmptyCtor(),
-        Template(Nil, Nil, Self(Name(""), None), Nil)
+        EmptyTemplate()
       )
     )
   }
@@ -104,13 +99,11 @@ class InfixSuite extends BaseDottySuite {
         List(Mod.Infix()),
         tname("infix"),
         Nil,
-        List(List(Term.Param(Nil, tname("infix"), Some(pname("infix")), None))),
+        List(List(tparam("infix", "infix"))),
         Some(pname("infix")),
         Term.NewAnonymous(
-          Template(
-            Nil,
-            List(Init(pname("infix"), Name(""), emptyArgClause)),
-            Self(Name(""), None),
+          tpl(
+            List(Init(pname("infix"), anon, emptyArgClause)),
             Nil
           )
         )
@@ -122,12 +115,12 @@ class InfixSuite extends BaseDottySuite {
     runTestAssert[Stat]("extension (i: Int) infix def zero(other: Int): Int = 0")(
       Defn.ExtensionGroup(
         Nil,
-        List(List(Term.Param(Nil, tname("i"), Some(pname("Int")), None))),
+        List(List(tparam("i", "Int"))),
         Defn.Def(
           List(Mod.Infix()),
           tname("zero"),
           Nil,
-          List(List(Term.Param(Nil, tname("other"), Some(pname("Int")), None))),
+          List(List(tparam("other", "Int"))),
           Some(pname("Int")),
           int(0)
         )
@@ -242,10 +235,10 @@ class InfixSuite extends BaseDottySuite {
         List(Pat.Var(tname("str"))),
         None,
         Term.ApplyInfix(
-          Term.ApplyInfix(Lit.String("hello"), tname("++"), Nil, List(Lit.String(" world"))),
+          Term.ApplyInfix(str("hello"), tname("++"), Nil, List(str(" world"))),
           tname("++"),
           Nil,
-          List(Lit.String("!"))
+          List(str("!"))
         )
       )
     )
@@ -642,7 +635,7 @@ class InfixSuite extends BaseDottySuite {
             Nil,
             List(Term.Apply(tname("abc"), List(tname("arg4"))))
           )
-        ) :: Nil
+        )
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)

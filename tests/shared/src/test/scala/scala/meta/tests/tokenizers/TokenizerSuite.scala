@@ -952,7 +952,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("synthetic trees don't have BOF/EOF in their tokens") {
-    val tree = Term.ApplyInfix(Term.Name("foo"), Term.Name("+"), Nil, List(Term.Name("bar")))
+    val tree = Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar")))
     assert(tree.pos == Position.None)
     val tokens = tree.tokenizeFor(implicitly[Dialect])
     val tokensStructure = tokens.structure

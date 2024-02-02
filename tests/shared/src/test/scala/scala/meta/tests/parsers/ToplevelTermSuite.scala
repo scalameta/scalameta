@@ -23,13 +23,13 @@ class ToplevelTermSuite extends TreeSuiteBase {
         List(
           Defn.Def(
             Nil,
-            Term.Name("foo"),
+            tname("foo"),
             Nil,
-            List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))),
-            Some(Type.Name("Int")),
-            Term.Name("x")
+            List(List(tparam("x", "Int"))),
+            Some(pname("Int")),
+            tname("x")
           ),
-          Term.Apply(Term.Name("foo"), List(Term.Name("x")))
+          Term.Apply(tname("foo"), List(tname("x")))
         )
       )
     assertTree(tree)(expected)
@@ -49,17 +49,17 @@ class ToplevelTermSuite extends TreeSuiteBase {
       Source(
         List(
           Pkg(
-            Term.Name("bar"),
+            tname("bar"),
             List(
               Defn.Def(
                 Nil,
-                Term.Name("foo"),
+                tname("foo"),
                 Nil,
-                List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))),
-                Some(Type.Name("Int")),
-                Term.Name("x")
+                List(List(tparam("x", "Int"))),
+                Some(pname("Int")),
+                tname("x")
               ),
-              Term.Apply(Term.Name("foo"), List(Term.Name("x")))
+              Term.Apply(tname("foo"), List(tname("x")))
             )
           )
         )
@@ -79,13 +79,13 @@ class ToplevelTermSuite extends TreeSuiteBase {
       List(
         Defn.Def(
           Nil,
-          Term.Name("foo"),
+          tname("foo"),
           Nil,
-          List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None))),
-          Some(Type.Name("Int")),
-          Term.Name("x")
+          List(List(tparam("x", "Int"))),
+          Some(pname("Int")),
+          tname("x")
         ),
-        Term.Apply(Term.Name("foo"), List(Term.Name("x")))
+        Term.Apply(tname("foo"), List(tname("x")))
       )
     )
     assertTree(tree)(expected)

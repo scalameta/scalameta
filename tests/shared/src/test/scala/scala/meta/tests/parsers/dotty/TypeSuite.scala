@@ -23,13 +23,13 @@ class TypeSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("A"),
+        pname("A"),
         Nil,
         Type.Refine(
-          Some(Type.Name("AnyRef")),
-          List(Decl.Type(Nil, Type.Name("T"), Nil, Type.Bounds(Some(Type.Name("Null")), None)))
+          Some(pname("AnyRef")),
+          List(Decl.Type(Nil, pname("T"), Nil, loBound("Null")))
         ),
-        Type.Bounds(None, None)
+        noBounds
       )
     )
   }
@@ -43,13 +43,13 @@ class TypeSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("A"),
+        pname("A"),
         Nil,
         Type.Refine(
-          Some(Type.With(Type.Name("AnyRef"), Type.Name("Product"))),
-          List(Decl.Type(Nil, Type.Name("T"), Nil, Type.Bounds(Some(Type.Name("Null")), None)))
+          Some(Type.With(pname("AnyRef"), pname("Product"))),
+          List(Decl.Type(Nil, pname("T"), Nil, loBound("Null")))
         ),
-        Type.Bounds(None, None)
+        noBounds
       )
     )
   }
@@ -65,25 +65,25 @@ class TypeSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("A"),
+        pname("A"),
         Nil,
         Type.Refine(
-          Some(Type.Name("Product")),
+          Some(pname("Product")),
           List(
             Decl.Type(
               Nil,
-              Type.Name("T"),
+              pname("T"),
               Nil,
               Type.Bounds(
                 Some(
                   Type.Refine(
-                    Some(Type.Name("Null")),
+                    Some(pname("Null")),
                     List(
                       Decl.Type(
                         Nil,
-                        Type.Name("D"),
+                        pname("D"),
                         Nil,
-                        Type.Bounds(None, Some(Type.Name("Product")))
+                        hiBound("Product")
                       )
                     )
                   )
@@ -93,7 +93,7 @@ class TypeSuite extends BaseDottySuite {
             )
           )
         ),
-        Type.Bounds(None, None)
+        noBounds
       )
     )
   }
@@ -110,25 +110,25 @@ class TypeSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("A"),
+        pname("A"),
         Nil,
         Type.Refine(
-          Some(Type.Name("Product")),
+          Some(pname("Product")),
           List(
             Decl.Type(
               Nil,
-              Type.Name("T"),
+              pname("T"),
               Nil,
               Type.Bounds(
                 Some(
                   Type.Refine(
-                    Some(Type.Name("Null")),
+                    Some(pname("Null")),
                     List(
                       Decl.Type(
                         Nil,
-                        Type.Name("D"),
+                        pname("D"),
                         Nil,
-                        Type.Bounds(None, Some(Type.Name("Product")))
+                        hiBound("Product")
                       )
                     )
                   )
@@ -138,7 +138,7 @@ class TypeSuite extends BaseDottySuite {
             )
           )
         ),
-        Type.Bounds(None, None)
+        noBounds
       )
     )
   }
@@ -163,7 +163,7 @@ class TypeSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some("type A = Product")
     )(
-      Defn.Type(Nil, Type.Name("A"), Nil, Type.Name("Product"), Type.Bounds(None, None))
+      Defn.Type(Nil, pname("A"), Nil, pname("Product"), Type.Bounds(None, None))
     )
   }
 
@@ -187,10 +187,10 @@ class TypeSuite extends BaseDottySuite {
             Nil,
             pname("T"),
             Nil,
-            lowBound(
+            loBound(
               Type.Refine(
                 Some(pname("Null")),
-                Decl.Type(Nil, pname("T"), Nil, lowBound(pname("Int"))) :: Nil
+                Decl.Type(Nil, pname("T"), Nil, loBound(pname("Int"))) :: Nil
               )
             )
           ) :: Nil
@@ -212,21 +212,21 @@ class TypeSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("AA"),
+        pname("AA"),
         Nil,
         Type.Refine(
-          Some(Type.With(Type.Name("String"), Type.Name("Int"))),
+          Some(Type.With(pname("String"), pname("Int"))),
           List(
             Decl.Type(
               Nil,
-              Type.Name("T"),
+              pname("T"),
               Nil,
               Type.Bounds(
                 Some(
                   Type.Refine(
-                    Some(Type.Name("Null")),
+                    Some(pname("Null")),
                     List(
-                      Decl.Type(Nil, Type.Name("T"), Nil, Type.Bounds(Some(Type.Name("Int")), None))
+                      Decl.Type(Nil, pname("T"), Nil, loBound("Int"))
                     )
                   )
                 ),
@@ -235,7 +235,7 @@ class TypeSuite extends BaseDottySuite {
             )
           )
         ),
-        Type.Bounds(None, None)
+        noBounds
       )
     )
   }
@@ -268,12 +268,12 @@ class TypeSuite extends BaseDottySuite {
             Nil,
             Type.Refine(
               Some(Type.With(pname("String"), pname("Int"))),
-              Decl.Type(Nil, pname("T"), Nil, Type.Bounds(Some(pname("Null")), None)) :: Nil
+              Decl.Type(Nil, pname("T"), Nil, loBound("Null")) :: Nil
             ),
-            Type.Bounds(None, None)
+            noBounds
           ),
           Term.Block(
-            Decl.Type(Nil, pname("T"), Nil, Type.Bounds(Some(pname("Int")), None)) :: Nil
+            Decl.Type(Nil, pname("T"), Nil, loBound("Int")) :: Nil
           )
         )
       )
@@ -305,9 +305,9 @@ class TypeSuite extends BaseDottySuite {
   test("A * B + C") {
     assertTpe("A * B + C") {
       Type.ApplyInfix(
-        Type.ApplyInfix(Type.Name("A"), Type.Name("*"), Type.Name("B")),
-        Type.Name("+"),
-        Type.Name("C")
+        Type.ApplyInfix(pname("A"), pname("*"), pname("B")),
+        pname("+"),
+        pname("C")
       )
     }
   }
@@ -315,9 +315,9 @@ class TypeSuite extends BaseDottySuite {
   test("A + B * C") {
     assertTpe("A + B * C") {
       Type.ApplyInfix(
-        Type.Name("A"),
-        Type.Name("+"),
-        Type.ApplyInfix(Type.Name("B"), Type.Name("*"), Type.Name("C"))
+        pname("A"),
+        pname("+"),
+        Type.ApplyInfix(pname("B"), pname("*"), pname("C"))
       )
     }
   }
@@ -325,9 +325,9 @@ class TypeSuite extends BaseDottySuite {
   test("A * B + C / D") {
     assertTpe("A * B + C / D") {
       Type.ApplyInfix(
-        Type.ApplyInfix(Type.Name("A"), Type.Name("*"), Type.Name("B")),
-        Type.Name("+"),
-        Type.ApplyInfix(Type.Name("C"), Type.Name("/"), Type.Name("D"))
+        Type.ApplyInfix(pname("A"), pname("*"), pname("B")),
+        pname("+"),
+        Type.ApplyInfix(pname("C"), pname("/"), pname("D"))
       )
     }
   }
@@ -360,7 +360,7 @@ class TypeSuite extends BaseDottySuite {
     assertTpe("T @foo")(
       Annotate(
         TypeName("T"),
-        Mod.Annot(Init(Type.Name("foo"), Name.Anonymous(), emptyArgClause)) :: Nil
+        Mod.Annot(Init(pname("foo"), anon, emptyArgClause)) :: Nil
       )
     )
   }
@@ -481,16 +481,16 @@ class TypeSuite extends BaseDottySuite {
       tpe("42")(dialects.Scala211)
     }
 
-    assertTpe("42")(Lit.Int(42))(dialects.Scala3)
-    assertTpe("-42")(Lit.Int(-42))(dialects.Scala3)
+    assertTpe("42")(int(42))(dialects.Scala3)
+    assertTpe("-42")(int(-42))(dialects.Scala3)
     assertTpe("42L")(Lit.Long(42L))(dialects.Scala3)
     matchSubStructure[Type]("42.0f", { case Lit(42.0f) => () })
     matchSubStructure[Type]("-42.0f", { case Lit(-42.0f) => () })
     matchSubStructure[Type]("42.0d", { case Lit(42.0d) => () })
     matchSubStructure[Type]("-42.0d", { case Lit(-42.0d) => () })
-    assertTpe("\"42\"")(Lit.String("42"))(dialects.Scala3)
-    assertTpe("true")(Lit.Boolean(true))(dialects.Scala3)
-    assertTpe("false")(Lit.Boolean(false))(dialects.Scala3)
+    assertTpe("\"42\"")(str("42"))(dialects.Scala3)
+    assertTpe("true")(bool(true))(dialects.Scala3)
+    assertTpe("false")(bool(false))(dialects.Scala3)
 
     val exceptionScala3 = intercept[ParseException] {
       tpe("() => ()")(dialects.Scala3)
@@ -510,7 +510,7 @@ class TypeSuite extends BaseDottySuite {
       { case Type.Function(List(Type.Name("+_")), Type.Name("Int")) => () }
     )(parseType, dialects.Scala213Source3, implicitly[Location])
     assertTpe("Option[- _]") {
-      Apply(Type.Name("Option"), ArgClause(List(Type.Name("-_"))))
+      Apply(pname("Option"), ArgClause(List(pname("-_"))))
     }(dialects.Scala213Source3)
   }
 
@@ -541,16 +541,10 @@ class TypeSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         tname("foo"),
-        Type.Param(
+        pparam(
           Nil,
-          pname("A"),
-          Nil,
-          Type.Bounds(
-            None,
-            Some(Type.AnonymousLambda(Type.Apply(pname("C"), List(Type.AnonymousParam(None)))))
-          ),
-          Nil,
-          Nil
+          "A",
+          hiBound(Type.AnonymousLambda(Type.Apply(pname("C"), List(Type.AnonymousParam(None)))))
         ) :: Nil,
         Nil,
         None,
@@ -571,16 +565,10 @@ class TypeSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         tname("foo"),
-        Type.Param(
+        pparam(
           Nil,
-          pname("A"),
-          Nil,
-          Type.Bounds(
-            None,
-            Some(Type.AnonymousLambda(Type.Apply(pname("C"), List(Type.AnonymousParam(None)))))
-          ),
-          Nil,
-          Nil
+          "A",
+          hiBound(Type.AnonymousLambda(Type.Apply(pname("C"), List(Type.AnonymousParam(None)))))
         ) :: Nil,
         Nil,
         None,

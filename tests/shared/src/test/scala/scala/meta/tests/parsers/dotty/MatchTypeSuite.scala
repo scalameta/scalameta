@@ -17,13 +17,13 @@ class MatchTypeSuite extends BaseDottySuite {
       )(
         Defn.Type(
           Nil,
-          Type.Name("Elem"),
-          List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
+          pname("Elem"),
+          List(pparam("X")),
           Type.Match(
-            Type.Name("X"),
+            pname("X"),
             List(
-              TypeCase(Type.Name("String"), Type.Name("Char")),
-              TypeCase(Type.Apply(Type.Name("Array"), List(Type.Name("t"))), Type.Name("t"))
+              TypeCase(pname("String"), pname("Char")),
+              TypeCase(Type.Apply(pname("Array"), List(pname("t"))), pname("t"))
             )
           )
         )
@@ -49,13 +49,13 @@ class MatchTypeSuite extends BaseDottySuite {
       )(
         Defn.Type(
           Nil,
-          Type.Name("Elem"),
-          List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
+          pname("Elem"),
+          List(pparam("X")),
           Type.Match(
-            Type.Name("X"),
+            pname("X"),
             List(
-              TypeCase(Type.Name("String"), Type.Name("Char")),
-              TypeCase(Type.Apply(Type.Name("Array"), List(Type.Name("t"))), Type.Name("t"))
+              TypeCase(pname("String"), pname("Char")),
+              TypeCase(Type.Apply(pname("Array"), List(pname("t"))), pname("t"))
             )
           )
         )
@@ -71,18 +71,16 @@ class MatchTypeSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("Head"),
-        List(
-          Type.Param(Nil, pname("X"), Nil, Type.Bounds(None, Some(pname("Tuple"))), Nil, Nil)
-        ),
+        pname("Head"),
+        List(pparam("X", hiBound("Tuple"))),
         Type.Match(
-          Type.Name("X"),
+          pname("X"),
           List(
             TypeCase(
               Type.Tuple(
-                List(Type.Name("x1"), Type.Wildcard(Type.Bounds(None, None)))
+                List(pname("x1"), Type.Wildcard(Type.Bounds(None, None)))
               ),
-              Type.Name("x1")
+              pname("x1")
             )
           )
         )
@@ -100,19 +98,19 @@ class MatchTypeSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("Len"),
-        List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
+        pname("Len"),
+        List(pparam("X")),
         Type.Match(
-          Type.Name("X"),
+          pname("X"),
           List(
-            TypeCase(Type.Name("Unit"), Lit.Int(0)),
+            TypeCase(pname("Unit"), int(0)),
             TypeCase(
-              Type.ApplyInfix(Type.Name("x"), Type.Name("*:"), Type.Name("xs")),
-              Type.Apply(Type.Name("S"), List(Type.Apply(Type.Name("Len"), List(Type.Name("xs")))))
+              Type.ApplyInfix(pname("x"), pname("*:"), pname("xs")),
+              Type.Apply(pname("S"), List(Type.Apply(pname("Len"), List(pname("xs")))))
             )
           )
         ),
-        Type.Bounds(None, Some(Type.Name("Int")))
+        hiBound("Int")
       )
     )
   }
@@ -127,26 +125,23 @@ class MatchTypeSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("Concat"),
-        List(
-          Type.Param(Nil, pname("X"), Nil, Type.Bounds(None, Some(pname("Tuple"))), Nil, Nil),
-          Type.Param(Nil, pname("Y"), Nil, Type.Bounds(None, Some(pname("Tuple"))), Nil, Nil)
-        ),
+        pname("Concat"),
+        List(pparam("X", hiBound("Tuple")), pparam("Y", hiBound("Tuple"))),
         Type.Match(
-          Type.Name("X"),
+          pname("X"),
           List(
-            TypeCase(Type.Name("Unit"), Type.Name("Y")),
+            TypeCase(pname("Unit"), pname("Y")),
             TypeCase(
-              Type.ApplyInfix(Type.Name("x1"), Type.Name("*:"), Type.Name("xs1")),
+              Type.ApplyInfix(pname("x1"), pname("*:"), pname("xs1")),
               Type.ApplyInfix(
-                Type.Name("x1"),
-                Type.Name("*:"),
-                Type.Apply(Type.Name("Concat"), List(Type.Name("xs1"), Type.Name("Y")))
+                pname("x1"),
+                pname("*:"),
+                Type.Apply(pname("Concat"), List(pname("xs1"), pname("Y")))
               )
             )
           )
         ),
-        Type.Bounds(None, Some(Type.Name("Tuple")))
+        hiBound("Tuple")
       )
     )
   }
@@ -168,13 +163,13 @@ class MatchTypeSuite extends BaseDottySuite {
     )(
       Defn.Type(
         Nil,
-        Type.Name("Elem"),
-        List(Type.Param(Nil, Type.Name("X"), Nil, Type.Bounds(None, None), Nil, Nil)),
+        pname("Elem"),
+        List(pparam("X")),
         Type.Match(
-          Type.Name("X"),
+          pname("X"),
           List(
-            TypeCase(Type.Name("String"), Type.Name("Char")),
-            TypeCase(Type.Apply(Type.Name("Array"), List(Type.Name("t"))), Type.Name("t"))
+            TypeCase(pname("String"), pname("Char")),
+            TypeCase(Type.Apply(pname("Array"), List(pname("t"))), pname("t"))
           )
         )
       )
@@ -201,30 +196,24 @@ class MatchTypeSuite extends BaseDottySuite {
     )(
       Defn.Object(
         Nil,
-        Term.Name("match_types"),
-        Template(
-          Nil,
-          Nil,
-          Self(Name(""), None),
-          List(
-            Defn.Type(
-              Nil,
-              Type.Name("Combine"),
+        tname("match_types"),
+        tpl(
+          Defn.Type(
+            Nil,
+            pname("Combine"),
+            List(
+              pparam("Left"),
+              pparam("Right")
+            ),
+            Type.Match(
+              pname("Left"),
               List(
-                Type.Param(Nil, Type.Name("Left"), Nil, Type.Bounds(None, None), Nil, Nil),
-                Type.Param(Nil, Type.Name("Right"), Nil, Type.Bounds(None, None), Nil, Nil)
-              ),
-              Type.Match(
-                Type.Name("Left"),
-                List(
-                  TypeCase(Type.Name("Unit"), Type.Name("Right")),
-                  TypeCase(Type.Name("?"), Type.Name("Left"))
-                )
-              ),
-              Type.Bounds(None, None)
-            )
-          ),
-          Nil
+                TypeCase(pname("Unit"), pname("Right")),
+                TypeCase(pname("?"), pname("Left"))
+              )
+            ),
+            noBounds
+          )
         )
       )
     )
@@ -254,52 +243,29 @@ class MatchTypeSuite extends BaseDottySuite {
     )(
       Defn.Object(
         Nil,
-        Term.Name("match_types"),
-        Template(
-          Nil,
-          Nil,
-          Self(Name(""), None),
-          List(
-            Defn.Type(
-              Nil,
-              Type.Name("Combine"),
+        tname("match_types"),
+        tpl(
+          Defn.Type(
+            Nil,
+            pname("Combine"),
+            List(pparam("L"), pparam("R")),
+            Type.Match(
+              pname("L"),
               List(
-                Type.Param(Nil, Type.Name("L"), Nil, Type.Bounds(None, None), Nil, Nil),
-                Type.Param(Nil, Type.Name("R"), Nil, Type.Bounds(None, None), Nil, Nil)
-              ),
-              Type.Match(
-                Type.Name("L"),
-                List(
-                  TypeCase(
-                    Type.AnonymousLambda(
-                      Type.Apply(
-                        Type.Name("Foo"),
-                        List(Type.AnonymousParam(None))
-                      )
-                    ),
-                    Type.Name("L")
-                  ),
-                  TypeCase(
-                    Type.Apply(
-                      Type.Name("Bar"),
-                      List(Type.Wildcard(Type.Bounds(None, None)))
-                    ),
-                    Type.Name("L")
-                  ),
-                  TypeCase(
-                    Type.PatWildcard(),
-                    Type.Name("R")
-                  ),
-                  TypeCase(
-                    Type.Name("?"),
-                    Type.Name("L")
-                  )
-                )
-              ),
-              Type.Bounds(None, None)
-            )
-          ),
-          Nil
+                TypeCase(
+                  Type.AnonymousLambda(Type.Apply(pname("Foo"), List(Type.AnonymousParam(None)))),
+                  pname("L")
+                ),
+                TypeCase(
+                  Type.Apply(pname("Bar"), List(Type.Wildcard(Type.Bounds(None, None)))),
+                  pname("L")
+                ),
+                TypeCase(Type.PatWildcard(), pname("R")),
+                TypeCase(pname("?"), pname("L"))
+              )
+            ),
+            noBounds
+          )
         )
       )
     )

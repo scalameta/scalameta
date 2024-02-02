@@ -7,31 +7,31 @@ import scala.meta.dialects.Scala213
 class DefnSuite extends ParseSuite {
   test("val x = 2") {
     assertTree(templStat("val x = 2"))(
-      Defn.Val(Nil, Pat.Var(Term.Name("x")) :: Nil, None, Lit.Int(2))
+      Defn.Val(Nil, Pat.Var(tname("x")) :: Nil, None, int(2))
     )
   }
 
   test("var x = 2") {
     assertTree(templStat("var x = 2"))(
-      Defn.Var(Nil, Pat.Var(Term.Name("x")) :: Nil, None, Some(Lit.Int(2)))
+      Defn.Var(Nil, Pat.Var(tname("x")) :: Nil, None, Some(int(2)))
     )
   }
 
   test("val x, y = 2") {
     assertTree(templStat("val x, y = 2"))(
-      Defn.Val(Nil, Pat.Var(Term.Name("x")) :: Pat.Var(Term.Name("y")) :: Nil, None, Lit.Int(2))
+      Defn.Val(Nil, Pat.Var(tname("x")) :: Pat.Var(tname("y")) :: Nil, None, int(2))
     )
   }
 
   test("val x: Int = 2") {
     assertTree(templStat("val x: Int = 2"))(
-      Defn.Val(Nil, Pat.Var(Term.Name("x")) :: Nil, Some(Type.Name("Int")), Lit.Int(2))
+      Defn.Val(Nil, Pat.Var(tname("x")) :: Nil, Some(pname("Int")), int(2))
     )
   }
 
   test("val `x`: Int = 2") {
     assertTree(templStat("val `x`: Int = 2"))(
-      Defn.Val(Nil, Pat.Var(Term.Name("x")) :: Nil, Some(Type.Name("Int")), Lit.Int(2))
+      Defn.Val(Nil, Pat.Var(tname("x")) :: Nil, Some(pname("Int")), int(2))
     )
   }
 
@@ -39,9 +39,9 @@ class DefnSuite extends ParseSuite {
     assertTree(templStat("val f: Int => String = _.toString"))(
       Defn.Val(
         Nil,
-        Pat.Var(Term.Name("f")) :: Nil,
-        Some(Type.Function(Type.Name("Int") :: Nil, Type.Name("String"))),
-        Term.AnonymousFunction(Term.Select(Term.Placeholder(), Term.Name("toString")))
+        Pat.Var(tname("f")) :: Nil,
+        Some(Type.Function(pname("Int") :: Nil, pname("String"))),
+        Term.AnonymousFunction(Term.Select(Term.Placeholder(), tname("toString")))
       )
     )
   }
@@ -50,16 +50,16 @@ class DefnSuite extends ParseSuite {
     assertTree(templStat("var f: Int => String = _.toString"))(
       Defn.Var(
         Nil,
-        Pat.Var(Term.Name("f")) :: Nil,
-        Some(Type.Function(Type.Name("Int") :: Nil, Type.Name("String"))),
-        Some(Term.AnonymousFunction(Term.Select(Term.Placeholder(), Term.Name("toString"))))
+        Pat.Var(tname("f")) :: Nil,
+        Some(Type.Function(pname("Int") :: Nil, pname("String"))),
+        Some(Term.AnonymousFunction(Term.Select(Term.Placeholder(), tname("toString"))))
       )
     )
   }
 
   test("var x: Int = _") {
     assertTree(templStat("var x: Int = _"))(
-      Defn.Var(Nil, Pat.Var(Term.Name("x")) :: Nil, Some(Type.Name("Int")), None)
+      Defn.Var(Nil, Pat.Var(tname("x")) :: Nil, Some(pname("Int")), None)
     )
   }
 
@@ -77,13 +77,13 @@ class DefnSuite extends ParseSuite {
 
   test("val (x: Int) = 2") {
     assertTree(templStat("val (x: Int) = 2"))(
-      Defn.Val(Nil, Pat.Typed(Pat.Var(Term.Name("x")), Type.Name("Int")) :: Nil, None, Lit.Int(2))
+      Defn.Val(Nil, Pat.Typed(Pat.Var(tname("x")), pname("Int")) :: Nil, None, int(2))
     )
   }
 
   test("type A = B") {
     assertTree(templStat("type A = B")) {
-      Defn.Type(Nil, Type.Name("A"), Type.ParamClause(Nil), Type.Name("B"))
+      Defn.Type(Nil, pname("A"), Type.ParamClause(Nil), pname("B"))
     }
   }
 
@@ -91,25 +91,16 @@ class DefnSuite extends ParseSuite {
     assertTree(templStat("type F[T] = List[T]")) {
       Defn.Type(
         Nil,
-        Type.Name("F"),
-        Type.ParamClause(
-          Type.Param(
-            Nil,
-            Type.Name("T"),
-            Type.ParamClause(Nil),
-            Type.Bounds(None, None),
-            Nil,
-            Nil
-          ) :: Nil
-        ),
-        Type.Apply(Type.Name("List"), Type.Name("T") :: Nil)
+        pname("F"),
+        pparam("T") :: Nil,
+        Type.Apply(pname("List"), pname("T") :: Nil)
       )
     }
   }
 
   test("def x = 2") {
     assertTree(templStat("def x = 2")) {
-      Defn.Def(Nil, Term.Name("x"), Nil, Nil, None, Lit.Int(2))
+      Defn.Def(Nil, tname("x"), Nil, Nil, None, int(2))
     }
   }
 
@@ -117,18 +108,11 @@ class DefnSuite extends ParseSuite {
     assertTree(templStat("def x[A <: B] = 2")) {
       Defn.Def(
         Nil,
-        Term.Name("x"),
-        Type.Param(
-          Nil,
-          Type.Name("A"),
-          Type.ParamClause(Nil),
-          Type.Bounds(None, Some(Type.Name("B"))),
-          Nil,
-          Nil
-        ) :: Nil,
+        tname("x"),
+        pparam("A", hiBound("B")) :: Nil,
         Nil,
         None,
-        Lit.Int(2)
+        int(2)
       )
     }
   }
@@ -137,20 +121,16 @@ class DefnSuite extends ParseSuite {
     assertTree(templStat("def x[A <% B] = 2")) {
       Defn.Def(
         Nil,
-        Term.Name("x"),
-        Type.ParamClause(
-          Type.Param(
-            Nil,
-            Type.Name("A"),
-            Type.ParamClause(Nil),
-            Type.Bounds(None, None),
-            Type.Name("B") :: Nil,
-            Nil
-          ) :: Nil
-        ),
+        tname("x"),
+        pparam(
+          Nil,
+          "A",
+          noBounds,
+          vb = pname("B") :: Nil
+        ) :: Nil,
         Nil,
         None,
-        Lit.Int(2)
+        int(2)
       )
     }
   }
@@ -159,20 +139,11 @@ class DefnSuite extends ParseSuite {
     assertTree(templStat("def x[A: B] = 2")) {
       Defn.Def(
         Nil,
-        Term.Name("x"),
-        Type.ParamClause(
-          Type.Param(
-            Nil,
-            Type.Name("A"),
-            Type.ParamClause(Nil),
-            Type.Bounds(None, None),
-            Nil,
-            Type.Name("B") :: Nil
-          ) :: Nil
-        ),
+        tname("x"),
+        pparam(Nil, "A", cb = pname("B") :: Nil) :: Nil,
         Nil,
         None,
-        Lit.Int(2)
+        int(2)
       )
     }
   }
@@ -181,13 +152,13 @@ class DefnSuite extends ParseSuite {
     assertTree(templStat("def f(a: Int)(implicit b: Int) = a + b")) {
       Defn.Def(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Nil,
-        (Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None) :: Nil) ::
-          (Term.Param(Mod.Implicit() :: Nil, Term.Name("b"), Some(Type.Name("Int")), None) :: Nil)
+        (tparam("a", "Int") :: Nil) ::
+          (tparam(Mod.Implicit() :: Nil, "b", "Int") :: Nil)
           :: Nil,
         None,
-        Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, Term.Name("b") :: Nil)
+        Term.ApplyInfix(tname("a"), tname("+"), Nil, tname("b") :: Nil)
       )
     }
   }
@@ -196,11 +167,11 @@ class DefnSuite extends ParseSuite {
     assertTree(templStat("def proc { return 42 }")) {
       Defn.Def(
         Nil,
-        Term.Name("proc"),
+        tname("proc"),
         Nil,
         Nil,
-        Some(Type.Name("Unit")),
-        Term.Block(Term.Return(Lit.Int(42)) :: Nil)
+        Some(pname("Unit")),
+        Term.Block(Term.Return(int(42)) :: Nil)
       )
     }
   }
@@ -209,11 +180,11 @@ class DefnSuite extends ParseSuite {
     assertTree(templStat("def f(x: Int) = macro impl")) {
       Defn.Macro(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Type.ParamClause(Nil),
-        (Term.Param(List(), Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil,
+        (tparam("x", "Int") :: Nil) :: Nil,
         None,
-        Term.Name("impl")
+        tname("impl")
       )
     }
   }
@@ -222,11 +193,11 @@ class DefnSuite extends ParseSuite {
     assertTree(templStat("def f(x: Int): Int = macro impl")) {
       Defn.Macro(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Nil,
-        (Term.Param(List(), Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil,
-        Some(Type.Name("Int")),
-        Term.Name("impl")
+        (tparam("x", "Int") :: Nil) :: Nil,
+        Some(pname("Int")),
+        tname("impl")
       )
     }
   }
@@ -244,41 +215,35 @@ class DefnSuite extends ParseSuite {
     assertTree(defn)(
       Defn.Def(
         Nil,
-        Term.Name("f"),
+        tname("f"),
         Type.ParamClause(Nil),
         Nil,
         None,
         Term.Block(
-          List(
-            Term.Function(
-              List(Term.Param(Nil, Term.Name("n"), Some(Type.Name("Int")), None)),
-              Term.Apply(
-                Term.Select(
-                  Term.Block(
-                    List(
-                      Term.ForYield(
-                        List(
-                          Enumerator.Generator(
-                            Pat.Wildcard(),
-                            Term.Apply(
-                              Term.Select(
-                                Term.Select(Term.Name("scala"), Term.Name("util")),
-                                Term.Name("Success")
-                              ),
-                              List(Lit.Int(123))
-                            )
-                          )
+          Term.Function(
+            List(tparam("n", "Int")),
+            Term.Apply(
+              Term.Select(
+                Term.Block(
+                  Term.ForYield(
+                    Enumerator.Generator(
+                      Pat.Wildcard(),
+                      Term.Apply(
+                        Term.Select(
+                          Term.Select(tname("scala"), tname("util")),
+                          tname("Success")
                         ),
-                        Lit.Int(42)
+                        List(int(123))
                       )
-                    )
-                  ),
-                  Term.Name("recover")
+                    ) :: Nil,
+                    int(42)
+                  ) :: Nil
                 ),
-                List(Term.Name("???"))
-              )
+                tname("recover")
+              ),
+              List(tname("???"))
             )
-          )
+          ) :: Nil
         )
       )
     )
@@ -291,13 +256,13 @@ class DefnSuite extends ParseSuite {
     )
     assertTree(defn)(
       Term.If(
-        Term.Name("cond"),
-        Term.Select(Term.Block(List(Term.Name("expr"))), Term.Name("select")),
+        tname("cond"),
+        Term.Select(Term.Block(List(tname("expr"))), tname("select")),
         Term.ApplyInfix(
-          Term.Block(List(Term.Name("expr"))),
-          Term.Name("+"),
+          Term.Block(List(tname("expr"))),
+          tname("+"),
           Nil,
-          List(Term.Block(List(Term.Name("expr"))))
+          List(Term.Block(List(tname("expr"))))
         ),
         Nil
       )
@@ -311,9 +276,9 @@ class DefnSuite extends ParseSuite {
     )
     assertTree(defn)(
       Term.Try(
-        Term.Select(Term.Block(List(Term.Name("expr"))), Term.Name("select")),
+        Term.Select(Term.Block(List(tname("expr"))), tname("select")),
         Nil,
-        Some(Term.Select(Term.Block(List(Term.Name("expr"))), Term.Name("select")))
+        Some(Term.Select(Term.Block(List(tname("expr"))), tname("select")))
       )
     )
   }
@@ -325,8 +290,8 @@ class DefnSuite extends ParseSuite {
     )
     assertTree(defn)(
       Term.While(
-        Term.Name("cond"),
-        Term.Select(Term.Block(List(Term.Name("expr"))), Term.Name("select"))
+        tname("cond"),
+        Term.Select(Term.Block(List(tname("expr"))), tname("select"))
       )
     )
   }
@@ -338,8 +303,8 @@ class DefnSuite extends ParseSuite {
     )
     assertTree(defn)(
       Term.For(
-        List(Enumerator.Generator(Pat.Var(Term.Name("i")), Term.Name("list"))),
-        Term.Select(Term.Block(List(Term.Name("expr"))), Term.Name("select"))
+        List(Enumerator.Generator(Pat.Var(tname("i")), tname("list"))),
+        Term.Select(Term.Block(List(tname("expr"))), tname("select"))
       )
     )
   }
@@ -384,9 +349,9 @@ class DefnSuite extends ParseSuite {
               pname("A6"),
               Nil,
               ctorp(List(tparam("a7", "A8"))),
-              tpl(Nil)
+              EmptyTemplate()
             ),
-            Defn.Object(Nil, tname("A9"), tpl(Nil))
+            Defn.Object(Nil, tname("A9"), EmptyTemplate())
           )
         )
       ) :: Nil,

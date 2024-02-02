@@ -73,23 +73,23 @@ class Scala3SyntaxSuite extends BaseDottySuite {
 
   test("backticked-keywords") {
     assertEquals(
-      Term.Name("enum").syntax,
+      tname("enum").syntax,
       "`enum`"
     )
     assertEquals(
-      Term.Name("given").syntax,
+      tname("given").syntax,
       "`given`"
     )
     assertEquals(
-      Term.Name("export").syntax,
+      tname("export").syntax,
       "`export`"
     )
     assertEquals(
-      Term.Name("then").syntax,
+      tname("then").syntax,
       "`then`"
     )
     assertEquals(
-      Term.Name("?=>").syntax,
+      tname("?=>").syntax,
       "`?=>`"
     )
   }

@@ -32,7 +32,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("val x: Int (raw)") {
     val tree = templStat("val x: Int")
-    assertTree(tree)(Decl.Val(Nil, List(Pat.Var(Term.Name("x"))), Type.Name("Int")))
+    assertTree(tree)(Decl.Val(Nil, List(Pat.Var(tname("x"))), pname("Int")))
   }
 
   test("val x: Int (code)") {
@@ -84,8 +84,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertTree(tree)(
       Term.Block(
         List(
-          Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.String("\n        x\n      ")),
-          Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.String("\""))
+          Defn.Val(Nil, List(Pat.Var(tname("x"))), None, str("\n        x\n      ")),
+          Defn.Val(Nil, List(Pat.Var(tname("y"))), None, str("\""))
         )
       )
     )
@@ -116,19 +116,19 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         List(
           Defn.Val(
             Nil,
-            List(Pat.Var(Term.Name("x"))),
+            List(Pat.Var(tname("x"))),
             None,
             Term.Interpolate(
-              Term.Name("q"),
-              List(Lit.String("123 + "), Lit.String(" + "), Lit.String(" + 456")),
-              List(Term.Name("x"), Term.Apply(Term.Name("foo"), List(Lit.Int(123))))
+              tname("q"),
+              List(str("123 + "), str(" + "), str(" + 456")),
+              List(tname("x"), Term.Apply(tname("foo"), List(int(123))))
             )
           ),
           Defn.Val(
             Nil,
-            List(Pat.Var(Term.Name("y"))),
+            List(Pat.Var(tname("y"))),
             None,
-            Lit.String("\n        $x\n        $y\n        ..$z\n      ")
+            str("\n        $x\n        $y\n        ..$z\n      ")
           )
         )
       )
@@ -671,32 +671,22 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     ) {
       Defn.Class(
         Nil,
-        Type.Name("C"),
+        pname("C"),
         Type.ParamClause(Nil),
         Ctor.Primary(
           Nil,
-          Name(""),
+          anon,
           List(
             Term.ParamClause(
               List(
-                Term.Param(
-                  List(Mod.Override(), Mod.Implicit(), Mod.ValParam()),
-                  Term.Name("x"),
-                  Some(Type.Name("Int")),
-                  None
-                ),
-                Term.Param(
-                  List(Mod.Final(), Mod.Implicit(), Mod.VarParam()),
-                  Term.Name("y"),
-                  Some(Type.Name("String")),
-                  None
-                )
+                tparam(List(Mod.Override(), Mod.Implicit(), Mod.ValParam()), "x", "Int"),
+                tparam(List(Mod.Final(), Mod.Implicit(), Mod.VarParam()), "y", "String")
               ),
               Some(Mod.Implicit())
             )
           )
         ),
-        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+        EmptyTemplate()
       )
     }
   }
@@ -712,32 +702,25 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     ) {
       Defn.Class(
         Nil,
-        Type.Name("C"),
+        pname("C"),
         Type.ParamClause(Nil),
         Ctor.Primary(
           Nil,
-          Name(""),
+          anon,
           Term.ParamClause(
-            Term.Param(
-              List(Mod.Private(Name("")), Mod.Implicit(), Mod.ValParam()),
-              Term.Name("x"),
-              Some(Type.Name("Int")),
-              None
-            ) :: Term.Param(
-              List(Mod.Implicit(), Mod.Final(), Mod.ValParam()),
-              Term.Name("y"),
-              Some(Type.Name("String")),
-              None
-            ) :: Term.Param(
-              List(Mod.Protected(Name("")), Mod.Implicit(), Mod.VarParam()),
-              Term.Name("z"),
-              Some(Type.Name("Boolean")),
-              None
+            tparam(
+              List(Mod.Private(anon), Mod.Implicit(), Mod.ValParam()),
+              "x",
+              "Int"
+            ) :: tparam(List(Mod.Implicit(), Mod.Final(), Mod.ValParam()), "y", "String") :: tparam(
+              List(Mod.Protected(anon), Mod.Implicit(), Mod.VarParam()),
+              "z",
+              "Boolean"
             ) :: Nil,
             Some(Mod.Implicit())
           ) :: Nil
         ),
-        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+        EmptyTemplate()
       )
     }
   }
@@ -770,7 +753,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("case List(xs @ _*)") {
     val tree = pat("List(xs @ _*)")
     assertTree(tree)(
-      Pat.Extract(Term.Name("List"), List(Pat.Bind(Pat.Var(Term.Name("xs")), Pat.SeqWildcard())))
+      Pat.Extract(tname("List"), List(Pat.Bind(Pat.Var(tname("xs")), Pat.SeqWildcard())))
     )
     assertEquals(tree.syntax, "List(xs @ _*)")
   }
@@ -779,8 +762,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val tree = pat("List[t](xs @ _*)")
     assertTree(tree)(
       Pat.Extract(
-        Term.ApplyType(Term.Name("List"), List(Type.Var(Type.Name("t")))),
-        List(Pat.Bind(Pat.Var(Term.Name("xs")), Pat.SeqWildcard()))
+        Term.ApplyType(tname("List"), List(Type.Var(pname("t")))),
+        List(Pat.Bind(Pat.Var(tname("xs")), Pat.SeqWildcard()))
       )
     )
     assertEquals(tree.syntax, "List[t](xs @ _*)")
@@ -790,8 +773,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val tree = pat("List[_](xs @ _*)")
     assertTree(tree)(
       Pat.Extract(
-        Term.ApplyType(Term.Name("List"), List(Type.Wildcard(Type.Bounds(None, None)))),
-        List(Pat.Bind(Pat.Var(Term.Name("xs")), Pat.SeqWildcard()))
+        Term.ApplyType(tname("List"), List(Type.Wildcard(Type.Bounds(None, None)))),
+        List(Pat.Bind(Pat.Var(tname("xs")), Pat.SeqWildcard()))
       )
     )
     assertEquals(tree.syntax, "List[_](xs @ _*)")
@@ -802,8 +785,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val tree = pat("List[_](xs @ _*)")
     assertTree(tree)(
       Pat.Extract(
-        Term.ApplyType(Term.Name("List"), List(Type.Wildcard(Type.Bounds(None, None)))),
-        List(Pat.Bind(Pat.Var(Term.Name("xs")), Pat.SeqWildcard()))
+        Term.ApplyType(tname("List"), List(Type.Wildcard(Type.Bounds(None, None)))),
+        List(Pat.Bind(Pat.Var(tname("xs")), Pat.SeqWildcard()))
       )
     )
     assertEquals(tree.syntax, "List[_](xs @ _*)")
@@ -814,8 +797,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val tree = pat("List[_](xs @ _*)")
     assertTree(tree)(
       Pat.Extract(
-        Term.ApplyType(Term.Name("List"), List(Type.AnonymousParam(None))),
-        List(Pat.Bind(Pat.Var(Term.Name("xs")), Pat.SeqWildcard()))
+        Term.ApplyType(tname("List"), List(Type.AnonymousParam(None))),
+        List(Pat.Bind(Pat.Var(tname("xs")), Pat.SeqWildcard()))
       )
     )
     assertEquals(tree.syntax, "List[_](xs @ _*)")
@@ -827,24 +810,24 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       Source(
         List(
           Pkg(
-            Term.Name("foo"),
+            tname("foo"),
             List(
               Defn.Class(
                 Nil,
-                Type.Name("C"),
+                pname("C"),
                 Nil,
-                Ctor.Primary(Nil, Name(""), Nil),
-                Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+                Ctor.Primary(Nil, anon, Nil),
+                EmptyTemplate()
               ),
               Pkg(
-                Term.Name("baz"),
+                tname("baz"),
                 List(
                   Defn.Class(
                     Nil,
-                    Type.Name("D"),
+                    pname("D"),
                     Nil,
-                    Ctor.Primary(Nil, Name(""), Nil),
-                    Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+                    Ctor.Primary(Nil, anon, Nil),
+                    EmptyTemplate()
                   )
                 )
               )
@@ -869,24 +852,24 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
           Source(
             List(
               Pkg(
-                Term.Name("foo1"),
+                tname("foo1"),
                 List(
                   Defn.Class(
                     Nil,
-                    Type.Name("C1"),
+                    pname("C1"),
                     Nil,
-                    Ctor.Primary(Nil, Name(""), Nil),
-                    Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+                    Ctor.Primary(Nil, anon, Nil),
+                    EmptyTemplate()
                   ),
                   Pkg(
-                    Term.Name("baz1"),
+                    tname("baz1"),
                     List(
                       Defn.Class(
                         Nil,
-                        Type.Name("D1"),
+                        pname("D1"),
                         Nil,
-                        Ctor.Primary(Nil, Name(""), Nil),
-                        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+                        Ctor.Primary(Nil, anon, Nil),
+                        EmptyTemplate()
                       )
                     )
                   )
@@ -897,24 +880,24 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
           Source(
             List(
               Pkg(
-                Term.Name("foo2"),
+                tname("foo2"),
                 List(
                   Defn.Class(
                     Nil,
-                    Type.Name("C2"),
+                    pname("C2"),
                     Nil,
-                    Ctor.Primary(Nil, Name(""), Nil),
-                    Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+                    Ctor.Primary(Nil, anon, Nil),
+                    EmptyTemplate()
                   ),
                   Pkg(
-                    Term.Name("baz2"),
+                    tname("baz2"),
                     List(
                       Defn.Class(
                         Nil,
-                        Type.Name("D2"),
+                        pname("D2"),
                         Nil,
-                        Ctor.Primary(Nil, Name(""), Nil),
-                        Template(Nil, Nil, Self(Name(""), None), Nil, Nil)
+                        Ctor.Primary(Nil, anon, Nil),
+                        EmptyTemplate()
                       )
                     )
                   )
@@ -946,15 +929,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("case `x`") {
     val tree1 = pat("`x`")
-    assertTree(tree1)(Term.Name("x"))
+    assertTree(tree1)(tname("x"))
     val tree2 = pat("f(`x`)")
-    assertTree(tree2)(Pat.Extract(Term.Name("f"), List(Term.Name("x"))))
+    assertTree(tree2)(Pat.Extract(tname("f"), List(tname("x"))))
     assertEquals(tree2.syntax, "f(`x`)")
     val tree3 = pat("X")
-    assertTree(tree3)(Term.Name("X"))
+    assertTree(tree3)(tname("X"))
     assertEquals(tree3.syntax, "X")
     val tree4 = pat("f(X)")
-    assertTree(tree4)(Pat.Extract(Term.Name("f"), List(Term.Name("X"))))
+    assertTree(tree4)(Pat.Extract(tname("f"), List(tname("X"))))
     assertEquals(tree4.syntax, "f(X)")
   }
 
@@ -1017,14 +1000,14 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("xml literals") {
     val tree = term("<foo>{bar}</foo>")
     checkTree(tree, "<foo>{bar}</foo>")(
-      Term.Xml(List(Lit.String("<foo>"), Lit.String("</foo>")), List(Term.Name("bar")))
+      Term.Xml(List(str("<foo>"), str("</foo>")), List(tname("bar")))
     )
   }
 
   test("xml literals unit") {
     val tree = term("<foo>{}</foo>")
     checkTree(tree, "<foo>{{}}</foo>")(
-      Term.Xml(List(Lit.String("<foo>"), Lit.String("</foo>")), List(Term.Block(Nil)))
+      Term.Xml(List(str("<foo>"), str("</foo>")), List(Term.Block(Nil)))
     )
   }
 
@@ -1038,8 +1021,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val tree = term("""s"Hello${}World"""")
     checkTree(tree, """s"Hello${{}}World"""")(
       Term.Interpolate(
-        Term.Name("s"),
-        List(Lit.String("Hello"), Lit.String("World")),
+        tname("s"),
+        List(str("Hello"), str("World")),
         List(Term.Block(Nil))
       )
     )
@@ -1049,9 +1032,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val tree = term("""s"$$$foo$$"""")
     checkTree(tree, """s"$$$foo$$"""")(
       Term.Interpolate(
-        Term.Name("s"),
-        List(Lit.String("$"), Lit.String("$")),
-        List(Term.Name("foo"))
+        tname("s"),
+        List(str("$"), str("$")),
+        List(tname("foo"))
       )
     )
   }
@@ -1139,9 +1122,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("interpolator braces for term names beginning with '_'") {
     def interpolate(before: String, after: String): Term.Interpolate =
       Term.Interpolate(
-        prefix = Term.Name("s"),
-        parts = List(Lit.String(before), Lit.String(after)),
-        args = List(Term.Name("_foo"))
+        prefix = tname("s"),
+        parts = List(str(before), str(after)),
+        args = List(tname("_foo"))
       )
     assertWithOriginalSyntax(interpolate("", ""), """s"${_foo}"""", """s"${_foo}"""")
     assertWithOriginalSyntax(
@@ -1155,24 +1138,24 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("empty-arglist application") {
     val tree = term("foo.toString()")
     checkTree(tree, "foo.toString()")(
-      Term.Apply(Term.Select(Term.Name("foo"), Term.Name("toString")), Nil)
+      Term.Apply(Term.Select(tname("foo"), tname("toString")), Nil)
     )
   }
 
   test("type parameters with type bounds") {
     val Defn.Def(_, _, List(tree), _, _, _) = templStat("def foo[T <: Int] = ???")
     checkTree(tree, "T <: Int")(
-      Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, Some(Type.Name("Int"))), Nil, Nil)
+      pparam("T", hiBound("Int"))
     )
 
     assertTree(templStat("def foo[T <: Int] = ???")) {
       Defn.Def(
         Nil,
-        Term.Name("foo"),
+        tname("foo"),
         Type.ParamClause(tree :: Nil),
         Nil,
         None,
-        Term.Name("???")
+        tname("???")
       )
     }
   }
@@ -1195,26 +1178,26 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("Term.Apply(_, List(Term.Function(...))) #572, #574") {
     import scala.collection.immutable.List
     val tree1 = Term.Apply(
-      Term.Name("foo"),
+      tname("foo"),
       List(
         Term.Function(
-          List(Term.Param(List(), Term.Name("i"), Some(Type.Name("Int")), None)),
+          List(tparam(List(), "i", "Int")),
           Lit.Unit()
         )
       )
     )
     val tree2 = Term.Apply(
-      Term.Name("foo"),
+      tname("foo"),
       List(
         Term.Function(
-          List(Term.Param(List(Mod.Implicit()), Term.Name("i"), Some(Type.Name("Int")), None)),
+          List(tparam(List(Mod.Implicit()), "i", "Int")),
           Lit.Unit()
         )
       )
     )
     val tree3 = Term.Apply(
-      Term.Name("foo"),
-      List(Term.Function(List(Term.Param(List(), Term.Name("i"), None, None)), Lit.Unit()))
+      tname("foo"),
+      List(Term.Function(List(tparam(List(), "i")), Lit.Unit()))
     )
     assertWithOriginalSyntax(tree1, "foo((i: Int) => ())", "foo((i: Int) => ())")
     assertWithOriginalSyntax(
@@ -1241,9 +1224,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("Pat.Interpolate syntax is correct #587") {
     val interpolate = Pat.Interpolate(
-      Term.Name("q"),
-      List(Lit.String("object "), Lit.String(" { .."), Lit.String(" }")),
-      List(Pat.Var(Term.Name("name")), Pat.Var(Term.Name("stats")))
+      tname("q"),
+      List(str("object "), str(" { .."), str(" }")),
+      List(Pat.Var(tname("name")), Pat.Var(tname("stats")))
     )
     assertWithOriginalSyntax(
       interpolate,
@@ -1263,14 +1246,14 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("show[Structure] should uppercase long literals suffix: '2l' -> '2L'") {
     assertTree(templStat("foo(1l, 1L)"))(
-      Term.Apply(Term.Name("foo"), List(Lit.Long(1L), Lit.Long(1L)))
+      Term.Apply(tname("foo"), List(Lit.Long(1L), Lit.Long(1L)))
     )
     assertTree(q"val x = 1l")(q"val x = 1L")
   }
 
   test("show[Structure] should lowercase float literals suffix: '0.01F' -> '0.01f'") {
     assertTree(templStat("foo(0.01f, 0.01F)"))(
-      Term.Apply(Term.Name("foo"), List(Lit.Float("0.01"), Lit.Float("0.01")))
+      Term.Apply(tname("foo"), List(Lit.Float("0.01"), Lit.Float("0.01")))
     )
     assertStruct(q"val x = 1f")(
       """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Float(1f))"""
@@ -1282,7 +1265,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("show[Structure] should lowercase double literals suffix: '0.01D' -> '0.01d'") {
     assertTree(templStat("foo(0.02d, 0.02D, 0.02)"))(
-      Term.Apply(Term.Name("foo"), List(Lit.Double("0.02"), Lit.Double("0.02"), Lit.Double("0.02")))
+      Term.Apply(tname("foo"), List(Lit.Double("0.02"), Lit.Double("0.02"), Lit.Double("0.02")))
     )
     assertStruct(q"val x = 1d")(
       """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1d))"""
@@ -1404,36 +1387,36 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#1864 Terms with leading numerics are backquoted") {
-    checkStat("`123foo`")(Term.Name("123foo"))
+    checkStat("`123foo`")(tname("123foo"))
     checkStat("""val `123foo` = "hello"""")(q""" val `123foo` = "hello" """)
   }
 
   test("#1868 Term.Eta preserves structure") {
-    checkStat("(x _).y")(Term.Select(Term.Eta(Term.Name("x")), Term.Name("y")))
+    checkStat("(x _).y")(Term.Select(Term.Eta(tname("x")), tname("y")))
     checkStat("(x _).y")(q"""(x _).y""")
-    checkStat("x _")(Term.Eta(Term.Name("x")))
+    checkStat("x _")(Term.Eta(tname("x")))
     checkStat("x _")(q"""x _""")
   }
 
   test("#2106 unicode characters are properly escaped in string literals") {
-    checkStat("\"xy\\u001az\"")(Lit.String("xy\u001az"))
-    checkStat("\"þæö\"")(Lit.String("þæö"))
-    checkStat("\">\"")(Lit.String(">"))
-    checkStat("\"~\"")(Lit.String("~"))
-    checkStat("\" \"")(Lit.String(" "))
-    checkStat("\"=\"")(Lit.String("="))
-    checkStat("\"\\u007f\"")(Lit.String("\u007f"))
-    checkStat("\"\\u001f\"")(Lit.String("\u001f"))
-    checkStat("\"\\\\\"")(Lit.String("\\"))
-    checkStat("\"þæö\"")(Lit.String("\u00fe\u00e6\u00f6"))
-    checkStat("\"ラーメン\"")(Lit.String("ラーメン"))
+    checkStat("\"xy\\u001az\"")(str("xy\u001az"))
+    checkStat("\"þæö\"")(str("þæö"))
+    checkStat("\">\"")(str(">"))
+    checkStat("\"~\"")(str("~"))
+    checkStat("\" \"")(str(" "))
+    checkStat("\"=\"")(str("="))
+    checkStat("\"\\u007f\"")(str("\u007f"))
+    checkStat("\"\\u001f\"")(str("\u001f"))
+    checkStat("\"\\\\\"")(str("\\"))
+    checkStat("\"þæö\"")(str("\u00fe\u00e6\u00f6"))
+    checkStat("\"ラーメン\"")(str("ラーメン"))
   }
 
-  test("#2447 Pat.Bind on Term.Name") {
+  test("#2447 Pat.Bind on tname") {
     checkStat("{\n  case x @ Y => x\n}")(q"{ case x @ Y => x }")
   }
 
-  test("#2447 Pat.Bind on Term.Name backticks") {
+  test("#2447 Pat.Bind on tname backticks") {
     checkStat("{\n  case x @ `y` => x\n}")(q"{ case x @ `y` => x }")
   }
 
@@ -1454,23 +1437,23 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("backticked-keywords-scala3") {
     assertEquals(
-      Term.Name("enum").syntax,
+      tname("enum").syntax,
       "enum"
     )
     assertEquals(
-      Term.Name("given").syntax,
+      tname("given").syntax,
       "given"
     )
     assertEquals(
-      Term.Name("export").syntax,
+      tname("export").syntax,
       "export"
     )
     assertEquals(
-      Term.Name("then").syntax,
+      tname("then").syntax,
       "then"
     )
     assertEquals(
-      Term.Name("?=>").syntax,
+      tname("?=>").syntax,
       "?=>"
     )
   }
@@ -1478,16 +1461,16 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("#1843 anonymous functions 1") {
     checkTree(q"list foo (_ fun (_.bar))")(
       Term.ApplyInfix(
-        Term.Name("list"),
-        Term.Name("foo"),
+        tname("list"),
+        tname("foo"),
         Nil,
         List(
           Term.AnonymousFunction(
             Term.ApplyInfix(
               Term.Placeholder(),
-              Term.Name("fun"),
+              tname("fun"),
               Nil,
-              List(Term.AnonymousFunction(Term.Select(Term.Placeholder(), Term.Name("bar"))))
+              List(Term.AnonymousFunction(Term.Select(Term.Placeholder(), tname("bar"))))
             )
           )
         )
@@ -1498,16 +1481,16 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("#1843 anonymous functions 2") {
     checkTree(q"list foo (_ fun _.bar)")(
       Term.ApplyInfix(
-        Term.Name("list"),
-        Term.Name("foo"),
+        tname("list"),
+        tname("foo"),
         Nil,
         List(
           Term.AnonymousFunction(
             Term.ApplyInfix(
               Term.Placeholder(),
-              Term.Name("fun"),
+              tname("fun"),
               Nil,
-              List(Term.Select(Term.Placeholder(), Term.Name("bar")))
+              List(Term.Select(Term.Placeholder(), tname("bar")))
             )
           )
         )
@@ -1518,16 +1501,16 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("#2717 anonymous function with unary") {
     checkTree(q"xs span { !separates(_) }") {
       Term.ApplyInfix(
-        Term.Name("xs"),
-        Term.Name("span"),
+        tname("xs"),
+        tname("span"),
         Nil,
         List(
           Term.Block(
             List(
               Term.AnonymousFunction(
                 Term.ApplyUnary(
-                  Term.Name("!"),
-                  Term.Apply(Term.Name("separates"), List(Term.Placeholder()))
+                  tname("!"),
+                  Term.Apply(tname("separates"), List(Term.Placeholder()))
                 )
               )
             )
@@ -1540,12 +1523,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("anonymous function with new") {
     checkTree(q"foo map (new foo(_))") {
       Term.ApplyInfix(
-        Term.Name("foo"),
-        Term.Name("map"),
+        tname("foo"),
+        tname("map"),
         Nil,
         List(
           Term.AnonymousFunction(
-            Term.New(Init(Type.Name("foo"), Name(""), List(List(Term.Placeholder()))))
+            Term.New(Init(pname("foo"), anon, List(List(Term.Placeholder()))))
           )
         )
       )
@@ -1555,12 +1538,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("anonymous function with select") {
     checkTree(q"foo map (foo(_).bar)") {
       Term.ApplyInfix(
-        Term.Name("foo"),
-        Term.Name("map"),
+        tname("foo"),
+        tname("map"),
         Nil,
         List(
           Term.AnonymousFunction(
-            Term.Select(Term.Apply(Term.Name("foo"), List(Term.Placeholder())), Term.Name("bar"))
+            Term.Select(Term.Apply(tname("foo"), List(Term.Placeholder())), tname("bar"))
           )
         )
       )
@@ -1570,12 +1553,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("anonymous function with apply type") {
     checkTree(q"foo map (_.foo[A])") {
       Term.ApplyInfix(
-        Term.Name("foo"),
-        Term.Name("map"),
+        tname("foo"),
+        tname("map"),
         Nil,
         List(
           Term.AnonymousFunction(
-            Term.ApplyType(Term.Select(Term.Placeholder(), Term.Name("foo")), List(Type.Name("A")))
+            Term.ApplyType(Term.Select(Term.Placeholder(), tname("foo")), List(pname("A")))
           )
         )
       )
@@ -1657,7 +1640,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("#1596") {
     val tree: Term.Xml = q"<h1>a{b}</h1>"
     checkTree(tree)(
-      Term.Xml(List(Lit.String("<h1>a"), Lit.String("</h1>")), List(Term.Name("b")))
+      Term.Xml(List(str("<h1>a"), str("</h1>")), List(tname("b")))
     )
     val Term.Xml(part1 :: part2 :: Nil, arg1 :: Nil) = tree
 
@@ -1690,8 +1673,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("#1063 good") {
     checkTree(term("foo(bar) { baz: _* }"))(
       Term.Apply(
-        Term.Apply(Term.Name("foo"), List(Term.Name("bar"))),
-        List(Term.Repeated(Term.Name("baz")))
+        Term.Apply(tname("foo"), List(tname("bar"))),
+        List(Term.Repeated(tname("baz")))
       )
     )
   }
@@ -1715,27 +1698,27 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
           }""")(
       Term.Block(
         List(
-          Term.ApplyInfix(Lit.Unit(), Term.Name("=="), Nil, Nil),
+          Term.ApplyInfix(Lit.Unit(), tname("=="), Nil, Nil),
           Term.ApplyInfix(
             Lit.Unit(),
-            Term.Name("=="),
+            tname("=="),
             Nil,
             List(Lit.Unit())
           ),
           Term.ApplyInfix(
-            Term.ApplyInfix(Lit.Unit(), Term.Name("=="), Nil, Nil),
-            Term.Name("=="),
+            Term.ApplyInfix(Lit.Unit(), tname("=="), Nil, Nil),
+            tname("=="),
             Nil,
             Nil
           ),
           Term.ApplyInfix(
             Term.ApplyInfix(
               Lit.Unit(),
-              Term.Name("=="),
+              tname("=="),
               Nil,
               List(Lit.Unit())
             ),
-            Term.Name("=="),
+            tname("=="),
             Nil,
             List(Lit.Unit())
           )
@@ -1753,27 +1736,27 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
           }""")(
       Term.Block(
         List(
-          Term.ApplyInfix(Lit.Unit(), Term.Name("::"), Nil, Nil),
+          Term.ApplyInfix(Lit.Unit(), tname("::"), Nil, Nil),
           Term.ApplyInfix(
             Lit.Unit(),
-            Term.Name("::"),
+            tname("::"),
             Nil,
             List(Lit.Unit())
           ),
           Term.ApplyInfix(
             Lit.Unit(),
-            Term.Name("::"),
+            tname("::"),
             Nil,
-            List(Term.ApplyInfix(Lit.Unit(), Term.Name("::"), Nil, Nil))
+            List(Term.ApplyInfix(Lit.Unit(), tname("::"), Nil, Nil))
           ),
           Term.ApplyInfix(
             Lit.Unit(),
-            Term.Name("::"),
+            tname("::"),
             Nil,
             List(
               Term.ApplyInfix(
                 Lit.Unit(),
-                Term.Name("::"),
+                tname("::"),
                 Nil,
                 List(Lit.Unit())
               )
@@ -1792,13 +1775,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             case (()) == (()) == (()) =>
           }""")(
       Term.Match(
-        Term.Name("foo"),
+        tname("foo"),
         List(
-          Case(Pat.ExtractInfix(Lit.Unit(), Term.Name("=="), Nil), None, Term.Block(Nil)),
+          Case(Pat.ExtractInfix(Lit.Unit(), tname("=="), Nil), None, Term.Block(Nil)),
           Case(
             Pat.ExtractInfix(
               Lit.Unit(),
-              Term.Name("=="),
+              tname("=="),
               List(Lit.Unit())
             ),
             None,
@@ -1806,8 +1789,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
           ),
           Case(
             Pat.ExtractInfix(
-              Pat.ExtractInfix(Lit.Unit(), Term.Name("=="), Nil),
-              Term.Name("=="),
+              Pat.ExtractInfix(Lit.Unit(), tname("=="), Nil),
+              tname("=="),
               Nil
             ),
             None,
@@ -1817,10 +1800,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             Pat.ExtractInfix(
               Pat.ExtractInfix(
                 Lit.Unit(),
-                Term.Name("=="),
+                tname("=="),
                 List(Lit.Unit())
               ),
-              Term.Name("=="),
+              tname("=="),
               List(Lit.Unit())
             ),
             None,
@@ -1840,13 +1823,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             case (()) :: (()) :: (()) =>
           }""")(
       Term.Match(
-        Term.Name("foo"),
+        tname("foo"),
         List(
-          Case(Pat.ExtractInfix(Lit.Unit(), Term.Name("::"), Nil), None, Term.Block(Nil)),
+          Case(Pat.ExtractInfix(Lit.Unit(), tname("::"), Nil), None, Term.Block(Nil)),
           Case(
             Pat.ExtractInfix(
               Lit.Unit(),
-              Term.Name("::"),
+              tname("::"),
               List(Lit.Unit())
             ),
             None,
@@ -1855,8 +1838,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
           Case(
             Pat.ExtractInfix(
               Lit.Unit(),
-              Term.Name("::"),
-              List(Pat.ExtractInfix(Lit.Unit(), Term.Name("::"), Nil))
+              tname("::"),
+              List(Pat.ExtractInfix(Lit.Unit(), tname("::"), Nil))
             ),
             None,
             Term.Block(Nil)
@@ -1864,11 +1847,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
           Case(
             Pat.ExtractInfix(
               Lit.Unit(),
-              Term.Name("::"),
+              tname("::"),
               List(
                 Pat.ExtractInfix(
                   Lit.Unit(),
-                  Term.Name("::"),
+                  tname("::"),
                   List(Lit.Unit())
                 )
               )
@@ -1912,8 +1895,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkTree(p"_ op (a | b)", "_ op (a | b)") {
       Pat.ExtractInfix(
         Pat.Wildcard(),
-        Term.Name("op"),
-        List(Pat.Alternative(Pat.Var(Term.Name("a")), Pat.Var(Term.Name("b"))))
+        tname("op"),
+        List(Pat.Alternative(Pat.Var(tname("a")), Pat.Var(tname("b"))))
       )
     }
   }
@@ -1922,9 +1905,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkTree(p"_ * (a + b)", "_ * (a + b)") {
       Pat.ExtractInfix(
         Pat.Wildcard(),
-        Term.Name("*"),
+        tname("*"),
         List(
-          Pat.ExtractInfix(Pat.Var(Term.Name("a")), Term.Name("+"), List(Pat.Var(Term.Name("b"))))
+          Pat.ExtractInfix(Pat.Var(tname("a")), tname("+"), List(Pat.Var(tname("b"))))
         )
       )
     }
@@ -1935,9 +1918,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       Term.AnonymousFunction(
         Term.ApplyInfix(
           Term.Placeholder(),
-          Term.Name("*"),
+          tname("*"),
           Nil,
-          List(Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b"))))
+          List(Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))))
         )
       )
     }
@@ -1946,15 +1929,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("term infix: 1 + (2 / 3) * 4") {
     checkTree(q"1 + (2 / 3) * 4", "1 + 2 / 3 * 4") {
       Term.ApplyInfix(
-        Lit.Int(1),
-        Term.Name("+"),
+        int(1),
+        tname("+"),
         Nil,
         List(
           Term.ApplyInfix(
-            Term.ApplyInfix(Lit.Int(2), Term.Name("/"), Nil, List(Lit.Int(3))),
-            Term.Name("*"),
+            Term.ApplyInfix(int(2), tname("/"), Nil, List(int(3))),
+            tname("*"),
             Nil,
-            List(Lit.Int(4))
+            List(int(4))
           )
         )
       )
@@ -1969,15 +1952,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
          |} * 4""".stripMargin
     ) {
       Term.ApplyInfix(
-        Lit.Int(1),
-        Term.Name("+"),
+        int(1),
+        tname("+"),
         Nil,
         List(
           Term.ApplyInfix(
-            Term.Block(List(Term.ApplyInfix(Lit.Int(2), Term.Name("/"), Nil, List(Lit.Int(3))))),
-            Term.Name("*"),
+            Term.Block(List(Term.ApplyInfix(int(2), tname("/"), Nil, List(int(3))))),
+            tname("*"),
             Nil,
-            List(Lit.Int(4))
+            List(int(4))
           )
         )
       )
@@ -1992,10 +1975,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
          |} + 4""".stripMargin
     ) {
       Term.ApplyInfix(
-        Term.Block(List(Term.ApplyInfix(Lit.Int(2), Term.Name("/"), Nil, List(Lit.Int(3))))),
-        Term.Name("+"),
+        Term.Block(List(Term.ApplyInfix(int(2), tname("/"), Nil, List(int(3))))),
+        tname("+"),
         Nil,
-        List(Lit.Int(4))
+        List(int(4))
       )
     }
   }
@@ -2004,10 +1987,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkTree(q"foo.bar(_: Int, _: String)", "foo.bar(_: Int, _: String)") {
       Term.AnonymousFunction(
         Term.Apply(
-          Term.Select(Term.Name("foo"), Term.Name("bar")),
+          Term.Select(tname("foo"), tname("bar")),
           List(
-            Term.Ascribe(Term.Placeholder(), Type.Name("Int")),
-            Term.Ascribe(Term.Placeholder(), Type.Name("String"))
+            Term.Ascribe(Term.Placeholder(), pname("Int")),
+            Term.Ascribe(Term.Placeholder(), pname("String"))
           )
         )
       )
@@ -2016,28 +1999,28 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("#2774 1") {
     val tree =
-      Term.Param(Mod.Erased() :: Mod.Using() :: Nil, Term.Name("foo"), Some(Type.Name("Bar")), None)
+      tparam(Mod.Erased() :: Mod.Using() :: Nil, "foo", "Bar")
     assertSyntax(tree, "erased foo: Bar")(tree)
   }
 
   test("#2774 2") {
     val tree = Type.Function(
-      List(Type.TypedParam(Type.Name("e"), Type.Name("Entry"), List(Mod.Erased()))),
-      Type.Select(Term.Name("e"), Type.Name("Key"))
+      List(Type.TypedParam(pname("e"), pname("Entry"), List(Mod.Erased()))),
+      Type.Select(tname("e"), pname("Key"))
     )
     assertSyntax(tree, "(erased e: Entry) => e.Key")(tree)
   }
 
   test("#2774 3") {
     val tree = Type.Function(
-      List(Type.FunctionArg(List(Mod.Erased()), Type.Name("Ev")), Type.Name("Int")),
-      Type.Name("Int")
+      List(Type.FunctionArg(List(Mod.Erased()), pname("Ev")), pname("Int")),
+      pname("Int")
     )
     assertSyntax(tree, "(erased Ev, Int) => Int")(tree)
   }
 
   test("#3065 embedded triple quotes") {
-    val tree = Lit.String("\n\"\"\"")
+    val tree = str("\n\"\"\"")
     assertSyntax(tree, "\"\"\"\n\\\"\\\"\\\"\"\"\"")(tree)
   }
 

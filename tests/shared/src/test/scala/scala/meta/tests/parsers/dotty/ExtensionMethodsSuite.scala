@@ -36,7 +36,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
         Nil,
         cparamss,
         Defn.Def(
-          List(Mod.Private(Name.Anonymous())),
+          List(Mod.Private(anon)),
           tname("crc"),
           Nil,
           Nil,
@@ -70,14 +70,14 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )(
       Defn.ExtensionGroup(
         Nil,
-        List(List(Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None))),
+        List(List(tparam("c", "Circle"))),
         Defn.Def(
-          List(Mod.Private(Name(""))),
-          Term.Name("crc"),
+          List(Mod.Private(anon)),
+          tname("crc"),
           Nil,
           Nil,
-          Some(Type.Name("Int")),
-          Lit.Int(2)
+          Some(pname("Int")),
+          int(2)
         )
       )
     )
@@ -92,12 +92,12 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     runTestAssert[Stat](code, assertLayout = None)(
       Defn.ExtensionGroup(
         Nil,
-        List(List(Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None))),
+        List(List(tparam("c", "Circle"))),
         Term.Block(
           List(
-            Defn.Def(Nil, Term.Name("cra"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)),
-            Defn.Def(Nil, Term.Name("crb"), Nil, Nil, Some(Type.Name("String")), Lit.String("3")),
-            Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Boolean")), Lit.Int(4))
+            Defn.Def(Nil, tname("cra"), Nil, Nil, Some(pname("Int")), int(2)),
+            Defn.Def(Nil, tname("crb"), Nil, Nil, Some(pname("String")), str("3")),
+            Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Boolean")), int(4))
           )
         )
       )
@@ -120,9 +120,9 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )(
       Defn.ExtensionGroup(
         Nil,
-        List(List(Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None))),
+        List(List(tparam("c", "Circle"))),
         Term.Block(
-          List(Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)))
+          List(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2)))
         )
       )
     )
@@ -141,14 +141,14 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.ExtensionGroup(
         Nil,
         List(
-          List(Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None)),
+          List(tparam("c", "Circle")),
           List(
-            Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Context")), None),
-            Term.Param(List(Mod.Using()), Term.Name("x"), Some(Type.Name("Int")), None)
+            tparam(List(Mod.Using()), "", "Context"),
+            tparam(List(Mod.Using()), "x", "Int")
           )
         ),
         Term.Block(
-          List(Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)))
+          List(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2)))
         )
       )
     )
@@ -169,14 +169,14 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.ExtensionGroup(
         Nil,
         List(
-          List(Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None)),
+          List(tparam("c", "Circle")),
           List(
-            Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Context")), None),
-            Term.Param(List(Mod.Using()), Term.Name("x"), Some(Type.Name("Int")), None)
+            tparam(List(Mod.Using()), "", "Context"),
+            tparam(List(Mod.Using()), "x", "Int")
           )
         ),
         Term.Block(
-          List(Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)))
+          List(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2)))
         )
       )
     )
@@ -196,18 +196,18 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.ExtensionGroup(
         Nil,
         List(
-          List(Term.Param(Nil, Term.Name("c"), Some(Type.Name("Circle")), None)),
+          List(tparam("c", "Circle")),
           List(
-            Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Context")), None),
-            Term.Param(List(Mod.Using()), Term.Name("x"), Some(Type.Name("Int")), None)
+            tparam(List(Mod.Using()), "", "Context"),
+            tparam(List(Mod.Using()), "x", "Int")
           ),
           List(
-            Term.Param(List(Mod.Using()), Term.Name("y"), Some(Type.Name("String")), None),
-            Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("File")), None)
+            tparam(List(Mod.Using()), "y", "String"),
+            tparam(List(Mod.Using()), "", "File")
           )
         ),
         Term.Block(
-          List(Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)))
+          List(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2)))
         )
       )
     )
@@ -229,14 +229,14 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )(
       Defn.ExtensionGroup(
         Nil,
-        List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))),
+        List(List(tparam("a", "Int"))),
         Defn.Def(
           Nil,
-          Term.Name("double"),
+          tname("double"),
           Nil,
           Nil,
           None,
-          Term.ApplyInfix(Term.Name("a"), Term.Name("*"), Nil, List(Lit.Int(2)))
+          Term.ApplyInfix(tname("a"), tname("*"), Nil, List(int(2)))
         )
       )
     )
@@ -261,23 +261,17 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )(
       Defn.Object(
         Nil,
-        Term.Name("A"),
-        Template(
-          Nil,
-          Nil,
-          Self(Name(""), None),
-          List(
-            Defn.Def(
-              Nil,
-              Term.Name("extension"),
-              Nil,
-              List(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))),
-              None,
-              Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Lit.Int(2)))
-            ),
-            Term.Apply(Term.Name("extension"), List(Lit.Int(2)))
+        tname("A"),
+        tpl(
+          Defn.Def(
+            Nil,
+            tname("extension"),
+            Nil,
+            List(List(tparam("a", "Int"))),
+            None,
+            Term.ApplyInfix(tname("a"), tname("+"), Nil, List(int(2)))
           ),
-          Nil
+          Term.Apply(tname("extension"), List(int(2)))
         )
       )
     )
@@ -287,7 +281,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     runTestAssert[Stat](
       "extension + 3"
     )(
-      Term.ApplyInfix(Term.Name("extension"), Term.Name("+"), Nil, List(Lit.Int(3)))
+      Term.ApplyInfix(tname("extension"), tname("+"), Nil, List(int(3)))
     )
 
     runTestAssert[Stat](
@@ -295,18 +289,18 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )(
       Defn.Def(
         Nil,
-        Term.Name("extension"),
+        tname("extension"),
         Nil,
-        List(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("extension")), None))),
-        Some(Type.Name("extension")),
-        Term.Name("x")
+        List(List(tparam("x", "extension"))),
+        Some(pname("extension")),
+        tname("x")
       )
     )
 
     runTestAssert[Stat](
       "extension.extension(3)"
     )(
-      Term.Apply(Term.Select(Term.Name("extension"), Term.Name("extension")), List(Lit.Int(3)))
+      Term.Apply(Term.Select(tname("extension"), tname("extension")), List(int(3)))
     )
   }
 
@@ -315,24 +309,19 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       "extension [T](xs: List[T]) def sumBy[U](t: T): U = ???"
     )(
       Defn.ExtensionGroup(
-        List(Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil)),
+        List(pparam("T")),
         List(
           List(
-            Term.Param(
-              Nil,
-              Term.Name("xs"),
-              Some(Type.Apply(Type.Name("List"), List(Type.Name("T")))),
-              None
-            )
+            tparam("xs", Type.Apply(pname("List"), List(pname("T"))))
           )
         ),
         Defn.Def(
           Nil,
-          Term.Name("sumBy"),
-          List(Type.Param(Nil, Type.Name("U"), Nil, Type.Bounds(None, None), Nil, Nil)),
-          List(List(Term.Param(Nil, Term.Name("t"), Some(Type.Name("T")), None))),
-          Some(Type.Name("U")),
-          Term.Name("???")
+          tname("sumBy"),
+          List(pparam("U")),
+          List(List(tparam("t", "T"))),
+          Some(pname("U")),
+          tname("???")
         )
       )
     )
@@ -346,17 +335,17 @@ class ExtensionMethodsSuite extends BaseDottySuite {
         Nil,
         List(
           List(
-            Term.Param(List(Mod.Using()), Term.Name("a"), Some(Type.Name("Int")), None)
+            tparam(List(Mod.Using()), "a", "Int")
           ),
-          List(Term.Param(Nil, Term.Name("b"), Some(Type.Name("Int")), None))
+          List(tparam("b", "Int"))
         ),
         Defn.Def(
           Nil,
-          Term.Name("hello"),
+          tname("hello"),
           Nil,
           Nil,
           None,
-          Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b")))
+          Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b")))
         )
       )
     )
@@ -381,21 +370,21 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.ExtensionGroup(
         Nil,
         List(
-          List(Term.Param(List(Mod.Using()), Term.Name("a"), Some(Type.Name("Int")), None)),
-          List(Term.Param(Nil, Term.Name("b"), Some(Type.Name("Int")), None)),
-          List(Term.Param(List(Mod.Using()), Term.Name("c"), Some(Type.Name("String")), None))
+          List(tparam(List(Mod.Using()), "a", "Int")),
+          List(tparam("b", "Int")),
+          List(tparam(List(Mod.Using()), "c", "String"))
         ),
         Defn.Def(
           Nil,
-          Term.Name("hello"),
+          tname("hello"),
           Nil,
           Nil,
           None,
           Term.ApplyInfix(
-            Term.ApplyInfix(Term.Name("a"), Term.Name("+"), Nil, List(Term.Name("b"))),
-            Term.Name("+"),
+            Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+            tname("+"),
             Nil,
-            List(Term.Select(Term.Name("c"), Term.Name("toInt")))
+            List(Term.Select(tname("c"), tname("toInt")))
           )
         )
       )
@@ -418,18 +407,18 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )(
       Defn.ExtensionGroup(
         Nil,
-        List(List(Term.Param(Nil, Term.Name("i"), Some(Type.Name("Int")), None))),
+        List(List(tparam("i", "Int"))),
         Term.Block(
           List(
             Defn.Def(
-              List(Mod.Private(Name(""))),
-              Term.Name("richInt"),
+              List(Mod.Private(anon)),
+              tname("richInt"),
               Nil,
               Nil,
               None,
-              Term.Apply(Term.Name("RichInt"), List(Term.Name("i")))
+              Term.Apply(tname("RichInt"), List(tname("i")))
             ),
-            Export(List(Importer(Term.Name("richInt"), List(Importee.Wildcard()))))
+            Export(List(Importer(tname("richInt"), List(Importee.Wildcard()))))
           )
         )
       )
@@ -450,16 +439,16 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     assertEquals(paramss.length, 3)
     assertTrees(paramss(0): _*)(cparam)
     assertTrees(paramss(1): _*)(
-      Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Context")), None),
-      Term.Param(List(Mod.Using()), Term.Name("x"), Some(Type.Name("Int")), None)
+      tparam(List(Mod.Using()), "", "Context"),
+      tparam(List(Mod.Using()), "x", "Int")
     )
     assertTrees(paramss(2): _*)(
-      Term.Param(List(Mod.Using()), Term.Name("y"), Some(Type.Name("String")), None),
-      Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("File")), None)
+      tparam(List(Mod.Using()), "y", "String"),
+      tparam(List(Mod.Using()), "", "File")
     )
 
     assertTrees(stats: _*)(
-      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+      Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
     )
   }
 
@@ -477,16 +466,16 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     assertEquals(paramss.length, 3)
     assertTrees(paramss(0): _*)(cparam)
     assertTrees(paramss(1): _*)(
-      Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Context")), None),
-      Term.Param(List(Mod.Using()), Term.Name("x"), Some(Type.Name("Int")), None)
+      tparam(List(Mod.Using()), "", "Context"),
+      tparam(List(Mod.Using()), "x", "Int")
     )
     assertTrees(paramss(2): _*)(
-      Term.Param(List(Mod.Using()), Term.Name("y"), Some(Type.Name("String")), None),
-      Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("File")), None)
+      tparam(List(Mod.Using()), "y", "String"),
+      tparam(List(Mod.Using()), "", "File")
     )
 
     assertTrees(stats: _*)(
-      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+      Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
     )
   }
 
@@ -504,7 +493,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     assertTrees(params: _*)(cparam)
 
     assertTrees(stats: _*)(
-      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+      Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
     )
   }
 
@@ -522,7 +511,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     assertTrees(params: _*)(cparam)
 
     assertTrees(stats: _*)(
-      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+      Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
     )
   }
 
@@ -541,8 +530,8 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     assertTree(param)(cparam)
 
     assertTrees(stats: _*)(
-      Defn.Def(Nil, Term.Name("crb"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(1)),
-      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+      Defn.Def(Nil, tname("crb"), Nil, Nil, Some(pname("Int")), int(1)),
+      Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
     )
   }
 
@@ -561,8 +550,8 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     assertTree(param)(cparam)
 
     assertTrees(stats: _*)(
-      Defn.Def(Nil, Term.Name("crb"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(1)),
-      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+      Defn.Def(Nil, tname("crb"), Nil, Nil, Some(pname("Int")), int(1)),
+      Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
     )
   }
 
@@ -631,10 +620,8 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.Object(
         Nil,
         tname("MtagsEnrichments"),
-        Template(
-          Nil,
+        tpl(
           List(init("ScalametaCommonEnrichments")),
-          slf,
           Defn.ExtensionGroup(
             Nil,
             List(List(tparam("x", "X"))),
@@ -646,8 +633,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
                 Term.EndMarker(tname("bar"))
               )
             )
-          ) :: Nil,
-          Nil
+          ) :: Nil
         )
       )
     )
@@ -682,10 +668,8 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       Defn.Object(
         Nil,
         tname("MtagsEnrichments"),
-        Template(
-          Nil,
+        tpl(
           List(init("ScalametaCommonEnrichments")),
-          slf,
           Defn.ExtensionGroup(
             Nil,
             List(List(tparam("x", "X"))),
@@ -697,8 +681,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
                 Term.EndMarker(tname("bar"))
               )
             )
-          ) :: Nil,
-          Nil
+          ) :: Nil
         )
       )
     )
@@ -734,21 +717,21 @@ class ExtensionMethodsSuite extends BaseDottySuite {
         Template(
           Nil,
           Nil,
-          Self(tname("self"), None),
+          self("self"),
           Defn.ExtensionGroup(
             Nil,
             List(List(tparam("x", "X"))),
             Term.Block(
               List(
                 Defn.Def(
-                  List(Mod.Annot(Init(pname("annoFoo"), Name.Anonymous(), emptyArgClause))),
+                  List(Mod.Annot(Init(pname("annoFoo"), anon, emptyArgClause))),
                   tname("foo"),
                   Nil,
                   Some(pname("Foo")),
                   tname("getFoo")
                 ),
                 Defn.Def(
-                  List(Mod.Annot(Init(pname("annoBar"), Name.Anonymous(), emptyArgClause))),
+                  List(Mod.Annot(Init(pname("annoBar"), anon, emptyArgClause))),
                   tname("bar"),
                   Nil,
                   Some(pname("Bar")),
@@ -791,21 +774,21 @@ class ExtensionMethodsSuite extends BaseDottySuite {
         Template(
           Nil,
           Nil,
-          Self(tname("self"), None),
+          self("self"),
           Defn.ExtensionGroup(
             Nil,
             List(List(tparam("x", "X"))),
             Term.Block(
               List(
                 Defn.Def(
-                  List(Mod.Private(Name.Anonymous())),
+                  List(Mod.Private(anon)),
                   tname("foo"),
                   Nil,
                   Some(pname("Foo")),
                   tname("getFoo")
                 ),
                 Defn.Def(
-                  List(Mod.Protected(Name.Anonymous())),
+                  List(Mod.Protected(anon)),
                   tname("bar"),
                   Nil,
                   Some(pname("Bar")),

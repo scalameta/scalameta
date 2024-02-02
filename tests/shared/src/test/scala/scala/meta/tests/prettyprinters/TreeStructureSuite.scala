@@ -27,17 +27,17 @@ class TreeStructureSuite extends ParseSuite {
   assertStructure(Lit.Double("1230d"))("Lit.Double(1230d)")
   assertStructure(Lit.Double("12.30d"))("Lit.Double(12.3d)")
   assertStructure(Lit.Long(1230))("Lit.Long(1230L)")
-  assertStructure(Lit.Int(1230))("Lit.Int(1230)")
+  assertStructure(int(1230))("Lit.Int(1230)")
   assertStructure(Lit.Null())("Lit.Null()")
-  assertStructure(Lit.Boolean(false))("Lit.Boolean(false)")
-  assertStructure(Lit.Boolean(true))("Lit.Boolean(true)")
-  assertStructure(Lit.String("lit.str"))("""Lit.String("lit.str")""")
+  assertStructure(bool(false))("Lit.Boolean(false)")
+  assertStructure(bool(true))("Lit.Boolean(true)")
+  assertStructure(str("lit.str"))("""Lit.String("lit.str")""")
 
   assertStructure(
     Case(
       Pat.Wildcard(),
       None,
-      Term.Function(List(Term.Param(Nil, Name(""), None, None)), Lit.Boolean(false))
+      Term.Function(List(tparam("")), bool(false))
     )
   )("""
       |Case(
@@ -53,10 +53,7 @@ class TreeStructureSuite extends ParseSuite {
     Case(
       Pat.Wildcard(),
       None,
-      Term.Function(
-        List(Term.Param(Nil, Name(""), None, None)),
-        Term.Block(List(Lit.Boolean(false)))
-      )
+      Term.Function(List(tparam("")), Term.Block(List(bool(false))))
     )
   )("""
       |Case(
@@ -72,10 +69,7 @@ class TreeStructureSuite extends ParseSuite {
     Case(
       Pat.Wildcard(),
       None,
-      Term.Function(
-        List(Term.Param(Nil, Name(""), None, None)),
-        Term.Block(List(Lit.Boolean(false), Term.Name("a")))
-      )
+      Term.Function(List(tparam("")), Term.Block(List(bool(false), tname("a"))))
     )
   )(
     """

@@ -203,38 +203,38 @@ class XmlSuite extends ParseSuite {
         List(
           Defn.Val(
             Nil,
-            List(Pat.Var(Term.Name("x"))),
+            List(Pat.Var(tname("x"))),
             None,
             Term.Xml(
-              List(Lit.String("<div href="), Lit.String(">Hello "), Lit.String("</div>")),
+              List(str("<div href="), str(">Hello "), str("</div>")),
               List(
                 Term.ApplyInfix(
-                  Lit.String("/"),
-                  Term.Name("+"),
+                  str("/"),
+                  tname("+"),
                   Type.ArgClause(Nil),
-                  Term.ArgClause(List(Term.Name("url")))
+                  Term.ArgClause(List(tname("url")))
                 ),
-                Term.Name("name")
+                tname("name")
               )
             )
           ),
           Defn.Val(
             Nil,
-            List(Pat.Var(Term.Name("noSemicolon"))),
+            List(Pat.Var(tname("noSemicolon"))),
             None,
             Term.Xml(
-              List(Lit.String("<h1>"), Lit.String("</h1>")),
+              List(str("<h1>"), str("</h1>")),
               List(
                 Term.ApplyInfix(
-                  Term.Name("msg"),
-                  Term.Name("infix"),
+                  tname("msg"),
+                  tname("infix"),
                   Type.ArgClause(Nil),
-                  Term.ArgClause(List(Term.Name("upper")))
+                  Term.ArgClause(List(tname("upper")))
                 )
               )
             )
           ),
-          Defn.Val(Nil, List(Pat.Var(Term.Name("y"))), None, Lit.Int(2))
+          Defn.Val(Nil, List(Pat.Var(tname("y"))), None, int(2))
         )
       )
     }

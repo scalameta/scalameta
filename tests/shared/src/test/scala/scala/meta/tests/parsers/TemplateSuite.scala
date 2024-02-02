@@ -8,7 +8,7 @@ class TemplateSuite extends ParseSuite {
   test("trait T") {
     val tree = templStat("trait T")
     assertTree(tree) {
-      Trait(Nil, Type.Name("T"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate())
+      Trait(Nil, pname("T"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate())
     }
     def testTokens(t: Tree): Unit = {
       interceptMessage[NoSuchElementException]("token 0 out of 0")(t.tokens.head)
@@ -22,7 +22,7 @@ class TemplateSuite extends ParseSuite {
 
   test("trait T {}") {
     assertTree(templStat("trait T {}")) {
-      Trait(Nil, Type.Name("T"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate())
+      Trait(Nil, pname("T"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate())
     }
   }
 
@@ -30,10 +30,8 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("trait F[T]")) {
       Trait(
         Nil,
-        Type.Name("F"),
-        Type.ParamClause(
-          Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
-        ),
+        pname("F"),
+        pparam("T") :: Nil,
         EmptyCtor(),
         EmptyTemplate()
       )
@@ -44,12 +42,12 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("trait A extends B")) {
       Trait(
         Nil,
-        Type.Name("A"),
+        pname("A"),
         Type.ParamClause(Nil),
         EmptyCtor(),
         Template(
           Nil,
-          Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil,
+          Init(pname("B"), anon, emptyArgClause) :: Nil,
           EmptySelf(),
           Nil
         )
@@ -61,14 +59,14 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("trait Inner <: { val x : Int = 3 }")) {
       Trait(
         Nil,
-        Type.Name("Inner"),
+        pname("Inner"),
         Type.ParamClause(Nil),
         EmptyCtor(),
         Template(
           Nil,
           Nil,
           EmptySelf(),
-          List(Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(3)))
+          List(Defn.Val(Nil, List(Pat.Var(tname("x"))), Some(pname("Int")), int(3)))
         )
       )
     }
@@ -78,12 +76,12 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("trait A extends { val x: Int = 2 } with B")) {
       Trait(
         Nil,
-        Type.Name("A"),
+        pname("A"),
         Type.ParamClause(Nil),
         EmptyCtor(),
         Template(
-          Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
-          Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil,
+          Defn.Val(Nil, List(Pat.Var(tname("x"))), Some(pname("Int")), int(2)) :: Nil,
+          Init(pname("B"), anon, emptyArgClause) :: Nil,
           EmptySelf(),
           Nil
         )
@@ -95,10 +93,10 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("trait A { self: B => }")) {
       Trait(
         Nil,
-        Type.Name("A"),
+        pname("A"),
         Type.ParamClause(Nil),
         EmptyCtor(),
-        Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)
+        Template(Nil, Nil, self("self", "B"), Nil)
       )
     }
   }
@@ -107,14 +105,14 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("trait T { def x: Int }")) {
       Trait(
         Nil,
-        Type.Name("T"),
+        pname("T"),
         Type.ParamClause(Nil),
         EmptyCtor(),
         Template(
           Nil,
           Nil,
           EmptySelf(),
-          List(Decl.Def(Nil, Term.Name("x"), Nil, Nil, Type.Name("Int")))
+          List(Decl.Def(Nil, tname("x"), Nil, Nil, pname("Int")))
         )
       )
     }
@@ -122,7 +120,7 @@ class TemplateSuite extends ParseSuite {
 
   test("class C") {
     assertTree(templStat("class C")) {
-      Class(Nil, Type.Name("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate())
+      Class(Nil, pname("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate())
     }
   }
 
@@ -130,10 +128,8 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("class C[T]")) {
       Class(
         Nil,
-        Type.Name("C"),
-        Type.ParamClause(
-          Type.Param(Nil, Type.Name("T"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
-        ),
+        pname("C"),
+        pparam("T") :: Nil,
         EmptyCtor(),
         EmptyTemplate()
       )
@@ -144,12 +140,12 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("class A extends B")) {
       Class(
         Nil,
-        Type.Name("A"),
+        pname("A"),
         Type.ParamClause(Nil),
         EmptyCtor(),
         Template(
           Nil,
-          Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil,
+          Init(pname("B"), anon, emptyArgClause) :: Nil,
           EmptySelf(),
           Nil
         )
@@ -161,12 +157,12 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("class A extends { val x: Int = 2 } with B")) {
       Class(
         Nil,
-        Type.Name("A"),
+        pname("A"),
         Type.ParamClause(Nil),
         EmptyCtor(),
         Template(
-          Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
-          Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil,
+          Defn.Val(Nil, List(Pat.Var(tname("x"))), Some(pname("Int")), int(2)) :: Nil,
+          Init(pname("B"), anon, emptyArgClause) :: Nil,
           EmptySelf(),
           Nil
         )
@@ -178,10 +174,10 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("class A { self: B => }")) {
       Class(
         Nil,
-        Type.Name("A"),
+        pname("A"),
         Type.ParamClause(Nil),
         EmptyCtor(),
-        Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)
+        Template(Nil, Nil, self("self", "B"), Nil)
       )
     }
   }
@@ -190,7 +186,7 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("class A { this => }")) {
       Class(
         Nil,
-        Type.Name("A"),
+        pname("A"),
         Type.ParamClause(Nil),
         EmptyCtor(),
         Template(Nil, Nil, Self(Name.This(), None), Nil)
@@ -202,7 +198,7 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("class A { this => }")) {
       Class(
         Nil,
-        Type.Name("A"),
+        pname("A"),
         Type.ParamClause(Nil),
         EmptyCtor(),
         Template(Nil, Nil, Self(Name.This(), None), Nil)
@@ -214,14 +210,14 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("class C { def x: Int }")) {
       Class(
         Nil,
-        Type.Name("C"),
+        pname("C"),
         Type.ParamClause(Nil),
         EmptyCtor(),
         Template(
           Nil,
           Nil,
           EmptySelf(),
-          List(Decl.Def(Nil, Term.Name("x"), Nil, Nil, Type.Name("Int")))
+          List(Decl.Def(Nil, tname("x"), Nil, Nil, pname("Int")))
         )
       )
     }
@@ -231,12 +227,12 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("class C(x: Int)")) {
       Class(
         Nil,
-        Type.Name("C"),
+        pname("C"),
         Type.ParamClause(Nil),
         Ctor.Primary(
           Nil,
-          Name.Anonymous(),
-          (Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil
+          anon,
+          (tparam("x", "Int") :: Nil) :: Nil
         ),
         EmptyTemplate()
       )
@@ -248,12 +244,12 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("class C private(x: Int)")) {
       Class(
         Nil,
-        Type.Name("C"),
+        pname("C"),
         Type.ParamClause(Nil),
         Ctor.Primary(
-          Mod.Private(Name.Anonymous()) :: Nil,
-          Name.Anonymous(),
-          (Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) :: Nil
+          Mod.Private(anon) :: Nil,
+          anon,
+          (tparam("x", "Int") :: Nil) :: Nil
         ),
         EmptyTemplate()
       )
@@ -265,12 +261,12 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("class C(val x: Int)")) {
       Class(
         Nil,
-        Type.Name("C"),
+        pname("C"),
         Type.ParamClause(Nil),
         Ctor.Primary(
           Nil,
-          Name.Anonymous(),
-          (Term.Param(Mod.ValParam() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil)
+          anon,
+          (tparam(Mod.ValParam() :: Nil, "x", "Int") :: Nil)
             :: Nil
         ),
         EmptyTemplate()
@@ -283,12 +279,12 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("class C(var x: Int)")) {
       Class(
         Nil,
-        Type.Name("C"),
+        pname("C"),
         Type.ParamClause(Nil),
         Ctor.Primary(
           Nil,
-          Name.Anonymous(),
-          (Term.Param(Mod.VarParam() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil)
+          anon,
+          (tparam(Mod.VarParam() :: Nil, "x", "Int") :: Nil)
             :: Nil
         ),
         EmptyTemplate()
@@ -301,12 +297,12 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("class C(implicit x: Int)")) {
       Class(
         Nil,
-        Type.Name("C"),
+        pname("C"),
         Type.ParamClause(Nil),
         Ctor.Primary(
           Nil,
-          Name.Anonymous(),
-          (Term.Param(Mod.Implicit() :: Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil)
+          anon,
+          (tparam(Mod.Implicit() :: Nil, "x", "Int") :: Nil)
             :: Nil
         ),
         EmptyTemplate()
@@ -319,17 +315,12 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("class C(override val x: Int)")) {
       Class(
         Nil,
-        Type.Name("C"),
+        pname("C"),
         Type.ParamClause(Nil),
         Ctor.Primary(
           Nil,
-          Name.Anonymous(),
-          (Term.Param(
-            List(Mod.Override(), Mod.ValParam()),
-            Term.Name("x"),
-            Some(Type.Name("Int")),
-            None
-          ) :: Nil) :: Nil
+          anon,
+          (tparam(List(Mod.Override(), Mod.ValParam()), "x", "Int") :: Nil) :: Nil
         ),
         EmptyTemplate()
       )
@@ -340,13 +331,13 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("case class C(x: Int)(y: => Int)")) {
       Class(
         Mod.Case() :: Nil,
-        Type.Name("C"),
+        pname("C"),
         Type.ParamClause(Nil),
         Ctor.Primary(
           Nil,
-          Name.Anonymous(),
-          (Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil) ::
-            (Term.Param(Nil, Term.Name("y"), Some(Type.ByName(Type.Name("Int"))), None) :: Nil)
+          anon,
+          (tparam("x", "Int") :: Nil) ::
+            (tparam("y", Type.ByName(pname("Int"))) :: Nil)
             :: Nil
         ),
         EmptyTemplate()
@@ -355,12 +346,12 @@ class TemplateSuite extends ParseSuite {
   }
 
   test("object O") {
-    assertTree(templStat("object O"))(Object(Nil, Term.Name("O"), EmptyTemplate()))
+    assertTree(templStat("object O"))(Object(Nil, tname("O"), EmptyTemplate()))
   }
 
   test("case object O") {
     assertTree(templStat("case object O"))(
-      Object(Mod.Case() :: Nil, Term.Name("O"), EmptyTemplate())
+      Object(Mod.Case() :: Nil, tname("O"), EmptyTemplate())
     )
   }
 
@@ -368,10 +359,10 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("object A extends B"))(
       Object(
         Nil,
-        Term.Name("A"),
+        tname("A"),
         Template(
           Nil,
-          Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil,
+          Init(pname("B"), anon, emptyArgClause) :: Nil,
           EmptySelf(),
           Nil
         )
@@ -383,10 +374,10 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("object A extends { val x: Int = 2 } with B"))(
       Object(
         Nil,
-        Term.Name("A"),
+        tname("A"),
         Template(
-          Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), Some(Type.Name("Int")), Lit.Int(2)) :: Nil,
-          Init(Type.Name("B"), Name.Anonymous(), emptyArgClause) :: Nil,
+          Defn.Val(Nil, List(Pat.Var(tname("x"))), Some(pname("Int")), int(2)) :: Nil,
+          Init(pname("B"), anon, emptyArgClause) :: Nil,
           EmptySelf(),
           Nil
         )
@@ -398,8 +389,8 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("object A { self: B => }"))(
       Object(
         Nil,
-        Term.Name("A"),
-        Template(Nil, Nil, Self(Term.Name("self"), Some(Type.Name("B"))), Nil)
+        tname("A"),
+        Template(Nil, Nil, self("self", "B"), Nil)
       )
     )
   }
@@ -415,10 +406,10 @@ class TemplateSuite extends ParseSuite {
     val code = "class foo { _: Int => }"
     val tree = Defn.Class(
       Nil,
-      Type.Name("foo"),
+      pname("foo"),
       Nil,
       EmptyCtor(),
-      Template(Nil, Nil, Self(Name.Placeholder(), Some(Type.Name("Int"))), Nil, Nil)
+      Template(Nil, Nil, Self(Name.Placeholder(), Some(pname("Int"))), Nil, Nil)
     )
     checkStat(code, code)(tree)
   }
@@ -455,17 +446,15 @@ class TemplateSuite extends ParseSuite {
       Nil,
       ctor,
       tpl(
-        List(
-          Defn.Class(
-            List(Mod.Case()),
-            pname("Foo"),
-            Nil,
-            ctorp(Nil),
-            tpl(Nil)
-          ),
-          Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo"))))),
-          Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
-        )
+        Defn.Class(
+          List(Mod.Case()),
+          pname("Foo"),
+          Nil,
+          ctorp(Nil),
+          EmptyTemplate()
+        ),
+        Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo"))))),
+        Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -503,17 +492,15 @@ class TemplateSuite extends ParseSuite {
       Nil,
       ctor,
       tpl(
-        List(
-          Defn.Class(
-            List(Mod.Case()),
-            pname("Foo"),
-            Nil,
-            ctorp(Nil),
-            tpl(List(init("Bar")), Nil)
-          ),
-          Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo"))))),
-          Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
-        )
+        Defn.Class(
+          List(Mod.Case()),
+          pname("Foo"),
+          Nil,
+          ctorp(Nil),
+          tpl(List(init("Bar")), Nil)
+        ),
+        Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo"))))),
+        Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)

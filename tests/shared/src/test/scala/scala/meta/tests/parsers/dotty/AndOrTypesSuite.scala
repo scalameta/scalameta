@@ -19,7 +19,7 @@ class AndOrTypesSuite extends BaseDottySuite {
 
   test("A with B") {
     runTestAssert[Type]("A with B", None)(
-      With(Type.Name("A"), Type.Name("B"))
+      With(pname("A"), pname("B"))
     )
   }
 
@@ -49,12 +49,7 @@ class AndOrTypesSuite extends BaseDottySuite {
         Nil,
         List(
           List(
-            Term.Param(
-              Nil,
-              tname("id"),
-              Some(ApplyInfix(pname("UserName"), pname("|"), pname("Password"))),
-              None
-            )
+            tparam("id", ApplyInfix(pname("UserName"), pname("|"), pname("Password")))
           )
         ),
         pname("Unit")
@@ -85,11 +80,10 @@ class AndOrTypesSuite extends BaseDottySuite {
         Nil,
         List(
           List(
-            Term.Param(
+            tparam(
               Nil,
-              tname("a"),
-              Some(Type.Apply(pname("List"), List(ApplyInfix(pname("A"), pname("&"), pname("B"))))),
-              None
+              "a",
+              Type.Apply(pname("List"), List(ApplyInfix(pname("A"), pname("&"), pname("B"))))
             )
           )
         ),
@@ -103,32 +97,26 @@ class AndOrTypesSuite extends BaseDottySuite {
     val tree = Defn.Object(
       Nil,
       tname("A"),
-      Template(
-        Nil,
-        Nil,
-        slf,
-        List(
-          Defn.Type(
-            Nil,
-            pname("AllTraits"),
-            Nil,
+      tpl(
+        Defn.Type(
+          Nil,
+          pname("AllTraits"),
+          Nil,
+          Type.ApplyInfix(
             Type.ApplyInfix(
               Type.ApplyInfix(
-                Type.ApplyInfix(
-                  Type.ApplyInfix(pname("Trait1"), pname("&"), pname("Trait2")),
-                  pname("&"),
-                  pname("Trait3")
-                ),
+                Type.ApplyInfix(pname("Trait1"), pname("&"), pname("Trait2")),
                 pname("&"),
-                pname("Trait4")
+                pname("Trait3")
               ),
               pname("&"),
-              pname("Trait5")
+              pname("Trait4")
             ),
-            noBounds
-          )
-        ),
-        Nil
+            pname("&"),
+            pname("Trait5")
+          ),
+          noBounds
+        )
       )
     )
     runTestAssert[Stat](

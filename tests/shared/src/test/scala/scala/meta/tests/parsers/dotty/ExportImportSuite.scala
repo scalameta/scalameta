@@ -8,7 +8,7 @@ class ExportImportSuite extends BaseDottySuite {
   test("export-single") {
     runTestAssert[Stat]("export A.b.c")(
       Export(
-        List(Importer(Term.Select(Term.Name("A"), Term.Name("b")), List(Importee.Name(Name("c")))))
+        List(Importer(Term.Select(tname("A"), tname("b")), List(Importee.Name(Name("c")))))
       )
     )
   }
@@ -22,12 +22,12 @@ class ExportImportSuite extends BaseDottySuite {
       Source(
         List(
           Pkg(
-            Term.Name("a"),
+            tname("a"),
             List(
               Export(
                 List(
                   Importer(
-                    Term.Select(Term.Name("A"), Term.Name("b")),
+                    Term.Select(tname("A"), tname("b")),
                     List(Importee.Name(Name("c")))
                   )
                 )
@@ -41,7 +41,7 @@ class ExportImportSuite extends BaseDottySuite {
 
   test("export-given") {
     runTestAssert[Stat]("export A.{ given Int }", assertLayout = Some("export A.given Int"))(
-      Export(List(Importer(Term.Name("A"), List(Importee.Given(Type.Name("Int"))))))
+      Export(List(Importer(tname("A"), List(Importee.Given(pname("Int"))))))
     )
   }
 
@@ -50,19 +50,19 @@ class ExportImportSuite extends BaseDottySuite {
       "export A.given Int",
       assertLayout = Some("export A.given Int")
     )(
-      Export(List(Importer(Term.Name("A"), List(Importee.Given(Type.Name("Int"))))))
+      Export(List(Importer(tname("A"), List(Importee.Given(pname("Int"))))))
     )
   }
 
   test("export-given-all") {
     runTestAssert[Stat]("export A.given")(
-      Export(List(Importer(Term.Name("A"), List(Importee.GivenAll()))))
+      Export(List(Importer(tname("A"), List(Importee.GivenAll()))))
     )
   }
 
   test("export-given-all-mixed") {
     runTestAssert[Stat]("export A.{ given, a }")(
-      Export(List(Importer(Term.Name("A"), List(Importee.GivenAll(), Importee.Name(Name("a"))))))
+      Export(List(Importer(tname("A"), List(Importee.GivenAll(), Importee.Name(Name("a"))))))
     )
   }
 
@@ -71,7 +71,7 @@ class ExportImportSuite extends BaseDottySuite {
       Export(
         List(
           Importer(
-            Term.Name("A"),
+            tname("A"),
             List(
               Importee.Name(Name("b")),
               Importee.Name(Name("c")),
@@ -89,7 +89,7 @@ class ExportImportSuite extends BaseDottySuite {
       Export(
         List(
           Importer(
-            Term.Name("A"),
+            tname("A"),
             List(Importee.Rename(Name("b"), Name("x")), Importee.Unimport(Name("c")))
           )
         )
@@ -102,7 +102,7 @@ class ExportImportSuite extends BaseDottySuite {
       Import(
         List(
           Importer(
-            Term.Select(Term.Name("a"), Term.Name("b")),
+            Term.Select(tname("a"), tname("b")),
             List(Importee.Rename(Name("C"), Name("D")))
           )
         )
@@ -121,7 +121,7 @@ class ExportImportSuite extends BaseDottySuite {
       Import(
         List(
           Importer(
-            Term.Name("A"),
+            tname("A"),
             List(
               Importee.Rename(Name("min"), Name("minimum")),
               Importee.Rename(Name("*"), Name("multiply"))
@@ -136,7 +136,7 @@ class ExportImportSuite extends BaseDottySuite {
       Import(
         List(
           Importer(
-            Term.Name("Predef"),
+            tname("Predef"),
             List(Importee.Unimport(Name("augmentString")), Importee.Wildcard())
           )
         )
@@ -148,7 +148,7 @@ class ExportImportSuite extends BaseDottySuite {
     runTestAssert[Stat]("import a.b.C as _")(
       Import(
         List(
-          Importer(Term.Select(Term.Name("a"), Term.Name("b")), List(Importee.Unimport(Name("C"))))
+          Importer(Term.Select(tname("a"), tname("b")), List(Importee.Unimport(Name("C"))))
         )
       )
     )
@@ -157,7 +157,7 @@ class ExportImportSuite extends BaseDottySuite {
   test("import-wildcard") {
     runTestAssert[Stat]("import A.b.*")(
       Import(
-        List(Importer(Term.Select(Term.Name("A"), Term.Name("b")), List(Importee.Wildcard())))
+        List(Importer(Term.Select(tname("A"), tname("b")), List(Importee.Wildcard())))
       )
     )
   }
@@ -165,7 +165,7 @@ class ExportImportSuite extends BaseDottySuite {
   test("import-wildcard-backquoted") {
     runTestAssert[Stat]("import A.b.`*`")(
       Import(
-        List(Importer(Term.Select(Term.Name("A"), Term.Name("b")), List(Importee.Name(Name("*")))))
+        List(Importer(Term.Select(tname("A"), tname("b")), List(Importee.Name(Name("*")))))
       )
     )
   }

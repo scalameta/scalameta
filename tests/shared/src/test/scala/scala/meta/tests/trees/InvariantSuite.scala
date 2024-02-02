@@ -11,19 +11,18 @@ class InvariantSuite extends TreeSuiteBase {
     val primaryCtor = EmptyCtor()
     val secondaryCtor = Ctor.Secondary(
       Nil,
-      Name.Anonymous(),
+      anon,
       List(List()),
-      Init(Type.Singleton(Term.This(Name.Anonymous())), Name.Anonymous(), emptyArgClause),
+      Init(Type.Singleton(Term.This(anon)), anon, emptyArgClause),
       Nil
     )
-    val stats = List(secondaryCtor)
-    val template = Template(Nil, Nil, Self(Name.Anonymous(), None), stats)
-    Defn.Class(Nil, Type.Name("test"), Nil, primaryCtor, template)
+    val template = tpl(secondaryCtor)
+    Defn.Class(Nil, pname("test"), Nil, primaryCtor, template)
     intercept[InvariantFailedException] {
-      Defn.Trait(Nil, Type.Name("test"), Nil, primaryCtor, template)
+      Defn.Trait(Nil, pname("test"), Nil, primaryCtor, template)
     }
-    intercept[InvariantFailedException] { Defn.Object(Nil, Term.Name("test"), template) }
-    intercept[InvariantFailedException] { Pkg.Object(Nil, Term.Name("test"), template) }
+    intercept[InvariantFailedException] { Defn.Object(Nil, tname("test"), template) }
+    intercept[InvariantFailedException] { Pkg.Object(Nil, tname("test"), template) }
   }
 
   test("Lit.Float/Double") {

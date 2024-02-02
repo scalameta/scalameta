@@ -1371,7 +1371,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         Template(
           Nil,
           Nil,
-          Self(tname("slf"), None),
+          self("slf"),
           List(
             Defn.Val(Nil, List(Pat.Var(tname("x"))), None, int(3))
           )
@@ -2378,22 +2378,16 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Defn.Object(
         Nil,
         tname("Z"),
-        Template(
-          Nil,
-          Nil,
-          Self(Name(""), None),
-          List(
-            Term.Match(
-              tname("a"),
-              List(
-                Case(Pat.Extract(tname("A"), Nil), None, tname("succ")),
-                Case(Pat.Wildcard(), None, Term.Block(Nil))
-              ),
-              Nil
+        tpl(
+          Term.Match(
+            tname("a"),
+            List(
+              Case(Pat.Extract(tname("A"), Nil), None, tname("succ")),
+              Case(Pat.Wildcard(), None, Term.Block(Nil))
             ),
-            Defn.Val(Nil, List(Pat.Var(tname("x"))), None, int(0))
+            Nil
           ),
-          Nil
+          Defn.Val(Nil, List(Pat.Var(tname("x"))), None, int(0))
         )
       )
     )
@@ -2458,55 +2452,49 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Defn.Object(
         Nil,
         tname("Test"),
-        Template(
-          Nil,
-          Nil,
-          Self(Name(""), None),
-          List(
-            Term.Try(
-              Term.Match(
-                Term.Apply(tname("List"), List(int(1), int(2), int(3))),
-                List(
-                  Case(
-                    Pat.ExtractInfix(
-                      Pat.Var(tname("x")),
-                      tname("::"),
-                      List(Pat.Var(tname("xs")))
-                    ),
-                    None,
-                    Term.Apply(tname("println"), List(tname("x")))
-                  ),
-                  Case(
-                    tname("Nil"),
-                    None,
-                    Term.Apply(tname("println"), List(str("Nil")))
-                  )
-                ),
-                Nil
-              ),
+        tpl(
+          Term.Try(
+            Term.Match(
+              Term.Apply(tname("List"), List(int(1), int(2), int(3))),
               List(
                 Case(
-                  Pat.Typed(
-                    Pat.Var(tname("ex")),
-                    Type.Select(
-                      Term.Select(tname("java"), tname("io")),
-                      pname("IOException")
-                    )
+                  Pat.ExtractInfix(
+                    Pat.Var(tname("x")),
+                    tname("::"),
+                    List(Pat.Var(tname("xs")))
                   ),
                   None,
-                  Term.Apply(tname("println"), List(tname("ex")))
+                  Term.Apply(tname("println"), List(tname("x")))
                 ),
                 Case(
-                  Pat.Typed(Pat.Var(tname("ex")), pname("Throwable")),
+                  tname("Nil"),
                   None,
-                  Term.Throw(tname("ex"))
+                  Term.Apply(tname("println"), List(str("Nil")))
                 )
               ),
-              None
+              Nil
             ),
-            Term.EndMarker(tname("try"))
+            List(
+              Case(
+                Pat.Typed(
+                  Pat.Var(tname("ex")),
+                  Type.Select(
+                    Term.Select(tname("java"), tname("io")),
+                    pname("IOException")
+                  )
+                ),
+                None,
+                Term.Apply(tname("println"), List(tname("ex")))
+              ),
+              Case(
+                Pat.Typed(Pat.Var(tname("ex")), pname("Throwable")),
+                None,
+                Term.Throw(tname("ex"))
+              )
+            ),
+            None
           ),
-          Nil
+          Term.EndMarker(tname("try"))
         )
       )
     )
@@ -2572,10 +2560,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Defn.Object(
         Nil,
         tname("foo"),
-        Template(
-          Nil,
-          Nil,
-          slf,
+        tpl(
           Defn.Def(
             Nil,
             tname("bar"),
@@ -2593,8 +2578,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
               Lit.Unit(),
               Nil
             )
-          ) :: Nil,
-          Nil
+          )
         )
       )
     )
@@ -2613,10 +2597,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Defn.Object(
         Nil,
         tname("foo"),
-        Template(
-          Nil,
-          Nil,
-          slf,
+        tpl(
           Defn.Def(
             Nil,
             tname("bar"),
@@ -2634,8 +2615,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
               Lit.Unit(),
               Nil
             )
-          ) :: Nil,
-          Nil
+          )
         )
       )
     )
@@ -2655,10 +2635,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Defn.Object(
         Nil,
         tname("foo"),
-        Template(
-          Nil,
-          Nil,
-          slf,
+        tpl(
           Defn.Def(
             Nil,
             tname("bar"),
@@ -2675,7 +2652,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
               Lit.Unit(),
               Nil
             )
-          ) :: Nil
+          )
         )
       )
     )
@@ -2695,10 +2672,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Defn.Object(
         Nil,
         tname("foo"),
-        Template(
-          Nil,
-          Nil,
-          slf,
+        tpl(
           Defn.Def(
             Nil,
             tname("bar"),
@@ -2715,8 +2689,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
               Lit.Unit(),
               Nil
             )
-          ) :: Nil,
-          Nil
+          )
         )
       )
     )
@@ -2736,10 +2709,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Defn.Object(
         Nil,
         tname("foo"),
-        Template(
-          Nil,
-          Nil,
-          slf,
+        tpl(
           Defn.Def(
             Nil,
             tname("bar"),
@@ -2756,8 +2726,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
               Lit.Unit(),
               Nil
             )
-          ) :: Nil,
-          Nil
+          )
         )
       )
     )
@@ -2789,10 +2758,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Defn.Object(
         Nil,
         tname("a"),
-        Template(
-          Nil,
-          Nil,
-          slf,
+        tpl(
           Term.ApplyInfix(
             Term.ApplyInfix(
               Term.Apply(
@@ -2837,11 +2803,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   )
                 ),
                 Term.If(
-                  Term.Select(Term.This(Name("")), tname("isCommittable")),
+                  Term.Select(Term.This(anon), tname("isCommittable")),
                   Term.Apply(
                     Term.Select(tname("tvars"), tname("foreach")),
                     Term.Function(
-                      List(Term.Param(Nil, tname("tvar"), None, None)),
+                      List(tparam("tvar")),
                       Term.If(
                         Term.ApplyInfix(
                           Term.ApplyUnary(
@@ -2857,7 +2823,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                             tname("!"),
                             Term.Apply(
                               tname("isOwnedAnywhere"),
-                              List(Term.This(Name("")), tname("tvar"))
+                              List(Term.This(anon), tname("tvar"))
                             )
                           ) :: Nil
                         ),
@@ -2879,8 +2845,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                 )
               )
             ) :: Nil
-          ) :: Nil,
-          Nil
+          )
         )
       )
     )
@@ -2906,10 +2871,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Defn.Def(
-        List(Mod.Private(Name(""))),
+        List(Mod.Private(anon)),
         tname("genScalaClass"),
         Nil,
-        List(List(Term.Param(Nil, tname("td"), Some(pname("TypeDef")), None))),
+        List(List(tparam("td", "TypeDef"))),
         Some(Type.Select(tname("js"), pname("ClassDef"))),
         Term.Block(
           List(
@@ -3195,47 +3160,41 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Defn.Object(
         Nil,
         tname("foo"),
-        Template(
-          Nil,
-          Nil,
-          slf,
-          List(
-            Defn.Def(
-              List(Mod.Private(Name(""))),
-              tname("assertBounds"),
-              Nil,
-              List(List(tparam("context", "String"))),
-              None,
-              Term.If(
-                Term.ApplyInfix(
-                  tname("idx"),
-                  tname(">="),
-                  Nil,
-                  List(Term.Select(tname("query"), tname("length")))
-                ),
-                Term.Apply(tname("err"), List(tname("context"))),
-                Lit.Unit(),
-                Nil
-              )
-            ),
-            Defn.Def(
-              List(Mod.Private(Name(""))),
-              tname("err"),
-              Nil,
-              List(List(tparam("problem", "String"))),
-              None,
-              Term.Throw(
-                Term.New(
-                  Init(
-                    pname("QueryParseException"),
-                    Name(""),
-                    List(List(tname("query"), tname("idx"), tname("problem")))
-                  )
+        tpl(
+          Defn.Def(
+            List(Mod.Private(anon)),
+            tname("assertBounds"),
+            Nil,
+            List(List(tparam("context", "String"))),
+            None,
+            Term.If(
+              Term.ApplyInfix(
+                tname("idx"),
+                tname(">="),
+                Nil,
+                List(Term.Select(tname("query"), tname("length")))
+              ),
+              Term.Apply(tname("err"), List(tname("context"))),
+              Lit.Unit(),
+              Nil
+            )
+          ),
+          Defn.Def(
+            List(Mod.Private(anon)),
+            tname("err"),
+            Nil,
+            List(List(tparam("problem", "String"))),
+            None,
+            Term.Throw(
+              Term.New(
+                Init(
+                  pname("QueryParseException"),
+                  anon,
+                  List(List(tname("query"), tname("idx"), tname("problem")))
                 )
               )
             )
-          ),
-          Nil
+          )
         )
       )
     )
@@ -3430,11 +3389,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Term.Block(
         List(
           Term.If(
-            Term.This(Name("")),
+            Term.This(anon),
             Term.Apply(
               Term.Select(tname("tvars"), tname("foreach")),
               Term.Function(
-                Term.ParamClause(List(tparam(Nil, "tvar"))),
+                Term.ParamClause(List(tparam("tvar"))),
                 Term.If(
                   Term.ApplyUnary(tname("!"), tname("tvar")),
                   Term.Apply(tname("includeVar"), List(tname("tvar"))),
@@ -3575,7 +3534,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         List(Pat.Var(tname("a"))),
         None,
         Term.Match(
-          Term.This(Name("")),
+          Term.This(anon),
           List(
             Case(
               Pat.Var(tname("a")),
