@@ -246,13 +246,13 @@ class FewerBracesSuite extends BaseDottySuite {
               Nil,
               List(Pat.Var(tname("firstLine"))),
               None,
-              Term.Apply(Term.Select(tname("files"), tname("fold")), List(Lit.Int(123)))
+              Term.Apply(Term.Select(tname("files"), tname("fold")), List(int(123)))
             ),
             Defn.Val(
               Nil,
               List(Pat.Var(tname("secondLine"))),
               None,
-              Term.Apply(Term.Select(tname("files"), tname("fold")), List(Lit.Int(123)))
+              Term.Apply(Term.Select(tname("files"), tname("fold")), List(int(123)))
             )
           )
         )
@@ -329,29 +329,18 @@ class FewerBracesSuite extends BaseDottySuite {
         Nil,
         None,
         Term.Block(
-          List(
-            Defn.Val(
-              Nil,
-              List(Pat.Var(tname("firstLine"))),
-              None,
-              Term.Apply(
-                Term.Select(
-                  Term
-                    .Apply(Term.Select(tname("files"), tname("fold")), List(Lit.Int(123))),
-                  tname("apply")
-                ),
-                List(
-                  Term.Function(
-                    List(
-                      Term.Param(Nil, tname("a"), None, None),
-                      Term.Param(Nil, tname("b"), None, None)
-                    ),
-                    tname("a")
-                  )
-                )
-              )
+          Defn.Val(
+            Nil,
+            List(Pat.Var(tname("firstLine"))),
+            None,
+            Term.Apply(
+              Term.Select(
+                Term.Apply(Term.Select(tname("files"), tname("fold")), List(int(123))),
+                tname("apply")
+              ),
+              Term.Function(List(tparam(Nil, "a"), tparam(Nil, "b")), tname("a")) :: Nil
             )
-          )
+          ) :: Nil
         )
       )
     )
@@ -378,49 +367,30 @@ class FewerBracesSuite extends BaseDottySuite {
           Term.Select(
             Term.Apply(
               tname("List"),
-              List(
-                Term.Tuple(
-                  List(
-                    Lit.Int(1),
-                    Term.Tuple(
-                      List(Term.Apply(tname("List"), List(Lit.String(""))), Lit.Int(3))
-                    )
-                  )
-                )
-              )
+              Term.Tuple(
+                List(int(1), Term.Tuple(List(Term.Apply(tname("List"), List(str(""))), int(3))))
+              ) :: Nil
             ),
             tname("map")
           ),
-          List(
-            Term.Function(
-              List(
-                Term.Param(
-                  Nil,
-                  tname("a"),
-                  Some(
-                    Type.Tuple(
-                      List(
-                        Type.Name("Int"),
-                        Type.Tuple(
-                          List(
-                            Type.Apply(Type.Name("List"), List(Type.Name("String"))),
-                            Type.Name("Int")
-                          )
-                        )
-                      )
-                    )
-                  ),
-                  None
+          Term.Function(
+            tparam(
+              Nil,
+              "a",
+              Type.Tuple(
+                List(
+                  pname("Int"),
+                  Type.Tuple(List(Type.Apply(pname("List"), List(pname("String"))), pname("Int")))
                 )
-              ),
-              Term.ApplyInfix(
-                Term.Select(tname("a"), tname("_1")),
-                tname("+"),
-                Nil,
-                List(Lit.Int(1))
               )
+            ) :: Nil,
+            Term.ApplyInfix(
+              Term.Select(tname("a"), tname("_1")),
+              tname("+"),
+              Nil,
+              List(int(1))
             )
-          )
+          ) :: Nil
         )
       )
     )
@@ -443,7 +413,7 @@ class FewerBracesSuite extends BaseDottySuite {
       Defn.Val(
         Nil,
         List(Pat.Var(tname("a"))),
-        Some(Type.Name("Int")),
+        Some(pname("Int")),
         Term.Apply(
           Term.Apply(
             Term.Select(
@@ -460,12 +430,12 @@ class FewerBracesSuite extends BaseDottySuite {
             ),
             List(
               Term.Function(
-                List(Term.Param(Nil, tname("y"), Some(Type.Name("Int")), None)),
-                Term.ApplyInfix(tname("y"), tname(">"), Nil, List(Lit.Int(0)))
+                List(Term.Param(Nil, tname("y"), Some(pname("Int")), None)),
+                Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0)))
               )
             )
           ),
-          List(Lit.Int(0))
+          List(int(0))
         )
       )
     )
@@ -484,16 +454,10 @@ class FewerBracesSuite extends BaseDottySuite {
     )(
       Defn.Class(
         Nil,
-        Type.Name("C"),
+        pname("C"),
         Nil,
         EmptyCtor(),
-        Template(
-          Nil,
-          Nil,
-          Self(Name(""), None),
-          List(Term.Apply(tname("f"), List(Lit.Int(22)))),
-          Nil
-        )
+        tpl(List(Term.Apply(tname("f"), List(int(22)))))
       )
     )
   }
@@ -557,16 +521,16 @@ class FewerBracesSuite extends BaseDottySuite {
                       Nil,
                       List(Pat.Var(tname("first"))),
                       None,
-                      Term.Apply(tname("arr"), List(Lit.Int(0)))
+                      Term.Apply(tname("arr"), List(int(0)))
                     ),
-                    Term.ApplyInfix(tname("first"), tname("!="), Nil, List(Lit.Int(1)))
+                    Term.ApplyInfix(tname("first"), tname("!="), Nil, List(int(1)))
                   )
                 )
               )
             )
           )
         ),
-        Term.Apply(tname("println"), List(Lit.String("invalid arr"))),
+        Term.Apply(tname("println"), List(str("invalid arr"))),
         Lit.Unit(),
         Nil
       )
@@ -660,7 +624,7 @@ class FewerBracesSuite extends BaseDottySuite {
       Defn.Object(
         Nil,
         tname("a"),
-        Template(Nil, Nil, slf, List(Term.Apply(tname("foo"), List(tname("bar")))), Nil)
+        tpl(List(Term.Apply(tname("foo"), List(tname("bar")))))
       )
     )
   }
@@ -676,7 +640,7 @@ class FewerBracesSuite extends BaseDottySuite {
       Defn.Object(
         Nil,
         tname("a"),
-        Template(Nil, Nil, slf, List(Term.Ascribe(tname("foo"), pname("bar"))), Nil)
+        tpl(List(Term.Ascribe(tname("foo"), pname("bar"))))
       )
     )
   }
@@ -1661,6 +1625,20 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestError[Stat](code, error)
   }
 
+  test("scalafmt #3763 implicit after space, with type") {
+    val code =
+      """
+        |def a =
+        |   foo: implicit bar: Int =>
+        |      baz
+        |""".stripMargin
+    val error =
+      """|<input>:3: error: identifier expected but implicit found
+         |   foo: implicit bar: Int =>
+         |        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
   test("scalafmt #3763 implicit after newline") {
     val code =
       """
@@ -1678,6 +1656,33 @@ class FewerBracesSuite extends BaseDottySuite {
         tname("foo"),
         Term.Function(
           Term.ParamClause(List(tparam(List(Mod.Implicit()), "bar")), Some(Mod.Implicit())),
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 implicit after newline, with type") {
+    val code =
+      """
+        |def a = foo:
+        |   implicit bar: Int =>
+        |      baz
+        |""".stripMargin
+    val layout = "def a = foo { implicit bar: Int => baz }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          Term.ParamClause(
+            List(tparam(List(Mod.Implicit()), "bar", "Int")),
+            Some(Mod.Implicit())
+          ),
           tname("baz")
         ) :: Nil
       )
@@ -1707,6 +1712,370 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("scalafmt #3763 implicit in braces, with type, no fewer") {
+    val code = "def a = foo { implicit bar: Int => baz }"
+    val layout = "def a = foo { implicit bar: Int => baz }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          Term.ParamClause(
+            List(tparam(List(Mod.Implicit()), "bar", "Int")),
+            Some(Mod.Implicit())
+          ),
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 using after space") {
+    val code =
+      """
+        |def a =
+        |   foo: using bar =>
+        |      baz
+        |""".stripMargin
+    val error =
+      """|<input>:3: error: identifier expected but => found
+         |   foo: using bar =>
+         |                  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("scalafmt #3763 using after space, with type") {
+    val code =
+      """
+        |def a =
+        |   foo: using bar: Int =>
+        |      baz
+        |""".stripMargin
+    val error =
+      """|<input>:3: error: identifier expected but : found
+         |   foo: using bar: Int =>
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("scalafmt #3763 using after newline") {
+    val code =
+      """
+        |def a = foo:
+        |   using bar =>
+        |      baz
+        |""".stripMargin
+    val layout = "def a = foo { (using bar) => baz }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          Term.ParamClause(List(tparam(List(Mod.Using()), "bar")), Some(Mod.Using())),
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 using after newline, no indent") {
+    val code =
+      """
+        |def a =
+        |   foo:
+        |   using bar =>
+        |      baz
+        |""".stripMargin
+    val error =
+      """|<input>:3: error: expected fewer-braces method body
+         |   foo:
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("scalafmt #3763 using after newline, with type") {
+    val code =
+      """
+        |def a = foo:
+        |   using bar: Int =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo(using bar (Int => baz))
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.ApplyInfix(
+          tname("using"),
+          tname("bar"),
+          Nil,
+          Term.Function(List(tparam(Nil, "Int")), tname("baz")) :: Nil
+        ) :: Nil
+      )
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 using after newline, with type, no indent") {
+    val code =
+      """
+        |def a =
+        |   foo:
+        |   using bar: Int =>
+        |      baz
+        |""".stripMargin
+    val error =
+      """|<input>:3: error: expected fewer-braces method body
+         |   foo:
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("scalafmt #3763 using, arg in parens (no fewer braces)") {
+    val code =
+      """
+        |def a =
+        |   foo(using bar => baz)
+        |""".stripMargin
+    val layout = "def a = foo(using bar => baz)"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.ArgClause(
+          Term.Function(List(tparam(Nil, "bar")), tname("baz")) :: Nil,
+          Some(Mod.Using())
+        )
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 using, arg in braces (no fewer braces)") {
+    val code =
+      """
+        |def a =
+        |   foo { using bar => baz }
+        |""".stripMargin
+    val layout = "def a = foo { (using bar) => baz }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          Term.ParamClause(
+            List(tparam(List(Mod.Using()), "bar")),
+            Some(Mod.Using())
+          ),
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 using, with type, arg in parens (no fewer braces)") {
+    val code =
+      """
+        |def a =
+        |   foo(using bar: Int => baz)
+        |""".stripMargin
+    val layout = "def a = foo(using bar: Int => baz)"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.ArgClause(
+          Term.Ascribe(tname("bar"), Type.Function(List(pname("Int")), pname("baz"))) :: Nil,
+          Some(Mod.Using())
+        )
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 using, with type, arg in braces (no fewer braces)") {
+    val code =
+      """
+        |def a =
+        |   foo { using bar: Int => baz }
+        |""".stripMargin
+    val layout = "def a = foo { (using bar: Int) => baz }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          Term.ParamClause(
+            List(tparam(List(Mod.Using()), "bar", "Int")),
+            Some(Mod.Using())
+          ),
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 using in parens") {
+    val code =
+      """
+        |def a =
+        |   foo: (using bar) =>
+        |      baz
+        |""".stripMargin
+    val layout = "def a = foo { (using bar) => baz }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          Term.ParamClause(List(tparam(List(Mod.Using()), "bar")), Some(Mod.Using())),
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 using in parens, with type") {
+    val code =
+      """
+        |def a =
+        |   foo: (using bar: Int => String) =>
+        |      baz
+        |""".stripMargin
+    val layout = "def a = foo { (using bar: Int => String) => baz }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          Term.ParamClause(
+            tparam(
+              List(Mod.Using()),
+              "bar",
+              Type.Function(List(pname("Int")), pname("String"))
+            ) :: Nil,
+            Some(Mod.Using())
+          ),
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 using id in parens, with type") {
+    val code =
+      """
+        |def a =
+        |   foo: (using: Int => String) =>
+        |      baz
+        |""".stripMargin
+    val layout = "def a = foo((using: Int => String) => baz)"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          tparam(
+            Nil,
+            "using",
+            Type.Function(List(pname("Int")), pname("String"))
+          ) :: Nil,
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 multiple using in parens") {
+    val code =
+      """
+        |def a =
+        |   foo: (using bar: Int, baz: String) =>
+        |      qux
+        |""".stripMargin
+    val layout = "def a = foo { (using bar: Int, baz: String) => qux }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          List(tparam(List(Mod.Using()), "bar", "Int"), tparam(Nil, "baz", "String")),
+          tname("qux")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 multiple using in parens, second is id") {
+    val code =
+      """
+        |def a =
+        |   foo: (using bar: Int, using: String) =>
+        |      qux
+        |""".stripMargin
+    val layout = "def a = foo { (using bar: Int, using: String) => qux }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          Term.ParamClause(
+            List(tparam(List(Mod.Using()), "bar", "Int"), tparam(Nil, "using", "String")),
+            Some(Mod.Using())
+          ),
+          tname("qux")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
   test("scalafmt #3763 erased after space") {
     val code =
       """
@@ -1718,6 +2087,20 @@ class FewerBracesSuite extends BaseDottySuite {
       """|<input>:3: error: identifier expected but => found
          |   foo: erased bar =>
          |                   ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("scalafmt #3763 erased after space, with type") {
+    val code =
+      """
+        |def a =
+        |   foo: erased bar: Int =>
+        |      baz
+        |""".stripMargin
+    val error =
+      """|<input>:3: error: identifier expected but : found
+         |   foo: erased bar: Int =>
+         |                  ^""".stripMargin
     runTestError[Stat](code, error)
   }
 
@@ -1742,7 +2125,63 @@ class FewerBracesSuite extends BaseDottySuite {
     parseAndCheckTree[Stat](code, layout)(tree)
   }
 
-  test("scalafmt #3763 erased, no fewer braces") {
+  test("scalafmt #3763 erased after newline, no indent") {
+    val code =
+      """
+        |def a =
+        |   foo:
+        |   erased bar =>
+        |      baz
+        |""".stripMargin
+    val error =
+      """|<input>:3: error: expected fewer-braces method body
+         |   foo:
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("scalafmt #3763 erased after newline, with type") {
+    val code =
+      """
+        |def a = foo:
+        |   erased bar: Int =>
+        |      baz
+        |""".stripMargin
+    val layout = "def a = foo(erased bar (Int => baz))"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.ApplyInfix(
+          tname("erased"),
+          tname("bar"),
+          Nil,
+          Term.Function(List(tparam(Nil, "Int")), tname("baz")) :: Nil
+        ) :: Nil
+      )
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 erased after newline, with type, no indent") {
+    val code =
+      """
+        |def a =
+        |   foo:
+        |   erased bar: Int =>
+        |      baz
+        |""".stripMargin
+    val error =
+      """|<input>:3: error: expected fewer-braces method body
+         |   foo:
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("scalafmt #3763 erased, arg in parens (no fewer braces)") {
     val code =
       """
         |def a =
@@ -1753,6 +2192,26 @@ class FewerBracesSuite extends BaseDottySuite {
          |   foo(erased bar => baz)
          |                  ^""".stripMargin
     runTestError[Stat](code, error)
+  }
+
+  test("scalafmt #3763 erased, arg in braces (no fewer braces)") {
+    val code =
+      """
+        |def a =
+        |   foo { erased bar => baz }
+        |""".stripMargin
+    val layout = "def a = foo(erased bar => baz)"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+      )
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 erased in parens") {
@@ -1774,6 +2233,34 @@ class FewerBracesSuite extends BaseDottySuite {
       )
     )
     parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 erased in parens, with type") {
+    val code =
+      """
+        |def a =
+        |   foo: (erased bar: Int => String) =>
+        |      baz
+        |""".stripMargin
+    val layout = "def a = foo((erased bar: Int => String) => baz)"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          tparam(
+            List(Mod.Erased()),
+            "bar",
+            Type.Function(List(pname("Int")), pname("String"))
+          ) :: Nil,
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 multiple erased in parens") {

@@ -1222,6 +1222,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       "foo { implicit i: Int => () }",
       "foo { implicit i: Int => () }"
     )
+    assertWithOriginalSyntax(
+      q"foo { implicit i: Int => () }",
+      "foo { implicit i: Int => () }",
+      "foo { implicit i: Int => () }"
+    )
     assertWithOriginalSyntax(tree3, "foo(i => ())", "foo(i => ())")
   }
 
