@@ -2503,13 +2503,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   // call it only if token is KwCase
   private def isCaseIntroOnKwCase(): Boolean = !peekToken.isClassOrObject
 
-  private def blockExprPartial(f: (=> Term) => Term)(orElse: => Term): Term = {
-    val hasCases = ahead(token match {
-      case _: KwCase => isCaseIntroOnKwCase()
-      case _: Ellipsis => peekToken.is[KwCase]
+  private def blockExprPartial[T <: Token: ClassTag](orElse: => Term): Term = {
+    val isPartial = peekToken match {
+      case _: KwCase => ahead(isCaseIntroOnKwCase())
+      case _: Ellipsis => ahead(peekToken.is[KwCase])
       case _ => false
+    }
+    if (isPartial) autoPos(next {
+      try Term.PartialFunction(caseClauses())
+      finally acceptAfterOptNL[T]
     })
-    if (hasCases) autoPos(f(Term.PartialFunction(caseClauses()))) else orElse
+    else orElse
   }
 
   private def blockWithinDelims(allowRepeated: Boolean = false) =
@@ -2519,12 +2523,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     autoPos(f(blockWithinDelims(allowRepeated = allowRepeated)))
 
   private def blockOnIndent(): Term = blockInDelims(x => dropOuterBlock(indentedOnOpen(x)))
-  private def blockExprOnIndent(): Term = blockExprPartial(indentedOnOpen)(blockOnIndent())
+  private def blockExprOnIndent(): Term = blockExprPartial[Indentation.Outdent](blockOnIndent())
 
   private def blockOnBrace(allowRepeated: Boolean = false): Term =
     blockInDelims(inBracesOnOpen, allowRepeated)
   private def blockExprOnBrace(allowRepeated: Boolean = false, isOptional: Boolean = false): Term =
-    blockExprPartial(inBracesOnOpen) {
+    blockExprPartial[RightBrace] {
       if (isOptional) blockOnOther(allowRepeated) else blockOnBrace(allowRepeated)
     }
 
