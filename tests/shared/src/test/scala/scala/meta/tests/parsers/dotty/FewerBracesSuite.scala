@@ -2290,4 +2290,41 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("scalafmt #3763 no params with space") {
+    val code =
+      """
+        |def a =
+        |   foo: () =>
+        |      qux
+        |""".stripMargin
+    val layout = "def a = foo(() => qux)"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(tname("foo"), List(Term.Function(Nil, tname("qux"))))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3763 no params with newline") {
+    val code =
+      """
+        |def a =
+        |   foo:
+        |     () =>
+        |       qux
+        |""".stripMargin
+    val layout = "def a = foo(() => qux)"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(tname("foo"), List(Term.Function(Nil, tname("qux"))))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
