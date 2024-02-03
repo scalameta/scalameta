@@ -2130,7 +2130,7 @@ class FewerBracesSuite extends BaseDottySuite {
         Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
       )
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 erased after space, with type") {
@@ -2175,7 +2175,7 @@ class FewerBracesSuite extends BaseDottySuite {
         Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
       )
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 erased after newline, no indent") {
@@ -2240,11 +2240,18 @@ class FewerBracesSuite extends BaseDottySuite {
         |def a =
         |   foo(erased bar => baz)
         |""".stripMargin
-    val error =
-      """|<input>:3: error: ) expected but => found
-         |   foo(erased bar => baz)
-         |                  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def a = foo(erased bar => baz)"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 erased, arg in braces (no fewer braces)") {
@@ -2264,7 +2271,7 @@ class FewerBracesSuite extends BaseDottySuite {
         Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
       )
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 erased in parens") {
@@ -2285,7 +2292,7 @@ class FewerBracesSuite extends BaseDottySuite {
         Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
       )
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 erased in parens, with type") {
