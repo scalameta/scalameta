@@ -346,8 +346,11 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   }
 
   @inline
-  private[parsers] def nextToken(ref: TokenRef): TokenRef =
-    nextToken(ref.token, ref.pos, ref.nextPos, ref.regions)
+  private[parsers] def nextToken(ref: TokenRef): TokenRef = {
+    val next = nextToken(ref.token, ref.pos, ref.nextPos, ref.regions)
+    ref.next = next
+    next
+  }
 
   @tailrec
   private[parsers] def nextToken(
