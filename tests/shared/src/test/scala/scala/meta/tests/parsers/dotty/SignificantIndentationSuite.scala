@@ -1632,6 +1632,22 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
+  test("#3531 apply with optional braces and trailing comma") {
+    val code =
+      """|Request(
+         |  value = true match
+         |    case true => Some(1)
+         |    case _ => None,
+         |  b = "xxx"
+         |)
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: ; expected but , found
+         |    case _ => None,
+         |                  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
   test("indented-double-apply") {
     runTestAssert[Stat](
       """|def method = 
