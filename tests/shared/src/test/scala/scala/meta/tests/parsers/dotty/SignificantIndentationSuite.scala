@@ -1641,11 +1641,32 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  b = "xxx"
          |)
          |""".stripMargin
-    val error =
-      """|<input>:4: error: ; expected but , found
-         |    case _ => None,
-         |                  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|Request(value = true match {
+         |  case true =>
+         |    Some(1)
+         |  case _ =>
+         |    None
+         |}, b = "xxx")
+         |""".stripMargin
+    val tree = Term.Apply(
+      tname("Request"),
+      List(
+        Term.Assign(
+          tname("value"),
+          Term.Match(
+            bool(true),
+            List(
+              Case(bool(true), None, Term.Apply(tname("Some"), List(int(1)))),
+              Case(Pat.Wildcard(), None, tname("None"))
+            ),
+            Nil
+          )
+        ),
+        Term.Assign(tname("b"), str("xxx"))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("indented-double-apply") {

@@ -475,16 +475,42 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def nonTrivial(sepRegions: List[SepRegion]) = curr match {
       case _: EOF => getAtEof(sepRegions)
       case _: Comma =>
-        if (inParens(sepRegions))
+        if (inParens(sepRegions)) {
+          @tailrec
+          def findLastAndPrevRef(ref: TokenRef, prev: TokenRef): (TokenRef, TokenRef) = {
+            val next = ref.next
+            if (next eq null) (ref, prev) else findLastAndPrevRef(next, ref)
+          }
+          def swapWithOutdents(tokenRef: TokenRef) = {
+            @tailrec
+            def iter(oref: TokenRef): TokenRef = {
+              val nref = nextToken(oref)
+              if (nref.token.is[Indentation.Outdent]) iter(nref)
+              else if (oref eq tokenRef) tokenRef
+              else {
+                oref.next = tokenRef
+                try tokenRef.next
+                finally tokenRef.next = nref
+              }
+            }
+            iter(tokenRef)
+          }
           mkOutdentsOpt(currPos, sepRegions) {
             case (r: SepRegionIndented) :: rs => (Left(r), rs)
             case (_: RegionNonDelimNonIndented) :: rs => (Right(true), rs)
             case rs => (Right(false), rs)
           } match {
-            case Right(tokenRef) => tokenRef
-            case Left(regions) => currRef(regions)
+            case Right(tokenRef) =>
+              val (last, prev) = findLastAndPrevRef(tokenRef, null)
+              val cref = swapWithOutdents(last)
+              if (prev eq null) cref
+              else {
+                if (cref ne last) prev.next = cref
+                tokenRef
+              }
+            case Left(regions) => swapWithOutdents(currRef(regions))
           }
-        else currRef(sepRegions)
+        } else currRef(sepRegions)
       case _: KwEnum => currRef(RegionTemplateMark :: sepRegions)
       case _: KwObject | _: KwClass | _: KwTrait | _: KwPackage | _: KwNew
           if dialect.allowSignificantIndentation =>
