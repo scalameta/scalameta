@@ -2386,8 +2386,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       peekToken match {
         case _: Indentation.Indent =>
           next()
-          Some(blockExprOnIndent())
-        case _: Indentation | _: EOL => syntaxError("expected fewer-braces method body", token)
+          tryAhead {
+            val argOpt = tryGetArgAsLambda()
+            val ok = argOpt.isDefined && acceptIfAfterOptNL[Indentation.Outdent]
+            if (ok) argOpt else None
+          }.orElse {
+            Some(blockExprOnIndent())
+          }
+        case _: Indentation => syntaxError("expected fewer-braces method body", token)
+        case _: EOL =>
+          val colon = token
+          nextTwice()
+          val argOpt = tryGetArgAsLambda()
+          if (argOpt.isEmpty) syntaxError("expected fewer-braces method body", colon)
+          argOpt
         case _ => tryAhead(tryGetArgAsLambda())
       }
   }

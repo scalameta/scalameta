@@ -1830,11 +1830,18 @@ class FewerBracesSuite extends BaseDottySuite {
         |   using bar =>
         |      baz
         |""".stripMargin
-    val error =
-      """|<input>:3: error: expected fewer-braces method body
-         |   foo:
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def a = foo { (using bar) => baz }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(List(tparam(List(Mod.Using()), "bar")), tname("baz")) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 using after newline, with type") {
@@ -1844,9 +1851,7 @@ class FewerBracesSuite extends BaseDottySuite {
         |   using bar: Int =>
         |      baz
         |""".stripMargin
-    val layout =
-      """|def a = foo(using bar (Int => baz))
-         |""".stripMargin
+    val layout = "def a = foo { (using bar: Int) => baz }"
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1854,15 +1859,13 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.ApplyInfix(
-          tname("using"),
-          tname("bar"),
-          Nil,
-          Term.Function(List(tparam("Int")), tname("baz")) :: Nil
+        Term.Function(
+          Term.ParamClause(List(tparam(List(Mod.Using()), "bar", "Int")), Some(Mod.Using())),
+          tname("baz")
         ) :: Nil
       )
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 using after newline, with type, no indent") {
@@ -1873,11 +1876,18 @@ class FewerBracesSuite extends BaseDottySuite {
         |   using bar: Int =>
         |      baz
         |""".stripMargin
-    val error =
-      """|<input>:3: error: expected fewer-braces method body
-         |   foo:
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def a = foo { (using bar: Int) => baz }"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(List(tparam(List(Mod.Using()), "bar", "Int")), tname("baz")) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 using, arg in parens (no fewer braces)") {
@@ -2186,11 +2196,18 @@ class FewerBracesSuite extends BaseDottySuite {
         |   erased bar =>
         |      baz
         |""".stripMargin
-    val error =
-      """|<input>:3: error: expected fewer-braces method body
-         |   foo:
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def a = foo(erased bar => baz)"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 erased after newline, with type") {
@@ -2200,7 +2217,7 @@ class FewerBracesSuite extends BaseDottySuite {
         |   erased bar: Int =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo(erased bar (Int => baz))"
+    val layout = "def a = foo((erased bar: Int) => baz)"
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2208,15 +2225,10 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.ApplyInfix(
-          tname("erased"),
-          tname("bar"),
-          Nil,
-          Term.Function(List(tparam("Int")), tname("baz")) :: Nil
-        ) :: Nil
+        Term.Function(List(tparam(List(Mod.Erased()), "bar", "Int")), tname("baz")) :: Nil
       )
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 erased after newline, with type, no indent") {
@@ -2227,11 +2239,21 @@ class FewerBracesSuite extends BaseDottySuite {
         |   erased bar: Int =>
         |      baz
         |""".stripMargin
-    val error =
-      """|<input>:3: error: expected fewer-braces method body
-         |   foo:
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def a = foo((erased bar: Int) => baz)"
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      Term.Apply(
+        tname("foo"),
+        Term.Function(
+          List(tparam(List(Mod.Erased()), "bar", "Int")),
+          tname("baz")
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 erased, arg in parens (no fewer braces)") {
