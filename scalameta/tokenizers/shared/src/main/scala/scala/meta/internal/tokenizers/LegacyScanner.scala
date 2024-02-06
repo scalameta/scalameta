@@ -325,6 +325,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
             putChar(ch)
             nextChar()
             base = 16
+          } else if (dialect.allowBinaryLiterals && (ch == 'b' || ch == 'B')) {
+            putChar(ch)
+            nextChar()
+            base = 2
           } else {
             base = 8
           }

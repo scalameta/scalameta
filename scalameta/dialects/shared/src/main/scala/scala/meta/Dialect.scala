@@ -155,7 +155,9 @@ final class Dialect private[meta] (
     /* Scala 3 allows dropping braces for block arguments such as `list.map: a =>`
      * It wasn't available in Scala 3.0 and got introduced later.
      */
-    val allowFewerBraces: Boolean
+    val allowFewerBraces: Boolean,
+    // Are binary literals allowed? SIP-42.
+    val allowBinaryLiterals: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -248,7 +250,8 @@ final class Dialect private[meta] (
       useInfixTypePrecedence = false,
       allowInfixOperatorAfterNL = false,
       allowParamClauseInterleaving = false,
-      allowFewerBraces = false
+      allowFewerBraces = false,
+      allowBinaryLiterals = false
       // NOTE(olafur): declare the default value for new fields above this comment.
     )
   }
@@ -470,6 +473,10 @@ final class Dialect private[meta] (
     privateCopy(allowFewerBraces = newValue)
   }
 
+  def withAllowBinaryLiterals(newValue: Boolean): Dialect = {
+    privateCopy(allowBinaryLiterals = newValue)
+  }
+
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -532,7 +539,8 @@ final class Dialect private[meta] (
       useInfixTypePrecedence: Boolean = this.useInfixTypePrecedence,
       allowInfixOperatorAfterNL: Boolean = this.allowInfixOperatorAfterNL,
       allowParamClauseInterleaving: Boolean = this.allowParamClauseInterleaving,
-      allowFewerBraces: Boolean = this.allowFewerBraces
+      allowFewerBraces: Boolean = this.allowFewerBraces,
+      allowBinaryLiterals: Boolean = this.allowBinaryLiterals
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     val notForUnquote = unquoteType eq UnquoteType.None
@@ -592,7 +600,8 @@ final class Dialect private[meta] (
       useInfixTypePrecedence = useInfixTypePrecedence,
       allowInfixOperatorAfterNL = allowInfixOperatorAfterNL,
       allowParamClauseInterleaving = allowParamClauseInterleaving,
-      allowFewerBraces = allowFewerBraces
+      allowFewerBraces = allowFewerBraces,
+      allowBinaryLiterals = allowBinaryLiterals
     )
     if (equivalent) return this // RETURN!
     new Dialect(
@@ -655,6 +664,7 @@ final class Dialect private[meta] (
       allowInfixOperatorAfterNL = allowInfixOperatorAfterNL,
       allowParamClauseInterleaving = allowParamClauseInterleaving,
       allowFewerBraces = allowFewerBraces,
+      allowBinaryLiterals = allowBinaryLiterals,
       // NOTE(olafur): add the next argument above this comment.
       unquoteType = unquoteType,
       unquoteParentDialect = if (notForUnquote) null else this
@@ -741,7 +751,8 @@ final class Dialect private[meta] (
       useInfixTypePrecedence: Boolean,
       allowInfixOperatorAfterNL: Boolean,
       allowParamClauseInterleaving: Boolean,
-      allowFewerBraces: Boolean
+      allowFewerBraces: Boolean,
+      allowBinaryLiterals: Boolean
   ): Boolean = (
     // do not include deprecated values in this comparison
     this.allowAtForExtractorVarargs == allowAtForExtractorVarargs
@@ -800,6 +811,7 @@ final class Dialect private[meta] (
       && this.allowInfixOperatorAfterNL == allowInfixOperatorAfterNL
       && this.allowParamClauseInterleaving == allowParamClauseInterleaving
       && this.allowFewerBraces == allowFewerBraces
+      && this.allowBinaryLiterals == allowBinaryLiterals
   )
 
   @inline
@@ -860,7 +872,8 @@ final class Dialect private[meta] (
       useInfixTypePrecedence = that.useInfixTypePrecedence,
       allowInfixOperatorAfterNL = that.allowInfixOperatorAfterNL,
       allowParamClauseInterleaving = that.allowParamClauseInterleaving,
-      allowFewerBraces = that.allowFewerBraces
+      allowFewerBraces = that.allowFewerBraces,
+      allowBinaryLiterals = that.allowBinaryLiterals
     )
 
   @deprecated("Use withX method instead", "4.3.11")
