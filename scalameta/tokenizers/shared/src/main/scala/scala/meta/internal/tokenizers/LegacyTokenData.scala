@@ -60,7 +60,8 @@ trait LegacyTokenData {
    */
   private def integerVal: BigInt = {
     var input = removeNumberSeparators(strVal)
-    if (input.startsWith("0x") || input.startsWith("0X")) input = input.substring(2)
+    if (input.startsWith("0x") || input.startsWith("0X") || input.startsWith("0b") || input
+        .startsWith("0B")) input = input.substring(2)
     if (input.endsWith("l") || input.endsWith("L")) input = input.substring(0, input.length - 1)
     var value: BigInt = 0
     var i = 0

@@ -49,6 +49,7 @@ package object dialects {
     .withAllowLiteralTypes(true)
     .withAllowNumericLiteralUnderscoreSeparators(true)
     .withAllowTryWithAnyExpr(true)
+    .withAllowBinaryLiterals(true)
 
   /**
    * Dialect starting with Scala 2.13.6 for `-Xsource:3` option
@@ -142,6 +143,7 @@ package object dialects {
     .withAllowStarAsTypePlaceholder(true)
     .withUseInfixTypePrecedence(true)
     .withAllowInfixOperatorAfterNL(true)
+    .withAllowBinaryLiterals(false)
 
   implicit val Scala31: Dialect = Scala30
     .withAllowErasedDefs(true)
@@ -156,6 +158,7 @@ package object dialects {
 
   implicit val Scala3Future: Dialect = Scala3
     .withAllowUnderscoreAsTypePlaceholder(true)
+    .withAllowBinaryLiterals(true)
 
   @deprecated("Use Scala3 instead", "4.4.2")
   implicit val Dotty: Dialect = Scala3

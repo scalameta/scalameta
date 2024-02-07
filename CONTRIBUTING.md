@@ -30,7 +30,7 @@ The exact test command to run tests depends on what you are working on:
 - `testsJVM/slow:test`: run slow integration tests for semantic APIs.
 - `testsJVM/all:test`: run all tests, both fast and slow.
 
-Tips to make your edit/test/debug worflow as productive as possible:
+Tips to make your edit/test/debug workflow as productive as possible:
 
 - Use `testOnly` to speedup your workflow. Running `testsJVM/test` may
   still be too slow if you want fast feedback while iterating on a small change.

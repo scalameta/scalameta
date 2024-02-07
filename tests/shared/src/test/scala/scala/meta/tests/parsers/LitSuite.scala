@@ -166,4 +166,25 @@ class LitSuite extends ParseSuite {
       templStat("def neg: Unit = 2 + throw")
     }
   }
+
+  test("binary literals") {
+    matchSubStructureWithDialect[Stat](
+      "0b1",
+      { case Lit(1) => () },
+      dialects.Scala213
+    )
+
+    matchSubStructureWithDialect[Stat](
+      "0b_0010_1010",
+      { case Lit(42) => () },
+      dialects.Scala213
+    )
+
+    matchSubStructureWithDialect[Stat](
+      "0B00101010L",
+      { case Lit(42) => () },
+      dialects.Scala213
+    )
+
+  }
 }

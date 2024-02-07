@@ -1228,4 +1228,14 @@ class TokenizerSuite extends BaseTokenizerSuite {
     assertEquals(res.get.toString, code)
   }
 
+  test("binary literals") {
+    val code =
+      """|val v1 = 0b00101010
+         |val v2 = 0B_0010_1010
+         |val v3 = 0b_0010_1010L
+         |""".stripMargin
+    val res = dialects.Scala213(code).tokenize
+    assertEquals(res.get.toString, code)
+  }
+
 }
