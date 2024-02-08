@@ -387,33 +387,28 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     @tailrec
     def mkOutdentsOpt(maxPointPos: Int, regions: List[SepRegion])(
         f: PartialFunction[List[SepRegion], (Either[SepRegionIndented, Boolean], List[SepRegion])]
-    ): Either[List[SepRegion], TokenRef] =
-      f.lift(regions) match {
-        case None => Left(regions)
-        case Some((Left(r), rs)) =>
-          Right(mkOutdents(r, maxPointPos, rs)(f))
-        case Some((Right(skip), rs)) =>
-          if (skip && (rs ne regions)) mkOutdentsOpt(maxPointPos, rs)(f) else Left(rs)
-      }
-
-    def mkOutdents(region: SepRegionIndented, maxPointPos: Int, regions: List[SepRegion])(
-        f: PartialFunction[List[SepRegion], (Either[SepRegionIndented, Boolean], List[SepRegion])]
-    ): TokenRef = {
+    ): Either[List[SepRegion], TokenRef] = {
       @tailrec
-      def iter(ref: TokenRef, xs: List[SepRegion]): Unit =
+      def mkOutdents(ref: TokenRef, xs: List[SepRegion]): Unit =
         f.lift(xs) match {
           case None =>
           case Some((Left(r), rs)) =>
             val tr = mkOutdentTo(r, maxPointPos, rs)
             ref.next = tr
-            iter(tr, rs)
+            mkOutdents(tr, rs)
           case Some((Right(skip), rs)) =>
-            if (skip && (rs ne xs)) iter(ref, rs)
+            if (skip && (rs ne xs)) mkOutdents(ref, rs)
             else if (currNonTrivial) ref.next = currRef(rs)
         }
-      val res = mkOutdentTo(region, maxPointPos, regions)
-      iter(res, regions)
-      res
+      f.lift(regions) match {
+        case None => Left(regions)
+        case Some((Left(r), rs)) =>
+          val res = mkOutdentTo(r, maxPointPos, rs)
+          mkOutdents(res, rs)
+          Right(res)
+        case Some((Right(skip), rs)) =>
+          if (skip && (rs ne regions)) mkOutdentsOpt(maxPointPos, rs)(f) else Left(rs)
+      }
     }
 
     def currRef(regions: List[SepRegion], next: TokenRef = null): TokenRef =
