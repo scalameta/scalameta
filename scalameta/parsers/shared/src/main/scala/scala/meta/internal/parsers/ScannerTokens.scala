@@ -293,7 +293,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       }
     }
 
-    if (tokens(tokenPosition).is[Whitespace]) (-1, -1)
+    if (tokenPosition < 0 || tokens(tokenPosition).is[Whitespace]) (-1, -1)
     else countIndentInternal(tokenPosition - 1)
   }
 
