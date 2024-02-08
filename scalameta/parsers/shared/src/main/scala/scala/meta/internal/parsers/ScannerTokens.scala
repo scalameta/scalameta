@@ -386,28 +386,32 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
     @tailrec
     def mkOutdentsOpt(maxPointPos: Int, regions: List[SepRegion])(
-        f: PartialFunction[List[SepRegion], (Either[SepRegionIndented, Boolean], List[SepRegion])]
+        f: List[SepRegion] => OutdentInfo
     ): Either[List[SepRegion], TokenRef] = {
+      def setLastRef(ref: TokenRef, xs: List[SepRegion]): Unit =
+        if (currNonTrivial) ref.next = currRef(xs)
       @tailrec
       def mkOutdents(ref: TokenRef, xs: List[SepRegion]): Unit =
-        f.lift(xs) match {
-          case None =>
-          case Some((Left(r), rs)) =>
-            val tr = mkOutdentTo(r, maxPointPos, rs)
-            ref.next = tr
-            mkOutdents(tr, rs)
-          case Some((Right(skip), rs)) =>
-            if (skip && (rs ne xs)) mkOutdents(ref, rs)
-            else if (currNonTrivial) ref.next = currRef(rs)
+        f(xs) match {
+          case null => setLastRef(ref, xs)
+          case OutdentInfo(outdent, rs, done) =>
+            val tr = if (outdent ne null) {
+              ref.next = mkOutdentTo(outdent, maxPointPos, rs)
+              ref.next
+            } else ref
+            if (done || (rs eq xs)) setLastRef(tr, rs) else mkOutdents(tr, rs)
         }
-      f.lift(regions) match {
-        case None => Left(regions)
-        case Some((Left(r), rs)) =>
-          val res = mkOutdentTo(r, maxPointPos, rs)
-          mkOutdents(res, rs)
-          Right(res)
-        case Some((Right(skip), rs)) =>
-          if (skip && (rs ne regions)) mkOutdentsOpt(maxPointPos, rs)(f) else Left(rs)
+      f(regions) match {
+        case null => Left(regions)
+        case OutdentInfo(outdent, rs, done) =>
+          if (outdent eq null) {
+            if (done || (rs eq regions)) Left(rs)
+            else mkOutdentsOpt(maxPointPos, rs)(f)
+          } else {
+            val res = mkOutdentTo(outdent, maxPointPos, rs)
+            if (!done) mkOutdents(res, rs)
+            Right(res)
+          }
       }
     }
 
@@ -463,8 +467,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
     def getAtEof(sepRegions: List[SepRegion]) =
       mkOutdentsOpt(currPos, sepRegions) {
-        case (r: SepRegionIndented) :: rs => (Left(r), rs)
-        case _ :: rs => (Right(true), rs)
+        case (r: SepRegionIndented) :: rs => OutdentInfo(r, rs)
+        case _ :: rs => OutdentInfo(null, rs)
+        case _ => null
       }.fold(currRef(_), identity)
 
     def nonTrivial(sepRegions: List[SepRegion]) = curr match {
@@ -491,9 +496,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             iter(tokenRef)
           }
           mkOutdentsOpt(currPos, sepRegions) {
-            case (r: SepRegionIndented) :: rs => (Left(r), rs)
-            case (_: RegionNonDelimNonIndented) :: rs => (Right(true), rs)
-            case rs => (Right(false), rs)
+            case (r: SepRegionIndented) :: rs => OutdentInfo(r, rs)
+            case (_: RegionNonDelimNonIndented) :: rs => OutdentInfo(null, rs)
+            case _ => null
           } match {
             case Right(tokenRef) =>
               val (last, prev) = findLastAndPrevRef(tokenRef, null)
@@ -552,11 +557,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _: RightBrace =>
         // produce outdent for every indented region before RegionBrace|RegionEnum
         mkOutdentsOpt(currPos, sepRegions) {
-          case (r: SepRegionIndented) :: rs => (Left(r), rs)
+          case (r: SepRegionIndented) :: rs => OutdentInfo(r, rs)
           case (_: RegionBrace) :: (RegionTemplateBody | RegionCaseMark) :: rs =>
-            (Right(false), rs)
-          case (_: RegionBrace) :: rs => (Right(false), rs)
-          case _ :: rs => (Right(true), rs)
+            OutdentInfo(null, rs, true)
+          case (_: RegionBrace) :: rs => OutdentInfo(null, rs, true)
+          case _ :: rs => OutdentInfo(null, rs)
+          case _ => null
         }.fold(currRef(_), identity)
       case _: LeftBracket => currRef(RegionBracket :: sepRegions)
       case _: RightBracket =>
@@ -564,9 +570,10 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _: LeftParen => currRef(RegionParen :: sepRegions)
       case _: RightParen =>
         mkOutdentsOpt(currPos, sepRegions) {
-          case (r: SepRegionIndented) :: rs => (Left(r), rs)
-          case RegionParen :: rs => (Right(false), rs)
-          case _ :: rs => (Right(true), rs)
+          case (r: SepRegionIndented) :: rs => OutdentInfo(r, rs)
+          case RegionParen :: rs => OutdentInfo(null, rs, true)
+          case _ :: rs => OutdentInfo(null, rs)
+          case _ => null
         }.fold(currRef(_), identity)
       case _: RightArrow =>
         currRef(sepRegions match {
@@ -774,31 +781,32 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                     case _: KwFinally => nextIndent <= r.indent
                     case _ => nextIndent < r.indent || nextIndent == r.indent && rc.arrow.ne(prev)
                   }) =>
-                (Left(r), rs)
+                OutdentInfo(r, rs)
               case (r: RegionIndentTry) :: rs if (next match {
                     case _: KwCatch | _: KwFinally => nextIndent <= r.indent
                     case _ => nextIndent < r.indent
                   }) =>
-                (Left(r), rs)
+                OutdentInfo(r, rs)
               case (_: RegionNonDelimNonIndented) :: rs if (prev match {
                     // [then]  else  do  [catch]  finally  yield  [match]
                     case _: KwThen | _: KwCatch | _: KwMatch => false
                     case _ => rs.find(_.isIndented).exists(_.indent >= nextIndent)
                   }) =>
-                (Right(true), rs)
-              case regions @ (r: SepRegionIndented) :: _ if nextIndent >= r.indent =>
-                (Right(false), regions) // we stop here
+                OutdentInfo(null, rs)
+              case (r: SepRegionIndented) :: _ if nextIndent >= r.indent =>
+                null // we stop here
               case (r: RegionIndent) :: (rs @ (rc: RegionControl) :: xs) =>
-                (Left(r), if (rc.isNotTerminatingTokenIfOptional(next)) xs else rs)
+                OutdentInfo(r, if (rc.isNotTerminatingTokenIfOptional(next)) xs else rs)
               case (r: RegionIndent) :: RegionTemplateBody :: rs =>
-                (Left(r), rs)
+                OutdentInfo(r, rs)
               case (r: SepRegionIndented) :: rs if (prev match {
                     // then  [else]  [do]  catch  [finally]  [yield]  match
                     case _: KwElse | _: KwDo | _: KwFinally | _: KwYield => false
                     // exclude leading infix op
                     case _ => findIndent(rs) >= nextIndent || isLeadingInfix != LeadingInfix.Yes
                   }) =>
-                (Left(r), rs)
+                OutdentInfo(r, rs)
+              case _ => null
             }
 
           /**
@@ -983,6 +991,12 @@ object ScannerTokens {
   def apply(input: Input)(implicit dialect: Dialect): ScannerTokens = {
     new ScannerTokens(input.tokenize.get)
   }
+
+  private[parsers] case class OutdentInfo(
+      outdent: SepRegionIndented,
+      regions: List[SepRegion],
+      done: Boolean = false
+  )
 
   private[parsers] def multilineCommentIndent(t: Comment): Int = {
     val str: String = t.value
