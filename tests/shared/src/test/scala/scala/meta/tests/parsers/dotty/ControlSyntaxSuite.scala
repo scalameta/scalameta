@@ -2746,9 +2746,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val output =
       """|object a {
          |  constraint.contains(tl) || other.isRemovable(tl) || {
-         |    val tvars = tl.paramRefs.map(other.typeVarOfParam(_)).collect({
+         |    val tvars = tl.paramRefs.map(other.typeVarOfParam(_)).collect {
          |      case tv: TypeVar => tv
-         |    })
+         |    }
          |    if (this.isCommittable) tvars.foreach(tvar => if (!tvar.inst.exists && !isOwnedAnywhere(this, tvar)) includeVar(tvar))
          |    typeComparer.addToConstraint(tl, tvars)
          |  }
@@ -3042,9 +3042,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |}
          |""".stripMargin,
       assertLayout = Some(
-        """|val tvars = targs.filter(_.isInstanceOf[InferredTypeTree]).tpes.collect({
+        """|val tvars = targs.filter(_.isInstanceOf[InferredTypeTree]).tpes.collect {
            |  case tvar: TypeVar if !tvar.isInstantiated && ctx.typerState.ownedVars.contains(tvar) && !locked.contains(tvar) => tvar
-           |})
+           |}
            |""".stripMargin
       )
     )(
@@ -3290,12 +3290,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    }
          |""".stripMargin
     val output =
-      """|classDef.foreach({
+      """|classDef.foreach {
          |  case typeSymbol: Symbol =>
          |    if (typ) {}
          |    if (typeDef) if (typJava) {}
          |  case _ =>
-         |})
+         |}
          |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.Apply(
@@ -3691,9 +3691,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  }
          |""".stripMargin
     val layout =
-      """|for (x2 <- x1) yield x2.x3({
+      """|for (x2 <- x1) yield x2.x3 {
          |  case x4 if x5.x6.x7(x8) => x9
-         |})
+         |}
          |""".stripMargin
     runTestAssert[Stat](code, Some(layout))(
       Term.ForYield(
