@@ -1059,7 +1059,7 @@ object TreeSyntax {
     // Multiples and optionals
     private def printApplyArgs(args: Term.ArgClause, beforeBrace: String): Show.Result =
       args.values match {
-        case Seq(b: Term.Block) => s(beforeBrace, b)
+        case Seq(b @ (_: Term.Block | _: Term.PartialFunction)) => s(beforeBrace, b)
         case Seq(f: Term.Function) if f.paramClause.mod.isDefined =>
           s(beforeBrace, "{ ", f, " }")
         case _ => s(args)

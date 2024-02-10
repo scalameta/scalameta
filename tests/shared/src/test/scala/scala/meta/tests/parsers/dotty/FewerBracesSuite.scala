@@ -121,9 +121,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |    a
          |""".stripMargin,
       assertLayout = Some(
-        """|val firstLine = files.map({
+        """|val firstLine = files.map {
            |  case (a, b) => a
-           |})
+           |}
            |""".stripMargin
       )
     )(
@@ -161,10 +161,10 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(
         """|def main = {
-           |  val firstLine = files.map({
+           |  val firstLine = files.map {
            |    case A(a) => a
            |    case B(b) => b
-           |  })
+           |  }
            |  def hello = ???
            |}
            |""".stripMargin

@@ -1740,9 +1740,9 @@ class TermSuite extends ParseSuite {
          |  }
          |""".stripMargin
     val layout =
-      """|for (x2 <- x1) yield x2.x3({
+      """|for (x2 <- x1) yield x2.x3 {
          |  case x4 if x5.x6.x7(x8) => x9
-         |})
+         |}
          |""".stripMargin
     runTestAssert[Term](code, Some(layout))(
       Term.ForYield(
