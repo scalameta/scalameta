@@ -33,7 +33,7 @@ case object RegionBracket extends RegionDelimNonIndented
 case class RegionBrace(override val indent: Int) extends RegionDelimNonIndented with CanProduceLF
 
 case object RegionCaseMark extends RegionNonDelimNonIndented
-final class RegionCaseExpr(override val indent: Int) extends RegionNonDelimNonIndented
+final class RegionCaseExpr(override val indent: Int) extends SepRegionNonIndented
 final class RegionCaseBody(override val indent: Int, val arrow: Token)
     extends SepRegionNonIndented with CanProduceLF
 
@@ -181,4 +181,4 @@ case object RegionForOther extends RegionFor {
   def isTerminatingTokenRequired(): Boolean = true
 }
 
-final class RegionIndentTry(override val indent: Int) extends SepRegionIndented
+case object RegionTry extends SepRegionNonIndented with CanProduceLF
