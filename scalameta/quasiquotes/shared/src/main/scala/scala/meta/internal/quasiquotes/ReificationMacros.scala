@@ -398,7 +398,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     val valDefns = List(
       q"val $dialectName = $dialectTree",
       q"""
-        implicit val $dialectOnlyName: $OriginModule.DialectOnly =
+        @annotation.nowarn implicit val $dialectOnlyName: $OriginModule.DialectOnly =
           new $OriginModule.DialectOnly($dialectName)
       """,
       if (sourceName eq null) null
