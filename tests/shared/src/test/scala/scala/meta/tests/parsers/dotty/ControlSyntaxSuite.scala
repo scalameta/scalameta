@@ -625,11 +625,17 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  finally iter.close()
          |finally arena.close()
          |""".stripMargin
-    val error =
-      """|<input>:4: error: ; expected but finally found
-         |finally arena.close()
-         |^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "try try Right(f()) finally iter.close() finally arena.close()"
+    val tree = Term.Try(
+      Term.Try(
+        Term.Apply(tname("Right"), List(Term.Apply(tname("f"), Nil))),
+        Nil,
+        Some(Term.Apply(Term.Select(tname("iter"), tname("close")), Nil))
+      ),
+      Nil,
+      Some(Term.Apply(Term.Select(tname("arena"), tname("close")), Nil))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3532 nested try-finally, oneline catch") {
@@ -640,11 +646,26 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  finally iter.close()
          |finally arena.close()
          |""".stripMargin
-    val error =
-      """|<input>:5: error: ; expected but finally found
-         |finally arena.close()
-         |^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|try try Right(f()) catch {
+         |  case NonFatal(ex) =>
+         |    Left(???)
+         |} finally iter.close() finally arena.close()
+         |""".stripMargin
+    val tree = Term.Try(
+      Term.Try(
+        Term.Apply(tname("Right"), List(Term.Apply(tname("f"), Nil))),
+        Case(
+          Pat.Extract(tname("NonFatal"), List(Pat.Var(tname("ex")))),
+          None,
+          Term.Apply(tname("Left"), List(tname("???")))
+        ) :: Nil,
+        Some(Term.Apply(Term.Select(tname("iter"), tname("close")), Nil))
+      ),
+      Nil,
+      Some(Term.Apply(Term.Select(tname("arena"), tname("close")), Nil))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3532 nested try-finally, catch with non-indented case") {
@@ -656,11 +677,26 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  finally iter.close()
          |finally arena.close()
          |""".stripMargin
-    val error =
-      """|<input>:6: error: ; expected but finally found
-         |finally arena.close()
-         |^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|try try Right(f()) catch {
+         |  case NonFatal(ex) =>
+         |    Left(???)
+         |} finally iter.close() finally arena.close()
+         |""".stripMargin
+    val tree = Term.Try(
+      Term.Try(
+        Term.Apply(tname("Right"), List(Term.Apply(tname("f"), Nil))),
+        Case(
+          Pat.Extract(tname("NonFatal"), List(Pat.Var(tname("ex")))),
+          None,
+          Term.Apply(tname("Left"), List(tname("???")))
+        ) :: Nil,
+        Some(Term.Apply(Term.Select(tname("iter"), tname("close")), Nil))
+      ),
+      Nil,
+      Some(Term.Apply(Term.Select(tname("arena"), tname("close")), Nil))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3532 nested try-finally, catch with indented case") {
@@ -672,11 +708,26 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  finally iter.close()
          |finally arena.close()
          |""".stripMargin
-    val error =
-      """|<input>:6: error: ; expected but finally found
-         |finally arena.close()
-         |^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|try try Right(f()) catch {
+         |  case NonFatal(ex) =>
+         |    Left(???)
+         |} finally iter.close() finally arena.close()
+         |""".stripMargin
+    val tree = Term.Try(
+      Term.Try(
+        Term.Apply(tname("Right"), List(Term.Apply(tname("f"), Nil))),
+        Case(
+          Pat.Extract(tname("NonFatal"), List(Pat.Var(tname("ex")))),
+          None,
+          Term.Apply(tname("Left"), List(tname("???")))
+        ) :: Nil,
+        Some(Term.Apply(Term.Select(tname("iter"), tname("close")), Nil))
+      ),
+      Nil,
+      Some(Term.Apply(Term.Select(tname("arena"), tname("close")), Nil))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3532 nested try, inner with catch, outer with finally") {
@@ -689,23 +740,23 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|try (
-         |  try Right(f())
-         |) catch {
-         |  case NonFatal(ex) =>
-         |    Left(???)
-         |} finally arena.close()
+         |  try Right(f()) catch {
+         |    case NonFatal(ex) =>
+         |      Left(???)
+         |  }
+         |) finally arena.close()
          |""".stripMargin
     val tree = Term.Try(
       Term.Try(
         Term.Apply(tname("Right"), List(Term.Apply(tname("f"), Nil))),
-        Nil,
+        Case(
+          Pat.Extract(tname("NonFatal"), List(Pat.Var(tname("ex")))),
+          None,
+          Term.Apply(tname("Left"), List(tname("???")))
+        ) :: Nil,
         None
       ),
-      Case(
-        Pat.Extract(tname("NonFatal"), List(Pat.Var(tname("ex")))),
-        None,
-        Term.Apply(tname("Left"), List(tname("???")))
-      ) :: Nil,
+      Nil,
       Some(Term.Apply(Term.Select(tname("arena"), tname("close")), Nil))
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -719,11 +770,26 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  finally iter.close()
          |finally arena.close()
          |""".stripMargin
-    val error =
-      """|<input>:5: error: ; expected but finally found
-         |finally arena.close()
-         |^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|try try {
+         |  1 + 2
+         |} + 3 finally iter.close() finally arena.close()
+         |""".stripMargin
+    val tree = Term.Try(
+      Term.Try(
+        Term.ApplyInfix(
+          Term.Block(List(Term.ApplyInfix(int(1), tname("+"), Nil, List(int(2))))),
+          tname("+"),
+          Nil,
+          List(int(3))
+        ),
+        Nil,
+        Some(Term.Apply(Term.Select(tname("iter"), tname("close")), Nil))
+      ),
+      Nil,
+      Some(Term.Apply(Term.Select(tname("arena"), tname("close")), Nil))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3532 nested try-finally, try with multiline non-indented expr 2") {
@@ -734,11 +800,24 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  finally iter.close()
          |finally arena.close()
          |""".stripMargin
-    val error =
-      """|<input>:5: error: ; expected but finally found
-         |finally arena.close()
-         |^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|try try {
+         |  1 + 2
+         |}.foo finally iter.close() finally arena.close()
+         |""".stripMargin
+    val tree = Term.Try(
+      Term.Try(
+        Term.Select(
+          Term.Block(Term.ApplyInfix(int(1), tname("+"), Nil, List(int(2))) :: Nil),
+          tname("foo")
+        ),
+        Nil,
+        Some(Term.Apply(Term.Select(tname("iter"), tname("close")), Nil))
+      ),
+      Nil,
+      Some(Term.Apply(Term.Select(tname("arena"), tname("close")), Nil))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3532 nested try-finally, try with multiline non-indented expr 3") {
