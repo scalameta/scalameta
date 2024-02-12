@@ -688,7 +688,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |finally arena.close()
          |""".stripMargin
     val layout =
-      """|try try Right(f()) catch {
+      """|try (
+         |  try Right(f())
+         |) catch {
          |  case NonFatal(ex) =>
          |    Left(???)
          |} finally arena.close()
@@ -706,7 +708,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
       ) :: Nil,
       Some(Term.Apply(Term.Select(tname("arena"), tname("close")), Nil))
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3532 nested try-finally, try with multiline non-indented expr 1") {
@@ -761,13 +763,17 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    + 2
          |finally foo
          |""".stripMargin
-    val layout = "try try 1 + 2 finally foo"
+    val layout =
+      """|try (
+         |  try 1 + 2
+         |) finally foo
+         |""".stripMargin
     val tree = Term.Try(
       Term.Try(Term.ApplyInfix(int(1), tname("+"), Nil, List(int(2))), Nil, None),
       Nil,
       Some(tname("foo"))
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3532 nested bare try, outer with catch") {
@@ -780,7 +786,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |finally foo
          |""".stripMargin
     val layout =
-      """|try try 1 + 2 catch {
+      """|try (
+         |  try 1 + 2
+         |) catch {
          |  case NonFatal(ex) => 3
          |} finally foo
          |""".stripMargin
@@ -789,7 +797,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
       List(Case(Pat.Extract(tname("NonFatal"), List(Pat.Var(tname("ex")))), None, int(3))),
       Some(tname("foo"))
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   // --------------------------

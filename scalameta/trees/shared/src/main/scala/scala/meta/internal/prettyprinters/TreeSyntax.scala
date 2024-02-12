@@ -470,12 +470,19 @@ object TreeSyntax {
           )
         )
       case t: Term.Try =>
+        val showExpr = p(Expr, t.expr)
+        val needParensAroundExpr = t.expr match {
+          case e: Term.Try if e.finallyp.isEmpty =>
+            if (e.catchp.isEmpty) t.catchp.nonEmpty || t.finallyp.isDefined
+            else t.catchp.isEmpty && t.finallyp.isDefined
+          case _ => false
+        }
         m(
           Expr1,
           s(
             kw("try"),
             " ",
-            p(Expr, t.expr),
+            if (needParensAroundExpr) s("(", i(showExpr), n(")")) else showExpr,
             if (t.catchp.nonEmpty) s(" ", kw("catch"), " {", t.catchp, n("}"))
             else s(""),
             t.finallyp
