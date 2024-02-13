@@ -358,11 +358,11 @@ object TreeSyntax {
       case t: Term.Name =>
         m(Path, w("`", t.value, "`", guessIsBackquoted(t)))
       case t: Term.Select =>
-        t.qual match {
-          case Term.New(Init(_, _, Nil)) =>
-            m(Path, s("(", t.qual, ")", if (guessIsPostfix(t)) " " else ".", t.name))
-          case _ => m(Path, s(p(SimpleExpr, t.qual), if (guessIsPostfix(t)) " " else ".", t.name))
+        val qualExpr = t.qual match {
+          case q: Term.New if q.init.argClauses.isEmpty => w("(", q, ")")
+          case q => p(SimpleExpr, q)
         }
+        m(Path, s(qualExpr, if (guessIsPostfix(t)) " " else ".", t.name))
       case t: Term.Interpolate =>
         /** @see LegacyScanner.getStringPart, when ch == '$' */
         def needBraces(id: String, nextPart: String): Boolean =
@@ -388,7 +388,7 @@ object TreeSyntax {
       case t: Term.Apply =>
         m(SimpleExpr1, s(p(SimpleExpr1, t.fun), printApplyArgs(t.argClause, " ")))
       case t: Term.ApplyUsing =>
-        val args = s("(", kw("using"), " ", r(t.args, ", "), ")")
+        val args = s("(", kw("using"), " ", r(t.argClause.values, ", "), ")")
         m(SimpleExpr1, s(p(SimpleExpr1, t.fun), args))
       case t: Term.ApplyType => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targClause))
       case t: Term.ApplyInfix =>
@@ -428,14 +428,17 @@ object TreeSyntax {
         }
         t match {
           case Block(
-                Function(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, Block(stats)) :: Nil
+                Function.Initial(
+                  Term.Param(mods, name: Term.Name, tptopt, _) :: Nil,
+                  Block(stats)
+                ) :: Nil
               ) if mods.exists(_.is[Mod.Implicit]) =>
             block(s("implicit ", name, o(": ", tptopt), " =>"), stats)
           case Block(
-                Function(Term.Param(_, name: Name, None, _) :: Nil, Block(stats)) :: Nil
+                Function.Initial(Term.Param(_, name: Name, None, _) :: Nil, Block(stats)) :: Nil
               ) =>
             block(s(name, " =>"), stats)
-          case Block(Function(params, Block(stats)) :: Nil) =>
+          case Block(Function.Initial(params, Block(stats)) :: Nil) =>
             block(s("(", r(params, ", "), ") =>"), stats)
           case _ => block(s(), t.stats)
         }
@@ -1040,8 +1043,8 @@ object TreeSyntax {
             case _ => false
           }
           t.parent match {
-            case Some(Term.Match(_, cases)) => cases.forall(isOneLiner)
-            case Some(Term.PartialFunction(cases)) => cases.forall(isOneLiner)
+            case Some(p: Term.Match) => p.cases.forall(isOneLiner)
+            case Some(p: Term.PartialFunction) => p.cases.forall(isOneLiner)
             case _ => isOneLiner(t)
           }
         }

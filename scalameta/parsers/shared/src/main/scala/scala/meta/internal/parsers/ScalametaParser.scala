@@ -1555,7 +1555,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         accept[LeftBrace]
         inBracesAfterOpen(caseClauses())
       }
-    autoEndPos(startPos)(Term.Match(t, cases))
+    autoEndPos(startPos)(Term.Match(t, cases, Nil))
   }
 
   def ifClause(mods: List[Mod] = Nil) = autoEndPos(mods) {
@@ -1836,8 +1836,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           case _ => None
         }
       case t: Term.ApplyInfix =>
-        t.args match {
-          case (n: Name) :: Nil if t.targs.isEmpty =>
+        t.argClause.values match {
+          case (n: Name) :: Nil if t.targClause.values.isEmpty =>
             val mOpt = for {
               m1 <- getModFromName(t.op)
               m2 <- getModFromName(n)
@@ -1855,8 +1855,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case t: Quasi => Some((t.become[Term.Name], Nil))
       case t: Term.Select => getMod(t.qual).map((t.name, _))
       case t: Term.ApplyInfix =>
-        t.args match {
-          case arg :: Nil if t.targs.isEmpty =>
+        t.argClause.values match {
+          case arg :: Nil if t.targClause.values.isEmpty =>
             for {
               mod <- getModFromName(t.op)
               name <- arg match {
@@ -2280,7 +2280,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           Success(autoPos {
             next()
             template(OwnedByTrait) match {
-              case Template(Nil, init :: Nil, Self(_: Name.Anonymous, None), Nil)
+              case Template.Initial(Nil, init :: Nil, Self(_: Name.Anonymous, None), Nil)
                   if !prevToken.is[RightBrace] =>
                 Term.New(init)
               case other =>
@@ -3798,7 +3798,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val rhs = if (slf.decltpe.nonEmpty) {
         syntaxError("given cannot have a self type", at = slf.pos)
       } else {
-        autoEndPos(decltype)(Template(List.empty, inits, slf, stats))
+        autoEndPos(decltype)(Template(Nil, inits, slf, stats, Nil))
       }
       Defn.Given(mods, sigName, paramClauseGroup, rhs)
     } else {
@@ -4382,7 +4382,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val parents = templateParents(afterExtend)
         templateAfterExtends(owner, parents, edefs)
       } else {
-        Template(Nil, Nil, self, body)
+        Template(Nil, Nil, self, body, Nil)
       }
     } else {
       val parents = if (token.is[Colon]) Nil else templateParents(afterExtend)
