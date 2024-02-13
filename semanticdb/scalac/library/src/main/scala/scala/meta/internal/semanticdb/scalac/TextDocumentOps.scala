@@ -149,7 +149,7 @@ trait TextDocumentOps { self: SemanticdbOps =>
                   case m.Decl.Val(_, pat :: Nil, _) => findBinder(pat)
                   case m.Decl.Var(_, pat :: Nil, _) => findBinder(pat)
                   case m.Defn.Val(_, pat :: Nil, _, _) => findBinder(pat)
-                  case m.Defn.Var(_, pat :: Nil, _, _) => findBinder(pat)
+                  case m.Defn.Var.Initial(_, pat :: Nil, _, _) => findBinder(pat)
                 }
                 if (mwithins.contains(menclName)) {
                   val details = syntaxAndPos(mname) + " " + syntaxAndPos(mwithins(menclName))
