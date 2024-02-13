@@ -556,6 +556,10 @@ lazy val sharedSettings = Def.settings(
     if (isScala213.value) List("-Ymacro-annotations")
     else Nil
   },
+  scalacOptions ++= {
+    if (isScala213.value) List("-Xfatal-warnings", "-Wconf:cat=deprecation:is")
+    else Nil
+  },
   scalacOptions ++= Seq("-feature", "-unchecked"),
   Compile / doc / scalacOptions ++= Seq("-skip-packages", ""),
   Compile / doc / scalacOptions ++= Seq("-implicits", "-implicits-hide:."),
