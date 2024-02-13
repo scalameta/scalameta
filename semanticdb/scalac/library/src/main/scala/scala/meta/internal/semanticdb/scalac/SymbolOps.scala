@@ -126,7 +126,7 @@ trait SymbolOps { self: SemanticdbOps =>
                 if (sym.isJavaDefined) {
                   sym.companionModule.info.decls.filter(_.isUseful).foreach(gbuf.+=)
                 }
-                SemanticdbDecls(gbuf.result)
+                SemanticdbDecls(gbuf.result())
               case _ =>
                 SemanticdbDecls(Nil)
             }
@@ -173,7 +173,7 @@ trait SymbolOps { self: SemanticdbOps =>
               }
             }
           }
-          s.Scope(symlinks = sbuf.result)
+          s.Scope(symlinks = sbuf.result())
         case HardlinkChildren =>
           val sbuf = List.newBuilder[s.SymbolInformation]
           gsyms.foreach { gsym =>
@@ -183,7 +183,7 @@ trait SymbolOps { self: SemanticdbOps =>
               Synthetics.setterInfos(sinfo, HardlinkChildren).foreach(sbuf.+=)
             }
           }
-          s.Scope(hardlinks = sbuf.result)
+          s.Scope(hardlinks = sbuf.result())
       }
     }
   }
