@@ -4,7 +4,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
 import scala.collection.{GenIterable, GenTraversableOnce, mutable}
-import scala.collection.JavaConverters._
+import org.scalameta.collections._
 import scala.meta._
 import scala.util.control.NonFatal
 
@@ -57,7 +57,7 @@ object SyntaxAnalysis {
       }
     }
     corpus.foreach(analyze)
-    results.asScala
+    results.toScalaBuffer
   }
 
   def onParsed[A](

@@ -1,7 +1,7 @@
 package scala.meta.internal.javacp
 
+import org.scalameta.collections._
 import org.scalameta.internal.ScalaCompat._
-import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.meta.internal.classpath.ClasspathIndex
@@ -62,7 +62,7 @@ object Javacp {
     val classSymbol = ssym(node.name)
     val classDisplayName = sdisplayName(node.name)
     val classAccess = node.access | access
-    val hasOuterClassReference = node.fields.asScala.exists(isOuterClassReference)
+    val hasOuterClassReference = node.fields.toScala.exists(isOuterClassReference)
     val isEnum = node.access.hasFlag(o.ACC_ENUM)
 
     val classKind =
@@ -77,7 +77,7 @@ object Javacp {
         // when assigning classParents below.
         ClassSignature.simple("impossible", Nil)
       } else if (node.signature == null) {
-        ClassSignature.simple(node.superName, node.interfaces.asScala.toList)
+        ClassSignature.simple(node.superName, node.interfaces.toScala.toList)
       } else {
         JavaTypeSignature.parse(node.signature, new ClassSignatureVisitor)
       }
@@ -93,7 +93,7 @@ object Javacp {
       if (isJavaLangObject) Nil
       else classSignature.parents.map(_.toSemanticTpe(classScope))
 
-    node.fields.asScala
+    node.fields.toScala
       .filterNot(_.access.hasFlag(o.ACC_SYNTHETIC))
       .foreach { field: FieldNode =>
         if (isOuterClassReference(field)) {
@@ -118,7 +118,7 @@ object Javacp {
         }
       }
 
-    val methodSignatures = node.methods.asScala
+    val methodSignatures = node.methods.toScala
       .filterNot(_.access.hasFlag(o.ACC_SYNTHETIC))
       .map { method: MethodNode =>
         val signature = JavaTypeSignature.parse(
@@ -248,7 +248,7 @@ object Javacp {
     }
 
     // node.innerClasses includes all inner classes, both direct and those nested inside other inner classes.
-    val directInnerClasses = node.innerClasses.asScala.filter(_.outerName == node.name)
+    val directInnerClasses = node.innerClasses.toScala.filter(_.outerName == node.name)
     directInnerClasses.foreach { ic =>
       val innerClassSymbol = ssym(ic.name)
       decls += innerClassSymbol
@@ -286,7 +286,7 @@ object Javacp {
   // ClassNode.innerClasses includes all inner classes of a compilation unit, both nested inner classes as well
   // as enclosing outer classes. Anonymous classes are distinguished by InnerClassNode.innerName == null.
   private def isAnonymousClass(node: ClassNode): Boolean = {
-    node.innerClasses.asScala.exists { ic: InnerClassNode =>
+    node.innerClasses.toScala.exists { ic: InnerClassNode =>
       ic.name == node.name &&
       ic.innerName == null
     }

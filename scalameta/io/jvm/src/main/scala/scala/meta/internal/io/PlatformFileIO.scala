@@ -54,16 +54,16 @@ object PlatformFileIO {
     Files.isDirectory(path.toNIO)
 
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
-    import scala.collection.JavaConverters._
+    import org.scalameta.collections._
     val relativeFiles = Files
       .walk(root.toNIO)
       .collect(Collectors.toList[Path])
-      .asScala
+      .toScala
       .collect {
         case path if Files.isRegularFile(path) =>
           RelativePath(root.toNIO.relativize(path))
       }
-    new ListFiles(root, relativeFiles.toList)
+    ListFiles(root, relativeFiles)
   }
 
   def jarRootPath(jarFile: AbsolutePath, create: Boolean = false): AbsolutePath = {
