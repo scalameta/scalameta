@@ -1,6 +1,6 @@
 package scala.meta.internal
 
-import scala.compat.Platform.EOL
+import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta.inputs._
 import scala.meta.internal.{semanticdb => s}
 

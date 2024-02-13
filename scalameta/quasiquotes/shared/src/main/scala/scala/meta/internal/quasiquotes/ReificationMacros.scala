@@ -3,13 +3,13 @@ package internal
 package quasiquotes
 
 import scala.collection.mutable
-import scala.compat.Platform.EOL
 import scala.language.implicitConversions
 import scala.reflect.macros.whitebox.Context
 import scala.runtime.ScalaRunTime
 
 import org.scalameta._
 import org.scalameta.adt.{Liftables => AdtLiftables}
+import org.scalameta.internal.ScalaCompat.EOL
 import org.scalameta.invariants._
 
 import scala.annotation.tailrec

@@ -2,7 +2,7 @@ package scala.meta
 package internal
 package parsers
 
-import scala.compat.Platform.EOL
+import org.scalameta.internal.ScalaCompat.EOL
 
 object Messages {
   def QuasiquoteRankMismatch(found: Int, required: Int, hint: String = ""): String = {

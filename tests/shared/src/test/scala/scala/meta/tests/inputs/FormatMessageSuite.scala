@@ -2,7 +2,7 @@ package scala.meta.tests
 package inputs
 
 import munit._
-import scala.compat.Platform.EOL
+import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta._
 import scala.meta.internal.inputs._
 

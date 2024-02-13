@@ -11,10 +11,9 @@ import scala.meta.tokens.Token
 import scala.meta.trees.Origin
 
 import org.scalameta.adt._
+import org.scalameta.internal.ScalaCompat.EOL
 import org.scalameta.invariants._
 import org.scalameta.unreachable
-
-import scala.compat.Platform.EOL
 
 import Show.{
   function => fn,

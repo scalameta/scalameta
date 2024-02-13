@@ -2,7 +2,7 @@ package scala.meta.tests.transversers
 
 import munit._
 
-import scala.compat.Platform.EOL
+import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta._
 
 class TransformerSuite extends FunSuite {

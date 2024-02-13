@@ -4,8 +4,9 @@ package prettyprinters
 
 import scala.meta.prettyprinters._
 import Show.{sequence => _, _}
-import scala.compat.Platform.EOL
 import scala.annotation.implicitNotFound
+
+import org.scalameta.internal.ScalaCompat.EOL
 
 @implicitNotFound(msg = "don't know how to show[Summary] for ${T}")
 trait Summary[T] extends Show[T]

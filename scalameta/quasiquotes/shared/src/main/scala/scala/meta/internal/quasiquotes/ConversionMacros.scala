@@ -2,7 +2,6 @@ package scala.meta
 package internal
 package quasiquotes
 
-import scala.compat.Platform.EOL
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import scala.meta.internal.trees.{Reflection => AstReflection}

@@ -7,7 +7,7 @@ import scala.reflect.io._
 import scala.meta.internal.semanticdb.scalac.CommandLineParser
 import scala.tools.nsc.{CompilerCommand, Global, Settings}
 import scala.tools.nsc.reporters.StoreReporter
-import scala.compat.Platform.EOL
+import org.scalameta.internal.ScalaCompat.EOL
 import scala.{meta => m}
 import scala.meta.internal.inputs._
 import scala.meta.internal.semanticdb.scalac._

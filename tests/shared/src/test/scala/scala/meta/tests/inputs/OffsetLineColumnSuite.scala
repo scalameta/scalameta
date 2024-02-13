@@ -2,7 +2,6 @@ package scala.meta.tests
 package inputs
 
 import munit._
-import scala.compat.Platform.EOL
 import scala.meta._
 
 class OffsetLineColumnSuite extends FunSuite {
