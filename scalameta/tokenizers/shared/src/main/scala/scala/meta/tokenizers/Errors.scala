@@ -5,7 +5,6 @@ import org.scalameta.adt._
 import org.scalameta.data._
 import scala.meta.tokens._
 import scala.meta.inputs._
-import scala.meta.internal.inputs._
 
 @root trait Tokenized {
 

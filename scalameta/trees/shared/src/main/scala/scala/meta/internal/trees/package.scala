@@ -3,11 +3,9 @@ package internal
 
 import java.lang.{Character => JCharacter}
 import scala.reflect.ClassTag
-import org.scalameta.invariants._
 
 import scala.annotation.{switch, tailrec}
 import scala.meta.classifiers._
-import scala.meta.internal.trees.Metadata.Ast
 
 package object trees {
 

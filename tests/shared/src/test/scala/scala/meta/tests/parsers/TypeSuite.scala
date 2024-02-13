@@ -2,7 +2,7 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
-import Term.{Super, Name => TermName}
+import Term.{Name => TermName}
 import Type.{Name => TypeName, _}
 import Name.Anonymous
 import scala.meta.parsers.ParseException

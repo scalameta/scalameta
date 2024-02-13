@@ -1,8 +1,6 @@
 package scala.meta.tests.parsers.dotty
 
-import scala.meta.tests.parsers._
 import scala.meta._
-import scala.meta.internal.tokenizers.ScalametaTokenizer
 
 class ControlSyntaxSuite extends BaseDottySuite {
 

@@ -86,7 +86,6 @@ object StringFS {
       includePath: RelativePath => Boolean = _ => true,
       charset: Charset = StandardCharsets.UTF_8
   ): String = {
-    import scala.collection.JavaConverters._
     FileIO
       .listAllFilesRecursively(root)
       .files

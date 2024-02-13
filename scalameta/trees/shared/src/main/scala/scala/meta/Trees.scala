@@ -2,8 +2,6 @@ package scala.meta
 
 import org.scalameta.invariants._
 import scala.meta.classifiers._
-import scala.meta.inputs._
-import scala.meta.tokens._
 import scala.meta.trees._
 import scala.meta.prettyprinters._
 import scala.meta.internal.trees._

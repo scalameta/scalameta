@@ -5,8 +5,6 @@ package prettyprinters
 import scala.meta.prettyprinters._
 import Show.{repeat => r, sequence => s}
 import scala.annotation.tailrec
-import scala.meta.tokens.Token
-import scala.meta.tokens.Token._
 import scala.meta.internal.trees.Quasi
 
 object TreeStructure {

@@ -2,7 +2,6 @@ package scala.meta
 package internal
 package tokenizers
 
-import scala.collection.mutable
 import org.scalameta._
 import org.scalameta.invariants._
 import LegacyToken._

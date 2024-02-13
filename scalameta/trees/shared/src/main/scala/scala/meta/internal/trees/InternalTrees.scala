@@ -6,7 +6,6 @@ import scala.collection.mutable
 import scala.meta.inputs._
 import scala.meta.internal.tokenizers.Compat
 import scala.meta.internal.prettyprinters.TreeSyntax
-import scala.meta.prettyprinters._
 import scala.meta.tokenizers._
 import scala.meta.tokens._
 import scala.meta.tokens.Token._

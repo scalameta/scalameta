@@ -1,12 +1,10 @@
 package scala.meta.tests.parsers
 
-import munit.FunSuite
 import munit.TestOptions
 import munit.Location
 import scala.meta.Dialect
 import scala.meta.internal.inputs._
 import scala.meta.parsers.Parse
-import scala.meta.tests.parsers.MoreHelpers
 
 abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
   import scala.meta._

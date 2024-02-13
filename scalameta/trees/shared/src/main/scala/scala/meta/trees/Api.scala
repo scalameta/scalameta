@@ -1,7 +1,6 @@
 package scala.meta
 package trees
 
-import scala.collection.mutable
 import scala.language.implicitConversions
 
 private[meta] trait ApiLowPriority {

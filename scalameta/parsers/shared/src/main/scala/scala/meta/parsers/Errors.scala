@@ -4,7 +4,6 @@ package parsers
 import org.scalameta.adt._
 import org.scalameta.data._
 import scala.meta.inputs._
-import scala.meta.internal.inputs._
 
 trait Parsed[+T] extends Product with Serializable with Metadata.Adt with Equals {
 
