@@ -206,7 +206,7 @@ sealed abstract class SymbolMode {
 }
 object SymbolMode {
   def unapply(arg: String): Option[SymbolMode] = {
-    val query = arg.replaceAllLiterally("-", "")
+    val query = arg.replace("-", "")
     all.find(_.toString.equalsIgnoreCase(query))
   }
   def all = List(All, LocalOnly, None)

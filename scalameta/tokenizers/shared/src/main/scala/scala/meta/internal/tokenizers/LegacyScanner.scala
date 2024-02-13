@@ -938,7 +938,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       case x: Parsed.Success[_] => x.index
       case x: Parsed.Failure =>
         syntaxError(
-          s"malformed xml literal, expected:\n${x.extra.traced.terminalsMsg}",
+          s"malformed xml literal, expected:\n${x.extra.trace().terminalsMsg}",
           at = x.index
         )
     }

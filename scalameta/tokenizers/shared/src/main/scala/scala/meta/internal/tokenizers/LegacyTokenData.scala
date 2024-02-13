@@ -78,7 +78,7 @@ trait LegacyTokenData {
   }
 
   @inline private def removeNumberSeparators(s: String): String =
-    if (s.indexOf('_') > 0) s.replaceAllLiterally("_", "") else s
+    s.replace("_", "")
 
   /**
    * Convert current strVal, base to double value
