@@ -250,7 +250,6 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     }
 
     val useParsedSource = mode.holes.isEmpty // otherwise, syntax will not make much sense
-    val dialectName = TermName(c.freshName("dialect"))
     val sourceName = if (useParsedSource) TermName(c.freshName("parsedSource")) else null
     val dialectOnlyName = TermName(c.freshName("dialectOnly"))
     object Lifts {
@@ -398,15 +397,13 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         Liftable((x: T) => Lifts.liftOrigin(x))
     }
     val valDefns = List(
-      q"val $dialectName = $dialectTree",
       if (sourceName eq null) q"""
-        implicit val $dialectOnlyName: $OriginModule.DialectOnly =
-          new $OriginModule.DialectOnly($dialectName)
+        val $dialectOnlyName = implicitly[$OriginModule.DialectOnly]
       """
       else q"""
         val $sourceName = new $OriginModule.ParsedSource(
           _root_.scala.meta.inputs.Input.String(${input.text.replace("$$", "$")})
-        )($dialectName)
+        )
       """
     ).filter(_ ne null)
     mode match {
