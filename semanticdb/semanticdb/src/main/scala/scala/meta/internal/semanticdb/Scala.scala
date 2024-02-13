@@ -94,7 +94,7 @@ object Scala {
         }
       }
       loop(symbol)
-      buf.result
+      buf.result()
     }
     def owner: String = {
       if (isGlobal) {

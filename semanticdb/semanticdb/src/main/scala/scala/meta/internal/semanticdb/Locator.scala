@@ -39,7 +39,7 @@ object Locator {
               buf += jarEntry
             }
           }
-          val jarEntries = buf.result.sortBy(_.getName.toLowerCase)
+          val jarEntries = buf.result().sortBy(_.getName.toLowerCase)
           jarEntries.foreach { jarEntry =>
             val path = Paths.get(jarEntry.getName)
             val stream = jar.getInputStream(jarEntry)

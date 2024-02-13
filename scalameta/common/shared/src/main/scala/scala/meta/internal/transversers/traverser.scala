@@ -32,14 +32,14 @@ class TraverserMacros(val c: Context) extends TransverserMacros {
       def apply(trees: $ListClass[$TreeClass]): $UnitClass = {
         val it = trees.iterator
         while (it.hasNext) {
-          apply(it.next)
+          apply(it.next())
         }
       }
 
       def apply(trees: $SeqClass[$TreeClass]): $UnitClass = {
         val it = trees.iterator
         while (it.hasNext) {
-          apply(it.next)
+          apply(it.next())
         }
       }
 
@@ -57,14 +57,14 @@ class TraverserMacros(val c: Context) extends TransverserMacros {
       def apply(treess: $ListClass[$ListClass[$TreeClass]])(implicit hack: $Hack2Class): $UnitClass = {
         val it = treess.iterator
         while (it.hasNext) {
-          apply(it.next)
+          apply(it.next())
         }
       }
 
       def apply(treess: $SeqClass[$SeqClass[$TreeClass]])(implicit hack: $Hack4Class): $UnitClass = {
         val it = treess.iterator
         while (it.hasNext) {
-          apply(it.next)
+          apply(it.next())
         }
       }
     """

@@ -47,7 +47,7 @@ object Libraries {
     //     ModuleID.scalaReflect("2.12.6")
     //   )
     // )
-    buf.result
+    buf.result()
   }
 }
 

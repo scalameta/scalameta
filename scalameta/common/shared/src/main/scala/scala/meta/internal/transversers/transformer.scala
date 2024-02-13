@@ -57,7 +57,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           val tolist = $ListModule.newBuilder[$elemTpe]
           val it = $fromlist.iterator
           while (it.hasNext) {
-            val $from = it.next
+            val $from = it.next()
             val $to = ${nested(q"$from", elemTpe)}
             if ($from ne $to) samelist = false
             tolist += $to
@@ -120,7 +120,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
         val buf = $ListModule.newBuilder[$TreeClass]
         val it = trees.iterator
         while (it.hasNext) {
-          val tree = it.next
+          val tree = it.next()
           val tree1 = apply(tree)
           if (tree ne tree1) same = false
           buf += tree1
@@ -134,7 +134,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
         val buf = $SeqModule.newBuilder[$TreeClass]
         val it = trees.iterator
         while (it.hasNext) {
-          val tree = it.next
+          val tree = it.next()
           val tree1 = apply(tree)
           if (tree ne tree1) same = false
           buf += tree1
@@ -167,7 +167,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
         val buf = $ListModule.newBuilder[$ListClass[$TreeClass]]
         val it = treess.iterator
         while (it.hasNext) {
-          val trees = it.next
+          val trees = it.next()
           val trees1 = apply(trees)
           if (trees ne trees1) same = false
           buf += trees1
@@ -181,7 +181,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
         val buf = $SeqModule.newBuilder[$SeqClass[$TreeClass]]
         val it = treess.iterator
         while (it.hasNext) {
-          val trees = it.next
+          val trees = it.next()
           val trees1 = apply(trees)
           if (trees ne trees1) same = false
           buf += trees1

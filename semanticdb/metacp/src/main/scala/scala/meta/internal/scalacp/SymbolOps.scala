@@ -164,7 +164,7 @@ trait SymbolOps { _: Scalacp =>
               sbuf += setterSym
             }
           }
-          s.Scope(sbuf.result)
+          s.Scope(sbuf.result())
         case HardlinkChildren =>
           val sbuf = List.newBuilder[s.SymbolInformation]
           syms.foreach { sym =>
@@ -178,7 +178,7 @@ trait SymbolOps { _: Scalacp =>
               Synthetics.setterInfos(sinfo, HardlinkChildren).foreach(sbuf.+=)
             }
           }
-          s.Scope(hardlinks = sbuf.result)
+          s.Scope(hardlinks = sbuf.result())
       }
     }
   }
