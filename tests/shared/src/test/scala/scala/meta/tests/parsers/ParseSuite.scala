@@ -10,7 +10,7 @@ import MoreHelpers._
 import org.scalameta.logger
 
 class ParseSuite extends TreeSuiteBase with CommonTrees {
-  val EOL = scala.compat.Platform.EOL
+  val EOL = org.scalameta.internal.ScalaCompat.EOL
   val escapedEOL = if (EOL == "\n") """\n""" else """\r\n"""
 
   implicit def parseStat(code: String, dialect: Dialect): Stat = templStat(code)(dialect)

@@ -2,7 +2,7 @@ package scala.meta.internal.semanticdb.scalac
 
 import java.io._
 import java.net.URI
-import scala.compat.Platform.EOL
+import org.scalameta.internal.ScalaCompat.EOL
 import scala.tools.nsc.Phase
 import scala.tools.nsc.plugins.PluginComponent
 import scala.meta.internal.{semanticdb => s}

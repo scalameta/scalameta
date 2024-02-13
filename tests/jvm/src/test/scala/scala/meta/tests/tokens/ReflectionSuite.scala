@@ -2,7 +2,7 @@ package scala.meta.tests
 package tokens
 
 import munit._
-import scala.compat.Platform.EOL
+import org.scalameta.internal.ScalaCompat.EOL
 import scala.reflect.runtime.{universe => ru}
 import scala.reflect.runtime.universe._
 

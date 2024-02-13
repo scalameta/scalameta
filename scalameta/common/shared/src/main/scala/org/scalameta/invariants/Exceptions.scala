@@ -1,6 +1,6 @@
 package org.scalameta.invariants
 
-import scala.compat.Platform.EOL
+import org.scalameta.internal.ScalaCompat.EOL
 
 class InvariantFailedException(message: String) extends Exception(message)
 object InvariantFailedException {

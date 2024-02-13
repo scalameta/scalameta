@@ -1,7 +1,7 @@
 package scala.meta.internal.semanticdb
 
 import scala.annotation.tailrec
-import scala.compat.Platform.EOL
+import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb.Scala.{Names => n}
 

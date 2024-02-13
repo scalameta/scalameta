@@ -3,7 +3,7 @@ package prettyprinters
 
 import scala.language.experimental.macros
 import scala.language.implicitConversions
-import scala.compat.Platform.EOL
+import org.scalameta.internal.ScalaCompat.EOL
 
 trait Show[-T] {
   def apply(t: T): Show.Result

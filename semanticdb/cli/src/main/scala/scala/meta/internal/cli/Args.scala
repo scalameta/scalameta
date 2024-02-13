@@ -2,7 +2,7 @@ package scala.meta.internal.cli
 
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file._
-import scala.compat.Platform.EOL
+import org.scalameta.internal.ScalaCompat.EOL
 
 object Args {
   def expand(args: Array[String]): List[String] = {

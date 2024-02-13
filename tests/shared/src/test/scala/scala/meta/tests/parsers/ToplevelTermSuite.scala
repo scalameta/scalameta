@@ -1,6 +1,5 @@
 package scala.meta.tests.parsers
 
-import scala.compat.Platform.EOL
 import scala.meta._
 
 import munit._

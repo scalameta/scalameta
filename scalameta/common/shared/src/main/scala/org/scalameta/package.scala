@@ -2,8 +2,8 @@ package org
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
-import scala.compat.Platform.EOL
 import org.scalameta.internal.MacroHelpers
+import org.scalameta.internal.ScalaCompat.EOL
 
 package object scalameta {
   // Statically indicates that a given code path is unreachable.

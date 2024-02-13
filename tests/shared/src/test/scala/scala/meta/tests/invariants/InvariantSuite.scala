@@ -3,9 +3,8 @@ package invariants
 
 import munit._
 import org.scalameta._
+import org.scalameta.internal.ScalaCompat.EOL
 import org.scalameta.invariants._
-
-import scala.compat.Platform.EOL
 
 class InvariantSuite extends FunSuite {
   test("more informative error messages") {

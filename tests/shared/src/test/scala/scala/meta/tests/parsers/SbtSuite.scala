@@ -1,9 +1,8 @@
 package scala.meta.tests
 package parsers
 
-import java.util.regex.Pattern
 import munit._
-import scala.compat.Platform.EOL
+import org.scalameta.internal.ScalaCompat.EOL
 
 import scala.meta._
 import scala.meta.dialects.Sbt0137
