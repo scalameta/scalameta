@@ -10,7 +10,7 @@ import org.scalameta.internal.MacroHelpers
 // Generates quasiquote definition boilerplate for a given interpolator
 // and then injects it into the annottee.
 // See usage examples in the `quasiquotes` project.
-class quasiquote[T](qname: scala.Symbol) extends StaticAnnotation {
+class quasiquote[T](qname: String) extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro QuasiquoteMacros.impl
 }
 
@@ -19,7 +19,7 @@ class QuasiquoteMacros(val c: Context) extends MacroHelpers {
   val ReificationMacros = q"_root_.scala.meta.internal.quasiquotes.ReificationMacros"
   def impl(annottees: c.Tree*): c.Tree =
     annottees.transformAnnottees(new ImplTransformer {
-      val q"new $_[..$qtypes](scala.Symbol(${qname: String})).macroTransform(..$_)" =
+      val q"new $_[..$qtypes](${qname: String}).macroTransform(..$_)" =
         c.macroApplication
       override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
         val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" =
