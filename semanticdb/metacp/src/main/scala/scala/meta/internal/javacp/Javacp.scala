@@ -274,7 +274,7 @@ object Javacp {
       classSig,
       classAccess
     )
-    buf.result()
+    buf
   }
 
   // Returns true if this field holds a reference to an outer enclosing class.

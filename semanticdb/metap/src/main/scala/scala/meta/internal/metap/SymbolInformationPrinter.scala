@@ -342,9 +342,9 @@ trait SymbolInformationPrinter extends BasePrinter {
         case IntConstant(value) =>
           out.print(value)
         case LongConstant(value) =>
-          out.print(value + "L")
+          out.print(s"${value}L")
         case FloatConstant(value) =>
-          out.print(value + "f")
+          out.print(s"${value}f")
         case DoubleConstant(value) =>
           out.print(value)
         case StringConstant(value) =>
