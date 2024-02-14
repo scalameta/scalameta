@@ -14,14 +14,11 @@ import scala.util.Failure
 
 import scala.meta.classifiers._
 import scala.meta.inputs._
-import scala.meta.internal.classifiers._
 import scala.meta.internal.parsers.Location._
 import scala.meta.internal.parsers.Absolutize._
-import scala.meta.internal.tokens._
 import scala.meta.internal.trees._
 import scala.meta.parsers._
 import scala.meta.prettyprinters._
-import scala.meta.tokenizers._
 import scala.meta.tokens._
 import scala.meta.tokens.Token._
 import scala.meta.trees.Origin

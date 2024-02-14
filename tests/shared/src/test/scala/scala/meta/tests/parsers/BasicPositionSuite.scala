@@ -3,7 +3,6 @@ package parsers
 
 import scala.meta._
 import scala.meta.dialects.Scala211
-import scala.meta.internal.prettyprinters._
 
 class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Term](

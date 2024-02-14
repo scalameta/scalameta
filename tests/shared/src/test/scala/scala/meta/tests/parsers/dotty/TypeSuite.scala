@@ -5,7 +5,6 @@ import Term.{Super, Name => TermName}
 import Type.{Name => TypeName, _}
 import Name.Anonymous
 import scala.meta.parsers.ParseException
-import scala.meta.tests.parsers.ParseSuite
 import munit.Location
 
 class TypeSuite extends BaseDottySuite {

@@ -1176,7 +1176,6 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("Term.Apply(_, List(Term.Function(...))) #572, #574") {
-    import scala.collection.immutable.List
     val tree1 = Term.Apply(
       tname("foo"),
       List(

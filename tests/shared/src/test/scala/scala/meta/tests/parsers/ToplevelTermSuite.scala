@@ -1,9 +1,6 @@
 package scala.meta.tests.parsers
 
 import scala.meta._
-
-import munit._
-
 import scala.meta.tests.TreeSuiteBase
 
 class ToplevelTermSuite extends TreeSuiteBase {

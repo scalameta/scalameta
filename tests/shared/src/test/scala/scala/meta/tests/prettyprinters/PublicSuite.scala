@@ -3,9 +3,8 @@ package prettyprinters
 
 import java.io._
 import java.nio.charset.Charset
-import munit._
 import scala.meta._
-import compat.Platform.EOL
+import org.scalameta.internal.ScalaCompat.EOL
 
 class PublicSuite extends TreeSuiteBase {
   test("scala.meta.Dialect.toString") {

@@ -9,7 +9,6 @@ package quasiquotes
 import munit._
 import org.scalameta.tests._
 import typecheckError.Options.WithPositions
-import compat.Platform.EOL
 
 // FIXME: https://github.com/scalatest/scalatest/issues/1112
 // I had to remove $ characters from all test names in this file.

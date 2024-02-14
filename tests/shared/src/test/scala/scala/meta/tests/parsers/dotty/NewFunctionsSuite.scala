@@ -1,6 +1,5 @@
 package scala.meta.tests.parsers.dotty
 
-import scala.meta.tests.parsers._
 import scala.meta._
 
 class NewFunctionsSuite extends BaseDottySuite {

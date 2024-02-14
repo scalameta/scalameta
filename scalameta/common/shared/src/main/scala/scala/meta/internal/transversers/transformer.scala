@@ -5,7 +5,6 @@ package transversers
 import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox.Context
-import scala.meta.internal.trees.{Metadata => AstMetadata}
 
 class transformer extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro TransformerMacros.impl

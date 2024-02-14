@@ -1,7 +1,6 @@
 package scala.meta.internal.parsers
 
 import scala.meta.classifiers._
-import scala.meta.internal.classifiers.classifier
 import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
 

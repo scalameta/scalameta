@@ -1,7 +1,5 @@
 package scala.meta
 
-import org.scalameta.invariants._
-
 package object dialects {
   implicit val Scala210: Dialect = Dialect(
     allowAndTypes = false,

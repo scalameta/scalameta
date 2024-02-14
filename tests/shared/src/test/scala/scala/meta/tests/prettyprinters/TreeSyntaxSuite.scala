@@ -1,8 +1,6 @@
 package scala.meta.tests.prettyprinters
 
-import scala.meta._
 import scala.meta.internal.prettyprinters.TreeSyntax
-import scala.meta.tests.parsers._
 
 /**
  * This class, unlike similar SyntacticSuite, does not reset origins. Instead it uses runTestAssert

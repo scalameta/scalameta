@@ -1,7 +1,6 @@
 package scala.meta.tests
 package tokenizers
 
-import munit._
 import scala.meta._
 import scala.meta.tokens.Token._
 import scala.meta.dialects.Scala211

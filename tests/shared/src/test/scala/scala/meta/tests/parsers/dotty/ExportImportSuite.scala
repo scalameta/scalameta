@@ -1,6 +1,5 @@
 package scala.meta.tests.parsers.dotty
 
-import scala.meta.tests.parsers._
 import scala.meta._
 
 class ExportImportSuite extends BaseDottySuite {

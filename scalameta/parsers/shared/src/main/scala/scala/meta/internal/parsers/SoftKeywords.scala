@@ -2,11 +2,6 @@ package scala.meta.internal.parsers
 
 import scala.meta.Dialect
 import scala.meta.tokens.Token
-import scala.meta.tokens.Token.Ident
-import scala.meta.internal.classifiers._
-import scala.meta.classifiers._
-import scala.meta.tokens.Token.LeftParen
-import scala.meta.tokens.Token.LeftBracket
 
 class SoftKeywords(dialect: Dialect) {
 
