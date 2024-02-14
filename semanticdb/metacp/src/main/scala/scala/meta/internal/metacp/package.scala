@@ -10,7 +10,7 @@ import scala.meta.io.AbsolutePath
 import scala.tools.asm._
 import scala.tools.asm.ClassReader._
 import scala.tools.asm.tree._
-import scala.collection.JavaConverters._
+import org.scalameta.collections._
 import scala.meta.internal.scalacp.ScalaSigAttribute
 import scala.meta.internal.scalacp.ScalaSigNode
 import scala.reflect.internal.pickling.ByteCodecs
@@ -25,7 +25,7 @@ package object metacp {
       if (node.attrs == null) None
       else {
         for {
-          scalaSigAttribute <- node.attrs.asScala.collectFirst { case ScalaSigAttribute(scalaSig) =>
+          scalaSigAttribute <- node.attrs.toScala.collectFirst { case ScalaSigAttribute(scalaSig) =>
             scalaSig
           }
           scalaSig <- {
@@ -38,18 +38,18 @@ package object metacp {
     private def fromScalaSigAnnotation: Option[ScalaSig] = {
       if (node.visibleAnnotations == null) None
       else {
-        node.visibleAnnotations.asScala.collectFirst {
+        node.visibleAnnotations.toScala.collectFirst {
           case annot
               if annot.desc == Main.SCALA_SIG_ANNOTATION ||
                 annot.desc == Main.SCALA_LONG_SIG_ANNOTATION =>
-            annot.values.asScala match {
+            annot.values.toScala match {
               case collection.Seq("bytes", anyBytes) =>
                 val baos = new ByteArrayOutputStream()
                 val bytes: Array[Byte] = anyBytes match {
                   case bytesString: String =>
                     bytesString.getBytes(StandardCharsets.UTF_8)
                   case bytesArray: util.ArrayList[_] =>
-                    bytesArray.asScala.foreach { case bytesString: String =>
+                    bytesArray.toScala.foreach { case bytesString: String =>
                       baos.write(bytesString.getBytes(StandardCharsets.UTF_8))
                     }
                     baos.toByteArray
@@ -76,7 +76,7 @@ package object metacp {
     }
     def hasScalaSig: Boolean = {
       val classNode = readInputStreamToClassNode(classfile.openInputStream())
-      classNode.attrs != null && classNode.attrs.asScala.exists(_.`type` match {
+      classNode.attrs != null && classNode.attrs.toScala.exists(_.`type` match {
         case "Scala" | "ScalaSig" => true
         case _ => false
       })

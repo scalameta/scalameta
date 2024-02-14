@@ -65,12 +65,12 @@ trait ReflectionToolkit {
     def toMap: Map[String, Any] =
       carrier.attachments
         .get[java.util.HashMap[String, Any]]
-        .map(_.toScalaMap)
+        .map(_.toScala)
         .getOrElse(Map[String, Any]())
     def toOption: Option[Map[String, Any]] =
-      carrier.attachments.get[java.util.HashMap[String, Any]].map(_.toScalaMap)
+      carrier.attachments.get[java.util.HashMap[String, Any]].map(_.toScala)
     def transform(f: Map[String, Any] => Map[String, Any]): Unit =
-      carrier.updateAttachment(f(toMap).toJavaMap)
+      carrier.updateAttachment(f(toMap).toJava)
     def contains(key: String): Boolean = toMap.contains(key)
     def apply(key: String): Any = toMap(key)
     def get(key: String): Option[Any] = toMap.get(key)

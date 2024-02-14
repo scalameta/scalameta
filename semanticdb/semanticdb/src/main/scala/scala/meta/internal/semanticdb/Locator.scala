@@ -2,7 +2,7 @@ package scala.meta.internal.semanticdb
 
 import java.nio.file._
 import java.util.jar._
-import scala.collection.JavaConverters._
+import org.scalameta.collections._
 
 object Locator {
   def apply(paths: List[Path])(fn: (Path, TextDocuments) => Unit): Unit = {
@@ -15,7 +15,7 @@ object Locator {
         Files
           .walk(path)
           .iterator()
-          .asScala
+          .toScala
           .filter(_.toString.endsWith(".semanticdb"))
           .toArray
           // NOTE: nio.file.Path.compareTo is file system specific,

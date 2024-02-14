@@ -9,7 +9,7 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.jar.JarFile
 import scala.collection.mutable
-import scala.collection.JavaConverters._
+import org.scalameta.collections._
 import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
 import scala.meta.internal.io.PathIO
@@ -87,10 +87,10 @@ object ClasspathIndex {
       val fs = FileSystems.getFileSystem(URI.create("jrt:/"))
       val dir = fs.getPath("/packages")
       for {
-        pkg <- Files.newDirectoryStream(dir).iterator().asScala
+        pkg <- Files.newDirectoryStream(dir).iterator().toScala
         symbol = pkg.toString.stripPrefix("/packages/").replace('.', '/') + "/"
         classdir = getClassdir(symbol)
-        moduleLink <- Files.list(pkg).iterator().asScala
+        moduleLink <- Files.list(pkg).iterator().toScala
       } {
         val module =
           if (!Files.isSymbolicLink(moduleLink)) moduleLink

@@ -6,7 +6,7 @@ import java.nio.file.Path
 import java.nio.{file => nio}
 import java.nio.file.Paths
 import scala.meta.internal.io.PathIO
-import scala.collection.JavaConverters._
+import org.scalameta.collections._
 
 /** Wrapper around a relative nio.Path. */
 sealed abstract case class RelativePath(toNIO: Path) {
@@ -41,7 +41,7 @@ object RelativePath {
   private[meta] def toURI(path: Path, isDirectory: Boolean): URI = {
     val suffix = if (isDirectory) "/" else ""
     // Can't use toNIO.toUri because it produces an absolute URI.
-    val names = path.iterator().asScala
+    val names = path.iterator().toScala
     val uris = names.map { name =>
       // URI encode each part of the path individually.
       new URI(null, null, name.toString, null)

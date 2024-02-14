@@ -4,7 +4,7 @@ import java.io.File
 import java.net.URI
 import java.nio.file.Path
 import java.util
-import scala.collection.JavaConverters._
+import org.scalameta.collections._
 
 // Rough implementation of java.nio.Path, should work similarly for the happy
 // path but has undefined behavior for error handling.
@@ -83,7 +83,7 @@ case class NodeNIOPath(filename: String) extends Path {
   override def toString: String =
     filename
   override def iterator(): util.Iterator[Path] =
-    filename.split(File.separator).iterator.map(name => NodeNIOPath(name): Path).asJava
+    filename.split(File.separator).iterator.map(name => NodeNIOPath(name): Path).toJava
 }
 
 object NodeNIOPath {

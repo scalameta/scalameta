@@ -1,7 +1,7 @@
 package scala.meta.internal.metacp
 
 import java.nio.file.Files
-import scala.collection.JavaConverters._
+import org.scalameta.collections._
 import scala.meta.cli._
 import scala.meta.internal.classpath.ClasspathIndex
 import scala.meta.internal.io.FileIO
@@ -46,11 +46,11 @@ object ClassfileInfos {
       case Some(scalaSig) =>
         Some(Scalacp.parse(scalaSig, classpathIndex, settings, reporter))
       case None =>
-        val attrs = if (node.attrs != null) node.attrs.asScala else Nil
+        val attrs = if (node.attrs != null) node.attrs.toScala else Nil
         if (attrs.exists(_.`type` == "Scala")) {
           None
         } else {
-          val innerClassNode = node.innerClasses.asScala.find(_.name == node.name)
+          val innerClassNode = node.innerClasses.toScala.find(_.name == node.name)
           if (innerClassNode.isEmpty) {
             if (node.name != "module-info") Some(Javacp.parse(node, classpathIndex))
             else None
