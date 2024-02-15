@@ -72,10 +72,11 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
     val defnBuilder = List.newBuilder[Leaf]
     val restBuilder = List.newBuilder[Leaf]
     TreeAdt.allLeafs.foreach { l =>
-      if (l <:< TermAdt) termBuilder += l
+      if (l <:< QuasiAdt) {} // do nothing
+      else if (l <:< TermAdt) termBuilder += l
       else if (l <:< TypeAdt) typeBuilder += l
       else if (l <:< DefnAdt) defnBuilder += l
-      else if (!(l <:< QuasiAdt)) restBuilder += l
+      else restBuilder += l
     }
 
     val termPriority = Seq("Term.Name", "Term.Apply", "Lit", "Term.Param", "Term.ApplyInfix")
