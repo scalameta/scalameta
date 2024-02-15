@@ -3,7 +3,7 @@ package build
 
 object Versions {
   val Scala211Versions = getVersions(2, 11, 12 to 12)
-  val Scala212Versions = getVersions(2, 12, 15 to 18)
+  val Scala212Versions = getVersions(2, 12, 16 to 19)
   val Scala213Versions = getVersions(2, 13, 9 to 12)
   val LatestScala211 = Scala211Versions.head
   val LatestScala212 = Scala212Versions.head
