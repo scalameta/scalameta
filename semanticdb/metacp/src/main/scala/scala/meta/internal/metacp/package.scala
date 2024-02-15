@@ -36,30 +36,29 @@ package object metacp {
       }
     }
     private def fromScalaSigAnnotation: Option[ScalaSig] = {
-      if (node.visibleAnnotations == null) None
-      else {
-        node.visibleAnnotations.toScala.collectFirst {
-          case annot
-              if annot.desc == Main.SCALA_SIG_ANNOTATION ||
-                annot.desc == Main.SCALA_LONG_SIG_ANNOTATION =>
-            annot.values.toScala match {
-              case collection.Seq("bytes", anyBytes) =>
-                val baos = new ByteArrayOutputStream()
-                val bytes: Array[Byte] = anyBytes match {
-                  case bytesString: String =>
-                    bytesString.getBytes(StandardCharsets.UTF_8)
-                  case bytesArray: util.ArrayList[_] =>
-                    bytesArray.toScala.foreach { case bytesString: String =>
-                      baos.write(bytesString.getBytes(StandardCharsets.UTF_8))
-                    }
-                    baos.toByteArray
-                  case els => throw new IllegalArgumentException(els.getClass.getName)
+      Option(node.visibleAnnotations).flatMap {
+        _.toScala.iterator
+          .filter { annot =>
+            annot.desc == Main.SCALA_SIG_ANNOTATION ||
+            annot.desc == Main.SCALA_LONG_SIG_ANNOTATION
+          }
+          .map { _.values.toScala }
+          .collectFirst { case collection.Seq("bytes", anyBytes) =>
+            val baos = new ByteArrayOutputStream()
+            val bytes: Array[Byte] = anyBytes match {
+              case bytesString: String =>
+                bytesString.getBytes(StandardCharsets.UTF_8)
+              case bytesArray: util.ArrayList[_] =>
+                bytesArray.toScala.foreach { case bytesString: String =>
+                  baos.write(bytesString.getBytes(StandardCharsets.UTF_8))
                 }
-                val length = ByteCodecs.decode(bytes)
-                val bytecode = ByteCode(bytes.take(length))
-                ScalaSigAttributeParsers.parse(bytecode)
+                baos.toByteArray
+              case els => throw new IllegalArgumentException(els.getClass.getName)
             }
-        }
+            val length = ByteCodecs.decode(bytes)
+            val bytecode = ByteCode(bytes.take(length))
+            ScalaSigAttributeParsers.parse(bytecode)
+          }
       }
     }
 
