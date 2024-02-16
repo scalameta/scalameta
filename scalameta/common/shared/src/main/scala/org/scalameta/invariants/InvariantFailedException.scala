@@ -1,4 +1,5 @@
-package org.scalameta.invariants
+package org.scalameta
+package invariants
 
 import org.scalameta.internal.ScalaCompat.EOL
 
@@ -15,17 +16,14 @@ object InvariantFailedException {
       debuggees: Map[String, Any]
   ): Nothing = {
     val clueStr = if (clue eq null) "" else s" ($clue)"
-    val mandatory = s"""
-    |invariant failed$clueStr:
-    |when verifying $invariant
-    |found that ${failures.head}
-    """.trim.stripMargin.split('\n').mkString(EOL)
-    val optionalFailures = failures.tail.headOption
-      .map(_ => EOL + failures.tail.map("and also " + _).mkString(EOL))
-      .getOrElse("")
-    val optionalLocals =
-      if (debuggees.nonEmpty)
-        EOL + debuggees.toList.sortBy(_._1).map({ case (k, v) => s"where $k = $v" }).mkString(EOL)
-    throw new InvariantFailedException(mandatory + optionalFailures + optionalLocals)
+    val sb = new StringBuilder()
+    sb.append(
+      s"""|invariant failed$clueStr:
+          |when verifying $invariant
+          |found that ${failures.mkString(s"\nand also ")}
+          |""".stripMargin.replace("\n", EOL)
+    )
+    ExceptionHelpers.formatDebuggees(sb, debuggees)
+    throw new InvariantFailedException(sb.result())
   }
 }
