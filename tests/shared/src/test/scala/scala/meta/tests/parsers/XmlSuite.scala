@@ -208,13 +208,15 @@ class XmlSuite extends ParseSuite {
             Term.Xml(
               List(str("<div href="), str(">Hello "), str("</div>")),
               List(
-                Term.ApplyInfix(
-                  str("/"),
-                  tname("+"),
-                  Type.ArgClause(Nil),
-                  Term.ArgClause(List(tname("url")))
+                Term.Block(
+                  Term.ApplyInfix(
+                    str("/"),
+                    tname("+"),
+                    Type.ArgClause(Nil),
+                    Term.ArgClause(List(tname("url")))
+                  ) :: Nil
                 ),
-                tname("name")
+                Term.Block(List(tname("name")))
               )
             )
           ),
@@ -224,14 +226,14 @@ class XmlSuite extends ParseSuite {
             None,
             Term.Xml(
               List(str("<h1>"), str("</h1>")),
-              List(
+              Term.Block(
                 Term.ApplyInfix(
                   tname("msg"),
                   tname("infix"),
                   Type.ArgClause(Nil),
                   Term.ArgClause(List(tname("upper")))
-                )
-              )
+                ) :: Nil
+              ) :: Nil
             )
           ),
           Defn.Val(Nil, List(Pat.Var(tname("y"))), None, int(2))

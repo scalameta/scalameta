@@ -2830,7 +2830,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    then err(context)
          |""".stripMargin,
       assertLayout = Some(
-        """|object foo { def bar = if (map(op(c == true))) err(context) }
+        """|object foo {
+           |  def bar = if (map {
+           |    op(c == true)
+           |  }) err(context)
+           |}
            |""".stripMargin
       )
     )(
@@ -2846,9 +2850,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
             Term.If(
               Term.Apply(
                 tname("map"),
-                Term.Apply(
-                  tname("op"),
-                  Term.ApplyInfix(tname("c"), tname("=="), Nil, List(bool(true))) :: Nil
+                Term.Block(
+                  Term.Apply(
+                    tname("op"),
+                    Term.ApplyInfix(tname("c"), tname("=="), Nil, List(bool(true))) :: Nil
+                  ) :: Nil
                 ) :: Nil
               ),
               Term.Apply(tname("err"), List(tname("context"))),
@@ -2868,7 +2874,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    if (a + b) { op(c == true) } then err(context)
          |""".stripMargin,
       assertLayout = Some(
-        "object foo { def bar = if ((a + b)(op(c == true))) err(context) }"
+        """object foo {
+          |  def bar = if ((a + b) {
+          |    op(c == true)
+          |  }) err(context)
+          |}
+          |""".stripMargin
       )
     )(
       Defn.Object(
@@ -2883,9 +2894,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
             Term.If(
               Term.Apply(
                 Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
-                Term.Apply(
-                  tname("op"),
-                  Term.ApplyInfix(tname("c"), tname("=="), Nil, List(bool(true))) :: Nil
+                Term.Block(
+                  Term.Apply(
+                    tname("op"),
+                    Term.ApplyInfix(tname("c"), tname("=="), Nil, List(bool(true))) :: Nil
+                  ) :: Nil
                 ) :: Nil
               ),
               Term.Apply(tname("err"), List(tname("context"))),
@@ -3216,7 +3229,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |          case _ =>
            |            ex.getMessage
            |        }
-           |        s"[cannot display due to $msg, raw string = ${arg.toString}]"
+           |        s"[cannot display due to $msg, raw string = ${
+           |          arg.toString
+           |        }]"
            |    }
            |  case _ =>
            |    String.valueOf(arg)
@@ -3289,7 +3304,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                       Term.Interpolate(
                         tname("s"),
                         List(str("[cannot display due to "), str(", raw string = "), str("]")),
-                        List(tname("msg"), Term.Select(tname("arg"), tname("toString")))
+                        List(
+                          tname("msg"),
+                          Term.Block(Term.Select(tname("arg"), tname("toString")) :: Nil)
+                        )
                       )
                     )
                   )
@@ -3609,7 +3627,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin
     val output =
       """|if (indexes.size > 1) {
-         |  val msg = s"ERROR: Multiple index pages for doc found ${indexes.map(_.file)}"
+         |  val msg = s"ERROR: Multiple index pages for doc found ${
+         |    indexes.map(_.file)
+         |  }"
          |  report.error(msg)
          |}
          |""".stripMargin
@@ -3630,9 +3650,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
               Term.Interpolate(
                 tname("s"),
                 List(str("ERROR: Multiple index pages for doc found "), str("")),
-                Term.Apply(
-                  Term.Select(tname("indexes"), tname("map")),
-                  List(Term.AnonymousFunction(Term.Select(Term.Placeholder(), tname("file"))))
+                Term.Block(
+                  Term.Apply(
+                    Term.Select(tname("indexes"), tname("map")),
+                    List(Term.AnonymousFunction(Term.Select(Term.Placeholder(), tname("file"))))
+                  ) :: Nil
                 ) :: Nil
               )
             ),

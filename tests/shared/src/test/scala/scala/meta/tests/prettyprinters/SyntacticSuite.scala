@@ -121,7 +121,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             Term.Interpolate(
               tname("q"),
               List(str("123 + "), str(" + "), str(" + 456")),
-              List(tname("x"), Term.Apply(tname("foo"), List(int(123))))
+              List(tname("x"), Term.Block(Term.Apply(tname("foo"), List(int(123))) :: Nil))
             )
           ),
           Defn.Val(
@@ -135,22 +135,22 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )
     assertSameLines(
       tree.syntax,
-      """
-    |{
-    |  val x = q"123 + $x + ${foo(123)} + 456"
-    |  val y = QQQ
-    |        $x
-    |        $y
-    |        ..$z
-    |      QQQ
-    |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\"")
+      """|{
+         |  val x = q"123 + $x + ${
+         |    foo(123)
+         |  } + 456"
+         |  val y = QQQ
+         |        $x
+         |        $y
+         |        ..$z
+         |      QQQ
+         |}""".stripMargin.replace("QQQ", "\"\"\"")
     )
   }
 
   test("foo.bar(bar) { baz }") {
     val tree = templStat("foo.bar(bar) { baz }")
-    assertEquals(tree.syntax, "foo.bar(bar)(baz)")
+    assertEquals(tree.syntax, s"foo.bar(bar) {$EOL  baz$EOL}")
   }
 
   test("Template.self stringifications") {
@@ -999,14 +999,14 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("xml literals") {
     val tree = term("<foo>{bar}</foo>")
-    checkTree(tree, "<foo>{bar}</foo>")(
-      Term.Xml(List(str("<foo>"), str("</foo>")), List(tname("bar")))
+    checkTree(tree, "<foo>{\n  bar\n}</foo>")(
+      Term.Xml(List(str("<foo>"), str("</foo>")), List(Term.Block(List(tname("bar")))))
     )
   }
 
   test("xml literals unit") {
     val tree = term("<foo>{}</foo>")
-    checkTree(tree, "<foo>{{}}</foo>")(
+    checkTree(tree, "<foo>{}</foo>")(
       Term.Xml(List(str("<foo>"), str("</foo>")), List(Term.Block(Nil)))
     )
   }
@@ -1019,7 +1019,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("interpolator unit") {
     val tree = term("""s"Hello${}World"""")
-    checkTree(tree, """s"Hello${{}}World"""")(
+    checkTree(tree, """s"Hello${}World"""")(
       Term.Interpolate(
         tname("s"),
         List(str("Hello"), str("World")),
@@ -1040,21 +1040,18 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   Seq(
-    ("${_}", "${_}"),
-    (
-      "${x + y.map { _.length }.max}",
-      "${x + y.map(_.length).max}"
-    ),
-    ("${_a}", "${_a}"),
-    ("${_a}123", "${_a}123"),
-    ("${_a} 123", "${_a} 123"),
-    ("${_a}_123", "${_a}_123"),
-    ("${_a}+123", "${_a}+123"),
-    ("${++}", "${++}"),
-    ("${++}123", "${++}123"),
-    ("${++} 123", "${++} 123"),
-    ("${++}_123", "${++}_123"),
-    ("${++}+123", "${++}+123")
+    ("${_}", "${\n  _\n}"),
+    ("${x + y.map { _.length }.max}", "${\n  x + y.map {\n    _.length\n  }.max\n}"),
+    ("${_a}", "${\n  _a\n}"),
+    ("${_a}123", "${\n  _a\n}123"),
+    ("${_a} 123", "${\n  _a\n} 123"),
+    ("${_a}_123", "${\n  _a\n}_123"),
+    ("${_a}+123", "${\n  _a\n}+123"),
+    ("${++}", "${\n  ++\n}"),
+    ("${++}123", "${\n  ++\n}123"),
+    ("${++} 123", "${\n  ++\n} 123"),
+    ("${++}_123", "${\n  ++\n}_123"),
+    ("${++}+123", "${\n  ++\n}+123")
   ).foreach { case (codeInterp, termSyntaxInterp) =>
     test(
       s"term interpolator braces: test syntax/parsing consistency: $codeInterp -> $termSyntaxInterp"
@@ -1092,11 +1089,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("interpolator braces for operator identifiers") {
     implicit def parseStat(code: String, dialect: Dialect): Stat = super.templStat(code)(dialect)
-    checkWithOriginalSyntax[Stat](q"""s"$${+++}bar"""")("""s"${+++}bar"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${+++}_bar"""")("""s"${+++}_bar"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${+++}123"""")("""s"${+++}123"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${+++}***"""")("""s"${+++}***"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${+++} ***"""")("""s"${+++} ***"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}bar"""", """s"${+++}bar"""")("s\"${\n  +++\n}bar\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}_bar"""", "s\"${+++}_bar\"")("s\"${\n  +++\n}_bar\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}123"""", """s"${+++}123"""")("s\"${\n  +++\n}123\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}***"""", """s"${+++}***"""")("s\"${\n  +++\n}***\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++} ***"""", "s\"${+++} ***\"")("s\"${\n  +++\n} ***\"")
   }
 
   test("interpolator braces for plain identifiers: check tokens") {
@@ -1112,11 +1109,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("interpolator braces for plain identifiers") {
     implicit def parseStat(code: String, dialect: Dialect): Stat = super.templStat(code)(dialect)
-    checkWithOriginalSyntax[Stat](q"""s"$${foo}bar"""")("""s"${foo}bar"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${foo}_bar"""")("""s"${foo}_bar"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${foo}123"""")("""s"${foo}123"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${foo}***"""", """s"${foo}***"""")("""s"$foo***"""")
-    checkWithOriginalSyntax[Stat](q"""s"$${foo} ***"""", """s"${foo} ***"""")("""s"$foo ***"""")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}bar"""", """s"${foo}bar"""")("s\"${\n  foo\n}bar\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}_bar"""", "s\"${foo}_bar\"")("s\"${\n  foo\n}_bar\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}123"""", """s"${foo}123"""")("s\"${\n  foo\n}123\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}***"""", """s"${foo}***"""")("s\"${\n  foo\n}***\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo} ***"""", "s\"${foo} ***\"")("s\"${\n  foo\n} ***\"")
   }
 
   test("interpolator braces for term names beginning with '_'") {
@@ -1207,7 +1204,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertWithOriginalSyntax(
       q"foo { implicit i: Int => () }",
       "foo { implicit i: Int => () }",
-      "foo { implicit i: Int => () }"
+      "foo {\n  implicit i: Int => ()\n}"
     )
     assertWithOriginalSyntax(tree3, "foo(i => ())", "foo(i => ())")
   }
@@ -1639,7 +1636,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("#1596") {
     val tree: Term.Xml = q"<h1>a{b}</h1>"
     checkTree(tree)(
-      Term.Xml(List(str("<h1>a"), str("</h1>")), List(tname("b")))
+      Term.Xml(List(str("<h1>a"), str("</h1>")), Term.Block(List(tname("b"))) :: Nil)
     )
     val Term.Xml(part1 :: part2 :: Nil, arg1 :: Nil) = tree
 
@@ -1650,7 +1647,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
     assertEquals(
       arg1.tokens.structure,
-      """Tokens(b [6..7))"""
+      """Tokens({ [5..6), b [6..7), } [7..8))"""
     )
 
     assertEquals(
@@ -1673,7 +1670,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkTree(term("foo(bar) { baz: _* }"))(
       Term.Apply(
         Term.Apply(tname("foo"), List(tname("bar"))),
-        List(Term.Repeated(tname("baz")))
+        Term.Block(List(Term.Repeated(tname("baz")))) :: Nil
       )
     )
   }

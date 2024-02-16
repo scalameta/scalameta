@@ -57,7 +57,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |
          |""".stripMargin,
       assertLayout = Some(
-        """|val firstLine = map(indentedCode)
+        """|val firstLine = map {
+           |  indentedCode
+           |}
            |""".stripMargin
       )
     )(
@@ -65,7 +67,7 @@ class FewerBracesSuite extends BaseDottySuite {
         Nil,
         List(Pat.Var(tname("firstLine"))),
         None,
-        Term.Apply(tname("map"), List(tname("indentedCode")))
+        Term.Apply(tname("map"), Term.Block(List(tname("indentedCode"))) :: Nil)
       )
     )
   }
@@ -76,7 +78,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |    a
          |""".stripMargin,
       assertLayout = Some(
-        """|val firstLine = files.map(a => a)
+        """|val firstLine = files.map {
+           |  a => a
+           |}
            |""".stripMargin
       )
     )(
@@ -86,7 +90,7 @@ class FewerBracesSuite extends BaseDottySuite {
         None,
         Term.Apply(
           Term.Select(tname("files"), tname("map")),
-          List(Term.Function(List(tparam("a")), tname("a")))
+          Term.Block(List(Term.Function(List(tparam("a")), tname("a")))) :: Nil
         )
       )
     )
@@ -98,7 +102,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |    a
          |""".stripMargin,
       assertLayout = Some(
-        """|val firstLine = files.map((a, b) => a)
+        """|val firstLine = files.map {
+           |  (a, b) => a
+           |}
            |""".stripMargin
       )
     )(
@@ -108,7 +114,7 @@ class FewerBracesSuite extends BaseDottySuite {
         None,
         Term.Apply(
           Term.Select(tname("files"), tname("map")),
-          List(Term.Function(List(tparam("a"), tparam("b")), tname("a")))
+          Term.Block(List(Term.Function(List(tparam("a"), tparam("b")), tname("a")))) :: Nil
         )
       )
     )
@@ -220,8 +226,12 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(
         """|def O = {
-           |  val firstLine = files.fold(123)
-           |  val secondLine = files.fold(123)
+           |  val firstLine = files.fold {
+           |    123
+           |  }
+           |  val secondLine = files.fold {
+           |    123
+           |  }
            |}
            |""".stripMargin
       )
@@ -238,13 +248,19 @@ class FewerBracesSuite extends BaseDottySuite {
               Nil,
               List(Pat.Var(tname("firstLine"))),
               None,
-              Term.Apply(Term.Select(tname("files"), tname("fold")), List(int(123)))
+              Term.Apply(
+                Term.Select(tname("files"), tname("fold")),
+                Term.Block(List(int(123))) :: Nil
+              )
             ),
             Defn.Val(
               Nil,
               List(Pat.Var(tname("secondLine"))),
               None,
-              Term.Apply(Term.Select(tname("files"), tname("fold")), List(int(123)))
+              Term.Apply(
+                Term.Select(tname("files"), tname("fold")),
+                Term.Block(List(int(123))) :: Nil
+              )
             )
           )
         )
@@ -309,7 +325,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some(
         """|def O = {
-           |  val firstLine = files.fold(123).apply((a, b) => a)
+           |  val firstLine = files.fold {
+           |    123
+           |  }.apply {
+           |    (a, b) => a
+           |  }
            |}
            |""".stripMargin
       )
@@ -327,10 +347,13 @@ class FewerBracesSuite extends BaseDottySuite {
             None,
             Term.Apply(
               Term.Select(
-                Term.Apply(Term.Select(tname("files"), tname("fold")), List(int(123))),
+                Term.Apply(
+                  Term.Select(tname("files"), tname("fold")),
+                  Term.Block(List(int(123))) :: Nil
+                ),
                 tname("apply")
               ),
-              Term.Function(List(tparam("a"), tparam("b")), tname("a")) :: Nil
+              Term.Block(Term.Function(List(tparam("a"), tparam("b")), tname("a")) :: Nil) :: Nil
             )
           ) :: Nil
         )
@@ -345,7 +368,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |    a._1 + 1
          |""".stripMargin,
       assertLayout = Some(
-        """|def O = List((1, (List(""), 3))).map((a: (Int, (List[String], Int))) => a._1 + 1)
+        """|def O = List((1, (List(""), 3))).map {
+           |  (a: (Int, (List[String], Int))) => a._1 + 1
+           |}
            |""".stripMargin
       )
     )(
@@ -365,23 +390,25 @@ class FewerBracesSuite extends BaseDottySuite {
             ),
             tname("map")
           ),
-          Term.Function(
-            tparam(
-              Nil,
-              "a",
-              Type.Tuple(
-                List(
-                  pname("Int"),
-                  Type.Tuple(List(Type.Apply(pname("List"), List(pname("String"))), pname("Int")))
+          Term.Block(
+            Term.Function(
+              tparam(
+                Nil,
+                "a",
+                Type.Tuple(
+                  List(
+                    pname("Int"),
+                    Type.Tuple(List(Type.Apply(pname("List"), List(pname("String"))), pname("Int")))
+                  )
                 )
+              ) :: Nil,
+              Term.ApplyInfix(
+                Term.Select(tname("a"), tname("_1")),
+                tname("+"),
+                Nil,
+                List(int(1))
               )
-            ) :: Nil,
-            Term.ApplyInfix(
-              Term.Select(tname("a"), tname("_1")),
-              tname("+"),
-              Nil,
-              List(int(1))
-            )
+            ) :: Nil
           ) :: Nil
         )
       )
@@ -398,7 +425,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |    (0)
          |""".stripMargin,
       assertLayout = Some(
-        """|val a: Int = xs.map(x => x * x).filter((y: Int) => y > 0)(0)
+        """|val a: Int = xs.map {
+           |  x => x * x
+           |}.filter {
+           |  (y: Int) => y > 0
+           |}(0)
            |""".stripMargin
       )
     )(
@@ -411,16 +442,20 @@ class FewerBracesSuite extends BaseDottySuite {
             Term.Select(
               Term.Apply(
                 Term.Select(tname("xs"), tname("map")),
-                Term.Function(
-                  List(tparam("x")),
-                  Term.ApplyInfix(tname("x"), tname("*"), Nil, List(tname("x")))
+                Term.Block(
+                  Term.Function(
+                    List(tparam("x")),
+                    Term.ApplyInfix(tname("x"), tname("*"), Nil, List(tname("x")))
+                  ) :: Nil
                 ) :: Nil
               ),
               tname("filter")
             ),
-            Term.Function(
-              List(tparam("y", "Int")),
-              Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0)))
+            Term.Block(
+              Term.Function(
+                List(tparam("y", "Int")),
+                Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0)))
+              ) :: Nil
             ) :: Nil
           ),
           List(int(0))
@@ -436,7 +471,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |    22
          |""".stripMargin,
       assertLayout = Some(
-        """|class C { f(22) }
+        """|class C {
+           |  f {
+           |    22
+           |  }
+           |}
            |""".stripMargin
       )
     )(
@@ -445,7 +484,7 @@ class FewerBracesSuite extends BaseDottySuite {
         pname("C"),
         Nil,
         EmptyCtor(),
-        tpl(Term.Apply(tname("f"), List(int(22))))
+        tpl(Term.Apply(tname("f"), Term.Block(List(int(22))) :: Nil))
       )
     )
   }
@@ -460,7 +499,11 @@ class FewerBracesSuite extends BaseDottySuite {
          |  x
          |""".stripMargin,
       assertLayout = Some(
-        """|xs.map(x => x).filter(x => x)
+        """|xs.map {
+           |  x => x
+           |}.filter {
+           |  x => x
+           |}
            |""".stripMargin
       )
     )(
@@ -468,11 +511,11 @@ class FewerBracesSuite extends BaseDottySuite {
         Term.Select(
           Term.Apply(
             Term.Select(tname("xs"), tname("map")),
-            List(Term.Function(List(tparam("x")), tname("x")))
+            Term.Block(List(Term.Function(List(tparam("x")), tname("x")))) :: Nil
           ),
           tname("filter")
         ),
-        List(Term.Function(List(tparam("x")), tname("x")))
+        Term.Block(List(Term.Function(List(tparam("x")), tname("x")))) :: Nil
       )
     )
   }
@@ -536,7 +579,9 @@ class FewerBracesSuite extends BaseDottySuite {
       assertLayout = Some(
         """|def test24 = {
            |  x < y or x > y
-           |  or(x == y)
+           |  or {
+           |    x == y
+           |  }
            |}
            |""".stripMargin
       )
@@ -557,7 +602,9 @@ class FewerBracesSuite extends BaseDottySuite {
             ),
             Term.Apply(
               tname("or"),
-              List(Term.ApplyInfix(tname("x"), tname("=="), Nil, List(tname("y"))))
+              Term.Block(
+                List(Term.ApplyInfix(tname("x"), tname("=="), Nil, List(tname("y"))))
+              ) :: Nil
             )
           )
         )
@@ -607,12 +654,16 @@ class FewerBracesSuite extends BaseDottySuite {
          |  foo :
          |    bar
          |""".stripMargin,
-      Some("object a { foo(bar) }")
+      Some("""|object a {
+              |  foo {
+              |    bar
+              |  }
+              |}""".stripMargin)
     )(
       Defn.Object(
         Nil,
         tname("a"),
-        tpl(Term.Apply(tname("foo"), List(tname("bar"))))
+        tpl(Term.Apply(tname("foo"), Term.Block(List(tname("bar"))) :: Nil))
       )
     )
   }
@@ -654,7 +705,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |    case class Foo(x: Int, y: String)
          |    1 == 1
          |  }
-         |  test("Second test")(1 == 1)
+         |  test("Second test") {
+         |    1 == 1
+         |  }
          |}
          |""".stripMargin
     assertNoDiff(parseStat(code, dialect).reprint, layout)
@@ -666,7 +719,12 @@ class FewerBracesSuite extends BaseDottySuite {
         |  List(1,2,3) foreach: x =>
         |    println(x)
         |""".stripMargin
-    val layout = "object MyApp { List(1, 2, 3) foreach (x => println(x)) }"
+    val layout =
+      """|object MyApp {
+         |  List(1, 2, 3) foreach {
+         |    x => println(x)
+         |  }
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
@@ -675,9 +733,11 @@ class FewerBracesSuite extends BaseDottySuite {
           Term.Apply(tname("List"), List(int(1), int(2), int(3))),
           tname("foreach"),
           Nil,
-          Term.Function(
-            List(tparam("x", None)),
-            Term.Apply(tname("println"), List(tname("x")))
+          Term.Block(
+            Term.Function(
+              List(tparam("x", None)),
+              Term.Apply(tname("println"), List(tname("x")))
+            ) :: Nil
           ) :: Nil
         )
       )
@@ -691,7 +751,12 @@ class FewerBracesSuite extends BaseDottySuite {
         |  ids foreach: x =>
         |    println(x)
         |""".stripMargin
-    val layout = "object MyApp { ids foreach (x => println(x)) }"
+    val layout =
+      """|object MyApp {
+         |  ids foreach {
+         |    x => println(x)
+         |  }
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
@@ -700,9 +765,11 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("ids"),
           tname("foreach"),
           Nil,
-          Term.Function(
-            List(tparam("x", None)),
-            Term.Apply(tname("println"), List(tname("x")))
+          Term.Block(
+            Term.Function(
+              List(tparam("x", None)),
+              Term.Apply(tname("println"), List(tname("x")))
+            ) :: Nil
           ) :: Nil
         )
       )
@@ -720,8 +787,12 @@ class FewerBracesSuite extends BaseDottySuite {
         |""".stripMargin
     val layout =
       """|object MyApp {
-         |  ids map (x => foo(x))
-         |  map(x => bar(x))
+         |  ids map {
+         |    x => foo(x)
+         |  }
+         |  map {
+         |    x => bar(x)
+         |  }
          |}""".stripMargin
     val tree = Defn.Object(
       Nil,
@@ -731,16 +802,20 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("ids"),
           tname("map"),
           Nil,
-          Term.Function(
-            List(tparam("x", None)),
-            Term.Apply(tname("foo"), List(tname("x")))
+          Term.Block(
+            Term.Function(
+              List(tparam("x", None)),
+              Term.Apply(tname("foo"), List(tname("x")))
+            ) :: Nil
           ) :: Nil
         ),
         Term.Apply(
           tname("map"),
-          Term.Function(
-            List(tparam("x", None)),
-            Term.Apply(tname("bar"), List(tname("x")))
+          Term.Block(
+            Term.Function(
+              List(tparam("x", None)),
+              Term.Apply(tname("bar"), List(tname("x")))
+            ) :: Nil
           ) :: Nil
         )
       )
@@ -757,10 +832,10 @@ class FewerBracesSuite extends BaseDottySuite {
         |""".stripMargin
     val layout =
       """|object MyApp {
-         |  ids map (x => {
+         |  ids map { x =>
          |    foo(x)
          |    bar(x)
-         |  })
+         |  }
          |}""".stripMargin
     val tree = Defn.Object(
       Nil,
@@ -770,14 +845,16 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("ids"),
           tname("map"),
           Nil,
-          Term.Function(
-            List(tparam("x", None)),
-            Term.Block(
-              List(
-                Term.Apply(tname("foo"), List(tname("x"))),
-                Term.Apply(tname("bar"), List(tname("x")))
+          Term.Block(
+            Term.Function(
+              List(tparam("x", None)),
+              Term.Block(
+                List(
+                  Term.Apply(tname("foo"), List(tname("x"))),
+                  Term.Apply(tname("bar"), List(tname("x")))
+                )
               )
-            )
+            ) :: Nil
           ) :: Nil
         )
       )
@@ -791,7 +868,12 @@ class FewerBracesSuite extends BaseDottySuite {
         |  List(1,2,3) foreach:
         |    println
         |""".stripMargin
-    val layout = "object MyApp { List(1, 2, 3) foreach println }"
+    val layout =
+      """|object MyApp {
+         |  List(1, 2, 3) foreach {
+         |    println
+         |  }
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
@@ -800,7 +882,7 @@ class FewerBracesSuite extends BaseDottySuite {
           Term.Apply(tname("List"), List(int(1), int(2), int(3))),
           tname("foreach"),
           Nil,
-          List(tname("println"))
+          Term.Block(List(tname("println"))) :: Nil
         )
       )
     )
@@ -813,7 +895,12 @@ class FewerBracesSuite extends BaseDottySuite {
         |  ids foreach:
         |    println
         |""".stripMargin
-    val layout = "object MyApp { ids foreach println }"
+    val layout =
+      """|object MyApp {
+         |  ids foreach {
+         |    println
+         |  }
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
@@ -822,7 +909,7 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("ids"),
           tname("foreach"),
           Nil,
-          List(tname("println"))
+          Term.Block(List(tname("println"))) :: Nil
         )
       )
     )
@@ -839,15 +926,19 @@ class FewerBracesSuite extends BaseDottySuite {
         |""".stripMargin
     val layout =
       """|object MyApp {
-         |  ids map foo
-         |  map(bar)
+         |  ids map {
+         |    foo
+         |  }
+         |  map {
+         |    bar
+         |  }
          |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
       tpl(
-        Term.ApplyInfix(tname("ids"), tname("map"), Nil, List(tname("foo"))),
-        Term.Apply(tname("map"), List(tname("bar")))
+        Term.ApplyInfix(tname("ids"), tname("map"), Nil, Term.Block(List(tname("foo"))) :: Nil),
+        Term.Apply(tname("map"), Term.Block(List(tname("bar"))) :: Nil)
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -945,9 +1036,12 @@ class FewerBracesSuite extends BaseDottySuite {
         |  arg
         |++ qux
         |""".stripMargin
-    val layout = "baz(arg) ++ qux"
+    val layout =
+      """|baz {
+         |  arg
+         |} ++ qux""".stripMargin
     val tree = Term.ApplyInfix(
-      Term.Apply(tname("baz"), List(tname("arg"))),
+      Term.Apply(tname("baz"), Term.Block(List(tname("arg"))) :: Nil),
       tname("++"),
       Nil,
       List(tname("qux"))
@@ -962,9 +1056,12 @@ class FewerBracesSuite extends BaseDottySuite {
         |    arg
         |  ++ qux
         |""".stripMargin
-    val layout = "baz(arg) ++ qux"
+    val layout =
+      """|baz {
+         |  arg
+         |} ++ qux""".stripMargin
     val tree = Term.ApplyInfix(
-      Term.Apply(tname("baz"), List(tname("arg"))),
+      Term.Apply(tname("baz"), Term.Block(List(tname("arg"))) :: Nil),
       tname("++"),
       Nil,
       List(tname("qux"))
@@ -981,13 +1078,18 @@ class FewerBracesSuite extends BaseDottySuite {
         |  ++ qux
         |}
         |""".stripMargin
-    val layout = "object a { baz(arg) ++ qux }"
+    val layout =
+      """|object a {
+         |  baz {
+         |    arg
+         |  } ++ qux
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
       tpl(
         Term.ApplyInfix(
-          Term.Apply(tname("baz"), List(tname("arg"))),
+          Term.Apply(tname("baz"), Term.Block(List(tname("arg"))) :: Nil),
           tname("++"),
           Nil,
           List(tname("qux"))
@@ -1005,13 +1107,18 @@ class FewerBracesSuite extends BaseDottySuite {
         |    arg
         |  ++ qux
         |""".stripMargin
-    val layout = "object a { baz(arg) ++ qux }"
+    val layout =
+      """|object a {
+         |  baz {
+         |    arg
+         |  } ++ qux
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
       tpl(
         Term.ApplyInfix(
-          Term.Apply(tname("baz"), List(tname("arg"))),
+          Term.Apply(tname("baz"), Term.Block(List(tname("arg"))) :: Nil),
           tname("++"),
           Nil,
           List(tname("qux"))
@@ -1032,13 +1139,18 @@ class FewerBracesSuite extends BaseDottySuite {
         |  ++
         |  qux
         |""".stripMargin
-    val layout = "foo.bar(arg) ++ baz(arg) ++ qux"
+    val layout =
+      """|foo.bar {
+         |  arg
+         |} ++ baz {
+         |  arg
+         |} ++ qux""".stripMargin
     val tree = Term.ApplyInfix(
       Term.ApplyInfix(
-        Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+        Term.Apply(Term.Select(tname("foo"), tname("bar")), Term.Block(List(tname("arg"))) :: Nil),
         tname("++"),
         Nil,
-        List(Term.Apply(tname("baz"), List(tname("arg"))))
+        List(Term.Apply(tname("baz"), Term.Block(List(tname("arg"))) :: Nil))
       ),
       tname("++"),
       Nil,
@@ -1058,13 +1170,18 @@ class FewerBracesSuite extends BaseDottySuite {
         |  ++
         |  qux
         |""".stripMargin
-    val layout = "foo.bar(arg) ++ baz(arg) ++ qux"
+    val layout =
+      """|foo.bar {
+         |  arg
+         |} ++ baz {
+         |  arg
+         |} ++ qux""".stripMargin
     val tree = Term.ApplyInfix(
       Term.ApplyInfix(
-        Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+        Term.Apply(Term.Select(tname("foo"), tname("bar")), Term.Block(List(tname("arg"))) :: Nil),
         tname("++"),
         Nil,
-        List(Term.Apply(tname("baz"), List(tname("arg"))))
+        List(Term.Apply(tname("baz"), Term.Block(List(tname("arg"))) :: Nil))
       ),
       tname("++"),
       Nil,
@@ -1086,17 +1203,27 @@ class FewerBracesSuite extends BaseDottySuite {
         |  qux
         |}
         |""".stripMargin
-    val layout = "object a { foo.bar(arg) ++ baz(arg) ++ qux }"
+    val layout =
+      """|object a {
+         |  foo.bar {
+         |    arg
+         |  } ++ baz {
+         |    arg
+         |  } ++ qux
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
       tpl(
         Term.ApplyInfix(
           Term.ApplyInfix(
-            Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+            Term.Apply(
+              Term.Select(tname("foo"), tname("bar")),
+              Term.Block(List(tname("arg"))) :: Nil
+            ),
             tname("++"),
             Nil,
-            List(Term.Apply(tname("baz"), List(tname("arg"))))
+            List(Term.Apply(tname("baz"), Term.Block(List(tname("arg"))) :: Nil))
           ),
           tname("++"),
           Nil,
@@ -1119,17 +1246,27 @@ class FewerBracesSuite extends BaseDottySuite {
         |  ++
         |  qux
         |""".stripMargin
-    val layout = "object a { foo.bar(arg) ++ baz(arg) ++ qux }"
+    val layout =
+      """|object a {
+         |  foo.bar {
+         |    arg
+         |  } ++ baz {
+         |    arg
+         |  } ++ qux
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
       tpl(
         Term.ApplyInfix(
           Term.ApplyInfix(
-            Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+            Term.Apply(
+              Term.Select(tname("foo"), tname("bar")),
+              Term.Block(List(tname("arg"))) :: Nil
+            ),
             tname("++"),
             Nil,
-            List(Term.Apply(tname("baz"), List(tname("arg"))))
+            List(Term.Apply(tname("baz"), Term.Block(List(tname("arg"))) :: Nil))
           ),
           tname("++"),
           Nil,
@@ -1150,13 +1287,18 @@ class FewerBracesSuite extends BaseDottySuite {
         |    arg
         |  ++ qux
         |""".stripMargin
-    val layout = "foo.bar(arg) ++ baz(arg) ++ qux"
+    val layout =
+      """|foo.bar {
+         |  arg
+         |} ++ baz {
+         |  arg
+         |} ++ qux""".stripMargin
     val tree = Term.ApplyInfix(
       Term.ApplyInfix(
-        Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+        Term.Apply(Term.Select(tname("foo"), tname("bar")), Term.Block(List(tname("arg"))) :: Nil),
         tname("++"),
         Nil,
-        List(Term.Apply(tname("baz"), List(tname("arg"))))
+        List(Term.Apply(tname("baz"), Term.Block(List(tname("arg"))) :: Nil))
       ),
       tname("++"),
       Nil,
@@ -1175,13 +1317,18 @@ class FewerBracesSuite extends BaseDottySuite {
         |      arg
         |    ++ qux
         |""".stripMargin
-    val layout = "foo.bar(arg) ++ baz(arg) ++ qux"
+    val layout =
+      """|foo.bar {
+         |  arg
+         |} ++ baz {
+         |  arg
+         |} ++ qux""".stripMargin
     val tree = Term.ApplyInfix(
       Term.ApplyInfix(
-        Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+        Term.Apply(Term.Select(tname("foo"), tname("bar")), Term.Block(List(tname("arg"))) :: Nil),
         tname("++"),
         Nil,
-        List(Term.Apply(tname("baz"), List(tname("arg"))))
+        List(Term.Apply(tname("baz"), Term.Block(List(tname("arg"))) :: Nil))
       ),
       tname("++"),
       Nil,
@@ -1202,17 +1349,27 @@ class FewerBracesSuite extends BaseDottySuite {
         |    ++ qux
         |}
         |""".stripMargin
-    val layout = "object a { foo.bar(arg) ++ baz(arg) ++ qux }"
+    val layout =
+      """|object a {
+         |  foo.bar {
+         |    arg
+         |  } ++ baz {
+         |    arg
+         |  } ++ qux
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
       tpl(
         Term.ApplyInfix(
           Term.ApplyInfix(
-            Term.Apply(Term.Select(tname("foo"), tname("bar")), List(tname("arg"))),
+            Term.Apply(
+              Term.Select(tname("foo"), tname("bar")),
+              Term.Block(List(tname("arg"))) :: Nil
+            ),
             tname("++"),
             Nil,
-            List(Term.Apply(tname("baz"), List(tname("arg"))))
+            List(Term.Apply(tname("baz"), Term.Block(List(tname("arg"))) :: Nil))
           ),
           tname("++"),
           Nil,
@@ -1234,7 +1391,14 @@ class FewerBracesSuite extends BaseDottySuite {
         |      arg
         |    ++ qux
         |""".stripMargin
-    val layout = "object a { foo.bar(arg) ++ baz(arg) ++ qux }"
+    val layout =
+      """|object a {
+         |  foo.bar {
+         |    arg
+         |  } ++ baz {
+         |    arg
+         |  } ++ qux
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
@@ -1243,11 +1407,11 @@ class FewerBracesSuite extends BaseDottySuite {
           Term.ApplyInfix(
             Term.Apply(
               Term.Select(tname("foo"), tname("bar")),
-              List(tname("arg"))
+              Term.Block(List(tname("arg"))) :: Nil
             ),
             tname("++"),
             Nil,
-            List(Term.Apply(tname("baz"), List(tname("arg"))))
+            List(Term.Apply(tname("baz"), Term.Block(List(tname("arg"))) :: Nil))
           ),
           tname("++"),
           Nil,
@@ -1271,7 +1435,14 @@ class FewerBracesSuite extends BaseDottySuite {
         |            abc:
         |                arg3
         |""".stripMargin
-    val layout = "def mtd = abc(arg1 ++ abc(arg2 ++ abc(arg3)))"
+    val layout =
+      """|def mtd = abc {
+         |  arg1 ++ abc {
+         |    arg2 ++ abc {
+         |      arg3
+         |    }
+         |  }
+         |}""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
@@ -1279,17 +1450,21 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("abc"),
-        Term.ApplyInfix(
-          tname("arg1"),
-          tname("++"),
-          Nil,
-          Term.Apply(
-            tname("abc"),
-            Term.ApplyInfix(
-              tname("arg2"),
-              tname("++"),
-              Nil,
-              List(Term.Apply(tname("abc"), List(tname("arg3"))))
+        Term.Block(
+          Term.ApplyInfix(
+            tname("arg1"),
+            tname("++"),
+            Nil,
+            Term.Apply(
+              tname("abc"),
+              Term.Block(
+                Term.ApplyInfix(
+                  tname("arg2"),
+                  tname("++"),
+                  Nil,
+                  List(Term.Apply(tname("abc"), Term.Block(List(tname("arg3"))) :: Nil))
+                ) :: Nil
+              ) :: Nil
             ) :: Nil
           ) :: Nil
         ) :: Nil
@@ -1311,7 +1486,14 @@ class FewerBracesSuite extends BaseDottySuite {
         |            abc:
         |                arg3
         |""".stripMargin
-    val layout = "def mtd = abc(arg1 ++ abc(arg2 ++ abc(arg3)))"
+    val layout =
+      """|def mtd = abc {
+         |  arg1 ++ abc {
+         |    arg2 ++ abc {
+         |      arg3
+         |    }
+         |  }
+         |}""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
@@ -1319,17 +1501,21 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("abc"),
-        Term.ApplyInfix(
-          tname("arg1"),
-          tname("++"),
-          Nil,
-          Term.Apply(
-            tname("abc"),
-            Term.ApplyInfix(
-              tname("arg2"),
-              tname("++"),
-              Nil,
-              List(Term.Apply(tname("abc"), List(tname("arg3"))))
+        Term.Block(
+          Term.ApplyInfix(
+            tname("arg1"),
+            tname("++"),
+            Nil,
+            Term.Apply(
+              tname("abc"),
+              Term.Block(
+                Term.ApplyInfix(
+                  tname("arg2"),
+                  tname("++"),
+                  Nil,
+                  List(Term.Apply(tname("abc"), Term.Block(List(tname("arg3"))) :: Nil))
+                ) :: Nil
+              ) :: Nil
             ) :: Nil
           ) :: Nil
         ) :: Nil
@@ -1355,7 +1541,13 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """
         |def mtd = {
-        |  abc(arg1 ++ abc(arg2 ++ abc(arg3)))
+        |  abc {
+        |    arg1 ++ abc {
+        |      arg2 ++ abc {
+        |        arg3
+        |      }
+        |    }
+        |  }
         |}
         |""".stripMargin
     val tree = Defn.Def(
@@ -1366,17 +1558,21 @@ class FewerBracesSuite extends BaseDottySuite {
       Term.Block(
         Term.Apply(
           tname("abc"),
-          Term.ApplyInfix(
-            tname("arg1"),
-            tname("++"),
-            Nil,
-            Term.Apply(
-              tname("abc"),
-              Term.ApplyInfix(
-                tname("arg2"),
-                tname("++"),
-                Nil,
-                List(Term.Apply(tname("abc"), List(tname("arg3"))))
+          Term.Block(
+            Term.ApplyInfix(
+              tname("arg1"),
+              tname("++"),
+              Nil,
+              Term.Apply(
+                tname("abc"),
+                Term.Block(
+                  Term.ApplyInfix(
+                    tname("arg2"),
+                    tname("++"),
+                    Nil,
+                    List(Term.Apply(tname("abc"), Term.Block(List(tname("arg3"))) :: Nil))
+                  ) :: Nil
+                ) :: Nil
               ) :: Nil
             ) :: Nil
           ) :: Nil
@@ -1399,7 +1595,14 @@ class FewerBracesSuite extends BaseDottySuite {
         |            abc:
         |                arg3
         |""".stripMargin
-    val layout = "def mtd = abc(arg1 ++ abc(arg2) ++ abc(arg3))"
+    val layout =
+      """|def mtd = abc {
+         |  arg1 ++ abc {
+         |    arg2
+         |  } ++ abc {
+         |    arg3
+         |  }
+         |}""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
@@ -1407,16 +1610,18 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("abc"),
-        Term.ApplyInfix(
+        Term.Block(
           Term.ApplyInfix(
-            tname("arg1"),
+            Term.ApplyInfix(
+              tname("arg1"),
+              tname("++"),
+              Nil,
+              List(Term.Apply(tname("abc"), Term.Block(List(tname("arg2"))) :: Nil))
+            ),
             tname("++"),
             Nil,
-            List(Term.Apply(tname("abc"), List(tname("arg2"))))
-          ),
-          tname("++"),
-          Nil,
-          List(Term.Apply(tname("abc"), List(tname("arg3"))))
+            List(Term.Apply(tname("abc"), Term.Block(List(tname("arg3"))) :: Nil))
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -1436,7 +1641,15 @@ class FewerBracesSuite extends BaseDottySuite {
         |            abc:
         |                arg3
         |""".stripMargin
-    val layout = "def mtd = abc(arg1 ++ abc(arg2) ++ abc(arg3))"
+    val layout =
+      """|def mtd = abc {
+         |  arg1 ++ abc {
+         |    arg2
+         |  } ++ abc {
+         |    arg3
+         |  }
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
@@ -1444,16 +1657,18 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("abc"),
-        Term.ApplyInfix(
+        Term.Block(
           Term.ApplyInfix(
-            tname("arg1"),
+            Term.ApplyInfix(
+              tname("arg1"),
+              tname("++"),
+              Nil,
+              List(Term.Apply(tname("abc"), Term.Block(List(tname("arg2"))) :: Nil))
+            ),
             tname("++"),
             Nil,
-            List(Term.Apply(tname("abc"), List(tname("arg2"))))
-          ),
-          tname("++"),
-          Nil,
-          List(Term.Apply(tname("abc"), List(tname("arg3"))))
+            List(Term.Apply(tname("abc"), Term.Block(List(tname("arg3"))) :: Nil))
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -1477,7 +1692,13 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """
         |def mtd = {
-        |  abc(arg1 ++ abc(arg2) ++ abc(arg3))
+        |  abc {
+        |    arg1 ++ abc {
+        |      arg2
+        |    } ++ abc {
+        |      arg3
+        |    }
+        |  }
         |}
         |""".stripMargin
     val tree = Defn.Def(
@@ -1488,16 +1709,18 @@ class FewerBracesSuite extends BaseDottySuite {
       Term.Block(
         Term.Apply(
           tname("abc"),
-          Term.ApplyInfix(
+          Term.Block(
             Term.ApplyInfix(
-              tname("arg1"),
+              Term.ApplyInfix(
+                tname("arg1"),
+                tname("++"),
+                Nil,
+                List(Term.Apply(tname("abc"), Term.Block(List(tname("arg2"))) :: Nil))
+              ),
               tname("++"),
               Nil,
-              List(Term.Apply(tname("abc"), List(tname("arg2"))))
-            ),
-            tname("++"),
-            Nil,
-            List(Term.Apply(tname("abc"), List(tname("arg3"))))
+              List(Term.Apply(tname("abc"), Term.Block(List(tname("arg3"))) :: Nil))
+            ) :: Nil
           ) :: Nil
         ) :: Nil
       )
@@ -1519,7 +1742,15 @@ class FewerBracesSuite extends BaseDottySuite {
         |        */ abc:
         |                arg3
         |""".stripMargin
-    val layout = "def mtd = abc(arg1) ++ abc(arg2) ++ abc(arg3)"
+    val layout =
+      """|def mtd = abc {
+         |  arg1
+         |} ++ abc {
+         |  arg2
+         |} ++ abc {
+         |  arg3
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
@@ -1527,14 +1758,14 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.ApplyInfix(
         Term.ApplyInfix(
-          Term.Apply(tname("abc"), List(tname("arg1"))),
+          Term.Apply(tname("abc"), Term.Block(List(tname("arg1"))) :: Nil),
           tname("++"),
           Nil,
-          List(Term.Apply(tname("abc"), List(tname("arg2"))))
+          List(Term.Apply(tname("abc"), Term.Block(List(tname("arg2"))) :: Nil))
         ),
         tname("++"),
         Nil,
-        List(Term.Apply(tname("abc"), List(tname("arg3"))))
+        List(Term.Apply(tname("abc"), Term.Block(List(tname("arg3"))) :: Nil))
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -1551,17 +1782,23 @@ class FewerBracesSuite extends BaseDottySuite {
         |    */ abc:
         |        arg2
         |""".stripMargin
-    val layout = "def mtd = abc(arg1) ++ abc(arg2)"
+    val layout =
+      """|def mtd = abc {
+         |  arg1
+         |} ++ abc {
+         |  arg2
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
       Nil,
       None,
       Term.ApplyInfix(
-        Term.Apply(tname("abc"), List(tname("arg1"))),
+        Term.Apply(tname("abc"), Term.Block(List(tname("arg1"))) :: Nil),
         tname("++"),
         Nil,
-        List(Term.Apply(tname("abc"), List(tname("arg2"))))
+        List(Term.Apply(tname("abc"), Term.Block(List(tname("arg2"))) :: Nil))
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -1579,17 +1816,22 @@ class FewerBracesSuite extends BaseDottySuite {
         |    abc:
         |        arg2
         |""".stripMargin
-    val layout = "def mtd = abc(arg1) ++ abc(arg2)"
+    val layout =
+      """|def mtd = abc {
+         |  arg1
+         |} ++ abc {
+         |  arg2
+         |}""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
       Nil,
       None,
       Term.ApplyInfix(
-        Term.Apply(tname("abc"), List(tname("arg1"))),
+        Term.Apply(tname("abc"), Term.Block(List(tname("arg1"))) :: Nil),
         tname("++"),
         Nil,
-        List(Term.Apply(tname("abc"), List(tname("arg2"))))
+        List(Term.Apply(tname("abc"), Term.Block(List(tname("arg2"))) :: Nil))
       )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
@@ -1602,7 +1844,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: implicit bar =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo { implicit bar => baz }"
+    val layout =
+      """|def a = foo {
+         |  implicit bar => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1610,12 +1856,14 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          Term.ParamClause(
-            List(tparam(List(Mod.Implicit()), "bar")),
-            Some(Mod.Implicit())
-          ),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(
+              List(tparam(List(Mod.Implicit()), "bar")),
+              Some(Mod.Implicit())
+            ),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -1629,7 +1877,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: implicit bar: Int =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo { implicit bar: Int => baz }"
+    val layout =
+      """|def a = foo {
+         |  implicit bar: Int => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1637,12 +1889,14 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          Term.ParamClause(
-            List(tparam(List(Mod.Implicit()), "bar", "Int")),
-            Some(Mod.Implicit())
-          ),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(
+              List(tparam(List(Mod.Implicit()), "bar", "Int")),
+              Some(Mod.Implicit())
+            ),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -1656,7 +1910,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   implicit bar =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo { implicit bar => baz }"
+    val layout =
+      """|def a = foo {
+         |  implicit bar => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1664,9 +1922,11 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          Term.ParamClause(List(tparam(List(Mod.Implicit()), "bar")), Some(Mod.Implicit())),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(List(tparam(List(Mod.Implicit()), "bar")), Some(Mod.Implicit())),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -1680,7 +1940,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   implicit bar: Int =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo { implicit bar: Int => baz }"
+    val layout =
+      """|def a = foo {
+         |  implicit bar: Int => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1688,12 +1952,14 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          Term.ParamClause(
-            List(tparam(List(Mod.Implicit()), "bar", "Int")),
-            Some(Mod.Implicit())
-          ),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(
+              List(tparam(List(Mod.Implicit()), "bar", "Int")),
+              Some(Mod.Implicit())
+            ),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -1702,7 +1968,11 @@ class FewerBracesSuite extends BaseDottySuite {
 
   test("scalafmt #3763 implicit in braces, no fewer") {
     val code = "def a = foo { implicit bar => baz }"
-    val layout = "def a = foo { implicit bar => baz }"
+    val layout =
+      """def a = foo {
+        |  implicit bar => baz
+        |}
+        |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1710,12 +1980,14 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          Term.ParamClause(
-            List(tparam(List(Mod.Implicit()), "bar")),
-            Some(Mod.Implicit())
-          ),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(
+              List(tparam(List(Mod.Implicit()), "bar")),
+              Some(Mod.Implicit())
+            ),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -1724,7 +1996,11 @@ class FewerBracesSuite extends BaseDottySuite {
 
   test("scalafmt #3763 implicit in braces, with type, no fewer") {
     val code = "def a = foo { implicit bar: Int => baz }"
-    val layout = "def a = foo { implicit bar: Int => baz }"
+    val layout =
+      """def a = foo {
+        |  implicit bar: Int => baz
+        |}
+        |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1732,12 +2008,14 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          Term.ParamClause(
-            List(tparam(List(Mod.Implicit()), "bar", "Int")),
-            Some(Mod.Implicit())
-          ),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(
+              List(tparam(List(Mod.Implicit()), "bar", "Int")),
+              Some(Mod.Implicit())
+            ),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -1751,7 +2029,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: using bar =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo { (using bar) => baz }"
+    val layout =
+      """|def a = foo {
+         |  (using bar) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1759,12 +2041,14 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          Term.ParamClause(
-            List(tparam(List(Mod.Using()), "bar")),
-            Some(Mod.Using())
-          ),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(
+              List(tparam(List(Mod.Using()), "bar")),
+              Some(Mod.Using())
+            ),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -1778,7 +2062,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: using bar: Int =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo { (using bar: Int) => baz }"
+    val layout =
+      """|def a = foo {
+         |  (using bar: Int) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1786,12 +2074,14 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          Term.ParamClause(
-            List(tparam(List(Mod.Using()), "bar", "Int")),
-            Some(Mod.Using())
-          ),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(
+              List(tparam(List(Mod.Using()), "bar", "Int")),
+              Some(Mod.Using())
+            ),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -1805,7 +2095,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   using bar =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo { (using bar) => baz }"
+    val layout =
+      """|def a = foo {
+         |  (using bar) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1813,9 +2107,11 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          Term.ParamClause(List(tparam(List(Mod.Using()), "bar")), Some(Mod.Using())),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(List(tparam(List(Mod.Using()), "bar")), Some(Mod.Using())),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -1830,7 +2126,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   using bar =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo { (using bar) => baz }"
+    val layout =
+      """|def a = foo {
+         |  (using bar) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1838,7 +2138,9 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(List(tparam(List(Mod.Using()), "bar")), tname("baz")) :: Nil
+        Term.Block(
+          Term.Function(List(tparam(List(Mod.Using()), "bar")), tname("baz")) :: Nil
+        ) :: Nil
       )
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -1851,7 +2153,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   using bar: Int =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo { (using bar: Int) => baz }"
+    val layout =
+      """|def a = foo {
+         |  (using bar: Int) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1859,9 +2165,11 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          Term.ParamClause(List(tparam(List(Mod.Using()), "bar", "Int")), Some(Mod.Using())),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(List(tparam(List(Mod.Using()), "bar", "Int")), Some(Mod.Using())),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -1876,7 +2184,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   using bar: Int =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo { (using bar: Int) => baz }"
+    val layout =
+      """|def a = foo {
+         |  (using bar: Int) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1884,7 +2196,9 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(List(tparam(List(Mod.Using()), "bar", "Int")), tname("baz")) :: Nil
+        Term.Block(
+          Term.Function(List(tparam(List(Mod.Using()), "bar", "Int")), tname("baz")) :: Nil
+        ) :: Nil
       )
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -1919,7 +2233,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |def a =
         |   foo { using bar => baz }
         |""".stripMargin
-    val layout = "def a = foo { (using bar) => baz }"
+    val layout =
+      """def a = foo {
+        |  (using bar) => baz
+        |}
+        |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1927,12 +2245,14 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          Term.ParamClause(
-            List(tparam(List(Mod.Using()), "bar")),
-            Some(Mod.Using())
-          ),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(
+              List(tparam(List(Mod.Using()), "bar")),
+              Some(Mod.Using())
+            ),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -1968,7 +2288,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |def a =
         |   foo { using bar: Int => baz }
         |""".stripMargin
-    val layout = "def a = foo { (using bar: Int) => baz }"
+    val layout =
+      """def a = foo {
+        |  (using bar: Int) => baz
+        |}
+        |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1976,12 +2300,14 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          Term.ParamClause(
-            List(tparam(List(Mod.Using()), "bar", "Int")),
-            Some(Mod.Using())
-          ),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(
+              List(tparam(List(Mod.Using()), "bar", "Int")),
+              Some(Mod.Using())
+            ),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -1995,7 +2321,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: (using bar) =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo { (using bar) => baz }"
+    val layout =
+      """|def a = foo {
+         |  (using bar) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2003,9 +2333,11 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          Term.ParamClause(List(tparam(List(Mod.Using()), "bar")), Some(Mod.Using())),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(List(tparam(List(Mod.Using()), "bar")), Some(Mod.Using())),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -2019,7 +2351,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: (using bar: Int => String) =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo { (using bar: Int => String) => baz }"
+    val layout =
+      """|def a = foo {
+         |  (using bar: Int => String) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2027,16 +2363,18 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          Term.ParamClause(
-            tparam(
-              List(Mod.Using()),
-              "bar",
-              Type.Function(List(pname("Int")), pname("String"))
-            ) :: Nil,
-            Some(Mod.Using())
-          ),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(
+              tparam(
+                List(Mod.Using()),
+                "bar",
+                Type.Function(List(pname("Int")), pname("String"))
+              ) :: Nil,
+              Some(Mod.Using())
+            ),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -2050,7 +2388,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: (using: Int => String) =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo((using: Int => String) => baz)"
+    val layout =
+      """|def a = foo {
+         |  (using: Int => String) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2058,13 +2400,15 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          tparam(
-            Nil,
-            "using",
-            Type.Function(List(pname("Int")), pname("String"))
-          ) :: Nil,
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            tparam(
+              Nil,
+              "using",
+              Type.Function(List(pname("Int")), pname("String"))
+            ) :: Nil,
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -2078,7 +2422,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: (using bar: Int, baz: String) =>
         |      qux
         |""".stripMargin
-    val layout = "def a = foo { (using bar: Int, baz: String) => qux }"
+    val layout =
+      """|def a = foo {
+         |  (using bar: Int, baz: String) => qux
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2086,9 +2434,11 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          List(tparam(List(Mod.Using()), "bar", "Int"), tparam("baz", "String")),
-          tname("qux")
+        Term.Block(
+          Term.Function(
+            List(tparam(List(Mod.Using()), "bar", "Int"), tparam("baz", "String")),
+            tname("qux")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -2102,7 +2452,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: (using bar: Int, using: String) =>
         |      qux
         |""".stripMargin
-    val layout = "def a = foo { (using bar: Int, using: String) => qux }"
+    val layout =
+      """|def a = foo {
+         |  (using bar: Int, using: String) => qux
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2110,12 +2464,14 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          Term.ParamClause(
-            List(tparam(List(Mod.Using()), "bar", "Int"), tparam("using", "String")),
-            Some(Mod.Using())
-          ),
-          tname("qux")
+        Term.Block(
+          Term.Function(
+            Term.ParamClause(
+              List(tparam(List(Mod.Using()), "bar", "Int"), tparam("using", "String")),
+              Some(Mod.Using())
+            ),
+            tname("qux")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -2129,7 +2485,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: erased bar =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo(erased bar => baz)"
+    val layout =
+      """|def a = foo {
+         |  erased bar => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2137,7 +2497,9 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+        Term.Block(
+          Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+        ) :: Nil
       )
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -2150,7 +2512,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: erased bar: Int =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo((erased bar: Int) => baz)"
+    val layout =
+      """|def a = foo {
+         |  (erased bar: Int) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2158,9 +2524,11 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          List(tparam(List(Mod.Erased()), "bar", "Int")),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            List(tparam(List(Mod.Erased()), "bar", "Int")),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -2174,7 +2542,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   erased bar =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo(erased bar => baz)"
+    val layout =
+      """def a = foo {
+        |  erased bar => baz
+        |}
+        |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2182,7 +2554,9 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+        Term.Block(
+          Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+        ) :: Nil
       )
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -2196,7 +2570,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   erased bar =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo(erased bar => baz)"
+    val layout =
+      """def a = foo {
+        |  erased bar => baz
+        |}
+        |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2204,7 +2582,9 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+        Term.Block(
+          Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+        ) :: Nil
       )
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -2217,7 +2597,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   erased bar: Int =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo((erased bar: Int) => baz)"
+    val layout =
+      """|def a = foo {
+         |  (erased bar: Int) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2225,7 +2609,9 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(List(tparam(List(Mod.Erased()), "bar", "Int")), tname("baz")) :: Nil
+        Term.Block(
+          Term.Function(List(tparam(List(Mod.Erased()), "bar", "Int")), tname("baz")) :: Nil
+        ) :: Nil
       )
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -2239,7 +2625,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   erased bar: Int =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo((erased bar: Int) => baz)"
+    val layout =
+      """|def a = foo {
+         |  (erased bar: Int) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2247,9 +2637,11 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          List(tparam(List(Mod.Erased()), "bar", "Int")),
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            List(tparam(List(Mod.Erased()), "bar", "Int")),
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -2282,7 +2674,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |def a =
         |   foo { erased bar => baz }
         |""".stripMargin
-    val layout = "def a = foo(erased bar => baz)"
+    val layout =
+      """|def a = foo {
+         |  erased bar => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2290,7 +2686,9 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+        Term.Block(
+          Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+        ) :: Nil
       )
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -2303,7 +2701,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: (erased bar) =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo(erased bar => baz)"
+    val layout =
+      """|def a = foo {
+         |  erased bar => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2311,7 +2713,9 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+        Term.Block(
+          Term.Function(List(tparam(List(Mod.Erased()), "bar")), tname("baz")) :: Nil
+        ) :: Nil
       )
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -2324,7 +2728,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: (erased bar: Int => String) =>
         |      baz
         |""".stripMargin
-    val layout = "def a = foo((erased bar: Int => String) => baz)"
+    val layout =
+      """|def a = foo {
+         |  (erased bar: Int => String) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2332,13 +2740,15 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          tparam(
-            List(Mod.Erased()),
-            "bar",
-            Type.Function(List(pname("Int")), pname("String"))
-          ) :: Nil,
-          tname("baz")
+        Term.Block(
+          Term.Function(
+            tparam(
+              List(Mod.Erased()),
+              "bar",
+              Type.Function(List(pname("Int")), pname("String"))
+            ) :: Nil,
+            tname("baz")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -2352,7 +2762,11 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: (erased bar: Int, erased baz: String) =>
         |      qux
         |""".stripMargin
-    val layout = "def a = foo((erased bar: Int, erased baz: String) => qux)"
+    val layout =
+      """|def a = foo {
+         |  (erased bar: Int, erased baz: String) => qux
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -2360,12 +2774,14 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       Term.Apply(
         tname("foo"),
-        Term.Function(
-          List(
-            tparam(List(Mod.Erased()), "bar", "Int"),
-            tparam(List(Mod.Erased()), "baz", "String")
-          ),
-          tname("qux")
+        Term.Block(
+          Term.Function(
+            List(
+              tparam(List(Mod.Erased()), "bar", "Int"),
+              tparam(List(Mod.Erased()), "baz", "String")
+            ),
+            tname("qux")
+          ) :: Nil
         ) :: Nil
       )
     )
@@ -2379,13 +2795,17 @@ class FewerBracesSuite extends BaseDottySuite {
         |   foo: () =>
         |      qux
         |""".stripMargin
-    val layout = "def a = foo(() => qux)"
+    val layout =
+      """|def a = foo {
+         |  () => qux
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
       Nil,
       None,
-      Term.Apply(tname("foo"), List(Term.Function(Nil, tname("qux"))))
+      Term.Apply(tname("foo"), Term.Block(List(Term.Function(Nil, tname("qux")))) :: Nil)
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2398,13 +2818,17 @@ class FewerBracesSuite extends BaseDottySuite {
         |     () =>
         |       qux
         |""".stripMargin
-    val layout = "def a = foo(() => qux)"
+    val layout =
+      """|def a = foo {
+         |  () => qux
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
       Nil,
       None,
-      Term.Apply(tname("foo"), List(Term.Function(Nil, tname("qux"))))
+      Term.Apply(tname("foo"), Term.Block(List(Term.Function(Nil, tname("qux")))) :: Nil)
     )
     runTestAssert[Stat](code, layout)(tree)
   }
