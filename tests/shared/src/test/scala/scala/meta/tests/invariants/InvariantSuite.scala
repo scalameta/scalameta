@@ -12,7 +12,8 @@ class InvariantSuite extends FunSuite {
       """|invariant failed:
          |when verifying x.>(3)
          |found that x.>(3) is false
-         |where x = 2""".stripMargin.replace("\n", EOL)
+         |where x = 2
+         |""".stripMargin.replace("\n", EOL)
     ) {
       val x = 2
       require(x > 3)
@@ -26,7 +27,8 @@ class InvariantSuite extends FunSuite {
          |found that C.this.x is equal to 3
          |where C = C(3)
          |where C.this.x = 3
-         |where y = 2""".stripMargin.replace("\n", EOL)
+         |where y = 2
+         |""".stripMargin.replace("\n", EOL)
     ) {
       val y = 2
       case class C(x: Int) { require(x != 3 && debug(x, y)) }
@@ -46,7 +48,8 @@ class InvariantSuite extends FunSuite {
     interceptMessage[UnreachableError](
       """|this code path should've been unreachable
          |where C.this.x = 3
-         |where y = 2""".stripMargin.replace("\n", EOL)
+         |where y = 2
+         |""".stripMargin.replace("\n", EOL)
     ) {
       val y = 2
       case class C(x: Int) { unreachable(debug(x, y)) }

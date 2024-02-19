@@ -299,7 +299,8 @@ class SuccessSuite extends TreeSuiteBase {
          |when verifying targClause.!=(null).&&(targClause.isInstanceOf[scala.meta.internal.trees.Quasi].||(targClause.nonEmpty))
          |found that targClause.isInstanceOf[scala.meta.internal.trees.Quasi] is false
          |and also targClause.nonEmpty is false
-         |where targClause = """.stripMargin.replace("\n", EOL)
+         |where targClause = ''
+         |""".stripMargin.replace("\n", EOL)
     interceptMessage[InvariantFailedException](error)(q"$foo[..$types]")
     interceptMessage[InvariantFailedException](error)(q"$foo[..$types]()")
   }
