@@ -1,9 +1,6 @@
 package org
 
 import scala.language.experimental.macros
-import scala.reflect.macros.blackbox.Context
-import org.scalameta.internal.MacroHelpers
-import org.scalameta.internal.ScalaCompat.EOL
 
 package object scalameta {
   // Statically indicates that a given code path is unreachable.
@@ -26,25 +23,4 @@ package object scalameta {
   // A marker method used to denote debugging boundaries for `org.scalameta.unreachable`
   // and `org.scalameta.invariants.requireXXX`. See corresponding documentation for more info.
   def debug(xs: Any*): Boolean = true
-}
-
-package scalameta {
-  class UnreachableError(message: String) extends Error(message)
-
-  object UnreachableError {
-    def raise(debuggees: Map[String, Any]): Nothing = {
-      def relevantValues =
-        debuggees.toList.sortBy(_._1).map({ case (k, v) => s"where $k = $v" }).mkString(EOL)
-      val mandatory = "this code path should've been unreachable"
-      val optional = if (debuggees.nonEmpty) EOL + relevantValues else ""
-      throw new UnreachableError(mandatory + optional)
-    }
-  }
-
-  class UnreachableMacros(val c: Context) extends MacroHelpers {
-    import c.universe._
-    def unreachable: c.Tree = q"$UnreachableErrorModule.raise(${Map.empty[String, Tree]})"
-    def unreachableWithDebug(dsl: c.Tree): c.Tree =
-      q"$UnreachableErrorModule.raise(${debuggees(dsl)})"
-  }
 }
