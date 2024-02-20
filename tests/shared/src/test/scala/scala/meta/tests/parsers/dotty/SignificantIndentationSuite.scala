@@ -3328,4 +3328,23 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
+  test("#3571 scala3") {
+    val code =
+      """|new A {
+         |  def b: C =
+         |    ???
+         |}
+         |""".stripMargin
+    val layout =
+      """|new A { def b: C = ??? }
+         |""".stripMargin
+    val tree = Term.NewAnonymous(
+      tpl(
+        List(Init(pname("A"), anon, Nil)),
+        List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
