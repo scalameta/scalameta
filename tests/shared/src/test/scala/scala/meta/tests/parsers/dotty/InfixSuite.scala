@@ -440,7 +440,7 @@ class InfixSuite extends BaseDottySuite {
   }
 
   test("scala3 infix syntax 5.2") {
-    runTestError[Stat](
+    val code =
       """|{
          |  println("hello")
          |    ???
@@ -448,11 +448,24 @@ class InfixSuite extends BaseDottySuite {
          |      case 0 => 1
          |    }
          |}
-         |""".stripMargin,
-      """|error: Invalid indented leading infix operator found
-         |    ???
-         |    ^""".stripMargin
+         |""".stripMargin
+    val layout =
+      """|{
+         |  println("hello")
+         |  ???
+         |  ??? match {
+         |    case 0 => 1
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Term.Block(
+      List(
+        Term.Apply(tname("println"), List(str("hello"))),
+        tname("???"),
+        Term.Match(tname("???"), List(Case(int(0), None, int(1))), Nil)
+      )
     )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scala3 infix syntax 6") {

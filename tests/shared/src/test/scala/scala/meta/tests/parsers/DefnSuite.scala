@@ -387,11 +387,16 @@ class DefnSuite extends ParseSuite {
          |    ???
          |}
          |""".stripMargin
-    val error =
-      """|<input>:2: error: illegal start of simple expression
-         |  def b: C =
-         |            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|new A { def b: C = ??? }
+         |""".stripMargin
+    val tree = Term.NewAnonymous(
+      tpl(
+        List(Init(pname("A"), anon, Nil)),
+        List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
