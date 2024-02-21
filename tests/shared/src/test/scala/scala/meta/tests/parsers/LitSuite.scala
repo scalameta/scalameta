@@ -187,4 +187,22 @@ class LitSuite extends ParseSuite {
     )
 
   }
+
+  test("numeric literals with separators") {
+    implicit val Scala211 = scala.meta.dialects.Scala213
+    interceptMessage[NumberFormatException](
+      """|For input string: "1_000_000_000.0"""".stripMargin
+    )(term("1_000_000_000.0"))
+    interceptMessage[NumberFormatException](
+      """|For input string: "1_000_000_000d"""".stripMargin
+    )(term("1_000_000_000d"))
+    interceptMessage[NumberFormatException](
+      """|For input string: "1_000_000_000D"""".stripMargin
+    )(term("1_000_000_000D"))
+    runTestAssert[Stat]("1000000000d")(dbl("1000000000d"))
+    runTestAssert[Stat]("1000000000D")(dbl("1000000000d"))
+    runTestAssert[Stat]("1_000_000_000l", "1000000000L")(lit(1000000000L))
+    runTestAssert[Stat]("1_000_000_000L", "1000000000L")(lit(1000000000L))
+  }
+
 }
