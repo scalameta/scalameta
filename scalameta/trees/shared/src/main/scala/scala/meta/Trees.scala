@@ -92,18 +92,20 @@ object Lit {
   }
   object Double {
     def apply(value: scala.Double): Double = {
-      org.scalameta.invariants.require(java.lang.Double.isFinite(value))
+      require(java.lang.Double.isFinite(value))
       apply(value.toString)
     }
+    private[meta] def apply(number: scala.BigDecimal): Double = apply(number.toString)
   }
   @ast class Float(format: scala.Predef.String) extends Lit {
     val value = format.toFloat
   }
   object Float {
     def apply(value: scala.Float): Float = {
-      org.scalameta.invariants.require(java.lang.Float.isFinite(value))
+      require(java.lang.Float.isFinite(value))
       apply(value.toString)
     }
+    private[meta] def apply(number: scala.BigDecimal): Float = apply(number.toString)
   }
   @ast class Byte(value: scala.Byte) extends Lit
   @ast class Short(value: scala.Short) extends Lit

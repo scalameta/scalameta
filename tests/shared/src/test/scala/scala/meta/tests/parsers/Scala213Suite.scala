@@ -31,7 +31,7 @@ class Scala213Suite extends ParseSuite {
         tname("foo"),
         Nil,
         List(List(tparam("a", Lit.Float("3.14159f")))),
-        Lit.Double(".1d")
+        Lit.Double("0.1d")
       )
     )
 

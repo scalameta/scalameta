@@ -100,7 +100,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       expected: PartialFunction[Tree, Unit]
   )(implicit parser: (String, Dialect) => T, dialect: Dialect, loc: munit.Location): Unit = {
     val obtained = parser(code, dialect)
-    expected.lift(obtained).getOrElse(fail("Got unexpected tree: " + obtained))
+    expected.lift(obtained).getOrElse(fail(s"Got unexpected tree: ${obtained.structure}"))
   }
 
   protected def matchSubStructureWithDialect[T <: Tree](
