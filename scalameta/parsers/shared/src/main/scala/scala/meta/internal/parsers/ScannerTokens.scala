@@ -977,9 +977,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         val commentIndent = multilineCommentIndent(c)
         iter(pos + 1, if (commentIndent < 0) indent else commentIndent, true)
       case t =>
-        if (indent >= 0 && indent < nextIndent) LeadingInfix.InvalidArg
-        else if (canBeLeadingInfixArg(t, pos)) LeadingInfix.Yes
-        else LeadingInfix.InvalidArg
+        if (!canBeLeadingInfixArg(t, pos)) LeadingInfix.No
+        else if (indent >= 0 && indent < nextIndent) LeadingInfix.InvalidArg
+        else LeadingInfix.Yes
     }
     tokens(afterOpPos) match {
       case _: EOL => iter(afterOpPos + 1, 0, false)
