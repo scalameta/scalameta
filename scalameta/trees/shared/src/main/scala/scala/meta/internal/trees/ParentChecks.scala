@@ -129,9 +129,9 @@ object ParentChecks {
     }
   }
 
-  private[meta] def MemberTuple(tree: Member.Tuple, parent: Tree, dest: String): Boolean = {
-    tree.args match {
-      case Nil | Member.Tuple(_ :: Nil) => false
+  private[meta] def MemberTuple(args: List[Tree]): Boolean = {
+    args match {
+      case Member.Tuple(_ :: Nil) :: Nil => false
       case _ => true
     }
   }

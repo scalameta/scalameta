@@ -6,7 +6,6 @@ import org.scalameta.invariants._
 
 import scala.meta._
 import scala.meta.dialects.Scala211
-import scala.util.Try
 
 class InvariantSuite extends TreeSuiteBase {
   test("secondary constructors in templates") {
@@ -96,8 +95,13 @@ class InvariantSuite extends TreeSuiteBase {
   }
   test("nested Term.Tuple") {
     def tuple = Term.Tuple(Term.Tuple(Lit.Unit() :: Nil) :: Nil)
-    // no exception
-    assert(Try(tuple).isSuccess)
+    interceptMessage[InvariantFailedException](
+      """|invariant failed:
+         |when verifying scala.meta.internal.trees.ParentChecks.MemberTuple(args)
+         |found that scala.meta.internal.trees.ParentChecks.MemberTuple(args) is false
+         |where args = List((()))
+         |""".stripMargin.replace("\n", EOL)
+    )(tuple)
   }
 
   test("empty Pat.Tuple") {
@@ -113,8 +117,13 @@ class InvariantSuite extends TreeSuiteBase {
   }
   test("nested Pat.Tuple") {
     def tuple = Pat.Tuple(Pat.Tuple(Lit.Unit() :: Nil) :: Nil)
-    // no exception
-    assert(Try(tuple).isSuccess)
+    interceptMessage[InvariantFailedException](
+      """|invariant failed:
+         |when verifying scala.meta.internal.trees.ParentChecks.MemberTuple(args)
+         |found that scala.meta.internal.trees.ParentChecks.MemberTuple(args) is false
+         |where args = List((()))
+         |""".stripMargin.replace("\n", EOL)
+    )(tuple)
   }
 
   test("empty Type.Tuple") {
@@ -130,8 +139,13 @@ class InvariantSuite extends TreeSuiteBase {
   }
   test("nested Type.Tuple") {
     def tuple = Type.Tuple(Type.Tuple(Lit.Unit() :: Nil) :: Nil)
-    // no exception
-    assert(Try(tuple).isSuccess)
+    interceptMessage[InvariantFailedException](
+      """|invariant failed:
+         |when verifying scala.meta.internal.trees.ParentChecks.MemberTuple(args)
+         |found that scala.meta.internal.trees.ParentChecks.MemberTuple(args) is false
+         |where args = List((()))
+         |""".stripMargin.replace("\n", EOL)
+    )(tuple)
   }
 
 }
