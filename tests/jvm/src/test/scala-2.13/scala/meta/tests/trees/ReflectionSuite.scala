@@ -85,6 +85,8 @@ class ReflectionSuite extends FunSuite {
       |Boolean
       |Byte
       |Char
+      |Double
+      |Float
       |Int
       |List[meta.Term.ParamClause]
       |List[scala.meta.Case]

@@ -119,8 +119,10 @@ trait CommonTrees {
   final def lit(v: Long) = Lit.Long(v)
   final def dbl(v: String) = Lit.Double(v)
   final def lit(v: Double) = Lit.Double(v)
+  final def lit(f: String, v: Double) = Lit.Double(f, v)
   final def flt(v: String) = Lit.Float(v)
   final def lit(v: Float) = Lit.Float(v)
+  final def lit(f: String, v: Float) = Lit.Float(f, v)
   final def str(v: String) = Lit.String(v)
   final def init(name: String, args: List[Term.ArgClause] = Nil): Init =
     Init(pname(name), anon, args)

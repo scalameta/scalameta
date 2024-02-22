@@ -787,28 +787,28 @@ object TreeSyntax {
         )
       case Lit.Int(value) => m(Literal, s(value.toString))
       case Lit.Long(value) => m(Literal, s(value.toString + "L"))
-      case Lit.Float(value) =>
-        val n = value.toFloat
-        if (java.lang.Float.isNaN(n)) s("Float.NaN")
+      case t: Lit.Float =>
+        val number = t.scalar
+        if (java.lang.Float.isNaN(number)) s("Float.NaN")
         else {
-          n match {
+          number match {
             case Float.PositiveInfinity => s("Float.PositiveInfinity")
             case Float.NegativeInfinity => s("Float.NegativeInfinity")
-            case _ if Character.toLowerCase(value.last) == 'f' => s(value)
             case _ =>
-              s(value, "f")
+              val format = t.format
+              w(s(format), "f", Character.toLowerCase(format.last) != 'f')
           }
         }
-      case Lit.Double(value) =>
-        val n = value.toDouble
-        if (java.lang.Double.isNaN(n)) s("Double.NaN")
+      case t: Lit.Double =>
+        val number = t.scalar
+        if (java.lang.Double.isNaN(number)) s("Double.NaN")
         else {
-          n match {
+          number match {
             case Double.PositiveInfinity => s("Double.PositiveInfinity")
             case Double.NegativeInfinity => s("Double.NegativeInfinity")
-            case _ if Character.toLowerCase(value.last) == 'd' => s(value)
             case _ =>
-              s(value, "d")
+              val format = t.format
+              w(s(format), "d", Character.toLowerCase(format.last) != 'd')
           }
         }
       case t @ Lit.Char(value) =>

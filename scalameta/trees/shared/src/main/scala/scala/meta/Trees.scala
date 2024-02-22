@@ -87,10 +87,26 @@ object Lit {
   // 1.4f.toString == "1.399999976158142" // in JS
   // 1.4f.toString == "1.4"               // in JVM
   // See https://www.scala-js.org/doc/semantics.html#tostring-of-float-double-and-unit
-  @ast class Double(format: scala.Predef.String) extends Lit { val value = format.toDouble }
-  object Double { def apply(double: scala.Double): Double = Lit.Double(double.toString) }
-  @ast class Float(format: scala.Predef.String) extends Lit { val value = format.toFloat }
-  object Float { def apply(float: scala.Float): Float = Lit.Float(float.toString) }
+  @ast class Double(
+      format: scala.Predef.String,
+      @newField("4.9.0") number: scala.Double = scala.Double.NaN
+  ) extends Lit {
+    final val scalar = if (java.lang.Double.isNaN(number)) format.toDouble else number
+    override def value: Any = scalar
+  }
+  object Double {
+    def apply(value: scala.Double): Double = Double(value.toString, value)
+  }
+  @ast class Float(
+      format: scala.Predef.String,
+      @newField("4.9.0") number: scala.Float = scala.Float.NaN
+  ) extends Lit {
+    final val scalar = if (java.lang.Float.isNaN(number)) format.toFloat else number
+    override def value: Any = scalar
+  }
+  object Float {
+    def apply(value: scala.Float): Float = Float(value.toString, value)
+  }
   @ast class Byte(value: scala.Byte) extends Lit
   @ast class Short(value: scala.Short) extends Lit
   @ast class Char(value: scala.Char) extends Lit
