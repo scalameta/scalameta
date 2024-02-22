@@ -1114,7 +1114,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           if (dialect.allowLiteralTypes) literal()
           else syntaxError(s"$dialect doesn't support literal types", at = path())
         case Ident("-") if dialect.allowLiteralTypes && tryAhead[NumericConstant[_]] =>
-          literal(isNegated = true)
+          numericLiteral(prevTokenPos, isNegated = true)
         case _ => pathSimpleType()
       }
       simpleTypeRest(autoEndPosOpt(startPos)(res), startPos)
@@ -1332,8 +1332,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (acceptOpt[Dot]) selectors(name) else name
   }
 
-  def literal(isNegated: Boolean = false): Lit = {
-    val startPos = if (isNegated) prevTokenPos else tokenPos
+  private def numericLiteral(startPos: Int, isNegated: Boolean): Lit = {
+    val number = token.asInstanceOf[NumericConstant[_]]
+    next()
+    autoEndPos(startPos)(numericLiteralAt(number, isNegated))
+  }
+
+  private def numericLiteralAt(token: NumericConstant[_], isNegated: Boolean): Lit = {
     def getBigInt(tok: NumericConstant[BigInt], dec: BigInt, hex: BigInt, typ: String) = {
       // decimal never starts with `0` as octal was removed in 2.11; "hex" includes `0x` or `0b`
       // non-decimal literals allow signed overflow within unsigned range
@@ -1350,7 +1355,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
     def getBigDecimal(tok: NumericConstant[BigDecimal]) =
       if (isNegated) -tok.value else tok.value
-    val res = token match {
+    token match {
       case tok: Constant.Int =>
         Lit.Int(getBigInt(tok, bigIntMaxInt, bigIntMaxUInt, "Int").intValue)
       case tok: Constant.Long =>
@@ -1359,24 +1364,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         Lit.Float(getBigDecimal(tok))
       case tok: Constant.Double =>
         Lit.Double(getBigDecimal(tok))
-      case Constant.Char(value) =>
-        Lit.Char(value)
-      case Constant.String(value) =>
-        Lit.String(value)
-      case _: Constant.Symbol if !dialect.allowSymbolLiterals =>
-        syntaxError("Symbol literals are no longer allowed", at = token)
-      case Constant.Symbol(value) =>
-        Lit.Symbol(value)
-      case x: BooleanConstant =>
-        Lit.Boolean(x.value)
-      case KwNull() =>
-        Lit.Null()
-      case _ =>
-        unreachable(token)
+      case t => unreachable(t)
     }
-    next()
-    autoEndPos(startPos)(res)
   }
+
+  def literal(): Lit = atCurPosNext(token match {
+    case number: NumericConstant[_] => numericLiteralAt(number, false)
+    case Constant.Char(value) => Lit.Char(value)
+    case Constant.String(value) => Lit.String(value)
+    case t: Constant.Symbol =>
+      if (dialect.allowSymbolLiterals) Lit.Symbol(t.value)
+      else syntaxError("Symbol literals are no longer allowed", at = t)
+    case x: BooleanConstant => Lit.Boolean(x.value)
+    case _: KwNull => Lit.Null()
+    case t => unreachable(t)
+  })
 
   private def interpolateWith[Ctx, Ret <: Tree](
       arg: => Ctx,
@@ -2231,15 +2233,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     else {
       val startPos = tokenPos
       val op = termName()
+      def addPos(tree: Term) = autoEndPos(startPos)(tree)
+      def rest(tree: Term) = simpleExprRest(tree, canApply = true, startPos = startPos)
       if (op.value == "-" && token.is[NumericConstant[_]])
-        simpleExprRest(literal(isNegated = true), canApply = true, startPos = startPos)
+        rest(numericLiteral(startPos, isNegated = true))
       else {
         simpleExpr0(allowRepeated = true) match {
-          case Success(result) => autoEndPos(startPos)(Term.ApplyUnary(op, result))
+          case Success(result) => addPos(Term.ApplyUnary(op, result))
           case Failure(_) =>
             // maybe it is not unary operator but simply an ident `trait - {...}`
             // we would fail here anyway, let's try to treat it as ident
-            simpleExprRest(op, canApply = true, startPos = startPos)
+            rest(op)
         }
       }
     }
@@ -2904,14 +2908,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         onError: Token => Nothing,
         isRhs: Boolean = false,
         isForComprehension: Boolean = false
-    ): Pat =
-      autoPos(token match {
-        case _: Ident | _: KwThis | _: Unquote =>
-          val isBackquoted = token.isBackquoted
+    ): Pat = {
+      val startPos = tokenPos
+      autoEndPos(startPos)(token match {
+        case sidToken @ (_: Ident | _: KwThis | _: Unquote) =>
           val sid = stableId()
           if (token.is[NumericConstant[_]]) {
             sid match {
-              case Term.Name("-") => return literal(isNegated = true)
+              case Term.Name("-") => return numericLiteral(startPos, isNegated = true)
               case _ =>
             }
           }
@@ -2931,7 +2935,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               case name: Term.Name =>
                 if (dialect.allowPostfixStarVarargSplices && isStar && tryAheadNot[Ident])
                   Pat.Repeated(name)
-                else if ((!isBackquoted || isForComprehension) && {
+                else if ((!sidToken.isBackquoted || isForComprehension) && {
                     val first = name.value.head
                     first == '_' || Character.getType(first) == Character.LOWERCASE_LETTER ||
                     dialect.allowUpperCasePatternVarBinding && token.is[At]
@@ -2982,6 +2986,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case t =>
           onError(t)
       })
+    }
   }
 
   /** The implementation of the context sensitive methods for parsing outside of patterns. */
