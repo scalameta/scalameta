@@ -13,6 +13,13 @@ jobs:
           - 'JVM'
           - 'JS'
           - 'Native'
+        isSematicdbReleased:
+          - ${{ contains(github.ref, 'semanticdb') }}
+        exclude:
+          - isSematicdbReleased: true
+            platform: 'JS'
+          - isSematicdbReleased: true
+            platform: 'Native'
     steps:
       - uses: actions/checkout@v4
         with:
