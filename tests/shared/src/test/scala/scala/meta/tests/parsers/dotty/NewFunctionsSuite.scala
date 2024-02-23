@@ -798,16 +798,20 @@ class NewFunctionsSuite extends BaseDottySuite {
     runTestAssert[Stat](
       """|f{ (x1: A, x2: B => C) => }
          |""".stripMargin,
-      "f((x1: A, x2: B => C) => {})"
+      """f { (x1: A, x2: B => C) =>
+        |}
+        |""".stripMargin
     )(
       Term.Apply(
         tname("f"),
-        Term.Function(
-          List(
-            tparam("x1", "A"),
-            tparam("x2", Type.Function(Type.FuncParamClause(List(pname("B"))), pname("C")))
-          ),
-          Term.Block(Nil)
+        Term.Block(
+          Term.Function(
+            List(
+              tparam("x1", "A"),
+              tparam("x2", Type.Function(Type.FuncParamClause(List(pname("B"))), pname("C")))
+            ),
+            Term.Block(Nil)
+          ) :: Nil
         ) :: Nil
       )
     )

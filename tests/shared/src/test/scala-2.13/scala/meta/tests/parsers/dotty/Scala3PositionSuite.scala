@@ -1107,7 +1107,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Term.ApplyInfix bar foreach:
        |    baz
        |Type.ArgClause   bar foreach@@:
-       |Term.ArgClause :
+       |Term.Block :
        |    baz
        |""".stripMargin
   )
@@ -1119,7 +1119,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Term.ApplyInfix bar foreach: baz =>
        |    println(baz)
        |Type.ArgClause   bar foreach@@: baz =>
-       |Term.ArgClause : baz =>
+       |Term.Block : baz =>
        |    println(baz)
        |Term.Function baz =>
        |    println(baz)

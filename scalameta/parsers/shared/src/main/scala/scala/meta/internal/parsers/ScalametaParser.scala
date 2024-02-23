@@ -1514,7 +1514,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def unquoteExpr(): Term =
     token match {
       case t: Ident => termName(t)
-      case _: LeftBrace => dropTrivialBlock(expr(location = UnquoteStat, allowRepeated = true))
+      case _: LeftBrace => expr(location = UnquoteStat, allowRepeated = true)
       case _: KwThis => anonThis()
       case _ =>
         syntaxError(
@@ -2379,26 +2379,30 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   private def getFewerBracesArgOnColon(): Option[Term] = {
     if (!dialect.allowFewerBraces) None
-    else
+    else {
+      val colonPos = tokenPos
+      def addPos(term: Term) = autoEndPos(colonPos)(term)
+      def tryGetArgAsLambdaBlock(postCheck: => Boolean) = tryGetArgAsLambda().flatMap { arg =>
+        if (postCheck) Some(addPos(Term.Block(arg :: Nil))) else None
+      }
       peekToken match {
         case _: Indentation.Indent =>
           next()
           tryAhead {
-            val argOpt = tryGetArgAsLambda()
-            val ok = argOpt.isDefined && acceptIfAfterOptNL[Indentation.Outdent]
-            if (ok) argOpt else None
+            tryGetArgAsLambdaBlock(acceptIfAfterOptNL[Indentation.Outdent])
           }.orElse {
-            Some(blockExprOnIndent())
+            Some(addPos(blockExprOnIndent(keepBlock = true)))
           }
         case _: Indentation => syntaxError("expected fewer-braces method body", token)
         case _: EOL =>
           val colon = token
           nextTwice()
-          val argOpt = tryGetArgAsLambda()
+          val argOpt = tryGetArgAsLambdaBlock(true)
           if (argOpt.isEmpty) syntaxError("expected fewer-braces method body", colon)
           argOpt
-        case _ => tryAhead(tryGetArgAsLambda())
+        case _ => tryAhead(tryGetArgAsLambdaBlock(true))
       }
+    }
   }
 
   private def tryGetArgAsLambda(): Option[Term.FunctionTerm] = Try {
@@ -2529,7 +2533,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   private def getArgClauseOnBrace(): Term.ArgClause = autoPos {
-    val arg = dropTrivialBlock(blockExprOnBrace(allowRepeated = true))
+    val arg = blockExprOnBrace(allowRepeated = true)
     Term.ArgClause(arg :: Nil)
   }
 
@@ -2587,8 +2591,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private def blockInDelims(f: (=> Term.Block) => Term, allowRepeated: Boolean = false): Term =
     autoPos(f(blockWithinDelims(allowRepeated = allowRepeated)))
 
-  private def blockOnIndent(): Term = blockInDelims(x => dropOuterBlock(indentedOnOpen(x)))
-  private def blockExprOnIndent(): Term = blockExprPartial[Indentation.Outdent](blockOnIndent())
+  private def blockOnIndent(keepBlock: Boolean = false): Term =
+    blockInDelims { x =>
+      val term = indentedOnOpen(x)
+      if (keepBlock) term else dropOuterBlock(term)
+    }
+  private def blockExprOnIndent(keepBlock: Boolean = false): Term =
+    blockExprPartial[Indentation.Outdent](blockOnIndent(keepBlock))
 
   private def blockOnBrace(allowRepeated: Boolean = false): Term =
     blockInDelims(inBracesOnOpen, allowRepeated)
@@ -4779,12 +4788,6 @@ object ScalametaParser {
     body
     while (cond) body
   }
-
-  private def dropTrivialBlock(term: Term): Term =
-    term match {
-      case b: Term.Block => dropOuterBlock(b)
-      case _ => term
-    }
 
   private def dropOuterBlock(term: Term.Block): Term =
     term.stats match {

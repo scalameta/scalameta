@@ -372,7 +372,8 @@ object TreeSyntax {
         val zipped = parts.zip(t.args).zip(parts.tail).map {
           case ((part, id: Name), next) if !guessIsBackquoted(id) && !needBraces(id.value, next) =>
             s(part, "$", id.value)
-          case ((part, arg), _) => s(part, "${", p(Expr, arg), "}")
+          case ((part, arg), _) =>
+            s(part, "$", w("{", p(Expr, arg), "}", !arg.is[Term.Block]))
         }
         val quote = if (parts.exists(s => s.contains("\n") || s.contains("\""))) "\"\"\"" else "\""
         m(SimpleExpr1, s(t.prefix, quote, r(zipped), parts.last, quote))
@@ -380,7 +381,9 @@ object TreeSyntax {
         if (!dialect.allowXmlLiterals)
           throw new UnsupportedOperationException(s"$dialect doesn't support xml literals")
         val parts = t.parts.map { case Lit(part: String) => part }
-        val zipped = parts.zip(t.args).map { case (part, arg) => s(part, "{", p(Expr, arg), "}") }
+        val zipped = parts.zip(t.args).map { case (part, arg) =>
+          s(part, w("{", p(Expr, arg), "}", !arg.is[Term.Block]))
+        }
         m(SimpleExpr1, s(r(zipped), parts.last))
 
       case t: Term.ArgClause => s("(", o(t.mod, " "), r(t.values, ", "), ")")
@@ -748,7 +751,7 @@ object TreeSyntax {
           case (part, id: Name) if !guessIsBackquoted(id) && !needBraces(id.value) =>
             s(part, "$", id.value)
           case (part, arg) =>
-            s(part, "${", arg, "}")
+            s(part, "$", w("{", arg, "}", !arg.is[Term.Block]))
         }
         m(SimplePattern, s(t.prefix, "\"", r(zipped), parts.last, "\""))
       case t: Pat.Xml =>

@@ -190,7 +190,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
   checkPositions[Stat](
     "foo { implicit a => { b }: C }",
-    """|Term.ArgClause { implicit a => { b }: C }
+    """|Term.Block { implicit a => { b }: C }
        |Term.Function implicit a => { b }: C
        |Term.ParamClause implicit a
        |Term.Param implicit a
@@ -311,7 +311,9 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |""".stripMargin
   )
   checkPositions[Stat](
-    """ s"start ${(a)} end""""
+    """ s"start ${(a)} end"""",
+    """|Term.Block {(a)}
+       |""".stripMargin
   )
   checkPositions[Stat](
     "(a) match { case x => x }",
@@ -425,7 +427,11 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Term.Block {d}
        |""".stripMargin
   )
-  checkPositions[Stat]("<a>b{c}d</a>")
+  checkPositions[Stat](
+    "<a>b{c}d</a>",
+    """|Term.Block {c}
+       |""".stripMargin
+  )
   checkPositions[Stat]("(x)")
   checkPositions[Stat]("(_)")
 
