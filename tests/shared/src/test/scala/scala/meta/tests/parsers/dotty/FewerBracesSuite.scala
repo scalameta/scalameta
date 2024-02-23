@@ -2840,21 +2840,33 @@ class FewerBracesSuite extends BaseDottySuite {
          |    loader: _ => 
          |      qux
          |""".stripMargin
-    val layout = "val foo = bar()(loader => baz(loader(_ => qux)))"
+    val layout =
+      """|val foo = bar() {
+         |  loader => baz {
+         |    loader {
+         |      _ => qux
+         |    }
+         |  }
+         |}
+         |""".stripMargin
     val tree = Defn.Val(
       Nil,
       List(Pat.Var(tname("foo"))),
       None,
       Term.Apply(
         Term.Apply(tname("bar"), Nil),
-        Term.Function(
-          List(tparam("loader")),
-          Term.Apply(
-            tname("baz"),
+        blk(
+          Term.Function(
+            List(tparam("loader")),
             Term.Apply(
-              tname("loader"),
-              Term.Function(List(tparam("_")), tname("qux")) :: Nil
-            ) :: Nil
+              tname("baz"),
+              blk(
+                Term.Apply(
+                  tname("loader"),
+                  blk(Term.Function(List(tparam("_")), tname("qux"))) :: Nil
+                )
+              ) :: Nil
+            )
           )
         ) :: Nil
       )
