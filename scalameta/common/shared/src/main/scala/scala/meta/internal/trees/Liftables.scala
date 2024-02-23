@@ -48,15 +48,10 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
         object ApplyToTripleDots {
           def unapply(t: _root_.scala.meta.Term.Apply): Option[(
             _root_.scala.meta.Term,
-            _root_.scala.Either[
-              _root_.scala.meta.Term.Quasi,
-              _root_.scala.meta.Term.ArgClause.Quasi
-            ]
+            _root_.scala.meta.Term.ArgClause.Quasi
           )] = t.argClause match {
             case arg: _root_.scala.meta.Term.ArgClause.Quasi if arg.rank == 1 =>
-              _root_.scala.Some((t.fun, _root_.scala.Right(arg)))
-            case _root_.scala.List(arg: _root_.scala.meta.Term.Quasi) if arg.rank == 2 =>
-              _root_.scala.Some((t.fun, _root_.scala.Left(arg)))
+              _root_.scala.Some((t.fun, arg))
             case _ => _root_.scala.None
           }
         }
@@ -73,16 +68,6 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
             }
           case _ => // do nothing
         }
-        private def applyTermQuasi(fn: _root_.scala.meta.Term)(arg: _root_.scala.meta.Term.Quasi) = {
-          checkNoTripleDots(fn, arg)
-          c.universe.Apply(
-            ${liftPath("scala.meta.internal.trees.Syntactic.TermApply.ArgListList")},
-            _root_.scala.List(
-              ${liftField(q"fn", tq"_root_.scala.meta.Term")},
-              ${liftField(q"List(List(arg))", tq"List[List[_root_.scala.meta.Term.Quasi]]")}
-            )
-          )
-        }
         private def applyArgClauseQuasi(fn: _root_.scala.meta.Term)(arg: _root_.scala.meta.Term.ArgClause.Quasi) = {
           checkNoTripleDots(fn, arg)
           c.universe.Apply(
@@ -94,8 +79,8 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
           )
         }
         $localName match {
-          case ApplyToTripleDots(fn, either) =>
-            either.fold(applyTermQuasi(fn), applyArgClauseQuasi(fn))
+          case ApplyToTripleDots(fn, acq) =>
+            applyArgClauseQuasi(fn)(acq)
           case _ =>
             $body
         }
