@@ -2435,8 +2435,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       autoPos(getParam(mods, fullTypeOK))
     @tailrec
     def getParam(mods: List[Mod], fullTypeOK: Boolean): Term.Param = {
-      def afterName(name: Name) =
-        Term.Param(mods, name, getDeclTpeOpt(fullTypeOK = fullTypeOK), None)
+      def afterName(name: Name) = {
+        val tpe = if (fullTypeOK || mods.nonEmpty) getDeclTpeOpt(fullTypeOK = fullTypeOK) else None
+        Term.Param(mods, name, tpe, None)
+      }
       token match {
         case t: Ellipsis => ellipsis[Term.Param](t, 1)
         case t: Ident =>
