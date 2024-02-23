@@ -4038,4 +4038,163 @@ class ControlSyntaxSuite extends BaseDottySuite {
     assertNoDiff(parseStat(code2, dialect).reprint, layout)
   }
 
+  test("scalafmt #3790 case") {
+    val code =
+      """|case 1 =>
+         |  println(2)
+         |  (3, 4)
+         |""".stripMargin
+    val layout =
+      """|case 1 =>
+         |  println(2)(3, 4)
+         |""".stripMargin
+    val tree = Case(
+      int(1),
+      None,
+      Term.Apply(Term.Apply(tname("println"), List(int(2))), List(int(3), int(4)))
+    )
+    runTestAssert[Case](code, layout)(tree)
+  }
+
+  test("scalafmt #3790 match optional braces") {
+    val code =
+      """|def foo =
+         |  bar match
+         |  case 1 =>
+         |    println(2)
+         |    (3, 4)
+         |  baz
+         |""".stripMargin
+    val layout =
+      """|def foo = {
+         |  bar match {
+         |    case 1 =>
+         |      println(2)
+         |      (3, 4)
+         |  }
+         |  baz
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("foo"),
+      Nil,
+      None,
+      blk(
+        Term.Match(
+          tname("bar"),
+          Case(
+            int(1),
+            None,
+            blk(
+              Term.Apply(tname("println"), List(int(2))),
+              Term.Tuple(List(int(3), int(4)))
+            )
+          ) :: Nil,
+          Nil
+        ),
+        tname("baz")
+      )
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3790 match optional braces, and case class following in case body") {
+    val code =
+      """|def foo =
+         |  bar match
+         |  case 1 =>
+         |    println(2)
+         |    (3, 4)
+         |    case class A(a: Int)
+         |""".stripMargin
+    val layout =
+      """|def foo = bar match {
+         |  case 1 =>
+         |    println(2)
+         |    (3, 4)
+         |    case class A(a: Int)
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("foo"),
+      Nil,
+      None,
+      Term.Match(
+        tname("bar"),
+        Case(
+          int(1),
+          None,
+          blk(
+            Term.Apply(tname("println"), List(int(2))),
+            Term.Tuple(List(int(3), int(4))),
+            Defn.Class(
+              List(Mod.Case()),
+              pname("A"),
+              Nil,
+              ctorp(tparam("a", "Int")),
+              tpl()
+            )
+          )
+        ) :: Nil,
+        Nil
+      )
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3790 match optional braces, and case class following after case body") {
+    val code =
+      """|def foo =
+         |  bar match
+         |  case 1 =>
+         |    println(2)
+         |    (3, 4)
+         |  case class A(a: Int)
+         |""".stripMargin
+    val error =
+      """|<input>:6: error: outdent expected but case found
+         |  case class A(a: Int)
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("scalafmt #3790 match actual braces") {
+    val code =
+      """|def foo =
+         |  bar match {
+         |  case 1 =>
+         |    println(2)
+         |    (3, 4)
+         |  baz}
+         |""".stripMargin
+    val layout =
+      """|def foo = bar match {
+         |  case 1 =>
+         |    println(2)(3, 4)
+         |    baz
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("foo"),
+      Nil,
+      None,
+      Term.Match(
+        tname("bar"),
+        Case(
+          int(1),
+          None,
+          blk(
+            Term.Apply(Term.Apply(tname("println"), List(int(2))), List(int(3), int(4))),
+            tname("baz")
+          )
+        ) :: Nil,
+        Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
