@@ -4157,11 +4157,44 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    (3, 4)
          |  case class A(a: Int)
          |""".stripMargin
-    val error =
-      """|<input>:6: error: outdent expected but case found
+    val layout =
+      """|def foo = {
+         |  bar match {
+         |    case 1 =>
+         |      println(2)
+         |      (3, 4)
+         |  }
          |  case class A(a: Int)
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("foo"),
+      Nil,
+      None,
+      blk(
+        Term.Match(
+          tname("bar"),
+          Case(
+            int(1),
+            None,
+            blk(
+              Term.Apply(tname("println"), List(int(2))),
+              Term.Tuple(List(int(3), int(4)))
+            )
+          ) :: Nil,
+          Nil
+        ),
+        Defn.Class(
+          List(Mod.Case()),
+          pname("A"),
+          Nil,
+          ctorp(List(tparam("a", "Int"))),
+          tpl()
+        )
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3790 match actual braces") {

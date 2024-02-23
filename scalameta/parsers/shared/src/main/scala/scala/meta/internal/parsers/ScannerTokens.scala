@@ -785,7 +785,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
               case (rc: RegionCaseBody) :: (r: RegionIndent) :: rs =>
                 if (nextIndent > r.indent) null
                 else if (next.is[KwFinally]) OutdentInfo(r, rs, noOutdent(rs))
-                else if (nextIndent < r.indent || rc.arrow.ne(prev) && !next.is[KwCase])
+                else if (nextIndent < r.indent || rc.arrow.ne(prev) &&
+                  (!next.is[KwCase]) || getNextToken(nextPos).isClassOrObject)
                   OutdentInfo(r, rs)
                 else null
               case (r: RegionIndent) :: (rs @ RegionTry :: xs) =>
