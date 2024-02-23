@@ -117,5 +117,7 @@ trait CommonTrees {
   final def str(v: String) = Lit.String(v)
   final def init(name: String, args: List[Term.ArgClause] = Nil): Init =
     Init(pname(name), anon, args)
+  final def blk(stats: List[Stat]): Term.Block = Term.Block(stats)
+  final def blk(stats: Stat*): Term.Block = blk(stats.toList)
 
 }
