@@ -4046,12 +4046,16 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|case 1 =>
-         |  println(2)(3, 4)
+         |  println(2)
+         |  (3, 4)
          |""".stripMargin
     val tree = Case(
       int(1),
       None,
-      Term.Apply(Term.Apply(tname("println"), List(int(2))), List(int(3), int(4)))
+      blk(
+        Term.Apply(tname("println"), List(int(2))),
+        Term.Tuple(List(int(3), int(4)))
+      )
     )
     runTestAssert[Case](code, layout)(tree)
   }
@@ -4096,7 +4100,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         tname("baz")
       )
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3790 match optional braces, and case class following in case body") {
@@ -4141,7 +4145,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         Nil
       )
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3790 match optional braces, and case class following after case body") {
@@ -4172,7 +4176,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val layout =
       """|def foo = bar match {
          |  case 1 =>
-         |    println(2)(3, 4)
+         |    println(2)
+         |    (3, 4)
          |    baz
          |}
          |""".stripMargin
@@ -4187,7 +4192,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
           int(1),
           None,
           blk(
-            Term.Apply(Term.Apply(tname("println"), List(int(2))), List(int(3), int(4))),
+            Term.Apply(tname("println"), List(int(2))),
+            Term.Tuple(List(int(3), int(4))),
             tname("baz")
           )
         ) :: Nil,
