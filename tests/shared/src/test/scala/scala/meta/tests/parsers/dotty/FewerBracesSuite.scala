@@ -2409,4 +2409,30 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("scalafmt #3785") {
+    val code =
+      """|val foo = bar(): loader =>
+         |  baz:
+         |    loader: _ => 
+         |      qux
+         |""".stripMargin
+    val layout = "val foo = bar()(loader => baz((loader: _) => qux))"
+    val tree = Defn.Val(
+      Nil,
+      List(Pat.Var(tname("foo"))),
+      None,
+      Term.Apply(
+        Term.Apply(tname("bar"), Nil),
+        Term.Function(
+          List(tparam("loader")),
+          Term.Apply(
+            tname("baz"),
+            List(Term.Function(List(tparam("loader", Type.Wildcard(noBounds))), tname("qux")))
+          )
+        ) :: Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
