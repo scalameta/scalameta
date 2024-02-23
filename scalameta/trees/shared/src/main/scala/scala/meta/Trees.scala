@@ -154,7 +154,7 @@ object Term {
   @ast class Tuple(args: List[Term] @nonEmpty) extends Term with Member.Tuple {
     // tuple may have one element (see scala.Tuple1)
     // however, this element may not be another single-element Tuple
-    checkParent(ParentChecks.MemberTuple)
+    checkFields(ParentChecks.MemberTuple(args))
   }
   @ast class Block(stats: List[Stat]) extends Term {
     checkParent(ParentChecks.TermBlock)
@@ -311,7 +311,7 @@ object Type {
   @ast class Tuple(args: List[Type] @nonEmpty) extends Type with Member.Tuple {
     // tuple may have one element (see scala.Tuple1)
     // however, this element may not be another single-element Tuple
-    checkParent(ParentChecks.MemberTuple)
+    checkFields(ParentChecks.MemberTuple(args))
   }
   @ast class With(lhs: Type, rhs: Type) extends Type
   @deprecated("And unused, replaced by ApplyInfix", "4.5.1")
@@ -423,7 +423,7 @@ object Pat {
   @ast class Tuple(args: List[Pat] @nonEmpty) extends Pat with Member.Tuple {
     // tuple may have one element (see scala.Tuple1)
     // however, this element may not be another single-element Tuple
-    checkParent(ParentChecks.MemberTuple)
+    checkFields(ParentChecks.MemberTuple(args))
   }
   @ast class Repeated(name: Term.Name) extends Pat
   @ast class Extract(fun: Term, argClause: ArgClause) extends Pat with Member.Apply {

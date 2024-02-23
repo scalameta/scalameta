@@ -1,7 +1,9 @@
 package scala.meta.tests
 package trees
 
+import org.scalameta.internal.ScalaCompat.EOL
 import org.scalameta.invariants._
+
 import scala.meta._
 import scala.meta.dialects.Scala211
 
@@ -79,4 +81,71 @@ class InvariantSuite extends TreeSuiteBase {
     intercept[InvariantFailedException] { mod"private[$ref]" }
     intercept[InvariantFailedException] { mod"protected[$ref]" }
   }
+
+  test("empty Term.Tuple") {
+    def tuple = Term.Tuple(Nil)
+    interceptMessage[InvariantFailedException](
+      """|invariant failed (args should be non-empty):
+         |when verifying args.!=(null).&&(args.isInstanceOf[scala.meta.internal.trees.Quasi].||(args.nonEmpty))
+         |found that args.isInstanceOf[scala.meta.internal.trees.Quasi] is false
+         |and also args.nonEmpty is false
+         |where args = List()
+         |""".stripMargin.replace("\n", EOL)
+    )(tuple)
+  }
+  test("nested Term.Tuple") {
+    def tuple = Term.Tuple(Term.Tuple(Lit.Unit() :: Nil) :: Nil)
+    interceptMessage[InvariantFailedException](
+      """|invariant failed:
+         |when verifying scala.meta.internal.trees.ParentChecks.MemberTuple(args)
+         |found that scala.meta.internal.trees.ParentChecks.MemberTuple(args) is false
+         |where args = List((()))
+         |""".stripMargin.replace("\n", EOL)
+    )(tuple)
+  }
+
+  test("empty Pat.Tuple") {
+    def tuple = Pat.Tuple(Nil)
+    interceptMessage[InvariantFailedException](
+      """|invariant failed (args should be non-empty):
+         |when verifying args.!=(null).&&(args.isInstanceOf[scala.meta.internal.trees.Quasi].||(args.nonEmpty))
+         |found that args.isInstanceOf[scala.meta.internal.trees.Quasi] is false
+         |and also args.nonEmpty is false
+         |where args = List()
+         |""".stripMargin.replace("\n", EOL)
+    )(tuple)
+  }
+  test("nested Pat.Tuple") {
+    def tuple = Pat.Tuple(Pat.Tuple(Lit.Unit() :: Nil) :: Nil)
+    interceptMessage[InvariantFailedException](
+      """|invariant failed:
+         |when verifying scala.meta.internal.trees.ParentChecks.MemberTuple(args)
+         |found that scala.meta.internal.trees.ParentChecks.MemberTuple(args) is false
+         |where args = List((()))
+         |""".stripMargin.replace("\n", EOL)
+    )(tuple)
+  }
+
+  test("empty Type.Tuple") {
+    def tuple = Type.Tuple(Nil)
+    interceptMessage[InvariantFailedException](
+      """|invariant failed (args should be non-empty):
+         |when verifying args.!=(null).&&(args.isInstanceOf[scala.meta.internal.trees.Quasi].||(args.nonEmpty))
+         |found that args.isInstanceOf[scala.meta.internal.trees.Quasi] is false
+         |and also args.nonEmpty is false
+         |where args = List()
+         |""".stripMargin.replace("\n", EOL)
+    )(tuple)
+  }
+  test("nested Type.Tuple") {
+    def tuple = Type.Tuple(Type.Tuple(Lit.Unit() :: Nil) :: Nil)
+    interceptMessage[InvariantFailedException](
+      """|invariant failed:
+         |when verifying scala.meta.internal.trees.ParentChecks.MemberTuple(args)
+         |found that scala.meta.internal.trees.ParentChecks.MemberTuple(args) is false
+         |where args = List((()))
+         |""".stripMargin.replace("\n", EOL)
+    )(tuple)
+  }
+
 }
