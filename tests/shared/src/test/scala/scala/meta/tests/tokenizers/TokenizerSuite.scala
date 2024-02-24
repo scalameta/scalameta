@@ -1,6 +1,8 @@
 package scala.meta.tests
 package tokenizers
 
+import org.scalameta.internal.ScalaCompat.EOL
+
 import scala.meta._
 import scala.meta.tokens.Token._
 import scala.meta.dialects.Scala211
@@ -1133,28 +1135,95 @@ class TokenizerSuite extends BaseTokenizerSuite {
     }
   }
 
-  test("numeric literal separator") {
-    dialects.Scala213("1_024").tokenize.get
-    dialects.Scala213("1_024L").tokenize.get
-    dialects.Scala213("3_14e-2").tokenize.get
-    dialects.Scala213("3_14E-2_1").tokenize.get
+  Seq("1_024", "1_024L", "3_14e-2", "3_14E-2_1").foreach { value =>
+    test("numeric literal separator ok scala213: $value") {
+      dialects.Scala213("1_024").tokenize.get // no exception
+    }
+  }
 
-    assert(dialects.Scala213("123_456_").tokenize.isInstanceOf[Tokenized.Error])
-    assert(dialects.Scala213("123_456_L").tokenize.isInstanceOf[Tokenized.Error])
-    assert(dialects.Scala213("3_14_E-2").tokenize.isInstanceOf[Tokenized.Error])
-    assert(dialects.Scala213("3_14E-_2").tokenize.isInstanceOf[Tokenized.Error])
-    assert(dialects.Scala213("3_14E-2_").tokenize.isInstanceOf[Tokenized.Error])
-    assert(dialects.Scala213("3.1_4_").tokenize.isInstanceOf[Tokenized.Error])
-    assert(dialects.Scala213("3.1_4_d").tokenize.isInstanceOf[Tokenized.Error])
-    assert(dialects.Scala213("3.1_4_dd").tokenize.isInstanceOf[Tokenized.Error])
-    assert(dialects.Scala213("3.1_4_dd").tokenize.isInstanceOf[Tokenized.Error])
+  Seq(
+    (
+      "123_456_",
+      """|<input>:1: error: trailing separator is not allowed
+         |123_456_
+         |       ^""".stripMargin
+    ),
+    (
+      "123_456_L",
+      """|<input>:1: error: trailing separator is not allowed
+         |123_456_L
+         |       ^""".stripMargin
+    ),
+    (
+      "3_14_E-2",
+      """|<input>:1: error: trailing separator is not allowed
+         |3_14_E-2
+         |    ^""".stripMargin
+    ),
+    (
+      "3_14E-_2",
+      """|<input>:1: error: Invalid literal number
+         |3_14E-_2
+         |^""".stripMargin
+    ),
+    (
+      "3_14E-2_",
+      """|<input>:1: error: trailing separator is not allowed
+         |3_14E-2_
+         |       ^""".stripMargin
+    ),
+    (
+      "3.1_4_",
+      """|<input>:1: error: trailing separator is not allowed
+         |3.1_4_
+         |     ^""".stripMargin
+    ),
+    (
+      "3.1_4_d",
+      """|<input>:1: error: trailing separator is not allowed
+         |3.1_4_d
+         |     ^""".stripMargin
+    ),
+    (
+      "3.1_4_dd",
+      """|<input>:1: error: trailing separator is not allowed
+         |3.1_4_dd
+         |     ^""".stripMargin
+    ),
+    (
+      "3.1_4_dd",
+      """|<input>:1: error: trailing separator is not allowed
+         |3.1_4_dd
+         |     ^""".stripMargin
+    )
+  ).foreach { case (value, error) =>
+    test("numeric literal separator fail scala213: $value") {
+      interceptMessage[TokenizeException](error.replace("\n", EOL))(
+        dialects.Scala213(value).tokenize.get
+      )
+    }
+  }
 
-    assert(dialects.Scala212("1_024").tokenize.isInstanceOf[Tokenized.Error])
+  Seq(
+    (
+      "1_024",
+      """|<input>:1: error: numeric separators are not allowed
+         |1_024
+         |^""".stripMargin
+    )
+  ).foreach { case (value, error) =>
+    test("numeric literal separator fail scala212: $value") {
+      interceptMessage[TokenizeException](error.replace("\n", EOL))(
+        dialects.Scala212(value).tokenize.get
+      )
+    }
+  }
 
+  test("numeric literal separator scala213: check positions") {
     val intConstant =
       dialects.Scala213(" 1_000_000 ").tokenize.get(2).asInstanceOf[Token.Constant.Int]
-    assert(intConstant.pos.text == "1_000_000") // assert token position includes underscores
-    assert(intConstant.value == BigInt(1000000))
+    assertEquals(intConstant.pos.text, "1_000_000") // assert token position includes underscores
+    assertEquals(intConstant.value, BigInt(1000000))
   }
 
   test("Interpolated string - escape") {
