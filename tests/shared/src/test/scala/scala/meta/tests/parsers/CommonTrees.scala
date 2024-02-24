@@ -113,7 +113,14 @@ trait CommonTrees {
     Type.Bounds(Option(lo).map(pname), Option(hi).map(pname))
 
   final def bool(v: Boolean) = Lit.Boolean(v)
+  final def lit(v: Boolean) = Lit.Boolean(v)
   final def int(v: Int) = Lit.Int(v)
+  final def lit(v: Int) = Lit.Int(v)
+  final def lit(v: Long) = Lit.Long(v)
+  final def dbl(v: String) = Lit.Double(v)
+  final def lit(v: Double) = Lit.Double(v)
+  final def flt(v: String) = Lit.Float(v)
+  final def lit(v: Float) = Lit.Float(v)
   final def str(v: String) = Lit.String(v)
   final def init(name: String, args: List[Term.ArgClause] = Nil): Init =
     Init(pname(name), anon, args)
