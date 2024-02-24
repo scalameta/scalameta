@@ -763,7 +763,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   @inline private def isNumberSeparator(c: Int): Boolean = {
     val isSeparator = c == '_'
     if (isSeparator && !dialect.allowNumericLiteralUnderscoreSeparators)
-      syntaxError("numeric separators are not allowed", at = offset)
+      syntaxError("numeric separators are not allowed", at = begCharOffset)
     else isSeparator
   }
 

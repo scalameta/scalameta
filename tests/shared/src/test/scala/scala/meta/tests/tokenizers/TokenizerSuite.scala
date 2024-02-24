@@ -1209,7 +1209,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       "1_024",
       """|<input>:1: error: numeric separators are not allowed
          |1_024
-         |^""".stripMargin
+         | ^""".stripMargin
     )
   ).foreach { case (value, error) =>
     test("numeric literal separator fail scala212: $value") {
