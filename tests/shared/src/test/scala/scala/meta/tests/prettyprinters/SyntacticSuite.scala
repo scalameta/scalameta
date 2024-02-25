@@ -1642,17 +1642,17 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
     assertEquals(
       part1.tokens.structure,
-      """Tokens(<h1>a [0..5))"""
+      """Tokens(Xml.Part(<h1>a) [0..5))"""
     )
 
     assertEquals(
       arg1.tokens.structure,
-      """Tokens({ [5..6), b [6..7), } [7..8))"""
+      "Tokens(LeftBrace({) [5..6), Ident(b) [6..7), RightBrace(}) [7..8))"
     )
 
     assertEquals(
       part2.tokens.structure,
-      """Tokens(</h1> [8..13))"""
+      "Tokens(Xml.Part(</h1>) [8..13))"
     )
   }
 
