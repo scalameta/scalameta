@@ -59,7 +59,7 @@ trait LegacyTokenData {
    * Convert current strVal, base to an integer value This is tricky because of max negative value.
    */
   private def integerVal: BigInt = {
-    var input = removeNumberSeparators(strVal)
+    var input = strVal
     if (input.startsWith("0x") || input.startsWith("0X") || input.startsWith("0b") || input
         .startsWith("0B")) input = input.substring(2)
     if (input.endsWith("l") || input.endsWith("L")) input = input.substring(0, input.length - 1)
@@ -77,14 +77,11 @@ trait LegacyTokenData {
     value
   }
 
-  @inline private def removeNumberSeparators(s: String): String =
-    s.replace("_", "")
-
   /**
    * Convert current strVal, base to double value
    */
   private def floatingVal: BigDecimal = {
-    val text = removeNumberSeparators(strVal)
+    val text = strVal
     def isDeprecatedForm = {
       val idx = text indexOf '.'
       (idx == text.length - 1) || (

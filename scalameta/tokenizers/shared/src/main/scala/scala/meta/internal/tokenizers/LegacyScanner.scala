@@ -760,30 +760,31 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
   }
 
-  @inline private def isNumberSeparator(c: Int): Boolean = {
-    val isSeparator = c == '_'
+  @inline private def isNumberSeparator(): Boolean = {
+    val isSeparator = ch == '_'
     if (isSeparator && !dialect.allowNumericLiteralUnderscoreSeparators)
       syntaxError("numeric separators are not allowed", at = begCharOffset)
     else isSeparator
   }
 
-  private def checkNoTrailingSeparator(): Unit = {
-    val last = cbuf.length() - 1
-    if (last >= 0 && isNumberSeparator(cbuf.charAt(last))) {
-      syntaxError("trailing separator is not allowed", at = offset + last)
-      cbuf.setLength(last)
+  @tailrec private def readDigits(base: Int, wasSeparator: Boolean = false): Unit =
+    if (digit2int(ch, base) >= 0) {
+      putChar(ch)
+      nextChar()
+      readDigits(base)
+    } else if (isNumberSeparator()) {
+      nextChar()
+      readDigits(base, true)
+    } else if (wasSeparator) {
+      val pos = if (ch == SU) begCharOffset else begCharOffset - 1
+      syntaxError("trailing separator is not allowed", at = pos)
     }
-  }
 
   /**
    * read fractional part and exponent of floating point number if one is present.
    */
   private def getFraction(): Unit = {
-    while ('0' <= ch && ch <= '9' || isNumberSeparator(ch)) {
-      putChar(ch)
-      nextChar()
-    }
-    checkNoTrailingSeparator()
+    readDigits(10)
     if (ch == 'e' || ch == 'E') {
       val lookahead = lookaheadReader
       lookahead.nextChar()
@@ -797,11 +798,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           putChar(ch)
           nextChar()
         }
-        while ('0' <= ch && ch <= '9' || isNumberSeparator(ch)) {
-          putChar(ch)
-          nextChar()
-        }
-        checkNoTrailingSeparator()
+        readDigits(10)
       }
       token = DOUBLELIT
     }
@@ -821,7 +818,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   }
 
   private def checkNoLetter(): Unit = {
-    if (isIdentifierPart(ch) && ch >= ' ' && !isNumberSeparator(ch))
+    if (isIdentifierPart(ch) && ch >= ' ' && !isNumberSeparator())
       syntaxError("Invalid literal number", at = offset)
   }
 
@@ -829,17 +826,14 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    * Read a number into strVal and set base
    */
   private def getNumber(): Unit = {
-    val base1 = if (base < 10) 10 else base
     // Read 8,9's even if format is octal, produce a malformed number error afterwards.
     // At this point, we have already read the first digit, so to tell an innocent 0 apart
     // from an octal literal 0123... (which we want to disallow), we check whether there
     // are any additional digits coming after the first one we have already read.
-    var notSingleZero = false
-    while (isNumberSeparator(ch) || digit2int(ch, base1) >= 0) {
-      putChar(ch)
-      nextChar()
-      notSingleZero = true
-    }
+    val cbufInitialLen = cbuf.length()
+    readDigits(base max 10)
+    val cbufDigitsLen = cbuf.length()
+    def noMoreDigits = cbufDigitsLen == cbufInitialLen
     token = INTLIT
 
     /* When we know for certain it's a number after using a touch of lookahead */
@@ -857,7 +851,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       else {
         // Checking for base == 8 is not enough, because base = 8 is set
         // as soon as a 0 is read in `case '0'` of method fetchToken.
-        if (base == 8 && notSingleZero)
+        if (base == 8 && !noMoreDigits)
           syntaxError("Non-zero integral values may not have a leading zero.", at = offset)
         if (isL) {
           putChar(ch)
@@ -870,8 +864,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         }
       }
     }
-
-    checkNoTrailingSeparator()
 
     if (base > 10 || ch != '.')
       restOfUncertainToken()
