@@ -724,9 +724,6 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case RegionTry :: xs
               if !next.isAny[KwCatch, KwFinally] && isLeadingInfix != LeadingInfix.Yes =>
             strip(xs)
-          case (_: RegionCaseBody) :: xs
-              if !next.isAny[KwCase, KwFinally] && isLeadingInfix != LeadingInfix.Yes =>
-            strip(xs)
           case Nil | (_: CanProduceLF) :: _ => Some(rs)
           case _ => None
         }
@@ -788,7 +785,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
               case (rc: RegionCaseBody) :: (r: RegionIndent) :: rs =>
                 if (nextIndent > r.indent) null
                 else if (next.is[KwFinally]) OutdentInfo(r, rs, noOutdent(rs))
-                else if (nextIndent < r.indent || rc.arrow.ne(prev) && !next.is[KwCase])
+                else if (nextIndent < r.indent || rc.arrow.ne(prev) &&
+                  (!next.is[KwCase]) || getNextToken(nextPos).isClassOrObject)
                   OutdentInfo(r, rs)
                 else null
               case (r: RegionIndent) :: (rs @ RegionTry :: xs) =>
