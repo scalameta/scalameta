@@ -12,9 +12,7 @@ class XmlSuite extends ParseSuite {
 
   def checkToken(original: String, expected: String): Unit = {
     def tokensStructure(tokenized: Tokens): String = {
-      tokenized
-        .map(x => f"${x.structure}%22s ----> ${x.getClass}")
-        .mkString("\n")
+      tokenized.map(_.structure).mkString("", "\n", "\n")
     }
 
     def tokenize(code: String): Tokens = {
@@ -26,7 +24,7 @@ class XmlSuite extends ParseSuite {
 
     test(logger.revealWhitespace(original)) {
       val obtained = tokensStructure(tokenize(original))
-      assert(obtained.trim == expected.trim)
+      assertEquals(obtained, expected)
     }
   }
 
@@ -41,85 +39,80 @@ class XmlSuite extends ParseSuite {
 
   checkToken(
     "<foo>bar</foo>",
-    """
-      |            BOF [0..0) ----> class scala.meta.tokens.Token$BOF
-      |                [0..0) ----> class scala.meta.tokens.Token$Xml$Start
-      |<foo>bar</foo> [0..14) ----> class scala.meta.tokens.Token$Xml$Part
-      |              [14..14) ----> class scala.meta.tokens.Token$Xml$End
-      |          EOF [14..14) ----> class scala.meta.tokens.Token$EOF
-    """.stripMargin
+    """|BOF [0..0)
+       |Xml.Start [0..0)
+       |Xml.Part(<foo>bar</foo>) [0..14)
+       |Xml.End [14..14)
+       |EOF [14..14)
+       |""".stripMargin
   )
   checkToken(
     "<foo>{bar}</foo> ",
-    """
-      |            BOF [0..0) ----> class scala.meta.tokens.Token$BOF
-      |                [0..0) ----> class scala.meta.tokens.Token$Xml$Start
-      |          <foo> [0..5) ----> class scala.meta.tokens.Token$Xml$Part
-      |                [5..5) ----> class scala.meta.tokens.Token$Xml$SpliceStart
-      |              { [5..6) ----> class scala.meta.tokens.Token$LeftBrace
-      |            bar [6..9) ----> class scala.meta.tokens.Token$Ident
-      |             } [9..10) ----> class scala.meta.tokens.Token$RightBrace
-      |              [10..10) ----> class scala.meta.tokens.Token$Xml$SpliceEnd
-      |       </foo> [10..16) ----> class scala.meta.tokens.Token$Xml$Part
-      |              [16..16) ----> class scala.meta.tokens.Token$Xml$End
-      |              [16..17) ----> class scala.meta.tokens.Token$Space
-      |          EOF [17..17) ----> class scala.meta.tokens.Token$EOF
-    """.stripMargin
+    """|BOF [0..0)
+       |Xml.Start [0..0)
+       |Xml.Part(<foo>) [0..5)
+       |Xml.SpliceStart [5..5)
+       |LeftBrace({) [5..6)
+       |Ident(bar) [6..9)
+       |RightBrace(}) [9..10)
+       |Xml.SpliceEnd [10..10)
+       |Xml.Part(</foo>) [10..16)
+       |Xml.End [16..16)
+       |Space( ) [16..17)
+       |EOF [17..17)
+       |""".stripMargin
   )
   checkToken(
     "<b>{1}{2}</b>",
-    """
-      |            BOF [0..0) ----> class scala.meta.tokens.Token$BOF
-      |                [0..0) ----> class scala.meta.tokens.Token$Xml$Start
-      |            <b> [0..3) ----> class scala.meta.tokens.Token$Xml$Part
-      |                [3..3) ----> class scala.meta.tokens.Token$Xml$SpliceStart
-      |              { [3..4) ----> class scala.meta.tokens.Token$LeftBrace
-      |              1 [4..5) ----> class scala.meta.tokens.Token$Constant$Int
-      |              } [5..6) ----> class scala.meta.tokens.Token$RightBrace
-      |                [6..6) ----> class scala.meta.tokens.Token$Xml$SpliceEnd
-      |                [6..6) ----> class scala.meta.tokens.Token$Xml$Part
-      |                [6..6) ----> class scala.meta.tokens.Token$Xml$SpliceStart
-      |              { [6..7) ----> class scala.meta.tokens.Token$LeftBrace
-      |              2 [7..8) ----> class scala.meta.tokens.Token$Constant$Int
-      |              } [8..9) ----> class scala.meta.tokens.Token$RightBrace
-      |                [9..9) ----> class scala.meta.tokens.Token$Xml$SpliceEnd
-      |          </b> [9..13) ----> class scala.meta.tokens.Token$Xml$Part
-      |              [13..13) ----> class scala.meta.tokens.Token$Xml$End
-      |          EOF [13..13) ----> class scala.meta.tokens.Token$EOF
-    """.stripMargin
+    """|BOF [0..0)
+       |Xml.Start [0..0)
+       |Xml.Part(<b>) [0..3)
+       |Xml.SpliceStart [3..3)
+       |LeftBrace({) [3..4)
+       |Constant.Int(1) [4..5)
+       |RightBrace(}) [5..6)
+       |Xml.SpliceEnd [6..6)
+       |Xml.Part [6..6)
+       |Xml.SpliceStart [6..6)
+       |LeftBrace({) [6..7)
+       |Constant.Int(2) [7..8)
+       |RightBrace(}) [8..9)
+       |Xml.SpliceEnd [9..9)
+       |Xml.Part(</b>) [9..13)
+       |Xml.End [13..13)
+       |EOF [13..13)
+       |""".stripMargin
   )
   checkToken(
     """<foo>{"{" + `{`}</foo>""",
-    """
-      |            BOF [0..0) ----> class scala.meta.tokens.Token$BOF
-      |                [0..0) ----> class scala.meta.tokens.Token$Xml$Start
-      |          <foo> [0..5) ----> class scala.meta.tokens.Token$Xml$Part
-      |                [5..5) ----> class scala.meta.tokens.Token$Xml$SpliceStart
-      |              { [5..6) ----> class scala.meta.tokens.Token$LeftBrace
-      |            "{" [6..9) ----> class scala.meta.tokens.Token$Constant$String
-      |               [9..10) ----> class scala.meta.tokens.Token$Space
-      |            + [10..11) ----> class scala.meta.tokens.Token$Ident
-      |              [11..12) ----> class scala.meta.tokens.Token$Space
-      |          `{` [12..15) ----> class scala.meta.tokens.Token$Ident
-      |            } [15..16) ----> class scala.meta.tokens.Token$RightBrace
-      |              [16..16) ----> class scala.meta.tokens.Token$Xml$SpliceEnd
-      |       </foo> [16..22) ----> class scala.meta.tokens.Token$Xml$Part
-      |              [22..22) ----> class scala.meta.tokens.Token$Xml$End
-      |          EOF [22..22) ----> class scala.meta.tokens.Token$EOF
-    """.stripMargin
+    """|BOF [0..0)
+       |Xml.Start [0..0)
+       |Xml.Part(<foo>) [0..5)
+       |Xml.SpliceStart [5..5)
+       |LeftBrace({) [5..6)
+       |Constant.String("{") [6..9)
+       |Space( ) [9..10)
+       |Ident(+) [10..11)
+       |Space( ) [11..12)
+       |Ident(`{`) [12..15)
+       |RightBrace(}) [15..16)
+       |Xml.SpliceEnd [16..16)
+       |Xml.Part(</foo>) [16..22)
+       |Xml.End [22..22)
+       |EOF [22..22)
+       |""".stripMargin
   )
   checkToken(
     "<foo/>{1}",
-    """
-      |            BOF [0..0) ----> class scala.meta.tokens.Token$BOF
-      |                [0..0) ----> class scala.meta.tokens.Token$Xml$Start
-      |         <foo/> [0..6) ----> class scala.meta.tokens.Token$Xml$Part
-      |                [6..6) ----> class scala.meta.tokens.Token$Xml$End
-      |              { [6..7) ----> class scala.meta.tokens.Token$LeftBrace
-      |              1 [7..8) ----> class scala.meta.tokens.Token$Constant$Int
-      |              } [8..9) ----> class scala.meta.tokens.Token$RightBrace
-      |            EOF [9..9) ----> class scala.meta.tokens.Token$EOF
-    """.stripMargin
+    """|BOF [0..0)
+       |Xml.Start [0..0)
+       |Xml.Part(<foo/>) [0..6)
+       |Xml.End [6..6)
+       |LeftBrace({) [6..7)
+       |Constant.Int(1) [7..8)
+       |RightBrace(}) [8..9)
+       |EOF [9..9)
+       |""".stripMargin
   )
 
   private val trickyXml =
@@ -133,111 +126,94 @@ class XmlSuite extends ParseSuite {
 
   checkToken(
     trickyXml,
-    """
-      |            BOF [0..0) ----> class scala.meta.tokens.Token$BOF
-      |              { [0..1) ----> class scala.meta.tokens.Token$LeftBrace
-      |             \n [1..2) ----> class scala.meta.tokens.Token$LF
-      |            val [2..5) ----> class scala.meta.tokens.Token$KwVal
-      |                [5..6) ----> class scala.meta.tokens.Token$Space
-      |              x [6..7) ----> class scala.meta.tokens.Token$Ident
-      |                [7..8) ----> class scala.meta.tokens.Token$Space
-      |              = [8..9) ----> class scala.meta.tokens.Token$Equals
-      |               [9..10) ----> class scala.meta.tokens.Token$Space
-      |              [10..10) ----> class scala.meta.tokens.Token$Xml$Start
-      |   <div href= [10..20) ----> class scala.meta.tokens.Token$Xml$Part
-      |              [20..20) ----> class scala.meta.tokens.Token$Xml$SpliceStart
-      |            { [20..21) ----> class scala.meta.tokens.Token$LeftBrace
-      |          "/" [21..24) ----> class scala.meta.tokens.Token$Constant$String
-      |              [24..25) ----> class scala.meta.tokens.Token$Space
-      |            + [25..26) ----> class scala.meta.tokens.Token$Ident
-      |              [26..27) ----> class scala.meta.tokens.Token$Space
-      |          url [27..30) ----> class scala.meta.tokens.Token$Ident
-      |            } [30..31) ----> class scala.meta.tokens.Token$RightBrace
-      |              [31..31) ----> class scala.meta.tokens.Token$Xml$SpliceEnd
-      |      >Hello  [31..38) ----> class scala.meta.tokens.Token$Xml$Part
-      |              [38..38) ----> class scala.meta.tokens.Token$Xml$SpliceStart
-      |            { [38..39) ----> class scala.meta.tokens.Token$LeftBrace
-      |         name [39..43) ----> class scala.meta.tokens.Token$Ident
-      |            } [43..44) ----> class scala.meta.tokens.Token$RightBrace
-      |              [44..44) ----> class scala.meta.tokens.Token$Xml$SpliceEnd
-      |       </div> [44..50) ----> class scala.meta.tokens.Token$Xml$Part
-      |              [50..50) ----> class scala.meta.tokens.Token$Xml$End
-      |            ; [50..51) ----> class scala.meta.tokens.Token$Semicolon
-      |           \n [51..52) ----> class scala.meta.tokens.Token$LF
-      |          val [52..55) ----> class scala.meta.tokens.Token$KwVal
-      |              [55..56) ----> class scala.meta.tokens.Token$Space
-      |  noSemicolon [56..67) ----> class scala.meta.tokens.Token$Ident
-      |              [67..68) ----> class scala.meta.tokens.Token$Space
-      |            = [68..69) ----> class scala.meta.tokens.Token$Equals
-      |              [69..70) ----> class scala.meta.tokens.Token$Space
-      |              [70..70) ----> class scala.meta.tokens.Token$Xml$Start
-      |         <h1> [70..74) ----> class scala.meta.tokens.Token$Xml$Part
-      |              [74..74) ----> class scala.meta.tokens.Token$Xml$SpliceStart
-      |            { [74..75) ----> class scala.meta.tokens.Token$LeftBrace
-      |          msg [75..78) ----> class scala.meta.tokens.Token$Ident
-      |              [78..79) ----> class scala.meta.tokens.Token$Space
-      |        infix [79..84) ----> class scala.meta.tokens.Token$Ident
-      |              [84..85) ----> class scala.meta.tokens.Token$Space
-      |        upper [85..90) ----> class scala.meta.tokens.Token$Ident
-      |            } [90..91) ----> class scala.meta.tokens.Token$RightBrace
-      |              [91..91) ----> class scala.meta.tokens.Token$Xml$SpliceEnd
-      |        </h1> [91..96) ----> class scala.meta.tokens.Token$Xml$Part
-      |              [96..96) ----> class scala.meta.tokens.Token$Xml$End
-      |           \n [96..97) ----> class scala.meta.tokens.Token$LF
-      |         val [97..100) ----> class scala.meta.tokens.Token$KwVal
-      |            [100..101) ----> class scala.meta.tokens.Token$Space
-      |          y [101..102) ----> class scala.meta.tokens.Token$Ident
-      |            [102..103) ----> class scala.meta.tokens.Token$Space
-      |          = [103..104) ----> class scala.meta.tokens.Token$Equals
-      |            [104..105) ----> class scala.meta.tokens.Token$Space
-      |          2 [105..106) ----> class scala.meta.tokens.Token$Constant$Int
-      |         \n [106..107) ----> class scala.meta.tokens.Token$LF
-      |          } [107..108) ----> class scala.meta.tokens.Token$RightBrace
-      |        EOF [108..108) ----> class scala.meta.tokens.Token$EOF
-    """.stripMargin
+    """|BOF [0..0)
+       |LeftBrace({) [0..1)
+       |LF(\n) [1..2)
+       |KwVal(val) [2..5)
+       |Space( ) [5..6)
+       |Ident(x) [6..7)
+       |Space( ) [7..8)
+       |Equals(=) [8..9)
+       |Space( ) [9..10)
+       |Xml.Start [10..10)
+       |Xml.Part(<div href=) [10..20)
+       |Xml.SpliceStart [20..20)
+       |LeftBrace({) [20..21)
+       |Constant.String("/") [21..24)
+       |Space( ) [24..25)
+       |Ident(+) [25..26)
+       |Space( ) [26..27)
+       |Ident(url) [27..30)
+       |RightBrace(}) [30..31)
+       |Xml.SpliceEnd [31..31)
+       |Xml.Part(>Hello ) [31..38)
+       |Xml.SpliceStart [38..38)
+       |LeftBrace({) [38..39)
+       |Ident(name) [39..43)
+       |RightBrace(}) [43..44)
+       |Xml.SpliceEnd [44..44)
+       |Xml.Part(</div>) [44..50)
+       |Xml.End [50..50)
+       |Semicolon(;) [50..51)
+       |LF(\n) [51..52)
+       |KwVal(val) [52..55)
+       |Space( ) [55..56)
+       |Ident(noSemicolon) [56..67)
+       |Space( ) [67..68)
+       |Equals(=) [68..69)
+       |Space( ) [69..70)
+       |Xml.Start [70..70)
+       |Xml.Part(<h1>) [70..74)
+       |Xml.SpliceStart [74..74)
+       |LeftBrace({) [74..75)
+       |Ident(msg) [75..78)
+       |Space( ) [78..79)
+       |Ident(infix) [79..84)
+       |Space( ) [84..85)
+       |Ident(upper) [85..90)
+       |RightBrace(}) [90..91)
+       |Xml.SpliceEnd [91..91)
+       |Xml.Part(</h1>) [91..96)
+       |Xml.End [96..96)
+       |LF(\n) [96..97)
+       |KwVal(val) [97..100)
+       |Space( ) [100..101)
+       |Ident(y) [101..102)
+       |Space( ) [102..103)
+       |Equals(=) [103..104)
+       |Space( ) [104..105)
+       |Constant.Int(2) [105..106)
+       |LF(\n) [106..107)
+       |RightBrace(}) [107..108)
+       |EOF [108..108)
+       |""".stripMargin
   )
 
   test("deconstruct") {
     assertTree(term(trickyXml)) {
-      Term.Block(
-        List(
-          Defn.Val(
-            Nil,
-            List(Pat.Var(tname("x"))),
-            None,
-            Term.Xml(
-              List(str("<div href="), str(">Hello "), str("</div>")),
-              List(
-                Term.Block(
-                  Term.ApplyInfix(
-                    str("/"),
-                    tname("+"),
-                    Type.ArgClause(Nil),
-                    Term.ArgClause(List(tname("url")))
-                  ) :: Nil
-                ),
-                Term.Block(List(tname("name")))
-              )
+      blk(
+        Defn.Val(
+          Nil,
+          List(Pat.Var(tname("x"))),
+          None,
+          Term.Xml(
+            List(str("<div href="), str(">Hello "), str("</div>")),
+            List(
+              blk(Term.ApplyInfix(str("/"), tname("+"), Nil, List(tname("url")))),
+              blk(tname("name"))
             )
-          ),
-          Defn.Val(
-            Nil,
-            List(Pat.Var(tname("noSemicolon"))),
-            None,
-            Term.Xml(
-              List(str("<h1>"), str("</h1>")),
-              Term.Block(
-                Term.ApplyInfix(
-                  tname("msg"),
-                  tname("infix"),
-                  Type.ArgClause(Nil),
-                  Term.ArgClause(List(tname("upper")))
-                ) :: Nil
-              ) :: Nil
-            )
-          ),
-          Defn.Val(Nil, List(Pat.Var(tname("y"))), None, int(2))
-        )
+          )
+        ),
+        Defn.Val(
+          Nil,
+          List(Pat.Var(tname("noSemicolon"))),
+          None,
+          Term.Xml(
+            List(str("<h1>"), str("</h1>")),
+            blk(Term.ApplyInfix(tname("msg"), tname("infix"), Nil, List(tname("upper")))) :: Nil
+          )
+        ),
+        Defn.Val(Nil, List(Pat.Var(tname("y"))), None, int(2))
       )
     }
   }

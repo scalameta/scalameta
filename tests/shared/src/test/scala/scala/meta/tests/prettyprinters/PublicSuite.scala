@@ -393,7 +393,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.tokens.Token.structure") {
     val token = "foo + bar".tokenize.get(1)
-    assert(token.structure == "foo [0..3)")
+    assertEquals(token.structure, "Ident(foo) [0..3)")
   }
 
   test("scala.meta.tokens.Token.syntax") {
@@ -408,8 +408,9 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.tokens.Tokens.structure") {
     val tokens = "foo + bar".tokenize.get
-    assert(
-      tokens.structure == "Tokens(BOF [0..0), foo [0..3),   [3..4), + [4..5),   [5..6), bar [6..9), EOF [9..9))"
+    assertEquals(
+      tokens.structure,
+      "Tokens(BOF [0..0), Ident(foo) [0..3), Space( ) [3..4), Ident(+) [4..5), Space( ) [5..6), Ident(bar) [6..9), EOF [9..9))"
     )
   }
 
