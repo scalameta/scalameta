@@ -325,14 +325,16 @@ class LegacyScanner(input: Input, dialect: Dialect) {
             putChar(ch)
             nextChar()
             base = 16
+            getNumber()
           } else if (dialect.allowBinaryLiterals && (ch == 'b' || ch == 'B')) {
             putChar(ch)
             nextChar()
             base = 2
+            getNumber()
           } else {
-            base = 8
+            base = 10
+            getNumber(hadLeadingZero = true)
           }
-          getNumber()
         }
         fetchZero()
       case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
@@ -828,22 +830,21 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   /**
    * Read a number into strVal and set base
    */
-  private def getNumber(): Unit = {
-    // Read 8,9's even if format is octal, produce a malformed number error afterwards.
-    // At this point, we have already read the first digit, so to tell an innocent 0 apart
-    // from an octal literal 0123... (which we want to disallow), we check whether there
-    // are any additional digits coming after the first one we have already read.
+  private def getNumber(hadLeadingZero: Boolean = false): Unit = {
     val cbufInitialLen = cbuf.length()
-    readDigits(base max 10)
-    val cbufDigitsLen = cbuf.length()
-    def noMoreDigits = cbufDigitsLen == cbufInitialLen
+    readDigits(base)
+    def noMoreDigits = cbuf.length() == cbufInitialLen
 
     def isEfd = ch match { case 'e' | 'E' | 'f' | 'F' | 'd' | 'D' => true; case _ => false }
     def isL = ch match { case 'l' | 'L' => true; case _ => false }
+    def verifyValidInteger() = {
+      if (hadLeadingZero && !noMoreDigits) // octal deprecated in 2.10, removed in 2.11
+        syntaxError("Non-zero integral values may not have a leading zero.", at = offset)
+    }
 
-    if (base <= 10 && isEfd)
+    if (base == 10 && isEfd)
       getFraction()
-    else if (base <= 10 && ch == '.') {
+    else if (base == 10 && ch == '.') {
       val lookahead = lookaheadReader
       lookahead.nextChar()
       if (lookahead.isDigit()) {
@@ -852,14 +853,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         getFraction()
       } else {
         // Prohibit `1.`, so stop before the dot
+        verifyValidInteger()
         setStrVal()
         token = INTLIT
       }
     } else {
-      // Checking for base == 8 is not enough, because base = 8 is set
-      // as soon as a 0 is read in `case '0'` of method fetchToken.
-      if (base == 8 && !noMoreDigits)
-        syntaxError("Non-zero integral values may not have a leading zero.", at = offset)
+      verifyValidInteger()
       if (isL) {
         putChar(ch)
         setStrVal()

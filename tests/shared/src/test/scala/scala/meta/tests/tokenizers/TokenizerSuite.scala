@@ -1522,6 +1522,23 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Constant.Long(0b_0010_1010L) [0..13)
          |EOF [13..13)
          |""".stripMargin
+    ),
+    (
+      "0b01.2",
+      """|BOF [0..0)
+         |Constant.Int(0b01) [0..4)
+         |Constant.Double(.2) [4..6)
+         |EOF [6..6)
+         |""".stripMargin
+    ),
+    (
+      "0b01.toString",
+      """|BOF [0..0)
+         |Constant.Int(0b01) [0..4)
+         |Dot(.) [4..5)
+         |Ident(toString) [5..13)
+         |EOF [13..13)
+         |""".stripMargin
     )
   ).foreach { case (code, value) =>
     test(s"numeric literal ok scala213: $code") {
@@ -1543,28 +1560,22 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |^""".stripMargin
     ),
     (
-      "0b01.2",
-      """|<input>:1: error: malformed floating point number
-         |0b01.2
-         |^""".stripMargin
-    ),
-    (
       "0b01d",
-      """|<input>:1: error: malformed floating point number
+      """|<input>:1: error: Invalid literal number, followed by identifier character
          |0b01d
-         |^""".stripMargin
+         |    ^""".stripMargin
     ),
     (
       "0b01f",
-      """|<input>:1: error: malformed floating point number
+      """|<input>:1: error: Invalid literal number, followed by identifier character
          |0b01f
-         |^""".stripMargin
+         |    ^""".stripMargin
     ),
     (
       "0b0123",
-      """|<input>:1: error: malformed integer number
+      """|<input>:1: error: Invalid literal number, followed by identifier character
          |0b0123
-         |^""".stripMargin
+         |    ^""".stripMargin
     )
   ).foreach { case (code, error) =>
     test(s"numeric literal fail scala213: $code") {
