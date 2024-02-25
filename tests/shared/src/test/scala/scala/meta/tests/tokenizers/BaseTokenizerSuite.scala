@@ -23,16 +23,16 @@ abstract class BaseTokenizerSuite extends TreeSuiteBase {
     expected.lift(obtained).getOrElse(fail("Got unexpected tokens: " + obtained))
   }
 
-  def assertTokenizedAsStructureLines(code: String, expected: String)(
+  def assertTokenizedAsStructureLines(code: String, expected: String, dialect: Dialect = Scala211)(
       implicit loc: Location
   ): Unit = {
-    assertNoDiff(tokenize(code).map(_.structure).mkString("\n"), expected)
+    assertNoDiff(tokenize(code, dialect).map(_.structure).mkString("\n"), expected)
   }
 
-  def assertTokenizedAsSyntax(code: String, expected: String)(
+  def assertTokenizedAsSyntax(code: String, expected: String, dialect: Dialect = Scala211)(
       implicit loc: Location
   ): Unit = {
-    assertNoDiff(tokenize(code).map(_.syntax).mkString, expected)
+    assertNoDiff(tokenize(code, dialect).map(_.syntax).mkString, expected)
   }
 
   implicit class ImplicitString(value: String) {
