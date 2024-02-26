@@ -1145,55 +1145,85 @@ class TokenizerSuite extends BaseTokenizerSuite {
   Seq(
     (
       "123_456_",
-      """|<input>:1: error: trailing separator is not allowed
+      """|<input>:1: error: trailing number separator
          |123_456_
          |       ^""".stripMargin
     ),
     (
       "123_456_L",
-      """|<input>:1: error: trailing separator is not allowed
+      """|<input>:1: error: trailing number separator
          |123_456_L
          |       ^""".stripMargin
     ),
     (
       "3_14_E-2",
-      """|<input>:1: error: trailing separator is not allowed
+      """|<input>:1: error: trailing number separator
          |3_14_E-2
          |    ^""".stripMargin
     ),
     (
       "3_14E-_2",
-      """|<input>:1: error: Invalid literal number
+      """|<input>:1: error: leading number separator
          |3_14E-_2
-         |^""".stripMargin
+         |      ^""".stripMargin
+    ),
+    (
+      "3_14E",
+      """|<input>:1: error: Invalid literal floating-point number, exponent not followed by integer
+         |3_14E
+         |    ^""".stripMargin
+    ),
+    (
+      "3_14E_2",
+      """|<input>:1: error: leading number separator
+         |3_14E_2
+         |     ^""".stripMargin
+    ),
+    (
+      "3_14E_F",
+      """|<input>:1: error: Invalid literal floating-point number, exponent not followed by integer
+         |3_14E_F
+         |    ^""".stripMargin
+    ),
+    (
+      "3_14ef",
+      """|<input>:1: error: Invalid literal floating-point number, exponent not followed by integer
+         |3_14ef
+         |    ^""".stripMargin
+    ),
+    (
+      "3_14E-1__2",
+      """|<input>:1: error: trailing number separator
+         |3_14E-1__2
+         |       ^""".stripMargin
     ),
     (
       "3_14E-2_",
-      """|<input>:1: error: trailing separator is not allowed
+      """|<input>:1: error: trailing number separator
          |3_14E-2_
          |       ^""".stripMargin
     ),
     (
       "3.1_4_",
-      """|<input>:1: error: trailing separator is not allowed
+      """|<input>:1: error: trailing number separator
          |3.1_4_
          |     ^""".stripMargin
     ),
     (
       "3.1_4_d",
-      """|<input>:1: error: trailing separator is not allowed
+      """|<input>:1: error: trailing number separator
          |3.1_4_d
          |     ^""".stripMargin
     ),
     (
       "3.1_4_dd",
-      """|<input>:1: error: trailing separator is not allowed
+      """|<input>:1: error: trailing number separator
          |3.1_4_dd
          |     ^""".stripMargin
     ),
     (
       "3.1_4_dd",
-      """|<input>:1: error: trailing separator is not allowed
+      """|<input>:1: error: trailing number separator
          |3.1_4_dd
          |     ^""".stripMargin
     )

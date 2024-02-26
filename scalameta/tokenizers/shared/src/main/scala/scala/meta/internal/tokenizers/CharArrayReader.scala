@@ -117,6 +117,15 @@ private[meta] case class CharArrayReader private (
 
   final def wasMultiChar: Boolean = begCharOffset < endCharOffset - 1
 
+  private[tokenizers] def isNumberSeparator(checkOnly: Boolean = false): Boolean =
+    if (ch != '_') false
+    else if (dialect.allowNumericLiteralUnderscoreSeparators) true
+    else if (checkOnly) false
+    else syntaxError("numeric separators are not allowed", at = begCharOffset)
+
+  @inline private[tokenizers] def isDigit(): Boolean =
+    ch >= '0' && ch <= '9'
+
 }
 
 object CharArrayReader {
