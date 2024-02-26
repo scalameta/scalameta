@@ -417,7 +417,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         fetchSingleQuote()
       case '.' =>
         nextChar()
-        if ('0' <= ch && ch <= '9') {
+        if (isDigit()) {
           putChar('.'); getFraction()
         } else if (unquoteDialect != null && ch == '.') {
           base = 0
@@ -760,24 +760,17 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
   }
 
-  @inline private def isNumberSeparator(): Boolean = {
-    val isSeparator = ch == '_'
-    if (isSeparator && !dialect.allowNumericLiteralUnderscoreSeparators)
-      syntaxError("numeric separators are not allowed", at = begCharOffset)
-    else isSeparator
-  }
-
   @tailrec private def readDigits(base: Int, wasSeparator: Boolean = false): Unit =
     if (digit2int(ch, base) >= 0) {
       putChar(ch)
       nextChar()
       readDigits(base)
+    } else if (wasSeparator) {
+      val pos = if (ch == SU) begCharOffset else begCharOffset - 1
+      syntaxError("trailing number separator", at = pos)
     } else if (isNumberSeparator()) {
       nextChar()
       readDigits(base, true)
-    } else if (wasSeparator) {
-      val pos = if (ch == SU) begCharOffset else begCharOffset - 1
-      syntaxError("trailing separator is not allowed", at = pos)
     }
 
   /**
@@ -791,7 +784,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       if (lookahead.ch == '+' || lookahead.ch == '-') {
         lookahead.nextChar()
       }
-      if ('0' <= lookahead.ch && lookahead.ch <= '9') {
+      if (lookahead.isDigit()) {
         putChar(ch)
         nextChar()
         if (ch == '+' || ch == '-') {
@@ -799,8 +792,18 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           nextChar()
         }
         readDigits(10)
+      } else {
+        if (lookahead.isNumberSeparator(checkOnly = true)) {
+          val separatorOffset = lookahead.begCharOffset
+          lookahead.nextChar()
+          if (lookahead.isDigit())
+            syntaxError("leading number separator", at = separatorOffset)
+        }
+        syntaxError(
+          s"Invalid literal floating-point number, exponent not followed by integer",
+          at = begCharOffset
+        )
       }
-      token = DOUBLELIT
     }
     if (ch == 'd' || ch == 'D') {
       putChar(ch)
@@ -819,7 +822,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   private def checkNoLetter(): Unit = {
     if (isIdentifierPart(ch) && ch >= ' ' && !isNumberSeparator())
-      syntaxError("Invalid literal number", at = offset)
+      syntaxError("Invalid literal number, followed by identifier character", at = begCharOffset)
   }
 
   /**
@@ -868,14 +871,14 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     if (base > 10 || ch != '.')
       restOfUncertainToken()
     else {
-      val lookahead = lookaheadReader
-      val c = lookahead.getc()
-
       /* Prohibit 1. */
-      if (!Character.isDigit(c))
-        return setStrVal()
-
-      restOfNumber()
+      val lookahead = lookaheadReader
+      lookahead.nextChar()
+      if (lookahead.isDigit()) {
+        restOfNumber()
+      } else {
+        setStrVal()
+      }
     }
   }
 
