@@ -82,23 +82,11 @@ trait LegacyTokenData {
    */
   private def floatingVal: BigDecimal = {
     val text = strVal
-    def isDeprecatedForm = {
-      val idx = text indexOf '.'
-      (idx == text.length - 1) || (
-        (idx >= 0)
-          && (idx + 1 < text.length)
-          && (!Character.isDigit(text charAt (idx + 1)))
-      )
-    }
-    if (isDeprecatedForm) {
-      syntaxError("floating point number is missing digit after dot", at = offset)
-    } else {
-      val designatorSuffixes = List('d', 'D', 'f', 'F')
-      val parsee =
-        if (text.nonEmpty && designatorSuffixes.contains(text.last)) text.dropRight(1) else text
-      try BigDecimal(parsee)
-      catch { case _: Exception => syntaxError("malformed floating point number", at = offset) }
-    }
+    val designatorSuffixes = List('d', 'D', 'f', 'F')
+    val parsee =
+      if (text.nonEmpty && designatorSuffixes.contains(text.last)) text.dropRight(1) else text
+    try BigDecimal(parsee)
+    catch { case _: Exception => syntaxError("malformed floating point number", at = offset) }
   }
 
   def intVal: BigInt = integerVal

@@ -875,31 +875,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       if (!Character.isDigit(c))
         return setStrVal()
 
-      val isDefinitelyNumber = (c: @switch) match {
-        /** Another digit is a giveaway. */
-        case '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
-          true
-
-        /* Backquoted idents like 22.`foo`. */
-        case '`' =>
-          return setStrVal()
-        /** Note the early return */
-
-        /* These letters may be part of a literal, or a method invocation on an Int.
-         */
-        case 'd' | 'D' | 'f' | 'F' =>
-          !isIdentifierPart(lookahead.getc())
-
-        /* A little more special handling for e.g. 5e7 */
-        case 'e' | 'E' =>
-          val ch = lookahead.getc()
-          !isIdentifierPart(ch) || (Character.isDigit(ch) || ch == '+' || ch == '-')
-
-        case x =>
-          !isIdentifierStart(x)
-      }
-      if (isDefinitelyNumber) restOfNumber()
-      else restOfUncertainToken()
+      restOfNumber()
     }
   }
 
