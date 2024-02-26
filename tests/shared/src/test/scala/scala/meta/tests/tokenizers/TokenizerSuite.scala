@@ -1138,7 +1138,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
   Seq("1_024", "1_024L", "3_14e-2", "3_14E-2_1").foreach { value =>
     test(s"numeric literal separator ok scala213: $value") {
-      dialects.Scala213("1_024").tokenize.get // no exception
+      dialects.Scala213(value).tokenize.get // no exception
     }
   }
 
@@ -1305,6 +1305,243 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |""".stripMargin
     val res = dialects.Scala213(code).tokenize
     assertEquals(res.get.toString, code)
+  }
+
+  Seq(
+    (
+      "0d",
+      """|BOF [0..0)
+         |Constant.Double(0d) [0..2)
+         |EOF [2..2)
+         |""".stripMargin
+    ),
+    (
+      "0.0",
+      """|BOF [0..0)
+         |Constant.Double(0.0) [0..3)
+         |EOF [3..3)
+         |""".stripMargin
+    ),
+    (
+      "00e0",
+      """|BOF [0..0)
+         |Constant.Double(00e0) [0..4)
+         |EOF [4..4)
+         |""".stripMargin
+    ),
+    (
+      "00e0f",
+      """|BOF [0..0)
+         |Constant.Float(00e0f) [0..5)
+         |EOF [5..5)
+         |""".stripMargin
+    ),
+    (
+      "0xe1",
+      """|BOF [0..0)
+         |Constant.Int(0xe1) [0..4)
+         |EOF [4..4)
+         |""".stripMargin
+    ),
+    (
+      "0xd",
+      """|BOF [0..0)
+         |Constant.Int(0xd) [0..3)
+         |EOF [3..3)
+         |""".stripMargin
+    ),
+    (
+      "0f",
+      """|BOF [0..0)
+         |Constant.Float(0f) [0..2)
+         |EOF [2..2)
+         |""".stripMargin
+    ),
+    (
+      "0.0f",
+      """|BOF [0..0)
+         |Constant.Float(0.0f) [0..4)
+         |EOF [4..4)
+         |""".stripMargin
+    ),
+    (
+      "0.f",
+      """|BOF [0..0)
+         |Constant.Int(0) [0..1)
+         |Dot(.) [1..2)
+         |Ident(f) [2..3)
+         |EOF [3..3)
+         |""".stripMargin
+    ),
+    (
+      ".f",
+      """|BOF [0..0)
+         |Dot(.) [0..1)
+         |Ident(f) [1..2)
+         |EOF [2..2)
+         |""".stripMargin
+    ),
+    (
+      "1. + 2.",
+      """|BOF [0..0)
+         |Constant.Int(1) [0..1)
+         |Dot(.) [1..2)
+         |Space( ) [2..3)
+         |Ident(+) [3..4)
+         |Space( ) [4..5)
+         |Constant.Int(2) [5..6)
+         |Dot(.) [6..7)
+         |EOF [7..7)
+         |""".stripMargin
+    ),
+    (
+      "1.0 + 2.0f",
+      """|BOF [0..0)
+         |Constant.Double(1.0) [0..3)
+         |Space( ) [3..4)
+         |Ident(+) [4..5)
+         |Space( ) [5..6)
+         |Constant.Float(2.0f) [6..10)
+         |EOF [10..10)
+         |""".stripMargin
+    ),
+    (
+      "1d + 2f",
+      """|BOF [0..0)
+         |Constant.Double(1d) [0..2)
+         |Space( ) [2..3)
+         |Ident(+) [3..4)
+         |Space( ) [4..5)
+         |Constant.Float(2f) [5..7)
+         |EOF [7..7)
+         |""".stripMargin
+    ),
+    (
+      "0xf",
+      """|BOF [0..0)
+         |Constant.Int(0xf) [0..3)
+         |EOF [3..3)
+         |""".stripMargin
+    ),
+    (
+      "0",
+      """|BOF [0..0)
+         |Constant.Int(0) [0..1)
+         |EOF [1..1)
+         |""".stripMargin
+    ),
+    (
+      "0l",
+      """|BOF [0..0)
+         |Constant.Long(0l) [0..2)
+         |EOF [2..2)
+         |""".stripMargin
+    ),
+    (
+      "0L",
+      """|BOF [0..0)
+         |Constant.Long(0L) [0..2)
+         |EOF [2..2)
+         |""".stripMargin
+    ),
+    (
+      "0x80000000",
+      """|BOF [0..0)
+         |Constant.Int(0x80000000) [0..10)
+         |EOF [10..10)
+         |""".stripMargin
+    ),
+    (
+      "0x8000000000000000L",
+      """|BOF [0..0)
+         |Constant.Long(0x8000000000000000L) [0..19)
+         |EOF [19..19)
+         |""".stripMargin
+    ),
+    (
+      "2e+127f",
+      """|BOF [0..0)
+         |Constant.Float(2e+127f) [0..7)
+         |EOF [7..7)
+         |""".stripMargin
+    ),
+    (
+      "2e+1023d",
+      """|BOF [0..0)
+         |Constant.Double(2e+1023d) [0..8)
+         |EOF [8..8)
+         |""".stripMargin
+    ),
+    (
+      "0b00101010",
+      """|BOF [0..0)
+         |Constant.Int(0b00101010) [0..10)
+         |EOF [10..10)
+         |""".stripMargin
+    ),
+    (
+      "0B_0010_1010",
+      """|BOF [0..0)
+         |Constant.Int(0B_0010_1010) [0..12)
+         |EOF [12..12)
+         |""".stripMargin
+    ),
+    (
+      "0b_0010_1010L",
+      """|BOF [0..0)
+         |Constant.Long(0b_0010_1010L) [0..13)
+         |EOF [13..13)
+         |""".stripMargin
+    )
+  ).foreach { case (code, value) =>
+    test(s"numeric literal ok scala213: $code") {
+      assertTokenizedAsStructureLines(code, value, dialects.Scala213)
+    }
+  }
+
+  Seq(
+    (
+      "00",
+      """|<input>:1: error: Non-zero integral values may not have a leading zero.
+         |00
+         |^""".stripMargin
+    ),
+    (
+      "00l",
+      """|<input>:1: error: Non-zero integral values may not have a leading zero.
+         |00l
+         |^""".stripMargin
+    ),
+    (
+      "0b01.2",
+      """|<input>:1: error: malformed floating point number
+         |0b01.2
+         |^""".stripMargin
+    ),
+    (
+      "0b01d",
+      """|<input>:1: error: malformed floating point number
+         |0b01d
+         |^""".stripMargin
+    ),
+    (
+      "0b01f",
+      """|<input>:1: error: malformed floating point number
+         |0b01f
+         |^""".stripMargin
+    ),
+    (
+      "0b0123",
+      """|<input>:1: error: malformed integer number
+         |0b0123
+         |^""".stripMargin
+    )
+  ).foreach { case (code, error) =>
+    test(s"numeric literal fail scala213: $code") {
+      interceptMessage[TokenizeException](error.replace("\n", EOL))(
+        dialects.Scala213(code).tokenize.get
+      )
+    }
   }
 
 }
