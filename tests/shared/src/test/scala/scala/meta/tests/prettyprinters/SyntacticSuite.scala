@@ -1,6 +1,8 @@
 package scala.meta.tests
 package prettyprinters
 
+import org.scalameta.invariants.InvariantFailedException
+
 import scala.meta._
 import scala.meta.prettyprinters.Show
 import scala.meta.trees.Origin
@@ -424,23 +426,33 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     // assertEquals(Lit.Double(1.40d).structure, "Lit.Double(1.4d)") // trailing 0 is lost
     // assertEquals(Lit.Double(1.4d).structure, "Lit.Double(1.4d)")
     // assertEquals(Lit.Double(1.40d).structure, "Lit.Double(1.4d)") // trailing 0 is lost
-    assertEquals(Lit.Double(Double.NaN).syntax, "Double.NaN")
-    assertEquals(Lit.Double(Double.PositiveInfinity).syntax, "Double.PositiveInfinity")
-    assertEquals(Lit.Double(Double.NegativeInfinity).syntax, "Double.NegativeInfinity")
-    assertTree(Lit.Double(Double.NaN))(Lit.Double(Double.NaN))
-    assertTree(Lit.Double(Double.PositiveInfinity))(Lit.Double(Double.PositiveInfinity))
-    assertTree(Lit.Double(Double.NegativeInfinity))(Lit.Double(Double.NegativeInfinity))
+    def assertFiniteError(value: Double, what: String) =
+      interceptMessage[InvariantFailedException](
+        s"""|invariant failed:
+            |when verifying java.lang.Double.isFinite(value)
+            |found that java.lang.Double.isFinite(value) is false
+            |where value = $what
+            |""".stripMargin.replace("\n", EOL)
+      )(Lit.Double(value))
+    assertFiniteError(Double.NaN, "NaN")
+    assertFiniteError(Double.PositiveInfinity, "Infinity")
+    assertFiniteError(Double.NegativeInfinity, "-Infinity")
   }
 
   test("Lit.Float") {
     assertTree(templStat("1.4f"))(Lit.Float("1.4"))
     assertTree(templStat("1.40f"))(Lit.Float("1.40"))
-    assertEquals(Lit.Float(Float.NaN).syntax, "Float.NaN")
-    assertEquals(Lit.Float(Float.PositiveInfinity).syntax, "Float.PositiveInfinity")
-    assertEquals(Lit.Float(Float.NegativeInfinity).syntax, "Float.NegativeInfinity")
-    assertTree(Lit.Float(Float.NaN))(Lit.Float(Float.NaN))
-    assertTree(Lit.Float(Float.PositiveInfinity))(Lit.Float(Float.PositiveInfinity))
-    assertTree(Lit.Float(Float.NegativeInfinity))(Lit.Float(Float.NegativeInfinity))
+    def assertFiniteError(value: Float, what: String) =
+      interceptMessage[InvariantFailedException](
+        s"""|invariant failed:
+            |when verifying java.lang.Float.isFinite(value)
+            |found that java.lang.Float.isFinite(value) is false
+            |where value = $what
+            |""".stripMargin.replace("\n", EOL)
+      )(Lit.Float(value))
+    assertFiniteError(Float.NaN, "NaN")
+    assertFiniteError(Float.PositiveInfinity, "Infinity")
+    assertFiniteError(Float.NegativeInfinity, "-Infinity")
   }
 
   test("context and view bounds") {

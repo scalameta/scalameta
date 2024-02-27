@@ -87,10 +87,24 @@ object Lit {
   // 1.4f.toString == "1.399999976158142" // in JS
   // 1.4f.toString == "1.4"               // in JVM
   // See https://www.scala-js.org/doc/semantics.html#tostring-of-float-double-and-unit
-  @ast class Double(format: scala.Predef.String) extends Lit { val value = format.toDouble }
-  object Double { def apply(double: scala.Double): Double = Lit.Double(double.toString) }
-  @ast class Float(format: scala.Predef.String) extends Lit { val value = format.toFloat }
-  object Float { def apply(float: scala.Float): Float = Lit.Float(float.toString) }
+  @ast class Double(format: scala.Predef.String) extends Lit {
+    val value = format.toDouble
+  }
+  object Double {
+    def apply(value: scala.Double): Double = {
+      org.scalameta.invariants.require(java.lang.Double.isFinite(value))
+      apply(value.toString)
+    }
+  }
+  @ast class Float(format: scala.Predef.String) extends Lit {
+    val value = format.toFloat
+  }
+  object Float {
+    def apply(value: scala.Float): Float = {
+      org.scalameta.invariants.require(java.lang.Float.isFinite(value))
+      apply(value.toString)
+    }
+  }
   @ast class Byte(value: scala.Byte) extends Lit
   @ast class Short(value: scala.Short) extends Lit
   @ast class Char(value: scala.Char) extends Lit
