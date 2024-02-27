@@ -837,47 +837,38 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     readDigits(base max 10)
     val cbufDigitsLen = cbuf.length()
     def noMoreDigits = cbufDigitsLen == cbufInitialLen
-    token = INTLIT
 
-    /* When we know for certain it's a number after using a touch of lookahead */
-    def restOfNumber() = {
-      putChar(ch)
-      nextChar()
+    def isEfd = ch match { case 'e' | 'E' | 'f' | 'F' | 'd' | 'D' => true; case _ => false }
+    def isL = ch match { case 'l' | 'L' => true; case _ => false }
+
+    if (base <= 10 && isEfd)
       getFraction()
-    }
-    def restOfUncertainToken() = {
-      def isEfd = ch match { case 'e' | 'E' | 'f' | 'F' | 'd' | 'D' => true; case _ => false }
-      def isL = ch match { case 'l' | 'L' => true; case _ => false }
-
-      if (base <= 10 && isEfd)
-        getFraction()
-      else {
-        // Checking for base == 8 is not enough, because base = 8 is set
-        // as soon as a 0 is read in `case '0'` of method fetchToken.
-        if (base == 8 && !noMoreDigits)
-          syntaxError("Non-zero integral values may not have a leading zero.", at = offset)
-        if (isL) {
-          putChar(ch)
-          setStrVal()
-          nextChar()
-          token = LONGLIT
-        } else {
-          setStrVal()
-          checkNoLetter()
-        }
-      }
-    }
-
-    if (base > 10 || ch != '.')
-      restOfUncertainToken()
-    else {
-      /* Prohibit 1. */
+    else if (base <= 10 && ch == '.') {
       val lookahead = lookaheadReader
       lookahead.nextChar()
       if (lookahead.isDigit()) {
-        restOfNumber()
+        putChar(ch) // '.'
+        nextChar()
+        getFraction()
+      } else {
+        // Prohibit `1.`, so stop before the dot
+        setStrVal()
+        token = INTLIT
+      }
+    } else {
+      // Checking for base == 8 is not enough, because base = 8 is set
+      // as soon as a 0 is read in `case '0'` of method fetchToken.
+      if (base == 8 && !noMoreDigits)
+        syntaxError("Non-zero integral values may not have a leading zero.", at = offset)
+      if (isL) {
+        putChar(ch)
+        setStrVal()
+        nextChar()
+        token = LONGLIT
       } else {
         setStrVal()
+        checkNoLetter()
+        token = INTLIT
       }
     }
   }
