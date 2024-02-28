@@ -319,19 +319,17 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         }
       case '0' =>
         def fetchZero() = {
-          putChar(ch)
           nextChar()
           if (ch == 'x' || ch == 'X') {
-            putChar(ch)
             nextChar()
             base = 16
             getNumber()
           } else if (dialect.allowBinaryLiterals && (ch == 'b' || ch == 'B')) {
-            putChar(ch)
             nextChar()
             base = 2
             getNumber()
           } else {
+            // since we didn't store '0', might need to do it later if there are no more digits
             base = 10
             getNumber(hadLeadingZero = true)
           }
@@ -808,11 +806,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       }
     }
     if (ch == 'd' || ch == 'D') {
-      putChar(ch)
       nextChar()
       token = DOUBLELIT
     } else if (ch == 'f' || ch == 'F') {
-      putChar(ch)
       nextChar()
       token = FLOATLIT
     } else {
@@ -831,9 +827,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    * Read a number into strVal and set base
    */
   private def getNumber(hadLeadingZero: Boolean = false): Unit = {
-    val cbufInitialLen = cbuf.length()
     readDigits(base)
-    def noMoreDigits = cbuf.length() == cbufInitialLen
+    val noMoreDigits = cbuf.length() == 0
+    if (hadLeadingZero && noMoreDigits) putChar('0')
 
     def isEfd = ch match { case 'e' | 'E' | 'f' | 'F' | 'd' | 'D' => true; case _ => false }
     def isL = ch match { case 'l' | 'L' => true; case _ => false }
@@ -860,7 +856,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     } else {
       verifyValidInteger()
       if (isL) {
-        putChar(ch)
         setStrVal()
         nextChar()
         token = LONGLIT

@@ -59,10 +59,7 @@ trait LegacyTokenData {
    * Convert current strVal, base to an integer value This is tricky because of max negative value.
    */
   private def integerVal: BigInt = {
-    var input = strVal
-    if (input.startsWith("0x") || input.startsWith("0X") || input.startsWith("0b") || input
-        .startsWith("0B")) input = input.substring(2)
-    if (input.endsWith("l") || input.endsWith("L")) input = input.substring(0, input.length - 1)
+    val input = strVal
     var value: BigInt = 0
     var i = 0
     val len = input.length
@@ -81,11 +78,7 @@ trait LegacyTokenData {
    * Convert current strVal, base to double value
    */
   private def floatingVal: BigDecimal = {
-    val text = strVal
-    val designatorSuffixes = List('d', 'D', 'f', 'F')
-    val parsee =
-      if (text.nonEmpty && designatorSuffixes.contains(text.last)) text.dropRight(1) else text
-    try BigDecimal(parsee)
+    try BigDecimal(strVal)
     catch { case _: Exception => syntaxError("malformed floating point number", at = offset) }
   }
 
