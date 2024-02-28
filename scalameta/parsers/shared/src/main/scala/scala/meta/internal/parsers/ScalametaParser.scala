@@ -1341,12 +1341,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         if (value > max) syntaxError("integer number too large", at = token)
         else if (value < min) syntaxError("integer number too small", at = token)
         Lit.Long(value.toLong)
-      case tok @ Constant.Float(rawValue) =>
-        val value = tok.text
-        Lit.Float(if (isNegated) s"-$value" else value)
-      case tok @ Constant.Double(rawValue) =>
-        val value = tok.text
-        Lit.Double(if (isNegated) s"-$value" else value)
+      case Constant.Float(rawValue) =>
+        Lit.Float(if (isNegated) -rawValue else rawValue)
+      case Constant.Double(rawValue) =>
+        Lit.Double(if (isNegated) -rawValue else rawValue)
       case Constant.Char(value) =>
         Lit.Char(value)
       case Constant.String(value) =>

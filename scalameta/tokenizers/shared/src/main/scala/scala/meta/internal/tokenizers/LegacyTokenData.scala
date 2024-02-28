@@ -82,10 +82,21 @@ trait LegacyTokenData {
     catch { case _: Exception => syntaxError("malformed floating point number", at = offset) }
   }
 
+  // these values are always non-negative, since we don't include any unary operators
   def intVal: BigInt = integerVal
   def longVal: BigInt = integerVal
-  def floatVal: BigDecimal = floatingVal
-  def doubleVal: BigDecimal = floatingVal
+  def floatVal: BigDecimal = {
+    val value = floatingVal
+    if (value > LegacyTokenData.bigDecimalMaxFloat)
+      syntaxError("floating-point value out of range for Float", offset)
+    value
+  }
+  def doubleVal: BigDecimal = {
+    val value = floatingVal
+    if (value > LegacyTokenData.bigDecimalMaxDouble)
+      syntaxError("floating-point value out of range for Double", offset)
+    value
+  }
 
   def setIdentifier(ident: String, dialect: Dialect, check: Boolean = true)(
       fCheck: LegacyTokenData => Unit
@@ -105,4 +116,9 @@ trait LegacyTokenData {
           fCheck(this)
       }
   }
+}
+
+object LegacyTokenData {
+  private val bigDecimalMaxFloat = BigDecimal(Float.MaxValue)
+  private val bigDecimalMaxDouble = BigDecimal(Double.MaxValue)
 }

@@ -1489,17 +1489,33 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |""".stripMargin
     ),
     (
-      "2e+127f",
+      "3.40e+38f",
       """|BOF [0..0)
-         |Constant.Float(2e+127f) [0..7)
-         |EOF [7..7)
+         |Constant.Float(3.40e+38f) [0..9)
+         |EOF [9..9)
          |""".stripMargin
     ),
     (
-      "2e+1023d",
+      "-3.40e+38f",
       """|BOF [0..0)
-         |Constant.Double(2e+1023d) [0..8)
-         |EOF [8..8)
+         |Ident(-) [0..1)
+         |Constant.Float(3.40e+38f) [1..10)
+         |EOF [10..10)
+         |""".stripMargin
+    ),
+    (
+      "1.79e+308d",
+      """|BOF [0..0)
+         |Constant.Double(1.79e+308d) [0..10)
+         |EOF [10..10)
+         |""".stripMargin
+    ),
+    (
+      "-1.79e+308d",
+      """|BOF [0..0)
+         |Ident(-) [0..1)
+         |Constant.Double(1.79e+308d) [1..11)
+         |EOF [11..11)
          |""".stripMargin
     ),
     (
@@ -1576,6 +1592,30 @@ class TokenizerSuite extends BaseTokenizerSuite {
       """|<input>:1: error: Invalid literal number, followed by identifier character
          |0b0123
          |    ^""".stripMargin
+    ),
+    (
+      "3.41e+38f",
+      """|<input>:1: error: floating-point value out of range for Float
+         |3.41e+38f
+         |^""".stripMargin
+    ),
+    (
+      "-3.41e+38f",
+      """|<input>:1: error: floating-point value out of range for Float
+         |-3.41e+38f
+         | ^""".stripMargin
+    ),
+    (
+      "1.80e+308d",
+      """|<input>:1: error: floating-point value out of range for Double
+         |1.80e+308d
+         |^""".stripMargin
+    ),
+    (
+      "-1.80e+308d",
+      """|<input>:1: error: floating-point value out of range for Double
+         |-1.80e+308d
+         | ^""".stripMargin
     )
   ).foreach { case (code, error) =>
     test(s"numeric literal fail scala213: $code") {
