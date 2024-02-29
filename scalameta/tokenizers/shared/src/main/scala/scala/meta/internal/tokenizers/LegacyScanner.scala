@@ -418,7 +418,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       case '.' =>
         nextChar()
         if (isDigit()) {
-          putChar('.'); getFraction()
+          putChar('.'); setFractionOnDot()
         } else if (unquoteDialect != null && ch == '.') {
           base = 0
           while (ch == '.') {
@@ -776,44 +776,53 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   /**
    * read fractional part and exponent of floating point number if one is present.
    */
-  private def getFraction(): Unit = {
+  private def setFractionOnDot(): Unit = {
     readDigits(10)
-    if (ch == 'e' || ch == 'E') {
-      val lookahead = lookaheadReader
-      lookahead.nextChar()
-      if (lookahead.ch == '+' || lookahead.ch == '-') {
+    token = DOUBLELIT
+    getFractionExponent()
+    getFractionWithSuffix()
+    setFractionDone()
+  }
+
+  private def getFractionExponent(): Boolean = (ch == 'e' || ch == 'E') && {
+    val lookahead = lookaheadReader
+    lookahead.nextChar()
+    val sign = lookahead.ch == '+' || lookahead.ch == '-'
+    if (sign) lookahead.nextChar()
+    if (!lookahead.isDigit()) {
+      if (lookahead.isNumberSeparator(checkOnly = true)) {
+        val separatorOffset = lookahead.begCharOffset
         lookahead.nextChar()
+        if (lookahead.isDigit())
+          syntaxError("leading number separator", at = separatorOffset)
       }
-      if (lookahead.isDigit()) {
-        putChar(ch)
-        nextChar()
-        if (ch == '+' || ch == '-') {
-          putChar(ch)
-          nextChar()
-        }
-        readDigits(10)
-      } else {
-        if (lookahead.isNumberSeparator(checkOnly = true)) {
-          val separatorOffset = lookahead.begCharOffset
-          lookahead.nextChar()
-          if (lookahead.isDigit())
-            syntaxError("leading number separator", at = separatorOffset)
-        }
-        syntaxError(
-          s"Invalid literal floating-point number, exponent not followed by integer",
-          at = begCharOffset
-        )
-      }
+      syntaxError(
+        s"Invalid literal floating-point number, exponent not followed by integer",
+        at = begCharOffset
+      )
     }
-    if (ch == 'd' || ch == 'D') {
+    putChar(ch)
+    nextChar()
+    if (sign) {
+      putChar(ch)
       nextChar()
-      token = DOUBLELIT
-    } else if (ch == 'f' || ch == 'F') {
-      nextChar()
-      token = FLOATLIT
-    } else {
-      token = DOUBLELIT
     }
+    readDigits(10)
+    token = DOUBLELIT
+    true
+  }
+
+  @inline private def getFractionWithSuffix(): Boolean = {
+    val ok = ch match {
+      case 'd' | 'D' => token = DOUBLELIT; true
+      case 'f' | 'F' => token = FLOATLIT; true
+      case _ => false
+    }
+    if (ok) nextChar()
+    ok
+  }
+
+  private def setFractionDone(): Unit = {
     checkNoLetter()
     setStrVal()
   }
@@ -831,40 +840,39 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     val noMoreDigits = cbuf.length() == 0
     if (hadLeadingZero && noMoreDigits) putChar('0')
 
-    def isEfd = ch match { case 'e' | 'E' | 'f' | 'F' | 'd' | 'D' => true; case _ => false }
-    def isL = ch match { case 'l' | 'L' => true; case _ => false }
-    def verifyValidInteger() = {
+    def setNumberInt(tokenValue: LegacyToken) = {
       if (hadLeadingZero && !noMoreDigits) // octal deprecated in 2.10, removed in 2.11
         syntaxError("Non-zero integral values may not have a leading zero.", at = offset)
+      setStrVal()
+      token = tokenValue
     }
 
-    if (base == 10 && isEfd)
-      getFraction()
-    else if (base == 10 && ch == '.') {
-      val lookahead = lookaheadReader
-      lookahead.nextChar()
-      if (lookahead.isDigit()) {
-        putChar(ch) // '.'
+    def setNumberInteger() =
+      if (ch == 'l' || ch == 'L') {
         nextChar()
-        getFraction()
+        setNumberInt(LONGLIT)
       } else {
-        // Prohibit `1.`, so stop before the dot
-        verifyValidInteger()
-        setStrVal()
-        token = INTLIT
-      }
-    } else {
-      verifyValidInteger()
-      if (isL) {
-        setStrVal()
-        nextChar()
-        token = LONGLIT
-      } else {
-        setStrVal()
         checkNoLetter()
-        token = INTLIT
+        setNumberInt(INTLIT)
       }
-    }
+
+    if (base == 10) {
+      val isFractionExp = getFractionExponent()
+      if (getFractionWithSuffix() || isFractionExp)
+        setFractionDone()
+      else if (ch == '.') {
+        val lookahead = lookaheadReader
+        lookahead.nextChar()
+        if (lookahead.isDigit()) {
+          putChar(ch) // '.'
+          nextChar()
+          setFractionOnDot()
+        } else
+          setNumberInt(INTLIT)
+      } else
+        setNumberInteger()
+    } else
+      setNumberInteger()
   }
 
   /**
