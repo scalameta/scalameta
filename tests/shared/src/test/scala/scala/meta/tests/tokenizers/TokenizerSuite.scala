@@ -1136,7 +1136,14 @@ class TokenizerSuite extends BaseTokenizerSuite {
     }
   }
 
-  Seq("1_024", "1_024L", "3_14e-2", "3_14E-2_1").foreach { value =>
+  Seq(
+    "1_024",
+    "1_024L",
+    "3_14e-2",
+    "3_14E-2_1",
+    "0x_1234",
+    "0b_0101"
+  ).foreach { value =>
     test(s"numeric literal separator ok scala213: $value") {
       dialects.Scala213(value).tokenize.get // no exception
     }
@@ -1226,6 +1233,18 @@ class TokenizerSuite extends BaseTokenizerSuite {
       """|<input>:1: error: trailing number separator
          |3.1_4_dd
          |     ^""".stripMargin
+    ),
+    (
+      "123_456__789",
+      """|<input>:1: error: trailing number separator
+         |123_456__789
+         |       ^""".stripMargin
+    ),
+    (
+      "0x__123_456__789",
+      """|<input>:1: error: trailing number separator
+         |0x__123_456__789
+         |  ^""".stripMargin
     )
   ).foreach { case (value, error) =>
     test(s"numeric literal separator fail scala213: $value") {
