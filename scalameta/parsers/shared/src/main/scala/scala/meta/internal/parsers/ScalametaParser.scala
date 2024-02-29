@@ -1322,25 +1322,25 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   def literal(isNegated: Boolean = false): Lit = {
     val startPos = if (isNegated) prevTokenPos else tokenPos
-    def isHex = {
-      val syntax = token.syntax
-      syntax.startsWith("0x") || syntax.startsWith("0X")
+    def getBigInt(tok: NumericConstant[BigInt], dec: BigInt, hex: BigInt, typ: String) = {
+      // decimal never starts with `0` as octal was removed in 2.11; "hex" includes `0x` or `0b`
+      // non-decimal literals allow signed overflow within unsigned range
+      val max = if (tok.text(0) != '0') dec else hex
+      // token value is always positive as it doesn't take into account a sign
+      val value = tok.value
+      if (isNegated) {
+        if (value > max) syntaxError(s"integer number too small for $typ", at = token)
+        -value
+      } else {
+        if (value >= max) syntaxError(s"integer number too large for $typ", at = token)
+        value
+      }
     }
     val res = token match {
-      case Constant.Int(rawValue) =>
-        val value = if (isNegated) -rawValue else rawValue
-        val min = if (isHex) BigInt(Int.MinValue) * 2 + 1 else BigInt(Int.MinValue)
-        val max = if (isHex) BigInt(Int.MaxValue) * 2 + 1 else BigInt(Int.MaxValue)
-        if (value > max) syntaxError("integer number too large", at = token)
-        else if (value < min) syntaxError("integer number too small", at = token)
-        Lit.Int(value.toInt)
-      case Constant.Long(rawValue) =>
-        val value = if (isNegated) -rawValue else rawValue
-        val min = if (isHex) BigInt(Long.MinValue) * 2 + 1 else BigInt(Long.MinValue)
-        val max = if (isHex) BigInt(Long.MaxValue) * 2 + 1 else BigInt(Long.MaxValue)
-        if (value > max) syntaxError("integer number too large", at = token)
-        else if (value < min) syntaxError("integer number too small", at = token)
-        Lit.Long(value.toLong)
+      case tok: Constant.Int =>
+        Lit.Int(getBigInt(tok, bigIntMaxInt, bigIntMaxUInt, "Int").intValue)
+      case tok: Constant.Long =>
+        Lit.Long(getBigInt(tok, bigIntMaxLong, bigIntMaxULong, "Long").longValue)
       case Constant.Float(rawValue) =>
         Lit.Float(if (isNegated) -rawValue else rawValue)
       case Constant.Double(rawValue) =>
@@ -4842,6 +4842,12 @@ object ScalametaParser {
     case (t: Quasi) :: Nil if t.rank >= reduceRank => reellipsis[C](t, t.rank - reduceRank)
     case v => f(v)
   }
+
+  private val bigIntMaxInt = BigInt(Int.MaxValue) + 1
+  private val bigIntMaxUInt = bigIntMaxInt << 1
+
+  private val bigIntMaxLong = BigInt(Long.MaxValue) + 1
+  private val bigIntMaxULong = bigIntMaxLong << 1
 
 }
 

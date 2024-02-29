@@ -2,7 +2,7 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
-import scala.meta.dialects.Scala211
+import scala.meta.dialects.Scala213
 
 class LitSuite extends ParseSuite {
 
@@ -19,7 +19,11 @@ class LitSuite extends ParseSuite {
   }
 
   test("2147483648") {
-    intercept[ParseException] { term("2147483648") }
+    interceptMessage[ParseException](
+      """|<input>:1: error: integer number too large for Int
+         |2147483648
+         |^""".stripMargin.replace("\n", EOL)
+    ) { term("2147483648") }
   }
 
   test("2147483647") {
@@ -31,7 +35,11 @@ class LitSuite extends ParseSuite {
   }
 
   test("-2147483649") {
-    intercept[ParseException] { term("-2147483649") }
+    interceptMessage[ParseException](
+      """|<input>:1: error: integer number too small for Int
+         |-2147483649
+         | ^""".stripMargin.replace("\n", EOL)
+    ) { term("-2147483649") }
   }
 
   test("42L") {
@@ -43,7 +51,11 @@ class LitSuite extends ParseSuite {
   }
 
   test("9223372036854775808L") {
-    intercept[ParseException] { term("9223372036854775808L") }
+    interceptMessage[ParseException](
+      """|<input>:1: error: integer number too large for Long
+         |9223372036854775808L
+         |^""".stripMargin.replace("\n", EOL)
+    ) { term("9223372036854775808L") }
   }
 
   test("9223372036854775807L") {
@@ -55,7 +67,11 @@ class LitSuite extends ParseSuite {
   }
 
   test("-9223372036854775809L") {
-    intercept[ParseException] { term("-9223372036854775809L") }
+    interceptMessage[ParseException](
+      """|<input>:1: error: integer number too small for Long
+         |-9223372036854775809L
+         | ^""".stripMargin.replace("\n", EOL)
+    ) { term("-9223372036854775809L") }
   }
 
   test("42.42") {
@@ -189,7 +205,6 @@ class LitSuite extends ParseSuite {
   }
 
   test("numeric literals with separators") {
-    implicit val Scala211 = scala.meta.dialects.Scala213
     runTestAssert[Stat]("1_000_000_000.0", "1000000000.0d")(dbl("1000000000"))
     runTestAssert[Stat]("1_000_000_000d", "1000000000d")(dbl("1000000000"))
     runTestAssert[Stat]("1_000_000_000D", "1000000000d")(dbl("1000000000"))
@@ -197,6 +212,62 @@ class LitSuite extends ParseSuite {
     runTestAssert[Stat]("1000000000D", "1000000000d")(dbl("1000000000d"))
     runTestAssert[Stat]("1_000_000_000l", "1000000000L")(lit(1000000000L))
     runTestAssert[Stat]("1_000_000_000L", "1000000000L")(lit(1000000000L))
+  }
+
+  // non-decimal, signed overflow within unsigned range
+
+  test("0xffffffff") {
+    assertTree(term("0xffffffff"))(Lit.Int(-1))
+    assertTree(term("-0xffffffff"))(Lit.Int(1))
+  }
+
+  test("0xffffffff0") {
+    interceptMessage[ParseException](
+      """|<input>:1: error: integer number too large for Int
+         |0xffffffff0
+         |^""".stripMargin.replace("\n", EOL)
+    )(term("0xffffffff0"))
+    interceptMessage[ParseException](
+      """|<input>:1: error: integer number too small for Int
+         |-0xffffffff0
+         | ^""".stripMargin.replace("\n", EOL)
+    )(term("-0xffffffff0"))
+  }
+
+  test("0b11111111111111111111111111111111") { // 32
+    assertTree(term("0b11111111111111111111111111111111"))(Lit.Int(-1))
+    assertTree(term("-0b11111111111111111111111111111111"))(Lit.Int(1))
+  }
+
+  test("0b111111111111111111111111111111110") { // 33
+    interceptMessage[ParseException](
+      """|<input>:1: error: integer number too large for Int
+         |0b111111111111111111111111111111110
+         |^""".stripMargin.replace("\n", EOL)
+    )(term("0b111111111111111111111111111111110"))
+    interceptMessage[ParseException](
+      """|<input>:1: error: integer number too small for Int
+         |-0b111111111111111111111111111111110
+         | ^""".stripMargin.replace("\n", EOL)
+    )(term("-0b111111111111111111111111111111110"))
+  }
+
+  test("0xffffffffffffffffL") {
+    assertTree(term("0xffffffffffffffffL"))(Lit.Long(-1L))
+    assertTree(term("-0xffffffffffffffffL"))(Lit.Long(1L))
+  }
+
+  test("0xffffffffffffffff0L") {
+    interceptMessage[ParseException](
+      """|<input>:1: error: integer number too large for Long
+         |0xffffffffffffffff0L
+         |^""".stripMargin.replace("\n", EOL)
+    )(term("0xffffffffffffffff0L"))
+    interceptMessage[ParseException](
+      """|<input>:1: error: integer number too small for Long
+         |-0xffffffffffffffff0L
+         | ^""".stripMargin.replace("\n", EOL)
+    )(term("-0xffffffffffffffff0L"))
   }
 
 }
