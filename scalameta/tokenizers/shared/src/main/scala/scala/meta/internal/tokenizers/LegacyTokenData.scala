@@ -59,19 +59,11 @@ trait LegacyTokenData {
    * Convert current strVal, base to an integer value This is tricky because of max negative value.
    */
   private def integerVal: BigInt = {
-    val input = strVal
-    var value: BigInt = 0
-    var i = 0
-    val len = input.length
-    while (i < len) {
-      val d = digit2int(input charAt i, base)
-      if (d < 0) {
-        syntaxError("malformed integer number", at = offset)
-      }
-      value = value * base + d
-      i += 1
+    try BigInt(strVal, base)
+    catch {
+      case e: Exception =>
+        syntaxError(s"malformed integer number: ${e.getMessage}", at = offset)
     }
-    value
   }
 
   /**
@@ -79,7 +71,10 @@ trait LegacyTokenData {
    */
   private def floatingVal: BigDecimal = {
     try BigDecimal(strVal)
-    catch { case _: Exception => syntaxError("malformed floating point number", at = offset) }
+    catch {
+      case e: Exception =>
+        syntaxError(s"malformed floating-point number: ${e.getMessage}", at = offset)
+    }
   }
 
   // these values are always non-negative, since we don't include any unary operators
