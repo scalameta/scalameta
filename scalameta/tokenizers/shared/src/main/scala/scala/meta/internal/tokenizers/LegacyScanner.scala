@@ -765,12 +765,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       putChar(ch)
       nextChar()
       readDigits(base)
-    } else if (wasSeparator) {
-      val pos = if (ch == SU) begCharOffset else begCharOffset - 1
-      syntaxError("trailing number separator", at = pos)
     } else if (isNumberSeparator()) {
       nextChar()
       readDigits(base, true)
+    } else if (wasSeparator) {
+      val pos = if (ch == SU) begCharOffset else begCharOffset - 1
+      syntaxError("trailing number separator", at = pos)
     }
 
   /**
