@@ -1136,7 +1136,17 @@ class TokenizerSuite extends BaseTokenizerSuite {
     }
   }
 
-  Seq("1_024", "1_024L", "3_14e-2", "3_14E-2_1").foreach { value =>
+  Seq(
+    "1_024",
+    "1_024L",
+    "3_14e-2",
+    "3_14E-2_1",
+    "3_14E-1__2",
+    "0x_1234",
+    "0b_0101",
+    "123_456__789",
+    "0x__123_456__789"
+  ).foreach { value =>
     test(s"numeric literal separator ok scala213: $value") {
       dialects.Scala213(value).tokenize.get // no exception
     }
@@ -1190,12 +1200,6 @@ class TokenizerSuite extends BaseTokenizerSuite {
       """|<input>:1: error: Invalid literal floating-point number, exponent not followed by integer
          |3_14ef
          |    ^""".stripMargin
-    ),
-    (
-      "3_14E-1__2",
-      """|<input>:1: error: trailing number separator
-         |3_14E-1__2
-         |       ^""".stripMargin
     ),
     (
       "3_14E-2_",
