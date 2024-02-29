@@ -20,7 +20,7 @@ class LitSuite extends ParseSuite {
 
   test("2147483648") {
     interceptMessage[ParseException](
-      """|<input>:1: error: integer number too large
+      """|<input>:1: error: integer number too large for Int
          |2147483648
          |^""".stripMargin.replace("\n", EOL)
     ) { term("2147483648") }
@@ -36,7 +36,7 @@ class LitSuite extends ParseSuite {
 
   test("-2147483649") {
     interceptMessage[ParseException](
-      """|<input>:1: error: integer number too small
+      """|<input>:1: error: integer number too small for Int
          |-2147483649
          | ^""".stripMargin.replace("\n", EOL)
     ) { term("-2147483649") }
@@ -52,7 +52,7 @@ class LitSuite extends ParseSuite {
 
   test("9223372036854775808L") {
     interceptMessage[ParseException](
-      """|<input>:1: error: integer number too large
+      """|<input>:1: error: integer number too large for Long
          |9223372036854775808L
          |^""".stripMargin.replace("\n", EOL)
     ) { term("9223372036854775808L") }
@@ -68,7 +68,7 @@ class LitSuite extends ParseSuite {
 
   test("-9223372036854775809L") {
     interceptMessage[ParseException](
-      """|<input>:1: error: integer number too small
+      """|<input>:1: error: integer number too small for Long
          |-9223372036854775809L
          | ^""".stripMargin.replace("\n", EOL)
     ) { term("-9223372036854775809L") }
@@ -223,38 +223,30 @@ class LitSuite extends ParseSuite {
 
   test("0xffffffff0") {
     interceptMessage[ParseException](
-      """|<input>:1: error: integer number too large
+      """|<input>:1: error: integer number too large for Int
          |0xffffffff0
          |^""".stripMargin.replace("\n", EOL)
     )(term("0xffffffff0"))
     interceptMessage[ParseException](
-      """|<input>:1: error: integer number too small
+      """|<input>:1: error: integer number too small for Int
          |-0xffffffff0
          | ^""".stripMargin.replace("\n", EOL)
     )(term("-0xffffffff0"))
   }
 
   test("0b11111111111111111111111111111111") { // 32
-    interceptMessage[ParseException](
-      """|<input>:1: error: integer number too large
-         |0b11111111111111111111111111111111
-         |^""".stripMargin.replace("\n", EOL)
-    )(term("0b11111111111111111111111111111111"))
-    interceptMessage[ParseException](
-      """|<input>:1: error: integer number too small
-         |-0b11111111111111111111111111111111
-         | ^""".stripMargin.replace("\n", EOL)
-    )(term("-0b11111111111111111111111111111111"))
+    assertTree(term("0b11111111111111111111111111111111"))(Lit.Int(-1))
+    assertTree(term("-0b11111111111111111111111111111111"))(Lit.Int(1))
   }
 
   test("0b111111111111111111111111111111110") { // 33
     interceptMessage[ParseException](
-      """|<input>:1: error: integer number too large
+      """|<input>:1: error: integer number too large for Int
          |0b111111111111111111111111111111110
          |^""".stripMargin.replace("\n", EOL)
     )(term("0b111111111111111111111111111111110"))
     interceptMessage[ParseException](
-      """|<input>:1: error: integer number too small
+      """|<input>:1: error: integer number too small for Int
          |-0b111111111111111111111111111111110
          | ^""".stripMargin.replace("\n", EOL)
     )(term("-0b111111111111111111111111111111110"))
@@ -267,12 +259,12 @@ class LitSuite extends ParseSuite {
 
   test("0xffffffffffffffff0L") {
     interceptMessage[ParseException](
-      """|<input>:1: error: integer number too large
+      """|<input>:1: error: integer number too large for Long
          |0xffffffffffffffff0L
          |^""".stripMargin.replace("\n", EOL)
     )(term("0xffffffffffffffff0L"))
     interceptMessage[ParseException](
-      """|<input>:1: error: integer number too small
+      """|<input>:1: error: integer number too small for Long
          |-0xffffffffffffffff0L
          | ^""".stripMargin.replace("\n", EOL)
     )(term("-0xffffffffffffffff0L"))
