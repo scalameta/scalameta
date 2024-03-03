@@ -267,7 +267,7 @@ println(q"$left + $right")
 
 > It's important to keep in mind that quasiquotes expand at compile-time into
 > the same program as if you had written normal constructors by hand.
-> This means for example, that formatting details or comments are not preserved
+> This means, for example, that formatting details or comments are not preserved
 > if interpolated values are used, because the complete source is not available
 > at compile-time.
 
