@@ -969,8 +969,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   private def isLeadingInfixArg(afterOpPos: Int, nextIndent: Int) = {
     // we don't check for pos to be within bounds since we would exit on EOF first
     @tailrec def iter(pos: Int, indent: Int, prevNoNL: Boolean): LeadingInfix = tokens(pos) match {
-      case _: EOL => if (prevNoNL) iter(pos + 1, 0, false) else LeadingInfix.InvalidArg
-      case _: Whitespace => iter(pos + 1, if (prevNoNL) indent else indent + 1, prevNoNL)
+      case _: EOL => if (prevNoNL) iter(pos + 1, 0, false) else LeadingInfix.No
+      case _: HSpace => iter(pos + 1, if (prevNoNL) indent else indent + 1, prevNoNL)
       case c: Comment =>
         val commentIndent = multilineCommentIndent(c)
         iter(pos + 1, if (commentIndent < 0) indent else commentIndent, true)
@@ -981,7 +981,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     }
     tokens(afterOpPos) match {
       case _: EOL => iter(afterOpPos + 1, 0, false)
-      case _: Whitespace => iter(afterOpPos + 1, -1, true)
+      case _: HSpace => iter(afterOpPos + 1, -1, true)
       case _: Comment => LeadingInfix.InvalidArg
       case _ => LeadingInfix.No
     }
