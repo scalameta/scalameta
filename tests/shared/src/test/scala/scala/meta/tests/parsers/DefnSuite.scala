@@ -379,6 +379,26 @@ class DefnSuite extends ParseSuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#3605 scala213") {
+    val code =
+      """|new A {
+         |  def b: C =
+         |    ???
+         |
+         |}
+         |""".stripMargin
+    val layout =
+      """|new A { def b: C = ??? }
+         |""".stripMargin
+    val tree = Term.NewAnonymous(
+      tpl(
+        List(Init(pname("A"), anon, Nil)),
+        List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
   test("#3571 scala213source3") {
     implicit val Scala213 = scala.meta.dialects.Scala213Source3
     val code =
@@ -397,6 +417,22 @@ class DefnSuite extends ParseSuite {
       )
     )
     runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3605 scala213source3") {
+    implicit val Scala213 = scala.meta.dialects.Scala213Source3
+    val code =
+      """|new A {
+         |  def b: C =
+         |    ???
+         |
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: illegal start of simple expression
+         |  def b: C =
+         |            ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
 }
