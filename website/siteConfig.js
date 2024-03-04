@@ -20,15 +20,16 @@ const siteConfig = {
   // organizationName: "olafurpg",
 
   algolia: {
-    apiKey: "0460d1c693a278bc1ad07ada3fb96c63",
-    indexName: "scalameta"
+    appId: "DZKJ3Z5JFX",
+    apiKey: "e8f55852e303f6374dfa716be910cf08",
+    indexName: "scalameta",
   },
 
   // For no header links in the top nav bar -> headerLinks: [],
   headerLinks: [
     { doc: "trees/guide", label: "Trees" },
     { doc: "semanticdb/guide", label: "SemanticDB" },
-    { href: repoUrl, label: "GitHub", external: true }
+    { href: repoUrl, label: "GitHub", external: true },
   ],
 
   // If you have users set above, you add it here:
@@ -42,7 +43,7 @@ const siteConfig = {
   /* colors for website */
   colors: {
     primaryColor: "#005124",
-    secondaryColor: "#181A1F"
+    secondaryColor: "#181A1F",
   },
 
   customDocsPath: "website/target/docs",
@@ -52,7 +53,7 @@ const siteConfig = {
 
   highlight: {
     // Highlight.js theme to use for syntax highlighting in code blocks
-    theme: "github"
+    theme: "github",
   },
 
   /* On page navigation for the current documentation page */
@@ -62,7 +63,7 @@ const siteConfig = {
   // editUrl: `${repoUrl}/edit/main/docs/`,
 
   repoUrl,
-  gitterUrl
+  gitterUrl,
 };
 
 module.exports = siteConfig;
