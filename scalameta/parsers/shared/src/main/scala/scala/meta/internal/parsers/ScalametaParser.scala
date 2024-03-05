@@ -1244,13 +1244,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private def anonThis(): Term.This = atCurPosNext(Term.This(anonNameEmpty()))
 
   def path(thisOK: Boolean = true): Term.Ref = {
-    val startsAtBofIfUnquote = dialect.allowUnquotes && getPrevToken(tokenPos).is[BOF]
-    def stop = token.isNot[Dot] || !nextIf(peekToken match {
-      case _: KwThis | _: KwSuper | _: Ident | _: Unquote => true
-      case _ => false
-    })
+    val startsAtBof = prevToken.is[BOF]
+    def afterDot[A <: Term.Ref](ref: A)(f: PartialFunction[Token, A => Term.Ref]): Term.Ref =
+      if (!token.is[Dot]) ref
+      else f.lift(peekToken) match { case Some(f) => next(); f(ref); case _ => ref }
     @inline def maybeSelectors(ref: Term.Ref): Term.Ref =
-      if (stop) ref else selectors(ref)
+      afterDot(ref) { case _: Ident | _: Unquote => selectors }
     def getThis(name: Name): Term.Ref = {
       val thisp = autoEndPos(name)(Term.This(name))
       if (thisOK) maybeSelectors(thisp)
@@ -1261,7 +1260,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
     def getSuper(name: Name): Term.Ref = {
       val superp = autoEndPos(name)(Term.Super(name, mixinQualifier()))
-      if (startsAtBofIfUnquote && token.is[EOF]) superp
+      if (startsAtBof && dialect.allowUnquotes && token.is[EOF]) superp
       else {
         accept[Dot]
         maybeSelectors(autoEndPos(name)(Term.Select(superp, termName())))
@@ -1278,29 +1277,25 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       case _: KwThis => getThis(getAnonQual())
       case _: KwSuper => getSuper(getAnonQual())
       case _ =>
-        val name = termName()
-        if (stop) name
-        else
-          token match {
-            case _: KwThis => getThis(getQual(name))
-            case _: KwSuper => getSuper(getQual(name))
-            case _ =>
-              selectors(name.become[Term])
-          }
+        afterDot(termName()) {
+          case _: KwThis => x => getThis(getQual(x))
+          case _: KwSuper => x => getSuper(getQual(x))
+          case _: Ident | _: Unquote => x => selectors(x.become[Term])
+        }
     }
   }
 
   def selector(t: Term, startPos: Int): Term.Select =
     autoEndPos(startPos)(Term.Select(t, termName()))
-  @inline
-  def selector(t: Term): Term.Select = selector(t, t.startTokenPos)
   @tailrec
-  private final def selectors(t: Term): Term.Ref = {
-    val t1 = selector(t)
+  private final def selectors(t: Term, startPos: Int): Term.Ref = {
+    val t1 = selector(t, startPos)
     if (token.is[Dot] && tryAhead[Ident])
-      selectors(t1)
+      selectors(t1, startPos)
     else t1
   }
+  private final def selectors(t: Term): Term.Ref =
+    selectors(t, t.startTokenPos)
 
   def mixinQualifier(): Name = {
     if (acceptOpt[LeftBracket]) {

@@ -225,10 +225,12 @@ class SuccessSuite extends TreeSuiteBase {
   test("2 q\"name.super[name].id\"") {
     val clazz = q"A"
     val tpe = t"B"
+    assertTree(q"$clazz.super[$tpe]")(
+      Term.Super(tname("A"), pname("B"))
+    )
     val id = q"x"
-    // inconsistency with the test above planned, since Name can't be constructed directly
-    assertTree(q"$clazz.super[$tpe].m")(
-      Term.Select(Term.Super(tname("A"), pname("B")), tname("m"))
+    assertTree(q"$clazz.super[$tpe].$id")(
+      Term.Select(Term.Super(tname("A"), pname("B")), tname("x"))
     )
   }
 
