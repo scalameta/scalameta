@@ -6,6 +6,7 @@ import scala.reflect.ClassTag
 
 import scala.annotation.{switch, tailrec}
 import scala.meta.classifiers._
+import scala.meta.internal.tokens.Chars
 
 package object trees {
 
@@ -48,7 +49,7 @@ package object trees {
       case "!=" | "<=" | ">=" | "" => false
       case _ =>
         (value.last == '=' && value.head != '='
-        && isOperatorPart(value.head))
+        && Chars.isOperatorPart(value.head))
     }
 
     // opPrecedence?
@@ -56,7 +57,7 @@ package object trees {
       if (isAssignmentOp) 0
       else if (isScalaLetter(value.head)) 1
       else
-        (value.head: @scala.annotation.switch) match {
+        (value.head: @switch) match {
           case '|' => 2
           case '^' => 3
           case '&' => 4
@@ -77,20 +78,6 @@ package object trees {
     }
     private def isScalaLetter(ch: Char) =
       letterGroups(JCharacter.getType(ch).toByte) || otherLetters(ch)
-
-    /** Is character a math or other symbol in Unicode? */
-    private def isSpecial(c: Char) = {
-      val chtp = Character.getType(c)
-      chtp == Character.MATH_SYMBOL.toInt || chtp == Character.OTHER_SYMBOL.toInt
-    }
-
-    /** Can character form part of a Scala operator name? */
-    private def isOperatorPart(c: Char): Boolean = (c: @switch) match {
-      case '~' | '!' | '@' | '#' | '%' | '^' | '*' | '+' | '-' | '<' | '>' | '?' | ':' | '=' | '&' |
-          '|' | '/' | '\\' =>
-        true
-      case c => isSpecial(c)
-    }
   }
 
   implicit class XtensionTreesTerm(private val tree: Term) extends AnyVal {

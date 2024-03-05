@@ -2,8 +2,8 @@ package scala.meta
 package internal
 package tokenizers
 
-import Chars._
 import scala.meta.inputs._
+import scala.meta.internal.tokens.Chars._
 
 private[meta] case class CharArrayReader private (
     buf: Array[Char],

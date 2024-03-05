@@ -4,7 +4,7 @@ import scala.annotation.tailrec
 import scala.meta.Dialect
 import scala.meta.classifiers._
 import scala.meta.inputs.Input
-import scala.meta.internal.tokenizers._
+import scala.meta.internal.tokens.Chars
 import scala.meta.internal.trees._
 import scala.meta.prettyprinters._
 import scala.meta.tokenizers._
