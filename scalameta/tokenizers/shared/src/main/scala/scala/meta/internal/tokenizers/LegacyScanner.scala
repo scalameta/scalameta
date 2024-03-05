@@ -4,12 +4,14 @@ package tokenizers
 
 import scala.annotation.{switch, tailrec}
 import scala.collection.mutable
-import Chars._
-import LegacyToken._
 import scala.meta.inputs._
+import scala.meta.internal.tokens.Chars._
 import scala.meta.tokenizers.TokenizeException
 
 class LegacyScanner(input: Input, dialect: Dialect) {
+
+  import LegacyToken._
+
   private val unquoteDialect = dialect.unquoteParentDialect
   val reporter: Reporter = Reporter(input)
   val curr: LegacyTokenData = new LegacyTokenData {}

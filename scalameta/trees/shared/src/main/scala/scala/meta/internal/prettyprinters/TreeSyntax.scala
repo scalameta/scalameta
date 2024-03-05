@@ -4,8 +4,8 @@ package prettyprinters
 
 import scala.meta.classifiers._
 import scala.meta.inputs.Position
+import scala.meta.internal.tokens.Chars._
 import scala.meta.internal.trees.{branch => _, root => _, _}
-import scala.meta.internal.tokenizers.Chars._
 import scala.meta.prettyprinters._
 import scala.meta.tokens.Token
 import scala.meta.trees.Origin

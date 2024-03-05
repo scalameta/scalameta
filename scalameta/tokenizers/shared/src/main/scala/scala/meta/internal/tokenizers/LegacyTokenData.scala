@@ -2,11 +2,11 @@ package scala.meta
 package internal
 package tokenizers
 
-import LegacyToken._
-import Chars._
 import scala.meta.inputs._
 
 trait LegacyTokenData {
+
+  import LegacyToken._
 
   /** the input that is currently being tokenized */
   var input: Input = null

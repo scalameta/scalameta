@@ -1,6 +1,4 @@
-package scala.meta
-package internal
-package tokenizers
+package scala.meta.internal.tokens
 
 import scala.annotation.switch
 import scala.language.postfixOps
