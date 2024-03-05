@@ -446,6 +446,21 @@ class PublicSuite extends TreeSuiteBase {
   test("scala.meta.XtensionTree") {}
   test("scala.meta.XtensionTreeT") {}
 
+  test("scala.meta.tokens.TokenExtensions") {}
+  test("scala.meta.tokens.StringExtensions") {
+    import scala.meta.tokens.StringExtensions
+    assert(!"foo".isBackquoted)
+    assert(!"`foo".isBackquoted)
+    assert(!"foo`".isBackquoted)
+    assert("`".isBackquoted)
+    assert("`foo`".isBackquoted)
+
+    assert(!"foo".isIdentSymbolicInfixOperator)
+    assert("`foo`".isIdentSymbolicInfixOperator)
+    assert("foo_+".isIdentSymbolicInfixOperator)
+    assert("+".isIdentSymbolicInfixOperator)
+  }
+
   test("scala.meta.trees.Origin") {}
   test("scala.meta.trees.Origin.DialectOnly") {}
   test("scala.meta.trees.Origin.None") {}

@@ -4,7 +4,6 @@ import scala.annotation.tailrec
 import scala.meta.Dialect
 import scala.meta.classifiers._
 import scala.meta.inputs.Input
-import scala.meta.internal.tokens.Chars
 import scala.meta.internal.trees._
 import scala.meta.prettyprinters._
 import scala.meta.tokenizers._
@@ -68,24 +67,6 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def asString: String =
       s"[${token.getClass.getSimpleName}@${token.end}]${token.syntax.replace("\n", "")}"
 
-    def isBackquoted: Boolean = {
-      val text = token.text
-      text.startsWith("`") && text.endsWith("`")
-    }
-
-    def isIdentSymbolicInfixOperator: Boolean = isBackquoted || {
-      val text = token.text
-
-      @tailrec
-      def iter(idx: Int, nonEmpty: Boolean): Boolean = {
-        val ch = text(idx)
-        if (ch == '_') nonEmpty || idx > 0 && iter(idx - 1, false)
-        else Chars.isOperatorPart(ch) && (idx == 0 || iter(idx - 1, true))
-      }
-
-      val len = text.length
-      len == 0 || iter(len - 1, false)
-    }
   }
 
   // https://github.com/lampepfl/dotty/blob/4e7ab609/compiler/src/dotty/tools/dotc/parsing/Scanners.scala#L435
@@ -736,7 +717,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       lazy val isLeadingInfix = sepRegionsOrig match {
         case Nil | (_: CanProduceLF) :: _
             if !newlines && lastNewlinePos >= 0 && dialect.allowInfixOperatorAfterNL &&
-              next.is[Ident] && next.isIdentSymbolicInfixOperator =>
+              next.isSymbolicInfixOperator =>
           isLeadingInfixArg(nextPos + 1, nextIndent)
         case _ => LeadingInfix.No
       }
