@@ -166,9 +166,11 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.tokenizers.Tokenized.Error *
       |scala.meta.tokenizers.Tokenized.Success *
       |scala.meta.tokens
+      |scala.meta.tokens.StringExtensions *
       |scala.meta.tokens.Token
       |scala.meta.tokens.Token.Interpolation *
       |scala.meta.tokens.Token.Xml *
+      |scala.meta.tokens.TokenExtensions *
       |scala.meta.tokens.Tokens
       |scala.meta.transversers
       |scala.meta.transversers.SimpleTraverser *
@@ -229,6 +231,10 @@ class SurfaceSuite extends FunSuite {
       |* A.equals(Any): Boolean
       |* A.hashCode(): Int
       |* A.maybeParse(implicit scala.meta.Dialect, scala.meta.parsers.Parse[A]): scala.meta.package.Parsed[A]
+      |* String.equals(Any): Boolean
+      |* String.hashCode(): Int
+      |* String.isBackquoted: Boolean
+      |* String.isIdentSymbolicInfixOperator: Boolean
       |* T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit XtensionClassifiable.this.C[U]): Boolean
       |* T(implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionClassifiable.this.C[U1], XtensionClassifiable.this.C[U2]): Boolean
       |* T(implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionClassifiable.this.C[U1], XtensionClassifiable.this.C[U2], XtensionClassifiable.this.C[U3]): Boolean
@@ -253,6 +259,11 @@ class SurfaceSuite extends FunSuite {
       |* scala.meta.Tree.reparseAs(implicit scala.meta.Dialect, scala.meta.parsers.Parse[A]): scala.meta.package.Parsed[A]
       |* scala.meta.Tree.transform(PartialFunction[scala.meta.Tree,scala.meta.Tree]): scala.meta.Tree
       |* scala.meta.Tree.traverse(PartialFunction[scala.meta.Tree,Unit]): Unit
+      |* scala.meta.tokens.Token.equals(Any): Boolean
+      |* scala.meta.tokens.Token.hashCode(): Int
+      |* scala.meta.tokens.Token.isBackquoted: Boolean
+      |* scala.meta.tokens.Token.isIdentSymbolicInfixOperator: Boolean
+      |* scala.meta.tokens.Token.isSymbolicInfixOperator: Boolean
     """.trim.stripMargin.split('\n').mkString(EOL)
     )
   }
