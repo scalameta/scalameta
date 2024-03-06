@@ -705,6 +705,7 @@ object TreeSyntax {
         }
         val cbounds = r(t.cbounds.map { s(kw(":"), " ", _) })
         s(w(mods, " "), variance, t.name, t.tparamClause, tbounds, vbounds, cbounds)
+      case t: Type.Block => s(w(r(t.typeDefs, "; "), "; "), t.tpe)
 
       // Pat
       case t: Pat.Var =>

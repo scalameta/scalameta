@@ -2064,4 +2064,19 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )
   }
 
+  test("#3610 Type.Block 1") {
+    val tree = Type.Block(Nil, pname("Int"))
+    assertEquals(tree.syntax, "Int")
+  }
+
+  test("#3610 Type.Block 2") {
+    val tree = Type.Block(List(Decl.Type(Nil, pname("t"), Nil, noBounds)), pname("t"))
+    assertEquals(tree.syntax, "type t; t")
+  }
+
+  test("#3610 Type.Block 3") {
+    val tree = Type.Block(List(Defn.Type(Nil, pname("t"), Nil, pname("Int"))), pname("t"))
+    assertEquals(tree.syntax, "type t = Int; t")
+  }
+
 }
