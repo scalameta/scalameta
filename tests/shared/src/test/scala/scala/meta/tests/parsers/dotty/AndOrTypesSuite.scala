@@ -11,7 +11,7 @@ class AndOrTypesSuite extends BaseDottySuite {
    */
   test("view bounds not allowed") {
     interceptMessage[IllegalArgumentException](
-      "requirement failed: Scala33 doesn't support view bounds"
+      "requirement failed: Scala34 doesn't support view bounds"
     ) {
       dialects.Scala3("{ def foo[T <% Int](t: T) = ??? }").parse[Term].get
     }
