@@ -3904,7 +3904,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def typeDefOrDcl(mods: List[Mod]): Member.Type with Stat = autoEndPos(mods) {
+  def typeDefOrDcl(mods: List[Mod]): Stat.TypeDef = autoEndPos(mods) {
     accept[KwType]
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     rejectMod[Mod.Implicit](mods, Messages.InvalidImplicit)
