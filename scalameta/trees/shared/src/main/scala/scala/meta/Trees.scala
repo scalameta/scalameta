@@ -50,6 +50,14 @@ object Stat {
   @branch trait WithCtor extends Stat { def ctor: Ctor.Primary }
   @branch trait WithMods extends Stat { def mods: List[Mod] }
   @branch trait WithTemplate extends Stat { def templ: Template }
+
+  @branch trait TypeDef
+      extends Stat with Member.Type with Stat.WithMods with Tree.WithTParamClause {
+    def mods: List[Mod]
+    def tparamClause: sm.Type.ParamClause
+    def bounds: sm.Type.Bounds
+  }
+
 }
 
 @branch trait Name extends Ref { def value: String }
@@ -614,7 +622,7 @@ object Decl {
       name: sm.Type.Name,
       tparamClause: sm.Type.ParamClause,
       bounds: sm.Type.Bounds
-  ) extends Decl with Member.Type with Stat.WithMods with Tree.WithTParamClause {
+  ) extends Decl with Stat.TypeDef {
     @replacedField("4.6.0") final def tparams: List[sm.Type.Param] = tparamClause.values
   }
   @ast class Given(
@@ -789,7 +797,7 @@ object Defn {
       tparamClause: sm.Type.ParamClause,
       body: sm.Type,
       @newField("4.4.0") bounds: sm.Type.Bounds = sm.Type.Bounds(None, None)
-  ) extends Defn with Member.Type with Stat.WithMods with Tree.WithTParamClause with Tree.WithBody {
+  ) extends Defn with Stat.TypeDef with Tree.WithBody {
     @replacedField("4.6.0") final def tparams: List[sm.Type.Param] = tparamClause.values
   }
   @ast class Class(
