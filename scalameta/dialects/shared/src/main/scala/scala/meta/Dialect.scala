@@ -110,6 +110,8 @@ final class Dialect private[meta] (
     val allowInfixMods: Boolean,
     // Scala 3 splices/quotes
     val allowSpliceAndQuote: Boolean,
+    // https://docs.scala-lang.org/sips/quote-pattern-type-variable-syntax.html
+    val allowQuotedTypeVariables: Boolean,
     // Scala 3 disallowed symbol literals
     val allowSymbolLiterals: Boolean,
     // Scala 3 disallowed symbol literals
@@ -235,6 +237,7 @@ final class Dialect private[meta] (
       allowTypeMatch = false,
       allowInfixMods = false,
       allowSpliceAndQuote = false,
+      allowQuotedTypeVariables = false,
       allowSymbolLiterals = true,
       allowDependentFunctionTypes = false,
       allowPostfixStarVarargSplices = false,
@@ -409,6 +412,9 @@ final class Dialect private[meta] (
   def withAllowSpliceAndQuote(newValue: Boolean): Dialect = {
     privateCopy(allowSpliceAndQuote = newValue)
   }
+  def withAllowQuotedTypeVariables(newValue: Boolean): Dialect = {
+    privateCopy(allowQuotedTypeVariables = newValue)
+  }
   def withAllowSymbolLiterals(newValue: Boolean): Dialect = {
     privateCopy(allowSymbolLiterals = newValue)
   }
@@ -524,6 +530,7 @@ final class Dialect private[meta] (
       allowTypeMatch: Boolean = this.allowTypeMatch,
       allowInfixMods: Boolean = this.allowInfixMods,
       allowSpliceAndQuote: Boolean = this.allowSpliceAndQuote,
+      allowQuotedTypeVariables: Boolean = this.allowQuotedTypeVariables,
       allowSymbolLiterals: Boolean = this.allowSymbolLiterals,
       allowDependentFunctionTypes: Boolean = this.allowDependentFunctionTypes,
       allowPostfixStarVarargSplices: Boolean = this.allowPostfixStarVarargSplices,
@@ -585,6 +592,7 @@ final class Dialect private[meta] (
       allowTypeMatch = allowTypeMatch,
       allowInfixMods = allowInfixMods,
       allowSpliceAndQuote = allowSpliceAndQuote,
+      allowQuotedTypeVariables = allowQuotedTypeVariables,
       allowSymbolLiterals = allowSymbolLiterals,
       allowDependentFunctionTypes = allowDependentFunctionTypes,
       allowPostfixStarVarargSplices = allowPostfixStarVarargSplices,
@@ -648,6 +656,7 @@ final class Dialect private[meta] (
       allowTypeMatch = allowTypeMatch,
       allowInfixMods = allowInfixMods,
       allowSpliceAndQuote = allowSpliceAndQuote,
+      allowQuotedTypeVariables = allowQuotedTypeVariables,
       allowSymbolLiterals = allowSymbolLiterals,
       allowDependentFunctionTypes = allowDependentFunctionTypes,
       allowPostfixStarVarargSplices = allowPostfixStarVarargSplices,
@@ -736,6 +745,7 @@ final class Dialect private[meta] (
       allowTypeMatch: Boolean,
       allowInfixMods: Boolean,
       allowSpliceAndQuote: Boolean,
+      allowQuotedTypeVariables: Boolean,
       allowSymbolLiterals: Boolean,
       allowDependentFunctionTypes: Boolean,
       allowPostfixStarVarargSplices: Boolean,
@@ -795,6 +805,7 @@ final class Dialect private[meta] (
       && this.allowTypeMatch == allowTypeMatch
       && this.allowInfixMods == allowInfixMods
       && this.allowSpliceAndQuote == allowSpliceAndQuote
+      && this.allowQuotedTypeVariables == allowQuotedTypeVariables
       && this.allowSymbolLiterals == allowSymbolLiterals
       && this.allowDependentFunctionTypes == allowDependentFunctionTypes
       && this.allowPostfixStarVarargSplices == allowPostfixStarVarargSplices
@@ -857,6 +868,7 @@ final class Dialect private[meta] (
       allowTypeMatch = that.allowTypeMatch,
       allowInfixMods = that.allowInfixMods,
       allowSpliceAndQuote = that.allowSpliceAndQuote,
+      allowQuotedTypeVariables = that.allowQuotedTypeVariables,
       allowSymbolLiterals = that.allowSymbolLiterals,
       allowDependentFunctionTypes = that.allowDependentFunctionTypes,
       allowPostfixStarVarargSplices = that.allowPostfixStarVarargSplices,
