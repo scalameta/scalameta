@@ -393,7 +393,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           else if (isOperatorPart(ch) && (ch != '\\' || wasMultiChar))
             charLitOr(getOperatorRest)
           else {
-            def isNotBraceOrBracketLiteral = {
+            def isNonLiteralBraceOrBracket = {
               val lookahead = lookaheadReader
               val nextNonWhitespace = lookahead.nextNonWhitespace
               (nextNonWhitespace == '{' || nextNonWhitespace == '[') && {
@@ -401,7 +401,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
                 lookahead.ch != '\''
               }
             }
-            if (dialect.allowSpliceAndQuote && isNotBraceOrBracketLiteral) {
+            if (dialect.allowSpliceAndQuote && isNonLiteralBraceOrBracket) {
               token = MACROQUOTE
               setStrVal()
             } else {
