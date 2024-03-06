@@ -152,7 +152,9 @@ package object dialects {
     .withAllowFewerBraces(true)
     .withAllowParamClauseInterleaving(true)
 
-  implicit val Scala3: Dialect = Scala33
+  implicit val Scala34: Dialect = Scala33
+
+  implicit val Scala3: Dialect = Scala34
 
   implicit val Scala3Future: Dialect = Scala3
     .withAllowUnderscoreAsTypePlaceholder(true)

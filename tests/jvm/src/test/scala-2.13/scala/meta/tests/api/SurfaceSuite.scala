@@ -114,6 +114,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.dialects.Scala31 *
       |scala.meta.dialects.Scala32 *
       |scala.meta.dialects.Scala33 *
+      |scala.meta.dialects.Scala34 *
       |scala.meta.dialects.Scala3Future *
       |scala.meta.dialects.Typelevel211 *
       |scala.meta.dialects.Typelevel212 *

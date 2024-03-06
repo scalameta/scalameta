@@ -41,11 +41,11 @@ class DialectSuite extends FunSuite {
   }
 
   test("scala3 toString") {
-    assertEquals(Scala3.toString, "Scala33")
+    assertEquals(Scala3.toString, "Scala34")
   }
 
   test("scala3copy toString") {
-    assertEquals(scala3copy.toString, "Scala33")
+    assertEquals(scala3copy.toString, "Scala34")
   }
 
   test("scala3 without indentation toString") {
@@ -53,7 +53,7 @@ class DialectSuite extends FunSuite {
   }
 
   test("scala3.unquoteTerm toString") {
-    assertEquals(Scala3.unquoteTerm(true).toString, "Scala33")
+    assertEquals(Scala3.unquoteTerm(true).toString, "Scala34")
   }
 
 }
