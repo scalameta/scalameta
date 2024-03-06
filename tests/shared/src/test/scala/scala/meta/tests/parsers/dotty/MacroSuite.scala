@@ -440,4 +440,28 @@ class MacroSuite extends BaseDottySuite {
       )
     )
   }
+
+  test("#3610 1") {
+    val code = "'[ List[Int] ]"
+    val tree = Term.QuotedMacroType(Type.Apply(pname("List"), List(pname("Int"))))
+    runTestAssert[Stat](code)(tree)
+  }
+
+  test("#3610 2") {
+    val code = "'[ type t = Int; List[t] ]"
+    val error =
+      """|<input>:1: error: identifier expected but type found
+         |'[ type t = Int; List[t] ]
+         |   ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3610 3") {
+    val code = "'[ type tail <: Tuple; *:[Int, tail] ]"
+    val error =
+      """|<input>:1: error: identifier expected but type found
+         |'[ type tail <: Tuple; *:[Int, tail] ]
+         |   ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
 }
