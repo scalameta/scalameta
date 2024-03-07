@@ -2249,52 +2249,52 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private def simpleExpr0(allowRepeated: Boolean): Try[Term] = {
     var canApply = true
     val startPos = tokenPos
-    val t: Try[Term] = {
-      token match {
-        case MacroQuote() =>
-          Success(macroQuote())
-        case MacroSplice() =>
-          Success(macroSplice())
-        case MacroQuotedIdent(ident) =>
-          Success(macroQuotedIdent(ident))
-        case MacroSplicedIdent(ident) =>
-          Success(macroSplicedIdent(ident))
-        case _: Literal =>
-          Success(literal())
-        case _: Interpolation.Id =>
-          Success(interpolateTerm())
-        case _: Xml.Start =>
-          Success(xmlTerm())
-        case Ident(_) | KwThis() | KwSuper() | Unquote() =>
-          Success(path().become[Term])
-        case Underscore() =>
-          Success(atCurPosNext(Term.Placeholder()))
-        case LeftParen() =>
-          Success(inParensOrTupleOrUnitExpr(allowRepeated = allowRepeated))
-        case LeftBrace() =>
-          canApply = false
-          Success(blockExprOnBrace())
-        case KwNew() =>
-          canApply = false
-          Success(autoPos {
-            next()
-            template(OwnedByTrait) match {
-              case Template.Initial(Nil, init :: Nil, Self(_: Name.Anonymous, None), Nil)
-                  if !prevToken.is[RightBrace] =>
-                Term.New(init)
-              case other =>
-                Term.NewAnonymous(other)
-            }
-          })
-        case LeftBracket() if dialect.allowPolymorphicFunctions =>
-          Success(polyFunction())
-        case Indentation.Indent() =>
-          Success(blockExprOnIndent())
-        case _ =>
-          Failure(new ParseException(token.pos, "illegal start of simple expression"))
-      }
+    (token match {
+      case MacroQuote() =>
+        Success(macroQuote())
+      case MacroSplice() =>
+        Success(macroSplice())
+      case MacroQuotedIdent(ident) =>
+        Success(macroQuotedIdent(ident))
+      case MacroSplicedIdent(ident) =>
+        Success(macroSplicedIdent(ident))
+      case _: Literal =>
+        Success(literal())
+      case _: Interpolation.Id =>
+        Success(interpolateTerm())
+      case _: Xml.Start =>
+        Success(xmlTerm())
+      case Ident(_) | KwThis() | KwSuper() | Unquote() =>
+        Success(path().become[Term])
+      case Underscore() =>
+        Success(atCurPosNext(Term.Placeholder()))
+      case LeftParen() =>
+        Success(inParensOrTupleOrUnitExpr(allowRepeated = allowRepeated))
+      case LeftBrace() =>
+        canApply = false
+        Success(blockExprOnBrace())
+      case KwNew() =>
+        canApply = false
+        Success(autoPos {
+          next()
+          template(OwnedByTrait) match {
+            case Template.Initial(Nil, init :: Nil, Self(_: Name.Anonymous, None), Nil)
+                if !prevToken.is[RightBrace] =>
+              Term.New(init)
+            case other =>
+              Term.NewAnonymous(other)
+          }
+        })
+      case LeftBracket() if dialect.allowPolymorphicFunctions =>
+        Success(polyFunction())
+      case Indentation.Indent() =>
+        Success(blockExprOnIndent())
+      case _ =>
+        Failure(new ParseException(token.pos, "illegal start of simple expression"))
+    }) match {
+      case Success(x) => Success(simpleExprRest(x, canApply = canApply, startPos = startPos))
+      case x: Failure[_] => x
     }
-    t.map(term => simpleExprRest(term, canApply = canApply, startPos = startPos))
   }
 
   def polyFunction() = autoPos {
