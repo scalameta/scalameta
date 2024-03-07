@@ -30,6 +30,7 @@ object Token {
     val value: A
   }
   @branch abstract class NumericConstant[A <: ScalaNumber] extends Constant[A]
+  @branch abstract class BooleanConstant(val value: Boolean) extends Constant[Boolean]
 
   @branch trait Keyword extends Token
   @branch trait ModifierKeyword extends Keyword
@@ -61,7 +62,7 @@ object Token {
   @fixed("enum") class KwEnum extends Keyword
   @fixed("export") class KwExport extends Keyword
   @fixed("extends") class KwExtends extends Keyword
-  @fixed("false") class KwFalse extends Literal
+  @fixed("false") class KwFalse extends BooleanConstant(false)
   @fixed("final") class KwFinal extends ModifierKeyword
   @fixed("finally") class KwFinally extends Keyword
   @fixed("for") class KwFor extends Keyword
@@ -87,7 +88,7 @@ object Token {
   @fixed("this") class KwThis extends Keyword
   @fixed("throw") class KwThrow extends Keyword
   @fixed("trait") class KwTrait extends Keyword
-  @fixed("true") class KwTrue extends Literal
+  @fixed("true") class KwTrue extends BooleanConstant(true)
   @fixed("try") class KwTry extends Keyword
   @fixed("type") class KwType extends Keyword
   @fixed("val") class KwVal extends Keyword
