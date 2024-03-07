@@ -270,4 +270,64 @@ class LitSuite extends ParseSuite {
     )(term("-0xffffffffffffffff0L"))
   }
 
+  test("unary: +1") {
+    runTestAssert[Stat]("+1")(Term.ApplyUnary(tname("+"), lit(1)))
+    runTestAssert[Stat]("+1(0)")(Term.ApplyUnary(tname("+"), Term.Apply(lit(1), List(lit(0)))))
+  }
+
+  test("unary: -1") {
+    runTestAssert[Stat]("-1")(int(-1))
+    runTestAssert[Stat]("-1(0)")(Term.Apply(lit(-1), List(lit(0))))
+  }
+
+  test("unary: ~1") {
+    runTestAssert[Stat]("~1")(Term.ApplyUnary(tname("~"), lit(1)))
+    runTestAssert[Stat]("~1(0)")(Term.ApplyUnary(tname("~"), Term.Apply(lit(1), List(lit(0)))))
+  }
+
+  test("unary: !1") {
+    runTestAssert[Stat]("!1")(Term.ApplyUnary(tname("!"), lit(1)))
+    runTestAssert[Stat]("!1(0)")(Term.ApplyUnary(tname("!"), Term.Apply(lit(1), List(lit(0)))))
+  }
+
+  test("unary: +1.0") {
+    runTestAssert[Stat]("+1.0", "+1.0d")(Term.ApplyUnary(tname("+"), lit(1d)))
+    runTestAssert[Stat]("+1.0(0)", "+1.0d(0)")(
+      Term.ApplyUnary(tname("+"), Term.Apply(lit(1d), List(lit(0))))
+    )
+  }
+
+  test("unary: -1.0") {
+    runTestAssert[Stat]("-1.0", "-1.0d")(lit(-1d))
+    runTestAssert[Stat]("-1.0(0)", "-1.0d(0)")(Term.Apply(lit(-1d), List(lit(0))))
+  }
+
+  test("unary: ~1.0") {
+    runTestAssert[Stat]("~1.0", "~1.0d")(Term.ApplyUnary(tname("~"), lit(1d)))
+    runTestAssert[Stat]("~1.0(0)", "~1.0d(0)")(
+      Term.ApplyUnary(tname("~"), Term.Apply(lit(1d), List(lit(0))))
+    )
+  }
+
+  test("unary: !1.0") {
+    runTestAssert[Stat]("!1.0", "!1.0d")(Term.ApplyUnary(tname("!"), lit(1d)))
+    runTestAssert[Stat]("!1.0(0)", "!1.0d(0)")(
+      Term.ApplyUnary(tname("!"), Term.Apply(lit(1d), List(lit(0))))
+    )
+  }
+
+  test("unary: !true") {
+    runTestAssert[Stat]("!true")(Term.ApplyUnary(tname("!"), lit(true)))
+    runTestAssert[Stat]("!true(0)")(
+      Term.ApplyUnary(tname("!"), Term.Apply(lit(true), List(lit(0))))
+    )
+  }
+
+  test("unary: !false") {
+    runTestAssert[Stat]("!false")(Term.ApplyUnary(tname("!"), lit(false)))
+    runTestAssert[Stat]("!false(0)")(
+      Term.ApplyUnary(tname("!"), Term.Apply(lit(false), List(lit(0))))
+    )
+  }
+
 }
