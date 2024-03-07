@@ -544,7 +544,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case Ident(x) => pred(x)
     case _ => false
   }
-  def isUnaryOp: Boolean = isIdentAnd(token, _.isUnaryOp)
   def isIdentExcept(except: String) = isIdentAnd(token, _ != except)
   def isIdentOf(tok: Token, name: String) = isIdentAnd(tok, _ == name)
   @inline def isStar: Boolean = isStar(token)
@@ -1113,8 +1112,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case _: Literal =>
           if (dialect.allowLiteralTypes) literal()
           else syntaxError(s"$dialect doesn't support literal types", at = path())
-        case Ident("-") if dialect.allowLiteralTypes && tryAhead[NumericConstant[_]] =>
-          numericLiteral(prevTokenPos, isNegated = true)
+        case Unary.Numeric(unary) if dialect.allowLiteralTypes && tryAhead[NumericConstant[_]] =>
+          numericLiteral(prevTokenPos, unary)
         case _ => pathSimpleType()
       }
       simpleTypeRest(autoEndPosOpt(startPos)(res), startPos)
@@ -1332,29 +1331,30 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     if (acceptOpt[Dot]) selectors(name) else name
   }
 
-  private def numericLiteral(startPos: Int, isNegated: Boolean): Lit = {
+  private def numericLiteral(startPos: Int, unary: Unary.Numeric): Lit = {
     val number = token.asInstanceOf[NumericConstant[_]]
     next()
-    autoEndPos(startPos)(numericLiteralAt(number, isNegated))
+    autoEndPos(startPos)(numericLiteralAt(number, unary))
   }
 
-  private def numericLiteralAt(token: NumericConstant[_], isNegated: Boolean): Lit = {
+  private def numericLiteralAt(token: NumericConstant[_], unary: Unary.Numeric): Lit = {
     def getBigInt(tok: NumericConstant[BigInt], dec: BigInt, hex: BigInt, typ: String) = {
       // decimal never starts with `0` as octal was removed in 2.11; "hex" includes `0x` or `0b`
       // non-decimal literals allow signed overflow within unsigned range
       val max = if (tok.text(0) != '0') dec else hex
       // token value is always positive as it doesn't take into account a sign
       val value = tok.value
-      if (isNegated) {
-        if (value > max) syntaxError(s"integer number too small for $typ", at = token)
-        -value
+      val result = unary(value)
+      if (result.signum < 0) {
+        if (value > max) syntaxError(s"integer number too small for $typ", at = tok)
       } else {
-        if (value >= max) syntaxError(s"integer number too large for $typ", at = token)
-        value
+        if (value >= max) syntaxError(s"integer number too large for $typ", at = tok)
       }
+      result
     }
     def getBigDecimal(tok: NumericConstant[BigDecimal]) =
-      if (isNegated) -tok.value else tok.value
+      unary(tok.value)
+        .getOrElse(syntaxError(s"bad unary op `${unary.op}` for floating-point", at = tok))
     token match {
       case tok: Constant.Int =>
         Lit.Int(getBigInt(tok, bigIntMaxInt, bigIntMaxUInt, "Int").intValue)
@@ -1369,7 +1369,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   }
 
   def literal(): Lit = atCurPosNext(token match {
-    case number: NumericConstant[_] => numericLiteralAt(number, false)
+    case number: NumericConstant[_] => numericLiteralAt(number, Unary.Noop)
     case Constant.Char(value) => Lit.Char(value)
     case Constant.String(value) => Lit.String(value)
     case t: Constant.Symbol =>
@@ -2228,16 +2228,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def prefixExpr(allowRepeated: Boolean): Term =
-    if (!isUnaryOp) simpleExpr(allowRepeated)
-    else {
+  def prefixExpr(allowRepeated: Boolean): Term = token match {
+    case Unary((ident, unary)) =>
       val startPos = tokenPos
-      val op = termName()
+      next()
+      def op = atPos(startPos)(Term.Name(ident))
       def addPos(tree: Term) = autoEndPos(startPos)(tree)
       def rest(tree: Term) = simpleExprRest(tree, canApply = true, startPos = startPos)
-      if (op.value == "-" && token.is[NumericConstant[_]])
-        rest(numericLiteral(startPos, isNegated = true))
-      else {
+      def otherwise =
         simpleExpr0(allowRepeated = true) match {
           case Success(result) => addPos(Term.ApplyUnary(op, result))
           case Failure(_) =>
@@ -2245,8 +2243,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             // we would fail here anyway, let's try to treat it as ident
             rest(op)
         }
+      (token, unary) match {
+        case (tok: NumericConstant[_], unary: Unary.Numeric) =>
+          next(); rest(addPos(numericLiteralAt(tok, unary)))
+        case (tok: BooleanConstant, unary: Unary.Logical) =>
+          next(); rest(addPos(Lit.Boolean(unary(tok.value))))
+        case _ => otherwise
       }
-    }
+    case _ => simpleExpr(allowRepeated)
+  }
 
   def simpleExpr(allowRepeated: Boolean): Term = simpleExpr0(allowRepeated).get
 
@@ -2910,11 +2915,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       autoEndPos(startPos)(token match {
         case sidToken @ (_: Ident | _: KwThis | _: Unquote) =>
           val sid = stableId()
-          if (token.is[NumericConstant[_]]) {
-            sid match {
-              case Term.Name("-") => return numericLiteral(startPos, isNegated = true)
-              case _ =>
-            }
+          (token, sidToken) match {
+            case (_: NumericConstant[_], Unary.Numeric(unary)) if prevTokenPos == startPos =>
+              return numericLiteral(startPos, unary)
+            case _ =>
           }
           val targs = if (token.is[LeftBracket]) Some(super.patternTypeArgs()) else None
           if (token.is[LeftParen]) {
