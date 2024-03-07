@@ -399,6 +399,30 @@ class DefnSuite extends ParseSuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#3617 scala213") {
+    val codeWithoutBlank =
+      """|object Test {
+         |  def bar =
+         |    `f-oo`
+         |}
+         |""".stripMargin
+    val codeWithBlank =
+      """|object Test {
+         |  def bar =
+         |    `f-oo`
+         |
+         |}
+         |""".stripMargin
+    val layout = "object Test { def bar = `f-oo` }"
+    val tree = Defn.Object(
+      Nil,
+      tname("Test"),
+      tpl(Defn.Def(Nil, tname("bar"), Nil, None, tname("f-oo")))
+    )
+    runTestAssert[Stat](codeWithoutBlank, layout)(tree)
+    runTestAssert[Stat](codeWithBlank, layout)(tree)
+  }
+
   test("#3571 scala213source3") {
     implicit val Scala213 = scala.meta.dialects.Scala213Source3
     val code =
@@ -438,6 +462,31 @@ class DefnSuite extends ParseSuite {
       )
     )
     runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3617 scala213source3") {
+    implicit val Scala213 = scala.meta.dialects.Scala213Source3
+    val codeWithoutBlank =
+      """|object Test {
+         |  def bar =
+         |    `f-oo`
+         |}
+         |""".stripMargin
+    val codeWithBlank =
+      """|object Test {
+         |  def bar =
+         |    `f-oo`
+         |
+         |}
+         |""".stripMargin
+    val layout = "object Test { def bar = `f-oo` }"
+    val tree = Defn.Object(
+      Nil,
+      tname("Test"),
+      tpl(Defn.Def(Nil, tname("bar"), Nil, None, tname("f-oo")))
+    )
+    runTestAssert[Stat](codeWithoutBlank, layout)(tree)
+    runTestAssert[Stat](codeWithBlank, layout)(tree)
   }
 
 }
