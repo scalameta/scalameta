@@ -15,7 +15,17 @@ object Mima {
         (ref.fullName, ref.isPublic && ref.scopedPrivateSuff.isEmpty)
       case problem: MemberProblem =>
         val ref = problem.ref
-        val accessible = !ref.nonAccessible && ref.scopedPrivatePrefix.isEmpty
+        val accessible = !ref.nonAccessible && ref.scopedPrivatePrefix.isEmpty &&
+          (ref.fullName match {
+            case "scala.meta.Dialect.this" =>
+              // exclude ctor with the longest method signature (aka, primary)
+              // for some reason, `private[meta]` on the primary ctor is not visible
+              val descriptorLength = ref.descriptor.length
+              !ref.owner.methods.get(MemberInfo.ConstructorName).forall { ctor =>
+                (ctor eq ref) || ctor.descriptor.length < descriptorLength
+              }
+            case _ => true
+          })
         (ref.fullName, accessible)
     }
     def include = fullName.startsWith("scala.meta.")
