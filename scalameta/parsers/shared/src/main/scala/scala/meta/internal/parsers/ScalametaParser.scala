@@ -1365,10 +1365,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         syntaxError("Symbol literals are no longer allowed", at = token)
       case Constant.Symbol(value) =>
         Lit.Symbol(value)
-      case KwTrue() =>
-        Lit.Boolean(true)
-      case KwFalse() =>
-        Lit.Boolean(false)
+      case x: BooleanConstant =>
+        Lit.Boolean(x.value)
       case KwNull() =>
         Lit.Null()
       case _ =>
