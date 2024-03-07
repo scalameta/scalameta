@@ -153,6 +153,7 @@ package object dialects {
     .withAllowParamClauseInterleaving(true)
 
   implicit val Scala34: Dialect = Scala33
+    .withAllowQuotedTypeVariables(true)
 
   implicit val Scala3: Dialect = Scala34
 

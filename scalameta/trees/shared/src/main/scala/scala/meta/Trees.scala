@@ -424,6 +424,9 @@ object Type {
   @ast class ParamClause(values: List[Param]) extends Member.ParamClause
 
   @ast class Match(tpe: Type, cases: List[TypeCase] @nonEmpty) extends Type with Tree.WithCases
+
+  @ast class Block(typeDefs: List[Stat.TypeDef], tpe: Type) extends Type
+
   def fresh(): Type.Name = fresh("fresh")
   def fresh(prefix: String): Type.Name = Type.Name(prefix + Fresh.nextId())
 }

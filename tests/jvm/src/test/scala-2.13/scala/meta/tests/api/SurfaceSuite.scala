@@ -469,6 +469,7 @@ class SurfaceSuite extends FunSuite {
       |scala.meta.Type.Apply
       |scala.meta.Type.ApplyInfix
       |scala.meta.Type.ArgClause
+      |scala.meta.Type.Block
       |scala.meta.Type.Bounds
       |scala.meta.Type.ByName
       |scala.meta.Type.ContextFunction

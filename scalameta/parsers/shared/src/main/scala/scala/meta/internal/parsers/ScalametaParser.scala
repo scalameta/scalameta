@@ -849,6 +849,23 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }).getOrElse(t)
     }
 
+    def typeBlock(): Type =
+      // TypeBlock, https://dotty.epfl.ch/docs/internals/syntax.html#expressions-3
+      if (dialect.allowQuotedTypeVariables && token.is[KwType]) autoPos {
+        val typeDefs = listBy[Stat.TypeDef] { buf =>
+          @tailrec def iter(): Unit = {
+            buf += typeDefOrDcl(Nil)
+            if (StatSep(token)) {
+              next()
+              if (token.is[KwType]) iter()
+            }
+          }
+          iter()
+        }
+        Type.Block(typeDefs, typ())
+      }
+      else typ()
+
     private def typeFuncOnArrow(
         paramPos: Int,
         params: List[Type],
@@ -2297,7 +2314,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     next()
     token match {
       case _: LeftBrace => Term.QuotedMacroExpr(autoPos(inBracesOnOpen(blockWithinDelims())))
-      case _: LeftBracket => Term.QuotedMacroType(inBracketsOnOpen(typ()))
+      case _: LeftBracket => Term.QuotedMacroType(inBracketsOnOpen(typeBlock()))
       case t => syntaxError("Quotation only works for expressions and types", at = t)
     }
   })
@@ -2982,6 +2999,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
    * initiated from non-pattern context.
    */
   def typ() = outPattern.typ()
+  private def typeBlock() = outPattern.typeBlock()
   def typeIndentedOpt() = outPattern.typeIndentedOpt()
   def quasiquoteType() = outPattern.quasiquoteType()
   def entrypointType() = outPattern.entrypointType()
