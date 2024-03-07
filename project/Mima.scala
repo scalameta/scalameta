@@ -9,21 +9,21 @@ import scala.reflect.ClassTag
 // https://github.com/typesafehub/migration-manager/wiki/sbt-plugin#basic-usage
 object Mima {
   val languageAgnosticCompatibilityPolicy: ProblemFilter = (problem: Problem) => {
-    val (ref, fullName, notScopedPrivate) = problem match {
+    val (fullName, accessible) = problem match {
       case problem: TemplateProblem =>
         val ref = problem.ref
-        (ref, ref.fullName, ref.scopedPrivateSuff.isEmpty)
+        (ref.fullName, ref.isPublic && ref.scopedPrivateSuff.isEmpty)
       case problem: MemberProblem =>
         val ref = problem.ref
-        (ref, ref.fullName, ref.scopedPrivatePrefix.isEmpty)
+        val accessible = !ref.nonAccessible && ref.scopedPrivatePrefix.isEmpty
+        (ref.fullName, accessible)
     }
-    val public = ref.isPublic && notScopedPrivate
     def include = fullName.startsWith("scala.meta.")
     def exclude = fullName.split(Array('.', '#', '$')).exists {
       case "internal" | "contrib" => true
       case _ => false
     }
-    public && include && !exclude
+    accessible && include && !exclude
   }
 
   private val treeAnnotations = Set(
