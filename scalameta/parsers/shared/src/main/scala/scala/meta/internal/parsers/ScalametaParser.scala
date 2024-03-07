@@ -1348,15 +1348,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         value
       }
     }
+    def getBigDecimal(tok: NumericConstant[BigDecimal]) =
+      if (isNegated) -tok.value else tok.value
     val res = token match {
       case tok: Constant.Int =>
         Lit.Int(getBigInt(tok, bigIntMaxInt, bigIntMaxUInt, "Int").intValue)
       case tok: Constant.Long =>
         Lit.Long(getBigInt(tok, bigIntMaxLong, bigIntMaxULong, "Long").longValue)
-      case Constant.Float(rawValue) =>
-        Lit.Float(if (isNegated) -rawValue else rawValue)
-      case Constant.Double(rawValue) =>
-        Lit.Double(if (isNegated) -rawValue else rawValue)
+      case tok: Constant.Float =>
+        Lit.Float(getBigDecimal(tok))
+      case tok: Constant.Double =>
+        Lit.Double(getBigDecimal(tok))
       case Constant.Char(value) =>
         Lit.Char(value)
       case Constant.String(value) =>
