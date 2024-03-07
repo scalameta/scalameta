@@ -272,62 +272,92 @@ class LitSuite extends ParseSuite {
 
   test("unary: +1") {
     runTestAssert[Stat]("+1")(Term.ApplyUnary(tname("+"), lit(1)))
-    runTestAssert[Stat]("+1(0)")(Term.ApplyUnary(tname("+"), Term.Apply(lit(1), List(lit(0)))))
+    val error =
+      """|<input>:1: error: `1` does not take parameters
+         |+1(0)
+         |  ^""".stripMargin
+    runTestError[Stat]("+1(0)", error)
   }
 
   test("unary: -1") {
     runTestAssert[Stat]("-1")(int(-1))
-    runTestAssert[Stat]("-1(0)")(Term.Apply(lit(-1), List(lit(0))))
+    val error =
+      """|<input>:1: error: `1` does not take parameters
+         |-1(0)
+         |  ^""".stripMargin
+    runTestError[Stat]("-1(0)", error)
   }
 
   test("unary: ~1") {
     runTestAssert[Stat]("~1")(Term.ApplyUnary(tname("~"), lit(1)))
-    runTestAssert[Stat]("~1(0)")(Term.ApplyUnary(tname("~"), Term.Apply(lit(1), List(lit(0)))))
+    val error =
+      """|<input>:1: error: `1` does not take parameters
+         |~1(0)
+         |  ^""".stripMargin
+    runTestError[Stat]("~1(0)", error)
   }
 
   test("unary: !1") {
     runTestAssert[Stat]("!1")(Term.ApplyUnary(tname("!"), lit(1)))
-    runTestAssert[Stat]("!1(0)")(Term.ApplyUnary(tname("!"), Term.Apply(lit(1), List(lit(0)))))
+    val error =
+      """|<input>:1: error: `1` does not take parameters
+         |!1(0)
+         |  ^""".stripMargin
+    runTestError[Stat]("!1(0)", error)
   }
 
   test("unary: +1.0") {
     runTestAssert[Stat]("+1.0", "+1.0d")(Term.ApplyUnary(tname("+"), lit(1d)))
-    runTestAssert[Stat]("+1.0(0)", "+1.0d(0)")(
-      Term.ApplyUnary(tname("+"), Term.Apply(lit(1d), List(lit(0))))
-    )
+    val error =
+      """|<input>:1: error: `1.0` does not take parameters
+         |+1.0(0)
+         |    ^""".stripMargin
+    runTestError[Stat]("+1.0(0)", error)
   }
 
   test("unary: -1.0") {
     runTestAssert[Stat]("-1.0", "-1.0d")(lit(-1d))
-    runTestAssert[Stat]("-1.0(0)", "-1.0d(0)")(Term.Apply(lit(-1d), List(lit(0))))
+    val error =
+      """|<input>:1: error: `1.0` does not take parameters
+         |-1.0(0)
+         |    ^""".stripMargin
+    runTestError[Stat]("-1.0(0)", error)
   }
 
   test("unary: ~1.0") {
     runTestAssert[Stat]("~1.0", "~1.0d")(Term.ApplyUnary(tname("~"), lit(1d)))
-    runTestAssert[Stat]("~1.0(0)", "~1.0d(0)")(
-      Term.ApplyUnary(tname("~"), Term.Apply(lit(1d), List(lit(0))))
-    )
+    val error =
+      """|<input>:1: error: `1.0` does not take parameters
+         |~1.0(0)
+         |    ^""".stripMargin
+    runTestError[Stat]("~1.0(0)", error)
   }
 
   test("unary: !1.0") {
     runTestAssert[Stat]("!1.0", "!1.0d")(Term.ApplyUnary(tname("!"), lit(1d)))
-    runTestAssert[Stat]("!1.0(0)", "!1.0d(0)")(
-      Term.ApplyUnary(tname("!"), Term.Apply(lit(1d), List(lit(0))))
-    )
+    val error =
+      """|<input>:1: error: `1.0` does not take parameters
+         |!1.0(0)
+         |    ^""".stripMargin
+    runTestError[Stat]("!1.0(0)", error)
   }
 
   test("unary: !true") {
     runTestAssert[Stat]("!true")(Term.ApplyUnary(tname("!"), lit(true)))
-    runTestAssert[Stat]("!true(0)")(
-      Term.ApplyUnary(tname("!"), Term.Apply(lit(true), List(lit(0))))
-    )
+    val error =
+      """|<input>:1: error: `true` does not take parameters
+         |!true(0)
+         |     ^""".stripMargin
+    runTestError[Stat]("!true(0)", error)
   }
 
   test("unary: !false") {
     runTestAssert[Stat]("!false")(Term.ApplyUnary(tname("!"), lit(false)))
-    runTestAssert[Stat]("!false(0)")(
-      Term.ApplyUnary(tname("!"), Term.Apply(lit(false), List(lit(0))))
-    )
+    val error =
+      """|<input>:1: error: `false` does not take parameters
+         |!false(0)
+         |      ^""".stripMargin
+    runTestError[Stat]("!false(0)", error)
   }
 
 }
