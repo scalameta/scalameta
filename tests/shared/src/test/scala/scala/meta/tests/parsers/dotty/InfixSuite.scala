@@ -653,4 +653,102 @@ class InfixSuite extends BaseDottySuite {
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
+  test("scalafmt #3825 1") {
+    val code =
+      """|object a:
+         |  foo
+         |    .map: i =>
+         |      i + 1
+         |    *> bar
+         |""".stripMargin
+    val layout =
+      """|object a {
+         |  foo.map {
+         |    i => i + 1 *> bar
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(
+        Term.Apply(
+          Term.Select(tname("foo"), tname("map")),
+          blk(
+            Term.Function(
+              List(tparam("i")),
+              Term.ApplyInfix(
+                tname("i"),
+                tname("+"),
+                Nil,
+                List(Term.ApplyInfix(int(1), tname("*>"), Nil, List(tname("bar"))))
+              )
+            )
+          ) :: Nil
+        )
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3825 2") {
+    val code =
+      """|object a:
+         |  object b:
+         |    foo
+         |      .map: i =>
+         |        i + 1
+         |          + 2
+         |        + 3
+         |      *> bar
+         |    baz
+         |  qux
+         |""".stripMargin
+    val layout =
+      """|object a {
+         |  object b {
+         |    foo.map {
+         |      i => i + 1 + 2 + 3 *> bar
+         |    }
+         |    baz
+         |  }
+         |  qux
+         |}
+         |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(
+        Defn.Object(
+          Nil,
+          tname("b"),
+          tpl(
+            Term.Apply(
+              Term.Select(tname("foo"), tname("map")),
+              blk(
+                Term.Function(
+                  List(tparam("i")),
+                  Term.ApplyInfix(
+                    Term.ApplyInfix(
+                      Term.ApplyInfix(tname("i"), tname("+"), Nil, List(int(1))),
+                      tname("+"),
+                      Nil,
+                      List(int(2))
+                    ),
+                    tname("+"),
+                    Nil,
+                    List(Term.ApplyInfix(int(3), tname("*>"), Nil, List(tname("bar"))))
+                  )
+                )
+              ) :: Nil
+            ),
+            tname("baz")
+          )
+        ),
+        tname("qux")
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
