@@ -664,27 +664,27 @@ class InfixSuite extends BaseDottySuite {
     val layout =
       """|object a {
          |  foo.map {
-         |    i => i + 1 *> bar
-         |  }
+         |    i => i + 1
+         |  } *> bar
          |}
          |""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
       tpl(
-        Term.Apply(
-          Term.Select(tname("foo"), tname("map")),
-          blk(
-            Term.Function(
-              List(tparam("i")),
-              Term.ApplyInfix(
-                tname("i"),
-                tname("+"),
-                Nil,
-                List(Term.ApplyInfix(int(1), tname("*>"), Nil, List(tname("bar"))))
+        Term.ApplyInfix(
+          Term.Apply(
+            Term.Select(tname("foo"), tname("map")),
+            blk(
+              Term.Function(
+                List(tparam("i")),
+                Term.ApplyInfix(tname("i"), tname("+"), Nil, List(int(1)))
               )
-            )
-          ) :: Nil
+            ) :: Nil
+          ),
+          tname("*>"),
+          Nil,
+          List(tname("bar"))
         )
       )
     )
@@ -708,8 +708,8 @@ class InfixSuite extends BaseDottySuite {
       """|object a {
          |  object b {
          |    foo.map {
-         |      i => i + 1 + 2 + 3 *> bar
-         |    }
+         |      i => i + 1 + 2 + 3
+         |    } *> bar
          |    baz
          |  }
          |  qux
@@ -723,24 +723,29 @@ class InfixSuite extends BaseDottySuite {
           Nil,
           tname("b"),
           tpl(
-            Term.Apply(
-              Term.Select(tname("foo"), tname("map")),
-              blk(
-                Term.Function(
-                  List(tparam("i")),
-                  Term.ApplyInfix(
+            Term.ApplyInfix(
+              Term.Apply(
+                Term.Select(tname("foo"), tname("map")),
+                blk(
+                  Term.Function(
+                    List(tparam("i")),
                     Term.ApplyInfix(
-                      Term.ApplyInfix(tname("i"), tname("+"), Nil, List(int(1))),
+                      Term.ApplyInfix(
+                        Term.ApplyInfix(tname("i"), tname("+"), Nil, List(int(1))),
+                        tname("+"),
+                        Nil,
+                        List(int(2))
+                      ),
                       tname("+"),
                       Nil,
-                      List(int(2))
-                    ),
-                    tname("+"),
-                    Nil,
-                    List(Term.ApplyInfix(int(3), tname("*>"), Nil, List(tname("bar"))))
+                      List(int(3))
+                    )
                   )
-                )
-              ) :: Nil
+                ) :: Nil
+              ),
+              tname("*>"),
+              Nil,
+              List(tname("bar"))
             ),
             tname("baz")
           )

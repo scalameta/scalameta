@@ -911,6 +911,16 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             if (prevToken.is[Indentation]) _ => None
             else getOutdentIfNeeded(_).fold(getIndentIfNeeded, x => Some(Right(x)))
 
+          def maybeWithLF(regions: List[SepRegion]) = {
+            val res = getIfCanProduceLF(regions, nextIndent)
+            if (res.isEmpty) sepRegionsOrig match {
+              case (ri: SepRegionIndented) :: _ if ri.indent < nextIndent =>
+                Some(Left(RegionLine(nextIndent) :: sepRegionsOrig))
+              case _ => res
+            }
+            else res
+          }
+
           @tailrec
           def iter(regions: List[SepRegion]): Option[Either[List[SepRegion], TokenRef]] = {
             val res = regionsToRes(regions).orElse {
@@ -927,12 +937,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                     if (next.is[Dot]) None
                     else
                       rc.asBody() match {
-                        case Some(body) => getIfCanProduceLF(body :: rs, nextIndent)
+                        case Some(body) => maybeWithLF(body :: rs)
                         case None => iter(rs)
                       }
                   case _ => iter(rs)
                 }
-              case rs => getIfCanProduceLF(rs, nextIndent)
+              case rs => maybeWithLF(rs)
             }
             else res
           }
