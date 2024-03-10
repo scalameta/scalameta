@@ -43,7 +43,7 @@ package object trees {
     // some heuristic is needed to govern associativity and precedence of unquoted operators
     def isLeftAssoc: Boolean = value.last != ':'
 
-    def isUnaryOp: Boolean = Set("-", "+", "~", "!").contains(value)
+    def isUnaryOp: Boolean = Unary.opMap.contains(value)
 
     def isAssignmentOp = value match {
       case "!=" | "<=" | ">=" | "" => false

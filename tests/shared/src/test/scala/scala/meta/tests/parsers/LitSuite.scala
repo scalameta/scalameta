@@ -271,9 +271,9 @@ class LitSuite extends ParseSuite {
   }
 
   test("unary: +1") {
-    runTestAssert[Stat]("+1")(Term.ApplyUnary(tname("+"), lit(1)))
-    val tree = Term.ApplyUnary(tname("+"), Term.Apply(lit(1), List(lit(0))))
-    runTestAssert[Stat]("+1(0)")(tree)
+    runTestAssert[Stat]("+1", "1")(lit(1))
+    val tree = Term.Apply(lit(1), List(lit(0)))
+    runTestAssert[Stat]("+1(0)", "1(0)")(tree)
   }
 
   test("unary: -1") {
@@ -283,9 +283,9 @@ class LitSuite extends ParseSuite {
   }
 
   test("unary: ~1") {
-    runTestAssert[Stat]("~1")(Term.ApplyUnary(tname("~"), lit(1)))
-    val tree = Term.ApplyUnary(tname("~"), Term.Apply(lit(1), List(lit(0))))
-    runTestAssert[Stat]("~1(0)")(tree)
+    runTestAssert[Stat]("~1", "-2")(lit(-2))
+    val tree = Term.Apply(lit(-2), List(lit(0)))
+    runTestAssert[Stat]("~1(0)", "-2(0)")(tree)
   }
 
   test("unary: !1") {
@@ -295,9 +295,9 @@ class LitSuite extends ParseSuite {
   }
 
   test("unary: +1.0") {
-    runTestAssert[Stat]("+1.0", "+1.0d")(Term.ApplyUnary(tname("+"), lit(1d)))
-    val tree = Term.ApplyUnary(tname("+"), Term.Apply(lit(1d), List(lit(0))))
-    runTestAssert[Stat]("+1.0(0)", "+1.0d(0)")(tree)
+    runTestAssert[Stat]("+1.0", "1.0d")(lit(1d))
+    val tree = Term.Apply(lit(1d), List(lit(0)))
+    runTestAssert[Stat]("+1.0(0)", "1.0d(0)")(tree)
   }
 
   test("unary: -1.0") {
@@ -307,9 +307,12 @@ class LitSuite extends ParseSuite {
   }
 
   test("unary: ~1.0") {
-    runTestAssert[Stat]("~1.0", "~1.0d")(Term.ApplyUnary(tname("~"), lit(1d)))
-    val tree = Term.ApplyUnary(tname("~"), Term.Apply(lit(1d), List(lit(0))))
-    runTestAssert[Stat]("~1.0(0)", "~1.0d(0)")(tree)
+    def error(code: String) =
+      s"""|<input>:1: error: bad unary op `~` for floating-point
+          |~$code
+          | ^""".stripMargin
+    runTestError[Stat]("~1.0", error("1.0"))
+    runTestError[Stat]("~1.0(0)", error("1.0(0)"))
   }
 
   test("unary: !1.0") {
@@ -319,15 +322,15 @@ class LitSuite extends ParseSuite {
   }
 
   test("unary: !true") {
-    runTestAssert[Stat]("!true")(Term.ApplyUnary(tname("!"), lit(true)))
-    val tree = Term.ApplyUnary(tname("!"), Term.Apply(lit(true), List(lit(0))))
-    runTestAssert[Stat]("!true(0)")(tree)
+    runTestAssert[Stat]("!true", "false")(lit(false))
+    val tree = Term.Apply(lit(false), List(lit(0)))
+    runTestAssert[Stat]("!true(0)", "false(0)")(tree)
   }
 
   test("unary: !false") {
-    runTestAssert[Stat]("!false")(Term.ApplyUnary(tname("!"), lit(false)))
-    val tree = Term.ApplyUnary(tname("!"), Term.Apply(lit(false), List(lit(0))))
-    runTestAssert[Stat]("!false(0)")(tree)
+    runTestAssert[Stat]("!false", "true")(lit(true))
+    val tree = Term.Apply(lit(true), List(lit(0)))
+    runTestAssert[Stat]("!false(0)", "true(0)")(tree)
   }
 
   test("scalatest-like infix without literal") {
