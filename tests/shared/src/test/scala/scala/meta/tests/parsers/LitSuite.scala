@@ -360,4 +360,40 @@ class LitSuite extends ParseSuite {
     runTestError[Stat]("!false(0)", error)
   }
 
+  test("scalatest-like infix without literal") {
+    val code =
+      """|behavior of something {
+         |  a shouldBe b
+         |}
+         |""".stripMargin
+    val layout =
+      """|behavior of something {
+         |  a shouldBe b
+         |}
+         |""".stripMargin
+    val tree = Term.ApplyInfix(
+      tname("behavior"),
+      tname("of"),
+      Nil,
+      Term.Apply(
+        tname("something"),
+        blk(Term.ApplyInfix(tname("a"), tname("shouldBe"), Nil, List(tname("b")))) :: Nil
+      ) :: Nil
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalatest-like infix with literal") {
+    val code =
+      """|behavior of "..." {
+         |  a shouldBe b
+         |}
+         |""".stripMargin
+    val error =
+      """|<input>:1: error: `"..."` does not take parameters
+         |behavior of "..." {
+         |                  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
