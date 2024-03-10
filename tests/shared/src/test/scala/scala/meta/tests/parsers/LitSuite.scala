@@ -272,92 +272,103 @@ class LitSuite extends ParseSuite {
 
   test("unary: +1") {
     runTestAssert[Stat]("+1")(Term.ApplyUnary(tname("+"), lit(1)))
-    val error =
-      """|<input>:1: error: `1` does not take parameters
-         |+1(0)
-         |  ^""".stripMargin
-    runTestError[Stat]("+1(0)", error)
+    val tree = Term.ApplyUnary(tname("+"), Term.Apply(lit(1), List(lit(0))))
+    runTestAssert[Stat]("+1(0)")(tree)
   }
 
   test("unary: -1") {
-    runTestAssert[Stat]("-1")(int(-1))
-    val error =
-      """|<input>:1: error: `1` does not take parameters
-         |-1(0)
-         |  ^""".stripMargin
-    runTestError[Stat]("-1(0)", error)
+    runTestAssert[Stat]("-1")(lit(-1))
+    val tree = Term.Apply(lit(-1), List(lit(0)))
+    runTestAssert[Stat]("-1(0)")(tree)
   }
 
   test("unary: ~1") {
     runTestAssert[Stat]("~1")(Term.ApplyUnary(tname("~"), lit(1)))
-    val error =
-      """|<input>:1: error: `1` does not take parameters
-         |~1(0)
-         |  ^""".stripMargin
-    runTestError[Stat]("~1(0)", error)
+    val tree = Term.ApplyUnary(tname("~"), Term.Apply(lit(1), List(lit(0))))
+    runTestAssert[Stat]("~1(0)")(tree)
   }
 
   test("unary: !1") {
     runTestAssert[Stat]("!1")(Term.ApplyUnary(tname("!"), lit(1)))
-    val error =
-      """|<input>:1: error: `1` does not take parameters
-         |!1(0)
-         |  ^""".stripMargin
-    runTestError[Stat]("!1(0)", error)
+    val tree = Term.ApplyUnary(tname("!"), Term.Apply(lit(1), List(lit(0))))
+    runTestAssert[Stat]("!1(0)")(tree)
   }
 
   test("unary: +1.0") {
     runTestAssert[Stat]("+1.0", "+1.0d")(Term.ApplyUnary(tname("+"), lit(1d)))
-    val error =
-      """|<input>:1: error: `1.0` does not take parameters
-         |+1.0(0)
-         |    ^""".stripMargin
-    runTestError[Stat]("+1.0(0)", error)
+    val tree = Term.ApplyUnary(tname("+"), Term.Apply(lit(1d), List(lit(0))))
+    runTestAssert[Stat]("+1.0(0)", "+1.0d(0)")(tree)
   }
 
   test("unary: -1.0") {
     runTestAssert[Stat]("-1.0", "-1.0d")(lit(-1d))
-    val error =
-      """|<input>:1: error: `1.0` does not take parameters
-         |-1.0(0)
-         |    ^""".stripMargin
-    runTestError[Stat]("-1.0(0)", error)
+    val tree = Term.Apply(lit(-1d), List(lit(0)))
+    runTestAssert[Stat]("-1.0(0)", "-1.0d(0)")(tree)
   }
 
   test("unary: ~1.0") {
     runTestAssert[Stat]("~1.0", "~1.0d")(Term.ApplyUnary(tname("~"), lit(1d)))
-    val error =
-      """|<input>:1: error: `1.0` does not take parameters
-         |~1.0(0)
-         |    ^""".stripMargin
-    runTestError[Stat]("~1.0(0)", error)
+    val tree = Term.ApplyUnary(tname("~"), Term.Apply(lit(1d), List(lit(0))))
+    runTestAssert[Stat]("~1.0(0)", "~1.0d(0)")(tree)
   }
 
   test("unary: !1.0") {
     runTestAssert[Stat]("!1.0", "!1.0d")(Term.ApplyUnary(tname("!"), lit(1d)))
-    val error =
-      """|<input>:1: error: `1.0` does not take parameters
-         |!1.0(0)
-         |    ^""".stripMargin
-    runTestError[Stat]("!1.0(0)", error)
+    val tree = Term.ApplyUnary(tname("!"), Term.Apply(lit(1d), List(lit(0))))
+    runTestAssert[Stat]("!1.0(0)", "!1.0d(0)")(tree)
   }
 
   test("unary: !true") {
     runTestAssert[Stat]("!true")(Term.ApplyUnary(tname("!"), lit(true)))
-    val error =
-      """|<input>:1: error: `true` does not take parameters
-         |!true(0)
-         |     ^""".stripMargin
-    runTestError[Stat]("!true(0)", error)
+    val tree = Term.ApplyUnary(tname("!"), Term.Apply(lit(true), List(lit(0))))
+    runTestAssert[Stat]("!true(0)")(tree)
   }
 
   test("unary: !false") {
     runTestAssert[Stat]("!false")(Term.ApplyUnary(tname("!"), lit(false)))
-    val error =
-      """|<input>:1: error: `false` does not take parameters
-         |!false(0)
-         |      ^""".stripMargin
-    runTestError[Stat]("!false(0)", error)
+    val tree = Term.ApplyUnary(tname("!"), Term.Apply(lit(false), List(lit(0))))
+    runTestAssert[Stat]("!false(0)")(tree)
+  }
+
+  test("scalatest-like infix without literal") {
+    val code =
+      """|behavior of something {
+         |  a shouldBe b
+         |}
+         |""".stripMargin
+    val layout =
+      """|behavior of something {
+         |  a shouldBe b
+         |}
+         |""".stripMargin
+    val tree = Term.ApplyInfix(
+      tname("behavior"),
+      tname("of"),
+      Nil,
+      Term.Apply(
+        tname("something"),
+        blk(Term.ApplyInfix(tname("a"), tname("shouldBe"), Nil, List(tname("b")))) :: Nil
+      ) :: Nil
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalatest-like infix with literal") {
+    val code =
+      """|behavior of "..." {
+         |  a shouldBe b
+         |}
+         |""".stripMargin
+    val tree = Term.ApplyInfix(
+      tname("behavior"),
+      tname("of"),
+      Nil,
+      Term.Apply(
+        str("..."),
+        blk(Term.ApplyInfix(tname("a"), tname("shouldBe"), Nil, List(tname("b")))) :: Nil
+      ) :: Nil
+    )
+    runTestAssert[Stat](code)(tree)
   }
 
 }

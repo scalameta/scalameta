@@ -2337,7 +2337,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   @tailrec
   private def simpleExprRest(t: Term, canApply: Boolean, startPos: Int): Term = {
-    val tokenBefore = prevToken
     @inline def addPos(body: Term): Term = autoEndPos(startPos)(body)
     if (canApply) {
       if (dialect.allowSignificantIndentation) {
@@ -2370,8 +2369,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             addPos(t)
         }
       case tok @ (_: LeftParen | _: LeftBrace) if canApply =>
-        if (t.is[Lit] && tokenBefore.is[Constant[_]])
-          syntaxError(s"`${tokenBefore.text}` does not take parameters", at = tok)
         def argClause =
           if (tok.is[LeftBrace]) getArgClauseOnBrace() else getArgClauseOnParen()
         val arguments = addPos(Term.Apply(t, argClause))
