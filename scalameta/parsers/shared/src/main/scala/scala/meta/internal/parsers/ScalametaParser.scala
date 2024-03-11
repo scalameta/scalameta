@@ -556,6 +556,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
+  private object VarArgTypeParam {
+    // we assume that this is a type specification for a vararg parameter
+    private def check(tok: Token): Boolean = peekToken match {
+      case _: RightParen | _: Comma | _: Equals | _: RightBrace | _: EOF => tok.text == "*"
+      case _ => false
+    }
+    @inline def unapply(tok: Token.Ident): Boolean = check(tok)
+    object Non {
+      def unapply(tok: Token.Ident): Boolean = !check(tok)
+    }
+  }
+
   /* ---------- TREE CONSTRUCTION ------------------------------------------- */
 
   private def listBy[T](f: ListBuffer[T] => Unit): List[T] = {
@@ -923,40 +935,35 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         f: Type => Type,
         inMatchType: Boolean = false
     ): Type = {
-      @inline def verifyLeftAssoc(at: Tree, leftAssoc: Boolean = true) =
-        if (mode != InfixMode.FirstOp) checkAssoc(at, leftAssoc, mode == InfixMode.LeftOp)
-      token match {
-        case Ident("*") if (peekToken match {
-              case _: RightParen | _: Comma | _: Equals | _: RightBrace | _: EOF => true
-              case _ => false
-            }) => // we assume that this is a type specification for a vararg parameter
-          f(t)
-        case _: Ident | _: Unquote =>
-          val op = typeName()
-          val leftAssoc = op.isLeftAssoc
-          verifyLeftAssoc(op, leftAssoc)
-          newLineOptWhenFollowedBy(TypeIntro(_))
-          val typ = compoundType(inMatchType = inMatchType)
-          def mkOp(t1: Type) = atPos(startPos, t1)(Type.ApplyInfix(t, op, t1))
-          if (leftAssoc)
-            infixTypeRestWithMode(
-              mkOp(typ),
-              InfixMode.LeftOp,
-              startPos,
-              f,
-              inMatchType = inMatchType
-            )
-          else
-            infixTypeRestWithMode(
-              typ,
-              InfixMode.RightOp,
-              typ.startTokenPos,
-              f.compose(mkOp),
-              inMatchType = inMatchType
-            )
-        case _ =>
-          f(t)
+      val ok = token match {
+        case _: Unquote | VarArgTypeParam.Non() => true
+        case _ => false
       }
+      if (ok) {
+        val op = typeName()
+        val leftAssoc = op.isLeftAssoc
+        if (mode != InfixMode.FirstOp) checkAssoc(op, leftAssoc, mode == InfixMode.LeftOp)
+        newLineOptWhenFollowedBy(TypeIntro(_))
+        val typ = compoundType(inMatchType = inMatchType)
+        def mkOp(t1: Type) = atPos(startPos, t1)(Type.ApplyInfix(t, op, t1))
+        if (leftAssoc)
+          infixTypeRestWithMode(
+            mkOp(typ),
+            InfixMode.LeftOp,
+            startPos,
+            f,
+            inMatchType = inMatchType
+          )
+        else
+          infixTypeRestWithMode(
+            typ,
+            InfixMode.RightOp,
+            typ.startTokenPos,
+            f.compose(mkOp),
+            inMatchType = inMatchType
+          )
+      } else
+        f(t)
     }
 
     private final def infixTypeRestWithPrecedence(t: Type, inMatchType: Boolean = false): Type = {
@@ -971,10 +978,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       }
       @tailrec
       def loop(rhs: ctx.Typ): ctx.Typ = token match {
-        case Ident("*") if (peekToken match {
-              case _: RightParen | _: Comma | _: Equals | _: RightBrace | _: EOF => true
-              case _ => false
-            }) => // we assume that this is a type specification for a vararg parameter
+        case VarArgTypeParam() =>
           reduce(rhs, None)
         case _: Ident | _: Unquote =>
           loop(getNextRhs(typeName(), rhs))
