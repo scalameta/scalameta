@@ -403,19 +403,14 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("question-type-like") {
-    val treeWithoutBounds = Decl.Val(
-      Nil,
-      List(Pat.Var(tname("stat"))),
-      Type.Apply(pname("Tree"), List(Type.Wildcard(noBounds)))
-    )
-    runTestAssert[Stat]("val stat: Tree[`?`]", "val stat: Tree[?]")(treeWithoutBounds)
-    runTestAssert[Stat]("val stat: Tree[`?` >: Untyped]", "val stat: Tree[? >: Untyped]")(
-      Decl.Val(
-        Nil,
-        List(Pat.Var(tname("stat"))),
-        Type.Apply(pname("Tree"), List(Type.Wildcard(loBound("Untyped"))))
-      )
-    )
+    val treeWithoutBounds =
+      Decl.Val(Nil, List(Pat.Var(tname("stat"))), Type.Apply(pname("Tree"), List(pname("?"))))
+    runTestAssert[Stat]("val stat: Tree[`?`]")(treeWithoutBounds)
+    val errorWithBounds =
+      """|<input>:1: error: ] expected but >: found
+         |val stat: Tree[`?` >: Untyped]
+         |                   ^""".stripMargin
+    runTestError[Stat]("val stat: Tree[`?` >: Untyped]", errorWithBounds)
   }
 
   test("lazy-val-toplevel") {
