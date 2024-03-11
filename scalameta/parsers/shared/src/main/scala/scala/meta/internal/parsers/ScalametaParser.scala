@@ -531,10 +531,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   def isIdentOf(tok: Token, name: String) = isIdentAnd(tok, _ == name)
   @inline def isStar: Boolean = isStar(token)
   def isStar(tok: Token): Boolean = isIdentOf(tok, "*")
-  def isVarargStarParam(allowRepeated: Boolean) =
-    isStar && isVarargParamOnStar(allowRepeated)
-  def isVarargParamOnStar(allowRepeated: Boolean) =
-    allowRepeated && dialect.allowPostfixStarVarargSplices && peekToken.is[RightParen]
 
   private trait MacroIdent {
     protected def ident(token: Token): Option[String]
@@ -1731,7 +1727,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
               iter(addPos(Term.Ascribe(t, typeOrInfixType(location))))
             }
         }
-      case Ident("*") if isVarargParamOnStar(allowRepeated) =>
+      case soft.StarSplice() if allowRepeated && peekToken.is[RightParen] =>
         repeatedTerm(t, next)
       case _: KwMatch =>
         next()
@@ -2173,7 +2169,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case t: Unquote =>
           val op = unquote[Term.Name](t)
           Some(getPostfixOrNextRhs(op))
-        case t: Ident if !isVarargStarParam(allowRepeated) =>
+        case t: Ident if !(allowRepeated && soft.StarSplice(t) && peekToken.is[RightParen]) =>
           val op = atCurPosNext(Term.Name(t.value))
           Some(getPostfixOrNextRhs(op))
         case _: KwMatch if dialect.allowMatchAsOperator =>
@@ -2918,7 +2914,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
             sid match {
               case name: Term.Name.Quasi => name.become[Pat]
               case name: Term.Name =>
-                if (dialect.allowPostfixStarVarargSplices && isStar && tryAheadNot[Ident])
+                if (soft.StarSplice(token) && tryAheadNot[Ident])
                   Pat.Repeated(name)
                 else if ((!sidToken.isBackquoted || isForComprehension) && {
                     val first = name.value.head

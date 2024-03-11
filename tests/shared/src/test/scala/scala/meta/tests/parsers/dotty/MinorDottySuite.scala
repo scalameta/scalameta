@@ -907,14 +907,13 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("vararg-wildcard-like-postfix-star") {
-    runTestAssert[Stat]("val lst = List(0, arr`*`)", "val lst = List(0, arr*)")(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("lst"))),
-        None,
-        Term.Apply(tname("List"), List(int(0), Term.Repeated(tname("arr"))))
-      )
+    val tree = Defn.Val(
+      Nil,
+      List(Pat.Var(tname("lst"))),
+      None,
+      Term.Apply(tname("List"), List(lit(0), Term.Select(tname("arr"), tname("*"))))
     )
+    runTestAssert[Stat]("val lst = List(0, arr`*`)", "val lst = List(0, arr.*)")(tree)
   }
 
   test("non-vararg-infix-star") {
@@ -962,27 +961,11 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("vararg-wildcard-like-postfix-start-pat") {
-    runTestAssert[Stat](
-      "a match {case List(xs`*`) => }",
-      assertLayout = Some(
-        """|a match {
-           |  case List(xs*) =>
-           |}
-           |""".stripMargin
-      )
-    )(
-      Term.Match(
-        tname("a"),
-        List(
-          Case(
-            Pat.Extract(tname("List"), List(Pat.Repeated(tname("xs")))),
-            None,
-            Term.Block(Nil)
-          )
-        ),
-        Nil
-      )
-    )
+    val error =
+      """|<input>:1: error: bad simple pattern: use _* to match a sequence
+         |a match {case List(xs`*`) => }
+         |                        ^""".stripMargin
+    runTestError[Stat]("a match {case List(xs`*`) => }", error)
   }
 
   test("empty-case-class") {
