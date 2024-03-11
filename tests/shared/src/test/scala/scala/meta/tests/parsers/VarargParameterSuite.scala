@@ -105,6 +105,24 @@ class VarargParameterSuite extends ParseSuite {
     )
   }
 
+  test("vararg-like parameters") {
+    check(
+      "def obj(fa: Int, fb: Int`*`) = true",
+      Defn.Def(
+        Nil,
+        tname("obj"),
+        Nil,
+        List(List(tparam("fa", "Int"), tparam("fb", Type.Repeated(pname("Int"))))),
+        None,
+        lit(true)
+      )
+    )
+    checkError(
+      "def obj(fa: Int`*`, fb: Int) = true",
+      "error: *-parameter must come last"
+    )
+  }
+
   private def check(definition: String, expected: scala.meta.Stat): Unit = {
     checkTree(templStat(definition))(expected)
   }
