@@ -534,7 +534,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   private object MacroSplicedIdent extends MacroIdent {
     protected def ident(token: Token): Option[String] = token match {
-      case Ident(value) if value.length > 1 && value.charAt(0) == '$' => Some(value.substring(1))
+      case Keywords(value) if value.length > 1 && value.charAt(0) == '$' => Some(value.substring(1))
       case _ => None
     }
   }
