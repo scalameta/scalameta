@@ -18,4 +18,13 @@ class SoftKeywords(dialect: Dialect) {
   object KwExtension extends IsWithName(dialect.allowExtensionMethods, "extension")
   object KwErased extends IsWithName(dialect.allowErasedDefs, "erased")
 
+  object StarAsTypePlaceholder
+      extends AsWithFunc(
+        dialect.allowStarAsTypePlaceholder,
+        { (x: String) =>
+          val last = x.length - 1
+          if (last >= 0 && x.charAt(last) == '*') Some(x.substring(0, last)) else None
+        }
+      )
+
 }
