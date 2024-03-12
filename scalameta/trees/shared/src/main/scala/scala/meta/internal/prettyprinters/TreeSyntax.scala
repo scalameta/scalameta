@@ -2,6 +2,8 @@ package scala.meta
 package internal
 package prettyprinters
 
+import scala.reflect.{ClassTag, classTag}
+
 import scala.meta.classifiers._
 import scala.meta.inputs.Position
 import scala.meta.internal.tokens.Chars._
@@ -88,6 +90,23 @@ object TreeSyntax {
     import SyntaxInstances.SyntacticGroup
     import SyntacticGroup.Type._, SyntacticGroup.Term._, SyntacticGroup.Pat._,
       SyntacticGroup.Literal, SyntacticGroup.Path
+
+    private val escapableSoftKeywords: Map[String, Seq[Class[_]]] = {
+      val seq = Seq.newBuilder[(String, Seq[ClassTag[_]])]
+
+      if (dialect.allowExtensionMethods)
+        seq += "extension" -> Seq(classTag[Term.Apply], classTag[Term.ApplyUsing])
+
+      if (dialect.allowInlineMods)
+        seq += "inline" ->
+          Seq(classTag[Term.Apply], classTag[Term.ApplyUsing], classTag[Term.ApplyInfix])
+
+      if (dialect.allowStarWildcardImport) seq += "*" -> Seq(classTag[Importee])
+
+      seq.result().groupBy(_._1).map { case (k, vs) =>
+        k -> vs.flatMap(_._2).distinct.map(_.runtimeClass)
+      }
+    }
 
     def p(
         og: SyntacticGroup,
@@ -259,16 +278,8 @@ object TreeSyntax {
        * https://github.com/scala-native/scala-native/issues/2187
        * instead we went with if clause to work around the issue.
        */
-      def isEscapableSoftKeyword(t: Name, parent: Tree): Boolean = {
-        if (t.value == "extension" && dialect.allowExtensionMethods)
-          parent.is[Term.Apply] || parent.is[Term.ApplyUsing]
-        else if (t.value == "inline" && dialect.allowInlineMods)
-          parent.is[Term.Apply] || parent.is[Term.ApplyUsing] || parent.is[Term.ApplyInfix]
-        else if (t.value == "*" && dialect.allowStarWildcardImport)
-          parent.is[Importee]
-        else
-          false
-      }
+      def isEscapableSoftKeyword(t: Name, parent: Tree): Boolean =
+        escapableSoftKeywords.get(t.value).exists(_.exists(_.isInstance(parent)))
 
       def isAmbiguousInParent(t: Tree, parent: Tree): Boolean = {
         t match {
