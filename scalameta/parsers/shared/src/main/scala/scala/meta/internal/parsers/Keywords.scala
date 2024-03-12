@@ -35,6 +35,7 @@ object Keywords {
 
   abstract class NotWithName(val name: String) extends IsWithPred(true, name != _)
 
+  object Star extends IsWithName(true, "*")
   object PatAlt extends IsWithName(true, "|")
   object NotPatAlt extends NotWithName("|")
 
