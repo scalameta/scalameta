@@ -18,6 +18,7 @@ class SoftKeywords(dialect: Dialect) {
   object KwExtension extends IsWithName(dialect.allowExtensionMethods, "extension")
   object KwErased extends IsWithName(dialect.allowErasedDefs, "erased")
 
+  object StarSplice extends IsWithName(dialect.allowPostfixStarVarargSplices, "*")
   object StarAsTypePlaceholder
       extends AsWithFunc(
         dialect.allowStarAsTypePlaceholder,
