@@ -33,4 +33,9 @@ object Keywords {
   abstract class IsWithName(isEnabled: Boolean, val name: String)
       extends IsWithPred(isEnabled, name == _)
 
+  abstract class NotWithName(val name: String) extends IsWithPred(true, name != _)
+
+  object PatAlt extends IsWithName(true, "|")
+  object NotPatAlt extends NotWithName("|")
+
 }

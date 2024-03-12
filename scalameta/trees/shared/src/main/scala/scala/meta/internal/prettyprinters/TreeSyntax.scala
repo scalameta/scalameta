@@ -94,6 +94,8 @@ object TreeSyntax {
     private val escapableSoftKeywords: Map[String, Seq[Class[_]]] = {
       val seq = Seq.newBuilder[(String, Seq[ClassTag[_]])]
 
+      seq += "|" -> Seq(classTag[Pat.ExtractInfix])
+
       if (dialect.allowExtensionMethods)
         seq += "extension" -> Seq(classTag[Term.Apply], classTag[Term.ApplyUsing])
 

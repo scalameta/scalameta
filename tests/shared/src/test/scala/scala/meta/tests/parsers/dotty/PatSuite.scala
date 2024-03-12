@@ -201,7 +201,7 @@ class PatSuite extends ParseSuite {
   test("1 | 2 | 3") {
     assertPat("1 | 2")(Alternative(int(1), int(2)))
     assertPat("1 | 2 | 3")(Alternative(int(1), Alternative(int(2), int(3))))
-    runTestAssert[Pat]("1 `|` 2", "1 | 2")(Alternative(int(1), int(2)))
+    runTestAssert[Pat]("1 `|` 2")(ExtractInfix(lit(1), tname("|"), List(lit(2))))
   }
 
   test("()") {

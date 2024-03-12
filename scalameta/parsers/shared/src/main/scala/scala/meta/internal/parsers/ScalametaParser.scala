@@ -527,7 +527,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     case Ident(x) => pred(x)
     case _ => false
   }
-  def isIdentExcept(except: String) = isIdentAnd(token, _ != except)
   def isIdentOf(tok: Token, name: String) = isIdentAnd(tok, _ == name)
   @inline def isStar: Boolean = isStar(token)
   def isStar(tok: Token): Boolean = isIdentOf(tok, "*")
@@ -1201,8 +1200,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           val t = if (token.is[LeftParen]) tupleInfixType() else compoundType()
           token match {
             case KwForsome() => next(); copyPos(t)(Type.Existential(t, existentialStats()))
-            case Ident("|") => t
-            case _: Unquote | _: Ident => infixTypeRest(t)
+            case _: Unquote | Keywords.NotPatAlt() => infixTypeRest(t)
             case _ => t
           }
         } else {
@@ -2748,7 +2746,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     private def patternAlternatives(pats: List[Pat]): Pat = {
       val pat = pattern1()
       checkNoTripleDot(pat)
-      if (isIdentOf(token, "|")) {
+      if (Keywords.PatAlt(token)) {
         next()
         patternAlternatives(pat :: pats)
       } else if (pats.isEmpty) {
@@ -2847,9 +2845,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val base = ctx.stack
       @tailrec
       def loop(rhs: ctx.Typ): ctx.Typ = {
-        val op =
-          if (isIdentExcept("|") || token.is[Unquote]) Some(termName())
-          else None
+        val op = token match {
+          case _: Unquote | Keywords.NotPatAlt() => Some(termName())
+          case _ => None
+        }
         val lhs1 = ctx.reduceStack(base, rhs, rhs, op)
         op match {
           case Some(op) =>
