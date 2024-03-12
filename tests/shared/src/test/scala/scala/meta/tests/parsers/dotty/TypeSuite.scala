@@ -437,6 +437,18 @@ class TypeSuite extends BaseDottySuite {
     assertTpe("F[-_]") {
       AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Contravariant())))))
     }
+    runTestError[Stat](
+      "F[`+`_]",
+      """|<input>:1: error: ] expected but _ found
+         |F[`+`_]
+         |     ^""".stripMargin
+    )
+    runTestError[Stat](
+      "F[`-`_]",
+      """|<input>:1: error: ] expected but _ found
+         |F[`-`_]
+         |     ^""".stripMargin
+    )
   }
 
   test("F[*]") {

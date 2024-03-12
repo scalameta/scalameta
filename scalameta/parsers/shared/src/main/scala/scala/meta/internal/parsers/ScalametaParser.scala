@@ -1076,7 +1076,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         case soft.QuestionMarkAsTypeWildcard() if !inMatchType => wildcardType()
         case soft.StarAsTypePlaceholder(value) if !inMatchType =>
           next(); anonymousParamWithVariant(value)
-        case Ident(value @ ("+" | "-"))
+        case Keywords(value @ ("+" | "-"))
             if (dialect.allowPlusMinusUnderscoreAsIdent || dialect.allowUnderscoreAsTypePlaceholder) &&
               !inMatchType && tryAhead[Underscore] =>
           next() // Ident and Underscore
