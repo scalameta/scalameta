@@ -102,6 +102,11 @@ object TreeSyntax {
           Seq(classTag[Term.Apply], classTag[Term.ApplyUsing], classTag[Term.ApplyInfix])
 
       if (dialect.allowStarWildcardImport) seq += "*" -> Seq(classTag[Importee])
+      if (dialect.allowStarAsTypePlaceholder) {
+        seq += "*" -> Seq(classTag[Type.ArgClause])
+        seq += "-*" -> Seq(classTag[Type.ArgClause])
+        seq += "+*" -> Seq(classTag[Type.ArgClause])
+      }
 
       seq.result().groupBy(_._1).map { case (k, vs) =>
         k -> vs.flatMap(_._2).distinct.map(_.runtimeClass)

@@ -539,15 +539,11 @@ class ModSuite extends ParseSuite {
   }
 
   test("covariant-like in type") {
-    runTestAssert[Stat]("type A[`+`T] = B[T]", "type A[+T] = B[T]") {
-      Defn.Type(
-        Nil,
-        pname("A"),
-        pparam(List(Mod.Covariant()), "T") :: Nil,
-        Type.Apply(pname("B"), List(pname("T"))),
-        noBounds
-      )
-    }
+    val error =
+      """|<input>:1: error: ] expected but identifier found
+         |type A[`+`T] = B[T]
+         |          ^""".stripMargin
+    runTestError[Stat]("type A[`+`T] = B[T]", error)
   }
 
   test("covariant in def") {
@@ -589,19 +585,11 @@ class ModSuite extends ParseSuite {
   }
 
   test("contravariant-like in class") {
-    runTestAssert[Stat]("class A[`-`T](t: T)", "class A[-T](t: T)") {
-      Defn.Class(
-        Nil,
-        pname("A"),
-        pparam(List(Mod.Contravariant()), "T") :: Nil,
-        Ctor.Primary(
-          Nil,
-          anon,
-          List(tparam("t", "T")) :: Nil
-        ),
-        EmptyTemplate()
-      )
-    }
+    val error =
+      """|<input>:1: error: ] expected but identifier found
+         |class A[`-`T](t: T)
+         |           ^""".stripMargin
+    runTestError[Stat]("class A[`-`T](t: T)", error)
   }
 
   test("contravariant in type") {

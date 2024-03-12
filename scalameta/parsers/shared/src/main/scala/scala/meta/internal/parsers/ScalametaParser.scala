@@ -1035,8 +1035,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         Type.Wildcard(typeBounds())
       }
       def anonymousParamWithVariant(value: String): Type = {
-        val variant = if (value(0) == '+') Mod.Covariant() else Mod.Contravariant()
-        Type.AnonymousParam(Some(atPos(startPos)(variant)))
+        val variant = tparamVariant(value).map(v => atPos(startPos)(v))
+        Type.AnonymousParam(variant)
       }
       def pathSimpleType(): Type = {
         val ref = path()
@@ -1080,9 +1080,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           wildcardType()
         case Ident("?") if !inMatchType && dialect.allowQuestionMarkAsTypeWildcard =>
           wildcardType()
-        case Ident("*") if !inMatchType && dialect.allowStarAsTypePlaceholder =>
-          next(); Type.AnonymousParam(None)
-        case Ident(value @ ("-*" | "+*")) if !inMatchType && dialect.allowStarAsTypePlaceholder =>
+        case soft.StarAsTypePlaceholder(value) if !inMatchType =>
           next(); anonymousParamWithVariant(value)
         case Ident(value @ ("+" | "-"))
             if (dialect.allowPlusMinusUnderscoreAsIdent || dialect.allowUnderscoreAsTypePlaceholder) &&
@@ -3124,10 +3122,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private def tparamModifiers(buf: ListBuffer[Mod]): Unit = token match {
     case t: Unquote => if (peekToken.isAny[Ident, Unquote]) buf += unquote[Mod](t)
     case t: Ellipsis => buf += ellipsis[Mod](t, 1)
-    case Ident("+") => buf += atCurPosNext(Mod.Covariant())
-    case Ident("-") => buf += atCurPosNext(Mod.Contravariant())
+    case t: Ident => tparamVariant(t.text).foreach(buf += atCurPosNext(_))
     case _ =>
   }
+
+  private def tparamVariant(ident: String): Option[Mod.Variant] =
+    ident match {
+      case "+" => Some(Mod.Covariant())
+      case "-" => Some(Mod.Contravariant())
+      case _ => None
+    }
 
   def modifiersBuf(
       buf: ListBuffer[Mod],
