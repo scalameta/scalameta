@@ -7,6 +7,8 @@ object Keywords {
 
   private val identClass = classTag[Token.Ident].runtimeClass
 
+  @inline final def unapply(token: Token.Ident): Option[String] = Some(token.text)
+
   abstract class AsWithFunc[A](isEnabled: Boolean, func: String => Option[A]) {
     private def getEnabled(value: => String): Option[A] = func(value)
     private def getDisabled(value: => String): Option[A] = None
