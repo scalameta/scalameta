@@ -492,15 +492,11 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("repeated-like-class-parameter") {
-    runTestAssert[Stat]("class Foo(bars: Int`*`)", "class Foo(bars: Int*)")(
-      Defn.Class(
-        Nil,
-        pname("Foo"),
-        Nil,
-        ctorp(tparam("bars", Type.Repeated(pname("Int")))),
-        EmptyTemplate()
-      )
-    )
+    val error =
+      """|<input>:1: error: identifier expected but ) found
+         |class Foo(bars: Int`*`)
+         |                      ^""".stripMargin
+    runTestError[Stat]("class Foo(bars: Int`*`)", error)
   }
 
   test("lazy-abstract-class-value") {
