@@ -233,6 +233,8 @@ class MacroSuite extends BaseDottySuite {
     val tree = Term.SplicedMacroExpr(blk(Term.SplicedMacroExpr(tname("x"))))
     runTestAssert[Stat](code)(tree)
     runTestAssert[Stat](code, assertLayout = Some(code))(tree)
+    val backquoted = Term.SplicedMacroExpr(blk(tname("$x")))
+    parseAndCheckTree[Stat]("${ `$x` }", code)(backquoted)
   }
 
   test("macro-splice: ${ powerCode('x) }") {
