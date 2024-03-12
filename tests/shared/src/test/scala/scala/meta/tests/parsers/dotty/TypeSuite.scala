@@ -437,6 +437,12 @@ class TypeSuite extends BaseDottySuite {
     assertTpe("F[-_]") {
       AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Contravariant())))))
     }
+    assertTpe("F[`+`_]") {
+      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant())))))
+    }
+    assertTpe("F[`-`_]") {
+      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Contravariant())))))
+    }
   }
 
   test("F[*]") {
