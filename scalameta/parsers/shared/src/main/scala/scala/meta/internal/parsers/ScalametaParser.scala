@@ -3577,13 +3577,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       else importees
     }
 
-  def importWildcardOrName(): Importee = autoPos {
-    token match {
+  def importWildcardOrName(): Importee = {
+    val startPos = tokenPos
+    autoEndPos(startPos)(token match {
       case Wildcard() => next(); Importee.Wildcard()
       case _: KwGiven => next(); if (token.is[Ident]) Importee.Given(typ()) else Importee.GivenAll()
       case t: Unquote => Importee.Name(unquote[Name.Quasi](t))
-      case _ => val name = termName(); Importee.Name(copyPos(name)(Name.Indeterminate(name.value)))
-    }
+      case t: Ident => next(); Importee.Name(atPos(startPos)(Name.Indeterminate(t.value)))
+      case _ => syntaxErrorExpected[Ident]
+    })
   }
 
   def importeeRename(from: Name) = autoEndPos(from) {
