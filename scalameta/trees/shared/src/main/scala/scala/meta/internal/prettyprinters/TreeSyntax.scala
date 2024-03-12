@@ -367,7 +367,7 @@ object TreeSyntax {
       case _: Name.Anonymous => s()
       case _: Name.Placeholder => s("_")
       case _: Term.Anonymous => s("")
-      case t: Name.Indeterminate => w("`", t.value, "`", guessIsBackquoted(t))
+      case t: Name.Indeterminate => printMaybeBackquoted(t)
 
       // Term
       case t: Term.This =>
@@ -375,7 +375,7 @@ object TreeSyntax {
       case t: Term.Super =>
         m(Path, s(w(t.thisp, "."), kw("super"), w("[", t.superp, "]")))
       case t: Term.Name =>
-        m(Path, w("`", t.value, "`", guessIsBackquoted(t)))
+        m(Path, printMaybeBackquoted(t))
       case t: Term.Select =>
         val qualExpr = t.qual match {
           case q: Term.New if q.init.argClauses.isEmpty => w("(", q, ")")
@@ -590,7 +590,7 @@ object TreeSyntax {
 
       // Type
       case t: Type.AnonymousName => m(Path, s(""))
-      case t: Type.Name => m(Path, if (guessIsBackquoted(t)) s("`", t.value, "`") else s(t.value))
+      case t: Type.Name => m(Path, printMaybeBackquoted(t))
       case t: Type.Select => m(SimpleTyp, s(t.qual, kw("."), t.name))
       case t: Type.Project => m(SimpleTyp, s(p(SimpleTyp, t.qual), kw("#"), t.name))
       case t: Type.Singleton => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
@@ -729,7 +729,7 @@ object TreeSyntax {
 
       // Pat
       case t: Pat.Var =>
-        m(SimplePattern, s(if (guessIsBackquoted(t.name)) s"`${t.name.value}`" else t.name.value))
+        m(SimplePattern, printMaybeBackquoted(t.name))
       case _: Pat.Wildcard => m(SimplePattern, kw("_"))
       case _: Pat.SeqWildcard => m(SimplePattern, kw("_*"))
       case t: Pat.Repeated => m(SimplePattern, t.name, kw("*"))
@@ -1132,6 +1132,11 @@ object TreeSyntax {
       }
       builder.result()
     }
+
+    private def printMaybeBackquoted(name: Name) =
+      printBackquoted(name, guessIsBackquoted(name))
+    private def printBackquoted(name: Name, isBackquoted: Boolean) =
+      w("`", name.value, "`", isBackquoted)
 
     implicit def syntaxStats: Syntax[Seq[Stat]] = Syntax(printStats)
 
