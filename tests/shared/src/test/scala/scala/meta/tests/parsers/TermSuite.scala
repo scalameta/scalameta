@@ -914,9 +914,11 @@ class TermSuite extends ParseSuite {
   }
 
   test("x = (ys: _`*`)") {
-    runTestAssert[Stat]("x = (ys: _`*`)", "x = ys: _*") {
-      Term.Assign(tname("x"), Term.Repeated(tname("ys")))
-    }
+    val error =
+      """|<input>:1: error: identifier expected but ) found
+         |x = (ys: _`*`)
+         |             ^""".stripMargin
+    runTestError[Stat]("x = (ys: _`*`)", error)
   }
 
   test("!(arr.cast[Ptr[Byte]] + sizeof[Ptr[_]]).cast[Ptr[Int]] = length") {

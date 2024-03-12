@@ -523,13 +523,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
 
   /* -------------- TOKEN CLASSES ------------------------------------------- */
 
-  private def isIdentAnd(token: Token, pred: String => Boolean): Boolean = token match {
-    case Ident(x) => pred(x)
-    case _ => false
-  }
-  def isIdentOf(tok: Token, name: String) = isIdentAnd(tok, _ == name)
   @inline def isStar: Boolean = isStar(token)
-  def isStar(tok: Token): Boolean = isIdentOf(tok, "*")
+  def isStar(tok: Token): Boolean = Keywords.Star(tok)
 
   private trait MacroIdent {
     protected def ident(token: Token): Option[String]
