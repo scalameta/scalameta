@@ -110,6 +110,8 @@ object TreeSyntax {
         seq += "+*" -> Seq(classTag[Type.ArgClause])
       }
 
+      if (dialect.allowQuestionMarkAsTypeWildcard) seq += "?" -> Seq(classTag[Type.ArgClause])
+
       seq.result().groupBy(_._1).map { case (k, vs) =>
         k -> vs.flatMap(_._2).distinct.map(_.runtimeClass)
       }

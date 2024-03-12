@@ -18,7 +18,7 @@ class RegressionSyntaxSuite extends ParseSuite {
     assertEquals(reprintedCode, expected)
   }
 
-  check("question-mark", "type T = List[?]", "type T = List[?]")
+  check("question-mark 211->213", "type T = List[?]", "type T = List[`?`]")(dialects.Scala211)
   check("underscore", "type T = List[_]", "type T = List[_]")
 
   check("211->3x", "type T = List[_]", "type T = List[?]", dialects.Scala3Future)(dialects.Scala211)

@@ -27,5 +27,6 @@ class SoftKeywords(dialect: Dialect) {
           if (last >= 0 && x.charAt(last) == '*') Some(x.substring(0, last)) else None
         }
       )
+  object QuestionMarkAsTypeWildcard extends IsWithName(dialect.allowQuestionMarkAsTypeWildcard, "?")
 
 }
