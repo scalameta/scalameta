@@ -2842,19 +2842,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       val base = ctx.stack
       @tailrec
       def loop(rhs: ctx.Typ): ctx.Typ = {
-        val op = token match {
-          case _: Unquote | Keywords.NotPatAlt() => Some(termName())
-          case _ => None
-        }
-        val lhs1 = ctx.reduceStack(base, rhs, rhs, op)
-        op match {
-          case Some(op) =>
+        @inline def lhs(opOpt: Option[Term.Name]) = ctx.reduceStack(base, rhs, rhs, opOpt)
+        token match {
+          case _: Unquote | Keywords.NotPatAlt() =>
+            val op = termName()
             expectNot[LeftBracket]("infix patterns cannot have type arguments")
-            ctx.push(ctx.UnfinishedInfix(lhs1, op))
-            val rhs1 = simplePattern(badPattern3, isRhs = true)
-            loop(rhs1)
-          case None =>
-            lhs1
+            ctx.push(ctx.UnfinishedInfix(lhs(Some(op)), op))
+            loop(simplePattern(badPattern3, isRhs = true))
+          case _ =>
+            lhs(None)
         }
       }
       loop(lhs)
