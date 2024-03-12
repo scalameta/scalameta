@@ -400,7 +400,22 @@ class MinorDottySuite extends BaseDottySuite {
         )
       )
     )
+  }
 
+  test("question-type-like") {
+    val treeWithoutBounds = Decl.Val(
+      Nil,
+      List(Pat.Var(tname("stat"))),
+      Type.Apply(pname("Tree"), List(Type.Wildcard(noBounds)))
+    )
+    runTestAssert[Stat]("val stat: Tree[`?`]", "val stat: Tree[?]")(treeWithoutBounds)
+    runTestAssert[Stat]("val stat: Tree[`?` >: Untyped]", "val stat: Tree[? >: Untyped]")(
+      Decl.Val(
+        Nil,
+        List(Pat.Var(tname("stat"))),
+        Type.Apply(pname("Tree"), List(Type.Wildcard(loBound("Untyped"))))
+      )
+    )
   }
 
   test("lazy-val-toplevel") {
@@ -459,15 +474,7 @@ class MinorDottySuite extends BaseDottySuite {
         Nil,
         pname("Foo"),
         Nil,
-        Ctor.Primary(
-          Nil,
-          anon,
-          List(
-            List(
-              tparam("bars", Type.Repeated(Type.ByName(pname("Int"))))
-            )
-          )
-        ),
+        ctorp(tparam("bars", Type.Repeated(Type.ByName(pname("Int"))))),
         EmptyTemplate()
       )
     )
@@ -480,6 +487,18 @@ class MinorDottySuite extends BaseDottySuite {
         List(List(tparam("x", Type.Repeated(Type.ByName(pname("Int")))))),
         Some(pname("Int")),
         int(3)
+      )
+    )
+  }
+
+  test("repeated-like-class-parameter") {
+    runTestAssert[Stat]("class Foo(bars: Int`*`)", "class Foo(bars: Int*)")(
+      Defn.Class(
+        Nil,
+        pname("Foo"),
+        Nil,
+        ctorp(tparam("bars", Type.Repeated(pname("Int")))),
+        EmptyTemplate()
       )
     )
   }
@@ -891,6 +910,17 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
+  test("vararg-wildcard-like-postfix-star") {
+    runTestAssert[Stat]("val lst = List(0, arr`*`)", "val lst = List(0, arr*)")(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("lst"))),
+        None,
+        Term.Apply(tname("List"), List(int(0), Term.Repeated(tname("arr"))))
+      )
+    )
+  }
+
   test("non-vararg-infix-star") {
     runTestAssert[Stat](
       "val lst = List(0, a * b)"
@@ -914,6 +944,30 @@ class MinorDottySuite extends BaseDottySuite {
     runTestAssert[Stat](
       """|a match {case List(xs*) => }
          |""".stripMargin,
+      assertLayout = Some(
+        """|a match {
+           |  case List(xs*) =>
+           |}
+           |""".stripMargin
+      )
+    )(
+      Term.Match(
+        tname("a"),
+        List(
+          Case(
+            Pat.Extract(tname("List"), List(Pat.Repeated(tname("xs")))),
+            None,
+            Term.Block(Nil)
+          )
+        ),
+        Nil
+      )
+    )
+  }
+
+  test("vararg-wildcard-like-postfix-start-pat") {
+    runTestAssert[Stat](
+      "a match {case List(xs`*`) => }",
       assertLayout = Some(
         """|a match {
            |  case List(xs*) =>

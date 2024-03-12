@@ -453,6 +453,20 @@ class TypeSuite extends BaseDottySuite {
     }
   }
 
+  test("F[`*`]") {
+    // will be deprecated in later versions
+    implicit val dialect: Dialect = dialects.Scala31
+    runTestAssert[Type]("F[`*`]", "F[*]") {
+      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None))))
+    }
+    runTestAssert[Type]("F[`+*`]", "F[+*]") {
+      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant())))))
+    }
+    runTestAssert[Type]("F[`-*`]", "F[-*]") {
+      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Contravariant())))))
+    }
+  }
+
   test("F[T] forSome { type T }") {
     assertTpe("F[T] forSome { type T }") {
       Existential(

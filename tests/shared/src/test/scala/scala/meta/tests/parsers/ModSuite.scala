@@ -538,6 +538,18 @@ class ModSuite extends ParseSuite {
     }
   }
 
+  test("covariant-like in type") {
+    runTestAssert[Stat]("type A[`+`T] = B[T]", "type A[+T] = B[T]") {
+      Defn.Type(
+        Nil,
+        pname("A"),
+        pparam(List(Mod.Covariant()), "T") :: Nil,
+        Type.Apply(pname("B"), List(pname("T"))),
+        noBounds
+      )
+    }
+  }
+
   test("covariant in def") {
     interceptParseError(
       "def foo[+T](t: T): Int"
@@ -562,6 +574,22 @@ class ModSuite extends ParseSuite {
 
   test("contravariant in class") {
     assertTree(templStat("class A[-T](t: T)")) {
+      Defn.Class(
+        Nil,
+        pname("A"),
+        pparam(List(Mod.Contravariant()), "T") :: Nil,
+        Ctor.Primary(
+          Nil,
+          anon,
+          List(tparam("t", "T")) :: Nil
+        ),
+        EmptyTemplate()
+      )
+    }
+  }
+
+  test("contravariant-like in class") {
+    runTestAssert[Stat]("class A[`-`T](t: T)", "class A[-T](t: T)") {
       Defn.Class(
         Nil,
         pname("A"),
