@@ -388,39 +388,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     }
   }
 
-  def syntaxErrorExpected[T <: Token: ClassTag]: Nothing = {
-    val expected = classTag[T].runtimeClass.getSimpleName match {
-      case "Semicolon" => ";"
-      case "Hash" => "#"
-      case "Colon" => ":"
-      case "Viewbound" => "<%"
-      case "LeftArrow" => "<-"
-      case "Subtype" => "<:"
-      case "Equals" => "="
-      case "RightArrow" => "=>"
-      case "Supertype" => ">:"
-      case "At" => "@"
-      case "Underscore" => "_"
-      case "TypeLambdaArrow" => "=>>"
-      case "ContextArrow" => "?=>"
-      case "MacroQuote" => "'"
-      case "MacroSplice" => "$"
-      case "LeftParen" => "("
-      case "RightParen" => ")"
-      case "Comma" => ","
-      case "Dot" => "."
-      case "LeftBracket" => "["
-      case "RightBracket" => "]"
-      case "LeftBrace" => "{"
-      case "RightBrace" => "}"
-      case "Ident" => "identifier"
-      case "EOF" => "end of file"
-      case "BOF" => "beginning of file"
-      case other => other.toLowerCase().stripPrefix("kw")
-    }
-    syntaxError(s"${expected} expected but ${token.name} found", at = token)
-  }
-  def expect[T <: Token: ClassTag]: Unit = if (!token.is[T]) syntaxErrorExpected[T]
+  private def syntaxErrorExpected[T <: Token: ClassTag]: Nothing =
+    syntaxError(syntaxExpectedMessage[T](token), at = token)
+  private def expectAt[T <: Token: ClassTag](tok: Token, msg: => String, exists: Boolean): Unit =
+    if (tok.is[T] != exists) syntaxError(msg, at = tok)
+
+  @inline private def expectAt[T <: Token: ClassTag](tok: Token): Unit =
+    expectAt[T](tok, syntaxExpectedMessage[T](tok), exists = true)
+  @inline private def expect[T <: Token: ClassTag]: Unit = expectAt[T](token)
+  @inline private def expect[T <: Token: ClassTag](msg: => String): Unit =
+    expectAt[T](token, msg, exists = true)
+
+  @inline private def expectNotAt[T <: Token: ClassTag](tok: Token): Unit =
+    expectAt[T](tok, syntaxNotExpectedMessage[T], exists = false)
+  @inline private def expectNot[T <: Token: ClassTag]: Unit = expectNotAt[T](token)
+  @inline private def expectNot[T <: Token: ClassTag](msg: => String): Unit =
+    expectAt[T](token, msg, exists = false)
 
   /** Consume one token of the specified type, or signal an error if it is not there. */
   def accept[T <: Token: ClassTag]: Unit = {
@@ -2868,8 +2851,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         val lhs1 = ctx.reduceStack(base, rhs, rhs, op)
         op match {
           case Some(op) =>
-            if (token.is[LeftBracket])
-              syntaxError("infix patterns cannot have type arguments", at = token)
+            expectNot[LeftBracket]("infix patterns cannot have type arguments")
             ctx.push(ctx.UnfinishedInfix(lhs1, op))
             val rhs1 = simplePattern(badPattern3, isRhs = true)
             loop(rhs1)
@@ -4445,7 +4427,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
       templateBody(owner)
     } else if (token.is[Colon] && peekToken.isAny[Indentation, EOL]) {
       next()
-      if (!token.is[Indentation.Indent]) syntaxError("expected template body", token)
+      expect[Indentation.Indent]("expected template body")
       indentedOnOpen(templateStatSeq(owner))
     } else if (token.is[LeftParen]) {
       if (owner.isPrimaryCtorAllowed)
@@ -4870,6 +4852,41 @@ object ScalametaParser {
 
   private val bigIntMaxLong = BigInt(Long.MaxValue) + 1
   private val bigIntMaxULong = bigIntMaxLong << 1
+
+  private def getTokenName[T <: Token: ClassTag]: String =
+    classTag[T].runtimeClass.getSimpleName match {
+      case "Semicolon" => ";"
+      case "Hash" => "#"
+      case "Colon" => ":"
+      case "Viewbound" => "<%"
+      case "LeftArrow" => "<-"
+      case "Subtype" => "<:"
+      case "Equals" => "="
+      case "RightArrow" => "=>"
+      case "Supertype" => ">:"
+      case "At" => "@"
+      case "Underscore" => "_"
+      case "TypeLambdaArrow" => "=>>"
+      case "ContextArrow" => "?=>"
+      case "MacroQuote" => "'"
+      case "MacroSplice" => "$"
+      case "LeftParen" => "("
+      case "RightParen" => ")"
+      case "Comma" => ","
+      case "Dot" => "."
+      case "LeftBracket" => "["
+      case "RightBracket" => "]"
+      case "LeftBrace" => "{"
+      case "RightBrace" => "}"
+      case "Ident" => "identifier"
+      case "EOF" => "end of file"
+      case "BOF" => "beginning of file"
+      case other => other.toLowerCase().stripPrefix("kw")
+    }
+  private def syntaxExpectedMessage[T <: Token: ClassTag](token: Token): String =
+    s"${getTokenName[T]} expected but ${token.name} found"
+  private def syntaxNotExpectedMessage[T <: Token: ClassTag]: String =
+    s"not expected ${getTokenName[T]}"
 
 }
 
