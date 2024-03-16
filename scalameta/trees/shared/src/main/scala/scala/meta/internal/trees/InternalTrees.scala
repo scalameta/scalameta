@@ -66,8 +66,8 @@ trait InternalTree extends Product {
   def tokenizeFor(dialect: Dialect): Tokens =
     if (origin.dialectOpt.contains(dialect)) tokensOpt.get else tokenizeForDialect(dialect)
 
-  private lazy val tokensOpt: Option[Tokens] =
-    origin.tokensOpt.orElse(origin.dialectOpt.map(tokenizeForDialect))
+  private def tokensOpt: Option[Tokens] = origin.tokensOpt.orElse(syntaxTokensOpt)
+  private lazy val syntaxTokensOpt: Option[Tokens] = origin.dialectOpt.map(tokenizeForDialect)
 
   private def tokenizeForDialect(dialect: Dialect): Tokens =
     this match {
@@ -96,8 +96,8 @@ trait InternalTree extends Product {
   private def reprintSyntax(dialect: Dialect): String =
     TreeSyntax.reprint(this)(dialect).toString
 
-  private lazy val textOpt: Option[String] =
-    origin.textOpt.orElse(origin.dialectOpt.map(reprintSyntax))
+  private def textOpt: Option[String] = origin.textOpt.orElse(syntaxTextOpt)
+  private lazy val syntaxTextOpt: Option[String] = origin.dialectOpt.map(reprintSyntax)
 
   // ==============================================================
   // Intellij-friendly stubs.
