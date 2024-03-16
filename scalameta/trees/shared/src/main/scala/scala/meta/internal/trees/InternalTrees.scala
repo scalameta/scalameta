@@ -68,7 +68,7 @@ trait InternalTree extends Product {
   def tokenizeFor(dialect: Dialect): Tokens =
     if (origin.dialectOpt.contains(dialect)) tokensOpt.get else lookupOrTokenizeFor(dialect)
 
-  private val tokenCache: mutable.Map[Dialect, Tokens] =
+  private lazy val tokenCache: mutable.Map[Dialect, Tokens] =
     Compat.newMutableMap[Dialect, Tokens]
 
   private def lookupOrTokenizeFor(dialect: Dialect): Tokens =
