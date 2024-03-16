@@ -389,8 +389,8 @@ class LitSuite extends ParseSuite {
     ("0L", 0L),
     ("0x80000000", -2147483648),
     ("0x8000000000000000L", -9223372036854775808L),
-    ("3.40e+38f", 3.40e+38f),
-    ("-3.40e+38f", -3.40e+38f),
+    ("3.4028235e38f", Float.MaxValue),
+    ("-3.4028235e38f", Float.MinValue),
     ("1.7976931348623157e+308d", Double.MaxValue),
     ("-1.7976931348623157e+308d", Double.MinValue),
     ("0b00101010", 42),
@@ -475,19 +475,6 @@ class LitSuite extends ParseSuite {
       """|<input>:1: error: illegal start of definition .
          |.f
          |^""".stripMargin
-    ),
-    // these two are actually within range
-    (
-      "3.4028235e38f",
-      """|<input>:1: error: floating-point value out of range for Float
-         |3.4028235e38f
-         |^""".stripMargin
-    ),
-    (
-      "-3.4028235e38f",
-      """|<input>:1: error: floating-point value out of range for Float
-         |-3.4028235e38f
-         | ^""".stripMargin
     ),
     (
       "3.4028236e38f",

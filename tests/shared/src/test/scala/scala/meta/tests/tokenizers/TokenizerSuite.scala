@@ -1493,18 +1493,18 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |""".stripMargin
     ),
     (
-      "3.40e+38f",
+      "3.4028235e38f",
       """|BOF [0..0)
-         |Constant.Float(3.40e+38f) [0..9)
-         |EOF [9..9)
+         |Constant.Float(3.4028235e38f) [0..13)
+         |EOF [13..13)
          |""".stripMargin
     ),
     (
-      "-3.40e+38f",
+      "-3.4028235e38f",
       """|BOF [0..0)
          |Ident(-) [0..1)
-         |Constant.Float(3.40e+38f) [1..10)
-         |EOF [10..10)
+         |Constant.Float(3.4028235e38f) [1..14)
+         |EOF [14..14)
          |""".stripMargin
     ),
     (
@@ -1596,19 +1596,6 @@ class TokenizerSuite extends BaseTokenizerSuite {
       """|<input>:1: error: Invalid literal number, followed by identifier character
          |0b0123
          |    ^""".stripMargin
-    ),
-    // these two are actually within range
-    (
-      "3.4028235e38f",
-      """|<input>:1: error: floating-point value out of range for Float
-         |3.4028235e38f
-         |^""".stripMargin
-    ),
-    (
-      "-3.4028235e38f",
-      """|<input>:1: error: floating-point value out of range for Float
-         |-3.4028235e38f
-         | ^""".stripMargin
     ),
     (
       "3.4028236e38f",
