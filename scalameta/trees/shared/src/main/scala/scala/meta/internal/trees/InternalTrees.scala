@@ -75,10 +75,7 @@ trait InternalTree extends Product {
     tokenCache.getOrElseUpdate(dialect, tokenizeForDialect(dialect))
 
   private lazy val tokensOpt: Option[Tokens] =
-    origin match {
-      case x: Origin.Parsed => Some(x.tokens)
-      case _ => origin.dialectOpt.map(tokenizeForDialect)
-    }
+    origin.tokensOpt.orElse(origin.dialectOpt.map(tokenizeForDialect))
 
   private def tokenizeForDialect(dialect: Dialect): Tokens =
     this match {
@@ -108,10 +105,7 @@ trait InternalTree extends Product {
     TreeSyntax.reprint(this)(dialect).toString
 
   private lazy val textOpt: Option[String] =
-    origin match {
-      case x: Origin.Parsed => Some(x.position.text)
-      case _ => origin.dialectOpt.map(reprintSyntax)
-    }
+    origin.textOpt.orElse(origin.dialectOpt.map(reprintSyntax))
 
   // ==============================================================
   // Intellij-friendly stubs.
