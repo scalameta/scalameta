@@ -2,9 +2,7 @@ package scala.meta
 package internal
 package trees
 
-import scala.collection.mutable
 import scala.meta.inputs._
-import scala.meta.internal.tokenizers.Compat
 import scala.meta.internal.prettyprinters.TreeSyntax
 import scala.meta.tokenizers._
 import scala.meta.tokens._
@@ -66,13 +64,7 @@ trait InternalTree extends Product {
   }
 
   def tokenizeFor(dialect: Dialect): Tokens =
-    if (origin.dialectOpt.contains(dialect)) tokensOpt.get else lookupOrTokenizeFor(dialect)
-
-  private val tokenCache: mutable.Map[Dialect, Tokens] =
-    Compat.newMutableMap[Dialect, Tokens]
-
-  private def lookupOrTokenizeFor(dialect: Dialect): Tokens =
-    tokenCache.getOrElseUpdate(dialect, tokenizeForDialect(dialect))
+    if (origin.dialectOpt.contains(dialect)) tokensOpt.get else tokenizeForDialect(dialect)
 
   private lazy val tokensOpt: Option[Tokens] =
     origin match {
