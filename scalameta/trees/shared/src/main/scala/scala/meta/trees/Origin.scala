@@ -12,6 +12,8 @@ import scala.meta.tokens._
 trait Origin extends Optional {
   def position: Position
   def dialectOpt: Option[Dialect]
+  private[meta] def textOpt: Option[String]
+  private[meta] def tokensOpt: Option[Tokens]
 }
 
 object Origin {
@@ -19,6 +21,8 @@ object Origin {
   object None extends Origin {
     val position: Position = Position.None
     val dialectOpt: Option[Dialect] = scala.None
+    private[meta] val textOpt: Option[String] = scala.None
+    private[meta] val tokensOpt: Option[Tokens] = scala.None
   }
 
   // `begTokenIdx` and `endTokenIdx` are half-open interval of index range
@@ -34,13 +38,13 @@ object Origin {
     }
 
     def dialectOpt: Option[Dialect] = Some(dialect)
-
-    def tokens: Tokens = {
-      allInputTokens().slice(begTokenIdx, endTokenIdx)
-    }
+    private[meta] def textOpt: Option[String] = Some(text)
+    private[meta] def tokensOpt: Option[Tokens] = Some(tokens)
 
     @inline def input: Input = source.input
     @inline def dialect: Dialect = source.dialect
+    @inline def text: String = position.text
+    def tokens: Tokens = allInputTokens().slice(begTokenIdx, endTokenIdx)
   }
 
   class ParsedSource(val input: Input)(implicit val dialect: Dialect) {
@@ -52,6 +56,8 @@ object Origin {
   class DialectOnly(dialect: Dialect) extends Origin {
     val position: Position = Position.None
     def dialectOpt: Option[Dialect] = Some(dialect)
+    private[meta] val textOpt: Option[String] = scala.None
+    private[meta] val tokensOpt: Option[Tokens] = scala.None
   }
 
   object DialectOnly {

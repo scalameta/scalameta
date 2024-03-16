@@ -665,20 +665,16 @@ object TreeSyntax {
         )
       case t: Type.AnonymousLambda => s(t.tpe)
       case t: Type.AnonymousParam =>
-        val useStar = dialect.allowStarAsTypePlaceholder && (t.origin match {
-          case o: Origin.Parsed => !o.tokens.lastOption.exists(_.is[Token.Underscore])
-          case _ => false
-        })
+        val useStar = dialect.allowStarAsTypePlaceholder &&
+          t.origin.tokensOpt.exists(!_.lastOption.exists(_.is[Token.Underscore]))
         val ph = if (useStar) "*" else "_"
         m(SimpleTyp, o(t.variant), ph)
       case t: Type.Wildcard =>
         /* In order not to break existing tools `.syntax` should still return
          * `_` instead `?` unless specifically used.
          */
-        def questionMarkUsed = t.origin match {
-          case o: Origin.Parsed => !o.tokens.headOption.exists(_.is[Token.Underscore])
-          case _ => false
-        }
+        def questionMarkUsed =
+          t.origin.tokensOpt.exists(!_.headOption.exists(_.is[Token.Underscore]))
         val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
           (dialect.allowUnderscoreAsTypePlaceholder || questionMarkUsed)
         m(SimpleTyp, s(kw(if (useQM) "?" else "_")), t.bounds)
@@ -688,10 +684,7 @@ object TreeSyntax {
         /* In order not to break existing tools `.syntax` should still return
          * `_` instead `?` unless specifically used.
          */
-        def questionMarkUsed = t.origin match {
-          case o: Origin.Parsed => !o.tokens.exists(_.is[Token.Underscore])
-          case _ => false
-        }
+        def questionMarkUsed = t.origin.tokensOpt.exists(!_.exists(_.is[Token.Underscore]))
         val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
           (dialect.allowUnderscoreAsTypePlaceholder || questionMarkUsed)
         m(SimpleTyp, s(kw(if (useQM) "?" else "_"), t.bounds))
@@ -1148,7 +1141,7 @@ object TreeSyntax {
     // I expect to improve on this in the nearest future, because we had it much better until recently.
     Syntax { (x: T) =>
       x.origin match {
-        case o: Origin.Parsed if o.dialect.isEquivalentTo(dialect) => s(o.position.text)
+        case o: Origin.Parsed if o.dialect.isEquivalentTo(dialect) => s(o.text)
         case _ => reprint(x)(dialect)
       }
     }
