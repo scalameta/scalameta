@@ -4536,7 +4536,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     while (!StatSeqEnd(token)) {
       if (statpfAdd(token)) acceptStatSepOpt()
       else if (StatSep(token)) acceptStatSep()
-      else syntaxError(errorMsg + s" ${token.name}", at = token)
+      else syntaxError(errorMsg + s" `${token.name}`", at = token)
     }
 
     if (isIndented) accept[Indentation.Outdent]
