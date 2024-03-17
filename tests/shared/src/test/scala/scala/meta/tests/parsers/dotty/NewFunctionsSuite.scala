@@ -666,7 +666,7 @@ class NewFunctionsSuite extends BaseDottySuite {
          |  ExecutionContext
          |?=> T
          |""".stripMargin,
-      """|error: illegal start of definition ?=>
+      """|error: illegal start of definition `?=>`
          |?=> T
          |^""".stripMargin
     )

@@ -460,19 +460,19 @@ class LitSuite extends ParseSuite {
     ),
     (
       "0b01.2",
-      """|<input>:1: error: ; expected but double constant found
+      """|<input>:1: error: `;` expected but `double constant` found
          |0b01.2
          |    ^""".stripMargin
     ),
     (
       "1. + 2.",
-      """|<input>:1: error: ; expected but integer constant found
+      """|<input>:1: error: `;` expected but `integer constant` found
          |1. + 2.
          |     ^""".stripMargin
     ),
     (
       ".f",
-      """|<input>:1: error: illegal start of definition .
+      """|<input>:1: error: illegal start of definition `.`
          |.f
          |^""".stripMargin
     ),
