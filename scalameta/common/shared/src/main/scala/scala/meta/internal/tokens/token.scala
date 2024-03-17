@@ -20,16 +20,11 @@ class fixed(name: String) extends StaticAnnotation {
 class TokenNamerMacros(val c: Context) extends TokenNamerMacroHelpers {
   import c.universe._
 
-  val Unsupported = tq"_root_.scala.`package`.UnsupportedOperationException"
   val Dialect = tq"_root_.scala.meta.Dialect"
   val Input = tq"_root_.scala.meta.inputs.Input"
-  val OptionsClass = tq"_root_.scala.meta.prettyprinters.Syntax.Options"
-  val OptionsModule = q"_root_.scala.meta.prettyprinters.Syntax.Options"
   val Int = tq"_root_.scala.Int"
   val PositionClass = tq"_root_.scala.meta.inputs.Position"
   val PositionModule = q"_root_.scala.meta.inputs.Position"
-  val PointClass = tq"_root_.scala.meta.inputs.Point"
-  val PointModule = q"_root_.scala.meta.inputs.Point"
 
   def freeform(annottees: Tree*): Tree = impl(annottees, isFixed = false)
 
