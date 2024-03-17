@@ -915,7 +915,7 @@ class TermSuite extends ParseSuite {
 
   test("x = (ys: _`*`)") {
     val error =
-      """|<input>:1: error: identifier expected but ) found
+      """|<input>:1: error: `identifier` expected but `)` found
          |x = (ys: _`*`)
          |             ^""".stripMargin
     runTestError[Stat]("x = (ys: _`*`)", error)
@@ -1451,7 +1451,7 @@ class TermSuite extends ParseSuite {
     runTestError[Term](
       """|() match
          |  case _: Unit => ()""".stripMargin,
-      "error: { expected but case found"
+      "error: `{` expected but `case` found"
     )
 
   }

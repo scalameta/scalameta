@@ -621,7 +621,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |      y > 0
          |    (0)
          |""".stripMargin,
-      "error: ; expected but . found"
+      "error: `;` expected but `.` found"
     )
   }
 

@@ -231,7 +231,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |    else
                   |  falsep
                   |""".stripMargin
-    runTestError[Stat](code, "expected but else found")
+    runTestError[Stat](code, "`;` expected but `else` found")
   }
 
   test("indent-inside-brace-ok") {
@@ -812,7 +812,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  def fa: Int = 1
          |  def fb: Int = 2
          |""".stripMargin,
-      "; expected but : found"
+      "`;` expected but `:` found"
     )
 
     runTestAssert[Stat](

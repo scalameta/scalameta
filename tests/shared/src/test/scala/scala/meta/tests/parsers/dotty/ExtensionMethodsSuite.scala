@@ -249,7 +249,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |  def extension(a : Int) = a + 2
          |  extension(2)
          |}""".stripMargin,
-      "identifier expected but integer constant found"
+      "`identifier` expected but `integer constant` found"
     )
 
     runTestAssert[Stat](

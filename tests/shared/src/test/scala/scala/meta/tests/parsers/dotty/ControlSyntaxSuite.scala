@@ -162,7 +162,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin
     runTestError[Stat](
       code,
-      """|error: ; expected but integer constant found
+      """|error: `;` expected but `integer constant` found
          |  if (x > 0) && y > 0
          |                    ^""".stripMargin
     )
@@ -268,7 +268,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |else
                   |  gx
                   |""".stripMargin
-    runTestError[Stat](code, "then expected but identifier found")
+    runTestError[Stat](code, "`then` expected but `identifier` found")
   }
 
   test("if-else-in-parens-3") {
@@ -827,7 +827,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |finally arena.close()
          |""".stripMargin
     val error =
-      """|<input>:5: error: ; expected but finally found
+      """|<input>:5: error: `;` expected but `finally` found
          |finally arena.close()
          |^""".stripMargin
     runTestError[Stat](code, error)
@@ -1622,7 +1622,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin
     runTestError[Stat](
       code,
-      """|error: ; expected but integer constant found
+      """|error: `;` expected but `integer constant` found
          |  while (x > 0) && y > 0
          |                       ^""".stripMargin
     )

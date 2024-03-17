@@ -91,7 +91,7 @@ class InterleavedDeclSuite extends BaseDottySuite {
   test("def f[A][B]: A") {
     runTestError[Stat](
       "def f[A][B]: A",
-      """|error: = expected but [ found
+      """|error: `=` expected but `[` found
          |def f[A][B]: A
          |        ^""".stripMargin
     )
@@ -127,7 +127,7 @@ class InterleavedDeclSuite extends BaseDottySuite {
   test("def f[A](implicit a: A)[B](implicit b: B): B") {
     runTestError[Stat](
       "def f[A](implicit a: A)[B](implicit b: B): B",
-      """|error: = expected but [ found
+      """|error: `=` expected but `[` found
          |def f[A](implicit a: A)[B](implicit b: B): B
          |                       ^""".stripMargin
     )

@@ -386,7 +386,7 @@ class MinorDottySuite extends BaseDottySuite {
 
   // Super traits were removed in Scala 3
   test("super-trait") {
-    runTestError[Stat]("super trait Foo", ". expected but trait found")
+    runTestError[Stat]("super trait Foo", "`.` expected but `trait` found")
   }
 
   test("question-type") {
@@ -407,7 +407,7 @@ class MinorDottySuite extends BaseDottySuite {
       Decl.Val(Nil, List(Pat.Var(tname("stat"))), Type.Apply(pname("Tree"), List(pname("?"))))
     runTestAssert[Stat]("val stat: Tree[`?`]")(treeWithoutBounds)
     val errorWithBounds =
-      """|<input>:1: error: ] expected but >: found
+      """|<input>:1: error: `]` expected but `>:` found
          |val stat: Tree[`?` >: Untyped]
          |                   ^""".stripMargin
     runTestError[Stat]("val stat: Tree[`?` >: Untyped]", errorWithBounds)
@@ -460,7 +460,10 @@ class MinorDottySuite extends BaseDottySuite {
     runTestError[Stat]("class F[_]", "identifier expected")
     runTestError[Stat]("enum X[T]{ case A[_] extends X[Int] }", "identifier expected")
     runTestError[Stat]("extension [_](x: Int) def inc: Int = x + 1", "identifier expected")
-    runTestError[Stat]("given [_](using Ord[T]): Ord[List[T]]{}", "identifier expected")
+    runTestError[Stat](
+      "given [_](using Ord[T]): Ord[List[T]]{}",
+      "`identifier` expected but `[` found"
+    )
   }
 
   test("repeated-byname-class-parameter") {
@@ -488,7 +491,7 @@ class MinorDottySuite extends BaseDottySuite {
 
   test("repeated-like-class-parameter") {
     val error =
-      """|<input>:1: error: identifier expected but ) found
+      """|<input>:1: error: `identifier` expected but `)` found
          |class Foo(bars: Int`*`)
          |                      ^""".stripMargin
     runTestError[Stat]("class Foo(bars: Int`*`)", error)
@@ -554,7 +557,7 @@ class MinorDottySuite extends BaseDottySuite {
 
     runTestError[Stat](
       "{ inline @foo def foo(): Int }",
-      "; expected but @ found"
+      "`;` expected but `@` found"
     )
   }
 

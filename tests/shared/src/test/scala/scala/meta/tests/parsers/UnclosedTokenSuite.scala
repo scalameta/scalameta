@@ -7,30 +7,43 @@ import scala.meta.parsers.ParseException
 
 class UnclosedTokenSuite extends ParseSuite {
   test("unclosed-string-1") {
-    val e = intercept[TokenizeException] {
+    interceptMessage[TokenizeException](
+      """|<input>:1: error: unclosed string interpolation
+         | s"start   
+         |   ^""".stripMargin.replace("\n", EOL)
+    ) {
       stat(""" s"start   """)
     }
-    assert(e.getMessage.contains("unclosed string interpolation"))
   }
 
   test("unclosed-string-2") {
-    val e = intercept[TokenizeException] {
+    interceptMessage[TokenizeException](
+      """|<input>:1: error: unclosed string literal
+         | x"${1 + " 
+         |         ^""".stripMargin.replace("\n", EOL)
+    ) {
       stat(""" x"${1 + " """)
     }
-    assert(e.getMessage.contains("unclosed string literal"))
   }
 
   test("unclosed-escape") {
-    val e = intercept[TokenizeException] {
+    interceptMessage[TokenizeException](
+      """|<input>:1: error: unclosed string literal
+         | "start \" 
+         | ^""".stripMargin.replace("\n", EOL)
+    ) {
       stat(""" "start \" """)
     }
   }
 
   test("unclosed-interpolation") {
-    val e = intercept[ParseException] {
+    interceptMessage[ParseException](
+      """|<input>:1: error: `}` expected but `end of file` found
+         | s"${1+ 
+         |        ^""".stripMargin.replace("\n", EOL)
+    ) {
       stat(""" s"${1+ """)
     }
-    assert(e.getMessage.contains("expected but end of file found"))
   }
 
 }
