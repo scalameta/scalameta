@@ -143,7 +143,7 @@ object DocToken {
   /**
    * Documents the return value of a method.
    */
-  case object Return extends TagKind("@returns", numberParameters = 1)
+  case object Return extends TagKind("@return", numberParameters = 1)
 
   /**
    * Documents an exception type that may be thrown by a method or class constructor.
