@@ -80,14 +80,18 @@ class TokenNamerMacros(val c: Context) extends TokenNamerMacroHelpers {
 
         // step 4: generate implementation of `def name: String`
         val codepage = Map(
-          "\t" -> "\\t",
-          "\b" -> "\\b",
-          "\n" -> "\\n",
-          "\r" -> "\\r",
-          "\f" -> "\\f",
-          "\\" -> "\\\\"
+          '\t' -> "\\t",
+          '\b' -> "\\b",
+          '\n' -> "\\n",
+          '\r' -> "\\r",
+          '\f' -> "\\f",
+          '\\' -> "\\\\"
         )
-        val tokenName = providedTokenName.flatMap(c => codepage.getOrElse(c.toString, c.toString))
+        val tokenName = {
+          val buf = new StringBuilder(providedTokenName.length)
+          providedTokenName.foreach(c => codepage.get(c).fold(buf.append(c))(buf.append))
+          buf.result()
+        }
         stats1 += q"private[meta] def name: _root_.scala.Predef.String = $tokenName"
 
         // step 5: generate implementation of `def end: String` for fixed tokens
