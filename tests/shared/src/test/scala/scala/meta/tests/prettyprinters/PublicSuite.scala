@@ -290,6 +290,7 @@ class PublicSuite extends TreeSuiteBase {
     "scala.meta.metap.Settings",
     "scala.meta.metacp.Result",
     "scala.meta.metap.Format.Compact",
+    "scala.meta.tokens.Token.Companion",
     "scala.meta.tokens.Token.Indentation",
     "scala.meta.metap.Format",
     "scala.meta.metacp.Settings",

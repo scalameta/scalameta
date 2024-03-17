@@ -25,6 +25,7 @@ class TokenNamerMacros(val c: Context) extends TokenNamerMacroHelpers {
   val Int = tq"_root_.scala.Int"
   val PositionClass = tq"_root_.scala.meta.inputs.Position"
   val PositionModule = q"_root_.scala.meta.inputs.Position"
+  val TokenCompanionClass = tq"_root_.scala.meta.tokens.Token.Companion"
 
   def freeform(annottees: Tree*): Tree = impl(annottees, isFixed = false)
 
@@ -48,6 +49,7 @@ class TokenNamerMacros(val c: Context) extends TokenNamerMacroHelpers {
         val stats1 = ListBuffer[Tree]() ++ stats
         val anns1 = ListBuffer[Tree]() ++ mods.annotations
         def mods1 = mods.mapAnnotations(_ => anns1.toList)
+        val mparents1 = ListBuffer[Tree]() ++ mparents
         val mstats1 = ListBuffer[Tree]() ++ mstats
         val manns1 = ListBuffer[Tree]() ++ mmods.annotations
         def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
@@ -88,6 +90,8 @@ class TokenNamerMacros(val c: Context) extends TokenNamerMacroHelpers {
           buf.result()
         }
         stats1 += q"private[meta] def name: _root_.scala.Predef.String = $tokenName"
+        mstats1 += q"private[meta] def name: _root_.scala.Predef.String = $tokenName"
+        mparents1 += TokenCompanionClass
 
         // step 5: generate implementation of `def end: String` for fixed tokens
         if (isFixed) {
@@ -124,7 +128,7 @@ class TokenNamerMacros(val c: Context) extends TokenNamerMacroHelpers {
         val cdef1 =
           q"$mods1 class $name[..$tparams] $ctorMods(...$paramss1) extends { ..$earlydefns } with ..$parents { $self => ..$stats1 }"
         val mdef1 =
-          q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats1 }"
+          q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents1 { $mself => ..$mstats1 }"
         List(cdef1, mdef1)
       }
     })

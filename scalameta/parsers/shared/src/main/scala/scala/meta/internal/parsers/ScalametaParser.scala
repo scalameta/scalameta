@@ -4849,36 +4849,18 @@ object ScalametaParser {
   private val bigIntMaxLong = BigInt(Long.MaxValue) + 1
   private val bigIntMaxULong = bigIntMaxLong << 1
 
-  private def getTokenName[T <: Token: ClassTag]: String =
-    classTag[T].runtimeClass.getSimpleName match {
-      case "Semicolon" => ";"
-      case "Hash" => "#"
-      case "Colon" => ":"
-      case "Viewbound" => "<%"
-      case "LeftArrow" => "<-"
-      case "Subtype" => "<:"
-      case "Equals" => "="
-      case "RightArrow" => "=>"
-      case "Supertype" => ">:"
-      case "At" => "@"
-      case "Underscore" => "_"
-      case "TypeLambdaArrow" => "=>>"
-      case "ContextArrow" => "?=>"
-      case "MacroQuote" => "'"
-      case "MacroSplice" => "$"
-      case "LeftParen" => "("
-      case "RightParen" => ")"
-      case "Comma" => ","
-      case "Dot" => "."
-      case "LeftBracket" => "["
-      case "RightBracket" => "]"
-      case "LeftBrace" => "{"
-      case "RightBrace" => "}"
-      case "Ident" => "identifier"
-      case "EOF" => "end of file"
-      case "BOF" => "beginning of file"
-      case other => other.toLowerCase().stripPrefix("kw")
-    }
+  private def companionOf[T: ClassTag]: Any = {
+    import scala.reflect.runtime.{currentMirror => cm}
+    val clazz = classTag[T].runtimeClass
+    Try {
+      val companionModule = cm.classSymbol(clazz).companion.asModule
+      cm.reflectModule(companionModule).instance
+    }.getOrElse(throw new RuntimeException(s"Could not get companion object for $clazz"))
+  }
+
+  private def getTokenName[T <: Token: ClassTag]: String = {
+    companionOf[T].asInstanceOf[Token.Companion].name
+  }
   private def syntaxExpectedMessage[T <: Token: ClassTag](token: Token): String =
     s"${getTokenName[T]} expected but ${token.name} found"
   private def syntaxNotExpectedMessage[T <: Token: ClassTag]: String =

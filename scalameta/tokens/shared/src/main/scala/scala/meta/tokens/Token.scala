@@ -24,6 +24,10 @@ import scala.meta.internal.prettyprinters._
 }
 
 object Token {
+  trait Companion {
+    private[meta] def name: String
+  }
+
   // Literals (include some keywords from above, constants, interpolations and xml)
   @branch trait Literal extends Token
   @branch abstract class Constant[A] extends Literal {
