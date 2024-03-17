@@ -540,7 +540,7 @@ class ModSuite extends ParseSuite {
 
   test("covariant-like in type") {
     val error =
-      """|<input>:1: error: ] expected but identifier found
+      """|<input>:1: error: `]` expected but `identifier` found
          |type A[`+`T] = B[T]
          |          ^""".stripMargin
     runTestError[Stat]("type A[`+`T] = B[T]", error)
@@ -586,7 +586,7 @@ class ModSuite extends ParseSuite {
 
   test("contravariant-like in class") {
     val error =
-      """|<input>:1: error: ] expected but identifier found
+      """|<input>:1: error: `]` expected but `identifier` found
          |class A[`-`T](t: T)
          |           ^""".stripMargin
     runTestError[Stat]("class A[`-`T](t: T)", error)
@@ -902,7 +902,7 @@ class ModSuite extends ParseSuite {
   test("missing val after parameter modifier") {
     val actual = interceptParseError("class A(implicit b: B, implicit c: C)")
     val expected =
-      s"""|error: val expected but identifier found
+      s"""|error: `val` expected but `identifier` found
           |class A(implicit b: B, implicit c: C)
           |                                ^""".stripMargin
     assert(actual.contains(expected), actual)

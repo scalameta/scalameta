@@ -45,7 +45,7 @@ class ErrorSuite extends FunSuite {
       q"foo + class"
     """).replace("\r", ""),
       """
-      |<macro>:4: ; expected but class found
+      |<macro>:4: `;` expected but `class` found
       |      q"foo + class"
       |              ^
     """.trim.stripMargin.replace("\r", "")
@@ -351,7 +351,7 @@ class ErrorSuite extends FunSuite {
       q"expr: ..$tpes"
     """).replace("\r", ""),
       """
-      |<macro>:5: identifier expected but ellipsis found
+      |<macro>:5: `identifier` expected but `ellipsis` found
       |      q"expr: ..$tpes"
       |              ^
     """.trim.stripMargin.replace("\r", "")
@@ -403,7 +403,7 @@ class ErrorSuite extends FunSuite {
       q"expr. ..$names"
     """).replace("\r", ""),
       """
-      |<macro>:5: identifier expected but ellipsis found
+      |<macro>:5: `identifier` expected but `ellipsis` found
       |      q"expr. ..$names"
       |              ^
     """.trim.stripMargin.replace("\r", "")
@@ -486,7 +486,7 @@ class ErrorSuite extends FunSuite {
       q"private final def this(x: X, y: Y) = foo"
     """).replace("\r", ""),
       """
-      |<macro>:4: this expected but identifier found
+      |<macro>:4: `this` expected but `identifier` found
       |      q"private final def this(x: X, y: Y) = foo"
       |                                             ^
     """.trim.stripMargin.replace("\r", "")
@@ -753,7 +753,7 @@ class ErrorSuite extends FunSuite {
       q"foo(...$xss, ...$xss)"
     """).replace("\r", ""),
       """
-      |<macro>:5: ) expected but , found
+      |<macro>:5: `)` expected but `,` found
       |      q"foo(...$xss, ...$xss)"
       |                   ^
     """.trim.stripMargin

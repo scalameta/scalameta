@@ -4880,9 +4880,9 @@ object ScalametaParser {
       case other => other.toLowerCase().stripPrefix("kw")
     }
   private def syntaxExpectedMessage[T <: Token: ClassTag](token: Token): String =
-    s"${getTokenName[T]} expected but ${token.name} found"
+    s"`${getTokenName[T]}` expected but `${token.name}` found"
   private def syntaxNotExpectedMessage[T <: Token: ClassTag]: String =
-    s"not expected ${getTokenName[T]}"
+    s"not expected `${getTokenName[T]}`"
 
 }
 

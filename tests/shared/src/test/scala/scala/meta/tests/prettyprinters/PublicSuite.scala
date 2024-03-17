@@ -309,11 +309,12 @@ class PublicSuite extends TreeSuiteBase {
       try "foo + class".parse[Term].get
       catch {
         case ex: ParseException =>
-          assert(ex.toString == """
-            |<input>:1: error: end of file expected but class found
-            |foo + class
-            |      ^
-          """.trim.stripMargin.split('\n').mkString(EOL))
+          assertEquals(
+            ex.toString,
+            """|<input>:1: error: `end of file` expected but `class` found
+               |foo + class
+               |      ^""".stripMargin.replace("\n", EOL)
+          )
           throw ex
       }
     }
@@ -326,11 +327,12 @@ class PublicSuite extends TreeSuiteBase {
   test("scala.meta.parsers.Parsed.Error.toString") {
     val parsed = "foo + class".parse[Term]
     parsed match { case _: Parsed.Error => ; case _ => }
-    assert(parsed.toString == """
-      |<input>:1: error: end of file expected but class found
-      |foo + class
-      |      ^
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    assertEquals(
+      parsed.toString,
+      """|<input>:1: error: `end of file` expected but `class` found
+         |foo + class
+         |      ^""".stripMargin.replace("\n", EOL)
+    )
   }
 
   test("scala.meta.parsers.Parsed.Success.toString") {

@@ -76,7 +76,7 @@ class VarargParameterSuite extends ParseSuite {
   test("error on return type vararg parameters") {
     checkError(
       "def obj(f: Int*): Boolean* = true",
-      "error: = expected but identifier found"
+      "error: `=` expected but `identifier` found"
     )
   }
 
@@ -90,11 +90,11 @@ class VarargParameterSuite extends ParseSuite {
   test("error on repeated byname parameter") {
     checkError(
       "def fx(x: => Int*): Int = 3",
-      ") expected but identifier found"
+      "`)` expected but `identifier` found"
     )
     checkError(
       "class Foo(bars: => Int*)",
-      ") expected but identifier found"
+      "`)` expected but `identifier` found"
     )
   }
 
@@ -108,11 +108,11 @@ class VarargParameterSuite extends ParseSuite {
   test("vararg-like parameters") {
     checkError(
       "def obj(fa: Int, fb: Int`*`) = true",
-      "error: identifier expected but ) found"
+      "error: `identifier` expected but `)` found"
     )
     checkError(
       "def obj(fa: Int`*`, fb: Int) = true",
-      "error: identifier expected but , found"
+      "error: `identifier` expected but `,` found"
     )
   }
 

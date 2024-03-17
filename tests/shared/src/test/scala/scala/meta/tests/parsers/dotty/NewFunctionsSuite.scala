@@ -618,7 +618,7 @@ class NewFunctionsSuite extends BaseDottySuite {
          |  (e: Entry) 
          |=> e.Key
          |""".stripMargin,
-      """|error: ; expected but => found
+      """|error: `;` expected but `=>` found
          |=> e.Key
          |^""".stripMargin
     )

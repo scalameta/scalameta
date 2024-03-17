@@ -149,7 +149,7 @@ class TypeSuite extends BaseDottySuite {
          | with
          |    type D <: Product
          |""".stripMargin,
-      "error: ; expected but with found"
+      "error: `;` expected but `with` found"
     )
   }
 
@@ -439,13 +439,13 @@ class TypeSuite extends BaseDottySuite {
     }
     runTestError[Stat](
       "F[`+`_]",
-      """|<input>:1: error: ] expected but _ found
+      """|<input>:1: error: `]` expected but `_` found
          |F[`+`_]
          |     ^""".stripMargin
     )
     runTestError[Stat](
       "F[`-`_]",
-      """|<input>:1: error: ] expected but _ found
+      """|<input>:1: error: `]` expected but `_` found
          |F[`-`_]
          |     ^""".stripMargin
     )
