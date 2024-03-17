@@ -2,6 +2,9 @@ package scala.meta
 package internal
 package tokenizers
 
+import java.math.MathContext
+import java.math.RoundingMode
+
 import scala.meta.inputs._
 
 trait LegacyTokenData {
@@ -114,6 +117,9 @@ trait LegacyTokenData {
 }
 
 object LegacyTokenData {
-  private val bigDecimalMaxFloat = BigDecimal(Float.MaxValue)
-  private val bigDecimalMaxDouble = BigDecimal(Double.MaxValue)
+  // add a bit more, JS doesn't handle it well
+  private val bigDecimalMaxFloat =
+    BigDecimal.binary(Float.MaxValue, new MathContext(8, RoundingMode.UP))
+  private val bigDecimalMaxDouble =
+    BigDecimal.binary(Double.MaxValue, new MathContext(32, RoundingMode.UP))
 }

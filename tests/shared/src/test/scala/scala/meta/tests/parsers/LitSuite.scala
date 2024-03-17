@@ -374,4 +374,136 @@ class LitSuite extends ParseSuite {
     runTestAssert[Stat](code)(tree)
   }
 
+  Seq(
+    ("0d", 0d),
+    ("0.0", 0d),
+    ("00e0", 0d),
+    ("00e0f", 0f),
+    ("0xe1", 225),
+    ("0xd", 13),
+    ("0f", 0f),
+    ("0.0f", 0f),
+    ("0xf", 15),
+    ("0", 0),
+    ("0l", 0L),
+    ("0L", 0L),
+    ("0x80000000", -2147483648),
+    ("0x8000000000000000L", -9223372036854775808L),
+    ("3.4028235e38f", Float.MaxValue),
+    ("-3.4028235e38f", Float.MinValue),
+    ("1.7976931348623157e+308d", Double.MaxValue),
+    ("-1.7976931348623157e+308d", Double.MinValue),
+    ("0b00101010", 42),
+    ("0B_0010_1010", 42),
+    ("0b_0010_1010L", 42L)
+  ).foreach { case (code, expected) =>
+    test(s"numeric literal ok scala213: $code") {
+      parseStat(code, Scala213) match {
+        case lit: Lit => assertEquals(lit.value, expected)
+      }
+    }
+  }
+
+  Seq(
+    (
+      "0.f",
+      Term.Select(lit(0), tname("f"))
+    ),
+    (
+      "1.0 + 2.0f",
+      Term.ApplyInfix(lit(1d), tname("+"), Nil, List(lit(2f)))
+    ),
+    (
+      "1d + 2f",
+      Term.ApplyInfix(lit(1d), tname("+"), Nil, List(lit(2f)))
+    ),
+    (
+      "0b01.toString",
+      Term.Select(lit(1), tname("toString"))
+    )
+  ).foreach { case (code, tree: Tree) =>
+    test(s"expr with numeric literal ok scala213: $code") {
+      runTestAssert[Stat](code, None)(tree)
+    }
+  }
+
+  Seq(
+    (
+      "00",
+      """|<input>:1: error: Non-zero integral values may not have a leading zero.
+         |00
+         |^""".stripMargin
+    ),
+    (
+      "00l",
+      """|<input>:1: error: Non-zero integral values may not have a leading zero.
+         |00l
+         |^""".stripMargin
+    ),
+    (
+      "0b01d",
+      """|<input>:1: error: Invalid literal number, followed by identifier character
+         |0b01d
+         |    ^""".stripMargin
+    ),
+    (
+      "0b01f",
+      """|<input>:1: error: Invalid literal number, followed by identifier character
+         |0b01f
+         |    ^""".stripMargin
+    ),
+    (
+      "0b0123",
+      """|<input>:1: error: Invalid literal number, followed by identifier character
+         |0b0123
+         |    ^""".stripMargin
+    ),
+    (
+      "0b01.2",
+      """|<input>:1: error: ; expected but double constant found
+         |0b01.2
+         |    ^""".stripMargin
+    ),
+    (
+      "1. + 2.",
+      """|<input>:1: error: ; expected but integer constant found
+         |1. + 2.
+         |     ^""".stripMargin
+    ),
+    (
+      ".f",
+      """|<input>:1: error: illegal start of definition .
+         |.f
+         |^""".stripMargin
+    ),
+    (
+      "3.4028236e38f",
+      """|<input>:1: error: floating-point value out of range for Float
+         |3.4028236e38f
+         |^""".stripMargin
+    ),
+    (
+      "-3.4028236e38f",
+      """|<input>:1: error: floating-point value out of range for Float
+         |-3.4028236e38f
+         | ^""".stripMargin
+    ),
+    (
+      "1.7976931348623158e+308d",
+      """|<input>:1: error: floating-point value out of range for Double
+         |1.7976931348623158e+308d
+         |^""".stripMargin
+    ),
+    (
+      "-1.7976931348623158e+308d",
+      """|<input>:1: error: floating-point value out of range for Double
+         |-1.7976931348623158e+308d
+         | ^""".stripMargin
+    )
+  ).foreach { case (code, error) =>
+    test(s"numeric literal fail scala213: $code") {
+      runTestError[Stat](code, error)
+    }
+  }
+
 }
