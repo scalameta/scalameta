@@ -7,5 +7,5 @@ import scala.meta.tokens._
 trait InternalToken {
   self: Token =>
 
-  private[meta] def name: String
+  def name: String
 }
