@@ -91,10 +91,15 @@ class TokenNamerMacros(val c: Context) extends TokenNamerMacroHelpers {
 
         // step 5: generate implementation of `def end: String` for fixed tokens
         if (isFixed) {
+          val len = providedTokenName.length
+          if (!hasMethod("len"))
+            stats1 += q"override final def len: _root_.scala.Int = $len"
+          if (!hasMethod("isEmpty"))
+            stats1 += q"override final def isEmpty: _root_.scala.Boolean = ${len == 0}"
           if (!hasMethod("end")) // for fixed, as simple as adding length of name
-            stats1 += q"def end: _root_.scala.Int = this.start + ${providedTokenName.length}"
+            stats1 += q"final def end: _root_.scala.Int = this.start + $len"
           if (!hasMethod("text"))
-            stats1 += q"override def text: _root_.scala.Predef.String = $providedTokenName"
+            stats1 += q"override final def text: _root_.scala.Predef.String = $providedTokenName"
         }
 
         // step 6: generate implementation of `Companion.unapply`
