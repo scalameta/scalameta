@@ -19,7 +19,7 @@ class TargetedSuite extends SemanticdbSuite {
       |  <<bar>>(children = 4)(3)
       |}
     """.trim.stripMargin,
-    { (_, second) => assert(second == "a/Curry.bar().") }
+    { (_, second) => assertEquals(second, "a/Curry.bar().") }
   )
 
   targeted(
@@ -32,8 +32,8 @@ class TargetedSuite extends SemanticdbSuite {
       |}
     """.trim.stripMargin,
     { (_, copy, age) =>
-      assert(copy == "b/User#copy().")
-      assert(age == "b/User#copy().(age)")
+      assertEquals(copy, "b/User#copy().")
+      assertEquals(age, "b/User#copy().(age)")
     }
   )
 
@@ -101,9 +101,9 @@ class TargetedSuite extends SemanticdbSuite {
       |}
     """.stripMargin,
     (doc, foo1, foo2, foo3) => {
-      assert(foo1 == "g/ao.foo.")
-      assert(foo2 == "g/ao.foo().")
-      assert(foo3 == "g/ao.foo(+1).")
+      assertEquals(foo1, "g/ao.foo.")
+      assertEquals(foo2, "g/ao.foo().")
+      assertEquals(foo3, "g/ao.foo(+1).")
     }
   )
 
@@ -116,9 +116,9 @@ class TargetedSuite extends SemanticdbSuite {
       |}
     """.stripMargin,
     (doc, foo1, local, c) => {
-      assert(foo1 == "h/ao.foo().")
-      assert(local == "h/ao.local.")
-      assert(c == "h/ao.foo().(c)")
+      assertEquals(foo1, "h/ao.foo().")
+      assertEquals(local, "h/ao.local.")
+      assertEquals(c, "h/ao.foo().(c)")
     }
   )
 
@@ -131,12 +131,12 @@ class TargetedSuite extends SemanticdbSuite {
       |}
     """.stripMargin,
     (doc, foo1, local1, c1, foo2, local2, c2) => {
-      assert(foo1 == "i/ao.foo().")
-      assert(foo2 == "i/ao.foo().")
-      assert(local1 == "i/ao.local.")
-      assert(local2 == "i/ao.local.")
-      assert(c1 == "i/ao.foo().(c)")
-      assert(c2 == "i/ao.foo().(c)")
+      assertEquals(foo1, "i/ao.foo().")
+      assertEquals(foo2, "i/ao.foo().")
+      assertEquals(local1, "i/ao.local.")
+      assertEquals(local2, "i/ao.local.")
+      assertEquals(c1, "i/ao.foo().(c)")
+      assertEquals(c2, "i/ao.foo().(c)")
     }
   )
 
@@ -149,8 +149,8 @@ class TargetedSuite extends SemanticdbSuite {
       |}
     """.stripMargin,
     (doc, msg, bodyText) => {
-      assert(msg == "j/ao.Msg.")
-      assert(bodyText == "j/ao.bodyText.")
+      assertEquals(msg, "j/ao.Msg.")
+      assertEquals(bodyText, "j/ao.bodyText.")
     }
   )
 
@@ -165,8 +165,8 @@ class TargetedSuite extends SemanticdbSuite {
       |}
     """.stripMargin,
     (doc, foo, c) => {
-      assert(foo == "k/target#foo().")
-      assert(c == "k/target#foo().(c)")
+      assertEquals(foo, "k/target#foo().")
+      assertEquals(c, "k/target#foo().(c)")
     }
   )
 

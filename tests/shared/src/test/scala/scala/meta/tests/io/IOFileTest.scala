@@ -12,10 +12,10 @@ class IOFileTest extends FunSuite {
   val nonNormalizedFile = new File(new File(new File(project, ".."), "bin"), "scalafmt")
 
   test(".toString") {
-    assert(file.toString == "build.sbt")
-    assert(project.toString == "project")
-    assert(nestedFile.toString == PathIO.fromUnix("project/build.properties"))
-    assert(nonNormalizedFile.toString == PathIO.fromUnix("project/../bin/scalafmt"))
+    assertEquals(file.toString, "build.sbt")
+    assertEquals(project.toString, "project")
+    assertEquals(nestedFile.toString, PathIO.fromUnix("project/build.properties"))
+    assertEquals(nonNormalizedFile.toString, PathIO.fromUnix("project/../bin/scalafmt"))
   }
 
   test(".isFile") {
@@ -35,8 +35,8 @@ class IOFileTest extends FunSuite {
   }
 
   test(".getPath") {
-    assert(file.getPath == "build.sbt")
-    assert(project.getPath == "project")
+    assertEquals(file.getPath, "build.sbt")
+    assertEquals(project.getPath, "project")
   }
 
   test(".toPath") {

@@ -7,10 +7,10 @@ class PathIOSuite extends FunSuite {
   def check(path: String, expectedDir: String, expectedName: String): Unit =
     test(path) {
       val obtainedDir = PathIO.dirname(path)
-      assert(obtainedDir == expectedDir, "Unexpected dirName")
+      assertEquals(obtainedDir, expectedDir, "Unexpected dirName")
 
       val obtainedName = PathIO.basename(path)
-      assert(obtainedName == expectedName, "Unexpected baseName")
+      assertEquals(obtainedName, expectedName, "Unexpected baseName")
     }
 
   check("/", "/", "")

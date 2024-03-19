@@ -13,7 +13,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.Tree.toString (manual)") {
     val tree = Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar")))
-    assert(tree.toString == "foo + bar")
+    assertEquals(tree.toString, "foo + bar")
   }
 
   test("scala.meta.Tree.structure (manual)") {
@@ -28,7 +28,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.Tree.toString (parsed)") {
     val tree = "foo + bar // baz".parse[Term].get
-    assert(tree.toString == "foo + bar // baz")
+    assertEquals(tree.toString, "foo + bar // baz")
   }
 
   test("scala.meta.Tree.structure (parsed)") {
@@ -209,7 +209,7 @@ class PublicSuite extends TreeSuiteBase {
   }
 
   test("scala.meta.inputs.Input.None.toString") {
-    assert(Input.None.toString == "Input.None")
+    assertEquals(Input.None.toString, "Input.None")
   }
 
   test("scala.meta.inputs.Input.File.toString") {
@@ -219,14 +219,17 @@ class PublicSuite extends TreeSuiteBase {
     val input2 = Input.File(path, Charset.forName("UTF-8"))
     input1 match { case _: Input.File => }
     input2 match { case _: Input.File => }
-    assert(input1.toString == s"""Input.File(new File("$syntax"), Charset.forName("ISO-8859-1"))""")
-    assert(input2.toString == s"""Input.File(new File("$syntax"), Charset.forName("UTF-8"))""")
+    assertEquals(
+      input1.toString,
+      s"""Input.File(new File("$syntax"), Charset.forName("ISO-8859-1"))"""
+    )
+    assertEquals(input2.toString, s"""Input.File(new File("$syntax"), Charset.forName("UTF-8"))""")
   }
 
   test("scala.meta.inputs.Input.Slice.toString") {
     val input = Input.Slice(Input.String("foo"), 0, 2)
     input match { case _: Input.Slice => }
-    assert(input.toString == """Input.Slice(Input.String("foo"), 0, 2)""")
+    assertEquals(input.toString, """Input.Slice(Input.String("foo"), 0, 2)""")
   }
 
   test("scala.meta.inputs.Input.Stream.toString") {
@@ -236,26 +239,26 @@ class PublicSuite extends TreeSuiteBase {
     val input2 = Input.Stream(stream, Charset.forName("UTF-8"))
     input1 match { case _: Input.Stream => }
     input2 match { case _: Input.Stream => }
-    assert(input1.toString == """Input.Stream(<stream>, Charset.forName("ISO-8859-1"))""")
-    assert(input2.toString == """Input.Stream(<stream>, Charset.forName("UTF-8"))""")
+    assertEquals(input1.toString, """Input.Stream(<stream>, Charset.forName("ISO-8859-1"))""")
+    assertEquals(input2.toString, """Input.Stream(<stream>, Charset.forName("UTF-8"))""")
   }
 
   test("scala.meta.inputs.Input.String.toString") {
     val input = Input.String("foo")
     input match { case _: Input.String => }
-    assert(input.toString == """Input.String("foo")""")
+    assertEquals(input.toString, """Input.String("foo")""")
   }
 
   test("scala.meta.inputs.Input.VirtualFile.toString") {
     val input = Input.VirtualFile("foo.scala", "foo")
     input match { case _: Input.VirtualFile => }
-    assert(input.toString == s"""Input.VirtualFile("foo.scala", "foo")""")
+    assertEquals(input.toString, s"""Input.VirtualFile("foo.scala", "foo")""")
   }
 
   test("scala.meta.inputs.Input.Ammonite.toString") {
     val input = Input.Ammonite(Input.None)
     input match { case _: Input.Ammonite => }
-    assert(input.toString == s"""Input.Ammonite(Input.None)""")
+    assertEquals(input.toString, s"""Input.Ammonite(Input.None)""")
   }
 
   test("scala.meta.inputs.Position.toString") {
@@ -263,13 +266,13 @@ class PublicSuite extends TreeSuiteBase {
   }
 
   test("scala.meta.inputs.Position.None.toString") {
-    assert(Position.None.toString == "Position.None")
+    assertEquals(Position.None.toString, "Position.None")
   }
 
   test("scala.meta.inputs.Position.Range.toString") {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
     lhs.pos match { case _: Position.Range => ; case _ => }
-    assert(lhs.pos.toString == """[0..3) in Input.String("foo + bar")""")
+    assertEquals(lhs.pos.toString, """[0..3) in Input.String("foo + bar")""")
   }
 
   test("scala.meta.io.AbsolutePath.toString") {
@@ -338,7 +341,7 @@ class PublicSuite extends TreeSuiteBase {
   test("scala.meta.parsers.Parsed.Success.toString") {
     val parsed = "foo + bar".parse[Term]
     parsed match { case _: Parsed.Success[_] => ; case _ => }
-    assert(parsed.toString == "foo + bar")
+    assertEquals(parsed.toString, "foo + bar")
   }
 
   test("scala.meta.prettyprinters.Show.toString") {
@@ -389,12 +392,12 @@ class PublicSuite extends TreeSuiteBase {
   test("scala.meta.tokenizers.Tokenized.Success.toString") {
     val tokenized = "foo + bar".tokenize
     tokenized match { case _: Tokenized.Success => ; case _ => }
-    assert(tokenized.toString == "foo + bar")
+    assertEquals(tokenized.toString, "foo + bar")
   }
 
   test("scala.meta.tokens.Token.toString") {
     val token = "foo + bar".tokenize.get(1)
-    assert(token.toString == "foo")
+    assertEquals(token.toString, "foo")
   }
 
   test("scala.meta.tokens.Token.structure") {
@@ -404,12 +407,12 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.tokens.Token.syntax") {
     val token = "foo + bar".tokenize.get(1)
-    assert(token.syntax == "foo")
+    assertEquals(token.syntax, "foo")
   }
 
   test("scala.meta.tokens.Tokens.toString") {
     val tokens = "foo + bar".tokenize.get
-    assert(tokens.toString == "foo + bar")
+    assertEquals(tokens.toString, "foo + bar")
   }
 
   test("scala.meta.tokens.Tokens.structure") {
@@ -422,7 +425,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.tokens.Tokens.syntax") {
     val tokens = "foo + bar".tokenize.get
-    assert(tokens.syntax == "foo + bar")
+    assertEquals(tokens.syntax, "foo + bar")
   }
 
   test("scala.meta.tokens.Token.Interpolation.toString") {

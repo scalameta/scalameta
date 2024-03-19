@@ -8,7 +8,7 @@ class SymbolSuite extends FunSuite {
   def checkMultiSyntax(symbols: List[String], expected: String): Unit = {
     test(" syntax: " + symbols.toString()) {
       val obtained = Symbols.Multi(symbols)
-      assert(obtained == expected)
+      assertEquals(obtained, expected)
     }
   }
 
@@ -16,7 +16,7 @@ class SymbolSuite extends FunSuite {
     test("  multi: " + symbols.toString) {
       val symbol = Symbols.Multi(symbols)
       val expected = symbol.asMulti
-      assert(symbol.asMulti == expected)
+      assertEquals(symbol.asMulti, expected)
     }
   }
 

@@ -10,6 +10,6 @@ class TokenClassesSuite extends munit.FunSuite {
       .filterNot(_.is[Trivia])
       .mkString
     val expected = "foobar"
-    assert(obtained == expected)
+    assertEquals(obtained, expected)
   }
 }

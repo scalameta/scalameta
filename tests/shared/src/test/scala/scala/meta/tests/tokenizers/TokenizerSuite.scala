@@ -955,7 +955,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
   test("synthetic trees don't have BOF/EOF in their tokens") {
     val tree = Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar")))
-    assert(tree.pos == Position.None)
+    assertEquals(tree.pos, Position.None)
     val tokens = tree.tokenizeFor(implicitly[Dialect])
     val tokensStructure = tokens.structure
     assertEquals(tree.tokens.structure, tokensStructure)
@@ -968,36 +968,36 @@ class TokenizerSuite extends BaseTokenizerSuite {
   test("Ident.value for normal") {
     "foo".parse[Term].get.tokens match {
       case Tokens(bof, foo: Ident, eof) =>
-        assert(foo.value == "foo")
+        assertEquals(foo.value, "foo")
     }
   }
 
   test("Ident.value for backquoted") {
     "`foo`".parse[Term].get.tokens match {
       case Tokens(bof, foo: Ident, eof) =>
-        assert(foo.value == "foo")
-        assert(foo.syntax == "`foo`")
+        assertEquals(foo.value, "foo")
+        assertEquals(foo.syntax, "`foo`")
     }
   }
 
   test("Interpolation.Id.value") {
     assertTokens(""" q"" """) { case Tokens(bof, _, id: Interpolation.Id, _, _, _, _, eof) =>
-      assert(id.value == "q")
+      assertEquals(id.value, "q")
     }
   }
 
   test("Interpolation.Part.value") {
     assertTokens(""" q"foo" """) { case Tokens(bof, _, _, _, part: Interpolation.Part, _, _, eof) =>
-      assert(part.value == "foo")
+      assertEquals(part.value, "foo")
     }
   }
 
   test("Interpolated tree parsed succesfully with windows newline") {
     assertTokens(""" q"foo"""" + "\r\n") {
       case Tokens(bof, _, _, _, part: Interpolation.Part, _, cr: CR, lf: LF, eof) =>
-        assert(part.value == "foo")
-        assert(cr.syntax == "\r")
-        assert(lf.syntax == "\n")
+        assertEquals(part.value, "foo")
+        assertEquals(cr.syntax, "\r")
+        assertEquals(lf.syntax, "\n")
     }
   }
 
@@ -1020,8 +1020,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
   test("Interpolated tree parsed succesfully with unix newline") {
     assertTokens(""" q"foo"""" + "\n") {
       case Tokens(bof, _, _, _, part: Interpolation.Part, _, lf: LF, eof) =>
-        assert(part.value == "foo")
-        assert(lf.syntax == "\n")
+        assertEquals(part.value, "foo")
+        assertEquals(lf.syntax, "\n")
     }
   }
 
@@ -1068,7 +1068,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
   test("Comment.value") {
     assertTokens("//foo") { case Tokens(bof, comment: Comment, eof) =>
-      assert(comment.value == "foo")
+      assertEquals(comment.value, "foo")
     }
   }
 

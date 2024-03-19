@@ -12,7 +12,7 @@ class SetExtensionsTest extends FunSuite {
   val set = Set(typeFoo, termFoo, q"Foo")
 
   test("Reference equality holds normally") {
-    assert(set.size == 3)
+    assertEquals(set.size, 3)
     assert(set.contains(typeFoo))
     assert(set.contains(termFoo))
     assert(!set.contains(q"Foo"))
@@ -20,7 +20,7 @@ class SetExtensionsTest extends FunSuite {
 
   test("Structurally") {
     val structuralSet = set.structurally
-    assert(structuralSet.size == 2)
+    assertEquals(structuralSet.size, 2)
     assert(structuralSet.contains(typeFoo))
     assert(structuralSet.contains(termFoo))
     assert(structuralSet.contains(q"Foo"))
@@ -28,7 +28,7 @@ class SetExtensionsTest extends FunSuite {
 
   test("Syntactically") {
     val syntacticSet = set.syntactically
-    assert(syntacticSet.size == 1)
+    assertEquals(syntacticSet.size, 1)
     assert(syntacticSet.contains(typeFoo))
     assert(syntacticSet.contains(termFoo))
     assert(syntacticSet.contains(q"Foo"))

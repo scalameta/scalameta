@@ -22,12 +22,15 @@ class TransformerSuite extends FunSuite {
       }
     }
     val tree1 = transformer(tree0)
-    assert(tree1.toString == """
+    assertEquals(
+      tree1.toString,
+      """
       |{
       |  def foo(y: y)(y: Int) = y + y + 1
       |  class C(y: y) { def bar(y: y) = ??? }
       |}
-    """.trim.stripMargin.split('\n').mkString(EOL))
+    """.trim.stripMargin.split('\n').mkString(EOL)
+    )
   }
 
   test("Transformer Fail") {
@@ -49,7 +52,7 @@ class TransformerSuite extends FunSuite {
   test("Tree.transform") {
     val tree0 = q"x + y"
     val tree1 = tree0.transform { case Term.Name(s) => Term.Name(s + s) }
-    assert(tree1.toString == "xx ++ yy")
+    assertEquals(tree1.toString, "xx ++ yy")
   }
 
   test("dotty-derives-transform") {

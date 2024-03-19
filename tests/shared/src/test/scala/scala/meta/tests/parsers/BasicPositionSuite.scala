@@ -148,13 +148,13 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
          |            // line 2""".stripMargin
     )
     val x = Position.Range(input, 0, 2, 0, 11)
-    assert(x.text == "val x = 2")
+    assertEquals(x.text, "val x = 2")
     val x2 = Position.Range(input, 0, 2, 0, Int.MaxValue)
-    assert(x2.text == "val x = 2 // line 0")
+    assertEquals(x2.text, "val x = 2 // line 0")
     val empty = Position.Range(input, 1, 0, 1, Int.MaxValue)
-    assert(empty.text == "")
+    assertEquals(empty.text, "")
     val last = Position.Range(input, 2, 0, 2, Int.MaxValue)
-    assert(last.text == "            // line 2")
+    assertEquals(last.text, "            // line 2")
   }
 
   checkPositions[Stat](

@@ -73,7 +73,7 @@ class SymbolTableSuite extends FunSuite {
     val aggregateSymtab = AggregateSymbolTable(List(localSymtab, globalSymtab))
     val local0 = aggregateSymtab.info("local0").get
     assert(local0.isType)
-    assert(local0.displayName == "_")
+    assertEquals(local0.displayName, "_")
   }
 
   test("SymbolTable.toString") {

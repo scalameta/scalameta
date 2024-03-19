@@ -17,7 +17,7 @@ class JavacpSuite extends FunSuite {
       val info = infos(symbol)
       val ClassSignature(_, _, _, Some(declarations)) = info.signature
       val obtained = declarations.symlinks.filter(filter)
-      assert(obtained == expected, info.toProtoString)
+      assertEquals(obtained, expected, info.toProtoString)
     }
 
   checkOrder(
