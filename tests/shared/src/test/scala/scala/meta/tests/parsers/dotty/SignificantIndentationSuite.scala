@@ -1675,6 +1675,22 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#3542 apply with optional braces in intermediate arg, with multiple outdents") {
+    val code =
+      """|A(
+         |  foo = x =>
+         |    x match
+         |      case baz => baz,
+         |  bar = bar
+         |)
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `;` expected but `,` found
+         |      case baz => baz,
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
   test("indented-double-apply") {
     runTestAssert[Stat](
       """|def method = 
