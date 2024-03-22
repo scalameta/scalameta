@@ -20,9 +20,9 @@ class NIOPathTest extends FunSuite {
   val nonNormalizedFile: Path = Paths.get("project", "..", "bin", "scalafmt")
 
   test(".toString") {
-    assert(file.toString == "build.sbt")
-    assert(project.toString == "project")
-    assert(nonNormalizedFile.toString == PathIO.fromUnix("project/../bin/scalafmt"))
+    assertEquals(file.toString, "build.sbt")
+    assertEquals(project.toString, "project")
+    assertEquals(nonNormalizedFile.toString, PathIO.fromUnix("project/../bin/scalafmt"))
   }
 
   test(".isAbsolute") {
@@ -31,22 +31,22 @@ class NIOPathTest extends FunSuite {
     assert(cwd.isAbsolute)
   }
   test(".getRoot") {
-    assert(file.getRoot == null)
+    assertEquals(file.getRoot, null)
     assert(Paths.get("").toAbsolutePath.getRoot != null)
   }
   test(".getFileName") {
-    assert(file.getFileName.toString == "build.sbt")
-    assert(abs.getFileName.toString == "foo")
-    assert(nonNormalizedFile.getFileName.toString == "scalafmt")
+    assertEquals(file.getFileName.toString, "build.sbt")
+    assertEquals(abs.getFileName.toString, "foo")
+    assertEquals(nonNormalizedFile.getFileName.toString, "scalafmt")
   }
   test(".getParent") {
-    assert(abs.getParent.getFileName.toString == "bar")
+    assertEquals(abs.getParent.getFileName.toString, "bar")
   }
   test(".getNameCount") {
     assert(Paths.get(rootString).getNameCount == 0)
     assert(Paths.get("").getNameCount == 1)
-    assert(abs.getNameCount == 2)
-    assert(nonNormalizedFile.getNameCount == 4)
+    assertEquals(abs.getNameCount, 2)
+    assertEquals(nonNormalizedFile.getNameCount, 4)
   }
   test(".getName(index)") {
     assert(file.getName(0).toString == "build.sbt")
@@ -105,11 +105,11 @@ class NIOPathTest extends FunSuite {
     // NOTE: Paths API seems to work inconsistently under Scala Native.
     // [info] - .toAbsolutePath *** FAILED ***
     // [info]   /bar/foo did not equal //bar/foo (NIOPathTest.scala:88)
-    // assert(abs.toAbsolutePath == abs)
+    // assertEquals(abs.toAbsolutePath, abs)
     // NOTE: Paths API seems to work inconsistently under Scala Native.
     // [info] - .toAbsolutePath *** FAILED ***
     // [info]   /Users/eburmako/Projects/scalameta/. did not equal /Users/eburmako/Projects/scalameta (NIOPathTest.scala:92)
-    // assert(cwd == Paths.get("").toAbsolutePath)
+    // assertEquals(cwd, Paths.get("").toAbsolutePath)
   }
   test(".toFile") {
     assert(file.toFile.isFile)

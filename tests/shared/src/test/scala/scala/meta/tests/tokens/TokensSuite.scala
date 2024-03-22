@@ -52,7 +52,7 @@ class TokensApiSuite extends FunSuite {
     // Drop BOF and EOF to make tests more readable
     val tokens = tokenize("((1 + 1) == 2)").drop(1).dropRight(1)
 
-    assert(tokens.length == 13)
+    assertEquals(tokens.length, 13)
     assert(tokens.segmentLength(_.is[LeftParen]) == 2)
     assert(tokens.segmentLengthRight(_.is[RightParen]) == 1)
     assert(tokens.take(2).syntax == "((")
@@ -84,7 +84,7 @@ class TokensApiSuite extends FunSuite {
     val tokens = tokenize("val foo = List(1, 2, 3)")
 
     val slice = tokens.slice(0, 5)
-    assert(slice.length == 5)
+    assertEquals(slice.length, 5)
     for (i <- 0 until 5) assert(slice(i) == tokens(i))
   }
 
@@ -105,8 +105,8 @@ class TokensApiSuite extends FunSuite {
 
     val slice = tokens.slice(-100, 1)
 
-    assert(slice.length == 1)
-    assert(slice.head == tokens.head)
+    assertEquals(slice.length, 1)
+    assertEquals(slice.head, tokens.head)
   }
 
   test("Tokens.slice - 'from' > 'length'") {
@@ -126,7 +126,7 @@ class TokensApiSuite extends FunSuite {
 
     val slice = tokens.slice(0, 18).slice(5, 15).slice(6, 8)
 
-    assert(slice.length == 2)
+    assertEquals(slice.length, 2)
     assert(slice(0) == tokens(11))
     assert(slice(1) == tokens(12))
   }
@@ -135,7 +135,7 @@ class TokensApiSuite extends FunSuite {
     val tokens = tokenize("val foo = 0")
     val (before, after) = tokens.span(_ => true)
 
-    assert(before == tokens)
+    assertEquals(before, tokens)
     assert(after.isEmpty)
   }
 
@@ -143,7 +143,7 @@ class TokensApiSuite extends FunSuite {
     val tokens = tokenize("val foo = 0")
     val (before, after) = tokens.spanRight(_ => true)
 
-    assert(after == tokens)
+    assertEquals(after, tokens)
     assert(before.isEmpty)
   }
 

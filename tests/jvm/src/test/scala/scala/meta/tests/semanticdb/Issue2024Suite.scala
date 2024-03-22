@@ -20,9 +20,9 @@ class Issue2024Suite extends SemanticdbSuite {
       |}
     """.stripMargin,
     (_, impl1, impl2, impl3) => {
-      assert(impl1 == "a/root.impl.")
-      assert(impl2 == "a/root.impl.")
-      assert(impl3 == "a/root.impl.")
+      assertEquals(impl1, "a/root.impl.")
+      assertEquals(impl2, "a/root.impl.")
+      assertEquals(impl3, "a/root.impl.")
     }
   )
 }

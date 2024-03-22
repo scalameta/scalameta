@@ -54,7 +54,7 @@ class ConfigSuite extends FunSuite {
       assert(metacErr.isEmpty)
       val semanticdbPath = SemanticdbPaths.toSemanticdb(A, targetroot)
       val docs = s.TextDocuments.parseFrom(semanticdbPath.readAllBytes)
-      assert(docs.documents.length == 1, docs.toProtoString)
+      assertEquals(docs.documents.length, 1, docs.toProtoString)
       fn(docs.documents.head)
     }
   }
@@ -127,7 +127,7 @@ class ConfigSuite extends FunSuite {
        |""".stripMargin,
     { doc =>
       val Seq(occurrence) = doc.occurrences
-      assert(occurrence.symbol == "_empty_/A.")
+      assertEquals(occurrence.symbol, "_empty_/A.")
     },
     targetroot = customTargetroot
   )

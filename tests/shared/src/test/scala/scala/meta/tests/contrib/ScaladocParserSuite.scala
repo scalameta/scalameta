@@ -147,7 +147,7 @@ class ScaladocParserSuite extends FunSuite {
         DocToken(CodeBlock, complexCodeBlock)
       )
     )
-    assert(result == expectation)
+    assertEquals(result, expectation)
   }
 
   test("headings") {

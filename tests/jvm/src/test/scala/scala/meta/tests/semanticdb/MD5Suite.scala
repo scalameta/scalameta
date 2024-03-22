@@ -41,8 +41,9 @@ class MD5Suite extends FunSuite {
     val doc = docs.documents.head
     test(doc.uri.tag(Slow)) {
       val fromText = stringMD5(doc.text)
-      assert(
-        doc.md5 == fromText,
+      assertEquals(
+        doc.md5,
+        fromText,
         "TextDocument.md5 does not match stringMD5(TextDocument.md5)"
       )
 
@@ -53,8 +54,9 @@ class MD5Suite extends FunSuite {
       }
 
       val fromFile = fileMD5(scalaFile)
-      assert(
-        doc.md5 == fromFile,
+      assertEquals(
+        doc.md5,
+        fromFile,
         "TextDocument.md5 does not match fileMD5(Paths.get(TextDocument.uri))"
       )
       assert(!md5Fingerprints.contains(doc.md5), "Fingerprint was not unique")

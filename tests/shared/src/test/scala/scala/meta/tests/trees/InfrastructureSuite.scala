@@ -30,13 +30,13 @@ class InfrastructureSuite extends TreeSuiteBase {
     val x1 = "foo".parse[Term].get.asInstanceOf[Term.Name]
     val x2 = x1.copy()
     assert(x1.pos != Position.None)
-    assert(x2.pos == Position.None)
+    assertEquals(x2.pos, Position.None)
   }
 
   test("copy tokens") {
     val x1 = "foo".parse[Term].get.asInstanceOf[Term.Name]
     val x2 = x1.copy()
-    assert(x1.tokens.nonEmpty == true)
+    assertEquals(x1.tokens.nonEmpty, true)
     assertEquals(x2.tokenizeFor(implicitly[Dialect]).nonEmpty, true)
   }
 }

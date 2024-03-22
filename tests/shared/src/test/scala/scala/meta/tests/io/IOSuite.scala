@@ -45,7 +45,7 @@ class IOSuite extends FunSuite {
   test("AbsolutePath(relpath)(customCwd)") {
     implicit val customWorkingDirectory = AbsolutePath.root
     val obtained = AbsolutePath("foo")
-    assert(obtained == customWorkingDirectory.resolve("foo"))
+    assertEquals(obtained, customWorkingDirectory.resolve("foo"))
   }
 
 }

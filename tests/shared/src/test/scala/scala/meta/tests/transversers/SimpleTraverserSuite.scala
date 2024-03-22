@@ -73,13 +73,13 @@ class SimpleTraverserSuite extends FunSuite {
     var cnt = 0
     val tree0 = q"x + y"
     tree0.traverse { case Term.Name(s) => cnt += 1 }
-    assert(cnt == 3)
+    assertEquals(cnt, 3)
   }
 
   test("Tree.collect") {
     val tree0 = q"x + y"
     val result1 = tree0.collect { case Term.Name(s) => s }
-    assert(result1.toString == "List(x, +, y)")
+    assertEquals(result1.toString, "List(x, +, y)")
   }
 
   test("#1200") {
