@@ -21,9 +21,9 @@ private[parsers] class LazyTokenIterator private (
 
   import scannerTokens._
 
-  private def getNextTokenRef(): TokenRef = {
-    if (curr.next eq null) nextToken(curr) else curr.next
-  }
+  @inline
+  private def getNextTokenRef(): TokenRef =
+    nextToken(curr)
 
   override def next(): Unit = {
     prev = curr
