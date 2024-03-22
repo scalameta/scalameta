@@ -50,10 +50,10 @@ Welcome to the Ammonite Repl 2.3.8 (Scala 2.13.5 Java 11.0.7)
 @ import $ivy.`org.scalameta::scalameta:@VERSION@`, scala.meta._
 ```
 
-### ScalaFiddle
+### Scastie
 
 You can try out Scalameta online with the
-[ScalaFiddle playground](scalafiddle.html).
+[Scastie playground](scastie.html).
 
 ## What is a syntax tree?
 
