@@ -1,6 +1,6 @@
 {
   "docs": {
-    "Trees": ["trees/guide", "trees/quasiquotes", "trees/examples", "trees/scalafiddle", "trees/astexplorer", "trees/scaladoc"],
+    "Trees": ["trees/guide", "trees/quasiquotes", "trees/examples", "trees/scastie", "trees/astexplorer", "trees/scaladoc"],
     "SemanticDB": ["semanticdb/guide", "semanticdb/specification"],
     "Community": ["misc/built-with-scalameta", "misc/presentations"]
   }
