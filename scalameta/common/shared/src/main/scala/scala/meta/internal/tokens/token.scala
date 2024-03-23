@@ -75,7 +75,7 @@ class TokenNamerMacros(val c: Context) extends TokenNamerMacroHelpers {
 
         // step 4: generate implementation of `def name: String`
         val tokenName = Chars.escape(providedTokenName)
-        stats1 += q"private[meta] def name: _root_.scala.Predef.String = $tokenName"
+        stats1 += q"def name: _root_.scala.Predef.String = $tokenName"
 
         // step 5: generate implementation of `def end: String` for fixed tokens
         if (isFixed) {
