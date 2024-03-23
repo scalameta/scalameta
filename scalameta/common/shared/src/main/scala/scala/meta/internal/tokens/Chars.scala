@@ -93,4 +93,23 @@ object Chars {
       case _ => ch == '_'
     }
   }
+
+  private val codepage = Map(
+    '\t' -> "\\t",
+    '\b' -> "\\b",
+    '\n' -> "\\n",
+    '\r' -> "\\r",
+    '\f' -> "\\f",
+    '\\' -> "\\\\"
+  )
+
+  def escape(value: Char): String =
+    codepage.getOrElse(value, value.toString)
+
+  def escape(value: String): String = {
+    val buf = new StringBuilder(value.length)
+    value.foreach(c => codepage.get(c).fold(buf.append(c))(buf.append))
+    buf.result()
+  }
+
 }
