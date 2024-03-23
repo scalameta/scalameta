@@ -1659,7 +1659,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
     assertEquals(
       arg1.tokens.structure,
-      "Tokens(LeftBrace({) [5..6), Ident(b) [6..7), RightBrace(}) [7..8))"
+      "Tokens(LeftBrace [5..6), Ident(b) [6..7), RightBrace [7..8))"
     )
 
     assertEquals(
