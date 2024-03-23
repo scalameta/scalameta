@@ -998,6 +998,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
         assertEquals(part.value, "foo")
         assertEquals(cr.syntax, "\r")
         assertEquals(lf.syntax, "\n")
+        assertEquals(part.len, 3)
+        assertEquals(lf.len, 1)
     }
   }
 
@@ -1073,8 +1075,18 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("enum") {
-    assertTokens("enum", dialects.Scala3) { case Tokens(BOF(), _: KwEnum, EOF()) => }
-    assertTokens("enum", dialects.Scala212) { case Tokens(BOF(), Ident("enum"), EOF()) => }
+    assertTokens("enum", dialects.Scala3) { case Tokens(bof @ BOF(), te: KwEnum, eof @ EOF()) =>
+      assertEquals(bof.len, 0)
+      assertEquals(bof.isEmpty, true)
+      assertEquals(te.len, 4)
+      assertEquals(te.isEmpty, false)
+      assertEquals(eof.len, 0)
+      assertEquals(eof.isEmpty, true)
+    }
+    assertTokens("enum", dialects.Scala212) { case Tokens(BOF(), te @ Ident("enum"), EOF()) =>
+      assertEquals(te.len, 4)
+      assertEquals(te.isEmpty, false)
+    }
     assertTokens("s\"$enum\"", dialects.Scala212) {
       case Tokens(
             BOF(),
