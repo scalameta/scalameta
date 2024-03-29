@@ -1029,9 +1029,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
         next()
         Type.Wildcard(typeBounds())
       }
-      def anonymousParamWithVariant(value: String): Type = {
-        val variant = tparamVariant(value).map(v => atPos(startPos)(v))
-        Type.AnonymousParam(variant)
+      def anonymousParamWithVariant(modOpt: Option[Mod.Variant]): Type = {
+        Type.AnonymousParam(modOpt.map(v => atPos(startPos)(v)))
       }
       def pathSimpleType(): Type = {
         val ref = path()
@@ -1082,11 +1081,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           t.text match {
             case soft.QuestionMarkAsTypeWildcard() => wildcardType()
             case soft.StarAsTypePlaceholder(value) => next(); anonymousParamWithVariant(value)
-            case value @ ("+" | "-")
+            case value @ TParamVariantStr(mod)
                 if (dialect.allowPlusMinusUnderscoreAsIdent || dialect.allowUnderscoreAsTypePlaceholder) &&
                   tryAhead[Underscore] =>
               next() // Ident and Underscore
-              if (dialect.allowUnderscoreAsTypePlaceholder) anonymousParamWithVariant(value)
+              if (dialect.allowUnderscoreAsTypePlaceholder) anonymousParamWithVariant(Some(mod))
               else Type.Name(s"${value}_")
             case _ => pathSimpleType()
           }
@@ -3114,16 +3113,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
   private def tparamModifiers(buf: ListBuffer[Mod]): Unit = token match {
     case t: Unquote => if (peekToken.isAny[Ident, Unquote]) buf += unquote[Mod](t)
     case t: Ellipsis => buf += ellipsis[Mod](t, 1)
-    case t: Ident => tparamVariant(t.text).foreach(buf += atCurPosNext(_))
+    case TParamVariant(mod) => buf += atCurPosNext(mod)
     case _ =>
   }
-
-  private def tparamVariant(ident: String): Option[Mod.Variant] =
-    ident match {
-      case "+" => Some(Mod.Covariant())
-      case "-" => Some(Mod.Contravariant())
-      case _ => None
-    }
 
   def modifiersBuf(
       buf: ListBuffer[Mod],
@@ -4885,6 +4877,18 @@ object ScalametaParser {
     s"`${getTokenName[T]}` expected but `${token.name}` found"
   private def syntaxNotExpectedMessage[T <: Token: ClassTag]: String =
     s"not expected `${getTokenName[T]}`"
+
+  private object TParamVariantStr {
+    def unapply(ident: String): Option[Mod.Variant] = ident match {
+      case "+" => Some(Mod.Covariant())
+      case "-" => Some(Mod.Contravariant())
+      case _ => None
+    }
+  }
+
+  private object TParamVariant {
+    def unapply(ident: Token.Ident): Option[Mod.Variant] = TParamVariantStr.unapply(ident.text)
+  }
 
 }
 

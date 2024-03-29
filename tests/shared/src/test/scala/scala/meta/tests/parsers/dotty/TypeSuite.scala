@@ -679,7 +679,7 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("#3672 [scala3] ***") {
-    parseAndCheckTree[Type]("***", "*")(Type.AnonymousParam(None))
+    runTestAssert[Type]("***")(pname("***"))
   }
 
 }
