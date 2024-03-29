@@ -1073,23 +1073,25 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
           next(); Type.AnonymousParam(None)
         case _: Underscore =>
           wildcardType()
-        case soft.QuestionMarkAsTypeWildcard() if !inMatchType => wildcardType()
-        case soft.StarAsTypePlaceholder(value) if !inMatchType =>
-          next(); anonymousParamWithVariant(value)
-        case Keywords(value @ ("+" | "-"))
-            if (dialect.allowPlusMinusUnderscoreAsIdent || dialect.allowUnderscoreAsTypePlaceholder) &&
-              !inMatchType && tryAhead[Underscore] =>
-          next() // Ident and Underscore
-          if (dialect.allowUnderscoreAsTypePlaceholder)
-            anonymousParamWithVariant(value)
-          else
-            Type.Name(s"${value}_")
         case _: Literal =>
           if (dialect.allowLiteralTypes) literal()
           else syntaxError(s"$dialect doesn't support literal types", at = path())
         case Unary.Numeric(unary) if dialect.allowLiteralTypes && tryAhead[NumericConstant[_]] =>
           numericLiteral(prevTokenPos, unary)
-        case _ => pathSimpleType()
+        case t: Token.Ident if !inMatchType =>
+          t.text match {
+            case soft.QuestionMarkAsTypeWildcard() => wildcardType()
+            case soft.StarAsTypePlaceholder(value) => next(); anonymousParamWithVariant(value)
+            case value @ ("+" | "-")
+                if (dialect.allowPlusMinusUnderscoreAsIdent || dialect.allowUnderscoreAsTypePlaceholder) &&
+                  tryAhead[Underscore] =>
+              next() // Ident and Underscore
+              if (dialect.allowUnderscoreAsTypePlaceholder) anonymousParamWithVariant(value)
+              else Type.Name(s"${value}_")
+            case _ => pathSimpleType()
+          }
+        case _ =>
+          pathSimpleType()
       }
       simpleTypeRest(autoEndPosOpt(startPos)(res), startPos)
     }
