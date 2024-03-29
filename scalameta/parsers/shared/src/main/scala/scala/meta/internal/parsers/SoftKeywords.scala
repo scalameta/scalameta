@@ -1,6 +1,7 @@
 package scala.meta.internal.parsers
 
 import scala.meta.Dialect
+import scala.meta.Mod
 
 class SoftKeywords(dialect: Dialect) {
 
@@ -22,9 +23,11 @@ class SoftKeywords(dialect: Dialect) {
   object StarAsTypePlaceholder
       extends AsWithFunc(
         dialect.allowStarAsTypePlaceholder,
-        { (x: String) =>
-          val last = x.length - 1
-          if (last >= 0 && x.charAt(last) == '*') Some(x.substring(0, last)) else None
+        {
+          case "*" => Some(None)
+          case "+*" => Some(Some(Mod.Covariant()))
+          case "-*" => Some(Some(Mod.Contravariant()))
+          case _ => None
         }
       )
   object QuestionMarkAsTypeWildcard extends IsWithName(dialect.allowQuestionMarkAsTypeWildcard, "?")
