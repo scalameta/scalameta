@@ -268,4 +268,8 @@ class TypeSuite extends ParseSuite {
     assertNoDiff(err.shortMessage, "can't have multiple parameter lists in function types")
   }
 
+  test("#3672 [scala213] ***") {
+    runTestAssert[Type]("***")(pname("***"))
+  }
+
 }
