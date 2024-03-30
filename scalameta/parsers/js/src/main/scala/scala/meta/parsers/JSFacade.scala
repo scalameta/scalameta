@@ -23,7 +23,7 @@ object JSFacade {
   // https://github.com/scala-js/scala-js/issues/2170#issuecomment-176795604
   @js.native
   private[this] sealed trait JSLong extends js.Any
-  implicit private[this] class LongJSOps(val x: Long) extends AnyVal {
+  private[this] implicit class LongJSOps(val x: Long) extends AnyVal {
     def toJSLong: JSLong = {
       if (x >= 0) (x & ((1L << 53) - 1)).toDouble
       else -((-x) & ((1L << 53) - 1)).toDouble

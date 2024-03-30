@@ -30,7 +30,7 @@ object JavaTypeSignature {
 
 // NOTE: We use Scala-friendly names for base types instead of the Java primitive keywords.
 abstract class BaseType(val name: String) extends JavaTypeSignature with Product {
-  final override def print(sb: StringBuilder): Unit =
+  override final def print(sb: StringBuilder): Unit =
     sb.append(this.productPrefix)
 }
 object BaseType {

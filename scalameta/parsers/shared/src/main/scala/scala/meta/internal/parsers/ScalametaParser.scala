@@ -4290,30 +4290,30 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) { parser =>
     def isSecondaryCtorAllowed: Boolean
   }
   object OwnedByTrait extends TemplateOwner {
-    final override def isEnumCaseAllowed: Boolean = false
-    final override def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean =
+    override final def isEnumCaseAllowed: Boolean = false
+    override final def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean =
       dialect.allowTraitParameters
-    final override def isSecondaryCtorAllowed: Boolean = false
+    override final def isSecondaryCtorAllowed: Boolean = false
   }
   object OwnedByCaseClass extends TemplateOwner {
-    final override def isEnumCaseAllowed: Boolean = false
-    final override def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = true
-    final override def isSecondaryCtorAllowed: Boolean = true
+    override final def isEnumCaseAllowed: Boolean = false
+    override final def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = true
+    override final def isSecondaryCtorAllowed: Boolean = true
   }
   object OwnedByClass extends TemplateOwner {
-    final override def isEnumCaseAllowed: Boolean = false
-    final override def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = true
-    final override def isSecondaryCtorAllowed: Boolean = true
+    override final def isEnumCaseAllowed: Boolean = false
+    override final def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = true
+    override final def isSecondaryCtorAllowed: Boolean = true
   }
   object OwnedByEnum extends TemplateOwner {
-    final override def isEnumCaseAllowed: Boolean = true
-    final override def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = true
-    final override def isSecondaryCtorAllowed: Boolean = true
+    override final def isEnumCaseAllowed: Boolean = true
+    override final def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = true
+    override final def isSecondaryCtorAllowed: Boolean = true
   }
   object OwnedByObject extends TemplateOwner {
-    final override def isEnumCaseAllowed: Boolean = false
-    final override def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = false
-    final override def isSecondaryCtorAllowed: Boolean = false
+    override final def isEnumCaseAllowed: Boolean = false
+    override final def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = false
+    override final def isSecondaryCtorAllowed: Boolean = false
   }
 
   def init() = {

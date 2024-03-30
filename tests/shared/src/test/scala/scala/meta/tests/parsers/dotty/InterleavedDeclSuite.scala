@@ -6,7 +6,7 @@ class InterleavedDeclSuite extends BaseDottySuite {
 
   import dialects.Scala3Future
 
-  protected override val dialect: Dialect = Scala3Future
+  override protected val dialect: Dialect = Scala3Future
 
   test("def f: Unit") {
     checkTree(templStat("def f: Unit")) {
